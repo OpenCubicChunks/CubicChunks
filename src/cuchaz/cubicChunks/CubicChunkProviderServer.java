@@ -12,14 +12,12 @@ package cuchaz.cubicChunks;
 
 import java.lang.reflect.Field;
 
-import net.minecraft.util.IProgressUpdate;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.ChunkProviderGenerate;
 import net.minecraft.world.gen.ChunkProviderServer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.tmatesoft.sqljet.core.SqlJetException;
 
 public class CubicChunkProviderServer extends ChunkProviderServer
 {
@@ -49,28 +47,4 @@ public class CubicChunkProviderServer extends ChunkProviderServer
     		throw new Error( ex );
     	}
     }
-    
-    @Override
-	public boolean saveChunks( boolean saveAllChunks, IProgressUpdate progress )
-	{
-    	try
-		{
-	    	try
-	    	{
-	    		m_loader.startChunkSave();
-	    		boolean result = super.saveChunks( saveAllChunks, progress );
-	    		return result;
-	    	}
-	    	finally
-	    	{
-	    		int numChunksSaved = m_loader.stopChunkSave();
-	    		log.info( "Saved " + numChunksSaved + " chunks" );
-	    	}
-		}
-		catch( SqlJetException ex )
-		{
-			log.error( "Unable to save chunks!", ex );
-			return false;
-		}
-	}
 }

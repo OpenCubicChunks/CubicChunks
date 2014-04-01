@@ -1,35 +1,35 @@
 /*******************************************************************************
- * Copyright (c) 2014 jeff.
+ * Copyright (c) 2014 Jeff Martin.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
  * 
  * Contributors:
- *     jeff - initial API and implementation
+ *     Jeff Martin - initial API and implementation
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
 import java.util.Collection;
 import java.util.HashSet;
 
-public class ChunkSet extends HashSet<Coords>
+public class AddressSet extends HashSet<Address>
 {
-	private static final long serialVersionUID = -1018340715197554750L;
-	
-	public ChunkSet( )
+	private static final long serialVersionUID = -3137789107020787032L;
+
+	public AddressSet( )
 	{
 		super();
 	}
 	
-	public ChunkSet( ChunkSet other )
+	public AddressSet( AddressSet other )
 	{
 		super( other );
 	}
 	
-	public ChunkSet( Collection<Coords> blocks )
+	public AddressSet( Collection<Address> src )
 	{
 		super();
-		addAll( blocks );
+		addAll( src );
 	}
 }

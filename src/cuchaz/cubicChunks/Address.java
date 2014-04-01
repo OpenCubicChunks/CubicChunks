@@ -10,38 +10,35 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
-import net.minecraft.util.ChunkCoordinates;
 
-public class Coords implements Comparable<Coords>
+public class Address implements Comparable<Address>
 {
+	public int dimension;
 	public int x;
 	public int y;
 	public int z;
 	
-	public Coords( )
+	public Address( )
 	{
+		dimension = 0;
 		x = 0;
 		y = 0;
 		z = 0;
 	}
 	
-	public Coords( int x, int y, int z )
+	public Address( int dimension, int x, int y, int z )
 	{
-		set( x, y, z );
+		set( dimension, x, y, z );
 	}
 	
-	public Coords( Coords other )
+	public Address( Address other )
 	{
-		set( other.x, other.y, other.z );
+		set( other.dimension, other.x, other.y, other.z );
 	}
 	
-	public Coords( ChunkCoordinates other )
+	public void set( int dimension, int x, int y, int z )
 	{
-		set( other.posX, other.posY, other.posZ );
-	}
-	
-	public void set( int x, int y, int z )
-	{
+		this.dimension = dimension;
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -50,34 +47,39 @@ public class Coords implements Comparable<Coords>
 	@Override
 	public int hashCode( )
 	{
-		return x + ( y << 8 ) + ( z << 16 );
+		return x + ( y << 8 ) + ( z << 16 ) + ( dimension << 30 );
 	}
 	
 	@Override
 	public boolean equals( Object other )
 	{
-		if( other instanceof Coords )
+		if( other instanceof Address )
 		{
-			return equals( (Coords)other );
+			return equals( (Address)other );
 		}
 		return false;
 	}
 	
-	public boolean equals( Coords other )
+	public boolean equals( Address other )
 	{
-		return x == other.x && y == other.y && z == other.z;
+		return dimension == other.dimension && x == other.x && y == other.y && z == other.z;
 	}
 	
 	@Override
     public String toString( )
     {
-    	return String.format( "(%d,%d,%d)", x, y, z );
+    	return String.format( "(%d,%d,%d,%d)", dimension, x, y, z );
     }
 
 	@Override
-	public int compareTo( Coords other )
+	public int compareTo( Address other )
 	{
-		int diff = x - other.x;
+		int diff = dimension - other.dimension;
+		if( diff != 0 )
+		{
+			return diff;
+		}
+		diff = x - other.x;
 		if( diff != 0 )
 		{
 			return diff;

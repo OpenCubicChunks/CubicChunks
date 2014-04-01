@@ -18,6 +18,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -34,6 +36,8 @@ import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.storage.ISaveHandler;
+import net.minecraft.world.storage.IThreadedFileIO;
+import net.minecraft.world.storage.ThreadedFileIOBase;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,12 +47,14 @@ import org.tmatesoft.sqljet.core.table.ISqlJetCursor;
 import org.tmatesoft.sqljet.core.table.ISqlJetTable;
 import org.tmatesoft.sqljet.core.table.SqlJetDb;
 
-public class CubicChunkLoader implements IChunkLoader
+import cuchaz.cubicChunks.perf.Profiler;
+
+public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 {
 	private static final Logger log = LogManager.getLogger();
 	
 	private SqlJetDb m_db;
-	private int m_numChunksSaved;
+	private Map<Long,byte[]> m_chunksToSave;
 	
 	public CubicChunkLoader( ISaveHandler saveHandler )
 	{
@@ -95,7 +101,7 @@ public class CubicChunkLoader implements IChunkLoader
 		} );
 		
 		// init defaults
-		m_numChunksSaved = 0;
+		m_chunksToSave = new TreeMap<Long,byte[]>();
 	}
 	
 	private static SqlJetDb createNewDb( File file )
@@ -112,7 +118,8 @@ public class CubicChunkLoader implements IChunkLoader
 		db.beginTransaction( SqlJetTransactionMode.WRITE );
         try
         {
-        	db.createTable( "CREATE TABLE chunks ( dimension INTEGER, x INTEGER, y INTEGER, z INTEGER, data BLOB NOT NULL, PRIMARY KEY( dimension, x, y, z ) ) WITHOUT ROWID" );
+        	//db.createTable( "CREATE TABLE chunks ( dimension INTEGER, x INTEGER, y INTEGER, z INTEGER, data BLOB NOT NULL, PRIMARY KEY( dimension, x, y, z ) ) WITHOUT ROWID" );
+        	db.createTable( "CREATE TABLE chunks ( address INTEGER PRIMARY KEY, data BLOB NOT NULL )" );
         }
         finally
         {
@@ -147,24 +154,15 @@ public class CubicChunkLoader implements IChunkLoader
 	}
 
 	@Override
-	public void chunkTick( )
-	{
-		// not used
-	}
-	
-	@Override
 	public Chunk loadChunk( World world, int x, int z ) throws IOException
 	{
 		// NOTE: returning null tells the world to generate a new chunk
 		try
 		{
 			// does the database have a chunk?
-			byte[] data = loadChunk( world.provider.dimensionId, x, z );
+			byte[] data = loadChunk( AddressTools.toAddress( world.provider.dimensionId, x, 0, z ) );
 			if( data == null )
 			{
-				// TEMP
-				log.info( "\tnot available" );
-				
 				return null;
 			}
 			
@@ -172,9 +170,6 @@ public class CubicChunkLoader implements IChunkLoader
 			DataInputStream in = new DataInputStream( new ByteArrayInputStream( data ) );
 			NBTTagCompound nbt = CompressedStreamTools.readCompressed( in );
 			in.close();
-			
-			// TEMP
-			log.info( String.format( "Loaded chunk (%3d,%3d)", x, z ) );
 			
 			// restore the chunk
 			return readChunkFromNBT( world, nbt );
@@ -186,7 +181,7 @@ public class CubicChunkLoader implements IChunkLoader
 		}
 	}
 	
-	private byte[] loadChunk( int dimension, int x, int z )
+	private byte[] loadChunk( long address )
 	throws SqlJetException
 	{
 		// TEMP: method for vanilla chunks
@@ -194,7 +189,7 @@ public class CubicChunkLoader implements IChunkLoader
 		m_db.beginTransaction( SqlJetTransactionMode.READ_ONLY );
 		try
 		{
-			cursor = m_db.getTable( "chunks" ).lookup( null, dimension, x, 0, z );
+			cursor = m_db.getTable( "chunks" ).lookup( null, address );
 			if( cursor.eof() )
 			{
 				return null;
@@ -215,74 +210,122 @@ public class CubicChunkLoader implements IChunkLoader
 	public void saveChunk( World world, Chunk chunk )
 	throws MinecraftException, IOException
 	{
-		// NEXTTIME: could speed up using ThreadedFileIOBase and a pending queue, like AnvilChunkLoader.saveChunk()
-		try
-		{
-			// write the chunk to NBT
-			NBTTagCompound nbt = new NBTTagCompound();
-			writeChunkToNBT( chunk, world, nbt );
-			
-			// render the NBT to a byte buffer
-			ByteArrayOutputStream buf = new ByteArrayOutputStream();
-			DataOutputStream out = new DataOutputStream( buf );
-			CompressedStreamTools.writeCompressed( nbt, out );
-			out.close();
-			byte[] data = buf.toByteArray();
-			
-			saveChunk( world.provider.dimensionId, chunk.xPosition, chunk.zPosition, data );
-			m_numChunksSaved++;
-		}
-		catch( SqlJetException ex )
-		{
-			log.error( String.format( "Unable to save chunk %d,%d!", chunk.xPosition, chunk.zPosition ), ex );
-		}
-	}
-	
-	public void startChunkSave( )
-	throws SqlJetException
-	{
-		m_numChunksSaved = 0;
-		m_db.beginTransaction( SqlJetTransactionMode.WRITE );
-	}
-	
-	public int stopChunkSave( )
-	throws SqlJetException
-	{
-		m_db.commit();
-		return m_numChunksSaved;
-	}
-	
-	private void saveChunk( int dimension, int x, int z, byte[] data )
-	throws SqlJetException
-	{
-		// TEMP: method for vanilla chunks
+		// TEMP
+		Profiler.start( "pack" );
 		
+		// write the chunk to NBT
+		NBTTagCompound nbt = new NBTTagCompound();
+		writeChunkToNBT( chunk, world, nbt );
+		
+		// render the NBT to a byte buffer
+		ByteArrayOutputStream buf = new ByteArrayOutputStream();
+		DataOutputStream out = new DataOutputStream( buf );
+		CompressedStreamTools.writeCompressed( nbt, out );
+		out.close();
+		byte[] data = buf.toByteArray();
+		
+		// put the rendered chunk in the save buffer
+		synchronized( m_chunksToSave )
+		{
+			m_chunksToSave.put( AddressTools.toAddress( world.provider.dimensionId, chunk.xPosition, 0, chunk.zPosition ), data );
+		}
+		ThreadedFileIOBase.threadedIOInstance.queueIO( this );
+		
+		// TEMP
+		Profiler.stop( "pack" );
+	}
+	
+	private void saveChunk( long address, byte[] data )
+	throws SqlJetException
+	{
 		// is this chunk already saved?
 		ISqlJetTable table = m_db.getTable( "chunks" );
-		Object[] key = { dimension, x, 0, z };
+		Object[] key = { address };
 		ISqlJetCursor cursor = table.scope( null, key, key );
 		if( cursor.eof() )
 		{
 			// insert
-			m_db.getTable( "chunks" ).insert( dimension, x, 0, z, data );
+			table.insert( address, data );
 		}
 		else
 		{
 			// update
-			cursor.update( dimension, x, 0, z, data );
+			cursor.update( address, data );
 		}
 	}
 	
 	@Override
-	public void saveExtraChunkData( World world, Chunk chunk )
+	public boolean writeNextIO( )
 	{
-		// UNDONE: do nothing for now
+		// NOTE: return true to redo-this call
+		try
+		{
+			// TEMP
+			Profiler.start( "save" );
+			
+			long start = System.currentTimeMillis();
+			int numChunksSaved = 0;
+			
+			m_db.beginTransaction( SqlJetTransactionMode.WRITE );
+			try
+			{
+				synchronized( m_chunksToSave )
+				{
+					for( Map.Entry<Long,byte[]> entry : m_chunksToSave.entrySet() )
+					{
+						long address = entry.getKey();
+						byte[] data = entry.getValue();
+						
+						try
+						{
+							saveChunk( address, data );
+							numChunksSaved++;
+						}
+						catch( SqlJetException ex )
+						{
+							log.error( String.format( "Unable to save chunk %d (%d,%d)!", address, AddressTools.getX( address ), AddressTools.getZ( address ) ), ex );
+						}
+					}
+					m_chunksToSave.clear();
+				}
+			}
+			finally
+			{
+				m_db.commit();
+			}
+			
+			long diff = System.currentTimeMillis() - start;
+			log.info( String.format( "Saved %d chunks in %d ms.", numChunksSaved, diff ) );
+			
+			// TEMP
+			Profiler.stop( "save" );
+			log.info( Profiler.getReport() );
+			
+			return false;
+		}
+		catch( SqlJetException ex )
+		{
+			log.error( "Unable to save chunks!", ex );
+			return true;
+		}
 	}
 	
 	@Override
 	public void saveExtraData( )
 	{
 		// UNDONE: do nothing for now
+	}
+	
+	@Override
+	public void chunkTick( )
+	{
+		// not used
+	}
+	
+	@Override
+	public void saveExtraChunkData( World world, Chunk chunk )
+	{
+		// not used
 	}
 	
 	private void writeChunkToNBT( Chunk chunk, World world, NBTTagCompound nbt )
