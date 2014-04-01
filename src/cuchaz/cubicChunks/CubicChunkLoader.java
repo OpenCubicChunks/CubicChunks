@@ -16,10 +16,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -47,14 +46,12 @@ import org.tmatesoft.sqljet.core.table.ISqlJetCursor;
 import org.tmatesoft.sqljet.core.table.ISqlJetTable;
 import org.tmatesoft.sqljet.core.table.SqlJetDb;
 
-import cuchaz.cubicChunks.perf.Profiler;
-
 public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 {
 	private static final Logger log = LogManager.getLogger();
 	
 	private SqlJetDb m_db;
-	private Map<Long,byte[]> m_chunksToSave;
+	private List<Chunk> m_chunksToSave;
 	
 	public CubicChunkLoader( ISaveHandler saveHandler )
 	{
@@ -101,7 +98,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		} );
 		
 		// init defaults
-		m_chunksToSave = new TreeMap<Long,byte[]>();
+		m_chunksToSave = new ArrayList<Chunk>();
 	}
 	
 	private static SqlJetDb createNewDb( File file )
@@ -210,12 +207,23 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	public void saveChunk( World world, Chunk chunk )
 	throws MinecraftException, IOException
 	{
-		// TEMP
-		Profiler.start( "pack" );
+		// NOTE: this function blocks the world thread
+		// make it as fast as possible by offloading processing to the IO thread
 		
+		// save the chunk for later
+		synchronized( m_chunksToSave )
+		{
+			m_chunksToSave.add( chunk );
+		}
+		ThreadedFileIOBase.threadedIOInstance.queueIO( this );
+	}
+	
+	private void saveChunk( Chunk chunk )
+	throws SqlJetException, IOException
+	{
 		// write the chunk to NBT
 		NBTTagCompound nbt = new NBTTagCompound();
-		writeChunkToNBT( chunk, world, nbt );
+		writeChunkToNBT( chunk, chunk.worldObj, nbt );
 		
 		// render the NBT to a byte buffer
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
@@ -224,20 +232,9 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		out.close();
 		byte[] data = buf.toByteArray();
 		
-		// put the rendered chunk in the save buffer
-		synchronized( m_chunksToSave )
-		{
-			m_chunksToSave.put( AddressTools.toAddress( world.provider.dimensionId, chunk.xPosition, 0, chunk.zPosition ), data );
-		}
-		ThreadedFileIOBase.threadedIOInstance.queueIO( this );
+		// get the chunk address
+		long address = AddressTools.toAddress( chunk.worldObj.provider.dimensionId, chunk.xPosition, 0, chunk.zPosition );
 		
-		// TEMP
-		Profiler.stop( "pack" );
-	}
-	
-	private void saveChunk( long address, byte[] data )
-	throws SqlJetException
-	{
 		// is this chunk already saved?
 		ISqlJetTable table = m_db.getTable( "chunks" );
 		Object[] key = { address };
@@ -260,9 +257,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		// NOTE: return true to redo-this call
 		try
 		{
-			// TEMP
-			Profiler.start( "save" );
-			
 			long start = System.currentTimeMillis();
 			int numChunksSaved = 0;
 			
@@ -271,19 +265,16 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			{
 				synchronized( m_chunksToSave )
 				{
-					for( Map.Entry<Long,byte[]> entry : m_chunksToSave.entrySet() )
+					for( Chunk chunk: m_chunksToSave )
 					{
-						long address = entry.getKey();
-						byte[] data = entry.getValue();
-						
 						try
 						{
-							saveChunk( address, data );
+							saveChunk( chunk );
 							numChunksSaved++;
 						}
-						catch( SqlJetException ex )
+						catch( Exception ex ) // SqlJetException | IOException
 						{
-							log.error( String.format( "Unable to save chunk %d (%d,%d)!", address, AddressTools.getX( address ), AddressTools.getZ( address ) ), ex );
+							log.error( String.format( "Unable to save chunk (%d,%d)!", chunk.xPosition, chunk.zPosition ), ex );
 						}
 					}
 					m_chunksToSave.clear();
@@ -296,10 +287,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			
 			long diff = System.currentTimeMillis() - start;
 			log.info( String.format( "Saved %d chunks in %d ms.", numChunksSaved, diff ) );
-			
-			// TEMP
-			Profiler.stop( "save" );
-			log.info( Profiler.getReport() );
 			
 			return false;
 		}
