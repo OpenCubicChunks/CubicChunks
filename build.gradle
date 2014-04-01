@@ -1,0 +1,59 @@
+
+buildscript
+{
+	repositories
+	{
+		maven
+		{
+			url "http://www.cuchazinteractive.com/maven"
+		}
+		mavenCentral()
+	}
+	
+	dependencies
+	{
+		classpath "com.cuchazinteractive:magicMojoGradle:0.1"
+	}
+}
+
+apply plugin: "m3l"
+
+m3l
+{
+	minecraftVersion = "1.7.2"
+	pathMinecraftBin = "../mcp903/bin/minecraft"
+}
+
+group = "com.cuchazinteractive"
+archivesBaseName = "cubicChunks"
+version = "0.1"
+
+sourceSets
+{
+	main
+	{
+		java
+		{
+			srcDir "src"
+		}
+		resources
+		{
+			srcDir "src"
+		}
+	}
+}
+
+repositories
+{
+	maven
+	{
+		url "http://www.cuchazinteractive.com/maven"
+	}
+	mavenCentral()
+}
+
+dependencies
+{
+	compile "com.cuchazinteractive:magicMojoModLoader:1.7.2-0.1:dev"
+	compile "org.tmatesoft.sqljet:sqljet:1.1.10"
+}
