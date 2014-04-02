@@ -10,15 +10,29 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
+import net.minecraft.world.chunk.Chunk;
+
 public class AddressTools
 {
+	public static long toAddress( Chunk chunk )
+	{
+		return toAddress(
+			chunk.worldObj.provider.dimensionId,
+			chunk.xPosition,
+			0,
+			chunk.zPosition
+		);
+	}
+	
 	public static long toAddress( int dimension, int x, int y, int z )
 	{
 		// here's the encoding scheme
 		// we're aiming for a 48-bit integer
 		
-		// MSB is reserved so longs are always > 0 (stupid lack of unsigned int support in java...)
-		// dimension: 3 bits, 7 dimensions (it would be 8, but all-0 addresses are not allowed either)
+		// UNDONE: mapdb doesn't have key restrictions
+		// free up the extra space for data
+		
+		// dimension: 4 bits, 16 dimensions
 		// y: 12 bits,  4096 chunks,   65536 blocks
 		// x: 16 bits, 65536 chunks, 1048576 blocks
 		// z: 16 bits, 65536 chunks, 1048576 blocks
@@ -28,16 +42,14 @@ public class AddressTools
 		
 		// 0         1         2         3|        4      |  5         6  |
 		// 0123456789012345678901234567890123456789012345678901234567890123
-		// 0dddyyyyyyyyyyyyxxxxxxxxxxxxxxxxzzzzzzzzzzzzzzzz
+		// ddddyyyyyyyyyyyyxxxxxxxxxxxxxxxxzzzzzzzzzzzzzzzz
 		
-		long address = ( ( (dimension+1) & 0x7 ) << 44 ) | ( ( y & 0xfff ) << 32 ) | ( ( x & 0xffff ) << 16 ) + ( z & 0xffff );
-		assert( address > 0 );
-		return address;
+		return ( ( dimension & 0xf ) << 44 ) | ( ( y & 0xfff ) << 32 ) | ( ( x & 0xffff ) << 16 ) + ( z & 0xffff );
 	}
 	
 	public static int getDimension( long address )
 	{
-		return ((int)( address >> 44 ) & 0xff ) - 1;
+		return (int)( address >> 44 ) & 0xff;
 	}
 	
 	public static int getY( long address )
