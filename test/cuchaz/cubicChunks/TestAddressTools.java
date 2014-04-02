@@ -20,15 +20,12 @@ public class TestAddressTools
 	@Test
 	public void testDimension( )
 	{
-		assertEquals( 0, AddressTools.MinDimension );
-		assertEquals( 15, AddressTools.MaxDimension );
+		assertEquals( -128, AddressTools.MinDimension );
+		assertEquals( 127, AddressTools.MaxDimension );
 		for( int i=AddressTools.MinDimension; i<=AddressTools.MaxDimension; i++ )
 		{
-			assertEquals( i, AddressTools.getDimension( AddressTools.toAddress( i, 0, 0, 0 ) ) );
+			assertEquals( i, AddressTools.getDimension( AddressTools.getAddress( i, 0, 0, 0 ) ) );
 		}
-		
-		// and test dimension -1 just because it's actually used in vanilla Minecraft
-		assertEquals( 15, AddressTools.getDimension( AddressTools.toAddress( -1, 0, 0, 0 ) ) );
 	}
 	
 	@Test
@@ -38,29 +35,29 @@ public class TestAddressTools
 		assertEquals( 2047, AddressTools.MaxY );
 		for( int i=AddressTools.MinY; i<=AddressTools.MaxY; i++ )
 		{
-			assertEquals( i, AddressTools.getY( AddressTools.toAddress( 0, 0, i, 0 ) ) );
+			assertEquals( i, AddressTools.getY( AddressTools.getAddress( 0, 0, i, 0 ) ) );
 		}
 	}
 	
 	@Test
 	public void testX( )
 	{
-		assertEquals( -32768, AddressTools.MinX );
-		assertEquals( 32767, AddressTools.MaxX );
+		assertEquals( -2097152, AddressTools.MinX );
+		assertEquals( 2097151, AddressTools.MaxX );
 		for( int i=AddressTools.MinX; i<=AddressTools.MaxX; i++ )
 		{
-			assertEquals( i, AddressTools.getX( AddressTools.toAddress( 0, i, 0, 0 ) ) );
+			assertEquals( i, AddressTools.getX( AddressTools.getAddress( 0, i, 0, 0 ) ) );
 		}
 	}
 	
 	@Test
 	public void testZ( )
 	{
-		assertEquals( -32768, AddressTools.MinZ );
-		assertEquals( 32767, AddressTools.MaxZ );
+		assertEquals( -2097152, AddressTools.MinZ );
+		assertEquals( 2097151, AddressTools.MaxZ );
 		for( int i=AddressTools.MinZ; i<=AddressTools.MaxZ; i++ )
 		{
-			assertEquals( i, AddressTools.getZ( AddressTools.toAddress( 0, 0, 0, i ) ) );
+			assertEquals( i, AddressTools.getZ( AddressTools.getAddress( 0, 0, 0, i ) ) );
 		}
 	}
 }

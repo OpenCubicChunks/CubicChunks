@@ -11,7 +11,6 @@
 package cuchaz.cubicChunks;
 
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.gen.ChunkProviderGenerate;
 import net.minecraft.world.gen.ChunkProviderServer;
 
 public class CubicChunkProviderServer extends ChunkProviderServer
@@ -21,7 +20,7 @@ public class CubicChunkProviderServer extends ChunkProviderServer
     	super(
     		world,
     		new CubicChunkLoader( world.getSaveHandler() ),
-			new ChunkProviderGenerate( world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled() )
+			new CubicChunkGenerator( world )
     	);
     }
 }

@@ -16,15 +16,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentNavigableMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
@@ -48,12 +48,12 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 {
 	private static final Logger log = LogManager.getLogger();
 	
-	private static class ChunkToSave
+	private static class SaveEntry
 	{
 		private long address;
 		private NBTTagCompound nbt;
 		
-		public ChunkToSave( long address, NBTTagCompound nbt )
+		public SaveEntry( long address, NBTTagCompound nbt )
 		{
 			this.address = address;
 			this.nbt = nbt;
@@ -61,8 +61,10 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	}
 	
 	private DB m_db;
+	private ConcurrentNavigableMap<Long,byte[]> m_columns;
 	private ConcurrentNavigableMap<Long,byte[]> m_chunks;
-	private List<ChunkToSave> m_chunksToSave;
+	private ConcurrentLinkedQueue<SaveEntry> m_columnsToSave;
+	private ConcurrentLinkedQueue<SaveEntry> m_chunksToSave;
 	
 	public CubicChunkLoader( ISaveHandler saveHandler )
 	{
@@ -73,12 +75,14 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		File file = new File( String.format( "%s/chunks.db", worldName ) );
         m_db = DBMaker.newFileDB( file )
             .closeOnJvmShutdown()
-            .compressionEnable()
+            //.compressionEnable()
             .make();
+        m_columns = m_db.getTreeMap( "columns" );
         m_chunks = m_db.getTreeMap( "chunks" );
         
         // init chunk save queue
-        m_chunksToSave = new ArrayList<ChunkToSave>();
+        m_columnsToSave = new ConcurrentLinkedQueue<SaveEntry>();
+        m_chunksToSave = new ConcurrentLinkedQueue<SaveEntry>();
 	}
 	
 	@Override
@@ -86,8 +90,8 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	throws IOException
 	{
 		// does the database have the chunk?
-		long address = AddressTools.toAddress( world.provider.dimensionId, x, 0, z );
-		byte[] data = m_chunks.get( address );
+		long address = AddressTools.getAddress( world.provider.dimensionId, x, 0, z );
+		byte[] data = m_columns.get( address );
 		if( data == null )
 		{
 			// returning null tells the world to generate a new chunk
@@ -100,28 +104,23 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		in.close();
 		
 		// restore the chunk
-		return readChunkFromNBT( world, nbt );
+		return readColumnFromNBT( world, nbt );
 	}
 	
 	@Override
-	public void saveChunk( World world, Chunk chunk )
+	public void saveChunk( World world, Chunk mcChunk )
 	throws MinecraftException, IOException
 	{
 		// NOTE: this function blocks the world thread
 		// make it as fast as possible by offloading processing to the IO thread
 		// except we have to write the NBT in this thread to avoid problems with world ticks
 		
-		// write the chunk to NBT
-		NBTTagCompound nbt = new NBTTagCompound();
-		writeChunkToNBT( chunk, world, nbt );
+		// add the column to the save queue
+		Column column = castColumn( mcChunk );
+		m_columnsToSave.offer( new SaveEntry( column.getAddress(), writeColumnToNbt( column ) ) );
 		
-		// add the chunk to the save queue
-		long address = AddressTools.toAddress( chunk );
-		ChunkToSave chunkToSave = new ChunkToSave( address, nbt );
-		synchronized( m_chunksToSave )
-		{
-			m_chunksToSave.add( chunkToSave );
-		}
+		// NOTE: in a MC chunk, we can probably set the ExtendedBlockStorage instances to point to the instances in the cubic chunks
+		
 		ThreadedFileIOBase.threadedIOInstance.queueIO( this );
 	}
 	
@@ -134,34 +133,26 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		int numBytesSaved = 0;
 		long start = System.currentTimeMillis();
 		
-		synchronized( m_chunksToSave )
+		// save columns
+		SaveEntry entry = null;
+		while( ( entry = m_columnsToSave.poll() ) != null )
 		{
-			for( ChunkToSave chunkToSave: m_chunksToSave )
+			try
 			{
-				try
-				{
-					// render the NBT to a byte buffer
-					ByteArrayOutputStream buf = new ByteArrayOutputStream();
-					DataOutputStream out = new DataOutputStream( buf );
-					CompressedStreamTools.writeCompressed( chunkToSave.nbt, out );
-					out.close();
-					byte[] data = buf.toByteArray();
-					
-					// save the chunk
-					m_chunks.put( chunkToSave.address, data );
-					
-					numChunksSaved++;
-					numBytesSaved += data.length;
-				}
-				catch( IOException ex )
-				{
-					log.error( String.format( "Unable to write chunk %d,%d",
-						AddressTools.getX( chunkToSave.address ),
-						AddressTools.getZ( chunkToSave.address )
-					), ex );
-				}
+				// save the chunk
+				byte[] data = writeNbtBytes( entry.nbt );
+				m_columns.put( entry.address, data );
+				
+				numChunksSaved++;
+				numBytesSaved += data.length;
 			}
-			m_chunksToSave.clear();
+			catch( IOException ex )
+			{
+				log.error( String.format( "Unable to write chunk %d,%d",
+					AddressTools.getX( entry.address ),
+					AddressTools.getZ( entry.address )
+				), ex );
+			}
 		}
 		
 		// flush changes to disk
@@ -173,10 +164,20 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		return false;
 	}
 	
+	private byte[] writeNbtBytes( NBTTagCompound nbt )
+	throws IOException
+	{
+		ByteArrayOutputStream buf = new ByteArrayOutputStream();
+		DataOutputStream out = new DataOutputStream( buf );
+		CompressedStreamTools.writeCompressed( nbt, out );
+		out.close();
+		return buf.toByteArray();
+	}
+
 	@Override
 	public void saveExtraData( )
 	{
-		// UNDONE: do nothing for now
+		// not used
 	}
 	
 	@Override
@@ -191,222 +192,249 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		// not used
 	}
 	
-	private void writeChunkToNBT( Chunk chunk, World world, NBTTagCompound nbt )
+	private Column castColumn( Chunk mcChunk )
 	{
+		if( mcChunk instanceof Column )
+		{
+			return (Column)mcChunk;
+		}
+		throw new IllegalArgumentException( "Chunk is a vanilla chunk! Exepected column of cubic chunks!" );
+	}
+	
+	private NBTTagCompound writeColumnToNbt( Column column )
+	{
+		NBTTagCompound nbt = new NBTTagCompound();
+		
 		// chunk properties
+		// COLUMN
 		nbt.setByte( "V", (byte)1 );
-		nbt.setInteger( "xPos", chunk.xPosition );
-		nbt.setInteger( "zPos", chunk.zPosition );
-		nbt.setLong( "LastUpdate", world.getTotalWorldTime() );
+		nbt.setInteger( "xPos", column.xPosition );
+		nbt.setInteger( "zPos", column.zPosition );
+		nbt.setBoolean( "TerrainPopulated", column.isTerrainPopulated );
+		nbt.setBoolean( "LightPopulated", column.isLightPopulated );
+		nbt.setLong( "InhabitedTime", column.inhabitedTime );
 		
 		// 16x16 array of highest y-value in chunk
-		nbt.setIntArray( "HeightMap", chunk.heightMap );
+		// COLUMN
+		nbt.setIntArray( "HeightMap", column.heightMap );
 		
-		nbt.setBoolean( "TerrainPopulated", chunk.isTerrainPopulated );
-		nbt.setBoolean( "LightPopulated", chunk.isLightPopulated );
-		nbt.setLong( "InhabitedTime", chunk.inhabitedTime );
+		// UNDONE: might need to store more detailed data structure for lighting/rain calculations
 		
-		// block data
-		int numSegments = chunk.getBlockStorageArray().length;
-		NBTTagList var5 = new NBTTagList();
-		for( int i=0; i<numSegments; i++ )
+		// block sections
+		// CUBIC CHUNK
+		NBTTagList nbtSections = new NBTTagList();
+		nbt.setTag( "Sections", nbtSections );
+		for( int i=0; i<column.getBlockStorageArray().length; i++ )
 		{
-			ExtendedBlockStorage chunkSegment = chunk.getBlockStorageArray()[i];
-			if( chunkSegment != null )
+			ExtendedBlockStorage section = column.getBlockStorageArray()[i];
+			if( section != null )
 			{
-				NBTTagCompound var11 = new NBTTagCompound();
-				var11.setByte( "Y", (byte)( chunkSegment.getYLocation() >> 4 & 255 ) );
-				var11.setByteArray( "Blocks", chunkSegment.getBlockLSBArray() );
+				NBTTagCompound nbtSection = new NBTTagCompound();
+				nbtSections.appendTag( nbtSection );
 				
-				if( chunkSegment.getBlockMSBArray() != null )
+				nbtSection.setByte( "Y", (byte)( section.getYLocation() >> 4 & 255 ) );
+				nbtSection.setByteArray( "Blocks", section.getBlockLSBArray() );
+				
+				if( section.getBlockMSBArray() != null )
 				{
-					var11.setByteArray( "Add", chunkSegment.getBlockMSBArray().data );
+					nbtSection.setByteArray( "Add", section.getBlockMSBArray().data );
 				}
 				
-				var11.setByteArray( "Data", chunkSegment.getMetadataArray().data );
-				var11.setByteArray( "BlockLight", chunkSegment.getBlocklightArray().data );
+				nbtSection.setByteArray( "Data", section.getMetadataArray().data );
+				nbtSection.setByteArray( "BlockLight", section.getBlocklightArray().data );
 				
-				if( !world.provider.hasNoSky )
+				if( !column.worldObj.provider.hasNoSky )
 				{
-					var11.setByteArray( "SkyLight", chunkSegment.getSkylightArray().data );
+					nbtSection.setByteArray( "SkyLight", section.getSkylightArray().data );
 				}
 				else
 				{
-					var11.setByteArray( "SkyLight", new byte[chunkSegment.getBlocklightArray().data.length] );
+					nbtSection.setByteArray( "SkyLight", new byte[section.getBlocklightArray().data.length] );
 				}
-				
-				var5.appendTag( var11 );
 			}
 		}
 		
-		nbt.setTag( "Sections", var5 );
-		nbt.setByteArray( "Biomes", chunk.getBiomeArray() );
-		chunk.hasEntities = false;
-		NBTTagList var16 = new NBTTagList();
-		Iterator var18;
+		// biome mappings
+		// COLUMN
+		nbt.setByteArray( "Biomes", column.getBiomeArray() );
 		
-		for( int i=0; i<chunk.entityLists.length; i++ )
+		// entities
+		// CUBIC CHUNK
+		column.hasEntities = false;
+		NBTTagList nbtEntities = new NBTTagList();
+		nbt.setTag( "Entities", nbtEntities );
+		for( int i=0; i<column.entityLists.length; i++ )
 		{
-			var18 = chunk.entityLists[i].iterator();
-			
-			while( var18.hasNext() )
+			@SuppressWarnings( "unchecked" )
+			List<Entity> entities = (List<Entity>)column.entityLists[i];
+			for( Entity entity : entities )
 			{
-				Entity var20 = (Entity)var18.next();
-				NBTTagCompound var11 = new NBTTagCompound();
-				
-				if( var20.writeToNBTOptional( var11 ) )
+				NBTTagCompound nbtEntity = new NBTTagCompound();
+				if( entity.writeToNBTOptional( nbtEntity ) )
 				{
-					chunk.hasEntities = true;
-					var16.appendTag( var11 );
+					column.hasEntities = true;
+					nbtEntities.appendTag( nbtEntity );
 				}
 			}
 		}
 		
-		nbt.setTag( "Entities", var16 );
-		NBTTagList var17 = new NBTTagList();
-		var18 = chunk.chunkTileEntityMap.values().iterator();
-		
-		while( var18.hasNext() )
+		// tile entities
+		// CUBIC CHUNK
+		NBTTagList nbtTileEntities = new NBTTagList();
+		nbt.setTag( "TileEntities", nbtTileEntities );
+		@SuppressWarnings( "unchecked" )
+		List<TileEntity> tileEntities = (List<TileEntity>)column.chunkTileEntityMap.values();
+		for( TileEntity tileEntity : tileEntities )
 		{
-			TileEntity var21 = (TileEntity)var18.next();
-			NBTTagCompound var11 = new NBTTagCompound();
-			var21.writeToNBT( var11 );
-			var17.appendTag( var11 );
+			NBTTagCompound nbtTileEntity = new NBTTagCompound();
+			tileEntity.writeToNBT( nbtTileEntity );
+			nbtTileEntities.appendTag( nbtTileEntity );
 		}
 		
-		nbt.setTag( "TileEntities", var17 );
-		List var19 = world.getPendingBlockUpdates( chunk, false );
-		
-		if( var19 != null )
+		// schedule block ticks
+		// CUBIC CHUNK
+		@SuppressWarnings( "unchecked" )
+		List<NextTickListEntry> scheduledTicks = (List<NextTickListEntry>)column.worldObj.getPendingBlockUpdates( column, false );
+		if( scheduledTicks != null )
 		{
-			long var22 = world.getTotalWorldTime();
-			NBTTagList var12 = new NBTTagList();
-			Iterator var13 = var19.iterator();
+			long time = column.worldObj.getTotalWorldTime();
 			
-			while( var13.hasNext() )
+			NBTTagList nbtTicks = new NBTTagList();
+			nbt.setTag( "TileTicks", nbtTicks );
+			for( NextTickListEntry scheduledTick : scheduledTicks )
 			{
-				NextTickListEntry var14 = (NextTickListEntry)var13.next();
-				NBTTagCompound var15 = new NBTTagCompound();
-				var15.setInteger( "i", Block.getIdFromBlock( var14.func_151351_a() ) );
-				var15.setInteger( "x", var14.xCoord );
-				var15.setInteger( "y", var14.yCoord );
-				var15.setInteger( "z", var14.zCoord );
-				var15.setInteger( "t", (int)( var14.scheduledTime - var22 ) );
-				var15.setInteger( "p", var14.priority );
-				var12.appendTag( var15 );
+				NBTTagCompound nbtScheduledTick = new NBTTagCompound();
+				nbtScheduledTick.setInteger( "i", Block.getIdFromBlock( scheduledTick.func_151351_a() ) );
+				nbtScheduledTick.setInteger( "x", scheduledTick.xCoord );
+				nbtScheduledTick.setInteger( "y", scheduledTick.yCoord );
+				nbtScheduledTick.setInteger( "z", scheduledTick.zCoord );
+				nbtScheduledTick.setInteger( "t", (int)( scheduledTick.scheduledTime - time ) );
+				nbtScheduledTick.setInteger( "p", scheduledTick.priority );
+				nbtTicks.appendTag( nbtScheduledTick );
 			}
-			
-			nbt.setTag( "TileTicks", var12 );
 		}
+		
+		return nbt;
 	}
 	
-	private Chunk readChunkFromNBT( World par1World, NBTTagCompound par2NBTTagCompound )
+	private Column readColumnFromNBT( World world, NBTTagCompound nbt )
 	{
-		int var3 = par2NBTTagCompound.getInteger( "xPos" );
-		int var4 = par2NBTTagCompound.getInteger( "zPos" );
-		Chunk var5 = new Chunk( par1World, var3, var4 );
-		var5.heightMap = par2NBTTagCompound.getIntArray( "HeightMap" );
-		var5.isTerrainPopulated = par2NBTTagCompound.getBoolean( "TerrainPopulated" );
-		var5.isLightPopulated = par2NBTTagCompound.getBoolean( "LightPopulated" );
-		var5.inhabitedTime = par2NBTTagCompound.getLong( "InhabitedTime" );
-		NBTTagList var6 = par2NBTTagCompound.getTagList( "Sections", 10 );
-		byte var7 = 16;
-		ExtendedBlockStorage[] var8 = new ExtendedBlockStorage[var7];
-		boolean var9 = !par1World.provider.hasNoSky;
+		// NBT types:
+		// 0      1       2        3      4       5        6         7         8         9       10          11
+		// "END", "BYTE", "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "BYTE[]", "STRING", "LIST", "COMPOUND", "INT[]"
 		
-		for( int var10 = 0; var10 < var6.tagCount(); ++var10 )
+		// create the column
+		int x = nbt.getInteger( "xPos" );
+		int z = nbt.getInteger( "zPos" );
+		Column column = new Column( world, x, z );
+		
+		// check the version number
+		byte version = nbt.getByte( "V" );
+		if( version != 1 )
 		{
-			NBTTagCompound var11 = var6.getCompoundTagAt( var10 );
-			byte var12 = var11.getByte( "Y" );
-			ExtendedBlockStorage var13 = new ExtendedBlockStorage( var12 << 4, var9 );
-			var13.setBlockLSBArray( var11.getByteArray( "Blocks" ) );
-			
-			if( var11.func_150297_b( "Add", 7 ) )
-			{
-				var13.setBlockMSBArray( new NibbleArray( var11.getByteArray( "Add" ), 4 ) );
-			}
-			
-			var13.setBlockMetadataArray( new NibbleArray( var11.getByteArray( "Data" ), 4 ) );
-			var13.setBlocklightArray( new NibbleArray( var11.getByteArray( "BlockLight" ), 4 ) );
-			
-			if( var9 )
-			{
-				var13.setSkylightArray( new NibbleArray( var11.getByteArray( "SkyLight" ), 4 ) );
-			}
-			
-			var13.removeInvalidBlocks();
-			var8[var12] = var13;
+			throw new IllegalArgumentException( "Column has wrong version! " + version );
 		}
 		
-		var5.setStorageArrays( var8 );
+		// read the rest of the column properties
+		column.isTerrainPopulated = nbt.getBoolean( "TerrainPopulated" );
+		column.isLightPopulated = nbt.getBoolean( "LightPopulated" );
+		column.inhabitedTime = nbt.getLong( "InhabitedTime" );
 		
-		if( par2NBTTagCompound.func_150297_b( "Biomes", 7 ) )
+		// height map		
+		column.heightMap = nbt.getIntArray( "HeightMap" );
+
+		// block sections
+		NBTTagList nbtSections = nbt.getTagList( "Sections", 10 );
+		ExtendedBlockStorage[] segments = new ExtendedBlockStorage[16];
+		column.setStorageArrays( segments );
+		boolean hasSky = !world.provider.hasNoSky;
+		for( int i=0; i<nbtSections.tagCount(); i++ )
 		{
-			var5.setBiomeArray( par2NBTTagCompound.getByteArray( "Biomes" ) );
+			NBTTagCompound nbtSection = nbtSections.getCompoundTagAt( i );
+			
+			byte y = nbtSection.getByte( "Y" );
+			ExtendedBlockStorage section = new ExtendedBlockStorage( y << 4, hasSky );
+			segments[y] = section;
+			
+			section.setBlockLSBArray( nbtSection.getByteArray( "Blocks" ) );
+			if( nbtSection.func_150297_b( "Add", 7 ) )
+			{
+				section.setBlockMSBArray( new NibbleArray( nbtSection.getByteArray( "Add" ), 4 ) );
+			}
+			section.setBlockMetadataArray( new NibbleArray( nbtSection.getByteArray( "Data" ), 4 ) );
+			section.setBlocklightArray( new NibbleArray( nbtSection.getByteArray( "BlockLight" ), 4 ) );
+			if( hasSky )
+			{
+				section.setSkylightArray( new NibbleArray( nbtSection.getByteArray( "SkyLight" ), 4 ) );
+			}
+			section.removeInvalidBlocks();
 		}
 		
-		NBTTagList var17 = par2NBTTagCompound.getTagList( "Entities", 10 );
+		// biomes
+		column.setBiomeArray( nbt.getByteArray( "Biomes" ) );
 		
-		if( var17 != null )
+		// entities
+		NBTTagList nbtEntities = nbt.getTagList( "Entities", 10 );
+		if( nbtEntities != null )
 		{
-			for( int var18 = 0; var18 < var17.tagCount(); ++var18 )
+			for( int i=0; i<nbtEntities.tagCount(); i++ )
 			{
-				NBTTagCompound var20 = var17.getCompoundTagAt( var18 );
-				Entity var22 = EntityList.createEntityFromNBT( var20, par1World );
-				var5.hasEntities = true;
-				
-				if( var22 != null )
+				NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt( i );
+				Entity entity = EntityList.createEntityFromNBT( nbtEntity, world );
+				column.hasEntities = true;
+				if( entity != null )
 				{
-					var5.addEntity( var22 );
-					Entity var14 = var22;
+					column.addEntity( entity );
 					
-					for( NBTTagCompound var15 = var20; var15.func_150297_b( "Riding", 10 ); var15 = var15.getCompoundTag( "Riding" ) )
+					// deal with riding
+					Entity topEntity = entity;
+					for( NBTTagCompound nbtRiddenEntity = nbtEntity; nbtRiddenEntity.func_150297_b( "Riding", 10 ); nbtRiddenEntity = nbtRiddenEntity.getCompoundTag( "Riding" ) )
 					{
-						Entity var16 = EntityList.createEntityFromNBT( var15.getCompoundTag( "Riding" ), par1World );
-						
-						if( var16 != null )
+						Entity riddenEntity = EntityList.createEntityFromNBT( nbtRiddenEntity.getCompoundTag( "Riding" ), world );
+						if( riddenEntity != null )
 						{
-							var5.addEntity( var16 );
-							var14.mountEntity( var16 );
+							column.addEntity( riddenEntity );
+							topEntity.mountEntity( riddenEntity );
 						}
-						
-						var14 = var16;
+						topEntity = riddenEntity;
 					}
 				}
 			}
 		}
 		
-		NBTTagList var19 = par2NBTTagCompound.getTagList( "TileEntities", 10 );
-		
-		if( var19 != null )
+		// tile entities
+		NBTTagList nbtTileEntities = nbt.getTagList( "TileEntities", 10 );
+		if( nbtTileEntities != null )
 		{
-			for( int var21 = 0; var21 < var19.tagCount(); ++var21 )
+			for( int i=0; i<nbtTileEntities.tagCount(); i++ )
 			{
-				NBTTagCompound var24 = var19.getCompoundTagAt( var21 );
-				TileEntity var26 = TileEntity.createAndLoadEntity( var24 );
-				
-				if( var26 != null )
+				NBTTagCompound nbtTileEntity = nbtTileEntities.getCompoundTagAt( i );
+				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbtTileEntity );
+				if( tileEntity != null )
 				{
-					var5.func_150813_a( var26 );
+					column.func_150813_a( tileEntity );
 				}
 			}
 		}
 		
-		if( par2NBTTagCompound.func_150297_b( "TileTicks", 9 ) )
+		// scheduled ticks
+		NBTTagList nbtScheduledTicks = nbt.getTagList( "TileTicks", 10 );
+		if( nbtScheduledTicks != null )
 		{
-			NBTTagList var23 = par2NBTTagCompound.getTagList( "TileTicks", 10 );
-			
-			if( var23 != null )
+			for( int i=0; i<nbtScheduledTicks.tagCount(); i++ )
 			{
-				for( int var25 = 0; var25 < var23.tagCount(); ++var25 )
-				{
-					NBTTagCompound var27 = var23.getCompoundTagAt( var25 );
-					par1World.func_147446_b( var27.getInteger( "x" ), var27.getInteger( "y" ), var27.getInteger( "z" ), Block.getBlockById( var27.getInteger( "i" ) ), var27.getInteger( "t" ),
-							var27.getInteger( "p" ) );
-				}
+				NBTTagCompound nbtScheduledTick = nbtScheduledTicks.getCompoundTagAt( i );
+				world.func_147446_b(
+					nbtScheduledTick.getInteger( "x" ),
+					nbtScheduledTick.getInteger( "y" ),
+					nbtScheduledTick.getInteger( "z" ),
+					Block.getBlockById( nbtScheduledTick.getInteger( "i" ) ),
+					nbtScheduledTick.getInteger( "t" ),
+					nbtScheduledTick.getInteger( "p" )
+				);
 			}
 		}
 		
-		return var5;
+		return column;
 	}
 }

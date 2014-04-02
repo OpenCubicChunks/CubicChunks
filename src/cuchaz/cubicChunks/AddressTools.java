@@ -10,37 +10,40 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
-import net.minecraft.world.chunk.Chunk;
 
 public class AddressTools
 {
-	// here's the encoding scheme
-	// we're aiming for a 48-bit integer
+	// Anvil format details:
+	// within a region file, each chunk coord gets 5 bits
+	// the coord for each region is capped at 27 bits
 	
-	// dimension: 4 bits, 16 dimensions
-	// y: 12 bits,  4096 chunks,   65536 blocks
-	// x: 16 bits, 65536 chunks, 1048576 blocks
-	// z: 16 bits, 65536 chunks, 1048576 blocks
+	// here's the encoding scheme for 64 bits of space:
+	// dimension:  8 bits, signed,   256 dimensions
+	// y:         12 bits, signed,     4,096 chunks,     65,536 blocks
+	// x:         22 bits, signed, 4,194,304 chunks, 67,108,864 blocks
+	// z:         22 bits, signed, 4,194,304 chunks, 67,108,864 blocks
 	
-	// moving at 8 blocks/s (which is like minecart speed), it would take ~36.4 hours to cross this distance
+	// the Anvil format gives 32 bits to each chunk coordinate, but we're only giving 22 bits
+	// moving at 8 blocks/s (which is like minecart speed), it would take ~48 days to reach the x or z edge from the center
+	// at the same speed, it would take ~1.3 hours to reach the bottom from the center
 	// that seems like enough room for a minecraft world
 	
 	// 0         1         2         3|        4      |  5         6  |
 	// 0123456789012345678901234567890123456789012345678901234567890123
-	// ddddyyyyyyyyyyyyxxxxxxxxxxxxxxxxzzzzzzzzzzzzzzzz
+	// ddddddddyyyyyyyyyyyyxxxxxxxxxxxxxxxxxxxxxxzzzzzzzzzzzzzzzzzzzzzz
 	
-	private static final int DimensionSize = 4;
+	private static final int DimensionSize = 8;
 	private static final int YSize = 12;
-	private static final int XSize = 16;
-	private static final int ZSize = 16;
+	private static final int XSize = 22;
+	private static final int ZSize = 22;
 	
 	private static final int ZOffset = 0;
 	private static final int XOffset = ZOffset + ZSize;
 	private static final int YOffset = XOffset + XSize;
 	private static final int DimensionOffset = YOffset + YSize;
 	
-	public static final int MinDimension = 0;
-	public static final int MaxDimension = Bits.getMaxUnsigned( DimensionSize );
+	public static final int MinDimension = Bits.getMinSigned( DimensionSize );
+	public static final int MaxDimension = Bits.getMaxSigned( DimensionSize );
 	public static final int MinY = Bits.getMinSigned( YSize );
 	public static final int MaxY = Bits.getMaxSigned( YSize );
 	public static final int MinX = Bits.getMinSigned( XSize );
@@ -48,27 +51,17 @@ public class AddressTools
 	public static final int MinZ = Bits.getMinSigned( ZSize );
 	public static final int MaxZ = Bits.getMaxSigned( ZSize );
 	
-	public static long toAddress( Chunk chunk )
+	public static long getAddress( int dimension, int x, int y, int z )
 	{
-		return toAddress(
-			chunk.worldObj.provider.dimensionId,
-			chunk.xPosition,
-			0,
-			chunk.zPosition
-		);
-	}
-	
-	public static long toAddress( int dimension, int x, int y, int z )
-	{
-		return Bits.packUnsigned( dimension, DimensionSize, DimensionOffset )
-			| Bits.packUnsigned( y, YSize, YOffset )
-			| Bits.packUnsigned( x, XSize, XOffset )
-			| Bits.packUnsigned( z, ZSize, ZOffset );
+		return Bits.packSigned( dimension, DimensionSize, DimensionOffset )
+			| Bits.packSigned( y, YSize, YOffset )
+			| Bits.packSigned( x, XSize, XOffset )
+			| Bits.packSigned( z, ZSize, ZOffset );
 	}
 	
 	public static int getDimension( long address )
 	{
-		return Bits.unpackUnsigned( address, DimensionSize, DimensionOffset );
+		return Bits.unpackSigned( address, DimensionSize, DimensionOffset );
 	}
 	
 	public static int getY( long address )
