@@ -70,7 +70,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		String worldName = saveHandler.getWorldDirectoryName();
 		
 		// init database connection
-		File file = new File( String.format( "%s.db", worldName ) );
+		File file = new File( String.format( "%s/chunks.db", worldName ) );
         m_db = DBMaker.newFileDB( file )
             .closeOnJvmShutdown()
             .compressionEnable()
@@ -198,7 +198,10 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		nbt.setInteger( "xPos", chunk.xPosition );
 		nbt.setInteger( "zPos", chunk.zPosition );
 		nbt.setLong( "LastUpdate", world.getTotalWorldTime() );
+		
+		// 16x16 array of highest y-value in chunk
 		nbt.setIntArray( "HeightMap", chunk.heightMap );
+		
 		nbt.setBoolean( "TerrainPopulated", chunk.isTerrainPopulated );
 		nbt.setBoolean( "LightPopulated", chunk.isLightPopulated );
 		nbt.setLong( "InhabitedTime", chunk.inhabitedTime );
