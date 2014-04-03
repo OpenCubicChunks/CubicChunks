@@ -16,7 +16,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
 
 import net.minecraft.block.Block;
@@ -61,8 +62,8 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	private DB m_db;
 	private ConcurrentNavigableMap<Long,byte[]> m_columns;
 	private ConcurrentNavigableMap<Long,byte[]> m_cubicChunks;
-	private ConcurrentLinkedQueue<SaveEntry> m_columnsToSave;
-	private ConcurrentLinkedQueue<SaveEntry> m_cubicChunksToSave;
+	private ConcurrentBatchedQueue<SaveEntry> m_columnsToSave;
+	private ConcurrentBatchedQueue<SaveEntry> m_cubicChunksToSave;
 	
 	public CubicChunkLoader( ISaveHandler saveHandler )
 	{
@@ -70,23 +71,46 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		String worldName = saveHandler.getWorldDirectoryName();
 		
 		// init database connection
+		// NEXTTIME: this is fine for the server
+		// on the client, this needs to be in the saves folder
 		File file = new File( String.format( "%s/chunks.db", worldName ) );
+		file.getParentFile().mkdirs();
         m_db = DBMaker.newFileDB( file )
             .closeOnJvmShutdown()
             //.compressionEnable()
             .make();
+        /*
+        Caused by: java.io.FileNotFoundException: Cubic Chunks/chunks.db (Is a directory)
+    	at java.io.RandomAccessFile.open(Native Method) ~[?:1.6.0_30]
+    	at java.io.RandomAccessFile.<init>(RandomAccessFile.java:236) ~[?:1.6.0_30]
+    	at org.mapdb.Volume$FileChannelVol.<init>(Volume.java:637) ~[Volume$FileChannelVol.class:?]
+    	at org.mapdb.Volume.volumeForFile(Volume.java:181) ~[Volume.class:?]
+    	at org.mapdb.Volume$1.createIndexVolume(Volume.java:202) ~[Volume$1.class:?]
+    	at org.mapdb.StoreDirect.<init>(StoreDirect.java:202) ~[StoreDirect.class:?]
+    	at org.mapdb.StoreWAL.<init>(StoreWAL.java:57) ~[StoreWAL.class:?]
+    	at org.mapdb.DBMaker.extendStoreWAL(DBMaker.java:907) ~[DBMaker.class:?]
+    	at org.mapdb.DBMaker.makeEngine(DBMaker.java:703) ~[DBMaker.class:?]
+    	at org.mapdb.DBMaker.make(DBMaker.java:654) ~[DBMaker.class:?]
+    	at cuchaz.cubicChunks.CubicChunkLoader.<init>(CubicChunkLoader.java:79) ~[CubicChunkLoader.class:?]
+    	at cuchaz.cubicChunks.CubicChunkProviderServer.<init>(CubicChunkProviderServer.java:22) ~[CubicChunkProviderServer.class:?]
+    	at cuchaz.cubicChunks.CubicChunksMod.handleEvent(CubicChunksMod.java:38) ~[CubicChunksMod.class:?]
+    	*/
+    	
         m_columns = m_db.getTreeMap( "columns" );
         m_cubicChunks = m_db.getTreeMap( "chunks" );
         
         // init chunk save queue
-        m_columnsToSave = new ConcurrentLinkedQueue<SaveEntry>();
-        m_cubicChunksToSave = new ConcurrentLinkedQueue<SaveEntry>();
+        m_columnsToSave = new ConcurrentBatchedQueue<SaveEntry>();
+        m_cubicChunksToSave = new ConcurrentBatchedQueue<SaveEntry>();
 	}
 	
 	@Override
 	public Column loadChunk( World world, int x, int z )
 	throws IOException
 	{
+		// TEMP
+		long start = System.currentTimeMillis();
+		
 		// does the database have the column?
 		Column column = loadColumn( world, AddressTools.getAddress( world.provider.dimensionId, x, 0, z ) );
 		if( column == null )
@@ -112,6 +136,13 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			segments[y] = cubicChunk.getStorage();
 		}
 		column.setStorageArrays( segments );
+		
+		// TEMP
+		long diff = System.currentTimeMillis() - start;
+		if( diff > 20 )
+		{
+			log.warn( String.format( "Loaded column %d,%d in %d ms", x, z, diff ) );
+		}
 		
 		return column;
 	}
@@ -166,17 +197,20 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	{
 		// NOTE: this function blocks the world thread
 		// make it as fast as possible by offloading processing to the IO thread
-		// except we have to write the NBT in this thread to avoid problems with world ticks
+		// except we have to write the NBT in this thread to avoid problems
+		// with concurrent access to world data structures
 		
 		// add the column to the save queue
 		Column column = castColumn( mcChunk );
-		m_columnsToSave.offer( new SaveEntry( column.getAddress(), writeColumnToNbt( column ) ) );
+		m_columnsToSave.add( new SaveEntry( column.getAddress(), writeColumnToNbt( column ) ) );
 		
 		// add the cubic chunks to the save queue
+		List<SaveEntry> entries = new ArrayList<SaveEntry>();
 		for( CubicChunk cubicChunk : column.cubicChunks() )
 		{
-			m_cubicChunksToSave.offer( new SaveEntry( cubicChunk.getAddress(), writeCubicChunkToNbt( cubicChunk ) ) );
+			entries.add( new SaveEntry( cubicChunk.getAddress(), writeCubicChunkToNbt( cubicChunk ) ) );
 		}
+		m_cubicChunksToSave.addAll( entries );
 		
 		// signal the IO thread to process the save queue
 		ThreadedFileIOBase.threadedIOInstance.queueIO( this );
@@ -185,11 +219,10 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	@Override
 	public boolean writeNextIO( )
 	{
-		// NOTE: return true to redo-this call
+		// NOTE: return true to redo this call (used for batching)
 		
-		final int MaxColumnsToSave = 20;
-		final int MaxCubicChunksToSave = MaxColumnsToSave*6;
-		boolean doOver = false;
+		final int ColumnsBatchSize = 26;
+		final int CubicChunksBatchSize = ColumnsBatchSize*6;
 		
 		int numColumnsSaved = 0;
 		int numColumnBytesSaved = 0;
@@ -197,10 +230,11 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		int numCubicChunkBytesSaved = 0;
 		long start = System.currentTimeMillis();
 		
-		SaveEntry entry = null;
+		List<SaveEntry> entries = new ArrayList<SaveEntry>( Math.max( ColumnsBatchSize, CubicChunksBatchSize ) );
 		
-		// save columns
-		while( ( entry = m_columnsToSave.poll() ) != null )
+		// save a batch of columns
+		boolean hasMoreColumns = m_columnsToSave.getBatch( entries, ColumnsBatchSize );
+		for( SaveEntry entry : entries )
 		{
 			try
 			{
@@ -218,17 +252,12 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 					AddressTools.getZ( entry.address )
 				), ex );
 			}
-			
-			// did we reach our column cap?
-			if( numColumnsSaved >= MaxColumnsToSave )
-			{
-				doOver = true;
-				break;
-			}
 		}
+		entries.clear();
 		
-		// save cubic chunks
-		while( ( entry = m_cubicChunksToSave.poll() ) != null )
+		// save a batch of cubic chunks
+		boolean hasMoreCubicChunks = m_cubicChunksToSave.getBatch( entries, CubicChunksBatchSize );
+		for( SaveEntry entry : entries )
 		{
 			try
 			{
@@ -247,14 +276,8 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 					AddressTools.getZ( entry.address )
 				), ex );
 			}
-			
-			// did we reach our cubic chunk cap?
-			if( numCubicChunksSaved >= MaxCubicChunksToSave )
-			{
-				doOver = true;
-				break;
-			}
 		}
+		entries.clear();
 		
 		// flush changes to disk
 		m_db.commit();
@@ -266,17 +289,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			diff
 		) );
 		
-		// NOTE: sometimes, writes take a long
-		// this is also correlated with long server ticks
-		// which is causal?
-		// read locks from chunk loading cause the writes to block?
-		// but that wouldn't delay the ticks since writes happen in the io thread
-		// or write locks cause chunk reads to block?
-		// this makes more sense since chunk reading is in the server thread
-		// the solution might be to reduce the write batch sizes
-		// also, reducing the number of bytes read/written will help speed things up a lot! 
-		
-		return doOver;
+		return hasMoreColumns || hasMoreCubicChunks;
 	}
 	
 	private byte[] writeNbtBytes( NBTTagCompound nbt )
