@@ -16,7 +16,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentNavigableMap;
 
@@ -24,7 +23,6 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
@@ -62,9 +60,9 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	
 	private DB m_db;
 	private ConcurrentNavigableMap<Long,byte[]> m_columns;
-	private ConcurrentNavigableMap<Long,byte[]> m_chunks;
+	private ConcurrentNavigableMap<Long,byte[]> m_cubicChunks;
 	private ConcurrentLinkedQueue<SaveEntry> m_columnsToSave;
-	private ConcurrentLinkedQueue<SaveEntry> m_chunksToSave;
+	private ConcurrentLinkedQueue<SaveEntry> m_cubicChunksToSave;
 	
 	public CubicChunkLoader( ISaveHandler saveHandler )
 	{
@@ -78,33 +76,88 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
             //.compressionEnable()
             .make();
         m_columns = m_db.getTreeMap( "columns" );
-        m_chunks = m_db.getTreeMap( "chunks" );
+        m_cubicChunks = m_db.getTreeMap( "chunks" );
         
         // init chunk save queue
         m_columnsToSave = new ConcurrentLinkedQueue<SaveEntry>();
-        m_chunksToSave = new ConcurrentLinkedQueue<SaveEntry>();
+        m_cubicChunksToSave = new ConcurrentLinkedQueue<SaveEntry>();
 	}
 	
 	@Override
-	public Chunk loadChunk( World world, int x, int z )
+	public Column loadChunk( World world, int x, int z )
 	throws IOException
 	{
-		// does the database have the chunk?
-		long address = AddressTools.getAddress( world.provider.dimensionId, x, 0, z );
-		byte[] data = m_columns.get( address );
-		if( data == null )
+		// does the database have the column?
+		Column column = loadColumn( world, AddressTools.getAddress( world.provider.dimensionId, x, 0, z ) );
+		if( column == null )
 		{
-			// returning null tells the world to generate a new chunk
+			// returning null tells the world to generate a new column
 			return null;
 		}
 		
-		// render back to NBT
+		// restore the cubic chunks
+		// TEMP: restore chunks 0-15
+		ExtendedBlockStorage[] segments = new ExtendedBlockStorage[16];
+		for( int y=0; y<15; y++ )
+		{
+			CubicChunk cubicChunk = loadCubicChunk( world, AddressTools.getAddress( world.provider.dimensionId, x, y, z ) );
+			if( cubicChunk == null )
+			{
+				continue;
+			}
+			
+			column.addCubicChunk( cubicChunk );
+			
+			// save the storage reference in the Minecraft chunk
+			segments[y] = cubicChunk.getStorage();
+		}
+		column.setStorageArrays( segments );
+		
+		return column;
+	}
+	
+	private Column loadColumn( World world, long address )
+	throws IOException
+	{
+		// does the database have the column?
+		byte[] data = m_columns.get( address );
+		if( data == null )
+		{
+			// returning null tells the world to generate a new column
+			return null;
+		}
+		
+		// read the NBT
 		DataInputStream in = new DataInputStream( new ByteArrayInputStream( data ) );
 		NBTTagCompound nbt = CompressedStreamTools.readCompressed( in );
 		in.close();
 		
-		// restore the chunk
-		return readColumnFromNBT( world, nbt );
+		// restore the column
+		int x = AddressTools.getX( address );
+		int z = AddressTools.getZ( address );
+		return readColumnFromNBT( world, x, z, nbt );
+	}
+	
+	private CubicChunk loadCubicChunk( World world, long address )
+	throws IOException
+	{
+		// does the database have the cubic chunk?
+		byte[] data = m_cubicChunks.get( address );
+		if( data == null )
+		{
+			return null;
+		}
+		
+		// read the NBT
+		DataInputStream in = new DataInputStream( new ByteArrayInputStream( data ) );
+		NBTTagCompound nbt = CompressedStreamTools.readCompressed( in );
+		in.close();
+		
+		// restore the cubic chunk
+		int x = AddressTools.getX( address );
+		int y = AddressTools.getY( address );
+		int z = AddressTools.getZ( address );
+		return readCubicChunkFromNbt( world, x, y, z, nbt );
 	}
 	
 	@Override
@@ -119,8 +172,13 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		Column column = castColumn( mcChunk );
 		m_columnsToSave.offer( new SaveEntry( column.getAddress(), writeColumnToNbt( column ) ) );
 		
-		// NOTE: in a MC chunk, we can probably set the ExtendedBlockStorage instances to point to the instances in the cubic chunks
+		// add the cubic chunks to the save queue
+		for( CubicChunk cubicChunk : column.cubicChunks() )
+		{
+			m_cubicChunksToSave.offer( new SaveEntry( cubicChunk.getAddress(), writeCubicChunkToNbt( cubicChunk ) ) );
+		}
 		
+		// signal the IO thread to process the save queue
 		ThreadedFileIOBase.threadedIOInstance.queueIO( this );
 	}
 	
@@ -129,29 +187,72 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	{
 		// NOTE: return true to redo-this call
 		
-		int numChunksSaved = 0;
-		int numBytesSaved = 0;
+		final int MaxColumnsToSave = 20;
+		final int MaxCubicChunksToSave = MaxColumnsToSave*6;
+		boolean doOver = false;
+		
+		int numColumnsSaved = 0;
+		int numColumnBytesSaved = 0;
+		int numCubicChunksSaved = 0;
+		int numCubicChunkBytesSaved = 0;
 		long start = System.currentTimeMillis();
 		
-		// save columns
 		SaveEntry entry = null;
+		
+		// save columns
 		while( ( entry = m_columnsToSave.poll() ) != null )
 		{
 			try
 			{
-				// save the chunk
+				// save the column
 				byte[] data = writeNbtBytes( entry.nbt );
 				m_columns.put( entry.address, data );
 				
-				numChunksSaved++;
-				numBytesSaved += data.length;
+				numColumnsSaved++;
+				numColumnBytesSaved += data.length;
 			}
 			catch( IOException ex )
 			{
-				log.error( String.format( "Unable to write chunk %d,%d",
+				log.error( String.format( "Unable to write column %d,%d",
 					AddressTools.getX( entry.address ),
 					AddressTools.getZ( entry.address )
 				), ex );
+			}
+			
+			// did we reach our column cap?
+			if( numColumnsSaved >= MaxColumnsToSave )
+			{
+				doOver = true;
+				break;
+			}
+		}
+		
+		// save cubic chunks
+		while( ( entry = m_cubicChunksToSave.poll() ) != null )
+		{
+			try
+			{
+				// save the cubic chunk
+				byte[] data = writeNbtBytes( entry.nbt );
+				m_cubicChunks.put( entry.address, data );
+				
+				numCubicChunksSaved++;
+				numCubicChunkBytesSaved += data.length;
+			}
+			catch( IOException ex )
+			{
+				log.error( String.format( "Unable to write cubic chunk %d,%d,%d",
+					AddressTools.getX( entry.address ),
+					AddressTools.getY( entry.address ),
+					AddressTools.getZ( entry.address )
+				), ex );
+			}
+			
+			// did we reach our cubic chunk cap?
+			if( numCubicChunksSaved >= MaxCubicChunksToSave )
+			{
+				doOver = true;
+				break;
 			}
 		}
 		
@@ -159,9 +260,23 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		m_db.commit();
 		
 		long diff = System.currentTimeMillis() - start;
-		log.info( String.format( "Wrote %d chunks with %dk in %d ms", numChunksSaved, numBytesSaved/1024, diff ) );
+		log.info( String.format( "Wrote %d columns (%dk) and %d cubic chunks (%dk) in %d ms",
+			numColumnsSaved, numColumnBytesSaved/1024,
+			numCubicChunksSaved, numCubicChunkBytesSaved/1024,
+			diff
+		) );
 		
-		return false;
+		// NOTE: sometimes, writes take a long
+		// this is also correlated with long server ticks
+		// which is causal?
+		// read locks from chunk loading cause the writes to block?
+		// but that wouldn't delay the ticks since writes happen in the io thread
+		// or write locks cause chunk reads to block?
+		// this makes more sense since chunk reading is in the server thread
+		// the solution might be to reduce the write batch sizes
+		// also, reducing the number of bytes read/written will help speed things up a lot! 
+		
+		return doOver;
 	}
 	
 	private byte[] writeNbtBytes( NBTTagCompound nbt )
@@ -207,9 +322,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		
 		// chunk properties
 		// COLUMN
-		nbt.setByte( "V", (byte)1 );
-		nbt.setInteger( "xPos", column.xPosition );
-		nbt.setInteger( "zPos", column.zPosition );
+		nbt.setByte( "v", (byte)1 );
 		nbt.setBoolean( "TerrainPopulated", column.isTerrainPopulated );
 		nbt.setBoolean( "LightPopulated", column.isLightPopulated );
 		nbt.setLong( "InhabitedTime", column.inhabitedTime );
@@ -219,40 +332,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		nbt.setIntArray( "HeightMap", column.heightMap );
 		
 		// UNDONE: might need to store more detailed data structure for lighting/rain calculations
-		
-		// block sections
-		// CUBIC CHUNK
-		NBTTagList nbtSections = new NBTTagList();
-		nbt.setTag( "Sections", nbtSections );
-		for( int i=0; i<column.getBlockStorageArray().length; i++ )
-		{
-			ExtendedBlockStorage section = column.getBlockStorageArray()[i];
-			if( section != null )
-			{
-				NBTTagCompound nbtSection = new NBTTagCompound();
-				nbtSections.appendTag( nbtSection );
-				
-				nbtSection.setByte( "Y", (byte)( section.getYLocation() >> 4 & 255 ) );
-				nbtSection.setByteArray( "Blocks", section.getBlockLSBArray() );
-				
-				if( section.getBlockMSBArray() != null )
-				{
-					nbtSection.setByteArray( "Add", section.getBlockMSBArray().data );
-				}
-				
-				nbtSection.setByteArray( "Data", section.getMetadataArray().data );
-				nbtSection.setByteArray( "BlockLight", section.getBlocklightArray().data );
-				
-				if( !column.worldObj.provider.hasNoSky )
-				{
-					nbtSection.setByteArray( "SkyLight", section.getSkylightArray().data );
-				}
-				else
-				{
-					nbtSection.setByteArray( "SkyLight", new byte[section.getBlocklightArray().data.length] );
-				}
-			}
-		}
 		
 		// biome mappings
 		// COLUMN
@@ -266,7 +345,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		for( int i=0; i<column.entityLists.length; i++ )
 		{
 			@SuppressWarnings( "unchecked" )
-			List<Entity> entities = (List<Entity>)column.entityLists[i];
+			Iterable<Entity> entities = (Iterable<Entity>)column.entityLists[i];
 			for( Entity entity : entities )
 			{
 				NBTTagCompound nbtEntity = new NBTTagCompound();
@@ -283,7 +362,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		NBTTagList nbtTileEntities = new NBTTagList();
 		nbt.setTag( "TileEntities", nbtTileEntities );
 		@SuppressWarnings( "unchecked" )
-		List<TileEntity> tileEntities = (List<TileEntity>)column.chunkTileEntityMap.values();
+		Iterable<TileEntity> tileEntities = (Iterable<TileEntity>)column.chunkTileEntityMap.values();
 		for( TileEntity tileEntity : tileEntities )
 		{
 			NBTTagCompound nbtTileEntity = new NBTTagCompound();
@@ -294,7 +373,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		// schedule block ticks
 		// CUBIC CHUNK
 		@SuppressWarnings( "unchecked" )
-		List<NextTickListEntry> scheduledTicks = (List<NextTickListEntry>)column.worldObj.getPendingBlockUpdates( column, false );
+		Iterable<NextTickListEntry> scheduledTicks = (Iterable<NextTickListEntry>)column.worldObj.getPendingBlockUpdates( column, false );
 		if( scheduledTicks != null )
 		{
 			long time = column.worldObj.getTotalWorldTime();
@@ -317,23 +396,21 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		return nbt;
 	}
 	
-	private Column readColumnFromNBT( World world, NBTTagCompound nbt )
+	private Column readColumnFromNBT( World world, int x, int z, NBTTagCompound nbt )
 	{
 		// NBT types:
 		// 0      1       2        3      4       5        6         7         8         9       10          11
 		// "END", "BYTE", "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "BYTE[]", "STRING", "LIST", "COMPOUND", "INT[]"
 		
-		// create the column
-		int x = nbt.getInteger( "xPos" );
-		int z = nbt.getInteger( "zPos" );
-		Column column = new Column( world, x, z );
-		
 		// check the version number
-		byte version = nbt.getByte( "V" );
+		byte version = nbt.getByte( "v" );
 		if( version != 1 )
 		{
 			throw new IllegalArgumentException( "Column has wrong version! " + version );
 		}
+		
+		// create the column
+		Column column = new Column( world, x, z );
 		
 		// read the rest of the column properties
 		column.isTerrainPopulated = nbt.getBoolean( "TerrainPopulated" );
@@ -342,33 +419,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		
 		// height map		
 		column.heightMap = nbt.getIntArray( "HeightMap" );
-
-		// block sections
-		NBTTagList nbtSections = nbt.getTagList( "Sections", 10 );
-		ExtendedBlockStorage[] segments = new ExtendedBlockStorage[16];
-		column.setStorageArrays( segments );
-		boolean hasSky = !world.provider.hasNoSky;
-		for( int i=0; i<nbtSections.tagCount(); i++ )
-		{
-			NBTTagCompound nbtSection = nbtSections.getCompoundTagAt( i );
-			
-			byte y = nbtSection.getByte( "Y" );
-			ExtendedBlockStorage section = new ExtendedBlockStorage( y << 4, hasSky );
-			segments[y] = section;
-			
-			section.setBlockLSBArray( nbtSection.getByteArray( "Blocks" ) );
-			if( nbtSection.func_150297_b( "Add", 7 ) )
-			{
-				section.setBlockMSBArray( new NibbleArray( nbtSection.getByteArray( "Add" ), 4 ) );
-			}
-			section.setBlockMetadataArray( new NibbleArray( nbtSection.getByteArray( "Data" ), 4 ) );
-			section.setBlocklightArray( new NibbleArray( nbtSection.getByteArray( "BlockLight" ), 4 ) );
-			if( hasSky )
-			{
-				section.setSkylightArray( new NibbleArray( nbtSection.getByteArray( "SkyLight" ), 4 ) );
-			}
-			section.removeInvalidBlocks();
-		}
 		
 		// biomes
 		column.setBiomeArray( nbt.getByteArray( "Biomes" ) );
@@ -436,5 +486,67 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		}
 		
 		return column;
+	}
+	
+	private NBTTagCompound writeCubicChunkToNbt( CubicChunk cubicChunk )
+	{
+		NBTTagCompound nbt = new NBTTagCompound();
+		nbt.setByte( "v", (byte)1 );
+		
+		// blocks
+		ExtendedBlockStorage storage = cubicChunk.getStorage();
+		nbt.setByteArray( "Blocks", storage.getBlockLSBArray() );
+		if( storage.getBlockMSBArray() != null )
+		{
+			nbt.setByteArray( "Add", storage.getBlockMSBArray().data );
+		}
+		
+		// metadata
+		nbt.setByteArray( "Data", storage.getMetadataArray().data );
+		
+		// light
+		nbt.setByteArray( "BlockLight", storage.getBlocklightArray().data );
+		if( storage.getSkylightArray() != null )
+		{
+			nbt.setByteArray( "SkyLight", storage.getSkylightArray().data );
+		}
+		
+		return nbt;
+	}
+	
+	private CubicChunk readCubicChunkFromNbt( World world, int x, int y, int z, NBTTagCompound nbt )
+	{
+		// check the version number
+		byte version = nbt.getByte( "v" );
+		if( version != 1 )
+		{
+			throw new IllegalArgumentException( "Cubic chunk has wrong version! " + version );
+		}
+		
+		// build the cubic chunk
+		boolean hasSky = !world.provider.hasNoSky;
+		CubicChunk cubicChunk = new CubicChunk( world, x, y, z, hasSky );
+		
+		ExtendedBlockStorage storage = cubicChunk.getStorage();
+		
+		// blocks
+		storage.setBlockLSBArray( nbt.getByteArray( "Blocks" ) );
+		if( nbt.func_150297_b( "Add", 7 ) )
+		{
+			storage.setBlockMSBArray( new NibbleArray( nbt.getByteArray( "Add" ), 4 ) );
+		}
+		
+		// metadata
+		storage.setBlockMetadataArray( new NibbleArray( nbt.getByteArray( "Data" ), 4 ) );
+		
+		// lights
+		storage.setBlocklightArray( new NibbleArray( nbt.getByteArray( "BlockLight" ), 4 ) );
+		if( hasSky )
+		{
+			storage.setSkylightArray( new NibbleArray( nbt.getByteArray( "SkyLight" ), 4 ) );
+		}
+		storage.removeInvalidBlocks();
+		
+		return cubicChunk;
 	}
 }
