@@ -101,7 +101,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		
 		// restore the cubic chunks
 		// TEMP: restore chunks 0-15
-		for( int y=0; y<15; y++ )
+		for( int y=0; y<16; y++ )
 		{
 			CubicChunk cubicChunk = loadCubicChunk( world, column, AddressTools.getAddress( world.provider.dimensionId, x, y, z ) );
 			if( cubicChunk == null )

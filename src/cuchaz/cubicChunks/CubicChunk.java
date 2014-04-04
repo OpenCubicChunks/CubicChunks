@@ -231,12 +231,14 @@ public class CubicChunk
 	{
 		// make sure the entity is in this cubic chunk
 		int chunkX = Coords.blockToChunk( MathHelper.floor_double( entity.posX ) );
-		int chunkY = MathHelper.floor_double( entity.posY );
-		int chunkZ = MathHelper.floor_double( entity.posZ );
+		int chunkY = Coords.blockToChunk( MathHelper.floor_double( entity.posY ) );
+		int chunkZ = Coords.blockToChunk( MathHelper.floor_double( entity.posZ ) );
 		if( chunkX != m_x || chunkY != m_y || chunkZ != m_z )
 		{
-			log.warn( String.format( "Entity %s added to cubic chunk (%d,%d,%d), but was not in cubic chunk!",
-				entity.toString(), m_x, m_y, m_z
+			log.warn( String.format( "Entity %s in cubic chunk (%d,%d,%d) added to cubic chunk (%d,%d,%d)!",
+				entity.getClass().getName(),
+				chunkX, chunkY, chunkZ,
+				m_x, m_y, m_z
 			) );
 		}
 		

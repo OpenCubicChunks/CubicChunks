@@ -288,15 +288,17 @@ public class Column extends Chunk
 		return true;
 	}
 	
-	// public boolean func_150807_a(int p_150807_1_, int p_150807_2_, int p_150807_3_, Block p_150807_4_, int p_150807_5_)
-	// this function is the only one that resets segment references
-	// it's setBlock( ... )
-	// of course, we'll have to override that one
-	// but it will only cause problems when we place a block outside of a generated segment
-	
-	// getBlock( ... )
-	// public Block func_150810_a(final int p_150810_1_, final int p_150810_2_, final int p_150810_3_)
-	// we'll eventually need to override this one too
+	@Override
+	public void addEntity( Entity entity )
+    {
+		// pass off to the cubic chunk
+		int chunkY = Coords.blockToChunk( MathHelper.floor_double( entity.posY ) );
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+		if( cubicChunk != null )
+		{
+			cubicChunk.addEntity( entity );
+		}
+    }
 	
 	@Override
 	public void removeEntity( Entity entity )
