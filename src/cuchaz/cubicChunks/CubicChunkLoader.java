@@ -71,11 +71,8 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	
 	public CubicChunkLoader( ISaveHandler saveHandler )
 	{
-		// identify the world
-		String worldName = saveHandler.getWorldDirectoryName();
-		
 		// init database connection
-		File file = new File( String.format( "%s/chunks.db", worldName ) );
+		File file = new File( saveHandler.getWorldDirectory(), "chunks.db" );
 		file.getParentFile().mkdirs();
         m_db = DBMaker.newFileDB( file )
             .closeOnJvmShutdown()
@@ -104,7 +101,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		
 		// restore the cubic chunks
 		// TEMP: restore chunks 0-15
-		ExtendedBlockStorage[] segments = new ExtendedBlockStorage[16];
 		for( int y=0; y<15; y++ )
 		{
 			CubicChunk cubicChunk = loadCubicChunk( world, column, AddressTools.getAddress( world.provider.dimensionId, x, y, z ) );
@@ -112,11 +108,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			{
 				continue;
 			}
-			
-			// save the storage reference in the Minecraft chunk
-			segments[y] = cubicChunk.getStorage();
 		}
-		column.setStorageArrays( segments );
 		
 		return column;
 	}
@@ -183,6 +175,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		for( CubicChunk cubicChunk : column.cubicChunks() )
 		{
 			entries.add( new SaveEntry( cubicChunk.getAddress(), writeCubicChunkToNbt( cubicChunk ) ) );
+			cubicChunk.markSaved();
 		}
 		m_cubicChunksToSave.addAll( entries );
 		
@@ -324,26 +317,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		// biome mappings
 		nbt.setByteArray( "Biomes", column.getBiomeArray() );
 		
-		// entities
-		// CUBIC CHUNK
-		column.hasEntities = false;
-		NBTTagList nbtEntities = new NBTTagList();
-		nbt.setTag( "Entities", nbtEntities );
-		for( int i=0; i<column.entityLists.length; i++ )
-		{
-			@SuppressWarnings( "unchecked" )
-			Iterable<Entity> entities = (Iterable<Entity>)column.entityLists[i];
-			for( Entity entity : entities )
-			{
-				NBTTagCompound nbtEntity = new NBTTagCompound();
-				if( entity.writeToNBTOptional( nbtEntity ) )
-				{
-					column.hasEntities = true;
-					nbtEntities.appendTag( nbtEntity );
-				}
-			}
-		}
-		
 		return nbt;
 	}
 	
@@ -382,35 +355,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		// biomes
 		column.setBiomeArray( nbt.getByteArray( "Biomes" ) );
 		
-		// entities
-		NBTTagList nbtEntities = nbt.getTagList( "Entities", 10 );
-		if( nbtEntities != null )
-		{
-			for( int i=0; i<nbtEntities.tagCount(); i++ )
-			{
-				NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt( i );
-				Entity entity = EntityList.createEntityFromNBT( nbtEntity, world );
-				column.hasEntities = true;
-				if( entity != null )
-				{
-					column.addEntity( entity );
-					
-					// deal with riding
-					Entity topEntity = entity;
-					for( NBTTagCompound nbtRiddenEntity = nbtEntity; nbtRiddenEntity.func_150297_b( "Riding", 10 ); nbtRiddenEntity = nbtRiddenEntity.getCompoundTag( "Riding" ) )
-					{
-						Entity riddenEntity = EntityList.createEntityFromNBT( nbtRiddenEntity.getCompoundTag( "Riding" ), world );
-						if( riddenEntity != null )
-						{
-							column.addEntity( riddenEntity );
-							topEntity.mountEntity( riddenEntity );
-						}
-						topEntity = riddenEntity;
-					}
-				}
-			}
-		}
-		
 		return column;
 	}
 	
@@ -440,6 +384,20 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		if( storage.getSkylightArray() != null )
 		{
 			nbt.setByteArray( "SkyLight", storage.getSkylightArray().data );
+		}
+		
+		// entities
+		cubicChunk.setActiveEntities( false );
+		NBTTagList nbtEntities = new NBTTagList();
+		nbt.setTag( "Entities", nbtEntities );
+		for( Entity entity : cubicChunk.entities() )
+		{
+			NBTTagCompound nbtEntity = new NBTTagCompound();
+			if( entity.writeToNBTOptional( nbtEntity ) )
+			{
+				cubicChunk.setActiveEntities( true );
+				nbtEntities.appendTag( nbtEntity );
+			}
 		}
 		
 		// tile entities
@@ -524,6 +482,34 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			storage.setSkylightArray( new NibbleArray( nbt.getByteArray( "SkyLight" ), 4 ) );
 		}
 		storage.removeInvalidBlocks();
+		
+		// entities
+		NBTTagList nbtEntities = nbt.getTagList( "Entities", 10 );
+		if( nbtEntities != null )
+		{
+			for( int i=0; i<nbtEntities.tagCount(); i++ )
+			{
+				NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt( i );
+				Entity entity = EntityList.createEntityFromNBT( nbtEntity, world );
+				if( entity != null )
+				{
+					cubicChunk.addEntity( entity );
+					
+					// deal with riding
+					Entity topEntity = entity;
+					for( NBTTagCompound nbtRiddenEntity = nbtEntity; nbtRiddenEntity.func_150297_b( "Riding", 10 ); nbtRiddenEntity = nbtRiddenEntity.getCompoundTag( "Riding" ) )
+					{
+						Entity riddenEntity = EntityList.createEntityFromNBT( nbtRiddenEntity.getCompoundTag( "Riding" ), world );
+						if( riddenEntity != null )
+						{
+							cubicChunk.addEntity( riddenEntity );
+							topEntity.mountEntity( riddenEntity );
+						}
+						topEntity = riddenEntity;
+					}
+				}
+			}
+		}
 		
 		// tile entities
 		NBTTagList nbtTileEntities = nbt.getTagList( "TileEntities", 10 );

@@ -14,9 +14,13 @@ import java.util.List;
 import java.util.TreeMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -48,46 +52,44 @@ public class Column extends Chunk
 		int maxY = blocks.length/256; // 256 blocks per y-layer
 		boolean hasSky = !world.provider.hasNoSky;
 		
-		ExtendedBlockStorage[] segments = new ExtendedBlockStorage[maxY];
-		
 		// for each block...
-		for( int x=0; x<16; x++ )
+		for( int localX=0; localX<16; localX++ )
 		{
-			for( int z=0; z<16; z++ )
+			for( int localZ=0; localZ<16; localZ++ )
 			{
-				for( int y=0; y<maxY; y++ )
+				for( int blockY=0; blockY<maxY; blockY++ )
 				{
-					int blockIndex = x*maxY*16 | z*maxY | y;
+					int blockIndex = localX*maxY*16 | localZ*maxY | blockY;
 					Block block = blocks[blockIndex];
 					if( block != null && block != Blocks.air )
 					{
 						// get the cubic chunk
-						int chunkY = blockToChunk( y );
+						int chunkY = Coords.blockToChunk( blockY );
 						CubicChunk cubicChunk = getCubicChunk( chunkY );
 						if( cubicChunk == null )
 						{
 							cubicChunk = new CubicChunk( world, this, chunkX, chunkY, chunkZ, hasSky );
 							m_cubicChunks.put( chunkY, cubicChunk );
-							
-							// save the reference for the Minecraft chunk
-							segments[chunkY] = cubicChunk.getStorage();
 						}
 						
 						// save the block
-						cubicChunk.getStorage().func_150818_a( x, y & 15, z, block );
-						cubicChunk.getStorage().setExtBlockMetadata( x, y & 15, z, meta[blockIndex] );
+						int localY = Coords.blockToLocal( blockY );
+						
+						// NOTE: don't call CubicChunk.setBlock() during chunk loading!
+						// it will send block events and cause bad things to happen
+						cubicChunk.setBlockSilently( localX, localY, localZ, block, meta[blockIndex] );
 					}
 				}
 			}
 		}
-		
-		// save the segments for the Minecraft chunk
-		setStorageArrays( segments );
     }
 	
 	private void init( )
 	{
 		m_cubicChunks = new TreeMap<Integer,CubicChunk>();
+		
+		// make sure no one's using the Minecraft segments
+		setStorageArrays( null );
 	}
 	
 	public long getAddress( )
@@ -120,9 +122,170 @@ public class Column extends Chunk
 		return m_cubicChunks.get( y );
 	}
 	
+	public Iterable<CubicChunk> getCubicChunks( int minY, int maxY )
+	{
+		return m_cubicChunks.subMap( minY, true, maxY, true ).values();
+	}
+	
 	public void addCubicChunk( CubicChunk cubicChunk )
 	{
 		m_cubicChunks.put( cubicChunk.getY(), cubicChunk );
+	}
+	
+	@Override
+	public boolean needsSaving( boolean alwaysTrue )
+	{
+		for( CubicChunk cubicChunk : m_cubicChunks.values() )
+		{
+			if( cubicChunk.needsSaving() )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override //      getBlock
+	public Block func_150810_a( final int localX, final int blockY, final int localZ )
+	{
+		// pass off to the cubic chunk
+		int chunkY = Coords.blockToChunk( blockY );
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+		if( cubicChunk != null )
+		{
+			int localY = Coords.blockToLocal( blockY );
+			return cubicChunk.getBlock( localX, localY, localZ );
+		}
+		return Blocks.air;
+	}
+	
+	@Override //        setBlock
+	public boolean func_150807_a( int localX, int blockY, int localZ, Block block, int meta )
+	{
+		// is there a chunk for this block?
+		int chunkY = Coords.blockToChunk( blockY );
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+		if( cubicChunk == null )
+		{
+			if( block == Blocks.air )
+			{
+				return false;
+			}
+			
+			// make a new chunk
+			cubicChunk = new CubicChunk( worldObj, this, xPosition, chunkY, zPosition, !worldObj.provider.hasNoSky );
+			m_cubicChunks.put( chunkY, cubicChunk );
+		}
+		
+		// pass off to chunk
+		int localY = Coords.blockToLocal( blockY );
+		boolean changed = cubicChunk.setBlock( localX, localY, localZ, block, meta );
+		if( !changed )
+		{
+			return false;
+		}
+		
+		/* UNDONE: update height data structures
+		int xzCoord = localZ << 4 | localX;
+		int highestY = heightMap[xzCoord];
+		boolean newHighestBlock = blockY >= highestY;
+		*/
+		
+		/* UNDONE: redo lighting
+		if( newHighestBlock )
+		{
+			this.generateSkylightMap();
+		}
+		else
+		{
+			int var14 = block.getLightOpacity();
+			int var15 = oldBlock.getLightOpacity();
+			
+			if( var14 > 0 )
+			{
+				if( blockY >= highestY )
+				{
+					this.relightBlock( localX, blockY + 1, localZ );
+				}
+			}
+			else if( blockY == highestY - 1 )
+			{
+				this.relightBlock( localX, blockY, localZ );
+			}
+			
+			if( var14 != var15
+					&& ( var14 < var15 || this.getSavedLightValue( EnumSkyBlock.Sky, localX, blockY, localZ ) > 0 || this.getSavedLightValue( EnumSkyBlock.Block, localX, blockY, localZ ) > 0 ) )
+			{
+				this.propagateSkylightOcclusion( localX, localZ );
+			}
+		}
+		*/
+		
+		return true;
+	}
+	
+	@Override
+	public int getBlockMetadata( int localX, int blockY, int localZ )
+	{
+		// pass off to the cubic chunk
+		int chunkY = Coords.blockToChunk( blockY );
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+		if( cubicChunk != null )
+		{
+			int localY = Coords.blockToLocal( blockY );
+			return cubicChunk.getBlockMetadata( localX, localY, localZ );
+		}
+		return 0;
+	}
+	
+	@Override
+	public boolean setBlockMetadata( int localX, int blockY, int localZ, int meta )
+	{
+		// pass off to the cubic chunk
+		int chunkY = Coords.blockToChunk( blockY );
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+		if( cubicChunk != null )
+		{
+			int localY = Coords.blockToLocal( blockY );
+			return cubicChunk.setBlockMetadata( localX, localY, localZ, meta );
+		}
+		return false;
+	}
+	
+	@Override
+	public ExtendedBlockStorage[] getBlockStorageArray( )
+	{
+		// TEMP: hack together this array for now...
+		// UNDONE: optimize out the new
+		ExtendedBlockStorage[] segments = new ExtendedBlockStorage[16];
+		for( CubicChunk cubicChunk : m_cubicChunks.values() )
+		{
+			segments[cubicChunk.getY()] = cubicChunk.getStorage();
+		}
+		return segments;
+	}
+	
+	@Override
+	public int getTopFilledSegment()
+    {
+		int chunkY = m_cubicChunks.lastKey();
+		int blockY = chunkY << 4;
+		return blockY;
+    }
+	
+	@Override
+	public boolean getAreLevelsEmpty( int minBlockY, int maxBlockY )
+	{
+		int minChunkY = Coords.blockToChunk( minBlockY );
+		int maxChunkY = Coords.blockToChunk( maxBlockY );
+		for( int chunkY=minChunkY; chunkY<=maxChunkY; chunkY++ )
+		{
+			if( m_cubicChunks.containsKey( chunkY ) )
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	// public boolean func_150807_a(int p_150807_1_, int p_150807_2_, int p_150807_3_, Block p_150807_4_, int p_150807_5_)
@@ -135,20 +298,65 @@ public class Column extends Chunk
 	// public Block func_150810_a(final int p_150810_1_, final int p_150810_2_, final int p_150810_3_)
 	// we'll eventually need to override this one too
 	
+	@Override
+	public void removeEntity( Entity entity )
+	{
+		removeEntityAtIndex( entity, entity.chunkCoordY );
+	}
+	
+	@Override
+	public void removeEntityAtIndex( Entity entity, int chunkY )
+	{
+		// pass off to the cubic chunk
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+		if( cubicChunk != null )
+		{
+			cubicChunk.removeEntity( entity );
+		}
+	}
+	
+	@Override
+	@SuppressWarnings( { "unchecked", "rawtypes" } )
+	public void getEntitiesOfTypeWithinAAAB( Class c, AxisAlignedBB queryBox, List out, IEntitySelector selector )
+	{
+		// get a y-range that 2 blocks wider than the box for safety
+		int minChunkY = Coords.blockToChunk( MathHelper.floor_double( queryBox.minY - 2 ) );
+		int maxChunkY = Coords.blockToChunk( MathHelper.floor_double( queryBox.maxY + 2 ) );
+		for( CubicChunk cubicChunk : getCubicChunks( minChunkY, maxChunkY ) )
+		{
+			cubicChunk.getEntities( (List<Entity>)out, c, queryBox, selector );
+		}
+	}
+	
+	@Override
+	@SuppressWarnings( { "unchecked", "rawtypes" } )
+	public void getEntitiesWithinAABBForEntity( Entity entity, AxisAlignedBB queryBox, List out, IEntitySelector selector )
+	{
+		// get a y-range that 2 blocks wider than the box for safety
+		int minChunkY = Coords.blockToChunk( MathHelper.floor_double( queryBox.minY - 2 ) );
+		int maxChunkY = Coords.blockToChunk( MathHelper.floor_double( queryBox.maxY + 2 ) );
+		for( CubicChunk cubicChunk : getCubicChunks( minChunkY, maxChunkY ) )
+		{
+			cubicChunk.getEntitiesExcept( (List<Entity>)out, entity, queryBox, selector );
+		}
+	}
+	
 	@Override //      getTileEntity
 	public TileEntity func_150806_e( int localX, int blockY, int localZ )
 	{
 		// pass off to the cubic chunk
-		CubicChunk cubicChunk = m_cubicChunks.get( blockToChunk( blockY ) );
+		int chunkY = Coords.blockToChunk( blockY );
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
 		if( cubicChunk != null )
 		{
-			int localY = blockToLocal( blockY );
+			int localY = Coords.blockToLocal( blockY );
 			return cubicChunk.getTileEntity( localX, localY, localZ );
 		}
 		return null;
 	}
 	
 	@Override
+	@SuppressWarnings( "unchecked" )
 	public void addTileEntity( TileEntity tileEntity )
 	{
 		// NOTE: this is called only by the chunk loader
@@ -158,12 +366,13 @@ public class Column extends Chunk
 		int blockZ = tileEntity.field_145849_e;
 		
 		// pass off to the cubic chunk
-		CubicChunk cubicChunk = m_cubicChunks.get( blockToChunk( blockY ) );
+		int chunkY = Coords.blockToChunk( blockY );
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
 		if( cubicChunk != null )
 		{
-			int localX = blockToLocal( blockX );
-			int localY = blockToLocal( blockY );
-			int localZ = blockToLocal( blockZ );
+			int localX = Coords.blockToLocal( blockX );
+			int localY = Coords.blockToLocal( blockY );
+			int localZ = Coords.blockToLocal( blockZ );
 			cubicChunk.addTileEntity( localX, localY, localZ, tileEntity );
 		}
 		
@@ -183,17 +392,12 @@ public class Column extends Chunk
 	{
 		// NOTE: this is called when the world sets this block
 		
-		log.info( String.format( "addTileEntity(%d,%d,%d) to cubic chunk (%d,%d,%d)",
-			localX, blockY, localZ,
-			xPosition, blockToChunk( blockY ), zPosition
-		) );
-		
 		// pass off to the cubic chunk
-		int chunkY = blockToChunk( blockY );
+		int chunkY = Coords.blockToChunk( blockY );
 		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
 		if( cubicChunk != null )
 		{
-			int localY = blockToLocal( blockY );
+			int localY = Coords.blockToLocal( blockY );
 			cubicChunk.addTileEntity( localX, localY, localZ, tileEntity );
 		}
 		else
@@ -213,10 +417,11 @@ public class Column extends Chunk
 		if( isChunkLoaded )
 		{
 			// pass off to the cubic chunk
-			CubicChunk cubicChunk = m_cubicChunks.get( blockToChunk( blockY ) );
+			int chunkY = Coords.blockToChunk( blockY );
+			CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
 			if( cubicChunk != null )
 			{
-				int localY = blockToLocal( blockY );
+				int localY = Coords.blockToLocal( blockY );
 				cubicChunk.removeTileEntity( localX, localY, localZ );
 			}
 		}
@@ -232,17 +437,6 @@ public class Column extends Chunk
 		{
 			cubicChunk.onLoad();
 		}
-		
-		// tell the world about entities
-		// UNDONE: move these to cubic chunks
-		for( List list : entityLists )
-		{
-			for( Entity entity : (List<Entity>)list )
-			{
-				entity.onChunkLoad();
-			}
-			worldObj.addLoadedEntities( list );
-		}
 	}
 	
 	@Override
@@ -254,13 +448,6 @@ public class Column extends Chunk
 		for( CubicChunk cubicChunk : m_cubicChunks.values() )
 		{
 			cubicChunk.onUnload();
-		}
-		
-		// tell the world to forget about entities
-		// UNDONE: move these to cubic chunks
-		for( List list : entityLists )
-		{
-			worldObj.unloadEntities( list );
 		}
 	}
 	
@@ -289,13 +476,41 @@ public class Column extends Chunk
 		}
 	}
 	
-	private int blockToLocal( int val )
+	@Override
+	public void generateHeightMap()
 	{
-		return val & 0xf;
+		// UNDONE: implement this for realsies
+		heightMapMinimum = 30;
+		for( int i=0; i<heightMap.length; i++ )
+		{
+			heightMap[i] = heightMapMinimum;
+		}
 	}
 	
-	private int blockToChunk( int val )
+	@Override
+	public void generateSkylightMap()
+    {
+		// UNDONE: implement lighting
+		generateHeightMap();
+    }
+	
+	@Override
+	public int getBlockLightValue( int localX, int blockY, int localZ, int skylightSubtracted )
 	{
-		return val >> 4;
+		// return 0-15
+		return 15;
+	}
+	
+	@Override
+	public int getSavedLightValue( EnumSkyBlock skyBlock, int localX, int blockY, int localZ )
+	{
+		// return 0-15
+		return 15;
+	}
+	
+	@Override
+	public void setLightValue( EnumSkyBlock skyBlock, int localX, int blockY, int localZ, int light )
+	{
+		// ignore
 	}
 }
