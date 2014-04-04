@@ -74,13 +74,17 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		// init database connection
 		File file = new File( saveHandler.getWorldDirectory(), "chunks.db" );
 		file.getParentFile().mkdirs();
-        m_db = DBMaker.newFileDB( file )
-            .closeOnJvmShutdown()
-            //.compressionEnable()
-            .make();
-    	
-        m_columns = m_db.getTreeMap( "columns" );
-        m_cubicChunks = m_db.getTreeMap( "chunks" );
+		m_db = DBMaker.newFileDB( file )
+			.closeOnJvmShutdown()
+			//.compressionEnable()
+			.make();
+		
+		// NOTE: could set different cache settings
+		// the default is a hash map cache with 32768 entries
+		// see: http://www.mapdb.org/features.html
+		
+		m_columns = m_db.getTreeMap( "columns" );
+		m_cubicChunks = m_db.getTreeMap( "chunks" );
         
         // init chunk save queue
         m_columnsToSave = new ConcurrentBatchedQueue<SaveEntry>();
@@ -92,7 +96,8 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	throws IOException
 	{
 		// does the database have the column?
-		Column column = loadColumn( world, AddressTools.getAddress( world.provider.dimensionId, x, 0, z ) );
+		List<RangeInt> cubicChunkYRanges = new ArrayList<RangeInt>();
+		Column column = loadColumn( cubicChunkYRanges, world, AddressTools.getAddress( world.provider.dimensionId, x, 0, z ) );
 		if( column == null )
 		{
 			// returning null tells the world to generate a new column
@@ -100,20 +105,18 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		}
 		
 		// restore the cubic chunks
-		// TEMP: restore chunks 0-15
-		for( int y=0; y<16; y++ )
+		for( RangeInt range : cubicChunkYRanges )
 		{
-			CubicChunk cubicChunk = loadCubicChunk( world, column, AddressTools.getAddress( world.provider.dimensionId, x, y, z ) );
-			if( cubicChunk == null )
+			for( int y=range.getStart(); y<=range.getStop(); y++ )
 			{
-				continue;
+				loadCubicChunkAndAddToColumn( world, column, AddressTools.getAddress( world.provider.dimensionId, x, y, z ) );
 			}
 		}
 		
 		return column;
 	}
 	
-	private Column loadColumn( World world, long address )
+	private Column loadColumn( List<RangeInt> cubicChunkYRanges, World world, long address )
 	throws IOException
 	{
 		// does the database have the column?
@@ -132,10 +135,10 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		// restore the column
 		int x = AddressTools.getX( address );
 		int z = AddressTools.getZ( address );
-		return readColumnFromNBT( world, x, z, nbt );
+		return readColumnFromNBT( cubicChunkYRanges, world, x, z, nbt );
 	}
 	
-	private CubicChunk loadCubicChunk( World world, Column column, long address )
+	private CubicChunk loadCubicChunkAndAddToColumn( World world, Column column, long address )
 	throws IOException
 	{
 		// does the database have the cubic chunk?
@@ -154,7 +157,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		int x = AddressTools.getX( address );
 		int y = AddressTools.getY( address );
 		int z = AddressTools.getZ( address );
-		return readCubicChunkFromNbt( world, column, x, y, z, nbt );
+		return readCubicChunkFromNbtAndAddToColumn( world, column, x, y, z, nbt );
 	}
 	
 	@Override
@@ -317,10 +320,21 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		// biome mappings
 		nbt.setByteArray( "Biomes", column.getBiomeArray() );
 		
+		// write which cubic chunks are in this column
+		List<RangeInt> rangesList = column.getCubicChunkYRanges();
+		int[] ranges = new int[rangesList.size()*2];
+		for( int i=0; i<rangesList.size(); i++ )
+		{
+			RangeInt range = rangesList.get( i );
+			ranges[i*2+0] = range.getStart();
+			ranges[i*2+1] = range.getStop();
+		}
+		nbt.setIntArray( "CubicChunks", ranges );
+		
 		return nbt;
 	}
 	
-	private Column readColumnFromNBT( World world, int x, int z, NBTTagCompound nbt )
+	private Column readColumnFromNBT( List<RangeInt> cubicChunkYRanges, World world, int x, int z, NBTTagCompound nbt )
 	{
 		// NBT types:
 		// 0      1       2        3      4       5        6         7         8         9       10          11
@@ -330,7 +344,8 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		byte version = nbt.getByte( "v" );
 		if( version != 1 )
 		{
-			throw new IllegalArgumentException( "Column has wrong version! " + version );
+			log.warn( String.format( "Column has wrong version: %d. Column will be regenerated.", version ) );
+			return null;
 		}
 		
 		// check the coords
@@ -338,7 +353,8 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		int zCheck = nbt.getInteger( "z" );
 		if( xCheck != x || zCheck != z )
 		{
-			throw new Error( String.format( "Column is corrupted! Expected (%d,%d) but got (%d,%d)", x, z, xCheck, zCheck ) );
+			log.warn( String.format( "Column is corrupted! Expected (%d,%d) but got (%d,%d). Column will be regenerated.", x, z, xCheck, zCheck ) );
+			return null;
 		}
 		
 		// create the column
@@ -354,6 +370,18 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		
 		// biomes
 		column.setBiomeArray( nbt.getByteArray( "Biomes" ) );
+		
+		// read the cubic chunk y ranges
+		int[] ranges = nbt.getIntArray( "CubicChunks" );
+		if( ranges.length % 2 != 0 )
+		{
+			log.warn( String.format( "Column (%d,%d) has invalid chubic chunk y values! Column will be regenerated", x, z ) );
+			return null;
+		}
+		for( int i=0; i<ranges.length/2; i++ )
+		{
+			cubicChunkYRanges.add( new RangeInt( ranges[i*2+0], ranges[i*2+1] ) );
+		}
 		
 		return column;
 	}
@@ -397,6 +425,19 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			{
 				cubicChunk.setActiveEntities( true );
 				nbtEntities.appendTag( nbtEntity );
+				
+				// make sure this entity is really in the chunk
+				int chunkX = Coords.getChunkXForEntity( entity );
+				int chunkY = Coords.getChunkYForEntity( entity );
+				int chunkZ = Coords.getChunkZForEntity( entity );
+				if( chunkX != cubicChunk.getX() || chunkY != cubicChunk.getY() || chunkZ != cubicChunk.getZ() )
+				{
+					log.warn( String.format( "Saved entity %s in cubic chunk (%d,%d,%d) to cubic chunk (%d,%d,%d)!",
+						entity.getClass().getName(),
+						chunkX, chunkY, chunkZ,
+						cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ()
+					) );
+				}
 			}
 		}
 		
@@ -434,7 +475,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		return nbt;
 	}
 	
-	private CubicChunk readCubicChunkFromNbt( World world, Column column, int x, int y, int z, NBTTagCompound nbt )
+	private CubicChunk readCubicChunkFromNbtAndAddToColumn( World world, Column column, int x, int y, int z, NBTTagCompound nbt )
 	{
 		// check the version number
 		byte version = nbt.getByte( "v" );
@@ -494,6 +535,19 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 				if( entity != null )
 				{
 					cubicChunk.addEntity( entity );
+					
+					// make sure this entity is really in the chunk
+					int chunkX = Coords.getChunkXForEntity( entity );
+					int chunkY = Coords.getChunkYForEntity( entity );
+					int chunkZ = Coords.getChunkZForEntity( entity );
+					if( chunkX != cubicChunk.getX() || chunkY != cubicChunk.getY() || chunkZ != cubicChunk.getZ() )
+					{
+						log.warn( String.format( "Loaded entity %s in cubic chunk (%d,%d,%d) to cubic chunk (%d,%d,%d)!",
+							entity.getClass().getName(),
+							chunkX, chunkY, chunkZ,
+							cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ()
+						) );
+					}
 					
 					// deal with riding
 					Entity topEntity = entity;

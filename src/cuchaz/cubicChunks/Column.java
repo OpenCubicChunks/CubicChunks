@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -130,6 +131,45 @@ public class Column extends Chunk
 	public void addCubicChunk( CubicChunk cubicChunk )
 	{
 		m_cubicChunks.put( cubicChunk.getY(), cubicChunk );
+	}
+	
+	public List<RangeInt> getCubicChunkYRanges( )
+	{
+		// compute a kind of run-length encoding on the cubic chunk y-values
+		List<RangeInt> ranges = new ArrayList<RangeInt>();
+		Integer start = null;
+		Integer stop = null;
+		for( int chunkY : m_cubicChunks.keySet() )
+		{
+			if( start == null )
+			{
+				// start a new range
+				start = chunkY;
+				stop = chunkY;
+			}
+			else if( chunkY == stop + 1 )
+			{
+				// extend the range
+				stop = chunkY;
+			}
+			else
+			{
+				// end the range
+				ranges.add( new RangeInt( start, stop ) );
+				
+				// start a new range
+				start = chunkY;
+				stop = chunkY;
+			}
+		}
+		
+		if( start != null )
+		{
+			// finish the last range
+			ranges.add( new RangeInt( start, stop ) );
+		}
+		
+		return ranges;
 	}
 	
 	@Override
@@ -292,11 +332,24 @@ public class Column extends Chunk
 	public void addEntity( Entity entity )
     {
 		// pass off to the cubic chunk
-		int chunkY = Coords.blockToChunk( MathHelper.floor_double( entity.posY ) );
+		int chunkY = Coords.getChunkYForEntity( entity );
 		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
 		if( cubicChunk != null )
 		{
 			cubicChunk.addEntity( entity );
+		}
+		else
+		{
+			log.warn( String.format( "No cubic chunk at (%d,%d,%d) to add entity %s (%.2f,%.2f,%.2f)!",
+				xPosition, chunkY, zPosition,
+				entity.getClass().getName(), entity.posX, entity.posY, entity.posZ
+			) );
+			
+			// NOTE: this warning can legitimately happen in the following case:
+			// when an entity crosses from a loaded cubic chunk into an unloaded cubic chunk
+			// World.updateEntityWithOptionalForce() doesn't check for changes in the chunkY coord
+			// when migrating entities to new columns
+			// maybe? I'm not sure this can actually happen...
 		}
     }
 	
@@ -404,8 +457,6 @@ public class Column extends Chunk
 		}
 		else
 		{
-			// TEMP: this eventually won't happen when we're in full cubic chunks land
-			// but for now, we need to handle this case
 			log.warn( String.format( "No cubic chunk at (%d,%d,%d) to add tile entity (block %d,%d,%d)!",
 				xPosition, chunkY, zPosition,
 				tileEntity.field_145851_c, blockY, tileEntity.field_145849_e

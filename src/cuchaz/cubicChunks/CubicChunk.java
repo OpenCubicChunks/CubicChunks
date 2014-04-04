@@ -19,7 +19,6 @@ import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -230,9 +229,9 @@ public class CubicChunk
 	public void addEntity( Entity entity )
 	{
 		// make sure the entity is in this cubic chunk
-		int chunkX = Coords.blockToChunk( MathHelper.floor_double( entity.posX ) );
-		int chunkY = Coords.blockToChunk( MathHelper.floor_double( entity.posY ) );
-		int chunkZ = Coords.blockToChunk( MathHelper.floor_double( entity.posZ ) );
+		int chunkX = Coords.getChunkXForEntity( entity );
+		int chunkY = Coords.getChunkYForEntity( entity );
+		int chunkZ = Coords.getChunkZForEntity( entity );
 		if( chunkX != m_x || chunkY != m_y || chunkZ != m_z )
 		{
 			log.warn( String.format( "Entity %s in cubic chunk (%d,%d,%d) added to cubic chunk (%d,%d,%d)!",
