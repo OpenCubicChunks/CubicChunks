@@ -53,10 +53,10 @@ public class AddressTools
 	
 	public static long getAddress( int dimension, int x, int y, int z )
 	{
-		return Bits.packSigned( dimension, DimensionSize, DimensionOffset )
-			| Bits.packSigned( y, YSize, YOffset )
-			| Bits.packSigned( x, XSize, XOffset )
-			| Bits.packSigned( z, ZSize, ZOffset );
+		return Bits.packSignedToLong( dimension, DimensionSize, DimensionOffset )
+			| Bits.packSignedToLong( y, YSize, YOffset )
+			| Bits.packSignedToLong( x, XSize, XOffset )
+			| Bits.packSignedToLong( z, ZSize, ZOffset );
 	}
 	
 	public static int getDimension( long address )

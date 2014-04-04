@@ -60,4 +60,26 @@ public class TestAddressTools
 			assertEquals( i, AddressTools.getZ( AddressTools.getAddress( 0, 0, 0, i ) ) );
 		}
 	}
+	
+	@Test
+	public void testAddresses( )
+	{
+		for( int dimension=-2; dimension<=2; dimension++ )
+		{
+			for( int x=-16; x<=16; x++ )
+			{
+				for( int y=-16; y<=16; y++ )
+				{
+					for( int z=-16; z<=16; z++ )
+					{
+						long address = AddressTools.getAddress( dimension, x, y, z );
+						assertEquals( dimension, AddressTools.getDimension( address ) );
+						assertEquals( x, AddressTools.getX( address ) );
+						assertEquals( y, AddressTools.getY( address ) );
+						assertEquals( z, AddressTools.getZ( address ) );
+					}
+				}
+			}
+		}
+	}
 }

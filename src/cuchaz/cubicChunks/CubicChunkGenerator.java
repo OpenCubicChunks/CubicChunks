@@ -351,7 +351,7 @@ public class CubicChunkGenerator implements IChunkProvider
 					double var34 = this.field_147428_e[var12] / 512.0D;
 					double var36 = this.field_147425_f[var12] / 512.0D;
 					double var38 = ( this.field_147427_d[var12] / 10.0D + 1.0D ) / 2.0D;
-					double var40 = MathHelper.func_151238_b( var34, var36, var38 ) - var32;
+					double var40 = MathHelper.denormalizeClamp( var34, var36, var38 ) - var32;
 					
 					if( var31 > 29 )
 					{
@@ -381,7 +381,7 @@ public class CubicChunkGenerator implements IChunkProvider
 	@Override
 	public void populate( IChunkProvider par1IChunkProvider, int par2, int par3 )
 	{
-		BlockFalling.fallInstantly = true;
+		BlockFalling.field_149832_M = true;
 		int var4 = par2 * 16;
 		int var5 = par3 * 16;
 		BiomeGenBase var6 = this.worldObj.getBiomeGenForCoords( var4 + 16, var5 + 16 );
@@ -454,7 +454,7 @@ public class CubicChunkGenerator implements IChunkProvider
 			}
 		}
 		
-		BlockFalling.fallInstantly = false;
+		BlockFalling.field_149832_M = false;
 	}
 	
 	/**

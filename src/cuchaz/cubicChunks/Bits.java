@@ -12,15 +12,27 @@ package cuchaz.cubicChunks;
 
 public class Bits
 {
-	public static long packUnsigned( int unsigned, int size, int offset )
+	public static long packUnsignedToLong( int unsigned, int size, int offset )
 	{
 		// same as signed
-		return packSigned( unsigned, size, offset );
+		return packSignedToLong( unsigned, size, offset );
 	}
 	
-	public static long packSigned( int signed, int size, int offset )
+	public static long packSignedToLong( int signed, int size, int offset )
 	{
 		long result = signed & getMask( size );
+		return result << offset;
+	}
+	
+	public static int packUnsignedToInt( int unsigned, int size, int offset )
+	{
+		// same as signed
+		return packSignedToInt( unsigned, size, offset );
+	}
+	
+	public static int packSignedToInt( int signed, int size, int offset )
+	{
+		int result = signed & getMask( size );
 		return result << offset;
 	}
 	
@@ -31,6 +43,23 @@ public class Bits
 	}
 	
 	public static int unpackSigned( long packed, int size, int offset )
+	{
+		// first, offset to the far left and back so we can preserve the two's complement
+		int complementOffset = 64 - offset - size;
+		packed = packed << complementOffset >> complementOffset;
+		
+		// then unpack the integer
+		packed = packed >> offset;
+		return (int)packed;
+	}
+	
+	public static int unpackUnsigned( int packed, int size, int offset )
+	{
+		packed = packed >> offset;
+		return (int)packed & getMask( size );
+	}
+	
+	public static int unpackSigned( int packed, int size, int offset )
 	{
 		// first, offset to the far left and back so we can preserve the two's complement
 		int complementOffset = 64 - offset - size;

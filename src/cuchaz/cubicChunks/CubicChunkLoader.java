@@ -17,6 +17,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
 
@@ -30,6 +31,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -42,6 +44,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+
+import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 
 public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 {
@@ -71,30 +75,12 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		String worldName = saveHandler.getWorldDirectoryName();
 		
 		// init database connection
-		// NEXTTIME: this is fine for the server
-		// on the client, this needs to be in the saves folder
 		File file = new File( String.format( "%s/chunks.db", worldName ) );
 		file.getParentFile().mkdirs();
         m_db = DBMaker.newFileDB( file )
             .closeOnJvmShutdown()
             //.compressionEnable()
             .make();
-        /*
-        Caused by: java.io.FileNotFoundException: Cubic Chunks/chunks.db (Is a directory)
-    	at java.io.RandomAccessFile.open(Native Method) ~[?:1.6.0_30]
-    	at java.io.RandomAccessFile.<init>(RandomAccessFile.java:236) ~[?:1.6.0_30]
-    	at org.mapdb.Volume$FileChannelVol.<init>(Volume.java:637) ~[Volume$FileChannelVol.class:?]
-    	at org.mapdb.Volume.volumeForFile(Volume.java:181) ~[Volume.class:?]
-    	at org.mapdb.Volume$1.createIndexVolume(Volume.java:202) ~[Volume$1.class:?]
-    	at org.mapdb.StoreDirect.<init>(StoreDirect.java:202) ~[StoreDirect.class:?]
-    	at org.mapdb.StoreWAL.<init>(StoreWAL.java:57) ~[StoreWAL.class:?]
-    	at org.mapdb.DBMaker.extendStoreWAL(DBMaker.java:907) ~[DBMaker.class:?]
-    	at org.mapdb.DBMaker.makeEngine(DBMaker.java:703) ~[DBMaker.class:?]
-    	at org.mapdb.DBMaker.make(DBMaker.java:654) ~[DBMaker.class:?]
-    	at cuchaz.cubicChunks.CubicChunkLoader.<init>(CubicChunkLoader.java:79) ~[CubicChunkLoader.class:?]
-    	at cuchaz.cubicChunks.CubicChunkProviderServer.<init>(CubicChunkProviderServer.java:22) ~[CubicChunkProviderServer.class:?]
-    	at cuchaz.cubicChunks.CubicChunksMod.handleEvent(CubicChunksMod.java:38) ~[CubicChunksMod.class:?]
-    	*/
     	
         m_columns = m_db.getTreeMap( "columns" );
         m_cubicChunks = m_db.getTreeMap( "chunks" );
@@ -108,9 +94,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	public Column loadChunk( World world, int x, int z )
 	throws IOException
 	{
-		// TEMP
-		long start = System.currentTimeMillis();
-		
 		// does the database have the column?
 		Column column = loadColumn( world, AddressTools.getAddress( world.provider.dimensionId, x, 0, z ) );
 		if( column == null )
@@ -124,25 +107,16 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		ExtendedBlockStorage[] segments = new ExtendedBlockStorage[16];
 		for( int y=0; y<15; y++ )
 		{
-			CubicChunk cubicChunk = loadCubicChunk( world, AddressTools.getAddress( world.provider.dimensionId, x, y, z ) );
+			CubicChunk cubicChunk = loadCubicChunk( world, column, AddressTools.getAddress( world.provider.dimensionId, x, y, z ) );
 			if( cubicChunk == null )
 			{
 				continue;
 			}
 			
-			column.addCubicChunk( cubicChunk );
-			
 			// save the storage reference in the Minecraft chunk
 			segments[y] = cubicChunk.getStorage();
 		}
 		column.setStorageArrays( segments );
-		
-		// TEMP
-		long diff = System.currentTimeMillis() - start;
-		if( diff > 20 )
-		{
-			log.warn( String.format( "Loaded column %d,%d in %d ms", x, z, diff ) );
-		}
 		
 		return column;
 	}
@@ -169,7 +143,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		return readColumnFromNBT( world, x, z, nbt );
 	}
 	
-	private CubicChunk loadCubicChunk( World world, long address )
+	private CubicChunk loadCubicChunk( World world, Column column, long address )
 	throws IOException
 	{
 		// does the database have the cubic chunk?
@@ -188,7 +162,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		int x = AddressTools.getX( address );
 		int y = AddressTools.getY( address );
 		int z = AddressTools.getZ( address );
-		return readCubicChunkFromNbt( world, x, y, z, nbt );
+		return readCubicChunkFromNbt( world, column, x, y, z, nbt );
 	}
 	
 	@Override
@@ -333,21 +307,21 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	{
 		NBTTagCompound nbt = new NBTTagCompound();
 		
-		// chunk properties
-		// COLUMN
+		// coords
+		nbt.setInteger( "x", column.xPosition );
+		nbt.setInteger( "z", column.zPosition );
+		
+		// column properties
 		nbt.setByte( "v", (byte)1 );
 		nbt.setBoolean( "TerrainPopulated", column.isTerrainPopulated );
 		nbt.setBoolean( "LightPopulated", column.isLightPopulated );
 		nbt.setLong( "InhabitedTime", column.inhabitedTime );
 		
 		// 16x16 array of highest y-value in chunk
-		// COLUMN
 		nbt.setIntArray( "HeightMap", column.heightMap );
-		
 		// UNDONE: might need to store more detailed data structure for lighting/rain calculations
 		
 		// biome mappings
-		// COLUMN
 		nbt.setByteArray( "Biomes", column.getBiomeArray() );
 		
 		// entities
@@ -370,42 +344,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			}
 		}
 		
-		// tile entities
-		// CUBIC CHUNK
-		NBTTagList nbtTileEntities = new NBTTagList();
-		nbt.setTag( "TileEntities", nbtTileEntities );
-		@SuppressWarnings( "unchecked" )
-		Iterable<TileEntity> tileEntities = (Iterable<TileEntity>)column.chunkTileEntityMap.values();
-		for( TileEntity tileEntity : tileEntities )
-		{
-			NBTTagCompound nbtTileEntity = new NBTTagCompound();
-			tileEntity.writeToNBT( nbtTileEntity );
-			nbtTileEntities.appendTag( nbtTileEntity );
-		}
-		
-		// schedule block ticks
-		// CUBIC CHUNK
-		@SuppressWarnings( "unchecked" )
-		Iterable<NextTickListEntry> scheduledTicks = (Iterable<NextTickListEntry>)column.worldObj.getPendingBlockUpdates( column, false );
-		if( scheduledTicks != null )
-		{
-			long time = column.worldObj.getTotalWorldTime();
-			
-			NBTTagList nbtTicks = new NBTTagList();
-			nbt.setTag( "TileTicks", nbtTicks );
-			for( NextTickListEntry scheduledTick : scheduledTicks )
-			{
-				NBTTagCompound nbtScheduledTick = new NBTTagCompound();
-				nbtScheduledTick.setInteger( "i", Block.getIdFromBlock( scheduledTick.func_151351_a() ) );
-				nbtScheduledTick.setInteger( "x", scheduledTick.xCoord );
-				nbtScheduledTick.setInteger( "y", scheduledTick.yCoord );
-				nbtScheduledTick.setInteger( "z", scheduledTick.zCoord );
-				nbtScheduledTick.setInteger( "t", (int)( scheduledTick.scheduledTime - time ) );
-				nbtScheduledTick.setInteger( "p", scheduledTick.priority );
-				nbtTicks.appendTag( nbtScheduledTick );
-			}
-		}
-		
 		return nbt;
 	}
 	
@@ -420,6 +358,14 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		if( version != 1 )
 		{
 			throw new IllegalArgumentException( "Column has wrong version! " + version );
+		}
+		
+		// check the coords
+		int xCheck = nbt.getInteger( "x" );
+		int zCheck = nbt.getInteger( "z" );
+		if( xCheck != x || zCheck != z )
+		{
+			throw new Error( String.format( "Column is corrupted! Expected (%d,%d) but got (%d,%d)", x, z, xCheck, zCheck ) );
 		}
 		
 		// create the column
@@ -465,39 +411,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			}
 		}
 		
-		// tile entities
-		NBTTagList nbtTileEntities = nbt.getTagList( "TileEntities", 10 );
-		if( nbtTileEntities != null )
-		{
-			for( int i=0; i<nbtTileEntities.tagCount(); i++ )
-			{
-				NBTTagCompound nbtTileEntity = nbtTileEntities.getCompoundTagAt( i );
-				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbtTileEntity );
-				if( tileEntity != null )
-				{
-					column.func_150813_a( tileEntity );
-				}
-			}
-		}
-		
-		// scheduled ticks
-		NBTTagList nbtScheduledTicks = nbt.getTagList( "TileTicks", 10 );
-		if( nbtScheduledTicks != null )
-		{
-			for( int i=0; i<nbtScheduledTicks.tagCount(); i++ )
-			{
-				NBTTagCompound nbtScheduledTick = nbtScheduledTicks.getCompoundTagAt( i );
-				world.func_147446_b(
-					nbtScheduledTick.getInteger( "x" ),
-					nbtScheduledTick.getInteger( "y" ),
-					nbtScheduledTick.getInteger( "z" ),
-					Block.getBlockById( nbtScheduledTick.getInteger( "i" ) ),
-					nbtScheduledTick.getInteger( "t" ),
-					nbtScheduledTick.getInteger( "p" )
-				);
-			}
-		}
-		
 		return column;
 	}
 	
@@ -505,6 +418,11 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	{
 		NBTTagCompound nbt = new NBTTagCompound();
 		nbt.setByte( "v", (byte)1 );
+		
+		// coords
+		nbt.setInteger( "x", cubicChunk.getX() );
+		nbt.setInteger( "y", cubicChunk.getY() );
+		nbt.setInteger( "z", cubicChunk.getZ() );
 		
 		// blocks
 		ExtendedBlockStorage storage = cubicChunk.getStorage();
@@ -524,10 +442,41 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			nbt.setByteArray( "SkyLight", storage.getSkylightArray().data );
 		}
 		
+		// tile entities
+		NBTTagList nbtTileEntities = new NBTTagList();
+		nbt.setTag( "TileEntities", nbtTileEntities );
+		for( TileEntity tileEntity : cubicChunk.tileEntities() )
+		{
+			NBTTagCompound nbtTileEntity = new NBTTagCompound();
+			tileEntity.writeToNBT( nbtTileEntity );
+			nbtTileEntities.appendTag( nbtTileEntity );
+		}
+		
+		// scheduled block ticks
+		Iterable<NextTickListEntry> scheduledTicks = getScheduledTicks( cubicChunk );
+		if( scheduledTicks != null )
+		{
+			long time = cubicChunk.getWorld().getTotalWorldTime();
+			
+			NBTTagList nbtTicks = new NBTTagList();
+			nbt.setTag( "TileTicks", nbtTicks );
+			for( NextTickListEntry scheduledTick : scheduledTicks )
+			{
+				NBTTagCompound nbtScheduledTick = new NBTTagCompound();
+				nbtScheduledTick.setInteger( "i", Block.getIdFromBlock( scheduledTick.func_151351_a() ) );
+				nbtScheduledTick.setInteger( "x", scheduledTick.xCoord );
+				nbtScheduledTick.setInteger( "y", scheduledTick.yCoord );
+				nbtScheduledTick.setInteger( "z", scheduledTick.zCoord );
+				nbtScheduledTick.setInteger( "t", (int)( scheduledTick.scheduledTime - time ) );
+				nbtScheduledTick.setInteger( "p", scheduledTick.priority );
+				nbtTicks.appendTag( nbtScheduledTick );
+			}
+		}
+		
 		return nbt;
 	}
 	
-	private CubicChunk readCubicChunkFromNbt( World world, int x, int y, int z, NBTTagCompound nbt )
+	private CubicChunk readCubicChunkFromNbt( World world, Column column, int x, int y, int z, NBTTagCompound nbt )
 	{
 		// check the version number
 		byte version = nbt.getByte( "v" );
@@ -536,9 +485,25 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 			throw new IllegalArgumentException( "Cubic chunk has wrong version! " + version );
 		}
 		
+		// check the coordinates
+		int xCheck = nbt.getInteger( "x" );
+		int yCheck = nbt.getInteger( "y" );
+		int zCheck = nbt.getInteger( "z" );
+		if( xCheck != x || yCheck != y || zCheck != z )
+		{
+			throw new Error( String.format( "Cubic chunk is corrupted! Expected (%d,%d,%d) but got (%d,%d,%d)", x, y, z, xCheck, yCheck, zCheck ) );
+		}
+		
+		// check against column
+		if( x != column.xPosition || z != column.zPosition )
+		{
+			throw new Error( String.format( "Cubic chunk is corrupted! Cubic chunk (%d,%d,%d) does not match column (%d,%d)", x, y, z, column.xPosition, column.zPosition ) );
+		}
+		
 		// build the cubic chunk
 		boolean hasSky = !world.provider.hasNoSky;
-		CubicChunk cubicChunk = new CubicChunk( world, x, y, z, hasSky );
+		CubicChunk cubicChunk = new CubicChunk( world, column, x, y, z, hasSky );
+		column.addCubicChunk( cubicChunk );
 		
 		ExtendedBlockStorage storage = cubicChunk.getStorage();
 		
@@ -560,6 +525,78 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		}
 		storage.removeInvalidBlocks();
 		
+		// tile entities
+		NBTTagList nbtTileEntities = nbt.getTagList( "TileEntities", 10 );
+		if( nbtTileEntities != null )
+		{
+			for( int i=0; i<nbtTileEntities.tagCount(); i++ )
+			{
+				NBTTagCompound nbtTileEntity = nbtTileEntities.getCompoundTagAt( i );
+				TileEntity tileEntity = TileEntity.createAndLoadEntity( nbtTileEntity );
+				if( tileEntity != null )
+				{
+					column.addTileEntity( tileEntity );
+				}
+			}
+		}
+		
+		// scheduled block ticks
+		NBTTagList nbtScheduledTicks = nbt.getTagList( "TileTicks", 10 );
+		if( nbtScheduledTicks != null )
+		{
+			for( int i=0; i<nbtScheduledTicks.tagCount(); i++ )
+			{
+				NBTTagCompound nbtScheduledTick = nbtScheduledTicks.getCompoundTagAt( i );
+				world.func_147446_b(
+					nbtScheduledTick.getInteger( "x" ),
+					nbtScheduledTick.getInteger( "y" ),
+					nbtScheduledTick.getInteger( "z" ),
+					Block.getBlockById( nbtScheduledTick.getInteger( "i" ) ),
+					nbtScheduledTick.getInteger( "t" ),
+					nbtScheduledTick.getInteger( "p" )
+				);
+			}
+		}
+		
 		return cubicChunk;
+	}
+	
+	private List<NextTickListEntry> getScheduledTicks( CubicChunk cubicChunk )
+	{
+		ArrayList<NextTickListEntry> out = new ArrayList<NextTickListEntry>();
+		
+		// make sure this is a server
+		if( !( cubicChunk.getWorld() instanceof WorldServer ) )
+		{
+			throw new Error( "Column is not on the server!" );
+		}
+		WorldServer worldServer = (WorldServer)cubicChunk.getWorld();
+		
+		// copy the ticks for this cubic chunk
+		copyScheduledTicks( out, WorldServerAccessor.getScheduledTicksTreeSet( worldServer ), cubicChunk );
+		copyScheduledTicks( out, WorldServerAccessor.getScheduledTicksThisTick( worldServer ), cubicChunk );
+		
+		return out;
+	}
+	
+	private void copyScheduledTicks( ArrayList<NextTickListEntry> out, Collection<NextTickListEntry> scheduledTicks, CubicChunk cubicChunk )
+	{
+		// WorldServer.getPendingBlockUpdates() has extra -2 offsets on the min bounds, but maybe we don't actually need them?
+		int minX = cubicChunk.getX() << 4;
+		int maxX = ( cubicChunk.getX() + 1 ) << 4;
+		int minY = cubicChunk.getY() << 4;
+		int maxY = ( cubicChunk.getY() + 1 ) << 4;
+		int minZ = cubicChunk.getZ() << 4;
+		int maxZ = ( cubicChunk.getZ() + 1 ) << 4;
+		
+		for( NextTickListEntry scheduleTick : scheduledTicks )
+		{
+			if( scheduleTick.xCoord >= minX && scheduleTick.xCoord < maxX
+				&& scheduleTick.yCoord >= minY && scheduleTick.yCoord < maxY
+				&& scheduleTick.zCoord >= minZ && scheduleTick.zCoord < maxZ )
+			{
+				out.add( scheduleTick );
+			}
+		}
 	}
 }
