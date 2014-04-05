@@ -19,7 +19,7 @@ public class AddressTools
 	
 	// here's the encoding scheme for 64 bits of space:
 	// dimension:  8 bits, signed,   256 dimensions
-	// y:         12 bits, signed,     4,096 chunks,     65,536 blocks
+	// y:         12 bits, unsigned,   4,096 chunks,     65,536 blocks
 	// x:         22 bits, signed, 4,194,304 chunks, 67,108,864 blocks
 	// z:         22 bits, signed, 4,194,304 chunks, 67,108,864 blocks
 	
@@ -54,7 +54,7 @@ public class AddressTools
 	public static long getAddress( int dimension, int x, int y, int z )
 	{
 		return Bits.packSignedToLong( dimension, DimensionSize, DimensionOffset )
-			| Bits.packSignedToLong( y, YSize, YOffset )
+			| Bits.packUnsignedToLong( y, YSize, YOffset )
 			| Bits.packSignedToLong( x, XSize, XOffset )
 			| Bits.packSignedToLong( z, ZSize, ZOffset );
 	}
@@ -66,7 +66,7 @@ public class AddressTools
 	
 	public static int getY( long address )
 	{
-		return Bits.unpackSigned( address, YSize, YOffset );
+		return Bits.unpackUnsigned( address, YSize, YOffset );
 	}
 	
 	public static int getX( long address )

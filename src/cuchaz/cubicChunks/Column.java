@@ -34,6 +34,7 @@ public class Column extends Chunk
 	private static final Logger log = LogManager.getLogger();
 	
 	private TreeMap<Integer,CubicChunk> m_cubicChunks;
+	private ExtendedBlockStorage[] m_legacySegments;
 	
 	public Column( World world, int x, int z )
 	{
@@ -88,6 +89,7 @@ public class Column extends Chunk
 	private void init( )
 	{
 		m_cubicChunks = new TreeMap<Integer,CubicChunk>();
+		m_legacySegments = null;
 		
 		// make sure no one's using the Minecraft segments
 		setStorageArrays( null );
@@ -131,6 +133,23 @@ public class Column extends Chunk
 	public void addCubicChunk( CubicChunk cubicChunk )
 	{
 		m_cubicChunks.put( cubicChunk.getY(), cubicChunk );
+		m_legacySegments = null;
+	}
+	
+	private CubicChunk addEmptyCubicChunk( int chunkY )
+	{
+		// is there already a chunk here?
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+		if( cubicChunk != null )
+		{
+			log.warn( String.format( "Column (%d,%d) already has cubic chunk at %d!", xPosition, zPosition, chunkY ) );
+			return cubicChunk;
+		}
+		
+		// make a new empty chunk
+		cubicChunk = new CubicChunk( worldObj, this, xPosition, chunkY, zPosition, !worldObj.provider.hasNoSky );
+		addCubicChunk( cubicChunk );
+		return cubicChunk;
 	}
 	
 	public List<RangeInt> getCubicChunkYRanges( )
@@ -212,9 +231,8 @@ public class Column extends Chunk
 				return false;
 			}
 			
-			// make a new chunk
-			cubicChunk = new CubicChunk( worldObj, this, xPosition, chunkY, zPosition, !worldObj.provider.hasNoSky );
-			m_cubicChunks.put( chunkY, cubicChunk );
+			// make a new chunk for the block
+			cubicChunk = addEmptyCubicChunk( chunkY );
 		}
 		
 		// pass off to chunk
@@ -295,22 +313,36 @@ public class Column extends Chunk
 	@Override
 	public ExtendedBlockStorage[] getBlockStorageArray( )
 	{
-		// TEMP: hack together this array for now...
-		// UNDONE: optimize out the new
-		ExtendedBlockStorage[] segments = new ExtendedBlockStorage[16];
-		for( CubicChunk cubicChunk : m_cubicChunks.values() )
+		if( m_legacySegments == null )
 		{
-			segments[cubicChunk.getY()] = cubicChunk.getStorage();
+			// build the segments index
+			if( m_cubicChunks.isEmpty() )
+			{
+				m_legacySegments = new ExtendedBlockStorage[0];
+			}
+			else
+			{
+				m_legacySegments = new ExtendedBlockStorage[m_cubicChunks.lastKey()+1];
+				for( CubicChunk cubicChunk : m_cubicChunks.values() )
+				{
+					m_legacySegments[cubicChunk.getY()] = cubicChunk.getStorage();
+				}
+			}
 		}
-		return segments;
+		return m_legacySegments;
 	}
 	
 	@Override
 	public int getTopFilledSegment()
     {
-		int chunkY = m_cubicChunks.lastKey();
-		int blockY = chunkY << 4;
-		return blockY;
+		for( CubicChunk cubicChunk : m_cubicChunks.descendingMap().values() )
+		{
+			if( cubicChunk.hasBlocks() )
+			{
+				return Coords.chunkToMinBlock( cubicChunk.getY() );
+			}
+		}
+		return 0;
     }
 	
 	@Override
@@ -320,7 +352,8 @@ public class Column extends Chunk
 		int maxChunkY = Coords.blockToChunk( maxBlockY );
 		for( int chunkY=minChunkY; chunkY<=maxChunkY; chunkY++ )
 		{
-			if( m_cubicChunks.containsKey( chunkY ) )
+			CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+			if( cubicChunk != null && cubicChunk.hasBlocks() )
 			{
 				return false;
 			}
@@ -331,26 +364,22 @@ public class Column extends Chunk
 	@Override
 	public void addEntity( Entity entity )
     {
-		// pass off to the cubic chunk
+		// make sure the y-coord is sane
 		int chunkY = Coords.getChunkYForEntity( entity );
+		if( chunkY < 0 )
+		{
+			return;
+		}
+		
+		// pass off to the cubic chunk
 		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
-		if( cubicChunk != null )
+		if( cubicChunk == null )
 		{
-			cubicChunk.addEntity( entity );
+			// make a new chunk for the entity
+			cubicChunk = addEmptyCubicChunk( chunkY );
 		}
-		else
-		{
-			log.warn( String.format( "No cubic chunk at (%d,%d,%d) to add entity %s (%.2f,%.2f,%.2f)!",
-				xPosition, chunkY, zPosition,
-				entity.getClass().getName(), entity.posX, entity.posY, entity.posZ
-			) );
-			
-			// NOTE: this warning can legitimately happen in the following case:
-			// when an entity crosses from a loaded cubic chunk into an unloaded cubic chunk
-			// World.updateEntityWithOptionalForce() doesn't check for changes in the chunkY coord
-			// when migrating entities to new columns
-			// maybe? I'm not sure this can actually happen...
-		}
+		
+		cubicChunk.addEntity( entity );
     }
 	
 	@Override
@@ -565,5 +594,50 @@ public class Column extends Chunk
 	public void setLightValue( EnumSkyBlock skyBlock, int localX, int blockY, int localZ, int light )
 	{
 		// ignore
+	}
+	
+	@Override //         tick
+	public void func_150804_b( boolean tryToTickFaster )
+	{
+		super.func_150804_b( tryToTickFaster );
+		
+		// migrate moved entities to new cubic chunks
+		// UNDONE: optimize out the new
+		List<Entity> entities = new ArrayList<Entity>();
+		for( CubicChunk cubicChunk : m_cubicChunks.values() )
+		{
+			cubicChunk.getMigratedEntities( entities );
+			for( Entity entity : entities )
+			{
+				int chunkX = Coords.getChunkXForEntity( entity );
+				int chunkY = Coords.getChunkYForEntity( entity );
+				int chunkZ = Coords.getChunkZForEntity( entity );
+				
+				if( chunkX != xPosition || chunkZ != zPosition )
+				{
+					// Unfortunately, entities get updated after chunk ticks
+					// that means entities might appear to be in the wrong column this tick,
+					// but they'll be corrected before the next tick during column migration
+					// so we can safely ignore them
+					continue;
+				}
+				
+				// try to find the new cubic chunk for this entity
+				CubicChunk newCubicChunk = m_cubicChunks.get( chunkY );
+				if( newCubicChunk == null )
+				{
+					log.warn( String.format( "Entity %s migrated from cubic chunk (%d,%d,%d) to unloaded cubic chunk (%d,%d,%d). Why hasn't this chunk loaded?",
+						entity.getClass().getName(),
+						cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ(),
+						xPosition, chunkY, zPosition
+					) );
+					continue;
+				}
+				
+				// move the entity to the new cubic chunk
+				cubicChunk.removeEntity( entity );
+				newCubicChunk.addEntity( entity );
+			}
+		}
 	}
 }

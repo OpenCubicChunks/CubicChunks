@@ -432,10 +432,11 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 				int chunkZ = Coords.getChunkZForEntity( entity );
 				if( chunkX != cubicChunk.getX() || chunkY != cubicChunk.getY() || chunkZ != cubicChunk.getZ() )
 				{
-					log.warn( String.format( "Saved entity %s in cubic chunk (%d,%d,%d) to cubic chunk (%d,%d,%d)!",
+					log.warn( String.format( "Saved entity %s in cubic chunk (%d,%d,%d) to cubic chunk (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
 						entity.getClass().getName(),
 						chunkX, chunkY, chunkZ,
-						cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ()
+						cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ(),
+						entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
 					) );
 				}
 			}

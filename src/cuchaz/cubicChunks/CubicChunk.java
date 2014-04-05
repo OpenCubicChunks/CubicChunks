@@ -19,6 +19,7 @@ import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -43,6 +44,11 @@ public class CubicChunk
 	
 	public CubicChunk( World world, Column column, int x, int y, int z, boolean hasSky )
 	{
+		if( y < 0 )
+		{
+			throw new IllegalArgumentException( "y-coord of cubic chunk must be non-negative!" );
+		}
+		
 		m_world = world;
 		m_column = column;
 		m_x = x;
@@ -212,6 +218,11 @@ public class CubicChunk
 		return true;
 	}
 	
+	public boolean hasBlocks( )
+	{
+		return !m_storage.isEmpty();
+	}
+	
 	public Iterable<TileEntity> tileEntities( )
 	{
 		return m_tileEntities.values();
@@ -242,9 +253,11 @@ public class CubicChunk
 		}
 		
 		// tell the entity it's in a cubic chunk
+		// NOTE: we have to set the y coord to the chunk the entity is in, not the chunk it's standing on.
+		// otherwise, the world will continually re-add the entity to the column
 		entity.addedToChunk = true;
 		entity.chunkCoordX = m_x;
-		entity.chunkCoordY = m_y; // how convenient!
+		entity.chunkCoordY = MathHelper.floor_double( entity.posY/16 );
 		entity.chunkCoordZ = m_z;
         
 		m_entities.add( entity );
@@ -302,6 +315,20 @@ public class CubicChunk
 						}
 					}
 				}
+			}
+		}
+	}
+	
+	public void getMigratedEntities( List<Entity> out )
+	{
+		for( Entity entity : m_entities )
+		{
+			int chunkX = Coords.getChunkXForEntity( entity );
+			int chunkY = Coords.getChunkYForEntity( entity );
+			int chunkZ = Coords.getChunkZForEntity( entity );
+			if( chunkX != m_x || chunkY != m_y || chunkZ != m_z )
+			{
+				out.add( entity );
 			}
 		}
 	}

@@ -10,8 +10,39 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.accessors;
 
+import java.lang.reflect.Field;
+import java.util.List;
+
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.ChunkProviderServer;
+
 public class ChunkProviderServerAccessor
 {
-	// need to get access to
-	// List loadedChunks (really, List<Chunk>)
+	private static Field m_fieldLoadedChunks;
+	
+	static
+	{
+		try
+		{
+			m_fieldLoadedChunks = ChunkProviderServer.class.getDeclaredField( "loadedChunks" );
+			m_fieldLoadedChunks.setAccessible( true );
+		}
+		catch( Exception ex )
+		{
+			throw new Error( ex );
+		}
+	}
+	
+	@SuppressWarnings( "unchecked" )
+	public static List<Chunk> getLoadedChunks( ChunkProviderServer provider )
+	{
+		try
+		{
+			return (List<Chunk>)m_fieldLoadedChunks.get( provider );
+		}
+		catch( Exception ex )
+		{
+			throw new Error( ex );
+		}
+	}
 }

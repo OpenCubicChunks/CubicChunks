@@ -27,7 +27,12 @@ public class Coords
 	
 	public static int localToBlock( int chunk, int local )
 	{
-		return ( chunk << 4 ) + local;
+		return chunkToMinBlock( chunk ) + local;
+	}
+	
+	public static int chunkToMinBlock( int chunk )
+	{
+		return chunk << 4;
 	}
 	
 	public static int getChunkXForEntity( Entity entity )
@@ -42,10 +47,7 @@ public class Coords
 	
 	public static int getChunkYForEntity( Entity entity )
 	{
-		// entities stand on blocks
-		// the entity (on top of the block) might actually be in one cubic chunk,
-		// but the block could be in one cubic chunk below.
-		// so for entities standing on blocks, assign them to the chunk of the block below
-		return blockToChunk( MathHelper.floor_double( entity.posY - 1 ) );
+		// the entity is in the cubic chunk it's inside, not the cubic chunk it's standing on
+		return blockToChunk( MathHelper.floor_double( entity.posY ) );
 	}
 }
