@@ -20,6 +20,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -438,5 +439,43 @@ public class CubicChunk
 	{
 		m_lastSaveTime = m_world.getTotalWorldTime();
 		m_isModified = false;
+	}
+	
+	public int getLightValue( EnumSkyBlock lightType, int x, int y, int z )
+	{
+		if( lightType == EnumSkyBlock.Sky )
+		{
+			if( !m_world.provider.hasNoSky )
+			{
+				return m_storage.getExtSkylightValue( x, y, z );
+			}
+			else
+			{
+				return 0;
+			}
+		}
+		else if( lightType == EnumSkyBlock.Block )
+		{
+			return m_storage.getExtBlocklightValue( x, y, z );
+		}
+		else
+		{
+			return lightType.defaultLightValue;
+		}
+	}
+	
+	public void setLightValue( EnumSkyBlock lightType, int x, int y, int z, int light )
+	{
+		if( lightType == EnumSkyBlock.Sky )
+		{
+			if( !m_world.provider.hasNoSky )
+			{
+				m_storage.setExtSkylightValue( x, y, z, light );
+			}
+		}
+		else if( lightType == EnumSkyBlock.Block )
+		{
+			m_storage.setExtBlocklightValue( x, y, z, light );
+		}
 	}
 }

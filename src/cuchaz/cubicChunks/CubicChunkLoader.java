@@ -525,6 +525,18 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		}
 		storage.removeInvalidBlocks();
 		
+		/* TEMP: init sky light to full brightness
+		for( x=0; x<16; x++ )
+		{
+			for( y=0; y<16; y++ )
+			{
+				for( z=0; z<16; z++ )
+				{
+					storage.setExtSkylightValue( x, y, z, 15 );
+				}
+			}
+		}*/
+		
 		// entities
 		NBTTagList nbtEntities = nbt.getTagList( "Entities", 10 );
 		if( nbtEntities != null )

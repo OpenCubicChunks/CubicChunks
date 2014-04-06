@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.TreeMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -250,33 +251,39 @@ public class Column extends Chunk
 		*/
 		
 		/* UNDONE: redo lighting
-		if( newHighestBlock )
-		{
-			this.generateSkylightMap();
-		}
-		else
-		{
-			int var14 = block.getLightOpacity();
-			int var15 = oldBlock.getLightOpacity();
-			
-			if( var14 > 0 )
-			{
-				if( blockY >= highestY )
-				{
-					this.relightBlock( localX, blockY + 1, localZ );
-				}
-			}
-			else if( blockY == highestY - 1 )
-			{
-				this.relightBlock( localX, blockY, localZ );
-			}
-			
-			if( var14 != var15
-					&& ( var14 < var15 || this.getSavedLightValue( EnumSkyBlock.Sky, localX, blockY, localZ ) > 0 || this.getSavedLightValue( EnumSkyBlock.Block, localX, blockY, localZ ) > 0 ) )
-			{
-				this.propagateSkylightOcclusion( localX, localZ );
-			}
-		}
+		// handle block relighting!!
+        if (newMaxHeightAndCreatedNewSegment)
+        {
+            this.generateSkylightMap();
+        }
+        else
+        {
+            int newOpacity = block.getLightOpacity();
+            int oldOpacity = oldBlock.getLightOpacity();
+
+            // if new block has light
+            if (newOpacity > 0)
+            {
+            	// and block is higher than any old block
+                if (blockY >= maxHeight)
+                {
+                	// relight the block above, if it exists
+                    this.relightBlock(localX, blockY + 1, localZ);
+                }
+            }
+            // if block is just under top
+            else if (blockY == maxHeight - 1)
+            {
+            	// relight this block
+                this.relightBlock(localX, blockY, localZ);
+            }
+
+            // if opacity changed and ( opacity decreased or block now has any light )
+            if (newOpacity != oldOpacity && (newOpacity < oldOpacity || this.getSavedLightValue(EnumSkyBlock.Sky, localX, blockY, localZ) > 0 || this.getSavedLightValue(EnumSkyBlock.Block, localX, blockY, localZ) > 0))
+            {
+                this.propagateSkylightOcclusion(localX, localZ);
+            }
+        }
 		*/
 		
 		return true;
@@ -561,39 +568,198 @@ public class Column extends Chunk
 	@Override
 	public void generateHeightMap()
 	{
-		// UNDONE: implement this for realsies
-		heightMapMinimum = 30;
-		for( int i=0; i<heightMap.length; i++ )
+		// NOTE: this is only called by fillChunk()
+		// and now Column.generateSkylightMap() calls it
+		// which essentially means it's only called right after generation
+		
+		int maxBlockY = getTopFilledSegment() + 15;
+		int minBlockY = Coords.chunkToMinBlock( m_cubicChunks.firstKey() );
+		
+		heightMapMinimum = Integer.MAX_VALUE;
+		for( int localX=0; localX<16; localX++ )
 		{
-			heightMap[i] = heightMapMinimum;
+			for( int localZ=0; localZ<16; localZ++ )
+			{
+				// default to the min value
+				heightMap[(localZ << 4) | localX] = minBlockY;
+				
+				// drop down until we hit a solid block
+				for( int blockY=maxBlockY; blockY>=minBlockY; blockY-- )
+				{
+					// is this block transparent?
+					if( func_150810_a( localX, blockY, localZ ).getLightOpacity() == 0 )
+					{
+						continue;
+					}
+					
+					// ok, this block is solid
+					heightMap[(localZ << 4) | localX] = blockY;
+					
+					// update min
+					if( blockY < heightMapMinimum )
+					{
+						heightMapMinimum = blockY;
+					}
+					
+					break;
+				}
+			}
 		}
 	}
 	
 	@Override
 	public void generateSkylightMap()
     {
-		// UNDONE: implement lighting
+		// NOTE: this is called right after chunk generation, and right after any new segments are created
+		
 		generateHeightMap();
+		
+		// init the rain map to -999, which is a kind of null value
+		// this array is actually a cache
+		// values will be calculated by the getter
+		for( int localX=0; localX<16; localX++ )
+		{
+			for( int localZ=0; localZ<16; localZ++ )
+			{
+				precipitationHeightMap[localX + (localZ << 4)] = -999;
+			}
+		}
+		
+		// UNDONE: this algo only works when the top cubic chunks are loaded
+		// eventually need to update to use new column data structures for all cubic chunks, regardless of loaded state
+		
+		if( !this.worldObj.provider.hasNoSky )
+		{
+			int maxBlockY = getTopFilledSegment() + 15;
+			int minBlockY = Coords.chunkToMinBlock( m_cubicChunks.firstKey() );
+			
+			// build the skylight map
+			for( int localX=0; localX<16; localX++ )
+			{
+				for( int localZ=0; localZ<16; localZ++ )
+				{
+					// start with full light for this block
+					int lightValue = 15;
+					
+					// start with the top block and fall down
+					for( int blockY=maxBlockY; blockY>=minBlockY; blockY-- )
+					{
+						// light opacity is [0,255], all blocks 0, 255 except ice,water:3, web:1
+						int lightOpacity = this.func_150808_b( localX, blockY, localZ );
+						if( lightOpacity == 0 && lightValue != 15 )
+						{
+							// after something blocks light, apply a linear falloff
+							lightOpacity = 1;
+						}
+						
+						// decrease the light
+						lightValue -= lightOpacity;
+						
+						if( lightValue > 0 )
+						{
+							// save the sky light value
+							CubicChunk cubicChunk = m_cubicChunks.get( Coords.blockToChunk( blockY ) );
+							int localY = Coords.blockToLocal( blockY );
+							cubicChunk.getStorage().setExtSkylightValue( localX, localY, localZ, lightValue );
+							
+							// signal a render update
+							int blockX = Coords.localToBlock( xPosition, localX );
+							int blockZ = Coords.localToBlock( zPosition, localZ );
+							worldObj.func_147479_m( blockX, blockY, blockZ );
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+			}
+		}
     }
+	
+	@Override
+	public int getPrecipitationHeight( int localX, int localZ )
+	{
+		// UNDONE: update this calculation to use better data structures
+		
+		int xzCoord = localX | localZ << 4;
+		int height = this.precipitationHeightMap[xzCoord];
+		if( height == -999 )
+		{
+			// compute a new rain height
+			
+			int maxBlockY = getTopFilledSegment() + 15;
+			int minBlockY = Coords.chunkToMinBlock( m_cubicChunks.firstKey() );
+			
+			height = -1;
+			
+			for( int blockY=maxBlockY; blockY>=minBlockY; blockY-- )
+			{
+				Block block = this.func_150810_a( localX, maxBlockY, localZ );
+				Material material = block.getMaterial();
+				
+				if( material.blocksMovement() || material.isLiquid() )
+				{
+					height = maxBlockY + 1;
+					break;
+				}
+			}
+			
+			precipitationHeightMap[xzCoord] = height;
+		}
+		
+		return height;
+	}
 	
 	@Override
 	public int getBlockLightValue( int localX, int blockY, int localZ, int skylightSubtracted )
 	{
+		// NOTE: this is called by WorldRenderers
+		// we need to set Chunk.isLit if this chunk actually has any lighting
+		Chunk.isLit = true;
+		
 		// return 0-15
 		return 15;
 	}
 	
 	@Override
-	public int getSavedLightValue( EnumSkyBlock skyBlock, int localX, int blockY, int localZ )
+	public int getSavedLightValue( EnumSkyBlock lightType, int localX, int blockY, int localZ )
 	{
-		// return 0-15
-		return 15;
+		// NOTE: this is the light function that is called by the rendering code on client
+		
+		// pass off to cubic chunk
+		int chunkY = Coords.blockToChunk( blockY );
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+		if( cubicChunk != null )
+		{
+			int localY = Coords.blockToLocal( blockY );
+			return cubicChunk.getLightValue( lightType, localX, localY, localZ );
+		}
+		
+		// there's no cubic chunk, rely on defaults
+		if( canBlockSeeTheSky( localX, blockY, localZ ) )
+		{
+			return lightType.defaultLightValue;
+		}
+		else
+		{
+			return 0;
+		}
 	}
 	
 	@Override
-	public void setLightValue( EnumSkyBlock skyBlock, int localX, int blockY, int localZ, int light )
+	public void setLightValue( EnumSkyBlock lightType, int localX, int blockY, int localZ, int light )
 	{
-		// ignore
+		// pass off to cubic chunk
+		int chunkY = Coords.blockToChunk( blockY );
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+		if( cubicChunk != null )
+		{
+			int localY = Coords.blockToLocal( blockY );
+			cubicChunk.setLightValue( lightType, localX, localY, localZ, light );
+			
+			isModified = true;
+		}
 	}
 	
 	@Override //         tick
