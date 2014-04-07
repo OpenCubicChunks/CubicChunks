@@ -13,6 +13,7 @@ package cuchaz.cubicChunks;
 import cuchaz.magicMojoModLoader.api.Mod;
 import cuchaz.magicMojoModLoader.api.ModMetadata;
 import cuchaz.magicMojoModLoader.api.Version;
+import cuchaz.magicMojoModLoader.api.events.InitChunkProviderClientEvent;
 import cuchaz.magicMojoModLoader.api.events.InitChunkProviderServerEvent;
 
 public class CubicChunksMod implements Mod
@@ -36,5 +37,10 @@ public class CubicChunksMod implements Mod
 	public void handleEvent( InitChunkProviderServerEvent event )
 	{
 		event.setCustomChunkProvider( new CubicChunkProviderServer( event.getWorld() ) );
+	}
+	
+	public void handleEvent( InitChunkProviderClientEvent event )
+	{
+		event.setCustomChunkProvider( new CubicChunkProviderClient( event.getWorld() ) );
 	}
 }

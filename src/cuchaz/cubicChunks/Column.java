@@ -25,6 +25,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import org.apache.logging.log4j.LogManager;
@@ -124,6 +125,16 @@ public class Column extends Chunk
 	public CubicChunk getCubicChunk( int y )
 	{
 		return m_cubicChunks.get( y );
+	}
+	
+	public CubicChunk getOrCreateCubicChunk( int y )
+	{
+		CubicChunk cubicChunk = m_cubicChunks.get( y );
+		if( cubicChunk == null )
+		{
+			cubicChunk = addEmptyCubicChunk( y );
+		}
+		return cubicChunk;
 	}
 	
 	public Iterable<CubicChunk> getCubicChunks( int minY, int maxY )
@@ -541,19 +552,153 @@ public class Column extends Chunk
 	}
 	
 	@Override
-	public void fillChunk( byte[] data, int segmentsToCopyBitFlags, int blockMSBToCopyBitFlags, boolean deleteUnflaggedSegmentsAndCopyBiomeData )
+	public void fillChunk( byte[] data, int segmentsToCopyBitFlags, int blockMSBToCopyBitFlags, boolean isFirstTime )
 	{
-		// called on the client after chunk data is sent from the server
-		// NOTE: the bit flags impose a 32-chunk limit for the y-dimension
-		super.fillChunk( data, segmentsToCopyBitFlags, blockMSBToCopyBitFlags, deleteUnflaggedSegmentsAndCopyBiomeData );
+		// NOTE: this is called on the client when it receives chunk data from the server
 		
-		/* SUPER does this:
-		for( TileEntity tileEntity : chunkTileEntityMap.values() )
+		// NEXTTIME: get better packet encoding!
+		// data is encoded by:
+		// public static S21PacketChunkData.Extracted func_149269_a( Chunk chunk, boolean isFirstTime, int flagsYAreasToUpdate )
+		// we can just hook the start of the method to return our encoding if a mod wants
+		
+		int dataPos = 0;
+		final int NibbleArraySize = 2048;
+		
+		// block IDs, low bits
+		for( int chunkY=0; chunkY<16; chunkY++ )
 		{
-            tileEntity.updateContainingBlockInfo();
-        }
-        but the tile entity map will be empty, so we need to do that here
-		*/
+			if( ( segmentsToCopyBitFlags & 1 << chunkY ) != 0 )
+			{
+				byte[] buf = getOrCreateCubicChunk( chunkY ).getStorage().getBlockLSBArray();
+				System.arraycopy( data, dataPos, buf, 0, buf.length );
+				dataPos += buf.length;
+			}
+		}
+		
+		// metadata
+		for( int chunkY=0; chunkY<16; chunkY++ )
+		{
+			if( ( segmentsToCopyBitFlags & 1 << chunkY ) != 0 )
+			{
+				CubicChunk cubicChunk = getCubicChunk( chunkY );
+				if( cubicChunk != null )
+				{
+					// copy the data
+					NibbleArray buf = cubicChunk.getStorage().getMetadataArray();
+					System.arraycopy( data, dataPos, buf.data, 0, buf.data.length );
+					dataPos += buf.data.length;
+				}
+				else
+				{
+					// skip those bytes
+					dataPos += NibbleArraySize;
+				}
+			}
+		}
+		
+		// block light
+		for( int chunkY=0; chunkY<16; chunkY++ )
+		{
+			if( ( segmentsToCopyBitFlags & 1 << chunkY ) != 0 )
+			{
+				CubicChunk cubicChunk = getCubicChunk( chunkY );
+				if( cubicChunk != null )
+				{
+					// copy the bytes
+					NibbleArray buf = cubicChunk.getStorage().getBlocklightArray();
+					System.arraycopy( data, dataPos, buf.data, 0, buf.data.length );
+					dataPos += buf.data.length;
+				}
+				else
+				{
+					// skip those bytes
+					dataPos += NibbleArraySize;
+				}
+			}
+		}
+		
+		if( !worldObj.provider.hasNoSky )
+		{
+			// sky light
+			for( int chunkY=0; chunkY<16; chunkY++ )
+			{
+				if( ( segmentsToCopyBitFlags & 1 << chunkY ) != 0 )
+				{
+					CubicChunk cubicChunk = getCubicChunk( chunkY );
+					if( cubicChunk != null )
+					{
+						// copy the bytes
+						NibbleArray buf = cubicChunk.getStorage().getSkylightArray();
+						System.arraycopy( data, dataPos, buf.data, 0, buf.data.length );
+						dataPos += buf.data.length;
+					}
+					else
+					{
+						// skip those bytes
+						dataPos += NibbleArraySize;
+					}
+				}
+			}
+		}
+		
+		// block IDs, high bits
+		for( int chunkY=0; chunkY<16; chunkY++ )
+		{
+			if( ( blockMSBToCopyBitFlags & 1 << chunkY ) != 0 )
+			{
+				CubicChunk cubicChunk = getCubicChunk( chunkY );
+				if( cubicChunk != null )
+				{
+					NibbleArray buf = cubicChunk.getStorage().getBlockMSBArray();
+					if( buf == null )
+					{
+						buf = cubicChunk.getStorage().createBlockMSBArray();
+					}
+					System.arraycopy( data, dataPos, buf.data, 0, buf.data.length );
+					dataPos += buf.data.length;
+				}
+				else
+				{
+					// skip those bytes
+					dataPos += NibbleArraySize;
+				}
+			}
+			else if( isFirstTime )
+			{
+				CubicChunk cubicChunk = getCubicChunk( chunkY );
+				if( cubicChunk != null )
+				{
+					cubicChunk.getStorage().clearMSBArray();
+				}
+			}
+		}
+		
+		if( isFirstTime )
+		{
+			// biome data
+			byte[] biomes = getBiomeArray();
+			System.arraycopy( data, dataPos, biomes, 0, biomes.length );
+		}
+		
+		for( int chunkY=0; chunkY<16; chunkY++ )
+		{
+			// clean up invalid blocks
+			if( ( segmentsToCopyBitFlags & 1 << chunkY ) != 0 )
+			{
+				CubicChunk cubicChunk = getCubicChunk( chunkY );
+				if( cubicChunk != null )
+				{
+					cubicChunk.getStorage().removeInvalidBlocks();
+				}
+			}
+		}
+		
+		// update lighting flags
+		isLightPopulated = true;
+		isTerrainPopulated = true;
+		
+		// update height map
+		generateHeightMap();
 		
 		// update tile entities in each chunk
 		for( CubicChunk cubicChunk : m_cubicChunks.values() )
