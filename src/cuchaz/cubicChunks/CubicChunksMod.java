@@ -10,9 +10,14 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
+import java.io.IOException;
+
+import org.apache.logging.log4j.LogManager;
+
 import cuchaz.magicMojoModLoader.api.Mod;
 import cuchaz.magicMojoModLoader.api.ModMetadata;
 import cuchaz.magicMojoModLoader.api.Version;
+import cuchaz.magicMojoModLoader.api.events.EncodeChunkEvent;
 import cuchaz.magicMojoModLoader.api.events.InitChunkProviderClientEvent;
 import cuchaz.magicMojoModLoader.api.events.InitChunkProviderServerEvent;
 
@@ -42,5 +47,25 @@ public class CubicChunksMod implements Mod
 	public void handleEvent( InitChunkProviderClientEvent event )
 	{
 		event.setCustomChunkProvider( new CubicChunkProviderClient( event.getWorld() ) );
+	}
+	
+	public void handleEvent( EncodeChunkEvent event )
+	{
+		// check for our chunk instance
+		if( event.getChunk() instanceof Column )
+		{
+			Column column = (Column)event.getChunk();
+			
+			// encode the column
+			try
+			{
+				byte[] data = column.encode( event.isFirstTime(), event.getFlagsYAreasToUpdate() );
+				event.setData( data );
+			}
+			catch( IOException ex )
+			{
+				LogManager.getLogger().error( String.format( "Unable to encode data for column (%d,%d)", column.xPosition, column.zPosition ), ex );
+			}
+		}
 	}
 }

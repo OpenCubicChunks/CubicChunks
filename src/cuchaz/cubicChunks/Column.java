@@ -10,6 +10,10 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -25,9 +29,9 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -551,146 +555,139 @@ public class Column extends Chunk
 		}
 	}
 	
+	public byte[] encode( boolean isFirstTime, int flagsYAreasToUpdate )
+	throws IOException
+	{
+		ByteArrayOutputStream buf = new ByteArrayOutputStream();
+		DataOutputStream out = new DataOutputStream( buf );
+		// NOTE: there's no need to do compression here. This output is compressed later
+		
+		// how many cubic chunks are we sending?
+		int numCubicChunks = 0;
+		for( CubicChunk cubicChunk : m_cubicChunks.values() )
+		{
+			// is this cubic chunk flagged for sending?
+			if( ( flagsYAreasToUpdate & 1 << cubicChunk.getY() ) != 0 )
+			{
+				numCubicChunks++;
+			}
+		}
+		out.writeShort( numCubicChunks );
+		
+		// send the actual cubic chunk data
+		for( CubicChunk cubicChunk : m_cubicChunks.values() )
+		{
+			// is this cubic chunk flagged for sending?
+			if( ( flagsYAreasToUpdate & 1 << cubicChunk.getY() ) != 0 )
+			{
+				// signal we're sending this cubic chunk
+				out.writeShort( cubicChunk.getY() );
+				
+				ExtendedBlockStorage storage = cubicChunk.getStorage();
+				
+				// 1. block IDs, low bits
+				out.write( storage.getBlockLSBArray() );
+				
+				// 2. block IDs, high bits
+				if( storage.getBlockMSBArray() != null )
+				{
+					out.writeByte( 1 );
+					out.write( storage.getBlockMSBArray().data );
+				}
+				else
+				{
+					// signal we're not sending this data
+					out.writeByte( 0 );
+				}
+				
+				// 3. metadata
+				out.write( storage.getMetadataArray().data );
+				
+				// 4. block light
+				out.write( storage.getBlocklightArray().data );
+				
+				if( !worldObj.provider.hasNoSky )
+				{
+					// 5. sky light
+					out.write( storage.getSkylightArray().data );
+				}
+				
+				if( isFirstTime )
+				{
+					// 6. biomes
+					out.write( getBiomeArray() );
+				}
+			}
+		}
+		
+		// UNDONE: eventually we'll need to send our index structure data as well
+		
+		out.close();
+		return buf.toByteArray();
+	}
+	
 	@Override
 	public void fillChunk( byte[] data, int segmentsToCopyBitFlags, int blockMSBToCopyBitFlags, boolean isFirstTime )
 	{
 		// NOTE: this is called on the client when it receives chunk data from the server
 		
-		// NEXTTIME: get better packet encoding!
-		// data is encoded by:
-		// public static S21PacketChunkData.Extracted func_149269_a( Chunk chunk, boolean isFirstTime, int flagsYAreasToUpdate )
-		// we can just hook the start of the method to return our encoding if a mod wants
+		ByteArrayInputStream buf = new ByteArrayInputStream( data );
+		DataInputStream in = new DataInputStream( buf );
 		
-		int dataPos = 0;
-		final int NibbleArraySize = 2048;
-		
-		// block IDs, low bits
-		for( int chunkY=0; chunkY<16; chunkY++ )
+		try
 		{
-			if( ( segmentsToCopyBitFlags & 1 << chunkY ) != 0 )
+			// how many cubic chunks are we reading?
+			int numCubicChunks = in.readShort();
+			for( int i=0; i<numCubicChunks; i++ )
 			{
-				byte[] buf = getOrCreateCubicChunk( chunkY ).getStorage().getBlockLSBArray();
-				System.arraycopy( data, dataPos, buf, 0, buf.length );
-				dataPos += buf.length;
-			}
-		}
-		
-		// metadata
-		for( int chunkY=0; chunkY<16; chunkY++ )
-		{
-			if( ( segmentsToCopyBitFlags & 1 << chunkY ) != 0 )
-			{
-				CubicChunk cubicChunk = getCubicChunk( chunkY );
-				if( cubicChunk != null )
+				int chunkY = in.readShort();
+				CubicChunk cubicChunk = getOrCreateCubicChunk( chunkY );
+				
+				ExtendedBlockStorage storage = cubicChunk.getStorage();
+				
+				// 1. block IDs, low bits
+				in.read( storage.getBlockLSBArray() );
+				
+				// 2. block IDs, high bits
+				boolean isHighBitsAttached = in.readByte() != 0;
+				if( isHighBitsAttached )
 				{
-					// copy the data
-					NibbleArray buf = cubicChunk.getStorage().getMetadataArray();
-					System.arraycopy( data, dataPos, buf.data, 0, buf.data.length );
-					dataPos += buf.data.length;
-				}
-				else
-				{
-					// skip those bytes
-					dataPos += NibbleArraySize;
-				}
-			}
-		}
-		
-		// block light
-		for( int chunkY=0; chunkY<16; chunkY++ )
-		{
-			if( ( segmentsToCopyBitFlags & 1 << chunkY ) != 0 )
-			{
-				CubicChunk cubicChunk = getCubicChunk( chunkY );
-				if( cubicChunk != null )
-				{
-					// copy the bytes
-					NibbleArray buf = cubicChunk.getStorage().getBlocklightArray();
-					System.arraycopy( data, dataPos, buf.data, 0, buf.data.length );
-					dataPos += buf.data.length;
-				}
-				else
-				{
-					// skip those bytes
-					dataPos += NibbleArraySize;
-				}
-			}
-		}
-		
-		if( !worldObj.provider.hasNoSky )
-		{
-			// sky light
-			for( int chunkY=0; chunkY<16; chunkY++ )
-			{
-				if( ( segmentsToCopyBitFlags & 1 << chunkY ) != 0 )
-				{
-					CubicChunk cubicChunk = getCubicChunk( chunkY );
-					if( cubicChunk != null )
+					if( storage.getBlockMSBArray() == null )
 					{
-						// copy the bytes
-						NibbleArray buf = cubicChunk.getStorage().getSkylightArray();
-						System.arraycopy( data, dataPos, buf.data, 0, buf.data.length );
-						dataPos += buf.data.length;
+						storage.createBlockMSBArray();
 					}
-					else
-					{
-						// skip those bytes
-						dataPos += NibbleArraySize;
-					}
+					in.read( storage.getBlockMSBArray().data );
 				}
+				
+				// 3. metadata
+				in.read( storage.getMetadataArray().data );
+				
+				// 4. block light
+				in.read( storage.getBlocklightArray().data );
+				
+				if( !worldObj.provider.hasNoSky )
+				{
+					// 5. sky light
+					in.read( storage.getSkylightArray().data );
+				}
+				
+				if( isFirstTime )
+				{
+					// 6. biomes
+					in.read( getBiomeArray() );
+				}
+				
+				// clean up invalid blocks
+				storage.removeInvalidBlocks();
 			}
+			
+			// UNDONE: eventually we'll need to read our index structure data as well
+			
+			in.close();
 		}
-		
-		// block IDs, high bits
-		for( int chunkY=0; chunkY<16; chunkY++ )
+		catch( IOException ex )
 		{
-			if( ( blockMSBToCopyBitFlags & 1 << chunkY ) != 0 )
-			{
-				CubicChunk cubicChunk = getCubicChunk( chunkY );
-				if( cubicChunk != null )
-				{
-					NibbleArray buf = cubicChunk.getStorage().getBlockMSBArray();
-					if( buf == null )
-					{
-						buf = cubicChunk.getStorage().createBlockMSBArray();
-					}
-					System.arraycopy( data, dataPos, buf.data, 0, buf.data.length );
-					dataPos += buf.data.length;
-				}
-				else
-				{
-					// skip those bytes
-					dataPos += NibbleArraySize;
-				}
-			}
-			else if( isFirstTime )
-			{
-				CubicChunk cubicChunk = getCubicChunk( chunkY );
-				if( cubicChunk != null )
-				{
-					cubicChunk.getStorage().clearMSBArray();
-				}
-			}
-		}
-		
-		if( isFirstTime )
-		{
-			// biome data
-			byte[] biomes = getBiomeArray();
-			System.arraycopy( data, dataPos, biomes, 0, biomes.length );
-		}
-		
-		for( int chunkY=0; chunkY<16; chunkY++ )
-		{
-			// clean up invalid blocks
-			if( ( segmentsToCopyBitFlags & 1 << chunkY ) != 0 )
-			{
-				CubicChunk cubicChunk = getCubicChunk( chunkY );
-				if( cubicChunk != null )
-				{
-					cubicChunk.getStorage().removeInvalidBlocks();
-				}
-			}
+			log.error( String.format( "Unable to read data for column (%d,%d)", xPosition, zPosition ), ex );
 		}
 		
 		// update lighting flags
