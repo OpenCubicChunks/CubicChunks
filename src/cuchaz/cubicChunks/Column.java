@@ -263,7 +263,7 @@ public class Column extends Chunk
 		}
 		
 		int xzCoord = localZ << 4 | localX;
-		int currentMaxY = heightMap[xzCoord];
+		int oldMaxY = heightMap[xzCoord];
 		
 		// NOTE: the height map doesn't get updated here
 		// it gets updated during the lighting update
@@ -292,14 +292,14 @@ public class Column extends Chunk
 			if( newOpacity > 0 )
 			{
 				// and is the new highest block or replaces the old highest block
-				if( blockY >= currentMaxY )
+				if( blockY >= oldMaxY )
 				{
 					// relight the block above, if it exists
 					relightBlock( localX, blockY + 1, localZ );
 				}
 			}
 			// new block is transparent, but one under top block
-			else if( blockY == currentMaxY - 1 )
+			else if( blockY == oldMaxY - 1 )
 			{
 				// relight this block
 				relightBlock( localX, blockY, localZ );
@@ -313,6 +313,16 @@ public class Column extends Chunk
 		}
 
 		return true;
+	}
+	
+	private void propagateSkylightOcclusion( int localX, int localZ )
+	{
+		// set flag for sky light update
+		int xzCoord = localZ << 4 | localX;
+		updateSkylightColumns[xzCoord] = true;
+		
+		// ???
+		isGapLightingUpdated = true;
 	}
 	
 	@Override
@@ -1045,16 +1055,29 @@ public class Column extends Chunk
 		if( !worldObj.provider.hasNoSky )
 		{
 			// update this block and its xz neighbors
-			updateSkylightNeighborHeight( blockX - 1, blockZ, lowerY, upperY );
-			updateSkylightNeighborHeight( blockX + 1, blockZ, lowerY, upperY );
-			updateSkylightNeighborHeight( blockX, blockZ - 1, lowerY, upperY );
-			updateSkylightNeighborHeight( blockX, blockZ + 1, lowerY, upperY );
-			updateSkylightNeighborHeight( blockX, blockZ, lowerY, upperY );
+			updateSkylightForYBlocks( blockX - 1, blockZ, lowerY, upperY );
+			updateSkylightForYBlocks( blockX + 1, blockZ, lowerY, upperY );
+			updateSkylightForYBlocks( blockX, blockZ - 1, lowerY, upperY );
+			updateSkylightForYBlocks( blockX, blockZ + 1, lowerY, upperY );
+			updateSkylightForYBlocks( blockX, blockZ, lowerY, upperY );
 		}
 		
 		isModified = true;
 	}
 	
+	private void updateSkylightForYBlocks( int localX, int localZ, int minBlockY, int maxBlockY )
+	{
+		if( maxBlockY > minBlockY && worldObj.doChunksNearChunkExist( localX, 0, localZ, 16 ) )
+		{
+			for( int y=minBlockY; y<maxBlockY; y++ )
+			{
+				worldObj.updateLightByType( EnumSkyBlock.Sky, localX, y, localZ );
+			}
+			
+			isModified = true;
+		}
+	}
+
 	@Override //         tick
 	public void func_150804_b( boolean tryToTickFaster )
 	{
