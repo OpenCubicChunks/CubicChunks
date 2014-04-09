@@ -239,6 +239,7 @@ public class Column extends Chunk
 	{
 		// is there a chunk for this block?
 		int chunkY = Coords.blockToChunk( blockY );
+		boolean createdNewCubicChunk = false;
 		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
 		if( cubicChunk == null )
 		{
@@ -249,58 +250,68 @@ public class Column extends Chunk
 			
 			// make a new chunk for the block
 			cubicChunk = addEmptyCubicChunk( chunkY );
+			createdNewCubicChunk = true;
 		}
 		
 		// pass off to chunk
 		int localY = Coords.blockToLocal( blockY );
+		Block oldBlock = cubicChunk.getBlock( localX, localY, localZ );
 		boolean changed = cubicChunk.setBlock( localX, localY, localZ, block, meta );
 		if( !changed )
 		{
 			return false;
 		}
 		
-		/* UNDONE: update height data structures
 		int xzCoord = localZ << 4 | localX;
-		int highestY = heightMap[xzCoord];
-		boolean newHighestBlock = blockY >= highestY;
-		*/
+		int currentMaxY = heightMap[xzCoord];
 		
-		/* UNDONE: redo lighting
-		// handle block relighting!!
-        if (newMaxHeightAndCreatedNewSegment)
-        {
-            this.generateSkylightMap();
-        }
-        else
-        {
-            int newOpacity = block.getLightOpacity();
-            int oldOpacity = oldBlock.getLightOpacity();
-
-            // if new block has light
-            if (newOpacity > 0)
-            {
-            	// and block is higher than any old block
-                if (blockY >= maxHeight)
-                {
-                	// relight the block above, if it exists
-                    this.relightBlock(localX, blockY + 1, localZ);
-                }
-            }
-            // if block is just under top
-            else if (blockY == maxHeight - 1)
-            {
-            	// relight this block
-                this.relightBlock(localX, blockY, localZ);
-            }
-
-            // if opacity changed and ( opacity decreased or block now has any light )
-            if (newOpacity != oldOpacity && (newOpacity < oldOpacity || this.getSavedLightValue(EnumSkyBlock.Sky, localX, blockY, localZ) > 0 || this.getSavedLightValue(EnumSkyBlock.Block, localX, blockY, localZ) > 0))
-            {
-                this.propagateSkylightOcclusion(localX, localZ);
-            }
-        }
-		*/
+		// NOTE: the height map doesn't get updated here
+		// it gets updated during the lighting update
 		
+		// update rain map
+		// NOTE: precipitationHeightMap[xzCoord] is he lowest block that will contain rain
+		// so precipitationHeightMap[xzCoord] - 1 is the block that is being rained on
+		if( blockY >= precipitationHeightMap[xzCoord] - 1 )
+		{
+			// invalidate the rain height map value
+			precipitationHeightMap[xzCoord] = -999;
+		}
+		
+		// handle lighting updates
+		if( createdNewCubicChunk )
+		{
+			// new chunk, redo all lighting
+			generateSkylightMap();
+		}
+		else
+		{
+			int newOpacity = block.getLightOpacity();
+			int oldOpacity = oldBlock.getLightOpacity();
+			
+			// if new block is not transparent
+			if( newOpacity > 0 )
+			{
+				// and is the new highest block or replaces the old highest block
+				if( blockY >= currentMaxY )
+				{
+					// relight the block above, if it exists
+					relightBlock( localX, blockY + 1, localZ );
+				}
+			}
+			// new block is transparent, but one under top block
+			else if( blockY == currentMaxY - 1 )
+			{
+				// relight this block
+				relightBlock( localX, blockY, localZ );
+			}
+			
+			// if opacity changed and ( opacity decreased or block now has any light )
+			if( newOpacity != oldOpacity && ( newOpacity < oldOpacity || getSavedLightValue( EnumSkyBlock.Sky, localX, blockY, localZ ) > 0 || getSavedLightValue( EnumSkyBlock.Block, localX, blockY, localZ ) > 0 ) )
+			{
+				propagateSkylightOcclusion( localX, localZ );
+			}
+		}
+
 		return true;
 	}
 	
@@ -902,6 +913,146 @@ public class Column extends Chunk
 			
 			isModified = true;
 		}
+	}
+	
+	private void relightBlock( int localX, int blockY, int localZ )
+	{
+		int xzCoord = localZ << 4 | localX;
+		int oldMaxY = heightMap[xzCoord] & 255; // NOTE: this clamps y to [0,255]
+		
+		// start y at the highest known block
+		int y = oldMaxY;
+		if( blockY > oldMaxY )
+		{
+			y = blockY;
+		}
+		
+		// drop down until we hit a non-transparent block
+		while( y > 0 && func_150808_b( localX, y - 1, localZ ) == 0 )
+		{
+			--y;
+		}
+		
+		// do we need to update anything at all?
+		if( y == oldMaxY )
+		{
+			return;
+		}
+		
+		// NOTE: this appears to call world lighting logic
+		// it calls World.updateLightByType( sky ) for each block in the column
+		worldObj.markBlocksDirtyVertical(
+			localX + this.xPosition * 16,
+			localZ + this.zPosition * 16,
+			y, oldMaxY 
+		);
+		
+		// update the height map
+		heightMap[xzCoord] = y;
+		
+		int blockX = this.xPosition * 16 + localX;
+		int blockZ = this.zPosition * 16 + localZ;
+		
+		if( !worldObj.provider.hasNoSky )
+		{
+			// update sky light
+			
+			ExtendedBlockStorage storage;
+			
+			// if the updated block is below the max
+			if( y < oldMaxY )
+			{
+				// rise up to the max
+				for( int i=y; i<oldMaxY; i++ )
+				{
+					storage = storageArrays[i >> 4];
+					if( storage != null )
+					{
+						// default the sky light to max
+						storage.setExtSkylightValue( localX, i & 15, localZ, 15 );
+						
+						// then mark the block for a render update
+						worldObj.func_147479_m( blockX, i, blockZ );
+					}
+				}
+			}
+			// if the updated block is at the max or above
+			else
+			{
+				// rise up from the old max to the new max
+				for( int i=oldMaxY; i<y; i++ )
+				{
+					storage = storageArrays[i >> 4];
+					if( storage != null )
+					{
+						// default the light to zero
+						storage.setExtSkylightValue( localX, i & 15, localZ, 0 );
+						
+						// then mark the block for a render update
+						worldObj.func_147479_m( blockX, i, blockZ );
+					}
+				}
+			}
+			
+			// apply the sky light algorithm starting at y
+			
+			// drop down from y all the way to the bottom
+			int lightValue = 15;
+			while( y>0 && lightValue>0 )
+			{
+				--y;
+				
+				int lightOpacity = func_150808_b( localX, y, localZ );
+				
+				if( lightOpacity == 0 )
+				{
+					lightOpacity = 1;
+				}
+				
+				lightValue -= lightOpacity;
+				
+				if( lightValue < 0 )
+				{
+					lightValue = 0;
+				}
+				
+				// update the sky light value
+				storage = this.storageArrays[y >> 4];
+				if( storage != null )
+				{
+					storage.setExtSkylightValue( localX, y & 15, localZ, lightValue );
+				}
+			}
+		}
+		
+		// update the column minimum
+		int maxY = heightMap[xzCoord];
+		if( maxY < heightMapMinimum )
+		{
+			heightMapMinimum = maxY;
+		}
+		
+		// choose bounds for y to update sky light
+		// ie, sort maxY and oldMaxY
+		int lowerY = oldMaxY;
+		int upperY = maxY;
+		if( maxY < oldMaxY )
+		{
+			lowerY = maxY;
+			upperY = oldMaxY;
+		}
+		
+		if( !worldObj.provider.hasNoSky )
+		{
+			// update this block and its xz neighbors
+			updateSkylightNeighborHeight( blockX - 1, blockZ, lowerY, upperY );
+			updateSkylightNeighborHeight( blockX + 1, blockZ, lowerY, upperY );
+			updateSkylightNeighborHeight( blockX, blockZ - 1, lowerY, upperY );
+			updateSkylightNeighborHeight( blockX, blockZ + 1, lowerY, upperY );
+			updateSkylightNeighborHeight( blockX, blockZ, lowerY, upperY );
+		}
+		
+		isModified = true;
 	}
 	
 	@Override //         tick
