@@ -1,0 +1,100 @@
+
+HOW MINECRAFT CURRENTLY WORKS:
+
+Chunk generation (server only):
+	chunks are generated from chunkY=0 all the way up to the "top"
+	top isn't always chunkY=15... it's usually 3,4,5
+	
+	generation starts here:
+	Column CubicChunkGenerator.provideChunk( int chunkX, int chunkZ )
+		Column( World world, Block[] blocks, byte[] meta, int chunkX, int chunkZ )
+		copies biome info over to the column
+		Column.generateSkylightMap()
+
+Chunk loading on client/server:
+	no lighting calculations
+
+Block change (client and server):
+	World.setBlock( blockX, blockY, blockZ )
+		Column.func_150807_a( chunkX, blockY, chunkZ ) // setBlock
+			Block.getLightOpacity()
+			Column.updateBlockSkylight( localX, blockY+1, localZ )
+			Column.updateBlockSkylight( localX, blockY, localZ )
+			Column.getSavedLightValue( sky, localX, blockY, localZ )
+			Column.getSavedLightValue( block, localX, blockY, localZ )
+			Column.propagateSkylightOcclusion()
+				updateSkylightColumns[localX,localZ] = true
+				isGapLightingUpdated = true
+		World.func_147451_t( blockX, blockY, blockZ ) // updateLights
+			World.updateLightByType( Sky, blockX, blockY, blockZ )
+			World.updateLightByType( Block, blockX, blockY, blockZ )
+
+on column tick:
+	recheckGaps()
+		Column.getHeightValue( localX, localZ )
+		for each block x,z neighbor
+			World.getChunkHeightMapMinimum( neighborBlockX, neighborBlockZ )
+		Column.checkSkylightNeighborHeight( blockX, blockZ )
+		for each block x,z neighbor
+			Column.checkSkylightNeighborHeight( neighborBlockX, neighborBlockZ, someBlockY )
+				World.worldObj.getHeightValue( neighborBlockX, neighborBlockZ )
+				Column.updateSkylightNeighborHeight( neighborBlockX, neighborBlockZ, startBlockY, stopBlockY )
+					for blockY in range
+						World.updateLightByType( sky, neighborBlockX, blockY, neighborBlockZ )
+
+Modules:
+
+Column.generateSkylightMap()
+	loop over ( localX, localY, localZ )
+		Chunk.func_150808_b( localX, blockY, localZ ) // getLightOpacity
+		CubicChunk.getStorage().setExtSkylightValue( localX, localY, localZ )
+		World.func_147479_m( blockX, blockY, blockZ ) // markForRenderUpdate
+
+Column.updateBlockSkylight( localX, blockY, localZ )
+	read Column.heightMap[localX,localZ]
+	Column.func_150808_b( localX, y, localZ ) // getLightOpacity
+	World.markBlocksDirtyVertical( minBlockX, minBlockZ, startBlockY, stopBlockY )
+		for blockY in range
+			World.updateLightByType( sky, blockX, blockY, blockZ )
+	write Column.heightMap[localX,localZ]
+	storage.setExtSkylightValue( localX, localY, localZ )
+	World.func_147479_m() // markForRenderUpdate
+	read/write Column.heightMapMinimum
+	for self and x,z neighbors
+		Column.updateSkylightForYBlocks( ..., startBlockY, stopBlockY )
+			World.worldObj.updateLightByType( sky, blockX, y, blockZ )
+
+World.updateLightByType( type, blockX, blockY, blockZ )
+	World.getSavedLightValue( type, blockX, blockY, blockZ )
+	World.computeLightValue( blockX, blockY, blockZ, type )
+	// uses World.lightUpdateBlockList[] as a queue for lighting updates
+	// only used within the score of a single method invocation
+	// processing of the lightUpdateBlockList queue calls these functions
+		// pass 1
+		World.getSavedLightValue( type, updateX, updateY, updateZ )
+		World.setLightValue( type, updateX, updateY, updateZ )
+		for each block face neighbor:
+			World.getBlock( neighborX, neighborY, neighborZ ).getLightOpacity() // will have to replace this call
+			World.getSavedLightValue( type, neighborX, neighborY, neighborZ )
+		// pass 2
+		World.getSavedLightValue( type, updateX, updateY, updateZ )
+		World.computeLightValue( updateX, updateY, updateZ, type )
+		World.setLightValue( type, updateX, updateY, updateZ )
+		for each block face neighbor:
+			World.getSavedLightValue( type, neighborX, neighborY, neighborZ )
+
+World.computeLightValue( blockX, blockY, blockZ, type )
+	Chunk.canBlockSeeTheSky( blockX, blockY, blockZ )
+	for each block face neighbor:
+		World.getSavedLightValue( neighborBlockX, neighborBlockY, neighborBlockZ, type )
+
+What queries we need to answer to have cubic chunks:
+	Chunk.canBlockSeeTheSky()
+	Chunk.getBlock()
+		// BUT!!! only calls to block:
+		Block.getLightValue() // emitted light
+		Block.getLightOpacity() // ability to block light
+		// maybe can override world to call Chunk accessors for those properties directly
+	Column.getSavedLightValue( block or sky )
+	Column.setLightValue( block or sky )
+	Column.getLightOpacity()

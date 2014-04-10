@@ -295,14 +295,14 @@ public class Column extends Chunk
 				if( blockY >= oldMaxY )
 				{
 					// relight the block above, if it exists
-					relightBlock( localX, blockY + 1, localZ );
+					updateBlockSkylight( localX, blockY + 1, localZ );
 				}
 			}
 			// new block is transparent, but one under top block
 			else if( blockY == oldMaxY - 1 )
 			{
 				// relight this block
-				relightBlock( localX, blockY, localZ );
+				updateBlockSkylight( localX, blockY, localZ );
 			}
 			
 			// if opacity changed and ( opacity decreased or block now has any light )
@@ -313,16 +313,6 @@ public class Column extends Chunk
 		}
 
 		return true;
-	}
-	
-	private void propagateSkylightOcclusion( int localX, int localZ )
-	{
-		// set flag for sky light update
-		int xzCoord = localZ << 4 | localX;
-		updateSkylightColumns[xzCoord] = true;
-		
-		// ???
-		isGapLightingUpdated = true;
 	}
 	
 	@Override
@@ -728,6 +718,51 @@ public class Column extends Chunk
 		}
 	}
 	
+	@Override //         tick
+	public void func_150804_b( boolean tryToTickFaster )
+	{
+		super.func_150804_b( tryToTickFaster );
+		
+		// migrate moved entities to new cubic chunks
+		// UNDONE: optimize out the new
+		List<Entity> entities = new ArrayList<Entity>();
+		for( CubicChunk cubicChunk : m_cubicChunks.values() )
+		{
+			cubicChunk.getMigratedEntities( entities );
+			for( Entity entity : entities )
+			{
+				int chunkX = Coords.getChunkXForEntity( entity );
+				int chunkY = Coords.getChunkYForEntity( entity );
+				int chunkZ = Coords.getChunkZForEntity( entity );
+				
+				if( chunkX != xPosition || chunkZ != zPosition )
+				{
+					// Unfortunately, entities get updated after chunk ticks
+					// that means entities might appear to be in the wrong column this tick,
+					// but they'll be corrected before the next tick during column migration
+					// so we can safely ignore them
+					continue;
+				}
+				
+				// try to find the new cubic chunk for this entity
+				CubicChunk newCubicChunk = m_cubicChunks.get( chunkY );
+				if( newCubicChunk == null )
+				{
+					log.warn( String.format( "Entity %s migrated from cubic chunk (%d,%d,%d) to unloaded cubic chunk (%d,%d,%d). Why hasn't this chunk loaded?",
+						entity.getClass().getName(),
+						cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ(),
+						xPosition, chunkY, zPosition
+					) );
+					continue;
+				}
+				
+				// move the entity to the new cubic chunk
+				cubicChunk.removeEntity( entity );
+				newCubicChunk.addEntity( entity );
+			}
+		}
+	}
+	
 	@Override
 	public void generateHeightMap()
 	{
@@ -791,7 +826,7 @@ public class Column extends Chunk
 		// UNDONE: this algo only works when the top cubic chunks are loaded
 		// eventually need to update to use new column data structures for all cubic chunks, regardless of loaded state
 		
-		if( !this.worldObj.provider.hasNoSky )
+		if( !worldObj.provider.hasNoSky )
 		{
 			int maxBlockY = getTopFilledSegment() + 15;
 			int minBlockY = Coords.chunkToMinBlock( m_cubicChunks.firstKey() );
@@ -808,7 +843,7 @@ public class Column extends Chunk
 					for( int blockY=maxBlockY; blockY>=minBlockY; blockY-- )
 					{
 						// light opacity is [0,255], all blocks 0, 255 except ice,water:3, web:1
-						int lightOpacity = this.func_150808_b( localX, blockY, localZ );
+						int lightOpacity = func_150808_b( localX, blockY, localZ );
 						if( lightOpacity == 0 && lightValue != 15 )
 						{
 							// after something blocks light, apply a linear falloff
@@ -925,7 +960,7 @@ public class Column extends Chunk
 		}
 	}
 	
-	private void relightBlock( int localX, int blockY, int localZ )
+	private void updateBlockSkylight( int localX, int blockY, int localZ )
 	{
 		int xzCoord = localZ << 4 | localX;
 		int oldMaxY = heightMap[xzCoord] & 255; // NOTE: this clamps y to [0,255]
@@ -1065,61 +1100,116 @@ public class Column extends Chunk
 		isModified = true;
 	}
 	
-	private void updateSkylightForYBlocks( int localX, int localZ, int minBlockY, int maxBlockY )
+	private void updateSkylightForYBlocks( int blockX, int blockZ, int minBlockY, int maxBlockY )
 	{
-		if( maxBlockY > minBlockY && worldObj.doChunksNearChunkExist( localX, 0, localZ, 16 ) )
+		if( maxBlockY > minBlockY && worldObj.doChunksNearChunkExist( blockX, 0, blockZ, 16 ) )
 		{
 			for( int y=minBlockY; y<maxBlockY; y++ )
 			{
-				worldObj.updateLightByType( EnumSkyBlock.Sky, localX, y, localZ );
+				worldObj.updateLightByType( EnumSkyBlock.Sky, blockX, y, blockZ );
 			}
 			
 			isModified = true;
 		}
 	}
-
-	@Override //         tick
-	public void func_150804_b( boolean tryToTickFaster )
+	
+	private void propagateSkylightOcclusion( int localX, int localZ )
 	{
-		super.func_150804_b( tryToTickFaster );
+		// set flag for sky light update
+		int xzCoord = localZ << 4 | localX;
+		updateSkylightColumns[xzCoord] = true;
 		
-		// migrate moved entities to new cubic chunks
-		// UNDONE: optimize out the new
-		List<Entity> entities = new ArrayList<Entity>();
-		for( CubicChunk cubicChunk : m_cubicChunks.values() )
+		// isPendingGapUpdate
+		isGapLightingUpdated = true;
+	}
+	
+	private void recheckGaps( boolean tryToRunFaster )
+	{
+		if( worldObj.doChunksNearChunkExist( this.xPosition * 16 + 8, 0, this.zPosition * 16 + 8, 16 ) )
 		{
-			cubicChunk.getMigratedEntities( entities );
-			for( Entity entity : entities )
+			for( int localX = 0; localX < 16; ++localX )
 			{
-				int chunkX = Coords.getChunkXForEntity( entity );
-				int chunkY = Coords.getChunkYForEntity( entity );
-				int chunkZ = Coords.getChunkZForEntity( entity );
-				
-				if( chunkX != xPosition || chunkZ != zPosition )
+				for( int localZ = 0; localZ < 16; ++localZ )
 				{
-					// Unfortunately, entities get updated after chunk ticks
-					// that means entities might appear to be in the wrong column this tick,
-					// but they'll be corrected before the next tick during column migration
-					// so we can safely ignore them
-					continue;
+					// is there a pending update on this block column?
+					if( updateSkylightColumns[localX + localZ * 16] )
+					{
+						// reset the update flag
+						updateSkylightColumns[localX + localZ * 16] = false;
+						
+						int height = getHeightValue( localX, localZ );
+						int blockX = xPosition * 16 + localX;
+						int blockZ = zPosition * 16 + localZ;
+						
+						// get the min height of all the block x,z neighbors
+						int minHeight = worldObj.getChunkHeightMapMinimum( blockX - 1, blockZ );
+						int xposMinHeight = worldObj.getChunkHeightMapMinimum( blockX + 1, blockZ );
+						int znegMinHeight = worldObj.getChunkHeightMapMinimum( blockX, blockZ - 1 );
+						int zposMinHeight = worldObj.getChunkHeightMapMinimum( blockX, blockZ + 1 );
+						if( xposMinHeight < minHeight )
+						{
+							minHeight = xposMinHeight;
+						}
+						if( znegMinHeight < minHeight )
+						{
+							minHeight = znegMinHeight;
+						}
+						if( zposMinHeight < minHeight )
+						{
+							minHeight = zposMinHeight;
+						}
+						
+						checkSkylightNeighborHeight( blockX, blockZ, minHeight );
+						checkSkylightNeighborHeight( blockX - 1, blockZ, height );
+						checkSkylightNeighborHeight( blockX + 1, blockZ, height );
+						checkSkylightNeighborHeight( blockX, blockZ - 1, height );
+						checkSkylightNeighborHeight( blockX, blockZ + 1, height );
+						
+						if( tryToRunFaster )
+						{
+							this.worldObj.theProfiler.endSection();
+							return;
+						}
+					}
 				}
-				
-				// try to find the new cubic chunk for this entity
-				CubicChunk newCubicChunk = m_cubicChunks.get( chunkY );
-				if( newCubicChunk == null )
-				{
-					log.warn( String.format( "Entity %s migrated from cubic chunk (%d,%d,%d) to unloaded cubic chunk (%d,%d,%d). Why hasn't this chunk loaded?",
-						entity.getClass().getName(),
-						cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ(),
-						xPosition, chunkY, zPosition
-					) );
-					continue;
-				}
-				
-				// move the entity to the new cubic chunk
-				cubicChunk.removeEntity( entity );
-				newCubicChunk.addEntity( entity );
 			}
+			
+			// isPendingGapUpdate
+			isGapLightingUpdated = false;
+		}
+	}
+	
+	/**
+	 * Checks the height of a block next to a sky-visible block and schedules a
+	 * lighting update as necessary.
+	 */
+	private void checkSkylightNeighborHeight( int blockX, int blockZ, int blockY )
+	{
+		int height = worldObj.getHeightValue( blockX, blockZ );
+		
+		// if this block is under the max
+		if( height > blockY )
+		{
+			// update starting at the block above the max
+			updateSkylightNeighborHeight( blockX, blockZ, blockY, height + 1 );
+		}
+		else if( height < blockY )
+		{
+			// update starting at the block above this one
+			updateSkylightNeighborHeight( blockX, blockZ, height, blockY + 1 );
+		}
+	}
+	
+	private void updateSkylightNeighborHeight( int blockX, int blockZ, int startBlockY, int stopBlockY )
+	{
+		if( stopBlockY > startBlockY && worldObj.doChunksNearChunkExist( blockX, 0, blockZ, 16 ) )
+		{
+			for( int blockY = startBlockY; blockY < stopBlockY; ++blockY )
+			{
+				worldObj.updateLightByType( EnumSkyBlock.Sky, blockX, blockY, blockZ );
+			}
+			
+			this.isModified = true;
 		}
 	}
 }

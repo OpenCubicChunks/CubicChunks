@@ -17,6 +17,8 @@ public class AddressTools
 	// within a region file, each chunk coord gets 5 bits
 	// the coord for each region is capped at 27 bits
 	
+	// World.setBlock() caps block x,z at -30m to 30m, so our 22-bit cap on chunk x,z is just right!
+	
 	// here's the encoding scheme for 64 bits of space:
 	// dimension:  8 bits, signed,   256 dimensions
 	// y:         12 bits, unsigned,   4,096 chunks,     65,536 blocks

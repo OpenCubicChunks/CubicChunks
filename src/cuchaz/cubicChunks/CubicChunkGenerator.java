@@ -219,35 +219,42 @@ public class CubicChunkGenerator implements IChunkProvider
 	 * and chunk seed
 	 */
 	@Override
-	public Column provideChunk( int par1, int par2 )
+	public Column provideChunk( int chunkX, int chunkZ )
 	{
-		this.rand.setSeed( (long)par1 * 341873128712L + (long)par2 * 132897987541L );
-		Block[] var3 = new Block[65536];
-		byte[] var4 = new byte[65536];
-		this.func_147424_a( par1, par2, var3 );
-		this.biomesForGeneration = this.worldObj.getWorldChunkManager().loadBlockGeneratorData( this.biomesForGeneration, par1 * 16, par2 * 16, 16, 16 );
-		this.func_147422_a( par1, par2, var3, var4, this.biomesForGeneration );
-		this.caveGenerator.func_151539_a( this, this.worldObj, par1, par2, var3 );
-		this.ravineGenerator.func_151539_a( this, this.worldObj, par1, par2, var3 );
+		Block[] blocks = new Block[65536];
+		byte[] meta = new byte[65536];
 		
-		if( this.mapFeaturesEnabled )
+		// init random
+		rand.setSeed( (long)chunkX * 341873128712L + (long)chunkZ * 132897987541L );
+		
+		func_147424_a( chunkX, chunkZ, blocks );
+		biomesForGeneration = worldObj.getWorldChunkManager().loadBlockGeneratorData( biomesForGeneration, chunkX * 16, chunkZ * 16, 16, 16 );
+		func_147422_a( chunkX, chunkZ, blocks, meta, biomesForGeneration );
+		caveGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
+		ravineGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
+		
+		if( mapFeaturesEnabled )
 		{
-			this.mineshaftGenerator.func_151539_a( this, this.worldObj, par1, par2, var3 );
-			this.villageGenerator.func_151539_a( this, this.worldObj, par1, par2, var3 );
-			this.strongholdGenerator.func_151539_a( this, this.worldObj, par1, par2, var3 );
-			this.scatteredFeatureGenerator.func_151539_a( this, this.worldObj, par1, par2, var3 );
+			mineshaftGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
+			villageGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
+			strongholdGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
+			scatteredFeatureGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
 		}
 		
-		Column var5 = new Column( this.worldObj, var3, var4, par1, par2 );
-		byte[] var6 = var5.getBiomeArray();
+		// create the column
+		Column column = new Column( worldObj, blocks, meta, chunkX, chunkZ );
 		
-		for( int var7 = 0; var7 < var6.length; ++var7 )
+		// set biome info
+		byte[] biomes = column.getBiomeArray();
+		for( int i=0; i<biomes.length; i++ )
 		{
-			var6[var7] = (byte)this.biomesForGeneration[var7].biomeID;
+			biomes[i] = (byte)biomesForGeneration[i].biomeID;
 		}
 		
-		var5.generateSkylightMap();
-		return var5;
+		// init sky lighting and height
+		column.generateSkylightMap();
+		
+		return column;
 	}
 	
 	private void func_147423_a( int p_147423_1_, int p_147423_2_, int p_147423_3_ )
