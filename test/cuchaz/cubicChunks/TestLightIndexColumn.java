@@ -17,6 +17,22 @@ import org.junit.Test;
 public class TestLightIndexColumn
 {
 	@Test
+	public void packing( )
+	{
+		int packed = LightIndexColumn.pack( 0, 0, 0, 0 );
+		assertEquals( 0, LightIndexColumn.unpackBlockY1( packed ) );
+		assertEquals( 0, LightIndexColumn.unpackOpacity1( packed ) );
+		assertEquals( 0, LightIndexColumn.unpackBlockY2( packed ) );
+		assertEquals( 0, LightIndexColumn.unpackOpacity2( packed ) );
+		
+		packed = LightIndexColumn.pack( 1, 2, 3, 4 );
+		assertEquals( 1, LightIndexColumn.unpackBlockY1( packed ) );
+		assertEquals( 2, LightIndexColumn.unpackOpacity1( packed ) );
+		assertEquals( 3, LightIndexColumn.unpackBlockY2( packed ) );
+		assertEquals( 4, LightIndexColumn.unpackOpacity2( packed ) );
+	}
+	
+	@Test
 	public void readZero( )
 	{
 		LightIndexColumn index = new LightIndexColumn();
@@ -30,7 +46,7 @@ public class TestLightIndexColumn
 	public void writeBottomDiffAbove( )
 	{
 		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 0 )
+			LightIndexColumn.pack( 0, 0, 0, 0 )
 		} );
 		
 		index.setOpacity( 0, 1 );
@@ -43,8 +59,7 @@ public class TestLightIndexColumn
 	public void writeBottomSameAbove( )
 	{
 		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 0 ),
-			LightIndexColumn.pack( 1, 1 )
+			LightIndexColumn.pack( 0, 0, 1, 1 )
 		} );
 		
 		index.setOpacity( 0, 1 );
@@ -57,9 +72,8 @@ public class TestLightIndexColumn
 	public void writeMiddleSameBottomSameAbove( )
 	{
 		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 1 ),
-			LightIndexColumn.pack( 5, 0 ),
-			LightIndexColumn.pack( 6, 1 )
+			LightIndexColumn.pack( 0, 1, 5, 0 ),
+			LightIndexColumn.pack( 6, 1, 0, 0 )
 		} );
 		
 		index.setOpacity( 5, 1 );
@@ -73,8 +87,7 @@ public class TestLightIndexColumn
 	public void writeMiddleDiffBottomSameAbove( )
 	{
 		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 0 ),
-			LightIndexColumn.pack( 6, 1 )
+			LightIndexColumn.pack( 0, 0, 6, 1 )
 		} );
 		
 		index.setOpacity( 5, 1 );
@@ -88,7 +101,7 @@ public class TestLightIndexColumn
 	public void writeMiddleDiffBottomDiffAbove( )
 	{
 		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 0 ),
+			LightIndexColumn.pack( 0, 0, 0, 0 ),
 		} );
 		
 		index.setOpacity( 5, 1 );
@@ -102,8 +115,7 @@ public class TestLightIndexColumn
 	public void writeMiddleSameBottomDiffAbove( )
 	{
 		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 1 ),
-			LightIndexColumn.pack( 6, 0 )
+			LightIndexColumn.pack( 0, 1, 6, 0 )
 		} );
 		
 		index.setOpacity( 5, 1 );
