@@ -313,10 +313,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		nbt.setBoolean( "LightPopulated", column.isLightPopulated );
 		nbt.setLong( "InhabitedTime", column.inhabitedTime );
 		
-		// 16x16 array of highest y-value in chunk
-		nbt.setIntArray( "HeightMap", column.heightMap );
-		// UNDONE: might need to store more detailed data structure for lighting/rain calculations
-		
 		// biome mappings
 		nbt.setByteArray( "Biomes", column.getBiomeArray() );
 		
@@ -331,15 +327,14 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		}
 		nbt.setIntArray( "CubicChunks", ranges );
 		
+		// light index
+		nbt.setByteArray( "LightIndex", column.getLightIndex().getData() );
+		
 		return nbt;
 	}
 	
 	private Column readColumnFromNBT( List<RangeInt> cubicChunkYRanges, World world, int x, int z, NBTTagCompound nbt )
 	{
-		// NBT types:
-		// 0      1       2        3      4       5        6         7         8         9       10          11
-		// "END", "BYTE", "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "BYTE[]", "STRING", "LIST", "COMPOUND", "INT[]"
-		
 		// check the version number
 		byte version = nbt.getByte( "v" );
 		if( version != 1 )
@@ -365,9 +360,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		column.isLightPopulated = nbt.getBoolean( "LightPopulated" );
 		column.inhabitedTime = nbt.getLong( "InhabitedTime" );
 		
-		// height map		
-		column.heightMap = nbt.getIntArray( "HeightMap" );
-		
 		// biomes
 		column.setBiomeArray( nbt.getByteArray( "Biomes" ) );
 		
@@ -382,6 +374,9 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		{
 			cubicChunkYRanges.add( new RangeInt( ranges[i*2+0], ranges[i*2+1] ) );
 		}
+		
+		// read light index
+		column.getLightIndex().readData( nbt.getByteArray( "LightIndex" ) );
 		
 		return column;
 	}
@@ -478,6 +473,10 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 	
 	private CubicChunk readCubicChunkFromNbtAndAddToColumn( World world, Column column, int x, int y, int z, NBTTagCompound nbt )
 	{
+		// NBT types:
+		// 0      1       2        3      4       5        6         7         8         9       10          11
+		// "END", "BYTE", "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "BYTE[]", "STRING", "LIST", "COMPOUND", "INT[]"
+		
 		// check the version number
 		byte version = nbt.getByte( "v" );
 		if( version != 1 )

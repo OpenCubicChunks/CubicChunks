@@ -10,105 +10,51 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
-import java.util.Iterator;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
 public class LightIndexColumn
 {
 	private TreeMap<Integer,Integer> m_opacity;
+	private int m_topNonTransparentBlockY;
 	
 	public LightIndexColumn( )
 	{
+		// UNDONE: could reduce memory usage by using the int-packed representation in memory
+		// although, that's probably not necessary since using cubic chunks should actually save memory
+		// will have to do memory profiling to see if it's even worth trying to optimize memory usage here
 		m_opacity = new TreeMap<Integer,Integer>();
 		
 		// init the column with all 0 opacity
 		m_opacity.put( 0, 0 );
+		m_topNonTransparentBlockY = -1;
 	}
 	
-	public LightIndexColumn( int[] data )
+	public void readData( DataInputStream in )
+	throws IOException
 	{
-		m_opacity = new TreeMap<Integer,Integer>();
-		for( int datum : data )
+		m_opacity.clear();
+		int numEntries = in.readUnsignedShort();
+		for( int i=0; i<numEntries; i++ )
 		{
-			// the first entry always gets added
-			int blockY1 = unpackBlockY1( datum );
-			int opacity1 = unpackOpacity1( datum );
-			m_opacity.put( blockY1, opacity1 );
-			
-			// the second entry can't have a zero y value, so if this value is zero, then there's no entry here
-			int blockY2 = unpackBlockY2( datum );
-			int opacity2 = unpackOpacity2( datum );
-			if( blockY2 > 0 )
-			{
-				m_opacity.put( blockY2, opacity2 );
-			}
+			int blockY = in.readUnsignedShort();
+			int opacity = in.readUnsignedByte();
+			m_opacity.put( blockY, opacity );
 		}
 	}
 	
-	public int[] getData( )
+	public void writeData( DataOutputStream out )
+	throws IOException
 	{
-		int[] data = new int[m_opacity.size()];
-		int i = 0;
-		Iterator<Map.Entry<Integer,Integer>> iter = m_opacity.entrySet().iterator();
-		while( iter.hasNext() )
+		out.writeShort( m_opacity.size() );
+		for( Map.Entry<Integer,Integer> entry : m_opacity.entrySet() )
 		{
-			Map.Entry<Integer,Integer> entry1 = iter.next();
-			if( iter.hasNext() )
-			{
-				// we have two entries
-				Map.Entry<Integer,Integer> entry2 = iter.next();
-				
-				// pack both into the same integer
-				data[i++] = pack( entry1.getKey(), entry1.getValue(), entry2.getKey(), entry2.getValue() );
-			}
-			else
-			{
-				// we have just one entry
-				// pack it with a big fat zero
-				data[i++] = pack( entry1.getKey(), entry1.getValue(), 0, 0 );
-			}
+			out.writeShort( entry.getKey() );
+			out.writeByte( entry.getValue() );
 		}
-		return data;
-	}
-	
-	public static int pack( int blockY1, int opacity1, int blockY2, int opacity2 )
-	{
-		// light opacity is [0,255], all blocks 0, 255 except ice,water:3, web:1
-		// we can just move anything >15 down to 15 and then opacity fits into 4 bytes
-		if( opacity1 > 15 )
-		{
-			opacity1 = 15;
-		}
-		if( opacity2 > 15 )
-		{
-			opacity2 = 15;
-		}
-		
-		return Bits.packUnsignedToInt( blockY1, 12, 0 )
-			| Bits.packUnsignedToInt( opacity1, 4, 12 )
-			| Bits.packUnsignedToInt( blockY2, 12, 16 )
-			| Bits.packUnsignedToInt( opacity2, 4, 28 );
-	}
-	
-	public static int unpackBlockY1( int packed )
-	{
-		return Bits.unpackUnsigned( packed, 12, 0 );
-	}
-	
-	public static int unpackOpacity1( int packed )
-	{
-		return Bits.unpackUnsigned( packed, 4, 12 );
-	}
-	
-	public static int unpackBlockY2( int packed )
-	{
-		return Bits.unpackUnsigned( packed, 12, 16 );
-	}
-	
-	public static int unpackOpacity2( int packed )
-	{
-		return Bits.unpackUnsigned( packed, 4, 28 );
 	}
 	
 	public int getOpacity( int blockY )
@@ -190,5 +136,66 @@ public class LightIndexColumn
 			assert( getOpacity( blockY + 1 ) == opacityAbove );
 			assert( getOpacity( blockY - 1 ) == opacityBelow );
 		}
+		
+		// did the top opacity change?
+		if( opacity > 0 )
+		{
+			if( blockY > m_topNonTransparentBlockY )
+			{
+				// we added a new top non-transparent block, update cache
+				m_topNonTransparentBlockY = blockY;
+			}
+		}
+		else
+		{
+			if( blockY == m_topNonTransparentBlockY )
+			{
+				// we removed the top non-transparent block, invalidate cache
+				m_topNonTransparentBlockY = -1;
+			}
+		}
+	}
+	
+	public int getTopNonTransparentBlockY( )
+	{
+		// do we need to recompute this?
+		if( m_topNonTransparentBlockY == -1 )
+		{
+			m_topNonTransparentBlockY = 0;
+			int lastBlockY = 0;
+			for( Map.Entry<Integer,Integer> entry : m_opacity.descendingMap().entrySet() )
+			{
+				int opacity = entry.getValue();
+				if( opacity > 0 )
+				{
+					// if there was no last segment, that means the top entry in this column is non-transparent
+					// which means the top non-transparent block is at infinity
+					// obviously that doesn't make any sense
+					assert( lastBlockY != 0 );
+					
+					// go to the top of this segment
+					m_topNonTransparentBlockY = lastBlockY - 1;
+					break;
+				}
+				
+				lastBlockY = entry.getKey();
+			}
+		}
+		
+		return m_topNonTransparentBlockY;
+	}
+
+	public String dump( )
+	{
+		StringBuilder buf = new StringBuilder();
+		for( Map.Entry<Integer,Integer> entry : m_opacity.entrySet() )
+		{
+			if( buf.length() > 0 )
+			{
+				buf.append( ", " );
+			}
+			buf.append( String.format( "%d:%d", entry.getKey(), entry.getValue() ) );
+		}
+		return buf.toString();
 	}
 }

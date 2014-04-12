@@ -10,28 +10,18 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 import org.junit.Test;
 
 public class TestLightIndexColumn
 {
-	@Test
-	public void packing( )
-	{
-		int packed = LightIndexColumn.pack( 0, 0, 0, 0 );
-		assertEquals( 0, LightIndexColumn.unpackBlockY1( packed ) );
-		assertEquals( 0, LightIndexColumn.unpackOpacity1( packed ) );
-		assertEquals( 0, LightIndexColumn.unpackBlockY2( packed ) );
-		assertEquals( 0, LightIndexColumn.unpackOpacity2( packed ) );
-		
-		packed = LightIndexColumn.pack( 1, 2, 3, 4 );
-		assertEquals( 1, LightIndexColumn.unpackBlockY1( packed ) );
-		assertEquals( 2, LightIndexColumn.unpackOpacity1( packed ) );
-		assertEquals( 3, LightIndexColumn.unpackBlockY2( packed ) );
-		assertEquals( 4, LightIndexColumn.unpackOpacity2( packed ) );
-	}
-	
 	@Test
 	public void readZero( )
 	{
@@ -45,9 +35,7 @@ public class TestLightIndexColumn
 	@Test
 	public void writeBottomDiffAbove( )
 	{
-		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 0, 0, 0 )
-		} );
+		LightIndexColumn index = buildColumn( 0, 0 );
 		
 		index.setOpacity( 0, 1 );
 		
@@ -58,9 +46,7 @@ public class TestLightIndexColumn
 	@Test
 	public void writeBottomSameAbove( )
 	{
-		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 0, 1, 1 )
-		} );
+		LightIndexColumn index = buildColumn( 0, 0, 1, 1 );
 		
 		index.setOpacity( 0, 1 );
 		
@@ -71,10 +57,7 @@ public class TestLightIndexColumn
 	@Test
 	public void writeMiddleSameBottomSameAbove( )
 	{
-		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 1, 5, 0 ),
-			LightIndexColumn.pack( 6, 1, 0, 0 )
-		} );
+		LightIndexColumn index = buildColumn( 0, 1, 5, 0, 6, 1 );
 		
 		index.setOpacity( 5, 1 );
 		
@@ -86,9 +69,7 @@ public class TestLightIndexColumn
 	@Test
 	public void writeMiddleDiffBottomSameAbove( )
 	{
-		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 0, 6, 1 )
-		} );
+		LightIndexColumn index = buildColumn( 0, 0, 6, 1 );
 		
 		index.setOpacity( 5, 1 );
 		
@@ -100,9 +81,7 @@ public class TestLightIndexColumn
 	@Test
 	public void writeMiddleDiffBottomDiffAbove( )
 	{
-		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 0, 0, 0 ),
-		} );
+		LightIndexColumn index = buildColumn( 0, 0 );
 		
 		index.setOpacity( 5, 1 );
 		
@@ -114,14 +93,38 @@ public class TestLightIndexColumn
 	@Test
 	public void writeMiddleSameBottomDiffAbove( )
 	{
-		LightIndexColumn index = new LightIndexColumn( new int[] {
-			LightIndexColumn.pack( 0, 1, 6, 0 )
-		} );
+		LightIndexColumn index = buildColumn( 0, 1, 6, 0 );
 		
 		index.setOpacity( 5, 1 );
 		
 		assertEquals( 1, index.getOpacity( 4 ) );
 		assertEquals( 1, index.getOpacity( 5 ) );
 		assertEquals( 0, index.getOpacity( 6 ) );
+	}
+	
+	private LightIndexColumn buildColumn( int ... data )
+	{
+		try
+		{
+			// write the data
+			ByteArrayOutputStream buf = new ByteArrayOutputStream();
+			DataOutputStream out = new DataOutputStream( buf );
+			out.writeShort( data.length/2 );
+			for( int i=0; i<data.length; )
+			{
+				out.writeShort( data[i++] );
+				out.writeByte( data[i++] );
+			}
+			out.close();
+			
+			// read the data
+			LightIndexColumn index = new LightIndexColumn();
+			index.readData( new DataInputStream( new ByteArrayInputStream( buf.toByteArray() ) ) );
+			return index;
+		}
+		catch( IOException ex )
+		{
+			throw new Error( ex );
+		}
 	}
 }

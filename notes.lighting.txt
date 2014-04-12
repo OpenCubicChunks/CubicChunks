@@ -1,15 +1,21 @@
 
-HOW MINECRAFT CURRENTLY WORKS:
+HOW MINECRAFT LIGHTING CURRENTLY WORKS:
+
+NOTE: sea level is set at blockY=63 and lots of code uses that constant
+	chunk generation
+	entity spawning
+	lighting
 
 Chunk generation (server only):
 	chunks are generated from chunkY=0 all the way up to the "top"
 	top isn't always chunkY=15... it's usually 3,4,5
 	
-	generation starts here:
 	Column CubicChunkGenerator.provideChunk( int chunkX, int chunkZ )
 		Column( World world, Block[] blocks, byte[] meta, int chunkX, int chunkZ )
 		copies biome info over to the column
 		Column.generateSkylightMap()
+	ChunkProvider.populateChunk()
+		Chunk.func_150809_p() // populateLighting
 
 Chunk loading on client/server:
 	no lighting calculations
@@ -30,7 +36,7 @@ Block change (client and server):
 			World.updateLightByType( Block, blockX, blockY, blockZ )
 
 on column tick:
-	recheckGaps()
+	Chunk.recheckGaps()
 		Column.getHeightValue( localX, localZ )
 		for each block x,z neighbor
 			World.getChunkHeightMapMinimum( neighborBlockX, neighborBlockZ )
@@ -41,8 +47,22 @@ on column tick:
 				Column.updateSkylightNeighborHeight( neighborBlockX, neighborBlockZ, startBlockY, stopBlockY )
 					for blockY in range
 						World.updateLightByType( sky, neighborBlockX, blockY, neighborBlockZ )
+	Chunk.func_150809_p() // populate lighting
+		
 
 Modules:
+
+Chunk.func_150809_p() // populateLighting
+	for x,z block column:
+		Chunk.func_150811_f() // populateBlockColumnLighting()
+	for each column x,z edge:
+		Chunk.func_150801_a() // populateEdgeLighting()
+			Chunk.func_150811_f() // populateBlockColumnLighting()
+			
+Chunk.func_150811_f() // populateBlockColumnLighting()
+	Chunk.getLightOpacity()
+	World.func_147451_t() // updateLights
+	World.getBlock().getLightValue()
 
 Column.generateSkylightMap()
 	loop over ( localX, localY, localZ )
@@ -50,7 +70,7 @@ Column.generateSkylightMap()
 		CubicChunk.getStorage().setExtSkylightValue( localX, localY, localZ )
 		World.func_147479_m( blockX, blockY, blockZ ) // markForRenderUpdate
 
-Column.updateBlockSkylight( localX, blockY, localZ )
+Column.updateBlockSkylight( localX, blockY, localZ ) // aka relightBlock
 	read Column.heightMap[localX,localZ]
 	Column.func_150808_b( localX, y, localZ ) // getLightOpacity
 	World.markBlocksDirtyVertical( minBlockX, minBlockZ, startBlockY, stopBlockY )
@@ -90,11 +110,32 @@ World.computeLightValue( blockX, blockY, blockZ, type )
 
 What queries we need to answer to have cubic chunks:
 	Chunk.canBlockSeeTheSky()
-	Chunk.getBlock()
-		// BUT!!! only calls to block:
-		Block.getLightValue() // emitted light
-		Block.getLightOpacity() // ability to block light
-		// maybe can override world to call Chunk accessors for those properties directly
+		checks Chunk.heightMap
+	Chunk.getBlock().getLightValue() // emitted light
+	Chunk.getBlock().getLightOpacity() // ability to block light
 	Column.getSavedLightValue( block or sky )
 	Column.setLightValue( block or sky )
 	Column.getLightOpacity()
+
+	
+Chunk.heightMap
+	read:
+		Chunk.canBlockSeeTheSky()
+		Chunk.setBlock()
+		Chunk.getHeightValue()
+	read/write:
+		Chunk.generateHeightMap()
+		Chunk.generateSkylightMap()
+		Chunk.relightBlock() private, called by Chunk.setBlock()
+	conclusion:
+		can replace heightMap with our light index
+
+Chunk.heightMapMinimum
+	read:
+		World.getChunkHeightMapMinimum()
+	read/write:
+		Chunk.generateHeightMap()
+		Chunk.generateSkylightMap()
+		Chunk.relightBlock() private, called by Chunk.setBlock()
+	conclusion:
+		used by World, can't replace

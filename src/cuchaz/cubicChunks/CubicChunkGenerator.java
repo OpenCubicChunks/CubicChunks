@@ -386,24 +386,36 @@ public class CubicChunkGenerator implements IChunkProvider
 	 * Populates chunk with ores etc etc
 	 */
 	@Override
-	public void populate( IChunkProvider par1IChunkProvider, int par2, int par3 )
+	public void populate( IChunkProvider par1IChunkProvider, int chunkX, int chunkZ )
 	{
+		// TEMP: check height
+        for( int x=0; x<16; x++ )
+        {
+        	for( int z=0; z<16;z++ )
+        	{
+        		if( worldObj.getHeightValue( chunkX << 4 | x, chunkZ << 4 | z ) <= 0 )
+        		{
+        			throw new Error( "World doesn't know about chunk!" );
+        		}
+        	}
+        }
+        
 		BlockFalling.field_149832_M = true;
-		int var4 = par2 * 16;
-		int var5 = par3 * 16;
+		int var4 = chunkX * 16;
+		int var5 = chunkZ * 16;
 		BiomeGenBase var6 = this.worldObj.getBiomeGenForCoords( var4 + 16, var5 + 16 );
 		this.rand.setSeed( this.worldObj.getSeed() );
 		long var7 = this.rand.nextLong() / 2L * 2L + 1L;
 		long var9 = this.rand.nextLong() / 2L * 2L + 1L;
-		this.rand.setSeed( (long)par2 * var7 + (long)par3 * var9 ^ this.worldObj.getSeed() );
+		this.rand.setSeed( (long)chunkX * var7 + (long)chunkZ * var9 ^ this.worldObj.getSeed() );
 		boolean var11 = false;
 		
 		if( this.mapFeaturesEnabled )
 		{
-			this.mineshaftGenerator.generateStructuresInChunk( this.worldObj, this.rand, par2, par3 );
-			var11 = this.villageGenerator.generateStructuresInChunk( this.worldObj, this.rand, par2, par3 );
-			this.strongholdGenerator.generateStructuresInChunk( this.worldObj, this.rand, par2, par3 );
-			this.scatteredFeatureGenerator.generateStructuresInChunk( this.worldObj, this.rand, par2, par3 );
+			this.mineshaftGenerator.generateStructuresInChunk( this.worldObj, this.rand, chunkX, chunkZ );
+			var11 = this.villageGenerator.generateStructuresInChunk( this.worldObj, this.rand, chunkX, chunkZ );
+			this.strongholdGenerator.generateStructuresInChunk( this.worldObj, this.rand, chunkX, chunkZ );
+			this.scatteredFeatureGenerator.generateStructuresInChunk( this.worldObj, this.rand, chunkX, chunkZ );
 		}
 		
 		int var12;
