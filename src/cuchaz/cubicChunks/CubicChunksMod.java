@@ -20,6 +20,7 @@ import cuchaz.magicMojoModLoader.api.Version;
 import cuchaz.magicMojoModLoader.api.events.EncodeChunkEvent;
 import cuchaz.magicMojoModLoader.api.events.InitChunkProviderClientEvent;
 import cuchaz.magicMojoModLoader.api.events.InitChunkProviderServerEvent;
+import cuchaz.magicMojoModLoader.api.events.InitPlayerManagerEvent;
 
 public class CubicChunksMod implements Mod
 {
@@ -67,5 +68,10 @@ public class CubicChunksMod implements Mod
 				LogManager.getLogger().error( String.format( "Unable to encode data for column (%d,%d)", column.xPosition, column.zPosition ), ex );
 			}
 		}
+	}
+	
+	public void handleEvent( InitPlayerManagerEvent event )
+	{
+		event.setCustomPlayerManager( new CubicChunkPlayerManager( event.getWorldServer(), event.getViewDistance() ) );
 	}
 }
