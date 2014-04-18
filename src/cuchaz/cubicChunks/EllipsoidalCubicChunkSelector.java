@@ -10,14 +10,14 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
-import java.util.List;
+import java.util.Collection;
 
 public class EllipsoidalCubicChunkSelector
 {
 	private static final int SemiAxisY = 2;
 	private static final int SemiAxisY2 = SemiAxisY*SemiAxisY;
 	
-	public static void getAddresses( List<Long> out, int chunkX, int chunkY, int chunkZ, int viewDistance )
+	public static void getAddresses( Collection<Long> out, int chunkX, int chunkY, int chunkZ, int viewDistance )
 	{
 		// equation for an axis-aligned ellipsoid:
 		// x^2/a^2 + y^2/b^2 + z^2/c^2 = 1

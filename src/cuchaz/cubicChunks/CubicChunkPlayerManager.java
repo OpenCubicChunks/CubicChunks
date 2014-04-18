@@ -16,19 +16,17 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.play.server.S21PacketChunkData;
-import net.minecraft.network.play.server.S22PacketMultiBlockChange;
-import net.minecraft.network.play.server.S23PacketBlockChange;
+import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S26PacketMapChunkBulk;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MathHelper;
-import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
@@ -41,12 +39,18 @@ public class CubicChunkPlayerManager extends PlayerManager
 		public EntityPlayerMP player;
 		public Set<Long> watchedAddresses;
 		public LinkedList<CubicChunk> outgoingCubicChunks;
+		public int lastBlockX;
+		public int lastBlockY;
+		public int lastBlockZ;
 		
 		public PlayerInfo( EntityPlayerMP player )
 		{
 			this.player = player;
 			this.watchedAddresses = new TreeSet<Long>();
 			this.outgoingCubicChunks = new LinkedList<CubicChunk>();
+			this.lastBlockX = MathHelper.floor_double( player.posZ );
+			this.lastBlockY = MathHelper.floor_double( player.posY );
+			this.lastBlockZ = MathHelper.floor_double( player.posZ );
 		}
 		
 		public void sortOutgoingCubicChunks( )
@@ -96,10 +100,6 @@ public class CubicChunkPlayerManager extends PlayerManager
 		int chunkX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
 		int chunkY = Coords.blockToChunk( MathHelper.floor_double( player.posY ) );
 		int chunkZ = Coords.blockToChunk( MathHelper.floor_double( player.posZ ) );
-		
-		// save the last checked position for the player
-		player.managedPosX = player.posX;
-		player.managedPosZ = player.posZ;
 		
 		// make new player info
 		PlayerInfo info = new PlayerInfo( player );
@@ -154,8 +154,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 		
 		for( CubicChunkWatcher watcher : m_watchers.values() )
 		{
-			// UNDONE: send (or collect?) cubic chunk updates
-			
+			watcher.sendUpdates();
 			watcher.tick();
 		}
 		
@@ -165,50 +164,6 @@ public class CubicChunkPlayerManager extends PlayerManager
 			// unload everything
 			getCubicChunkProvider().unloadAllChunks();
 		}
-		
-		// NOTE: these things are done in sub-method calls
-		
-        // send single block updates
-        var1 = this.chunkLocation.chunkXPos * 16 + (this.field_151254_d[0] >> 12 & 15);
-        var2 = this.field_151254_d[0] & 255;
-        var3 = this.chunkLocation.chunkZPos * 16 + (this.field_151254_d[0] >> 8 & 15);
-        this.func_151251_a(new S23PacketBlockChange(var1, var2, var3, PlayerManager.this.theWorldServer));
-        if (PlayerManager.this.theWorldServer.getBlock(var1, var2, var3).hasTileEntity())
-        {
-            this.func_151252_a(PlayerManager.this.theWorldServer.getTileEntity(var1, var2, var3));
-        }
-        
-        // send multi-block updates
-        this.func_151251_a(new S22PacketMultiBlockChange(this.numberOfTilesToUpdate, this.field_151254_d, PlayerManager.this.theWorldServer.getChunkFromChunkCoords(this.chunkLocation.chunkXPos, this.chunkLocation.chunkZPos)));
-        for (var1 = 0; var1 < this.numberOfTilesToUpdate; ++var1)
-        {
-            var2 = this.chunkLocation.chunkXPos * 16 + (this.field_151254_d[var1] >> 12 & 15);
-            var3 = this.field_151254_d[var1] & 255;
-            var4 = this.chunkLocation.chunkZPos * 16 + (this.field_151254_d[var1] >> 8 & 15);
-
-            if (PlayerManager.this.theWorldServer.getBlock(var2, var3, var4).hasTileEntity())
-            {
-                this.func_151252_a(PlayerManager.this.theWorldServer.getTileEntity(var2, var3, var4));
-            }
-        }
-        
-        // send whole chunk updates
-        var1 = this.chunkLocation.chunkXPos * 16;
-        var2 = this.chunkLocation.chunkZPos * 16;
-        this.func_151251_a(new S21PacketChunkData(PlayerManager.this.theWorldServer.getChunkFromChunkCoords(this.chunkLocation.chunkXPos, this.chunkLocation.chunkZPos), false, this.flagsYAreasToUpdate));
-        for (var3 = 0; var3 < 16; ++var3)
-        {
-            if ((this.flagsYAreasToUpdate & 1 << var3) != 0)
-            {
-                var4 = var3 << 4;
-                List var5 = PlayerManager.this.theWorldServer.func_147486_a(var1, var4, var2, var1 + 16, var4 + 16, var2 + 16);
-
-                for (int var6 = 0; var6 < var5.size(); ++var6)
-                {
-                    this.func_151252_a((TileEntity)var5.get(var6));
-                }
-            }
-        }
 	}
 	
 	//     markBlockForUpdate
@@ -237,51 +192,69 @@ public class CubicChunkPlayerManager extends PlayerManager
 		// if the player moved into a new chunk, update which chunks the player needs to know about
 		// then update the list of chunks that need to be sent to the client
 		
-		int playerChunkX = (int)player.posX >> 4;
-		int playerChunkZ = (int)player.posZ >> 4;
-		double dx = player.managedPosX - player.posX;
-		double dz = player.managedPosZ - player.posZ;
-		double distMovedSquared = dx * dx + dz * dz;
-		
-		if( distMovedSquared >= 64.0D ) // 8 blocks
+		// get the player info
+		PlayerInfo info = m_players.get( player.getEntityId() );
+		if( info == null )
 		{
-			int lastChunkX = (int)player.managedPosX >> 4;
-			int lastChunkZ = (int)player.managedPosZ >> 4;
-			int radius = this.playerViewRadius;
-			int chunkDx = playerChunkX - lastChunkX;
-			int chunkDz = playerChunkZ - lastChunkZ;
-			
-			if( chunkDx != 0 || chunkDz != 0 )
+			return;
+		}
+		
+		// how far did the player move?
+		int newBlockX = MathHelper.floor_double( player.posX );
+		int newBlockY = MathHelper.floor_double( player.posY );
+		int newBlockZ = MathHelper.floor_double( player.posZ );
+		int manhattanDistance = Math.abs( newBlockX - info.lastBlockX )
+				+ Math.abs( newBlockY - info.lastBlockY )
+				+ Math.abs( newBlockZ - info.lastBlockZ );
+		if( manhattanDistance < 8 )
+		{
+			return;
+		}
+		
+		// did the player move into a new cubic chunk?
+		int newChunkX = Coords.blockToChunk( newBlockX );
+		int newChunkY = Coords.blockToChunk( newBlockY );
+		int newChunkZ = Coords.blockToChunk( newBlockZ );
+		int oldChunkX = Coords.blockToChunk( info.lastBlockX );
+		int oldChunkY = Coords.blockToChunk( info.lastBlockY );
+		int oldChunkZ = Coords.blockToChunk( info.lastBlockZ );
+		if( newChunkX == oldChunkX && newChunkY == oldChunkY && newChunkZ == oldChunkZ )
+		{
+			return;
+		}
+		
+		// find out which cubic chunks have been added to view, and which ones have been removed
+		Set<Long> oldAddresses = new TreeSet<Long>();
+		EllipsoidalCubicChunkSelector.getAddresses( oldAddresses, oldChunkX, oldChunkY, oldChunkZ, m_viewDistance );
+		Set<Long> newAddresses = new TreeSet<Long>();
+		EllipsoidalCubicChunkSelector.getAddresses( newAddresses, newChunkX, newChunkY, newChunkZ, m_viewDistance );
+		Set<Long> intersection = new TreeSet<Long>( newAddresses );
+		intersection.retainAll( oldAddresses );
+		oldAddresses.removeAll( intersection );
+		newAddresses.removeAll( intersection );
+		
+		// add to new watchers
+		for( long address : newAddresses )
+		{
+			CubicChunkWatcher watcher = getOrCreateWatcher( address );
+			watcher.addPlayer( player );
+			info.outgoingCubicChunks.add( watcher.getCubicChunk() );
+		}
+		
+		// remove from old watchers
+		for( long address : oldAddresses )
+		{
+			CubicChunkWatcher watcher = getWatcher( address );
+			if( watcher != null )
 			{
-				for( int x = playerChunkX - radius; x <= playerChunkX + radius; ++x )
-				{
-					for( int z = playerChunkZ - radius; z <= playerChunkZ + radius; ++z )
-					{
-						// add player to new chunk
-						if( !this.overlaps( x, z, lastChunkX, lastChunkZ, radius ) )
-						{
-							PlayerInstance watcher = this.getOrCreateChunkWatcher( x, z, true );
-							watcher.addPlayer( player );
-						}
-						
-						// remove player from old chunk
-						if( !this.overlaps( x - chunkDx, z - chunkDz, playerChunkX, playerChunkZ, radius ) )
-						{
-							PlayerManager.PlayerInstance var17 = this.getOrCreateChunkWatcher( x - chunkDx, z - chunkDz, false );
-							
-							if( var17 != null )
-							{
-								var17.removePlayer( player );
-							}
-						}
-					}
-				}
-				
-				this.filterChunkLoadQueue( player );
-				player.managedPosX = player.posX;
-				player.managedPosZ = player.posZ;
+				watcher.removePlayer( player );
 			}
 		}
+		
+		// update player info
+		info.lastBlockX = newBlockX;
+		info.lastBlockY = newBlockY;
+		info.lastBlockZ = newBlockZ;
 	}
 	
 	public boolean isPlayerWatchingChunk( EntityPlayerMP player, int chunkX, int chunkZ )
@@ -318,64 +291,67 @@ public class CubicChunkPlayerManager extends PlayerManager
 		}
 		info.sortOutgoingCubicChunks();
 		
-		// UNDONE: pull off enough cubic chunks from the queue to fit in a packet
-		
-		// copied from EntityPlayerMP.onUpdate()
-		if( !this.loadedChunks.isEmpty() )
+		// pull off enough cubic chunks from the queue to fit in a packet
+		final int MaxCubicChunksToSend = 20;
+		List<CubicChunk> cubicChunksToSend = new ArrayList<CubicChunk>();
+		List<TileEntity> tileEntitiesToSend = new ArrayList<TileEntity>();
+		Iterator<CubicChunk> iter = info.outgoingCubicChunks.iterator();
+		while( iter.hasNext() && cubicChunksToSend.size() < MaxCubicChunksToSend )
 		{
-			// drain the "loadedChunks" list into a buffer for later
-			// transmission
-			ArrayList chunks = new ArrayList();
-			Iterator iterChunk = this.loadedChunks.iterator();
-			ArrayList tileEntities = new ArrayList();
-			Chunk chunk;
-			
-			while( iterChunk.hasNext() && chunks.size() < S26PacketMapChunkBulk.func_149258_c() )
+			CubicChunk cubicChunk = iter.next();
+			if( cubicChunk.getColumn().func_150802_k() )
 			{
-				ChunkCoordIntPair chunkCoords = (ChunkCoordIntPair)iterChunk.next();
+				// add this cubic chunk to the send buffer
+				cubicChunksToSend.add( cubicChunk );
+				iter.remove();
 				
-				if( chunkCoords != null )
+				// add tile entities too
+				for( TileEntity tileEntity : cubicChunk.tileEntities() )
 				{
-					if( this.worldObj.blockExists( chunkCoords.chunkXPos << 4, 0, chunkCoords.chunkZPos << 4 ) )
-					{
-						chunk = this.worldObj.getChunkFromChunkCoords( chunkCoords.chunkXPos, chunkCoords.chunkZPos );
-						
-						if( chunk.func_150802_k() )
-						{
-							chunks.add( chunk );
-							tileEntities.addAll( ( (WorldServer)this.worldObj ).func_147486_a( chunkCoords.chunkXPos * 16, 0, chunkCoords.chunkZPos * 16, chunkCoords.chunkXPos * 16 + 16, 256,
-									chunkCoords.chunkZPos * 16 + 16 ) );
-							iterChunk.remove();
-						}
-					}
-				}
-				else
-				{
-					iterChunk.remove();
+					tileEntitiesToSend.add( tileEntity );
 				}
 			}
-			
-			if( !chunks.isEmpty() )
+		}
+		
+		if( cubicChunksToSend.isEmpty() )
+		{
+			return;
+		}
+		
+		// group the cubic chunks into column views
+		Map<Long,ColumnView> views = new TreeMap<Long,ColumnView>();
+		for( CubicChunk cubicChunk : cubicChunksToSend )
+		{
+			// is there a column view for this cubic chunk?
+			long columnAddress = AddressTools.getAddress( 0, cubicChunk.getX(), 0, cubicChunk.getY() );
+			ColumnView view = views.get( columnAddress );
+			if( view == null )
 			{
-				// send the selected chunks
-				this.playerNetServerHandler.sendPacket( new S26PacketMapChunkBulk( chunks ) );
-				
-				// send tile entities in those chunks
-				Iterator var10 = tileEntities.iterator();
-				while( var10.hasNext() )
-				{
-					TileEntity var11 = (TileEntity)var10.next();
-					this.func_147097_b( var11 );
-				}
-				
-				// something about watching chunks
-				var10 = chunks.iterator();
-				while( var10.hasNext() )
-				{
-					chunk = (Chunk)var10.next();
-					this.getServerForPlayer().getEntityTracker().func_85172_a( this, chunk );
-				}
+				view = new ColumnView( cubicChunk.getColumn() );
+				views.put( columnAddress, view );
 			}
+			
+			view.addCubicChunkToView( cubicChunk );
+		}
+		List<Chunk> columnsToSend = new ArrayList<Chunk>( views.values() );
+		
+		// send the cubic chunk data
+		player.playerNetServerHandler.sendPacket( new S26PacketMapChunkBulk( columnsToSend ) );
+		
+		// send tile entity data
+		for( TileEntity tileEntity : tileEntitiesToSend )
+		{
+			Packet packet = tileEntity.getDescriptionPacket();
+			if( packet != null )
+			{
+				player.playerNetServerHandler.sendPacket( packet );
+			}
+		}
+		
+		// watch entities on the chunks we just sent
+		for( Chunk chunk : columnsToSend )
+		{
+			m_worldServer.getEntityTracker().func_85172_a( player, chunk );
 		}
 	}
 	

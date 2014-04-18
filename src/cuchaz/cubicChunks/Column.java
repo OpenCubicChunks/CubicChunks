@@ -184,41 +184,7 @@ public class Column extends Chunk
 	
 	public List<RangeInt> getCubicChunkYRanges( )
 	{
-		// compute a kind of run-length encoding on the cubic chunk y-values
-		List<RangeInt> ranges = new ArrayList<RangeInt>();
-		Integer start = null;
-		Integer stop = null;
-		for( int chunkY : m_cubicChunks.keySet() )
-		{
-			if( start == null )
-			{
-				// start a new range
-				start = chunkY;
-				stop = chunkY;
-			}
-			else if( chunkY == stop + 1 )
-			{
-				// extend the range
-				stop = chunkY;
-			}
-			else
-			{
-				// end the range
-				ranges.add( new RangeInt( start, stop ) );
-				
-				// start a new range
-				start = chunkY;
-				stop = chunkY;
-			}
-		}
-		
-		if( start != null )
-		{
-			// finish the last range
-			ranges.add( new RangeInt( start, stop ) );
-		}
-		
-		return ranges;
+		return getRanges( m_cubicChunks.keySet() );
 	}
 	
 	@Override
@@ -596,7 +562,7 @@ public class Column extends Chunk
 		}
 	}
 	
-	public byte[] encode( boolean isFirstTime, int flagsYAreasToUpdate )
+	public byte[] encode( boolean isFirstTime )
 	throws IOException
 	{
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
@@ -605,59 +571,51 @@ public class Column extends Chunk
 		
 		// how many cubic chunks are we sending?
 		int numCubicChunks = 0;
-		for( CubicChunk cubicChunk : m_cubicChunks.values() )
+		for( @SuppressWarnings( "unused" ) CubicChunk cubicChunk : cubicChunks() )
 		{
-			// is this cubic chunk flagged for sending?
-			if( ( flagsYAreasToUpdate & 1 << cubicChunk.getY() ) != 0 )
-			{
-				numCubicChunks++;
-			}
+			numCubicChunks++;
 		}
 		out.writeShort( numCubicChunks );
 		
 		// send the actual cubic chunk data
-		for( CubicChunk cubicChunk : m_cubicChunks.values() )
+		for( CubicChunk cubicChunk : cubicChunks() )
 		{
-			// is this cubic chunk flagged for sending?
-			if( ( flagsYAreasToUpdate & 1 << cubicChunk.getY() ) != 0 )
+			// signal we're sending this cubic chunk
+			out.writeShort( cubicChunk.getY() );
+			
+			ExtendedBlockStorage storage = cubicChunk.getStorage();
+			
+			// 1. block IDs, low bits
+			out.write( storage.getBlockLSBArray() );
+			
+			// 2. block IDs, high bits
+			if( storage.getBlockMSBArray() != null )
 			{
-				// signal we're sending this cubic chunk
-				out.writeShort( cubicChunk.getY() );
-				
-				ExtendedBlockStorage storage = cubicChunk.getStorage();
-				
-				// 1. block IDs, low bits
-				out.write( storage.getBlockLSBArray() );
-				
-				// 2. block IDs, high bits
-				if( storage.getBlockMSBArray() != null )
-				{
-					out.writeByte( 1 );
-					out.write( storage.getBlockMSBArray().data );
-				}
-				else
-				{
-					// signal we're not sending this data
-					out.writeByte( 0 );
-				}
-				
-				// 3. metadata
-				out.write( storage.getMetadataArray().data );
-				
-				// 4. block light
-				out.write( storage.getBlocklightArray().data );
-				
-				if( !worldObj.provider.hasNoSky )
-				{
-					// 5. sky light
-					out.write( storage.getSkylightArray().data );
-				}
-				
-				if( isFirstTime )
-				{
-					// 6. biomes
-					out.write( getBiomeArray() );
-				}
+				out.writeByte( 1 );
+				out.write( storage.getBlockMSBArray().data );
+			}
+			else
+			{
+				// signal we're not sending this data
+				out.writeByte( 0 );
+			}
+			
+			// 3. metadata
+			out.write( storage.getMetadataArray().data );
+			
+			// 4. block light
+			out.write( storage.getBlocklightArray().data );
+			
+			if( !worldObj.provider.hasNoSky )
+			{
+				// 5. sky light
+				out.write( storage.getSkylightArray().data );
+			}
+			
+			if( isFirstTime )
+			{
+				// 6. biomes
+				out.write( getBiomeArray() );
 			}
 		}
 		
@@ -918,6 +876,33 @@ public class Column extends Chunk
 		
 		// return 0-15
 		return 15;
+		
+		/* UNDONE: re-implement this algorithm
+		ExtendedBlockStorage var5 = this.storageArrays[par2 >> 4];
+        if (var5 == null)
+        {
+            return !this.worldObj.provider.hasNoSky && par4 < EnumSkyBlock.Sky.defaultLightValue ? EnumSkyBlock.Sky.defaultLightValue - par4 : 0;
+        }
+        else
+        {
+            int var6 = this.worldObj.provider.hasNoSky ? 0 : var5.getExtSkylightValue(par1, par2 & 15, par3);
+
+            if (var6 > 0)
+            {
+                isLit = true;
+            }
+
+            var6 -= par4;
+            int var7 = var5.getExtBlocklightValue(par1, par2 & 15, par3);
+
+            if (var7 > var6)
+            {
+                var6 = var7;
+            }
+
+            return var6;
+        }
+		*/
 	}
 	
 	@Override
@@ -957,14 +942,6 @@ public class Column extends Chunk
 			cubicChunk.setLightValue( lightType, localX, localY, localZ, light );
 			
 			isModified = true;
-		}
-		
-    	// TEMP
-		int blockX = Coords.localToBlock( xPosition, localX );
-		int blockZ = Coords.localToBlock( zPosition, localZ );
-		if( worldObj.isClient && blockX == 150 && blockZ == 240 )
-		{
-	    	System.out.println( String.format( "Set light: %d,%d,%d %d", blockX, blockY, blockZ, light ) );
 		}
 	}
 	
@@ -1064,6 +1041,45 @@ public class Column extends Chunk
 		}
 	}
 	
+	protected List<RangeInt> getRanges( Iterable<Integer> yValues )
+	{
+		// compute a kind of run-length encoding on the cubic chunk y-values
+		List<RangeInt> ranges = new ArrayList<RangeInt>();
+		Integer start = null;
+		Integer stop = null;
+		for( int chunkY : yValues )
+		{
+			if( start == null )
+			{
+				// start a new range
+				start = chunkY;
+				stop = chunkY;
+			}
+			else if( chunkY == stop + 1 )
+			{
+				// extend the range
+				stop = chunkY;
+			}
+			else
+			{
+				// end the range
+				ranges.add( new RangeInt( start, stop ) );
+				
+				// start a new range
+				start = chunkY;
+				stop = chunkY;
+			}
+		}
+		
+		if( start != null )
+		{
+			// finish the last range
+			ranges.add( new RangeInt( start, stop ) );
+		}
+		
+		return ranges;
+	}
+
 	/* don't think we need to override any of this...
 	private void propagateSkylightOcclusion( int localX, int localZ )
 	{
