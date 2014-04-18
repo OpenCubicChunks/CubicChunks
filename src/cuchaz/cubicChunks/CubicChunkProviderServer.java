@@ -23,4 +23,40 @@ public class CubicChunkProviderServer extends ChunkProviderServer
 			new CubicChunkGenerator( world )
 		);
 	}
+	
+	@Override
+	public Column loadChunk( int chunkX, int chunkZ )
+	{
+		return (Column)super.loadChunk( chunkX, chunkZ );
+	}
+	
+	@Override
+	public Column provideChunk( int chunkX, int chunkZ )
+	{
+		return (Column)super.provideChunk( chunkX, chunkZ );
+	}
+	
+	public CubicChunk loadCubicChunk( int chunkX, int chunkY, int chunkZ )
+	{
+		Column column = loadChunk( chunkX, chunkZ );
+		CubicChunk cubicChunk = column.getCubicChunk( chunkY );
+		if( cubicChunk == null )
+		{
+			// UNDONE: load the cubic chunk
+			throw new Error( "Cubic chunk is not loaded!" );
+		}
+		
+		return cubicChunk;
+	}
+	
+	public void unloadCubicChunkIfNotNearSpawn( CubicChunk cubicChunk )
+	{
+		unloadCubicChunkIfNotNearSpawn( cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ() );
+	}
+	
+	public void unloadCubicChunkIfNotNearSpawn( int chunkX, int chunkY, int chunkZ )
+	{
+		// UNDONE: implement meeee!!!!
+		// implement an unload queue like the superclass does
+	}
 }

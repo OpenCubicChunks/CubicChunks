@@ -12,12 +12,16 @@ package cuchaz.cubicChunks;
 
 import java.io.IOException;
 
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.world.WorldServer;
+
 import org.apache.logging.log4j.LogManager;
 
 import cuchaz.magicMojoModLoader.api.Mod;
 import cuchaz.magicMojoModLoader.api.ModMetadata;
 import cuchaz.magicMojoModLoader.api.Version;
 import cuchaz.magicMojoModLoader.api.events.EncodeChunkEvent;
+import cuchaz.magicMojoModLoader.api.events.EntityPlayerMPUpdateEvent;
 import cuchaz.magicMojoModLoader.api.events.InitChunkProviderClientEvent;
 import cuchaz.magicMojoModLoader.api.events.InitChunkProviderServerEvent;
 import cuchaz.magicMojoModLoader.api.events.InitPlayerManagerEvent;
@@ -73,5 +77,13 @@ public class CubicChunksMod implements Mod
 	public void handleEvent( InitPlayerManagerEvent event )
 	{
 		event.setCustomPlayerManager( new CubicChunkPlayerManager( event.getWorldServer(), event.getViewDistance() ) );
+	}
+	
+	public void handleEvent( EntityPlayerMPUpdateEvent event )
+	{
+		EntityPlayerMP player = event.getPlayer();
+		WorldServer world = (WorldServer)player.theItemInWorldManager.theWorld;
+		CubicChunkPlayerManager playerManager = (CubicChunkPlayerManager)world.getPlayerManager();
+		playerManager.onPlayerUpdate( player );
 	}
 }

@@ -993,13 +993,6 @@ public class Column extends Chunk
 				upperY = oldMaxY;
 			}
 			
-			// TEMP
-			if( worldObj.isClient && blockX == 150 && blockZ == 240 )
-			{
-				log.info( String.format( "Recalculating skylight oldTop=%d, newTop=%d", oldMaxY, newMaxY ) );
-				log.info( String.format( "\tcolumn %d,%d: %s", blockX, blockZ, m_lightIndex.dump( localX, localZ ) ) );
-			}
-			
 			// reset sky light for the affected y range
 			for( int blockY=lowerY; blockY<upperY; blockY++ )
 			{
@@ -1013,18 +1006,6 @@ public class Column extends Chunk
 				{
 					int localY = Coords.blockToLocal( blockY );
 					cubicChunk.getStorage().setExtSkylightValue( localX, localY, localZ, light );
-					
-					// TEMP
-					if( worldObj.isClient && blockX == 150 && blockZ == 240 )
-					{
-						log.info( String.format( "\t%d=%d neighbors: %d,%d,%d,%d",
-							blockY, light,
-							getSkyLight( worldObj, blockX + 1, blockY, blockZ + 0 ),
-							getSkyLight( worldObj, blockX - 1, blockY, blockZ + 0 ),
-							getSkyLight( worldObj, blockX + 0, blockY, blockZ + 1 ),
-							getSkyLight( worldObj, blockX + 0, blockY, blockZ - 1 )
-						) );
-					}
 				}
 				
 				// mark the block for a render update
@@ -1048,18 +1029,6 @@ public class Column extends Chunk
 				{
 					int localY = Coords.blockToLocal( blockY );
 					cubicChunk.getStorage().setExtSkylightValue( localX, localY, localZ, light );
-					
-					// TEMP
-					if( worldObj.isClient && blockX == 150 && blockZ == 240 )
-					{
-						log.info( String.format( "\t%d=%d neighbors: %d,%d,%d,%d",
-							blockY, light,
-							getSkyLight( worldObj, blockX + 1, blockY, blockZ + 0 ),
-							getSkyLight( worldObj, blockX - 1, blockY, blockZ + 0 ),
-							getSkyLight( worldObj, blockX + 0, blockY, blockZ + 1 ),
-							getSkyLight( worldObj, blockX + 0, blockY, blockZ - 1 )
-						) );
-					}
 				}
 				
 				if( light == 0 )
@@ -1076,42 +1045,12 @@ public class Column extends Chunk
 			updateSkylightForYBlocks( blockX, blockZ + 1, lowerY, upperY );
 			updateSkylightForYBlocks( blockX, blockZ, lowerY, upperY );
 			
-			// TEMP
-			if( worldObj.isClient && blockX == 150 && blockZ == 240 )
-			{
-				for( int blockY=lowerY; blockY<=upperY; blockY++ )
-				{
-					log.info( String.format( "%d=%d neighbors: %d,%d,%d,%d, computed: %d",
-						blockY,
-						getSkyLight( worldObj, blockX + 0, blockY, blockZ + 0 ),
-						getSkyLight( worldObj, blockX + 1, blockY, blockZ + 0 ),
-						getSkyLight( worldObj, blockX - 1, blockY, blockZ + 0 ),
-						getSkyLight( worldObj, blockX + 0, blockY, blockZ + 1 ),
-						getSkyLight( worldObj, blockX + 0, blockY, blockZ - 1 ),
-						worldObj.computeLightValue( blockX, blockY, blockZ, EnumSkyBlock.Sky )
-					) );
-				}
-			}
-			
 			// NOTE: after this, World calls updateLights on the source block which changes light values
 		}
 		
 		isModified = true;
 	}
 	
-	// TEMP
-	private int getSkyLight( World world, int blockX, int blockY, int blockZ )
-	{
-		// get the chunk
-		Column column = (Column)world.getChunkFromBlockCoords( blockX, blockZ );
-		CubicChunk cubicChunk = column.getCubicChunk( Coords.blockToChunk( blockY ) );
-		if( cubicChunk != null )
-		{
-			return cubicChunk.getLightValue( EnumSkyBlock.Sky, Coords.blockToLocal( blockX ), Coords.blockToLocal( blockY ), Coords.blockToLocal( blockZ ) );
-		}
-		return -1;
-	}
-
 	private void updateSkylightForYBlocks( int blockX, int blockZ, int minBlockY, int maxBlockY )
 	{
 		if( maxBlockY > minBlockY && worldObj.doChunksNearChunkExist( blockX, 0, blockZ, 16 ) )
