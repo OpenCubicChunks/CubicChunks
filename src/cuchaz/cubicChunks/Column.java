@@ -709,12 +709,10 @@ public class Column extends Chunk
 	public void func_150804_b( boolean tryToTickFaster )
 	{
 		// from the super implementation
-		/* TEMP
-		if( isGapLightingUpdated && !worldObj.provider.hasNoSky && !tryToTickFaster )
+		if( ChunkAccessor.isGapLightingUpdated( this ) && !worldObj.provider.hasNoSky && !tryToTickFaster )
 		{
-			recheckGaps( this.worldObj.isClient );
+			ChunkAccessor.recheckGaps( this, worldObj.isClient );
 		}
-		*/
 		
 		// isTicked
 		field_150815_m = true;
@@ -871,38 +869,29 @@ public class Column extends Chunk
 	public int getBlockLightValue( int localX, int blockY, int localZ, int skylightSubtracted )
 	{
 		// NOTE: this is called by WorldRenderers
-		// we need to set Chunk.isLit if this chunk actually has any lighting
-		Chunk.isLit = true;
 		
-		// return 0-15
-		return 15;
+		// pass off to cubic chunk
+		int chunkY = Coords.blockToChunk( blockY );
+		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
+		if( cubicChunk != null )
+		{
+			int localY = Coords.blockToLocal( blockY );
+			int light = cubicChunk.getBlockLightValue( localX, localY, localZ, skylightSubtracted );
+			
+			if( light > 0 )
+	        {
+	            isLit = true;
+	        }
+			
+			return light;
+		}
 		
-		/* UNDONE: re-implement this algorithm
-		ExtendedBlockStorage var5 = this.storageArrays[par2 >> 4];
-        if (var5 == null)
-        {
-            return !this.worldObj.provider.hasNoSky && par4 < EnumSkyBlock.Sky.defaultLightValue ? EnumSkyBlock.Sky.defaultLightValue - par4 : 0;
-        }
-        else
-        {
-            int var6 = this.worldObj.provider.hasNoSky ? 0 : var5.getExtSkylightValue(par1, par2 & 15, par3);
-
-            if (var6 > 0)
-            {
-                isLit = true;
-            }
-
-            var6 -= par4;
-            int var7 = var5.getExtBlocklightValue(par1, par2 & 15, par3);
-
-            if (var7 > var6)
-            {
-                var6 = var7;
-            }
-
-            return var6;
-        }
-		*/
+		// defaults
+		if( !worldObj.provider.hasNoSky && skylightSubtracted < EnumSkyBlock.Sky.defaultLightValue )
+		{
+			return EnumSkyBlock.Sky.defaultLightValue - skylightSubtracted;
+		}
+		return 0;
 	}
 	
 	@Override
@@ -1079,7 +1068,7 @@ public class Column extends Chunk
 		
 		return ranges;
 	}
-
+	
 	/* don't think we need to override any of this...
 	private void propagateSkylightOcclusion( int localX, int localZ )
 	{

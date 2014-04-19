@@ -11,6 +11,7 @@
 package cuchaz.cubicChunks;
 
 import net.minecraft.client.multiplayer.ChunkProviderClient;
+import net.minecraft.util.LongHashMap;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import cuchaz.cubicChunks.accessors.ChunkProviderClientAccessor;
@@ -28,13 +29,22 @@ public class CubicChunkProviderClient extends ChunkProviderClient
 	
 	@Override
 	public Column loadChunk( int chunkX, int chunkZ )
-    {
-		Column column = new Column( m_world, chunkX, chunkZ );
+	{
+		// is this chunk already loaded?
+		LongHashMap chunkMapping = ChunkProviderClientAccessor.getChunkMapping( this );
+		Column column = (Column)chunkMapping.getValueByKey( ChunkCoordIntPair.chunkXZ2Int( chunkX, chunkZ ) );
+		if( column != null )
+		{
+			return column;
+		}
 		
-		ChunkProviderClientAccessor.getChunkMapping( this ).add( ChunkCoordIntPair.chunkXZ2Int( chunkX, chunkZ ), column );
+		// make a new one
+		column = new Column( m_world, chunkX, chunkZ );
+		
+		chunkMapping.add( ChunkCoordIntPair.chunkXZ2Int( chunkX, chunkZ ), column );
 		ChunkProviderClientAccessor.getChunkListing( this ).add( column );
-        
-        column.isChunkLoaded = true;
-        return column;
-    }
+		
+		column.isChunkLoaded = true;
+		return column;
+	}
 }

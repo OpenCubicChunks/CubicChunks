@@ -10,8 +10,6 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
-import java.util.List;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -20,8 +18,8 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S21PacketChunkData;
 import net.minecraft.network.play.server.S22PacketMultiBlockChange;
 import net.minecraft.network.play.server.S23PacketBlockChange;
-import net.minecraft.server.management.PlayerManager;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
 
 import com.google.common.collect.Maps;
 
@@ -30,7 +28,7 @@ public class CubicChunkWatcher
 	private CubicChunk m_cubicChunk;
 	private TreeMap<Integer,EntityPlayerMP> m_players;
 	private long m_previousWorldTime;
-	private Set<Integer> m_dirtyBlocks;
+	private TreeSet<Integer> m_dirtyBlocks;
 	
 	public CubicChunkWatcher( CubicChunk cubicChunk )
 	{
@@ -81,65 +79,118 @@ public class CubicChunkWatcher
 	
 	public void setDirtyBlock( int localX, int localY, int localZ )
 	{
-		int localAddress = Bits.packUnsignedToInt( localX, 4, 0 )
-			| Bits.packUnsignedToInt( localY, 4, 4 )
-			| Bits.packUnsignedToInt( localZ, 4, 8 );
-		m_dirtyBlocks.add( localAddress );
+		m_dirtyBlocks.add( packAddress( localX, localY, localZ ) );
 	}
 	
 	public void sendUpdates( )
 	{
-		// NEXTTIME: finish this
-		// NOTE: use sendPacketToAllPlayers()
+		// are there any updates?
+		if( m_dirtyBlocks.isEmpty() )
+		{
+			return;
+		}
 		
-        // send single block updates
-        var1 = this.chunkLocation.chunkXPos * 16 + (this.field_151254_d[0] >> 12 & 15);
-        var2 = this.field_151254_d[0] & 255;
-        var3 = this.chunkLocation.chunkZPos * 16 + (this.field_151254_d[0] >> 8 & 15);
-        this.func_151251_a(new S23PacketBlockChange(var1, var2, var3, PlayerManager.this.theWorldServer));
-        if (PlayerManager.this.theWorldServer.getBlock(var1, var2, var3).hasTileEntity())
-        {
-            this.func_151252_a(PlayerManager.this.theWorldServer.getTileEntity(var1, var2, var3));
-        }
-        
-        // send multi-block updates
-        this.func_151251_a(new S22PacketMultiBlockChange(this.numberOfTilesToUpdate, this.field_151254_d, PlayerManager.this.theWorldServer.getChunkFromChunkCoords(this.chunkLocation.chunkXPos, this.chunkLocation.chunkZPos)));
-        for (var1 = 0; var1 < this.numberOfTilesToUpdate; ++var1)
-        {
-            var2 = this.chunkLocation.chunkXPos * 16 + (this.field_151254_d[var1] >> 12 & 15);
-            var3 = this.field_151254_d[var1] & 255;
-            var4 = this.chunkLocation.chunkZPos * 16 + (this.field_151254_d[var1] >> 8 & 15);
-
-            if (PlayerManager.this.theWorldServer.getBlock(var2, var3, var4).hasTileEntity())
-            {
-                this.func_151252_a(PlayerManager.this.theWorldServer.getTileEntity(var2, var3, var4));
-            }
-        }
-        
-        // send whole chunk updates
-        var1 = this.chunkLocation.chunkXPos * 16;
-        var2 = this.chunkLocation.chunkZPos * 16;
-        this.func_151251_a(new S21PacketChunkData(PlayerManager.this.theWorldServer.getChunkFromChunkCoords(this.chunkLocation.chunkXPos, this.chunkLocation.chunkZPos), false, this.flagsYAreasToUpdate));
-        for (var3 = 0; var3 < 16; ++var3)
-        {
-            if ((this.flagsYAreasToUpdate & 1 << var3) != 0)
-            {
-                var4 = var3 << 4;
-                List var5 = PlayerManager.this.theWorldServer.func_147486_a(var1, var4, var2, var1 + 16, var4 + 16, var2 + 16);
-
-                for (int var6 = 0; var6 < var5.size(); ++var6)
-                {
-                    this.func_151252_a((TileEntity)var5.get(var6));
-                }
-            }
-        }
+		World world = m_cubicChunk.getWorld();
+		
+		// how many?
+		if( m_dirtyBlocks.size() == 1 )
+		{
+			// get the block coords
+			int address = m_dirtyBlocks.first();
+			int localX = unpackLocalX( address );
+			int localY = unpackLocalY( address );
+			int localZ = unpackLocalZ( address );
+			int blockX = Coords.localToBlock( m_cubicChunk.getX(), localX );
+			int blockY = Coords.localToBlock( m_cubicChunk.getY(), localY );
+			int blockZ = Coords.localToBlock( m_cubicChunk.getZ(), localZ );
+			
+			// send single block updates
+			sendPacketToAllPlayers( new S23PacketBlockChange( blockX, blockY, blockZ, world ) );
+			if( world.getBlock( blockX, blockY, blockZ ).hasTileEntity() )
+			{
+				sendTileEntityToAllPlayers( world.getTileEntity( blockX, blockY, blockZ ) );
+			}
+		}
+		else if( m_dirtyBlocks.size() == 64 )
+		{
+			// make a column view
+			ColumnView view = new ColumnView( m_cubicChunk.getColumn() );
+			view.addCubicChunkToView( m_cubicChunk );
+			
+			// send whole chunk update
+			sendPacketToAllPlayers( new S21PacketChunkData( view, false, 0 ) );
+			for( TileEntity tileEntity : m_cubicChunk.tileEntities() )
+			{
+				sendTileEntityToAllPlayers( tileEntity );
+			}
+		}
+		else
+		{
+			// encode the update coords
+			short[] coords = new short[m_dirtyBlocks.size()];
+			int i=0;
+			for( int address : m_dirtyBlocks )
+			{
+				int localX = unpackLocalX( address );
+				int localY = unpackLocalY( address );
+				int localZ = unpackLocalZ( address );
+				int blockY = Coords.localToBlock( m_cubicChunk.getY(), localY );
+				coords[i++] = (short)( ( localX & 0xf ) << 12 | ( localZ & 0xf ) << 8 | ( blockY & 0xff ) );
+			}
+			
+			// send multi-block updates
+			sendPacketToAllPlayers( new S22PacketMultiBlockChange( coords.length, coords, m_cubicChunk.getColumn() ) );
+			for( int address : m_dirtyBlocks )
+			{
+				int localX = unpackLocalX( address );
+				int localY = unpackLocalY( address );
+				int localZ = unpackLocalZ( address );
+				sendTileEntityToAllPlayers( m_cubicChunk.getTileEntity( localX, localY, localZ ) );
+			}
+		}
 	}
 	
+	private void sendTileEntityToAllPlayers( TileEntity tileEntity )
+	{
+		if( tileEntity == null )
+		{
+			return;
+		}
+		
+		Packet packet = tileEntity.getDescriptionPacket();
+		if( packet == null )
+		{
+			return;
+		}
+		
+		sendPacketToAllPlayers( packet );
+	}
+
 	private void sendPacketToAllPlayers( Packet packet )
 	{
 		for( EntityPlayerMP player : m_players.values() )
 		{
 			player.playerNetServerHandler.sendPacket( packet );
 		}
+	}
+	
+	private int packAddress( int localX, int localY, int localZ )
+	{
+		return Bits.packUnsignedToInt( localX, 4, 0 ) | Bits.packUnsignedToInt( localY, 4, 4 ) | Bits.packUnsignedToInt( localZ, 4, 8 );
+	}
+	
+	private int unpackLocalX( int packed )
+	{
+		return Bits.unpackUnsigned( packed, 4, 0 );
+	}
+	
+	private int unpackLocalY( int packed )
+	{
+		return Bits.unpackUnsigned( packed, 4, 4 );
+	}
+	
+	private int unpackLocalZ( int packed )
+	{
+		return Bits.unpackUnsigned( packed, 4, 8 );
 	}
 }

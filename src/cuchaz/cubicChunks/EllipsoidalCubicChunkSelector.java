@@ -12,12 +12,13 @@ package cuchaz.cubicChunks;
 
 import java.util.Collection;
 
-public class EllipsoidalCubicChunkSelector
+public class EllipsoidalCubicChunkSelector extends CubicChunkSelector
 {
 	private static final int SemiAxisY = 2;
 	private static final int SemiAxisY2 = SemiAxisY*SemiAxisY;
 	
-	public static void getAddresses( Collection<Long> out, int chunkX, int chunkY, int chunkZ, int viewDistance )
+	@Override
+	protected void computeVisible( Collection<Long> out, int dimension, int chunkX, int chunkY, int chunkZ, int viewDistance )
 	{
 		// equation for an axis-aligned ellipsoid:
 		// x^2/a^2 + y^2/b^2 + z^2/c^2 = 1
@@ -39,7 +40,7 @@ public class EllipsoidalCubicChunkSelector
 						int y2 = y*y;
 						if( test <= -y2*SemiAxisXZ2 ) // test for point in ellipsoid, but using only integer arithmetic
 						{
-							out.add( AddressTools.getAddress( 0, x + chunkX, y + chunkY, z + chunkZ ) );
+							out.add( AddressTools.getAddress( dimension, x + chunkX, y + chunkY, z + chunkZ ) );
 						}
 					}
 				}

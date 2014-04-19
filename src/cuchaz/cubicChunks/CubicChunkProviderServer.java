@@ -36,14 +36,22 @@ public class CubicChunkProviderServer extends ChunkProviderServer
 		return (Column)super.provideChunk( chunkX, chunkZ );
 	}
 	
-	public CubicChunk loadCubicChunk( int chunkX, int chunkY, int chunkZ )
+	public boolean cubicChunkExists( int chunkX, int chunkY, int chunkZ )
 	{
 		Column column = loadChunk( chunkX, chunkZ );
+		return column.getCubicChunk( chunkY ) != null;
+	}
+	
+	public CubicChunk loadCubicChunk( int chunkX, int chunkY, int chunkZ )
+	{
+		// load the column
+		Column column = loadChunk( chunkX, chunkZ );
+		
+		// check for the cubic chunk
 		CubicChunk cubicChunk = column.getCubicChunk( chunkY );
 		if( cubicChunk == null )
 		{
-			// UNDONE: load the cubic chunk
-			throw new Error( "Cubic chunk is not loaded!" );
+			// UNDONE: try to load the cubic chunk
 		}
 		
 		return cubicChunk;

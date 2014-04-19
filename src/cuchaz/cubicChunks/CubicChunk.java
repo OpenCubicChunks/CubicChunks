@@ -441,6 +441,27 @@ public class CubicChunk
 		m_isModified = false;
 	}
 	
+	public int getBlockLightValue( int localX, int localY, int localZ, int skylightSubtracted )
+	{
+		// get sky light
+		int skyLight = 0;
+		if( !m_world.provider.hasNoSky )
+		{
+			skyLight = m_storage.getExtSkylightValue( localX, localY, localZ );
+		}
+		skyLight -= skylightSubtracted;
+		
+		// get block light
+		int blockLight = m_storage.getExtBlocklightValue( localX, localY, localZ );
+		
+		// FIGHT!!!
+		if( blockLight > skyLight )
+		{
+			return blockLight;
+		}
+		return skyLight;
+	}
+	
 	public int getLightValue( EnumSkyBlock lightType, int x, int y, int z )
 	{
 		if( lightType == EnumSkyBlock.Sky )

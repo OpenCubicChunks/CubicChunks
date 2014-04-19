@@ -10,10 +10,10 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.TreeSet;
 
 import org.junit.Test;
 
@@ -22,9 +22,10 @@ public class TestEllipsoidalCubicChunkSelector
 	@Test
 	public void small( )
 	{
-		List<Long> addresses = new ArrayList<Long>();
-		EllipsoidalCubicChunkSelector.getAddresses( addresses, 5, 5, 5, 1 );
+		EllipsoidalCubicChunkSelector selector = new EllipsoidalCubicChunkSelector();
+		selector.setPlayerPosition( AddressTools.getAddress( 0, 5, 5, 5 ), 1 );
 		
+		TreeSet<Long> addresses = (TreeSet<Long>)selector.getVisibleCubicChunks();
 		assertTrue( addresses.contains( AddressTools.getAddress( 0, 4, 5, 5 ) ) );
 		assertTrue( addresses.contains( AddressTools.getAddress( 0, 5, 5, 4 ) ) );
 		assertTrue( addresses.contains( AddressTools.getAddress( 0, 5, 3, 5 ) ) );

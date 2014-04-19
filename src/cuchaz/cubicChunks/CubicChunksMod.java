@@ -64,7 +64,7 @@ public class CubicChunksMod implements Mod
 			// encode the column
 			try
 			{
-				byte[] data = column.encode( event.isFirstTime(), event.getFlagsYAreasToUpdate() );
+				byte[] data = column.encode( event.isFirstTime() );
 				event.setData( data );
 			}
 			catch( IOException ex )

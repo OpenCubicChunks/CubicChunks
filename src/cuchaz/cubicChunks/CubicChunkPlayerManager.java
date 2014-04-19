@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S26PacketMapChunkBulk;
@@ -36,29 +37,31 @@ public class CubicChunkPlayerManager extends PlayerManager
 {
 	private static class PlayerInfo
 	{
-		public EntityPlayerMP player;
 		public Set<Long> watchedAddresses;
 		public LinkedList<CubicChunk> outgoingCubicChunks;
-		public int lastBlockX;
-		public int lastBlockY;
-		public int lastBlockZ;
+		public CubicChunkSelector cubicChunkSelector;
+		public int blockX;
+		public int blockY;
+		public int blockZ;
+		public long address;
 		
-		public PlayerInfo( EntityPlayerMP player )
+		public PlayerInfo( )
 		{
-			this.player = player;
 			this.watchedAddresses = new TreeSet<Long>();
 			this.outgoingCubicChunks = new LinkedList<CubicChunk>();
-			this.lastBlockX = MathHelper.floor_double( player.posZ );
-			this.lastBlockY = MathHelper.floor_double( player.posY );
-			this.lastBlockZ = MathHelper.floor_double( player.posZ );
+			this.cubicChunkSelector = new EllipsoidalCubicChunkSelector();
+			this.blockX = 0;
+			this.blockY = 0;
+			this.blockZ = 0;
+			this.address = 0;
 		}
 		
 		public void sortOutgoingCubicChunks( )
 		{
 			// get the player chunk position
-			final int chunkX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
-			final int chunkY = Coords.blockToChunk( MathHelper.floor_double( player.posY ) );
-			final int chunkZ = Coords.blockToChunk( MathHelper.floor_double( player.posZ ) );
+			final int chunkX = AddressTools.getX( address );
+			final int chunkY = AddressTools.getY( address );
+			final int chunkZ = AddressTools.getZ( address );
 			
 			// sort cubic chunks so they load radially away from the player
 			Collections.sort( outgoingCubicChunks, new Comparator<CubicChunk>( )
@@ -71,9 +74,9 @@ public class CubicChunkPlayerManager extends PlayerManager
 				
 				private int getManhattanDist( CubicChunk cubicChunk )
 				{
-					int dx = cubicChunk.getX() - chunkX;
-					int dy = cubicChunk.getY() - chunkY;
-					int dz = cubicChunk.getZ() - chunkZ;
+					int dx = Math.abs( cubicChunk.getX() - chunkX );
+					int dy = Math.abs( cubicChunk.getY() - chunkY );
+					int dz = Math.abs( cubicChunk.getZ() - chunkZ );
 					return dx + dy + dz;
 				}
 			} );
@@ -97,37 +100,61 @@ public class CubicChunkPlayerManager extends PlayerManager
 	
 	public void addPlayer( EntityPlayerMP player )
 	{
-		int chunkX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
-		int chunkY = Coords.blockToChunk( MathHelper.floor_double( player.posY ) );
-		int chunkZ = Coords.blockToChunk( MathHelper.floor_double( player.posZ ) );
-		
 		// make new player info
-		PlayerInfo info = new PlayerInfo( player );
+		PlayerInfo info = new PlayerInfo();
 		m_players.put( player.getEntityId(), info );
 		
+		// set initial player position
+		info.blockX = MathHelper.floor_double( player.posX );
+		info.blockY = MathHelper.floor_double( player.posY );
+		info.blockZ = MathHelper.floor_double( player.posZ );
+		int chunkX = Coords.blockToChunk( info.blockX );
+		int chunkY = Coords.blockToChunk( info.blockY );
+		int chunkZ = Coords.blockToChunk( info.blockZ );
+		info.address = AddressTools.getAddress( m_worldServer.provider.dimensionId, chunkX, chunkY, chunkZ );
+		
+		// compute initial visibility
+		info.cubicChunkSelector.setPlayerPosition( info.address, m_viewDistance );
+		
 		// add player to watchers and collect the cubic chunks to send over
-		List<Long> addresses = new ArrayList<Long>();
-		EllipsoidalCubicChunkSelector.getAddresses( addresses, chunkX, chunkY, chunkZ, m_viewDistance );
-		for( long address : addresses )
+		for( long address : info.cubicChunkSelector.getVisibleCubicChunks() )
 		{
+			// skip non-existent cubic chunks
+			if( !cubicChunkExists( address ) )
+			{
+				continue;
+			}
+			
 			CubicChunkWatcher watcher = getOrCreateWatcher( address );
 			watcher.addPlayer( player );
 			info.watchedAddresses.add( address );
-			info.outgoingCubicChunks.add( watcher.getCubicChunk() );
+			
+			if( isActiveColumn( watcher.getCubicChunk().getColumn() ) )
+			{
+				info.outgoingCubicChunks.add( watcher.getCubicChunk() );
+			}
 		}
 	}
 	
 	public void removePlayer( EntityPlayerMP player )
 	{
-		int chunkX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
-		int chunkY = Coords.blockToChunk( MathHelper.floor_double( player.posY ) );
-		int chunkZ = Coords.blockToChunk( MathHelper.floor_double( player.posZ ) );
+		// get the player info
+		PlayerInfo info = m_players.get( player.getEntityId() );
+		if( info == null )
+		{
+			return;
+		}
 		
 		// remove player from all its cubic chunks
-		List<Long> addresses = new ArrayList<Long>();
-		EllipsoidalCubicChunkSelector.getAddresses( addresses, chunkX, chunkY, chunkZ, m_viewDistance );
-		for( long address : addresses )
+		for( long address : info.watchedAddresses )
 		{
+			// skip non-existent cubic chunks
+			if( !cubicChunkExists( address ) )
+			{
+				continue;
+			}
+			
+			// remove from the watcher
 			CubicChunkWatcher watcher = getWatcher( address );
 			if( watcher != null )
 			{
@@ -199,13 +226,13 @@ public class CubicChunkPlayerManager extends PlayerManager
 			return;
 		}
 		
-		// how far did the player move?
+		// did the player move far enough to matter?
 		int newBlockX = MathHelper.floor_double( player.posX );
 		int newBlockY = MathHelper.floor_double( player.posY );
 		int newBlockZ = MathHelper.floor_double( player.posZ );
-		int manhattanDistance = Math.abs( newBlockX - info.lastBlockX )
-				+ Math.abs( newBlockY - info.lastBlockY )
-				+ Math.abs( newBlockZ - info.lastBlockZ );
+		int manhattanDistance = Math.abs( newBlockX - info.blockX )
+				+ Math.abs( newBlockY - info.blockY )
+				+ Math.abs( newBlockZ - info.blockZ );
 		if( manhattanDistance < 8 )
 		{
 			return;
@@ -215,34 +242,41 @@ public class CubicChunkPlayerManager extends PlayerManager
 		int newChunkX = Coords.blockToChunk( newBlockX );
 		int newChunkY = Coords.blockToChunk( newBlockY );
 		int newChunkZ = Coords.blockToChunk( newBlockZ );
-		int oldChunkX = Coords.blockToChunk( info.lastBlockX );
-		int oldChunkY = Coords.blockToChunk( info.lastBlockY );
-		int oldChunkZ = Coords.blockToChunk( info.lastBlockZ );
-		if( newChunkX == oldChunkX && newChunkY == oldChunkY && newChunkZ == oldChunkZ )
+		long newAddress = AddressTools.getAddress( m_worldServer.provider.dimensionId, newChunkX, newChunkY, newChunkZ );
+		if( newAddress == info.address )
 		{
 			return;
 		}
 		
-		// find out which cubic chunks have been added to view, and which ones have been removed
-		Set<Long> oldAddresses = new TreeSet<Long>();
-		EllipsoidalCubicChunkSelector.getAddresses( oldAddresses, oldChunkX, oldChunkY, oldChunkZ, m_viewDistance );
-		Set<Long> newAddresses = new TreeSet<Long>();
-		EllipsoidalCubicChunkSelector.getAddresses( newAddresses, newChunkX, newChunkY, newChunkZ, m_viewDistance );
-		Set<Long> intersection = new TreeSet<Long>( newAddresses );
-		intersection.retainAll( oldAddresses );
-		oldAddresses.removeAll( intersection );
-		newAddresses.removeAll( intersection );
+		// update player info
+		info.blockX = newBlockX;
+		info.blockY = newBlockY;
+		info.blockZ = newBlockZ;
+		info.address = newAddress;
+		
+		// calculate new visibility
+		info.cubicChunkSelector.setPlayerPosition( newAddress, m_viewDistance );
 		
 		// add to new watchers
-		for( long address : newAddresses )
+		for( long address : info.cubicChunkSelector.getNewlyVisibleCubicChunks() )
 		{
+			// skip non-existent cubic chunks
+			if( !cubicChunkExists( address ) )
+			{
+				continue;
+			}
+			
 			CubicChunkWatcher watcher = getOrCreateWatcher( address );
 			watcher.addPlayer( player );
-			info.outgoingCubicChunks.add( watcher.getCubicChunk() );
+			
+			if( isActiveColumn( watcher.getCubicChunk().getColumn() ) )
+			{
+				info.outgoingCubicChunks.add( watcher.getCubicChunk() );
+			}
 		}
 		
 		// remove from old watchers
-		for( long address : oldAddresses )
+		for( long address : info.cubicChunkSelector.getNewlyHiddenCubicChunks() )
 		{
 			CubicChunkWatcher watcher = getWatcher( address );
 			if( watcher != null )
@@ -250,11 +284,6 @@ public class CubicChunkPlayerManager extends PlayerManager
 				watcher.removePlayer( player );
 			}
 		}
-		
-		// update player info
-		info.lastBlockX = newBlockX;
-		info.lastBlockY = newBlockY;
-		info.lastBlockZ = newBlockZ;
 	}
 	
 	public boolean isPlayerWatchingChunk( EntityPlayerMP player, int chunkX, int chunkZ )
@@ -299,17 +328,22 @@ public class CubicChunkPlayerManager extends PlayerManager
 		while( iter.hasNext() && cubicChunksToSend.size() < MaxCubicChunksToSend )
 		{
 			CubicChunk cubicChunk = iter.next();
-			if( cubicChunk.getColumn().func_150802_k() )
+			
+			// only send cubic chunks in active columns, not from columns on the fringe of the world that have been generated, but not activated yet
+			if( !cubicChunk.getColumn().func_150802_k() )
 			{
-				// add this cubic chunk to the send buffer
-				cubicChunksToSend.add( cubicChunk );
 				iter.remove();
-				
-				// add tile entities too
-				for( TileEntity tileEntity : cubicChunk.tileEntities() )
-				{
-					tileEntitiesToSend.add( tileEntity );
-				}
+				continue;
+			}
+			
+			// add this cubic chunk to the send buffer
+			cubicChunksToSend.add( cubicChunk );
+			iter.remove();
+			
+			// add tile entities too
+			for( TileEntity tileEntity : cubicChunk.tileEntities() )
+			{
+				tileEntitiesToSend.add( tileEntity );
 			}
 		}
 		
@@ -323,7 +357,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 		for( CubicChunk cubicChunk : cubicChunksToSend )
 		{
 			// is there a column view for this cubic chunk?
-			long columnAddress = AddressTools.getAddress( 0, cubicChunk.getX(), 0, cubicChunk.getY() );
+			long columnAddress = AddressTools.getAddress( 0, cubicChunk.getX(), 0, cubicChunk.getZ() );
 			ColumnView view = views.get( columnAddress );
 			if( view == null )
 			{
@@ -333,10 +367,15 @@ public class CubicChunkPlayerManager extends PlayerManager
 			
 			view.addCubicChunkToView( cubicChunk );
 		}
-		List<Chunk> columnsToSend = new ArrayList<Chunk>( views.values() );
+		List<Column> columnsToSend = new ArrayList<Column>( views.values() );
 		
 		// send the cubic chunk data
 		player.playerNetServerHandler.sendPacket( new S26PacketMapChunkBulk( columnsToSend ) );
+		
+		// TEMP
+		System.out.println( String.format( "Send %d cubic chunks in %d columns to player. %d cubic chunks pending.",
+			cubicChunksToSend.size(), columnsToSend.size(), info.outgoingCubicChunks.size()
+		) );
 		
 		// send tile entity data
 		for( TileEntity tileEntity : tileEntitiesToSend )
@@ -370,9 +409,12 @@ public class CubicChunkPlayerManager extends PlayerManager
 		return m_watchers.get( address );
 	}
 	
-	private CubicChunkWatcher getOrCreateWatcher( int chunkX, int chunkY, int chunkZ )
+	private boolean cubicChunkExists( long address )
 	{
-		return getOrCreateWatcher( AddressTools.getAddress( 0, chunkX, chunkY, chunkZ ) );
+		int chunkX = AddressTools.getX( address );
+		int chunkY = AddressTools.getY( address );
+		int chunkZ = AddressTools.getZ( address );
+		return getCubicChunkProvider().cubicChunkExists( chunkX, chunkY, chunkZ );
 	}
 	
 	private CubicChunkWatcher getOrCreateWatcher( long address )
@@ -391,5 +433,44 @@ public class CubicChunkPlayerManager extends PlayerManager
 			m_watchers.put( address, watcher );
 		}
 		return watcher;
+	}
+	
+	@SuppressWarnings( "unchecked" )
+	private boolean isActiveColumn( Column column )
+	{
+		/* this is how the world decides which columns are active
+		for( EntityPlayer player : (List<EntityPlayer>)column.worldObj.playerEntities )
+		{
+			int chunkX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
+			int chunkZ = Coords.blockToChunk( MathHelper.floor_double( player.posZ ) );
+			byte seven = 7;
+			
+			for( int x = -seven; x <= seven; ++x )
+			{
+				for( int var7 = -seven; var7 <= seven; ++var7 )
+				{
+					activeChunkSet.add( new ChunkCoordIntPair( x + chunkX, var7 + chunkZ ) );
+				}
+			}
+		}
+		*/
+		
+		// so, a column is active if it is within 7 column to a player
+		for( EntityPlayer player : (List<EntityPlayer>)column.worldObj.playerEntities )
+		{
+			int chunkX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
+			int chunkZ = Coords.blockToChunk( MathHelper.floor_double( player.posZ ) );
+			
+			final int Range = 7;
+			if( Math.abs( chunkX - column.xPosition ) <= Range )
+			{
+				return true;
+			}
+			if( Math.abs( chunkZ - column.zPosition ) <= Range )
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }
