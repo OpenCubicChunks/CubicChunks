@@ -711,6 +711,39 @@ public class Column extends Chunk
 		// from the super implementation
 		if( ChunkAccessor.isGapLightingUpdated( this ) && !worldObj.provider.hasNoSky && !tryToTickFaster )
 		{
+			// NEXTTIME: this is taking FOREVER!!
+			/*
+			Processed 32766 lights
+			java.lang.Exception: Stack trace
+				at java.lang.Thread.dumpStack(Thread.java:1288)
+				at net.minecraft.world.World.updateLightByType(World.java:3294)
+				at net.minecraft.world.chunk.Chunk.updateSkylightNeighborHeight(Chunk.java:471)
+				at net.minecraft.world.chunk.Chunk.checkSkylightNeighborHeight(Chunk.java:461)
+				at net.minecraft.world.chunk.Chunk.recheckGaps(Chunk.java:430)
+				at sun.reflect.GeneratedMethodAccessor13.invoke(Unknown Source)
+				at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+				at java.lang.reflect.Method.invoke(Method.java:622)
+				at cuchaz.cubicChunks.accessors.ChunkAccessor.recheckGaps(ChunkAccessor.java:59)
+				at cuchaz.cubicChunks.Column.func_150804_b(Column.java:714)
+				at net.minecraft.client.multiplayer.ChunkProviderClient.unloadQueuedChunks(ChunkProviderClient.java:122)
+				at net.minecraft.client.multiplayer.WorldClient.tick(WorldClient.java:98)
+				at net.minecraft.client.Minecraft.runTick(Minecraft.java:2073)
+				at net.minecraft.client.Minecraft.runGameLoop(Minecraft.java:995)
+				at net.minecraft.client.Minecraft.run(Minecraft.java:911)
+				at net.minecraft.client.main.Main.main(Main.java:109)
+				at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+				at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+				at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+				at java.lang.reflect.Method.invoke(Method.java:622)
+				at net.minecraft.launchwrapper.Launch.launch(Launch.java:131)
+				at net.minecraft.launchwrapper.Launch.main(Launch.java:27)
+				at cuchaz.magicMojoModLoader.MainLauncher.main(MainLauncher.java:75)
+			*/
+			// found out the problem
+			// lighting calculations oscillate and max out the update buffer
+			// need to fix by disallowing lighting updates within 17 blocks of an unloaded block
+			// fix by patching:
+			//    public boolean World.checkChunksExist( int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ )
 			ChunkAccessor.recheckGaps( this, worldObj.isClient );
 		}
 		
