@@ -16,7 +16,7 @@ import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import cuchaz.cubicChunks.accessors.ChunkProviderClientAccessor;
 
-public class CubicChunkProviderClient extends ChunkProviderClient
+public class CubicChunkProviderClient extends ChunkProviderClient implements CubicChunkProvider
 {
 	private World m_world;
 	
@@ -25,6 +25,9 @@ public class CubicChunkProviderClient extends ChunkProviderClient
 		super( world );
 		
 		m_world = world;
+		
+		// set empty chunk
+		ChunkProviderClientAccessor.setBlankChunk( this, new BlankColumn( world, 0, 0 ) );
 	}
 	
 	@Override
@@ -46,5 +49,20 @@ public class CubicChunkProviderClient extends ChunkProviderClient
 		
 		column.isChunkLoaded = true;
 		return column;
+	}
+	
+	@Override
+	public boolean cubicChunkExists( int chunkX, int chunkY, int chunkZ )
+	{
+		// NOTE: cubic chunks always exist on the client
+		// but unloaded cubic chunks will be empty
+		return true;
+	}
+	
+	@Override
+	public CubicChunk loadCubicChunk( int chunkX, int chunkY, int chunkZ )
+	{
+		// UNDONE: implement this
+		throw new UnsupportedOperationException();
 	}
 }

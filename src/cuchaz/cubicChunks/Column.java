@@ -387,6 +387,12 @@ public class Column extends Chunk
 	@Override //  getOpacity
 	public int func_150808_b( int localX, int blockY, int localZ )
 	{
+		// TEMP: emulate BlankColumn for missing cubic chunks
+		if( !m_cubicChunks.containsKey( Coords.blockToChunk( blockY ) ) )
+		{
+			return 255;
+		}
+		
 		return m_lightIndex.getOpacity( localX, blockY, localZ );
 	}
 	
@@ -711,40 +717,8 @@ public class Column extends Chunk
 		// from the super implementation
 		if( ChunkAccessor.isGapLightingUpdated( this ) && !worldObj.provider.hasNoSky && !tryToTickFaster )
 		{
-			// NEXTTIME: this is taking FOREVER!!
-			/*
-			Processed 32766 lights
-			java.lang.Exception: Stack trace
-				at java.lang.Thread.dumpStack(Thread.java:1288)
-				at net.minecraft.world.World.updateLightByType(World.java:3294)
-				at net.minecraft.world.chunk.Chunk.updateSkylightNeighborHeight(Chunk.java:471)
-				at net.minecraft.world.chunk.Chunk.checkSkylightNeighborHeight(Chunk.java:461)
-				at net.minecraft.world.chunk.Chunk.recheckGaps(Chunk.java:430)
-				at sun.reflect.GeneratedMethodAccessor13.invoke(Unknown Source)
-				at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-				at java.lang.reflect.Method.invoke(Method.java:622)
-				at cuchaz.cubicChunks.accessors.ChunkAccessor.recheckGaps(ChunkAccessor.java:59)
-				at cuchaz.cubicChunks.Column.func_150804_b(Column.java:714)
-				at net.minecraft.client.multiplayer.ChunkProviderClient.unloadQueuedChunks(ChunkProviderClient.java:122)
-				at net.minecraft.client.multiplayer.WorldClient.tick(WorldClient.java:98)
-				at net.minecraft.client.Minecraft.runTick(Minecraft.java:2073)
-				at net.minecraft.client.Minecraft.runGameLoop(Minecraft.java:995)
-				at net.minecraft.client.Minecraft.run(Minecraft.java:911)
-				at net.minecraft.client.main.Main.main(Main.java:109)
-				at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-				at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
-				at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-				at java.lang.reflect.Method.invoke(Method.java:622)
-				at net.minecraft.launchwrapper.Launch.launch(Launch.java:131)
-				at net.minecraft.launchwrapper.Launch.main(Launch.java:27)
-				at cuchaz.magicMojoModLoader.MainLauncher.main(MainLauncher.java:75)
-			*/
-			// found out the problem
-			// lighting calculations oscillate and max out the update buffer
-			// need to fix by disallowing lighting updates within 17 blocks of an unloaded block
-			// fix by patching:
-			//    public boolean World.checkChunksExist( int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ )
-			ChunkAccessor.recheckGaps( this, worldObj.isClient );
+			// TEMP: disable relighting
+			//ChunkAccessor.recheckGaps( this, worldObj.isClient );
 		}
 		
 		// isTicked
@@ -903,6 +877,12 @@ public class Column extends Chunk
 	{
 		// NOTE: this is called by WorldRenderers
 		
+		// TEMP: emulate BlankColumn for missing cubic chunks
+		if( !m_cubicChunks.containsKey( Coords.blockToChunk( blockY ) ) )
+		{
+			return 0;
+		}
+		
 		// pass off to cubic chunk
 		int chunkY = Coords.blockToChunk( blockY );
 		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
@@ -931,6 +911,12 @@ public class Column extends Chunk
 	public int getSavedLightValue( EnumSkyBlock lightType, int localX, int blockY, int localZ )
 	{
 		// NOTE: this is the light function that is called by the rendering code on client
+		
+		// TEMP: emulate BlankColumn for missing cubic chunks
+		if( !m_cubicChunks.containsKey( Coords.blockToChunk( blockY ) ) )
+		{
+			return 0;
+		}
 		
 		// pass off to cubic chunk
 		int chunkY = Coords.blockToChunk( blockY );
@@ -1101,102 +1087,4 @@ public class Column extends Chunk
 		
 		return ranges;
 	}
-	
-	/* don't think we need to override any of this...
-	private void propagateSkylightOcclusion( int localX, int localZ )
-	{
-		// set flag for sky light update
-		int xzCoord = localZ << 4 | localX;
-		updateSkylightColumns[xzCoord] = true;
-		
-		// isPendingGapUpdate
-		isGapLightingUpdated = true;
-	}
-	
-	private void recheckGaps( boolean tryToRunFaster )
-	{
-		if( worldObj.doChunksNearChunkExist( this.xPosition * 16 + 8, 0, this.zPosition * 16 + 8, 16 ) )
-		{
-			for( int localX = 0; localX < 16; ++localX )
-			{
-				for( int localZ = 0; localZ < 16; ++localZ )
-				{
-					// is there a pending update on this block column?
-					if( updateSkylightColumns[localX + localZ * 16] )
-					{
-						// reset the update flag
-						updateSkylightColumns[localX + localZ * 16] = false;
-						
-						int height = getHeightValue( localX, localZ );
-						int blockX = xPosition * 16 + localX;
-						int blockZ = zPosition * 16 + localZ;
-						
-						// get the min height of all the block x,z neighbors
-						int minHeight = worldObj.getChunkHeightMapMinimum( blockX - 1, blockZ );
-						int xposMinHeight = worldObj.getChunkHeightMapMinimum( blockX + 1, blockZ );
-						int znegMinHeight = worldObj.getChunkHeightMapMinimum( blockX, blockZ - 1 );
-						int zposMinHeight = worldObj.getChunkHeightMapMinimum( blockX, blockZ + 1 );
-						if( xposMinHeight < minHeight )
-						{
-							minHeight = xposMinHeight;
-						}
-						if( znegMinHeight < minHeight )
-						{
-							minHeight = znegMinHeight;
-						}
-						if( zposMinHeight < minHeight )
-						{
-							minHeight = zposMinHeight;
-						}
-						
-						checkSkylightNeighborHeight( blockX, blockZ, minHeight );
-						checkSkylightNeighborHeight( blockX - 1, blockZ, height );
-						checkSkylightNeighborHeight( blockX + 1, blockZ, height );
-						checkSkylightNeighborHeight( blockX, blockZ - 1, height );
-						checkSkylightNeighborHeight( blockX, blockZ + 1, height );
-						
-						if( tryToRunFaster )
-						{
-							this.worldObj.theProfiler.endSection();
-							return;
-						}
-					}
-				}
-			}
-			
-			// isPendingGapUpdate
-			isGapLightingUpdated = false;
-		}
-	}
-	
-	private void checkSkylightNeighborHeight( int blockX, int blockZ, int blockY )
-	{
-		int height = worldObj.getHeightValue( blockX, blockZ );
-		
-		// if this block is under the max
-		if( height > blockY )
-		{
-			// update starting at the block above the max
-			updateSkylightNeighborHeight( blockX, blockZ, blockY, height + 1 );
-		}
-		else if( height < blockY )
-		{
-			// update starting at the block above this one
-			updateSkylightNeighborHeight( blockX, blockZ, height, blockY + 1 );
-		}
-	}
-	
-	private void updateSkylightNeighborHeight( int blockX, int blockZ, int startBlockY, int stopBlockY )
-	{
-		if( stopBlockY > startBlockY && worldObj.doChunksNearChunkExist( blockX, 0, blockZ, 16 ) )
-		{
-			for( int blockY = startBlockY; blockY < stopBlockY; ++blockY )
-			{
-				worldObj.updateLightByType( EnumSkyBlock.Sky, blockX, blockY, blockZ );
-			}
-			
-			isModified = true;
-		}
-	}
-	*/
 }

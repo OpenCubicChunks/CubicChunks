@@ -19,6 +19,7 @@ import net.minecraft.world.gen.ChunkProviderServer;
 public class ChunkProviderServerAccessor
 {
 	private static Field m_fieldLoadedChunks;
+	private static Field m_fieldBlankChunk;
 	
 	static
 	{
@@ -26,6 +27,9 @@ public class ChunkProviderServerAccessor
 		{
 			m_fieldLoadedChunks = ChunkProviderServer.class.getDeclaredField( "loadedChunks" );
 			m_fieldLoadedChunks.setAccessible( true );
+			
+			m_fieldBlankChunk = ChunkProviderServer.class.getDeclaredField( "defaultEmptyChunk" );
+			m_fieldBlankChunk.setAccessible( true );
 		}
 		catch( Exception ex )
 		{
@@ -39,6 +43,30 @@ public class ChunkProviderServerAccessor
 		try
 		{
 			return (List<Chunk>)m_fieldLoadedChunks.get( provider );
+		}
+		catch( Exception ex )
+		{
+			throw new Error( ex );
+		}
+	}
+	
+	public static Chunk getBlankChunk( ChunkProviderServer provider )
+	{
+		try
+		{
+			return (Chunk)m_fieldBlankChunk.get( provider );
+		}
+		catch( Exception ex )
+		{
+			throw new Error( ex );
+		}
+	}
+	
+	public static void setBlankChunk( ChunkProviderServer provider, Chunk val )
+	{
+		try
+		{
+			m_fieldBlankChunk.set( provider, val );
 		}
 		catch( Exception ex )
 		{

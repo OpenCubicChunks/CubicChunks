@@ -22,6 +22,7 @@ public class ChunkProviderClientAccessor
 {
 	private static Field m_fieldChunkMapping;
 	private static Field m_fieldChunkListing;
+	private static Field m_fieldBlankChunk;
 	
 	static
 	{
@@ -32,6 +33,9 @@ public class ChunkProviderClientAccessor
 			
 			m_fieldChunkListing = ChunkProviderClient.class.getDeclaredField( "chunkListing" );
 			m_fieldChunkListing.setAccessible( true );
+			
+			m_fieldBlankChunk = ChunkProviderClient.class.getDeclaredField( "blankChunk" );
+			m_fieldBlankChunk.setAccessible( true );
 		}
 		catch( Exception ex )
 		{
@@ -57,6 +61,30 @@ public class ChunkProviderClientAccessor
 		try
 		{
 			return (List<Chunk>)m_fieldChunkListing.get( provider );
+		}
+		catch( Exception ex )
+		{
+			throw new Error( ex );
+		}
+	}
+	
+	public static Chunk getBlankChunk( ChunkProviderClient provider )
+	{
+		try
+		{
+			return (Chunk)m_fieldBlankChunk.get( provider );
+		}
+		catch( Exception ex )
+		{
+			throw new Error( ex );
+		}
+	}
+	
+	public static void setBlankChunk( ChunkProviderClient provider, Chunk val )
+	{
+		try
+		{
+			m_fieldBlankChunk.set( provider, val );
 		}
 		catch( Exception ex )
 		{

@@ -32,6 +32,11 @@ public class CubicChunkWatcher
 	
 	public CubicChunkWatcher( CubicChunk cubicChunk )
 	{
+		if( cubicChunk == null )
+		{
+			throw new IllegalArgumentException( "cubicChunk cannot be null!" );
+		}
+		
 		m_cubicChunk = cubicChunk;
 		m_players = Maps.newTreeMap();
 		m_previousWorldTime = 0;

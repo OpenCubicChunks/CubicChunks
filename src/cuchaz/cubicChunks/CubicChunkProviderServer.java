@@ -10,10 +10,11 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
+import cuchaz.cubicChunks.accessors.ChunkProviderServerAccessor;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.ChunkProviderServer;
 
-public class CubicChunkProviderServer extends ChunkProviderServer
+public class CubicChunkProviderServer extends ChunkProviderServer implements CubicChunkProvider
 {
 	public CubicChunkProviderServer( WorldServer world )
 	{
@@ -22,6 +23,9 @@ public class CubicChunkProviderServer extends ChunkProviderServer
 			new CubicChunkLoader( world.getSaveHandler() ),
 			new CubicChunkGenerator( world )
 		);
+		
+		// set empty chunk
+		ChunkProviderServerAccessor.setBlankChunk( this, new BlankColumn( world, 0, 0 ) );
 	}
 	
 	@Override
@@ -36,12 +40,20 @@ public class CubicChunkProviderServer extends ChunkProviderServer
 		return (Column)super.provideChunk( chunkX, chunkZ );
 	}
 	
+	@Override
 	public boolean cubicChunkExists( int chunkX, int chunkY, int chunkZ )
 	{
-		Column column = loadChunk( chunkX, chunkZ );
-		return column.getCubicChunk( chunkY ) != null;
+		// check the column first
+		if( !chunkExists( chunkX, chunkZ ) )
+		{
+			return false;
+		}
+		
+		// then check the cubic chunk
+		return provideChunk( chunkX, chunkZ ).getCubicChunk( chunkY ) != null;
 	}
 	
+	@Override
 	public CubicChunk loadCubicChunk( int chunkX, int chunkY, int chunkZ )
 	{
 		// load the column
