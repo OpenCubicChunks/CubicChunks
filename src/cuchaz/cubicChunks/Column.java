@@ -213,7 +213,7 @@ public class Column extends Chunk
 		}
 		
 		// this cubic chunk isn't loaded, but there's something non-transparent there, return a block proxy
-		int opacity = m_lightIndex.getOpacity( localX, blockY, localZ );
+		int opacity = getLightIndex().getOpacity( localX, blockY, localZ );
 		if( opacity > 0 )
 		{
 			return LightIndexBlockProxy.get( opacity );
@@ -276,7 +276,7 @@ public class Column extends Chunk
 			
 			// did the top non-transparent block change?
 			int oldMaxY = getHeightValue( localX, localZ );
-			m_lightIndex.setOpacity( localX, blockY, localZ, newOpacity );
+			getLightIndex().setOpacity( localX, blockY, localZ, newOpacity );
 			int newMaxY = getHeightValue( localX, localZ );
 			if( oldMaxY != newMaxY )
 			{
@@ -293,7 +293,7 @@ public class Column extends Chunk
 		}
 		
 		// update lighting index
-		m_lightIndex.setOpacity( localX, blockY, localZ, block.getLightOpacity() );
+		getLightIndex().setOpacity( localX, blockY, localZ, block.getLightOpacity() );
 		
 		return true;
 	}
@@ -351,7 +351,7 @@ public class Column extends Chunk
 	@Override
 	public int getTopFilledSegment()
     {
-		int blockY = m_lightIndex.getTopNonTransparentBlockY();
+		int blockY = getLightIndex().getTopNonTransparentBlockY();
 		return Coords.blockToChunk( blockY );
     }
 	
@@ -381,19 +381,13 @@ public class Column extends Chunk
 	public int getHeightValue( int localX, int localZ )
 	{
 		// NOTE: the "height value" here is the height of the highest block whose block UNDERNEATH is non-transparent
-		return m_lightIndex.getTopNonTransparentBlock( localX, localZ ) + 1;
+		return getLightIndex().getTopNonTransparentBlock( localX, localZ ) + 1;
 	}
 	
 	@Override //  getOpacity
 	public int func_150808_b( int localX, int blockY, int localZ )
 	{
-		// TEMP: emulate BlankColumn for missing cubic chunks
-		if( !m_cubicChunks.containsKey( Coords.blockToChunk( blockY ) ) )
-		{
-			return 255;
-		}
-		
-		return m_lightIndex.getOpacity( localX, blockY, localZ );
+		return getLightIndex().getOpacity( localX, blockY, localZ );
 	}
 	
 	@Override
@@ -626,7 +620,7 @@ public class Column extends Chunk
 		}
 		
 		// 7. light index
-		m_lightIndex.writeData( out );
+		getLightIndex().writeData( out );
 		
 		out.close();
 		return buf.toByteArray();
@@ -688,7 +682,7 @@ public class Column extends Chunk
 			}
 			
 			// 7. light index
-			m_lightIndex.readData( in );
+			getLightIndex().readData( in );
 			
 			in.close();
 		}
@@ -717,8 +711,7 @@ public class Column extends Chunk
 		// from the super implementation
 		if( ChunkAccessor.isGapLightingUpdated( this ) && !worldObj.provider.hasNoSky && !tryToTickFaster )
 		{
-			// TEMP: disable relighting
-			//ChunkAccessor.recheckGaps( this, worldObj.isClient );
+			ChunkAccessor.recheckGaps( this, worldObj.isClient );
 		}
 		
 		// isTicked
@@ -877,12 +870,6 @@ public class Column extends Chunk
 	{
 		// NOTE: this is called by WorldRenderers
 		
-		// TEMP: emulate BlankColumn for missing cubic chunks
-		if( !m_cubicChunks.containsKey( Coords.blockToChunk( blockY ) ) )
-		{
-			return 0;
-		}
-		
 		// pass off to cubic chunk
 		int chunkY = Coords.blockToChunk( blockY );
 		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
@@ -911,12 +898,6 @@ public class Column extends Chunk
 	public int getSavedLightValue( EnumSkyBlock lightType, int localX, int blockY, int localZ )
 	{
 		// NOTE: this is the light function that is called by the rendering code on client
-		
-		// TEMP: emulate BlankColumn for missing cubic chunks
-		if( !m_cubicChunks.containsKey( Coords.blockToChunk( blockY ) ) )
-		{
-			return 0;
-		}
 		
 		// pass off to cubic chunk
 		int chunkY = Coords.blockToChunk( blockY );
