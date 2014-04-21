@@ -61,7 +61,6 @@ public class Column extends Chunk
 		init();
 		
 		int maxY = blocks.length/256; // 256 blocks per y-layer
-		boolean hasSky = !world.provider.hasNoSky;
 		
 		// for each block...
 		for( int localX=0; localX<16; localX++ )
@@ -76,24 +75,17 @@ public class Column extends Chunk
 					{
 						// get the cubic chunk
 						int chunkY = Coords.blockToChunk( blockY );
-						CubicChunk cubicChunk = getCubicChunk( chunkY );
-						if( cubicChunk == null )
-						{
-							cubicChunk = new CubicChunk( world, this, chunkX, chunkY, chunkZ, hasSky );
-							m_cubicChunks.put( chunkY, cubicChunk );
-						}
+						CubicChunk cubicChunk = getOrCreateCubicChunk( chunkY );
 						
 						// save the block
-						int localY = Coords.blockToLocal( blockY );
-						
 						// NOTE: don't call CubicChunk.setBlock() during chunk loading!
 						// it will send block events and cause bad things to happen
+						int localY = Coords.blockToLocal( blockY );
 						cubicChunk.setBlockSilently( localX, localY, localZ, block, meta[blockIndex] );
+						
+						// build the light index
+						m_lightIndex.setOpacity( localX, blockY, localZ, block.getLightOpacity() );
 					}
-					
-					// build the light index
-					int opacity = block != null ? block.getLightOpacity() : 0;
-					m_lightIndex.setOpacity( localX, blockY, localZ, opacity );
 				}
 			}
 		}
@@ -250,7 +242,7 @@ public class Column extends Chunk
 			return false;
 		}
 		
-		// NOTE: the height map doesn't get updated here
+		// NOTE: the light index doesn't get updated here
 		// it gets updated during the lighting update
 		
 		// update rain map
@@ -266,7 +258,10 @@ public class Column extends Chunk
 		// handle lighting updates
 		if( createdNewCubicChunk )
 		{
-			// new chunk, redo all lighting
+			// update light index before sky light update
+			getLightIndex().setOpacity( localX, blockY, localZ, block.getLightOpacity() );
+			
+			// new chunk, update sky lighting
 			generateSkylightMap();
 		}
 		else
@@ -352,7 +347,7 @@ public class Column extends Chunk
 	public int getTopFilledSegment()
     {
 		int blockY = getLightIndex().getTopNonTransparentBlockY();
-		return Coords.blockToChunk( blockY );
+		return Coords.chunkToMinBlock( Coords.blockToChunk( blockY ) );
     }
 	
 	@Override
@@ -708,7 +703,7 @@ public class Column extends Chunk
 	@Override //         tick
 	public void func_150804_b( boolean tryToTickFaster )
 	{
-		// from the super implementation
+		// tick-based lighting calculations
 		if( ChunkAccessor.isGapLightingUpdated( this ) && !worldObj.provider.hasNoSky && !tryToTickFaster )
 		{
 			ChunkAccessor.recheckGaps( this, worldObj.isClient );

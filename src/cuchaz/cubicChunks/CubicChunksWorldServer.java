@@ -16,7 +16,6 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
-import cuchaz.cubicChunks.accessors.WorldAccessor;
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 
 public class CubicChunksWorldServer extends WorldServer
@@ -38,6 +37,8 @@ public class CubicChunksWorldServer extends WorldServer
 		return chunkProvider;
     }
 	
+	/* SOO much Minecraft code expects the bottom cubic chunks to be loaded
+	   Let's not tell Minecraft they're not actually loaded just yet
 	@Override
 	public boolean checkChunksExist( int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ )
 	{
@@ -66,4 +67,5 @@ public class CubicChunksWorldServer extends WorldServer
 		}
 		return true;
 	}
+	*/
 }

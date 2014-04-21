@@ -139,3 +139,18 @@ Chunk.heightMapMinimum
 		Chunk.relightBlock() private, called by Chunk.setBlock()
 	conclusion:
 		used by World, can't replace
+
+Processes that update lights on blocks
+	New segment creation
+		calls Chunk.generateSkylightMap()
+	New chunk creation
+		calls Chunk.func_150809_p() // populateLighting
+	Block changes
+		calls World.func_147451_t() // relightBlock
+		and   Chunk.updateBlockSkylight()
+		and   Chunk.propagateSkylightOcclusion()
+	World tick
+		calls World.enqueueRelightChecks()
+		and   World.setActivePlayerChunksAndCheckLight()
+				randomly recalculates light around random entities
+		
