@@ -70,5 +70,10 @@ public abstract class CubicChunkSelector
 		return m_newlyHidden;
 	}
 	
+	public boolean isVisible( long address )
+	{
+		return m_visible.contains( address );
+	}
+	
 	protected abstract void computeVisible( Collection<Long> out, int dimension, int chunkX, int chunkY, int chunkZ, int viewDistance );
 }

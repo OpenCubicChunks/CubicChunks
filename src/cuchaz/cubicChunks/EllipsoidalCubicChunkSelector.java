@@ -14,7 +14,7 @@ import java.util.Collection;
 
 public class EllipsoidalCubicChunkSelector extends CubicChunkSelector
 {
-	private static final int SemiAxisY = 2;
+	private static final int SemiAxisY = 3;
 	private static final int SemiAxisY2 = SemiAxisY*SemiAxisY;
 	
 	@Override

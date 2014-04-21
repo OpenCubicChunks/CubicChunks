@@ -49,7 +49,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 		{
 			this.watchedAddresses = new TreeSet<Long>();
 			this.outgoingCubicChunks = new LinkedList<CubicChunk>();
-			this.cubicChunkSelector = new CuboidalCubicChunkSelector();//new EllipsoidalCubicChunkSelector();
+			this.cubicChunkSelector = new CuboidalCubicChunkSelector();
 			this.blockX = 0;
 			this.blockY = 0;
 			this.blockZ = 0;
@@ -80,6 +80,19 @@ public class CubicChunkPlayerManager extends PlayerManager
 					return dx + dy + dz;
 				}
 			} );
+		}
+		
+		public void removeOutOfRangeOutgoingCubicChunks( )
+		{
+			Iterator<CubicChunk> iter = outgoingCubicChunks.iterator();
+			while( iter.hasNext() )
+			{
+				CubicChunk cubicChunk = iter.next();
+				if( !cubicChunkSelector.isVisible( cubicChunk.getAddress() ) )
+				{
+					iter.remove();
+				}
+			}
 		}
 	}
 	
@@ -318,6 +331,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 		{
 			return;
 		}
+		info.removeOutOfRangeOutgoingCubicChunks();
 		info.sortOutgoingCubicChunks();
 		
 		// pull off enough cubic chunks from the queue to fit in a packet
@@ -330,9 +344,8 @@ public class CubicChunkPlayerManager extends PlayerManager
 			CubicChunk cubicChunk = iter.next();
 			
 			// only send cubic chunks in active columns, not from columns on the fringe of the world that have been generated, but not activated yet
-			if( !cubicChunk.getColumn().field_150815_m )
+			if( !cubicChunk.getColumn().func_150802_k() )
 			{
-				iter.remove();
 				continue;
 			}
 			
@@ -371,11 +384,6 @@ public class CubicChunkPlayerManager extends PlayerManager
 		
 		// send the cubic chunk data
 		player.playerNetServerHandler.sendPacket( new S26PacketMapChunkBulk( columnsToSend ) );
-		
-		// TEMP
-		System.out.println( String.format( "Send %d cubic chunks in %d columns to player. %d cubic chunks pending.",
-			cubicChunksToSend.size(), columnsToSend.size(), info.outgoingCubicChunks.size()
-		) );
 		
 		// send tile entity data
 		for( TileEntity tileEntity : tileEntitiesToSend )
@@ -461,7 +469,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 		}
 		*/
 		
-		// so, a column is active if it is within 7 column to a player
+		// so, a column is active if it is within 7 columns to a player
 		for( EntityPlayer player : (List<EntityPlayer>)column.worldObj.playerEntities )
 		{
 			int chunkX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
