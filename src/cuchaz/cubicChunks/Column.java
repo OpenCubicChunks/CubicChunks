@@ -44,6 +44,8 @@ public class Column extends Chunk
 	private TreeMap<Integer,CubicChunk> m_cubicChunks;
 	private ExtendedBlockStorage[] m_legacySegments;
 	private LightIndex m_lightIndex;
+	private int m_roundRobinLightUpdatePointer;
+	private List<CubicChunk> m_roundRobinCubicChunks;
 	
 	public Column( World world, int x, int z )
 	{
@@ -96,6 +98,8 @@ public class Column extends Chunk
 		m_cubicChunks = new TreeMap<Integer,CubicChunk>();
 		m_legacySegments = null;
 		m_lightIndex = new LightIndex();
+		m_roundRobinLightUpdatePointer = 0;
+		m_roundRobinCubicChunks = new ArrayList<CubicChunk>();
 		
 		// make sure no one's using data structures that have been replaced
 		setStorageArrays( null );
@@ -774,9 +778,6 @@ public class Column extends Chunk
 			}
 		}
 		
-		// UNDONE: this algo only works when the top cubic chunks are loaded
-		// eventually need to update to use new column data structures for all cubic chunks, regardless of loaded state
-		
 		if( !worldObj.provider.hasNoSky )
 		{
 			int maxBlockY = getTopFilledSegment() + 15;
@@ -804,10 +805,17 @@ public class Column extends Chunk
 						// decrease the light
 						lightValue -= lightOpacity;
 						
-						if( lightValue > 0 )
+						// stop when we run out of light
+						if( lightValue <= 0 )
+						{
+							break;
+						}
+						
+						// update the cubic chunk only if it's actually loaded
+						CubicChunk cubicChunk = m_cubicChunks.get( Coords.blockToChunk( blockY ) );
+						if( cubicChunk != null )
 						{
 							// save the sky light value
-							CubicChunk cubicChunk = m_cubicChunks.get( Coords.blockToChunk( blockY ) );
 							int localY = Coords.blockToLocal( blockY );
 							cubicChunk.getStorage().setExtSkylightValue( localX, localY, localZ, lightValue );
 							
@@ -815,10 +823,6 @@ public class Column extends Chunk
 							int blockX = Coords.localToBlock( xPosition, localX );
 							int blockZ = Coords.localToBlock( zPosition, localZ );
 							worldObj.func_147479_m( blockX, blockY, blockZ );
-						}
-						else
-						{
-							break;
 						}
 					}
 				}
@@ -1062,5 +1066,87 @@ public class Column extends Chunk
 		}
 		
 		return ranges;
+	}
+	
+	@Override
+	public void resetRelightChecks( )
+	{
+		m_roundRobinLightUpdatePointer = 0;
+		m_roundRobinCubicChunks.clear();
+		m_roundRobinCubicChunks.addAll( m_cubicChunks.values() );
+	}
+	
+	@Override // doSomeRoundRobinLightUpdates
+	public void enqueueRelightChecks( )
+	{
+		if( m_roundRobinCubicChunks.isEmpty() )
+		{
+			resetRelightChecks();
+		}
+		
+		// we get 8 updates this time
+		for( int i=0; i<8; i++ )
+		{
+			// once we've checked all the blocks, stop checking
+			int maxPointer = 16*16*m_roundRobinCubicChunks.size();
+			if( m_roundRobinLightUpdatePointer >= maxPointer )
+			{
+				return;
+			}
+			
+			// get this update's arguments
+			int cubicChunkIndex = Bits.unpackUnsigned( m_roundRobinLightUpdatePointer, 4, 8 );
+			int localX = Bits.unpackUnsigned( m_roundRobinLightUpdatePointer, 4, 4 );
+			int localZ = Bits.unpackUnsigned( m_roundRobinLightUpdatePointer, 4, 0 );
+			
+			// advance to the next block
+			// this pointer advances over segment block columns
+			// starting from the block columns in the bottom segment and moving upwards
+			m_roundRobinLightUpdatePointer++;
+			
+			// get the cubic chunk that was pointed to
+			CubicChunk cubicChunk = m_roundRobinCubicChunks.get( cubicChunkIndex );
+			
+			int blockX = Coords.localToBlock( xPosition, localX );
+			int blockZ = Coords.localToBlock( zPosition, localZ );
+			
+			// for each block in this segment block column...
+			for( int localY=0; localY<16; ++localY )
+			{
+				if( cubicChunk.getBlock( localX, localY, localZ ).getMaterial() == Material.air )
+				{
+					int blockY = Coords.localToBlock( cubicChunkIndex, localY );
+					
+					// if there's a light source next to this block, update the light source
+					if( worldObj.getBlock( blockX, blockY - 1, blockZ ).getLightValue() > 0 )
+					{
+						worldObj.func_147451_t( blockX, blockY - 1, blockZ );
+					}
+					if( worldObj.getBlock( blockX, blockY + 1, blockZ ).getLightValue() > 0 )
+					{
+						worldObj.func_147451_t( blockX, blockY + 1, blockZ );
+					}
+					if( worldObj.getBlock( blockX - 1, blockY, blockZ ).getLightValue() > 0 )
+					{
+						worldObj.func_147451_t( blockX - 1, blockY, blockZ );
+					}
+					if( worldObj.getBlock( blockX + 1, blockY, blockZ ).getLightValue() > 0 )
+					{
+						worldObj.func_147451_t( blockX + 1, blockY, blockZ );
+					}
+					if( worldObj.getBlock( blockX, blockY, blockZ - 1 ).getLightValue() > 0 )
+					{
+						worldObj.func_147451_t( blockX, blockY, blockZ - 1 );
+					}
+					if( worldObj.getBlock( blockX, blockY, blockZ + 1 ).getLightValue() > 0 )
+					{
+						worldObj.func_147451_t( blockX, blockY, blockZ + 1 );
+					}
+					
+					// then update this block
+					worldObj.func_147451_t( blockX, blockY, blockZ );
+				}
+			}
+		}
 	}
 }

@@ -14,12 +14,14 @@ import java.util.Collection;
 
 public class CuboidalCubicChunkSelector extends CubicChunkSelector
 {
+	private static final int ViewDistanceY = 2;
+	
 	@Override
 	protected void computeVisible( Collection<Long> out, int dimension, int chunkX, int chunkY, int chunkZ, int viewDistance )
 	{
 		for( int x=chunkX-viewDistance; x<=chunkX+viewDistance; x++ )
 		{
-			for( int y=Math.max( 0, chunkY-viewDistance ); y<=chunkY+viewDistance; y++ )
+			for( int y=Math.max( 0, chunkY-ViewDistanceY ); y<=chunkY+ViewDistanceY; y++ )
 			{
 				for( int z=chunkZ-viewDistance; z<=chunkZ+viewDistance; z++ )
 				{

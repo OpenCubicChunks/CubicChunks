@@ -49,7 +49,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 		{
 			this.watchedAddresses = new TreeSet<Long>();
 			this.outgoingCubicChunks = new LinkedList<CubicChunk>();
-			this.cubicChunkSelector = new EllipsoidalCubicChunkSelector();
+			this.cubicChunkSelector = new CuboidalCubicChunkSelector();//new EllipsoidalCubicChunkSelector();
 			this.blockX = 0;
 			this.blockY = 0;
 			this.blockZ = 0;
@@ -119,13 +119,13 @@ public class CubicChunkPlayerManager extends PlayerManager
 		// add player to watchers and collect the cubic chunks to send over
 		for( long address : info.cubicChunkSelector.getVisibleCubicChunks() )
 		{
-			// skip non-existent cubic chunks
-			if( !cubicChunkExists( address ) )
+			CubicChunkWatcher watcher = getOrCreateWatcher( address );
+			if( watcher == null )
 			{
+				// no watcher means an empty cubic chunk
 				continue;
 			}
 			
-			CubicChunkWatcher watcher = getOrCreateWatcher( address );
 			watcher.addPlayer( player );
 			info.watchedAddresses.add( address );
 			
@@ -260,13 +260,13 @@ public class CubicChunkPlayerManager extends PlayerManager
 		// add to new watchers
 		for( long address : info.cubicChunkSelector.getNewlyVisibleCubicChunks() )
 		{
-			// skip non-existent cubic chunks
-			if( !cubicChunkExists( address ) )
+			CubicChunkWatcher watcher = getOrCreateWatcher( address );
+			if( watcher == null )
 			{
+				// no watcher means an empty cubic chunk
 				continue;
 			}
 			
-			CubicChunkWatcher watcher = getOrCreateWatcher( address );
 			watcher.addPlayer( player );
 			
 			if( isActiveColumn( watcher.getCubicChunk().getColumn() ) )
@@ -330,7 +330,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 			CubicChunk cubicChunk = iter.next();
 			
 			// only send cubic chunks in active columns, not from columns on the fringe of the world that have been generated, but not activated yet
-			if( !cubicChunk.getColumn().func_150802_k() )
+			if( !cubicChunk.getColumn().field_150815_m )
 			{
 				iter.remove();
 				continue;
@@ -427,6 +427,12 @@ public class CubicChunkPlayerManager extends PlayerManager
 			int chunkY = AddressTools.getY( address );
 			int chunkZ = AddressTools.getZ( address );
 			CubicChunk cubicChunk = getCubicChunkProvider().loadCubicChunk( chunkX, chunkY, chunkZ );
+			
+			// if no cubic chunk was loaded, that means it's an empty cubic chunk
+			if( cubicChunk == null )
+			{
+				return null;
+			}
 			
 			// make a new watcher
 			watcher = new CubicChunkWatcher( cubicChunk );
