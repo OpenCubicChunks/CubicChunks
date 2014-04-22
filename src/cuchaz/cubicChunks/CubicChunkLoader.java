@@ -32,10 +32,8 @@ import net.minecraft.world.MinecraftException;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.IThreadedFileIO;
 import net.minecraft.world.storage.ThreadedFileIOBase;
@@ -47,7 +45,7 @@ import org.mapdb.DBMaker;
 
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 
-public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
+public class CubicChunkLoader implements IThreadedFileIO
 {
 	private static final Logger log = LogManager.getLogger();
 	
@@ -91,8 +89,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
         m_cubicChunksToSave = new ConcurrentBatchedQueue<SaveEntry>();
 	}
 	
-	@Override
-	public Column loadChunk( World world, int x, int z )
+	public Column loadColumn( World world, int x, int z )
 	throws IOException
 	{
 		// does the database have the column?
@@ -160,8 +157,7 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		return readCubicChunkFromNbtAndAddToColumn( world, column, x, y, z, nbt );
 	}
 	
-	@Override
-	public void saveChunk( World world, Chunk mcChunk )
+	public void saveColumn( World world, Column column )
 	throws MinecraftException, IOException
 	{
 		// NOTE: this function blocks the world thread
@@ -170,7 +166,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		// with concurrent access to world data structures
 		
 		// add the column to the save queue
-		Column column = castColumn( mcChunk );
 		m_columnsToSave.add( new SaveEntry( column.getAddress(), writeColumnToNbt( column ) ) );
 		
 		// add the cubic chunks to the save queue
@@ -270,33 +265,6 @@ public class CubicChunkLoader implements IChunkLoader, IThreadedFileIO
 		CompressedStreamTools.writeCompressed( nbt, out );
 		out.close();
 		return buf.toByteArray();
-	}
-
-	@Override
-	public void saveExtraData( )
-	{
-		// not used
-	}
-	
-	@Override
-	public void chunkTick( )
-	{
-		// not used
-	}
-	
-	@Override
-	public void saveExtraChunkData( World world, Chunk chunk )
-	{
-		// not used
-	}
-	
-	private Column castColumn( Chunk mcChunk )
-	{
-		if( mcChunk instanceof Column )
-		{
-			return (Column)mcChunk;
-		}
-		throw new IllegalArgumentException( "Chunk is a vanilla chunk! Exepected column of cubic chunks!" );
 	}
 	
 	private NBTTagCompound writeColumnToNbt( Column column )
