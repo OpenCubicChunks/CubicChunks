@@ -28,7 +28,6 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.MinecraftException;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -158,7 +157,6 @@ public class CubicChunkLoader implements IThreadedFileIO
 	}
 	
 	public void saveColumn( World world, Column column )
-	throws MinecraftException, IOException
 	{
 		// NOTE: this function blocks the world thread
 		// make it as fast as possible by offloading processing to the IO thread

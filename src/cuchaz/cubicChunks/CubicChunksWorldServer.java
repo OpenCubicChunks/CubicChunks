@@ -37,6 +37,16 @@ public class CubicChunksWorldServer extends WorldServer
 		return chunkProvider;
     }
 	
+	public long getSpawnPointCubicChunkAddress( )
+	{
+		return AddressTools.getAddress(
+			provider.dimensionId,
+			Coords.blockToChunk( worldInfo.getSpawnX() ),
+			Coords.blockToChunk( worldInfo.getSpawnY() ),
+			Coords.blockToChunk( worldInfo.getSpawnZ() )
+		);
+	}
+	
 	/* SOO much Minecraft code expects the bottom cubic chunks to be loaded
 	   Let's not tell Minecraft they're not actually loaded just yet
 	@Override

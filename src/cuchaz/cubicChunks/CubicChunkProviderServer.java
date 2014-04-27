@@ -11,47 +11,48 @@
 package cuchaz.cubicChunks;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
 
-import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.IProgressUpdate;
-import net.minecraft.util.LongHashMap;
-import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.collect.Maps;
+
 public class CubicChunkProviderServer extends ChunkProviderServer implements CubicChunkProvider
 {
 	private static final Logger log = LogManager.getLogger();
 	
-	private WorldServer m_worldServer;
+	private CubicChunksWorldServer m_worldServer;
 	private CubicChunkLoader m_loader;
 	private CubicChunkGenerator m_generator;
-	private LongHashMap m_loadedColumns;
+	private HashMap<Long,Column> m_loadedColumns;
 	private BlankColumn m_blankColumn;
-	private List<Long> m_columnsToUnload;
+	private Deque<Long> m_columnsToUnload;
+	private Deque<Long> m_cubicChunksToUnload;
 	
 	public CubicChunkProviderServer( WorldServer world )
 	{
 		super( null, null, null );
 		
-		m_worldServer = world;
+		m_worldServer = (CubicChunksWorldServer)world;
 		m_loader = new CubicChunkLoader( world.getSaveHandler() );
 		m_generator = new CubicChunkGenerator( world );
-		m_loadedColumns = new LongHashMap();
+		m_loadedColumns = Maps.newHashMap();
 		m_blankColumn = new BlankColumn( world, 0, 0 );
-		m_columnsToUnload = new ArrayList<Long>();
+		m_columnsToUnload = new ArrayDeque<Long>();
+		m_cubicChunksToUnload = new ArrayDeque<Long>();
 	}
 	
 	@Override
 	public boolean chunkExists( int chunkX, int chunkZ )
 	{
-		return m_loadedColumns.containsItem( getColumnAddress( chunkX, chunkZ ) );
+		return m_loadedColumns.containsKey( getColumnAddress( chunkX, chunkZ ) );
 	}
 	
 	@Override
@@ -70,13 +71,19 @@ public class CubicChunkProviderServer extends ChunkProviderServer implements Cub
 	@Override
 	public Column loadChunk( int chunkX, int chunkZ )
 	{
+		// NEXTTIME: route this directly to provideChunk()?
+		// but need to actually load things in special cases like:
+		//    spawn area preparation
+		//    player spawning (eg, at beds)
+		// see list of loadChunk callers and figure out how to make those work...
+		
 		long address = getColumnAddress( chunkX, chunkZ );
 		
 		// remove this column from the unload queue
 		m_columnsToUnload.remove( address );
 		
 		// is this column already loaded?
-		Column column = (Column)m_loadedColumns.getValueByKey( address );
+		Column column = (Column)m_loadedColumns.get( address );
 		if( column != null )
 		{
 			return column;
@@ -97,7 +104,7 @@ public class CubicChunkProviderServer extends ChunkProviderServer implements Cub
 			}
 			
 			// add the column to the cache
-			m_loadedColumns.add( address, column );
+			m_loadedColumns.put( address, column );
 			
 			// init the column
 			column.onChunkLoad();
@@ -117,16 +124,17 @@ public class CubicChunkProviderServer extends ChunkProviderServer implements Cub
 	public Column provideChunk( int chunkX, int chunkZ )
 	{
 		// check for the column
-		Column column = (Column)m_loadedColumns.getValueByKey( getColumnAddress( chunkX, chunkZ ) );
+		Column column = (Column)m_loadedColumns.get( getColumnAddress( chunkX, chunkZ ) );
 		if( column != null )
 		{
 			return column;
 		}
 		
 		// load the column or send back a proxy
-		if( m_worldServer.findingSpawnPoint || loadChunkOnProvideRequest )
+		if( m_worldServer.findingSpawnPoint )
 		{
-			return loadChunk( chunkX, chunkZ );
+			// NOTE: if we're finding a spawn point, we only need to load the cubic chunks above sea level
+			return loadCubicChunksAboveSeaLevel( chunkX, chunkZ );
 		}
 		else
 		{
@@ -137,114 +145,105 @@ public class CubicChunkProviderServer extends ChunkProviderServer implements Cub
 	@Override
 	public CubicChunk loadCubicChunk( int chunkX, int chunkY, int chunkZ )
 	{
-		// UNDONE: re-evaluate this method!
+		// NOTE: this is the main load method for block data!
 		
-		// load the column
-		Column column = loadChunk( chunkX, chunkZ );
+		// get the column
+		Column column = provideChunk( chunkX, chunkZ );
 		
 		// check for the cubic chunk
 		CubicChunk cubicChunk = column.getCubicChunk( chunkY );
-		if( cubicChunk == null )
+		if( cubicChunk != null )
 		{
-			// UNDONE: try to load the cubic chunk
+			return cubicChunk;
 		}
 		
-		return cubicChunk;
+		// UNDONE: load the cubic chunk and add it to the column
+		return null;
 	}
 	
 	@Override
 	public void unloadChunksIfNotNearSpawn( int chunkX, int chunkZ )
 	{
-		if( m_worldServer.provider.canRespawnHere() )
-		{
-			ChunkCoordinates coords = m_worldServer.getSpawnPoint();
-			int blockX = chunkX * 16 + 8 - coords.posX;
-			int blockZ = chunkZ * 16 + 8 - coords.posZ;
-			short blockDistance = 128; // 8 chunks
-			
-			if( blockX < -blockDistance || blockX > blockDistance || blockZ < -blockDistance || blockZ > blockDistance )
-			{
-				this.chunksToUnload.add( Long.valueOf( ChunkCoordIntPair.chunkXZ2Int( chunkX, chunkZ ) ) );
-			}
-		}
-		else
-		{
-			this.chunksToUnload.add( Long.valueOf( ChunkCoordIntPair.chunkXZ2Int( chunkX, chunkZ ) ) );
-		}
+		throw new UnsupportedOperationException();
 	}
 	
 	public void unloadCubicChunkIfNotNearSpawn( CubicChunk cubicChunk )
 	{
+		// NOTE: this is the main unload method for block data!
+		
 		unloadCubicChunkIfNotNearSpawn( cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ() );
 	}
 	
 	public void unloadCubicChunkIfNotNearSpawn( int chunkX, int chunkY, int chunkZ )
 	{
-		// UNDONE
+		// don't unload cubic chunks near the spawn
+		if( cubicChunkIsNearSpawn( chunkX, chunkY, chunkZ ) )
+		{
+			return;
+		}
+		
+		// queue the cubic chunk for unloading
+		m_cubicChunksToUnload.add( getCubicChunkAddress( chunkX, chunkY, chunkZ ) );
 	}
 	
 	@Override
 	public void unloadAllChunks( )
 	{
-		for( Column column : m_loadedColumns )
-		{
-			
-		}
+		m_columnsToUnload.addAll( m_loadedColumns.keySet() );
 	}
 	
 	@Override
 	public boolean unloadQueuedChunks( )
 	{
-		if( !this.worldObj.levelSaving )
+		// NOTE: the return value is completely ignored
+		
+		// don't unload if we're saving
+		if( m_worldServer.levelSaving )
 		{
-			for( int var1 = 0; var1 < 100; ++var1 )
-			{
-				if( !this.chunksToUnload.isEmpty() )
-				{
-					Long var2 = (Long)this.chunksToUnload.iterator().next();
-					Chunk var3 = (Chunk)this.loadedChunkHashMap.getValueByKey( var2.longValue() );
-					var3.onChunkUnload();
-					this.safeSaveChunk( var3 );
-					this.safeSaveExtraChunkData( var3 );
-					this.chunksToUnload.remove( var2 );
-					this.loadedChunkHashMap.remove( var2.longValue() );
-					this.loadedChunks.remove( var3 );
-				}
-			}
-			
-			if( this.currentChunkLoader != null )
-			{
-				this.currentChunkLoader.chunkTick();
-			}
+			return false;
 		}
 		
-		return this.currentChunkProvider.unloadQueuedChunks();
+		final int MaxNumToUnload = 100;
+		
+		// unload cubic chunks
+		
+		
+		// unload columns
+		for( int i=0; i<MaxNumToUnload && !m_columnsToUnload.isEmpty(); i++ )
+		{
+			long address = m_columnsToUnload.poll();
+			
+			// get the column
+			Column column = (Column)m_loadedColumns.get( address );
+			if( column == null )
+			{
+				// already unloaded
+				continue;
+			}
+			
+			// remove from the loaded set
+			m_loadedColumns.remove( address );
+			
+			// tell the column is has been unloaded
+			column.onChunkUnload();
+			
+			// save the column
+			m_loader.saveColumn( m_worldServer, column );
+		}
+		
+		return false;
 	}
 	
 	@Override
-	public boolean saveChunks( boolean flag, IProgressUpdate progress )
+	public boolean saveChunks( boolean alwaysTrue, IProgressUpdate progress )
 	{
-		int var3 = 0;
-		
-		for( int var4 = 0; var4 < this.loadedChunks.size(); ++var4 )
+		for( Column column : m_loadedColumns.values() )
 		{
-			Chunk var5 = (Chunk)this.loadedChunks.get( var4 );
-			
-			if( flag )
+			if( column.needsSaving( alwaysTrue ) )
 			{
-				this.safeSaveExtraChunkData( var5 );
-			}
-			
-			if( var5.needsSaving( flag ) )
-			{
-				this.safeSaveChunk( var5 );
-				var5.isModified = false;
-				++var3;
-				
-				if( var3 == 24 && !flag )
-				{
-					return false;
-				}
+				// save the column
+				m_loader.saveColumn( m_worldServer, column );
+				column.isModified = false;
 			}
 		}
 		
@@ -254,13 +253,13 @@ public class CubicChunkProviderServer extends ChunkProviderServer implements Cub
 	@Override
 	public String makeString( )
 	{
-		return "ServerChunkCache: " + this.loadedChunkHashMap.getNumHashElements() + " Drop: " + this.chunksToUnload.size();
+		return "ServerChunkCache: " + m_loadedColumns.size() + " Drop: " + m_columnsToUnload.size();
 	}
 	
 	@Override
 	public int getLoadedChunkCount( )
 	{
-		return this.loadedChunkHashMap.getNumHashElements();
+		return m_loadedColumns.size();
 	}
 	
 	private long getColumnAddress( int chunkX, int chunkZ )
@@ -271,5 +270,25 @@ public class CubicChunkProviderServer extends ChunkProviderServer implements Cub
 	private long getCubicChunkAddress( int chunkX, int chunkY, int chunkZ )
 	{
 		return AddressTools.getAddress( m_worldServer.provider.dimensionId, chunkX, chunkY, chunkZ );
+	}
+	
+	private boolean cubicChunkIsNearSpawn( int chunkX, int chunkY, int chunkZ )
+	{
+		if( !m_worldServer.provider.canRespawnHere() )
+		{
+			// no spawn points
+			return false;
+		}
+		
+		final int MaxChunkDistance = 8;
+		
+		long address = m_worldServer.getSpawnPointCubicChunkAddress();
+		int spawnX = AddressTools.getX( address );
+		int spawnY = AddressTools.getY( address );
+		int spawnZ = AddressTools.getZ( address );
+		int dx = Math.abs( spawnX - chunkX );
+		int dy = Math.abs( spawnY - chunkY );
+		int dz = Math.abs( spawnZ - chunkZ );
+		return dx <= MaxChunkDistance && dy <= MaxChunkDistance && dz <= MaxChunkDistance;
 	}
 }

@@ -1,0 +1,36 @@
+
+Things that call loadChunk():
+
+ServerConfigurationManager.func_72375_a( )
+	loads the chunk at a player
+	return ignored
+	
+ServerConfigurationManager.respawnPlayer( )
+	loads the chunk at the player
+	return ignored, but checks world for bounding boxes
+	later, playerManager.addPlayer();
+
+MinecraftServer.initialWorldChunkLoad( )
+	loads all the chunks near the spawn
+	12 chunks in each direction
+	return ignored
+
+PlayerManager
+	overridden by CubicChunkPlayerManager
+
+EntityPlayer.verifyRespawnCoordinates( )
+	loads chunks within 3 blocks of target block
+
+
+Things that call provideChunk():
+
+World.getChunkFromChunkCoords( )
+	called by everything and its mother...
+	maybe we should pass back the currently-loaded column and don't load any requested cubic chunks
+	that way, cubic chunks are only loaded by player movement, and spawn point proximity
+
+World.isBlockNormalCubeDefault( )
+	looks for chunk at block position
+
+Chunk.populate( )
+	looks for chunks at (x,z), (x-1,z), (x,z-1), and (x-1,z-1)

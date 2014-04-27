@@ -296,6 +296,13 @@ public class CubicChunkPlayerManager extends PlayerManager
 			{
 				watcher.removePlayer( player );
 			}
+			
+			// cleanup empty watchers and cubic chunks
+			if( !watcher.hasPlayers() )
+			{
+				m_watchers.remove( address );
+				getCubicChunkProvider().unloadCubicChunkIfNotNearSpawn( watcher.getCubicChunk() );
+			}
 		}
 	}
 	
