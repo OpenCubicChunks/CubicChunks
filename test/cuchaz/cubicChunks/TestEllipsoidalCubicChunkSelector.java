@@ -23,18 +23,18 @@ public class TestEllipsoidalCubicChunkSelector
 	public void small( )
 	{
 		EllipsoidalCubicChunkSelector selector = new EllipsoidalCubicChunkSelector();
-		selector.setPlayerPosition( AddressTools.getAddress( 0, 5, 5, 5 ), 1 );
+		selector.setPlayerPosition( AddressTools.getAddress( 5, 5, 5 ), 1 );
 		
 		TreeSet<Long> addresses = (TreeSet<Long>)selector.getVisibleCubicChunks();
-		assertTrue( addresses.contains( AddressTools.getAddress( 0, 4, 5, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 0, 5, 5, 4 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 0, 5, 3, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 0, 5, 4, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 0, 5, 5, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 0, 5, 6, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 0, 5, 7, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 0, 5, 5, 6 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 0, 6, 5, 5 ) ) );
+		assertTrue( addresses.contains( AddressTools.getAddress( 4, 5, 5 ) ) );
+		assertTrue( addresses.contains( AddressTools.getAddress( 5, 5, 4 ) ) );
+		assertTrue( addresses.contains( AddressTools.getAddress( 5, 3, 5 ) ) );
+		assertTrue( addresses.contains( AddressTools.getAddress( 5, 4, 5 ) ) );
+		assertTrue( addresses.contains( AddressTools.getAddress( 5, 5, 5 ) ) );
+		assertTrue( addresses.contains( AddressTools.getAddress( 5, 6, 5 ) ) );
+		assertTrue( addresses.contains( AddressTools.getAddress( 5, 7, 5 ) ) );
+		assertTrue( addresses.contains( AddressTools.getAddress( 5, 5, 6 ) ) );
+		assertTrue( addresses.contains( AddressTools.getAddress( 6, 5, 5 ) ) );
 		assertEquals( 9, addresses.size() );
 	}
 }

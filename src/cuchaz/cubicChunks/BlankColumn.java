@@ -33,7 +33,13 @@ public class BlankColumn extends Column
 	// rest of the Chunk overrides
 	
 	@Override
-	public int getHeightValue( int par1, int par2 )
+	public int getHeightValue( int localX, int localZ )
+	{
+		return 0;
+	}
+	
+	@Override
+	public int getPrecipitationHeight( int localX, int localZ )
 	{
 		return 0;
 	}

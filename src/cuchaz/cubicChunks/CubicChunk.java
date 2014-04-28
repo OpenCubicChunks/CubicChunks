@@ -10,7 +10,6 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.block.Block;
@@ -37,11 +36,9 @@ public class CubicChunk
 	private int m_y;
 	private int m_z;
 	private ExtendedBlockStorage m_storage;
-	private List<Entity> m_entities;
+	private EntityContainer m_entities;
 	private CubicChunkBlockMap<TileEntity> m_tileEntities;
-	private boolean m_hasActiveEntities;
 	private boolean m_isModified;
-	private long m_lastSaveTime;
 	
 	public CubicChunk( World world, Column column, int x, int y, int z, boolean hasSky )
 	{
@@ -56,16 +53,14 @@ public class CubicChunk
 		m_y = y;
 		m_z = z;
 		m_storage = new ExtendedBlockStorage( y << 4, hasSky );
-		m_entities = new ArrayList<Entity>();
+		m_entities = new EntityContainer();
 		m_tileEntities = new CubicChunkBlockMap<TileEntity>();
-		m_hasActiveEntities = false;
 		m_isModified = false;
-		m_lastSaveTime = 0;
 	}
 	
 	public long getAddress( )
 	{
-		return AddressTools.getAddress( m_world.provider.dimensionId, m_x, m_y, m_z );
+		return AddressTools.getAddress( m_x, m_y, m_z );
 	}
 	
 	public World getWorld( )
@@ -93,6 +88,11 @@ public class CubicChunk
 		return m_z;
 	}
 	
+	public EntityContainer getEntityContainer( )
+	{
+		return m_entities;
+	}
+	
 	public ExtendedBlockStorage getStorage( )
 	{
 		return m_storage;
@@ -112,6 +112,7 @@ public class CubicChunk
 	{
 		m_storage.func_150818_a( x, y, z, block );
 		m_storage.setExtBlockMetadata( x, y, z, meta );
+		m_isModified = true;
 	}
 	
 	public boolean setBlock( int x, int y, int z, Block block, int meta )
@@ -153,6 +154,7 @@ public class CubicChunk
 		{
 			return false;
 		}
+		m_isModified = true;
 		
 		// set the meta
 		m_storage.setExtBlockMetadata( x, y, z, meta );
@@ -188,7 +190,6 @@ public class CubicChunk
 			}
 		}
 		
-		m_isModified = true;
 		return true;
 	}
 	
@@ -229,15 +230,6 @@ public class CubicChunk
 		return m_tileEntities.values();
 	}
 	
-	public boolean hasActiveEntities( )
-	{
-		return m_hasActiveEntities;
-	}
-	public void setActiveEntities( boolean val )
-	{
-		m_hasActiveEntities = val;
-	}
-	
 	public void addEntity( Entity entity )
 	{
 		// make sure the entity is in this cubic chunk
@@ -262,7 +254,6 @@ public class CubicChunk
 		entity.chunkCoordZ = m_z;
         
 		m_entities.add( entity );
-		m_hasActiveEntities = true;
 	}
 	
 	public boolean removeEntity( Entity entity )
@@ -277,52 +268,22 @@ public class CubicChunk
 	
 	public Iterable<Entity> entities( )
 	{
-		return m_entities;
+		return m_entities.entities();
 	}
 	
 	public void getEntities( List<Entity> out, Class<?> c, AxisAlignedBB queryBox, IEntitySelector selector )
 	{
-		for( Entity entity : m_entities )
-		{
-			if( c.isAssignableFrom( entity.getClass() ) && entity.boundingBox.intersectsWith( queryBox ) && ( selector == null || selector.isEntityApplicable( entity ) ) )
-			{
-				out.add( entity );
-			}
-		}
+		m_entities.getEntities( out, c, queryBox, selector );
 	}
 	
-	public void getEntitiesExcept( List<Entity> out, Entity entityExclusion, AxisAlignedBB queryBox, IEntitySelector selector )
+	public void getEntitiesExcept( List<Entity> out, Entity excludedEntity, AxisAlignedBB queryBox, IEntitySelector selector )
 	{
-		for( Entity entity : m_entities )
-		{
-			// handle entity exclusion
-			if( entity == entityExclusion )
-			{
-				continue;
-			}
-			
-			if( entity.boundingBox.intersectsWith( queryBox ) && ( selector == null || selector.isEntityApplicable( entity ) ) )
-			{
-				out.add( entity );
-				
-				// also check entity parts
-				if( entity.getParts() != null )
-				{
-					for( Entity part : entity.getParts() )
-					{
-						if( part != entityExclusion && part.boundingBox.intersectsWith( queryBox ) && ( selector == null || selector.isEntityApplicable( part ) ) )
-						{
-							out.add( part );
-						}
-					}
-				}
-			}
-		}
+		m_entities.getEntitiesExcept( out, excludedEntity, queryBox, selector );
 	}
 	
 	public void getMigratedEntities( List<Entity> out )
 	{
-		for( Entity entity : m_entities )
+		for( Entity entity : m_entities.entities() )
 		{
 			int chunkX = Coords.getChunkXForEntity( entity );
 			int chunkY = Coords.getChunkYForEntity( entity );
@@ -408,11 +369,11 @@ public class CubicChunk
 	public void onLoad( )
 	{
 		// tell the world about entities
-		for( Entity entity : m_entities )
+		for( Entity entity : m_entities.entities() )
 		{
 			entity.onChunkLoad();
 		}
-		m_world.addLoadedEntities( m_entities );
+		m_world.addLoadedEntities( m_entities.entities() );
 		
 		// tell the world about tile entities
 		m_world.func_147448_a( m_tileEntities.values() );
@@ -421,7 +382,7 @@ public class CubicChunk
 	public void onUnload( )
 	{
 		// tell the world to forget about entities
-		m_world.unloadEntities( m_entities );
+		m_world.unloadEntities( m_entities.entities() );
 		
 		// tell the world to forget about tile entities
 		for( TileEntity tileEntity : m_tileEntities.values() )
@@ -432,12 +393,12 @@ public class CubicChunk
 	
 	public boolean needsSaving( )
 	{
-		return ( m_hasActiveEntities && m_world.getTotalWorldTime() >= m_lastSaveTime + 600L ) || m_isModified;
+		return m_entities.needsSaving( m_world.getTotalWorldTime() ) || m_isModified;
 	}
 	
 	public void markSaved( )
 	{
-		m_lastSaveTime = m_world.getTotalWorldTime();
+		m_entities.markSaved( m_world.getTotalWorldTime() );
 		m_isModified = false;
 	}
 	
@@ -498,5 +459,6 @@ public class CubicChunk
 		{
 			m_storage.setExtBlocklightValue( x, y, z, light );
 		}
+		m_isModified = true;
 	}
 }

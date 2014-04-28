@@ -23,7 +23,6 @@ import java.util.concurrent.ConcurrentNavigableMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -88,34 +87,16 @@ public class CubicChunkLoader implements IThreadedFileIO
         m_cubicChunksToSave = new ConcurrentBatchedQueue<SaveEntry>();
 	}
 	
-	public Column loadColumn( World world, int x, int z )
-	throws IOException
+	public boolean columnExists( long address )
 	{
-		// does the database have the column?
-		List<RangeInt> cubicChunkYRanges = new ArrayList<RangeInt>();
-		Column column = loadColumn( cubicChunkYRanges, world, AddressTools.getAddress( world.provider.dimensionId, x, 0, z ) );
-		if( column == null )
-		{
-			// returning null tells the world to generate a new column
-			return null;
-		}
-		
-		// restore the cubic chunks
-		for( RangeInt range : cubicChunkYRanges )
-		{
-			for( int y=range.getStart(); y<=range.getStop(); y++ )
-			{
-				loadCubicChunkAndAddToColumn( world, column, AddressTools.getAddress( world.provider.dimensionId, x, y, z ) );
-			}
-		}
-		
-		return column;
+		return m_columns.containsKey( address );
 	}
 	
-	private Column loadColumn( List<RangeInt> cubicChunkYRanges, World world, long address )
+	public Column loadColumn( World world, int chunkX, int chunkZ )
 	throws IOException
 	{
 		// does the database have the column?
+		long address = AddressTools.getAddress( chunkX, chunkZ );
 		byte[] data = m_columns.get( address );
 		if( data == null )
 		{
@@ -129,12 +110,15 @@ public class CubicChunkLoader implements IThreadedFileIO
 		in.close();
 		
 		// restore the column
-		int x = AddressTools.getX( address );
-		int z = AddressTools.getZ( address );
-		return readColumnFromNBT( cubicChunkYRanges, world, x, z, nbt );
+		return readColumnFromNBT( world, chunkX, chunkZ, nbt );
 	}
 	
-	private CubicChunk loadCubicChunkAndAddToColumn( World world, Column column, long address )
+	public boolean cubicChunkExists( long address )
+	{
+		return m_cubicChunks.containsKey( address );
+	}
+	
+	public CubicChunk loadCubicChunkAndAddToColumn( World world, Column column, long address )
 	throws IOException
 	{
 		// does the database have the cubic chunk?
@@ -156,7 +140,7 @@ public class CubicChunkLoader implements IThreadedFileIO
 		return readCubicChunkFromNbtAndAddToColumn( world, column, x, y, z, nbt );
 	}
 	
-	public void saveColumn( World world, Column column )
+	public void saveColumn( Column column )
 	{
 		// NOTE: this function blocks the world thread
 		// make it as fast as possible by offloading processing to the IO thread
@@ -165,15 +149,18 @@ public class CubicChunkLoader implements IThreadedFileIO
 		
 		// add the column to the save queue
 		m_columnsToSave.add( new SaveEntry( column.getAddress(), writeColumnToNbt( column ) ) );
+		column.markSaved();
 		
-		// add the cubic chunks to the save queue
-		List<SaveEntry> entries = new ArrayList<SaveEntry>();
-		for( CubicChunk cubicChunk : column.cubicChunks() )
-		{
-			entries.add( new SaveEntry( cubicChunk.getAddress(), writeCubicChunkToNbt( cubicChunk ) ) );
-			cubicChunk.markSaved();
-		}
-		m_cubicChunksToSave.addAll( entries );
+		// signal the IO thread to process the save queue
+		ThreadedFileIOBase.threadedIOInstance.queueIO( this );
+	}
+	
+	public void saveCubicChunk( CubicChunk cubicChunk )
+	{
+		// NOTE: this function blocks the world thread, so make it fast
+		
+		m_cubicChunksToSave.add( new SaveEntry( cubicChunk.getAddress(), writeCubicChunkToNbt( cubicChunk ) ) );
+		cubicChunk.markSaved();
 		
 		// signal the IO thread to process the save queue
 		ThreadedFileIOBase.threadedIOInstance.queueIO( this );
@@ -282,24 +269,16 @@ public class CubicChunkLoader implements IThreadedFileIO
 		// biome mappings
 		nbt.setByteArray( "Biomes", column.getBiomeArray() );
 		
-		// write which cubic chunks are in this column
-		List<RangeInt> rangesList = column.getCubicChunkYRanges();
-		int[] ranges = new int[rangesList.size()*2];
-		for( int i=0; i<rangesList.size(); i++ )
-		{
-			RangeInt range = rangesList.get( i );
-			ranges[i*2+0] = range.getStart();
-			ranges[i*2+1] = range.getStop();
-		}
-		nbt.setIntArray( "CubicChunks", ranges );
-		
 		// light index
 		nbt.setByteArray( "LightIndex", column.getLightIndex().getData() );
+		
+		// entities
+		column.getEntityContainer().writeToNbt( nbt, "Entities" );
 		
 		return nbt;
 	}
 	
-	private Column readColumnFromNBT( List<RangeInt> cubicChunkYRanges, World world, int x, int z, NBTTagCompound nbt )
+	private Column readColumnFromNBT( World world, int x, int z, NBTTagCompound nbt )
 	{
 		// check the version number
 		byte version = nbt.getByte( "v" );
@@ -329,25 +308,16 @@ public class CubicChunkLoader implements IThreadedFileIO
 		// biomes
 		column.setBiomeArray( nbt.getByteArray( "Biomes" ) );
 		
-		// read the cubic chunk y ranges
-		int[] ranges = nbt.getIntArray( "CubicChunks" );
-		if( ranges.length % 2 != 0 )
-		{
-			log.warn( String.format( "Column (%d,%d) has invalid chubic chunk y values! Column will be regenerated", x, z ) );
-			return null;
-		}
-		for( int i=0; i<ranges.length/2; i++ )
-		{
-			cubicChunkYRanges.add( new RangeInt( ranges[i*2+0], ranges[i*2+1] ) );
-		}
-		
 		// read light index
 		column.getLightIndex().readData( nbt.getByteArray( "LightIndex" ) );
+		
+		// entities
+		column.getEntityContainer().readFromNbt( nbt, "Entities", world );
 		
 		return column;
 	}
 	
-	private NBTTagCompound writeCubicChunkToNbt( CubicChunk cubicChunk )
+	private NBTTagCompound writeCubicChunkToNbt( final CubicChunk cubicChunk )
 	{
 		NBTTagCompound nbt = new NBTTagCompound();
 		nbt.setByte( "v", (byte)1 );
@@ -376,17 +346,11 @@ public class CubicChunkLoader implements IThreadedFileIO
 		}
 		
 		// entities
-		cubicChunk.setActiveEntities( false );
-		NBTTagList nbtEntities = new NBTTagList();
-		nbt.setTag( "Entities", nbtEntities );
-		for( Entity entity : cubicChunk.entities() )
+		cubicChunk.getEntityContainer().writeToNbt( nbt, "Entities", new EntityActionListener( )
 		{
-			NBTTagCompound nbtEntity = new NBTTagCompound();
-			if( entity.writeToNBTOptional( nbtEntity ) )
+			@Override
+			public void onEntity( Entity entity )
 			{
-				cubicChunk.setActiveEntities( true );
-				nbtEntities.appendTag( nbtEntity );
-				
 				// make sure this entity is really in the chunk
 				int chunkX = Coords.getChunkXForEntity( entity );
 				int chunkY = Coords.getChunkYForEntity( entity );
@@ -401,7 +365,7 @@ public class CubicChunkLoader implements IThreadedFileIO
 					) );
 				}
 			}
-		}
+		} );
 		
 		// tile entities
 		NBTTagList nbtTileEntities = new NBTTagList();
@@ -443,6 +407,15 @@ public class CubicChunkLoader implements IThreadedFileIO
 		// 0      1       2        3      4       5        6         7         8         9       10          11
 		// "END", "BYTE", "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "BYTE[]", "STRING", "LIST", "COMPOUND", "INT[]"
 		
+		// TEMP
+		int targetChunkX = Coords.blockToChunk( 221 );
+		int targetChunkY = Coords.blockToChunk( 131 );
+		int targetChunkZ = Coords.blockToChunk( -121 );
+		if( x == targetChunkX && y == targetChunkY && z == targetChunkZ )
+		{
+			System.out.println( "Loading target chunk from NBT!" );
+		}
+		
 		// check the version number
 		byte version = nbt.getByte( "v" );
 		if( version != 1 )
@@ -467,7 +440,7 @@ public class CubicChunkLoader implements IThreadedFileIO
 		
 		// build the cubic chunk
 		boolean hasSky = !world.provider.hasNoSky;
-		CubicChunk cubicChunk = new CubicChunk( world, column, x, y, z, hasSky );
+		final CubicChunk cubicChunk = new CubicChunk( world, column, x, y, z, hasSky );
 		column.addCubicChunk( cubicChunk );
 		
 		ExtendedBlockStorage storage = cubicChunk.getStorage();
@@ -491,45 +464,25 @@ public class CubicChunkLoader implements IThreadedFileIO
 		storage.removeInvalidBlocks();
 		
 		// entities
-		NBTTagList nbtEntities = nbt.getTagList( "Entities", 10 );
-		if( nbtEntities != null )
+		cubicChunk.getEntityContainer().readFromNbt( nbt, "Entities", world, new EntityActionListener( )
 		{
-			for( int i=0; i<nbtEntities.tagCount(); i++ )
+			@Override
+			public void onEntity( Entity entity )
 			{
-				NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt( i );
-				Entity entity = EntityList.createEntityFromNBT( nbtEntity, world );
-				if( entity != null )
+				// make sure this entity is really in the chunk
+				int chunkX = Coords.getChunkXForEntity( entity );
+				int chunkY = Coords.getChunkYForEntity( entity );
+				int chunkZ = Coords.getChunkZForEntity( entity );
+				if( chunkX != cubicChunk.getX() || chunkY != cubicChunk.getY() || chunkZ != cubicChunk.getZ() )
 				{
-					cubicChunk.addEntity( entity );
-					
-					// make sure this entity is really in the chunk
-					int chunkX = Coords.getChunkXForEntity( entity );
-					int chunkY = Coords.getChunkYForEntity( entity );
-					int chunkZ = Coords.getChunkZForEntity( entity );
-					if( chunkX != cubicChunk.getX() || chunkY != cubicChunk.getY() || chunkZ != cubicChunk.getZ() )
-					{
-						log.warn( String.format( "Loaded entity %s in cubic chunk (%d,%d,%d) to cubic chunk (%d,%d,%d)!",
-							entity.getClass().getName(),
-							chunkX, chunkY, chunkZ,
-							cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ()
-						) );
-					}
-					
-					// deal with riding
-					Entity topEntity = entity;
-					for( NBTTagCompound nbtRiddenEntity = nbtEntity; nbtRiddenEntity.func_150297_b( "Riding", 10 ); nbtRiddenEntity = nbtRiddenEntity.getCompoundTag( "Riding" ) )
-					{
-						Entity riddenEntity = EntityList.createEntityFromNBT( nbtRiddenEntity.getCompoundTag( "Riding" ), world );
-						if( riddenEntity != null )
-						{
-							cubicChunk.addEntity( riddenEntity );
-							topEntity.mountEntity( riddenEntity );
-						}
-						topEntity = riddenEntity;
-					}
+					log.warn( String.format( "Loaded entity %s in cubic chunk (%d,%d,%d) to cubic chunk (%d,%d,%d)!",
+						entity.getClass().getName(),
+						chunkX, chunkY, chunkZ,
+						cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ()
+					) );
 				}
 			}
-		}
+		} );
 		
 		// tile entities
 		NBTTagList nbtTileEntities = nbt.getTagList( "TileEntities", 10 );

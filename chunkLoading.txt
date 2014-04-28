@@ -2,11 +2,11 @@
 Things that call loadChunk():
 
 ServerConfigurationManager.func_72375_a( )
-	loads the chunk at a player
+	loads the chunk at a player's current position
 	return ignored
 	
 ServerConfigurationManager.respawnPlayer( )
-	loads the chunk at the player
+	loads the chunk at the player's current position
 	return ignored, but checks world for bounding boxes
 	later, playerManager.addPlayer();
 
@@ -19,7 +19,7 @@ PlayerManager
 	overridden by CubicChunkPlayerManager
 
 EntityPlayer.verifyRespawnCoordinates( )
-	loads chunks within 3 blocks of target block
+	loads chunks within 3 blocks of target block, which is player's bed location
 
 
 Things that call provideChunk():

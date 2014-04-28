@@ -124,7 +124,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 		int chunkX = Coords.blockToChunk( info.blockX );
 		int chunkY = Coords.blockToChunk( info.blockY );
 		int chunkZ = Coords.blockToChunk( info.blockZ );
-		info.address = AddressTools.getAddress( m_worldServer.provider.dimensionId, chunkX, chunkY, chunkZ );
+		info.address = AddressTools.getAddress( chunkX, chunkY, chunkZ );
 		
 		// compute initial visibility
 		info.cubicChunkSelector.setPlayerPosition( info.address, m_viewDistance );
@@ -255,7 +255,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 		int newChunkX = Coords.blockToChunk( newBlockX );
 		int newChunkY = Coords.blockToChunk( newBlockY );
 		int newChunkZ = Coords.blockToChunk( newBlockZ );
-		long newAddress = AddressTools.getAddress( m_worldServer.provider.dimensionId, newChunkX, newChunkY, newChunkZ );
+		long newAddress = AddressTools.getAddress( newChunkX, newChunkY, newChunkZ );
 		if( newAddress == info.address )
 		{
 			return;
@@ -292,10 +292,12 @@ public class CubicChunkPlayerManager extends PlayerManager
 		for( long address : info.cubicChunkSelector.getNewlyHiddenCubicChunks() )
 		{
 			CubicChunkWatcher watcher = getWatcher( address );
-			if( watcher != null )
+			if( watcher == null )
 			{
-				watcher.removePlayer( player );
+				continue;
 			}
+			
+			watcher.removePlayer( player );
 			
 			// cleanup empty watchers and cubic chunks
 			if( !watcher.hasPlayers() )
@@ -377,7 +379,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 		for( CubicChunk cubicChunk : cubicChunksToSend )
 		{
 			// is there a column view for this cubic chunk?
-			long columnAddress = AddressTools.getAddress( 0, cubicChunk.getX(), 0, cubicChunk.getZ() );
+			long columnAddress = AddressTools.getAddress( cubicChunk.getX(), cubicChunk.getZ() );
 			ColumnView view = views.get( columnAddress );
 			if( view == null )
 			{
@@ -409,6 +411,18 @@ public class CubicChunkPlayerManager extends PlayerManager
 		}
 	}
 	
+	public Iterable<Long> getVisibleCubicChunkAddresses( EntityPlayerMP player )
+	{
+		// get the info
+		PlayerInfo info = m_players.get( player.getEntityId() );
+		if( info == null )
+		{
+			return null;
+		}
+		
+		return info.cubicChunkSelector.getVisibleCubicChunks();
+	}
+	
 	private CubicChunkProviderServer getCubicChunkProvider( )
 	{
 		return (CubicChunkProviderServer)m_worldServer.theChunkProviderServer;
@@ -416,7 +430,7 @@ public class CubicChunkPlayerManager extends PlayerManager
 	
 	private CubicChunkWatcher getWatcher( int chunkX, int chunkY, int chunkZ )
 	{
-		return getWatcher( AddressTools.getAddress( 0, chunkX, chunkY, chunkZ ) );
+		return getWatcher( AddressTools.getAddress( chunkX, chunkY, chunkZ ) );
 	}
 	
 	private CubicChunkWatcher getWatcher( long address )

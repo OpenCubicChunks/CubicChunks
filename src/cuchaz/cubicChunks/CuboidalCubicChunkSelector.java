@@ -17,7 +17,7 @@ public class CuboidalCubicChunkSelector extends CubicChunkSelector
 	private static final int ViewDistanceY = 2;
 	
 	@Override
-	protected void computeVisible( Collection<Long> out, int dimension, int chunkX, int chunkY, int chunkZ, int viewDistance )
+	protected void computeVisible( Collection<Long> out, int chunkX, int chunkY, int chunkZ, int viewDistance )
 	{
 		for( int x=chunkX-viewDistance; x<=chunkX+viewDistance; x++ )
 		{
@@ -25,7 +25,7 @@ public class CuboidalCubicChunkSelector extends CubicChunkSelector
 			{
 				for( int z=chunkZ-viewDistance; z<=chunkZ+viewDistance; z++ )
 				{
-					out.add( AddressTools.getAddress( dimension, x, y, z ) );
+					out.add( AddressTools.getAddress( x, y, z ) );
 				}
 			}
 		}

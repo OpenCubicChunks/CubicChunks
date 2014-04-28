@@ -40,7 +40,6 @@ public class CubicChunksWorldServer extends WorldServer
 	public long getSpawnPointCubicChunkAddress( )
 	{
 		return AddressTools.getAddress(
-			provider.dimensionId,
 			Coords.blockToChunk( worldInfo.getSpawnX() ),
 			Coords.blockToChunk( worldInfo.getSpawnY() ),
 			Coords.blockToChunk( worldInfo.getSpawnZ() )

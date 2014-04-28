@@ -32,14 +32,13 @@ public abstract class CubicChunkSelector
 	
 	public void setPlayerPosition( long address, int viewDistance )
 	{
-		int dimension = AddressTools.getDimension( address );
 		int chunkX = AddressTools.getX( address );
 		int chunkY = AddressTools.getY( address );
 		int chunkZ = AddressTools.getZ( address );
 		
 		// compute the cubic chunk visibility
 		m_nextVisible.clear();
-		computeVisible( m_nextVisible, dimension, chunkX, chunkY, chunkZ, viewDistance );
+		computeVisible( m_nextVisible, chunkX, chunkY, chunkZ, viewDistance );
 		
 		m_newlyVisible.clear();
 		m_newlyVisible.addAll( m_nextVisible );
@@ -75,5 +74,5 @@ public abstract class CubicChunkSelector
 		return m_visible.contains( address );
 	}
 	
-	protected abstract void computeVisible( Collection<Long> out, int dimension, int chunkX, int chunkY, int chunkZ, int viewDistance );
+	protected abstract void computeVisible( Collection<Long> out, int chunkX, int chunkY, int chunkZ, int viewDistance );
 }

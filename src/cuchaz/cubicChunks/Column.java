@@ -46,6 +46,7 @@ public class Column extends Chunk
 	private LightIndex m_lightIndex;
 	private int m_roundRobinLightUpdatePointer;
 	private List<CubicChunk> m_roundRobinCubicChunks;
+	private EntityContainer m_entities;
 	
 	public Column( World world, int x, int z )
 	{
@@ -91,6 +92,8 @@ public class Column extends Chunk
 				}
 			}
 		}
+		
+		isModified = true;
     }
 	
 	private void init( )
@@ -100,6 +103,7 @@ public class Column extends Chunk
 		m_lightIndex = new LightIndex();
 		m_roundRobinLightUpdatePointer = 0;
 		m_roundRobinCubicChunks = new ArrayList<CubicChunk>();
+		m_entities = new EntityContainer();
 		
 		// make sure no one's using data structures that have been replaced
 		setStorageArrays( null );
@@ -108,7 +112,7 @@ public class Column extends Chunk
 	
 	public long getAddress( )
 	{
-		return AddressTools.getAddress( worldObj.provider.dimensionId, xPosition, 0, zPosition );
+		return AddressTools.getAddress( xPosition, zPosition );
 	}
 	
 	public World getWorld( )
@@ -126,6 +130,11 @@ public class Column extends Chunk
 		return zPosition;
 	}
 	
+	public EntityContainer getEntityContainer( )
+	{
+		return m_entities;
+	}
+	
 	public LightIndex getLightIndex( )
 	{
 		return m_lightIndex;
@@ -134,6 +143,11 @@ public class Column extends Chunk
 	public Iterable<CubicChunk> cubicChunks( )
 	{
 		return m_cubicChunks.values();
+	}
+	
+	public boolean hasCubicChunks( )
+	{
+		return !m_cubicChunks.isEmpty();
 	}
 	
 	public CubicChunk getCubicChunk( int y )
@@ -178,6 +192,12 @@ public class Column extends Chunk
 		return cubicChunk;
 	}
 	
+	public CubicChunk removeCubicChunk( int chunkY )
+	{
+		m_legacySegments = null;
+		return m_cubicChunks.remove( chunkY );
+	}
+	
 	public List<RangeInt> getCubicChunkYRanges( )
 	{
 		return getRanges( m_cubicChunks.keySet() );
@@ -186,14 +206,13 @@ public class Column extends Chunk
 	@Override
 	public boolean needsSaving( boolean alwaysTrue )
 	{
-		for( CubicChunk cubicChunk : m_cubicChunks.values() )
-		{
-			if( cubicChunk.needsSaving() )
-			{
-				return true;
-			}
-		}
-		return false;
+		return m_entities.needsSaving( worldObj.getTotalWorldTime() ) || isModified;
+	}
+	
+	public void markSaved( )
+	{
+		m_entities.markSaved( worldObj.getTotalWorldTime() );
+		isModified = false;
 	}
 	
 	@Override //      getBlock
@@ -294,6 +313,8 @@ public class Column extends Chunk
 		// update lighting index
 		getLightIndex().setOpacity( localX, blockY, localZ, block.getLightOpacity() );
 		
+		isModified = true;
+		
 		return true;
 	}
 	
@@ -347,11 +368,16 @@ public class Column extends Chunk
 		return m_legacySegments;
 	}
 	
+	public int getTopCubicChunkY( )
+	{
+		int blockY = getLightIndex().getTopNonTransparentBlockY();
+		return Coords.blockToChunk( blockY );
+	}
+	
 	@Override
 	public int getTopFilledSegment()
     {
-		int blockY = getLightIndex().getTopNonTransparentBlockY();
-		return Coords.chunkToMinBlock( Coords.blockToChunk( blockY ) );
+		return Coords.chunkToMinBlock( getTopCubicChunkY() );
     }
 	
 	@Override
@@ -389,6 +415,11 @@ public class Column extends Chunk
 		return getLightIndex().getOpacity( localX, blockY, localZ );
 	}
 	
+	public Iterable<Entity> entities( )
+	{
+		return m_entities.entities();
+	}
+	
 	@Override
 	public void addEntity( Entity entity )
     {
@@ -401,13 +432,20 @@ public class Column extends Chunk
 		
 		// pass off to the cubic chunk
 		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
-		if( cubicChunk == null )
+		if( cubicChunk != null )
 		{
-			// make a new chunk for the entity
-			cubicChunk = addEmptyCubicChunk( chunkY );
+			cubicChunk.addEntity( entity );
 		}
-		
-		cubicChunk.addEntity( entity );
+		else
+		{
+			// entities don't have to be in chunks, just add it directly to the column
+			entity.addedToChunk = true;
+			entity.chunkCoordX = xPosition;
+			entity.chunkCoordY = MathHelper.floor_double( entity.posY/16 );
+			entity.chunkCoordZ = zPosition;
+	        
+			m_entities.add( entity );
+		}
     }
 	
 	@Override
@@ -419,6 +457,11 @@ public class Column extends Chunk
 	@Override
 	public void removeEntityAtIndex( Entity entity, int chunkY )
 	{
+		if( m_entities.remove( entity ) )
+		{
+			isModified = true;
+		}
+		
 		// pass off to the cubic chunk
 		CubicChunk cubicChunk = m_cubicChunks.get( chunkY );
 		if( cubicChunk != null )
@@ -438,19 +481,25 @@ public class Column extends Chunk
 		{
 			cubicChunk.getEntities( (List<Entity>)out, c, queryBox, selector );
 		}
+		
+		// check the column too
+		m_entities.getEntities( out, c, queryBox, selector );
 	}
 	
 	@Override
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public void getEntitiesWithinAABBForEntity( Entity entity, AxisAlignedBB queryBox, List out, IEntitySelector selector )
+	public void getEntitiesWithinAABBForEntity( Entity excludedEntity, AxisAlignedBB queryBox, List out, IEntitySelector selector )
 	{
 		// get a y-range that 2 blocks wider than the box for safety
 		int minChunkY = Coords.blockToChunk( MathHelper.floor_double( queryBox.minY - 2 ) );
 		int maxChunkY = Coords.blockToChunk( MathHelper.floor_double( queryBox.maxY + 2 ) );
 		for( CubicChunk cubicChunk : getCubicChunks( minChunkY, maxChunkY ) )
 		{
-			cubicChunk.getEntitiesExcept( (List<Entity>)out, entity, queryBox, selector );
+			cubicChunk.getEntitiesExcept( (List<Entity>)out, excludedEntity, queryBox, selector );
 		}
+		
+		// check the column too
+		m_entities.getEntitiesExcept( out, excludedEntity, queryBox, selector );
 	}
 	
 	@Override //      getTileEntity
@@ -541,24 +590,12 @@ public class Column extends Chunk
 	public void onChunkLoad( )
 	{
 		isChunkLoaded = true;
-		
-		// pass off to cubic chunks
-		for( CubicChunk cubicChunk : m_cubicChunks.values() )
-		{
-			cubicChunk.onLoad();
-		}
 	}
 	
 	@Override
 	public void onChunkUnload( )
 	{
-		this.isChunkLoaded = false;
-		
-		// pass off to cubic chunks
-		for( CubicChunk cubicChunk : m_cubicChunks.values() )
-		{
-			cubicChunk.onUnload();
-		}
+		isChunkLoaded = false;
 	}
 	
 	public byte[] encode( boolean isFirstTime )
@@ -744,22 +781,22 @@ public class Column extends Chunk
 				}
 				
 				// try to find the new cubic chunk for this entity
-				CubicChunk newCubicChunk = m_cubicChunks.get( chunkY );
-				if( newCubicChunk == null )
-				{
-					log.warn( String.format( "Entity %s migrated from cubic chunk (%d,%d,%d) to unloaded cubic chunk (%d,%d,%d). Why hasn't this chunk loaded?",
-						entity.getClass().getName(),
-						cubicChunk.getX(), cubicChunk.getY(), cubicChunk.getZ(),
-						xPosition, chunkY, zPosition
-					) );
-					continue;
-				}
-				
-				// move the entity to the new cubic chunk
 				cubicChunk.removeEntity( entity );
-				newCubicChunk.addEntity( entity );
+				CubicChunk newCubicChunk = m_cubicChunks.get( chunkY );
+				if( newCubicChunk != null )
+				{
+					// move the entity to the new cubic chunk
+					newCubicChunk.addEntity( entity );
+				}
+				else
+				{
+					// move the entity to the column
+					addEntity( entity );
+				}
 			}
 		}
+		
+		// UNDONE: check for entity migration from the column to a cubic chunk
 	}
 	
 	@Override
@@ -817,7 +854,7 @@ public class Column extends Chunk
 						{
 							// save the sky light value
 							int localY = Coords.blockToLocal( blockY );
-							cubicChunk.getStorage().setExtSkylightValue( localX, localY, localZ, lightValue );
+							cubicChunk.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, lightValue );
 							
 							// signal a render update
 							int blockX = Coords.localToBlock( xPosition, localX );
@@ -841,6 +878,12 @@ public class Column extends Chunk
 		{
 			// compute a new rain height
 			
+			// TEMP
+			if( m_cubicChunks.isEmpty() )
+			{
+				System.out.println( String.format( "No cubic chunks in column (%d,%d)", xPosition, zPosition ) );
+			}
+			
 			int maxBlockY = getTopFilledSegment() + 15;
 			int minBlockY = Coords.chunkToMinBlock( m_cubicChunks.firstKey() );
 			
@@ -859,6 +902,8 @@ public class Column extends Chunk
 			}
 			
 			precipitationHeightMap[xzCoord] = height;
+			
+			isModified = true;
 		}
 		
 		return height;
@@ -970,7 +1015,7 @@ public class Column extends Chunk
 				if( cubicChunk != null )
 				{
 					int localY = Coords.blockToLocal( blockY );
-					cubicChunk.getStorage().setExtSkylightValue( localX, localY, localZ, light );
+					cubicChunk.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, light );
 				}
 				
 				// mark the block for a render update
@@ -993,7 +1038,7 @@ public class Column extends Chunk
 				if( cubicChunk != null )
 				{
 					int localY = Coords.blockToLocal( blockY );
-					cubicChunk.getStorage().setExtSkylightValue( localX, localY, localZ, light );
+					cubicChunk.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, light );
 				}
 				
 				if( light == 0 )
