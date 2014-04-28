@@ -42,16 +42,15 @@ public class CubicChunkGenerator implements IChunkProvider
 {
 	/** RNG. */
 	private Random rand;
-	private NoiseGeneratorOctaves field_147431_j;
-	private NoiseGeneratorOctaves field_147432_k;
-	private NoiseGeneratorOctaves field_147429_l;
-	private NoiseGeneratorPerlin field_147430_m;
 	
-	/** A NoiseGeneratorOctaves used in generating terrain */
+	/** NoiseGenerators used in generating terrain */
+	private NoiseGeneratorOctaves noiseGen1;
+	private NoiseGeneratorOctaves noiseGen2;
+	private NoiseGeneratorOctaves noiseGen3;
+	private NoiseGeneratorPerlin noiseGen4;
 	public NoiseGeneratorOctaves noiseGen5;
-	
-	/** A NoiseGeneratorOctaves used in generating terrain */
 	public NoiseGeneratorOctaves noiseGen6;
+	
 	public NoiseGeneratorOctaves mobSpawnerNoise;
 	
 	/** Reference to the World object. */
@@ -59,7 +58,7 @@ public class CubicChunkGenerator implements IChunkProvider
 	
 	/** are map structures going to be generated (e.g. strongholds) */
 	private final boolean mapFeaturesEnabled;
-	private WorldType field_147435_p;
+	private WorldType worldType;
 	private final double[] field_147434_q;
 	private final float[] field_147433_r;
 	private double[] stoneNoise = new double[256];
@@ -90,12 +89,12 @@ public class CubicChunkGenerator implements IChunkProvider
 	{
 		this.worldObj = world;
 		this.mapFeaturesEnabled = world.getWorldInfo().isMapFeaturesEnabled();
-		this.field_147435_p = world.getWorldInfo().getTerrainType();
+		this.worldType = world.getWorldInfo().getTerrainType();
 		this.rand = new Random( world.getSeed() );
-		this.field_147431_j = new NoiseGeneratorOctaves( this.rand, 16 );
-		this.field_147432_k = new NoiseGeneratorOctaves( this.rand, 16 );
-		this.field_147429_l = new NoiseGeneratorOctaves( this.rand, 8 );
-		this.field_147430_m = new NoiseGeneratorPerlin( this.rand, 4 );
+		this.noiseGen1 = new NoiseGeneratorOctaves( this.rand, 16 );
+		this.noiseGen2 = new NoiseGeneratorOctaves( this.rand, 16 );
+		this.noiseGen3 = new NoiseGeneratorOctaves( this.rand, 8 );
+		this.noiseGen4 = new NoiseGeneratorPerlin( this.rand, 4 );
 		this.noiseGen5 = new NoiseGeneratorOctaves( this.rand, 10 );
 		this.noiseGen6 = new NoiseGeneratorOctaves( this.rand, 16 );
 		this.mobSpawnerNoise = new NoiseGeneratorOctaves( this.rand, 8 );
@@ -112,11 +111,11 @@ public class CubicChunkGenerator implements IChunkProvider
 		}
 	}
 	
-	public void func_147424_a( int p_147424_1_, int p_147424_2_, Block[] p_147424_3_ )
+	public void generateTerrain( int chunkX, int chunkZ, Block[] blocks )
 	{
-		byte var4 = 63;
-		this.biomesForGeneration = this.worldObj.getWorldChunkManager().getBiomesForGeneration( this.biomesForGeneration, p_147424_1_ * 4 - 2, p_147424_2_ * 4 - 2, 10, 10 );
-		this.func_147423_a( p_147424_1_ * 4, 0, p_147424_2_ * 4 );
+		byte seaLevel = 63;
+		this.biomesForGeneration = this.worldObj.getWorldChunkManager().getBiomesForGeneration( this.biomesForGeneration, chunkX * 4 - 2, chunkZ * 4 - 2, 10, 10 );
+		this.func_147423_a( chunkX * 4, 0, chunkZ * 4 );
 		
 		for( int var5 = 0; var5 < 4; ++var5 )
 		{
@@ -163,15 +162,15 @@ public class CubicChunkGenerator implements IChunkProvider
 							{
 								if( ( var48 += var50 ) > 0.0D )
 								{
-									p_147424_3_[var44 += var45] = Blocks.stone;
+									blocks[var44 += var45] = Blocks.stone;
 								}
-								else if( var13 * 8 + var32 < var4 )
+								else if( var13 * 8 + var32 < seaLevel )
 								{
-									p_147424_3_[var44 += var45] = Blocks.water;
+									blocks[var44 += var45] = Blocks.water;
 								}
 								else
 								{
-									p_147424_3_[var44 += var45] = null;
+									blocks[var44 += var45] = null;
 								}
 							}
 							
@@ -192,14 +191,14 @@ public class CubicChunkGenerator implements IChunkProvider
 	public void func_147422_a( int p_147422_1_, int p_147422_2_, Block[] p_147422_3_, byte[] p_147422_4_, BiomeGenBase[] p_147422_5_ )
 	{
 		double var6 = 0.03125D;
-		this.stoneNoise = this.field_147430_m.func_151599_a( this.stoneNoise, (double)( p_147422_1_ * 16 ), (double)( p_147422_2_ * 16 ), 16, 16, var6 * 2.0D, var6 * 2.0D, 1.0D );
+		this.stoneNoise = this.noiseGen4.func_151599_a( this.stoneNoise, (double)( p_147422_1_ * 16 ), (double)( p_147422_2_ * 16 ), 16, 16, var6 * 2.0D, var6 * 2.0D, 1.0D );
 		
 		for( int var8 = 0; var8 < 16; ++var8 )
 		{
 			for( int var9 = 0; var9 < 16; ++var9 )
 			{
-				BiomeGenBase var10 = p_147422_5_[var9 + var8 * 16];
-				var10.func_150573_a( this.worldObj, this.rand, p_147422_3_, p_147422_4_, p_147422_1_ * 16 + var8, p_147422_2_ * 16 + var9, this.stoneNoise[var9 + var8 * 16] );
+				BiomeGenBase biomeGenBase = p_147422_5_[var9 + var8 * 16];
+				biomeGenBase.func_150573_a( this.worldObj, this.rand, p_147422_3_, p_147422_4_, p_147422_1_ * 16 + var8, p_147422_2_ * 16 + var9, this.stoneNoise[var9 + var8 * 16] );
 			}
 		}
 	}
@@ -227,7 +226,7 @@ public class CubicChunkGenerator implements IChunkProvider
 		// init random
 		rand.setSeed( (long)chunkX * 341873128712L + (long)chunkZ * 132897987541L );
 		
-		func_147424_a( chunkX, chunkZ, blocks );
+		generateTerrain( chunkX, chunkZ, blocks );
 		biomesForGeneration = worldObj.getWorldChunkManager().loadBlockGeneratorData( biomesForGeneration, chunkX * 16, chunkZ * 16, 16, 16 );
 		func_147422_a( chunkX, chunkZ, blocks, meta, biomesForGeneration );
 		caveGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
@@ -260,10 +259,9 @@ public class CubicChunkGenerator implements IChunkProvider
 	private void func_147423_a( int p_147423_1_, int p_147423_2_, int p_147423_3_ )
 	{
 		this.field_147426_g = this.noiseGen6.generateNoiseOctaves( this.field_147426_g, p_147423_1_, p_147423_3_, 5, 5, 200.0D, 200.0D, 0.5D );
-		this.field_147427_d = this.field_147429_l.generateNoiseOctaves( this.field_147427_d, p_147423_1_, p_147423_2_, p_147423_3_, 5, 33, 5, 8.555150000000001D, 4.277575000000001D,
-				8.555150000000001D );
-		this.field_147428_e = this.field_147431_j.generateNoiseOctaves( this.field_147428_e, p_147423_1_, p_147423_2_, p_147423_3_, 5, 33, 5, 684.412D, 684.412D, 684.412D );
-		this.field_147425_f = this.field_147432_k.generateNoiseOctaves( this.field_147425_f, p_147423_1_, p_147423_2_, p_147423_3_, 5, 33, 5, 684.412D, 684.412D, 684.412D );
+		this.field_147427_d = this.noiseGen3.generateNoiseOctaves( this.field_147427_d, p_147423_1_, p_147423_2_, p_147423_3_, 5, 33, 5, 8.555150000000001D, 4.277575000000001D, 8.555150000000001D );
+		this.field_147428_e = this.noiseGen1.generateNoiseOctaves( this.field_147428_e, p_147423_1_, p_147423_2_, p_147423_3_, 5, 33, 5, 684.412D, 684.412D, 684.412D );
+		this.field_147425_f = this.noiseGen2.generateNoiseOctaves( this.field_147425_f, p_147423_1_, p_147423_2_, p_147423_3_, 5, 33, 5, 684.412D, 684.412D, 684.412D );
 		int var12 = 0;
 		int var13 = 0;
 		
@@ -285,7 +283,7 @@ public class CubicChunkGenerator implements IChunkProvider
 						float var26 = var25.minHeight;
 						float var27 = var25.maxHeight;
 						
-						if( this.field_147435_p == WorldType.field_151360_e && var26 > 0.0F )
+						if( this.worldType == WorldType.field_151360_e && var26 > 0.0F )
 						{
 							var26 = 1.0F + var26 * 2.0F;
 							var27 = 1.0F + var27 * 4.0F;
