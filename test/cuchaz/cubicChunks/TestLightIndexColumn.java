@@ -20,6 +20,8 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import cuchaz.cubicChunks.world.LightIndexColumn;
+
 public class TestLightIndexColumn
 {
 	@Test

@@ -17,6 +17,10 @@ import net.minecraft.world.WorldServer;
 
 import org.apache.logging.log4j.LogManager;
 
+import cuchaz.cubicChunks.client.CubeWorldClient;
+import cuchaz.cubicChunks.server.CubePlayerManager;
+import cuchaz.cubicChunks.server.CubeWorldServer;
+import cuchaz.cubicChunks.world.Column;
 import cuchaz.magicMojoModLoader.api.Mod;
 import cuchaz.magicMojoModLoader.api.ModMetadata;
 import cuchaz.magicMojoModLoader.api.Version;
@@ -46,11 +50,11 @@ public class CubicChunksMod implements Mod
 	{
 		if( event.getOldClassName().equals( "net.minecraft.client.multiplayer.WorldClient" ) )
 		{
-			event.setNewClassName( CubicChunksWorldClient.class.getName() );
+			event.setNewClassName( CubeWorldClient.class.getName() );
 		}
 		else if( event.getOldClassName().equals( "net.minecraft.world.WorldServer" ) )
 		{
-			event.setNewClassName( CubicChunksWorldServer.class.getName() );
+			event.setNewClassName( CubeWorldServer.class.getName() );
 		}
 	}
 	
@@ -78,7 +82,7 @@ public class CubicChunksMod implements Mod
 	{
 		EntityPlayerMP player = event.getPlayer();
 		WorldServer world = (WorldServer)player.theItemInWorldManager.theWorld;
-		CubicChunkPlayerManager playerManager = (CubicChunkPlayerManager)world.getPlayerManager();
+		CubePlayerManager playerManager = (CubePlayerManager)world.getPlayerManager();
 		playerManager.onPlayerUpdate( player );
 	}
 }

@@ -16,6 +16,8 @@ import java.util.HashSet;
 
 import org.junit.Test;
 
+import cuchaz.cubicChunks.util.AddressTools;
+
 
 public class TestAddressTools
 {

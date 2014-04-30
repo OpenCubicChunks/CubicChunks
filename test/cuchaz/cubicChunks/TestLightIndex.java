@@ -14,6 +14,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import cuchaz.cubicChunks.world.LightIndex;
+
 public class TestLightIndex
 {
 	@Test
