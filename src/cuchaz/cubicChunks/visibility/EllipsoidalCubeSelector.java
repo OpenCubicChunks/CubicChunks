@@ -20,7 +20,7 @@ public class EllipsoidalCubeSelector extends CubeSelector
 	private static final int SemiAxisY2 = SemiAxisY*SemiAxisY;
 	
 	@Override
-	protected void computeVisible( Collection<Long> out, int chunkX, int chunkY, int chunkZ, int viewDistance )
+	protected void computeVisible( Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance )
 	{
 		// equation for an axis-aligned ellipsoid:
 		// x^2/a^2 + y^2/b^2 + z^2/c^2 = 1
@@ -37,12 +37,12 @@ public class EllipsoidalCubeSelector extends CubeSelector
 				int test = ( x2 + z2 - SemiAxisXZ2 )*SemiAxisY2;
 				for( int y=-SemiAxisY; y<=SemiAxisY; y++ )
 				{
-					if( y + chunkY >= 0 )
+					if( y + cubeY >= 0 )
 					{
 						int y2 = y*y;
 						if( test <= -y2*SemiAxisXZ2 ) // test for point in ellipsoid, but using only integer arithmetic
 						{
-							out.add( AddressTools.getAddress( x + chunkX, y + chunkY, z + chunkZ ) );
+							out.add( AddressTools.getAddress( x + cubeX, y + cubeY, z + cubeZ ) );
 						}
 					}
 				}

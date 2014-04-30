@@ -67,11 +67,11 @@ public class CubePlayerManager extends PlayerManager
 		public void sortOutgoingCubes( )
 		{
 			// get the player chunk position
-			final int chunkX = AddressTools.getX( address );
-			final int chunkY = AddressTools.getY( address );
-			final int chunkZ = AddressTools.getZ( address );
+			final int cubeX = AddressTools.getX( address );
+			final int cubeY = AddressTools.getY( address );
+			final int cubeZ = AddressTools.getZ( address );
 			
-			// sort cubic chunks so they load radially away from the player
+			// sort cubes so they load radially away from the player
 			Collections.sort( outgoingCubes, new Comparator<Cube>( )
 			{
 				@Override
@@ -82,9 +82,9 @@ public class CubePlayerManager extends PlayerManager
 				
 				private int getManhattanDist( Cube cube )
 				{
-					int dx = Math.abs( cube.getX() - chunkX );
-					int dy = Math.abs( cube.getY() - chunkY );
-					int dz = Math.abs( cube.getZ() - chunkZ );
+					int dx = Math.abs( cube.getX() - cubeX );
+					int dy = Math.abs( cube.getY() - cubeY );
+					int dz = Math.abs( cube.getZ() - cubeZ );
 					return dx + dy + dz;
 				}
 			} );
@@ -129,21 +129,21 @@ public class CubePlayerManager extends PlayerManager
 		info.blockX = MathHelper.floor_double( player.posX );
 		info.blockY = MathHelper.floor_double( player.posY );
 		info.blockZ = MathHelper.floor_double( player.posZ );
-		int chunkX = Coords.blockToChunk( info.blockX );
-		int chunkY = Coords.blockToChunk( info.blockY );
-		int chunkZ = Coords.blockToChunk( info.blockZ );
-		info.address = AddressTools.getAddress( chunkX, chunkY, chunkZ );
+		int cubeX = Coords.blockToCube( info.blockX );
+		int cubeY = Coords.blockToCube( info.blockY );
+		int cubeZ = Coords.blockToCube( info.blockZ );
+		info.address = AddressTools.getAddress( cubeX, cubeY, cubeZ );
 		
 		// compute initial visibility
 		info.cubeSelector.setPlayerPosition( info.address, m_viewDistance );
 		
-		// add player to watchers and collect the cubic chunks to send over
+		// add player to watchers and collect the cubes to send over
 		for( long address : info.cubeSelector.getVisibleCubes() )
 		{
 			CubeWatcher watcher = getOrCreateWatcher( address );
 			if( watcher == null )
 			{
-				// no watcher means an empty cubic chunk
+				// no watcher means an empty cube
 				continue;
 			}
 			
@@ -166,10 +166,10 @@ public class CubePlayerManager extends PlayerManager
 			return;
 		}
 		
-		// remove player from all its cubic chunks
+		// remove player from all its cubes
 		for( long address : info.watchedAddresses )
 		{
-			// skip non-existent cubic chunks
+			// skip non-existent cubes
 			if( !cubeExists( address ) )
 			{
 				continue;
@@ -182,7 +182,7 @@ public class CubePlayerManager extends PlayerManager
 				watcher.removePlayer( player );
 			}
 			
-			// cleanup empty watchers and cubic chunks
+			// cleanup empty watchers and cubes
 			if( !watcher.hasPlayers() )
 			{
 				m_watchers.remove( address );
@@ -218,10 +218,10 @@ public class CubePlayerManager extends PlayerManager
 	public void func_151250_a( int blockX, int blockY, int blockZ )
 	{
 		// get the watcher
-		int chunkX = Coords.blockToChunk( blockX );
-		int chunkY = Coords.blockToChunk( blockY );
-		int chunkZ = Coords.blockToChunk( blockZ );
-		CubeWatcher watcher = getWatcher( chunkX, chunkY, chunkZ );
+		int cubeX = Coords.blockToCube( blockX );
+		int cubeY = Coords.blockToCube( blockY );
+		int cubeZ = Coords.blockToCube( blockZ );
+		CubeWatcher watcher = getWatcher( cubeX, cubeY, cubeZ );
 		if( watcher == null )
 		{
 			return;
@@ -259,11 +259,11 @@ public class CubePlayerManager extends PlayerManager
 			return;
 		}
 		
-		// did the player move into a new cubic chunk?
-		int newChunkX = Coords.blockToChunk( newBlockX );
-		int newChunkY = Coords.blockToChunk( newBlockY );
-		int newChunkZ = Coords.blockToChunk( newBlockZ );
-		long newAddress = AddressTools.getAddress( newChunkX, newChunkY, newChunkZ );
+		// did the player move into a new cube?
+		int newCubeX = Coords.blockToCube( newBlockX );
+		int newCubeY = Coords.blockToCube( newBlockY );
+		int newCubeZ = Coords.blockToCube( newBlockZ );
+		long newAddress = AddressTools.getAddress( newCubeX, newCubeY, newCubeZ );
 		if( newAddress == info.address )
 		{
 			return;
@@ -284,7 +284,7 @@ public class CubePlayerManager extends PlayerManager
 			CubeWatcher watcher = getOrCreateWatcher( address );
 			if( watcher == null )
 			{
-				// no watcher means an empty cubic chunk
+				// no watcher means an empty cube
 				continue;
 			}
 			
@@ -307,7 +307,7 @@ public class CubePlayerManager extends PlayerManager
 			
 			watcher.removePlayer( player );
 			
-			// cleanup empty watchers and cubic chunks
+			// cleanup empty watchers and cubes
 			if( !watcher.hasPlayers() )
 			{
 				m_watchers.remove( address );
@@ -316,7 +316,7 @@ public class CubePlayerManager extends PlayerManager
 		}
 	}
 	
-	public boolean isPlayerWatchingChunk( EntityPlayerMP player, int chunkX, int chunkZ )
+	public boolean isPlayerWatchingChunk( EntityPlayerMP player, int cubeX, int cubeZ )
 	{
 		// get the info
 		PlayerInfo info = m_players.get( player.getEntityId() );
@@ -330,7 +330,7 @@ public class CubePlayerManager extends PlayerManager
 		{
 			int x = AddressTools.getX( address );
 			int z = AddressTools.getZ( address );
-			if( x == chunkX && z == chunkZ )
+			if( x == cubeX && z == cubeZ )
 			{
 				return true;
 			}
@@ -351,7 +351,7 @@ public class CubePlayerManager extends PlayerManager
 		info.removeOutOfRangeOutgoingCubes();
 		info.sortOutgoingCubes();
 		
-		// pull off enough cubic chunks from the queue to fit in a packet
+		// pull off enough cubes from the queue to fit in a packet
 		final int MaxCubesToSend = 20;
 		List<Cube> cubesToSend = new ArrayList<Cube>();
 		List<TileEntity> tileEntitiesToSend = new ArrayList<TileEntity>();
@@ -360,13 +360,13 @@ public class CubePlayerManager extends PlayerManager
 		{
 			Cube cube = iter.next();
 			
-			// only send cubic chunks in active columns, not from columns on the fringe of the world that have been generated, but not activated yet
+			// only send cubes in active columns, not from columns on the fringe of the world that have been generated, but not activated yet
 			if( !cube.getColumn().func_150802_k() )
 			{
 				continue;
 			}
 			
-			// add this cubic chunk to the send buffer
+			// add this cube to the send buffer
 			cubesToSend.add( cube );
 			iter.remove();
 			
@@ -382,11 +382,11 @@ public class CubePlayerManager extends PlayerManager
 			return;
 		}
 		
-		// group the cubic chunks into column views
+		// group the cubes into column views
 		Map<Long,ColumnView> views = new TreeMap<Long,ColumnView>();
 		for( Cube cube : cubesToSend )
 		{
-			// is there a column view for this cubic chunk?
+			// is there a column view for this cube?
 			long columnAddress = AddressTools.getAddress( cube.getX(), cube.getZ() );
 			ColumnView view = views.get( columnAddress );
 			if( view == null )
@@ -399,7 +399,7 @@ public class CubePlayerManager extends PlayerManager
 		}
 		List<Column> columnsToSend = new ArrayList<Column>( views.values() );
 		
-		// send the cubic chunk data
+		// send the cube data
 		player.playerNetServerHandler.sendPacket( new S26PacketMapChunkBulk( columnsToSend ) );
 		
 		// send tile entity data
@@ -436,9 +436,9 @@ public class CubePlayerManager extends PlayerManager
 		return (CubeProviderServer)m_worldServer.theChunkProviderServer;
 	}
 	
-	private CubeWatcher getWatcher( int chunkX, int chunkY, int chunkZ )
+	private CubeWatcher getWatcher( int cubeX, int cubeY, int cubeZ )
 	{
-		return getWatcher( AddressTools.getAddress( chunkX, chunkY, chunkZ ) );
+		return getWatcher( AddressTools.getAddress( cubeX, cubeY, cubeZ ) );
 	}
 	
 	private CubeWatcher getWatcher( long address )
@@ -448,10 +448,10 @@ public class CubePlayerManager extends PlayerManager
 	
 	private boolean cubeExists( long address )
 	{
-		int chunkX = AddressTools.getX( address );
-		int chunkY = AddressTools.getY( address );
-		int chunkZ = AddressTools.getZ( address );
-		return getCubeProvider().cubeExists( chunkX, chunkY, chunkZ );
+		int cubeX = AddressTools.getX( address );
+		int cubeY = AddressTools.getY( address );
+		int cubeZ = AddressTools.getZ( address );
+		return getCubeProvider().cubeExists( cubeX, cubeY, cubeZ );
 	}
 	
 	private CubeWatcher getOrCreateWatcher( long address )
@@ -459,13 +459,13 @@ public class CubePlayerManager extends PlayerManager
 		CubeWatcher watcher = m_watchers.get( address );
 		if( watcher == null )
 		{
-			// get the cubic chunk
-			int chunkX = AddressTools.getX( address );
-			int chunkY = AddressTools.getY( address );
-			int chunkZ = AddressTools.getZ( address );
-			Cube cube = getCubeProvider().loadCube( chunkX, chunkY, chunkZ );
+			// get the cube
+			int cubeX = AddressTools.getX( address );
+			int cubeY = AddressTools.getY( address );
+			int cubeZ = AddressTools.getZ( address );
+			Cube cube = getCubeProvider().loadCube( cubeX, cubeY, cubeZ );
 			
-			// if no cubic chunk was loaded, that means it's an empty cubic chunk
+			// if no cube was loaded, that means it's an empty cube
 			if( cube == null )
 			{
 				return null;
@@ -484,15 +484,15 @@ public class CubePlayerManager extends PlayerManager
 		/* this is how the world decides which columns are active
 		for( EntityPlayer player : (List<EntityPlayer>)column.worldObj.playerEntities )
 		{
-			int chunkX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
-			int chunkZ = Coords.blockToChunk( MathHelper.floor_double( player.posZ ) );
+			int cubeX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
+			int cubeZ = Coords.blockToChunk( MathHelper.floor_double( player.posZ ) );
 			byte seven = 7;
 			
 			for( int x = -seven; x <= seven; ++x )
 			{
 				for( int var7 = -seven; var7 <= seven; ++var7 )
 				{
-					activeChunkSet.add( new ChunkCoordIntPair( x + chunkX, var7 + chunkZ ) );
+					activeChunkSet.add( new ChunkCoordIntPair( x + cubeX, var7 + cubeZ ) );
 				}
 			}
 		}
@@ -501,15 +501,15 @@ public class CubePlayerManager extends PlayerManager
 		// so, a column is active if it is within 7 columns to a player
 		for( EntityPlayer player : (List<EntityPlayer>)column.worldObj.playerEntities )
 		{
-			int chunkX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
-			int chunkZ = Coords.blockToChunk( MathHelper.floor_double( player.posZ ) );
+			int cubeX = Coords.blockToCube( MathHelper.floor_double( player.posX ) );
+			int cubeZ = Coords.blockToCube( MathHelper.floor_double( player.posZ ) );
 			
 			final int Range = 7;
-			if( Math.abs( chunkX - column.xPosition ) <= Range )
+			if( Math.abs( cubeX - column.xPosition ) <= Range )
 			{
 				return true;
 			}
-			if( Math.abs( chunkZ - column.zPosition ) <= Range )
+			if( Math.abs( cubeZ - column.zPosition ) <= Range )
 			{
 				return true;
 			}

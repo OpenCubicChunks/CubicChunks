@@ -24,7 +24,7 @@ public class LightIndexColumn
 	public LightIndexColumn( )
 	{
 		// UNDONE: could reduce memory usage by using the int-packed representation in memory
-		// although, that's probably not necessary since using cubic chunks should actually save memory
+		// although, that's probably not necessary since using cubes should actually save memory
 		// will have to do memory profiling to see if it's even worth trying to optimize memory usage here
 		m_opacity = new TreeMap<Integer,Integer>();
 		

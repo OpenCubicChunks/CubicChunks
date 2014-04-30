@@ -70,51 +70,51 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	@Override
-	public boolean chunkExists( int chunkX, int chunkZ )
+	public boolean chunkExists( int cubeX, int cubeZ )
 	{
-		return m_loadedColumns.containsKey( AddressTools.getAddress( chunkX, chunkZ ) );
+		return m_loadedColumns.containsKey( AddressTools.getAddress( cubeX, cubeZ ) );
 	}
 	
 	@Override
-	public boolean cubeExists( int chunkX, int chunkY, int chunkZ )
+	public boolean cubeExists( int cubeX, int cubeY, int cubeZ )
 	{
 		// check the column first
-		if( !chunkExists( chunkX, chunkZ ) )
+		if( !chunkExists( cubeX, cubeZ ) )
 		{
 			return false;
 		}
 		
-		// then check the cubic chunk
-		return provideChunk( chunkX, chunkZ ).getCube( chunkY ) != null;
+		// then check the cube
+		return provideChunk( cubeX, cubeZ ).getCube( cubeY ) != null;
 	}
 	
 	@Override
-	public Column loadChunk( int chunkX, int chunkZ )
+	public Column loadChunk( int cubeX, int cubeZ )
 	{
-		// find out the cubic chunks in this column near any players or spawn points
+		// find out the cubes in this column near any players or spawn points
 		m_values.clear();
-		getActiveCubeAddresses( m_values, chunkX, chunkZ );
+		getActiveCubeAddresses( m_values, cubeX, cubeZ );
 		
 		// TEMP
 		if( m_values.isEmpty() )
 		{
 			System.out.println( String.format( "Tried to load column (%d,%d) but nothing was nearby, spawn=(%d,%d,%d)",
-				chunkX, chunkZ,
+				cubeX, cubeZ,
 				m_worldServer.getSpawnPoint().posX, m_worldServer.getSpawnPoint().posY, m_worldServer.getSpawnPoint().posZ
 			) );
 			Thread.dumpStack();
 			return null;
 		}
 		
-		// actually load those cubic chunks
+		// actually load those cubes
 		for( long address : m_values )
 		{
-			loadCube( chunkX, AddressTools.getY( address ), chunkZ );
+			loadCube( cubeX, AddressTools.getY( address ), cubeZ );
 		}
 		
-		Column column = provideChunk( chunkX, chunkZ );
+		Column column = provideChunk( cubeX, cubeZ );
 		
-		// remove the column's cubic chunks from the unload queue
+		// remove the column's cubes from the unload queue
 		for( Cube cube : column.cubes() )
 		{
 			m_cubesToUnload.remove( cube.getAddress() );
@@ -124,16 +124,16 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	@Override
-	public Column provideChunk( int chunkX, int chunkZ )
+	public Column provideChunk( int cubeX, int cubeZ )
 	{
 		// check for the column
-		Column column = m_loadedColumns.get( AddressTools.getAddress( chunkX, chunkZ ) );
+		Column column = m_loadedColumns.get( AddressTools.getAddress( cubeX, cubeZ ) );
 		if( column != null )
 		{
 			// TEMP
 			if( !column.hasCubes() )
 			{
-				System.out.println( String.format( "provided column (%d,%d) has no cubic chunks!", chunkX, chunkZ ) );
+				System.out.println( String.format( "provided column (%d,%d) has no cubes!", cubeX, cubeZ ) );
 			}
 			
 			return column;
@@ -142,8 +142,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		// load the column or send back a proxy
 		if( m_worldServer.findingSpawnPoint )
 		{
-			// if we're finding a spawn point, we only need to load the cubic chunks above sea level
-			return loadCubesAboveSeaLevel( chunkX, chunkZ );
+			// if we're finding a spawn point, we only need to load the cubes above sea level
+			return loadCubesAboveSeaLevel( cubeX, cubeZ );
 		}
 		else
 		{
@@ -151,35 +151,35 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		}
 	}
 	
-	private Column loadCubesAboveSeaLevel( int chunkX, int chunkZ )
+	private Column loadCubesAboveSeaLevel( int cubeX, int cubeZ )
 	{
 		// UNDONE: do something smarter about the sea level
 		final int SeaLevel = 63;
 		
-		Column column = loadChunk( chunkX, chunkZ );
+		Column column = loadChunk( cubeX, cubeZ );
 		
-		int minChunkY = Coords.blockToChunk( SeaLevel );
-		int maxChunkY = column.getTopCubeY();
-		for( int chunkY=minChunkY; chunkY<=maxChunkY; chunkY++ )
+		int minCubeY = Coords.blockToCube( SeaLevel );
+		int maxCubeY = column.getTopCubeY();
+		for( int cubeY=minCubeY; cubeY<=maxCubeY; cubeY++ )
 		{
-			loadCube( chunkX, chunkY, chunkZ );
+			loadCube( cubeX, cubeY, cubeZ );
 		}
 		
 		return column;
 	}
 
 	@Override
-	public Cube loadCube( int chunkX, int chunkY, int chunkZ )
+	public Cube loadCube( int cubeX, int cubeY, int cubeZ )
 	{
-		long cubeAddress = AddressTools.getAddress( chunkX, chunkY, chunkZ );
-		long columnAddress = AddressTools.getAddress( chunkX, chunkZ );
+		long cubeAddress = AddressTools.getAddress( cubeX, cubeY, cubeZ );
+		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
 		
 		// is the column loaded?
 		Column column = m_loadedColumns.get( columnAddress );
 		if( column != null )
 		{
-			// is the cubic chunk loaded?
-			Cube cube = column.getCube( chunkY );
+			// is the cube loaded?
+			Cube cube = column.getCube( cubeY );
 			if( cube != null )
 			{
 				return cube;
@@ -193,20 +193,20 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		{
 			try
 			{
-				// at this point, column and cubic chunk loading are intertwined
-				// so try to load the column and the cubic chunk at the same time
+				// at this point, column and cube loading are intertwined
+				// so try to load the column and the cube at the same time
 				Cube cube;
-				column = m_loader.loadColumn( m_worldServer, chunkX, chunkZ );
+				column = m_loader.loadColumn( m_worldServer, cubeX, cubeZ );
 				if( column == null )
 				{
 					// there wasn't a column, generate a new one
-					column = m_generator.provideChunk( chunkX, chunkZ );
+					column = m_generator.provideChunk( cubeX, cubeZ );
 					
-					// was the cubic chunk generated?
-					cube = column.getCube( chunkY );
+					// was the cube generated?
+					cube = column.getCube( cubeY );
 					if( cube != null )
 					{
-						// tell the cubic chunk it was loaded
+						// tell the cube it was loaded
 						cube.onLoad();
 					}
 				}
@@ -215,11 +215,11 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 					// the column was loaded
 					column.lastSaveTime = m_worldServer.getTotalWorldTime();
 					
-					// load the cubic chunk too
+					// load the cube too
 					cube = loadCubeIntoColumn( column, cubeAddress );
 				}
 				
-				// if we have a valid cubic chunk, init the column
+				// if we have a valid cube, init the column
 				if( cube != null )
 				{
 					// add the column to the cache
@@ -227,14 +227,14 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 					
 					// init the column
 					column.onChunkLoad();
-					column.populateChunk( this, this, chunkX, chunkZ );
+					column.populateChunk( this, this, cubeX, cubeZ );
 				}
 				
 				return cube;
 			}
 			catch( IOException ex )
 			{
-				log.error( String.format( "Unable to load column (%d,,%d)", chunkX, chunkZ ), ex );
+				log.error( String.format( "Unable to load column (%d,,%d)", cubeX, cubeZ ), ex );
 				return null;
 			}
 		}
@@ -244,23 +244,23 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	{
 		try
 		{
-			// load the cubic chunk
+			// load the cube
 			Cube cube = m_loader.loadCubeAndAddToColumn( m_worldServer, column, address );
 			
 			if( cube == null )
 			{
-				// cubic chunk does not exist
+				// cube does not exist
 				return null;
 			}
 			
-			// tell the cubic chunk it was loaded
+			// tell the cube it was loaded
 			cube.onLoad();
 			
 			return cube;
 		}
 		catch( IOException ex )
 		{
-			log.error( String.format( "Unable to load cubic chunk (%d,%d,%d)",
+			log.error( String.format( "Unable to load cube (%d,%d,%d)",
 				AddressTools.getX( address ), AddressTools.getY( address ), AddressTools.getZ( address )
 			), ex );
 			return null;
@@ -268,7 +268,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 
 	@Override
-	public void unloadChunksIfNotNearSpawn( int chunkX, int chunkZ )
+	public void unloadChunksIfNotNearSpawn( int cubeX, int cubeZ )
 	{
 		throw new UnsupportedOperationException();
 	}
@@ -280,22 +280,22 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		unloadCubeIfNotNearSpawn( cube.getX(), cube.getY(), cube.getZ() );
 	}
 	
-	public void unloadCubeIfNotNearSpawn( int chunkX, int chunkY, int chunkZ )
+	public void unloadCubeIfNotNearSpawn( int cubeX, int cubeY, int cubeZ )
 	{
-		// don't unload cubic chunks near the spawn
-		if( cubeIsNearSpawn( chunkX, chunkY, chunkZ ) )
+		// don't unload cubes near the spawn
+		if( cubeIsNearSpawn( cubeX, cubeY, cubeZ ) )
 		{
 			return;
 		}
 		
-		// queue the cubic chunk for unloading
-		m_cubesToUnload.add( AddressTools.getAddress( chunkX, chunkY, chunkZ ) );
+		// queue the cube for unloading
+		m_cubesToUnload.add( AddressTools.getAddress( cubeX, cubeY, cubeZ ) );
 	}
 	
 	@Override
 	public void unloadAllChunks( )
 	{
-		// unload all the cubic chunks in the columns
+		// unload all the cubes in the columns
 		for( Column column : m_loadedColumns.values() )
 		{
 			for( Cube cube : column.cubes() )
@@ -318,13 +318,13 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		
 		final int MaxNumToUnload = 400;
 		
-		// unload cubic chunks
+		// unload cubes
 		for( int i=0; i<MaxNumToUnload && !m_cubesToUnload.isEmpty(); i++ )
 		{
 			long cubeAddress = m_cubesToUnload.poll();
 			long columnAddress = AddressTools.getAddress( AddressTools.getX( cubeAddress ), AddressTools.getZ( cubeAddress ) );
 			
-			// get the cubic chunk
+			// get the cube
 			Column column = m_loadedColumns.get( columnAddress );
 			if( column == null )
 			{
@@ -332,15 +332,15 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 				continue;
 			}
 			
-			// unload the cubic chunk
-			int chunkY = AddressTools.getY( cubeAddress );
-			Cube cube = column.removeCube( chunkY );
+			// unload the cube
+			int cubeY = AddressTools.getY( cubeAddress );
+			Cube cube = column.removeCube( cubeY );
 			if( cube != null )
 			{
-				// tell the cubic chunk it has been unloaded
+				// tell the cube it has been unloaded
 				cube.onUnload();
 				
-				// save the cubic chunk
+				// save the cube
 				m_loader.saveCube( cube );
 			}
 			
@@ -367,7 +367,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 				m_loader.saveColumn( column );
 			}
 			
-			// save the cubic chunks
+			// save the cubes
 			for( Cube cube : column.cubes() )
 			{
 				if( cube.needsSaving() )
@@ -383,7 +383,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	@Override
 	public String makeString( )
 	{
-		return "CubeProviderServer: " + m_loadedColumns.size() + " columns, Unload: " + m_cubesToUnload.size() + " cubic chunks";
+		return "CubeProviderServer: " + m_loadedColumns.size() + " columns, Unload: " + m_cubesToUnload.size() + " cubes";
 	}
 	
 	@Override
@@ -406,18 +406,18 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	@SuppressWarnings( "unchecked" )
-	private void getActiveCubeAddresses( Collection<Integer> out, int chunkX, int chunkZ )
+	private void getActiveCubeAddresses( Collection<Integer> out, int cubeX, int cubeZ )
 	{
 		CubePlayerManager playerManager = (CubePlayerManager)m_worldServer.getPlayerManager();
 		
 		for( EntityPlayerMP player : (List<EntityPlayerMP>)m_worldServer.playerEntities )
 		{
-			// check for cubic chunks near players
+			// check for cubes near players
 			for( Long address : playerManager.getVisibleCubeAddresses( player ) )
 			{
-				int visibleChunkX = AddressTools.getX( address );
-				int visibleChunkZ = AddressTools.getZ( address );
-				if( visibleChunkX == chunkX && visibleChunkZ == chunkZ )
+				int visibleCubeX = AddressTools.getX( address );
+				int visibleCubeZ = AddressTools.getZ( address );
+				if( visibleCubeX == cubeX && visibleCubeZ == cubeZ )
 				{
 					out.add( AddressTools.getY( address ) );
 				}
@@ -426,14 +426,14 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			// or near their spawn point
 			if( player.getBedLocation() != null )
 			{
-				int spawnChunkX = Coords.blockToChunk( player.getBedLocation().posX );
-				int spawnChunkY = Coords.blockToChunk( player.getBedLocation().posY );
-				int spawnChunkZ = Coords.blockToChunk( player.getBedLocation().posZ );
-				if( spawnChunkX == chunkX && spawnChunkZ == chunkZ )
+				int spawnCubeX = Coords.blockToCube( player.getBedLocation().posX );
+				int spawnCubeY = Coords.blockToCube( player.getBedLocation().posY );
+				int spawnCubeZ = Coords.blockToCube( player.getBedLocation().posZ );
+				if( spawnCubeX == cubeX && spawnCubeZ == cubeZ )
 				{
 					for( int y=-PlayerSpawnChunkDistance; y<=PlayerSpawnChunkDistance; y++ )
 					{
-						out.add( spawnChunkY + y );
+						out.add( spawnCubeY + y );
 					}
 				}
 			}
@@ -442,22 +442,22 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		// or near world spawns
 		if( m_worldServer.getSpawnPoint() != null )
 		{
-			int spawnChunkX = Coords.blockToChunk( m_worldServer.getSpawnPoint().posX );
-			int spawnChunkY = Coords.blockToChunk( m_worldServer.getSpawnPoint().posY );
-			int spawnChunkZ = Coords.blockToChunk( m_worldServer.getSpawnPoint().posZ );
-			int dx = Math.abs( spawnChunkX - chunkX );
-			int dz = Math.abs( spawnChunkZ - chunkZ );
+			int spawnCubeX = Coords.blockToCube( m_worldServer.getSpawnPoint().posX );
+			int spawnCubeY = Coords.blockToCube( m_worldServer.getSpawnPoint().posY );
+			int spawnCubeZ = Coords.blockToCube( m_worldServer.getSpawnPoint().posZ );
+			int dx = Math.abs( spawnCubeX - cubeX );
+			int dz = Math.abs( spawnCubeZ - cubeZ );
 			if( dx <= WorldSpawnChunkDistance && dz <= WorldSpawnChunkDistance )
 			{
 				for( int y=-WorldSpawnChunkDistance; y<=WorldSpawnChunkDistance; y++ )
 				{
-					out.add( spawnChunkY + y );
+					out.add( spawnCubeY + y );
 				}
 			}
 		}
 	}
 	
-	private boolean cubeIsNearSpawn( int chunkX, int chunkY, int chunkZ )
+	private boolean cubeIsNearSpawn( int cubeX, int cubeY, int cubeZ )
 	{
 		if( !m_worldServer.provider.canRespawnHere() )
 		{
@@ -469,9 +469,9 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		int spawnX = AddressTools.getX( address );
 		int spawnY = AddressTools.getY( address );
 		int spawnZ = AddressTools.getZ( address );
-		int dx = Math.abs( spawnX - chunkX );
-		int dy = Math.abs( spawnY - chunkY );
-		int dz = Math.abs( spawnZ - chunkZ );
+		int dx = Math.abs( spawnX - cubeX );
+		int dy = Math.abs( spawnY - cubeY );
+		int dz = Math.abs( spawnZ - cubeZ );
 		return dx <= WorldSpawnChunkDistance && dy <= WorldSpawnChunkDistance && dz <= WorldSpawnChunkDistance;
 	}
 }

@@ -50,7 +50,7 @@ public class LightIndexBlockProxy extends BlockAir
 	@Override
 	public int getLightValue( )
 	{
-		// assume lights in unloaded cubic chunks are turned off
+		// assume lights in unloaded cubes are turned off
 		return 0;
 	}
 	

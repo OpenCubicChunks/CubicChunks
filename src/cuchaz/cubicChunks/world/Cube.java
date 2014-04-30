@@ -48,7 +48,7 @@ public class Cube
 	{
 		if( y < 0 )
 		{
-			throw new IllegalArgumentException( "y-coord of cubic chunk must be non-negative!" );
+			throw new IllegalArgumentException( "y-coord of cube must be non-negative!" );
 		}
 		
 		m_world = world;
@@ -236,20 +236,20 @@ public class Cube
 	
 	public void addEntity( Entity entity )
 	{
-		// make sure the entity is in this cubic chunk
-		int chunkX = Coords.getChunkXForEntity( entity );
-		int chunkY = Coords.getChunkYForEntity( entity );
-		int chunkZ = Coords.getChunkZForEntity( entity );
-		if( chunkX != m_x || chunkY != m_y || chunkZ != m_z )
+		// make sure the entity is in this cube
+		int cubeX = Coords.getCubeXForEntity( entity );
+		int cubeY = Coords.getCubeYForEntity( entity );
+		int cubeZ = Coords.getCubeZForEntity( entity );
+		if( cubeX != m_x || cubeY != m_y || cubeZ != m_z )
 		{
-			log.warn( String.format( "Entity %s in cubic chunk (%d,%d,%d) added to cubic chunk (%d,%d,%d)!",
+			log.warn( String.format( "Entity %s in cube (%d,%d,%d) added to cube (%d,%d,%d)!",
 				entity.getClass().getName(),
-				chunkX, chunkY, chunkZ,
+				cubeX, cubeY, cubeZ,
 				m_x, m_y, m_z
 			) );
 		}
 		
-		// tell the entity it's in a cubic chunk
+		// tell the entity it's in a cube
 		// NOTE: we have to set the y coord to the chunk the entity is in, not the chunk it's standing on.
 		// otherwise, the world will continually re-add the entity to the column
 		entity.addedToChunk = true;
@@ -289,10 +289,10 @@ public class Cube
 	{
 		for( Entity entity : m_entities.entities() )
 		{
-			int chunkX = Coords.getChunkXForEntity( entity );
-			int chunkY = Coords.getChunkYForEntity( entity );
-			int chunkZ = Coords.getChunkZForEntity( entity );
-			if( chunkX != m_x || chunkY != m_y || chunkZ != m_z )
+			int cubeX = Coords.getCubeXForEntity( entity );
+			int cubeY = Coords.getCubeYForEntity( entity );
+			int cubeZ = Coords.getCubeZForEntity( entity );
+			if( cubeX != m_x || cubeY != m_y || cubeZ != m_z )
 			{
 				out.add( entity );
 			}

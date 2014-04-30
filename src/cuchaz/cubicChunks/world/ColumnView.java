@@ -86,16 +86,16 @@ public class ColumnView extends Column
 	@Override //      getBlock
 	public Block func_150810_a( final int localX, final int blockY, final int localZ )
 	{
-		// pass off to the cubic chunk
-		int chunkY = Coords.blockToChunk( blockY );
-		Cube cube = m_cubes.get( chunkY );
+		// pass off to the cube
+		int cubeY = Coords.blockToCube( blockY );
+		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
 			int localY = Coords.blockToLocal( blockY );
 			return cube.getBlock( localX, localY, localZ );
 		}
 		
-		// this cubic chunk isn't loaded, but there's something non-transparent there, return a block proxy
+		// this cube isn't loaded, but there's something non-transparent there, return a block proxy
 		int opacity = m_column.getLightIndex().getOpacity( localX, blockY, localZ );
 		if( opacity > 0 )
 		{
@@ -114,9 +114,9 @@ public class ColumnView extends Column
 	@Override
 	public int getBlockMetadata( int localX, int blockY, int localZ )
 	{
-		// pass off to the cubic chunk
-		int chunkY = Coords.blockToChunk( blockY );
-		Cube cube = m_cubes.get( chunkY );
+		// pass off to the cube
+		int cubeY = Coords.blockToCube( blockY );
+		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
 			int localY = Coords.blockToLocal( blockY );
@@ -180,7 +180,7 @@ public class ColumnView extends Column
 	}
 	
 	@Override
-	public void removeEntityAtIndex( Entity entity, int chunkY )
+	public void removeEntityAtIndex( Entity entity, int cubeY )
 	{
 		throw new UnsupportedOperationException();
 	}
@@ -188,9 +188,9 @@ public class ColumnView extends Column
 	@Override //      getTileEntity
 	public TileEntity func_150806_e( int localX, int blockY, int localZ )
 	{
-		// pass off to the cubic chunk
-		int chunkY = Coords.blockToChunk( blockY );
-		Cube cube = m_cubes.get( chunkY );
+		// pass off to the cube
+		int cubeY = Coords.blockToCube( blockY );
+		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
 			int localY = Coords.blockToLocal( blockY );

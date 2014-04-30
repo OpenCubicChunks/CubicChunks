@@ -98,11 +98,11 @@ public class CubeLoader implements IThreadedFileIO
 		return m_columns.containsKey( address );
 	}
 	
-	public Column loadColumn( World world, int chunkX, int chunkZ )
+	public Column loadColumn( World world, int cubeX, int cubeZ )
 	throws IOException
 	{
 		// does the database have the column?
-		long address = AddressTools.getAddress( chunkX, chunkZ );
+		long address = AddressTools.getAddress( cubeX, cubeZ );
 		byte[] data = m_columns.get( address );
 		if( data == null )
 		{
@@ -116,7 +116,7 @@ public class CubeLoader implements IThreadedFileIO
 		in.close();
 		
 		// restore the column
-		return readColumnFromNBT( world, chunkX, chunkZ, nbt );
+		return readColumnFromNBT( world, cubeX, cubeZ, nbt );
 	}
 	
 	public boolean cubeExists( long address )
@@ -127,7 +127,7 @@ public class CubeLoader implements IThreadedFileIO
 	public Cube loadCubeAndAddToColumn( World world, Column column, long address )
 	throws IOException
 	{
-		// does the database have the cubic chunk?
+		// does the database have the cube?
 		byte[] data = m_cubes.get( address );
 		if( data == null )
 		{
@@ -139,7 +139,7 @@ public class CubeLoader implements IThreadedFileIO
 		NBTTagCompound nbt = CompressedStreamTools.readCompressed( in );
 		in.close();
 		
-		// restore the cubic chunk
+		// restore the cube
 		int x = AddressTools.getX( address );
 		int y = AddressTools.getY( address );
 		int z = AddressTools.getZ( address );
@@ -211,13 +211,13 @@ public class CubeLoader implements IThreadedFileIO
 		}
 		entries.clear();
 		
-		// save a batch of cubic chunks
+		// save a batch of cubes
 		boolean hasMoreCubes = m_cubesToSave.getBatch( entries, CubesBatchSize );
 		for( SaveEntry entry : entries )
 		{
 			try
 			{
-				// save the cubic chunk
+				// save the cube
 				byte[] data = writeNbtBytes( entry.nbt );
 				m_cubes.put( entry.address, data );
 				
@@ -226,7 +226,7 @@ public class CubeLoader implements IThreadedFileIO
 			}
 			catch( IOException ex )
 			{
-				log.error( String.format( "Unable to write cubic chunk %d,%d,%d",
+				log.error( String.format( "Unable to write cube %d,%d,%d",
 					AddressTools.getX( entry.address ),
 					AddressTools.getY( entry.address ),
 					AddressTools.getZ( entry.address )
@@ -239,7 +239,7 @@ public class CubeLoader implements IThreadedFileIO
 		m_db.commit();
 		
 		long diff = System.currentTimeMillis() - start;
-		log.info( String.format( "Wrote %d columns (%dk) and %d cubic chunks (%dk) in %d ms",
+		log.info( String.format( "Wrote %d columns (%dk) and %d cubes (%dk) in %d ms",
 			numColumnsSaved, numColumnBytesSaved/1024,
 			numCubesSaved, numCubeBytesSaved/1024,
 			diff
@@ -358,14 +358,14 @@ public class CubeLoader implements IThreadedFileIO
 			public void onEntity( Entity entity )
 			{
 				// make sure this entity is really in the chunk
-				int chunkX = Coords.getChunkXForEntity( entity );
-				int chunkY = Coords.getChunkYForEntity( entity );
-				int chunkZ = Coords.getChunkZForEntity( entity );
-				if( chunkX != cube.getX() || chunkY != cube.getY() || chunkZ != cube.getZ() )
+				int cubeX = Coords.getCubeXForEntity( entity );
+				int cubeY = Coords.getCubeYForEntity( entity );
+				int cubeZ = Coords.getCubeZForEntity( entity );
+				if( cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ() )
 				{
-					log.warn( String.format( "Saved entity %s in cubic chunk (%d,%d,%d) to cubic chunk (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
+					log.warn( String.format( "Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
 						entity.getClass().getName(),
-						chunkX, chunkY, chunkZ,
+						cubeX, cubeY, cubeZ,
 						cube.getX(), cube.getY(), cube.getZ(),
 						entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
 					) );
@@ -414,10 +414,10 @@ public class CubeLoader implements IThreadedFileIO
 		// "END", "BYTE", "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "BYTE[]", "STRING", "LIST", "COMPOUND", "INT[]"
 		
 		// TEMP
-		int targetChunkX = Coords.blockToChunk( 221 );
-		int targetChunkY = Coords.blockToChunk( 131 );
-		int targetChunkZ = Coords.blockToChunk( -121 );
-		if( x == targetChunkX && y == targetChunkY && z == targetChunkZ )
+		int targetCubeX = Coords.blockToCube( 221 );
+		int targetCubeY = Coords.blockToCube( 131 );
+		int targetCubeZ = Coords.blockToCube( -121 );
+		if( x == targetCubeX && y == targetCubeY && z == targetCubeZ )
 		{
 			System.out.println( "Loading target chunk from NBT!" );
 		}
@@ -426,7 +426,7 @@ public class CubeLoader implements IThreadedFileIO
 		byte version = nbt.getByte( "v" );
 		if( version != 1 )
 		{
-			throw new IllegalArgumentException( "Cubic chunk has wrong version! " + version );
+			throw new IllegalArgumentException( "Cube has wrong version! " + version );
 		}
 		
 		// check the coordinates
@@ -435,16 +435,16 @@ public class CubeLoader implements IThreadedFileIO
 		int zCheck = nbt.getInteger( "z" );
 		if( xCheck != x || yCheck != y || zCheck != z )
 		{
-			throw new Error( String.format( "Cubic chunk is corrupted! Expected (%d,%d,%d) but got (%d,%d,%d)", x, y, z, xCheck, yCheck, zCheck ) );
+			throw new Error( String.format( "Cube is corrupted! Expected (%d,%d,%d) but got (%d,%d,%d)", x, y, z, xCheck, yCheck, zCheck ) );
 		}
 		
 		// check against column
 		if( x != column.xPosition || z != column.zPosition )
 		{
-			throw new Error( String.format( "Cubic chunk is corrupted! Cubic chunk (%d,%d,%d) does not match column (%d,%d)", x, y, z, column.xPosition, column.zPosition ) );
+			throw new Error( String.format( "Cube is corrupted! Cube (%d,%d,%d) does not match column (%d,%d)", x, y, z, column.xPosition, column.zPosition ) );
 		}
 		
-		// build the cubic chunk
+		// build the cube
 		boolean hasSky = !world.provider.hasNoSky;
 		final Cube cube = new Cube( world, column, x, y, z, hasSky );
 		column.addCube( cube );
@@ -476,14 +476,14 @@ public class CubeLoader implements IThreadedFileIO
 			public void onEntity( Entity entity )
 			{
 				// make sure this entity is really in the chunk
-				int chunkX = Coords.getChunkXForEntity( entity );
-				int chunkY = Coords.getChunkYForEntity( entity );
-				int chunkZ = Coords.getChunkZForEntity( entity );
-				if( chunkX != cube.getX() || chunkY != cube.getY() || chunkZ != cube.getZ() )
+				int cubeX = Coords.getCubeXForEntity( entity );
+				int cubeY = Coords.getCubeYForEntity( entity );
+				int cubeZ = Coords.getCubeZForEntity( entity );
+				if( cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ() )
 				{
-					log.warn( String.format( "Loaded entity %s in cubic chunk (%d,%d,%d) to cubic chunk (%d,%d,%d)!",
+					log.warn( String.format( "Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!",
 						entity.getClass().getName(),
-						chunkX, chunkY, chunkZ,
+						cubeX, cubeY, cubeZ,
 						cube.getX(), cube.getY(), cube.getZ()
 					) );
 				}
@@ -537,7 +537,7 @@ public class CubeLoader implements IThreadedFileIO
 		}
 		WorldServer worldServer = (WorldServer)cube.getWorld();
 		
-		// copy the ticks for this cubic chunk
+		// copy the ticks for this cube
 		copyScheduledTicks( out, WorldServerAccessor.getScheduledTicksTreeSet( worldServer ), cube );
 		copyScheduledTicks( out, WorldServerAccessor.getScheduledTicksThisTick( worldServer ), cube );
 		

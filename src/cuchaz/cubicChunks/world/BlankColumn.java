@@ -23,9 +23,9 @@ import net.minecraft.world.World;
 
 public class BlankColumn extends Column
 {
-	public BlankColumn( World world, int chunkX, int chunkZ )
+	public BlankColumn( World world, int cubeX, int cubeZ )
 	{
-		super( world, chunkX, chunkZ );
+		super( world, cubeX, cubeZ );
 	}
 	
 	// UNDONE: override Column methods

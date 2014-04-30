@@ -28,16 +28,16 @@ import cuchaz.magicMojoModLoader.api.events.ClassOverrideEvent;
 import cuchaz.magicMojoModLoader.api.events.EncodeChunkEvent;
 import cuchaz.magicMojoModLoader.api.events.EntityPlayerMPUpdateEvent;
 
-public class CubicChunksMod implements Mod
+public class TallWorldsMod implements Mod
 {
 	// define one instance of the metadata
 	private static final ModMetadata m_meta;
 	static
 	{
 		m_meta = new ModMetadata();
-		m_meta.setId( "cubic-chunks" );
+		m_meta.setId( "tall-worlds" );
 		m_meta.setVersion( new Version( "0.1 beta" ) );
-		m_meta.setName( "Cubic Chunks" );
+		m_meta.setName( "Tall Worlds" );
 	}
 	
 	@Override

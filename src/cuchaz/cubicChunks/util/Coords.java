@@ -20,34 +20,34 @@ public class Coords
 		return val & 0xf;
 	}
 	
-	public static int blockToChunk( int val )
+	public static int blockToCube( int val )
 	{
 		return val >> 4;
 	}
 	
 	public static int localToBlock( int chunk, int local )
 	{
-		return chunkToMinBlock( chunk ) + local;
+		return cubeToMinBlock( chunk ) + local;
 	}
 	
-	public static int chunkToMinBlock( int chunk )
+	public static int cubeToMinBlock( int chunk )
 	{
 		return chunk << 4;
 	}
 	
-	public static int getChunkXForEntity( Entity entity )
+	public static int getCubeXForEntity( Entity entity )
 	{
-		return blockToChunk( MathHelper.floor_double( entity.posX ) );
+		return blockToCube( MathHelper.floor_double( entity.posX ) );
 	}
 	
-	public static int getChunkZForEntity( Entity entity )
+	public static int getCubeZForEntity( Entity entity )
 	{
-		return blockToChunk( MathHelper.floor_double( entity.posZ ) );
+		return blockToCube( MathHelper.floor_double( entity.posZ ) );
 	}
 	
-	public static int getChunkYForEntity( Entity entity )
+	public static int getCubeYForEntity( Entity entity )
 	{
-		// the entity is in the cubic chunk it's inside, not the cubic chunk it's standing on
-		return blockToChunk( MathHelper.floor_double( entity.posY ) );
+		// the entity is in the cube it's inside, not the cube it's standing on
+		return blockToCube( MathHelper.floor_double( entity.posY ) );
 	}
 }

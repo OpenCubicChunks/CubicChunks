@@ -42,34 +42,34 @@ public class CubeWorldServer extends WorldServer
 	public long getSpawnPointCubeAddress( )
 	{
 		return AddressTools.getAddress(
-			Coords.blockToChunk( worldInfo.getSpawnX() ),
-			Coords.blockToChunk( worldInfo.getSpawnY() ),
-			Coords.blockToChunk( worldInfo.getSpawnZ() )
+			Coords.blockToCube( worldInfo.getSpawnX() ),
+			Coords.blockToCube( worldInfo.getSpawnY() ),
+			Coords.blockToCube( worldInfo.getSpawnZ() )
 		);
 	}
 	
-	/* SOO much Minecraft code expects the bottom cubic chunks to be loaded
+	/* SOO much Minecraft code expects the bottom cubes to be loaded
 	   Let's not tell Minecraft they're not actually loaded just yet
 	@Override
 	public boolean checkChunksExist( int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ )
 	{
 		// convert block bounds to chunk bounds
-		int minChunkX = Coords.blockToChunk( minBlockX );
-		int minChunkY = Coords.blockToChunk( minBlockY );
-		int minChunkZ = Coords.blockToChunk( minBlockZ );
-		int maxChunkX = Coords.blockToChunk( maxBlockX );
-		int maxChunkY = Coords.blockToChunk( maxBlockY );
-		int maxChunkZ = Coords.blockToChunk( maxBlockZ );
+		int minCubeX = Coords.blockToChunk( minBlockX );
+		int minCubeY = Coords.blockToChunk( minBlockY );
+		int minCubeZ = Coords.blockToChunk( minBlockZ );
+		int maxCubeX = Coords.blockToChunk( maxBlockX );
+		int maxCubeY = Coords.blockToChunk( maxBlockY );
+		int maxCubeZ = Coords.blockToChunk( maxBlockZ );
 		
-		// check for any missing cubic chunks
+		// check for any missing cubes
 		CubeProviderServer chunkProvider = (CubeProviderServer)WorldAccessor.getChunkProvider( this );
-		for( int chunkX=minChunkX; chunkX<=maxChunkX; chunkX++ )
+		for( int cubeX=minCubeX; cubeX<=maxCubeX; cubeX++ )
 		{
-			for( int chunkY=minChunkY; chunkY<=maxChunkY; chunkY++ )
+			for( int cubeY=minCubeY; cubeY<=maxCubeY; cubeY++ )
 			{
-				for( int chunkZ=minChunkZ; chunkZ<=maxChunkZ; chunkZ++ )
+				for( int cubeZ=minCubeZ; cubeZ<=maxCubeZ; cubeZ++ )
 				{
-					if( !chunkProvider.cubeExists( chunkX, chunkY, chunkZ ) )
+					if( !chunkProvider.cubeExists( cubeX, cubeY, cubeZ ) )
 					{
 						return false;
 					}

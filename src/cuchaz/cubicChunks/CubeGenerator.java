@@ -113,11 +113,11 @@ public class CubeGenerator implements IChunkProvider
 		}
 	}
 	
-	public void generateTerrain( int chunkX, int chunkZ, Block[] blocks )
+	public void generateTerrain( int cubeX, int cubeZ, Block[] blocks )
 	{
 		byte seaLevel = 63;
-		this.biomesForGeneration = this.worldObj.getWorldChunkManager().getBiomesForGeneration( this.biomesForGeneration, chunkX * 4 - 2, chunkZ * 4 - 2, 10, 10 );
-		this.func_147423_a( chunkX * 4, 0, chunkZ * 4 );
+		this.biomesForGeneration = this.worldObj.getWorldChunkManager().getBiomesForGeneration( this.biomesForGeneration, cubeX * 4 - 2, cubeZ * 4 - 2, 10, 10 );
+		this.func_147423_a( cubeX * 4, 0, cubeZ * 4 );
 		
 		for( int var5 = 0; var5 < 4; ++var5 )
 		{
@@ -220,30 +220,30 @@ public class CubeGenerator implements IChunkProvider
 	 * and chunk seed
 	 */
 	@Override
-	public Column provideChunk( int chunkX, int chunkZ )
+	public Column provideChunk( int cubeX, int cubeZ )
 	{
 		Block[] blocks = new Block[65536];
 		byte[] meta = new byte[65536];
 		
 		// init random
-		rand.setSeed( (long)chunkX * 341873128712L + (long)chunkZ * 132897987541L );
+		rand.setSeed( (long)cubeX * 341873128712L + (long)cubeZ * 132897987541L );
 		
-		generateTerrain( chunkX, chunkZ, blocks );
-		biomesForGeneration = worldObj.getWorldChunkManager().loadBlockGeneratorData( biomesForGeneration, chunkX * 16, chunkZ * 16, 16, 16 );
-		func_147422_a( chunkX, chunkZ, blocks, meta, biomesForGeneration );
-		caveGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
-		ravineGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
+		generateTerrain( cubeX, cubeZ, blocks );
+		biomesForGeneration = worldObj.getWorldChunkManager().loadBlockGeneratorData( biomesForGeneration, cubeX * 16, cubeZ * 16, 16, 16 );
+		func_147422_a( cubeX, cubeZ, blocks, meta, biomesForGeneration );
+		caveGenerator.func_151539_a( this, worldObj, cubeX, cubeZ, blocks );
+		ravineGenerator.func_151539_a( this, worldObj, cubeX, cubeZ, blocks );
 		
 		if( mapFeaturesEnabled )
 		{
-			mineshaftGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
-			villageGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
-			strongholdGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
-			scatteredFeatureGenerator.func_151539_a( this, worldObj, chunkX, chunkZ, blocks );
+			mineshaftGenerator.func_151539_a( this, worldObj, cubeX, cubeZ, blocks );
+			villageGenerator.func_151539_a( this, worldObj, cubeX, cubeZ, blocks );
+			strongholdGenerator.func_151539_a( this, worldObj, cubeX, cubeZ, blocks );
+			scatteredFeatureGenerator.func_151539_a( this, worldObj, cubeX, cubeZ, blocks );
 		}
 		
 		// create the column
-		Column column = new Column( worldObj, blocks, meta, chunkX, chunkZ );
+		Column column = new Column( worldObj, blocks, meta, cubeX, cubeZ );
 		
 		// set biome info
 		byte[] biomes = column.getBiomeArray();
@@ -386,14 +386,14 @@ public class CubeGenerator implements IChunkProvider
 	 * Populates chunk with ores etc etc
 	 */
 	@Override
-	public void populate( IChunkProvider par1IChunkProvider, int chunkX, int chunkZ )
+	public void populate( IChunkProvider par1IChunkProvider, int cubeX, int cubeZ )
 	{
 		// TEMP: check height
         for( int x=0; x<16; x++ )
         {
         	for( int z=0; z<16;z++ )
         	{
-        		if( worldObj.getHeightValue( chunkX << 4 | x, chunkZ << 4 | z ) <= 0 )
+        		if( worldObj.getHeightValue( cubeX << 4 | x, cubeZ << 4 | z ) <= 0 )
         		{
         			throw new Error( "World doesn't know about chunk!" );
         		}
@@ -401,21 +401,21 @@ public class CubeGenerator implements IChunkProvider
         }
         
 		BlockFalling.field_149832_M = true;
-		int var4 = chunkX * 16;
-		int var5 = chunkZ * 16;
+		int var4 = cubeX * 16;
+		int var5 = cubeZ * 16;
 		BiomeGenBase var6 = this.worldObj.getBiomeGenForCoords( var4 + 16, var5 + 16 );
 		this.rand.setSeed( this.worldObj.getSeed() );
 		long var7 = this.rand.nextLong() / 2L * 2L + 1L;
 		long var9 = this.rand.nextLong() / 2L * 2L + 1L;
-		this.rand.setSeed( (long)chunkX * var7 + (long)chunkZ * var9 ^ this.worldObj.getSeed() );
+		this.rand.setSeed( (long)cubeX * var7 + (long)cubeZ * var9 ^ this.worldObj.getSeed() );
 		boolean var11 = false;
 		
 		if( this.mapFeaturesEnabled )
 		{
-			this.mineshaftGenerator.generateStructuresInChunk( this.worldObj, this.rand, chunkX, chunkZ );
-			var11 = this.villageGenerator.generateStructuresInChunk( this.worldObj, this.rand, chunkX, chunkZ );
-			this.strongholdGenerator.generateStructuresInChunk( this.worldObj, this.rand, chunkX, chunkZ );
-			this.scatteredFeatureGenerator.generateStructuresInChunk( this.worldObj, this.rand, chunkX, chunkZ );
+			this.mineshaftGenerator.generateStructuresInChunk( this.worldObj, this.rand, cubeX, cubeZ );
+			var11 = this.villageGenerator.generateStructuresInChunk( this.worldObj, this.rand, cubeX, cubeZ );
+			this.strongholdGenerator.generateStructuresInChunk( this.worldObj, this.rand, cubeX, cubeZ );
+			this.scatteredFeatureGenerator.generateStructuresInChunk( this.worldObj, this.rand, cubeX, cubeZ );
 		}
 		
 		int var12;

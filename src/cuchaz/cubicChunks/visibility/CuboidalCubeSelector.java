@@ -19,13 +19,13 @@ public class CuboidalCubeSelector extends CubeSelector
 	private static final int ViewDistanceY = 2;
 	
 	@Override
-	protected void computeVisible( Collection<Long> out, int chunkX, int chunkY, int chunkZ, int viewDistance )
+	protected void computeVisible( Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance )
 	{
-		for( int x=chunkX-viewDistance; x<=chunkX+viewDistance; x++ )
+		for( int x=cubeX-viewDistance; x<=cubeX+viewDistance; x++ )
 		{
-			for( int y=Math.max( 0, chunkY-ViewDistanceY ); y<=chunkY+ViewDistanceY; y++ )
+			for( int y=Math.max( 0, cubeY-ViewDistanceY ); y<=cubeY+ViewDistanceY; y++ )
 			{
-				for( int z=chunkZ-viewDistance; z<=chunkZ+viewDistance; z++ )
+				for( int z=cubeZ-viewDistance; z<=cubeZ+viewDistance; z++ )
 				{
 					out.add( AddressTools.getAddress( x, y, z ) );
 				}
