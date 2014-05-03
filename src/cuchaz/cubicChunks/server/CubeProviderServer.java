@@ -32,7 +32,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import cuchaz.cubicChunks.CubeGenerator;
+import cuchaz.cubicChunks.gen.CubeGenerator;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
@@ -95,17 +95,6 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		m_values.clear();
 		getActiveCubeAddresses( m_values, cubeX, cubeZ );
 		
-		// TEMP
-		if( m_values.isEmpty() )
-		{
-			System.out.println( String.format( "Tried to load column (%d,%d) but nothing was nearby, spawn=(%d,%d,%d)",
-				cubeX, cubeZ,
-				m_worldServer.getSpawnPoint().posX, m_worldServer.getSpawnPoint().posY, m_worldServer.getSpawnPoint().posZ
-			) );
-			Thread.dumpStack();
-			return null;
-		}
-		
 		// actually load those cubes
 		for( long address : m_values )
 		{
@@ -130,12 +119,6 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		Column column = m_loadedColumns.get( AddressTools.getAddress( cubeX, cubeZ ) );
 		if( column != null )
 		{
-			// TEMP
-			if( !column.hasCubes() )
-			{
-				System.out.println( String.format( "provided column (%d,%d) has no cubes!", cubeX, cubeZ ) );
-			}
-			
 			return column;
 		}
 		
@@ -174,99 +157,80 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		long cubeAddress = AddressTools.getAddress( cubeX, cubeY, cubeZ );
 		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
 		
-		// is the column loaded?
+		// step 1: get a column
+		
+		// is the column already loaded?
 		Column column = m_loadedColumns.get( columnAddress );
-		if( column != null )
+		if( column == null )
 		{
-			// is the cube loaded?
-			Cube cube = column.getCube( cubeY );
-			if( cube != null )
-			{
-				return cube;
-			}
-			else
-			{
-				return loadCubeIntoColumn( column, cubeAddress );
-			}
-		}
-		else
-		{
+			// try loading it
 			try
 			{
-				// at this point, column and cube loading are intertwined
-				// so try to load the column and the cube at the same time
-				Cube cube;
 				column = m_loader.loadColumn( m_worldServer, cubeX, cubeZ );
-				if( column == null )
-				{
-					// there wasn't a column, generate a new one
-					column = m_generator.provideChunk( cubeX, cubeZ );
-					
-					// was the cube generated?
-					cube = column.getCube( cubeY );
-					if( cube != null )
-					{
-						// tell the cube it was loaded
-						cube.onLoad();
-					}
-				}
-				else
-				{
-					// the column was loaded
-					column.lastSaveTime = m_worldServer.getTotalWorldTime();
-					
-					// load the cube too
-					cube = loadCubeIntoColumn( column, cubeAddress );
-				}
-				
-				// if we have a valid cube, init the column
-				if( cube != null )
-				{
-					// add the column to the cache
-					m_loadedColumns.put( columnAddress, column );
-					
-					// init the column
-					column.onChunkLoad();
-					column.populateChunk( this, this, cubeX, cubeZ );
-				}
-				
-				return cube;
 			}
 			catch( IOException ex )
 			{
-				log.error( String.format( "Unable to load column (%d,,%d)", cubeX, cubeZ ), ex );
+				log.error( String.format( "Unable to load column (%d,%d)", cubeX, cubeZ ), ex );
 				return null;
 			}
+			
+			if( column == null )
+			{
+				// there wasn't a column, generate a new one
+				column = m_generator.generateColumn( cubeX, cubeZ );
+			}
+			else
+			{
+				// the column was loaded
+				column.lastSaveTime = m_worldServer.getTotalWorldTime();
+			}
 		}
-	}
-	
-	private Cube loadCubeIntoColumn( Column column, long address )
-	{
-		try
+		
+		// step 2: get a cube
+		
+		// is the cube already loaded?
+		Cube cube = column.getCube( cubeY );
+		if( cube == null )
 		{
-			// load the cube
-			Cube cube = m_loader.loadCubeAndAddToColumn( m_worldServer, column, address );
+			// try to load the cube
+			try
+			{
+				cube = m_loader.loadCubeAndAddToColumn( m_worldServer, column, cubeAddress );
+			}
+			catch( IOException ex )
+			{
+				log.error( String.format( "Unable to load cube (%d,%d,%d)", cubeX, cubeY, cubeZ ), ex );
+				return null;
+			}
 			
 			if( cube == null )
 			{
-				// cube does not exist
-				return null;
+				// generate a new cube
+				cube = m_generator.generateCube( column, cubeX, cubeY, cubeZ );
 			}
-			
-			// tell the cube it was loaded
-			cube.onLoad();
-			
-			return cube;
 		}
-		catch( IOException ex )
+		
+		// if we have a valid cube, initialize everything
+		if( cube != null )
 		{
-			log.error( String.format( "Unable to load cube (%d,%d,%d)",
-				AddressTools.getX( address ), AddressTools.getY( address ), AddressTools.getZ( address )
-			), ex );
-			return null;
+			// add the column to the cache
+			m_loadedColumns.put( columnAddress, column );
+			
+			// init the column
+			column.onChunkLoad();
+			column.populateChunk( this, this, cubeX, cubeZ );
+			
+			// init the cube
+			cube.onLoad();
 		}
+		else
+		{
+			// otherwise, the world will never know about the column and it'll just get garbage collected
+		}
+		
+		return cube;
 	}
-
+	
 	@Override
 	public void unloadChunksIfNotNearSpawn( int cubeX, int cubeZ )
 	{

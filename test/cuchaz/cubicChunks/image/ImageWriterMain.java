@@ -1,4 +1,4 @@
-package cuchaz.cubicChunks.gen.procedural.imagewriter;
+package cuchaz.cubicChunks.image;
 import java.util.Random;
 
 import cuchaz.cubicChunks.gen.procedural.OctaveNoise;

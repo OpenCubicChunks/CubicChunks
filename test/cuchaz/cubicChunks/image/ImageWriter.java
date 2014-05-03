@@ -1,4 +1,4 @@
-package cuchaz.cubicChunks.gen.procedural.imagewriter;
+package cuchaz.cubicChunks.image;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
