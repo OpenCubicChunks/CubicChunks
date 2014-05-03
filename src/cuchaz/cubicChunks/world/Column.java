@@ -61,46 +61,6 @@ public class Column extends Chunk
 		init();
 	}
 	
-	public Column( World world, Block[] blocks, byte[] meta, int cubeX, int cubeZ )
-    {
-		// NOTE: this constructor is called by the chunk generator
-		this( world, cubeX, cubeZ );
-		
-		init();
-		
-		int maxY = blocks.length/256; // 256 blocks per y-layer
-		
-		// for each block...
-		for( int localX=0; localX<16; localX++ )
-		{
-			for( int localZ=0; localZ<16; localZ++ )
-			{
-				for( int blockY=0; blockY<maxY; blockY++ )
-				{
-					int blockIndex = localX*maxY*16 | localZ*maxY | blockY;
-					Block block = blocks[blockIndex];
-					if( block != null && block != Blocks.air )
-					{
-						// get the cube
-						int cubeY = Coords.blockToCube( blockY );
-						Cube cube = getOrCreateCube( cubeY );
-						
-						// save the block
-						// NOTE: don't call Cube.setBlock() during chunk loading!
-						// it will send block events and cause bad things to happen
-						int localY = Coords.blockToLocal( blockY );
-						cube.setBlockSilently( localX, localY, localZ, block, meta[blockIndex] );
-						
-						// build the light index
-						m_lightIndex.setOpacity( localX, blockY, localZ, block.getLightOpacity() );
-					}
-				}
-			}
-		}
-		
-		isModified = true;
-    }
-	
 	public Column( World world, int cubeX, int cubeZ, BiomeGenBase[] biomes )
 	{
 		// NOTE: this constructor is called by the cube generator
@@ -114,6 +74,8 @@ public class Column extends Chunk
 		{
 			biomeArray[i] = (byte)biomes[i].biomeID;
 		}
+		
+		isModified = true;
 	}
 
 	private void init( )
@@ -772,12 +734,6 @@ public class Column extends Chunk
 		
 		// isTicked
 		field_150815_m = true;
-		
-		// populate lighting
-		if( !isLightPopulated && isTerrainPopulated )
-		{
-			func_150809_p();
-		}
 		
 		// migrate moved entities to new cubes
 		// UNDONE: optimize out the new

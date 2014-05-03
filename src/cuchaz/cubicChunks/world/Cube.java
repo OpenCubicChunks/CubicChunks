@@ -26,6 +26,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import cuchaz.cubicChunks.gen.CubeBlocks;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeBlockMap;
@@ -60,6 +61,41 @@ public class Cube
 		m_entities = new EntityContainer();
 		m_tileEntities = new CubeBlockMap<TileEntity>();
 		m_isModified = false;
+	}
+	
+	public static Cube generateCubeAndAddToColumn( World world, Column column, int cubeX, int cubeY, int cubeZ, boolean hasSky, CubeBlocks blocks )
+	{
+		Cube cube = new Cube( world, column, cubeX, cubeY, cubeZ, hasSky );
+		
+		// copy over the block data
+		Block block = null;
+		for( int x=0; x<16; x++ )
+		{
+			for( int y=0; y<16; y++ )
+			{
+				for( int z=0; z<16; z++ )
+				{
+					// save the block data
+					block = blocks.getBlock( x, y, z );
+					if( block == null )
+					{
+						continue;
+					}
+					
+					cube.m_storage.func_150818_a( x, y, z, block );
+					cube.m_storage.setExtBlockMetadata( x, y, z, blocks.getMeta( x, y, z ) );
+					
+					// update the column light index
+					column.getLightIndex().setOpacity( x, y, z, block.getLightOpacity() );
+				}
+			}
+		}
+		
+		column.addCube( cube );
+		
+		cube.m_isModified = true;
+		
+		return cube;
 	}
 	
 	public long getAddress( )
@@ -110,13 +146,6 @@ public class Cube
 	public int getBlockMetadata( int x, int y, int z )
 	{
 		return m_storage.getMetadataArray().get( x, y, z );
-	}
-	
-	public void setBlockSilently( int x, int y, int z, Block block, int meta )
-	{
-		m_storage.func_150818_a( x, y, z, block );
-		m_storage.setExtBlockMetadata( x, y, z, meta );
-		m_isModified = true;
 	}
 	
 	public boolean setBlock( int x, int y, int z, Block block, int meta )
@@ -465,4 +494,135 @@ public class Cube
 		}
 		m_isModified = true;
 	}
+	
+	public void populateLight( )
+	{
+		// UNDONE: do me
+		// look at chunkPopulateLighting()
+	}
+	
+	/* for reference
+
+    public void chunkPopulateLighting()
+    {
+        this.isTerrainPopulated = true;
+        this.isLightPopulated = true;
+        
+        if (!this.worldObj.provider.hasNoSky)
+        {
+            if ( this.worldObj.checkChunksExist(this.xPosition * 16 - 1, 0, this.zPosition * 16 - 1, this.xPosition * 16 + 1, 63, this.zPosition * 16 + 1))
+            {
+                for (int var1 = 0; var1 < 16; ++var1)
+                {
+                    for (int var2 = 0; var2 < 16; ++var2)
+                    {
+                        if (!this.chunkPopulateBlockColumnLighting(var1, var2))
+                        {
+                            this.isLightPopulated = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (this.isLightPopulated)
+                {
+                    Chunk var3 = this.worldObj.getChunkFromBlockCoords(this.xPosition * 16 - 1, this.zPosition * 16);
+                    var3.func_150801_a(3);
+                    var3 = this.worldObj.getChunkFromBlockCoords(this.xPosition * 16 + 16, this.zPosition * 16);
+                    var3.func_150801_a(1);
+                    var3 = this.worldObj.getChunkFromBlockCoords(this.xPosition * 16, this.zPosition * 16 - 1);
+                    var3.func_150801_a(0);
+                    var3 = this.worldObj.getChunkFromBlockCoords(this.xPosition * 16, this.zPosition * 16 + 16);
+                    var3.func_150801_a(2);
+                }
+            }
+            else
+            {
+                this.isLightPopulated = false;
+            }
+        }
+    }
+
+    private void chunkPopulateEdgeLighting(int edge) // 0,1,2, or 3
+    {
+        if (this.isTerrainPopulated)
+        {
+            int var2;
+
+            if (edge == 3)
+            {
+                for (var2 = 0; var2 < 16; ++var2)
+                {
+                    this.chunkPopulateBlockColumnLighting(15, var2);
+                }
+            }
+            else if (edge == 1)
+            {
+                for (var2 = 0; var2 < 16; ++var2)
+                {
+                    this.chunkPopulateBlockColumnLighting(0, var2);
+                }
+            }
+            else if (edge == 0)
+            {
+                for (var2 = 0; var2 < 16; ++var2)
+                {
+                    this.chunkPopulateBlockColumnLighting(var2, 15);
+                }
+            }
+            else if (edge == 2)
+            {
+                for (var2 = 0; var2 < 16; ++var2)
+                {
+                    this.chunkPopulateBlockColumnLighting(var2, 0);
+                }
+            }
+        }
+    }
+
+    private boolean chunkPopulateBlockColumnLighting(int localX, int localZ)
+    {
+        int topSegmentBottomBlockY = this.getTopFilledSegment();
+        boolean foundNonTransparentBlock = false;
+        boolean foundOpaqueBlockBelowSeaLevel = false;
+        int blockY;
+
+        // start at the top of the top segment
+        // keep dropping while we're above sea level
+        // or keep dropping until we hit an opaque block below sea level
+        for (blockY = topSegmentBottomBlockY + 16 - 1; blockY > 63 || blockY > 0 && !foundOpaqueBlockBelowSeaLevel; --blockY)
+        {
+            int lightOpacity = this.func_150808_b(localX, blockY, localZ);
+
+            // if we hit an opaque block below sea level
+            if (lightOpacity == 255 && blockY < 63)
+            {
+                foundOpaqueBlockBelowSeaLevel = true;
+            }
+            
+            // check the blocks above the opaque-below-sea-level block for something...
+            if (!foundNonTransparentBlock && lightOpacity > 0)
+            {
+                foundNonTransparentBlock = true;
+            }
+            // if we're below a non-transparent block and we're a clear block, then update lights for this block
+            // func_147451_t (updateLights) only returns false when nearby chunks are missing (and hence we can't do full lighting)
+            else if (foundNonTransparentBlock && lightOpacity == 0 && !this.worldObj.func_147451_t(this.xPosition * 16 + localX, blockY, this.zPosition * 16 + localZ))
+            {
+                return false;
+            }
+        }
+
+        // update lights for light source blocks under and including this block
+        for (; blockY > 0; --blockY)
+        {
+            if (this.func_150810_a(localX, blockY, localZ).getLightValue() > 0)
+            {
+                this.worldObj.func_147451_t(this.xPosition * 16 + localX, blockY, this.zPosition * 16 + localZ);
+            }
+        }
+
+        return true;
+    }
+    */
 }

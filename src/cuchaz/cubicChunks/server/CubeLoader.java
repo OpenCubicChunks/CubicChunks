@@ -194,6 +194,13 @@ public class CubeLoader implements IThreadedFileIO
 		{
 			try
 			{
+				// is the database still active?
+				if( m_db.isClosed() )
+				{
+					log.warn( String.format( "Chunk database was closed before world save could finish! Up to %d columns were not saved!", entries.size() ) );
+					break;
+				}
+				
 				// save the column
 				byte[] data = writeNbtBytes( entry.nbt );
 				m_columns.put( entry.address, data );
@@ -217,6 +224,13 @@ public class CubeLoader implements IThreadedFileIO
 		{
 			try
 			{
+				// is the database still active?
+				if( m_db.isClosed() )
+				{
+					log.warn( String.format( "Chunk database was closed before world save could finish! Up to %d cubes were not saved!", entries.size() ) );
+					break;
+				}
+				
 				// save the cube
 				byte[] data = writeNbtBytes( entry.nbt );
 				m_cubes.put( entry.address, data );

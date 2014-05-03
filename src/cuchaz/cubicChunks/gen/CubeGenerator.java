@@ -4,12 +4,10 @@ import java.util.List;
 import java.util.Random;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockFalling;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.ChunkPosition;
-import net.minecraft.world.SpawnerAnimals;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.BiomeGenBase;
@@ -18,8 +16,6 @@ import net.minecraft.world.gen.MapGenCaves;
 import net.minecraft.world.gen.MapGenRavine;
 import net.minecraft.world.gen.NoiseGeneratorOctaves;
 import net.minecraft.world.gen.NoiseGeneratorPerlin;
-import net.minecraft.world.gen.feature.WorldGenDungeons;
-import net.minecraft.world.gen.feature.WorldGenLakes;
 import net.minecraft.world.gen.structure.MapGenMineshaft;
 import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.MapGenStronghold;
@@ -30,51 +26,67 @@ import cuchaz.cubicChunks.world.Cube;
 
 public class CubeGenerator implements ICubeGenerator
 {
-	// vars I actually understand
 	private World m_world;
-	private final boolean m_mapFeaturesEnabled;
+	private boolean m_mapFeaturesEnabled;
 	private WorldType m_worldType;
 	
 	private Random m_rand;
 	private BiomeGenBase[] m_biomes;
+	private CubeBlocks m_blocks;
 	
-	private MapGenBase m_caveGenerator = new MapGenCaves();
-	private MapGenStronghold m_strongholdGenerator = new MapGenStronghold();
-	private MapGenVillage m_villageGenerator = new MapGenVillage();
-	private MapGenMineshaft m_mineshaftGenerator = new MapGenMineshaft();
-	private MapGenScatteredFeature m_scatteredFeatureGenerator = new MapGenScatteredFeature();
-	private MapGenBase m_ravineGenerator = new MapGenRavine();
+	private MapGenBase m_caveGenerator;
+	private MapGenStronghold m_strongholdGenerator;
+	private MapGenVillage m_villageGenerator;
+	private MapGenMineshaft m_mineshaftGenerator;
+	private MapGenScatteredFeature m_scatteredFeatureGenerator;
+	private MapGenBase m_ravineGenerator;
 	
-	private final float[] m_filter5x5;
+	private float[] m_filter5x5;
 	
-	private double[] m_noise1;
-	private double[] m_noise2;
-	private double[] m_noise3;
-	private double[] m_noise4;
-	private double[] m_noise6;
-	private final double[] m_terrainNoise;
+	private NoiseGeneratorPerlin m_biomeNoiseGen;
+	private NoiseGeneratorOctaves m_terrainNoiseGenLow;
+	private NoiseGeneratorOctaves m_terrainNoiseGenHigh;
+	private NoiseGeneratorOctaves m_terrainNoiseGenT;
+	private NoiseGeneratorOctaves m_terrainNoiseGenXZ;
 	
-	// what the hell do these do?
-	private NoiseGeneratorOctaves noiseGen1;
-	private NoiseGeneratorOctaves noiseGen2;
-	private NoiseGeneratorOctaves noiseGen3;
-	private NoiseGeneratorPerlin noiseGen4;
-	private NoiseGeneratorOctaves noiseGen6;
+	private double[] m_biomeNoise;
+	private double[] m_terrainNoise;
+	private double[] m_terrainNoiseLow;
+	private double[] m_terrainNoiseHigh;
+	private double[] m_terrainNoiseT;
+	private double[] m_terrainNoiseXZ;
 	
 	public CubeGenerator( World world )
 	{
 		m_world = world;
 		m_mapFeaturesEnabled = world.getWorldInfo().isMapFeaturesEnabled();
 		m_worldType = world.getWorldInfo().getTerrainType();
-		m_rand = new Random( world.getSeed() );
 		
-		noiseGen1 = new NoiseGeneratorOctaves( m_rand, 16 );
-		noiseGen2 = new NoiseGeneratorOctaves( m_rand, 16 );
-		noiseGen3 = new NoiseGeneratorOctaves( m_rand, 8 );
-		noiseGen4 = new NoiseGeneratorPerlin( m_rand, 4 );
-		noiseGen6 = new NoiseGeneratorOctaves( m_rand, 16 );
-		m_terrainNoise = new double[825];
-		m_noise4 = new double[256];
+		m_rand = new Random( world.getSeed() );
+		m_biomes = null;
+		m_blocks = new CubeBlocks();
+		
+		m_caveGenerator = new MapGenCaves();
+		m_strongholdGenerator = new MapGenStronghold();
+		m_villageGenerator = new MapGenVillage();
+		m_mineshaftGenerator = new MapGenMineshaft();
+		m_scatteredFeatureGenerator = new MapGenScatteredFeature();
+		m_ravineGenerator = new MapGenRavine();
+		
+		m_biomeNoiseGen = new NoiseGeneratorPerlin( m_rand, 4 );
+		m_terrainNoiseGenLow = new NoiseGeneratorOctaves( m_rand, 16 );
+		m_terrainNoiseGenHigh = new NoiseGeneratorOctaves( m_rand, 16 );
+		m_terrainNoiseGenT = new NoiseGeneratorOctaves( m_rand, 8 );
+		m_terrainNoiseGenXZ = new NoiseGeneratorOctaves( m_rand, 16 );
+		
+		m_terrainNoiseLow = null;
+		m_terrainNoiseHigh = null;
+		m_terrainNoiseT = null;
+		m_terrainNoiseXZ = null;
+		m_terrainNoise = new double[5*5*3];
+		m_biomeNoise = new double[256];
+		
+		m_terrainNoiseXZ = null;
 		
 		// init the 5x5 filter
 		m_filter5x5 = new float[25];
@@ -103,11 +115,6 @@ public class CubeGenerator implements ICubeGenerator
 	@Override
 	public Cube generateCube( Column column, int cubeX, int cubeY, int cubeZ )
 	{
-		// UNDONE: still need to cubify this method
-		
-		Block[] blocks = new Block[65536];
-		byte[] meta = new byte[65536];
-		
 		// init random
 		m_rand.setSeed( (long)cubeX * 341873128712L + (long)cubeZ * 132897987541L );
 		
@@ -120,155 +127,162 @@ public class CubeGenerator implements ICubeGenerator
 		);
 		
 		// actually generate the terrain
-		generateTerrain( cubeX, cubeY, cubeZ, blocks );
-		replaceBlocksForBiome( cubeX, cubeY, cubeZ, blocks, meta, m_biomes );
+		generateTerrain( cubeX, cubeY, cubeZ, m_blocks );
 		
-		// TEMP: don't generate features for now. Need to cubify those generators
-		if( false )
+		/* TEMP: don't do these things yet. They still need to be cubified
+		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks, m_biomes );
+		
+		// generate world features
+		m_caveGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
+		m_ravineGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
+		if( m_mapFeaturesEnabled )
 		{
-			// generate world features
-			m_caveGenerator.func_151539_a( null, m_world, cubeX, cubeZ, blocks );
-			m_ravineGenerator.func_151539_a( null, m_world, cubeX, cubeZ, blocks );
-			if( m_mapFeaturesEnabled )
-			{
-				m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeZ, blocks );
-				m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeZ, blocks );
-				m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeZ, blocks );
-				m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeZ, blocks );
-			}
+			m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
+			m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
+			m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
+			m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
 		}
+		*/
 		
-		// create the cube
-		Cube cube = new Cube( m_world, column, cubeX, cubeY, cubeZ, !m_world.provider.hasNoSky );
-		
-		// UNDONE: set the blocks and meta for the cube
-		
-		// init sky lighting and height
-		// UNDONE: move this out of the generator and into the cube provider?
-		column.generateSkylightMap();
-		
-		return cube;
+		return Cube.generateCubeAndAddToColumn( m_world, column, cubeX, cubeY, cubeZ, !m_world.provider.hasNoSky, m_blocks );
 	}
 	
-	public void generateTerrain( int cubeX, int cubeY, int cubeZ, Block[] blocks )
+	private void generateTerrain( int cubeX, int cubeY, int cubeZ, CubeBlocks blocks )
 	{
-		byte seaLevel = 63;
+		// UNDONE: centralize sea level somehow
+		final int seaLevel = 63;
 		
-		generateNoise( cubeX*4, cubeY*4, cubeZ*4 );
+		generateNoise( cubeX*4, cubeY*2, cubeZ*4 );
 		
-		for( int localXBig=0; localXBig<4; localXBig++ )
+		// use the noise to generate the terrain
+		for( int noiseX=0; noiseX<4; noiseX++ )
 		{
-			int var6 = localXBig * 5;
-			int var7 = ( localXBig + 1 ) * 5;
-			
-			for( int localZBig=0; localZBig<4; localZBig++ )
+			for( int noiseZ=0; noiseZ<4; noiseZ++ )
 			{
-				int var9 = ( var6 + localZBig ) * 33;
-				int var10 = ( var6 + localZBig + 1 ) * 33;
-				int var11 = ( var7 + localZBig ) * 33;
-				int var12 = ( var7 + localZBig + 1 ) * 33;
-				
-				for( int blockYBig=0; blockYBig<32; blockYBig++ )
+				for( int noiseY=0; noiseY<2; noiseY++ )
 				{
-					double var16 = m_terrainNoise[var9 + blockYBig];
-					double var18 = m_terrainNoise[var10 + blockYBig];
-					double var20 = m_terrainNoise[var11 + blockYBig];
-					double var22 = m_terrainNoise[var12 + blockYBig];
-					double var24 = ( m_terrainNoise[var9 + blockYBig + 1] - var16 )/8;
-					double var26 = ( m_terrainNoise[var10 + blockYBig + 1] - var18 )/8;
-					double var28 = ( m_terrainNoise[var11 + blockYBig + 1] - var20 )/8;
-					double var30 = ( m_terrainNoise[var12 + blockYBig + 1] - var22 )/8;
+					// get the noise samples
+					double noiseXYZ = m_terrainNoise[( noiseX*5 + noiseZ )*3 + noiseY];
+					double noiseXYZp = m_terrainNoise[( noiseX*5 + noiseZ + 1 )*3 + noiseY];
+					double noiseXpYZ = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ )*3 + noiseY];
+					double noiseXpYZp = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ + 1 )*3 + noiseY];
 					
-					for( int blockYSmall=0; blockYSmall<8; blockYSmall++ )
+					double noiseXYpZ = m_terrainNoise[( noiseX*5 + noiseZ )*3 + noiseY + 1];
+					double noiseXYpZp = m_terrainNoise[( noiseX*5 + noiseZ + 1 )*3 + noiseY + 1];
+					double noiseXpYpZ = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ )*3 + noiseY + 1];
+					double noiseXpYpZp = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ + 1 )*3 + noiseY + 1];
+					
+					// interpolate the noise linearly in the y dimension
+					double yStepXZ = ( noiseXYpZ - noiseXYZ )/8;
+					double yStepXZp = ( noiseXYpZp - noiseXYZp )/8;
+					double yStepXpZ = ( noiseXpYpZ - noiseXpYZ )/8;
+					double yStepXpZp = ( noiseXpYpZp - noiseXpYZp )/8;
+					
+					for( int y=0; y<8; y++ )
 					{
-						int blockY = blockYBig*8 + blockYSmall;
+						int localY = noiseY*8 + y;
+						int blockY = Coords.localToBlock( cubeY, localY );
 						
-						double var35 = var16;
-						double var37 = var18;
-						double var39 = ( var20 - var16 )/4;
-						double var41 = ( var22 - var18 )/4;
+						// interpolate noise linearly in the x dimension
+						double valXYZ = noiseXYZ;
+						double valXYZp = noiseXYZp;
+						double xStepYZ = ( noiseXpYZ - noiseXYZ )/4;
+						double xStepYZp = ( noiseXpYZp - noiseXYZp )/4;
 						
-						for( int localXSmall=0; localXSmall<4; localXSmall++ )
+						for( int x=0; x<4; x++ )
 						{
-							int localX = localXBig*4 + localXSmall;
+							int localX = noiseX*4 + x;
 							
-							double var50 = ( var37 - var35 )/4;
-							double var48 = var35 - var50;
+							// interpolate noise linearly in the z dimension
+							double zStepXY = ( valXYZp - valXYZ )/4;
+							double val = valXYZ;
 							
-							for( int localZSmall=0; localZSmall<4; localZSmall++ )
+							for( int z=0; z<4; z++ )
 							{
-								int localZ = localZBig*4 + localZSmall;
-								int blockIndex = localX << 12 | localZ << 8 | blockY;
+								int localZ = noiseZ*4 + z;
 								
-								if( ( var48 += var50 ) > 0.0D )
+								if( val > 0.0D )
 								{
-									blocks[blockIndex] = Blocks.stone;
+									blocks.setBlock( localX, localY, localZ, Blocks.stone );
 								}
 								else if( blockY < seaLevel )
 								{
-									blocks[blockIndex] = Blocks.water;
+									blocks.setBlock( localX, localY, localZ, Blocks.water );
 								}
 								else
 								{
-									blocks[blockIndex] = null;
+									blocks.setBlock( localX, localY, localZ, null );
 								}
+								
+								// one step in the z dimension
+								val += zStepXY;
 							}
 							
-							var35 += var39;
-							var37 += var41;
+							// one step in the x dimension
+							valXYZ += xStepYZ;
+							valXYZp += xStepYZp;
 						}
 						
-						var16 += var24;
-						var18 += var26;
-						var20 += var28;
-						var22 += var30;
+						// one step in the y dimension
+						noiseXYZ += yStepXZ;
+						noiseXYZp += yStepXZp;
+						noiseXpYZ += yStepXpZ;
+						noiseXpYZp += yStepXpZp;
 					}
 				}
 			}
 		}
 	}
 	
-	public void replaceBlocksForBiome( int cubeX, int cubeY, int cubeZ, Block[] blocks, byte[] metadata, BiomeGenBase[] biomesForGeneration )
+	private void generateNoise( int noiseX, int noiseY, int noiseZ )
 	{
-		double var6 = 0.03125D;
-		m_noise4 = noiseGen4.func_151599_a( m_noise4, (double)( cubeX * 16 ), (double)( cubeZ * 16 ), 16, 16, var6 * 2.0D, var6 * 2.0D, 1.0D );
+		// NOTE: the noise coordinate system samples world space differently in each dimension
+		//   x,z: once every 4 blocks
+		//   y:   once every 8 blocks
+		// this means each cube uses 5 samples in x, 5 samples in z, and 3 samples in y
+		final double noiseScale = 684.412;
+		m_terrainNoiseLow = m_terrainNoiseGenLow.generateNoiseOctaves( m_terrainNoiseLow,
+			noiseX, noiseY, noiseZ,            // offset
+			5, 3, 5,                           // size
+			noiseScale, noiseScale, noiseScale // scale
+		);
+		m_terrainNoiseHigh = m_terrainNoiseGenHigh.generateNoiseOctaves( m_terrainNoiseHigh,
+			noiseX, noiseY, noiseZ,
+			5, 3, 5,
+			noiseScale, noiseScale, noiseScale
+		);
+		m_terrainNoiseT = m_terrainNoiseGenT.generateNoiseOctaves( m_terrainNoiseT,
+			noiseX, noiseY, noiseZ,
+			5, 3, 5,
+			noiseScale/80, noiseScale/160, noiseScale/80
+		);
+		m_terrainNoiseXZ = m_terrainNoiseGenXZ.generateNoiseOctaves( m_terrainNoiseXZ,
+			noiseX, 10, noiseZ,
+			5, 1, 5,
+			200, 1, 200
+		);
 		
-		for( int xRel = 0; xRel < 16; ++xRel )
+		int noiseIndex = 0;
+		int noiseIndexXZ = 0;
+		
+		for( int x=0; x<=4; x++ )
 		{
-			for( int zRel = 0; zRel < 16; ++zRel )
+			for( int z=0; z<=4; z++ )
 			{
-				BiomeGenBase biomeGenBase = biomesForGeneration[zRel + xRel * 16];
-				biomeGenBase.func_150573_a( m_world, m_rand, blocks, metadata, cubeX * 16 + xRel, cubeZ * 16 + zRel, m_noise4[zRel + xRel * 16] );
-			}
-		}
-	}
-	
-	private void generateNoise( int x, int y, int z )
-	{
-		m_noise1 = noiseGen1.generateNoiseOctaves( m_noise1, x, y, z, 5, 33, 5, 684.412D, 684.412D, 684.412D );
-		m_noise2 = noiseGen2.generateNoiseOctaves( m_noise2, x, y, z, 5, 33, 5, 684.412D, 684.412D, 684.412D );
-		m_noise3 = noiseGen3.generateNoiseOctaves( m_noise3, x, y, z, 5, 33, 5, 8.555150000000001D, 4.277575000000001D, 8.555150000000001D );
-		m_noise6 = noiseGen6.generateNoiseOctaves( m_noise6, x, z, 5, 5, 200.0D, 200.0D, 0.5D );
-		
-		int var12 = 0;
-		int var13 = 0;
-		
-		for( int u=0; u<5; u++ )
-		{
-			for( int v=0; v<5; v++ )
-			{
-				float var18 = 0.0F;
-				float var19 = 0.0F;
-				float sumHeightScale = 0.0F;
+				BiomeGenBase biome = m_biomes[x + 2 + ( z + 2 )*10];
 				
-				BiomeGenBase uvBiome = m_biomes[u + 2 + ( v + 2 )*10];
+				// compute biome height info
+				float maxHeightConditioned = 0;
+				float minHeightConditioned = 0;
+				float sumHeightScale = 0;
 				
 				// apply 5x5 filter
-				for( int i = -2; i <= 2; ++i )
+				for( int i=-2; i<=2; i++ )
 				{
-					for( int j = -2; j <= 2; ++j )
+					for( int j=-2; j<=2; j++ )
 					{
-						BiomeGenBase ijBiome = m_biomes[u + i + 2 + ( v + j + 2 )*10];
+						BiomeGenBase ijBiome = m_biomes[x + i + 2 + ( z + j + 2 )*10];
+						
 						float minHeight = ijBiome.minHeight;
 						float maxHeight = ijBiome.maxHeight;
 						
@@ -279,84 +293,92 @@ public class CubeGenerator implements ICubeGenerator
 							maxHeight = maxHeight*4 + 1;
 						}
 						
+						// compute the height scale
 						float heightScale = m_filter5x5[i + 2 + ( j + 2 )*5]/( minHeight + 2.0F );
-						
-						if( ijBiome.minHeight > uvBiome.minHeight )
+						if( ijBiome.minHeight > biome.minHeight )
 						{
 							heightScale /= 2;
 						}
 						
-						var18 += maxHeight * heightScale;
-						var19 += minHeight * heightScale;
+						maxHeightConditioned += maxHeight * heightScale;
+						minHeightConditioned += minHeight * heightScale;
 						sumHeightScale += heightScale;
 					}
 				}
 				
-				var18 /= sumHeightScale;
-				var19 /= sumHeightScale;
-				var18 = var18 * 0.9F + 0.1F;
-				var19 = ( var19 * 4.0F - 1.0F ) / 8.0F;
-				double var46 = m_noise6[var13] / 8000.0D;
+				maxHeightConditioned /= sumHeightScale;
+				minHeightConditioned /= sumHeightScale;
 				
-				if( var46 < 0.0D )
+				maxHeightConditioned = maxHeightConditioned * 0.9F + 0.1F;
+				minHeightConditioned = ( minHeightConditioned * 4.0F - 1.0F ) / 8.0F;
+				
+				// get and condition XZ noise
+				double noiseXZ = m_terrainNoiseXZ[noiseIndexXZ++]/8000;
+				if( noiseXZ < 0 )
 				{
-					var46 = -var46 * 0.3D;
+					noiseXZ = -noiseXZ * 0.3;
 				}
-				
-				var46 = var46 * 3.0D - 2.0D;
-				
-				if( var46 < 0.0D )
+				noiseXZ = noiseXZ * 3 - 2;
+				if( noiseXZ < 0 )
 				{
-					var46 /= 2.0D;
+					noiseXZ /= 2;
 					
-					if( var46 < -1.0D )
+					if( noiseXZ < -1 )
 					{
-						var46 = -1.0D;
+						noiseXZ = -1;
 					}
 					
-					var46 /= 1.4D;
-					var46 /= 2.0D;
+					noiseXZ /= 1.4;
+					noiseXZ /= 2;
 				}
 				else
 				{
-					if( var46 > 1.0D )
+					if( noiseXZ > 1 )
 					{
-						var46 = 1.0D;
+						noiseXZ = 1;
 					}
 					
-					var46 /= 8.0D;
+					noiseXZ /= 8;
 				}
+				noiseXZ *= 0.2*8.5/8;
 				
-				++var13;
-				double var47 = (double)var19;
-				double var48 = (double)var18;
-				var47 += var46 * 0.2D;
-				var47 = var47 * 8.5D / 8.0D;
-				double var29 = 8.5D + var47 * 4.0D;
-				
-				for( int var31 = 0; var31 < 33; ++var31 )
+				// handle the y dimension
+				double yInfo = 8.5 + ( (double)minHeightConditioned + noiseXZ )*4;
+				for( int y=0; y<=2; y++ )
 				{
-					double var32 = ( (double)var31 - var29 ) * 12.0D * 128.0D / 256.0D / var48;
-					
-					if( var32 < 0.0D )
+					// compute the noise offset
+					double noiseOffset = ( (double)( y + noiseY ) - yInfo ) * 12.0D * 128.0D / 256.0D / maxHeightConditioned;
+					if( noiseOffset < 0.0D )
 					{
-						var32 *= 4.0D;
+						noiseOffset *= 4.0D;
 					}
 					
-					double var34 = m_noise1[var12] / 512.0D;
-					double var36 = m_noise2[var12] / 512.0D;
-					double var38 = ( m_noise3[var12] / 10.0D + 1.0D ) / 2.0D;
-					double var40 = MathHelper.denormalizeClamp( var34, var36, var38 ) - var32;
-					
-					if( var31 > 29 )
-					{
-						double var42 = (double)( (float)( var31 - 29 ) / 3.0F );
-						var40 = var40 * ( 1.0D - var42 ) + -10.0D * var42;
-					}
-					
-					m_terrainNoise[var12] = var40;
-					++var12;
+					double lowNoise = m_terrainNoiseLow[noiseIndex] / 512.0D;
+					double highNoise = m_terrainNoiseHigh[noiseIndex] / 512.0D;
+					double tNoise = ( m_terrainNoiseT[noiseIndex] / 10.0D + 1.0D ) / 2.0D;
+					m_terrainNoise[noiseIndex++] = MathHelper.denormalizeClamp( lowNoise, highNoise, tNoise ) - noiseOffset;
 				}
+			}
+		}
+	}
+	
+	private void replaceBlocksForBiome( int cubeX, int cubeY, int cubeZ, Block[] blocks, byte[] metadata, BiomeGenBase[] biomes )
+	{
+		m_biomeNoise = m_biomeNoiseGen.func_151599_a( m_biomeNoise, Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ), 16, 16, 16, 16, 1 );
+		
+		for( int localX=0; localX<16; localX++ )
+		{
+			for( int localZ=0; localZ<16; localZ++ )
+			{
+				int xzCoord = localZ | localX << 4;
+				// UNDONE: need to cubeify this
+				biomes[xzCoord].func_150573_a(
+					m_world, m_rand,
+					blocks, metadata,
+					Coords.localToBlock( cubeX, localX ),
+					Coords.localToBlock( cubeZ, localZ ),
+					m_biomeNoise[xzCoord]
+				);
 			}
 		}
 	}
@@ -364,18 +386,8 @@ public class CubeGenerator implements ICubeGenerator
 	@Override
 	public void populate( ICubeGenerator generator, int cubeX, int cubeY, int cubeZ )
 	{
-		// TEMP: check height
-        for( int x = 0; x < 16; x++ )
-        {
-        	for( int z = 0; z < 16; z++ )
-        	{
-        		if( m_world.getHeightValue( cubeX << 4 | x, cubeZ << 4 | z ) <= 0 )
-        		{
-        			throw new Error( "World doesn't know about chunk!" );
-        		}
-        	}
-        }
-        
+		/* TEMP: don't do population yet
+		
         // field_149832_M = fallInstantly
 		BlockFalling.field_149832_M = true;
 		int xAbs = cubeX * 16;
@@ -452,6 +464,7 @@ public class CubeGenerator implements ICubeGenerator
 		}
 		
 		BlockFalling.field_149832_M = false;
+		*/
 	}
 	
 	@Override
@@ -463,20 +476,29 @@ public class CubeGenerator implements ICubeGenerator
 				: var5.getSpawnableList( par1EnumCreatureType );
 	}
 	
-	public ChunkPosition func_147416_a( World world, String str, int cubeX, int cubeY, int cubeZ )
+	@Override
+	public ChunkPosition getNearestStructure( World world, String structureType, int blockX, int blockY, int blockZ )
 	{
-		return "Stronghold".equals( str ) && m_strongholdGenerator != null ? m_strongholdGenerator.func_151545_a( world, cubeX, cubeY, cubeZ ) : null;
+		if( "Stronghold".equals( structureType ) && m_strongholdGenerator != null )
+		{
+			return m_strongholdGenerator.func_151545_a( world, blockX, blockY, blockZ );
+		}
+		return null;
 	}
 	
 	@Override
 	public void recreateStructures( int cubeX, int cubeY, int cubeZ )
 	{
-		if( m_mapFeaturesEnabled )
+		// disable this for now until these things can be cubified
+		if( false )
 		{
-			m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
-			m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
-			m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
-			m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
+			if( m_mapFeaturesEnabled )
+			{
+				m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
+				m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
+				m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
+				m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
+			}
 		}
 	}
 }

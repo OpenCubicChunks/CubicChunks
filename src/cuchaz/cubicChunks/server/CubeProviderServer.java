@@ -32,8 +32,8 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import cuchaz.cubicChunks.gen.CubeGenerator;
 import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.gen.CubeGenerator;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.BlankColumn;
@@ -189,6 +189,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		// step 2: get a cube
 		
 		// is the cube already loaded?
+		boolean cubeWasGenerated = false;
 		Cube cube = column.getCube( cubeY );
 		if( cube == null )
 		{
@@ -207,6 +208,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			{
 				// generate a new cube
 				cube = m_generator.generateCube( column, cubeX, cubeY, cubeZ );
+				cubeWasGenerated = true;
 			}
 		}
 		
@@ -218,7 +220,19 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			
 			// init the column
 			column.onChunkLoad();
-			column.populateChunk( this, this, cubeX, cubeZ );
+			column.generateSkylightMap();
+			
+			if( cubeWasGenerated )
+			{
+				// populate the cube
+				cube.populateLight();
+				
+				// NOTE: have to do generator population after the cube is lit
+				m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
+			}
+			
+			column.isLightPopulated = true;
+			column.isTerrainPopulated = true;
 			
 			// init the cube
 			cube.onLoad();
@@ -366,7 +380,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	@Override
 	public ChunkPosition func_147416_a( World world, String structureType, int blockX, int blockY, int blockZ )
 	{
-		return m_generator.func_147416_a( world, structureType, blockX, blockY, blockZ );
+		return m_generator.getNearestStructure( world, structureType, blockX, blockY, blockZ );
 	}
 	
 	@SuppressWarnings( "unchecked" )
