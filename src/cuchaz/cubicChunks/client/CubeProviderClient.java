@@ -39,7 +39,7 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeProvi
 	{
 		// is this chunk already loaded?
 		LongHashMap chunkMapping = ChunkProviderClientAccessor.getChunkMapping( this );
-		Column column = (Column)chunkMapping.getValueByKey( ChunkCoordIntPair.cubeXZ2Int( cubeX, cubeZ ) );
+		Column column = (Column)chunkMapping.getValueByKey( ChunkCoordIntPair.chunkXZ2Int( cubeX, cubeZ ) );
 		if( column != null )
 		{
 			return column;
@@ -48,7 +48,7 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeProvi
 		// make a new one
 		column = new Column( m_world, cubeX, cubeZ );
 		
-		chunkMapping.add( ChunkCoordIntPair.cubeXZ2Int( cubeX, cubeZ ), column );
+		chunkMapping.add( ChunkCoordIntPair.chunkXZ2Int( cubeX, cubeZ ), column );
 		ChunkProviderClientAccessor.getChunkListing( this ).add( column );
 		
 		column.isChunkLoaded = true;
