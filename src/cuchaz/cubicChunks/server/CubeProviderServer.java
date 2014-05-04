@@ -220,19 +220,18 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			
 			// init the column
 			column.onChunkLoad();
+			column.isTerrainPopulated = true;
+			
+			// recompute the sky light map
 			column.generateSkylightMap();
 			
 			if( cubeWasGenerated )
 			{
-				// populate the cube
-				cube.populateLight();
+				column.isLightPopulated = false;
 				
 				// NOTE: have to do generator population after the cube is lit
 				m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
 			}
-			
-			column.isLightPopulated = true;
-			column.isTerrainPopulated = true;
 			
 			// init the cube
 			cube.onLoad();

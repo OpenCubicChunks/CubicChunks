@@ -194,13 +194,6 @@ public class CubeLoader implements IThreadedFileIO
 		{
 			try
 			{
-				// is the database still active?
-				if( m_db.isClosed() )
-				{
-					log.warn( String.format( "Chunk database was closed before world save could finish! Up to %d columns were not saved!", entries.size() ) );
-					break;
-				}
-				
 				// save the column
 				byte[] data = writeNbtBytes( entry.nbt );
 				m_columns.put( entry.address, data );
@@ -224,13 +217,6 @@ public class CubeLoader implements IThreadedFileIO
 		{
 			try
 			{
-				// is the database still active?
-				if( m_db.isClosed() )
-				{
-					log.warn( String.format( "Chunk database was closed before world save could finish! Up to %d cubes were not saved!", entries.size() ) );
-					break;
-				}
-				
 				// save the cube
 				byte[] data = writeNbtBytes( entry.nbt );
 				m_cubes.put( entry.address, data );
@@ -426,15 +412,6 @@ public class CubeLoader implements IThreadedFileIO
 		// NBT types:
 		// 0      1       2        3      4       5        6         7         8         9       10          11
 		// "END", "BYTE", "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "BYTE[]", "STRING", "LIST", "COMPOUND", "INT[]"
-		
-		// TEMP
-		int targetCubeX = Coords.blockToCube( 221 );
-		int targetCubeY = Coords.blockToCube( 131 );
-		int targetCubeZ = Coords.blockToCube( -121 );
-		if( x == targetCubeX && y == targetCubeY && z == targetCubeZ )
-		{
-			System.out.println( "Loading target chunk from NBT!" );
-		}
 		
 		// check the version number
 		byte version = nbt.getByte( "v" );
