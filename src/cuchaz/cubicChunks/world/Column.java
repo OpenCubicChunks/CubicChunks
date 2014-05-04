@@ -61,46 +61,6 @@ public class Column extends Chunk
 		init();
 	}
 	
-	public Column( World world, Block[] blocks, byte[] meta, int cubeX, int cubeZ )
-    {
-		// NOTE: this constructor is called by the chunk generator
-		this( world, cubeX, cubeZ );
-		
-		init();
-		
-		int maxY = blocks.length/256; // 256 blocks per y-layer
-		
-		// for each block...
-		for( int localX=0; localX<16; localX++ )
-		{
-			for( int localZ=0; localZ<16; localZ++ )
-			{
-				for( int blockY=0; blockY<maxY; blockY++ )
-				{
-					int blockIndex = localX*maxY*16 | localZ*maxY | blockY;
-					Block block = blocks[blockIndex];
-					if( block != null && block != Blocks.air )
-					{
-						// get the cube
-						int cubeY = Coords.blockToCube( blockY );
-						Cube cube = getOrCreateCube( cubeY );
-						
-						// save the block
-						// NOTE: don't call Cube.setBlock() during chunk loading!
-						// it will send block events and cause bad things to happen
-						int localY = Coords.blockToLocal( blockY );
-						cube.setBlockSilently( localX, localY, localZ, block, meta[blockIndex] );
-						
-						// build the light index
-						m_lightIndex.setOpacity( localX, blockY, localZ, block.getLightOpacity() );
-					}
-				}
-			}
-		}
-		
-		isModified = true;
-    }
-	
 	public Column( World world, int cubeX, int cubeZ, BiomeGenBase[] biomes )
 	{
 		// NOTE: this constructor is called by the cube generator
@@ -114,6 +74,8 @@ public class Column extends Chunk
 		{
 			biomeArray[i] = (byte)biomes[i].biomeID;
 		}
+		
+		isModified = true;
 	}
 
 	private void init( )
@@ -773,7 +735,7 @@ public class Column extends Chunk
 		// isTicked
 		field_150815_m = true;
 		
-		// populate lighting
+		// keep trying initial light calculations if needed
 		if( !isLightPopulated && isTerrainPopulated )
 		{
 			func_150809_p();
@@ -1211,6 +1173,146 @@ public class Column extends Chunk
 					// then update this block
 					worldObj.func_147451_t( blockX, blockY, blockZ );
 				}
+			}
+		}
+	}
+	
+	@Override // populateLighting
+	public void func_150809_p( )
+	{
+		isLightPopulated = true;
+		
+		if( worldObj.provider.hasNoSky )
+		{
+			return;
+		}
+		
+		// are the nearby chunks there?
+		int blockX = Coords.cubeToMinBlock( xPosition );
+		int blockZ = Coords.cubeToMinBlock( zPosition );
+		if( !worldObj.checkChunksExist( blockX - 1, 0, blockZ - 1, blockX + 1, 0, blockZ + 1 ) )
+		{
+			// NOTE: checkChunksExist ignores the y cubes
+			isLightPopulated = false;
+			return;
+        }
+		
+		for( int localX=0; localX<16; localX++ )
+		{
+			for( int localZ=0; localZ<16; localZ++ )
+			{
+				boolean wasLit = populateBlockColumnLighting( localX, localZ );
+				
+				// if the lighting failed, then try again later
+				if( !wasLit )
+				{
+					isLightPopulated = false;
+					return;
+				}
+			}
+		}
+		
+		// try to populate neighboring columns too
+		populateNeighborLight( -1, 0, 3 );
+		populateNeighborLight( 1, 0, 1 );
+		populateNeighborLight( 0, -1, 0 );
+		populateNeighborLight( -1, 1, 2 );
+	}
+	
+	private void populateNeighborLight( int dcubeX, int dcubeZ, int edge )
+	{
+		Column column = (Column)worldObj.getChunkFromChunkCoords( xPosition + dcubeX, zPosition + dcubeZ );
+		column.populateEdgeLighting( edge );
+	}
+	
+	private boolean populateBlockColumnLighting( int localX, int localZ )
+	{
+		final int seaLevel = 63;
+		
+		int blockX = Coords.localToBlock( xPosition, localX );
+		int blockZ = Coords.localToBlock( zPosition, localZ );
+		
+		if( blockX == 366 && blockZ == -108 )
+		{
+			System.out.println( String.format( "topBlockY=%d", getLightIndex().getTopNonTransparentBlock( localX, localZ ) ) );
+		}
+		
+		boolean foundNonTransparentBlock = false;
+		
+		int blockY = getLightIndex().getTopNonTransparentBlock( localX, localZ );
+		for( ; blockY > 0; blockY-- )
+		{
+			int lightOpacity = func_150808_b( localX, blockY, localZ );
+			
+			if( lightOpacity == 255 && blockY < seaLevel )
+			{
+				// if we hit an opaque block below sea level, stop early
+				break;
+			}
+			
+			if( lightOpacity > 0 )
+			{
+				foundNonTransparentBlock = true;
+			}
+			
+			// if we're below a non-transparent block and we're a clear block, then update lights for this block			
+			if( foundNonTransparentBlock && lightOpacity == 0 )
+			{
+				boolean wasLit = worldObj.func_147451_t( blockX, blockY, blockZ );
+				
+				// if lighting failed, try again later
+				if( !wasLit )
+				{
+					return false;
+				}
+			}
+		}
+		
+		// update lights for light sources at this block and below
+		for( ; blockY > 0; blockY-- )
+		{
+			if( func_150810_a( localX, blockY, localZ ).getLightValue() > 0 )
+			{
+				worldObj.func_147451_t( blockX, blockY, blockZ );
+			}
+		}
+		
+		return true;
+	}
+	
+	private void populateEdgeLighting( int edge ) // 0,1,2, or 3
+	{
+		if( !isTerrainPopulated )
+		{
+			return;
+		}
+		
+		if( edge == 3 )
+		{
+			for( int i=0; i<16; i++ )
+			{
+				populateBlockColumnLighting( 15, i );
+			}
+		}
+		else if( edge == 1 )
+		{
+			for( int i=0; i<16; i++ )
+			{
+				populateBlockColumnLighting( 0, i );
+			}
+		}
+		else if( edge == 0 )
+		{
+			for( int i=0; i<16; i++ )
+			{
+				populateBlockColumnLighting( i, 15 );
+			}
+		}
+		else if( edge == 2 )
+		{
+			for( int i=0; i<16; i++ )
+			{
+				populateBlockColumnLighting( i, 0 );
 			}
 		}
 	}

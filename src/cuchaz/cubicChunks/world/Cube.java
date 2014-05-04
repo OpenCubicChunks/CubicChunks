@@ -26,6 +26,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import cuchaz.cubicChunks.gen.CubeBlocks;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeBlockMap;
@@ -60,6 +61,42 @@ public class Cube
 		m_entities = new EntityContainer();
 		m_tileEntities = new CubeBlockMap<TileEntity>();
 		m_isModified = false;
+	}
+	
+	public static Cube generateCubeAndAddToColumn( World world, Column column, int cubeX, int cubeY, int cubeZ, boolean hasSky, CubeBlocks blocks )
+	{
+		Cube cube = new Cube( world, column, cubeX, cubeY, cubeZ, hasSky );
+		
+		// copy over the block data
+		Block block = null;
+		for( int x=0; x<16; x++ )
+		{
+			for( int y=0; y<16; y++ )
+			{
+				for( int z=0; z<16; z++ )
+				{
+					// save the block data
+					block = blocks.getBlock( x, y, z );
+					if( block == null )
+					{
+						continue;
+					}
+					
+					cube.m_storage.func_150818_a( x, y, z, block );
+					cube.m_storage.setExtBlockMetadata( x, y, z, blocks.getMeta( x, y, z ) );
+					
+					// update the column light index
+					int blockY = Coords.localToBlock( cubeY, y );
+					column.getLightIndex().setOpacity( x, blockY, z, block.getLightOpacity() );
+				}
+			}
+		}
+		
+		column.addCube( cube );
+		
+		cube.m_isModified = true;
+		
+		return cube;
 	}
 	
 	public long getAddress( )
@@ -110,13 +147,6 @@ public class Cube
 	public int getBlockMetadata( int x, int y, int z )
 	{
 		return m_storage.getMetadataArray().get( x, y, z );
-	}
-	
-	public void setBlockSilently( int x, int y, int z, Block block, int meta )
-	{
-		m_storage.func_150818_a( x, y, z, block );
-		m_storage.setExtBlockMetadata( x, y, z, meta );
-		m_isModified = true;
 	}
 	
 	public boolean setBlock( int x, int y, int z, Block block, int meta )

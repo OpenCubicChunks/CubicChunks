@@ -352,7 +352,7 @@ public class CubePlayerManager extends PlayerManager
 		info.sortOutgoingCubes();
 		
 		// pull off enough cubes from the queue to fit in a packet
-		final int MaxCubesToSend = 20;
+		final int MaxCubesToSend = 100;
 		List<Cube> cubesToSend = new ArrayList<Cube>();
 		List<TileEntity> tileEntitiesToSend = new ArrayList<TileEntity>();
 		Iterator<Cube> iter = info.outgoingCubes.iterator();
@@ -401,6 +401,9 @@ public class CubePlayerManager extends PlayerManager
 		
 		// send the cube data
 		player.playerNetServerHandler.sendPacket( new S26PacketMapChunkBulk( columnsToSend ) );
+		
+		// TEMP
+		System.out.println( String.format( "Send %d cubes, %d remaining", cubesToSend.size(), info.outgoingCubes.size() ) );
 		
 		// send tile entity data
 		for( TileEntity tileEntity : tileEntitiesToSend )
