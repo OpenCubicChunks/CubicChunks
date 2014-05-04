@@ -12,16 +12,22 @@ package cuchaz.cubicChunks.server;
 
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
+import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
+import cuchaz.cubicChunks.lighting.LightingManager;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 
-public class CubeWorldServer extends WorldServer
+public class CubeWorldServer extends WorldServer implements CubeWorld
 {
+	private LightingManager m_lightingManager;
+	
 	public CubeWorldServer( MinecraftServer server, ISaveHandler saveHandler, String worldName, int dimension, WorldSettings settings, Profiler profiler )
 	{
 		super( server, saveHandler, worldName, dimension, settings, profiler );
@@ -29,6 +35,9 @@ public class CubeWorldServer extends WorldServer
 		// set the player manager
 		CubePlayerManager playerManager = new CubePlayerManager( this, server.getConfigurationManager().getViewDistance() );
 		WorldServerAccessor.setPlayerManager( this, playerManager );
+		
+		// init the lighting manager
+		m_lightingManager = new LightingManager( this, getCubeProvider() );
 	}
 	
 	@Override
@@ -38,6 +47,26 @@ public class CubeWorldServer extends WorldServer
 		WorldServerAccessor.setChunkProvider( this, chunkProvider );
 		return chunkProvider;
     }
+	
+	@Override
+	public CubeProvider getCubeProvider( )
+	{
+		return (CubeProvider)chunkProvider;
+	}
+	
+	@Override
+	public LightingManager getLightingManager( )
+	{
+		return m_lightingManager;
+	}
+	
+	@Override
+	public void tick( )
+	{
+		super.tick();
+		
+		m_lightingManager.tick();
+	}
 	
 	public long getSpawnPointCubeAddress( )
 	{
@@ -79,4 +108,15 @@ public class CubeWorldServer extends WorldServer
 		return true;
 	}
 	*/
+	
+	@Override
+	public boolean updateLightByType( EnumSkyBlock lightType, int blockX, int blockY, int blockZ )
+    {
+		/* TEMP: just forward to the new lighting manager for now, but eventually, we should replace all calls to this
+		// don't use this, use the new lighting manager
+		throw new UnsupportedOperationException();
+		*/
+		
+		return m_lightingManager.computeDiffuseLighting( blockX, blockY, blockZ, lightType );
+    }
 }

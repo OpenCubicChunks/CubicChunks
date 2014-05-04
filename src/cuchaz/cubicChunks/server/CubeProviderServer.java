@@ -130,7 +130,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		}
 		else
 		{
-			return m_blankColumn;			
+			return m_blankColumn;
 		}
 	}
 	
@@ -222,15 +222,17 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			column.onChunkLoad();
 			column.isTerrainPopulated = true;
 			
-			// recompute the sky light map
-			column.generateSkylightMap();
-			
 			if( cubeWasGenerated )
 			{
 				column.isLightPopulated = false;
 				
+				// recompute the sky light
+				m_worldServer.getLightingManager().queueSkyLightCalculation( columnAddress );
+				m_worldServer.getLightingManager().queueFirstLightCalculation( columnAddress );
+				
 				// NOTE: have to do generator population after the cube is lit
-				m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
+				// UNDONE: make a chunk population queue
+				//m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
 			}
 			
 			// init the cube

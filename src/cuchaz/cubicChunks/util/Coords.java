@@ -25,14 +25,19 @@ public class Coords
 		return val >> 4;
 	}
 	
-	public static int localToBlock( int chunk, int local )
+	public static int localToBlock( int cubeVal, int localVal )
 	{
-		return cubeToMinBlock( chunk ) + local;
+		return cubeToMinBlock( cubeVal ) + localVal;
 	}
 	
-	public static int cubeToMinBlock( int chunk )
+	public static int cubeToMinBlock( int val )
 	{
-		return chunk << 4;
+		return val << 4;
+	}
+	
+	public static int cubeToMaxBlock( int val )
+	{
+		return cubeToMinBlock( val ) + 15;
 	}
 	
 	public static int getCubeXForEntity( Entity entity )

@@ -36,6 +36,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.accessors.ChunkAccessor;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Bits;
@@ -267,7 +268,8 @@ public class Column extends Chunk
 			getLightIndex().setOpacity( localX, blockY, localZ, block.getLightOpacity() );
 			
 			// new chunk, update sky lighting
-			generateSkylightMap();
+			CubeWorld world = (CubeWorld)worldObj;
+			world.getLightingManager().queueSkyLightCalculation( getAddress() );
 		}
 		else
 		{
@@ -280,7 +282,8 @@ public class Column extends Chunk
 			int newMaxY = getHeightValue( localX, localZ );
 			if( oldMaxY != newMaxY )
 			{
-				updateBlockSkylight( localX, localZ, oldMaxY, newMaxY );
+				// TEMP: don't update light yet
+				//updateBlockSkylight( localX, localZ, oldMaxY, newMaxY );
 			}
 			
 			// if opacity changed and ( opacity decreased or block now has any light )
@@ -354,6 +357,11 @@ public class Column extends Chunk
 	{
 		int blockY = getLightIndex().getTopNonTransparentBlockY();
 		return Coords.blockToCube( blockY );
+	}
+	
+	public int getBottomCubeY( )
+	{
+		return m_cubes.firstKey();
 	}
 	
 	@Override
@@ -735,12 +743,6 @@ public class Column extends Chunk
 		// isTicked
 		field_150815_m = true;
 		
-		// keep trying initial light calculations if needed
-		if( !isLightPopulated && isTerrainPopulated )
-		{
-			func_150809_p();
-		}
-		
 		// migrate moved entities to new cubes
 		// UNDONE: optimize out the new
 		List<Entity> entities = new ArrayList<Entity>();
@@ -784,69 +786,8 @@ public class Column extends Chunk
 	@Override
 	public void generateSkylightMap()
     {
-		// NOTE: this is called right after chunk generation, and right after any new segments are created
-		
-		// init the rain map to -999, which is a kind of null value
-		// this array is actually a cache
-		// values will be calculated by the getter
-		for( int localX=0; localX<16; localX++ )
-		{
-			for( int localZ=0; localZ<16; localZ++ )
-			{
-				precipitationHeightMap[localX + (localZ << 4)] = -999;
-			}
-		}
-		
-		if( !worldObj.provider.hasNoSky )
-		{
-			int maxBlockY = getTopFilledSegment() + 15;
-			int minBlockY = Coords.cubeToMinBlock( m_cubes.firstKey() );
-			
-			// build the skylight map
-			for( int localX=0; localX<16; localX++ )
-			{
-				for( int localZ=0; localZ<16; localZ++ )
-				{
-					// start with full light for this block
-					int lightValue = 15;
-					
-					// start with the top block and fall down
-					for( int blockY=maxBlockY; blockY>=minBlockY; blockY-- )
-					{
-						// light opacity is [0,255], all blocks 0, 255 except ice,water:3, web:1
-						int lightOpacity = func_150808_b( localX, blockY, localZ );
-						if( lightOpacity == 0 && lightValue != 15 )
-						{
-							// after something blocks light, apply a linear falloff
-							lightOpacity = 1;
-						}
-						
-						// decrease the light
-						lightValue -= lightOpacity;
-						
-						// stop when we run out of light
-						if( lightValue <= 0 )
-						{
-							break;
-						}
-						
-						// update the cube only if it's actually loaded
-						Cube cube = m_cubes.get( Coords.blockToCube( blockY ) );
-						if( cube != null )
-						{
-							// save the sky light value
-							int localY = Coords.blockToLocal( blockY );
-							cube.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, lightValue );
-							
-							// signal a render update
-							int blockX = Coords.localToBlock( xPosition, localX );
-							int blockZ = Coords.localToBlock( zPosition, localZ );
-							worldObj.func_147479_m( blockX, blockY, blockZ );
-						}
-					}
-				}
-			}
-		}
+		// don't call this, use the lighting manager
+		throw new UnsupportedOperationException();
     }
 	
 	@Override
@@ -1180,140 +1121,7 @@ public class Column extends Chunk
 	@Override // populateLighting
 	public void func_150809_p( )
 	{
-		isLightPopulated = true;
-		
-		if( worldObj.provider.hasNoSky )
-		{
-			return;
-		}
-		
-		// are the nearby chunks there?
-		int blockX = Coords.cubeToMinBlock( xPosition );
-		int blockZ = Coords.cubeToMinBlock( zPosition );
-		if( !worldObj.checkChunksExist( blockX - 1, 0, blockZ - 1, blockX + 1, 0, blockZ + 1 ) )
-		{
-			// NOTE: checkChunksExist ignores the y cubes
-			isLightPopulated = false;
-			return;
-        }
-		
-		for( int localX=0; localX<16; localX++ )
-		{
-			for( int localZ=0; localZ<16; localZ++ )
-			{
-				boolean wasLit = populateBlockColumnLighting( localX, localZ );
-				
-				// if the lighting failed, then try again later
-				if( !wasLit )
-				{
-					isLightPopulated = false;
-					return;
-				}
-			}
-		}
-		
-		// try to populate neighboring columns too
-		populateNeighborLight( -1, 0, 3 );
-		populateNeighborLight( 1, 0, 1 );
-		populateNeighborLight( 0, -1, 0 );
-		populateNeighborLight( -1, 1, 2 );
-	}
-	
-	private void populateNeighborLight( int dcubeX, int dcubeZ, int edge )
-	{
-		Column column = (Column)worldObj.getChunkFromChunkCoords( xPosition + dcubeX, zPosition + dcubeZ );
-		column.populateEdgeLighting( edge );
-	}
-	
-	private boolean populateBlockColumnLighting( int localX, int localZ )
-	{
-		final int seaLevel = 63;
-		
-		int blockX = Coords.localToBlock( xPosition, localX );
-		int blockZ = Coords.localToBlock( zPosition, localZ );
-		
-		if( blockX == 366 && blockZ == -108 )
-		{
-			System.out.println( String.format( "topBlockY=%d", getLightIndex().getTopNonTransparentBlock( localX, localZ ) ) );
-		}
-		
-		boolean foundNonTransparentBlock = false;
-		
-		int blockY = getLightIndex().getTopNonTransparentBlock( localX, localZ );
-		for( ; blockY > 0; blockY-- )
-		{
-			int lightOpacity = func_150808_b( localX, blockY, localZ );
-			
-			if( lightOpacity == 255 && blockY < seaLevel )
-			{
-				// if we hit an opaque block below sea level, stop early
-				break;
-			}
-			
-			if( lightOpacity > 0 )
-			{
-				foundNonTransparentBlock = true;
-			}
-			
-			// if we're below a non-transparent block and we're a clear block, then update lights for this block			
-			if( foundNonTransparentBlock && lightOpacity == 0 )
-			{
-				boolean wasLit = worldObj.func_147451_t( blockX, blockY, blockZ );
-				
-				// if lighting failed, try again later
-				if( !wasLit )
-				{
-					return false;
-				}
-			}
-		}
-		
-		// update lights for light sources at this block and below
-		for( ; blockY > 0; blockY-- )
-		{
-			if( func_150810_a( localX, blockY, localZ ).getLightValue() > 0 )
-			{
-				worldObj.func_147451_t( blockX, blockY, blockZ );
-			}
-		}
-		
-		return true;
-	}
-	
-	private void populateEdgeLighting( int edge ) // 0,1,2, or 3
-	{
-		if( !isTerrainPopulated )
-		{
-			return;
-		}
-		
-		if( edge == 3 )
-		{
-			for( int i=0; i<16; i++ )
-			{
-				populateBlockColumnLighting( 15, i );
-			}
-		}
-		else if( edge == 1 )
-		{
-			for( int i=0; i<16; i++ )
-			{
-				populateBlockColumnLighting( 0, i );
-			}
-		}
-		else if( edge == 0 )
-		{
-			for( int i=0; i<16; i++ )
-			{
-				populateBlockColumnLighting( i, 15 );
-			}
-		}
-		else if( edge == 2 )
-		{
-			for( int i=0; i<16; i++ )
-			{
-				populateBlockColumnLighting( i, 0 );
-			}
-		}
+		// don't use this, use the new lighting manager
+		throw new UnsupportedOperationException();
 	}
 }
