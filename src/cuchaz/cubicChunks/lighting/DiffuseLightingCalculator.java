@@ -16,198 +16,231 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import cuchaz.cubicChunks.CubeWorld;
+import cuchaz.cubicChunks.util.Bits;
+import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.FastIntQueue;
+
 public class DiffuseLightingCalculator
 {
-	private int[] m_lightUpdateBlockList;
+	private static final Logger log = LogManager.getLogger();
+	
+	private FastIntQueue m_queue;
 	
 	public DiffuseLightingCalculator( )
 	{
-		m_lightUpdateBlockList = new int[32768];
+		m_queue = new FastIntQueue();
 	}
 	
 	public boolean calculate( World world, int blockX, int blockY, int blockZ, EnumSkyBlock lightType )
 	{
-		// TEMP: just light the source block
-		world.setLightValue( lightType, blockX, blockY, blockZ, 15 );
-		
-		return true;
-	}
-	
-	public boolean calculateReal( World world, int blockX, int blockY, int blockZ, EnumSkyBlock lightType )
-	{
 		// are there enough nearby blocks to do the lighting?
-		if( !world.doChunksNearChunkExist( blockX, blockY, blockZ, 17 ) )
+		if( !world.doChunksNearChunkExist( blockX, blockY, blockZ, 16 ) )
 		{
 			return false;
 		}
 		
-		int i = 0;
-		int updateCounter = 0;
-		world.theProfiler.startSection( "getBrightness" );
+		// did we add or subtract light?
 		int oldLight = world.getSavedLightValue( lightType, blockX, blockY, blockZ );
 		int newLight = computeLightValue( world, blockX, blockY, blockZ, lightType );
-		int updateData;
-		int updateBlockX;
-		int updateBlockY;
-		int updateBlockZ;
-		int updateLight;
-		int updateOldLight;
-		int blockDx;
-		int blockDy;
-		int blockDz;
-		
 		if( newLight > oldLight )
 		{
-			// queue an update at this block for 0
-			m_lightUpdateBlockList[updateCounter++] = 133152; // ( light=0, x=0, y=0, z=0 )
+			// add light to the area
+			world.theProfiler.startSection( "diffuse light additions" );
+			m_queue.clear();
+			m_queue.add( packUpdate( 0, 0, 0, 0 ) );
+			processLightAdditions( world, blockX, blockY, blockZ, lightType );
+			world.theProfiler.endSection();
 		}
 		else if( newLight < oldLight )
 		{
-			// remove light from the world
-			
-			// queue an update at this block for the old light
-			m_lightUpdateBlockList[updateCounter++] = 133152 | oldLight << 18;
-			
-			// for each queued light update...
-			while( i < updateCounter )
-			{
-				updateData = m_lightUpdateBlockList[i++];
-				updateBlockX = ( updateData & 63 ) - 32 + blockX;
-				updateBlockY = ( updateData >> 6 & 63 ) - 32 + blockY;
-				updateBlockZ = ( updateData >> 12 & 63 ) - 32 + blockZ;
-				updateLight = updateData >> 18 & 15;
-				updateOldLight = world.getSavedLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ );
-				
-				if( updateOldLight == updateLight )
-				{
-					// set current light to 0
-					world.setLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ, 0 );
-					
-					if( updateLight > 0 )
-					{
-						// only look at nearby updates
-						blockDx = MathHelper.abs_int( updateBlockX - blockX );
-						blockDy = MathHelper.abs_int( updateBlockY - blockY );
-						blockDz = MathHelper.abs_int( updateBlockZ - blockZ );
-						if( blockDx + blockDy + blockDz < 17 )
-						{
-							// for each face-neighboring block...
-							for( int side = 0; side < 6; ++side )
-							{
-								int neighborBlockX = updateBlockX + Facing.offsetsXForSide[side];
-								int neighborBlockY = updateBlockY + Facing.offsetsYForSide[side];
-								int neighborBlockZ = updateBlockZ + Facing.offsetsZForSide[side];
-								int neighborOpacityMin1 = Math.max( 1, world.getBlock( neighborBlockX, neighborBlockY, neighborBlockZ ).getLightOpacity() );
-								int neighborOldLight = world.getSavedLightValue( lightType, neighborBlockX, neighborBlockY, neighborBlockZ );
-								
-								if( neighborOldLight == updateLight - neighborOpacityMin1 && updateCounter < m_lightUpdateBlockList.length )
-								{
-									// queue an update for the neighbor block with the value the neighbor light should be
-									m_lightUpdateBlockList[updateCounter++] =
-										neighborBlockX - blockX + 32
-										| neighborBlockY - blockY + 32 << 6
-										| neighborBlockZ - blockZ + 32 << 12
-										| updateLight - neighborOpacityMin1 << 18;
-								}
-							}
-						}
-					}
-				}
-			}
-			
-			i = 0;
+			// subtract light from the area
+			world.theProfiler.startSection( "diffuse light subtractions" );
+			m_queue.clear();
+			m_queue.add( packUpdate( 0, 0, 0, oldLight ) );
+			processLightSubtractions( world, blockX, blockY, blockZ, lightType );
+			world.theProfiler.endSection();
 		}
 		
-		world.theProfiler.endSection();
-		world.theProfiler.startSection( "checkedPosition < toCheckCount" );
-		
-		// for each update...
-		while( i < updateCounter )
+		// TEMP
+		if( m_queue.size() > 10000 )
 		{
-			updateData = m_lightUpdateBlockList[i++];
-			updateBlockX = ( updateData & 63 ) - 32 + blockX;
-			updateBlockY = ( updateData >> 6 & 63 ) - 32 + blockY;
-			updateBlockZ = ( updateData >> 12 & 63 ) - 32 + blockZ;
-			updateOldLight = world.getSavedLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ );
-			int computedLight = computeLightValue( world, updateBlockX, updateBlockY, updateBlockZ, lightType );
-			
-			// TEMP: is light even saveable here?
-			int testLightValue = 5;
-			if( updateOldLight == testLightValue )
-			{
-				testLightValue = 6;
-			}
-			world.setLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ, testLightValue );
-			boolean isLightSavableHere = world.getSavedLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ ) == testLightValue;
-			world.setLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ, updateOldLight );
-			if( !isLightSavableHere )
-			{
-				continue;
-			}
-			
-			// if the light at this update block needs to change
-			if( computedLight != updateOldLight )
-			{
-				// change it
-				world.setLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ, computedLight );
-				
-				// if we got brighter
-				if( computedLight > updateOldLight )
-				{
-					// only look at nearby updates
-					blockDx = Math.abs( updateBlockX - blockX );
-					blockDy = Math.abs( updateBlockY - blockY );
-					blockDz = Math.abs( updateBlockZ - blockZ );
-					boolean isRoomFor6Updates = updateCounter < m_lightUpdateBlockList.length - 6;
-					if( blockDx + blockDy + blockDz < 17 && isRoomFor6Updates )
-					{
-						// queue updates for all 6 face-neighbors with 0
-						// light
-						if( world.getSavedLightValue( lightType, updateBlockX - 1, updateBlockY, updateBlockZ ) < computedLight )
-						{
-							m_lightUpdateBlockList[updateCounter++] = updateBlockX - 1 - blockX + 32 + ( updateBlockY - blockY + 32 << 6 ) + ( updateBlockZ - blockZ + 32 << 12 );
-						}
-						
-						if( world.getSavedLightValue( lightType, updateBlockX + 1, updateBlockY, updateBlockZ ) < computedLight )
-						{
-							m_lightUpdateBlockList[updateCounter++] = updateBlockX + 1 - blockX + 32 + ( updateBlockY - blockY + 32 << 6 ) + ( updateBlockZ - blockZ + 32 << 12 );
-						}
-						
-						if( world.getSavedLightValue( lightType, updateBlockX, updateBlockY - 1, updateBlockZ ) < computedLight )
-						{
-							m_lightUpdateBlockList[updateCounter++] = updateBlockX - blockX + 32 + ( updateBlockY - 1 - blockY + 32 << 6 ) + ( updateBlockZ - blockZ + 32 << 12 );
-						}
-						
-						if( world.getSavedLightValue( lightType, updateBlockX, updateBlockY + 1, updateBlockZ ) < computedLight )
-						{
-							m_lightUpdateBlockList[updateCounter++] = updateBlockX - blockX + 32 + ( updateBlockY + 1 - blockY + 32 << 6 ) + ( updateBlockZ - blockZ + 32 << 12 );
-						}
-						
-						if( world.getSavedLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ - 1 ) < computedLight )
-						{
-							m_lightUpdateBlockList[updateCounter++] = updateBlockX - blockX + 32 + ( updateBlockY - blockY + 32 << 6 ) + ( updateBlockZ - 1 - blockZ + 32 << 12 );
-						}
-						
-						if( world.getSavedLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ + 1 ) < computedLight )
-						{
-							m_lightUpdateBlockList[updateCounter++] = updateBlockX - blockX + 32 + ( updateBlockY - blockY + 32 << 6 ) + ( updateBlockZ + 1 - blockZ + 32 << 12 );
-						}
-					}
-				}
-			}
-			
-			// TEMP
-			if( i > 10000 )
-			{
-				System.out.println( String.format( "%s Warning! Calculated %d light updates at (%d,%d,%d) for %s light.", world.isClient ? "CLIENT" : "SERVER", i, blockX, blockY, blockZ, lightType.name() ) );
-			}
-			
-			world.theProfiler.endSection();
+			log.warn( String.format( "%s Warning! Calculated %d light updates at (%d,%d,%d) for %s light.",
+				world.isClient ? "CLIENT" : "SERVER",
+				m_queue.size(),
+				blockX, blockY, blockZ,
+				lightType.name()
+			) );
 		}
 		
 		return true;
 	}
 	
+	private void processLightSubtractions( World world, int blockX, int blockY, int blockZ, EnumSkyBlock lightType )
+	{
+		// for each queued light update...
+		while( m_queue.hasNext() )
+		{
+			// unpack the update
+			int update = m_queue.get();
+			int updateBlockX = unpackUpdateDx( update ) + blockX;
+			int updateBlockY = unpackUpdateDy( update ) + blockY;
+			int updateBlockZ = unpackUpdateDz( update ) + blockZ;
+			int updateLight = unpackUpdateLight( update );
+			
+			// if the light changed, skip this update
+			int oldLight = world.getSavedLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ );
+			if( oldLight != updateLight )
+			{
+				continue;
+			}
+			
+			// set update block light to 0
+			world.setLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ, 0 );
+			
+			// if we ran out of light, don't propagate
+			if( updateLight <= 0 )
+			{
+				continue;
+			}
+			
+			// for each neighbor block...
+			for( int side=0; side<6; side++ )
+			{
+				// get the neighboring block coords
+				int neighborBlockX = updateBlockX + Facing.offsetsXForSide[side];
+				int neighborBlockY = updateBlockY + Facing.offsetsYForSide[side];
+				int neighborBlockZ = updateBlockZ + Facing.offsetsZForSide[side];
+				
+				if( !shouldUpdateLight( world, blockX, blockY, blockZ, neighborBlockX, neighborBlockY, neighborBlockZ ) )
+				{
+					continue;
+				}
+				
+				// get the neighbor opacity
+				int neighborOpacity = world.getBlock( neighborBlockX, neighborBlockY, neighborBlockZ ).getLightOpacity();
+				if( neighborOpacity > 1 )
+				{
+					neighborOpacity = 1;
+				}
+				
+				// if the neighbor block doesn't have the light we expect, bail
+				int expectedLight = updateLight - neighborOpacity;
+				int actualLight = world.getSavedLightValue( lightType, neighborBlockX, neighborBlockY, neighborBlockZ );
+				if( actualLight != expectedLight )
+				{
+					continue;
+				}
+				
+				if( m_queue.hasRoomFor( 1 ) )
+				{
+					// queue an update to subtract light from the neighboring block
+					m_queue.add( packUpdate(
+						neighborBlockX - blockX,
+						neighborBlockY - blockY,
+						neighborBlockZ - blockZ,
+						expectedLight
+					) );
+				}
+			}
+		}
+	}
+	
+	private void processLightAdditions( World world, int blockX, int blockY, int blockZ, EnumSkyBlock lightType )
+	{
+		// for each queued light update...
+		while( m_queue.hasNext() )
+		{
+			// unpack the update
+			int update = m_queue.get();
+			int updateBlockX = unpackUpdateDx( update ) + blockX;
+			int updateBlockY = unpackUpdateDy( update ) + blockY;
+			int updateBlockZ = unpackUpdateDz( update ) + blockZ;
+			
+			// skip updates that don't change the light
+			int oldLight = world.getSavedLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ );
+			int newLight = computeLightValue( world, updateBlockX, updateBlockY, updateBlockZ, lightType );
+			if( newLight == oldLight )
+			{
+				continue;
+			}
+			
+			// update the light here
+			world.setLightValue( lightType, updateBlockX, updateBlockY, updateBlockZ, newLight );
+			
+			// if we didn't get brighter, don't propagate light to the area
+			if( newLight <= oldLight )
+			{
+				continue;
+			}
+			
+			// for each neighbor block...
+			for( int side=0; side<6; side++ )
+			{
+				// get the neighboring block coords
+				int neighborBlockX = updateBlockX + Facing.offsetsXForSide[side];
+				int neighborBlockY = updateBlockY + Facing.offsetsYForSide[side];
+				int neighborBlockZ = updateBlockZ + Facing.offsetsZForSide[side];
+				
+				if( !shouldUpdateLight( world, blockX, blockY, blockZ, neighborBlockX, neighborBlockY, neighborBlockZ ) )
+				{
+					continue;
+				}
+				
+				// if the neighbor already has enough light, bail
+				int neighborLight = world.getSavedLightValue( lightType, neighborBlockX, neighborBlockY, neighborBlockZ );
+				if( neighborLight >= newLight )
+				{
+					continue;
+				}
+				
+				if( m_queue.hasRoomFor( 1 ) )
+				{
+					// queue an update to add light to the neighboring block
+					m_queue.add( packUpdate(
+						neighborBlockX - blockX,
+						neighborBlockY - blockY,
+						neighborBlockZ - blockZ,
+						0
+					) );
+				}
+			}
+		}
+	}
+	
+	private boolean shouldUpdateLight( World world, int blockX, int blockY, int blockZ, int targetBlockX, int targetBlockY, int targetBlockZ )
+	{
+		// don't update blocks that are too far away
+		int manhattanDistance = MathHelper.abs_int( targetBlockX - blockX )
+			+ MathHelper.abs_int( targetBlockY - blockY )
+			+ MathHelper.abs_int( targetBlockZ - blockZ );
+		if( manhattanDistance > 16 )
+		{
+			return false;
+		}
+		
+		// don't update blocks can't write to
+		if( !isLightModifiable( world, targetBlockX, targetBlockY, targetBlockZ ) )
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean isLightModifiable( World world, int blockX, int blockY, int blockZ )
+	{
+		int cubeX = Coords.blockToCube( blockX );
+		int cubeY = Coords.blockToCube( blockY );
+		int cubeZ = Coords.blockToCube( blockZ );
+		
+		CubeWorld cubeWorld = (CubeWorld)world;
+		return cubeWorld.getCubeProvider().cubeExists( cubeX, cubeY, cubeZ );
+	}
+
 	private int computeLightValue( World world, int blockX, int blockY, int blockZ, EnumSkyBlock lightType )
 	{
 		if( lightType == EnumSkyBlock.Sky && world.canBlockSeeTheSky( blockX, blockY, blockZ ) )
@@ -275,5 +308,33 @@ public class DiffuseLightingCalculator
 				return lightAtThisBlock;
 			}
 		}
+	}
+	
+	private int packUpdate( int dx, int dy, int dz, int light )
+	{
+		return Bits.packSignedToInt( dx, 6, 0 )
+			| Bits.packSignedToInt( dy, 6, 6 )
+			| Bits.packSignedToInt( dz, 6, 12 )
+			| Bits.packUnsignedToInt( light, 6, 18 );
+	}
+	
+	private int unpackUpdateDx( int packed )
+	{
+		return Bits.unpackSigned( packed, 6, 0 );
+	}
+	
+	private int unpackUpdateDy( int packed )
+	{
+		return Bits.unpackSigned( packed, 6, 6 );
+	}
+	
+	private int unpackUpdateDz( int packed )
+	{
+		return Bits.unpackSigned( packed, 6, 12 );
+	}
+	
+	private int unpackUpdateLight( int packed )
+	{
+		return Bits.unpackUnsigned( packed, 6, 18 );
 	}
 }

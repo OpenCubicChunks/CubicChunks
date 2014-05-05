@@ -34,16 +34,14 @@ public class FirstLightCalculator implements ColumnCalculator
 			return true;
 		}
 		
-		/* TEMP: don't do fancy lighting yet
-		// lighting will only finish if all adjacent columns exist. Are they there?
+		// only calculate first light if the neighboring columns exist
+		// NOTE: doChunksNearChunkExist() essentially ignores the y coordinate
 		int blockX = Coords.cubeToMinBlock( column.xPosition );
 		int blockZ = Coords.cubeToMinBlock( column.zPosition );
-		if( !column.worldObj.checkChunksExist( blockX - 1, 0, blockZ - 1, blockX + 1, 0, blockZ + 1 ) )
+		if( !column.worldObj.doChunksNearChunkExist( blockX, 0, blockZ, 17 ) )
 		{
-			// NOTE: checkChunksExist ignores the y cubes
 			return false;
-        }
-        */
+		}
 		
 		for( int localX=0; localX<16; localX++ )
 		{

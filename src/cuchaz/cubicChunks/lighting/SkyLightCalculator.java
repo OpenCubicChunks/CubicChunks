@@ -41,54 +41,59 @@ public class SkyLightCalculator implements ColumnCalculator
 			return true;
 		}
 		
-		int maxBlockY = Coords.cubeToMaxBlock( column.getTopCubeY() );
-		int minBlockY = Coords.cubeToMinBlock( column.getBottomCubeY() );
-		
 		// build the skylight map
 		for( int localX=0; localX<16; localX++ )
 		{
 			for( int localZ=0; localZ<16; localZ++ )
 			{
-				// start with full light for this block
-				int lightValue = 15;
-				
-				// start with the top block and fall down
-				for( int blockY=maxBlockY; blockY>=minBlockY; blockY-- )
-				{
-					// light opacity is [0,255], all blocks 0, 255 except ice,water:3, web:1
-					int lightOpacity = column.func_150808_b( localX, blockY, localZ );
-					if( lightOpacity == 0 && lightValue != 15 )
-					{
-						// after something blocks light, apply a linear falloff
-						lightOpacity = 1;
-					}
-					
-					// decrease the light
-					lightValue -= lightOpacity;
-					
-					// stop when we run out of light
-					if( lightValue <= 0 )
-					{
-						break;
-					}
-					
-					// update the cube only if it's actually loaded
-					Cube cube = column.getCube( Coords.blockToCube( blockY ) );
-					if( cube != null )
-					{
-						// save the sky light value
-						int localY = Coords.blockToLocal( blockY );
-						cube.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, lightValue );
-						
-						// signal a render update
-						int blockX = Coords.localToBlock( column.xPosition, localX );
-						int blockZ = Coords.localToBlock( column.zPosition, localZ );
-						column.worldObj.func_147479_m( blockX, blockY, blockZ );
-					}
-				}
+				calculateBlockColumn( column, localX, localZ );
 			}
 		}
 		
 		return true;
+	}
+	
+	private void calculateBlockColumn( Column column, int localX, int localZ )
+	{
+		int maxBlockY = Coords.cubeToMaxBlock( column.getTopCubeY() ) + 1;
+		int minBlockY = Coords.cubeToMinBlock( column.getBottomCubeY() );
+		
+		// start with full light for this block
+		int lightValue = 15;
+		
+		// start with the top block and fall down
+		for( int blockY=maxBlockY; blockY>=minBlockY; blockY-- )
+		{
+			// light opacity is [0,255], all blocks 0, 255 except ice,water:3, web:1
+			int lightOpacity = column.func_150808_b( localX, blockY, localZ );
+			if( lightOpacity == 0 && lightValue != 15 )
+			{
+				// after something blocks light, apply a linear falloff
+				lightOpacity = 1;
+			}
+			
+			// decrease the light
+			lightValue -= lightOpacity;
+			
+			// stop when we run out of light
+			if( lightValue <= 0 )
+			{
+				break;
+			}
+			
+			// update the cube only if it's actually loaded
+			Cube cube = column.getCube( Coords.blockToCube( blockY ) );
+			if( cube != null )
+			{
+				// save the sky light value
+				int localY = Coords.blockToLocal( blockY );
+				cube.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, lightValue );
+				
+				// signal a render update
+				int blockX = Coords.localToBlock( column.xPosition, localX );
+				int blockZ = Coords.localToBlock( column.zPosition, localZ );
+				column.worldObj.func_147479_m( blockX, blockY, blockZ );
+			}
+		}
 	}
 }

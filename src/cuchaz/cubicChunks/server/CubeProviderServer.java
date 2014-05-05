@@ -224,16 +224,20 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			
 			if( cubeWasGenerated )
 			{
+				// flag for light recalculations
 				column.isLightPopulated = false;
-				
+			}
+			
+			if( !column.isLightPopulated )
+			{
 				// recompute the sky light
 				m_worldServer.getLightingManager().queueSkyLightCalculation( columnAddress );
 				m_worldServer.getLightingManager().queueFirstLightCalculation( columnAddress );
-				
-				// NOTE: have to do generator population after the cube is lit
-				// UNDONE: make a chunk population queue
-				//m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
 			}
+			
+			// NOTE: have to do generator population after the cube is lit
+			// UNDONE: make a chunk population queue
+			//m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
 			
 			// init the cube
 			cube.onLoad();

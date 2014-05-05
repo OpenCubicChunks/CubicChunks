@@ -96,8 +96,12 @@ public class LightingManager
 	
 	private int processColumnQueue( BatchedSetQueue<Long> queue, int batchSize, ColumnCalculator calculator )
 	{
+		// get a batch of addresses
 		m_addresses.clear();
 		queue.getBatch( m_addresses, batchSize );
+		
+		// start processing
+		int numSuccesses = 0;
 		for( long columnAddress : m_addresses )
 		{
 			// get the column
@@ -117,7 +121,11 @@ public class LightingManager
 			{
 				queue.add( columnAddress );
 			}
+			else
+			{
+				numSuccesses++;
+			}
 		}
-		return m_addresses.size();
+		return numSuccesses;
 	}
 }
