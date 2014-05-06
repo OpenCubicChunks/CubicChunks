@@ -93,8 +93,8 @@ public class LightingManager
 				m_world.isClient ? "CLIENT" : "SERVER",
 				totalProcessed, timeDiff
 			) );
-			log.info( String.format( "\t%16s: %3d / %d", "Sky Lights", numSkyLightsProcessed, m_skyLightQueue.size() ) );
-			log.info( String.format( "\t%16s: %3d / %d", "First Lights", numFirstLightsProcessed, m_firstLightQueue.size() ) );
+			log.info( String.format( "\t%16s: %3d processed, %d remaining", "Sky Lights", numSkyLightsProcessed, m_skyLightQueue.size() ) );
+			log.info( String.format( "\t%16s: %3d processed, %d remaining", "First Lights", numFirstLightsProcessed, m_firstLightQueue.size() ) );
 		}
 	}
 	
