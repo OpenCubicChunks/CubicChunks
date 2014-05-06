@@ -52,4 +52,9 @@ public class FastIntQueue
 		m_start = 0;
 		m_stop = 0;
 	}
+	
+	public void reset( )
+	{
+		m_start = 0;
+	}
 }

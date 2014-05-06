@@ -137,7 +137,14 @@ public class CubeGenerator implements ICubeGenerator
 		);
 		
 		// actually generate the terrain
+		m_blocks.clear();
 		generateTerrain( cubeX, cubeY, cubeZ, m_blocks );
+		
+		// is there nothing but air here?
+		if( m_blocks.isEmpty() )
+		{
+			return null;
+		}
 		
 		/* TEMP: don't do these things yet. They still need to be cubified
 		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks, m_biomes );

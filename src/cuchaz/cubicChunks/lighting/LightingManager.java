@@ -29,12 +29,14 @@ public class LightingManager
 {
 	private static final Logger log = LogManager.getLogger();
 	
-	private static final int SkyLightBatchSize = 50;
-	private static final int FirstLightBatchSize = 50;
+	private static final int TickBudget = 100; // ms
+	private static final int SkyLightBatchSize = 100;
+	private static final int FirstLightBatchSize = 10;
 	
 	private World m_world;
 	private CubeProvider m_provider;
 	private transient List<Long> m_addresses;
+	private transient List<Long> m_deferredAddresses;
 	
 	private BatchedSetQueue<Long> m_skyLightQueue;
 	private BatchedSetQueue<Long> m_firstLightQueue;
@@ -48,6 +50,7 @@ public class LightingManager
 		m_world = world;
 		m_provider = provider;
 		m_addresses = new ArrayList<Long>();
+		m_deferredAddresses = new ArrayList<Long>();
 		
 		m_skyLightQueue = new BatchedSetQueue<Long>();
 		m_firstLightQueue = new BatchedSetQueue<Long>();
@@ -75,10 +78,11 @@ public class LightingManager
 	public void tick( )
 	{
 		long timeStart = System.currentTimeMillis();
+		long timeStop = timeStart + TickBudget;
 		
 		// process the queues
-		int numSkyLightsProcessed = processColumnQueue( m_skyLightQueue, SkyLightBatchSize, m_skyLightCalculator );
-		int numFirstLightsProcessed = processColumnQueue( m_firstLightQueue, FirstLightBatchSize, m_firstLightCalculator );
+		int numSkyLightsProcessed = processColumnQueue( m_skyLightQueue, timeStop, SkyLightBatchSize, m_skyLightCalculator );
+		int numFirstLightsProcessed = processColumnQueue( m_firstLightQueue, timeStop, FirstLightBatchSize, m_firstLightCalculator );
 		
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
@@ -87,19 +91,47 @@ public class LightingManager
 		{
 			log.info( String.format( "%s Lighting manager processed %d calculations in %d ms.",
 				m_world.isClient ? "CLIENT" : "SERVER",
-				totalProcessed, timeDiff/1000
+				totalProcessed, timeDiff
 			) );
 			log.info( String.format( "\t%16s: %3d / %d", "Sky Lights", numSkyLightsProcessed, m_skyLightQueue.size() ) );
 			log.info( String.format( "\t%16s: %3d / %d", "First Lights", numFirstLightsProcessed, m_firstLightQueue.size() ) );
 		}
 	}
 	
-	private int processColumnQueue( BatchedSetQueue<Long> queue, int batchSize, ColumnCalculator calculator )
+	private int processColumnQueue( BatchedSetQueue<Long> queue, long timeStop, int batchSize, ColumnCalculator calculator )
 	{
-		// get a batch of addresses
-		m_addresses.clear();
-		queue.getBatch( m_addresses, batchSize );
+		m_deferredAddresses.clear();
 		
+		int numProcessed = 0;
+		
+		// is there time left?
+		while( System.currentTimeMillis() < timeStop )
+		{
+			// get a batch of addresses
+			m_addresses.clear();
+			queue.getBatch( m_addresses, batchSize );
+			
+			// nothing left to do?
+			if( m_addresses.isEmpty() )
+			{
+				break;
+			}
+			
+			// process it
+			numProcessed += processColumnBatch( calculator );
+		}
+		
+		// put the deferred addresses back on the queue
+		for( long address : m_deferredAddresses )
+		{
+			queue.add( address );
+		}
+		
+		return numProcessed;
+	}
+	
+	private int processColumnBatch( ColumnCalculator calculator )
+	{
 		// start processing
 		int numSuccesses = 0;
 		for( long columnAddress : m_addresses )
@@ -110,7 +142,7 @@ public class LightingManager
 			Column column = (Column)m_provider.provideChunk( cubeX, cubeZ );
 			
 			// skip blank columns
-			if( column instanceof BlankColumn )
+			if( column == null || column instanceof BlankColumn )
 			{
 				continue;
 			}
@@ -119,7 +151,7 @@ public class LightingManager
 			boolean success = calculator.calculate( column );
 			if( !success )
 			{
-				queue.add( columnAddress );
+				m_deferredAddresses.add( columnAddress );
 			}
 			else
 			{

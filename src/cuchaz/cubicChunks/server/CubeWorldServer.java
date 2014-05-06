@@ -35,9 +35,6 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 		// set the player manager
 		CubePlayerManager playerManager = new CubePlayerManager( this, server.getConfigurationManager().getViewDistance() );
 		WorldServerAccessor.setPlayerManager( this, playerManager );
-		
-		// init the lighting manager
-		m_lightingManager = new LightingManager( this, getCubeProvider() );
 	}
 	
 	@Override
@@ -45,6 +42,10 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
     {
 		CubeProviderServer chunkProvider = new CubeProviderServer( this );
 		WorldServerAccessor.setChunkProvider( this, chunkProvider );
+		
+		// init the lighting manager
+		m_lightingManager = new LightingManager( this, chunkProvider );
+		
 		return chunkProvider;
     }
 	

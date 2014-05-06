@@ -28,9 +28,6 @@ public class CubeWorldClient extends WorldClient implements CubeWorld
 	public CubeWorldClient( NetHandlerPlayClient client, WorldSettings settings, int dimension, EnumDifficulty difficulty, Profiler profiler )
 	{
 		super( client, settings, dimension, difficulty, profiler );
-		
-		// init the lighting manager
-		m_lightingManager = new LightingManager( this, getCubeProvider() );
 	}
 	
 	@Override
@@ -38,6 +35,10 @@ public class CubeWorldClient extends WorldClient implements CubeWorld
     {
 		CubeProviderClient chunkProvider = new CubeProviderClient( this );
 		WorldClientAccessor.setChunkProvider( this, chunkProvider );
+
+		// init the lighting manager
+		m_lightingManager = new LightingManager( this, chunkProvider );
+		
 		return chunkProvider;
     }
 	

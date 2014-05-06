@@ -139,13 +139,20 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		// UNDONE: do something smarter about the sea level
 		final int SeaLevel = 63;
 		
-		Column column = loadChunk( cubeX, cubeZ );
-		
-		int minCubeY = Coords.blockToCube( SeaLevel );
-		int maxCubeY = column.getTopCubeY();
-		for( int cubeY=minCubeY; cubeY<=maxCubeY; cubeY++ )
+		// load the cube at sea level
+		// keep loading the next cube up until we don't get anything back
+		Column column = null;
+		for( int cubeY=Coords.blockToCube( SeaLevel ); ; cubeY++ )
 		{
-			loadCube( cubeX, cubeY, cubeZ );
+			Cube cube = loadCube( cubeX, cubeY, cubeZ );
+			if( cube != null )
+			{
+				column = cube.getColumn();
+			}
+			else
+			{
+				break;
+			}
 		}
 		
 		return column;

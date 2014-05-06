@@ -43,30 +43,35 @@ public class DiffuseLightingCalculator
 			return false;
 		}
 		
+		m_queue.clear();
+		
 		// did we add or subtract light?
 		int oldLight = world.getSavedLightValue( lightType, blockX, blockY, blockZ );
 		int newLight = computeLightValue( world, blockX, blockY, blockZ, lightType );
 		if( newLight > oldLight )
 		{
-			// add light to the area
-			world.theProfiler.startSection( "diffuse light additions" );
-			m_queue.clear();
+			// seed processing with this block
 			m_queue.add( packUpdate( 0, 0, 0, 0 ) );
-			processLightAdditions( world, blockX, blockY, blockZ, lightType );
-			world.theProfiler.endSection();
 		}
 		else if( newLight < oldLight )
 		{
 			// subtract light from the area
 			world.theProfiler.startSection( "diffuse light subtractions" );
-			m_queue.clear();
 			m_queue.add( packUpdate( 0, 0, 0, oldLight ) );
 			processLightSubtractions( world, blockX, blockY, blockZ, lightType );
 			world.theProfiler.endSection();
+			
+			// reset the queue so the next processing method re-processes all the entries
+			m_queue.reset();
 		}
 		
+		// add light to the area
+		world.theProfiler.startSection( "diffuse light additions" );
+		processLightAdditions( world, blockX, blockY, blockZ, lightType );
+		world.theProfiler.endSection();
+		
 		// TEMP
-		if( m_queue.size() > 10000 )
+		if( m_queue.size() > 32000 )
 		{
 			log.warn( String.format( "%s Warning! Calculated %d light updates at (%d,%d,%d) for %s light.",
 				world.isClient ? "CLIENT" : "SERVER",
