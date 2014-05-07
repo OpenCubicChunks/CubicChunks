@@ -10,9 +10,46 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.lighting;
 
+import java.util.List;
+
+import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.util.AddressTools;
+import cuchaz.cubicChunks.world.BlankColumn;
 import cuchaz.cubicChunks.world.Column;
 
-public interface ColumnCalculator
+public abstract class ColumnCalculator implements LightCalculator
 {
-	boolean calculate( Column column );
+	@Override
+	public int processBatch( List<Long> addresses, List<Long> deferredAddresses, CubeProvider provider )
+	{
+		// start processing
+		int numSuccesses = 0;
+		for( long address : addresses )
+		{
+			// get the column
+			int cubeX = AddressTools.getX( address );
+			int cubeZ = AddressTools.getZ( address );
+			Column column = (Column)provider.provideChunk( cubeX, cubeZ );
+			
+			// skip blank columns
+			if( column == null || column instanceof BlankColumn )
+			{
+				continue;
+			}
+			
+			// add unsuccessful calculations back onto the queue
+			boolean success = calculate( column );
+			if( !success )
+			{
+				deferredAddresses.add( address );
+			}
+			else
+			{
+				numSuccesses++;
+			}
+		}
+		return numSuccesses;
+	}
+	
+	public abstract boolean calculate( Column column );
 }

@@ -20,9 +20,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.BatchedSetQueue;
-import cuchaz.cubicChunks.world.BlankColumn;
+import cuchaz.cubicChunks.util.Bits;
 import cuchaz.cubicChunks.world.Column;
 
 public class LightingManager
@@ -32,6 +31,7 @@ public class LightingManager
 	private static final int TickBudget = 100; // ms
 	private static final int SkyLightBatchSize = 100;
 	private static final int FirstLightBatchSize = 10;
+	private static final int SkyLightOcclusionBatchSize = 50;
 	
 	private World m_world;
 	private CubeProvider m_provider;
@@ -40,10 +40,13 @@ public class LightingManager
 	
 	private BatchedSetQueue<Long> m_skyLightQueue;
 	private BatchedSetQueue<Long> m_firstLightQueue;
+	private BatchedSetQueue<Long> m_skyLightOcclusionQueue;
 	
 	private SkyLightCalculator m_skyLightCalculator;
 	private FirstLightCalculator m_firstLightCalculator;
+	private SkyLightOcclusionCalculator m_skyLightOcclusionCalculator;
 	private DiffuseLightingCalculator m_diffuseLightingCalculator;
+	private SkyLightUpdateCalculator m_skyLightUpdateCalculator;
 	
 	public LightingManager( World world, CubeProvider provider )
 	{
@@ -54,10 +57,13 @@ public class LightingManager
 		
 		m_skyLightQueue = new BatchedSetQueue<Long>();
 		m_firstLightQueue = new BatchedSetQueue<Long>();
+		m_skyLightOcclusionQueue = new BatchedSetQueue<Long>();
 		
 		m_skyLightCalculator = new SkyLightCalculator();
 		m_firstLightCalculator = new FirstLightCalculator();
+		m_skyLightOcclusionCalculator = new SkyLightOcclusionCalculator();
 		m_diffuseLightingCalculator = new DiffuseLightingCalculator();
+		m_skyLightUpdateCalculator = new SkyLightUpdateCalculator();
 	}
 	
 	public void queueSkyLightCalculation( long columnAddress )
@@ -70,9 +76,22 @@ public class LightingManager
 		m_firstLightQueue.add( columnAddress );
 	}
 	
+	public void queueSkyLightOcclusionCalculation( int blockX, int blockZ )
+	{
+		long blockColumnAddress =
+			Bits.packSignedToLong( blockX, 26, 0 )
+			| Bits.packSignedToLong( blockZ, 26, 26 );
+		m_skyLightOcclusionQueue.add( blockColumnAddress );
+	}
+	
 	public boolean computeDiffuseLighting( int blockX, int blockY, int blockZ, EnumSkyBlock lightType )
 	{
 		return m_diffuseLightingCalculator.calculate( m_world, blockX, blockY, blockZ, lightType );
+	}
+	
+	public void computeSkyLightUpdate( Column column, int localX, int localZ, int oldMaxBlockY, int newMaxBlockY )
+	{
+		m_skyLightUpdateCalculator.calculate( column, localX, localZ, oldMaxBlockY, newMaxBlockY );
 	}
 	
 	public void tick( )
@@ -81,8 +100,9 @@ public class LightingManager
 		long timeStop = timeStart + TickBudget;
 		
 		// process the queues
-		int numSkyLightsProcessed = processColumnQueue( m_skyLightQueue, timeStop, SkyLightBatchSize, m_skyLightCalculator );
-		int numFirstLightsProcessed = processColumnQueue( m_firstLightQueue, timeStop, FirstLightBatchSize, m_firstLightCalculator );
+		int numSkyLightsProcessed = processQueue( m_skyLightQueue, timeStop, SkyLightBatchSize, m_skyLightCalculator );
+		int numFirstLightsProcessed = processQueue( m_firstLightQueue, timeStop, FirstLightBatchSize, m_firstLightCalculator );
+		int numSkyLightOcclusionsProcessed = processQueue( m_skyLightOcclusionQueue, timeStop, SkyLightOcclusionBatchSize, m_skyLightOcclusionCalculator );
 		
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
@@ -93,12 +113,13 @@ public class LightingManager
 				m_world.isClient ? "CLIENT" : "SERVER",
 				totalProcessed, timeDiff
 			) );
-			log.info( String.format( "\t%16s: %3d processed, %d remaining", "Sky Lights", numSkyLightsProcessed, m_skyLightQueue.size() ) );
-			log.info( String.format( "\t%16s: %3d processed, %d remaining", "First Lights", numFirstLightsProcessed, m_firstLightQueue.size() ) );
+			log.info( String.format( "\t%22s: %3d processed, %d remaining", "Sky Lights", numSkyLightsProcessed, m_skyLightQueue.size() ) );
+			log.info( String.format( "\t%22s: %3d processed, %d remaining", "First Lights", numFirstLightsProcessed, m_firstLightQueue.size() ) );
+			log.info( String.format( "\t%22s: %3d processed, %d remaining", "Sky Light Occlusions", numSkyLightOcclusionsProcessed, m_skyLightOcclusionQueue.size() ) );
 		}
 	}
 	
-	private int processColumnQueue( BatchedSetQueue<Long> queue, long timeStop, int batchSize, ColumnCalculator calculator )
+	private int processQueue( BatchedSetQueue<Long> queue, long timeStop, int batchSize, LightCalculator calculator )
 	{
 		m_deferredAddresses.clear();
 		
@@ -118,7 +139,7 @@ public class LightingManager
 			}
 			
 			// process it
-			numProcessed += processColumnBatch( calculator );
+			numProcessed += calculator.processBatch( m_addresses, m_deferredAddresses, m_provider );
 		}
 		
 		// put the deferred addresses back on the queue
@@ -128,36 +149,5 @@ public class LightingManager
 		}
 		
 		return numProcessed;
-	}
-	
-	private int processColumnBatch( ColumnCalculator calculator )
-	{
-		// start processing
-		int numSuccesses = 0;
-		for( long columnAddress : m_addresses )
-		{
-			// get the column
-			int cubeX = AddressTools.getX( columnAddress );
-			int cubeZ = AddressTools.getZ( columnAddress );
-			Column column = (Column)m_provider.provideChunk( cubeX, cubeZ );
-			
-			// skip blank columns
-			if( column == null || column instanceof BlankColumn )
-			{
-				continue;
-			}
-			
-			// add unsuccessful calculations back onto the queue
-			boolean success = calculator.calculate( column );
-			if( !success )
-			{
-				m_deferredAddresses.add( columnAddress );
-			}
-			else
-			{
-				numSuccesses++;
-			}
-		}
-		return numSuccesses;
 	}
 }

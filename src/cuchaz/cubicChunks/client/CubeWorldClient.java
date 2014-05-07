@@ -14,6 +14,7 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.world.EnumDifficulty;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.chunk.IChunkProvider;
 import cuchaz.cubicChunks.CubeProvider;
@@ -61,4 +62,11 @@ public class CubeWorldClient extends WorldClient implements CubeWorld
 		
 		m_lightingManager.tick();
 	}
+	
+	@Override
+	public boolean updateLightByType( EnumSkyBlock lightType, int blockX, int blockY, int blockZ )
+    {
+		// forward to the new lighting system
+		return m_lightingManager.computeDiffuseLighting( blockX, blockY, blockZ, lightType );
+    }
 }

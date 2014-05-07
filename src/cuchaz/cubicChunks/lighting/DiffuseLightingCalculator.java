@@ -127,7 +127,7 @@ public class DiffuseLightingCalculator
 				
 				// get the neighbor opacity
 				int neighborOpacity = world.getBlock( neighborBlockX, neighborBlockY, neighborBlockZ ).getLightOpacity();
-				if( neighborOpacity > 1 )
+				if( neighborOpacity < 1 )
 				{
 					neighborOpacity = 1;
 				}

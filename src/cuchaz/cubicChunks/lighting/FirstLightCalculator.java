@@ -13,7 +13,7 @@ package cuchaz.cubicChunks.lighting;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 
-public class FirstLightCalculator implements ColumnCalculator
+public class FirstLightCalculator extends ColumnCalculator
 {
 	@Override
 	public boolean calculate( Column column )
@@ -57,12 +57,13 @@ public class FirstLightCalculator implements ColumnCalculator
 			}
 		}
 		
-		/* try to populate neighboring columns too
-		populateNeighborLight( -1, 0, 3 );
-		populateNeighborLight( 1, 0, 1 );
-		populateNeighborLight( 0, -1, 0 );
-		populateNeighborLight( -1, 1, 2 );
-		*/
+		// populate neighboring columns too
+		// this is for cases when a sheer wall is up against an empty cube
+		// unless this is called, the wall will not get directly lit
+		populateNeighborEdgeLight( column, -1, 0, 3 );
+		populateNeighborEdgeLight( column, 1, 0, 1 );
+		populateNeighborEdgeLight( column, 0, -1, 0 );
+		populateNeighborEdgeLight( column, -1, 1, 2 );
 		
 		return true;
 	}
@@ -117,7 +118,7 @@ public class FirstLightCalculator implements ColumnCalculator
 		return true;
 	}
 	
-	private void populateNeighborLight( Column column, int dcubeX, int dcubeZ, int edge )
+	private void populateNeighborEdgeLight( Column column, int dcubeX, int dcubeZ, int edge )
 	{
 		Column neighbor = (Column)column.worldObj.getChunkFromChunkCoords( column.xPosition + dcubeX, column.zPosition + dcubeZ );
 		populateEdgeLighting( neighbor, edge );

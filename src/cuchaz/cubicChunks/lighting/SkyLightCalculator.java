@@ -15,7 +15,7 @@ import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
 
-public class SkyLightCalculator implements ColumnCalculator
+public class SkyLightCalculator extends ColumnCalculator
 {
 	@Override
 	public boolean calculate( Column column )

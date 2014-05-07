@@ -113,11 +113,7 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 	@Override
 	public boolean updateLightByType( EnumSkyBlock lightType, int blockX, int blockY, int blockZ )
     {
-		/* TEMP: just forward to the new lighting manager for now, but eventually, we should replace all calls to this
-		// don't use this, use the new lighting manager
-		throw new UnsupportedOperationException();
-		*/
-		
+		// forward to the new lighting system
 		return m_lightingManager.computeDiffuseLighting( blockX, blockY, blockZ, lightType );
     }
 }
