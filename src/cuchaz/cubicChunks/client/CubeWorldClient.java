@@ -14,12 +14,18 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.world.EnumDifficulty;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.chunk.IChunkProvider;
+import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.accessors.WorldClientAccessor;
+import cuchaz.cubicChunks.lighting.LightingManager;
 
-public class CubeWorldClient extends WorldClient
+public class CubeWorldClient extends WorldClient implements CubeWorld
 {
+	private LightingManager m_lightingManager;
+	
 	public CubeWorldClient( NetHandlerPlayClient client, WorldSettings settings, int dimension, EnumDifficulty difficulty, Profiler profiler )
 	{
 		super( client, settings, dimension, difficulty, profiler );
@@ -30,6 +36,37 @@ public class CubeWorldClient extends WorldClient
     {
 		CubeProviderClient chunkProvider = new CubeProviderClient( this );
 		WorldClientAccessor.setChunkProvider( this, chunkProvider );
+
+		// init the lighting manager
+		m_lightingManager = new LightingManager( this, chunkProvider );
+		
 		return chunkProvider;
+    }
+	
+	@Override
+	public CubeProvider getCubeProvider( )
+	{
+		return (CubeProvider)chunkProvider;
+	}
+	
+	@Override
+	public LightingManager getLightingManager( )
+	{
+		return m_lightingManager;
+	}
+	
+	@Override
+	public void tick( )
+	{
+		super.tick();
+		
+		m_lightingManager.tick();
+	}
+	
+	@Override
+	public boolean updateLightByType( EnumSkyBlock lightType, int blockX, int blockY, int blockZ )
+    {
+		// forward to the new lighting system
+		return m_lightingManager.computeDiffuseLighting( blockX, blockY, blockZ, lightType );
     }
 }

@@ -130,7 +130,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		}
 		else
 		{
-			return m_blankColumn;			
+			return m_blankColumn;
 		}
 	}
 	
@@ -139,13 +139,20 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		// UNDONE: do something smarter about the sea level
 		final int SeaLevel = 63;
 		
-		Column column = loadChunk( cubeX, cubeZ );
-		
-		int minCubeY = Coords.blockToCube( SeaLevel );
-		int maxCubeY = column.getTopCubeY();
-		for( int cubeY=minCubeY; cubeY<=maxCubeY; cubeY++ )
+		// load the cube at sea level
+		// keep loading the next cube up until we don't get anything back
+		Column column = null;
+		for( int cubeY=Coords.blockToCube( SeaLevel ); ; cubeY++ )
 		{
-			loadCube( cubeX, cubeY, cubeZ );
+			Cube cube = loadCube( cubeX, cubeY, cubeZ );
+			if( cube != null )
+			{
+				column = cube.getColumn();
+			}
+			else
+			{
+				break;
+			}
 		}
 		
 		return column;
@@ -222,16 +229,22 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			column.onChunkLoad();
 			column.isTerrainPopulated = true;
 			
-			// recompute the sky light map
-			column.generateSkylightMap();
-			
 			if( cubeWasGenerated )
 			{
+				// flag for light recalculations
 				column.isLightPopulated = false;
-				
-				// NOTE: have to do generator population after the cube is lit
-				m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
 			}
+			
+			if( !column.isLightPopulated )
+			{
+				// recompute the sky light
+				m_worldServer.getLightingManager().queueSkyLightCalculation( columnAddress );
+				m_worldServer.getLightingManager().queueFirstLightCalculation( columnAddress );
+			}
+			
+			// NOTE: have to do generator population after the cube is lit
+			// UNDONE: make a chunk population queue
+			//m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
 			
 			// init the cube
 			cube.onLoad();

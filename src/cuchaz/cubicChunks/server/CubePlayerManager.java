@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S26PacketMapChunkBulk;
@@ -149,11 +148,7 @@ public class CubePlayerManager extends PlayerManager
 			
 			watcher.addPlayer( player );
 			info.watchedAddresses.add( address );
-			
-			if( isActiveColumn( watcher.getCube().getColumn() ) )
-			{
-				info.outgoingCubes.add( watcher.getCube() );
-			}
+			info.outgoingCubes.add( watcher.getCube() );
 		}
 	}
 	
@@ -234,6 +229,7 @@ public class CubePlayerManager extends PlayerManager
 		watcher.setDirtyBlock( localX, localY, localZ );
 	}
 	
+	@Override
 	public void updateMountedMovingPlayer( EntityPlayerMP player )
 	{
 		// the player moved
@@ -289,11 +285,7 @@ public class CubePlayerManager extends PlayerManager
 			}
 			
 			watcher.addPlayer( player );
-			
-			if( isActiveColumn( watcher.getCube().getColumn() ) )
-			{
-				info.outgoingCubes.add( watcher.getCube() );
-			}
+			info.outgoingCubes.add( watcher.getCube() );
 		}
 		
 		// remove from old watchers
@@ -479,44 +471,5 @@ public class CubePlayerManager extends PlayerManager
 			m_watchers.put( address, watcher );
 		}
 		return watcher;
-	}
-	
-	@SuppressWarnings( "unchecked" )
-	private boolean isActiveColumn( Column column )
-	{
-		/* this is how the world decides which columns are active
-		for( EntityPlayer player : (List<EntityPlayer>)column.worldObj.playerEntities )
-		{
-			int cubeX = Coords.blockToChunk( MathHelper.floor_double( player.posX ) );
-			int cubeZ = Coords.blockToChunk( MathHelper.floor_double( player.posZ ) );
-			byte seven = 7;
-			
-			for( int x = -seven; x <= seven; ++x )
-			{
-				for( int var7 = -seven; var7 <= seven; ++var7 )
-				{
-					activeChunkSet.add( new ChunkCoordIntPair( x + cubeX, var7 + cubeZ ) );
-				}
-			}
-		}
-		*/
-		
-		// so, a column is active if it is within 7 columns to a player
-		for( EntityPlayer player : (List<EntityPlayer>)column.worldObj.playerEntities )
-		{
-			int cubeX = Coords.blockToCube( MathHelper.floor_double( player.posX ) );
-			int cubeZ = Coords.blockToCube( MathHelper.floor_double( player.posZ ) );
-			
-			final int Range = 7;
-			if( Math.abs( cubeX - column.xPosition ) <= Range )
-			{
-				return true;
-			}
-			if( Math.abs( cubeZ - column.zPosition ) <= Range )
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 }
