@@ -20,7 +20,7 @@ public class AddressTools
 	// World.setBlock() caps block x,z at -30m to 30m, so our 22-bit cap on chunk x,z is just right!
 	
 	// here's the encoding scheme for 64 bits of space:
-	// y:         20 bits, unsigned, 1,048,575 chunks, 16,777,200 blocks
+	// y:         20 bits, unsigned, 1,048,576 chunks, 16,777,216 blocks
 	// x:         22 bits, signed,   4,194,304 chunks, 67,108,864 blocks
 	// z:         22 bits, signed,   4,194,304 chunks, 67,108,864 blocks
 	

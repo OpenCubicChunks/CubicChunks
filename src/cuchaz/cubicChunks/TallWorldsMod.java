@@ -20,10 +20,13 @@ import org.apache.logging.log4j.LogManager;
 import cuchaz.cubicChunks.client.CubeWorldClient;
 import cuchaz.cubicChunks.server.CubePlayerManager;
 import cuchaz.cubicChunks.server.CubeWorldServer;
+import cuchaz.cubicChunks.util.AddressTools;
+import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.magicMojoModLoader.api.Mod;
 import cuchaz.magicMojoModLoader.api.ModMetadata;
 import cuchaz.magicMojoModLoader.api.Version;
+import cuchaz.magicMojoModLoader.api.events.BuildHeightEvent;
 import cuchaz.magicMojoModLoader.api.events.ClassOverrideEvent;
 import cuchaz.magicMojoModLoader.api.events.EncodeChunkEvent;
 import cuchaz.magicMojoModLoader.api.events.EntityPlayerMPUpdateEvent;
@@ -76,6 +79,11 @@ public class TallWorldsMod implements Mod
 				LogManager.getLogger().error( String.format( "Unable to encode data for column (%d,%d)", column.xPosition, column.zPosition ), ex );
 			}
 		}
+	}
+	
+	public void handleEvent( BuildHeightEvent event )
+	{
+		event.setCustomBuildHeight( Coords.cubeToMaxBlock( AddressTools.MaxY ) + 1 );
 	}
 	
 	public void handleEvent( EntityPlayerMPUpdateEvent event )
