@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.WorldServer;
 
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.client.CubeWorldClient;
 import cuchaz.cubicChunks.server.CubePlayerManager;
@@ -33,6 +34,8 @@ import cuchaz.magicMojoModLoader.api.events.EntityPlayerMPUpdateEvent;
 
 public class TallWorldsMod implements Mod
 {
+	private static final Logger log = LogManager.getLogger();
+	
 	// define one instance of the metadata
 	private static final ModMetadata m_meta;
 	static
@@ -76,7 +79,7 @@ public class TallWorldsMod implements Mod
 			}
 			catch( IOException ex )
 			{
-				LogManager.getLogger().error( String.format( "Unable to encode data for column (%d,%d)", column.xPosition, column.zPosition ), ex );
+				log.error( String.format( "Unable to encode data for column (%d,%d)", column.xPosition, column.zPosition ), ex );
 			}
 		}
 	}
@@ -84,6 +87,8 @@ public class TallWorldsMod implements Mod
 	public void handleEvent( BuildHeightEvent event )
 	{
 		event.setCustomBuildHeight( Coords.cubeToMaxBlock( AddressTools.MaxY ) + 1 );
+		
+		log.info( "Set build height to " + event.getCustomBuildHeight() );
 	}
 	
 	public void handleEvent( EntityPlayerMPUpdateEvent event )

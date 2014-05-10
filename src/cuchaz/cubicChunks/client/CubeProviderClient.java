@@ -58,15 +58,35 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeProvi
 	@Override
 	public boolean cubeExists( int cubeX, int cubeY, int cubeZ )
 	{
-		// NOTE: cubes always exist on the client
-		// but unloaded cubes will be empty
+		// cubes always exist on the client, but unloaded cubes will be empty
 		return true;
+	}
+	
+	@Override
+	public boolean isCubeLoaded( int cubeX, int cubeY, int cubeZ )
+	{
+		// is this chunk loaded?
+		LongHashMap chunkMapping = ChunkProviderClientAccessor.getChunkMapping( this );
+		Column column = (Column)chunkMapping.getValueByKey( ChunkCoordIntPair.chunkXZ2Int( cubeX, cubeZ ) );
+		if( column == null )
+		{
+			return false;
+		}
+		
+		// is the cube loaded?
+		return column.getCube( cubeY ) != null;
 	}
 	
 	@Override
 	public Cube loadCube( int cubeX, int cubeY, int cubeZ )
 	{
-		// UNDONE: implement this
-		throw new UnsupportedOperationException();
+		Column column = loadChunk( cubeX, cubeZ );
+		Cube cube = column.getCube( cubeY );
+		if( cube == null )
+		{
+			// make an empty cube
+			cube = new Cube( column.worldObj, column, cubeX, cubeY, cubeZ );
+		}
+		return cube;
 	}
 }

@@ -16,6 +16,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
@@ -45,7 +46,7 @@ public class Cube
 	private CubeBlockMap<TileEntity> m_tileEntities;
 	private boolean m_isModified;
 	
-	public Cube( World world, Column column, int x, int y, int z, boolean hasSky )
+	public Cube( World world, Column column, int x, int y, int z )
 	{
 		if( y < 0 )
 		{
@@ -57,15 +58,43 @@ public class Cube
 		m_x = x;
 		m_y = y;
 		m_z = z;
-		m_storage = new ExtendedBlockStorage( y << 4, hasSky );
+		
+		// start with a blank cube
+		m_storage = null;
 		m_entities = new EntityContainer();
 		m_tileEntities = new CubeBlockMap<TileEntity>();
 		m_isModified = false;
 	}
 	
-	public static Cube generateCubeAndAddToColumn( World world, Column column, int cubeX, int cubeY, int cubeZ, boolean hasSky, CubeBlocks blocks )
+	public boolean isEmpty( )
 	{
-		Cube cube = new Cube( world, column, cubeX, cubeY, cubeZ, hasSky );
+		return m_storage == null;
+	}
+	
+	public void setEmpty( boolean isEmpty )
+	{
+		if( isEmpty )
+		{
+			m_storage = null;
+		}
+		else
+		{
+			m_storage = new ExtendedBlockStorage( m_y << 4, !m_world.provider.hasNoSky );
+		}
+	}
+	
+	public static Cube generateEmptyCubeAndAddToColumn( World world, Column column, int cubeX, int cubeY, int cubeZ )
+	{
+		Cube cube = new Cube( world, column, cubeX, cubeY, cubeZ );
+		column.addCube( cube );
+		cube.m_isModified = true;
+		return cube;
+	}
+	
+	public static Cube generateCubeAndAddToColumn( World world, Column column, int cubeX, int cubeY, int cubeZ, CubeBlocks blocks )
+	{
+		Cube cube = new Cube( world, column, cubeX, cubeY, cubeZ );
+		cube.setEmpty( false );
 		
 		// copy over the block data
 		Block block = null;
@@ -141,11 +170,21 @@ public class Cube
 	
 	public Block getBlock( int x, int y, int z )
 	{
+		if( isEmpty() )
+		{
+			return Blocks.air;
+		}
+		
 		return m_storage.func_150819_a( x, y, z );
 	}
 	
 	public int getBlockMetadata( int x, int y, int z )
 	{
+		if( isEmpty() )
+		{
+			return 0;
+		}
+		
 		return m_storage.getMetadataArray().get( x, y, z );
 	}
 	
@@ -157,6 +196,12 @@ public class Cube
 		if( oldBlock == block && oldMeta == meta )
 		{
 			return false;
+		}
+		
+		// make sure we're not empty
+		if( isEmpty() )
+		{
+			setEmpty( false );
 		}
 		
 		int blockX = Coords.localToBlock( m_x, x );
@@ -236,6 +281,12 @@ public class Cube
 			return false;
 		}
 		
+		// make sure we're not empty
+		if( isEmpty() )
+		{
+			setEmpty( false );
+		}
+		
 		// change the metadata
 		m_storage.setExtBlockMetadata( x, y, z, meta );
 		m_isModified = true;
@@ -256,6 +307,11 @@ public class Cube
 	
 	public boolean hasBlocks( )
 	{
+		if( isEmpty() )
+		{
+			return false;
+		}
+		
 		return !m_storage.isEmpty();
 	}
 	
@@ -436,8 +492,15 @@ public class Cube
 		m_isModified = false;
 	}
 	
+	public boolean isUnderground( int localX, int localY, int localZ )
+	{
+		return m_column.getLightIndex().getTopNonTransparentBlock( localX, localZ ) >= Coords.localToBlock( m_y, localY );
+	}
+	
 	public int getBlockLightValue( int localX, int localY, int localZ, int skylightSubtracted )
 	{
+		
+		
 		// get sky light
 		int skyLight = 0;
 		if( !m_world.provider.hasNoSky )
@@ -457,13 +520,25 @@ public class Cube
 		return skyLight;
 	}
 	
-	public int getLightValue( EnumSkyBlock lightType, int x, int y, int z )
+	public int getLightValue( EnumSkyBlock lightType, int localX, int localY, int localZ )
 	{
 		if( lightType == EnumSkyBlock.Sky )
 		{
 			if( !m_world.provider.hasNoSky )
 			{
-				return m_storage.getExtSkylightValue( x, y, z );
+				if( isEmpty() )
+				{
+					if( isUnderground( localX, localY, localZ ) )
+					{
+						return 0;
+					}
+					else
+					{
+						return 15;
+					}
+				}
+				
+				return m_storage.getExtSkylightValue( localX, localY, localZ );
 			}
 			else
 			{
@@ -472,7 +547,12 @@ public class Cube
 		}
 		else if( lightType == EnumSkyBlock.Block )
 		{
-			return m_storage.getExtBlocklightValue( x, y, z );
+			if( isEmpty() )
+			{
+				return 0;
+			}
+			
+			return m_storage.getExtBlocklightValue( localX, localY, localZ );
 		}
 		else
 		{
@@ -482,6 +562,12 @@ public class Cube
 	
 	public void setLightValue( EnumSkyBlock lightType, int x, int y, int z, int light )
 	{
+		// make sure we're not empty
+		if( isEmpty() )
+		{
+			setEmpty( false );
+		}
+		
 		if( lightType == EnumSkyBlock.Sky )
 		{
 			if( !m_world.provider.hasNoSky )

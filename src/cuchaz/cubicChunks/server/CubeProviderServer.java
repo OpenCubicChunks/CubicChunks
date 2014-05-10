@@ -89,6 +89,21 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	@Override
+	public boolean isCubeLoaded( int cubeX, int cubeY, int cubeZ )
+	{
+		// is the column loaded?
+		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
+		Column column = m_loadedColumns.get( columnAddress );
+		if( column == null )
+		{
+			return false;
+		}
+		
+		// is the cube loaded?
+		return column.getCube( cubeY ) != null;
+	}
+	
+	@Override
 	public Column loadChunk( int cubeX, int cubeZ )
 	{
 		// find out the cubes in this column near any players or spawn points
@@ -161,6 +176,12 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	@Override
 	public Cube loadCube( int cubeX, int cubeY, int cubeZ )
 	{
+		// check our only coordinate bound
+		if( cubeY < 0 )
+		{
+			throw new IllegalArgumentException( "y coord of " + cubeY + " is not allowed!" );
+		}
+		
 		long cubeAddress = AddressTools.getAddress( cubeX, cubeY, cubeZ );
 		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
 		
@@ -192,67 +213,59 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 				column.lastSaveTime = m_worldServer.getTotalWorldTime();
 			}
 		}
+		assert( column != null );
 		
 		// step 2: get a cube
 		
 		// is the cube already loaded?
-		boolean cubeWasGenerated = false;
 		Cube cube = column.getCube( cubeY );
-		if( cube == null )
-		{
-			// try to load the cube
-			try
-			{
-				cube = m_loader.loadCubeAndAddToColumn( m_worldServer, column, cubeAddress );
-			}
-			catch( IOException ex )
-			{
-				log.error( String.format( "Unable to load cube (%d,%d,%d)", cubeX, cubeY, cubeZ ), ex );
-				return null;
-			}
-			
-			if( cube == null )
-			{
-				// generate a new cube
-				cube = m_generator.generateCube( column, cubeX, cubeY, cubeZ );
-				cubeWasGenerated = true;
-			}
-		}
-		
-		// if we have a valid cube, initialize everything
 		if( cube != null )
 		{
-			// add the column to the cache
-			m_loadedColumns.put( columnAddress, column );
+			return cube;
+		}
+		
+		// try to load the cube
+		try
+		{
+			cube = m_loader.loadCubeAndAddToColumn( m_worldServer, column, cubeAddress );
+		}
+		catch( IOException ex )
+		{
+			log.error( String.format( "Unable to load cube (%d,%d,%d)", cubeX, cubeY, cubeZ ), ex );
+			return null;
+		}
+		
+		if( cube == null )
+		{
+			// generate a new cube
+			cube = m_generator.generateCube( column, cubeX, cubeY, cubeZ );
 			
-			// init the column
-			column.onChunkLoad();
-			column.isTerrainPopulated = true;
-			
-			if( cubeWasGenerated )
-			{
-				// flag for light recalculations
-				column.isLightPopulated = false;
-			}
-			
-			if( !column.isLightPopulated )
-			{
-				// recompute the sky light
-				m_worldServer.getLightingManager().queueSkyLightCalculation( columnAddress );
-				m_worldServer.getLightingManager().queueFirstLightCalculation( columnAddress );
-			}
+			// flag the column for relighting
+			column.isLightPopulated = false;
 			
 			// NOTE: have to do generator population after the cube is lit
 			// UNDONE: make a chunk population queue
 			//m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
-			
-			// init the cube
-			cube.onLoad();
 		}
-		else
+		
+		assert( cube != null );
+		
+		// add the column to the cache
+		m_loadedColumns.put( columnAddress, column );
+		
+		// init the column
+		column.onChunkLoad();
+		column.isTerrainPopulated = true;
+		
+		if( !column.isLightPopulated )
 		{
-			// otherwise, the world will never know about the column and it'll just get garbage collected
+			// recompute the sky light
+			m_worldServer.getLightingManager().queueSkyLightCalculation( columnAddress );
+			m_worldServer.getLightingManager().queueFirstLightCalculation( columnAddress );
 		}
+		
+		// init the cube
+		cube.onLoad();
 		
 		return cube;
 	}

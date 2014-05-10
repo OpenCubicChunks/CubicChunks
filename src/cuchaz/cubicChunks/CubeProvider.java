@@ -16,5 +16,6 @@ import net.minecraft.world.chunk.IChunkProvider;
 public interface CubeProvider extends IChunkProvider
 {
 	boolean cubeExists( int cubeX, int cubeY, int cubeZ );
+	boolean isCubeLoaded( int cubeX, int cubeY, int cubeZ );
 	Cube loadCube( int cubeX, int cubeY, int cubeZ );
 }

@@ -171,7 +171,7 @@ public class Column extends Chunk
 		}
 		
 		// make a new empty chunk
-		cube = new Cube( worldObj, this, xPosition, cubeY, zPosition, !worldObj.provider.hasNoSky );
+		cube = new Cube( worldObj, this, xPosition, cubeY, zPosition );
 		addCube( cube );
 		return cube;
 	}
@@ -628,33 +628,37 @@ public class Column extends Chunk
 			// signal we're sending this cube
 			out.writeShort( cube.getY() );
 			
-			ExtendedBlockStorage storage = cube.getStorage();
-			
-			// 1. block IDs, low bits
-			out.write( storage.getBlockLSBArray() );
-			
-			// 2. block IDs, high bits
-			if( storage.getBlockMSBArray() != null )
+			out.writeBoolean( cube.isEmpty() );
+			if( !cube.isEmpty() )
 			{
-				out.writeByte( 1 );
-				out.write( storage.getBlockMSBArray().data );
-			}
-			else
-			{
-				// signal we're not sending this data
-				out.writeByte( 0 );
-			}
-			
-			// 3. metadata
-			out.write( storage.getMetadataArray().data );
-			
-			// 4. block light
-			out.write( storage.getBlocklightArray().data );
-			
-			if( !worldObj.provider.hasNoSky )
-			{
-				// 5. sky light
-				out.write( storage.getSkylightArray().data );
+				ExtendedBlockStorage storage = cube.getStorage();
+				
+				// 1. block IDs, low bits
+				out.write( storage.getBlockLSBArray() );
+				
+				// 2. block IDs, high bits
+				if( storage.getBlockMSBArray() != null )
+				{
+					out.writeByte( 1 );
+					out.write( storage.getBlockMSBArray().data );
+				}
+				else
+				{
+					// signal we're not sending this data
+					out.writeByte( 0 );
+				}
+				
+				// 3. metadata
+				out.write( storage.getMetadataArray().data );
+				
+				// 4. block light
+				out.write( storage.getBlocklightArray().data );
+				
+				if( !worldObj.provider.hasNoSky )
+				{
+					// 5. sky light
+					out.write( storage.getSkylightArray().data );
+				}
 			}
 			
 			if( isFirstTime )
@@ -688,32 +692,42 @@ public class Column extends Chunk
 				int cubeY = in.readUnsignedShort();
 				Cube cube = getOrCreateCube( cubeY );
 				
-				ExtendedBlockStorage storage = cube.getStorage();
+				// is the cube empty?
+				boolean isEmpty = in.readBoolean();
+				cube.setEmpty( isEmpty );
 				
-				// 1. block IDs, low bits
-				in.read( storage.getBlockLSBArray() );
-				
-				// 2. block IDs, high bits
-				boolean isHighBitsAttached = in.readByte() != 0;
-				if( isHighBitsAttached )
+				if( !isEmpty )
 				{
-					if( storage.getBlockMSBArray() == null )
+					ExtendedBlockStorage storage = cube.getStorage();
+					
+					// 1. block IDs, low bits
+					in.read( storage.getBlockLSBArray() );
+					
+					// 2. block IDs, high bits
+					boolean isHighBitsAttached = in.readByte() != 0;
+					if( isHighBitsAttached )
 					{
-						storage.createBlockMSBArray();
+						if( storage.getBlockMSBArray() == null )
+						{
+							storage.createBlockMSBArray();
+						}
+						in.read( storage.getBlockMSBArray().data );
 					}
-					in.read( storage.getBlockMSBArray().data );
-				}
-				
-				// 3. metadata
-				in.read( storage.getMetadataArray().data );
-				
-				// 4. block light
-				in.read( storage.getBlocklightArray().data );
-				
-				if( !worldObj.provider.hasNoSky )
-				{
-					// 5. sky light
-					in.read( storage.getSkylightArray().data );
+					
+					// 3. metadata
+					in.read( storage.getMetadataArray().data );
+					
+					// 4. block light
+					in.read( storage.getBlocklightArray().data );
+					
+					if( !worldObj.provider.hasNoSky )
+					{
+						// 5. sky light
+						in.read( storage.getSkylightArray().data );
+					}
+					
+					// clean up invalid blocks
+					storage.removeInvalidBlocks();
 				}
 				
 				if( isFirstTime )
@@ -721,9 +735,6 @@ public class Column extends Chunk
 					// 6. biomes
 					in.read( getBiomeArray() );
 				}
-				
-				// clean up invalid blocks
-				storage.removeInvalidBlocks();
 			}
 			
 			// 7. light index

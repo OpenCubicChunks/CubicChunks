@@ -23,6 +23,7 @@ import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.util.Bits;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.FastIntQueue;
+import cuchaz.cubicChunks.world.Cube;
 
 public class DiffuseLightingCalculator
 {
@@ -218,6 +219,12 @@ public class DiffuseLightingCalculator
 	
 	private boolean shouldUpdateLight( World world, int blockX, int blockY, int blockZ, int targetBlockX, int targetBlockY, int targetBlockZ )
 	{
+		// check our only coordinate bound
+		if( targetBlockY < 0 )
+		{
+			return false;
+		}
+		
 		// don't update blocks that are too far away
 		int manhattanDistance = MathHelper.abs_int( targetBlockX - blockX )
 			+ MathHelper.abs_int( targetBlockY - blockY )
@@ -227,7 +234,7 @@ public class DiffuseLightingCalculator
 			return false;
 		}
 		
-		// don't update blocks can't write to
+		// don't update blocks we can't write to
 		if( !isLightModifiable( world, targetBlockX, targetBlockY, targetBlockZ ) )
 		{
 			return false;
@@ -238,12 +245,19 @@ public class DiffuseLightingCalculator
 	
 	private boolean isLightModifiable( World world, int blockX, int blockY, int blockZ )
 	{
+		CubeWorld cubeWorld = (CubeWorld)world;
+		
+		// get the cube
 		int cubeX = Coords.blockToCube( blockX );
 		int cubeY = Coords.blockToCube( blockY );
 		int cubeZ = Coords.blockToCube( blockZ );
+		if( !cubeWorld.getCubeProvider().isCubeLoaded( cubeX, cubeY, cubeZ ) )
+		{
+			return false;
+		}
+		Cube cube = cubeWorld.getCubeProvider().loadCube( cubeX, cubeY, cubeZ );
 		
-		CubeWorld cubeWorld = (CubeWorld)world;
-		return cubeWorld.getCubeProvider().cubeExists( cubeX, cubeY, cubeZ );
+		return !cube.isEmpty();
 	}
 
 	private int computeLightValue( World world, int blockX, int blockY, int blockZ, EnumSkyBlock lightType )

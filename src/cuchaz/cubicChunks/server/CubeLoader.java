@@ -333,22 +333,25 @@ public class CubeLoader implements IThreadedFileIO
 		nbt.setInteger( "y", cube.getY() );
 		nbt.setInteger( "z", cube.getZ() );
 		
-		// blocks
-		ExtendedBlockStorage storage = cube.getStorage();
-		nbt.setByteArray( "Blocks", storage.getBlockLSBArray() );
-		if( storage.getBlockMSBArray() != null )
+		if( !cube.isEmpty() )
 		{
-			nbt.setByteArray( "Add", storage.getBlockMSBArray().data );
-		}
-		
-		// metadata
-		nbt.setByteArray( "Data", storage.getMetadataArray().data );
-		
-		// light
-		nbt.setByteArray( "BlockLight", storage.getBlocklightArray().data );
-		if( storage.getSkylightArray() != null )
-		{
-			nbt.setByteArray( "SkyLight", storage.getSkylightArray().data );
+			// blocks
+			ExtendedBlockStorage storage = cube.getStorage();
+			nbt.setByteArray( "Blocks", storage.getBlockLSBArray() );
+			if( storage.getBlockMSBArray() != null )
+			{
+				nbt.setByteArray( "Add", storage.getBlockMSBArray().data );
+			}
+			
+			// metadata
+			nbt.setByteArray( "Data", storage.getMetadataArray().data );
+			
+			// light
+			nbt.setByteArray( "BlockLight", storage.getBlocklightArray().data );
+			if( storage.getSkylightArray() != null )
+			{
+				nbt.setByteArray( "SkyLight", storage.getSkylightArray().data );
+			}
 		}
 		
 		// entities
@@ -437,28 +440,34 @@ public class CubeLoader implements IThreadedFileIO
 		
 		// build the cube
 		boolean hasSky = !world.provider.hasNoSky;
-		final Cube cube = new Cube( world, column, x, y, z, hasSky );
+		final Cube cube = new Cube( world, column, x, y, z );
 		column.addCube( cube );
 		
-		ExtendedBlockStorage storage = cube.getStorage();
-		
-		// blocks
-		storage.setBlockLSBArray( nbt.getByteArray( "Blocks" ) );
-		if( nbt.func_150297_b( "Add", 7 ) )
+		// is this an empty cube?
+		boolean isEmpty = !nbt.hasKey( "Blocks" );
+		cube.setEmpty( isEmpty );
+		if( !isEmpty )
 		{
-			storage.setBlockMSBArray( new NibbleArray( nbt.getByteArray( "Add" ), 4 ) );
+			ExtendedBlockStorage storage = cube.getStorage();
+			
+			// blocks
+			storage.setBlockLSBArray( nbt.getByteArray( "Blocks" ) );
+			if( nbt.func_150297_b( "Add", 7 ) )
+			{
+				storage.setBlockMSBArray( new NibbleArray( nbt.getByteArray( "Add" ), 4 ) );
+			}
+			
+			// metadata
+			storage.setBlockMetadataArray( new NibbleArray( nbt.getByteArray( "Data" ), 4 ) );
+			
+			// lights
+			storage.setBlocklightArray( new NibbleArray( nbt.getByteArray( "BlockLight" ), 4 ) );
+			if( hasSky )
+			{
+				storage.setSkylightArray( new NibbleArray( nbt.getByteArray( "SkyLight" ), 4 ) );
+			}
+			storage.removeInvalidBlocks();
 		}
-		
-		// metadata
-		storage.setBlockMetadataArray( new NibbleArray( nbt.getByteArray( "Data" ), 4 ) );
-		
-		// lights
-		storage.setBlocklightArray( new NibbleArray( nbt.getByteArray( "BlockLight" ), 4 ) );
-		if( hasSky )
-		{
-			storage.setSkylightArray( new NibbleArray( nbt.getByteArray( "SkyLight" ), 4 ) );
-		}
-		storage.removeInvalidBlocks();
 		
 		// entities
 		cube.getEntityContainer().readFromNbt( nbt, "Entities", world, new EntityActionListener( )
