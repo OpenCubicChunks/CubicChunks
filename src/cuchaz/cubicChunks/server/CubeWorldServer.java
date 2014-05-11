@@ -66,7 +66,9 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 	{
 		super.tick();
 		
+		theProfiler.startSection( "lightingEngine" );
 		m_lightingManager.tick();
+		theProfiler.endSection();
 	}
 	
 	public long getSpawnPointCubeAddress( )

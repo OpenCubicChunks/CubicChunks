@@ -170,12 +170,15 @@ public class CubePlayerManager extends PlayerManager
 				continue;
 			}
 			
-			// remove from the watcher
+			// get the watcher
 			CubeWatcher watcher = getWatcher( address );
-			if( watcher != null )
+			if( watcher == null )
 			{
-				watcher.removePlayer( player );
+				continue;
 			}
+			
+			// remove from the watcher
+			watcher.removePlayer( player );
 			
 			// cleanup empty watchers and cubes
 			if( !watcher.hasPlayers() )
