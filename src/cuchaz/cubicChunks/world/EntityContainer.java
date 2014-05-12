@@ -59,6 +59,11 @@ public class EntityContainer
 		return m_entities;
 	}
 	
+	public int size( )
+	{
+		return m_entities.size();
+	}
+	
 	public void getEntities( List<Entity> out, Class<?> c, AxisAlignedBB queryBox, IEntitySelector selector )
 	{
 		for( Entity entity : m_entities )

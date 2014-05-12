@@ -86,9 +86,9 @@ public class Cube
 	public static Cube generateEmptyCubeAndAddToColumn( World world, Column column, int cubeX, int cubeY, int cubeZ )
 	{
 		Cube cube = new Cube( world, column, cubeX, cubeY, cubeZ );
+		cube.setEmpty( true );
 		column.addCube( cube );
 		cube.m_isModified = true;
-		cube.setEmpty(true);
 		return cube;
 	}
 	
@@ -500,18 +500,12 @@ public class Cube
 	
 	public int getBlockLightValue( int localX, int localY, int localZ, int skylightSubtracted )
 	{
-		
-		
 		// get sky light
-		int skyLight = 0;
-		if( !m_world.provider.hasNoSky )
-		{
-			skyLight = m_storage.getExtSkylightValue( localX, localY, localZ );
-		}
+		int skyLight = getLightValue( EnumSkyBlock.Sky, localX, localY, localZ );
 		skyLight -= skylightSubtracted;
 		
 		// get block light
-		int blockLight = m_storage.getExtBlocklightValue( localX, localY, localZ );
+		int blockLight = getLightValue( EnumSkyBlock.Block, localX, localY, localZ );
 		
 		// FIGHT!!!
 		if( blockLight > skyLight )
@@ -523,41 +517,40 @@ public class Cube
 	
 	public int getLightValue( EnumSkyBlock lightType, int localX, int localY, int localZ )
 	{
-		if( lightType == EnumSkyBlock.Sky )
+		switch( lightType )
 		{
-			if( !m_world.provider.hasNoSky )
-			{
-				if( isEmpty() )
+			case Sky:
+				if( !m_world.provider.hasNoSky )
 				{
-					if( isUnderground( localX, localY, localZ ) )
+					if( isEmpty() )
 					{
-						return 0;
+						if( isUnderground( localX, localY, localZ ) )
+						{
+							return 0;
+						}
+						else
+						{
+							return 15;
+						}
 					}
-					else
-					{
-						return 15;
-					}
+					
+					return m_storage.getExtSkylightValue( localX, localY, localZ );
+				}
+				else
+				{
+					return 0;
 				}
 				
-				return m_storage.getExtSkylightValue( localX, localY, localZ );
-			}
-			else
-			{
-				return 0;
-			}
-		}
-		else if( lightType == EnumSkyBlock.Block )
-		{
-			if( isEmpty() )
-			{
-				return 0;
-			}
-			
-			return m_storage.getExtBlocklightValue( localX, localY, localZ );
-		}
-		else
-		{
-			return lightType.defaultLightValue;
+			case Block:
+				if( isEmpty() )
+				{
+					return 0;
+				}
+				
+				return m_storage.getExtBlocklightValue( localX, localY, localZ );
+				
+			default:
+				return lightType.defaultLightValue;
 		}
 	}
 	
@@ -569,16 +562,18 @@ public class Cube
 			setEmpty( false );
 		}
 		
-		if( lightType == EnumSkyBlock.Sky )
+		switch( lightType )
 		{
-			if( !m_world.provider.hasNoSky )
-			{
-				m_storage.setExtSkylightValue( x, y, z, light );
-			}
-		}
-		else if( lightType == EnumSkyBlock.Block )
-		{
-			m_storage.setExtBlocklightValue( x, y, z, light );
+			case Sky:
+				if( !m_world.provider.hasNoSky )
+				{
+					m_storage.setExtSkylightValue( x, y, z, light );
+				}
+			break;
+			
+			case Block:
+				m_storage.setExtBlocklightValue( x, y, z, light );
+			break;
 		}
 		m_isModified = true;
 	}

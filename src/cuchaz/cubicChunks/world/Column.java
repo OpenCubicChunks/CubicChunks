@@ -53,6 +53,8 @@ public class Column extends Chunk
 	private List<Cube> m_roundRobinCubes;
 	private EntityContainer m_entities;
 	
+	private transient List<Entity> m_tempEntities;
+	
 	public Column( World world, int x, int z )
 	{
 		// NOTE: this constructor is called by the chunk loader
@@ -86,6 +88,8 @@ public class Column extends Chunk
 		m_roundRobinLightUpdatePointer = 0;
 		m_roundRobinCubes = new ArrayList<Cube>();
 		m_entities = new EntityContainer();
+		
+		m_tempEntities = new ArrayList<Entity>();
 		
 		// make sure no one's using data structures that have been replaced
 		// also saves memory
@@ -769,11 +773,12 @@ public class Column extends Chunk
 		
 		// migrate moved entities to new cubes
 		// UNDONE: optimize out the new
-		List<Entity> entities = new ArrayList<Entity>();
 		for( Cube cube : m_cubes.values() )
 		{
-			cube.getMigratedEntities( entities );
-			for( Entity entity : entities )
+			// for each entity that needs to move...
+			m_tempEntities.clear();
+			cube.getMigratedEntities( m_tempEntities );
+			for( Entity entity : m_tempEntities )
 			{
 				int cubeX = Coords.getCubeXForEntity( entity );
 				int cubeY = Coords.getCubeYForEntity( entity );
