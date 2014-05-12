@@ -160,7 +160,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		for( int cubeY=Coords.blockToCube( SeaLevel ); ; cubeY++ )
 		{
 			Cube cube = loadCube( cubeX, cubeY, cubeZ );
-			if( cube != null )
+			if( !cube.isEmpty() )
 			{
 				column = cube.getColumn();
 			}

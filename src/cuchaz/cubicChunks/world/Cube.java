@@ -88,6 +88,7 @@ public class Cube
 		Cube cube = new Cube( world, column, cubeX, cubeY, cubeZ );
 		column.addCube( cube );
 		cube.m_isModified = true;
+		cube.setEmpty(true);
 		return cube;
 	}
 	

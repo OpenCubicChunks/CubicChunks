@@ -143,7 +143,11 @@ public class CubeGenerator implements ICubeGenerator
 		// is there nothing but air here?
 		if( m_blocks.isEmpty() )
 		{
-			Cube.generateEmptyCubeAndAddToColumn( m_world, column, cubeX, cubeY, cubeZ );
+			return Cube.generateEmptyCubeAndAddToColumn( m_world, column, cubeX, cubeY, cubeZ );
+		}
+		else
+		{
+			return Cube.generateCubeAndAddToColumn( m_world, column, cubeX, cubeY, cubeZ, m_blocks );
 		}
 		
 		/* TEMP: don't do these things yet. They still need to be cubified
@@ -160,8 +164,6 @@ public class CubeGenerator implements ICubeGenerator
 			m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
 		}
 		*/
-		
-		return Cube.generateCubeAndAddToColumn( m_world, column, cubeX, cubeY, cubeZ, m_blocks );
 	}
 	
 	private void generateTerrain( int cubeX, int cubeY, int cubeZ, CubeBlocks blocks )
