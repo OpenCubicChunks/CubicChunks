@@ -47,8 +47,9 @@ public class Column extends Chunk
 {
 	private static final Logger log = LogManager.getLogger();
 	
+	private static final ExtendedBlockStorage[] m_emptyStorageArray = new ExtendedBlockStorage[0]; 
+	
 	private TreeMap<Integer,Cube> m_cubes;
-	private ExtendedBlockStorage[] m_legacySegments;
 	private LightIndex m_lightIndex;
 	private int m_roundRobinLightUpdatePointer;
 	private List<Cube> m_roundRobinCubes;
@@ -84,7 +85,6 @@ public class Column extends Chunk
 	private void init( )
 	{
 		m_cubes = new TreeMap<Integer,Cube>();
-		m_legacySegments = null;
 		m_lightIndex = new LightIndex();
 		m_roundRobinLightUpdatePointer = 0;
 		m_roundRobinCubes = new ArrayList<Cube>();
@@ -162,7 +162,6 @@ public class Column extends Chunk
 	public void addCube( Cube cube )
 	{
 		m_cubes.put( cube.getY(), cube );
-		m_legacySegments = null;
 	}
 	
 	private Cube addEmptyCube( int cubeY )
@@ -183,7 +182,6 @@ public class Column extends Chunk
 	
 	public Cube removeCube( int cubeY )
 	{
-		m_legacySegments = null;
 		return m_cubes.remove( cubeY );
 	}
 	
@@ -358,23 +356,8 @@ public class Column extends Chunk
 	@Override
 	public ExtendedBlockStorage[] getBlockStorageArray( )
 	{
-		if( m_legacySegments == null )
-		{
-			// build the segments index
-			if( m_cubes.isEmpty() )
-			{
-				m_legacySegments = new ExtendedBlockStorage[0];
-			}
-			else
-			{
-				m_legacySegments = new ExtendedBlockStorage[m_cubes.lastKey()+1];
-				for( Cube cube : m_cubes.values() )
-				{
-					m_legacySegments[cube.getY()] = cube.getStorage();
-				}
-			}
-		}
-		return m_legacySegments;
+		// don't use this anymore
+		return m_emptyStorageArray;
 	}
 	
 	public int getTopCubeY( )
@@ -1018,19 +1001,21 @@ public class Column extends Chunk
 	@Override // doSomeRoundRobinLightUpdates
 	public void enqueueRelightChecks( )
 	{
+		worldObj.theProfiler.startSection( "roundRobinRelight" );
+		
 		if( m_roundRobinCubes.isEmpty() )
 		{
 			resetRelightChecks();
 		}
 		
-		// we get 8 updates this time
-		for( int i=0; i<8; i++ )
+		// we get just a few updates this time
+		for( int i=0; i<2; i++ )
 		{
 			// once we've checked all the blocks, stop checking
 			int maxPointer = 16*16*m_roundRobinCubes.size();
 			if( m_roundRobinLightUpdatePointer >= maxPointer )
 			{
-				return;
+				break;
 			}
 			
 			// get this update's arguments
@@ -1087,6 +1072,8 @@ public class Column extends Chunk
 				}
 			}
 		}
+		
+		worldObj.theProfiler.endSection();
 	}
 	
 	@Override // populateLighting
@@ -1094,5 +1081,18 @@ public class Column extends Chunk
 	{
 		// don't use this, use the new lighting manager
 		throw new UnsupportedOperationException();
+	}
+	
+	public void doRandomTicks( )
+	{
+		if( isEmpty() )
+		{
+			return;
+		}
+		
+		for( Cube cube : m_cubes.values() )
+		{
+			cube.doRandomTicks();
+		}
 	}
 }

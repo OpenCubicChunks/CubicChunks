@@ -585,4 +585,32 @@ public class Cube
 		}
 		m_isModified = true;
 	}
+	
+	public void doRandomTicks( )
+	{
+		if( isEmpty() || !m_storage.getNeedsRandomTick() )
+		{
+			return;
+		}
+		
+		// do three random ticks
+		for( int i=0; i<3; i++ )
+		{
+			// get a random block
+			int index = m_world.rand.nextInt();
+			int localX = index & 15;
+			int localY = index >> 8 & 15;
+			int localZ = index >> 16 & 15;
+			Block block = m_storage.func_150819_a( localX, localZ, localY );
+			
+			if( block.getTickRandomly() )
+			{
+				// tick it
+				int blockX = Coords.localToBlock( m_x, localX );
+				int blockY = Coords.localToBlock( m_y, localY );
+				int blockZ = Coords.localToBlock( m_z, localZ );
+				block.updateTick( m_world, blockX, blockY, blockZ, m_world.rand );
+			}
+		}
+	}
 }

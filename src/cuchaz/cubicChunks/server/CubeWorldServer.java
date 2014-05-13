@@ -10,8 +10,11 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.server;
 
+import java.util.Set;
+
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
@@ -23,6 +26,7 @@ import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 import cuchaz.cubicChunks.lighting.LightingManager;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.world.Column;
 
 public class CubeWorldServer extends WorldServer implements CubeWorld
 {
@@ -118,4 +122,18 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 		// forward to the new lighting system
 		return m_lightingManager.computeDiffuseLighting( blockX, blockY, blockZ, lightType );
     }
+	
+	@Override //            tick
+	@SuppressWarnings( "unchecked" )
+	protected void func_147456_g( )
+	{
+		super.func_147456_g();
+		
+		// apply random ticks
+		for( ChunkCoordIntPair coords : (Set<ChunkCoordIntPair>)activeChunkSet )
+		{
+			Column column = (Column)chunkProvider.provideChunk( coords.chunkXPos, coords.chunkZPos );
+			column.doRandomTicks();
+		}
+	}
 }
