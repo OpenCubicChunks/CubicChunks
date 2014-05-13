@@ -140,42 +140,50 @@ public class EntityContainer
 		}
 	}
 	
-	public void readFromNbt( NBTTagCompound nbt, String name, World world )
-	{
-		readFromNbt( nbt, name, world, null );
-	}
-	
 	public void readFromNbt( NBTTagCompound nbt, String name, World world, EntityActionListener listener )
 	{
 		NBTTagList nbtEntities = nbt.getTagList( name, 10 );
-		if( nbtEntities != null )
+		if( nbtEntities == null )
 		{
-			for( int i=0; i<nbtEntities.tagCount(); i++ )
+			return;
+		}
+		
+		for( int i=0; i<nbtEntities.tagCount(); i++ )
+		{
+			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt( i );
+			
+			// create the entity
+			Entity entity = EntityList.createEntityFromNBT( nbtEntity, world );
+			if( entity == null )
 			{
-				NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt( i );
-				Entity entity = EntityList.createEntityFromNBT( nbtEntity, world );
-				if( entity != null )
+				continue;
+			}
+			
+			add( entity );
+			
+			if( listener != null )
+			{
+				listener.onEntity( entity );
+			}
+			
+			// deal with riding
+			while( nbtEntity.func_150297_b( "Riding", 10 ) )
+			{
+				// create the ridden entity
+				NBTTagCompound nbtRiddenEntity = nbtEntity.getCompoundTag( "Riding" );
+				Entity riddenEntity = EntityList.createEntityFromNBT( nbtRiddenEntity, world );
+				if( riddenEntity == null )
 				{
-					add( entity );
-					
-					if( listener != null )
-					{
-						listener.onEntity( entity );
-					}
-					
-					// deal with riding
-					Entity topEntity = entity;
-					for( NBTTagCompound nbtRiddenEntity = nbtEntity; nbtRiddenEntity.func_150297_b( "Riding", 10 ); nbtRiddenEntity = nbtRiddenEntity.getCompoundTag( "Riding" ) )
-					{
-						Entity riddenEntity = EntityList.createEntityFromNBT( nbtRiddenEntity.getCompoundTag( "Riding" ), world );
-						if( riddenEntity != null )
-						{
-							add( riddenEntity );
-							topEntity.mountEntity( riddenEntity );
-						}
-						topEntity = riddenEntity;
-					}
+					break;
 				}
+				
+				// RIDE THE PIG!!
+				add( riddenEntity );
+				entity.mountEntity( riddenEntity );
+				
+				// point to the ridden entity and iterate
+				entity = riddenEntity;
+				nbtEntity = nbtRiddenEntity;
 			}
 		}
 	}

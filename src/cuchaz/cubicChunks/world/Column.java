@@ -15,6 +15,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -454,10 +455,11 @@ public class Column extends Chunk
 			// entities don't have to be in chunks, just add it directly to the column
 			entity.addedToChunk = true;
 			entity.chunkCoordX = xPosition;
-			entity.chunkCoordY = MathHelper.floor_double( entity.posY/16 );
+			entity.chunkCoordY = cubeY;
 			entity.chunkCoordZ = zPosition;
 	        
 			m_entities.add( entity );
+			isModified = true;
 		}
     }
 	
@@ -470,9 +472,9 @@ public class Column extends Chunk
 	@Override
 	public void removeEntityAtIndex( Entity entity, int cubeY )
 	{
-		if( m_entities.remove( entity ) )
+		if( !entity.addedToChunk )
 		{
-			isModified = true;
+			return;
 		}
 		
 		// pass off to the cube
@@ -480,6 +482,20 @@ public class Column extends Chunk
 		if( cube != null )
 		{
 			cube.removeEntity( entity );
+		}
+		else if( m_entities.remove( entity ) )
+		{
+			entity.addedToChunk = false;
+			isModified = true;
+		}
+		else
+		{
+			log.warn( String.format( "%s Tried to remove entity %s from column (%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
+				worldObj.isClient? "CLIENT" : "SERVER",
+				entity.getClass().getName(),
+				xPosition, zPosition,
+				entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
+			) );
 		}
 	}
 	
@@ -771,8 +787,9 @@ public class Column extends Chunk
 		// isTicked
 		field_150815_m = true;
 		
+		worldObj.theProfiler.startSection( "entityMigration" );
+		
 		// migrate moved entities to new cubes
-		// UNDONE: optimize out the new
 		for( Cube cube : m_cubes.values() )
 		{
 			// for each entity that needs to move...
@@ -809,7 +826,35 @@ public class Column extends Chunk
 			}
 		}
 		
-		// UNDONE: check for entity migration from the column to a cube
+		// check for entity migration from the column to a cube
+		Iterator<Entity> iter = m_entities.entities().iterator();
+		while( iter.hasNext() )
+		{
+			Entity entity = iter.next();
+			int cubeX = Coords.getCubeXForEntity( entity );
+			int cubeY = Coords.getCubeYForEntity( entity );
+			int cubeZ = Coords.getCubeZForEntity( entity );
+			
+			if( cubeX != xPosition || cubeZ != zPosition )
+			{
+				// these entities are migrated by the world to other columns, we can ignore them
+				continue;
+			}
+			
+			// is there a cube here?
+			Cube cube = m_cubes.get( cubeY );
+			if( cube != null )
+			{
+				// remove from the column
+				iter.remove();
+				isModified = true;
+				
+				// add to the cube
+				cube.addEntity( entity );
+			}
+		}
+		
+		worldObj.theProfiler.endSection();
 	}
 	
 	@Override
@@ -829,13 +874,6 @@ public class Column extends Chunk
 		if( height == -999 )
 		{
 			// compute a new rain height
-			
-			// TEMP
-			if( m_cubes.isEmpty() )
-			{
-				System.out.println( String.format( "No cubes in column (%d,%d)", xPosition, zPosition ) );
-			}
-			
 			int maxBlockY = getTopFilledSegment() + 15;
 			int minBlockY = Coords.cubeToMinBlock( m_cubes.firstKey() );
 			

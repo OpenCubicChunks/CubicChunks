@@ -284,7 +284,7 @@ public class CubeLoader implements IThreadedFileIO
 		return nbt;
 	}
 	
-	private Column readColumnFromNBT( World world, int x, int z, NBTTagCompound nbt )
+	private Column readColumnFromNBT( World world, final int x, final int z, NBTTagCompound nbt )
 	{
 		// check the version number
 		byte version = nbt.getByte( "v" );
@@ -318,7 +318,17 @@ public class CubeLoader implements IThreadedFileIO
 		column.getLightIndex().readData( nbt.getByteArray( "LightIndex" ) );
 		
 		// entities
-		column.getEntityContainer().readFromNbt( nbt, "Entities", world );
+		column.getEntityContainer().readFromNbt( nbt, "Entities", world, new EntityActionListener( )
+		{
+			@Override
+			public void onEntity( Entity entity )
+			{
+				entity.addedToChunk = true;
+				entity.chunkCoordX = x;
+				entity.chunkCoordY = Coords.getCubeYForEntity( entity );
+				entity.chunkCoordZ = z;
+			}
+		} );
 		
 		return column;
 	}
@@ -410,7 +420,7 @@ public class CubeLoader implements IThreadedFileIO
 		return nbt;
 	}
 	
-	private Cube readCubeFromNbtAndAddToColumn( World world, Column column, int x, int y, int z, NBTTagCompound nbt )
+	private Cube readCubeFromNbtAndAddToColumn( World world, Column column, final int x, final int y, final int z, NBTTagCompound nbt )
 	{
 		// NBT types:
 		// 0      1       2        3      4       5        6         7         8         9       10          11
@@ -487,6 +497,11 @@ public class CubeLoader implements IThreadedFileIO
 						cube.getX(), cube.getY(), cube.getZ()
 					) );
 				}
+				
+				entity.addedToChunk = true;
+				entity.chunkCoordX = x;
+				entity.chunkCoordY = y;
+				entity.chunkCoordZ = z;
 			}
 		} );
 		
