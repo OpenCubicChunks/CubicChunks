@@ -19,7 +19,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -336,15 +335,14 @@ public class Cube
 			) );
 		}
 		
-		// tell the entity it's in a cube
-		// NOTE: we have to set the y coord to the chunk the entity is in, not the chunk it's standing on.
-		// otherwise, the world will continually re-add the entity to the column
+		// tell the entity it's in this cube
 		entity.addedToChunk = true;
 		entity.chunkCoordX = m_x;
-		entity.chunkCoordY = MathHelper.floor_double( entity.posY/16 );
+		entity.chunkCoordY = m_y;
 		entity.chunkCoordZ = m_z;
         
 		m_entities.add( entity );
+		m_isModified = true;
 	}
 	
 	public boolean removeEntity( Entity entity )
@@ -352,7 +350,17 @@ public class Cube
 		boolean wasRemoved = m_entities.remove( entity );
 		if( wasRemoved )
 		{
+			entity.addedToChunk = false;
 			m_isModified = true;
+		}
+		else
+		{
+			log.warn( String.format( "%s Tried to remove entity %s from cube (%d,%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
+				m_world.isClient? "CLIENT" : "SERVER",
+				entity.getClass().getName(),
+				m_x, m_y, m_z,
+				entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
+			) );
 		}
 		return wasRemoved;
 	}
@@ -576,5 +584,33 @@ public class Cube
 			break;
 		}
 		m_isModified = true;
+	}
+	
+	public void doRandomTicks( )
+	{
+		if( isEmpty() || !m_storage.getNeedsRandomTick() )
+		{
+			return;
+		}
+		
+		// do three random ticks
+		for( int i=0; i<3; i++ )
+		{
+			// get a random block
+			int index = m_world.rand.nextInt();
+			int localX = index & 15;
+			int localY = index >> 8 & 15;
+			int localZ = index >> 16 & 15;
+			Block block = m_storage.func_150819_a( localX, localZ, localY );
+			
+			if( block.getTickRandomly() )
+			{
+				// tick it
+				int blockX = Coords.localToBlock( m_x, localX );
+				int blockY = Coords.localToBlock( m_y, localY );
+				int blockZ = Coords.localToBlock( m_z, localZ );
+				block.updateTick( m_world, blockX, blockY, blockZ, m_world.rand );
+			}
+		}
 	}
 }

@@ -15,6 +15,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -46,8 +47,9 @@ public class Column extends Chunk
 {
 	private static final Logger log = LogManager.getLogger();
 	
+	private static final ExtendedBlockStorage[] m_emptyStorageArray = new ExtendedBlockStorage[0]; 
+	
 	private TreeMap<Integer,Cube> m_cubes;
-	private ExtendedBlockStorage[] m_legacySegments;
 	private LightIndex m_lightIndex;
 	private int m_roundRobinLightUpdatePointer;
 	private List<Cube> m_roundRobinCubes;
@@ -83,7 +85,6 @@ public class Column extends Chunk
 	private void init( )
 	{
 		m_cubes = new TreeMap<Integer,Cube>();
-		m_legacySegments = null;
 		m_lightIndex = new LightIndex();
 		m_roundRobinLightUpdatePointer = 0;
 		m_roundRobinCubes = new ArrayList<Cube>();
@@ -161,7 +162,6 @@ public class Column extends Chunk
 	public void addCube( Cube cube )
 	{
 		m_cubes.put( cube.getY(), cube );
-		m_legacySegments = null;
 	}
 	
 	private Cube addEmptyCube( int cubeY )
@@ -182,7 +182,6 @@ public class Column extends Chunk
 	
 	public Cube removeCube( int cubeY )
 	{
-		m_legacySegments = null;
 		return m_cubes.remove( cubeY );
 	}
 	
@@ -357,23 +356,8 @@ public class Column extends Chunk
 	@Override
 	public ExtendedBlockStorage[] getBlockStorageArray( )
 	{
-		if( m_legacySegments == null )
-		{
-			// build the segments index
-			if( m_cubes.isEmpty() )
-			{
-				m_legacySegments = new ExtendedBlockStorage[0];
-			}
-			else
-			{
-				m_legacySegments = new ExtendedBlockStorage[m_cubes.lastKey()+1];
-				for( Cube cube : m_cubes.values() )
-				{
-					m_legacySegments[cube.getY()] = cube.getStorage();
-				}
-			}
-		}
-		return m_legacySegments;
+		// don't use this anymore
+		return m_emptyStorageArray;
 	}
 	
 	public int getTopCubeY( )
@@ -454,10 +438,11 @@ public class Column extends Chunk
 			// entities don't have to be in chunks, just add it directly to the column
 			entity.addedToChunk = true;
 			entity.chunkCoordX = xPosition;
-			entity.chunkCoordY = MathHelper.floor_double( entity.posY/16 );
+			entity.chunkCoordY = cubeY;
 			entity.chunkCoordZ = zPosition;
 	        
 			m_entities.add( entity );
+			isModified = true;
 		}
     }
 	
@@ -470,9 +455,9 @@ public class Column extends Chunk
 	@Override
 	public void removeEntityAtIndex( Entity entity, int cubeY )
 	{
-		if( m_entities.remove( entity ) )
+		if( !entity.addedToChunk )
 		{
-			isModified = true;
+			return;
 		}
 		
 		// pass off to the cube
@@ -480,6 +465,20 @@ public class Column extends Chunk
 		if( cube != null )
 		{
 			cube.removeEntity( entity );
+		}
+		else if( m_entities.remove( entity ) )
+		{
+			entity.addedToChunk = false;
+			isModified = true;
+		}
+		else
+		{
+			log.warn( String.format( "%s Tried to remove entity %s from column (%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
+				worldObj.isClient? "CLIENT" : "SERVER",
+				entity.getClass().getName(),
+				xPosition, zPosition,
+				entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
+			) );
 		}
 	}
 	
@@ -771,8 +770,9 @@ public class Column extends Chunk
 		// isTicked
 		field_150815_m = true;
 		
+		worldObj.theProfiler.startSection( "entityMigration" );
+		
 		// migrate moved entities to new cubes
-		// UNDONE: optimize out the new
 		for( Cube cube : m_cubes.values() )
 		{
 			// for each entity that needs to move...
@@ -809,7 +809,35 @@ public class Column extends Chunk
 			}
 		}
 		
-		// UNDONE: check for entity migration from the column to a cube
+		// check for entity migration from the column to a cube
+		Iterator<Entity> iter = m_entities.entities().iterator();
+		while( iter.hasNext() )
+		{
+			Entity entity = iter.next();
+			int cubeX = Coords.getCubeXForEntity( entity );
+			int cubeY = Coords.getCubeYForEntity( entity );
+			int cubeZ = Coords.getCubeZForEntity( entity );
+			
+			if( cubeX != xPosition || cubeZ != zPosition )
+			{
+				// these entities are migrated by the world to other columns, we can ignore them
+				continue;
+			}
+			
+			// is there a cube here?
+			Cube cube = m_cubes.get( cubeY );
+			if( cube != null )
+			{
+				// remove from the column
+				iter.remove();
+				isModified = true;
+				
+				// add to the cube
+				cube.addEntity( entity );
+			}
+		}
+		
+		worldObj.theProfiler.endSection();
 	}
 	
 	@Override
@@ -829,13 +857,6 @@ public class Column extends Chunk
 		if( height == -999 )
 		{
 			// compute a new rain height
-			
-			// TEMP
-			if( m_cubes.isEmpty() )
-			{
-				System.out.println( String.format( "No cubes in column (%d,%d)", xPosition, zPosition ) );
-			}
-			
 			int maxBlockY = getTopFilledSegment() + 15;
 			int minBlockY = Coords.cubeToMinBlock( m_cubes.firstKey() );
 			
@@ -980,19 +1001,21 @@ public class Column extends Chunk
 	@Override // doSomeRoundRobinLightUpdates
 	public void enqueueRelightChecks( )
 	{
+		worldObj.theProfiler.startSection( "roundRobinRelight" );
+		
 		if( m_roundRobinCubes.isEmpty() )
 		{
 			resetRelightChecks();
 		}
 		
-		// we get 8 updates this time
-		for( int i=0; i<8; i++ )
+		// we get just a few updates this time
+		for( int i=0; i<2; i++ )
 		{
 			// once we've checked all the blocks, stop checking
 			int maxPointer = 16*16*m_roundRobinCubes.size();
 			if( m_roundRobinLightUpdatePointer >= maxPointer )
 			{
-				return;
+				break;
 			}
 			
 			// get this update's arguments
@@ -1049,6 +1072,8 @@ public class Column extends Chunk
 				}
 			}
 		}
+		
+		worldObj.theProfiler.endSection();
 	}
 	
 	@Override // populateLighting
@@ -1056,5 +1081,18 @@ public class Column extends Chunk
 	{
 		// don't use this, use the new lighting manager
 		throw new UnsupportedOperationException();
+	}
+	
+	public void doRandomTicks( )
+	{
+		if( isEmpty() )
+		{
+			return;
+		}
+		
+		for( Cube cube : m_cubes.values() )
+		{
+			cube.doRandomTicks();
+		}
 	}
 }
