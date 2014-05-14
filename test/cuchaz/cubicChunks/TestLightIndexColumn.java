@@ -28,7 +28,7 @@ public class TestLightIndexColumn
 	public void readZero( )
 	{
 		LightIndexColumn index = new LightIndexColumn();
-		for( int i=0; i<16; i++ )
+		for( int i=-16; i<=16; i++ )
 		{
 			assertEquals( 0, index.getOpacity( i ) );
 		}
@@ -37,71 +37,121 @@ public class TestLightIndexColumn
 	@Test
 	public void writeBottomDiffAbove( )
 	{
-		LightIndexColumn index = buildColumn( 0, 0 );
-		
-		index.setOpacity( 0, 1 );
-		
-		assertEquals( 1, index.getOpacity( 0 ) );
-		assertEquals( 0, index.getOpacity( 1 ) );
+		for( int i=-16; i<=16; i++ )
+		{
+			LightIndexColumn index = buildColumn( i+0, 0 );
+			
+			index.setOpacity( i+0, 1 );
+			
+			assertEquals( 1, index.getOpacity( i ) );
+			assertEquals( 0, index.getOpacity( i+1 ) );
+		}
 	}
 	
 	@Test
 	public void writeBottomSameAbove( )
 	{
-		LightIndexColumn index = buildColumn( 0, 0, 1, 1 );
-		
-		index.setOpacity( 0, 1 );
-		
-		assertEquals( 1, index.getOpacity( 0 ) );
-		assertEquals( 1, index.getOpacity( 1 ) );
+		for( int i=-16; i<=16; i++ )
+		{
+			LightIndexColumn index = buildColumn( i+0, 0, i+1, 1 );
+			
+			index.setOpacity( i+0, 1 );
+			
+			assertEquals( 1, index.getOpacity( i+0 ) );
+			assertEquals( 1, index.getOpacity( i+1 ) );
+		}
 	}
 	
 	@Test
 	public void writeMiddleSameBottomSameAbove( )
 	{
-		LightIndexColumn index = buildColumn( 0, 1, 5, 0, 6, 1 );
-		
-		index.setOpacity( 5, 1 );
-		
-		assertEquals( 1, index.getOpacity( 4 ) );
-		assertEquals( 1, index.getOpacity( 5 ) );
-		assertEquals( 1, index.getOpacity( 6 ) );
+		for( int i=-16; i<=16; i++ )
+		{
+			LightIndexColumn index = buildColumn( i+0, 1, i+5, 0, i+6, 1 );
+			
+			index.setOpacity( i+5, 1 );
+			
+			assertEquals( 1, index.getOpacity( i+4 ) );
+			assertEquals( 1, index.getOpacity( i+5 ) );
+			assertEquals( 1, index.getOpacity( i+6 ) );
+		}
 	}
 	
 	@Test
 	public void writeMiddleDiffBottomSameAbove( )
 	{
-		LightIndexColumn index = buildColumn( 0, 0, 6, 1 );
-		
-		index.setOpacity( 5, 1 );
-		
-		assertEquals( 0, index.getOpacity( 4 ) );
-		assertEquals( 1, index.getOpacity( 5 ) );
-		assertEquals( 1, index.getOpacity( 6 ) );
+		for( int i=-16; i<=16; i++ )
+		{
+			LightIndexColumn index = buildColumn( i+6, 1 );
+			
+			index.setOpacity( i+5, 1 );
+			
+			assertEquals( 0, index.getOpacity( i+4 ) );
+			assertEquals( 1, index.getOpacity( i+5 ) );
+			assertEquals( 1, index.getOpacity( i+6 ) );
+		}
 	}
 	
 	@Test
 	public void writeMiddleDiffBottomDiffAbove( )
 	{
-		LightIndexColumn index = buildColumn( 0, 0 );
-		
-		index.setOpacity( 5, 1 );
-		
-		assertEquals( 0, index.getOpacity( 4 ) );
-		assertEquals( 1, index.getOpacity( 5 ) );
-		assertEquals( 0, index.getOpacity( 6 ) );
+		for( int i=-16; i<=16; i++ )
+		{
+			LightIndexColumn index = buildColumn( i+0, 0 );
+			
+			index.setOpacity( i+5, 1 );
+			
+			assertEquals( 0, index.getOpacity( i+4 ) );
+			assertEquals( 1, index.getOpacity( i+5 ) );
+			assertEquals( 0, index.getOpacity( i+6 ) );
+		}
 	}
 	
 	@Test
 	public void writeMiddleSameBottomDiffAbove( )
 	{
-		LightIndexColumn index = buildColumn( 0, 1, 6, 0 );
+		for( int i=-16; i<=16; i++ )
+		{
+			LightIndexColumn index = buildColumn( i+0, 1, i+6, 0 );
+			
+			index.setOpacity( i+5, 1 );
+			
+			assertEquals( 1, index.getOpacity( i+4 ) );
+			assertEquals( 1, index.getOpacity( i+5 ) );
+			assertEquals( 0, index.getOpacity( i+6 ) );
+		}
+	}
+	
+	@Test
+	public void topNonTransparentBlock( )
+	{
+		LightIndexColumn index = new LightIndexColumn();
+		
+		assertEquals( Integer.MIN_VALUE, index.getTopNonTransparentBlockY() );
+		
+		index.setOpacity( -16, 1 );
+		assertEquals( -16, index.getTopNonTransparentBlockY() );
+		
+		index.setOpacity( 0, 1 );
+		assertEquals( 0, index.getTopNonTransparentBlockY() );
+
+		index.setOpacity( 1, 1 );
+		assertEquals( 1, index.getTopNonTransparentBlockY() );
 		
 		index.setOpacity( 5, 1 );
+		assertEquals( 5, index.getTopNonTransparentBlockY() );
 		
-		assertEquals( 1, index.getOpacity( 4 ) );
-		assertEquals( 1, index.getOpacity( 5 ) );
-		assertEquals( 0, index.getOpacity( 6 ) );
+		index.setOpacity( 5, 0 );
+		assertEquals( 1, index.getTopNonTransparentBlockY() );
+
+		index.setOpacity( 1, 0 );
+		assertEquals( 0, index.getTopNonTransparentBlockY() );
+		
+		index.setOpacity( 0, 0 );
+		assertEquals( -16, index.getTopNonTransparentBlockY() );
+		
+		index.setOpacity( -16, 0 );
+		assertEquals( Integer.MIN_VALUE, index.getTopNonTransparentBlockY() );
 	}
 	
 	private LightIndexColumn buildColumn( int ... data )
@@ -114,7 +164,7 @@ public class TestLightIndexColumn
 			out.writeShort( data.length/2 );
 			for( int i=0; i<data.length; )
 			{
-				out.writeShort( data[i++] );
+				out.writeInt( data[i++] );
 				out.writeByte( data[i++] );
 			}
 			out.close();

@@ -20,7 +20,7 @@ public class AddressTools
 	// World.setBlock() caps block x,z at -30m to 30m, so our 22-bit cap on chunk x,z is just right!
 	
 	// here's the encoding scheme for 64 bits of space:
-	// y:         20 bits, unsigned, 1,048,576 chunks, 16,777,216 blocks
+	// y:         20 bits, signed,   1,048,576 chunks, 16,777,216 blocks
 	// x:         22 bits, signed,   4,194,304 chunks, 67,108,864 blocks
 	// z:         22 bits, signed,   4,194,304 chunks, 67,108,864 blocks
 	
@@ -41,7 +41,8 @@ public class AddressTools
 	private static final int XOffset = ZOffset + ZSize;
 	private static final int YOffset = XOffset + XSize;
 	
-	public static final int MaxY = Bits.getMaxUnsigned( YSize );
+	public static final int MinY = Bits.getMinSigned( YSize );
+	public static final int MaxY = Bits.getMaxSigned( YSize );
 	public static final int MinX = Bits.getMinSigned( XSize );
 	public static final int MaxX = Bits.getMaxSigned( XSize );
 	public static final int MinZ = Bits.getMinSigned( ZSize );
@@ -49,7 +50,7 @@ public class AddressTools
 	
 	public static long getAddress( int x, int y, int z )
 	{
-		return Bits.packUnsignedToLong( y, YSize, YOffset )
+		return Bits.packSignedToLong( y, YSize, YOffset )
 			| Bits.packSignedToLong( x, XSize, XOffset )
 			| Bits.packSignedToLong( z, ZSize, ZOffset );
 	}
@@ -62,7 +63,7 @@ public class AddressTools
 	
 	public static int getY( long address )
 	{
-		return Bits.unpackUnsigned( address, YSize, YOffset );
+		return Bits.unpackSigned( address, YSize, YOffset );
 	}
 	
 	public static int getX( long address )

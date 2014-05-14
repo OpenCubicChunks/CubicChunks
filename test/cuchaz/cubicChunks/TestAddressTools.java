@@ -24,8 +24,9 @@ public class TestAddressTools
 	@Test
 	public void testY( )
 	{
-		assertEquals( 1048575, AddressTools.MaxY );
-		for( int i=0; i<=AddressTools.MaxY; i++ )
+		assertEquals( -524288, AddressTools.MinY );
+		assertEquals( 524287, AddressTools.MaxY );
+		for( int i=AddressTools.MinY; i<=AddressTools.MaxY; i++ )
 		{
 			assertEquals( i, AddressTools.getY( AddressTools.getAddress( 0, i, 0 ) ) );
 		}
@@ -58,7 +59,7 @@ public class TestAddressTools
 	{
 		for( int x=-32; x<=32; x++ )
 		{
-			for( int y=0; y<=64; y++ )
+			for( int y=-32; y<=32; y++ )
 			{
 				for( int z=-32; z<=32; z++ )
 				{
@@ -77,7 +78,7 @@ public class TestAddressTools
 		HashSet<Long> addresses = new HashSet<Long>();
 		for( int x=-32; x<=32; x++ )
 		{
-			for( int y=0; y<=64; y++ )
+			for( int y=-32; y<=32; y++ )
 			{
 				for( int z=-32; z<=32; z++ )
 				{

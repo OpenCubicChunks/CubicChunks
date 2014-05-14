@@ -337,7 +337,7 @@ public class CubePlayerManager extends PlayerManager
 	{
 		// this method flushes outgoing chunks to the player
 		
-		// get the outgoing chunks
+		// get the outgoing cubes
 		PlayerInfo info = m_players.get( player.getEntityId() );
 		if( info == null || info.outgoingCubes.isEmpty() )
 		{
@@ -355,8 +355,8 @@ public class CubePlayerManager extends PlayerManager
 		{
 			Cube cube = iter.next();
 			
-			// only send cubes in active columns, not from columns on the fringe of the world that have been generated, but not activated yet
-			if( !cube.getColumn().func_150802_k() )
+			// wait for the cube to be lit and the column to be active before sending
+			if( !cube.isLit() || !cube.getColumn().func_150802_k() )
 			{
 				continue;
 			}

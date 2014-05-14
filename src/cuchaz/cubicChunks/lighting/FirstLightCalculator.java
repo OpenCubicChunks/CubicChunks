@@ -10,154 +10,141 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.lighting;
 
+import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.util.Coords;
-import cuchaz.cubicChunks.world.Column;
+import cuchaz.cubicChunks.world.Cube;
+import cuchaz.cubicChunks.world.LightIndex;
 
-public class FirstLightCalculator extends ColumnCalculator
+public class FirstLightCalculator extends CubeCalculator
 {
 	@Override
-	public boolean calculate( Column column )
+	public boolean calculate( Cube cube )
 	{
-		boolean success = reallyCalculate( column );
-		
-		// set the lighting flag on the column so it gets properly sent to the client (or not)
-		column.isLightPopulated = success;
-		
-		return success;
-	}
-	
-	private boolean reallyCalculate( Column column )
-	{
-		// no sky? no sky light
-		if( column.worldObj.provider.hasNoSky )
+		// already lit? bail
+		if( cube.isLit() )
 		{
 			return true;
 		}
 		
-		// only calculate first light if the neighboring columns exist
-		// NOTE: doChunksNearChunkExist() essentially ignores the y coordinate
-		int blockX = Coords.cubeToMinBlock( column.xPosition );
-		int blockZ = Coords.cubeToMinBlock( column.zPosition );
-		if( !column.worldObj.doChunksNearChunkExist( blockX, 0, blockZ, 17 ) )
+		boolean success = reallyCalculate( cube );
+		
+		// set the lighting flag on the cube so it gets properly sent to the client (or not)
+		cube.setIsLit( success );
+		
+		return success;
+	}
+	
+	private boolean reallyCalculate( Cube cube )
+	{
+		// only light if the neighboring cubes exist
+		CubeProvider provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
+		if(	!provider.cubeExists( cube.getX()-1, cube.getY(), cube.getZ() ) || !provider.cubeExists( cube.getX()+1, cube.getY(), cube.getZ() )
+			|| !provider.cubeExists( cube.getX(), cube.getY()-1, cube.getZ() ) || !provider.cubeExists( cube.getX(), cube.getY()+1, cube.getZ() )
+			|| !provider.cubeExists( cube.getX(), cube.getY(), cube.getZ()-1 ) || !provider.cubeExists( cube.getX(), cube.getY(), cube.getZ()+1 ) ) 
 		{
 			return false;
 		}
 		
+		// light blocks in this cube
+		for( int localX=0; localX<16; localX++ )
+		{
+			for( int localY=0; localY<16; localY++ )
+			{
+				for( int localZ=0; localZ<16; localZ++ )
+				{
+					boolean wasLit = lightBlock( cube, localX, localY, localZ );
+					
+					// if the lighting failed, then try again later
+					if( !wasLit )
+					{
+						return false;
+					}
+				}
+			}
+		}
+		
+		// populate the nearby faces of adjacent cubes
+		// this is for cases when a sheer wall is up against an empty cube
+		// unless this is called, the wall will not get directly lit
+		lightXSlab( provider.loadCube( cube.getX() - 1, cube.getY(), cube.getZ() ), 15 );
+		lightXSlab( provider.loadCube( cube.getX() + 1, cube.getY(), cube.getZ() ), 0 );
+		lightYSlab( provider.loadCube( cube.getX(), cube.getY() - 1, cube.getZ() ), 15 );
+		lightYSlab( provider.loadCube( cube.getX(), cube.getY() + 1, cube.getZ() ), 0 );
+		lightZSlab( provider.loadCube( cube.getX(), cube.getY(), cube.getZ() - 1 ), 15 );
+		lightZSlab( provider.loadCube( cube.getX(), cube.getY(), cube.getZ() + 1 ), 0 );
+		
+		return true;
+	}
+	
+	private void lightXSlab( Cube cube, int localX )
+	{
+		for( int localY=0; localY<16; localY++ )
+		{
+			for( int localZ=0; localZ<16; localZ++ )
+			{
+				lightBlock( cube, localX, localY, localZ );
+			}
+		}
+	}
+	
+	private void lightYSlab( Cube cube, int localY )
+	{
 		for( int localX=0; localX<16; localX++ )
 		{
 			for( int localZ=0; localZ<16; localZ++ )
 			{
-				boolean wasLit = populateBlockColumnLighting( column, localX, localZ );
-				
-				// if the lighting failed, then try again later
-				if( !wasLit )
-				{
-					return false;
-				}
+				lightBlock( cube, localX, localY, localZ );
 			}
 		}
-		
-		// populate neighboring columns too
-		// this is for cases when a sheer wall is up against an empty cube
-		// unless this is called, the wall will not get directly lit
-		populateNeighborEdgeLight( column, -1, 0, 3 );
-		populateNeighborEdgeLight( column, 1, 0, 1 );
-		populateNeighborEdgeLight( column, 0, -1, 0 );
-		populateNeighborEdgeLight( column, -1, 1, 2 );
-		
-		return true;
 	}
 	
-	private boolean populateBlockColumnLighting( Column column, int localX, int localZ )
+	private void lightZSlab( Cube cube, int localZ )
 	{
-		final int seaLevel = 63;
-		
-		int blockX = Coords.localToBlock( column.xPosition, localX );
-		int blockZ = Coords.localToBlock( column.zPosition, localZ );
-		
-		boolean foundNonTransparentBlock = false;
-		
-		int blockY = column.getLightIndex().getTopNonTransparentBlock( localX, localZ ) + 1;
-		for( ; blockY > 0; blockY-- )
+		for( int localX=0; localX<16; localX++ )
 		{
-			int lightOpacity = column.func_150808_b( localX, blockY, localZ );
-			
-			if( lightOpacity == 255 && blockY < seaLevel )
+			for( int localY=0; localY<16; localY++ )
 			{
-				// if we hit an opaque block below sea level, stop early
-				break;
-			}
-			
-			if( lightOpacity > 0 )
-			{
-				foundNonTransparentBlock = true;
-			}
-			
-			// if we're below a non-transparent block and we're a clear block, then update lights for this block			
-			if( foundNonTransparentBlock && lightOpacity == 0 )
-			{
-				boolean wasLit = column.worldObj.func_147451_t( blockX, blockY, blockZ );
-				
-				// if lighting failed, try again later
-				if( !wasLit )
-				{
-					return false;
-				}
+				lightBlock( cube, localX, localY, localZ );
 			}
 		}
+	}
+	
+	private boolean lightBlock( Cube cube, int localX, int localY, int localZ )
+	{
+		// conditions for lighting a block in phase 1:
+		//    must be below a non-transparent block
+		//    must be above an opaque block that's below sea level
+		//    must be a clear block
+		//    must have a sky
 		
-		// update lights for light sources at this block and below
-		for( ; blockY > 0; blockY-- )
+		// conditions for lighting a block in phase 2:
+		//   must be at or below an opaque block below sea level
+		//   must be a block light source
+		
+		int blockY = Coords.localToBlock( cube.getY(), localY );
+		LightIndex index = cube.getColumn().getLightIndex();
+		
+		boolean lightBlock = false;
+		if( blockY > index.getTopOpaqueBlockBelowSeaLevel( localX, localZ ) )
 		{
-			if( column.func_150810_a( localX, blockY, localZ ).getLightValue() > 0 )
+			if( !cube.getColumn().worldObj.provider.hasNoSky && blockY < index.getTopNonTransparentBlock( localX, localZ ) && index.getOpacity( localX, localY, localZ ) == 0 )
 			{
-				column.worldObj.func_147451_t( blockX, blockY, blockZ );
+				lightBlock = true;
 			}
+		}
+		else if( cube.getBlock( localX, localY, localZ ).getLightValue() > 0 )
+		{
+			lightBlock = true;
+		}
+		
+		if( lightBlock )
+		{
+			int blockX = Coords.localToBlock( cube.getX(), localX );
+			int blockZ = Coords.localToBlock( cube.getZ(), localZ );
+			return cube.getWorld().func_147451_t( blockX, blockY, blockZ );
 		}
 		
 		return true;
-	}
-	
-	private void populateNeighborEdgeLight( Column column, int dcubeX, int dcubeZ, int edge )
-	{
-		Column neighbor = (Column)column.worldObj.getChunkFromChunkCoords( column.xPosition + dcubeX, column.zPosition + dcubeZ );
-		populateEdgeLighting( neighbor, edge );
-	}
-	
-	private void populateEdgeLighting( Column column, int edge ) // 0,1,2, or 3
-	{
-		if( !column.isTerrainPopulated )
-		{
-			return;
-		}
-		
-		if( edge == 3 )
-		{
-			for( int i=0; i<16; i++ )
-			{
-				populateBlockColumnLighting( column, 15, i );
-			}
-		}
-		else if( edge == 1 )
-		{
-			for( int i=0; i<16; i++ )
-			{
-				populateBlockColumnLighting( column, 0, i );
-			}
-		}
-		else if( edge == 0 )
-		{
-			for( int i=0; i<16; i++ )
-			{
-				populateBlockColumnLighting( column, i, 15 );
-			}
-		}
-		else if( edge == 2 )
-		{
-			for( int i=0; i<16; i++ )
-			{
-				populateBlockColumnLighting( column, i, 0 );
-			}
-		}
 	}
 }

@@ -18,6 +18,7 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.chunk.IChunkProvider;
 import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.accessors.WorldClientAccessor;
 import cuchaz.cubicChunks.lighting.LightingManager;
@@ -69,4 +70,10 @@ public class CubeWorldClient extends WorldClient implements CubeWorld
 		// forward to the new lighting system
 		return m_lightingManager.computeDiffuseLighting( blockX, blockY, blockZ, lightType );
     }
+	
+	@Override
+	public boolean checkChunksExist( int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ )
+	{
+		return CubeProviderTools.blocksExist( (CubeProvider)chunkProvider, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ );
+	}
 }

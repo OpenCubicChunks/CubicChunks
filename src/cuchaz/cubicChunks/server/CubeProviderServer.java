@@ -78,19 +78,6 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	@Override
 	public boolean cubeExists( int cubeX, int cubeY, int cubeZ )
 	{
-		// check the column first
-		if( !chunkExists( cubeX, cubeZ ) )
-		{
-			return false;
-		}
-		
-		// then check the cube
-		return provideChunk( cubeX, cubeZ ).getCube( cubeY ) != null;
-	}
-	
-	@Override
-	public boolean isCubeLoaded( int cubeX, int cubeY, int cubeZ )
-	{
 		// is the column loaded?
 		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
 		Column column = m_loadedColumns.get( columnAddress );
@@ -176,12 +163,6 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	@Override
 	public Cube loadCube( int cubeX, int cubeY, int cubeZ )
 	{
-		// check our only coordinate bound
-		if( cubeY < 0 )
-		{
-			throw new IllegalArgumentException( "y coord of " + cubeY + " is not allowed!" );
-		}
-		
 		long cubeAddress = AddressTools.getAddress( cubeX, cubeY, cubeZ );
 		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
 		
@@ -240,9 +221,6 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			// generate a new cube
 			cube = m_generator.generateCube( column, cubeX, cubeY, cubeZ );
 			
-			// flag the column for relighting
-			column.isLightPopulated = false;
-			
 			// NOTE: have to do generator population after the cube is lit
 			// UNDONE: make a chunk population queue
 			//m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
@@ -256,13 +234,12 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		// init the column
 		column.onChunkLoad();
 		column.isTerrainPopulated = true;
+		column.resetPrecipitationHeight();
 		
-		if( !column.isLightPopulated )
-		{
-			// recompute the sky light
-			m_worldServer.getLightingManager().queueSkyLightCalculation( columnAddress );
-			m_worldServer.getLightingManager().queueFirstLightCalculation( columnAddress );
-		}
+		// relight the cube
+		cube.setIsLit( false );
+		m_worldServer.getLightingManager().queueSkyLightCalculation( columnAddress );
+		m_worldServer.getLightingManager().queueFirstLightCalculation( cubeAddress );
 		
 		// init the cube
 		cube.onLoad();

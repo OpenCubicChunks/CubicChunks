@@ -251,7 +251,7 @@ public class DiffuseLightingCalculator
 		int cubeX = Coords.blockToCube( blockX );
 		int cubeY = Coords.blockToCube( blockY );
 		int cubeZ = Coords.blockToCube( blockZ );
-		if( !cubeWorld.getCubeProvider().isCubeLoaded( cubeX, cubeY, cubeZ ) )
+		if( !cubeWorld.getCubeProvider().cubeExists( cubeX, cubeY, cubeZ ) )
 		{
 			return false;
 		}

@@ -52,7 +52,8 @@ public class SkyLightUpdateCalculator
 		
 		// compute the skylight falloff starting at the new top block
 		light = 15;
-		for( int blockY=newMaxBlockY-1; blockY>0; blockY-- )
+		int bottomBlockY = Coords.cubeToMinBlock( column.getBottomCubeY() );
+		for( int blockY=newMaxBlockY-1; blockY>bottomBlockY; blockY-- )
 		{
 			// get the opacity to apply for this block
 			int lightOpacity = Math.max( 1, column.func_150808_b( localX, blockY, localZ ) );
