@@ -2,7 +2,7 @@ package cuchaz.cubicChunks.world.biome;
 
 import net.minecraft.init.Blocks;
 
-public class BiomeGenBeach extends BiomeGenBase
+public class BiomeGenBeach extends CubeBiomeGenBase
 {
     public BiomeGenBeach(int par1)
     {

@@ -14,7 +14,7 @@ import net.minecraft.world.gen.feature.WorldGenTrees;
 import net.minecraft.world.gen.feature.WorldGenVines;
 import net.minecraft.world.gen.feature.WorldGenerator;
 
-public class BiomeGenJungle extends BiomeGenBase
+public class BiomeGenJungle extends CubeBiomeGenBase
 {
     private boolean field_150614_aC;
 
@@ -37,10 +37,10 @@ public class BiomeGenJungle extends BiomeGenBase
 
         if (!p_i45379_2_)
         {
-            this.spawnableMonsterList.add(new BiomeGenBase.SpawnListEntry(EntityOcelot.class, 2, 1, 1));
+            this.spawnableMonsterList.add(new CubeBiomeGenBase.SpawnListEntry(EntityOcelot.class, 2, 1, 1));
         }
 
-        this.spawnableCreatureList.add(new BiomeGenBase.SpawnListEntry(EntityChicken.class, 10, 4, 4));
+        this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityChicken.class, 10, 4, 4));
     }
 
     public WorldGenAbstractTree checkSpawnTree(Random p_150567_1_)

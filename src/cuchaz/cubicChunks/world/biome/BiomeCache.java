@@ -52,7 +52,7 @@ public class BiomeCache
     /**
      * Returns the BiomeGenBase related to the x, z position from the cache.
      */
-    public BiomeGenBase getBiomeGenAt(int xAbs, int zAbs)
+    public CubeBiomeGenBase getBiomeGenAt(int xAbs, int zAbs)
     {
         return this.getBiomeCacheBlock(xAbs, zAbs).getBiomeGenAt(xAbs, zAbs);
     }
@@ -87,7 +87,7 @@ public class BiomeCache
     /**
      * Returns the array of cached biome types in the BiomeCacheBlock at the given location.
      */
-    public BiomeGenBase[] getCachedBiomes(int xAbs, int zAbs)
+    public CubeBiomeGenBase[] getCachedBiomes(int xAbs, int zAbs)
     {
         return this.getBiomeCacheBlock(xAbs, zAbs).biomes;
     }
@@ -95,7 +95,7 @@ public class BiomeCache
     public class Block
     {
         public float[] rainfallValues = new float[256];
-        public BiomeGenBase[] biomes = new BiomeGenBase[256];
+        public CubeBiomeGenBase[] biomes = new CubeBiomeGenBase[256];
         public int xPosition;
         public int zPosition;
         public long lastAccessTime;
@@ -108,7 +108,7 @@ public class BiomeCache
             BiomeCache.this.columnManager.getBiomeGenAt(this.biomes, cubeX << 4, cubeZ << 4, 16, 16, false);
         }
 
-        public BiomeGenBase getBiomeGenAt(int xAbs, int zAbs)
+        public CubeBiomeGenBase getBiomeGenAt(int xAbs, int zAbs)
         {
             return this.biomes[xAbs & 15 | (zAbs & 15) << 4];
         }

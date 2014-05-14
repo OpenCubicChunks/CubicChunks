@@ -21,6 +21,7 @@ import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.BiomeGenBase.SpawnListEntry;
 import net.minecraft.world.gen.MapGenBase;
 import net.minecraft.world.gen.MapGenCaves;
 import net.minecraft.world.gen.MapGenRavine;
@@ -33,6 +34,8 @@ import net.minecraft.world.gen.structure.MapGenVillage;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
+import cuchaz.cubicChunks.world.biome.CubeBiomeGenBase;
+import cuchaz.cubicChunks.world.biome.WorldColumnManager;
 
 public class CubeGenerator implements ICubeGenerator
 {
@@ -40,8 +43,10 @@ public class CubeGenerator implements ICubeGenerator
 	private boolean m_mapFeaturesEnabled;
 	private WorldType m_worldType;
 	
+	private WorldColumnManager worldColumnManager;
+	
 	private Random m_rand;
-	private BiomeGenBase[] m_biomes;
+	private CubeBiomeGenBase[] m_biomes;
 	private CubeBlocks m_blocks;
 	
 	private MapGenBase m_caveGenerator;
@@ -83,6 +88,8 @@ public class CubeGenerator implements ICubeGenerator
 		m_scatteredFeatureGenerator = new MapGenScatteredFeature();
 		m_ravineGenerator = new MapGenRavine();
 		
+		worldColumnManager = new WorldColumnManager(this.m_world);
+		
 		m_biomeNoiseGen = new NoiseGeneratorPerlin( m_rand, 4 );
 		m_terrainNoiseGenLow = new NoiseGeneratorOctaves( m_rand, 16 );
 		m_terrainNoiseGenHigh = new NoiseGeneratorOctaves( m_rand, 16 );
@@ -112,8 +119,8 @@ public class CubeGenerator implements ICubeGenerator
 	@Override
 	public Column generateColumn( int cubeX, int cubeZ )
 	{
-		// generate biome info
-		m_biomes = m_world.getWorldChunkManager().loadBlockGeneratorData(
+		// generate biome info. This is a hackjob.
+		m_biomes = worldColumnManager.loadBlockGeneratorData(
 			m_biomes,
 			Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ),
 			16, 16
@@ -130,7 +137,7 @@ public class CubeGenerator implements ICubeGenerator
 		
 		// get more biome data
 		// NOTE: this is different from the column biome data for some reason...
-		m_biomes = m_world.getWorldChunkManager().getBiomesForGeneration(
+		m_biomes = (CubeBiomeGenBase[]) worldColumnManager.getBiomesForGeneration(
 			m_biomes,
 			cubeX * 4 - 2, cubeZ * 4 - 2,
 			10, 10
@@ -146,7 +153,7 @@ public class CubeGenerator implements ICubeGenerator
 			return Cube.generateEmptyCubeAndAddToColumn( m_world, column, cubeX, cubeY, cubeZ );
 		}
 		
-		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks, m_biomes );
+		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks.m_blocks, m_blocks.m_meta, m_biomes );
 		
 		/*
 		// generate world features
@@ -287,7 +294,7 @@ public class CubeGenerator implements ICubeGenerator
 		{
 			for( int z=0; z<=4; z++ )
 			{
-				BiomeGenBase biome = m_biomes[x + 2 + ( z + 2 )*10];
+				CubeBiomeGenBase biome = m_biomes[x + 2 + ( z + 2 )*10];
 				
 				// compute biome height info
 				float maxHeightConditioned = 0;
@@ -299,7 +306,7 @@ public class CubeGenerator implements ICubeGenerator
 				{
 					for( int j=-2; j<=2; j++ )
 					{
-						BiomeGenBase ijBiome = m_biomes[x + i + 2 + ( z + j + 2 )*10];
+						CubeBiomeGenBase ijBiome = m_biomes[x + i + 2 + ( z + j + 2 )*10];
 						
 						float minHeight = ijBiome.minHeight;
 						float maxHeight = ijBiome.maxHeight;
@@ -380,7 +387,7 @@ public class CubeGenerator implements ICubeGenerator
 		}
 	}
 	
-	private void replaceBlocksForBiome( int cubeX, int cubeY, int cubeZ, Block[] blocks, byte[] metadata, BiomeGenBase[] biomes )
+	private void replaceBlocksForBiome( int cubeX, int cubeY, int cubeZ, Block[] blocks, byte[] metadata, CubeBiomeGenBase[] biomes )
 	{
 		m_biomeNoise = m_biomeNoiseGen.func_151599_a( m_biomeNoise, Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ), 16, 16, 16, 16, 1 );
 		
@@ -388,39 +395,47 @@ public class CubeGenerator implements ICubeGenerator
 		{
 			for( int localZ=0; localZ<16; localZ++ )
 			{
-				int xzCoord = localZ | localX << 4;
-				// UNDONE: need to cubeify this
-				biomes[xzCoord].func_150573_a(
-					m_world, m_rand,
-					blocks, metadata,
-					Coords.localToBlock( cubeX, localX ),
-					Coords.localToBlock( cubeZ, localZ ),
-					m_biomeNoise[xzCoord]
-				);
+				for (int localY = 0; localY < 16; localY++)
+				{
+					int xzCoord = localZ | localX << 4;
+					// UNDONE: need to cubeify this
+					biomes[xzCoord].modifyBlocks_pre(
+						m_world, m_rand,
+						blocks, metadata,
+						Coords.localToBlock( cubeX, localX ),
+						Coords.localToBlock( cubeX, localY ),
+						Coords.localToBlock( cubeZ, localZ ),
+						m_biomeNoise[xzCoord]
+					);
+				}
 			}
 		}
 	}
 	
-	private void replaceBlocksForBiome( int cubeX, int cubeY, int cubeZ, CubeBlocks blocks, BiomeGenBase[] biomes )
-	{
-		m_biomeNoise = m_biomeNoiseGen.func_151599_a( m_biomeNoise, Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ), 16, 16, 16, 16, 1 );
-		
-		for( int localX=0; localX<16; localX++ )
-		{
-			for( int localZ=0; localZ<16; localZ++ )
-			{
-				int xzCoord = localZ | localX << 4;
-				// UNDONE: need to cubeify this
-				biomes[xzCoord].func_150573_a(
-					m_world, m_rand,
-					blocks.m_blocks, blocks.m_meta,
-					Coords.localToBlock( cubeX, localX ),
-					Coords.localToBlock( cubeZ, localZ ),
-					m_biomeNoise[xzCoord]
-				);
-			}
-		}
-	}
+//	private void replaceBlocksForBiome( int cubeX, int cubeY, int cubeZ, CubeBlocks blocks, CubeBiomeGenBase[] biomes )
+//	{
+//		m_biomeNoise = m_biomeNoiseGen.func_151599_a( m_biomeNoise, Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ), 16, 16, 16, 16, 1 );
+//		
+//		for( int localY = 0; localY < 16; localY++)
+//		{
+//			for( int localZ=0; localZ<16; localZ++ )
+//			{
+//				for (int localX=0; localX<16; localX++ )
+//				{
+//					int xzCoord = localZ | localX << 4;
+//					// UNDONE: need to cubeify this
+//					biomes[xzCoord].modifyBlocks_pre(
+//						m_world, m_rand,
+//						blocks.m_blocks, blocks.m_meta,
+//						Coords.localToBlock( cubeX, localX ),
+//						Coords.localToBlock( cubeY, localY ),
+//						Coords.localToBlock( cubeZ, localZ ),
+//						m_biomeNoise[xzCoord]
+//					);
+//				}
+//			}
+//		}
+//	}
 	
 	@Override
 	public void populate( ICubeGenerator generator, int cubeX, int cubeY, int cubeZ )
@@ -507,9 +522,9 @@ public class CubeGenerator implements ICubeGenerator
 	}
 	
 	@Override
-	public List<BiomeGenBase.SpawnListEntry> getPossibleCreatures( EnumCreatureType par1EnumCreatureType, int cubeX, int cubeY, int cubeZ )
+	public List<SpawnListEntry> getPossibleCreatures( EnumCreatureType par1EnumCreatureType, int cubeX, int cubeY, int cubeZ )
 	{
-		BiomeGenBase var5 = m_world.getBiomeGenForCoords( cubeX, cubeZ );
+		CubeBiomeGenBase var5 = (CubeBiomeGenBase) m_world.getBiomeGenForCoords( cubeX, cubeZ );
 		return par1EnumCreatureType == EnumCreatureType.monster && m_scatteredFeatureGenerator.func_143030_a( cubeX, cubeY, cubeZ ) 
 				? m_scatteredFeatureGenerator.getScatteredFeatureSpawnList()
 				: var5.getSpawnableList( par1EnumCreatureType );

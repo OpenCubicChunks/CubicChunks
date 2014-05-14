@@ -1,6 +1,6 @@
 package cuchaz.cubicChunks.world.biome;
 
-public class BiomeGenRiver extends BiomeGenBase
+public class BiomeGenRiver extends CubeBiomeGenBase
 {
     private static final String __OBFID = "CL_00000181";
 

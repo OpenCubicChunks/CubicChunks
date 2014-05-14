@@ -3,7 +3,7 @@ package cuchaz.cubicChunks.world.biome;
 import net.minecraft.entity.passive.EntityMooshroom;
 import net.minecraft.init.Blocks;
 
-public class BiomeGenMushroomIsland extends BiomeGenBase
+public class BiomeGenMushroomIsland extends CubeBiomeGenBase
 {
     private static final String __OBFID = "CL_00000177";
 
@@ -19,6 +19,6 @@ public class BiomeGenMushroomIsland extends BiomeGenBase
         this.spawnableMonsterList.clear();
         this.spawnableCreatureList.clear();
         this.spawnableWaterCreatureList.clear();
-        this.spawnableCreatureList.add(new BiomeGenBase.SpawnListEntry(EntityMooshroom.class, 8, 4, 8));
+        this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityMooshroom.class, 8, 4, 8));
     }
 }

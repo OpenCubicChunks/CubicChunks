@@ -19,7 +19,7 @@ import net.minecraft.world.gen.feature.WorldGenSand;
 import net.minecraft.world.gen.feature.WorldGenWaterlily;
 import net.minecraft.world.gen.feature.WorldGenerator;
 
-public class BiomeDecorator
+public class BiomeDecorator extends net.minecraft.world.biome.BiomeDecorator
 {
     /** The world the BiomeDecorator is currently decorating */
     protected World currentWorld;
@@ -167,7 +167,7 @@ public class BiomeDecorator
         this.generateLakes = true;
     }
 
-    public void func_150512_a(World world, Random rand, BiomeGenBase biome, int cubeX, int cubeZ)
+    public void func_150512_a(World world, Random rand, CubeBiomeGenBase biome, int cubeX, int cubeZ)
     {
         if (this.currentWorld != null)
         {
@@ -185,7 +185,7 @@ public class BiomeDecorator
         }
     }
 
-    protected void func_150513_a(BiomeGenBase biome)
+    protected void func_150513_a(CubeBiomeGenBase biome)
     {
         this.generateOres();
         int var2;

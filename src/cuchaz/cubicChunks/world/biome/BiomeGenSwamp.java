@@ -9,7 +9,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 
-public class BiomeGenSwamp extends BiomeGenBase
+public class BiomeGenSwamp extends CubeBiomeGenBase
 {
     private static final String __OBFID = "CL_00000185";
 
@@ -27,7 +27,7 @@ public class BiomeGenSwamp extends BiomeGenBase
         this.theBiomeDecorator.sandPerChunk = 0;
         this.theBiomeDecorator.grassPerChunk = 5;
         this.waterColorMultiplier = 14745518;
-        this.spawnableMonsterList.add(new BiomeGenBase.SpawnListEntry(EntitySlime.class, 1, 1, 1));
+        this.spawnableMonsterList.add(new CubeBiomeGenBase.SpawnListEntry(EntitySlime.class, 1, 1, 1));
     }
 
     public WorldGenAbstractTree checkSpawnTree(Random p_150567_1_)
@@ -57,29 +57,31 @@ public class BiomeGenSwamp extends BiomeGenBase
         return BlockFlower.field_149859_a[1];
     }
 
-    public void func_150573_a(World p_150573_1_, Random p_150573_2_, Block[] p_150573_3_, byte[] p_150573_4_, int p_150573_5_, int p_150573_6_, double p_150573_7_)
+    public void modifyBlocks_pre(World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int yAbs, int zAbs, double val)
     {
-        double var9 = field_150606_ad.func_151601_a((double)p_150573_5_ * 0.25D, (double)p_150573_6_ * 0.25D);
+        double var9 = field_150606_ad.func_151601_a((double)xAbs * 0.25D, (double)yAbs * 0.25D);
 
         if (var9 > 0.0D)
         {
-            int var11 = p_150573_5_ & 15;
-            int var12 = p_150573_6_ & 15;
-            int var13 = p_150573_3_.length / 256;
+            int xRel = xAbs & 15;
+            int yRel = yAbs & 15;
+            int zRel = zAbs & 15;
+//            int height = blocks.length / 256;
 
-            for (int var14 = 255; var14 >= 0; --var14)
+            for (int y = 16; y >= 0; --y)
             {
-                int var15 = (var12 * 16 + var11) * var13 + var14;
+                int loc = (zRel * 16 + xRel) * 16 + yRel;
 
-                if (p_150573_3_[var15] == null || p_150573_3_[var15].getMaterial() != Material.air)
+                if (blocks[loc] == null || blocks[loc].getMaterial() != Material.air)
                 {
-                    if (var14 == 62 && p_150573_3_[var15] != Blocks.water)
+                    if (yAbs == 62 && blocks[loc] != Blocks.water)
                     {
-                        p_150573_3_[var15] = Blocks.water;
+                        blocks[loc] = Blocks.water;
 
                         if (var9 < 0.12D)
                         {
-                            p_150573_3_[var15 + 1] = Blocks.waterlily;
+                            blocks[loc + 1] = Blocks.waterlily; // this should always place the lily at a height of 63, 
+                            									//and not go into the next cube up which would be bad.
                         }
                     }
 
@@ -88,6 +90,6 @@ public class BiomeGenSwamp extends BiomeGenBase
             }
         }
 
-        this.modifyBlocks(p_150573_1_, p_150573_2_, p_150573_3_, p_150573_4_, p_150573_5_, p_150573_6_, p_150573_7_);
+        this.modifyBlocks(world, rand, blocks, meta, xAbs, yAbs, zAbs, val);
     }
 }

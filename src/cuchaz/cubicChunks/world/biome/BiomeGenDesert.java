@@ -5,7 +5,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenDesertWells;
 
-public class BiomeGenDesert extends BiomeGenBase
+public class BiomeGenDesert extends CubeBiomeGenBase
 {
     public BiomeGenDesert(int par1)
     {

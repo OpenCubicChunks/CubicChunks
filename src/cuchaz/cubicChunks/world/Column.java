@@ -42,6 +42,7 @@ import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Bits;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.RangeInt;
+import cuchaz.cubicChunks.world.biome.CubeBiomeGenBase;
 
 public class Column extends Chunk
 {
@@ -65,7 +66,7 @@ public class Column extends Chunk
 		init();
 	}
 	
-	public Column( World world, int cubeX, int cubeZ, BiomeGenBase[] biomes )
+	public Column( World world, int cubeX, int cubeZ, CubeBiomeGenBase[] biomes )
 	{
 		// NOTE: this constructor is called by the cube generator
 		this( world, cubeX, cubeZ );
@@ -74,7 +75,8 @@ public class Column extends Chunk
 		
 		// save the biome data
 		byte[] biomeArray = getBiomeArray();
-		for( int i=0; i<biomeArray.length; i++ )
+		
+		for( int i = 0; i < biomeArray.length; i++ )
 		{
 			biomeArray[i] = (byte)biomes[i].biomeID;
 		}

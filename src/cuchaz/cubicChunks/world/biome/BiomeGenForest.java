@@ -10,7 +10,7 @@ import net.minecraft.world.gen.feature.WorldGenBigMushroom;
 import net.minecraft.world.gen.feature.WorldGenCanopyTree;
 import net.minecraft.world.gen.feature.WorldGenForest;
 
-public class BiomeGenForest extends BiomeGenBase
+public class BiomeGenForest extends CubeBiomeGenBase
 {
     private int field_150632_aF;
     protected static final WorldGenForest field_150629_aC = new WorldGenForest(false, true);
@@ -43,7 +43,7 @@ public class BiomeGenForest extends BiomeGenBase
 
         if (this.field_150632_aF == 0)
         {
-            this.spawnableCreatureList.add(new BiomeGenBase.SpawnListEntry(EntityWolf.class, 5, 4, 4));
+            this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityWolf.class, 5, 4, 4));
         }
 
         if (this.field_150632_aF == 3)
@@ -52,7 +52,7 @@ public class BiomeGenForest extends BiomeGenBase
         }
     }
 
-    protected BiomeGenBase func_150557_a(int p_150557_1_, boolean p_150557_2_)
+    protected CubeBiomeGenBase func_150557_a(int p_150557_1_, boolean p_150557_2_)
     {
         if (this.field_150632_aF == 2)
         {
@@ -194,12 +194,12 @@ public class BiomeGenForest extends BiomeGenBase
         return this.field_150632_aF == 3 ? (var4 & 16711422) + 2634762 >> 1 : var4;
     }
 
-    protected BiomeGenBase func_150566_k()
+    protected CubeBiomeGenBase func_150566_k()
     {
-        if (this.biomeID == BiomeGenBase.forest.biomeID)
+        if (this.biomeID == CubeBiomeGenBase.forest.biomeID)
         {
             BiomeGenForest var1 = new BiomeGenForest(this.biomeID + 128, 1);
-            var1.setHeightRange(new BiomeGenBase.Height(this.minHeight, this.maxHeight + 0.2F));
+            var1.setHeightRange(new CubeBiomeGenBase.Height(this.minHeight, this.maxHeight + 0.2F));
             var1.setBiomeName("Flower Forest");
             var1.func_150557_a(6976549, true);
             var1.func_76733_a(8233509);
@@ -207,7 +207,7 @@ public class BiomeGenForest extends BiomeGenBase
         }
         else
         {
-            return this.biomeID != BiomeGenBase.field_150583_P.biomeID && this.biomeID != BiomeGenBase.field_150582_Q.biomeID 
+            return this.biomeID != CubeBiomeGenBase.field_150583_P.biomeID && this.biomeID != CubeBiomeGenBase.field_150582_Q.biomeID 
             		? new BiomeGenMutated(this.biomeID + 128, this)
 			            {
 			                public void decorate(World var1, Random var2, int var3, int var4)

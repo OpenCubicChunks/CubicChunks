@@ -6,11 +6,11 @@ import net.minecraft.block.Block;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 
-public class BiomeGenMutated extends BiomeGenBase
+public class BiomeGenMutated extends CubeBiomeGenBase
 {
-    protected BiomeGenBase biome;
+    protected CubeBiomeGenBase biome;
 
-    public BiomeGenMutated(int biomeID, BiomeGenBase biome)
+    public BiomeGenMutated(int biomeID, CubeBiomeGenBase biome)
     {
         super(biomeID);
         this.biome = biome;
@@ -41,9 +41,9 @@ public class BiomeGenMutated extends BiomeGenBase
         this.biome.theBiomeDecorator.func_150512_a(par1World, rand, this, par3, par4);
     }
 
-    public void func_150573_a(World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int zAbs, double p_150573_7_)
+    public void modifyBlocks_pre(World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int yAbs, int zAbs, double var)
     {
-        this.biome.func_150573_a(world, rand, blocks, meta, xAbs, zAbs, p_150573_7_);
+        this.biome.modifyBlocks_pre(world, rand, blocks, meta, xAbs, yAbs, zAbs, var);
     }
 
     /**
@@ -80,12 +80,12 @@ public class BiomeGenMutated extends BiomeGenBase
         return this.biome.func_150562_l();
     }
 
-    public boolean func_150569_a(BiomeGenBase biome)
+    public boolean func_150569_a(CubeBiomeGenBase biome)
     {
         return this.biome.func_150569_a(biome);
     }
 
-    public BiomeGenBase.TempCategory func_150561_m()
+    public CubeBiomeGenBase.TempCategory func_150561_m()
     {
         return this.biome.func_150561_m();
     }

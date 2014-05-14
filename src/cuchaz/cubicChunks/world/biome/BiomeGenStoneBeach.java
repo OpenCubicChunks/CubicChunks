@@ -2,7 +2,7 @@ package cuchaz.cubicChunks.world.biome;
 
 import net.minecraft.init.Blocks;
 
-public class BiomeGenStoneBeach extends BiomeGenBase
+public class BiomeGenStoneBeach extends CubeBiomeGenBase
 {
     private static final String __OBFID = "CL_00000184";
 

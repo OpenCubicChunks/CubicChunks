@@ -24,19 +24,19 @@ public class WorldColumnManager
     private BiomeCache biomeCache;
 
     /** A list of biomes that the player can spawn in. */
-    private List<BiomeGenBase> biomesToSpawnIn;
+    private List<CubeBiomeGenBase> biomesToSpawnIn;
 
     protected WorldColumnManager()
     {
         this.biomeCache = new BiomeCache(this);
-        this.biomesToSpawnIn = new ArrayList<BiomeGenBase>();
-        this.biomesToSpawnIn.add(BiomeGenBase.forest);
-        this.biomesToSpawnIn.add(BiomeGenBase.plains);
-        this.biomesToSpawnIn.add(BiomeGenBase.taiga);
-        this.biomesToSpawnIn.add(BiomeGenBase.taigaHills);
-        this.biomesToSpawnIn.add(BiomeGenBase.forestHills);
-        this.biomesToSpawnIn.add(BiomeGenBase.jungle);
-        this.biomesToSpawnIn.add(BiomeGenBase.jungleHills);
+        this.biomesToSpawnIn = new ArrayList<CubeBiomeGenBase>();
+        this.biomesToSpawnIn.add(CubeBiomeGenBase.forest);
+        this.biomesToSpawnIn.add(CubeBiomeGenBase.plains);
+        this.biomesToSpawnIn.add(CubeBiomeGenBase.taiga);
+        this.biomesToSpawnIn.add(CubeBiomeGenBase.taigaHills);
+        this.biomesToSpawnIn.add(CubeBiomeGenBase.forestHills);
+        this.biomesToSpawnIn.add(CubeBiomeGenBase.jungle);
+        this.biomesToSpawnIn.add(CubeBiomeGenBase.jungleHills);
     }
 
     public WorldColumnManager(long par1, WorldType worldType)
@@ -55,7 +55,7 @@ public class WorldColumnManager
     /**
      * Gets the list of valid biomes for the player to spawn in.
      */
-    public List<BiomeGenBase> getBiomesToSpawnIn()
+    public List<CubeBiomeGenBase> getBiomesToSpawnIn()
     {
         return this.biomesToSpawnIn;
     }
@@ -63,7 +63,7 @@ public class WorldColumnManager
     /**
      * Returns the BiomeGenBase related to the x, z position on the world.
      */
-    public BiomeGenBase getBiomeGenAt(int xAbs, int zAbs)
+    public CubeBiomeGenBase getBiomeGenAt(int xAbs, int zAbs)
     {
         return this.biomeCache.getBiomeGenAt(xAbs, zAbs);
     }
@@ -86,7 +86,8 @@ public class WorldColumnManager
         {
             try
             {
-                float rainfall = (float)BiomeGenBase.getBiome(var6[i]).getIntRainfall() / 65536.0F;
+//                float rainfall = (float)CubeBiomeGenBase.getBiome(var6[i]).getIntRainfall() / 65536.0F;
+            	float rainfall = (float) 0.5;
 
                 if (rainfall > 1.0F)
                 {
@@ -123,13 +124,13 @@ public class WorldColumnManager
     /**
      * Returns an array of biomes for the location input.
      */
-    public BiomeGenBase[] getBiomesForGeneration(BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length)
+    public CubeBiomeGenBase[] getBiomesForGeneration(CubeBiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length)
     {
         IntCache.resetIntCache();
 
         if (biomes == null || biomes.length < width * length)
         {
-            biomes = new BiomeGenBase[width * length];
+            biomes = new CubeBiomeGenBase[width * length];
         }
 
         int[] intArray = this.genBiomes.getInts(cubeX, cubeZ, width, length);
@@ -138,7 +139,8 @@ public class WorldColumnManager
         {
             for (int i = 0; i < width * length; ++i)
             {
-                biomes[i] = BiomeGenBase.getBiome(intArray[i]);
+//                biomes[i] = CubeBiomeGenBase.getBiome(intArray[i]);
+            	biomes[i] = CubeBiomeGenBase.getBiome(1);
             }
 
             return biomes;
@@ -160,7 +162,7 @@ public class WorldColumnManager
      * Returns biomes to use for the blocks and loads the other data like temperature and humidity onto the
      * WorldChunkManager Args: oldBiomeList, x, z, width, depth
      */
-    public BiomeGenBase[] loadBlockGeneratorData(BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length)
+    public CubeBiomeGenBase[] loadBlockGeneratorData(CubeBiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length)
     {
         return this.getBiomeGenAt(biomes, cubeX, cubeZ, width, length, true);
     }
@@ -169,18 +171,18 @@ public class WorldColumnManager
      * Return a list of biomes for the specified blocks. Args: listToReuse, x, y, width, length, cacheFlag (if false,
      * don't check biomeCache to avoid infinite loop in BiomeCacheBlock)
      */
-    public BiomeGenBase[] getBiomeGenAt(BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length, boolean flag)
+    public CubeBiomeGenBase[] getBiomeGenAt(CubeBiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length, boolean flag)
     {
         IntCache.resetIntCache();
 
         if (biomes == null || biomes.length < width * length)
         {
-            biomes = new BiomeGenBase[width * length];
+            biomes = new CubeBiomeGenBase[width * length];
         }
 
         if (flag && width == 16 && length == 16 && (cubeX & 15) == 0 && (cubeZ & 15) == 0)
         {
-            BiomeGenBase[] cachedBiomes = this.biomeCache.getCachedBiomes(cubeX, cubeZ);
+            CubeBiomeGenBase[] cachedBiomes = this.biomeCache.getCachedBiomes(cubeX, cubeZ);
             System.arraycopy(cachedBiomes, 0, biomes, 0, width * length);
             return biomes;
         }
@@ -190,7 +192,8 @@ public class WorldColumnManager
 
             for (int i = 0; i < width * length; ++i)
             {
-                biomes[i] = BiomeGenBase.getBiome(aInt[i]);
+//                biomes[i] = CubeBiomeGenBase.getBiome(aInt[i]);
+            	biomes[i] = CubeBiomeGenBase.getBiome(1);
             }
 
             return biomes;
@@ -215,7 +218,7 @@ public class WorldColumnManager
         {
             for (int i = 0; i < width * length; ++i)
             {
-                BiomeGenBase biome = BiomeGenBase.getBiome(aInt[i]);
+                CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome(aInt[i]);
 
                 if (!par4List.contains(biome))
                 {
@@ -255,7 +258,7 @@ public class WorldColumnManager
         {
             int cubeX = var6 + i % var10 << 2;
             int cubeZ = var7 + i / var10 << 2;
-            BiomeGenBase biome = BiomeGenBase.getBiome(aInt[i]);
+            CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome(aInt[i]);
 
             if (list.contains(biome) && (chunkPosition == null || rand.nextInt(var14 + 1) == 0))
             {

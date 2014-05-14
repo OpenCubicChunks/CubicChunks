@@ -13,7 +13,7 @@ import net.minecraft.world.gen.feature.WorldGenTaiga2;
 import net.minecraft.world.gen.feature.WorldGenTallGrass;
 import net.minecraft.world.gen.feature.WorldGenerator;
 
-public class BiomeGenTaiga extends BiomeGenBase
+public class BiomeGenTaiga extends CubeBiomeGenBase
 {
     private static final WorldGenTaiga1 field_150639_aC = new WorldGenTaiga1();
     private static final WorldGenTaiga2 field_150640_aD = new WorldGenTaiga2(false);
@@ -27,7 +27,7 @@ public class BiomeGenTaiga extends BiomeGenBase
     {
         super(p_i45385_1_);
         this.field_150644_aH = p_i45385_2_;
-        this.spawnableCreatureList.add(new BiomeGenBase.SpawnListEntry(EntityWolf.class, 8, 4, 4));
+        this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityWolf.class, 8, 4, 4));
         this.theBiomeDecorator.treesPerChunk = 10;
 
         if (p_i45385_2_ != 1 && p_i45385_2_ != 2)
@@ -89,7 +89,7 @@ public class BiomeGenTaiga extends BiomeGenBase
         super.decorate(par1World, par2Random, par3, par4);
     }
 
-    public void func_150573_a(World p_150573_1_, Random p_150573_2_, Block[] p_150573_3_, byte[] p_150573_4_, int p_150573_5_, int p_150573_6_, double p_150573_7_)
+    public void modifyBlocks_pre(World world, Random rand, Block[] blocks, byte[] meta, int cubeX, int cubeY, int cubeZ, double val)
     {
         if (this.field_150644_aH == 1 || this.field_150644_aH == 2)
         {
@@ -97,23 +97,23 @@ public class BiomeGenTaiga extends BiomeGenBase
             this.field_150604_aj = 0;
             this.fillerBlock = Blocks.dirt;
 
-            if (p_150573_7_ > 1.75D)
+            if (val > 1.75D)
             {
                 this.topBlock = Blocks.dirt;
                 this.field_150604_aj = 1;
             }
-            else if (p_150573_7_ > -0.95D)
+            else if (val > -0.95D)
             {
                 this.topBlock = Blocks.dirt;
                 this.field_150604_aj = 2;
             }
         }
 
-        this.modifyBlocks(p_150573_1_, p_150573_2_, p_150573_3_, p_150573_4_, p_150573_5_, p_150573_6_, p_150573_7_);
+        this.modifyBlocks(world, rand, blocks, meta, cubeX, cubeY, cubeZ, val);
     }
 
-    protected BiomeGenBase func_150566_k()
+    protected CubeBiomeGenBase func_150566_k()
     {
-        return this.biomeID == BiomeGenBase.field_150578_U.biomeID ? (new BiomeGenTaiga(this.biomeID + 128, 2)).func_150557_a(5858897, true).setBiomeName("Mega Spruce Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(new BiomeGenBase.Height(this.minHeight, this.maxHeight)) : super.func_150566_k();
+        return this.biomeID == CubeBiomeGenBase.field_150578_U.biomeID ? (new BiomeGenTaiga(this.biomeID + 128, 2)).func_150557_a(5858897, true).setBiomeName("Mega Spruce Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(new CubeBiomeGenBase.Height(this.minHeight, this.maxHeight)) : super.func_150566_k();
     }
 }

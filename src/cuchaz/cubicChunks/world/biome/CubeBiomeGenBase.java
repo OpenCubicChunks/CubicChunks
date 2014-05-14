@@ -31,6 +31,7 @@ import net.minecraft.util.WeightedRandom;
 import net.minecraft.world.ColorizerFoliage;
 import net.minecraft.world.ColorizerGrass;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.gen.NoiseGeneratorPerlin;
 import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 import net.minecraft.world.gen.feature.WorldGenBigTree;
@@ -43,80 +44,80 @@ import net.minecraft.world.gen.feature.WorldGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public abstract class BiomeGenBase
+public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGenBase
 {
     private static final Logger logger = LogManager.getLogger();
-    protected static final BiomeGenBase.Height field_150596_a = new BiomeGenBase.Height(0.1F, 0.2F);
-    protected static final BiomeGenBase.Height field_150594_b = new BiomeGenBase.Height(-0.5F, 0.0F);
-    protected static final BiomeGenBase.Height field_150595_c = new BiomeGenBase.Height(-1.0F, 0.1F);
-    protected static final BiomeGenBase.Height field_150592_d = new BiomeGenBase.Height(-1.8F, 0.1F);
-    protected static final BiomeGenBase.Height field_150593_e = new BiomeGenBase.Height(0.125F, 0.05F);
-    protected static final BiomeGenBase.Height field_150590_f = new BiomeGenBase.Height(0.2F, 0.2F);
-    protected static final BiomeGenBase.Height field_150591_g = new BiomeGenBase.Height(0.45F, 0.3F);
-    protected static final BiomeGenBase.Height field_150602_h = new BiomeGenBase.Height(1.5F, 0.025F);
-    protected static final BiomeGenBase.Height field_150603_i = new BiomeGenBase.Height(1.0F, 0.5F);
-    protected static final BiomeGenBase.Height field_150600_j = new BiomeGenBase.Height(0.0F, 0.025F);
-    protected static final BiomeGenBase.Height field_150601_k = new BiomeGenBase.Height(0.1F, 0.8F);
-    protected static final BiomeGenBase.Height field_150598_l = new BiomeGenBase.Height(0.2F, 0.3F);
-    protected static final BiomeGenBase.Height field_150599_m = new BiomeGenBase.Height(-0.2F, 0.1F);
+    protected static final CubeBiomeGenBase.Height field_150596_a = new CubeBiomeGenBase.Height(0.1F, 0.2F);
+    protected static final CubeBiomeGenBase.Height field_150594_b = new CubeBiomeGenBase.Height(-0.5F, 0.0F);
+    protected static final CubeBiomeGenBase.Height field_150595_c = new CubeBiomeGenBase.Height(-1.0F, 0.1F);
+    protected static final CubeBiomeGenBase.Height field_150592_d = new CubeBiomeGenBase.Height(-1.8F, 0.1F);
+    protected static final CubeBiomeGenBase.Height field_150593_e = new CubeBiomeGenBase.Height(0.125F, 0.05F);
+    protected static final CubeBiomeGenBase.Height field_150590_f = new CubeBiomeGenBase.Height(0.2F, 0.2F);
+    protected static final CubeBiomeGenBase.Height field_150591_g = new CubeBiomeGenBase.Height(0.45F, 0.3F);
+    protected static final CubeBiomeGenBase.Height field_150602_h = new CubeBiomeGenBase.Height(1.5F, 0.025F);
+    protected static final CubeBiomeGenBase.Height field_150603_i = new CubeBiomeGenBase.Height(1.0F, 0.5F);
+    protected static final CubeBiomeGenBase.Height field_150600_j = new CubeBiomeGenBase.Height(0.0F, 0.025F);
+    protected static final CubeBiomeGenBase.Height field_150601_k = new CubeBiomeGenBase.Height(0.1F, 0.8F);
+    protected static final CubeBiomeGenBase.Height field_150598_l = new CubeBiomeGenBase.Height(0.2F, 0.3F);
+    protected static final CubeBiomeGenBase.Height field_150599_m = new CubeBiomeGenBase.Height(-0.2F, 0.1F);
 
     /** An array of all the biomes, indexed by biome id. */
-    private static final BiomeGenBase[] biomeList = new BiomeGenBase[256];
-    public static final Set<BiomeGenBase> field_150597_n = Sets.newHashSet();
-    public static final BiomeGenBase ocean = (new BiomeGenOcean(0)).setColor(112).setBiomeName("Ocean").setHeightRange(field_150595_c);
-    public static final BiomeGenBase plains = (new BiomeGenPlains(1)).setColor(9286496).setBiomeName("Plains");
-    public static final BiomeGenBase desert = (new BiomeGenDesert(2)).setColor(16421912).setBiomeName("Desert").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F).setHeightRange(field_150593_e);
-    public static final BiomeGenBase extremeHills = (new BiomeGenHills(3, false)).setColor(6316128).setBiomeName("Extreme Hills").setHeightRange(field_150603_i).setTemperatureAndRainfall(0.2F, 0.3F);
-    public static final BiomeGenBase forest = (new BiomeGenForest(4, 0)).setColor(353825).setBiomeName("Forest");
-    public static final BiomeGenBase taiga = (new BiomeGenTaiga(5, 0)).setColor(747097).setBiomeName("Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(field_150590_f);
-    public static final BiomeGenBase swampland = (new BiomeGenSwamp(6)).setColor(522674).setBiomeName("Swampland").func_76733_a(9154376).setHeightRange(field_150599_m).setTemperatureAndRainfall(0.8F, 0.9F);
-    public static final BiomeGenBase river = (new BiomeGenRiver(7)).setColor(255).setBiomeName("River").setHeightRange(field_150594_b);
-    public static final BiomeGenBase hell = (new BiomeGenHell(8)).setColor(16711680).setBiomeName("Hell").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F);
+    private static final CubeBiomeGenBase[] biomeList = new CubeBiomeGenBase[256];
+    public static final Set<CubeBiomeGenBase> field_150597_n = Sets.newHashSet();
+    public static final CubeBiomeGenBase ocean = (new BiomeGenOcean(0)).setColor(112).setBiomeName("Ocean").setHeightRange(field_150595_c);
+    public static final CubeBiomeGenBase plains = (new BiomeGenPlains(1)).setColor(9286496).setBiomeName("Plains");
+    public static final CubeBiomeGenBase desert = (new BiomeGenDesert(2)).setColor(16421912).setBiomeName("Desert").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F).setHeightRange(field_150593_e);
+    public static final CubeBiomeGenBase extremeHills = (new BiomeGenHills(3, false)).setColor(6316128).setBiomeName("Extreme Hills").setHeightRange(field_150603_i).setTemperatureAndRainfall(0.2F, 0.3F);
+    public static final CubeBiomeGenBase forest = (new BiomeGenForest(4, 0)).setColor(353825).setBiomeName("Forest");
+    public static final CubeBiomeGenBase taiga = (new BiomeGenTaiga(5, 0)).setColor(747097).setBiomeName("Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(field_150590_f);
+    public static final CubeBiomeGenBase swampland = (new BiomeGenSwamp(6)).setColor(522674).setBiomeName("Swampland").func_76733_a(9154376).setHeightRange(field_150599_m).setTemperatureAndRainfall(0.8F, 0.9F);
+    public static final CubeBiomeGenBase river = (new BiomeGenRiver(7)).setColor(255).setBiomeName("River").setHeightRange(field_150594_b);
+    public static final CubeBiomeGenBase hell = (new BiomeGenHell(8)).setColor(16711680).setBiomeName("Hell").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F);
 
     /** Is the biome used for sky world. */
-    public static final BiomeGenBase sky = (new BiomeGenEnd(9)).setColor(8421631).setBiomeName("Sky").setDisableRain();
-    public static final BiomeGenBase frozenOcean = (new BiomeGenOcean(10)).setColor(9474208).setBiomeName("FrozenOcean").setEnableSnow().setHeightRange(field_150595_c).setTemperatureAndRainfall(0.0F, 0.5F);
-    public static final BiomeGenBase frozenRiver = (new BiomeGenRiver(11)).setColor(10526975).setBiomeName("FrozenRiver").setEnableSnow().setHeightRange(field_150594_b).setTemperatureAndRainfall(0.0F, 0.5F);
-    public static final BiomeGenBase icePlains = (new BiomeGenSnow(12, false)).setColor(16777215).setBiomeName("Ice Plains").setEnableSnow().setTemperatureAndRainfall(0.0F, 0.5F).setHeightRange(field_150593_e);
-    public static final BiomeGenBase iceMountains = (new BiomeGenSnow(13, false)).setColor(10526880).setBiomeName("Ice Mountains").setEnableSnow().setHeightRange(field_150591_g).setTemperatureAndRainfall(0.0F, 0.5F);
-    public static final BiomeGenBase mushroomIsland = (new BiomeGenMushroomIsland(14)).setColor(16711935).setBiomeName("MushroomIsland").setTemperatureAndRainfall(0.9F, 1.0F).setHeightRange(field_150598_l);
-    public static final BiomeGenBase mushroomIslandShore = (new BiomeGenMushroomIsland(15)).setColor(10486015).setBiomeName("MushroomIslandShore").setTemperatureAndRainfall(0.9F, 1.0F).setHeightRange(field_150600_j);
+    public static final CubeBiomeGenBase sky = (new BiomeGenEnd(9)).setColor(8421631).setBiomeName("Sky").setDisableRain();
+    public static final CubeBiomeGenBase frozenOcean = (new BiomeGenOcean(10)).setColor(9474208).setBiomeName("FrozenOcean").setEnableSnow().setHeightRange(field_150595_c).setTemperatureAndRainfall(0.0F, 0.5F);
+    public static final CubeBiomeGenBase frozenRiver = (new BiomeGenRiver(11)).setColor(10526975).setBiomeName("FrozenRiver").setEnableSnow().setHeightRange(field_150594_b).setTemperatureAndRainfall(0.0F, 0.5F);
+    public static final CubeBiomeGenBase icePlains = (new BiomeGenSnow(12, false)).setColor(16777215).setBiomeName("Ice Plains").setEnableSnow().setTemperatureAndRainfall(0.0F, 0.5F).setHeightRange(field_150593_e);
+    public static final CubeBiomeGenBase iceMountains = (new BiomeGenSnow(13, false)).setColor(10526880).setBiomeName("Ice Mountains").setEnableSnow().setHeightRange(field_150591_g).setTemperatureAndRainfall(0.0F, 0.5F);
+    public static final CubeBiomeGenBase mushroomIsland = (new BiomeGenMushroomIsland(14)).setColor(16711935).setBiomeName("MushroomIsland").setTemperatureAndRainfall(0.9F, 1.0F).setHeightRange(field_150598_l);
+    public static final CubeBiomeGenBase mushroomIslandShore = (new BiomeGenMushroomIsland(15)).setColor(10486015).setBiomeName("MushroomIslandShore").setTemperatureAndRainfall(0.9F, 1.0F).setHeightRange(field_150600_j);
 
     /** Beach biome. */
-    public static final BiomeGenBase beach = (new BiomeGenBeach(16)).setColor(16440917).setBiomeName("Beach").setTemperatureAndRainfall(0.8F, 0.4F).setHeightRange(field_150600_j);
+    public static final CubeBiomeGenBase beach = (new BiomeGenBeach(16)).setColor(16440917).setBiomeName("Beach").setTemperatureAndRainfall(0.8F, 0.4F).setHeightRange(field_150600_j);
 
     /** Desert Hills biome. */
-    public static final BiomeGenBase desertHills = (new BiomeGenDesert(17)).setColor(13786898).setBiomeName("DesertHills").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F).setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase desertHills = (new BiomeGenDesert(17)).setColor(13786898).setBiomeName("DesertHills").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F).setHeightRange(field_150591_g);
 
     /** Forest Hills biome. */
-    public static final BiomeGenBase forestHills = (new BiomeGenForest(18, 0)).setColor(2250012).setBiomeName("ForestHills").setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase forestHills = (new BiomeGenForest(18, 0)).setColor(2250012).setBiomeName("ForestHills").setHeightRange(field_150591_g);
 
     /** Taiga Hills biome. */
-    public static final BiomeGenBase taigaHills = (new BiomeGenTaiga(19, 0)).setColor(1456435).setBiomeName("TaigaHills").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase taigaHills = (new BiomeGenTaiga(19, 0)).setColor(1456435).setBiomeName("TaigaHills").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(field_150591_g);
 
     /** Extreme Hills Edge biome. */
-    public static final BiomeGenBase extremeHillsEdge = (new BiomeGenHills(20, true)).setColor(7501978).setBiomeName("Extreme Hills Edge").setHeightRange(field_150603_i.func_150775_a()).setTemperatureAndRainfall(0.2F, 0.3F);
+    public static final CubeBiomeGenBase extremeHillsEdge = (new BiomeGenHills(20, true)).setColor(7501978).setBiomeName("Extreme Hills Edge").setHeightRange(field_150603_i.func_150775_a()).setTemperatureAndRainfall(0.2F, 0.3F);
 
     /** Jungle biome identifier */
-    public static final BiomeGenBase jungle = (new BiomeGenJungle(21, false)).setColor(5470985).setBiomeName("Jungle").func_76733_a(5470985).setTemperatureAndRainfall(0.95F, 0.9F);
-    public static final BiomeGenBase jungleHills = (new BiomeGenJungle(22, false)).setColor(2900485).setBiomeName("JungleHills").func_76733_a(5470985).setTemperatureAndRainfall(0.95F, 0.9F).setHeightRange(field_150591_g);
-    public static final BiomeGenBase field_150574_L = (new BiomeGenJungle(23, true)).setColor(6458135).setBiomeName("JungleEdge").func_76733_a(5470985).setTemperatureAndRainfall(0.95F, 0.8F);
-    public static final BiomeGenBase field_150575_M = (new BiomeGenOcean(24)).setColor(48).setBiomeName("Deep Ocean").setHeightRange(field_150592_d);
-    public static final BiomeGenBase field_150576_N = (new BiomeGenStoneBeach(25)).setColor(10658436).setBiomeName("Stone Beach").setTemperatureAndRainfall(0.2F, 0.3F).setHeightRange(field_150601_k);
-    public static final BiomeGenBase field_150577_O = (new BiomeGenBeach(26)).setColor(16445632).setBiomeName("Cold Beach").setTemperatureAndRainfall(0.05F, 0.3F).setHeightRange(field_150600_j).setEnableSnow();
-    public static final BiomeGenBase field_150583_P = (new BiomeGenForest(27, 2)).setBiomeName("Birch Forest").setColor(3175492);
-    public static final BiomeGenBase field_150582_Q = (new BiomeGenForest(28, 2)).setBiomeName("Birch Forest Hills").setColor(2055986).setHeightRange(field_150591_g);
-    public static final BiomeGenBase field_150585_R = (new BiomeGenForest(29, 3)).setColor(4215066).setBiomeName("Roofed Forest");
-    public static final BiomeGenBase field_150584_S = (new BiomeGenTaiga(30, 0)).setColor(3233098).setBiomeName("Cold Taiga").func_76733_a(5159473).setEnableSnow().setTemperatureAndRainfall(-0.5F, 0.4F).setHeightRange(field_150590_f).func_150563_c(16777215);
-    public static final BiomeGenBase field_150579_T = (new BiomeGenTaiga(31, 0)).setColor(2375478).setBiomeName("Cold Taiga Hills").func_76733_a(5159473).setEnableSnow().setTemperatureAndRainfall(-0.5F, 0.4F).setHeightRange(field_150591_g).func_150563_c(16777215);
-    public static final BiomeGenBase field_150578_U = (new BiomeGenTaiga(32, 1)).setColor(5858897).setBiomeName("Mega Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.3F, 0.8F).setHeightRange(field_150590_f);
-    public static final BiomeGenBase field_150581_V = (new BiomeGenTaiga(33, 1)).setColor(4542270).setBiomeName("Mega Taiga Hills").func_76733_a(5159473).setTemperatureAndRainfall(0.3F, 0.8F).setHeightRange(field_150591_g);
-    public static final BiomeGenBase field_150580_W = (new BiomeGenHills(34, true)).setColor(5271632).setBiomeName("Extreme Hills+").setHeightRange(field_150603_i).setTemperatureAndRainfall(0.2F, 0.3F);
-    public static final BiomeGenBase field_150588_X = (new BiomeGenSavanna(35)).setColor(12431967).setBiomeName("Savanna").setTemperatureAndRainfall(1.2F, 0.0F).setDisableRain().setHeightRange(field_150593_e);
-    public static final BiomeGenBase field_150587_Y = (new BiomeGenSavanna(36)).setColor(10984804).setBiomeName("Savanna Plateau").setTemperatureAndRainfall(1.0F, 0.0F).setDisableRain().setHeightRange(field_150602_h);
-    public static final BiomeGenBase field_150589_Z = (new BiomeGenMesa(37, false, false)).setColor(14238997).setBiomeName("Mesa");
-    public static final BiomeGenBase field_150607_aa = (new BiomeGenMesa(38, false, true)).setColor(11573093).setBiomeName("Mesa Plateau F").setHeightRange(field_150602_h);
-    public static final BiomeGenBase field_150608_ab = (new BiomeGenMesa(39, false, false)).setColor(13274213).setBiomeName("Mesa Plateau").setHeightRange(field_150602_h);
+    public static final CubeBiomeGenBase jungle = (new BiomeGenJungle(21, false)).setColor(5470985).setBiomeName("Jungle").func_76733_a(5470985).setTemperatureAndRainfall(0.95F, 0.9F);
+    public static final CubeBiomeGenBase jungleHills = (new BiomeGenJungle(22, false)).setColor(2900485).setBiomeName("JungleHills").func_76733_a(5470985).setTemperatureAndRainfall(0.95F, 0.9F).setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase field_150574_L = (new BiomeGenJungle(23, true)).setColor(6458135).setBiomeName("JungleEdge").func_76733_a(5470985).setTemperatureAndRainfall(0.95F, 0.8F);
+    public static final CubeBiomeGenBase field_150575_M = (new BiomeGenOcean(24)).setColor(48).setBiomeName("Deep Ocean").setHeightRange(field_150592_d);
+    public static final CubeBiomeGenBase field_150576_N = (new BiomeGenStoneBeach(25)).setColor(10658436).setBiomeName("Stone Beach").setTemperatureAndRainfall(0.2F, 0.3F).setHeightRange(field_150601_k);
+    public static final CubeBiomeGenBase field_150577_O = (new BiomeGenBeach(26)).setColor(16445632).setBiomeName("Cold Beach").setTemperatureAndRainfall(0.05F, 0.3F).setHeightRange(field_150600_j).setEnableSnow();
+    public static final CubeBiomeGenBase field_150583_P = (new BiomeGenForest(27, 2)).setBiomeName("Birch Forest").setColor(3175492);
+    public static final CubeBiomeGenBase field_150582_Q = (new BiomeGenForest(28, 2)).setBiomeName("Birch Forest Hills").setColor(2055986).setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase field_150585_R = (new BiomeGenForest(29, 3)).setColor(4215066).setBiomeName("Roofed Forest");
+    public static final CubeBiomeGenBase field_150584_S = (new BiomeGenTaiga(30, 0)).setColor(3233098).setBiomeName("Cold Taiga").func_76733_a(5159473).setEnableSnow().setTemperatureAndRainfall(-0.5F, 0.4F).setHeightRange(field_150590_f).func_150563_c(16777215);
+    public static final CubeBiomeGenBase field_150579_T = (new BiomeGenTaiga(31, 0)).setColor(2375478).setBiomeName("Cold Taiga Hills").func_76733_a(5159473).setEnableSnow().setTemperatureAndRainfall(-0.5F, 0.4F).setHeightRange(field_150591_g).func_150563_c(16777215);
+    public static final CubeBiomeGenBase field_150578_U = (new BiomeGenTaiga(32, 1)).setColor(5858897).setBiomeName("Mega Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.3F, 0.8F).setHeightRange(field_150590_f);
+    public static final CubeBiomeGenBase field_150581_V = (new BiomeGenTaiga(33, 1)).setColor(4542270).setBiomeName("Mega Taiga Hills").func_76733_a(5159473).setTemperatureAndRainfall(0.3F, 0.8F).setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase field_150580_W = (new BiomeGenHills(34, true)).setColor(5271632).setBiomeName("Extreme Hills+").setHeightRange(field_150603_i).setTemperatureAndRainfall(0.2F, 0.3F);
+    public static final CubeBiomeGenBase field_150588_X = (new BiomeGenSavanna(35)).setColor(12431967).setBiomeName("Savanna").setTemperatureAndRainfall(1.2F, 0.0F).setDisableRain().setHeightRange(field_150593_e);
+    public static final CubeBiomeGenBase field_150587_Y = (new BiomeGenSavanna(36)).setColor(10984804).setBiomeName("Savanna Plateau").setTemperatureAndRainfall(1.0F, 0.0F).setDisableRain().setHeightRange(field_150602_h);
+    public static final CubeBiomeGenBase field_150589_Z = (new BiomeGenMesa(37, false, false)).setColor(14238997).setBiomeName("Mesa");
+    public static final CubeBiomeGenBase field_150607_aa = (new BiomeGenMesa(38, false, true)).setColor(11573093).setBiomeName("Mesa Plateau F").setHeightRange(field_150602_h);
+    public static final CubeBiomeGenBase field_150608_ab = (new BiomeGenMesa(39, false, false)).setColor(13274213).setBiomeName("Mesa Plateau").setHeightRange(field_150602_h);
     
     protected static final NoiseGeneratorPerlin field_150605_ac;
     protected static final NoiseGeneratorPerlin field_150606_ad;
@@ -157,18 +158,18 @@ public abstract class BiomeGenBase
     /**
      * Holds the classes of IMobs (hostile mobs) that can be spawned in the biome.
      */
-    protected List<SpawnListEntry> spawnableMonsterList;
+    protected List spawnableMonsterList;
 
     /**
      * Holds the classes of any creature that can be spawned in the biome as friendly creature.
      */
-    protected List<SpawnListEntry> spawnableCreatureList;
+    protected List spawnableCreatureList;
 
     /**
      * Holds the classes of any aquatic creature that can be spawned in the water of the biome.
      */
-    protected List<SpawnListEntry> spawnableWaterCreatureList;
-    protected List<SpawnListEntry> spawnableCaveCreatureList;
+    protected List spawnableWaterCreatureList;
+    protected List spawnableCaveCreatureList;
 
     /** Set to true if snow is enabled for this biome. */
     protected boolean enableSnow;
@@ -190,8 +191,9 @@ public abstract class BiomeGenBase
     /** The swamp tree generator. */
     protected WorldGenSwamp worldGeneratorSwamp;
 
-    protected BiomeGenBase(int par1)
+    protected CubeBiomeGenBase(int biomeID)
     {
+    	super(biomeID);
         this.topBlock = Blocks.grass;
         this.field_150604_aj = 0;
         this.fillerBlock = Blocks.dirt;
@@ -202,10 +204,10 @@ public abstract class BiomeGenBase
         this.rainfall = 0.5F;
         this.waterColorMultiplier = 16777215;
         
-        this.spawnableMonsterList = new ArrayList<SpawnListEntry>();
-        this.spawnableCreatureList = new ArrayList<SpawnListEntry>();
-        this.spawnableWaterCreatureList = new ArrayList<SpawnListEntry>();
-        this.spawnableCaveCreatureList = new ArrayList<SpawnListEntry>();
+        this.spawnableMonsterList = new ArrayList();
+        this.spawnableCreatureList = new ArrayList();
+        this.spawnableWaterCreatureList = new ArrayList();
+        this.spawnableCaveCreatureList = new ArrayList();
         
         this.enableRain = true;
         
@@ -213,8 +215,8 @@ public abstract class BiomeGenBase
         this.worldGeneratorBigTree = new WorldGenBigTree(false);
         this.worldGeneratorSwamp = new WorldGenSwamp();
         
-        this.biomeID = par1;
-        biomeList[par1] = this;
+        this.biomeID = biomeID;
+        biomeList[biomeID] = this;
         this.theBiomeDecorator = this.createBiomeDecorator();
         
         this.spawnableCreatureList.add(new BiomeGenBase.SpawnListEntry(EntitySheep.class, 12, 4, 4));
@@ -238,6 +240,7 @@ public abstract class BiomeGenBase
     /**
      * Allocate a new BiomeDecorator for this BiomeGenBase
      */
+    @Override
     protected BiomeDecorator createBiomeDecorator()
     {
         return new BiomeDecorator();
@@ -246,7 +249,7 @@ public abstract class BiomeGenBase
     /**
      * Sets the temperature and rainfall of this biome.
      */
-    protected BiomeGenBase setTemperatureAndRainfall(float temp, float rainfall)
+    protected CubeBiomeGenBase setTemperatureAndRainfall(float temp, float rainfall)
     {
         if (temp > 0.1F && temp < 0.2F)
         {
@@ -260,7 +263,7 @@ public abstract class BiomeGenBase
         }
     }
 
-    protected final BiomeGenBase setHeightRange(BiomeGenBase.Height p_150570_1_)
+    protected final CubeBiomeGenBase setHeightRange(CubeBiomeGenBase.Height p_150570_1_)
     {
         this.minHeight = p_150570_1_.field_150777_a;
         this.maxHeight = p_150570_1_.field_150776_b;
@@ -270,7 +273,7 @@ public abstract class BiomeGenBase
     /**
      * Disable the rain for the biome.
      */
-    protected BiomeGenBase setDisableRain()
+    protected CubeBiomeGenBase setDisableRain()
     {
         this.enableRain = false;
         return this;
@@ -297,37 +300,37 @@ public abstract class BiomeGenBase
     /**
      * sets enableSnow to true during biome initialization. returns BiomeGenBase.
      */
-    protected BiomeGenBase setEnableSnow()
+    protected CubeBiomeGenBase setEnableSnow()
     {
         this.enableSnow = true;
         return this;
     }
 
-    protected BiomeGenBase setBiomeName(String name)
+    protected CubeBiomeGenBase setBiomeName(String name)
     {
         this.biomeName = name;
         return this;
     }
 
-    protected BiomeGenBase func_76733_a(int par1)
+    protected CubeBiomeGenBase func_76733_a(int par1)
     {
         this.field_76754_C = par1;
         return this;
     }
 
-    protected BiomeGenBase setColor(int par1)
+    protected CubeBiomeGenBase setColor(int par1)
     {
         this.func_150557_a(par1, false);
         return this;
     }
 
-    protected BiomeGenBase func_150563_c(int p_150563_1_)
+    protected CubeBiomeGenBase func_150563_c(int p_150563_1_)
     {
         this.field_150609_ah = p_150563_1_;
         return this;
     }
 
-    protected BiomeGenBase func_150557_a(int p_150557_1_, boolean p_150557_2_)
+    protected CubeBiomeGenBase func_150557_a(int p_150557_1_, boolean p_150557_2_)
     {
         this.color = p_150557_1_;
 
@@ -366,7 +369,7 @@ public abstract class BiomeGenBase
     /**
      * Returns the correspondent list of the EnumCreatureType informed.
      */
-    public List<SpawnListEntry> getSpawnableList(EnumCreatureType par1EnumCreatureType)
+    public List getSpawnableList(EnumCreatureType par1EnumCreatureType)
     {
         return par1EnumCreatureType == EnumCreatureType.monster ? this.spawnableMonsterList : (par1EnumCreatureType == EnumCreatureType.creature ? this.spawnableCreatureList : (par1EnumCreatureType == EnumCreatureType.waterCreature ? this.spawnableWaterCreatureList : (par1EnumCreatureType == EnumCreatureType.ambient ? this.spawnableCaveCreatureList : null)));
     }
@@ -403,37 +406,37 @@ public abstract class BiomeGenBase
         return 0.1F;
     }
 
-    /**
-     * Gets an integer representation of this biome's rainfall
-     */
-    public final int getIntRainfall()
-    {
-        return (int)(this.rainfall * 65536.0F);
-    }
+//    /**
+//     * Gets an integer representation of this biome's rainfall
+//     */
+//    public final int getIntRainfall()
+//    {
+//        return (int)(this.rainfall * 65536.0F);
+//    }
 
-    /**
-     * Gets a floating point representation of this biome's rainfall
-     */
-    public final float getFloatRainfall()
-    {
-        return this.rainfall;
-    }
+//    /**
+//     * Gets a floating point representation of this biome's rainfall
+//     */
+//    public final float getFloatRainfall()
+//    {
+//        return this.rainfall;
+//    }
 
-    /**
-     * Gets a floating point representation of this biome's temperature. above sealevel the temperature decreases, but below it stays constant.
-     */
-    public final float getFloatTemperature(int xAbs, int yAbs, int zAbs)
-    {
-        if (yAbs > 64)
-        {
-            float var4 = (float)field_150605_ac.func_151601_a((double)xAbs * 1.0D / 8.0D, (double)zAbs * 1.0D / 8.0D) * 4.0F;
-            return this.temperature - (var4 + (float)yAbs - 64.0F) * 0.05F / 30.0F;
-        }
-        else
-        {
-            return this.temperature;
-        }
-    }
+//    /**
+//     * Gets a floating point representation of this biome's temperature. above sealevel the temperature decreases, but below it stays constant.
+//     */
+//    public final float getFloatTemperature(int xAbs, int yAbs, int zAbs)
+//    {
+//        if (yAbs > 64)
+//        {
+//            float var4 = (float)field_150605_ac.func_151601_a((double)xAbs * 1.0D / 8.0D, (double)zAbs * 1.0D / 8.0D) * 4.0F;
+//            return this.temperature - (var4 + (float)yAbs - 64.0F) * 0.05F / 30.0F;
+//        }
+//        else
+//        {
+//            return this.temperature;
+//        }
+//    }
 
     public void decorate(World par1World, Random par2Random, int par3, int par4)
     {
@@ -465,25 +468,25 @@ public abstract class BiomeGenBase
         return this.enableSnow;
     }
 
-    public void func_150573_a(World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int zAbs, double p_150573_7_)
+    public void modifyBlocks_pre(World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int yAbs, int zAbs, double val)
     {
-        this.modifyBlocks(world, rand, blocks, meta, xAbs, zAbs, p_150573_7_);
+        this.modifyBlocks(world, rand, blocks, meta, xAbs, yAbs, zAbs, val);
     }
 
-    public final void modifyBlocks(World p_150560_1_, Random rand, Block[] blocks, byte[] p_150560_4_, int xAbs, int zAbs, double p_150560_7_)
+    public final void modifyBlocks(World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int yAbs, int zAbs, double val)
     {
-        Block topBlock = this.topBlock;
+        Block topBlock = this.topBlock; // start with grass for the top
         byte var11 = (byte)(this.field_150604_aj & 255);
-        Block fillBlock = this.fillerBlock;
+        Block fillBlock = this.fillerBlock; // start with dirt for the fill
         int var13 = -1;
-        int var14 = (int)(p_150560_7_ / 3.0D + 3.0D + rand.nextDouble() * 0.25D);
+        int rnd1 = (int)(val / 3.0D + 3.0D + rand.nextDouble() * 0.25D);
         int xRel = xAbs & 15;
-        int zRel = zAbs & 15;
-        int height = blocks.length / 256;
+        int yRel = yAbs & 15;
+        int zRel = zAbs & 15;    
 
-        for (int yAbs = 255; yAbs >= 0; --yAbs)
-        {
-            int loc = (zRel * 16 + xRel) * height + yAbs;
+//        for (int y0 = 15; y0 >= 0; --y0) // removed, since we're already evaluating all the blocks in the cube
+//        {
+            int loc = (zRel * 16 + xRel) * 16 + yRel;
 
             if (yAbs <= 0 + rand.nextInt(5)) // 20% chance of bedrock in the bottom 5 layers of the world
             {
@@ -499,17 +502,17 @@ public abstract class BiomeGenBase
                     {
                         if (var13 == -1)
                         {
-                            if (var14 <= 0)
+                            if (rnd1 <= 0)
                             {
-                                topBlock = null;
+                                topBlock = null; // don't place topblock if rnd1 is less than 0. this probably leaves exposed stone areas.
                                 var11 = 0;
-                                fillBlock = Blocks.stone;
+                                fillBlock = Blocks.stone; // change fillblock to stone if rnd1 is less than 0
                             }
                             else if (yAbs >= 59 && yAbs <= 64)
                             {
-                                topBlock = this.topBlock;
+                                topBlock = this.topBlock; //replace the topblock between 59 and 64
                                 var11 = (byte)(this.field_150604_aj & 255);
-                                fillBlock = this.fillerBlock;
+                                fillBlock = this.fillerBlock; // replace the fillblock between 59 and 64
                             }
 
                             if (yAbs < 63 && (topBlock == null || topBlock.getMaterial() == Material.air))
@@ -526,14 +529,14 @@ public abstract class BiomeGenBase
                                 }
                             }
 
-                            var13 = var14;
+                            var13 = rnd1;
 
                             if (yAbs >= 62)
                             {
                                 blocks[loc] = topBlock;
-                                p_150560_4_[loc] = var11;
+                                meta[loc] = var11;
                             }
-                            else if (yAbs < 56 - var14)
+                            else if (yAbs < 56 - rnd1)
                             {
                                 topBlock = null;
                                 fillBlock = Blocks.stone;
@@ -562,35 +565,36 @@ public abstract class BiomeGenBase
                     var13 = -1;
                 }
             }
-        }
+//        }
     }
 
-    protected BiomeGenBase func_150566_k()
+    protected CubeBiomeGenBase func_150566_k()
     {
         return new BiomeGenMutated(this.biomeID + 128, this);
     }
 
-    public Class<? extends BiomeGenBase> func_150562_l()
+    public Class<? extends CubeBiomeGenBase> func_150562_l()
     {
         return this.getClass();
     }
 
-    public boolean func_150569_a(BiomeGenBase p_150569_1_)
+    public boolean func_150569_a(CubeBiomeGenBase p_150569_1_)
     {
         return p_150569_1_ == this ? true : (p_150569_1_ == null ? false : this.func_150562_l() == p_150569_1_.func_150562_l());
     }
 
-    public BiomeGenBase.TempCategory func_150561_m()
-    {
-        return (double)this.temperature < 0.2D ? BiomeGenBase.TempCategory.COLD : ((double)this.temperature < 1.0D ? BiomeGenBase.TempCategory.MEDIUM : BiomeGenBase.TempCategory.WARM);
-    }
+//    @Override
+//    public TempCategory func_150561_m()
+//    {
+//        return (double)this.temperature < 0.2D ? BiomeGenBase.TempCategory.COLD : ((double)this.temperature < 1.0D ? BiomeGenBase.TempCategory.MEDIUM : BiomeGenBase.TempCategory.WARM);
+//    }
 
-    public static BiomeGenBase[] getBiomeGenArray()
+    public static CubeBiomeGenBase[] getBiomeGenArray()
     {
         return biomeList;
     }
 
-    public static BiomeGenBase getBiome(int val)
+    public static CubeBiomeGenBase getBiome(int val)
     {
         if (val >= 0 && val <= biomeList.length)
         {
@@ -626,12 +630,12 @@ public abstract class BiomeGenBase
         extremeHills.func_150566_k();
         field_150580_W.func_150566_k();
         biomeList[field_150581_V.biomeID + 128] = biomeList[field_150578_U.biomeID + 128];
-        BiomeGenBase[] var0 = biomeList;
+        CubeBiomeGenBase[] var0 = biomeList;
         int var1 = var0.length;
 
         for (int var2 = 0; var2 < var1; ++var2)
         {
-            BiomeGenBase var3 = var0[var2];
+            CubeBiomeGenBase var3 = var0[var2];
 
             if (var3 != null && var3.biomeID < 128)
             {
@@ -675,19 +679,19 @@ public abstract class BiomeGenBase
             this.field_150776_b = p_i45371_2_;
         }
 
-        public BiomeGenBase.Height func_150775_a()
+        public CubeBiomeGenBase.Height func_150775_a()
         {
-            return new BiomeGenBase.Height(this.field_150777_a * 0.8F, this.field_150776_b * 0.6F);
+            return new CubeBiomeGenBase.Height(this.field_150777_a * 0.8F, this.field_150776_b * 0.6F);
         }
     }
 
-    public static enum TempCategory
-    {
-        OCEAN("OCEAN", 0),
-        COLD("COLD", 1),
-        MEDIUM("MEDIUM", 2),
-        WARM("WARM", 3);
-
-        private TempCategory(String p_i45372_1_, int p_i45372_2_) {}
-    }
+//    public static enum TempCategory extends net.minecraft.world.biome.BioeGenbase.TempCategory
+//    {
+//        OCEAN("OCEAN", 0),
+//        COLD("COLD", 1),
+//        MEDIUM("MEDIUM", 2),
+//        WARM("WARM", 3);
+//
+//        private TempCategory(String p_i45372_1_, int p_i45372_2_) {}
+//    }
 }

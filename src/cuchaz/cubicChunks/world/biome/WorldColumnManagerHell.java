@@ -8,12 +8,12 @@ import net.minecraft.world.ChunkPosition;
 public class WorldColumnManagerHell extends WorldColumnManager
 {
     /** The biome generator object. */
-    private BiomeGenBase biomeGenerator;
+    private CubeBiomeGenBase biomeGenerator;
 
     /** The rainfall in the world */
     private float rainfall; // this is hell, there IS no rain.
 
-    public WorldColumnManagerHell(BiomeGenBase p_i45374_1_, float p_i45374_2_)
+    public WorldColumnManagerHell(CubeBiomeGenBase p_i45374_1_, float p_i45374_2_)
     {
         this.biomeGenerator = p_i45374_1_;
         this.rainfall = p_i45374_2_;
@@ -22,7 +22,7 @@ public class WorldColumnManagerHell extends WorldColumnManager
     /**
      * Returns the BiomeGenBase related to the x, z position on the world.
      */
-    public BiomeGenBase getBiomeGenAt(int par1, int par2)
+    public CubeBiomeGenBase getBiomeGenAt(int par1, int par2)
     {
         return this.biomeGenerator;
     }
@@ -32,11 +32,11 @@ public class WorldColumnManagerHell extends WorldColumnManager
      * 
      * It ignores the cubeX, cubeZ input since it doesn't care, it's exactly the same biome everywhere in the nether.
      */
-    public BiomeGenBase[] getBiomesForGeneration(BiomeGenBase[] aBiomeGenBase, int par2, int par3, int width, int length)
+    public CubeBiomeGenBase[] getBiomesForGeneration(CubeBiomeGenBase[] aBiomeGenBase, int par2, int par3, int width, int length)
     {
         if (aBiomeGenBase == null || aBiomeGenBase.length < width * length)
         {
-            aBiomeGenBase = new BiomeGenBase[width * length];
+            aBiomeGenBase = new CubeBiomeGenBase[width * length];
         }
 
         Arrays.fill(aBiomeGenBase, 0, width * length, this.biomeGenerator); // fills the array with biome 0. same biome everywhere, then.
@@ -61,11 +61,11 @@ public class WorldColumnManagerHell extends WorldColumnManager
      * Returns biomes to use for the blocks and loads the other data like temperature and humidity onto the
      * WorldChunkManager Args: oldBiomeList, x, z, width, depth
      */
-    public BiomeGenBase[] loadBlockGeneratorData(BiomeGenBase[] par1ArrayOfBiomeGenBase, int par2, int par3, int par4, int par5)
+    public CubeBiomeGenBase[] loadBlockGeneratorData(CubeBiomeGenBase[] par1ArrayOfBiomeGenBase, int par2, int par3, int par4, int par5)
     {
         if (par1ArrayOfBiomeGenBase == null || par1ArrayOfBiomeGenBase.length < par4 * par5)
         {
-            par1ArrayOfBiomeGenBase = new BiomeGenBase[par4 * par5];
+            par1ArrayOfBiomeGenBase = new CubeBiomeGenBase[par4 * par5];
         }
 
         Arrays.fill(par1ArrayOfBiomeGenBase, 0, par4 * par5, this.biomeGenerator);
@@ -76,7 +76,7 @@ public class WorldColumnManagerHell extends WorldColumnManager
      * Return a list of biomes for the specified blocks. Args: listToReuse, x, y, width, length, cacheFlag (if false,
      * don't check biomeCache to avoid infinite loop in BiomeCacheBlock)
      */
-    public BiomeGenBase[] getBiomeGenAt(BiomeGenBase[] par1ArrayOfBiomeGenBase, int par2, int par3, int par4, int par5, boolean par6)
+    public CubeBiomeGenBase[] getBiomeGenAt(CubeBiomeGenBase[] par1ArrayOfBiomeGenBase, int par2, int par3, int par4, int par5, boolean par6)
     {
         return this.loadBlockGeneratorData(par1ArrayOfBiomeGenBase, par2, par3, par4, par5);
     }

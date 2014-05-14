@@ -25,6 +25,7 @@ import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
+import cuchaz.cubicChunks.world.biome.WorldColumnManager;
 import cuchaz.magicMojoModLoader.api.Mod;
 import cuchaz.magicMojoModLoader.api.ModMetadata;
 import cuchaz.magicMojoModLoader.api.Version;
