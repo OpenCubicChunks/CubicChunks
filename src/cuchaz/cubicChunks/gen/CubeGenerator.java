@@ -146,9 +146,9 @@ public class CubeGenerator implements ICubeGenerator
 			return Cube.generateEmptyCubeAndAddToColumn( m_world, column, cubeX, cubeY, cubeZ );
 		}
 		
-		/* TEMP: don't do these things yet. They still need to be cubified
 		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks, m_biomes );
 		
+		/*
 		// generate world features
 		m_caveGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
 		m_ravineGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
@@ -258,6 +258,7 @@ public class CubeGenerator implements ICubeGenerator
 		//   y:   once every 8 blocks
 		// this means each cube uses 5 samples in x, 5 samples in z, and 3 samples in y
 		final double noiseScale = 684.412;
+		
 		m_terrainNoiseLow = m_terrainNoiseGenLow.generateNoiseOctaves( m_terrainNoiseLow,
 			noiseX, noiseY, noiseZ,            // offset
 			5, 3, 5,                           // size
@@ -392,6 +393,27 @@ public class CubeGenerator implements ICubeGenerator
 				biomes[xzCoord].func_150573_a(
 					m_world, m_rand,
 					blocks, metadata,
+					Coords.localToBlock( cubeX, localX ),
+					Coords.localToBlock( cubeZ, localZ ),
+					m_biomeNoise[xzCoord]
+				);
+			}
+		}
+	}
+	
+	private void replaceBlocksForBiome( int cubeX, int cubeY, int cubeZ, CubeBlocks blocks, BiomeGenBase[] biomes )
+	{
+		m_biomeNoise = m_biomeNoiseGen.func_151599_a( m_biomeNoise, Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ), 16, 16, 16, 16, 1 );
+		
+		for( int localX=0; localX<16; localX++ )
+		{
+			for( int localZ=0; localZ<16; localZ++ )
+			{
+				int xzCoord = localZ | localX << 4;
+				// UNDONE: need to cubeify this
+				biomes[xzCoord].func_150573_a(
+					m_world, m_rand,
+					blocks.m_blocks, blocks.m_meta,
 					Coords.localToBlock( cubeX, localX ),
 					Coords.localToBlock( cubeZ, localZ ),
 					m_biomeNoise[xzCoord]

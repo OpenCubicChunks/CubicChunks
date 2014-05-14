@@ -15,8 +15,8 @@ import net.minecraft.block.Block;
 
 public class CubeBlocks
 {
-	private Block[] m_blocks;
-	private byte[] m_meta;
+	Block[] m_blocks;
+	byte[] m_meta;
 	private boolean m_isEmpty;
 	
 	public CubeBlocks( )
