@@ -758,7 +758,6 @@ public class Column extends Chunk
 		
 		// update lighting flags
 		isTerrainPopulated = true;
-		isLightPopulated = true;
 		
 		// update tile entities in each chunk
 		for( Cube cube : m_cubes.values() )

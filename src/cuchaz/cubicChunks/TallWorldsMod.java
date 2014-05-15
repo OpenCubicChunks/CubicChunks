@@ -28,7 +28,7 @@ import cuchaz.cubicChunks.world.Column;
 import cuchaz.magicMojoModLoader.api.Mod;
 import cuchaz.magicMojoModLoader.api.ModMetadata;
 import cuchaz.magicMojoModLoader.api.Version;
-import cuchaz.magicMojoModLoader.api.events.BuildHeightEvent;
+import cuchaz.magicMojoModLoader.api.events.BuildSizeEvent;
 import cuchaz.magicMojoModLoader.api.events.ClassOverrideEvent;
 import cuchaz.magicMojoModLoader.api.events.EncodeChunkEvent;
 import cuchaz.magicMojoModLoader.api.events.EntityPlayerMPUpdateEvent;
@@ -86,7 +86,7 @@ public class TallWorldsMod implements Mod
 		}
 	}
 	
-	public void handleEvent( BuildHeightEvent event )
+	public void handleEvent( BuildSizeEvent event )
 	{
 		event.setCustomBuildHeight( Coords.cubeToMaxBlock( AddressTools.MaxY ) + 1 );
 		

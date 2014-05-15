@@ -11,6 +11,7 @@
 package cuchaz.cubicChunks.lighting;
 
 import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Cube;
@@ -21,7 +22,7 @@ public class FirstLightCalculator extends CubeCalculator
 	@Override
 	public boolean calculate( Cube cube )
 	{
-		// already lit? bail
+		// already lit? we're done here
 		if( cube.isLit() )
 		{
 			return true;
@@ -39,9 +40,7 @@ public class FirstLightCalculator extends CubeCalculator
 	{
 		// only light if the neighboring cubes exist
 		CubeProvider provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
-		if(	!provider.cubeExists( cube.getX()-1, cube.getY(), cube.getZ() ) || !provider.cubeExists( cube.getX()+1, cube.getY(), cube.getZ() )
-			|| !provider.cubeExists( cube.getX(), cube.getY()-1, cube.getZ() ) || !provider.cubeExists( cube.getX(), cube.getY()+1, cube.getZ() )
-			|| !provider.cubeExists( cube.getX(), cube.getY(), cube.getZ()-1 ) || !provider.cubeExists( cube.getX(), cube.getY(), cube.getZ()+1 ) ) 
+		if( !CubeProviderTools.cubesExist( provider, cube.getX()-1, cube.getY()-1, cube.getZ()-1, cube.getX()+1, cube.getY()+1, cube.getZ()+1 ) )
 		{
 			return false;
 		}
@@ -128,7 +127,7 @@ public class FirstLightCalculator extends CubeCalculator
 		boolean lightBlock = false;
 		if( blockY > index.getTopOpaqueBlockBelowSeaLevel( localX, localZ ) )
 		{
-			if( !cube.getColumn().worldObj.provider.hasNoSky && blockY < index.getTopNonTransparentBlock( localX, localZ ) && index.getOpacity( localX, localY, localZ ) == 0 )
+			if( !cube.getColumn().worldObj.provider.hasNoSky && blockY < index.getTopNonTransparentBlock( localX, localZ ) && index.getOpacity( localX, blockY, localZ ) == 0 )
 			{
 				lightBlock = true;
 			}

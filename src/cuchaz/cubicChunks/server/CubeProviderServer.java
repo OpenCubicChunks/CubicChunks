@@ -159,7 +159,45 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		
 		return column;
 	}
-
+	
+	public Cube loadCubeAndNeighbors( int cubeX, int cubeY, int cubeZ )
+	{
+		// load the requested cube
+		Cube cube = loadCube( cubeX, cubeY, cubeZ );
+		
+		// load the neighbors
+		loadCube( cubeX - 1, cubeY - 1, cubeZ - 1 );
+		loadCube( cubeX - 1, cubeY - 1, cubeZ + 0 );
+		loadCube( cubeX - 1, cubeY - 1, cubeZ + 1 );
+		loadCube( cubeX + 0, cubeY - 1, cubeZ - 1 );
+		loadCube( cubeX + 0, cubeY - 1, cubeZ + 0 );
+		loadCube( cubeX + 0, cubeY - 1, cubeZ + 1 );
+		loadCube( cubeX + 1, cubeY - 1, cubeZ - 1 );
+		loadCube( cubeX + 1, cubeY - 1, cubeZ + 0 );
+		loadCube( cubeX + 1, cubeY - 1, cubeZ + 1 );
+		
+		loadCube( cubeX - 1, cubeY + 0, cubeZ - 1 );
+		loadCube( cubeX - 1, cubeY + 0, cubeZ + 0 );
+		loadCube( cubeX - 1, cubeY + 0, cubeZ + 1 );
+		loadCube( cubeX + 0, cubeY + 0, cubeZ - 1 );
+		loadCube( cubeX + 0, cubeY + 0, cubeZ + 1 );
+		loadCube( cubeX + 1, cubeY + 0, cubeZ - 1 );
+		loadCube( cubeX + 1, cubeY + 0, cubeZ + 0 );
+		loadCube( cubeX + 1, cubeY + 0, cubeZ + 1 );
+		
+		loadCube( cubeX - 1, cubeY + 1, cubeZ - 1 );
+		loadCube( cubeX - 1, cubeY + 1, cubeZ + 0 );
+		loadCube( cubeX - 1, cubeY + 1, cubeZ + 1 );
+		loadCube( cubeX + 0, cubeY + 1, cubeZ - 1 );
+		loadCube( cubeX + 0, cubeY + 1, cubeZ + 0 );
+		loadCube( cubeX + 0, cubeY + 1, cubeZ + 1 );
+		loadCube( cubeX + 1, cubeY + 1, cubeZ - 1 );
+		loadCube( cubeX + 1, cubeY + 1, cubeZ + 0 );
+		loadCube( cubeX + 1, cubeY + 1, cubeZ + 1 );
+		
+		return cube;
+	}
+	
 	@Override
 	public Cube loadCube( int cubeX, int cubeY, int cubeZ )
 	{
