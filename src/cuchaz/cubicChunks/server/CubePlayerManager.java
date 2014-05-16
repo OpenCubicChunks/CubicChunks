@@ -140,12 +140,6 @@ public class CubePlayerManager extends PlayerManager
 		for( long address : info.cubeSelector.getVisibleCubes() )
 		{
 			CubeWatcher watcher = getOrCreateWatcher( address );
-			if( watcher == null )
-			{
-				// no watcher means an empty cube
-				continue;
-			}
-			
 			watcher.addPlayer( player );
 			info.watchedAddresses.add( address );
 			info.outgoingCubes.add( watcher.getCube() );
@@ -281,12 +275,6 @@ public class CubePlayerManager extends PlayerManager
 		for( long address : info.cubeSelector.getNewlyVisibleCubes() )
 		{
 			CubeWatcher watcher = getOrCreateWatcher( address );
-			if( watcher == null )
-			{
-				// no watcher means an empty cube
-				continue;
-			}
-			
 			watcher.addPlayer( player );
 			info.outgoingCubes.add( watcher.getCube() );
 		}
@@ -337,7 +325,7 @@ public class CubePlayerManager extends PlayerManager
 	{
 		// this method flushes outgoing chunks to the player
 		
-		// get the outgoing chunks
+		// get the outgoing cubes
 		PlayerInfo info = m_players.get( player.getEntityId() );
 		if( info == null || info.outgoingCubes.isEmpty() )
 		{
@@ -355,10 +343,11 @@ public class CubePlayerManager extends PlayerManager
 		{
 			Cube cube = iter.next();
 			
-			// only send cubes in active columns, not from columns on the fringe of the world that have been generated, but not activated yet
-			if( !cube.getColumn().func_150802_k() )
+			// wait for the cube to be lit before sending this cube
+			// or any cube in the order after it
+			if( !cube.isLit() )
 			{
-				continue;
+				break;
 			}
 			
 			// add this cube to the send buffer
@@ -461,13 +450,7 @@ public class CubePlayerManager extends PlayerManager
 			int cubeX = AddressTools.getX( address );
 			int cubeY = AddressTools.getY( address );
 			int cubeZ = AddressTools.getZ( address );
-			Cube cube = getCubeProvider().loadCube( cubeX, cubeY, cubeZ );
-			
-			// if no cube was loaded, that means it's an empty cube
-			if( cube == null )
-			{
-				return null;
-			}
+			Cube cube = getCubeProvider().loadCubeAndNeighbors( cubeX, cubeY, cubeZ );
 			
 			// make a new watcher
 			watcher = new CubeWatcher( cube );

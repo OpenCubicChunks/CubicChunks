@@ -269,7 +269,6 @@ public class CubeLoader implements IThreadedFileIO
 		// column properties
 		nbt.setByte( "v", (byte)1 );
 		nbt.setBoolean( "TerrainPopulated", column.isTerrainPopulated );
-		nbt.setBoolean( "LightPopulated", column.isLightPopulated );
 		nbt.setLong( "InhabitedTime", column.inhabitedTime );
 		
 		// biome mappings
@@ -308,7 +307,6 @@ public class CubeLoader implements IThreadedFileIO
 		
 		// read the rest of the column properties
 		column.isTerrainPopulated = nbt.getBoolean( "TerrainPopulated" );
-		column.isLightPopulated = nbt.getBoolean( "LightPopulated" );
 		column.inhabitedTime = nbt.getLong( "InhabitedTime" );
 		
 		// biomes
@@ -362,6 +360,7 @@ public class CubeLoader implements IThreadedFileIO
 			{
 				nbt.setByteArray( "SkyLight", storage.getSkylightArray().data );
 			}
+			nbt.setBoolean( "Lit", cube.isLit() );
 		}
 		
 		// entities
@@ -477,6 +476,7 @@ public class CubeLoader implements IThreadedFileIO
 				storage.setSkylightArray( new NibbleArray( nbt.getByteArray( "SkyLight" ), 4 ) );
 			}
 			storage.removeInvalidBlocks();
+			cube.setIsLit( nbt.getBoolean( "Lit" ) );
 		}
 		
 		// entities

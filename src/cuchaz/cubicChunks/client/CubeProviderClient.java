@@ -23,15 +23,14 @@ import cuchaz.cubicChunks.world.Cube;
 public class CubeProviderClient extends ChunkProviderClient implements CubeProvider
 {
 	private World m_world;
+	private BlankColumn m_blankColumn;
 	
 	public CubeProviderClient( World world )
 	{
 		super( world );
 		
 		m_world = world;
-		
-		// set empty chunk
-		ChunkProviderClientAccessor.setBlankChunk( this, new BlankColumn( world, 0, 0 ) );
+		m_blankColumn = new BlankColumn( world, 0, 0 );
 	}
 	
 	@Override
@@ -56,25 +55,24 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeProvi
 	}
 	
 	@Override
-	public boolean cubeExists( int cubeX, int cubeY, int cubeZ )
+	public Column provideChunk( int cubeX, int cubeZ )
 	{
-		// cubes always exist on the client, but unloaded cubes will be empty
-		return true;
+		// is this chunk already loaded?
+		LongHashMap chunkMapping = ChunkProviderClientAccessor.getChunkMapping( this );
+		Column column = (Column)chunkMapping.getValueByKey( ChunkCoordIntPair.chunkXZ2Int( cubeX, cubeZ ) );
+		if( column != null )
+		{
+			return column;
+		}
+		
+		return m_blankColumn;
 	}
 	
 	@Override
-	public boolean isCubeLoaded( int cubeX, int cubeY, int cubeZ )
+	public boolean cubeExists( int cubeX, int cubeY, int cubeZ )
 	{
-		// is this chunk loaded?
-		LongHashMap chunkMapping = ChunkProviderClientAccessor.getChunkMapping( this );
-		Column column = (Column)chunkMapping.getValueByKey( ChunkCoordIntPair.chunkXZ2Int( cubeX, cubeZ ) );
-		if( column == null )
-		{
-			return false;
-		}
-		
-		// is the cube loaded?
-		return column.getCube( cubeY ) != null;
+		// cubes always exist on the client
+		return true;
 	}
 	
 	@Override
@@ -86,6 +84,7 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeProvi
 		{
 			// make an empty cube
 			cube = new Cube( column.worldObj, column, cubeX, cubeY, cubeZ );
+			cube.setEmpty( true );
 		}
 		return cube;
 	}

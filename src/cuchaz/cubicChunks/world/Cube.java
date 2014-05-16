@@ -44,25 +44,21 @@ public class Cube
 	private EntityContainer m_entities;
 	private CubeBlockMap<TileEntity> m_tileEntities;
 	private boolean m_isModified;
+	private boolean m_isLit;
 	
 	public Cube( World world, Column column, int x, int y, int z )
 	{
-		if( y < 0 )
-		{
-			throw new IllegalArgumentException( "y-coord of cube must be non-negative!" );
-		}
-		
 		m_world = world;
 		m_column = column;
 		m_x = x;
 		m_y = y;
 		m_z = z;
 		
-		// start with a blank cube
 		m_storage = null;
 		m_entities = new EntityContainer();
 		m_tileEntities = new CubeBlockMap<TileEntity>();
 		m_isModified = false;
+		m_isLit = false;
 	}
 	
 	public boolean isEmpty( )
@@ -499,6 +495,23 @@ public class Cube
 	{
 		m_entities.markSaved( m_world.getTotalWorldTime() );
 		m_isModified = false;
+	}
+	
+	public boolean isLit( )
+	{
+		if( isEmpty() )
+		{
+			return true;
+		}
+		return m_isLit;
+	}
+	public void setIsLit( boolean val )
+	{
+		if( isEmpty() )
+		{
+			return;
+		}
+		m_isLit = val;
 	}
 	
 	public boolean isUnderground( int localX, int localY, int localZ )
