@@ -470,107 +470,10 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
         return this.enableSnow;
     }
     
-//    public void modifyBlocks_pre(World world, Random rand, CubeBlocks cubeBlock, int cubeX, int cubeY, int cubeZ, int xRel, int yRel, int zRel, double val)
-//    {
-//        this.modifyBlocks(world, rand, cubeBlock, cubeX, cubeY, cubeZ, xRel, yRel, zRel, val);
-//    }
-    
     public void modifyBlocks_pre(World world, Random rand, CubeBlocks cubeBlock, int xAbs, int yAbs, int zAbs, double val)
     {
         this.modifyBlocks(world, rand, cubeBlock, xAbs, yAbs, zAbs, val);
     }
-    
-//    public final void modifyBlocks(World world, Random rand, CubeBlocks cubeBlocks, int cubeX, int cubeY, int cubeZ, int xRel, int yRel, int zRel, double val)
-//    {
-//        Block topBlock = this.topBlock; // start with grass for the top
-//        byte var11 = (byte)(this.field_150604_aj & 255);
-//        Block fillBlock = this.fillerBlock; // start with dirt for the fill
-//        int var13 = -1;
-//        int rnd1 = (int)(val / 3.0D + 3.0D + rand.nextDouble() * 0.25D);
-//        
-//        int xAbs = cubeX << 4 | xRel;
-//        int zAbs = cubeZ << 4 | zRel;
-//    	int yAbs = cubeY << 4 | yRel;
-//
-//        if (yAbs <= 0 + rand.nextInt(5)) // 20% chance of bedrock in the bottom 5 layers of the world
-//        {
-//            cubeBlocks.setBlock(xRel, yRel, zRel, Blocks.bedrock);
-//        }
-//        else
-//        {
-//            Block block = cubeBlocks.getBlock(xRel, yRel, zRel);
-//            
-//            if (block != null && block.getMaterial() != Material.air)
-//            {
-//                if (block == Blocks.stone)
-//                {
-//                    if (var13 == -1)
-//                    {
-//                        if (rnd1 <= 0)
-//                        {
-//                            topBlock = null; // don't place topblock if rnd1 is less than 0. this probably leaves exposed stone areas.
-//                            var11 = 0;
-//                            fillBlock = Blocks.stone; // change fillblock to stone if rnd1 is less than 0
-//                        }
-//                        else if (yAbs >= 59 && yAbs <= 64)
-//                        {
-//                            topBlock = this.topBlock; //replace the topblock between 59 and 64
-//                            var11 = (byte)(this.field_150604_aj & 255);
-//                            fillBlock = this.fillerBlock; // replace the fillblock between 59 and 64
-//                        }
-//
-//                        if (yAbs < 63 && (topBlock == null || topBlock.getMaterial() == Material.air))
-//                        {
-//                            if (this.getFloatTemperature(xAbs, yAbs, zAbs) < 0.15F)
-//                            {
-//                                topBlock = Blocks.ice;
-//                                var11 = 0;
-//                            }
-//                            else
-//                            {
-//                                topBlock = Blocks.water;
-//                                var11 = 0;
-//                            }
-//                        }
-//
-//                        var13 = rnd1;
-//
-//                        if (yAbs >= 62)
-//                        {
-//                            cubeBlocks.setBlock(xRel, yRel, zRel, topBlock);
-//                            cubeBlocks.setMeta(xRel, yRel, zRel, var11);
-//                        }
-//                        else if (yAbs < 56 - rnd1)
-//                        {
-//                            topBlock = null;
-//                            fillBlock = Blocks.stone;
-//                            
-//                            cubeBlocks.setBlock(xRel, yRel, zRel, Blocks.gravel);
-//                        }
-//                        else
-//                        {
-//                            cubeBlocks.setBlock(xRel, yRel, zRel, fillBlock);
-//                        }
-//                    }
-//                    else if (var13 > 0)
-//                    {
-//                        --var13;
-//                        cubeBlocks.setBlock(xRel, yRel, zRel, fillBlock);
-//
-//                        if (var13 == 0 && fillBlock == Blocks.sand)
-//                        {
-//                            var13 = rand.nextInt(4) + Math.max(0, yAbs - 63);
-//                            fillBlock = Blocks.sandstone;
-//                        }
-//                    }
-//                }
-//            }
-//            else
-//            {
-//                var13 = -1;
-//            }
-//        }
-//    }
     
     public final void modifyBlocks(World world, Random rand, CubeBlocks cubeBlocks, int xAbs, int yAbs, int zAbs, double val)
     {
