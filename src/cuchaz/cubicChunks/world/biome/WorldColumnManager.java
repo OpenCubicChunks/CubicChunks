@@ -139,8 +139,8 @@ public class WorldColumnManager
         {
             for (int i = 0; i < width * length; ++i)
             {
-//                biomes[i] = CubeBiomeGenBase.getBiome(intArray[i]);
-            	biomes[i] = CubeBiomeGenBase.getBiome(1);
+                biomes[i] = CubeBiomeGenBase.getBiome(intArray[i]);
+//            	biomes[i] = CubeBiomeGenBase.getBiome(1);
             }
 
             return biomes;
@@ -192,8 +192,7 @@ public class WorldColumnManager
 
             for (int i = 0; i < width * length; ++i)
             {
-//                biomes[i] = CubeBiomeGenBase.getBiome(aInt[i]);
-            	biomes[i] = CubeBiomeGenBase.getBiome(1);
+                biomes[i] = CubeBiomeGenBase.getBiome(aInt[i]);
             }
 
             return biomes;

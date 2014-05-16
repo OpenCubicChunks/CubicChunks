@@ -1,6 +1,8 @@
 package cuchaz.cubicChunks.world.biome;
 
 import java.util.Random;
+
+import cuchaz.cubicChunks.gen.CubeBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
@@ -12,32 +14,32 @@ import net.minecraft.world.gen.feature.WorldGenerator;
 public class BiomeGenHills extends CubeBiomeGenBase
 {
     private WorldGenerator theWorldGenerator;
-    private WorldGenTaiga2 field_150634_aD;
-    private int field_150635_aE;
-    private int field_150636_aF;
-    private int field_150637_aG;
-    private int field_150638_aH;
+    private WorldGenTaiga2 genTaiga;
+    private int value1;
+    private int value2;
+    private int value3;
+    private int value4;
 
-    protected BiomeGenHills(int biomeID, boolean p_i45373_2_)
+    protected BiomeGenHills(int biomeID, boolean flag)
     {
         super(biomeID);
         this.theWorldGenerator = new WorldGenMinable(Blocks.monster_egg, 8);
-        this.field_150634_aD = new WorldGenTaiga2(false);
-        this.field_150635_aE = 0;
-        this.field_150636_aF = 1;
-        this.field_150637_aG = 2;
-        this.field_150638_aH = this.field_150635_aE;
+        this.genTaiga = new WorldGenTaiga2(false);
+        this.value1 = 0;
+        this.value2 = 1;
+        this.value3 = 2;
+        this.value4 = this.value1;
 
-        if (p_i45373_2_)
+        if (flag)
         {
             this.theBiomeDecorator.treesPerChunk = 3;
-            this.field_150638_aH = this.field_150636_aF;
+            this.value4 = this.value2;
         }
     }
 
     public WorldGenAbstractTree checkSpawnTree(Random rand)
     {
-        return (WorldGenAbstractTree)(rand.nextInt(3) > 0 ? this.field_150634_aD : super.checkSpawnTree(rand));
+        return (WorldGenAbstractTree)(rand.nextInt(3) > 0 ? this.genTaiga : super.checkSpawnTree(rand));
     }
 
     public void decorate(World world, Random rand, int par3, int par4)
@@ -69,29 +71,29 @@ public class BiomeGenHills extends CubeBiomeGenBase
         }
     }
 
-    public void modifyBlocks_pre(World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int yAbs, int zAbs, double var)
+    public void modifyBlocks_pre(World world, Random rand, CubeBlocks cubeBlocks, int xAbs, int yAbs, int zAbs, double var)
     {
         this.topBlock = Blocks.grass;
         this.field_150604_aj = 0;
         this.fillerBlock = Blocks.dirt;
 
-        if ((var < -1.0D || var > 2.0D) && this.field_150638_aH == this.field_150637_aG)
+        if ((var < -1.0D || var > 2.0D) && this.value4 == this.value3)
         {
             this.topBlock = Blocks.gravel;
             this.fillerBlock = Blocks.gravel;
         }
-        else if (var > 1.0D && this.field_150638_aH != this.field_150636_aF)
+        else if (var > 1.0D && this.value4 != this.value2)
         {
             this.topBlock = Blocks.stone;
             this.fillerBlock = Blocks.stone;
         }
 
-        this.modifyBlocks(world, rand, blocks, meta, xAbs, yAbs, zAbs, var);
+        this.modifyBlocks(world, rand, cubeBlocks, xAbs, yAbs, zAbs, var);
     }
 
     private BiomeGenHills func_150633_b(CubeBiomeGenBase biome)
     {
-        this.field_150638_aH = this.field_150637_aG;
+        this.value4 = this.value3;
         this.func_150557_a(biome.color, true);
         this.setBiomeName(biome.biomeName + " M");
         this.setHeightRange(new CubeBiomeGenBase.Height(biome.minHeight, biome.maxHeight));

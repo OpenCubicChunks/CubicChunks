@@ -1,6 +1,8 @@
 package cuchaz.cubicChunks.world.biome;
 
 import java.util.Random;
+
+import cuchaz.cubicChunks.gen.CubeBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.init.Blocks;
@@ -63,7 +65,7 @@ public class BiomeGenSavanna extends CubeBiomeGenBase
             this.theBiomeDecorator.grassPerChunk = 5;
         }
 
-        public void modifyBlocks_pre(World world, Random rand, Block[] blocks, byte[] meta, int cubeX, int cubeY, int cubeZ, double val)
+        public void modifyBlocks_pre(World world, Random rand, CubeBlocks cubeBlocks, int xAbs, int yAbs, int zAbs, double val)
         {
             this.topBlock = Blocks.grass;
             this.field_150604_aj = 0;
@@ -80,7 +82,7 @@ public class BiomeGenSavanna extends CubeBiomeGenBase
                 this.field_150604_aj = 1;
             }
 
-            this.modifyBlocks(world, rand, blocks, meta, cubeX, cubeY, cubeZ, val);
+            this.modifyBlocks(world, rand, cubeBlocks, xAbs, yAbs, zAbs, val);
         }
 
         public void decorate(World par1World, Random par2Random, int par3, int par4)

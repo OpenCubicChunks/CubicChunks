@@ -30,6 +30,7 @@ public class CubeBlocks
 	{
 		return m_blocks[getCoord( x, y, z )];
 	}
+	
 	public void setBlock( int x, int y, int z, Block val )
 	{
 		m_blocks[getCoord( x, y, z )] = val;

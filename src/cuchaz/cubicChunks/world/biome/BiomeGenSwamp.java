@@ -1,6 +1,8 @@
 package cuchaz.cubicChunks.world.biome;
 
 import java.util.Random;
+
+import cuchaz.cubicChunks.gen.CubeBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.block.material.Material;
@@ -57,7 +59,7 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
         return BlockFlower.field_149859_a[1];
     }
 
-    public void modifyBlocks_pre(World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int yAbs, int zAbs, double val)
+    public void modifyBlocks_pre(World world, Random rand, CubeBlocks cubeBlocks, int xAbs, int yAbs, int zAbs, double val)
     {
         double var9 = field_150606_ad.func_151601_a((double)xAbs * 0.25D, (double)yAbs * 0.25D);
 
@@ -72,15 +74,17 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
             {
                 int loc = (zRel * 16 + xRel) * 16 + yRel;
 
-                if (blocks[loc] == null || blocks[loc].getMaterial() != Material.air)
+                Block block = cubeBlocks.getBlock(xRel, yRel, zRel);
+                
+                if (block == null || block.getMaterial() != Material.air)
                 {
-                    if (yAbs == 62 && blocks[loc] != Blocks.water)
+                    if (yAbs == 62 && block != Blocks.water)
                     {
-                        blocks[loc] = Blocks.water;
+                        cubeBlocks.setBlock(xRel, yRel, zRel, Blocks.water);
 
                         if (var9 < 0.12D)
                         {
-                            blocks[loc + 1] = Blocks.waterlily; // this should always place the lily at a height of 63, 
+                        	cubeBlocks.setBlock(xRel, yRel + 1, zRel, Blocks.waterlily); // this should always place the lily at a height of 63, 
                             									//and not go into the next cube up which would be bad.
                         }
                     }
@@ -90,6 +94,6 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
             }
         }
 
-        this.modifyBlocks(world, rand, blocks, meta, xAbs, yAbs, zAbs, val);
+        this.modifyBlocks(world, rand, cubeBlocks, xAbs, yAbs, zAbs, val);
     }
 }

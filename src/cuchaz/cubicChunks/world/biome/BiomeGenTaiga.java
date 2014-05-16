@@ -1,6 +1,8 @@
 package cuchaz.cubicChunks.world.biome;
 
 import java.util.Random;
+
+import cuchaz.cubicChunks.gen.CubeBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.init.Blocks;
@@ -89,7 +91,7 @@ public class BiomeGenTaiga extends CubeBiomeGenBase
         super.decorate(par1World, par2Random, par3, par4);
     }
 
-    public void modifyBlocks_pre(World world, Random rand, Block[] blocks, byte[] meta, int cubeX, int cubeY, int cubeZ, double val)
+    public void modifyBlocks_pre(World world, Random rand, CubeBlocks cubeBlocks, int xAbs, int yAbs, int zAbs, double val)
     {
         if (this.field_150644_aH == 1 || this.field_150644_aH == 2)
         {
@@ -109,7 +111,7 @@ public class BiomeGenTaiga extends CubeBiomeGenBase
             }
         }
 
-        this.modifyBlocks(world, rand, blocks, meta, cubeX, cubeY, cubeZ, val);
+        this.modifyBlocks(world, rand, cubeBlocks, xAbs, yAbs, zAbs, val);
     }
 
     protected CubeBiomeGenBase func_150566_k()

@@ -153,7 +153,8 @@ public class CubeGenerator implements ICubeGenerator
 			return Cube.generateEmptyCubeAndAddToColumn( m_world, column, cubeX, cubeY, cubeZ );
 		}
 		
-		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks.m_blocks, m_blocks.m_meta, m_biomes );
+//		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks.m_blocks, m_blocks.m_meta, m_biomes );
+		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks, m_biomes );
 		
 		/*
 		// generate world features
@@ -387,55 +388,34 @@ public class CubeGenerator implements ICubeGenerator
 		}
 	}
 	
-	private void replaceBlocksForBiome( int cubeX, int cubeY, int cubeZ, Block[] blocks, byte[] metadata, CubeBiomeGenBase[] biomes )
+	private void replaceBlocksForBiome( int cubeX, int cubeY, int cubeZ, CubeBlocks cubeBlocks, CubeBiomeGenBase[] biomes )
 	{
 		m_biomeNoise = m_biomeNoiseGen.func_151599_a( m_biomeNoise, Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ), 16, 16, 16, 16, 1 );
 		
-		for( int localX=0; localX<16; localX++ )
+		for( int xRel = 0; xRel < 16; xRel++ )
 		{
-			for( int localZ=0; localZ<16; localZ++ )
+			int xAbs = cubeX << 4 | xRel;
+			
+			for( int zRel = 0; zRel < 16; zRel++ )
 			{
-				for (int localY = 0; localY < 16; localY++)
-				{
-					int xzCoord = localZ | localX << 4;
-					// UNDONE: need to cubeify this
+				int zAbs = cubeZ << 4 | zRel;
+				
+				int xzCoord = zRel | xRel << 4;
+
+				for (int yRel = 0; yRel < 16; yRel++)
+				{	
+					int yAbs = cubeY << 4 | yRel;
+					
 					biomes[xzCoord].modifyBlocks_pre(
-						m_world, m_rand,
-						blocks, metadata,
-						Coords.localToBlock( cubeX, localX ),
-						Coords.localToBlock( cubeX, localY ),
-						Coords.localToBlock( cubeZ, localZ ),
-						m_biomeNoise[xzCoord]
-					);
+							m_world, m_rand,
+							cubeBlocks,
+							xAbs, yAbs, zAbs,
+							m_biomeNoise[xzCoord]
+						);
 				}
 			}
 		}
 	}
-	
-//	private void replaceBlocksForBiome( int cubeX, int cubeY, int cubeZ, CubeBlocks blocks, CubeBiomeGenBase[] biomes )
-//	{
-//		m_biomeNoise = m_biomeNoiseGen.func_151599_a( m_biomeNoise, Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ), 16, 16, 16, 16, 1 );
-//		
-//		for( int localY = 0; localY < 16; localY++)
-//		{
-//			for( int localZ=0; localZ<16; localZ++ )
-//			{
-//				for (int localX=0; localX<16; localX++ )
-//				{
-//					int xzCoord = localZ | localX << 4;
-//					// UNDONE: need to cubeify this
-//					biomes[xzCoord].modifyBlocks_pre(
-//						m_world, m_rand,
-//						blocks.m_blocks, blocks.m_meta,
-//						Coords.localToBlock( cubeX, localX ),
-//						Coords.localToBlock( cubeY, localY ),
-//						Coords.localToBlock( cubeZ, localZ ),
-//						m_biomeNoise[xzCoord]
-//					);
-//				}
-//			}
-//		}
-//	}
 	
 	@Override
 	public void populate( ICubeGenerator generator, int cubeX, int cubeY, int cubeZ )

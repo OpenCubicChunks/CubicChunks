@@ -2,6 +2,8 @@ package cuchaz.cubicChunks.world.biome;
 
 import java.util.ArrayList;
 import java.util.Random;
+
+import cuchaz.cubicChunks.gen.CubeBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenAbstractTree;
@@ -41,9 +43,9 @@ public class BiomeGenMutated extends CubeBiomeGenBase
         this.biome.theBiomeDecorator.func_150512_a(par1World, rand, this, par3, par4);
     }
 
-    public void modifyBlocks_pre(World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int yAbs, int zAbs, double var)
+    public void modifyBlocks_pre(World world, Random rand, CubeBlocks cubeBlocks, int xAbs, int yAbs, int zAbs, double var)
     {
-        this.biome.modifyBlocks_pre(world, rand, blocks, meta, xAbs, yAbs, zAbs, var);
+        this.biome.modifyBlocks_pre(world, rand, cubeBlocks, xAbs, yAbs, zAbs, var);
     }
 
     /**
