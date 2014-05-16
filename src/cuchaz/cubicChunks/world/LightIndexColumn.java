@@ -193,6 +193,9 @@ public class LightIndexColumn
 					m_topOpaqueUnderSeaLevelBlockY = m_opacity.higherKey( entry.getKey() );
 					break;
 				}
+				
+				// move down to the next entry
+				entry = m_opacity.lowerEntry( entry.getKey() );
 			}
 		}
 		return m_topOpaqueUnderSeaLevelBlockY;

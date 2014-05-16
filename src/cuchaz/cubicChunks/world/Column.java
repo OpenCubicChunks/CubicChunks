@@ -632,7 +632,7 @@ public class Column extends Chunk
 		for( Cube cube : cubes() )
 		{
 			// signal we're sending this cube
-			out.writeShort( cube.getY() );
+			out.writeInt( cube.getY() );
 			
 			out.writeBoolean( cube.isEmpty() );
 			if( !cube.isEmpty() )
@@ -695,7 +695,7 @@ public class Column extends Chunk
 			int numCubes = in.readUnsignedShort();
 			for( int i=0; i<numCubes; i++ )
 			{
-				int cubeY = in.readUnsignedShort();
+				int cubeY = in.readInt();
 				Cube cube = getOrCreateCube( cubeY );
 				
 				// is the cube empty?

@@ -88,9 +88,10 @@ public class TallWorldsMod implements Mod
 	
 	public void handleEvent( BuildSizeEvent event )
 	{
-		event.setCustomBuildHeight( Coords.cubeToMaxBlock( AddressTools.MaxY ) + 1 );
+		event.setCustomBuildHeight( Coords.cubeToMaxBlock( AddressTools.MaxY ) );
+		event.setCustomBuildDepth( Coords.cubeToMinBlock( AddressTools.MinY ) );
 		
-		log.info( "Set build height to " + event.getCustomBuildHeight() );
+		log.info( String.format( "Set build height to [%d,%d]", event.getCustomBuildDepth(), event.getCustomBuildHeight() ) );
 	}
 	
 	public void handleEvent( EntityPlayerMPUpdateEvent event )
