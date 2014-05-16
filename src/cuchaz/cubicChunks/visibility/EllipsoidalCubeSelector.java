@@ -37,13 +37,10 @@ public class EllipsoidalCubeSelector extends CubeSelector
 				int test = ( x2 + z2 - SemiAxisXZ2 )*SemiAxisY2;
 				for( int y=-SemiAxisY; y<=SemiAxisY; y++ )
 				{
-					if( y + cubeY >= 0 )
+					int y2 = y*y;
+					if( test <= -y2*SemiAxisXZ2 ) // test for point in ellipsoid, but using only integer arithmetic
 					{
-						int y2 = y*y;
-						if( test <= -y2*SemiAxisXZ2 ) // test for point in ellipsoid, but using only integer arithmetic
-						{
-							out.add( AddressTools.getAddress( x + cubeX, y + cubeY, z + cubeZ ) );
-						}
+						out.add( AddressTools.getAddress( x + cubeX, y + cubeY, z + cubeZ ) );
 					}
 				}
 			}

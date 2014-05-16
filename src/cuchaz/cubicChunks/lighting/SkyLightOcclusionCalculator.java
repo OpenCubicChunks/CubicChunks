@@ -70,7 +70,7 @@ public class SkyLightOcclusionCalculator extends BlockColumnCalculator
 			return false;
 		}
 		
-		if( !world.doChunksNearChunkExist( blockX, 0, blockZ, 16 ) )
+		if( !world.doChunksNearChunkExist( blockX, minBlockY, blockZ, maxBlockY ) )
 		{
 			return false;
 		}

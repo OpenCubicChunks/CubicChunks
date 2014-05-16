@@ -271,6 +271,9 @@ public class Column extends Chunk
 			// update light index before sky light update
 			getLightIndex().setOpacity( localX, blockY, localZ, block.getLightOpacity() );
 			
+			// update rain map
+			resetPrecipitationHeight();
+
 			// new chunk, update sky lighting
 			CubeWorld world = (CubeWorld)worldObj;
 			world.getLightingManager().queueSkyLightCalculation( getAddress() );
@@ -629,7 +632,7 @@ public class Column extends Chunk
 		for( Cube cube : cubes() )
 		{
 			// signal we're sending this cube
-			out.writeShort( cube.getY() );
+			out.writeInt( cube.getY() );
 			
 			out.writeBoolean( cube.isEmpty() );
 			if( !cube.isEmpty() )
@@ -663,12 +666,12 @@ public class Column extends Chunk
 					out.write( storage.getSkylightArray().data );
 				}
 			}
-			
-			if( isFirstTime )
-			{
-				// 6. biomes
-				out.write( getBiomeArray() );
-			}
+		}
+		
+		if( isFirstTime )
+		{
+			// 6. biomes
+			out.write( getBiomeArray() );
 		}
 		
 		// 7. light index
@@ -692,7 +695,7 @@ public class Column extends Chunk
 			int numCubes = in.readUnsignedShort();
 			for( int i=0; i<numCubes; i++ )
 			{
-				int cubeY = in.readUnsignedShort();
+				int cubeY = in.readInt();
 				Cube cube = getOrCreateCube( cubeY );
 				
 				// is the cube empty?
@@ -731,13 +734,16 @@ public class Column extends Chunk
 					
 					// clean up invalid blocks
 					storage.removeInvalidBlocks();
+					
+					// the cube came from the server, it must be lit
+					cube.setIsLit( true );
 				}
-				
-				if( isFirstTime )
-				{
-					// 6. biomes
-					in.read( getBiomeArray() );
-				}
+			}
+			
+			if( isFirstTime )
+			{
+				// 6. biomes
+				in.read( getBiomeArray() );
 			}
 			
 			// 7. light index
@@ -751,7 +757,6 @@ public class Column extends Chunk
 		}
 		
 		// update lighting flags
-		isLightPopulated = true;
 		isTerrainPopulated = true;
 		
 		// update tile entities in each chunk
@@ -762,6 +767,18 @@ public class Column extends Chunk
 				tileEntity.updateContainingBlockInfo();
 			}
 		}
+	}
+	
+	@Override //        isActive
+	public boolean func_150802_k( )
+	{
+		boolean isAnyCubeLit = false;
+		for( Cube cube : m_cubes.values() )
+		{
+			isAnyCubeLit |= cube.isLit();
+		}
+		
+		return field_150815_m && isTerrainPopulated && isAnyCubeLit;
 	}
 	
 	@Override //         tick
@@ -847,6 +864,21 @@ public class Column extends Chunk
 		throw new UnsupportedOperationException();
     }
 	
+	public void resetPrecipitationHeight( )
+	{
+		// init the rain map to -999, which is a kind of null value
+		// this array is actually a cache
+		// values will be calculated by the getter
+		for( int localX=0; localX<16; localX++ )
+		{
+			for( int localZ=0; localZ<16; localZ++ )
+			{
+				int xzCoord = localX | localZ << 4;
+				precipitationHeightMap[xzCoord] = -999;
+			}
+		}
+	}
+	
 	@Override
 	public int getPrecipitationHeight( int localX, int localZ )
 	{
@@ -858,7 +890,7 @@ public class Column extends Chunk
 		{
 			// compute a new rain height
 			int maxBlockY = getTopFilledSegment() + 15;
-			int minBlockY = Coords.cubeToMinBlock( m_cubes.firstKey() );
+			int minBlockY = Coords.cubeToMinBlock( getBottomCubeY() );
 			
 			height = -1;
 			

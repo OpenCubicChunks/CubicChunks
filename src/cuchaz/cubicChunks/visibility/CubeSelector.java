@@ -11,6 +11,7 @@
 package cuchaz.cubicChunks.visibility;
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.TreeSet;
 
 import com.google.common.collect.Sets;
@@ -56,17 +57,17 @@ public abstract class CubeSelector
 		m_nextVisible = swap;
 	}
 	
-	public Iterable<Long> getVisibleCubes( )
+	public Set<Long> getVisibleCubes( )
 	{
 		return m_visible;
 	}
 	
-	public Iterable<Long> getNewlyVisibleCubes( )
+	public Set<Long> getNewlyVisibleCubes( )
 	{
 		return m_newlyVisible;
 	}
 	
-	public Iterable<Long> getNewlyHiddenCubes( )
+	public Set<Long> getNewlyHiddenCubes( )
 	{
 		return m_newlyHidden;
 	}

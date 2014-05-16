@@ -22,19 +22,6 @@ public class SkyLightCalculator extends ColumnCalculator
 	{
 		// NOTE: this is called right after chunk generation, and right after any new segments are created
 		
-		// UNDONE: move rain calculations out of the lighting system!
-		
-		// init the rain map to -999, which is a kind of null value
-		// this array is actually a cache
-		// values will be calculated by the getter
-		for( int localX=0; localX<16; localX++ )
-		{
-			for( int localZ=0; localZ<16; localZ++ )
-			{
-				column.precipitationHeightMap[localX + (localZ << 4)] = -999;
-			}
-		}
-		
 		// no sky? no sky light
 		if( column.worldObj.provider.hasNoSky )
 		{

@@ -23,7 +23,7 @@ public class CuboidalCubeSelector extends CubeSelector
 	{
 		for( int x=cubeX-viewDistance; x<=cubeX+viewDistance; x++ )
 		{
-			for( int y=Math.max( 0, cubeY-ViewDistanceY ); y<=cubeY+ViewDistanceY; y++ )
+			for( int y=cubeY-ViewDistanceY; y<=cubeY+ViewDistanceY; y++ )
 			{
 				for( int z=cubeZ-viewDistance; z<=cubeZ+viewDistance; z++ )
 				{

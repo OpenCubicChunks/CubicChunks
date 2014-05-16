@@ -21,6 +21,7 @@ import net.minecraft.world.WorldSettings;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
 import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 import cuchaz.cubicChunks.lighting.LightingManager;
@@ -84,37 +85,11 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 		);
 	}
 	
-	/* SOO much Minecraft code expects the bottom cubes to be loaded
-	   Let's not tell Minecraft they're not actually loaded just yet
 	@Override
 	public boolean checkChunksExist( int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ )
 	{
-		// convert block bounds to chunk bounds
-		int minCubeX = Coords.blockToChunk( minBlockX );
-		int minCubeY = Coords.blockToChunk( minBlockY );
-		int minCubeZ = Coords.blockToChunk( minBlockZ );
-		int maxCubeX = Coords.blockToChunk( maxBlockX );
-		int maxCubeY = Coords.blockToChunk( maxBlockY );
-		int maxCubeZ = Coords.blockToChunk( maxBlockZ );
-		
-		// check for any missing cubes
-		CubeProviderServer chunkProvider = (CubeProviderServer)WorldAccessor.getChunkProvider( this );
-		for( int cubeX=minCubeX; cubeX<=maxCubeX; cubeX++ )
-		{
-			for( int cubeY=minCubeY; cubeY<=maxCubeY; cubeY++ )
-			{
-				for( int cubeZ=minCubeZ; cubeZ<=maxCubeZ; cubeZ++ )
-				{
-					if( !chunkProvider.cubeExists( cubeX, cubeY, cubeZ ) )
-					{
-						return false;
-					}
-				}
-			}
-		}
-		return true;
+		return CubeProviderTools.blocksExist( (CubeProvider)chunkProvider, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ );
 	}
-	*/
 	
 	@Override
 	public boolean updateLightByType( EnumSkyBlock lightType, int blockX, int blockY, int blockZ )

@@ -114,9 +114,6 @@ public class CubeWatcher
 			int blockY = Coords.localToBlock( m_cube.getY(), localY );
 			int blockZ = Coords.localToBlock( m_cube.getZ(), localZ );
 			
-			// TEMP
-			System.out.println( String.format( "SERVER sending block update: (%d,%d,%d)", blockX, blockY, blockZ ) );
-			
 			// send single block updates
 			sendPacketToAllPlayers( new S23PacketBlockChange( blockX, blockY, blockZ, world ) );
 			if( world.getBlock( blockX, blockY, blockZ ).hasTileEntity() )

@@ -71,9 +71,9 @@ public class LightingManager
 		m_skyLightQueue.add( columnAddress );
 	}
 	
-	public void queueFirstLightCalculation( long columnAddress )
+	public void queueFirstLightCalculation( long cubeAddress )
 	{
-		m_firstLightQueue.add( columnAddress );
+		m_firstLightQueue.add( cubeAddress );
 	}
 	
 	public void queueSkyLightOcclusionCalculation( int blockX, int blockZ )

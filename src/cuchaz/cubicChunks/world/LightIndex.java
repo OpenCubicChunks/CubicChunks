@@ -19,7 +19,7 @@ import java.io.IOException;
 public class LightIndex
 {
 	private LightIndexColumn[] m_columns;
-	private int m_topNonTransparentBlockY;
+	private Integer m_topNonTransparentBlockY;
 	
 	public LightIndex( )
 	{
@@ -29,7 +29,7 @@ public class LightIndex
 			m_columns[i] = new LightIndexColumn();
 		}
 		
-		m_topNonTransparentBlockY = -1;
+		m_topNonTransparentBlockY = Integer.MIN_VALUE;
 	}
 	
 	public int getOpacity( int localX, int blockY, int localZ )
@@ -48,10 +48,10 @@ public class LightIndex
 		m_columns[xzCoord].setOpacity( blockY, opacity );
 		
 		// invalidate top block cache
-		m_topNonTransparentBlockY = -1;
+		m_topNonTransparentBlockY = Integer.MIN_VALUE;
 	}
 	
-	public int getTopNonTransparentBlock( int localX, int localZ )
+	public Integer getTopNonTransparentBlock( int localX, int localZ )
 	{
 		int xzCoord = localZ << 4 | localX;
 		return m_columns[xzCoord].getTopNonTransparentBlockY();
@@ -60,15 +60,24 @@ public class LightIndex
 	public int getTopNonTransparentBlockY( )
 	{
 		// do we need to update the cache?
-		if( m_topNonTransparentBlockY == -1 )
+		if( m_topNonTransparentBlockY == Integer.MIN_VALUE )
 		{
-			m_topNonTransparentBlockY = 0;
 			for( int i=0; i<m_columns.length; i++ )
 			{
-				m_topNonTransparentBlockY = Math.max( m_topNonTransparentBlockY, m_columns[i].getTopNonTransparentBlockY() );
+				int blockY = m_columns[i].getTopNonTransparentBlockY();
+				if( blockY > m_topNonTransparentBlockY )
+				{
+					m_topNonTransparentBlockY = blockY;
+				}
 			}
 		}
 		return m_topNonTransparentBlockY;
+	}
+	
+	public int getTopOpaqueBlockBelowSeaLevel( int localX, int localZ )
+	{
+		int xzCoord = localZ << 4 | localX;
+		return m_columns[xzCoord].getTopOpaqueBlockBelowSeaLevel();
 	}
 	
 	public byte[] getData( )
