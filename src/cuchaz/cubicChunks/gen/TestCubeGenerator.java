@@ -32,6 +32,7 @@ import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
 import cuchaz.cubicChunks.gen.lib.exception.ExceptionInvalidParam;
+import cuchaz.cubicChunks.gen.lib.module.ModuleBase;
 import cuchaz.cubicChunks.gen.lib.module.ScaleBias;
 import cuchaz.cubicChunks.gen.lib.module.Simplex;
 import cuchaz.cubicChunks.util.Coords;
@@ -73,6 +74,8 @@ public class TestCubeGenerator implements ICubeGenerator
 	private double[] m_terrainNoiseHigh;
 	private double[] m_terrainNoiseT;
 	private double[] m_terrainNoiseXZ;
+	
+	private ModuleBase finalBuild;
 	
 	public TestCubeGenerator( World world )
 	{
@@ -117,6 +120,20 @@ public class TestCubeGenerator implements ICubeGenerator
 				m_filter5x5[i + 2 + ( j + 2 )*5] = 10.0F/MathHelper.sqrt_float( 0.2F + ( i*i + j*j ) );
 			}
 		}
+		
+		Simplex baseContinentDef_pe0 = new Simplex();
+		baseContinentDef_pe0.setSeed(0);
+		baseContinentDef_pe0.setFrequency(1.0);
+		baseContinentDef_pe0.setPersistence(0.5);
+		baseContinentDef_pe0.setLacunarity(2.2089);
+		baseContinentDef_pe0.setOctaveCount(8);
+		baseContinentDef_pe0.setUp();
+		
+		ScaleBias scaleBias = new ScaleBias(baseContinentDef_pe0);
+		scaleBias.setScale(64);
+		scaleBias.setBias(63);
+		
+		finalBuild = scaleBias;
 	}
 	
 	@Override
@@ -143,7 +160,7 @@ public class TestCubeGenerator implements ICubeGenerator
 		m_biomes = (CubeBiomeGenBase[]) worldColumnManager.getBiomesForGeneration(
 			m_biomes,
 			cubeX * 4 - 2, cubeZ * 4 - 2,
-			10, 10
+			16, 16
 		);
 		
 		// actually generate the terrain
@@ -157,7 +174,7 @@ public class TestCubeGenerator implements ICubeGenerator
 		}
 		
 //		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks.m_blocks, m_blocks.m_meta, m_biomes );
-		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks, m_biomes );
+//		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks, m_biomes );
 		
 		/*
 		// generate world features
@@ -176,114 +193,40 @@ public class TestCubeGenerator implements ICubeGenerator
 	}
 	
 	private void generateTerrain( int cubeX, int cubeY, int cubeZ, CubeBlocks blocks )
-	{
-		
-		Simplex baseContinentDef_pe0 = new Simplex();
-		baseContinentDef_pe0.setSeed(0);
-		baseContinentDef_pe0.setFrequency(1.0);
-		baseContinentDef_pe0.setPersistence(0.5);
-		baseContinentDef_pe0.setLacunarity(2.2089);
-		baseContinentDef_pe0.setOctaveCount(14);
-		baseContinentDef_pe0.setUp();
-		
-		ScaleBias scaleBias = new ScaleBias(baseContinentDef_pe0);
-		scaleBias.setScale(12800);
-		scaleBias.setBias(63);
-		
+	{	
 		// UNDONE: centralize sea level somehow
 		final int seaLevel = 63;
-		
-//		generateNoise( cubeX*4, cubeY*2, cubeZ*4 );
-		
-		// use the noise to generate the terrain
-		for( int noiseX=0; noiseX<4; noiseX++ )
+						
+		for( int xRel=0; xRel < 16; xRel++ )
 		{
-			for( int noiseZ=0; noiseZ<4; noiseZ++ )
-			{
-				for( int noiseY=0; noiseY<2; noiseY++ )
+			int xAbs = cubeX << 4 | xRel;
+			
+			for( int zRel=0; zRel < 16; zRel++ )
+			{				
+				int zAbs = cubeZ << 4 | zRel;
+				
+				for( int yRel=0; yRel < 16; yRel++ )
 				{
-//					// get the noise samples
-//					double noiseXYZ = m_terrainNoise[( noiseX*5 + noiseZ )*3 + noiseY];
-//					double noiseXYZp = m_terrainNoise[( noiseX*5 + noiseZ + 1 )*3 + noiseY];
-//					double noiseXpYZ = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ )*3 + noiseY];
-//					double noiseXpYZp = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ + 1 )*3 + noiseY];
-//					
-//					double noiseXYpZ = m_terrainNoise[( noiseX*5 + noiseZ )*3 + noiseY + 1];
-//					double noiseXYpZp = m_terrainNoise[( noiseX*5 + noiseZ + 1 )*3 + noiseY + 1];
-//					double noiseXpYpZ = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ )*3 + noiseY + 1];
-//					double noiseXpYpZp = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ + 1 )*3 + noiseY + 1];
+					int yAbs = Coords.localToBlock( cubeY, yRel );
 					
-					// get the noise samples
-					double noiseXYZ = scaleBias.getValue(noiseX, noiseY, noiseZ);				
-					double noiseXYZp = scaleBias.getValue(noiseX, noiseY, noiseZ + 1);
-					double noiseXpYZ = scaleBias.getValue(noiseX + 1, noiseY, noiseZ);
-					double noiseXpYZp = scaleBias.getValue(noiseX + 1, noiseY, noiseZ + 1);
+					double val = finalBuild.getValue(xAbs, yAbs, zAbs);
+					val -= yAbs;
 					
-					double noiseXYpZ = scaleBias.getValue(noiseX, noiseY + 1, noiseZ);
-					double noiseXYpZp = scaleBias.getValue(noiseX, noiseY + 1, noiseZ + 1);
-					double noiseXpYpZ = scaleBias.getValue(noiseX + 1, noiseY + 1, noiseZ);
-					double noiseXpYpZp = scaleBias.getValue(noiseX + 1, noiseY + 1, noiseZ + 1);
+//								System.out.println(yAbs + ":" + val);
 					
-					// interpolate the noise linearly in the y dimension
-					double yStepXZ = ( noiseXYpZ - noiseXYZ )/8;
-					double yStepXZp = ( noiseXYpZp - noiseXYZp )/8;
-					double yStepXpZ = ( noiseXpYpZ - noiseXpYZ )/8;
-					double yStepXpZp = ( noiseXpYpZp - noiseXpYZp )/8;
-					
-					for( int y=0; y<8; y++ )
+					if( val > 0.0D )
 					{
-						int localY = noiseY*8 + y;
-						int blockY = Coords.localToBlock( cubeY, localY );
-						
-//						System.out.println("Noise at " + blockY + " is " + noiseXYZ);
-						
-						// interpolate noise linearly in the x dimension
-						double valXYZ = noiseXYZ;
-						double valXYZp = noiseXYZp;
-						double xStepYZ = ( noiseXpYZ - noiseXYZ )/4;
-						double xStepYZp = ( noiseXpYZp - noiseXYZp )/4;
-						
-						for( int x=0; x<4; x++ )
-						{
-							int localX = noiseX*4 + x;
-							
-							// interpolate noise linearly in the z dimension
-							double zStepXY = ( valXYZp - valXYZ )/4;
-							double val = valXYZ - blockY;
-							
-							for( int z=0; z<4; z++ )
-							{
-								int localZ = noiseZ*4 + z;
-								
-								if( val > 0.0D )
-								{
-									blocks.setBlock( localX, localY, localZ, Blocks.stone );
-								}
-								else if( blockY < seaLevel )
-								{
-									blocks.setBlock( localX, localY, localZ, Blocks.water );
-								}
-								else
-								{
-									blocks.setBlock( localX, localY, localZ, null );
-								}
-								
-								// one step in the z dimension
-								val += zStepXY;
-							}
-							
-							// one step in the x dimension
-							valXYZ += xStepYZ;
-							valXYZp += xStepYZp;
-						}
-						
-						// one step in the y dimension
-						noiseXYZ += yStepXZ;
-						noiseXYZp += yStepXZp;
-						noiseXpYZ += yStepXpZ;
-						noiseXpYZp += yStepXpZp;
+						blocks.setBlock( xRel, yRel, zRel, Blocks.stone );
 					}
-				}
+					else if( yAbs < seaLevel )
+					{
+						blocks.setBlock( xRel, yRel, zRel, Blocks.water );
+					}
+					else
+					{
+						blocks.setBlock( xRel, yRel, zRel, null );
+					}
+				}		
 			}
 		}
 	}
@@ -435,12 +378,17 @@ public class TestCubeGenerator implements ICubeGenerator
 				{	
 					int yAbs = cubeY << 4 | yRel;
 					
-					biomes[xzCoord].modifyBlocks_pre(
-							m_world, m_rand,
-							cubeBlocks,
-							xAbs, yAbs, zAbs,
-							m_biomeNoise[xzCoord]
-						);
+//					if ( biomes[xzCoord] == null )
+//					{
+//						System.out.println(biomes[xzCoord] + ":" + m_world + ":" + m_rand + ":" + cubeBlocks );
+//					}
+					
+//					biomes[xzCoord].modifyBlocks_pre(
+//							m_world, m_rand,
+//							cubeBlocks,
+//							xAbs, yAbs, zAbs,
+//							m_biomeNoise[xzCoord]
+//						);
 				}
 			}
 		}
