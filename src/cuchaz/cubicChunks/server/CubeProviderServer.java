@@ -34,6 +34,7 @@ import com.google.common.collect.Sets;
 
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.gen.CubeGenerator;
+import cuchaz.cubicChunks.gen.TestCubeGenerator;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.BlankColumn;
@@ -49,8 +50,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	
 	private CubeWorldServer m_worldServer;
 	private CubeLoader m_loader;
-	private CubeGenerator m_generator;
-//	private TestCubeGenerator m_generator;
+//	private CubeGenerator m_generator;
+	private TestCubeGenerator m_generator;
 	private HashMap<Long,Column> m_loadedColumns;
 	private BlankColumn m_blankColumn;
 	private Deque<Long> m_cubesToUnload;
@@ -63,8 +64,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		
 		m_worldServer = (CubeWorldServer)world;
 		m_loader = new CubeLoader( world.getSaveHandler() );
-		m_generator = new CubeGenerator( world );
-//		m_generator = new TestCubeGenerator( world );
+//		m_generator = new CubeGenerator( world );
+		m_generator = new TestCubeGenerator( world );
 		m_loadedColumns = Maps.newHashMap();
 		m_blankColumn = new BlankColumn( world, 0, 0 );
 		m_cubesToUnload = new ArrayDeque<Long>();

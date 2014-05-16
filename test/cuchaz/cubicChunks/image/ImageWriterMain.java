@@ -11,7 +11,7 @@
 package cuchaz.cubicChunks.image;
 import java.util.Random;
 
-import cuchaz.cubicChunks.gen.procedural.OctaveNoise;
+import cuchaz.cubicChunks.gen.lib.module.Simplex;
 
 public class ImageWriterMain
 {
@@ -19,7 +19,13 @@ public class ImageWriterMain
 	{
 		Random rand = new Random();
 		int rnd = rand.nextInt();
-	    OctaveNoise octaveNoise = new OctaveNoise(16, 0.8, rnd);
+		Simplex baseContinentDef_pe0 = new Simplex();
+		baseContinentDef_pe0.setSeed(0);
+		baseContinentDef_pe0.setFrequency(1.0);
+		baseContinentDef_pe0.setPersistence(0.5);
+		baseContinentDef_pe0.setLacunarity(2.2089);
+		baseContinentDef_pe0.setOctaveCount(14);
+		baseContinentDef_pe0.setUp();
 
 	    double xStart = 0;
 	    double xEnd = 960;
@@ -37,7 +43,7 @@ public class ImageWriterMain
 	        {
 	            int x = (int) (xStart + i * ((xEnd - xStart) / xResolution));
 	            int y = (int) (yStart + j * ((yEnd - yStart) / yResolution));
-	            result[i][j] = 0.5 * (1 + octaveNoise.getNoise(x, y));
+	            result[i][j] = 0.5 * (1 + baseContinentDef_pe0.getValue(x, y, 0));
 	        }
 	    }
 	    

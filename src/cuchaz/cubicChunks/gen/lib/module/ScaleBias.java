@@ -53,10 +53,14 @@ public class ScaleBias extends ModuleBase
 	double scale;
 
 
-	public ScaleBias (ModuleBase sourceModule) throws ExceptionInvalidParam
+	public ScaleBias (ModuleBase sourceModule)
 	{
 		super(1);
-		setSourceModule(0, sourceModule);
+		try {
+			setSourceModule(0, sourceModule);
+		} catch (ExceptionInvalidParam e) {
+			//do nothing
+		}
 		bias = DEFAULT_BIAS;
 		scale = DEFAULT_SCALE;
 	}

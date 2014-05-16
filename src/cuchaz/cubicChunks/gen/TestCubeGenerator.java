@@ -31,6 +31,8 @@ import net.minecraft.world.gen.structure.MapGenMineshaft;
 import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
+import cuchaz.cubicChunks.gen.lib.exception.ExceptionInvalidParam;
+import cuchaz.cubicChunks.gen.lib.module.ScaleBias;
 import cuchaz.cubicChunks.gen.lib.module.Simplex;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
@@ -38,7 +40,7 @@ import cuchaz.cubicChunks.world.Cube;
 import cuchaz.cubicChunks.world.biome.CubeBiomeGenBase;
 import cuchaz.cubicChunks.world.biome.WorldColumnManager;
 
-public class CubeGenerator implements ICubeGenerator
+public class TestCubeGenerator implements ICubeGenerator
 {
 	private World m_world;
 	private boolean m_mapFeaturesEnabled;
@@ -72,7 +74,7 @@ public class CubeGenerator implements ICubeGenerator
 	private double[] m_terrainNoiseT;
 	private double[] m_terrainNoiseXZ;
 	
-	public CubeGenerator( World world )
+	public TestCubeGenerator( World world )
 	{
 		m_world = world;
 		m_mapFeaturesEnabled = world.getWorldInfo().isMapFeaturesEnabled();
@@ -184,10 +186,14 @@ public class CubeGenerator implements ICubeGenerator
 		baseContinentDef_pe0.setOctaveCount(14);
 		baseContinentDef_pe0.setUp();
 		
+		ScaleBias scaleBias = new ScaleBias(baseContinentDef_pe0);
+		scaleBias.setScale(12800);
+		scaleBias.setBias(63);
+		
 		// UNDONE: centralize sea level somehow
 		final int seaLevel = 63;
 		
-		generateNoise( cubeX*4, cubeY*2, cubeZ*4 );
+//		generateNoise( cubeX*4, cubeY*2, cubeZ*4 );
 		
 		// use the noise to generate the terrain
 		for( int noiseX=0; noiseX<4; noiseX++ )
@@ -196,16 +202,27 @@ public class CubeGenerator implements ICubeGenerator
 			{
 				for( int noiseY=0; noiseY<2; noiseY++ )
 				{
-					// get the noise samples
-					double noiseXYZ = m_terrainNoise[( noiseX*5 + noiseZ )*3 + noiseY];
-					double noiseXYZp = m_terrainNoise[( noiseX*5 + noiseZ + 1 )*3 + noiseY];
-					double noiseXpYZ = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ )*3 + noiseY];
-					double noiseXpYZp = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ + 1 )*3 + noiseY];
+//					// get the noise samples
+//					double noiseXYZ = m_terrainNoise[( noiseX*5 + noiseZ )*3 + noiseY];
+//					double noiseXYZp = m_terrainNoise[( noiseX*5 + noiseZ + 1 )*3 + noiseY];
+//					double noiseXpYZ = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ )*3 + noiseY];
+//					double noiseXpYZp = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ + 1 )*3 + noiseY];
+//					
+//					double noiseXYpZ = m_terrainNoise[( noiseX*5 + noiseZ )*3 + noiseY + 1];
+//					double noiseXYpZp = m_terrainNoise[( noiseX*5 + noiseZ + 1 )*3 + noiseY + 1];
+//					double noiseXpYpZ = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ )*3 + noiseY + 1];
+//					double noiseXpYpZp = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ + 1 )*3 + noiseY + 1];
 					
-					double noiseXYpZ = m_terrainNoise[( noiseX*5 + noiseZ )*3 + noiseY + 1];
-					double noiseXYpZp = m_terrainNoise[( noiseX*5 + noiseZ + 1 )*3 + noiseY + 1];
-					double noiseXpYpZ = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ )*3 + noiseY + 1];
-					double noiseXpYpZp = m_terrainNoise[( ( noiseX + 1 )*5 + noiseZ + 1 )*3 + noiseY + 1];
+					// get the noise samples
+					double noiseXYZ = scaleBias.getValue(noiseX, noiseY, noiseZ);				
+					double noiseXYZp = scaleBias.getValue(noiseX, noiseY, noiseZ + 1);
+					double noiseXpYZ = scaleBias.getValue(noiseX + 1, noiseY, noiseZ);
+					double noiseXpYZp = scaleBias.getValue(noiseX + 1, noiseY, noiseZ + 1);
+					
+					double noiseXYpZ = scaleBias.getValue(noiseX, noiseY + 1, noiseZ);
+					double noiseXYpZp = scaleBias.getValue(noiseX, noiseY + 1, noiseZ + 1);
+					double noiseXpYpZ = scaleBias.getValue(noiseX + 1, noiseY + 1, noiseZ);
+					double noiseXpYpZp = scaleBias.getValue(noiseX + 1, noiseY + 1, noiseZ + 1);
 					
 					// interpolate the noise linearly in the y dimension
 					double yStepXZ = ( noiseXYpZ - noiseXYZ )/8;
@@ -217,6 +234,8 @@ public class CubeGenerator implements ICubeGenerator
 					{
 						int localY = noiseY*8 + y;
 						int blockY = Coords.localToBlock( cubeY, localY );
+						
+//						System.out.println("Noise at " + blockY + " is " + noiseXYZ);
 						
 						// interpolate noise linearly in the x dimension
 						double valXYZ = noiseXYZ;
@@ -230,7 +249,7 @@ public class CubeGenerator implements ICubeGenerator
 							
 							// interpolate noise linearly in the z dimension
 							double zStepXY = ( valXYZp - valXYZ )/4;
-							double val = valXYZ;
+							double val = valXYZ - blockY;
 							
 							for( int z=0; z<4; z++ )
 							{

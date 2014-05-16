@@ -1,9 +1,19 @@
+/*****************************************************************************
+ * Copyright (c) Nick Whitney.                      
+ *
+ * This source is licensed under the GNU LGPL v3
+ * Please read http://www.gnu.org/copyleft/lgpl.html for more information
+ *
+ * This software comes with the standard NO WARRANTY disclaimer for any
+ * purpose. Use it at your own risk. If there's a problem you get to fix it.
+ *
+ ****************************************************************************/
+
 package cuchaz.cubicChunks.gen.lib.module;
 
-import cuchaz.cubicChunks.gen.lib.NoiseQuality;
-import cuchaz.cubicChunks.gen.lib.SimplexNoiseGen;
-import cuchaz.cubicChunks.gen.lib.SimplexNoiseGen2;
-import cuchaz.cubicChunks.gen.lib.exception.ExceptionInvalidParam;
+import java.util.Random;
+
+import cuchaz.cubicChunks.gen.lib.*;
 
 public class Simplex extends ModuleBase
 {
@@ -144,9 +154,11 @@ public class Simplex extends ModuleBase
 	// Seed value used by the Simplex-noise function.
 	int seed;
 
-	SimplexNoiseGen2 source;
+	private SimplexBasis[] source;
+	double[] frequencies;
+	double[] amplitudes;
 
-	public Simplex ()
+	public Simplex()
 	{
 		super(0);
 		frequency = DEFAULT_SIMPLEX_FREQUENCY;
@@ -155,46 +167,44 @@ public class Simplex extends ModuleBase
 		octaveCount = DEFAULT_SIMPLEX_OCTAVE_COUNT;
 		persistence = DEFAULT_SIMPLEX_PERSISTENCE;
 		seed = DEFAULT_SIMPLEX_SEED;
+	}
+	
+	public void setUp()
+	{
+		source = new SimplexBasis[octaveCount];
+		frequencies = new double[octaveCount];
+		amplitudes = new double[octaveCount];
 
-		source = new SimplexNoiseGen2();
+		for(int i = 0; i < octaveCount; i++)
+		{
+			if(seed != 0)
+			{
+				Random rnd = new Random(seed);
+				seed = rnd.nextInt();
+			}
+
+			source[i] = new SimplexBasis();
+			source[i].setSeed(seed);
+
+			frequencies[i] = Math.pow(lacunarity, i);
+			amplitudes[i] = Math.pow(persistence, source.length - i);
+		}
 	}
 
-	@Override
-	public double getValue (double x, double y, double z)
+	public double getValue(double x, double y, double z)
 	{
-		double value = 0.0;
-		double signal = 0.0;
-		double curPersistence = 1.0;
+		double value = 0;
 		double nx, ny, nz;
-		int curSeed;
+		double signal = 0;
+		
+		nx = Misc.MakeInt32Range (x);
+		ny = Misc.MakeInt32Range (y);
+		nz = Misc.MakeInt32Range (z);
 
-		x *= frequency;
-		y *= frequency;
-		z *= frequency;
-
-		for (int curOctave = 0; curOctave < octaveCount; curOctave++)
+		for(int i = 0; i < source.length; i++)
 		{
-
-			// Make sure that these floating-point values have the same range as a 32-
-			// bit integer so that we can pass them to the coherent-noise functions.
-			nx = SimplexNoiseGen.MakeInt32Range (x);
-			ny = SimplexNoiseGen.MakeInt32Range (y);
-			nz = SimplexNoiseGen.MakeInt32Range (z);
-
-			// Get the coherent-noise value from the input value and add it to the
-			// final result.
-			curSeed = (seed + curOctave) & 0xffffffff;
-
-			source.setSeed(curSeed);
-
-			signal = source.noise (nx, ny, nz);
-			value += signal * curPersistence;
-
-			// Prepare the next octave.
-			x *= lacunarity;
-			y *= lacunarity;
-			z *= lacunarity;
-			curPersistence *= persistence;
+			signal = source[i].getValue(nx/frequencies[i],  ny/frequencies[i], nz/frequencies[i]);
+			value += signal * amplitudes[i];
 		}
 
 		return value;
@@ -319,11 +329,15 @@ public class Simplex extends ModuleBase
 	 * The larger the number of octaves, the more time required to
 	 * calculate the Simplex-noise value.
 	 */
-	public void setOctaveCount (int octaveCount) throws ExceptionInvalidParam
+	public void setOctaveCount (int octaveCount)
 	{
-		if (octaveCount < 1 || octaveCount > SIMPLEX_MAX_OCTAVE)
+		if (octaveCount < 1)
 		{
-			throw new ExceptionInvalidParam ("Invalid parameter In Simplex Noise Module");
+			octaveCount = 1;
+		}
+		else if (octaveCount > SIMPLEX_MAX_OCTAVE)
+		{
+			octaveCount = SIMPLEX_MAX_OCTAVE;
 		}
 
 		this.octaveCount = octaveCount;
@@ -351,5 +365,4 @@ public class Simplex extends ModuleBase
 	{
 		this.seed = seed;
 	}
-
 }
