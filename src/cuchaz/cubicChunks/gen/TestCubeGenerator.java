@@ -66,7 +66,7 @@ public class TestCubeGenerator implements ICubeGenerator
 	
 	private NoiseGeneratorPerlin m_biomeNoiseGen;
 	private double[] m_biomeNoise;
-	private IBuilder worldBuilder;
+	private BasicBuilder worldBuilder;
 	
 	public TestCubeGenerator( World world )
 	{
@@ -105,6 +105,7 @@ public class TestCubeGenerator implements ICubeGenerator
 		worldBuilder = new BasicBuilder();
 		
 		worldBuilder.setSeed(m_rand.nextInt());
+		worldBuilder.setMaxElev(1024);
 		worldBuilder.setSeaLevel(63);
 		try {
 			worldBuilder.build();

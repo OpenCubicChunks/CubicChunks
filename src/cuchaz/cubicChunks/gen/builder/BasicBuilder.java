@@ -57,7 +57,7 @@ public class BasicBuilder implements IBuilder
 		baseContinentDef_pe0.setUp();
 		
 		ScaleBias scaleBias = new ScaleBias(baseContinentDef_pe0);
-		scaleBias.setScale(512);
+		scaleBias.setScale(MAX_ELEV);
 		scaleBias.setBias(SEA_LEVEL);
 		
 		finalModule = scaleBias;
