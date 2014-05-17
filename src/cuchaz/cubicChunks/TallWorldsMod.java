@@ -33,6 +33,7 @@ import cuchaz.magicMojoModLoader.api.events.ClassOverrideEvent;
 import cuchaz.magicMojoModLoader.api.events.EncodeChunkEvent;
 import cuchaz.magicMojoModLoader.api.events.EntityPlayerMPUpdateEvent;
 import cuchaz.magicMojoModLoader.api.events.UpdateRenderPositionEvent;
+import cuchaz.magicMojoModLoader.api.events.VoidFogRangeEvent;
 
 public class TallWorldsMod implements Mod
 {
@@ -225,5 +226,11 @@ public class TallWorldsMod implements Mod
 		event.setMaxBlockZ( maxBlockZ );
 		
 		event.setHandled();
+	}
+	
+	public void handleEvent( VoidFogRangeEvent event )
+	{
+		int min = Coords.cubeToMinBlock( AddressTools.MinY );
+		event.setCustomRange( min, min + 1024 );
 	}
 }
