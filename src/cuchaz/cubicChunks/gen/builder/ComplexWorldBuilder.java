@@ -49,8 +49,7 @@ import cuchaz.cubicChunks.gen.lib.module.*;
 //for that group and subgroup.
 
 public class ComplexWorldBuilder implements IBuilder
-{
-	
+{	
 	ModuleBase finalModule;
 	
 	/** CONSTANTS
@@ -177,8 +176,12 @@ public class ComplexWorldBuilder implements IBuilder
 	{
 		this.MAX_ELEV = maxElev;	
 	}
-	
-	public void setSeaLevel(int seaLevel)
+	/**
+	 * Sets the sea level for the world. This must be between -1.0 (minimum
+	 * elevation) and 1.0 (maximum elevation). I recommend dividing the desired 
+	 * seaLevel by the desired build height and feeding the result into this method.
+	 */
+	public void setSeaLevel(double seaLevel)
 	{
 		this.SEA_LEVEL = seaLevel;	
 	}
@@ -336,8 +339,8 @@ public class ComplexWorldBuilder implements IBuilder
 		Cache continentDef = new Cache(continentDef_se);
 		continentDef.setSourceModule(0, continentDef_se);
 		
-		finalModule = continentDef;
 		
+		finalModule = continentDef;
 	}
 
 	@Override

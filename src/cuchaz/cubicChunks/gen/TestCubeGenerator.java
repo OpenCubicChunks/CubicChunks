@@ -31,6 +31,8 @@ import net.minecraft.world.gen.structure.MapGenMineshaft;
 import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
+import cuchaz.cubicChunks.gen.builder.BasicBuilder;
+import cuchaz.cubicChunks.gen.builder.IBuilder;
 import cuchaz.cubicChunks.gen.lib.exception.ExceptionInvalidParam;
 import cuchaz.cubicChunks.gen.lib.module.ModuleBase;
 import cuchaz.cubicChunks.gen.lib.module.ScaleBias;
@@ -63,19 +65,8 @@ public class TestCubeGenerator implements ICubeGenerator
 	private float[] m_filter5x5;
 	
 	private NoiseGeneratorPerlin m_biomeNoiseGen;
-	private NoiseGeneratorOctaves m_terrainNoiseGenLow;
-	private NoiseGeneratorOctaves m_terrainNoiseGenHigh;
-	private NoiseGeneratorOctaves m_terrainNoiseGenT;
-	private NoiseGeneratorOctaves m_terrainNoiseGenXZ;
-	
 	private double[] m_biomeNoise;
-	private double[] m_terrainNoise;
-	private double[] m_terrainNoiseLow;
-	private double[] m_terrainNoiseHigh;
-	private double[] m_terrainNoiseT;
-	private double[] m_terrainNoiseXZ;
-	
-	private ModuleBase finalBuild;
+	private IBuilder worldBuilder;
 	
 	public TestCubeGenerator( World world )
 	{
@@ -97,19 +88,8 @@ public class TestCubeGenerator implements ICubeGenerator
 		worldColumnManager = new WorldColumnManager(this.m_world);
 		
 		m_biomeNoiseGen = new NoiseGeneratorPerlin( m_rand, 4 );
-		m_terrainNoiseGenLow = new NoiseGeneratorOctaves( m_rand, 16 );
-		m_terrainNoiseGenHigh = new NoiseGeneratorOctaves( m_rand, 16 );
-		m_terrainNoiseGenT = new NoiseGeneratorOctaves( m_rand, 8 );
-		m_terrainNoiseGenXZ = new NoiseGeneratorOctaves( m_rand, 16 );
 		
-		m_terrainNoiseLow = null;
-		m_terrainNoiseHigh = null;
-		m_terrainNoiseT = null;
-		m_terrainNoiseXZ = null;
-		m_terrainNoise = new double[5*5*3];
 		m_biomeNoise = new double[256];
-		
-		m_terrainNoiseXZ = null;
 		
 		// init the 5x5 filter
 		m_filter5x5 = new float[25];
@@ -121,19 +101,16 @@ public class TestCubeGenerator implements ICubeGenerator
 			}
 		}
 		
-		Simplex baseContinentDef_pe0 = new Simplex();
-		baseContinentDef_pe0.setSeed(0);
-		baseContinentDef_pe0.setFrequency(1.0);
-		baseContinentDef_pe0.setPersistence(0.5);
-		baseContinentDef_pe0.setLacunarity(2.2089);
-		baseContinentDef_pe0.setOctaveCount(11);
-		baseContinentDef_pe0.setUp();
+		// switch worldBuilders based on worldType here
+		worldBuilder = new BasicBuilder();
 		
-		ScaleBias scaleBias = new ScaleBias(baseContinentDef_pe0);
-		scaleBias.setScale(1024);
-		scaleBias.setBias(63);
-		
-		finalBuild = scaleBias;
+		worldBuilder.setSeed(m_rand.nextInt());
+		worldBuilder.setSeaLevel(63);
+		try {
+			worldBuilder.build();
+		} catch (ExceptionInvalidParam e) {
+			// do nothing, but it failed to build the world so need to crash here.
+		}
 	}
 	
 	@Override
@@ -209,7 +186,7 @@ public class TestCubeGenerator implements ICubeGenerator
 				{
 					int yAbs = Coords.localToBlock( cubeY, yRel );
 					
-					double val = finalBuild.getValue(xAbs, yAbs, zAbs);
+					double val = worldBuilder.getValue(xAbs, yAbs, zAbs);
 					val -= yAbs;
 					
 					if( val > 0.0D )
@@ -235,17 +212,10 @@ public class TestCubeGenerator implements ICubeGenerator
 		
 		for( int xRel = 0; xRel < 16; xRel++ )
 		{
-			int xAbs = cubeX << 4 | xRel;
-			
 			for( int zRel = 0; zRel < 16; zRel++ )
 			{
-				int zAbs = cubeZ << 4 | zRel;
-				
-				int xzCoord = zRel | xRel << 4;
-
 				for (int yRel = 0; yRel < 16; yRel++)
-				{	
-					int yAbs = cubeY << 4 | yRel;
+				{
 					
 //					if ( biomes[xzCoord] == null )
 //					{
