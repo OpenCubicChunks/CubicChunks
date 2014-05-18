@@ -219,12 +219,6 @@ public class DiffuseLightingCalculator
 	
 	private boolean shouldUpdateLight( World world, int blockX, int blockY, int blockZ, int targetBlockX, int targetBlockY, int targetBlockZ )
 	{
-		// check our only coordinate bound
-		if( targetBlockY < 0 )
-		{
-			return false;
-		}
-		
 		// don't update blocks that are too far away
 		int manhattanDistance = MathHelper.abs_int( targetBlockX - blockX )
 			+ MathHelper.abs_int( targetBlockY - blockY )

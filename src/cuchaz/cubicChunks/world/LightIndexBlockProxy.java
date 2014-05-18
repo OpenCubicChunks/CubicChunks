@@ -14,6 +14,7 @@ import java.util.TreeMap;
 
 import net.minecraft.block.BlockAir;
 
+@Deprecated
 public class LightIndexBlockProxy extends BlockAir
 {
 	private static TreeMap<Integer,LightIndexBlockProxy> m_cache;
