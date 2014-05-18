@@ -1,6 +1,9 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome.biomegen;
 
 import java.util.Random;
+
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase.Height;
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.util.MathHelper;
@@ -207,7 +210,7 @@ public class BiomeGenForest extends CubeBiomeGenBase
         }
         else
         {
-            return this.biomeID != CubeBiomeGenBase.field_150583_P.biomeID && this.biomeID != CubeBiomeGenBase.field_150582_Q.biomeID 
+            return this.biomeID != CubeBiomeGenBase.birchForest.biomeID && this.biomeID != CubeBiomeGenBase.birchForestHills.biomeID 
             		? new BiomeGenMutated(this.biomeID + 128, this)
 			            {
 			                public void decorate(World var1, Random var2, int var3, int var4)

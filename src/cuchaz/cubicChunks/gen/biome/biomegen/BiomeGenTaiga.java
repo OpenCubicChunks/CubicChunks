@@ -1,8 +1,10 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome.biomegen;
 
 import java.util.Random;
 
 import cuchaz.cubicChunks.gen.CubeBlocks;
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase.Height;
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.init.Blocks;
@@ -116,6 +118,6 @@ public class BiomeGenTaiga extends CubeBiomeGenBase
 
     protected CubeBiomeGenBase func_150566_k()
     {
-        return this.biomeID == CubeBiomeGenBase.field_150578_U.biomeID ? (new BiomeGenTaiga(this.biomeID + 128, 2)).func_150557_a(5858897, true).setBiomeName("Mega Spruce Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(new CubeBiomeGenBase.Height(this.minHeight, this.maxHeight)) : super.func_150566_k();
+        return this.biomeID == CubeBiomeGenBase.megaTaiga.biomeID ? (new BiomeGenTaiga(this.biomeID + 128, 2)).func_150557_a(5858897, true).setBiomeName("Mega Spruce Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(new CubeBiomeGenBase.Height(this.minHeight, this.maxHeight)) : super.func_150566_k();
     }
 }

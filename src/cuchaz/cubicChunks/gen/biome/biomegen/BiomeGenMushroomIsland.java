@@ -1,5 +1,6 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome.biomegen;
 
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
 import net.minecraft.entity.passive.EntityMooshroom;
 import net.minecraft.init.Blocks;
 

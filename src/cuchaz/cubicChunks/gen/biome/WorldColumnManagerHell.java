@@ -1,8 +1,10 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase;
 import net.minecraft.world.ChunkPosition;
 
 public class WorldColumnManagerHell extends WorldColumnManager

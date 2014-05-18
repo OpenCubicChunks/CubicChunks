@@ -1,6 +1,8 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome.biomegen;
 
 import java.util.Random;
+
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase.Height;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenAbstractTree;

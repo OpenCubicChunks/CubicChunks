@@ -1,9 +1,10 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.util.ReportedException;
@@ -200,18 +201,20 @@ public class WorldColumnManager
     }
 
     /**
-     * checks given Chunk's Biomes against List of allowed ones
+     * checks given Chunk's Biomes against List of allowed ones.
+     * 
+     * this doesn't appear to be used.
      */
-    public boolean areBiomesViable(int par1, int par2, int par3, List par4List)
+    public boolean areBiomesViable(int x, int par2, int par3, List list)
     {
         IntCache.resetIntCache();
-        int var5 = par1 - par3 >> 2;
-        int var6 = par2 - par3 >> 2;
-        int var7 = par1 + par3 >> 2;
+        int x0 = x - par3 >> 2;
+        int z0 = par2 - par3 >> 2;
+        int var7 = x + par3 >> 2;
         int var8 = par2 + par3 >> 2;
-        int width = var7 - var5 + 1;
-        int length = var8 - var6 + 1;
-        int[] aInt = this.genBiomes.getInts(var5, var6, width, length);
+        int width = var7 - x0 + 1;
+        int length = var8 - z0 + 1;
+        int[] aInt = this.genBiomes.getInts(x0, z0, width, length);
 
         try
         {
@@ -219,7 +222,7 @@ public class WorldColumnManager
             {
                 CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome(aInt[i]);
 
-                if (!par4List.contains(biome))
+                if (!list.contains(biome))
                 {
                     return false;
                 }
@@ -232,10 +235,10 @@ public class WorldColumnManager
             CrashReport var13 = CrashReport.makeCrashReport(var15, "Invalid Biome id");
             CrashReportCategory var14 = var13.makeCategory("Layer");
             var14.addCrashSection("Layer", this.genBiomes.toString());
-            var14.addCrashSection("x", Integer.valueOf(par1));
+            var14.addCrashSection("x", Integer.valueOf(x));
             var14.addCrashSection("z", Integer.valueOf(par2));
             var14.addCrashSection("radius", Integer.valueOf(par3));
-            var14.addCrashSection("allowed", par4List);
+            var14.addCrashSection("allowed", list);
             throw new ReportedException(var13);
         }
     }

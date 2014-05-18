@@ -1,8 +1,9 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.LongHashMap;
 

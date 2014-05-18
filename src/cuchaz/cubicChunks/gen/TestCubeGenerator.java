@@ -31,6 +31,8 @@ import net.minecraft.world.gen.structure.MapGenMineshaft;
 import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
+import cuchaz.cubicChunks.gen.biome.WorldColumnManager;
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.gen.builder.BasicBuilder;
 import cuchaz.cubicChunks.gen.builder.IBuilder;
 import cuchaz.cubicChunks.gen.lib.exception.ExceptionInvalidParam;
@@ -40,8 +42,6 @@ import cuchaz.cubicChunks.gen.lib.module.Simplex;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
-import cuchaz.cubicChunks.world.biome.CubeBiomeGenBase;
-import cuchaz.cubicChunks.world.biome.WorldColumnManager;
 
 public class TestCubeGenerator implements ICubeGenerator
 {
@@ -66,7 +66,9 @@ public class TestCubeGenerator implements ICubeGenerator
 	
 	private NoiseGeneratorPerlin m_biomeNoiseGen;
 	private double[] m_biomeNoise;
-	private BasicBuilder worldBuilder;
+	
+	private BasicBuilder basicBuilder;
+	private int seaLevel;
 	
 	public TestCubeGenerator( World world )
 	{
@@ -101,14 +103,16 @@ public class TestCubeGenerator implements ICubeGenerator
 			}
 		}
 		
-		// switch worldBuilders based on worldType here
-		worldBuilder = new BasicBuilder();
+		seaLevel = 63;
 		
-		worldBuilder.setSeed(m_rand.nextInt());
-		worldBuilder.setMaxElev(1024);
-		worldBuilder.setSeaLevel(63);
+		// switch worldBuilders based on worldType here
+		basicBuilder = new BasicBuilder();
+		
+		basicBuilder.setSeed(m_rand.nextInt());
+		basicBuilder.setMaxElev(256);
+		basicBuilder.setSeaLevel(63);
 		try {
-			worldBuilder.build();
+			basicBuilder.build();
 		} catch (ExceptionInvalidParam e) {
 			// do nothing, but it failed to build the world so need to crash here.
 		}
@@ -152,7 +156,7 @@ public class TestCubeGenerator implements ICubeGenerator
 		}
 		
 //		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks.m_blocks, m_blocks.m_meta, m_biomes );
-//		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks, m_biomes );
+		replaceBlocksForBiome( cubeX, cubeY, cubeZ, m_blocks, m_biomes );
 		
 		/*
 		// generate world features
@@ -171,10 +175,7 @@ public class TestCubeGenerator implements ICubeGenerator
 	}
 	
 	private void generateTerrain( int cubeX, int cubeY, int cubeZ, CubeBlocks blocks )
-	{	
-		// UNDONE: centralize sea level somehow
-		final int seaLevel = 63;
-						
+	{							
 		for( int xRel=0; xRel < 16; xRel++ )
 		{
 			int xAbs = cubeX << 4 | xRel;
@@ -187,7 +188,7 @@ public class TestCubeGenerator implements ICubeGenerator
 				{
 					int yAbs = Coords.localToBlock( cubeY, yRel );
 					
-					double val = worldBuilder.getValue(xAbs, yAbs, zAbs);
+					double val = basicBuilder.getValue(xAbs, yAbs, zAbs);
 					val -= yAbs;
 					
 					if( val > 0.0D )
@@ -213,22 +214,28 @@ public class TestCubeGenerator implements ICubeGenerator
 		
 		for( int xRel = 0; xRel < 16; xRel++ )
 		{
+			int xAbs = cubeX << 4 | xRel;
+			
 			for( int zRel = 0; zRel < 16; zRel++ )
 			{
+				int zAbs = cubeZ << 4 | zRel;
+				
+				int xzCoord = xRel << 4 | zRel;
+				
 				for (int yRel = 0; yRel < 16; yRel++)
-				{
+				{				
+					int yAbs = cubeY << 4 | yRel;
+					if ( biomes[xzCoord] == null )
+					{
+						System.out.println(biomes[xzCoord] + ":" + m_world + ":" + m_rand + ":" + cubeBlocks );
+					}
 					
-//					if ( biomes[xzCoord] == null )
-//					{
-//						System.out.println(biomes[xzCoord] + ":" + m_world + ":" + m_rand + ":" + cubeBlocks );
-//					}
-					
-//					biomes[xzCoord].modifyBlocks_pre(
-//							m_world, m_rand,
-//							cubeBlocks,
-//							xAbs, yAbs, zAbs,
-//							m_biomeNoise[xzCoord]
-//						);
+					biomes[xzCoord].modifyBlocks_pre(
+							m_world, m_rand,
+							cubeBlocks,
+							xAbs, yAbs, zAbs,
+							m_biomeNoise[xzCoord]
+						);
 				}
 			}
 		}

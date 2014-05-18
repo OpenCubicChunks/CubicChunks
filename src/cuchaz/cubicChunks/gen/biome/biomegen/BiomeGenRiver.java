@@ -1,4 +1,5 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome.biomegen;
+
 
 public class BiomeGenRiver extends CubeBiomeGenBase
 {

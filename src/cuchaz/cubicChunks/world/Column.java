@@ -38,11 +38,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.CubeWorld;
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Bits;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.RangeInt;
-import cuchaz.cubicChunks.world.biome.CubeBiomeGenBase;
 
 public class Column extends Chunk
 {
@@ -74,12 +74,12 @@ public class Column extends Chunk
 		init();
 		
 		// save the biome data
-//		byte[] biomeArray = getBiomeArray();
-//		
-//		for( int i = 0; i < biomeArray.length; i++ )
-//		{
-//			biomeArray[i] = (byte)biomes[i].biomeID;
-//		}
+		byte[] biomeArray = getBiomeArray();
+		
+		for( int i = 0; i < biomeArray.length; i++ )
+		{
+			biomeArray[i] = (byte)biomes[i].biomeID;
+		}
 		
 		isModified = true;
 	}

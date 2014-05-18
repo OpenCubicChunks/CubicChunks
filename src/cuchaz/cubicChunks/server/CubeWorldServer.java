@@ -28,12 +28,12 @@ import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase;
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
 import cuchaz.cubicChunks.lighting.LightingManager;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
-import cuchaz.cubicChunks.world.biome.CubeBiomeGenBase;
-import cuchaz.cubicChunks.world.biome.CubeBiomeGenBase.SpawnListEntry;
 
 public class CubeWorldServer extends WorldServer implements CubeWorld
 {

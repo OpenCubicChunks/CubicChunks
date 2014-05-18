@@ -1,7 +1,8 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome.biomegen;
 
 import java.util.Arrays;
 import java.util.Random;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
@@ -354,7 +355,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 
     protected CubeBiomeGenBase func_150566_k()
     {
-        boolean var1 = this.biomeID == CubeBiomeGenBase.field_150589_Z.biomeID;
+        boolean var1 = this.biomeID == CubeBiomeGenBase.mesa.biomeID;
         BiomeGenMesa var2 = new BiomeGenMesa(this.biomeID + 128, var1, this.field_150620_aI);
 
         if (!var1)

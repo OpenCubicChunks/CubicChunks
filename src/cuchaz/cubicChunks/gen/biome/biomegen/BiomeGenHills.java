@@ -1,8 +1,9 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome.biomegen;
 
 import java.util.Random;
 
 import cuchaz.cubicChunks.gen.CubeBlocks;
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase.Height;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
@@ -20,7 +21,7 @@ public class BiomeGenHills extends CubeBiomeGenBase
     private int value3;
     private int value4;
 
-    protected BiomeGenHills(int biomeID, boolean flag)
+    public BiomeGenHills(int biomeID, boolean flag)
     {
         super(biomeID);
         this.theWorldGenerator = new WorldGenMinable(Blocks.monster_egg, 8);

@@ -144,10 +144,13 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		// UNDONE: do something smarter about the sea level
 		final int SeaLevel = 63;
 		
+		int i;
 		// load the cube at sea level
-		// keep loading the next cube up until we don't get anything back
+		// keep loading the next cube up until we don't get anything back or we 
+		// hit the limit of 16 cubes above sea level. This will prevent the endless 
+		// generation issues from freezing the game during initial world generation.
 		Column column = null;
-		for( int cubeY=Coords.blockToCube( SeaLevel ); ; cubeY++ )
+		for( int cubeY=Coords.blockToCube( SeaLevel ); cubeY < 16; cubeY++ )
 		{
 			Cube cube = loadCube( cubeX, cubeY, cubeZ );
 			if( !cube.isEmpty() )

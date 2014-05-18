@@ -31,12 +31,12 @@ import net.minecraft.world.gen.structure.MapGenMineshaft;
 import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
+import cuchaz.cubicChunks.gen.biome.WorldColumnManager;
+import cuchaz.cubicChunks.gen.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.gen.lib.module.Simplex;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
-import cuchaz.cubicChunks.world.biome.CubeBiomeGenBase;
-import cuchaz.cubicChunks.world.biome.WorldColumnManager;
 
 public class CubeGenerator implements ICubeGenerator
 {

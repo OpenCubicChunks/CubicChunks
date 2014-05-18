@@ -20,12 +20,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.client.CubeWorldClient;
+import cuchaz.cubicChunks.gen.biome.WorldColumnManager;
 import cuchaz.cubicChunks.server.CubePlayerManager;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
-import cuchaz.cubicChunks.world.biome.WorldColumnManager;
 import cuchaz.magicMojoModLoader.api.Mod;
 import cuchaz.magicMojoModLoader.api.ModMetadata;
 import cuchaz.magicMojoModLoader.api.Version;

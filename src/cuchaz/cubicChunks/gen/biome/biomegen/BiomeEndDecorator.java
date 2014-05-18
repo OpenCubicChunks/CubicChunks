@@ -1,4 +1,4 @@
-package cuchaz.cubicChunks.world.biome;
+package cuchaz.cubicChunks.gen.biome.biomegen;
 
 import net.minecraft.entity.boss.EntityDragon;
 import net.minecraft.init.Blocks;
