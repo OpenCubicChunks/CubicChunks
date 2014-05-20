@@ -32,8 +32,10 @@ import cuchaz.magicMojoModLoader.api.events.BuildSizeEvent;
 import cuchaz.magicMojoModLoader.api.events.ClassOverrideEvent;
 import cuchaz.magicMojoModLoader.api.events.EncodeChunkEvent;
 import cuchaz.magicMojoModLoader.api.events.EntityPlayerMPUpdateEvent;
+import cuchaz.magicMojoModLoader.api.events.RandomChunkBlockYEvent;
 import cuchaz.magicMojoModLoader.api.events.UpdateRenderPositionEvent;
 import cuchaz.magicMojoModLoader.api.events.VoidFogRangeEvent;
+import cuchaz.magicMojoModLoader.util.Util;
 
 public class TallWorldsMod implements Mod
 {
@@ -232,5 +234,18 @@ public class TallWorldsMod implements Mod
 	{
 		int min = Coords.cubeToMinBlock( AddressTools.MinY );
 		event.setCustomRange( min, min + 1024 );
+	}
+	
+	public void handleEvent( RandomChunkBlockYEvent event )
+	{
+		if( event.getChunk() instanceof Column )
+		{
+			Column column = (Column)event.getChunk();
+			event.setBlockY( Util.randRange(
+				event.getRand(),
+				Coords.cubeToMinBlock( column.getBottomCubeY() ),
+				Coords.cubeToMaxBlock( column.getTopCubeY() )
+			) );
+		}
 	}
 }
