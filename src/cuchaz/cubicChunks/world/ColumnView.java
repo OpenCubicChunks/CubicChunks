@@ -95,13 +95,6 @@ public class ColumnView extends Column
 			return cube.getBlock( localX, localY, localZ );
 		}
 		
-		// this cube isn't loaded, but there's something non-transparent there, return a block proxy
-		int opacity = m_column.getLightIndex().getOpacity( localX, blockY, localZ );
-		if( opacity > 0 )
-		{
-			return LightIndexBlockProxy.get( opacity );
-		}
-		
 		return Blocks.air;
 	}
 	

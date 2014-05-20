@@ -58,8 +58,6 @@ public class Column extends Chunk
 	private List<Cube> m_roundRobinCubes;
 	private EntityContainer m_entities;
 	
-	private transient List<Entity> m_tempEntities;
-
 	private byte[] columnBlockBiomeArray;
 	
 	public Column( World world, int x, int z )
@@ -79,8 +77,7 @@ public class Column extends Chunk
 		
 		// save the biome data
 		byte[] biomeArray = getBiomeArray();
-		
-		for( int i = 0; i < biomeArray.length; i++ )
+		for( int i=0; i<biomeArray.length; i++ )
 		{
 			biomeArray[i] = (byte)biomes[i].biomeID;
 		}
@@ -90,19 +87,17 @@ public class Column extends Chunk
 
 	private void init( )
 	{
-		this.m_cubes = new TreeMap<Integer,Cube>();
-		this.m_lightIndex = new LightIndex();
-		this.m_roundRobinLightUpdatePointer = 0;
-		this.m_roundRobinCubes = new ArrayList<Cube>();
-		this.m_entities = new EntityContainer();
-        this.columnBlockBiomeArray = new byte[256];
-		
-		this.m_tempEntities = new ArrayList<Entity>();
+		m_cubes = new TreeMap<Integer,Cube>();
+		m_lightIndex = new LightIndex();
+		m_roundRobinLightUpdatePointer = 0;
+		m_roundRobinCubes = new ArrayList<Cube>();
+		m_entities = new EntityContainer();
+        columnBlockBiomeArray = new byte[256];
 		
 		// make sure no one's using data structures that have been replaced
 		// also saves memory
 		setStorageArrays( null );
-		this.heightMap = null;
+		heightMap = null;
 		updateSkylightColumns = null;
 		
 		Arrays.fill(this.columnBlockBiomeArray, (byte) - 1);
@@ -141,7 +136,7 @@ public class Column extends Chunk
 	@Override
 	public void generateHeightMap()
 	{
-		
+		// override this so no height map is generated
 	}
 	
 	public Iterable<Cube> cubes( )
@@ -227,13 +222,6 @@ public class Column extends Chunk
 		{
 			int localY = Coords.blockToLocal( blockY );
 			return cube.getBlock( localX, localY, localZ );
-		}
-		
-		// this cube isn't loaded, but there's something non-transparent there, return a block proxy
-		int opacity = getLightIndex().getOpacity( localX, blockY, localZ );
-		if( opacity > 0 )
-		{
-			return LightIndexBlockProxy.get( opacity );
 		}
 		
 		return Blocks.air;
@@ -438,12 +426,7 @@ public class Column extends Chunk
 	@Override
 	public void addEntity( Entity entity )
     {
-		// make sure the y-coord is sane
 		int cubeY = Coords.getCubeYForEntity( entity );
-		if( cubeY < 0 )
-		{
-			return;
-		}
 		
 		// pass off to the cube
 		Cube cube = m_cubes.get( cubeY );
@@ -839,74 +822,7 @@ public class Column extends Chunk
 		// isTicked
 		field_150815_m = true;
 		
-		worldObj.theProfiler.startSection( "entityMigration" );
-		
-		// migrate moved entities to new cubes
-		for( Cube cube : m_cubes.values() )
-		{
-			// for each entity that needs to move...
-			m_tempEntities.clear();
-			cube.getMigratedEntities( m_tempEntities );
-			for( Entity entity : m_tempEntities )
-			{
-				int cubeX = Coords.getCubeXForEntity( entity );
-				int cubeY = Coords.getCubeYForEntity( entity );
-				int cubeZ = Coords.getCubeZForEntity( entity );
-				
-				if( cubeX != xPosition || cubeZ != zPosition )
-				{
-					// Unfortunately, entities get updated after chunk ticks
-					// that means entities might appear to be in the wrong column this tick,
-					// but they'll be corrected before the next tick during column migration
-					// so we can safely ignore them
-					continue;
-				}
-				
-				// try to find the new cube for this entity
-				cube.removeEntity( entity );
-				Cube newCube = m_cubes.get( cubeY );
-				if( newCube != null )
-				{
-					// move the entity to the new cube
-					newCube.addEntity( entity );
-				}
-				else
-				{
-					// move the entity to the column
-					addEntity( entity );
-				}
-			}
-		}
-		
-		// check for entity migration from the column to a cube
-		Iterator<Entity> iter = m_entities.entities().iterator();
-		while( iter.hasNext() )
-		{
-			Entity entity = iter.next();
-			int cubeX = Coords.getCubeXForEntity( entity );
-			int cubeY = Coords.getCubeYForEntity( entity );
-			int cubeZ = Coords.getCubeZForEntity( entity );
-			
-			if( cubeX != xPosition || cubeZ != zPosition )
-			{
-				// these entities are migrated by the world to other columns, we can ignore them
-				continue;
-			}
-			
-			// is there a cube here?
-			Cube cube = m_cubes.get( cubeY );
-			if( cube != null )
-			{
-				// remove from the column
-				iter.remove();
-				isModified = true;
-				
-				// add to the cube
-				cube.addEntity( entity );
-			}
-		}
-		
-		worldObj.theProfiler.endSection();
+		// don't need to do anything else here
 	}
 	
 	@Override

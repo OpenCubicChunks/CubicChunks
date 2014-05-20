@@ -51,7 +51,7 @@ public class LightIndex
 		m_topNonTransparentBlockY = Integer.MIN_VALUE;
 	}
 	
-	public Integer getTopNonTransparentBlock( int localX, int localZ )
+	public int getTopNonTransparentBlock( int localX, int localZ )
 	{
 		int xzCoord = localZ << 4 | localX;
 		return m_columns[xzCoord].getTopNonTransparentBlockY();

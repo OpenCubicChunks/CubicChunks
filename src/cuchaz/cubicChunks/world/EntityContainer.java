@@ -54,6 +54,11 @@ public class EntityContainer
 		return m_entities.remove( entity );
 	}
 	
+	public void clear( )
+	{
+		m_entities.clear();
+	}
+	
 	public List<Entity> entities( )
 	{
 		return m_entities;
