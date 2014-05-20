@@ -11,7 +11,7 @@
 package cuchaz.cubicChunks.image;
 import java.util.Random;
 
-import cuchaz.cubicChunks.gen.lib.module.Simplex;
+import libnoiseforjava.module.Simplex;
 
 public class ImageWriterMain
 {
@@ -25,7 +25,7 @@ public class ImageWriterMain
 		baseContinentDef_pe0.setPersistence(0.5);
 		baseContinentDef_pe0.setLacunarity(2.2089);
 		baseContinentDef_pe0.setOctaveCount(14);
-		baseContinentDef_pe0.setUp();
+		baseContinentDef_pe0.build();
 
 	    double xStart = 0;
 	    double xEnd = 960;
