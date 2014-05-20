@@ -33,6 +33,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.generator.ICubeGenerator;
 import cuchaz.cubicChunks.generator.TestCubeGenerator;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
@@ -49,9 +50,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	
 	private CubeWorldServer m_worldServer;
 	private CubeLoader m_loader;
-//	private CubeGenerator m_generator;
-	private TestCubeGenerator m_generator;
-//	private ComplexCubeGenerator m_generator;
+	private ICubeGenerator m_generator;
 	private HashMap<Long,Column> m_loadedColumns;
 	private BlankColumn m_blankColumn;
 	private Deque<Long> m_cubesToUnload;

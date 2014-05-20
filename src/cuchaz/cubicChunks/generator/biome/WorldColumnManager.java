@@ -194,6 +194,9 @@ public class WorldColumnManager
             for (int i = 0; i < width * length; ++i)
             {
                 biomes[i] = CubeBiomeGenBase.getBiome(aInt[i]);
+                
+                // make sure we got a valid biome
+                assert( biomes[i] != null );
             }
 
             return biomes;

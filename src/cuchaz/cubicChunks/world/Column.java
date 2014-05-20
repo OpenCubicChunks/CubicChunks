@@ -16,7 +16,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -30,7 +29,6 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -57,7 +55,6 @@ public class Column extends Chunk
 	private int m_roundRobinLightUpdatePointer;
 	private List<Cube> m_roundRobinCubes;
 	private EntityContainer m_entities;
-	
 	private byte[] columnBlockBiomeArray;
 	
 	public Column( World world, int x, int z )
@@ -99,6 +96,7 @@ public class Column extends Chunk
 		setStorageArrays( null );
 		heightMap = null;
 		updateSkylightColumns = null;
+		super.setBiomeArray( null );
 		
 		Arrays.fill(this.columnBlockBiomeArray, (byte) - 1);
 	}
