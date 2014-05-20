@@ -26,7 +26,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cuchaz.cubicChunks.gen.CubeBlocks;
+import cuchaz.cubicChunks.generator.CubeBlocks;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeBlockMap;

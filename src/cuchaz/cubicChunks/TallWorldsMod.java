@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.client.CubeWorldClient;
-import cuchaz.cubicChunks.gen.biome.WorldColumnManager;
+import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.server.CubePlayerManager;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.AddressTools;
