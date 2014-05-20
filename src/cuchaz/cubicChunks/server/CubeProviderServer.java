@@ -33,7 +33,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.gen.CubeGenerator;
+import cuchaz.cubicChunks.generator.ICubeGenerator;
+import cuchaz.cubicChunks.generator.TestCubeGenerator;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.BlankColumn;
@@ -49,7 +50,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	
 	private CubeWorldServer m_worldServer;
 	private CubeLoader m_loader;
-	private CubeGenerator m_generator;
+	private ICubeGenerator m_generator;
 	private HashMap<Long,Column> m_loadedColumns;
 	private BlankColumn m_blankColumn;
 	private Deque<Long> m_cubesToUnload;
@@ -62,7 +63,9 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		
 		m_worldServer = (CubeWorldServer)world;
 		m_loader = new CubeLoader( world.getSaveHandler() );
-		m_generator = new CubeGenerator( world );
+//		m_generator = new CubeGenerator( world );
+		m_generator = new TestCubeGenerator( world );
+//		m_generator = new ComplexCubeGenerator( world );
 		m_loadedColumns = Maps.newHashMap();
 		m_blankColumn = new BlankColumn( world, 0, 0 );
 		m_cubesToUnload = new ArrayDeque<Long>();
@@ -139,12 +142,17 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	private Column loadCubesAboveSeaLevel( int cubeX, int cubeZ )
 	{
 		// UNDONE: do something smarter about the sea level
-		final int SeaLevel = 63;
+		final int SeaLevel = 0;
 		
+		int i = 0;
+		int maxToLoad = 16;
 		// load the cube at sea level
-		// keep loading the next cube up until we don't get anything back
+		// keep loading the next cube up until we don't get anything back or we 
+		// hit a generation limit of 16 cubes. This will prevent endless 
+		// generation issues from freezing the game during initial world generation.
+		// especially useful for the nether until we have a proper loading system in place.
 		Column column = null;
-		for( int cubeY=Coords.blockToCube( SeaLevel ); ; cubeY++ )
+		for( int cubeY=Coords.blockToCube( SeaLevel ); /*i < maxToLoad*/ ; cubeY++ )
 		{
 			Cube cube = loadCube( cubeX, cubeY, cubeZ );
 			if( !cube.isEmpty() )
@@ -155,6 +163,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			{
 				break;
 			}
+			
+			i++;
 		}
 		
 		return column;

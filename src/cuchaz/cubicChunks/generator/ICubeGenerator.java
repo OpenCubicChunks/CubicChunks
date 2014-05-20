@@ -8,7 +8,7 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.cubicChunks.gen;
+package cuchaz.cubicChunks.generator;
 
 import java.util.List;
 

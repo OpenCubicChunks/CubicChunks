@@ -15,6 +15,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -28,7 +29,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -37,6 +38,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.CubeWorld;
+import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Bits;
 import cuchaz.cubicChunks.util.Coords;
@@ -53,6 +55,7 @@ public class Column extends Chunk
 	private int m_roundRobinLightUpdatePointer;
 	private List<Cube> m_roundRobinCubes;
 	private EntityContainer m_entities;
+	private byte[] columnBlockBiomeArray;
 	
 	public Column( World world, int x, int z )
 	{
@@ -62,7 +65,7 @@ public class Column extends Chunk
 		init();
 	}
 	
-	public Column( World world, int cubeX, int cubeZ, BiomeGenBase[] biomes )
+	public Column( World world, int cubeX, int cubeZ, CubeBiomeGenBase[] biomes )
 	{
 		// NOTE: this constructor is called by the cube generator
 		this( world, cubeX, cubeZ );
@@ -86,12 +89,16 @@ public class Column extends Chunk
 		m_roundRobinLightUpdatePointer = 0;
 		m_roundRobinCubes = new ArrayList<Cube>();
 		m_entities = new EntityContainer();
+        columnBlockBiomeArray = new byte[256];
 		
 		// make sure no one's using data structures that have been replaced
 		// also saves memory
 		setStorageArrays( null );
 		heightMap = null;
 		updateSkylightColumns = null;
+		super.setBiomeArray( null );
+		
+		Arrays.fill(this.columnBlockBiomeArray, (byte) - 1);
 	}
 	
 	public long getAddress( )
@@ -122,6 +129,12 @@ public class Column extends Chunk
 	public LightIndex getLightIndex( )
 	{
 		return m_lightIndex;
+	}
+	
+	@Override
+	public void generateHeightMap()
+	{
+		// override this so no height map is generated
 	}
 	
 	public Iterable<Cube> cubes( )
@@ -751,6 +764,43 @@ public class Column extends Chunk
 			}
 		}
 	}
+	
+	/**
+     * This method retrieves the biome at a set of coordinates
+     */
+	@Override
+    public CubeBiomeGenBase getBiomeGenForWorldCoords(int xRel, int zRel, WorldChunkManager par3WorldChunkManager)
+    {
+		int biomeID = this.columnBlockBiomeArray[zRel << 4 | xRel] & 255;
+		
+        if (biomeID == 255)
+        {
+            CubeBiomeGenBase var5 = (CubeBiomeGenBase) par3WorldChunkManager.getBiomeGenAt((this.xPosition << 4) + xRel, (this.zPosition << 4) + zRel);
+            biomeID = var5.biomeID;
+            this.columnBlockBiomeArray[zRel << 4 | xRel] = (byte)(biomeID & 255);
+        }
+
+        return (CubeBiomeGenBase) (CubeBiomeGenBase.func_150568_d(biomeID) == null ? CubeBiomeGenBase.plains : CubeBiomeGenBase.func_150568_d(biomeID));
+    }
+	
+	   /**
+     * Returns an array containing a 16x16 mapping on the X/Z of block positions in this Chunk to biome IDs.
+     */
+	@Override
+    public byte[] getBiomeArray()
+    {
+        return this.columnBlockBiomeArray;
+    }
+	
+    /**
+     * Accepts a 256-entry array that contains a 16x16 mapping on the X/Z plane of block positions in this Chunk to
+     * biome IDs.
+     */
+	@Override
+    public void setBiomeArray(byte[] par1ArrayOfByte)
+    {
+        this.columnBlockBiomeArray = par1ArrayOfByte;
+    }
 	
 	@Override //        isActive
 	public boolean func_150802_k( )

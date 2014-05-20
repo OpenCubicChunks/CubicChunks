@@ -8,15 +8,15 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.cubicChunks.gen;
+package cuchaz.cubicChunks.generator;
 
 import cuchaz.cubicChunks.util.Bits;
 import net.minecraft.block.Block;
 
 public class CubeBlocks
 {
-	private Block[] m_blocks;
-	private byte[] m_meta;
+	Block[] m_blocks;
+	byte[] m_meta;
 	private boolean m_isEmpty;
 	
 	public CubeBlocks( )
@@ -30,6 +30,7 @@ public class CubeBlocks
 	{
 		return m_blocks[getCoord( x, y, z )];
 	}
+	
 	public void setBlock( int x, int y, int z, Block val )
 	{
 		m_blocks[getCoord( x, y, z )] = val;

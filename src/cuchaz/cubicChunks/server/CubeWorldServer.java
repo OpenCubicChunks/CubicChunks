@@ -10,20 +10,26 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.server;
 
+import java.util.List;
 import java.util.Set;
 
+import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.WeightedRandom;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
+import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
 import cuchaz.cubicChunks.lighting.LightingManager;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
@@ -75,6 +81,17 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 		m_lightingManager.tick();
 		theProfiler.endSection();
 	}
+	
+    /**
+     * only spawns creatures allowed by the chunkProvider
+     */
+	@Override
+    public net.minecraft.world.biome.BiomeGenBase.SpawnListEntry spawnRandomCreature(EnumCreatureType par1EnumCreatureType, int par2, int par3, int par4)
+    {
+//        List var5 = (List) this.getChunkProvider().getPossibleCreatures(par1EnumCreatureType, par2, par3, par4);
+//        return var5 != null && !var5.isEmpty() ? (net.minecraft.world.biome.BiomeGenBase.SpawnListEntry)WeightedRandom.getRandomItem(this.rand, var5) : null;
+		return null;
+    }
 	
 	public long getSpawnPointCubeAddress( )
 	{
