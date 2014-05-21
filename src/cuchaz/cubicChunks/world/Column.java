@@ -38,6 +38,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.CubeWorld;
+import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Bits;
@@ -152,12 +153,13 @@ public class Column extends Chunk
 		return m_cubes.get( y );
 	}
 	
-	public Cube getOrCreateCube( int y )
+	public Cube getOrCreateCube( int cubeY, boolean isModified )
 	{
-		Cube cube = m_cubes.get( y );
+		Cube cube = m_cubes.get( cubeY );
 		if( cube == null )
 		{
-			cube = addEmptyCube( y );
+			cube = new Cube( worldObj, this, xPosition, cubeY, zPosition, isModified );
+			m_cubes.put( cubeY, cube );
 		}
 		return cube;
 	}
@@ -165,27 +167,6 @@ public class Column extends Chunk
 	public Iterable<Cube> getCubes( int minY, int maxY )
 	{
 		return m_cubes.subMap( minY, true, maxY, true ).values();
-	}
-	
-	public void addCube( Cube cube )
-	{
-		m_cubes.put( cube.getY(), cube );
-	}
-	
-	private Cube addEmptyCube( int cubeY )
-	{
-		// is there already a chunk here?
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			log.warn( String.format( "Column (%d,%d) already has cube at %d!", xPosition, zPosition, cubeY ) );
-			return cube;
-		}
-		
-		// make a new empty chunk
-		cube = new Cube( worldObj, this, xPosition, cubeY, zPosition );
-		addCube( cube );
-		return cube;
 	}
 	
 	public Cube removeCube( int cubeY )
@@ -230,21 +211,13 @@ public class Column extends Chunk
 	{
 		// is there a chunk for this block?
 		int cubeY = Coords.blockToCube( blockY );
-		boolean createdNewCube = false;
 		Cube cube = m_cubes.get( cubeY );
 		if( cube == null )
 		{
-			if( block == Blocks.air )
-			{
-				return false;
-			}
-			
-			// make a new chunk for the block
-			cube = addEmptyCube( cubeY );
-			createdNewCube = true;
+			return false;
 		}
 		
-		// pass off to chunk
+		// did anything change?
 		int localY = Coords.blockToLocal( blockY );
 		Block oldBlock = cube.getBlock( localX, localY, localZ );
 		boolean changed = cube.setBlock( localX, localY, localZ, block, meta );
@@ -252,9 +225,6 @@ public class Column extends Chunk
 		{
 			return false;
 		}
-		
-		// NOTE: the light index doesn't get updated here
-		// it gets updated during the lighting update
 		
 		// update rain map
 		// NOTE: precipitationHeightMap[xzCoord] is he lowest block that will contain rain
@@ -266,59 +236,41 @@ public class Column extends Chunk
 			precipitationHeightMap[xzCoord] = -999;
 		}
 		
-		// handle lighting updates
-		if( createdNewCube )
+		int newOpacity = block.getLightOpacity();
+		int oldOpacity = oldBlock.getLightOpacity();
+		
+		int blockX = Coords.localToBlock( xPosition, localX );
+		int blockZ = Coords.localToBlock( zPosition, localZ );
+		
+		CubeWorld cubeWorld = (CubeWorld)worldObj;
+		
+		// did the top non-transparent block change?
+		int oldMaxY = getHeightValue( localX, localZ );
+		getLightIndex().setOpacity( localX, blockY, localZ, newOpacity );
+		int newMaxY = getHeightValue( localX, localZ );
+		if( oldMaxY != newMaxY )
 		{
-			// update light index before sky light update
-			getLightIndex().setOpacity( localX, blockY, localZ, block.getLightOpacity() );
+			// sort the y-values
+			int minBlockY = oldMaxY;
+			int maxBlockY = newMaxY;
+			if( minBlockY > maxBlockY )
+			{
+				minBlockY = newMaxY;
+				maxBlockY = oldMaxY;
+			}
+			assert( minBlockY < maxBlockY );
 			
-			// update rain map
-			resetPrecipitationHeight();
-
-			// new chunk, update sky lighting
-			CubeWorld world = (CubeWorld)worldObj;
-			world.getLightingManager().queueSkyLightCalculation( getAddress() );
+			// update light and signal render update
+			cubeWorld.getLightingManager().computeSkyLightUpdate( this, localX, localZ, minBlockY, maxBlockY );
+			worldObj.markBlockRangeForRenderUpdate( blockX, minBlockY, blockZ, blockX, maxBlockY, blockZ );
 		}
-		else
+		
+		// if opacity changed and ( opacity decreased or block now has any light )
+		int skyLight = getSavedLightValue( EnumSkyBlock.Sky, localX, blockY, localZ );
+		int blockLight = getSavedLightValue( EnumSkyBlock.Block, localX, blockY, localZ );
+		if( newOpacity != oldOpacity && ( newOpacity < oldOpacity || skyLight > 0 || blockLight > 0 ) )
 		{
-			int newOpacity = block.getLightOpacity();
-			int oldOpacity = oldBlock.getLightOpacity();
-			
-			int blockX = Coords.localToBlock( xPosition, localX );
-			int blockZ = Coords.localToBlock( zPosition, localZ );
-			
-			CubeWorld cubeWorld = (CubeWorld)worldObj;
-			
-			// did the top non-transparent block change?
-			int oldMaxY = getHeightValue( localX, localZ );
-			getLightIndex().setOpacity( localX, blockY, localZ, newOpacity );
-			int newMaxY = getHeightValue( localX, localZ );
-			if( oldMaxY != newMaxY )
-			{
-				// sort the y-values
-				int minBlockY = oldMaxY;
-				int maxBlockY = newMaxY;
-				if( minBlockY > maxBlockY )
-				{
-					minBlockY = newMaxY;
-					maxBlockY = oldMaxY;
-				}
-				assert( minBlockY < maxBlockY );
-				
-				// update light and signal render update
-				cubeWorld.getLightingManager().computeSkyLightUpdate( this, localX, localZ, minBlockY, maxBlockY );
-				worldObj.markBlockRangeForRenderUpdate( blockX, minBlockY, blockZ, blockX, maxBlockY, blockZ );
-			}
-			
-			// if opacity changed and ( opacity decreased or block now has any light )
-			int skyLight = getSavedLightValue( EnumSkyBlock.Sky, localX, blockY, localZ );
-			int blockLight = getSavedLightValue( EnumSkyBlock.Block, localX, blockY, localZ );
-			if( newOpacity != oldOpacity && ( newOpacity < oldOpacity || skyLight > 0 || blockLight > 0 ) )
-			{
-				cubeWorld.getLightingManager().queueSkyLightOcclusionCalculation( blockX, blockZ );
-			}
-			
-			// NOTE: after this, World calls updateLights on the source block which changes light values
+			cubeWorld.getLightingManager().queueSkyLightOcclusionCalculation( blockX, blockZ );
 		}
 		
 		// update lighting index
@@ -326,6 +278,7 @@ public class Column extends Chunk
 		
 		isModified = true;
 		
+		// NOTE: after this method, the World calls updateLights on the source block which changes light values again
 		return true;
 	}
 	
@@ -366,8 +319,7 @@ public class Column extends Chunk
 	
 	public int getTopCubeY( )
 	{
-		int blockY = getLightIndex().getTopNonTransparentBlockY();
-		return Coords.blockToCube( blockY );
+		return m_cubes.lastKey();
 	}
 	
 	public int getBottomCubeY( )
@@ -375,10 +327,16 @@ public class Column extends Chunk
 		return m_cubes.firstKey();
 	}
 	
+	public int getTopFilledCubeY( )
+	{
+		int blockY = getLightIndex().getTopNonTransparentBlockY();
+		return Coords.blockToCube( blockY );
+	}
+	
 	@Override
 	public int getTopFilledSegment()
     {
-		return Coords.cubeToMinBlock( getTopCubeY() );
+		return Coords.cubeToMinBlock( getTopFilledCubeY() );
     }
 	
 	@Override
@@ -692,7 +650,10 @@ public class Column extends Chunk
 			for( int i=0; i<numCubes; i++ )
 			{
 				int cubeY = in.readInt();
-				Cube cube = getOrCreateCube( cubeY );
+				Cube cube = getOrCreateCube( cubeY, false );
+				
+				// if the cube came from the server, it must be live
+				cube.setGeneratorStage( GeneratorStage.getLastStage() );
 				
 				// is the cube empty?
 				boolean isEmpty = in.readBoolean();
@@ -730,9 +691,6 @@ public class Column extends Chunk
 					
 					// clean up invalid blocks
 					storage.removeInvalidBlocks();
-					
-					// the cube came from the server, it must be lit
-					cube.setIsLit( true );
 				}
 			}
 			
@@ -805,13 +763,13 @@ public class Column extends Chunk
 	@Override //        isActive
 	public boolean func_150802_k( )
 	{
-		boolean isAnyCubeLit = false;
+		boolean isAnyCubeLive = false;
 		for( Cube cube : m_cubes.values() )
 		{
-			isAnyCubeLit |= cube.isLit();
+			isAnyCubeLive |= cube.getGeneratorStage().isLastStage();
 		}
 		
-		return field_150815_m && isTerrainPopulated && isAnyCubeLit;
+		return field_150815_m && isTerrainPopulated && isAnyCubeLive;
 	}
 	
 	@Override //         tick

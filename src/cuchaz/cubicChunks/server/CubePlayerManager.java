@@ -343,9 +343,9 @@ public class CubePlayerManager extends PlayerManager
 		{
 			Cube cube = iter.next();
 			
-			// wait for the cube to be lit before sending this cube
+			// wait for the cube to be live before sending this cube
 			// or any cube in the order after it
-			if( !cube.isLit() )
+			if( !cube.getGeneratorStage().isLastStage() )
 			{
 				break;
 			}
@@ -450,10 +450,10 @@ public class CubePlayerManager extends PlayerManager
 			int cubeX = AddressTools.getX( address );
 			int cubeY = AddressTools.getY( address );
 			int cubeZ = AddressTools.getZ( address );
-			Cube cube = getCubeProvider().loadCubeAndNeighbors( cubeX, cubeY, cubeZ );
+			getCubeProvider().loadCubeAndNeighbors( cubeX, cubeY, cubeZ );
 			
 			// make a new watcher
-			watcher = new CubeWatcher( cube );
+			watcher = new CubeWatcher( getCubeProvider().provideCube( cubeX, cubeY, cubeZ ) );
 			m_watchers.put( address, watcher );
 		}
 		return watcher;

@@ -16,6 +16,7 @@ import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.accessors.ChunkProviderClientAccessor;
+import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.world.BlankColumn;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
@@ -76,16 +77,13 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeProvi
 	}
 	
 	@Override
-	public Cube loadCube( int cubeX, int cubeY, int cubeZ )
+	public Cube provideCube( int cubeX, int cubeY, int cubeZ )
 	{
-		Column column = loadChunk( cubeX, cubeZ );
-		Cube cube = column.getCube( cubeY );
-		if( cube == null )
-		{
-			// make an empty cube
-			cube = new Cube( column.worldObj, column, cubeX, cubeY, cubeZ );
-			cube.setEmpty( true );
-		}
+		Cube cube = loadChunk( cubeX, cubeZ ).getOrCreateCube( cubeY, false );
+		
+		// cubes are always live on the client
+		cube.setGeneratorStage( GeneratorStage.getLastStage() );
+		
 		return cube;
 	}
 }

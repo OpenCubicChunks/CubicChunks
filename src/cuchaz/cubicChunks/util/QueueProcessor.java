@@ -18,7 +18,7 @@ import cuchaz.cubicChunks.CubeProvider;
 
 public abstract class QueueProcessor
 {
-	private String m_name;
+	protected String m_name;
 	protected CubeProvider m_provider;
 	private int m_batchSize;
 	private BatchedSetQueue<Long> m_queue;
@@ -43,9 +43,14 @@ public abstract class QueueProcessor
 		m_queue.add( address );
 	}
 	
+	public void addAll( List<Long> addresses )
+	{
+		m_queue.addAll( addresses );
+	}
+	
 	public int processQueue( long timeStop )
 	{
-		m_processedAddresses = Lists.newArrayList();
+		m_processedAddresses.clear();
 		m_deferredAddresses.clear();
 		
 		// is there time left?
@@ -74,9 +79,9 @@ public abstract class QueueProcessor
 		return m_processedAddresses.size();
 	}
 	
-	public int getNumProcessed( )
+	public List<Long> getProcessedAddresses( )
 	{
-		return m_processedAddresses.size();
+		return m_processedAddresses;
 	}
 	
 	public String getProcessingReport( )

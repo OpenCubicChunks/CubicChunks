@@ -28,6 +28,14 @@ public class BatchedSetQueue<T>
 		return m_setQueue.add( val );
 	}
 	
+	public void addAll( Iterable<T> vals )
+	{
+		for( T val : vals )
+		{
+			m_setQueue.add( val );
+		}
+	}
+	
 	public boolean contains( T val )
 	{
 		return m_setQueue.contains( val );

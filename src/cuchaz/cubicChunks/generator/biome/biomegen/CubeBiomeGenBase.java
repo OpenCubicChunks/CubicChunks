@@ -1,9 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2014 Jeff Martin.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Jeff Martin - initial API and implementation
+ ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
-
-import com.google.common.collect.Sets;
-
-import cuchaz.cubicChunks.generator.CubeBlocks;
-import cuchaz.magicMojoModLoader.api.events.BuildSizeEvent;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -46,6 +51,11 @@ import net.minecraft.world.gen.feature.WorldGenerator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.google.common.collect.Sets;
+
+import cuchaz.cubicChunks.world.Cube;
+import cuchaz.magicMojoModLoader.api.events.BuildSizeEvent;
 
 public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGenBase
 {
@@ -472,12 +482,12 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
         return this.enableSnow;
     }
     
-    public void modifyBlocks_pre(World world, Random rand, CubeBlocks cubeBlock, int xAbs, int yAbs, int zAbs, double val)
+    public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val)
     {
-        this.modifyBlocks(world, rand, cubeBlock, xAbs, yAbs, zAbs, val);
+        this.modifyBlocks(world, rand, cube, xAbs, yAbs, zAbs, val);
     }
     
-    public final void modifyBlocks(World world, Random rand, CubeBlocks cubeBlocks, int xAbs, int yAbs, int zAbs, double val)
+    public final void modifyBlocks(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val)
     {
         Block topBlock = this.topBlock; // grass/gravel/stone
         byte var11 = (byte)(this.field_150604_aj & 255);
@@ -503,15 +513,15 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
         
         if (yAbs <= BuildSizeEvent.getBuildDepth() + 16 + rand.nextInt(16)) // generate bedrock in the very bottom cube and below plus random bedrock in the cube above that
         {
-            cubeBlocks.setBlock(xRel, yRel, zRel, Blocks.bedrock);
+            cube.setBlockForGeneration(xRel, yRel, zRel, Blocks.bedrock);
         }
         else if (yAbs < -32768 + rand.nextInt(256)) // generate lava sea under y = -32768, plus a rough surface. this is pretty fucking deep though, so nobody will reach this, probably.
         {
-        	cubeBlocks.setBlock(xRel, yRel, zRel, Blocks.lava);
+        	cube.setBlockForGeneration(xRel, yRel, zRel, Blocks.lava);
         }
         else
         {
-            Block block = cubeBlocks.getBlock(xRel, yRel, zRel);
+            Block block = cube.getBlock(xRel, yRel, zRel);
             
             if (block != null && block.getMaterial() != Material.air)
             {
@@ -550,8 +560,7 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 
                         if (yAbs >= 62)
                         {
-                            cubeBlocks.setBlock(xRel, yRel, zRel, topBlock); //grass/gravel/stone
-                            cubeBlocks.setMeta(xRel, yRel, zRel, var11);
+                        	cube.setBlockForGeneration(xRel, yRel, zRel, topBlock, var11); //grass/gravel/stone
                         }
                         else if (yAbs < 56 - rnd1)
                         {
@@ -562,13 +571,13 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
                         }
                         else
                         {
-                            cubeBlocks.setBlock(xRel, yRel, zRel, fillBlock); 
+                        	cube.setBlockForGeneration(xRel, yRel, zRel, fillBlock); 
                         }
                     }
                     else if (var13 > 0)
                     {
                         --var13;
-                        cubeBlocks.setBlock(xRel, yRel, zRel, fillBlock);
+                        cube.setBlockForGeneration(xRel, yRel, zRel, fillBlock);
 
                         if (var13 == 0 && fillBlock == Blocks.sand)
                         {

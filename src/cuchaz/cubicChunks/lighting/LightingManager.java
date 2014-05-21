@@ -29,6 +29,7 @@ public class LightingManager
 	private World m_world;
 	private SkyLightProcessor m_skyLightProcessor;
 	private SkyLightOcclusionProcessor m_skyLightOcclusionProcessor;
+	private FirstLightProcessor m_firstLightProcessor;
 	private DiffuseLightingCalculator m_diffuseLightingCalculator;
 	private SkyLightUpdateCalculator m_skyLightUpdateCalculator;
 	
@@ -38,7 +39,7 @@ public class LightingManager
 		
 		m_skyLightProcessor = new SkyLightProcessor( "Sky Light", provider, 100 );
 		m_skyLightOcclusionProcessor = new SkyLightOcclusionProcessor( "Sky Light Occlusion", provider, 50 );
-		
+		m_firstLightProcessor = new FirstLightProcessor( "First Light", provider, 10 );
 		m_diffuseLightingCalculator = new DiffuseLightingCalculator();
 		m_skyLightUpdateCalculator = new SkyLightUpdateCalculator();
 	}
@@ -54,6 +55,11 @@ public class LightingManager
 			Bits.packSignedToLong( blockX, 26, 0 )
 			| Bits.packSignedToLong( blockZ, 26, 26 );
 		m_skyLightOcclusionProcessor.add( blockColumnAddress );
+	}
+	
+	public void queueFirstLightCalculation( long cubeAddress )
+	{
+		m_firstLightProcessor.add( cubeAddress );
 	}
 	
 	public boolean computeDiffuseLighting( int blockX, int blockY, int blockZ, EnumSkyBlock lightType )
@@ -72,17 +78,18 @@ public class LightingManager
 		long timeStop = timeStart + TickBudget;
 		
 		// process the queues
-		int numSkyLightsProcessed = m_skyLightProcessor.processQueue( timeStop );
-		int numSkyLightOcclusionsProcessed = m_skyLightOcclusionProcessor.processQueue( timeStop );
+		int numProcessed = 0;
+		numProcessed += m_skyLightProcessor.processQueue( timeStop );
+		numProcessed += m_skyLightOcclusionProcessor.processQueue( timeStop );
+		numProcessed += m_firstLightProcessor.processQueue( timeStop );
 		
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
-		int totalProcessed = numSkyLightsProcessed + numSkyLightOcclusionsProcessed;
-		if( totalProcessed > 0 )
+		if( numProcessed > 0 )
 		{
 			log.info( String.format( "%s Lighting manager processed %d calculations in %d ms.",
 				m_world.isClient ? "CLIENT" : "SERVER",
-				totalProcessed, timeDiff
+				numProcessed, timeDiff
 			) );
 			log.info( m_skyLightProcessor.getProcessingReport() );
 			log.info( m_skyLightOcclusionProcessor.getProcessingReport() );

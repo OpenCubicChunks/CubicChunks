@@ -1,9 +1,17 @@
+/*******************************************************************************
+ * Copyright (c) 2014 Jeff Martin.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Jeff Martin - initial API and implementation
+ ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import java.util.Random;
 
-import cuchaz.cubicChunks.generator.CubeBlocks;
-import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.block.material.Material;
@@ -11,6 +19,7 @@ import net.minecraft.entity.monster.EntitySlime;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenAbstractTree;
+import cuchaz.cubicChunks.world.Cube;
 
 public class BiomeGenSwamp extends CubeBiomeGenBase
 {
@@ -60,7 +69,7 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
         return BlockFlower.field_149859_a[1];
     }
 
-    public void modifyBlocks_pre(World world, Random rand, CubeBlocks cubeBlocks, int xAbs, int yAbs, int zAbs, double val)
+    public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val)
     {
         double var9 = field_150606_ad.func_151601_a((double)xAbs * 0.25D, (double)yAbs * 0.25D);
 
@@ -75,17 +84,17 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
             {
                 int loc = (zRel * 16 + xRel) * 16 + yRel;
 
-                Block block = cubeBlocks.getBlock(xRel, yRel, zRel);
+                Block block = cube.getBlock(xRel, yRel, zRel);
                 
                 if (block == null || block.getMaterial() != Material.air)
                 {
                     if (yAbs == 62 && block != Blocks.water)
                     {
-                        cubeBlocks.setBlock(xRel, yRel, zRel, Blocks.water);
+                        cube.setBlockForGeneration(xRel, yRel, zRel, Blocks.water);
 
                         if (var9 < 0.12D)
                         {
-                        	cubeBlocks.setBlock(xRel, yRel + 1, zRel, Blocks.waterlily); // this should always place the lily at a height of 63, 
+                        	cube.setBlockForGeneration(xRel, yRel + 1, zRel, Blocks.waterlily); // this should always place the lily at a height of 63, 
                             									//and not go into the next cube up which would be bad.
                         }
                     }
@@ -95,6 +104,6 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
             }
         }
 
-        this.modifyBlocks(world, rand, cubeBlocks, xAbs, yAbs, zAbs, val);
+        this.modifyBlocks(world, rand, cube, xAbs, yAbs, zAbs, val);
     }
 }

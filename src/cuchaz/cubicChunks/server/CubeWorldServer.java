@@ -10,26 +10,29 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.server;
 
-import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.WeightedRandom;
 import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
-import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
-import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
+import cuchaz.cubicChunks.generator.GeneratorPipeline;
 import cuchaz.cubicChunks.lighting.LightingManager;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
@@ -37,7 +40,10 @@ import cuchaz.cubicChunks.world.Column;
 
 public class CubeWorldServer extends WorldServer implements CubeWorld
 {
+	private static final Logger log = LogManager.getLogger();
+	
 	private LightingManager m_lightingManager;
+	private GeneratorPipeline m_generatorPipeline;
 	
 	public CubeWorldServer( MinecraftServer server, ISaveHandler saveHandler, String worldName, int dimension, WorldSettings settings, Profiler profiler )
 	{
@@ -54,8 +60,9 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 		CubeProviderServer chunkProvider = new CubeProviderServer( this );
 		WorldServerAccessor.setChunkProvider( this, chunkProvider );
 		
-		// init the lighting manager
+		// init systems dependent on cubes
 		m_lightingManager = new LightingManager( this, chunkProvider );
+		m_generatorPipeline = new GeneratorPipeline( this, chunkProvider );
 		
 		return chunkProvider;
     }
@@ -72,10 +79,19 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 		return m_lightingManager;
 	}
 	
+	public GeneratorPipeline getGeneratorPipeline( )
+	{
+		return m_generatorPipeline;
+	}
+	
 	@Override
 	public void tick( )
 	{
 		super.tick();
+		
+		theProfiler.startSection( "generatorPipeline" );
+		m_generatorPipeline.tick();
+		theProfiler.endSection();
 		
 		theProfiler.startSection( "lightingEngine" );
 		m_lightingManager.tick();
@@ -126,6 +142,59 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 		{
 			Column column = (Column)chunkProvider.provideChunk( coords.chunkXPos, coords.chunkZPos );
 			column.doRandomTicks();
+		}
+	}
+	
+	@Override
+	protected void createSpawnPosition( WorldSettings worldSettings )
+	{
+		// UNDONE: do world type-specific spawn finding
+		if( !provider.canRespawnHere() )
+		{
+			worldInfo.setSpawnPosition( 0, provider.getAverageGroundLevel(), 0 );
+		}
+		else
+		{
+			findingSpawnPoint = true;
+			
+			WorldChunkManager chunkManager = provider.worldChunkMgr;
+			Random rand = new Random( getSeed() );
+			ChunkPosition spawnPosition = chunkManager.func_150795_a( 0, 0, 256, chunkManager.getBiomesToSpawnIn(), rand );
+			
+			int spawnBlockX = 0;
+			int spawnBlockY = provider.getAverageGroundLevel();
+			int spawnBlockZ = 0;
+			
+			if( spawnPosition != null )
+			{
+				spawnBlockX = spawnPosition.field_151329_a;
+				spawnBlockZ = spawnPosition.field_151328_c;
+			}
+			else
+			{
+				log.warn( "Unable to find spawn biome" );
+			}
+			
+			int blockY = 0;
+			while( !provider.canCoordinateBeSpawn( spawnBlockX, spawnBlockZ ) )
+			{
+				spawnBlockX += rand.nextInt( 64 ) - rand.nextInt( 64 );
+				spawnBlockZ += rand.nextInt( 64 ) - rand.nextInt( 64 );
+				++blockY;
+				
+				if( blockY == 1000 )
+				{
+					break;
+				}
+			}
+			
+			worldInfo.setSpawnPosition( spawnBlockX, spawnBlockY, spawnBlockZ );
+			findingSpawnPoint = false;
+			
+			if( worldSettings.isBonusChestEnabled() )
+			{
+				createBonusChest();
+			}
 		}
 	}
 }

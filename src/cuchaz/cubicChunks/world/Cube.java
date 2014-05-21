@@ -26,7 +26,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cuchaz.cubicChunks.generator.CubeBlocks;
+import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeBlockMap;
@@ -40,25 +40,25 @@ public class Cube
 	private int m_x;
 	private int m_y;
 	private int m_z;
+	private boolean m_isModified;
 	private ExtendedBlockStorage m_storage;
 	private EntityContainer m_entities;
 	private CubeBlockMap<TileEntity> m_tileEntities;
-	private boolean m_isModified;
-	private boolean m_isLit;
+	private GeneratorStage m_generatorStage;
 	
-	public Cube( World world, Column column, int x, int y, int z )
+	public Cube( World world, Column column, int x, int y, int z, boolean isModified )
 	{
 		m_world = world;
 		m_column = column;
 		m_x = x;
 		m_y = y;
 		m_z = z;
+		m_isModified = isModified;
 		
 		m_storage = null;
 		m_entities = new EntityContainer();
 		m_tileEntities = new CubeBlockMap<TileEntity>();
-		m_isModified = false;
-		m_isLit = false;
+		m_generatorStage = null;
 	}
 	
 	public boolean isEmpty( )
@@ -78,50 +78,13 @@ public class Cube
 		}
 	}
 	
-	public static Cube generateEmptyCubeAndAddToColumn( World world, Column column, int cubeX, int cubeY, int cubeZ )
+	public GeneratorStage getGeneratorStage( )
 	{
-		Cube cube = new Cube( world, column, cubeX, cubeY, cubeZ );
-		cube.setEmpty( true );
-		column.addCube( cube );
-		cube.m_isModified = true;
-		return cube;
+		return m_generatorStage;
 	}
-	
-	public static Cube generateCubeAndAddToColumn( World world, Column column, int cubeX, int cubeY, int cubeZ, CubeBlocks blocks )
+	public void setGeneratorStage( GeneratorStage val )
 	{
-		Cube cube = new Cube( world, column, cubeX, cubeY, cubeZ );
-		cube.setEmpty( false );
-		
-		// copy over the block data
-		Block block = null;
-		for( int x=0; x<16; x++ )
-		{
-			for( int y=0; y<16; y++ )
-			{
-				for( int z=0; z<16; z++ )
-				{
-					// save the block data
-					block = blocks.getBlock( x, y, z );
-					if( block == null )
-					{
-						continue;
-					}
-					
-					cube.m_storage.func_150818_a( x, y, z, block );
-					cube.m_storage.setExtBlockMetadata( x, y, z, blocks.getMeta( x, y, z ) );
-					
-					// update the column light index
-					int blockY = Coords.localToBlock( cubeY, y );
-					column.getLightIndex().setOpacity( x, blockY, z, block.getLightOpacity() );
-				}
-			}
-		}
-		
-		column.addCube( cube );
-		
-		cube.m_isModified = true;
-		
-		return cube;
+		m_generatorStage = val;
 	}
 	
 	public long getAddress( )
@@ -297,6 +260,53 @@ public class Cube
 				tileEntity.blockMetadata = meta;
 			}
 		}
+		
+		return true;
+	}
+	
+	public boolean setBlockForGeneration( int x, int y, int z, Block block )
+	{
+		return setBlockForGeneration( x, y, z, block, 0 );
+	}
+	
+	public boolean setBlockForGeneration( int x, int y, int z, Block block, int meta )
+	{
+		// null blocks are really air
+		if( block == null )
+		{
+			block = Blocks.air;
+		}
+		
+		// did anything actually change?
+		Block oldBlock = getBlock( x, y, z );
+		int oldMeta = getBlockMetadata( x, y, z );
+		if( oldBlock == block && oldMeta == meta )
+		{
+			return false;
+		}
+		
+		// make sure we're not empty
+		if( isEmpty() )
+		{
+			setEmpty( false );
+		}
+		
+		// set the block
+		m_storage.func_150818_a( x, y, z, block );
+		
+		// did the block change work correctly?
+		if( m_storage.func_150819_a( x, y, z ) != block )
+		{
+			return false;
+		}
+		m_isModified = true;
+		
+		// set the meta
+		m_storage.setExtBlockMetadata( x, y, z, meta );
+		
+		// update the column light index
+		int blockY = Coords.localToBlock( m_y, y );
+		m_column.getLightIndex().setOpacity( x, blockY, z, block.getLightOpacity() );
 		
 		return true;
 	}
@@ -495,23 +505,6 @@ public class Cube
 	{
 		m_entities.markSaved( m_world.getTotalWorldTime() );
 		m_isModified = false;
-	}
-	
-	public boolean isLit( )
-	{
-		if( isEmpty() )
-		{
-			return true;
-		}
-		return m_isLit;
-	}
-	public void setIsLit( boolean val )
-	{
-		if( isEmpty() )
-		{
-			return;
-		}
-		m_isLit = val;
 	}
 	
 	public boolean isUnderground( int localX, int localY, int localZ )

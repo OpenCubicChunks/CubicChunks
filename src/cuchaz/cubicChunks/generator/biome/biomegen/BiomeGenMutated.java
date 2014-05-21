@@ -1,12 +1,21 @@
+/*******************************************************************************
+ * Copyright (c) 2014 Jeff Martin.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Jeff Martin - initial API and implementation
+ ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import java.util.ArrayList;
 import java.util.Random;
 
-import cuchaz.cubicChunks.generator.CubeBlocks;
-import net.minecraft.block.Block;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenAbstractTree;
+import cuchaz.cubicChunks.world.Cube;
 
 public class BiomeGenMutated extends CubeBiomeGenBase
 {
@@ -43,9 +52,9 @@ public class BiomeGenMutated extends CubeBiomeGenBase
         this.biome.theBiomeDecorator.func_150512_a(par1World, rand, this, par3, par4);
     }
 
-    public void modifyBlocks_pre(World world, Random rand, CubeBlocks cubeBlocks, int xAbs, int yAbs, int zAbs, double var)
+    public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var)
     {
-        this.biome.modifyBlocks_pre(world, rand, cubeBlocks, xAbs, yAbs, zAbs, var);
+        this.biome.modifyBlocks_pre(world, rand, cube, xAbs, yAbs, zAbs, var);
     }
 
     /**

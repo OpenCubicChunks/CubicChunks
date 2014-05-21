@@ -10,11 +10,16 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.util;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.world.Cube;
 
 public abstract class CubeProcessor extends QueueProcessor
 {
+	private static final Logger log = LogManager.getLogger();
+	
 	public CubeProcessor( String name, CubeProvider provider, int batchSize )
 	{
 		super( name, provider, batchSize );
@@ -30,15 +35,12 @@ public abstract class CubeProcessor extends QueueProcessor
 			int cubeX = AddressTools.getX( address );
 			int cubeY = AddressTools.getY( address );
 			int cubeZ = AddressTools.getZ( address );
-			if( !m_provider.cubeExists( cubeX, cubeY, cubeZ ) )
+			Cube cube = m_provider.provideCube( cubeX, cubeY, cubeZ );
+			if( cube == null )
 			{
-				continue;
-			}
-			Cube cube = m_provider.loadCube( cubeX, cubeY, cubeZ );
-			
-			// skip blank cubes
-			if( cube.isEmpty() )
-			{
+				log.warn( String.format( "Unloaded cube (%d,%d,%d) dropped from %s processor queue.",
+					cubeX, cubeY, cubeZ, m_name
+				) );
 				continue;
 			}
 			

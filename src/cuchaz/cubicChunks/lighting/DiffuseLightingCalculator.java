@@ -249,7 +249,7 @@ public class DiffuseLightingCalculator
 		{
 			return false;
 		}
-		Cube cube = cubeWorld.getCubeProvider().loadCube( cubeX, cubeY, cubeZ );
+		Cube cube = cubeWorld.getCubeProvider().provideCube( cubeX, cubeY, cubeZ );
 		
 		return !cube.isEmpty();
 	}

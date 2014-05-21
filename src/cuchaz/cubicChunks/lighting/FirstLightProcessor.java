@@ -8,8 +8,9 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.cubicChunks.generator;
+package cuchaz.cubicChunks.lighting;
 
+import net.minecraft.world.EnumSkyBlock;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
@@ -18,9 +19,9 @@ import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 import cuchaz.cubicChunks.world.LightIndex;
 
-public class LightingProcessor extends CubeProcessor
+public class FirstLightProcessor extends CubeProcessor
 {
-	public LightingProcessor( String name, CubeProvider provider, int batchSize )
+	public FirstLightProcessor( String name, CubeProvider provider, int batchSize )
 	{
 		super( name, provider, batchSize );
 	}
@@ -28,27 +29,20 @@ public class LightingProcessor extends CubeProcessor
 	@Override
 	public boolean calculate( Cube cube )
 	{
-		// already lit? we're done here
-		if( cube.isLit() )
-		{
-			return true;
-		}
-		
-		boolean success = reallyCalculate( cube );
-		
-		// set the lighting flag on the cube so it gets properly sent to the client (or not)
-		cube.setIsLit( success );
-		
-		return success;
-	}
-	
-	private boolean reallyCalculate( Cube cube )
-	{
 		// only light if the neighboring cubes exist
 		CubeProvider provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
-		if( !CubeProviderTools.cubesExist( provider, cube.getX()-1, cube.getY()-1, cube.getZ()-1, cube.getX()+1, cube.getY()+1, cube.getZ()+1 ) )
+		if( !CubeProviderTools.cubeAndNeighborsExist( provider, cube.getX(), cube.getY(), cube.getZ() ) )
 		{
 			return false;
+		}
+		
+		// update the sky light
+		for( int localX=0; localX<16; localX++ )
+		{
+			for( int localZ=0; localZ<16; localZ++ )
+			{
+				updateSkylight( cube, localX, localZ );
+			}
 		}
 		
 		// light blocks in this cube
@@ -72,16 +66,71 @@ public class LightingProcessor extends CubeProcessor
 		// populate the nearby faces of adjacent cubes
 		// this is for cases when a sheer wall is up against an empty cube
 		// unless this is called, the wall will not get directly lit
-		lightXSlab( provider.loadCube( cube.getX() - 1, cube.getY(), cube.getZ() ), 15 );
-		lightXSlab( provider.loadCube( cube.getX() + 1, cube.getY(), cube.getZ() ), 0 );
-		lightYSlab( provider.loadCube( cube.getX(), cube.getY() - 1, cube.getZ() ), 15 );
-		lightYSlab( provider.loadCube( cube.getX(), cube.getY() + 1, cube.getZ() ), 0 );
-		lightZSlab( provider.loadCube( cube.getX(), cube.getY(), cube.getZ() - 1 ), 15 );
-		lightZSlab( provider.loadCube( cube.getX(), cube.getY(), cube.getZ() + 1 ), 0 );
+		lightXSlab( provider.provideCube( cube.getX() - 1, cube.getY(), cube.getZ() ), 15 );
+		lightXSlab( provider.provideCube( cube.getX() + 1, cube.getY(), cube.getZ() ), 0 );
+		lightYSlab( provider.provideCube( cube.getX(), cube.getY() - 1, cube.getZ() ), 15 );
+		lightYSlab( provider.provideCube( cube.getX(), cube.getY() + 1, cube.getZ() ), 0 );
+		lightZSlab( provider.provideCube( cube.getX(), cube.getY(), cube.getZ() - 1 ), 15 );
+		lightZSlab( provider.provideCube( cube.getX(), cube.getY(), cube.getZ() + 1 ), 0 );
 		
 		return true;
 	}
 	
+	private void updateSkylight( Cube cube, int localX, int localZ )
+	{
+		// compute bounds on the sky light gradient
+		LightIndex index = cube.getColumn().getLightIndex();
+		int lightMaxBlockY = index.getTopNonTransparentBlock( localX, localZ ) + 1; // transparent block on top of non-transparent block
+		int lightMinBlockY = lightMaxBlockY - 15;
+		
+		// get the cube bounds
+		int cubeMinBlockY = Coords.cubeToMinBlock( cube.getY() );
+		int cubeMaxBlockY = Coords.cubeToMaxBlock( cube.getY() );
+		
+		// could this sky light possibly reach this cube?
+		if( cubeMinBlockY > lightMaxBlockY )
+		{
+			// set everything to sky light
+			for( int localY=0; localY<16; localY++ )
+			{
+				cube.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, 15 );
+			}
+		}
+		else if( cubeMaxBlockY < lightMinBlockY )
+		{
+			// set everything to dark
+			for( int localY=0; localY<16; localY++ )
+			{
+				cube.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, 0 );
+			}
+		}
+		else
+		{
+			// need to calculate the light
+			int light = 15;
+			int startBlockY = Math.max( lightMaxBlockY, cubeMaxBlockY );
+			for( int blockY=startBlockY; blockY>=cubeMinBlockY; blockY-- )
+			{
+				int opacity = index.getOpacity( localX, blockY, localZ );
+				if( opacity == 0 && light < 15 )
+				{
+					// after something blocks light, apply a linear falloff
+					opacity = 1;
+				}
+				
+				// decrease the light
+				light = Math.max( 0, light - opacity );
+				
+				if( blockY <= cubeMaxBlockY )
+				{
+					// apply the light
+					int localY = Coords.blockToLocal( blockY );
+					cube.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, light );
+				}
+			}
+		}
+	}
+
 	private void lightXSlab( Cube cube, int localX )
 	{
 		for( int localY=0; localY<16; localY++ )
