@@ -27,7 +27,6 @@ public class LightingManager
 	private static final int TickBudget = 100; // ms
 	
 	private World m_world;
-	private SkyLightProcessor m_skyLightProcessor;
 	private SkyLightOcclusionProcessor m_skyLightOcclusionProcessor;
 	private FirstLightProcessor m_firstLightProcessor;
 	private DiffuseLightingCalculator m_diffuseLightingCalculator;
@@ -37,16 +36,10 @@ public class LightingManager
 	{
 		m_world = world;
 		
-		m_skyLightProcessor = new SkyLightProcessor( "Sky Light", provider, 100 );
 		m_skyLightOcclusionProcessor = new SkyLightOcclusionProcessor( "Sky Light Occlusion", provider, 50 );
 		m_firstLightProcessor = new FirstLightProcessor( "First Light", provider, 10 );
 		m_diffuseLightingCalculator = new DiffuseLightingCalculator();
 		m_skyLightUpdateCalculator = new SkyLightUpdateCalculator();
-	}
-	
-	public void queueSkyLightCalculation( long columnAddress )
-	{
-		m_skyLightProcessor.add( columnAddress );
 	}
 	
 	public void queueSkyLightOcclusionCalculation( int blockX, int blockZ )
@@ -79,7 +72,6 @@ public class LightingManager
 		
 		// process the queues
 		int numProcessed = 0;
-		numProcessed += m_skyLightProcessor.processQueue( timeStop );
 		numProcessed += m_skyLightOcclusionProcessor.processQueue( timeStop );
 		numProcessed += m_firstLightProcessor.processQueue( timeStop );
 		
@@ -91,8 +83,8 @@ public class LightingManager
 				m_world.isClient ? "CLIENT" : "SERVER",
 				numProcessed, timeDiff
 			) );
-			log.info( m_skyLightProcessor.getProcessingReport() );
 			log.info( m_skyLightOcclusionProcessor.getProcessingReport() );
+			log.info( m_firstLightProcessor.getProcessingReport() );
 		}
 	}
 }

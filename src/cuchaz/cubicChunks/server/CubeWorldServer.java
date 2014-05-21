@@ -148,53 +148,53 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 	@Override
 	protected void createSpawnPosition( WorldSettings worldSettings )
 	{
-		// UNDONE: do world type-specific spawn finding
 		if( !provider.canRespawnHere() )
 		{
-			worldInfo.setSpawnPosition( 0, provider.getAverageGroundLevel(), 0 );
+			worldInfo.setSpawnPosition( 0, 0, 0 );
+			return;
+		}
+		
+		// UNDONE: do world type-specific spawn finding
+		
+		findingSpawnPoint = true;
+		
+		WorldChunkManager chunkManager = provider.worldChunkMgr;
+		Random rand = new Random( getSeed() );
+		ChunkPosition spawnPosition = chunkManager.func_150795_a( 0, 0, 256, chunkManager.getBiomesToSpawnIn(), rand );
+		
+		int spawnBlockX = 0;
+		int spawnBlockY = provider.getAverageGroundLevel();
+		int spawnBlockZ = 0;
+		
+		if( spawnPosition != null )
+		{
+			spawnBlockX = spawnPosition.field_151329_a;
+			spawnBlockZ = spawnPosition.field_151328_c;
 		}
 		else
 		{
-			findingSpawnPoint = true;
+			log.warn( "Unable to find spawn biome" );
+		}
+		
+		int blockY = 0;
+		while( !provider.canCoordinateBeSpawn( spawnBlockX, spawnBlockZ ) )
+		{
+			spawnBlockX += rand.nextInt( 64 ) - rand.nextInt( 64 );
+			spawnBlockZ += rand.nextInt( 64 ) - rand.nextInt( 64 );
+			++blockY;
 			
-			WorldChunkManager chunkManager = provider.worldChunkMgr;
-			Random rand = new Random( getSeed() );
-			ChunkPosition spawnPosition = chunkManager.func_150795_a( 0, 0, 256, chunkManager.getBiomesToSpawnIn(), rand );
-			
-			int spawnBlockX = 0;
-			int spawnBlockY = provider.getAverageGroundLevel();
-			int spawnBlockZ = 0;
-			
-			if( spawnPosition != null )
+			if( blockY == 1000 )
 			{
-				spawnBlockX = spawnPosition.field_151329_a;
-				spawnBlockZ = spawnPosition.field_151328_c;
+				break;
 			}
-			else
-			{
-				log.warn( "Unable to find spawn biome" );
-			}
-			
-			int blockY = 0;
-			while( !provider.canCoordinateBeSpawn( spawnBlockX, spawnBlockZ ) )
-			{
-				spawnBlockX += rand.nextInt( 64 ) - rand.nextInt( 64 );
-				spawnBlockZ += rand.nextInt( 64 ) - rand.nextInt( 64 );
-				++blockY;
-				
-				if( blockY == 1000 )
-				{
-					break;
-				}
-			}
-			
-			worldInfo.setSpawnPosition( spawnBlockX, spawnBlockY, spawnBlockZ );
-			findingSpawnPoint = false;
-			
-			if( worldSettings.isBonusChestEnabled() )
-			{
-				createBonusChest();
-			}
+		}
+		
+		worldInfo.setSpawnPosition( spawnBlockX, spawnBlockY, spawnBlockZ );
+		findingSpawnPoint = false;
+		
+		if( worldSettings.isBonusChestEnabled() )
+		{
+			createBonusChest();
 		}
 	}
 }

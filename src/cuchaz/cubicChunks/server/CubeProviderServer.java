@@ -223,7 +223,6 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		else
 		{
 			// queue the cube for re-lighting
-			m_worldServer.getLightingManager().queueSkyLightCalculation( columnAddress );
 			m_worldServer.getLightingManager().queueFirstLightCalculation( cubeAddress );
 		}
 		

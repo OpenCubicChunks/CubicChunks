@@ -582,14 +582,15 @@ public class Cube
 				if( !m_world.provider.hasNoSky )
 				{
 					m_storage.setExtSkylightValue( x, y, z, light );
+					m_isModified = true;
 				}
 			break;
 			
 			case Block:
 				m_storage.setExtBlocklightValue( x, y, z, light );
+				m_isModified = true;
 			break;
 		}
-		m_isModified = true;
 	}
 	
 	public void doRandomTicks( )
