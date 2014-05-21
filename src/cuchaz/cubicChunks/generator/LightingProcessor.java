@@ -8,17 +8,23 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.cubicChunks.lighting;
+package cuchaz.cubicChunks.generator;
 
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 import cuchaz.cubicChunks.world.LightIndex;
 
-public class FirstLightCalculator extends CubeCalculator
+public class LightingProcessor extends CubeProcessor
 {
+	public LightingProcessor( String name, CubeProvider provider, int batchSize )
+	{
+		super( name, provider, batchSize );
+	}
+	
 	@Override
 	public boolean calculate( Cube cube )
 	{

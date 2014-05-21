@@ -8,52 +8,48 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.cubicChunks.lighting;
-
-import java.util.List;
+package cuchaz.cubicChunks.util;
 
 import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.util.AddressTools;
-import cuchaz.cubicChunks.world.Cube;
+import cuchaz.cubicChunks.world.BlankColumn;
+import cuchaz.cubicChunks.world.Column;
 
-public abstract class CubeCalculator implements LightCalculator
+public abstract class ColumnProcessor extends QueueProcessor
 {
+	public ColumnProcessor( String name, CubeProvider provider, int batchSize )
+	{
+		super( name, provider, batchSize );
+	}
+	
 	@Override
-	public int processBatch( List<Long> addresses, List<Long> deferredAddresses, CubeProvider provider )
+	public void processBatch( )
 	{
 		// start processing
-		int numSuccesses = 0;
-		for( long address : addresses )
+		for( long address : m_incomingAddresses )
 		{
-			// get the cube
+			// get the column
 			int cubeX = AddressTools.getX( address );
-			int cubeY = AddressTools.getY( address );
 			int cubeZ = AddressTools.getZ( address );
-			if( !provider.cubeExists( cubeX, cubeY, cubeZ ) )
-			{
-				continue;
-			}
-			Cube cube = provider.loadCube( cubeX, cubeY, cubeZ );
+			Column column = (Column)m_provider.provideChunk( cubeX, cubeZ );
 			
-			// skip blank cubes
-			if( cube.isEmpty() )
+			// skip blank columns
+			if( column == null || column instanceof BlankColumn )
 			{
 				continue;
 			}
 			
 			// add unsuccessful calculations back onto the queue
-			boolean success = calculate( cube );
-			if( !success )
+			boolean success = calculate( column );
+			if( success )
 			{
-				deferredAddresses.add( address );
+				m_processedAddresses.add( address );
 			}
 			else
 			{
-				numSuccesses++;
+				m_deferredAddresses.add( address );
 			}
 		}
-		return numSuccesses;
 	}
 	
-	public abstract boolean calculate( Cube cube );
+	public abstract boolean calculate( Column column );
 }

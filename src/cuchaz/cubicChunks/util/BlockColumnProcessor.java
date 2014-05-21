@@ -8,24 +8,24 @@
  * Contributors:
  *     jeff - initial API and implementation
  ******************************************************************************/
-package cuchaz.cubicChunks.lighting;
-
-import java.util.List;
+package cuchaz.cubicChunks.util;
 
 import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.util.Bits;
-import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.BlankColumn;
 import cuchaz.cubicChunks.world.Column;
 
-public abstract class BlockColumnCalculator implements LightCalculator
+public abstract class BlockColumnProcessor extends QueueProcessor
 {
+	public BlockColumnProcessor( String name, CubeProvider provider, int batchSize )
+	{
+		super( name, provider, batchSize );
+	}
+	
 	@Override
-	public int processBatch( List<Long> addresses, List<Long> deferredAddresses, CubeProvider provider )
+	public void processBatch( )
 	{
 		// start processing
-		int numSuccesses = 0;
-		for( long address : addresses )
+		for( long address : m_incomingAddresses )
 		{
 			// get the block coords
 			int blockX = Bits.unpackSigned( address, 26, 0 );
@@ -34,7 +34,7 @@ public abstract class BlockColumnCalculator implements LightCalculator
 			// get the column
 			int cubeX = Coords.blockToCube( blockX );
 			int cubeZ = Coords.blockToCube( blockZ );
-			Column column = (Column)provider.provideChunk( cubeX, cubeZ );
+			Column column = (Column)m_provider.provideChunk( cubeX, cubeZ );
 			
 			// skip blank columns
 			if( column == null || column instanceof BlankColumn )
@@ -48,16 +48,15 @@ public abstract class BlockColumnCalculator implements LightCalculator
 			
 			// add unsuccessful calculations back onto the queue
 			boolean success = calculate( column, localX, localZ, blockX, blockZ );
-			if( !success )
+			if( success )
 			{
-				deferredAddresses.add( address );
+				m_processedAddresses.add( address );
 			}
 			else
 			{
-				numSuccesses++;
+				m_deferredAddresses.add( address );
 			}
 		}
-		return numSuccesses;
 	}
 	
 	public abstract boolean calculate( Column column, int localX, int localZ, int blockX, int blockZ );

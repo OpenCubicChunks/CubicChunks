@@ -8,48 +8,52 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.cubicChunks.lighting;
-
-import java.util.List;
+package cuchaz.cubicChunks.util;
 
 import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.util.AddressTools;
-import cuchaz.cubicChunks.world.BlankColumn;
-import cuchaz.cubicChunks.world.Column;
+import cuchaz.cubicChunks.world.Cube;
 
-public abstract class ColumnCalculator implements LightCalculator
+public abstract class CubeProcessor extends QueueProcessor
 {
+	public CubeProcessor( String name, CubeProvider provider, int batchSize )
+	{
+		super( name, provider, batchSize );
+	}
+	
 	@Override
-	public int processBatch( List<Long> addresses, List<Long> deferredAddresses, CubeProvider provider )
+	public void processBatch( )
 	{
 		// start processing
-		int numSuccesses = 0;
-		for( long address : addresses )
+		for( long address : m_incomingAddresses )
 		{
-			// get the column
+			// get the cube
 			int cubeX = AddressTools.getX( address );
+			int cubeY = AddressTools.getY( address );
 			int cubeZ = AddressTools.getZ( address );
-			Column column = (Column)provider.provideChunk( cubeX, cubeZ );
+			if( !m_provider.cubeExists( cubeX, cubeY, cubeZ ) )
+			{
+				continue;
+			}
+			Cube cube = m_provider.loadCube( cubeX, cubeY, cubeZ );
 			
-			// skip blank columns
-			if( column == null || column instanceof BlankColumn )
+			// skip blank cubes
+			if( cube.isEmpty() )
 			{
 				continue;
 			}
 			
 			// add unsuccessful calculations back onto the queue
-			boolean success = calculate( column );
-			if( !success )
+			boolean success = calculate( cube );
+			if( success )
 			{
-				deferredAddresses.add( address );
+				m_processedAddresses.add( address );
 			}
 			else
 			{
-				numSuccesses++;
+				m_deferredAddresses.add( address );
 			}
 		}
-		return numSuccesses;
 	}
 	
-	public abstract boolean calculate( Column column );
+	public abstract boolean calculate( Cube cube );
 }

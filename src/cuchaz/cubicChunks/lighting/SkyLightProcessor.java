@@ -11,12 +11,19 @@
 package cuchaz.cubicChunks.lighting;
 
 import net.minecraft.world.EnumSkyBlock;
+import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.util.ColumnProcessor;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
 
-public class SkyLightCalculator extends ColumnCalculator
+public class SkyLightProcessor extends ColumnProcessor
 {
+	public SkyLightProcessor( String name, CubeProvider provider, int batchSize )
+	{
+		super( name, provider, batchSize );
+	}
+	
 	@Override
 	public boolean calculate( Column column )
 	{

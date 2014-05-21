@@ -284,6 +284,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		column.isTerrainPopulated = true;
 		column.resetPrecipitationHeight();
 		
+		// UNDONE: redo cube lighting
+		
 		// relight the cube
 		cube.setIsLit( false );
 		m_worldServer.getLightingManager().queueSkyLightCalculation( columnAddress );
