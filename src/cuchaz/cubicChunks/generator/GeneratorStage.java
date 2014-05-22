@@ -10,60 +10,16 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator;
 
-import net.minecraft.world.WorldServer;
-import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.lighting.FirstLightProcessor;
-import cuchaz.cubicChunks.util.QueueProcessor;
 
 public enum GeneratorStage
 {
-	Terrain
-	{
-		@Override
-		public QueueProcessor getProcessor( WorldServer worldServer, CubeProvider provider )
-		{
-			return new TerrainProcessor( "Terrain", provider, 10, worldServer );
-		}
-	},
-	Features
-	{
-		@Override
-		public QueueProcessor getProcessor( WorldServer worldServer, CubeProvider provider )
-		{
-			return new FeatureProcessor( "Features", provider, 10 );
-		}
-	},
-	Biomes
-	{
-		@Override
-		public QueueProcessor getProcessor( WorldServer worldServer, CubeProvider provider )
-		{
-			return new BiomeProcessor( "Biomes", provider, 10, worldServer );
-		}
-	},
-	Lighting
-	{
-		@Override
-		public QueueProcessor getProcessor( WorldServer worldServer, CubeProvider provider )
-		{
-			return new FirstLightProcessor( "Lighting", provider, 10 );
-		}
-	},
-	Population
-	{
-		@Override
-		public QueueProcessor getProcessor( WorldServer worldServer, CubeProvider provider )
-		{
-			return new PopulationProcessor( "Population", provider, 10 );
-		}
-	},
+	Terrain,
+	Features,
+	Biomes,
+	Lighting,
+	Population,
 	Live;
 	
-	public QueueProcessor getProcessor( WorldServer worldServer, CubeProvider provider )
-	{
-		return null;
-	}
-
 	public static GeneratorStage getFirstStage( )
 	{
 		return values()[0];

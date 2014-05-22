@@ -12,8 +12,6 @@ package cuchaz.cubicChunks.generator;
 
 import java.util.List;
 
-import net.minecraft.world.WorldServer;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,6 +19,7 @@ import com.google.common.collect.Lists;
 
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.util.AddressTools;
+import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.util.QueueProcessor;
 import cuchaz.cubicChunks.world.Cube;
 
@@ -33,22 +32,41 @@ public class GeneratorPipeline
 	private CubeProvider m_provider;
 	private List<QueueProcessor> m_processors;
 	
-	public GeneratorPipeline( WorldServer worldServer, CubeProvider provider )
+	public GeneratorPipeline( CubeProvider provider )
 	{
 		m_provider = provider;
 		m_processors = Lists.newArrayList();
 		
-		// build the stages of the pipeline
+		// allocate space for the stages
 		for( GeneratorStage stage : GeneratorStage.values() )
 		{
 			if( !stage.isLastStage() )
 			{
-				m_processors.add( stage.getProcessor( worldServer, provider ) );
+				m_processors.add( null );
 			}
 		}
 	}
 	
-	public void add( Cube cube )
+	public void addStage( GeneratorStage stage, CubeProcessor processor )
+	{
+		m_processors.set( stage.ordinal(), processor );
+	}
+	
+	public void checkStages( )
+	{
+		for( GeneratorStage stage : GeneratorStage.values() )
+		{
+			if( !stage.isLastStage() )
+			{
+				if( m_processors.get( stage.ordinal() ) == null )
+				{
+					throw new Error( "Generator pipline configured incorrectly! Stage " + stage.name() + " is null! Fix your CubeWorldProvider.createGeneratorPipeline()!" );
+				}
+			}
+		}
+	}
+	
+	public void generate( Cube cube )
 	{
 		GeneratorStage stage = cube.getGeneratorStage();
 		if( !stage.isLastStage() )
@@ -57,7 +75,20 @@ public class GeneratorPipeline
 		}
 	}
 	
-	public void tick( )
+	public int getNumCubes( )
+	{
+		int num = 0;
+		for( GeneratorStage stage : GeneratorStage.values() )
+		{
+			if( !stage.isLastStage() )
+			{
+				num += m_processors.get( stage.ordinal() ).getNumInQueue();
+			}
+		}
+		return num;
+	}
+	
+	public int tick( )
 	{
 		long timeStart = System.currentTimeMillis();
 		long timeStop = timeStart + TickBudget;
@@ -99,5 +130,12 @@ public class GeneratorPipeline
 				log.info( processor.getProcessingReport() );
 			}
 		}
+		
+		return numProcessed;
+	}
+	
+	public void generateAll( )
+	{
+		while( tick() > 0 );
 	}
 }

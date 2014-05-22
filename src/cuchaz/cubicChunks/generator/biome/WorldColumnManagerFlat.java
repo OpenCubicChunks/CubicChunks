@@ -17,7 +17,7 @@ import java.util.Random;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import net.minecraft.world.ChunkPosition;
 
-public class WorldColumnManagerHell extends WorldColumnManager
+public class WorldColumnManagerFlat extends WorldColumnManager
 {
     /** The biome generator object. */
     private CubeBiomeGenBase biomeGenerator;
@@ -25,7 +25,7 @@ public class WorldColumnManagerHell extends WorldColumnManager
     /** The rainfall in the world */
     private float rainfall; // this is hell, there IS no rain.
 
-    public WorldColumnManagerHell(CubeBiomeGenBase p_i45374_1_, float p_i45374_2_)
+    public WorldColumnManagerFlat(CubeBiomeGenBase p_i45374_1_, float p_i45374_2_)
     {
         this.biomeGenerator = p_i45374_1_;
         this.rainfall = p_i45374_2_;

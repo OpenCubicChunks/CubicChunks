@@ -48,6 +48,11 @@ public abstract class QueueProcessor
 		m_queue.addAll( addresses );
 	}
 	
+	public int getNumInQueue( )
+	{
+		return m_queue.size();
+	}
+	
 	public int processQueue( long timeStop )
 	{
 		m_processedAddresses.clear();

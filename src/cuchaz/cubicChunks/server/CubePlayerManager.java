@@ -323,6 +323,9 @@ public class CubePlayerManager extends PlayerManager
 	
 	public void onPlayerUpdate( EntityPlayerMP player )
 	{
+		// TEMP
+		System.out.println( "CubePlayerManager.onPlayerUpdate()" );
+		
 		// this method flushes outgoing chunks to the player
 		
 		// get the outgoing cubes
@@ -334,6 +337,9 @@ public class CubePlayerManager extends PlayerManager
 		info.removeOutOfRangeOutgoingCubes();
 		info.sortOutgoingCubes();
 		
+		// TEMP
+		System.out.println( String.format( "Player %s has %d cubes waiting", player.getPlayerIP(), info.outgoingCubes.size() ) );
+		
 		// pull off enough cubes from the queue to fit in a packet
 		final int MaxCubesToSend = 100;
 		List<Cube> cubesToSend = new ArrayList<Cube>();
@@ -342,6 +348,9 @@ public class CubePlayerManager extends PlayerManager
 		while( iter.hasNext() && cubesToSend.size() < MaxCubesToSend )
 		{
 			Cube cube = iter.next();
+			
+			// TEMP
+			System.out.println( String.format( "Cube (%d,%d,%d) is in stage %s", cube.getX(), cube.getY(), cube.getZ(), cube.getGeneratorStage() ) );
 			
 			// wait for the cube to be live before sending this cube
 			// or any cube in the order after it

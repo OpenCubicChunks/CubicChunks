@@ -20,7 +20,6 @@ import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.IProgressUpdate;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.ChunkProviderServer;
 
 import org.apache.logging.log4j.LogManager;
@@ -49,7 +48,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	private BlankColumn m_blankColumn;
 	private Deque<Long> m_cubesToUnload;
 	
-	public CubeProviderServer( WorldServer world )
+	public CubeProviderServer( CubeWorldServer world )
 	{
 		super( world, null, null );
 		
@@ -218,7 +217,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		if( !cube.getGeneratorStage().isLastStage() )
 		{
 			// queue the cube to finish generation
-			m_worldServer.getGeneratorPipeline().add( cube );
+			m_worldServer.getGeneratorPipeline().generate( cube );
 		}
 		else
 		{

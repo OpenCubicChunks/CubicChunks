@@ -31,6 +31,7 @@ import org.apache.logging.log4j.Logger;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
+import cuchaz.cubicChunks.CubeWorldProvider;
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 import cuchaz.cubicChunks.generator.GeneratorPipeline;
 import cuchaz.cubicChunks.lighting.LightingManager;
@@ -57,20 +58,29 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 	@Override
 	protected IChunkProvider createChunkProvider()
     {
-		CubeProviderServer chunkProvider = new CubeProviderServer( this );
-		WorldServerAccessor.setChunkProvider( this, chunkProvider );
+		// create the cube provider
+		CubeProviderServer provider = new CubeProviderServer( this );
+		
+		// tell World and WorldServer about it
+		chunkProvider = provider;
+		WorldServerAccessor.setChunkProvider( this, provider );
 		
 		// init systems dependent on cubes
-		m_lightingManager = new LightingManager( this, chunkProvider );
-		m_generatorPipeline = new GeneratorPipeline( this, chunkProvider );
+		m_lightingManager = new LightingManager( this, provider );
+		m_generatorPipeline = getCubeWorldProvider().createGeneratorPipeline( this );
 		
 		return chunkProvider;
     }
 	
 	@Override
-	public CubeProvider getCubeProvider( )
+	public CubeProviderServer getCubeProvider( )
 	{
-		return (CubeProvider)chunkProvider;
+		return (CubeProviderServer)chunkProvider;
+	}
+	
+	public CubeWorldProvider getCubeWorldProvider( )
+	{
+		return (CubeWorldProvider)provider;
 	}
 	
 	@Override
@@ -155,6 +165,7 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 		}
 		
 		// UNDONE: do world type-specific spawn finding
+		// ask the world provider or the world provider's chunk manager!!
 		
 		findingSpawnPoint = true;
 		

@@ -14,20 +14,17 @@ import java.util.Random;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.NoiseGeneratorOctaves;
-import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 
 public class TerrainProcessor extends CubeProcessor
 {
-	private WorldServer m_worldServer;
-	private WorldColumnManager m_worldColumnManager;
+	private CubeWorldServer m_worldServer;
 	private CubeBiomeGenBase[] m_biomes;
 	
 	private Random m_rand;
@@ -44,12 +41,11 @@ public class TerrainProcessor extends CubeProcessor
 	
 	private float[] m_filter5x5;
 	
-	public TerrainProcessor( String name, CubeProvider provider, int batchSize, WorldServer worldServer )
+	public TerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
 	{
-		super( name, provider, batchSize );
+		super( name, worldServer.getCubeProvider(), batchSize );
 		
 		m_worldServer = worldServer;
-		m_worldColumnManager = new WorldColumnManager( m_worldServer );
 		m_biomes = null;
 		
 		m_rand = new Random( m_worldServer.getSeed() );
@@ -83,7 +79,7 @@ public class TerrainProcessor extends CubeProcessor
 		
 		// get more biome data
 		// NOTE: this is different from the column biome data for some reason...
-		m_biomes = m_worldColumnManager.getBiomesForGeneration(
+		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().getBiomesForGeneration(
 			m_biomes,
 			cube.getX()*4 - 2, cube.getZ()*4 - 2,
 			10, 10
