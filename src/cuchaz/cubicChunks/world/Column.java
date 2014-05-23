@@ -692,6 +692,9 @@ public class Column extends Chunk
 					// clean up invalid blocks
 					storage.removeInvalidBlocks();
 				}
+				
+				// flag cube for render update
+				cube.markForRenderUpdate();
 			}
 			
 			if( isFirstTime )

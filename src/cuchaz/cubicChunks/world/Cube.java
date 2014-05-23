@@ -620,4 +620,12 @@ public class Cube
 			}
 		}
 	}
+	
+	public void markForRenderUpdate( )
+	{
+		m_world.markBlockRangeForRenderUpdate(
+			Coords.cubeToMinBlock( m_x ), Coords.cubeToMinBlock( m_y ), Coords.cubeToMinBlock( m_z ),
+			Coords.cubeToMaxBlock( m_x ), Coords.cubeToMaxBlock( m_y ), Coords.cubeToMaxBlock( m_z )
+		);
+	}
 }

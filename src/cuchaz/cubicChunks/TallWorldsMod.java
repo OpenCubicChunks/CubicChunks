@@ -13,8 +13,10 @@ package cuchaz.cubicChunks;
 import java.io.IOException;
 
 import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +33,7 @@ import cuchaz.magicMojoModLoader.api.Mod;
 import cuchaz.magicMojoModLoader.api.ModMetadata;
 import cuchaz.magicMojoModLoader.api.Version;
 import cuchaz.magicMojoModLoader.api.events.BuildSizeEvent;
+import cuchaz.magicMojoModLoader.api.events.CheckChunksExistForEntityEvent;
 import cuchaz.magicMojoModLoader.api.events.ClassOverrideEvent;
 import cuchaz.magicMojoModLoader.api.events.EncodeChunkEvent;
 import cuchaz.magicMojoModLoader.api.events.EntityPlayerMPUpdateEvent;
@@ -299,5 +302,18 @@ public class TallWorldsMod implements Mod
 				Coords.cubeToMaxBlock( column.getTopCubeY() )
 			) );
 		}
+	}
+	
+	public void handleEvent( CheckChunksExistForEntityEvent event )
+	{
+		Entity entity = event.getEntity();
+		int entityX = MathHelper.floor_double( entity.posX );
+        int entityY = MathHelper.floor_double( entity.posY );
+		int entityZ = MathHelper.floor_double( entity.posZ );
+		
+    	event.setChunksExist( entity.worldObj.checkChunksExist(
+    		entityX - 32, entityY - 32, entityZ - 32,
+    		entityX + 32, entityY + 32, entityZ + 32
+    	) );
 	}
 }

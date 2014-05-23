@@ -30,6 +30,9 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.Maps;
 
 import cuchaz.cubicChunks.util.AddressTools;
@@ -42,6 +45,8 @@ import cuchaz.cubicChunks.world.Cube;
 
 public class CubePlayerManager extends PlayerManager
 {
+	private static final Logger log = LogManager.getLogger();
+	
 	private static class PlayerInfo
 	{
 		public Set<Long> watchedAddresses;
@@ -323,9 +328,6 @@ public class CubePlayerManager extends PlayerManager
 	
 	public void onPlayerUpdate( EntityPlayerMP player )
 	{
-		// TEMP
-		System.out.println( "CubePlayerManager.onPlayerUpdate()" );
-		
 		// this method flushes outgoing chunks to the player
 		
 		// get the outgoing cubes
@@ -337,9 +339,6 @@ public class CubePlayerManager extends PlayerManager
 		info.removeOutOfRangeOutgoingCubes();
 		info.sortOutgoingCubes();
 		
-		// TEMP
-		System.out.println( String.format( "Player %s has %d cubes waiting", player.getPlayerIP(), info.outgoingCubes.size() ) );
-		
 		// pull off enough cubes from the queue to fit in a packet
 		final int MaxCubesToSend = 100;
 		List<Cube> cubesToSend = new ArrayList<Cube>();
@@ -348,9 +347,6 @@ public class CubePlayerManager extends PlayerManager
 		while( iter.hasNext() && cubesToSend.size() < MaxCubesToSend )
 		{
 			Cube cube = iter.next();
-			
-			// TEMP
-			System.out.println( String.format( "Cube (%d,%d,%d) is in stage %s", cube.getX(), cube.getY(), cube.getZ(), cube.getGeneratorStage() ) );
 			
 			// wait for the cube to be live before sending this cube
 			// or any cube in the order after it
@@ -394,9 +390,7 @@ public class CubePlayerManager extends PlayerManager
 		
 		// send the cube data
 		player.playerNetServerHandler.sendPacket( new S26PacketMapChunkBulk( columnsToSend ) );
-		
-		// TEMP
-		System.out.println( String.format( "Send %d cubes, %d remaining", cubesToSend.size(), info.outgoingCubes.size() ) );
+		log.info( String.format( "Server sent %d cubes to player, %d remaining", cubesToSend.size(), info.outgoingCubes.size() ) );
 		
 		// send tile entity data
 		for( TileEntity tileEntity : tileEntitiesToSend )
