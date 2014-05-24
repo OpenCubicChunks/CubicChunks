@@ -622,13 +622,13 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 
     public static CubeBiomeGenBase getBiome(int val)
     {
-        if (val >= 0 && val <= biomeList.length)
+        if (val >= 0 && val <= biomeList.length && biomeList[val] != null)
         {
             return biomeList[val];
         }
         else
         {
-            logger.warn("Biome ID is out of bounds: " + val + ", defaulting to 0 (Ocean)");
+            logger.warn("Biome ID is invalid or out of bounds: " + val + ", defaulting to 0 (Ocean)");
             return ocean;
         }
     }

@@ -157,8 +157,8 @@ public class WorldColumnManager extends WorldChunkManager
         {
             for (int i = 0; i < width * length; ++i)
             {
-//                biomes[i] = CubeBiomeGenBase.getBiome(intArray[i]);
-            	biomes[i] = CubeBiomeGenBase.getBiome(1);
+                biomes[i] = CubeBiomeGenBase.getBiome(intArray[i]);
+//            	biomes[i] = CubeBiomeGenBase.getBiome(1);
             }
 
             return biomes;

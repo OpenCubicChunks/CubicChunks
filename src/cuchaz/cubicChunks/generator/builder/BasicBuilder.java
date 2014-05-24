@@ -56,19 +56,19 @@ public class BasicBuilder implements IBuilder
 	@Override
 	public void build()
 	{
-		Perlin baseContinentDef_pe0 = new Perlin();
-		baseContinentDef_pe0.setSeed(SEED);
-		baseContinentDef_pe0.setFrequency(1.0);
-		baseContinentDef_pe0.setPersistence(0.5);
-		baseContinentDef_pe0.setLacunarity(2.2089);
-		baseContinentDef_pe0.setOctaveCount(11);
-		baseContinentDef_pe0.build();
+		Perlin perlin = new Perlin();
+		perlin.setSeed(SEED);
+		perlin.setFrequency(1.0);
+		perlin.setPersistence(0.5);
+		perlin.setLacunarity(2.2089);
+		perlin.setOctaveCount(11);
+		perlin.build();
 		
-		ScaleBias scaleBias = new ScaleBias(baseContinentDef_pe0);
+		ScaleBias scaleBias = new ScaleBias(perlin);
 		scaleBias.setScale(MAX_ELEV);
 		scaleBias.setBias(SEA_LEVEL);
 		
-		finalModule = scaleBias;
+		finalModule = perlin;
 //		finalModule = baseContinentDef_pe0;
 	}
 
