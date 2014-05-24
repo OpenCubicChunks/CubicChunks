@@ -32,6 +32,8 @@ public class BasicBuilder implements IBuilder
 	// (minimum elevation) and +1.0 (maximum planet elevation.)
 	double SEA_LEVEL = 0.0;
 	
+	int NUM_OCTAVES = 10;
+	
 	@Override
 	public void setSeed(int seed)
 	{
@@ -52,6 +54,11 @@ public class BasicBuilder implements IBuilder
 	{
 		this.SEA_LEVEL = seaLevel;	
 	}
+	
+	public void setOctaves(int numOctaves)
+	{
+		this.NUM_OCTAVES = numOctaves;	
+	}
 
 	@Override
 	public void build()
@@ -62,7 +69,7 @@ public class BasicBuilder implements IBuilder
 		perlin.setFrequency(1.0);
 		perlin.setPersistence(0.5);
 		perlin.setLacunarity(2.2089);
-		perlin.setOctaveCount(11);
+		perlin.setOctaveCount(NUM_OCTAVES);
 		perlin.build();
 		
 		ScaleBias scaleBias = new ScaleBias(perlin);
