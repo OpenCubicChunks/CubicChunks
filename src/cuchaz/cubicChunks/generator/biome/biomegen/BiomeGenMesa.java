@@ -370,7 +370,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 
         if (!var1)
         {
-            var2.setHeightRange(field_150591_g);
+            var2.setHeightRange(hillsRange);
             var2.setBiomeName(this.biomeName + " M");
         }
         else

@@ -61,17 +61,17 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 {
     private static final Logger logger = LogManager.getLogger();
     protected static final CubeBiomeGenBase.Height field_150596_a = new CubeBiomeGenBase.Height(0.1F, 0.2F);
-    protected static final CubeBiomeGenBase.Height field_150594_b = new CubeBiomeGenBase.Height(-0.5F, 0.0F);
+    protected static final CubeBiomeGenBase.Height riverRange = new CubeBiomeGenBase.Height(-0.5F, 0.0F);
     protected static final CubeBiomeGenBase.Height oceanRange = new CubeBiomeGenBase.Height(-1.0F, 0.1F);
     protected static final CubeBiomeGenBase.Height deepOceanRange = new CubeBiomeGenBase.Height(-1.8F, 0.1F);
-    protected static final CubeBiomeGenBase.Height field_150593_e = new CubeBiomeGenBase.Height(0.125F, 0.05F);
-    protected static final CubeBiomeGenBase.Height field_150590_f = new CubeBiomeGenBase.Height(0.2F, 0.2F);
-    protected static final CubeBiomeGenBase.Height field_150591_g = new CubeBiomeGenBase.Height(0.45F, 0.3F);
-    protected static final CubeBiomeGenBase.Height field_150602_h = new CubeBiomeGenBase.Height(1.5F, 0.025F);
-    protected static final CubeBiomeGenBase.Height field_150603_i = new CubeBiomeGenBase.Height(1.0F, 0.5F);
-    protected static final CubeBiomeGenBase.Height field_150600_j = new CubeBiomeGenBase.Height(0.0F, 0.025F);
-    protected static final CubeBiomeGenBase.Height field_150601_k = new CubeBiomeGenBase.Height(0.1F, 0.8F);
-    protected static final CubeBiomeGenBase.Height field_150598_l = new CubeBiomeGenBase.Height(0.2F, 0.3F);
+    protected static final CubeBiomeGenBase.Height PlainsRange = new CubeBiomeGenBase.Height(0.125F, 0.05F);
+    protected static final CubeBiomeGenBase.Height taigaRange = new CubeBiomeGenBase.Height(0.2F, 0.2F);
+    protected static final CubeBiomeGenBase.Height hillsRange = new CubeBiomeGenBase.Height(0.45F, 0.3F);
+    protected static final CubeBiomeGenBase.Height plateauRange = new CubeBiomeGenBase.Height(1.5F, 0.025F);
+    protected static final CubeBiomeGenBase.Height extremeHillsRange = new CubeBiomeGenBase.Height(1.0F, 0.5F);
+    protected static final CubeBiomeGenBase.Height beachRange = new CubeBiomeGenBase.Height(0.0F, 0.025F);
+    protected static final CubeBiomeGenBase.Height stoneBeachRange = new CubeBiomeGenBase.Height(0.1F, 0.8F);
+    protected static final CubeBiomeGenBase.Height mushroomIslandRange = new CubeBiomeGenBase.Height(0.2F, 0.3F);
     protected static final CubeBiomeGenBase.Height swampRange = new CubeBiomeGenBase.Height(-0.2F, 0.1F);
 
     /** An array of all the biomes, indexed by biome id. */
@@ -81,59 +81,59 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
     
     public static final CubeBiomeGenBase ocean = (new BiomeGenOcean(0)).setColor(112).setBiomeName("Ocean").setHeightRange(oceanRange);
     public static final CubeBiomeGenBase plains = (new BiomeGenPlains(1)).setColor(9286496).setBiomeName("Plains");
-    public static final CubeBiomeGenBase desert = (new BiomeGenDesert(2)).setColor(16421912).setBiomeName("Desert").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F).setHeightRange(field_150593_e);
-    public static final CubeBiomeGenBase extremeHills = (new BiomeGenHills(3, false)).setColor(6316128).setBiomeName("Extreme Hills").setHeightRange(field_150603_i).setTemperatureAndRainfall(0.2F, 0.3F);
+    public static final CubeBiomeGenBase desert = (new BiomeGenDesert(2)).setColor(16421912).setBiomeName("Desert").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F).setHeightRange(PlainsRange);
+    public static final CubeBiomeGenBase extremeHills = (new BiomeGenHills(3, false)).setColor(6316128).setBiomeName("Extreme Hills").setHeightRange(extremeHillsRange).setTemperatureAndRainfall(0.2F, 0.3F);
     public static final CubeBiomeGenBase forest = (new BiomeGenForest(4, 0)).setColor(353825).setBiomeName("Forest");
-    public static final CubeBiomeGenBase taiga = (new BiomeGenTaiga(5, 0)).setColor(747097).setBiomeName("Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(field_150590_f);
+    public static final CubeBiomeGenBase taiga = (new BiomeGenTaiga(5, 0)).setColor(747097).setBiomeName("Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(taigaRange);
     public static final CubeBiomeGenBase swampland = (new BiomeGenSwamp(6)).setColor(522674).setBiomeName("Swampland").func_76733_a(9154376).setHeightRange(swampRange).setTemperatureAndRainfall(0.8F, 0.9F);
-    public static final CubeBiomeGenBase river = (new BiomeGenRiver(7)).setColor(255).setBiomeName("River").setHeightRange(field_150594_b);
+    public static final CubeBiomeGenBase river = (new BiomeGenRiver(7)).setColor(255).setBiomeName("River").setHeightRange(riverRange);
     public static final CubeBiomeGenBase hell = (new BiomeGenHell(8)).setColor(16711680).setBiomeName("Hell").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F);
 
     /** Is the biome used for sky world. */
     public static final CubeBiomeGenBase sky = (new BiomeGenEnd(9)).setColor(8421631).setBiomeName("Sky").setDisableRain();
     
     public static final CubeBiomeGenBase frozenOcean = (new BiomeGenOcean(10)).setColor(9474208).setBiomeName("FrozenOcean").setEnableSnow().setHeightRange(oceanRange).setTemperatureAndRainfall(0.0F, 0.5F);
-    public static final CubeBiomeGenBase frozenRiver = (new BiomeGenRiver(11)).setColor(10526975).setBiomeName("FrozenRiver").setEnableSnow().setHeightRange(field_150594_b).setTemperatureAndRainfall(0.0F, 0.5F);
-    public static final CubeBiomeGenBase icePlains = (new BiomeGenSnow(12, false)).setColor(16777215).setBiomeName("Ice Plains").setEnableSnow().setTemperatureAndRainfall(0.0F, 0.5F).setHeightRange(field_150593_e);
-    public static final CubeBiomeGenBase iceMountains = (new BiomeGenSnow(13, false)).setColor(10526880).setBiomeName("Ice Mountains").setEnableSnow().setHeightRange(field_150591_g).setTemperatureAndRainfall(0.0F, 0.5F);
-    public static final CubeBiomeGenBase mushroomIsland = (new BiomeGenMushroomIsland(14)).setColor(16711935).setBiomeName("MushroomIsland").setTemperatureAndRainfall(0.9F, 1.0F).setHeightRange(field_150598_l);
-    public static final CubeBiomeGenBase mushroomIslandShore = (new BiomeGenMushroomIsland(15)).setColor(10486015).setBiomeName("MushroomIslandShore").setTemperatureAndRainfall(0.9F, 1.0F).setHeightRange(field_150600_j);
+    public static final CubeBiomeGenBase frozenRiver = (new BiomeGenRiver(11)).setColor(10526975).setBiomeName("FrozenRiver").setEnableSnow().setHeightRange(riverRange).setTemperatureAndRainfall(0.0F, 0.5F);
+    public static final CubeBiomeGenBase icePlains = (new BiomeGenSnow(12, false)).setColor(16777215).setBiomeName("Ice Plains").setEnableSnow().setTemperatureAndRainfall(0.0F, 0.5F).setHeightRange(PlainsRange);
+    public static final CubeBiomeGenBase iceMountains = (new BiomeGenSnow(13, false)).setColor(10526880).setBiomeName("Ice Mountains").setEnableSnow().setHeightRange(hillsRange).setTemperatureAndRainfall(0.0F, 0.5F);
+    public static final CubeBiomeGenBase mushroomIsland = (new BiomeGenMushroomIsland(14)).setColor(16711935).setBiomeName("MushroomIsland").setTemperatureAndRainfall(0.9F, 1.0F).setHeightRange(mushroomIslandRange);
+    public static final CubeBiomeGenBase mushroomIslandShore = (new BiomeGenMushroomIsland(15)).setColor(10486015).setBiomeName("MushroomIslandShore").setTemperatureAndRainfall(0.9F, 1.0F).setHeightRange(beachRange);
 
     /** Beach biome. */
-    public static final CubeBiomeGenBase beach = (new BiomeGenBeach(16)).setColor(16440917).setBiomeName("Beach").setTemperatureAndRainfall(0.8F, 0.4F).setHeightRange(field_150600_j);
+    public static final CubeBiomeGenBase beach = (new BiomeGenBeach(16)).setColor(16440917).setBiomeName("Beach").setTemperatureAndRainfall(0.8F, 0.4F).setHeightRange(beachRange);
 
     /** Desert Hills biome. */
-    public static final CubeBiomeGenBase desertHills = (new BiomeGenDesert(17)).setColor(13786898).setBiomeName("DesertHills").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F).setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase desertHills = (new BiomeGenDesert(17)).setColor(13786898).setBiomeName("DesertHills").setDisableRain().setTemperatureAndRainfall(2.0F, 0.0F).setHeightRange(hillsRange);
 
     /** Forest Hills biome. */
-    public static final CubeBiomeGenBase forestHills = (new BiomeGenForest(18, 0)).setColor(2250012).setBiomeName("ForestHills").setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase forestHills = (new BiomeGenForest(18, 0)).setColor(2250012).setBiomeName("ForestHills").setHeightRange(hillsRange);
 
     /** Taiga Hills biome. */
-    public static final CubeBiomeGenBase taigaHills = (new BiomeGenTaiga(19, 0)).setColor(1456435).setBiomeName("TaigaHills").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase taigaHills = (new BiomeGenTaiga(19, 0)).setColor(1456435).setBiomeName("TaigaHills").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(hillsRange);
 
     /** Extreme Hills Edge biome. */
-    public static final CubeBiomeGenBase extremeHillsEdge = (new BiomeGenHills(20, true)).setColor(7501978).setBiomeName("Extreme Hills Edge").setHeightRange(field_150603_i.func_150775_a()).setTemperatureAndRainfall(0.2F, 0.3F);
+    public static final CubeBiomeGenBase extremeHillsEdge = (new BiomeGenHills(20, true)).setColor(7501978).setBiomeName("Extreme Hills Edge").setHeightRange(extremeHillsRange.func_150775_a()).setTemperatureAndRainfall(0.2F, 0.3F);
 
     /** Jungle biome identifier */
     public static final CubeBiomeGenBase jungle = (new BiomeGenJungle(21, false)).setColor(5470985).setBiomeName("Jungle").func_76733_a(5470985).setTemperatureAndRainfall(0.95F, 0.9F);
-    public static final CubeBiomeGenBase jungleHills = (new BiomeGenJungle(22, false)).setColor(2900485).setBiomeName("JungleHills").func_76733_a(5470985).setTemperatureAndRainfall(0.95F, 0.9F).setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase jungleHills = (new BiomeGenJungle(22, false)).setColor(2900485).setBiomeName("JungleHills").func_76733_a(5470985).setTemperatureAndRainfall(0.95F, 0.9F).setHeightRange(hillsRange);
     public static final CubeBiomeGenBase jungleEdge = (new BiomeGenJungle(23, true)).setColor(6458135).setBiomeName("JungleEdge").func_76733_a(5470985).setTemperatureAndRainfall(0.95F, 0.8F);
     public static final CubeBiomeGenBase deepOcean = (new BiomeGenOcean(24)).setColor(48).setBiomeName("Deep Ocean").setHeightRange(deepOceanRange);
-    public static final CubeBiomeGenBase stoneBeach = (new BiomeGenStoneBeach(25)).setColor(10658436).setBiomeName("Stone Beach").setTemperatureAndRainfall(0.2F, 0.3F).setHeightRange(field_150601_k);
-    public static final CubeBiomeGenBase coldBeach = (new BiomeGenBeach(26)).setColor(16445632).setBiomeName("Cold Beach").setTemperatureAndRainfall(0.05F, 0.3F).setHeightRange(field_150600_j).setEnableSnow();
+    public static final CubeBiomeGenBase stoneBeach = (new BiomeGenStoneBeach(25)).setColor(10658436).setBiomeName("Stone Beach").setTemperatureAndRainfall(0.2F, 0.3F).setHeightRange(stoneBeachRange);
+    public static final CubeBiomeGenBase coldBeach = (new BiomeGenBeach(26)).setColor(16445632).setBiomeName("Cold Beach").setTemperatureAndRainfall(0.05F, 0.3F).setHeightRange(beachRange).setEnableSnow();
     public static final CubeBiomeGenBase birchForest = (new BiomeGenForest(27, 2)).setBiomeName("Birch Forest").setColor(3175492);
-    public static final CubeBiomeGenBase birchForestHills = (new BiomeGenForest(28, 2)).setBiomeName("Birch Forest Hills").setColor(2055986).setHeightRange(field_150591_g);
+    public static final CubeBiomeGenBase birchForestHills = (new BiomeGenForest(28, 2)).setBiomeName("Birch Forest Hills").setColor(2055986).setHeightRange(hillsRange);
     public static final CubeBiomeGenBase roofedForest = (new BiomeGenForest(29, 3)).setColor(4215066).setBiomeName("Roofed Forest");
-    public static final CubeBiomeGenBase coldTaiga = (new BiomeGenTaiga(30, 0)).setColor(3233098).setBiomeName("Cold Taiga").func_76733_a(5159473).setEnableSnow().setTemperatureAndRainfall(-0.5F, 0.4F).setHeightRange(field_150590_f).func_150563_c(16777215);
-    public static final CubeBiomeGenBase coldTaigaHills = (new BiomeGenTaiga(31, 0)).setColor(2375478).setBiomeName("Cold Taiga Hills").func_76733_a(5159473).setEnableSnow().setTemperatureAndRainfall(-0.5F, 0.4F).setHeightRange(field_150591_g).func_150563_c(16777215);
-    public static final CubeBiomeGenBase megaTaiga = (new BiomeGenTaiga(32, 1)).setColor(5858897).setBiomeName("Mega Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.3F, 0.8F).setHeightRange(field_150590_f);
-    public static final CubeBiomeGenBase megaTaigaHills = (new BiomeGenTaiga(33, 1)).setColor(4542270).setBiomeName("Mega Taiga Hills").func_76733_a(5159473).setTemperatureAndRainfall(0.3F, 0.8F).setHeightRange(field_150591_g);
-    public static final CubeBiomeGenBase extremeHillsPlus = (new BiomeGenHills(34, true)).setColor(5271632).setBiomeName("Extreme Hills+").setHeightRange(field_150603_i).setTemperatureAndRainfall(0.2F, 0.3F);
-    public static final CubeBiomeGenBase savanna = (new BiomeGenSavanna(35)).setColor(12431967).setBiomeName("Savanna").setTemperatureAndRainfall(1.2F, 0.0F).setDisableRain().setHeightRange(field_150593_e);
-    public static final CubeBiomeGenBase SavannaPlateau = (new BiomeGenSavanna(36)).setColor(10984804).setBiomeName("Savanna Plateau").setTemperatureAndRainfall(1.0F, 0.0F).setDisableRain().setHeightRange(field_150602_h);
+    public static final CubeBiomeGenBase coldTaiga = (new BiomeGenTaiga(30, 0)).setColor(3233098).setBiomeName("Cold Taiga").func_76733_a(5159473).setEnableSnow().setTemperatureAndRainfall(-0.5F, 0.4F).setHeightRange(taigaRange).func_150563_c(16777215);
+    public static final CubeBiomeGenBase coldTaigaHills = (new BiomeGenTaiga(31, 0)).setColor(2375478).setBiomeName("Cold Taiga Hills").func_76733_a(5159473).setEnableSnow().setTemperatureAndRainfall(-0.5F, 0.4F).setHeightRange(hillsRange).func_150563_c(16777215);
+    public static final CubeBiomeGenBase megaTaiga = (new BiomeGenTaiga(32, 1)).setColor(5858897).setBiomeName("Mega Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.3F, 0.8F).setHeightRange(taigaRange);
+    public static final CubeBiomeGenBase megaTaigaHills = (new BiomeGenTaiga(33, 1)).setColor(4542270).setBiomeName("Mega Taiga Hills").func_76733_a(5159473).setTemperatureAndRainfall(0.3F, 0.8F).setHeightRange(hillsRange);
+    public static final CubeBiomeGenBase extremeHillsPlus = (new BiomeGenHills(34, true)).setColor(5271632).setBiomeName("Extreme Hills+").setHeightRange(extremeHillsRange).setTemperatureAndRainfall(0.2F, 0.3F);
+    public static final CubeBiomeGenBase savanna = (new BiomeGenSavanna(35)).setColor(12431967).setBiomeName("Savanna").setTemperatureAndRainfall(1.2F, 0.0F).setDisableRain().setHeightRange(PlainsRange);
+    public static final CubeBiomeGenBase SavannaPlateau = (new BiomeGenSavanna(36)).setColor(10984804).setBiomeName("Savanna Plateau").setTemperatureAndRainfall(1.0F, 0.0F).setDisableRain().setHeightRange(plateauRange);
     public static final CubeBiomeGenBase mesa = (new BiomeGenMesa(37, false, false)).setColor(14238997).setBiomeName("Mesa");
-    public static final CubeBiomeGenBase mesaPlateauF = (new BiomeGenMesa(38, false, true)).setColor(11573093).setBiomeName("Mesa Plateau F").setHeightRange(field_150602_h);
-    public static final CubeBiomeGenBase mesaPlateau = (new BiomeGenMesa(39, false, false)).setColor(13274213).setBiomeName("Mesa Plateau").setHeightRange(field_150602_h);
+    public static final CubeBiomeGenBase mesaPlateauF = (new BiomeGenMesa(38, false, true)).setColor(11573093).setBiomeName("Mesa Plateau F").setHeightRange(plateauRange);
+    public static final CubeBiomeGenBase mesaPlateau = (new BiomeGenMesa(39, false, false)).setColor(13274213).setBiomeName("Mesa Plateau").setHeightRange(plateauRange);
     
     protected static final NoiseGeneratorPerlin field_150605_ac;
     protected static final NoiseGeneratorPerlin field_150606_ad;

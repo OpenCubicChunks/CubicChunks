@@ -25,7 +25,7 @@ public class BiomeGenPlains extends CubeBiomeGenBase
     {
         super(biomeID);
         this.setTemperatureAndRainfall(0.8F, 0.4F);
-        this.setHeightRange(field_150593_e);
+        this.setHeightRange(PlainsRange);
         this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityHorse.class, 5, 2, 6));
         this.theBiomeDecorator.treesPerChunk = -999;
         this.theBiomeDecorator.flowersPerChunk = 4;
