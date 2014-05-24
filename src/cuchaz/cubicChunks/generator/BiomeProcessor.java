@@ -7,6 +7,8 @@
  * 
  * Contributors:
  *     Jeff Martin - initial API and implementation
+ *     Bartosz Skrzypczak - Reverse engineered Vanilla's replaceBlocksForBiome
+ *     		and created a cubified version.
  ******************************************************************************/
 package cuchaz.cubicChunks.generator;
 
