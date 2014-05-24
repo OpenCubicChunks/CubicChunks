@@ -86,14 +86,15 @@ public class TerrainProcessor extends CubeProcessor
 		);
 		
 		// actually generate the terrain
-		generateNoise( cube.getX()*4, cube.getY()*2, cube.getZ()*4 );
 		generateTerrain( cube );
 		
 		return true;
 	}
 	
-	private void generateTerrain( Cube cube )
+	protected void generateTerrain( Cube cube )
 	{
+		generateNoise( cube.getX()*4, cube.getY()*2, cube.getZ()*4 );
+		
 		// UNDONE: centralize sea level somehow
 		final int seaLevel = 63;
 		

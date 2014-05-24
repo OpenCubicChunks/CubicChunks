@@ -267,35 +267,47 @@ public class WorldColumnManager extends WorldChunkManager
     }
 
     @Override
-    public ChunkPosition func_150795_a(int p_150795_1_, int p_150795_2_, int p_150795_3_, List list, Random rand)
-    {
-        IntCache.resetIntCache();
-        int var6 = p_150795_1_ - p_150795_3_ >> 2;
-        int var7 = p_150795_2_ - p_150795_3_ >> 2;
-        int var8 = p_150795_1_ + p_150795_3_ >> 2;
-        int var9 = p_150795_2_ + p_150795_3_ >> 2;
-        int var10 = var8 - var6 + 1;
-        int var11 = var9 - var7 + 1;
-        int[] aInt = this.genBiomes.getInts(var6, var7, var10, var11);
-        ChunkPosition chunkPosition = null;
-        int var14 = 0;
-
-        for (int i = 0; i < var10 * var11; ++i)
-        {
-            int cubeX = var6 + i % var10 << 2;
-            int cubeZ = var7 + i / var10 << 2;
-            CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome(aInt[i]);
-
-            if (list.contains(biome) && (chunkPosition == null || rand.nextInt(var14 + 1) == 0))
-            {
-                chunkPosition = new ChunkPosition(cubeX, 0, cubeZ);
-                ++var14;
-            }
-        }
-
-        return chunkPosition;
-    }
-
+    @SuppressWarnings( "rawtypes" ) // sampleBlockXZFromSpawnableBiome
+	public ChunkPosition func_150795_a( int blockX, int blockZ, int blockDistance, List spawnBiomes, Random rand )
+	{
+    	// looks like we sample one point of noise for every 4 blocks
+		final int BlocksPerSample = 4;
+		
+    	// sample the noise to get biome data
+		IntCache.resetIntCache();
+		int minNoiseX = ( blockX - blockDistance )/BlocksPerSample;
+		int minNoiseZ = ( blockZ - blockDistance )/BlocksPerSample;
+		int maxNoiseX = ( blockX + blockDistance )/BlocksPerSample;
+		int maxNoiseZ = ( blockZ + blockDistance )/BlocksPerSample;
+		int noiseXSize = maxNoiseX - minNoiseX + 1;
+		int noiseZSize = maxNoiseZ - minNoiseZ + 1;
+		int[] biomeNoise = genBiomes.getInts( minNoiseX, minNoiseZ, noiseXSize, noiseZSize );
+		
+		// collect all xz positions from spawnable biomes
+		List<ChunkPosition> possibleSpawns = new ArrayList<ChunkPosition>();
+		for( int x=0; x<noiseXSize; x++ )
+		{
+			for( int z=0; z<noiseZSize; z++ )
+			{
+				CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome( biomeNoise[x + z*noiseXSize] );
+				if( spawnBiomes.contains( biome ) )
+				{
+					int spawnBlockX = ( minNoiseX + x )*BlocksPerSample;
+					int spawnBlockZ = ( minNoiseZ + z )*BlocksPerSample;
+					possibleSpawns.add( new ChunkPosition( spawnBlockX, 0, spawnBlockZ ) );
+				}
+			}
+		}
+		
+		if( possibleSpawns.isEmpty() )
+		{
+			return null;
+		}
+		
+		// pick a random spawn from the list
+		return possibleSpawns.get( rand.nextInt( possibleSpawns.size() ) );
+	}
+    
     /**
      * Calls the WorldChunkManager's biomeCache.cleanupCache()
      */

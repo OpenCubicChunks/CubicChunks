@@ -24,6 +24,8 @@ public abstract class CubeWorldProvider extends WorldProvider
 	@Override
 	protected void registerWorldChunkManager()
     {
+		// NOTE: this is the place we plug in different WorldColumnManagers for different dimensions or world types
+		
 		if( worldObj.getWorldInfo().getTerrainType() == WorldType.FLAT )
 		{
 			FlatGeneratorInfo info = FlatGeneratorInfo.createFlatGeneratorFromString( worldObj.getWorldInfo().getGeneratorOptions() );
@@ -41,4 +43,5 @@ public abstract class CubeWorldProvider extends WorldProvider
 	}
 	
 	public abstract GeneratorPipeline createGeneratorPipeline( CubeWorldServer worldServer );
+	public abstract int getSeaLevel( );
 }

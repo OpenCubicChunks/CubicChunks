@@ -21,7 +21,6 @@ import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
-import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
 
@@ -34,10 +33,12 @@ import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.CubeWorldProvider;
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 import cuchaz.cubicChunks.generator.GeneratorPipeline;
+import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.lighting.LightingManager;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
+import cuchaz.magicMojoModLoader.util.Util;
 
 public class CubeWorldServer extends WorldServer implements CubeWorld
 {
@@ -158,25 +159,26 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 	@Override
 	protected void createSpawnPosition( WorldSettings worldSettings )
 	{
+		// NOTE: this is called inside the world constructor
+		// this is apparently called before the world is generated
+		// we'll have to do our own generation to find the spawn point
+		
 		if( !provider.canRespawnHere() )
 		{
 			worldInfo.setSpawnPosition( 0, 0, 0 );
 			return;
 		}
 		
-		// UNDONE: do world type-specific spawn finding
-		// ask the world provider or the world provider's chunk manager!!
-		
-		findingSpawnPoint = true;
-		
-		WorldChunkManager chunkManager = provider.worldChunkMgr;
-		Random rand = new Random( getSeed() );
-		ChunkPosition spawnPosition = chunkManager.func_150795_a( 0, 0, 256, chunkManager.getBiomesToSpawnIn(), rand );
-		
+		// pick a default fail-safe spawn point
 		int spawnBlockX = 0;
 		int spawnBlockY = provider.getAverageGroundLevel();
 		int spawnBlockZ = 0;
 		
+		Random rand = new Random( getSeed() );
+		
+		// defer to the column manager to find the x,z part of the spawn point
+		WorldColumnManager columnManager = getCubeWorldProvider().getWorldColumnMananger();
+		ChunkPosition spawnPosition = columnManager.func_150795_a( 0, 0, 256, columnManager.getBiomesToSpawnIn(), rand );
 		if( spawnPosition != null )
 		{
 			spawnBlockX = spawnPosition.field_151329_a;
@@ -187,21 +189,36 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 			log.warn( "Unable to find spawn biome" );
 		}
 		
-		int blockY = 0;
-		while( !provider.canCoordinateBeSpawn( spawnBlockX, spawnBlockZ ) )
+		log.info( "Searching for suitable spawn point..." );
+		
+		// generate some world around the spawn x,z at sea level
+		int spawnCubeX = Coords.blockToCube( spawnBlockX );
+		int spawnCubeY = Coords.blockToCube( getCubeWorldProvider().getSeaLevel() );
+		int spawnCubeZ = Coords.blockToCube( spawnBlockZ );
+		final int SearchDistance = 4;
+		CubeProviderServer cubeProvider = getCubeProvider();
+		for( int cubeX=spawnCubeX-SearchDistance; cubeX<=spawnCubeX+SearchDistance; cubeX++ )
 		{
-			spawnBlockX += rand.nextInt( 64 ) - rand.nextInt( 64 );
-			spawnBlockZ += rand.nextInt( 64 ) - rand.nextInt( 64 );
-			++blockY;
-			
-			if( blockY == 1000 )
+			for( int cubeY=spawnCubeY-SearchDistance; cubeY<=spawnCubeY+SearchDistance; cubeY++ )
 			{
-				break;
+				for( int cubeZ=spawnCubeZ-SearchDistance; cubeZ<=spawnCubeZ+SearchDistance; cubeZ++ )
+				{
+					cubeProvider.loadCube( cubeX, cubeY, cubeZ );
+				}
 			}
 		}
+		getGeneratorPipeline().generateAll();
 		
+		// make some effort to find a suitable spawn point, but don't guarantee it
+		for( int i=0; i<1000 && !provider.canCoordinateBeSpawn( spawnBlockX, spawnBlockZ ); i++ )
+		{
+			spawnBlockX += Util.randRange( rand, -16, 16 );
+			spawnBlockZ += Util.randRange( rand, -16, 16 );
+		}
+		
+		// save the spawn point
 		worldInfo.setSpawnPosition( spawnBlockX, spawnBlockY, spawnBlockZ );
-		findingSpawnPoint = false;
+		log.info( String.format( "Found spawn point at (%d,%d,%d)", spawnBlockX, spawnBlockY, spawnBlockZ ) );
 		
 		if( worldSettings.isBonusChestEnabled() )
 		{
