@@ -51,7 +51,6 @@ public class CubeWorldProviderSurface extends CubeWorldProvider
 	{
 		GeneratorPipeline generatorPipeline = new GeneratorPipeline( worldServer.getCubeProvider() );
 		generatorPipeline.addStage( GeneratorStage.Terrain, new TerrainProcessor( "Terrain", worldServer, 10 ) );
-		//generatorPipeline.addStage( GeneratorStage.Terrain, new ComplexTerrainProcessor( "Terrain", worldServer, 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Features, new FeatureProcessor( "Features", worldServer.getCubeProvider(), 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Biomes, new BiomeProcessor( "Biomes", worldServer, 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Lighting, new FirstLightProcessor( "Lighting", worldServer.getCubeProvider(), 10 ) );

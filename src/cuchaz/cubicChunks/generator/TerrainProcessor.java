@@ -10,16 +10,14 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator;
 
-import java.util.Arrays;
 import java.util.Random;
 
+import libnoiseforjava.exception.ExceptionInvalidParam;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldType;
-import net.minecraft.world.gen.NoiseGeneratorOctaves;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
-//import cuchaz.cubicChunks.generator.noise.CubeNoiseArray;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeProcessor;
@@ -31,16 +29,6 @@ public class TerrainProcessor extends CubeProcessor
 	private CubeBiomeGenBase[] m_biomes;
 	
 	private Random m_rand;
-	private NoiseGeneratorOctaves m_terrainNoiseGenLow;
-	private NoiseGeneratorOctaves m_terrainNoiseGenHigh;
-	private NoiseGeneratorOctaves m_terrainNoiseGenT;
-	private NoiseGeneratorOctaves m_terrainNoiseGenXZ;
-	
-	private double[] m_terrainNoise;
-	private double[] m_terrainNoiseLow;
-	private double[] m_terrainNoiseHigh;
-	private double[] m_terrainNoiseT;
-	private double[] m_terrainNoiseXZ;
 	
 	private double[] m_filter5x5;
 	private final static double filterTweaker = 15.4412439587182; 
@@ -56,8 +44,6 @@ public class TerrainProcessor extends CubeProcessor
 	private int seaLevel;
 	private double maxElev;
 	
-//	private CubeNoiseArray cubeNoiseArray;
-	
 	public TerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
 	{
 		super( name, worldServer.getCubeProvider(), batchSize );
@@ -66,23 +52,9 @@ public class TerrainProcessor extends CubeProcessor
 		m_biomes = null;
 		
 		m_rand = new Random( m_worldServer.getSeed() );
-		m_terrainNoiseGenLow = new NoiseGeneratorOctaves( m_rand, 16 );
-		m_terrainNoiseGenHigh = new NoiseGeneratorOctaves( m_rand, 16 );
-		m_terrainNoiseGenT = new NoiseGeneratorOctaves( m_rand, 8 );
-		m_terrainNoiseGenXZ = new NoiseGeneratorOctaves( m_rand, 16 );
-		
-		m_terrainNoiseLow = null;
-		m_terrainNoiseHigh = null;
-		m_terrainNoiseT = null;
-		m_terrainNoiseXZ = null;
-		m_terrainNoise = new double[5*5*3];
-		
-//		cubeNoiseArray = new CubeNoiseArray();
-//		cubeNoiseArray.setSeed(m_rand.nextInt());
-//		cubeNoiseArray.build();
 		
 		seaLevel = worldServer.getCubeWorldProvider().getSeaLevel();
-		maxElev = 2;
+		maxElev = 200; // NOTE: this is apparently multiplied by 100
 		
 		// init the 5x5 filter
 		m_filter5x5 = new double[25];
@@ -97,9 +69,18 @@ public class TerrainProcessor extends CubeProcessor
 		
 		builder = new BasicBuilder();
 		builder.setSeed(m_rand.nextInt());
-//		builder.setMaxElev(maxElev);
+		builder.setMaxElev(maxElev);
 		builder.setSeaLevel(seaLevel);
-		builder.build();
+		try
+		{
+			builder.build();
+		}
+		catch( ExceptionInvalidParam ex )
+		{
+			// this should really be an illegal argument exception,
+			// but apparently the author of libnoiseforjava doesn't follow conventions
+			throw new IllegalArgumentException( ex );
+		}
 	}
 	
 	@Override
@@ -129,182 +110,34 @@ public class TerrainProcessor extends CubeProcessor
 		int cubeZ = cube.getZ();
 		
 		noiseArray = getNoiseArray(cubeX, cubeY, cubeZ);
-		
 		noiseArray = modifyNoiseArray(noiseArray, cubeX, cubeY, cubeZ);
-		
 		noiseArray = scaleNoiseArray(noiseArray, maxElev);
-		
 		valueArray = expandNoiseArray(noiseArray);
 		
 		for( int xRel=0; xRel < 16; xRel++ )
 		{
-			int xAbs = cubeX << 4 | xRel;
-			
 			for( int zRel=0; zRel < 16; zRel++ )
 			{				
-				int zAbs = cubeZ << 4 | zRel;
-				
 				for( int yRel=0; yRel < 16; yRel++ )
 				{
-					int yAbs = cubeY << 4 | yRel;
-					
 					double val = valueArray[xRel][yRel][zRel];
-					
-					if(yAbs == 0)
+					int yAbs = Coords.localToBlock( cubeY, yRel );
+					if( val - yAbs > 0 )
 					{
-//						System.out.println(xAbs + ":" + yAbs + ":" + zAbs + ":" + val);
-					}
-					
-					val -= yAbs;
-					
-					if( val > 0.0D )
-					{
-						cube.setBlock( xRel, yRel, zRel, Blocks.stone, 0);
+						cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.stone );
 					}
 					else if( yAbs < seaLevel )
 					{
-						cube.setBlock( xRel, yRel, zRel, Blocks.water, 0);
+						cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.water );
 					}
 					else
 					{
-						cube.setBlock( xRel, yRel, zRel, Blocks.air, 0);
+						cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.air );
 					}
-				}		
-			}
-		}
-	}
-	
-	/**
-	private void generateNoise( int noiseX, int noiseY, int noiseZ )
-	{
-		// NOTE: the noise coordinate system samples world space differently in each dimension
-		//   x,z: once every 4 blocks
-		//   y:   once every 8 blocks
-		// this means each cube uses 5 samples in x, 5 samples in z, and 3 samples in y
-		final double noiseScale = 684.412;
-		
-		m_terrainNoiseLow = m_terrainNoiseGenLow.generateNoiseOctaves( m_terrainNoiseLow,
-			noiseX, noiseY, noiseZ,            // offset
-			5, 3, 5,                           // size
-			noiseScale, noiseScale, noiseScale // scale
-		);
-		m_terrainNoiseHigh = m_terrainNoiseGenHigh.generateNoiseOctaves( m_terrainNoiseHigh,
-			noiseX, noiseY, noiseZ,
-			5, 3, 5,
-			noiseScale, noiseScale, noiseScale
-		);
-		m_terrainNoiseT = m_terrainNoiseGenT.generateNoiseOctaves( m_terrainNoiseT,
-			noiseX, noiseY, noiseZ,
-			5, 3, 5,
-			noiseScale/80, noiseScale/160, noiseScale/80
-		);
-		m_terrainNoiseXZ = m_terrainNoiseGenXZ.generateNoiseOctaves( m_terrainNoiseXZ,
-			noiseX, 10, noiseZ,
-			5, 1, 5,
-			200, 1, 200
-		);
-		
-		int noiseIndex = 0;
-		
-		for( int x=0; x<=4; x++ )
-		{
-			for( int z=0; z<=4; z++ )
-			{
-				CubeBiomeGenBase biome = m_biomes[x + 2 + ( z + 2 )*10];
-				
-				// compute biome height info
-				float maxHeightConditioned = 0;
-				float minHeightConditioned = 0;
-				float sumHeightScale = 0;
-				
-				// apply 5x5 filter to smooth the height scale based on the surrounding biome values. This actually reaches 8 blocks in each direction and smooths.
-				for( int i=-2; i<=2; i++ )
-				{
-					for( int j=-2; j<=2; j++ )
-					{
-						CubeBiomeGenBase ijBiome = m_biomes[x + i + 2 + ( z + j + 2 )*10]; // retrieve the biomes in a 5x5 (16x16) square around the x,z coord
-						
-						float minHeight = ijBiome.minHeight; // min biome height at the x + i, z + j coord
-						float maxHeight = ijBiome.maxHeight; // max biome height at the x + i, z + j coord.
-						
-						// if world type is amplified, increase the height a lot
-						if( m_worldServer.getWorldInfo().getTerrainType() == WorldType.field_151360_e && minHeight > 0.0F )
-						{
-							minHeight = minHeight*2 + 1;
-							maxHeight = maxHeight*4 + 1;
-						}
-						
-						// compute the height scale
-						float heightScale = m_filter5x5[i + 2 + ( j + 2 )*5]/( minHeight + 2.0F ); // get the  scale factor at i,j
-						
-						if( ijBiome.minHeight > biome.minHeight ) // if the biome minheight at x + i, z + j coord is greater than the biome minheight at x, z, cut the scale in half to smooth
-						{
-							heightScale /= 2;
-						}
-						
-						maxHeightConditioned += maxHeight * heightScale; // smooth between the min heights and add
-						minHeightConditioned += minHeight * heightScale; // smooth between the max heights and add
-						sumHeightScale += heightScale; // add the height scale from each iteration into a total
-					}
-				}
-				
-				maxHeightConditioned /= sumHeightScale;
-				minHeightConditioned /= sumHeightScale;
-				
-				maxHeightConditioned = maxHeightConditioned * 0.9F + 0.1F;
-				minHeightConditioned = ( minHeightConditioned * 4.0F - 1.0F ) / 8.0F;
-				
-				// get and condition XZ noise
-				double noiseXZ = m_terrainNoiseXZ[noiseIndexXZ++]/8000;
-				if( noiseXZ < 0 )
-				{
-					noiseXZ = -noiseXZ * 0.3;
-				}
-				noiseXZ = noiseXZ * 3 - 2;
-				if( noiseXZ < 0 )
-				{
-					noiseXZ /= 2;
-					
-					if( noiseXZ < -1 )
-					{
-						noiseXZ = -1;
-					}
-					
-					noiseXZ /= 1.4;
-					noiseXZ /= 2;
-				}
-				else
-				{
-					if( noiseXZ > 1 )
-					{
-						noiseXZ = 1;
-					}
-					
-					noiseXZ /= 8;
-				}
-				noiseXZ *= 0.2*8.5/8;
-				
-				// handle the y dimension
-				double yInfo = 8.5 + ( (double)minHeightConditioned + noiseXZ )*4;
-				
-				for( int y=0; y<=2; y++ )
-				{
-					// compute the noise offset
-					double noiseOffset = ( (double)( y + noiseY ) - yInfo ) * 12.0D * 128.0D / 256.0D / maxHeightConditioned;
-					if( noiseOffset < 0.0D )
-					{
-						noiseOffset *= 4.0D;
-					}
-					
-					double lowNoise = m_terrainNoiseLow[noiseIndex] / 512.0D;
-					double highNoise = m_terrainNoiseHigh[noiseIndex] / 512.0D;
-					double tNoise = ( m_terrainNoiseT[noiseIndex] / 10.0D + 1.0D ) / 2.0D;
-					m_terrainNoise[noiseIndex++] = MathHelper.denormalizeClamp( lowNoise, highNoise, tNoise ) - noiseOffset;
 				}
 			}
 		}
 	}
-	*/
 	
 	private double[][][] getNoiseArray(int cubeX, int cubeY, int cubeZ)
 	{		

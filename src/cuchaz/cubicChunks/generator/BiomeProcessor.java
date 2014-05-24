@@ -18,9 +18,7 @@ import net.minecraft.world.gen.NoiseGeneratorPerlin;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
-import cuchaz.cubicChunks.CubeWorldProvider;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
-import cuchaz.cubicChunks.server.CubeProviderServer;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeProcessor;
@@ -191,30 +189,6 @@ public class BiomeProcessor extends CubeProcessor
 				}
 			}
 		}	
-		
-//		for( int xRel = 0; xRel < 16; xRel++ )
-//		{
-//			int xAbs = cube.getX() << 4 | xRel;
-//			
-//			for( int zRel = 0; zRel < 16; zRel++ )
-//			{
-//				int zAbs = cube.getZ() << 4 | zRel;
-//				
-//				int xzCoord = zRel | xRel << 4;
-//
-//				for (int yRel = 0; yRel < 16; yRel++)
-//				{	
-//					int yAbs = cube.getY() << 4 | yRel;
-//					
-//					m_biomes[xzCoord].modifyBlocks_pre(
-//						m_worldServer, m_rand,
-//						cube,
-//						xAbs, yAbs, zAbs,
-//						m_noise[xzCoord]
-//					);
-//				}
-//			}
-//		}
 		
 		return true;
 	}

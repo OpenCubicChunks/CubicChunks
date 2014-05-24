@@ -55,6 +55,7 @@ public class BasicBuilder implements IBuilder
 
 	@Override
 	public void build()
+	throws ExceptionInvalidParam
 	{
 		Perlin perlin = new Perlin();
 		perlin.setSeed(SEED);
