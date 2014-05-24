@@ -18,7 +18,7 @@ import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.NoiseGeneratorOctaves;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
-import cuchaz.cubicChunks.generator.noise.CubeNoiseArray;
+//import cuchaz.cubicChunks.generator.noise.CubeNoiseArray;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeProcessor;
@@ -47,7 +47,7 @@ public class TerrainProcessor extends CubeProcessor
 	private int seaLevel;
 	private int maxElev;
 	
-	private CubeNoiseArray cubeNoiseArray;
+//	private CubeNoiseArray cubeNoiseArray;
 	
 	public TerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
 	{
@@ -68,11 +68,11 @@ public class TerrainProcessor extends CubeProcessor
 		m_terrainNoiseXZ = null;
 		m_terrainNoise = new double[5*5*3];
 		
-		cubeNoiseArray = new CubeNoiseArray();
-		cubeNoiseArray.setSeed(m_rand.nextInt());
-		cubeNoiseArray.build();
+//		cubeNoiseArray = new CubeNoiseArray();
+//		cubeNoiseArray.setSeed(m_rand.nextInt());
+//		cubeNoiseArray.build();
 		
-		seaLevel = 0;
+		seaLevel = worldServer.getCubeWorldProvider().getSeaLevel();
 		maxElev = 512;
 		
 		// init the 5x5 filter
@@ -107,7 +107,7 @@ public class TerrainProcessor extends CubeProcessor
 		);
 		
 		// actually generate the terrain
-		generateNoise( cube.getX()*4, cube.getY()*2, cube.getZ()*4 );
+//		generateNoise( cube.getX()*4, cube.getY()*2, cube.getZ()*4 );
 		
 		generateTerrain( cube );
 		
@@ -260,7 +260,7 @@ public class TerrainProcessor extends CubeProcessor
 //			200, 1, 200
 //		);
 		
-		m_terrainNoiseLow = cubeNoiseArray.getCubeNoiseArray(noiseX, noiseY, noiseZ);
+//		m_terrainNoiseLow = cubeNoiseArray.getCubeNoiseArray(noiseX, noiseY, noiseZ);
 		
 		int noiseIndex = 0;
 		

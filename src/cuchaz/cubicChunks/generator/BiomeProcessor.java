@@ -48,7 +48,7 @@ public class BiomeProcessor extends CubeProcessor
 		m_noise = new double[256];
 		m_biomes = null;
 		
-		seaLevel = 0;
+		seaLevel = worldServer.getCubeWorldProvider().getSeaLevel();
 	}
 	
 	@Override
@@ -228,13 +228,13 @@ public class BiomeProcessor extends CubeProcessor
 		if(Coords.blockToCube( yAbs ) == cube.getY()) // check if we're in the same cube as Cube
 		{
 			//If we are in the same cube
-			cube.setBlock( xRel, yRel, zRel, block, 0 );
+			cube.setBlockForGeneration( xRel, yRel, zRel, block );
 		} 
 		else // we're actually in the cube below
 		{
 			assert m_worldServer.getCubeProvider().cubeExists( Coords.blockToCube( xAbs ), Coords.blockToCube( yAbs ), Coords.blockToCube( zAbs ) );
 			
-			below.setBlock( xRel, yRel, zRel, block, cube.getY() );
+			below.setBlockForGeneration( xRel, yRel, zRel, block );
 		}
 	}
 }
