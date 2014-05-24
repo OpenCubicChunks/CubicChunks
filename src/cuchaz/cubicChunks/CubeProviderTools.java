@@ -27,6 +27,14 @@ public class CubeProviderTools
 		return cubesExist( provider, minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ );
 	}
 	
+	public static boolean cubeAndNeighborsExist( CubeProvider provider, int cubeX, int cubeY, int cubeZ )
+	{
+		return cubesExist( provider,
+			cubeX - 1, cubeY - 1, cubeZ - 1,
+			cubeX + 1, cubeY + 1, cubeZ + 1
+		);
+	}
+	
 	public static boolean cubesExist( CubeProvider provider, int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ )
 	{
 		for( int cubeX=minCubeX; cubeX<=maxCubeX; cubeX++ )

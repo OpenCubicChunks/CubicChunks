@@ -8,51 +8,53 @@
  * Contributors:
  *     Jeff Martin - initial API and implementation
  ******************************************************************************/
-package cuchaz.cubicChunks.lighting;
+package cuchaz.cubicChunks.util;
 
-import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.world.Cube;
 
-public abstract class CubeCalculator implements LightCalculator
+public abstract class CubeProcessor extends QueueProcessor
 {
+	private static final Logger log = LogManager.getLogger();
+	
+	public CubeProcessor( String name, CubeProvider provider, int batchSize )
+	{
+		super( name, provider, batchSize );
+	}
+	
 	@Override
-	public int processBatch( List<Long> addresses, List<Long> deferredAddresses, CubeProvider provider )
+	public void processBatch( )
 	{
 		// start processing
-		int numSuccesses = 0;
-		for( long address : addresses )
+		for( long address : m_incomingAddresses )
 		{
 			// get the cube
 			int cubeX = AddressTools.getX( address );
 			int cubeY = AddressTools.getY( address );
 			int cubeZ = AddressTools.getZ( address );
-			if( !provider.cubeExists( cubeX, cubeY, cubeZ ) )
+			Cube cube = m_provider.provideCube( cubeX, cubeY, cubeZ );
+			if( cube == null )
 			{
-				continue;
-			}
-			Cube cube = provider.loadCube( cubeX, cubeY, cubeZ );
-			
-			// skip blank cubes
-			if( cube.isEmpty() )
-			{
+				log.warn( String.format( "Unloaded cube (%d,%d,%d) dropped from %s processor queue.",
+					cubeX, cubeY, cubeZ, m_name
+				) );
 				continue;
 			}
 			
 			// add unsuccessful calculations back onto the queue
 			boolean success = calculate( cube );
-			if( !success )
+			if( success )
 			{
-				deferredAddresses.add( address );
+				m_processedAddresses.add( address );
 			}
 			else
 			{
-				numSuccesses++;
+				m_deferredAddresses.add( address );
 			}
 		}
-		return numSuccesses;
 	}
 	
 	public abstract boolean calculate( Cube cube );

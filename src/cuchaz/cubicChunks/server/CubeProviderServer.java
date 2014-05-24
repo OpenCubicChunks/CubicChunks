@@ -12,31 +12,25 @@ package cuchaz.cubicChunks.server;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.IProgressUpdate;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.ChunkProviderServer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.generator.ICubeGenerator;
-import cuchaz.cubicChunks.generator.TestCubeGenerator;
+import cuchaz.cubicChunks.generator.ColumnGenerator;
+import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.util.AddressTools;
-import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.BlankColumn;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
@@ -46,30 +40,24 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	private static final Logger log = LogManager.getLogger();
 	
 	private static final int WorldSpawnChunkDistance = 12;
-	private static final int PlayerSpawnChunkDistance = 1;
 	
 	private CubeWorldServer m_worldServer;
 	private CubeLoader m_loader;
-	private ICubeGenerator m_generator;
+	private ColumnGenerator m_columnGenerator;
 	private HashMap<Long,Column> m_loadedColumns;
 	private BlankColumn m_blankColumn;
 	private Deque<Long> m_cubesToUnload;
 	
-	private transient Set<Integer> m_values; // just temp space to save a new call on each chunk load
-	
-	public CubeProviderServer( WorldServer world )
+	public CubeProviderServer( CubeWorldServer world )
 	{
 		super( world, null, null );
 		
 		m_worldServer = (CubeWorldServer)world;
 		m_loader = new CubeLoader( world.getSaveHandler() );
-//		m_generator = new CubeGenerator( world );
-		m_generator = new TestCubeGenerator( world );
-//		m_generator = new ComplexCubeGenerator( world );
+		m_columnGenerator = new ColumnGenerator( world );
 		m_loadedColumns = Maps.newHashMap();
 		m_blankColumn = new BlankColumn( world, 0, 0 );
 		m_cubesToUnload = new ArrayDeque<Long>();
-		m_values = Sets.newHashSet();
 	}
 	
 	@Override
@@ -96,25 +84,9 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	@Override
 	public Column loadChunk( int cubeX, int cubeZ )
 	{
-		// find out the cubes in this column near any players or spawn points
-		m_values.clear();
-		getActiveCubeAddresses( m_values, cubeX, cubeZ );
-		
-		// actually load those cubes
-		for( long address : m_values )
-		{
-			loadCube( cubeX, AddressTools.getY( address ), cubeZ );
-		}
-		
-		Column column = provideChunk( cubeX, cubeZ );
-		
-		// remove the column's cubes from the unload queue
-		for( Cube cube : column.cubes() )
-		{
-			m_cubesToUnload.remove( cube.getAddress() );
-		}
-		
-		return column;
+		// in the tall worlds scheme, load and provide columns/chunks are semantically the same thing
+		// but load/provide cube do actually do different things
+		return provideChunk( cubeX, cubeZ );
 	}
 	
 	@Override
@@ -127,53 +99,27 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			return column;
 		}
 		
-		// load the column or send back a proxy
-		if( m_worldServer.findingSpawnPoint )
-		{
-			// if we're finding a spawn point, we only need to load the cubes above sea level
-			return loadCubesAboveSeaLevel( cubeX, cubeZ );
-		}
-		else
-		{
-			return m_blankColumn;
-		}
+		return m_blankColumn;
 	}
 	
-	private Column loadCubesAboveSeaLevel( int cubeX, int cubeZ )
+	@Override
+	public Cube provideCube( int cubeX, int cubeY, int cubeZ )
 	{
-		// UNDONE: do something smarter about the sea level
-		final int SeaLevel = 0;
-		
-		int i = 0;
-		int maxToLoad = 16;
-		// load the cube at sea level
-		// keep loading the next cube up until we don't get anything back or we 
-		// hit a generation limit of 16 cubes. This will prevent endless 
-		// generation issues from freezing the game during initial world generation.
-		// especially useful for the nether until we have a proper loading system in place.
-		Column column = null;
-		for( int cubeY=Coords.blockToCube( SeaLevel ); /*i < maxToLoad*/ ; cubeY++ )
+		// is the column loaded?
+		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
+		Column column = m_loadedColumns.get( columnAddress );
+		if( column == null )
 		{
-			Cube cube = loadCube( cubeX, cubeY, cubeZ );
-			if( !cube.isEmpty() )
-			{
-				column = cube.getColumn();
-			}
-			else
-			{
-				break;
-			}
-			
-			i++;
+			return null;
 		}
 		
-		return column;
+		return column.getCube( cubeY );
 	}
 	
-	public Cube loadCubeAndNeighbors( int cubeX, int cubeY, int cubeZ )
+	public void loadCubeAndNeighbors( int cubeX, int cubeY, int cubeZ )
 	{
 		// load the requested cube
-		Cube cube = loadCube( cubeX, cubeY, cubeZ );
+		loadCube( cubeX, cubeY, cubeZ );
 		
 		// load the neighbors
 		loadCube( cubeX - 1, cubeY - 1, cubeZ - 1 );
@@ -204,12 +150,9 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		loadCube( cubeX + 1, cubeY + 1, cubeZ - 1 );
 		loadCube( cubeX + 1, cubeY + 1, cubeZ + 0 );
 		loadCube( cubeX + 1, cubeY + 1, cubeZ + 1 );
-		
-		return cube;
 	}
 	
-	@Override
-	public Cube loadCube( int cubeX, int cubeY, int cubeZ )
+	public void loadCube( int cubeX, int cubeY, int cubeZ )
 	{
 		long cubeAddress = AddressTools.getAddress( cubeX, cubeY, cubeZ );
 		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
@@ -228,13 +171,13 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			catch( IOException ex )
 			{
 				log.error( String.format( "Unable to load column (%d,%d)", cubeX, cubeZ ), ex );
-				return null;
+				return;
 			}
 			
 			if( column == null )
 			{
 				// there wasn't a column, generate a new one
-				column = m_generator.generateColumn( cubeX, cubeZ );
+				column = m_columnGenerator.generateColumn( cubeX, cubeZ );
 			}
 			else
 			{
@@ -250,7 +193,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		Cube cube = column.getCube( cubeY );
 		if( cube != null )
 		{
-			return cube;
+			return;
 		}
 		
 		// try to load the cube
@@ -261,38 +204,40 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		catch( IOException ex )
 		{
 			log.error( String.format( "Unable to load cube (%d,%d,%d)", cubeX, cubeY, cubeZ ), ex );
-			return null;
+			return;
 		}
 		
 		if( cube == null )
 		{
-			// generate a new cube
-			cube = m_generator.generateCube( column, cubeX, cubeY, cubeZ );
-			
-			// NOTE: have to do generator population after the cube is lit
-			// UNDONE: make a chunk population queue
-			//m_generator.populate( m_generator, cubeX, cubeY, cubeZ );
+			// start the cube generation process with an empty cube
+			cube = column.getOrCreateCube( cubeY, true );
+			cube.setGeneratorStage( GeneratorStage.getFirstStage() );
 		}
 		
-		assert( cube != null );
+		if( !cube.getGeneratorStage().isLastStage() )
+		{
+			// queue the cube to finish generation
+			m_worldServer.getGeneratorPipeline().generate( cube );
+		}
+		else
+		{
+			// queue the cube for re-lighting
+			m_worldServer.getLightingManager().queueFirstLightCalculation( cubeAddress );
+		}
 		
 		// add the column to the cache
 		m_loadedColumns.put( columnAddress, column );
 		
 		// init the column
-		column.onChunkLoad();
+		if( !column.isChunkLoaded )
+		{
+			column.onChunkLoad();
+		}
 		column.isTerrainPopulated = true;
 		column.resetPrecipitationHeight();
 		
-		// relight the cube
-		cube.setIsLit( false );
-		m_worldServer.getLightingManager().queueSkyLightCalculation( columnAddress );
-		m_worldServer.getLightingManager().queueFirstLightCalculation( cubeAddress );
-		
 		// init the cube
 		cube.onLoad();
-		
-		return cube;
 	}
 	
 	@Override
@@ -424,65 +369,38 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	@SuppressWarnings( "rawtypes" )
 	public List getPossibleCreatures( EnumCreatureType creatureType, int blockX, int blockY, int blockZ )
 	{
-		return m_generator.getPossibleCreatures( creatureType, blockX, blockY, blockZ );
+		/* UNDONE: ask one of the pipeline processors for these things
+		CubeBiomeGenBase var5 = (CubeBiomeGenBase) m_world.getBiomeGenForCoords( cubeX, cubeZ );
+		return par1EnumCreatureType == EnumCreatureType.monster && m_scatteredFeatureGenerator.func_143030_a( cubeX, cubeY, cubeZ ) 
+				? m_scatteredFeatureGenerator.getScatteredFeatureSpawnList()
+				: var5.getSpawnableList( par1EnumCreatureType );
+		*/
+		return null;
 	}
 	
 	@Override
 	public ChunkPosition func_147416_a( World world, String structureType, int blockX, int blockY, int blockZ )
 	{
-		return m_generator.getNearestStructure( world, structureType, blockX, blockY, blockZ );
+		/* UNDONE: ask the one of the pipeline processors for these things
+		if( "Stronghold".equals( structureType ) && m_strongholdGenerator != null )
+		{
+			return m_strongholdGenerator.func_151545_a( world, blockX, blockY, blockZ );
+		}
+		*/
+		return null;
 	}
 	
-	@SuppressWarnings( "unchecked" )
-	private void getActiveCubeAddresses( Collection<Integer> out, int cubeX, int cubeZ )
+	public void recreateStructures( int cubeX, int cubeY, int cubeZ )
 	{
-		CubePlayerManager playerManager = (CubePlayerManager)m_worldServer.getPlayerManager();
-		
-		for( EntityPlayerMP player : (List<EntityPlayerMP>)m_worldServer.playerEntities )
+		/* UNDONE: ask the one of the pipeline processors to do this
+		if( m_mapFeaturesEnabled )
 		{
-			// check for cubes near players
-			for( Long address : playerManager.getVisibleCubeAddresses( player ) )
-			{
-				int visibleCubeX = AddressTools.getX( address );
-				int visibleCubeZ = AddressTools.getZ( address );
-				if( visibleCubeX == cubeX && visibleCubeZ == cubeZ )
-				{
-					out.add( AddressTools.getY( address ) );
-				}
-			}
-			
-			// or near their spawn point
-			if( player.getBedLocation() != null )
-			{
-				int spawnCubeX = Coords.blockToCube( player.getBedLocation().posX );
-				int spawnCubeY = Coords.blockToCube( player.getBedLocation().posY );
-				int spawnCubeZ = Coords.blockToCube( player.getBedLocation().posZ );
-				if( spawnCubeX == cubeX && spawnCubeZ == cubeZ )
-				{
-					for( int y=-PlayerSpawnChunkDistance; y<=PlayerSpawnChunkDistance; y++ )
-					{
-						out.add( spawnCubeY + y );
-					}
-				}
-			}
+			m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
+			m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
+			m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
+			m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
 		}
-		
-		// or near world spawns
-		if( m_worldServer.getSpawnPoint() != null )
-		{
-			int spawnCubeX = Coords.blockToCube( m_worldServer.getSpawnPoint().posX );
-			int spawnCubeY = Coords.blockToCube( m_worldServer.getSpawnPoint().posY );
-			int spawnCubeZ = Coords.blockToCube( m_worldServer.getSpawnPoint().posZ );
-			int dx = Math.abs( spawnCubeX - cubeX );
-			int dz = Math.abs( spawnCubeZ - cubeZ );
-			if( dx <= WorldSpawnChunkDistance && dz <= WorldSpawnChunkDistance )
-			{
-				for( int y=-WorldSpawnChunkDistance; y<=WorldSpawnChunkDistance; y++ )
-				{
-					out.add( spawnCubeY + y );
-				}
-			}
-		}
+		*/
 	}
 	
 	private boolean cubeIsNearSpawn( int cubeX, int cubeY, int cubeZ )

@@ -10,14 +10,9 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.world;
 
-import java.util.List;
-
 import net.minecraft.block.Block;
-import net.minecraft.command.IEntitySelector;
-import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 
@@ -28,9 +23,38 @@ public class BlankColumn extends Column
 		super( world, cubeX, cubeZ );
 	}
 	
-	// UNDONE: override Column methods
+	// column overrides
 	
-	// rest of the Chunk overrides
+	public Cube getOrCreateCube( int cubeY, boolean isModified )
+	{
+		throw new UnsupportedOperationException();
+	}
+	
+	public Cube removeCube( int cubeY )
+	{
+		throw new UnsupportedOperationException();
+	}
+	
+	public void markSaved( )
+	{
+	}
+	
+	public int getTopCubeY( )
+	{
+		return Integer.MIN_VALUE;
+	}
+	
+	public int getBottomCubeY( )
+	{
+		return Integer.MIN_VALUE;
+	}
+	
+	public int getTopFilledCubeY( )
+	{
+		return Integer.MIN_VALUE;
+	}
+	
+	// chunk overrides
 	
 	@Override
 	public int getHeightValue( int localX, int localZ )
@@ -102,21 +126,6 @@ public class BlankColumn extends Column
 	}
 	
 	@Override
-	public void addEntity( Entity par1Entity )
-	{
-	}
-	
-	@Override
-	public void removeEntity( Entity par1Entity )
-	{
-	}
-
-	@Override
-	public void removeEntityAtIndex( Entity par1Entity, int par2 )
-	{
-	}
-
-	@Override
 	public boolean canBlockSeeTheSky( int par1, int par2, int par3 )
 	{
 		return false;
@@ -157,19 +166,7 @@ public class BlankColumn extends Column
 	public void setChunkModified( )
 	{
 	}
-
-	@Override
-	@SuppressWarnings( "rawtypes" )
-	public void getEntitiesWithinAABBForEntity( Entity par1Entity, AxisAlignedBB par2AxisAlignedBB, List par3List, IEntitySelector par4IEntitySelector )
-	{
-	}
 	
-	@Override
-	@SuppressWarnings( "rawtypes" )
-	public void getEntitiesOfTypeWithinAAAB( Class par1Class, AxisAlignedBB par2AxisAlignedBB, List par3List, IEntitySelector par4IEntitySelector )
-	{
-	}
-
 	@Override
 	public boolean needsSaving( boolean par1 )
 	{

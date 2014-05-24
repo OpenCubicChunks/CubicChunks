@@ -30,6 +30,9 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.Maps;
 
 import cuchaz.cubicChunks.util.AddressTools;
@@ -42,6 +45,8 @@ import cuchaz.cubicChunks.world.Cube;
 
 public class CubePlayerManager extends PlayerManager
 {
+	private static final Logger log = LogManager.getLogger();
+	
 	private static class PlayerInfo
 	{
 		public Set<Long> watchedAddresses;
@@ -343,9 +348,9 @@ public class CubePlayerManager extends PlayerManager
 		{
 			Cube cube = iter.next();
 			
-			// wait for the cube to be lit before sending this cube
+			// wait for the cube to be live before sending this cube
 			// or any cube in the order after it
-			if( !cube.isLit() )
+			if( !cube.getGeneratorStage().isLastStage() )
 			{
 				break;
 			}
@@ -385,9 +390,7 @@ public class CubePlayerManager extends PlayerManager
 		
 		// send the cube data
 		player.playerNetServerHandler.sendPacket( new S26PacketMapChunkBulk( columnsToSend ) );
-		
-		// TEMP
-		System.out.println( String.format( "Send %d cubes, %d remaining", cubesToSend.size(), info.outgoingCubes.size() ) );
+		log.info( String.format( "Server sent %d cubes to player, %d remaining", cubesToSend.size(), info.outgoingCubes.size() ) );
 		
 		// send tile entity data
 		for( TileEntity tileEntity : tileEntitiesToSend )
@@ -450,10 +453,10 @@ public class CubePlayerManager extends PlayerManager
 			int cubeX = AddressTools.getX( address );
 			int cubeY = AddressTools.getY( address );
 			int cubeZ = AddressTools.getZ( address );
-			Cube cube = getCubeProvider().loadCubeAndNeighbors( cubeX, cubeY, cubeZ );
+			getCubeProvider().loadCubeAndNeighbors( cubeX, cubeY, cubeZ );
 			
 			// make a new watcher
-			watcher = new CubeWatcher( cube );
+			watcher = new CubeWatcher( getCubeProvider().provideCube( cubeX, cubeY, cubeZ ) );
 			m_watchers.put( address, watcher );
 		}
 		return watcher;

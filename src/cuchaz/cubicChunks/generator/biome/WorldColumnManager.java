@@ -1,20 +1,32 @@
+/*******************************************************************************
+ * Copyright (c) 2014 Jeff Martin.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Jeff Martin - initial API and implementation
+ ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.util.ReportedException;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
+import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.IntCache;
+import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 
-public class WorldColumnManager
+public class WorldColumnManager extends WorldChunkManager
 {
     private GenLayer genBiomes;
 
@@ -56,6 +68,7 @@ public class WorldColumnManager
     /**
      * Gets the list of valid biomes for the player to spawn in.
      */
+    @Override
     public List<CubeBiomeGenBase> getBiomesToSpawnIn()
     {
         return this.biomesToSpawnIn;
@@ -64,6 +77,7 @@ public class WorldColumnManager
     /**
      * Returns the BiomeGenBase related to the x, z position on the world.
      */
+    @Override
     public CubeBiomeGenBase getBiomeGenAt(int xAbs, int zAbs)
     {
         return this.biomeCache.getBiomeGenAt(xAbs, zAbs);
@@ -72,6 +86,7 @@ public class WorldColumnManager
     /**
      * Returns a list of rainfall values for the specified blocks. Args: listToReuse, x, z, width, length.
      */
+    @Override
     public float[] getRainfall(float[] downfall, int cubeX, int cubeZ, int width, int length)
     {
         IntCache.resetIntCache();
@@ -117,6 +132,7 @@ public class WorldColumnManager
     /**
      * Return an adjusted version of a given temperature based on the y height. (not really).
      */
+    @Override
     public float getTemperatureAtHeight(float temp, int height)
     {
         return temp;
@@ -125,7 +141,8 @@ public class WorldColumnManager
     /**
      * Returns an array of biomes for the location input.
      */
-    public CubeBiomeGenBase[] getBiomesForGeneration(CubeBiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length)
+    @Override
+    public BiomeGenBase[] getBiomesForGeneration( BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length )
     {
         IntCache.resetIntCache();
 
@@ -163,7 +180,8 @@ public class WorldColumnManager
      * Returns biomes to use for the blocks and loads the other data like temperature and humidity onto the
      * WorldChunkManager Args: oldBiomeList, x, z, width, depth
      */
-    public CubeBiomeGenBase[] loadBlockGeneratorData(CubeBiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length)
+    @Override
+    public BiomeGenBase[] loadBlockGeneratorData( BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length)
     {
         return this.getBiomeGenAt(biomes, cubeX, cubeZ, width, length, true);
     }
@@ -172,7 +190,8 @@ public class WorldColumnManager
      * Return a list of biomes for the specified blocks. Args: listToReuse, x, y, width, length, cacheFlag (if false,
      * don't check biomeCache to avoid infinite loop in BiomeCacheBlock)
      */
-    public CubeBiomeGenBase[] getBiomeGenAt(CubeBiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length, boolean flag)
+    @Override
+    public BiomeGenBase[] getBiomeGenAt( BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length, boolean flag)
     {
         IntCache.resetIntCache();
 
@@ -208,6 +227,7 @@ public class WorldColumnManager
      * 
      * this doesn't appear to be used.
      */
+    @Override
     public boolean areBiomesViable(int x, int par2, int par3, List list)
     {
         IntCache.resetIntCache();
@@ -246,38 +266,52 @@ public class WorldColumnManager
         }
     }
 
-    public ChunkPosition func_150795_a(int p_150795_1_, int p_150795_2_, int p_150795_3_, List list, Random rand)
-    {
-        IntCache.resetIntCache();
-        int var6 = p_150795_1_ - p_150795_3_ >> 2;
-        int var7 = p_150795_2_ - p_150795_3_ >> 2;
-        int var8 = p_150795_1_ + p_150795_3_ >> 2;
-        int var9 = p_150795_2_ + p_150795_3_ >> 2;
-        int var10 = var8 - var6 + 1;
-        int var11 = var9 - var7 + 1;
-        int[] aInt = this.genBiomes.getInts(var6, var7, var10, var11);
-        ChunkPosition chunkPosition = null;
-        int var14 = 0;
-
-        for (int i = 0; i < var10 * var11; ++i)
-        {
-            int cubeX = var6 + i % var10 << 2;
-            int cubeZ = var7 + i / var10 << 2;
-            CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome(aInt[i]);
-
-            if (list.contains(biome) && (chunkPosition == null || rand.nextInt(var14 + 1) == 0))
-            {
-                chunkPosition = new ChunkPosition(cubeX, 0, cubeZ);
-                ++var14;
-            }
-        }
-
-        return chunkPosition;
-    }
-
+    @Override
+    @SuppressWarnings( "rawtypes" ) // sampleBlockXZFromSpawnableBiome
+	public ChunkPosition func_150795_a( int blockX, int blockZ, int blockDistance, List spawnBiomes, Random rand )
+	{
+    	// looks like we sample one point of noise for every 4 blocks
+		final int BlocksPerSample = 4;
+		
+    	// sample the noise to get biome data
+		IntCache.resetIntCache();
+		int minNoiseX = ( blockX - blockDistance )/BlocksPerSample;
+		int minNoiseZ = ( blockZ - blockDistance )/BlocksPerSample;
+		int maxNoiseX = ( blockX + blockDistance )/BlocksPerSample;
+		int maxNoiseZ = ( blockZ + blockDistance )/BlocksPerSample;
+		int noiseXSize = maxNoiseX - minNoiseX + 1;
+		int noiseZSize = maxNoiseZ - minNoiseZ + 1;
+		int[] biomeNoise = genBiomes.getInts( minNoiseX, minNoiseZ, noiseXSize, noiseZSize );
+		
+		// collect all xz positions from spawnable biomes
+		List<ChunkPosition> possibleSpawns = new ArrayList<ChunkPosition>();
+		for( int x=0; x<noiseXSize; x++ )
+		{
+			for( int z=0; z<noiseZSize; z++ )
+			{
+				CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome( biomeNoise[x + z*noiseXSize] );
+				if( spawnBiomes.contains( biome ) )
+				{
+					int spawnBlockX = ( minNoiseX + x )*BlocksPerSample;
+					int spawnBlockZ = ( minNoiseZ + z )*BlocksPerSample;
+					possibleSpawns.add( new ChunkPosition( spawnBlockX, 0, spawnBlockZ ) );
+				}
+			}
+		}
+		
+		if( possibleSpawns.isEmpty() )
+		{
+			return null;
+		}
+		
+		// pick a random spawn from the list
+		return possibleSpawns.get( rand.nextInt( possibleSpawns.size() ) );
+	}
+    
     /**
      * Calls the WorldChunkManager's biomeCache.cleanupCache()
      */
+    @Override
     public void cleanupCache()
     {
         this.biomeCache.cleanupCache();

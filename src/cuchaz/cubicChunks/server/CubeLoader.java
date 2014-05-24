@@ -42,6 +42,7 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
+import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.ConcurrentBatchedQueue;
 import cuchaz.cubicChunks.util.Coords;
@@ -177,8 +178,8 @@ public class CubeLoader implements IThreadedFileIO
 	{
 		// NOTE: return true to redo this call (used for batching)
 		
-		final int ColumnsBatchSize = 26;
-		final int CubesBatchSize = ColumnsBatchSize*6;
+		final int ColumnsBatchSize = 25;
+		final int CubesBatchSize = 250;
 		
 		int numColumnsSaved = 0;
 		int numColumnBytesSaved = 0;
@@ -341,6 +342,8 @@ public class CubeLoader implements IThreadedFileIO
 		nbt.setInteger( "y", cube.getY() );
 		nbt.setInteger( "z", cube.getZ() );
 		
+		nbt.setByte( "GeneratorStage", (byte)cube.getGeneratorStage().ordinal() );
+		
 		if( !cube.isEmpty() )
 		{
 			// blocks
@@ -360,7 +363,6 @@ public class CubeLoader implements IThreadedFileIO
 			{
 				nbt.setByteArray( "SkyLight", storage.getSkylightArray().data );
 			}
-			nbt.setBoolean( "Lit", cube.isLit() );
 		}
 		
 		// entities
@@ -449,8 +451,10 @@ public class CubeLoader implements IThreadedFileIO
 		
 		// build the cube
 		boolean hasSky = !world.provider.hasNoSky;
-		final Cube cube = new Cube( world, column, x, y, z );
-		column.addCube( cube );
+		final Cube cube = column.getOrCreateCube( y, false );
+		
+		// get the generator stage
+		cube.setGeneratorStage( GeneratorStage.values()[nbt.getByte( "GeneratorStage" )] );
 		
 		// is this an empty cube?
 		boolean isEmpty = !nbt.hasKey( "Blocks" );
@@ -476,7 +480,6 @@ public class CubeLoader implements IThreadedFileIO
 				storage.setSkylightArray( new NibbleArray( nbt.getByteArray( "SkyLight" ), 4 ) );
 			}
 			storage.removeInvalidBlocks();
-			cube.setIsLit( nbt.getBoolean( "Lit" ) );
 		}
 		
 		// entities
