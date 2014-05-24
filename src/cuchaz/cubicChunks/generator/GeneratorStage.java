@@ -16,8 +16,8 @@ public enum GeneratorStage
 	Terrain,
 	Biomes,
 	Features,
-	Population,
 	Lighting,
+	Population,
 	Live;
 	
 	public static GeneratorStage getFirstStage( )
