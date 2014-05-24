@@ -10,7 +10,6 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.builder;
 
-import libnoiseforjava.exception.ExceptionInvalidParam;
 import libnoiseforjava.module.ModuleBase;
 import libnoiseforjava.module.Perlin;
 import libnoiseforjava.module.ScaleBias;
@@ -62,7 +61,6 @@ public class BasicBuilder implements IBuilder
 
 	@Override
 	public void build()
-	throws ExceptionInvalidParam
 	{
 		Perlin perlin = new Perlin();
 		perlin.setSeed(SEED);

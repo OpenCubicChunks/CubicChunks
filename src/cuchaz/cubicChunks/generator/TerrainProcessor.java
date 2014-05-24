@@ -7,6 +7,8 @@
  * 
  * Contributors:
  *     Jeff Martin - initial API and implementation
+ *     Nick Whitney - oh so much. Restructuring of terrain gen and biome gen,
+ *     		for a start.
  ******************************************************************************/
 package cuchaz.cubicChunks.generator;
 
@@ -18,6 +20,7 @@ import net.minecraft.world.WorldType;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
 import cuchaz.cubicChunks.server.CubeWorldServer;
+import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 
@@ -43,7 +46,7 @@ public class TerrainProcessor extends CubeProcessor
 	
 	// these are the knobs for terrain generation
 	private static double maxElev = 512; // approximately how high blocks will go
-	private static double elevFudge = 6; // fudge factor for elevation
+	private static double elevFudge = 6; // fudge factor for elevation. this is a magic number.
 	private static int octaves = 10; // size of features. increasing by 1 approximately doubles the size of features.
 	
 	public TerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
@@ -109,31 +112,25 @@ public class TerrainProcessor extends CubeProcessor
 		
 		for( int xRel=0; xRel < 16; xRel++ )
 		{
-			int xAbs = cubeX << 4 | xRel;
-			
 			for( int zRel=0; zRel < 16; zRel++ )
 			{				
-				int zAbs = cubeZ << 4 | zRel;
-				
 				for( int yRel=0; yRel < 16; yRel++ )
 				{
-					int yAbs = cubeY << 4 | yRel;
-					
 					double val = valueArray[xRel][yRel][zRel];
 					
-					val -= yAbs;
+					int yAbs = Coords.localToBlock(cubeY, yRel);
 					
-					if( val > 0.0D )
+					if( val - yAbs > 0 )
 					{
-						cube.setBlock( xRel, yRel, zRel, Blocks.stone, 0);
+						cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.stone);
 					}
 					else if( yAbs < seaLevel )
 					{
-						cube.setBlock( xRel, yRel, zRel, Blocks.water, 0);
+						cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.water);
 					}
 					else
 					{
-						cube.setBlock( xRel, yRel, zRel, Blocks.air, 0);
+						cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.air);
 					}
 				}		
 			}
@@ -412,6 +409,8 @@ public class TerrainProcessor extends CubeProcessor
 	}
 	
 	/**
+	 * This is only kept for reference. it should NEVER be used. NEVER NEVER NEVER.
+	 * 
 	 * @deprecated
 	private void generateNoise( int noiseX, int noiseY, int noiseZ )
 	{
