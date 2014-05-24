@@ -14,10 +14,10 @@ package cuchaz.cubicChunks.generator;
 public enum GeneratorStage
 {
 	Terrain,
-	Features,
 	Biomes,
-	Lighting,
+	Features,
 	Population,
+	Lighting,
 	Live;
 	
 	public static GeneratorStage getFirstStage( )
