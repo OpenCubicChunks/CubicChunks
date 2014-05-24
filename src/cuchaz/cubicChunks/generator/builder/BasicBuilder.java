@@ -47,25 +47,21 @@ public class BasicBuilder implements IBuilder
 	{
 		this.MAX_ELEV = maxElev;	
 	}
-	/**
-	 * Sets the sea level for the world. This must be between -1.0 (minimum
-	 * elevation) and 1.0 (maximum elevation). I recommend dividing the desired 
-	 * seaLevel by the desired build height and feeding the result into this method.
-	 */
+
 	public void setSeaLevel(double seaLevel)
 	{
 		this.SEA_LEVEL = seaLevel;	
 	}
 
 	@Override
-	public void build() throws ExceptionInvalidParam
+	public void build()
 	{
 		Perlin baseContinentDef_pe0 = new Perlin();
 		baseContinentDef_pe0.setSeed(SEED);
 		baseContinentDef_pe0.setFrequency(1.0);
 		baseContinentDef_pe0.setPersistence(0.5);
 		baseContinentDef_pe0.setLacunarity(2.2089);
-		baseContinentDef_pe0.setOctaveCount(10);
+		baseContinentDef_pe0.setOctaveCount(11);
 		baseContinentDef_pe0.build();
 		
 		ScaleBias scaleBias = new ScaleBias(baseContinentDef_pe0);
@@ -73,6 +69,7 @@ public class BasicBuilder implements IBuilder
 		scaleBias.setBias(SEA_LEVEL);
 		
 		finalModule = scaleBias;
+//		finalModule = baseContinentDef_pe0;
 	}
 
 	@Override
