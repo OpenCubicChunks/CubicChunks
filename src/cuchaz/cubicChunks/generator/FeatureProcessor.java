@@ -10,45 +10,49 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator;
 
-import net.minecraft.world.gen.MapGenBase;
-import net.minecraft.world.gen.MapGenCaves;
-import net.minecraft.world.gen.MapGenRavine;
+import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.MapGenMineshaft;
 import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
 import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.generator.features.CubicCaveGen;
+import cuchaz.cubicChunks.generator.features.CubicRavineGen;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 
 public class FeatureProcessor extends CubeProcessor
 {
-	private MapGenBase m_caveGenerator;
+	private CubicCaveGen caveGenerator;
 	private MapGenStronghold m_strongholdGenerator;
 	private MapGenVillage m_villageGenerator;
 	private MapGenMineshaft m_mineshaftGenerator;
 	private MapGenScatteredFeature m_scatteredFeatureGenerator;
-	private MapGenBase m_ravineGenerator;
+	private CubicRavineGen ravineGenerator;
+	
+	private World worldObj;
 	
 	public FeatureProcessor( String name, CubeProvider provider, int batchSize )
 	{
 		super( name, provider, batchSize );
 		
-		m_caveGenerator = new MapGenCaves();
+		caveGenerator = new CubicCaveGen();
 		m_strongholdGenerator = new MapGenStronghold();
 		m_villageGenerator = new MapGenVillage();
 		m_mineshaftGenerator = new MapGenMineshaft();
 		m_scatteredFeatureGenerator = new MapGenScatteredFeature();
-		m_ravineGenerator = new MapGenRavine();
+		ravineGenerator = new CubicRavineGen();	
 	}
 	
 	@Override
 	public boolean calculate( Cube cube )
-	{
-		/* UNDONE: enable feature generation
+	{	
+		worldObj = cube.getWorld();
+		
 		// generate world features
-		m_caveGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
-		m_ravineGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
+		caveGenerator.generate( worldObj, cube );
+		ravineGenerator.generate( worldObj, cube );
+		/* UNDONE: enable feature generation
 		if( m_mapFeaturesEnabled )
 		{
 			m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
