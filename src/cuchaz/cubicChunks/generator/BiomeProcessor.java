@@ -107,12 +107,10 @@ public class BiomeProcessor extends CubeProcessor
 				Block topBlock = biome.topBlock;
 				Block fillerBlock = biome.fillerBlock;
 
-				for ( int blockY = top; blockY >= bottom; --blockY )
+				for ( int yAbs = top; yAbs >= bottom; --yAbs )
 				{
 					//Current block
-					Block block = Coords.blockToCube( blockY ) == cube.getY() ? //if in current cube, get block from current cube, else get block from lower cube
-						cube.getBlock( xRel, Coords.blockToLocal( blockY ), zRel) : 
-						below.getBlock( xRel, Coords.blockToLocal( blockY ), zRel );
+					Block block = replaceBlocksForBiome_getBlock(cube, below, above, xAbs, yAbs, zAbs );
 					
 					//Set numBlocksToChange to -1 when we reach air, skip everything else
 					if ( block == Blocks.air )
@@ -122,10 +120,10 @@ public class BiomeProcessor extends CubeProcessor
 					}
 
 					// Why? If the block has already been replaced, skip it and go to the next block
-					if ( /*worldY <= alterationTop && */block != Blocks.stone )
-					{
-						continue;
-					}
+//					if ( /*worldY <= alterationTop && */block != Blocks.stone )
+//					{
+//						continue;
+//					}
 
 					//If we are 1 block below air...
 					if ( numBlocksToChange == -1 )
@@ -137,13 +135,13 @@ public class BiomeProcessor extends CubeProcessor
 							fillerBlock = Blocks.stone;
 						}
 						//If we are above or at 4 block under water and at or below one block above water
-						else if ( blockY >= seaLevel - 4 && blockY <= seaLevel + 1 )
+						else if ( yAbs >= seaLevel - 4 && yAbs <= seaLevel + 1 )
 						{
 							topBlock = biome.topBlock;
 							fillerBlock = biome.fillerBlock;
 						}
 						//If top block is air and we are below sea level use water instead
-						if ( blockY < seaLevel && topBlock == Blocks.air )
+						if ( yAbs < seaLevel && topBlock == Blocks.air )
 						{
 							topBlock = Blocks.water;
 						}
@@ -151,17 +149,17 @@ public class BiomeProcessor extends CubeProcessor
 						numBlocksToChange = depth;
 
 						//Modify blocks only if we are at or below alteration top
-						if ( blockY <= alterationTop )
+						if ( yAbs <= alterationTop )
 						{
-							if ( blockY >= seaLevel - 1 )
+							if ( yAbs >= seaLevel - 1 )
 							{
 								//If we are above sea level
-								replaceBlocksForBiome_setBlock(topBlock, cube, below, xAbs, blockY, zAbs);
+								replaceBlocksForBiome_setBlock(topBlock, cube, below, xAbs, yAbs, zAbs);
 							} 
 							else
 							{
 								//Don't set grass underwater
-								replaceBlocksForBiome_setBlock(fillerBlock, cube, below, xAbs, blockY, zAbs);
+								replaceBlocksForBiome_setBlock(fillerBlock, cube, below, xAbs, yAbs, zAbs);
 							}
 						}
 
@@ -177,9 +175,9 @@ public class BiomeProcessor extends CubeProcessor
 					numBlocksToChange--;
 
 					//Set blocks only if we are below or at alteration top
-					if ( blockY <= alterationTop )
+					if ( yAbs <= alterationTop )
 					{
-						replaceBlocksForBiome_setBlock(fillerBlock, cube, below, xAbs, blockY, zAbs);
+						replaceBlocksForBiome_setBlock(fillerBlock, cube, below, xAbs, yAbs, zAbs);
 					}
 
 					// random sandstone generation
@@ -197,6 +195,8 @@ public class BiomeProcessor extends CubeProcessor
 	
 	private void replaceBlocksForBiome_setBlock(Block block, Cube cube, Cube below, int xAbs, int yAbs, int zAbs)
 	{
+		assert Coords.blockToCube( yAbs ) == cube.getY() || Coords.blockToCube( yAbs ) == cube.getY() - 1;
+		
 		int xRel = xAbs & 15;
 		int yRel = yAbs & 15;
 		int zRel = zAbs & 15;
@@ -209,8 +209,29 @@ public class BiomeProcessor extends CubeProcessor
 		else // we're actually in the cube below
 		{
 			assert m_worldServer.getCubeProvider().cubeExists( Coords.blockToCube( xAbs ), Coords.blockToCube( yAbs ), Coords.blockToCube( zAbs ) );
-			
 			below.setBlockForGeneration( xRel, yRel, zRel, block );
+		}
+	}
+	
+	private Block replaceBlocksForBiome_getBlock(Cube cube, Cube below, Cube above, int xAbs, int yAbs, int zAbs)
+	{
+		assert m_worldServer.getCubeProvider().cubeExists( Coords.blockToCube( xAbs ), Coords.blockToCube( yAbs ), Coords.blockToCube( zAbs ) );
+		
+		int xRel = xAbs & 15;
+		int yRel = yAbs & 15;
+		int zRel = zAbs & 15;
+		
+		if(Coords.blockToCube( yAbs ) == cube.getY()) // check if we're in the same cube as Cube
+		{
+			//If we are in the same cube
+			return cube.getBlock( xRel, yRel, zRel );
+		} 
+		else if(Coords.blockToCube( yAbs ) == cube.getY() - 1)// are we in cube below?
+		{
+			return below.getBlock( xRel, yRel, zRel );
+		} else {//we are in cube above
+			assert Coords.blockToCube( yAbs ) == cube.getY() + 1;
+			return above.getBlock( xRel, yRel, zRel );
 		}
 	}
 }
