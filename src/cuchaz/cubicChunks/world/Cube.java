@@ -608,7 +608,7 @@ public class Cube
 			int localX = index & 15;
 			int localY = index >> 8 & 15;
 			int localZ = index >> 16 & 15;
-			Block block = m_storage.func_150819_a( localX, localZ, localY );
+			Block block = m_storage.func_150819_a( localX, localY, localZ );
 			
 			if( block.getTickRandomly() )
 			{
