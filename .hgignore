@@ -5,6 +5,10 @@ syntax: regexp
 ^\.settings$
 syntax: regexp
 ^\.classpath$
+syntax: regexp
+^\.directory$
 syntax: glob
 bin/
+build/
 .project
+.nb-gradle/
