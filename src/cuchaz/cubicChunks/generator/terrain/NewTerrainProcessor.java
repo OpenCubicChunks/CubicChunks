@@ -10,7 +10,7 @@
  *     Nick Whitney - oh so much. Restructuring of terrain gen and biome gen,
  *     		for a start.
  ******************************************************************************/
-package cuchaz.cubicChunks.generator;
+package cuchaz.cubicChunks.generator.terrain;
 
 import java.util.Random;
 
@@ -19,12 +19,13 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldType;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
+import cuchaz.cubicChunks.generator.builder.ComplexWorldBuilder;
 import cuchaz.cubicChunks.server.CubeWorldServer;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 
-public class TerrainProcessor extends CubeProcessor
+public class NewTerrainProcessor extends CubeProcessor
 {
 	private CubeWorldServer m_worldServer;
 	private CubeBiomeGenBase[] m_biomes;
@@ -41,7 +42,8 @@ public class TerrainProcessor extends CubeProcessor
 	private double[][][] noiseArray;
 	private double[][][] valueArray;
 	
-	private static BasicBuilder builder;
+//	private static BasicBuilder builder;
+	private static ComplexWorldBuilder builder;
 	private static int seaLevel;
 	
 	// these are the knobs for terrain generation
@@ -49,7 +51,7 @@ public class TerrainProcessor extends CubeProcessor
 	private static double elevFudge = 6; // fudge factor for elevation. this is a magic number.
 	private static int octaves = 10; // size of features. increasing by 1 approximately doubles the size of features.
 	
-	public TerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
+	public NewTerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
 	{
 		super( name, worldServer.getCubeProvider(), batchSize );
 		
@@ -71,11 +73,12 @@ public class TerrainProcessor extends CubeProcessor
 			}
 		}
 		
-		builder = new BasicBuilder();
+//		builder = new BasicBuilder();
+		builder = new ComplexWorldBuilder();
 		builder.setSeed(m_rand.nextInt());
 //		builder.setMaxElev(maxElev); // this is replaced by scaleNoiseArray since it needs to be scaled after biome modification
-		builder.setSeaLevel(seaLevel);
-		builder.setOctaves(octaves);
+//		builder.setSeaLevel(seaLevel);
+//		builder.setOctaves(octaves);
 		builder.build();
 	}
 	
@@ -118,7 +121,7 @@ public class TerrainProcessor extends CubeProcessor
 				{
 					double val = valueArray[xRel][yRel][zRel];
 					
-					int yAbs = Coords.localToBlock(cubeY, yRel);
+					int yAbs = CubeCoordinate.localToBlock(cubeY, yRel);
 					
 					if( val - yAbs > 0 )
 					{
@@ -222,8 +225,8 @@ public class TerrainProcessor extends CubeProcessor
 						CubeBiomeGenBase ijBiome = m_biomes[x + i + 2 + ( z + j + 2 )*9]; 
 						
 						// ranges from -1.0 to 1.0
-						float minHeight = ijBiome.minHeight; // min biome height at the x + i, z + j coord
-						float maxHeight = ijBiome.maxHeight; // max biome height at the x + i, z + j coord.
+						float minHeight = ijBiome.biomeHeight; // min biome height at the x + i, z + j coord
+						float maxHeight = ijBiome.biomeVolatility; // max biome height at the x + i, z + j coord.
 						
 						// if world type is amplified, increase the land height a lot. don't change the sea depth.
 						if( m_worldServer.getWorldInfo().getTerrainType() == WorldType.field_151360_e && minHeight > 0.0F )
@@ -237,7 +240,7 @@ public class TerrainProcessor extends CubeProcessor
 						
 						// if the biome minheight at x + i, z + j coord is greater than the biome 
 						//minheight at x, z, cut the scale in half to smooth
-						if( ijBiome.minHeight > biome.minHeight ) 
+						if( ijBiome.biomeHeight > biome.biomeHeight ) 
 						{
 							heightFilter /= 2;
 						}
