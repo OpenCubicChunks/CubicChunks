@@ -12,7 +12,7 @@ package cuchaz.cubicChunks.generator;
 
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.server.CubeWorldServer;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.world.Column;
 
 public class ColumnGenerator
@@ -31,7 +31,7 @@ public class ColumnGenerator
 		// generate biome info. This is a hackjob.
 		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(
 			m_biomes,
-			Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ),
+			CubeCoordinate.cubeToMinBlock( cubeX ), CubeCoordinate.cubeToMinBlock( cubeZ ),
 			16, 16
 		);
 		

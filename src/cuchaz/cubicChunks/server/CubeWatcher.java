@@ -24,7 +24,7 @@ import net.minecraft.world.World;
 import com.google.common.collect.Maps;
 
 import cuchaz.cubicChunks.util.Bits;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.world.ColumnView;
 import cuchaz.cubicChunks.world.Cube;
 
@@ -110,9 +110,9 @@ public class CubeWatcher
 			int localX = unpackLocalX( address );
 			int localY = unpackLocalY( address );
 			int localZ = unpackLocalZ( address );
-			int blockX = Coords.localToBlock( m_cube.getX(), localX );
-			int blockY = Coords.localToBlock( m_cube.getY(), localY );
-			int blockZ = Coords.localToBlock( m_cube.getZ(), localZ );
+			int blockX = CubeCoordinate.localToBlock( m_cube.getX(), localX );
+			int blockY = CubeCoordinate.localToBlock( m_cube.getY(), localY );
+			int blockZ = CubeCoordinate.localToBlock( m_cube.getZ(), localZ );
 			
 			// send single block updates
 			sendPacketToAllPlayers( new S23PacketBlockChange( blockX, blockY, blockZ, world ) );
@@ -144,7 +144,7 @@ public class CubeWatcher
 				int localX = unpackLocalX( address );
 				int localY = unpackLocalY( address );
 				int localZ = unpackLocalZ( address );
-				int blockY = Coords.localToBlock( m_cube.getY(), localY );
+				int blockY = CubeCoordinate.localToBlock( m_cube.getY(), localY );
 				coords[i++] = (short)( ( localX & 0xf ) << 12 | ( localZ & 0xf ) << 8 | ( blockY & 0xff ) );
 			}
 			

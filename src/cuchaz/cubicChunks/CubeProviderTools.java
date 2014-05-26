@@ -10,19 +10,19 @@
  ******************************************************************************/
 package cuchaz.cubicChunks;
 
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 
 public class CubeProviderTools
 {
 	public static boolean blocksExist( CubeProvider provider, int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ )
 	{
 		// convert block bounds to chunk bounds
-		int minCubeX = Coords.blockToCube( minBlockX );
-		int minCubeY = Coords.blockToCube( minBlockY );
-		int minCubeZ = Coords.blockToCube( minBlockZ );
-		int maxCubeX = Coords.blockToCube( maxBlockX );
-		int maxCubeY = Coords.blockToCube( maxBlockY );
-		int maxCubeZ = Coords.blockToCube( maxBlockZ );
+		int minCubeX = CubeCoordinate.blockToCube( minBlockX );
+		int minCubeY = CubeCoordinate.blockToCube( minBlockY );
+		int minCubeZ = CubeCoordinate.blockToCube( minBlockZ );
+		int maxCubeX = CubeCoordinate.blockToCube( maxBlockX );
+		int maxCubeY = CubeCoordinate.blockToCube( maxBlockY );
+		int maxCubeZ = CubeCoordinate.blockToCube( maxBlockZ );
 		
 		return cubesExist( provider, minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ );
 	}

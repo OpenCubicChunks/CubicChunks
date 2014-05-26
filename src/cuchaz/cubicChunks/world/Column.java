@@ -42,7 +42,7 @@ import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Bits;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.util.RangeInt;
 
 public class Column extends Chunk
@@ -195,11 +195,11 @@ public class Column extends Chunk
 	public Block func_150810_a( final int localX, final int blockY, final int localZ )
 	{
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			return cube.getBlock( localX, localY, localZ );
 		}
 		
@@ -210,7 +210,7 @@ public class Column extends Chunk
 	public boolean func_150807_a( int localX, int blockY, int localZ, Block block, int meta )
 	{
 		// is there a chunk for this block?
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube == null )
 		{
@@ -218,7 +218,7 @@ public class Column extends Chunk
 		}
 		
 		// did anything change?
-		int localY = Coords.blockToLocal( blockY );
+		int localY = CubeCoordinate.blockToLocal( blockY );
 		Block oldBlock = cube.getBlock( localX, localY, localZ );
 		boolean changed = cube.setBlock( localX, localY, localZ, block, meta );
 		if( !changed )
@@ -239,8 +239,8 @@ public class Column extends Chunk
 		int newOpacity = block.getLightOpacity();
 		int oldOpacity = oldBlock.getLightOpacity();
 		
-		int blockX = Coords.localToBlock( xPosition, localX );
-		int blockZ = Coords.localToBlock( zPosition, localZ );
+		int blockX = CubeCoordinate.localToBlock( xPosition, localX );
+		int blockZ = CubeCoordinate.localToBlock( zPosition, localZ );
 		
 		CubeWorld cubeWorld = (CubeWorld)worldObj;
 		
@@ -286,11 +286,11 @@ public class Column extends Chunk
 	public int getBlockMetadata( int localX, int blockY, int localZ )
 	{
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			return cube.getBlockMetadata( localX, localY, localZ );
 		}
 		return 0;
@@ -300,11 +300,11 @@ public class Column extends Chunk
 	public boolean setBlockMetadata( int localX, int blockY, int localZ, int meta )
 	{
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			return cube.setBlockMetadata( localX, localY, localZ, meta );
 		}
 		return false;
@@ -330,20 +330,20 @@ public class Column extends Chunk
 	public int getTopFilledCubeY( )
 	{
 		int blockY = getLightIndex().getTopNonTransparentBlockY();
-		return Coords.blockToCube( blockY );
+		return CubeCoordinate.blockToCube( blockY );
 	}
 	
 	@Override
 	public int getTopFilledSegment()
     {
-		return Coords.cubeToMinBlock( getTopFilledCubeY() );
+		return CubeCoordinate.cubeToMinBlock( getTopFilledCubeY() );
     }
 	
 	@Override
 	public boolean getAreLevelsEmpty( int minBlockY, int maxBlockY )
 	{
-		int minCubeY = Coords.blockToCube( minBlockY );
-		int maxCubeY = Coords.blockToCube( maxBlockY );
+		int minCubeY = CubeCoordinate.blockToCube( minBlockY );
+		int maxCubeY = CubeCoordinate.blockToCube( maxBlockY );
 		for( int cubeY=minCubeY; cubeY<=maxCubeY; cubeY++ )
 		{
 			Cube cube = m_cubes.get( cubeY );
@@ -382,7 +382,7 @@ public class Column extends Chunk
 	@Override
 	public void addEntity( Entity entity )
     {
-		int cubeY = Coords.getCubeYForEntity( entity );
+		int cubeY = CubeCoordinate.getCubeYForEntity( entity );
 		
 		// pass off to the cube
 		Cube cube = m_cubes.get( cubeY );
@@ -444,8 +444,8 @@ public class Column extends Chunk
 	public void getEntitiesOfTypeWithinAAAB( Class c, AxisAlignedBB queryBox, List out, IEntitySelector selector )
 	{
 		// get a y-range that 2 blocks wider than the box for safety
-		int minCubeY = Coords.blockToCube( MathHelper.floor_double( queryBox.minY - 2 ) );
-		int maxCubeY = Coords.blockToCube( MathHelper.floor_double( queryBox.maxY + 2 ) );
+		int minCubeY = CubeCoordinate.blockToCube( MathHelper.floor_double( queryBox.minY - 2 ) );
+		int maxCubeY = CubeCoordinate.blockToCube( MathHelper.floor_double( queryBox.maxY + 2 ) );
 		for( Cube cube : getCubes( minCubeY, maxCubeY ) )
 		{
 			cube.getEntities( (List<Entity>)out, c, queryBox, selector );
@@ -460,8 +460,8 @@ public class Column extends Chunk
 	public void getEntitiesWithinAABBForEntity( Entity excludedEntity, AxisAlignedBB queryBox, List out, IEntitySelector selector )
 	{
 		// get a y-range that 2 blocks wider than the box for safety
-		int minCubeY = Coords.blockToCube( MathHelper.floor_double( queryBox.minY - 2 ) );
-		int maxCubeY = Coords.blockToCube( MathHelper.floor_double( queryBox.maxY + 2 ) );
+		int minCubeY = CubeCoordinate.blockToCube( MathHelper.floor_double( queryBox.minY - 2 ) );
+		int maxCubeY = CubeCoordinate.blockToCube( MathHelper.floor_double( queryBox.maxY + 2 ) );
 		for( Cube cube : getCubes( minCubeY, maxCubeY ) )
 		{
 			cube.getEntitiesExcept( (List<Entity>)out, excludedEntity, queryBox, selector );
@@ -475,11 +475,11 @@ public class Column extends Chunk
 	public TileEntity func_150806_e( int localX, int blockY, int localZ )
 	{
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			return cube.getTileEntity( localX, localY, localZ );
 		}
 		return null;
@@ -496,13 +496,13 @@ public class Column extends Chunk
 		int blockZ = tileEntity.field_145849_e;
 		
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localX = Coords.blockToLocal( blockX );
-			int localY = Coords.blockToLocal( blockY );
-			int localZ = Coords.blockToLocal( blockZ );
+			int localX = CubeCoordinate.blockToLocal( blockX );
+			int localY = CubeCoordinate.blockToLocal( blockY );
+			int localZ = CubeCoordinate.blockToLocal( blockZ );
 			cube.addTileEntity( localX, localY, localZ, tileEntity );
 		}
 		
@@ -523,11 +523,11 @@ public class Column extends Chunk
 		// NOTE: this is called when the world sets this block
 		
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			cube.addTileEntity( localX, localY, localZ, tileEntity );
 		}
 		else
@@ -545,11 +545,11 @@ public class Column extends Chunk
 		if( isChunkLoaded )
 		{
 			// pass off to the cube
-			int cubeY = Coords.blockToCube( blockY );
+			int cubeY = CubeCoordinate.blockToCube( blockY );
 			Cube cube = m_cubes.get( cubeY );
 			if( cube != null )
 			{
-				int localY = Coords.blockToLocal( blockY );
+				int localY = CubeCoordinate.blockToLocal( blockY );
 				cube.removeTileEntity( localX, localY, localZ );
 			}
 		}
@@ -817,7 +817,7 @@ public class Column extends Chunk
 		{
 			// compute a new rain height
 			int maxBlockY = getTopFilledSegment() + 15;
-			int minBlockY = Coords.cubeToMinBlock( getBottomCubeY() );
+			int minBlockY = CubeCoordinate.cubeToMinBlock( getBottomCubeY() );
 			
 			height = -1;
 			
@@ -847,11 +847,11 @@ public class Column extends Chunk
 		// NOTE: this is called by WorldRenderers
 		
 		// pass off to cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			int light = cube.getBlockLightValue( localX, localY, localZ, skylightSubtracted );
 			
 			if( light > 0 )
@@ -876,11 +876,11 @@ public class Column extends Chunk
 		// NOTE: this is the light function that is called by the rendering code on client
 		
 		// pass off to cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			return cube.getLightValue( lightType, localX, localY, localZ );
 		}
 		
@@ -899,11 +899,11 @@ public class Column extends Chunk
 	public void setLightValue( EnumSkyBlock lightType, int localX, int blockY, int localZ, int light )
 	{
 		// pass off to cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			cube.setLightValue( lightType, localX, localY, localZ, light );
 			
 			isModified = true;
@@ -990,15 +990,15 @@ public class Column extends Chunk
 			// get the cube that was pointed to
 			Cube cube = m_roundRobinCubes.get( cubeIndex );
 			
-			int blockX = Coords.localToBlock( xPosition, localX );
-			int blockZ = Coords.localToBlock( zPosition, localZ );
+			int blockX = CubeCoordinate.localToBlock( xPosition, localX );
+			int blockZ = CubeCoordinate.localToBlock( zPosition, localZ );
 			
 			// for each block in this segment block column...
 			for( int localY=0; localY<16; ++localY )
 			{
 				if( cube.getBlock( localX, localY, localZ ).getMaterial() == Material.air )
 				{
-					int blockY = Coords.localToBlock( cubeIndex, localY );
+					int blockY = CubeCoordinate.localToBlock( cubeIndex, localY );
 					
 					// if there's a light source next to this block, update the light source
 					if( worldObj.getBlock( blockX, blockY - 1, blockZ ).getLightValue() > 0 )

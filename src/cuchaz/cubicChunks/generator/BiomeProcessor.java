@@ -22,7 +22,7 @@ import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.server.CubeWorldServer;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 
@@ -64,21 +64,21 @@ public class BiomeProcessor extends CubeProcessor
 		// generate biome info. This is a hackjob.
 		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(
 			m_biomes,
-			Coords.cubeToMinBlock( cube.getX() ), Coords.cubeToMinBlock( cube.getZ() ),
+			CubeCoordinate.cubeToMinBlock( cube.getX() ), CubeCoordinate.cubeToMinBlock( cube.getZ() ),
 			16, 16
 		);
 		
 		m_noise = m_noiseGen.func_151599_a(
 			m_noise,
-			Coords.cubeToMinBlock( cube.getX() ), Coords.cubeToMinBlock( cube.getZ() ),
+			CubeCoordinate.cubeToMinBlock( cube.getX() ), CubeCoordinate.cubeToMinBlock( cube.getZ() ),
 			16, 16, 16, 16, 1
 		);
 		
 		Cube above = provider.provideCube(cube.getX(), cube.getY() + 1, cube.getZ());
 		Cube below = provider.provideCube(cube.getX(), cube.getY() - 1, cube.getZ());
 		
-		int topOfCube = Coords.cubeToMaxBlock(cube.getY());
-		int bottomOfCube = Coords.cubeToMinBlock(cube.getY());
+		int topOfCube = CubeCoordinate.cubeToMaxBlock(cube.getY());
+		int bottomOfCube = CubeCoordinate.cubeToMinBlock(cube.getY());
 		
 		// already checked that cubes above and below exist
 		int alterationTop = topOfCube;
@@ -110,9 +110,9 @@ public class BiomeProcessor extends CubeProcessor
 				for ( int blockY = top; blockY >= bottom; --blockY )
 				{
 					//Current block
-					Block block = Coords.blockToCube( blockY ) == cube.getY() ? //if in current cube, get block from current cube, else get block from lower cube
-						cube.getBlock( xRel, Coords.blockToLocal( blockY ), zRel) : 
-						below.getBlock( xRel, Coords.blockToLocal( blockY ), zRel );
+					Block block = CubeCoordinate.blockToCube( blockY ) == cube.getY() ? //if in current cube, get block from current cube, else get block from lower cube
+						cube.getBlock( xRel, CubeCoordinate.blockToLocal( blockY ), zRel) : 
+						below.getBlock( xRel, CubeCoordinate.blockToLocal( blockY ), zRel );
 					
 					//Set numBlocksToChange to -1 when we reach air, skip everything else
 					if ( block == Blocks.air )
@@ -201,14 +201,14 @@ public class BiomeProcessor extends CubeProcessor
 		int yRel = yAbs & 15;
 		int zRel = zAbs & 15;
 		
-		if(Coords.blockToCube( yAbs ) == cube.getY()) // check if we're in the same cube as Cube
+		if(CubeCoordinate.blockToCube( yAbs ) == cube.getY()) // check if we're in the same cube as Cube
 		{
 			//If we are in the same cube
 			cube.setBlockForGeneration( xRel, yRel, zRel, block );
 		} 
 		else // we're actually in the cube below
 		{
-			assert m_worldServer.getCubeProvider().cubeExists( Coords.blockToCube( xAbs ), Coords.blockToCube( yAbs ), Coords.blockToCube( zAbs ) );
+			assert m_worldServer.getCubeProvider().cubeExists( CubeCoordinate.blockToCube( xAbs ), CubeCoordinate.blockToCube( yAbs ), CubeCoordinate.blockToCube( zAbs ) );
 			
 			below.setBlockForGeneration( xRel, yRel, zRel, block );
 		}

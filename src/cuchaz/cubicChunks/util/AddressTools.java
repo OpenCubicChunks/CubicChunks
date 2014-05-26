@@ -10,7 +10,6 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.util;
 
-
 public class AddressTools
 {
 	// Anvil format details:

@@ -14,7 +14,7 @@ import net.minecraft.world.EnumSkyBlock;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 import cuchaz.cubicChunks.world.LightIndex;
@@ -84,8 +84,8 @@ public class FirstLightProcessor extends CubeProcessor
 		int lightMinBlockY = lightMaxBlockY - 15;
 		
 		// get the cube bounds
-		int cubeMinBlockY = Coords.cubeToMinBlock( cube.getY() );
-		int cubeMaxBlockY = Coords.cubeToMaxBlock( cube.getY() );
+		int cubeMinBlockY = CubeCoordinate.cubeToMinBlock( cube.getY() );
+		int cubeMaxBlockY = CubeCoordinate.cubeToMaxBlock( cube.getY() );
 		
 		// could this sky light possibly reach this cube?
 		if( cubeMinBlockY > lightMaxBlockY )
@@ -124,7 +124,7 @@ public class FirstLightProcessor extends CubeProcessor
 				if( blockY <= cubeMaxBlockY )
 				{
 					// apply the light
-					int localY = Coords.blockToLocal( blockY );
+					int localY = CubeCoordinate.blockToLocal( blockY );
 					cube.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, light );
 				}
 			}
@@ -176,7 +176,7 @@ public class FirstLightProcessor extends CubeProcessor
 		//   must be at or below an opaque block below sea level
 		//   must be a block light source
 		
-		int blockY = Coords.localToBlock( cube.getY(), localY );
+		int blockY = CubeCoordinate.localToBlock( cube.getY(), localY );
 		LightIndex index = cube.getColumn().getLightIndex();
 		
 		boolean lightBlock = false;
@@ -194,8 +194,8 @@ public class FirstLightProcessor extends CubeProcessor
 		
 		if( lightBlock )
 		{
-			int blockX = Coords.localToBlock( cube.getX(), localX );
-			int blockZ = Coords.localToBlock( cube.getZ(), localZ );
+			int blockX = CubeCoordinate.localToBlock( cube.getX(), localX );
+			int blockZ = CubeCoordinate.localToBlock( cube.getZ(), localZ );
 			return cube.getWorld().func_147451_t( blockX, blockY, blockZ );
 		}
 		
