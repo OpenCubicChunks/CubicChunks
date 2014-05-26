@@ -30,10 +30,10 @@ public class BiomeGenForest extends CubeBiomeGenBase
     protected static final WorldGenForest field_150630_aD = new WorldGenForest(false, false);
     protected static final WorldGenCanopyTree field_150631_aE = new WorldGenCanopyTree(false);
 
-    public BiomeGenForest(int p_i45377_1_, int p_i45377_2_)
+    public BiomeGenForest(int biomeID, int variant)
     {
-        super(p_i45377_1_);
-        this.field_150632_aF = p_i45377_2_;
+        super(biomeID);
+        this.field_150632_aF = variant;
         this.theBiomeDecorator.treesPerChunk = 10;
         this.theBiomeDecorator.grassPerChunk = 2;
 
@@ -212,7 +212,7 @@ public class BiomeGenForest extends CubeBiomeGenBase
         if (this.biomeID == CubeBiomeGenBase.forest.biomeID)
         {
             BiomeGenForest var1 = new BiomeGenForest(this.biomeID + 128, 1);
-            var1.setHeightRange(new CubeBiomeGenBase.Height(this.minHeight, this.maxHeight + 0.2F));
+            var1.setHeightRange(new CubeBiomeGenBase.Height(this.biomeHeight, this.biomeVolatility + 0.2F));
             var1.setBiomeName("Flower Forest");
             var1.func_150557_a(6976549, true);
             var1.func_76733_a(8233509);

@@ -42,8 +42,8 @@ public class BiomeGenSavanna extends CubeBiomeGenBase
     {
         BiomeGenSavanna.Mutated var1 = new BiomeGenSavanna.Mutated(this.biomeID + 128, this);
         var1.temperature = (this.temperature + 1.0F) * 0.5F;
-        var1.minHeight = this.minHeight * 0.5F + 0.3F;
-        var1.maxHeight = this.maxHeight * 0.5F + 1.2F;
+        var1.biomeHeight = this.biomeHeight * 0.5F + 0.3F;
+        var1.biomeVolatility = this.biomeVolatility * 0.5F + 1.2F;
         return var1;
     }
 
