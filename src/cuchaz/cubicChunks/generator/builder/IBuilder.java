@@ -10,15 +10,13 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.builder;
 
-import libnoiseforjava.exception.ExceptionInvalidParam;
-
 public abstract interface IBuilder 
 {	
 	public void setSeed(int seed);
 	
 	public void setSeaLevel(double seaLevel);
 	
-	public void build() throws ExceptionInvalidParam;
+	public void build() throws IllegalArgumentException;
 	
 	public double getValue(double x, double y, double z);
 }

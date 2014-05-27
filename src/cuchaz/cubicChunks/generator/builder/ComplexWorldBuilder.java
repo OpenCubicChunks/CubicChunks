@@ -10,10 +10,7 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.builder;
 
-import libnoiseforjava.exception.ExceptionInvalidParam;
 import libnoiseforjava.module.*;
-
-import com.google.common.cache.Cache;
 
 //The following is a list of module groups and subgroups that build the
 //terrain:
@@ -72,12 +69,6 @@ public class ComplexWorldBuilder implements IBuilder
 	 *  Note: "Planetary Elevation Units" range from -1.0 (for the lowest underwater trenches)
 	 *  to +1.0 (for the highest mountain peaks).
 	 */
-
-	// Width of elevation grid, in points
-	final int GRID_WIDTH = 1000;
-
-	// Height of elevation grid, in points
-	final int GRID_HEIGHT = 1000;
 
 	// Planet seed.  Change this to generate a different planet.
 	int CUR_SEED = 0;
@@ -190,6 +181,7 @@ public class ComplexWorldBuilder implements IBuilder
 	{
 		this.MAX_ELEV = maxElev;	
 	}
+	
 	/**
 	 * Sets the sea level for the world. This must be between -1.0 (minimum
 	 * elevation) and 1.0 (maximum elevation). I recommend dividing the desired 
@@ -206,7 +198,7 @@ public class ComplexWorldBuilder implements IBuilder
 	}
 
 	@Override
-	public void build() throws ExceptionInvalidParam
+	public void build()
 	{
 		////////////////////////////////////////////////////////////////////////////
 		// Module group: continent definition
