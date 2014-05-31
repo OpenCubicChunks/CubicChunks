@@ -32,9 +32,9 @@ public abstract class CubeProcessor extends QueueProcessor
 		for( long address : m_incomingAddresses )
 		{
 			// get the cube
-			int cubeX = AddressTools.getX( address );
-			int cubeY = AddressTools.getY( address );
-			int cubeZ = AddressTools.getZ( address );
+			int cubeX = CubeAddress.getX( address );
+			int cubeY = CubeAddress.getY( address );
+			int cubeZ = CubeAddress.getZ( address );
 			Cube cube = m_provider.provideCube( cubeX, cubeY, cubeZ );
 			if( cube == null )
 			{

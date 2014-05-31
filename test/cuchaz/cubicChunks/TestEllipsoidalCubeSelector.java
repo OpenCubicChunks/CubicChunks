@@ -17,7 +17,7 @@ import java.util.TreeSet;
 
 import org.junit.Test;
 
-import cuchaz.cubicChunks.util.AddressTools;
+import cuchaz.cubicChunks.util.CubeAddress;
 import cuchaz.cubicChunks.visibility.EllipsoidalCubeSelector;
 
 public class TestEllipsoidalCubeSelector
@@ -26,18 +26,18 @@ public class TestEllipsoidalCubeSelector
 	public void small( )
 	{
 		EllipsoidalCubeSelector selector = new EllipsoidalCubeSelector();
-		selector.setPlayerPosition( AddressTools.getAddress( 5, 5, 5 ), 1 );
+		selector.setPlayerPosition( CubeAddress.getAddress( 5, 5, 5 ), 1 );
 		
 		TreeSet<Long> addresses = (TreeSet<Long>)selector.getVisibleCubes();
-		assertTrue( addresses.contains( AddressTools.getAddress( 4, 5, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 5, 5, 4 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 5, 3, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 5, 4, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 5, 5, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 5, 6, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 5, 7, 5 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 5, 5, 6 ) ) );
-		assertTrue( addresses.contains( AddressTools.getAddress( 6, 5, 5 ) ) );
+		assertTrue( addresses.contains( CubeAddress.getAddress( 4, 5, 5 ) ) );
+		assertTrue( addresses.contains( CubeAddress.getAddress( 5, 5, 4 ) ) );
+		assertTrue( addresses.contains( CubeAddress.getAddress( 5, 3, 5 ) ) );
+		assertTrue( addresses.contains( CubeAddress.getAddress( 5, 4, 5 ) ) );
+		assertTrue( addresses.contains( CubeAddress.getAddress( 5, 5, 5 ) ) );
+		assertTrue( addresses.contains( CubeAddress.getAddress( 5, 6, 5 ) ) );
+		assertTrue( addresses.contains( CubeAddress.getAddress( 5, 7, 5 ) ) );
+		assertTrue( addresses.contains( CubeAddress.getAddress( 5, 5, 6 ) ) );
+		assertTrue( addresses.contains( CubeAddress.getAddress( 6, 5, 5 ) ) );
 		assertEquals( 9, addresses.size() );
 	}
 }

@@ -43,9 +43,9 @@ import org.mapdb.DBMaker;
 
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 import cuchaz.cubicChunks.generator.GeneratorStage;
-import cuchaz.cubicChunks.util.AddressTools;
+import cuchaz.cubicChunks.util.CubeAddress;
 import cuchaz.cubicChunks.util.ConcurrentBatchedQueue;
-import cuchaz.cubicChunks.util.CubeCoordinate;
+import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
 import cuchaz.cubicChunks.world.EntityActionListener;
@@ -103,7 +103,7 @@ public class CubeLoader implements IThreadedFileIO
 	throws IOException
 	{
 		// does the database have the column?
-		long address = AddressTools.getAddress( cubeX, cubeZ );
+		long address = CubeAddress.getAddress( cubeX, cubeZ );
 		byte[] data = m_columns.get( address );
 		if( data == null )
 		{
@@ -141,9 +141,9 @@ public class CubeLoader implements IThreadedFileIO
 		in.close();
 		
 		// restore the cube
-		int x = AddressTools.getX( address );
-		int y = AddressTools.getY( address );
-		int z = AddressTools.getZ( address );
+		int x = CubeAddress.getX( address );
+		int y = CubeAddress.getY( address );
+		int z = CubeAddress.getZ( address );
 		return readCubeFromNbtAndAddToColumn( world, column, x, y, z, nbt );
 	}
 	
@@ -205,8 +205,8 @@ public class CubeLoader implements IThreadedFileIO
 			catch( IOException ex )
 			{
 				log.error( String.format( "Unable to write column %d,%d",
-					AddressTools.getX( entry.address ),
-					AddressTools.getZ( entry.address )
+					CubeAddress.getX( entry.address ),
+					CubeAddress.getZ( entry.address )
 				), ex );
 			}
 		}
@@ -228,9 +228,9 @@ public class CubeLoader implements IThreadedFileIO
 			catch( IOException ex )
 			{
 				log.error( String.format( "Unable to write cube %d,%d,%d",
-					AddressTools.getX( entry.address ),
-					AddressTools.getY( entry.address ),
-					AddressTools.getZ( entry.address )
+					CubeAddress.getX( entry.address ),
+					CubeAddress.getY( entry.address ),
+					CubeAddress.getZ( entry.address )
 				), ex );
 			}
 		}
@@ -324,7 +324,7 @@ public class CubeLoader implements IThreadedFileIO
 			{
 				entity.addedToChunk = true;
 				entity.chunkCoordX = x;
-				entity.chunkCoordY = CubeCoordinate.getCubeYForEntity( entity );
+				entity.chunkCoordY = Coords.getCubeYForEntity( entity );
 				entity.chunkCoordZ = z;
 			}
 		} );
@@ -372,9 +372,9 @@ public class CubeLoader implements IThreadedFileIO
 			public void onEntity( Entity entity )
 			{
 				// make sure this entity is really in the chunk
-				int cubeX = CubeCoordinate.getCubeXForEntity( entity );
-				int cubeY = CubeCoordinate.getCubeYForEntity( entity );
-				int cubeZ = CubeCoordinate.getCubeZForEntity( entity );
+				int cubeX = Coords.getCubeXForEntity( entity );
+				int cubeY = Coords.getCubeYForEntity( entity );
+				int cubeZ = Coords.getCubeZForEntity( entity );
 				if( cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ() )
 				{
 					log.warn( String.format( "Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
@@ -489,9 +489,9 @@ public class CubeLoader implements IThreadedFileIO
 			public void onEntity( Entity entity )
 			{
 				// make sure this entity is really in the chunk
-				int cubeX = CubeCoordinate.getCubeXForEntity( entity );
-				int cubeY = CubeCoordinate.getCubeYForEntity( entity );
-				int cubeZ = CubeCoordinate.getCubeZForEntity( entity );
+				int cubeX = Coords.getCubeXForEntity( entity );
+				int cubeY = Coords.getCubeYForEntity( entity );
+				int cubeZ = Coords.getCubeZForEntity( entity );
 				if( cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ() )
 				{
 					log.warn( String.format( "Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!",

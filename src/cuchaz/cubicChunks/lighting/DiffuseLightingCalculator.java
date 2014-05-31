@@ -21,7 +21,7 @@ import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.util.Bits;
-import cuchaz.cubicChunks.util.CubeCoordinate;
+import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.FastIntQueue;
 import cuchaz.cubicChunks.world.Cube;
 
@@ -242,9 +242,9 @@ public class DiffuseLightingCalculator
 		CubeWorld cubeWorld = (CubeWorld)world;
 		
 		// get the cube
-		int cubeX = CubeCoordinate.blockToCube( blockX );
-		int cubeY = CubeCoordinate.blockToCube( blockY );
-		int cubeZ = CubeCoordinate.blockToCube( blockZ );
+		int cubeX = Coords.blockToCube( blockX );
+		int cubeY = Coords.blockToCube( blockY );
+		int cubeZ = Coords.blockToCube( blockZ );
 		if( !cubeWorld.getCubeProvider().cubeExists( cubeX, cubeY, cubeZ ) )
 		{
 			return false;
