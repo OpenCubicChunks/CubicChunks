@@ -23,6 +23,7 @@ import net.minecraft.world.World;
 
 import com.google.common.collect.Maps;
 
+import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.util.Bits;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.ColumnView;
@@ -30,6 +31,8 @@ import cuchaz.cubicChunks.world.Cube;
 
 public class CubeWatcher
 {
+	private static final int MaxBlocksPerUpdate = 64;
+	
 	private Cube m_cube;
 	private TreeMap<Integer,EntityPlayerMP> m_players;
 	private long m_previousWorldTime;
@@ -89,7 +92,20 @@ public class CubeWatcher
 	
 	public void setDirtyBlock( int localX, int localY, int localZ )
 	{
-		m_dirtyBlocks.add( packAddress( localX, localY, localZ ) );
+		// is this cube done generating yet?
+		if( m_cube.getGeneratorStage() != GeneratorStage.getLastStage() )
+		{
+			// ignore updates
+			return;
+		}
+		
+		// save up to some number of individual block updates
+		// once that threshold is passed, the whole cube is sent during an update,
+		// so there's no need to save more per-block updates
+		if( m_dirtyBlocks.size() < MaxBlocksPerUpdate )
+		{
+			m_dirtyBlocks.add( packAddress( localX, localY, localZ ) );
+		}
 	}
 	
 	public void sendUpdates( )
@@ -121,13 +137,11 @@ public class CubeWatcher
 				sendTileEntityToAllPlayers( world.getTileEntity( blockX, blockY, blockZ ) );
 			}
 		}
-		else if( m_dirtyBlocks.size() == 64 )
+		else if( m_dirtyBlocks.size() == MaxBlocksPerUpdate )
 		{
-			// make a column view
+			// send whole cube (wrapped in a column view)
 			ColumnView view = new ColumnView( m_cube.getColumn() );
 			view.addCubeToView( m_cube );
-			
-			// send whole chunk update
 			sendPacketToAllPlayers( new S21PacketChunkData( view, false, 0 ) );
 			for( TileEntity tileEntity : m_cube.tileEntities() )
 			{

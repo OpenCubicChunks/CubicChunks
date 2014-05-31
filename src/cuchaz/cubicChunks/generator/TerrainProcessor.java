@@ -54,7 +54,7 @@ public class TerrainProcessor extends CubeProcessor
 		m_rand = new Random( m_worldServer.getSeed() );
 		
 		seaLevel = worldServer.getCubeWorldProvider().getSeaLevel();
-		maxElev = 200; // NOTE: this is apparently multiplied by 100
+		maxElev = 5; // NOTE: this is apparently multiplied by 100 somewhere...
 		
 		// init the 5x5 filter
 		m_filter5x5 = new double[25];
