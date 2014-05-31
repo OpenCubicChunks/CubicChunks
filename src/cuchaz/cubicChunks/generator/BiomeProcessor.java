@@ -60,7 +60,12 @@ public class BiomeProcessor extends CubeProcessor
 		{
 			return false;
 		}
-		
+		//Nothing to do...
+		if( cube.isEmpty() )
+		{
+			return true;
+		}
+
 		// generate biome info. This is a hackjob.
 		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(
 			m_biomes,
@@ -121,13 +126,12 @@ public class BiomeProcessor extends CubeProcessor
 						continue;
 					}
 
-					// Why? If the block has already been replaced, skip it and go to the next block
-					//Do not make dirt layer on top of ocean :)
-					if ( block == Blocks.water ||  block == Blocks.flowing_water )
+					//Do not replace any blocks axcept already replaced and stone
+					if (block != Blocks.stone && block != biome.topBlock && block != biome.fillerBlock && block != Blocks.sandstone)
 					{
 						continue;
 					}
-
+					
 					//If we are 1 block below air...
 					if ( numBlocksToChange == -1 )
 					{

@@ -47,11 +47,16 @@ public class FeatureProcessor extends CubeProcessor
 	@Override
 	public boolean calculate( Cube cube )
 	{	
+		
 		worldObj = cube.getWorld();
 		
 		// generate world features
-		caveGenerator.generate( worldObj, cube );
-		ravineGenerator.generate( worldObj, cube );
+		if( !cube.isEmpty() )
+		{
+			caveGenerator.generate( worldObj, cube );
+			ravineGenerator.generate( worldObj, cube );
+		}
+		
 		/* UNDONE: enable feature generation
 		if( m_mapFeaturesEnabled )
 		{

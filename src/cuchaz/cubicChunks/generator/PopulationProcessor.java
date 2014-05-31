@@ -10,7 +10,6 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator;
 
-import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.server.CubeWorldServer;
@@ -20,8 +19,6 @@ import cuchaz.cubicChunks.world.Cube;
 import java.util.Random;
 import net.minecraft.block.BlockFalling;
 import net.minecraft.init.Blocks;
-import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.SpawnerAnimals;
 import net.minecraft.world.gen.feature.WorldGenDungeons;
 import net.minecraft.world.gen.feature.WorldGenLakes;
 
@@ -126,7 +123,7 @@ public class PopulationProcessor extends CubeProcessor
 			(new WorldGenDungeons()).generate( world, rand, genX, genY, genZ );
 		}
 		
-		//biome.decorate( world, rand, cubeX, cubeY, cubeZ );
+		biome.decorate( world, rand, cubeX, cubeY, cubeZ );
 		//TODO: cubify this:
 		//SpawnerAnimals.performWorldGenSpawning( m_world, var6, xAbs + 8, zAbs + 8, 16, 16, m_rand );
 
