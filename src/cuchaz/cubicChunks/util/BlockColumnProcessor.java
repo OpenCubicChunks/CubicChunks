@@ -32,8 +32,8 @@ public abstract class BlockColumnProcessor extends QueueProcessor
 			int blockZ = Bits.unpackSigned( address, 26, 26 );
 			
 			// get the column
-			int cubeX = Coords.blockToCube( blockX );
-			int cubeZ = Coords.blockToCube( blockZ );
+			int cubeX = CubeCoordinate.blockToCube( blockX );
+			int cubeZ = CubeCoordinate.blockToCube( blockZ );
 			Column column = (Column)m_provider.provideChunk( cubeX, cubeZ );
 			
 			// skip blank columns
@@ -43,8 +43,8 @@ public abstract class BlockColumnProcessor extends QueueProcessor
 			}
 			
 			// get the local coords
-			int localX = Coords.blockToLocal( blockX );
-			int localZ = Coords.blockToLocal( blockZ );
+			int localX = CubeCoordinate.blockToLocal( blockX );
+			int localZ = CubeCoordinate.blockToLocal( blockZ );
 			
 			// add unsuccessful calculations back onto the queue
 			boolean success = calculate( column, localX, localZ, blockX, blockZ );

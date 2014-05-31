@@ -13,7 +13,7 @@ package cuchaz.cubicChunks.world;
 import java.util.List;
 import java.util.TreeMap;
 
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.util.RangeInt;
 
 import net.minecraft.block.Block;
@@ -87,11 +87,11 @@ public class ColumnView extends Column
 	public Block func_150810_a( final int localX, final int blockY, final int localZ )
 	{
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			return cube.getBlock( localX, localY, localZ );
 		}
 		
@@ -108,11 +108,11 @@ public class ColumnView extends Column
 	public int getBlockMetadata( int localX, int blockY, int localZ )
 	{
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			return cube.getBlockMetadata( localX, localY, localZ );
 		}
 		return 0;
@@ -182,11 +182,11 @@ public class ColumnView extends Column
 	public TileEntity func_150806_e( int localX, int blockY, int localZ )
 	{
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
+		int cubeY = CubeCoordinate.blockToCube( blockY );
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			int localY = Coords.blockToLocal( blockY );
+			int localY = CubeCoordinate.blockToLocal( blockY );
 			return cube.getTileEntity( localX, localY, localZ );
 		}
 		return null;

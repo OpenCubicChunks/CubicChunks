@@ -30,8 +30,8 @@ public class BiomeGenMutated extends CubeBiomeGenBase
         this.topBlock = biome.topBlock;
         this.fillerBlock = biome.fillerBlock;
         this.field_76754_C = biome.field_76754_C;
-        this.minHeight = biome.minHeight;
-        this.maxHeight = biome.maxHeight;
+        this.biomeHeight = biome.biomeHeight;
+        this.biomeVolatility = biome.biomeVolatility;
         this.temperature = biome.temperature;
         this.rainfall = biome.rainfall;
         this.waterColorMultiplier = biome.waterColorMultiplier;
@@ -43,8 +43,8 @@ public class BiomeGenMutated extends CubeBiomeGenBase
         this.spawnableWaterCreatureList = new ArrayList(biome.spawnableWaterCreatureList);
         this.temperature = biome.temperature;
         this.rainfall = biome.rainfall;
-        this.minHeight = biome.minHeight + 0.1F;
-        this.maxHeight = biome.maxHeight + 0.2F;
+        this.biomeHeight = biome.biomeHeight + 0.1F;
+        this.biomeVolatility = biome.biomeVolatility + 0.2F;
     }
 
     public void decorate(World par1World, Random rand, int par3, int par4)

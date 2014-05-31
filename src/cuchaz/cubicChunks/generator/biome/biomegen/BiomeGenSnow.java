@@ -73,9 +73,9 @@ public class BiomeGenSnow extends CubeBiomeGenBase
 
     protected CubeBiomeGenBase func_150566_k()
     {
-        CubeBiomeGenBase var1 = (new BiomeGenSnow(this.biomeID + 128, true)).func_150557_a(13828095, true).setBiomeName(this.biomeName + " Spikes").setEnableSnow().setTemperatureAndRainfall(0.0F, 0.5F).setHeightRange(new CubeBiomeGenBase.Height(this.minHeight + 0.1F, this.maxHeight + 0.1F));
-        var1.minHeight = this.minHeight + 0.3F;
-        var1.maxHeight = this.maxHeight + 0.4F;
+        CubeBiomeGenBase var1 = (new BiomeGenSnow(this.biomeID + 128, true)).func_150557_a(13828095, true).setBiomeName(this.biomeName + " Spikes").setEnableSnow().setTemperatureAndRainfall(0.0F, 0.5F).setHeightRange(new CubeBiomeGenBase.Height(this.biomeHeight + 0.1F, this.biomeVolatility + 0.1F));
+        var1.biomeHeight = this.biomeHeight + 0.3F;
+        var1.biomeVolatility = this.biomeVolatility + 0.4F;
         return var1;
     }
 }

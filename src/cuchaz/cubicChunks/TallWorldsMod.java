@@ -27,7 +27,7 @@ import cuchaz.cubicChunks.generator.GeneratorPipeline;
 import cuchaz.cubicChunks.server.CubePlayerManager;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.AddressTools;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.magicMojoModLoader.api.Mod;
 import cuchaz.magicMojoModLoader.api.ModMetadata;
@@ -106,8 +106,8 @@ public class TallWorldsMod implements Mod
 	
 	public void handleEvent( BuildSizeEvent event )
 	{
-		event.setCustomBuildHeight( Coords.cubeToMaxBlock( AddressTools.MaxY ) );
-		event.setCustomBuildDepth( Coords.cubeToMinBlock( AddressTools.MinY ) );
+		event.setCustomBuildHeight( CubeCoordinate.cubeToMaxBlock( AddressTools.MaxY ) );
+		event.setCustomBuildDepth( CubeCoordinate.cubeToMinBlock( AddressTools.MinY ) );
 		
 		log.info( String.format( "Set build height to [%d,%d]", event.getCustomBuildDepth(), event.getCustomBuildHeight() ) );
 	}
@@ -121,9 +121,9 @@ public class TallWorldsMod implements Mod
 		log.info( "Loading cubes for spawn..." );
 		final int Distance = 12;
 		ChunkCoordinates spawnPoint = worldServer.getSpawnPoint();
-		int spawnCubeX = Coords.blockToCube( spawnPoint.posX );
-		int spawnCubeY = Coords.blockToCube( spawnPoint.posY );
-		int spawnCubeZ = Coords.blockToCube( spawnPoint.posZ );
+		int spawnCubeX = CubeCoordinate.blockToCube( spawnPoint.posX );
+		int spawnCubeY = CubeCoordinate.blockToCube( spawnPoint.posY );
+		int spawnCubeZ = CubeCoordinate.blockToCube( spawnPoint.posZ );
 		for( int cubeX=spawnCubeX-Distance; cubeX<=spawnCubeX+Distance; cubeX++ )
 		{
 			for( int cubeY=spawnCubeY-Distance; cubeY<=spawnCubeY+Distance; cubeY++ )
@@ -287,7 +287,7 @@ public class TallWorldsMod implements Mod
 	
 	public void handleEvent( VoidFogRangeEvent event )
 	{
-		int min = Coords.cubeToMinBlock( AddressTools.MinY );
+		int min = CubeCoordinate.cubeToMinBlock( AddressTools.MinY );
 		event.setCustomRange( min, min + 1024 );
 	}
 	
@@ -298,8 +298,8 @@ public class TallWorldsMod implements Mod
 			Column column = (Column)event.getChunk();
 			event.setBlockY( Util.randRange(
 				event.getRand(),
-				Coords.cubeToMinBlock( column.getBottomCubeY() ),
-				Coords.cubeToMaxBlock( column.getTopCubeY() )
+				CubeCoordinate.cubeToMinBlock( column.getBottomCubeY() ),
+				CubeCoordinate.cubeToMaxBlock( column.getTopCubeY() )
 			) );
 		}
 	}

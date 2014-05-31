@@ -14,7 +14,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import cuchaz.cubicChunks.CubeWorld;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
 
@@ -41,18 +41,18 @@ public class SkyLightUpdateCalculator
 		for( int blockY=minBlockY; blockY<maxBlockY; blockY++ )
 		{
 			// save the light value
-			int cubeY = Coords.blockToCube( blockY );
+			int cubeY = CubeCoordinate.blockToCube( blockY );
 			Cube cube = column.getCube( cubeY );
 			if( cube != null )
 			{
-				int localY = Coords.blockToLocal( blockY );
+				int localY = CubeCoordinate.blockToLocal( blockY );
 				cube.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, light );
 			}
 		}
 		
 		// compute the skylight falloff starting at the new top block
 		light = 15;
-		int bottomBlockY = Coords.cubeToMinBlock( column.getBottomCubeY() );
+		int bottomBlockY = CubeCoordinate.cubeToMinBlock( column.getBottomCubeY() );
 		for( int blockY=newMaxBlockY-1; blockY>bottomBlockY; blockY-- )
 		{
 			// get the opacity to apply for this block
@@ -62,11 +62,11 @@ public class SkyLightUpdateCalculator
 			light = Math.max( light - lightOpacity, 0 );
 			
 			// save the light value
-			int cubeY = Coords.blockToCube( blockY );
+			int cubeY = CubeCoordinate.blockToCube( blockY );
 			Cube cube = column.getCube( cubeY );
 			if( cube != null )
 			{
-				int localY = Coords.blockToLocal( blockY );
+				int localY = CubeCoordinate.blockToLocal( blockY );
 				cube.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, light );
 			}
 			
@@ -78,8 +78,8 @@ public class SkyLightUpdateCalculator
 		}
 		
 		// update this block and its xz neighbors
-		int blockX = Coords.localToBlock( column.xPosition, localX );
-		int blockZ = Coords.localToBlock( column.zPosition, localZ );
+		int blockX = CubeCoordinate.localToBlock( column.xPosition, localX );
+		int blockZ = CubeCoordinate.localToBlock( column.zPosition, localZ );
 		diffuseSkyLightForBlockColumn( lightingManager, blockX - 1, blockZ, minBlockY, maxBlockY );
 		diffuseSkyLightForBlockColumn( lightingManager, blockX + 1, blockZ, minBlockY, maxBlockY );
 		diffuseSkyLightForBlockColumn( lightingManager, blockX, blockZ - 1, minBlockY, maxBlockY );

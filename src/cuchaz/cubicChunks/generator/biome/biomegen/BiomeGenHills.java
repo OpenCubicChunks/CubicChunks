@@ -105,7 +105,7 @@ public class BiomeGenHills extends CubeBiomeGenBase
         this.value4 = this.value3;
         this.func_150557_a(biome.color, true);
         this.setBiomeName(biome.biomeName + " M");
-        this.setHeightRange(new CubeBiomeGenBase.Height(biome.minHeight, biome.maxHeight));
+        this.setHeightRange(new CubeBiomeGenBase.Height(biome.biomeHeight, biome.biomeVolatility));
         this.setTemperatureAndRainfall(biome.temperature, biome.rainfall);
         return this;
     }

@@ -36,7 +36,7 @@ import cuchaz.cubicChunks.generator.GeneratorPipeline;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.lighting.LightingManager;
 import cuchaz.cubicChunks.util.AddressTools;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.magicMojoModLoader.util.Util;
 
@@ -123,9 +123,9 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 	public long getSpawnPointCubeAddress( )
 	{
 		return AddressTools.getAddress(
-			Coords.blockToCube( worldInfo.getSpawnX() ),
-			Coords.blockToCube( worldInfo.getSpawnY() ),
-			Coords.blockToCube( worldInfo.getSpawnZ() )
+			CubeCoordinate.blockToCube( worldInfo.getSpawnX() ),
+			CubeCoordinate.blockToCube( worldInfo.getSpawnY() ),
+			CubeCoordinate.blockToCube( worldInfo.getSpawnZ() )
 		);
 	}
 	
@@ -192,9 +192,9 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 		log.info( "Searching for suitable spawn point..." );
 		
 		// generate some world around the spawn x,z at sea level
-		int spawnCubeX = Coords.blockToCube( spawnBlockX );
-		int spawnCubeY = Coords.blockToCube( getCubeWorldProvider().getSeaLevel() );
-		int spawnCubeZ = Coords.blockToCube( spawnBlockZ );
+		int spawnCubeX = CubeCoordinate.blockToCube( spawnBlockX );
+		int spawnCubeY = CubeCoordinate.blockToCube( getCubeWorldProvider().getSeaLevel() );
+		int spawnCubeZ = CubeCoordinate.blockToCube( spawnBlockZ );
 		final int SearchDistance = 4;
 		CubeProviderServer cubeProvider = getCubeProvider();
 		for( int cubeX=spawnCubeX-SearchDistance; cubeX<=spawnCubeX+SearchDistance; cubeX++ )

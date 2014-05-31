@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.util.AddressTools;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.util.CubeBlockMap;
 
 public class Cube
@@ -163,9 +163,9 @@ public class Cube
 			setEmpty( false );
 		}
 		
-		int blockX = Coords.localToBlock( m_x, x );
-		int blockY = Coords.localToBlock( m_y, y );
-		int blockZ = Coords.localToBlock( m_z, z );
+		int blockX = CubeCoordinate.localToBlock( m_x, x );
+		int blockY = CubeCoordinate.localToBlock( m_y, y );
+		int blockZ = CubeCoordinate.localToBlock( m_z, z );
 		
 		if( !m_world.isClient )
 		{
@@ -305,7 +305,7 @@ public class Cube
 		m_storage.setExtBlockMetadata( x, y, z, meta );
 		
 		// update the column light index
-		int blockY = Coords.localToBlock( m_y, y );
+		int blockY = CubeCoordinate.localToBlock( m_y, y );
 		m_column.getLightIndex().setOpacity( x, blockY, z, block.getLightOpacity() );
 		
 		return true;
@@ -329,9 +329,9 @@ public class Cube
 	public void addEntity( Entity entity )
 	{
 		// make sure the entity is in this cube
-		int cubeX = Coords.getCubeXForEntity( entity );
-		int cubeY = Coords.getCubeYForEntity( entity );
-		int cubeZ = Coords.getCubeZForEntity( entity );
+		int cubeX = CubeCoordinate.getCubeXForEntity( entity );
+		int cubeY = CubeCoordinate.getCubeYForEntity( entity );
+		int cubeZ = CubeCoordinate.getCubeZForEntity( entity );
 		if( cubeX != m_x || cubeY != m_y || cubeZ != m_z )
 		{
 			log.warn( String.format( "Entity %s in cube (%d,%d,%d) added to cube (%d,%d,%d)!",
@@ -390,9 +390,9 @@ public class Cube
 	{
 		for( Entity entity : m_entities.entities() )
 		{
-			int cubeX = Coords.getCubeXForEntity( entity );
-			int cubeY = Coords.getCubeYForEntity( entity );
-			int cubeZ = Coords.getCubeZForEntity( entity );
+			int cubeX = CubeCoordinate.getCubeXForEntity( entity );
+			int cubeY = CubeCoordinate.getCubeYForEntity( entity );
+			int cubeZ = CubeCoordinate.getCubeZForEntity( entity );
 			if( cubeX != m_x || cubeY != m_y || cubeZ != m_z )
 			{
 				out.add( entity );
@@ -415,9 +415,9 @@ public class Cube
 			
 			// make a new tile entity for the block
 			tileEntity = ((ITileEntityProvider)block).createNewTileEntity( m_world, getBlockMetadata( x, y, z ) );
-			int blockX = Coords.localToBlock( m_x, x );
-			int blockY = Coords.localToBlock( m_y, y );
-			int blockZ = Coords.localToBlock( m_z, z );
+			int blockX = CubeCoordinate.localToBlock( m_x, x );
+			int blockY = CubeCoordinate.localToBlock( m_y, y );
+			int blockZ = CubeCoordinate.localToBlock( m_z, z );
 			m_world.setTileEntity( blockX, blockY, blockZ, tileEntity );
 		}
 		
@@ -436,9 +436,9 @@ public class Cube
 	public void addTileEntity( int x, int y, int z, TileEntity tileEntity )
 	{
 		// update the tile entity
-		int blockX = Coords.localToBlock( m_x, x );
-		int blockY = Coords.localToBlock( m_y, y );
-		int blockZ = Coords.localToBlock( m_z, z );
+		int blockX = CubeCoordinate.localToBlock( m_x, x );
+		int blockY = CubeCoordinate.localToBlock( m_y, y );
+		int blockZ = CubeCoordinate.localToBlock( m_z, z );
 		tileEntity.setWorldObj( m_world );
 		tileEntity.field_145851_c = blockX;
 		tileEntity.field_145848_d = blockY;
@@ -509,7 +509,7 @@ public class Cube
 	
 	public boolean isUnderground( int localX, int localY, int localZ )
 	{
-		return m_column.getLightIndex().getTopNonTransparentBlock( localX, localZ ) >= Coords.localToBlock( m_y, localY );
+		return m_column.getLightIndex().getTopNonTransparentBlock( localX, localZ ) >= CubeCoordinate.localToBlock( m_y, localY );
 	}
 	
 	public int getBlockLightValue( int localX, int localY, int localZ, int skylightSubtracted )
@@ -613,9 +613,9 @@ public class Cube
 			if( block.getTickRandomly() )
 			{
 				// tick it
-				int blockX = Coords.localToBlock( m_x, localX );
-				int blockY = Coords.localToBlock( m_y, localY );
-				int blockZ = Coords.localToBlock( m_z, localZ );
+				int blockX = CubeCoordinate.localToBlock( m_x, localX );
+				int blockY = CubeCoordinate.localToBlock( m_y, localY );
+				int blockZ = CubeCoordinate.localToBlock( m_z, localZ );
 				block.updateTick( m_world, blockX, blockY, blockZ, m_world.rand );
 			}
 		}
@@ -624,8 +624,8 @@ public class Cube
 	public void markForRenderUpdate( )
 	{
 		m_world.markBlockRangeForRenderUpdate(
-			Coords.cubeToMinBlock( m_x ), Coords.cubeToMinBlock( m_y ), Coords.cubeToMinBlock( m_z ),
-			Coords.cubeToMaxBlock( m_x ), Coords.cubeToMaxBlock( m_y ), Coords.cubeToMaxBlock( m_z )
+			CubeCoordinate.cubeToMinBlock( m_x ), CubeCoordinate.cubeToMinBlock( m_y ), CubeCoordinate.cubeToMinBlock( m_z ),
+			CubeCoordinate.cubeToMaxBlock( m_x ), CubeCoordinate.cubeToMaxBlock( m_y ), CubeCoordinate.cubeToMaxBlock( m_z )
 		);
 	}
 }

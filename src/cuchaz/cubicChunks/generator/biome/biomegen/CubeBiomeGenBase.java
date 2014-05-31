@@ -151,11 +151,11 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
     
     public int field_76754_C;
 
-    /** The minimum height of this biome. Default 0.1. */
-    public float minHeight;
+    /** The average height of this biome. Default 0.1. */
+    public float biomeHeight;
 
-    /** The maximum height of this biome. Default 0.3. */
-    public float maxHeight;
+    /** The average volatility of this biome. Default 0.3. */
+    public float biomeVolatility;
 
     /** The temperature of this biome. */
     public float temperature;
@@ -212,8 +212,8 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
         this.field_150604_aj = 0;
         this.fillerBlock = Blocks.dirt;
         this.field_76754_C = 5169201;
-        this.minHeight = field_150596_a.field_150777_a;
-        this.maxHeight = field_150596_a.field_150776_b;
+        this.biomeHeight = field_150596_a.biomeHeight;
+        this.biomeVolatility = field_150596_a.biomeVolatility;
         this.temperature = 0.5F;
         this.rainfall = 0.5F;
         this.waterColorMultiplier = 16777215;
@@ -279,8 +279,8 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 
     protected final CubeBiomeGenBase setHeightRange(CubeBiomeGenBase.Height p_150570_1_)
     {
-        this.minHeight = p_150570_1_.field_150777_a;
-        this.maxHeight = p_150570_1_.field_150776_b;
+        this.biomeHeight = p_150570_1_.biomeHeight;
+        this.biomeVolatility = p_150570_1_.biomeVolatility;
         return this;
     }
 
@@ -697,17 +697,17 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 
     public static class Height
     {
-        public float field_150777_a;
-        public float field_150776_b;
+        public float biomeHeight;
+        public float biomeVolatility;
         public Height(float p_i45371_1_, float p_i45371_2_)
         {
-            this.field_150777_a = p_i45371_1_;
-            this.field_150776_b = p_i45371_2_;
+            this.biomeHeight = p_i45371_1_;
+            this.biomeVolatility = p_i45371_2_;
         }
 
         public CubeBiomeGenBase.Height func_150775_a()
         {
-            return new CubeBiomeGenBase.Height(this.field_150777_a * 0.8F, this.field_150776_b * 0.6F);
+            return new CubeBiomeGenBase.Height(this.biomeHeight * 0.8F, this.biomeVolatility * 0.6F);
         }
     }
 

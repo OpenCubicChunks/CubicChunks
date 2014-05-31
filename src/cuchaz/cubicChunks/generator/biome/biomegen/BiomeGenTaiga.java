@@ -125,6 +125,6 @@ public class BiomeGenTaiga extends CubeBiomeGenBase
 
     protected CubeBiomeGenBase func_150566_k()
     {
-        return this.biomeID == CubeBiomeGenBase.megaTaiga.biomeID ? (new BiomeGenTaiga(this.biomeID + 128, 2)).func_150557_a(5858897, true).setBiomeName("Mega Spruce Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(new CubeBiomeGenBase.Height(this.minHeight, this.maxHeight)) : super.func_150566_k();
+        return this.biomeID == CubeBiomeGenBase.megaTaiga.biomeID ? (new BiomeGenTaiga(this.biomeID + 128, 2)).func_150557_a(5858897, true).setBiomeName("Mega Spruce Taiga").func_76733_a(5159473).setTemperatureAndRainfall(0.25F, 0.8F).setHeightRange(new CubeBiomeGenBase.Height(this.biomeHeight, this.biomeVolatility)) : super.func_150566_k();
     }
 }
