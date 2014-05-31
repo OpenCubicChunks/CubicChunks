@@ -260,9 +260,9 @@ public class Column extends Chunk
 			}
 			assert( minBlockY < maxBlockY );
 		
-			if( minBlockY < CubeCoordinate.cubeToMinBlock( this.getBottomCubeY() ) )
+			if( (long)maxBlockY - (long)minBlockY > 256 )
 			{
-				minBlockY = CubeCoordinate.cubeToMinBlock( this.getBottomCubeY() );
+				minBlockY = maxBlockY - 256;
 			}
 			// update light and signal render update
 			cubeWorld.getLightingManager().computeSkyLightUpdate( this, localX, localZ, minBlockY, maxBlockY );
