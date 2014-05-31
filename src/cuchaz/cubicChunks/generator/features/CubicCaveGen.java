@@ -178,19 +178,19 @@ public class CubicCaveGen extends CubicMapGenBase
 						xDist1 = 0;
 					}
 
-					if ( xDist2 > 15 )
+					if ( xDist2 > 16 )
 					{
-						xDist2 = 15;
+						xDist2 = 16;
 					}
 
-					if ( yDist1 < 1 )//orig: 1
+					if ( yDist1 < 0 )//orig: 1
 					{
-						yDist1 = 1;//orig: 1
+						yDist1 = 0;//orig: 1
 					}
 
-					if ( yDist2 > 15 )//orig: 120
+					if ( yDist2 > 16 )//orig: 120
 					{
-						yDist2 = 15;//orig: 120
+						yDist2 = 16;//orig: 120
 					}
 
 					if ( zDist1 < 0 )
@@ -198,9 +198,9 @@ public class CubicCaveGen extends CubicMapGenBase
 						zDist1 = 0;
 					}
 
-					if ( zDist2 > 15 )
+					if ( zDist2 > 16 )
 					{
-						zDist2 = 15;
+						zDist2 = 16;
 					}
 
 					boolean hitLava = false;
@@ -211,7 +211,7 @@ public class CubicCaveGen extends CubicMapGenBase
 					{
 						for ( int z2 = zDist1; !hitLava && z2 < zDist2; ++z2 )
 						{
-							for ( int y2 = yDist2 /*+ 1*/; !hitLava && y2 >= yDist1 - 1; --y2 )
+							for ( int y2 = yDist2 - 1; !hitLava && y2 >= yDist1; --y2 )
 							{
 								//temp = ( x2 * 16 + z2 ) * 16/*128*/ + y2;
 								Block block = cube.getBlock( x2, y2, z2 );
@@ -249,7 +249,7 @@ public class CubicCaveGen extends CubicMapGenBase
 								{
 									double distY = ( ( double ) ( y2 + yOrigin * 16 ) + 0.5D - y ) / yModSin;
 
-									if ( /*distY > -0.7D &&*/ distX * distX + distY * distY + distZ * distZ < 1.0D )
+									if ( distY > -0.7D && distX * distX + distY * distY + distZ * distZ < 1.0D )
 									{
 										//No lava generation, infinite depth.
 										//Lava will be generatede differently (or not generated)
