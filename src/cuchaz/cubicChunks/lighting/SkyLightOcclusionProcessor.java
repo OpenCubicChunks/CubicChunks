@@ -82,6 +82,10 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor
 			return false;
 		}
 		
+		if( (long)maxBlockY - (long)minBlockY > 256 )
+		{
+			minBlockY = maxBlockY - 256;
+		}
 		CubeWorld cubeWorld = (CubeWorld)world;
 		for( int blockY=minBlockY; blockY<=maxBlockY; blockY++ )
 		{

@@ -259,7 +259,11 @@ public class Column extends Chunk
 				maxBlockY = oldMaxY;
 			}
 			assert( minBlockY < maxBlockY );
-			
+		
+			if( (long)maxBlockY - (long)minBlockY > 256 )
+			{
+				minBlockY = maxBlockY - 256;
+			}
 			// update light and signal render update
 			cubeWorld.getLightingManager().computeSkyLightUpdate( this, localX, localZ, minBlockY, maxBlockY );
 			worldObj.markBlockRangeForRenderUpdate( blockX, minBlockY, blockZ, blockX, maxBlockY, blockZ );

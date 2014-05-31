@@ -167,7 +167,7 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
     public int waterColorMultiplier;
 
     /** The biome decorator. */
-    public BiomeDecorator theBiomeDecorator;
+    public CubeBiomeDecorator theBiomeDecorator;
 
     /**
      * Holds the classes of IMobs (hostile mobs) that can be spawned in the biome.
@@ -252,12 +252,12 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
     }
 
     /**
-     * Allocate a new BiomeDecorator for this BiomeGenBase
+     * Allocate a new CubeBiomeDecorator for this BiomeGenBase
      */
     @Override
-    protected BiomeDecorator createBiomeDecorator()
+    protected CubeBiomeDecorator createBiomeDecorator()
     {
-        return new BiomeDecorator();
+        return new CubeBiomeDecorator();
     }
 
     /**
@@ -452,9 +452,9 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 //        }
 //    }
 
-    public void decorate(World par1World, Random par2Random, int par3, int par4)
+    public void decorate(World world, Random rand, int cubeX, int cubeY, int cubeZ)
     {
-        this.theBiomeDecorator.func_150512_a(par1World, par2Random, this, par3, par4);
+        this.theBiomeDecorator.decorate(world, rand, this, cubeX, cubeY, cubeZ);
     }
 
     /**

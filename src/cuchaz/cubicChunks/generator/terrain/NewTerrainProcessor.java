@@ -56,8 +56,8 @@ public class NewTerrainProcessor extends CubeProcessor
 
     private final int heightCap;
 
-    private final int maxSmoothDiameter = 5;
-    private final int maxSmoothRadius = 2;
+    private final int maxSmoothDiameter = 9;
+    private final int maxSmoothRadius = 4;
 	
 	private double[][][] noiseArrayHigh;
 	private double[][][] noiseArrayLow;
@@ -79,9 +79,9 @@ public class NewTerrainProcessor extends CubeProcessor
 	private static int seaLevel;
 	
 	// these are the knobs for terrain generation
-	private static double maxElev = 100; // approximately how high blocks will go
-	private static double elevFudge = 28.57; // fudge factor for elevation. this is a magic number.
-	private static int octaves = 10; // size of features. increasing by 1 approximately doubles the size of features.
+	public static final int maxElev = 200; // approximately how high blocks will go
+	private static int amplify = 30000; // amplify factor for the noise array.
+	private static int octaves = 14; // size of features. increasing by 1 approximately doubles the size of features.
 	
 	public NewTerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
 	{
@@ -118,17 +118,20 @@ public class NewTerrainProcessor extends CubeProcessor
 		
 		builderHigh = new BasicBuilder();
 		builderHigh.setSeed(m_rand.nextInt());
-		builderHigh.setOctaves(14);
+		builderHigh.setOctaves(octaves);
+		builderHigh.setMaxElev(maxElev);
 		builderHigh.build();
 		
 		builderLow = new BasicBuilder();
 		builderLow.setSeed(m_rand.nextInt());
-		builderLow.setOctaves(14);
+		builderLow.setOctaves(octaves);
+		builderLow.setMaxElev(maxElev);
 		builderLow.build();
 		
 		builderAlpha = new BasicBuilder();
 		builderAlpha.setSeed(m_rand.nextInt());
 		builderAlpha.setOctaves(8);
+		builderAlpha.setMaxElev(maxElev);
 		builderAlpha.build();
 		
 		builderHeight = new BasicBuilder();
@@ -141,12 +144,9 @@ public class NewTerrainProcessor extends CubeProcessor
 	@Override
 	public boolean calculate( Cube cube )
 	{		
-		// get more biome data
-		// NOTE: this is different from the column biome data for some reason...
-		// Nick: This is a 10x10 array of biomes, centered on the xz center. points in the array are separated by 4 blocks.
 		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().getBiomesForGeneration(
 			m_biomes,
-			cube.getX()*4 - 2, cube.getZ()*4 - 2,
+			cube.getX() * 4 - maxSmoothRadius, cube.getZ() * 4 - maxSmoothRadius,
 			xNoiseSize + maxSmoothDiameter, zNoiseSize + maxSmoothDiameter
 		);
 		
@@ -154,7 +154,7 @@ public class NewTerrainProcessor extends CubeProcessor
 		
 		this.generateTerrainArray( cube );
 		
-		this.scaleNoiseArray(maxElev);
+		this.amplifyNoiseArray();
 		
 		this.expandNoiseArray();
 		
@@ -206,7 +206,7 @@ public class NewTerrainProcessor extends CubeProcessor
 	}
 	
 	/**
-	 * Generates a noise array of size xNoiseSize * yNoiseSize * zNoiseSize
+	 * Generates noise arrays of size xNoiseSize * yNoiseSize * zNoiseSize
 	 * 
 	 * No issues with this. Tested by using size 16 (full resolution)
 	 * 
@@ -354,18 +354,15 @@ public class NewTerrainProcessor extends CubeProcessor
         }
 	}
 	
-	private void scaleNoiseArray(double scale)
+	private void amplifyNoiseArray()
 	{
-		//fudge factor so maxElev can be actual block height. not finalized
-		scale *= elevFudge;
-		
 		for(int x = 0; x < xNoiseSize; x++)
 		{
 			for (int z = 0; z < zNoiseSize; z++)
 			{
 				for (int y = 0; y < yNoiseSize; y++)
 				{
-					this.rawTerrainArray[x][y][z] *= scale;
+					this.rawTerrainArray[x][y][z] *= amplify;
 				}
 			}
 		}
