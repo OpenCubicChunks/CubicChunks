@@ -510,12 +510,12 @@ public class CubeBiomeDecorator extends BiomeDecorator
 
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, double maxHeight, int maxTerrainHeight )
 	{
-		this.genStandardOre1( numGen, probability, generator, Double.NEGATIVE_INFINITY, maxHeight, maxTerrainHeight );
+		this.genStandardOre1( numGen, probability, generator, Double.MIN_VALUE, maxHeight, maxTerrainHeight );
 	}
 
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, int maxTerrainHeight )
 	{
-		this.genStandardOre1( numGen, probability, generator, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, maxTerrainHeight );
+		this.genStandardOre1( numGen, probability, generator, Double.MIN_VALUE, Double.MAX_VALUE, maxTerrainHeight );
 	}
 
 	/**
