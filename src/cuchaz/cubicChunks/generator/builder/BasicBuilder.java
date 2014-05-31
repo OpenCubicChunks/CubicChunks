@@ -74,7 +74,7 @@ public class BasicBuilder implements IBuilder
 		scaleBias.setScale(MAX_ELEV);
 		scaleBias.setBias(SEA_LEVEL);
 		
-		finalModule = perlin;
+		finalModule = scaleBias;
 //		finalModule = baseContinentDef_pe0;
 	}
 
