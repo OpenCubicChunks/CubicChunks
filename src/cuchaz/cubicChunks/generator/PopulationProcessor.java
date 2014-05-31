@@ -13,7 +13,7 @@ package cuchaz.cubicChunks.generator;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.server.CubeWorldServer;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 import java.util.Random;
@@ -134,7 +134,7 @@ public class PopulationProcessor extends CubeProcessor
 			for( int z = zCenter; z < zCenterPlus16; z++ )
 			{
 				int y = world.getPrecipitationHeight( x, z ) - 1;
-				if( Coords.blockToCube( y ) != cubeY )
+				if( CubeCoordinate.blockToCube( y ) != cubeY )
 				{
 					continue;
 				}

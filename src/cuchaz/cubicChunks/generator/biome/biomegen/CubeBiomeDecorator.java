@@ -11,8 +11,8 @@
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import cuchaz.cubicChunks.CubeWorldProvider;
-import cuchaz.cubicChunks.generator.TerrainProcessor;
-import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
+import cuchaz.cubicChunks.util.CubeCoordinate;
 import java.util.Random;
 
 import net.minecraft.block.BlockFlower;
@@ -158,7 +158,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			this.chunk_Z = cubeZ;
 			//TODO: move setting seaLevel and min/maxTerrainY to constructor
 			this.seaLevel = ((CubeWorldProvider)world.provider).getSeaLevel();
-			this.maxTerrainY = MathHelper.floor_double( TerrainProcessor.maxElev );
+			this.maxTerrainY = MathHelper.floor_double( NewTerrainProcessor.maxElev );
 			//magic...
 			this.minTerrainY = -maxTerrainY + 2 * seaLevel;
 			this.decorate_do( biome );
@@ -507,8 +507,8 @@ public class CubeBiomeDecorator extends BiomeDecorator
 	 */
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, double minHeight, double maxHeight, int maxTerrainHeight )
 	{
-		int minCubeY = Coords.blockToCube( MathHelper.floor_double( minHeight * maxTerrainHeight + seaLevel ) );
-		int maxCubeY = Coords.blockToCube( MathHelper.floor_double( maxHeight * maxTerrainHeight + seaLevel ) );
+		int minCubeY = CubeCoordinate.blockToCube( MathHelper.floor_double( minHeight * maxTerrainHeight + seaLevel ) );
+		int maxCubeY = CubeCoordinate.blockToCube( MathHelper.floor_double( maxHeight * maxTerrainHeight + seaLevel ) );
 		if( this.chunk_Y > maxCubeY || this.chunk_Y < minCubeY )
 		{
 			return;
