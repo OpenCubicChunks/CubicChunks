@@ -98,7 +98,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 	public boolean generateLakes;
 
 	protected int chunk_Y;
-	
+
 	protected int seaLevel;
 
 	protected int maxTerrainY;
@@ -481,25 +481,35 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			}
 			this.cactusGen.generate( this.currentWorld, this.randomGenerator, xAbs, yAbs, zAbs );
 		}
-		//Don't do this yet. Will cubify later
-		/*if( this.generateLakes )
-		 {
-		 for( xAbs = 0; xAbs < 50; ++xAbs )
-		 {
-		 zAbs = this.chunk_X + this.randomGenerator.nextInt( 16 ) + 8;
-		 var5 = this.randomGenerator.nextInt( this.randomGenerator.nextInt( 248 ) + 8 );
-		 var6 = this.chunk_Z + this.randomGenerator.nextInt( 16 ) + 8;
-		 (new WorldGenLiquids( Blocks.flowing_water )).generate( this.currentWorld, this.randomGenerator, zAbs, var5, var6 );
-		 }
+		if( this.generateLakes )
+		{
+			int maxRandInt = Math.max( 5, chunk_Y + CubeCoordinate.blockToCube( maxTerrainY ) );
+			for( int i = 0; i < 50; ++i )
+			{
+				if( randomGenerator.nextInt( maxRandInt ) != 0 )
+				{
+					continue;
+				}
+				xAbs = this.chunk_X * 16 + this.randomGenerator.nextInt( 16 ) + 8;
+				int height = this.chunk_Y * 16 + this.randomGenerator.nextInt( 16 ) + 8;
+				//var5 = this.randomGenerator.nextInt( this.randomGenerator.nextInt( 248 ) + 8 );
+				zAbs = this.chunk_Z * 16 + this.randomGenerator.nextInt( 16 ) + 8;
+				(new WorldGenLiquids( Blocks.flowing_water )).generate( this.currentWorld, this.randomGenerator, xAbs, height, zAbs );
+			}
 
-		 for( xAbs = 0; xAbs < 20; ++xAbs )
-		 {
-		 zAbs = this.chunk_X + this.randomGenerator.nextInt( 16 ) + 8;
-		 var5 = this.randomGenerator.nextInt( this.randomGenerator.nextInt( this.randomGenerator.nextInt( 240 ) + 8 ) + 8 );
-		 var6 = this.chunk_Z + this.randomGenerator.nextInt( 16 ) + 8;
-		 (new WorldGenLiquids( Blocks.flowing_lava )).generate( this.currentWorld, this.randomGenerator, zAbs, var5, var6 );
-		 }
-		 }*/
+			for( int i = 0; i < 20; ++i )
+			{
+				if( randomGenerator.nextInt( maxRandInt * maxRandInt / 5 + 5 ) != 0 )
+				{
+					continue;
+				}
+				xAbs = this.chunk_X * 16 + this.randomGenerator.nextInt( 16 ) + 8;
+				int height = this.chunk_Y * 16 + this.randomGenerator.nextInt( 16 ) + 8;
+				//var5 = this.randomGenerator.nextInt( this.randomGenerator.nextInt( this.randomGenerator.nextInt( 240 ) + 8 ) + 8 );
+				zAbs = this.chunk_Z * 16 + this.randomGenerator.nextInt( 16 ) + 8;
+				(new WorldGenLiquids( Blocks.flowing_lava )).generate( this.currentWorld, this.randomGenerator, xAbs, height, zAbs );
+			}
+		}
 	}
 
 	/**
@@ -528,12 +538,12 @@ public class CubeBiomeDecorator extends BiomeDecorator
 
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, double maxHeight, int maxTerrainHeight )
 	{
-		this.genStandardOre1( numGen, probability, generator, -1, maxHeight, maxTerrainHeight );
+		this.genStandardOre1( numGen, probability, generator, Double.NEGATIVE_INFINITY, maxHeight, maxTerrainHeight );
 	}
 
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, int maxTerrainHeight )
 	{
-		this.genStandardOre1( numGen, probability, generator, -1, 1, maxTerrainHeight );
+		this.genStandardOre1( numGen, probability, generator, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, maxTerrainHeight );
 	}
 
 	/**
@@ -555,6 +565,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 		this.genStandardOre1( 1, probability * 16, this.diamondGen, -0.75D, maxTerrainY );//0-16
 		this.genStandardOre1( 1, probability * 8, this.lapisGen, -0.5D, maxTerrainY );//0-32
 	}
+
 	private int rand( int min, int max )
 	{
 		return randomGenerator.nextInt( max - min ) + min;
