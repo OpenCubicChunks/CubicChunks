@@ -79,7 +79,7 @@ public class NewTerrainProcessor extends CubeProcessor
 	private static int seaLevel;
 	
 	// these are the knobs for terrain generation
-	public static final double maxElev = 100; // approximately how high blocks will go
+	public static final double maxElev = 100000; // approximately how high blocks will go
 	private static double elevFudge = 28.57; // fudge factor for elevation. this is a magic number.
 	private static int octaves = 10; // size of features. increasing by 1 approximately doubles the size of features.
 	

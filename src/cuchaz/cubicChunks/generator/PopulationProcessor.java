@@ -38,7 +38,7 @@ public class PopulationProcessor extends CubeProcessor
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();
 
-		if( !CubeProviderTools.cubesForPopulationExist( m_provider, cubeX, cubeY, cubeZ ) )
+		if( !CubeProviderTools.cubesForPopulationExistAndCheckStage( m_provider, cubeX, cubeY, cubeZ ) )
 		{
 			return false;
 		}

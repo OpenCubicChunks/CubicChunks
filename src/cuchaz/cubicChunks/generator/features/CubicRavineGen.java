@@ -114,9 +114,9 @@ public class CubicRavineGen extends CubicMapGenBase
 				xDist1 = 0;
 			}
 
-			if ( xDist2 > 15 )
+			if ( xDist2 > 16 )
 			{
-				xDist2 = 15;
+				xDist2 = 16;
 			}
 
 			if ( yDist1 < 0 )//1
@@ -124,9 +124,9 @@ public class CubicRavineGen extends CubicMapGenBase
 				yDist1 = 0;//1
 			}
 
-			if ( yDist2 > 15 )//120
+			if ( yDist2 > 16 )//120
 			{
-				yDist2 = 15;//120
+				yDist2 = 16;//120
 			}
 
 			if ( zDist1 < 0 )
@@ -134,9 +134,9 @@ public class CubicRavineGen extends CubicMapGenBase
 				zDist1 = 0;
 			}
 
-			if ( zDist2 > 15 )
+			if ( zDist2 > 16 )
 			{
-				zDist2 = 15;
+				zDist2 = 16;
 			}
 
 			boolean hitwater = false;
@@ -147,7 +147,7 @@ public class CubicRavineGen extends CubicMapGenBase
 			{
 				for ( int z1 = zDist1; !hitwater && z1 < zDist2; ++z1 )
 				{
-					for ( int y1 = yDist2; !hitwater && y1 >= yDist1; --y1 )
+					for ( int y1 = yDist2 - 1; !hitwater && y1 >= yDist1; --y1 )
 					{
 						//temp = ( x1 * 16 + z1 ) * 16 /*128*/ + y1;
 						Block block = cube.getBlock( x1, y1, z1 );
@@ -214,7 +214,8 @@ public class CubicRavineGen extends CubicMapGenBase
 						if ( y1 + yOrigin * 16 < /*10*/ 0 ) //used to place lava at the bottom of ravines if it was deep enough
 						{
 							cube.setBlockForGeneration( x1, y1, z1, /*Blocks.flowing_lava*/ Blocks.air );//BUG: crash when it's lava
-						} else
+						} 
+						else
 						{
 							cube.setBlockForGeneration( x1, y1, z1, Blocks.air );
 
