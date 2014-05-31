@@ -79,7 +79,7 @@ public class NewTerrainProcessor extends CubeProcessor
 	private static int seaLevel;
 	
 	// these are the knobs for terrain generation
-	private static int maxElev = 200; // approximately how high blocks will go
+	public static final int maxElev = 200; // approximately how high blocks will go
 	private static int amplify = 30000; // amplify factor for the noise array.
 	private static int octaves = 14; // size of features. increasing by 1 approximately doubles the size of features.
 	
