@@ -184,4 +184,10 @@ public class BlankColumn extends Column
 	{
 		return true;
 	}
+	
+	@Override
+	public void fillChunk( byte[] data, int segmentsToCopyBitFlags, int blockMSBToCopyBitFlags, boolean isFirstTime )
+	{
+
+	}
 }
