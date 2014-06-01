@@ -1,5 +1,12 @@
 package cuchaz.cubicChunks.util;
 
+import static cuchaz.cubicChunks.util.Coords.CUBE_MAX_X;
+import static cuchaz.cubicChunks.util.Coords.CUBE_MAX_Y;
+import static cuchaz.cubicChunks.util.Coords.CUBE_MAX_Z;
+import static cuchaz.cubicChunks.util.Coords.HALF_CUBE_MAX_X;
+import static cuchaz.cubicChunks.util.Coords.HALF_CUBE_MAX_Y;
+import static cuchaz.cubicChunks.util.Coords.HALF_CUBE_MAX_Z;
+
 /**
  * Position of a cube.
  * <p>
@@ -24,14 +31,6 @@ package cuchaz.cubicChunks.util;
  */
 public class CubeCoords
 {
-	private static final int CUBE_MAX_X = 16;
-	private static final int CUBE_MAX_Y = 16;
-	private static final int CUBE_MAX_Z = 16;
-	
-	private static final int HALF_CUBE_MAX_X = CUBE_MAX_X / 2;
-	private static final int HALF_CUBE_MAX_Y = CUBE_MAX_Y / 2;
-	private static final int HALF_CUBE_MAX_Z = CUBE_MAX_Z / 2;
-	
 	private final int cubeX;
 	private final int cubeY;
 	private final int cubeZ;
