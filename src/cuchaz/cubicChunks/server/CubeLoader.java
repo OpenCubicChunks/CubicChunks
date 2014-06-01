@@ -182,8 +182,10 @@ public class CubeLoader implements IThreadedFileIO
 		final int CubesBatchSize = 250;
 		
 		int numColumnsSaved = 0;
+		int numColumnsRemaining = 0;
 		int numColumnBytesSaved = 0;
 		int numCubesSaved = 0;
+		int numCubesRemaining = 0;
 		int numCubeBytesSaved = 0;
 		long start = System.currentTimeMillis();
 		
@@ -236,13 +238,16 @@ public class CubeLoader implements IThreadedFileIO
 		}
 		entries.clear();
 		
+		numColumnsRemaining = m_columnsToSave.size();
+		numCubesRemaining = m_cubesToSave.size();
+		
 		// flush changes to disk
 		m_db.commit();
 		
 		long diff = System.currentTimeMillis() - start;
-		log.info( String.format( "Wrote %d columns (%dk) and %d cubes (%dk) in %d ms",
-			numColumnsSaved, numColumnBytesSaved/1024,
-			numCubesSaved, numCubeBytesSaved/1024,
+		log.info( String.format( "Wrote %d columns (%d remaining) (%dk) and %d cubes (%d remaining) (%dk) in %d ms",
+			numColumnsSaved, numColumnsRemaining, numColumnBytesSaved/1024,
+			numCubesSaved, numCubesRemaining, numCubeBytesSaved/1024,
 			diff
 		) );
 		
