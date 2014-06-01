@@ -36,7 +36,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.Maps;
 
 import cuchaz.cubicChunks.util.AddressTools;
-import cuchaz.cubicChunks.util.CubeCoordinate;
+import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.visibility.CubeSelector;
 import cuchaz.cubicChunks.visibility.CuboidalCubeSelector;
 import cuchaz.cubicChunks.world.Column;
@@ -133,9 +133,9 @@ public class CubePlayerManager extends PlayerManager
 		info.blockX = MathHelper.floor_double( player.posX );
 		info.blockY = MathHelper.floor_double( player.posY );
 		info.blockZ = MathHelper.floor_double( player.posZ );
-		int cubeX = CubeCoordinate.blockToCube( info.blockX );
-		int cubeY = CubeCoordinate.blockToCube( info.blockY );
-		int cubeZ = CubeCoordinate.blockToCube( info.blockZ );
+		int cubeX = Coords.blockToCube( info.blockX );
+		int cubeY = Coords.blockToCube( info.blockY );
+		int cubeZ = Coords.blockToCube( info.blockZ );
 		info.address = AddressTools.getAddress( cubeX, cubeY, cubeZ );
 		
 		// compute initial visibility
@@ -215,9 +215,9 @@ public class CubePlayerManager extends PlayerManager
 	public void func_151250_a( int blockX, int blockY, int blockZ )
 	{
 		// get the watcher
-		int cubeX = CubeCoordinate.blockToCube( blockX );
-		int cubeY = CubeCoordinate.blockToCube( blockY );
-		int cubeZ = CubeCoordinate.blockToCube( blockZ );
+		int cubeX = Coords.blockToCube( blockX );
+		int cubeY = Coords.blockToCube( blockY );
+		int cubeZ = Coords.blockToCube( blockZ );
 		CubeWatcher watcher = getWatcher( cubeX, cubeY, cubeZ );
 		if( watcher == null )
 		{
@@ -225,9 +225,9 @@ public class CubePlayerManager extends PlayerManager
 		}
 		
 		// pass off to watcher
-		int localX = CubeCoordinate.blockToLocal( blockX );
-		int localY = CubeCoordinate.blockToLocal( blockY );
-		int localZ = CubeCoordinate.blockToLocal( blockZ );
+		int localX = Coords.blockToLocal( blockX );
+		int localY = Coords.blockToLocal( blockY );
+		int localZ = Coords.blockToLocal( blockZ );
 		watcher.setDirtyBlock( localX, localY, localZ );
 	}
 	
@@ -258,9 +258,9 @@ public class CubePlayerManager extends PlayerManager
 		}
 		
 		// did the player move into a new cube?
-		int newCubeX = CubeCoordinate.blockToCube( newBlockX );
-		int newCubeY = CubeCoordinate.blockToCube( newBlockY );
-		int newCubeZ = CubeCoordinate.blockToCube( newBlockZ );
+		int newCubeX = Coords.blockToCube( newBlockX );
+		int newCubeY = Coords.blockToCube( newBlockY );
+		int newCubeZ = Coords.blockToCube( newBlockZ );
 		long newAddress = AddressTools.getAddress( newCubeX, newCubeY, newCubeZ );
 		if( newAddress == info.address )
 		{

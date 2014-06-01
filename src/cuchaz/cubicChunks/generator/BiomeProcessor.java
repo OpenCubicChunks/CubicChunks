@@ -22,7 +22,7 @@ import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.server.CubeWorldServer;
-import cuchaz.cubicChunks.util.CubeCoordinate;
+import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 
@@ -69,13 +69,13 @@ public class BiomeProcessor extends CubeProcessor
 		// generate biome info. This is a hackjob.
 		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(
 			m_biomes,
-			CubeCoordinate.cubeToMinBlock( cube.getX() ), CubeCoordinate.cubeToMinBlock( cube.getZ() ),
+			Coords.cubeToMinBlock( cube.getX() ), Coords.cubeToMinBlock( cube.getZ() ),
 			16, 16
 		);
 		
 		m_noise = m_noiseGen.func_151599_a(
 			m_noise,
-			CubeCoordinate.cubeToMinBlock( cube.getX() ), CubeCoordinate.cubeToMinBlock( cube.getZ() ),
+			Coords.cubeToMinBlock( cube.getX() ), Coords.cubeToMinBlock( cube.getZ() ),
 			16, 16, 16, 16, 1
 		);
 		
@@ -83,8 +83,8 @@ public class BiomeProcessor extends CubeProcessor
 		//Do not modify cube below
 		//Cube below = provider.provideCube(cube.getX(), cube.getY() - 1, cube.getZ());
 		
-		int topOfCube = CubeCoordinate.cubeToMaxBlock(cube.getY());
-		int bottomOfCube = CubeCoordinate.cubeToMinBlock(cube.getY());
+		int topOfCube = Coords.cubeToMaxBlock(cube.getY());
+		int bottomOfCube = Coords.cubeToMinBlock(cube.getY());
 		
 		// already checked that cubes above and below exist
 		// Do not modyfy cubes above/below to avoid generating dirt/grass in caves
@@ -202,25 +202,25 @@ public class BiomeProcessor extends CubeProcessor
 	
 	private void replaceBlocksForBiome_setBlock(Block block, Cube cube, int xAbs, int yAbs, int zAbs)
 	{
-		assert CubeCoordinate.blockToCube( yAbs ) == cube.getY() || CubeCoordinate.blockToCube( yAbs ) == cube.getY() - 1;
+		assert Coords.blockToCube( yAbs ) == cube.getY() || Coords.blockToCube( yAbs ) == cube.getY() - 1;
 		
 		int xRel = xAbs & 15;
 		int yRel = yAbs & 15;
 		int zRel = zAbs & 15;
 		
-		assert CubeCoordinate.blockToCube( yAbs ) == cube.getY() ;
+		assert Coords.blockToCube( yAbs ) == cube.getY() ;
 		cube.setBlockForGeneration( xRel, yRel, zRel, block );
 	}
 	
 	private Block replaceBlocksForBiome_getBlock(Cube cube, Cube above, int xAbs, int yAbs, int zAbs)
 	{
-		assert m_worldServer.getCubeProvider().cubeExists( CubeCoordinate.blockToCube( xAbs ), CubeCoordinate.blockToCube( yAbs ), CubeCoordinate.blockToCube( zAbs ) );
+		assert m_worldServer.getCubeProvider().cubeExists( Coords.blockToCube( xAbs ), Coords.blockToCube( yAbs ), Coords.blockToCube( zAbs ) );
 		
 		int xRel = xAbs & 15;
 		int yRel = yAbs & 15;
 		int zRel = zAbs & 15;
 		
-		if(CubeCoordinate.blockToCube( yAbs ) == cube.getY()) // check if we're in the same cube as Cube
+		if(Coords.blockToCube( yAbs ) == cube.getY()) // check if we're in the same cube as Cube
 		{
 			//If we are in the same cube
 			return cube.getBlock( xRel, yRel, zRel );
@@ -228,7 +228,7 @@ public class BiomeProcessor extends CubeProcessor
 		else 
 		{
 			//we are in cube above
-			assert CubeCoordinate.blockToCube( yAbs ) == cube.getY() + 1;
+			assert Coords.blockToCube( yAbs ) == cube.getY() + 1;
 			return above.getBlock( xRel, yRel, zRel );
 		}
 	}
