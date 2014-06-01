@@ -12,7 +12,8 @@ package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import cuchaz.cubicChunks.CubeWorldProvider;
 import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
-import cuchaz.cubicChunks.util.CubeCoordinate;
+import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.util.CubeCoords;
 import java.util.Random;
 
 import net.minecraft.block.BlockFlower;
@@ -180,8 +181,8 @@ public class CubeBiomeDecorator extends BiomeDecorator
 		int minY = chunk_Y * 16 + 8;
 		int maxY = minY + 16;
 
-		int blockXCenter = CubeCoordinate.cubeToMinBlock( chunk_X ) + 8;
-		int blockZCenter = CubeCoordinate.cubeToMinBlock( chunk_Z ) + 8;
+		int blockXCenter = Coords.cubeToMinBlock( chunk_X ) + 8;
+		int blockZCenter = Coords.cubeToMinBlock( chunk_Z ) + 8;
 		for( int i = 0; i < this.sandPerChunk2; ++i )
 		{
 			xAbs = blockXCenter + this.randomGenerator.nextInt( 16 );
@@ -255,7 +256,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			this.bigMushroomGen.generate( this.currentWorld, this.randomGenerator, xAbs, yAbs, zAbs );
 		}
 
-		int blockYCenter = CubeCoordinate.cubeToMinBlock( chunk_Y ) + 8;
+		int blockYCenter = Coords.cubeToMinBlock( chunk_Y ) + 8;
 		for( int i = 0; i < this.flowersPerChunk; ++i )
 		{
 			if( randomGenerator.nextInt( MAGIC_NUMBER ) != 0 )
@@ -282,7 +283,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			xAbs = blockXCenter + this.randomGenerator.nextInt( 16 );
 			zAbs = blockZCenter + this.randomGenerator.nextInt( 16 );
 
-			int height = CubeCoordinate.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
+			int height = Coords.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
 
 			if( randomGenerator.nextInt( MAGIC_NUMBER + Math.max( 0, height ) ) != 0 )
 			{
@@ -300,7 +301,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			xAbs = blockXCenter + this.randomGenerator.nextInt( 16 );
 			zAbs = blockZCenter + this.randomGenerator.nextInt( 16 );
 
-			int height = CubeCoordinate.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
+			int height = Coords.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
 
 			if( randomGenerator.nextInt( MAGIC_NUMBER + Math.max( 0, height ) ) != 0 )
 			{
@@ -317,7 +318,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			xAbs = blockXCenter + this.randomGenerator.nextInt( 16 );
 			zAbs = blockZCenter + this.randomGenerator.nextInt( 16 );
 
-			int height = CubeCoordinate.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
+			int height = Coords.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
 
 			if( randomGenerator.nextInt( MAGIC_NUMBER + Math.max( 0, height ) ) != 0 )
 			{
@@ -357,7 +358,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 				xAbs = blockXCenter + this.randomGenerator.nextInt( 16 );
 				zAbs = blockZCenter + this.randomGenerator.nextInt( 16 );
 
-				int height = CubeCoordinate.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
+				int height = Coords.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
 
 				if( randomGenerator.nextInt( MAGIC_NUMBER + Math.max( 0, height ) ) == 0 )
 				{
@@ -372,7 +373,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			xAbs = blockXCenter + this.randomGenerator.nextInt( 16 );
 			zAbs = blockZCenter + this.randomGenerator.nextInt( 16 );
 
-			int height = CubeCoordinate.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
+			int height = Coords.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
 
 			if( randomGenerator.nextInt( MAGIC_NUMBER + Math.max( 0, height ) ) == 0 )
 			{
@@ -407,7 +408,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			xAbs = blockXCenter + this.randomGenerator.nextInt( 16 );
 			zAbs = blockZCenter + this.randomGenerator.nextInt( 16 );
 
-			int height = CubeCoordinate.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
+			int height = Coords.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
 
 			if( randomGenerator.nextInt( MAGIC_NUMBER + Math.max( 0, height ) ) != 0 )
 			{
@@ -424,7 +425,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			xAbs = blockXCenter + this.randomGenerator.nextInt( 16 );
 			zAbs = blockZCenter + this.randomGenerator.nextInt( 16 );
 
-			int height = CubeCoordinate.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
+			int height = Coords.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
 
 			if( randomGenerator.nextInt( MAGIC_NUMBER + Math.max( 0, height ) ) == 0 )
 			{
@@ -439,7 +440,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			xAbs = blockXCenter + this.randomGenerator.nextInt( 16 );
 			zAbs = blockZCenter + this.randomGenerator.nextInt( 16 );
 
-			int height = CubeCoordinate.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
+			int height = Coords.blockToCube( this.currentWorld.getHeightValue( xAbs, zAbs ) - seaLevel );
 
 			if( randomGenerator.nextInt( MAGIC_NUMBER + Math.max( 0, height ) ) != 0 )
 			{
@@ -452,7 +453,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 		}
 		if( this.generateLakes )
 		{
-			int maxRandInt = Math.max( MAGIC_NUMBER, chunk_Y + CubeCoordinate.blockToCube( maxTerrainY ) );
+			int maxRandInt = Math.max( MAGIC_NUMBER, chunk_Y + Coords.blockToCube( maxTerrainY ) );
 			for( int i = 0; i < 50; ++i )
 			{
 				if( randomGenerator.nextInt( maxRandInt ) != 0 )
@@ -486,15 +487,15 @@ public class CubeBiomeDecorator extends BiomeDecorator
 	 */
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, double minHeight, double maxHeight, int maxTerrainHeight )
 	{
-		int minCubeY = CubeCoordinate.blockToCube( MathHelper.floor_double( minHeight * maxTerrainHeight + seaLevel ) );
-		int maxCubeY = CubeCoordinate.blockToCube( MathHelper.floor_double( maxHeight * maxTerrainHeight + seaLevel ) );
+		int minCubeY = Coords.blockToCube( MathHelper.floor_double( minHeight * maxTerrainHeight + seaLevel ) );
+		int maxCubeY = Coords.blockToCube( MathHelper.floor_double( maxHeight * maxTerrainHeight + seaLevel ) );
 		if( this.chunk_Y > maxCubeY || this.chunk_Y < minCubeY )
 		{
 			return;
 		}
-		int blockXCenter = CubeCoordinate.cubeToMinBlock( this.chunk_X ) + 8;
-		int blockYCenter = CubeCoordinate.cubeToMinBlock( this.chunk_Y ) + 8;
-		int blockZCenter = CubeCoordinate.cubeToMinBlock( this.chunk_Z ) + 8;
+		int blockXCenter = Coords.cubeToMinBlock( this.chunk_X ) + 8;
+		int blockYCenter = Coords.cubeToMinBlock( this.chunk_Y ) + 8;
+		int blockZCenter = Coords.cubeToMinBlock( this.chunk_Z ) + 8;
 		for( int n = 0; n < numGen; ++n )
 		{
 			if( this.randomGenerator.nextDouble() < probability )

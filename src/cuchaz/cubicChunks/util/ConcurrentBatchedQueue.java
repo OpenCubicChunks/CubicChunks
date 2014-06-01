@@ -55,4 +55,9 @@ public class ConcurrentBatchedQueue<T>
 		// are there more entries?
 		return !m_queue.isEmpty();
 	}
+	
+	public synchronized int size()
+	{
+		return m_queue.size();
+	}
 }

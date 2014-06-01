@@ -45,7 +45,7 @@ import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.ConcurrentBatchedQueue;
-import cuchaz.cubicChunks.util.CubeCoordinate;
+import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
 import cuchaz.cubicChunks.world.EntityActionListener;
@@ -182,8 +182,10 @@ public class CubeLoader implements IThreadedFileIO
 		final int CubesBatchSize = 250;
 		
 		int numColumnsSaved = 0;
+		int numColumnsRemaining = 0;
 		int numColumnBytesSaved = 0;
 		int numCubesSaved = 0;
+		int numCubesRemaining = 0;
 		int numCubeBytesSaved = 0;
 		long start = System.currentTimeMillis();
 		
@@ -236,13 +238,16 @@ public class CubeLoader implements IThreadedFileIO
 		}
 		entries.clear();
 		
+		numColumnsRemaining = m_columnsToSave.size();
+		numCubesRemaining = m_cubesToSave.size();
+		
 		// flush changes to disk
 		m_db.commit();
 		
 		long diff = System.currentTimeMillis() - start;
-		log.info( String.format( "Wrote %d columns (%dk) and %d cubes (%dk) in %d ms",
-			numColumnsSaved, numColumnBytesSaved/1024,
-			numCubesSaved, numCubeBytesSaved/1024,
+		log.info( String.format( "Wrote %d columns (%d remaining) (%dk) and %d cubes (%d remaining) (%dk) in %d ms",
+			numColumnsSaved, numColumnsRemaining, numColumnBytesSaved/1024,
+			numCubesSaved, numCubesRemaining, numCubeBytesSaved/1024,
 			diff
 		) );
 		
@@ -324,7 +329,7 @@ public class CubeLoader implements IThreadedFileIO
 			{
 				entity.addedToChunk = true;
 				entity.chunkCoordX = x;
-				entity.chunkCoordY = CubeCoordinate.getCubeYForEntity( entity );
+				entity.chunkCoordY = Coords.getCubeYForEntity( entity );
 				entity.chunkCoordZ = z;
 			}
 		} );
@@ -372,9 +377,9 @@ public class CubeLoader implements IThreadedFileIO
 			public void onEntity( Entity entity )
 			{
 				// make sure this entity is really in the chunk
-				int cubeX = CubeCoordinate.getCubeXForEntity( entity );
-				int cubeY = CubeCoordinate.getCubeYForEntity( entity );
-				int cubeZ = CubeCoordinate.getCubeZForEntity( entity );
+				int cubeX = Coords.getCubeXForEntity( entity );
+				int cubeY = Coords.getCubeYForEntity( entity );
+				int cubeZ = Coords.getCubeZForEntity( entity );
 				if( cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ() )
 				{
 					log.warn( String.format( "Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
@@ -489,9 +494,9 @@ public class CubeLoader implements IThreadedFileIO
 			public void onEntity( Entity entity )
 			{
 				// make sure this entity is really in the chunk
-				int cubeX = CubeCoordinate.getCubeXForEntity( entity );
-				int cubeY = CubeCoordinate.getCubeYForEntity( entity );
-				int cubeZ = CubeCoordinate.getCubeZForEntity( entity );
+				int cubeX = Coords.getCubeXForEntity( entity );
+				int cubeY = Coords.getCubeYForEntity( entity );
+				int cubeZ = Coords.getCubeZForEntity( entity );
 				if( cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ() )
 				{
 					log.warn( String.format( "Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!",

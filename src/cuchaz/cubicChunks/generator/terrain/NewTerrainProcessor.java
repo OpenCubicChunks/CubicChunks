@@ -22,7 +22,7 @@ import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
 import cuchaz.cubicChunks.generator.builder.ComplexWorldBuilder;
 import cuchaz.cubicChunks.server.CubeWorldServer;
-import cuchaz.cubicChunks.util.CubeCoordinate;
+import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 
@@ -183,7 +183,7 @@ public class NewTerrainProcessor extends CubeProcessor
 					if(val > maxNoise) maxNoise = val;
 					if(val < minNoise) minNoise = val;
 					
-					int yAbs = CubeCoordinate.localToBlock(cubeY, yRel);
+					int yAbs = Coords.localToBlock(cubeY, yRel);
 					
 					if( val - yAbs > 0 )
 					{
