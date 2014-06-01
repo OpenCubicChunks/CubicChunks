@@ -50,6 +50,19 @@ public class CubeProviderTools
 			cubeX + 1, cubeY + 1, cubeZ + 1);
 		return r;
 	}
+	
+	public static boolean cubeAboveExistsAndStageEqualOrHigher( CubeProvider provider, GeneratorStage stage, int cubeX, int cubeY, int cubeZ ){
+		boolean r = cubesExist( provider,
+			cubeX, cubeY, cubeZ,
+			cubeX , cubeY + 1, cubeZ );
+		if(!r){
+			return false;
+		}
+		r &= checkCubeGeneratorStage(provider, stage, 
+			cubeX, cubeY, cubeZ,
+			cubeX, cubeY + 1, cubeZ);
+		return r;
+	}
 
 	public static boolean cubesExist( CubeProvider provider, int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ )
 	{

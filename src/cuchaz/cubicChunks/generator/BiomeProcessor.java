@@ -20,6 +20,7 @@ import net.minecraft.world.gen.NoiseGeneratorPerlin;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
+import static cuchaz.cubicChunks.generator.GeneratorStage.Biomes;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;
@@ -56,10 +57,11 @@ public class BiomeProcessor extends CubeProcessor
 	{
 		// only continue if the neighboring cubes exist
 		CubeProvider provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
-		if( !CubeProviderTools.cubeAndNeighborsExist( provider, cube.getX(), cube.getY(), cube.getZ() ) )
+		if( !CubeProviderTools.cubeAboveExistsAndStageEqualOrHigher( provider, Biomes, cube.getX(), cube.getY(), cube.getZ() ) )
 		{
 			return false;
 		}
+
 		//Nothing to do...
 		if( cube.isEmpty() )
 		{
