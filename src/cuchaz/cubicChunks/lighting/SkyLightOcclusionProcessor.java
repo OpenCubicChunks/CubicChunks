@@ -15,6 +15,7 @@ import net.minecraft.world.World;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.util.BlockColumnProcessor;
+import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 
 public class SkyLightOcclusionProcessor extends BlockColumnProcessor
@@ -30,22 +31,26 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor
 		World world = column.worldObj;
 		
 		// get the height
-		// NOTE: height here is the value of the first air block on top of the column
-		int height = column.getHeightValue( localX, localZ );
+		Integer height = column.getSkylightBlockY( localX, localZ );
+		if( height == null )
+		{
+			// nothing to do
+			return true;
+		}
 		
 		// get the min column height among neighbors
 		int minHeight1 = world.getChunkHeightMapMinimum( blockX - 1, blockZ );
 		int minHeight2 = world.getChunkHeightMapMinimum( blockX + 1, blockZ );
 		int minHeight3 = world.getChunkHeightMapMinimum( blockX, blockZ - 1 );
 		int minHeight4 = world.getChunkHeightMapMinimum( blockX, blockZ + 1 );
-		int minHeight = Math.min( minHeight1, Math.min( minHeight2, Math.min( minHeight3, minHeight4 ) ) );
+		int minNeighborHeight = Math.min( minHeight1, Math.min( minHeight2, Math.min( minHeight3, minHeight4 ) ) );
 		
 		boolean actuallyUpdated = false;
-		actuallyUpdated |= checkSkylightNeighborHeight( world, blockX, blockZ, minHeight );
-		actuallyUpdated |= checkSkylightNeighborHeight( world, blockX - 1, blockZ, height );
-		actuallyUpdated |= checkSkylightNeighborHeight( world, blockX + 1, blockZ, height );
-		actuallyUpdated |= checkSkylightNeighborHeight( world, blockX, blockZ - 1, height );
-		actuallyUpdated |= checkSkylightNeighborHeight( world, blockX, blockZ + 1, height );
+		actuallyUpdated |= updateSkylight( world, blockX, blockZ, minNeighborHeight );
+		actuallyUpdated |= updateSkylight( world, blockX - 1, blockZ, height );
+		actuallyUpdated |= updateSkylight( world, blockX + 1, blockZ, height );
+		actuallyUpdated |= updateSkylight( world, blockX, blockZ - 1, height );
+		actuallyUpdated |= updateSkylight( world, blockX, blockZ + 1, height );
 		
 		if( actuallyUpdated )
 		{
@@ -55,22 +60,32 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor
 		return true;
 	}
 	
-	private boolean checkSkylightNeighborHeight( World world, int blockX, int blockZ, int maxBlockY )
+	private boolean updateSkylight( World world, int blockX, int blockZ, int maxBlockY )
 	{
-		int height = world.getHeightValue( blockX, blockZ );
+		// get the skylight block for this block column
+		Column column = (Column)world.getChunkFromBlockCoords( blockX, blockZ );
+		int localX = Coords.blockToLocal( blockX );
+		int localZ = Coords.blockToLocal( blockZ );
+		Integer height = column.getSkylightBlockY( localX, localZ );
+		if( height == null )
+		{
+			// nothing to do
+			return false;
+		}
+		
 		if( height > maxBlockY )
 		{
-			return updateSkylightNeighborHeight( world, blockX, blockZ, maxBlockY, height );
+			return updateSkylight( world, blockX, blockZ, maxBlockY, height );
 		}
 		else if( height < maxBlockY )
 		{
-			return updateSkylightNeighborHeight( world, blockX, blockZ, height, maxBlockY );
+			return updateSkylight( world, blockX, blockZ, height, maxBlockY );
 		}
 		
 		return false;
 	}
 	
-	private boolean updateSkylightNeighborHeight( World world, int blockX, int blockZ, int minBlockY, int maxBlockY )
+	private boolean updateSkylight( World world, int blockX, int blockZ, int minBlockY, int maxBlockY )
 	{
 		if( maxBlockY <= minBlockY )
 		{

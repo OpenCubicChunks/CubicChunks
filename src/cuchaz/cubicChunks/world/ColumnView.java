@@ -149,6 +149,7 @@ public class ColumnView extends Column
 	}
 	
 	@Override
+	@Deprecated
 	public int getHeightValue( int localX, int localZ )
 	{
 		return m_column.getHeightValue( localX, localZ );

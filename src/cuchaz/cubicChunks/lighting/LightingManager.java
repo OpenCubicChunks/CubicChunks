@@ -24,7 +24,7 @@ public class LightingManager
 {
 	private static final Logger log = LogManager.getLogger();
 	
-	private static final int TickBudget = 100; // ms
+	private static final int TickBudget = 40; // ms. Only 50 ms in a tick
 	
 	private World m_world;
 	private SkyLightOcclusionProcessor m_skyLightOcclusionProcessor;

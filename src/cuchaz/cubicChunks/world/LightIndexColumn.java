@@ -16,24 +16,25 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
+import cuchaz.cubicChunks.util.ValueCache;
+
 public class LightIndexColumn
 {
-	// UNDONE: do something smarter about sea level
-	private static final int SeaLevel = 0;
-	
+	private int m_seaLevel;
 	private TreeMap<Integer,Integer> m_opacity;
-	private int m_topNonTransparentBlockY;
-	private int m_topOpaqueUnderSeaLevelBlockY;
+	private ValueCache<Integer> m_topNonTransparentBlockY;
+	private ValueCache<Integer> m_topOpaqueUnderSeaLevelBlockY;
 	
-	public LightIndexColumn( )
+	public LightIndexColumn( int seaLevel )
 	{
+		m_seaLevel = seaLevel;
 		// UNDONE: could reduce memory usage by using the int-packed representation in memory
 		// although, that's probably not necessary since using cubes should actually save memory
 		// will have to do memory profiling to see if it's even worth trying to optimize memory usage here
 		m_opacity = new TreeMap<Integer,Integer>();
 		
-		m_topNonTransparentBlockY = Integer.MIN_VALUE;
-		m_topOpaqueUnderSeaLevelBlockY = Integer.MIN_VALUE;
+		m_topNonTransparentBlockY = new ValueCache<Integer>();
+		m_topOpaqueUnderSeaLevelBlockY = new ValueCache<Integer>();
 	}
 	
 	public void readData( DataInputStream in )
@@ -120,38 +121,18 @@ public class LightIndexColumn
 		assert( getOpacity( blockY + 1 ) == opacityAbove );
 		assert( getOpacity( blockY - 1 ) == opacityBelow );
 		
-		// update caches
-		if( opacity > 0 && blockY > m_topNonTransparentBlockY )
-		{
-			// we added a new top non-transparent block, update cache
-			m_topNonTransparentBlockY = blockY;
-		}
-		else if( opacity == 0 && blockY == m_topNonTransparentBlockY )
-		{
-			// we removed the top non-transparent block, invalidate cache
-			m_topNonTransparentBlockY = Integer.MIN_VALUE;
-		}
-		
-		if( blockY < SeaLevel )
-		{
-			if( opacity == 255 && blockY > m_topOpaqueUnderSeaLevelBlockY )
-			{
-				// we added a new opaque under sea level block
-				m_topOpaqueUnderSeaLevelBlockY = blockY;
-			}
-			else if( opacity < 255 && blockY == m_topOpaqueUnderSeaLevelBlockY )
-			{
-				// we removed the top opaque under sea level block, invalidate cache
-				m_topOpaqueUnderSeaLevelBlockY = Integer.MIN_VALUE;
-			}
-		}
+		// invalidate caches
+		m_topNonTransparentBlockY.clear();
+		m_topOpaqueUnderSeaLevelBlockY.clear();
 	}
 	
-	public int getTopNonTransparentBlockY( )
+	public Integer getTopNonTransparentBlockY( )
 	{
 		// do we need to recompute this?
-		if( m_topNonTransparentBlockY == Integer.MIN_VALUE )
+		if( !m_topNonTransparentBlockY.hasValue() )
 		{
+			m_topNonTransparentBlockY.set( null );
+			
 			Map.Entry<Integer,Integer> lastEntry = null;
 			for( Map.Entry<Integer,Integer> entry : m_opacity.descendingMap().entrySet() )
 			{
@@ -164,25 +145,27 @@ public class LightIndexColumn
 					assert( lastEntry != null );
 					
 					// go to the top of this segment
-					m_topNonTransparentBlockY = lastEntry.getKey() - 1;
+					m_topNonTransparentBlockY.set( lastEntry.getKey() - 1 );
 					break;
 				}
 				
 				lastEntry = entry;
 			}
 		}
-		return m_topNonTransparentBlockY;
+		return m_topNonTransparentBlockY.get();
 	}
 	
-	public int getTopOpaqueBlockBelowSeaLevel( )
+	public Integer getTopOpaqueBlockBelowSeaLevel( )
 	{
 		// do we need to recompute this?
-		if( m_topOpaqueUnderSeaLevelBlockY == Integer.MIN_VALUE )
+		if( !m_topOpaqueUnderSeaLevelBlockY.hasValue() )
 		{
+			m_topOpaqueUnderSeaLevelBlockY.set( null );
+			
 			// UNDONE: this is a linear-time query... we might be able to speed it up if we need
 			// log(n) would be nice
 			
-			Map.Entry<Integer,Integer> entry = m_opacity.floorEntry( SeaLevel );
+			Map.Entry<Integer,Integer> entry = m_opacity.floorEntry( m_seaLevel );
 			while( entry != null )
 			{
 				// is this segment opaque?
@@ -190,7 +173,7 @@ public class LightIndexColumn
 				{
 					// go to the top of this segment
 					// NOTE: since this segment is opaque, there should always be a transparent one above it
-					m_topOpaqueUnderSeaLevelBlockY = m_opacity.higherKey( entry.getKey() );
+					m_topOpaqueUnderSeaLevelBlockY.set( m_opacity.higherKey( entry.getKey() ) );
 					break;
 				}
 				
@@ -198,7 +181,7 @@ public class LightIndexColumn
 				entry = m_opacity.lowerEntry( entry.getKey() );
 			}
 		}
-		return m_topOpaqueUnderSeaLevelBlockY;
+		return m_topOpaqueUnderSeaLevelBlockY.get();
 	}
 
 	public String dump( )

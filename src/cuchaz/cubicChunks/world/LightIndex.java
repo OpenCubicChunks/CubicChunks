@@ -16,20 +16,22 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import cuchaz.cubicChunks.util.ValueCache;
+
 public class LightIndex
 {
 	private LightIndexColumn[] m_columns;
-	private Integer m_topNonTransparentBlockY;
+	private ValueCache<Integer> m_topNonTransparentBlockY;
 	
-	public LightIndex( )
+	public LightIndex( int seaLevel )
 	{
 		m_columns = new LightIndexColumn[16*16];
 		for( int i=0; i<m_columns.length; i++ )
 		{
-			m_columns[i] = new LightIndexColumn();
+			m_columns[i] = new LightIndexColumn( seaLevel );
 		}
 		
-		m_topNonTransparentBlockY = Integer.MIN_VALUE;
+		m_topNonTransparentBlockY = new ValueCache<Integer>();
 	}
 	
 	public int getOpacity( int localX, int blockY, int localZ )
@@ -47,34 +49,42 @@ public class LightIndex
 		int xzCoord = localZ << 4 | localX;
 		m_columns[xzCoord].setOpacity( blockY, opacity );
 		
-		// invalidate top block cache
-		m_topNonTransparentBlockY = Integer.MIN_VALUE;
+		m_topNonTransparentBlockY.clear();
 	}
 	
-	public int getTopNonTransparentBlock( int localX, int localZ )
+	public Integer getTopNonTransparentBlockY( int localX, int localZ )
 	{
 		int xzCoord = localZ << 4 | localX;
 		return m_columns[xzCoord].getTopNonTransparentBlockY();
 	}
 	
-	public int getTopNonTransparentBlockY( )
+	public Integer getTopNonTransparentBlockY( )
 	{
 		// do we need to update the cache?
-		if( m_topNonTransparentBlockY == Integer.MIN_VALUE )
+		if( !m_topNonTransparentBlockY.hasValue() )
 		{
+			m_topNonTransparentBlockY.set( null );
+			
 			for( int i=0; i<m_columns.length; i++ )
 			{
-				int blockY = m_columns[i].getTopNonTransparentBlockY();
-				if( blockY > m_topNonTransparentBlockY )
+				// get the top y from the column
+				Integer blockY = m_columns[i].getTopNonTransparentBlockY();
+				if( blockY == null )
 				{
-					m_topNonTransparentBlockY = blockY;
+					continue;
+				}
+				
+				// does it beat our current top y?
+				if( m_topNonTransparentBlockY.get() == null || blockY > m_topNonTransparentBlockY.get() )
+				{
+					m_topNonTransparentBlockY.set( blockY );
 				}
 			}
 		}
-		return m_topNonTransparentBlockY;
+		return m_topNonTransparentBlockY.get();
 	}
 	
-	public int getTopOpaqueBlockBelowSeaLevel( int localX, int localZ )
+	public Integer getTopOpaqueBlockBelowSeaLevel( int localX, int localZ )
 	{
 		int xzCoord = localZ << 4 | localX;
 		return m_columns[xzCoord].getTopOpaqueBlockBelowSeaLevel();
