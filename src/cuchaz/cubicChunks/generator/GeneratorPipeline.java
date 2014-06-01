@@ -27,7 +27,7 @@ public class GeneratorPipeline
 {
 	private static final Logger log = LogManager.getLogger();
 	
-	private static final int TickBudget = 100; // ms
+	private static final int TickBudget = 40; // ms. There are only 50 ms per tick
 	
 	private CubeProvider m_provider;
 	private List<QueueProcessor> m_processors;
