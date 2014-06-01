@@ -41,7 +41,7 @@ import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Bits;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.RangeInt;
@@ -105,7 +105,7 @@ public class Column extends Chunk
 	
 	public long getAddress( )
 	{
-		return CubeAddress.getAddress( xPosition, zPosition );
+		return AddressTools.getAddress( xPosition, zPosition );
 	}
 	
 	public World getWorld( )

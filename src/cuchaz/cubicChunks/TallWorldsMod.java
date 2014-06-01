@@ -26,7 +26,7 @@ import cuchaz.cubicChunks.client.CubeWorldClient;
 import cuchaz.cubicChunks.generator.GeneratorPipeline;
 import cuchaz.cubicChunks.server.CubePlayerManager;
 import cuchaz.cubicChunks.server.CubeWorldServer;
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.magicMojoModLoader.api.Mod;
@@ -106,8 +106,8 @@ public class TallWorldsMod implements Mod
 	
 	public void handleEvent( BuildSizeEvent event )
 	{
-		event.setCustomBuildHeight( Coords.cubeToMaxBlock( CubeAddress.MaxY ) );
-		event.setCustomBuildDepth( Coords.cubeToMinBlock( CubeAddress.MinY ) );
+		event.setCustomBuildHeight( Coords.cubeToMaxBlock( AddressTools.MaxY ) );
+		event.setCustomBuildDepth( Coords.cubeToMinBlock( AddressTools.MinY ) );
 		
 		log.info( String.format( "Set build height to [%d,%d]", event.getCustomBuildDepth(), event.getCustomBuildHeight() ) );
 	}
@@ -287,7 +287,7 @@ public class TallWorldsMod implements Mod
 	
 	public void handleEvent( VoidFogRangeEvent event )
 	{
-		int min = Coords.cubeToMinBlock( CubeAddress.MinY );
+		int min = Coords.cubeToMinBlock( AddressTools.MinY );
 		event.setCustomRange( min, min + 1024 );
 	}
 	

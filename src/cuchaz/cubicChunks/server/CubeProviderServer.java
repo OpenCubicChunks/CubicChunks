@@ -30,7 +30,7 @@ import com.google.common.collect.Maps;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.generator.ColumnGenerator;
 import cuchaz.cubicChunks.generator.GeneratorStage;
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.world.BlankColumn;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
@@ -63,14 +63,14 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	@Override
 	public boolean chunkExists( int cubeX, int cubeZ )
 	{
-		return m_loadedColumns.containsKey( CubeAddress.getAddress( cubeX, cubeZ ) );
+		return m_loadedColumns.containsKey( AddressTools.getAddress( cubeX, cubeZ ) );
 	}
 	
 	@Override
 	public boolean cubeExists( int cubeX, int cubeY, int cubeZ )
 	{
 		// is the column loaded?
-		long columnAddress = CubeAddress.getAddress( cubeX, cubeZ );
+		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
 		Column column = m_loadedColumns.get( columnAddress );
 		if( column == null )
 		{
@@ -93,7 +93,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	public Column provideChunk( int cubeX, int cubeZ )
 	{
 		// check for the column
-		Column column = m_loadedColumns.get( CubeAddress.getAddress( cubeX, cubeZ ) );
+		Column column = m_loadedColumns.get( AddressTools.getAddress( cubeX, cubeZ ) );
 		if( column != null )
 		{
 			return column;
@@ -106,7 +106,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	public Cube provideCube( int cubeX, int cubeY, int cubeZ )
 	{
 		// is the column loaded?
-		long columnAddress = CubeAddress.getAddress( cubeX, cubeZ );
+		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
 		Column column = m_loadedColumns.get( columnAddress );
 		if( column == null )
 		{
@@ -154,8 +154,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	
 	public void loadCube( int cubeX, int cubeY, int cubeZ )
 	{
-		long cubeAddress = CubeAddress.getAddress( cubeX, cubeY, cubeZ );
-		long columnAddress = CubeAddress.getAddress( cubeX, cubeZ );
+		long cubeAddress = AddressTools.getAddress( cubeX, cubeY, cubeZ );
+		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
 		
 		// step 1: get a column
 		
@@ -262,7 +262,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		}
 		
 		// queue the cube for unloading
-		m_cubesToUnload.add( CubeAddress.getAddress( cubeX, cubeY, cubeZ ) );
+		m_cubesToUnload.add( AddressTools.getAddress( cubeX, cubeY, cubeZ ) );
 	}
 	
 	@Override
@@ -295,7 +295,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		for( int i=0; i<MaxNumToUnload && !m_cubesToUnload.isEmpty(); i++ )
 		{
 			long cubeAddress = m_cubesToUnload.poll();
-			long columnAddress = CubeAddress.getAddress( CubeAddress.getX( cubeAddress ), CubeAddress.getZ( cubeAddress ) );
+			long columnAddress = AddressTools.getAddress( AddressTools.getX( cubeAddress ), AddressTools.getZ( cubeAddress ) );
 			
 			// get the cube
 			Column column = m_loadedColumns.get( columnAddress );
@@ -306,7 +306,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			}
 			
 			// unload the cube
-			int cubeY = CubeAddress.getY( cubeAddress );
+			int cubeY = AddressTools.getY( cubeAddress );
 			Cube cube = column.removeCube( cubeY );
 			if( cube != null )
 			{
@@ -412,9 +412,9 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		}
 		
 		long address = m_worldServer.getSpawnPointCubeAddress();
-		int spawnX = CubeAddress.getX( address );
-		int spawnY = CubeAddress.getY( address );
-		int spawnZ = CubeAddress.getZ( address );
+		int spawnX = AddressTools.getX( address );
+		int spawnY = AddressTools.getY( address );
+		int spawnZ = AddressTools.getZ( address );
 		int dx = Math.abs( spawnX - cubeX );
 		int dy = Math.abs( spawnY - cubeY );
 		int dz = Math.abs( spawnZ - cubeZ );

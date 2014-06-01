@@ -12,7 +12,7 @@ package cuchaz.cubicChunks.visibility;
 
 import java.util.Collection;
 
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 
 public class EllipsoidalCubeSelector extends CubeSelector
 {
@@ -40,7 +40,7 @@ public class EllipsoidalCubeSelector extends CubeSelector
 					int y2 = y*y;
 					if( test <= -y2*SemiAxisXZ2 ) // test for point in ellipsoid, but using only integer arithmetic
 					{
-						out.add( CubeAddress.getAddress( x + cubeX, y + cubeY, z + cubeZ ) );
+						out.add( AddressTools.getAddress( x + cubeX, y + cubeY, z + cubeZ ) );
 					}
 				}
 			}

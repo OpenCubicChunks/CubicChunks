@@ -35,7 +35,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Maps;
 
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.visibility.CubeSelector;
 import cuchaz.cubicChunks.visibility.CuboidalCubeSelector;
@@ -71,9 +71,9 @@ public class CubePlayerManager extends PlayerManager
 		public void sortOutgoingCubes( )
 		{
 			// get the player chunk position
-			final int cubeX = CubeAddress.getX( address );
-			final int cubeY = CubeAddress.getY( address );
-			final int cubeZ = CubeAddress.getZ( address );
+			final int cubeX = AddressTools.getX( address );
+			final int cubeY = AddressTools.getY( address );
+			final int cubeZ = AddressTools.getZ( address );
 			
 			// sort cubes so they load radially away from the player
 			Collections.sort( outgoingCubes, new Comparator<Cube>( )
@@ -136,7 +136,7 @@ public class CubePlayerManager extends PlayerManager
 		int cubeX = Coords.blockToCube( info.blockX );
 		int cubeY = Coords.blockToCube( info.blockY );
 		int cubeZ = Coords.blockToCube( info.blockZ );
-		info.address = CubeAddress.getAddress( cubeX, cubeY, cubeZ );
+		info.address = AddressTools.getAddress( cubeX, cubeY, cubeZ );
 		
 		// compute initial visibility
 		info.cubeSelector.setPlayerPosition( info.address, m_viewDistance );
@@ -261,7 +261,7 @@ public class CubePlayerManager extends PlayerManager
 		int newCubeX = Coords.blockToCube( newBlockX );
 		int newCubeY = Coords.blockToCube( newBlockY );
 		int newCubeZ = Coords.blockToCube( newBlockZ );
-		long newAddress = CubeAddress.getAddress( newCubeX, newCubeY, newCubeZ );
+		long newAddress = AddressTools.getAddress( newCubeX, newCubeY, newCubeZ );
 		if( newAddress == info.address )
 		{
 			return;
@@ -316,8 +316,8 @@ public class CubePlayerManager extends PlayerManager
 		// check the player's watched addresses
 		for( long address : info.watchedAddresses )
 		{
-			int x = CubeAddress.getX( address );
-			int z = CubeAddress.getZ( address );
+			int x = AddressTools.getX( address );
+			int z = AddressTools.getZ( address );
 			if( x == cubeX && z == cubeZ )
 			{
 				return true;
@@ -376,7 +376,7 @@ public class CubePlayerManager extends PlayerManager
 		for( Cube cube : cubesToSend )
 		{
 			// is there a column view for this cube?
-			long columnAddress = CubeAddress.getAddress( cube.getX(), cube.getZ() );
+			long columnAddress = AddressTools.getAddress( cube.getX(), cube.getZ() );
 			ColumnView view = views.get( columnAddress );
 			if( view == null )
 			{
@@ -428,7 +428,7 @@ public class CubePlayerManager extends PlayerManager
 	
 	private CubeWatcher getWatcher( int cubeX, int cubeY, int cubeZ )
 	{
-		return getWatcher( CubeAddress.getAddress( cubeX, cubeY, cubeZ ) );
+		return getWatcher( AddressTools.getAddress( cubeX, cubeY, cubeZ ) );
 	}
 	
 	private CubeWatcher getWatcher( long address )
@@ -438,9 +438,9 @@ public class CubePlayerManager extends PlayerManager
 	
 	private boolean cubeExists( long address )
 	{
-		int cubeX = CubeAddress.getX( address );
-		int cubeY = CubeAddress.getY( address );
-		int cubeZ = CubeAddress.getZ( address );
+		int cubeX = AddressTools.getX( address );
+		int cubeY = AddressTools.getY( address );
+		int cubeZ = AddressTools.getZ( address );
 		return getCubeProvider().cubeExists( cubeX, cubeY, cubeZ );
 	}
 	
@@ -450,9 +450,9 @@ public class CubePlayerManager extends PlayerManager
 		if( watcher == null )
 		{
 			// get the cube
-			int cubeX = CubeAddress.getX( address );
-			int cubeY = CubeAddress.getY( address );
-			int cubeZ = CubeAddress.getZ( address );
+			int cubeX = AddressTools.getX( address );
+			int cubeY = AddressTools.getY( address );
+			int cubeZ = AddressTools.getZ( address );
 			getCubeProvider().loadCubeAndNeighbors( cubeX, cubeY, cubeZ );
 			
 			// make a new watcher

@@ -27,7 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.generator.GeneratorStage;
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeBlockMap;
 
@@ -89,7 +89,7 @@ public class Cube
 	
 	public long getAddress( )
 	{
-		return CubeAddress.getAddress( m_x, m_y, m_z );
+		return AddressTools.getAddress( m_x, m_y, m_z );
 	}
 	
 	public World getWorld( )

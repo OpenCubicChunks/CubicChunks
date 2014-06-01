@@ -16,7 +16,7 @@ import java.util.TreeSet;
 
 import com.google.common.collect.Sets;
 
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 
 public abstract class CubeSelector
 {
@@ -35,9 +35,9 @@ public abstract class CubeSelector
 	
 	public void setPlayerPosition( long address, int viewDistance )
 	{
-		int cubeX = CubeAddress.getX( address );
-		int cubeY = CubeAddress.getY( address );
-		int cubeZ = CubeAddress.getZ( address );
+		int cubeX = AddressTools.getX( address );
+		int cubeY = AddressTools.getY( address );
+		int cubeZ = AddressTools.getZ( address );
 		
 		// compute the cube visibility
 		m_nextVisible.clear();

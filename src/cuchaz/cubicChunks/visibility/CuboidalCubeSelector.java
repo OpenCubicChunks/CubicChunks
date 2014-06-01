@@ -12,7 +12,7 @@ package cuchaz.cubicChunks.visibility;
 
 import java.util.Collection;
 
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 
 public class CuboidalCubeSelector extends CubeSelector
 {
@@ -27,7 +27,7 @@ public class CuboidalCubeSelector extends CubeSelector
 			{
 				for( int z=cubeZ-viewDistance; z<=cubeZ+viewDistance; z++ )
 				{
-					out.add( CubeAddress.getAddress( x, y, z ) );
+					out.add( AddressTools.getAddress( x, y, z ) );
 				}
 			}
 		}

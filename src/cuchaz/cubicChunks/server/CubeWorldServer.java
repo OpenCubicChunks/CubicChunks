@@ -35,7 +35,7 @@ import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 import cuchaz.cubicChunks.generator.GeneratorPipeline;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.lighting.LightingManager;
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.magicMojoModLoader.util.Util;
@@ -122,7 +122,7 @@ public class CubeWorldServer extends WorldServer implements CubeWorld
 	
 	public long getSpawnPointCubeAddress( )
 	{
-		return CubeAddress.getAddress(
+		return AddressTools.getAddress(
 			Coords.blockToCube( worldInfo.getSpawnX() ),
 			Coords.blockToCube( worldInfo.getSpawnY() ),
 			Coords.blockToCube( worldInfo.getSpawnZ() )

@@ -43,7 +43,7 @@ import org.mapdb.DBMaker;
 
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 import cuchaz.cubicChunks.generator.GeneratorStage;
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.ConcurrentBatchedQueue;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
@@ -103,7 +103,7 @@ public class CubeLoader implements IThreadedFileIO
 	throws IOException
 	{
 		// does the database have the column?
-		long address = CubeAddress.getAddress( cubeX, cubeZ );
+		long address = AddressTools.getAddress( cubeX, cubeZ );
 		byte[] data = m_columns.get( address );
 		if( data == null )
 		{
@@ -141,9 +141,9 @@ public class CubeLoader implements IThreadedFileIO
 		in.close();
 		
 		// restore the cube
-		int x = CubeAddress.getX( address );
-		int y = CubeAddress.getY( address );
-		int z = CubeAddress.getZ( address );
+		int x = AddressTools.getX( address );
+		int y = AddressTools.getY( address );
+		int z = AddressTools.getZ( address );
 		return readCubeFromNbtAndAddToColumn( world, column, x, y, z, nbt );
 	}
 	
@@ -207,8 +207,8 @@ public class CubeLoader implements IThreadedFileIO
 			catch( IOException ex )
 			{
 				log.error( String.format( "Unable to write column %d,%d",
-					CubeAddress.getX( entry.address ),
-					CubeAddress.getZ( entry.address )
+					AddressTools.getX( entry.address ),
+					AddressTools.getZ( entry.address )
 				), ex );
 			}
 		}
@@ -230,9 +230,9 @@ public class CubeLoader implements IThreadedFileIO
 			catch( IOException ex )
 			{
 				log.error( String.format( "Unable to write cube %d,%d,%d",
-					CubeAddress.getX( entry.address ),
-					CubeAddress.getY( entry.address ),
-					CubeAddress.getZ( entry.address )
+					AddressTools.getX( entry.address ),
+					AddressTools.getY( entry.address ),
+					AddressTools.getZ( entry.address )
 				), ex );
 			}
 		}

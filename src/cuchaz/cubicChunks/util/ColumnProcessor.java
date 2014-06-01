@@ -28,8 +28,8 @@ public abstract class ColumnProcessor extends QueueProcessor
 		for( long address : m_incomingAddresses )
 		{
 			// get the column
-			int cubeX = CubeAddress.getX( address );
-			int cubeZ = CubeAddress.getZ( address );
+			int cubeX = AddressTools.getX( address );
+			int cubeZ = AddressTools.getZ( address );
 			Column column = (Column)m_provider.provideChunk( cubeX, cubeZ );
 			
 			// skip blank columns

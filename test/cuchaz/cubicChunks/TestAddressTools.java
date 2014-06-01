@@ -16,7 +16,7 @@ import java.util.HashSet;
 
 import org.junit.Test;
 
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 
 
 public class TestAddressTools
@@ -24,33 +24,33 @@ public class TestAddressTools
 	@Test
 	public void testY( )
 	{
-		assertEquals( -524288, CubeAddress.MinY );
-		assertEquals( 524287, CubeAddress.MaxY );
-		for( int i=CubeAddress.MinY; i<=CubeAddress.MaxY; i++ )
+		assertEquals( -524288, AddressTools.MinY );
+		assertEquals( 524287, AddressTools.MaxY );
+		for( int i=AddressTools.MinY; i<=AddressTools.MaxY; i++ )
 		{
-			assertEquals( i, CubeAddress.getY( CubeAddress.getAddress( 0, i, 0 ) ) );
+			assertEquals( i, AddressTools.getY( AddressTools.getAddress( 0, i, 0 ) ) );
 		}
 	}
 	
 	@Test
 	public void testX( )
 	{
-		assertEquals( -2097152, CubeAddress.MinX );
-		assertEquals( 2097151, CubeAddress.MaxX );
-		for( int i=CubeAddress.MinX; i<=CubeAddress.MaxX; i++ )
+		assertEquals( -2097152, AddressTools.MinX );
+		assertEquals( 2097151, AddressTools.MaxX );
+		for( int i=AddressTools.MinX; i<=AddressTools.MaxX; i++ )
 		{
-			assertEquals( i, CubeAddress.getX( CubeAddress.getAddress( i, 0, 0 ) ) );
+			assertEquals( i, AddressTools.getX( AddressTools.getAddress( i, 0, 0 ) ) );
 		}
 	}
 	
 	@Test
 	public void testZ( )
 	{
-		assertEquals( -2097152, CubeAddress.MinZ );
-		assertEquals( 2097151, CubeAddress.MaxZ );
-		for( int i=CubeAddress.MinZ; i<=CubeAddress.MaxZ; i++ )
+		assertEquals( -2097152, AddressTools.MinZ );
+		assertEquals( 2097151, AddressTools.MaxZ );
+		for( int i=AddressTools.MinZ; i<=AddressTools.MaxZ; i++ )
 		{
-			assertEquals( i, CubeAddress.getZ( CubeAddress.getAddress( 0, 0, i ) ) );
+			assertEquals( i, AddressTools.getZ( AddressTools.getAddress( 0, 0, i ) ) );
 		}
 	}
 	
@@ -63,10 +63,10 @@ public class TestAddressTools
 			{
 				for( int z=-32; z<=32; z++ )
 				{
-					long address = CubeAddress.getAddress( x, y, z );
-					assertEquals( x, CubeAddress.getX( address ) );
-					assertEquals( y, CubeAddress.getY( address ) );
-					assertEquals( z, CubeAddress.getZ( address ) );
+					long address = AddressTools.getAddress( x, y, z );
+					assertEquals( x, AddressTools.getX( address ) );
+					assertEquals( y, AddressTools.getY( address ) );
+					assertEquals( z, AddressTools.getZ( address ) );
 				}
 			}
 		}
@@ -82,7 +82,7 @@ public class TestAddressTools
 			{
 				for( int z=-32; z<=32; z++ )
 				{
-					long address = CubeAddress.getAddress( x, y, z );
+					long address = AddressTools.getAddress( x, y, z );
 					assertFalse( addresses.contains( address ) );
 					addresses.add( address );
 				}

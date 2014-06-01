@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.Lists;
 
 import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.util.CubeAddress;
+import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.util.QueueProcessor;
 import cuchaz.cubicChunks.world.Cube;
@@ -105,9 +105,9 @@ public class GeneratorPipeline
 			for( long address : processor.getProcessedAddresses() )
 			{
 				// set the generator stage flag on the cube
-				int cubeX = CubeAddress.getX( address );
-				int cubeY = CubeAddress.getY( address );
-				int cubeZ = CubeAddress.getZ( address );
+				int cubeX = AddressTools.getX( address );
+				int cubeY = AddressTools.getY( address );
+				int cubeZ = AddressTools.getZ( address );
 				m_provider.provideCube( cubeX, cubeY, cubeZ ).setGeneratorStage( GeneratorStage.values()[nextStage] );
 				
 				// advance the address to the next stage
