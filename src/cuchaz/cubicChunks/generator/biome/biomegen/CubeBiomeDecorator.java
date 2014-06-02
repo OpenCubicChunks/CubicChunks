@@ -163,7 +163,6 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			//TODO: move setting seaLevel and min/maxTerrainY to constructor
 			this.seaLevel = ((CubeWorldProvider)world.provider).getSeaLevel();
 			this.maxTerrainY = MathHelper.floor_double( NewTerrainProcessor.maxElev );
-			//magic...
 			this.minTerrainY = -maxTerrainY + 2 * seaLevel;
 			this.decorate_do( biome );
 			this.currentWorld = null;
@@ -487,8 +486,8 @@ public class CubeBiomeDecorator extends BiomeDecorator
 	 */
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, double minHeight, double maxHeight, int maxTerrainHeight )
 	{
-		int minBlockY = Double.isNaN( minHeight ) ? Integer.MIN_VALUE : MathHelper.floor_double( minHeight * maxTerrainHeight + seaLevel );
-		int maxBlockY = Double.isNaN( maxHeight ) ? Integer.MAX_VALUE : MathHelper.floor_double( maxHeight * maxTerrainHeight + seaLevel );
+		final double minBlockY = Double.isNaN( minHeight ) ? Double.MIN_VALUE : minHeight * maxTerrainHeight + seaLevel;
+		final double maxBlockY = Double.isNaN( maxHeight ) ? Double.MAX_VALUE : maxHeight * maxTerrainHeight + seaLevel;
 		
 		int blockXCenter = Coords.cubeToMinBlock( this.chunk_X ) + 8;
 		int blockYCenter = Coords.cubeToMinBlock( this.chunk_Y ) + 8;
@@ -499,15 +498,15 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			{
 				continue;
 			}
-			int x = blockXCenter + this.randomGenerator.nextInt( 16 );
-			int y = blockYCenter + this.randomGenerator.nextInt( 16 );
-			if( y > maxBlockY || y < minBlockY )
+			int yAbs = blockYCenter + this.randomGenerator.nextInt( 16 );
+			if( yAbs > maxBlockY || yAbs < minBlockY )
 			{
 				continue;
 			}
-			int z = blockZCenter + this.randomGenerator.nextInt( 16 );
+			int xAbs = blockXCenter + this.randomGenerator.nextInt( 16 );
+			int zAbs = blockZCenter + this.randomGenerator.nextInt( 16 );
 
-			generator.generate( this.currentWorld, this.randomGenerator, x, y, z );
+			generator.generate( this.currentWorld, this.randomGenerator, xAbs, yAbs, zAbs );
 		}
 	}
 
@@ -533,8 +532,8 @@ public class CubeBiomeDecorator extends BiomeDecorator
 		//Gravel generation disabled because of incredibly slow world saving.
 		//this.genStandardOre1( 10, probability, this.gravelGen, maxTerrainY );//0-256
 		//generate only in range 0-128. Doubled probability
-		this.genStandardOre1( 20, probability * 2, this.coalGen, 1D, maxTerrainY );//0-128
-		this.genStandardOre1( 20, probability * 4, this.ironGen, 0D, maxTerrainY );//0-64//only below sea level
+		this.genStandardOre1( 20, probability * 2, this.coalGen, 1.0D, maxTerrainY );//0-128
+		this.genStandardOre1( 20, probability * 4, this.ironGen, 0.0D, maxTerrainY );//0-64//only below sea level
 		this.genStandardOre1( 2, probability * 8, this.goldGen, -0.5D, maxTerrainY );//0-32 //only below 1/4 of max height
 		this.genStandardOre1( 8, probability * 16, this.redstoneGen, -0.75D, maxTerrainY );//0-16
 		this.genStandardOre1( 1, probability * 16, this.diamondGen, -0.75D, maxTerrainY );//0-16

@@ -39,7 +39,13 @@ public class PopulationProcessor extends CubeProcessor
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();
 
-		if( !CubeProviderTools.cubesForPopulationExistAndCheckStage( m_provider, cubeX, cubeY, cubeZ ) )
+		//Actually we don't need all neightbor cubes, but to be sure generation order is correct...
+		if( !CubeProviderTools.cubeAndNeighborsExist( m_provider, cubeX, cubeY, cubeZ ) )
+		{
+			return false;
+		}
+
+		if( !CubeProviderTools.checkGenerationStage( m_provider, GeneratorStage.Population, cubeX, cubeY, cubeZ, cubeX + 1, cubeY + 1, cubeZ + 1 ) )
 		{
 			return false;
 		}

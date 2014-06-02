@@ -16,6 +16,8 @@ import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
 import cuchaz.cubicChunks.CubeProvider;
+import cuchaz.cubicChunks.CubeProviderTools;
+import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.generator.features.CubicCaveGen;
 import cuchaz.cubicChunks.generator.features.CubicRavineGen;
 import cuchaz.cubicChunks.util.CubeProcessor;
@@ -46,8 +48,7 @@ public class FeatureProcessor extends CubeProcessor
 	
 	@Override
 	public boolean calculate( Cube cube )
-	{	
-		
+	{
 		worldObj = cube.getWorld();
 		
 		// generate world features
