@@ -388,9 +388,22 @@ public class CubePlayerManager extends PlayerManager
 		}
 		List<Column> columnsToSend = new ArrayList<Column>( views.values() );
 		
-		// send the cube data
+		// send the cube data with the first time flag set
 		player.playerNetServerHandler.sendPacket( new S26PacketMapChunkBulk( columnsToSend ) );
 		log.info( String.format( "Server sent %d cubes to player, %d remaining", cubesToSend.size(), info.outgoingCubes.size() ) );
+		
+		// tell the cube watchers which cubes were sent for this player
+		for( Cube cube : cubesToSend )
+		{
+			// get the watcher
+			CubeWatcher watcher = getWatcher( cube.getAddress() );
+			if( watcher == null )
+			{
+				continue;
+			}
+			
+			watcher.setPlayerSawCube( player );
+		}
 		
 		// send tile entity data
 		for( TileEntity tileEntity : tileEntitiesToSend )

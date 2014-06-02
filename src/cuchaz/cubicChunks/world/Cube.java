@@ -509,7 +509,12 @@ public class Cube
 	
 	public boolean isUnderground( int localX, int localY, int localZ )
 	{
-		return m_column.getLightIndex().getTopNonTransparentBlock( localX, localZ ) >= Coords.localToBlock( m_y, localY );
+		Integer topNonTransparentBlockY = m_column.getLightIndex().getTopNonTransparentBlockY( localX, localZ );
+		if( topNonTransparentBlockY == null )
+		{
+			return false;
+		}
+		return topNonTransparentBlockY >= Coords.localToBlock( m_y, localY );
 	}
 	
 	public int getBlockLightValue( int localX, int localY, int localZ, int skylightSubtracted )

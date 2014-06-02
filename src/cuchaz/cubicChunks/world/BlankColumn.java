@@ -25,34 +25,23 @@ public class BlankColumn extends Column
 	
 	// column overrides
 	
+	@Override
 	public Cube getOrCreateCube( int cubeY, boolean isModified )
 	{
 		throw new UnsupportedOperationException();
 	}
 	
+	@Override
 	public Cube removeCube( int cubeY )
 	{
 		throw new UnsupportedOperationException();
 	}
 	
+	@Override
 	public void markSaved( )
 	{
 	}
 	
-	public int getTopCubeY( )
-	{
-		return Integer.MIN_VALUE;
-	}
-	
-	public int getBottomCubeY( )
-	{
-		return Integer.MIN_VALUE;
-	}
-	
-	public int getTopFilledCubeY( )
-	{
-		return Integer.MIN_VALUE;
-	}
 	
 	// chunk overrides
 	
@@ -183,11 +172,5 @@ public class BlankColumn extends Column
 	public boolean getAreLevelsEmpty( int par1, int par2 )
 	{
 		return true;
-	}
-	
-	@Override
-	public void fillChunk( byte[] data, int segmentsToCopyBitFlags, int blockMSBToCopyBitFlags, boolean isFirstTime )
-	{
-
 	}
 }

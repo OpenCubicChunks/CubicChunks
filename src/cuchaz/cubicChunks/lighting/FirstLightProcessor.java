@@ -79,16 +79,24 @@ public class FirstLightProcessor extends CubeProcessor
 	private void updateSkylight( Cube cube, int localX, int localZ )
 	{
 		// compute bounds on the sky light gradient
-		LightIndex index = cube.getColumn().getLightIndex();
-		int lightMaxBlockY = index.getTopNonTransparentBlock( localX, localZ ) + 1; // transparent block on top of non-transparent block
-		int lightMinBlockY = lightMaxBlockY - 15;
+		Integer gradientMaxBlockY = cube.getColumn().getSkylightBlockY( localX, localZ );
+		Integer gradientMinBlockY = null;
+		if( gradientMaxBlockY != null )
+		{
+			gradientMinBlockY = gradientMaxBlockY - 15;
+		}
+		else
+		{
+			// there are no solid blocks in this column. Everything should be skylit
+			gradientMaxBlockY = Integer.MIN_VALUE;
+		}
 		
 		// get the cube bounds
 		int cubeMinBlockY = Coords.cubeToMinBlock( cube.getY() );
 		int cubeMaxBlockY = Coords.cubeToMaxBlock( cube.getY() );
 		
 		// could this sky light possibly reach this cube?
-		if( cubeMinBlockY > lightMaxBlockY )
+		if( cubeMinBlockY > gradientMaxBlockY )
 		{
 			// set everything to sky light
 			for( int localY=0; localY<16; localY++ )
@@ -96,7 +104,7 @@ public class FirstLightProcessor extends CubeProcessor
 				cube.setLightValue( EnumSkyBlock.Sky, localX, localY, localZ, 15 );
 			}
 		}
-		else if( cubeMaxBlockY < lightMinBlockY )
+		else if( cubeMaxBlockY < gradientMinBlockY )
 		{
 			// set everything to dark
 			for( int localY=0; localY<16; localY++ )
@@ -106,9 +114,11 @@ public class FirstLightProcessor extends CubeProcessor
 		}
 		else
 		{
+			LightIndex index = cube.getColumn().getLightIndex();
+			
 			// need to calculate the light
 			int light = 15;
-			int startBlockY = Math.max( lightMaxBlockY, cubeMaxBlockY );
+			int startBlockY = Math.max( gradientMaxBlockY, cubeMaxBlockY );
 			for( int blockY=startBlockY; blockY>=cubeMinBlockY; blockY-- )
 			{
 				int opacity = index.getOpacity( localX, blockY, localZ );
@@ -176,13 +186,19 @@ public class FirstLightProcessor extends CubeProcessor
 		//   must be at or below an opaque block below sea level
 		//   must be a block light source
 		
+		// get the opaque block below sea level (if one exists)
 		int blockY = Coords.localToBlock( cube.getY(), localY );
 		LightIndex index = cube.getColumn().getLightIndex();
+		Integer opaqueBelowSeaLevelBlockY = index.getTopOpaqueBlockBelowSeaLevel( localX, localZ );
 		
 		boolean lightBlock = false;
-		if( blockY > index.getTopOpaqueBlockBelowSeaLevel( localX, localZ ) )
+		if( opaqueBelowSeaLevelBlockY == null || blockY > opaqueBelowSeaLevelBlockY )
 		{
-			if( !cube.getColumn().worldObj.provider.hasNoSky && blockY < index.getTopNonTransparentBlock( localX, localZ ) && index.getOpacity( localX, blockY, localZ ) == 0 )
+			// get the top nontransparent block (if one exists)
+			Integer topNonTransparentBlockY = index.getTopNonTransparentBlockY( localX, localZ );
+			
+			boolean hasSky = !cube.getColumn().worldObj.provider.hasNoSky;
+			if( hasSky && topNonTransparentBlockY != null && blockY < topNonTransparentBlockY && index.getOpacity( localX, blockY, localZ ) == 0 )
 			{
 				lightBlock = true;
 			}

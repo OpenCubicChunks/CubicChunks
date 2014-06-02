@@ -18,17 +18,19 @@ import cuchaz.cubicChunks.world.LightIndex;
 
 public class TestLightIndex
 {
+	private static final int SeaLevel = 0;
+	
 	@Test
 	public void readWrite( )
 	{
-		LightIndex original = new LightIndex();
+		LightIndex original = new LightIndex( SeaLevel);
 		
 		// make some changes
 		original.setOpacity( 4, 10, 5, 10 );
 		original.setOpacity( 6, 34, 10, 255 );
 		
 		// clone the index
-		LightIndex copy = new LightIndex();
+		LightIndex copy = new LightIndex( SeaLevel );
 		copy.readData( original.getData() );
 		
 		// make sure they're identical

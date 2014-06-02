@@ -23,7 +23,6 @@ import net.minecraft.world.World;
 
 import com.google.common.collect.Maps;
 
-import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.util.Bits;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.ColumnView;
@@ -33,8 +32,20 @@ public class CubeWatcher
 {
 	private static final int MaxBlocksPerUpdate = 64;
 	
+	private static class PlayerEntry
+	{
+		EntityPlayerMP player;
+		boolean sawCube;
+		
+		public PlayerEntry( EntityPlayerMP player )
+		{
+			this.player = player;
+			this.sawCube = false;
+		}
+	}
+	
 	private Cube m_cube;
-	private TreeMap<Integer,EntityPlayerMP> m_players;
+	private TreeMap<Integer,PlayerEntry> m_players;
 	private long m_previousWorldTime;
 	private TreeSet<Integer> m_dirtyBlocks;
 	
@@ -58,7 +69,7 @@ public class CubeWatcher
 	
 	public void addPlayer( EntityPlayerMP player )
 	{
-		m_players.put( player.getEntityId(), player );
+		m_players.put( player.getEntityId(), new PlayerEntry( player ) );
 		m_previousWorldTime = getWorldTime();
 	}
 	
@@ -71,6 +82,15 @@ public class CubeWatcher
 	public boolean hasPlayers( )
 	{
 		return !m_players.isEmpty();
+	}
+	
+	public void setPlayerSawCube( EntityPlayerMP player )
+	{
+		PlayerEntry entry = m_players.get( player.getEntityId() );
+		if( entry != null )
+		{
+			entry.sawCube = true;
+		}
 	}
 	
 	public void tick( )
@@ -92,13 +112,6 @@ public class CubeWatcher
 	
 	public void setDirtyBlock( int localX, int localY, int localZ )
 	{
-		// is this cube done generating yet?
-		if( m_cube.getGeneratorStage() != GeneratorStage.getLastStage() )
-		{
-			// ignore updates
-			return;
-		}
-		
 		// save up to some number of individual block updates
 		// once that threshold is passed, the whole cube is sent during an update,
 		// so there's no need to save more per-block updates
@@ -191,12 +204,16 @@ public class CubeWatcher
 		
 		sendPacketToAllPlayers( packet );
 	}
-
+	
 	private void sendPacketToAllPlayers( Packet packet )
 	{
-		for( EntityPlayerMP player : m_players.values() )
+		for( PlayerEntry entry : m_players.values() )
 		{
-			player.playerNetServerHandler.sendPacket( packet );
+			// has this player seen this cube before?
+			if( entry.sawCube )
+			{
+				entry.player.playerNetServerHandler.sendPacket( packet );
+			}
 		}
 	}
 	
