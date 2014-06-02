@@ -38,6 +38,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.CubeWorld;
+import cuchaz.cubicChunks.CubeWorldProvider;
 import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
@@ -87,7 +88,7 @@ public class Column extends Chunk
 	private void init( )
 	{
 		m_cubes = new TreeMap<Integer,Cube>();
-		m_lightIndex = new LightIndex();
+		m_lightIndex = new LightIndex( getWorldProvider().getSeaLevel() );
 		m_roundRobinLightUpdatePointer = 0;
 		m_roundRobinCubes = new ArrayList<Cube>();
 		m_entities = new EntityContainer();
@@ -112,7 +113,12 @@ public class Column extends Chunk
 	{
 		return worldObj;
 	}
-
+	
+	private CubeWorldProvider getWorldProvider( )
+	{
+		return (CubeWorldProvider)worldObj.provider;
+	}
+	
 	public int getX( )
 	{
 		return xPosition;
@@ -246,25 +252,21 @@ public class Column extends Chunk
 		CubeWorld cubeWorld = (CubeWorld)worldObj;
 		
 		// did the top non-transparent block change?
-		int oldMaxY = getHeightValue( localX, localZ );
+		Integer oldSkylightY = getSkylightBlockY( localX, localZ );
 		getLightIndex().setOpacity( localX, blockY, localZ, newOpacity );
-		int newMaxY = getHeightValue( localX, localZ );
-		if( oldMaxY != newMaxY )
+		Integer newSkylightY = getSkylightBlockY( localX, localZ );
+		if( oldSkylightY != null && newSkylightY != null && oldSkylightY != newSkylightY )
 		{
 			// sort the y-values
-			int minBlockY = oldMaxY;
-			int maxBlockY = newMaxY;
+			int minBlockY = oldSkylightY;
+			int maxBlockY = newSkylightY;
 			if( minBlockY > maxBlockY )
 			{
-				minBlockY = newMaxY;
-				maxBlockY = oldMaxY;
+				minBlockY = newSkylightY;
+				maxBlockY = oldSkylightY;
 			}
-			assert( minBlockY < maxBlockY );
-		
-			if( (long)maxBlockY - (long)minBlockY > 256 )
-			{
-				minBlockY = maxBlockY - 256;
-			}
+			assert( minBlockY < maxBlockY ) : "Values not sorted! " + minBlockY + ", " + maxBlockY;
+
 			// update light and signal render update
 			cubeWorld.getLightingManager().computeSkyLightUpdate( this, localX, localZ, minBlockY, maxBlockY );
 			worldObj.markBlockRangeForRenderUpdate( blockX, minBlockY, blockZ, blockX, maxBlockY, blockZ );
@@ -332,16 +334,35 @@ public class Column extends Chunk
 		return m_cubes.firstKey();
 	}
 	
-	public int getTopFilledCubeY( )
+	public Integer getTopFilledCubeY( )
 	{
-		int blockY = getLightIndex().getTopNonTransparentBlockY();
+		Integer blockY = getLightIndex().getTopNonTransparentBlockY();
+		if( blockY == null )
+		{
+			return null;
+		}
 		return Coords.blockToCube( blockY );
 	}
 	
 	@Override
+	@Deprecated // don't use this! It's only here because vanilla needs it, but we need to be hacky about it
 	public int getTopFilledSegment()
     {
-		return Coords.cubeToMinBlock( getTopFilledCubeY() );
+		Integer cubeY = getTopFilledCubeY();
+		if( cubeY != null )
+		{
+			return Coords.cubeToMinBlock( cubeY );
+		}
+		else
+		{
+			// PANIC!
+			// this column doesn't have any blocks in it that aren't air!
+			// but we can't return null here because vanilla code expects there to be a surface down there somewhere
+			// we don't actually know where the surface is yet, because maybe it hasn't been generated
+			// but we do know that the surface has to be at least at sea level,
+			// so let's go with that for now and hope for the best
+			return getWorldProvider().getSeaLevel();
+		}
     }
 	
 	@Override
@@ -363,14 +384,43 @@ public class Column extends Chunk
 	@Override
 	public boolean canBlockSeeTheSky( int localX, int blockY, int localZ )
 	{
-		return blockY >= getHeightValue( localX, localZ );
+		Integer skylightBlockY = getSkylightBlockY( localX, localZ );
+		if( skylightBlockY == null )
+		{
+			return true;
+		}
+		return blockY >= skylightBlockY;
+	}
+	
+	public Integer getSkylightBlockY( int localX, int localZ )
+	{
+		// NOTE: a "skylight" block is the transparent block that is directly one block above the top non-transparent block
+		Integer topBlockY = getLightIndex().getTopNonTransparentBlockY( localX, localZ );
+		if( topBlockY != null )
+		{
+			return topBlockY + 1;
+		}
+		return null;
 	}
 	
 	@Override
+	@Deprecated // don't use this! It's only here because vanilla needs it, but we need to be hacky about it
 	public int getHeightValue( int localX, int localZ )
 	{
-		// NOTE: the "height value" here is the height of the highest block whose block UNDERNEATH is non-transparent
-		return getLightIndex().getTopNonTransparentBlock( localX, localZ ) + 1;
+		// NOTE: the "height value" here is the height of the transparent block on top of the highest non-transparent block
+		
+		Integer skylightBlockY = getSkylightBlockY( localX, localZ );
+		if( skylightBlockY == null )
+		{
+			// PANIC!
+			// this column doesn't have any blocks in it that aren't air!
+			// but we can't return null here because vanilla code expects there to be a surface down there somewhere
+			// we don't actually know where the surface is yet, because maybe it hasn't been generated
+			// but we do know that the surface has to be at least at sea level,
+			// so let's go with that for now and hope for the best
+			skylightBlockY = getWorldProvider().getSeaLevel() + 1;
+		}
+		return skylightBlockY;
 	}
 	
 	@Override //  getOpacity
@@ -822,27 +872,20 @@ public class Column extends Chunk
 		int height = this.precipitationHeightMap[xzCoord];
 		if( height == -999 )
 		{
-			// compute a new rain height
+			// UNDONE: compute a new rain height
+			/* look over the blocks in the top filled cube (if one exists) and do this:
 			int maxBlockY = getTopFilledSegment() + 15;
 			int minBlockY = Coords.cubeToMinBlock( getBottomCubeY() );
-			
-			height = -1;
-			
-			for( int blockY=maxBlockY; blockY>=minBlockY; blockY-- )
+			Block block = cube.getBlock( ... );
+			Material material = block.getMaterial();
+			if( material.blocksMovement() || material.isLiquid() )
 			{
-				Block block = this.func_150810_a( localX, maxBlockY, localZ );
-				Material material = block.getMaterial();
-				
-				if( material.blocksMovement() || material.isLiquid() )
-				{
-					height = maxBlockY + 1;
-					break;
-				}
+				height = maxBlockY + 1;
 			}
+			*/
 			
-			precipitationHeightMap[xzCoord] = height;
-			
-			isModified = true;
+			// TEMP: just rain down to the sea
+			precipitationHeightMap[xzCoord] = getWorldProvider().getSeaLevel();
 		}
 		
 		return height;

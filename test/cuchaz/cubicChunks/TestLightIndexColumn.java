@@ -24,10 +24,12 @@ import cuchaz.cubicChunks.world.LightIndexColumn;
 
 public class TestLightIndexColumn
 {
+	private static final int SeaLevel = 0;
+	
 	@Test
 	public void readZero( )
 	{
-		LightIndexColumn index = new LightIndexColumn();
+		LightIndexColumn index = new LightIndexColumn( SeaLevel );
 		for( int i=-16; i<=16; i++ )
 		{
 			assertEquals( 0, index.getOpacity( i ) );
@@ -125,33 +127,33 @@ public class TestLightIndexColumn
 	@Test
 	public void topNonTransparentBlock( )
 	{
-		LightIndexColumn index = new LightIndexColumn();
+		LightIndexColumn index = new LightIndexColumn( SeaLevel );
 		
-		assertEquals( Integer.MIN_VALUE, index.getTopNonTransparentBlockY() );
+		assertEquals( null, index.getTopNonTransparentBlockY() );
 		
 		index.setOpacity( -16, 1 );
-		assertEquals( -16, index.getTopNonTransparentBlockY() );
+		assertEquals( -16, (int)index.getTopNonTransparentBlockY() );
 		
 		index.setOpacity( 0, 1 );
-		assertEquals( 0, index.getTopNonTransparentBlockY() );
+		assertEquals( 0, (int)index.getTopNonTransparentBlockY() );
 
 		index.setOpacity( 1, 1 );
-		assertEquals( 1, index.getTopNonTransparentBlockY() );
+		assertEquals( 1, (int)index.getTopNonTransparentBlockY() );
 		
 		index.setOpacity( 5, 1 );
-		assertEquals( 5, index.getTopNonTransparentBlockY() );
+		assertEquals( 5, (int)index.getTopNonTransparentBlockY() );
 		
 		index.setOpacity( 5, 0 );
-		assertEquals( 1, index.getTopNonTransparentBlockY() );
+		assertEquals( 1, (int)index.getTopNonTransparentBlockY() );
 
 		index.setOpacity( 1, 0 );
-		assertEquals( 0, index.getTopNonTransparentBlockY() );
+		assertEquals( 0, (int)index.getTopNonTransparentBlockY() );
 		
 		index.setOpacity( 0, 0 );
-		assertEquals( -16, index.getTopNonTransparentBlockY() );
+		assertEquals( -16, (int)index.getTopNonTransparentBlockY() );
 		
 		index.setOpacity( -16, 0 );
-		assertEquals( Integer.MIN_VALUE, index.getTopNonTransparentBlockY() );
+		assertEquals( null, index.getTopNonTransparentBlockY() );
 	}
 	
 	private LightIndexColumn buildColumn( int ... data )
@@ -170,7 +172,7 @@ public class TestLightIndexColumn
 			out.close();
 			
 			// read the data
-			LightIndexColumn index = new LightIndexColumn();
+			LightIndexColumn index = new LightIndexColumn( SeaLevel );
 			index.readData( new DataInputStream( new ByteArrayInputStream( buf.toByteArray() ) ) );
 			return index;
 		}

@@ -16,7 +16,7 @@ import cuchaz.cubicChunks.util.AddressTools;
 
 public class CuboidalCubeSelector extends CubeSelector
 {
-	private static final int ViewDistanceY = 4;
+	private static final int ViewDistanceY = 8;
 	
 	@Override
 	protected void computeVisible( Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance )
