@@ -486,7 +486,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 	 */
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, double minHeight, double maxHeight, int maxTerrainHeight )
 	{
-		final double minBlockY = Double.isNaN( minHeight ) ? Double.MIN_VALUE : minHeight * maxTerrainHeight + seaLevel;
+		final double minBlockY = Double.isNaN( minHeight ) ? -Double.MAX_VALUE : minHeight * maxTerrainHeight + seaLevel;
 		final double maxBlockY = Double.isNaN( maxHeight ) ? Double.MAX_VALUE : maxHeight * maxTerrainHeight + seaLevel;
 		
 		int blockXCenter = Coords.cubeToMinBlock( this.chunk_X ) + 8;
