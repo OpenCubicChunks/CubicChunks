@@ -487,36 +487,38 @@ public class CubeBiomeDecorator extends BiomeDecorator
 	 */
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, double minHeight, double maxHeight, int maxTerrainHeight )
 	{
-		int minCubeY = Coords.blockToCube( MathHelper.floor_double( minHeight * maxTerrainHeight + seaLevel ) );
-		int maxCubeY = Coords.blockToCube( MathHelper.floor_double( maxHeight * maxTerrainHeight + seaLevel ) );
-		if( this.chunk_Y > maxCubeY || this.chunk_Y < minCubeY )
-		{
-			return;
-		}
+		int minBlockY = Double.isNaN( minHeight ) ? Integer.MIN_VALUE : MathHelper.floor_double( minHeight * maxTerrainHeight + seaLevel );
+		int maxBlockY = Double.isNaN( maxHeight ) ? Integer.MAX_VALUE : MathHelper.floor_double( maxHeight * maxTerrainHeight + seaLevel );
+		
 		int blockXCenter = Coords.cubeToMinBlock( this.chunk_X ) + 8;
 		int blockYCenter = Coords.cubeToMinBlock( this.chunk_Y ) + 8;
 		int blockZCenter = Coords.cubeToMinBlock( this.chunk_Z ) + 8;
 		for( int n = 0; n < numGen; ++n )
 		{
-			if( this.randomGenerator.nextDouble() < probability )
+			if( this.randomGenerator.nextDouble() > probability )
 			{
 				continue;
 			}
 			int x = blockXCenter + this.randomGenerator.nextInt( 16 );
 			int y = blockYCenter + this.randomGenerator.nextInt( 16 );
+			if( y > maxBlockY || y < minBlockY )
+			{
+				continue;
+			}
 			int z = blockZCenter + this.randomGenerator.nextInt( 16 );
+
 			generator.generate( this.currentWorld, this.randomGenerator, x, y, z );
 		}
 	}
 
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, double maxHeight, int maxTerrainHeight )
 	{
-		this.genStandardOre1( numGen, probability, generator, Double.MIN_VALUE, maxHeight, maxTerrainHeight );
+		this.genStandardOre1( numGen, probability, generator, Double.NaN, maxHeight, maxTerrainHeight );
 	}
 
 	protected void genStandardOre1( int numGen, double probability, WorldGenerator generator, int maxTerrainHeight )
 	{
-		this.genStandardOre1( numGen, probability, generator, Double.MIN_VALUE, Double.MAX_VALUE, maxTerrainHeight );
+		this.genStandardOre1( numGen, probability, generator, Double.NaN, Double.NaN, maxTerrainHeight );
 	}
 
 	/**
