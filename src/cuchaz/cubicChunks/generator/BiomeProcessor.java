@@ -20,6 +20,7 @@ import net.minecraft.world.gen.NoiseGeneratorPerlin;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
+import static cuchaz.cubicChunks.generator.GeneratorStage.Biomes;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;
@@ -56,10 +57,11 @@ public class BiomeProcessor extends CubeProcessor
 	{
 		// only continue if the neighboring cubes exist
 		CubeProvider provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
-		if( !CubeProviderTools.cubeAndNeighborsExist( provider, cube.getX(), cube.getY(), cube.getZ() ) )
+		if( !CubeProviderTools.cubeAndNeighborsExist(provider, cube.getX(), cube.getY(), cube.getZ() ) )
 		{
 			return false;
 		}
+
 		//Nothing to do...
 		if( cube.isEmpty() )
 		{
@@ -90,7 +92,7 @@ public class BiomeProcessor extends CubeProcessor
 		// Do not modyfy cubes above/below to avoid generating dirt/grass in caves
 		int alterationTop = topOfCube;
 		int top = topOfCube + 8;
-		int bottom = bottomOfCube/* - 8*/;
+		int bottom = bottomOfCube;
 		
 		for( int xRel = 0; xRel < 16; xRel++ )
 		{

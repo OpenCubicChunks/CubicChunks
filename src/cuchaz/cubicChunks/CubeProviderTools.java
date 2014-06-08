@@ -11,7 +11,6 @@
 package cuchaz.cubicChunks;
 
 import cuchaz.cubicChunks.generator.GeneratorStage;
-import static cuchaz.cubicChunks.generator.GeneratorStage.Population;
 import cuchaz.cubicChunks.util.Coords;
 
 public class CubeProviderTools
@@ -37,20 +36,6 @@ public class CubeProviderTools
 		);
 	}
 
-	public static boolean cubesForPopulationExistAndCheckStage( CubeProvider provider, int cubeX, int cubeY, int cubeZ )
-	{
-		boolean r = cubesExist( provider,
-			cubeX, cubeY, cubeZ,
-			cubeX + 1, cubeY + 1, cubeZ + 1 );
-		if(!r){
-			return false;
-		}
-		r &= checkCubeGeneratorStage(provider, Population, 
-			cubeX, cubeY, cubeZ,
-			cubeX + 1, cubeY + 1, cubeZ + 1);
-		return r;
-	}
-
 	public static boolean cubesExist( CubeProvider provider, int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ )
 	{
 		for( int cubeX=minCubeX; cubeX<=maxCubeX; cubeX++ )
@@ -69,7 +54,7 @@ public class CubeProviderTools
 		return true;
 	}
 	
-	public static boolean checkCubeGeneratorStage(CubeProvider provider, GeneratorStage stage, int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ ){
+	public static boolean checkGenerationStage(CubeProvider provider, GeneratorStage stage, int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ ){
 		for( int cubeX=minCubeX; cubeX<=maxCubeX; cubeX++ )
 		{
 			for( int cubeY=minCubeY; cubeY<=maxCubeY; cubeY++ )

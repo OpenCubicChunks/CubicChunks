@@ -25,7 +25,7 @@ public class CubicCaveGen extends CubicMapGenBase
 {
 	protected void generate( World world, Cube cube, int x, int y, int z, int xOrigin, int yOrigin, int zOrigin )
 	{
-		if ( m_rand.nextInt( 16 ) != 0 )
+		if ( m_rand.nextInt( 8 ) != 0 )
 		{
 			return;
 		}
@@ -36,7 +36,7 @@ public class CubicCaveGen extends CubicMapGenBase
 			tries = 0;
 		}
 
-		for ( int n1 = 0; n1 < tries; ++n1 )
+		for ( int n = 0; n < tries; ++n )
 		{
 			double x1 = x * 16 + this.m_rand.nextInt( 16 );
 			double y1 = y * 16 + this.m_rand.nextInt( 16 );

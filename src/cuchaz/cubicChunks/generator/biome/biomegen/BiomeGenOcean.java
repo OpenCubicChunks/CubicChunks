@@ -10,26 +10,27 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
-import java.util.Random;
-
-import net.minecraft.world.World;
 import cuchaz.cubicChunks.world.Cube;
+import java.util.Random;
+import net.minecraft.world.World;
 
 public class BiomeGenOcean extends CubeBiomeGenBase
 {
-    public BiomeGenOcean(int par1)
-    {
-        super(par1);
-        this.spawnableCreatureList.clear();
-    }
+	public BiomeGenOcean( int id )
+	{
+		super( id );
+		this.spawnableCreatureList.clear();
+	}
 
-    public CubeBiomeGenBase.TempCategory func_150561_m()
-    {
-        return CubeBiomeGenBase.TempCategory.OCEAN;
-    }
+	@Override
+	public CubeBiomeGenBase.TempCategory func_150561_m()
+	{
+		return CubeBiomeGenBase.TempCategory.OCEAN;
+	}
 
-    public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var)
-    {
-        super.modifyBlocks_pre(world, rand, cube, xAbs, yAbs, zAbs, var);
-    }
+	@Override
+	public void modifyBlocks_pre( World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var )
+	{
+		super.modifyBlocks_pre( world, rand, cube, xAbs, yAbs, zAbs, var );
+	}
 }

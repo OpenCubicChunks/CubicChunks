@@ -25,12 +25,13 @@ import net.minecraft.world.gen.feature.WorldGenLakes;
 public class PopulationProcessor extends CubeProcessor
 {
 	private final int m_seaLevel;
+
 	public PopulationProcessor( String name, CubeWorldServer world, int batchSize )
 	{
 		super( name, world.getCubeProvider(), batchSize );
 		m_seaLevel = world.getCubeWorldProvider().getSeaLevel();
 	}
-	
+
 	@Override
 	public boolean calculate( Cube cube )
 	{
@@ -38,7 +39,13 @@ public class PopulationProcessor extends CubeProcessor
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();
 
-		if( !CubeProviderTools.cubesForPopulationExistAndCheckStage( m_provider, cubeX, cubeY, cubeZ ) )
+		//Actually we don't need all neightbor cubes, but to be sure generation order is correct...
+		if( !CubeProviderTools.cubeAndNeighborsExist( m_provider, cubeX, cubeY, cubeZ ) )
+		{
+			return false;
+		}
+
+		if( !CubeProviderTools.checkGenerationStage( m_provider, GeneratorStage.Population, cubeX, cubeY, cubeZ, cubeX + 1, cubeY + 1, cubeZ + 1 ) )
 		{
 			return false;
 		}
@@ -73,24 +80,27 @@ public class PopulationProcessor extends CubeProcessor
 		int xCenter = xAbs + 8;
 		int yCenter = yAbs + 8;
 		int zCenter = zAbs + 8;
-		
+
 		int genX;
 		int genY;
 		int genZ;
-		
+
 		if( biome != CubeBiomeGenBase.desert && biome != CubeBiomeGenBase.desertHills && !villageGenerated && rand.nextInt( 4 ) == 0 )
 		{
-			genX = xCenter + rand.nextInt( 16 );
-			genY = yCenter + rand.nextInt( 16 );
-			genZ = zCenter + rand.nextInt( 16 );
-			(new WorldGenLakes( Blocks.water )).generate( world, rand, genX, genY, genZ );
+			if( rand.nextInt( 16 ) == 0 )
+			{
+				genX = xCenter + rand.nextInt( 16 );
+				genY = yCenter + rand.nextInt( 16 );
+				genZ = zCenter + rand.nextInt( 16 );
+				(new WorldGenLakes( Blocks.water )).generate( world, rand, genX, genY, genZ );
+			}
 		}
-		
+
 		if( !villageGenerated && rand.nextInt( 8 ) == 0 )
 		{
 			//var13 = m_rand.nextInt( m_rand.nextInt( 248 ) + 8 );
 
-			if( rand.nextInt( Math.max( 1, cubeY + 8 - m_seaLevel / 16 ) ) == 0 )
+			if( rand.nextInt( Math.max( 1, cubeY + 16 - m_seaLevel / 16 ) ) == 0 )
 			{
 				genX = xCenter + rand.nextInt( 16 );
 				genY = yCenter + rand.nextInt( 16 );
@@ -105,12 +115,12 @@ public class PopulationProcessor extends CubeProcessor
 		//really? instead of making a new var here, they reuse var12 and make a new var15 instead of how they were doing it the previous two times
 		// ^ code obfuscator did it
 		/*for( var12 = 0; var12 < 8; ++var12 ) 
-		{
-			var13 = xAbs + m_rand.nextInt( 16 ) + 8;
-			var14 = m_rand.nextInt( 256 );
-			int var15 = zAbs + m_rand.nextInt( 16 ) + 8;
-			( new WorldGenDungeons() ).generate( m_world, m_rand, var13, var14, var15 );
-		}*/
+		 {
+		 var13 = xAbs + m_rand.nextInt( 16 ) + 8;
+		 var14 = m_rand.nextInt( 256 );
+		 int var15 = zAbs + m_rand.nextInt( 16 ) + 8;
+		 ( new WorldGenDungeons() ).generate( m_world, m_rand, var13, var14, var15 );
+		 }*/
 		for( int i = 0; i < 8; ++i )
 		{
 			if( rand.nextInt( 16 ) != 0 )
@@ -122,7 +132,7 @@ public class PopulationProcessor extends CubeProcessor
 			genZ = zCenter + rand.nextInt( 16 );
 			(new WorldGenDungeons()).generate( world, rand, genX, genY, genZ );
 		}
-		
+
 		biome.decorate( world, rand, cubeX, cubeY, cubeZ );
 		//TODO: cubify this:
 		//SpawnerAnimals.performWorldGenSpawning( m_world, var6, xAbs + 8, zAbs + 8, 16, 16, m_rand );
@@ -150,7 +160,7 @@ public class PopulationProcessor extends CubeProcessor
 		}
 
 		BlockFalling.field_149832_M = false;
-		
+
 		return true;
 	}
 }
