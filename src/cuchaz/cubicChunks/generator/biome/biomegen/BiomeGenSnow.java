@@ -10,72 +10,61 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
+import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
+import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
+import cuchaz.cubicChunks.generator.populator.generators.WorldGenIcePathCube;
+import cuchaz.cubicChunks.generator.populator.generators.WorldGenIceSpikeCube;
+import cuchaz.cubicChunks.generator.populator.generators.WorldGenTaiga2Cube;
+import cuchaz.cubicChunks.util.Coords;
 import java.util.Random;
-
-import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.Height;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenAbstractTree;
-import net.minecraft.world.gen.feature.WorldGenIcePath;
-import net.minecraft.world.gen.feature.WorldGenIceSpike;
-import net.minecraft.world.gen.feature.WorldGenTaiga2;
 
 public class BiomeGenSnow extends CubeBiomeGenBase
 {
-    private boolean field_150615_aC;
-    private WorldGenIceSpike field_150616_aD = new WorldGenIceSpike();
-    private WorldGenIcePath field_150617_aE = new WorldGenIcePath(4);
-    private static final String __OBFID = "CL_00000174";
+	private final boolean genIce;
+	private final WorldGenIceSpikeCube wgenIceSpike = new WorldGenIceSpikeCube();
+	private final WorldGenIcePathCube wGenIcePath = new WorldGenIcePathCube( 4 );
 
-    public BiomeGenSnow(int p_i45378_1_, boolean p_i45378_2_)
-    {
-        super(p_i45378_1_);
-        this.field_150615_aC = p_i45378_2_;
+	public BiomeGenSnow( int id, boolean genIce )
+	{
+		super( id );
+		this.genIce = genIce;
 
-        if (p_i45378_2_)
-        {
-            this.topBlock = Blocks.snow;
-        }
+		if( genIce )
+		{
+			this.topBlock = Blocks.snow;
+		}
 
-        this.spawnableCreatureList.clear();
-    }
+		this.spawnableCreatureList.clear();
+	}
 
-    public void decorate(World par1World, Random par2Random, int par3, int par4)
-    {
-        if (this.field_150615_aC)
-        {
-            int var5;
-            int var6;
-            int var7;
+	@Override
+	public void decorate( World world, Random rand, int x, int y, int z )
+	{
+		
+		if( this.genIce )
+		{
+			DecoratorHelper gen = new DecoratorHelper(world, rand, x, y, z );
+			gen.generateAtSurface( this.wgenIceSpike, 3, 1);
+			gen.generateAtSurface( this.wGenIcePath, 2, 1);
+		}
 
-            for (var5 = 0; var5 < 3; ++var5)
-            {
-                var6 = par3 + par2Random.nextInt(16) + 8;
-                var7 = par4 + par2Random.nextInt(16) + 8;
-                this.field_150616_aD.generate(par1World, par2Random, var6, par1World.getHeightValue(var6, var7), var7);
-            }
+		super.decorate( world, rand, x, y, z );
+	}
 
-            for (var5 = 0; var5 < 2; ++var5)
-            {
-                var6 = par3 + par2Random.nextInt(16) + 8;
-                var7 = par4 + par2Random.nextInt(16) + 8;
-                this.field_150617_aE.generate(par1World, par2Random, var6, par1World.getHeightValue(var6, var7), var7);
-            }
-        }
+	@Override
+	public WorldGenAbstractTreeCube checkSpawnTree( Random p_150567_1_ )
+	{
+		return new WorldGenTaiga2Cube( false );
+	}
 
-        super.decorate(par1World, par2Random, par3, par4);
-    }
-
-    public WorldGenAbstractTree checkSpawnTree(Random p_150567_1_)
-    {
-        return new WorldGenTaiga2(false);
-    }
-
-    protected CubeBiomeGenBase func_150566_k()
-    {
-        CubeBiomeGenBase var1 = (new BiomeGenSnow(this.biomeID + 128, true)).func_150557_a(13828095, true).setBiomeName(this.biomeName + " Spikes").setEnableSnow().setTemperatureAndRainfall(0.0F, 0.5F).setHeightRange(new CubeBiomeGenBase.Height(this.biomeHeight + 0.1F, this.biomeVolatility + 0.1F));
-        var1.biomeHeight = this.biomeHeight + 0.3F;
-        var1.biomeVolatility = this.biomeVolatility + 0.4F;
-        return var1;
-    }
+	@Override
+	protected CubeBiomeGenBase createAndReturnMutated()
+	{
+		CubeBiomeGenBase biome = (new BiomeGenSnow( this.biomeID + 128, true )).func_150557_a( 13828095, true ).setBiomeName( this.biomeName + " Spikes" ).setEnableSnow().setTemperatureAndRainfall( 0.0F, 0.5F ).setHeightRange( new CubeBiomeGenBase.Height( this.biomeHeight + 0.1F, this.biomeVolatility + 0.1F ) );
+		biome.biomeHeight = this.biomeHeight + 0.3F;
+		biome.biomeVolatility = this.biomeVolatility + 0.4F;
+		return biome;
+	}
 }

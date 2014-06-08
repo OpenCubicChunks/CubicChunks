@@ -10,79 +10,70 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
+import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
+import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
+import cuchaz.cubicChunks.generator.populator.WorldGeneratorCube;
+import cuchaz.cubicChunks.generator.populator.generators.WorldGenMegaJungleCube;
+import cuchaz.cubicChunks.generator.populator.generators.WorldGenShrubCube;
+import cuchaz.cubicChunks.generator.populator.generators.WorldGenTallGrassCube;
+import cuchaz.cubicChunks.generator.populator.generators.WorldGenTreesCube;
 import java.util.Random;
-
-import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
 import net.minecraft.entity.passive.EntityChicken;
 import net.minecraft.entity.passive.EntityOcelot;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenAbstractTree;
-import net.minecraft.world.gen.feature.WorldGenMegaJungle;
 import net.minecraft.world.gen.feature.WorldGenMelon;
-import net.minecraft.world.gen.feature.WorldGenShrub;
-import net.minecraft.world.gen.feature.WorldGenTallGrass;
-import net.minecraft.world.gen.feature.WorldGenTrees;
-import net.minecraft.world.gen.feature.WorldGenVines;
-import net.minecraft.world.gen.feature.WorldGenerator;
 
 public class BiomeGenJungle extends CubeBiomeGenBase
 {
-    private boolean field_150614_aC;
+	private final boolean type;
 
-    public BiomeGenJungle(int p_i45379_1_, boolean p_i45379_2_)
-    {
-        super(p_i45379_1_);
-        this.field_150614_aC = p_i45379_2_;
+	public BiomeGenJungle( int id, boolean type )
+	{
+		super( id );
+		this.type = type;
 
-        if (p_i45379_2_)
-        {
-            this.theBiomeDecorator.treesPerChunk = 2;
-        }
-        else
-        {
-            this.theBiomeDecorator.treesPerChunk = 50;
-        }
+		if( type )
+		{
+			this.decorator().treesPerChunk = 2;
+		}
+		else
+		{
+			this.decorator().treesPerChunk = 50;
+		}
 
-        this.theBiomeDecorator.grassPerChunk = 25;
-        this.theBiomeDecorator.flowersPerChunk = 4;
+		this.decorator().grassPerChunk = 25;
+		this.decorator().flowersPerChunk = 4;
 
-        if (!p_i45379_2_)
-        {
-            this.spawnableMonsterList.add(new CubeBiomeGenBase.SpawnListEntry(EntityOcelot.class, 2, 1, 1));
-        }
+		if( !type )
+		{
+			this.spawnableMonsterList.add( new CubeBiomeGenBase.SpawnListEntry( EntityOcelot.class, 2, 1, 1 ) );
+		}
 
-        this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityChicken.class, 10, 4, 4));
-    }
+		this.spawnableCreatureList.add( new CubeBiomeGenBase.SpawnListEntry( EntityChicken.class, 10, 4, 4 ) );
+	}
 
-    public WorldGenAbstractTree checkSpawnTree(Random p_150567_1_)
-    {
-        return (WorldGenAbstractTree)(p_150567_1_.nextInt(10) == 0 ? this.worldGeneratorBigTree : (p_150567_1_.nextInt(2) == 0 ? new WorldGenShrub(3, 0) : (!this.field_150614_aC && p_150567_1_.nextInt(3) == 0 ? new WorldGenMegaJungle(false, 10, 20, 3, 3) : new WorldGenTrees(false, 4 + p_150567_1_.nextInt(7), 3, 3, true))));
-    }
+	@Override
+	public WorldGenAbstractTreeCube checkSpawnTree( Random p_150567_1_ )
+	{
+		return (p_150567_1_.nextInt( 10 ) == 0 ? this.worldGeneratorBigTree : (p_150567_1_.nextInt( 2 ) == 0 ? new WorldGenShrubCube( 3, 0 ) : (!this.type && p_150567_1_.nextInt( 3 ) == 0 ? new WorldGenMegaJungleCube( false, 10, 20, 3, 3 ) : new WorldGenTreesCube( false, 4 + p_150567_1_.nextInt( 7 ), 3, 3, true ))));
+	}
 
-    /**
-     * Gets a WorldGen appropriate for this biome.
-     */
-    public WorldGenerator getRandomWorldGenForGrass(Random par1Random)
-    {
-        return par1Random.nextInt(4) == 0 ? new WorldGenTallGrass(Blocks.tallgrass, 2) : new WorldGenTallGrass(Blocks.tallgrass, 1);
-    }
+	/**
+	 * Gets a WorldGen appropriate for this biome.
+	 */
+	@Override
+	public WorldGeneratorCube getRandomWorldGenForGrass( Random par1Random )
+	{
+		return par1Random.nextInt( 4 ) == 0 ? new WorldGenTallGrassCube( Blocks.tallgrass, 2 ) : new WorldGenTallGrassCube( Blocks.tallgrass, 1 );
+	}
 
-    public void decorate(World par1World, Random par2Random, int par3, int par4)
-    {
-        super.decorate(par1World, par2Random, par3, par4);
-        int var5 = par3 + par2Random.nextInt(16) + 8;
-        int var6 = par4 + par2Random.nextInt(16) + 8;
-        int var7 = par2Random.nextInt(par1World.getHeightValue(var5, var6) * 2);
-        (new WorldGenMelon()).generate(par1World, par2Random, var5, var7, var6);
-        WorldGenVines var10 = new WorldGenVines();
-
-        for (var6 = 0; var6 < 50; ++var6)
-        {
-            var7 = par3 + par2Random.nextInt(16) + 8;
-            short var8 = 128;
-            int var9 = par4 + par2Random.nextInt(16) + 8;
-            var10.generate(par1World, par2Random, var7, var8, var9);
-        }
-    }
+	@Override
+	public void decorate( World world, Random rand, int x, int y, int z )
+	{
+		super.decorate( world, rand, x, y, z );
+		
+		DecoratorHelper gen = new DecoratorHelper( world, rand, x, y, z );
+		gen.generateAtRandSurfacePlus32( new WorldGenMelon(), 1, 1 );
+	}
 }

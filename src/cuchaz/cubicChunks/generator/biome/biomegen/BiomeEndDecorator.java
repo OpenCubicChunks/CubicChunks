@@ -10,37 +10,32 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
+import cuchaz.cubicChunks.generator.populator.WorldGeneratorCube;
+import cuchaz.cubicChunks.generator.populator.generators.WorldGenSpikesCube;
 import net.minecraft.entity.boss.EntityDragon;
 import net.minecraft.init.Blocks;
-import net.minecraft.world.gen.feature.WorldGenSpikes;
-import net.minecraft.world.gen.feature.WorldGenerator;
 
 public class BiomeEndDecorator extends CubeBiomeDecorator
 {
-    protected WorldGenerator spikeGen;
+	protected WorldGeneratorCube spikeGen;
 
-    public BiomeEndDecorator()
-    {
-        this.spikeGen = new WorldGenSpikes(Blocks.end_stone);
-    }
+	public BiomeEndDecorator()
+	{
+		this.spikeGen = new WorldGenSpikesCube( Blocks.end_stone );
+	}
 
-    protected void func_150513_a(CubeBiomeGenBase p_150513_1_)
-    {
-        this.generateOres();
+	@Override
+	protected void decorate_do( CubeBiomeGenBase biome )
+	{
+		this.generateOres();
 
-        /*if (this.randomGenerator.nextInt(5) == 0)
-        {
-            int var2 = this.cubeX + this.randomGenerator.nextInt(16) + 8;
-            int var3 = this.cubeZ + this.randomGenerator.nextInt(16) + 8;
-            int var4 = this.currentWorld.getTopSolidOrLiquidBlock(var2, var3);
-            this.spikeGen.generate(this.currentWorld, this.randomGenerator, var2, var4, var3);
-        }
+		gen.generateAtSurface( this.spikeGen, 1, 0.2);
 
-        if (this.cubeX == 0 && this.cubeZ == 0)
-        {
-            EntityDragon var5 = new EntityDragon(this.currentWorld);
-            var5.setLocationAndAngles(0.0D, 128.0D, 0.0D, this.randomGenerator.nextFloat() * 360.0F, 0.0F);
-            this.currentWorld.spawnEntityInWorld(var5);
-        }*/
-    }
+		if( gen.chunk_X == 0 && gen.chunk_Z == 0 )
+		{
+			EntityDragon dragon = new EntityDragon( this.currentWorld );
+			dragon.setLocationAndAngles( 0.0D, 128.0D, 0.0D, this.randomGenerator.nextFloat() * 360.0F, 0.0F );
+			gen.world.spawnEntityInWorld( dragon );
+		}
+	}
 }

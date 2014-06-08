@@ -10,94 +10,97 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
+import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
+import cuchaz.cubicChunks.world.Cube;
 import java.util.ArrayList;
 import java.util.Random;
-
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenAbstractTree;
-import cuchaz.cubicChunks.world.Cube;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class BiomeGenMutated extends CubeBiomeGenBase
 {
-    protected CubeBiomeGenBase biome;
+	protected final CubeBiomeGenBase biome;
 
-    public BiomeGenMutated(int biomeID, CubeBiomeGenBase biome)
-    {
-        super(biomeID);
-        this.biome = biome;
-        this.func_150557_a(biome.color, true);
-        this.biomeName = biome.biomeName + " M";
-        this.topBlock = biome.topBlock;
-        this.fillerBlock = biome.fillerBlock;
-        this.field_76754_C = biome.field_76754_C;
-        this.biomeHeight = biome.biomeHeight;
-        this.biomeVolatility = biome.biomeVolatility;
-        this.temperature = biome.temperature;
-        this.rainfall = biome.rainfall;
-        this.waterColorMultiplier = biome.waterColorMultiplier;
-        this.enableSnow = biome.enableSnow;
-        this.enableRain = biome.enableRain;
-        this.spawnableCreatureList = new ArrayList(biome.spawnableCreatureList);
-        this.spawnableMonsterList = new ArrayList(biome.spawnableMonsterList);
-        this.spawnableCaveCreatureList = new ArrayList(biome.spawnableCaveCreatureList);
-        this.spawnableWaterCreatureList = new ArrayList(biome.spawnableWaterCreatureList);
-        this.temperature = biome.temperature;
-        this.rainfall = biome.rainfall;
-        this.biomeHeight = biome.biomeHeight + 0.1F;
-        this.biomeVolatility = biome.biomeVolatility + 0.2F;
-    }
+	public BiomeGenMutated( int biomeID, CubeBiomeGenBase biome )
+	{
+		super( biomeID );
+		this.biome = biome;
+		this.func_150557_a( biome.color, true );
+		this.biomeName = biome.biomeName + " M";
+		this.topBlock = biome.topBlock;
+		this.fillerBlock = biome.fillerBlock;
+		this.field_76754_C = biome.field_76754_C;
+		this.biomeHeight = biome.biomeHeight;
+		this.biomeVolatility = biome.biomeVolatility;
+		this.temperature = biome.temperature;
+		this.rainfall = biome.rainfall;
+		this.waterColorMultiplier = biome.waterColorMultiplier;
+		this.enableSnow = biome.getEnableSnow();
+		this.enableRain = biome.getEnableRain();
+		this.spawnableCreatureList = new ArrayList( biome.getSpawnableCreatureList() );
+		this.spawnableMonsterList = new ArrayList( biome.getSpawnableMonsterList() );
+		this.spawnableCaveCreatureList = new ArrayList( biome.getSpawnableCaveCreatureList() );
+		this.spawnableWaterCreatureList = new ArrayList( biome.getSpawnableWaterCreatureList() );
+		this.temperature = biome.temperature;
+		this.rainfall = biome.rainfall;
+		this.biomeHeight = biome.biomeHeight + 0.1F;
+		this.biomeVolatility = biome.biomeVolatility + 0.2F;
+	}
 
-    public void decorate(World par1World, Random rand, int par3, int par4)
-    {
-        this.biome.theBiomeDecorator.func_150512_a(par1World, rand, this, par3, par4);
-    }
+	@Override
+	public void modifyBlocks_pre( World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var )
+	{
+		this.biome.modifyBlocks_pre( world, rand, cube, xAbs, yAbs, zAbs, var );
+	}
 
-    public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var)
-    {
-        this.biome.modifyBlocks_pre(world, rand, cube, xAbs, yAbs, zAbs, var);
-    }
+	/**
+	 * returns the chance a creature has to spawn.
+	 */
+	@Override
+	public float getSpawningChance()
+	{
+		return this.biome.getSpawningChance();
+	}
 
-    /**
-     * returns the chance a creature has to spawn.
-     */
-    public float getSpawningChance()
-    {
-        return this.biome.getSpawningChance();
-    }
+	@Override
+	public WorldGenAbstractTreeCube checkSpawnTree( Random p_150567_1_ )
+	{
+		return this.biome.checkSpawnTree( p_150567_1_ );
+	}
 
-    public WorldGenAbstractTree checkSpawnTree(Random p_150567_1_)
-    {
-        return this.biome.checkSpawnTree(p_150567_1_);
-    }
+	/**
+	 * Provides the basic foliage color based on the biome temperature and rainfall
+	 */
+	@Override
+	public int getBiomeFoliageColor( int p_150571_1_, int p_150571_2_, int p_150571_3_ )
+	{
+		return this.biome.getBiomeFoliageColor( p_150571_1_, p_150571_2_, p_150571_2_ );
+	}
 
-    /**
-     * Provides the basic foliage color based on the biome temperature and rainfall
-     */
-    public int getBiomeFoliageColor(int p_150571_1_, int p_150571_2_, int p_150571_3_)
-    {
-        return this.biome.getBiomeFoliageColor(p_150571_1_, p_150571_2_, p_150571_2_);
-    }
+	/**
+	 * Provides the basic grass color based on the biome temperature and rainfall
+	 */
+	@Override
+	public int getBiomeGrassColor( int p_150558_1_, int p_150558_2_, int p_150558_3_ )
+	{
+		return this.biome.getBiomeGrassColor( p_150558_1_, p_150558_2_, p_150558_2_ );
+	}
 
-    /**
-     * Provides the basic grass color based on the biome temperature and rainfall
-     */
-    public int getBiomeGrassColor(int p_150558_1_, int p_150558_2_, int p_150558_3_)
-    {
-        return this.biome.getBiomeGrassColor(p_150558_1_, p_150558_2_, p_150558_2_);
-    }
+	@Override
+	public Class<? extends CubeBiomeGenBase> func_150562_l()
+	{
+		return this.biome.func_150562_l();
+	}
 
-    public Class func_150562_l()
-    {
-        return this.biome.func_150562_l();
-    }
+	@Override
+	public boolean func_150569_a( BiomeGenBase biome )
+	{
+		return this.biome.func_150569_a( biome );
+	}
 
-    public boolean func_150569_a(CubeBiomeGenBase biome)
-    {
-        return this.biome.func_150569_a(biome);
-    }
-
-    public CubeBiomeGenBase.TempCategory func_150561_m()
-    {
-        return this.biome.func_150561_m();
-    }
+	@Override
+	public CubeBiomeGenBase.TempCategory func_150561_m()
+	{
+		return this.biome.func_150561_m();
+	}
 }
