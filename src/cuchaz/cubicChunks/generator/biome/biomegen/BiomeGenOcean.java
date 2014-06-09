@@ -27,10 +27,4 @@ public class BiomeGenOcean extends CubeBiomeGenBase
 	{
 		return CubeBiomeGenBase.TempCategory.OCEAN;
 	}
-
-	@Override
-	public void modifyBlocks_pre( World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var )
-	{
-		super.modifyBlocks_pre( world, rand, cube, xAbs, yAbs, zAbs, var );
-	}
 }

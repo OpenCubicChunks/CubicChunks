@@ -47,12 +47,6 @@ public class BiomeGenMutated extends CubeBiomeGenBase
 		this.biomeVolatility = biome.biomeVolatility + 0.2F;
 	}
 
-	@Override
-	public void modifyBlocks_pre( World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var )
-	{
-		this.biome.modifyBlocks_pre( world, rand, cube, xAbs, yAbs, zAbs, var );
-	}
-
 	/**
 	 * returns the chance a creature has to spawn.
 	 */
@@ -102,5 +96,11 @@ public class BiomeGenMutated extends CubeBiomeGenBase
 	public CubeBiomeGenBase.TempCategory func_150561_m()
 	{
 		return this.biome.func_150561_m();
+	}
+	
+	@Override
+	public void replaceBlocks( World world, Random rand, Cube cube, Cube above, int xAbs, int zAbs, int top, int bottom, int alterationTop, int seaLevel, double depthNoiseValue )
+	{
+		biome.replaceBlocks_do( world, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, depthNoiseValue );
 	}
 }

@@ -41,10 +41,10 @@ public class BiomeGenSavanna extends CubeBiomeGenBase
 	@Override
 	public void decorate( World world, Random rand, int x, int y, int z )
 	{
-		DecoratorHelper gen = new DecoratorHelper(world, rand, x, y, z );
-		
-		worldGenDoublePlant.setType(2 );
-		gen.generateAtRandSurfacePlus32( worldGenDoublePlant, 7, 1);
+		DecoratorHelper gen = new DecoratorHelper( world, rand, x, y, z );
+
+		worldGenDoublePlant.setType( 2 );
+		gen.generateAtRandSurfacePlus32( worldGenDoublePlant, 7, 1 );
 
 		super.decorate( world, rand, x, y, z );
 	}
@@ -70,24 +70,25 @@ public class BiomeGenSavanna extends CubeBiomeGenBase
 		}
 
 		@Override
-		public void modifyBlocks_pre( World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val )
+		public void replaceBlocks( World world, Random rand, Cube cube, Cube above, int xAbs, int zAbs, int top, int bottom, int alterationTop, int seaLevel, double depthNoiseValue )
 		{
+			
 			this.topBlock = Blocks.grass;
 			this.field_150604_aj = 0;
 			this.fillerBlock = Blocks.dirt;
 
-			if( val > 1.75D )
+			if( depthNoiseValue > 1.75D )
 			{
 				this.topBlock = Blocks.stone;
 				this.fillerBlock = Blocks.stone;
 			}
-			else if( val > -0.5D )
+			else if( depthNoiseValue > -0.5D )
 			{
 				this.topBlock = Blocks.dirt;
 				this.field_150604_aj = 1;
 			}
 
-			this.modifyBlocks( world, rand, cube, xAbs, yAbs, zAbs, val );
+			super.replaceBlocks( world, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, depthNoiseValue );
 		}
 
 		@Override

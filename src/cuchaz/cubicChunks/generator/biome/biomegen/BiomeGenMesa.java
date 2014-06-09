@@ -11,29 +11,33 @@
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
+import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
+import cuchaz.cubicChunks.util.HeightHelper;
+import cuchaz.cubicChunks.world.Cube;
 import java.util.Arrays;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.NoiseGeneratorPerlin;
 
 public class BiomeGenMesa extends CubeBiomeGenBase
 {
-	private byte[] field_150621_aC;
-	private long field_150622_aD;
+	private byte[] colorArray;
+	private long lastWorldSeed;
 	private NoiseGeneratorPerlin noise1;
 	private NoiseGeneratorPerlin noise2;
-	private NoiseGeneratorPerlin noise3;
-	private final boolean field_150626_aH;
-	private final boolean field_150620_aI;
+	private NoiseGeneratorPerlin colorGenNoise;
+	private final boolean isMesaMutated;
+	private final boolean isForest;
 
-	public BiomeGenMesa( int id, boolean p_i45380_2_, boolean p_i45380_3_ )
+	public BiomeGenMesa( int id, boolean isMesaMutated, boolean isForest )
 	{
 		super( id );
-		this.field_150626_aH = p_i45380_2_;
-		this.field_150620_aI = p_i45380_3_;
+		this.isMesaMutated = isMesaMutated;
+		this.isForest = isForest;
 		this.setDisableRain();
 		this.setTemperatureAndRainfall( 2.0F, 0.0F );
 		this.spawnableCreatureList.clear();
@@ -47,7 +51,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 		this.decorator().flowersPerChunk = 0;
 		this.spawnableCreatureList.clear();
 
-		if( p_i45380_3_ )
+		if( isForest )
 		{
 			this.decorator().treesPerChunk = 5;
 		}
@@ -77,51 +81,245 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 		return 9470285;
 	}
 
-	public void modifyBlocks_pre( World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int yAbs, int zAbs, double val )
+	@Override
+	public void replaceBlocks( World world, Random rand, Cube cube, Cube above, int xAbs, int zAbs, int top, int bottom, int alterationTop, int seaLevel, double depthNoiseValue )
 	{
-		if( this.field_150621_aC == null || this.field_150622_aD != world.getSeed() )
+		if( this.colorArray == null || this.lastWorldSeed != world.getSeed() )
 		{
-			this.func_150619_a( world.getSeed() );
+			this.generateColorArray( world.getSeed() );
 		}
 
-		if( this.noise1 == null || this.noise2 == null || this.field_150622_aD != world.getSeed() )
+		if( this.noise1 == null || this.noise2 == null || this.lastWorldSeed != world.getSeed() )
 		{
-			Random var9 = new Random( this.field_150622_aD );
+			Random var9 = new Random( this.lastWorldSeed );
 			this.noise1 = new NoiseGeneratorPerlin( var9, 4 );
 			this.noise2 = new NoiseGeneratorPerlin( var9, 1 );
 		}
 
-		this.field_150622_aD = world.getSeed();
-		double var25 = 0.0D;
-		int xRel;
-		int yRel;
-		int zRel;
+		this.lastWorldSeed = world.getSeed();
+		double fillStoneY = 0.0D;
 
-		if( this.field_150626_aH )
+		if( this.isMesaMutated )
 		{
-			xRel = (xAbs & -16) + (zAbs & 15);
-			zRel = (zAbs & -16) + (xAbs & 15);
-			double var13 = Math.min( Math.abs( val ), this.noise1.func_151601_a( (double)xRel * 0.25D, (double)zRel * 0.25D ) );
+			int xNoise = (xAbs & -16) + (zAbs & 15);
+			int zNoise = (zAbs & -16) + (xAbs & 15);
+			double noiseValue = Math.min( Math.abs( depthNoiseValue ), this.noise1.func_151601_a( (double)xNoise * 0.25D, (double)zNoise * 0.25D ) );
 
-			if( var13 > 0.0D )
+			if( noiseValue > 0.0D )
 			{
-				double var15 = 0.001953125D;
-				double var17 = Math.abs( this.noise2.func_151601_a( (double)xRel * var15, (double)zRel * var15 ) );
-				var25 = var13 * var13 * 2.5D;
-				double var19 = Math.ceil( var17 * 50.0D ) + 14.0D;
+				double scale = 0.001953125D;
+				double noiseValue2 = Math.abs( this.noise2.func_151601_a( (double)xNoise * scale, (double)zNoise * scale ) );
+				fillStoneY = noiseValue * noiseValue * 2.5D;
+				double max = Math.ceil( noiseValue2 * 50.0D ) + 14.0D;
 
-				if( var25 > var19 )
+				if( fillStoneY > max )
 				{
-					var25 = var19;
+					fillStoneY = max;
 				}
-
-				var25 += 64.0D;
+				//sea level is now 64 blocks below vanilla sea level.
+				//fillStoneY += 64.0D;
 			}
 		}
 
-		xRel = xAbs & 15;
-		yRel = yAbs & 15;
-		zRel = zAbs & 15;
+		fillStoneY = HeightHelper.getScaledHeight_Double( fillStoneY );
+
+		Block topBlock = Blocks.stained_hardened_clay;
+		Block fillerBlock = this.fillerBlock;
+
+		//How many biome blocks left to set in column? Initially -1
+		int numBlocksToChange = -1;
+
+		//Biome blocks depth in current block column. 0 for negative values.
+		int depth = (int)(depthNoiseValue / 3.0D + 3.0D + rand.nextDouble() * 0.25D);
+
+		boolean noTopBlock = Math.cos( depthNoiseValue / 3.0D * Math.PI ) > 0.0D;
+
+		boolean b1 = false;
+
+		for( int yAbs = top; yAbs >= bottom; --yAbs )
+		{
+			boolean canSetBlock = yAbs <= alterationTop;
+
+			//Current block
+			Block block = replaceBlocks_getBlock( cube, above, xAbs, yAbs, zAbs );
+
+			if( (block == null || block.getMaterial() == Material.air) && yAbs < (int)fillStoneY )
+			{
+				replaceBlocks_setBlock( Blocks.stone, 0, cube, xAbs, yAbs, zAbs, canSetBlock );
+				block = Blocks.stone;
+			}
+
+			//Set numBlocksToChange to -1 when we reach air, skip everything else
+			if( block == null || block.getMaterial() == Material.air )
+			{
+				numBlocksToChange = -1;
+				continue;
+			}
+
+			//Do not replace any blocks except already replaced and stone
+			if( block != Blocks.stone && block != topBlock && block != fillerBlock && block != Blocks.sandstone )
+			{
+				continue;
+			}
+
+			byte metadata;
+
+			//If we are 1 block below air...
+			if( numBlocksToChange == -1 )
+			{
+				b1 = false;
+				//If depth is <= 0 - only stone
+				if( depth <= 0 )
+				{
+					topBlock = null;
+					fillerBlock = Blocks.stone;
+				}
+				//If we are above or at 4 block under water and at or below one block above water
+				else if( yAbs >= seaLevel - 4 && yAbs <= seaLevel + 1 )
+				{
+					topBlock = this.topBlock;
+					fillerBlock = this.fillerBlock;
+				}
+
+				//If top block is air and we are below sea level use water instead
+				if( yAbs < seaLevel && (topBlock == null || topBlock.getMaterial() == Material.air) )
+				{
+					topBlock = Blocks.water;
+					metadata = 0;
+				}
+
+				//Set num blocks to change to current depth.
+				int yAbsVanilla = HeightHelper.getVanillaHeight( yAbs );
+				//depth can't be higher 16 :(
+				//but to be sure that everything works don't go above 15
+				numBlocksToChange = Math.min( 15, depth + Math.max( 0, yAbsVanilla - 63 ) );
+
+				if( yAbs >= seaLevel - 1 )
+				{
+					if( isForest && yAbs > HeightHelper.getScaledHeight( 86 ) + depth * 2 )
+					{
+						if( noTopBlock )
+						{
+							replaceBlocks_setBlock( Blocks.dirt, 1, cube, xAbs, yAbs, zAbs, canSetBlock );
+						}
+						else
+						{
+							replaceBlocks_setBlock( Blocks.grass, 0, cube, xAbs, yAbs, zAbs, canSetBlock );
+						}
+					}
+					else if( yAbs > HeightHelper.getScaledHeight( 66 ) + depth )
+					{
+						metadata = 16;
+						if( yAbs >= seaLevel + 1 && yAbs <= NewTerrainProcessor.maxElev )
+						{
+							if( !noTopBlock )
+							{
+								metadata = this.getRandomMetadata( xAbs, yAbs, zAbs );
+							}
+						}
+						else
+						{
+							metadata = 1;
+						}
+
+						if( metadata != 16 )
+						{
+							replaceBlocks_setBlock( Blocks.stained_hardened_clay, metadata, cube, xAbs, yAbs, zAbs, canSetBlock );
+						}
+						else
+						{
+							replaceBlocks_setBlock( Blocks.hardened_clay, 0, cube, xAbs, yAbs, zAbs, canSetBlock );
+						}
+					}
+					else
+					{
+						replaceBlocks_setBlock( topBlock, this.field_150604_aj, cube, xAbs, yAbs, zAbs, canSetBlock );
+						b1 = true;
+
+					}
+				}
+				else
+				{
+					replaceBlocks_setBlock( fillerBlock, fillerBlock == Blocks.stained_hardened_clay ? 1 : 0, cube, xAbs, yAbs, zAbs, canSetBlock );
+				}
+				
+				continue;
+			}
+
+			// Nothing left to do...
+			// so continue
+			if( numBlocksToChange <= 0 )
+			{
+				continue;
+			}
+
+			//Decrease blocks to change
+			--numBlocksToChange;
+			if( b1 )
+			{
+				replaceBlocks_setBlock( Blocks.stained_hardened_clay, 1, cube, xAbs, yAbs, zAbs, canSetBlock );
+			}
+			else
+			{
+				metadata = this.getRandomMetadata( xAbs, yAbs, zAbs );
+				if( metadata != 16 )
+				{
+					replaceBlocks_setBlock( Blocks.stained_hardened_clay, metadata, cube, xAbs, yAbs, zAbs, canSetBlock );
+				}
+				else
+				{
+					replaceBlocks_setBlock( Blocks.hardened_clay, 0, cube, xAbs, yAbs, zAbs, canSetBlock );
+				}
+			}
+		}
+	}
+
+	public void modifyBlocks_pre( World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int yAbs, int zAbs, double val )
+	{
+		if( this.colorArray == null || this.lastWorldSeed != world.getSeed() )
+		{
+			this.generateColorArray( world.getSeed() );
+		}
+
+		if( this.noise1 == null || this.noise2 == null || this.lastWorldSeed != world.getSeed() )
+		{
+			Random var9 = new Random( this.lastWorldSeed );
+			this.noise1 = new NoiseGeneratorPerlin( var9, 4 );
+			this.noise2 = new NoiseGeneratorPerlin( var9, 1 );
+		}
+
+		this.lastWorldSeed = world.getSeed();
+		double fillStoneY = 0.0D;
+
+		if( this.isMesaMutated )
+		{
+			int xNoise = (xAbs & -16) + (zAbs & 15);
+			int zNoise = (zAbs & -16) + (xAbs & 15);
+			double noiseValue = Math.min( Math.abs( val ), this.noise1.func_151601_a( (double)xNoise * 0.25D, (double)zNoise * 0.25D ) );
+
+			if( noiseValue > 0.0D )
+			{
+				double scale = 0.001953125D;
+				double noiseValue2 = Math.abs( this.noise2.func_151601_a( (double)xNoise * scale, (double)zNoise * scale ) );
+				fillStoneY = noiseValue * noiseValue * 2.5D;
+				double max = Math.ceil( noiseValue2 * 50.0D ) + 14.0D;
+
+				if( fillStoneY > max )
+				{
+					fillStoneY = max;
+				}
+				//sea level is now 64 blocks below vanilla sea level.
+				//fillStoneY += 64.0D;
+			}
+		}
+
+		//maxElev for vanilla would be 64 (64 blocks above sea level)
+		double terrainHeightScale = NewTerrainProcessor.maxElev / 64D;
+		fillStoneY *= terrainHeightScale;
+
+		int xRel = xAbs & 15;
+		int yRel = yAbs & 15;
+		int zRel = zAbs & 15;
 		boolean var26 = true;
 		Block var14 = Blocks.stained_hardened_clay;
 		Block var27 = this.fillerBlock;
@@ -135,7 +333,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 		{
 			int loc = (zRel * 16 + xRel) * 16 + y;
 
-			if( (blocks[loc] == null || blocks[loc].getMaterial() == Material.air) && yAbs < (int)var25 )
+			if( (blocks[loc] == null || blocks[loc].getMaterial() == Material.air) && yAbs < (int)fillStoneY )
 			{
 				blocks[loc] = Blocks.stone;
 			}
@@ -178,7 +376,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 
 							if( yAbs >= 62 )
 							{
-								if( this.field_150620_aI && y > 86 + var16 * 2 )
+								if( this.isForest && y > 86 + var16 * 2 )
 								{
 									if( var28 )
 									{
@@ -198,7 +396,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 									{
 										if( !var28 )
 										{
-											var24 = this.func_150618_d( xAbs, y, zAbs );
+											var24 = this.getRandomMetadata( xAbs, y, zAbs );
 										}
 									}
 									else
@@ -244,7 +442,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 							}
 							else
 							{
-								var24 = this.func_150618_d( xAbs, y, zAbs );
+								var24 = this.getRandomMetadata( xAbs, y, zAbs );
 
 								if( var24 < 16 )
 								{
@@ -268,115 +466,119 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 	}
 
 	@Override
-	protected CubeBiomeGenBase createAndReturnMutated(  )
+	protected CubeBiomeGenBase createAndReturnMutated()
 	{
-		boolean var1 = this.biomeID == CubeBiomeGenBase.mesa.biomeID;
-		BiomeGenMesa var2 = new BiomeGenMesa( this.biomeID + 128, var1, this.field_150620_aI );
-		
-		if( !var1 )
+		boolean notPlateau = this.biomeID == CubeBiomeGenBase.mesa.biomeID;
+		BiomeGenMesa newBiome = new BiomeGenMesa( this.biomeID + 128, notPlateau, this.isForest );
+
+		if( !notPlateau )
 		{
-			var2.setHeightRange( hillsRange );
-			var2.setBiomeName( this.biomeName + " M" );
+			newBiome.setHeightRange( hillsRange );
+			newBiome.setBiomeName( this.biomeName + " M" );
 		}
 		else
 		{
-			var2.setBiomeName( this.biomeName + " (Bryce)" );
+			newBiome.setBiomeName( this.biomeName + " (Bryce)" );
 		}
-		
-		var2.func_150557_a( this.color, true );
-		return var2;
+
+		newBiome.func_150557_a( this.color, true );
+		return newBiome;
 	}
 
-	private void func_150619_a( long p_150619_1_)
+	private void generateColorArray( long seed )
 	{
-		this.field_150621_aC = new byte[64];
-		Arrays.fill( this.field_150621_aC, (byte)16 );
-		Random var3 = new Random( p_150619_1_ );
-		this.noise3 = new NoiseGeneratorPerlin( var3, 1 );
-		int var4;
+		this.colorArray = new byte[64];
 
-		for( var4 = 0; var4 < 64; ++var4 )
+		//fill array with 16 (unspecified color)
+		Arrays.fill( this.colorArray, (byte)16 );
+
+		Random rand = new Random( seed );
+		this.colorGenNoise = new NoiseGeneratorPerlin( rand, 1 );
+
+		//fill random places in array with 1 (orange)
+		for( int i = 0; i < 64; ++i )
 		{
-			var4 += var3.nextInt( 5 ) + 1;
+			i += rand.nextInt( 5 ) + 1;
 
-			if( var4 < 64 )
+			if( i < 64 )
 			{
-				this.field_150621_aC[var4] = 1;
+				this.colorArray[i] = 1;
 			}
 		}
 
-		var4 = var3.nextInt( 4 ) + 2;
-		int var5;
-		int var6;
-		int var7;
-		int var8;
-
-		for( var5 = 0; var5 < var4; ++var5 )
+		//add some yellow color
+		int numYellowGenRanges = rand.nextInt( 4 ) + 2;
+		for( int i = 0; i < numYellowGenRanges; ++i )
 		{
-			var6 = var3.nextInt( 3 ) + 1;
-			var7 = var3.nextInt( 64 );
+			int rangeSize = rand.nextInt( 3 ) + 1;
+			int startIndex = rand.nextInt( 64 );
 
-			for( var8 = 0; var7 + var8 < 64 && var8 < var6; ++var8 )
+			for( int j = 0; startIndex + j < 64 && j < rangeSize; ++j )
 			{
-				this.field_150621_aC[var7 + var8] = 4;
+				this.colorArray[startIndex + j] = 4;
 			}
 		}
 
-		var5 = var3.nextInt( 4 ) + 2;
-		int var9;
+		//add some brown color
+		int numBrownGenRanges = rand.nextInt( 4 ) + 2;
 
-		for( var6 = 0; var6 < var5; ++var6 )
+		for( int i = 0; i < numBrownGenRanges; ++i )
 		{
-			var7 = var3.nextInt( 3 ) + 2;
-			var8 = var3.nextInt( 64 );
+			int rangeSize = rand.nextInt( 3 ) + 2;
+			int startIndex = rand.nextInt( 64 );
 
-			for( var9 = 0; var8 + var9 < 64 && var9 < var7; ++var9 )
+			for( int j = 0; startIndex + j < 64 && j < rangeSize; ++j )
 			{
-				this.field_150621_aC[var8 + var9] = 12;
+				this.colorArray[startIndex + j] = 12;
 			}
 		}
 
-		var6 = var3.nextInt( 4 ) + 2;
+		//and red
+		int numRedGenRanges = rand.nextInt( 4 ) + 2;
 
-		for( var7 = 0; var7 < var6; ++var7 )
+		for( int i = 0; i < numRedGenRanges; ++i )
 		{
-			var8 = var3.nextInt( 3 ) + 1;
-			var9 = var3.nextInt( 64 );
+			int rangeSize = rand.nextInt( 3 ) + 1;
+			int startIndex = rand.nextInt( 64 );
 
-			for( int var10 = 0; var9 + var10 < 64 && var10 < var8; ++var10 )
+			for( int j = 0; startIndex + j < 64 && j < rangeSize; ++j )
 			{
-				this.field_150621_aC[var9 + var10] = 14;
+				this.colorArray[startIndex + j] = 14;
 			}
 		}
 
-		var7 = var3.nextInt( 3 ) + 3;
-		var8 = 0;
+		//light gray
+		int numGenLighrGray = rand.nextInt( 3 ) + 3;
+		int rangeStart = 0;
 
-		for( var9 = 0; var9 < var7; ++var9 )
+		for( int i = 0; i < numGenLighrGray; ++i )
 		{
-			byte var12 = 1;
-			var8 += var3.nextInt( 16 ) + 4;
+			byte layers = 1;
+			rangeStart += rand.nextInt( 16 ) + 4;
 
-			for( int var11 = 0; var8 + var11 < 64 && var11 < var12; ++var11 )
+			for( int j = 0; rangeStart + j < 64 && j < layers; ++j )
 			{
-				this.field_150621_aC[var8 + var11] = 0;
+				this.colorArray[rangeStart + j] = 0;
 
-				if( var8 + var11 > 1 && var3.nextBoolean() )
+				if( rangeStart + j > 1 && rand.nextBoolean() )
 				{
-					this.field_150621_aC[var8 + var11 - 1] = 8;
+					this.colorArray[rangeStart + j - 1] = 8;
 				}
 
-				if( var8 + var11 < 63 && var3.nextBoolean() )
+				if( rangeStart + j < 63 && rand.nextBoolean() )
 				{
-					this.field_150621_aC[var8 + var11 + 1] = 8;
+					this.colorArray[rangeStart + j + 1] = 8;
 				}
 			}
 		}
 	}
 
-	private byte func_150618_d(int p_150618_1_, int p_150618_2_, int p_150618_3_)
+	private byte getRandomMetadata( int x, int y, int z )
 	{
-		int var4 = (int)Math.round( this.noise3.func_151601_a( (double)p_150618_1_ * 1.0D / 512.0D, (double)p_150618_1_ * 1.0D / 512.0D ) * 2.0D );
-		return this.field_150621_aC[(p_150618_2_ + var4 + 64) % 64];
+		//generate random y-shift from perlin noise
+		int randomShift = (int)Math.round( this.colorGenNoise.func_151601_a( x * 1.0D / 512.0D, z * 1.0D / 512.0D ) * 2.0D );
+
+		//colors loop if  we are above 64
+		return this.colorArray[(y + randomShift + 64) % 64];
 	}
 }

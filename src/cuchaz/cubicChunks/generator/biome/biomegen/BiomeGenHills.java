@@ -26,27 +26,27 @@ import net.minecraft.world.gen.feature.WorldGenerator;
 
 public class BiomeGenHills extends CubeBiomeGenBase
 {
-	private WorldGenerator theWorldGenerator;
-	private WorldGenTaiga2Cube genTaiga;
-	private int value1;
-	private int value2;
-	private int value3;
-	private int value4;
+	private final WorldGenerator theWorldGenerator;
+	private final WorldGenTaiga2Cube genTaiga;
+	private final int typeDefault;
+	private final int typeForest;
+	private final int typeMutated;
+	private int type;
 
-	public BiomeGenHills( int biomeID, boolean flag )
+	public BiomeGenHills( int biomeID, boolean isForest )
 	{
 		super( biomeID );
 		this.theWorldGenerator = new WorldGenMinable( Blocks.monster_egg, 8 );
 		this.genTaiga = new WorldGenTaiga2Cube( false );
-		this.value1 = 0;
-		this.value2 = 1;
-		this.value3 = 2;
-		this.value4 = this.value1;
+		this.typeDefault = 0;
+		this.typeForest = 1;
+		this.typeMutated = 2;
+		this.type = this.typeDefault;
 
-		if( flag )
+		if( isForest )
 		{
 			this.decorator().treesPerChunk = 3;
-			this.value4 = this.value2;
+			this.type = this.typeForest;
 		}
 	}
 
@@ -65,30 +65,30 @@ public class BiomeGenHills extends CubeBiomeGenBase
 		int numGen = 3 + rand.nextInt( 6 );
 
 		gen.generateSingleBlocks( Blocks.emerald_ore, numGen, 1, -0.75 );
-		
+
 		//generate silverfish stone (monsteregg)
 		gen.generateAtRandomHeight( 7, 1, theWorldGenerator, 0 );
 	}
 
 	@Override
-	public void modifyBlocks_pre( World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var )
+	public void replaceBlocks( World world, Random rand, Cube cube, Cube above, int xAbs, int zAbs, int top, int bottom, int alterationTop, int seaLevel, double depthNoiseValue )
 	{
 		this.topBlock = Blocks.grass;
 		this.field_150604_aj = 0;
 		this.fillerBlock = Blocks.dirt;
 
-		if( (var < -1.0D || var > 2.0D) && this.value4 == this.value3 )
+		if( (depthNoiseValue < -1.0D || depthNoiseValue > 2.0D) && this.type == this.typeMutated )
 		{
 			this.topBlock = Blocks.gravel;
 			this.fillerBlock = Blocks.gravel;
 		}
-		else if( var > 1.0D && this.value4 != this.value2 )
+		else if( depthNoiseValue > 1.0D && this.type != this.typeForest )
 		{
 			this.topBlock = Blocks.stone;
 			this.fillerBlock = Blocks.stone;
 		}
 
-		this.modifyBlocks( world, rand, cube, xAbs, yAbs, zAbs, var );
+		this.replaceBlocks_do( world, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, depthNoiseValue );
 	}
 
 	@Override
@@ -99,7 +99,7 @@ public class BiomeGenHills extends CubeBiomeGenBase
 
 	private BiomeGenHills func_150633_b( CubeBiomeGenBase biome )
 	{
-		this.value4 = this.value3;
+		this.type = this.typeMutated;
 		this.func_150557_a( biome.color, true );
 		this.setBiomeName( biome.biomeName + " M" );
 		this.setHeightRange( new CubeBiomeGenBase.Height( biome.biomeHeight, biome.biomeVolatility ) );

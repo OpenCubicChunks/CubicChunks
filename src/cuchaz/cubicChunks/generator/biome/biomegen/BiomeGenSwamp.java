@@ -72,33 +72,26 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
 	}
 
 	@Override
-	public void modifyBlocks_pre( World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val )
+	public void replaceBlocks( World world, Random rand, Cube cube, Cube above, int xAbs, int zAbs, int top, int bottom, int alterationTop, int seaLevel, double depthNoiseValue )
 	{
-		double var9 = field_150606_ad.func_151601_a( (double)xAbs * 0.25D, (double)yAbs * 0.25D );
+		double var9 = field_150606_ad.func_151601_a( (double)xAbs * 0.25D, (double)zAbs * 0.25D );
 
-		if( var9 > 0.0D )
+		if( var9 > 0.0D && bottom <= seaLevel && top >= seaLevel )
 		{
-			int xRel = xAbs & 15;
-			int yRel = yAbs & 15;
-			int zRel = zAbs & 15;
-//            int height = blocks.length / 256;
-
-			for( int y = 16; y >= 0; --y )
+			for( int y = top - 1; y >= bottom + 1; --y )
 			{
-				int loc = (zRel * 16 + xRel) * 16 + yRel;
 
-				Block block = cube.getBlock( xRel, yRel, zRel );
+				Block block = replaceBlocks_getBlock( cube, above, xAbs, y, zAbs );
 
 				if( block == null || block.getMaterial() != Material.air )
 				{
-					if( yAbs == 62 && block != Blocks.water )
+					if( y == seaLevel - 1 && block != Blocks.water )
 					{
-						cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.water );
+						cube.setBlockForGeneration( xAbs, y, zAbs, Blocks.water );
 
 						if( var9 < 0.12D )
 						{
-							cube.setBlockForGeneration( xRel, yRel + 1, zRel, Blocks.waterlily ); // this should always place the lily at a height of 63, 
-							//and not go into the next cube up which would be bad.
+							cube.setBlockForGeneration( xAbs, y + 1, zAbs, Blocks.waterlily );
 						}
 					}
 
@@ -106,7 +99,6 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
 				}
 			}
 		}
-
-		this.modifyBlocks( world, rand, cube, xAbs, yAbs, zAbs, val );
+		this.replaceBlocks_do( world, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, depthNoiseValue );
 	}
 }

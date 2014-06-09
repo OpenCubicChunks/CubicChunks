@@ -85,7 +85,7 @@ public class BiomeGenTaiga extends CubeBiomeGenBase
 	}
 
 	@Override
-	public void modifyBlocks_pre( World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val )
+	public void replaceBlocks( World world, Random rand, Cube cube, Cube above, int xAbs, int zAbs, int top, int bottom, int alterationTop, int seaLevel, double depthNoiseValue )
 	{
 		if( this.type == 1 || this.type == 2 )
 		{
@@ -93,19 +93,19 @@ public class BiomeGenTaiga extends CubeBiomeGenBase
 			this.field_150604_aj = 0;
 			this.fillerBlock = Blocks.dirt;
 
-			if( val > 1.75D )
+			if( depthNoiseValue > 1.75D )
 			{
 				this.topBlock = Blocks.dirt;
 				this.field_150604_aj = 1;
 			}
-			else if( val > -0.95D )
+			else if( depthNoiseValue > -0.95D )
 			{
 				this.topBlock = Blocks.dirt;
 				this.field_150604_aj = 2;
 			}
 		}
 
-		this.modifyBlocks( world, rand, cube, xAbs, yAbs, zAbs, val );
+		this.replaceBlocks_do( world, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, depthNoiseValue );
 	}
 
 	@Override
