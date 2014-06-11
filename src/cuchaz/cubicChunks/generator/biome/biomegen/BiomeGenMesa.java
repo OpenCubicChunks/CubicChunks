@@ -10,6 +10,7 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
+import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeDecorator.DecoratorConfig.DISABLE;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
 import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
 import cuchaz.cubicChunks.util.HeightHelper;
@@ -33,9 +34,9 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 	private final boolean isMesaMutated;
 	private final boolean isForest;
 
-	public BiomeGenMesa( int id, boolean isMesaMutated, boolean isForest )
+	public BiomeGenMesa( int biomeID, boolean isMesaMutated, boolean isForest )
 	{
-		super( id );
+		super( biomeID );
 		this.isMesaMutated = isMesaMutated;
 		this.isForest = isForest;
 		this.setDisableRain();
@@ -44,16 +45,19 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 		this.topBlock = Blocks.sand;
 		this.field_150604_aj = 1;
 		this.fillerBlock = Blocks.stained_hardened_clay;
-		this.decorator().treesPerChunk = -999;
-		this.decorator().deadBushPerChunk = 20;
-		this.decorator().reedsPerChunk = 3;
-		this.decorator().cactiPerChunk = 5;
-		this.decorator().flowersPerChunk = 0;
+
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+
+		cfg.treesPerColumn( DISABLE );
+		cfg.deadBushPerColumn( 20 );
+		cfg.reedsPerColumn( 3 );
+		cfg.cactiPerColumn( 5 );
+		cfg.flowersPerColumn( 0 );
 		this.spawnableCreatureList.clear();
 
 		if( isForest )
 		{
-			this.decorator().treesPerChunk = 5;
+			cfg.treesPerColumn( 5 );
 		}
 	}
 
@@ -242,7 +246,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 				{
 					replaceBlocks_setBlock( fillerBlock, fillerBlock == Blocks.stained_hardened_clay ? 1 : 0, cube, xAbs, yAbs, zAbs, canSetBlock );
 				}
-				
+
 				continue;
 			}
 
@@ -269,197 +273,6 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 				else
 				{
 					replaceBlocks_setBlock( Blocks.hardened_clay, 0, cube, xAbs, yAbs, zAbs, canSetBlock );
-				}
-			}
-		}
-	}
-
-	public void modifyBlocks_pre( World world, Random rand, Block[] blocks, byte[] meta, int xAbs, int yAbs, int zAbs, double val )
-	{
-		if( this.colorArray == null || this.lastWorldSeed != world.getSeed() )
-		{
-			this.generateColorArray( world.getSeed() );
-		}
-
-		if( this.noise1 == null || this.noise2 == null || this.lastWorldSeed != world.getSeed() )
-		{
-			Random var9 = new Random( this.lastWorldSeed );
-			this.noise1 = new NoiseGeneratorPerlin( var9, 4 );
-			this.noise2 = new NoiseGeneratorPerlin( var9, 1 );
-		}
-
-		this.lastWorldSeed = world.getSeed();
-		double fillStoneY = 0.0D;
-
-		if( this.isMesaMutated )
-		{
-			int xNoise = (xAbs & -16) + (zAbs & 15);
-			int zNoise = (zAbs & -16) + (xAbs & 15);
-			double noiseValue = Math.min( Math.abs( val ), this.noise1.func_151601_a( (double)xNoise * 0.25D, (double)zNoise * 0.25D ) );
-
-			if( noiseValue > 0.0D )
-			{
-				double scale = 0.001953125D;
-				double noiseValue2 = Math.abs( this.noise2.func_151601_a( (double)xNoise * scale, (double)zNoise * scale ) );
-				fillStoneY = noiseValue * noiseValue * 2.5D;
-				double max = Math.ceil( noiseValue2 * 50.0D ) + 14.0D;
-
-				if( fillStoneY > max )
-				{
-					fillStoneY = max;
-				}
-				//sea level is now 64 blocks below vanilla sea level.
-				//fillStoneY += 64.0D;
-			}
-		}
-
-		//maxElev for vanilla would be 64 (64 blocks above sea level)
-		double terrainHeightScale = NewTerrainProcessor.maxElev / 64D;
-		fillStoneY *= terrainHeightScale;
-
-		int xRel = xAbs & 15;
-		int yRel = yAbs & 15;
-		int zRel = zAbs & 15;
-		boolean var26 = true;
-		Block var14 = Blocks.stained_hardened_clay;
-		Block var27 = this.fillerBlock;
-		int var16 = (int)(val / 3.0D + 3.0D + rand.nextDouble() * 0.25D);
-		boolean var28 = Math.cos( val / 3.0D * Math.PI ) > 0.0D;
-		int var18 = -1;
-		boolean var29 = false;
-		int var20 = blocks.length / 256;
-
-		for( int y = 16; y >= 0; --y )
-		{
-			int loc = (zRel * 16 + xRel) * 16 + y;
-
-			if( (blocks[loc] == null || blocks[loc].getMaterial() == Material.air) && yAbs < (int)fillStoneY )
-			{
-				blocks[loc] = Blocks.stone;
-			}
-
-			if( yAbs <= 0 + rand.nextInt( 5 ) )
-			{
-				blocks[loc] = Blocks.bedrock;
-			}
-			else
-			{
-				Block block = blocks[loc];
-
-				if( block != null && block.getMaterial() != Material.air )
-				{
-					if( block == Blocks.stone )
-					{
-						byte var24;
-
-						if( var18 == -1 )
-						{
-							var29 = false;
-
-							if( var16 <= 0 )
-							{
-								var14 = null;
-								var27 = Blocks.stone;
-							}
-							else if( yAbs >= 59 && y <= 64 )
-							{
-								var14 = Blocks.stained_hardened_clay;
-								var27 = this.fillerBlock;
-							}
-
-							if( yAbs < 63 && (var14 == null || var14.getMaterial() == Material.air) )
-							{
-								var14 = Blocks.water;
-							}
-
-							var18 = var16 + Math.max( 0, y - 63 );
-
-							if( yAbs >= 62 )
-							{
-								if( this.isForest && y > 86 + var16 * 2 )
-								{
-									if( var28 )
-									{
-										blocks[loc] = Blocks.dirt;
-										meta[loc] = 1;
-									}
-									else
-									{
-										blocks[loc] = Blocks.grass;
-									}
-								}
-								else if( yAbs > 66 + var16 )
-								{
-									var24 = 16;
-
-									if( yAbs >= 64 && yAbs <= 127 )
-									{
-										if( !var28 )
-										{
-											var24 = this.getRandomMetadata( xAbs, y, zAbs );
-										}
-									}
-									else
-									{
-										var24 = 1;
-									}
-
-									if( var24 < 16 )
-									{
-										blocks[loc] = Blocks.stained_hardened_clay;
-										meta[loc] = (byte)var24;
-									}
-									else
-									{
-										blocks[loc] = Blocks.hardened_clay;
-									}
-								}
-								else
-								{
-									blocks[loc] = this.topBlock;
-									meta[loc] = (byte)this.field_150604_aj;
-									var29 = true;
-								}
-							}
-							else
-							{
-								blocks[loc] = var27;
-
-								if( var27 == Blocks.stained_hardened_clay )
-								{
-									meta[loc] = 1;
-								}
-							}
-						}
-						else if( var18 > 0 )
-						{
-							--var18;
-
-							if( var29 )
-							{
-								blocks[loc] = Blocks.stained_hardened_clay;
-								meta[loc] = 1;
-							}
-							else
-							{
-								var24 = this.getRandomMetadata( xAbs, y, zAbs );
-
-								if( var24 < 16 )
-								{
-									blocks[loc] = Blocks.stained_hardened_clay;
-									meta[loc] = var24;
-								}
-								else
-								{
-									blocks[loc] = Blocks.hardened_clay;
-								}
-							}
-						}
-					}
-				}
-				else
-				{
-					var18 = -1;
 				}
 			}
 		}

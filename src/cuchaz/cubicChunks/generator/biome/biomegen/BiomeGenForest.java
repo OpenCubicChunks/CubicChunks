@@ -10,71 +10,88 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
+import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeDecorator.DecoratorConfig.DISABLE;
 import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
+import cuchaz.cubicChunks.generator.populator.generators.WorldGenBigMushroomCube;
+import cuchaz.cubicChunks.generator.populator.generators.WorldGenBirchTreeCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenCanopyTreeCube;
-import cuchaz.cubicChunks.generator.populator.generators.WorldGenForestCube;
+import cuchaz.cubicChunks.util.Coords;
 import java.util.Random;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenBigMushroom;
 
 public class BiomeGenForest extends CubeBiomeGenBase
 {
-	protected static final WorldGenForestCube wGenTrees1 = new WorldGenForestCube( false, true );
-	protected static final WorldGenForestCube wGenTrees2 = new WorldGenForestCube( false, false );
-	protected static final WorldGenCanopyTreeCube wGenConopyTree = new WorldGenCanopyTreeCube( false );
+	protected static final WorldGenBirchTreeCube wGenTrees1 = new WorldGenBirchTreeCube( false, true );
+	protected static final WorldGenBirchTreeCube wGenTrees2 = new WorldGenBirchTreeCube( false, false );
+	protected static final WorldGenCanopyTreeCube wGenCanopyTree = new WorldGenCanopyTreeCube( false );
+	private static final int FOREST = 0;
+	private static final int FOREST_MUTATED = 1;
+	private static final int BIRCH_FOREST = 2;
+	private static final int ROOFED_FOREST = 3;
 	private final int variant;
 
 	public BiomeGenForest( int biomeID, int variant )
 	{
 		super( biomeID );
 		this.variant = variant;
-		this.decorator().treesPerChunk = 10;
-		this.decorator().grassPerChunk = 2;
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+		cfg.treesPerColumn( 10 );
+		cfg.grassPerColumn( 2 );
 
-		if( this.variant == 1 )
+		if( this.variant == FOREST_MUTATED )
 		{
-			this.decorator().treesPerChunk = 6;
-			this.decorator().flowersPerChunk = 100;
-			this.decorator().grassPerChunk = 1;
+			cfg.treesPerColumn( 6 );
+			cfg.flowersPerColumn( 100 );
+			cfg.grassPerColumn( 1 );
 		}
 
 		this.func_76733_a( 5159473 );
 		this.setTemperatureAndRainfall( 0.7F, 0.8F );
 
-		if( this.variant == 2 )
+		if( this.variant == BIRCH_FOREST )
 		{
 			this.field_150609_ah = 353825;
 			this.color = 3175492;
 			this.setTemperatureAndRainfall( 0.6F, 0.6F );
 		}
 
-		if( this.variant == 0 )
+		if( this.variant == FOREST )
 		{
 			this.spawnableCreatureList.add( new CubeBiomeGenBase.SpawnListEntry( EntityWolf.class, 5, 4, 4 ) );
 		}
 
-		if( this.variant == 3 )
+		if( this.variant == ROOFED_FOREST )
 		{
-			this.decorator().treesPerChunk = -999;
+			//decorate() overrides tree generation for roofed forest
+			cfg.treesPerColumn( DISABLE );
 		}
 	}
 
 	@Override
-	public WorldGenAbstractTreeCube checkSpawnTree( Random p_150567_1_ )
+	public WorldGenAbstractTreeCube checkSpawnTree( Random rand )
 	{
-		return (this.variant == 3 && p_150567_1_.nextInt( 3 ) > 0 ? wGenConopyTree : (this.variant != 2 && p_150567_1_.nextInt( 5 ) != 0 ? this.worldGeneratorTrees : wGenTrees2));
+		if( variant == ROOFED_FOREST && rand.nextInt( 3 ) > 0 )
+		{
+			return wGenCanopyTree;
+		}
+
+		if( this.variant != BIRCH_FOREST && rand.nextInt( 5 ) != 0 )
+		{
+			return this.worldGeneratorTrees;
+		}
+		return wGenTrees2;
 	}
 
 	@Override
-	public String spawnFlower( Random p_150572_1_, int p_150572_2_, int p_150572_3_, int p_150572_4_ )
+	public String spawnFlower( Random rand, int x, int y, int z )
 	{
-		if( this.variant == 1 )
+		if( this.variant == FOREST_MUTATED )
 		{
-			double var5 = MathHelper.clamp_double( (1.0D + field_150606_ad.func_151601_a( (double)p_150572_2_ / 48.0D, (double)p_150572_4_ / 48.0D )) / 2.0D, 0.0D, 0.9999D );
+			double var5 = MathHelper.clamp_double( (1.0D + field_150606_ad.func_151601_a( (double)x / 48.0D, (double)z / 48.0D )) / 2.0D, 0.0D, 0.9999D );
 			int var7 = (int)(var5 * (double)BlockFlower.field_149859_a.length);
 
 			if( var7 == 1 )
@@ -86,7 +103,7 @@ public class BiomeGenForest extends CubeBiomeGenBase
 		}
 		else
 		{
-			return super.spawnFlower( p_150572_1_, p_150572_2_, p_150572_3_, p_150572_4_ );
+			return super.spawnFlower( rand, x, y, z );
 		}
 	}
 
@@ -95,20 +112,45 @@ public class BiomeGenForest extends CubeBiomeGenBase
 	{
 		DecoratorHelper gen = new DecoratorHelper( world, rand, x, y, z );
 
-		if( this.variant == 3 )
+		int minY = Coords.cubeToMaxBlock( y ) + 8;
+		int maxY = minY + 8;
+		if( this.variant == ROOFED_FOREST )
 		{
-			gen.generateAtSurface( new WorldGenBigMushroom(), 16, 0.05D );
-			for( int i = 0; i < 16; i++ )
+			for( int xGrid = 0; xGrid < 4; ++xGrid )
 			{
-				WorldGenAbstractTreeCube generator = this.checkSpawnTree( rand );
-				generator.setScale( 1.0D, 1.0D, 1.0D );
-				gen.generateAtSurface( generator, 16, 0.95D );
+				for( int zGrid = 0; zGrid < 4; ++zGrid )
+				{
+					int xAbs = Coords.cubeToMinBlock( x ) + xGrid * 4 + 1 + 8 + rand.nextInt( 3 );
+					int zAbs = Coords.cubeToMinBlock( z ) + zGrid * 4 + 1 + 8 + rand.nextInt( 3 );
+					int yAbs = world.getHeightValue( xAbs, zAbs );
+
+					if( yAbs < minY || yAbs > maxY )
+					{
+						continue;
+					}
+
+					if( rand.nextInt( 20 ) == 0 )
+					{
+						WorldGenBigMushroomCube generator = new WorldGenBigMushroomCube();
+						generator.generate( world, rand, xAbs, yAbs, zAbs );
+					}
+					else
+					{
+						WorldGenAbstractTreeCube wGenTree = this.checkSpawnTree( rand );
+						wGenTree.setScale( 1.0D, 1.0D, 1.0D );
+
+						if( wGenTree.generate( world, rand, xAbs, yAbs, zAbs ) )
+						{
+							wGenTree.afterGenerate( world, rand, xAbs, yAbs, zAbs );
+						}
+					}
+				}
 			}
 		}
 
 		int maxGen = rand.nextInt( 5 ) - 3;
 
-		if( this.variant == 1 )
+		if( this.variant == FOREST_MUTATED )
 		{
 			maxGen += 2;
 		}
@@ -157,16 +199,16 @@ public class BiomeGenForest extends CubeBiomeGenBase
 	 * Provides the basic grass color based on the biome temperature and rainfall
 	 */
 	@Override
-	public int getBiomeGrassColor( int p_150558_1_, int p_150558_2_, int p_150558_3_ )
+	public int getBiomeGrassColor( int x, int y, int z )
 	{
-		int var4 = super.getBiomeGrassColor( p_150558_1_, p_150558_2_, p_150558_3_ );
-		return this.variant == 3 ? (var4 & 16711422) + 2634762 >> 1 : var4;
+		int color = super.getBiomeGrassColor( x, y, z );
+		return this.variant == ROOFED_FOREST ? (color & 16711422) + 2634762 >> 1 : color;
 	}
 
 	@Override
 	protected CubeBiomeGenBase func_150557_a( int p_150557_1_, boolean p_150557_2_ )
 	{
-		if( this.variant == 2 )
+		if( this.variant == BIRCH_FOREST )
 		{
 			this.field_150609_ah = 353825;
 			this.color = p_150557_1_;
@@ -189,7 +231,7 @@ public class BiomeGenForest extends CubeBiomeGenBase
 	{
 		if( this.biomeID == CubeBiomeGenBase.forest.biomeID )
 		{
-			BiomeGenForest biome = new BiomeGenForest( this.biomeID + 128, 1 );
+			BiomeGenForest biome = new BiomeGenForest( this.biomeID + 128, FOREST_MUTATED );
 			biome.setHeightRange( new CubeBiomeGenBase.Height( this.biomeHeight, this.biomeVolatility + 0.2F ) );
 			biome.setBiomeName( "Flower Forest" );
 			biome.func_150557_a( 6976549, true );

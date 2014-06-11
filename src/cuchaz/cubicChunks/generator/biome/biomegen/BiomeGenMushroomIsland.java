@@ -18,11 +18,15 @@ public class BiomeGenMushroomIsland extends CubeBiomeGenBase
 	public BiomeGenMushroomIsland( int par1 )
 	{
 		super( par1 );
-		this.decorator().treesPerChunk = -100;
-		this.decorator().flowersPerChunk = -100;
-		this.decorator().grassPerChunk = -100;
-		this.decorator().mushroomsPerChunk = 1;
-		this.decorator().bigMushroomsPerChunk = 1;
+
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+
+		cfg.treesPerColumn( -100 );
+		cfg.flowersPerColumn( -100 );
+		cfg.grassPerColumn( -100 );
+		cfg.mushroomsPerColumn( 1 );
+		cfg.bigMushroomsPerColumn( 1 );
+		
 		this.topBlock = Blocks.mycelium;
 		this.spawnableMonsterList.clear();
 		this.spawnableCreatureList.clear();

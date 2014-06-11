@@ -27,16 +27,19 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
 	protected BiomeGenSwamp( int par1 )
 	{
 		super( par1 );
-		this.decorator().treesPerChunk = 2;
-		this.decorator().flowersPerChunk = 1;
-		this.decorator().deadBushPerChunk = 1;
-		this.decorator().mushroomsPerChunk = 8;
-		this.decorator().reedsPerChunk = 10;
-		this.decorator().clayPerChunk = 1;
-		this.decorator().waterlilyPerChunk = 4;
-		this.decorator().sandPerChunk2 = 0;
-		this.decorator().sandPerChunk = 0;
-		this.decorator().grassPerChunk = 5;
+
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+
+		cfg.treesPerColumn( 2 );
+		cfg.flowersPerColumn( 1 );
+		cfg.deadBushPerColumn( 1 );
+		cfg.mushroomsPerColumn( 8 );
+		cfg.reedsPerColumn( 10 );
+		cfg.clayPerColumn( 1 );
+		cfg.waterlilyPerColumn( 4 );
+		cfg.sandPerColumn( 0 );
+		cfg.gravelPerColumn( 0 );
+		cfg.grassPerColumn( 5 );
 		this.waterColorMultiplier = 14745518;
 		this.spawnableMonsterList.add( new CubeBiomeGenBase.SpawnListEntry( EntitySlime.class, 1, 1, 1 ) );
 	}

@@ -10,16 +10,12 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
-import cuchaz.cubicChunks.CubeWorldProvider;
 import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenTaiga2Cube;
-import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
-import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Cube;
 import java.util.Random;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenMinable;
 import net.minecraft.world.gen.feature.WorldGenerator;
@@ -45,7 +41,8 @@ public class BiomeGenHills extends CubeBiomeGenBase
 
 		if( isForest )
 		{
-			this.decorator().treesPerChunk = 3;
+			CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+			cfg.treesPerColumn( 3 );
 			this.type = this.typeForest;
 		}
 	}
@@ -94,10 +91,10 @@ public class BiomeGenHills extends CubeBiomeGenBase
 	@Override
 	protected CubeBiomeGenBase createAndReturnMutated()
 	{
-		return (new BiomeGenHills( this.biomeID + 128, false )).func_150633_b( this );
+		return (new BiomeGenHills( this.biomeID + 128, false )).createMutated( this );
 	}
 
-	private BiomeGenHills func_150633_b( CubeBiomeGenBase biome )
+	private BiomeGenHills createMutated( CubeBiomeGenBase biome )
 	{
 		this.type = this.typeMutated;
 		this.func_150557_a( biome.color, true );

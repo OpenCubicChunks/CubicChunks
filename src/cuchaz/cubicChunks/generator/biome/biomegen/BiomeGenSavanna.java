@@ -27,9 +27,12 @@ public class BiomeGenSavanna extends CubeBiomeGenBase
 	{
 		super( id );
 		this.spawnableCreatureList.add( new CubeBiomeGenBase.SpawnListEntry( EntityHorse.class, 1, 2, 6 ) );
-		this.decorator().treesPerChunk = 1;
-		this.decorator().flowersPerChunk = 4;
-		this.decorator().grassPerChunk = 20;
+		
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+		
+		cfg.treesPerColumn( 1);
+		cfg.flowersPerColumn( 4);
+		cfg.grassPerColumn( 20);
 	}
 
 	@Override
@@ -61,12 +64,15 @@ public class BiomeGenSavanna extends CubeBiomeGenBase
 
 	public static class Mutated extends BiomeGenMutated
 	{
-		public Mutated( int p_i45382_1_, CubeBiomeGenBase p_i45382_2_ )
+		public Mutated( int biomeID, CubeBiomeGenBase newBiome )
 		{
-			super( p_i45382_1_, p_i45382_2_ );
-			this.decorator().treesPerChunk = 2;
-			this.decorator().flowersPerChunk = 2;
-			this.decorator().grassPerChunk = 5;
+			super( biomeID, newBiome );
+			
+			CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+			
+			cfg.treesPerColumn( 2);
+			cfg.flowersPerColumn( 2);
+			cfg.grassPerColumn( 5);
 		}
 
 		@Override

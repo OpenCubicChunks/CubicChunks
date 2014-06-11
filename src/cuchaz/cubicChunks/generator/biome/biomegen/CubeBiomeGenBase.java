@@ -33,12 +33,54 @@ import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;
 
 import cuchaz.cubicChunks.world.Cube;
-import cuchaz.magicMojoModLoader.api.events.BuildSizeEvent;
+import java.lang.reflect.Field;
 import java.util.List;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGenBase
 {
 	private static final Logger logger = LogManager.getLogger();
+
+	/** An array of all the biomes, indexed by biome id. */
+	private static final BiomeGenBase[] biomeList;
+
+	static
+	{
+		//clear existing biome set.
+		field_150597_n.clear();
+		//set our biome array to BiomeGenBase biome array and clear it.
+		BiomeGenBase[] temp = new CubeBiomeGenBase[256];
+		try
+		{
+			Field biomes = BiomeGenBase.class.getDeclaredField( "biomeList" );
+			biomes.setAccessible( true );
+			temp = (BiomeGenBase[])biomes.get( null );
+			for( int i = 0; i < temp.length; i++ )
+			{
+				temp[i] = null;
+			}
+
+		}
+		catch( NoSuchFieldException ex )
+		{
+			logger.fatal( "Impossible exception!", ex );
+		}
+		catch( SecurityException ex )
+		{
+			logger.fatal( "SecurityException while initializing CubeBiomeGenBase!", ex );
+		}
+		catch( IllegalArgumentException ex )
+		{
+			logger.fatal( "Impossible exception!", ex );
+		}
+		catch( IllegalAccessException ex )
+		{
+			logger.fatal( "Impossible exception!", ex );
+		}
+		
+		biomeList = temp;
+	}
+
 	protected static final CubeBiomeGenBase.Height defaultBiomeRange = new CubeBiomeGenBase.Height( 0.1F, 0.2F );
 	protected static final CubeBiomeGenBase.Height riverRange = new CubeBiomeGenBase.Height( -0.5F, 0.0F );
 	protected static final CubeBiomeGenBase.Height oceanRange = new CubeBiomeGenBase.Height( -1.0F, 0.1F );
@@ -52,9 +94,6 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 	protected static final CubeBiomeGenBase.Height stoneBeachRange = new CubeBiomeGenBase.Height( 0.1F, 0.8F );
 	protected static final CubeBiomeGenBase.Height mushroomIslandRange = new CubeBiomeGenBase.Height( 0.2F, 0.3F );
 	protected static final CubeBiomeGenBase.Height swampRange = new CubeBiomeGenBase.Height( -0.2F, 0.1F );
-
-	/** An array of all the biomes, indexed by biome id. */
-	private static final CubeBiomeGenBase[] biomeList = new CubeBiomeGenBase[256];
 
 	public static final CubeBiomeGenBase ocean = (new BiomeGenOcean( 0 )).setColor( 112 ).setBiomeName( "Ocean" ).setHeightRange( oceanRange );
 	public static final CubeBiomeGenBase plains = (new BiomeGenPlains( 1 )).setColor( 9286496 ).setBiomeName( "Plains" );
@@ -209,7 +248,7 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 
 	public WorldGenAbstractTreeCube checkSpawnTree( Random rand )
 	{
-		return (WorldGenAbstractTreeCube)(rand.nextInt( 10 ) == 0 ? this.worldGeneratorBigTree : this.worldGeneratorTrees);
+		return rand.nextInt( 10 ) == 0 ? this.worldGeneratorBigTree : this.worldGeneratorTrees;
 	}
 
 	/**
@@ -295,7 +334,7 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 
 		//TODO:
 		/*
-		*Default BuildDepth is 8,388,608. the Earth has a radius of ~6,378,100m. Not too far off.
+		 *Default BuildDepth is 8,388,608. the Earth has a radius of ~6,378,100m. Not too far off.
 		 * Let's make this world similar to the earth!
 		 *
 		 *	Crust - 0 to 35km (varies between 5 and 70km thick due to the sea and mountains)
@@ -304,16 +343,16 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		 *	Outer Core - 2890km to 5150km
 		 *	Inner Core - 5150km to 6360km - apparently, the innermost sections of the core could be a plasma! Crazy!
 		 *
-		if( yAbs <= BuildSizeEvent.getBuildDepth() + 16 + rand.nextInt( 16 ) ) // generate bedrock in the very bottom cube and below plus random bedrock in the cube above that
-		{
-			cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.bedrock );
-		}
-		else if( yAbs < -32768 + rand.nextInt( 256 ) ) // generate lava sea under y = -32768, plus a rough surface. this is pretty fucking deep though, so nobody will reach this, probably.
-		{
-			cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.lava );
-		}
-		else
-		*/
+		 if( yAbs <= BuildSizeEvent.getBuildDepth() + 16 + rand.nextInt( 16 ) ) // generate bedrock in the very bottom cube and below plus random bedrock in the cube above that
+		 {
+		 cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.bedrock );
+		 }
+		 else if( yAbs < -32768 + rand.nextInt( 256 ) ) // generate lava sea under y = -32768, plus a rough surface. this is pretty fucking deep though, so nobody will reach this, probably.
+		 {
+		 cube.setBlockForGeneration( xRel, yRel, zRel, Blocks.lava );
+		 }
+		 else
+		 */
 		for( int yAbs = top; yAbs >= bottom; --yAbs )
 		{
 			//Current block
@@ -388,7 +427,7 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 					//no grass below sea level
 					replaceBlocks_setBlock( fillerBlock, 0, cube, xAbs, yAbs, zAbs, canSetBlock );
 				}
-				
+
 				continue;
 			}
 
@@ -466,16 +505,15 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		return this.getClass();
 	}
 
-	public static CubeBiomeGenBase[] getBiomeGenArray()
-	{
-		return biomeList;
-	}
-
+	/*public static CubeBiomeGenBase[] getBiomeGenArray()
+	 {
+	 return biomeList;
+	 }*/
 	public static CubeBiomeGenBase getBiome( int val )
 	{
 		if( val >= 0 && val <= biomeList.length && biomeList[val] != null )
 		{
-			return biomeList[val];
+			return (CubeBiomeGenBase)biomeList[val];
 		}
 		else
 		{
@@ -507,12 +545,12 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		extremeHills.createAndReturnMutated();
 		extremeHillsPlus.createAndReturnMutated();
 		biomeList[megaTaigaHills.biomeID + 128] = biomeList[megaTaiga.biomeID + 128];
-		CubeBiomeGenBase[] array = biomeList;
+		BiomeGenBase[] array = biomeList;
 		int var1 = array.length;
 
 		for( int var2 = 0; var2 < var1; ++var2 )
 		{
-			CubeBiomeGenBase biome = array[var2];
+			CubeBiomeGenBase biome = (CubeBiomeGenBase)array[var2];
 
 			if( biome != null && biome.biomeID < 128 )
 			{

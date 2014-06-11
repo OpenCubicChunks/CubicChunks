@@ -37,11 +37,13 @@ public class ColumnView extends Column
 		m_cubes = new TreeMap<Integer,Cube>();
 	}
 	
+	@Override
 	public LightIndex getLightIndex( )
 	{
 		return m_column.getLightIndex();
 	}
 	
+	@Override
 	public Iterable<Cube> cubes( )
 	{
 		return m_cubes.values();
@@ -52,6 +54,7 @@ public class ColumnView extends Column
 		m_cubes.put( cube.getY(), cube );
 	}
 	
+	@Override
 	public Cube getCube( int y )
 	{
 		return m_cubes.get( y );
@@ -62,6 +65,7 @@ public class ColumnView extends Column
 		throw new UnsupportedOperationException();
 	}
 	
+	@Override
 	public Iterable<Cube> getCubes( int minY, int maxY )
 	{
 		return m_cubes.subMap( minY, true, maxY, true ).values();
@@ -72,6 +76,7 @@ public class ColumnView extends Column
 		throw new UnsupportedOperationException();
 	}
 	
+	@Override
 	public List<RangeInt> getCubeYRanges( )
 	{
 		return getRanges( m_cubes.keySet() );
@@ -263,5 +268,17 @@ public class ColumnView extends Column
 	public void setLightValue( EnumSkyBlock lightType, int localX, int blockY, int localZ, int light )
 	{
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setBiomeArray( byte[] biomes )
+	{
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public byte[] getBiomeArray()
+	{
+		return m_column.getBiomeArray();
 	}
 }

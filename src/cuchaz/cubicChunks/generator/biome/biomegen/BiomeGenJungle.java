@@ -33,17 +33,19 @@ public class BiomeGenJungle extends CubeBiomeGenBase
 		super( id );
 		this.type = type;
 
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+
 		if( type )
 		{
-			this.decorator().treesPerChunk = 2;
+			cfg.treesPerColumn( 2 );
 		}
 		else
 		{
-			this.decorator().treesPerChunk = 50;
+			cfg.treesPerColumn( 50 );
 		}
 
-		this.decorator().grassPerChunk = 25;
-		this.decorator().flowersPerChunk = 4;
+		cfg.grassPerColumn( 25 );
+		cfg.flowersPerColumn( 4 );
 
 		if( !type )
 		{
@@ -54,9 +56,9 @@ public class BiomeGenJungle extends CubeBiomeGenBase
 	}
 
 	@Override
-	public WorldGenAbstractTreeCube checkSpawnTree( Random p_150567_1_ )
+	public WorldGenAbstractTreeCube checkSpawnTree( Random rand )
 	{
-		return (p_150567_1_.nextInt( 10 ) == 0 ? this.worldGeneratorBigTree : (p_150567_1_.nextInt( 2 ) == 0 ? new WorldGenShrubCube( 3, 0 ) : (!this.type && p_150567_1_.nextInt( 3 ) == 0 ? new WorldGenMegaJungleCube( false, 10, 20, 3, 3 ) : new WorldGenTreesCube( false, 4 + p_150567_1_.nextInt( 7 ), 3, 3, true ))));
+		return (rand.nextInt( 10 ) == 0 ? this.worldGeneratorBigTree : (rand.nextInt( 2 ) == 0 ? new WorldGenShrubCube( 3, 0 ) : (!this.type && rand.nextInt( 3 ) == 0 ? new WorldGenMegaJungleCube( false, 10, 20, 3, 3 ) : new WorldGenTreesCube( false, 4 + rand.nextInt( 7 ), 3, 3, true ))));
 	}
 
 	/**
@@ -72,7 +74,7 @@ public class BiomeGenJungle extends CubeBiomeGenBase
 	public void decorate( World world, Random rand, int x, int y, int z )
 	{
 		super.decorate( world, rand, x, y, z );
-		
+
 		DecoratorHelper gen = new DecoratorHelper( world, rand, x, y, z );
 		gen.generateAtRandSurfacePlus32( new WorldGenMelon(), 1, 1 );
 	}

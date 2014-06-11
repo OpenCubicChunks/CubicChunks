@@ -11,6 +11,7 @@
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import cuchaz.cubicChunks.CubeWorldProvider;
+import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeDecorator.DecoratorConfig.DISABLE;
 import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
 import cuchaz.cubicChunks.generator.populator.WorldGeneratorCube;
@@ -39,72 +40,15 @@ import net.minecraft.world.gen.feature.WorldGenerator;
 
 public class CubeBiomeDecorator extends BiomeDecorator
 {
-	/** True if decorator should generate surface lava & water */
-	public boolean generateLakes;
-
-	/** Amount of waterlilys per chunk. */
-	protected int waterlilyPerChunk;
-
-	/**
-	 * The number of trees to attempt to generate per chunk. Up to 10 in forests, none in deserts.
-	 */
-	protected int treesPerChunk;
-
-	/**
-	 * The number of yellow flower patches to generate per chunk. The game generates much less than this number, since
-	 * it attempts to generate them at a random altitude.
-	 */
-	protected int flowersPerChunk;
-
-	/** The amount of tall grass to generate per chunk. */
-	protected int grassPerChunk;
-
-	/**
-	 * The number of dead bushes to generate per chunk. Used in deserts and swamps.
-	 */
-	protected int deadBushPerChunk;
-
-	/**
-	 * The number of extra mushroom patches per chunk. It generates 1/4 this number in brown mushroom patches, and 1/8
-	 * this number in red mushroom patches. These mushrooms go beyond the default base number of mushrooms.
-	 */
-	protected int mushroomsPerChunk;
-
-	/**
-	 * The number of reeds to generate per chunk. Reeds won't generate if the randomly selected placement is unsuitable.
-	 */
-	protected int reedsPerChunk;
-
-	/**
-	 * The number of cactus plants to generate per chunk. Cacti only work on sand.
-	 */
-	protected int cactiPerChunk;
-
-	/**
-	 * The number of sand patches to generate per chunk. Sand patches only generate when part of it is underwater.
-	 */
-	protected int sandPerChunk;
-
-	/**
-	 * The number of sand patches to generate per chunk. Sand patches only generate when part of it is underwater. There
-	 * appear to be two separate fields for this.
-	 */
-	protected int sandPerChunk2;
-
-	/**
-	 * The number of clay patches to generate per chunk. Only generates when part of it is underwater.
-	 */
-	protected int clayPerChunk;
-
-	/** Amount of big mushrooms per chunk */
-	protected int bigMushroomsPerChunk;
-
 	private WorldGenFlowersCube flowerGen;
-	
+
 	protected DecoratorHelper gen;
+
+	private DecoratorConfig cfg;
 
 	public CubeBiomeDecorator()
 	{
+		this.cfg = new DecoratorConfig();
 		this.sandGen = new WorldGenSand( Blocks.sand, 7 );
 		this.gravelAsSandGen = new WorldGenSand( Blocks.gravel, 6 );
 		this.dirtGen = new WorldGenMinable( Blocks.dirt, 32 );
@@ -122,21 +66,31 @@ public class CubeBiomeDecorator extends BiomeDecorator
 		this.reedGen = new WorldGenReed();
 		this.cactusGen = new WorldGenCactus();
 		this.waterlilyGen = new WorldGenWaterlily();
-		this.flowersPerChunk = 2;
-		this.grassPerChunk = 1;
-		this.sandPerChunk = 1;
-		this.sandPerChunk2 = 3;
-		this.clayPerChunk = 1;
-		this.generateLakes = true;
+		this.cfg.flowersPerColumn( 2 );
+		this.cfg.grassPerColumn( 1 );
+		this.cfg.gravelPerColumn( 1 );
+		this.cfg.sandPerColumn( 3 );
+		this.cfg.clayPerColumn( 1 );
+		this.cfg.generateLakes( true );
+	}
+
+	protected DecoratorConfig decoratorConfig()
+	{
+		return this.cfg;
 	}
 
 	public void func_150512_a( World world, Random rand, CubeBiomeGenBase biome, int cubeX, int cubeZ )
 	{
-		throw new RuntimeException( "Can't decorate Columns!" );
+		throw new UnsupportedOperationException( "Can't decorate Columns!" );
 	}
 
 	public void decorate( World world, Random rand, CubeBiomeGenBase biome, int cubeX, int cubeY, int cubeZ )
 	{
+		if( this.cfg == null )
+		{
+			throw new IllegalStateException( "Decorator confiug is null!" );
+		}
+
 		if( this.gen != null )
 		{
 			//In case if we generate something really high and poulate other cubes...
@@ -149,7 +103,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 		}
 		else
 		{
-			this.gen = new DecoratorHelper(world, rand, cubeX, cubeY, cubeZ);
+			this.gen = new DecoratorHelper( world, rand, cubeX, cubeY, cubeZ );
 			this.randomGenerator = rand;
 			this.decorate_do( biome );
 			this.gen = null;
@@ -160,11 +114,11 @@ public class CubeBiomeDecorator extends BiomeDecorator
 	{
 		this.generateOres();
 
-		gen.generateAtSurface( this.sandGen, this.sandPerChunk2, 1 );
-		gen.generateAtSurface( this.clayGen, this.clayPerChunk, 1 );
-		gen.generateAtSurface( this.gravelAsSandGen, this.sandPerChunk, 1 );
+		gen.generateAtSurface( this.sandGen, cfg.sandPerColumn(), 1 );
+		gen.generateAtSurface( this.clayGen, cfg.clayPerColumn(), 1 );
+		gen.generateAtSurface( this.gravelAsSandGen, cfg.gravelPerColumn(), 1 );
 
-		int trees = this.randomGenerator.nextInt( 10 ) == 0 ? this.treesPerChunk + 1 : this.treesPerChunk;
+		int trees = this.randomGenerator.nextInt( 10 ) == 0 ? cfg.treesPerColumn() + 1 : cfg.treesPerColumn();
 
 		for( int i = 0; i < trees; ++i )
 		{
@@ -173,22 +127,22 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			gen.generateAtSurface( wGenTree, 1, 1 );
 		}
 
-		gen.generateAtSurface( this.bigMushroomGen, this.bigMushroomsPerChunk, 1 );
+		gen.generateAtSurface( this.bigMushroomGen, cfg.bigMushroomsPerColumn(), 1 );
 
-		gen.generateFlowers( flowerGen, biome, this.flowersPerChunk, 1 );
+		gen.generateFlowers( flowerGen, biome, cfg.flowersPerColumn(), 1 );
 
-		gen.generateAtRand2xHeight1( biome.getRandomWorldGenForGrass( this.randomGenerator ), this.grassPerChunk, 1 );
-		gen.generateAtRand2xHeight1( new WorldGenDeadBushCube( Blocks.deadbush ), this.deadBushPerChunk, 1 );
+		gen.generateAtRand2xHeight1( biome.getRandomWorldGenForGrass( this.randomGenerator ), cfg.grassPerColumn(), 1 );
+		gen.generateAtRand2xHeight1( new WorldGenDeadBushCube( Blocks.deadbush ), cfg.deadBushPerColumn(), 1 );
 
-		gen.generateAtRand2xHeight2( this.waterlilyGen, this.waterlilyPerChunk, 1 );
+		gen.generateAtRand2xHeight2( this.waterlilyGen, cfg.waterlilyPerColumn(), 1 );
 
-		gen.generateAtSurface( this.mushroomBrownGen, this.mushroomsPerChunk, 0.25D );
+		gen.generateAtSurface( this.mushroomBrownGen, cfg.mushroomsPerColumn(), 0.25D );
 
-		gen.generateAtRand2xHeight3( this.mushroomRedGen, this.mushroomsPerChunk + 1, 0.125D );
+		gen.generateAtRand2xHeight3( this.mushroomRedGen, cfg.mushroomsPerColumn() + 1, 0.125D );
 		gen.generateAtRand2xHeight3( this.mushroomBrownGen, 1, 0.25D );
-		gen.generateAtRand2xHeight3( this.reedGen, reedsPerChunk <= 0 ? 10 : reedsPerChunk + 10, 1 );
+		gen.generateAtRand2xHeight3( this.reedGen, cfg.reedsPerColumn() < 0 ? 10 : cfg.reedsPerColumn() + 10, 1 );
 		gen.generateAtRand2xHeight3( new WorldGenPumpkin(), 1, 1.0D / 32.0D );
-		gen.generateAtRand2xHeight3( this.cactusGen, this.cactiPerChunk, 1 );
+		gen.generateAtRand2xHeight3( this.cactusGen, cfg.cactiPerColumn(), 1 );
 
 		if( this.generateLakes )
 		{
@@ -196,8 +150,6 @@ public class CubeBiomeDecorator extends BiomeDecorator
 			gen.generateLava();
 		}
 	}
-
-	
 
 	/**
 	 * Generates ores in the current chunk
@@ -219,4 +171,153 @@ public class CubeBiomeDecorator extends BiomeDecorator
 		gen.generateAtRandomHeight( 1, probability * 8, this.lapisGen, -0.5D );//0-32
 	}
 
+	protected class DecoratorConfig
+	{
+		protected static final int DISABLE = -999;
+
+		protected final DecoratorConfig generateLakes( boolean value )
+		{
+			CubeBiomeDecorator.this.generateLakes = value;
+			return this;
+		}
+
+		protected final DecoratorConfig waterlilyPerColumn( int value )
+		{
+			CubeBiomeDecorator.this.waterlilyPerChunk = value;
+			return this;
+		}
+
+		protected final DecoratorConfig treesPerColumn( int value )
+		{
+			CubeBiomeDecorator.this.treesPerChunk = value;
+			return this;
+		}
+
+		protected final DecoratorConfig flowersPerColumn( int value )
+		{
+			CubeBiomeDecorator.this.flowersPerChunk = value;
+			return this;
+		}
+
+		protected final DecoratorConfig grassPerColumn( int value )
+		{
+			CubeBiomeDecorator.this.grassPerChunk = value;
+			return this;
+		}
+
+		protected final DecoratorConfig deadBushPerColumn( int value )
+		{
+			CubeBiomeDecorator.this.deadBushPerChunk = value;
+			return this;
+		}
+
+		protected final DecoratorConfig mushroomsPerColumn( int value )
+		{
+			CubeBiomeDecorator.this.mushroomsPerChunk = value;
+			return this;
+		}
+
+		protected final DecoratorConfig reedsPerColumn( int value )
+		{
+			CubeBiomeDecorator.this.reedsPerChunk = value;
+			return this;
+		}
+
+		protected final DecoratorConfig cactiPerColumn( int value )
+		{
+			CubeBiomeDecorator.this.cactiPerChunk = value;
+			return this;
+		}
+
+		protected final DecoratorConfig sandPerColumn( int value )
+		{
+			//the actual sane per chunk is sandPerChunk2
+			CubeBiomeDecorator.this.sandPerChunk2 = value;
+			return this;
+		}
+
+		protected final DecoratorConfig gravelPerColumn( int value )
+		{
+			//Who invented names for these variables!?
+			CubeBiomeDecorator.this.sandPerChunk = value;
+			return this;
+		}
+
+		protected final DecoratorConfig clayPerColumn( int value )
+		{
+			CubeBiomeDecorator.this.clayPerChunk = value;
+			return this;
+		}
+
+		protected final DecoratorConfig bigMushroomsPerColumn( int value )
+		{
+			CubeBiomeDecorator.this.bigMushroomsPerChunk = value;
+			return this;
+		}
+
+		protected final boolean generateLakes()
+		{
+			return CubeBiomeDecorator.this.generateLakes;
+		}
+
+		protected final int waterlilyPerColumn()
+		{
+			return CubeBiomeDecorator.this.waterlilyPerChunk;
+		}
+
+		protected final int treesPerColumn()
+		{
+			return CubeBiomeDecorator.this.treesPerChunk;
+		}
+
+		protected final int flowersPerColumn()
+		{
+			return CubeBiomeDecorator.this.flowersPerChunk;
+		}
+
+		protected final int grassPerColumn()
+		{
+			return CubeBiomeDecorator.this.grassPerChunk;
+		}
+
+		protected final int deadBushPerColumn()
+		{
+			return CubeBiomeDecorator.this.deadBushPerChunk;
+		}
+
+		protected final int mushroomsPerColumn()
+		{
+			return CubeBiomeDecorator.this.mushroomsPerChunk;
+		}
+
+		protected final int reedsPerColumn()
+		{
+			return CubeBiomeDecorator.this.reedsPerChunk;
+		}
+
+		protected final int cactiPerColumn()
+		{
+			return CubeBiomeDecorator.this.cactiPerChunk;
+		}
+
+		protected final int sandPerColumn()
+		{
+			return CubeBiomeDecorator.this.sandPerChunk2;
+		}
+
+		protected final int gravelPerColumn()
+		{
+			return CubeBiomeDecorator.this.sandPerChunk;
+		}
+
+		protected final int clayPerColumn()
+		{
+			return CubeBiomeDecorator.this.clayPerChunk;
+		}
+
+		protected final int bigMushroomsPerColumn()
+		{
+			return CubeBiomeDecorator.this.bigMushroomsPerChunk;
+		}
+	}
 }

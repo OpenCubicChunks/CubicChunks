@@ -27,9 +27,12 @@ public class BiomeGenPlains extends CubeBiomeGenBase
 		this.setTemperatureAndRainfall( 0.8F, 0.4F );
 		this.setHeightRange( PlainsRange );
 		this.spawnableCreatureList.add( new CubeBiomeGenBase.SpawnListEntry( EntityHorse.class, 5, 2, 6 ) );
-		this.decorator().treesPerChunk = -999;
-		this.decorator().flowersPerChunk = 4;
-		this.decorator().grassPerChunk = 10;
+
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+
+		cfg.treesPerColumn( -999 );
+		cfg.flowersPerColumn( 4 );
+		cfg.grassPerColumn( 10 );
 	}
 
 	@Override
@@ -60,15 +63,17 @@ public class BiomeGenPlains extends CubeBiomeGenBase
 		DecoratorHelper gen = new DecoratorHelper( world, rand, x, y, z );
 		double d1 = field_150606_ad.func_151601_a( (x + 8) / 200.0D, (z + 8) / 200.0D );
 
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+		
 		if( d1 < -0.8D )
 		{
-			this.decorator().flowersPerChunk = 15;
-			this.decorator().grassPerChunk = 5;
+			cfg.flowersPerColumn( 15);
+			cfg.grassPerColumn( 5);
 		}
 		else
 		{
-			this.decorator().flowersPerChunk = 4;
-			this.decorator().grassPerChunk = 10;
+			cfg.flowersPerColumn( 4);
+			cfg.grassPerColumn( 10);
 
 			worldGenDoublePlant.setType( 2 );
 			gen.generateAtRandSurfacePlus32( worldGenDoublePlant, 7, 1 );

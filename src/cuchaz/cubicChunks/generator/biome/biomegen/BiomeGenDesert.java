@@ -12,10 +12,10 @@ package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenDesertWellsCube;
-import cuchaz.cubicChunks.util.Coords;
 import java.util.Random;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
+import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeDecorator.DecoratorConfig.DISABLE;
 
 public class BiomeGenDesert extends CubeBiomeGenBase
 {
@@ -25,10 +25,11 @@ public class BiomeGenDesert extends CubeBiomeGenBase
 		this.spawnableCreatureList.clear();
 		this.topBlock = Blocks.sand;
 		this.fillerBlock = Blocks.sand;
-		this.decorator().treesPerChunk = -999;
-		this.decorator().deadBushPerChunk = 2;
-		this.decorator().reedsPerChunk = 50;
-		this.decorator().cactiPerChunk = 10;
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+		cfg.treesPerColumn( DISABLE );
+		cfg.deadBushPerColumn( 2 );
+		cfg.reedsPerColumn( 50 );;
+		cfg.cactiPerColumn( 10 );
 		this.spawnableCreatureList.clear();
 	}
 

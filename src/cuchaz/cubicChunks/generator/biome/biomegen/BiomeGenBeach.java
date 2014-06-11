@@ -11,6 +11,7 @@
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import net.minecraft.init.Blocks;
+import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeDecorator.DecoratorConfig.DISABLE;
 
 public class BiomeGenBeach extends CubeBiomeGenBase
 {
@@ -20,9 +21,10 @@ public class BiomeGenBeach extends CubeBiomeGenBase
 		this.spawnableCreatureList.clear();
 		this.topBlock = Blocks.sand;
 		this.fillerBlock = Blocks.sand;
-		this.decorator().treesPerChunk = -999;
-		this.decorator().deadBushPerChunk = 0;
-		this.decorator().reedsPerChunk = 0;
-		this.decorator().cactiPerChunk = 0;
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+		cfg.treesPerColumn( DISABLE );
+		cfg.deadBushPerColumn( 0 );
+		cfg.reedsPerColumn( 0 );
+		cfg.cactiPerColumn( 0 );
 	}
 }

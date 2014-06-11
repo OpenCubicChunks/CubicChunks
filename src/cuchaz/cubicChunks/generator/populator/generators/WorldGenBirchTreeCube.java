@@ -7,11 +7,11 @@ import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 
-public class WorldGenForestCube extends WorldGenAbstractTreeCube
+public class WorldGenBirchTreeCube extends WorldGenAbstractTreeCube
 {
 	private final boolean addRandomHeight;
 
-	public WorldGenForestCube( boolean doUpdateNotify, boolean addRandomHeight )
+	public WorldGenBirchTreeCube( boolean doUpdateNotify, boolean addRandomHeight )
 	{
 		super( doUpdateNotify );
 		this.addRandomHeight = addRandomHeight;

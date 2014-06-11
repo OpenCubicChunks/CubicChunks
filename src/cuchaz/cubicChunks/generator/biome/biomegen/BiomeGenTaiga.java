@@ -38,18 +38,21 @@ public class BiomeGenTaiga extends CubeBiomeGenBase
 		super( id );
 		this.type = type;
 		this.spawnableCreatureList.add( new CubeBiomeGenBase.SpawnListEntry( EntityWolf.class, 8, 4, 4 ) );
-		this.decorator().treesPerChunk = 10;
+
+		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
+
+		cfg.treesPerColumn( 10 );
 
 		if( type != 1 && type != 2 )
 		{
-			this.decorator().grassPerChunk = 1;
-			this.decorator().mushroomsPerChunk = 1;
+			cfg.grassPerColumn( 1 );
+			cfg.mushroomsPerColumn( 1 );
 		}
 		else
 		{
-			this.decorator().grassPerChunk = 7;
-			this.decorator().deadBushPerChunk = 1;
-			this.decorator().mushroomsPerChunk = 3;
+			cfg.grassPerColumn( 7 );
+			cfg.deadBushPerColumn( 1 );
+			cfg.mushroomsPerColumn( 3 );
 		}
 	}
 
@@ -71,15 +74,15 @@ public class BiomeGenTaiga extends CubeBiomeGenBase
 	@Override
 	public void decorate( World world, Random rand, int x, int y, int z )
 	{
-		DecoratorHelper gen = new DecoratorHelper(world, rand, x, y, z );
-		
+		DecoratorHelper gen = new DecoratorHelper( world, rand, x, y, z );
+
 		if( this.type == 1 || this.type == 2 )
 		{
-			gen.generateAtSurface( wGenBlockBlob, rand.nextInt( 3 ), 1);
+			gen.generateAtSurface( wGenBlockBlob, rand.nextInt( 3 ), 1 );
 		}
 
 		worldGenDoublePlant.setType( 3 );
-		gen.generateAtRandSurfacePlus32( worldGenDoublePlant, 7, 1);
+		gen.generateAtRandSurfacePlus32( worldGenDoublePlant, 7, 1 );
 
 		super.decorate( world, rand, x, y, z );
 	}
