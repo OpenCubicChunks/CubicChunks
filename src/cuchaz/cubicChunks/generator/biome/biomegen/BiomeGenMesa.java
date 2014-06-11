@@ -392,6 +392,6 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 		int randomShift = (int)Math.round( this.colorGenNoise.func_151601_a( x * 1.0D / 512.0D, z * 1.0D / 512.0D ) * 2.0D );
 
 		//colors loop if  we are above 64
-		return this.colorArray[(y + randomShift + 64) % 64];
+		return this.colorArray[(y + randomShift + 64) & 63];
 	}
 }
