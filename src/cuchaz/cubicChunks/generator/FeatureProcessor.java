@@ -49,6 +49,8 @@ public class FeatureProcessor extends CubeProcessor
 	@Override
 	public boolean calculate( Cube cube )
 	{
+		//uncomment line below to disable feature generation
+		//if(true) return true;
 		worldObj = cube.getWorld();
 		
 		// generate world features

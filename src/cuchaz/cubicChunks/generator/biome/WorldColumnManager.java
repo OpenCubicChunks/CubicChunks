@@ -25,6 +25,7 @@ import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.IntCache;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
+import java.util.Arrays;
 
 public class WorldColumnManager extends WorldChunkManager
 {
@@ -150,6 +151,8 @@ public class WorldColumnManager extends WorldChunkManager
         {
             biomes = new CubeBiomeGenBase[width * length];
         }
+		//if(true) {Arrays.fill( biomes, CubeBiomeGenBase.extremeHills ); return biomes ;}
+		
 
         int[] intArray = this.genBiomes.getInts(cubeX, cubeZ, width, length);
 
@@ -199,6 +202,7 @@ public class WorldColumnManager extends WorldChunkManager
         {
             biomes = new CubeBiomeGenBase[width * length];
         }
+		//if(true) {Arrays.fill( biomes, CubeBiomeGenBase.extremeHills ); return biomes ;}
 
         if (flag && width == 16 && length == 16 && (cubeX & 15) == 0 && (cubeZ & 15) == 0)
         {

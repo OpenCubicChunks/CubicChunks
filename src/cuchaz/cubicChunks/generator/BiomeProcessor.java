@@ -55,6 +55,8 @@ public class BiomeProcessor extends CubeProcessor
 	@Override
 	public boolean calculate( Cube cube )
 	{
+		//uncomment line below ti disable dirt/grass generation
+		//if(true) return true;
 		// only continue if the neighboring cubes exist
 		CubeProvider provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
 		if( !CubeProviderTools.cubeAndNeighborsExist(provider, cube.getX(), cube.getY(), cube.getZ() ) )

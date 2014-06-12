@@ -13,6 +13,8 @@ package cuchaz.cubicChunks.generator.builder;
 import libnoiseforjava.module.ModuleBase;
 import libnoiseforjava.module.Perlin;
 import libnoiseforjava.module.ScaleBias;
+import libnoiseforjava.module.ScalePoint;
+import libnoiseforjava.module.Turbulence;
 
 public class BasicBuilder implements IBuilder
 {	
@@ -74,7 +76,15 @@ public class BasicBuilder implements IBuilder
 		scaleBias.setScale(MAX_ELEV);
 		scaleBias.setBias(SEA_LEVEL);
 		
-		finalModule = scaleBias;
+		Turbulence turb = new Turbulence( scaleBias );
+		turb.setPower( 3 );
+		turb.setRoughness( 2 );
+		turb.build();
+
+		ScalePoint scalePoint = new ScalePoint( turb );
+		scalePoint.setScale( 1.4, 1.6, 1.4);
+		
+		finalModule = scalePoint;
 //		finalModule = baseContinentDef_pe0;
 	}
 

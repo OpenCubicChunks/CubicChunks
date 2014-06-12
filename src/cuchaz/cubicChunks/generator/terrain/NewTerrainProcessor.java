@@ -78,10 +78,9 @@ public class NewTerrainProcessor extends CubeProcessor
 //	private static ComplexWorldBuilder builder;
 	private static int seaLevel;
 	
-	// these are the knobs for terrain generation
-	public static final int maxElev = 200; // approximately how high blocks will go
-	private static int amplify = 30000; // amplify factor for the noise array.
-	private static int octaves = 14; // size of features. increasing by 1 approximately doubles the size of features.
+	// these are the knobs for terrain generation 
+	public static final int maxElev = 400; // approximately how high blocks will go
+	private static int octaves = 6; // size of features. increasing by 1 approximately doubles the size of features.
 	
 	public NewTerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
 	{
@@ -116,28 +115,28 @@ public class NewTerrainProcessor extends CubeProcessor
             }
         }
 		
-		builderHigh = new BasicBuilder();
-		builderHigh.setSeed(m_rand.nextInt());
-		builderHigh.setOctaves(octaves);
-		builderHigh.setMaxElev(maxElev);
+		 builderHigh = new BasicBuilder();
+		builderHigh.setSeed( m_rand.nextInt() );
+		builderHigh.setOctaves( octaves );
+		builderHigh.setMaxElev( 1 );
 		builderHigh.build();
-		
+
 		builderLow = new BasicBuilder();
-		builderLow.setSeed(m_rand.nextInt());
-		builderLow.setOctaves(octaves);
-		builderLow.setMaxElev(maxElev);
+		builderLow.setSeed( m_rand.nextInt() );
+		builderLow.setOctaves( octaves );
+		builderLow.setMaxElev( 1 );
 		builderLow.build();
-		
+
 		builderAlpha = new BasicBuilder();
-		builderAlpha.setSeed(m_rand.nextInt());
-		builderAlpha.setOctaves(8);
-		builderAlpha.setMaxElev(maxElev);
+		builderAlpha.setSeed( m_rand.nextInt() );
+		builderAlpha.setOctaves( octaves );
+		builderAlpha.setMaxElev( 1 );
 		builderAlpha.build();
-		
+
 		builderHeight = new BasicBuilder();
-		builderHeight.setSeed(m_rand.nextInt());
-		builderHeight.setOctaves(8);
-		builderHeight.setMaxElev(1);
+		builderHeight.setSeed( m_rand.nextInt() );
+		builderHeight.setOctaves( octaves );
+		builderHeight.setMaxElev( 1 );
 		builderHeight.build();
 	}
 	
@@ -297,40 +296,57 @@ public class NewTerrainProcessor extends CubeProcessor
                 for (int y = 0; y < yNoiseSize; y++)
                 {
                     double output;
-                    double d8;
+                    double heightModifier;
+					double volatilityModifier;
 
                     if (this.riverFound)
                     {
-                        d8 = (this.riverHeight - y) * 12.0D * 128.0D / this.heightCap / this.riverVol;
+                        heightModifier = this.riverHeight;
+						volatilityModifier = this.riverVol;
                     } else
                     {
-                        d8 = (this.heightFactor - y) * 12.0D * 128.0D / this.heightCap / this.volatilityFactor;
+                        heightModifier = this.heightFactor;
+						volatilityModifier = this.volatilityFactor;
                     }
+					
+					//some math to ensure that height is in correct range.
+					heightModifier /= 1 + volatilityModifier;
 
-                    if (d8 > 0.0D)
-                    {
-                        d8 *= 4.0D;
-                    }
+                    double vol1Low = this.noiseArrayLow[x][y][z]/*/ 512.0D * 0.5 biomeConfig.volatility1*/;
+                    double vol2High = this.noiseArrayHigh[x][y][z]/*/ 512.0D  * 0.5 biomeConfig.volatility2*/;
 
-                    final double vol1Low = this.noiseArrayLow[x][y][z] / 512.0D * 0.5/* biomeConfig.volatility1*/;
-                    final double vol2High = this.noiseArrayHigh[x][y][z] / 512.0D  * 0.5/* biomeConfig.volatility2*/;
+                    final double noiseAlpha = (this.noiseArrayAlpha[x][y][z]);
+                 
+					if( vol1Low > vol2High )
+					{
+						double d = vol1Low;
+						vol1Low = vol2High;
+						vol2High = d;
+					}
 
-                    final double noiseAlpha = (this.noiseArrayAlpha[x][y][z] / 10.0D + 1.0D) / 2.0D;
-                    
-                    if (noiseAlpha < 0.0/*biomeConfig.volatilityWeight1*/)
+                    if (noiseAlpha < 0 /*biomeConfig.volatilityWeight1*/)
                     {
                         output = vol1Low;
-                    } else if (noiseAlpha > 1.0/*biomeConfig.volatilityWeight2*/)
+                    } 
+                    else if (noiseAlpha > 1/*biomeConfig.volatilityWeight2*/)
                     {
                         output = vol2High;
-                    } else
+                    } 
+                    else
                     {
                         output = vol1Low + (vol2High - vol1Low) * noiseAlpha;
                     }
+//                    System.out.println("output: " + output);
+//                    System.out.println("heightFactor: " + heightFactor);
+//                    System.out.println("biomeModifier: " + biomeModifier);
 
 //                    if (!biomeConfig.disableNotchHeightControl)
 //                    {
-//                        output += d8;
+					//make height range lower
+					output *= volatilityModifier;
+					//height shift
+					output += heightModifier;
+						
 //
 //                        if (y > maxYSections - 4)
 //                        {
@@ -344,11 +360,10 @@ public class NewTerrainProcessor extends CubeProcessor
 //                    {
 //                        output += biomeConfig.riverHeightMatrix[y];
 //                    } else
-//                    {
-//                        output += biomeConfig.heightMatrix[y];
-//                    }
+                        
+//                        System.out.println("output2: " + output);
 
-                    this.rawTerrainArray[x][y][z] = output;                
+                    this.rawTerrainArray[x][y][z] = output;            
                 }
             }
         }
@@ -362,7 +377,7 @@ public class NewTerrainProcessor extends CubeProcessor
 			{
 				for (int y = 0; y < yNoiseSize; y++)
 				{
-					this.rawTerrainArray[x][y][z] *= amplify;
+					this.rawTerrainArray[x][y][z] *= maxElev;
 				}
 			}
 		}
@@ -480,10 +495,10 @@ public class NewTerrainProcessor extends CubeProcessor
         this.waterLevelRaw[x * xNoiseSize + z] = seaLevel; // (byte) centerBiomeConfig.waterLevelMax;
 
         volatilitySum = volatilitySum * 0.9F + 0.1F;   // Must be != 0
-        heightSum = (heightSum * 4.0F - 1.0F) / 8.0F;  // Silly magic numbers
+        //heightSum = (heightSum * 4.0F - 1.0F) / 8.0F;  // Silly magic numbers
 
         this.volatilityFactor = volatilitySum;
-        this.heightFactor = 16 * (2.0D + heightSum + noiseHeight * 0.2D) / 4.0D;
+        this.heightFactor = heightSum < 0 ? heightSum / 2 : heightSum;//4 * (heightSum + noiseHeight * 0.2D);
     }
 	
 	private double lerp(double a, double min, double max)

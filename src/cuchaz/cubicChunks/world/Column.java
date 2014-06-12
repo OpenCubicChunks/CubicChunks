@@ -265,7 +265,7 @@ public class Column extends Chunk
 				minBlockY = newSkylightY;
 				maxBlockY = oldSkylightY;
 			}
-			assert (minBlockY < maxBlockY): "Values not sorted! " + minBlockY + ", " + maxBlockY;
+			assert (minBlockY <= maxBlockY): "Values not sorted! " + minBlockY + ", " + maxBlockY;
 
 			// update light and signal render update
 			cubeWorld.getLightingManager().computeSkyLightUpdate( this, localX, localZ, minBlockY, maxBlockY );

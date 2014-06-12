@@ -35,6 +35,8 @@ public class PopulationProcessor extends CubeProcessor
 	@Override
 	public boolean calculate( Cube cube )
 	{
+		//uncomment line below to disable populator
+		//if(true) return true;
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();
