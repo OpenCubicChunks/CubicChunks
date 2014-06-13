@@ -11,6 +11,8 @@
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
+import cuchaz.cubicChunks.server.CubeWorldServer;
+import cuchaz.cubicChunks.util.Coords;
 import java.util.Random;
 
 import net.minecraft.block.Block;
@@ -75,33 +77,48 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
 	}
 
 	@Override
-	public void replaceBlocks( World world, Random rand, Cube cube, Cube above, int xAbs, int zAbs, int top, int bottom, int alterationTop, int seaLevel, double depthNoiseValue )
+	public void decorate( World world, Random rand, int cubeX, int cubeY, int cubeZ )
 	{
-		double var9 = field_150606_ad.func_151601_a( (double)xAbs * 0.25D, (double)zAbs * 0.25D );
 
-		if( var9 > 0.0D && bottom <= seaLevel && top >= seaLevel )
+		int seaLevel = ((CubeWorldServer)world).getCubeWorldProvider().getSeaLevel();
+		int minY = Coords.localToBlock( cubeY, 8 );
+		int maxY = minY + 16;
+
+		//moved from replaceBlocks
+		for( int x = 0; x < 16; x++ )
 		{
-			for( int y = top - 1; y >= bottom + 1; --y )
+			int xAbs = Coords.localToBlock( cubeX, x );
+			for( int z = 0; z < 16; z++ )
 			{
-
-				Block block = replaceBlocks_getBlock( cube, above, xAbs, y, zAbs );
-
-				if( block == null || block.getMaterial() != Material.air )
+				int zAbs = Coords.localToBlock( cubeZ, z );
+				
+				double var9 = field_150606_ad.func_151601_a( (double)xAbs * 0.25D, (double)zAbs * 0.25D );
+				if( var9 > 0.0D )
 				{
-					if( y == seaLevel - 1 && block != Blocks.water )
+					for( int y = maxY; y >= minY; --y )
 					{
-						cube.setBlockForGeneration( xAbs, y, zAbs, Blocks.water );
 
-						if( var9 < 0.12D )
+						Block block = world.getBlock( xAbs, y, zAbs );
+
+						if( block == null || block.getMaterial() != Material.air )
 						{
-							cube.setBlockForGeneration( xAbs, y + 1, zAbs, Blocks.waterlily );
+							if( y == seaLevel - 1 && block != Blocks.water )
+							{
+								int yRel = Coords.blockToLocal( y );
+								world.setBlock( xAbs, yRel, zAbs, Blocks.water );
+
+								if( var9 < 0.12D )
+								{
+									world.setBlock( xAbs, yRel + 1, zAbs, Blocks.waterlily );
+								}
+							}
+
+							break;
 						}
 					}
-
-					break;
 				}
 			}
 		}
-		this.replaceBlocks_do( world, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, depthNoiseValue );
+		super.decorate( world, rand, cubeX, cubeY, cubeZ );
 	}
 }

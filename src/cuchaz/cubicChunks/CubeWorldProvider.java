@@ -18,6 +18,7 @@ import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManagerFlat;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.server.CubeWorldServer;
+import net.minecraft.util.Vec3;
 
 public abstract class CubeWorldProvider extends WorldProvider
 {

@@ -14,7 +14,6 @@ import libnoiseforjava.module.ModuleBase;
 import libnoiseforjava.module.Perlin;
 import libnoiseforjava.module.ScaleBias;
 import libnoiseforjava.module.ScalePoint;
-import libnoiseforjava.module.Turbulence;
 
 public class BasicBuilder implements IBuilder
 {	
@@ -35,6 +34,11 @@ public class BasicBuilder implements IBuilder
 	
 	int NUM_OCTAVES = 10;
 	
+	double SCALE_X = 1;
+	double SCALE_Y = 1;
+	double SCALE_Z = 1;
+	
+	double maxValue = Double.NaN;
 	@Override
 	public void setSeed(int seed)
 	{
@@ -61,6 +65,18 @@ public class BasicBuilder implements IBuilder
 		this.NUM_OCTAVES = numOctaves;	
 	}
 
+	public void setScale( double scale )
+	{
+		this.SCALE_X = this.SCALE_Y = this.SCALE_Z = scale;
+	}
+
+	public void setScale( double scaleX, double scaleY, double scaleZ )
+	{
+		this.SCALE_X = scaleX;
+		this.SCALE_Y = scaleY;
+		this.SCALE_Z = scaleZ;
+	}
+
 	@Override
 	public void build()
 	{
@@ -68,7 +84,7 @@ public class BasicBuilder implements IBuilder
 		perlin.setSeed(SEED);
 		perlin.setFrequency(1.0);
 		perlin.setPersistence(0.5);
-		perlin.setLacunarity(2.2089);
+		perlin.setLacunarity(2/*.2089*/);
 		perlin.setOctaveCount(NUM_OCTAVES);
 		perlin.build();
 		
@@ -76,13 +92,8 @@ public class BasicBuilder implements IBuilder
 		scaleBias.setScale(MAX_ELEV);
 		scaleBias.setBias(SEA_LEVEL);
 		
-		Turbulence turb = new Turbulence( scaleBias );
-		turb.setPower( 3 );
-		turb.setRoughness( 2 );
-		turb.build();
-
-		ScalePoint scalePoint = new ScalePoint( turb );
-		scalePoint.setScale( 1.4, 1.6, 1.4);
+		ScalePoint scalePoint = new ScalePoint( scaleBias );
+		scalePoint.setScale( SCALE_X, SCALE_Y, SCALE_Z );
 		
 		finalModule = scalePoint;
 //		finalModule = baseContinentDef_pe0;
@@ -93,5 +104,4 @@ public class BasicBuilder implements IBuilder
 	{
 		return finalModule.getValue(x, y, z);
 	}
-
 }
