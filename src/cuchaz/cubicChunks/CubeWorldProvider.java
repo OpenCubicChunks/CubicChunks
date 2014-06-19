@@ -14,6 +14,7 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.FlatGeneratorInfo;
 import cuchaz.cubicChunks.generator.GeneratorPipeline;
+import cuchaz.cubicChunks.generator.biome.AlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManagerFlat;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
@@ -24,9 +25,9 @@ public abstract class CubeWorldProvider extends WorldProvider
 {
 	@Override
 	protected void registerWorldChunkManager()
-    {
+	{
 		// NOTE: this is the place we plug in different WorldColumnManagers for different dimensions or world types
-		
+
 		if( worldObj.getWorldInfo().getTerrainType() == WorldType.FLAT )
 		{
 			FlatGeneratorInfo info = FlatGeneratorInfo.createFlatGeneratorFromString( worldObj.getWorldInfo().getGeneratorOptions() );
@@ -34,15 +35,19 @@ public abstract class CubeWorldProvider extends WorldProvider
 		}
 		else
 		{
-			worldChunkMgr = new WorldColumnManager( worldObj );
+			if( worldObj instanceof CubeWorldServer )
+				worldChunkMgr = new AlternateWorldColumnManager( (CubeWorldServer)worldObj );
+			else
+				worldChunkMgr = new WorldColumnManager( worldObj );
 		}
-    }
-	
-	public WorldColumnManager getWorldColumnMananger( )
+	}
+
+	public WorldColumnManager getWorldColumnMananger()
 	{
 		return (WorldColumnManager)worldChunkMgr;
 	}
-	
+
 	public abstract GeneratorPipeline createGeneratorPipeline( CubeWorldServer worldServer );
-	public abstract int getSeaLevel( );
+
+	public abstract int getSeaLevel();
 }

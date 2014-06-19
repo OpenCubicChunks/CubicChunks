@@ -77,7 +77,7 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		{
 			logger.fatal( "Impossible exception!", ex );
 		}
-		
+
 		biomeList = temp;
 	}
 
@@ -95,11 +95,67 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 	protected static final CubeBiomeGenBase.Height mushroomIslandRange = new CubeBiomeGenBase.Height( 0.2F, 0.3F );
 	protected static final CubeBiomeGenBase.Height swampRange = new CubeBiomeGenBase.Height( -0.2F, 0.1F );
 
-	public static final CubeBiomeGenBase ocean = (new BiomeGenOcean( 0 )).setColor( 112 ).setBiomeName( "Ocean" ).setHeightRange( oceanRange );
-	public static final CubeBiomeGenBase plains = (new BiomeGenPlains( 1 )).setColor( 9286496 ).setBiomeName( "Plains" );
-	public static final CubeBiomeGenBase desert = (new BiomeGenDesert( 2 )).setColor( 16421912 ).setBiomeName( "Desert" ).setDisableRain().setTemperatureAndRainfall( 2.0F, 0.0F ).setHeightRange( PlainsRange );
-	public static final CubeBiomeGenBase extremeHills = (new BiomeGenHills( 3, false )).setColor( 6316128 ).setBiomeName( "Extreme Hills" ).setHeightRange( extremeHillsRange ).setTemperatureAndRainfall( 0.2F, 0.3F );
-	public static final CubeBiomeGenBase forest = (new BiomeGenForest( 4, 0 )).setColor( 353825 ).setBiomeName( "Forest" );
+	private static AlternateWorldGenData oceanData = new AlternateWorldGenData();
+	private static AlternateWorldGenData desertData = new AlternateWorldGenData();
+	private static AlternateWorldGenData forestData = new AlternateWorldGenData();
+	private static AlternateWorldGenData ehData = new AlternateWorldGenData();
+	private static AlternateWorldGenData plainsData = new AlternateWorldGenData();
+	static{
+		oceanData.maxHeight = 0.05F;
+		oceanData.minHeight = -1;
+		oceanData.minVolatility = 0;
+		oceanData.maxVolatility = 0.5F;//allow underwater mountains
+		oceanData.maxTemp = 1;
+		oceanData.minTemp = 0;
+		oceanData.minRainfall = 0;
+		oceanData.maxRainfall = 1;
+		oceanData.maxHeightDiff = 0.1F;
+		
+		desertData.maxHeight = 1;
+		desertData.minHeight = 0.2F;
+		desertData.minVolatility = 0;
+		desertData.maxVolatility = 1;
+		desertData.maxTemp = 1;
+		desertData.minTemp = 0.8F;
+		desertData.minRainfall = 0;
+		desertData.maxRainfall = 0.2F;
+		desertData.maxHeightDiff = 0.2F;
+		
+		forestData.maxHeight = 0.7F;
+		forestData.minHeight = 0.2F;
+		forestData.minVolatility = 0;
+		forestData.maxVolatility = 0.3F;
+		forestData.maxTemp = 0.7F;
+		forestData.minTemp = 0.3F;
+		forestData.minRainfall = 0.5F;
+		forestData.maxRainfall = 1;
+		forestData.maxHeightDiff = 0.2F;
+		
+		ehData.maxHeight = 1;
+		ehData.minHeight = 0.3F;
+		ehData.minVolatility = 0.1F;
+		ehData.maxVolatility = 1;
+		ehData.maxTemp = 1;
+		ehData.minTemp = 0;
+		ehData.minRainfall = 0;
+		ehData.maxRainfall = 1;
+		ehData.maxHeightDiff = 0.3F;
+		
+		plainsData.maxHeight = 0.5F;
+		plainsData.minHeight = 0.1F;
+		plainsData.minVolatility = 0;
+		plainsData.maxVolatility = 0.1F;
+		plainsData.maxTemp = 1;
+		plainsData.minTemp = 0;
+		plainsData.minRainfall = 0;
+		plainsData.maxRainfall = 1;
+		plainsData.maxHeightDiff = 0.1F;
+	}
+	public static final CubeBiomeGenBase ocean = (new BiomeGenOcean( 0 )).setColor( 112 ).setBiomeName( "Ocean" ).setHeightRange( oceanRange ).setAlternateData( oceanData);
+	public static final CubeBiomeGenBase plains = (new BiomeGenPlains( 1 )).setColor( 9286496 ).setBiomeName( "Plains" ).setAlternateData( plainsData);
+	public static final CubeBiomeGenBase desert = (new BiomeGenDesert( 2 )).setColor( 16421912 ).setBiomeName( "Desert" ).setDisableRain().setTemperatureAndRainfall( 2.0F, 0.0F ).setHeightRange( PlainsRange ).setAlternateData( desertData);
+	public static final CubeBiomeGenBase extremeHills = (new BiomeGenHills( 3, false )).setColor( 6316128 ).setBiomeName( "Extreme Hills" ).setHeightRange( extremeHillsRange ).setTemperatureAndRainfall( 0.2F, 0.3F ).setAlternateData( ehData );
+	public static final CubeBiomeGenBase forest = (new BiomeGenForest( 4, 0 )).setColor( 353825 ).setBiomeName( "Forest" ).setAlternateData( forestData);
 	public static final CubeBiomeGenBase taiga = (new BiomeGenTaiga( 5, 0 )).setColor( 747097 ).setBiomeName( "Taiga" ).func_76733_a( 5159473 ).setTemperatureAndRainfall( 0.25F, 0.8F ).setHeightRange( taigaRange );
 	public static final CubeBiomeGenBase swampland = (new BiomeGenSwamp( 6 )).setColor( 522674 ).setBiomeName( "Swampland" ).func_76733_a( 9154376 ).setHeightRange( swampRange ).setTemperatureAndRainfall( 0.8F, 0.9F );
 	public static final CubeBiomeGenBase river = (new BiomeGenRiver( 7 )).setColor( 255 ).setBiomeName( "River" ).setHeightRange( riverRange );
@@ -168,6 +224,8 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 	/** The average volatility of this biome. Default 0.3. */
 	public float biomeVolatility;
 
+	private AlternateWorldGenData data;
+
 	protected CubeBiomeGenBase( int biomeID )
 	{
 		super( biomeID );
@@ -180,6 +238,12 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 
 		biomeList[biomeID] = this;
 		this.theBiomeDecorator = this.createBiomeDecorator();
+	}
+
+	protected CubeBiomeGenBase setAlternateData( AlternateWorldGenData data )
+	{
+		this.data = data;
+		return this;
 	}
 
 	public CubeBiomeDecorator decorator()
@@ -522,6 +586,11 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		}
 	}
 
+	public AlternateWorldGenData getGenData()
+	{
+		return data;
+	}
+
 	static
 	{
 		plains.createAndReturnMutated();
@@ -578,5 +647,13 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		{
 			return new CubeBiomeGenBase.Height( this.biomeHeight * 0.8F, this.biomeVolatility * 0.6F );
 		}
+	}
+
+	public static class AlternateWorldGenData
+	{
+		public float minVolatility, maxVolatility;
+		public float minHeight, maxHeight, maxHeightDiff;
+		public float minTemp, maxTemp;
+		public float minRainfall, maxRainfall;
 	}
 }

@@ -146,8 +146,8 @@ public class CubeBiomeDecorator extends BiomeDecorator
 
 		if( this.generateLakes )
 		{
-			gen.generateWater();
-			gen.generateLava();
+			//gen.generateWater();
+			//gen.generateLava();
 		}
 	}
 

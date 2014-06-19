@@ -79,7 +79,7 @@ public class NewTerrainProcessor extends CubeProcessor
 	private static int seaLevel;
 	
 	// these are the knobs for terrain generation 
-	public static final int maxElev = 64; // approximately how high blocks will go
+	public static final int maxElev = 1024; // approximately how high blocks will go
 	private static int octaves = 16; // size of features. increasing by 1 approximately doubles the size of features.
 	
 	public NewTerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
@@ -115,33 +115,33 @@ public class NewTerrainProcessor extends CubeProcessor
             }
         }
 		
-		double scaleBase = 0.076234534;
+		double freq = 1 / (4*Math.PI);
 		builderHigh = new BasicBuilder();
 		builderHigh.setSeed( m_rand.nextInt() );
 		builderHigh.setOctaves( octaves );
-		builderHigh.setMaxElev( 1.1 );
-		builderHigh.setScale( scaleBase, scaleBase * 4, scaleBase );
+		builderHigh.setMaxElev( 1 );
+		builderHigh.setFreq( freq, freq * 4, freq );
 		builderHigh.build();
 
 		builderLow = new BasicBuilder();
 		builderLow.setSeed( m_rand.nextInt() );
 		builderLow.setOctaves( octaves );
-		builderLow.setMaxElev( 1.1 );
-		builderLow.setScale( scaleBase, scaleBase * 4, scaleBase );
+		builderLow.setMaxElev( 1 );
+		builderLow.setFreq( freq, freq * 4, freq );
 		builderLow.build();
 
 		builderAlpha = new BasicBuilder();
 		builderAlpha.setSeed( m_rand.nextInt() );
 		builderAlpha.setOctaves( octaves / 2 );
-		builderAlpha.setMaxElev( 1.1 );
-		builderAlpha.setScale( scaleBase, scaleBase * 4, scaleBase );
+		builderAlpha.setMaxElev( 10 );
+		builderAlpha.setFreq( freq, freq * 4, freq );
 		builderAlpha.build();
 
 		builderHeight = new BasicBuilder();
 		builderHeight.setSeed( m_rand.nextInt() );
 		builderHeight.setOctaves( octaves );
-		builderHeight.setMaxElev( 1.1 );
-		builderHeight.setScale( scaleBase / 3 );
+		builderHeight.setMaxElev( 1 );
+		builderHeight.setScale( freq / 3 );
 		builderHeight.build();
 	}
 	
@@ -316,13 +316,10 @@ public class NewTerrainProcessor extends CubeProcessor
 						volatilityModifier = this.volatilityFactor;
 					}
 
-					//some math to ensure that height is in correct range.
-					heightModifier *= 1 - volatilityModifier;
+					double vol1Low = MathHelper.clamp_double( this.noiseArrayLow[x][y][z], -1, 1 );
+					double vol2High = MathHelper.clamp_double( this.noiseArrayHigh[x][y][z], -1, 1 );
 
-					double vol1Low = MathHelper.clamp_double( this.noiseArrayLow[x][y][z], -1, 1 ) /*/ 512.0D * 0.5 biomeConfig.volatility1*/;
-					double vol2High = MathHelper.clamp_double( this.noiseArrayHigh[x][y][z], -1, 1 )/*/ 512.0D  * 0.5 biomeConfig.volatility2*/;
-
-					final double noiseAlpha = this.noiseArrayAlpha[x][y][z] * 10;
+					final double noiseAlpha = this.noiseArrayAlpha[x][y][z];
 
 					if( noiseAlpha < 0 /*biomeConfig.volatilityWeight1*/ )
 					{
@@ -491,8 +488,11 @@ public class NewTerrainProcessor extends CubeProcessor
         //heightSum = (heightSum * 4.0F - 1.0F) / 8.0F;  // Silly magic numbers
 
         this.volatilityFactor = volatilitySum;
-        this.heightFactor = heightSum < 0 ? heightSum / 2 : heightSum;//4 * (heightSum + noiseHeight * 0.2D);
+        this.heightFactor = heightSum < 0 ? heightSum / 4 : heightSum;//4 * (heightSum + noiseHeight * 0.2D);
 		this.heightFactor += noiseHeight * 0.2;
+		
+		//some math to ensure that height is in correct range.
+		heightFactor *= 1 - volatilityFactor;
     }
 	
 	private double lerp(double a, double min, double max)

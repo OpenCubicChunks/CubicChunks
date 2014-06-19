@@ -15,9 +15,11 @@ import cuchaz.cubicChunks.generator.FeatureProcessor;
 import cuchaz.cubicChunks.generator.GeneratorPipeline;
 import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.generator.PopulationProcessor;
+import cuchaz.cubicChunks.generator.terrain.AlternateTerrainProcessor;
 import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
 import cuchaz.cubicChunks.lighting.FirstLightProcessor;
 import cuchaz.cubicChunks.server.CubeWorldServer;
+import net.minecraft.util.Vec3;
 
 public class CubeWorldProviderSurface extends CubeWorldProvider
 {
@@ -44,12 +46,33 @@ public class CubeWorldProviderSurface extends CubeWorldProvider
 	{
 		return 256;
 	}
+	
+	@Override
+	public Vec3 getFogColor( float par1, float par2 )
+	{
+		float r = 1 * 0.7529412F;
+		float g = 1 * 0.84705883F;
+		float b = 1.0F;
+		return this.worldObj.getWorldVec3Pool().getVecFromPool( (double)r, (double)g, (double)b );
+	}
+	
+	@Override
+	public boolean getWorldHasVoidParticles()
+    {
+        return false;
+    }
+	
+	@Override
+	public double getVoidFogYFactor()
+    {
+        return Double.MAX_VALUE;
+    }
 
 	@Override
 	public GeneratorPipeline createGeneratorPipeline( CubeWorldServer worldServer )
 	{
 		GeneratorPipeline generatorPipeline = new GeneratorPipeline( worldServer.getCubeProvider() );
-		generatorPipeline.addStage( GeneratorStage.Terrain, new NewTerrainProcessor( "Terrain", worldServer, 10 ) );
+		generatorPipeline.addStage( GeneratorStage.Terrain, new AlternateTerrainProcessor( "Terrain", worldServer, 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Biomes, new BiomeProcessor( "Biomes", worldServer, 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Features, new FeatureProcessor( "Features", worldServer.getCubeProvider(), 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Population, new PopulationProcessor( "Population", worldServer, 10 ) );
