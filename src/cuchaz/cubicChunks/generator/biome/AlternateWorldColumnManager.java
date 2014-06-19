@@ -1,5 +1,6 @@
 package cuchaz.cubicChunks.generator.biome;
 
+import cuchaz.cubicChunks.generator.biome.biomegen.AlternateBiomeGenTable;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.desert;
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.extremeHills;
@@ -69,7 +70,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		heightBuilder.setSeed( rand.nextInt() );
 		heightBuilder.setOctaves( 4 );
 		heightBuilder.setMaxElev( 2 );
-		heightBuilder.setClamp(-1, 1);
+		heightBuilder.setClamp( -1, 1 );
 		heightBuilder.setScale( freqH );
 		heightBuilder.build();
 
@@ -77,7 +78,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		volatilityBuilder.setSeed( rand.nextInt() );
 		volatilityBuilder.setOctaves( 4 );
 		volatilityBuilder.setMaxElev( 2 );
-		volatilityBuilder.setClamp(-1, 1);
+		volatilityBuilder.setClamp( -1, 1 );
 		volatilityBuilder.setScale( freqV );
 		volatilityBuilder.build();
 
@@ -98,23 +99,6 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		rainfallBuilder.setClamp( 0, 1 );
 		rainfallBuilder.setScale( freqR );
 		rainfallBuilder.build();
-
-		/*HashSet<CubeBiomeGenBase> set = new HashSet<CubeBiomeGenBase>( 256 );
-		 BiomeGenBase[] array = CubeBiomeGenBase.getBiomeGenArray();
-		 for( BiomeGenBase biome: array )
-		 {
-		 if( biome != CubeBiomeGenBase.river && biome != CubeBiomeGenBase.frozenRiver )
-		 {
-		 set.add( (CubeBiomeGenBase)biome );
-		 }
-		 }
-
-		 this.biomeList = new CubeBiomeGenBase[set.size()];*/
-		//biomeList = set.toArray( biomeList );
-		biomeList = new CubeBiomeGenBase[]
-		{
-			ocean, desert, forest, extremeHills, plains
-		};
 	}
 
 	@Override
@@ -432,16 +416,17 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		double minDistSquaredInRange = Double.MAX_VALUE;
 		CubeBiomeGenBase nearestBiomeInRange = null;
 		CubeBiomeGenBase nearestBiome = null;
-		for( CubeBiomeGenBase biome: biomeList )
+		for( AlternateBiomeGenTable.AlternateWorldGenData data: AlternateBiomeGenTable.DATA )
 		{
-			CubeBiomeGenBase.AlternateWorldGenData data = biome.getGenData();
-			
+			if( data.biome == null ) continue;
 			double maxVol = Math.min( (data.maxHeight - data.minHeight) * 0.5 + data.maxHeightDiff, data.maxVolatility );
 			double maxVol2 = Math.min( (data.maxHeight - data.minHeight) * 0.5, data.maxVolatility );
-			
+
 			double maxHeight2 = data.maxHeight + data.maxHeightDiff;
 			double minHeight2 = data.minHeight - data.maxHeightDiff;
 
+			double vAvg = (maxVol + data.minVolatility) * 0.5;
+			
 			double hAvg = (data.maxHeight + data.minHeight) * 0.5;
 
 			double rAvg = (data.maxRainfall + data.minRainfall) * 0.5;
@@ -456,8 +441,8 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 			boolean tempRainfallOK = false;
 			tempRainfallOK |= temp <= data.maxTemp && temp >= data.minTemp && rainfall <= data.maxRainfall && rainfall >= data.minRainfall;
 
-			double volDist = (maxVol - vol) * (maxVol - data.minVolatility);
-			double heightDist = (hAvg - height) * (data.maxHeight - data.minHeight);
+			double volDist = (vAvg - vol) * (maxVol - data.minVolatility);
+			double heightDist = (hAvg - height) * (maxHeight2 - minHeight2);
 			double rainfallDist = (rAvg - rainfall) * (data.maxRainfall - data.minRainfall);
 			double tempDist = (tAvg - temp) * (data.maxTemp - data.minTemp);
 
@@ -468,7 +453,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 				if( distSquared < minDistSquared )
 				{
-					nearestBiome = biome;
+					nearestBiome = data.biome;
 					minDistSquared = distSquared;
 				}
 				continue;
@@ -476,7 +461,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 			if( distSquared < minDistSquaredInRange )
 			{
-				nearestBiomeInRange = biome;
+				nearestBiomeInRange = data.biome;
 				minDistSquaredInRange = distSquared;
 			}
 		}
@@ -484,9 +469,9 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		assert nearestBiome != null;
 
 		/*if( nearestBiomeInRange == null )
-		{
-			System.out.printf( "nearestBiomeInRangeNull, nearestBiome biome: %s\n", nearestBiome.biomeName );
-		}*/
+		 {
+		 System.out.printf( "nearestBiomeInRangeNull, nearestBiome biome: %s\n", nearestBiome.biomeName );
+		 }*/
 		//return nearest biome in range. If it doesn't exist - return nearest biome
 		return nearestBiomeInRange == null ? nearestBiome : nearestBiomeInRange;
 	}
