@@ -352,6 +352,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 						vol = Math.abs( vol );
 						vol *= Math.max( 0, height );
 						vol *= 1 - Math.pow( 1 - rainfall, 4 );
+						//vol = vol * 0.95 + 0.05;//don't do that here
 						if( height < 0 )
 						{
 							height *= 0.987;

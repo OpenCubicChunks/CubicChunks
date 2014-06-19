@@ -255,7 +255,8 @@ public class AlternateTerrainProcessor extends CubeProcessor
 				vol = Math.abs( vol );
 				vol *= Math.max( 0, height );
 				vol *= 1 - Math.pow( 1 - rainfall, 4 );
-				//vol = 0.9 * vol + 0.1;
+				vol = 0.95 * vol + 0.05;//It should be done here
+				
 				if( height < 0 )
 				{
 					height *= 0.987;
