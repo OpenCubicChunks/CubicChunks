@@ -107,7 +107,7 @@ public class AlternateTerrainProcessor extends CubeProcessor
 		builderHigh.setSeed( m_rand.nextInt() );
 		builderHigh.setOctaves( octaves );
 		builderHigh.setMaxElev( 1 );
-		builderHigh.setSeaLevel( seaLevel/maxElev );
+		builderHigh.setSeaLevel( seaLevel / maxElev );
 		builderHigh.setFreq( freqHor, freqVert, freqHor );
 		builderHigh.build();
 
@@ -115,7 +115,7 @@ public class AlternateTerrainProcessor extends CubeProcessor
 		builderLow.setSeed( m_rand.nextInt() );
 		builderLow.setOctaves( octaves );
 		builderLow.setMaxElev( 1 );
-		builderLow.setSeaLevel( seaLevel/maxElev );
+		builderLow.setSeaLevel( seaLevel / maxElev );
 		builderLow.setFreq( freqHor, freqVert, freqHor );
 		builderLow.build();
 
@@ -259,7 +259,7 @@ public class AlternateTerrainProcessor extends CubeProcessor
 				if( height < 0 )
 				{
 					height *= 0.987;
-					height = -Math.pow( height, 4 );
+					height = -Math.pow( -height, MathHelper.clamp_double( -height * 4, 2, 4 ) );
 				}
 
 				for( int y = 0; y < yNoiseSize; y++ )

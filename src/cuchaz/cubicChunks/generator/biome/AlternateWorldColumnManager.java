@@ -8,6 +8,7 @@ import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.fores
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.ocean;
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.plains;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
+import cuchaz.cubicChunks.generator.builder.IBuilder;
 import cuchaz.cubicChunks.generator.noise.cache.NoiseCache;
 import static cuchaz.cubicChunks.generator.terrain.AlternateTerrainProcessor.CUBE_X_SIZE;
 import static cuchaz.cubicChunks.generator.terrain.AlternateTerrainProcessor.CUBE_Z_SIZE;
@@ -17,6 +18,7 @@ import cuchaz.cubicChunks.server.CubeWorldServer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.gen.layer.IntCache;
@@ -27,8 +29,6 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	{
 		0, 4, 8, 11, 15
 	};//this is to avoid additional caches and almost duplicate methids. 1 block diffference shouldn't be noticable, players don't see temperature/rainfall.
-	private NoiseCache volatilityCacheForGen = new NoiseCache();
-	private NoiseCache heightCacheForGen = new NoiseCache();
 	private NoiseCache volatilityCache = new NoiseCache();
 	private NoiseCache heightCache = new NoiseCache();
 	private NoiseCache tempCache = new NoiseCache();
@@ -58,10 +58,10 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 		this.world = world;
 
-		double freqH = 0.007 / (4 * Math.PI);
-		double freqV = 0.007 / (4 * Math.PI);
-		double freqT = 0.007 / (4 * Math.PI);
-		double freqR = 0.007 / (4 * Math.PI);
+		double freqH = 0.003 / (4 * Math.PI);
+		double freqV = 0.003 / (4 * Math.PI);
+		double freqT = 0.001 / (4 * Math.PI);
+		double freqR = 0.001 / (4 * Math.PI);
 
 		Random rand = new Random( world.getSeed() );
 		rand.setSeed( rand.nextLong() ^ rand.nextLong() );
@@ -113,7 +113,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		{
 			for( int z = 0; z < length; z++ )
 			{
-				downfall[x * width + z] = (float)rain[x][z];//should it be z * length + x or something else?
+				downfall[z * length + x] = (float)rain[x][z];//should it be z * length + x or something else?
 			}
 		}
 		return downfall;
@@ -157,26 +157,6 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	public double[][] getHeightArray( int columnX, int columnZ )
 	{
 		return getFromCacheOrGenerate( heightCache, columnX, columnZ );
-	}
-
-	/**
-	 * @param columnX
-	 * @param columnZ
-	 * @return Volatility array, needs to be interpolated (4x4 by default)
-	 */
-	public double[][] getVolArrayForGeneration( int columnX, int columnZ )
-	{
-		return getFromCacheOrGenerate( volatilityCacheForGen, columnX, columnZ );
-	}
-
-	/**
-	 * @param columnX
-	 * @param columnZ
-	 * @return Height array, needs to be interpolated (4x4 by default)
-	 */
-	public double[][] getHeightArrayForGeneration( int columnX, int columnZ )
-	{
-		return getFromCacheOrGenerate( heightCacheForGen, columnX, columnZ );
 	}
 
 	@Override
@@ -226,7 +206,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		{
 			for( int z = 0; z < 4; z++ )
 			{
-				biomes[x * width + z] = biomeArray[genToNormal[x] * 16 + genToNormal[z]];
+				biomes[z * length + x] = biomeArray[genToNormal[z] * 16 + genToNormal[x]];
 			}
 		}
 		return biomes;
@@ -288,7 +268,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		//done automatically by Java GC
 	}
 
-	private double[][] populateArray( double[][] array, BasicBuilder builder, int startX, int startZ, int xSize, int zSize )
+	private double[][] populateArray( double[][] array, IBuilder builder, int startX, int startZ, int xSize, int zSize )
 	{
 		if( array == null || array.length != xSize || array[0].length != zSize )
 		{
@@ -299,24 +279,6 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 			for( int z = 0; z < zSize; z++ )
 			{
 				array[x][z] = builder.getValue( startX + x, 0, startZ + z );
-			}
-		}
-		return array;
-	}
-
-	private double[][] populateArrayForGeneration( double[][] array, BasicBuilder builder, int startX, int startZ, int xSize, int zSize )
-	{
-		if( array == null || array.length != xSize || array[0].length != zSize )
-		{
-			throw new IllegalArgumentException();
-		}
-		int xScale = CUBE_X_SIZE / (xNoiseSize - 1);
-		int zScale = CUBE_Z_SIZE / (zNoiseSize - 1);
-		for( int x = 0; x < xSize; x++ )
-		{
-			for( int z = 0; z < zSize; z++ )
-			{
-				array[x][z] = builder.getValue( (startX + x) * xScale, 0, (startZ + z) * zScale );
 			}
 		}
 		return array;
@@ -336,22 +298,16 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 	private void generateAllNoiseArrays( int columnX, int columnZ )
 	{
-		double[][] volGenArray = new double[xNoiseSize][zNoiseSize];
-		double[][] heightGenArray = new double[xNoiseSize][zNoiseSize];
 		double[][] volArray = new double[16][16];
 		double[][] heightArray = new double[16][16];
 		double[][] tempArray = new double[16][16];
 		double[][] rainfallArray = new double[16][16];
 
-		populateArrayForGeneration( volGenArray, volatilityBuilder, columnX * (xNoiseSize - 1), columnZ * (zNoiseSize - 1), xNoiseSize, zNoiseSize );
-		populateArrayForGeneration( heightGenArray, heightBuilder, columnX * (xNoiseSize - 1), columnZ * (zNoiseSize - 1), xNoiseSize, zNoiseSize );
 		populateArray( volArray, volatilityBuilder, columnX * 16, columnZ * 16, 16, 16 );
 		populateArray( heightArray, heightBuilder, columnX * 16, columnZ * 16, 16, 16 );
 		populateArray( tempArray, tempBuilder, columnX * 16, columnZ * 16, 16, 16 );
 		populateArray( rainfallArray, rainfallBuilder, columnX * 16, columnZ * 16, 16, 16 );
 
-		volatilityCacheForGen.addToCache( columnX, columnZ, volGenArray );
-		heightCacheForGen.addToCache( columnX, columnZ, heightGenArray );
 		volatilityCache.addToCache( columnX, columnZ, volArray );
 		heightCache.addToCache( columnX, columnZ, heightArray );
 		tempCache.addToCache( columnX, columnZ, tempArray );
@@ -399,11 +355,11 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 						if( height < 0 )
 						{
 							height *= 0.987;
-							height = -Math.pow( height, 4 );//height should be negative, but height^4 is always positive
+							height = -Math.pow( -height, MathHelper.clamp_double( -height * 4, 2, 4 ) );
 						}
 
 						CubeBiomeGenBase biome = getBiomeForValues( vol, height, temp, rainfall );
-						biomes[xRel * width + zRel] = biome;
+						biomes[zRel * length + xRel] = biome;
 					}
 				}
 			}
@@ -419,30 +375,28 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		for( AlternateBiomeGenTable.AlternateWorldGenData data: AlternateBiomeGenTable.DATA )
 		{
 			if( data.biome == null ) continue;
-			double maxVol = Math.min( (data.maxHeight - data.minHeight) * 0.5 + data.maxHeightDiff, data.maxVolatility );
-			double maxVol2 = Math.min( (data.maxHeight - data.minHeight) * 0.5, data.maxVolatility );
+			double maxVol = Math.min( (data.maxHeightWithVol - data.minHeightWithVol) * 0.5, data.maxVolatility );
 
-			double maxHeight2 = data.maxHeight + data.maxHeightDiff;
-			double minHeight2 = data.minHeight - data.maxHeightDiff;
+			double heightWithVolatilityMin = height - vol;
+			double heightWithVolatilityMax = height + vol;
 
 			double vAvg = (maxVol + data.minVolatility) * 0.5;
-			
-			double hAvg = (data.maxHeight + data.minHeight) * 0.5;
+
+			double hAvg = (data.maxHeightWithVol + data.minHeightWithVol) * 0.5;
 
 			double rAvg = (data.maxRainfall + data.minRainfall) * 0.5;
 
 			double tAvg = (data.maxTemp + data.minTemp) * 0.5;
 
 			boolean heightVolatilityOK = false;
-			heightVolatilityOK |= vol <= maxVol && height <= data.maxHeight && height >= data.minHeight;
-			heightVolatilityOK |= height <= maxHeight2 && height >= minHeight2 && vol <= maxVol2;
-			heightVolatilityOK &= vol >= data.minVolatility;
+			heightVolatilityOK |= vol <= maxVol && vol >= data.minVolatility
+				&& heightWithVolatilityMax <= data.maxHeightWithVol && heightWithVolatilityMin >= data.minHeightWithVol;
 
 			boolean tempRainfallOK = false;
 			tempRainfallOK |= temp <= data.maxTemp && temp >= data.minTemp && rainfall <= data.maxRainfall && rainfall >= data.minRainfall;
 
 			double volDist = (vAvg - vol) * (maxVol - data.minVolatility);
-			double heightDist = (hAvg - height) * (maxHeight2 - minHeight2);
+			double heightDist = (hAvg - height) * (data.maxHeightWithVol - data.minHeightWithVol);
 			double rainfallDist = (rAvg - rainfall) * (data.maxRainfall - data.minRainfall);
 			double tempDist = (tAvg - temp) * (data.maxTemp - data.minTemp);
 

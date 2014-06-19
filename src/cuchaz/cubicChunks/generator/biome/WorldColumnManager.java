@@ -88,7 +88,7 @@ public class WorldColumnManager extends WorldChunkManager
      * Returns a list of rainfall values for the specified blocks. Args: listToReuse, x, z, width, length.
      */
     @Override
-    public float[] getRainfall(float[] downfall, int cubeX, int cubeZ, int width, int length)
+    public float[] getRainfall(float[] downfall, int blockX, int blockZ, int width, int length)
     {
         IntCache.resetIntCache();
 
@@ -97,7 +97,7 @@ public class WorldColumnManager extends WorldChunkManager
             downfall = new float[width * length];
         }
 
-        int[] var6 = this.biomeIndexLayer.getInts(cubeX, cubeZ, width, length);
+        int[] var6 = this.biomeIndexLayer.getInts(blockX, blockZ, width, length);
 
         for (int i = 0; i < width * length; ++i)
         {
@@ -119,8 +119,8 @@ public class WorldColumnManager extends WorldChunkManager
                 CrashReportCategory var10 = var9.makeCategory("DownfallBlock");
                 var10.addCrashSection("biome id", Integer.valueOf(i));
                 var10.addCrashSection("downfalls[] size", Integer.valueOf(downfall.length));
-                var10.addCrashSection("x", Integer.valueOf(cubeX));
-                var10.addCrashSection("z", Integer.valueOf(cubeZ));
+                var10.addCrashSection("x", Integer.valueOf(blockX));
+                var10.addCrashSection("z", Integer.valueOf(blockZ));
                 var10.addCrashSection("w", Integer.valueOf(width));
                 var10.addCrashSection("h", Integer.valueOf(length));
                 throw new ReportedException(var9);
@@ -143,7 +143,7 @@ public class WorldColumnManager extends WorldChunkManager
      * Returns an array of biomes for the location input.
      */
     @Override
-    public BiomeGenBase[] getBiomesForGeneration( BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length )
+    public BiomeGenBase[] getBiomesForGeneration( BiomeGenBase[] biomes, int xGenBlock, int zGenBlock, int width, int length )
     {
         IntCache.resetIntCache();
 
@@ -154,7 +154,7 @@ public class WorldColumnManager extends WorldChunkManager
 		//if(true) {Arrays.fill( biomes, CubeBiomeGenBase.extremeHills ); return biomes ;}
 		
 
-        int[] intArray = this.genBiomes.getInts(cubeX, cubeZ, width, length);
+        int[] intArray = this.genBiomes.getInts(xGenBlock, zGenBlock, width, length);
 
         try
         {
@@ -171,8 +171,8 @@ public class WorldColumnManager extends WorldChunkManager
             CrashReport var8 = CrashReport.makeCrashReport(var10, "Invalid Biome id");
             CrashReportCategory var9 = var8.makeCategory("RawBiomeBlock");
             var9.addCrashSection("biomes[] size", Integer.valueOf(biomes.length));
-            var9.addCrashSection("x", Integer.valueOf(cubeX));
-            var9.addCrashSection("z", Integer.valueOf(cubeZ));
+            var9.addCrashSection("x", Integer.valueOf(xGenBlock));
+            var9.addCrashSection("z", Integer.valueOf(zGenBlock));
             var9.addCrashSection("w", Integer.valueOf(width));
             var9.addCrashSection("h", Integer.valueOf(length));
             throw new ReportedException(var8);
@@ -194,7 +194,7 @@ public class WorldColumnManager extends WorldChunkManager
      * don't check biomeCache to avoid infinite loop in BiomeCacheBlock)
      */
     @Override
-    public BiomeGenBase[] getBiomeGenAt( BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length, boolean flag)
+    public BiomeGenBase[] getBiomeGenAt( BiomeGenBase[] biomes, int blockX, int blockZ, int width, int length, boolean flag)
     {
         IntCache.resetIntCache();
 
@@ -204,15 +204,15 @@ public class WorldColumnManager extends WorldChunkManager
         }
 		//if(true) {Arrays.fill( biomes, CubeBiomeGenBase.extremeHills ); return biomes ;}
 
-        if (flag && width == 16 && length == 16 && (cubeX & 15) == 0 && (cubeZ & 15) == 0)
+        if (flag && width == 16 && length == 16 && (blockX & 15) == 0 && (blockZ & 15) == 0)
         {
-            CubeBiomeGenBase[] cachedBiomes = this.biomeCache.getCachedBiomes(cubeX, cubeZ);
+            CubeBiomeGenBase[] cachedBiomes = this.biomeCache.getCachedBiomes(blockX, blockZ);
             System.arraycopy(cachedBiomes, 0, biomes, 0, width * length);
             return biomes;
         }
         else
         {
-            int[] aInt = this.biomeIndexLayer.getInts(cubeX, cubeZ, width, length);
+            int[] aInt = this.biomeIndexLayer.getInts(blockX, blockZ, width, length);
 
             for (int i = 0; i < width * length; ++i)
             {
