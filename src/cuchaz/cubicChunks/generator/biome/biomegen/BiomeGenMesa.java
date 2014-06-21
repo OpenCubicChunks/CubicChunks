@@ -12,6 +12,7 @@ package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeDecorator.DecoratorConfig.DISABLE;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
+import cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig;
 import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
 import cuchaz.cubicChunks.util.HeightHelper;
 import cuchaz.cubicChunks.world.Cube;
@@ -214,7 +215,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 					else if( yAbs > HeightHelper.getScaledHeight( 66 ) + depth )
 					{
 						metadata = 16;
-						if( yAbs >= seaLevel + 1 && yAbs <= NewTerrainProcessor.maxElev )
+						if( yAbs >= seaLevel + 1 && yAbs <= GlobalGeneratorConfig.maxElev )
 						{
 							if( !noTopBlock )
 							{

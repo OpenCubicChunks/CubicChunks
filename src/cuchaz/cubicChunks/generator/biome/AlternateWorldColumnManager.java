@@ -2,18 +2,9 @@ package cuchaz.cubicChunks.generator.biome;
 
 import cuchaz.cubicChunks.generator.biome.biomegen.AlternateBiomeGenTable;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
-import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.desert;
-import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.extremeHills;
-import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.forest;
-import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.ocean;
-import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.plains;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
 import cuchaz.cubicChunks.generator.builder.IBuilder;
-import cuchaz.cubicChunks.generator.noise.cache.NoiseCache;
-import static cuchaz.cubicChunks.generator.terrain.AlternateTerrainProcessor.CUBE_X_SIZE;
-import static cuchaz.cubicChunks.generator.terrain.AlternateTerrainProcessor.CUBE_Z_SIZE;
-import static cuchaz.cubicChunks.generator.terrain.AlternateTerrainProcessor.xNoiseSize;
-import static cuchaz.cubicChunks.generator.terrain.AlternateTerrainProcessor.zNoiseSize;
+import cuchaz.cubicChunks.cache.CacheMap;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,24 +16,13 @@ import net.minecraft.world.gen.layer.IntCache;
 
 public class AlternateWorldColumnManager extends WorldColumnManager
 {
-	private int genToNormal[] =
-	{
-		0, 4, 8, 11, 15
-	};//this is to avoid additional caches and almost duplicate methids. 1 block diffference shouldn't be noticable, players don't see temperature/rainfall.
-	private NoiseCache volatilityCache = new NoiseCache();
-	private NoiseCache heightCache = new NoiseCache();
-	private NoiseCache tempCache = new NoiseCache();
-	private NoiseCache rainfallCache = new NoiseCache();
+	//Cache for noise fields.
+	private final CacheMap<Long, NoiseArrays> noiseCache = new CacheMap<Long, NoiseArrays>( 1024, 1100 );
 
-	private CubeWorldServer world;
-
+	//Builders
 	private final BasicBuilder volatilityBuilder, heightBuilder, tempBuilder, rainfallBuilder;
-
-	private BiomeCache biomeCache;
-
-	private List<CubeBiomeGenBase> biomesToSpawnIn;
-
-	private CubeBiomeGenBase[] biomeList;
+	private final BiomeCache biomeCache;
+	private final List<CubeBiomeGenBase> biomesToSpawnIn;
 
 	public AlternateWorldColumnManager( CubeWorldServer world )
 	{
@@ -56,8 +36,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		this.biomesToSpawnIn.add( CubeBiomeGenBase.jungle );
 		this.biomesToSpawnIn.add( CubeBiomeGenBase.jungleHills );
 
-		this.world = world;
-
+		//this.world = world;
 		double freqH = 0.003 / (4 * Math.PI);
 		double freqV = 0.003 / (4 * Math.PI);
 		double freqT = 0.001 / (4 * Math.PI);
@@ -113,7 +92,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		{
 			for( int z = 0; z < length; z++ )
 			{
-				downfall[z * length + x] = (float)rain[x][z];//should it be z * length + x or something else?
+				downfall[z * length + x] = (float)rain[x][z];
 			}
 		}
 		return downfall;
@@ -126,7 +105,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	 */
 	public double[][] getTempArray( int columnX, int columnZ )
 	{
-		return getFromCacheOrGenerate( tempCache, columnX, columnZ );
+		return getFromCacheOrGenerate( noiseCache, NoiseArrays.Type.TEMPERATURE, columnX, columnZ );
 	}
 
 	/**
@@ -136,7 +115,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	 */
 	public double[][] getRainfallArray( int columnX, int columnZ )
 	{
-		return getFromCacheOrGenerate( rainfallCache, columnX, columnZ );
+		return getFromCacheOrGenerate( noiseCache, NoiseArrays.Type.RAINFALL, columnX, columnZ );
 	}
 
 	/**
@@ -146,7 +125,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	 */
 	public double[][] getVolArray( int columnX, int columnZ )
 	{
-		return getFromCacheOrGenerate( volatilityCache, columnX, columnZ );
+		return getFromCacheOrGenerate( noiseCache, NoiseArrays.Type.VOLATILITY, columnX, columnZ );
 	}
 
 	/**
@@ -156,7 +135,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	 */
 	public double[][] getHeightArray( int columnX, int columnZ )
 	{
-		return getFromCacheOrGenerate( heightCache, columnX, columnZ );
+		return getFromCacheOrGenerate( noiseCache, NoiseArrays.Type.HEIGHT, columnX, columnZ );
 	}
 
 	@Override
@@ -168,7 +147,6 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		{
 			biomes = new CubeBiomeGenBase[width * length];
 		}
-		//if(true) {Arrays.fill( biomes, CubeBiomeGenBase.extremeHills ); return biomes ;}
 
 		if( fromCache && width == 16 && length == 16 && (blockX & 15) == 0 && (blockZ & 15) == 0 )
 		{
@@ -187,35 +165,15 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	@Override
 	public BiomeGenBase[] getBiomesForGeneration( BiomeGenBase[] biomes, int xGenBlock, int zGenBlock, int width, int length )
 	{
-		IntCache.resetIntCache();
-
-		if( biomes == null || biomes.length < width * length )
-		{
-			biomes = new CubeBiomeGenBase[width * length];
-		}
-		//if(true) {Arrays.fill( biomes, CubeBiomeGenBase.extremeHills ); return biomes ;}
-		int xBlock = xGenBlock * 4;
-		int zBlock = zGenBlock * 4;
-
-		assert ((xBlock & 0xf) == 0) && ((zBlock & 0xf) == 0);
-
-		BiomeGenBase biomeArray[] = new BiomeGenBase[16 * 16];
-		biomeArray = getBiomeGenAt( biomeArray, xBlock, zBlock, 16, 16, true );
-
-		for( int x = 0; x < 4; x++ )
-		{
-			for( int z = 0; z < 4; z++ )
-			{
-				biomes[z * length + x] = biomeArray[genToNormal[z] * 16 + genToNormal[x]];
-			}
-		}
-		return biomes;
+		//this is unuses=d
+		throw new UnsupportedOperationException( "AlternateWrldColumnManager.getBiomesForGeneration()" );
 	}
 
 	@Override
 	public boolean areBiomesViable( int x, int par2, int par3, List list )
 	{
-		return false;//if it doesn't appear to be used...
+		//This is probably unused. No crash so far...
+		throw new UnsupportedOperationException( "AlternateWrldColumnManager.areBiomesViable()" );
 	}
 
 	@Override
@@ -265,7 +223,8 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	@Override
 	public void cleanupCache()
 	{
-		//done automatically by Java GC
+		//For noise arraysdone automatically by Java GC
+		biomeCache.cleanupCache();
 	}
 
 	private double[][] populateArray( double[][] array, IBuilder builder, int startX, int startZ, int xSize, int zSize )
@@ -284,34 +243,34 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		return array;
 	}
 
-	private double[][] getFromCacheOrGenerate( NoiseCache cache, int columnX, int columnZ )
+	private double[][] getFromCacheOrGenerate( CacheMap<Long, NoiseArrays> cache, NoiseArrays.Type type, int columnX, int columnZ )
 	{
-		double[][] array = cache.getFromCache( columnX, columnZ );
-		if( array == null )
+		NoiseArrays arrays = cache.get( xzToLong( columnX, columnZ ) );
+		if( arrays == null )
 		{
 			generateAllNoiseArrays( columnX, columnZ );
-			array = cache.getFromCache( columnX, columnZ );
-			assert array != null;
+			arrays = cache.get( xzToLong( columnX, columnZ ) );
+			assert arrays != null;
 		}
-		return array;
+		return arrays.get( type );
 	}
 
 	private void generateAllNoiseArrays( int columnX, int columnZ )
 	{
-		double[][] volArray = new double[16][16];
-		double[][] heightArray = new double[16][16];
-		double[][] tempArray = new double[16][16];
-		double[][] rainfallArray = new double[16][16];
+		//yes, length 17. This is correct.
+		double[][] volArray = new double[17][17];
+		double[][] heightArray = new double[17][17];
+		double[][] tempArray = new double[17][17];
+		double[][] rainfallArray = new double[17][17];
 
-		populateArray( volArray, volatilityBuilder, columnX * 16, columnZ * 16, 16, 16 );
-		populateArray( heightArray, heightBuilder, columnX * 16, columnZ * 16, 16, 16 );
-		populateArray( tempArray, tempBuilder, columnX * 16, columnZ * 16, 16, 16 );
-		populateArray( rainfallArray, rainfallBuilder, columnX * 16, columnZ * 16, 16, 16 );
+		//and multimply position by 16, not 17. This is correct too. In AlternateTerrainProcessor we need values at 0, 4, 8, 12 and 16. Value at 16 is 17-th array element.
+		populateArray( volArray, volatilityBuilder, columnX * 16, columnZ * 16, 17, 17 );
+		populateArray( heightArray, heightBuilder, columnX * 16, columnZ * 16, 17, 17 );
+		populateArray( tempArray, tempBuilder, columnX * 16, columnZ * 16, 17, 17 );
+		populateArray( rainfallArray, rainfallBuilder, columnX * 16, columnZ * 16, 17, 17 );
 
-		volatilityCache.addToCache( columnX, columnZ, volArray );
-		heightCache.addToCache( columnX, columnZ, heightArray );
-		tempCache.addToCache( columnX, columnZ, tempArray );
-		rainfallCache.addToCache( columnX, columnZ, rainfallArray );
+		NoiseArrays arrays = new NoiseArrays( volArray, heightArray, tempArray, rainfallArray );
+		noiseCache.put( xzToLong( columnX, columnZ ), arrays );
 	}
 
 	private void generateBiomes( BiomeGenBase[] biomes, int blockX, int blockZ, int width, int length )
@@ -342,22 +301,16 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 						{
 							continue;
 						}
+
 						double vol = volArray[xRel][zRel];
 						double height = heightArray[xRel][zRel];
 						double temp = tempArray[xRel][zRel];
 						double rainfall = rainfallArray[xRel][zRel];
 
-						rainfall *= temp;
+						vol = getRealVolatility( vol, height, rainfall, temp );
+						height = getRealHeight( height );
 
-						vol = Math.abs( vol );
-						vol *= Math.max( 0, height );
-						vol *= 1 - Math.pow( 1 - rainfall, 4 );
-						//vol = vol * 0.95 + 0.05;//don't do that here
-						if( height < 0 )
-						{
-							height *= 0.987;
-							height = -Math.pow( -height, MathHelper.clamp_double( -height * 4, 2, 4 ) );
-						}
+						rainfall *= temp;
 
 						CubeBiomeGenBase biome = getBiomeForValues( vol, height, temp, rainfall );
 						biomes[zRel * length + xRel] = biome;
@@ -371,53 +324,66 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	{
 		double minDistSquared = Double.MAX_VALUE;
 		double minDistSquaredInRange = Double.MAX_VALUE;
+
 		CubeBiomeGenBase nearestBiomeInRange = null;
 		CubeBiomeGenBase nearestBiome = null;
-		for( AlternateBiomeGenTable.AlternateWorldGenData data: AlternateBiomeGenTable.DATA )
-		{
-			if( data.biome == null ) continue;
-			double maxVol = Math.min( (data.maxHeightWithVol - data.minHeightWithVol) * 0.5, data.maxVolatility );
 
+		//iterate over all biomes and find the "nearest" biome
+		for( AlternateBiomeGenTable.AlternateWorldGenData data: AlternateBiomeGenTable.BIOMES )
+		{
+			//max volatility for this biome. If we include volatility in height checks volatility can naver be higher that avgHeight - minHeight ( = 0.5*(maxHeight-minHeight) )
+			double maxVol = data.entendedHeightVolatilityChecks ? Math.min( (data.maxHeight - data.minHeight) * 0.5, data.maxVolatility ) : data.maxVolatility;
+
+			//min and max height if we include volatility in height checks
 			double heightWithVolatilityMin = height - vol;
 			double heightWithVolatilityMax = height + vol;
 
+			//average biome volatility, height, rainfall and temperature
 			double vAvg = (maxVol + data.minVolatility) * 0.5;
-
-			double hAvg = (data.maxHeightWithVol + data.minHeightWithVol) * 0.5;
-
+			double hAvg = (data.maxHeight + data.minHeight) * 0.5;
 			double rAvg = (data.maxRainfall + data.minRainfall) * 0.5;
-
 			double tAvg = (data.maxTemp + data.minTemp) * 0.5;
 
+			//check if volatility and height are in correct range
 			boolean heightVolatilityOK = false;
-			heightVolatilityOK |= vol <= maxVol && vol >= data.minVolatility
-				&& heightWithVolatilityMax <= data.maxHeightWithVol && heightWithVolatilityMin >= data.minHeightWithVol;
+			//are we between min and max height (including volatility)?
+			heightVolatilityOK |= heightWithVolatilityMax <= data.maxHeight && heightWithVolatilityMin >= data.minHeight;
+			//Should we exclude volatility from height checks? So check only height ranges
+			heightVolatilityOK |= !data.entendedHeightVolatilityChecks && height <= data.maxHeight && height >= data.minHeight;
+			//but always check volatility
+			heightVolatilityOK &= vol <= maxVol && vol >= data.minVolatility;
 
+			//are temperatire and rainfall in correct range?
 			boolean tempRainfallOK = false;
 			tempRainfallOK |= temp <= data.maxTemp && temp >= data.minTemp && rainfall <= data.maxRainfall && rainfall >= data.minRainfall;
 
+			//calculate "distance" from average values
+			//if biome range is small, distance also should be small so that if biome with broad range fully overlaps biome with tiny range the second biome will be generated.
+
 			double volDist = (vAvg - vol) * (maxVol - data.minVolatility);
-			double heightDist = (hAvg - height) * (data.maxHeightWithVol - data.minHeightWithVol);
+			double heightDist = (hAvg - height) * (data.maxHeight - data.minHeight);
 			double rainfallDist = (rAvg - rainfall) * (data.maxRainfall - data.minRainfall);
 			double tempDist = (tAvg - temp) * (data.maxTemp - data.minTemp);
 
+			//now calculate distSquared
 			double distSquared = volDist * volDist + heightDist * heightDist + rainfallDist * rainfallDist + tempDist * tempDist;
 
-			if( !heightVolatilityOK || !tempRainfallOK )
+			//Are we in correct value range for the biome?
+			if( heightVolatilityOK && tempRainfallOK )
 			{
-
-				if( distSquared < minDistSquared )
+				//is it the "nearest" biome so far?
+				if( distSquared < minDistSquaredInRange )
 				{
-					nearestBiome = data.biome;
-					minDistSquared = distSquared;
+					nearestBiomeInRange = data.biome;
+					minDistSquaredInRange = distSquared;
 				}
-				continue;
 			}
 
-			if( distSquared < minDistSquaredInRange )
+			//In case if there is no biome in correct height range we choose the nearest one. So check if it's the nearesat biome so far.
+			if( distSquared < minDistSquared )
 			{
-				nearestBiomeInRange = data.biome;
-				minDistSquaredInRange = distSquared;
+				nearestBiome = data.biome;
+				minDistSquared = distSquared;
 			}
 		}
 
@@ -429,5 +395,49 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		 }*/
 		//return nearest biome in range. If it doesn't exist - return nearest biome
 		return nearestBiomeInRange == null ? nearestBiome : nearestBiomeInRange;
+	}
+
+	public double getRealVolatility( double volatilityRaw, double heightRaw, double rainfallRaw, double temperatureRaw )
+	{
+		return Math.min( Math.abs( heightRaw ), (Math.abs( volatilityRaw ) * 0.95D + 0.05) * Math.sqrt( Math.abs( heightRaw ) ) ) * (1 - Math.pow( 1 - rainfallRaw * temperatureRaw, 4 ));
+	}
+
+	public double getRealHeight( double heightRaw )
+	{
+		return heightRaw >= 0 ? heightRaw : -Math.pow( -0.987 * heightRaw, MathHelper.clamp_double( -heightRaw * 4, 2, 4 ) );
+	}
+
+	private static Long xzToLong( int x, int z )
+	{
+		return (x & 0xFFFFFFFFl) | ((z & 0xFFFFFFFFl) << 32);
+	}
+
+	private static class NoiseArrays
+	{
+		private final List<double[][]> arrays = new ArrayList<double[][]>( 4 );
+
+		NoiseArrays( double[][] volatility, double[][] height, double[][] temperature, double[][] rainfall )
+		{
+			//add 4 null elements to set them later.
+			while( arrays.size() < 4 ) arrays.add( null );
+
+			arrays.set( Type.VOLATILITY.ordinal(), volatility );
+			arrays.set( Type.HEIGHT.ordinal(), height );
+			arrays.set( Type.TEMPERATURE.ordinal(), temperature );
+			arrays.set( Type.RAINFALL.ordinal(), rainfall );
+		}
+
+		double[][] get( Type type )
+		{
+			return arrays.get( type.ordinal() );
+		}
+
+		enum Type
+		{
+			VOLATILITY,
+			HEIGHT,
+			TEMPERATURE,
+			RAINFALL
+		}
 	}
 }

@@ -3,6 +3,7 @@ package cuchaz.cubicChunks.generator.populator;
 import cuchaz.cubicChunks.CubeWorldProvider;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenFlowersCube;
+import cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig;
 import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
 import cuchaz.cubicChunks.util.Coords;
 import java.util.Random;
@@ -31,7 +32,7 @@ public class DecoratorHelper
 		this.chunk_Z = z;
 		this.rand = rand;
 		this.seaLevel = ((CubeWorldProvider)world.provider).getSeaLevel();
-		this.maxTerrainY = MathHelper.floor_double( NewTerrainProcessor.maxElev );
+		this.maxTerrainY = MathHelper.floor_double( GlobalGeneratorConfig.maxElev );
 	}
 
 	/**

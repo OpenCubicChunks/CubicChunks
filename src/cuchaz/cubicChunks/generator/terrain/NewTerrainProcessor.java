@@ -26,16 +26,14 @@ import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Cube;
 
+import static cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig.*;
+
 public class NewTerrainProcessor extends CubeProcessor
 {
 	private static final int CUBE_X_SIZE = 16;
 	private static final int CUBE_Y_SIZE = 16;
 	private static final int CUBE_Z_SIZE = 16;
-	
-    private static final int xNoiseSize = CUBE_X_SIZE / 4 + 1;
-    private static final int yNoiseSize = CUBE_Y_SIZE / 8 + 1;
-    private static final int zNoiseSize = CUBE_Z_SIZE / 4 + 1;
-    
+
     // Water level at lower resolution
     private final int[] waterLevelRaw = new int[25];
     // Water level for each column
@@ -79,7 +77,6 @@ public class NewTerrainProcessor extends CubeProcessor
 	private static int seaLevel;
 	
 	// these are the knobs for terrain generation 
-	public static final int maxElev = 1024; // approximately how high blocks will go
 	private static int octaves = 16; // size of features. increasing by 1 approximately doubles the size of features.
 	
 	public NewTerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
@@ -95,11 +92,11 @@ public class NewTerrainProcessor extends CubeProcessor
 		
 		this.heightCap = 16;
 		
-		this.noiseArrayHeight = new double[xNoiseSize][zNoiseSize];
+		this.noiseArrayHeight = new double[X_NOISE_SIZE][Z_NOISE_SIZE];
 		
-		this.noiseArrayHigh = new double[xNoiseSize][yNoiseSize][zNoiseSize];
-		this.noiseArrayLow = new double[xNoiseSize][yNoiseSize][zNoiseSize];
-		this.noiseArrayAlpha = new double[xNoiseSize][yNoiseSize][zNoiseSize];
+		this.noiseArrayHigh = new double[X_NOISE_SIZE][Y_NOISE_SIZE][Z_NOISE_SIZE];
+		this.noiseArrayLow = new double[X_NOISE_SIZE][Y_NOISE_SIZE][Z_NOISE_SIZE];
+		this.noiseArrayAlpha = new double[X_NOISE_SIZE][Y_NOISE_SIZE][Z_NOISE_SIZE];
 		
 		this.rawTerrainArray = new double[CUBE_X_SIZE][CUBE_Y_SIZE][CUBE_Z_SIZE];
 		this.terrainArray = new double[CUBE_X_SIZE][CUBE_Y_SIZE][CUBE_Z_SIZE];
@@ -151,7 +148,7 @@ public class NewTerrainProcessor extends CubeProcessor
 		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().getBiomesForGeneration(
 			m_biomes,
 			cube.getX() * 4 - maxSmoothRadius, cube.getZ() * 4 - maxSmoothRadius,
-			xNoiseSize + maxSmoothDiameter, zNoiseSize + maxSmoothDiameter
+			X_NOISE_SIZE + maxSmoothDiameter, Z_NOISE_SIZE + maxSmoothDiameter
 		);
 		
 		this.generateNoiseArrays( cube );
@@ -221,21 +218,21 @@ public class NewTerrainProcessor extends CubeProcessor
 	 */
 	private void generateNoiseArrays(Cube cube)
 	{		
-		int cubeXMin = cube.getX() * (xNoiseSize - 1);
-		int cubeYMin = cube.getY() * (yNoiseSize - 1);
-		int cubeZMin = cube.getZ() * (zNoiseSize - 1);
+		int cubeXMin = cube.getX() * (X_NOISE_SIZE - 1);
+		int cubeYMin = cube.getY() * (Y_NOISE_SIZE - 1);
+		int cubeZMin = cube.getZ() * (Z_NOISE_SIZE - 1);
 		
-		for (int x = 0; x < xNoiseSize; x++)
+		for (int x = 0; x < X_NOISE_SIZE; x++)
 		{
 			int xPos = cubeXMin + x;
 			
-			for (int z = 0; z < zNoiseSize; z++)
+			for (int z = 0; z < Z_NOISE_SIZE; z++)
 			{
 				int zPos = cubeZMin + z;
 				
 				this.noiseArrayHeight[x][z] = builderHeight.getValue(xPos, 0, zPos);
 				
-				for (int y = 0; y < yNoiseSize; y++)
+				for (int y = 0; y < Y_NOISE_SIZE; y++)
 				{
 					int yPos = cubeYMin + y;
 					
@@ -251,9 +248,9 @@ public class NewTerrainProcessor extends CubeProcessor
 	long s = 0;
 	private void generateTerrainArray(Cube cube)
 	{				
-		for (int x = 0; x < xNoiseSize; x++)
+		for (int x = 0; x < X_NOISE_SIZE; x++)
         {
-            for (int z = 0; z < zNoiseSize; z++)
+            for (int z = 0; z < Z_NOISE_SIZE; z++)
             {
                 double noiseHeight = noiseArrayHeight[x][z];
                 
@@ -299,7 +296,7 @@ public class NewTerrainProcessor extends CubeProcessor
 
 //                i2D++;
 
-                for (int y = 0; y < yNoiseSize; y++)
+                for (int y = 0; y < Y_NOISE_SIZE; y++)
                 {
                     double output;
 					double heightModifier;
@@ -345,7 +342,7 @@ public class NewTerrainProcessor extends CubeProcessor
 //                        output += biomeConfig.riverHeightMatrix[y];
 //                    } else
 //                        System.out.println("output2: " + output);
-					int maxYSections = maxElev / 2;
+					int maxYSections = MathHelper.ceiling_double_int( maxElev / 2 );
 					int yAbs = cube.getY() * 8 + y;
 					if( yAbs > maxYSections - 4 )
 					{
@@ -361,11 +358,11 @@ public class NewTerrainProcessor extends CubeProcessor
 	
 	private void amplifyNoiseArray()
 	{
-		for(int x = 0; x < xNoiseSize; x++)
+		for(int x = 0; x < X_NOISE_SIZE; x++)
 		{
-			for (int z = 0; z < zNoiseSize; z++)
+			for (int z = 0; z < Z_NOISE_SIZE; z++)
 			{
-				for (int y = 0; y < yNoiseSize; y++)
+				for (int y = 0; y < Y_NOISE_SIZE; y++)
 				{
 					this.rawTerrainArray[x][y][z] *= maxElev;
 				}
@@ -381,16 +378,16 @@ public class NewTerrainProcessor extends CubeProcessor
 	 */
 	private void expandNoiseArray()
 	{	
-		int xSteps = 16 / (xNoiseSize - 1);
-		int ySteps = 16 / (yNoiseSize - 1);
-		int zSteps = 16 / (zNoiseSize - 1);
+		int xSteps = 16 / (X_NOISE_SIZE - 1);
+		int ySteps = 16 / (Y_NOISE_SIZE - 1);
+		int zSteps = 16 / (Z_NOISE_SIZE - 1);
 		
 		// use the noise to generate the terrain
-		for( int noiseX=0; noiseX < xNoiseSize - 1; noiseX++ )
+		for( int noiseX=0; noiseX < X_NOISE_SIZE - 1; noiseX++ )
 		{
-			for( int noiseZ=0; noiseZ < zNoiseSize - 1; noiseZ++ )
+			for( int noiseZ=0; noiseZ < Z_NOISE_SIZE - 1; noiseZ++ )
 			{
-				for( int noiseY=0; noiseY < yNoiseSize - 1; noiseY++ )
+				for( int noiseY=0; noiseY < Y_NOISE_SIZE - 1; noiseY++ )
 				{
 					// get the noise samples
 					double x0y0z0 = rawTerrainArray[noiseX][noiseY][noiseZ];
@@ -450,7 +447,7 @@ public class NewTerrainProcessor extends CubeProcessor
         float biomeWeightSum = 0.0F;
 
         final CubeBiomeGenBase centerBiomeConfig = this.m_biomes[(x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
-                * (xNoiseSize + this.maxSmoothDiameter))];
+                * (X_NOISE_SIZE + this.maxSmoothDiameter))];
         final int lookRadius = 2/*centerBiomeConfig.smoothRadius*/;
 
         float nextBiomeHeight;
@@ -461,7 +458,7 @@ public class NewTerrainProcessor extends CubeProcessor
             for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++)
             {
                 final CubeBiomeGenBase nextBiomeConfig = this.m_biomes[(x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius)
-                        * (xNoiseSize + this.maxSmoothDiameter))];
+                        * (X_NOISE_SIZE + this.maxSmoothDiameter))];
 
                 nextBiomeHeight = nextBiomeConfig.biomeHeight;
 
@@ -482,7 +479,7 @@ public class NewTerrainProcessor extends CubeProcessor
         volatilitySum /= biomeWeightSum;
         heightSum /= biomeWeightSum;
 
-        this.waterLevelRaw[x * xNoiseSize + z] = seaLevel; // (byte) centerBiomeConfig.waterLevelMax;
+        this.waterLevelRaw[x * X_NOISE_SIZE + z] = seaLevel; // (byte) centerBiomeConfig.waterLevelMax;
 
         volatilitySum = volatilitySum;
         //heightSum = (heightSum * 4.0F - 1.0F) / 8.0F;  // Silly magic numbers
