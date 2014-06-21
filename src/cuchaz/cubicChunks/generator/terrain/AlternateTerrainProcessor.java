@@ -76,8 +76,8 @@ public class AlternateTerrainProcessor extends CubeProcessor
 		this.rawTerrainArray = new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
 		this.terrainArray = new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
 
-		double freqHor = Math.min( 1, 64 / maxElev ) / (4 * Math.PI);
-		double freqVert = 4 * Math.min( 1, 64 / maxElev ) / (4 * Math.PI);
+		double freqHor = Math.min( 1, 128 / maxElev ) / (4 * Math.PI);
+		double freqVert = 4 * Math.min( 1, 128 / maxElev ) / (4 * Math.PI);
 
 		builderHigh = new BasicBuilder();
 		builderHigh.setSeed( rand.nextInt() );

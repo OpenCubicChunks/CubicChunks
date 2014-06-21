@@ -5,12 +5,14 @@ import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
 import cuchaz.cubicChunks.generator.builder.IBuilder;
 import cuchaz.cubicChunks.cache.CacheMap;
+import static cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig.maxElev;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.ChunkPosition;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.gen.layer.IntCache;
 
@@ -24,8 +26,11 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	private final BiomeCache biomeCache;
 	private final List<CubeBiomeGenBase> biomesToSpawnIn;
 
+	private final World world;
+
 	public AlternateWorldColumnManager( CubeWorldServer world )
 	{
+		AlternateBiomeGenTable.createBuilderForWorld( world );
 		this.biomeCache = new BiomeCache( this );
 		this.biomesToSpawnIn = new ArrayList<CubeBiomeGenBase>( 7 );
 		this.biomesToSpawnIn.add( CubeBiomeGenBase.forest );
@@ -37,17 +42,19 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		this.biomesToSpawnIn.add( CubeBiomeGenBase.jungleHills );
 
 		//this.world = world;
-		double freqH = 0.003 / (4 * Math.PI);
-		double freqV = 0.003 / (4 * Math.PI);
-		double freqT = 0.001 / (4 * Math.PI);
-		double freqR = 0.001 / (4 * Math.PI);
+		double freqH = 0.003 / (maxElev / 256) / (4 * Math.PI);
+		double freqV = 0.003 / (maxElev / 256) / (4 * Math.PI);
+		double freqT = 0.001 / (maxElev / 256) / (4 * Math.PI);
+		double freqR = 0.001 / (maxElev / 256) / (4 * Math.PI);
+
+		int octaves = (int)(Math.log( maxElev ));
 
 		Random rand = new Random( world.getSeed() );
 		rand.setSeed( rand.nextLong() ^ rand.nextLong() );
 
 		heightBuilder = new BasicBuilder();
 		heightBuilder.setSeed( rand.nextInt() );
-		heightBuilder.setOctaves( 4 );
+		heightBuilder.setOctaves( octaves );
 		heightBuilder.setMaxElev( 2 );
 		heightBuilder.setClamp( -1, 1 );
 		heightBuilder.setScale( freqH );
@@ -55,15 +62,15 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 		volatilityBuilder = new BasicBuilder();
 		volatilityBuilder.setSeed( rand.nextInt() );
-		volatilityBuilder.setOctaves( 4 );
-		volatilityBuilder.setMaxElev( 2 );
-		volatilityBuilder.setClamp( -1, 1 );
+		volatilityBuilder.setOctaves( octaves );
+		volatilityBuilder.setMaxElev( 1 );
+		volatilityBuilder.setClamp( -0.5, 0.5 );
 		volatilityBuilder.setScale( freqV );
 		volatilityBuilder.build();
 
 		tempBuilder = new BasicBuilder();
 		tempBuilder.setSeed( rand.nextInt() );
-		tempBuilder.setOctaves( 4 );
+		tempBuilder.setOctaves( octaves );
 		tempBuilder.setMaxElev( 1 );
 		tempBuilder.setSeaLevel( 0.5 );
 		tempBuilder.setClamp( 0, 1 );
@@ -72,12 +79,14 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 		rainfallBuilder = new BasicBuilder();
 		rainfallBuilder.setSeed( rand.nextInt() );
-		rainfallBuilder.setOctaves( 4 );
+		rainfallBuilder.setOctaves( octaves );
 		rainfallBuilder.setMaxElev( 1 );
 		rainfallBuilder.setSeaLevel( 0.5 );
 		rainfallBuilder.setClamp( 0, 1 );
 		rainfallBuilder.setScale( freqR );
 		rainfallBuilder.build();
+
+		this.world = world;
 	}
 
 	@Override
@@ -312,7 +321,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 						rainfall *= temp;
 
-						CubeBiomeGenBase biome = getBiomeForValues( vol, height, temp, rainfall );
+						CubeBiomeGenBase biome = getBiomeForValues( x, z, vol, height, temp, rainfall );
 						biomes[zRel * length + xRel] = biome;
 					}
 				}
@@ -320,13 +329,17 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		}
 	}
 
-	private CubeBiomeGenBase getBiomeForValues( double vol, double height, double temp, double rainfall )
+	private CubeBiomeGenBase getBiomeForValues( double x, double z, double vol, double height, double temp, double rainfall )
 	{
 		double minDistSquared = Double.MAX_VALUE;
 		double minDistSquaredInRange = Double.MAX_VALUE;
 
 		CubeBiomeGenBase nearestBiomeInRange = null;
 		CubeBiomeGenBase nearestBiome = null;
+
+		int biomeNum = 0;//used only for generating rarity. Biome order shouldn't change.
+
+		IBuilder rarity = AlternateBiomeGenTable.getRarityGenerator( this.world );
 
 		//iterate over all biomes and find the "nearest" biome
 		for( AlternateBiomeGenTable.AlternateWorldGenData data: AlternateBiomeGenTable.BIOMES )
@@ -359,14 +372,18 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 			//calculate "distance" from average values
 			//if biome range is small, distance also should be small so that if biome with broad range fully overlaps biome with tiny range the second biome will be generated.
-
 			double volDist = (vAvg - vol) * (maxVol - data.minVolatility);
 			double heightDist = (hAvg - height) * (data.maxHeight - data.minHeight);
 			double rainfallDist = (rAvg - rainfall) * (data.maxRainfall - data.minRainfall);
 			double tempDist = (tAvg - temp) * (data.maxTemp - data.minTemp);
 
+			//don't cache this value. It's generated only once / xz / biome
+			double rarityModifier = rarity.getValue( x / data.size, biomeNum * 1234, z / data.size ) + data.rarity;//this is value between -2 and 2. Use it as distSquared (I know, distSquared can't be negative...)
+			rarityModifier /= 2;//now it's from -1 to 1
+		
+			assert rarityModifier > -1 && rarityModifier < 1;
 			//now calculate distSquared
-			double distSquared = volDist * volDist + heightDist * heightDist + rainfallDist * rainfallDist + tempDist * tempDist;
+			double distSquared = volDist * volDist + heightDist * heightDist + rainfallDist * rainfallDist + tempDist * tempDist + rarityModifier;
 
 			//Are we in correct value range for the biome?
 			if( heightVolatilityOK && tempRainfallOK )
@@ -385,6 +402,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 				nearestBiome = data.biome;
 				minDistSquared = distSquared;
 			}
+			biomeNum++;
 		}
 
 		assert nearestBiome != null;
