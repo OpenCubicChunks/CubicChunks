@@ -134,7 +134,7 @@ public class AlternateTerrainProcessor extends CubeProcessor
 					int yAbs = Coords.localToBlock( cubeY, yRel );
 
 					cube.setBlockForGeneration( xRel, yRel, zRel,
-						val - yAbs > 0 ? Blocks.stone : yAbs < seaLevel ? Blocks.water : Blocks.air );
+						val - yAbs > 0 ? Blocks.stone : yAbs <= seaLevel ? Blocks.water : Blocks.air );
 				} // end yRel		
 			} // end zRel
 		} // end xRel
@@ -194,8 +194,8 @@ public class AlternateTerrainProcessor extends CubeProcessor
 				double temp = noiseArrayTemp[genToNormal[x]][genToNormal[z]];
 				double rainfall = noiseArrayRainfall[genToNormal[x]][genToNormal[z]];
 
-				vol = this.wcm.getRealVolatility( vol, height, rainfall, temp );
 				height = this.wcm.getRealHeight( height );
+				vol = this.wcm.getRealVolatility( vol, height, rainfall, temp );
 				rainfall *= temp;
 
 				for( int y = 0; y < Y_NOISE_SIZE; y++ )

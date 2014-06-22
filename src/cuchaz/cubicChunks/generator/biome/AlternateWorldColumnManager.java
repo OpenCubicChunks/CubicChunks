@@ -1,10 +1,10 @@
 package cuchaz.cubicChunks.generator.biome;
 
-import cuchaz.cubicChunks.generator.biome.biomegen.AlternateBiomeGenTable;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
 import cuchaz.cubicChunks.generator.builder.IBuilder;
 import cuchaz.cubicChunks.cache.CacheMap;
+import cuchaz.cubicChunks.generator.biome.biomegen.AlternateBiomeGen;
 import static cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig.maxElev;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import java.util.ArrayList;
@@ -18,6 +18,8 @@ import net.minecraft.world.gen.layer.IntCache;
 
 public class AlternateWorldColumnManager extends WorldColumnManager
 {
+
+	private static final int DIST_DIMENSIONS = 4;
 	//Cache for noise fields.
 	private final CacheMap<Long, NoiseArrays> noiseCache = new CacheMap<Long, NoiseArrays>( 1024, 1100 );
 
@@ -30,7 +32,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 	public AlternateWorldColumnManager( CubeWorldServer world )
 	{
-		AlternateBiomeGenTable.createBuilderForWorld( world );
+		AlternateBiomeGen.createBuilderForWorld( world );
 		this.biomeCache = new BiomeCache( this );
 		this.biomesToSpawnIn = new ArrayList<CubeBiomeGenBase>( 7 );
 		this.biomesToSpawnIn.add( CubeBiomeGenBase.forest );
@@ -316,9 +318,9 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 						double temp = tempArray[xRel][zRel];
 						double rainfall = rainfallArray[xRel][zRel];
 
-						vol = getRealVolatility( vol, height, rainfall, temp );
 						height = getRealHeight( height );
-
+						vol = getRealVolatility( vol, height, rainfall, temp );
+						
 						rainfall *= temp;
 
 						CubeBiomeGenBase biome = getBiomeForValues( x, z, vol, height, temp, rainfall );
@@ -339,51 +341,62 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 		int biomeNum = 0;//used only for generating rarity. Biome order shouldn't change.
 
-		IBuilder rarity = AlternateBiomeGenTable.getRarityGenerator( this.world );
+		IBuilder rarity = AlternateBiomeGen.getRarityGenerator( this.world );
 
 		//iterate over all biomes and find the "nearest" biome
-		for( AlternateBiomeGenTable.AlternateWorldGenData data: AlternateBiomeGenTable.BIOMES )
+		for( AlternateBiomeGen.AlternateBiomeGenInfo biomeInfo: AlternateBiomeGen.BIOMES )
 		{
 			//max volatility for this biome. If we include volatility in height checks volatility can naver be higher that avgHeight - minHeight ( = 0.5*(maxHeight-minHeight) )
-			double maxVol = data.entendedHeightVolatilityChecks ? Math.min( (data.maxHeight - data.minHeight) * 0.5, data.maxVolatility ) : data.maxVolatility;
+			double maxVol = biomeInfo.entendedHeightVolatilityChecks ? Math.min( (biomeInfo.maxHeight - biomeInfo.minHeight) * 0.5, biomeInfo.maxVolatility ) : biomeInfo.maxVolatility;
 
 			//min and max height if we include volatility in height checks
 			double heightWithVolatilityMin = height - vol;
 			double heightWithVolatilityMax = height + vol;
 
 			//average biome volatility, height, rainfall and temperature
-			double vAvg = (maxVol + data.minVolatility) * 0.5;
-			double hAvg = (data.maxHeight + data.minHeight) * 0.5;
-			double rAvg = (data.maxRainfall + data.minRainfall) * 0.5;
-			double tAvg = (data.maxTemp + data.minTemp) * 0.5;
+			double vAvg = (maxVol + biomeInfo.minVolatility) * 0.5;
+			double hAvg = (biomeInfo.maxHeight + biomeInfo.minHeight) * 0.5;
+			double rAvg = (biomeInfo.maxRainfall + biomeInfo.minRainfall) * 0.5;
+			double tAvg = (biomeInfo.maxTemp + biomeInfo.minTemp) * 0.5;
 
 			//check if volatility and height are in correct range
 			boolean heightVolatilityOK = false;
 			//are we between min and max height (including volatility)?
-			heightVolatilityOK |= heightWithVolatilityMax <= data.maxHeight && heightWithVolatilityMin >= data.minHeight;
+			heightVolatilityOK |= heightWithVolatilityMax <= biomeInfo.maxHeight && heightWithVolatilityMin >= biomeInfo.minHeight;
 			//Should we exclude volatility from height checks? So check only height ranges
-			heightVolatilityOK |= !data.entendedHeightVolatilityChecks && height <= data.maxHeight && height >= data.minHeight;
+			heightVolatilityOK |= !biomeInfo.entendedHeightVolatilityChecks && height <= biomeInfo.maxHeight && height >= biomeInfo.minHeight;
 			//but always check volatility
-			heightVolatilityOK &= vol <= maxVol && vol >= data.minVolatility;
+			heightVolatilityOK &= vol <= maxVol && vol >= biomeInfo.minVolatility;
 
 			//are temperatire and rainfall in correct range?
-			boolean tempRainfallOK = false;
-			tempRainfallOK |= temp <= data.maxTemp && temp >= data.minTemp && rainfall <= data.maxRainfall && rainfall >= data.minRainfall;
+			boolean tempRainfallOK = temp <= biomeInfo.maxTemp && temp >= biomeInfo.minTemp && rainfall <= biomeInfo.maxRainfall && rainfall >= biomeInfo.minRainfall;
 
 			//calculate "distance" from average values
 			//if biome range is small, distance also should be small so that if biome with broad range fully overlaps biome with tiny range the second biome will be generated.
-			double volDist = (vAvg - vol) * (maxVol - data.minVolatility);
-			double heightDist = (hAvg - height) * (data.maxHeight - data.minHeight);
-			double rainfallDist = (rAvg - rainfall) * (data.maxRainfall - data.minRainfall);
-			double tempDist = (tAvg - temp) * (data.maxTemp - data.minTemp);
+			double volDist = (vAvg - vol) * (maxVol - biomeInfo.minVolatility);
+			double heightDist = (hAvg - height) * (biomeInfo.maxHeight - biomeInfo.minHeight);
+			double rainfallDist = (rAvg - rainfall) * (biomeInfo.maxRainfall - biomeInfo.minRainfall);
+			double tempDist = (tAvg - temp) * (biomeInfo.maxTemp - biomeInfo.minTemp);
 
 			//don't cache this value. It's generated only once / xz / biome
-			double rarityModifier = rarity.getValue( x / data.size, biomeNum * 1234, z / data.size ) + data.rarity;//this is value between -2 and 2. Use it as distSquared (I know, distSquared can't be negative...)
-			rarityModifier /= 2;//now it's from -1 to 1
-		
-			assert rarityModifier > -1 && rarityModifier < 1;
+			//noise values are from -1 to 1. 
+			//Corner cases (impossible):
+			//	n	r	(n = noise, r = rarity, d = distSquared)
+			//----------------------------------------------------
+			//	-1	-1	--> rarityModifier = -DIST_DIMENSIONS --> distSquared += DIST_DIMENSIONS; (far biome)
+			//	0	-1	--> rarityModifier = -DIST_DIMENSIONS/2 --> distSquared += DIST_DIMENSIONS/2; (far biome)
+			//	1	-1	--> rarityModifier = 0 --> distSquared stays the same
+			//----------------------------------------------------
+			//	-1	1	--> rarityModifier = 0 --> distSquared stays the same
+			//	0	1	-->	rarityModifier = DIST_DIMENSIONS/2 --> distSquared -= DIST_DIMENSIONS/2; (near biome)
+			//	1	1	--> rarityModifier = DIST_DIMENSIONS --> distSquared -= DIST_DIMENSIONS; (near biome)
+			double rarityModifier = rarity.getValue( x / biomeInfo.size, biomeNum, z / biomeInfo.size ) + biomeInfo.rarity;//this is value between -2 and 2. Use it as distSquared (I know, distSquared can't be negative...)
+			rarityModifier *= DIST_DIMENSIONS / 2.0D;//now it's from -4 to 4, the same range ad distSquared
+
+			assert rarityModifier > -DIST_DIMENSIONS && rarityModifier < DIST_DIMENSIONS;
 			//now calculate distSquared
-			double distSquared = volDist * volDist + heightDist * heightDist + rainfallDist * rainfallDist + tempDist * tempDist + rarityModifier;
+			double distSquared = volDist * volDist + heightDist * heightDist + rainfallDist * rainfallDist + tempDist * tempDist;
+			distSquared -= rarityModifier;
 
 			//Are we in correct value range for the biome?
 			if( heightVolatilityOK && tempRainfallOK )
@@ -391,7 +404,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 				//is it the "nearest" biome so far?
 				if( distSquared < minDistSquaredInRange )
 				{
-					nearestBiomeInRange = data.biome;
+					nearestBiomeInRange = biomeInfo.biome;
 					minDistSquaredInRange = distSquared;
 				}
 			}
@@ -399,7 +412,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 			//In case if there is no biome in correct height range we choose the nearest one. So check if it's the nearesat biome so far.
 			if( distSquared < minDistSquared )
 			{
-				nearestBiome = data.biome;
+				nearestBiome = biomeInfo.biome;
 				minDistSquared = distSquared;
 			}
 			biomeNum++;
@@ -407,10 +420,10 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 		assert nearestBiome != null;
 
-		/*if( nearestBiomeInRange == null )
-		 {
-		 System.out.printf( "nearestBiomeInRangeNull, nearestBiome biome: %s\n", nearestBiome.biomeName );
-		 }*/
+		if( nearestBiomeInRange == null )
+		{
+			System.err.printf( "nearestBiomeInRange == null, nearestBiome biome: %s, %f, %f, %f, %f\n", nearestBiome.biomeName, vol, height, temp, rainfall );
+		}
 		//return nearest biome in range. If it doesn't exist - return nearest biome
 		return nearestBiomeInRange == null ? nearestBiome : nearestBiomeInRange;
 	}
@@ -422,7 +435,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 	public double getRealHeight( double heightRaw )
 	{
-		return heightRaw >= 0 ? heightRaw : -Math.pow( -0.987 * heightRaw, MathHelper.clamp_double( -heightRaw * 4, 2, 4 ) );
+		return heightRaw >= 0 ? heightRaw : -Math.pow( -0.987 * heightRaw, MathHelper.clamp_double( -heightRaw * 4, 2, 4 ) );//Maybe use this function?: ((sin(x*pi - pi/2)^3)/2+0.5)^1.3
 	}
 
 	private static Long xzToLong( int x, int z )
