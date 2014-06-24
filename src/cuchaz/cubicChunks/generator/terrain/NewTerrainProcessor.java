@@ -138,7 +138,7 @@ public class NewTerrainProcessor extends CubeProcessor
 		builderHeight.setSeed( m_rand.nextInt() );
 		builderHeight.setOctaves( octaves );
 		builderHeight.setMaxElev( 1 );
-		builderHeight.setScale( freq / 3 );
+		builderHeight.setFreq( freq / 3 );
 		builderHeight.build();
 	}
 	

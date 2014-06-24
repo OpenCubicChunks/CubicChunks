@@ -1,34 +1,38 @@
-package cuchaz.cubicChunks.generator.biome;
+package cuchaz.cubicChunks.generator.biome.alternateGen;
 
+import cuchaz.cubicChunks.cache.CacheMap;
+import cuchaz.cubicChunks.generator.biome.BiomeCache;
+import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
 import cuchaz.cubicChunks.generator.builder.IBuilder;
-import cuchaz.cubicChunks.cache.CacheMap;
-import cuchaz.cubicChunks.generator.biome.biomegen.AlternateBiomeGen;
 import static cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig.maxElev;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.ChunkPosition;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.gen.layer.IntCache;
 
 public class AlternateWorldColumnManager extends WorldColumnManager
 {
-
-	private static final int DIST_DIMENSIONS = 4;
 	//Cache for noise fields.
 	private final CacheMap<Long, NoiseArrays> noiseCache = new CacheMap<Long, NoiseArrays>( 1024, 1100 );
 
-	//Builders
+	//Builders for height volatility temperature and rainfall
 	private final BasicBuilder volatilityBuilder, heightBuilder, tempBuilder, rainfallBuilder;
 	private final BiomeCache biomeCache;
 	private final List<CubeBiomeGenBase> biomesToSpawnIn;
 
-	private final World world;
+	private final List<BiomeFinder> biomeFindersPriorityList;
+
+	private static Long xzToLong( int x, int z )
+	{
+		return (x & 0xFFFFFFFFl) | ((z & 0xFFFFFFFFl) << 32);
+	}
 
 	public AlternateWorldColumnManager( CubeWorldServer world )
 	{
@@ -59,7 +63,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		heightBuilder.setOctaves( octaves );
 		heightBuilder.setMaxElev( 2 );
 		heightBuilder.setClamp( -1, 1 );
-		heightBuilder.setScale( freqH );
+		heightBuilder.setFreq( freqH );
 		heightBuilder.build();
 
 		volatilityBuilder = new BasicBuilder();
@@ -67,7 +71,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		volatilityBuilder.setOctaves( octaves );
 		volatilityBuilder.setMaxElev( 1 );
 		volatilityBuilder.setClamp( -0.5, 0.5 );
-		volatilityBuilder.setScale( freqV );
+		volatilityBuilder.setFreq( freqV );
 		volatilityBuilder.build();
 
 		tempBuilder = new BasicBuilder();
@@ -76,7 +80,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		tempBuilder.setMaxElev( 1 );
 		tempBuilder.setSeaLevel( 0.5 );
 		tempBuilder.setClamp( 0, 1 );
-		tempBuilder.setScale( freqT );
+		tempBuilder.setFreq( freqT );
 		tempBuilder.build();
 
 		rainfallBuilder = new BasicBuilder();
@@ -85,15 +89,31 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		rainfallBuilder.setMaxElev( 1 );
 		rainfallBuilder.setSeaLevel( 0.5 );
 		rainfallBuilder.setClamp( 0, 1 );
-		rainfallBuilder.setScale( freqR );
+		rainfallBuilder.setFreq( freqR );
 		rainfallBuilder.build();
 
-		this.world = world;
+		this.biomeFindersPriorityList = new LinkedList<BiomeFinder>();
+
+		int flags = 0;//default biome finder. Check everything
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+
+		flags |= BiomeFinder.IGNORE_TEMP | BiomeFinder.IGNORE_RAINFALL | BiomeFinder.TEMP_INV | BiomeFinder.RAINFALL_INV;//if no biome found - ignore values player can't see and try again
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+
+		flags |= BiomeFinder.FORCE_NO_EXTENDED_HEIGHT_VOL_CHEKCS;//maybe try without extended height and volatility checks...
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+
+		flags |= BiomeFinder.IGNORE_VOL | BiomeFinder.VOLATILITY_INV | BiomeFinder.NO_RARITY;//If averything else fails - ignore volatility to find something. Ignore rarity.
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+			//If still nothing found - give up and throw an Exception...
+		//ignoring height would be too risky...
 	}
 
 	@Override
 	public float[] getRainfall( float[] downfall, int blockX, int blockZ, int width, int length )
 	{
+		assert width <= 17 && length <= 17;
+		
 		double[][] rain = getRainfallArray( blockX >> 4, blockZ >> 4 );
 		if( downfall == null || downfall.length != width * length )
 		{
@@ -238,6 +258,16 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		biomeCache.cleanupCache();
 	}
 
+	public double getRealVolatility( double volatilityRaw, double heightRaw, double rainfallRaw, double temperatureRaw )
+	{
+		return Math.min( Math.abs( heightRaw ), (Math.abs( volatilityRaw ) * 0.95D + 0.05) * Math.sqrt( Math.abs( heightRaw ) ) ) * (1 - Math.pow( 1 - rainfallRaw * temperatureRaw, 4 ));
+	}
+
+	public double getRealHeight( double heightRaw )
+	{
+		return heightRaw >= 0 ? heightRaw : -Math.pow( -0.987 * heightRaw, MathHelper.clamp_double( -heightRaw * 4, 2, 4 ) );//Maybe use this function?: ((sin(x*pi - pi/2)^3)/2+0.5)^1.3
+	}
+
 	private double[][] populateArray( double[][] array, IBuilder builder, int startX, int startZ, int xSize, int zSize )
 	{
 		if( array == null || array.length != xSize || array[0].length != zSize )
@@ -320,7 +350,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 						height = getRealHeight( height );
 						vol = getRealVolatility( vol, height, rainfall, temp );
-						
+
 						rainfall *= temp;
 
 						CubeBiomeGenBase biome = getBiomeForValues( x, z, vol, height, temp, rainfall );
@@ -333,142 +363,23 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 	private CubeBiomeGenBase getBiomeForValues( double x, double z, double vol, double height, double temp, double rainfall )
 	{
-		double minDistSquared = Double.MAX_VALUE;
-		double minDistSquaredInRange = Double.MAX_VALUE;
 
-		CubeBiomeGenBase nearestBiomeInRange = null;
-		CubeBiomeGenBase nearestBiome = null;
+		CubeBiomeGenBase biome = null;
 
-		int biomeNum = 0;//used only for generating rarity. Biome order shouldn't change.
-
-		IBuilder rarity = AlternateBiomeGen.getRarityGenerator( this.world );
-
-		//iterate over all biomes and find the "nearest" biome
-		for( AlternateBiomeGen.AlternateBiomeGenInfo biomeInfo: AlternateBiomeGen.BIOMES )
+		for( BiomeFinder finder: biomeFindersPriorityList )
 		{
-			//max volatility for this biome. If we include volatility in height checks volatility can naver be higher that avgHeight - minHeight ( = 0.5*(maxHeight-minHeight) )
-			double maxVol = biomeInfo.entendedHeightVolatilityChecks ? Math.min( (biomeInfo.maxHeight - biomeInfo.minHeight) * 0.5, biomeInfo.maxVolatility ) : biomeInfo.maxVolatility;
-
-			//min and max height if we include volatility in height checks
-			double heightWithVolatilityMin = height - vol;
-			double heightWithVolatilityMax = height + vol;
-
-			//average biome volatility, height, rainfall and temperature
-			double vAvg = (maxVol + biomeInfo.minVolatility) * 0.5;
-			double hAvg = (biomeInfo.maxHeight + biomeInfo.minHeight) * 0.5;
-			double rAvg = (biomeInfo.maxRainfall + biomeInfo.minRainfall) * 0.5;
-			double tAvg = (biomeInfo.maxTemp + biomeInfo.minTemp) * 0.5;
-
-			//check if volatility and height are in correct range
-			boolean heightVolatilityOK = false;
-			//are we between min and max height (including volatility)?
-			heightVolatilityOK |= heightWithVolatilityMax <= biomeInfo.maxHeight && heightWithVolatilityMin >= biomeInfo.minHeight;
-			//Should we exclude volatility from height checks? So check only height ranges
-			heightVolatilityOK |= !biomeInfo.entendedHeightVolatilityChecks && height <= biomeInfo.maxHeight && height >= biomeInfo.minHeight;
-			//but always check volatility
-			heightVolatilityOK &= vol <= maxVol && vol >= biomeInfo.minVolatility;
-
-			//are temperatire and rainfall in correct range?
-			boolean tempRainfallOK = temp <= biomeInfo.maxTemp && temp >= biomeInfo.minTemp && rainfall <= biomeInfo.maxRainfall && rainfall >= biomeInfo.minRainfall;
-
-			//calculate "distance" from average values
-			//if biome range is small, distance also should be small so that if biome with broad range fully overlaps biome with tiny range the second biome will be generated.
-			double volDist = (vAvg - vol) * (maxVol - biomeInfo.minVolatility);
-			double heightDist = (hAvg - height) * (biomeInfo.maxHeight - biomeInfo.minHeight);
-			double rainfallDist = (rAvg - rainfall) * (biomeInfo.maxRainfall - biomeInfo.minRainfall);
-			double tempDist = (tAvg - temp) * (biomeInfo.maxTemp - biomeInfo.minTemp);
-
-			//don't cache this value. It's generated only once / xz / biome
-			//noise values are from -1 to 1. 
-			//Corner cases (impossible):
-			//	n	r	(n = noise, r = rarity, d = distSquared)
-			//----------------------------------------------------
-			//	-1	-1	--> rarityModifier = -DIST_DIMENSIONS --> distSquared += DIST_DIMENSIONS; (far biome)
-			//	0	-1	--> rarityModifier = -DIST_DIMENSIONS/2 --> distSquared += DIST_DIMENSIONS/2; (far biome)
-			//	1	-1	--> rarityModifier = 0 --> distSquared stays the same
-			//----------------------------------------------------
-			//	-1	1	--> rarityModifier = 0 --> distSquared stays the same
-			//	0	1	-->	rarityModifier = DIST_DIMENSIONS/2 --> distSquared -= DIST_DIMENSIONS/2; (near biome)
-			//	1	1	--> rarityModifier = DIST_DIMENSIONS --> distSquared -= DIST_DIMENSIONS; (near biome)
-			double rarityModifier = rarity.getValue( x / biomeInfo.size, biomeNum, z / biomeInfo.size ) + biomeInfo.rarity;//this is value between -2 and 2. Use it as distSquared (I know, distSquared can't be negative...)
-			rarityModifier *= DIST_DIMENSIONS / 2.0D;//now it's from -4 to 4, the same range ad distSquared
-
-			assert rarityModifier > -DIST_DIMENSIONS && rarityModifier < DIST_DIMENSIONS;
-			//now calculate distSquared
-			double distSquared = volDist * volDist + heightDist * heightDist + rainfallDist * rainfallDist + tempDist * tempDist;
-			distSquared -= rarityModifier;
-
-			//Are we in correct value range for the biome?
-			if( heightVolatilityOK && tempRainfallOK )
+			biome = finder.getBiomeForValues( x, z, vol, height, temp, rainfall );
+			if( biome != null )
 			{
-				//is it the "nearest" biome so far?
-				if( distSquared < minDistSquaredInRange )
-				{
-					nearestBiomeInRange = biomeInfo.biome;
-					minDistSquaredInRange = distSquared;
-				}
+				break;
 			}
-
-			//In case if there is no biome in correct height range we choose the nearest one. So check if it's the nearesat biome so far.
-			if( distSquared < minDistSquared )
-			{
-				nearestBiome = biomeInfo.biome;
-				minDistSquared = distSquared;
-			}
-			biomeNum++;
 		}
 
-		assert nearestBiome != null;
-
-		if( nearestBiomeInRange == null )
+		if( biome == null )
 		{
-			System.err.printf( "nearestBiomeInRange == null, nearestBiome biome: %s, %f, %f, %f, %f\n", nearestBiome.biomeName, vol, height, temp, rainfall );
-		}
-		//return nearest biome in range. If it doesn't exist - return nearest biome
-		return nearestBiomeInRange == null ? nearestBiome : nearestBiomeInRange;
-	}
-
-	public double getRealVolatility( double volatilityRaw, double heightRaw, double rainfallRaw, double temperatureRaw )
-	{
-		return Math.min( Math.abs( heightRaw ), (Math.abs( volatilityRaw ) * 0.95D + 0.05) * Math.sqrt( Math.abs( heightRaw ) ) ) * (1 - Math.pow( 1 - rainfallRaw * temperatureRaw, 4 ));
-	}
-
-	public double getRealHeight( double heightRaw )
-	{
-		return heightRaw >= 0 ? heightRaw : -Math.pow( -0.987 * heightRaw, MathHelper.clamp_double( -heightRaw * 4, 2, 4 ) );//Maybe use this function?: ((sin(x*pi - pi/2)^3)/2+0.5)^1.3
-	}
-
-	private static Long xzToLong( int x, int z )
-	{
-		return (x & 0xFFFFFFFFl) | ((z & 0xFFFFFFFFl) << 32);
-	}
-
-	private static class NoiseArrays
-	{
-		private final List<double[][]> arrays = new ArrayList<double[][]>( 4 );
-
-		NoiseArrays( double[][] volatility, double[][] height, double[][] temperature, double[][] rainfall )
-		{
-			//add 4 null elements to set them later.
-			while( arrays.size() < 4 ) arrays.add( null );
-
-			arrays.set( Type.VOLATILITY.ordinal(), volatility );
-			arrays.set( Type.HEIGHT.ordinal(), height );
-			arrays.set( Type.TEMPERATURE.ordinal(), temperature );
-			arrays.set( Type.RAINFALL.ordinal(), rainfall );
+			throw new RuntimeException( String.format( "No biome for values found: h = %f, v = %f, t = %f, r = %f", height, vol, temp, rainfall ) );
 		}
 
-		double[][] get( Type type )
-		{
-			return arrays.get( type.ordinal() );
-		}
-
-		enum Type
-		{
-			VOLATILITY,
-			HEIGHT,
-			TEMPERATURE,
-			RAINFALL
-		}
+		return biome;
 	}
 }

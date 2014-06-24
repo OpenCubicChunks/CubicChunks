@@ -14,7 +14,7 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.FlatGeneratorInfo;
 import cuchaz.cubicChunks.generator.GeneratorPipeline;
-import cuchaz.cubicChunks.generator.biome.AlternateWorldColumnManager;
+import cuchaz.cubicChunks.generator.biome.alternateGen.AlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManagerFlat;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;

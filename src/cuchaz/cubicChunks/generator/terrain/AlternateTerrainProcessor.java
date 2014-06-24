@@ -5,7 +5,7 @@
  */
 package cuchaz.cubicChunks.generator.terrain;
 
-import cuchaz.cubicChunks.generator.biome.AlternateWorldColumnManager;
+import cuchaz.cubicChunks.generator.biome.alternateGen.AlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;

@@ -66,7 +66,7 @@ public class BasicBuilder implements IBuilder
 		this.NUM_OCTAVES = numOctaves;
 	}
 
-	public void setScale( double scale )
+	public void setFreq( double scale )
 	{
 		this.SCALE_X = this.SCALE_Y = this.SCALE_Z = scale;
 	}

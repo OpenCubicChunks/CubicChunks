@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 /**
- * This is very simple cache for 2d noise. It uses WeakHashMap and array.
+ * This is very simple cache for 2d noise. It uses WeakHashMap and array. Stores last n added values.
  */
 public class CacheMap<K extends Object, V extends Object> implements Map<K, V>
 {
@@ -55,7 +55,7 @@ public class CacheMap<K extends Object, V extends Object> implements Map<K, V>
 	@Override
 	public V put( K key, V value )
 	{
-		this.addValue( value );
+		this.addValue( key );
 		return cache.put( key, value );
 	}
 
@@ -77,9 +77,9 @@ public class CacheMap<K extends Object, V extends Object> implements Map<K, V>
 			throw new IllegalArgumentException( "Can't put all values from map to cache. Cache too small. Cache size: " + cacheSize + ", values to add: " + m.size() );
 		}
 
-		for( V value: m.values() )
+		for( K key: m.keySet() )
 		{
-			this.addValue( value );
+			this.addValue( key );
 		}
 
 		cache.putAll( m );
@@ -109,10 +109,9 @@ public class CacheMap<K extends Object, V extends Object> implements Map<K, V>
 		return cache.entrySet();
 	}
 
-	private void addValue( V value )
+	private void addValue( K key )
 	{
-		//if our cache already contains this value we replace it. Don't replace it in array. The array exists only to let GC delete the values after other CACHE_SIZE values are cached
-		cacheLastValues[index++] = value;
+		cacheLastValues[index++] = key;
 		index %= cacheSize;
 	}
 }

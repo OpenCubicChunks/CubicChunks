@@ -1,5 +1,6 @@
-package cuchaz.cubicChunks.generator.biome.biomegen;
+package cuchaz.cubicChunks.generator.biome.alternateGen;
 
+import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.beach;
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.desert;
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.extremeHills;
