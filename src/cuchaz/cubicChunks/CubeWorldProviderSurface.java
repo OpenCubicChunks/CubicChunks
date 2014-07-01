@@ -15,6 +15,7 @@ import cuchaz.cubicChunks.generator.FeatureProcessor;
 import cuchaz.cubicChunks.generator.GeneratorPipeline;
 import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.generator.PopulationProcessor;
+import cuchaz.cubicChunks.generator.terrain.NewAlternateTerrainProcessor;
 import cuchaz.cubicChunks.generator.terrain.AlternateTerrainProcessor;
 import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
 import cuchaz.cubicChunks.lighting.FirstLightProcessor;
@@ -72,7 +73,7 @@ public class CubeWorldProviderSurface extends CubeWorldProvider
 	public GeneratorPipeline createGeneratorPipeline( CubeWorldServer worldServer )
 	{
 		GeneratorPipeline generatorPipeline = new GeneratorPipeline( worldServer.getCubeProvider() );
-		generatorPipeline.addStage( GeneratorStage.Terrain, new AlternateTerrainProcessor( "Terrain", worldServer, 10 ) );
+		generatorPipeline.addStage( GeneratorStage.Terrain, new NewAlternateTerrainProcessor( "Terrain", worldServer, 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Biomes, new BiomeProcessor( "Biomes", worldServer, 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Features, new FeatureProcessor( "Features", worldServer.getCubeProvider(), 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Population, new PopulationProcessor( "Population", worldServer, 10 ) );

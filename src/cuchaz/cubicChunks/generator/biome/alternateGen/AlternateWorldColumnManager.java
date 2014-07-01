@@ -48,10 +48,10 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		this.biomesToSpawnIn.add( CubeBiomeGenBase.jungleHills );
 
 		//this.world = world;
-		double freqH = 0.003 / (maxElev / 256) / (4 * Math.PI);
+		double freqH = 0.002 / (maxElev / 256) / (4 * Math.PI);
 		double freqV = 0.003 / (maxElev / 256) / (4 * Math.PI);
-		double freqT = 0.001 / (maxElev / 256) / (4 * Math.PI);
-		double freqR = 0.001 / (maxElev / 256) / (4 * Math.PI);
+		double freqT = 0.0009 / (maxElev / 256) / (4 * Math.PI);
+		double freqR = 0.0009 / (maxElev / 256) / (4 * Math.PI);
 
 		int octaves = (int)(Math.log( maxElev ));
 
@@ -60,9 +60,8 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 		heightBuilder = new BasicBuilder();
 		heightBuilder.setSeed( rand.nextInt() );
-		heightBuilder.setOctaves( octaves );
-		heightBuilder.setMaxElev( 2 );
-		heightBuilder.setClamp( -1, 1 );
+		heightBuilder.setOctaves( octaves + 1 );
+		heightBuilder.setMaxElev( 1.5 );
 		heightBuilder.setFreq( freqH );
 		heightBuilder.build();
 
@@ -77,7 +76,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		tempBuilder = new BasicBuilder();
 		tempBuilder.setSeed( rand.nextInt() );
 		tempBuilder.setOctaves( octaves );
-		tempBuilder.setMaxElev( 1 );
+		tempBuilder.setMaxElev( 0.9);
 		tempBuilder.setSeaLevel( 0.5 );
 		tempBuilder.setClamp( 0, 1 );
 		tempBuilder.setFreq( freqT );
@@ -85,12 +84,13 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 		rainfallBuilder = new BasicBuilder();
 		rainfallBuilder.setSeed( rand.nextInt() );
-		rainfallBuilder.setOctaves( octaves );
-		rainfallBuilder.setMaxElev( 1 );
+		rainfallBuilder.setOctaves( octaves  );
+		rainfallBuilder.setMaxElev( 0.9 );
 		rainfallBuilder.setSeaLevel( 0.5 );
 		rainfallBuilder.setClamp( 0, 1 );
 		rainfallBuilder.setFreq( freqR );
 		rainfallBuilder.build();
+
 
 		this.biomeFindersPriorityList = new LinkedList<BiomeFinder>();
 
@@ -172,7 +172,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	@Override
 	public BiomeGenBase[] getBiomeGenAt( BiomeGenBase[] biomes, int blockX, int blockZ, int width, int length, boolean fromCache )
 	{
-		IntCache.resetIntCache();
+		//IntCache.resetIntCache();
 
 		if( biomes == null || biomes.length < width * length )
 		{
@@ -254,7 +254,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	@Override
 	public void cleanupCache()
 	{
-		//For noise arraysdone automatically by Java GC
+		//For noise arrays done automatically by Java GC
 		biomeCache.cleanupCache();
 	}
 
@@ -265,7 +265,8 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 	public double getRealHeight( double heightRaw )
 	{
-		return heightRaw >= 0 ? heightRaw : -Math.pow( -0.987 * heightRaw, MathHelper.clamp_double( -heightRaw * 4, 2, 4 ) );//Maybe use this function?: ((sin(x*pi - pi/2)^3)/2+0.5)^1.3
+		return (heightRaw * 1.4 + heightRaw*heightRaw*Math.sin(heightRaw*17)) * 30;
+		//Maybe use this function?: ((sin(x*pi - pi/2)^3)/2+0.5)^1.3
 	}
 
 	private double[][] populateArray( double[][] array, IBuilder builder, int startX, int startZ, int xSize, int zSize )
@@ -348,10 +349,10 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 						double temp = tempArray[xRel][zRel];
 						double rainfall = rainfallArray[xRel][zRel];
 
-						height = getRealHeight( height );
+						//height = getRealHeight( height );
+						height = height > 1 ? 1 : height;
+						height = height < -1 ? -1 : height;
 						vol = getRealVolatility( vol, height, rainfall, temp );
-
-						rainfall *= temp;
 
 						CubeBiomeGenBase biome = getBiomeForValues( x, z, vol, height, temp, rainfall );
 						biomes[zRel * length + xRel] = biome;

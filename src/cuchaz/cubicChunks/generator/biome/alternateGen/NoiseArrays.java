@@ -3,11 +3,11 @@ package cuchaz.cubicChunks.generator.biome.alternateGen;
 import java.util.ArrayList;
 import java.util.List;
 
-class NoiseArrays
+public class NoiseArrays
 {
 	private final List<double[][]> arrays = new ArrayList<double[][]>( 4 );
 
-	NoiseArrays( double[][] volatility, double[][] height, double[][] temperature, double[][] rainfall )
+	public NoiseArrays( double[][] volatility, double[][] height, double[][] temperature, double[][] rainfall )
 	{
 		//add 4 null elements to set them later.
 		while( arrays.size() < 4 ) arrays.add( null );
@@ -17,12 +17,12 @@ class NoiseArrays
 		arrays.set( Type.RAINFALL.ordinal(), rainfall );
 	}
 
-	double[][] get( Type type )
+	public double[][] get( Type type )
 	{
 		return arrays.get( type.ordinal() );
 	}
 
-	enum Type
+	public enum Type
 	{
 		VOLATILITY,
 		HEIGHT,

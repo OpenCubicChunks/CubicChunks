@@ -873,8 +873,7 @@ public class Column extends Chunk
 	public int getPrecipitationHeight( int localX, int localZ )
 	{
 		// UNDONE: update this calculation to use better data structures
-
-		int xzCoord = localX | localZ << 4;
+		int xzCoord = localZ << 4 | localX;
 		int height = this.precipitationHeightMap[xzCoord];
 		if( height == -999 )
 		{
@@ -892,8 +891,9 @@ public class Column extends Chunk
 
 			// TEMP: just rain down to the sea
 			precipitationHeightMap[xzCoord] = getWorldProvider().getSeaLevel();
+			height = getWorldProvider().getSeaLevel();
 		}
-
+		
 		return height;
 	}
 

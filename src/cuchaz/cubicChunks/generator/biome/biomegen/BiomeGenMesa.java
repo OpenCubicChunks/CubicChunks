@@ -128,7 +128,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 
 		fillStoneY = HeightHelper.getScaledHeight_Double( fillStoneY );
 
-		Block topBlock = Blocks.stained_hardened_clay;
+		Block topBlock = this.topBlock;
 		Block fillerBlock = this.fillerBlock;
 
 		//How many biome blocks left to set in column? Initially -1

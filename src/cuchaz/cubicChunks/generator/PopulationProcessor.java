@@ -11,10 +11,12 @@
 package cuchaz.cubicChunks.generator;
 
 import cuchaz.cubicChunks.CubeProviderTools;
+import cuchaz.cubicChunks.generator.biome.alternateGen.AlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeProcessor;
+import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
 import java.util.Random;
 import net.minecraft.block.BlockFalling;
@@ -33,7 +35,132 @@ public class PopulationProcessor extends CubeProcessor
 	}
 
 	@Override
-	public boolean calculate( Cube cube )
+	public boolean calculate( Cube cube)
+	{
+		CubeWorldServer world = (CubeWorldServer)cube.getWorld();
+		AlternateWorldColumnManager wcm = (AlternateWorldColumnManager)world.getWorldChunkManager();
+		double [][] height = wcm.getHeightArray(cube.getX(), cube.getZ());
+		//double [][] volatility = wcm.getVolArray(cube.getX(), cube.getZ());
+		//double [][] temp = wcm.getTempArray(cube.getX(), cube.getZ());
+		//double [][] hum = wcm.getRainfallArray(cube.getX(), cube.getZ());
+		int heightMax = -1999;
+		int heightMin = 1999;
+		double volMax = 0;
+		for (int i = 0; i < 16; i++){
+			for (int j = 0; j < 16; j++){
+				int height1 = (int)wcm.getRealHeight(height[i][j]);
+				//double volatility1 = wcm.getRealVolatility(volatility[i][j], height[i][j], hum[i][j], temp[i][j]);
+				heightMax = heightMax > height1 ? heightMax : height1 ;
+				heightMin = heightMin < height1 ? heightMin : height1 ;
+				//volMax = volMax > volatility1 ? volMax : volatility1 ;
+			}
+		}
+		int buffer = 10;// +/-3 cubes
+		if ( cube.getY() * 2 < heightMin - buffer){return calculateUnderground(cube, world, wcm);}
+		if ( cube.getY() * 2 > heightMax + buffer){return calculateSky(cube, world, wcm);}
+		return calculateSurface( cube, world, wcm);
+	}
+	
+	public boolean calculateUnderground( Cube cube, CubeWorldServer world, AlternateWorldColumnManager wcm)
+	{
+		int cubeX = cube.getX();
+		int cubeY = cube.getY();
+		int cubeZ = cube.getZ();
+
+		//Actually we don't need all neightbor cubes, but to be sure generation order is correct...
+		if( !CubeProviderTools.cubeAndNeighborsExist( m_provider, cubeX, cubeY, cubeZ ) )
+		{
+			return false;
+		}
+
+		if( !CubeProviderTools.checkGenerationStage( m_provider, GeneratorStage.Population, cubeX, cubeY, cubeZ, cubeX + 1, cubeY + 1, cubeZ + 1 ) )
+		{
+			return false;
+		}
+		//BlockFalling.fallInstantly
+		BlockFalling.field_149832_M = true;
+
+		int xAbs = cubeX * 16;
+		int yAbs = cubeY * 16;
+		int zAbs = cubeZ * 16;
+
+		//This can be easily replaced with an different biome definition for underground decoration
+		//CubeBiomeGenBase biome = (CubeBiomeGenBase)world.getBiomeGenForCoords( xAbs + 16, zAbs + 16 );
+				
+		Random rand = new Random( world.getSeed() );
+		long rand1 = rand.nextLong() / 2L * 2L + 1L;
+		long rand2 = rand.nextLong() / 2L * 2L + 1L;
+		long rand3 = rand.nextLong() / 2L * 2L + 1L;
+		rand.setSeed( (long)cubeX * rand1 + (long)cubeY * rand2 + (long)cubeZ * rand3 ^ world.getSeed() );
+
+		
+		//Start from center of cube
+		int xCenter = xAbs + 8;
+		int yCenter = yAbs + 8;
+		int zCenter = zAbs + 8;
+
+		int genX;
+		int genY;
+		int genZ;
+
+		if( rand.nextInt( 16 ) == 0 )
+		{
+			genX = xCenter + rand.nextInt( 16 );
+			genY = yCenter + rand.nextInt( 16 );
+			genZ = zCenter + rand.nextInt( 16 );
+			(new WorldGenLakes( Blocks.water )).generate( world, rand, genX, genY, genZ );
+		}
+
+
+		if(rand.nextInt( 8 ) == 0 )
+		{
+			if( rand.nextInt( Math.max( 1, cubeY + 16 - m_seaLevel / 16 ) ) == 0 )
+			{
+				genX = xCenter + rand.nextInt( 16 );
+				genY = yCenter + rand.nextInt( 16 );
+				genZ = zCenter + rand.nextInt( 16 );
+
+				if( genY < m_seaLevel || rand.nextInt( 10 ) == 0 )
+				{
+					(new WorldGenLakes( Blocks.lava )).generate( world, rand, genX, genY, genZ );
+				}
+			}
+		}
+		
+		for( int i = 0; i < 8; ++i )
+		{
+			if( rand.nextInt( 16 ) != 0 )
+			{
+				continue;
+			}
+			genX = xCenter + rand.nextInt( 16 );
+			genY = yCenter + rand.nextInt( 16 );
+			genZ = zCenter + rand.nextInt( 16 );
+			(new WorldGenDungeons()).generate( world, rand, genX, genY, genZ );
+		}
+		return true;
+	}
+	
+	public boolean calculateSky( Cube cube, CubeWorldServer world, AlternateWorldColumnManager wcm)
+	{
+		int cubeX = cube.getX();
+		int cubeY = cube.getY();
+		int cubeZ = cube.getZ();
+
+		//Actually we don't need all neightbor cubes, but to be sure generation order is correct...
+		if( !CubeProviderTools.cubeAndNeighborsExist( m_provider, cubeX, cubeY, cubeZ ) )
+		{
+			return false;
+		}
+
+		if( !CubeProviderTools.checkGenerationStage( m_provider, GeneratorStage.Population, cubeX, cubeY, cubeZ, cubeX + 1, cubeY + 1, cubeZ + 1 ) )
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	public boolean calculateSurface( Cube cube , CubeWorldServer world, AlternateWorldColumnManager wcm)
 	{
 		//uncomment line below to disable populator
 		//if(true) return true;
@@ -58,7 +185,6 @@ public class PopulationProcessor extends CubeProcessor
 		int yAbs = cubeY * 16;
 		int zAbs = cubeZ * 16;
 
-		CubeWorldServer world = (CubeWorldServer)cube.getWorld();
 		CubeBiomeGenBase biome = (CubeBiomeGenBase)world.getBiomeGenForCoords( xAbs + 16, zAbs + 16 );
 
 		Random rand = new Random( world.getSeed() );
@@ -114,49 +240,36 @@ public class PopulationProcessor extends CubeProcessor
 				}
 			}
 		}
-		//really? instead of making a new var here, they reuse var12 and make a new var15 instead of how they were doing it the previous two times
-		// ^ code obfuscator did it
-		/*for( var12 = 0; var12 < 8; ++var12 ) 
-		 {
-		 var13 = xAbs + m_rand.nextInt( 16 ) + 8;
-		 var14 = m_rand.nextInt( 256 );
-		 int var15 = zAbs + m_rand.nextInt( 16 ) + 8;
-		 ( new WorldGenDungeons() ).generate( m_world, m_rand, var13, var14, var15 );
-		 }*/
-		for( int i = 0; i < 8; ++i )
-		{
-			if( rand.nextInt( 16 ) != 0 )
-			{
-				continue;
-			}
-			genX = xCenter + rand.nextInt( 16 );
-			genY = yCenter + rand.nextInt( 16 );
-			genZ = zCenter + rand.nextInt( 16 );
-			(new WorldGenDungeons()).generate( world, rand, genX, genY, genZ );
-		}
 
 		biome.decorate( world, rand, cubeX, cubeY, cubeZ );
 		//TODO: cubify this:
 		//SpawnerAnimals.performWorldGenSpawning( m_world, var6, xAbs + 8, zAbs + 8, 16, 16, m_rand );
 
-		int xCenterPlus16 = xCenter + 16;
-		int zCenterPlus16 = xCenter + 16;
-		for( int x = xCenter; x < xCenterPlus16; x++ )
+		double[][] temps = wcm.getTempArray(cubeX, cubeZ);
+		for( int x = 0; x < 16; x++ )
 		{
-			for( int z = zCenter; z < zCenterPlus16; z++ )
+			for( int z = 0; z < 16; z++ )
 			{
-				int y = world.getPrecipitationHeight( x, z ) - 1;
+				Column c = cube.getColumn();
+				int y = c.getSkylightBlockY(x,z) - 1;
 				if( Coords.blockToCube( y ) != cubeY )
 				{
 					continue;
 				}
-				if( world.isBlockFreezable( x, y, z ) )
+				//freeze the ocean/lakes
+				if( cube.getBlock( x, Coords.blockToLocal(y), z ) == Blocks.water && temps[x][z] < 0.3D && y > m_seaLevel )
 				{
-					world.setBlock( x, y, z, Blocks.ice, 0, 2 );
+					cube.setBlock( x, Coords.blockToLocal(y), z, Blocks.ice, 0 );
 				}
-				if( world.func_147478_e( x, y, z, true ) )
+				//freeze pools
+				else if (cube.getBlock( x, Coords.blockToLocal(y), z ) == Blocks.water && temps[x][z] < 0.2D && y <= m_seaLevel)
 				{
-					world.setBlock( x, y + 1, z, Blocks.snow_layer, 0, 2 );
+					cube.setBlock( x, Coords.blockToLocal(y), z, Blocks.ice, 0 );
+				}
+				//place snow
+				else if( cube.getColumn().func_150810_a(x, y + 1, z) == Blocks.air  && temps[x][z] < 0.34D )
+				{
+					cube.getColumn().func_150807_a( x, y + 1, z, Blocks.snow_layer, 0 );
 				}
 			}
 		}

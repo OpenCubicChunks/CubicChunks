@@ -80,7 +80,7 @@ public class BiomeProcessor extends CubeProcessor
 		m_noise = m_noiseGen.func_151599_a(
 			m_noise,
 			Coords.cubeToMinBlock( cube.getX() ), Coords.cubeToMinBlock( cube.getZ() ),
-			16, 16, 16, 16, 1
+			16, 16, 0.06D, 0.06D, 1
 		);
 		
 		Cube above = provider.provideCube(cube.getX(), cube.getY() + 1, cube.getZ());
@@ -111,7 +111,7 @@ public class BiomeProcessor extends CubeProcessor
 				
 				//Biome blocks depth in current block column. 0 for negative values.
 
-				biome.replaceBlocks( m_worldServer, m_rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, m_noise[zRel + xRel * 16] );
+				biome.replaceBlocks( m_worldServer, m_rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, m_noise[zRel * 16 + xRel] );
 			}
 		}	
 		

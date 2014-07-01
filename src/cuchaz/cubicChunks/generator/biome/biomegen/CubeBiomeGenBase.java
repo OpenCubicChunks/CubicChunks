@@ -16,6 +16,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.MathHelper;
+import net.minecraft.world.ColorizerGrass;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenBigTree;
 
@@ -521,6 +523,28 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 			return ocean;
 		}
 	}
+	
+	@Override
+    public int getBiomeGrassColor(int p_150558_1_, int p_150558_2_, int p_150558_3_)
+    {
+        double var4 = (double)MathHelper.clamp_float(this.getFloatTemperatures(p_150558_1_, p_150558_2_, p_150558_3_), 0.0F, 1.0F);
+        double var6 = (double)MathHelper.clamp_float(this.getFloatRainfall(), 0.0F, 1.0F);
+        return ColorizerGrass.getGrassColor(var4, var6);
+    }
+
+	//Needed to adjust variable height based biome coloring for greater terrain heights.
+    public final float getFloatTemperatures(int p_150564_1_, int p_150564_2_, int p_150564_3_)
+    {
+        if (p_150564_2_ > 64)
+        {
+            float var4 = (float)field_150605_ac.func_151601_a((double)p_150564_1_ * 1.0D / 8.0D, (double)p_150564_3_ * 1.0D / 8.0D) * 4.0F;
+            return this.temperature - (var4 + (float)p_150564_2_ - 64.0F) * 0.01F / 30.0F;
+        }
+        else
+        {
+            return this.temperature;
+        }
+    }
 
 	static
 	{

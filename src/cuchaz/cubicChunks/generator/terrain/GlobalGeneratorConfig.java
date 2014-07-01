@@ -6,7 +6,7 @@ import static cuchaz.cubicChunks.util.Coords.CUBE_MAX_Z;
 
 public class GlobalGeneratorConfig
 {
-	public static final double maxElev = 128;
+	public static final double maxElev = 256;
 	
 	//these are constants. Changing them may cause issued.
 	public static final int X_NOISE_SIZE = CUBE_MAX_X / 4 + 1;

@@ -62,6 +62,7 @@ public class CubeWorldClient extends WorldClient implements CubeWorld
 		super.tick();
 		
 		m_lightingManager.tick();
+		WorldClientAccessor.getChunkProvider(this).unloadQueuedChunks( );
 	}
 	
 	@Override
