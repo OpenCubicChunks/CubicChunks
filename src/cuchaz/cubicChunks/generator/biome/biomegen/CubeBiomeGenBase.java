@@ -39,12 +39,12 @@ import java.lang.reflect.Field;
 import java.util.List;
 import net.minecraft.world.biome.BiomeGenBase;
 
-public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGenBase
+public abstract class CubeBiomeGenBase extends BiomeGenBase
 {
 	private static final Logger logger = LogManager.getLogger();
 
 	/** An array of all the biomes, indexed by biome id. */
-	private static final BiomeGenBase[] biomeList;
+	private static final CubeBiomeGenBase[] biomeList = new CubeBiomeGenBase[256];
 
 	static
 	{
@@ -80,7 +80,7 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 			logger.fatal( "Impossible exception!", ex );
 		}
 
-		biomeList = temp;
+		//biomeList = temp;
 	}
 
 	protected static final CubeBiomeGenBase.Height defaultBiomeRange = new CubeBiomeGenBase.Height( 0.1F, 0.2F );
@@ -543,6 +543,19 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
         else
         {
             return this.temperature;
+        }
+    }
+    
+    public static CubeBiomeGenBase func_150568_d(int p_150568_0_)
+    {
+        if (p_150568_0_ >= 0 && p_150568_0_ <= biomeList.length)
+        {
+            return biomeList[p_150568_0_];
+        }
+        else
+        {
+            logger.warn("Biome ID is out of bounds: " + p_150568_0_ + ", defaulting to 0 (Ocean)");
+            return ocean;
         }
     }
 
