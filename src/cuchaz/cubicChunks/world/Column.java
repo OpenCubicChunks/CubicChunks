@@ -16,6 +16,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -39,6 +40,7 @@ import org.apache.logging.log4j.Logger;
 
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.CubeWorldProvider;
+import cuchaz.cubicChunks.client.CubeProviderClient;
 import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
@@ -619,6 +621,13 @@ public class Column extends Chunk
 	@Override
 	public void onChunkLoad()
 	{
+		// tell the world about entities
+		for( Entity entity : m_entities.entities() )
+		{
+			entity.onChunkLoad();
+		}
+		worldObj.addLoadedEntities( m_entities.entities() );
+
 		isChunkLoaded = true;
 	}
 
@@ -700,7 +709,6 @@ public class Column extends Chunk
 	public void fillChunk( byte[] data, int segmentsToCopyBitFlags, int blockMSBToCopyBitFlags, boolean isFirstTime )
 	{
 		// NOTE: this is called on the client when it receives chunk data from the server
-
 		ByteArrayInputStream buf = new ByteArrayInputStream( data );
 		DataInputStream in = new DataInputStream( buf );
 
@@ -711,13 +719,13 @@ public class Column extends Chunk
 			for( int i = 0; i < numCubes; i++ )
 			{
 				int cubeY = in.readInt();
+				boolean isEmpty = in.readBoolean();
 				Cube cube = getOrCreateCube( cubeY, false );
 
 				// if the cube came from the server, it must be live
 				cube.setGeneratorStage( GeneratorStage.getLastStage() );
 
 				// is the cube empty?
-				boolean isEmpty = in.readBoolean();
 				cube.setEmpty( isEmpty );
 
 				if( !isEmpty )
@@ -768,6 +776,22 @@ public class Column extends Chunk
 			getLightIndex().readData( in );
 
 			in.close();
+			
+			// 8. clean up column if we have just emptied all its cubes
+			if ( worldObj.isClient){
+				boolean unload = true;
+				Iterator<Cube> c = cubes().iterator();
+				while (c.hasNext()){
+					if (!c.next().isEmpty()){
+						unload = false;
+						break;
+					}
+				}
+				if (unload){
+					CubeProviderClient provider = (CubeProviderClient) worldObj.getChunkProvider();
+					provider.unloadChunk(this.getX(), this.getZ());
+				}
+			}
 		}
 		catch( IOException ex )
 		{

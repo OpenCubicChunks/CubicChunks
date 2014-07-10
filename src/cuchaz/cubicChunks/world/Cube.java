@@ -473,13 +473,6 @@ public class Cube
 	
 	public void onLoad( )
 	{
-		// tell the world about entities
-		for( Entity entity : m_entities.entities() )
-		{
-			entity.onChunkLoad();
-		}
-		m_world.addLoadedEntities( m_entities.entities() );
-		
 		// tell the world about tile entities
 		m_world.func_147448_a( m_tileEntities.values() );
 	}

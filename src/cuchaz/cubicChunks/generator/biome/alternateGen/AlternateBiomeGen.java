@@ -23,13 +23,13 @@ public class AlternateBiomeGen
 		
 //ocean biomes
 //		new AlternateBiomeGenInfo(	vMin,	vMax,	hMin,	hMax,	tMin,	tMax,	rMin,	rMax,	rarity,	size,	addVol,	biome)
-		new AlternateBiomeGenInfo(	0.0F,	0.5F,	-0.5F,	-0.03F,	0.2F,	1.0F,	0.0F,	1.0F,	0.0F,	1.0F,	true,	CubeBiomeGenBase.ocean),//ocean
+		new AlternateBiomeGenInfo(	0.0F,	0.5F,	-0.5F,	0.0F,	0.2F,	1.0F,	0.0F,	1.0F,	0.0F,	1.0F,	true,	CubeBiomeGenBase.ocean),//ocean
 		new AlternateBiomeGenInfo(	0.0F,	0.5F,	-1.0F,	-0.5F,	0.2F,	1.0F,	0.0F,	1.0F,	0.0F,	1.0F,	true,	CubeBiomeGenBase.deepOcean), //Deep Ocean
-		new AlternateBiomeGenInfo(	0.0F,	0.5F,	-1.0F,	-0.5F,	0.0F,	0.2F,	0.0F,	1.0F,	0.0F,	1.0F,	true,	CubeBiomeGenBase.frozenOcean ), //Frozen Ocean
+		new AlternateBiomeGenInfo(	0.0F,	0.5F,	-1.0F,	0.0F,	0.0F,	0.2F,	0.0F,	1.0F,	0.0F,	1.0F,	true,	CubeBiomeGenBase.frozenOcean ), //Frozen Ocean
 //sea level biomes
 		//AlternateBiomeGenInfo(	vMin,	vMax,	hMin,	hMax,	tMin,	tMax,	rMin,	rMax,	rarity,	size,	check,	biome)
-		new AlternateBiomeGenInfo(	0.0F,	0.05F,	-0.05F,	0.05F,	0.5F,	1.0F,	0.0F,	0.7F,	0.6F,	1.0F,	false,	CubeBiomeGenBase.beach),//beach
-		new AlternateBiomeGenInfo(	0.0F,	0.1F,	-0.05F,	0.05F,	0.0F,	0.5F,	0.0F,	0.7F, 	0.6F,	1.0F,	false,	CubeBiomeGenBase.coldBeach),//Cold beach
+		new AlternateBiomeGenInfo(	0.0F,	0.05F,	-0.02F,	0.05F,	0.5F,	1.0F,	0.0F,	0.7F,	0.6F,	1.0F,	false,	CubeBiomeGenBase.beach),//beach
+		new AlternateBiomeGenInfo(	0.0F,	0.1F,	-0.02F,	0.05F,	0.0F,	0.5F,	0.0F,	0.7F, 	0.6F,	1.0F,	false,	CubeBiomeGenBase.coldBeach),//Cold beach
 		new AlternateBiomeGenInfo(	0.0F,	0.2F,	-0.05F,	0.05F,	0.6F,	0.9F,	0.7F,	1.0F,	-1.0F, 	1.0F, 	true, 	CubeBiomeGenBase.swampland),//SWAMPLAND
 		new AlternateBiomeGenInfo(	0.2F,	0.5F,	-0.05F,	0.05F,	0.6F,	0.9F,	0.7F,	1.0F,	0.0F, 	1.0F,	true,	CubeBiomeGenBase.getBiome(134) ),//Swampland M
 		new AlternateBiomeGenInfo(	0.0F,	0.2F,	-0.05F,	0.05F,	0.6F,	0.9F,	0.5F,	1.0F,	1.0F, 	1.0F, 	true, 	CubeBiomeGenBase.mushroomIsland),//MushroomIsland
@@ -42,7 +42,7 @@ public class AlternateBiomeGen
 		new AlternateBiomeGenInfo(	0.15F,	0.3F,	0.025F,	0.4F,	0.3F,	0.7F,	0.4F,	0.8F,	0.0F,	1.0F,	true,	CubeBiomeGenBase.getBiome(129) ),//Sunflower Plains
 		new AlternateBiomeGenInfo(	0.0F,	0.15F,	0.025F,	0.4F,	0.3F,	0.7F,	0.4F,	0.8F,	0.0F,	1.0F,	true,	CubeBiomeGenBase.plains ),//plains
 		new AlternateBiomeGenInfo(	0.0F,	0.15F,	0.025F,	0.4F,	0.0F,	0.3F,	0.3F,	0.6F,	0.6F,	1.0F,	true,	CubeBiomeGenBase.icePlains ), //ice plains
-		new AlternateBiomeGenInfo(	0.15F,	0.3F,	0.025F,	0.4F,	0.0F,	0.3F,	0.3F,	0.6F,	0.6F,	1.1F,	true,	CubeBiomeGenBase.getBiome(135) ),//Ice Plain Spikes
+		new AlternateBiomeGenInfo(	0.15F,	0.3F,	0.025F,	0.4F,	0.0F,	0.3F,	0.3F,	0.6F,	0.6F,	1.1F,	true,	CubeBiomeGenBase.getBiome(140) ),//Ice Plain Spikes
 //rolling hills biomes
 		//AlternateBiomeGenInfo(	vMin,	vMax,	hMin,	hMax,	tMin,	tMax,	rMin,	rMax,	rarity,	size,	check,	biome)
 		new AlternateBiomeGenInfo(	0.0F,	0.5F,	0.2F,	0.6F,	0.8F,	1.0F,	0.7F,	1.0F,	0.0F,	1.0F,	true,	CubeBiomeGenBase.jungle), //jungle 
@@ -51,7 +51,7 @@ public class AlternateBiomeGen
 		//new AlternateBiomeGenInfo(	0.0F,	0.15F,	0.0F,			0.2F,	0.0F,	0.2F,	0.3F,	0.6F,	1.1F,	CubeBiomeGenBase.getBiome(151) ),//Jungle edge M
 		new AlternateBiomeGenInfo(	0.0F,	0.5F,	0.2F,	0.6F,	0.7F,	1.0F,	0.5F,	0.7F,	0.0F,	3.0F,	true,	CubeBiomeGenBase.roofedForest), //Roofed Forest
 		new AlternateBiomeGenInfo(	0.5F,	1.0F,	0.2F,	0.6F,	0.7F,	1.0F,	0.5F,	0.7F,	0.0F,	1.1F,	true,	CubeBiomeGenBase.getBiome(157) ),//Roofed Forest M
-		new AlternateBiomeGenInfo(	0.0F,	0.15F,	0.3F,	0.6F,	0.6F,	0.8F,	0.1F,	0.6F,	0.0F,	3.0F,	true, 	CubeBiomeGenBase.SavannaPlateau), //svanna plateau
+		new AlternateBiomeGenInfo(	0.0F,	0.15F,	0.3F,	0.6F,	0.6F,	0.8F,	0.1F,	0.6F,	0.0F,	1.0F,	true, 	CubeBiomeGenBase.SavannaPlateau), //svanna plateau
 		new AlternateBiomeGenInfo(	0.15F,	0.4F,	0.3F,	0.6F,	0.6F,	0.8F,	0.1F,	0.6F,	0.0F,	1.1F,	true,	CubeBiomeGenBase.getBiome(164) ),//Savanna Plateau M
 		new AlternateBiomeGenInfo(	0.0F,	0.5F,	0.2F,	0.6F,	0.5F,	0.7F,	0.7F,	1.0F,	0.0F,	1.0F,	true,	CubeBiomeGenBase.forest ),//forest
 		new AlternateBiomeGenInfo(	0.5F,	1.0F,	0.2F,	0.6F,	0.5F,	0.7F,	0.4F,	1.0F,	0.0F,	1.0F, 	true,	CubeBiomeGenBase.getBiome(132) ),//Flower Forest

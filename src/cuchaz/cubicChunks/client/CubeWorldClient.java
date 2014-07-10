@@ -15,6 +15,7 @@ import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.IWorldAccess;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.chunk.IChunkProvider;
 import cuchaz.cubicChunks.CubeProvider;
@@ -22,6 +23,7 @@ import cuchaz.cubicChunks.CubeProviderTools;
 import cuchaz.cubicChunks.CubeWorld;
 import cuchaz.cubicChunks.accessors.WorldClientAccessor;
 import cuchaz.cubicChunks.lighting.LightingManager;
+import cuchaz.cubicChunks.world.Column;
 
 public class CubeWorldClient extends WorldClient implements CubeWorld
 {
@@ -62,7 +64,6 @@ public class CubeWorldClient extends WorldClient implements CubeWorld
 		super.tick();
 		
 		m_lightingManager.tick();
-		WorldClientAccessor.getChunkProvider(this).unloadQueuedChunks( );
 	}
 	
 	@Override

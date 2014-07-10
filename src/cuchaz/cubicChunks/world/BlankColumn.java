@@ -28,6 +28,11 @@ public class BlankColumn extends Column
 	@Override
 	public Cube getOrCreateCube( int cubeY, boolean isModified )
 	{
+		//hacky correction for world gen crash
+		//needs more work. Client isn't loading the column (0,0) from the server
+		if (this.getX() == 0 && this.getZ() == 0){
+			return super.getOrCreateCube(cubeY, isModified);
+		}
 		throw new UnsupportedOperationException();
 	}
 	

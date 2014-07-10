@@ -61,7 +61,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		heightBuilder = new BasicBuilder();
 		heightBuilder.setSeed( rand.nextInt() );
 		heightBuilder.setOctaves( octaves + 1 );
-		heightBuilder.setMaxElev( 1.5 );
+		heightBuilder.setMaxElev( 1.1 );
 		heightBuilder.setFreq( freqH );
 		heightBuilder.build();
 
@@ -260,13 +260,29 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 	public double getRealVolatility( double volatilityRaw, double heightRaw, double rainfallRaw, double temperatureRaw )
 	{
-		return Math.min( Math.abs( heightRaw ), (Math.abs( volatilityRaw ) * 0.95D + 0.05) * Math.sqrt( Math.abs( heightRaw ) ) ) * (1 - Math.pow( 1 - rainfallRaw * temperatureRaw, 4 ));
+		return Math.min( Math.abs( heightRaw ), (Math.abs( volatilityRaw ) * 0.95D + 0.05) * Math.sqrt( Math.abs( heightRaw * heightRaw ) ) ) * (1 - Math.pow( 1 - rainfallRaw * temperatureRaw, 4 ));
 	}
 
-	public double getRealHeight( double heightRaw )
+	public double getRealHeight( double heightRaw , double temp, double rainfall)
 	{
-		return (heightRaw * 1.4 + heightRaw*heightRaw*Math.sin(heightRaw*17)) * 30;
+		//return (heightRaw * 1.4 + heightRaw*heightRaw*Math.sin(heightRaw*17)) * 30;
 		//Maybe use this function?: ((sin(x*pi - pi/2)^3)/2+0.5)^1.3
+		if (heightRaw < -0.0){
+			return heightRaw;
+		}
+		else if (heightRaw > 0.0 && heightRaw <= 0.05){
+			return heightRaw * 0.02D;
+		}
+		else if (heightRaw > 0.05 && heightRaw <= 0.3){
+			return heightRaw * 0.5D - 0.015D;
+		}
+		else if (heightRaw > 0.3 && heightRaw <= 0.6){
+			return heightRaw - 0.135D;
+		}
+		else if (heightRaw > 0.6 && heightRaw <= 0.8){
+			return 1.5D * heightRaw - 0.465D;
+		}
+		return 1.75 * heightRaw - 0.065D - 0.6;
 	}
 
 	private double[][] populateArray( double[][] array, IBuilder builder, int startX, int startZ, int xSize, int zSize )
