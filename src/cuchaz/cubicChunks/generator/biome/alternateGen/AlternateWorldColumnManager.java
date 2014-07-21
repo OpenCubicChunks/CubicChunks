@@ -33,10 +33,12 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	{
 		return (x & 0xFFFFFFFFl) | ((z & 0xFFFFFFFFl) << 32);
 	}
+	
+	private AlternateBiomeGen biomeGen;
 
 	public AlternateWorldColumnManager( CubeWorldServer world )
 	{
-		AlternateBiomeGen.createBuilderForWorld( world );
+		this.biomeGen = new AlternateBiomeGen( world );
 		this.biomeCache = new BiomeCache( this );
 		this.biomesToSpawnIn = new ArrayList<CubeBiomeGenBase>( 7 );
 		this.biomesToSpawnIn.add( CubeBiomeGenBase.forest );
@@ -95,16 +97,16 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		this.biomeFindersPriorityList = new LinkedList<BiomeFinder>();
 
 		int flags = 0;//default biome finder. Check everything
-		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, biomeGen, flags ) );
 
 		flags |= BiomeFinder.IGNORE_TEMP | BiomeFinder.IGNORE_RAINFALL | BiomeFinder.TEMP_INV | BiomeFinder.RAINFALL_INV;//if no biome found - ignore values player can't see and try again
-		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, biomeGen, flags ) );
 
 		flags |= BiomeFinder.FORCE_NO_EXTENDED_HEIGHT_VOL_CHEKCS;//maybe try without extended height and volatility checks...
-		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, biomeGen, flags ) );
 
 		flags |= BiomeFinder.IGNORE_VOL | BiomeFinder.VOLATILITY_INV | BiomeFinder.NO_RARITY;//If averything else fails - ignore volatility to find something. Ignore rarity.
-		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, biomeGen, flags ) );
 			//If still nothing found - give up and throw an Exception...
 		//ignoring height would be too risky...
 	}
@@ -363,7 +365,6 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 	private CubeBiomeGenBase getBiomeForValues( double x, double z, double vol, double height, double temp, double rainfall )
 	{
-
 		CubeBiomeGenBase biome = null;
 
 		for( BiomeFinder finder: biomeFindersPriorityList )
