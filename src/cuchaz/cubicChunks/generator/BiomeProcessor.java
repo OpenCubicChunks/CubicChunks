@@ -55,7 +55,7 @@ public class BiomeProcessor extends CubeProcessor
 	@Override
 	public boolean calculate( Cube cube )
 	{
-		//uncomment line below ti disable dirt/grass generation
+		//uncomment line below to disable dirt/grass generation
 		//if(true) return true;
 		// only continue if the neighboring cubes exist
 		CubeProvider provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
@@ -92,7 +92,7 @@ public class BiomeProcessor extends CubeProcessor
 		int bottomOfCube = Coords.cubeToMinBlock(cube.getY());
 		
 		// already checked that cubes above and below exist
-		// Do not modyfy cubes above/below to avoid generating dirt/grass in caves
+		// Do not modify cubes above/below to avoid generating dirt/grass in caves
 		int alterationTop = topOfCube;
 		int top = topOfCubeAbove;
 		int bottom = bottomOfCube;

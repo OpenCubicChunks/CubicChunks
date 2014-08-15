@@ -21,6 +21,9 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 {
 	//Cache for noise fields.
 	private final CacheMap<Long, NoiseArrays> noiseCache = new CacheMap<Long, NoiseArrays>( 1024, 1100 );
+	
+	//Cache for noise fields accessed only once every 64 columns
+	private final CacheMap<Long, NoiseArrays> noiseCache2 = new CacheMap<Long, NoiseArrays>( 128, 132 );
 
 	//Builders for height volatility temperature and rainfall
 	private final BasicBuilder volatilityBuilder, heightBuilder, tempBuilder, rainfallBuilder;
@@ -28,15 +31,22 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	private final List<CubeBiomeGenBase> biomesToSpawnIn;
 
 	private final List<BiomeFinder> biomeFindersPriorityList;
+	
+	private Long worldSeed;
+	
+	private int zoom = 7;
 
 	private static Long xzToLong( int x, int z )
 	{
 		return (x & 0xFFFFFFFFl) | ((z & 0xFFFFFFFFl) << 32);
 	}
 
+	private AlternateBiomeGen biomeGen;
+	
 	public AlternateWorldColumnManager( CubeWorldServer world )
 	{
-		AlternateBiomeGen.createBuilderForWorld( world );
+		this.worldSeed = world.getSeed();
+		this.biomeGen = new AlternateBiomeGen( world );
 		this.biomeCache = new BiomeCache( this );
 		this.biomesToSpawnIn = new ArrayList<CubeBiomeGenBase>( 7 );
 		this.biomesToSpawnIn.add( CubeBiomeGenBase.forest );
@@ -48,10 +58,10 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		this.biomesToSpawnIn.add( CubeBiomeGenBase.jungleHills );
 
 		//this.world = world;
-		double freqH = 0.002 / (maxElev / 256) / (4 * Math.PI);
+		double freqH = 0.003 / (maxElev / 256) / (4 * Math.PI);
 		double freqV = 0.003 / (maxElev / 256) / (4 * Math.PI);
-		double freqT = 0.0009 / (maxElev / 256) / (4 * Math.PI);
-		double freqR = 0.0009 / (maxElev / 256) / (4 * Math.PI);
+		double freqT = 0.005 / (maxElev / 256) / (4 * Math.PI);
+		double freqR = 0.005 / (maxElev / 256) / (4 * Math.PI);
 
 		int octaves = (int)(Math.log( maxElev ));
 
@@ -60,8 +70,8 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 		heightBuilder = new BasicBuilder();
 		heightBuilder.setSeed( rand.nextInt() );
-		heightBuilder.setOctaves( octaves + 1 );
-		heightBuilder.setMaxElev( 1.1 );
+		heightBuilder.setOctaves( octaves  );
+		heightBuilder.setMaxElev( 1.3 );
 		heightBuilder.setFreq( freqH );
 		heightBuilder.build();
 
@@ -95,16 +105,16 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		this.biomeFindersPriorityList = new LinkedList<BiomeFinder>();
 
 		int flags = 0;//default biome finder. Check everything
-		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, biomeGen, flags ) );
 
 		flags |= BiomeFinder.IGNORE_TEMP | BiomeFinder.IGNORE_RAINFALL | BiomeFinder.TEMP_INV | BiomeFinder.RAINFALL_INV;//if no biome found - ignore values player can't see and try again
-		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, biomeGen, flags ) );
 
 		flags |= BiomeFinder.FORCE_NO_EXTENDED_HEIGHT_VOL_CHEKCS;//maybe try without extended height and volatility checks...
-		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, biomeGen, flags ) );
 
 		flags |= BiomeFinder.IGNORE_VOL | BiomeFinder.VOLATILITY_INV | BiomeFinder.NO_RARITY;//If averything else fails - ignore volatility to find something. Ignore rarity.
-		this.biomeFindersPriorityList.add( new BiomeFinder( world, flags ) );
+		this.biomeFindersPriorityList.add( new BiomeFinder( world, biomeGen, flags ) );
 			//If still nothing found - give up and throw an Exception...
 		//ignoring height would be too risky...
 	}
@@ -167,6 +177,61 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 	public double[][] getHeightArray( int columnX, int columnZ )
 	{
 		return getFromCacheOrGenerate( noiseCache, NoiseArrays.Type.HEIGHT, columnX, columnZ );
+	}
+	
+	public double  getTempFromCache2( int X, int Z )
+	{
+		return getFromCache2OrGenerate( noiseCache2, NoiseArrays.Type.TEMPERATURE, X, Z )[0][0];
+	}
+
+	/**
+	 * @param columnX
+	 * @param columnZ
+	 * @return Rainfall array
+	 */
+	public double  getRainfallFromCache2( int X, int Z )
+	{
+		return getFromCache2OrGenerate( noiseCache2, NoiseArrays.Type.RAINFALL, X, Z )[0][0];
+	}
+
+	/**
+	 * @param columnX
+	 * @param columnZ
+	 * @return Volatility array
+	 */
+	public double  getVolFromCache2( int X, int Z )
+	{
+		return getFromCache2OrGenerate( noiseCache2, NoiseArrays.Type.VOLATILITY, X, Z )[0][0];
+	}
+
+	/**
+	 * @param columnX
+	 * @param columnZ
+	 * @return Height array, needs to be interpolated (4x4 by default)
+	 */
+	public double  getHeightFromCache2( int X, int Z )
+	{
+		return getFromCache2OrGenerate( noiseCache2, NoiseArrays.Type.HEIGHT, X, Z )[0][0];
+	}
+	
+	public double getHeight( int x, int z )
+	{
+		return heightBuilder.getValue( x, 0, z );
+	}
+
+	public double getVolatility( int x, int z )
+	{
+		return volatilityBuilder.getValue( x, 0, z );
+	}
+
+	public double getTemp( int x, int z )
+	{
+		return tempBuilder.getValue( x, 0, z );
+	}
+
+	public double getRainfall( int x, int z )
+	{
+		return rainfallBuilder.getValue( x, 0, z );
 	}
 
 	@Override
@@ -268,21 +333,21 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		//return (heightRaw * 1.4 + heightRaw*heightRaw*Math.sin(heightRaw*17)) * 30;
 		//Maybe use this function?: ((sin(x*pi - pi/2)^3)/2+0.5)^1.3
 		if (heightRaw < -0.0){
-			return heightRaw;
+			return heightRaw;//ocean
 		}
 		else if (heightRaw > 0.0 && heightRaw <= 0.05){
-			return heightRaw * 0.02D;
+			return heightRaw * 0.2D;//beach, swamp
 		}
 		else if (heightRaw > 0.05 && heightRaw <= 0.3){
-			return heightRaw * 0.5D - 0.015D;
+			return heightRaw * 0.5D - 0.015D;//plains, savanna, etc.
 		}
 		else if (heightRaw > 0.3 && heightRaw <= 0.6){
-			return heightRaw - 0.135D;
+			return heightRaw - 0.165D;//forest, desert, mesa, etc.
 		}
 		else if (heightRaw > 0.6 && heightRaw <= 0.8){
-			return 1.5D * heightRaw - 0.465D;
+			return 1.5D * heightRaw - 0.465D;//hill biomes
 		}
-		return 1.75 * heightRaw - 0.065D - 0.6;
+		return 1.75 * heightRaw - 0.065D - 0.6;//extreme hills, ice mountains
 	}
 
 	private double[][] populateArray( double[][] array, IBuilder builder, int startX, int startZ, int xSize, int zSize )
@@ -312,6 +377,35 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		}
 		return arrays.get( type );
 	}
+	
+	private double[][] getFromCache2OrGenerate( CacheMap<Long, NoiseArrays> cache, NoiseArrays.Type type, int X, int Z )
+	{
+		X = (X >> zoom) << zoom;
+		Z = (Z >> zoom) << zoom;
+		NoiseArrays arrays = cache.get( xzToLong( X, Z ) );
+		if( arrays == null )
+		{
+			addToNoiseCache2( X, Z );
+			arrays = cache.get( xzToLong( X, Z ) );
+			assert arrays != null;
+		}
+		return arrays.get( type );
+	}
+	
+	private void addToNoiseCache2( int X, int Z )
+	{
+		double[][] vol = new double [1][1];
+		double[][] height = new double [1][1];
+		double[][] temp = new double [1][1];
+		double [][] rainfall = new double [1][1];
+		vol[0][0] = this.getVolatility( X, Z);
+		height[0][0] = this.getHeight( X, Z);
+		temp[0][0] = this.getTemp( X, Z);
+		rainfall[0][0] = this.getRainfall( X, Z);
+		
+		NoiseArrays arrays2 = new NoiseArrays(vol, height, temp, rainfall);
+		noiseCache2.put( xzToLong(  X, Z) , arrays2);
+	}
 
 	private void generateAllNoiseArrays( int columnX, int columnZ )
 	{
@@ -326,7 +420,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		populateArray( heightArray, heightBuilder, columnX * 16, columnZ * 16, 17, 17 );
 		populateArray( tempArray, tempBuilder, columnX * 16, columnZ * 16, 17, 17 );
 		populateArray( rainfallArray, rainfallBuilder, columnX * 16, columnZ * 16, 17, 17 );
-
+		
 		NoiseArrays arrays = new NoiseArrays( volArray, heightArray, tempArray, rainfallArray );
 		noiseCache.put( xzToLong( columnX, columnZ ), arrays );
 	}
@@ -345,32 +439,51 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		{
 			for( int z = minChunkZ; z <= maxChunkZ; z++ )
 			{
+				double[][] heightArray = this.getHeightArray(x, z);
 				double[][] volArray = getVolArray( x, z );
-				double[][] heightArray = getHeightArray( x, z );
 				double[][] tempArray = getTempArray( x, z );
 				double[][] rainfallArray = getRainfallArray( x, z );
 				for( int xRel = 0; xRel < 16; xRel++ )
 				{
 					for( int zRel = 0; zRel < 16; zRel++ )
 					{
-						int xAbs = x << 4 | xRel;
-						int zAbs = z << 4 | zRel;
-						if( xAbs < blockX || zAbs < blockZ || xAbs >= blockX + width || zAbs >= blockZ + length )
+						int [] coords = getAlteredCoordinates((x<<4)+xRel,(z<<4)+zRel,this.worldSeed);
+						double height;
+						double vol;
+						double rainfall;
+						double temp;
+						CubeBiomeGenBase biome;
+						if (heightArray[xRel][zRel] > 0.05)
 						{
-							continue;
+							int x1 = coords[0];
+							int z1 = coords[1];
+							int chunkX = x1 >> 4;
+							int chunkZ = z1 >> 4;
+							vol = getVolFromCache2(x1,z1);
+							height = getHeightFromCache2(x1,z1);
+							temp = getTempFromCache2(x1,z1);
+							rainfall = getRainfallFromCache2(x1,z1);
+							height = height > 1 ? 1 : height;
+							height = height < -1 ? -1 : height;
+							vol = getRealVolatility( vol, height, rainfall, temp );
+							height = (height < 0.05) ?  0.05 : height;
+							biome = getBiomeForValues( chunkX, chunkZ, vol, height, temp, rainfall );
+						}
+						else
+						{
+							vol = volArray[xRel][zRel];
+							height = heightArray[xRel][zRel];
+							temp = tempArray[xRel][zRel];
+							rainfall = rainfallArray[xRel][zRel];
+							height = height > 1 ? 1 : height;
+							height = height < -1 ? -1 : height;
+							vol = getRealVolatility( vol / 2, height, rainfall, temp );
+
+							biome = getBiomeForValues( x, z, vol, height, temp, rainfall );
 						}
 
-						double vol = volArray[xRel][zRel];
-						double height = heightArray[xRel][zRel];
-						double temp = tempArray[xRel][zRel];
-						double rainfall = rainfallArray[xRel][zRel];
-
 						//height = getRealHeight( height );
-						height = height > 1 ? 1 : height;
-						height = height < -1 ? -1 : height;
-						vol = getRealVolatility( vol, height, rainfall, temp );
 
-						CubeBiomeGenBase biome = getBiomeForValues( x, z, vol, height, temp, rainfall );
 						biomes[zRel * length + xRel] = biome;
 					}
 				}
@@ -380,9 +493,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 	private CubeBiomeGenBase getBiomeForValues( double x, double z, double vol, double height, double temp, double rainfall )
 	{
-
 		CubeBiomeGenBase biome = null;
-
 		for( BiomeFinder finder: biomeFindersPriorityList )
 		{
 			biome = finder.getBiomeForValues( x, z, vol, height, temp, rainfall );
@@ -399,4 +510,114 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 
 		return biome;
 	}
+	
+	public int [] getAlteredCoordinates(int x, int z, Long seed)
+	{
+		int zoom = this.zoom;
+		long orgseed = seed;
+		int [] array1 = new int[] {1, 2, 3, 4};
+		int [] array2 = new int[] {0, 0, 0, 0, 0, 0};
+		for (int i = zoom; i >= 0; i--)
+		{
+			seed = initChunkSeed(x >> (i+1),z >> (i+1), orgseed+i);
+			array2[0] = array1[0];
+			array2[1] = array1[this.nextInt(2, seed)];
+			seed *= seed * 6364136223846793005L + 1442695040888963407L;
+            seed += this.worldSeed;
+			array2[2] = array1[this.nextInt(2,seed) << 1];
+			seed *= seed * 6364136223846793005L + 1442695040888963407L;
+            seed += this.worldSeed;
+			array2[3] = array1[0]==array1[1] && array1[0]==array1[2]?array1[0]:(array1[1]==array1[2] && array1[1] == array1[3]?array1[1]:((array1[0]==array1[1] && array1[2] != array1[3]) || (array1[0]==array1[2] && array1[1] != array1[3]) || (array1[0]==array1[3] && array1[1] != array1[2])?array1[0]:( (array1[1]==array1[2] && array1[0] != array1[3]) || (array1[1]==array1[2] && array1[0] != array1[3])?array1[1]:array1[2]==array1[3] && array1[0] != array1[1]?array1[2]:array1[this.nextInt(4,seed)])));
+			seed = initChunkSeed(x >> (i+1),(z >> (i+1))+1, orgseed+i);
+			array2[5] = array1[this.nextInt(2, seed) + 2];
+			seed = initChunkSeed((x >> (i+1))+1,z >> (i+1), orgseed+i);
+			seed *= seed * 6364136223846793005L + 1442695040888963407L;
+            seed += this.worldSeed;
+			array2[4] = array1[(this.nextInt(2, seed) << 1) + 1];
+			int q1 = (x >> i)&1;
+			int q2 = (z >> i)&1;
+			assert((q1==0 || q1 == 1) && (q2 == 0 || q2 == 1));
+			if (q1==0 && q2 == 0)
+			{
+				array1[1] = array2[1];
+				array1[2] = array2[2];
+				array1[3] = array2[3];
+			}
+			else if (q1 == 1 && q2 == 0)
+			{
+				array1[0] = array2[1];
+				array1[2] = array2[3];
+				array1[3] = array2[4];
+			}
+			else if (q1 == 0 && q2 == 1)
+			{
+				array1[0] = array2[2];
+				array1[1] = array2[3];
+				array1[3] = array2[5];
+			}
+			else
+			{
+				array1[0] = array2[3];
+				array1[1] = array2[4];
+				array1[2] = array2[5];
+			}
+			if (array1[0]==array1[1] && array1[0]==array1[2] && array1[0] == array1[3])
+			{
+				break;
+			}
+		}
+		zoom = zoom+1;
+		if (array2[3] == 1)
+		{
+			x = (x >> zoom) << zoom;
+			z = (z >> zoom) << zoom;
+		}
+		else if (array2[3] == 2)
+		{
+			x = ((x >> zoom) + 1) << zoom;
+			z = (z >> zoom) << zoom;
+		}
+		else if (array2[3] == 3)
+		{
+			x = (x >> zoom) << zoom;
+			z = ((z >> zoom) + 1) << zoom;
+		}
+		else
+		{
+			x = ((x >> zoom) + 1) << zoom;
+			z = ((z >> zoom) + 1) << zoom;
+		}
+		
+		return new int []  {x, z};
+	}
+	
+    /**
+     * Initialize layer's current chunkSeed based on the local worldGenSeed and the (x,z) chunk coordinates.
+     */
+    public long initChunkSeed(long x, long z, long seed)
+    {
+        seed *= seed * 6364136223846793005L + 1442695040888963407L;
+        seed += x;
+        seed *= seed * 6364136223846793005L + 1442695040888963407L;
+        seed += z;
+        seed *= seed * 6364136223846793005L + 1442695040888963407L;
+        seed += x;
+        seed *= seed * 6364136223846793005L + 1442695040888963407L;
+        seed += z;
+        return seed;
+    }
+
+    /**
+     * returns a LCG pseudo random number from [0, x). Args: int x
+     */
+    protected int nextInt(int par1, Long seed)
+    {
+        int var2 = (int)((seed >> 24) % (long)par1);
+
+        if (var2 < 0)
+        {
+            var2 += par1;
+        }
+        return var2;
+    }
 }

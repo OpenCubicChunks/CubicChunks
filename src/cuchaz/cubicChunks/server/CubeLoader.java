@@ -18,7 +18,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 
 import net.minecraft.block.Block;
@@ -44,7 +47,7 @@ import org.mapdb.DBMaker;
 import cuchaz.cubicChunks.accessors.WorldServerAccessor;
 import cuchaz.cubicChunks.generator.GeneratorStage;
 import cuchaz.cubicChunks.util.AddressTools;
-import cuchaz.cubicChunks.util.ConcurrentBatchedQueue;
+import cuchaz.cubicChunks.util.ConcurrentBatchedMappedQueue;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
@@ -54,23 +57,11 @@ public class CubeLoader implements IThreadedFileIO
 {
 	private static final Logger log = LogManager.getLogger();
 	
-	private static class SaveEntry
-	{
-		private long address;
-		private NBTTagCompound nbt;
-		
-		public SaveEntry( long address, NBTTagCompound nbt )
-		{
-			this.address = address;
-			this.nbt = nbt;
-		}
-	}
-	
 	private DB m_db;
 	private ConcurrentNavigableMap<Long,byte[]> m_columns;
 	private ConcurrentNavigableMap<Long,byte[]> m_cubes;
-	private ConcurrentBatchedQueue<SaveEntry> m_columnsToSave;
-	private ConcurrentBatchedQueue<SaveEntry> m_cubesToSave;
+	private ConcurrentBatchedMappedQueue<Long,NBTTagCompound> m_columnsToSave;
+	private ConcurrentBatchedMappedQueue<Long,NBTTagCompound> m_cubesToSave;
 	
 	public CubeLoader( ISaveHandler saveHandler )
 	{
@@ -88,15 +79,15 @@ public class CubeLoader implements IThreadedFileIO
 		
 		m_columns = m_db.getTreeMap( "columns" );
 		m_cubes = m_db.getTreeMap( "chunks" );
-        
+
         // init chunk save queue
-        m_columnsToSave = new ConcurrentBatchedQueue<SaveEntry>();
-        m_cubesToSave = new ConcurrentBatchedQueue<SaveEntry>();
+        m_columnsToSave = new ConcurrentBatchedMappedQueue<Long,NBTTagCompound>();
+        m_cubesToSave = new ConcurrentBatchedMappedQueue<Long,NBTTagCompound>();
 	}
 	
 	public boolean columnExists( long address )
 	{
-		return m_columns.containsKey( address );
+		return m_columns.containsKey( address ) || m_columnsToSave.contains(address);
 	}
 	
 	public Column loadColumn( World world, int cubeX, int cubeZ )
@@ -107,8 +98,13 @@ public class CubeLoader implements IThreadedFileIO
 		byte[] data = m_columns.get( address );
 		if( data == null )
 		{
-			// returning null tells the world to generate a new column
-			return null;
+			NBTTagCompound tag = m_columnsToSave.get(address);
+			if (tag == null)
+			{
+				// returning null tells the world to generate a new column
+				return null;
+			}
+			else return readColumnFromNBT( world, cubeX, cubeZ, tag );
 		}
 		
 		// read the NBT
@@ -128,11 +124,20 @@ public class CubeLoader implements IThreadedFileIO
 	public Cube loadCubeAndAddToColumn( World world, Column column, long address )
 	throws IOException
 	{
+		int x = AddressTools.getX( address );
+		int y = AddressTools.getY( address );
+		int z = AddressTools.getZ( address );
 		// does the database have the cube?
 		byte[] data = m_cubes.get( address );
 		if( data == null )
 		{
-			return null;
+			NBTTagCompound tag = m_cubesToSave.get(address);
+			if (tag == null)
+			{
+				// returning null tells the world to generate a new column
+				return null;
+			}
+			else return readCubeFromNbtAndAddToColumn( world, column, x, y, z, tag );
 		}
 		
 		// read the NBT
@@ -141,9 +146,6 @@ public class CubeLoader implements IThreadedFileIO
 		in.close();
 		
 		// restore the cube
-		int x = AddressTools.getX( address );
-		int y = AddressTools.getY( address );
-		int z = AddressTools.getZ( address );
 		return readCubeFromNbtAndAddToColumn( world, column, x, y, z, nbt );
 	}
 	
@@ -155,7 +157,7 @@ public class CubeLoader implements IThreadedFileIO
 		// with concurrent access to world data structures
 		
 		// add the column to the save queue
-		m_columnsToSave.add( new SaveEntry( column.getAddress(), writeColumnToNbt( column ) ) );
+		m_columnsToSave.add( column.getAddress(), writeColumnToNbt( column ) );
 		column.markSaved();
 		
 		// signal the IO thread to process the save queue
@@ -166,7 +168,7 @@ public class CubeLoader implements IThreadedFileIO
 	{
 		// NOTE: this function blocks the world thread, so make it fast
 		
-		m_cubesToSave.add( new SaveEntry( cube.getAddress(), writeCubeToNbt( cube ) ) );
+		m_cubesToSave.add( cube.getAddress(), writeCubeToNbt( cube  ) );
 		cube.markSaved();
 		
 		// signal the IO thread to process the save queue
@@ -189,17 +191,17 @@ public class CubeLoader implements IThreadedFileIO
 		int numCubeBytesSaved = 0;
 		long start = System.currentTimeMillis();
 		
-		List<SaveEntry> entries = new ArrayList<SaveEntry>( Math.max( ColumnsBatchSize, CubesBatchSize ) );
+		LinkedHashMap<Long,NBTTagCompound> entries = new LinkedHashMap<Long,NBTTagCompound>( Math.max( ColumnsBatchSize, CubesBatchSize ) );
 		
 		// save a batch of columns
 		boolean hasMoreColumns = m_columnsToSave.getBatch( entries, ColumnsBatchSize );
-		for( SaveEntry entry : entries )
+		for(Entry<Long, NBTTagCompound> entry : entries.entrySet() )
 		{
 			try
 			{
 				// save the column
-				byte[] data = writeNbtBytes( entry.nbt );
-				m_columns.put( entry.address, data );
+				byte[] data = writeNbtBytes( entry.getValue() );
+				m_columns.put( entry.getKey(), data );
 				
 				numColumnsSaved++;
 				numColumnBytesSaved += data.length;
@@ -207,8 +209,8 @@ public class CubeLoader implements IThreadedFileIO
 			catch( IOException ex )
 			{
 				log.error( String.format( "Unable to write column %d,%d",
-					AddressTools.getX( entry.address ),
-					AddressTools.getZ( entry.address )
+					AddressTools.getX( entry.getKey() ),
+					AddressTools.getZ( entry.getKey() )
 				), ex );
 			}
 		}
@@ -216,13 +218,13 @@ public class CubeLoader implements IThreadedFileIO
 		
 		// save a batch of cubes
 		boolean hasMoreCubes = m_cubesToSave.getBatch( entries, CubesBatchSize );
-		for( SaveEntry entry : entries )
+		for(Entry<Long, NBTTagCompound> entry : entries.entrySet() )
 		{
 			try
 			{
 				// save the cube
-				byte[] data = writeNbtBytes( entry.nbt );
-				m_cubes.put( entry.address, data );
+				byte[] data = writeNbtBytes( entry.getValue() );
+				m_cubes.put( entry.getKey(), data );
 				
 				numCubesSaved++;
 				numCubeBytesSaved += data.length;
@@ -230,9 +232,9 @@ public class CubeLoader implements IThreadedFileIO
 			catch( IOException ex )
 			{
 				log.error( String.format( "Unable to write cube %d,%d,%d",
-					AddressTools.getX( entry.address ),
-					AddressTools.getY( entry.address ),
-					AddressTools.getZ( entry.address )
+					AddressTools.getX( entry.getKey() ),
+					AddressTools.getY( entry.getKey() ),
+					AddressTools.getZ( entry.getKey() )
 				), ex );
 			}
 		}

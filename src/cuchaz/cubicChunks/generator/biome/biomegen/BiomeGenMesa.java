@@ -122,13 +122,13 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 					fillStoneY = max;
 				}
 				//sea level is now 64 blocks below vanilla sea level.
-				//fillStoneY += 64.0D;
+				fillStoneY += 140.0D;
 			}
 		}
 
 		fillStoneY = HeightHelper.getScaledHeight_Double( fillStoneY );
 
-		Block topBlock = this.topBlock;
+		Block topBlock1 = Blocks.stained_hardened_clay;
 		Block fillerBlock = this.fillerBlock;
 
 		//How many biome blocks left to set in column? Initially -1
@@ -176,20 +176,20 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 				//If depth is <= 0 - only stone
 				if( depth <= 0 )
 				{
-					topBlock = null;
+					topBlock1 = null;
 					fillerBlock = Blocks.stone;
 				}
 				//If we are above or at 4 block under water and at or below one block above water
 				else if( yAbs >= seaLevel - 4 && yAbs <= seaLevel + 1 )
 				{
-					topBlock = this.topBlock;
+					topBlock1 = Blocks.stained_hardened_clay;
 					fillerBlock = this.fillerBlock;
 				}
 
 				//If top block is air and we are below sea level use water instead
 				if( yAbs < seaLevel && (topBlock == null || topBlock.getMaterial() == Material.air) )
 				{
-					topBlock = Blocks.water;
+					topBlock1 = Blocks.water;
 					metadata = 0;
 				}
 
@@ -238,7 +238,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 					}
 					else
 					{
-						replaceBlocks_setBlock( topBlock, this.field_150604_aj, cube, xAbs, yAbs, zAbs, canSetBlock );
+						replaceBlocks_setBlock( this.topBlock, this.field_150604_aj, cube, xAbs, yAbs, zAbs, canSetBlock );
 						b1 = true;
 
 					}
@@ -279,7 +279,7 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 		}
 	}
 
-	@Override
+	//@Override
 	protected CubeBiomeGenBase createAndReturnMutated()
 	{
 		boolean notPlateau = this.biomeID == CubeBiomeGenBase.mesa.biomeID;

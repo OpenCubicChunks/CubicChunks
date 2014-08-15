@@ -21,6 +21,7 @@ import net.minecraft.util.IProgressUpdate;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraft.entity.EnumCreatureType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,6 +31,7 @@ import com.google.common.collect.Maps;
 import cuchaz.cubicChunks.CubeProvider;
 import cuchaz.cubicChunks.generator.ColumnGenerator;
 import cuchaz.cubicChunks.generator.GeneratorStage;
+import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.world.BlankColumn;
 import cuchaz.cubicChunks.world.Column;
@@ -312,15 +314,13 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 			{
 				// tell the cube it has been unloaded
 				cube.onUnload();
-				
 				// save the cube
 				m_loader.saveCube( cube );
 			}
-			
 			// unload empty columns
 			if( !column.hasCubes() )
 			{
-				column.onChunkLoad();
+				column.onChunkUnload();
 				m_loadedColumns.remove( columnAddress );
 				m_loader.saveColumn( column );
 			}
@@ -369,13 +369,12 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	@SuppressWarnings( "rawtypes" )
 	public List getPossibleCreatures( EnumCreatureType creatureType, int blockX, int blockY, int blockZ )
 	{
-		/* UNDONE: ask one of the pipeline processors for these things
-		CubeBiomeGenBase var5 = (CubeBiomeGenBase) m_world.getBiomeGenForCoords( cubeX, cubeZ );
-		return par1EnumCreatureType == EnumCreatureType.monster && m_scatteredFeatureGenerator.func_143030_a( cubeX, cubeY, cubeZ ) 
-				? m_scatteredFeatureGenerator.getScatteredFeatureSpawnList()
-				: var5.getSpawnableList( par1EnumCreatureType );
-		*/
-		return null;
+		// UNDONE: ask one of the pipeline processors for these things
+		// This call only does the continuous spawning of mobs. 
+		CubeBiomeGenBase var5 = (CubeBiomeGenBase) m_worldServer.getBiomeGenForCoords( blockX >> 4, blockZ >> 4 );
+		return  var5.getSpawnableList( creatureType );
+		
+		//return null;
 	}
 	
 	@Override

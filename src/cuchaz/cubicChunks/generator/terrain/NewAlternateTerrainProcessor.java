@@ -5,7 +5,6 @@
  */
 package cuchaz.cubicChunks.generator.terrain;
 
-import cuchaz.cubicChunks.generator.biome.NewAlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.alternateGen.AlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.builder.BasicBuilder;
@@ -278,10 +277,8 @@ public class NewAlternateTerrainProcessor extends CubeProcessor
 		int cubeXMin = cube.getX() * (xNoiseSize - 1);
 		int cubeYMin = cube.getY() * (yNoiseSize - 1);
 		int cubeZMin = cube.getZ() * (zNoiseSize - 1);
-
 		this.noiseArrayHeight = wcm.getHeightArray( cube.getX(), cube.getZ() );
 		this.noiseArrayVolatility = wcm.getVolArray( cube.getX(), cube.getZ() );
-
 		this.noiseArrayRainfall = wcm.getRainfallArray( cube.getX(), cube.getZ() );
 		this.noiseArrayTemp = wcm.getTempArray( cube.getX(), cube.getZ() );
 		for( int x = 0; x < xNoiseSize; x++ )
@@ -291,7 +288,6 @@ public class NewAlternateTerrainProcessor extends CubeProcessor
 			for( int z = 0; z < zNoiseSize; z++ )
 			{
 				int zPos = cubeZMin + z;
-
 				for( int y = 0; y < yNoiseSize; y++ )
 				{
 					int yPos = cubeYMin + y;
@@ -316,8 +312,8 @@ public class NewAlternateTerrainProcessor extends CubeProcessor
 				double temp = noiseArrayTemp[genToNormal[x]][genToNormal[z]];
 				double rainfall = noiseArrayRainfall[genToNormal[x]][genToNormal[z]];
 				//height *= 1 - vol;
-				vol = this.wcm.getRealVolatility( vol, height, rainfall, temp );
-				height = this.wcm.getRealHeight( height , temp, rainfall ) * 70D ;
+				vol = this.wcm.getRealVolatility( vol, height, rainfall, temp ) * 1.4 + 0.04D;
+				height = this.wcm.getRealHeight( height , temp, rainfall ) * (50D + 250D * vol)  ;
 				double output;
 				double d8;
 				int yPos = cube.getY() * (yNoiseSize - 1);

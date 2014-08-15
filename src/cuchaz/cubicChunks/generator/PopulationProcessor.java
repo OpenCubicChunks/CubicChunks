@@ -21,10 +21,21 @@ import cuchaz.cubicChunks.world.Column;
 import cuchaz.cubicChunks.world.Cube;
 import cuchaz.cubicChunks.world.LightIndex;
 
+import java.util.List;
 import java.util.Random;
 import net.minecraft.block.BlockFalling;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityTracker;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.WeightedRandom;
+import net.minecraft.world.IWorldAccess;
+import net.minecraft.world.SpawnerAnimals;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.gen.feature.WorldGenDungeons;
 import net.minecraft.world.gen.feature.WorldGenLakes;
 import net.minecraft.world.gen.feature.WorldGenMinable;
@@ -43,26 +54,29 @@ public class PopulationProcessor extends CubeProcessor
 	public boolean calculate( Cube cube)
 	{
 		CubeWorldServer world = (CubeWorldServer)cube.getWorld();
-		AlternateWorldColumnManager wcm = (AlternateWorldColumnManager)world.getWorldChunkManager();
-		double [][] height = wcm.getHeightArray(cube.getX(), cube.getZ());
-		//double [][] volatility = wcm.getVolArray(cube.getX(), cube.getZ());
-		double [][] temp = wcm.getTempArray(cube.getX(), cube.getZ());
-		double [][] hum = wcm.getRainfallArray(cube.getX(), cube.getZ());
 		int heightMax = Integer.MIN_VALUE;
 		int heightMin = Integer.MAX_VALUE;
 		double volMax = 0;
 		for (int i = 0; i < 16; i++){
 			for (int j = 0; j < 16; j++){
-				int height1 = (int)wcm.getRealHeight(height[i][j],temp[i][j],hum[i][j]);
-				//double volatility1 = wcm.getRealVolatility(volatility[i][j], height[i][j], hum[i][j], temp[i][j]);
-				heightMax = heightMax > height1 ? heightMax : height1 ;
-				heightMin = heightMin < height1 ? heightMin : height1 ;
-				//volMax = volMax > volatility1 ? volMax : volatility1 ;
+				if (cube.getColumn().getSkylightBlockY(i, j) == null){
+					return calculateSky(cube, world, null);
+				}
+				int height = cube.getColumn().getSkylightBlockY(i, j);
+				if (height > heightMax)
+				{
+					heightMax = height;
+				}
+				if (height < heightMin)
+				{
+					heightMin = height;
+				}
 			}
 		}
-		int buffer = 30;// +/-3 cubes
-		if ( cube.getY() * 2 < heightMin - buffer){return calculateUnderground(cube, world, wcm);}
-		if ( cube.getY() * 2 > heightMax + buffer){return calculateSky(cube, world, wcm);}
+		int buffer = 48;// 3 cubes
+		AlternateWorldColumnManager wcm = (AlternateWorldColumnManager)cube.getWorld().getWorldChunkManager();
+		if ( cube.getY() << 4 < heightMin - buffer){return calculateUnderground(cube, world, wcm);}
+		if ( cube.getY() << 4 > heightMax ){return calculateSky(cube, world, wcm);}
 		return calculateSurface( cube, world, wcm);
 	}
 	
@@ -257,7 +271,7 @@ public class PopulationProcessor extends CubeProcessor
 
 		biome.decorate( world, rand, cubeX, cubeY, cubeZ );
 		//TODO: cubify this:
-		//SpawnerAnimals.performWorldGenSpawning( m_world, var6, xAbs + 8, zAbs + 8, 16, 16, m_rand );
+		performWorldGenSpawning( world, biome, cube, xAbs, yAbs, zAbs, 16, 16, 16, rand );
 
 		double[][] temps = wcm.getTempArray(cubeX, cubeZ);
 		for( int x = 0; x < 16; x++ )
@@ -266,34 +280,30 @@ public class PopulationProcessor extends CubeProcessor
 			{
 				LightIndex c = cube.getColumn().getLightIndex();
 				if (c == null){continue;}
-				try {
-					int y = c.getTopNonTransparentBlockY(x,z);
-					
-					if( Coords.blockToCube( y ) != cubeY )
-					{
-						continue;
-					}
-					//freeze the ocean/lakes
-					if( cube.getBlock( x, Coords.blockToLocal(y), z ) == Blocks.water && temps[x][z] < 0.3D && y > m_seaLevel )
-					{
-						cube.setBlock( x, Coords.blockToLocal(y), z, Blocks.ice, 0 );
-					}
-					//freeze pools
-					else if (cube.getBlock( x, Coords.blockToLocal(y), z ) == Blocks.water && temps[x][z] < 0.2D && y <= m_seaLevel)
-					{
-						cube.setBlock( x, Coords.blockToLocal(y), z, Blocks.ice, 0 );
-					}
-					//place snow
-					else if( cube.getColumn().func_150810_a(x, y + 1, z) == Blocks.air  && temps[x][z] < 0.34D && cube.getColumn().func_150810_a(x, y - 1, z) != Blocks.water )
-					{
-						cube.getColumn().func_150807_a( x, y + 1, z, Blocks.snow_layer, 0 );
-					}
+				if (c.getTopNonTransparentBlockY(x,z) == null)
+				{
+					continue;
 				}
-				catch (Exception e){
-					System.out.printf( "x =  %d, z = %d", x , z );
-					//throw new UnsupportedOperationException();
+				int y = c.getTopNonTransparentBlockY(x,z);
+				if( Coords.blockToCube( y ) != cubeY )
+				{
+					continue;
 				}
-				
+				//freeze the ocean/lakes
+				if( cube.getBlock( x, Coords.blockToLocal(y), z ) == Blocks.water && temps[x][z] < 0.3D && y > m_seaLevel )
+				{
+					cube.setBlock( x, Coords.blockToLocal(y), z, Blocks.ice, 0 );
+				}
+				//freeze pools
+				else if (cube.getBlock( x, Coords.blockToLocal(y), z ) == Blocks.water && temps[x][z] < 0.2D && y <= m_seaLevel)
+				{
+					cube.setBlock( x, Coords.blockToLocal(y), z, Blocks.ice, 0 );
+				}
+				//place snow
+				else if( cube.getColumn().func_150810_a(x, y + 1, z) == Blocks.air  && temps[x][z] < 0.34D && cube.getColumn().func_150810_a(x, y - 1, z) != Blocks.water )
+				{
+					cube.getColumn().func_150807_a( x, y + 1, z, Blocks.snow_layer, 0 );
+				}
 			}
 		}
 
@@ -301,4 +311,78 @@ public class PopulationProcessor extends CubeProcessor
 
 		return true;
 	}
+	
+	public static void performWorldGenSpawning(World par0World, BiomeGenBase par1BiomeGenBase, Cube cube, int xMin, int yMin, int zMin, int xRange, int yRange, int zRange, Random par6Random)
+    {
+        List var7 = par1BiomeGenBase.getSpawnableList(EnumCreatureType.creature);
+        if (!var7.isEmpty())
+        {
+            while (par6Random.nextFloat() < par1BiomeGenBase.getSpawningChance())
+            {
+                BiomeGenBase.SpawnListEntry var8 = (BiomeGenBase.SpawnListEntry)WeightedRandom.getRandomItem(par0World.rand, var7);
+                IEntityLivingData var9 = null;
+                int var10 = var8.minGroupCount + par6Random.nextInt(1 + var8.maxGroupCount - var8.minGroupCount);
+                int x = xMin + par6Random.nextInt(xRange);
+                //int y = yMin + par6Random.nextInt(yRange);
+                int z = zMin + par6Random.nextInt(zRange);
+                int var13 = x;
+                int var14 = z;
+                for (int var15 = 0; var15 < var10; ++var15)
+                {
+                    boolean var16 = false;
+                    for (int var17 = 0; !var16 && var17 < 4; ++var17)
+                    {
+          	
+                        int var18 = cube.getColumn().getSkylightBlockY(x & 15, z & 15);
+                        if (var18 == -1)
+                        {
+                        	while (x < xMin || x >= xMin + xRange || z < zMin || z >= zMin + zRange)
+                            {
+                                x = var13 + par6Random.nextInt(5) - par6Random.nextInt(5);
+                                z = var14 + par6Random.nextInt(5) - par6Random.nextInt(5);
+                            }
+                        	continue;
+                        }
+                        if (var18 > yMin + 16 || var18 < yMin){
+                        	while (x < xMin || x >= xMin + xRange || z < zMin || z >= zMin + zRange)
+                            {
+                                x = var13 + par6Random.nextInt(5) - par6Random.nextInt(5);
+                                z = var14 + par6Random.nextInt(5) - par6Random.nextInt(5);
+                            }
+                            continue;
+                        }
+                        if (SpawnerAnimals.canCreatureTypeSpawnAtLocation(EnumCreatureType.creature, par0World, x, var18, z))
+                        {
+                            float var19 = (float)x + 0.5F;
+                            float var20 = (float)var18;
+                            float var21 = (float)z + 0.5F;
+                            EntityLiving var22;
+
+                            try
+                            {
+                                var22 = (EntityLiving)var8.entityClass.getConstructor(new Class[] {World.class}).newInstance(new Object[] {par0World});
+                            }
+                            catch (Exception var24)
+                            {
+                                var24.printStackTrace();
+                                continue;
+                            }
+
+                            var22.setLocationAndAngles((double)var19, (double)var20, (double)var21, par6Random.nextFloat() * 360.0F, 0.0F);
+                            par0World.spawnEntityInWorld(var22);
+                            var9 = var22.onSpawnWithEgg(var9);
+                            var16 = true;
+                        }
+
+                        x += par6Random.nextInt(5) - par6Random.nextInt(5);
+
+                        for (z += par6Random.nextInt(5) - par6Random.nextInt(5); x < xMin || x >= xMin + xRange || z < zMin || z >= zMin + zRange; z = var14 + par6Random.nextInt(5) - par6Random.nextInt(5))
+                        {
+                            x = var13 + par6Random.nextInt(5) - par6Random.nextInt(5);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

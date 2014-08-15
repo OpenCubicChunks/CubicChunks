@@ -22,6 +22,7 @@ import java.util.TreeMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -176,6 +177,11 @@ public class Column extends Chunk
 	public Iterable<Cube> getCubes( int minY, int maxY )
 	{
 		return m_cubes.subMap( minY, true, maxY, true ).values();
+	}
+	
+	public int loadedCubes()
+	{
+		return m_cubes.size();	
 	}
 
 	public Cube removeCube( int cubeY )
@@ -439,8 +445,12 @@ public class Column extends Chunk
 	@Override
 	public void addEntity( Entity entity )
 	{
+		//check whether client has loaded column
+		/*if (this.isEmpty() && this.worldObj.isClient)
+		{
+			return;
+		}*/
 		int cubeY = Coords.getCubeYForEntity( entity );
-
 		// pass off to the cube
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
@@ -473,20 +483,25 @@ public class Column extends Chunk
 		{
 			return;
 		}
-
+		boolean wasRemoved = false;
 		// pass off to the cube
 		Cube cube = m_cubes.get( cubeY );
 		if( cube != null )
 		{
-			cube.removeEntity( entity );
+			wasRemoved = cube.removeEntity( entity );
 		}
-		else if( m_entities.remove( entity ) )
+		if(!wasRemoved)
+		{
+			if (m_entities.remove( entity ))
+			{
+				entity.addedToChunk = false;
+				isModified = true;
+				wasRemoved = true;
+			}
+		}
+		if (!wasRemoved && cube != null && !this.isEmpty())
 		{
 			entity.addedToChunk = false;
-			isModified = true;
-		}
-		else
-		{
 			log.warn( String.format( "%s Tried to remove entity %s from column (%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
 				worldObj.isClient ? "CLIENT" : "SERVER",
 				entity.getClass().getName(),
@@ -635,6 +650,17 @@ public class Column extends Chunk
 	public void onChunkUnload()
 	{
 		isChunkLoaded = false;
+
+		for( Cube cube: m_cubes.values() )
+		{
+			for( TileEntity tileEntity: cube.tileEntities() )
+			{
+				this.worldObj.func_147457_a( tileEntity );
+			}
+			this.worldObj.unloadEntities(cube.getEntityContainer().entities());
+		}
+
+        this.worldObj.unloadEntities(this.m_entities.entities());
 	}
 
 	public byte[] encode( boolean isFirstTime )
@@ -815,8 +841,7 @@ public class Column extends Chunk
 	 * This method retrieves the biome at a set of coordinates
 	 */
 	@Override
-	public CubeBiomeGenBase getBiomeGenForWorldCoords( int xRel, int zRel, WorldChunkManager worldChunkManager )
-	{
+	public CubeBiomeGenBase getBiomeGenForWorldCoords( int xRel, int zRel, WorldChunkManager worldChunkManager ){
 		int biomeID = this.getBiomeArray()[zRel << 4 | xRel] & 255;
 
 		WorldColumnManager worldColumnManager = (WorldColumnManager)worldChunkManager;
@@ -828,9 +853,9 @@ public class Column extends Chunk
 			this.getBiomeArray()[zRel << 4 | xRel] = (byte)(biomeID & 255);
 		}
 
-		return (CubeBiomeGenBase)(CubeBiomeGenBase.func_150568_d( biomeID ) == null ? CubeBiomeGenBase.plains : CubeBiomeGenBase.func_150568_d( biomeID ));
+		return (CubeBiomeGenBase)(CubeBiomeGenBase.func_150568_d( biomeID ) == null ? CubeBiomeGenBase.plains : CubeBiomeGenBase.func_150568_d( biomeID ));	
 	}
-
+	
 	/**
 	 * Returns an array containing a 16x16 mapping on the X/Z of block positions in this Chunk to biome IDs.
 	 */

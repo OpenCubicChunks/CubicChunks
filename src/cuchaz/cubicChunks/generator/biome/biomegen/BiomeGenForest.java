@@ -83,6 +83,11 @@ public class BiomeGenForest extends CubeBiomeGenBase
 		{
 			return this.worldGeneratorTrees;
 		}
+		
+		if (this.variant != ROOFED_FOREST)
+		{
+		return rand.nextInt(3) == 0 ? this.worldGeneratorBigTree : wGenTrees2;
+		}
 		return wGenTrees2;
 	}
 
@@ -159,7 +164,7 @@ public class BiomeGenForest extends CubeBiomeGenBase
 
 		while( n < maxGen )
 		{
-			int rand1 = rand.nextInt( 3 );
+			int rand1 = rand.nextInt( 10 );
 
 			if( rand1 == 0 )
 			{
@@ -178,7 +183,7 @@ public class BiomeGenForest extends CubeBiomeGenBase
 
 			while( true )
 			{
-				if( n2 < 5 )
+				if( n2 < 5 & rand1 > 6 )
 				{
 					if( !gen.generateAtSurface( worldGenDoublePlant, 1, 1 ) )
 					{

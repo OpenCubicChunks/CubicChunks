@@ -12,6 +12,7 @@ package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import cuchaz.cubicChunks.CubeWorldProvider;
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeDecorator.DecoratorConfig.DISABLE;
+import cuchaz.cubicChunks.generator.biome.alternateGen.AlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
 import cuchaz.cubicChunks.generator.populator.WorldGeneratorCube;
@@ -78,7 +79,11 @@ public class CubeBiomeDecorator extends BiomeDecorator
 	{
 		return this.cfg;
 	}
-
+	
+	public World getWorld()
+	{
+		return this.currentWorld;
+	}
 	public void func_150512_a( World world, Random rand, CubeBiomeGenBase biome, int cubeX, int cubeZ )
 	{
 		throw new UnsupportedOperationException( "Can't decorate Columns!" );
@@ -86,6 +91,7 @@ public class CubeBiomeDecorator extends BiomeDecorator
 
 	public void decorate( World world, Random rand, CubeBiomeGenBase biome, int cubeX, int cubeY, int cubeZ )
 	{
+		this.currentWorld = world;
 		if( this.cfg == null )
 		{
 			throw new IllegalStateException( "Decorator confiug is null!" );
@@ -105,11 +111,67 @@ public class CubeBiomeDecorator extends BiomeDecorator
 		{
 			this.gen = new DecoratorHelper( world, rand, cubeX, cubeY, cubeZ );
 			this.randomGenerator = rand;
+			this.tempAndHumidityModifier( world, cubeX, cubeZ, biome);//adjust local grass/tree/flower frequency/type
 			this.decorate_do( biome );
 			this.gen = null;
 		}
 	}
 
+	public void tempAndHumidityModifier(World world, int cubeX, int cubeZ, CubeBiomeGenBase biome)
+	{
+		AlternateWorldColumnManager wcm = (AlternateWorldColumnManager)world.getWorldChunkManager();
+		double temp = wcm.getTemp(cubeX << 4, cubeZ << 4);
+		double rainfall = wcm.getRainfall(cubeX << 4, cubeZ << 4);
+		if (biome.biomeID == 1)//plains
+		{
+			
+		}
+		else if (biome.biomeID == 2)//desert
+		{
+			
+		}
+		else if (biome.biomeID == 3)//extreme hills
+		{
+			
+		}
+		else if (biome.biomeID == 4)//forest
+		{
+			
+		}
+		else if (biome.biomeID == 5)//taiga
+		{
+			
+		}
+		else if (biome.biomeID == 6)//swamp
+		{
+			
+		}
+		else if (biome.biomeID == 13)//ice mountain
+		{
+			
+		}
+		else if (biome.biomeID == 21)//jungle
+		{
+			
+		}
+		else if (biome.biomeID == 27)//birch forest
+		{
+			
+		}
+		else if (biome.biomeID == 29)//roofed forest
+		{
+			
+		}
+		else if (biome.biomeID == 32)//mega taiga
+		{
+			
+		}
+		else if (biome.biomeID == 35)//savanna
+		{
+			
+		}
+	}
+	
 	protected void decorate_do( CubeBiomeGenBase biome )
 	{
 		this.generateOres();
