@@ -34,6 +34,8 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor{
 	{
 		super( name, worldServer.getCubeProvider(), batchSize );
 		
+		this.m_worldServer = worldServer;
+		
 		this.noiseArrayHigh = new double[X_NOISE_SIZE][Y_NOISE_SIZE][Z_NOISE_SIZE];
 		this.noiseArrayLow = new double[X_NOISE_SIZE][Y_NOISE_SIZE][Z_NOISE_SIZE];
 		this.noiseArrayAlpha = new double[X_NOISE_SIZE][Y_NOISE_SIZE][Z_NOISE_SIZE];
@@ -47,9 +49,6 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor{
 		
 		this.amplify = true;
 		this.seaLevel = worldServer.getCubeWorldProvider().getSeaLevel();
-		
-		this.m_worldServer = worldServer;
-		
 	}
 	
 	protected abstract IBuilder createHighBuilder();

@@ -120,8 +120,6 @@ public class AlternateTerrainProcessor extends AbstractTerrainProcessor3dNoise
 
 				for( int y = 0; y < Y_NOISE_SIZE; y++ )
 				{
-					
-
 					double vol1Low = MathHelper.clamp_double( this.noiseArrayLow[x][y][z], -1, 1 );
 					double vol2High = MathHelper.clamp_double( this.noiseArrayHigh[x][y][z], -1, 1 );
 					double noiseAlpha = this.noiseArrayAlpha[x][y][z] * 10;

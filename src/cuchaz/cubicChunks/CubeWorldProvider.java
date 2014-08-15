@@ -15,9 +15,13 @@ import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.FlatGeneratorInfo;
 import cuchaz.cubicChunks.generator.GeneratorPipeline;
 import cuchaz.cubicChunks.generator.biome.alternateGen.AlternateWorldColumnManager;
+import cuchaz.cubicChunks.generator.biome.alternateGen.NewAlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.WorldColumnManagerFlat;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig;
+import cuchaz.cubicChunks.generator.terrain.NewAlternateTerrainProcessor;
+import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 
 public abstract class CubeWorldProvider extends WorldProvider
@@ -32,12 +36,16 @@ public abstract class CubeWorldProvider extends WorldProvider
 			FlatGeneratorInfo info = FlatGeneratorInfo.createFlatGeneratorFromString( worldObj.getWorldInfo().getGeneratorOptions() );
 			worldChunkMgr = new WorldColumnManagerFlat( CubeBiomeGenBase.getBiome( info.getBiome() ), 0.5F );
 		}
-		else
+		else if(worldObj instanceof CubeWorldServer)
 		{
-			if( worldObj instanceof CubeWorldServer )
-				worldChunkMgr = new AlternateWorldColumnManager( (CubeWorldServer)worldObj );
-			else
+			if(GlobalGeneratorConfig.generator == NewTerrainProcessor.class)
 				worldChunkMgr = new WorldColumnManager( worldObj );
+			else if(GlobalGeneratorConfig.generator == NewAlternateTerrainProcessor.class)
+				worldChunkMgr = new NewAlternateWorldColumnManager( (CubeWorldServer)worldObj );
+			else
+				worldChunkMgr = new AlternateWorldColumnManager( (CubeWorldServer)worldObj );
+		}else{
+			worldChunkMgr = new WorldColumnManager(worldObj);
 		}
 	}
 
