@@ -25,7 +25,6 @@ import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.IntCache;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
-import java.util.Arrays;
 
 public class WorldColumnManager extends WorldChunkManager
 {

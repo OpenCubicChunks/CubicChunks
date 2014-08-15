@@ -11,8 +11,9 @@
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
-import cuchaz.cubicChunks.util.Coords;
+
 import java.util.Random;
+
 import net.minecraft.block.BlockFlower;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.world.World;
@@ -21,6 +22,7 @@ public class BiomeGenPlains extends CubeBiomeGenBase
 {
 	protected boolean generateAdditionalDoblePlants;
 
+	@SuppressWarnings("unchecked")
 	protected BiomeGenPlains( int biomeID )
 	{
 		super( biomeID );

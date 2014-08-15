@@ -1,6 +1,5 @@
 package cuchaz.cubicChunks.generator.populator.generators;
 
-import cuchaz.cubicChunks.generator.populator.WorldGeneratorCube;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;

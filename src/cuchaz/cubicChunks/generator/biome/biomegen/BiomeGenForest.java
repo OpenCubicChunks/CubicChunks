@@ -17,7 +17,9 @@ import cuchaz.cubicChunks.generator.populator.generators.WorldGenBigMushroomCube
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenBirchTreeCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenCanopyTreeCube;
 import cuchaz.cubicChunks.util.Coords;
+
 import java.util.Random;
+
 import net.minecraft.block.BlockFlower;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.util.MathHelper;
@@ -34,6 +36,7 @@ public class BiomeGenForest extends CubeBiomeGenBase
 	private static final int ROOFED_FOREST = 3;
 	private final int variant;
 
+	@SuppressWarnings("unchecked")
 	public BiomeGenForest( int biomeID, int variant )
 	{
 		super( biomeID );

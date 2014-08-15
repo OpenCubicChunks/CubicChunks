@@ -10,10 +10,6 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
-import cuchaz.cubicChunks.world.Cube;
-import java.util.Random;
-import net.minecraft.world.World;
-
 public class BiomeGenOcean extends CubeBiomeGenBase
 {
 	public BiomeGenOcean( int id )

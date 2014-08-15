@@ -1,19 +1,12 @@
 package cuchaz.cubicChunks.generator.biome.alternateGen;
 
-import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.*;
-import cuchaz.cubicChunks.generator.builder.BasicBuilder;
-import cuchaz.cubicChunks.generator.builder.IBuilder;
-import cuchaz.cubicChunks.server.CubeWorldServer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import libnoiseforjava.SimplexBasis;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import org.lwjgl.util.Color;
 
 public class AlternateBiomeGen
 {
@@ -80,8 +73,6 @@ public class AlternateBiomeGen
 			registerBiome(AlternateBiomeGenInfo.builder().setH(0.7F, 0.98F ).setV(0.06F, 1.0F ).setT(0.0F, 0.5F ).setR(0.0F, 1.0F ).setSizeRarity(0.3F, 0.0F).setExtHV(true).setBiome(iceMountains).setName("Ice mountains").build());
 	}
 
-	private final World world;
-
 	private static final int RARITY_NOISE_LENGTH = 512;
 
 	private final long seed;
@@ -100,7 +91,6 @@ public class AlternateBiomeGen
 
 	public AlternateBiomeGen( World world )
 	{
-		this.world = world;
 		this.rarityNoise = new float[RARITY_NOISE_LENGTH][RARITY_NOISE_LENGTH];
 		this.seed = world.getSeed();
 		SimplexBasis simplex = new SimplexBasis();

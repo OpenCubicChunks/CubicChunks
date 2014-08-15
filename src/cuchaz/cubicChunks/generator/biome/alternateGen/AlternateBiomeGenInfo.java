@@ -6,7 +6,6 @@
 package cuchaz.cubicChunks.generator.biome.alternateGen;
 
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
-import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase.SavannaPlateau;
 
 /**
  *

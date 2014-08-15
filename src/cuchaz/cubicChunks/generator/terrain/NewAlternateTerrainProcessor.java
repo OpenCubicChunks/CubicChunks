@@ -28,7 +28,7 @@ public class NewAlternateTerrainProcessor extends CubeProcessor
 	private int genToNormal[] =
 	{
 		0, 4, 8, 10, 16
-	};//this is to avoid additional caches and almost duplicate methods.
+	};
 
 	private final AlternateWorldColumnManager wcm;
 	// these are the knobs for terrain generation 
@@ -45,9 +45,6 @@ public class NewAlternateTerrainProcessor extends CubeProcessor
 
 	private final Random m_rand;
 
-	private final int maxSmoothDiameter = 9;
-	private final int maxSmoothRadius = 4;
-
 	private final double[][][] noiseArrayHigh;
 	private final double[][][] noiseArrayLow;
 	private final double[][][] noiseArrayAlpha;
@@ -59,8 +56,6 @@ public class NewAlternateTerrainProcessor extends CubeProcessor
 
 	private final double[][][] rawTerrainArray;
 	private final double[][][] terrainArray;
-
-	private final double[] nearBiomeWeightArray;
 
 	public NewAlternateTerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
 	{
@@ -83,17 +78,6 @@ public class NewAlternateTerrainProcessor extends CubeProcessor
 
 		this.rawTerrainArray = new double[CUBE_X_SIZE][CUBE_Y_SIZE][CUBE_Z_SIZE];
 		this.terrainArray = new double[CUBE_X_SIZE][CUBE_Y_SIZE][CUBE_Z_SIZE];
-
-		this.nearBiomeWeightArray = new double[maxSmoothDiameter * maxSmoothDiameter];
-
-		for( int x = -maxSmoothRadius; x <= maxSmoothRadius; x++ )
-		{
-			for( int z = -maxSmoothRadius; z <= maxSmoothRadius; z++ )
-			{
-				final double f1 = 10.0F / Math.sqrt( x * x + z * z + 0.2F );
-				this.nearBiomeWeightArray[(x + maxSmoothRadius + (z + maxSmoothRadius) * maxSmoothDiameter)] = f1;
-			}
-		}
 
 		double freqHor = Math.min( 1, 64 / maxElev ) / (4 * Math.PI);
 		double freqVert = 4 * Math.min( 1, 64 / maxElev ) / (4 * Math.PI);
@@ -129,22 +113,6 @@ public class NewAlternateTerrainProcessor extends CubeProcessor
 		builderAlpha.setClamp( 0, 1 );
 		builderAlpha.setlacunarity(2);
 		builderAlpha.build();
-
-		/*double freq2d = 0.1 / (4 * Math.PI);
-
-		 builderHeight = new BasicBuilder();
-		 builderHeight.setSeed( m_rand.nextInt() );
-		 builderHeight.setOctaves( octaves );
-		 builderHeight.setMaxElev( 1 );
-		 builderHeight.setScale( freq2d );
-		 builderHeight.build();
-
-		 builderVolatility = new BasicBuilder();
-		 builderVolatility.setSeed( m_rand.nextInt() );
-		 builderVolatility.setOctaves( octaves );
-		 builderVolatility.setMaxElev( 1 );
-		 builderVolatility.setScale( freq2d );
-		 builderVolatility.build();*/
 	}
 
 	@Override
@@ -326,20 +294,6 @@ public class NewAlternateTerrainProcessor extends CubeProcessor
                     output -= d8;
                     this.rawTerrainArray[x][y][z] = output;                
                 }
-			}
-		}
-	}
-
-	private void amplifyNoiseArray()
-	{
-		for( int x = 0; x < xNoiseSize; x++ )
-		{
-			for( int z = 0; z < zNoiseSize; z++ )
-			{
-				for( int y = 0; y < yNoiseSize; y++ )
-				{
-					this.rawTerrainArray[x][y][z] *= maxElev;
-				}
 			}
 		}
 	}

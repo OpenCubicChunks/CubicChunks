@@ -8,14 +8,14 @@ import cuchaz.cubicChunks.generator.builder.BasicBuilder;
 import cuchaz.cubicChunks.generator.builder.IBuilder;
 import static cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig.maxElev;
 import cuchaz.cubicChunks.server.CubeWorldServer;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import net.minecraft.util.MathHelper;
+
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.gen.layer.IntCache;
 
 public class AlternateWorldColumnManager extends WorldColumnManager
 {
@@ -265,6 +265,7 @@ public class AlternateWorldColumnManager extends WorldColumnManager
 		throw new UnsupportedOperationException( "AlternateWrldColumnManager.getBiomesForGeneration()" );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public boolean areBiomesViable( int x, int par2, int par3, List list )
 	{

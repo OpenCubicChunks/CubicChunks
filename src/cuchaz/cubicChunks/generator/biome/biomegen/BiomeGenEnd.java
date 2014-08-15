@@ -15,6 +15,7 @@ import net.minecraft.init.Blocks;
 
 public class BiomeGenEnd extends CubeBiomeGenBase
 {
+	@SuppressWarnings("unchecked")
 	public BiomeGenEnd( int id )
 	{
 		super( id );

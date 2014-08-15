@@ -17,7 +17,9 @@ import cuchaz.cubicChunks.generator.populator.generators.WorldGenMegaJungleCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenShrubCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenTallGrassCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenTreesCube;
+
 import java.util.Random;
+
 import net.minecraft.entity.passive.EntityChicken;
 import net.minecraft.entity.passive.EntityOcelot;
 import net.minecraft.init.Blocks;
@@ -28,6 +30,7 @@ public class BiomeGenJungle extends CubeBiomeGenBase
 {
 	private final boolean type;
 
+	@SuppressWarnings("unchecked")
 	public BiomeGenJungle( int id, boolean type )
 	{
 		super( id );

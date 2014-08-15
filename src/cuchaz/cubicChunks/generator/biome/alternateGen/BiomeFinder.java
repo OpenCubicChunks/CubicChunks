@@ -1,9 +1,7 @@
 package cuchaz.cubicChunks.generator.biome.alternateGen;
 
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
-import cuchaz.cubicChunks.generator.builder.IBuilder;
 import net.minecraft.world.World;
-import org.lwjgl.util.Color;
 
 class BiomeFinder
 {
@@ -31,8 +29,6 @@ class BiomeFinder
 	private final boolean ignoreHeight;
 	private final boolean noExtHV;
 	private final boolean noRarity;
-
-	private final World world;
 
 	private final AlternateBiomeGen biomeGen;
 
@@ -64,7 +60,6 @@ class BiomeFinder
 		this.noExtHV = (flags & FORCE_NO_EXTENDED_HEIGHT_VOL_CHEKCS) != 0;
 		this.noRarity = (flags & NO_RARITY) != 0;
 
-		this.world = world;
 		this.biomeGen = biomeGen;
 	}
 
@@ -73,7 +68,6 @@ class BiomeFinder
 		double minDistSquaredInRange = Double.MAX_VALUE;
 
 		CubeBiomeGenBase nearestBiomeInRange = null;
-		int nearestID = -1;
 
 		int biomeNum = 0;//used only for generating rarity. Biome order shouldn't change.
 
@@ -141,7 +135,6 @@ class BiomeFinder
 			{
 				nearestBiomeInRange = biome.biome;
 				minDistSquaredInRange = distSquared;
-				nearestID = biomeNum;
 			}
 			biomeNum++;
 		}

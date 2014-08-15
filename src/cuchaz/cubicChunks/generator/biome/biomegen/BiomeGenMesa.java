@@ -13,7 +13,6 @@ package cuchaz.cubicChunks.generator.biome.biomegen;
 import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeDecorator.DecoratorConfig.DISABLE;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
 import cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig;
-import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
 import cuchaz.cubicChunks.util.HeightHelper;
 import cuchaz.cubicChunks.world.Cube;
 import java.util.Arrays;
@@ -21,7 +20,6 @@ import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.NoiseGeneratorPerlin;
 
@@ -128,7 +126,6 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 
 		fillStoneY = HeightHelper.getScaledHeight_Double( fillStoneY );
 
-		Block topBlock1 = Blocks.stained_hardened_clay;
 		Block fillerBlock = this.fillerBlock;
 
 		//How many biome blocks left to set in column? Initially -1
@@ -176,20 +173,17 @@ public class BiomeGenMesa extends CubeBiomeGenBase
 				//If depth is <= 0 - only stone
 				if( depth <= 0 )
 				{
-					topBlock1 = null;
 					fillerBlock = Blocks.stone;
 				}
 				//If we are above or at 4 block under water and at or below one block above water
 				else if( yAbs >= seaLevel - 4 && yAbs <= seaLevel + 1 )
 				{
-					topBlock1 = Blocks.stained_hardened_clay;
 					fillerBlock = this.fillerBlock;
 				}
 
 				//If top block is air and we are below sea level use water instead
 				if( yAbs < seaLevel && (topBlock == null || topBlock.getMaterial() == Material.air) )
 				{
-					topBlock1 = Blocks.water;
 					metadata = 0;
 				}
 

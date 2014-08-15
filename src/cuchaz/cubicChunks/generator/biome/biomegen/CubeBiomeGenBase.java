@@ -20,7 +20,6 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.ColorizerFoliage;
 import net.minecraft.world.ColorizerGrass;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenBigTree;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,12 +34,14 @@ import cuchaz.cubicChunks.generator.populator.generators.WorldGenTallGrassCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenTreesCube;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;
-
 import cuchaz.cubicChunks.world.Cube;
+
 import java.lang.reflect.Field;
 import java.util.List;
+
 import net.minecraft.world.biome.BiomeGenBase;
 
+@SuppressWarnings("unchecked")
 public abstract class CubeBiomeGenBase extends BiomeGenBase
 {
 	private static final Logger logger = LogManager.getLogger();
@@ -200,22 +201,22 @@ public abstract class CubeBiomeGenBase extends BiomeGenBase
 		return this.enableRain;
 	}
 
-	protected List getSpawnableCreatureList()
+	protected List<?> getSpawnableCreatureList()
 	{
 		return this.spawnableCreatureList;
 	}
 
-	protected List getSpawnableMonsterList()
+	protected List<?> getSpawnableMonsterList()
 	{
 		return this.spawnableMonsterList;
 	}
 
-	protected List getSpawnableCaveCreatureList()
+	protected List<?> getSpawnableCaveCreatureList()
 	{
 		return this.spawnableCaveCreatureList;
 	}
 
-	protected List getSpawnableWaterCreatureList()
+	protected List<?> getSpawnableWaterCreatureList()
 	{
 		return this.spawnableWaterCreatureList;
 	}

@@ -10,34 +10,24 @@
  ******************************************************************************/
 package cuchaz.cubicChunks.generator.biome.biomegen;
 
-import cuchaz.cubicChunks.CubeWorldProvider;
-import static cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeDecorator.DecoratorConfig.DISABLE;
 import cuchaz.cubicChunks.generator.biome.alternateGen.AlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
-import cuchaz.cubicChunks.generator.populator.WorldGeneratorCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenDeadBushCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenFlowersCube;
-import cuchaz.cubicChunks.generator.terrain.NewTerrainProcessor;
-import cuchaz.cubicChunks.util.Coords;
+
 import java.util.Random;
 
-import net.minecraft.block.BlockFlower;
-import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeDecorator;
 import net.minecraft.world.gen.feature.WorldGenBigMushroom;
 import net.minecraft.world.gen.feature.WorldGenCactus;
-import net.minecraft.world.gen.feature.WorldGenDeadBush;
-import net.minecraft.world.gen.feature.WorldGenLiquids;
 import net.minecraft.world.gen.feature.WorldGenMinable;
 import net.minecraft.world.gen.feature.WorldGenPumpkin;
 import net.minecraft.world.gen.feature.WorldGenReed;
 import net.minecraft.world.gen.feature.WorldGenSand;
 import net.minecraft.world.gen.feature.WorldGenWaterlily;
-import net.minecraft.world.gen.feature.WorldGenerator;
 
 public class CubeBiomeDecorator extends BiomeDecorator
 {
@@ -120,8 +110,10 @@ public class CubeBiomeDecorator extends BiomeDecorator
 	public void tempAndHumidityModifier(World world, int cubeX, int cubeZ, CubeBiomeGenBase biome)
 	{
 		AlternateWorldColumnManager wcm = (AlternateWorldColumnManager)world.getWorldChunkManager();
+
 		double temp = wcm.getTemp(cubeX << 4, cubeZ << 4);
 		double rainfall = wcm.getRainfall(cubeX << 4, cubeZ << 4);
+		
 		if (biome.biomeID == 1)//plains
 		{
 			

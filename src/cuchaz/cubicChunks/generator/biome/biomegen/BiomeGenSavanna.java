@@ -14,7 +14,9 @@ import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenSavannaTreeCube;
 import cuchaz.cubicChunks.world.Cube;
+
 import java.util.Random;
+
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
@@ -23,6 +25,7 @@ public class BiomeGenSavanna extends CubeBiomeGenBase
 {
 	private static final WorldGenSavannaTreeCube savannaTreeGen = new WorldGenSavannaTreeCube( false );
 
+	@SuppressWarnings("unchecked")
 	protected BiomeGenSavanna( int id )
 	{
 		super( id );

@@ -15,6 +15,7 @@ import net.minecraft.init.Blocks;
 
 public class BiomeGenMushroomIsland extends CubeBiomeGenBase
 {
+	@SuppressWarnings("unchecked")
 	public BiomeGenMushroomIsland( int par1 )
 	{
 		super( par1 );

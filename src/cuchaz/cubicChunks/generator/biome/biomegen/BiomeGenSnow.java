@@ -15,7 +15,6 @@ import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenIcePathCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenIceSpikeCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenTaiga2Cube;
-import cuchaz.cubicChunks.util.Coords;
 import java.util.Random;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;

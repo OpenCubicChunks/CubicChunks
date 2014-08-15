@@ -13,6 +13,7 @@ package cuchaz.cubicChunks.generator.biome.biomegen;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
 import cuchaz.cubicChunks.server.CubeWorldServer;
 import cuchaz.cubicChunks.util.Coords;
+
 import java.util.Random;
 
 import net.minecraft.block.Block;
@@ -21,11 +22,10 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.monster.EntitySlime;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenAbstractTree;
-import cuchaz.cubicChunks.world.Cube;
 
 public class BiomeGenSwamp extends CubeBiomeGenBase
 {
+	@SuppressWarnings("unchecked")
 	protected BiomeGenSwamp( int par1 )
 	{
 		super( par1 );

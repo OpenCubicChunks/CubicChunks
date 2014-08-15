@@ -16,6 +16,7 @@ import net.minecraft.entity.monster.EntityPigZombie;
 
 public class BiomeGenHell extends CubeBiomeGenBase
 {
+	@SuppressWarnings("unchecked")
 	public BiomeGenHell( int id )
 	{
 		super( id );

@@ -12,8 +12,10 @@ package cuchaz.cubicChunks.generator.biome.biomegen;
 
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
 import cuchaz.cubicChunks.world.Cube;
+
 import java.util.ArrayList;
 import java.util.Random;
+
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 
@@ -21,6 +23,7 @@ public class BiomeGenMutated extends CubeBiomeGenBase
 {
 	protected final CubeBiomeGenBase biome;
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public BiomeGenMutated( int biomeID, CubeBiomeGenBase biome )
 	{
 		super( biomeID );

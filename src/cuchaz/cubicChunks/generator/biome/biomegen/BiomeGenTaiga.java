@@ -18,7 +18,9 @@ import cuchaz.cubicChunks.generator.populator.generators.WorldGenTaiga1Cube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenTaiga2Cube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenTallGrassCube;
 import cuchaz.cubicChunks.world.Cube;
+
 import java.util.Random;
+
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
@@ -33,6 +35,7 @@ public class BiomeGenTaiga extends CubeBiomeGenBase
 	private static final WorldGenBlockBlob wGenBlockBlob = new WorldGenBlockBlob( Blocks.mossy_cobblestone, 0 );
 	private final int type;
 
+	@SuppressWarnings("unchecked")
 	public BiomeGenTaiga( int id, int type )
 	{
 		super( id );
