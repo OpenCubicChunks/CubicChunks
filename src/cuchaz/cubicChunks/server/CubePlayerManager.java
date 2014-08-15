@@ -466,7 +466,7 @@ public class CubePlayerManager extends PlayerManager
 			int cubeX = AddressTools.getX( address );
 			int cubeY = AddressTools.getY( address );
 			int cubeZ = AddressTools.getZ( address );
-			getCubeProvider().loadCubeAndNeighbors( cubeX, cubeY, cubeZ );
+			getCubeProvider().loadCube( cubeX, cubeY, cubeZ );
 			
 			// make a new watcher
 			watcher = new CubeWatcher( getCubeProvider().provideCube( cubeX, cubeY, cubeZ ) );

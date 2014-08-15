@@ -97,19 +97,18 @@ public class BiomeGenSwamp extends CubeBiomeGenBase
 				{
 					for( int y = maxY; y >= minY; --y )
 					{
-
-						Block block = world.getBlock( xAbs, y, zAbs );
+						int yAbs = Coords.localToBlock(cubeY, y);
+						Block block = world.getBlock( xAbs, yAbs, zAbs );
 
 						if( block == null || block.getMaterial() != Material.air )
 						{
-							if( y == seaLevel - 1 && block != Blocks.water )
+							if( yAbs == seaLevel - 1 && block != Blocks.water )
 							{
-								int yRel = Coords.blockToLocal( y );
-								world.setBlock( xAbs, yRel, zAbs, Blocks.water );
+								world.setBlock( xAbs, yAbs, zAbs, Blocks.water );
 
 								if( var9 < 0.12D )
 								{
-									world.setBlock( xAbs, yRel + 1, zAbs, Blocks.waterlily );
+									world.setBlock( xAbs, yAbs + 1, zAbs, Blocks.waterlily );
 								}
 							}
 

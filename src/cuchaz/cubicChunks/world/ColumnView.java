@@ -54,6 +54,11 @@ public class ColumnView extends Column
 		m_cubes.put( cube.getY(), cube );
 	}
 	
+	public void removeCubeFromView( Cube cube)
+	{
+		m_cubes.remove(cube.getY());
+	}
+	
 	@Override
 	public Cube getCube( int y )
 	{

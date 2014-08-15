@@ -25,6 +25,7 @@ import com.google.common.collect.Maps;
 
 import cuchaz.cubicChunks.util.Bits;
 import cuchaz.cubicChunks.util.Coords;
+import cuchaz.cubicChunks.world.BlankColumn;
 import cuchaz.cubicChunks.world.ColumnView;
 import cuchaz.cubicChunks.world.Cube;
 
@@ -75,6 +76,15 @@ public class CubeWatcher
 	
 	public void removePlayer( EntityPlayerMP player )
 	{
+		//clientside cleanup
+		ColumnView c = new ColumnView(m_cube.getColumn());
+		Cube cube = new Cube(m_cube.getWorld(),c,m_cube.getX(),m_cube.getY(),m_cube.getZ(),false);
+		cube.setEmpty(true);
+		c.addCubeToView(cube);
+		//send client chunk data for empty cube, overrides previously filled cube
+		player.playerNetServerHandler.sendPacket(new S21PacketChunkData(c, false, cube.getY() << 4));
+		
+		//serverside cleanup
 		m_players.remove( player.getEntityId() );
 		updateInhabitedTime();
 	}

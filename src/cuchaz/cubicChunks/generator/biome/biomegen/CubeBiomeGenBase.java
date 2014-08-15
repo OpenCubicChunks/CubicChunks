@@ -16,12 +16,16 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.MathHelper;
+import net.minecraft.world.ColorizerFoliage;
+import net.minecraft.world.ColorizerGrass;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenBigTree;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import cuchaz.cubicChunks.generator.biome.alternateGen.AlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.populator.WorldGenAbstractTreeCube;
 import cuchaz.cubicChunks.generator.populator.WorldGeneratorCube;
 import cuchaz.cubicChunks.generator.populator.generators.WorldGenBigTreeCube;
@@ -37,12 +41,12 @@ import java.lang.reflect.Field;
 import java.util.List;
 import net.minecraft.world.biome.BiomeGenBase;
 
-public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGenBase
+public abstract class CubeBiomeGenBase extends BiomeGenBase
 {
 	private static final Logger logger = LogManager.getLogger();
 
 	/** An array of all the biomes, indexed by biome id. */
-	private static final BiomeGenBase[] biomeList;
+	private static final CubeBiomeGenBase[] biomeList = new CubeBiomeGenBase[256];
 
 	static
 	{
@@ -78,7 +82,7 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 			logger.fatal( "Impossible exception!", ex );
 		}
 
-		biomeList = temp;
+		//biomeList = temp;
 	}
 
 	protected static final CubeBiomeGenBase.Height defaultBiomeRange = new CubeBiomeGenBase.Height( 0.1F, 0.2F );
@@ -151,6 +155,8 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 	public static final CubeBiomeGenBase mesaPlateauF = (new BiomeGenMesa( 38, false, true )).setColor( 11573093 ).setBiomeName( "Mesa Plateau F" ).setHeightRange( plateauRange );
 	public static final CubeBiomeGenBase mesaPlateau = (new BiomeGenMesa( 39, false, false )).setColor( 13274213 ).setBiomeName( "Mesa Plateau" ).setHeightRange( plateauRange );
 
+	public World world;
+	
 	protected static final WorldGenDoublePlantCube worldGenDoublePlant;
 
 	/** The tree generator. */
@@ -180,6 +186,7 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 
 		biomeList[biomeID] = this;
 		this.theBiomeDecorator = this.createBiomeDecorator();
+        this.world = this.decorator().getWorld();
 	}
 
 	public CubeBiomeDecorator decorator()
@@ -521,6 +528,64 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 			return ocean;
 		}
 	}
+	
+	@Override
+    public int getBiomeGrassColor(int x, int y, int z)
+    {
+        if (this.world == null){this.world = this.decorator().getWorld();}
+        if (this.world != null){
+        	float [] downfall = new float [1];
+        	((AlternateWorldColumnManager)this.world.getWorldChunkManager()).getRainfall(downfall, x, z, 1, 1);
+        	double [][] temp = ((AlternateWorldColumnManager)this.world.getWorldChunkManager()).getTempArray(x >> 4, z >> 4);
+        	return ColorizerGrass.getGrassColor(MathHelper.clamp_double(((temp[x & 15][z & 15])-0.5) * 1.2 + 0.5,0.0,1.0), MathHelper.clamp_double((downfall[0] - 0.5)*2 + 0.5,0.0,1.0));
+        }
+        double var4 = (double)MathHelper.clamp_float(this.getFloatTemperatures(x, y, z), 0.0F, 1.0F);
+        double var6 = (double)MathHelper.clamp_float(this.getFloatRainfall(), 0.0F, 1.0F) + 0.1D;
+		return ColorizerGrass.getGrassColor(var4,var6);
+    }
+	
+	@Override
+    public int getBiomeFoliageColor(int x, int y, int z)
+    {
+        float [] downfall = new float [1];
+        if (this.world == null){this.world = this.decorator().getWorld();}
+        if (this.world != null){
+        	((AlternateWorldColumnManager)this.world.getWorldChunkManager()).getRainfall(downfall, x, z, 1, 1);
+        	double [][] temp = ((AlternateWorldColumnManager)this.world.getWorldChunkManager()).getTempArray(x >> 4, z >> 4);
+        	return ColorizerFoliage.getFoliageColor(MathHelper.clamp_double(((temp[x & 15][z & 15])-0.5) * 1.2 + 0.5,0.0,1.0), MathHelper.clamp_double((downfall[0] - 0.5)*2 + 0.5,0.0,1.0));
+        }
+        double var4 = (double)MathHelper.clamp_float(this.getFloatTemperature(x, y, z), 0.0F, 1.0F);
+        double var6 = (double)MathHelper.clamp_float(this.getFloatRainfall(), 0.0F, 1.0F) + 0.1D;
+		return ColorizerFoliage.getFoliageColor(var4,var6);
+
+    }
+
+	//Needed to adjust variable height based biome coloring for greater terrain heights.
+    public final float getFloatTemperatures(int p_150564_1_, int p_150564_2_, int p_150564_3_)
+    {
+        if (p_150564_2_ > 64)
+        {
+            float var4 = (float)field_150605_ac.func_151601_a((double)p_150564_1_ * 1.0D / 8.0D, (double)p_150564_3_ * 1.0D / 8.0D) * 4.0F;
+            return this.temperature - (var4 + (float)p_150564_2_ - 64.0F) * 0.01F / 30.0F;
+        }
+        else
+        {
+            return this.temperature;
+        }
+    }
+    
+    public static CubeBiomeGenBase func_150568_d(int p_150568_0_)
+    {
+        if (p_150568_0_ >= 0 && p_150568_0_ <= biomeList.length)
+        {
+            return biomeList[p_150568_0_];
+        }
+        else
+        {
+            logger.warn("Biome ID is out of bounds: " + p_150568_0_ + ", defaulting to 0 (Ocean)");
+            return ocean;
+        }
+    }
 
 	static
 	{

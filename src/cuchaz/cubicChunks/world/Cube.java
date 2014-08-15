@@ -334,6 +334,10 @@ public class Cube
 		int cubeZ = Coords.getCubeZForEntity( entity );
 		if( cubeX != m_x || cubeY != m_y || cubeZ != m_z )
 		{
+			if (this.getColumn().isEmpty()==true)
+			{
+				return;//client hasn't loaded column yet.			
+			}
 			log.warn( String.format( "Entity %s in cube (%d,%d,%d) added to cube (%d,%d,%d)!",
 				entity.getClass().getName(),
 				cubeX, cubeY, cubeZ,
@@ -358,15 +362,6 @@ public class Cube
 		{
 			entity.addedToChunk = false;
 			m_isModified = true;
-		}
-		else
-		{
-			log.warn( String.format( "%s Tried to remove entity %s from cube (%d,%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
-				m_world.isClient? "CLIENT" : "SERVER",
-				entity.getClass().getName(),
-				m_x, m_y, m_z,
-				entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
-			) );
 		}
 		return wasRemoved;
 	}
@@ -473,22 +468,22 @@ public class Cube
 	
 	public void onLoad( )
 	{
+		// tell the world about tile entities
+		m_world.func_147448_a( m_tileEntities.values() );
+		
 		// tell the world about entities
 		for( Entity entity : m_entities.entities() )
 		{
 			entity.onChunkLoad();
 		}
 		m_world.addLoadedEntities( m_entities.entities() );
-		
-		// tell the world about tile entities
-		m_world.func_147448_a( m_tileEntities.values() );
 	}
 	
 	public void onUnload( )
 	{
 		// tell the world to forget about entities
 		m_world.unloadEntities( m_entities.entities() );
-		
+
 		// tell the world to forget about tile entities
 		for( TileEntity tileEntity : m_tileEntities.values() )
 		{

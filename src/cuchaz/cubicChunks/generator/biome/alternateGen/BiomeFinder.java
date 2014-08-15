@@ -129,9 +129,9 @@ class BiomeFinder
 				//	1	1	--> rarityModifier = DIST_DIMENSIONS --> distSquared -= DIST_DIMENSIONS; (near biome)
 
 				double rarityModifier = biomeGen.getRarityMod( biomeNum, x, z );
-				rarityModifier *= DIST_DIMENSIONS / 2.0D;
+				rarityModifier *= DIST_DIMENSIONS / 2.0001D;
 
-				assert rarityModifier > -DIST_DIMENSIONS && rarityModifier < DIST_DIMENSIONS : String.format("Wrong rarity value: %.5f, x: %.2f, z: %.2f ");
+				assert rarityModifier > -DIST_DIMENSIONS && rarityModifier < DIST_DIMENSIONS : String.format("Wrong rarity value: %.5f, x: %.2f, z: %.2f ",biomeGen.getRarityMod( biomeNum, x, z ),x,z);
 
 				distSquared += rarityModifier;
 			}

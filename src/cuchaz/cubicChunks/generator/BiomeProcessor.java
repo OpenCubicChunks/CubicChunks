@@ -55,7 +55,7 @@ public class BiomeProcessor extends CubeProcessor
 	@Override
 	public boolean calculate( Cube cube )
 	{
-		//uncomment line below ti disable dirt/grass generation
+		//uncomment line below to disable dirt/grass generation
 		//if(true) return true;
 		// only continue if the neighboring cubes exist
 		CubeProvider provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
@@ -80,7 +80,7 @@ public class BiomeProcessor extends CubeProcessor
 		m_noise = m_noiseGen.func_151599_a(
 			m_noise,
 			Coords.cubeToMinBlock( cube.getX() ), Coords.cubeToMinBlock( cube.getZ() ),
-			16, 16, 16, 16, 1
+			16, 16, 0.06D, 0.06D, 1
 		);
 		
 		Cube above = provider.provideCube(cube.getX(), cube.getY() + 1, cube.getZ());
@@ -92,7 +92,7 @@ public class BiomeProcessor extends CubeProcessor
 		int bottomOfCube = Coords.cubeToMinBlock(cube.getY());
 		
 		// already checked that cubes above and below exist
-		// Do not modyfy cubes above/below to avoid generating dirt/grass in caves
+		// Do not modify cubes above/below to avoid generating dirt/grass in caves
 		int alterationTop = topOfCube;
 		int top = topOfCubeAbove;
 		int bottom = bottomOfCube;
@@ -111,7 +111,7 @@ public class BiomeProcessor extends CubeProcessor
 				
 				//Biome blocks depth in current block column. 0 for negative values.
 
-				biome.replaceBlocks( m_worldServer, m_rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, m_noise[zRel + xRel * 16] );
+				biome.replaceBlocks( m_worldServer, m_rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, m_noise[zRel * 16 + xRel] );
 			}
 		}	
 		

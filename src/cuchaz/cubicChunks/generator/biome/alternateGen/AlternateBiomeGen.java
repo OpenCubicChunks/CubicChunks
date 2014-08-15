@@ -46,65 +46,38 @@ public class AlternateBiomeGen
 	static void init()
 	{
 		System.out.println( Thread.currentThread().getId() );
-		//sea level biomes
-		registerBiome( AlternateBiomeGenInfo.builder().setH( -0.5F, -0.03F ).setV( 0.0F, 0.5F ).setT( 0.2F, 1.0F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.0F, -0.5F ).setExtHV( true ).setBiome( ocean ).setName( "Ocean" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( -1.0F, -0.5F ).setV( 0.0F, 0.5F ).setT( 0.2F, 1.0F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( deepOcean ).setName( "Deep ocean" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( -1.0F, -0.5F ).setV( 0.0F, 0.5F ).setT( 0.0F, 0.2F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( frozenOcean ).setName( "Frozen ocean" ).build() );
-		//just above sea level flat biomes
-		registerBiome( AlternateBiomeGenInfo.builder().setH( -0.05F, 0.05F ).setV( 0.0F, 0.05F ).setT( 0.5F, 1.0F ).setR( 0.0F, 0.7F ).setSizeRarity( 1.0F, 0.6F ).setExtHV( false ).setBiome( beach ).setName( "Beach" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( -0.05F, 0.05F ).setV( 0.0F, 0.1F ).setT( 0.0F, 0.5F ).setR( 0.0F, 0.7F ).setSizeRarity( 1.0F, 0.6F ).setExtHV( false ).setBiome( coldBeach ).setName( "Cold beach" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( -0.05F, 0.05F ).setV( 0.0F, 0.2F ).setT( 0.6F, 0.9F ).setR( 0.7F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( swampland ).setName( "Swampland" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( -0.05F, 0.3F ).setV( 0.05F, 0.3F ).setT( 0.6F, 0.9F ).setR( 0.7F, 1.0F ).setSizeRarity( 1.0F, 0.7F ).setExtHV( false ).setBiome( swampland ).setName( "Swampland M" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( -0.1F, 0.4F ).setV( 0.0F, 0.3F ).setT( 0.6F, 0.9F ).setR( 0.5F, 1.0F ).setSizeRarity( 1.0F, 1.0F ).setExtHV( true ).setBiome( mushroomIsland ).setName( "Mushroom Island" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.025F, 0.4F ).setV( 0.0F, 0.3F ).setT( 0.8F, 1.0F ).setR( 0.0F, 0.3F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( desert ).setName( "Desert" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.025F, 0.4F ).setV( 0.3F, 0.5F ).setT( 0.8F, 1.0F ).setR( 0.0F, 0.3F ).setSizeRarity( 1.1F, 0.0F ).setExtHV( true ).setBiome( desert ).setName( "Desert M" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.025F, 0.4F ).setV( 0.0F, 0.3F ).setT( 0.6F, 0.8F ).setR( 0.1F, 0.6F ).setSizeRarity( 1.0F, -0.5F ).setExtHV( true ).setBiome( savanna ).setName( "Savanna" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.025F, 0.4F ).setV( 0.3F, 0.5F ).setT( 0.6F, 0.8F ).setR( 0.1F, 0.6F ).setSizeRarity( 1.1F, 0.0F ).setExtHV( true ).setBiome( savanna ).setName( "Savanna M" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.025F, 0.4F ).setV( 0.15F, 0.3F ).setT( 0.3F, 0.7F ).setR( 0.4F, 0.8F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( plains ).setName( "Sunflower plains (Plains M)" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.025F, 0.4F ).setV( 0.0F, 0.15F ).setT( 0.3F, 0.7F ).setR( 0.4F, 0.8F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( plains ).setName( "Plains" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.025F, 0.4F ).setV( 0.0F, 0.15F ).setT( 0.0F, 0.3F ).setR( 0.3F, 0.6F ).setSizeRarity( 1.0F, 1.0F ).setExtHV( true ).setBiome( icePlains ).setName( "Ice plains" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.025F, 0.4F ).setV( 0.15F, 0.3F ).setT( 0.0F, 0.3F ).setR( 0.3F, 0.6F ).setSizeRarity( 1.1F, 0.6F ).setExtHV( true ).setBiome( icePlains ).setName( "Ice plains spikes" ).buildMutated() );
-		//rolling hills biomes
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.0F, 0.5F ).setT( 0.8F, 1.0F ).setR( 0.7F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( jungle ).setName( "Jungle" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.5F, 1.0F ).setT( 0.8F, 1.0F ).setR( 0.7F, 1.0F ).setSizeRarity( 1.1F, 0.0F ).setExtHV( true ).setBiome( jungle ).setName( "Jungle M" ).buildMutated() );
-		//new AlternateBiomeGenInfo(	0.0F,	0.5F,	0.2F,	0.6F,	0.75F,	0.8F,	0.75F,	0.8F,	1.0F,	0.1F,	false, 	new Color(40, 255, 20) ),//jungle edge 
-		//new AlternateBiomeGenInfo(	0.0F,	0.15F,	0.0F,			0.2F,	0.0F,	0.2F,	0.3F,	0.6F,	1.1F,	CubeBiomeGenBase.getBiome(151) ),//Jungle edge M
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.0F, 0.5F ).setT( 0.7F, 1.0F ).setR( 0.5F, 0.7F ).setSizeRarity( 3.0F, 0.0F ).setExtHV( true ).setBiome( roofedForest ).setName( "Roofed forest" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.5F, 1.0F ).setT( 0.7F, 1.0F ).setR( 0.5F, 0.7F ).setSizeRarity( 1.1F, 0.0F ).setExtHV( true ).setBiome( roofedForest ).setName( "Roofed forest M" ).buildMutated() );
-		//registerBiome( AlternateBiomeGenInfo.builder().setH( 0.3F, 0.6F ).setV( 0.0F, 0.15F ).setT( 0.6F, 0.8F ).setR( 0.1F, 0.6F ).setSizeRarity( 3.0F, 0.0F ).setExtHV( true ).setBiome( new Color( 100, 80, 0 ) ).setName( "Savanna plateau" ).build() );
-		//registerBiome( AlternateBiomeGenInfo.builder().setH( 0.3F, 0.6F ).setV( 0.15F, 0.4F ).setT( 0.6F, 0.8F ).setR( 0.1F, 0.6F ).setSizeRarity( 1.1F, 0.0F ).setExtHV( true ).setBiome( new Color( 100, 80, 40 ) ).setName( "Savanna plateau M" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.0F, 0.5F ).setT( 0.5F, 0.7F ).setR( 0.7F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( forest ).setName( "Forest" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.5F, 1.0F ).setT( 0.5F, 0.7F ).setR( 0.4F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( forest ).setName( "Flower forest" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.0F, 0.5F ).setT( 0.5F, 0.7F ).setR( 0.4F, 0.7F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( birchForest ).setName( "Birch forest" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.5F, 1.0F ).setT( 0.5F, 0.7F ).setR( 0.4F, 0.7F ).setSizeRarity( 1.1F, 0.0F ).setExtHV( true ).setBiome( birchForest ).setName( "Borch forest M" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.0F, 0.8F ).setT( 0.3F, 0.5F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.2F, 0.4F ).setExtHV( true ).setBiome( megaTaiga ).setName( "Mega taiga" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.0F, 0.5F ).setT( 0.3F, 0.5F ).setR( 0.5F, 1.0F ).setSizeRarity( 1.0F, 0.3F ).setExtHV( true ).setBiome( taiga ).setName( "Taiga" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.5F, 1.0F ).setT( 0.3F, 0.5F ).setR( 0.5F, 1.0F ).setSizeRarity( 1.0F, 0.3F ).setExtHV( true ).setBiome( taiga ).setName( "Taiga M" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.0F, 0.5F ).setT( 0.3F, 0.6F ).setR( 0.0F, 0.5F ).setSizeRarity( 1.0F, 0.2F ).setExtHV( true ).setBiome( mesa ).setName( "Mesa" ).build() );
-		//registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.5F, 1.0F ).setT( 0.3F, 0.6F ).setR( 0.0F, 0.5F ).setSizeRarity( 1.1F, 0.2F ).setExtHV( true ).setBiome( new Color( 255, 100, 200 ) ).setName( "Mesa Bryce" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.0F, 0.5F ).setT( 0.0F, 0.3F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( coldTaiga ).setName( "Cold taiga" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.2F, 0.6F ).setV( 0.5F, 1.0F ).setT( 0.0F, 0.3F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( coldTaiga ).setName( "Cold taiga M" ).buildMutated() );
-		//large hills biomes
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.0F, 0.8F ).setT( 0.8F, 1.0F ).setR( 0.0F, 0.5F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( desertHills ).setName( "Desert hills" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.0F, 0.8F ).setT( 0.7F, 1.0F ).setR( 0.5F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( jungleHills ).setName( "Jungle hills" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.0F, 0.15F ).setT( 0.4F, 0.8F ).setR( 0.0F, 0.5F ).setSizeRarity( 3.0F, 0.0F ).setExtHV( true ).setBiome( mesaPlateau ).setName( "Mesa plateau" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.15F, 0.4F ).setT( 0.4F, 0.8F ).setR( 0.0F, 0.5F ).setSizeRarity( 1.1F, 0.0F ).setExtHV( true ).setBiome( mesaPlateau ).setName( "Mesa plateau M" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.0F, 0.15F ).setT( 0.4F, 0.8F ).setR( 0.0F, 0.5F ).setSizeRarity( 3.0F, 0.0F ).setExtHV( true ).setBiome( mesaPlateauF ).setName( "Mesa plateau F" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.15F, 0.4F ).setT( 0.4F, 0.8F ).setR( 0.0F, 0.5F ).setSizeRarity( 1.1F, 0.0F ).setExtHV( true ).setBiome( mesaPlateauF ).setName( "Mesa plateau F M" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.0F, 0.8F ).setT( 0.5F, 0.7F ).setR( 0.5F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( forestHills ).setName( "Forest hills" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.0F, 0.5F ).setT( 0.3F, 0.5F ).setR( 0.5F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( birchForestHills ).setName( "Birch forest hills" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.5F, 1.0F ).setT( 0.3F, 0.5F ).setR( 0.5F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( birchForestHills ).setName( "Birch forest hills M" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.0F, 0.5F ).setT( 0.2F, 0.4F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.2F, 0.4F ).setExtHV( true ).setBiome( megaTaigaHills ).setName( "Mega taiga hills" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.5F, 1.0F ).setT( 0.2F, 0.4F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.2F, 0.4F ).setExtHV( true ).setBiome( megaTaigaHills ).setName( "Mega spruce taiga hills" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.0F, 0.8F ).setT( 0.2F, 0.4F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.2F, 0.0F ).setExtHV( true ).setBiome( taigaHills ).setName( "Taiga hills" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.6F, 0.8F ).setV( 0.0F, 0.8F ).setT( 0.0F, 0.3F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.0F, 0.0F ).setExtHV( true ).setBiome( coldTaigaHills ).setName( "Cold taiga hills" ).build() );
-		//mountain biomes
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.7F, 0.96F ).setV( 0.3F, 1.0F ).setT( 0.5F, 1.0F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.0F, -1.0F ).setExtHV( true ).setBiome( extremeHillsPlus ).setName( "Extreme hills plus" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.96F, 1.0F ).setV( 0.3F, 1.0F ).setT( 0.5F, 1.0F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.1F, 0.0F ).setExtHV( true ).setBiome( extremeHillsPlus ).setName( "Extreme hills plus M" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.96F, 1.0F ).setV( 0.3F, 1.0F ).setT( 0.3F, 0.6F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.2F, 0.0F ).setExtHV( true ).setBiome( extremeHills ).setName( "Extreme hills M" ).buildMutated() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.7F, 0.96F ).setV( 0.3F, 1.0F ).setT( 0.3F, 0.6F ).setR( 0.0F, 1.0F ).setSizeRarity( 1.0F, 1.0F ).setExtHV( false ).setBiome( extremeHills ).setName( "Extreme hills" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.65F, 0.7F ).setV( 0.3F, 1.0F ).setT( 0.3F, 0.6F ).setR( 0.0F, 1.0F ).setSizeRarity( 0.1F, 0.9F ).setExtHV( false ).setBiome( extremeHillsEdge ).setName( "Extreme hills edge" ).build() );
-		registerBiome( AlternateBiomeGenInfo.builder().setH( 0.7F, 1.0F ).setV( 0.4F, 1.0F ).setT( 0.0F, 0.3F ).setR( 0.0F, 1.0F ).setSizeRarity( 0.3F, 0.0F ).setExtHV( true ).setBiome( iceMountains ).setName( "Ice mountains" ).build() );
+		//ocean biomes
+			registerBiome(AlternateBiomeGenInfo.builder().setH(-0.5F, -0.03F ).setV(0.0F, 0.5F ).setT(0.2F, 1.0F ).setR(0.0F, 1.0F ).setSizeRarity(1.0F, -0.5F).setExtHV(true).setBiome(ocean).setName("Ocean").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(-1.0F, -0.5F ).setV(0.0F, 0.5F ).setT(0.2F, 1.0F ).setR(0.0F, 1.0F ).setSizeRarity(1.0F, 0.0F).setExtHV(true).setBiome(deepOcean).setName("Deep ocean").build());
+			//sea level biomes
+			registerBiome(AlternateBiomeGenInfo.builder().setH(-0.1F, 0.03F ).setV(0.0F, 0.01F ).setT(0.0F, 1.0F ).setR(0.0F, 0.7F ).setSizeRarity(1.0F, 0.6F).setExtHV(false).setBiome(beach).setName("Beach").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(-0.1F, 0.03F ).setV(0.01F, 0.05F ).setT(0.0F, 1.0F ).setR(0.0F, 0.7F ).setSizeRarity(1.0F, 0.6F).setExtHV(false).setBiome(coldBeach).setName("Cold Beach").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(-0.1F, 0.26000002F ).setV(0.0F, 0.2F ).setT(0.6F, 0.90000004F ).setR(0.6F, 1.0F ).setSizeRarity(1.0F, 0.0F).setExtHV(true).setBiome(swampland).setName("Swampland").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(-0.1F, 0.18F ).setV(0.0F, 0.3F ).setT(0.6F, 0.90000004F ).setR(0.5F, 1.0F ).setSizeRarity(2.0F, 0.0F).setExtHV(true).setBiome(mushroomIsland).setName("Mushroom Island").build());
+			//mostly flat biomes
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.02F, 0.82F ).setV(0.0F, 0.3F ).setT(0.82F, 1.0F ).setR(0.0F, 0.26F ).setSizeRarity(1.0F, 0.0F).setExtHV(true).setBiome(desert).setName("Desert").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.02F, 0.22F ).setV(0.0F, 0.3F ).setT(0.64F, 0.9F ).setR(0.1F, 0.6F ).setSizeRarity(1.0F, -0.5F).setExtHV(true).setBiome(savanna).setName("Savanna").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.02F, 0.17999999F ).setV(0.12F, 0.28F ).setT(0.3F, 0.70000005F ).setR(0.4F, 0.8F ).setSizeRarity(1.0F, 0.0F).setExtHV(true).setBiome(plains).setName("Sunflower plains").buildMutated());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.02F, 0.22F ).setV(0.0F, 0.24F ).setT(0.3F, 0.70000005F ).setR(0.4F, 0.8F ).setSizeRarity(1.0F, 0.0F).setExtHV(true).setBiome(plains).setName("Plains").build());
+			//registerBiome(AlternateBiomeGenInfo.builder().setH(0.025F, 0.4F ).setV(0.0F, 0.15F ).setT(0.0F, 0.3F ).setR(0.3F, 0.6F ).setSizeRarity(1.0F, 1.0F).setExtHV(true).setBiome(icePlains).setName("Ice plains").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.02F, 0.46F ).setV(0.0F, 0.34F ).setT(0.0F, 0.3F ).setR(0.3F, 0.6F ).setSizeRarity(1.1F, 0.6F).setExtHV(true).setBiome(icePlains).setName("Ice plains spikes").buildMutated());
+			//hilly biomes
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.053F, 0.81299996F ).setV(0.0F, 0.5F ).setT(0.7F, 1.0F ).setR(0.7F, 1.0F ).setSizeRarity(1.0F, 0.0F).setExtHV(true).setBiome(jungle).setName("Jungle").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.093F, 0.773F ).setV(0.0F, 0.5F ).setT(0.7F, 1.0F ).setR(0.397F, 0.777F ).setSizeRarity(3.0F, 0.0F).setExtHV(true).setBiome(roofedForest).setName("Roofed forest").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.1F, 0.82000005F ).setV(0.0F, 0.5F ).setT(0.35F, 0.89F ).setR(0.34F, 1.0F ).setSizeRarity(1.0F, 0.0F).setExtHV(true).setBiome(forest).setName("Forest").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.1F, 0.78000003F ).setV(0.29F, 0.78999996F ).setT(0.5F, 0.7F ).setR(0.4F, 1.0F ).setSizeRarity(1.0F, 0.0F).setExtHV(true).setBiome(forest).setName("Flower forest").buildMutated());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.1F, 0.78000003F ).setV(0.0F, 0.5F ).setT(0.38F, 0.7F ).setR(0.4F, 0.8F ).setSizeRarity(1.0F, 1.0F).setExtHV(true).setBiome(birchForest).setName("Birch forest").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.1F, 0.78000003F ).setV(0.0F, 0.8F ).setT(0.1F, 0.42F ).setR(0.0F, 0.92F ).setSizeRarity(1.2F, 0.4F).setExtHV(true).setBiome(megaTaiga).setName("Mega taiga").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.2F, 0.6F ).setV(0.0F, 0.5F ).setT(0.3F, 0.5F ).setR(0.5F, 1.0F ).setSizeRarity(1.0F, 0.3F).setExtHV(true).setBiome(taiga).setName("Taiga").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.22F, 0.82000005F ).setV(0.0F, 0.5F ).setT(0.8F, 1.0F ).setR(0.0F, 0.5F ).setSizeRarity(1.0F, 0.2F).setExtHV(true).setBiome(mesa).setName("Mesa").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.2F, 0.6F ).setV(0.1F, 1.0F ).setT(0.8F, 1.0F ).setR(0.0F, 0.5F ).setSizeRarity(1.1F, 0.2F).setExtHV(true).setBiome(mesa).setName("Mesa Bryce").buildMutated());
+			//registerBiome(AlternateBiomeGenInfo.builder().setH(0.2F, 0.6F ).setV(0.0F, 0.5F ).setT(0.0F, 0.16F ).setR(0.0F, 1.0F ).setSizeRarity(1.0F, 0.0F).setExtHV(true).setBiome(coldTaiga).setName("Cold taiga").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.56F, 0.84000003F ).setV(0.0F, 0.24F ).setT(0.8F, 1.0F ).setR(0.0F, 0.5F ).setSizeRarity(3.0F, 0.0F).setExtHV(true).setBiome(mesaPlateauF).setName("Mesa plateau F").build());
+			//mountainous biomes
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.72F, 1.0F ).setV(0.3F, 1.0F ).setT(0.5F, 1.0F ).setR(0.0F, 1.0F ).setSizeRarity(1.0F, -1.0F).setExtHV(true).setBiome(extremeHillsPlus).setName("Extreme hills plus").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.7F, 0.94F ).setV(0.06F, 1.0F ).setT(0.3F, 0.6F ).setR(0.0F, 1.0F ).setSizeRarity(1.0F, 1.0F).setExtHV(false).setBiome(extremeHills).setName("Extreme hills").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.66F, 0.70000005F ).setV(0.0F, 0.7F ).setT(0.3F, 0.6F ).setR(0.0F, 1.0F ).setSizeRarity(0.1F, 0.9F).setExtHV(false).setBiome(extremeHillsEdge).setName("Extreme hills edge").build());
+			registerBiome(AlternateBiomeGenInfo.builder().setH(0.7F, 0.98F ).setV(0.06F, 1.0F ).setT(0.0F, 0.5F ).setR(0.0F, 1.0F ).setSizeRarity(0.3F, 0.0F).setExtHV(true).setBiome(iceMountains).setName("Ice mountains").build());
 	}
 
 	private final World world;
@@ -159,11 +132,11 @@ public class AlternateBiomeGen
 					rarityNoise[x][z] += simplex.getValue4D( xAlfa * scale, zAlfa * scale, xBeta * scale, zBeta * scale ) * amplitude;
 					if( rarityNoise[x][z] > max )
 					{
-						max = Math.abs( rarityNoise[x][z] );
+						max = rarityNoise[x][z] ;
 					}
 					if( rarityNoise[x][z] < min )
 					{
-						min = Math.abs( rarityNoise[x][z] );
+						min =  rarityNoise[x][z] ;
 					}
 				}
 			}
@@ -241,7 +214,11 @@ public class AlternateBiomeGen
 		double lerp2 = valX1Z0 + zFrac * (valX1Z1 - valX1Z0);
 
 		double lerp = lerp1 + xFrac * (lerp2 - lerp1);
-
+		assert(zFrac <= 1.0 && xFrac <= 1.0);
+		assert(zFrac >= 0.0 && xFrac >= 0.0);
+		if (lerp > 1.0){lerp = 1.0D;}
+		if (lerp < -1.0){lerp = -1.0D;}//round-off error correction
+		assert Math.abs(BIOMES.get( biome ).rarity)<=1.0 : String.format("Biome rarity too high %f, %s",BIOMES.get( biome ).rarity, BIOMES.get( biome ).name);
 		return BIOMES.get( biome ).rarity + lerp;
 	}
 }

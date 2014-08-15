@@ -28,7 +28,7 @@ public class BiomeGenDesert extends CubeBiomeGenBase
 		CubeBiomeDecorator.DecoratorConfig cfg = this.decorator().decoratorConfig();
 		cfg.treesPerColumn( DISABLE );
 		cfg.deadBushPerColumn( 2 );
-		cfg.reedsPerColumn( 50 );;
+		cfg.reedsPerColumn( 50 );
 		cfg.cactiPerColumn( 10 );
 		this.spawnableCreatureList.clear();
 	}
