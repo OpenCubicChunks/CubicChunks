@@ -55,12 +55,9 @@ public class LightIndex
 	public Integer getTopNonTransparentBlockY( int localX, int localZ )
 	{
 		int xzCoord = localZ << 4 | localX;
-		LightIndexColumn column = m_columns[xzCoord];
-		if (column != null)
-		{
-			return m_columns[xzCoord].getTopNonTransparentBlockY();
-		}
-		return null;
+        LightIndexColumn column = m_columns[xzCoord];
+        assert column != null;
+        return column.getTopNonTransparentBlockY();
 	}
 	
 	public Integer getTopNonTransparentBlockY( )

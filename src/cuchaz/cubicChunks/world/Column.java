@@ -50,6 +50,7 @@ import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Bits;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.RangeInt;
+import org.lwjgl.input.Mouse;
 
 public class Column extends Chunk
 {
@@ -262,9 +263,9 @@ public class Column extends Chunk
 		// did the top non-transparent block change?
 		Integer oldSkylightY = getSkylightBlockY( localX, localZ );
 		getLightIndex().setOpacity( localX, blockY, localZ, newOpacity );
-		Integer newSkylightY = getSkylightBlockY( localX, localZ );
-		if( oldSkylightY != null && newSkylightY != null && oldSkylightY != newSkylightY )
-		{
+        Integer newSkylightY = getSkylightBlockY(localX, localZ);
+        //cast to int is required
+        if(oldSkylightY != null && newSkylightY != null && oldSkylightY != (int)newSkylightY) {
 			// sort the y-values
 			int minBlockY = oldSkylightY;
 			int maxBlockY = newSkylightY;
@@ -272,8 +273,9 @@ public class Column extends Chunk
 			{
 				minBlockY = newSkylightY;
 				maxBlockY = oldSkylightY;
-			}
-			assert (minBlockY <= maxBlockY): "Values not sorted! " + minBlockY + ", " + maxBlockY;
+            }
+            //they can't be equal
+			assert (minBlockY < maxBlockY): "Values not sorted! " + minBlockY + ", " + maxBlockY;
 
 			// update light and signal render update
 			cubeWorld.getLightingManager().computeSkyLightUpdate( this, localX, localZ, minBlockY, maxBlockY );
@@ -394,7 +396,7 @@ public class Column extends Chunk
 	{
 		Integer skylightBlockY = getSkylightBlockY( localX, localZ );
 		if( skylightBlockY == null )
-		{
+        {
 			return true;
 		}
 		return blockY >= skylightBlockY;
@@ -407,7 +409,7 @@ public class Column extends Chunk
 		if( topBlockY != null )
 		{
 			return topBlockY + 1;
-		}
+        }
 		return null;
 	}
 
@@ -672,8 +674,7 @@ public class Column extends Chunk
 
 		// how many cubes are we sending?
 		int numCubes = 0;
-		for( @SuppressWarnings("unused") Cube cube: cubes() )
-		{
+        for(@SuppressWarnings("unused") Cube cube : cubes())		{
 			numCubes++;
 		}
 		out.writeShort( numCubes );

@@ -47,13 +47,15 @@ public class LightIndexColumn
 			int blockY = in.readInt();
 			int opacity = in.readUnsignedByte();
 			m_opacity.put( blockY, opacity );
-		}
+        }
+        m_topNonTransparentBlockY.clear();
+        m_topOpaqueUnderSeaLevelBlockY.clear();
 	}
 	
 	public void writeData( DataOutputStream out )
 	throws IOException
 	{
-		out.writeShort( m_opacity.size() );
+        out.writeShort(m_opacity.size());
 		for( Map.Entry<Integer,Integer> entry : m_opacity.entrySet() )
 		{
 			out.writeInt( entry.getKey() );
@@ -70,7 +72,6 @@ public class LightIndexColumn
 		{
 			return entry.getValue();
 		}
-		
 		// assume zero
 		return 0;
 	}
@@ -133,7 +134,7 @@ public class LightIndexColumn
 		{
 			m_topNonTransparentBlockY.set( null );
 			
-			Map.Entry<Integer,Integer> lastEntry = null;
+            Map.Entry<Integer, Integer> lastEntry = null;
 			for( Map.Entry<Integer,Integer> entry : m_opacity.descendingMap().entrySet() )
 			{
 				int opacity = entry.getValue();
@@ -148,10 +149,9 @@ public class LightIndexColumn
 					m_topNonTransparentBlockY.set( lastEntry.getKey() - 1 );
 					break;
 				}
-				
 				lastEntry = entry;
-			}
-		}
+            }
+        }
 		return m_topNonTransparentBlockY.get();
 	}
 	
