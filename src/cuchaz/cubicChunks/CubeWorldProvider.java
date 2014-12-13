@@ -38,12 +38,7 @@ public abstract class CubeWorldProvider extends WorldProvider
 		}
 		else if(worldObj instanceof CubeWorldServer)
 		{
-			if(GlobalGeneratorConfig.generator == NewTerrainProcessor.class)
-				worldChunkMgr = new WorldColumnManager( worldObj );
-			else if(GlobalGeneratorConfig.generator == NewAlternateTerrainProcessor.class)
-				worldChunkMgr = new NewAlternateWorldColumnManager( (CubeWorldServer)worldObj );
-			else
-				worldChunkMgr = new AlternateWorldColumnManager( (CubeWorldServer)worldObj );
+			worldChunkMgr = new NewAlternateWorldColumnManager( (CubeWorldServer)worldObj );
 		}else{
 			worldChunkMgr = new WorldColumnManager(worldObj);
 		}

@@ -75,15 +75,7 @@ public class CubeWorldProviderSurface extends CubeWorldProvider
 	public GeneratorPipeline createGeneratorPipeline( CubeWorldServer worldServer )
 	{
 		GeneratorPipeline generatorPipeline = new GeneratorPipeline( worldServer.getCubeProvider() );
-		CubeProcessor terrainProcessor = null;
-		if(GlobalGeneratorConfig.generator == NewTerrainProcessor.class){
-			terrainProcessor = new NewTerrainProcessor("Terrain", worldServer, 10);
-		}else if(GlobalGeneratorConfig.generator == NewAlternateTerrainProcessor.class){
-			terrainProcessor = new NewAlternateTerrainProcessor("Terrain", worldServer, 10);
-		}else{
-			terrainProcessor = new AlternateTerrainProcessor("Terrain", worldServer, 10);
-		}
-		assert terrainProcessor != null;
+		CubeProcessor terrainProcessor = new NewAlternateTerrainProcessor("Terrain", worldServer, 10);
 		generatorPipeline.addStage( GeneratorStage.Terrain, terrainProcessor );
 		generatorPipeline.addStage( GeneratorStage.Biomes, new BiomeProcessor( "Biomes", worldServer, 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Features, new FeatureProcessor( "Features", worldServer.getCubeProvider(), 10 ) );

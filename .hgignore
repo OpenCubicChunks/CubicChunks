@@ -1,6 +1,6 @@
-
 syntax: regexp
 ^\.gradle$
+hs_err_.*\.log
 syntax: regexp
 ^\.settings$
 syntax: regexp
@@ -13,3 +13,7 @@ build/
 .project
 .nb-gradle/
 *.sh
+crash-reports/
+saves/
+screenshots/
+options.txt

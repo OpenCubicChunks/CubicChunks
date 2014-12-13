@@ -23,5 +23,5 @@ public class GlobalGeneratorConfig
 
 	public static final int yNoiseSize = CUBE_Y_SIZE / 8 + 1;
 
-	public static final int zNoiseSize = CUBE_Z_SIZE / 4 + 1;
+    public static final int zNoiseSize = CUBE_Z_SIZE / 4 + 1;
 }
