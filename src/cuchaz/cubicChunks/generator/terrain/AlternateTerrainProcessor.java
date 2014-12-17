@@ -105,9 +105,9 @@ public class AlternateTerrainProcessor extends AbstractTerrainProcessor3dNoise
 		this.noiseArrayRainfall = wcm.getRainfallArray( cube.getX(), cube.getZ() );
 		this.noiseArrayTemp = wcm.getTempArray( cube.getX(), cube.getZ() );
 		
-		for( int x = 0; x < X_NOISE_SIZE; x++ )
+		for( int x = 0; x < X_SECTION_SIZE; x++ )
 		{
-			for( int z = 0; z < Z_NOISE_SIZE; z++ )
+			for( int z = 0; z < Z_SECTION_SIZE; z++ )
 			{
 				double height = noiseArrayHeight[genToNormal[x]][genToNormal[z]];
 				double vol = noiseArrayVolatility[genToNormal[x]][genToNormal[z]];
@@ -118,7 +118,7 @@ public class AlternateTerrainProcessor extends AbstractTerrainProcessor3dNoise
 				vol = this.wcm.getRealVolatility( vol, height, rainfall, temp );
 				rainfall *= temp;
 
-				for( int y = 0; y < Y_NOISE_SIZE; y++ )
+				for( int y = 0; y < Y_SECTION_SIZE; y++ )
 				{
 					double vol1Low = MathHelper.clamp_double( this.noiseArrayLow[x][y][z], -1, 1 );
 					double vol2High = MathHelper.clamp_double( this.noiseArrayHigh[x][y][z], -1, 1 );

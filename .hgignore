@@ -17,3 +17,5 @@ crash-reports/
 saves/
 screenshots/
 options.txt
+.nb-gradle-properties
+resourcepacks/

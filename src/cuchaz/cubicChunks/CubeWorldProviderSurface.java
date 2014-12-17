@@ -45,7 +45,7 @@ public class CubeWorldProviderSurface extends CubeWorldProvider
 	}
 	
 	@Override
-	public float getCloudHeight()
+	public float getCloudHeight( )
 	{
 		return 256;
 	}
@@ -60,22 +60,22 @@ public class CubeWorldProviderSurface extends CubeWorldProvider
 	}
 	
 	@Override
-	public boolean getWorldHasVoidParticles()
-    {
-        return false;
-    }
+	public boolean getWorldHasVoidParticles( )
+	{
+		return false;
+	}
 	
 	@Override
-	public double getVoidFogYFactor()
-    {
-        return Double.MAX_VALUE;
-    }
-
+	public double getVoidFogYFactor( )
+	{
+		return Double.MAX_VALUE;
+	}
+	
 	@Override
 	public GeneratorPipeline createGeneratorPipeline( CubeWorldServer worldServer )
 	{
 		GeneratorPipeline generatorPipeline = new GeneratorPipeline( worldServer.getCubeProvider() );
-		CubeProcessor terrainProcessor = new NewAlternateTerrainProcessor("Terrain", worldServer, 10);
+		CubeProcessor terrainProcessor = new NewTerrainProcessor( "Terrain", worldServer, 10 );
 		generatorPipeline.addStage( GeneratorStage.Terrain, terrainProcessor );
 		generatorPipeline.addStage( GeneratorStage.Biomes, new BiomeProcessor( "Biomes", worldServer, 10 ) );
 		generatorPipeline.addStage( GeneratorStage.Features, new FeatureProcessor( "Features", worldServer.getCubeProvider(), 10 ) );

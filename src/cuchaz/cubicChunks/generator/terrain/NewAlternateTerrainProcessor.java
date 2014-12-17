@@ -52,8 +52,8 @@ public class NewAlternateTerrainProcessor extends AbstractTerrainProcessor3dNois
 
 		this.m_rand = new Random( m_worldServer.getSeed() );
 
-		this.noiseArrayHeight = new double[xNoiseSize][zNoiseSize];
-		this.noiseArrayVolatility = new double[xNoiseSize][zNoiseSize];
+		this.noiseArrayHeight = new double[X_SECTIONS][Z_SECTIONS];
+		this.noiseArrayVolatility = new double[X_SECTIONS][Z_SECTIONS];
 	}
 	
 	@Override
@@ -186,9 +186,9 @@ public class NewAlternateTerrainProcessor extends AbstractTerrainProcessor3dNois
 		this.noiseArrayRainfall = wcm.getRainfallArray( cube.getX(), cube.getZ() );
 		this.noiseArrayTemp = wcm.getTempArray( cube.getX(), cube.getZ() );
 		
-		for( int x = 0; x < xNoiseSize; x++ )
+		for( int x = 0; x < X_SECTIONS; x++ )
 		{
-			for( int z = 0; z < zNoiseSize; z++ )
+			for( int z = 0; z < Z_SECTIONS; z++ )
 			{
 				double height = noiseArrayHeight[genToNormal[x]][genToNormal[z]];
 				double vol = noiseArrayVolatility[genToNormal[x]][genToNormal[z]];
@@ -199,8 +199,8 @@ public class NewAlternateTerrainProcessor extends AbstractTerrainProcessor3dNois
 				height = this.wcm.getRealHeight( height ) * (50D + 250D * vol)  ;
 				double output;
 				double d8;
-				int yPos = cube.getY() * (yNoiseSize - 1);
-                for (int y = 0; y < yNoiseSize; y++)
+				int yPos = cube.getY() * (Y_SECTIONS - 1);
+                for (int y = 0; y < Y_SECTIONS; y++)
                 {
                     d8 = (yPos + y - height)  / vol / 4 * 3;
                     if (d8 < 0.0D)
