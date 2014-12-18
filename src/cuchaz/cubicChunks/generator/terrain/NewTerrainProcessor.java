@@ -63,11 +63,11 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 			}
 		}
 		
-		double freq = 1 / ( 200 );
+		double freq = 200.0 / Math.pow( 2, 10 );
 		
 		builderHeight = new BasicBuilder();
 		builderHeight.setSeed( m_rand.nextInt() );
-		builderHeight.setOctaves( octaves );
+		builderHeight.setOctaves( 10 );
 		builderHeight.setMaxElev( 8 );
 		builderHeight.setFreq( freq );
 		builderHeight.build();
@@ -77,7 +77,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 	protected IBuilder createHighBuilder( )
 	{
 		Random rand = new Random( m_worldServer.getSeed() * 2 );
-		double freq = 684.412D / ( 64 * 1024 );
+		double freq = 684.412D / Math.pow( 2, octaves );
 		
 		BasicBuilder builderHigh = new BasicBuilder();
 		builderHigh.setSeed( rand.nextInt() );
@@ -94,7 +94,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 	protected IBuilder createLowBuilder( )
 	{
 		Random rand = new Random( m_worldServer.getSeed() * 3 );
-		double freq = 684.412D / ( 64 * 1024 );
+		double freq = 684.412D / Math.pow( 2, octaves );
 		
 		BasicBuilder builderLow = new BasicBuilder();
 		builderLow.setSeed( rand.nextInt() );
@@ -111,14 +111,15 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 	protected IBuilder createAlphaBuilder( )
 	{
 		Random rand = new Random( m_worldServer.getSeed() * 4 );
-		double freq = 8.555150000000001 / ( 256 );
+		double freq = 8.55515 / Math.pow( 2, 8 );
 		
 		BasicBuilder builderAlpha = new BasicBuilder();
 		builderAlpha.setSeed( rand.nextInt() );
 		builderAlpha.setOctaves( 8 );
 		builderAlpha.setPersistance( 0.5 );
-		builderAlpha.setMaxElev( 12.8 );
-		builderAlpha.setFreq( freq, freq / 2, freq );
+		builderAlpha.setMaxElev( 25.6 );
+		builderAlpha.setSeaLevel( 0.5 );
+		builderAlpha.setFreq( freq, freq * 2, freq );
 		builderAlpha.build();
 		
 		return builderAlpha;
@@ -244,12 +245,13 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 		// Convert from vanilla height/volatility format
 		// to something easier to predict
 		this.biomeVolatility = smoothVolatility * 0.9 + 0.1;
-		this.biomeVolatility *= 2.0 / 3.0;
+		this.biomeVolatility *= 3.0;
 		
 		// divide everything by 64, then it will be multpllied by maxElev
+		// vanilla sea level: 63.75 / 64.00
 		
-		// uncomment to use vanilla sea level == 63.75
-		this.biomeHeight = 0;// 63.75 / 64.00;
+		// sea level 0.75/64 of height above sea level (63.75 = 63+0.75)
+		this.biomeHeight = 0.75 / 64.0;
 		this.biomeHeight += smoothHeight * 17.0 / 64.0;
 		// TODO: Remove addHeight? it changes the result by at most 1 block
 		this.biomeHeight += 0.2 * addHeight * 17.0 / 64.0;

@@ -27,29 +27,32 @@ import cuchaz.cubicChunks.server.CubeWorldServer;
 public abstract class CubeWorldProvider extends WorldProvider
 {
 	@Override
-	protected void registerWorldChunkManager()
+	protected void registerWorldChunkManager( )
 	{
-		// NOTE: this is the place we plug in different WorldColumnManagers for different dimensions or world types
-
+		// NOTE: this is the place we plug in different WorldColumnManagers for
+		// different dimensions or world types
+		
 		if( worldObj.getWorldInfo().getTerrainType() == WorldType.FLAT )
 		{
 			FlatGeneratorInfo info = FlatGeneratorInfo.createFlatGeneratorFromString( worldObj.getWorldInfo().getGeneratorOptions() );
 			worldChunkMgr = new WorldColumnManagerFlat( CubeBiomeGenBase.getBiome( info.getBiome() ), 0.5F );
 		}
-		else if(worldObj instanceof CubeWorldServer)
+		else if( worldObj instanceof CubeWorldServer )
 		{
-			worldChunkMgr = new NewAlternateWorldColumnManager( (CubeWorldServer)worldObj );
-		}else{
-			worldChunkMgr = new WorldColumnManager(worldObj);
+			worldChunkMgr = new WorldColumnManager( (CubeWorldServer)worldObj );
+		}
+		else
+		{
+			worldChunkMgr = new WorldColumnManager( worldObj );
 		}
 	}
-
-	public WorldColumnManager getWorldColumnMananger()
+	
+	public WorldColumnManager getWorldColumnMananger( )
 	{
 		return (WorldColumnManager)worldChunkMgr;
 	}
-
+	
 	public abstract GeneratorPipeline createGeneratorPipeline( CubeWorldServer worldServer );
-
-	public abstract int getSeaLevel();
+	
+	public abstract int getSeaLevel( );
 }

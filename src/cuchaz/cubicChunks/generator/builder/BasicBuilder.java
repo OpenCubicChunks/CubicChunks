@@ -19,8 +19,8 @@ import libnoiseforjava.module.ScalePoint;
 public class BasicBuilder implements IBuilder
 {
 	protected ModuleBase finalModule;
-
-	// Planet seed.  Change this to generate a different planet.
+	
+	// Planet seed. Change this to generate a different planet.
 	int SEED = 0;
 	
 	// Maximum elevation, in meters. This value is approximate.
@@ -39,6 +39,7 @@ public class BasicBuilder implements IBuilder
 	double persistance = 0.5;
 	double clampMin = -Double.MAX_VALUE, clampMax = Double.MAX_VALUE;
 	double lacunarity = 2;
+	private double scaleOctaves;
 	
 	@Override
 	public void setSeed( int seed )
@@ -62,6 +63,7 @@ public class BasicBuilder implements IBuilder
 	public void setOctaves( int numOctaves )
 	{
 		this.NUM_OCTAVES = numOctaves;
+		this.scaleOctaves = 1 / ( 2 - Math.pow( 2, numOctaves - 1 ) );
 	}
 	
 	public void setFreq( double scale )
@@ -107,7 +109,11 @@ public class BasicBuilder implements IBuilder
 		scalePoint.setScale( SCALE_X, SCALE_Y, SCALE_Z );
 		
 		ScaleBias scaleBias = new ScaleBias( scalePoint );
-		scaleBias.setScale( MAX_ELEV );
+		// Max perlin noise value with N octaves and persistance p is
+		// 1 + 1/p + 1/(p^2) + ... + 1/(p^(N-1))
+		// It's equal to (1 - p^N) / (1 - p)
+		// Divide result by it to make sure that result is between -1 and 1
+		scaleBias.setScale( MAX_ELEV * ( 1 - persistance ) / ( 1 - Math.pow( persistance, NUM_OCTAVES ) ) );
 		scaleBias.setBias( SEA_LEVEL );
 		
 		Clamp clamp = new Clamp( scaleBias );
