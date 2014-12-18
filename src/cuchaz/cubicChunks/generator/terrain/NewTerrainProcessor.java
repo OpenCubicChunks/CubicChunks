@@ -31,8 +31,8 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 	private double biomeVolatility;
 	private double biomeHeight;
 	
-	private final int maxSmoothRadius = 2;
-	private final int maxSmoothDiameter = maxSmoothRadius * 2 + 1;
+	private final int maxSmoothRadius;
+	private final int maxSmoothDiameter;
 	
 	private final double[][] noiseArrayHeight;
 	
@@ -45,6 +45,9 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 	public NewTerrainProcessor( String name, CubeWorldServer worldServer, int batchSize )
 	{
 		super( name, worldServer, batchSize );
+		
+		this.maxSmoothRadius = 2 * (int)( maxElev / 64 );
+		this.maxSmoothDiameter = maxSmoothRadius * 2 + 1;
 		
 		this.m_biomes = null;
 		
@@ -63,7 +66,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 			}
 		}
 		
-		double freq = 200.0 / Math.pow( 2, 10 );
+		double freq = 200.0 / Math.pow( 2, 10 ) / ( maxElev / 64 );
 		
 		builderHeight = new BasicBuilder();
 		builderHeight.setSeed( m_rand.nextInt() );
@@ -77,13 +80,15 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 	protected IBuilder createHighBuilder( )
 	{
 		Random rand = new Random( m_worldServer.getSeed() * 2 );
-		double freq = 684.412D / Math.pow( 2, octaves );
+		double freq = 684.412D / Math.pow( 2, octaves ) / ( maxElev / 64.0 );
 		
 		BasicBuilder builderHigh = new BasicBuilder();
 		builderHigh.setSeed( rand.nextInt() );
 		builderHigh.setOctaves( octaves );
 		builderHigh.setPersistance( 0.5 );
-		builderHigh.setMaxElev( 1 );
+		// with 16 octaves probability of getting 1 is too low
+		builderHigh.setMaxElev( 2 );
+		builderHigh.setClamp( -1, 1 );
 		builderHigh.setFreq( freq, freq, freq );
 		builderHigh.build();
 		
@@ -94,13 +99,14 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 	protected IBuilder createLowBuilder( )
 	{
 		Random rand = new Random( m_worldServer.getSeed() * 3 );
-		double freq = 684.412D / Math.pow( 2, octaves );
+		double freq = 684.412D / Math.pow( 2, octaves ) / ( maxElev / 64.0 );
 		
 		BasicBuilder builderLow = new BasicBuilder();
 		builderLow.setSeed( rand.nextInt() );
 		builderLow.setOctaves( octaves );
 		builderLow.setPersistance( 0.5 );
-		builderLow.setMaxElev( 1 );
+		builderLow.setMaxElev( 2 );
+		builderLow.setClamp( -1, 1 );
 		builderLow.setFreq( freq, freq, freq );
 		builderLow.build();
 		
@@ -111,7 +117,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 	protected IBuilder createAlphaBuilder( )
 	{
 		Random rand = new Random( m_worldServer.getSeed() * 4 );
-		double freq = 8.55515 / Math.pow( 2, 8 );
+		double freq = 8.55515 / Math.pow( 2, 8 ) / ( maxElev / 64.0 );
 		
 		BasicBuilder builderAlpha = new BasicBuilder();
 		builderAlpha.setSeed( rand.nextInt() );
@@ -119,6 +125,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 		builderAlpha.setPersistance( 0.5 );
 		builderAlpha.setMaxElev( 25.6 );
 		builderAlpha.setSeaLevel( 0.5 );
+		builderAlpha.setClamp( 0, 1 );
 		builderAlpha.setFreq( freq, freq * 2, freq );
 		builderAlpha.build();
 		
@@ -145,7 +152,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 					final double vol1Low = this.noiseArrayLow[x][y][z];
 					final double vol2High = this.noiseArrayHigh[x][y][z];
 					
-					final double noiseAlpha = MathHelper.clamp_double( this.noiseArrayAlpha[x][y][z], 0, 1 );
+					final double noiseAlpha = this.noiseArrayAlpha[x][y][z];
 					
 					double output = lerp( noiseAlpha, vol1Low, vol2High );
 					
@@ -220,7 +227,6 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 			for( int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++ )
 			{
 				final CubeBiomeGenBase biome = this.m_biomes[( x + nextX + this.maxSmoothRadius + ( z + nextZ + this.maxSmoothRadius ) * ( X_SECTION_SIZE + this.maxSmoothDiameter ) )];
-				
 				float biomeHeight = biome.biomeHeight;
 				float biomeVolatility = biome.biomeVolatility;
 				
@@ -245,7 +251,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 		// Convert from vanilla height/volatility format
 		// to something easier to predict
 		this.biomeVolatility = smoothVolatility * 0.9 + 0.1;
-		this.biomeVolatility *= 3.0;
+		this.biomeVolatility *= 4.0 / 3.0;
 		
 		// divide everything by 64, then it will be multpllied by maxElev
 		// vanilla sea level: 63.75 / 64.00

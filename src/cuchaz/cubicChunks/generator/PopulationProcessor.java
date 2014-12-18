@@ -336,7 +336,11 @@ public class PopulationProcessor extends CubeProcessor
 					for( int var17 = 0; !var16 && var17 < 4; ++var17 )
 					{
 						
-						int var18 = cube.getColumn().getSkylightBlockY( x & 15, z & 15 );
+						Integer var18 = cube.getColumn().getSkylightBlockY( x & 15, z & 15 );
+						if( var18 == null )
+						{
+							continue;
+						}
 						if( var18 == -1 )
 						{
 							while( x < xMin || x >= xMin + xRange || z < zMin || z >= zMin + zRange )
