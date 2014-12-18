@@ -15,7 +15,9 @@ import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.alternateGen.AlternateWorldColumnManager;
 import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
+import cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig;
 import cuchaz.cubicChunks.server.CubeWorldServer;
+import cuchaz.cubicChunks.util.AddressTools;
 import cuchaz.cubicChunks.util.Coords;
 import cuchaz.cubicChunks.util.CubeProcessor;
 import cuchaz.cubicChunks.world.Column;
@@ -54,52 +56,10 @@ public class PopulationProcessor extends CubeProcessor
 	@Override
 	public boolean calculate( Cube cube )
 	{
-		if( true )
-			return true;
-		CubeWorldServer world = (CubeWorldServer)cube.getWorld();
-		int heightMax = Integer.MIN_VALUE;
-		int heightMin = Integer.MAX_VALUE;
-		double volMax = 0;
-		for( int i = 0; i < 16; i++ )
-		{
-			for( int j = 0; j < 16; j++ )
-			{
-				if( cube.getColumn().getSkylightBlockY( i, j ) == null )
-				{
-					return calculateSky( cube, world, null );
-				}
-				int height = cube.getColumn().getSkylightBlockY( i, j );
-				if( height > heightMax )
-				{
-					heightMax = height;
-				}
-				if( height < heightMin )
-				{
-					heightMin = height;
-				}
-			}
-		}
-		int buffer = 48;// 3 cubes
-		WorldColumnManager wcm = (WorldColumnManager)cube.getWorld().getWorldChunkManager();
-		if( cube.getY() << 4 < heightMin - buffer )
-		{
-			return calculateUnderground( cube, world, wcm );
-		}
-		if( cube.getY() << 4 > heightMax )
-		{
-			return calculateSky( cube, world, wcm );
-		}
-		return calculateSurface( cube, world, wcm );
-	}
-	
-	public boolean calculateUnderground( Cube cube, CubeWorldServer world, WorldColumnManager wcm )
-	{
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();
 		
-		// Actually we don't need all neightbor cubes, but to be sure generation
-		// order is correct...
 		if( !CubeProviderTools.cubeAndNeighborsExist( m_provider, cubeX, cubeY, cubeZ ) )
 		{
 			return false;
@@ -109,8 +69,71 @@ public class PopulationProcessor extends CubeProcessor
 		{
 			return false;
 		}
+		
+		CubeWorldServer world = (CubeWorldServer)cube.getWorld();
+		double heightMax = Double.NEGATIVE_INFINITY;
+		double heightMin = Double.POSITIVE_INFINITY;
+		double volMax = 0;
+		for( int x = 0; x < 16; x++ )
+		{
+			for( int z = 0; z < 16; z++ )
+			{
+				int biomeId = cube.getColumn().getBiomeArray()[z << 4 | x];
+				CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome( biomeId );
+				
+				double biomeHeight = 0.75 / 64.0 + biome.biomeHeight * 17.0 / 64.0;
+				double biomeVolatility = 3 * ( biome.biomeVolatility * 0.9 + 0.1 );
+				
+				// +/- volatility +/. 1/64th (addHeight)
+				double minBiomeHeight = biomeHeight - biomeVolatility / 4 - 1.0 / 64.0;
+				double maxBiomdHeight = biomeHeight + biomeVolatility + 1.0 / 64.0;
+				
+				if( maxBiomdHeight > heightMax )
+				{
+					heightMax = maxBiomdHeight;
+				}
+				if( minBiomeHeight < heightMin )
+				{
+					heightMin = minBiomeHeight;
+				}
+			}
+		}
+		heightMin *= GlobalGeneratorConfig.maxElev;
+		heightMax *= GlobalGeneratorConfig.maxElev;
+		int buffer = 48;// 3 cubes
+		WorldColumnManager wcm = (WorldColumnManager)cube.getWorld().getWorldChunkManager();
+		
+		int cubeMinBlock = Coords.cubeToMaxBlock( cube.getY() );
+		int cubeMaxBlock = Coords.cubeToMaxBlock( cube.getY() );
+		
 		// BlockFalling.fallInstantly
 		BlockFalling.field_149832_M = true;
+		
+		// if we are anywhere below max surface Y
+		if( cubeMinBlock < heightMax )
+		{
+			calculateUnderground( cube, world, wcm );
+		}
+		// if we are anyywhere above min surface height
+		if( cubeMaxBlock > heightMin )
+		{
+			calculateSky( cube, world, wcm );
+		}
+		// if any block of the cube is between min and max height
+		if( cubeMinBlock <= heightMax && cubeMaxBlock >= heightMin )
+		{
+			calculateSurface( cube, world, wcm );
+		}
+		
+		BlockFalling.field_149832_M = false;
+		return true;
+	}
+	
+	public void calculateUnderground( Cube cube, CubeWorldServer world, WorldColumnManager wcm )
+	{
+		int cubeX = cube.getX();
+		int cubeY = cube.getY();
+		int cubeZ = cube.getZ();
 		
 		int xAbs = cubeX * 16;
 		int yAbs = cubeY * 16;
@@ -188,50 +211,23 @@ public class PopulationProcessor extends CubeProcessor
 		// maxTerrainY );//0-256
 		// generate only in range 0-128. Doubled probability
 		gen.generateAtRandomHeight( 20, probability * 2, coalGen, 1.0D );// 0-128
-		gen.generateAtRandomHeight( 20, probability * 4, ironGen, 0.0D );// 0-64//only
-																			// below
-																			// sea
-																			// level
+		gen.generateAtRandomHeight( 20, probability * 4, ironGen, 0.0D );// 0-64
 		gen.generateAtRandomHeight( 2, probability * 8, goldGen, -0.5D );// 0-32
-																			// //only
-																			// below
-																			// 1/4
-																			// of
-																			// max
-																			// height
 		gen.generateAtRandomHeight( 8, probability * 16, redstoneGen, -0.75D );// 0-16
 		gen.generateAtRandomHeight( 1, probability * 16, diamondGen, -0.75D );// 0-16
 		gen.generateAtRandomHeight( 1, probability * 8, lapisGen, -0.5D );// 0-32
-		
-		return true;
 	}
 	
-	public boolean calculateSky( Cube cube, CubeWorldServer world, WorldColumnManager wcm )
+	public void calculateSky( Cube cube, CubeWorldServer world, WorldColumnManager wcm )
 	{
-		return true;
+		// do nothing
 	}
 	
-	public boolean calculateSurface( Cube cube, CubeWorldServer world, WorldColumnManager wcm )
+	public void calculateSurface( Cube cube, CubeWorldServer world, WorldColumnManager wcm )
 	{
-		// uncomment line below to disable populator
-		// if(true) return true;
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();
-		
-		// Actually we don't need all neightbor cubes, but to be sure generation
-		// order is correct...
-		if( !CubeProviderTools.cubeAndNeighborsExist( m_provider, cubeX, cubeY, cubeZ ) )
-		{
-			return false;
-		}
-		
-		if( !CubeProviderTools.checkGenerationStage( m_provider, GeneratorStage.Population, cubeX, cubeY, cubeZ, cubeX + 1, cubeY + 1, cubeZ + 1 ) )
-		{
-			return false;
-		}
-		// BlockFalling.fallInstantly
-		BlockFalling.field_149832_M = true;
 		
 		int xAbs = cubeX * 16;
 		int yAbs = cubeY * 16;
@@ -317,10 +313,6 @@ public class PopulationProcessor extends CubeProcessor
 		 * x, y - 1, z ) != Blocks.water ) { cube.getColumn().func_150807_a( x,
 		 * y + 1, z, Blocks.snow_layer, 0 ); } } }
 		 */
-		
-		BlockFalling.field_149832_M = false;
-		
-		return true;
 	}
 	
 	public static void performWorldGenSpawning( World par0World, BiomeGenBase par1BiomeGenBase, Cube cube, int xMin, int yMin, int zMin, int xRange, int yRange, int zRange, Random par6Random )
