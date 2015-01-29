@@ -3,11 +3,11 @@ package cubicchunks.util;
 public interface IThreadedFileIO {
 
     /**
-     * Returns a boolean stating if the write was successful.
+     * Returns a boolean stating if there is more IO to write.
      * 
-     * @return TRUE - write successful
+     * @return TRUE - more IO to write in the current object.
      *         <p>
-     *         FALSE - write failed
+     *         FALSE - no more IO to write in the current object.
      */
     boolean writeNextIO();
 }

@@ -23,14 +23,19 @@ public class FileIOWorker implements Runnable {
     @Override
     public void run() {
         while (true) { // Run continuously
-            try {
-                //Get the next item on the queue, if there isn't anything on it, block the thread until something is on it
-                IThreadedFileIO var2 = (IThreadedFileIO) this.threadedIOQueue.take();
-                var2.writeNextIO();
-            } catch (InterruptedException e) {
-                System.out.println("Thread interrupted!");
-                e.printStackTrace();
-            }
+            //Get the next item on the queue, without removing it from the queue
+            IThreadedFileIO nextIO = (IThreadedFileIO) this.threadedIOQueue.peek();
+            
+            // do the work
+            boolean moreIO = nextIO.writeNextIO();
+            
+            // if there is no more work for the current IO, remove the head
+            if (!moreIO) {
+                this.threadedIOQueue.remove();
+                
+                //give other threads a chance to run, since we finished writing one set of IO
+                Thread.yield();
+            }                
         }
     }
 
