@@ -24,15 +24,14 @@
  ******************************************************************************/
 package cubicchunks.perf;
 
-public class ProfilerCounter implements Comparable<ProfilerCounter>
-{
+public class ProfilerCounter implements Comparable<ProfilerCounter> {
+	
 	private String m_name;
 	private long m_elapsedMilliseconds;
 	private Timer m_timer;
 	private double m_percentTime;
 	
-	public ProfilerCounter( String name )
-	{
+	public ProfilerCounter(String name) {
 		// save parameters
 		m_name = name;
 		
@@ -42,49 +41,39 @@ public class ProfilerCounter implements Comparable<ProfilerCounter>
 		m_percentTime = 0.0;
 	}
 	
-	public String getName( )
-	{
+	public String getName() {
 		return m_name;
 	}
 	
-	public long getElapsedMilliseconds( )
-	{
+	public long getElapsedMilliseconds() {
 		return m_elapsedMilliseconds;
 	}
 	
-	public double getPercentTime( )
-	{
+	public double getPercentTime() {
 		return m_percentTime;
 	}
 	
-	public void setPercentTime( double val )
-	{
+	public void setPercentTime(double val) {
 		m_percentTime = val;
 	}
 	
-	public void start( )
-	{
+	public void start() {
 		m_timer = new Timer();
 		m_timer.start();
 	}
 	
-	public void stop( )
-	{
+	public void stop() {
 		m_timer.stop();
 		m_elapsedMilliseconds += m_timer.getElapsedMilliseconds();
 		m_timer = null;
 	}
 	
 	@Override
-	public int compareTo( ProfilerCounter other )
-	{
-		if( m_percentTime > other.m_percentTime )
-		{
+	public int compareTo(ProfilerCounter other) {
+		if (m_percentTime > other.m_percentTime) {
 			return -1;
-		}
-		else
-		{
+		} else {
 			return 1;
 		}
-	}	
+	}
 }

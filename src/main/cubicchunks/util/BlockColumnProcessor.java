@@ -28,50 +28,43 @@ import cubicchunks.CubeProvider;
 import cubicchunks.world.BlankColumn;
 import cubicchunks.world.Column;
 
-public abstract class BlockColumnProcessor extends QueueProcessor
-{
-	public BlockColumnProcessor( String name, CubeProvider provider, int batchSize )
-	{
-		super( name, provider, batchSize );
+public abstract class BlockColumnProcessor extends QueueProcessor {
+	
+	public BlockColumnProcessor(String name, CubeProvider provider, int batchSize) {
+		super(name, provider, batchSize);
 	}
 	
 	@Override
-	public void processBatch( )
-	{
+	public void processBatch() {
 		// start processing
-		for( long address : m_incomingAddresses )
-		{
+		for (long address : m_incomingAddresses) {
 			// get the block coords
-			int blockX = Bits.unpackSigned( address, 26, 0 );
-			int blockZ = Bits.unpackSigned( address, 26, 26 );
+			int blockX = Bits.unpackSigned(address, 26, 0);
+			int blockZ = Bits.unpackSigned(address, 26, 26);
 			
 			// get the column
-			int cubeX = Coords.blockToCube( blockX );
-			int cubeZ = Coords.blockToCube( blockZ );
-			Column column = (Column)m_provider.provideChunk( cubeX, cubeZ );
+			int cubeX = Coords.blockToCube(blockX);
+			int cubeZ = Coords.blockToCube(blockZ);
+			Column column = (Column)m_provider.provideChunk(cubeX, cubeZ);
 			
 			// skip blank columns
-			if( column == null || column instanceof BlankColumn )
-			{
+			if (column == null || column instanceof BlankColumn) {
 				continue;
 			}
 			
 			// get the local coords
-			int localX = Coords.blockToLocal( blockX );
-			int localZ = Coords.blockToLocal( blockZ );
+			int localX = Coords.blockToLocal(blockX);
+			int localZ = Coords.blockToLocal(blockZ);
 			
 			// add unsuccessful calculations back onto the queue
-			boolean success = calculate( column, localX, localZ, blockX, blockZ );
-			if( success )
-			{
-				m_processedAddresses.add( address );
-			}
-			else
-			{
-				m_deferredAddresses.add( address );
+			boolean success = calculate(column, localX, localZ, blockX, blockZ);
+			if (success) {
+				m_processedAddresses.add(address);
+			} else {
+				m_deferredAddresses.add(address);
 			}
 		}
 	}
 	
-	public abstract boolean calculate( Column column, int localX, int localZ, int blockX, int blockZ );
+	public abstract boolean calculate(Column column, int localX, int localZ, int blockX, int blockZ);
 }

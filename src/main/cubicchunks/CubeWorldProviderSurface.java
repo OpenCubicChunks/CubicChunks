@@ -33,41 +33,36 @@ import cubicchunks.generator.terrain.NewTerrainProcessor;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.CubeWorldServer;
 
-public class CubeWorldProviderSurface extends CubeWorldProvider
-{
+public class CubeWorldProviderSurface extends CubeWorldProvider {
+	
 	@Override
-	public String getDimensionName( )
-	{
+	public String getDimensionName() {
 		return "Cube-world surface";
 	}
 	
 	@Override
-	public int getAverageGroundLevel( )
-	{
+	public int getAverageGroundLevel() {
 		return getSeaLevel() + 1;
 	}
 	
 	@Override
-	public int getSeaLevel( )
-	{
+	public int getSeaLevel() {
 		return 0;
 	}
 	
 	@Override
-	public float getCloudHeight()
-    {
-        return 256;
-    }
+	public float getCloudHeight() {
+		return 256;
+	}
 	
 	@Override
-	public GeneratorPipeline createGeneratorPipeline( CubeWorldServer worldServer )
-	{
-		GeneratorPipeline generatorPipeline = new GeneratorPipeline( worldServer.getCubeProvider() );
-		generatorPipeline.addStage( GeneratorStage.Terrain, new NewTerrainProcessor( "Terrain", worldServer, 10 ) );
-		generatorPipeline.addStage( GeneratorStage.Biomes, new BiomeProcessor( "Biomes", worldServer, 10 ) );
-		generatorPipeline.addStage( GeneratorStage.Features, new FeatureProcessor( "Features", worldServer.getCubeProvider(), 10 ) );
-		generatorPipeline.addStage( GeneratorStage.Population, new PopulationProcessor( "Population", worldServer.getCubeProvider(), 10 ) );
-		generatorPipeline.addStage( GeneratorStage.Lighting, new FirstLightProcessor( "Lighting", worldServer.getCubeProvider(), 10 ) );
+	public GeneratorPipeline createGeneratorPipeline(CubeWorldServer worldServer) {
+		GeneratorPipeline generatorPipeline = new GeneratorPipeline(worldServer.getCubeProvider());
+		generatorPipeline.addStage(GeneratorStage.Terrain, new NewTerrainProcessor("Terrain", worldServer, 10));
+		generatorPipeline.addStage(GeneratorStage.Biomes, new BiomeProcessor("Biomes", worldServer, 10));
+		generatorPipeline.addStage(GeneratorStage.Features, new FeatureProcessor("Features", worldServer.getCubeProvider(), 10));
+		generatorPipeline.addStage(GeneratorStage.Population, new PopulationProcessor("Population", worldServer.getCubeProvider(), 10));
+		generatorPipeline.addStage(GeneratorStage.Lighting, new FirstLightProcessor("Lighting", worldServer.getCubeProvider(), 10));
 		return generatorPipeline;
 	}
 }

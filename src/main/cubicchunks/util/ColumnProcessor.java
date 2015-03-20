@@ -28,42 +28,35 @@ import cubicchunks.CubeProvider;
 import cubicchunks.world.BlankColumn;
 import cubicchunks.world.Column;
 
-public abstract class ColumnProcessor extends QueueProcessor
-{
-	public ColumnProcessor( String name, CubeProvider provider, int batchSize )
-	{
-		super( name, provider, batchSize );
+public abstract class ColumnProcessor extends QueueProcessor {
+	
+	public ColumnProcessor(String name, CubeProvider provider, int batchSize) {
+		super(name, provider, batchSize);
 	}
 	
 	@Override
-	public void processBatch( )
-	{
+	public void processBatch() {
 		// start processing
-		for( long address : m_incomingAddresses )
-		{
+		for (long address : m_incomingAddresses) {
 			// get the column
-			int cubeX = AddressTools.getX( address );
-			int cubeZ = AddressTools.getZ( address );
-			Column column = (Column)m_provider.provideChunk( cubeX, cubeZ );
+			int cubeX = AddressTools.getX(address);
+			int cubeZ = AddressTools.getZ(address);
+			Column column = (Column)m_provider.provideChunk(cubeX, cubeZ);
 			
 			// skip blank columns
-			if( column == null || column instanceof BlankColumn )
-			{
+			if (column == null || column instanceof BlankColumn) {
 				continue;
 			}
 			
 			// add unsuccessful calculations back onto the queue
-			boolean success = calculate( column );
-			if( success )
-			{
-				m_processedAddresses.add( address );
-			}
-			else
-			{
-				m_deferredAddresses.add( address );
+			boolean success = calculate(column);
+			if (success) {
+				m_processedAddresses.add(address);
+			} else {
+				m_deferredAddresses.add(address);
 			}
 		}
 	}
 	
-	public abstract boolean calculate( Column column );
+	public abstract boolean calculate(Column column);
 }

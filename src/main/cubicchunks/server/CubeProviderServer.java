@@ -49,8 +49,8 @@ import cubicchunks.world.BlankColumn;
 import cubicchunks.world.Column;
 import cubicchunks.world.Cube;
 
-public class CubeProviderServer extends ChunkProviderServer implements CubeProvider
-{
+public class CubeProviderServer extends ChunkProviderServer implements CubeProvider {
+	
 	private static final Logger log = LogManager.getLogger();
 	
 	private static final int WorldSpawnChunkDistance = 12;
@@ -62,54 +62,47 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	private BlankColumn m_blankColumn;
 	private Deque<Long> m_cubesToUnload;
 	
-	public CubeProviderServer( CubeWorldServer world )
-	{
-		super( world, null, null );
+	public CubeProviderServer(CubeWorldServer world) {
+		super(world, null, null);
 		
 		m_worldServer = (CubeWorldServer)world;
-		m_loader = new CubeLoader( world.getSaveHandler() );
-		m_columnGenerator = new ColumnGenerator( world );
+		m_loader = new CubeLoader(world.getSaveHandler());
+		m_columnGenerator = new ColumnGenerator(world);
 		m_loadedColumns = Maps.newHashMap();
-		m_blankColumn = new BlankColumn( world, 0, 0 );
+		m_blankColumn = new BlankColumn(world, 0, 0);
 		m_cubesToUnload = new ArrayDeque<Long>();
 	}
 	
 	@Override
-	public boolean chunkExists( int cubeX, int cubeZ )
-	{
-		return m_loadedColumns.containsKey( AddressTools.getAddress( cubeX, cubeZ ) );
+	public boolean chunkExists(int cubeX, int cubeZ) {
+		return m_loadedColumns.containsKey(AddressTools.getAddress(cubeX, cubeZ));
 	}
 	
 	@Override
-	public boolean cubeExists( int cubeX, int cubeY, int cubeZ )
-	{
+	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
 		// is the column loaded?
-		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
-		Column column = m_loadedColumns.get( columnAddress );
-		if( column == null )
-		{
+		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
+		Column column = m_loadedColumns.get(columnAddress);
+		if (column == null) {
 			return false;
 		}
 		
 		// is the cube loaded?
-		return column.getCube( cubeY ) != null;
+		return column.getCube(cubeY) != null;
 	}
 	
 	@Override
-	public Column loadChunk( int cubeX, int cubeZ )
-	{
+	public Column loadChunk(int cubeX, int cubeZ) {
 		// in the tall worlds scheme, load and provide columns/chunks are semantically the same thing
 		// but load/provide cube do actually do different things
-		return provideChunk( cubeX, cubeZ );
+		return provideChunk(cubeX, cubeZ);
 	}
 	
 	@Override
-	public Column provideChunk( int cubeX, int cubeZ )
-	{
+	public Column provideChunk(int cubeX, int cubeZ) {
 		// check for the column
-		Column column = m_loadedColumns.get( AddressTools.getAddress( cubeX, cubeZ ) );
-		if( column != null )
-		{
+		Column column = m_loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
+		if (column != null) {
 			return column;
 		}
 		
@@ -117,134 +110,114 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	@Override
-	public Cube provideCube( int cubeX, int cubeY, int cubeZ )
-	{
+	public Cube provideCube(int cubeX, int cubeY, int cubeZ) {
 		// is the column loaded?
-		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
-		Column column = m_loadedColumns.get( columnAddress );
-		if( column == null )
-		{
+		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
+		Column column = m_loadedColumns.get(columnAddress);
+		if (column == null) {
 			return null;
 		}
 		
-		return column.getCube( cubeY );
+		return column.getCube(cubeY);
 	}
 	
-	public void loadCubeAndNeighbors( int cubeX, int cubeY, int cubeZ )
-	{
+	public void loadCubeAndNeighbors(int cubeX, int cubeY, int cubeZ) {
 		// load the requested cube
-		loadCube( cubeX, cubeY, cubeZ );
+		loadCube(cubeX, cubeY, cubeZ);
 		
 		// load the neighbors
-		loadCube( cubeX - 1, cubeY - 1, cubeZ - 1 );
-		loadCube( cubeX - 1, cubeY - 1, cubeZ + 0 );
-		loadCube( cubeX - 1, cubeY - 1, cubeZ + 1 );
-		loadCube( cubeX + 0, cubeY - 1, cubeZ - 1 );
-		loadCube( cubeX + 0, cubeY - 1, cubeZ + 0 );
-		loadCube( cubeX + 0, cubeY - 1, cubeZ + 1 );
-		loadCube( cubeX + 1, cubeY - 1, cubeZ - 1 );
-		loadCube( cubeX + 1, cubeY - 1, cubeZ + 0 );
-		loadCube( cubeX + 1, cubeY - 1, cubeZ + 1 );
+		loadCube(cubeX - 1, cubeY - 1, cubeZ - 1);
+		loadCube(cubeX - 1, cubeY - 1, cubeZ + 0);
+		loadCube(cubeX - 1, cubeY - 1, cubeZ + 1);
+		loadCube(cubeX + 0, cubeY - 1, cubeZ - 1);
+		loadCube(cubeX + 0, cubeY - 1, cubeZ + 0);
+		loadCube(cubeX + 0, cubeY - 1, cubeZ + 1);
+		loadCube(cubeX + 1, cubeY - 1, cubeZ - 1);
+		loadCube(cubeX + 1, cubeY - 1, cubeZ + 0);
+		loadCube(cubeX + 1, cubeY - 1, cubeZ + 1);
 		
-		loadCube( cubeX - 1, cubeY + 0, cubeZ - 1 );
-		loadCube( cubeX - 1, cubeY + 0, cubeZ + 0 );
-		loadCube( cubeX - 1, cubeY + 0, cubeZ + 1 );
-		loadCube( cubeX + 0, cubeY + 0, cubeZ - 1 );
-		loadCube( cubeX + 0, cubeY + 0, cubeZ + 1 );
-		loadCube( cubeX + 1, cubeY + 0, cubeZ - 1 );
-		loadCube( cubeX + 1, cubeY + 0, cubeZ + 0 );
-		loadCube( cubeX + 1, cubeY + 0, cubeZ + 1 );
+		loadCube(cubeX - 1, cubeY + 0, cubeZ - 1);
+		loadCube(cubeX - 1, cubeY + 0, cubeZ + 0);
+		loadCube(cubeX - 1, cubeY + 0, cubeZ + 1);
+		loadCube(cubeX + 0, cubeY + 0, cubeZ - 1);
+		loadCube(cubeX + 0, cubeY + 0, cubeZ + 1);
+		loadCube(cubeX + 1, cubeY + 0, cubeZ - 1);
+		loadCube(cubeX + 1, cubeY + 0, cubeZ + 0);
+		loadCube(cubeX + 1, cubeY + 0, cubeZ + 1);
 		
-		loadCube( cubeX - 1, cubeY + 1, cubeZ - 1 );
-		loadCube( cubeX - 1, cubeY + 1, cubeZ + 0 );
-		loadCube( cubeX - 1, cubeY + 1, cubeZ + 1 );
-		loadCube( cubeX + 0, cubeY + 1, cubeZ - 1 );
-		loadCube( cubeX + 0, cubeY + 1, cubeZ + 0 );
-		loadCube( cubeX + 0, cubeY + 1, cubeZ + 1 );
-		loadCube( cubeX + 1, cubeY + 1, cubeZ - 1 );
-		loadCube( cubeX + 1, cubeY + 1, cubeZ + 0 );
-		loadCube( cubeX + 1, cubeY + 1, cubeZ + 1 );
+		loadCube(cubeX - 1, cubeY + 1, cubeZ - 1);
+		loadCube(cubeX - 1, cubeY + 1, cubeZ + 0);
+		loadCube(cubeX - 1, cubeY + 1, cubeZ + 1);
+		loadCube(cubeX + 0, cubeY + 1, cubeZ - 1);
+		loadCube(cubeX + 0, cubeY + 1, cubeZ + 0);
+		loadCube(cubeX + 0, cubeY + 1, cubeZ + 1);
+		loadCube(cubeX + 1, cubeY + 1, cubeZ - 1);
+		loadCube(cubeX + 1, cubeY + 1, cubeZ + 0);
+		loadCube(cubeX + 1, cubeY + 1, cubeZ + 1);
 	}
 	
-	public void loadCube( int cubeX, int cubeY, int cubeZ )
-	{
-		long cubeAddress = AddressTools.getAddress( cubeX, cubeY, cubeZ );
-		long columnAddress = AddressTools.getAddress( cubeX, cubeZ );
+	public void loadCube(int cubeX, int cubeY, int cubeZ) {
+		long cubeAddress = AddressTools.getAddress(cubeX, cubeY, cubeZ);
+		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
 		
 		// step 1: get a column
 		
 		// is the column already loaded?
-		Column column = m_loadedColumns.get( columnAddress );
-		if( column == null )
-		{
+		Column column = m_loadedColumns.get(columnAddress);
+		if (column == null) {
 			// try loading it
-			try
-			{
-				column = m_loader.loadColumn( m_worldServer, cubeX, cubeZ );
-			}
-			catch( IOException ex )
-			{
-				log.error( String.format( "Unable to load column (%d,%d)", cubeX, cubeZ ), ex );
+			try {
+				column = m_loader.loadColumn(m_worldServer, cubeX, cubeZ);
+			} catch (IOException ex) {
+				log.error(String.format("Unable to load column (%d,%d)", cubeX, cubeZ), ex);
 				return;
 			}
 			
-			if( column == null )
-			{
+			if (column == null) {
 				// there wasn't a column, generate a new one
-				column = m_columnGenerator.generateColumn( cubeX, cubeZ );
-			}
-			else
-			{
+				column = m_columnGenerator.generateColumn(cubeX, cubeZ);
+			} else {
 				// the column was loaded
 				column.lastSaveTime = m_worldServer.getTotalWorldTime();
 			}
 		}
-		assert( column != null );
+		assert (column != null);
 		
 		// step 2: get a cube
 		
 		// is the cube already loaded?
-		Cube cube = column.getCube( cubeY );
-		if( cube != null )
-		{
+		Cube cube = column.getCube(cubeY);
+		if (cube != null) {
 			return;
 		}
 		
 		// try to load the cube
-		try
-		{
-			cube = m_loader.loadCubeAndAddToColumn( m_worldServer, column, cubeAddress );
-		}
-		catch( IOException ex )
-		{
-			log.error( String.format( "Unable to load cube (%d,%d,%d)", cubeX, cubeY, cubeZ ), ex );
+		try {
+			cube = m_loader.loadCubeAndAddToColumn(m_worldServer, column, cubeAddress);
+		} catch (IOException ex) {
+			log.error(String.format("Unable to load cube (%d,%d,%d)", cubeX, cubeY, cubeZ), ex);
 			return;
 		}
 		
-		if( cube == null )
-		{
+		if (cube == null) {
 			// start the cube generation process with an empty cube
-			cube = column.getOrCreateCube( cubeY, true );
-			cube.setGeneratorStage( GeneratorStage.getFirstStage() );
+			cube = column.getOrCreateCube(cubeY, true);
+			cube.setGeneratorStage(GeneratorStage.getFirstStage());
 		}
 		
-		if( !cube.getGeneratorStage().isLastStage() )
-		{
+		if (!cube.getGeneratorStage().isLastStage()) {
 			// queue the cube to finish generation
-			m_worldServer.getGeneratorPipeline().generate( cube );
-		}
-		else
-		{
+			m_worldServer.getGeneratorPipeline().generate(cube);
+		} else {
 			// queue the cube for re-lighting
-			m_worldServer.getLightingManager().queueFirstLightCalculation( cubeAddress );
+			m_worldServer.getLightingManager().queueFirstLightCalculation(cubeAddress);
 		}
 		
 		// add the column to the cache
-		m_loadedColumns.put( columnAddress, column );
+		m_loadedColumns.put(columnAddress, column);
 		
 		// init the column
-		if( !column.isChunkLoaded )
-		{
+		if (!column.isChunkLoaded) {
 			column.onChunkLoad();
 		}
 		column.isTerrainPopulated = true;
@@ -255,88 +228,75 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	@Override
-	public void unloadChunksIfNotNearSpawn( int cubeX, int cubeZ )
-	{
+	public void unloadChunksIfNotNearSpawn(int cubeX, int cubeZ) {
 		throw new UnsupportedOperationException();
 	}
 	
-	public void unloadCubeIfNotNearSpawn( Cube cube )
-	{
+	public void unloadCubeIfNotNearSpawn(Cube cube) {
 		// NOTE: this is the main unload method for block data!
 		
-		unloadCubeIfNotNearSpawn( cube.getX(), cube.getY(), cube.getZ() );
+		unloadCubeIfNotNearSpawn(cube.getX(), cube.getY(), cube.getZ());
 	}
 	
-	public void unloadCubeIfNotNearSpawn( int cubeX, int cubeY, int cubeZ )
-	{
+	public void unloadCubeIfNotNearSpawn(int cubeX, int cubeY, int cubeZ) {
 		// don't unload cubes near the spawn
-		if( cubeIsNearSpawn( cubeX, cubeY, cubeZ ) )
-		{
+		if (cubeIsNearSpawn(cubeX, cubeY, cubeZ)) {
 			return;
 		}
 		
 		// queue the cube for unloading
-		m_cubesToUnload.add( AddressTools.getAddress( cubeX, cubeY, cubeZ ) );
+		m_cubesToUnload.add(AddressTools.getAddress(cubeX, cubeY, cubeZ));
 	}
 	
 	@Override
-	public void unloadAllChunks( )
-	{
+	public void unloadAllChunks() {
 		// unload all the cubes in the columns
-		for( Column column : m_loadedColumns.values() )
-		{
-			for( Cube cube : column.cubes() )
-			{
-				m_cubesToUnload.add( cube.getAddress() );
+		for (Column column : m_loadedColumns.values()) {
+			for (Cube cube : column.cubes()) {
+				m_cubesToUnload.add(cube.getAddress());
 			}
 		}
 	}
 	
 	@Override
-	public boolean unloadQueuedChunks( )
-	{
+	public boolean unloadQueuedChunks() {
 		// NOTE: the return value is completely ignored
 		
 		// don't unload if we're saving
-		if( m_worldServer.levelSaving )
-		{
+		if (m_worldServer.levelSaving) {
 			return false;
 		}
 		
 		final int MaxNumToUnload = 400;
 		
 		// unload cubes
-		for( int i=0; i<MaxNumToUnload && !m_cubesToUnload.isEmpty(); i++ )
-		{
+		for (int i = 0; i < MaxNumToUnload && !m_cubesToUnload.isEmpty(); i++) {
 			long cubeAddress = m_cubesToUnload.poll();
-			long columnAddress = AddressTools.getAddress( AddressTools.getX( cubeAddress ), AddressTools.getZ( cubeAddress ) );
+			long columnAddress = AddressTools.getAddress(AddressTools.getX(cubeAddress), AddressTools.getZ(cubeAddress));
 			
 			// get the cube
-			Column column = m_loadedColumns.get( columnAddress );
-			if( column == null )
-			{
+			Column column = m_loadedColumns.get(columnAddress);
+			if (column == null) {
 				// already unloaded
 				continue;
 			}
 			
 			// unload the cube
-			int cubeY = AddressTools.getY( cubeAddress );
-			Cube cube = column.removeCube( cubeY );
-			if( cube != null )
-			{
+			int cubeY = AddressTools.getY(cubeAddress);
+			Cube cube = column.removeCube(cubeY);
+			if (cube != null) {
 				// tell the cube it has been unloaded
 				cube.onUnload();
 				
 				// save the cube
-				m_loader.saveCube( cube );
+				m_loader.saveCube(cube);
 			}
 			
 			// unload empty columns
-			if( !column.hasCubes() )
-			{
+			if (!column.hasCubes()) {
 				column.onChunkLoad();
-				m_loadedColumns.remove( columnAddress );
-				m_loader.saveColumn( column );
+				m_loadedColumns.remove(columnAddress);
+				m_loader.saveColumn(column);
 			}
 		}
 		
@@ -344,22 +304,17 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	@Override
-	public boolean saveChunks( boolean alwaysTrue, IProgressUpdate progress )
-	{
-		for( Column column : m_loadedColumns.values() )
-		{
+	public boolean saveChunks(boolean alwaysTrue, IProgressUpdate progress) {
+		for (Column column : m_loadedColumns.values()) {
 			// save the column
-			if( column.needsSaving( alwaysTrue ) )
-			{
-				m_loader.saveColumn( column );
+			if (column.needsSaving(alwaysTrue)) {
+				m_loader.saveColumn(column);
 			}
 			
 			// save the cubes
-			for( Cube cube : column.cubes() )
-			{
-				if( cube.needsSaving() )
-				{
-					m_loader.saveCube( cube );
+			for (Cube cube : column.cubes()) {
+				if (cube.needsSaving()) {
+					m_loader.saveCube(cube);
 				}
 			}
 		}
@@ -368,70 +323,51 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	@Override
-	public String makeString( )
-	{
+	public String makeString() {
 		return "CubeProviderServer: " + m_loadedColumns.size() + " columns, Unload: " + m_cubesToUnload.size() + " cubes";
 	}
 	
 	@Override
-	public int getLoadedChunkCount( )
-	{
+	public int getLoadedChunkCount() {
 		return m_loadedColumns.size();
 	}
 	
 	@Override
-	@SuppressWarnings( "rawtypes" )
-	public List getPossibleCreatures( EnumCreatureType creatureType, int blockX, int blockY, int blockZ )
-	{
-		/* UNDONE: ask one of the pipeline processors for these things
-		CubeBiomeGenBase var5 = (CubeBiomeGenBase) m_world.getBiomeGenForCoords( cubeX, cubeZ );
-		return par1EnumCreatureType == EnumCreatureType.monster && m_scatteredFeatureGenerator.func_143030_a( cubeX, cubeY, cubeZ ) 
-				? m_scatteredFeatureGenerator.getScatteredFeatureSpawnList()
-				: var5.getSpawnableList( par1EnumCreatureType );
-		*/
+	@SuppressWarnings("rawtypes")
+	public List getPossibleCreatures(EnumCreatureType creatureType, int blockX, int blockY, int blockZ) {
+		/*
+		 * UNDONE: ask one of the pipeline processors for these things CubeBiomeGenBase var5 = (CubeBiomeGenBase) m_world.getBiomeGenForCoords( cubeX, cubeZ ); return par1EnumCreatureType == EnumCreatureType.monster && m_scatteredFeatureGenerator.func_143030_a( cubeX, cubeY, cubeZ ) ? m_scatteredFeatureGenerator.getScatteredFeatureSpawnList() : var5.getSpawnableList( par1EnumCreatureType );
+		 */
 		return null;
 	}
 	
 	@Override
-	public ChunkPosition func_147416_a( World world, String structureType, int blockX, int blockY, int blockZ )
-	{
-		/* UNDONE: ask the one of the pipeline processors for these things
-		if( "Stronghold".equals( structureType ) && m_strongholdGenerator != null )
-		{
-			return m_strongholdGenerator.func_151545_a( world, blockX, blockY, blockZ );
-		}
-		*/
+	public ChunkPosition func_147416_a(World world, String structureType, int blockX, int blockY, int blockZ) {
+		/*
+		 * UNDONE: ask the one of the pipeline processors for these things if( "Stronghold".equals( structureType ) && m_strongholdGenerator != null ) { return m_strongholdGenerator.func_151545_a( world, blockX, blockY, blockZ ); }
+		 */
 		return null;
 	}
 	
-	public void recreateStructures( int cubeX, int cubeY, int cubeZ )
-	{
-		/* UNDONE: ask the one of the pipeline processors to do this
-		if( m_mapFeaturesEnabled )
-		{
-			m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
-			m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
-			m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
-			m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null );
-		}
-		*/
+	public void recreateStructures(int cubeX, int cubeY, int cubeZ) {
+		/*
+		 * UNDONE: ask the one of the pipeline processors to do this if( m_mapFeaturesEnabled ) { m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null ); m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null ); m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null ); m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null ); }
+		 */
 	}
 	
-	private boolean cubeIsNearSpawn( int cubeX, int cubeY, int cubeZ )
-	{
-		if( !m_worldServer.provider.canRespawnHere() )
-		{
+	private boolean cubeIsNearSpawn(int cubeX, int cubeY, int cubeZ) {
+		if (!m_worldServer.provider.canRespawnHere()) {
 			// no spawn points
 			return false;
 		}
 		
 		long address = m_worldServer.getSpawnPointCubeAddress();
-		int spawnX = AddressTools.getX( address );
-		int spawnY = AddressTools.getY( address );
-		int spawnZ = AddressTools.getZ( address );
-		int dx = Math.abs( spawnX - cubeX );
-		int dy = Math.abs( spawnY - cubeY );
-		int dz = Math.abs( spawnZ - cubeZ );
+		int spawnX = AddressTools.getX(address);
+		int spawnY = AddressTools.getY(address);
+		int spawnZ = AddressTools.getZ(address);
+		int dx = Math.abs(spawnX - cubeX);
+		int dy = Math.abs(spawnY - cubeY);
+		int dz = Math.abs(spawnZ - cubeZ);
 		return dx <= WorldSpawnChunkDistance && dy <= WorldSpawnChunkDistance && dz <= WorldSpawnChunkDistance;
 	}
 }

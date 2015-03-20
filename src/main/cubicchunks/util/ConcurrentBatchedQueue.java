@@ -28,50 +28,41 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.List;
 
-
-public class ConcurrentBatchedQueue<T>
-{
+public class ConcurrentBatchedQueue<T> {
+	
 	private ArrayDeque<T> m_queue;
 	
-	public ConcurrentBatchedQueue( )
-	{
+	public ConcurrentBatchedQueue() {
 		m_queue = new ArrayDeque<T>();
 	}
 	
-	public synchronized void add( T val )
-	{
-		m_queue.add( val );
+	public synchronized void add(T val) {
+		m_queue.add(val);
 	}
 	
-	public synchronized void addAll( Collection<T> vals )
-	{
-		m_queue.addAll( vals );
+	public synchronized void addAll(Collection<T> vals) {
+		m_queue.addAll(vals);
 	}
 	
-	public synchronized T get( )
-	{
+	public synchronized T get() {
 		return m_queue.poll();
 	}
 	
-	public synchronized boolean getBatch( List<T> out, int size )
-	{
+	public synchronized boolean getBatch(List<T> out, int size) {
 		// copy the batch to the out list
-		for( int i=0; i<size; i++ )
-		{
+		for (int i = 0; i < size; i++) {
 			T val = m_queue.poll();
-			if( val == null )
-			{
+			if (val == null) {
 				break;
 			}
-			out.add( val );
+			out.add(val);
 		}
 		
 		// are there more entries?
 		return !m_queue.isEmpty();
 	}
 	
-	public synchronized int size()
-	{
+	public synchronized int size() {
 		return m_queue.size();
 	}
 }

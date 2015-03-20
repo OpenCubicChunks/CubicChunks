@@ -32,129 +32,102 @@ import java.io.IOException;
 
 import cubicchunks.util.ValueCache;
 
-public class LightIndex
-{
+public class LightIndex {
+	
 	private LightIndexColumn[] m_columns;
 	private ValueCache<Integer> m_topNonTransparentBlockY;
 	
-	public LightIndex( int seaLevel )
-	{
-		m_columns = new LightIndexColumn[16*16];
-		for( int i=0; i<m_columns.length; i++ )
-		{
-			m_columns[i] = new LightIndexColumn( seaLevel );
+	public LightIndex(int seaLevel) {
+		m_columns = new LightIndexColumn[16 * 16];
+		for (int i = 0; i < m_columns.length; i++) {
+			m_columns[i] = new LightIndexColumn(seaLevel);
 		}
 		
 		m_topNonTransparentBlockY = new ValueCache<Integer>();
 	}
 	
-	public int getOpacity( int localX, int blockY, int localZ )
-	{
+	public int getOpacity(int localX, int blockY, int localZ) {
 		int xzCoord = localZ << 4 | localX;
-		if( m_columns[xzCoord] == null )
-		{
+		if (m_columns[xzCoord] == null) {
 			return 0;
 		}
-		return m_columns[xzCoord].getOpacity( blockY );
+		return m_columns[xzCoord].getOpacity(blockY);
 	}
 	
-	public void setOpacity( int localX, int blockY, int localZ, int opacity )
-	{
+	public void setOpacity(int localX, int blockY, int localZ, int opacity) {
 		int xzCoord = localZ << 4 | localX;
-		m_columns[xzCoord].setOpacity( blockY, opacity );
+		m_columns[xzCoord].setOpacity(blockY, opacity);
 		
 		m_topNonTransparentBlockY.clear();
 	}
 	
-	public Integer getTopNonTransparentBlockY( int localX, int localZ )
-	{
+	public Integer getTopNonTransparentBlockY(int localX, int localZ) {
 		int xzCoord = localZ << 4 | localX;
 		return m_columns[xzCoord].getTopNonTransparentBlockY();
 	}
 	
-	public Integer getTopNonTransparentBlockY( )
-	{
+	public Integer getTopNonTransparentBlockY() {
 		// do we need to update the cache?
-		if( !m_topNonTransparentBlockY.hasValue() )
-		{
-			m_topNonTransparentBlockY.set( null );
+		if (!m_topNonTransparentBlockY.hasValue()) {
+			m_topNonTransparentBlockY.set(null);
 			
-			for( int i=0; i<m_columns.length; i++ )
-			{
+			for (int i = 0; i < m_columns.length; i++) {
 				// get the top y from the column
 				Integer blockY = m_columns[i].getTopNonTransparentBlockY();
-				if( blockY == null )
-				{
+				if (blockY == null) {
 					continue;
 				}
 				
 				// does it beat our current top y?
-				if( m_topNonTransparentBlockY.get() == null || blockY > m_topNonTransparentBlockY.get() )
-				{
-					m_topNonTransparentBlockY.set( blockY );
+				if (m_topNonTransparentBlockY.get() == null || blockY > m_topNonTransparentBlockY.get()) {
+					m_topNonTransparentBlockY.set(blockY);
 				}
 			}
 		}
 		return m_topNonTransparentBlockY.get();
 	}
 	
-	public Integer getTopOpaqueBlockBelowSeaLevel( int localX, int localZ )
-	{
+	public Integer getTopOpaqueBlockBelowSeaLevel(int localX, int localZ) {
 		int xzCoord = localZ << 4 | localX;
 		return m_columns[xzCoord].getTopOpaqueBlockBelowSeaLevel();
 	}
 	
-	public byte[] getData( )
-	{
-		try
-		{
+	public byte[] getData() {
+		try {
 			ByteArrayOutputStream buf = new ByteArrayOutputStream();
-			DataOutputStream out = new DataOutputStream( buf );
-			writeData( out );
+			DataOutputStream out = new DataOutputStream(buf);
+			writeData(out);
 			out.close();
 			return buf.toByteArray();
-		}
-		catch( IOException ex )
-		{
-			throw new Error( ex );
+		} catch (IOException ex) {
+			throw new Error(ex);
 		}
 	}
 	
-	public void readData( byte[] data )
-	{
-		try
-		{
-			ByteArrayInputStream buf = new ByteArrayInputStream( data );
-			DataInputStream in = new DataInputStream( buf );
-			readData( in );
+	public void readData(byte[] data) {
+		try {
+			ByteArrayInputStream buf = new ByteArrayInputStream(data);
+			DataInputStream in = new DataInputStream(buf);
+			readData(in);
 			in.close();
-		}
-		catch( IOException ex )
-		{
-			throw new Error( ex );
+		} catch (IOException ex) {
+			throw new Error(ex);
 		}
 	}
 	
-	public void readData( DataInputStream in )
-	throws IOException
-	{
-		for( int i=0; i<m_columns.length; i++ )
-		{
-			m_columns[i].readData( in );
+	public void readData(DataInputStream in) throws IOException {
+		for (int i = 0; i < m_columns.length; i++) {
+			m_columns[i].readData(in);
 		}
 	}
 	
-	public void writeData( DataOutputStream out )
-	throws IOException
-	{
-		for( int i=0; i<m_columns.length; i++ )
-		{
-			m_columns[i].writeData( out );
+	public void writeData(DataOutputStream out) throws IOException {
+		for (int i = 0; i < m_columns.length; i++) {
+			m_columns[i].writeData(out);
 		}
 	}
 	
-	public String dump( int localX, int localZ )
-	{
+	public String dump(int localX, int localZ) {
 		int xzCoord = localZ << 4 | localX;
 		return m_columns[xzCoord].dump();
 	}

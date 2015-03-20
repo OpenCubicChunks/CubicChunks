@@ -24,39 +24,33 @@
  ******************************************************************************/
 package cubicchunks.util;
 
-public class ValueCache<T>
-{
+public class ValueCache<T> {
+	
 	private T m_value;
 	private boolean m_hasValue;
 	
-	public ValueCache( )
-	{
+	public ValueCache() {
 		m_value = null;
 		m_hasValue = false;
 	}
 	
-	public T get( )
-	{
-		if( !m_hasValue )
-		{
-			throw new UnsupportedOperationException( "Cache has no value!" );
+	public T get() {
+		if (!m_hasValue) {
+			throw new UnsupportedOperationException("Cache has no value!");
 		}
 		return m_value;
 	}
 	
-	public void set( T val )
-	{
+	public void set(T val) {
 		m_value = val;
 		m_hasValue = true;
 	}
 	
-	public boolean hasValue( )
-	{
+	public boolean hasValue() {
 		return m_hasValue;
 	}
 	
-	public void clear( )
-	{
+	public void clear() {
 		m_value = null;
 		m_hasValue = false;
 	}

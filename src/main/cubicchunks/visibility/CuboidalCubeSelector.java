@@ -28,20 +28,16 @@ import java.util.Collection;
 
 import cubicchunks.util.AddressTools;
 
-public class CuboidalCubeSelector extends CubeSelector
-{
+public class CuboidalCubeSelector extends CubeSelector {
+	
 	private static final int ViewDistanceY = 8;
 	
 	@Override
-	protected void computeVisible( Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance )
-	{
-		for( int x=cubeX-viewDistance; x<=cubeX+viewDistance; x++ )
-		{
-			for( int y=cubeY-ViewDistanceY; y<=cubeY+ViewDistanceY; y++ )
-			{
-				for( int z=cubeZ-viewDistance; z<=cubeZ+viewDistance; z++ )
-				{
-					out.add( AddressTools.getAddress( x, y, z ) );
+	protected void computeVisible(Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance) {
+		for (int x = cubeX - viewDistance; x <= cubeX + viewDistance; x++) {
+			for (int y = cubeY - ViewDistanceY; y <= cubeY + ViewDistanceY; y++) {
+				for (int z = cubeZ - viewDistance; z <= cubeZ + viewDistance; z++) {
+					out.add(AddressTools.getAddress(x, y, z));
 				}
 			}
 		}

@@ -24,28 +24,18 @@
  ******************************************************************************/
 package cubicchunks.generator;
 
-
-public enum GeneratorStage
-{
-	Terrain,
-	Biomes,
-	Features,
-	Lighting,
-	Population,
-	Live;
+public enum GeneratorStage {
+	Terrain, Biomes, Features, Lighting, Population, Live;
 	
-	public static GeneratorStage getFirstStage( )
-	{
+	public static GeneratorStage getFirstStage() {
 		return values()[0];
 	}
 	
-	public static GeneratorStage getLastStage( )
-	{
+	public static GeneratorStage getLastStage() {
 		return values()[values().length - 1];
 	}
 	
-	public boolean isLastStage( )
-	{
+	public boolean isLastStage() {
 		return ordinal() == values().length - 1;
 	}
 }

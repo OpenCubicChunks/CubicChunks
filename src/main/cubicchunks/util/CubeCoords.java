@@ -34,33 +34,23 @@ import static cubicchunks.util.Coords.HALF_CUBE_MAX_Z;
 /**
  * Position of a cube.
  * <p>
- * Tall Worlds uses a column coordinate system (which is really just a cube 
- * coordinate system without the y-coordinate), a cube coordinate system,
- * and two block coordinate systems, a cube-relative system, and a world absolute
- * system.
+ * Tall Worlds uses a column coordinate system (which is really just a cube coordinate system without the y-coordinate), a cube coordinate system, and two block coordinate systems, a cube-relative system, and a world absolute system.
  * <p>
- * It is important that the systems are kept separate. This class should be 
- * used whenever a cube coordinate is passed along, so that it is clear that
- * cube coordinates are being used, and not block coordinates.
+ * It is important that the systems are kept separate. This class should be used whenever a cube coordinate is passed along, so that it is clear that cube coordinates are being used, and not block coordinates.
  * <p>
- * Additionally, I (Nick) like to use xRel, yRel, and zRel for the relative
- * position of a block inside of a cube. In world space, I (Nick) refer to the
- * coordinates as xAbs, yAbs, and zAbs.
+ * Additionally, I (Nick) like to use xRel, yRel, and zRel for the relative position of a block inside of a cube. In world space, I (Nick) refer to the coordinates as xAbs, yAbs, and zAbs.
  * <p>
- * See {@link AddressTools} for details of hashing the cube coordinates for keys and 
- * storage.
+ * See {@link AddressTools} for details of hashing the cube coordinates for keys and storage.
  * <p>
- * This class also contains some helper methods to switch from/to block
- * coordinates.
+ * This class also contains some helper methods to switch from/to block coordinates.
  */
-public class CubeCoords
-{
+public class CubeCoords {
+	
 	private final int cubeX;
 	private final int cubeY;
 	private final int cubeZ;
 	
-	protected CubeCoords( int cubeX, int cubeY, int cubeZ)
-	{
+	protected CubeCoords(int cubeX, int cubeY, int cubeZ) {
 		this.cubeX = cubeX;
 		this.cubeY = cubeY;
 		this.cubeZ = cubeZ;
@@ -71,8 +61,7 @@ public class CubeCoords
 	 * 
 	 * @return The x position.
 	 */
-	public int getCubeX()
-	{
+	public int getCubeX() {
 		return this.cubeX;
 	}
 	
@@ -81,8 +70,7 @@ public class CubeCoords
 	 * 
 	 * @return The y position.
 	 */
-	public int getCubeY()
-	{
+	public int getCubeY() {
 		return this.cubeY;
 	}
 	
@@ -91,8 +79,7 @@ public class CubeCoords
 	 * 
 	 * @return The z position.
 	 */
-	public int getCubeZ()
-	{
+	public int getCubeZ() {
 		return this.cubeZ;
 	}
 	
@@ -102,53 +89,44 @@ public class CubeCoords
 	 * @return The coordinates, formatted as a string.
 	 */
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return this.cubeX + "," + this.cubeY + "," + this.cubeZ;
 	}
 	
 	/**
 	 * Compares the CubeCoordinate against the given object.
 	 * 
-	 * @return True if the cube matches the given object, but false if it
-	 * doesn't match, or is null, or not a CubeCoordinate object.
+	 * @return True if the cube matches the given object, but false if it doesn't match, or is null, or not a CubeCoordinate object.
 	 */
 	@Override
-	public boolean equals(Object otherObject)
-	{
-		if (otherObject == this)
-        {
-            return true;
-        }
+	public boolean equals(Object otherObject) {
+		if (otherObject == this) {
+			return true;
+		}
 		
-        if (otherObject == null)
-        {
-            return false;
-        }
-        
-        if (!(otherObject instanceof Coords))
-        {
-            return false;
-        }
-        
-        CubeCoords otherCubeCoordinate = (CubeCoords) otherObject;
-        
-        if (otherCubeCoordinate.cubeX != cubeX)
-        {
-            return false;
-        }
-        
-        if (otherCubeCoordinate.cubeY != cubeY)
-        {
-            return false;
-        }
-        
-        if (otherCubeCoordinate.cubeZ != cubeZ)
-        {
-            return false;
-        }
-        
-        return true;
+		if (otherObject == null) {
+			return false;
+		}
+		
+		if (! (otherObject instanceof Coords)) {
+			return false;
+		}
+		
+		CubeCoords otherCubeCoordinate = (CubeCoords)otherObject;
+		
+		if (otherCubeCoordinate.cubeX != cubeX) {
+			return false;
+		}
+		
+		if (otherCubeCoordinate.cubeY != cubeY) {
+			return false;
+		}
+		
+		if (otherCubeCoordinate.cubeZ != cubeZ) {
+			return false;
+		}
+		
+		return true;
 	}
 	
 	/**
@@ -156,8 +134,7 @@ public class CubeCoords
 	 * 
 	 * @return The x center of the cube.
 	 */
-	public int getXCenter()
-	{
+	public int getXCenter() {
 		return cubeX * CUBE_MAX_X + HALF_CUBE_MAX_X;
 	}
 	
@@ -166,8 +143,7 @@ public class CubeCoords
 	 * 
 	 * @return The y center of the cube.
 	 */
-	public int getYCenter()
-	{
+	public int getYCenter() {
 		return cubeY * CUBE_MAX_Y + HALF_CUBE_MAX_Y;
 	}
 	
@@ -176,23 +152,19 @@ public class CubeCoords
 	 * 
 	 * @return The z center of the cube.
 	 */
-	public int getZCenter()
-	{
+	public int getZCenter() {
 		return cubeZ * CUBE_MAX_Z + HALF_CUBE_MAX_Z;
 	}
 	
-	public int getMinBlockX()
-	{
+	public int getMinBlockX() {
 		return Coords.cubeToMinBlock(cubeX);
 	}
 	
-	public int getMinBlockY()
-	{
+	public int getMinBlockY() {
 		return Coords.cubeToMinBlock(cubeX);
 	}
 	
-	public int getMinBlockZ()
-	{
+	public int getMinBlockZ() {
 		return Coords.cubeToMinBlock(cubeX);
 	}
 }

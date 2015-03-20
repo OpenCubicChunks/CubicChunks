@@ -30,31 +30,27 @@ import org.junit.Test;
 
 import cubicchunks.world.LightIndex;
 
-public class TestLightIndex
-{
+public class TestLightIndex {
+	
 	private static final int SeaLevel = 0;
 	
 	@Test
-	public void readWrite( )
-	{
-		LightIndex original = new LightIndex( SeaLevel);
+	public void readWrite() {
+		LightIndex original = new LightIndex(SeaLevel);
 		
 		// make some changes
-		original.setOpacity( 4, 10, 5, 10 );
-		original.setOpacity( 6, 34, 10, 255 );
+		original.setOpacity(4, 10, 5, 10);
+		original.setOpacity(6, 34, 10, 255);
 		
 		// clone the index
-		LightIndex copy = new LightIndex( SeaLevel );
-		copy.readData( original.getData() );
+		LightIndex copy = new LightIndex(SeaLevel);
+		copy.readData(original.getData());
 		
 		// make sure they're identical
-		for( int x=0; x<16; x++ )
-		{
-			for( int z=0; z<16; z++ )
-			{
-				for( int y=0; y<255; y++ )
-				{
-					assertEquals( original.getOpacity( x, y, z ), copy.getOpacity( x, y, z ) );
+		for (int x = 0; x < 16; x++) {
+			for (int z = 0; z < 16; z++) {
+				for (int y = 0; y < 255; y++) {
+					assertEquals(original.getOpacity(x, y, z), copy.getOpacity(x, y, z));
 				}
 			}
 		}

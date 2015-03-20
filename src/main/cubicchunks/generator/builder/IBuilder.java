@@ -24,8 +24,8 @@
  ******************************************************************************/
 package cubicchunks.generator.builder;
 
-public abstract interface IBuilder 
-{	
+public abstract interface IBuilder {
+	
 	public void setSeed(int seed);
 	
 	public void setSeaLevel(double seaLevel);

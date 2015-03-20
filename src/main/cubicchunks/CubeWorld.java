@@ -26,8 +26,7 @@ package cubicchunks;
 
 import cubicchunks.lighting.LightingManager;
 
-public interface CubeWorld
-{
-	CubeProvider getCubeProvider( );
-	LightingManager getLightingManager( );
+public interface CubeWorld {
+	CubeProvider getCubeProvider();
+	LightingManager getLightingManager();
 }

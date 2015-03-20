@@ -24,30 +24,26 @@
  ******************************************************************************/
 package cubicchunks.util;
 
-public class RangeInt
-{
+public class RangeInt {
+	
 	private int m_start;
 	private int m_stop;
 	
-	public RangeInt( int start, int stop )
-	{
+	public RangeInt(int start, int stop) {
 		m_start = start;
 		m_stop = stop;
 	}
 	
-	public int getStart( )
-	{
+	public int getStart() {
 		return m_start;
 	}
 	
-	public int getStop( )
-	{
+	public int getStop() {
 		return m_stop;
 	}
 	
 	@Override
-	public String toString( )
-	{
-		return String.format( "[%d,%d]", m_start, m_stop );
+	public String toString() {
+		return String.format("[%d,%d]", m_start, m_stop);
 	}
 }

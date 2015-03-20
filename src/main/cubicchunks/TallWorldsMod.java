@@ -58,93 +58,76 @@ import cuchaz.magicMojoModLoader.api.events.VoidFogRangeEvent;
 import cuchaz.magicMojoModLoader.api.events.WorldProviderEvent;
 import cuchaz.magicMojoModLoader.util.Util;
 
-public class TallWorldsMod implements Mod
-{
+public class TallWorldsMod implements Mod {
+	
 	private static final Logger log = LogManager.getLogger();
 	
 	// define one instance of the metadata
 	private static final ModMetadata m_meta;
-	static
-	{
+	static {
 		m_meta = new ModMetadata();
-		m_meta.setId( "tall-worlds" );
-		m_meta.setVersion( new Version( "0.1 beta" ) );
-		m_meta.setName( "Tall Worlds" );
+		m_meta.setId("tall-worlds");
+		m_meta.setVersion(new Version("0.1 beta"));
+		m_meta.setName("Tall Worlds");
 	}
 	
 	@Override
-	public ModMetadata getMetadata( )
-	{
+	public ModMetadata getMetadata() {
 		return m_meta;
 	}
 	
-	public void handleEvent( ClassOverrideEvent event )
-	{
-		if( event.getOldClassName().equals( "net.minecraft.client.multiplayer.WorldClient" ) )
-		{
-			event.setNewClassName( CubeWorldClient.class.getName() );
-		}
-		else if( event.getOldClassName().equals( "net.minecraft.world.WorldServer" ) )
-		{
-			event.setNewClassName( CubeWorldServer.class.getName() );
+	public void handleEvent(ClassOverrideEvent event) {
+		if (event.getOldClassName().equals("net.minecraft.client.multiplayer.WorldClient")) {
+			event.setNewClassName(CubeWorldClient.class.getName());
+		} else if (event.getOldClassName().equals("net.minecraft.world.WorldServer")) {
+			event.setNewClassName(CubeWorldServer.class.getName());
 		}
 	}
 	
-	public void handleEvent( WorldProviderEvent event )
-	{
-		if( event.getDimension() == 0 ) // surface world
+	public void handleEvent(WorldProviderEvent event) {
+		if (event.getDimension() == 0) // surface world
 		{
-			event.setCustomWorldProvider( new CubeWorldProviderSurface() );
+			event.setCustomWorldProvider(new CubeWorldProviderSurface());
 		}
 	}
 	
-	public void handleEvent( EncodeChunkEvent event )
-	{
+	public void handleEvent(EncodeChunkEvent event) {
 		// check for our chunk instance
-		if( event.getChunk() instanceof Column )
-		{
+		if (event.getChunk() instanceof Column) {
 			Column column = (Column)event.getChunk();
 			
 			// encode the column
-			try
-			{
-				byte[] data = column.encode( event.isFirstTime() );
-				event.setData( data );
-			}
-			catch( IOException ex )
-			{
-				log.error( String.format( "Unable to encode data for column (%d,%d)", column.xPosition, column.zPosition ), ex );
+			try {
+				byte[] data = column.encode(event.isFirstTime());
+				event.setData(data);
+			} catch (IOException ex) {
+				log.error(String.format("Unable to encode data for column (%d,%d)", column.xPosition, column.zPosition), ex);
 			}
 		}
 	}
 	
-	public void handleEvent( BuildSizeEvent event )
-	{
-		event.setCustomBuildHeight( Coords.cubeToMaxBlock( AddressTools.MaxY ) );
-		event.setCustomBuildDepth( Coords.cubeToMinBlock( AddressTools.MinY ) );
+	public void handleEvent(BuildSizeEvent event) {
+		event.setCustomBuildHeight(Coords.cubeToMaxBlock(AddressTools.MaxY));
+		event.setCustomBuildDepth(Coords.cubeToMinBlock(AddressTools.MinY));
 		
-		log.info( String.format( "Set build height to [%d,%d]", event.getCustomBuildDepth(), event.getCustomBuildHeight() ) );
+		log.info(String.format("Set build height to [%d,%d]", event.getCustomBuildDepth(), event.getCustomBuildHeight()));
 	}
 	
-	public void handleEvent( InitialChunkLoadEvent event )
-	{
+	public void handleEvent(InitialChunkLoadEvent event) {
 		// get the surface world
-		CubeWorldServer worldServer = (CubeWorldServer)event.worldServers().get( 0 );
+		CubeWorldServer worldServer = (CubeWorldServer)event.worldServers().get(0);
 		
 		// load the cubes around the spawn point
-		log.info( "Loading cubes for spawn..." );
+		log.info("Loading cubes for spawn...");
 		final int Distance = 12;
 		ChunkCoordinates spawnPoint = worldServer.getSpawnPoint();
-		int spawnCubeX = Coords.blockToCube( spawnPoint.posX );
-		int spawnCubeY = Coords.blockToCube( spawnPoint.posY );
-		int spawnCubeZ = Coords.blockToCube( spawnPoint.posZ );
-		for( int cubeX=spawnCubeX-Distance; cubeX<=spawnCubeX+Distance; cubeX++ )
-		{
-			for( int cubeY=spawnCubeY-Distance; cubeY<=spawnCubeY+Distance; cubeY++ )
-			{
-				for( int cubeZ=spawnCubeZ-Distance; cubeZ<=spawnCubeZ+Distance; cubeZ++ )
-				{
-					worldServer.getCubeProvider().loadCubeAndNeighbors( cubeX, cubeY, cubeZ );
+		int spawnCubeX = Coords.blockToCube(spawnPoint.posX);
+		int spawnCubeY = Coords.blockToCube(spawnPoint.posY);
+		int spawnCubeZ = Coords.blockToCube(spawnPoint.posZ);
+		for (int cubeX = spawnCubeX - Distance; cubeX <= spawnCubeX + Distance; cubeX++) {
+			for (int cubeY = spawnCubeY - Distance; cubeY <= spawnCubeY + Distance; cubeY++) {
+				for (int cubeZ = spawnCubeZ - Distance; cubeZ <= spawnCubeZ + Distance; cubeZ++) {
+					worldServer.getCubeProvider().loadCubeAndNeighbors(cubeX, cubeY, cubeZ);
 				}
 			}
 		}
@@ -152,30 +135,23 @@ public class TallWorldsMod implements Mod
 		// wait for the cubes to be loaded
 		GeneratorPipeline pipeline = worldServer.getGeneratorPipeline();
 		int numCubesTotal = pipeline.getNumCubes();
-		if( numCubesTotal > 0 )
-		{
+		if (numCubesTotal > 0) {
 			long timeStart = System.currentTimeMillis();
-			log.info( String.format( "Generating %d cubes for spawn at block (%d,%d,%d) cube (%d,%d,%d)...",
-				numCubesTotal,
-				spawnPoint.posX, spawnPoint.posY, spawnPoint.posZ,
-				spawnCubeX, spawnCubeY, spawnCubeZ
-			) );
+			log.info(String.format("Generating %d cubes for spawn at block (%d,%d,%d) cube (%d,%d,%d)...", numCubesTotal, spawnPoint.posX, spawnPoint.posY, spawnPoint.posZ, spawnCubeX, spawnCubeY, spawnCubeZ));
 			pipeline.generateAll();
 			long timeDiff = System.currentTimeMillis() - timeStart;
-			log.info( String.format( "Done in %d ms", timeDiff ) );
+			log.info(String.format("Done in %d ms", timeDiff));
 		}
 	}
 	
-	public void handleEvent( EntityPlayerMPUpdateEvent event )
-	{
+	public void handleEvent(EntityPlayerMPUpdateEvent event) {
 		EntityPlayerMP player = event.getPlayer();
 		WorldServer world = (WorldServer)player.theItemInWorldManager.theWorld;
 		CubePlayerManager playerManager = (CubePlayerManager)world.getPlayerManager();
-		playerManager.onPlayerUpdate( player );
+		playerManager.onPlayerUpdate(player);
 	}
 	
-	public void handleEvent( UpdateRenderPositionEvent event )
-	{
+	public void handleEvent(UpdateRenderPositionEvent event) {
 		// block position is the position of the viewpoint entity
 		int blockX = event.getBlockX();
 		int blockY = event.getBlockY();
@@ -194,140 +170,116 @@ public class TallWorldsMod implements Mod
 		int maxBlockZ = Integer.MIN_VALUE;
 		
 		// get view dimensions
-		int blockViewDx = event.getRenderCubeDx()*16;
-		int blockViewHdx = blockViewDx/2;
-		int blockViewDy = event.getRenderCubeDy()*16;
-		int blockViewHdy = blockViewDy/2;
-		int blockViewDz = event.getRenderCubeDz()*16;
-		int blockViewHdz = blockViewDz/2;
+		int blockViewDx = event.getRenderCubeDx() * 16;
+		int blockViewHdx = blockViewDx / 2;
+		int blockViewDy = event.getRenderCubeDy() * 16;
+		int blockViewHdy = blockViewDy / 2;
+		int blockViewDz = event.getRenderCubeDz() * 16;
+		int blockViewHdz = blockViewDz / 2;
 		
-		for( int renderX=0; renderX<event.getRenderCubeDx(); renderX++ )
-		{
-			int posBlockX = renderX*16;
+		for (int renderX = 0; renderX < event.getRenderCubeDx(); renderX++) {
+			int posBlockX = renderX * 16;
 			
 			// compute parameter of coordinate transformation
 			int blockWidthsX = posBlockX + blockViewHdx - blockX;
-			if( blockWidthsX < 0 )
-			{
+			if (blockWidthsX < 0) {
 				blockWidthsX -= blockViewDx - 1;
 			}
 			blockWidthsX /= blockViewDx;
 			
 			// translate by player position
-			posBlockX -= blockWidthsX*blockViewDx;
+			posBlockX -= blockWidthsX * blockViewDx;
 			
 			// update bounds
-			if( posBlockX < minBlockX )
-			{
+			if (posBlockX < minBlockX) {
 				minBlockX = posBlockX;
 			}
-			if( posBlockX > maxBlockX )
-			{
+			if (posBlockX > maxBlockX) {
 				maxBlockX = posBlockX;
 			}
 			
-			for( int renderZ=0; renderZ<event.getRenderCubeDz(); renderZ++ )
-			{
-				int posBlockZ = renderZ*16;
+			for (int renderZ = 0; renderZ < event.getRenderCubeDz(); renderZ++) {
+				int posBlockZ = renderZ * 16;
 				
 				// compute parameter of coordinate transformation
 				int blockWidthsZ = posBlockZ + blockViewHdz - blockZ;
-				if( blockWidthsZ < 0 )
-				{
+				if (blockWidthsZ < 0) {
 					blockWidthsZ -= blockViewDz - 1;
 				}
 				blockWidthsZ /= blockViewDz;
 				
 				// translate by player position
-				posBlockZ -= blockWidthsZ*blockViewDz;
+				posBlockZ -= blockWidthsZ * blockViewDz;
 				
 				// update bounds
-				if( posBlockZ < minBlockZ )
-				{
+				if (posBlockZ < minBlockZ) {
 					minBlockZ = posBlockZ;
 				}
-				if( posBlockZ > maxBlockZ )
-				{
+				if (posBlockZ > maxBlockZ) {
 					maxBlockZ = posBlockZ;
 				}
 				
-				for( int renderY=0; renderY<event.getRenderCubeDy(); renderY++ )
-				{
-					int posBlockY = renderY*16;
+				for (int renderY = 0; renderY < event.getRenderCubeDy(); renderY++) {
+					int posBlockY = renderY * 16;
 					
 					// compute parameter of coordinate transformation
 					int blockHeightsY = posBlockY + blockViewHdy - blockY;
-					if( blockHeightsY < 0 )
-					{
+					if (blockHeightsY < 0) {
 						blockHeightsY -= blockViewDy - 1;
 					}
 					blockHeightsY /= blockViewDy;
 					
 					// translate by player position
-					posBlockY -= blockHeightsY*blockViewDy;
+					posBlockY -= blockHeightsY * blockViewDy;
 					
 					// update bounds
-					if( posBlockY < minBlockY )
-					{
+					if (posBlockY < minBlockY) {
 						minBlockY = posBlockY;
 					}
-					if( posBlockY > maxBlockY )
-					{
+					if (posBlockY > maxBlockY) {
 						maxBlockY = posBlockY;
 					}
 					
 					// update renderer
-					WorldRenderer renderer = event.getRenderer( renderX, renderY, renderZ );
+					WorldRenderer renderer = event.getRenderer(renderX, renderY, renderZ);
 					boolean neededUpdate = renderer.needsUpdate;
-					renderer.setPosition( posBlockX, posBlockY, posBlockZ );
-					if( !neededUpdate && renderer.needsUpdate )
-					{
-						event.updateRenderer( renderer );
+					renderer.setPosition(posBlockX, posBlockY, posBlockZ);
+					if (!neededUpdate && renderer.needsUpdate) {
+						event.updateRenderer(renderer);
 					}
 				}
 			}
 		}
 		
 		// save the bounds to the event
-		event.setMinBlockX( minBlockX );
-		event.setMinBlockY( minBlockY );
-		event.setMinBlockZ( minBlockZ );
-		event.setMaxBlockX( maxBlockX );
-		event.setMaxBlockY( maxBlockY );
-		event.setMaxBlockZ( maxBlockZ );
+		event.setMinBlockX(minBlockX);
+		event.setMinBlockY(minBlockY);
+		event.setMinBlockZ(minBlockZ);
+		event.setMaxBlockX(maxBlockX);
+		event.setMaxBlockY(maxBlockY);
+		event.setMaxBlockZ(maxBlockZ);
 		
 		event.setHandled();
 	}
 	
-	public void handleEvent( VoidFogRangeEvent event )
-	{
-		int min = Coords.cubeToMinBlock( AddressTools.MinY );
-		event.setCustomRange( min, min + 1024 );
+	public void handleEvent(VoidFogRangeEvent event) {
+		int min = Coords.cubeToMinBlock(AddressTools.MinY);
+		event.setCustomRange(min, min + 1024);
 	}
 	
-	public void handleEvent( RandomChunkBlockYEvent event )
-	{
-		if( event.getChunk() instanceof Column )
-		{
+	public void handleEvent(RandomChunkBlockYEvent event) {
+		if (event.getChunk() instanceof Column) {
 			Column column = (Column)event.getChunk();
-			event.setBlockY( Util.randRange(
-				event.getRand(),
-				Coords.cubeToMinBlock( column.getBottomCubeY() ),
-				Coords.cubeToMaxBlock( column.getTopCubeY() )
-			) );
+			event.setBlockY(Util.randRange(event.getRand(), Coords.cubeToMinBlock(column.getBottomCubeY()), Coords.cubeToMaxBlock(column.getTopCubeY())));
 		}
 	}
 	
-	public void handleEvent( CheckChunksExistForEntityEvent event )
-	{
+	public void handleEvent(CheckChunksExistForEntityEvent event) {
 		Entity entity = event.getEntity();
-		int entityX = MathHelper.floor_double( entity.posX );
-        int entityY = MathHelper.floor_double( entity.posY );
-		int entityZ = MathHelper.floor_double( entity.posZ );
+		int entityX = MathHelper.floor_double(entity.posX);
+		int entityY = MathHelper.floor_double(entity.posY);
+		int entityZ = MathHelper.floor_double(entity.posZ);
 		
-    	event.setChunksExist( entity.worldObj.checkChunksExist(
-    		entityX - 32, entityY - 32, entityZ - 32,
-    		entityX + 32, entityY + 32, entityZ + 32
-    	) );
+		event.setChunksExist(entity.worldObj.checkChunksExist(entityX - 32, entityY - 32, entityZ - 32, entityX + 32, entityY + 32, entityZ + 32));
 	}
 }

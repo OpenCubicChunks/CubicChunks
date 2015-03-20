@@ -30,46 +30,37 @@ import org.apache.logging.log4j.Logger;
 import cubicchunks.CubeProvider;
 import cubicchunks.world.Cube;
 
-public abstract class CubeProcessor extends QueueProcessor
-{
+public abstract class CubeProcessor extends QueueProcessor {
+	
 	private static final Logger log = LogManager.getLogger();
 	
-	public CubeProcessor( String name, CubeProvider provider, int batchSize )
-	{
-		super( name, provider, batchSize );
+	public CubeProcessor(String name, CubeProvider provider, int batchSize) {
+		super(name, provider, batchSize);
 	}
 	
 	@Override
-	public void processBatch( )
-	{
+	public void processBatch() {
 		// start processing
-		for( long address : m_incomingAddresses )
-		{
+		for (long address : m_incomingAddresses) {
 			// get the cube
-			int cubeX = AddressTools.getX( address );
-			int cubeY = AddressTools.getY( address );
-			int cubeZ = AddressTools.getZ( address );
-			Cube cube = m_provider.provideCube( cubeX, cubeY, cubeZ );
-			if( cube == null )
-			{
-				log.warn( String.format( "Unloaded cube (%d,%d,%d) dropped from %s processor queue.",
-					cubeX, cubeY, cubeZ, m_name
-				) );
+			int cubeX = AddressTools.getX(address);
+			int cubeY = AddressTools.getY(address);
+			int cubeZ = AddressTools.getZ(address);
+			Cube cube = m_provider.provideCube(cubeX, cubeY, cubeZ);
+			if (cube == null) {
+				log.warn(String.format("Unloaded cube (%d,%d,%d) dropped from %s processor queue.", cubeX, cubeY, cubeZ, m_name));
 				continue;
 			}
 			
 			// add unsuccessful calculations back onto the queue
-			boolean success = calculate( cube );
-			if( success )
-			{
-				m_processedAddresses.add( address );
-			}
-			else
-			{
-				m_deferredAddresses.add( address );
+			boolean success = calculate(cube);
+			if (success) {
+				m_processedAddresses.add(address);
+			} else {
+				m_deferredAddresses.add(address);
 			}
 		}
 	}
 	
-	public abstract boolean calculate( Cube cube );
+	public abstract boolean calculate(Cube cube);
 }

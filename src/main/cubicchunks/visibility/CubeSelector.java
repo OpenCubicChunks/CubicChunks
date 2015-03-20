@@ -32,38 +32,36 @@ import com.google.common.collect.Sets;
 
 import cubicchunks.util.AddressTools;
 
-public abstract class CubeSelector
-{
+public abstract class CubeSelector {
+	
 	private TreeSet<Long> m_visible;
 	private TreeSet<Long> m_newlyVisible;
 	private TreeSet<Long> m_newlyHidden;
 	private TreeSet<Long> m_nextVisible;
 	
-	public CubeSelector( )
-	{
+	public CubeSelector() {
 		m_visible = Sets.newTreeSet();
 		m_newlyVisible = Sets.newTreeSet();
 		m_newlyHidden = Sets.newTreeSet();
 		m_nextVisible = Sets.newTreeSet();
 	}
 	
-	public void setPlayerPosition( long address, int viewDistance )
-	{
-		int cubeX = AddressTools.getX( address );
-		int cubeY = AddressTools.getY( address );
-		int cubeZ = AddressTools.getZ( address );
+	public void setPlayerPosition(long address, int viewDistance) {
+		int cubeX = AddressTools.getX(address);
+		int cubeY = AddressTools.getY(address);
+		int cubeZ = AddressTools.getZ(address);
 		
 		// compute the cube visibility
 		m_nextVisible.clear();
-		computeVisible( m_nextVisible, cubeX, cubeY, cubeZ, viewDistance );
+		computeVisible(m_nextVisible, cubeX, cubeY, cubeZ, viewDistance);
 		
 		m_newlyVisible.clear();
-		m_newlyVisible.addAll( m_nextVisible );
-		m_newlyVisible.removeAll( m_visible );
+		m_newlyVisible.addAll(m_nextVisible);
+		m_newlyVisible.removeAll(m_visible);
 		
 		m_newlyHidden.clear();
-		m_newlyHidden.addAll( m_visible );
-		m_newlyHidden.removeAll( m_nextVisible );
+		m_newlyHidden.addAll(m_visible);
+		m_newlyHidden.removeAll(m_nextVisible);
 		
 		// swap the buffers
 		TreeSet<Long> swap = m_visible;
@@ -71,25 +69,21 @@ public abstract class CubeSelector
 		m_nextVisible = swap;
 	}
 	
-	public Set<Long> getVisibleCubes( )
-	{
+	public Set<Long> getVisibleCubes() {
 		return m_visible;
 	}
 	
-	public Set<Long> getNewlyVisibleCubes( )
-	{
+	public Set<Long> getNewlyVisibleCubes() {
 		return m_newlyVisible;
 	}
 	
-	public Set<Long> getNewlyHiddenCubes( )
-	{
+	public Set<Long> getNewlyHiddenCubes() {
 		return m_newlyHidden;
 	}
 	
-	public boolean isVisible( long address )
-	{
-		return m_visible.contains( address );
+	public boolean isVisible(long address) {
+		return m_visible.contains(address);
 	}
 	
-	protected abstract void computeVisible( Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance );
+	protected abstract void computeVisible(Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance);
 }

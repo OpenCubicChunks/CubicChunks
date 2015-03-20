@@ -29,20 +29,18 @@ import java.util.List;
 
 import cuchaz.magicMojoModLoader.classTransformation.transformers.*;
 
-public class BiomeGenRegistry
-{
+public class BiomeGenRegistry {
+	
 	private static List<CubeBiomeGenBase> biomeList;
 	
 	protected static final CubeBiomeGenBase.Height oceanRange = new CubeBiomeGenBase.Height(-1.0F, 0.1F);
 	
-	static
-	{
+	static {
 		biomeList = new ArrayList<CubeBiomeGenBase>();
-		biomeList.add( new BiomeGenBeach(0).setColor(112).setBiomeName("Ocean").setHeightRange(oceanRange) );
+		biomeList.add(new BiomeGenBeach(0).setColor(112).setBiomeName("Ocean").setHeightRange(oceanRange));
 	}
 	
-	public static List<CubeBiomeGenBase> getBiomes( )
-	{
-		return new ArrayList<CubeBiomeGenBase>( biomeList );
+	public static List<CubeBiomeGenBase> getBiomes() {
+		return new ArrayList<CubeBiomeGenBase>(biomeList);
 	}
 }

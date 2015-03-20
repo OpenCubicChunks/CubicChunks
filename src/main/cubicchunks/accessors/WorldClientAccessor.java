@@ -29,44 +29,32 @@ import java.lang.reflect.Field;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
 
-public class WorldClientAccessor
-{
+public class WorldClientAccessor {
+	
 	private static Field m_fieldChunkProvider;
 	
-	static
-	{
-		try
-		{
-			m_fieldChunkProvider = WorldClient.class.getDeclaredField( "clientChunkProvider" );
-			m_fieldChunkProvider.setAccessible( true );
-		}
-		catch( Exception ex )
-		{
-			throw new Error( ex );
+	static {
+		try {
+			m_fieldChunkProvider = WorldClient.class.getDeclaredField("clientChunkProvider");
+			m_fieldChunkProvider.setAccessible(true);
+		} catch (Exception ex) {
+			throw new Error(ex);
 		}
 	}
 	
-	public static ChunkProviderClient getChunkProvider( WorldClient world )
-	{
-		try
-		{
-			return (ChunkProviderClient)m_fieldChunkProvider.get( world );
-		}
-		catch( Exception ex )
-		{
-			throw new Error( ex );
+	public static ChunkProviderClient getChunkProvider(WorldClient world) {
+		try {
+			return (ChunkProviderClient)m_fieldChunkProvider.get(world);
+		} catch (Exception ex) {
+			throw new Error(ex);
 		}
 	}
 	
-	public static void setChunkProvider( WorldClient world, ChunkProviderClient val )
-	{
-		try
-		{
-			m_fieldChunkProvider.set( world, val );
-		}
-		catch( Exception ex )
-		{
-			throw new Error( ex );
+	public static void setChunkProvider(WorldClient world, ChunkProviderClient val) {
+		try {
+			m_fieldChunkProvider.set(world, val);
+		} catch (Exception ex) {
+			throw new Error(ex);
 		}
 	}
 }

@@ -35,8 +35,8 @@ import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
 
-public class FeatureProcessor extends CubeProcessor
-{
+public class FeatureProcessor extends CubeProcessor {
+	
 	private CubicCaveGen caveGenerator;
 	private MapGenStronghold m_strongholdGenerator;
 	private MapGenVillage m_villageGenerator;
@@ -46,35 +46,27 @@ public class FeatureProcessor extends CubeProcessor
 	
 	private World worldObj;
 	
-	public FeatureProcessor( String name, CubeProvider provider, int batchSize )
-	{
-		super( name, provider, batchSize );
+	public FeatureProcessor(String name, CubeProvider provider, int batchSize) {
+		super(name, provider, batchSize);
 		
 		caveGenerator = new CubicCaveGen();
 		m_strongholdGenerator = new MapGenStronghold();
 		m_villageGenerator = new MapGenVillage();
 		m_mineshaftGenerator = new MapGenMineshaft();
 		m_scatteredFeatureGenerator = new MapGenScatteredFeature();
-		ravineGenerator = new CubicRavineGen();	
+		ravineGenerator = new CubicRavineGen();
 	}
 	
 	@Override
-	public boolean calculate( Cube cube )
-	{	
+	public boolean calculate(Cube cube) {
 		worldObj = cube.getWorld();
 		
 		// generate world features
-		caveGenerator.generate( worldObj, cube );
-		ravineGenerator.generate( worldObj, cube );
-		/* UNDONE: enable feature generation
-		if( m_mapFeaturesEnabled )
-		{
-			m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
-			m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
-			m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
-			m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks );
-		}
-		*/
+		caveGenerator.generate(worldObj, cube);
+		ravineGenerator.generate(worldObj, cube);
+		/*
+		 * UNDONE: enable feature generation if( m_mapFeaturesEnabled ) { m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); }
+		 */
 		
 		return true;
 	}

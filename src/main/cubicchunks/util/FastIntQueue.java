@@ -24,51 +24,43 @@
  ******************************************************************************/
 package cubicchunks.util;
 
-public class FastIntQueue
-{
+public class FastIntQueue {
+	
 	private int[] m_queue;
 	private int m_start;
 	private int m_stop;
 	
-	public FastIntQueue( )
-	{
+	public FastIntQueue() {
 		m_queue = new int[32768];
 		clear();
 	}
 	
-	public boolean hasRoomFor( int n )
-	{
+	public boolean hasRoomFor(int n) {
 		return m_stop + n <= m_queue.length;
 	}
 	
-	public void add( int val )
-	{
+	public void add(int val) {
 		m_queue[m_stop++] = val;
 	}
 	
-	public boolean hasNext( )
-	{
+	public boolean hasNext() {
 		return m_start < m_stop;
 	}
 	
-	public int get( )
-	{
+	public int get() {
 		return m_queue[m_start++];
 	}
 	
-	public int size( )
-	{
+	public int size() {
 		return m_stop;
 	}
 	
-	public void clear( )
-	{
+	public void clear() {
 		m_start = 0;
 		m_stop = 0;
 	}
 	
-	public void reset( )
-	{
+	public void reset() {
 		m_start = 0;
 	}
 }

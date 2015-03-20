@@ -29,29 +29,23 @@ import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Column;
 
-public class ColumnGenerator
-{
+public class ColumnGenerator {
+	
 	private CubeWorldServer m_worldServer;
 	private CubeBiomeGenBase[] m_biomes;
 	
-	public ColumnGenerator( CubeWorldServer worldServer )
-	{
+	public ColumnGenerator(CubeWorldServer worldServer) {
 		m_worldServer = worldServer;
 		m_biomes = null;
 	}
 	
-	public Column generateColumn( int cubeX, int cubeZ )
-	{
+	public Column generateColumn(int cubeX, int cubeZ) {
 		// generate biome info. This is a hackjob.
-		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(
-			m_biomes,
-			Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ),
-			16, 16
-		);
+		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(m_biomes, Coords.cubeToMinBlock(cubeX), Coords.cubeToMinBlock(cubeZ), 16, 16);
 		
 		// UNDONE: generate temperature map
 		// UNDONE: generate rainfall map
 		
-		return new Column( m_worldServer, cubeX, cubeZ, m_biomes );
+		return new Column(m_worldServer, cubeX, cubeZ, m_biomes);
 	}
 }

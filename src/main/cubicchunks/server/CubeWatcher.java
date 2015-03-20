@@ -42,17 +42,16 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.ColumnView;
 import cubicchunks.world.Cube;
 
-public class CubeWatcher
-{
+public class CubeWatcher {
+	
 	private static final int MaxBlocksPerUpdate = 64;
 	
-	private static class PlayerEntry
-	{
+	private static class PlayerEntry {
+		
 		EntityPlayerMP player;
 		boolean sawCube;
 		
-		public PlayerEntry( EntityPlayerMP player )
-		{
+		public PlayerEntry(EntityPlayerMP player) {
 			this.player = player;
 			this.sawCube = false;
 		}
@@ -63,11 +62,9 @@ public class CubeWatcher
 	private long m_previousWorldTime;
 	private TreeSet<Integer> m_dirtyBlocks;
 	
-	public CubeWatcher( Cube cube )
-	{
-		if( cube == null )
-		{
-			throw new IllegalArgumentException( "cube cannot be null!" );
+	public CubeWatcher(Cube cube) {
+		if (cube == null) {
+			throw new IllegalArgumentException("cube cannot be null!");
 		}
 		
 		m_cube = cube;
@@ -76,178 +73,146 @@ public class CubeWatcher
 		m_dirtyBlocks = new TreeSet<Integer>();
 	}
 	
-	public Cube getCube( )
-	{
+	public Cube getCube() {
 		return m_cube;
 	}
 	
-	public void addPlayer( EntityPlayerMP player )
-	{
-		m_players.put( player.getEntityId(), new PlayerEntry( player ) );
+	public void addPlayer(EntityPlayerMP player) {
+		m_players.put(player.getEntityId(), new PlayerEntry(player));
 		m_previousWorldTime = getWorldTime();
 	}
 	
-	public void removePlayer( EntityPlayerMP player )
-	{
-		m_players.remove( player.getEntityId() );
+	public void removePlayer(EntityPlayerMP player) {
+		m_players.remove(player.getEntityId());
 		updateInhabitedTime();
 	}
 	
-	public boolean hasPlayers( )
-	{
+	public boolean hasPlayers() {
 		return !m_players.isEmpty();
 	}
 	
-	public void setPlayerSawCube( EntityPlayerMP player )
-	{
-		PlayerEntry entry = m_players.get( player.getEntityId() );
-		if( entry != null )
-		{
+	public void setPlayerSawCube(EntityPlayerMP player) {
+		PlayerEntry entry = m_players.get(player.getEntityId());
+		if (entry != null) {
 			entry.sawCube = true;
 		}
 	}
 	
-	public void tick( )
-	{
+	public void tick() {
 		updateInhabitedTime();
 	}
 	
-	private long getWorldTime( )
-	{
+	private long getWorldTime() {
 		return m_cube.getWorld().getTotalWorldTime();
 	}
 	
-	private void updateInhabitedTime( )
-	{
+	private void updateInhabitedTime() {
 		long now = getWorldTime();
 		m_cube.getColumn().inhabitedTime += now - m_previousWorldTime;
 		m_previousWorldTime = now;
 	}
 	
-	public void setDirtyBlock( int localX, int localY, int localZ )
-	{
+	public void setDirtyBlock(int localX, int localY, int localZ) {
 		// save up to some number of individual block updates
 		// once that threshold is passed, the whole cube is sent during an update,
 		// so there's no need to save more per-block updates
-		if( m_dirtyBlocks.size() < MaxBlocksPerUpdate )
-		{
-			m_dirtyBlocks.add( packAddress( localX, localY, localZ ) );
+		if (m_dirtyBlocks.size() < MaxBlocksPerUpdate) {
+			m_dirtyBlocks.add(packAddress(localX, localY, localZ));
 		}
 	}
 	
-	public void sendUpdates( )
-	{
+	public void sendUpdates() {
 		// are there any updates?
-		if( m_dirtyBlocks.isEmpty() )
-		{
+		if (m_dirtyBlocks.isEmpty()) {
 			return;
 		}
 		
 		World world = m_cube.getWorld();
 		
 		// how many?
-		if( m_dirtyBlocks.size() == 1 )
-		{
+		if (m_dirtyBlocks.size() == 1) {
 			// get the block coords
 			int address = m_dirtyBlocks.first();
-			int localX = unpackLocalX( address );
-			int localY = unpackLocalY( address );
-			int localZ = unpackLocalZ( address );
-			int blockX = Coords.localToBlock( m_cube.getX(), localX );
-			int blockY = Coords.localToBlock( m_cube.getY(), localY );
-			int blockZ = Coords.localToBlock( m_cube.getZ(), localZ );
+			int localX = unpackLocalX(address);
+			int localY = unpackLocalY(address);
+			int localZ = unpackLocalZ(address);
+			int blockX = Coords.localToBlock(m_cube.getX(), localX);
+			int blockY = Coords.localToBlock(m_cube.getY(), localY);
+			int blockZ = Coords.localToBlock(m_cube.getZ(), localZ);
 			
 			// send single block updates
-			sendPacketToAllPlayers( new S23PacketBlockChange( blockX, blockY, blockZ, world ) );
-			if( world.getBlock( blockX, blockY, blockZ ).hasTileEntity() )
-			{
-				sendTileEntityToAllPlayers( world.getTileEntity( blockX, blockY, blockZ ) );
+			sendPacketToAllPlayers(new S23PacketBlockChange(blockX, blockY, blockZ, world));
+			if (world.getBlock(blockX, blockY, blockZ).hasTileEntity()) {
+				sendTileEntityToAllPlayers(world.getTileEntity(blockX, blockY, blockZ));
 			}
-		}
-		else if( m_dirtyBlocks.size() == MaxBlocksPerUpdate )
-		{
+		} else if (m_dirtyBlocks.size() == MaxBlocksPerUpdate) {
 			// send whole cube (wrapped in a column view)
-			ColumnView view = new ColumnView( m_cube.getColumn() );
-			view.addCubeToView( m_cube );
-			sendPacketToAllPlayers( new S21PacketChunkData( view, false, 0 ) );
-			for( TileEntity tileEntity : m_cube.tileEntities() )
-			{
-				sendTileEntityToAllPlayers( tileEntity );
+			ColumnView view = new ColumnView(m_cube.getColumn());
+			view.addCubeToView(m_cube);
+			sendPacketToAllPlayers(new S21PacketChunkData(view, false, 0));
+			for (TileEntity tileEntity : m_cube.tileEntities()) {
+				sendTileEntityToAllPlayers(tileEntity);
 			}
-		}
-		else
-		{
+		} else {
 			// encode the update coords
 			short[] coords = new short[m_dirtyBlocks.size()];
-			int i=0;
-			for( int address : m_dirtyBlocks )
-			{
-				int localX = unpackLocalX( address );
-				int localY = unpackLocalY( address );
-				int localZ = unpackLocalZ( address );
-				int blockY = Coords.localToBlock( m_cube.getY(), localY );
-				coords[i++] = (short)( ( localX & 0xf ) << 12 | ( localZ & 0xf ) << 8 | ( blockY & 0xff ) );
+			int i = 0;
+			for (int address : m_dirtyBlocks) {
+				int localX = unpackLocalX(address);
+				int localY = unpackLocalY(address);
+				int localZ = unpackLocalZ(address);
+				int blockY = Coords.localToBlock(m_cube.getY(), localY);
+				coords[i++] = (short) ( (localX & 0xf) << 12 | (localZ & 0xf) << 8 | (blockY & 0xff));
 			}
 			
 			// send multi-block updates
-			sendPacketToAllPlayers( new S22PacketMultiBlockChange( coords.length, coords, m_cube.getColumn() ) );
-			for( int address : m_dirtyBlocks )
-			{
-				int localX = unpackLocalX( address );
-				int localY = unpackLocalY( address );
-				int localZ = unpackLocalZ( address );
-				sendTileEntityToAllPlayers( m_cube.getTileEntity( localX, localY, localZ ) );
+			sendPacketToAllPlayers(new S22PacketMultiBlockChange(coords.length, coords, m_cube.getColumn()));
+			for (int address : m_dirtyBlocks) {
+				int localX = unpackLocalX(address);
+				int localY = unpackLocalY(address);
+				int localZ = unpackLocalZ(address);
+				sendTileEntityToAllPlayers(m_cube.getTileEntity(localX, localY, localZ));
 			}
 		}
 		
 		m_dirtyBlocks.clear();
 	}
 	
-	private void sendTileEntityToAllPlayers( TileEntity tileEntity )
-	{
-		if( tileEntity == null )
-		{
+	private void sendTileEntityToAllPlayers(TileEntity tileEntity) {
+		if (tileEntity == null) {
 			return;
 		}
 		
 		Packet packet = tileEntity.getDescriptionPacket();
-		if( packet == null )
-		{
+		if (packet == null) {
 			return;
 		}
 		
-		sendPacketToAllPlayers( packet );
+		sendPacketToAllPlayers(packet);
 	}
 	
-	private void sendPacketToAllPlayers( Packet packet )
-	{
-		for( PlayerEntry entry : m_players.values() )
-		{
+	private void sendPacketToAllPlayers(Packet packet) {
+		for (PlayerEntry entry : m_players.values()) {
 			// has this player seen this cube before?
-			if( entry.sawCube )
-			{
-				entry.player.playerNetServerHandler.sendPacket( packet );
+			if (entry.sawCube) {
+				entry.player.playerNetServerHandler.sendPacket(packet);
 			}
 		}
 	}
 	
-	private int packAddress( int localX, int localY, int localZ )
-	{
-		return Bits.packUnsignedToInt( localX, 4, 0 ) | Bits.packUnsignedToInt( localY, 4, 4 ) | Bits.packUnsignedToInt( localZ, 4, 8 );
+	private int packAddress(int localX, int localY, int localZ) {
+		return Bits.packUnsignedToInt(localX, 4, 0) | Bits.packUnsignedToInt(localY, 4, 4) | Bits.packUnsignedToInt(localZ, 4, 8);
 	}
 	
-	private int unpackLocalX( int packed )
-	{
-		return Bits.unpackUnsigned( packed, 4, 0 );
+	private int unpackLocalX(int packed) {
+		return Bits.unpackUnsigned(packed, 4, 0);
 	}
 	
-	private int unpackLocalY( int packed )
-	{
-		return Bits.unpackUnsigned( packed, 4, 4 );
+	private int unpackLocalY(int packed) {
+		return Bits.unpackUnsigned(packed, 4, 4);
 	}
 	
-	private int unpackLocalZ( int packed )
-	{
-		return Bits.unpackUnsigned( packed, 4, 8 );
+	private int unpackLocalZ(int packed) {
+		return Bits.unpackUnsigned(packed, 4, 8);
 	}
 }

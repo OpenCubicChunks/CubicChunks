@@ -35,87 +35,70 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
-public class EntityContainer
-{
+public class EntityContainer {
+	
 	private List<Entity> m_entities;
 	private boolean m_hasActiveEntities;
 	private long m_lastSaveTime;
 	
-	public EntityContainer( )
-	{
+	public EntityContainer() {
 		m_entities = new ArrayList<Entity>();
 		m_hasActiveEntities = false;
 		m_lastSaveTime = 0;
 	}
 	
-	public boolean hasActiveEntities( )
-	{
+	public boolean hasActiveEntities() {
 		return m_hasActiveEntities;
 	}
-	public void setHasActiveEntities( boolean val )
-	{
+	
+	public void setHasActiveEntities(boolean val) {
 		m_hasActiveEntities = val;
 	}
 	
-	public void add( Entity entity )
-	{
-		m_entities.add( entity );
+	public void add(Entity entity) {
+		m_entities.add(entity);
 		m_hasActiveEntities = true;
 	}
 	
-	public boolean remove( Entity entity )
-	{
-		return m_entities.remove( entity );
+	public boolean remove(Entity entity) {
+		return m_entities.remove(entity);
 	}
 	
-	public void clear( )
-	{
+	public void clear() {
 		m_entities.clear();
 	}
 	
-	public List<Entity> entities( )
-	{
+	public List<Entity> entities() {
 		return m_entities;
 	}
 	
-	public int size( )
-	{
+	public int size() {
 		return m_entities.size();
 	}
 	
-	public void getEntities( List<Entity> out, Class<?> c, AxisAlignedBB queryBox, IEntitySelector selector )
-	{
-		for( Entity entity : m_entities )
-		{
-			if( c.isAssignableFrom( entity.getClass() ) && entity.boundingBox.intersectsWith( queryBox ) && ( selector == null || selector.isEntityApplicable( entity ) ) )
-			{
-				out.add( entity );
+	public void getEntities(List<Entity> out, Class<?> c, AxisAlignedBB queryBox, IEntitySelector selector) {
+		for (Entity entity : m_entities) {
+			if (c.isAssignableFrom(entity.getClass()) && entity.boundingBox.intersectsWith(queryBox) && (selector == null || selector.isEntityApplicable(entity))) {
+				out.add(entity);
 			}
 		}
 	}
 	
-	public void getEntitiesExcept( List<Entity> out, Entity excludedEntity, AxisAlignedBB queryBox, IEntitySelector selector )
-	{
-		for( Entity entity : m_entities )
-		{
+	public void getEntitiesExcept(List<Entity> out, Entity excludedEntity, AxisAlignedBB queryBox, IEntitySelector selector) {
+		for (Entity entity : m_entities) {
 			// handle entity exclusion
-			if( entity == excludedEntity )
-			{
+			if (entity == excludedEntity) {
 				continue;
 			}
 			
-			if( entity.boundingBox.intersectsWith( queryBox ) && ( selector == null || selector.isEntityApplicable( entity ) ) )
-			{
-				out.add( entity );
+			if (entity.boundingBox.intersectsWith(queryBox) && (selector == null || selector.isEntityApplicable(entity))) {
+				out.add(entity);
 				
 				// also check entity parts
-				if( entity.getParts() != null )
-				{
-					for( Entity part : entity.getParts() )
-					{
-						if( part != excludedEntity && part.boundingBox.intersectsWith( queryBox ) && ( selector == null || selector.isEntityApplicable( part ) ) )
-						{
-							out.add( part );
+				if (entity.getParts() != null) {
+					for (Entity part : entity.getParts()) {
+						if (part != excludedEntity && part.boundingBox.intersectsWith(queryBox) && (selector == null || selector.isEntityApplicable(part))) {
+							out.add(part);
 						}
 					}
 				}
@@ -123,82 +106,68 @@ public class EntityContainer
 		}
 	}
 	
-	public boolean needsSaving( long time )
-	{
+	public boolean needsSaving(long time) {
 		return m_hasActiveEntities && time >= m_lastSaveTime + 600;
 	}
 	
-	public void markSaved( long time )
-	{
+	public void markSaved(long time) {
 		m_lastSaveTime = time;
 	}
 	
-	public void writeToNbt( NBTTagCompound nbt, String name )
-	{
-		writeToNbt( nbt, name, null );
+	public void writeToNbt(NBTTagCompound nbt, String name) {
+		writeToNbt(nbt, name, null);
 	}
 	
-	public void writeToNbt( NBTTagCompound nbt, String name, EntityActionListener listener )
-	{
+	public void writeToNbt(NBTTagCompound nbt, String name, EntityActionListener listener) {
 		m_hasActiveEntities = false;
 		NBTTagList nbtEntities = new NBTTagList();
-		nbt.setTag( name, nbtEntities );
-		for( Entity entity : m_entities )
-		{
+		nbt.setTag(name, nbtEntities);
+		for (Entity entity : m_entities) {
 			NBTTagCompound nbtEntity = new NBTTagCompound();
-			if( entity.writeToNBTOptional( nbtEntity ) )
-			{
+			if (entity.writeToNBTOptional(nbtEntity)) {
 				m_hasActiveEntities = true;
-				nbtEntities.appendTag( nbtEntity );
+				nbtEntities.appendTag(nbtEntity);
 				
-				if( listener != null )
-				{
-					listener.onEntity( entity );
+				if (listener != null) {
+					listener.onEntity(entity);
 				}
 			}
 		}
 	}
 	
-	public void readFromNbt( NBTTagCompound nbt, String name, World world, EntityActionListener listener )
-	{
-		NBTTagList nbtEntities = nbt.getTagList( name, 10 );
-		if( nbtEntities == null )
-		{
+	public void readFromNbt(NBTTagCompound nbt, String name, World world, EntityActionListener listener) {
+		NBTTagList nbtEntities = nbt.getTagList(name, 10);
+		if (nbtEntities == null) {
 			return;
 		}
 		
-		for( int i=0; i<nbtEntities.tagCount(); i++ )
-		{
-			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt( i );
+		for (int i = 0; i < nbtEntities.tagCount(); i++) {
+			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
 			
 			// create the entity
-			Entity entity = EntityList.createEntityFromNBT( nbtEntity, world );
-			if( entity == null )
-			{
+			Entity entity = EntityList.createEntityFromNBT(nbtEntity, world);
+			if (entity == null) {
 				continue;
 			}
 			
-			add( entity );
+			add(entity);
 			
-			if( listener != null )
-			{
-				listener.onEntity( entity );
+			if (listener != null) {
+				listener.onEntity(entity);
 			}
 			
 			// deal with riding
-			while( nbtEntity.func_150297_b( "Riding", 10 ) )
-			{
+			while (nbtEntity.func_150297_b("Riding", 10)) {
 				// create the ridden entity
-				NBTTagCompound nbtRiddenEntity = nbtEntity.getCompoundTag( "Riding" );
-				Entity riddenEntity = EntityList.createEntityFromNBT( nbtRiddenEntity, world );
-				if( riddenEntity == null )
-				{
+				NBTTagCompound nbtRiddenEntity = nbtEntity.getCompoundTag("Riding");
+				Entity riddenEntity = EntityList.createEntityFromNBT(nbtRiddenEntity, world);
+				if (riddenEntity == null) {
 					break;
 				}
 				
 				// RIDE THE PIG!!
-				add( riddenEntity );
-				entity.mountEntity( riddenEntity );
+				add(riddenEntity);
+				entity.mountEntity(riddenEntity);
 				
 				// point to the ridden entity and iterate
 				entity = riddenEntity;

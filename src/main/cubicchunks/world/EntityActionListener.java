@@ -26,7 +26,6 @@ package cubicchunks.world;
 
 import net.minecraft.entity.Entity;
 
-public interface EntityActionListener
-{
-	void onEntity( Entity entity );
+public interface EntityActionListener {
+	void onEntity(Entity entity);
 }
