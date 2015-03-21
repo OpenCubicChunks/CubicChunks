@@ -24,58 +24,37 @@
  ******************************************************************************/
 package cubicchunks;
 
-import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.WorldServer;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cuchaz.m3l.M3L;
+import cuchaz.m3l.api.registry.AlreadyRegisteredException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import cubicchunks.client.CubeWorldClient;
-import cubicchunks.generator.GeneratorPipeline;
-import cubicchunks.server.CubePlayerManager;
-import cubicchunks.server.CubeWorldServer;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.Coords;
-import cubicchunks.world.Column;
-import cuchaz.magicMojoModLoader.api.Mod;
-import cuchaz.magicMojoModLoader.api.ModMetadata;
-import cuchaz.magicMojoModLoader.api.Version;
-import cuchaz.magicMojoModLoader.api.events.BuildSizeEvent;
-import cuchaz.magicMojoModLoader.api.events.CheckChunksExistForEntityEvent;
-import cuchaz.magicMojoModLoader.api.events.ClassOverrideEvent;
-import cuchaz.magicMojoModLoader.api.events.EncodeChunkEvent;
-import cuchaz.magicMojoModLoader.api.events.EntityPlayerMPUpdateEvent;
-import cuchaz.magicMojoModLoader.api.events.InitialChunkLoadEvent;
-import cuchaz.magicMojoModLoader.api.events.RandomChunkBlockYEvent;
-import cuchaz.magicMojoModLoader.api.events.UpdateRenderPositionEvent;
-import cuchaz.magicMojoModLoader.api.events.VoidFogRangeEvent;
-import cuchaz.magicMojoModLoader.api.events.WorldProviderEvent;
-import cuchaz.magicMojoModLoader.util.Util;
-
-public class TallWorldsMod implements Mod {
+@Mod(
+	modid = TallWorldsMod.Id,
+	name = "Tall Worlds",
+	version = "1.8.3-0.1"
+)
+public class TallWorldsMod {
 	
-	private static final Logger log = LogManager.getLogger();
+	public static final String Id = "tallworlds";
+	public static final Logger log = LoggerFactory.getLogger(Id);
 	
-	// define one instance of the metadata
-	private static final ModMetadata m_meta;
-	static {
-		m_meta = new ModMetadata();
-		m_meta.setId("tall-worlds");
-		m_meta.setVersion(new Version("0.1 beta"));
-		m_meta.setName("Tall Worlds");
+	@Mod.EventHandler
+	public void init(FMLInitializationEvent event) {
+		
+		log.info("Init");
+		
+		try {
+			M3L.instance.getRegistry().chunkSystem.register(new CubicChunkSystem());
+		} catch (AlreadyRegisteredException ex) {
+			log.error("Cannot register cubic chunk system. Someone else beat us to it. =(", ex);
+		}
 	}
 	
-	@Override
-	public ModMetadata getMetadata() {
-		return m_meta;
-	}
-	
+	/*
 	public void handleEvent(ClassOverrideEvent event) {
 		if (event.getOldClassName().equals("net.minecraft.client.multiplayer.WorldClient")) {
 			event.setNewClassName(CubeWorldClient.class.getName());
@@ -282,4 +261,5 @@ public class TallWorldsMod implements Mod {
 		
 		event.setChunksExist(entity.worldObj.checkChunksExist(entityX - 32, entityY - 32, entityZ - 32, entityX + 32, entityY + 32, entityZ + 32));
 	}
+	*/
 }

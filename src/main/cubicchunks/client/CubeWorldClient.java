@@ -29,7 +29,7 @@ import cubicchunks.CubeProviderTools;
 import cubicchunks.CubeWorld;
 import cubicchunks.accessors.WorldClientAccessor;
 import cubicchunks.lighting.LightingManager;
-import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.world.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.world.EnumDifficulty;
