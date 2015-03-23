@@ -1,48 +1,73 @@
-
+// Gradle repositories and dependencies
 buildscript
 {
-	repositories
-	{
+	repositories {
 		maven
 		{
 			url "http://www.cuchazinteractive.com/maven"
 		}
-		mavenCentral()
+		jcenter()
 	}
-	
-	dependencies
-	{
-		classpath "com.cuchazinteractive:magicMojoGradle:0.1"
+	dependencies {
+		classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'
 	}
 }
 
-apply plugin: "m3l"
+// Apply plugins
+apply plugin: 'java'
+apply plugin: 'license'
+//apply plugin: 'maven'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
 
-m3l
-{
-	minecraftVersion = "1.7.2"
-	pathMinecraftBin = "../mcp903/bin/minecraft"
-}
+// Default tasks
 
-group = "com.cuchazinteractive"
-archivesBaseName = "cubicChunks"
+defaultTasks 'licenseFormat', 'build'
+
+// Basic project information
+group = ""
+archivesBaseName = "cubicchunks"
 version = "0.1"
 
+// Extended project information
+ext.projectName = 'Cubic Chunks'
+ext.inceptionYear = '2014'
+ext.packaging = 'jar'
+ext.url = ''
+ext.description = 'Cubic Chunks'
+ext.organization = 'Tall Worlds'
+
+// Define build and commit variables
+ext.buildNumber = project.hasProperty("buildNumber") ? buildNumber : '0'
+ext.ciSystem = project.hasProperty("ciSystem") ? ciSystem : 'unknown'
+ext.commit = project.hasProperty("commit") ? commit : 'unknown'
+
+// Minimum version of Java required
+sourceCompatibility = '1.6'
+targetCompatibility = '1.6'
+
+// Project source locations
 sourceSets
 {
-	main
-	{
-		java
-		{
-			srcDir "src"
+	main {
+		java {
+			srcDir 'src/main/java'
 		}
-		resources
-		{
-			srcDir "src"
+		resources {
+			srcDir 'src/main/resources'
+		}
+	}
+	test {
+		java {
+			srcDir 'src/test/java'
+		}
+		resources {
+			srcDir 'src/test/resources'
 		}
 	}
 }
 
+// Project repositories
 repositories
 {
 	maven
@@ -54,6 +79,56 @@ repositories
 
 dependencies
 {
-	compile "com.cuchazinteractive:magicMojoModLoader:1.7.2-0.1:dev"
-	compile "org.mapdb:mapdb:0.9.11"
+	compile 'org.mapdb:mapdb:0.9.11'
+	testCompile 'junit:junit:4.11'
+}
+
+// Filter, process, and include resources
+processResources {
+	// Include in final JAR
+	from 'LICENSE.txt'
+}
+
+// License header formatting
+license {
+	ext.name = project.name
+	ext.organization = project.organization
+	ext.url = project.url
+	ext.year = project.inceptionYear
+	exclude "**/*.info"
+	exclude "assets/*"
+	header file('HEADER.txt')
+	sourceSets = project.sourceSets
+	ignoreFailures false
+	strictCheck true
+	mapping {
+		java = 'SLASHSTAR_STYLE'
+	}
+}
+
+// Source compiler configuration
+configure([compileJava, compileTestJava]) {
+	options.compilerArgs += ['-Xlint:all', '-Xlint:-path']
+	options.deprecation = true
+	options.encoding = 'utf8'
+}
+
+// JAR manifest configuration
+jar.manifest.mainAttributes(
+	"Built-By": System.properties['user.name']
+	//"Created-By": System.properties['java.vm.version'] + " (" + System.properties['java.vm.vendor'] + ")",
+	//"Implementation-Title": name,
+	//"Implementation-Version": version + "+" + ciSystem + "-b" + buildNumber + ".git-" + commit,
+	//"Implementation-Vendor": url
+)
+	
+task sourceJar(type: Jar) {
+	from sourceSets.main.java
+	from sourceSets.main.resources
+	classifier = "sources"
+}
+
+artifacts {
+	archives jar
+	archives sourceJar
 }
