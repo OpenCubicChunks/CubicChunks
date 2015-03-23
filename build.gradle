@@ -49,18 +49,12 @@ sourceSets
 {
 	main {
 		java {
-			srcDir 'src/main/java'
-		}
-		resources {
-			srcDir 'src/main/resources'
+			srcDir 'src/main'
 		}
 	}
 	test {
 		java {
-			srcDir 'src/test/java'
-		}
-		resources {
-			srcDir 'src/test/resources'
+			srcDir 'src/test'
 		}
 	}
 }
