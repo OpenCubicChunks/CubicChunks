@@ -34,12 +34,15 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk.ChunkEntityCreationType;
 import net.minecraft.world.chunk.storage.ChunkSection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.google.common.base.Predicate;
 
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
@@ -119,10 +122,6 @@ public class Cube {
 		return m_z;
 	}
 	
-	public EntityContainer getEntityContainer() {
-		return m_entities;
-	}
-	
 	public ChunkSection getStorage() {
 		return m_storage;
 	}
@@ -134,7 +133,11 @@ public class Cube {
 		int x = Coords.blockToLocal(pos.getX());
 		int y = Coords.blockToLocal(pos.getY());
 		int z = Coords.blockToLocal(pos.getZ());
-		return m_storage.getBlockStateAt(x, y, z);
+		return getBlockState(x, y, z);
+	}
+	
+	public IBlockState getBlockState(int localX, int localY, int localZ) {
+		return m_storage.getBlockStateAt(localX, localY, localZ);
 	}
 	
 	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
@@ -184,17 +187,6 @@ public class Cube {
 			}
 		}
 		
-        if (v7 instanceof IBlockEntityProvider) {
-            BlockEntity v13 = this.getBlockEntityAt(a1, ChunkEntityCreationType.CHECK);
-            if (v13 == null) {
-                v13 = ((IBlockEntityProvider)v7).getBlockEntity(this.world, v7.getMetadataForBlockState(a2));
-                this.world.a(a1, v13);
-            }
-            if (v13 != null) {
-                v13.updateContainingBlockInfo();
-            }
-        }
-		
 		if (!m_world.isClient && newBlock != oldBlock) {
 			// on the server, tell the block it was added
 			newBlock.onSet(m_world, pos, newBlockState);
@@ -205,7 +197,7 @@ public class Cube {
 			BlockEntity blockEntity = getBlockEntity(pos, ChunkEntityCreationType.CHECK);
 			if (blockEntity == null) {
 				blockEntity = ((IBlockEntityProvider)newBlock).getBlockEntity(m_world, newBlock.getMetadataForBlockState(newBlockState));
-				m_world.a(pos, blockEntity); // TODO: get updated mappings: setBlockEntity()
+				m_world.setBlockEntity(pos, blockEntity);
 			}
 			if (blockEntity != null) {
 				blockEntity.updateContainingBlockInfo();
@@ -215,22 +207,13 @@ public class Cube {
 		return oldBlockState;
 	}
 	
-	public boolean setBlockForGeneration(int x, int y, int z, Block block) {
-		return setBlockForGeneration(x, y, z, block, 0);
-	}
-	
-	public boolean setBlockForGeneration(int x, int y, int z, Block block, int meta) {
+	public IBlockState setBlockForGeneration(BlockPos pos, IBlockState newBlockState) {
 		
-		// null blocks are really air
-		if (block == null) {
-			block = Blocks.air;
-		}
+		IBlockState oldBlockState = getBlockState(pos);
 		
 		// did anything actually change?
-		Block oldBlock = getBlock(x, y, z);
-		int oldMeta = getBlockMetadata(x, y, z);
-		if (oldBlock == block && oldMeta == meta) {
-			return false;
+		if (newBlockState == oldBlockState) {
+			return null;
 		}
 		
 		// make sure we're not empty
@@ -238,23 +221,26 @@ public class Cube {
 			setEmpty(false);
 		}
 		
+		int x = Coords.blockToLocal(pos.getX());
+		int y = Coords.blockToLocal(pos.getY());
+		int z = Coords.blockToLocal(pos.getZ());
+
 		// set the block
-		m_storage.func_150818_a(x, y, z, block);
+		m_storage.setBlockStateAt(x, y, z, newBlockState);
+		
+		Block newBlock = newBlockState.getBlock();
 		
 		// did the block change work correctly?
-		if (m_storage.func_150819_a(x, y, z) != block) {
-			return false;
+		if (m_storage.getBlockAt(x, y, z) != newBlock) {
+			return null;
 		}
 		m_isModified = true;
 		
-		// set the meta
-		m_storage.setExtBlockMetadata(x, y, z, meta);
-		
 		// update the column light index
 		int blockY = Coords.localToBlock(m_y, y);
-		m_column.getLightIndex().setOpacity(x, blockY, z, block.getLightOpacity());
+		m_column.getLightIndex().setOpacity(x, blockY, z, newBlock.getOpacity());
 		
-		return true;
+		return oldBlockState;
 	}
 	
 	public boolean hasBlocks() {
@@ -265,11 +251,12 @@ public class Cube {
 		return !m_storage.isSectionEmpty();
 	}
 	
-	public Iterable<TileEntity> tileEntities() {
+	public Iterable<BlockEntity> blockEntities() {
 		return m_blockEntities.values();
 	}
 	
 	public void addEntity(Entity entity) {
+		
 		// make sure the entity is in this cube
 		int cubeX = Coords.getCubeXForEntity(entity);
 		int cubeY = Coords.getCubeYForEntity(entity);
@@ -280,9 +267,9 @@ public class Cube {
 		
 		// tell the entity it's in this cube
 		entity.addedToChunk = true;
-		entity.chunkCoordX = m_x;
-		entity.chunkCoordY = m_y;
-		entity.chunkCoordZ = m_z;
+		entity.chunkX = m_x;
+		entity.chunkY = m_y;
+		entity.chunkZ = m_z;
 		
 		m_entities.add(entity);
 		m_isModified = true;
@@ -294,7 +281,12 @@ public class Cube {
 			entity.addedToChunk = false;
 			m_isModified = true;
 		} else {
-			log.warn(String.format("%s Tried to remove entity %s from cube (%d,%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)", m_world.isClient ? "CLIENT" : "SERVER", entity.getClass().getName(), m_x, m_y, m_z, entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ));
+			log.warn(String.format("%s Tried to remove entity %s from cube (%d,%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
+				m_world.isClient ? "CLIENT" : "SERVER",
+				entity.getClass().getName(),
+				m_x, m_y, m_z,
+				entity.chunkX, entity.chunkY, entity.chunkZ
+			));
 		}
 		return wasRemoved;
 	}
@@ -303,12 +295,12 @@ public class Cube {
 		return m_entities.entities();
 	}
 	
-	public void getEntities(List<Entity> out, Class<?> c, AxisAlignedBB queryBox, IEntitySelector selector) {
-		m_entities.getEntities(out, c, queryBox, selector);
+	public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
+		m_entities.findEntitiesExcept(excludedEntity, queryBox, out, predicate);
 	}
 	
-	public void getEntitiesExcept(List<Entity> out, Entity excludedEntity, AxisAlignedBB queryBox, IEntitySelector selector) {
-		m_entities.getEntitiesExcept(out, excludedEntity, queryBox, selector);
+	public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
+		m_entities.findEntities(entityType, queryBox, out, predicate);
 	}
 	
 	public void getMigratedEntities(List<Entity> out) {
@@ -322,111 +314,134 @@ public class Cube {
 		}
 	}
 	
-	public TileEntity getTileEntity(int x, int y, int z) {
-		TileEntity tileEntity = m_blockEntities.get(x, y, z);
-		
-		if (tileEntity == null) {
+	public BlockEntity getBlockEntity(BlockPos pos, ChunkEntityCreationType creationType) {
+        
+		BlockEntity blockEntity = m_blockEntities.get(pos);
+		if (blockEntity == null) {
+			
+			if (creationType == ChunkEntityCreationType.IMMEDIATE) {
+				blockEntity = createBlockEntity(pos);
+				m_world.setBlockEntity(pos, blockEntity);
+			} else if (creationType == ChunkEntityCreationType.IMMEDIATE) {
+				throw new Error("TODO: implement block entity creation queue!");
+			}
+			
 			// is this block not supposed to have a tile entity?
-			Block block = getBlock(x, y, z);
-			if (!block.hasTileEntity()) {
+			IBlockState blockState = getBlockState(pos);
+			Block block = blockState.getBlock();
+			int meta = block.getMetadataForBlockState(blockState);
+			
+			if (!block.hasBlockEntity()) {
 				return null;
 			}
 			
 			// make a new tile entity for the block
-			tileEntity = ((ITileEntityProvider)block).createNewTileEntity(m_world, getBlockMetadata(x, y, z));
-			int blockX = Coords.localToBlock(m_x, x);
-			int blockY = Coords.localToBlock(m_y, y);
-			int blockZ = Coords.localToBlock(m_z, z);
-			m_world.setTileEntity(blockX, blockY, blockZ, tileEntity);
+			blockEntity = ((IBlockEntityProvider)block).getBlockEntity(m_world, meta);
+			m_world.setBlockEntity(pos, blockEntity);
+			
+		} else if (blockEntity.isInvalid()) {
+			
+			// remove the tile entity
+			m_blockEntities.remove(pos);
+			blockEntity = null;
 		}
 		
-		if (tileEntity != null && tileEntity.isInvalid()) {
-			// remove the tile entity
-			m_blockEntities.remove(x, y, z);
-			return null;
-		} else {
-			return tileEntity;
-		}
+		return blockEntity;
 	}
 	
-	public void addTileEntity(int x, int y, int z, TileEntity tileEntity) {
+	private BlockEntity createBlockEntity(BlockPos pos) {
+		
+		IBlockState blockState = getBlockState(pos);
+		Block block = blockState.getBlock();
+		int meta = block.getMetadataForBlockState(blockState);
+		
+		if (block.hasBlockEntity()) {
+			return ((IBlockEntityProvider)block).getBlockEntity(m_world, meta);
+		}
+		return null;
+	}
+
+	public void addBlockEntity(BlockPos pos, BlockEntity blockEntity) {
+		
 		// update the tile entity
-		int blockX = Coords.localToBlock(m_x, x);
-		int blockY = Coords.localToBlock(m_y, y);
-		int blockZ = Coords.localToBlock(m_z, z);
-		tileEntity.setWorldObj(m_world);
-		tileEntity.field_145851_c = blockX;
-		tileEntity.field_145848_d = blockY;
-		tileEntity.field_145849_e = blockZ;
+		blockEntity.setLevel(m_world);
+		blockEntity.setPosition(pos);
 		
 		// is this block supposed to have a tile entity?
-		if (getBlock(x, y, z) instanceof ITileEntityProvider) {
+		if (getBlockState(pos).getBlock() instanceof IBlockEntityProvider) {
+			
 			// cleanup the old tile entity
-			TileEntity oldTileEntity = m_blockEntities.get(x, y, z);
-			if (oldTileEntity != null) {
-				oldTileEntity.invalidate();
+			BlockEntity oldBlockEntity = m_blockEntities.get(pos);
+			if (oldBlockEntity != null) {
+				oldBlockEntity.setInvalid();
 			}
 			
 			// install the new tile entity
-			tileEntity.validate();
-			m_blockEntities.put(x, y, z, tileEntity);
+			blockEntity.setValid();
+			m_blockEntities.put(pos, blockEntity);
 			m_isModified = true;
 		}
 	}
 	
-	public void removeTileEntity(int x, int y, int z) {
-		TileEntity tileEntity = m_blockEntities.remove(x, y, z);
-		if (tileEntity != null) {
-			tileEntity.invalidate();
+	public void removeBlockEntity(BlockPos pos) {
+		BlockEntity blockEntity = m_blockEntities.remove(pos);
+		if (blockEntity != null) {
+			blockEntity.setInvalid();
 			m_isModified = true;
 		}
 	}
 	
 	public void onLoad() {
+		
 		// tell the world about entities
 		for (Entity entity : m_entities.entities()) {
 			entity.onChunkLoad();
 		}
-		m_world.addLoadedEntities(m_entities.entities());
+		
+		m_world.loadEntitiesInBulk(m_entities.entities());
 		
 		// tell the world about tile entities
-		m_world.func_147448_a(m_blockEntities.values());
+		m_world.addBlockEntities(m_blockEntities.values());
 	}
 	
 	public void onUnload() {
+		
 		// tell the world to forget about entities
-		m_world.unloadEntities(m_entities.entities());
+		m_world.unloadEntitiesInBulk(m_entities.entities());
 		
 		// tell the world to forget about tile entities
-		for (TileEntity tileEntity : m_blockEntities.values()) {
-			m_world.func_147457_a(tileEntity);
+		for (BlockEntity blockEntity : m_blockEntities.values()) {
+			m_world.removeBlockEntity(blockEntity.getBlockCoords());
 		}
 	}
 	
 	public boolean needsSaving() {
-		return m_entities.needsSaving(m_world.getTotalWorldTime()) || m_isModified;
+		return m_entities.needsSaving(m_world.getGameTime()) || m_isModified;
 	}
 	
 	public void markSaved() {
-		m_entities.markSaved(m_world.getTotalWorldTime());
+		m_entities.markSaved(m_world.getGameTime());
 		m_isModified = false;
 	}
 	
-	public boolean isUnderground(int localX, int localY, int localZ) {
-		Integer topNonTransparentBlockY = m_column.getLightIndex().getTopNonTransparentBlockY(localX, localZ);
+	public boolean isUnderground(BlockPos pos) {
+		int x = Coords.blockToLocal(pos.getX());
+		int z = Coords.blockToLocal(pos.getZ());
+		Integer topNonTransparentBlockY = m_column.getLightIndex().getTopNonTransparentBlockY(x, z);
 		if (topNonTransparentBlockY == null) {
 			return false;
 		}
-		return topNonTransparentBlockY >= Coords.localToBlock(m_y, localY);
+		return pos.getY() < topNonTransparentBlockY;
 	}
 	
-	public int getBlockLightValue(int localX, int localY, int localZ, int skylightSubtracted) {
+	public int getBrightestLight(BlockPos pos, int skyLightDampeningTerm) {
+		
 		// get sky light
-		int skyLight = getLightValue(EnumSkyBlock.Sky, localX, localY, localZ);
-		skyLight -= skylightSubtracted;
+		int skyLight = getLightValue(LightType.SKY, pos);
+		skyLight -= skyLightDampeningTerm;
 		
 		// get block light
-		int blockLight = getLightValue(EnumSkyBlock.Block, localX, localY, localZ);
+		int blockLight = getLightValue(LightType.BLOCK, pos);
 		
 		// FIGHT!!!
 		if (blockLight > skyLight) {
@@ -435,76 +450,93 @@ public class Cube {
 		return skyLight;
 	}
 	
-	public int getLightValue(EnumSkyBlock lightType, int localX, int localY, int localZ) {
+	public int getLightValue(LightType lightType, BlockPos pos) {
+		
+		int x = Coords.blockToLocal(pos.getX());
+		int y = Coords.blockToLocal(pos.getY());
+		int z = Coords.blockToLocal(pos.getZ());
+		
 		switch (lightType) {
-			case Sky:
-				if (!m_world.provider.hasNoSky) {
+			case SKY:
+				if (m_world.dimensionType.hasSky()) {
 					if (isEmpty()) {
-						if (isUnderground(localX, localY, localZ)) {
+						if (isUnderground(pos)) {
 							return 0;
 						} else {
 							return 15;
 						}
 					}
 					
-					return m_storage.getExtSkylightValue(localX, localY, localZ);
+					return m_storage.getSkyLightAtCoords(x, y, z);
 				} else {
 					return 0;
 				}
 				
-			case Block:
+			case BLOCK:
 				if (isEmpty()) {
 					return 0;
 				}
 				
-				return m_storage.getExtBlocklightValue(localX, localY, localZ);
+				return m_storage.getBlockLightAtCoords(x, y, z);
 				
 			default:
-				return lightType.defaultLightValue;
+				return lightType.defaultValue;
 		}
 	}
 	
-	public void setLightValue(EnumSkyBlock lightType, int x, int y, int z, int light) {
+	public void setLightValue(LightType lightType, BlockPos pos, int light) {
+		
 		// make sure we're not empty
 		if (isEmpty()) {
 			setEmpty(false);
 		}
 		
+		int x = Coords.blockToLocal(pos.getX());
+		int y = Coords.blockToLocal(pos.getY());
+		int z = Coords.blockToLocal(pos.getZ());
+		
 		switch (lightType) {
-			case Sky:
-				if (!m_world.provider.hasNoSky) {
-					m_storage.setExtSkylightValue(x, y, z, light);
+			case SKY:
+				if (m_world.dimensionType.hasSky()) {
+					m_storage.setSkyLightAtCoords(x, y, z, light);
 					m_isModified = true;
 				}
 			break;
 			
-			case Block:
-				m_storage.setExtBlocklightValue(x, y, z, light);
+			case BLOCK:
+				m_storage.setBlockLightAtCoords(x, y, z, light);
 				m_isModified = true;
 			break;
 		}
 	}
 	
 	public void doRandomTicks() {
-		if (isEmpty() || !m_storage.getNeedsRandomTick()) {
+		
+		if (isEmpty() || m_storage.isSectionEmpty()) {
 			return;
 		}
 		
 		// do three random ticks
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		for (int i = 0; i < 3; i++) {
+			
 			// get a random block
 			int index = m_world.rand.nextInt();
-			int localX = index & 15;
-			int localY = index >> 8 & 15;
-			int localZ = index >> 16 & 15;
-			Block block = m_storage.func_150819_a(localX, localY, localZ);
+			int x = index & 15;
+			int y = (index >> 8) & 15;
+			int z = (index >> 16) & 15;
 			
-			if (block.getTickRandomly()) {
+			IBlockState blockState = m_storage.getBlockStateAt(x, y, z);
+			Block block = blockState.getBlock();
+			
+			if (block.hasRandomTick()) {
 				// tick it
-				int blockX = Coords.localToBlock(m_x, localX);
-				int blockY = Coords.localToBlock(m_y, localY);
-				int blockZ = Coords.localToBlock(m_z, localZ);
-				block.updateTick(m_world, blockX, blockY, blockZ, m_world.rand);
+				pos.setBlockPos(
+					Coords.localToBlock(m_x, x),
+					Coords.localToBlock(m_y, y),
+					Coords.localToBlock(m_z, z)
+				);
+				block.onTick(m_world, pos, blockState, m_world.rand);
 			}
 		}
 	}

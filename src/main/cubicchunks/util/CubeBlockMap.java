@@ -26,6 +26,8 @@ package cubicchunks.util;
 
 import java.util.TreeMap;
 
+import net.minecraft.util.BlockPos;
+
 public class CubeBlockMap<T> extends TreeMap<Integer,T> {
 	
 	private static final long serialVersionUID = -356507892710221222L;
@@ -39,12 +41,33 @@ public class CubeBlockMap<T> extends TreeMap<Integer,T> {
 	private static final int YOffset = ZOffset + ZSize;
 	private static final int XOffset = YOffset + YSize;
 	
+	public T put(BlockPos pos, T val) {
+		int x = Coords.blockToLocal(pos.getX());
+		int y = Coords.blockToLocal(pos.getY());
+		int z = Coords.blockToLocal(pos.getZ());
+		return put(x, y, z, val);
+	}
+	
 	public T put(int x, int y, int z, T val) {
 		return put(getKey(x, y, z), val);
 	}
 	
+	public T get(BlockPos pos) {
+		int x = Coords.blockToLocal(pos.getX());
+		int y = Coords.blockToLocal(pos.getY());
+		int z = Coords.blockToLocal(pos.getZ());
+		return get(x, y, z);
+	}
+	
 	public T get(int x, int y, int z) {
 		return get(getKey(x, y, z));
+	}
+	
+	public T remove(BlockPos pos) {
+		int x = Coords.blockToLocal(pos.getX());
+		int y = Coords.blockToLocal(pos.getY());
+		int z = Coords.blockToLocal(pos.getZ());
+		return remove(x, y, z);
 	}
 	
 	public T remove(int x, int y, int z) {

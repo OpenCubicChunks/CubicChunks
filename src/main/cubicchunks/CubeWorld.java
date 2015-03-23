@@ -24,9 +24,21 @@
  ******************************************************************************/
 package cubicchunks;
 
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import cubicchunks.lighting.LightingManager;
+import cubicchunks.server.ServerCubeCache;
 
-public interface CubeWorld {
-	CubeCache getCubeProvider();
-	LightingManager getLightingManager();
+
+public class CubeWorld {
+	
+	public static ServerCubeCache getCubeCache(WorldServer worldServer) {
+		// TODO
+		return null;
+	}
+	
+	public static LightingManager getLightingManager(World world) {
+		// TODO
+		return null;
+	}
 }
