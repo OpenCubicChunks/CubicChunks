@@ -49,6 +49,10 @@ target
 ########
 *.bak
 
+# Libraries #
+#############
+/libs
+
 # System #
 ##########
 .DS_Store
