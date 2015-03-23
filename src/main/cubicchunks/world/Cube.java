@@ -27,15 +27,16 @@ package cubicchunks.world;
 import java.util.List;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.command.IEntitySelector;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.IBlockEntityProvider;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraft.world.chunk.Chunk.ChunkEntityCreationType;
+import net.minecraft.world.chunk.storage.ChunkSection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,9 +56,9 @@ public class Cube {
 	private int m_y;
 	private int m_z;
 	private boolean m_isModified;
-	private ExtendedBlockStorage m_storage;
+	private ChunkSection m_storage;
 	private EntityContainer m_entities;
-	private CubeBlockMap<TileEntity> m_tileEntities;
+	private CubeBlockMap<BlockEntity> m_blockEntities;
 	private GeneratorStage m_generatorStage;
 	
 	public Cube(World world, Column column, int x, int y, int z, boolean isModified) {
@@ -70,7 +71,7 @@ public class Cube {
 		
 		m_storage = null;
 		m_entities = new EntityContainer();
-		m_tileEntities = new CubeBlockMap<TileEntity>();
+		m_blockEntities = new CubeBlockMap<BlockEntity>();
 		m_generatorStage = null;
 	}
 	
@@ -82,7 +83,7 @@ public class Cube {
 		if (isEmpty) {
 			m_storage = null;
 		} else {
-			m_storage = new ExtendedBlockStorage(m_y << 4, !m_world.provider.hasNoSky);
+			m_storage = new ChunkSection(m_y << 4, m_world.dimensionType.hasSky());
 		}
 	}
 	
@@ -122,32 +123,26 @@ public class Cube {
 		return m_entities;
 	}
 	
-	public ExtendedBlockStorage getStorage() {
+	public ChunkSection getStorage() {
 		return m_storage;
 	}
 	
-	public Block getBlock(int x, int y, int z) {
+	public IBlockState getBlockState(BlockPos pos) {
 		if (isEmpty()) {
-			return Blocks.air;
+			return Blocks.AIR.getDefaultState();
 		}
-		
-		return m_storage.func_150819_a(x, y, z);
+		int x = Coords.blockToLocal(pos.getX());
+		int y = Coords.blockToLocal(pos.getY());
+		int z = Coords.blockToLocal(pos.getZ());
+		return m_storage.getBlockStateAt(x, y, z);
 	}
 	
-	public int getBlockMetadata(int x, int y, int z) {
-		if (isEmpty()) {
-			return 0;
-		}
+	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
 		
-		return m_storage.getMetadataArray().get(x, y, z);
-	}
-	
-	public boolean setBlock(int x, int y, int z, Block block, int meta) {
 		// did anything actually change?
-		Block oldBlock = getBlock(x, y, z);
-		int oldMeta = getBlockMetadata(x, y, z);
-		if (oldBlock == block && oldMeta == meta) {
-			return false;
+		IBlockState oldBlockState = getBlockState(pos);
+		if (newBlockState == oldBlockState) {
+			return null;
 		}
 		
 		// make sure we're not empty
@@ -155,89 +150,69 @@ public class Cube {
 			setEmpty(false);
 		}
 		
-		int blockX = Coords.localToBlock(m_x, x);
-		int blockY = Coords.localToBlock(m_y, y);
-		int blockZ = Coords.localToBlock(m_z, z);
-		
-		if (!m_world.isClient) {
-			// on the server, tell the block it's about to be broken
-			oldBlock.onBlockPreDestroy(m_world, blockX, blockY, blockZ, oldMeta);
-		}
-		
+		int x = Coords.blockToLocal(pos.getX());
+		int y = Coords.blockToLocal(pos.getY());
+		int z = Coords.blockToLocal(pos.getZ());
+
 		// set the block
-		m_storage.func_150818_a(x, y, z, block);
+		m_storage.setBlockStateAt(x, y, z, newBlockState);
 		
-		if (!m_world.isClient) {
-			// on the server, break the old block
-			oldBlock.breakBlock(m_world, blockX, blockY, blockZ, oldBlock, oldMeta);
-		} else if (oldBlock instanceof ITileEntityProvider && oldBlock != block) {
-			// on the client, remove the tile entity
-			m_world.removeTileEntity(blockX, blockY, blockZ);
+		Block newBlock = newBlockState.getBlock();
+		Block oldBlock = oldBlockState.getBlock();
+		
+		if (newBlock != oldBlock) {
+			if (!m_world.isClient) {
+				// on the server, break the old block
+				oldBlock.onRemoved(m_world, pos, oldBlockState);
+			} else if (oldBlock instanceof IBlockEntityProvider) {
+				// on the client, remove the tile entity
+				m_world.removeBlockEntity(pos);
+			}
 		}
 		
 		// did the block change work correctly?
-		if (m_storage.func_150819_a(x, y, z) != block) {
-			return false;
+		if (m_storage.getBlockAt(x, y, z) != newBlock) {
+			return null;
 		}
 		m_isModified = true;
 		
-		// set the meta
-		m_storage.setExtBlockMetadata(x, y, z, meta);
-		
-		if (oldBlock instanceof ITileEntityProvider) {
+		if (oldBlock instanceof IBlockEntityProvider) {
 			// update tile entity
-			TileEntity tileEntity = getTileEntity(x, y, z);
-			if (tileEntity != null) {
-				tileEntity.updateContainingBlockInfo();
+			BlockEntity blockEntity = getBlockEntity(pos, ChunkEntityCreationType.CHECK);
+			if (blockEntity != null) {
+				blockEntity.updateContainingBlockInfo();
 			}
 		}
 		
-		if (!m_world.isClient) {
+        if (v7 instanceof IBlockEntityProvider) {
+            BlockEntity v13 = this.getBlockEntityAt(a1, ChunkEntityCreationType.CHECK);
+            if (v13 == null) {
+                v13 = ((IBlockEntityProvider)v7).getBlockEntity(this.world, v7.getMetadataForBlockState(a2));
+                this.world.a(a1, v13);
+            }
+            if (v13 != null) {
+                v13.updateContainingBlockInfo();
+            }
+        }
+		
+		if (!m_world.isClient && newBlock != oldBlock) {
 			// on the server, tell the block it was added
-			block.onBlockAdded(m_world, blockX, blockY, blockZ);
+			newBlock.onSet(m_world, pos, newBlockState);
 		}
 		
-		if (block instanceof ITileEntityProvider) {
+		if (newBlock instanceof IBlockEntityProvider) {
 			// make sure the tile entity is good
-			TileEntity tileEntity = getTileEntity(x, y, z);
-			if (tileEntity == null) {
-				tileEntity = ((ITileEntityProvider)block).createNewTileEntity(m_world, meta);
-				m_world.setTileEntity(blockX, blockY, blockZ, tileEntity);
+			BlockEntity blockEntity = getBlockEntity(pos, ChunkEntityCreationType.CHECK);
+			if (blockEntity == null) {
+				blockEntity = ((IBlockEntityProvider)newBlock).getBlockEntity(m_world, newBlock.getMetadataForBlockState(newBlockState));
+				m_world.a(pos, blockEntity); // TODO: get updated mappings: setBlockEntity()
 			}
-			if (tileEntity != null) {
-				tileEntity.updateContainingBlockInfo();
-			}
-		}
-		
-		return true;
-	}
-	
-	public boolean setBlockMetadata(int x, int y, int z, int meta) {
-		// did anything even change
-		int oldMeta = getBlockMetadata(x, y, z);
-		if (meta == oldMeta) {
-			return false;
-		}
-		
-		// make sure we're not empty
-		if (isEmpty()) {
-			setEmpty(false);
-		}
-		
-		// change the metadata
-		m_storage.setExtBlockMetadata(x, y, z, meta);
-		m_isModified = true;
-		
-		// notify any tile entities of the change
-		if (getBlock(x, y, z) instanceof ITileEntityProvider) {
-			TileEntity tileEntity = getTileEntity(x, y, z);
-			if (tileEntity != null) {
-				tileEntity.updateContainingBlockInfo();
-				tileEntity.blockMetadata = meta;
+			if (blockEntity != null) {
+				blockEntity.updateContainingBlockInfo();
 			}
 		}
 		
-		return true;
+		return oldBlockState;
 	}
 	
 	public boolean setBlockForGeneration(int x, int y, int z, Block block) {
@@ -245,6 +220,7 @@ public class Cube {
 	}
 	
 	public boolean setBlockForGeneration(int x, int y, int z, Block block, int meta) {
+		
 		// null blocks are really air
 		if (block == null) {
 			block = Blocks.air;
@@ -286,11 +262,11 @@ public class Cube {
 			return false;
 		}
 		
-		return !m_storage.isEmpty();
+		return !m_storage.isSectionEmpty();
 	}
 	
 	public Iterable<TileEntity> tileEntities() {
-		return m_tileEntities.values();
+		return m_blockEntities.values();
 	}
 	
 	public void addEntity(Entity entity) {
@@ -347,7 +323,7 @@ public class Cube {
 	}
 	
 	public TileEntity getTileEntity(int x, int y, int z) {
-		TileEntity tileEntity = m_tileEntities.get(x, y, z);
+		TileEntity tileEntity = m_blockEntities.get(x, y, z);
 		
 		if (tileEntity == null) {
 			// is this block not supposed to have a tile entity?
@@ -366,7 +342,7 @@ public class Cube {
 		
 		if (tileEntity != null && tileEntity.isInvalid()) {
 			// remove the tile entity
-			m_tileEntities.remove(x, y, z);
+			m_blockEntities.remove(x, y, z);
 			return null;
 		} else {
 			return tileEntity;
@@ -386,20 +362,20 @@ public class Cube {
 		// is this block supposed to have a tile entity?
 		if (getBlock(x, y, z) instanceof ITileEntityProvider) {
 			// cleanup the old tile entity
-			TileEntity oldTileEntity = m_tileEntities.get(x, y, z);
+			TileEntity oldTileEntity = m_blockEntities.get(x, y, z);
 			if (oldTileEntity != null) {
 				oldTileEntity.invalidate();
 			}
 			
 			// install the new tile entity
 			tileEntity.validate();
-			m_tileEntities.put(x, y, z, tileEntity);
+			m_blockEntities.put(x, y, z, tileEntity);
 			m_isModified = true;
 		}
 	}
 	
 	public void removeTileEntity(int x, int y, int z) {
-		TileEntity tileEntity = m_tileEntities.remove(x, y, z);
+		TileEntity tileEntity = m_blockEntities.remove(x, y, z);
 		if (tileEntity != null) {
 			tileEntity.invalidate();
 			m_isModified = true;
@@ -414,7 +390,7 @@ public class Cube {
 		m_world.addLoadedEntities(m_entities.entities());
 		
 		// tell the world about tile entities
-		m_world.func_147448_a(m_tileEntities.values());
+		m_world.func_147448_a(m_blockEntities.values());
 	}
 	
 	public void onUnload() {
@@ -422,7 +398,7 @@ public class Cube {
 		m_world.unloadEntities(m_entities.entities());
 		
 		// tell the world to forget about tile entities
-		for (TileEntity tileEntity : m_tileEntities.values()) {
+		for (TileEntity tileEntity : m_blockEntities.values()) {
 			m_world.func_147457_a(tileEntity);
 		}
 	}

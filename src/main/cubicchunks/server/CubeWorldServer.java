@@ -41,7 +41,7 @@ import net.minecraft.world.storage.ISaveHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
 import cubicchunks.CubeWorld;
 import cubicchunks.CubeWorldProvider;
@@ -72,7 +72,7 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 	@Override
 	protected IChunkProvider createChunkProvider() {
 		// create the cube provider
-		CubeProviderServer provider = new CubeProviderServer(this);
+		ServerCubeCache provider = new ServerCubeCache(this);
 		
 		// tell World and WorldServer about it
 		chunkProvider = provider;
@@ -86,8 +86,8 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 	}
 	
 	@Override
-	public CubeProviderServer getCubeProvider() {
-		return (CubeProviderServer)chunkProvider;
+	public ServerCubeCache getCubeProvider() {
+		return (ServerCubeCache)chunkProvider;
 	}
 	
 	public CubeWorldProvider getCubeWorldProvider() {
@@ -132,7 +132,7 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 	
 	@Override
 	public boolean checkChunksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ) {
-		return CubeProviderTools.blocksExist((CubeProvider)chunkProvider, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
+		return CubeProviderTools.blocksExist((CubeCache)chunkProvider, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
 	}
 	
 	@Override
@@ -189,7 +189,7 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 		int spawnCubeY = Coords.blockToCube(getCubeWorldProvider().getSeaLevel());
 		int spawnCubeZ = Coords.blockToCube(spawnBlockZ);
 		final int SearchDistance = 4;
-		CubeProviderServer cubeProvider = getCubeProvider();
+		ServerCubeCache cubeProvider = getCubeProvider();
 		for (int cubeX = spawnCubeX - SearchDistance; cubeX <= spawnCubeX + SearchDistance; cubeX++) {
 			for (int cubeY = spawnCubeY - SearchDistance; cubeY <= spawnCubeY + SearchDistance; cubeY++) {
 				for (int cubeZ = spawnCubeZ - SearchDistance; cubeZ <= spawnCubeZ + SearchDistance; cubeZ++) {

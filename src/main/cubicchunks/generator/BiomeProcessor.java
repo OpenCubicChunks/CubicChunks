@@ -26,7 +26,7 @@ package cubicchunks.generator;
 
 import java.util.Random;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
 import cubicchunks.CubeWorld;
 import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
@@ -65,7 +65,7 @@ public class BiomeProcessor extends CubeProcessor {
 	@Override
 	public boolean calculate(Cube cube) {
 		// only continue if the neighboring cubes exist
-		CubeProvider provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
+		CubeCache provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
 		if (!CubeProviderTools.cubeAndNeighborsExist(provider, cube.getX(), cube.getY(), cube.getZ())) {
 			return false;
 		}

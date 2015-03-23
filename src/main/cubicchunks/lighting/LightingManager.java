@@ -30,7 +30,7 @@ import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.util.Bits;
 import cubicchunks.world.Column;
 
@@ -46,7 +46,7 @@ public class LightingManager {
 	private DiffuseLightingCalculator m_diffuseLightingCalculator;
 	private SkyLightUpdateCalculator m_skyLightUpdateCalculator;
 	
-	public LightingManager(World world, CubeProvider provider) {
+	public LightingManager(World world, CubeCache provider) {
 		m_world = world;
 		
 		m_skyLightOcclusionProcessor = new SkyLightOcclusionProcessor("Sky Light Occlusion", provider, 50);

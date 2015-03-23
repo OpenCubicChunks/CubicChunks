@@ -24,7 +24,7 @@
  ******************************************************************************/
 package cubicchunks.generator;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.generator.features.CubicCaveGen;
 import cubicchunks.generator.features.CubicRavineGen;
 import cubicchunks.util.CubeProcessor;
@@ -46,7 +46,7 @@ public class FeatureProcessor extends CubeProcessor {
 	
 	private World worldObj;
 	
-	public FeatureProcessor(String name, CubeProvider provider, int batchSize) {
+	public FeatureProcessor(String name, CubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 		
 		caveGenerator = new CubicCaveGen();

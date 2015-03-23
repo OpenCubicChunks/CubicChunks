@@ -31,7 +31,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Lists;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.util.QueueProcessor;
@@ -43,10 +43,10 @@ public class GeneratorPipeline {
 	
 	private static final int TickBudget = 40; // ms. There are only 50 ms per tick
 	
-	private CubeProvider m_provider;
+	private CubeCache m_provider;
 	private List<QueueProcessor> m_processors;
 	
-	public GeneratorPipeline(CubeProvider provider) {
+	public GeneratorPipeline(CubeCache provider) {
 		m_provider = provider;
 		m_processors = Lists.newArrayList();
 		

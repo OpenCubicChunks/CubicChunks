@@ -181,7 +181,7 @@ public class CubePlayerManager extends PlayerManager {
 			// cleanup empty watchers and cubes
 			if (!watcher.hasPlayers()) {
 				m_watchers.remove(address);
-				getCubeProvider().unloadCubeIfNotNearSpawn(watcher.getCube());
+				getCubeProvider().unloadCube(watcher.getCube());
 			}
 		}
 		
@@ -283,7 +283,7 @@ public class CubePlayerManager extends PlayerManager {
 			// cleanup empty watchers and cubes
 			if (!watcher.hasPlayers()) {
 				m_watchers.remove(address);
-				getCubeProvider().unloadCubeIfNotNearSpawn(watcher.getCube());
+				getCubeProvider().unloadCube(watcher.getCube());
 			}
 		}
 	}
@@ -399,8 +399,8 @@ public class CubePlayerManager extends PlayerManager {
 		return info.cubeSelector.getVisibleCubes();
 	}
 	
-	private CubeProviderServer getCubeProvider() {
-		return (CubeProviderServer)m_worldServer.theChunkProviderServer;
+	private ServerCubeCache getCubeProvider() {
+		return (ServerCubeCache)m_worldServer.theChunkProviderServer;
 	}
 	
 	private CubeWatcher getWatcher(int cubeX, int cubeY, int cubeZ) {

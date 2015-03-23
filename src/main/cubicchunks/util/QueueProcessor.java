@@ -28,19 +28,19 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 
 public abstract class QueueProcessor {
 	
 	protected String m_name;
-	protected CubeProvider m_provider;
+	protected CubeCache m_provider;
 	private int m_batchSize;
 	private BatchedSetQueue<Long> m_queue;
 	protected List<Long> m_incomingAddresses;
 	protected List<Long> m_processedAddresses;
 	protected List<Long> m_deferredAddresses;
 	
-	public QueueProcessor(String name, CubeProvider provider, int batchSize) {
+	public QueueProcessor(String name, CubeCache provider, int batchSize) {
 		m_name = name;
 		m_provider = provider;
 		m_batchSize = batchSize;

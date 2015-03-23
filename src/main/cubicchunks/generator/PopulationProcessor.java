@@ -24,13 +24,13 @@
  ******************************************************************************/
 package cubicchunks.generator;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
 
 public class PopulationProcessor extends CubeProcessor {
 	
-	public PopulationProcessor(String name, CubeProvider provider, int batchSize) {
+	public PopulationProcessor(String name, CubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 	}
 	

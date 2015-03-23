@@ -24,7 +24,7 @@
  ******************************************************************************/
 package cubicchunks.lighting;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
 import cubicchunks.CubeWorld;
 import cubicchunks.util.Coords;
@@ -35,14 +35,14 @@ import net.minecraft.world.EnumSkyBlock;
 
 public class FirstLightProcessor extends CubeProcessor {
 	
-	public FirstLightProcessor(String name, CubeProvider provider, int batchSize) {
+	public FirstLightProcessor(String name, CubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 	}
 	
 	@Override
 	public boolean calculate(Cube cube) {
 		// only light if the neighboring cubes exist
-		CubeProvider provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
+		CubeCache provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
 		if (!CubeProviderTools.cubeAndNeighborsExist(provider, cube.getX(), cube.getY(), cube.getZ())) {
 			return false;
 		}

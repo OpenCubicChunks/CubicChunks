@@ -24,13 +24,13 @@
  ******************************************************************************/
 package cubicchunks.util;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.world.BlankColumn;
 import cubicchunks.world.Column;
 
 public abstract class ColumnProcessor extends QueueProcessor {
 	
-	public ColumnProcessor(String name, CubeProvider provider, int batchSize) {
+	public ColumnProcessor(String name, CubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 	}
 	

@@ -25,9 +25,8 @@
 package cubicchunks;
 
 import cubicchunks.world.Cube;
-import net.minecraft.world.IChunkProvider;
 
-public interface CubeProvider extends IChunkProvider {
+public interface CubeCache {
 	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
-	Cube provideCube(int cubeX, int cubeY, int cubeZ);
+	Cube getCube(int cubeX, int cubeY, int cubeZ);
 }

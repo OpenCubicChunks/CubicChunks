@@ -27,14 +27,14 @@ package cubicchunks.util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.world.Cube;
 
 public abstract class CubeProcessor extends QueueProcessor {
 	
 	private static final Logger log = LogManager.getLogger();
 	
-	public CubeProcessor(String name, CubeProvider provider, int batchSize) {
+	public CubeProcessor(String name, CubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 	}
 	

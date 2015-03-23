@@ -24,7 +24,7 @@
  ******************************************************************************/
 package cubicchunks.client;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.accessors.ChunkProviderClientAccessor;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.world.BlankColumn;
@@ -35,7 +35,7 @@ import net.minecraft.util.LongHashMap;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 
-public class CubeProviderClient extends ChunkProviderClient implements CubeProvider {
+public class CubeProviderClient extends ChunkProviderClient implements CubeCache {
 	
 	private World m_world;
 	private BlankColumn m_blankColumn;

@@ -24,56 +24,30 @@
  ******************************************************************************/
 package cubicchunks.server;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.NextTickListEntry;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.minecraft.world.storage.ISaveHandler;
+import net.minecraft.nbt.NbtTagCompound;
+import net.minecraft.world.Dimension;
 import net.minecraft.world.storage.IThreadedFileIO;
-import net.minecraft.world.storage.ThreadedFileIOBase;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
-import cubicchunks.accessors.WorldServerAccessor;
-import cubicchunks.generator.GeneratorStage;
-import cubicchunks.util.AddressTools;
 import cubicchunks.util.ConcurrentBatchedQueue;
-import cubicchunks.util.Coords;
-import cubicchunks.world.Column;
-import cubicchunks.world.Cube;
-import cubicchunks.world.EntityActionListener;
 
-public class CubeLoader implements IThreadedFileIO {
+public class CubeIO implements IThreadedFileIO {
 	
 	private static final Logger log = LogManager.getLogger();
 	
 	private static class SaveEntry {
 		
 		private long address;
-		private NBTTagCompound nbt;
+		private NbtTagCompound nbt;
 		
-		public SaveEntry(long address, NBTTagCompound nbt) {
+		public SaveEntry(long address, NbtTagCompound nbt) {
 			this.address = address;
 			this.nbt = nbt;
 		}
@@ -85,13 +59,15 @@ public class CubeLoader implements IThreadedFileIO {
 	private ConcurrentBatchedQueue<SaveEntry> m_columnsToSave;
 	private ConcurrentBatchedQueue<SaveEntry> m_cubesToSave;
 	
-	public CubeLoader(ISaveHandler saveHandler) {
+	public CubeIO(File saveFile, Dimension dimension) {
+		
 		// init database connection
-		File file = new File(saveHandler.getWorldDirectory(), "chunks.db");
+		File file = new File(saveFile, String.format("cubes.dim%d.db", dimension.getId()));
+		
 		file.getParentFile().mkdirs();
 		m_db = DBMaker.newFileDB(file).closeOnJvmShutdown()
 		// .compressionEnable()
-				.make();
+			.make();
 		
 		// NOTE: could set different cache settings
 		// the default is a hash map cache with 32768 entries
@@ -105,6 +81,7 @@ public class CubeLoader implements IThreadedFileIO {
 		m_cubesToSave = new ConcurrentBatchedQueue<SaveEntry>();
 	}
 	
+	/* TODO
 	public boolean columnExists(long address) {
 		return m_columns.containsKey(address);
 	}
@@ -120,7 +97,7 @@ public class CubeLoader implements IThreadedFileIO {
 		
 		// read the NBT
 		DataInputStream in = new DataInputStream(new ByteArrayInputStream(data));
-		NBTTagCompound nbt = CompressedStreamTools.readCompressed(in);
+		NbtTagCompound nbt = CompressedStreamTools.readCompressed(in);
 		in.close();
 		
 		// restore the column
@@ -140,7 +117,7 @@ public class CubeLoader implements IThreadedFileIO {
 		
 		// read the NBT
 		DataInputStream in = new DataInputStream(new ByteArrayInputStream(data));
-		NBTTagCompound nbt = CompressedStreamTools.readCompressed(in);
+		NbtTagCompound nbt = CompressedStreamTools.readCompressed(in);
 		in.close();
 		
 		// restore the cube
@@ -173,9 +150,12 @@ public class CubeLoader implements IThreadedFileIO {
 		// signal the IO thread to process the save queue
 		ThreadedFileIOBase.threadedIOInstance.queueIO(this);
 	}
+	*/
 	
 	@Override
-	public boolean writeNextIO() {
+	public boolean tryWrite() {
+		return false;
+		/* TODO
 		// NOTE: return true to redo this call (used for batching)
 		
 		final int ColumnsBatchSize = 25;
@@ -233,9 +213,11 @@ public class CubeLoader implements IThreadedFileIO {
 		log.info(String.format("Wrote %d columns (%d remaining) (%dk) and %d cubes (%d remaining) (%dk) in %d ms", numColumnsSaved, numColumnsRemaining, numColumnBytesSaved / 1024, numCubesSaved, numCubesRemaining, numCubeBytesSaved / 1024, diff));
 		
 		return hasMoreColumns || hasMoreCubes;
+		*/
 	}
 	
-	private byte[] writeNbtBytes(NBTTagCompound nbt) throws IOException {
+	/* TODO
+	private byte[] writeNbtBytes(NbtTagCompound nbt) throws IOException {
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
 		DataOutputStream out = new DataOutputStream(buf);
 		CompressedStreamTools.writeCompressed(nbt, out);
@@ -243,8 +225,8 @@ public class CubeLoader implements IThreadedFileIO {
 		return buf.toByteArray();
 	}
 	
-	private NBTTagCompound writeColumnToNbt(Column column) {
-		NBTTagCompound nbt = new NBTTagCompound();
+	private NbtTagCompound writeColumnToNbt(Column column) {
+		NbtTagCompound nbt = new NbtTagCompound();
 		
 		// coords
 		nbt.setInteger("x", column.xPosition);
@@ -267,7 +249,7 @@ public class CubeLoader implements IThreadedFileIO {
 		return nbt;
 	}
 	
-	private Column readColumnFromNBT(World world, final int x, final int z, NBTTagCompound nbt) {
+	private Column readColumnFromNBT(World world, final int x, final int z, NbtTagCompound nbt) {
 		// check the version number
 		byte version = nbt.getByte("v");
 		if (version != 1) {
@@ -311,8 +293,8 @@ public class CubeLoader implements IThreadedFileIO {
 		return column;
 	}
 	
-	private NBTTagCompound writeCubeToNbt(final Cube cube) {
-		NBTTagCompound nbt = new NBTTagCompound();
+	private NbtTagCompound writeCubeToNbt(final Cube cube) {
+		NbtTagCompound nbt = new NbtTagCompound();
 		nbt.setByte("v", (byte)1);
 		
 		// coords
@@ -359,7 +341,7 @@ public class CubeLoader implements IThreadedFileIO {
 		NBTTagList nbtTileEntities = new NBTTagList();
 		nbt.setTag("TileEntities", nbtTileEntities);
 		for (TileEntity tileEntity : cube.tileEntities()) {
-			NBTTagCompound nbtTileEntity = new NBTTagCompound();
+			NbtTagCompound nbtTileEntity = new NbtTagCompound();
 			tileEntity.writeToNBT(nbtTileEntity);
 			nbtTileEntities.appendTag(nbtTileEntity);
 		}
@@ -372,7 +354,7 @@ public class CubeLoader implements IThreadedFileIO {
 			NBTTagList nbtTicks = new NBTTagList();
 			nbt.setTag("TileTicks", nbtTicks);
 			for (NextTickListEntry scheduledTick : scheduledTicks) {
-				NBTTagCompound nbtScheduledTick = new NBTTagCompound();
+				NbtTagCompound nbtScheduledTick = new NbtTagCompound();
 				nbtScheduledTick.setInteger("i", Block.getIdFromBlock(scheduledTick.func_151351_a()));
 				nbtScheduledTick.setInteger("x", scheduledTick.xCoord);
 				nbtScheduledTick.setInteger("y", scheduledTick.yCoord);
@@ -386,7 +368,7 @@ public class CubeLoader implements IThreadedFileIO {
 		return nbt;
 	}
 	
-	private Cube readCubeFromNbtAndAddToColumn(World world, Column column, final int x, final int y, final int z, NBTTagCompound nbt) {
+	private Cube readCubeFromNbtAndAddToColumn(World world, Column column, final int x, final int y, final int z, NbtTagCompound nbt) {
 		// NBT types:
 		// 0 1 2 3 4 5 6 7 8 9 10 11
 		// "END", "BYTE", "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "BYTE[]", "STRING", "LIST", "COMPOUND", "INT[]"
@@ -464,7 +446,7 @@ public class CubeLoader implements IThreadedFileIO {
 		NBTTagList nbtTileEntities = nbt.getTagList("TileEntities", 10);
 		if (nbtTileEntities != null) {
 			for (int i = 0; i < nbtTileEntities.tagCount(); i++) {
-				NBTTagCompound nbtTileEntity = nbtTileEntities.getCompoundTagAt(i);
+				NbtTagCompound nbtTileEntity = nbtTileEntities.getCompoundTagAt(i);
 				TileEntity tileEntity = TileEntity.createAndLoadEntity(nbtTileEntity);
 				if (tileEntity != null) {
 					column.addTileEntity(tileEntity);
@@ -476,7 +458,7 @@ public class CubeLoader implements IThreadedFileIO {
 		NBTTagList nbtScheduledTicks = nbt.getTagList("TileTicks", 10);
 		if (nbtScheduledTicks != null) {
 			for (int i = 0; i < nbtScheduledTicks.tagCount(); i++) {
-				NBTTagCompound nbtScheduledTick = nbtScheduledTicks.getCompoundTagAt(i);
+				NbtTagCompound nbtScheduledTick = nbtScheduledTicks.getCompoundTagAt(i);
 				world.func_147446_b(nbtScheduledTick.getInteger("x"), nbtScheduledTick.getInteger("y"), nbtScheduledTick.getInteger("z"), Block.getBlockById(nbtScheduledTick.getInteger("i")), nbtScheduledTick.getInteger("t"), nbtScheduledTick.getInteger("p"));
 			}
 		}
@@ -515,4 +497,5 @@ public class CubeLoader implements IThreadedFileIO {
 			}
 		}
 	}
+	*/
 }

@@ -24,7 +24,7 @@
  ******************************************************************************/
 package cubicchunks.client;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
 import cubicchunks.CubeWorld;
 import cubicchunks.accessors.WorldClientAccessor;
@@ -57,8 +57,8 @@ public class CubeWorldClient extends WorldClient implements CubeWorld {
 	}
 	
 	@Override
-	public CubeProvider getCubeProvider() {
-		return (CubeProvider)chunkProvider;
+	public CubeCache getCubeProvider() {
+		return (CubeCache)chunkProvider;
 	}
 	
 	@Override
@@ -81,6 +81,6 @@ public class CubeWorldClient extends WorldClient implements CubeWorld {
 	
 	@Override
 	public boolean checkChunksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ) {
-		return CubeProviderTools.blocksExist((CubeProvider)chunkProvider, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
+		return CubeProviderTools.blocksExist((CubeCache)chunkProvider, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
 	}
 }

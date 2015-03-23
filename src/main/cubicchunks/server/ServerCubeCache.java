@@ -24,52 +24,48 @@
  ******************************************************************************/
 package cubicchunks.server;
 
-import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.IProgressUpdate;
-import net.minecraft.world.ChunkPosition;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.ChunkProviderServer;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraft.entity.CreatureTypes;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.IProgressBar;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.ServerChunkCache;
 
 import com.google.common.collect.Maps;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.generator.ColumnGenerator;
-import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.Coords;
 import cubicchunks.world.BlankColumn;
 import cubicchunks.world.Column;
 import cubicchunks.world.Cube;
 
-public class CubeProviderServer extends ChunkProviderServer implements CubeProvider {
-	
-	private static final Logger log = LogManager.getLogger();
+public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	
 	private static final int WorldSpawnChunkDistance = 12;
 	
-	private CubeWorldServer m_worldServer;
-	private CubeLoader m_loader;
+	private WorldServer m_worldServer;
+	private CubeIO m_io;
 	private ColumnGenerator m_columnGenerator;
 	private HashMap<Long,Column> m_loadedColumns;
 	private BlankColumn m_blankColumn;
 	private Deque<Long> m_cubesToUnload;
 	
-	public CubeProviderServer(CubeWorldServer world) {
-		super(world, null, null);
+	public ServerCubeCache(WorldServer worldServer) {
+		super(worldServer, null, null);
 		
-		m_worldServer = (CubeWorldServer)world;
-		m_loader = new CubeLoader(world.getSaveHandler());
-		m_columnGenerator = new ColumnGenerator(world);
+		m_worldServer = worldServer;
+		m_io = new CubeIO(worldServer.getSaveHandler().getSaveFile(), worldServer.dimensionType);
+		// TODO
+		//m_columnGenerator = new ColumnGenerator(worldServer);
 		m_loadedColumns = Maps.newHashMap();
-		m_blankColumn = new BlankColumn(world, 0, 0);
+		m_blankColumn = new BlankColumn(worldServer, 0, 0);
 		m_cubesToUnload = new ArrayDeque<Long>();
 	}
 	
@@ -95,11 +91,11 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	public Column loadChunk(int cubeX, int cubeZ) {
 		// in the tall worlds scheme, load and provide columns/chunks are semantically the same thing
 		// but load/provide cube do actually do different things
-		return provideChunk(cubeX, cubeZ);
+		return getChunk(cubeX, cubeZ);
 	}
 	
 	@Override
-	public Column provideChunk(int cubeX, int cubeZ) {
+	public Column getChunk(int cubeX, int cubeZ) {
 		// check for the column
 		Column column = m_loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
 		if (column != null) {
@@ -110,7 +106,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	@Override
-	public Cube provideCube(int cubeX, int cubeY, int cubeZ) {
+	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
 		// is the column loaded?
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
 		Column column = m_loadedColumns.get(columnAddress);
@@ -157,6 +153,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	public void loadCube(int cubeX, int cubeY, int cubeZ) {
+		
+		/* TODO
 		long cubeAddress = AddressTools.getAddress(cubeX, cubeY, cubeZ);
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
 		
@@ -167,7 +165,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		if (column == null) {
 			// try loading it
 			try {
-				column = m_loader.loadColumn(m_worldServer, cubeX, cubeZ);
+				column = m_io.loadColumn(m_worldServer, cubeX, cubeZ);
 			} catch (IOException ex) {
 				log.error(String.format("Unable to load column (%d,%d)", cubeX, cubeZ), ex);
 				return;
@@ -193,7 +191,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		
 		// try to load the cube
 		try {
-			cube = m_loader.loadCubeAndAddToColumn(m_worldServer, column, cubeAddress);
+			cube = m_io.loadCubeAndAddToColumn(m_worldServer, column, cubeAddress);
 		} catch (IOException ex) {
 			log.error(String.format("Unable to load cube (%d,%d,%d)", cubeX, cubeY, cubeZ), ex);
 			return;
@@ -225,20 +223,21 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 		
 		// init the cube
 		cube.onLoad();
+		*/
 	}
 	
 	@Override
-	public void unloadChunksIfNotNearSpawn(int cubeX, int cubeZ) {
+	public void unloadChunk(int cubeX, int cubeZ) {
 		throw new UnsupportedOperationException();
 	}
 	
-	public void unloadCubeIfNotNearSpawn(Cube cube) {
+	public void unloadCube(Cube cube) {
 		// NOTE: this is the main unload method for block data!
-		
-		unloadCubeIfNotNearSpawn(cube.getX(), cube.getY(), cube.getZ());
+		unloadCube(cube.getX(), cube.getY(), cube.getZ());
 	}
 	
-	public void unloadCubeIfNotNearSpawn(int cubeX, int cubeY, int cubeZ) {
+	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
+		
 		// don't unload cubes near the spawn
 		if (cubeIsNearSpawn(cubeX, cubeY, cubeZ)) {
 			return;
@@ -260,6 +259,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	
 	@Override
 	public boolean unloadQueuedChunks() {
+		
+		/* TODO
 		// NOTE: the return value is completely ignored
 		
 		// don't unload if we're saving
@@ -289,42 +290,46 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 				cube.onUnload();
 				
 				// save the cube
-				m_loader.saveCube(cube);
+				m_io.saveCube(cube);
 			}
 			
 			// unload empty columns
 			if (!column.hasCubes()) {
 				column.onChunkLoad();
 				m_loadedColumns.remove(columnAddress);
-				m_loader.saveColumn(column);
+				m_io.saveColumn(column);
 			}
 		}
+		*/
 		
 		return false;
 	}
 	
 	@Override
-	public boolean saveChunks(boolean alwaysTrue, IProgressUpdate progress) {
+	public boolean saveAllChunks(boolean alwaysTrue, IProgressBar progress) {
+		
+		/* TODO
 		for (Column column : m_loadedColumns.values()) {
 			// save the column
 			if (column.needsSaving(alwaysTrue)) {
-				m_loader.saveColumn(column);
+				m_io.saveColumn(column);
 			}
 			
 			// save the cubes
 			for (Cube cube : column.cubes()) {
 				if (cube.needsSaving()) {
-					m_loader.saveCube(cube);
+					m_io.saveCube(cube);
 				}
 			}
 		}
+		*/
 		
 		return true;
 	}
 	
 	@Override
-	public String makeString() {
-		return "CubeProviderServer: " + m_loadedColumns.size() + " columns, Unload: " + m_cubesToUnload.size() + " cubes";
+	public String getName() {
+		return "ServerCubeCache: " + m_loadedColumns.size() + " columns, Unload: " + m_cubesToUnload.size() + " cubes";
 	}
 	
 	@Override
@@ -333,41 +338,24 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 	}
 	
 	@Override
-	@SuppressWarnings("rawtypes")
-	public List getPossibleCreatures(EnumCreatureType creatureType, int blockX, int blockY, int blockZ) {
-		/*
-		 * UNDONE: ask one of the pipeline processors for these things CubeBiomeGenBase var5 = (CubeBiomeGenBase) m_world.getBiomeGenForCoords( cubeX, cubeZ ); return par1EnumCreatureType == EnumCreatureType.monster && m_scatteredFeatureGenerator.func_143030_a( cubeX, cubeY, cubeZ ) ? m_scatteredFeatureGenerator.getScatteredFeatureSpawnList() : var5.getSpawnableList( par1EnumCreatureType );
-		 */
+    public List<Biome.SpawnList> getSpawnableAtPos(final CreatureTypes a1, final BlockPos a2) {
 		return null;
-	}
-	
-	@Override
-	public ChunkPosition func_147416_a(World world, String structureType, int blockX, int blockY, int blockZ) {
-		/*
-		 * UNDONE: ask the one of the pipeline processors for these things if( "Stronghold".equals( structureType ) && m_strongholdGenerator != null ) { return m_strongholdGenerator.func_151545_a( world, blockX, blockY, blockZ ); }
-		 */
-		return null;
-	}
-	
-	public void recreateStructures(int cubeX, int cubeY, int cubeZ) {
-		/*
-		 * UNDONE: ask the one of the pipeline processors to do this if( m_mapFeaturesEnabled ) { m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null ); m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null ); m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null ); m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeY, (Block[])null ); }
-		 */
 	}
 	
 	private boolean cubeIsNearSpawn(int cubeX, int cubeY, int cubeZ) {
-		if (!m_worldServer.provider.canRespawnHere()) {
+		
+		if (!m_worldServer.dimensionType.canRespawnHere()) {
 			// no spawn points
 			return false;
 		}
 		
-		long address = m_worldServer.getSpawnPointCubeAddress();
-		int spawnX = AddressTools.getX(address);
-		int spawnY = AddressTools.getY(address);
-		int spawnZ = AddressTools.getZ(address);
-		int dx = Math.abs(spawnX - cubeX);
-		int dy = Math.abs(spawnY - cubeY);
-		int dz = Math.abs(spawnZ - cubeZ);
+		BlockPos spawnPoint = m_worldServer.getSpawnPoint();
+		int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
+		int spawnCubeY = Coords.blockToCube(spawnPoint.getY());
+		int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
+		int dx = Math.abs(spawnCubeX - cubeX);
+		int dy = Math.abs(spawnCubeY - cubeY);
+		int dz = Math.abs(spawnCubeZ - cubeZ);
 		return dx <= WorldSpawnChunkDistance && dy <= WorldSpawnChunkDistance && dz <= WorldSpawnChunkDistance;
 	}
 }

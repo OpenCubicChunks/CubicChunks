@@ -24,7 +24,7 @@
  ******************************************************************************/
 package cubicchunks.lighting;
 
-import cubicchunks.CubeProvider;
+import cubicchunks.CubeCache;
 import cubicchunks.CubeWorld;
 import cubicchunks.util.BlockColumnProcessor;
 import cubicchunks.util.Coords;
@@ -34,7 +34,7 @@ import net.minecraft.world.World;
 
 public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	
-	public SkyLightOcclusionProcessor(String name, CubeProvider provider, int batchSize) {
+	public SkyLightOcclusionProcessor(String name, CubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 	}
 	
