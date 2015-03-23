@@ -2,14 +2,20 @@
 buildscript
 {
 	repositories {
-		maven
-		{
+		mavenCentral()
+        mavenLocal()
+		maven {
 			url "http://www.cuchazinteractive.com/maven"
 		}
+		maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
 		jcenter()
 	}
 	dependencies {
 		classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'
+		classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
 	}
 }
 
@@ -80,6 +86,7 @@ repositories
 dependencies
 {
 	compile 'org.mapdb:mapdb:0.9.11'
+	compile 'org.slf4j:slf4j-api:1.7.10'
 	testCompile 'junit:junit:4.11'
 }
 
