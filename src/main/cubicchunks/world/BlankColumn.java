@@ -25,10 +25,15 @@
 package cubicchunks.world;
 
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.IChunkGenerator;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.storage.ChunkSection;
 
 public class BlankColumn extends Column {
 	
@@ -54,83 +59,106 @@ public class BlankColumn extends Column {
 	
 	// chunk overrides
 	
-	@Override
-	public int getHeightValue(int localX, int localZ) {
+    @Override
+	public int getHeightAtCoords(final BlockPos a1) {
 		return 0;
 	}
 	
-	@Override
-	public int getPrecipitationHeight(int localX, int localZ) {
+    @Override
+	public int getHeightAtCoords(final int a1, final int a2) {
 		return 0;
 	}
 	
-	@Override
-	public void generateHeightMap() {
+    @Override
+	public int getBlockStoreY() {
+		return 0;
 	}
 	
-	@Override
+    @Override
 	public void generateSkylightMap() {
 	}
 	
-	@Override
-	public Block func_150810_a(int p_150810_1_, int p_150810_2_, int p_150810_3_) {
-		return Blocks.air;
+    @Override
+	public int getBlockOpacityAt(final BlockPos a1) {
+		return 0;
+	}
+	
+    @Override
+	public Block getBlockAt(final int a1, final int a2, final int a3) {
+		return Blocks.AIR;
+	}
+	
+    @Override
+	public Block getBlockAt(final BlockPos a1) {
+		return Blocks.AIR;
+	}
+	
+	public IBlockState getBlockState(final BlockPos a1) {
+		return Blocks.AIR.getDefaultState();
+	}
+	
+	public int getBlockMetadata(final BlockPos a1) {
+		return 0;
+	}
+	
+    @Override
+	public IBlockState setBlockState(final BlockPos a1, final IBlockState a2) {
+    	return null;
 	}
 	
 	@Override
-	public int func_150808_b(int p_150808_1_, int p_150808_2_, int p_150808_3_) {
-		return 255;
+	public int getLightAt(final LightType lightType, final BlockPos pos) {
+		switch (lightType) {
+			case SKY: return 15;
+			case BLOCK: return 0;
+			default: return 0;
+		}
 	}
 	
 	@Override
-	public boolean func_150807_a(int p_150807_1_, int p_150807_2_, int p_150807_3_, Block p_150807_4_, int p_150807_5_) {
+	public void setLightAt(final LightType a1, final BlockPos a2, final int a3) {
+	}
+	
+	@Override
+	public int getBrightestLight(final BlockPos pos, final int skyLightDampeningTerm) {
+		if (!this.world.dimensionType.hasSky() && skyLightDampeningTerm < LightType.SKY.defaultValue) {
+			return LightType.SKY.defaultValue - skyLightDampeningTerm;
+		}
+		return 0;
+	}
+	
+	@Override
+	public void addEntity(final Entity a1) {
+	}
+	
+	@Override
+	public void removeEntity(final Entity a1) {
+	}
+	
+	@Override
+	public void removeEntity(final Entity a1, int a2) {
+	}
+	
+	@Override
+	public boolean canSeeSky(final BlockPos a1) {
 		return true;
 	}
 	
 	@Override
-	public int getBlockMetadata(int par1, int par2, int par3) {
-		return 0;
-	}
-	
-	@Override
-	public boolean setBlockMetadata(int par1, int par2, int par3, int par4) {
-		return false;
-	}
-	
-	@Override
-	public int getSavedLightValue(EnumSkyBlock par1EnumSkyBlock, int par2, int par3, int par4) {
-		return 0;
-	}
-	
-	@Override
-	public void setLightValue(EnumSkyBlock par1EnumSkyBlock, int par2, int par3, int par4, int par5) {
-	}
-	
-	@Override
-	public int getBlockLightValue(int par1, int par2, int par3, int par4) {
-		return 0;
-	}
-	
-	@Override
-	public boolean canBlockSeeTheSky(int par1, int par2, int par3) {
-		return false;
-	}
-	
-	@Override
-	public TileEntity func_150806_e(int p_150806_1_, int p_150806_2_, int p_150806_3_) {
+	public BlockEntity getBlockEntityAt(final BlockPos a1, final ChunkEntityCreationType a2) {
 		return null;
 	}
 	
 	@Override
-	public void addTileEntity(TileEntity p_150813_1_) {
+	public void setBlockEntity(final BlockEntity a1) {
 	}
 	
 	@Override
-	public void func_150812_a(int p_150812_1_, int p_150812_2_, int p_150812_3_, TileEntity p_150812_4_) {
+	public void setBlockEntityAt(final BlockPos a1, final BlockEntity a2) {
 	}
 	
 	@Override
-	public void removeTileEntity(int p_150805_1_, int p_150805_2_, int p_150805_3_) {
+	public void removeBlockEntityAt(final BlockPos a1) {
 	}
 	
 	@Override
@@ -146,7 +174,7 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public boolean needsSaving(boolean par1) {
+	public boolean needsSaving(final boolean a1) {
 		return false;
 	}
 	
@@ -156,7 +184,101 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public boolean getAreLevelsEmpty(int par1, int par2) {
+	public void populateChunk(final IChunkGenerator a1, final IChunkGenerator a2, final int a3, final int a4) {
+	}
+	
+	@Override
+	public BlockPos getRainfallHeight(final BlockPos pos) {
+		return new BlockPos(pos.getX(), 0, pos.getZ());
+	}
+	
+	@Override
+	public void tickChunk(final boolean a1) {
+	}
+	
+	@Override
+	public boolean isPopulated() {
 		return true;
+	}
+	
+	@Override
+	public void setChunkSections(final ChunkSection[] a1) {
+	}
+	
+	@Override
+	public void readChunkIn(final byte[] a1, final int a2, final boolean a3) {
+	}
+	
+	@Override
+	public void setBiomeMap(final byte[] a1) {
+	}
+	
+	@Override
+	public void resetRelightChecks() {
+	}
+	
+	@Override
+	public void processRelightChecks() {
+	}
+	
+	@Override
+	public void queueRelightChecks() {
+	}
+	
+	@Override
+	public boolean isChunkLoaded() {
+		return true;
+	}
+	
+	@Override
+	public void setChunkLoaded(final boolean a1) {
+	}
+	
+	@Override
+	public void setHeightMap(final int[] a1) {
+	}
+	
+	@Override
+	public boolean isTerrainPopulated() {
+		return true;
+	}
+	
+	@Override
+	public void setTerrainPopulated(final boolean a1) {
+	}
+	
+	@Override
+	public boolean isLightPopulated() {
+		return true;
+	}
+	
+	@Override
+	public void setLightPopulated(final boolean a1) {
+	}
+	
+	@Override
+	public void setModified(final boolean a1) {
+	}
+	
+	@Override
+	public void setHasEntities(final boolean a1) {
+	}
+	
+	@Override
+	public void setLastSaveTime(final long a1) {
+	}
+	
+	@Override
+	public int getHeightMapMinimum() {
+		return 0;
+	}
+	
+	@Override
+	public long getInhabitedTime() {
+		return 0;
+	}
+	
+	@Override
+	public void setInhabitedTime(final long a1) {
 	}
 }
