@@ -24,11 +24,12 @@
  ******************************************************************************/
 package cubicchunks;
 
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cuchaz.m3l.M3L;
 import cuchaz.m3l.api.registry.AlreadyRegisteredException;
 
