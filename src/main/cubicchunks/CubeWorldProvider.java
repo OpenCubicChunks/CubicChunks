@@ -29,21 +29,23 @@ import cubicchunks.generator.biome.WorldColumnManager;
 import cubicchunks.generator.biome.WorldColumnManagerFlat;
 import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cubicchunks.server.CubeWorldServer;
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldType;
+import net.minecraft.world.Dimension;
+import net.minecraft.world.Generator;
+import net.minecraft.world.biome.BiomeManager;
+import net.minecraft.world.biome.BiomeManagerSingle;
 import net.minecraft.world.gen.FlatGeneratorInfo;
 
-public abstract class CubeWorldProvider extends WorldProvider {
+public abstract class CubeWorldProvider extends Dimension {
 	
 	@Override
-	protected void registerWorldChunkManager() {
+	protected void registerBiomeManager() {
 		// NOTE: this is the place we plug in different WorldColumnManagers for different dimensions or world types
 		
-		if (worldObj.getWorldInfo().getTerrainType() == WorldType.FLAT) {
-			FlatGeneratorInfo info = FlatGeneratorInfo.createFlatGeneratorFromString(worldObj.getWorldInfo().getGeneratorOptions());
-			worldChunkMgr = new WorldColumnManagerFlat(CubeBiomeGenBase.getBiome(info.getBiome()), 0.5F);
+		if (world.getLevel().getGenerator() == Generator.FLAT) {
+			FlatGeneratorInfo info = FlatGeneratorInfo.createFlatGeneratorFromString(world.getWorldInfo().getGeneratorOptions());
+			biomeManager = new BiomeManagerSingle(CubeBiomeGenBase.getBiome(info.getBiomeID()), 0.5F);
 		} else {
-			worldChunkMgr = new WorldColumnManager(worldObj);
+			biomeManager = new BiomeManager(world);
 		}
 	}
 	

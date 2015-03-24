@@ -91,14 +91,11 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	public Column loadChunk(int cubeX, int cubeZ) {
 		// in the tall worlds scheme, load and provide columns/chunks are semantically the same thing
 		// but load/provide cube do actually do different things
-		// NOTE: we're not really generating anything... it's just a poorly-named interface
-		return generate(cubeX, cubeZ);
+		return getChunk(cubeX, cubeZ);
 	}
 	
 	@Override
-	public Column generate(int cubeX, int cubeZ) {
-		// NOTE: we're not really generating anything... it's just a poorly-named interface
-		
+	public Column getChunk(int cubeX, int cubeZ) {		
 		// check for the column
 		Column column = m_loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
 		if (column != null) {
