@@ -58,15 +58,15 @@ public class Coords {
 	}
 	
 	public static int getCubeXForEntity(Entity entity) {
-		return blockToCube(MathHelper.floor_double(entity.posX));
+		return blockToCube(MathHelper.floorDoubleToInt(entity.xPos));
 	}
 	
 	public static int getCubeZForEntity(Entity entity) {
-		return blockToCube(MathHelper.floor_double(entity.posZ));
+		return blockToCube(MathHelper.floorDoubleToInt(entity.zPos));
 	}
 	
 	public static int getCubeYForEntity(Entity entity) {
 		// the entity is in the cube it's inside, not the cube it's standing on
-		return blockToCube(MathHelper.floor_double(entity.posY));
+		return blockToCube(MathHelper.floorDoubleToInt(entity.yPos));
 	}
 }

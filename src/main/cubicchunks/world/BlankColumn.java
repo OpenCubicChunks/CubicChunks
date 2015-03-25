@@ -121,7 +121,7 @@ public class BlankColumn extends Column {
 	
 	@Override
 	public int getBrightestLight(final BlockPos pos, final int skyLightDampeningTerm) {
-		if (!this.world.dimensionType.hasSky() && skyLightDampeningTerm < LightType.SKY.defaultValue) {
+		if (!this.world.dimension.hasNoSky() && skyLightDampeningTerm < LightType.SKY.defaultValue) {
 			return LightType.SKY.defaultValue - skyLightDampeningTerm;
 		}
 		return 0;

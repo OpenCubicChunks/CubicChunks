@@ -86,7 +86,7 @@ public class Cube {
 		if (isEmpty) {
 			m_storage = null;
 		} else {
-			m_storage = new ChunkSection(m_y << 4, m_world.dimensionType.hasSky());
+			m_storage = new ChunkSection(m_y << 4, !m_world.dimension.hasNoSky());
 		}
 	}
 	
@@ -458,7 +458,7 @@ public class Cube {
 		
 		switch (lightType) {
 			case SKY:
-				if (m_world.dimensionType.hasSky()) {
+				if (!m_world.dimension.hasNoSky()) {
 					if (isEmpty()) {
 						if (isUnderground(pos)) {
 							return 0;
@@ -497,7 +497,7 @@ public class Cube {
 		
 		switch (lightType) {
 			case SKY:
-				if (m_world.dimensionType.hasSky()) {
+				if (!m_world.dimension.hasNoSky()) {
 					m_storage.setSkyLightAtCoords(x, y, z, light);
 					m_isModified = true;
 				}
