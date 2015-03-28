@@ -61,7 +61,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 		super(worldServer, null, null);
 		
 		m_worldServer = worldServer;
-		m_io = new CubeIO(worldServer.getSaveHandler().getSaveFile(), worldServer.dimensionType);
+		m_io = new CubeIO(worldServer.getSaveHandler().getSaveFile(), worldServer.dimension);
 		// TODO
 		//m_columnGenerator = new ColumnGenerator(worldServer);
 		m_loadedColumns = Maps.newHashMap();
@@ -338,13 +338,13 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	}
 	
 	@Override
-    public List<Biome.SpawnList> getSpawnableAtPos(final CreatureTypes a1, final BlockPos a2) {
+    public List<Biome.SpawnMob> getSpawnableAtPos(final CreatureTypes a1, final BlockPos a2) {
 		return null;
 	}
 	
 	private boolean cubeIsNearSpawn(int cubeX, int cubeY, int cubeZ) {
 		
-		if (!m_worldServer.dimensionType.canRespawnHere()) {
+		if (!m_worldServer.dimension.canRespawnHere()) {
 			// no spawn points
 			return false;
 		}
