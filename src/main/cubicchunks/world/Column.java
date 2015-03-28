@@ -112,9 +112,9 @@ public class Column extends Chunk {
 		
 		// make sure no one's using data structures that have been replaced
 		// also saves memory
-		setChunkSections(null);
 		/* TODO: setting these vars to null would save memory, but they're final. =(
 		 * also... make sure we're actually not using them
+		this.chunkSections = null;
 		this.biomeMap = null;
 		this.heightMap = null;
 		this.skylightUpdateMap = null;
