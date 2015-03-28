@@ -251,7 +251,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	public void unloadAllChunks() {
 		// unload all the cubes in the columns
 		for (Column column : m_loadedColumns.values()) {
-			for (Cube cube : column.cubes()) {
+			for (Cube cube : column.getCubes()) {
 				m_cubesToUnload.add(cube.getAddress());
 			}
 		}
@@ -316,7 +316,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 			}
 			
 			// save the cubes
-			for (Cube cube : column.cubes()) {
+			for (Cube cube : column.getCubes()) {
 				if (cube.needsSaving()) {
 					m_io.saveCube(cube);
 				}
