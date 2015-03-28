@@ -10,6 +10,12 @@ public class CubicChunkSystem implements ChunkSystem {
 
 	@Override
 	public ServerChunkCache getServerChunkCache(WorldServer world) {
-        return new ServerCubeCache(world);
+		
+		// for now, only tall-ify the overworld
+		if (world.dimension.getId() == 0) {
+			return new ServerCubeCache(world);
+		}
+		
+		return null;
 	}
 }
