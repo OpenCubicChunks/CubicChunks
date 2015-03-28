@@ -24,60 +24,67 @@
  ******************************************************************************/
 package cubicchunks.world;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import cubicchunks.util.Coords;
 import cubicchunks.util.RangeInt;
-import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
-import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.LightType;
 
 public class ColumnView extends Column {
 	
-	private Column m_column;
-	private TreeMap<Integer,Cube> m_cubes;
+	private Column column;
+	private Map<Integer,Cube> cubes;
 	
 	public ColumnView(Column column) {
-		super(column.getWorld(), column.xPosition, column.zPosition);
+		super(column.getWorld(), column.chunkX, column.chunkZ);
 		
-		m_column = column;
-		m_cubes = new TreeMap<Integer,Cube>();
+		this.column = column;
+		this.cubes = new TreeMap<Integer,Cube>();
 	}
 	
+	@Override
 	public LightIndex getLightIndex() {
-		return m_column.getLightIndex();
+		return this.column.getLightIndex();
 	}
 	
-	public Iterable<Cube> cubes() {
-		return m_cubes.values();
+	@Override
+	public Collection<Cube> getCubes() {
+		return this.cubes.values();
 	}
 	
 	public void addCubeToView(Cube cube) {
-		m_cubes.put(cube.getY(), cube);
+		this.cubes.put(cube.getY(), cube);
 	}
 	
+	@Override
 	public Cube getCube(int y) {
-		return m_cubes.get(y);
+		return this.cubes.get(y);
 	}
 	
 	public Cube getOrCreateCube(int y) {
 		throw new UnsupportedOperationException();
 	}
 	
+	@Override
 	public Iterable<Cube> getCubes(int minY, int maxY) {
-		return m_cubes.subMap(minY, true, maxY, true).values();
+		return ((TreeMap<Integer, Cube>) this.cubes).subMap(minY, true, maxY, true).values();
 	}
 	
 	public void addCube(Cube cube) {
 		throw new UnsupportedOperationException();
 	}
 	
+	@Override
 	public List<RangeInt> getCubeYRanges() {
-		return getRanges(m_cubes.keySet());
+		return getRanges(this.cubes.keySet());
 	}
 	
 	@Override
@@ -86,49 +93,30 @@ public class ColumnView extends Column {
 	}
 	
 	@Override
-	// getBlock
-	public Block func_150810_a(final int localX, final int blockY, final int localZ) {
+	public IBlockState getBlockState(BlockPos pos) {
+		
 		// pass off to the cube
-		int cubeY = Coords.blockToCube(blockY);
-		Cube cube = m_cubes.get(cubeY);
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
-			int localY = Coords.blockToLocal(blockY);
-			return cube.getBlock(localX, localY, localZ);
+			return cube.getBlockState(pos);
 		}
 		
-		return Blocks.air;
+		return Blocks.AIR.getDefaultState();
 	}
 	
 	@Override
-	// setBlock
-	public boolean func_150807_a(int localX, int blockY, int localZ, Block block, int meta) {
+	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public int getBlockMetadata(int localX, int blockY, int localZ) {
-		// pass off to the cube
-		int cubeY = Coords.blockToCube(blockY);
-		Cube cube = m_cubes.get(cubeY);
-		if (cube != null) {
-			int localY = Coords.blockToLocal(blockY);
-			return cube.getBlockMetadata(localX, localY, localZ);
-		}
-		return 0;
+	public int getBlockMetadata(BlockPos pos) {
+		return this.column.getBlockMetadata(pos);
 	}
 	
 	@Override
-	public boolean setBlockMetadata(int localX, int blockY, int localZ, int meta) {
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override
-	public ExtendedBlockStorage[] getBlockStorageArray() {
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override
-	public int getTopFilledSegment() {
+	public int getTopCubeY() {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -138,20 +126,20 @@ public class ColumnView extends Column {
 	}
 	
 	@Override
-	public boolean canBlockSeeTheSky(int localX, int blockY, int localZ) {
-		return m_column.canBlockSeeTheSky(localX, blockY, localZ);
+	public boolean canSeeSky(BlockPos pos) {		
+		return this.column.canSeeSky(pos);
 	}
 	
 	@Override
 	@Deprecated
-	public int getHeightValue(int localX, int localZ) {
-		return m_column.getHeightValue(localX, localZ);
+	public int getHeightAtCoords(int localX, int localZ) {
+		return this.column.getHeightAtCoords(localX, localZ);
 	}
 	
 	@Override
 	// getOpacity
-	public int func_150808_b(int localX, int blockY, int localZ) {
-		return m_column.func_150808_b(localX, blockY, localZ);
+	public int getBlockOpacityAt(BlockPos pos) {
+		return this.column.getBlockOpacityAt(pos);
 	}
 	
 	@Override
@@ -165,36 +153,28 @@ public class ColumnView extends Column {
 	}
 	
 	@Override
-	public void removeEntityAtIndex(Entity entity, int cubeY) {
+	public void removeEntity(Entity entity, int cubeY) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	// getTileEntity
-	public TileEntity func_150806_e(int localX, int blockY, int localZ) {
-		// pass off to the cube
-		int cubeY = Coords.blockToCube(blockY);
-		Cube cube = m_cubes.get(cubeY);
-		if (cube != null) {
-			int localY = Coords.blockToLocal(blockY);
-			return cube.getTileEntity(localX, localY, localZ);
-		}
-		return null;
+	public BlockEntity getBlockEntityAt(BlockPos pos, ChunkEntityCreationType creationType) {
+		return this.column.getBlockEntityAt(pos, creationType);
 	}
 	
-	@Override
-	public void addTileEntity(TileEntity tileEntity) {
-		throw new UnsupportedOperationException();
-	}
+//	@Override
+//	public void addTileEntity(Entity tileEntity) {
+//		throw new UnsupportedOperationException();
+//	}
 	
 	@Override
 	// addTileEntity
-	public void func_150812_a(int localX, int blockY, int localZ, TileEntity tileEntity) {
+	public void setBlockEntityAt(BlockPos pos, BlockEntity blockEntity) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public void removeTileEntity(int localX, int blockY, int localZ) {
+	public void removeBlockEntityAt(BlockPos pos) {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -209,13 +189,12 @@ public class ColumnView extends Column {
 	}
 	
 	@Override
-	public void fillChunk(byte[] data, int segmentsToCopyBitFlags, int blockMSBToCopyBitFlags, boolean isFirstTime) {
+	public void readChunkIn(byte[] data, int segmentsToCopyBitFlags, boolean isFirstTime) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	// tick
-	public void func_150804_b(boolean tryToTickFaster) {
+	public void tickChunk(boolean tryToTickFaster) {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -225,22 +204,22 @@ public class ColumnView extends Column {
 	}
 	
 	@Override
-	public int getPrecipitationHeight(int localX, int localZ) {
-		return m_column.getPrecipitationHeight(localX, localZ);
+	public BlockPos getRainfallHeight(BlockPos pos) {
+		return this.column.getRainfallHeight(pos);
 	}
 	
 	@Override
-	public int getBlockLightValue(int localX, int blockY, int localZ, int skylightSubtracted) {
-		return m_column.getBlockLightValue(localX, blockY, localZ, skylightSubtracted);
+	public int getBrightestLight(BlockPos pos, int skylightDampeningTerm) {
+		return this.column.getBrightestLight(pos, skylightDampeningTerm);
 	}
 	
 	@Override
-	public int getSavedLightValue(EnumSkyBlock lightType, int localX, int blockY, int localZ) {
+	public int getLightAt(LightType lightType, BlockPos pos) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public void setLightValue(EnumSkyBlock lightType, int localX, int blockY, int localZ, int light) {
+	public void setLightAt(LightType lightType, BlockPos pos, int light) {
 		throw new UnsupportedOperationException();
 	}
 }

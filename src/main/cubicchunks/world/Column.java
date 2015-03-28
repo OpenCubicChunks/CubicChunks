@@ -148,7 +148,7 @@ public class Column extends Chunk {
 		// override this so no height map is generated
 	}
 	
-	public Collection<Cube> cubes() {
+	public Collection<Cube> getCubes() {
 		return Collections.unmodifiableCollection(m_cubes.values());
 	}
 	
@@ -529,11 +529,11 @@ public class Column extends Chunk {
 		// NOTE: there's no need to do compression here. This output is compressed later
 		
 		// how many cubes are we sending?
-		int numCubes = cubes().size();
+		int numCubes = getCubes().size();
 		out.writeShort(numCubes);
 		
 		// send the actual cube data
-		for (Cube cube : cubes()) {
+		for (Cube cube : getCubes()) {
 			
 			// signal we're sending this cube
 			out.writeInt(cube.getY());

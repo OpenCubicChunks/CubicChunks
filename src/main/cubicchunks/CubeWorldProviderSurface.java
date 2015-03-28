@@ -65,4 +65,10 @@ public class CubeWorldProviderSurface extends CubeWorldProvider {
 		generatorPipeline.addStage(GeneratorStage.Lighting, new FirstLightProcessor("Lighting", worldServer.getCubeProvider(), 10));
 		return generatorPipeline;
 	}
+
+	@Override
+	public String getDimensionNameSuffix() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
