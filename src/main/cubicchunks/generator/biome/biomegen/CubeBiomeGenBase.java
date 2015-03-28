@@ -32,8 +32,12 @@ import java.util.Set;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
+import net.minecraft.block.BlockTallGrass.TallGrassTypes;
 import net.minecraft.block.material.Material;
-import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.CreatureTypes;
+import net.minecraft.entity.EntityMob;
+import net.minecraft.entity.IMob;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntitySkeleton;
@@ -47,21 +51,24 @@ import net.minecraft.entity.passive.EntityCow;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.entity.passive.EntitySquid;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.Blocks;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.WeightedRandom;
-import net.minecraft.world.ColorizerFoliage;
+import net.minecraft.world.ColorizerLeaves;
 import net.minecraft.world.ColorizerGrass;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.gen.NoiseGeneratorPerlin;
-import net.minecraft.world.gen.feature.WorldGenAbstractTree;
-import net.minecraft.world.gen.feature.WorldGenBigTree;
-import net.minecraft.world.gen.feature.WorldGenDoublePlant;
-import net.minecraft.world.gen.feature.WorldGenSwamp;
-import net.minecraft.world.gen.feature.WorldGenTallGrass;
-import net.minecraft.world.gen.feature.WorldGenTrees;
-import net.minecraft.world.gen.feature.WorldGenerator;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.chunk.ChunkPrimer;
+import net.minecraft.world.decorator.Decorator;
+import net.minecraft.world.gen.noise.Perlin3dOctaves;
+import net.minecraft.world.gen.feature.TreeGenerator;
+import net.minecraft.world.gen.feature.TreeGeneratorBig;
+import net.minecraft.world.gen.feature.TallPlantGenerator;
+import net.minecraft.world.gen.feature.TreeGeneratorSmall;
+import net.minecraft.world.gen.feature.TreeGeneratorSwamp;
+import net.minecraft.world.gen.feature.TallGrassGenerator;
+import net.minecraft.world.gen.feature.FeatureGenerator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,9 +76,9 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.Sets;
 
 import cubicchunks.world.Cube;
-import cuchaz.magicMojoModLoader.api.events.BuildSizeEvent;
+//import cuchaz.m3l.api.events.BuildSizeEvent;
 
-public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGenBase {
+public abstract class CubeBiomeGenBase extends Biome {
 	
 	private static final Logger logger = LogManager.getLogger();
 	protected static final CubeBiomeGenBase.Height field_150596_a = new CubeBiomeGenBase.Height(0.1F, 0.2F);
@@ -149,9 +156,9 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 	public static final CubeBiomeGenBase mesaPlateauF = (new BiomeGenMesa(38, false, true)).setColor(11573093).setBiomeName("Mesa Plateau F").setHeightRange(plateauRange);
 	public static final CubeBiomeGenBase mesaPlateau = (new BiomeGenMesa(39, false, false)).setColor(13274213).setBiomeName("Mesa Plateau").setHeightRange(plateauRange);
 	
-	protected static final NoiseGeneratorPerlin field_150605_ac;
-	protected static final NoiseGeneratorPerlin field_150606_ad;
-	protected static final WorldGenDoublePlant field_150610_ae;
+	protected static final Perlin3dOctaves field_150605_ac;
+	protected static final Perlin3dOctaves field_150606_ad;
+	protected static final TallPlantGenerator field_150610_ae;
 	
 	public int color;
 	public int field_150609_ah;
@@ -186,18 +193,18 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 	/**
 	 * Holds the classes of IMobs (hostile mobs) that can be spawned in the biome.
 	 */
-	protected List spawnableMonsterList;
+	protected List<SpawnMob> spawnableMonsterList;
 	
 	/**
 	 * Holds the classes of any creature that can be spawned in the biome as friendly creature.
 	 */
-	protected List spawnableCreatureList;
+	protected List<SpawnMob> spawnableCreatureList;
 	
 	/**
 	 * Holds the classes of any aquatic creature that can be spawned in the water of the biome.
 	 */
-	protected List spawnableWaterCreatureList;
-	protected List spawnableCaveCreatureList;
+	protected List<SpawnMob> spawnableWaterCreatureList;
+	protected List<SpawnMob> spawnableCaveCreatureList;
 	
 	/** Set to true if snow is enabled for this biome. */
 	protected boolean enableSnow;
@@ -211,19 +218,19 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 	public final int biomeID;
 	
 	/** The tree generator. */
-	protected WorldGenTrees worldGeneratorTrees;
+	protected TreeGeneratorSmall worldGeneratorTrees;
 	
 	/** The big tree generator. */
-	protected WorldGenBigTree worldGeneratorBigTree;
+	protected TreeGeneratorBig worldGeneratorBigTree;
 	
 	/** The swamp tree generator. */
-	protected WorldGenSwamp worldGeneratorSwamp;
+	protected TreeGeneratorSwamp worldGeneratorSwamp;
 	
 	protected CubeBiomeGenBase(int biomeID) {
 		super(biomeID);
-		this.topBlock = Blocks.grass;
+		this.topBlock = Blocks.GRASS;
 		this.field_150604_aj = 0;
-		this.fillerBlock = Blocks.dirt;
+		this.fillerBlock = Blocks.DIRT;
 		this.field_76754_C = 5169201;
 		this.biomeHeight = field_150596_a.biomeHeight;
 		this.biomeVolatility = field_150596_a.biomeVolatility;
@@ -231,37 +238,37 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		this.rainfall = 0.5F;
 		this.waterColorMultiplier = 16777215;
 		
-		this.spawnableMonsterList = new ArrayList();
-		this.spawnableCreatureList = new ArrayList();
-		this.spawnableWaterCreatureList = new ArrayList();
-		this.spawnableCaveCreatureList = new ArrayList();
+		this.spawnableMonsterList = new ArrayList<SpawnMob>();
+		this.spawnableCreatureList = new ArrayList<SpawnMob>();
+		this.spawnableWaterCreatureList = new ArrayList<SpawnMob>();
+		this.spawnableCaveCreatureList = new ArrayList<SpawnMob>();
 		
 		this.enableRain = true;
 		
-		this.worldGeneratorTrees = new WorldGenTrees(false);
-		this.worldGeneratorBigTree = new WorldGenBigTree(false);
-		this.worldGeneratorSwamp = new WorldGenSwamp();
+		this.worldGeneratorTrees = new TreeGeneratorSmall(false);
+		this.worldGeneratorBigTree = new TreeGeneratorBig(false);
+		this.worldGeneratorSwamp = new TreeGeneratorSwamp();
 		
 		this.biomeID = biomeID;
 		biomeList[biomeID] = this;
 		this.theBiomeDecorator = this.createBiomeDecorator();
 		
-		this.spawnableCreatureList.add(new BiomeGenBase.SpawnListEntry(EntitySheep.class, 12, 4, 4));
-		this.spawnableCreatureList.add(new BiomeGenBase.SpawnListEntry(EntityPig.class, 10, 4, 4));
-		this.spawnableCreatureList.add(new BiomeGenBase.SpawnListEntry(EntityChicken.class, 10, 4, 4));
-		this.spawnableCreatureList.add(new BiomeGenBase.SpawnListEntry(EntityCow.class, 8, 4, 4));
+		this.spawnableCreatureList.add(new Biome.SpawnMob(EntitySheep.class, 12, 4, 4));
+		this.spawnableCreatureList.add(new Biome.SpawnMob(EntityPig.class, 10, 4, 4));
+		this.spawnableCreatureList.add(new Biome.SpawnMob(EntityChicken.class, 10, 4, 4));
+		this.spawnableCreatureList.add(new Biome.SpawnMob(EntityCow.class, 8, 4, 4));
 		
-		this.spawnableMonsterList.add(new BiomeGenBase.SpawnListEntry(EntitySpider.class, 100, 4, 4));
-		this.spawnableMonsterList.add(new BiomeGenBase.SpawnListEntry(EntityZombie.class, 100, 4, 4));
-		this.spawnableMonsterList.add(new BiomeGenBase.SpawnListEntry(EntitySkeleton.class, 100, 4, 4));
-		this.spawnableMonsterList.add(new BiomeGenBase.SpawnListEntry(EntityCreeper.class, 100, 4, 4));
-		this.spawnableMonsterList.add(new BiomeGenBase.SpawnListEntry(EntitySlime.class, 100, 4, 4));
-		this.spawnableMonsterList.add(new BiomeGenBase.SpawnListEntry(EntityEnderman.class, 10, 1, 4));
-		this.spawnableMonsterList.add(new BiomeGenBase.SpawnListEntry(EntityWitch.class, 5, 1, 1));
+		this.spawnableMonsterList.add(new Biome.SpawnMob(EntitySpider.class, 100, 4, 4));
+		this.spawnableMonsterList.add(new Biome.SpawnMob(EntityZombie.class, 100, 4, 4));
+		this.spawnableMonsterList.add(new Biome.SpawnMob(EntitySkeleton.class, 100, 4, 4));
+		this.spawnableMonsterList.add(new Biome.SpawnMob(EntityCreeper.class, 100, 4, 4));
+		this.spawnableMonsterList.add(new Biome.SpawnMob(EntitySlime.class, 100, 4, 4));
+		this.spawnableMonsterList.add(new Biome.SpawnMob(EntityEnderman.class, 10, 1, 4));
+		this.spawnableMonsterList.add(new Biome.SpawnMob(EntityWitch.class, 5, 1, 1));
 		
-		this.spawnableWaterCreatureList.add(new BiomeGenBase.SpawnListEntry(EntitySquid.class, 10, 4, 4));
+		this.spawnableWaterCreatureList.add(new Biome.SpawnMob(EntitySquid.class, 10, 4, 4));
 		
-		this.spawnableCaveCreatureList.add(new BiomeGenBase.SpawnListEntry(EntityBat.class, 10, 8, 8));
+		this.spawnableCaveCreatureList.add(new Biome.SpawnMob(EntityBat.class, 10, 8, 8));
 	}
 	
 	/**
@@ -299,20 +306,21 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		return this;
 	}
 	
-	public WorldGenAbstractTree checkSpawnTree(Random rand) {
-		return (WorldGenAbstractTree) (rand.nextInt(10) == 0 ? this.worldGeneratorBigTree : this.worldGeneratorTrees);
+	public TreeGenerator checkSpawnTree(Random rand) {
+		return (TreeGenerator) (rand.nextInt(10) == 0 ? this.worldGeneratorBigTree : this.worldGeneratorTrees);
 	}
 	
 	/**
 	 * Gets a WorldGen appropriate for this biome.
 	 */
-	public WorldGenerator getRandomWorldGenForGrass(Random par1Random) {
-		return new WorldGenTallGrass(Blocks.tallgrass, 1);
+	public FeatureGenerator getRandomWorldGenForGrass(Random par1Random) {
+		return new TallGrassGenerator(TallGrassTypes.GRASS);
 	}
 	
-	public String spawnFlower(Random rand, int p_150572_2_, int p_150572_3_, int p_150572_4_) {
-		return rand.nextInt(3) > 0 ? BlockFlower.field_149858_b[0] : BlockFlower.field_149859_a[0];
-	}
+//	Replaced by Biome.getRandomFlower
+//	public String spawnFlower(Random rand, int p_150572_2_, int p_150572_3_, int p_150572_4_) {
+//		return rand.nextInt(3) > 0 ? BlockFlower.field_149858_b[0] : BlockFlower.field_149859_a[0];
+//	}
 	
 	/**
 	 * sets enableSnow to true during biome initialization. returns BiomeGenBase.
@@ -374,8 +382,12 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 	/**
 	 * Returns the correspondent list of the EnumCreatureType informed.
 	 */
-	public List getSpawnableList(EnumCreatureType par1EnumCreatureType) {
-		return par1EnumCreatureType == EnumCreatureType.monster ? this.spawnableMonsterList : (par1EnumCreatureType == EnumCreatureType.creature ? this.spawnableCreatureList : (par1EnumCreatureType == EnumCreatureType.waterCreature ? this.spawnableWaterCreatureList : (par1EnumCreatureType == EnumCreatureType.ambient ? this.spawnableCaveCreatureList : null)));
+	public List<SpawnMob> getSpawnList(CreatureTypes creatureType) {
+		return creatureType == CreatureTypes.MONSTER ? this.spawnableMonsterList 
+			: (creatureType == CreatureTypes.CREATURE ? this.spawnableCreatureList 
+			: (creatureType == CreatureTypes.WATER_CREATURE ? this.spawnableWaterCreatureList 
+			: (creatureType == CreatureTypes.AMBIENT ? this.spawnableCaveCreatureList 
+			: null)));
 	}
 	
 	/**
@@ -442,42 +454,49 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		this.theBiomeDecorator.func_150512_a(par1World, par2Random, this, par3, par4);
 	}
 	
-	/**
-	 * Provides the basic grass color based on the biome temperature and rainfall
-	 */
-	public int getBiomeGrassColor(int xAbs, int yAbs, int zAbs) {
-		double var4 = (double)MathHelper.clamp_float(this.getFloatTemperature(xAbs, yAbs, zAbs), 0.0F, 1.0F);
-		double var6 = (double)MathHelper.clamp_float(this.getFloatRainfall(), 0.0F, 1.0F);
-		return ColorizerGrass.getGrassColor(var4, var6);
-	}
+//	Replaced by getGrassColorAt(BlockPos)
+//	/**
+//	 * Provides the basic grass color based on the biome temperature and rainfall
+//	 */
+//	public int getBiomeGrassColor(int xAbs, int yAbs, int zAbs) {
+//		double var4 = (double)MathHelper.clamp_float(this.getFloatTemperature(xAbs, yAbs, zAbs), 0.0F, 1.0F);
+//		double var6 = (double)MathHelper.clamp_float(this.getFloatRainfall(), 0.0F, 1.0F);
+//		return ColorizerGrass.getGrassColor(var4, var6);
+//	}
 	
-	/**
-	 * Provides the basic foliage color based on the biome temperature and rainfall
-	 */
-	public int getBiomeFoliageColor(int p_150571_1_, int p_150571_2_, int p_150571_3_) {
-		double var4 = (double)MathHelper.clamp_float(this.getFloatTemperature(p_150571_1_, p_150571_2_, p_150571_3_), 0.0F, 1.0F);
-		double var6 = (double)MathHelper.clamp_float(this.getFloatRainfall(), 0.0F, 1.0F);
-		return ColorizerFoliage.getFoliageColor(var4, var6);
-	}
+//	Replaced by getLeavesColorAt(BlockPos)
+//	/**
+//	 * Provides the basic foliage color based on the biome temperature and rainfall
+//	 */
+//	public int getBiomeFoliageColor(int p_150571_1_, int p_150571_2_, int p_150571_3_) {
+//		double var4 = (double)MathHelper.clamp_float(this.getFloatTemperature(p_150571_1_, p_150571_2_, p_150571_3_), 0.0F, 1.0F);
+//		double var6 = (double)MathHelper.clamp_float(this.getFloatRainfall(), 0.0F, 1.0F);
+//		return ColorizerFoliage.getFoliageColor(var4, var6);
+//	}
 	
 	public boolean func_150559_j() {
 		return this.enableSnow;
 	}
 	
-	public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val) {
-		this.modifyBlocks(world, rand, cube, xAbs, yAbs, zAbs, val);
+	public void replaceBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val) {
+		this.replaceBlocks(world, rand, cube, xAbs, yAbs, zAbs, val);
 	}
 	
-	public final void modifyBlocks(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val) {
+//	public final void replaceBlocks(final World world, final Random rand, final ChunkPrimer primer, final int xAbs, final int zAbs, final double grassLevel)
+	public final void replaceBlocks(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double grassLevel) {
 		Block topBlock = this.topBlock; // grass/gravel/stone
 		byte var11 = (byte) (this.field_150604_aj & 255);
 		Block fillBlock = this.fillerBlock; // dirt/gravel/stone
 		int var13 = -1;
-		int rnd1 = (int) (val / 3.0D + 3.0D + rand.nextDouble() * 0.25D);
+		int rnd1 = (int) (grassLevel / 3.0D + 3.0D + rand.nextDouble() * 0.25D);
 		
 		int xRel = xAbs & 15;
 		int yRel = yAbs & 15;
 		int zRel = zAbs & 15;
+		
+		BlockPos pos = new BlockPos(xAbs, yAbs, zAbs);
+		
+		BlockPos posRel = new BlockPos(xRel, yRel, zRel);
 		
 		int seaLevel = 63; // replace with user-selectable
 		
@@ -489,32 +508,32 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		
 		if (yAbs <= BuildSizeEvent.getBuildDepth() + 16 + rand.nextInt(16)) // generate bedrock in the very bottom cube and below plus random bedrock in the cube above that
 		{
-			cube.setBlockForGeneration(xRel, yRel, zRel, Blocks.bedrock);
+			cube.setBlockForGeneration(pos, Blocks.BEDROCK.getDefaultState());
 		} else if (yAbs < -32768 + rand.nextInt(256)) // generate lava sea under y = -32768, plus a rough surface. this is pretty fucking deep though, so nobody will reach this, probably.
 		{
-			cube.setBlockForGeneration(xRel, yRel, zRel, Blocks.lava);
+			cube.setBlockForGeneration(pos, Blocks.LAVA.getDefaultState());
 		} else {
-			Block block = cube.getBlock(xRel, yRel, zRel);
+			IBlockState blockState = cube.getBlockState(posRel);
 			
-			if (block != null && block.getMaterial() != Material.air) {
-				if (block == Blocks.stone) {
+			if (blockState != null && blockState.getBlock().getMaterial() != Material.AIR) {
+				if (blockState == Blocks.STONE) {
 					if (var13 == -1) {
 						if (rnd1 <= 0) {
 							topBlock = null;
 							var11 = 0;
-							fillBlock = Blocks.stone; // stone/stone/stone
+							fillBlock = Blocks.STONE; // stone/stone/stone
 						} else if (yAbs >= seaLevel - 4 && yAbs <= seaLevel + 1) {
 							topBlock = this.topBlock;
 							var11 = (byte) (this.field_150604_aj & 255);
 							fillBlock = this.fillerBlock;
 						}
 						
-						if (yAbs < seaLevel && (topBlock == null || topBlock.getMaterial() == Material.air)) {
-							if (this.getFloatTemperature(xAbs, yAbs, zAbs) < 0.15F) {
-								topBlock = Blocks.ice;
+						if (yAbs < seaLevel && (topBlock == null || topBlock.getMaterial() == Material.AIR)) {
+							if (this.getTemp(pos) < 0.15F) {
+								topBlock = Blocks.ICE;
 								var11 = 0;
 							} else {
-								topBlock = Blocks.water;
+								topBlock = Blocks.WATER;
 								var11 = 0;
 							}
 						}
@@ -522,22 +541,22 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 						var13 = rnd1;
 						
 						if (yAbs >= 62) {
-							cube.setBlockForGeneration(xRel, yRel, zRel, topBlock, var11); // grass/gravel/stone
+							cube.setBlockForGeneration(pos, topBlock.getDefaultState()); // grass/gravel/stone
 						} else if (yAbs < 56 - rnd1) {
 							topBlock = null;
-							fillBlock = Blocks.stone; // stone/stone/stone
+							fillBlock = Blocks.STONE; // stone/stone/stone
 							
 							// cubeBlocks.setBlock(xRel, yRel, zRel, Blocks.gravel);
 						} else {
-							cube.setBlockForGeneration(xRel, yRel, zRel, fillBlock);
+							cube.setBlockForGeneration(pos, fillBlock.getDefaultState());
 						}
 					} else if (var13 > 0) {
 						--var13;
-						cube.setBlockForGeneration(xRel, yRel, zRel, fillBlock);
+						cube.setBlockForGeneration(pos, fillBlock.getDefaultState());
 						
-						if (var13 == 0 && fillBlock == Blocks.sand) {
+						if (var13 == 0 && fillBlock == Blocks.SAND) {
 							var13 = rand.nextInt(4) + Math.max(0, yAbs - 63);
-							fillBlock = Blocks.sandstone;
+							fillBlock = Blocks.SANDSTONE;
 						}
 					}
 				}
@@ -613,9 +632,9 @@ public abstract class CubeBiomeGenBase extends net.minecraft.world.biome.BiomeGe
 		
 		field_150597_n.remove(hell);
 		field_150597_n.remove(sky);
-		field_150605_ac = new NoiseGeneratorPerlin(new Random(1234L), 1);
-		field_150606_ad = new NoiseGeneratorPerlin(new Random(2345L), 1);
-		field_150610_ae = new WorldGenDoublePlant();
+		field_150605_ac = new Perlin3dOctaves(new Random(1234L), 1);
+		field_150606_ad = new Perlin3dOctaves(new Random(2345L), 1);
+		field_150610_ae = new TallPlantGenerator();
 	}
 	
 	public static class SpawnListEntry extends WeightedRandom.Item {

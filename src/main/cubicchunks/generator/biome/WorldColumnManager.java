@@ -35,17 +35,17 @@ import net.minecraft.util.ReportedException;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
-import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.biome.WorldChunkManager;
-import net.minecraft.world.gen.layer.GenLayer;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeManager;
+import net.minecraft.world.gen.layer.GenLayerBase;
 import net.minecraft.world.gen.layer.IntCache;
 
-public class WorldColumnManager extends WorldChunkManager {
+public class WorldColumnManager extends BiomeManager {
 	
-	private GenLayer genBiomes;
+	private GenLayerBase genBiomes;
 	
 	/** A GenLayer containing the indices into BiomeGenBase.biomeList[] */
-	private GenLayer biomeIndexLayer;
+	private GenLayerBase biomeIndexLayer;
 	
 	/** The BiomeCache object for this world. */
 	private BiomeCache biomeCache;

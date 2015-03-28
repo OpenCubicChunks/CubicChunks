@@ -87,7 +87,7 @@ public class BiomeGenHills extends CubeBiomeGenBase {
 		}
 	}
 	
-	public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var) {
+	public void replaceBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var) {
 		this.topBlock = Blocks.grass;
 		this.field_150604_aj = 0;
 		this.fillerBlock = Blocks.dirt;
@@ -100,7 +100,7 @@ public class BiomeGenHills extends CubeBiomeGenBase {
 			this.fillerBlock = Blocks.stone;
 		}
 		
-		this.modifyBlocks(world, rand, cube, xAbs, yAbs, zAbs, var);
+		this.replaceBlocks(world, rand, cube, xAbs, yAbs, zAbs, var);
 	}
 	
 	private BiomeGenHills func_150633_b(CubeBiomeGenBase biome) {

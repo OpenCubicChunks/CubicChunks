@@ -82,7 +82,7 @@ public class BiomeGenSavanna extends CubeBiomeGenBase {
 			this.theBiomeDecorator.grassPerChunk = 5;
 		}
 		
-		public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val) {
+		public void replaceBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val) {
 			this.topBlock = Blocks.grass;
 			this.field_150604_aj = 0;
 			this.fillerBlock = Blocks.dirt;
@@ -95,7 +95,7 @@ public class BiomeGenSavanna extends CubeBiomeGenBase {
 				this.field_150604_aj = 1;
 			}
 			
-			this.modifyBlocks(world, rand, cube, xAbs, yAbs, zAbs, val);
+			this.replaceBlocks(world, rand, cube, xAbs, yAbs, zAbs, val);
 		}
 		
 		public void decorate(World par1World, Random par2Random, int par3, int par4) {

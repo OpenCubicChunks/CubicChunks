@@ -104,7 +104,7 @@ public class BiomeGenTaiga extends CubeBiomeGenBase {
 		super.decorate(par1World, par2Random, par3, par4);
 	}
 	
-	public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val) {
+	public void replaceBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val) {
 		if (this.field_150644_aH == 1 || this.field_150644_aH == 2) {
 			this.topBlock = Blocks.grass;
 			this.field_150604_aj = 0;
@@ -119,7 +119,7 @@ public class BiomeGenTaiga extends CubeBiomeGenBase {
 			}
 		}
 		
-		this.modifyBlocks(world, rand, cube, xAbs, yAbs, zAbs, val);
+		this.replaceBlocks(world, rand, cube, xAbs, yAbs, zAbs, val);
 	}
 	
 	protected CubeBiomeGenBase func_150566_k() {

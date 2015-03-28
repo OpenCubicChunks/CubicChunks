@@ -78,7 +78,7 @@ public class BiomeGenSwamp extends CubeBiomeGenBase {
 		return BlockFlower.field_149859_a[1];
 	}
 	
-	public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val) {
+	public void replaceBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double val) {
 		double var9 = field_150606_ad.func_151601_a((double)xAbs * 0.25D, (double)yAbs * 0.25D);
 		
 		if (var9 > 0.0D) {
@@ -107,6 +107,6 @@ public class BiomeGenSwamp extends CubeBiomeGenBase {
 			}
 		}
 		
-		this.modifyBlocks(world, rand, cube, xAbs, yAbs, zAbs, val);
+		this.replaceBlocks(world, rand, cube, xAbs, yAbs, zAbs, val);
 	}
 }

@@ -40,7 +40,7 @@ public class BiomeGenOcean extends CubeBiomeGenBase {
 		return CubeBiomeGenBase.TempCategory.OCEAN;
 	}
 	
-	public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var) {
-		super.modifyBlocks_pre(world, rand, cube, xAbs, yAbs, zAbs, var);
+	public void replaceBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var) {
+		super.replaceBlocks_pre(world, rand, cube, xAbs, yAbs, zAbs, var);
 	}
 }

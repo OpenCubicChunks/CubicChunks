@@ -30,6 +30,7 @@ import net.minecraft.block.BlockFlower;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
+import net.minecraft.world.decorator.Decorator;
 import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 import net.minecraft.world.gen.feature.WorldGenBigMushroom;
 import net.minecraft.world.gen.feature.WorldGenCactus;
@@ -44,7 +45,7 @@ import net.minecraft.world.gen.feature.WorldGenSand;
 import net.minecraft.world.gen.feature.WorldGenWaterlily;
 import net.minecraft.world.gen.feature.WorldGenerator;
 
-public class BiomeDecorator extends net.minecraft.world.biome.BiomeDecorator {
+public class BiomeDecorator extends Decorator {
 	
 	/** The world the BiomeDecorator is currently decorating */
 	protected World currentWorld;

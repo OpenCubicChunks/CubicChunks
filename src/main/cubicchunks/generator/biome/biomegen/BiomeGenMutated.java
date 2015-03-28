@@ -64,8 +64,8 @@ public class BiomeGenMutated extends CubeBiomeGenBase {
 		this.biome.theBiomeDecorator.func_150512_a(par1World, rand, this, par3, par4);
 	}
 	
-	public void modifyBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var) {
-		this.biome.modifyBlocks_pre(world, rand, cube, xAbs, yAbs, zAbs, var);
+	public void replaceBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var) {
+		this.biome.replaceBlocks_pre(world, rand, cube, xAbs, yAbs, zAbs, var);
 	}
 	
 	/**
