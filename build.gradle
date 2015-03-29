@@ -3,13 +3,16 @@ buildscript
 {
 	repositories {
 		mavenCentral()
-        mavenLocal()
+		mavenLocal()
 		jcenter()
 	}
 	dependencies {
 		classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'
 	}
 }
+
+//for debugging
+def USE_ECJ = true
 
 // Apply plugins
 apply plugin: 'java'
@@ -18,8 +21,10 @@ apply plugin: 'license'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
-// Default tasks
+//minecraft version to get Minecraft.jar for netbeans
+ext.minecraftVersion = "1.8.3"
 
+// Default tasks
 defaultTasks 'licenseFormat', 'build'
 
 // Basic project information
@@ -69,13 +74,42 @@ repositories
 	}
 }
 
+//Hacks to allow controlling classpath order
+configurations
+{ 
+	forge
+	m3l 
+	minecraft
+	minecraftDeps
+	minecraftObfJar
+}
+
 dependencies
 {
+	forge files('libs/forge-1.8-11.14.1.1336-universal.jar')
+	
+	m3l files('../m3l/lib/m3l-libs.jar')
+	m3l files('../m3l/lib/m3l.jar')
+	
+	minecraftObfJar files(getMinecraftJarLocation())
+	minecraftDeps files('../m3l/lib/minecraft-1.8.3-deps.jar')
+	minecraft files('../m3l/lib/minecraft-1.8.3-client-deobf.jar')
+	
 	compile 'org.mapdb:mapdb:1.0.7'
 	compile 'org.slf4j:slf4j-api:1.7.10'
-	compile files('libs/forge-1.8-11.14.1.1334-universal.jar')
 	testCompile 'junit:junit:4.11'
 }
+//ensure correct order
+sourceSets.main.compileClasspath = configurations.m3l + sourceSets.main.compileClasspath
+sourceSets.main.compileClasspath = configurations.minecraftDeps + sourceSets.main.compileClasspath
+sourceSets.main.compileClasspath = sourceSets.main.compileClasspath + configurations.minecraft
+sourceSets.main.compileClasspath = sourceSets.main.compileClasspath + configurations.forge
+
+sourceSets.main.runtimeClasspath = configurations.m3l + sourceSets.main.runtimeClasspath
+sourceSets.main.runtimeClasspath = configurations.minecraftDeps + sourceSets.main.runtimeClasspath
+sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + configurations.minecraft
+sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + configurations.forge
+sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + configurations.minecraftObfJar
 
 // Filter, process, and include resources
 processResources {
@@ -91,9 +125,9 @@ license {
 	ext.year = project.inceptionYear
 	exclude "**/*.info"
 	exclude "assets/*"
-	header file('HEADER.txt')
+	header file('license.txt')
 	sourceSets = project.sourceSets
-	ignoreFailures false
+	ignoreFailures true
 	strictCheck true
 	mapping {
 		java = 'SLASHSTAR_STYLE'
@@ -102,9 +136,20 @@ license {
 
 // Source compiler configuration
 configure([compileJava, compileTestJava]) {
-	options.compilerArgs += ['-Xlint:all', '-Xlint:-path']
 	options.deprecation = true
 	options.encoding = 'utf8'
+	if(USE_ECJ){
+		options.fork = true
+		options.define compilerArgs: [
+			'-Xlint:all', 
+			'-Xlint:-path',
+			'-proceedOnError'
+		]
+		options.failOnError = false
+		options.fork executable: 'ecj'
+	}else{	
+		options.compilerArgs += ['-Xlint:all', '-Xlint:-path']
+	}
 }
 
 // JAR manifest configuration
@@ -125,4 +170,65 @@ task sourceJar(type: Jar) {
 artifacts {
 	archives jar
 	archives sourceJar
+}
+
+def runCfg = {
+	standardInput = System.in//doesn't work on windows. gradle bug
+	workingDir = "eclipse"//this is usually used in forge projects
+
+	//make sure that workingDir exists and is a directory
+	File workDir = new File(getProjectDir(), 'eclipse');
+	System.out.println(workDir.getAbsolutePath())
+	if(!workDir.exists()){
+		workDir.mkdirs()
+		workDir.mkdir()
+	}
+	if(!workDir.isDirectory()){
+		//this provides more information than failed task...
+		throw new RuntimeException('workingDir is not a directory!')
+	}
+	//because gadle won't guess the classpath
+	classpath = sourceSets.main.runtimeClasspath
+	main = 'cuchaz.m3l.MainLauncher'
+	jvmArgs "-Xmx2G"
+	jvmArgs "-Djava.library.path=natives"//${workingDir}/natives
+	jvmArgs "-Dcuchaz.m3l.modClassNames=cubicchunks.TallWorldsMod"
+	args("client")
+	
+	ignoreExitValue = true
+	enableAssertions = true
+}
+
+/**
+ * Run and debug tasks. Used by Netbeans gradle plugin
+ */ 
+task run(type:JavaExec, dependsOn: build) {
+	doFirst { 
+		configure runCfg
+	}
+}
+
+task debug(type:JavaExec, dependsOn: build) {
+	doFirst {
+		configure runCfg
+		debug = true
+	}
+}
+
+//additional utils
+def getDotMinecraft(){
+	def location = null
+	if(System.getProperty("os.name").toUpperCase().contains("WIN")){
+		//windows
+		location = System.getenv("APPDATA")
+	}else{
+		//assume *nix
+		location = System.getProperty("user.home")
+	}
+	location += "/.minecraft"
+	return location
+}
+
+def getMinecraftJarLocation(){
+	return getDotMinecraft() + "/versions/" + ext.minecraftVersion + "/" + ext.minecraftVersion + ".jar"
 }
