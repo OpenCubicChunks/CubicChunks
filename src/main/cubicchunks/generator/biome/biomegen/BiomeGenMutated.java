@@ -29,11 +29,11 @@ import java.util.Random;
 import net.minecraft.world.World;
 import cubicchunks.world.Cube;
 
-public class BiomeGenMutated extends CubeBiomeGenBase {
+public class BiomeGenMutated extends CCBiome {
 	
-	protected CubeBiomeGenBase biome;
+	protected CCBiome biome;
 	
-	public BiomeGenMutated(int biomeID, CubeBiomeGenBase biome) {
+	public BiomeGenMutated(int biomeID, CCBiome biome) {
 		super(biomeID);
 		this.biome = biome;
 		this.func_150557_a(biome.color, true);
@@ -95,11 +95,11 @@ public class BiomeGenMutated extends CubeBiomeGenBase {
 		return this.biome.func_150562_l();
 	}
 	
-	public boolean func_150569_a(CubeBiomeGenBase biome) {
+	public boolean func_150569_a(CCBiome biome) {
 		return this.biome.func_150569_a(biome);
 	}
 	
-	public CubeBiomeGenBase.TempCategory func_150561_m() {
+	public CCBiome.TempCategory func_150561_m() {
 		return this.biome.func_150561_m();
 	}
 }

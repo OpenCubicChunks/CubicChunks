@@ -29,7 +29,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.world.World;
 import cubicchunks.world.Cube;
 
-public class BiomeGenHills extends CubeBiomeGenBase {
+public class BiomeGenHills extends CCBiome {
 	
 	private WorldGenerator theWorldGenerator;
 	private WorldGenTaiga2 genTaiga;
@@ -98,16 +98,16 @@ public class BiomeGenHills extends CubeBiomeGenBase {
 		this.replaceBlocks(world, rand, cube, xAbs, yAbs, zAbs, var);
 	}
 	
-	private BiomeGenHills func_150633_b(CubeBiomeGenBase biome) {
+	private BiomeGenHills func_150633_b(CCBiome biome) {
 		this.value4 = this.value3;
 		this.func_150557_a(biome.color, true);
 		this.setBiomeName(biome.biomeName + " M");
-		this.setHeightRange(new CubeBiomeGenBase.Height(biome.biomeHeight, biome.biomeVolatility));
+		this.setHeightRange(new CCBiome.Height(biome.biomeHeight, biome.biomeVolatility));
 		this.setTemperatureAndRainfall(biome.temperature, biome.rainfall);
 		return this;
 	}
 	
-	protected CubeBiomeGenBase func_150566_k() {
+	protected CCBiome func_150566_k() {
 		return (new BiomeGenHills(this.biomeID + 128, false)).func_150633_b(this);
 	}
 }

@@ -25,15 +25,15 @@ package cubicchunks.generator.biome.biomegen;
 
 import net.minecraft.block.Blocks;
 
-public class BiomeGenStoneBeach extends CubeBiomeGenBase {
+public class BiomeStoneBeach extends CCBiome {
 	
 	private static final String __OBFID = "CL_00000184";
 	
-	public BiomeGenStoneBeach(int p_i45384_1_) {
+	public BiomeStoneBeach(int p_i45384_1_) {
 		super(p_i45384_1_);
 		this.spawnableCreatureList.clear();
-		this.topBlock = Blocks.stone;
-		this.fillerBlock = Blocks.stone;
+		this.topBlock = Blocks.STONE;
+		this.fillerBlock = Blocks.STONE;
 		this.theBiomeDecorator.treesPerChunk = -999;
 		this.theBiomeDecorator.deadBushPerChunk = 0;
 		this.theBiomeDecorator.reedsPerChunk = 0;

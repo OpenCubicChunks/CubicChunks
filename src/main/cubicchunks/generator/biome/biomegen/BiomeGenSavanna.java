@@ -30,14 +30,14 @@ import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.world.World;
 import cubicchunks.world.Cube;
 
-public class BiomeGenSavanna extends CubeBiomeGenBase {
+public class BiomeGenSavanna extends CCBiome {
 	
 	private static final WorldGenSavannaTree field_150627_aC = new WorldGenSavannaTree(false);
 	private static final String __OBFID = "CL_00000182";
 	
 	protected BiomeGenSavanna(int p_i45383_1_) {
 		super(p_i45383_1_);
-		this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityHorse.class, 1, 2, 6));
+		this.spawnableCreatureList.add(new CCBiome.SpawnListEntry(EntityHorse.class, 1, 2, 6));
 		this.theBiomeDecorator.treesPerChunk = 1;
 		this.theBiomeDecorator.flowersPerChunk = 4;
 		this.theBiomeDecorator.grassPerChunk = 20;
@@ -47,7 +47,7 @@ public class BiomeGenSavanna extends CubeBiomeGenBase {
 		return (WorldGenAbstractTree) (p_150567_1_.nextInt(5) > 0 ? field_150627_aC : this.worldGeneratorTrees);
 	}
 	
-	protected CubeBiomeGenBase func_150566_k() {
+	protected CCBiome func_150566_k() {
 		BiomeGenSavanna.Mutated var1 = new BiomeGenSavanna.Mutated(this.biomeID + 128, this);
 		var1.temperature = (this.temperature + 1.0F) * 0.5F;
 		var1.biomeHeight = this.biomeHeight * 0.5F + 0.3F;
@@ -72,7 +72,7 @@ public class BiomeGenSavanna extends CubeBiomeGenBase {
 		
 		private static final String __OBFID = "CL_00000183";
 		
-		public Mutated(int p_i45382_1_, CubeBiomeGenBase p_i45382_2_) {
+		public Mutated(int p_i45382_1_, CCBiome p_i45382_2_) {
 			super(p_i45382_1_, p_i45382_2_);
 			this.theBiomeDecorator.treesPerChunk = 2;
 			this.theBiomeDecorator.flowersPerChunk = 2;

@@ -28,7 +28,7 @@ import java.util.Random;
 import net.minecraft.block.Blocks;
 import net.minecraft.world.World;
 
-public class BiomeGenDesert extends CubeBiomeGenBase {
+public class BiomeGenDesert extends CCBiome {
 	
 	public BiomeGenDesert(int par1) {
 		super(par1);

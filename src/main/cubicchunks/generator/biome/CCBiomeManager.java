@@ -37,7 +37,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.gen.layer.GenLayerBase;
 import net.minecraft.world.gen.layer.IntCache;
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 
 public class CCBiomeManager extends BiomeManager {
 	
@@ -50,18 +50,18 @@ public class CCBiomeManager extends BiomeManager {
 	private BiomeCache biomeCache;
 	
 	/** A list of biomes that the player can spawn in. */
-	private List<CubeBiomeGenBase> biomesToSpawnIn;
+	private List<CCBiome> biomesToSpawnIn;
 	
 	protected CCBiomeManager() {
 		this.biomeCache = new BiomeCache(this);
-		this.biomesToSpawnIn = new ArrayList<CubeBiomeGenBase>();
-		this.biomesToSpawnIn.add(CubeBiomeGenBase.forest);
-		this.biomesToSpawnIn.add(CubeBiomeGenBase.plains);
-		this.biomesToSpawnIn.add(CubeBiomeGenBase.taiga);
-		this.biomesToSpawnIn.add(CubeBiomeGenBase.taigaHills);
-		this.biomesToSpawnIn.add(CubeBiomeGenBase.forestHills);
-		this.biomesToSpawnIn.add(CubeBiomeGenBase.jungle);
-		this.biomesToSpawnIn.add(CubeBiomeGenBase.jungleHills);
+		this.biomesToSpawnIn = new ArrayList<CCBiome>();
+		this.biomesToSpawnIn.add(CCBiome.forest);
+		this.biomesToSpawnIn.add(CCBiome.plains);
+		this.biomesToSpawnIn.add(CCBiome.taiga);
+		this.biomesToSpawnIn.add(CCBiome.taigaHills);
+		this.biomesToSpawnIn.add(CCBiome.forestHills);
+		this.biomesToSpawnIn.add(CCBiome.jungle);
+		this.biomesToSpawnIn.add(CCBiome.jungleHills);
 	}
 	
 	public CCBiomeManager(long par1, DimensionType dimensionType, String customSettings) {
@@ -87,7 +87,7 @@ public class CCBiomeManager extends BiomeManager {
 	 * Returns the BiomeGenBase related to the x, z position on the world.
 	 */
 	@Override
-	public CubeBiomeGenBase getBiome(BlockPos pos) {
+	public CCBiome getBiome(BlockPos pos) {
 		return this.biomeCache.getBiomeGenAt(pos.getX(), pos.getZ());
 	}
 	
@@ -146,14 +146,14 @@ public class CCBiomeManager extends BiomeManager {
 		IntCache.resetIntCache();
 		
 		if (biomes == null || biomes.length < width * length) {
-			biomes = new CubeBiomeGenBase[width * length];
+			biomes = new CCBiome[width * length];
 		}
 		
 		int[] intArray = this.genBiomes.getInts(cubeX, cubeZ, width, length);
 		
 		try {
 			for (int i = 0; i < width * length; ++i) {
-				biomes[i] = CubeBiomeGenBase.getBiome(intArray[i]);
+				biomes[i] = CCBiome.getBiome(intArray[i]);
 				// biomes[i] = CubeBiomeGenBase.getBiome(1);
 			}
 			
@@ -186,18 +186,18 @@ public class CCBiomeManager extends BiomeManager {
 		IntCache.resetIntCache();
 		
 		if (biomes == null || biomes.length < width * length) {
-			biomes = new CubeBiomeGenBase[width * length];
+			biomes = new CCBiome[width * length];
 		}
 		
 		if (flag && width == 16 && length == 16 && (cubeX & 15) == 0 && (cubeZ & 15) == 0) {
-			CubeBiomeGenBase[] cachedBiomes = this.biomeCache.getCachedBiomes(cubeX, cubeZ);
+			CCBiome[] cachedBiomes = this.biomeCache.getCachedBiomes(cubeX, cubeZ);
 			System.arraycopy(cachedBiomes, 0, biomes, 0, width * length);
 			return biomes;
 		} else {
 			int[] aInt = this.biomeIndexLayer.getInts(cubeX, cubeZ, width, length);
 			
 			for (int i = 0; i < width * length; ++i) {
-				biomes[i] = CubeBiomeGenBase.getBiome(aInt[i]);
+				biomes[i] = CCBiome.getBiome(aInt[i]);
 				
 				// make sure we got a valid biome
 				assert (biomes[i] != null);
@@ -225,7 +225,7 @@ public class CCBiomeManager extends BiomeManager {
 		
 		try {
 			for (int i = 0; i < width * length; ++i) {
-				CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome(aInt[i]);
+				CCBiome biome = CCBiome.getBiome(aInt[i]);
 				
 				if (!list.contains(biome)) {
 					return false;
@@ -264,7 +264,7 @@ public class CCBiomeManager extends BiomeManager {
 		List<BlockPos> possibleSpawns = new ArrayList<BlockPos>();
 		for (int x = 0; x < noiseXSize; x++) {
 			for (int z = 0; z < noiseZSize; z++) {
-				CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome(biomeNoise[x + z * noiseXSize]);
+				CCBiome biome = CCBiome.getBiome(biomeNoise[x + z * noiseXSize]);
 				if (spawnBiomes.contains(biome)) {
 					int spawnBlockX = (minNoiseX + x) * BlocksPerSample;
 					int spawnBlockZ = (minNoiseZ + z) * BlocksPerSample;

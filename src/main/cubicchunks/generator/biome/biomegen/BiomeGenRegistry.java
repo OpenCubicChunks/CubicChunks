@@ -28,16 +28,16 @@ import java.util.List;
 
 public class BiomeGenRegistry {
 	
-	private static List<CubeBiomeGenBase> biomeList;
+	private static List<CCBiome> biomeList;
 	
-	protected static final CubeBiomeGenBase.Height oceanRange = new CubeBiomeGenBase.Height(-1.0F, 0.1F);
+	protected static final CCBiome.Height oceanRange = new CCBiome.Height(-1.0F, 0.1F);
 	
 	static {
-		biomeList = new ArrayList<CubeBiomeGenBase>();
+		biomeList = new ArrayList<CCBiome>();
 		biomeList.add(new BiomeGenBeach(0).setColor(112).setBiomeName("Ocean").setHeightRange(oceanRange));
 	}
 	
-	public static List<CubeBiomeGenBase> getBiomes() {
-		return new ArrayList<CubeBiomeGenBase>(biomeList);
+	public static List<CCBiome> getBiomes() {
+		return new ArrayList<CCBiome>(biomeList);
 	}
 }

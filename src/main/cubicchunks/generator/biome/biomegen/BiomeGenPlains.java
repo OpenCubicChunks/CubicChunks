@@ -29,7 +29,7 @@ import net.minecraft.block.BlockFlower;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.world.World;
 
-public class BiomeGenPlains extends CubeBiomeGenBase {
+public class BiomeGenPlains extends CCBiome {
 	
 	protected boolean field_150628_aC;
 	
@@ -37,7 +37,7 @@ public class BiomeGenPlains extends CubeBiomeGenBase {
 		super(biomeID);
 		this.setTemperatureAndRainfall(0.8F, 0.4F);
 		this.setHeightRange(PlainsRange);
-		this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityHorse.class, 5, 2, 6));
+		this.spawnableCreatureList.add(new CCBiome.SpawnListEntry(EntityHorse.class, 5, 2, 6));
 		this.theBiomeDecorator.treesPerChunk = -999;
 		this.theBiomeDecorator.flowersPerChunk = 4;
 		this.theBiomeDecorator.grassPerChunk = 10;
@@ -95,7 +95,7 @@ public class BiomeGenPlains extends CubeBiomeGenBase {
 		super.decorate(par1World, par2Random, par3, par4);
 	}
 	
-	protected CubeBiomeGenBase func_150566_k() {
+	protected CCBiome func_150566_k() {
 		BiomeGenPlains var1 = new BiomeGenPlains(this.biomeID + 128);
 		var1.setBiomeName("Sunflower Plains");
 		var1.field_150628_aC = true;

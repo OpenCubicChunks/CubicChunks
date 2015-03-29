@@ -175,7 +175,7 @@ public class BiomeDecorator extends Decorator {
 		this.generateLakes = true;
 	}
 	
-	public void func_150512_a(World world, Random rand, CubeBiomeGenBase biome, int cubeX, int cubeZ) {
+	public void func_150512_a(World world, Random rand, CCBiome biome, int cubeX, int cubeZ) {
 		if (this.currentWorld != null) {
 			throw new RuntimeException("Already decorating!!");
 		} else {
@@ -189,7 +189,7 @@ public class BiomeDecorator extends Decorator {
 		}
 	}
 	
-	protected void func_150513_a(CubeBiomeGenBase biome) {
+	protected void func_150513_a(CCBiome biome) {
 		this.generateOres();
 		int var2;
 		int var3;

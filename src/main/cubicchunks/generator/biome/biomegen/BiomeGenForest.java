@@ -30,7 +30,7 @@ import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
-public class BiomeGenForest extends CubeBiomeGenBase {
+public class BiomeGenForest extends CCBiome {
 	
 	private int field_150632_aF;
 	protected static final WorldGenForest field_150629_aC = new WorldGenForest(false, true);
@@ -59,7 +59,7 @@ public class BiomeGenForest extends CubeBiomeGenBase {
 		}
 		
 		if (this.field_150632_aF == 0) {
-			this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityWolf.class, 5, 4, 4));
+			this.spawnableCreatureList.add(new CCBiome.SpawnListEntry(EntityWolf.class, 5, 4, 4));
 		}
 		
 		if (this.field_150632_aF == 3) {
@@ -67,7 +67,7 @@ public class BiomeGenForest extends CubeBiomeGenBase {
 		}
 	}
 	
-	protected CubeBiomeGenBase func_150557_a(int p_150557_1_, boolean p_150557_2_) {
+	protected CCBiome func_150557_a(int p_150557_1_, boolean p_150557_2_) {
 		if (this.field_150632_aF == 2) {
 			this.field_150609_ah = 353825;
 			this.color = p_150557_1_;
@@ -179,16 +179,16 @@ public class BiomeGenForest extends CubeBiomeGenBase {
 		return this.field_150632_aF == 3 ? (var4 & 16711422) + 2634762 >> 1 : var4;
 	}
 	
-	protected CubeBiomeGenBase func_150566_k() {
-		if (this.biomeID == CubeBiomeGenBase.forest.biomeID) {
+	protected CCBiome func_150566_k() {
+		if (this.biomeID == CCBiome.forest.biomeID) {
 			BiomeGenForest var1 = new BiomeGenForest(this.biomeID + 128, 1);
-			var1.setHeightRange(new CubeBiomeGenBase.Height(this.biomeHeight, this.biomeVolatility + 0.2F));
+			var1.setHeightRange(new CCBiome.Height(this.biomeHeight, this.biomeVolatility + 0.2F));
 			var1.setBiomeName("Flower Forest");
 			var1.func_150557_a(6976549, true);
 			var1.func_76733_a(8233509);
 			return var1;
 		} else {
-			return this.biomeID != CubeBiomeGenBase.birchForest.biomeID && this.biomeID != CubeBiomeGenBase.birchForestHills.biomeID ? new BiomeGenMutated(this.biomeID + 128, this) {
+			return this.biomeID != CCBiome.birchForest.biomeID && this.biomeID != CCBiome.birchForestHills.biomeID ? new BiomeGenMutated(this.biomeID + 128, this) {
 				
 				public void decorate(World var1, Random var2, int var3, int var4) {
 					this.biome.decorate(var1, var2, var3, var4);

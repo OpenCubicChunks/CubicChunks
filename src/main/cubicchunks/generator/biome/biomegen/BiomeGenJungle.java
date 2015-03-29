@@ -30,7 +30,7 @@ import net.minecraft.entity.passive.EntityChicken;
 import net.minecraft.entity.passive.EntityOcelot;
 import net.minecraft.world.World;
 
-public class BiomeGenJungle extends CubeBiomeGenBase {
+public class BiomeGenJungle extends CCBiome {
 	
 	private boolean field_150614_aC;
 	
@@ -48,10 +48,10 @@ public class BiomeGenJungle extends CubeBiomeGenBase {
 		this.theBiomeDecorator.flowersPerChunk = 4;
 		
 		if (!p_i45379_2_) {
-			this.spawnableMonsterList.add(new CubeBiomeGenBase.SpawnListEntry(EntityOcelot.class, 2, 1, 1));
+			this.spawnableMonsterList.add(new CCBiome.SpawnListEntry(EntityOcelot.class, 2, 1, 1));
 		}
 		
-		this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityChicken.class, 10, 4, 4));
+		this.spawnableCreatureList.add(new CCBiome.SpawnListEntry(EntityChicken.class, 10, 4, 4));
 	}
 	
 	public WorldGenAbstractTree checkSpawnTree(Random p_150567_1_) {

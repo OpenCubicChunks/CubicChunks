@@ -30,7 +30,7 @@ import net.minecraft.world.biome.BiomeManagerSingle;
 import net.minecraft.world.gen.FlatGeneratorInfo;
 import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.biome.CCBiomeManager;
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.server.CubeWorldServer;
 
 public abstract class CubeWorldProvider extends Dimension {
@@ -41,7 +41,7 @@ public abstract class CubeWorldProvider extends Dimension {
 		
 		if (this.world.getGenerator() == DimensionType.FLAT) {
 			FlatGeneratorInfo info = FlatGeneratorInfo.createFlatGeneratorFromString(this.world.getWorldInfo().getGeneratorOptions());
-			this.biomeManager = new BiomeManagerSingle(CubeBiomeGenBase.getBiome(info.getBiomeID()), 0.5F);
+			this.biomeManager = new BiomeManagerSingle(CCBiome.getBiome(info.getBiomeID()), 0.5F);
 		} else {
 			this.biomeManager = new BiomeManager(this.world);
 		}

@@ -23,7 +23,7 @@
  */
 package cubicchunks.generator.biome.biomegen;
 
-public class BiomeGenRiver extends CubeBiomeGenBase {
+public class BiomeGenRiver extends CCBiome {
 	
 	private static final String __OBFID = "CL_00000181";
 	

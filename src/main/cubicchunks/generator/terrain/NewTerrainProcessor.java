@@ -27,7 +27,7 @@ import java.util.Random;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.generator.builder.BasicBuilder;
 import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
@@ -50,7 +50,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 	private final byte[] waterLevel = new byte[CUBE_X_SIZE * CUBE_Z_SIZE];
 	
 	private CubeWorldServer worldServer;
-	private CubeBiomeGenBase[] biomes;
+	private CCBiome[] biomes;
 	
 	private Random rand;
 	
@@ -148,7 +148,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
-		this.biomes = (CubeBiomeGenBase[])this.worldServer.getCubeWorldProvider().getWorldColumnMananger().getBiomesForGeneration(this.biomes, cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius, xNoiseSize + this.maxSmoothDiameter, zNoiseSize + this.maxSmoothDiameter);
+		this.biomes = (CCBiome[])this.worldServer.getCubeWorldProvider().getWorldColumnMananger().getBiomesForGeneration(this.biomes, cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius, xNoiseSize + this.maxSmoothDiameter, zNoiseSize + this.maxSmoothDiameter);
 		
 		this.generateNoiseArrays(cube);
 		
@@ -405,7 +405,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 		double heightSum = 0.0F;
 		float biomeWeightSum = 0.0F;
 		
-		final CubeBiomeGenBase centerBiomeConfig = this.biomes[ (x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
+		final CCBiome centerBiomeConfig = this.biomes[ (x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
 		final int lookRadius = 2/* centerBiomeConfig.smoothRadius */;
 		
 		float nextBiomeHeight;
@@ -413,7 +413,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 		
 		for (int nextX = -lookRadius; nextX <= lookRadius; nextX++) {
 			for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++) {
-				final CubeBiomeGenBase nextBiomeConfig = this.biomes[ (x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
+				final CCBiome nextBiomeConfig = this.biomes[ (x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
 				
 				nextBiomeHeight = nextBiomeConfig.biomeHeight;
 				

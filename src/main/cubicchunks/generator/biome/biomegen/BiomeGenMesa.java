@@ -32,7 +32,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.world.World;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
 
-public class BiomeGenMesa extends CubeBiomeGenBase {
+public class BiomeGenMesa extends CCBiome {
 	
 	private byte[] field_150621_aC;
 	private long field_150622_aD;
@@ -308,8 +308,8 @@ public class BiomeGenMesa extends CubeBiomeGenBase {
 		return this.field_150621_aC[ (p_150618_2_ + var4 + 64) % 64];
 	}
 	
-	protected CubeBiomeGenBase func_150566_k() {
-		boolean var1 = this.biomeID == CubeBiomeGenBase.mesa.biomeID;
+	protected CCBiome func_150566_k() {
+		boolean var1 = this.biomeID == CCBiome.mesa.biomeID;
 		BiomeGenMesa var2 = new BiomeGenMesa(this.biomeID + 128, var1, this.field_150620_aI);
 		
 		if (!var1) {

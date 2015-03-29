@@ -26,7 +26,7 @@ package cubicchunks.generator.biome.biomegen;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.monster.EntityEnderman;
 
-public class BiomeGenEnd extends CubeBiomeGenBase {
+public class BiomeGenEnd extends CCBiome {
 	
 	public BiomeGenEnd(int par1) {
 		super(par1);
@@ -34,7 +34,7 @@ public class BiomeGenEnd extends CubeBiomeGenBase {
 		this.spawnableCreatureList.clear();
 		this.spawnableWaterCreatureList.clear();
 		this.spawnableCaveCreatureList.clear();
-		this.spawnableMonsterList.add(new CubeBiomeGenBase.SpawnListEntry(EntityEnderman.class, 10, 4, 4));
+		this.spawnableMonsterList.add(new CCBiome.SpawnListEntry(EntityEnderman.class, 10, 4, 4));
 		this.topBlock = Blocks.dirt;
 		this.fillerBlock = Blocks.dirt;
 		this.theBiomeDecorator = new BiomeEndDecorator();

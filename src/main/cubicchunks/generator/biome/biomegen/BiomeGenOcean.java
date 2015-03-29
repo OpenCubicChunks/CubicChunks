@@ -28,15 +28,15 @@ import java.util.Random;
 import net.minecraft.world.World;
 import cubicchunks.world.Cube;
 
-public class BiomeGenOcean extends CubeBiomeGenBase {
+public class BiomeGenOcean extends CCBiome {
 	
 	public BiomeGenOcean(int par1) {
 		super(par1);
 		this.spawnableCreatureList.clear();
 	}
 	
-	public CubeBiomeGenBase.TempCategory func_150561_m() {
-		return CubeBiomeGenBase.TempCategory.OCEAN;
+	public CCBiome.TempCategory func_150561_m() {
+		return CCBiome.TempCategory.OCEAN;
 	}
 	
 	public void replaceBlocks_pre(World world, Random rand, Cube cube, int xAbs, int yAbs, int zAbs, double var) {

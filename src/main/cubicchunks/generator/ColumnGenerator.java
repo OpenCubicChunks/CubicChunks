@@ -23,7 +23,7 @@
  */
 package cubicchunks.generator;
 
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Column;
@@ -31,7 +31,7 @@ import cubicchunks.world.Column;
 public class ColumnGenerator {
 	
 	private CubeWorldServer m_worldServer;
-	private CubeBiomeGenBase[] m_biomes;
+	private CCBiome[] m_biomes;
 	
 	public ColumnGenerator(CubeWorldServer worldServer) {
 		this.m_worldServer = worldServer;
@@ -40,7 +40,7 @@ public class ColumnGenerator {
 	
 	public Column generateColumn(int cubeX, int cubeZ) {
 		// generate biome info. This is a hackjob.
-		this.m_biomes = (CubeBiomeGenBase[])this.m_worldServer.getCubeWorldProvider()
+		this.m_biomes = (CCBiome[])this.m_worldServer.getCubeWorldProvider()
 				.getWorldColumnMananger().loadBlockGeneratorData(this.m_biomes,
 						Coords.cubeToMinBlock(cubeX), 
 						Coords.cubeToMinBlock(cubeZ), 16, 16);

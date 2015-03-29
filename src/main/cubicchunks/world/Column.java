@@ -59,7 +59,7 @@ import com.google.common.base.Predicate;
 
 import cubicchunks.CubeWorld;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
@@ -84,7 +84,7 @@ public class Column extends Chunk {
 		init();
 	}
 	
-	public Column(World world, int cubeX, int cubeZ, CubeBiomeGenBase[] biomes) {
+	public Column(World world, int cubeX, int cubeZ, CCBiome[] biomes) {
 		
 		// NOTE: this constructor is called by the cube generator
 		this(world, cubeX, cubeZ);

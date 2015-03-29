@@ -28,7 +28,7 @@ import java.util.List;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.LongHashMap;
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 
 public class BiomeCache {
 	
@@ -72,7 +72,7 @@ public class BiomeCache {
 	/**
 	 * Returns the BiomeGenBase related to the x, z position from the cache.
 	 */
-	public CubeBiomeGenBase getBiomeGenAt(int xAbs, int zAbs) {
+	public CCBiome getBiomeGenAt(int xAbs, int zAbs) {
 		return this.getBiomeCacheBlock(xAbs, zAbs).getBiomeGenAt(xAbs, zAbs);
 	}
 	
@@ -102,14 +102,14 @@ public class BiomeCache {
 	/**
 	 * Returns the array of cached biome types in the BiomeCacheBlock at the given location.
 	 */
-	public CubeBiomeGenBase[] getCachedBiomes(int xAbs, int zAbs) {
+	public CCBiome[] getCachedBiomes(int xAbs, int zAbs) {
 		return this.getBiomeCacheBlock(xAbs, zAbs).biomes;
 	}
 	
 	public class CacheBlock {
 		
 		public float[] rainfallValues = new float[256];
-		public CubeBiomeGenBase[] biomes = new CubeBiomeGenBase[256];
+		public CCBiome[] biomes = new CCBiome[256];
 		public int xPosition;
 		public int zPosition;
 		public long lastAccessTime;
@@ -121,7 +121,7 @@ public class BiomeCache {
 			BiomeCache.this.columnManager.getBiomeGenAt(this.biomes, cubeX << 4, cubeZ << 4, 16, 16, false);
 		}
 		
-		public CubeBiomeGenBase getBiomeGenAt(int xAbs, int zAbs) {
+		public CCBiome getBiomeGenAt(int xAbs, int zAbs) {
 			return this.biomes[xAbs & 15 | (zAbs & 15) << 4];
 		}
 	}

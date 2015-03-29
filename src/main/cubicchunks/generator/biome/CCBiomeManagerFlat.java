@@ -29,17 +29,17 @@ import java.util.Random;
 
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.biome.Biome;
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 
 public class CCBiomeManagerFlat extends CCBiomeManager {
 	
 	/** The biome generator object. */
-	private CubeBiomeGenBase biomeGenerator;
+	private CCBiome biomeGenerator;
 	
 	/** The rainfall in the world */
 	private float rainfall; // this is hell, there IS no rain.
 	
-	public CCBiomeManagerFlat(CubeBiomeGenBase p_i45374_1_, float p_i45374_2_) {
+	public CCBiomeManagerFlat(CCBiome p_i45374_1_, float p_i45374_2_) {
 		this.biomeGenerator = p_i45374_1_;
 		this.rainfall = p_i45374_2_;
 	}
@@ -47,7 +47,7 @@ public class CCBiomeManagerFlat extends CCBiomeManager {
 	/**
 	 * Returns the BiomeGenBase related to the x, z position on the world.
 	 */
-	public CubeBiomeGenBase getBiomeGenAt(int par1, int par2) {
+	public CCBiome getBiomeGenAt(int par1, int par2) {
 		return this.biomeGenerator;
 	}
 	
@@ -56,9 +56,9 @@ public class CCBiomeManagerFlat extends CCBiomeManager {
 	 * 
 	 * It ignores the cubeX, cubeZ input since it doesn't care, it's exactly the same biome everywhere in the nether.
 	 */
-	public CubeBiomeGenBase[] getBiomesForGeneration(CubeBiomeGenBase[] aBiomeGenBase, int par2, int par3, int width, int length) {
+	public CCBiome[] getBiomesForGeneration(CCBiome[] aBiomeGenBase, int par2, int par3, int width, int length) {
 		if (aBiomeGenBase == null || aBiomeGenBase.length < width * length) {
-			aBiomeGenBase = new CubeBiomeGenBase[width * length];
+			aBiomeGenBase = new CCBiome[width * length];
 		}
 		
 		Arrays.fill(aBiomeGenBase, 0, width * length, this.biomeGenerator); // fills the array with biome 0. same biome everywhere, then.
@@ -80,9 +80,9 @@ public class CCBiomeManagerFlat extends CCBiomeManager {
 	/**
 	 * Returns biomes to use for the blocks and loads the other data like temperature and humidity onto the WorldChunkManager Args: oldBiomeList, x, z, width, depth
 	 */
-	public CubeBiomeGenBase[] loadBlockGeneratorData(CubeBiomeGenBase[] par1ArrayOfBiomeGenBase, int par2, int par3, int par4, int par5) {
+	public CCBiome[] loadBlockGeneratorData(CCBiome[] par1ArrayOfBiomeGenBase, int par2, int par3, int par4, int par5) {
 		if (par1ArrayOfBiomeGenBase == null || par1ArrayOfBiomeGenBase.length < par4 * par5) {
-			par1ArrayOfBiomeGenBase = new CubeBiomeGenBase[par4 * par5];
+			par1ArrayOfBiomeGenBase = new CCBiome[par4 * par5];
 		}
 		
 		Arrays.fill(par1ArrayOfBiomeGenBase, 0, par4 * par5, this.biomeGenerator);
@@ -92,7 +92,7 @@ public class CCBiomeManagerFlat extends CCBiomeManager {
 	/**
 	 * Return a list of biomes for the specified blocks. Args: listToReuse, x, y, width, length, cacheFlag (if false, don't check biomeCache to avoid infinite loop in BiomeCacheBlock)
 	 */
-	public CubeBiomeGenBase[] getBiomeGenAt(CubeBiomeGenBase[] par1ArrayOfBiomeGenBase, int par2, int par3, int par4, int par5, boolean par6) {
+	public CCBiome[] getBiomeGenAt(CCBiome[] par1ArrayOfBiomeGenBase, int par2, int par3, int par4, int par5, boolean par6) {
 		return this.loadBlockGeneratorData(par1ArrayOfBiomeGenBase, par2, par3, par4, par5);
 	}
 	

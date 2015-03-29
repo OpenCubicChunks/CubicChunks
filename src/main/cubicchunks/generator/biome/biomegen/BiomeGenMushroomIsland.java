@@ -26,7 +26,7 @@ package cubicchunks.generator.biome.biomegen;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.passive.EntityMooshroom;
 
-public class BiomeGenMushroomIsland extends CubeBiomeGenBase {
+public class BiomeGenMushroomIsland extends CCBiome {
 	
 	private static final String __OBFID = "CL_00000177";
 	
@@ -41,6 +41,6 @@ public class BiomeGenMushroomIsland extends CubeBiomeGenBase {
 		this.spawnableMonsterList.clear();
 		this.spawnableCreatureList.clear();
 		this.spawnableWaterCreatureList.clear();
-		this.spawnableCreatureList.add(new CubeBiomeGenBase.SpawnListEntry(EntityMooshroom.class, 8, 4, 8));
+		this.spawnableCreatureList.add(new CCBiome.SpawnListEntry(EntityMooshroom.class, 8, 4, 8));
 	}
 }

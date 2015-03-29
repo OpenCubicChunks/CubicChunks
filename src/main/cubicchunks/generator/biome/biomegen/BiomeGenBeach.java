@@ -25,13 +25,13 @@ package cubicchunks.generator.biome.biomegen;
 
 import net.minecraft.block.Blocks;
 
-public class BiomeGenBeach extends CubeBiomeGenBase {
+public class BiomeGenBeach extends CCBiome {
 	
 	public BiomeGenBeach(int par1) {
 		super(par1);
 		this.spawnableCreatureList.clear();
-		this.topBlock = Blocks.sand;
-		this.fillerBlock = Blocks.sand;
+		this.topBlock = Blocks.SAND;
+		this.fillerBlock = Blocks.SAND;
 		this.theBiomeDecorator.treesPerChunk = -999;
 		this.theBiomeDecorator.deadBushPerChunk = 0;
 		this.theBiomeDecorator.reedsPerChunk = 0;

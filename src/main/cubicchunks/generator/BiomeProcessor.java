@@ -31,7 +31,7 @@ import net.minecraft.util.BlockPos;
 import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
 import cubicchunks.CubeWorld;
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
 import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
@@ -45,7 +45,7 @@ public class BiomeProcessor extends CubeProcessor {
 	private Random rand;
 	private NoiseGeneratorPerlin m_noiseGen;
 	private double[] noise;
-	private CubeBiomeGenBase[] biomes;
+	private CCBiome[] biomes;
 	
 	private int seaLevel;
 	
@@ -71,7 +71,7 @@ public class BiomeProcessor extends CubeProcessor {
 		}
 		
 		// generate biome info. This is a hackjob.
-		this.biomes = (CubeBiomeGenBase[])this.worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(this.biomes, Coords.cubeToMinBlock(cube.getX()), Coords.cubeToMinBlock(cube.getZ()), 16, 16);
+		this.biomes = (CCBiome[])this.worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(this.biomes, Coords.cubeToMinBlock(cube.getX()), Coords.cubeToMinBlock(cube.getZ()), 16, 16);
 		
 		this.noise = this.m_noiseGen.arrayNoise2D_pre(this.noise, Coords.cubeToMinBlock(cube.getX()), Coords.cubeToMinBlock(cube.getZ()), 16, 16, 16, 16, 1);
 		
@@ -94,7 +94,7 @@ public class BiomeProcessor extends CubeProcessor {
 				
 				int xzCoord = zRel << 4 | xRel;
 				
-				CubeBiomeGenBase biome = this.biomes[xzCoord];
+				CCBiome biome = this.biomes[xzCoord];
 				
 				// Biome blocks depth in current block column. 0 for negative values.
 				

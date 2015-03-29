@@ -134,9 +134,9 @@ public class CubePlayerManager extends PlayerManager {
 		this.m_players.put(player.getEntityId(), info);
 		
 		// set initial player position
-		info.blockX = MathHelper.floor(player.xPos);
-		info.blockY = MathHelper.floor(player.yPos);
-		info.blockZ = MathHelper.floor(player.zPos);
+		info.blockX = MathHelper.floorDoubleToInt(player.xPos);
+		info.blockY = MathHelper.floorDoubleToInt(player.yPos);
+		info.blockZ = MathHelper.floorDoubleToInt(player.zPos);
 		int cubeX = Coords.blockToCube(info.blockX);
 		int cubeY = Coords.blockToCube(info.blockY);
 		int cubeZ = Coords.blockToCube(info.blockZ);
@@ -239,9 +239,9 @@ public class CubePlayerManager extends PlayerManager {
 		}
 		
 		// did the player move far enough to matter?
-		int newBlockX = MathHelper.floor(player.xPos);
-		int newBlockY = MathHelper.floor(player.yPos);
-		int newBlockZ = MathHelper.floor(player.zPos);
+		int newBlockX = MathHelper.floorDoubleToInt(player.xPos);
+		int newBlockY = MathHelper.floorDoubleToInt(player.yPos);
+		int newBlockZ = MathHelper.floorDoubleToInt(player.zPos);
 		int manhattanDistance = Math.abs(newBlockX - info.blockX) + Math.abs(newBlockY - info.blockY) + Math.abs(newBlockZ - info.blockZ);
 		if (manhattanDistance < 8) {
 			return;
