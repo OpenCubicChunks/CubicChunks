@@ -67,7 +67,7 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 		super(server, saveHandler, worldInfo, dimension, profiler);
 		
 		// set the player manager
-		CubePlayerManager playerManager = new CubePlayerManager(this, server.getConfigurationManager().getViewDistance());
+		CubePlayerManager playerManager = new CubePlayerManager(this, server.getConfigurationManager().getViewRadius());
 		WorldServerAccessor.setPlayerManager(this, playerManager);
 	}
 	
@@ -88,12 +88,12 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 	}
 	
 	@Override
-	public ServerCubeCache getCubeCache(WorldServer server) {
-		return (ServerCubeCache)server.serverChunkCache;
-	}}
+	public ServerCubeCache getCubeCache() {
+		return (ServerCubeCache)this.serverChunkCache;
+	}
 	
 	@Override
-	public LightingManager getLightingManager(World world) {
+	public LightingManager getLightingManager() {
 		return this.lightingManager;
 	}
 	
@@ -130,14 +130,14 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 	}
 	
 	@Override
-	public boolean checkChunksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ) {
-		return CubeProviderTools.blocksExist((CubeCache)chunkProvider, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
+	public boolean checkBlockRangeIsInWorld(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean flag) {
+		return CubeProviderTools.blocksExist((CubeCache)this.chunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
 	}
 	
 	@Override
 	public boolean updateLightingAt(LightType lightType, BlockPos pos) {
 		// forward to the new lighting system
-		return this.lightingManager.computeDiffuseLighting(blockX, blockY, blockZ, lightType);
+		return this.lightingManager.computeDiffuseLighting(pos, lightType);
 	}
 	
 	@Override
@@ -148,7 +148,7 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 		
 		// apply random ticks
 		for (ChunkCoordIntPair coords : (Set<ChunkCoordIntPair>)this.activeChunkSet) {
-			Column column = (Column)chunkProvider.provideChunk(coords.chunkX, coords.chunkZ);
+			Column column = (Column)this.chunkCache.getChunk(coords.chunkX, coords.chunkZ);
 			column.doRandomTicks();
 		}
 	}
@@ -172,8 +172,8 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 		Random rand = new Random(getSeed());
 		
 		// defer to the column manager to find the x,z part of the spawn point
-		CCBiomeManager columnManager = getCubeWorldProvider().getWorldColumnMananger();
-		BlockPos spawnPosition = columnManager.getRandomPositionInBiome(0, 0, 256, columnManager.getSpawnableBiomes(), rand);
+		CCBiomeManager biomeManager = getCubeWorldProvider().getBiomeMananger();
+		BlockPos spawnPosition = biomeManager.getRandomPositionInBiome(0, 0, 256, biomeManager.getSpawnableBiomes(), rand);
 		if (spawnPosition != null) {
 			spawnBlockX = spawnPosition.getX();
 			spawnBlockZ = spawnPosition.getZ();
@@ -189,7 +189,7 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 		int spawnCubeZ = Coords.blockToCube(spawnBlockZ);
 		
 		final int SearchDistance = 4;
-		ServerCubeCache cubeCache = getCubeCache(null);
+		ServerCubeCache cubeCache = getCubeCache();
 		for (int cubeX = spawnCubeX - SearchDistance; cubeX <= spawnCubeX + SearchDistance; cubeX++) {
 			for (int cubeY = spawnCubeY - SearchDistance; cubeY <= spawnCubeY + SearchDistance; cubeY++) {
 				for (int cubeZ = spawnCubeZ - SearchDistance; cubeZ <= spawnCubeZ + SearchDistance; cubeZ++) {

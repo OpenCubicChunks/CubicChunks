@@ -35,14 +35,14 @@ import cubicchunks.world.LightIndex;
 
 public class FirstLightProcessor extends CubeProcessor {
 	
-	public FirstLightProcessor(String name, CubeCache provider, int batchSize) {
-		super(name, provider, batchSize);
+	public FirstLightProcessor(String name, CubeCache cache, int batchSize) {
+		super(name, cache, batchSize);
 	}
 	
 	@Override
 	public boolean calculate(Cube cube) {
 		// only light if the neighboring cubes exist
-		CubeCache cache = ((CubeWorld)cube.getWorld()).getCubeCache(worldServer);
+		CubeCache cache = ((CubeWorld)cube.getWorld()).getCubeCache();
 		if (!CubeProviderTools.cubeAndNeighborsExist(cache, cube.getX(), cube.getY(), cube.getZ())) {
 			return false;
 		}

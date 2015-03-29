@@ -101,7 +101,7 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 		
 		CubeWorld cubeWorld = (CubeWorld)world;
 		for (int blockY = minBlockY; blockY <= maxBlockY; blockY++) {
-			CubeWorld.getLightingManager(cubeWorld).computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
+			cubeWorld.getLightingManager().computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
 		}
 		
 		return true;

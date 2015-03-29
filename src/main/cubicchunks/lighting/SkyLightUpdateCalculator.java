@@ -38,7 +38,7 @@ public class SkyLightUpdateCalculator {
 		// NOTE: maxBlockY is always the air block above the top block that was added or removed
 		
 		World world = column.getWorld();
-		LightingManager lightingManager = CubeWorld.getLightingManager(world);
+		LightingManager lightingManager = ((CubeWorld) world).getLightingManager();
 		
 		if (world.dimension.hasNoSky()) {
 			return;

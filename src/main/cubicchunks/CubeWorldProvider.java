@@ -47,7 +47,7 @@ public abstract class CubeWorldProvider extends Dimension {
 		}
 	}
 	
-	public CCBiomeManager getWorldColumnMananger() {
+	public CCBiomeManager getBiomeMananger() {
 		return (CCBiomeManager)this.biomeManager;
 	}
 	

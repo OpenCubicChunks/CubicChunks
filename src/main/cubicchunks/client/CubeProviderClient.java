@@ -66,7 +66,7 @@ public class CubeProviderClient extends ClientChunkCache implements CubeCache {
 	}
 	
 	@Override
-	public Column generate(int cubeX, int cubeZ) {
+	public Column getChunk(int cubeX, int cubeZ) {
 		// is this chunk already loaded?
 		LongHashMap chunkMapping = ChunkProviderClientAccessor.getChunkMapping(this);
 		Column column = (Column)chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));

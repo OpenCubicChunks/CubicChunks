@@ -253,7 +253,7 @@ public class Column extends Chunk {
 			assert (minBlockY < maxBlockY) : "Values not sorted! " + minBlockY + ", " + maxBlockY;
 			
 			// update light and signal render update
-			CubeWorld.getLightingManager(this.world).computeSkyLightUpdate(this, x, z, minBlockY, maxBlockY);
+			((CubeWorld) cube.getWorld()).getLightingManager().computeSkyLightUpdate(this, x, z, minBlockY, maxBlockY);
 			this.world.markBlockRangeForRenderUpdate(pos.getX(), minBlockY, pos.getZ(), pos.getX(), maxBlockY, pos.getZ());
 		}
 		
@@ -261,7 +261,7 @@ public class Column extends Chunk {
 		int skyLight = getLightAt(LightType.SKY, pos);
 		int blockLight = getLightAt(LightType.BLOCK, pos);
 		if (newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0)) {
-			CubeWorld.getLightingManager(this.world).queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
+			((CubeWorld)cube.getWorld()).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
 		}
 		
 		// update lighting index

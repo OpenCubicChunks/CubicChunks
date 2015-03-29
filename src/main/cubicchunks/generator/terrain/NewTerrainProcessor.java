@@ -92,7 +92,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 	private static int octaves = 14; // size of features. increasing by 1 approximately doubles the size of features.
 	
 	public NewTerrainProcessor(String name, CubeWorldServer worldServer, int batchSize) {
-		super(name, worldServer.getCubeCache(worldServer), batchSize);
+		super(name, worldServer.getCubeCache(), batchSize);
 		
 		this.worldServer = worldServer;
 		this.biomes = null;
@@ -148,7 +148,12 @@ public class NewTerrainProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
-		this.biomes = (CCBiome[])this.worldServer.getCubeWorldProvider().getWorldColumnMananger().getBiomesForGeneration(this.biomes, cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius, xNoiseSize + this.maxSmoothDiameter, zNoiseSize + this.maxSmoothDiameter);
+		this.biomes = (CCBiome[])this.worldServer.getCubeWorldProvider().
+				getBiomeMananger().getBiomesForGeneration(this.biomes, 
+						cube.getX() * 4 - this.maxSmoothRadius, 
+						cube.getZ() * 4 - this.maxSmoothRadius, 
+						xNoiseSize + this.maxSmoothDiameter, 
+						zNoiseSize + this.maxSmoothDiameter);
 		
 		this.generateNoiseArrays(cube);
 		

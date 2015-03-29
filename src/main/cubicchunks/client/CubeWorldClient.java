@@ -28,7 +28,6 @@ import net.minecraft.profiler.Profiler;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.LightType;
-import net.minecraft.world.World;
 import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.gen.IChunkGenerator;
@@ -58,12 +57,12 @@ public class CubeWorldClient extends WorldClient implements CubeWorld {
 	}
 	
 	@Override
-	public CubeCache getCubeProvider() {
-		return (CubeCache)chunkProvider;
+	public CubeCache getCubeCache() {
+		return (CubeCache)this.chunkCache;
 	}
 	
 	@Override
-	public LightingManager getLightingManager(World world) {
+	public LightingManager getLightingManager() {
 		return this.m_lightingManager;
 	}
 	
@@ -82,6 +81,6 @@ public class CubeWorldClient extends WorldClient implements CubeWorld {
 	
 	@Override
 	public boolean checkBlockRangeIsInWorld(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean flag) {
-		return CubeProviderTools.blocksExist((CubeCache)clientChunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
+		return CubeProviderTools.blocksExist((CubeCache)this.clientChunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
 	}
 }

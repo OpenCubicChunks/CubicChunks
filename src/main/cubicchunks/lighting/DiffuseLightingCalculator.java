@@ -225,10 +225,10 @@ public class DiffuseLightingCalculator {
 		int cubeX = Coords.blockToCube(blockX);
 		int cubeY = Coords.blockToCube(blockY);
 		int cubeZ = Coords.blockToCube(blockZ);
-		if (!cubeWorld.getCubeProvider().cubeExists(cubeX, cubeY, cubeZ)) {
+		if (!cubeWorld.getCubeCache().cubeExists(cubeX, cubeY, cubeZ)) {
 			return false;
 		}
-		Cube cube = cubeWorld.getCubeProvider().provideCube(cubeX, cubeY, cubeZ);
+		Cube cube = cubeWorld.getCubeCache().getCube(cubeX, cubeY, cubeZ);
 		
 		return !cube.isEmpty();
 	}

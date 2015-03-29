@@ -150,6 +150,7 @@ public abstract class CCBiome extends Biome {
 	public static final CCBiome mesaPlateau = (new BiomeGenMesa(39, false, false)).setColor(13274213).setBiomeName("Mesa Plateau").setHeightRange(plateauRange);
 	
 	protected static final Perlin3dOctaves field_150605_ac;
+	protected static final Perlin3dOctaves field_150606_ad;
 	protected static final TallPlantGenerator field_150610_ae;
 	
 	public int color;

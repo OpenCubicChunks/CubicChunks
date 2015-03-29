@@ -28,7 +28,6 @@ import net.minecraft.world.gen.ServerChunkCache;
 import cubicchunks.server.ServerCubeCache;
 import cuchaz.m3l.api.chunks.ChunkSystem;
 
-
 public class CubicChunkSystem implements ChunkSystem {
 
 	@Override
