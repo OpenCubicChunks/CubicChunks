@@ -95,6 +95,7 @@ dependencies
 	minecraftDeps files('../m3l/lib/minecraft-1.8.3-deps.jar')
 	minecraft files('../m3l/lib/minecraft-1.8.3-client-deobf.jar')
 	
+	compile files('libs/libnoiseforjava.jar')
 	compile 'org.mapdb:mapdb:1.0.7'
 	compile 'org.slf4j:slf4j-api:1.7.10'
 	testCompile 'junit:junit:4.11'
@@ -125,9 +126,9 @@ license {
 	ext.year = project.inceptionYear
 	exclude "**/*.info"
 	exclude "assets/*"
-	header file('license.txt')
+	header file('HEADER.txt')
 	sourceSets = project.sourceSets
-	ignoreFailures true
+	ignoreFailures false
 	strictCheck true
 	mapping {
 		java = 'SLASHSTAR_STYLE'
