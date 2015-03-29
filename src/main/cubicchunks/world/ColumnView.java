@@ -29,14 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import cubicchunks.util.Coords;
-import cubicchunks.util.RangeInt;
-import net.minecraft.entity.Entity;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
+import cubicchunks.util.Coords;
+import cubicchunks.util.RangeInt;
 
 public class ColumnView extends Column {
 	

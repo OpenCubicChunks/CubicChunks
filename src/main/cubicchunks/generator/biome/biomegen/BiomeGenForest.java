@@ -26,16 +26,10 @@ package cubicchunks.generator.biome.biomegen;
 
 import java.util.Random;
 
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase.Height;
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenAbstractTree;
-import net.minecraft.world.gen.feature.WorldGenBigMushroom;
-import net.minecraft.world.gen.feature.WorldGenCanopyTree;
-import net.minecraft.world.gen.feature.WorldGenForest;
 
 public class BiomeGenForest extends CubeBiomeGenBase {
 	

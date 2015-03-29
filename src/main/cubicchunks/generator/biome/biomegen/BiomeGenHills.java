@@ -26,13 +26,9 @@ package cubicchunks.generator.biome.biomegen;
 
 import java.util.Random;
 
-import cubicchunks.world.Cube;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.Blocks;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenAbstractTree;
-import net.minecraft.world.gen.feature.WorldGenMinable;
-import net.minecraft.world.gen.feature.WorldGenTaiga2;
-import net.minecraft.world.gen.feature.WorldGenerator;
+import cubicchunks.world.Cube;
 
 public class BiomeGenHills extends CubeBiomeGenBase {
 	

@@ -25,9 +25,9 @@
 package cubicchunks.server;
 
 import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Queue;
 
 import net.minecraft.entity.CreatureTypes;
 import net.minecraft.util.BlockPos;
@@ -50,35 +50,35 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	
 	private static final int WorldSpawnChunkDistance = 12;
 	
-	private WorldServer m_worldServer;
-	private CubeIO m_io;
-	private ColumnGenerator m_columnGenerator;
-	private HashMap<Long,Column> m_loadedColumns;
-	private BlankColumn m_blankColumn;
-	private Deque<Long> m_cubesToUnload;
+	private WorldServer worldServer;
+	private CubeIO cubeIO;
+	private ColumnGenerator columnGenerator;
+	private HashMap<Long,Column> loadedColumns;
+	private BlankColumn blankColumn;
+	private Queue<Long> cubesToUnload;
 	
 	public ServerCubeCache(WorldServer worldServer) {
 		super(worldServer, null, null);
 		
-		m_worldServer = worldServer;
-		m_io = new CubeIO(worldServer.getSaveHandler().getSaveFile(), worldServer.dimension);
+		this.worldServer = worldServer;
+		this.cubeIO = new CubeIO(worldServer.getSaveHandler().getSaveFile(), worldServer.dimension);
 		// TODO
 		//m_columnGenerator = new ColumnGenerator(worldServer);
-		m_loadedColumns = Maps.newHashMap();
-		m_blankColumn = new BlankColumn(worldServer, 0, 0);
-		m_cubesToUnload = new ArrayDeque<Long>();
+		this.loadedColumns = Maps.newHashMap();
+		this.blankColumn = new BlankColumn(worldServer, 0, 0);
+		this.cubesToUnload = new ArrayDeque<Long>();
 	}
 	
 	@Override
 	public boolean chunkExists(int cubeX, int cubeZ) {
-		return m_loadedColumns.containsKey(AddressTools.getAddress(cubeX, cubeZ));
+		return this.loadedColumns.containsKey(AddressTools.getAddress(cubeX, cubeZ));
 	}
 	
 	@Override
 	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
 		// is the column loaded?
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-		Column column = m_loadedColumns.get(columnAddress);
+		Column column = this.loadedColumns.get(columnAddress);
 		if (column == null) {
 			return false;
 		}
@@ -94,22 +94,21 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 		return getChunk(cubeX, cubeZ);
 	}
 	
-	@Override
 	public Column getChunk(int cubeX, int cubeZ) {		
 		// check for the column
-		Column column = m_loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
+		Column column = this.loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}
 		
-		return m_blankColumn;
+		return this.blankColumn;
 	}
 	
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
 		// is the column loaded?
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-		Column column = m_loadedColumns.get(columnAddress);
+		Column column = this.loadedColumns.get(columnAddress);
 		if (column == null) {
 			return null;
 		}
@@ -244,15 +243,15 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 		}
 		
 		// queue the cube for unloading
-		m_cubesToUnload.add(AddressTools.getAddress(cubeX, cubeY, cubeZ));
+		this.cubesToUnload.add(AddressTools.getAddress(cubeX, cubeY, cubeZ));
 	}
 	
 	@Override
 	public void unloadAllChunks() {
 		// unload all the cubes in the columns
-		for (Column column : m_loadedColumns.values()) {
+		for (Column column : this.loadedColumns.values()) {
 			for (Cube cube : column.getCubes()) {
-				m_cubesToUnload.add(cube.getAddress());
+				this.cubesToUnload.add(cube.getAddress());
 			}
 		}
 	}
@@ -329,12 +328,12 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	
 	@Override
 	public String getName() {
-		return "ServerCubeCache: " + m_loadedColumns.size() + " columns, Unload: " + m_cubesToUnload.size() + " cubes";
+		return "ServerCubeCache: " + this.loadedColumns.size() + " columns, Unload: " + this.cubesToUnload.size() + " cubes";
 	}
 	
 	@Override
 	public int getLoadedChunkCount() {
-		return m_loadedColumns.size();
+		return this.loadedColumns.size();
 	}
 	
 	@Override
@@ -344,12 +343,12 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	
 	private boolean cubeIsNearSpawn(int cubeX, int cubeY, int cubeZ) {
 		
-		if (!m_worldServer.dimension.canRespawnHere()) {
+		if (!this.worldServer.dimension.canRespawnHere()) {
 			// no spawn points
 			return false;
 		}
 		
-		BlockPos spawnPoint = m_worldServer.getSpawnPoint();
+		BlockPos spawnPoint = this.worldServer.getSpawnPoint();
 		int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
 		int spawnCubeY = Coords.blockToCube(spawnPoint.getY());
 		int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());

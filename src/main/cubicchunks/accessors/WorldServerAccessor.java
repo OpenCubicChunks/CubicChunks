@@ -29,79 +29,80 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.server.management.PlayerManager;
-import net.minecraft.world.NextTickListEntry;
+import net.minecraft.world.ScheduledBlockTick;
+import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraft.world.gen.ServerChunkCache;
+import cubicchunks.server.ServerCubeCache;
 
 public class WorldServerAccessor {
 	
-	private static Field m_fieldScheduledTicksTreeSet;
-	private static Field m_fieldScheduledTicksHashSet;
-	private static Field m_fieldScheduledTicksNextTick;
-	private static Field m_fieldChunkProvider;
-	private static Field m_fieldPlayerManager;
+	private static Field fieldScheduledTicksTreeSet;
+	private static Field fieldScheduledTicksHashSet;
+	private static Field fieldScheduledTicksNextTick;
+	private static Field fieldChunkProvider;
+	private static Field fieldPlayerManager;
 	
 	static {
 		try {
-			m_fieldScheduledTicksTreeSet = WorldServer.class.getDeclaredField("pendingTickListEntriesTreeSet");
-			m_fieldScheduledTicksTreeSet.setAccessible(true);
+			fieldScheduledTicksTreeSet = WorldServer.class.getDeclaredField("pendingTickListEntriesTreeSet");
+			fieldScheduledTicksTreeSet.setAccessible(true);
 			
-			m_fieldScheduledTicksHashSet = WorldServer.class.getDeclaredField("pendingTickListEntriesHashSet");
-			m_fieldScheduledTicksHashSet.setAccessible(true);
+			fieldScheduledTicksHashSet = WorldServer.class.getDeclaredField("pendingTickListEntriesHashSet");
+			fieldScheduledTicksHashSet.setAccessible(true);
 			
-			m_fieldScheduledTicksNextTick = WorldServer.class.getDeclaredField("pendingTickListEntriesThisTick");
-			m_fieldScheduledTicksNextTick.setAccessible(true);
+			fieldScheduledTicksNextTick = WorldServer.class.getDeclaredField("pendingTickListEntriesThisTick");
+			fieldScheduledTicksNextTick.setAccessible(true);
 			
-			m_fieldChunkProvider = WorldServer.class.getDeclaredField("theChunkProviderServer");
-			m_fieldChunkProvider.setAccessible(true);
+			fieldChunkProvider = WorldServer.class.getDeclaredField("theChunkProviderServer");
+			fieldChunkProvider.setAccessible(true);
 			
-			m_fieldPlayerManager = WorldServer.class.getDeclaredField("thePlayerManager");
-			m_fieldPlayerManager.setAccessible(true);
+			fieldPlayerManager = WorldServer.class.getDeclaredField("thePlayerManager");
+			fieldPlayerManager.setAccessible(true);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static TreeSet<NextTickListEntry> getScheduledTicksTreeSet(WorldServer worldServer) {
+	public static TreeSet<ScheduledBlockTick> getScheduledTicksTreeSet(WorldServer worldServer) {
 		try {
-			return (TreeSet<NextTickListEntry>)m_fieldScheduledTicksTreeSet.get(worldServer);
+			return (TreeSet<ScheduledBlockTick>)fieldScheduledTicksTreeSet.get(worldServer);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static Set<NextTickListEntry> getScheduledTicksHashSet(WorldServer worldServer) {
+	public static Set<ScheduledBlockTick> getScheduledTicksHashSet(WorldServer worldServer) {
 		try {
-			return (Set<NextTickListEntry>)m_fieldScheduledTicksHashSet.get(worldServer);
+			return (Set<ScheduledBlockTick>)fieldScheduledTicksHashSet.get(worldServer);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static List<NextTickListEntry> getScheduledTicksThisTick(WorldServer worldServer) {
+	public static List<ScheduledBlockTick> getScheduledTicksThisTick(WorldServer worldServer) {
 		try {
-			return (List<NextTickListEntry>)m_fieldScheduledTicksNextTick.get(worldServer);
+			return (List<ScheduledBlockTick>)fieldScheduledTicksNextTick.get(worldServer);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
 	}
 	
-	public static ChunkProviderServer getChunkProvider(WorldClient world) {
+	public static ServerCubeCache getChunkProvider(WorldClient world) {
 		try {
-			return (ChunkProviderServer)m_fieldChunkProvider.get(world);
+			return (ServerCubeCache)fieldChunkProvider.get(world);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
 	}
 	
-	public static void setChunkProvider(WorldServer world, ChunkProviderServer val) {
+	public static void setChunkCache(WorldServer world, ServerChunkCache val) {
 		try {
-			m_fieldChunkProvider.set(world, val);
+			fieldChunkProvider.set(world, val);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
@@ -109,7 +110,7 @@ public class WorldServerAccessor {
 	
 	public static PlayerManager getPlayerManager(WorldClient world) {
 		try {
-			return (PlayerManager)m_fieldPlayerManager.get(world);
+			return (PlayerManager)fieldPlayerManager.get(world);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
@@ -117,7 +118,7 @@ public class WorldServerAccessor {
 	
 	public static void setPlayerManager(WorldServer world, PlayerManager val) {
 		try {
-			m_fieldPlayerManager.set(world, val);
+			fieldPlayerManager.set(world, val);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}

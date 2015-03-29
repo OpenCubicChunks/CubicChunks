@@ -24,9 +24,8 @@
  ******************************************************************************/
 package cubicchunks.generator.biome.biomegen;
 
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.monster.EntityEnderman;
-import net.minecraft.init.Blocks;
 
 public class BiomeGenEnd extends CubeBiomeGenBase {
 	

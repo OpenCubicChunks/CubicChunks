@@ -27,31 +27,32 @@ package cubicchunks.util;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class BatchedSetQueue<T> {
 	
-	private LinkedHashSet<T> m_setQueue;
+	private Set<T> setQueue;
 	
 	public BatchedSetQueue() {
-		m_setQueue = new LinkedHashSet<T>();
+		this.setQueue = new LinkedHashSet<T>();
 	}
 	
 	public boolean add(T val) {
-		return m_setQueue.add(val);
+		return this.setQueue.add(val);
 	}
 	
 	public void addAll(Iterable<T> vals) {
 		for (T val : vals) {
-			m_setQueue.add(val);
+			this.setQueue.add(val);
 		}
 	}
 	
 	public boolean contains(T val) {
-		return m_setQueue.contains(val);
+		return this.setQueue.contains(val);
 	}
 	
 	public void getBatch(Collection<T> out, int size) {
-		Iterator<T> iter = m_setQueue.iterator();
+		Iterator<T> iter = this.setQueue.iterator();
 		for (int i = 0; i < size && iter.hasNext(); i++) {
 			out.add(iter.next());
 			iter.remove();
@@ -59,6 +60,6 @@ public class BatchedSetQueue<T> {
 	}
 	
 	public int size() {
-		return m_setQueue.size();
+		return this.setQueue.size();
 	}
 }

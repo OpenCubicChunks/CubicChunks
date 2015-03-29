@@ -28,7 +28,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraft.world.gen.ServerChunkCache;
 
 public class ChunkProviderServerAccessor {
 	
@@ -37,10 +37,10 @@ public class ChunkProviderServerAccessor {
 	
 	static {
 		try {
-			m_fieldLoadedChunks = ChunkProviderServer.class.getDeclaredField("loadedChunks");
+			m_fieldLoadedChunks = ServerChunkCache.class.getDeclaredField("loadedChunks");
 			m_fieldLoadedChunks.setAccessible(true);
 			
-			m_fieldBlankChunk = ChunkProviderServer.class.getDeclaredField("defaultEmptyChunk");
+			m_fieldBlankChunk = ServerChunkCache.class.getDeclaredField("defaultEmptyChunk");
 			m_fieldBlankChunk.setAccessible(true);
 		} catch (Exception ex) {
 			throw new Error(ex);
@@ -48,25 +48,25 @@ public class ChunkProviderServerAccessor {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static List<Chunk> getLoadedChunks(ChunkProviderServer provider) {
+	public static List<Chunk> getLoadedChunks(ServerChunkCache cache) {
 		try {
-			return (List<Chunk>)m_fieldLoadedChunks.get(provider);
+			return (List<Chunk>)m_fieldLoadedChunks.get(cache);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
 	}
 	
-	public static Chunk getBlankChunk(ChunkProviderServer provider) {
+	public static Chunk getBlankChunk(ServerChunkCache cache) {
 		try {
-			return (Chunk)m_fieldBlankChunk.get(provider);
+			return (Chunk)m_fieldBlankChunk.get(cache);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
 	}
 	
-	public static void setBlankChunk(ChunkProviderServer provider, Chunk val) {
+	public static void setBlankChunk(ServerChunkCache cache, Chunk val) {
 		try {
-			m_fieldBlankChunk.set(provider, val);
+			m_fieldBlankChunk.set(cache, val);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}

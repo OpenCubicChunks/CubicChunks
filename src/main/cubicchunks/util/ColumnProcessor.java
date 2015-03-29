@@ -37,11 +37,11 @@ public abstract class ColumnProcessor extends QueueProcessor {
 	@Override
 	public void processBatch() {
 		// start processing
-		for (long address : m_incomingAddresses) {
+		for (long address : this.incomingAddresses) {
 			// get the column
 			int cubeX = AddressTools.getX(address);
 			int cubeZ = AddressTools.getZ(address);
-			Column column = (Column)m_provider.provideChunk(cubeX, cubeZ);
+			Column column = (Column)this.cache.getChunk(cubeX, cubeZ);
 			
 			// skip blank columns
 			if (column == null || column instanceof BlankColumn) {
@@ -51,9 +51,9 @@ public abstract class ColumnProcessor extends QueueProcessor {
 			// add unsuccessful calculations back onto the queue
 			boolean success = calculate(column);
 			if (success) {
-				m_processedAddresses.add(address);
+				this.processedAddresses.add(address);
 			} else {
-				m_deferredAddresses.add(address);
+				this.deferredAddresses.add(address);
 			}
 		}
 	}

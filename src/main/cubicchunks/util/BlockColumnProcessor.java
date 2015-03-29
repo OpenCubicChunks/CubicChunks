@@ -37,7 +37,7 @@ public abstract class BlockColumnProcessor extends QueueProcessor {
 	@Override
 	public void processBatch() {
 		// start processing
-		for (long address : m_incomingAddresses) {
+		for (long address : this.incomingAddresses) {
 			// get the block coords
 			int blockX = Bits.unpackSigned(address, 26, 0);
 			int blockZ = Bits.unpackSigned(address, 26, 26);
@@ -45,7 +45,7 @@ public abstract class BlockColumnProcessor extends QueueProcessor {
 			// get the column
 			int cubeX = Coords.blockToCube(blockX);
 			int cubeZ = Coords.blockToCube(blockZ);
-			Column column = (Column)m_provider.provideChunk(cubeX, cubeZ);
+			Column column = (Column)this.cache.getChunk(cubeX, cubeZ);
 			
 			// skip blank columns
 			if (column == null || column instanceof BlankColumn) {
@@ -59,9 +59,9 @@ public abstract class BlockColumnProcessor extends QueueProcessor {
 			// add unsuccessful calculations back onto the queue
 			boolean success = calculate(column, localX, localZ, blockX, blockZ);
 			if (success) {
-				m_processedAddresses.add(address);
+				this.processedAddresses.add(address);
 			} else {
-				m_deferredAddresses.add(address);
+				this.deferredAddresses.add(address);
 			}
 		}
 	}

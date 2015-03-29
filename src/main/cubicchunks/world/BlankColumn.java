@@ -30,10 +30,10 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.IChunkGenerator;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.ChunkSection;
+import net.minecraft.world.gen.IChunkGenerator;
 
 public class BlankColumn extends Column {
 	
@@ -93,10 +93,12 @@ public class BlankColumn extends Column {
 		return Blocks.AIR;
 	}
 	
+	@Override
 	public IBlockState getBlockState(final BlockPos a1) {
 		return Blocks.AIR.getDefaultState();
 	}
 	
+	@Override
 	public int getBlockMetadata(final BlockPos a1) {
 		return 0;
 	}

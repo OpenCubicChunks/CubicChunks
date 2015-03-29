@@ -24,7 +24,8 @@
  ******************************************************************************/
 package cubicchunks.lighting;
 
-import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 
 import org.apache.logging.log4j.LogManager;
@@ -40,36 +41,36 @@ public class LightingManager {
 	
 	private static final int TickBudget = 40; // ms. Only 50 ms in a tick
 	
-	private World m_world;
-	private SkyLightOcclusionProcessor m_skyLightOcclusionProcessor;
-	private FirstLightProcessor m_firstLightProcessor;
-	private DiffuseLightingCalculator m_diffuseLightingCalculator;
-	private SkyLightUpdateCalculator m_skyLightUpdateCalculator;
+	private World world;
+	private SkyLightOcclusionProcessor skyLightOcclusionProcessor;
+	private FirstLightProcessor firstLightProcessor;
+	private DiffuseLightingCalculator diffuseLightingCalculator;
+	private SkyLightUpdateCalculator skyLightUpdateCalculator;
 	
 	public LightingManager(World world, CubeCache provider) {
-		m_world = world;
+		this.world = world;
 		
-		m_skyLightOcclusionProcessor = new SkyLightOcclusionProcessor("Sky Light Occlusion", provider, 50);
-		m_firstLightProcessor = new FirstLightProcessor("First Light", provider, 10);
-		m_diffuseLightingCalculator = new DiffuseLightingCalculator();
-		m_skyLightUpdateCalculator = new SkyLightUpdateCalculator();
+		this.skyLightOcclusionProcessor = new SkyLightOcclusionProcessor("Sky Light Occlusion", provider, 50);
+		this.firstLightProcessor = new FirstLightProcessor("First Light", provider, 10);
+		this.diffuseLightingCalculator = new DiffuseLightingCalculator();
+		this.skyLightUpdateCalculator = new SkyLightUpdateCalculator();
 	}
 	
 	public void queueSkyLightOcclusionCalculation(int blockX, int blockZ) {
 		long blockColumnAddress = Bits.packSignedToLong(blockX, 26, 0) | Bits.packSignedToLong(blockZ, 26, 26);
-		m_skyLightOcclusionProcessor.add(blockColumnAddress);
+		this.skyLightOcclusionProcessor.add(blockColumnAddress);
 	}
 	
 	public void queueFirstLightCalculation(long cubeAddress) {
-		m_firstLightProcessor.add(cubeAddress);
+		this.firstLightProcessor.add(cubeAddress);
 	}
 	
-	public boolean computeDiffuseLighting(int blockX, int blockY, int blockZ, EnumSkyBlock lightType) {
-		return m_diffuseLightingCalculator.calculate(m_world, blockX, blockY, blockZ, lightType);
+	public boolean computeDiffuseLighting(BlockPos pos, LightType lightType) {
+		return this.diffuseLightingCalculator.calculate(this.world, pos, lightType);
 	}
 	
 	public void computeSkyLightUpdate(Column column, int localX, int localZ, int oldMaxBlockY, int newMaxBlockY) {
-		m_skyLightUpdateCalculator.calculate(column, localX, localZ, oldMaxBlockY, newMaxBlockY);
+		this.skyLightUpdateCalculator.calculate(column, localX, localZ, oldMaxBlockY, newMaxBlockY);
 	}
 	
 	public void tick() {
@@ -78,15 +79,15 @@ public class LightingManager {
 		
 		// process the queues
 		int numProcessed = 0;
-		numProcessed += m_skyLightOcclusionProcessor.processQueue(timeStop);
-		numProcessed += m_firstLightProcessor.processQueue(timeStop);
+		numProcessed += this.skyLightOcclusionProcessor.processQueue(timeStop);
+		numProcessed += this.firstLightProcessor.processQueue(timeStop);
 		
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			log.info(String.format("%s Lighting manager processed %d calculations in %d ms.", m_world.isClient ? "CLIENT" : "SERVER", numProcessed, timeDiff));
-			log.info(m_skyLightOcclusionProcessor.getProcessingReport());
-			log.info(m_firstLightProcessor.getProcessingReport());
+			log.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isClient ? "CLIENT" : "SERVER", numProcessed, timeDiff));
+			log.info(this.skyLightOcclusionProcessor.getProcessingReport());
+			log.info(this.firstLightProcessor.getProcessingReport());
 		}
 	}
 }

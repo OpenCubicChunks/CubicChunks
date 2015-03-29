@@ -27,9 +27,9 @@ package cubicchunks.accessors;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.LongHashMap;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.ClientChunkCache;
 
 public class ChunkProviderClientAccessor {
 	
@@ -39,20 +39,20 @@ public class ChunkProviderClientAccessor {
 	
 	static {
 		try {
-			m_fieldChunkMapping = ChunkProviderClient.class.getDeclaredField("chunkMapping");
+			m_fieldChunkMapping = ClientChunkCache.class.getDeclaredField("chunkMapping");
 			m_fieldChunkMapping.setAccessible(true);
 			
-			m_fieldChunkListing = ChunkProviderClient.class.getDeclaredField("chunkListing");
+			m_fieldChunkListing = ClientChunkCache.class.getDeclaredField("chunkListing");
 			m_fieldChunkListing.setAccessible(true);
 			
-			m_fieldBlankChunk = ChunkProviderClient.class.getDeclaredField("blankChunk");
+			m_fieldBlankChunk = ClientChunkCache.class.getDeclaredField("blankChunk");
 			m_fieldBlankChunk.setAccessible(true);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
 	}
 	
-	public static LongHashMap getChunkMapping(ChunkProviderClient provider) {
+	public static LongHashMap getChunkMapping(ClientChunkCache provider) {
 		try {
 			return (LongHashMap)m_fieldChunkMapping.get(provider);
 		} catch (Exception ex) {
@@ -61,7 +61,7 @@ public class ChunkProviderClientAccessor {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static List<Chunk> getChunkListing(ChunkProviderClient provider) {
+	public static List<Chunk> getChunkListing(ClientChunkCache provider) {
 		try {
 			return (List<Chunk>)m_fieldChunkListing.get(provider);
 		} catch (Exception ex) {
@@ -69,7 +69,7 @@ public class ChunkProviderClientAccessor {
 		}
 	}
 	
-	public static Chunk getBlankChunk(ChunkProviderClient provider) {
+	public static Chunk getBlankChunk(ClientChunkCache provider) {
 		try {
 			return (Chunk)m_fieldBlankChunk.get(provider);
 		} catch (Exception ex) {
@@ -77,7 +77,7 @@ public class ChunkProviderClientAccessor {
 		}
 	}
 	
-	public static void setBlankChunk(ChunkProviderClient provider, Chunk val) {
+	public static void setBlankChunk(ClientChunkCache provider, Chunk val) {
 		try {
 			m_fieldBlankChunk.set(provider, val);
 		} catch (Exception ex) {

@@ -26,12 +26,12 @@ package cubicchunks.generator.features;
 
 import java.util.Random;
 
-import cubicchunks.world.Cube;
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.Blocks;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
-import static net.minecraft.world.EnumSkyBlock.Block;
 import net.minecraft.world.World;
+import cubicchunks.world.Cube;
 
 public class CubicRavineGen extends CubicMapGenBase {
 	
@@ -102,12 +102,12 @@ public class CubicRavineGen extends CubicMapGenBase {
 			if (! (x >= xOCenter - 16.0D - modSin * 2.0D && y >= yOCenter - 16.0D - yModSin * 2.0D && z >= zOCenter - 16.0D - modSin * 2.0D && x <= xOCenter + 16.0D + modSin * 2.0D && y <= yOCenter + 16.0D + yModSin * 2.0D && z <= zOCenter + 16.0D + modSin * 2.0D)) {
 				continue;
 			}
-			int xDist1 = MathHelper.floor_double(x - modSin) - xOrigin * 16 - 1;
-			int xDist2 = MathHelper.floor_double(x + modSin) - xOrigin * 16 + 1;
-			int yDist1 = MathHelper.floor_double(y - yModSin) - yOrigin * 16 - 1;
-			int yDist2 = MathHelper.floor_double(y + yModSin) - yOrigin * 16 + 1;
-			int zDist1 = MathHelper.floor_double(z - modSin) - zOrigin * 16 - 1;
-			int zDist2 = MathHelper.floor_double(z + modSin) - zOrigin * 16 + 1;
+			int xDist1 = MathHelper.floor(x - modSin) - xOrigin * 16 - 1;
+			int xDist2 = MathHelper.floor(x + modSin) - xOrigin * 16 + 1;
+			int yDist1 = MathHelper.floor(y - yModSin) - yOrigin * 16 - 1;
+			int yDist2 = MathHelper.floor(y + yModSin) - yOrigin * 16 + 1;
+			int zDist1 = MathHelper.floor(z - modSin) - zOrigin * 16 - 1;
+			int zDist2 = MathHelper.floor(z + modSin) - zOrigin * 16 + 1;
 			
 			if (xDist1 < 0) {
 				xDist1 = 0;
@@ -143,13 +143,13 @@ public class CubicRavineGen extends CubicMapGenBase {
 				for (int z1 = zDist1; !hitwater && z1 < zDist2; ++z1) {
 					for (int y1 = yDist2; !hitwater && y1 >= yDist1; --y1) {
 						// temp = ( x1 * 16 + z1 ) * 16 /*128*/ + y1;
-						Block block = cube.getBlock(x1, y1, z1);
+						Block block = cube.getBlockState(new BlockPos(x1, y1, z1)).getBlock();
 						
 						if (y1 < 0 || y1 >= 16)// 128
 						{
 							continue;
 						}
-						if (block == Blocks.flowing_water || block == Blocks.water) {
+						if (block == Blocks.FLOWING_WATER || block == Blocks.WATER) {
 							hitwater = true;
 						}
 						
@@ -181,20 +181,22 @@ public class CubicRavineGen extends CubicMapGenBase {
 						if ( (distX * distX + distZ * distZ) * (double)this.array1[ (y1 + yOrigin * 16) & 0xFF] + distY * distY / 6.0D >= 1.0D) {
 							continue;
 						}
+						
+						BlockPos pos = new BlockPos(x1, y1, z1);
 						// byte blockID = abyte[aIndex];
-						Block block = cube.getBlock(x1, y1, z1);
-						if (block == Blocks.grass) {
+						Block block = cube.getBlockState(pos).getBlock();
+						if (block == Blocks.GRASS) {
 							grass = true;
 						}
 						
-						if (block != Blocks.stone && block != Blocks.dirt && block != Blocks.grass) {
+						if (block != Blocks.STONE && block != Blocks.DIRT && block != Blocks.GRASS) {
 							continue;
 						}
 						if (y1 + yOrigin * 16 < /* 10 */0) // used to place lava at the bottom of ravines if it was deep enough
 						{
-							cube.setBlockForGeneration(x1, y1, z1, /* Blocks.flowing_lava */Blocks.air);// BUG: crash when it's lava
+							cube.setBlockForGeneration(pos, /* Blocks.flowing_lava */Blocks.AIR.getDefaultState());// BUG: crash when it's lava
 						} else {
-							cube.setBlockForGeneration(x1, y1, z1, Blocks.air);
+							cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
 							
 							/*
 							 * if ( grass && blocks.getBlock( x1, y1 - 1, z1) == Blocks.dirt ) { blocks.setBlock( x1, y1 - 1, z1, m_world.getBiomeGenForCoords( x1 + xOrigin * 16, z1 + zOrigin * 16 ).topBlock);//not needed yet }
@@ -213,20 +215,20 @@ public class CubicRavineGen extends CubicMapGenBase {
 	
 	@Override
 	protected void generate(World world, Cube cube, int chunkX, int chunkY, int chunkZ, int xOrigin, int yOrigin, int zOrigin) {
-		if (m_rand.nextInt(16) != 0) {
+		if (rand.nextInt(16) != 0) {
 			return;
 		}
-		if (chunkY <= 4 && m_rand.nextInt(50) == 0) {
-			double x = chunkX * 16 + m_rand.nextInt(16);
-			double y = chunkY * 16 + m_rand.nextInt(16);
-			double z = chunkZ * 16 + m_rand.nextInt(16);
+		if (chunkY <= 4 && rand.nextInt(50) == 0) {
+			double x = chunkX * 16 + rand.nextInt(16);
+			double y = chunkY * 16 + rand.nextInt(16);
+			double z = chunkZ * 16 + rand.nextInt(16);
 			byte numGen = 1;
 			
 			for (int i = 0; i < numGen; ++i) {
-				float curve = m_rand.nextFloat() * (float)Math.PI * 2.0F;
-				float angle = (m_rand.nextFloat() - 0.5F) * 2.0F / 8.0F;
-				float f = (m_rand.nextFloat() * 2.0F + m_rand.nextFloat()) * 2.0F;
-				this.generateRavine(m_rand.nextLong(), cube, xOrigin, yOrigin, zOrigin, x, y, z, f, curve, angle, 0, 0, 3.0D);
+				float curve = rand.nextFloat() * (float)Math.PI * 2.0F;
+				float angle = (rand.nextFloat() - 0.5F) * 2.0F / 8.0F;
+				float f = (rand.nextFloat() * 2.0F + rand.nextFloat()) * 2.0F;
+				this.generateRavine(rand.nextLong(), cube, xOrigin, yOrigin, zOrigin, x, y, z, f, curve, angle, 0, 0, 3.0D);
 			}
 		}
 	}

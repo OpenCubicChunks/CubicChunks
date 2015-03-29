@@ -27,15 +27,18 @@ package cubicchunks.server;
 import java.util.Random;
 import java.util.Set;
 
-import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.entity.CreatureTypes;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.ChunkPosition;
-import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.LightType;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldInfo;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
-import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraft.world.storage.ISaveHandler;
 
 import org.apache.logging.log4j.LogManager;
@@ -47,22 +50,22 @@ import cubicchunks.CubeWorld;
 import cubicchunks.CubeWorldProvider;
 import cubicchunks.accessors.WorldServerAccessor;
 import cubicchunks.generator.GeneratorPipeline;
-import cubicchunks.generator.biome.WorldColumnManager;
+import cubicchunks.generator.biome.CCBiomeManager;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Column;
-import cuchaz.magicMojoModLoader.util.Util;
+import cuchaz.m3l.util.Util;
 
 public class CubeWorldServer extends WorldServer implements CubeWorld {
 	
 	private static final Logger log = LogManager.getLogger();
 	
-	private LightingManager m_lightingManager;
-	private GeneratorPipeline m_generatorPipeline;
+	private LightingManager lightingManager;
+	private GeneratorPipeline generatorPipeline;
 	
-	public CubeWorldServer(MinecraftServer server, ISaveHandler saveHandler, String worldName, int dimension, WorldSettings settings, Profiler profiler) {
-		super(server, saveHandler, worldName, dimension, settings, profiler);
+	public CubeWorldServer(MinecraftServer server, ISaveHandler saveHandler, WorldInfo worldInfo, int dimension, Profiler profiler) {
+		super(server, saveHandler, worldInfo, dimension, profiler);
 		
 		// set the player manager
 		CubePlayerManager playerManager = new CubePlayerManager(this, server.getConfigurationManager().getViewDistance());
@@ -70,64 +73,61 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 	}
 	
 	@Override
-	protected IChunkProvider createChunkProvider() {
+	protected IChunkGenerator createChunkCache() {
 		// create the cube provider
-		ServerCubeCache provider = new ServerCubeCache(this);
+		ServerCubeCache cache = new ServerCubeCache(this);
 		
 		// tell World and WorldServer about it
-		chunkProvider = provider;
-		WorldServerAccessor.setChunkProvider(this, provider);
+		this.chunkCache = cache;
+		WorldServerAccessor.setChunkCache(this, cache);
 		
 		// init systems dependent on cubes
-		m_lightingManager = new LightingManager(this, provider);
-		m_generatorPipeline = getCubeWorldProvider().createGeneratorPipeline(this);
+		this.lightingManager = new LightingManager(this, cache);
+		this.generatorPipeline = getCubeWorldProvider().createGeneratorPipeline(this);
 		
-		return chunkProvider;
+		return cache;
 	}
 	
 	@Override
-	public ServerCubeCache getCubeProvider() {
-		return (ServerCubeCache)chunkProvider;
-	}
-	
-	public CubeWorldProvider getCubeWorldProvider() {
-		return (CubeWorldProvider)provider;
-	}
+	public ServerCubeCache getCubeCache(WorldServer server) {
+		return (ServerCubeCache)server.serverChunkCache;
+	}}
 	
 	@Override
-	public LightingManager getLightingManager() {
-		return m_lightingManager;
+	public LightingManager getLightingManager(World world) {
+		return this.lightingManager;
 	}
 	
 	public GeneratorPipeline getGeneratorPipeline() {
-		return m_generatorPipeline;
+		return this.generatorPipeline;
 	}
 	
 	@Override
 	public void tick() {
 		super.tick();
 		
-		theProfiler.startSection("generatorPipeline");
-		m_generatorPipeline.tick();
-		theProfiler.endSection();
+		this.profiler.startSection("generatorPipeline");
+		this.generatorPipeline.tick();
+		this.profiler.endSection();
 		
-		theProfiler.startSection("lightingEngine");
-		m_lightingManager.tick();
-		theProfiler.endSection();
+		this.profiler.startSection("lightingEngine");
+		this.lightingManager.tick();
+		this.profiler.endSection();
 	}
 	
 	/**
 	 * only spawns creatures allowed by the chunkProvider
 	 */
 	@Override
-	public net.minecraft.world.biome.BiomeGenBase.SpawnListEntry spawnRandomCreature(EnumCreatureType par1EnumCreatureType, int par2, int par3, int par4) {
+	@Deprecated
+	public Biome.SpawnMob spawnRandomCreature(CreatureTypes creatureType, int par2, int par3, int par4) {
 		// List var5 = (List) this.getChunkProvider().getPossibleCreatures(par1EnumCreatureType, par2, par3, par4);
 		// return var5 != null && !var5.isEmpty() ? (net.minecraft.world.biome.BiomeGenBase.SpawnListEntry)WeightedRandom.getRandomItem(this.rand, var5) : null;
 		return null;
 	}
 	
 	public long getSpawnPointCubeAddress() {
-		return AddressTools.getAddress(Coords.blockToCube(worldInfo.getSpawnX()), Coords.blockToCube(worldInfo.getSpawnY()), Coords.blockToCube(worldInfo.getSpawnZ()));
+		return AddressTools.getAddress(Coords.blockToCube(this.worldInfo.getSpawnX()), Coords.blockToCube(this.worldInfo.getSpawnY()), Coords.blockToCube(this.worldInfo.getSpawnZ()));
 	}
 	
 	@Override
@@ -136,9 +136,9 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 	}
 	
 	@Override
-	public boolean updateLightByType(EnumSkyBlock lightType, int blockX, int blockY, int blockZ) {
+	public boolean updateLightingAt(LightType lightType, BlockPos pos) {
 		// forward to the new lighting system
-		return m_lightingManager.computeDiffuseLighting(blockX, blockY, blockZ, lightType);
+		return this.lightingManager.computeDiffuseLighting(blockX, blockY, blockZ, lightType);
 	}
 	
 	@Override
@@ -148,8 +148,8 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 		super.func_147456_g();
 		
 		// apply random ticks
-		for (ChunkCoordIntPair coords : (Set<ChunkCoordIntPair>)activeChunkSet) {
-			Column column = (Column)chunkProvider.provideChunk(coords.chunkXPos, coords.chunkZPos);
+		for (ChunkCoordIntPair coords : (Set<ChunkCoordIntPair>)this.activeChunkSet) {
+			Column column = (Column)chunkProvider.provideChunk(coords.chunkX, coords.chunkZ);
 			column.doRandomTicks();
 		}
 	}
@@ -160,24 +160,24 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 		// this is apparently called before the world is generated
 		// we'll have to do our own generation to find the spawn point
 		
-		if (!provider.canRespawnHere()) {
-			worldInfo.setSpawnPosition(0, 0, 0);
+		if (!this.dimension.canRespawnHere()) {
+			this.worldInfo.setSpawnPoint(new BlockPos(0,0,0));
 			return;
 		}
 		
 		// pick a default fail-safe spawn point
 		int spawnBlockX = 0;
-		int spawnBlockY = provider.getAverageGroundLevel();
+		int spawnBlockY = this.dimension.getAverageGroundLevel();
 		int spawnBlockZ = 0;
 		
 		Random rand = new Random(getSeed());
 		
 		// defer to the column manager to find the x,z part of the spawn point
-		WorldColumnManager columnManager = getCubeWorldProvider().getWorldColumnMananger();
-		ChunkPosition spawnPosition = columnManager.func_150795_a(0, 0, 256, columnManager.getBiomesToSpawnIn(), rand);
+		CCBiomeManager columnManager = getCubeWorldProvider().getWorldColumnMananger();
+		BlockPos spawnPosition = columnManager.getRandomPositionInBiome(0, 0, 256, columnManager.getSpawnableBiomes(), rand);
 		if (spawnPosition != null) {
-			spawnBlockX = spawnPosition.field_151329_a;
-			spawnBlockZ = spawnPosition.field_151328_c;
+			spawnBlockX = spawnPosition.getX();
+			spawnBlockZ = spawnPosition.getZ();
 		} else {
 			log.warn("Unable to find spawn biome");
 		}
@@ -188,25 +188,26 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 		int spawnCubeX = Coords.blockToCube(spawnBlockX);
 		int spawnCubeY = Coords.blockToCube(getCubeWorldProvider().getSeaLevel());
 		int spawnCubeZ = Coords.blockToCube(spawnBlockZ);
+		
 		final int SearchDistance = 4;
-		ServerCubeCache cubeProvider = getCubeProvider();
+		ServerCubeCache cubeCache = getCubeCache(null);
 		for (int cubeX = spawnCubeX - SearchDistance; cubeX <= spawnCubeX + SearchDistance; cubeX++) {
 			for (int cubeY = spawnCubeY - SearchDistance; cubeY <= spawnCubeY + SearchDistance; cubeY++) {
 				for (int cubeZ = spawnCubeZ - SearchDistance; cubeZ <= spawnCubeZ + SearchDistance; cubeZ++) {
-					cubeProvider.loadCube(cubeX, cubeY, cubeZ);
+					cubeCache.loadCube(cubeX, cubeY, cubeZ);
 				}
 			}
 		}
 		getGeneratorPipeline().generateAll();
 		
 		// make some effort to find a suitable spawn point, but don't guarantee it
-		for (int i = 0; i < 1000 && !provider.canCoordinateBeSpawn(spawnBlockX, spawnBlockZ); i++) {
+		for (int i = 0; i < 1000 && !this.dimension.canCoordinateBeSpawn(spawnBlockX, spawnBlockZ); i++) {
 			spawnBlockX += Util.randRange(rand, -16, 16);
 			spawnBlockZ += Util.randRange(rand, -16, 16);
 		}
 		
 		// save the spawn point
-		worldInfo.setSpawnPosition(spawnBlockX, spawnBlockY, spawnBlockZ);
+		this.worldInfo.setSpawnPoint(new BlockPos(spawnBlockX, spawnBlockY, spawnBlockZ));
 		log.info(String.format("Found spawn point at (%d,%d,%d)", spawnBlockX, spawnBlockY, spawnBlockZ));
 		
 		if (worldSettings.isBonusChestEnabled()) {

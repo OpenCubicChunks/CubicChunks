@@ -41,23 +41,23 @@ public abstract class CubeProcessor extends QueueProcessor {
 	@Override
 	public void processBatch() {
 		// start processing
-		for (long address : m_incomingAddresses) {
+		for (long address : this.incomingAddresses) {
 			// get the cube
 			int cubeX = AddressTools.getX(address);
 			int cubeY = AddressTools.getY(address);
 			int cubeZ = AddressTools.getZ(address);
-			Cube cube = m_provider.provideCube(cubeX, cubeY, cubeZ);
+			Cube cube = this.cache.getCube(cubeX, cubeY, cubeZ);
 			if (cube == null) {
-				log.warn(String.format("Unloaded cube (%d,%d,%d) dropped from %s processor queue.", cubeX, cubeY, cubeZ, m_name));
+				log.warn(String.format("Unloaded cube (%d,%d,%d) dropped from %s processor queue.", cubeX, cubeY, cubeZ, this.name));
 				continue;
 			}
 			
 			// add unsuccessful calculations back onto the queue
 			boolean success = calculate(cube);
 			if (success) {
-				m_processedAddresses.add(address);
+				this.processedAddresses.add(address);
 			} else {
-				m_deferredAddresses.add(address);
+				this.deferredAddresses.add(address);
 			}
 		}
 	}

@@ -27,14 +27,14 @@ package cubicchunks.generator.biome;
 import java.util.ArrayList;
 import java.util.List;
 
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.LongHashMap;
+import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
 
 public class BiomeCache {
 	
 	/** Reference to the WorldChunkManager */
-	private final WorldColumnManager columnManager;
+	private final CCBiomeManager columnManager;
 	
 	/** The last time this BiomeCache was cleaned, in milliseconds. */
 	private long lastCleanupTime;
@@ -42,31 +42,31 @@ public class BiomeCache {
 	/**
 	 * The map of keys to BiomeCacheBlocks. Keys are based on the column x, z coordinates as (x | z << 32). Well, shit. This basically caches the biomes for the entire world, on a column-by-column basis.
 	 */
-	private LongHashMap cacheMap = new LongHashMap();
+	private LongHashMap<CacheBlock> cacheMap = new LongHashMap<CacheBlock>();
 	
 	/** The list of cached BiomeCacheBlocks */
-	private List<Block> cache = new ArrayList<Block>();
+	private List<CacheBlock> cache = new ArrayList<CacheBlock>();
 	
-	public BiomeCache(WorldColumnManager par1WorldChunkManager) {
+	public BiomeCache(CCBiomeManager par1WorldChunkManager) {
 		this.columnManager = par1WorldChunkManager;
 	}
 	
 	/**
 	 * Returns a biome cache block at location specified.
 	 */
-	public BiomeCache.Block getBiomeCacheBlock(int xAbs, int zAbs) {
+	public BiomeCache.CacheBlock getBiomeCacheBlock(int xAbs, int zAbs) {
 		xAbs >>= 4;
 		zAbs >>= 4;
 		long var3 = (long)xAbs & 4294967295L | ((long)zAbs & 4294967295L) << 32;
-		BiomeCache.Block block = (BiomeCache.Block)this.cacheMap.getValueByKey(var3);
+		BiomeCache.CacheBlock block = (BiomeCache.CacheBlock)this.cacheMap.getValueByKey(var3);
 		
 		if (block == null) {
-			block = new BiomeCache.Block(xAbs, zAbs);
+			block = new BiomeCache.CacheBlock(xAbs, zAbs);
 			this.cacheMap.add(var3, block);
 			this.cache.add(block);
 		}
 		
-		block.lastAccessTime = MinecraftServer.getSystemTimeMillis();
+		block.lastAccessTime = MinecraftServer.getSystemTimeMills();
 		return block;
 	}
 	
@@ -81,14 +81,14 @@ public class BiomeCache {
 	 * Removes BiomeCacheBlocks from this cache that haven't been accessed in at least 30 seconds.
 	 */
 	public void cleanupCache() {
-		long curTime = MinecraftServer.getSystemTimeMillis();
+		long curTime = MinecraftServer.getSystemTimeMills();
 		long elapsed = curTime - this.lastCleanupTime;
 		
 		if (elapsed > 7500L || elapsed < 0L) {
 			this.lastCleanupTime = curTime;
 			
 			for (int i = 0; i < this.cache.size(); ++i) {
-				BiomeCache.Block block = this.cache.get(i);
+				BiomeCache.CacheBlock block = this.cache.get(i);
 				long elapsed2 = curTime - block.lastAccessTime;
 				
 				if (elapsed2 > 30000L || elapsed2 < 0L) {
@@ -107,7 +107,7 @@ public class BiomeCache {
 		return this.getBiomeCacheBlock(xAbs, zAbs).biomes;
 	}
 	
-	public class Block {
+	public class CacheBlock {
 		
 		public float[] rainfallValues = new float[256];
 		public CubeBiomeGenBase[] biomes = new CubeBiomeGenBase[256];
@@ -115,10 +115,10 @@ public class BiomeCache {
 		public int zPosition;
 		public long lastAccessTime;
 		
-		public Block(int cubeX, int cubeZ) {
+		public CacheBlock(int cubeX, int cubeZ) {
 			this.xPosition = cubeX;
 			this.zPosition = cubeZ;
-			BiomeCache.this.columnManager.getRainfall(this.rainfallValues, cubeX << 4, cubeZ << 4, 16, 16);
+			BiomeCache.this.columnManager.getRainfallMap(this.rainfallValues, cubeX << 4, cubeZ << 4, 16, 16);
 			BiomeCache.this.columnManager.getBiomeGenAt(this.biomes, cubeX << 4, cubeZ << 4, 16, 16, false);
 		}
 		

@@ -24,7 +24,6 @@
  ******************************************************************************/
 package cubicchunks.generator.biome.biomegen;
 
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
 import net.minecraft.entity.monster.EntityGhast;
 import net.minecraft.entity.monster.EntityMagmaCube;
 import net.minecraft.entity.monster.EntityPigZombie;

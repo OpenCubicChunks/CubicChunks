@@ -27,9 +27,8 @@ package cubicchunks.generator.biome.biomegen;
 import java.util.ArrayList;
 import java.util.Random;
 
-import cubicchunks.world.Cube;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenAbstractTree;
+import cubicchunks.world.Cube;
 
 public class BiomeGenMutated extends CubeBiomeGenBase {
 	

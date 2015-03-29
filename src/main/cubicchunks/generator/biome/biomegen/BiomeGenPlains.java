@@ -26,7 +26,6 @@ package cubicchunks.generator.biome.biomegen;
 
 import java.util.Random;
 
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase.SpawnListEntry;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.world.World;

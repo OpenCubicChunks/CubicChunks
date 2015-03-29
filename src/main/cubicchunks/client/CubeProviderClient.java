@@ -24,50 +24,50 @@
  ******************************************************************************/
 package cubicchunks.client;
 
+import net.minecraft.util.LongHashMap;
+import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.world.World;
+import net.minecraft.world.gen.ClientChunkCache;
 import cubicchunks.CubeCache;
 import cubicchunks.accessors.ChunkProviderClientAccessor;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.world.BlankColumn;
 import cubicchunks.world.Column;
 import cubicchunks.world.Cube;
-import net.minecraft.client.multiplayer.ChunkProviderClient;
-import net.minecraft.util.LongHashMap;
-import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.World;
 
-public class CubeProviderClient extends ChunkProviderClient implements CubeCache {
+public class CubeProviderClient extends ClientChunkCache implements CubeCache {
 	
-	private World m_world;
-	private BlankColumn m_blankColumn;
+	private World world;
+	private BlankColumn blankColumn;
 	
 	public CubeProviderClient(World world) {
 		super(world);
 		
-		m_world = world;
-		m_blankColumn = new BlankColumn(world, 0, 0);
+		this.world = world;
+		this.blankColumn = new BlankColumn(world, 0, 0);
 	}
 	
 	@Override
 	public Column loadChunk(int cubeX, int cubeZ) {
 		// is this chunk already loaded?
-		LongHashMap chunkMapping = ChunkProviderClientAccessor.getChunkMapping(this);
+		LongHashMap chunkMapping = (LongHashMap) ChunkProviderClientAccessor.getChunkMapping(this);
 		Column column = (Column)chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}
 		
 		// make a new one
-		column = new Column(m_world, cubeX, cubeZ);
+		column = new Column(this.world, cubeX, cubeZ);
 		
 		chunkMapping.add(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ), column);
 		ChunkProviderClientAccessor.getChunkListing(this).add(column);
 		
-		column.isChunkLoaded = true;
+		column.setChunkLoaded(true);
 		return column;
 	}
 	
 	@Override
-	public Column provideChunk(int cubeX, int cubeZ) {
+	public Column generate(int cubeX, int cubeZ) {
 		// is this chunk already loaded?
 		LongHashMap chunkMapping = ChunkProviderClientAccessor.getChunkMapping(this);
 		Column column = (Column)chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
@@ -75,7 +75,7 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeCache
 			return column;
 		}
 		
-		return m_blankColumn;
+		return this.blankColumn;
 	}
 	
 	@Override
@@ -85,7 +85,7 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeCache
 	}
 	
 	@Override
-	public Cube provideCube(int cubeX, int cubeY, int cubeZ) {
+	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
 		Cube cube = loadChunk(cubeX, cubeZ).getOrCreateCube(cubeY, false);
 		
 		// cubes are always live on the client

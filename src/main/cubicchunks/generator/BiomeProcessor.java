@@ -26,57 +26,58 @@ package cubicchunks.generator;
 
 import java.util.Random;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.util.BlockPos;
 import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
 import cubicchunks.CubeWorld;
 import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.noise.NoiseGeneratorPerlin;
 import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.world.gen.NoiseGeneratorPerlin;
 
 public class BiomeProcessor extends CubeProcessor {
 	
-	private CubeWorldServer m_worldServer;
+	private CubeWorldServer worldServer;
 	
-	private Random m_rand;
+	private Random rand;
 	private NoiseGeneratorPerlin m_noiseGen;
-	private double[] m_noise;
-	private CubeBiomeGenBase[] m_biomes;
+	private double[] noise;
+	private CubeBiomeGenBase[] biomes;
 	
 	private int seaLevel;
 	
 	public BiomeProcessor(String name, CubeWorldServer worldServer, int batchSize) {
-		super(name, worldServer.getCubeProvider(), batchSize);
+		super(name, worldServer.getCubeCache(worldServer), batchSize);
 		
-		m_worldServer = worldServer;
+		this.worldServer = worldServer;
 		
-		m_rand = new Random(worldServer.getSeed());
-		m_noiseGen = new NoiseGeneratorPerlin(m_rand, 4);
-		m_noise = new double[256];
-		m_biomes = null;
+		this.rand = new Random(worldServer.getSeed());
+		this.m_noiseGen = new NoiseGeneratorPerlin(this.rand, 4);
+		this.noise = new double[256];
+		this.biomes = null;
 		
-		seaLevel = worldServer.getCubeWorldProvider().getSeaLevel();
+		this.seaLevel = worldServer.getCubeWorldProvider().getSeaLevel();
 	}
 	
 	@Override
 	public boolean calculate(Cube cube) {
 		// only continue if the neighboring cubes exist
-		CubeCache provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
-		if (!CubeProviderTools.cubeAndNeighborsExist(provider, cube.getX(), cube.getY(), cube.getZ())) {
+		CubeCache cache = CubeWorld.getCubeCache(this.worldServer);
+		if (!CubeProviderTools.cubeAndNeighborsExist(cache, cube.getX(), cube.getY(), cube.getZ())) {
 			return false;
 		}
 		
 		// generate biome info. This is a hackjob.
-		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(m_biomes, Coords.cubeToMinBlock(cube.getX()), Coords.cubeToMinBlock(cube.getZ()), 16, 16);
+		this.biomes = (CubeBiomeGenBase[])this.worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(this.biomes, Coords.cubeToMinBlock(cube.getX()), Coords.cubeToMinBlock(cube.getZ()), 16, 16);
 		
-		m_noise = m_noiseGen.func_151599_a(m_noise, Coords.cubeToMinBlock(cube.getX()), Coords.cubeToMinBlock(cube.getZ()), 16, 16, 16, 16, 1);
+		this.noise = this.m_noiseGen.arrayNoise2D_pre(this.noise, Coords.cubeToMinBlock(cube.getX()), Coords.cubeToMinBlock(cube.getZ()), 16, 16, 16, 16, 1);
 		
-		Cube above = provider.provideCube(cube.getX(), cube.getY() + 1, cube.getZ());
-		Cube below = provider.provideCube(cube.getX(), cube.getY() - 1, cube.getZ());
+		Cube above = cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
+		Cube below = cache.getCube(cube.getX(), cube.getY() - 1, cube.getZ());
 		
 		int topOfCube = Coords.cubeToMaxBlock(cube.getY());
 		int bottomOfCube = Coords.cubeToMinBlock(cube.getY());
@@ -94,11 +95,11 @@ public class BiomeProcessor extends CubeProcessor {
 				
 				int xzCoord = zRel << 4 | xRel;
 				
-				CubeBiomeGenBase biome = m_biomes[xzCoord];
+				CubeBiomeGenBase biome = this.biomes[xzCoord];
 				
 				// Biome blocks depth in current block column. 0 for negative values.
 				
-				int depth = (int) (m_noise[zRel + xRel * 16] / 3D + 3D + m_rand.nextDouble() * 0.25D);
+				int depth = (int) (this.noise[zRel + xRel * 16] / 3D + 3D + this.rand.nextDouble() * 0.25D);
 				
 				// How many biome blocks left to set in column? Initially -1
 				int numBlocksToChange = -1;
@@ -109,17 +110,17 @@ public class BiomeProcessor extends CubeProcessor {
 				for (int blockY = top; blockY >= bottom; --blockY) {
 					// Current block
 					Block block = Coords.blockToCube(blockY) == cube.getY() ? // if in current cube, get block from current cube, else get block from lower cube
-					cube.getBlock(xRel, Coords.blockToLocal(blockY), zRel)
-							: below.getBlock(xRel, Coords.blockToLocal(blockY), zRel);
+					cube.getBlockState(new BlockPos(xRel, Coords.blockToLocal(blockY), zRel)).getBlock()
+							: below.getBlockState(new BlockPos(xRel, Coords.blockToLocal(blockY), zRel)).getBlock();
 					
 					// Set numBlocksToChange to -1 when we reach air, skip everything else
-					if (block == Blocks.air) {
+					if (block == Blocks.AIR) {
 						numBlocksToChange = -1;
 						continue;
 					}
 					
 					// Why? If the block has already been replaced, skip it and go to the next block
-					if ( /* worldY <= alterationTop && */block != Blocks.stone) {
+					if ( /* worldY <= alterationTop && */block != Blocks.STONE) {
 						continue;
 					}
 					
@@ -127,24 +128,24 @@ public class BiomeProcessor extends CubeProcessor {
 					if (numBlocksToChange == -1) {
 						// If depth is <= 0 - only stone
 						if (depth <= 0) {
-							topBlock = Blocks.air;
-							fillerBlock = Blocks.stone;
+							topBlock = Blocks.AIR;
+							fillerBlock = Blocks.STONE;
 						}
 						// If we are above or at 4 block under water and at or below one block above water
-						else if (blockY >= seaLevel - 4 && blockY <= seaLevel + 1) {
+						else if (blockY >= this.seaLevel - 4 && blockY <= this.seaLevel + 1) {
 							topBlock = biome.topBlock;
 							fillerBlock = biome.fillerBlock;
 						}
 						// If top block is air and we are below sea level use water instead
-						if (blockY < seaLevel && topBlock == Blocks.air) {
-							topBlock = Blocks.water;
+						if (blockY < this.seaLevel && topBlock == Blocks.AIR) {
+							topBlock = Blocks.WATER;
 						}
 						// Set num blocks to change to current depth.
 						numBlocksToChange = depth;
 						
 						// Modify blocks only if we are at or below alteration top
 						if (blockY <= alterationTop) {
-							if (blockY >= seaLevel - 1) {
+							if (blockY >= this.seaLevel - 1) {
 								// If we are above sea level
 								replaceBlocksForBiome_setBlock(topBlock, cube, below, xAbs, blockY, zAbs);
 							} else {
@@ -169,9 +170,9 @@ public class BiomeProcessor extends CubeProcessor {
 					}
 					
 					// random sandstone generation
-					if (numBlocksToChange == 0 && fillerBlock == Blocks.sand) {
-						numBlocksToChange = m_rand.nextInt(4);
-						fillerBlock = Blocks.sandstone;
+					if (numBlocksToChange == 0 && fillerBlock == Blocks.SAND) {
+						numBlocksToChange = this.rand.nextInt(4);
+						fillerBlock = Blocks.SANDSTONE;
 					}
 				}
 			}
@@ -185,15 +186,17 @@ public class BiomeProcessor extends CubeProcessor {
 		int yRel = yAbs & 15;
 		int zRel = zAbs & 15;
 		
+		BlockPos newPos = new BlockPos(xRel, yRel, zRel);
+		
 		if (Coords.blockToCube(yAbs) == cube.getY()) // check if we're in the same cube as Cube
 		{
 			// If we are in the same cube
-			cube.setBlockForGeneration(xRel, yRel, zRel, block);
+			cube.setBlockForGeneration(newPos, block.getDefaultState());
 		} else // we're actually in the cube below
 		{
-			assert m_worldServer.getCubeProvider().cubeExists(Coords.blockToCube(xAbs), Coords.blockToCube(yAbs), Coords.blockToCube(zAbs));
+			assert this.worldServer.getCubeCache(this.worldServer).cubeExists(Coords.blockToCube(xAbs), Coords.blockToCube(yAbs), Coords.blockToCube(zAbs));
 			
-			below.setBlockForGeneration(xRel, yRel, zRel, block);
+			below.setBlockForGeneration(newPos, block.getDefaultState());
 		}
 	}
 }

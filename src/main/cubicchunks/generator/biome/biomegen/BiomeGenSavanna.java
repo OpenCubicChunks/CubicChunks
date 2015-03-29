@@ -26,12 +26,10 @@ package cubicchunks.generator.biome.biomegen;
 
 import java.util.Random;
 
-import cubicchunks.world.Cube;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.passive.EntityHorse;
-import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenAbstractTree;
-import net.minecraft.world.gen.feature.WorldGenSavannaTree;
+import cubicchunks.world.Cube;
 
 public class BiomeGenSavanna extends CubeBiomeGenBase {
 	

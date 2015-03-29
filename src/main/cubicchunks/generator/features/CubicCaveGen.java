@@ -26,11 +26,12 @@ package cubicchunks.generator.features;
 
 import java.util.Random;
 
-import cubicchunks.world.Cube;
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.Blocks;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
+import cubicchunks.world.Cube;
 
 /*
  * Modified Minecraft cave generation code. Based on Robinton's cave generation implementation.
@@ -38,37 +39,38 @@ import net.minecraft.world.World;
 
 public class CubicCaveGen extends CubicMapGenBase {
 	
+	@Override
 	protected void generate(World world, Cube cube, int x, int y, int z, int xOrigin, int yOrigin, int zOrigin) {
-		if (m_rand.nextInt(16) != 0) {
+		if (this.rand.nextInt(16) != 0) {
 			return;
 		}
-		int tries = this.m_rand.nextInt(this.m_rand.nextInt(this.m_rand.nextInt(15) + 1) + 1);
+		int tries = this.rand.nextInt(this.rand.nextInt(this.rand.nextInt(15) + 1) + 1);
 		
-		if (this.m_rand.nextInt(7) != 0) {
+		if (this.rand.nextInt(7) != 0) {
 			tries = 0;
 		}
 		
 		for (int n1 = 0; n1 < tries; ++n1) {
-			double x1 = x * 16 + this.m_rand.nextInt(16);
-			double y1 = y * 16 + this.m_rand.nextInt(16);
-			double z1 = z * 16 + this.m_rand.nextInt(16);
+			double x1 = x * 16 + this.rand.nextInt(16);
+			double y1 = y * 16 + this.rand.nextInt(16);
+			double z1 = z * 16 + this.rand.nextInt(16);
 			int numTries = 1;
 			
-			if (this.m_rand.nextInt(4) == 0) {
-				this.generateLargeCaveNode(cube, this.m_rand.nextLong(), xOrigin, yOrigin, zOrigin, x1, y1, z1);
-				numTries += this.m_rand.nextInt(4);
+			if (this.rand.nextInt(4) == 0) {
+				this.generateLargeCaveNode(cube, this.rand.nextLong(), xOrigin, yOrigin, zOrigin, x1, y1, z1);
+				numTries += this.rand.nextInt(4);
 			}
 			
 			for (int n2 = 0; n2 < numTries; ++n2) {
-				float curve = this.m_rand.nextFloat() * (float)Math.PI * 2.0F;
-				float angle = (this.m_rand.nextFloat() - 0.5F) * 2.0F / 8.0F;
-				float f2 = this.m_rand.nextFloat() * 2.0F + this.m_rand.nextFloat();
+				float curve = this.rand.nextFloat() * (float)Math.PI * 2.0F;
+				float angle = (this.rand.nextFloat() - 0.5F) * 2.0F / 8.0F;
+				float f2 = this.rand.nextFloat() * 2.0F + this.rand.nextFloat();
 				
-				if (m_rand.nextInt(10) == 0) {
-					f2 *= m_rand.nextFloat() * m_rand.nextFloat() * 3.0F + 1.0F;
+				if (this.rand.nextInt(10) == 0) {
+					f2 *= this.rand.nextFloat() * this.rand.nextFloat() * 3.0F + 1.0F;
 				}
 				
-				this.generateCaveNode(cube, this.m_rand.nextLong(), xOrigin, yOrigin, zOrigin, x1, y1, z1, f2/* * 2.0F */, curve, angle, 0, 0, /* 0.5D */1.0D);
+				this.generateCaveNode(cube, this.rand.nextLong(), xOrigin, yOrigin, zOrigin, x1, y1, z1, f2/* * 2.0F */, curve, angle, 0, 0, /* 0.5D */1.0D);
 			}
 		}
 	}
@@ -77,7 +79,7 @@ public class CubicCaveGen extends CubicMapGenBase {
 	 * Generates a larger initial cave node than usual. Called 25% of the time.
 	 */
 	protected void generateLargeCaveNode(Cube cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y, double z) {
-		this.generateCaveNode(cube, seed, xOrigin, yOrigin, zOrigin, x, y, z, 1.0F + this.m_rand.nextFloat() * 6.0F, 0.0F, 0.0F, -1, -1, 0.5D);
+		this.generateCaveNode(cube, seed, xOrigin, yOrigin, zOrigin, x, y, z, 1.0F + this.rand.nextFloat() * 6.0F, 0.0F, 0.0F, -1, -1, 0.5D);
 	}
 	
 	/**
@@ -147,12 +149,12 @@ public class CubicCaveGen extends CubicMapGenBase {
 				
 				// Check y coords?
 				if (x >= xOCenter - 16.0D - modSin * 2.0D && y >= yOCenter - 16.0D - yModSin * 2.0D && z >= zOCenter - 16.0D - modSin * 2.0D && x <= xOCenter + 16.0D + modSin * 2.0D && y <= yOCenter + 16.0D + yModSin * 2.0D && z <= zOCenter + 16.0D + modSin * 2.0D) {
-					int xDist1 = MathHelper.floor_double(x - modSin) - xOrigin * 16 - 1;
-					int xDist2 = MathHelper.floor_double(x + modSin) - xOrigin * 16 + 1;
-					int yDist1 = MathHelper.floor_double(y - yModSin) - yOrigin * 16 - 1;
-					int yDist2 = MathHelper.floor_double(y + yModSin) - yOrigin * 16 + 1;
-					int zDist1 = MathHelper.floor_double(z - modSin) - zOrigin * 16 - 1;
-					int zDist2 = MathHelper.floor_double(z + modSin) - zOrigin * 16 + 1;
+					int xDist1 = MathHelper.floor(x - modSin) - xOrigin * 16 - 1;
+					int xDist2 = MathHelper.floor(x + modSin) - xOrigin * 16 + 1;
+					int yDist1 = MathHelper.floor(y - yModSin) - yOrigin * 16 - 1;
+					int yDist2 = MathHelper.floor(y + yModSin) - yOrigin * 16 + 1;
+					int zDist1 = MathHelper.floor(z - modSin) - zOrigin * 16 - 1;
+					int zDist2 = MathHelper.floor(z + modSin) - zOrigin * 16 + 1;
 					
 					// Probably this causes some glitches
 					if (xDist1 < 0) {
@@ -189,10 +191,10 @@ public class CubicCaveGen extends CubicMapGenBase {
 						for (int z2 = zDist1; !hitLava && z2 < zDist2; ++z2) {
 							for (int y2 = yDist2 - 1; !hitLava && y2 >= yDist1; --y2) {
 								// temp = ( x2 * 16 + z2 ) * 16/*128*/ + y2;
-								Block block = cube.getBlock(x2, y2, z2);
+								Block block = cube.getBlockState(new BlockPos(x2, y2, z2)).getBlock();
 								
 								if (y2 >= 0 && y2 < 16/* 128 */) {
-									if (block == Blocks.flowing_lava || block == Blocks.lava) {
+									if (block == Blocks.FLOWING_LAVA || block == Blocks.LAVA) {
 										hitLava = true;
 									}
 									
@@ -216,14 +218,15 @@ public class CubicCaveGen extends CubicMapGenBase {
 								// for ( int y2 = yDist2 - 1; y2 >= yDist1; --y2 )//what?
 								for (int y2 = yDist1; y2 < yDist2; ++y2) {
 									double distY = ((double) (y2 + yOrigin * 16) + 0.5D - y) / yModSin;
+									BlockPos pos = new BlockPos(x2, y2, z2);
 									
 									if (distY > -0.7D && distX * distX + distY * distY + distZ * distZ < 1.0D) {
 										// No lava generation, infinite depth.
 										// Lava will be generatede differently (or not generated)
-										Block block = cube.getBlock(x2, y2, z2);
+										Block block = cube.getBlockState(pos).getBlock();
 										
-										if (block == Blocks.stone || block == Blocks.dirt || block == Blocks.grass) {
-											cube.setBlockForGeneration(x2, y2, z2, Blocks.air);
+										if (block == Blocks.STONE || block == Blocks.DIRT || block == Blocks.GRASS) {
+											cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
 											// abyte[aIndex] = 0;
 										}
 									}

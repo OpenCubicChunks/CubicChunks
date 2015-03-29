@@ -26,8 +26,8 @@ package cubicchunks.accessors;
 
 import java.lang.reflect.Field;
 
-import net.minecraft.client.multiplayer.ChunkProviderClient;
-import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.world.WorldClient;
+import net.minecraft.world.gen.ClientChunkCache;
 
 public class WorldClientAccessor {
 	
@@ -42,15 +42,15 @@ public class WorldClientAccessor {
 		}
 	}
 	
-	public static ChunkProviderClient getChunkProvider(WorldClient world) {
+	public static ClientChunkCache getChunkProvider(WorldClient world) {
 		try {
-			return (ChunkProviderClient)m_fieldChunkProvider.get(world);
+			return (ClientChunkCache)m_fieldChunkProvider.get(world);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}
 	}
 	
-	public static void setChunkProvider(WorldClient world, ChunkProviderClient val) {
+	public static void setChunkProvider(WorldClient world, ClientChunkCache val) {
 		try {
 			m_fieldChunkProvider.set(world, val);
 		} catch (Exception ex) {

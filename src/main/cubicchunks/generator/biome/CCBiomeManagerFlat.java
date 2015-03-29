@@ -28,10 +28,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
-import net.minecraft.world.ChunkPosition;
 
-public class WorldColumnManagerFlat extends WorldColumnManager {
+public class CCBiomeManagerFlat extends CCBiomeManager {
 	
 	/** The biome generator object. */
 	private CubeBiomeGenBase biomeGenerator;
@@ -39,7 +40,7 @@ public class WorldColumnManagerFlat extends WorldColumnManager {
 	/** The rainfall in the world */
 	private float rainfall; // this is hell, there IS no rain.
 	
-	public WorldColumnManagerFlat(CubeBiomeGenBase p_i45374_1_, float p_i45374_2_) {
+	public CCBiomeManagerFlat(CubeBiomeGenBase p_i45374_1_, float p_i45374_2_) {
 		this.biomeGenerator = p_i45374_1_;
 		this.rainfall = p_i45374_2_;
 	}
@@ -96,14 +97,15 @@ public class WorldColumnManagerFlat extends WorldColumnManager {
 		return this.loadBlockGeneratorData(par1ArrayOfBiomeGenBase, par2, par3, par4, par5);
 	}
 	
-	public ChunkPosition func_150795_a(int p_150795_1_, int p_150795_2_, int p_150795_3_, List p_150795_4_, Random p_150795_5_) {
-		return p_150795_4_.contains(this.biomeGenerator) ? new ChunkPosition(p_150795_1_ - p_150795_3_ + p_150795_5_.nextInt(p_150795_3_ * 2 + 1), 0, p_150795_2_ - p_150795_3_ + p_150795_5_.nextInt(p_150795_3_ * 2 + 1)) : null;
+	@Override
+	public BlockPos getRandomPositionInBiome(int p_150795_1_, int p_150795_2_, int p_150795_3_, List<Biome> p_150795_4_, Random p_150795_5_) {
+		return p_150795_4_.contains(this.biomeGenerator) ? new BlockPos(p_150795_1_ - p_150795_3_ + p_150795_5_.nextInt(p_150795_3_ * 2 + 1), 0, p_150795_2_ - p_150795_3_ + p_150795_5_.nextInt(p_150795_3_ * 2 + 1)) : null;
 	}
 	
 	/**
 	 * checks given Chunk's Biomes against List of allowed ones
 	 */
-	public boolean areBiomesViable(int par1, int par2, int par3, List biomeList) {
+	public boolean areBiomesViable(int par1, int par2, int par3, List<Biome> biomeList) {
 		return biomeList.contains(this.biomeGenerator);
 	}
 }

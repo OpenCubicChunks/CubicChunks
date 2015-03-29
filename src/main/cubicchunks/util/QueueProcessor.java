@@ -32,49 +32,49 @@ import cubicchunks.CubeCache;
 
 public abstract class QueueProcessor {
 	
-	protected String m_name;
-	protected CubeCache m_provider;
-	private int m_batchSize;
-	private BatchedSetQueue<Long> m_queue;
-	protected List<Long> m_incomingAddresses;
-	protected List<Long> m_processedAddresses;
-	protected List<Long> m_deferredAddresses;
+	protected String name;
+	protected CubeCache cache;
+	private int batchSize;
+	private BatchedSetQueue<Long> queue;
+	protected List<Long> incomingAddresses;
+	protected List<Long> processedAddresses;
+	protected List<Long> deferredAddresses;
 	
-	public QueueProcessor(String name, CubeCache provider, int batchSize) {
-		m_name = name;
-		m_provider = provider;
-		m_batchSize = batchSize;
+	public QueueProcessor(String name, CubeCache cache, int batchSize) {
+		this.name = name;
+		this.cache = cache;
+		this.batchSize = batchSize;
 		
-		m_queue = new BatchedSetQueue<Long>();
-		m_incomingAddresses = Lists.newArrayList();
-		m_processedAddresses = Lists.newArrayList();
-		m_deferredAddresses = Lists.newArrayList();
+		this.queue = new BatchedSetQueue<Long>();
+		this.incomingAddresses = Lists.newArrayList();
+		this.processedAddresses = Lists.newArrayList();
+		this.deferredAddresses = Lists.newArrayList();
 	}
 	
 	public void add(long address) {
-		m_queue.add(address);
+		this.queue.add(address);
 	}
 	
 	public void addAll(List<Long> addresses) {
-		m_queue.addAll(addresses);
+		this.queue.addAll(addresses);
 	}
 	
 	public int getNumInQueue() {
-		return m_queue.size();
+		return this.queue.size();
 	}
 	
 	public int processQueue(long timeStop) {
-		m_processedAddresses.clear();
-		m_deferredAddresses.clear();
+		this.processedAddresses.clear();
+		this.deferredAddresses.clear();
 		
 		// is there time left?
 		while (System.currentTimeMillis() < timeStop) {
 			// get a batch of addresses
-			m_incomingAddresses.clear();
-			m_queue.getBatch(m_incomingAddresses, m_batchSize);
+			this.incomingAddresses.clear();
+			this.queue.getBatch(this.incomingAddresses, this.batchSize);
 			
 			// nothing left to do?
-			if (m_incomingAddresses.isEmpty()) {
+			if (this.incomingAddresses.isEmpty()) {
 				break;
 			}
 			
@@ -83,19 +83,19 @@ public abstract class QueueProcessor {
 		}
 		
 		// put the deferred addresses back on the queue
-		for (long address : m_deferredAddresses) {
-			m_queue.add(address);
+		for (long address : this.deferredAddresses) {
+			this.queue.add(address);
 		}
 		
-		return m_processedAddresses.size();
+		return this.processedAddresses.size();
 	}
 	
 	public List<Long> getProcessedAddresses() {
-		return m_processedAddresses;
+		return this.processedAddresses;
 	}
 	
 	public String getProcessingReport() {
-		return String.format("\t%22s: %3d processed, %d remaining", m_name, m_processedAddresses.size(), m_queue.size());
+		return String.format("\t%22s: %3d processed, %d remaining", this.name, this.processedAddresses.size(), this.queue.size());
 	}
 	
 	public abstract void processBatch();

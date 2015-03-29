@@ -24,24 +24,23 @@
  ******************************************************************************/
 package cubicchunks.generator;
 
+import net.minecraft.world.World;
+import net.minecraft.world.gen.structure.MineshaftGenerator;
+import net.minecraft.world.gen.structure.StrongholdGenerator;
+import net.minecraft.world.gen.structure.VillageGenerator;
 import cubicchunks.CubeCache;
 import cubicchunks.generator.features.CubicCaveGen;
 import cubicchunks.generator.features.CubicRavineGen;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.structure.MapGenMineshaft;
-import net.minecraft.world.gen.structure.MapGenScatteredFeature;
-import net.minecraft.world.gen.structure.MapGenStronghold;
-import net.minecraft.world.gen.structure.MapGenVillage;
 
 public class FeatureProcessor extends CubeProcessor {
 	
 	private CubicCaveGen caveGenerator;
-	private MapGenStronghold m_strongholdGenerator;
-	private MapGenVillage m_villageGenerator;
-	private MapGenMineshaft m_mineshaftGenerator;
-	private MapGenScatteredFeature m_scatteredFeatureGenerator;
+	private StrongholdGenerator strongholdGenerator;
+	private VillageGenerator villageGenerator;
+	private MineshaftGenerator mineshaftGenerator;
+//	private MapGenScatteredFeature scatteredFeatureGenerator;
 	private CubicRavineGen ravineGenerator;
 	
 	private World worldObj;
@@ -49,21 +48,21 @@ public class FeatureProcessor extends CubeProcessor {
 	public FeatureProcessor(String name, CubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 		
-		caveGenerator = new CubicCaveGen();
-		m_strongholdGenerator = new MapGenStronghold();
-		m_villageGenerator = new MapGenVillage();
-		m_mineshaftGenerator = new MapGenMineshaft();
-		m_scatteredFeatureGenerator = new MapGenScatteredFeature();
-		ravineGenerator = new CubicRavineGen();
+		this.caveGenerator = new CubicCaveGen();
+		this.strongholdGenerator = new StrongholdGenerator();
+		this.villageGenerator = new VillageGenerator();
+		this.mineshaftGenerator = new MineshaftGenerator();
+//		this.scatteredFeatureGenerator = new TempleGenerator();
+		this.ravineGenerator = new CubicRavineGen();
 	}
 	
 	@Override
 	public boolean calculate(Cube cube) {
-		worldObj = cube.getWorld();
+		this.worldObj = cube.getWorld();
 		
 		// generate world features
-		caveGenerator.generate(worldObj, cube);
-		ravineGenerator.generate(worldObj, cube);
+		this.caveGenerator.generate(this.worldObj, cube);
+		this.ravineGenerator.generate(this.worldObj, cube);
 		/*
 		 * UNDONE: enable feature generation if( m_mapFeaturesEnabled ) { m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); }
 		 */

@@ -70,11 +70,11 @@ public class Column extends Chunk {
 	
 	private static final Logger log = LogManager.getLogger();
 	
-	private TreeMap<Integer,Cube> m_cubes;
-	private LightIndex m_lightIndex;
-	private int m_roundRobinLightUpdatePointer;
-	private List<Cube> m_roundRobinCubes;
-	private EntityContainer m_entities;
+	private TreeMap<Integer,Cube> cubes;
+	private LightIndex lightIndex;
+	private int roundRobinLightUpdatePointer;
+	private List<Cube> roundRobinCubes;
+	private EntityContainer entities;
 	private byte[] columnBlockBiomeArray;
 	
 	public Column(World world, int x, int z) {
@@ -103,12 +103,12 @@ public class Column extends Chunk {
 	
 	private void init() {
 		
-		m_cubes = new TreeMap<Integer,Cube>();
-		m_lightIndex = new LightIndex(this.world.getSeaLevel());
-		m_roundRobinLightUpdatePointer = 0;
-		m_roundRobinCubes = new ArrayList<Cube>();
-		m_entities = new EntityContainer();
-		columnBlockBiomeArray = new byte[256];
+		this.cubes = new TreeMap<Integer,Cube>();
+		this.lightIndex = new LightIndex(this.world.getSeaLevel());
+		this.roundRobinLightUpdatePointer = 0;
+		this.roundRobinCubes = new ArrayList<Cube>();
+		this.entities = new EntityContainer();
+		this.columnBlockBiomeArray = new byte[256];
 		
 		// make sure no one's using data structures that have been replaced
 		// also saves memory
@@ -136,11 +136,11 @@ public class Column extends Chunk {
 	}
 	
 	public EntityContainer getEntityContainer() {
-		return m_entities;
+		return this.entities;
 	}
 	
 	public LightIndex getLightIndex() {
-		return m_lightIndex;
+		return this.lightIndex;
 	}
 	
 	@Override
@@ -149,46 +149,46 @@ public class Column extends Chunk {
 	}
 	
 	public Collection<Cube> getCubes() {
-		return Collections.unmodifiableCollection(m_cubes.values());
+		return Collections.unmodifiableCollection(this.cubes.values());
 	}
 	
 	public boolean hasCubes() {
-		return !m_cubes.isEmpty();
+		return !this.cubes.isEmpty();
 	}
 	
 	public Cube getCube(int y) {
-		return m_cubes.get(y);
+		return this.cubes.get(y);
 	}
 	
 	public Cube getOrCreateCube(int cubeY, boolean isModified) {
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube == null) {
-			cube = new Cube(this.world, this, chunkX, cubeY, chunkZ, isModified);
-			m_cubes.put(cubeY, cube);
+			cube = new Cube(this.world, this, this.chunkX, cubeY, this.chunkZ, isModified);
+			this.cubes.put(cubeY, cube);
 		}
 		return cube;
 	}
 	
 	public Iterable<Cube> getCubes(int minY, int maxY) {
-		return m_cubes.subMap(minY, true, maxY, true).values();
+		return this.cubes.subMap(minY, true, maxY, true).values();
 	}
 	
 	public Cube removeCube(int cubeY) {
-		return m_cubes.remove(cubeY);
+		return this.cubes.remove(cubeY);
 	}
 	
 	public List<RangeInt> getCubeYRanges() {
-		return getRanges(m_cubes.keySet());
+		return getRanges(this.cubes.keySet());
 	}
 	
 	@Override
 	public boolean needsSaving(boolean alwaysTrue) {
-		return m_entities.needsSaving(this.world.getGameTime()) || isModified;
+		return this.entities.needsSaving(this.world.getGameTime()) || this.isModified;
 	}
 	
 	public void markSaved() {
-		m_entities.markSaved(this.world.getGameTime());
-		isModified = false;
+		this.entities.markSaved(this.world.getGameTime());
+		this.isModified = false;
 	}
 	
 	@Override
@@ -196,7 +196,7 @@ public class Column extends Chunk {
 		
 		// pass off to the cube
 		int cubeY = Coords.blockToCube(pos.getY());
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
 			return cube.getBlockState(pos);
 		}
@@ -209,7 +209,7 @@ public class Column extends Chunk {
 		
 		// is there a chunk for this block?
 		int cubeY = Coords.blockToCube(pos.getY());
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube == null) {
 			return null;
 		}
@@ -230,9 +230,9 @@ public class Column extends Chunk {
 		int x = Coords.blockToLocal(pos.getX());
 		int z = Coords.blockToLocal(pos.getZ());
 		int xzCoord = z << 4 | x;
-		if (pos.getY() >= rainfallMap[xzCoord] - 1) {
+		if (pos.getY() >= this.rainfallMap[xzCoord] - 1) {
 			// invalidate the rain height map value
-			rainfallMap[xzCoord] = -999;
+			this.rainfallMap[xzCoord] = -999;
 		}
 		
 		int newOpacity = newBlock.getOpacity();
@@ -268,7 +268,7 @@ public class Column extends Chunk {
 		// update lighting index
 		getLightIndex().setOpacity(x, pos.getY(), z, newBlock.getOpacity());
 		
-		isModified = true;
+		this.isModified = true;
 		
 		// NOTE: after this method, the World calls updateLights on the source block which changes light values again
 		
@@ -287,7 +287,7 @@ public class Column extends Chunk {
 		
 		// pass off to the cube
 		int cubeY = Coords.blockToCube(blockY);
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
 			int localY = Coords.blockToLocal(blockY);
 			IBlockState blockState = cube.getBlockState(localX, localY, localZ);
@@ -299,11 +299,11 @@ public class Column extends Chunk {
 	}
 	
 	public int getTopCubeY() {
-		return m_cubes.lastKey();
+		return this.cubes.lastKey();
 	}
 	
 	public int getBottomCubeY() {
-		return m_cubes.firstKey();
+		return this.cubes.firstKey();
 	}
 	
 	public Integer getTopFilledCubeY() {
@@ -337,7 +337,7 @@ public class Column extends Chunk {
 		int minCubeY = Coords.blockToCube(minBlockY);
 		int maxCubeY = Coords.blockToCube(maxBlockY);
 		for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
-			Cube cube = m_cubes.get(cubeY);
+			Cube cube = this.cubes.get(cubeY);
 			if (cube != null && cube.hasBlocks()) {
 				return false;
 			}
@@ -392,7 +392,7 @@ public class Column extends Chunk {
 	}
 	
 	public Iterable<Entity> entities() {
-		return m_entities.entities();
+		return this.entities.entities();
 	}
 	
 	@Override
@@ -400,18 +400,18 @@ public class Column extends Chunk {
 		int cubeY = Coords.getCubeYForEntity(entity);
 		
 		// pass off to the cube
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
 			cube.addEntity(entity);
 		} else {
 			// entities don't have to be in cubes, just add it directly to the column
 			entity.addedToChunk = true;
-			entity.chunkX = chunkX;
+			entity.chunkX = this.chunkX;
 			entity.chunkY = cubeY;
-			entity.chunkZ = chunkZ;
+			entity.chunkZ = this.chunkZ;
 			
-			m_entities.add(entity);
-			isModified = true;
+			this.entities.add(entity);
+			this.isModified = true;
 		}
 	}
 	
@@ -428,17 +428,17 @@ public class Column extends Chunk {
 		}
 		
 		// pass off to the cube
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
 			cube.removeEntity(entity);
-		} else if (m_entities.remove(entity)) {
+		} else if (this.entities.remove(entity)) {
 			entity.addedToChunk = false;
-			isModified = true;
+			this.isModified = true;
 		} else {
 			log.warn(String.format("%s Tried to remove entity %s from column (%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
 				this.world.isClient ? "CLIENT" : "SERVER",
 				entity.getClass().getName(),
-				chunkX, chunkZ,
+				this.chunkX, this.chunkZ,
 				entity.chunkX, entity.chunkY, entity.chunkZ
 			));
 		}
@@ -448,28 +448,28 @@ public class Column extends Chunk {
     public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
 		
 		// get a y-range that 2 blocks wider than the box for safety
-		int minCubeY = Coords.blockToCube(MathHelper.floorDoubleToInt(queryBox.minY - 2));
-		int maxCubeY = Coords.blockToCube(MathHelper.floorDoubleToInt(queryBox.maxY + 2));
+		int minCubeY = Coords.blockToCube(MathHelper.floor(queryBox.minY - 2));
+		int maxCubeY = Coords.blockToCube(MathHelper.floor(queryBox.maxY + 2));
 		for (Cube cube : getCubes(minCubeY, maxCubeY)) {
 			cube.findEntitiesExcept(excludedEntity, queryBox, out, predicate);
 		}
 		
 		// check the column too
-		m_entities.findEntitiesExcept(excludedEntity, queryBox, out, predicate);
+		this.entities.findEntitiesExcept(excludedEntity, queryBox, out, predicate);
     }
     
 	@Override
     public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
 		
 		// get a y-range that 2 blocks wider than the box for safety
-		int minCubeY = Coords.blockToCube(MathHelper.floorDoubleToInt(queryBox.minY - 2));
-		int maxCubeY = Coords.blockToCube(MathHelper.floorDoubleToInt(queryBox.maxY + 2));
+		int minCubeY = Coords.blockToCube(MathHelper.floor(queryBox.minY - 2));
+		int maxCubeY = Coords.blockToCube(MathHelper.floor(queryBox.maxY + 2));
 		for (Cube cube : getCubes(minCubeY, maxCubeY)) {
 			cube.findEntities(entityType, queryBox, out, predicate);
 		}
 		
 		// check the column too
-		m_entities.findEntities(entityType, queryBox, out, predicate);
+		this.entities.findEntities(entityType, queryBox, out, predicate);
     }
 	
 	@Override
@@ -477,7 +477,7 @@ public class Column extends Chunk {
 		
 		// pass off to the cube
 		int cubeY = Coords.blockToCube(pos.getY());
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
 			return cube.getBlockEntity(pos, creationType);
 		}
@@ -489,12 +489,12 @@ public class Column extends Chunk {
 		
 		// pass off to the cube
 		int cubeY = Coords.blockToCube(pos.getY());
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
 			cube.addBlockEntity(pos, blockEntity);
 		} else {
 			log.warn(String.format("No cube at (%d,%d,%d) to add tile entity (block %d,%d,%d)!",
-				chunkX, cubeY, chunkZ,
+				this.chunkX, cubeY, this.chunkZ,
 				pos.getX(), pos.getY(), pos.getZ()
 			));
 		}
@@ -505,7 +505,7 @@ public class Column extends Chunk {
 		
 		// pass off to the cube
 		int cubeY = Coords.blockToCube(pos.getY());
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
 			cube.removeBlockEntity(pos);
 		}
@@ -652,15 +652,15 @@ public class Column extends Chunk {
 			
 			in.close();
 		} catch (IOException ex) {
-			log.error(String.format("Unable to read data for column (%d,%d)", chunkX, chunkZ), ex);
+			log.error(String.format("Unable to read data for column (%d,%d)", this.chunkX, this.chunkZ), ex);
 		}
 		
 		// update lighting flags
 		this.terrainPopulated = true;
 		
 		// update tile entities in each chunk
-		for (Cube cube : m_cubes.values()) {
-			for (BlockEntity blockEntity : cube.blockEntities()) {
+		for (Cube cube : this.cubes.values()) {
+			for (BlockEntity blockEntity : cube.getBlockEntities()) {
 				blockEntity.updateContainingBlockInfo();
 			}
 		}
@@ -708,7 +708,7 @@ public class Column extends Chunk {
 	@Override
 	public boolean isPopulated() {
 		boolean isAnyCubeLive = false;
-		for (Cube cube : m_cubes.values()) {
+		for (Cube cube : this.cubes.values()) {
 			isAnyCubeLive |= cube.getGeneratorStage().isLastStage();
 		}
 		return this.ticked && this.terrainPopulated && isAnyCubeLive;
@@ -736,7 +736,7 @@ public class Column extends Chunk {
 		for (int localX = 0; localX < 16; localX++) {
 			for (int localZ = 0; localZ < 16; localZ++) {
 				int xzCoord = localX | localZ << 4;
-				rainfallMap[xzCoord] = -999;
+				this.rainfallMap[xzCoord] = -999;
 			}
 		}
 	}
@@ -765,7 +765,7 @@ public class Column extends Chunk {
 			*/
 			
 			// TEMP: just rain down to the sea
-			rainfallMap[xzCoord] = this.world.getSeaLevel();
+			this.rainfallMap[xzCoord] = this.world.getSeaLevel();
 		}
 		
 		return new BlockPos(pos.getX(), height, pos.getZ());
@@ -777,7 +777,7 @@ public class Column extends Chunk {
 		
 		// pass off to cube
 		int cubeY = Coords.blockToCube(pos.getY());
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
 			return cube.getBrightestLight(pos, skyLightDampeningTerm);
 		}
@@ -795,7 +795,7 @@ public class Column extends Chunk {
 		
 		// pass off to cube
 		int cubeY = Coords.blockToCube(pos.getY());
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
 			return cube.getLightValue(lightType, pos);
 		}
@@ -816,10 +816,10 @@ public class Column extends Chunk {
 		
 		// pass off to cube
 		int cubeY = Coords.blockToCube(pos.getY());
-		Cube cube = m_cubes.get(cubeY);
+		Cube cube = this.cubes.get(cubeY);
 		if (cube != null) {
 			cube.setLightValue(lightType, pos, light);
-			isModified = true;
+			this.isModified = true;
 		}
 	}
 	
@@ -857,15 +857,15 @@ public class Column extends Chunk {
 	
 	@Override
 	public void resetRelightChecks() {
-		m_roundRobinLightUpdatePointer = 0;
-		m_roundRobinCubes.clear();
-		m_roundRobinCubes.addAll(m_cubes.values());
+		this.roundRobinLightUpdatePointer = 0;
+		this.roundRobinCubes.clear();
+		this.roundRobinCubes.addAll(this.cubes.values());
 	}
 	
 	@Override
 	public void processRelightChecks() {
 		
-		if (m_roundRobinCubes.isEmpty()) {
+		if (this.roundRobinCubes.isEmpty()) {
 			resetRelightChecks();
 		}
 		
@@ -874,26 +874,26 @@ public class Column extends Chunk {
 		for (int i = 0; i < 2; i++) {
 			
 			// once we've checked all the blocks, stop checking
-			int maxPointer = 16 * 16 * m_roundRobinCubes.size();
-			if (m_roundRobinLightUpdatePointer >= maxPointer) {
+			int maxPointer = 16 * 16 * this.roundRobinCubes.size();
+			if (this.roundRobinLightUpdatePointer >= maxPointer) {
 				break;
 			}
 			
 			// get this update's arguments
-			int cubeIndex = Bits.unpackUnsigned(m_roundRobinLightUpdatePointer, 4, 8);
-			int localX = Bits.unpackUnsigned(m_roundRobinLightUpdatePointer, 4, 4);
-			int localZ = Bits.unpackUnsigned(m_roundRobinLightUpdatePointer, 4, 0);
+			int cubeIndex = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 8);
+			int localX = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 4);
+			int localZ = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 0);
 			
 			// advance to the next block
 			// this pointer advances over segment block columns
 			// starting from the block columns in the bottom segment and moving upwards
-			m_roundRobinLightUpdatePointer++;
+			this.roundRobinLightUpdatePointer++;
 			
 			// get the cube that was pointed to
-			Cube cube = m_roundRobinCubes.get(cubeIndex);
+			Cube cube = this.roundRobinCubes.get(cubeIndex);
 			
-			int blockX = Coords.localToBlock(chunkX, localX);
-			int blockZ = Coords.localToBlock(chunkZ, localZ);
+			int blockX = Coords.localToBlock(this.chunkX, localX);
+			int blockZ = Coords.localToBlock(this.chunkZ, localZ);
 			
 			// for each block in this segment block column...
 			for (int localY = 0; localY < 16; ++localY) {
@@ -906,7 +906,7 @@ public class Column extends Chunk {
 					// if there's a light source next to this block, update the light source
 					for (Facing facing : Facing.values()) {
 						BlockPos neighborPos = pos.addDirection(facing, 1);
-						if (this.world.getBlockStateAt(neighborPos).getBlock().getLightEmmisionLevel() > 0) {
+						if (this.world.getBlockStateAt(neighborPos).getBlock().getBrightness() > 0) {
 							this.world.updateLightingAt(neighborPos);
 						}
 					}
@@ -923,7 +923,7 @@ public class Column extends Chunk {
 			return;
 		}
 		
-		for (Cube cube : m_cubes.values()) {
+		for (Cube cube : this.cubes.values()) {
 			cube.doRandomTicks();
 		}
 	}

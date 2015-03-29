@@ -24,16 +24,15 @@
  ******************************************************************************/
 package cubicchunks;
 
-import cubicchunks.generator.GeneratorPipeline;
-import cubicchunks.generator.biome.WorldColumnManager;
-import cubicchunks.generator.biome.WorldColumnManagerFlat;
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
-import cubicchunks.server.CubeWorldServer;
 import net.minecraft.world.Dimension;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.biome.BiomeManagerSingle;
 import net.minecraft.world.gen.FlatGeneratorInfo;
+import cubicchunks.generator.GeneratorPipeline;
+import cubicchunks.generator.biome.CCBiomeManager;
+import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.server.CubeWorldServer;
 
 public abstract class CubeWorldProvider extends Dimension {
 	
@@ -41,16 +40,16 @@ public abstract class CubeWorldProvider extends Dimension {
 	protected void registerBiomeManager() {
 		// NOTE: this is the place we plug in different WorldColumnManagers for different dimensions or world types
 		
-		if (world.getGenerator() == DimensionType.FLAT) {
-			FlatGeneratorInfo info = FlatGeneratorInfo.createFlatGeneratorFromString(world.getWorldInfo().getGeneratorOptions());
-			biomeManager = new BiomeManagerSingle(CubeBiomeGenBase.getBiome(info.getBiomeID()), 0.5F);
+		if (this.world.getGenerator() == DimensionType.FLAT) {
+			FlatGeneratorInfo info = FlatGeneratorInfo.createFlatGeneratorFromString(this.world.getWorldInfo().getGeneratorOptions());
+			this.biomeManager = new BiomeManagerSingle(CubeBiomeGenBase.getBiome(info.getBiomeID()), 0.5F);
 		} else {
-			biomeManager = new BiomeManager(world);
+			this.biomeManager = new BiomeManager(this.world);
 		}
 	}
 	
-	public WorldColumnManager getWorldColumnMananger() {
-		return (WorldColumnManager)biomeManager;
+	public CCBiomeManager getWorldColumnMananger() {
+		return (CCBiomeManager)this.biomeManager;
 	}
 	
 	public abstract GeneratorPipeline createGeneratorPipeline(CubeWorldServer worldServer);

@@ -26,10 +26,8 @@ package cubicchunks.generator.features;
 
 import java.util.Random;
 
-import cubicchunks.world.Cube;
-import net.minecraft.block.Block;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.IChunkProvider;
+import cubicchunks.world.Cube;
 
 public abstract class CubicMapGenBase {
 	
@@ -37,7 +35,7 @@ public abstract class CubicMapGenBase {
 	protected int m_range = 8;
 	
 	/** The RNG used by the MapGen classes. */
-	protected Random m_rand = new Random();
+	protected Random rand = new Random();
 	
 	/** This world object. */
 	protected World m_world;
@@ -49,10 +47,10 @@ public abstract class CubicMapGenBase {
 		
 		int radius = this.m_range;
 		this.m_world = world;
-		this.m_rand.setSeed(world.getSeed());
-		long randX = this.m_rand.nextLong();
-		long randY = this.m_rand.nextLong();
-		long randZ = this.m_rand.nextLong();
+		this.rand.setSeed(world.getSeed());
+		long randX = this.rand.nextLong();
+		long randY = this.rand.nextLong();
+		long randZ = this.rand.nextLong();
 		
 		for (int x = xOrigin - radius; x <= xOrigin + radius; ++x) {
 			for (int y = yOrigin - radius; y <= yOrigin + radius; ++y) {
@@ -60,7 +58,7 @@ public abstract class CubicMapGenBase {
 					long randX_mul = (long)x * randX;
 					long randY_mul = (long)y * randY;
 					long randZ_mul = (long)z * randZ;
-					this.m_rand.setSeed(randX_mul ^ randY_mul ^ randZ_mul ^ world.getSeed());
+					this.rand.setSeed(randX_mul ^ randY_mul ^ randZ_mul ^ world.getSeed());
 					this.generate(world, cube, x, y, z, xOrigin, yOrigin, zOrigin);
 				}
 			}

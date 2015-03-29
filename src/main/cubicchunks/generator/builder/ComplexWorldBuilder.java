@@ -24,7 +24,8 @@
  ******************************************************************************/
 package cubicchunks.generator.builder;
 
-import libnoiseforjava.module.*;
+import com.sun.org.apache.bcel.internal.generic.Select;
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 
 //The following is a list of module groups and subgroups that build the
 //terrain:

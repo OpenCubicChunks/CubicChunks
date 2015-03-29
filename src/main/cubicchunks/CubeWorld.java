@@ -24,21 +24,28 @@
  ******************************************************************************/
 package cubicchunks;
 
+import net.minecraft.profiler.Profiler;
+import net.minecraft.world.Dimension;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldInfo;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.storage.ISaveHandler;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.ServerCubeCache;
 
-
-public class CubeWorld {
+public abstract class CubeWorld extends World {
 	
+	protected CubeWorld(ISaveHandler a1, WorldInfo a2, Dimension a3,
+			Profiler a4, boolean a5) {
+		super(a1, a2, a3, a4, a5);
+		// TODO Auto-generated constructor stub
+	}
+
 	public static ServerCubeCache getCubeCache(WorldServer worldServer) {
-		// TODO
 		return null;
 	}
 	
 	public static LightingManager getLightingManager(World world) {
-		// TODO
 		return null;
 	}
 }

@@ -26,8 +26,8 @@ package cubicchunks.generator.biome.biomegen;
 
 import java.util.Random;
 
-import cubicchunks.world.Cube;
 import net.minecraft.world.World;
+import cubicchunks.world.Cube;
 
 public class BiomeGenOcean extends CubeBiomeGenBase {
 	

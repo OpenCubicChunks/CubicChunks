@@ -24,10 +24,8 @@
  ******************************************************************************/
 package cubicchunks.generator.biome.biomegen;
 
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.boss.EntityDragon;
-import net.minecraft.init.Blocks;
-import net.minecraft.world.gen.feature.WorldGenSpikes;
-import net.minecraft.world.gen.feature.WorldGenerator;
 
 public class BiomeEndDecorator extends BiomeDecorator {
 	

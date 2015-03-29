@@ -24,6 +24,8 @@
  ******************************************************************************/
 package cubicchunks.lighting;
 
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.LightType;
 import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
 import cubicchunks.CubeWorld;
@@ -31,7 +33,6 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
 import cubicchunks.world.LightIndex;
-import net.minecraft.world.EnumSkyBlock;
 
 public class FirstLightProcessor extends CubeProcessor {
 	
@@ -42,8 +43,8 @@ public class FirstLightProcessor extends CubeProcessor {
 	@Override
 	public boolean calculate(Cube cube) {
 		// only light if the neighboring cubes exist
-		CubeCache provider = ((CubeWorld)cube.getWorld()).getCubeProvider();
-		if (!CubeProviderTools.cubeAndNeighborsExist(provider, cube.getX(), cube.getY(), cube.getZ())) {
+		CubeCache cache = ((CubeWorld)cube.getWorld()).getCubeCache(worldServer);
+		if (!CubeProviderTools.cubeAndNeighborsExist(cache, cube.getX(), cube.getY(), cube.getZ())) {
 			return false;
 		}
 		
@@ -71,12 +72,12 @@ public class FirstLightProcessor extends CubeProcessor {
 		// populate the nearby faces of adjacent cubes
 		// this is for cases when a sheer wall is up against an empty cube
 		// unless this is called, the wall will not get directly lit
-		lightXSlab(provider.provideCube(cube.getX() - 1, cube.getY(), cube.getZ()), 15);
-		lightXSlab(provider.provideCube(cube.getX() + 1, cube.getY(), cube.getZ()), 0);
-		lightYSlab(provider.provideCube(cube.getX(), cube.getY() - 1, cube.getZ()), 15);
-		lightYSlab(provider.provideCube(cube.getX(), cube.getY() + 1, cube.getZ()), 0);
-		lightZSlab(provider.provideCube(cube.getX(), cube.getY(), cube.getZ() - 1), 15);
-		lightZSlab(provider.provideCube(cube.getX(), cube.getY(), cube.getZ() + 1), 0);
+		lightXSlab(cache.getCube(cube.getX() - 1, cube.getY(), cube.getZ()), 15);
+		lightXSlab(cache.getCube(cube.getX() + 1, cube.getY(), cube.getZ()), 0);
+		lightYSlab(cache.getCube(cube.getX(), cube.getY() - 1, cube.getZ()), 15);
+		lightYSlab(cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ()), 0);
+		lightZSlab(cache.getCube(cube.getX(), cube.getY(), cube.getZ() - 1), 15);
+		lightZSlab(cache.getCube(cube.getX(), cube.getY(), cube.getZ() + 1), 0);
 		
 		return true;
 	}
@@ -100,12 +101,12 @@ public class FirstLightProcessor extends CubeProcessor {
 		if (cubeMinBlockY > gradientMaxBlockY) {
 			// set everything to sky light
 			for (int localY = 0; localY < 16; localY++) {
-				cube.setLightValue(EnumSkyBlock.Sky, localX, localY, localZ, 15);
+				cube.setLightValue(LightType.SKY, new BlockPos(localX, localY, localZ), 15);
 			}
 		} else if (cubeMaxBlockY < gradientMinBlockY) {
 			// set everything to dark
 			for (int localY = 0; localY < 16; localY++) {
-				cube.setLightValue(EnumSkyBlock.Sky, localX, localY, localZ, 0);
+				cube.setLightValue(LightType.SKY, new BlockPos(localX, localY, localZ), 0);
 			}
 		} else {
 			LightIndex index = cube.getColumn().getLightIndex();
@@ -126,7 +127,7 @@ public class FirstLightProcessor extends CubeProcessor {
 				if (blockY <= cubeMaxBlockY) {
 					// apply the light
 					int localY = Coords.blockToLocal(blockY);
-					cube.setLightValue(EnumSkyBlock.Sky, localX, localY, localZ, light);
+					cube.setLightValue(LightType.SKY, new BlockPos(localX, localY, localZ), light);
 				}
 			}
 		}
@@ -177,18 +178,19 @@ public class FirstLightProcessor extends CubeProcessor {
 			// get the top nontransparent block (if one exists)
 			Integer topNonTransparentBlockY = index.getTopNonTransparentBlockY(localX, localZ);
 			
-			boolean hasSky = !cube.getColumn().worldObj.provider.hasNoSky;
+			boolean hasSky = !cube.getColumn().getWorld().dimension.hasNoSky();
 			if (hasSky && topNonTransparentBlockY != null && blockY < topNonTransparentBlockY && index.getOpacity(localX, blockY, localZ) == 0) {
 				lightBlock = true;
 			}
-		} else if (cube.getBlock(localX, localY, localZ).getLightValue() > 0) {
+		} else if (cube.getBlockState(localX, localY, localZ).getBlock().getBrightness() > 0) {
 			lightBlock = true;
 		}
 		
 		if (lightBlock) {
 			int blockX = Coords.localToBlock(cube.getX(), localX);
 			int blockZ = Coords.localToBlock(cube.getZ(), localZ);
-			return cube.getWorld().func_147451_t(blockX, blockY, blockZ);
+			
+			return cube.getWorld().updateLightingAt(new BlockPos(blockX, blockY, blockZ));
 		}
 		
 		return true;

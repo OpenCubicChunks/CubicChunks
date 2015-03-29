@@ -57,12 +57,12 @@ public class CubeWorldProviderSurface extends CubeWorldProvider {
 	
 	@Override
 	public GeneratorPipeline createGeneratorPipeline(CubeWorldServer worldServer) {
-		GeneratorPipeline generatorPipeline = new GeneratorPipeline(worldServer.getCubeProvider());
+		GeneratorPipeline generatorPipeline = new GeneratorPipeline(worldServer.getCubeCache(worldServer));
 		generatorPipeline.addStage(GeneratorStage.Terrain, new NewTerrainProcessor("Terrain", worldServer, 10));
 		generatorPipeline.addStage(GeneratorStage.Biomes, new BiomeProcessor("Biomes", worldServer, 10));
-		generatorPipeline.addStage(GeneratorStage.Features, new FeatureProcessor("Features", worldServer.getCubeProvider(), 10));
-		generatorPipeline.addStage(GeneratorStage.Population, new PopulationProcessor("Population", worldServer.getCubeProvider(), 10));
-		generatorPipeline.addStage(GeneratorStage.Lighting, new FirstLightProcessor("Lighting", worldServer.getCubeProvider(), 10));
+		generatorPipeline.addStage(GeneratorStage.Features, new FeatureProcessor("Features", worldServer.getCubeCache(worldServer), 10));
+		generatorPipeline.addStage(GeneratorStage.Population, new PopulationProcessor("Population", worldServer.getCubeCache(worldServer), 10));
+		generatorPipeline.addStage(GeneratorStage.Lighting, new FirstLightProcessor("Lighting", worldServer.getCubeCache(worldServer), 10));
 		return generatorPipeline;
 	}
 

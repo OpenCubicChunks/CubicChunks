@@ -24,7 +24,7 @@
  ******************************************************************************/
 package cubicchunks.generator.biome.biomegen;
 
-import net.minecraft.init.Blocks;
+import net.minecraft.block.Blocks;
 
 public class BiomeGenBeach extends CubeBiomeGenBase {
 	

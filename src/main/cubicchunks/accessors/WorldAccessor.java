@@ -27,7 +27,7 @@ package cubicchunks.accessors;
 import java.lang.reflect.Field;
 
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.gen.IChunkGenerator;
 
 public class WorldAccessor {
 	
@@ -42,9 +42,9 @@ public class WorldAccessor {
 		}
 	}
 	
-	public static IChunkProvider getChunkProvider(World world) {
+	public static IChunkGenerator getChunkProvider(World world) {
 		try {
-			return (IChunkProvider)m_fieldChunkProvider.get(world);
+			return (IChunkGenerator)m_fieldChunkProvider.get(world);
 		} catch (Exception ex) {
 			throw new Error(ex);
 		}

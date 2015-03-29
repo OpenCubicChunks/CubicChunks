@@ -51,79 +51,79 @@ import cubicchunks.util.CubeBlockMap;
 
 public class Cube {
 	
-	private static final Logger log = LogManager.getLogger();
+	private static final Logger LOGGER = LogManager.getLogger();
 	
-	private World m_world;
-	private Column m_column;
-	private int m_x;
-	private int m_y;
-	private int m_z;
-	private boolean m_isModified;
-	private ChunkSection m_storage;
-	private EntityContainer m_entities;
-	private CubeBlockMap<BlockEntity> m_blockEntities;
-	private GeneratorStage m_generatorStage;
+	private World world;
+	private Column column;
+	private int cubeX;
+	private int cubeY;
+	private int cubeZ;
+	private boolean isModified;
+	private ChunkSection storage;
+	private EntityContainer entities;
+	private CubeBlockMap<BlockEntity> blockEntities;
+	private GeneratorStage generatorStage;
 	
 	public Cube(World world, Column column, int x, int y, int z, boolean isModified) {
-		m_world = world;
-		m_column = column;
-		m_x = x;
-		m_y = y;
-		m_z = z;
-		m_isModified = isModified;
+		this.world = world;
+		this.column = column;
+		this.cubeX = x;
+		this.cubeY = y;
+		this.cubeZ = z;
+		this.isModified = isModified;
 		
-		m_storage = null;
-		m_entities = new EntityContainer();
-		m_blockEntities = new CubeBlockMap<BlockEntity>();
-		m_generatorStage = null;
+		this.storage = null;
+		this.entities = new EntityContainer();
+		this.blockEntities = new CubeBlockMap<BlockEntity>();
+		this.generatorStage = null;
 	}
 	
 	public boolean isEmpty() {
-		return m_storage == null;
+		return this.storage == null;
 	}
 	
 	public void setEmpty(boolean isEmpty) {
 		if (isEmpty) {
-			m_storage = null;
+			this.storage = null;
 		} else {
-			m_storage = new ChunkSection(m_y << 4, !m_world.dimension.hasNoSky());
+			this.storage = new ChunkSection(this.cubeY << 4, !this.world.dimension.hasNoSky());
 		}
 	}
 	
 	public GeneratorStage getGeneratorStage() {
-		return m_generatorStage;
+		return this.generatorStage;
 	}
 	
 	public void setGeneratorStage(GeneratorStage val) {
-		m_generatorStage = val;
+		this.generatorStage = val;
 	}
 	
 	public long getAddress() {
-		return AddressTools.getAddress(m_x, m_y, m_z);
+		return AddressTools.getAddress(this.cubeX, this.cubeY, this.cubeZ);
 	}
 	
 	public World getWorld() {
-		return m_world;
+		return this.world;
 	}
 	
 	public Column getColumn() {
-		return m_column;
+		return this.column;
 	}
 	
 	public int getX() {
-		return m_x;
+		return this.cubeX;
 	}
 	
 	public int getY() {
-		return m_y;
+		return this.cubeY;
 	}
 	
 	public int getZ() {
-		return m_z;
+		return this.cubeZ;
 	}
 	
 	public ChunkSection getStorage() {
-		return m_storage;
+		return this.storage;
 	}
 	
 	public IBlockState getBlockState(BlockPos pos) {
@@ -137,7 +137,7 @@ public class Cube {
 	}
 	
 	public IBlockState getBlockState(int localX, int localY, int localZ) {
-		return m_storage.getBlockStateAt(localX, localY, localZ);
+		return this.storage.getBlockStateAt(localX, localY, localZ);
 	}
 	
 	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
@@ -158,26 +158,26 @@ public class Cube {
 		int z = Coords.blockToLocal(pos.getZ());
 
 		// set the block
-		m_storage.setBlockStateAt(x, y, z, newBlockState);
+		this.storage.setBlockStateAt(x, y, z, newBlockState);
 		
 		Block newBlock = newBlockState.getBlock();
 		Block oldBlock = oldBlockState.getBlock();
 		
 		if (newBlock != oldBlock) {
-			if (!m_world.isClient) {
+			if (!this.world.isClient) {
 				// on the server, break the old block
-				oldBlock.onRemoved(m_world, pos, oldBlockState);
+				oldBlock.onRemoved(this.world, pos, oldBlockState);
 			} else if (oldBlock instanceof IBlockEntityProvider) {
 				// on the client, remove the tile entity
-				m_world.removeBlockEntity(pos);
+				this.world.removeBlockEntity(pos);
 			}
 		}
 		
 		// did the block change work correctly?
-		if (m_storage.getBlockAt(x, y, z) != newBlock) {
+		if (this.storage.getBlockAt(x, y, z) != newBlock) {
 			return null;
 		}
-		m_isModified = true;
+		this.isModified = true;
 		
 		if (oldBlock instanceof IBlockEntityProvider) {
 			// update tile entity
@@ -187,17 +187,17 @@ public class Cube {
 			}
 		}
 		
-		if (!m_world.isClient && newBlock != oldBlock) {
+		if (!this.world.isClient && newBlock != oldBlock) {
 			// on the server, tell the block it was added
-			newBlock.onSet(m_world, pos, newBlockState);
+			newBlock.onSet(this.world, pos, newBlockState);
 		}
 		
 		if (newBlock instanceof IBlockEntityProvider) {
 			// make sure the tile entity is good
 			BlockEntity blockEntity = getBlockEntity(pos, ChunkEntityCreationType.CHECK);
 			if (blockEntity == null) {
-				blockEntity = ((IBlockEntityProvider)newBlock).getBlockEntity(m_world, newBlock.getMetadataForBlockState(newBlockState));
-				m_world.setBlockEntity(pos, blockEntity);
+				blockEntity = ((IBlockEntityProvider)newBlock).getBlockEntity(this.world, newBlock.getMetadataForBlockState(newBlockState));
+				this.world.setBlockEntity(pos, blockEntity);
 			}
 			if (blockEntity != null) {
 				blockEntity.updateContainingBlockInfo();
@@ -226,19 +226,19 @@ public class Cube {
 		int z = Coords.blockToLocal(pos.getZ());
 
 		// set the block
-		m_storage.setBlockStateAt(x, y, z, newBlockState);
+		this.storage.setBlockStateAt(x, y, z, newBlockState);
 		
 		Block newBlock = newBlockState.getBlock();
 		
 		// did the block change work correctly?
-		if (m_storage.getBlockAt(x, y, z) != newBlock) {
+		if (this.storage.getBlockAt(x, y, z) != newBlock) {
 			return null;
 		}
-		m_isModified = true;
+		this.isModified = true;
 		
 		// update the column light index
-		int blockY = Coords.localToBlock(m_y, y);
-		m_column.getLightIndex().setOpacity(x, blockY, z, newBlock.getOpacity());
+		int blockY = Coords.localToBlock(this.cubeY, y);
+		this.column.getLightIndex().setOpacity(x, blockY, z, newBlock.getOpacity());
 		
 		return oldBlockState;
 	}
@@ -248,11 +248,11 @@ public class Cube {
 			return false;
 		}
 		
-		return !m_storage.isSectionEmpty();
+		return !this.storage.isSectionEmpty();
 	}
 	
-	public Iterable<BlockEntity> blockEntities() {
-		return m_blockEntities.values();
+	public Iterable<BlockEntity> getBlockEntities() {
+		return this.blockEntities.values();
 	}
 	
 	public void addEntity(Entity entity) {
@@ -261,30 +261,30 @@ public class Cube {
 		int cubeX = Coords.getCubeXForEntity(entity);
 		int cubeY = Coords.getCubeYForEntity(entity);
 		int cubeZ = Coords.getCubeZForEntity(entity);
-		if (cubeX != m_x || cubeY != m_y || cubeZ != m_z) {
-			log.warn(String.format("Entity %s in cube (%d,%d,%d) added to cube (%d,%d,%d)!", entity.getClass().getName(), cubeX, cubeY, cubeZ, m_x, m_y, m_z));
+		if (cubeX != this.cubeX || cubeY != this.cubeY || cubeZ != this.cubeZ) {
+			LOGGER.warn(String.format("Entity %s in cube (%d,%d,%d) added to cube (%d,%d,%d)!", entity.getClass().getName(), cubeX, cubeY, cubeZ, this.cubeX, this.cubeY, this.cubeZ));
 		}
 		
 		// tell the entity it's in this cube
 		entity.addedToChunk = true;
-		entity.chunkX = m_x;
-		entity.chunkY = m_y;
-		entity.chunkZ = m_z;
+		entity.chunkX = this.cubeX;
+		entity.chunkY = this.cubeY;
+		entity.chunkZ = this.cubeZ;
 		
-		m_entities.add(entity);
-		m_isModified = true;
+		this.entities.add(entity);
+		this.isModified = true;
 	}
 	
 	public boolean removeEntity(Entity entity) {
-		boolean wasRemoved = m_entities.remove(entity);
+		boolean wasRemoved = this.entities.remove(entity);
 		if (wasRemoved) {
 			entity.addedToChunk = false;
-			m_isModified = true;
+			this.isModified = true;
 		} else {
-			log.warn(String.format("%s Tried to remove entity %s from cube (%d,%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
-				m_world.isClient ? "CLIENT" : "SERVER",
+			LOGGER.warn(String.format("%s Tried to remove entity %s from cube (%d,%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
+				this.world.isClient ? "CLIENT" : "SERVER",
 				entity.getClass().getName(),
-				m_x, m_y, m_z,
+				this.cubeX, this.cubeY, this.cubeZ,
 				entity.chunkX, entity.chunkY, entity.chunkZ
 			));
 		}
@@ -292,23 +292,23 @@ public class Cube {
 	}
 	
 	public Iterable<Entity> entities() {
-		return m_entities.entities();
+		return this.entities.entities();
 	}
 	
 	public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
-		m_entities.findEntitiesExcept(excludedEntity, queryBox, out, predicate);
+		this.entities.findEntitiesExcept(excludedEntity, queryBox, out, predicate);
 	}
 	
 	public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
-		m_entities.findEntities(entityType, queryBox, out, predicate);
+		this.entities.findEntities(entityType, queryBox, out, predicate);
 	}
 	
 	public void getMigratedEntities(List<Entity> out) {
-		for (Entity entity : m_entities.entities()) {
+		for (Entity entity : this.entities.entities()) {
 			int cubeX = Coords.getCubeXForEntity(entity);
 			int cubeY = Coords.getCubeYForEntity(entity);
 			int cubeZ = Coords.getCubeZForEntity(entity);
-			if (cubeX != m_x || cubeY != m_y || cubeZ != m_z) {
+			if (cubeX != this.cubeX || cubeY != this.cubeY || cubeZ != this.cubeZ) {
 				out.add(entity);
 			}
 		}
@@ -316,12 +316,12 @@ public class Cube {
 	
 	public BlockEntity getBlockEntity(BlockPos pos, ChunkEntityCreationType creationType) {
         
-		BlockEntity blockEntity = m_blockEntities.get(pos);
+		BlockEntity blockEntity = this.blockEntities.get(pos);
 		if (blockEntity == null) {
 			
 			if (creationType == ChunkEntityCreationType.IMMEDIATE) {
 				blockEntity = createBlockEntity(pos);
-				m_world.setBlockEntity(pos, blockEntity);
+				this.world.setBlockEntity(pos, blockEntity);
 			} else if (creationType == ChunkEntityCreationType.IMMEDIATE) {
 				throw new Error("TODO: implement block entity creation queue!");
 			}
@@ -336,13 +336,13 @@ public class Cube {
 			}
 			
 			// make a new tile entity for the block
-			blockEntity = ((IBlockEntityProvider)block).getBlockEntity(m_world, meta);
-			m_world.setBlockEntity(pos, blockEntity);
+			blockEntity = ((IBlockEntityProvider)block).getBlockEntity(this.world, meta);
+			this.world.setBlockEntity(pos, blockEntity);
 			
 		} else if (blockEntity.isInvalid()) {
 			
 			// remove the tile entity
-			m_blockEntities.remove(pos);
+			this.blockEntities.remove(pos);
 			blockEntity = null;
 		}
 		
@@ -356,7 +356,7 @@ public class Cube {
 		int meta = block.getMetadataForBlockState(blockState);
 		
 		if (block.hasBlockEntity()) {
-			return ((IBlockEntityProvider)block).getBlockEntity(m_world, meta);
+			return ((IBlockEntityProvider)block).getBlockEntity(this.world, meta);
 		}
 		return null;
 	}
@@ -364,70 +364,70 @@ public class Cube {
 	public void addBlockEntity(BlockPos pos, BlockEntity blockEntity) {
 		
 		// update the tile entity
-		blockEntity.setLevel(m_world);
+		blockEntity.setLevel(this.world);
 		blockEntity.setPosition(pos);
 		
 		// is this block supposed to have a tile entity?
 		if (getBlockState(pos).getBlock() instanceof IBlockEntityProvider) {
 			
 			// cleanup the old tile entity
-			BlockEntity oldBlockEntity = m_blockEntities.get(pos);
+			BlockEntity oldBlockEntity = this.blockEntities.get(pos);
 			if (oldBlockEntity != null) {
 				oldBlockEntity.setInvalid();
 			}
 			
 			// install the new tile entity
 			blockEntity.setValid();
-			m_blockEntities.put(pos, blockEntity);
-			m_isModified = true;
+			this.blockEntities.put(pos, blockEntity);
+			this.isModified = true;
 		}
 	}
 	
 	public void removeBlockEntity(BlockPos pos) {
-		BlockEntity blockEntity = m_blockEntities.remove(pos);
+		BlockEntity blockEntity = this.blockEntities.remove(pos);
 		if (blockEntity != null) {
 			blockEntity.setInvalid();
-			m_isModified = true;
+			this.isModified = true;
 		}
 	}
 	
 	public void onLoad() {
 		
 		// tell the world about entities
-		for (Entity entity : m_entities.entities()) {
+		for (Entity entity : this.entities.entities()) {
 			entity.onChunkLoad();
 		}
 		
-		m_world.loadEntitiesInBulk(m_entities.entities());
+		this.world.loadEntitiesInBulk(this.entities.entities());
 		
 		// tell the world about tile entities
-		m_world.addBlockEntities(m_blockEntities.values());
+		this.world.addBlockEntities(this.blockEntities.values());
 	}
 	
 	public void onUnload() {
 		
 		// tell the world to forget about entities
-		m_world.unloadEntitiesInBulk(m_entities.entities());
+		this.world.unloadEntitiesInBulk(this.entities.entities());
 		
 		// tell the world to forget about tile entities
-		for (BlockEntity blockEntity : m_blockEntities.values()) {
-			m_world.removeBlockEntity(blockEntity.getBlockCoords());
+		for (BlockEntity blockEntity : this.blockEntities.values()) {
+			this.world.removeBlockEntity(blockEntity.getBlockCoords());
 		}
 	}
 	
 	public boolean needsSaving() {
-		return m_entities.needsSaving(m_world.getGameTime()) || m_isModified;
+		return this.entities.needsSaving(this.world.getGameTime()) || this.isModified;
 	}
 	
 	public void markSaved() {
-		m_entities.markSaved(m_world.getGameTime());
-		m_isModified = false;
+		this.entities.markSaved(this.world.getGameTime());
+		this.isModified = false;
 	}
 	
 	public boolean isUnderground(BlockPos pos) {
 		int x = Coords.blockToLocal(pos.getX());
 		int z = Coords.blockToLocal(pos.getZ());
-		Integer topNonTransparentBlockY = m_column.getLightIndex().getTopNonTransparentBlockY(x, z);
+		Integer topNonTransparentBlockY = this.column.getLightIndex().getTopNonTransparentBlockY(x, z);
 		if (topNonTransparentBlockY == null) {
 			return false;
 		}
@@ -458,7 +458,7 @@ public class Cube {
 		
 		switch (lightType) {
 			case SKY:
-				if (!m_world.dimension.hasNoSky()) {
+				if (!this.world.dimension.hasNoSky()) {
 					if (isEmpty()) {
 						if (isUnderground(pos)) {
 							return 0;
@@ -467,7 +467,7 @@ public class Cube {
 						}
 					}
 					
-					return m_storage.getSkyLightAtCoords(x, y, z);
+					return this.storage.getSkyLightAtCoords(x, y, z);
 				} else {
 					return 0;
 				}
@@ -477,7 +477,7 @@ public class Cube {
 					return 0;
 				}
 				
-				return m_storage.getBlockLightAtCoords(x, y, z);
+				return this.storage.getBlockLightAtCoords(x, y, z);
 				
 			default:
 				return lightType.defaultValue;
@@ -497,22 +497,22 @@ public class Cube {
 		
 		switch (lightType) {
 			case SKY:
-				if (!m_world.dimension.hasNoSky()) {
-					m_storage.setSkyLightAtCoords(x, y, z, light);
-					m_isModified = true;
+				if (!this.world.dimension.hasNoSky()) {
+					this.storage.setSkyLightAtCoords(x, y, z, light);
+					this.isModified = true;
 				}
 			break;
 			
 			case BLOCK:
-				m_storage.setBlockLightAtCoords(x, y, z, light);
-				m_isModified = true;
+				this.storage.setBlockLightAtCoords(x, y, z, light);
+				this.isModified = true;
 			break;
 		}
 	}
 	
 	public void doRandomTicks() {
 		
-		if (isEmpty() || m_storage.isSectionEmpty()) {
+		if (isEmpty() || this.storage.isSectionEmpty()) {
 			return;
 		}
 		
@@ -521,27 +521,27 @@ public class Cube {
 		for (int i = 0; i < 3; i++) {
 			
 			// get a random block
-			int index = m_world.rand.nextInt();
+			int index = this.world.rand.nextInt();
 			int x = index & 15;
 			int y = (index >> 8) & 15;
 			int z = (index >> 16) & 15;
 			
-			IBlockState blockState = m_storage.getBlockStateAt(x, y, z);
+			IBlockState blockState = this.storage.getBlockStateAt(x, y, z);
 			Block block = blockState.getBlock();
 			
 			if (block.hasRandomTick()) {
 				// tick it
 				pos.setBlockPos(
-					Coords.localToBlock(m_x, x),
-					Coords.localToBlock(m_y, y),
-					Coords.localToBlock(m_z, z)
+					Coords.localToBlock(this.cubeX, x),
+					Coords.localToBlock(this.cubeY, y),
+					Coords.localToBlock(this.cubeZ, z)
 				);
-				block.onTick(m_world, pos, blockState, m_world.rand);
+				block.onTick(this.world, pos, blockState, this.world.rand);
 			}
 		}
 	}
 	
 	public void markForRenderUpdate() {
-		m_world.markBlockRangeForRenderUpdate(Coords.cubeToMinBlock(m_x), Coords.cubeToMinBlock(m_y), Coords.cubeToMinBlock(m_z), Coords.cubeToMaxBlock(m_x), Coords.cubeToMaxBlock(m_y), Coords.cubeToMaxBlock(m_z));
+		this.world.markBlockRangeForRenderUpdate(Coords.cubeToMinBlock(this.cubeX), Coords.cubeToMinBlock(this.cubeY), Coords.cubeToMinBlock(this.cubeZ), Coords.cubeToMaxBlock(this.cubeX), Coords.cubeToMaxBlock(this.cubeY), Coords.cubeToMaxBlock(this.cubeZ));
 	}
 }

@@ -25,6 +25,7 @@
 package cubicchunks.generator.noise;
 
 import java.util.Random;
+
 import net.minecraft.util.MathHelper;
 
 public class NoiseGeneratorOctaves extends NoiseGenerator {
@@ -62,8 +63,8 @@ public class NoiseGeneratorOctaves extends NoiseGenerator {
 			double yValue = (double)noiseY * frequency * yScale;
 			double zValue = (double)noiseZ * frequency * zScale;
 			
-			long xLong = MathHelper.floor_double_long(xValue); // convert the double to a long int and floor it
-			long zLong = MathHelper.floor_double_long(zValue);
+			long xLong = MathHelper.floor(xValue); // convert the double to a long int and floor it
+			long zLong = MathHelper.floor(zValue);
 			
 			xValue -= (double)xLong; // subtract the double-cast long from the double??? This should get the decimal portion of xValue
 			zValue -= (double)zLong;

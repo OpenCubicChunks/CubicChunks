@@ -26,17 +26,14 @@ package cubicchunks.generator.terrain;
 
 import java.util.Random;
 
+import net.minecraft.block.Blocks;
+import net.minecraft.util.BlockPos;
 import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
 import cubicchunks.generator.builder.BasicBuilder;
-import cubicchunks.generator.builder.ComplexWorldBuilder;
 import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.WorldType;
 
 public class NewTerrainProcessor extends CubeProcessor {
 	
@@ -53,10 +50,10 @@ public class NewTerrainProcessor extends CubeProcessor {
 	// Water level for each column
 	private final byte[] waterLevel = new byte[CUBE_X_SIZE * CUBE_Z_SIZE];
 	
-	private CubeWorldServer m_worldServer;
-	private CubeBiomeGenBase[] m_biomes;
+	private CubeWorldServer worldServer;
+	private CubeBiomeGenBase[] biomes;
 	
-	private Random m_rand;
+	private Random rand;
 	
 	private double riverVol;
 	private double riverHeight;
@@ -96,12 +93,12 @@ public class NewTerrainProcessor extends CubeProcessor {
 	private static int octaves = 14; // size of features. increasing by 1 approximately doubles the size of features.
 	
 	public NewTerrainProcessor(String name, CubeWorldServer worldServer, int batchSize) {
-		super(name, worldServer.getCubeProvider(), batchSize);
+		super(name, worldServer.getCubeCache(worldServer), batchSize);
 		
-		this.m_worldServer = worldServer;
-		this.m_biomes = null;
+		this.worldServer = worldServer;
+		this.biomes = null;
 		
-		this.m_rand = new Random(m_worldServer.getSeed());
+		this.rand = new Random(this.worldServer.getSeed());
 		
 		seaLevel = worldServer.getCubeWorldProvider().getSeaLevel();
 		
@@ -116,35 +113,35 @@ public class NewTerrainProcessor extends CubeProcessor {
 		this.rawTerrainArray = new double[CUBE_X_SIZE][CUBE_Y_SIZE][CUBE_Z_SIZE];
 		this.terrainArray = new double[CUBE_X_SIZE][CUBE_Y_SIZE][CUBE_Z_SIZE];
 		
-		this.nearBiomeWeightArray = new double[maxSmoothDiameter * maxSmoothDiameter];
+		this.nearBiomeWeightArray = new double[this.maxSmoothDiameter * this.maxSmoothDiameter];
 		
-		for (int x = -maxSmoothRadius; x <= maxSmoothRadius; x++) {
-			for (int z = -maxSmoothRadius; z <= maxSmoothRadius; z++) {
+		for (int x = -this.maxSmoothRadius; x <= this.maxSmoothRadius; x++) {
+			for (int z = -this.maxSmoothRadius; z <= this.maxSmoothRadius; z++) {
 				final double f1 = 10.0F / Math.sqrt(x * x + z * z + 0.2F);
-				this.nearBiomeWeightArray[ (x + maxSmoothRadius + (z + maxSmoothRadius) * maxSmoothDiameter)] = f1;
+				this.nearBiomeWeightArray[ (x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * this.maxSmoothDiameter)] = f1;
 			}
 		}
 		
 		builderHigh = new BasicBuilder();
-		builderHigh.setSeed(m_rand.nextInt());
+		builderHigh.setSeed(this.rand.nextInt());
 		builderHigh.setOctaves(octaves);
 		builderHigh.setMaxElev(maxElev);
 		builderHigh.build();
 		
 		builderLow = new BasicBuilder();
-		builderLow.setSeed(m_rand.nextInt());
+		builderLow.setSeed(this.rand.nextInt());
 		builderLow.setOctaves(octaves);
 		builderLow.setMaxElev(maxElev);
 		builderLow.build();
 		
 		builderAlpha = new BasicBuilder();
-		builderAlpha.setSeed(m_rand.nextInt());
+		builderAlpha.setSeed(this.rand.nextInt());
 		builderAlpha.setOctaves(8);
 		builderAlpha.setMaxElev(maxElev);
 		builderAlpha.build();
 		
 		builderHeight = new BasicBuilder();
-		builderHeight.setSeed(m_rand.nextInt());
+		builderHeight.setSeed(this.rand.nextInt());
 		builderHeight.setOctaves(8);
 		builderHeight.setMaxElev(1);
 		builderHeight.build();
@@ -152,7 +149,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
-		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().getBiomesForGeneration(m_biomes, cube.getX() * 4 - maxSmoothRadius, cube.getZ() * 4 - maxSmoothRadius, xNoiseSize + maxSmoothDiameter, zNoiseSize + maxSmoothDiameter);
+		this.biomes = (CubeBiomeGenBase[])this.worldServer.getCubeWorldProvider().getWorldColumnMananger().getBiomesForGeneration(this.biomes, cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius, xNoiseSize + this.maxSmoothDiameter, zNoiseSize + this.maxSmoothDiameter);
 		
 		this.generateNoiseArrays(cube);
 		
@@ -176,8 +173,8 @@ public class NewTerrainProcessor extends CubeProcessor {
 		for (int xRel = 0; xRel < 16; xRel++) {
 			for (int zRel = 0; zRel < 16; zRel++) {
 				for (int yRel = 0; yRel < 16; yRel++) {
-					double val = terrainArray[xRel][yRel][zRel];
-					
+					double val = this.terrainArray[xRel][yRel][zRel];
+					BlockPos pos = new BlockPos(xRel, yRel, zRel);
 					// System.out.println(xRel + ":" + yRel + ":" + zRel + ":" + val);
 					
 					if (val > maxNoise)
@@ -188,11 +185,11 @@ public class NewTerrainProcessor extends CubeProcessor {
 					int yAbs = Coords.localToBlock(cubeY, yRel);
 					
 					if (val - yAbs > 0) {
-						cube.setBlockForGeneration(xRel, yRel, zRel, Blocks.stone);
+						cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
 					} else if (yAbs < seaLevel) {
-						cube.setBlockForGeneration(xRel, yRel, zRel, Blocks.water);
+						cube.setBlockForGeneration(pos, Blocks.WATER.getDefaultState());
 					} else {
-						cube.setBlockForGeneration(xRel, yRel, zRel, Blocks.air);
+						cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
 					}
 				} // end yRel
 			} // end zRel
@@ -240,7 +237,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 	private void generateTerrainArray(Cube cube) {
 		for (int x = 0; x < xNoiseSize; x++) {
 			for (int z = 0; z < zNoiseSize; z++) {
-				double noiseHeight = noiseArrayHeight[x][z];
+				double noiseHeight = this.noiseArrayHeight[x][z];
 				
 				if (noiseHeight < 0.0D) {
 					noiseHeight = -noiseHeight * 0.3D;
@@ -357,15 +354,15 @@ public class NewTerrainProcessor extends CubeProcessor {
 			for (int noiseZ = 0; noiseZ < zNoiseSize - 1; noiseZ++) {
 				for (int noiseY = 0; noiseY < yNoiseSize - 1; noiseY++) {
 					// get the noise samples
-					double x0y0z0 = rawTerrainArray[noiseX][noiseY][noiseZ];
-					double x0y0z1 = rawTerrainArray[noiseX][noiseY][noiseZ + 1];
-					double x1y0z0 = rawTerrainArray[noiseX + 1][noiseY][noiseZ];
-					double x1y0z1 = rawTerrainArray[noiseX + 1][noiseY][noiseZ + 1];
+					double x0y0z0 = this.rawTerrainArray[noiseX][noiseY][noiseZ];
+					double x0y0z1 = this.rawTerrainArray[noiseX][noiseY][noiseZ + 1];
+					double x1y0z0 = this.rawTerrainArray[noiseX + 1][noiseY][noiseZ];
+					double x1y0z1 = this.rawTerrainArray[noiseX + 1][noiseY][noiseZ + 1];
 					
-					double x0y1z0 = rawTerrainArray[noiseX][noiseY + 1][noiseZ];
-					double x0y1z1 = rawTerrainArray[noiseX][noiseY + 1][noiseZ + 1];
-					double x1y1z0 = rawTerrainArray[noiseX + 1][noiseY + 1][noiseZ];
-					double x1y1z1 = rawTerrainArray[noiseX + 1][noiseY + 1][noiseZ + 1];
+					double x0y1z0 = this.rawTerrainArray[noiseX][noiseY + 1][noiseZ];
+					double x0y1z1 = this.rawTerrainArray[noiseX][noiseY + 1][noiseZ + 1];
+					double x1y1z0 = this.rawTerrainArray[noiseX + 1][noiseY + 1][noiseZ];
+					double x1y1z1 = this.rawTerrainArray[noiseX + 1][noiseY + 1][noiseZ + 1];
 					
 					for (int x = 0; x < xSteps; x++) {
 						int xRel = noiseX * xSteps + x;
@@ -395,7 +392,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 								// interpolate along y
 								double xyz = lerp(yd, xy0z, xy1z);
 								
-								terrainArray[xRel][yRel][zRel] = xyz;
+								this.terrainArray[xRel][yRel][zRel] = xyz;
 							}
 						}
 					}
@@ -409,7 +406,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 		double heightSum = 0.0F;
 		float biomeWeightSum = 0.0F;
 		
-		final CubeBiomeGenBase centerBiomeConfig = this.m_biomes[ (x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
+		final CubeBiomeGenBase centerBiomeConfig = this.biomes[ (x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
 		final int lookRadius = 2/* centerBiomeConfig.smoothRadius */;
 		
 		float nextBiomeHeight;
@@ -417,7 +414,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 		
 		for (int nextX = -lookRadius; nextX <= lookRadius; nextX++) {
 			for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++) {
-				final CubeBiomeGenBase nextBiomeConfig = this.m_biomes[ (x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
+				final CubeBiomeGenBase nextBiomeConfig = this.biomes[ (x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
 				
 				nextBiomeHeight = nextBiomeConfig.biomeHeight;
 				

@@ -28,19 +28,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
-import net.minecraft.util.ReportedException;
-import net.minecraft.world.ChunkPosition;
+import net.minecraft.crash.CrashReportException;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.gen.layer.GenLayerBase;
 import net.minecraft.world.gen.layer.IntCache;
+import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
 
-public class WorldColumnManager extends BiomeManager {
+public class CCBiomeManager extends BiomeManager {
 	
 	private GenLayerBase genBiomes;
 	
@@ -53,7 +53,7 @@ public class WorldColumnManager extends BiomeManager {
 	/** A list of biomes that the player can spawn in. */
 	private List<CubeBiomeGenBase> biomesToSpawnIn;
 	
-	protected WorldColumnManager() {
+	protected CCBiomeManager() {
 		this.biomeCache = new BiomeCache(this);
 		this.biomesToSpawnIn = new ArrayList<CubeBiomeGenBase>();
 		this.biomesToSpawnIn.add(CubeBiomeGenBase.forest);
@@ -65,38 +65,38 @@ public class WorldColumnManager extends BiomeManager {
 		this.biomesToSpawnIn.add(CubeBiomeGenBase.jungleHills);
 	}
 	
-	public WorldColumnManager(long par1, WorldType worldType) {
+	public CCBiomeManager(long par1, DimensionType dimensionType, String customSettings) {
 		this();
-		GenLayer[] genLayer = GenLayer.initializeAllBiomeGenerators(par1, worldType);
+		GenLayerBase[] genLayer = GenLayerBase.initializeBiomeGenerators(par1, dimensionType, customSettings);
 		this.genBiomes = genLayer[0];
 		this.biomeIndexLayer = genLayer[1];
 	}
 	
-	public WorldColumnManager(World world) {
-		this(world.getSeed(), world.getWorldInfo().getTerrainType());
+	public CCBiomeManager(World world) {
+		this(world.getSeed(), world.getWorldInfo().getDimensionType(), null);
 	}
 	
 	/**
 	 * Gets the list of valid biomes for the player to spawn in.
 	 */
 	@Override
-	public List<CubeBiomeGenBase> getBiomesToSpawnIn() {
-		return this.biomesToSpawnIn;
+	public List<Biome> getSpawnableBiomes() {
+		return new ArrayList<Biome>(this.biomesToSpawnIn);
 	}
 	
 	/**
 	 * Returns the BiomeGenBase related to the x, z position on the world.
 	 */
 	@Override
-	public CubeBiomeGenBase getBiomeGenAt(int xAbs, int zAbs) {
-		return this.biomeCache.getBiomeGenAt(xAbs, zAbs);
+	public CubeBiomeGenBase getBiome(BlockPos pos) {
+		return this.biomeCache.getBiomeGenAt(pos.getX(), pos.getZ());
 	}
 	
 	/**
 	 * Returns a list of rainfall values for the specified blocks. Args: listToReuse, x, z, width, length.
 	 */
 	@Override
-	public float[] getRainfall(float[] downfall, int cubeX, int cubeZ, int width, int length) {
+	public float[] getRainfallMap(float[] downfall, int cubeX, int cubeZ, int width, int length) {
 		IntCache.resetIntCache();
 		
 		if (downfall == null || downfall.length < width * length) {
@@ -116,15 +116,15 @@ public class WorldColumnManager extends BiomeManager {
 				
 				downfall[i] = rainfall;
 			} catch (Throwable var11) {
-				CrashReport var9 = CrashReport.makeCrashReport(var11, "Invalid Biome id");
+				CrashReport var9 = CrashReport.getCrashLogger(var11, "Invalid Biome id");
 				CrashReportCategory var10 = var9.makeCategory("DownfallBlock");
-				var10.addCrashSection("biome id", Integer.valueOf(i));
-				var10.addCrashSection("downfalls[] size", Integer.valueOf(downfall.length));
-				var10.addCrashSection("x", Integer.valueOf(cubeX));
-				var10.addCrashSection("z", Integer.valueOf(cubeZ));
-				var10.addCrashSection("w", Integer.valueOf(width));
-				var10.addCrashSection("h", Integer.valueOf(length));
-				throw new ReportedException(var9);
+				var10.addCrashInfo("biome id", Integer.valueOf(i));
+				var10.addCrashInfo("downfalls[] size", Integer.valueOf(downfall.length));
+				var10.addCrashInfo("x", Integer.valueOf(cubeX));
+				var10.addCrashInfo("z", Integer.valueOf(cubeZ));
+				var10.addCrashInfo("w", Integer.valueOf(width));
+				var10.addCrashInfo("h", Integer.valueOf(length));
+				throw new CrashReportException(var9);
 			}
 		}
 		
@@ -143,7 +143,7 @@ public class WorldColumnManager extends BiomeManager {
 	 * Returns an array of biomes for the location input.
 	 */
 	@Override
-	public BiomeGenBase[] getBiomesForGeneration(BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length) {
+	public Biome[] getBiomeMap2(Biome[] biomes, int cubeX, int cubeZ, int width, int length) {
 		IntCache.resetIntCache();
 		
 		if (biomes == null || biomes.length < width * length) {
@@ -160,14 +160,14 @@ public class WorldColumnManager extends BiomeManager {
 			
 			return biomes;
 		} catch (Throwable var10) {
-			CrashReport var8 = CrashReport.makeCrashReport(var10, "Invalid Biome id");
+			CrashReport var8 = CrashReport.getCrashLogger(var10, "Invalid Biome id");
 			CrashReportCategory var9 = var8.makeCategory("RawBiomeBlock");
-			var9.addCrashSection("biomes[] size", Integer.valueOf(biomes.length));
-			var9.addCrashSection("x", Integer.valueOf(cubeX));
-			var9.addCrashSection("z", Integer.valueOf(cubeZ));
-			var9.addCrashSection("w", Integer.valueOf(width));
-			var9.addCrashSection("h", Integer.valueOf(length));
-			throw new ReportedException(var8);
+			var9.addCrashInfo("biomes[] size", Integer.valueOf(biomes.length));
+			var9.addCrashInfo("x", Integer.valueOf(cubeX));
+			var9.addCrashInfo("z", Integer.valueOf(cubeZ));
+			var9.addCrashInfo("w", Integer.valueOf(width));
+			var9.addCrashInfo("h", Integer.valueOf(length));
+			throw new CrashReportException(var8);
 		}
 	}
 	
@@ -175,7 +175,7 @@ public class WorldColumnManager extends BiomeManager {
 	 * Returns biomes to use for the blocks and loads the other data like temperature and humidity onto the WorldChunkManager Args: oldBiomeList, x, z, width, depth
 	 */
 	@Override
-	public BiomeGenBase[] loadBlockGeneratorData(BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length) {
+	public Biome[] getBiomeMap(Biome[] biomes, int cubeX, int cubeZ, int width, int length) {
 		return this.getBiomeGenAt(biomes, cubeX, cubeZ, width, length, true);
 	}
 	
@@ -183,7 +183,7 @@ public class WorldColumnManager extends BiomeManager {
 	 * Return a list of biomes for the specified blocks. Args: listToReuse, x, y, width, length, cacheFlag (if false, don't check biomeCache to avoid infinite loop in BiomeCacheBlock)
 	 */
 	@Override
-	public BiomeGenBase[] getBiomeGenAt(BiomeGenBase[] biomes, int cubeX, int cubeZ, int width, int length, boolean flag) {
+	public Biome[] getBiomeGenAt(Biome[] biomes, int cubeX, int cubeZ, int width, int length, boolean flag) {
 		IntCache.resetIntCache();
 		
 		if (biomes == null || biomes.length < width * length) {
@@ -214,7 +214,7 @@ public class WorldColumnManager extends BiomeManager {
 	 * this doesn't appear to be used.
 	 */
 	@Override
-	public boolean areBiomesViable(int x, int par2, int par3, List list) {
+	public boolean checkViableBiomes(int x, int par2, int par3, List<Biome> list) {
 		IntCache.resetIntCache();
 		int x0 = x - par3 >> 2;
 		int z0 = par2 - par3 >> 2;
@@ -235,21 +235,19 @@ public class WorldColumnManager extends BiomeManager {
 			
 			return true;
 		} catch (Throwable var15) {
-			CrashReport var13 = CrashReport.makeCrashReport(var15, "Invalid Biome id");
+			CrashReport var13 = CrashReport.getCrashLogger(var15, "Invalid Biome id");
 			CrashReportCategory var14 = var13.makeCategory("Layer");
-			var14.addCrashSection("Layer", this.genBiomes.toString());
-			var14.addCrashSection("x", Integer.valueOf(x));
-			var14.addCrashSection("z", Integer.valueOf(par2));
-			var14.addCrashSection("radius", Integer.valueOf(par3));
-			var14.addCrashSection("allowed", list);
-			throw new ReportedException(var13);
+			var14.addCrashInfo("Layer", this.genBiomes.toString());
+			var14.addCrashInfo("x", Integer.valueOf(x));
+			var14.addCrashInfo("z", Integer.valueOf(par2));
+			var14.addCrashInfo("radius", Integer.valueOf(par3));
+			var14.addCrashInfo("allowed", list);
+			throw new CrashReportException(var13);
 		}
 	}
 	
 	@Override
-	@SuppressWarnings("rawtypes")
-	// sampleBlockXZFromSpawnableBiome
-	public ChunkPosition func_150795_a(int blockX, int blockZ, int blockDistance, List spawnBiomes, Random rand) {
+	public BlockPos getRandomPositionInBiome(int blockX, int blockZ, int blockDistance, List<Biome> spawnBiomes, Random rand) {
 		// looks like we sample one point of noise for every 4 blocks
 		final int BlocksPerSample = 4;
 		
@@ -261,17 +259,17 @@ public class WorldColumnManager extends BiomeManager {
 		int maxNoiseZ = (blockZ + blockDistance) / BlocksPerSample;
 		int noiseXSize = maxNoiseX - minNoiseX + 1;
 		int noiseZSize = maxNoiseZ - minNoiseZ + 1;
-		int[] biomeNoise = genBiomes.getInts(minNoiseX, minNoiseZ, noiseXSize, noiseZSize);
+		int[] biomeNoise = this.genBiomes.getInts(minNoiseX, minNoiseZ, noiseXSize, noiseZSize);
 		
 		// collect all xz positions from spawnable biomes
-		List<ChunkPosition> possibleSpawns = new ArrayList<ChunkPosition>();
+		List<BlockPos> possibleSpawns = new ArrayList<BlockPos>();
 		for (int x = 0; x < noiseXSize; x++) {
 			for (int z = 0; z < noiseZSize; z++) {
 				CubeBiomeGenBase biome = CubeBiomeGenBase.getBiome(biomeNoise[x + z * noiseXSize]);
 				if (spawnBiomes.contains(biome)) {
 					int spawnBlockX = (minNoiseX + x) * BlocksPerSample;
 					int spawnBlockZ = (minNoiseZ + z) * BlocksPerSample;
-					possibleSpawns.add(new ChunkPosition(spawnBlockX, 0, spawnBlockZ));
+					possibleSpawns.add(new BlockPos(spawnBlockX, 0, spawnBlockZ));
 				}
 			}
 		}

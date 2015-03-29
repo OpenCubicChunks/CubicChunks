@@ -24,13 +24,14 @@
  ******************************************************************************/
 package cubicchunks.lighting;
 
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.LightType;
+import net.minecraft.world.World;
 import cubicchunks.CubeCache;
 import cubicchunks.CubeWorld;
 import cubicchunks.util.BlockColumnProcessor;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Column;
-import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.World;
 
 public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	
@@ -40,7 +41,7 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	
 	@Override
 	public boolean calculate(Column column, int localX, int localZ, int blockX, int blockZ) {
-		World world = column.worldObj;
+		World world = column.getWorld();
 		
 		// get the height
 		Integer height = column.getSkylightBlockY(localX, localZ);
@@ -50,10 +51,10 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 		}
 		
 		// get the min column height among neighbors
-		int minHeight1 = world.getChunkHeightMapMinimum(blockX - 1, blockZ);
-		int minHeight2 = world.getChunkHeightMapMinimum(blockX + 1, blockZ);
-		int minHeight3 = world.getChunkHeightMapMinimum(blockX, blockZ - 1);
-		int minHeight4 = world.getChunkHeightMapMinimum(blockX, blockZ + 1);
+		int minHeight1 = world.getChunkMinimumHeight(blockX - 1, blockZ);
+		int minHeight2 = world.getChunkMinimumHeight(blockX + 1, blockZ);
+		int minHeight3 = world.getChunkMinimumHeight(blockX, blockZ - 1);
+		int minHeight4 = world.getChunkMinimumHeight(blockX, blockZ + 1);
 		int minNeighborHeight = Math.min(minHeight1, Math.min(minHeight2, Math.min(minHeight3, minHeight4)));
 		
 		boolean actuallyUpdated = false;
@@ -64,7 +65,7 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 		actuallyUpdated |= updateSkylight(world, blockX, blockZ + 1, height);
 		
 		if (actuallyUpdated) {
-			column.isModified = true;
+			column.setModified(true);
 		}
 		
 		return true;
@@ -72,7 +73,7 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	
 	private boolean updateSkylight(World world, int blockX, int blockZ, int maxBlockY) {
 		// get the skylight block for this block column
-		Column column = (Column)world.getChunkFromBlockCoords(blockX, blockZ);
+		Column column = (Column)world.getChunkFromBlockCoords(new BlockPos(blockX, 0, blockZ));
 		int localX = Coords.blockToLocal(blockX);
 		int localZ = Coords.blockToLocal(blockZ);
 		Integer height = column.getSkylightBlockY(localX, localZ);
@@ -101,7 +102,7 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 		
 		CubeWorld cubeWorld = (CubeWorld)world;
 		for (int blockY = minBlockY; blockY <= maxBlockY; blockY++) {
-			cubeWorld.getLightingManager().computeDiffuseLighting(blockX, blockY, blockZ, EnumSkyBlock.Sky);
+			CubeWorld.getLightingManager(cubeWorld).computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
 		}
 		
 		return true;

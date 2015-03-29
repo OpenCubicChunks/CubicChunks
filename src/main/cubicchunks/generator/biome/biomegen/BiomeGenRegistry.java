@@ -27,8 +27,6 @@ package cubicchunks.generator.biome.biomegen;
 import java.util.ArrayList;
 import java.util.List;
 
-import cuchaz.magicMojoModLoader.classTransformation.transformers.*;
-
 public class BiomeGenRegistry {
 	
 	private static List<CubeBiomeGenBase> biomeList;

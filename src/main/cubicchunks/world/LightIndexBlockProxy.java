@@ -31,40 +31,40 @@ import net.minecraft.block.BlockAir;
 @Deprecated
 public class LightIndexBlockProxy extends BlockAir {
 	
-	private static TreeMap<Integer,LightIndexBlockProxy> m_cache;
+	private static TreeMap<Integer,LightIndexBlockProxy> cache;
 	
 	static {
-		m_cache = new TreeMap<Integer,LightIndexBlockProxy>();
+		cache = new TreeMap<Integer,LightIndexBlockProxy>();
 	}
 	
 	public static LightIndexBlockProxy get(int opacity) {
-		LightIndexBlockProxy proxy = m_cache.get(opacity);
+		LightIndexBlockProxy proxy = cache.get(opacity);
 		if (proxy == null) {
 			proxy = new LightIndexBlockProxy(opacity);
-			m_cache.put(opacity, proxy);
+			cache.put(opacity, proxy);
 		}
 		return proxy;
 	}
 	
-	private int m_opacity;
+	private int opacity;
 	
 	protected LightIndexBlockProxy(int opacity) {
-		m_opacity = opacity;
+		this.opacity = opacity;
 	}
 	
 	@Override
-	public int getLightOpacity() {
-		return m_opacity;
+	public int getOpacity() {
+		return this.opacity;
 	}
 	
 	@Override
-	public int getLightValue() {
+	public int getBrightness() {
 		// assume lights in unloaded cubes are turned off
 		return 0;
 	}
 	
 	@Override
-	public boolean isOpaqueCube() {
-		return m_opacity == 255;
+	public boolean isOpaque() {
+		return this.opacity == 255;
 	}
 }

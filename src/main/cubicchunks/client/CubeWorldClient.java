@@ -24,18 +24,20 @@
  ******************************************************************************/
 package cubicchunks.client;
 
+import net.minecraft.network.play.NetHandlerPlayClient;
+import net.minecraft.profiler.Profiler;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.EnumDifficulty;
+import net.minecraft.world.LightType;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldClient;
+import net.minecraft.world.WorldSettings;
+import net.minecraft.world.gen.IChunkGenerator;
 import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
 import cubicchunks.CubeWorld;
 import cubicchunks.accessors.WorldClientAccessor;
 import cubicchunks.lighting.LightingManager;
-import net.minecraft.world.WorldClient;
-import net.minecraft.client.network.NetHandlerPlayClient;
-import net.minecraft.profiler.Profiler;
-import net.minecraft.world.EnumDifficulty;
-import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.chunk.IChunkProvider;
 
 public class CubeWorldClient extends WorldClient implements CubeWorld {
 	
@@ -46,14 +48,14 @@ public class CubeWorldClient extends WorldClient implements CubeWorld {
 	}
 	
 	@Override
-	protected IChunkProvider createChunkProvider() {
+	protected IChunkGenerator createChunkCache() {
 		CubeProviderClient chunkProvider = new CubeProviderClient(this);
 		WorldClientAccessor.setChunkProvider(this, chunkProvider);
 		
 		// init the lighting manager
-		m_lightingManager = new LightingManager(this, chunkProvider);
+		this.m_lightingManager = new LightingManager(this, chunkProvider);
 		
-		return chunkProvider;
+		return (IChunkGenerator) chunkProvider;
 	}
 	
 	@Override
@@ -62,25 +64,25 @@ public class CubeWorldClient extends WorldClient implements CubeWorld {
 	}
 	
 	@Override
-	public LightingManager getLightingManager() {
-		return m_lightingManager;
+	public LightingManager getLightingManager(World world) {
+		return this.m_lightingManager;
 	}
 	
 	@Override
 	public void tick() {
 		super.tick();
 		
-		m_lightingManager.tick();
+		this.m_lightingManager.tick();
 	}
 	
 	@Override
-	public boolean updateLightByType(EnumSkyBlock lightType, int blockX, int blockY, int blockZ) {
+	public boolean updateLightingAt(LightType lightType, BlockPos pos) {
 		// forward to the new lighting system
-		return m_lightingManager.computeDiffuseLighting(blockX, blockY, blockZ, lightType);
+		return this.m_lightingManager.computeDiffuseLighting(pos, lightType);
 	}
 	
 	@Override
-	public boolean checkChunksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ) {
-		return CubeProviderTools.blocksExist((CubeCache)chunkProvider, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
+	public boolean checkBlockRangeIsInWorld(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean flag) {
+		return CubeProviderTools.blocksExist((CubeCache)clientChunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
 	}
 }

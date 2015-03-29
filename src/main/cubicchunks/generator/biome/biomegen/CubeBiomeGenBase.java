@@ -31,13 +31,12 @@ import java.util.Random;
 import java.util.Set;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockFlower;
 import net.minecraft.block.BlockTallGrass.TallGrassTypes;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.CreatureTypes;
 import net.minecraft.entity.EntityMob;
-import net.minecraft.entity.IMob;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntitySkeleton;
@@ -51,24 +50,18 @@ import net.minecraft.entity.passive.EntityCow;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.entity.passive.EntitySquid;
-import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
 import net.minecraft.util.WeightedRandom;
-import net.minecraft.world.ColorizerLeaves;
-import net.minecraft.world.ColorizerGrass;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.ChunkPrimer;
-import net.minecraft.world.decorator.Decorator;
-import net.minecraft.world.gen.noise.Perlin3dOctaves;
+import net.minecraft.world.gen.feature.FeatureGenerator;
+import net.minecraft.world.gen.feature.TallGrassGenerator;
+import net.minecraft.world.gen.feature.TallPlantGenerator;
 import net.minecraft.world.gen.feature.TreeGenerator;
 import net.minecraft.world.gen.feature.TreeGeneratorBig;
-import net.minecraft.world.gen.feature.TallPlantGenerator;
 import net.minecraft.world.gen.feature.TreeGeneratorSmall;
 import net.minecraft.world.gen.feature.TreeGeneratorSwamp;
-import net.minecraft.world.gen.feature.TallGrassGenerator;
-import net.minecraft.world.gen.feature.FeatureGenerator;
+import net.minecraft.world.gen.noise.Perlin3dOctaves;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -340,6 +333,7 @@ public abstract class CubeBiomeGenBase extends Biome {
 		return this;
 	}
 	
+	@Override
 	protected CubeBiomeGenBase setColor(int par1) {
 		this.func_150557_a(par1, false);
 		return this;
@@ -393,6 +387,7 @@ public abstract class CubeBiomeGenBase extends Biome {
 	/**
 	 * Returns true if the biome have snowfall instead a normal rain.
 	 */
+	@Override
 	public boolean getEnableSnow() {
 		return this.func_150559_j();
 	}
@@ -639,17 +634,18 @@ public abstract class CubeBiomeGenBase extends Biome {
 	
 	public static class SpawnListEntry extends WeightedRandom.Item {
 		
-		public Class entityClass;
+		public Class<EntityMob> entityClass;
 		public int minGroupCount;
 		public int maxGroupCount;
 		
-		public SpawnListEntry(Class par1Class, int par2, int par3, int par4) {
+		public SpawnListEntry(Class<EntityMob> par1Class, int par2, int par3, int par4) {
 			super(par2);
 			this.entityClass = par1Class;
 			this.minGroupCount = par3;
 			this.maxGroupCount = par4;
 		}
 		
+		@Override
 		public String toString() {
 			return this.entityClass.getSimpleName() + "*(" + this.minGroupCount + "-" + this.maxGroupCount + "):" + this.itemWeight;
 		}
