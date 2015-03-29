@@ -31,7 +31,7 @@ version = "0.1"
 ext.projectName = 'Cubic Chunks'
 ext.inceptionYear = '2014'
 ext.packaging = 'jar'
-ext.url = ''
+ext.organizationUrl = ''
 ext.description = 'Cubic Chunks'
 ext.organization = 'Tall Worlds'
 
@@ -85,14 +85,13 @@ processResources {
 
 // License header formatting
 license {
-	ext.name = project.name
-	ext.organization = project.organization
-	ext.url = project.url
-	ext.year = project.inceptionYear
+	ext.project = projectName
+	ext.year = inceptionYear
+	ext.name = organization
+	ext.url = organizationUrl
 	exclude "**/*.info"
 	exclude "assets/*"
 	header file('HEADER.txt')
-	sourceSets = project.sourceSets
 	ignoreFailures false
 	strictCheck true
 	mapping {
