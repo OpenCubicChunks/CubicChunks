@@ -21,31 +21,11 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.accessors;
+package cubicchunks.world;
 
-import java.lang.reflect.Field;
 
-import net.minecraft.world.World;
-import net.minecraft.world.gen.IChunkGenerator;
-
-public class WorldAccessor {
-	
-	private static Field m_fieldChunkProvider;
-	
-	static {
-		try {
-			m_fieldChunkProvider = World.class.getDeclaredField("chunkProvider");
-			m_fieldChunkProvider.setAccessible(true);
-		} catch (Exception ex) {
-			throw new Error(ex);
-		}
-	}
-	
-	public static IChunkGenerator getChunkProvider(World world) {
-		try {
-			return (IChunkGenerator)m_fieldChunkProvider.get(world);
-		} catch (Exception ex) {
-			throw new Error(ex);
-		}
-	}
+public interface CubeCache {
+	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
+	Cube getCube(int cubeX, int cubeY, int cubeZ);
+	Column getColumn(int cubeX, int cubeZ);
 }

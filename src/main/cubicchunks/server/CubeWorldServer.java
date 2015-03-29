@@ -32,36 +32,23 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.LightType;
-import net.minecraft.world.World;
 import net.minecraft.world.WorldInfo;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.WorldServerAccessor;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraft.world.storage.ISaveHandler;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
-import cubicchunks.CubeWorld;
-import cubicchunks.CubeWorldProvider;
-import cubicchunks.accessors.WorldServerAccessor;
-import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.biome.CCBiomeManager;
-import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Column;
+import cubicchunks.world.CubeCache;
 import cuchaz.m3l.util.Util;
 
-public class CubeWorldServer extends WorldServer implements CubeWorld {
+public class CubeWorldServer {
 	
-	private static final Logger log = LogManager.getLogger();
-	
-	private LightingManager lightingManager;
-	private GeneratorPipeline generatorPipeline;
+	// TODO: this class will get deleted
+	// but we need to migrate this code to other places first
 	
 	public CubeWorldServer(MinecraftServer server, ISaveHandler saveHandler, WorldInfo worldInfo, int dimension, Profiler profiler) {
 		super(server, saveHandler, worldInfo, dimension, profiler);
@@ -69,36 +56,6 @@ public class CubeWorldServer extends WorldServer implements CubeWorld {
 		// set the player manager
 		CubePlayerManager playerManager = new CubePlayerManager(this, server.getConfigurationManager().getViewRadius());
 		WorldServerAccessor.setPlayerManager(this, playerManager);
-	}
-	
-	@Override
-	protected IChunkGenerator createChunkCache() {
-		// create the cube provider
-		ServerCubeCache cache = new ServerCubeCache(this);
-		
-		// tell World and WorldServer about it
-		this.chunkCache = cache;
-		WorldServerAccessor.setChunkCache(this, cache);
-		
-		// init systems dependent on cubes
-		this.lightingManager = new LightingManager(this, cache);
-		this.generatorPipeline = getCubeWorldProvider().createGeneratorPipeline(this);
-		
-		return cache;
-	}
-	
-	@Override
-	public ServerCubeCache getCubeCache() {
-		return (ServerCubeCache)this.serverChunkCache;
-	}
-	
-	@Override
-	public LightingManager getLightingManager() {
-		return this.lightingManager;
-	}
-	
-	public GeneratorPipeline getGeneratorPipeline() {
-		return this.generatorPipeline;
 	}
 	
 	@Override

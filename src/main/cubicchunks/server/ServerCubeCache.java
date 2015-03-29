@@ -23,6 +23,7 @@
  */
 package cubicchunks.server;
 
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.List;
@@ -35,17 +36,23 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.ServerChunkCache;
 
+import org.slf4j.Logger;
+
 import com.google.common.collect.Maps;
 
-import cubicchunks.CubeCache;
 import cubicchunks.generator.ColumnGenerator;
+import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.BlankColumn;
 import cubicchunks.world.Column;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
+import cuchaz.m3l.util.Logging;
 
 public class ServerCubeCache extends ServerChunkCache implements CubeCache {
+	
+	private static final Logger log = Logging.getLogger();
 	
 	private static final int WorldSpawnChunkDistance = 12;
 	
@@ -61,8 +68,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 		
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer.getSaveHandler().getSaveFile(), worldServer.dimension);
-		// TODO
-		//m_columnGenerator = new ColumnGenerator(worldServer);
+		this.columnGenerator = new ColumnGenerator(worldServer);
 		this.loadedColumns = Maps.newHashMap();
 		this.blankColumn = new BlankColumn(worldServer, 0, 0);
 		this.cubesToUnload = new ArrayDeque<Long>();
@@ -94,7 +100,12 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	}
 	
 	@Override
-	public Column getChunk(int cubeX, int cubeZ) {		
+	public Column getColumn(int columnX, int columnZ) {
+		return getChunk(columnX, columnZ);
+	}
+	
+	@Override
+	public Column getChunk(int cubeX, int cubeZ) {
 		// check for the column
 		Column column = this.loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
 		if (column != null) {
@@ -153,18 +164,17 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	
 	public void loadCube(int cubeX, int cubeY, int cubeZ) {
 		
-		/* TODO
 		long cubeAddress = AddressTools.getAddress(cubeX, cubeY, cubeZ);
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
 		
 		// step 1: get a column
 		
 		// is the column already loaded?
-		Column column = m_loadedColumns.get(columnAddress);
+		Column column = this.loadedColumns.get(columnAddress);
 		if (column == null) {
 			// try loading it
 			try {
-				column = m_io.loadColumn(m_worldServer, cubeX, cubeZ);
+				column = this.cubeIO.loadColumn(this.worldServer, cubeX, cubeZ);
 			} catch (IOException ex) {
 				log.error(String.format("Unable to load column (%d,%d)", cubeX, cubeZ), ex);
 				return;
@@ -172,10 +182,10 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 			
 			if (column == null) {
 				// there wasn't a column, generate a new one
-				column = m_columnGenerator.generateColumn(cubeX, cubeZ);
+				column = this.columnGenerator.generateColumn(cubeX, cubeZ);
 			} else {
 				// the column was loaded
-				column.lastSaveTime = m_worldServer.getTotalWorldTime();
+				column.setLastSaveTime(this.worldServer.getGameTime());
 			}
 		}
 		assert (column != null);
@@ -190,7 +200,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 		
 		// try to load the cube
 		try {
-			cube = m_io.loadCubeAndAddToColumn(m_worldServer, column, cubeAddress);
+			cube = this.cubeIO.loadCubeAndAddToColumn(this.worldServer, column, cubeAddress);
 		} catch (IOException ex) {
 			log.error(String.format("Unable to load cube (%d,%d,%d)", cubeX, cubeY, cubeZ), ex);
 			return;
@@ -204,25 +214,24 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 		
 		if (!cube.getGeneratorStage().isLastStage()) {
 			// queue the cube to finish generation
-			m_worldServer.getGeneratorPipeline().generate(cube);
+			WorldServerContext.get(this.worldServer).getGeneratorPipeline().generate(cube);
 		} else {
 			// queue the cube for re-lighting
-			m_worldServer.getLightingManager().queueFirstLightCalculation(cubeAddress);
+			WorldServerContext.get(this.worldServer).getLightingManager().queueFirstLightCalculation(cubeAddress);
 		}
 		
 		// add the column to the cache
-		m_loadedColumns.put(columnAddress, column);
+		this.loadedColumns.put(columnAddress, column);
 		
 		// init the column
-		if (!column.isChunkLoaded) {
+		if (!column.isChunkLoaded()) {
 			column.onChunkLoad();
 		}
-		column.isTerrainPopulated = true;
+		column.setTerrainPopulated(true);
 		column.resetPrecipitationHeight();
 		
 		// init the cube
 		cube.onLoad();
-		*/
 	}
 	
 	@Override
@@ -263,19 +272,19 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 		// NOTE: the return value is completely ignored
 		
 		// don't unload if we're saving
-		if (m_worldServer.levelSaving) {
+		if (this.worldServer.levelSaving) {
 			return false;
 		}
 		
 		final int MaxNumToUnload = 400;
 		
 		// unload cubes
-		for (int i = 0; i < MaxNumToUnload && !m_cubesToUnload.isEmpty(); i++) {
-			long cubeAddress = m_cubesToUnload.poll();
+		for (int i = 0; i < MaxNumToUnload && !this.cubesToUnload.isEmpty(); i++) {
+			long cubeAddress = this.cubesToUnload.poll();
 			long columnAddress = AddressTools.getAddress(AddressTools.getX(cubeAddress), AddressTools.getZ(cubeAddress));
 			
 			// get the cube
-			Column column = m_loadedColumns.get(columnAddress);
+			Column column = this.loadedColumns.get(columnAddress);
 			if (column == null) {
 				// already unloaded
 				continue;
@@ -289,14 +298,14 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 				cube.onUnload();
 				
 				// save the cube
-				m_io.saveCube(cube);
+				this.io.saveCube(cube);
 			}
 			
 			// unload empty columns
 			if (!column.hasCubes()) {
 				column.onChunkLoad();
-				m_loadedColumns.remove(columnAddress);
-				m_io.saveColumn(column);
+				this.loadedColumns.remove(columnAddress);
+				this.io.saveColumn(column);
 			}
 		}
 		*/
@@ -308,16 +317,16 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	public boolean saveAllChunks(boolean alwaysTrue, IProgressBar progress) {
 		
 		/* TODO
-		for (Column column : m_loadedColumns.values()) {
+		for (Column column : this.loadedColumns.values()) {
 			// save the column
 			if (column.needsSaving(alwaysTrue)) {
-				m_io.saveColumn(column);
+				this.io.saveColumn(column);
 			}
 			
 			// save the cubes
 			for (Cube cube : column.getCubes()) {
 				if (cube.needsSaving()) {
-					m_io.saveCube(cube);
+					this.io.saveCube(cube);
 				}
 			}
 		}

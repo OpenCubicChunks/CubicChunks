@@ -23,19 +23,57 @@
  */
 package cubicchunks;
 
+import net.minecraft.world.DimensionType;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.BiomeManager;
+import net.minecraft.world.gen.ClientChunkCache;
 import net.minecraft.world.gen.ServerChunkCache;
+import cubicchunks.client.ClientCubeCache;
+import cubicchunks.client.WorldClientContext;
+import cubicchunks.generator.biome.CCBiomeManager;
 import cubicchunks.server.ServerCubeCache;
+import cubicchunks.server.WorldServerContext;
 import cuchaz.m3l.api.chunks.ChunkSystem;
 
 public class CubicChunkSystem implements ChunkSystem {
-
+	
 	@Override
-	public ServerChunkCache getServerChunkCache(WorldServer world) {
+	public ServerChunkCache getServerChunkCache(WorldServer worldServer) {
 		
 		// for now, only tall-ify the overworld
+		if (worldServer.dimension.getId() == 0) {
+			ServerCubeCache serverCubeCache = new ServerCubeCache(worldServer);
+			WorldServerContext.put(worldServer, new WorldServerContext(worldServer, serverCubeCache));
+			return serverCubeCache;
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public ClientChunkCache getClientChunkCache(WorldClient worldClient) {
+		
+		// for now, only tall-ify the overworld
+		if (worldClient.dimension.getId() == 0) {
+			ClientCubeCache clientCubeCache = new ClientCubeCache(worldClient);
+			WorldClientContext.put(worldClient, new WorldClientContext(worldClient, clientCubeCache));
+			return clientCubeCache;
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public BiomeManager getBiomeManager(World world) {
+		
+		// for now, only muck with the overworld
 		if (world.dimension.getId() == 0) {
-			return new ServerCubeCache(world);
+			DimensionType dimensionType = world.getWorldInfo().getDimensionType();
+			if (dimensionType != DimensionType.FLAT && dimensionType != DimensionType.DEBUG_ALL_BLOCK_STATES) {
+				return new CCBiomeManager(world);
+			}
 		}
 		
 		return null;

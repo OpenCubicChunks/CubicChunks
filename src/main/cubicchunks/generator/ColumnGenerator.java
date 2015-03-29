@@ -23,27 +23,30 @@
  */
 package cubicchunks.generator;
 
+import net.minecraft.world.WorldServer;
 import cubicchunks.generator.biome.biomegen.CCBiome;
-import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Column;
 
 public class ColumnGenerator {
 	
-	private CubeWorldServer m_worldServer;
+	private WorldServer m_worldServer;
 	private CCBiome[] m_biomes;
 	
-	public ColumnGenerator(CubeWorldServer worldServer) {
+	public ColumnGenerator(WorldServer worldServer) {
 		this.m_worldServer = worldServer;
-		this.m_biomes = null;
 	}
 	
 	public Column generateColumn(int cubeX, int cubeZ) {
+		
 		// generate biome info. This is a hackjob.
-		this.m_biomes = (CCBiome[])this.m_worldServer.getCubeWorldProvider()
-				.getBiomeMananger().loadBlockGeneratorData(this.m_biomes,
-						Coords.cubeToMinBlock(cubeX), 
-						Coords.cubeToMinBlock(cubeZ), 16, 16);
+		this.m_biomes = (CCBiome[])this.m_worldServer.dimension.getBiomeManager().getBiomeMap(
+			this.m_biomes,
+			Coords.cubeToMinBlock(cubeX), 
+			Coords.cubeToMinBlock(cubeZ),
+			16,
+			16
+		);
 		
 		// UNDONE: generate temperature map
 		// UNDONE: generate rainfall map

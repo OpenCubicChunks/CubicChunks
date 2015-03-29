@@ -23,9 +23,9 @@
  */
 package cubicchunks.generator;
 
-import cubicchunks.CubeCache;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
 
 public class PopulationProcessor extends CubeProcessor {
 	

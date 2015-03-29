@@ -121,6 +121,12 @@ public class Cube {
 		return this.cubeZ;
 	}
 	
+	public boolean containsBlockPos(BlockPos blockPos) {
+		return this.cubeX == Coords.blockToCube(blockPos.getX())
+			&& this.cubeY == Coords.blockToCube(blockPos.getY())
+			&& this.cubeZ == Coords.blockToCube(blockPos.getZ());
+	}
+	
 	public ChunkSection getStorage() {
 		return this.storage;
 	}
@@ -252,6 +258,10 @@ public class Cube {
 	
 	public Iterable<BlockEntity> getBlockEntities() {
 		return this.blockEntities.values();
+	}
+	
+	public EntityContainer getEntityContainer() {
+		return this.entities;
 	}
 	
 	public void addEntity(Entity entity) {

@@ -25,13 +25,13 @@ package cubicchunks.lighting;
 
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
-import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
-import cubicchunks.CubeWorld;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
 import cubicchunks.world.LightIndex;
+import cubicchunks.world.WorldContexts;
 
 public class FirstLightProcessor extends CubeProcessor {
 	
@@ -41,8 +41,9 @@ public class FirstLightProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
+		
 		// only light if the neighboring cubes exist
-		CubeCache cache = ((CubeWorld)cube.getWorld()).getCubeCache();
+		CubeCache cache = WorldContexts.get(cube.getWorld()).getCubeCache();
 		if (!CubeProviderTools.cubeAndNeighborsExist(cache, cube.getX(), cube.getY(), cube.getZ())) {
 			return false;
 		}
@@ -82,6 +83,7 @@ public class FirstLightProcessor extends CubeProcessor {
 	}
 	
 	private void updateSkylight(Cube cube, int localX, int localZ) {
+		
 		// compute bounds on the sky light gradient
 		Integer gradientMaxBlockY = cube.getColumn().getSkylightBlockY(localX, localZ);
 		Integer gradientMinBlockY = null;
@@ -98,15 +100,19 @@ public class FirstLightProcessor extends CubeProcessor {
 		
 		// could this sky light possibly reach this cube?
 		if (cubeMinBlockY > gradientMaxBlockY) {
+			
 			// set everything to sky light
 			for (int localY = 0; localY < 16; localY++) {
 				cube.setLightValue(LightType.SKY, new BlockPos(localX, localY, localZ), 15);
 			}
+			
 		} else if (cubeMaxBlockY < gradientMinBlockY) {
+			
 			// set everything to dark
 			for (int localY = 0; localY < 16; localY++) {
 				cube.setLightValue(LightType.SKY, new BlockPos(localX, localY, localZ), 0);
 			}
+			
 		} else {
 			LightIndex index = cube.getColumn().getLightIndex();
 			
@@ -174,6 +180,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		
 		boolean lightBlock = false;
 		if (opaqueBelowSeaLevelBlockY == null || blockY > opaqueBelowSeaLevelBlockY) {
+			
 			// get the top nontransparent block (if one exists)
 			Integer topNonTransparentBlockY = index.getTopNonTransparentBlockY(localX, localZ);
 			
@@ -181,6 +188,7 @@ public class FirstLightProcessor extends CubeProcessor {
 			if (hasSky && topNonTransparentBlockY != null && blockY < topNonTransparentBlockY && index.getOpacity(localX, blockY, localZ) == 0) {
 				lightBlock = true;
 			}
+			
 		} else if (cube.getBlockState(localX, localY, localZ).getBlock().getBrightness() > 0) {
 			lightBlock = true;
 		}

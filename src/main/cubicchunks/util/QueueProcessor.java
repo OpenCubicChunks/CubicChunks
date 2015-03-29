@@ -27,7 +27,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import cubicchunks.CubeCache;
+import cubicchunks.world.CubeCache;
 
 public abstract class QueueProcessor {
 	

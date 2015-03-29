@@ -23,48 +23,15 @@
  */
 package cubicchunks.client;
 
-import net.minecraft.network.play.NetHandlerPlayClient;
-import net.minecraft.profiler.Profiler;
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.LightType;
-import net.minecraft.world.WorldClient;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.gen.IChunkGenerator;
-import cubicchunks.CubeCache;
 import cubicchunks.CubeProviderTools;
-import cubicchunks.CubeWorld;
-import cubicchunks.accessors.WorldClientAccessor;
-import cubicchunks.lighting.LightingManager;
+import cubicchunks.world.CubeCache;
 
-public class CubeWorldClient extends WorldClient implements CubeWorld {
+public class CubeWorldClient {
 	
-	private LightingManager m_lightingManager;
-	
-	public CubeWorldClient(NetHandlerPlayClient client, WorldSettings settings, int dimension, EnumDifficulty difficulty, Profiler profiler) {
-		super(client, settings, dimension, difficulty, profiler);
-	}
-	
-	@Override
-	protected IChunkGenerator createChunkCache() {
-		CubeProviderClient chunkProvider = new CubeProviderClient(this);
-		WorldClientAccessor.setChunkProvider(this, chunkProvider);
-		
-		// init the lighting manager
-		this.m_lightingManager = new LightingManager(this, chunkProvider);
-		
-		return (IChunkGenerator) chunkProvider;
-	}
-	
-	@Override
-	public CubeCache getCubeCache() {
-		return (CubeCache)this.chunkCache;
-	}
-	
-	@Override
-	public LightingManager getLightingManager() {
-		return this.m_lightingManager;
-	}
+	// TODO: this class will get deleted
+	// but we need to migrate this code to other places first
 	
 	@Override
 	public void tick() {

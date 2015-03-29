@@ -27,11 +27,11 @@ import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.MineshaftGenerator;
 import net.minecraft.world.gen.structure.StrongholdGenerator;
 import net.minecraft.world.gen.structure.VillageGenerator;
-import cubicchunks.CubeCache;
 import cubicchunks.generator.features.CubicCaveGen;
 import cubicchunks.generator.features.CubicRavineGen;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
 
 public class FeatureProcessor extends CubeProcessor {
 	

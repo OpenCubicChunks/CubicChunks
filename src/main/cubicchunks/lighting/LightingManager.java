@@ -30,9 +30,9 @@ import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cubicchunks.CubeCache;
 import cubicchunks.util.Bits;
 import cubicchunks.world.Column;
+import cubicchunks.world.CubeCache;
 
 public class LightingManager {
 	

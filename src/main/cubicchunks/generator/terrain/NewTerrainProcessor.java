@@ -27,9 +27,10 @@ import java.util.Random;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
+import net.minecraft.world.WorldServer;
 import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.generator.builder.BasicBuilder;
-import cubicchunks.server.CubeWorldServer;
+import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
@@ -49,7 +50,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 	// Water level for each column
 	private final byte[] waterLevel = new byte[CUBE_X_SIZE * CUBE_Z_SIZE];
 	
-	private CubeWorldServer worldServer;
+	private WorldServer worldServer;
 	private CCBiome[] biomes;
 	
 	private Random rand;
@@ -91,15 +92,15 @@ public class NewTerrainProcessor extends CubeProcessor {
 	private static int amplify = 30000; // amplify factor for the noise array.
 	private static int octaves = 14; // size of features. increasing by 1 approximately doubles the size of features.
 	
-	public NewTerrainProcessor(String name, CubeWorldServer worldServer, int batchSize) {
-		super(name, worldServer.getCubeCache(), batchSize);
+	public NewTerrainProcessor(String name, WorldServer worldServer, ServerCubeCache serverCubeCache, int batchSize) {
+		super(name, serverCubeCache, batchSize);
 		
 		this.worldServer = worldServer;
 		this.biomes = null;
 		
 		this.rand = new Random(this.worldServer.getSeed());
 		
-		seaLevel = worldServer.getCubeWorldProvider().getSeaLevel();
+		seaLevel = worldServer.getSeaLevel();
 		
 		this.heightCap = 16;
 		
@@ -148,12 +149,13 @@ public class NewTerrainProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
-		this.biomes = (CCBiome[])this.worldServer.getCubeWorldProvider().
-				getBiomeMananger().getBiomesForGeneration(this.biomes, 
-						cube.getX() * 4 - this.maxSmoothRadius, 
-						cube.getZ() * 4 - this.maxSmoothRadius, 
-						xNoiseSize + this.maxSmoothDiameter, 
-						zNoiseSize + this.maxSmoothDiameter);
+		this.biomes = (CCBiome[])this.worldServer.dimension.getBiomeManager().getBiomeMap(
+			this.biomes, 
+			cube.getX() * 4 - this.maxSmoothRadius, 
+			cube.getZ() * 4 - this.maxSmoothRadius, 
+			xNoiseSize + this.maxSmoothDiameter, 
+			zNoiseSize + this.maxSmoothDiameter
+		);
 		
 		this.generateNoiseArrays(cube);
 		

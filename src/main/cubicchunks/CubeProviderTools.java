@@ -24,6 +24,7 @@
 package cubicchunks;
 
 import cubicchunks.util.Coords;
+import cubicchunks.world.CubeCache;
 
 public class CubeProviderTools {
 	

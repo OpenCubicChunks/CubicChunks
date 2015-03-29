@@ -49,6 +49,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ChunkSection;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -57,7 +58,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Predicate;
 
-import cubicchunks.CubeWorld;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.util.AddressTools;
@@ -86,7 +86,7 @@ public class Column extends Chunk {
 	
 	public Column(World world, int cubeX, int cubeZ, CCBiome[] biomes) {
 		
-		// NOTE: this constructor is called by the cube generator
+		// NOTE: this constructor is called by the column generator
 		this(world, cubeX, cubeZ);
 		
 		init();
@@ -253,7 +253,7 @@ public class Column extends Chunk {
 			assert (minBlockY < maxBlockY) : "Values not sorted! " + minBlockY + ", " + maxBlockY;
 			
 			// update light and signal render update
-			((CubeWorld) cube.getWorld()).getLightingManager().computeSkyLightUpdate(this, x, z, minBlockY, maxBlockY);
+			WorldContexts.get(this.world).getLightingManager().computeSkyLightUpdate(this, x, z, minBlockY, maxBlockY);
 			this.world.markBlockRangeForRenderUpdate(pos.getX(), minBlockY, pos.getZ(), pos.getX(), maxBlockY, pos.getZ());
 		}
 		
@@ -261,7 +261,7 @@ public class Column extends Chunk {
 		int skyLight = getLightAt(LightType.SKY, pos);
 		int blockLight = getLightAt(LightType.BLOCK, pos);
 		if (newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0)) {
-			((CubeWorld)cube.getWorld()).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
+			WorldContexts.get(this.world).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
 		}
 		
 		// update lighting index
@@ -541,31 +541,29 @@ public class Column extends Chunk {
 			if (!cube.isEmpty()) {
 				ChunkSection storage = cube.getStorage();
 				
-				/* TODO: cube serialization
-				
 				// 1. block IDs, low bits
-				out.write(storage.getBlockLSBArray());
+				out.write(ChunkSectionHelper.getBlockLSBArray(storage));
 				
 				// 2. block IDs, high bits
-				if (storage.getBlockMSBArray() != null) {
+				NibbleArray blockIdMsbs = ChunkSectionHelper.getBlockMSBArray(storage);
+				if (blockIdMsbs != null) {
 					out.writeByte(1);
-					out.write(storage.getBlockMSBArray().data);
+					out.write(blockIdMsbs.get());
 				} else {
 					// signal we're not sending this data
 					out.writeByte(0);
 				}
 				
 				// 3. metadata
-				out.write(storage.getMetadataArray().data);
+				out.write(ChunkSectionHelper.getBlockMetaArray(storage).get());
 				
 				// 4. block light
-				out.write(storage.getBlocklightArray().data);
+				out.write(storage.getBlockLightArray().get());
 				
-				if (this.world.dimensionType.hasSky()) {
+				if (!this.world.dimension.hasNoSky()) {
 					// 5. sky light
-					out.write(storage.getSkylightArray().data);
+					out.write(storage.getSkyLightArray().get());
 				}
-				*/
 			}
 		}
 		
@@ -606,35 +604,33 @@ public class Column extends Chunk {
 				if (!isEmpty) {
 					ChunkSection storage = cube.getStorage();
 					
-					/* TODO: cube serialization
-					
 					// 1. block IDs, low bits
-					in.read(storage.getBlockLSBArray());
+					byte[] blockIdLsbs = new byte[16*16*16];
+					in.read(blockIdLsbs);
 					
 					// 2. block IDs, high bits
+					NibbleArray blockIdMsbs = null;
 					boolean isHighBitsAttached = in.readByte() != 0;
 					if (isHighBitsAttached) {
-						if (storage.getBlockMSBArray() == null) {
-							storage.createBlockMSBArray();
-						}
-						in.read(storage.getBlockMSBArray().data);
+						blockIdMsbs = new NibbleArray();
+						in.read(blockIdMsbs.get());
 					}
 					
 					// 3. metadata
-					in.read(storage.getMetadataArray().data);
+					NibbleArray blockMetadata = new NibbleArray();
+					in.read(blockMetadata.get());
+					
+					ChunkSectionHelper.setBlockStates(storage, blockIdLsbs, blockIdMsbs, blockMetadata);
 					
 					// 4. block light
-					in.read(storage.getBlocklightArray().data);
+					in.read(storage.getBlockLightArray().get());
 					
-					if (!this.world.provider.hasNoSky) {
+					if (!this.world.dimension.hasNoSky()) {
 						// 5. sky light
-						in.read(storage.getSkylightArray().data);
+						in.read(storage.getSkyLightArray().get());
 					}
 					
-					// clean up invalid blocks
-					storage.removeInvalidBlocks();
-					
-					*/
+					storage.countBlocksInSection();
 				}
 				
 				// flag cube for render update
