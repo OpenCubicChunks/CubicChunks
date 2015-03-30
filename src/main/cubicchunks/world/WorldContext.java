@@ -21,40 +21,11 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.accessors;
+package cubicchunks.world;
 
-import java.lang.reflect.Field;
+import cubicchunks.lighting.LightingManager;
 
-import net.minecraft.world.WorldClient;
-import net.minecraft.world.gen.ClientChunkCache;
-
-public class WorldClientAccessor {
-	
-	private static Field m_fieldChunkProvider;
-	
-	static {
-		try {
-			m_fieldChunkProvider = WorldClient.class.getDeclaredField("clientChunkProvider");
-			m_fieldChunkProvider.setAccessible(true);
-		} catch (Exception ex) {
-			throw new Error(ex);
-		}
-	}
-	
-	public static ClientChunkCache getChunkProvider(WorldClient world) {
-		try {
-			return (ClientChunkCache)m_fieldChunkProvider.get(world);
-		} catch (Exception ex) {
-			throw new Error(ex);
-		}
-	}
-	
-	public static void setChunkProvider(WorldClient world, ClientChunkCache val) {
-		try {
-			m_fieldChunkProvider.set(world, val);
-		} catch (Exception ex) {
-			throw new Error(ex);
-		}
-	}
-}
+public interface WorldContext {
+	CubeCache getCubeCache();
+	LightingManager getLightingManager();
 }

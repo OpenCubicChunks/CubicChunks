@@ -33,11 +33,12 @@ import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cubicchunks.CubeWorld;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.FastIntQueue;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
+import cubicchunks.world.WorldContexts;
 
 public class DiffuseLightingCalculator {
 	
@@ -50,8 +51,9 @@ public class DiffuseLightingCalculator {
 	}
 	
 	public boolean calculate(World world, BlockPos pos, LightType lightType) {
+		
 		// are there enough nearby blocks to do the lighting?
-		if (!world.doChunksNearChunkExist(pos, 16)) {
+		if (!world.checkBlockRangeIsInWorld(pos, 16)) {
 			return false;
 		}
 		
@@ -89,16 +91,22 @@ public class DiffuseLightingCalculator {
 	}
 	
 	private void processLightSubtractions(World world, BlockPos pos, LightType lightType) {
+		
+		// TODO: optimize out news?
+		BlockPos.MutableBlockPos updatePos = new BlockPos.MutableBlockPos();
+		BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
+		
 		// for each queued light update...
 		while (this.queue.hasNext()) {
+			
 			// unpack the update
 			int update = this.queue.get();
-			int updateBlockX = unpackUpdateDx(update) + pos.getX();
-			int updateBlockY = unpackUpdateDy(update) + pos.getY();
-			int updateBlockZ = unpackUpdateDz(update) + pos.getZ();
+			updatePos.setBlockPos(
+				unpackUpdateDx(update) + pos.getX(),
+				unpackUpdateDy(update) + pos.getY(),
+				unpackUpdateDz(update) + pos.getZ()
+			);
 			int updateLight = unpackUpdateLight(update);
-			
-			BlockPos updatePos = new BlockPos(updateBlockX, updateBlockY, updateBlockZ);
 			
 			// if the light changed, skip this update
 			int oldLight = world.getLightAt(lightType, updatePos);
@@ -115,13 +123,9 @@ public class DiffuseLightingCalculator {
 			}
 			
 			// for each neighbor block...
-			for (int side = 0; side < 6; side++) {
-				// get the neighboring block coords
-				int neighborBlockX = updateBlockX + Facing.offsetsXForSide[side];
-				int neighborBlockY = updateBlockY + Facing.offsetsYForSide[side];
-				int neighborBlockZ = updateBlockZ + Facing.offsetsZForSide[side];
-				
-				BlockPos neighborPos = new BlockPos(neighborBlockX, neighborBlockY, neighborBlockZ);
+			for (Facing facing : Facing.values()) {
+				neighborPos.setBlockPos(updatePos.getX(), updatePos.getY(), updatePos.getZ());
+				neighborPos.addDirection(facing, 1);
 				
 				if (!shouldUpdateLight(world, pos, neighborPos)) {
 					continue;
@@ -135,29 +139,40 @@ public class DiffuseLightingCalculator {
 				
 				// if the neighbor block doesn't have the light we expect, bail
 				int expectedLight = updateLight - neighborOpacity;
-				int actualLight = world.getLightAt(lightType, new BlockPos(neighborBlockX, neighborBlockY, neighborBlockZ));
+				int actualLight = world.getLightAt(lightType, neighborPos);
 				if (actualLight != expectedLight) {
 					continue;
 				}
 				
 				if (this.queue.hasRoomFor(1)) {
 					// queue an update to subtract light from the neighboring block
-					this.queue.add(packUpdate(neighborBlockX - pos.getX(), neighborBlockY - pos.getY(), neighborBlockZ - pos.getZ(), expectedLight));
+					this.queue.add(packUpdate(
+						neighborPos.getX() - pos.getX(),
+						neighborPos.getY() - pos.getY(),
+						neighborPos.getZ() - pos.getZ(),
+						expectedLight
+					));
 				}
 			}
 		}
 	}
 	
 	private void processLightAdditions(World world, BlockPos pos, LightType lightType) {
+		
+		// TODO: optimize out news?
+		BlockPos.MutableBlockPos updatePos = new BlockPos.MutableBlockPos();
+		BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
+
 		// for each queued light update...
 		while (this.queue.hasNext()) {
+			
 			// unpack the update
 			int update = this.queue.get();
-			int updateBlockX = unpackUpdateDx(update) + pos.getX();
-			int updateBlockY = unpackUpdateDy(update) + pos.getY();
-			int updateBlockZ = unpackUpdateDz(update) + pos.getZ();
-			
-			BlockPos updatePos = new BlockPos(updateBlockX, updateBlockY, updateBlockZ);
+			updatePos.setBlockPos(
+				unpackUpdateDx(update) + pos.getX(),
+				unpackUpdateDy(update) + pos.getY(),
+				unpackUpdateDz(update) + pos.getZ()
+			);
 			
 			// skip updates that don't change the light
 			int oldLight = world.getLightAt(lightType, updatePos);
@@ -175,33 +190,35 @@ public class DiffuseLightingCalculator {
 			}
 			
 			// for each neighbor block...
-			for (int side = 0; side < 6; side++) {
-				// get the neighboring block coords
-				int neighborBlockX = updateBlockX + Facing.offsetsXForSide[side];
-				int neighborBlockY = updateBlockY + Facing.offsetsYForSide[side];
-				int neighborBlockZ = updateBlockZ + Facing.offsetsZForSide[side];
-				
-				BlockPos neighborPos = new BlockPos(neighborBlockX, neighborBlockY, neighborBlockZ);
+			for (Facing facing : Facing.values()) {
+				neighborPos.setBlockPos(updatePos.getX(), updatePos.getY(), updatePos.getZ());
+				neighborPos.addDirection(facing, 1);
 				
 				if (!shouldUpdateLight(world, pos, neighborPos)) {
 					continue;
 				}
 				
 				// if the neighbor already has enough light, bail
-				int neighborLight = world.getLightAt(lightType, new BlockPos(neighborBlockX, neighborBlockY, neighborBlockZ));
+				int neighborLight = world.getLightAt(lightType, neighborPos);
 				if (neighborLight >= newLight) {
 					continue;
 				}
 				
 				if (this.queue.hasRoomFor(1)) {
 					// queue an update to add light to the neighboring block
-					this.queue.add(packUpdate(neighborBlockX - pos.getX(), neighborBlockY - pos.getY(), neighborBlockZ - pos.getZ(), 0));
+					this.queue.add(packUpdate(
+						neighborPos.getX() - pos.getX(),
+						neighborPos.getY() - pos.getY(),
+						neighborPos.getZ() - pos.getZ(),
+						0
+					));
 				}
 			}
 		}
 	}
 	
 	private boolean shouldUpdateLight(World world, BlockPos pos, BlockPos targetPos) {
+		
 		// don't update blocks that are too far away
 		int manhattanDistance = MathHelper.abs(targetPos.getX() - pos.getX()) 
 								+ MathHelper.abs(targetPos.getY() - pos.getY()) 
@@ -219,21 +236,25 @@ public class DiffuseLightingCalculator {
 	}
 	
 	private boolean isLightModifiable(World world, int blockX, int blockY, int blockZ) {
-		CubeWorld cubeWorld = (CubeWorld)world;
 		
 		// get the cube
 		int cubeX = Coords.blockToCube(blockX);
 		int cubeY = Coords.blockToCube(blockY);
 		int cubeZ = Coords.blockToCube(blockZ);
-		if (!cubeWorld.getCubeCache().cubeExists(cubeX, cubeY, cubeZ)) {
+		CubeCache cubeCache = WorldContexts.get(world).getCubeCache();
+		if (!cubeCache.cubeExists(cubeX, cubeY, cubeZ)) {
 			return false;
 		}
-		Cube cube = cubeWorld.getCubeCache().getCube(cubeX, cubeY, cubeZ);
+		Cube cube = cubeCache.getCube(cubeX, cubeY, cubeZ);
 		
 		return !cube.isEmpty();
 	}
 	
-	private int computeLightValue(World world, BlockPos pos, LightType lightType) {		
+	private int computeLightValue(World world, BlockPos pos, LightType lightType) {
+		
+		// TODO: optimize out news?
+		BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
+
 		if (lightType == LightType.SKY && world.canSeeSky(pos)) {
 			// sky light is easy
 			return 15;
@@ -265,13 +286,13 @@ public class DiffuseLightingCalculator {
 			else if (lightAtThisBlock >= 14) {
 				return lightAtThisBlock;
 			} else {
+				
 				// for each block face...
-				for (int side = 0; side < 6; ++side) {
-					int offsetBlockX = pos.getX() + Facing.offsetsXForSide[side];
-					int offsetBlockY = pos.getY() + Facing.offsetsYForSide[side];
-					int offsetBlockZ = pos.getZ() + Facing.offsetsZForSide[side];
+				for (Facing facing : Facing.values()) {
+					neighborPos.setBlockPos(pos.getX(), pos.getY(), pos.getZ());
+					neighborPos.addDirection(facing, 1);
 					
-					int lightFromNeighbor = world.getLightAt(lightType, new BlockPos(offsetBlockX, offsetBlockY, offsetBlockZ)) - blockOpacity;
+					int lightFromNeighbor = world.getLightAt(lightType, neighborPos) - blockOpacity;
 					
 					// take the max of light from neighbors
 					if (lightFromNeighbor > lightAtThisBlock) {

@@ -21,53 +21,55 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.accessors;
+package cubicchunks.client;
 
-import java.lang.reflect.Field;
-import java.util.List;
+import java.util.Map;
 
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.ServerChunkCache;
+import net.minecraft.world.WorldClient;
 
-public class ChunkProviderServerAccessor {
+import com.google.common.collect.Maps;
+
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.world.WorldContext;
+
+
+public class WorldClientContext implements WorldContext {
 	
-	private static Field m_fieldLoadedChunks;
-	private static Field m_fieldBlankChunk;
+	private static Map<WorldClient,WorldClientContext> m_instances;
 	
 	static {
-		try {
-			m_fieldLoadedChunks = ServerChunkCache.class.getDeclaredField("loadedChunks");
-			m_fieldLoadedChunks.setAccessible(true);
-			
-			m_fieldBlankChunk = ServerChunkCache.class.getDeclaredField("defaultEmptyChunk");
-			m_fieldBlankChunk.setAccessible(true);
-		} catch (Exception ex) {
-			throw new Error(ex);
-		}
+		m_instances = Maps.newHashMap();
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static List<Chunk> getLoadedChunks(ServerChunkCache cache) {
-		try {
-			return (List<Chunk>)m_fieldLoadedChunks.get(cache);
-		} catch (Exception ex) {
-			throw new Error(ex);
-		}
+	public static WorldClientContext get(WorldClient worldClient) {
+		return m_instances.get(worldClient);
 	}
 	
-	public static Chunk getBlankChunk(ServerChunkCache cache) {
-		try {
-			return (Chunk)m_fieldBlankChunk.get(cache);
-		} catch (Exception ex) {
-			throw new Error(ex);
-		}
+	public static void put(WorldClient worldClient, WorldClientContext worldClientContext) {
+		m_instances.put(worldClient, worldClientContext);
 	}
 	
-	public static void setBlankChunk(ServerChunkCache cache, Chunk val) {
-		try {
-			m_fieldBlankChunk.set(cache, val);
-		} catch (Exception ex) {
-			throw new Error(ex);
-		}
+	private WorldClient m_worldClient;
+	private ClientCubeCache m_clientCubeCache;
+	private LightingManager m_lightingManager;
+	
+	public WorldClientContext(WorldClient worldClient, ClientCubeCache clientCubeCache) {
+		m_worldClient = worldClient;
+		m_clientCubeCache = clientCubeCache;
+		m_lightingManager = new LightingManager(worldClient, clientCubeCache);
+	}
+	
+	public WorldClient getWorldClient() {
+		return m_worldClient;
+	}
+	
+	@Override
+	public ClientCubeCache getCubeCache() {
+		return m_clientCubeCache;
+	}
+	
+	@Override
+	public LightingManager getLightingManager() {
+		return m_lightingManager;
 	}
 }

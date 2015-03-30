@@ -1,4 +1,3 @@
-
 /*
  *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
  *
@@ -24,26 +23,23 @@
  */
 package cubicchunks.client;
 
-import net.minecraft.util.LongHashMap;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.ClientChunkCache;
-import cubicchunks.CubeCache;
-import cubicchunks.accessors.ChunkProviderClientAccessor;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.world.BlankColumn;
 import cubicchunks.world.Column;
 import cubicchunks.world.Cube;
 import net.minecraft.world.chunk.Chunk;
+import cubicchunks.world.CubeCache;
+import net.minecraft.util.LongHashMap;
 
-public class CubeProviderClient extends ClientChunkCache implements CubeCache {
+public class ClientCubeCache extends ClientChunkCache implements CubeCache {
 	
 	private World world;
 	private BlankColumn blankColumn;
 	
-	private LongHashMap chunkMapping = new LongHashMap();
-	
-	public CubeProviderClient(World world) {
+	public ClientCubeCache(World world) {
 		super(world);
 		
 		this.world = world;
@@ -52,9 +48,9 @@ public class CubeProviderClient extends ClientChunkCache implements CubeCache {
 	
 	@Override
 	public Column loadChunk(int cubeX, int cubeZ) {
+		
 		// is this chunk already loaded?
-		chunkMapping = (LongHashMap) ChunkProviderClientAccessor.getChunkMapping(this);
-		Column column = (Column)chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		Column column = (Column)this.cacheMap.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}
@@ -62,18 +58,23 @@ public class CubeProviderClient extends ClientChunkCache implements CubeCache {
 		// make a new one
 		column = new Column(this.world, cubeX, cubeZ);
 		
-		chunkMapping.add(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ), column);
-		ChunkProviderClientAccessor.getChunkListing(this).add(column);
+		this.cacheMap.add(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ), column);
+		this.cachedChunks.add(column);
 		
 		column.setChunkLoaded(true);
 		return column;
 	}
 	
 	@Override
+	public Column getColumn(int columnX, int columnZ) {
+		return getChunk(columnX, columnZ);
+	}
+	
+	@Override
 	public Column getChunk(int cubeX, int cubeZ) {
+		
 		// is this chunk already loaded?
-		chunkMapping = ChunkProviderClientAccessor.getChunkMapping(this);
-		Column column = (Column)chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		Column column = (Column)this.cacheMap.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}
@@ -103,12 +104,12 @@ public class CubeProviderClient extends ClientChunkCache implements CubeCache {
 		if (!var3.isEmpty()) {
 			var3.onChunkUnload();
 		}
-		chunkMapping.remove(ChunkCoordIntPair.chunkXZ2Int(par1, par2));
-		ChunkProviderClientAccessor.getChunkListing( this ).remove(var3);
+		this.cacheMap.remove(ChunkCoordIntPair.chunkXZ2Int(par1, par2));
+		this.cachedChunks.remove(var3);
 	}
 	
 	@Override
 	public String getName() {
-		return "MultiplayerChunkCache: " + chunkMapping.getNumHashElements() + ", " + ChunkProviderClientAccessor.getChunkListing( this ).size();
+		return "MultiplayerChunkCache: " + this.cacheMap.getNumHashElements() + ", " + this.cachedChunks.size();
 	}
 }

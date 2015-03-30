@@ -26,8 +26,8 @@ package cubicchunks.util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import cubicchunks.CubeCache;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
 
 public abstract class CubeProcessor extends QueueProcessor {
 	

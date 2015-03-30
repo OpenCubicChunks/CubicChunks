@@ -30,11 +30,11 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Lists;
 
-import cubicchunks.CubeCache;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.util.QueueProcessor;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
 
 public class GeneratorPipeline {
 	

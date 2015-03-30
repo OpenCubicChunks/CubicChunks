@@ -23,9 +23,9 @@
  */
 package cubicchunks.util;
 
-import cubicchunks.CubeCache;
 import cubicchunks.world.BlankColumn;
 import cubicchunks.world.Column;
+import cubicchunks.world.CubeCache;
 
 public abstract class ColumnProcessor extends QueueProcessor {
 	
@@ -40,7 +40,7 @@ public abstract class ColumnProcessor extends QueueProcessor {
 			// get the column
 			int cubeX = AddressTools.getX(address);
 			int cubeZ = AddressTools.getZ(address);
-			Column column = (Column)this.cache.getChunk(cubeX, cubeZ);
+			Column column = (Column)this.cache.getColumn(cubeX, cubeZ);
 			
 			// skip blank columns
 			if (column == null || column instanceof BlankColumn) {

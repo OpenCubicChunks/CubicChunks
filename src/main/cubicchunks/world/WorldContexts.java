@@ -21,11 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.world;
 
-import cubicchunks.world.Cube;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldClient;
+import net.minecraft.world.WorldServer;
+import cubicchunks.client.WorldClientContext;
+import cubicchunks.server.WorldServerContext;
 
-public interface CubeCache {
-	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
-	Cube getCube(int cubeX, int cubeY, int cubeZ);
+
+public class WorldContexts {
+	
+	public static WorldContext get(World world) {
+		// TODO: hide client things from the server
+		if (world instanceof WorldClient) {
+			return WorldClientContext.get((WorldClient)world);
+		} else if (world instanceof WorldServer) {
+			return WorldServerContext.get((WorldServer)world);
+		}
+		throw new Error("Unknown world type!");
+	}
 }

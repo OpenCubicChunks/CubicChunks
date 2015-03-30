@@ -23,10 +23,6 @@
  */
 package cubicchunks.generator;
 
-import cuchaz.cubicChunks.generator.biome.alternateGen.AlternateCCBiomeManager;
-import cuchaz.cubicChunks.generator.populator.DecoratorHelper;
-import cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig;
-
 import java.util.List;
 import java.util.Random;
 import net.minecraft.block.BlockFalling;
@@ -36,21 +32,21 @@ import net.minecraft.util.WeightedRandom;
 import net.minecraft.world.IWorldAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import cubicchunks.CubeProvider;
 import cubicchunks.CubeProviderTools;
 import cubicchunks.generator.biome.CCBiomeManager;
 import cubicchunks.generator.biome.biomegen.CCBiome;
+import cubicchunks.generator.terrain.GlobalGeneratorConfig;
 import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
 
 public class PopulationProcessor extends CubeProcessor {
-	private final int seaLevel;
+	private final int seaLevel = 0;
 
-	public PopulationProcessor(String name, CubeWorldServer world, int batchSize) {
-		super(name, world.getCubeCache(), batchSize);
-		this.seaLevel = world.getCubeWorldProvider().getSeaLevel();
+	public PopulationProcessor(String name, CubeCache cache, int batchSize) {
+		super(name, cache, batchSize);
 	}
 
 	@Override
@@ -68,13 +64,13 @@ public class PopulationProcessor extends CubeProcessor {
 			return false;
 		}
 
-		CubeWorldServer world = (CubeWorldServer) cube.getWorld();
+		World world = cube.getWorld();
 		double heightMax = Double.NEGATIVE_INFINITY;
 		double heightMin = Double.POSITIVE_INFINITY;
 		double volMax = 0;
 		for (int x = 0; x < 16; x++) {
 			for (int z = 0; z < 16; z++) {
-				int biomeId = cube.getColumn().getBiomeArray()[z << 4 | x];
+				int biomeId = cube.getColumn().getBiomeMap()[z << 4 | x];
 				CCBiome biome = CCBiome.getBiome(biomeId);
 
 				double biomeHeight = 0.75 / 64.0 + biome.biomeHeight * 17.0 / 64.0;
@@ -120,7 +116,7 @@ public class PopulationProcessor extends CubeProcessor {
 		return true;
 	}
 
-	public void calculateUnderground(Cube cube, CubeWorldServer world, CCBiomeManager wcm) {
+	public void calculateUnderground(Cube cube, World world, CCBiomeManager wcm) {
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();
@@ -202,11 +198,11 @@ public class PopulationProcessor extends CubeProcessor {
 		gen.generateAtRandomHeight(1, probability * 8, lapisGen, -0.5D);// 0-32
 	}
 
-	public void calculateSky(Cube cube, CubeWorldServer world, CCBiomeManager wcm) {
+	public void calculateSky(Cube cube, World world, CCBiomeManager wcm) {
 		// do nothing
 	}
 
-	public void calculateSurface(Cube cube, CubeWorldServer world, CCBiomeManager wcm) {
+	public void calculateSurface(Cube cube, World world, CCBiomeManager wcm) {
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();

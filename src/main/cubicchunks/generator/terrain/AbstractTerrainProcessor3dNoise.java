@@ -32,7 +32,9 @@ import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
 import net.minecraft.block.Blocks;
+import net.minecraft.world.World;
 
 public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 
@@ -51,10 +53,10 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 
 	protected boolean amplify;
 
-	protected final CubeWorldServer m_worldServer;
+	protected final World m_worldServer;
 
-	public AbstractTerrainProcessor3dNoise(String name, CubeWorldServer worldServer, int batchSize) {
-		super(name, worldServer.getCubeCache(), batchSize);
+	public AbstractTerrainProcessor3dNoise(String name, World worldServer, CubeCache cache, int batchSize) {
+		super(name, cache, batchSize);
 
 		this.m_worldServer = worldServer;
 

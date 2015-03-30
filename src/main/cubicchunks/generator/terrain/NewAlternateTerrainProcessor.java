@@ -33,8 +33,10 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.maxElev;
 import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
 import java.util.Random;
 import net.minecraft.block.Blocks;
+import net.minecraft.world.World;
 
 /**
  *
@@ -55,8 +57,8 @@ public class NewAlternateTerrainProcessor extends AbstractTerrainProcessor3dNois
 	private double[][] noiseArrayTemp;
 	private double[][] noiseArrayRainfall;
 
-	public NewAlternateTerrainProcessor(String name, CubeWorldServer worldServer, int batchSize) {
-		super(name, worldServer, batchSize);
+	public NewAlternateTerrainProcessor(String name, World worldServer, CubeCache cache, int batchSize) {
+		super(name, worldServer, cache, batchSize);
 
 		this.wcm = (AlternateWorldColumnManager) worldServer.getBiomeManager();
 

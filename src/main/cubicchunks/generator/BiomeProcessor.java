@@ -28,19 +28,18 @@ import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
-import cubicchunks.CubeCache;
+import net.minecraft.world.WorldServer;
 import cubicchunks.CubeProviderTools;
-import cubicchunks.CubeWorld;
 import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
-import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
+import cubicchunks.world.CubeCache;
 
 public class BiomeProcessor extends CubeProcessor {
 	
-	private CubeWorldServer worldServer;
+	private WorldServer worldServer;
 	
 	private Random rand;
 	private NoiseGeneratorPerlin m_noiseGen;
@@ -49,8 +48,8 @@ public class BiomeProcessor extends CubeProcessor {
 	
 	private int seaLevel;
 	
-	public BiomeProcessor(String name, CubeWorldServer worldServer, int batchSize) {
-		super(name, worldServer.getCubeCache(), batchSize);
+	public BiomeProcessor(String name, WorldServer worldServer, CubeCache cubeCache, int batchSize) {
+		super(name, cubeCache, batchSize);
 		
 		this.worldServer = worldServer;
 		
@@ -59,7 +58,7 @@ public class BiomeProcessor extends CubeProcessor {
 		this.noise = new double[256];
 		this.biomes = null;
 		
-		this.seaLevel = worldServer.getCubeWorldProvider().getSeaLevel();
+		this.seaLevel = worldServer.getSeaLevel();
 	}
 	
 	@Override
@@ -69,24 +68,28 @@ public class BiomeProcessor extends CubeProcessor {
 			return true;
 		}
 		// only continue if the neighboring cubes exist
-		CubeCache cache = ((CubeWorld) cube.getWorld()).getCubeCache();
-		if (!CubeProviderTools.cubeAndNeighborsExist(cache, cube.getX(), cube.getY(), cube.getZ())) {
+		if (!CubeProviderTools.cubeAndNeighborsExist(this.cache, cube.getX(), cube.getY(), cube.getZ())) {
 			return false;
 		}
 		
 		// generate biome info. This is a hackjob.
-		this.biomes = (CCBiome[])this.worldServer.getCubeWorldProvider()
-				.getBiomeMananger().loadBlockGeneratorData(this.biomes, 
-						Coords.cubeToMinBlock(cube.getX()), 
-						Coords.cubeToMinBlock(cube.getZ()), 
-						16, 16);
+		this.biomes = (CCBiome[])this.worldServer.dimension.getBiomeManager().getBiomeMap(
+			this.biomes, 
+			Coords.cubeToMinBlock(cube.getX()), 
+			Coords.cubeToMinBlock(cube.getZ()), 
+			16, 16
+		);
 		
-		this.noise = this.m_noiseGen.arrayNoise2D_pre(this.noise, 
-				Coords.cubeToMinBlock(cube.getX()), 
-				Coords.cubeToMinBlock(cube.getZ()), 
-				16, 16, 16, 16, 1);
+		this.noise = this.m_noiseGen.arrayNoise2D_pre(
+			this.noise, 
+			Coords.cubeToMinBlock(cube.getX()), 
+			Coords.cubeToMinBlock(cube.getZ()), 
+			16, 16,
+			16, 16,
+			1
+		);
 		
-		Cube above = cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
+		Cube above = this.cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
 		
 		int topOfCube = Coords.cubeToMaxBlock(cube.getY());
 		int topOfCubeAbove = Coords.cubeToMaxBlock(cube.getY() + 1);

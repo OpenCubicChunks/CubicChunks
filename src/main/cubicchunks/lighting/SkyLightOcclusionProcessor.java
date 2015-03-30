@@ -26,11 +26,11 @@ package cubicchunks.lighting;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
-import cubicchunks.CubeCache;
-import cubicchunks.CubeWorld;
 import cubicchunks.util.BlockColumnProcessor;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Column;
+import cubicchunks.world.CubeCache;
+import cubicchunks.world.WorldContexts;
 
 public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	
@@ -71,8 +71,12 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	}
 	
 	private boolean updateSkylight(World world, int blockX, int blockZ, int maxBlockY) {
+		
 		// get the skylight block for this block column
-		Column column = (Column)world.getChunkFromBlockCoords(new BlockPos(blockX, 0, blockZ));
+		Column column = WorldContexts.get(world).getCubeCache().getColumn(
+			Coords.blockToCube(blockX),
+			Coords.blockToCube(blockZ)
+		);
 		int localX = Coords.blockToLocal(blockX);
 		int localZ = Coords.blockToLocal(blockZ);
 		Integer height = column.getSkylightBlockY(localX, localZ);
@@ -95,13 +99,15 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 			return false;
 		}
 		
-		if (!world.doChunksNearChunkExist(blockX, minBlockY, blockZ, maxBlockY)) {
+		// TODO: optimize out news?
+		BlockPos bottom = new BlockPos(blockX, minBlockY, blockZ);
+		BlockPos top = new BlockPos(blockX, maxBlockY, blockZ);
+		if (!world.checkBlockRangeIsInWorld(bottom, top)) {
 			return false;
 		}
 		
-		CubeWorld cubeWorld = (CubeWorld)world;
 		for (int blockY = minBlockY; blockY <= maxBlockY; blockY++) {
-			cubeWorld.getLightingManager().computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
+			WorldContexts.get(world).getLightingManager().computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
 		}
 		
 		return true;
