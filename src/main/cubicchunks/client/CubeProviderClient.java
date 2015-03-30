@@ -1,134 +1,114 @@
-/*******************************************************************************
- * This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+
+/*
+ *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
  *
- * Copyright (c) Tall Worlds
- * Copyright (c) contributors
+ *  Copyright (c) 2014 Tall Worlds
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *******************************************************************************/
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package cubicchunks.client;
 
-import cubicchunks.CubeProvider;
+import net.minecraft.util.LongHashMap;
+import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.world.World;
+import net.minecraft.world.gen.ClientChunkCache;
+import cubicchunks.CubeCache;
 import cubicchunks.accessors.ChunkProviderClientAccessor;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.world.BlankColumn;
 import cubicchunks.world.Column;
 import cubicchunks.world.Cube;
-import net.minecraft.client.multiplayer.ChunkProviderClient;
-import net.minecraft.util.LongHashMap;
-import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.World;
-<<<<<<< HEAD:src/cuchaz/cubicChunks/client/CubeProviderClient.java
 import net.minecraft.world.chunk.Chunk;
-import cuchaz.cubicChunks.CubeProvider;
-import cuchaz.cubicChunks.accessors.ChunkProviderClientAccessor;
-import cuchaz.cubicChunks.generator.GeneratorStage;
-import cuchaz.cubicChunks.world.BlankColumn;
-import cuchaz.cubicChunks.world.Column;
-import cuchaz.cubicChunks.world.Cube;
-=======
->>>>>>> 0c6cf2e... Refactored the package structure:src/main/java/cubicchunks/client/CubeProviderClient.java
 
-public class CubeProviderClient extends ChunkProviderClient implements CubeProvider
-{
-	private World m_world;
-	private BlankColumn m_blankColumn;
+public class CubeProviderClient extends ClientChunkCache implements CubeCache {
+	
+	private World world;
+	private BlankColumn blankColumn;
 	
 	private LongHashMap chunkMapping = new LongHashMap();
 	
-	public CubeProviderClient( World world )
-	{
-		super( world );
+	public CubeProviderClient(World world) {
+		super(world);
 		
-		m_world = world;
-		m_blankColumn = new BlankColumn( world, 0, 0 );
+		this.world = world;
+		this.blankColumn = new BlankColumn(world, 0, 0);
 	}
 	
 	@Override
-	public Column loadChunk( int cubeX, int cubeZ )
-	{
+	public Column loadChunk(int cubeX, int cubeZ) {
 		// is this chunk already loaded?
-		chunkMapping = ChunkProviderClientAccessor.getChunkMapping( this );
-		Column column = (Column)chunkMapping.getValueByKey( ChunkCoordIntPair.chunkXZ2Int( cubeX, cubeZ ) );
-		if( column != null )
-		{
+		chunkMapping = (LongHashMap) ChunkProviderClientAccessor.getChunkMapping(this);
+		Column column = (Column)chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		if (column != null) {
 			return column;
 		}
 		
 		// make a new one
-		column = new Column( m_world, cubeX, cubeZ );
+		column = new Column(this.world, cubeX, cubeZ);
 		
-		chunkMapping.add( ChunkCoordIntPair.chunkXZ2Int( cubeX, cubeZ ), column );
-		ChunkProviderClientAccessor.getChunkListing( this ).add( column );
+		chunkMapping.add(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ), column);
+		ChunkProviderClientAccessor.getChunkListing(this).add(column);
 		
-		column.isChunkLoaded = true;
+		column.setChunkLoaded(true);
 		return column;
 	}
 	
 	@Override
-    public void unloadChunk(int par1, int par2)
-    {
-        Chunk var3 = this.provideChunk(par1, par2);
-
-        if (!var3.isEmpty())
-        {
-            var3.onChunkUnload();
-        }
-        chunkMapping.remove(ChunkCoordIntPair.chunkXZ2Int(par1, par2));
-        ChunkProviderClientAccessor.getChunkListing( this ).remove(var3);
-    }
-	
-	@Override
-    public String makeString()
-    {
-        return "MultiplayerChunkCache: " + chunkMapping.getNumHashElements() + ", " + ChunkProviderClientAccessor.getChunkListing( this ).size();
-    }
-	
-	@Override
-	public Column provideChunk( int cubeX, int cubeZ )
-	{
+	public Column getChunk(int cubeX, int cubeZ) {
 		// is this chunk already loaded?
-		LongHashMap chunkMapping = ChunkProviderClientAccessor.getChunkMapping( this );
-		Column column = (Column)chunkMapping.getValueByKey( ChunkCoordIntPair.chunkXZ2Int( cubeX, cubeZ ) );
-		if( column != null )
-		{
+		chunkMapping = ChunkProviderClientAccessor.getChunkMapping(this);
+		Column column = (Column)chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		if (column != null) {
 			return column;
 		}
 		
-		return m_blankColumn;
+		return this.blankColumn;
 	}
 	
 	@Override
-	public boolean cubeExists( int cubeX, int cubeY, int cubeZ )
-	{
+	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
 		// cubes always exist on the client
 		return true;
 	}
 	
 	@Override
-	public Cube provideCube( int cubeX, int cubeY, int cubeZ )
-	{
-		Cube cube = loadChunk( cubeX, cubeZ ).getOrCreateCube( cubeY, false );
+	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
+		Cube cube = loadChunk(cubeX, cubeZ).getOrCreateCube(cubeY, false);
 		
 		// cubes are always live on the client
-		cube.setGeneratorStage( GeneratorStage.getLastStage() );
+		cube.setGeneratorStage(GeneratorStage.getLastStage());
 		
 		return cube;
+	}
+	
+	@Override
+	public void unloadChunk(int par1, int par2){
+		Chunk var3 = this.getChunk(par1, par2);
+		if (!var3.isEmpty()) {
+			var3.onChunkUnload();
+		}
+		chunkMapping.remove(ChunkCoordIntPair.chunkXZ2Int(par1, par2));
+		ChunkProviderClientAccessor.getChunkListing( this ).remove(var3);
+	}
+	
+	@Override
+	public String getName() {
+		return "MultiplayerChunkCache: " + chunkMapping.getNumHashElements() + ", " + ChunkProviderClientAccessor.getChunkListing( this ).size();
 	}
 }

@@ -1,274 +1,236 @@
-/*******************************************************************************
- * This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+/*
+ *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
  *
- * Copyright (c) Tall Worlds
- * Copyright (c) contributors
+ *  Copyright (c) 2014 Tall Worlds
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *******************************************************************************/
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package cubicchunks.server;
 
-import java.util.TreeMap;
+import java.util.Map;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.S21PacketChunkData;
-import net.minecraft.network.play.server.S22PacketMultiBlockChange;
-import net.minecraft.network.play.server.S23PacketBlockChange;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.play.packet.clientbound.PacketBlockChange;
+import net.minecraft.network.play.packet.clientbound.PacketChunkData;
+import net.minecraft.network.play.packet.clientbound.PacketMultiBlockChange;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk.ChunkEntityCreationType;
 
 import com.google.common.collect.Maps;
 
-<<<<<<< HEAD:src/main/java/cubicchunks/server/CubeWatcher.java
-<<<<<<< HEAD:src/cuchaz/cubicChunks/server/CubeWatcher.java
-import cuchaz.cubicChunks.util.Bits;
-import cuchaz.cubicChunks.util.Coords;
-import cuchaz.cubicChunks.world.BlankColumn;
-import cuchaz.cubicChunks.world.ColumnView;
-import cuchaz.cubicChunks.world.Cube;
-
-=======
->>>>>>> 0c6cf2e... Refactored the package structure:src/main/java/cubicchunks/server/CubeWatcher.java
-=======
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ColumnView;
 import cubicchunks.world.Cube;
 
->>>>>>> 69175bb... - Refactored package structure again to remove /java/:src/main/cubicchunks/server/CubeWatcher.java
-public class CubeWatcher
-{
+public class CubeWatcher {
+	
 	private static final int MaxBlocksPerUpdate = 64;
 	
-	private static class PlayerEntry
-	{
+	private static class PlayerEntry {
+		
 		EntityPlayerMP player;
 		boolean sawCube;
 		
-		public PlayerEntry( EntityPlayerMP player )
-		{
+		public PlayerEntry(EntityPlayerMP player) {
 			this.player = player;
 			this.sawCube = false;
 		}
 	}
 	
-	private Cube m_cube;
-	private TreeMap<Integer,PlayerEntry> m_players;
-	private long m_previousWorldTime;
-	private TreeSet<Integer> m_dirtyBlocks;
+	private Cube cube;
+	private Map<Integer,PlayerEntry> players;
+	private long previousWorldTime;
+	private SortedSet<Integer> dirtyBlocks;
 	
-	public CubeWatcher( Cube cube )
-	{
-		if( cube == null )
-		{
-			throw new IllegalArgumentException( "cube cannot be null!" );
+	public CubeWatcher(Cube cube) {
+		if (cube == null) {
+			throw new IllegalArgumentException("cube cannot be null!");
 		}
 		
-		m_cube = cube;
-		m_players = Maps.newTreeMap();
-		m_previousWorldTime = 0;
-		m_dirtyBlocks = new TreeSet<Integer>();
+		this.cube = cube;
+		this.players = Maps.newTreeMap();
+		this.previousWorldTime = 0;
+		this.dirtyBlocks = new TreeSet<Integer>();
 	}
 	
-	public Cube getCube( )
-	{
-		return m_cube;
+	public Cube getCube() {
+		return this.cube;
 	}
 	
-	public void addPlayer( EntityPlayerMP player )
-	{
-		m_players.put( player.getEntityId(), new PlayerEntry( player ) );
-		m_previousWorldTime = getWorldTime();
+	public void addPlayer(EntityPlayerMP player) {
+		this.players.put(player.getEntityId(), new PlayerEntry(player));
+		this.previousWorldTime = getWorldTime();
 	}
 	
-	public void removePlayer( EntityPlayerMP player )
-	{
-		//clientside cleanup
-		ColumnView c = new ColumnView(m_cube.getColumn());
-		Cube cube = new Cube(m_cube.getWorld(),c,m_cube.getX(),m_cube.getY(),m_cube.getZ(),false);
-		cube.setEmpty(true);
-		c.addCubeToView(cube);
-		//send client chunk data for empty cube, overrides previously filled cube
-		player.playerNetServerHandler.sendPacket(new S21PacketChunkData(c, false, cube.getY() << 4));
-		
-		//serverside cleanup
-		m_players.remove( player.getEntityId() );
+	public void removePlayer(EntityPlayerMP player) {
+		this.players.remove(player.getEntityId());
 		updateInhabitedTime();
 	}
 	
-	public boolean hasPlayers( )
-	{
-		return !m_players.isEmpty();
+	public boolean hasPlayers() {
+		return !this.players.isEmpty();
 	}
 	
-	public void setPlayerSawCube( EntityPlayerMP player )
-	{
-		PlayerEntry entry = m_players.get( player.getEntityId() );
-		if( entry != null )
-		{
+	public void setPlayerSawCube(EntityPlayerMP player) {
+		PlayerEntry entry = this.players.get(player.getEntityId());
+		if (entry != null) {
 			entry.sawCube = true;
 		}
 	}
 	
-	public void tick( )
-	{
+	public void tick() {
 		updateInhabitedTime();
 	}
 	
-	private long getWorldTime( )
-	{
-		return m_cube.getWorld().getTotalWorldTime();
+	private long getWorldTime() {
+		return this.cube.getWorld().getGameTime();
 	}
 	
-	private void updateInhabitedTime( )
-	{
-		long now = getWorldTime();
-		m_cube.getColumn().inhabitedTime += now - m_previousWorldTime;
-		m_previousWorldTime = now;
+	private void updateInhabitedTime() {
+		final long now = getWorldTime();
+		
+		long inhabitedTime = this.cube.getColumn().getInhabitedTime();
+		inhabitedTime += now - this.previousWorldTime;
+		
+		this.cube.getColumn().setInhabitedTime(inhabitedTime);
+		this.previousWorldTime = now;
 	}
 	
-	public void setDirtyBlock( int localX, int localY, int localZ )
-	{
+	public void setDirtyBlock(int localX, int localY, int localZ) {
 		// save up to some number of individual block updates
 		// once that threshold is passed, the whole cube is sent during an update,
 		// so there's no need to save more per-block updates
-		if( m_dirtyBlocks.size() < MaxBlocksPerUpdate )
-		{
-			m_dirtyBlocks.add( packAddress( localX, localY, localZ ) );
+		if (this.dirtyBlocks.size() < MaxBlocksPerUpdate) {
+			this.dirtyBlocks.add(packAddress(localX, localY, localZ));
 		}
 	}
 	
-	public void sendUpdates( )
-	{
+	public void sendUpdates() {
 		// are there any updates?
-		if( m_dirtyBlocks.isEmpty() )
-		{
+		if (this.dirtyBlocks.isEmpty()) {
 			return;
 		}
 		
-		World world = m_cube.getWorld();
+		World world = this.cube.getWorld();
 		
 		// how many?
-		if( m_dirtyBlocks.size() == 1 )
-		{
+		if (this.dirtyBlocks.size() == 1) {
 			// get the block coords
-			int address = m_dirtyBlocks.first();
-			int localX = unpackLocalX( address );
-			int localY = unpackLocalY( address );
-			int localZ = unpackLocalZ( address );
-			int blockX = Coords.localToBlock( m_cube.getX(), localX );
-			int blockY = Coords.localToBlock( m_cube.getY(), localY );
-			int blockZ = Coords.localToBlock( m_cube.getZ(), localZ );
+			int address = this.dirtyBlocks.first();
+			
+			BlockPos pos = addressToBlockPos(address);
 			
 			// send single block updates
-			sendPacketToAllPlayers( new S23PacketBlockChange( blockX, blockY, blockZ, world ) );
-			if( world.getBlock( blockX, blockY, blockZ ).hasTileEntity() )
-			{
-				sendTileEntityToAllPlayers( world.getTileEntity( blockX, blockY, blockZ ) );
+			sendPacketToAllPlayers(new PacketBlockChange(world, pos));
+			if (world.getBlockEntityAt(pos) != null) {
+				sendBlockEntityToAllPlayers(world.getBlockEntityAt(pos));
 			}
-		}
-		else if( m_dirtyBlocks.size() == MaxBlocksPerUpdate )
-		{
+		} else if (this.dirtyBlocks.size() == MaxBlocksPerUpdate) {
 			// send whole cube (wrapped in a column view)
-			ColumnView view = new ColumnView( m_cube.getColumn() );
-			view.addCubeToView( m_cube );
-			sendPacketToAllPlayers( new S21PacketChunkData( view, false, 0 ) );
-			for( TileEntity tileEntity : m_cube.tileEntities() )
-			{
-				sendTileEntityToAllPlayers( tileEntity );
+			ColumnView view = new ColumnView(this.cube.getColumn());
+			view.addCubeToView(this.cube);
+			sendPacketToAllPlayers(new PacketChunkData(view, false, 0));
+			for (BlockEntity blockEntity : this.cube.getBlockEntities()) {
+				sendBlockEntityToAllPlayers(blockEntity);
 			}
-		}
-		else
-		{
+		} else {
 			// encode the update coords
-			short[] coords = new short[m_dirtyBlocks.size()];
-			int i=0;
-			for( int address : m_dirtyBlocks )
-			{
-				int localX = unpackLocalX( address );
-				int localY = unpackLocalY( address );
-				int localZ = unpackLocalZ( address );
-				int blockY = Coords.localToBlock( m_cube.getY(), localY );
-				coords[i++] = (short)( ( localX & 0xf ) << 12 | ( localZ & 0xf ) << 8 | ( blockY & 0xff ) );
+			short[] coords = new short[this.dirtyBlocks.size()];
+			int i = 0;
+			for (int address : this.dirtyBlocks) {
+				int localX = unpackLocalX(address);
+				int localY = unpackLocalY(address);
+				int localZ = unpackLocalZ(address);
+				int blockY = Coords.localToBlock(this.cube.getY(), localY);
+				coords[i++] = (short) ( (localX & 0xf) << 12 | (localZ & 0xf) << 8 | (blockY & 0xff));
 			}
 			
 			// send multi-block updates
-			sendPacketToAllPlayers( new S22PacketMultiBlockChange( coords.length, coords, m_cube.getColumn() ) );
-			for( int address : m_dirtyBlocks )
-			{
-				int localX = unpackLocalX( address );
-				int localY = unpackLocalY( address );
-				int localZ = unpackLocalZ( address );
-				sendTileEntityToAllPlayers( m_cube.getTileEntity( localX, localY, localZ ) );
+			sendPacketToAllPlayers(new PacketMultiBlockChange(coords.length, coords, this.cube.getColumn()));
+			for (int address : this.dirtyBlocks) {
+				int localX = unpackLocalX(address);
+				int localY = unpackLocalY(address);
+				int localZ = unpackLocalZ(address);
+				int blockX = Coords.localToBlock(this.cube.getX(), localX);
+				int blockY = Coords.localToBlock(this.cube.getY(), localY);
+				int blockZ = Coords.localToBlock(this.cube.getZ(), localZ);
+				
+				BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+				sendBlockEntityToAllPlayers(this.cube.getBlockEntity(pos, ChunkEntityCreationType.QUEUED));
 			}
 		}
 		
-		m_dirtyBlocks.clear();
+		this.dirtyBlocks.clear();
 	}
 	
-	private void sendTileEntityToAllPlayers( TileEntity tileEntity )
-	{
-		if( tileEntity == null )
-		{
+	private void sendBlockEntityToAllPlayers(BlockEntity blockEntity) {
+		if (blockEntity == null) {
 			return;
 		}
 		
-		Packet packet = tileEntity.getDescriptionPacket();
-		if( packet == null )
-		{
+		IPacket<?> packet = blockEntity.getDescriptionPacket();
+		if (packet == null) {
 			return;
 		}
 		
-		sendPacketToAllPlayers( packet );
+		sendPacketToAllPlayers(packet);
 	}
 	
-	private void sendPacketToAllPlayers( Packet packet )
-	{
-		for( PlayerEntry entry : m_players.values() )
-		{
+	private void sendPacketToAllPlayers(IPacket packet) {
+		for (PlayerEntry entry : this.players.values()) {
 			// has this player seen this cube before?
-			if( entry.sawCube )
-			{
-				entry.player.playerNetServerHandler.sendPacket( packet );
+			if (entry.sawCube) {
+				entry.player.netServerHandler.send(packet);
 			}
 		}
 	}
 	
-	private int packAddress( int localX, int localY, int localZ )
-	{
-		return Bits.packUnsignedToInt( localX, 4, 0 ) | Bits.packUnsignedToInt( localY, 4, 4 ) | Bits.packUnsignedToInt( localZ, 4, 8 );
+	private int packAddress(int localX, int localY, int localZ) {
+		return Bits.packUnsignedToInt(localX, 4, 0) | Bits.packUnsignedToInt(localY, 4, 4) | Bits.packUnsignedToInt(localZ, 4, 8);
 	}
 	
-	private int unpackLocalX( int packed )
-	{
-		return Bits.unpackUnsigned( packed, 4, 0 );
+	private int unpackLocalX(int packed) {
+		return Bits.unpackUnsigned(packed, 4, 0);
 	}
 	
-	private int unpackLocalY( int packed )
-	{
-		return Bits.unpackUnsigned( packed, 4, 4 );
+	private int unpackLocalY(int packed) {
+		return Bits.unpackUnsigned(packed, 4, 4);
 	}
 	
-	private int unpackLocalZ( int packed )
-	{
-		return Bits.unpackUnsigned( packed, 4, 8 );
+	private int unpackLocalZ(int packed) {
+		return Bits.unpackUnsigned(packed, 4, 8);
+	}
+	
+	private BlockPos addressToBlockPos(int address) {
+		int localX = unpackLocalX(address);
+		int localY = unpackLocalY(address);
+		int localZ = unpackLocalZ(address);
+		int blockX = Coords.localToBlock(this.cube.getX(), localX);
+		int blockY = Coords.localToBlock(this.cube.getY(), localY);
+		int blockZ = Coords.localToBlock(this.cube.getZ(), localZ);
+		
+		return new BlockPos(blockX, blockY, blockZ);	
 	}
 }

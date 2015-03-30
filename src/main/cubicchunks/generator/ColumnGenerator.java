@@ -1,57 +1,53 @@
-/*******************************************************************************
- * This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+/*
+ *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
  *
- * Copyright (c) Tall Worlds
- * Copyright (c) contributors
+ *  Copyright (c) 2014 Tall Worlds
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *******************************************************************************/
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package cubicchunks.generator;
 
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.server.CubeWorldServer;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Column;
 
-public class ColumnGenerator
-{
-	private CubeWorldServer m_worldServer;
-	private CubeBiomeGenBase[] m_biomes;
+public class ColumnGenerator {
 	
-	public ColumnGenerator( CubeWorldServer worldServer )
-	{
-		m_worldServer = worldServer;
-		m_biomes = null;
+	private CubeWorldServer m_worldServer;
+	private CCBiome[] m_biomes;
+	
+	public ColumnGenerator(CubeWorldServer worldServer) {
+		this.m_worldServer = worldServer;
+		this.m_biomes = null;
 	}
 	
-	public Column generateColumn( int cubeX, int cubeZ )
-	{
+	public Column generateColumn(int cubeX, int cubeZ) {
 		// generate biome info. This is a hackjob.
-		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger().loadBlockGeneratorData(
-			m_biomes,
-			Coords.cubeToMinBlock( cubeX ), Coords.cubeToMinBlock( cubeZ ),
-			16, 16
-		);
+		this.m_biomes = (CCBiome[])this.m_worldServer.getCubeWorldProvider()
+				.getBiomeMananger().loadBlockGeneratorData(this.m_biomes,
+						Coords.cubeToMinBlock(cubeX), 
+						Coords.cubeToMinBlock(cubeZ), 16, 16);
 		
 		// UNDONE: generate temperature map
 		// UNDONE: generate rainfall map
 		
-		return new Column( m_worldServer, cubeX, cubeZ, m_biomes );
+		return new Column(this.m_worldServer, cubeX, cubeZ, this.m_biomes);
 	}
 }

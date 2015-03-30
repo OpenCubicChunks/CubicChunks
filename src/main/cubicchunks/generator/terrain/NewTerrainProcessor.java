@@ -1,66 +1,45 @@
-/*******************************************************************************
- * This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+/*
+ *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
  *
- * Copyright (c) Tall Worlds
- * Copyright (c) contributors
+ *  Copyright (c) 2014 Tall Worlds
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *******************************************************************************/
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package cubicchunks.generator.terrain;
 
-import java.util.Random;
-
-<<<<<<< HEAD:src/main/java/cubicchunks/generator/terrain/NewTerrainProcessor.java
-<<<<<<< HEAD:src/cuchaz/cubicChunks/generator/terrain/NewTerrainProcessor.java
-import net.minecraft.util.MathHelper;
-import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
-import cuchaz.cubicChunks.generator.builder.BasicBuilder;
-import cuchaz.cubicChunks.generator.builder.IBuilder;
-import cuchaz.cubicChunks.server.CubeWorldServer;
-import cuchaz.cubicChunks.world.Cube;
-import static cuchaz.cubicChunks.generator.terrain.GlobalGeneratorConfig.*;
-=======
-import main.java.cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
-import main.java.cubicchunks.generator.builder.BasicBuilder;
-import main.java.cubicchunks.generator.builder.ComplexWorldBuilder;
-import main.java.cubicchunks.server.CubeWorldServer;
-import main.java.cubicchunks.util.Coords;
-import main.java.cubicchunks.util.CubeProcessor;
-import main.java.cubicchunks.world.Cube;
-=======
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.generator.builder.BasicBuilder;
-import cubicchunks.generator.builder.ComplexWorldBuilder;
+import cubicchunks.generator.builder.IBuilder;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.maxElev;
 import cubicchunks.server.CubeWorldServer;
-import cubicchunks.util.Coords;
-import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
->>>>>>> 69175bb... - Refactored package structure again to remove /java/:src/main/cubicchunks/generator/terrain/NewTerrainProcessor.java
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.WorldType;
->>>>>>> 0c6cf2e... Refactored the package structure:src/main/java/cubicchunks/generator/terrain/NewTerrainProcessor.java
+import java.util.Random;
 
 public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 {
-	private CubeBiomeGenBase[] m_biomes;
+	private CCBiome[] m_biomes;
 	
 	private final Random m_rand;
 	
@@ -171,7 +150,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 	@Override
 	protected void generateTerrainArray( Cube cube )
 	{
-		m_biomes = (CubeBiomeGenBase[])m_worldServer.getCubeWorldProvider().getWorldColumnMananger()
+		m_biomes = (CCBiome[])m_worldServer.getBiomeManager()
 				.getBiomesForGeneration( m_biomes, cube.getX() * 4 - maxSmoothRadius, cube.getZ() * 4 - maxSmoothRadius, X_SECTION_SIZE + maxSmoothDiameter, Z_SECTION_SIZE + maxSmoothDiameter );
 		
 		this.fillHeightArray( cube );
@@ -222,7 +201,6 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 						// 3.0F;
 						// output = output * ( 1.0D - a ) - 10.0D * a;
 					}
-					
 					this.rawTerrainArray[x][y][z] = output;
 				}
 			}
@@ -255,14 +233,14 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise
 		
 		float biomeWeightSum = 0.0F;
 		
-		final CubeBiomeGenBase centerBiomeConfig = this.m_biomes[( x + this.maxSmoothRadius + ( z + this.maxSmoothRadius ) * ( X_SECTION_SIZE + this.maxSmoothDiameter ) )];
+		final CCBiome centerBiomeConfig = this.m_biomes[( x + this.maxSmoothRadius + ( z + this.maxSmoothRadius ) * ( X_SECTION_SIZE + this.maxSmoothDiameter ) )];
 		final int lookRadius = maxSmoothRadius;
 		
 		for( int nextX = -lookRadius; nextX <= lookRadius; nextX++ )
 		{
 			for( int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++ )
 			{
-				final CubeBiomeGenBase biome = this.m_biomes[( x + nextX + this.maxSmoothRadius + ( z + nextZ + this.maxSmoothRadius ) * ( X_SECTION_SIZE + this.maxSmoothDiameter ) )];
+				final CCBiome biome = this.m_biomes[( x + nextX + this.maxSmoothRadius + ( z + nextZ + this.maxSmoothRadius ) * ( X_SECTION_SIZE + this.maxSmoothDiameter ) )];
 				float biomeHeight = biome.biomeHeight;
 				float biomeVolatility = biome.biomeVolatility;
 				

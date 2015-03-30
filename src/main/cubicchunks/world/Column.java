@@ -1,27 +1,26 @@
-/*******************************************************************************
- * This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+/*
+ *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
  *
- * Copyright (c) Tall Worlds
- * Copyright (c) contributors
+ *  Copyright (c) 2014 Tall Worlds
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *******************************************************************************/
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package cubicchunks.world;
 
 import java.io.ByteArrayInputStream;
@@ -30,814 +29,652 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
-import net.minecraft.command.IEntitySelector;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.Facing;
 import net.minecraft.util.MathHelper;
-import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.WorldChunkManager;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraft.world.chunk.storage.ChunkSection;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-<<<<<<< HEAD:src/main/java/cubicchunks/world/Column.java
-<<<<<<< HEAD:src/cuchaz/cubicChunks/world/Column.java
-import cuchaz.cubicChunks.CubeWorld;
-import cuchaz.cubicChunks.CubeWorldProvider;
-import cuchaz.cubicChunks.client.CubeProviderClient;
-import cuchaz.cubicChunks.generator.GeneratorStage;
-import cuchaz.cubicChunks.generator.biome.WorldColumnManager;
-import cuchaz.cubicChunks.generator.biome.biomegen.CubeBiomeGenBase;
-import cuchaz.cubicChunks.server.CubeWorldServer;
-import cuchaz.cubicChunks.util.AddressTools;
-import cuchaz.cubicChunks.util.Bits;
-import cuchaz.cubicChunks.util.Coords;
-import cuchaz.cubicChunks.util.RangeInt;
-import org.lwjgl.input.Mouse;
+import com.google.common.base.Predicate;
 
-=======
->>>>>>> 0c6cf2e... Refactored the package structure:src/main/java/cubicchunks/world/Column.java
-=======
 import cubicchunks.CubeWorld;
-import cubicchunks.CubeWorldProvider;
+import cubicchunks.client.CubeProviderClient;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.generator.biome.WorldColumnManager;
-import cubicchunks.generator.biome.biomegen.CubeBiomeGenBase;
+import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.RangeInt;
+import java.util.Iterator;
 
->>>>>>> 69175bb... - Refactored package structure again to remove /java/:src/main/cubicchunks/world/Column.java
-public class Column extends Chunk
-{
+public class Column extends Chunk {
+	
 	private static final Logger log = LogManager.getLogger();
-
-	private static final ExtendedBlockStorage[] m_emptyStorageArray = new ExtendedBlockStorage[0];
-
-	private TreeMap<Integer, Cube> m_cubes;
-	private LightIndex m_lightIndex;
-	private int m_roundRobinLightUpdatePointer;
-	private List<Cube> m_roundRobinCubes;
-	private EntityContainer m_entities;
+	
+	private TreeMap<Integer,Cube> cubes;
+	private LightIndex lightIndex;
+	private int roundRobinLightUpdatePointer;
+	private List<Cube> roundRobinCubes;
+	private EntityContainer entities;
 	private byte[] columnBlockBiomeArray;
-
-	public Column( World world, int x, int z )
-	{
+	
+	public Column(World world, int x, int z) {
+		
 		// NOTE: this constructor is called by the chunk loader
-		super( world, x, z );
-
+		super(world, x, z);
+		
 		init();
 	}
-
-	public Column( World world, int cubeX, int cubeZ, CubeBiomeGenBase[] biomes )
-	{
+	
+	public Column(World world, int cubeX, int cubeZ, CCBiome[] biomes) {
+		
 		// NOTE: this constructor is called by the cube generator
-		this( world, cubeX, cubeZ );
+		this(world, cubeX, cubeZ);
+		
+		init();
 		
 		// save the biome data
-		byte[] biomeArray = getBiomeArray();
-		assert biomes.length == biomeArray.length;
-		for( int i = 0; i < biomeArray.length; i++ )
-		{
+		byte[] biomeArray = getBiomeMap();
+		for (int i = 0; i < biomeArray.length; i++) {
 			biomeArray[i] = (byte)biomes[i].biomeID;
 		}
-
-		isModified = true;
+		
+		this.isModified = true;
 	}
-
-	private void init()
-	{
-		m_cubes = new TreeMap<Integer, Cube>();
-		m_lightIndex = new LightIndex( getWorldProvider().getSeaLevel() );
-		m_roundRobinLightUpdatePointer = 0;
-		m_roundRobinCubes = new ArrayList<Cube>();
-		m_entities = new EntityContainer();
-		columnBlockBiomeArray = new byte[256];
-
+	
+	private void init() {
+		
+		this.cubes = new TreeMap<Integer,Cube>();
+		this.lightIndex = new LightIndex(this.world.getSeaLevel());
+		this.roundRobinLightUpdatePointer = 0;
+		this.roundRobinCubes = new ArrayList<Cube>();
+		this.entities = new EntityContainer();
+		this.columnBlockBiomeArray = new byte[256];
+		
 		// make sure no one's using data structures that have been replaced
 		// also saves memory
-		setStorageArrays( null );
-		heightMap = null;
-		updateSkylightColumns = null;
-		super.setBiomeArray( null );
-
-		Arrays.fill( this.columnBlockBiomeArray, (byte)- 1 );
+		/* TODO: setting these vars to null would save memory, but they're final. =(
+		 * also... make sure we're actually not using them
+		this.chunkSections = null;
+		this.biomeMap = null;
+		this.heightMap = null;
+		this.skylightUpdateMap = null;
+		*/
+		
+		Arrays.fill(this.columnBlockBiomeArray, (byte)-1);
 	}
-
-	public long getAddress()
-	{
-		return AddressTools.getAddress( xPosition, zPosition );
+	
+	public long getAddress() {
+		return AddressTools.getAddress(this.chunkX, this.chunkZ);
 	}
-
-	public World getWorld()
-	{
-		return worldObj;
+	
+	public int getX() {
+		return this.chunkX;
 	}
-
-	private CubeWorldProvider getWorldProvider()
-	{
-		return (CubeWorldProvider)worldObj.provider;
+	
+	public int getZ() {
+		return this.chunkZ;
 	}
-
-	public int getX()
-	{
-		return xPosition;
+	
+	public EntityContainer getEntityContainer() {
+		return this.entities;
 	}
-
-	public int getZ()
-	{
-		return zPosition;
+	
+	public LightIndex getLightIndex() {
+		return this.lightIndex;
 	}
-
-	public EntityContainer getEntityContainer()
-	{
-		return m_entities;
-	}
-
-	public LightIndex getLightIndex()
-	{
-		return m_lightIndex;
-	}
-
+	
 	@Override
-	public void generateHeightMap()
-	{
+	public void generateHeightMap() {
 		// override this so no height map is generated
 	}
-
-	public Iterable<Cube> cubes()
-	{
-		return m_cubes.values();
+	
+	public Collection<Cube> getCubes() {
+		return Collections.unmodifiableCollection(this.cubes.values());
 	}
-
-	public boolean hasCubes()
-	{
-		return !m_cubes.isEmpty();
+	
+	public boolean hasCubes() {
+		return !this.cubes.isEmpty();
 	}
-
-	public Cube getCube( int y )
-	{
-		return m_cubes.get( y );
+	
+	public Cube getCube(int y) {
+		return this.cubes.get(y);
 	}
-
-	public Cube getOrCreateCube( int cubeY, boolean isModified )
-	{
-		Cube cube = m_cubes.get( cubeY );
-		if( cube == null )
-		{
-			cube = new Cube( worldObj, this, xPosition, cubeY, zPosition, isModified );
-			m_cubes.put( cubeY, cube );
+	
+	public Cube getOrCreateCube(int cubeY, boolean isModified) {
+		Cube cube = this.cubes.get(cubeY);
+		if (cube == null) {
+			cube = new Cube(this.world, this, this.chunkX, cubeY, this.chunkZ, isModified);
+			this.cubes.put(cubeY, cube);
 		}
 		return cube;
 	}
-
-	public Iterable<Cube> getCubes( int minY, int maxY )
-	{
-		return m_cubes.subMap( minY, true, maxY, true ).values();
+	
+	public Iterable<Cube> getCubes(int minY, int maxY) {
+		return this.cubes.subMap(minY, true, maxY, true).values();
 	}
 	
-	public int loadedCubes()
-	{
-		return m_cubes.size();	
+	public Cube removeCube(int cubeY) {
+		return this.cubes.remove(cubeY);
 	}
-
-	public Cube removeCube( int cubeY )
-	{
-		return m_cubes.remove( cubeY );
+	
+	public List<RangeInt> getCubeYRanges() {
+		return getRanges(this.cubes.keySet());
 	}
-
-	public List<RangeInt> getCubeYRanges()
-	{
-		return getRanges( m_cubes.keySet() );
-	}
-
+	
 	@Override
-	public boolean needsSaving( boolean alwaysTrue )
-	{
-		return m_entities.needsSaving( worldObj.getTotalWorldTime() ) || isModified;
+	public boolean needsSaving(boolean alwaysTrue) {
+		return this.entities.needsSaving(this.world.getGameTime()) || this.isModified;
 	}
-
-	public void markSaved()
-	{
-		m_entities.markSaved( worldObj.getTotalWorldTime() );
-		isModified = false;
+	
+	public void markSaved() {
+		this.entities.markSaved(this.world.getGameTime());
+		this.isModified = false;
 	}
-
-	@Override //      getBlock
-	public Block func_150810_a( final int localX, final int blockY, final int localZ )
-	{
+	
+	@Override
+	public IBlockState getBlockState(BlockPos pos) {
+		
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			return cube.getBlock( localX, localY, localZ );
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			return cube.getBlockState(pos);
 		}
-
-		return Blocks.air;
+		
+		return Blocks.AIR.getDefaultState();
 	}
-
-	@Override //        setBlock
-	public boolean func_150807_a( int localX, int blockY, int localZ, Block block, int meta )
-	{
+	
+	@Override
+	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
+		
 		// is there a chunk for this block?
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube == null )
-		{
-			return false;
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
+		if (cube == null) {
+			return null;
 		}
-
+		
 		// did anything change?
-		int localY = Coords.blockToLocal( blockY );
-		Block oldBlock = cube.getBlock( localX, localY, localZ );
-		boolean changed = cube.setBlock( localX, localY, localZ, block, meta );
-		if( !changed )
-		{
-			return false;
+		IBlockState oldBlockState = cube.setBlockState(pos, newBlockState);
+		if (oldBlockState == null) {
+			// nothing changed
+			return null;
 		}
-
+		
+		Block oldBlock = oldBlockState.getBlock();
+		Block newBlock = newBlockState.getBlock();
+		
 		// update rain map
-		// NOTE: precipitationHeightMap[xzCoord] is he lowest block that will contain rain
-		// so precipitationHeightMap[xzCoord] - 1 is the block that is being rained on
-		int xzCoord = localZ << 4 | localX;
-		if( blockY >= precipitationHeightMap[xzCoord] - 1 )
-		{
+		// NOTE: rainfallMap[xzCoord] is he lowest block that will contain rain
+		// so rainfallMap[xzCoord] - 1 is the block that is being rained on
+		int x = Coords.blockToLocal(pos.getX());
+		int z = Coords.blockToLocal(pos.getZ());
+		int xzCoord = z << 4 | x;
+		if (pos.getY() >= this.rainfallMap[xzCoord] - 1) {
 			// invalidate the rain height map value
-			precipitationHeightMap[xzCoord] = -999;
+			this.rainfallMap[xzCoord] = -999;
 		}
-
-		int newOpacity = block.getLightOpacity();
-		int oldOpacity = oldBlock.getLightOpacity();
-
-		int blockX = Coords.localToBlock( xPosition, localX );
-		int blockZ = Coords.localToBlock( zPosition, localZ );
-
-		CubeWorld cubeWorld = (CubeWorld)worldObj;
-
+		
+		int newOpacity = newBlock.getOpacity();
+		int oldOpacity = oldBlock.getOpacity();
+		
 		// did the top non-transparent block change?
-		Integer oldSkylightY = getSkylightBlockY( localX, localZ );
-		getLightIndex().setOpacity( localX, blockY, localZ, newOpacity );
-        Integer newSkylightY = getSkylightBlockY(localX, localZ);
-        //cast to int is required
-        if(oldSkylightY != null && newSkylightY != null && oldSkylightY != (int)newSkylightY) {
+		Integer oldSkylightY = getSkylightBlockY(x, z);
+		getLightIndex().setOpacity(x, pos.getY(), z, newOpacity);
+		Integer newSkylightY = getSkylightBlockY(x, z);
+		//cast to int is required. No autoboxing/unboxing in this case
+		if (oldSkylightY != null && newSkylightY != null && oldSkylightY != (int)newSkylightY) {
+			
 			// sort the y-values
 			int minBlockY = oldSkylightY;
 			int maxBlockY = newSkylightY;
-			if( minBlockY > maxBlockY )
-			{
+			if (minBlockY > maxBlockY) {
 				minBlockY = newSkylightY;
 				maxBlockY = oldSkylightY;
-            }
-            //they can't be equal
-			assert (minBlockY < maxBlockY): "Values not sorted! " + minBlockY + ", " + maxBlockY;
-
+			}
+			assert (minBlockY < maxBlockY) : "Values not sorted! " + minBlockY + ", " + maxBlockY;
+			
 			// update light and signal render update
-			cubeWorld.getLightingManager().computeSkyLightUpdate( this, localX, localZ, minBlockY, maxBlockY );
-			worldObj.markBlockRangeForRenderUpdate( blockX, minBlockY, blockZ, blockX, maxBlockY, blockZ );
+			((CubeWorld) cube.getWorld()).getLightingManager().computeSkyLightUpdate(this, x, z, minBlockY, maxBlockY);
+			this.world.markBlockRangeForRenderUpdate(pos.getX(), minBlockY, pos.getZ(), pos.getX(), maxBlockY, pos.getZ());
 		}
-
+		
 		// if opacity changed and ( opacity decreased or block now has any light )
-		int skyLight = getSavedLightValue( EnumSkyBlock.Sky, localX, blockY, localZ );
-		int blockLight = getSavedLightValue( EnumSkyBlock.Block, localX, blockY, localZ );
-		if( newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0) )
-		{
-			cubeWorld.getLightingManager().queueSkyLightOcclusionCalculation( blockX, blockZ );
+		int skyLight = getLightAt(LightType.SKY, pos);
+		int blockLight = getLightAt(LightType.BLOCK, pos);
+		if (newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0)) {
+			((CubeWorld)cube.getWorld()).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
 		}
-
+		
 		// update lighting index
-		getLightIndex().setOpacity( localX, blockY, localZ, block.getLightOpacity() );
-
-		isModified = true;
-
+		getLightIndex().setOpacity(x, pos.getY(), z, newBlock.getOpacity());
+		
+		this.isModified = true;
+		
 		// NOTE: after this method, the World calls updateLights on the source block which changes light values again
-		return true;
+		
+		return oldBlockState;
 	}
-
+	
 	@Override
-	public int getBlockMetadata( int localX, int blockY, int localZ )
-	{
+	public int getBlockMetadata(BlockPos pos) {
+		int x = Coords.blockToLocal(pos.getX());
+		int z = Coords.blockToLocal(pos.getZ());
+		return getBlockMetadata(x, pos.getY(), z);
+	}
+	
+	@Override
+	protected int getBlockMetadata(int localX, int blockY, int localZ) {
+		
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			return cube.getBlockMetadata( localX, localY, localZ );
+		int cubeY = Coords.blockToCube(blockY);
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			int localY = Coords.blockToLocal(blockY);
+			IBlockState blockState = cube.getBlockState(localX, localY, localZ);
+			if (blockState != null) {
+				return blockState.getBlock().getMetadataForBlockState(blockState);
+			}
 		}
 		return 0;
 	}
-
-	@Override
-	public boolean setBlockMetadata( int localX, int blockY, int localZ, int meta )
-	{
-		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			return cube.setBlockMetadata( localX, localY, localZ, meta );
-		}
-		return false;
+	
+	public int getTopCubeY() {
+		return this.cubes.lastKey();
 	}
-
-	@Override
-	public ExtendedBlockStorage[] getBlockStorageArray()
-	{
-		// don't use this anymore
-		return m_emptyStorageArray;
+	
+	public int getBottomCubeY() {
+		return this.cubes.firstKey();
 	}
-
-	public int getTopCubeY()
-	{
-		return m_cubes.lastKey();
-	}
-
-	public int getBottomCubeY()
-	{
-		return m_cubes.firstKey();
-	}
-
-	public Integer getTopFilledCubeY()
-	{
+	
+	public Integer getTopFilledCubeY() {
 		Integer blockY = getLightIndex().getTopNonTransparentBlockY();
-		if( blockY == null )
-		{
+		if (blockY == null) {
 			return null;
 		}
-		return Coords.blockToCube( blockY );
+		return Coords.blockToCube(blockY);
 	}
-
+	
 	@Override
-	@Deprecated // don't use this! It's only here because vanilla needs it, but we need to be hacky about it
-	public int getTopFilledSegment()
-	{
+	@Deprecated
+	// don't use this! It's only here because vanilla needs it, but we need to be hacky about it
+	public int getBlockStoreY() {
 		Integer cubeY = getTopFilledCubeY();
-		if( cubeY != null )
-		{
-			return Coords.cubeToMinBlock( cubeY );
-		}
-		else
-		{
+		if (cubeY != null) {
+			return Coords.cubeToMinBlock(cubeY);
+		} else {
 			// PANIC!
 			// this column doesn't have any blocks in it that aren't air!
 			// but we can't return null here because vanilla code expects there to be a surface down there somewhere
 			// we don't actually know where the surface is yet, because maybe it hasn't been generated
 			// but we do know that the surface has to be at least at sea level,
 			// so let's go with that for now and hope for the best
-			return getWorldProvider().getSeaLevel();
+			return this.world.getSeaLevel();
 		}
 	}
-
+	
 	@Override
-	public boolean getAreLevelsEmpty( int minBlockY, int maxBlockY )
-	{
-		int minCubeY = Coords.blockToCube( minBlockY );
-		int maxCubeY = Coords.blockToCube( maxBlockY );
-		for( int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++ )
-		{
-			Cube cube = m_cubes.get( cubeY );
-			if( cube != null && cube.hasBlocks() )
-			{
+	public boolean getAreLevelsEmpty(int minBlockY, int maxBlockY) {
+		int minCubeY = Coords.blockToCube(minBlockY);
+		int maxCubeY = Coords.blockToCube(maxBlockY);
+		for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
+			Cube cube = this.cubes.get(cubeY);
+			if (cube != null && cube.hasBlocks()) {
 				return false;
 			}
 		}
 		return true;
 	}
-
+	
 	@Override
-	public boolean canBlockSeeTheSky( int localX, int blockY, int localZ )
-	{
-		Integer skylightBlockY = getSkylightBlockY( localX, localZ );
-		if( skylightBlockY == null )
-        {
+	public boolean canSeeSky(BlockPos pos) {
+		int x = Coords.blockToLocal(pos.getX());
+		int z = Coords.blockToLocal(pos.getZ());
+		Integer skylightBlockY = getSkylightBlockY(x, z);
+		if (skylightBlockY == null) {
 			return true;
 		}
-		return blockY >= skylightBlockY;
+		return pos.getY() >= skylightBlockY;
 	}
-
-	public Integer getSkylightBlockY( int localX, int localZ )
-	{
+	
+	public Integer getSkylightBlockY(int localX, int localZ) {
 		// NOTE: a "skylight" block is the transparent block that is directly one block above the top non-transparent block
-		Integer topBlockY = getLightIndex().getTopNonTransparentBlockY( localX, localZ );
-		if( topBlockY != null )
-		{
+		Integer topBlockY = getLightIndex().getTopNonTransparentBlockY(localX, localZ);
+		if (topBlockY != null) {
 			return topBlockY + 1;
-        }
+		}
 		return null;
 	}
-
+	
 	@Override
-	@Deprecated // don't use this! It's only here because vanilla needs it, but we need to be hacky about it
-	public int getHeightValue( int localX, int localZ )
-	{
+	@Deprecated
+	// don't use this! It's only here because vanilla needs it, but we need to be hacky about it
+	public int getHeightAtCoords(int localX, int localZ) {
 		// NOTE: the "height value" here is the height of the transparent block on top of the highest non-transparent block
-
-		Integer skylightBlockY = getSkylightBlockY( localX, localZ );
-		if( skylightBlockY == null )
-		{
+		
+		Integer skylightBlockY = getSkylightBlockY(localX, localZ);
+		if (skylightBlockY == null) {
 			// PANIC!
 			// this column doesn't have any blocks in it that aren't air!
 			// but we can't return null here because vanilla code expects there to be a surface down there somewhere
 			// we don't actually know where the surface is yet, because maybe it hasn't been generated
 			// but we do know that the surface has to be at least at sea level,
 			// so let's go with that for now and hope for the best
-			skylightBlockY = getWorldProvider().getSeaLevel() + 1;
+			skylightBlockY = this.world.getSeaLevel() + 1;
 		}
 		return skylightBlockY;
 	}
-
-	@Override //  getOpacity
-	public int func_150808_b( int localX, int blockY, int localZ )
-	{
-		return getLightIndex().getOpacity( localX, blockY, localZ );
-	}
-
-	public Iterable<Entity> entities()
-	{
-		return m_entities.entities();
-	}
-
+	
 	@Override
-	public void addEntity( Entity entity )
-	{
-		//check whether client has loaded column
-		/*if (this.isEmpty() && this.worldObj.isClient)
-		{
-			return;
-		}*/
-		int cubeY = Coords.getCubeYForEntity( entity );
+	public int getBlockOpacityAt(BlockPos pos) {
+		int x = Coords.blockToLocal(pos.getX());
+		int z = Coords.blockToLocal(pos.getZ());
+		return getLightIndex().getOpacity(x, pos.getY(), z);
+	}
+	
+	public Iterable<Entity> entities() {
+		return this.entities.entities();
+	}
+	
+	@Override
+	public void addEntity(Entity entity) {
+		int cubeY = Coords.getCubeYForEntity(entity);
+		
 		// pass off to the cube
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			cube.addEntity( entity );
-		}
-		else
-		{
-			// entities don't have to be in chunks, just add it directly to the column
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			cube.addEntity(entity);
+		} else {
+			// entities don't have to be in cubes, just add it directly to the column
 			entity.addedToChunk = true;
-			entity.chunkCoordX = xPosition;
-			entity.chunkCoordY = cubeY;
-			entity.chunkCoordZ = zPosition;
-
-			m_entities.add( entity );
-			isModified = true;
+			entity.chunkX = this.chunkX;
+			entity.chunkY = cubeY;
+			entity.chunkZ = this.chunkZ;
+			
+			this.entities.add(entity);
+			this.isModified = true;
 		}
 	}
-
+	
 	@Override
-	public void removeEntity( Entity entity )
-	{
-		removeEntityAtIndex( entity, entity.chunkCoordY );
+	public void removeEntity(Entity entity) {
+		removeEntity(entity, entity.chunkY);
 	}
-
+	
 	@Override
-	public void removeEntityAtIndex( Entity entity, int cubeY )
-	{
-		if( !entity.addedToChunk )
-		{
+	public void removeEntity(Entity entity, int cubeY) {
+		
+		if (!entity.addedToChunk) {
 			return;
 		}
-		boolean wasRemoved = false;
+		
 		// pass off to the cube
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			wasRemoved = cube.removeEntity( entity );
-		}
-		if(!wasRemoved)
-		{
-			if (m_entities.remove( entity ))
-			{
-				entity.addedToChunk = false;
-				isModified = true;
-				wasRemoved = true;
-			}
-		}
-		if (!wasRemoved && cube != null && !this.isEmpty())
-		{
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			cube.removeEntity(entity);
+		} else if (this.entities.remove(entity)) {
 			entity.addedToChunk = false;
-			log.warn( String.format( "%s Tried to remove entity %s from column (%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
-				worldObj.isClient ? "CLIENT" : "SERVER",
+			this.isModified = true;
+		} else {
+			log.warn(String.format("%s Tried to remove entity %s from column (%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
+				this.world.isClient ? "CLIENT" : "SERVER",
 				entity.getClass().getName(),
-				xPosition, zPosition,
-				entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
-			) );
+				this.chunkX, this.chunkZ,
+				entity.chunkX, entity.chunkY, entity.chunkZ
+			));
 		}
 	}
-
+	
 	@Override
-	@SuppressWarnings(
-	{
-		"unchecked", "rawtypes"
-	})
-	public void getEntitiesOfTypeWithinAAAB( Class c, AxisAlignedBB queryBox, List out, IEntitySelector selector )
-	{
+    public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
+		
 		// get a y-range that 2 blocks wider than the box for safety
-		int minCubeY = Coords.blockToCube( MathHelper.floor_double( queryBox.minY - 2 ) );
-		int maxCubeY = Coords.blockToCube( MathHelper.floor_double( queryBox.maxY + 2 ) );
-		for( Cube cube: getCubes( minCubeY, maxCubeY ) )
-		{
-			cube.getEntities( (List<Entity>)out, c, queryBox, selector );
+		int minCubeY = Coords.blockToCube(MathHelper.floor(queryBox.minY - 2));
+		int maxCubeY = Coords.blockToCube(MathHelper.floor(queryBox.maxY + 2));
+		for (Cube cube : getCubes(minCubeY, maxCubeY)) {
+			cube.findEntitiesExcept(excludedEntity, queryBox, out, predicate);
 		}
-
+		
 		// check the column too
-		m_entities.getEntities( out, c, queryBox, selector );
-	}
-
+		this.entities.findEntitiesExcept(excludedEntity, queryBox, out, predicate);
+    }
+    
 	@Override
-	@SuppressWarnings(
-	{
-		"unchecked", "rawtypes"
-	})
-	public void getEntitiesWithinAABBForEntity( Entity excludedEntity, AxisAlignedBB queryBox, List out, IEntitySelector selector )
-	{
+    public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
+		
 		// get a y-range that 2 blocks wider than the box for safety
-		int minCubeY = Coords.blockToCube( MathHelper.floor_double( queryBox.minY - 2 ) );
-		int maxCubeY = Coords.blockToCube( MathHelper.floor_double( queryBox.maxY + 2 ) );
-		for( Cube cube: getCubes( minCubeY, maxCubeY ) )
-		{
-			cube.getEntitiesExcept( (List<Entity>)out, excludedEntity, queryBox, selector );
+		int minCubeY = Coords.blockToCube(MathHelper.floor(queryBox.minY - 2));
+		int maxCubeY = Coords.blockToCube(MathHelper.floor(queryBox.maxY + 2));
+		for (Cube cube : getCubes(minCubeY, maxCubeY)) {
+			cube.findEntities(entityType, queryBox, out, predicate);
 		}
-
+		
 		// check the column too
-		m_entities.getEntitiesExcept( out, excludedEntity, queryBox, selector );
-	}
-
-	@Override //      getTileEntity
-	public TileEntity func_150806_e( int localX, int blockY, int localZ )
-	{
+		this.entities.findEntities(entityType, queryBox, out, predicate);
+    }
+	
+	@Override
+	public BlockEntity getBlockEntityAt(BlockPos pos, ChunkEntityCreationType creationType) {
+		
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			return cube.getTileEntity( localX, localY, localZ );
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			return cube.getBlockEntity(pos, creationType);
 		}
 		return null;
 	}
-
+	
 	@Override
-	@SuppressWarnings("unchecked")
-	public void addTileEntity( TileEntity tileEntity )
-	{
-		// NOTE: this is called only by the chunk loader
-
-		int blockX = tileEntity.field_145851_c;
-		int blockY = tileEntity.field_145848_d;
-		int blockZ = tileEntity.field_145849_e;
-
+	public void setBlockEntityAt(BlockPos pos, BlockEntity blockEntity) {
+		
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localX = Coords.blockToLocal( blockX );
-			int localY = Coords.blockToLocal( blockY );
-			int localZ = Coords.blockToLocal( blockZ );
-			cube.addTileEntity( localX, localY, localZ, tileEntity );
-		}
-
-		if( isChunkLoaded )
-		{
-			// was the tile entity actually added?
-			if( tileEntity.hasWorldObj() )
-			{
-				// tell the world
-				worldObj.field_147482_g.add( tileEntity );
-			}
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			cube.addBlockEntity(pos, blockEntity);
+		} else {
+			log.warn(String.format("No cube at (%d,%d,%d) to add tile entity (block %d,%d,%d)!",
+				this.chunkX, cubeY, this.chunkZ,
+				pos.getX(), pos.getY(), pos.getZ()
+			));
 		}
 	}
-
-	@Override // addTileEntity
-	public void func_150812_a( int localX, int blockY, int localZ, TileEntity tileEntity )
-	{
-		// NOTE: this is called when the world sets this block
-
+	
+	@Override
+	public void removeBlockEntityAt(BlockPos pos) {
+		
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			cube.addTileEntity( localX, localY, localZ, tileEntity );
-		}
-		else
-		{
-			log.warn( String.format( "No cube at (%d,%d,%d) to add tile entity (block %d,%d,%d)!",
-				xPosition, cubeY, zPosition,
-				tileEntity.field_145851_c, blockY, tileEntity.field_145849_e
-			) );
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			cube.removeBlockEntity(pos);
 		}
 	}
-
+	
 	@Override
-	public void removeTileEntity( int localX, int blockY, int localZ )
-	{
-		if( isChunkLoaded )
-		{
-			// pass off to the cube
-			int cubeY = Coords.blockToCube( blockY );
-			Cube cube = m_cubes.get( cubeY );
-			if( cube != null )
-			{
-				int localY = Coords.blockToLocal( blockY );
-				cube.removeTileEntity( localX, localY, localZ );
-			}
-		}
-	}
-
-	@Override
-	public void onChunkLoad()
-	{
+	public void onChunkLoad() {
 		// tell the world about entities
-		for( Entity entity : m_entities.entities() )
+		for( Entity entity : entities.entities() )
 		{
 			entity.onChunkLoad();
 		}
-		worldObj.addLoadedEntities( m_entities.entities() );
-
-		isChunkLoaded = true;
+		this.world.loadEntitiesInBulk(entities.entities() );
+		this.chunkLoaded = true;
 	}
-
+	
 	@Override
-	public void onChunkUnload()
-	{
-		isChunkLoaded = false;
-
-		for( Cube cube: m_cubes.values() )
+	public void onChunkUnload() {
+		this.chunkLoaded = false;
+		
+		for( Cube cube: this.cubes.values() )
 		{
-			for( TileEntity tileEntity: cube.tileEntities() )
+			for( BlockEntity tileEntity: cube.getBlockEntities())
 			{
-				this.worldObj.func_147457_a( tileEntity );
+				//this.world.func_147457_a( tileEntity );
 			}
-			this.worldObj.unloadEntities(cube.getEntityContainer().entities());
+			//this.world.unloadEntities(cube.getEntityContainer().entities());
 		}
 
-        this.worldObj.unloadEntities(this.m_entities.entities());
+		this.world.unloadEntitiesInBulk(this.entities.entities());
 	}
-
-	public byte[] encode( boolean isFirstTime )
-		throws IOException
-	{
+	
+	public byte[] encode(boolean isFirstTime) throws IOException {
+		
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
-		DataOutputStream out = new DataOutputStream( buf );
+		DataOutputStream out = new DataOutputStream(buf);
+		
 		// NOTE: there's no need to do compression here. This output is compressed later
-
+		
 		// how many cubes are we sending?
-		int numCubes = 0;
-        for(@SuppressWarnings("unused") Cube cube : cubes())		{
-			numCubes++;
-		}
-		out.writeShort( numCubes );
-
+		int numCubes = getCubes().size();
+		out.writeShort(numCubes);
+		
 		// send the actual cube data
-		for( Cube cube: cubes() )
-		{
+		for (Cube cube : getCubes()) {
+			
 			// signal we're sending this cube
-			out.writeInt( cube.getY() );
-
-			out.writeBoolean( cube.isEmpty() );
-			if( !cube.isEmpty() )
-			{
-				ExtendedBlockStorage storage = cube.getStorage();
-
+			out.writeInt(cube.getY());
+			
+			out.writeBoolean(cube.isEmpty());
+			if (!cube.isEmpty()) {
+				ChunkSection storage = cube.getStorage();
+				
+				/* TODO: cube serialization
+				
 				// 1. block IDs, low bits
-				out.write( storage.getBlockLSBArray() );
-
+				out.write(storage.getBlockLSBArray());
+				
 				// 2. block IDs, high bits
-				if( storage.getBlockMSBArray() != null )
-				{
-					out.writeByte( 1 );
-					out.write( storage.getBlockMSBArray().data );
-				}
-				else
-				{
+				if (storage.getBlockMSBArray() != null) {
+					out.writeByte(1);
+					out.write(storage.getBlockMSBArray().data);
+				} else {
 					// signal we're not sending this data
-					out.writeByte( 0 );
+					out.writeByte(0);
 				}
-
+				
 				// 3. metadata
-				out.write( storage.getMetadataArray().data );
-
+				out.write(storage.getMetadataArray().data);
+				
 				// 4. block light
-				out.write( storage.getBlocklightArray().data );
-
-				if( !worldObj.provider.hasNoSky )
-				{
+				out.write(storage.getBlocklightArray().data);
+				
+				if (this.world.dimensionType.hasSky()) {
 					// 5. sky light
-					out.write( storage.getSkylightArray().data );
+					out.write(storage.getSkylightArray().data);
 				}
+				*/
 			}
 		}
-
-		if( isFirstTime )
-		{
+		
+		if (isFirstTime) {
 			// 6. biomes
-			out.write( getBiomeArray() );
+			out.write(getBiomeMap());
 		}
-
+		
 		// 7. light index
-		getLightIndex().writeData( out );
-
+		getLightIndex().writeData(out);
+		
 		out.close();
 		return buf.toByteArray();
 	}
-
+	
 	@Override
-	public void fillChunk( byte[] data, int segmentsToCopyBitFlags, int blockMSBToCopyBitFlags, boolean isFirstTime )
-	{
+	public void readChunkIn(byte[] data, int segmentsToCopyBitFlags, boolean isFirstTime) {
+		
 		// NOTE: this is called on the client when it receives chunk data from the server
-		ByteArrayInputStream buf = new ByteArrayInputStream( data );
-		DataInputStream in = new DataInputStream( buf );
-
-		try
-		{
+		
+		ByteArrayInputStream buf = new ByteArrayInputStream(data);
+		DataInputStream in = new DataInputStream(buf);
+		
+		try {
 			// how many cubes are we reading?
 			int numCubes = in.readUnsignedShort();
-			for( int i = 0; i < numCubes; i++ )
-			{
+			for (int i = 0; i < numCubes; i++) {
 				int cubeY = in.readInt();
-				boolean isEmpty = in.readBoolean();
-				Cube cube = getOrCreateCube( cubeY, false );
-
+				Cube cube = getOrCreateCube(cubeY, false);
+				
 				// if the cube came from the server, it must be live
-				cube.setGeneratorStage( GeneratorStage.getLastStage() );
-
+				cube.setGeneratorStage(GeneratorStage.getLastStage());
+				
 				// is the cube empty?
-				cube.setEmpty( isEmpty );
-
-				if( !isEmpty )
-				{
-					ExtendedBlockStorage storage = cube.getStorage();
-
+				boolean isEmpty = in.readBoolean();
+				cube.setEmpty(isEmpty);
+				
+				if (!isEmpty) {
+					ChunkSection storage = cube.getStorage();
+					throw new UnsupportedOperationException("Not implemented yet");
+					/* TODO: cube serialization
+					
 					// 1. block IDs, low bits
-					in.read( storage.getBlockLSBArray() );
-
+					in.read(storage.getBlockLSBArray());
+					
 					// 2. block IDs, high bits
 					boolean isHighBitsAttached = in.readByte() != 0;
-					if( isHighBitsAttached )
-					{
-						if( storage.getBlockMSBArray() == null )
-						{
+					if (isHighBitsAttached) {
+						if (storage.getBlockMSBArray() == null) {
 							storage.createBlockMSBArray();
 						}
-						in.read( storage.getBlockMSBArray().data );
+						in.read(storage.getBlockMSBArray().data);
 					}
-
+					
 					// 3. metadata
-					in.read( storage.getMetadataArray().data );
-
+					in.read(storage.getMetadataArray().data);
+					
 					// 4. block light
-					in.read( storage.getBlocklightArray().data );
-
-					if( !worldObj.provider.hasNoSky )
-					{
+					in.read(storage.getBlocklightArray().data);
+					
+					if (!this.world.provider.hasNoSky) {
 						// 5. sky light
-						in.read( storage.getSkylightArray().data );
+						in.read(storage.getSkylightArray().data);
 					}
-
+					
 					// clean up invalid blocks
 					storage.removeInvalidBlocks();
+					
+					*/
 				}
-
+				
 				// flag cube for render update
 				cube.markForRenderUpdate();
 			}
-
-			if( isFirstTime )
-			{
+			
+			if (isFirstTime) {
 				// 6. biomes
-				in.read( getBiomeArray() );
+				in.read(getBiomeMap());
 			}
-
+			
 			// 7. light index
-			getLightIndex().readData( in );
-
+			getLightIndex().readData(in);
+			
 			in.close();
 			
 			// 8. clean up column if we have just emptied all its cubes
-			if ( worldObj.isClient){
+			if ( this.world.isClient){
 				boolean unload = true;
-				Iterator<Cube> c = cubes().iterator();
+				Iterator<Cube> c = this.getCubes().iterator();
 				while (c.hasNext()){
 					if (!c.next().isEmpty()){
 						unload = false;
@@ -845,348 +682,283 @@ public class Column extends Chunk
 					}
 				}
 				if (unload){
-					CubeProviderClient provider = (CubeProviderClient) worldObj.getChunkProvider();
+					CubeProviderClient provider = (CubeProviderClient) this.world.getChunkProvider();
 					provider.unloadChunk(this.getX(), this.getZ());
 				}
 			}
+		} catch (IOException ex) {
+			log.error(String.format("Unable to read data for column (%d,%d)", this.chunkX, this.chunkZ), ex);
 		}
-		catch( IOException ex )
-		{
-			log.error( String.format( "Unable to read data for column (%d,%d)", xPosition, zPosition ), ex );
-		}
-
+		
 		// update lighting flags
-		isTerrainPopulated = true;
-
+		this.terrainPopulated = true;
+		
 		// update tile entities in each chunk
-		for( Cube cube: m_cubes.values() )
-		{
-			for( TileEntity tileEntity: cube.tileEntities() )
-			{
-				tileEntity.updateContainingBlockInfo();
+		for (Cube cube : this.cubes.values()) {
+			for (BlockEntity blockEntity : cube.getBlockEntities()) {
+				blockEntity.updateContainingBlockInfo();
 			}
 		}
 	}
-
+	
 	/**
 	 * This method retrieves the biome at a set of coordinates
 	 */
 	@Override
-	public CubeBiomeGenBase getBiomeGenForWorldCoords( int xRel, int zRel, WorldChunkManager worldChunkManager ){
-		int biomeID = this.getBiomeArray()[zRel << 4 | xRel] & 255;
-
+	public Biome getBiome(BlockPos pos, BiomeManager biomeManager) {
+		
+		/* TODO: biome stuff... no idea what to do here. Maybe the biome experts should look at this
+		
+		int biomeID = this.columnBlockBiomeArray[zRel << 4 | xRel] & 255;
+		
 		WorldColumnManager worldColumnManager = (WorldColumnManager)worldChunkManager;
-
-		if( biomeID == 255 )
-		{
-			CubeBiomeGenBase var5 = worldColumnManager.getBiomeGenAt( (this.xPosition << 4) + xRel, (this.zPosition << 4) + zRel );
+		
+		if (biomeID == 255) {
+			CubeBiomeGenBase var5 = worldColumnManager.getBiomeGenAt( (this.xPosition << 4) + xRel, (this.zPosition << 4) + zRel);
 			biomeID = var5.biomeID;
-			this.getBiomeArray()[zRel << 4 | xRel] = (byte)(biomeID & 255);
+			this.columnBlockBiomeArray[zRel << 4 | xRel] = (byte) (biomeID & 255);
 		}
-
-		return (CubeBiomeGenBase)(CubeBiomeGenBase.func_150568_d( biomeID ) == null ? CubeBiomeGenBase.plains : CubeBiomeGenBase.func_150568_d( biomeID ));	
+		
+		return (CubeBiomeGenBase) (CubeBiomeGenBase.func_150568_d(biomeID) == null ? CubeBiomeGenBase.plains : CubeBiomeGenBase.func_150568_d(biomeID));
+		*/
+		return Biome.PLAINS;
 	}
 	
 	/**
 	 * Returns an array containing a 16x16 mapping on the X/Z of block positions in this Chunk to biome IDs.
 	 */
 	@Override
-	public byte[] getBiomeArray()
-	{
+	public byte[] getBiomeMap() {
 		return this.columnBlockBiomeArray;
 	}
-
+	
 	/**
-	 * Accepts a 256-entry array that contains a 16x16 mapping on the X/Z plane of block positions in this Chunk to
-	 * biome IDs.
+	 * Accepts a 256-entry array that contains a 16x16 mapping on the X/Z plane of block positions in this Chunk to biome IDs.
 	 */
 	@Override
-	public void setBiomeArray( byte[] par1ArrayOfByte )
-	{
-		this.columnBlockBiomeArray = par1ArrayOfByte;
+	public void setBiomeMap(byte[] val) {
+		this.columnBlockBiomeArray = val;
 	}
-
-	@Override //        isActive
-	public boolean func_150802_k()
-	{
+	
+	@Override
+	public boolean isPopulated() {
 		boolean isAnyCubeLive = false;
-		for( Cube cube: m_cubes.values() )
-		{
+		for (Cube cube : this.cubes.values()) {
 			isAnyCubeLive |= cube.getGeneratorStage().isLastStage();
 		}
-
-		return field_150815_m && isTerrainPopulated && isAnyCubeLive;
+		return this.ticked && this.terrainPopulated && isAnyCubeLive;
 	}
-
-	@Override //         tick
-	public void func_150804_b( boolean tryToTickFaster )
-	{
-		// isTicked
-		field_150815_m = true;
-
-		// don't need to do anything else here
-	}
-
+	
 	@Override
-	public void generateSkylightMap()
-	{
+	public void tickChunk(boolean tryToTickFaster) {
+		this.ticked = true;
+		
+		// don't need to do anything else here
+		// lighting is handled elsewhere now
+	}
+	
+	@Override
+	@Deprecated
+	public void generateSkylightMap() {
 		// don't call this, use the lighting manager
 		throw new UnsupportedOperationException();
 	}
-
-	public void resetPrecipitationHeight()
-	{
+	
+	public void resetPrecipitationHeight() {
 		// init the rain map to -999, which is a kind of null value
 		// this array is actually a cache
 		// values will be calculated by the getter
-		for( int localX = 0; localX < 16; localX++ )
-		{
-			for( int localZ = 0; localZ < 16; localZ++ )
-			{
+		for (int localX = 0; localX < 16; localX++) {
+			for (int localZ = 0; localZ < 16; localZ++) {
 				int xzCoord = localX | localZ << 4;
-				precipitationHeightMap[xzCoord] = -999;
+				this.rainfallMap[xzCoord] = -999;
 			}
 		}
 	}
-
+	
 	@Override
-	public int getPrecipitationHeight( int localX, int localZ )
-	{
-		// UNDONE: update this calculation to use better data structures
-		int xzCoord = localZ << 4 | localX;
-		int height = this.precipitationHeightMap[xzCoord];
-		if( height == -999 )
-		{
-			// UNDONE: compute a new rain height
-			/* look over the blocks in the top filled cube (if one exists) and do this:
-			 int maxBlockY = getTopFilledSegment() + 15;
-			 int minBlockY = Coords.cubeToMinBlock( getBottomCubeY() );
-			 Block block = cube.getBlock( ... );
-			 Material material = block.getMaterial();
-			 if( material.blocksMovement() || material.isLiquid() )
-			 {
-			 height = maxBlockY + 1;
-			 }
-			 */
-
+	public BlockPos getRainfallHeight(BlockPos pos) {
+		
+		// TODO: update this calculation to use better data structures
+		
+		int x = Coords.blockToLocal(pos.getX());
+		int z = Coords.blockToLocal(pos.getZ());
+		
+		int xzCoord = x | z << 4;
+		int height = this.rainfallMap[xzCoord];
+		if (height == -999) {
+			
+			/* TODO: compute a new rain height
+			look over the blocks in the top filled cube (if one exists) and do something like this:
+			int maxBlockY = getTopFilledSegment() + 15;
+			int minBlockY = Coords.cubeToMinBlock( getBottomCubeY() );
+			Block block = cube.getBlock( ... );
+			Material material = block.getMaterial();
+			if( material.blocksMovement() || material.isLiquid() ) {
+				height = maxBlockY + 1;
+			}
+			*/
+			
 			// TEMP: just rain down to the sea
-			precipitationHeightMap[xzCoord] = getWorldProvider().getSeaLevel();
-			height = getWorldProvider().getSeaLevel();
+			this.rainfallMap[xzCoord] = this.world.getSeaLevel();
 		}
 		
-		return height;
+		return new BlockPos(pos.getX(), height, pos.getZ());
 	}
-
+	
 	@Override
-	public int getBlockLightValue( int localX, int blockY, int localZ, int skylightSubtracted )
-	{
+	public int getBrightestLight(BlockPos pos, int skyLightDampeningTerm) {
 		// NOTE: this is called by WorldRenderers
-
+		
 		// pass off to cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			int light = cube.getBlockLightValue( localX, localY, localZ, skylightSubtracted );
-
-			if( light > 0 )
-			{
-				isLit = true;
-			}
-
-			return light;
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			return cube.getBrightestLight(pos, skyLightDampeningTerm);
 		}
-
+		
 		// defaults
-		if( !worldObj.provider.hasNoSky && skylightSubtracted < EnumSkyBlock.Sky.defaultLightValue )
-		{
-			return EnumSkyBlock.Sky.defaultLightValue - skylightSubtracted;
+		if (!this.world.dimension.hasNoSky() && skyLightDampeningTerm < LightType.SKY.defaultValue) {
+			return LightType.SKY.defaultValue - skyLightDampeningTerm;
 		}
 		return 0;
 	}
-
+	
 	@Override
-	public int getSavedLightValue( EnumSkyBlock lightType, int localX, int blockY, int localZ )
-	{
+	public int getLightAt(LightType lightType, BlockPos pos) {
 		// NOTE: this is the light function that is called by the rendering code on client
-
+		
 		// pass off to cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			return cube.getLightValue( lightType, localX, localY, localZ );
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			return cube.getLightValue(lightType, pos);
 		}
-
+		
 		// there's no cube, rely on defaults
-		if( canBlockSeeTheSky( localX, blockY, localZ ) )
-		{
-			return lightType.defaultLightValue;
+		if (lightType == LightType.SKY) {
+			if (canSeeSky(pos)) {
+				return lightType.defaultValue;
+			} else {
+				return 0;
+			}
 		}
-		else
-		{
-			return 0;
-		}
+		return 0;
 	}
-
+	
 	@Override
-	public void setLightValue( EnumSkyBlock lightType, int localX, int blockY, int localZ, int light )
-	{
+	public void setLightAt(LightType lightType, BlockPos pos, int light) {
+		
 		// pass off to cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			cube.setLightValue( lightType, localX, localY, localZ, light );
-
-			isModified = true;
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			cube.setLightValue(lightType, pos, light);
+			this.isModified = true;
 		}
 	}
-
-	protected List<RangeInt> getRanges( Iterable<Integer> yValues )
-	{
+	
+	protected List<RangeInt> getRanges(Iterable<Integer> yValues) {
+		
 		// compute a kind of run-length encoding on the cube y-values
 		List<RangeInt> ranges = new ArrayList<RangeInt>();
 		Integer start = null;
 		Integer stop = null;
-		for( int cubeY: yValues )
-		{
-			if( start == null )
-			{
+		for (int cubeY : yValues) {
+			if (start == null) {
 				// start a new range
 				start = cubeY;
 				stop = cubeY;
-			}
-			else if( cubeY == stop + 1 )
-			{
+			} else if (cubeY == stop + 1) {
 				// extend the range
 				stop = cubeY;
-			}
-			else
-			{
+			} else {
 				// end the range
-				ranges.add( new RangeInt( start, stop ) );
-
+				ranges.add(new RangeInt(start, stop));
+				
 				// start a new range
 				start = cubeY;
 				stop = cubeY;
 			}
 		}
-
-		if( start != null )
-		{
+		
+		if (start != null) {
 			// finish the last range
-			ranges.add( new RangeInt( start, stop ) );
+			ranges.add(new RangeInt(start, stop));
 		}
-
+		
 		return ranges;
 	}
-
+	
 	@Override
-	public void resetRelightChecks()
-	{
-		m_roundRobinLightUpdatePointer = 0;
-		m_roundRobinCubes.clear();
-		m_roundRobinCubes.addAll( m_cubes.values() );
+	public void resetRelightChecks() {
+		this.roundRobinLightUpdatePointer = 0;
+		this.roundRobinCubes.clear();
+		this.roundRobinCubes.addAll(this.cubes.values());
 	}
-
-	@Override // doSomeRoundRobinLightUpdates
-	public void enqueueRelightChecks()
-	{
-		worldObj.theProfiler.startSection( "roundRobinRelight" );
-
-		if( m_roundRobinCubes.isEmpty() )
-		{
+	
+	@Override
+	public void processRelightChecks() {
+		
+		if (this.roundRobinCubes.isEmpty()) {
 			resetRelightChecks();
 		}
-
+		
 		// we get just a few updates this time
-		for( int i = 0; i < 2; i++ )
-		{
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		for (int i = 0; i < 2; i++) {
+			
 			// once we've checked all the blocks, stop checking
-			int maxPointer = 16 * 16 * m_roundRobinCubes.size();
-			if( m_roundRobinLightUpdatePointer >= maxPointer )
-			{
+			int maxPointer = 16 * 16 * this.roundRobinCubes.size();
+			if (this.roundRobinLightUpdatePointer >= maxPointer) {
 				break;
 			}
-
+			
 			// get this update's arguments
-			int cubeIndex = Bits.unpackUnsigned( m_roundRobinLightUpdatePointer, 4, 8 );
-			int localX = Bits.unpackUnsigned( m_roundRobinLightUpdatePointer, 4, 4 );
-			int localZ = Bits.unpackUnsigned( m_roundRobinLightUpdatePointer, 4, 0 );
-
+			int cubeIndex = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 8);
+			int localX = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 4);
+			int localZ = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 0);
+			
 			// advance to the next block
 			// this pointer advances over segment block columns
 			// starting from the block columns in the bottom segment and moving upwards
-			m_roundRobinLightUpdatePointer++;
-
+			this.roundRobinLightUpdatePointer++;
+			
 			// get the cube that was pointed to
-			Cube cube = m_roundRobinCubes.get( cubeIndex );
-
-			int blockX = Coords.localToBlock( xPosition, localX );
-			int blockZ = Coords.localToBlock( zPosition, localZ );
-
+			Cube cube = this.roundRobinCubes.get(cubeIndex);
+			
+			int blockX = Coords.localToBlock(this.chunkX, localX);
+			int blockZ = Coords.localToBlock(this.chunkZ, localZ);
+			
 			// for each block in this segment block column...
-			for( int localY = 0; localY < 16; ++localY )
-			{
-				if( cube.getBlock( localX, localY, localZ ).getMaterial() == Material.air )
-				{
-					int blockY = Coords.localToBlock( cubeIndex, localY );
-
+			for (int localY = 0; localY < 16; ++localY) {
+				
+				int blockY = Coords.localToBlock(cube.getY(), localY);
+				pos.setBlockPos(blockX, blockY, blockZ);
+				
+				if (cube.getBlockState(pos).getBlock().getMaterial() == Material.AIR) {
+					
 					// if there's a light source next to this block, update the light source
-					if( worldObj.getBlock( blockX, blockY - 1, blockZ ).getLightValue() > 0 )
-					{
-						worldObj.func_147451_t( blockX, blockY - 1, blockZ );
+					for (Facing facing : Facing.values()) {
+						BlockPos neighborPos = pos.addDirection(facing, 1);
+						if (this.world.getBlockStateAt(neighborPos).getBlock().getBrightness() > 0) {
+							this.world.updateLightingAt(neighborPos);
+						}
 					}
-					if( worldObj.getBlock( blockX, blockY + 1, blockZ ).getLightValue() > 0 )
-					{
-						worldObj.func_147451_t( blockX, blockY + 1, blockZ );
-					}
-					if( worldObj.getBlock( blockX - 1, blockY, blockZ ).getLightValue() > 0 )
-					{
-						worldObj.func_147451_t( blockX - 1, blockY, blockZ );
-					}
-					if( worldObj.getBlock( blockX + 1, blockY, blockZ ).getLightValue() > 0 )
-					{
-						worldObj.func_147451_t( blockX + 1, blockY, blockZ );
-					}
-					if( worldObj.getBlock( blockX, blockY, blockZ - 1 ).getLightValue() > 0 )
-					{
-						worldObj.func_147451_t( blockX, blockY, blockZ - 1 );
-					}
-					if( worldObj.getBlock( blockX, blockY, blockZ + 1 ).getLightValue() > 0 )
-					{
-						worldObj.func_147451_t( blockX, blockY, blockZ + 1 );
-					}
-
+					
 					// then update this block
-					worldObj.func_147451_t( blockX, blockY, blockZ );
+					this.world.updateLightingAt(pos);
 				}
 			}
 		}
-
-		worldObj.theProfiler.endSection();
 	}
-
-	@Override // populateLighting
-	public void func_150809_p()
-	{
-		// don't use this, use the new lighting manager
-		throw new UnsupportedOperationException();
-	}
-
-	public void doRandomTicks()
-	{
-		if( isEmpty() )
-		{
+	
+	public void doRandomTicks() {
+		if (isEmpty()) {
 			return;
 		}
-
-		for( Cube cube: m_cubes.values() )
-		{
+		
+		for (Cube cube : this.cubes.values()) {
 			cube.doRandomTicks();
 		}
 	}

@@ -1,302 +1,224 @@
-/*******************************************************************************
- * This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+/*
+ *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
  *
- * Copyright (c) Tall Worlds
- * Copyright (c) contributors
+ *  Copyright (c) 2014 Tall Worlds
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *******************************************************************************/
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package cubicchunks.world;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
+import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.LightType;
 import cubicchunks.util.Coords;
 import cubicchunks.util.RangeInt;
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-
-public class ColumnView extends Column
-{
-	private Column m_column;
-	private TreeMap<Integer,Cube> m_cubes;
+public class ColumnView extends Column {
 	
-	public ColumnView( Column column ) 
-	{
-		super( column.getWorld(), column.xPosition, column.zPosition );
+	private Column column;
+	private Map<Integer,Cube> cubes;
+	
+	public ColumnView(Column column) {
+		super(column.getWorld(), column.chunkX, column.chunkZ);
 		
-		m_column = column;
-		m_cubes = new TreeMap<Integer,Cube>();
+		this.column = column;
+		this.cubes = new TreeMap<Integer,Cube>();
 	}
 	
 	@Override
-	public LightIndex getLightIndex( )
-	{
-		return m_column.getLightIndex();
+	public LightIndex getLightIndex() {
+		return this.column.getLightIndex();
 	}
 	
 	@Override
-	public Iterable<Cube> cubes( )
-	{
-		return m_cubes.values();
+	public Collection<Cube> getCubes() {
+		return this.cubes.values();
 	}
 	
-	public void addCubeToView( Cube cube )
-	{
-		m_cubes.put( cube.getY(), cube );
-	}
-	
-	public void removeCubeFromView( Cube cube)
-	{
-		m_cubes.remove(cube.getY());
+	public void addCubeToView(Cube cube) {
+		this.cubes.put(cube.getY(), cube);
 	}
 	
 	@Override
-	public Cube getCube( int y )
-	{
-		return m_cubes.get( y );
+	public Cube getCube(int y) {
+		return this.cubes.get(y);
 	}
 	
-	public Cube getOrCreateCube( int y )
-	{
+	public Cube getOrCreateCube(int y) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public Iterable<Cube> getCubes( int minY, int maxY )
-	{
-		return m_cubes.subMap( minY, true, maxY, true ).values();
+	public Iterable<Cube> getCubes(int minY, int maxY) {
+		return ((TreeMap<Integer, Cube>) this.cubes).subMap(minY, true, maxY, true).values();
 	}
 	
-	public void addCube( Cube cube )
-	{
+	public void addCube(Cube cube) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public List<RangeInt> getCubeYRanges( )
-	{
-		return getRanges( m_cubes.keySet() );
+	public List<RangeInt> getCubeYRanges() {
+		return getRanges(this.cubes.keySet());
 	}
 	
 	@Override
-	public boolean needsSaving( boolean alwaysTrue )
-	{
+	public boolean needsSaving(boolean alwaysTrue) {
 		throw new UnsupportedOperationException();
 	}
 	
-	@Override //      getBlock
-	public Block func_150810_a( final int localX, final int blockY, final int localZ )
-	{
+	@Override
+	public IBlockState getBlockState(BlockPos pos) {
+		
 		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			return cube.getBlock( localX, localY, localZ );
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			return cube.getBlockState(pos);
 		}
 		
-		return Blocks.air;
+		return Blocks.AIR.getDefaultState();
 	}
 	
-	@Override //        setBlock
-	public boolean func_150807_a( int localX, int blockY, int localZ, Block block, int meta )
-	{
+	@Override
+	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public int getBlockMetadata( int localX, int blockY, int localZ )
-	{
-		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			return cube.getBlockMetadata( localX, localY, localZ );
-		}
-		return 0;
+	public int getBlockMetadata(BlockPos pos) {
+		return this.column.getBlockMetadata(pos);
 	}
 	
 	@Override
-	public boolean setBlockMetadata( int localX, int blockY, int localZ, int meta )
-	{
+	public int getTopCubeY() {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public ExtendedBlockStorage[] getBlockStorageArray( )
-	{
+	public boolean getAreLevelsEmpty(int minBlockY, int maxBlockY) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public int getTopFilledSegment()
-    {
-		throw new UnsupportedOperationException();
-    }
-	
-	@Override
-	public boolean getAreLevelsEmpty( int minBlockY, int maxBlockY )
-	{
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override
-	public boolean canBlockSeeTheSky( int localX, int blockY, int localZ )
-	{
-		return m_column.canBlockSeeTheSky( localX, blockY, localZ );
+	public boolean canSeeSky(BlockPos pos) {		
+		return this.column.canSeeSky(pos);
 	}
 	
 	@Override
 	@Deprecated
-	public int getHeightValue( int localX, int localZ )
-	{
-		return m_column.getHeightValue( localX, localZ );
-	}
-	
-	@Override //  getOpacity
-	public int func_150808_b( int localX, int blockY, int localZ )
-	{
-		return m_column.func_150808_b( localX, blockY, localZ );
+	public int getHeightAtCoords(int localX, int localZ) {
+		return this.column.getHeightAtCoords(localX, localZ);
 	}
 	
 	@Override
-	public void addEntity( Entity entity )
-    {
-		throw new UnsupportedOperationException();
-    }
+	// getOpacity
+	public int getBlockOpacityAt(BlockPos pos) {
+		return this.column.getBlockOpacityAt(pos);
+	}
 	
 	@Override
-	public void removeEntity( Entity entity )
-	{
+	public void addEntity(Entity entity) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public void removeEntityAtIndex( Entity entity, int cubeY )
-	{
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override //      getTileEntity
-	public TileEntity func_150806_e( int localX, int blockY, int localZ )
-	{
-		// pass off to the cube
-		int cubeY = Coords.blockToCube( blockY );
-		Cube cube = m_cubes.get( cubeY );
-		if( cube != null )
-		{
-			int localY = Coords.blockToLocal( blockY );
-			return cube.getTileEntity( localX, localY, localZ );
-		}
-		return null;
-	}
-	
-	@Override
-	public void addTileEntity( TileEntity tileEntity )
-	{
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override // addTileEntity
-	public void func_150812_a( int localX, int blockY, int localZ, TileEntity tileEntity )
-	{
+	public void removeEntity(Entity entity) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public void removeTileEntity( int localX, int blockY, int localZ )
-	{
+	public void removeEntity(Entity entity, int cubeY) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public void onChunkLoad( )
-	{
+	public BlockEntity getBlockEntityAt(BlockPos pos, ChunkEntityCreationType creationType) {
+		return this.column.getBlockEntityAt(pos, creationType);
+	}
+	
+//	@Override
+//	public void addTileEntity(Entity tileEntity) {
+//		throw new UnsupportedOperationException();
+//	}
+	
+	@Override
+	// addTileEntity
+	public void setBlockEntityAt(BlockPos pos, BlockEntity blockEntity) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public void onChunkUnload( )
-	{
+	public void removeBlockEntityAt(BlockPos pos) {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public void fillChunk( byte[] data, int segmentsToCopyBitFlags, int blockMSBToCopyBitFlags, boolean isFirstTime )
-	{
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override //         tick
-	public void func_150804_b( boolean tryToTickFaster )
-	{
+	public void onChunkLoad() {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public void generateSkylightMap()
-    {
-		throw new UnsupportedOperationException();
-    }
-	
-	@Override
-	public int getPrecipitationHeight( int localX, int localZ )
-	{
-		return m_column.getPrecipitationHeight( localX, localZ );
-	}
-	
-	@Override
-	public int getBlockLightValue( int localX, int blockY, int localZ, int skylightSubtracted )
-	{
-		return m_column.getBlockLightValue( localX, blockY, localZ, skylightSubtracted );
-	}
-	
-	@Override
-	public int getSavedLightValue( EnumSkyBlock lightType, int localX, int blockY, int localZ )
-	{
+	public void onChunkUnload() {
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public void setLightValue( EnumSkyBlock lightType, int localX, int blockY, int localZ, int light )
-	{
+	public void readChunkIn(byte[] data, int segmentsToCopyBitFlags, boolean isFirstTime) {
 		throw new UnsupportedOperationException();
 	}
-
+	
 	@Override
-	public void setBiomeArray( byte[] biomes )
-	{
+	public void tickChunk(boolean tryToTickFaster) {
 		throw new UnsupportedOperationException();
 	}
-
+	
 	@Override
-	public byte[] getBiomeArray()
-	{
-		return m_column.getBiomeArray();
+	public void generateSkylightMap() {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public BlockPos getRainfallHeight(BlockPos pos) {
+		return this.column.getRainfallHeight(pos);
+	}
+	
+	@Override
+	public int getBrightestLight(BlockPos pos, int skylightDampeningTerm) {
+		return this.column.getBrightestLight(pos, skylightDampeningTerm);
+	}
+	
+	@Override
+	public int getLightAt(LightType lightType, BlockPos pos) {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public void setLightAt(LightType lightType, BlockPos pos, int light) {
+		throw new UnsupportedOperationException();
 	}
 }
