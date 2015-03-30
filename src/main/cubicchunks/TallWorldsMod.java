@@ -42,13 +42,23 @@ public class TallWorldsMod {
 	public static final String Id = "tallworlds";
 	public static final Logger log = LoggerFactory.getLogger(Id);
 	
+	@Mod.Instance(Id)
+	public static TallWorldsMod instance;
+	
+	private CubicChunkSystem m_system;
+	
+	public CubicChunkSystem getSystem() {
+		// TODO: maybe this could be named better...
+		return m_system;
+	}
+	
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
-		
-		log.info("Init");
-		
+
+		// register our chunk system
+		m_system = new CubicChunkSystem();
 		try {
-			M3L.instance.getRegistry().chunkSystem.register(new CubicChunkSystem());
+			M3L.instance.getRegistry().chunkSystem.register(m_system);
 		} catch (AlreadyRegisteredException ex) {
 			log.error("Cannot register cubic chunk system. Someone else beat us to it. =(", ex);
 		}

@@ -35,6 +35,7 @@ import cubicchunks.client.WorldClientContext;
 import cubicchunks.generator.biome.CCBiomeManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
+import cubicchunks.util.AddressTools;
 import cuchaz.m3l.api.chunks.ChunkSystem;
 
 public class CubicChunkSystem implements ChunkSystem {
@@ -77,5 +78,15 @@ public class CubicChunkSystem implements ChunkSystem {
 		}
 		
 		return null;
+	}
+
+	@Override
+	public int getMinBlockY() {
+		return AddressTools.MinY;
+	}
+
+	@Override
+	public int getMaxBlockY() {
+		return AddressTools.MaxY;
 	}
 }
