@@ -26,19 +26,11 @@ package cubicchunks.server;
 import java.util.Random;
 import java.util.Set;
 
-import net.minecraft.entity.CreatureTypes;
-import net.minecraft.profiler.Profiler;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.LightType;
-import net.minecraft.world.WorldInfo;
-import net.minecraft.world.WorldServerAccessor;
 import net.minecraft.world.WorldSettings;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.storage.ISaveHandler;
 import cubicchunks.CubeProviderTools;
-import cubicchunks.generator.biome.CCBiomeManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Column;
@@ -49,14 +41,6 @@ public class CubeWorldServer {
 	
 	// TODO: this class will get deleted
 	// but we need to migrate this code to other places first
-	
-	public CubeWorldServer(MinecraftServer server, ISaveHandler saveHandler, WorldInfo worldInfo, int dimension, Profiler profiler) {
-		super(server, saveHandler, worldInfo, dimension, profiler);
-		
-		// set the player manager
-		CubePlayerManager playerManager = new CubePlayerManager(this, server.getConfigurationManager().getViewRadius());
-		WorldServerAccessor.setPlayerManager(this, playerManager);
-	}
 	
 	@Override
 	public void tick() {
@@ -69,17 +53,12 @@ public class CubeWorldServer {
 		this.profiler.startSection("lightingEngine");
 		this.lightingManager.tick();
 		this.profiler.endSection();
-	}
-	
-	/**
-	 * only spawns creatures allowed by the chunkProvider
-	 */
-	@Override
-	@Deprecated
-	public Biome.SpawnMob spawnRandomCreature(CreatureTypes creatureType, int par2, int par3, int par4) {
-		// List var5 = (List) this.getChunkProvider().getPossibleCreatures(par1EnumCreatureType, par2, par3, par4);
-		// return var5 != null && !var5.isEmpty() ? (net.minecraft.world.biome.BiomeGenBase.SpawnListEntry)WeightedRandom.getRandomItem(this.rand, var5) : null;
-		return null;
+		
+		// apply random ticks
+		for (ChunkCoordIntPair coords : (Set<ChunkCoordIntPair>)this.activeChunkSet) {
+			Column column = (Column)this.chunkCache.getChunk(coords.chunkX, coords.chunkZ);
+			column.doRandomTicks();
+		}
 	}
 	
 	public long getSpawnPointCubeAddress() {
@@ -95,19 +74,6 @@ public class CubeWorldServer {
 	public boolean updateLightingAt(LightType lightType, BlockPos pos) {
 		// forward to the new lighting system
 		return this.lightingManager.computeDiffuseLighting(pos, lightType);
-	}
-	
-	@Override
-	// tick
-	@SuppressWarnings("unchecked")
-	protected void func_147456_g() {
-		super.func_147456_g();
-		
-		// apply random ticks
-		for (ChunkCoordIntPair coords : (Set<ChunkCoordIntPair>)this.activeChunkSet) {
-			Column column = (Column)this.chunkCache.getChunk(coords.chunkX, coords.chunkZ);
-			column.doRandomTicks();
-		}
 	}
 	
 	@Override
