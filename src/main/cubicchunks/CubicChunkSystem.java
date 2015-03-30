@@ -23,7 +23,6 @@
  */
 package cubicchunks;
 
-import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
@@ -32,7 +31,6 @@ import net.minecraft.world.gen.ClientChunkCache;
 import net.minecraft.world.gen.ServerChunkCache;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
-import cubicchunks.generator.biome.CCBiomeManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
@@ -69,6 +67,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	@Override
 	public BiomeManager getBiomeManager(World world) {
 		
+		/* TEMP: disable fancy generation
 		// for now, only muck with the overworld
 		if (world.dimension.getId() == 0) {
 			DimensionType dimensionType = world.getWorldInfo().getDimensionType();
@@ -76,6 +75,7 @@ public class CubicChunkSystem implements ChunkSystem {
 				return new CCBiomeManager(world);
 			}
 		}
+		*/
 		
 		return null;
 	}

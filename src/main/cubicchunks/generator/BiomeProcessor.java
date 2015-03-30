@@ -29,8 +29,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.Biome;
 import cubicchunks.CubeProviderTools;
-import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
@@ -44,7 +44,7 @@ public class BiomeProcessor extends CubeProcessor {
 	private Random rand;
 	private NoiseGeneratorPerlin m_noiseGen;
 	private double[] noise;
-	private CCBiome[] biomes;
+	private Biome[] biomes;
 	
 	private int seaLevel;
 	
@@ -69,7 +69,7 @@ public class BiomeProcessor extends CubeProcessor {
 		}
 		
 		// generate biome info. This is a hackjob.
-		this.biomes = (CCBiome[])this.worldServer.dimension.getBiomeManager().getBiomeMap(
+		this.biomes = (Biome[])this.worldServer.dimension.getBiomeManager().getBiomeMap(
 			this.biomes, 
 			Coords.cubeToMinBlock(cube.getX()), 
 			Coords.cubeToMinBlock(cube.getZ()), 
@@ -104,7 +104,7 @@ public class BiomeProcessor extends CubeProcessor {
 				
 				int xzCoord = zRel << 4 | xRel;
 				
-				CCBiome biome = this.biomes[xzCoord];
+				Biome biome = this.biomes[xzCoord];
 				
 				// Biome blocks depth in current block column. 0 for negative values.
 				
@@ -113,8 +113,8 @@ public class BiomeProcessor extends CubeProcessor {
 				// How many biome blocks left to set in column? Initially -1
 				int numBlocksToChange = -1;
 				
-				Block topBlock = biome.topBlock;
-				Block fillerBlock = biome.fillerBlock;
+				Block topBlock = biome.topBlock.getBlock();
+				Block fillerBlock = biome.fillerBlock.getBlock();
 				
 				for (int blockY = top; blockY >= bottom; --blockY) {
 					// Current block
@@ -142,8 +142,8 @@ public class BiomeProcessor extends CubeProcessor {
 						}
 						// If we are above or at 4 block under water and at or below one block above water
 						else if (blockY >= this.seaLevel - 4 && blockY <= this.seaLevel + 1) {
-							topBlock = biome.topBlock;
-							fillerBlock = biome.fillerBlock;
+							topBlock = biome.topBlock.getBlock();
+							fillerBlock = biome.fillerBlock.getBlock();
 						}
 						// If top block is air and we are below sea level use water instead
 						if (blockY < this.seaLevel && topBlock == Blocks.AIR) {

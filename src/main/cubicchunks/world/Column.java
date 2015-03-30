@@ -59,7 +59,6 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.base.Predicate;
 
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
@@ -84,7 +83,7 @@ public class Column extends Chunk {
 		init();
 	}
 	
-	public Column(World world, int cubeX, int cubeZ, CCBiome[] biomes) {
+	public Column(World world, int cubeX, int cubeZ, Biome[] biomes) {
 		
 		// NOTE: this constructor is called by the column generator
 		this(world, cubeX, cubeZ);

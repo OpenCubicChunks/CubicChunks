@@ -28,7 +28,7 @@ import java.util.Random;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
-import cubicchunks.generator.biome.biomegen.CCBiome;
+import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.builder.BasicBuilder;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
@@ -51,7 +51,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 	private final byte[] waterLevel = new byte[CUBE_X_SIZE * CUBE_Z_SIZE];
 	
 	private WorldServer worldServer;
-	private CCBiome[] biomes;
+	private Biome[] biomes;
 	
 	private Random rand;
 	
@@ -149,7 +149,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
-		this.biomes = (CCBiome[])this.worldServer.dimension.getBiomeManager().getBiomeMap(
+		this.biomes = (Biome[])this.worldServer.dimension.getBiomeManager().getBiomeMap(
 			this.biomes, 
 			cube.getX() * 4 - this.maxSmoothRadius, 
 			cube.getZ() * 4 - this.maxSmoothRadius, 
@@ -412,7 +412,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 		double heightSum = 0.0F;
 		float biomeWeightSum = 0.0F;
 		
-		final CCBiome centerBiomeConfig = this.biomes[ (x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
+		final Biome centerBiomeConfig = this.biomes[ (x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
 		final int lookRadius = 2/* centerBiomeConfig.smoothRadius */;
 		
 		float nextBiomeHeight;
@@ -420,16 +420,16 @@ public class NewTerrainProcessor extends CubeProcessor {
 		
 		for (int nextX = -lookRadius; nextX <= lookRadius; nextX++) {
 			for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++) {
-				final CCBiome nextBiomeConfig = this.biomes[ (x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
+				final Biome nextBiomeConfig = this.biomes[ (x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
 				
-				nextBiomeHeight = nextBiomeConfig.biomeHeight;
+				nextBiomeHeight = nextBiomeConfig.height;
 				
 				biomeWeight = this.nearBiomeWeightArray[ (nextX + this.maxSmoothRadius + (nextZ + this.maxSmoothRadius) * this.maxSmoothDiameter)] / (nextBiomeHeight + 2.0F);
 				biomeWeight = Math.abs(biomeWeight);
-				if (nextBiomeHeight > centerBiomeConfig.biomeHeight) {
+				if (nextBiomeHeight > centerBiomeConfig.height) {
 					biomeWeight /= 2.0F;
 				}
-				volatilitySum += nextBiomeConfig.biomeVolatility * biomeWeight;
+				volatilitySum += nextBiomeConfig.volatility * biomeWeight;
 				heightSum += nextBiomeHeight * biomeWeight;
 				biomeWeightSum += biomeWeight;
 			}

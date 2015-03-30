@@ -23,6 +23,10 @@
  */
 package cubicchunks.generator.builder;
 
+import libnoiseforjava.module.ModuleBase;
+import libnoiseforjava.module.Perlin;
+import libnoiseforjava.module.ScaleBias;
+
 
 public class BasicBuilder implements IBuilder {
 	
