@@ -45,7 +45,6 @@ import net.minecraft.world.Dimension;
 import net.minecraft.world.ScheduledBlockTick;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.WorldServerAccessor;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ChunkSection;
 import net.minecraft.world.storage.FileIOWorker;
@@ -516,8 +515,8 @@ public class CubeIO implements IThreadedFileIO {
 		WorldServer worldServer = (WorldServer)cube.getWorld();
 		
 		// copy the ticks for this cube
-		copyScheduledTicks(out, WorldServerAccessor.getLastSynedTickNextTick(worldServer), cube);
-		copyScheduledTicks(out, WorldServerAccessor.getTickNextTick(worldServer), cube);
+		copyScheduledTicks(out, worldServer.lastSyncedTickNextTick, cube);
+		copyScheduledTicks(out, worldServer.tickNextTick, cube);
 		
 		return out;
 	}

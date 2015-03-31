@@ -29,6 +29,11 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cubicchunks.client.ClientCubeCache;
+import cubicchunks.server.CubeIO;
+import cubicchunks.server.CubePlayerManager;
+import cubicchunks.server.ServerCubeCache;
+import cubicchunks.world.Column;
 import cuchaz.m3l.M3L;
 import cuchaz.m3l.api.registry.AlreadyRegisteredException;
 
@@ -54,7 +59,17 @@ public class TallWorldsMod {
 	
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
-
+		
+		// HACKHACK: tweak the class load order so the runtime obfuscator works correctly
+		// load subclasses of Minecraft classes first, so the runtime obfuscator can record
+		// the superclass information before any other classes need it
+		// TODO: make a way to explicitly record superclass info without needing to change load order
+		Column.class.getName();
+		CubePlayerManager.class.getName();
+		ServerCubeCache.class.getName();
+		ClientCubeCache.class.getName();
+		CubeIO.class.getName();
+		
 		// register our chunk system
 		m_system = new CubicChunkSystem();
 		try {
