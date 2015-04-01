@@ -30,7 +30,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.LightType;
 import net.minecraft.world.WorldSettings;
-import cubicchunks.CubeProviderTools;
+import cubicchunks.CubeTools;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.Column;
@@ -43,31 +43,8 @@ public class CubeWorldServer {
 	// but we need to migrate this code to other places first
 	
 	@Override
-	public void tick() {
-		super.tick();
-		
-		this.profiler.startSection("generatorPipeline");
-		this.generatorPipeline.tick();
-		this.profiler.endSection();
-		
-		this.profiler.startSection("lightingEngine");
-		this.lightingManager.tick();
-		this.profiler.endSection();
-		
-		// apply random ticks
-		for (ChunkCoordIntPair coords : (Set<ChunkCoordIntPair>)this.activeChunkSet) {
-			Column column = (Column)this.chunkCache.getChunk(coords.chunkX, coords.chunkZ);
-			column.doRandomTicks();
-		}
-	}
-	
-	public long getSpawnPointCubeAddress() {
-		return AddressTools.getAddress(Coords.blockToCube(this.worldInfo.getSpawnX()), Coords.blockToCube(this.worldInfo.getSpawnY()), Coords.blockToCube(this.worldInfo.getSpawnZ()));
-	}
-	
-	@Override
 	public boolean checkBlockRangeIsInWorld(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean flag) {
-		return CubeProviderTools.blocksExist((CubeCache)this.chunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
+		return CubeTools.blocksExist((CubeCache)this.chunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
 	}
 	
 	@Override

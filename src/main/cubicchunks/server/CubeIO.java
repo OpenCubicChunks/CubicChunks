@@ -204,8 +204,12 @@ public class CubeIO implements IThreadedFileIO {
 				
 				numColumnsSaved++;
 				numColumnBytesSaved += data.length;
-			} catch (IOException ex) {
-				log.error(String.format("Unable to write column %d,%d", AddressTools.getX(entry.address), AddressTools.getZ(entry.address)), ex);
+			} catch (Throwable t) {
+				log.error("Unable to write column {},{}",
+					AddressTools.getX(entry.address),
+					AddressTools.getZ(entry.address),
+					t
+				);
 			}
 		}
 		entries.clear();
@@ -220,8 +224,13 @@ public class CubeIO implements IThreadedFileIO {
 				
 				numCubesSaved++;
 				numCubeBytesSaved += data.length;
-			} catch (IOException ex) {
-				log.error(String.format("Unable to write cube %d,%d,%d", AddressTools.getX(entry.address), AddressTools.getY(entry.address), AddressTools.getZ(entry.address)), ex);
+			} catch (Throwable t) {
+				log.error("Unable to write cube {},{},{}",
+					AddressTools.getX(entry.address),
+					AddressTools.getY(entry.address),
+					AddressTools.getZ(entry.address),
+					t
+				);
 			}
 		}
 		entries.clear();
@@ -233,7 +242,10 @@ public class CubeIO implements IThreadedFileIO {
 		m_db.commit();
 		
 		long diff = System.currentTimeMillis() - start;
-		log.info(String.format("Wrote %d columns (%d remaining) (%dk) and %d cubes (%d remaining) (%dk) in %d ms", numColumnsSaved, numColumnsRemaining, numColumnBytesSaved / 1024, numCubesSaved, numCubesRemaining, numCubeBytesSaved / 1024, diff));
+		log.info("Wrote {} columns ({} remaining) ({}k) and {} cubes ({} remaining) ({}k) in {} ms",
+			numColumnsSaved, numColumnsRemaining, numColumnBytesSaved / 1024,
+			numCubesSaved, numCubesRemaining, numCubeBytesSaved / 1024, diff
+		);
 		
 		return hasMoreColumns || hasMoreCubes;
 	}

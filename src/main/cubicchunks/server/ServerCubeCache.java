@@ -81,6 +81,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	
 	@Override
 	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
+		
 		// is the column loaded?
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
 		Column column = this.loadedColumns.get(columnAddress);
@@ -176,7 +177,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 			try {
 				column = this.cubeIO.loadColumn(this.worldServer, cubeX, cubeZ);
 			} catch (IOException ex) {
-				log.error(String.format("Unable to load column (%d,%d)", cubeX, cubeZ), ex);
+				log.error("Unable to load column ({},{})", cubeX, cubeZ, ex);
 				return;
 			}
 			
@@ -202,7 +203,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 		try {
 			cube = this.cubeIO.loadCubeAndAddToColumn(this.worldServer, column, cubeAddress);
 		} catch (IOException ex) {
-			log.error(String.format("Unable to load cube (%d,%d,%d)", cubeX, cubeY, cubeZ), ex);
+			log.error("Unable to load cube ({},{},{})", cubeX, cubeY, cubeZ, ex);
 			return;
 		}
 		

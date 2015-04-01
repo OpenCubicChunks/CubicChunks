@@ -318,7 +318,7 @@ public class CubePlayerManager extends PlayerManager {
 	
 	public void processCubeLoadQueue(EntityPlayerMP player) {
 		// this method flushes outgoing chunks to the player
-		
+
 		// get the outgoing cubes
 		PlayerInfo info = this.m_players.get(player.getEntityId());
 		if (info == null || info.outgoingCubes.isEmpty()) {
@@ -372,7 +372,7 @@ public class CubePlayerManager extends PlayerManager {
 		
 		// send the cube data with the first time flag set
 		player.netServerHandler.send(new PacketMapChunkBulk(columnsToSend));
-		log.info(String.format("Server sent %d cubes to player, %d remaining", cubesToSend.size(), info.outgoingCubes.size()));
+		log.info("Server sent {} cubes to player, {} remaining", cubesToSend.size(), info.outgoingCubes.size());
 		
 		// tell the cube watchers which cubes were sent for this player
 		for (Cube cube : cubesToSend) {

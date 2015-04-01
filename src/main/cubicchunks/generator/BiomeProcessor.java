@@ -30,7 +30,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
-import cubicchunks.CubeProviderTools;
+import cubicchunks.CubeTools;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
@@ -63,8 +63,12 @@ public class BiomeProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
+		
+		// TEMP: skip this stage
+		if (true) return true;
+		
 		// only continue if the neighboring cubes exist
-		if (!CubeProviderTools.cubeAndNeighborsExist(this.cache, cube.getX(), cube.getY(), cube.getZ())) {
+		if (!CubeTools.cubeAndNeighborsExist(this.cache, cube.getX(), cube.getY(), cube.getZ())) {
 			return false;
 		}
 		

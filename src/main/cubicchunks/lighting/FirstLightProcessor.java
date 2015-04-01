@@ -25,7 +25,7 @@ package cubicchunks.lighting;
 
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
-import cubicchunks.CubeProviderTools;
+import cubicchunks.CubeTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
@@ -42,9 +42,14 @@ public class FirstLightProcessor extends CubeProcessor {
 	@Override
 	public boolean calculate(Cube cube) {
 		
+		// TODO: lighting it taking too long and breaking the generation pipeline
+		// need to find a way to fix it
+		// TEMP: skip this stage for now
+		if (true) return true;
+		
 		// only light if the neighboring cubes exist
 		CubeCache cache = WorldContexts.get(cube.getWorld()).getCubeCache();
-		if (!CubeProviderTools.cubeAndNeighborsExist(cache, cube.getX(), cube.getY(), cube.getZ())) {
+		if (!CubeTools.cubeAndNeighborsExist(cache, cube.getX(), cube.getY(), cube.getZ())) {
 			return false;
 		}
 		

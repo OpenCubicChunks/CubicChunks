@@ -28,6 +28,8 @@ import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.server.WorldServerContext;
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.Coords;
 
 
 public class WorldContexts {
@@ -40,5 +42,13 @@ public class WorldContexts {
 			return WorldServerContext.get((WorldServer)world);
 		}
 		throw new Error("Unknown world type!");
+	}
+	
+	public static long getSpawnPointCubeAddress(World world) {
+		return AddressTools.getAddress(
+			Coords.blockToCube(world.worldInfo.getSpawnX()),
+			Coords.blockToCube(world.worldInfo.getSpawnY()),
+			Coords.blockToCube(world.worldInfo.getSpawnZ())
+		);
 	}
 }

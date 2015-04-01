@@ -23,8 +23,12 @@
  */
 package cubicchunks;
 
+import java.util.Random;
+import java.util.Set;
+
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerManager;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
@@ -37,6 +41,7 @@ import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
+import cubicchunks.world.Column;
 import cuchaz.m3l.api.chunks.ChunkSystem;
 
 public class CubicChunkSystem implements ChunkSystem {
@@ -107,5 +112,48 @@ public class CubicChunkSystem implements ChunkSystem {
 	private boolean isTallWorld(World world) {
 		// for now, only tall-ify the overworld
 		return world.dimension.getId() == 0;
+	}
+	
+	@Override
+	public void onWorldClientTick(WorldClient worldClient) {
+		if (isTallWorld(worldClient)) {
+			WorldClientContext context = WorldClientContext.get(worldClient);
+			
+			// tick all the things!
+			worldClient.profiler.startSection("lightingEngine");
+			context.getLightingManager().tick();
+			worldClient.profiler.endSection();
+		}
+	}
+
+	@Override
+	public void onWorldServerTick(WorldServer worldServer) {
+		if (isTallWorld(worldServer)) {
+			WorldServerContext context = WorldServerContext.get(worldServer);
+			
+			// tick all the things!
+			worldServer.profiler.startSection("generatorPipeline");
+			context.getGeneratorPipeline().tick();
+			worldServer.profiler.endSection();
+			
+			worldServer.profiler.startSection("lightingEngine");
+			context.getLightingManager().tick();
+			worldServer.profiler.endSection();
+			
+			worldServer.profiler.startSection("randomCubeTicks");
+			ServerCubeCache cubeCache = context.getCubeCache();
+			for (ChunkCoordIntPair coords : (Set<ChunkCoordIntPair>)worldServer.activeChunkSet) {
+				Column column = (Column)cubeCache.getChunk(coords.chunkX, coords.chunkZ);
+				column.doRandomTicks();
+			}
+			worldServer.profiler.endSection();
+		}
+	}
+
+	@Override
+	public Integer getRandomBlockYForMobSpawnAttempt(Random rand, int upper, World world, int cubeX, int cubeZ) {
+		// need to return a random blockY between the "bottom" of the world and upper
+		// TEMP: well... we don't really have a bottom, so just clamp the val to [15,upper] for now
+		return rand.nextInt(Math.max(15, upper));
 	}
 }

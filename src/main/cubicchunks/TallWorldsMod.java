@@ -80,21 +80,6 @@ public class TallWorldsMod {
 	}
 	
 	/*
-	public void handleEvent(ClassOverrideEvent event) {
-		if (event.getOldClassName().equals("net.minecraft.client.multiplayer.WorldClient")) {
-			event.setNewClassName(CubeWorldClient.class.getName());
-		} else if (event.getOldClassName().equals("net.minecraft.world.WorldServer")) {
-			event.setNewClassName(CubeWorldServer.class.getName());
-		}
-	}
-	
-	public void handleEvent(WorldProviderEvent event) {
-		if (event.getDimension() == 0) // surface world
-		{
-			event.setCustomWorldProvider(new CubeWorldProviderSurface());
-		}
-	}
-	
 	public void handleEvent(EncodeChunkEvent event) {
 		// check for our chunk instance
 		if (event.getChunk() instanceof Column) {
@@ -269,13 +254,6 @@ public class TallWorldsMod {
 	public void handleEvent(VoidFogRangeEvent event) {
 		int min = Coords.cubeToMinBlock(AddressTools.MinY);
 		event.setCustomRange(min, min + 1024);
-	}
-	
-	public void handleEvent(RandomChunkBlockYEvent event) {
-		if (event.getChunk() instanceof Column) {
-			Column column = (Column)event.getChunk();
-			event.setBlockY(Util.randRange(event.getRand(), Coords.cubeToMinBlock(column.getBottomCubeY()), Coords.cubeToMaxBlock(column.getTopCubeY())));
-		}
 	}
 	
 	public void handleEvent(CheckChunksExistForEntityEvent event) {

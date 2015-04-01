@@ -240,7 +240,7 @@ public class Column extends Chunk {
 		Integer oldSkylightY = getSkylightBlockY(x, z);
 		getLightIndex().setOpacity(x, pos.getY(), z, newOpacity);
 		Integer newSkylightY = getSkylightBlockY(x, z);
-		if (oldSkylightY != null && newSkylightY != null && oldSkylightY != newSkylightY) {
+		if (oldSkylightY != null && newSkylightY != null && !oldSkylightY.equals(newSkylightY)) {
 			
 			// sort the y-values
 			int minBlockY = oldSkylightY;
@@ -281,7 +281,7 @@ public class Column extends Chunk {
 	}
 	
 	@Override
-	protected int getBlockMetadata(int localX, int blockY, int localZ) {
+	public int getBlockMetadata(int localX, int blockY, int localZ) {
 		
 		// pass off to the cube
 		int cubeY = Coords.blockToCube(blockY);
