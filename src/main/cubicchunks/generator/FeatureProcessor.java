@@ -57,6 +57,10 @@ public class FeatureProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
+		
+		// TEMP: skip this stage
+		if (true) return true;
+		
 		this.worldObj = cube.getWorld();
 		
 		// generate world features
@@ -65,7 +69,13 @@ public class FeatureProcessor extends CubeProcessor {
 			this.ravineGenerator.generate(this.worldObj, cube);
 		}
 		/*
-		 * UNDONE: enable feature generation if( m_mapFeaturesEnabled ) { m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); }
+		UNDONE: enable feature generation 
+		if( m_mapFeaturesEnabled ) { 
+			m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); 
+			m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); 
+			m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); 
+			m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); 
+		}
 		 */
 		
 		return true;

@@ -59,12 +59,14 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.base.Predicate;
 
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.generator.biome.biomegen.CCBiome;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.RangeInt;
 import java.util.Iterator;
+import net.minecraft.world.gen.ClientChunkCache;
+import net.minecraft.world.gen.IChunkGenerator;
+import net.minecraft.world.gen.ServerChunkCache;
 
 public class Column extends Chunk {
 	
@@ -85,7 +87,7 @@ public class Column extends Chunk {
 		init();
 	}
 	
-	public Column(World world, int cubeX, int cubeZ, CCBiome[] biomes) {
+	public Column(World world, int cubeX, int cubeZ, Biome[] biomes) {
 		
 		// NOTE: this constructor is called by the column generator
 		this(world, cubeX, cubeZ);
@@ -193,7 +195,6 @@ public class Column extends Chunk {
 	
 	@Override
 	public IBlockState getBlockState(BlockPos pos) {
-		
 		// pass off to the cube
 		int cubeY = Coords.blockToCube(pos.getY());
 		Cube cube = this.cubes.get(cubeY);
@@ -206,7 +207,6 @@ public class Column extends Chunk {
 	
 	@Override
 	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
-		
 		// is there a chunk for this block?
 		int cubeY = Coords.blockToCube(pos.getY());
 		Cube cube = this.cubes.get(cubeY);
@@ -244,7 +244,6 @@ public class Column extends Chunk {
 		Integer newSkylightY = getSkylightBlockY(x, z);
 		//cast to int is required. No autoboxing/unboxing in this case
 		if (oldSkylightY != null && newSkylightY != null && oldSkylightY != (int)newSkylightY) {
-			
 			// sort the y-values
 			int minBlockY = oldSkylightY;
 			int maxBlockY = newSkylightY;
@@ -285,7 +284,7 @@ public class Column extends Chunk {
 	}
 	
 	@Override
-	protected int getBlockMetadata(int localX, int blockY, int localZ) {
+	public int getBlockMetadata(int localX, int blockY, int localZ) {
 		
 		// pass off to the cube
 		int cubeY = Coords.blockToCube(blockY);
@@ -668,7 +667,7 @@ public class Column extends Chunk {
 			in.close();
 			
 			// 8. clean up column if we have just emptied all its cubes
-			if ( this.world.isClient){
+			if (this.world.isClient){
 				boolean unload = true;
 				Iterator<Cube> c = this.getCubes().iterator();
 				while (c.hasNext()){
@@ -678,7 +677,7 @@ public class Column extends Chunk {
 					}
 				}
 				if (unload){
-					CubeProviderClient provider = (CubeProviderClient) this.world.getChunkProvider();
+					ClientChunkCache provider =  (ClientChunkCache) this.world.getChunkProvider();
 					provider.unloadChunk(this.getX(), this.getZ());
 				}
 			}

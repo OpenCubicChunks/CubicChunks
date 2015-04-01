@@ -33,7 +33,9 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
 import cubicchunks.world.Cube;
 import cubicchunks.world.CubeCache;
+import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 
 public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
@@ -53,12 +55,12 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 
 	protected boolean amplify;
 
-	protected final World m_worldServer;
+	protected final World worldServer;
 
 	public AbstractTerrainProcessor3dNoise(String name, World worldServer, CubeCache cache, int batchSize) {
 		super(name, cache, batchSize);
 
-		this.m_worldServer = worldServer;
+		this.worldServer = worldServer;
 
 		this.noiseArrayHigh = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 		this.noiseArrayLow = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
@@ -218,9 +220,10 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 					double val = terrainArray[xRel][yRel][zRel];
 
 					int yAbs = Coords.localToBlock(cubeY, yRel);
-
-					cube.setBlockForGeneration(xRel, yRel, zRel, val - yAbs > 0 ? Blocks.stone
-							: yAbs < seaLevel ? Blocks.water : Blocks.air);
+					BlockPos pos = new BlockPos(xRel, yRel, zRel);
+					Block block = val - yAbs > 0 ? Blocks.STONE
+							: yAbs < seaLevel ? Blocks.WATER : Blocks.AIR;
+					cube.setBlockForGeneration(pos, block.getDefaultState());
 				} // end yRel
 			} // end zRel
 		} // end xRel

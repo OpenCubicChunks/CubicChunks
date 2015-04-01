@@ -39,6 +39,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.play.packet.clientbound.PacketMapChunkBulk;
 import net.minecraft.server.management.PlayerManager;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -80,6 +81,7 @@ public class CubePlayerManager extends PlayerManager {
 		}
 		
 		public void sortOutgoingCubes() {
+			
 			// get the player chunk position
 			final int cubeX = AddressTools.getX(this.address);
 			final int cubeY = AddressTools.getY(this.address);
@@ -114,21 +116,24 @@ public class CubePlayerManager extends PlayerManager {
 	}
 	
 	private WorldServer m_worldServer;
+	private ServerCubeCache m_cubeCache;
 	private int m_viewDistance;
 	private TreeMap<Long,CubeWatcher> m_watchers;
 	private TreeMap<Integer,PlayerInfo> m_players;
 	
-	public CubePlayerManager(WorldServer worldServer, int viewDistance) {
+	public CubePlayerManager(WorldServer worldServer) {
 		super(worldServer);
 		
 		this.m_worldServer = worldServer;
-		this.m_viewDistance = viewDistance;
+		this.m_cubeCache = (ServerCubeCache)m_worldServer.serverChunkCache;
+		this.m_viewDistance = worldServer.getMinecraftServer().getConfigurationManager().getViewRadius();
 		this.m_watchers = Maps.newTreeMap();
 		this.m_players = Maps.newTreeMap();
 	}
 	
 	@Override
 	public void addPlayer(EntityPlayerMP player) {
+		
 		// make new player info
 		PlayerInfo info = new PlayerInfo();
 		this.m_players.put(player.getEntityId(), info);
@@ -156,6 +161,7 @@ public class CubePlayerManager extends PlayerManager {
 	
 	@Override
 	public void removePlayer(EntityPlayerMP player) {
+		
 		// get the player info
 		PlayerInfo info = this.m_players.get(player.getEntityId());
 		if (info == null) {
@@ -181,7 +187,7 @@ public class CubePlayerManager extends PlayerManager {
 			// cleanup empty watchers and cubes
 			if (!watcher.hasPlayers()) {
 				this.m_watchers.remove(address);
-				getCubeProvider().unloadCube(watcher.getCube());
+				m_cubeCache.unloadCube(watcher.getCube());
 			}
 		}
 		
@@ -190,8 +196,8 @@ public class CubePlayerManager extends PlayerManager {
 	}
 	
 	@Override
-	public void updatePlayerInstances() // aka tick()
-	{
+	public void updatePlayerInstances()	{
+		
 		// responsibilities:
 		// update chunk properties
 		// send chunk updates to players
@@ -204,25 +210,26 @@ public class CubePlayerManager extends PlayerManager {
 		// did all the players leave an alternate dimension?
 		if (this.m_players.isEmpty() && !this.m_worldServer.dimension.canRespawnHere()) {
 			// unload everything
-			getCubeProvider().unloadAllChunks();
+			m_cubeCache.unloadAllChunks();
 		}
 	}
 	
-	// markBlockForUpdate
-	public void func_151250_a(int blockX, int blockY, int blockZ) {
+	@Override
+	public void markBlockForUpdate(BlockPos pos) {
+		
 		// get the watcher
-		int cubeX = Coords.blockToCube(blockX);
-		int cubeY = Coords.blockToCube(blockY);
-		int cubeZ = Coords.blockToCube(blockZ);
+		int cubeX = Coords.blockToCube(pos.getX());
+		int cubeY = Coords.blockToCube(pos.getY());
+		int cubeZ = Coords.blockToCube(pos.getZ());
 		CubeWatcher watcher = getWatcher(cubeX, cubeY, cubeZ);
 		if (watcher == null) {
 			return;
 		}
 		
 		// pass off to watcher
-		int localX = Coords.blockToLocal(blockX);
-		int localY = Coords.blockToLocal(blockY);
-		int localZ = Coords.blockToLocal(blockZ);
+		int localX = Coords.blockToLocal(pos.getX());
+		int localY = Coords.blockToLocal(pos.getY());
+		int localZ = Coords.blockToLocal(pos.getZ());
 		watcher.setDirtyBlock(localX, localY, localZ);
 	}
 	
@@ -284,13 +291,14 @@ public class CubePlayerManager extends PlayerManager {
 			// cleanup empty watchers and cubes
 			if (!watcher.hasPlayers()) {
 				this.m_watchers.remove(address);
-				getCubeProvider().unloadCube(watcher.getCube());
+				m_cubeCache.unloadCube(watcher.getCube());
 			}
 		}
 	}
 	
 	@Override
 	public boolean isPlayerWatchingChunk(EntityPlayerMP player, int cubeX, int cubeZ) {
+		
 		// get the info
 		PlayerInfo info = this.m_players.get(player.getEntityId());
 		if (info == null) {
@@ -308,9 +316,9 @@ public class CubePlayerManager extends PlayerManager {
 		return false;
 	}
 	
-	public void onPlayerUpdate(EntityPlayerMP player) {
+	public void processCubeLoadQueue(EntityPlayerMP player) {
 		// this method flushes outgoing chunks to the player
-		
+
 		// get the outgoing cubes
 		PlayerInfo info = this.m_players.get(player.getEntityId());
 		if (info == null || info.outgoingCubes.isEmpty()) {
@@ -364,7 +372,7 @@ public class CubePlayerManager extends PlayerManager {
 		
 		// send the cube data with the first time flag set
 		player.netServerHandler.send(new PacketMapChunkBulk(columnsToSend));
-		log.info(String.format("Server sent %d cubes to player, %d remaining", cubesToSend.size(), info.outgoingCubes.size()));
+		log.info("Server sent {} cubes to player, {} remaining", cubesToSend.size(), info.outgoingCubes.size());
 		
 		// tell the cube watchers which cubes were sent for this player
 		for (Cube cube : cubesToSend) {
@@ -401,10 +409,6 @@ public class CubePlayerManager extends PlayerManager {
 		return info.cubeSelector.getVisibleCubes();
 	}
 	
-	private ServerCubeCache getCubeProvider() {
-		return (ServerCubeCache)this.m_worldServer.serverChunkCache;
-	}
-	
 	private CubeWatcher getWatcher(int cubeX, int cubeY, int cubeZ) {
 		return getWatcher(AddressTools.getAddress(cubeX, cubeY, cubeZ));
 	}
@@ -417,7 +421,7 @@ public class CubePlayerManager extends PlayerManager {
 		int cubeX = AddressTools.getX(address);
 		int cubeY = AddressTools.getY(address);
 		int cubeZ = AddressTools.getZ(address);
-		return getCubeProvider().cubeExists(cubeX, cubeY, cubeZ);
+		return m_cubeCache.cubeExists(cubeX, cubeY, cubeZ);
 	}
 	
 	private CubeWatcher getOrCreateWatcher(long address) {
@@ -427,10 +431,10 @@ public class CubePlayerManager extends PlayerManager {
 			int cubeX = AddressTools.getX(address);
 			int cubeY = AddressTools.getY(address);
 			int cubeZ = AddressTools.getZ(address);
-			getCubeProvider().loadCubeAndNeighbors(cubeX, cubeY, cubeZ);
+			m_cubeCache.loadCubeAndNeighbors(cubeX, cubeY, cubeZ);
 			
 			// make a new watcher
-			watcher = new CubeWatcher(getCubeProvider().getCube(cubeX, cubeY, cubeZ));
+			watcher = new CubeWatcher(m_cubeCache.getCube(cubeX, cubeY, cubeZ));
 			this.m_watchers.put(address, watcher);
 		}
 		return watcher;

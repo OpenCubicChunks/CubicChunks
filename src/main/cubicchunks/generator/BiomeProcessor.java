@@ -29,8 +29,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
-import cubicchunks.CubeProviderTools;
-import cubicchunks.generator.biome.biomegen.CCBiome;
+import net.minecraft.world.biome.Biome;
+import cubicchunks.CubeTools;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeProcessor;
@@ -44,7 +44,7 @@ public class BiomeProcessor extends CubeProcessor {
 	private Random rand;
 	private NoiseGeneratorPerlin m_noiseGen;
 	private double[] noise;
-	private CCBiome[] biomes;
+	private Biome[] biomes;
 	
 	private int seaLevel;
 	
@@ -63,17 +63,21 @@ public class BiomeProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
+		// TEMP: skip this stage
+		if (true) return true;
+		
 		//if the cube is empty, there is nothing to do. Even if neightbors don't exist
 		if(cube.isEmpty()) {
 			return true;
 		}
+		
 		// only continue if the neighboring cubes exist
-		if (!CubeProviderTools.cubeAndNeighborsExist(this.cache, cube.getX(), cube.getY(), cube.getZ())) {
+		if (!CubeTools.cubeAndNeighborsExist(this.cache, cube.getX(), cube.getY(), cube.getZ())) {
 			return false;
 		}
 		
 		// generate biome info. This is a hackjob.
-		this.biomes = (CCBiome[])this.worldServer.dimension.getBiomeManager().getBiomeMap(
+		this.biomes = (Biome[])this.worldServer.dimension.getBiomeManager().getBiomeMap(
 			this.biomes, 
 			Coords.cubeToMinBlock(cube.getX()), 
 			Coords.cubeToMinBlock(cube.getZ()), 
@@ -107,8 +111,9 @@ public class BiomeProcessor extends CubeProcessor {
 				int zAbs = cube.getZ() << 4 | zRel;
 				int xzCoord = zRel << 4 | xRel;
 				
-				CCBiome biome = this.biomes[xzCoord];
-				biome.replaceBlocks(this.worldServer, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, noise[zRel * 16 + xRel]);
+				//TODO: Reimplement this
+				//CCBiome biome = this.biomes[xzCoord];
+				//biome.replaceBlocks(this.worldServer, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, noise[zRel * 16 + xRel]);
 			}
 		}
 		return true;

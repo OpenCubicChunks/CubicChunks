@@ -25,7 +25,7 @@ package cubicchunks.client;
 
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
-import cubicchunks.CubeProviderTools;
+import cubicchunks.CubeTools;
 import cubicchunks.world.CubeCache;
 
 public class CubeWorldClient {
@@ -34,13 +34,6 @@ public class CubeWorldClient {
 	// but we need to migrate this code to other places first
 
 	@Override
-	public void tick() {
-		super.tick();
-		
-		this.m_lightingManager.tick();
-	}
-	
-	@Override
 	public boolean updateLightingAt(LightType lightType, BlockPos pos) {
 		// forward to the new lighting system
 		return this.m_lightingManager.computeDiffuseLighting(pos, lightType);
@@ -48,6 +41,6 @@ public class CubeWorldClient {
 	
 	@Override
 	public boolean checkBlockRangeIsInWorld(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean flag) {
-		return CubeProviderTools.blocksExist((CubeCache)this.clientChunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
+		return CubeTools.blocksExist((CubeCache)this.clientChunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
 	}
 }

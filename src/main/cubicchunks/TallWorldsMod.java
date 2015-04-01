@@ -29,6 +29,11 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cubicchunks.client.ClientCubeCache;
+import cubicchunks.server.CubeIO;
+import cubicchunks.server.CubePlayerManager;
+import cubicchunks.server.ServerCubeCache;
+import cubicchunks.world.Column;
 import cuchaz.m3l.M3L;
 import cuchaz.m3l.api.registry.AlreadyRegisteredException;
 
@@ -42,34 +47,39 @@ public class TallWorldsMod {
 	public static final String Id = "tallworlds";
 	public static final Logger log = LoggerFactory.getLogger(Id);
 	
+	@Mod.Instance(Id)
+	public static TallWorldsMod instance;
+	
+	private CubicChunkSystem m_system;
+	
+	public CubicChunkSystem getSystem() {
+		// TODO: maybe this could be named better...
+		return m_system;
+	}
+	
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
 		
-		log.info("Init");
+		// HACKHACK: tweak the class load order so the runtime obfuscator works correctly
+		// load subclasses of Minecraft classes first, so the runtime obfuscator can record
+		// the superclass information before any other classes need it
+		// TODO: make a way to explicitly record superclass info without needing to change load order
+		Column.class.getName();
+		CubePlayerManager.class.getName();
+		ServerCubeCache.class.getName();
+		ClientCubeCache.class.getName();
+		CubeIO.class.getName();
 		
+		// register our chunk system
+		m_system = new CubicChunkSystem();
 		try {
-			M3L.instance.getRegistry().chunkSystem.register(new CubicChunkSystem());
+			M3L.instance.getRegistry().chunkSystem.register(m_system);
 		} catch (AlreadyRegisteredException ex) {
 			log.error("Cannot register cubic chunk system. Someone else beat us to it. =(", ex);
 		}
 	}
 	
 	/*
-	public void handleEvent(ClassOverrideEvent event) {
-		if (event.getOldClassName().equals("net.minecraft.client.multiplayer.WorldClient")) {
-			event.setNewClassName(CubeWorldClient.class.getName());
-		} else if (event.getOldClassName().equals("net.minecraft.world.WorldServer")) {
-			event.setNewClassName(CubeWorldServer.class.getName());
-		}
-	}
-	
-	public void handleEvent(WorldProviderEvent event) {
-		if (event.getDimension() == 0) // surface world
-		{
-			event.setCustomWorldProvider(new CubeWorldProviderSurface());
-		}
-	}
-	
 	public void handleEvent(EncodeChunkEvent event) {
 		// check for our chunk instance
 		if (event.getChunk() instanceof Column) {
@@ -244,13 +254,6 @@ public class TallWorldsMod {
 	public void handleEvent(VoidFogRangeEvent event) {
 		int min = Coords.cubeToMinBlock(AddressTools.MinY);
 		event.setCustomRange(min, min + 1024);
-	}
-	
-	public void handleEvent(RandomChunkBlockYEvent event) {
-		if (event.getChunk() instanceof Column) {
-			Column column = (Column)event.getChunk();
-			event.setBlockY(Util.randRange(event.getRand(), Coords.cubeToMinBlock(column.getBottomCubeY()), Coords.cubeToMaxBlock(column.getTopCubeY())));
-		}
 	}
 	
 	public void handleEvent(CheckChunksExistForEntityEvent event) {

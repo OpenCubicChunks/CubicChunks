@@ -42,11 +42,11 @@ public class GeneratorPipeline {
 	
 	private static final int TickBudget = 40; // ms. There are only 50 ms per tick
 	
-	private CubeCache provider;
+	private CubeCache cubes;
 	private List<QueueProcessor> processors;
 	
-	public GeneratorPipeline(CubeCache provider) {
-		this.provider = provider;
+	public GeneratorPipeline(CubeCache cubes) {
+		this.cubes = cubes;
 		this.processors = Lists.newArrayList();
 		
 		// allocate space for the stages
@@ -65,7 +65,7 @@ public class GeneratorPipeline {
 		for (GeneratorStage stage : GeneratorStage.values()) {
 			if (!stage.isLastStage()) {
 				if (this.processors.get(stage.ordinal()) == null) {
-					throw new Error("Generator pipline configured incorrectly! Stage " + stage.name() + " is null! Fix your CubeWorldProvider.createGeneratorPipeline()!");
+					throw new Error("Generator pipline configured incorrectly! Stage " + stage.name() + " is null! Fix your WorldServerContext constructor!");
 				}
 			}
 		}
@@ -101,11 +101,12 @@ public class GeneratorPipeline {
 			// move the processed entries into the next stage of the pipeline
 			int nextStage = stage + 1;
 			for (long address : processor.getProcessedAddresses()) {
+				
 				// set the generator stage flag on the cube
 				int cubeX = AddressTools.getX(address);
 				int cubeY = AddressTools.getY(address);
 				int cubeZ = AddressTools.getZ(address);
-				this.provider.getCube(cubeX, cubeY, cubeZ).setGeneratorStage(GeneratorStage.values()[nextStage]);
+				this.cubes.getCube(cubeX, cubeY, cubeZ).setGeneratorStage(GeneratorStage.values()[nextStage]);
 				
 				// advance the address to the next stage
 				if (nextStage < this.processors.size()) {
@@ -127,7 +128,6 @@ public class GeneratorPipeline {
 	}
 	
 	public void generateAll() {
-		while (tick() > 0)
-			;
+		while (tick() > 0);
 	}
 }

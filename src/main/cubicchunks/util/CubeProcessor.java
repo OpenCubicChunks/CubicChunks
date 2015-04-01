@@ -39,15 +39,17 @@ public abstract class CubeProcessor extends QueueProcessor {
 	
 	@Override
 	public void processBatch() {
+		
 		// start processing
 		for (long address : this.incomingAddresses) {
+			
 			// get the cube
 			int cubeX = AddressTools.getX(address);
 			int cubeY = AddressTools.getY(address);
 			int cubeZ = AddressTools.getZ(address);
 			Cube cube = this.cache.getCube(cubeX, cubeY, cubeZ);
 			if (cube == null) {
-				log.warn(String.format("Unloaded cube (%d,%d,%d) dropped from %s processor queue.", cubeX, cubeY, cubeZ, this.name));
+				log.warn("Unloaded cube ({},{},{}) dropped from {} processor queue.", cubeX, cubeY, cubeZ, this.name);
 				continue;
 			}
 			

@@ -50,6 +50,10 @@ public abstract class QueueProcessor {
 		this.deferredAddresses = Lists.newArrayList();
 	}
 	
+	public String getName() {
+		return this.name;
+	}
+	
 	public void add(long address) {
 		this.queue.add(address);
 	}
@@ -68,6 +72,7 @@ public abstract class QueueProcessor {
 		
 		// is there time left?
 		while (System.currentTimeMillis() < timeStop) {
+			
 			// get a batch of addresses
 			this.incomingAddresses.clear();
 			this.queue.getBatch(this.incomingAddresses, this.batchSize);

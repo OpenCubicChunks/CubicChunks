@@ -81,6 +81,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	
 	@Override
 	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
+		
 		// is the column loaded?
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
 		Column column = this.loadedColumns.get(columnAddress);
@@ -176,7 +177,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 			try {
 				column = this.cubeIO.loadColumn(this.worldServer, cubeX, cubeZ);
 			} catch (IOException ex) {
-				log.error(String.format("Unable to load column (%d,%d)", cubeX, cubeZ), ex);
+				log.error("Unable to load column ({},{})", cubeX, cubeZ, ex);
 				return;
 			}
 			
@@ -202,7 +203,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 		try {
 			cube = this.cubeIO.loadCubeAndAddToColumn(this.worldServer, column, cubeAddress);
 		} catch (IOException ex) {
-			log.error(String.format("Unable to load cube (%d,%d,%d)", cubeX, cubeY, cubeZ), ex);
+			log.error("Unable to load cube ({},{},{})", cubeX, cubeY, cubeZ, ex);
 			return;
 		}
 		
@@ -236,6 +237,7 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	
 	@Override
 	public void unloadChunk(int cubeX, int cubeZ) {
+		// don't call this, unload cubes instead
 		throw new UnsupportedOperationException();
 	}
 	
@@ -268,11 +270,9 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	@Override
 	public boolean unloadQueuedChunks() {
 		
-		/* TODO
 		// NOTE: the return value is completely ignored
 		
-		// don't unload if we're saving
-		if (this.worldServer.levelSaving) {
+		if (this.worldServer.disableSaving) {
 			return false;
 		}
 		
@@ -298,17 +298,16 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 				cube.onUnload();
 				
 				// save the cube
-				this.io.saveCube(cube);
+				this.cubeIO.saveCube(cube);
 			}
 			
 			// unload empty columns
 			if (!column.hasCubes()) {
 				column.onChunkLoad();
 				this.loadedColumns.remove(columnAddress);
-				this.io.saveColumn(column);
+				this.cubeIO.saveColumn(column);
 			}
 		}
-		*/
 		
 		return false;
 	}
@@ -316,21 +315,19 @@ public class ServerCubeCache extends ServerChunkCache implements CubeCache {
 	@Override
 	public boolean saveAllChunks(boolean alwaysTrue, IProgressBar progress) {
 		
-		/* TODO
 		for (Column column : this.loadedColumns.values()) {
 			// save the column
 			if (column.needsSaving(alwaysTrue)) {
-				this.io.saveColumn(column);
+				this.cubeIO.saveColumn(column);
 			}
 			
 			// save the cubes
 			for (Cube cube : column.getCubes()) {
 				if (cube.needsSaving()) {
-					this.io.saveCube(cube);
+					this.cubeIO.saveCube(cube);
 				}
 			}
 		}
-		*/
 		
 		return true;
 	}

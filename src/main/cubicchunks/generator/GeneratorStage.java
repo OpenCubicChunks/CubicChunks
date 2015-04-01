@@ -24,7 +24,12 @@
 package cubicchunks.generator;
 
 public enum GeneratorStage {
-	Terrain, Biomes, Features, Lighting, Population, Live;
+	Terrain,
+	Biomes,
+	Features,
+	Lighting,
+	Population,
+	Live;
 	
 	public static GeneratorStage getFirstStage() {
 		return values()[0];
