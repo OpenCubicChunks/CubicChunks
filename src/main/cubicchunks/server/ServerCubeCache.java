@@ -44,13 +44,13 @@ import cubicchunks.generator.ColumnGenerator;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
-import cubicchunks.world.BlankColumn;
-import cubicchunks.world.Column;
-import cubicchunks.world.Cube;
-import cubicchunks.world.CubeCache;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.column.BlankColumn;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 import cuchaz.m3l.util.Logging;
 
-public class ServerCubeCache extends ServerChunkCache implements CubeCache {
+public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 	
 	private static final Logger log = Logging.getLogger();
 	

@@ -27,12 +27,12 @@ import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.ClientChunkCache;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.world.BlankColumn;
-import cubicchunks.world.Column;
-import cubicchunks.world.Cube;
-import cubicchunks.world.CubeCache;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.column.BlankColumn;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
-public class ClientCubeCache extends ClientChunkCache implements CubeCache {
+public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 	
 	private World world;
 	private BlankColumn blankColumn;

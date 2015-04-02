@@ -21,25 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.util.processor;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import cubicchunks.world.CubeCache;
+import cubicchunks.util.BatchedSetQueue;
+import cubicchunks.world.ICubeCache;
 
 public abstract class QueueProcessor {
 	
 	protected String name;
-	protected CubeCache cache;
+	protected ICubeCache cache;
 	private int batchSize;
 	private BatchedSetQueue<Long> queue;
 	protected List<Long> incomingAddresses;
 	protected List<Long> processedAddresses;
 	protected List<Long> deferredAddresses;
 	
-	public QueueProcessor(String name, CubeCache cache, int batchSize) {
+	public QueueProcessor(String name, ICubeCache cache, int batchSize) {
 		this.name = name;
 		this.cache = cache;
 		this.batchSize = batchSize;

@@ -26,7 +26,7 @@ package cubicchunks.generator;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import cubicchunks.util.Coords;
-import cubicchunks.world.Column;
+import cubicchunks.world.column.Column;
 
 public class ColumnGenerator {
 	
@@ -40,7 +40,7 @@ public class ColumnGenerator {
 	public Column generateColumn(int cubeX, int cubeZ) {
 		
 		// generate biome info. This is a hackjob.
-		this.m_biomes = (Biome[])this.m_worldServer.dimension.getBiomeManager().getBiomeMap(
+		this.m_biomes = this.m_worldServer.dimension.getBiomeManager().getBiomeMap(
 			this.m_biomes,
 			Coords.cubeToMinBlock(cubeX), 
 			Coords.cubeToMinBlock(cubeZ),

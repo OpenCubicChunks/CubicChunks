@@ -62,7 +62,7 @@ public class Bits {
 	
 	public static int unpackUnsigned(int packed, int size, int offset) {
 		packed = packed >> offset;
-		return (int)packed & getMask(size);
+		return packed & getMask(size);
 	}
 	
 	public static int unpackSigned(int packed, int size, int offset) {
@@ -72,7 +72,7 @@ public class Bits {
 		
 		// then unpack the integer
 		packed = packed >> offset;
-		return (int)packed;
+		return packed;
 	}
 	
 	public static int getMask(int size) {

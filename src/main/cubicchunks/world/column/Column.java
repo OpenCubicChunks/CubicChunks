@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.world.column;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -63,6 +63,11 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.RangeInt;
+import cubicchunks.world.ChunkSectionHelper;
+import cubicchunks.world.EntityContainer;
+import cubicchunks.world.LightIndex;
+import cubicchunks.world.WorldContexts;
+import cubicchunks.world.cube.Cube;
 
 public class Column extends Chunk {
 	
@@ -187,6 +192,27 @@ public class Column extends Chunk {
 	public void markSaved() {
 		this.entities.markSaved(this.world.getGameTime());
 		this.isModified = false;
+	}
+	
+	@Override
+	public Block getBlockAt(final int x, final int y, final int z) {
+		
+		//compact to BlockPos
+		BlockPos pos = new BlockPos(x, y, z);
+		
+		return getBlockAt(pos);
+	}
+	
+	@Override
+	public Block getBlockAt(final BlockPos pos) {
+		// pass to cube
+		int cubeY = Coords.blockToCube(pos.getY());
+		Cube cube = this.cubes.get(cubeY);
+		if (cube != null) {
+			return cube.getBlockAt(pos);
+		}
+		
+		return Blocks.AIR;
 	}
 	
 	@Override

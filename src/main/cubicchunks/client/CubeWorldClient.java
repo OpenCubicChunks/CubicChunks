@@ -25,8 +25,8 @@ package cubicchunks.client;
 
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
-import cubicchunks.CubeTools;
-import cubicchunks.world.CubeCache;
+import cubicchunks.util.CubeTools;
+import cubicchunks.world.ICubeCache;
 
 public class CubeWorldClient {
 	
@@ -41,6 +41,6 @@ public class CubeWorldClient {
 	
 	@Override
 	public boolean checkBlockRangeIsInWorld(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean flag) {
-		return CubeTools.blocksExist((CubeCache)this.clientChunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
+		return CubeTools.blocksExist((ICubeCache)this.clientChunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
 	}
 }

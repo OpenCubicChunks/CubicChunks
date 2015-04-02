@@ -21,14 +21,13 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.util;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.CubeCache;
+import cubicchunks.world.ICubeCache;
 
 public class CubeTools {
 	
-	public static boolean blocksExist(CubeCache cubeCache, int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ) {
+	public static boolean blocksExist(ICubeCache cubeCache, int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ) {
 		
 		// convert block bounds to chunk bounds
 		int minCubeX = Coords.blockToCube(minBlockX);
@@ -41,12 +40,12 @@ public class CubeTools {
 		return cubesExist(cubeCache, minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ);
 	}
 	
-	public static boolean cubeAndNeighborsExist(CubeCache cubeCache, int cubeX, int cubeY, int cubeZ) {
+	public static boolean cubeAndNeighborsExist(ICubeCache cubeCache, int cubeX, int cubeY, int cubeZ) {
 		// TODO: optimize this with loop unrolling
 		return cubesExist(cubeCache, cubeX - 1, cubeY - 1, cubeZ - 1, cubeX + 1, cubeY + 1, cubeZ + 1);
 	}
 	
-	public static boolean cubesExist(CubeCache cubeCache, int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ) {
+	public static boolean cubesExist(ICubeCache cubeCache, int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ) {
 		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
 			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {

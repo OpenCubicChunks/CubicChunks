@@ -63,7 +63,7 @@ public class NoiseGeneratorSimplex {
 	}
 	
 	private static double func_151604_a(int[] p_151604_0_, double p_151604_1_, double p_151604_3_) {
-		return (double)p_151604_0_[0] * p_151604_1_ + (double)p_151604_0_[1] * p_151604_3_;
+		return p_151604_0_[0] * p_151604_1_ + p_151604_0_[1] * p_151604_3_;
 	}
 	
 	public double noise2D(double p_151605_1_, double p_151605_3_) {
@@ -72,9 +72,9 @@ public class NoiseGeneratorSimplex {
 		int var15 = fastfloor(p_151605_1_ + var13);
 		int var16 = fastfloor(p_151605_3_ + var13);
 		double var17 = (3.0D - sqrt3) / 6.0D;
-		double var19 = (double) (var15 + var16) * var17;
-		double var21 = (double)var15 - var19;
-		double var23 = (double)var16 - var19;
+		double var19 = (var15 + var16) * var17;
+		double var21 = var15 - var19;
+		double var23 = var16 - var19;
 		double var25 = p_151605_1_ - var21;
 		double var27 = p_151605_3_ - var23;
 		byte var29;
@@ -88,8 +88,8 @@ public class NoiseGeneratorSimplex {
 			var30 = 1;
 		}
 		
-		double var31 = var25 - (double)var29 + var17;
-		double var33 = var27 - (double)var30 + var17;
+		double var31 = var25 - var29 + var17;
+		double var33 = var27 - var30 + var17;
 		double var35 = var25 - 1.0D + 2.0D * var17;
 		double var37 = var27 - 1.0D + 2.0D * var17;
 		int var39 = var15 & 255;
@@ -134,17 +134,17 @@ public class NoiseGeneratorSimplex {
 		int var14 = 0;
 		
 		for (int var15 = 0; var15 < zSize; ++var15) {
-			double var16 = (zOffset + (double)var15) * zScale + this.zCoord;
+			double var16 = (zOffset + var15) * zScale + this.zCoord;
 			
 			for (int var18 = 0; var18 < xSize; ++var18) {
-				double var19 = (xOffset + (double)var18) * xScale + this.xCoord;
+				double var19 = (xOffset + var18) * xScale + this.xCoord;
 				
 				double var27 = (var19 + var16) * F3;
 				int var29 = fastfloor(var19 + var27);
 				int var30 = fastfloor(var16 + var27);
-				double var31 = (double) (var29 + var30) * G3;
-				double var33 = (double)var29 - var31;
-				double var35 = (double)var30 - var31;
+				double var31 = (var29 + var30) * G3;
+				double var33 = var29 - var31;
+				double var35 = var30 - var31;
 				double var37 = var19 - var33;
 				double var39 = var16 - var35;
 				byte var41;
@@ -158,8 +158,8 @@ public class NoiseGeneratorSimplex {
 					var42 = 1;
 				}
 				
-				double var43 = var37 - (double)var41 + G3;
-				double var45 = var39 - (double)var42 + G3;
+				double var43 = var37 - var41 + G3;
+				double var45 = var39 - var42 + G3;
 				double var47 = var37 - 1.0D + 2.0D * G3;
 				double var49 = var39 - 1.0D + 2.0D * G3;
 				int var51 = var29 & 255;

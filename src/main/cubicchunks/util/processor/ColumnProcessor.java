@@ -21,11 +21,42 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.util.processor;
 
+import cubicchunks.util.AddressTools;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.column.BlankColumn;
+import cubicchunks.world.column.Column;
 
-public interface CubeCache {
-	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
-	Cube getCube(int cubeX, int cubeY, int cubeZ);
-	Column getColumn(int cubeX, int cubeZ);
+public abstract class ColumnProcessor extends QueueProcessor {
+	
+	public ColumnProcessor(String name, ICubeCache provider, int batchSize) {
+		super(name, provider, batchSize);
+	}
+	
+	@Override
+	public void processBatch() {
+		// start processing
+		for (long address : this.incomingAddresses) {
+			// get the column
+			int cubeX = AddressTools.getX(address);
+			int cubeZ = AddressTools.getZ(address);
+			Column column = this.cache.getColumn(cubeX, cubeZ);
+			
+			// skip blank columns
+			if (column == null || column instanceof BlankColumn) {
+				continue;
+			}
+			
+			// add unsuccessful calculations back onto the queue
+			boolean success = calculate(column);
+			if (success) {
+				this.processedAddresses.add(address);
+			} else {
+				this.deferredAddresses.add(address);
+			}
+		}
+	}
+	
+	public abstract boolean calculate(Column column);
 }

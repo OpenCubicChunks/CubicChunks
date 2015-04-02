@@ -30,7 +30,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import cubicchunks.world.Cube;
+import cubicchunks.world.cube.Cube;
 
 public class CubicRavineGen extends CubicMapGenBase {
 	
@@ -68,15 +68,15 @@ public class CubicRavineGen extends CubicMapGenBase {
 		}
 		
 		for (; numTry < tries; ++numTry) {
-			double modSin = 1.5D + (double) (MathHelper.sin((float)numTry * (float)Math.PI / (float)tries) * size_base * 1.0F);
+			double modSin = 1.5D + MathHelper.sin(numTry * (float)Math.PI / tries) * size_base * 1.0F;
 			double yModSin = modSin * yModSinMultiplier;
-			modSin *= (double)rand.nextFloat() * 0.25D + 0.75D;// * value between 0.75 and 1
-			yModSin *= (double)rand.nextFloat() * 0.25D + 0.75D;
+			modSin *= rand.nextFloat() * 0.25D + 0.75D;// * value between 0.75 and 1
+			yModSin *= rand.nextFloat() * 0.25D + 0.75D;
 			float cosAngle = MathHelper.cos(angle);
 			float sinAngle = MathHelper.sin(angle);
-			x += (double) (MathHelper.cos(curve) * cosAngle);
-			y += (double)sinAngle;
-			z += (double) (MathHelper.sin(curve) * cosAngle);
+			x += MathHelper.cos(curve) * cosAngle;
+			y += sinAngle;
+			z += MathHelper.sin(curve) * cosAngle;
 			angle *= 0.7F;
 			angle += f4 * 0.05F;
 			curve += f3 * 0.05F;
@@ -91,8 +91,8 @@ public class CubicRavineGen extends CubicMapGenBase {
 			double xDist = x - xOCenter;
 			// double yDist = y - yOCenter;
 			double zDist = z - zOCenter;
-			double triesLeft = (double) (tries - numTry);
-			double fDist = (double) (size_base + 2.0F + 16.0F);
+			double triesLeft = tries - numTry;
+			double fDist = size_base + 2.0F + 16.0F;
 			
 			if (xDist * xDist + zDist * zDist - triesLeft * triesLeft > fDist * fDist) {
 				return;
@@ -164,10 +164,10 @@ public class CubicRavineGen extends CubicMapGenBase {
 				continue;
 			}
 			for (int x1 = xDist1; x1 < xDist2; ++x1) {
-				double distX = ((double) (x1 + xOrigin * 16) + 0.5D - x) / modSin;
+				double distX = (x1 + xOrigin * 16 + 0.5D - x) / modSin;
 				
 				for (int z1 = zDist1; z1 < zDist2; ++z1) {
-					double distZ = ((double) (z1 + zOrigin * 16) + 0.5D - z) / modSin;
+					double distZ = (z1 + zOrigin * 16 + 0.5D - z) / modSin;
 					// int aIndex = ( x1 * 16 + z1 ) * 16 /*128*/ + yDist2;
 					boolean grass = false;
 					
@@ -177,7 +177,7 @@ public class CubicRavineGen extends CubicMapGenBase {
 					for (int y1 = yDist1; y1 < yDist2; ++y1) {
 						double distY = ((double)y1 + yOrigin * 16 + 0.5D - y) / yModSin;
 						
-						if ( (distX * distX + distZ * distZ) * (double)this.array1[ (y1 + yOrigin * 16) & 0xFF] + distY * distY / 6.0D >= 1.0D) {
+						if ( (distX * distX + distZ * distZ) * this.array1[ (y1 + yOrigin * 16) & 0xFF] + distY * distY / 6.0D >= 1.0D) {
 							continue;
 						}
 						

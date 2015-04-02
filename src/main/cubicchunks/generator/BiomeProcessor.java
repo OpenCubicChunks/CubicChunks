@@ -30,12 +30,12 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
-import cubicchunks.CubeTools;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
 import cubicchunks.util.Coords;
-import cubicchunks.util.CubeProcessor;
-import cubicchunks.world.Cube;
-import cubicchunks.world.CubeCache;
+import cubicchunks.util.CubeTools;
+import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.cube.Cube;
 
 public class BiomeProcessor extends CubeProcessor {
 	
@@ -48,7 +48,7 @@ public class BiomeProcessor extends CubeProcessor {
 	
 	private int seaLevel;
 	
-	public BiomeProcessor(String name, WorldServer worldServer, CubeCache cubeCache, int batchSize) {
+	public BiomeProcessor(String name, WorldServer worldServer, ICubeCache cubeCache, int batchSize) {
 		super(name, cubeCache, batchSize);
 		
 		this.worldServer = worldServer;
@@ -73,7 +73,7 @@ public class BiomeProcessor extends CubeProcessor {
 		}
 		
 		// generate biome info. This is a hackjob.
-		this.biomes = (Biome[])this.worldServer.dimension.getBiomeManager().getBiomeMap(
+		this.biomes = this.worldServer.dimension.getBiomeManager().getBiomeMap(
 			this.biomes, 
 			Coords.cubeToMinBlock(cube.getX()), 
 			Coords.cubeToMinBlock(cube.getZ()), 

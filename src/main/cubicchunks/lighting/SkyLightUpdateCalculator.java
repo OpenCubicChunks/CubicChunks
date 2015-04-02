@@ -28,9 +28,9 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import cubicchunks.util.Coords;
-import cubicchunks.world.Column;
-import cubicchunks.world.Cube;
 import cubicchunks.world.WorldContexts;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
 public class SkyLightUpdateCalculator {
 	

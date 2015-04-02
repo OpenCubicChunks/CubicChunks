@@ -210,12 +210,13 @@ public class ComplexWorldBuilder implements IBuilder {
 	/**
 	 * Sets the sea level for the world. This must be between -1.0 (minimum elevation) and 1.0 (maximum elevation). I recommend dividing the desired seaLevel by the desired build height and feeding the result into this method.
 	 */
+	@Override
 	public void setSeaLevel(double seaLevel) {
 		this.SEA_LEVEL = seaLevel;
 	}
 	
 	public void setModOctaves(int value) {
-		this.ModOctaves = value;
+		ComplexWorldBuilder.ModOctaves = value;
 	}
 	
 	@Override

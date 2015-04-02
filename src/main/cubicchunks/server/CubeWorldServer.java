@@ -30,11 +30,11 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.LightType;
 import net.minecraft.world.WorldSettings;
-import cubicchunks.CubeTools;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
-import cubicchunks.world.Column;
-import cubicchunks.world.CubeCache;
+import cubicchunks.util.CubeTools;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.column.Column;
 import cuchaz.m3l.util.Util;
 
 public class CubeWorldServer {
@@ -44,7 +44,7 @@ public class CubeWorldServer {
 	
 	@Override
 	public boolean checkBlockRangeIsInWorld(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean flag) {
-		return CubeTools.blocksExist((CubeCache)this.chunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
+		return CubeTools.blocksExist((ICubeCache)this.chunkCache, minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
 	}
 	
 	@Override

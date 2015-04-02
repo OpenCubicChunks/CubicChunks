@@ -30,7 +30,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import cubicchunks.world.Cube;
+import cubicchunks.world.cube.Cube;
 
 /*
  * Modified Minecraft cave generation code. Based on Robinton's cave generation implementation.
@@ -107,13 +107,13 @@ public class CubicCaveGen extends CubicMapGenBase {
 		int r1 = random.nextInt(tries / 2) + tries / 4;
 		
 		for (boolean r2 = random.nextInt(6) == 0; n < tries; ++n) {
-			double modSin = 1.5D + (double) (MathHelper.sin((float)n * (float)Math.PI / (float)tries) * f * 1.0F);
+			double modSin = 1.5D + MathHelper.sin(n * (float)Math.PI / tries) * f * 1.0F;
 			double yModSin = modSin * d3;
 			float angleCos = MathHelper.cos(angle);
 			float angleSin = MathHelper.sin(angle);
-			x += (double) (MathHelper.cos(curve) * angleCos);
-			y += (double)angleSin;
-			z += (double) (MathHelper.sin(curve) * angleCos);
+			x += MathHelper.cos(curve) * angleCos;
+			y += angleSin;
+			z += MathHelper.sin(curve) * angleCos;
 			
 			if (r2) {
 				angle *= 0.92F;
@@ -138,8 +138,8 @@ public class CubicCaveGen extends CubicMapGenBase {
 				double xDist = x - xOCenter;
 				double yDist = y - yOCenter;
 				double zDist = z - zOCenter;
-				double triesLeft = (double) (tries - n);
-				double fDist = (double) (f + 2.0F + 16.0F);
+				double triesLeft = tries - n;
+				double fDist = f + 2.0F + 16.0F;
 				
 				// Use yDist?
 				if (xDist * xDist + yDist * yDist + zDist * zDist - triesLeft * triesLeft > fDist * fDist) {
@@ -208,15 +208,15 @@ public class CubicCaveGen extends CubicMapGenBase {
 						// Will it work?
 						for (x2 = xDist1; x2 < xDist2; ++x2) {
 							// xDistance from what to what?
-							double distX = ((double) (x2 + xOrigin * 16) + 0.5D - x) / modSin;
+							double distX = (x2 + xOrigin * 16 + 0.5D - x) / modSin;
 							
 							for (int z2 = zDist1; z2 < zDist2; ++z2) {
-								double distZ = ((double) (z2 + zOrigin * 16) + 0.5D - z) / modSin;
+								double distZ = (z2 + zOrigin * 16 + 0.5D - z) / modSin;
 								// int aIndex = ( x2 * 16 + z2 ) * 16/*128*/ + yDist2;
 								
 								// for ( int y2 = yDist2 - 1; y2 >= yDist1; --y2 )//what?
 								for (int y2 = yDist1; y2 < yDist2; ++y2) {
-									double distY = ((double) (y2 + yOrigin * 16) + 0.5D - y) / yModSin;
+									double distY = (y2 + yOrigin * 16 + 0.5D - y) / yModSin;
 									BlockPos pos = new BlockPos(x2, y2, z2);
 									
 									if (distY > -0.7D && distX * distX + distY * distY + distZ * distZ < 1.0D) {

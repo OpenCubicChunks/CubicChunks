@@ -31,8 +31,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cubicchunks.util.Bits;
-import cubicchunks.world.Column;
-import cubicchunks.world.CubeCache;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.column.Column;
 
 public class LightingManager {
 	
@@ -46,7 +46,7 @@ public class LightingManager {
 	private DiffuseLightingCalculator diffuseLightingCalculator;
 	private SkyLightUpdateCalculator skyLightUpdateCalculator;
 	
-	public LightingManager(World world, CubeCache provider) {
+	public LightingManager(World world, ICubeCache provider) {
 		this.world = world;
 		
 		this.skyLightOcclusionProcessor = new SkyLightOcclusionProcessor("Sky Light Occlusion", provider, 50);

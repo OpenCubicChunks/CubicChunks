@@ -32,7 +32,6 @@ import com.google.common.collect.Maps;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.world.WorldContext;
 
-
 public class WorldClientContext implements WorldContext {
 	
 	private static Map<WorldClient,WorldClientContext> m_instances;

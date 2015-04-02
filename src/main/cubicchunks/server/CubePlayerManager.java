@@ -53,8 +53,8 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
-import cubicchunks.world.ColumnView;
-import cubicchunks.world.Cube;
+import cubicchunks.world.column.ColumnView;
+import cubicchunks.world.cube.Cube;
 
 public class CubePlayerManager extends PlayerManager {
 	

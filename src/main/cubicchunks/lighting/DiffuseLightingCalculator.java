@@ -36,9 +36,9 @@ import org.apache.logging.log4j.Logger;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.FastIntQueue;
-import cubicchunks.world.Cube;
-import cubicchunks.world.CubeCache;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.WorldContexts;
+import cubicchunks.world.cube.Cube;
 
 public class DiffuseLightingCalculator {
 	
@@ -241,7 +241,7 @@ public class DiffuseLightingCalculator {
 		int cubeX = Coords.blockToCube(blockX);
 		int cubeY = Coords.blockToCube(blockY);
 		int cubeZ = Coords.blockToCube(blockZ);
-		CubeCache cubeCache = WorldContexts.get(world).getCubeCache();
+		ICubeCache cubeCache = WorldContexts.get(world).getCubeCache();
 		if (!cubeCache.cubeExists(cubeX, cubeY, cubeZ)) {
 			return false;
 		}

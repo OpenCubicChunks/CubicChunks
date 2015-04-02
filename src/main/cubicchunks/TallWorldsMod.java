@@ -33,7 +33,7 @@ import cubicchunks.client.ClientCubeCache;
 import cubicchunks.server.CubeIO;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
-import cubicchunks.world.Column;
+import cubicchunks.world.column.Column;
 import cuchaz.m3l.M3L;
 import cuchaz.m3l.api.registry.AlreadyRegisteredException;
 

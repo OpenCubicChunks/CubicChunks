@@ -67,7 +67,7 @@ public class NoiseGeneratorImproved extends NoiseGenerator {
 	
 	public final double func_76309_a(int i, double a, double b) {
 		int var6 = i & 15;
-		double var7 = (double) (1 - ( (var6 & 8) >> 3)) * a;
+		double var7 = (1 - ( (var6 & 8) >> 3)) * a;
 		double var9 = var6 < 4 ? 0.0D : (var6 != 12 && var6 != 14 ? b : a);
 		return ( (var6 & 1) == 0 ? var7 : -var7) + ( (var6 & 2) == 0 ? var9 : -var9);
 	}
@@ -101,28 +101,28 @@ public class NoiseGeneratorImproved extends NoiseGenerator {
 			double var77 = 1.0D / frequency;
 			
 			for (int xPos = 0; xPos < xSize; ++xPos) {
-				x0 = xValue + (double)xPos * scaledXScale + this.xCoord;
+				x0 = xValue + xPos * scaledXScale + this.xCoord;
 				int var78 = (int)x0;
 				
-				if (x0 < (double)var78) {
+				if (x0 < var78) {
 					--var78;
 				}
 				
 				int var34 = var78 & 255;
-				x0 -= (double)var78;
+				x0 -= var78;
 				y0 = qerp(x0);
 				
 				for (int zPos = 0; zPos < zSize; ++zPos) {
-					z0 = zValue + (double)zPos * scaledZScale + this.zCoord;
+					z0 = zValue + zPos * scaledZScale + this.zCoord;
 					var40 = (int)z0;
 					
-					if (z0 < (double)var40) // floor z0 and store as var40
+					if (z0 < var40) // floor z0 and store as var40
 					{
 						--var40;
 					}
 					
 					var41 = var40 & 255;
-					z0 -= (double)var40;
+					z0 -= var40;
 					var42 = qerp(z0);
 					var19 = this.permutations[var34] + 0; // add zero???
 					int var66 = this.permutations[var19] + var41;
@@ -145,39 +145,39 @@ public class NoiseGeneratorImproved extends NoiseGenerator {
 			y0 = 0.0D;
 			
 			for (int xPos = 0; xPos < xSize; ++xPos) {
-				z0 = xValue + (double)xPos * scaledXScale + this.xCoord;
+				z0 = xValue + xPos * scaledXScale + this.xCoord;
 				var40 = (int)z0;
 				
-				if (z0 < (double)var40) {
+				if (z0 < var40) {
 					--var40;
 				}
 				
 				var41 = var40 & 255;
-				z0 -= (double)var40;
+				z0 -= var40;
 				var42 = z0 * z0 * z0 * (z0 * (z0 * 6.0D - 15.0D) + 10.0D);
 				
 				for (int var44 = 0; var44 < zSize; ++var44) {
-					double var45 = zValue + (double)var44 * scaledZScale + this.zCoord;
+					double var45 = zValue + var44 * scaledZScale + this.zCoord;
 					int var47 = (int)var45;
 					
-					if (var45 < (double)var47) {
+					if (var45 < var47) {
 						--var47;
 					}
 					
 					int var48 = var47 & 255;
-					var45 -= (double)var47;
+					var45 -= var47;
 					double var49 = qerp(var45);
 					
 					for (int var51 = 0; var51 < ySize; ++var51) {
-						double var52 = yValue + (double)var51 * scaledYScale + this.yCoord;
+						double var52 = yValue + var51 * scaledYScale + this.yCoord;
 						int var54 = (int)var52;
 						
-						if (var52 < (double)var54) {
+						if (var52 < var54) {
 							--var54;
 						}
 						
 						int var55 = var54 & 255;
-						var52 -= (double)var54;
+						var52 -= var54;
 						double var56 = var52 * var52 * var52 * (var52 * (var52 * 6.0D - 15.0D) + 10.0D);
 						
 						if (var51 == 0 || var55 != var22) {

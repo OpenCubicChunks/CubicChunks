@@ -26,7 +26,7 @@ package cubicchunks.generator.features;
 import java.util.Random;
 
 import net.minecraft.world.World;
-import cubicchunks.world.Cube;
+import cubicchunks.world.cube.Cube;
 
 public abstract class CubicMapGenBase {
 	
@@ -54,9 +54,9 @@ public abstract class CubicMapGenBase {
 		for (int x = xOrigin - radius; x <= xOrigin + radius; ++x) {
 			for (int y = yOrigin - radius; y <= yOrigin + radius; ++y) {
 				for (int z = zOrigin - radius; z <= zOrigin + radius; ++z) {
-					long randX_mul = (long)x * randX;
-					long randY_mul = (long)y * randY;
-					long randZ_mul = (long)z * randZ;
+					long randX_mul = x * randX;
+					long randY_mul = y * randY;
+					long randZ_mul = z * randZ;
 					this.rand.setSeed(randX_mul ^ randY_mul ^ randZ_mul ^ world.getSeed());
 					this.generate(world, cube, x, y, z, xOrigin, yOrigin, zOrigin);
 				}

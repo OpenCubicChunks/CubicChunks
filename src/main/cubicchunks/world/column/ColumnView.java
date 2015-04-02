@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.world.column;
 
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +36,8 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
 import cubicchunks.util.Coords;
 import cubicchunks.util.RangeInt;
+import cubicchunks.world.LightIndex;
+import cubicchunks.world.cube.Cube;
 
 public class ColumnView extends Column {
 	

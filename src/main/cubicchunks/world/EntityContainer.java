@@ -122,7 +122,7 @@ public class EntityContainer {
 		writeToNbt(nbt, name, null);
 	}
 	
-	public void writeToNbt(NbtTagCompound nbt, String name, EntityActionListener listener) {
+	public void writeToNbt(NbtTagCompound nbt, String name, IEntityActionListener listener) {
 		m_hasActiveEntities = false;
 		NbtList nbtEntities = new NbtList();
 		nbt.put(name, nbtEntities);
@@ -139,7 +139,7 @@ public class EntityContainer {
 		}
 	}
 	
-	public void readFromNbt(NbtTagCompound nbt, String name, World world, EntityActionListener listener) {
+	public void readFromNbt(NbtTagCompound nbt, String name, World world, IEntityActionListener listener) {
 		NbtList nbtEntities = nbt.getAsNbtList(name, 10);
 		if (nbtEntities == null) {
 			return;

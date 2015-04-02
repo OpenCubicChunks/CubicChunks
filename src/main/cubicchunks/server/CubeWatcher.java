@@ -41,8 +41,8 @@ import com.google.common.collect.Maps;
 
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ColumnView;
-import cubicchunks.world.Cube;
+import cubicchunks.world.column.ColumnView;
+import cubicchunks.world.cube.Cube;
 
 public class CubeWatcher {
 	

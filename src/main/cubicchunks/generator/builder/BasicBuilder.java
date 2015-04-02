@@ -60,6 +60,7 @@ public class BasicBuilder implements IBuilder {
 		this.MAX_ELEV = maxElev;
 	}
 	
+	@Override
 	public void setSeaLevel(double seaLevel) {
 		this.SEA_LEVEL = seaLevel;
 	}

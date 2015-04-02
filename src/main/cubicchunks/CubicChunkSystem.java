@@ -41,10 +41,10 @@ import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
-import cubicchunks.world.Column;
-import cuchaz.m3l.api.chunks.ChunkSystem;
+import cubicchunks.world.column.Column;
+import cuchaz.m3l.api.chunks.IChunkSystem;
 
-public class CubicChunkSystem implements ChunkSystem {
+public class CubicChunkSystem implements IChunkSystem {
 	
 	@Override
 	public ServerChunkCache getServerChunkCache(WorldServer worldServer) {
@@ -142,8 +142,8 @@ public class CubicChunkSystem implements ChunkSystem {
 			
 			worldServer.profiler.startSection("randomCubeTicks");
 			ServerCubeCache cubeCache = context.getCubeCache();
-			for (ChunkCoordIntPair coords : (Set<ChunkCoordIntPair>)worldServer.activeChunkSet) {
-				Column column = (Column)cubeCache.getChunk(coords.chunkX, coords.chunkZ);
+			for (ChunkCoordIntPair coords : worldServer.activeChunkSet) {
+				Column column = cubeCache.getChunk(coords.chunkX, coords.chunkZ);
 				column.doRandomTicks();
 			}
 			worldServer.profiler.endSection();

@@ -21,22 +21,13 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator;
+package cubicchunks.world;
 
-import cubicchunks.util.processor.CubeProcessor;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
-public class PopulationProcessor extends CubeProcessor {
-	
-	public PopulationProcessor(String name, ICubeCache provider, int batchSize) {
-		super(name, provider, batchSize);
-	}
-	
-	@Override
-	public boolean calculate(Cube cube) {
-		
-		// TEMP: skip this stage
-		return true;
-	}
+public interface ICubeCache {
+	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
+	Cube getCube(int cubeX, int cubeY, int cubeZ);
+	Column getColumn(int cubeX, int cubeZ);
 }

@@ -57,6 +57,7 @@ public class Timer {
 		return m_isRunning;
 	}
 	
+	@Override
 	public String toString() {
 		return m_name + " : " + getElapsedTime();
 	}

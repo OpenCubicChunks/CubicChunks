@@ -60,9 +60,9 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ChunkSectionHelper;
-import cubicchunks.world.Column;
-import cubicchunks.world.Cube;
-import cubicchunks.world.EntityActionListener;
+import cubicchunks.world.IEntityActionListener;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
 public class CubeIO implements IThreadedFileIO {
 	
@@ -313,7 +313,7 @@ public class CubeIO implements IThreadedFileIO {
 		column.getLightIndex().readData(nbt.getAsByteArray("LightIndex"));
 		
 		// entities
-		column.getEntityContainer().readFromNbt(nbt, "Entities", world, new EntityActionListener() {
+		column.getEntityContainer().readFromNbt(nbt, "Entities", world, new IEntityActionListener() {
 			
 			@Override
 			public void onEntity(Entity entity) {
@@ -360,7 +360,7 @@ public class CubeIO implements IThreadedFileIO {
 		}
 		
 		// entities
-		cube.getEntityContainer().writeToNbt(nbt, "Entities", new EntityActionListener() {
+		cube.getEntityContainer().writeToNbt(nbt, "Entities", new IEntityActionListener() {
 			
 			@Override
 			public void onEntity(Entity entity) {
@@ -465,7 +465,7 @@ public class CubeIO implements IThreadedFileIO {
 		}
 		
 		// entities
-		cube.getEntityContainer().readFromNbt(nbt, "Entities", world, new EntityActionListener() {
+		cube.getEntityContainer().readFromNbt(nbt, "Entities", world, new IEntityActionListener() {
 			
 			@Override
 			public void onEntity(Entity entity) {

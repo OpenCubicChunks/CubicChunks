@@ -21,15 +21,17 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.util.processor;
 
-import cubicchunks.world.BlankColumn;
-import cubicchunks.world.Column;
-import cubicchunks.world.CubeCache;
+import cubicchunks.util.Bits;
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.column.BlankColumn;
+import cubicchunks.world.column.Column;
 
-public abstract class ColumnProcessor extends QueueProcessor {
+public abstract class BlockColumnProcessor extends QueueProcessor {
 	
-	public ColumnProcessor(String name, CubeCache provider, int batchSize) {
+	public BlockColumnProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 	}
 	
@@ -37,18 +39,26 @@ public abstract class ColumnProcessor extends QueueProcessor {
 	public void processBatch() {
 		// start processing
 		for (long address : this.incomingAddresses) {
+			// get the block coords
+			int blockX = Bits.unpackSigned(address, 26, 0);
+			int blockZ = Bits.unpackSigned(address, 26, 26);
+			
 			// get the column
-			int cubeX = AddressTools.getX(address);
-			int cubeZ = AddressTools.getZ(address);
-			Column column = (Column)this.cache.getColumn(cubeX, cubeZ);
+			int cubeX = Coords.blockToCube(blockX);
+			int cubeZ = Coords.blockToCube(blockZ);
+			Column column = this.cache.getColumn(cubeX, cubeZ);
 			
 			// skip blank columns
 			if (column == null || column instanceof BlankColumn) {
 				continue;
 			}
 			
+			// get the local coords
+			int localX = Coords.blockToLocal(blockX);
+			int localZ = Coords.blockToLocal(blockZ);
+			
 			// add unsuccessful calculations back onto the queue
-			boolean success = calculate(column);
+			boolean success = calculate(column, localX, localZ, blockX, blockZ);
 			if (success) {
 				this.processedAddresses.add(address);
 			} else {
@@ -57,5 +67,5 @@ public abstract class ColumnProcessor extends QueueProcessor {
 		}
 	}
 	
-	public abstract boolean calculate(Column column);
+	public abstract boolean calculate(Column column, int localX, int localZ, int blockX, int blockZ);
 }

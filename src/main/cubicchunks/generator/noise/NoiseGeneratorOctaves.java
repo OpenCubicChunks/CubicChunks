@@ -58,19 +58,19 @@ public class NoiseGeneratorOctaves extends NoiseGenerator {
 		double frequency = 1.0D;
 		
 		for (int curOctave = 0; curOctave < this.octaves; ++curOctave) {
-			double xValue = (double)noiseX * frequency * xScale;
-			double yValue = (double)noiseY * frequency * yScale;
-			double zValue = (double)noiseZ * frequency * zScale;
+			double xValue = noiseX * frequency * xScale;
+			double yValue = noiseY * frequency * yScale;
+			double zValue = noiseZ * frequency * zScale;
 			
 			long xLong = MathHelper.floor(xValue); // convert the double to a long int and floor it
 			long zLong = MathHelper.floor(zValue);
 			
-			xValue -= (double)xLong; // subtract the double-cast long from the double??? This should get the decimal portion of xValue
-			zValue -= (double)zLong;
+			xValue -= xLong; // subtract the double-cast long from the double??? This should get the decimal portion of xValue
+			zValue -= zLong;
 			xLong %= 16777216L; // binary select the long
 			zLong %= 16777216L;
-			xValue += (double)xLong; // add the double-cast long after the binary select to the double
-			zValue += (double)zLong;
+			xValue += xLong; // add the double-cast long after the binary select to the double
+			zValue += zLong;
 			
 			this.generatorCollection[curOctave].populateNoiseArray(noiseArray, xValue, yValue, zValue, xSize, ySize, zSize, xScale * frequency, yScale * frequency, zScale * frequency, frequency);
 			frequency /= 2.0D;

@@ -32,8 +32,8 @@ import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.builder.BasicBuilder;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
-import cubicchunks.util.CubeProcessor;
-import cubicchunks.world.Cube;
+import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.world.cube.Cube;
 
 public class NewTerrainProcessor extends CubeProcessor {
 	
@@ -149,7 +149,7 @@ public class NewTerrainProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
-		this.biomes = (Biome[])this.worldServer.dimension.getBiomeManager().getBiomeMap(
+		this.biomes = this.worldServer.dimension.getBiomeManager().getBiomeMap(
 			this.biomes, 
 			cube.getX() * 4 - this.maxSmoothRadius, 
 			cube.getZ() * 4 - this.maxSmoothRadius, 

@@ -29,9 +29,9 @@ import net.minecraft.world.gen.structure.StrongholdGenerator;
 import net.minecraft.world.gen.structure.VillageGenerator;
 import cubicchunks.generator.features.CubicCaveGen;
 import cubicchunks.generator.features.CubicRavineGen;
-import cubicchunks.util.CubeProcessor;
-import cubicchunks.world.Cube;
-import cubicchunks.world.CubeCache;
+import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.cube.Cube;
 
 public class FeatureProcessor extends CubeProcessor {
 	
@@ -44,7 +44,7 @@ public class FeatureProcessor extends CubeProcessor {
 	
 	private World worldObj;
 	
-	public FeatureProcessor(String name, CubeCache provider, int batchSize) {
+	public FeatureProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 		
 		this.caveGenerator = new CubicCaveGen();

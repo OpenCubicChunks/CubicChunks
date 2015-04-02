@@ -68,7 +68,7 @@ public class Profiler {
 		
 		// update percentages
 		for (ProfilerCounter counter : m_counters.values()) {
-			counter.setPercentTime(100.0 * (double)counter.getElapsedMilliseconds() / (double)totalTime);
+			counter.setPercentTime(100.0 * counter.getElapsedMilliseconds() / totalTime);
 		}
 		
 		// sort the counters
@@ -82,7 +82,7 @@ public class Profiler {
 		buf.append("Profiling Report:\n");
 		ProfilerCounter counter = null;
 		while ( (counter = order.poll()) != null) {
-			buf.append(String.format("%8.2f", (double)counter.getElapsedMilliseconds() / 1000.0));
+			buf.append(String.format("%8.2f", counter.getElapsedMilliseconds() / 1000.0));
 			buf.append("s (");
 			buf.append(String.format("%6.2f", counter.getPercentTime()));
 			buf.append("%): ");
@@ -96,7 +96,7 @@ public class Profiler {
 	public static String getMemoryUsed() {
 		long usedBytes = Runtime.getRuntime().totalMemory();
 		
-		double usedKibibytes = (double)usedBytes / 1024.0;
+		double usedKibibytes = usedBytes / 1024.0;
 		if (usedKibibytes < 1000.0) {
 			return String.format("%.2f", usedKibibytes) + "KiB";
 		}

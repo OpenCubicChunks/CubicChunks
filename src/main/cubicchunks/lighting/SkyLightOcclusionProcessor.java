@@ -26,15 +26,15 @@ package cubicchunks.lighting;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
-import cubicchunks.util.BlockColumnProcessor;
 import cubicchunks.util.Coords;
-import cubicchunks.world.Column;
-import cubicchunks.world.CubeCache;
+import cubicchunks.util.processor.BlockColumnProcessor;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.WorldContexts;
+import cubicchunks.world.column.Column;
 
 public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	
-	public SkyLightOcclusionProcessor(String name, CubeCache provider, int batchSize) {
+	public SkyLightOcclusionProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 	}
 	

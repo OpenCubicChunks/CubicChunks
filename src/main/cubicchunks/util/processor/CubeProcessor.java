@@ -21,10 +21,48 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.util.processor;
 
-import net.minecraft.entity.Entity;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-public interface EntityActionListener {
-	void onEntity(Entity entity);
+import cubicchunks.util.AddressTools;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.cube.Cube;
+
+public abstract class CubeProcessor extends QueueProcessor {
+	
+	private static final Logger log = LogManager.getLogger();
+	
+	public CubeProcessor(String name, ICubeCache provider, int batchSize) {
+		super(name, provider, batchSize);
+	}
+	
+	@Override
+	public void processBatch() {
+		
+		// start processing
+		for (long address : this.incomingAddresses) {
+			
+			// get the cube
+			int cubeX = AddressTools.getX(address);
+			int cubeY = AddressTools.getY(address);
+			int cubeZ = AddressTools.getZ(address);
+			Cube cube = this.cache.getCube(cubeX, cubeY, cubeZ);
+			if (cube == null) {
+				log.warn("Unloaded cube ({},{},{}) dropped from {} processor queue.", cubeX, cubeY, cubeZ, this.name);
+				continue;
+			}
+			
+			// add unsuccessful calculations back onto the queue
+			boolean success = calculate(cube);
+			if (success) {
+				this.processedAddresses.add(address);
+			} else {
+				this.deferredAddresses.add(address);
+			}
+		}
+	}
+	
+	public abstract boolean calculate(Cube cube);
 }

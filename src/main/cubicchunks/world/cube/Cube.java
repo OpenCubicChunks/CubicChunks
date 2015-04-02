@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.world.cube;
 
 import java.util.List;
 
@@ -47,6 +47,8 @@ import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;
+import cubicchunks.world.EntityContainer;
+import cubicchunks.world.column.Column;
 
 public class Cube {
 	
@@ -129,6 +131,20 @@ public class Cube {
 	
 	public ChunkSection getStorage() {
 		return this.storage;
+	}
+	
+	public Block getBlockAt(final BlockPos pos) {
+		if (isEmpty()) {
+			return Blocks.AIR;
+		}
+		int x = Coords.blockToLocal(pos.getX());
+		int y = Coords.blockToLocal(pos.getY());
+		int z = Coords.blockToLocal(pos.getZ());
+		return getBlockAt(x, y, z);
+	}
+	
+	public Block getBlockAt(final int localX, final int localY, final int localZ) {
+		return this.storage.getBlockAt(localX, localY, localZ);
 	}
 	
 	public IBlockState getBlockState(BlockPos pos) {
