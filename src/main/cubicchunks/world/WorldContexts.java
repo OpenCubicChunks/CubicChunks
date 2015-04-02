@@ -46,9 +46,9 @@ public class WorldContexts {
 	
 	public static long getSpawnPointCubeAddress(World world) {
 		return AddressTools.getAddress(
-			Coords.blockToCube(world.worldInfo.getSpawnX()),
-			Coords.blockToCube(world.worldInfo.getSpawnY()),
-			Coords.blockToCube(world.worldInfo.getSpawnZ())
+			Coords.blockToCube(world.getWorldInfo().getSpawnX()),
+			Coords.blockToCube(world.getWorldInfo().getSpawnY()),
+			Coords.blockToCube(world.getWorldInfo().getSpawnZ())
 		);
 	}
 }
