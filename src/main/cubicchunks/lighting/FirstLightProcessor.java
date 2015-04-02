@@ -42,10 +42,7 @@ public class FirstLightProcessor extends CubeProcessor {
 	@Override
 	public boolean calculate(Cube cube) {
 		
-		// TODO: lighting it taking too long and breaking the generation pipeline
-		// need to find a way to fix it
-		// TEMP: skip this stage for now
-		if (true) return true;
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		
 		// only light if the neighboring cubes exist
 		ICubeCache cache = WorldContexts.get(cube.getWorld()).getCubeCache();
@@ -53,18 +50,25 @@ public class FirstLightProcessor extends CubeProcessor {
 			return false;
 		}
 		
+		int minBlockX = Coords.cubeToMinBlock(cube.getX());
+		int maxBlockX = Coords.cubeToMaxBlock(cube.getX());
+		int minBlockY = Coords.cubeToMinBlock(cube.getY());
+		int maxBlockY = Coords.cubeToMaxBlock(cube.getY());
+		int minBlockZ = Coords.cubeToMinBlock(cube.getZ());
+		int maxBlockZ = Coords.cubeToMaxBlock(cube.getZ());
+		
 		// update the sky light
-		for (int localX = 0; localX < 16; localX++) {
-			for (int localZ = 0; localZ < 16; localZ++) {
-				updateSkylight(cube, localX, localZ);
+		for (pos.x = minBlockX; pos.x <= maxBlockX; pos.x++) {
+			for (pos.z = minBlockZ; pos.z <= maxBlockZ; pos.z++) {
+				updateSkylight(cube, pos);
 			}
 		}
 		
 		// light blocks in this cube
-		for (int localX = 0; localX < 16; localX++) {
-			for (int localY = 0; localY < 16; localY++) {
-				for (int localZ = 0; localZ < 16; localZ++) {
-					boolean wasLit = lightBlock(cube, localX, localY, localZ);
+		for (pos.x = minBlockX; pos.x <= maxBlockX; pos.x++) {
+			for (pos.y = minBlockY; pos.y <= maxBlockY; pos.y++) {
+				for (pos.z = minBlockZ; pos.z <= maxBlockZ; pos.z++) {
+					boolean wasLit = lightBlock(cube, pos);
 					
 					// if the lighting failed, then try again later
 					if (!wasLit) {
@@ -77,17 +81,20 @@ public class FirstLightProcessor extends CubeProcessor {
 		// populate the nearby faces of adjacent cubes
 		// this is for cases when a sheer wall is up against an empty cube
 		// unless this is called, the wall will not get directly lit
-		lightXSlab(cache.getCube(cube.getX() - 1, cube.getY(), cube.getZ()), 15);
-		lightXSlab(cache.getCube(cube.getX() + 1, cube.getY(), cube.getZ()), 0);
-		lightYSlab(cache.getCube(cube.getX(), cube.getY() - 1, cube.getZ()), 15);
-		lightYSlab(cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ()), 0);
-		lightZSlab(cache.getCube(cube.getX(), cube.getY(), cube.getZ() - 1), 15);
-		lightZSlab(cache.getCube(cube.getX(), cube.getY(), cube.getZ() + 1), 0);
+		lightXSlab(cache.getCube(cube.getX() - 1, cube.getY(), cube.getZ()), 15, pos);
+		lightXSlab(cache.getCube(cube.getX() + 1, cube.getY(), cube.getZ()), 0, pos);
+		lightYSlab(cache.getCube(cube.getX(), cube.getY() - 1, cube.getZ()), 15, pos);
+		lightYSlab(cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ()), 0, pos);
+		lightZSlab(cache.getCube(cube.getX(), cube.getY(), cube.getZ() - 1), 15, pos);
+		lightZSlab(cache.getCube(cube.getX(), cube.getY(), cube.getZ() + 1), 0, pos);
 		
 		return true;
 	}
 	
-	private void updateSkylight(Cube cube, int localX, int localZ) {
+	private void updateSkylight(Cube cube, BlockPos.MutableBlockPos pos) {
+		
+		int localX = Coords.blockToLocal(pos.getX());
+		int localZ = Coords.blockToLocal(pos.getZ());
 		
 		// compute bounds on the sky light gradient
 		Integer gradientMaxBlockY = cube.getColumn().getSkylightBlockY(localX, localZ);
@@ -107,15 +114,15 @@ public class FirstLightProcessor extends CubeProcessor {
 		if (cubeMinBlockY > gradientMaxBlockY) {
 			
 			// set everything to sky light
-			for (int localY = 0; localY < 16; localY++) {
-				cube.setLightValue(LightType.SKY, new BlockPos(localX, localY, localZ), 15);
+			for (pos.y=cubeMinBlockY; pos.y<=cubeMaxBlockY; pos.y++) {
+				cube.setLightValue(LightType.SKY, pos, 15);
 			}
 			
 		} else if (cubeMaxBlockY < gradientMinBlockY) {
 			
 			// set everything to dark
-			for (int localY = 0; localY < 16; localY++) {
-				cube.setLightValue(LightType.SKY, new BlockPos(localX, localY, localZ), 0);
+			for (pos.y=cubeMinBlockY; pos.y<=cubeMaxBlockY; pos.y++) {
+				cube.setLightValue(LightType.SKY, pos, 0);
 			}
 			
 		} else {
@@ -124,8 +131,8 @@ public class FirstLightProcessor extends CubeProcessor {
 			// need to calculate the light
 			int light = 15;
 			int startBlockY = Math.max(gradientMaxBlockY, cubeMaxBlockY);
-			for (int blockY = startBlockY; blockY >= cubeMinBlockY; blockY--) {
-				int opacity = index.getOpacity(localX, blockY, localZ);
+			for (pos.y = startBlockY; pos.y >= cubeMinBlockY; pos.y--) {
+				int opacity = index.getOpacity(localX, pos.y, localZ);
 				if (opacity == 0 && light < 15) {
 					// after something blocks light, apply a linear falloff
 					opacity = 1;
@@ -134,40 +141,59 @@ public class FirstLightProcessor extends CubeProcessor {
 				// decrease the light
 				light = Math.max(0, light - opacity);
 				
-				if (blockY <= cubeMaxBlockY) {
+				if (pos.y <= cubeMaxBlockY) {
 					// apply the light
-					int localY = Coords.blockToLocal(blockY);
-					cube.setLightValue(LightType.SKY, new BlockPos(localX, localY, localZ), light);
+					cube.setLightValue(LightType.SKY, pos, light);
 				}
 			}
 		}
 	}
 	
-	private void lightXSlab(Cube cube, int localX) {
-		for (int localY = 0; localY < 16; localY++) {
-			for (int localZ = 0; localZ < 16; localZ++) {
-				lightBlock(cube, localX, localY, localZ);
+	private void lightXSlab(Cube cube, int localX, BlockPos.MutableBlockPos pos) {
+		pos.x = Coords.localToBlock(cube.getX(), localX);
+		int minBlockY = Coords.cubeToMinBlock(cube.getY());
+		int maxBlockY = Coords.cubeToMaxBlock(cube.getY());
+		int minBlockZ = Coords.cubeToMinBlock(cube.getZ());
+		int maxBlockZ = Coords.cubeToMaxBlock(cube.getZ());
+		for (pos.y = minBlockY; pos.y <= maxBlockY; pos.y++) {
+			for (pos.z = minBlockZ; pos.z <= maxBlockZ; pos.z++) {
+				lightBlock(cube, pos);
 			}
 		}
 	}
 	
-	private void lightYSlab(Cube cube, int localY) {
-		for (int localX = 0; localX < 16; localX++) {
-			for (int localZ = 0; localZ < 16; localZ++) {
-				lightBlock(cube, localX, localY, localZ);
+	private void lightYSlab(Cube cube, int localY, BlockPos.MutableBlockPos pos) {
+		int minBlockX = Coords.cubeToMinBlock(cube.getX());
+		int maxBlockX = Coords.cubeToMaxBlock(cube.getX());
+		pos.y = Coords.localToBlock(cube.getY(), localY);
+		int minBlockZ = Coords.cubeToMinBlock(cube.getZ());
+		int maxBlockZ = Coords.cubeToMaxBlock(cube.getZ());
+		for (pos.x = minBlockX; pos.x <= maxBlockX; pos.x++) {
+			for (pos.z = minBlockZ; pos.z <= maxBlockZ; pos.z++) {
+				lightBlock(cube, pos);
 			}
 		}
 	}
 	
-	private void lightZSlab(Cube cube, int localZ) {
-		for (int localX = 0; localX < 16; localX++) {
-			for (int localY = 0; localY < 16; localY++) {
-				lightBlock(cube, localX, localY, localZ);
+	private void lightZSlab(Cube cube, int localZ, BlockPos.MutableBlockPos pos) {
+		int minBlockX = Coords.cubeToMinBlock(cube.getX());
+		int maxBlockX = Coords.cubeToMaxBlock(cube.getX());
+		int minBlockY = Coords.cubeToMinBlock(cube.getY());
+		int maxBlockY = Coords.cubeToMaxBlock(cube.getY());
+		pos.z = Coords.localToBlock(cube.getZ(), localZ);
+		for (pos.x = minBlockX; pos.x <= maxBlockX; pos.x++) {
+			for (pos.y = minBlockY; pos.y <= maxBlockY; pos.y++) {
+				lightBlock(cube, pos);
 			}
 		}
 	}
 	
-	private boolean lightBlock(Cube cube, int localX, int localY, int localZ) {
+	private boolean lightBlock(Cube cube, BlockPos.MutableBlockPos pos) {
+		
+		int localX = Coords.blockToLocal(pos.getX());
+		int localY = Coords.blockToLocal(pos.getY());
+		int localZ = Coords.blockToLocal(pos.getZ());
+		
 		// conditions for lighting a block in phase 1:
 		// must be below a non-transparent block
 		// must be above an opaque block that's below sea level
@@ -179,18 +205,17 @@ public class FirstLightProcessor extends CubeProcessor {
 		// must be a block light source
 		
 		// get the opaque block below sea level (if one exists)
-		int blockY = Coords.localToBlock(cube.getY(), localY);
 		LightIndex index = cube.getColumn().getLightIndex();
 		Integer opaqueBelowSeaLevelBlockY = index.getTopOpaqueBlockBelowSeaLevel(localX, localZ);
 		
 		boolean lightBlock = false;
-		if (opaqueBelowSeaLevelBlockY == null || blockY > opaqueBelowSeaLevelBlockY) {
+		if (opaqueBelowSeaLevelBlockY == null || pos.y > opaqueBelowSeaLevelBlockY) {
 			
 			// get the top nontransparent block (if one exists)
 			Integer topNonTransparentBlockY = index.getTopNonTransparentBlockY(localX, localZ);
 			
 			boolean hasSky = !cube.getColumn().getWorld().dimension.hasNoSky();
-			if (hasSky && topNonTransparentBlockY != null && blockY < topNonTransparentBlockY && index.getOpacity(localX, blockY, localZ) == 0) {
+			if (hasSky && topNonTransparentBlockY != null && pos.y < topNonTransparentBlockY && index.getOpacity(localX, pos.y, localZ) == 0) {
 				lightBlock = true;
 			}
 			
@@ -199,10 +224,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		}
 		
 		if (lightBlock) {
-			int blockX = Coords.localToBlock(cube.getX(), localX);
-			int blockZ = Coords.localToBlock(cube.getZ(), localZ);
-			
-			return cube.getWorld().updateLightingAt(new BlockPos(blockX, blockY, blockZ));
+			return cube.getWorld().updateLightingAt(pos);
 		}
 		
 		return true;
