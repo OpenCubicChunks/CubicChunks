@@ -346,7 +346,6 @@ public class CubePlayerManager extends PlayerManager {
 			Cube cube = iter.next();
 			
 			// wait for the cube to be live before sending this cube
-			// or any cube in the order after it
 			if (!cube.getGeneratorStage().isLastStage()) {
 				continue;
 			}
