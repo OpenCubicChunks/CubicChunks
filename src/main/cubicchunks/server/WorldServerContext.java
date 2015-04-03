@@ -69,10 +69,10 @@ public class WorldServerContext implements WorldContext {
 		m_generatorPipeline = new GeneratorPipeline(serverCubeCache);
 		
 		// init the generator pipeline
-		m_generatorPipeline.addStage(GeneratorStage.Terrain, new NewTerrainProcessor("Terrain", m_worldServer, m_serverCubeCache, 1));
-		m_generatorPipeline.addStage(GeneratorStage.Biomes, new BiomeProcessor("Biomes", m_worldServer, m_serverCubeCache, 100));
-		m_generatorPipeline.addStage(GeneratorStage.Features, new FeatureProcessor("Features", m_serverCubeCache, 100));
-		m_generatorPipeline.addStage(GeneratorStage.Lighting, new FirstLightProcessor("Lighting", m_serverCubeCache, 1));
+		m_generatorPipeline.addStage(GeneratorStage.Terrain, new NewTerrainProcessor("Terrain", m_worldServer, m_serverCubeCache, 5));
+		m_generatorPipeline.addStage(GeneratorStage.Biomes, new BiomeProcessor("Biomes", m_worldServer, m_serverCubeCache, 10));
+		m_generatorPipeline.addStage(GeneratorStage.Features, new FeatureProcessor("Features", m_serverCubeCache, 10));
+		m_generatorPipeline.addStage(GeneratorStage.Lighting, new FirstLightProcessor("Lighting", m_serverCubeCache, 5));
 		m_generatorPipeline.addStage(GeneratorStage.Population, new PopulationProcessor("Population", m_serverCubeCache, 100));
 		m_generatorPipeline.checkStages();
 	}

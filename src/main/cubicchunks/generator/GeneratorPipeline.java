@@ -119,10 +119,11 @@ public class GeneratorPipeline {
 			
 			// process this stage according to its share
 			StageProcessor processor = this.processors.get(stage);
-			int numMsToProcess = (int)(processor.share*TickBudget);
-			if (numMsToProcess <= 0) {
+			if (processor.share <= 0) {
 				continue;
 			}
+			
+			int numMsToProcess = (int)(Math.ceil(processor.share*TickBudget));
 			long stageTimeStart = System.currentTimeMillis();
 			int numStageProcessed = processor.processor.processQueue(stageTimeStart + numMsToProcess);
 			
