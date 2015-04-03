@@ -348,7 +348,7 @@ public class CubePlayerManager extends PlayerManager {
 			// wait for the cube to be live before sending this cube
 			// or any cube in the order after it
 			if (!cube.getGeneratorStage().isLastStage()) {
-				break;
+				continue;
 			}
 			
 			// add this cube to the send buffer
