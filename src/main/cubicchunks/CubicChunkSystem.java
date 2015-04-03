@@ -25,7 +25,6 @@ package cubicchunks;
 
 import java.io.IOException;
 import java.util.Random;
-import java.util.Set;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.packet.clientbound.PacketChunkData.EncodedChunk;
@@ -45,9 +44,9 @@ import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.column.Column;
-import cuchaz.m3l.api.chunks.IChunkSystem;
+import cuchaz.m3l.api.chunks.ChunkSystem;
 
-public class CubicChunkSystem implements IChunkSystem {
+public class CubicChunkSystem implements ChunkSystem {
 	
 	@Override
 	public ServerChunkCache getServerChunkCache(WorldServer worldServer) {
