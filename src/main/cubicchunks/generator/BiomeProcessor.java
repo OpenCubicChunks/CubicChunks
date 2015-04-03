@@ -63,9 +63,13 @@ public class BiomeProcessor extends CubeProcessor {
 	
 	@Override
 	public boolean calculate(Cube cube) {
-		
 		// TEMP: skip this stage
 		if (true) return true;
+		
+		//if the cube is empty, there is nothing to do. Even if neightbors don't exist
+		if(cube.isEmpty()) {
+			return true;
+		}
 		
 		// only continue if the neighboring cubes exist
 		if (!CubeTools.cubeAndNeighborsExist(this.cache, cube.getX(), cube.getY(), cube.getZ())) {
@@ -90,125 +94,28 @@ public class BiomeProcessor extends CubeProcessor {
 		);
 		
 		Cube above = this.cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
-		Cube below = this.cache.getCube(cube.getX(), cube.getY() - 1, cube.getZ());
 		
 		int topOfCube = Coords.cubeToMaxBlock(cube.getY());
+		int topOfCubeAbove = Coords.cubeToMaxBlock(cube.getY() + 1);
 		int bottomOfCube = Coords.cubeToMinBlock(cube.getY());
 		
 		// already checked that cubes above and below exist
 		int alterationTop = topOfCube;
-		int top = topOfCube + 8;
-		int bottom = bottomOfCube - 8;
+		int top = topOfCubeAbove;
+		int bottom = bottomOfCube;
 		
 		for (int xRel = 0; xRel < 16; xRel++) {
 			int xAbs = cube.getX() << 4 | xRel;
 			
 			for (int zRel = 0; zRel < 16; zRel++) {
 				int zAbs = cube.getZ() << 4 | zRel;
-				
 				int xzCoord = zRel << 4 | xRel;
 				
-				Biome biome = this.biomes[xzCoord];
-				
-				// Biome blocks depth in current block column. 0 for negative values.
-				
-				int depth = (int) (this.noise[zRel + xRel * 16] / 3D + 3D + this.rand.nextDouble() * 0.25D);
-				
-				// How many biome blocks left to set in column? Initially -1
-				int numBlocksToChange = -1;
-				
-				Block topBlock = biome.topBlock.getBlock();
-				Block fillerBlock = biome.fillerBlock.getBlock();
-				
-				for (int blockY = top; blockY >= bottom; --blockY) {
-					// Current block
-					Block block = Coords.blockToCube(blockY) == cube.getY() ? // if in current cube, get block from current cube, else get block from lower cube
-					cube.getBlockState(new BlockPos(xRel, Coords.blockToLocal(blockY), zRel)).getBlock()
-							: below.getBlockState(new BlockPos(xRel, Coords.blockToLocal(blockY), zRel)).getBlock();
-					
-					// Set numBlocksToChange to -1 when we reach air, skip everything else
-					if (block == Blocks.AIR) {
-						numBlocksToChange = -1;
-						continue;
-					}
-					
-					// Why? If the block has already been replaced, skip it and go to the next block
-					if ( /* worldY <= alterationTop && */block != Blocks.STONE) {
-						continue;
-					}
-					
-					// If we are 1 block below air...
-					if (numBlocksToChange == -1) {
-						// If depth is <= 0 - only stone
-						if (depth <= 0) {
-							topBlock = Blocks.AIR;
-							fillerBlock = Blocks.STONE;
-						}
-						// If we are above or at 4 block under water and at or below one block above water
-						else if (blockY >= this.seaLevel - 4 && blockY <= this.seaLevel + 1) {
-							topBlock = biome.topBlock.getBlock();
-							fillerBlock = biome.fillerBlock.getBlock();
-						}
-						// If top block is air and we are below sea level use water instead
-						if (blockY < this.seaLevel && topBlock == Blocks.AIR) {
-							topBlock = Blocks.WATER;
-						}
-						// Set num blocks to change to current depth.
-						numBlocksToChange = depth;
-						
-						// Modify blocks only if we are at or below alteration top
-						if (blockY <= alterationTop) {
-							if (blockY >= this.seaLevel - 1) {
-								// If we are above sea level
-								replaceBlocksForBiome_setBlock(topBlock, cube, below, xAbs, blockY, zAbs);
-							} else {
-								// Don't set grass underwater
-								replaceBlocksForBiome_setBlock(fillerBlock, cube, below, xAbs, blockY, zAbs);
-							}
-						}
-						
-						continue;
-					}
-					// Nothing left to do...
-					// so continue
-					if (numBlocksToChange <= 0) {
-						continue;
-					}
-					// Decrease blocks to change
-					numBlocksToChange--;
-					
-					// Set blocks only if we are below or at alteration top
-					if (blockY <= alterationTop) {
-						replaceBlocksForBiome_setBlock(fillerBlock, cube, below, xAbs, blockY, zAbs);
-					}
-					
-					// random sandstone generation
-					if (numBlocksToChange == 0 && fillerBlock == Blocks.SAND) {
-						numBlocksToChange = this.rand.nextInt(4);
-						fillerBlock = Blocks.SANDSTONE;
-					}
-				}
+				//TODO: Reimplement this
+				//CCBiome biome = this.biomes[xzCoord];
+				//biome.replaceBlocks(this.worldServer, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, noise[zRel * 16 + xRel]);
 			}
 		}
-		
 		return true;
-	}
-	
-	private void replaceBlocksForBiome_setBlock(Block block, Cube cube, Cube below, int xAbs, int yAbs, int zAbs) {
-		int xRel = xAbs & 15;
-		int yRel = yAbs & 15;
-		int zRel = zAbs & 15;
-		
-		BlockPos newPos = new BlockPos(xRel, yRel, zRel);
-		
-		// check if we're in the same cube as Cube
-		if (Coords.blockToCube(yAbs) == cube.getY()) {
-			// we are in the same cube
-			cube.setBlockForGeneration(newPos, block.getDefaultState());
-		} else {
-			// we're actually in the cube below
-			assert this.cache.cubeExists(Coords.blockToCube(xAbs), Coords.blockToCube(yAbs), Coords.blockToCube(zAbs));
-			below.setBlockForGeneration(newPos, block.getDefaultState());
-		}
 	}
 }

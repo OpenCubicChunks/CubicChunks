@@ -23,45 +23,61 @@
  */
 package cubicchunks.util;
 
-import java.util.ArrayDeque;
-import java.util.Collection;
-import java.util.List;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
-public class ConcurrentBatchedQueue<T> {
-	
-	private ArrayDeque<T> m_queue;
-	
-	public ConcurrentBatchedQueue() {
-		m_queue = new ArrayDeque<T>();
+public class ConcurrentBatchedMappedQueue<k, T> {
+	private LinkedHashMap<k, T> queue;
+
+	public ConcurrentBatchedMappedQueue() {
+		queue = new LinkedHashMap<k, T>();
 	}
-	
-	public synchronized void add(T val) {
-		m_queue.add(val);
+
+	public synchronized void add(k key, T val) {
+		queue.put(key, val);
 	}
-	
-	public synchronized void addAll(Collection<T> vals) {
-		m_queue.addAll(vals);
+
+	public synchronized void addAll(Map<k, T> vals) {
+		queue.putAll(vals);
 	}
-	
+
+	public synchronized boolean contains(k key) {
+		return queue.containsKey(key);
+	}
+
 	public synchronized T get() {
-		return m_queue.poll();
+		T val = queue.entrySet().iterator().next().getValue();
+		return queue.remove(val);
 	}
-	
-	public synchronized boolean getBatch(List<T> out, int size) {
+
+	public synchronized T get(k key) {
+		return queue.get(key);
+	}
+
+	public synchronized boolean getBatch(LinkedHashMap<k, T> out, int size) {
 		// copy the batch to the out list
+		Iterator<Entry<k, T>> iter = queue.entrySet().iterator();
 		for (int i = 0; i < size; i++) {
-			T val = m_queue.poll();
+			if (!iter.hasNext()) {
+				break;
+			}
+			Map.Entry<k, T> entry = iter.next();
+			k key = entry.getKey();
+			T val = entry.getValue();
+			iter.remove();
 			if (val == null) {
 				break;
 			}
-			out.add(val);
+			out.put(key, val);
 		}
-		
+
 		// are there more entries?
-		return !m_queue.isEmpty();
+		return !queue.isEmpty();
 	}
-	
+
 	public synchronized int size() {
-		return m_queue.size();
+		return queue.size();
 	}
 }

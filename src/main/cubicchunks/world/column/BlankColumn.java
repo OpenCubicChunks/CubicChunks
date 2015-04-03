@@ -59,36 +59,36 @@ public class BlankColumn extends Column {
 	
 	// chunk overrides
 	
-    @Override
+	@Override
 	public int getHeightAtCoords(final BlockPos a1) {
 		return 0;
 	}
 	
-    @Override
+	@Override
 	public int getHeightAtCoords(final int a1, final int a2) {
 		return 0;
 	}
 	
-    @Override
+	@Override
 	public int getBlockStoreY() {
 		return 0;
 	}
 	
-    @Override
+	@Override
 	public void generateSkylightMap() {
 	}
 	
-    @Override
+	@Override
 	public int getBlockOpacityAt(final BlockPos a1) {
 		return 0;
 	}
 	
-    @Override
+	@Override
 	public Block getBlockAt(final int a1, final int a2, final int a3) {
 		return Blocks.AIR;
 	}
 	
-    @Override
+	@Override
 	public Block getBlockAt(final BlockPos a1) {
 		return Blocks.AIR;
 	}

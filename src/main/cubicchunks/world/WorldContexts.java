@@ -43,7 +43,7 @@ public class WorldContexts {
 		}
 		throw new Error("Unknown world type!");
 	}
-	
+
 	public static long getSpawnPointCubeAddress(World world) {
 		return AddressTools.getAddress(
 			Coords.blockToCube(world.getWorldInfo().getSpawnX()),

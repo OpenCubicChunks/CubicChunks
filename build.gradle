@@ -72,6 +72,8 @@ repositories
 	{
 		url "http://www.cuchazinteractive.com/maven"
 	}
+	mavenCentral()
+	mavenLocal()
 }
 
 //Hacks to allow controlling classpath order

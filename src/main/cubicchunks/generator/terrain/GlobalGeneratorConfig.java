@@ -21,45 +21,22 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.generator.terrain;
 
-public class FastIntQueue {
-	
-	private int[] m_queue;
-	private int m_start;
-	private int m_stop;
-	
-	public FastIntQueue() {
-		m_queue = new int[32768];
-		clear();
-	}
-	
-	public boolean hasRoomFor(int n) {
-		return m_stop + n <= m_queue.length;
-	}
-	
-	public void add(int val) {
-		m_queue[m_stop++] = val;
-	}
-	
-	public boolean hasNext() {
-		return m_start < m_stop;
-	}
-	
-	public int get() {
-		return m_queue[m_start++];
-	}
-	
-	public int size() {
-		return m_stop;
-	}
-	
-	public void clear() {
-		m_start = 0;
-		m_stop = 0;
-	}
-	
-	public void reset() {
-		m_start = 0;
-	}
+import cubicchunks.util.Coords;
+import static cubicchunks.util.Coords.CUBE_MAX_X;
+import static cubicchunks.util.Coords.CUBE_MAX_Y;
+import static cubicchunks.util.Coords.CUBE_MAX_Z;
+
+public class GlobalGeneratorConfig {
+	public static final double maxElev = 64;
+
+	// these are constants. Changing them may cause issues.
+	public static final int X_SECTION_SIZE = 4 + 1;
+	public static final int Y_SECTION_SIZE = 8 + 1;
+	public static final int Z_SECTION_SIZE = 4 + 1;
+
+	public static final int X_SECTIONS = Coords.CUBE_MAX_X / (X_SECTION_SIZE - 1) + 1;
+	public static final int Y_SECTIONS = Coords.CUBE_MAX_Y / (Y_SECTION_SIZE - 1) + 1;
+	public static final int Z_SECTIONS = Coords.CUBE_MAX_Z / (Z_SECTION_SIZE - 1) + 1;
 }

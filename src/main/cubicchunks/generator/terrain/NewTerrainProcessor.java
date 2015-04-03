@@ -24,430 +24,301 @@
 package cubicchunks.generator.terrain;
 
 import java.util.Random;
-
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.builder.BasicBuilder;
-import cubicchunks.server.ServerCubeCache;
-import cubicchunks.util.Coords;
-import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.generator.builder.IBuilder;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.maxElev;
+import cubicchunks.server.CubeWorldServer;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.ICubeCache;
+import net.minecraft.world.World;
 
-public class NewTerrainProcessor extends CubeProcessor {
-	
-	private static final int CUBE_X_SIZE = 16;
-	private static final int CUBE_Y_SIZE = 16;
-	private static final int CUBE_Z_SIZE = 16;
-	
-	private static final int xNoiseSize = CUBE_X_SIZE / 4 + 1;
-	private static final int yNoiseSize = CUBE_Y_SIZE / 8 + 1;
-	private static final int zNoiseSize = CUBE_Z_SIZE / 4 + 1;
-	
-	// Water level at lower resolution
-	private final int[] waterLevelRaw = new int[25];
-	// Water level for each column
-	private final byte[] waterLevel = new byte[CUBE_X_SIZE * CUBE_Z_SIZE];
-	
-	private WorldServer worldServer;
+public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 	private Biome[] biomes;
-	
-	private Random rand;
-	
-	private double riverVol;
-	private double riverHeight;
-	// Always false if improved rivers disabled
-	private boolean riverFound = false;
-	
-	private double volatilityFactor;
-	private double heightFactor;
-	
-	private final int heightCap;
-	
-	private final int maxSmoothDiameter = 9;
-	private final int maxSmoothRadius = 4;
-	
-	private double[][][] noiseArrayHigh;
-	private double[][][] noiseArrayLow;
-	private double[][][] noiseArrayAlpha;
-	
-	private double[][] noiseArrayHeight;
-	
-	private double[][][] rawTerrainArray;
-	private double[][][] terrainArray;
-	
-	private double[] nearBiomeWeightArray;
-	
-	private static BasicBuilder builderHigh;
-	private static BasicBuilder builderLow;
-	private static BasicBuilder builderAlpha;
-	private static BasicBuilder builderHeight;
-	
-	// private static ComplexWorldBuilder builder;
-	private static int seaLevel;
-	
-	// these are the knobs for terrain generation
-	private static int maxElev = 800; // approximately how high blocks will go
-	private static int amplify = 30000; // amplify factor for the noise array.
-	private static int octaves = 14; // size of features. increasing by 1 approximately doubles the size of features.
-	
-	public NewTerrainProcessor(String name, WorldServer worldServer, ServerCubeCache serverCubeCache, int batchSize) {
-		super(name, serverCubeCache, batchSize);
-		
-		this.worldServer = worldServer;
+
+	private final Random rand;
+
+	private double biomeVolatility;
+	private double biomeHeight;
+
+	private final int maxSmoothRadius;
+	private final int maxSmoothDiameter;
+
+	private final double[][] noiseArrayHeight;
+
+	private final double[] nearBiomeWeightArray;
+
+	private final BasicBuilder builderHeight;
+
+	private static final int octaves = 16;
+
+	public NewTerrainProcessor(String name, World worldServer, ICubeCache cache, int batchSize) {
+		super(name, worldServer, cache, batchSize);
+
+		this.maxSmoothRadius = 2 * (int) (maxElev / 64);
+		this.maxSmoothDiameter = maxSmoothRadius * 2 + 1;
+
 		this.biomes = null;
-		
+
 		this.rand = new Random(this.worldServer.getSeed());
-		
-		seaLevel = worldServer.getSeaLevel();
-		
-		this.heightCap = 16;
-		
-		this.noiseArrayHeight = new double[xNoiseSize][zNoiseSize];
-		
-		this.noiseArrayHigh = new double[xNoiseSize][yNoiseSize][zNoiseSize];
-		this.noiseArrayLow = new double[xNoiseSize][yNoiseSize][zNoiseSize];
-		this.noiseArrayAlpha = new double[xNoiseSize][yNoiseSize][zNoiseSize];
-		
-		this.rawTerrainArray = new double[CUBE_X_SIZE][CUBE_Y_SIZE][CUBE_Z_SIZE];
-		this.terrainArray = new double[CUBE_X_SIZE][CUBE_Y_SIZE][CUBE_Z_SIZE];
-		
-		this.nearBiomeWeightArray = new double[this.maxSmoothDiameter * this.maxSmoothDiameter];
-		
-		for (int x = -this.maxSmoothRadius; x <= this.maxSmoothRadius; x++) {
-			for (int z = -this.maxSmoothRadius; z <= this.maxSmoothRadius; z++) {
+
+		this.noiseArrayHeight = new double[X_SECTIONS][Z_SECTIONS];
+
+		this.nearBiomeWeightArray = new double[maxSmoothDiameter * maxSmoothDiameter];
+
+		for (int x = -maxSmoothRadius; x <= maxSmoothRadius; x++) {
+			for (int z = -maxSmoothRadius; z <= maxSmoothRadius; z++) {
 				final double f1 = 10.0F / Math.sqrt(x * x + z * z + 0.2F);
-				this.nearBiomeWeightArray[ (x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * this.maxSmoothDiameter)] = f1;
+				this.nearBiomeWeightArray[(x + maxSmoothRadius + (z + maxSmoothRadius) * maxSmoothDiameter)] = f1;
 			}
 		}
-		
-		builderHigh = new BasicBuilder();
-		builderHigh.setSeed(this.rand.nextInt());
-		builderHigh.setOctaves(octaves);
-		builderHigh.setMaxElev(maxElev);
-		builderHigh.build();
-		
-		builderLow = new BasicBuilder();
-		builderLow.setSeed(this.rand.nextInt());
-		builderLow.setOctaves(octaves);
-		builderLow.setMaxElev(maxElev);
-		builderLow.build();
-		
-		builderAlpha = new BasicBuilder();
-		builderAlpha.setSeed(this.rand.nextInt());
-		builderAlpha.setOctaves(8);
-		builderAlpha.setMaxElev(maxElev);
-		builderAlpha.build();
-		
+
+		double freq = 200.0 / Math.pow(2, 10) / (maxElev / 64);
+
 		builderHeight = new BasicBuilder();
-		builderHeight.setSeed(this.rand.nextInt());
-		builderHeight.setOctaves(8);
-		builderHeight.setMaxElev(1);
+		builderHeight.setSeed(rand.nextInt());
+		builderHeight.setOctaves(10);
+		builderHeight.setMaxElev(8);
+		builderHeight.setFreq(freq);
 		builderHeight.build();
 	}
-	
+
 	@Override
-	public boolean calculate(Cube cube) {
-		this.biomes = this.worldServer.dimension.getBiomeManager().getBiomeMap(
-			this.biomes, 
-			cube.getX() * 4 - this.maxSmoothRadius, 
-			cube.getZ() * 4 - this.maxSmoothRadius, 
-			xNoiseSize + this.maxSmoothDiameter, 
-			zNoiseSize + this.maxSmoothDiameter
-		);
-		
-		this.generateNoiseArrays(cube);
-		
-		this.generateTerrainArray(cube);
-		
-		this.amplifyNoiseArray();
-		
-		this.expandNoiseArray();
-		
-		this.generateTerrain(cube);
-		
-		return true;
+	protected IBuilder createHighBuilder() {
+		Random rand = new Random(worldServer.getSeed() * 2);
+		double freq = 684.412D / Math.pow(2, octaves) / (maxElev / 64.0);
+
+		BasicBuilder builderHigh = new BasicBuilder();
+		builderHigh.setSeed(rand.nextInt());
+		builderHigh.setOctaves(octaves);
+		builderHigh.setPersistance(0.5);
+		// with 16 octaves probability of getting 1 is too low
+		builderHigh.setMaxElev(2);
+		builderHigh.setClamp(-1, 1);
+		builderHigh.setFreq(freq, freq, freq);
+		builderHigh.build();
+
+		return builderHigh;
 	}
-	
-	protected void generateTerrain(Cube cube) {
-		int cubeY = cube.getY();
-		
-		double maxNoise = -9000;
-		double minNoise = 9000;
-		
-		for (int xRel = 0; xRel < 16; xRel++) {
-			for (int zRel = 0; zRel < 16; zRel++) {
-				for (int yRel = 0; yRel < 16; yRel++) {
-					double val = this.terrainArray[xRel][yRel][zRel];
-					BlockPos pos = new BlockPos(xRel, yRel, zRel);
-					// System.out.println(xRel + ":" + yRel + ":" + zRel + ":" + val);
-					
-					if (val > maxNoise)
-						maxNoise = val;
-					if (val < minNoise)
-						minNoise = val;
-					
-					int yAbs = Coords.localToBlock(cubeY, yRel);
-					
-					if (val - yAbs > 0) {
-						cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
-					} else if (yAbs < seaLevel) {
-						cube.setBlockForGeneration(pos, Blocks.WATER.getDefaultState());
-					} else {
-						cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
-					}
-				} // end yRel
-			} // end zRel
-		} // end xRel
-		
-		// System.out.println("maxNoise: " + maxNoise);
-		// System.out.println("minNoise: " + minNoise);
+
+	@Override
+	protected IBuilder createLowBuilder() {
+		Random rand = new Random(worldServer.getSeed() * 3);
+		double freq = 684.412D / Math.pow(2, octaves) / (maxElev / 64.0);
+
+		BasicBuilder builderLow = new BasicBuilder();
+		builderLow.setSeed(rand.nextInt());
+		builderLow.setOctaves(octaves);
+		builderLow.setPersistance(0.5);
+		builderLow.setMaxElev(2);
+		builderLow.setClamp(-1, 1);
+		builderLow.setFreq(freq, freq, freq);
+		builderLow.build();
+
+		return builderLow;
 	}
-	
-	/**
-	 * Generates noise arrays of size xNoiseSize * yNoiseSize * zNoiseSize
-	 * 
-	 * No issues with this. Tested by using size 16 (full resolution)
-	 * 
-	 * @param cubeX
-	 * @param cubeY
-	 * @param cubeZ
-	 * @return
-	 */
-	private void generateNoiseArrays(Cube cube) {
-		int cubeXMin = cube.getX() * (xNoiseSize - 1);
-		int cubeYMin = cube.getY() * (yNoiseSize - 1);
-		int cubeZMin = cube.getZ() * (zNoiseSize - 1);
-		
-		for (int x = 0; x < xNoiseSize; x++) {
-			int xPos = cubeXMin + x;
-			
-			for (int z = 0; z < zNoiseSize; z++) {
-				int zPos = cubeZMin + z;
-				
-				this.noiseArrayHeight[x][z] = builderHeight.getValue(xPos, 0, zPos);
-				
-				for (int y = 0; y < yNoiseSize; y++) {
-					int yPos = cubeYMin + y;
-					
-					this.noiseArrayHigh[x][y][z] = builderHigh.getValue(xPos, yPos, zPos);
-					this.noiseArrayLow[x][y][z] = builderLow.getValue(xPos, yPos, zPos);
-					this.noiseArrayAlpha[x][y][z] = builderAlpha.getValue(xPos, yPos, zPos);
-					
-				}
-			}
-		}
+
+	@Override
+	protected IBuilder createAlphaBuilder() {
+		Random rand = new Random(worldServer.getSeed() * 4);
+		double freq = 8.55515 / Math.pow(2, 8) / (maxElev / 64.0);
+
+		BasicBuilder builderAlpha = new BasicBuilder();
+		builderAlpha.setSeed(rand.nextInt());
+		builderAlpha.setOctaves(8);
+		builderAlpha.setPersistance(0.5);
+		builderAlpha.setMaxElev(25.6);
+		builderAlpha.setSeaLevel(0.5);
+		builderAlpha.setClamp(0, 1);
+		builderAlpha.setFreq(freq, freq * 2, freq);
+		builderAlpha.build();
+
+		return builderAlpha;
 	}
-	
-	private void generateTerrainArray(Cube cube) {
-		for (int x = 0; x < xNoiseSize; x++) {
-			for (int z = 0; z < zNoiseSize; z++) {
-				double noiseHeight = this.noiseArrayHeight[x][z];
-				
-				if (noiseHeight < 0.0D) {
-					noiseHeight = -noiseHeight * 0.3D;
-				}
-				
-				noiseHeight = noiseHeight * 3.0D - 2.0D;
-				
-				if (noiseHeight < 0.0D) {
-					noiseHeight /= 2.0D;
-					
-					if (noiseHeight < -1.0D) {
-						noiseHeight = -1.0D;
+
+	@Override
+	protected void generateTerrainArray(Cube cube) {
+		biomes = this.worldServer.dimension.getBiomeManager().getBiomeMap(biomes,
+				cube.getX() * 4 - maxSmoothRadius, cube.getZ() * 4 - maxSmoothRadius,
+				X_SECTION_SIZE + maxSmoothDiameter, Z_SECTION_SIZE + maxSmoothDiameter);
+
+		this.fillHeightArray(cube);
+		for (int x = 0; x < X_SECTIONS; x++) {
+			for (int z = 0; z < Z_SECTIONS; z++) {
+				// TODO: Remove addHeight?
+				double addHeight = getAddHeight(x, z);
+				this.biomeFactor(x, z, addHeight);
+
+				for (int y = 0; y < Y_SECTIONS; y++) {
+					final double vol1Low = this.noiseArrayLow[x][y][z];
+					final double vol2High = this.noiseArrayHigh[x][y][z];
+
+					final double noiseAlpha = this.noiseArrayAlpha[x][y][z];
+
+					double output = lerp(noiseAlpha, vol1Low, vol2High);
+
+					double heightModifier = this.biomeHeight;
+					double volatilityModifier = this.biomeVolatility;
+
+					final double yAbs = (cube.getY() * 16.0 + y * 8.0) / maxElev;
+					if (yAbs < heightModifier) {
+						// terrain below average biome geight is more flat
+						volatilityModifier /= 4.0;
 					}
-					// noiseHeight -= biomeConfig.maxAverageDepth;
-					noiseHeight /= 1.4D;
-					noiseHeight /= 2.0D;
-					
-				} else {
-					if (noiseHeight > 1.0D) {
-						System.out.println("noiseHeight >= 1.0D; ");
-						noiseHeight = 1.0D;
+
+					// NOTE: Multiplication by nonnegative number and addition
+					// when using 3d noise effects are the same as with
+					// heightmap.
+
+					// make height range lower
+					output *= volatilityModifier;
+					// height shift
+					output += heightModifier;
+
+					// Since in TWM we don't have height limit we could skip it
+					// but PLATEAU biomes need it
+					int maxYSections = (int) Math.round(maxElev / Y_SECTION_SIZE);
+					if (yAbs * maxElev > maxYSections - 4) {
+						// TODO: Convert this to work correctly with noise
+						// between -1 and 1
+						// final double a = ( yAbs - ( maxYSections - 4 ) ) /
+						// 3.0F;
+						// output = output * ( 1.0D - a ) - 10.0D * a;
 					}
-					// noiseHeight += biomeConfig.maxAverageHeight;
-					noiseHeight /= 8.0D;
-				}
-				
-				// if (!worldConfig.oldTerrainGenerator)
-				// {
-				// if (worldConfig.improvedRivers)
-				// this.biomeFactorWithRivers(x, z, usedYSections, noiseHeight);
-				// else
-				this.biomeFactor(x, z, noiseHeight);
-				// } else
-				// this.oldBiomeFactor(x, z, i2D, usedYSections, noiseHeight);
-				
-				// i2D++;
-				
-				for (int y = 0; y < yNoiseSize; y++) {
-					double output;
-					double d8;
-					
-					if (this.riverFound) {
-						d8 = (this.riverHeight - y) * 12.0D * 128.0D / this.heightCap / this.riverVol;
-					} else {
-						d8 = (this.heightFactor - y) * 12.0D * 128.0D / this.heightCap / this.volatilityFactor;
-					}
-					
-					if (d8 > 0.0D) {
-						d8 *= 4.0D;
-					}
-					
-					final double vol1Low = this.noiseArrayLow[x][y][z] / 512.0D * 0.5/* biomeConfig.volatility1 */;
-					final double vol2High = this.noiseArrayHigh[x][y][z] / 512.0D * 0.5/* biomeConfig.volatility2 */;
-					
-					final double noiseAlpha = (this.noiseArrayAlpha[x][y][z] / 10.0D + 1.0D) / 2.0D;
-					
-					if (noiseAlpha < 0.0/* biomeConfig.volatilityWeight1 */) {
-						output = vol1Low;
-					} else if (noiseAlpha > 1.0/* biomeConfig.volatilityWeight2 */) {
-						output = vol2High;
-					} else {
-						output = vol1Low + (vol2High - vol1Low) * noiseAlpha;
-					}
-					
-					// if (!biomeConfig.disableNotchHeightControl)
-					// {
-					// output += d8;
-					//
-					// if (y > maxYSections - 4)
-					// {
-					// final double d12 = (y - (maxYSections - 4)) / 3.0F;
-					// // Reduce last three layers
-					// output = output * (1.0D - d12) + -10.0D * d12;
-					// }
-					//
-					// }
-					// if (this.riverFound)
-					// {
-					// output += biomeConfig.riverHeightMatrix[y];
-					// } else
-					// {
-					// output += biomeConfig.heightMatrix[y];
-					// }
-					
 					this.rawTerrainArray[x][y][z] = output;
 				}
 			}
 		}
 	}
-	
-	private void amplifyNoiseArray() {
-		for (int x = 0; x < xNoiseSize; x++) {
-			for (int z = 0; z < zNoiseSize; z++) {
-				for (int y = 0; y < yNoiseSize; y++) {
-					this.rawTerrainArray[x][y][z] *= amplify;
-				}
-			}
-		}
-	}
-	
+
 	/**
-	 * expand the noise array to 16x16x16 by interpolating the values.
+	 * Calculates biome height and volatility and adds addHeight to result. It
+	 * converts vanilla biome values to some more predictable format:
 	 * 
-	 * @param arrayIn
-	 * @return
+	 * biome volatility == 0 will generate flat terrain
+	 * 
+	 * biome volatility == 0.5 means that max difference between the actual
+	 * height and average height is 0.5 of max generation height from sea level.
+	 * High volatility will generate overhangs
+	 * 
+	 * biome height == 0 will generate terrain at sea level
+	 * 
+	 * biome height == 1 will generate terrain will generate at max generation
+	 * height above sea level.
+	 * 
+	 * Volatility Note: Terrain below biome height has volatility divided by 4,
+	 * probably to add some flat terrain to mountanious biomes
 	 */
-	private void expandNoiseArray() {
-		int xSteps = 16 / (xNoiseSize - 1);
-		int ySteps = 16 / (yNoiseSize - 1);
-		int zSteps = 16 / (zNoiseSize - 1);
-		
-		// use the noise to generate the terrain
-		for (int noiseX = 0; noiseX < xNoiseSize - 1; noiseX++) {
-			for (int noiseZ = 0; noiseZ < zNoiseSize - 1; noiseZ++) {
-				for (int noiseY = 0; noiseY < yNoiseSize - 1; noiseY++) {
-					// get the noise samples
-					double x0y0z0 = this.rawTerrainArray[noiseX][noiseY][noiseZ];
-					double x0y0z1 = this.rawTerrainArray[noiseX][noiseY][noiseZ + 1];
-					double x1y0z0 = this.rawTerrainArray[noiseX + 1][noiseY][noiseZ];
-					double x1y0z1 = this.rawTerrainArray[noiseX + 1][noiseY][noiseZ + 1];
-					
-					double x0y1z0 = this.rawTerrainArray[noiseX][noiseY + 1][noiseZ];
-					double x0y1z1 = this.rawTerrainArray[noiseX][noiseY + 1][noiseZ + 1];
-					double x1y1z0 = this.rawTerrainArray[noiseX + 1][noiseY + 1][noiseZ];
-					double x1y1z1 = this.rawTerrainArray[noiseX + 1][noiseY + 1][noiseZ + 1];
-					
-					for (int x = 0; x < xSteps; x++) {
-						int xRel = noiseX * xSteps + x;
-						
-						double xd = (double)x / xSteps;
-						
-						// interpolate along x
-						double xy0z0 = lerp(xd, x0y0z0, x1y0z0);
-						double xy0z1 = lerp(xd, x0y0z1, x1y0z1);
-						double xy1z0 = lerp(xd, x0y1z0, x1y1z0);
-						double xy1z1 = lerp(xd, x0y1z1, x1y1z1);
-						
-						for (int z = 0; z < zSteps; z++) {
-							int zRel = noiseZ * zSteps + z;
-							
-							double zd = (double)z / zSteps;
-							
-							// interpolate along z
-							double xy0z = lerp(zd, xy0z0, xy0z1);
-							double xy1z = lerp(zd, xy1z0, xy1z1);
-							
-							for (int y = 0; y < ySteps; y++) {
-								int yRel = noiseY * ySteps + y;
-								
-								double yd = (double)y / ySteps;
-								
-								// interpolate along y
-								double xyz = lerp(yd, xy0z, xy1z);
-								
-								this.terrainArray[xRel][yRel][zRel] = xyz;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	private void biomeFactor(int x, int z, double noiseHeight) {
-		float volatilitySum = 0.0F;
-		double heightSum = 0.0F;
+	private void biomeFactor(int x, int z, double addHeight) {
+		// Calculate weighted average of nearby biomes height and volatility
+		float smoothVolatility = 0.0F;
+		float smoothHeight = 0.0F;
+
 		float biomeWeightSum = 0.0F;
-		
-		final Biome centerBiomeConfig = this.biomes[ (x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
-		final int lookRadius = 2/* centerBiomeConfig.smoothRadius */;
-		
-		float nextBiomeHeight;
-		double biomeWeight;
-		
+		final Biome centerBiomeConfig = this.biomes[(x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
+				* (X_SECTION_SIZE + this.maxSmoothDiameter))];
+		final int lookRadius = maxSmoothRadius;
+
 		for (int nextX = -lookRadius; nextX <= lookRadius; nextX++) {
 			for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++) {
-				final Biome nextBiomeConfig = this.biomes[ (x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius) * (xNoiseSize + this.maxSmoothDiameter))];
-				
-				nextBiomeHeight = nextBiomeConfig.height;
-				
-				biomeWeight = this.nearBiomeWeightArray[ (nextX + this.maxSmoothRadius + (nextZ + this.maxSmoothRadius) * this.maxSmoothDiameter)] / (nextBiomeHeight + 2.0F);
+				final Biome biome = this.biomes[(x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius)
+						* (X_SECTION_SIZE + this.maxSmoothDiameter))];
+				float biomeHeight = biome.height;
+				float biomeVolatility = biome.volatility;
+
+				double biomeWeight = this.nearBiomeWeightArray[(nextX + this.maxSmoothRadius + (nextZ + this.maxSmoothRadius)
+						* this.maxSmoothDiameter)]
+						/ (biomeHeight + 2.0F);
+
 				biomeWeight = Math.abs(biomeWeight);
-				if (nextBiomeHeight > centerBiomeConfig.height) {
+				if (biomeHeight > centerBiomeConfig.height) {
+					// prefer biomes with lower height?
 					biomeWeight /= 2.0F;
 				}
-				volatilitySum += nextBiomeConfig.volatility * biomeWeight;
-				heightSum += nextBiomeHeight * biomeWeight;
+				smoothVolatility += biomeVolatility * biomeWeight;
+				smoothHeight += biomeHeight * biomeWeight;
+				
 				biomeWeightSum += biomeWeight;
 			}
 		}
-		
-		volatilitySum /= biomeWeightSum;
-		heightSum /= biomeWeightSum;
-		
-		this.waterLevelRaw[x * xNoiseSize + z] = seaLevel; // (byte) centerBiomeConfig.waterLevelMax;
-		
-		volatilitySum = volatilitySum * 0.9F + 0.1F; // Must be != 0
-		heightSum = (heightSum * 4.0F - 1.0F) / 8.0F; // Silly magic numbers
-		
-		this.volatilityFactor = volatilitySum;
-		this.heightFactor = 16 * (2.0D + heightSum + noiseHeight * 0.2D) / 4.0D;
+
+		smoothVolatility /= biomeWeightSum;
+		smoothHeight /= biomeWeightSum;
+
+		// Convert from vanilla height/volatility format
+		// to something easier to predict
+		this.biomeVolatility = smoothVolatility * 0.9 + 0.1;
+		this.biomeVolatility *= 4.0 / 3.0;
+
+		// divide everything by 64, then it will be multpllied by maxElev
+		// vanilla sea level: 63.75 / 64.00
+
+		// sea level 0.75/64 of height above sea level (63.75 = 63+0.75)
+		this.biomeHeight = 0.75 / 64.0;
+		this.biomeHeight += smoothHeight * 17.0 / 64.0;
+		// TODO: Remove addHeight? it changes the result by at most 1 block
+		this.biomeHeight += 0.2 * addHeight * 17.0 / 64.0;
 	}
-	
-	private double lerp(double a, double min, double max) {
-		return min + a * (max - min);
+
+	private void fillHeightArray(Cube cube) {
+		int cubeXMin = cube.getX() * (X_SECTION_SIZE - 1);
+		int cubeZMin = cube.getZ() * (Z_SECTION_SIZE - 1);
+
+		for (int x = 0; x < X_SECTIONS; x++) {
+			int xPos = cubeXMin + x;
+
+			for (int z = 0; z < Z_SECTIONS; z++) {
+				int zPos = cubeZMin + z;
+
+				this.noiseArrayHeight[x][z] = builderHeight.getValue(xPos, 0, zPos);
+
+			}
+		}
+	}
+
+	/**
+	 * This method is there only because the code exists in vanilla, it affects
+	 * terrain height by at most 1 block (+/-0.425 blocks).
+	 * 
+	 * In Minecraft beta it was base terrain height, but as of beta 1.8 it
+	 * doesn't have any significant effect. It's multiplied 0.2 before it's
+	 * used.
+	 */
+	private double getAddHeight(int x, int z) {
+		double noiseHeight = noiseArrayHeight[x][z];
+
+		assert noiseHeight <= 8 && noiseHeight >= -8;
+
+		if (noiseHeight < 0.0D) {
+			noiseHeight = -noiseHeight * 0.3D;
+		}
+
+		noiseHeight = noiseHeight * 3.0D - 2.0D;
+
+		if (noiseHeight < 0.0D) {
+			noiseHeight /= 2.0D;
+
+			if (noiseHeight < -1.0D) {
+				noiseHeight = -1.0D;
+			}
+			noiseHeight /= 1.4D;
+			noiseHeight /= 2.0D;
+
+		} else {
+			if (noiseHeight > 1.0D) {
+				noiseHeight = 1.0D;
+			}
+			noiseHeight /= 8.0D;
+		}
+		return noiseHeight;
 	}
 }

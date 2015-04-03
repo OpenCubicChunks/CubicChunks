@@ -32,7 +32,7 @@ public class CubeWorldClient {
 	
 	// TODO: this class will get deleted
 	// but we need to migrate this code to other places first
-	
+
 	@Override
 	public boolean updateLightingAt(LightType lightType, BlockPos pos) {
 		// forward to the new lighting system

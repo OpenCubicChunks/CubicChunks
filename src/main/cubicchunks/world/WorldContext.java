@@ -25,7 +25,6 @@ package cubicchunks.world;
 
 import cubicchunks.lighting.LightingManager;
 
-
 public interface WorldContext {
 	ICubeCache getCubeCache();
 	LightingManager getLightingManager();

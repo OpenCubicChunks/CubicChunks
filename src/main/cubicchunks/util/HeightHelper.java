@@ -23,43 +23,22 @@
  */
 package cubicchunks.util;
 
-public class FastIntQueue {
-	
-	private int[] m_queue;
-	private int m_start;
-	private int m_stop;
-	
-	public FastIntQueue() {
-		m_queue = new int[32768];
-		clear();
+import cubicchunks.generator.terrain.GlobalGeneratorConfig;
+
+public class HeightHelper {
+	public static double getScaledHeight_Double(double y) {
+		return GlobalGeneratorConfig.maxElev * (y - 64D) / 64D;
 	}
-	
-	public boolean hasRoomFor(int n) {
-		return m_stop + n <= m_queue.length;
+
+	public static double getVanillaHeight_Double(double y) {
+		return 64D + 64D * y / GlobalGeneratorConfig.maxElev;
 	}
-	
-	public void add(int val) {
-		m_queue[m_stop++] = val;
+
+	public static int getScaledHeight(int y) {
+		return (int) Math.round(getScaledHeight_Double(y));
 	}
-	
-	public boolean hasNext() {
-		return m_start < m_stop;
-	}
-	
-	public int get() {
-		return m_queue[m_start++];
-	}
-	
-	public int size() {
-		return m_stop;
-	}
-	
-	public void clear() {
-		m_start = 0;
-		m_stop = 0;
-	}
-	
-	public void reset() {
-		m_start = 0;
+
+	public static int getVanillaHeight(int y) {
+		return (int) Math.round(getVanillaHeight_Double(y));
 	}
 }

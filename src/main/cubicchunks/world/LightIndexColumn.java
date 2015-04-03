@@ -57,6 +57,8 @@ public class LightIndexColumn {
 			int opacity = in.readUnsignedByte();
 			m_opacity.put(blockY, opacity);
 		}
+		m_topNonTransparentBlockY.clear();;
+		m_topOpaqueUnderSeaLevelBlockY.clear();
 	}
 	
 	public void writeData(DataOutputStream out) throws IOException {

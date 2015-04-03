@@ -29,6 +29,10 @@ import java.util.Set;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.LightType;
+<<<<<<< HEAD
+import net.minecraft.world.WorldInfo;
+=======
+>>>>>>> develop
 import net.minecraft.world.WorldSettings;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
