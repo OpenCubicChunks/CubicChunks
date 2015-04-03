@@ -143,7 +143,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 
 	@Override
 	protected void generateTerrainArray(Cube cube) {
-		biomes = this.worldServer.dimension.getBiomeManager().getBiomeMap(biomes,
+		biomes = this.worldServer.dimension.getBiomeManager().getBiomeMap2(biomes,
 				cube.getX() * 4 - maxSmoothRadius, cube.getZ() * 4 - maxSmoothRadius,
 				X_SECTION_SIZE + maxSmoothDiameter, Z_SECTION_SIZE + maxSmoothDiameter);
 

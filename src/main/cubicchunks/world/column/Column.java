@@ -698,21 +698,15 @@ public class Column extends Chunk {
 	@Override
 	public Biome getBiome(BlockPos pos, BiomeManager biomeManager) {
 		
-		/* TODO: biome stuff... no idea what to do here. Maybe the biome experts should look at this
-		
-		int biomeID = this.columnBlockBiomeArray[zRel << 4 | xRel] & 255;
-		
-		WorldColumnManager worldColumnManager = (WorldColumnManager)worldChunkManager;
+		int biomeID = this.columnBlockBiomeArray[Coords.blockToLocal(pos.getZ()) << 4 | Coords.blockToLocal(pos.getX())] & 255;
 		
 		if (biomeID == 255) {
-			CubeBiomeGenBase var5 = worldColumnManager.getBiomeGenAt( (this.xPosition << 4) + xRel, (this.zPosition << 4) + zRel);
-			biomeID = var5.biomeID;
-			this.columnBlockBiomeArray[zRel << 4 | xRel] = (byte) (biomeID & 255);
+			Biome biome = biomeManager.getBiome(pos);
+			biomeID = biome.biomeID;
+			this.columnBlockBiomeArray[Coords.blockToLocal(pos.getZ()) << 4 | Coords.blockToLocal(pos.getX())] = (byte) (biomeID & 255);
 		}
 		
-		return (CubeBiomeGenBase) (CubeBiomeGenBase.func_150568_d(biomeID) == null ? CubeBiomeGenBase.plains : CubeBiomeGenBase.func_150568_d(biomeID));
-		*/
-		return Biome.PLAINS;
+		return Biome.getBiome(biomeID) == null ? Biome.PLAINS : Biome.getBiome(biomeID);
 	}
 	
 	/**
