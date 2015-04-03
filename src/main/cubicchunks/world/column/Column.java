@@ -79,7 +79,7 @@ public class Column extends Chunk {
 	private int roundRobinLightUpdatePointer;
 	private List<Cube> roundRobinCubes;
 	private EntityContainer entities;
-	private byte[] columnBlockBiomeArray;
+	private byte[] columnBiomeMap;
 	
 	public Column(World world, int x, int z) {
 		
@@ -97,9 +97,8 @@ public class Column extends Chunk {
 		init();
 		
 		// save the biome data
-		byte[] biomeArray = getBiomeMap();
-		for (int i = 0; i < biomeArray.length; i++) {
-			biomeArray[i] = (byte)biomes[i].biomeID;
+		for (int i = 0; i < biomes.length; i++) {
+			columnBiomeMap[i] = (byte)biomes[i].biomeID;
 		}
 		
 		this.isModified = true;
@@ -112,7 +111,7 @@ public class Column extends Chunk {
 		this.roundRobinLightUpdatePointer = 0;
 		this.roundRobinCubes = new ArrayList<Cube>();
 		this.entities = new EntityContainer();
-		this.columnBlockBiomeArray = new byte[256];
+		this.columnBiomeMap = new byte[256];
 		
 		// make sure no one's using data structures that have been replaced
 		// also saves memory
@@ -124,7 +123,7 @@ public class Column extends Chunk {
 		this.skylightUpdateMap = null;
 		*/
 		
-		Arrays.fill(this.columnBlockBiomeArray, (byte)-1);
+		Arrays.fill(this.columnBiomeMap, (byte)-1);
 	}
 	
 	public long getAddress() {
@@ -698,12 +697,12 @@ public class Column extends Chunk {
 	@Override
 	public Biome getBiome(BlockPos pos, BiomeManager biomeManager) {
 		
-		int biomeID = this.columnBlockBiomeArray[Coords.blockToLocal(pos.getZ()) << 4 | Coords.blockToLocal(pos.getX())] & 255;
+		int biomeID = this.columnBiomeMap[Coords.blockToLocal(pos.getZ()) << 4 | Coords.blockToLocal(pos.getX())] & 255;
 		
 		if (biomeID == 255) {
 			Biome biome = biomeManager.getBiome(pos);
 			biomeID = biome.biomeID;
-			this.columnBlockBiomeArray[Coords.blockToLocal(pos.getZ()) << 4 | Coords.blockToLocal(pos.getX())] = (byte) (biomeID & 255);
+			this.columnBiomeMap[Coords.blockToLocal(pos.getZ()) << 4 | Coords.blockToLocal(pos.getX())] = (byte) (biomeID & 255);
 		}
 		
 		return Biome.getBiome(biomeID) == null ? Biome.PLAINS : Biome.getBiome(biomeID);
@@ -714,7 +713,7 @@ public class Column extends Chunk {
 	 */
 	@Override
 	public byte[] getBiomeMap() {
-		return this.columnBlockBiomeArray;
+		return this.columnBiomeMap;
 	}
 	
 	/**
@@ -722,7 +721,7 @@ public class Column extends Chunk {
 	 */
 	@Override
 	public void setBiomeMap(byte[] val) {
-		this.columnBlockBiomeArray = val;
+		this.columnBiomeMap = val;
 	}
 	
 	@Override

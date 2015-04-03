@@ -60,14 +60,13 @@ public class BiomeProcessor extends CubeProcessor {
 	}
 	
 	@Override
-	public boolean calculate(Cube cube) {
-		// TEMP: skip this stage
-//		if (true) return true;
-		
-		//if the cube is empty, there is nothing to do. Even if neightbors don't exist
+	public boolean calculate(Cube cube) {	
+		//if the cube is empty, there is nothing to do. Even if neighbors don't exist
 		if(cube.isEmpty()) {
 			return true;
 		}
+		
+		rand.setSeed(41 * cube.getWorld().getSeed() + cube.cubeRandomSeed());
 		
 		// only continue if the neighboring cubes exist
 		if (!CubeTools.cubeAndNeighborsExist(this.cache, cube.getX(), cube.getY(), cube.getZ())) {

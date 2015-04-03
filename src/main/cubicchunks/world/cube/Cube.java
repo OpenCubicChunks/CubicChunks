@@ -572,4 +572,11 @@ public class Cube {
 	public void markForRenderUpdate() {
 		this.world.markBlockRangeForRenderUpdate(Coords.cubeToMinBlock(this.cubeX), Coords.cubeToMinBlock(this.cubeY), Coords.cubeToMinBlock(this.cubeZ), Coords.cubeToMaxBlock(this.cubeX), Coords.cubeToMaxBlock(this.cubeY), Coords.cubeToMaxBlock(this.cubeZ));
 	}
+	
+	public long cubeRandomSeed() {
+		long hash = 3;
+		hash = 41 * hash + getX();
+		hash = 41 * hash + getY();
+		return 41 * hash + getZ();
+	}
 }
