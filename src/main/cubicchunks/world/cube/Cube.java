@@ -87,7 +87,7 @@ public class Cube {
 		if (isEmpty) {
 			this.storage = null;
 		} else {
-			this.storage = new ChunkSection(this.cubeY << 4, !this.world.dimension.hasNoSky());
+			this.storage = new ChunkSection(Coords.cubeToMinBlock(this.cubeY), !this.world.dimension.hasNoSky());
 		}
 	}
 	
@@ -158,6 +158,9 @@ public class Cube {
 	}
 	
 	public IBlockState getBlockState(int localX, int localY, int localZ) {
+		if (isEmpty()) {
+			return Blocks.AIR.getDefaultState();
+		}
 		return this.storage.getBlockStateAt(localX, localY, localZ);
 	}
 	

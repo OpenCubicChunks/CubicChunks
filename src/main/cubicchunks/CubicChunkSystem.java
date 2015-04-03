@@ -23,16 +23,19 @@
  */
 package cubicchunks;
 
+import java.io.IOException;
 import java.util.Random;
 import java.util.Set;
 
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.play.packet.clientbound.PacketChunkData.EncodedChunk;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.BiomeManager;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ClientChunkCache;
 import net.minecraft.world.gen.ServerChunkCache;
 import cubicchunks.client.ClientCubeCache;
@@ -155,5 +158,20 @@ public class CubicChunkSystem implements IChunkSystem {
 		// need to return a random blockY between the "bottom" of the world and upper
 		// TEMP: well... we don't really have a bottom, so just clamp the val to [15,upper] for now
 		return rand.nextInt(Math.max(15, upper));
+	}
+
+	@Override
+	public EncodedChunk encodeChunk(Chunk chunk, boolean isFirstTime, boolean hasSky, int sectionFlags) {
+		if (isTallWorld(chunk.getWorld())) {
+			if (chunk instanceof Column) {
+				Column column = (Column)chunk;
+				try {
+					return column.encode(isFirstTime, hasSky, sectionFlags);
+				} catch (IOException ex) {
+					throw new Error(ex);
+				}
+			}
+		}
+		return null;
 	}
 }

@@ -44,11 +44,10 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.collect.Maps;
 
+import cubicchunks.TallWorldsMod;
+import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.visibility.CubeSelector;
@@ -57,8 +56,6 @@ import cubicchunks.world.column.ColumnView;
 import cubicchunks.world.cube.Cube;
 
 public class CubePlayerManager extends PlayerManager {
-	
-	private static final Logger log = LogManager.getLogger();
 	
 	private static class PlayerInfo {
 		
@@ -326,6 +323,19 @@ public class CubePlayerManager extends PlayerManager {
 		}
 		info.removeOutOfRangeOutgoingCubes();
 		info.sortOutgoingCubes();
+
+		// TEMP
+		Map<GeneratorStage,Integer> counts = Maps.newHashMap();
+		for (Cube cube : info.outgoingCubes) {
+			Integer count = counts.get(cube.getGeneratorStage());
+			if (count == null) {
+				count = 1;
+			} else {
+				count++;
+			}
+			counts.put(cube.getGeneratorStage(), count);
+		}
+		TallWorldsMod.log.info("Server cubes: {}", counts);
 		
 		// pull off enough cubes from the queue to fit in a packet
 		final int MaxCubesToSend = 100;
@@ -372,7 +382,7 @@ public class CubePlayerManager extends PlayerManager {
 		
 		// send the cube data with the first time flag set
 		player.netServerHandler.send(new PacketMapChunkBulk(columnsToSend));
-		log.info("Server sent {} cubes to player, {} remaining", cubesToSend.size(), info.outgoingCubes.size());
+		TallWorldsMod.log.info("Server sent {} cubes to player, {} remaining", cubesToSend.size(), info.outgoingCubes.size());
 		
 		// tell the cube watchers which cubes were sent for this player
 		for (Cube cube : cubesToSend) {

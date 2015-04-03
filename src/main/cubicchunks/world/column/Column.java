@@ -40,6 +40,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.network.play.packet.clientbound.PacketChunkData;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Facing;
@@ -545,7 +546,8 @@ public class Column extends Chunk {
 		this.chunkLoaded = false;
 	}
 	
-	public byte[] encode(boolean isFirstTime) throws IOException {
+	public PacketChunkData.EncodedChunk encode(boolean isFirstTime, boolean hasSky, int sectionFlags)
+	throws IOException {
 		
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
 		DataOutputStream out = new DataOutputStream(buf);
@@ -585,7 +587,7 @@ public class Column extends Chunk {
 				// 4. block light
 				out.write(storage.getBlockLightArray().get());
 				
-				if (!this.world.dimension.hasNoSky()) {
+				if (hasSky) {
 					// 5. sky light
 					out.write(storage.getSkyLightArray().get());
 				}
@@ -601,7 +603,11 @@ public class Column extends Chunk {
 		getLightIndex().writeData(out);
 		
 		out.close();
-		return buf.toByteArray();
+		
+		PacketChunkData.EncodedChunk encodedChunk = new PacketChunkData.EncodedChunk();
+		encodedChunk.data = buf.toByteArray();
+		encodedChunk.sectionFlags = 0;
+		return encodedChunk;
 	}
 	
 	@Override

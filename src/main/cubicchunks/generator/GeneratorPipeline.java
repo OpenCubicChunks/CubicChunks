@@ -30,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Lists;
 
+import cubicchunks.TallWorldsMod;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.util.processor.QueueProcessor;
@@ -38,12 +39,21 @@ import cubicchunks.world.cube.Cube;
 
 public class GeneratorPipeline {
 	
-	private static final Logger log = LogManager.getLogger();
-	
 	private static final int TickBudget = 40; // ms. There are only 50 ms per tick
 	
+	private static class StageProcessor {
+		
+		public QueueProcessor processor;
+		public float share;
+		
+		public StageProcessor(QueueProcessor processor) {
+			this.processor = processor;
+			this.share = 0f;
+		}
+	}
+	
 	private ICubeCache cubes;
-	private List<QueueProcessor> processors;
+	private List<StageProcessor> processors;
 	
 	public GeneratorPipeline(ICubeCache cubes) {
 		this.cubes = cubes;
@@ -58,7 +68,7 @@ public class GeneratorPipeline {
 	}
 	
 	public void addStage(GeneratorStage stage, CubeProcessor processor) {
-		this.processors.set(stage.ordinal(), processor);
+		this.processors.set(stage.ordinal(), new StageProcessor(processor));
 	}
 	
 	public void checkStages() {
@@ -74,7 +84,7 @@ public class GeneratorPipeline {
 	public void generate(Cube cube) {
 		GeneratorStage stage = cube.getGeneratorStage();
 		if (!stage.isLastStage()) {
-			this.processors.get(stage.ordinal()).add(cube.getAddress());
+			this.processors.get(stage.ordinal()).processor.add(cube.getAddress());
 		}
 	}
 	
@@ -82,7 +92,7 @@ public class GeneratorPipeline {
 		int num = 0;
 		for (GeneratorStage stage : GeneratorStage.values()) {
 			if (!stage.isLastStage()) {
-				num += this.processors.get(stage.ordinal()).getNumInQueue();
+				num += this.processors.get(stage.ordinal()).processor.getNumInQueue();
 			}
 		}
 		return num;
@@ -90,17 +100,50 @@ public class GeneratorPipeline {
 	
 	public int tick() {
 		long timeStart = System.currentTimeMillis();
-		long timeStop = timeStart + TickBudget;
+		
+		// allocate time to each stage depending on busy it is
+		final int sizeCap = 500;
+		int numCubes = 0;
+		for (StageProcessor processor : this.processors) {
+			numCubes += Math.min(sizeCap, processor.processor.getNumInQueue());
+		}
+		for (StageProcessor processor : this.processors) {
+			if (numCubes <= 0) {
+				processor.share = 0;
+			} else {
+				int size = Math.min(sizeCap, processor.processor.getNumInQueue());
+				processor.share = (float)size/(float)numCubes;
+			}
+		}
 		
 		// process the queues
 		int numProcessed = 0;
 		for (int stage = 0; stage < this.processors.size(); stage++) {
-			QueueProcessor processor = this.processors.get(stage);
-			numProcessed += processor.processQueue(timeStop);
+			
+			// process this stage according to its share
+			StageProcessor processor = this.processors.get(stage);
+			int numMsToProcess = (int)(processor.share*TickBudget);
+			if (numMsToProcess <= 0) {
+				continue;
+			}
+			long stageTimeStart = System.currentTimeMillis();
+			int numStageProcessed = processor.processor.processQueue(stageTimeStart + numMsToProcess);
+			
+			// TEMP
+			TallWorldsMod.log.info("Stage {} processed {} cubes in {} ms of {}/{} ms ({}%).",
+				processor.processor.getName(),
+				numStageProcessed,
+				System.currentTimeMillis() - stageTimeStart,
+				(long)(processor.share*TickBudget),
+				TickBudget,
+				processor.share*100
+			);
+			
+			numProcessed += numStageProcessed;
 			
 			// move the processed entries into the next stage of the pipeline
 			int nextStage = stage + 1;
-			for (long address : processor.getProcessedAddresses()) {
+			for (long address : processor.processor.getProcessedAddresses()) {
 				
 				// set the generator stage flag on the cube
 				int cubeX = AddressTools.getX(address);
@@ -110,7 +153,7 @@ public class GeneratorPipeline {
 				
 				// advance the address to the next stage
 				if (nextStage < this.processors.size()) {
-					this.processors.get(nextStage).add(address);
+					this.processors.get(nextStage).processor.add(address);
 				}
 			}
 		}
@@ -118,9 +161,9 @@ public class GeneratorPipeline {
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			log.info(String.format("Generation pipeline processed %d cubes in %d ms.", numProcessed, timeDiff));
-			for (QueueProcessor processor : this.processors) {
-				log.info(processor.getProcessingReport());
+			TallWorldsMod.log.info("Generation pipeline processed {} cubes in {} ms.", numProcessed, timeDiff);
+			for (StageProcessor processor : this.processors) {
+				TallWorldsMod.log.info(processor.processor.getProcessingReport());
 			}
 		}
 		
