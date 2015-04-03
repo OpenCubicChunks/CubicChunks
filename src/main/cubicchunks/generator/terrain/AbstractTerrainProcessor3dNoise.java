@@ -37,6 +37,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 
@@ -55,9 +56,9 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 
 	protected boolean amplify;
 
-	protected final World worldServer;
+	protected final WorldServer worldServer;
 
-	public AbstractTerrainProcessor3dNoise(String name, World worldServer, ICubeCache cache, int batchSize) {
+	public AbstractTerrainProcessor3dNoise(String name, WorldServer worldServer, ICubeCache cache, int batchSize) {
 		super(name, cache, batchSize);
 
 		this.worldServer = worldServer;
@@ -74,7 +75,7 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 		this.builderAlpha = createAlphaBuilder();
 
 		this.amplify = true;
-		this.seaLevel = 0;// worldServer.getCubeWorldProvider().getSeaLevel();
+		this.seaLevel = 16;
 	}
 
 	protected abstract IBuilder createHighBuilder();

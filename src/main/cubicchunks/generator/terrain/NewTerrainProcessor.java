@@ -61,7 +61,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 
 	private static final int octaves = 16;
 
-	public NewTerrainProcessor(String name, World worldServer, ICubeCache cache, int batchSize) {
+	public NewTerrainProcessor(String name, WorldServer worldServer, ICubeCache cache, int batchSize) {
 		super(name, worldServer, cache, batchSize);
 
 		this.maxSmoothRadius = 2 * (int) (maxElev / 64);

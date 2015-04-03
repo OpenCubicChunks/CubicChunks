@@ -134,9 +134,6 @@ public class Cube {
 	}
 	
 	public Block getBlockAt(final BlockPos pos) {
-		if (isEmpty()) {
-			return Blocks.AIR;
-		}
 		int x = Coords.blockToLocal(pos.getX());
 		int y = Coords.blockToLocal(pos.getY());
 		int z = Coords.blockToLocal(pos.getZ());
@@ -144,6 +141,9 @@ public class Cube {
 	}
 	
 	public Block getBlockAt(final int localX, final int localY, final int localZ) {
+		if (isEmpty()) {
+			return Blocks.AIR;
+		}
 		return this.storage.getBlockAt(localX, localY, localZ);
 	}
 	
