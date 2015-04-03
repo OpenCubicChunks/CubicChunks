@@ -289,4 +289,24 @@ public class CubicChunkSystem implements ChunkSystem {
 		// spawn point calculated successfully
 		return true;
 	}
+
+	@Override
+	public Integer getSeaLevel(World world) {
+		if (isTallWorld(world)) {
+			// tall worlds will eventually have the sea level at 0
+			// for now, let's just do the vanilla thing
+			return 63;
+		}
+		return null;
+	}
+	
+	@Override
+	public Double getHorizonLevel(World world) {
+		if (isTallWorld(world)) {
+			// tall worlds will eventually have the horizon level at 0
+			// for now, let's just do the vanilla thing
+			return 63.0;
+		}
+		return null;
+	}
 }
