@@ -80,21 +80,6 @@ public class TallWorldsMod {
 	}
 	
 	/*
-	public void handleEvent(EncodeChunkEvent event) {
-		// check for our chunk instance
-		if (event.getChunk() instanceof Column) {
-			Column column = (Column)event.getChunk();
-			
-			// encode the column
-			try {
-				byte[] data = column.encode(event.isFirstTime());
-				event.setData(data);
-			} catch (IOException ex) {
-				log.error(String.format("Unable to encode data for column (%d,%d)", column.xPosition, column.zPosition), ex);
-			}
-		}
-	}
-	
 	public void handleEvent(BuildSizeEvent event) {
 		event.setCustomBuildHeight(Coords.cubeToMaxBlock(AddressTools.MaxY));
 		event.setCustomBuildDepth(Coords.cubeToMinBlock(AddressTools.MinY));

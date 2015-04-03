@@ -25,9 +25,6 @@ package cubicchunks.generator;
 
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.collect.Lists;
 
 import cubicchunks.TallWorldsMod;
@@ -129,7 +126,7 @@ public class GeneratorPipeline {
 			long stageTimeStart = System.currentTimeMillis();
 			int numStageProcessed = processor.processor.processQueue(stageTimeStart + numMsToProcess);
 			
-			// TEMP
+			/* DEBUG
 			TallWorldsMod.log.info("Stage {} processed {} cubes in {} ms of {}/{} ms ({}%).",
 				processor.processor.getName(),
 				numStageProcessed,
@@ -138,6 +135,7 @@ public class GeneratorPipeline {
 				TickBudget,
 				processor.share*100
 			);
+			*/
 			
 			numProcessed += numStageProcessed;
 			
