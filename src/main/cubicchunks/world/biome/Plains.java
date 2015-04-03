@@ -105,7 +105,7 @@ public class Plains extends BiomePlains implements ICubicBiome {
 			if (numBlocksToChange == -1) {
 				// If depth is <= 0 - only stone
 				if (depth <= 0) {
-					surfaceBlock = null;
+					surfaceBlock = Blocks.AIR.getDefaultState();
 					// metadata = 0;
 					groundBlock = Blocks.STONE.getDefaultState();
 				}
@@ -138,7 +138,7 @@ public class Plains extends BiomePlains implements ICubicBiome {
 					setBlock(surfaceBlock, cube, xAbs, yAbs, zAbs, canSetBlock);
 				} else if (yAbs < seaLevel - 7 - depth) {
 					// gravel beaches?
-					surfaceBlock = null;
+					surfaceBlock = Blocks.AIR.getDefaultState();
 					groundBlock = Blocks.STONE.getDefaultState();
 					//setBlock(Blocks.GRAVEL.getDefaultState(), cube, xAbs, yAbs, zAbs, canSetBlock);
 				} else {
