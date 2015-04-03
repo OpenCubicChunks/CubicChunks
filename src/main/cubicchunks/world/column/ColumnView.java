@@ -223,4 +223,14 @@ public class ColumnView extends Column {
 	public void setLightAt(LightType lightType, BlockPos pos, int light) {
 		throw new UnsupportedOperationException();
 	}
+	
+	@Override
+	public byte[] getBiomeMap(){
+		return column.getBiomeMap();
+	}
+	
+	@Override
+	public void setBiomeMap(byte[] b){
+		throw new UnsupportedOperationException();
+	}
 }
