@@ -74,6 +74,12 @@ public class BiomeProcessor extends CubeProcessor {
 			return false;
 		}
 		
+		Cube above = this.cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
+		
+		if(above.getGeneratorStage().ordinal() < GeneratorStage.Biomes.ordinal()){
+			return false;
+		}
+		
 		// generate biome info. This is a hackjob.
 		this.biomes = cube.getWorld().dimension.getBiomeManager().getBiomeMap(
 			this.biomes, 
@@ -90,8 +96,6 @@ public class BiomeProcessor extends CubeProcessor {
 			16, 16,
 			1
 		);
-		
-		Cube above = this.cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
 		
 		int topOfCube = Coords.cubeToMaxBlock(cube.getY());
 		int topOfCubeAbove = Coords.cubeToMaxBlock(cube.getY() + 1);

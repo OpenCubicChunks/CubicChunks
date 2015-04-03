@@ -58,9 +58,6 @@ public class FeatureProcessor extends CubeProcessor {
 	@Override
 	public boolean calculate(Cube cube) {
 		
-		// TEMP: skip this stage
-		if (true) return true;
-		
 		this.worldObj = cube.getWorld();
 		
 		// generate world features
