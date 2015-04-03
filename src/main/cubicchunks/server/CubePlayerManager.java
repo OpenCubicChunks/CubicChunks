@@ -47,7 +47,6 @@ import net.minecraft.world.chunk.Chunk;
 import com.google.common.collect.Maps;
 
 import cubicchunks.TallWorldsMod;
-import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.visibility.CubeSelector;
@@ -324,7 +323,7 @@ public class CubePlayerManager extends PlayerManager {
 		info.removeOutOfRangeOutgoingCubes();
 		info.sortOutgoingCubes();
 
-		// TEMP
+		/* DEBUG
 		Map<GeneratorStage,Integer> counts = Maps.newHashMap();
 		for (Cube cube : info.outgoingCubes) {
 			Integer count = counts.get(cube.getGeneratorStage());
@@ -336,6 +335,7 @@ public class CubePlayerManager extends PlayerManager {
 			counts.put(cube.getGeneratorStage(), count);
 		}
 		TallWorldsMod.log.info("Server cubes: {}", counts);
+		*/
 		
 		// pull off enough cubes from the queue to fit in a packet
 		final int MaxCubesToSend = 100;
