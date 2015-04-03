@@ -87,37 +87,6 @@ public class TallWorldsMod {
 		log.info(String.format("Set build height to [%d,%d]", event.getCustomBuildDepth(), event.getCustomBuildHeight()));
 	}
 	
-	public void handleEvent(InitialChunkLoadEvent event) {
-		// get the surface world
-		CubeWorldServer worldServer = (CubeWorldServer)event.worldServers().get(0);
-		
-		// load the cubes around the spawn point
-		log.info("Loading cubes for spawn...");
-		final int Distance = 12;
-		ChunkCoordinates spawnPoint = worldServer.getSpawnPoint();
-		int spawnCubeX = Coords.blockToCube(spawnPoint.posX);
-		int spawnCubeY = Coords.blockToCube(spawnPoint.posY);
-		int spawnCubeZ = Coords.blockToCube(spawnPoint.posZ);
-		for (int cubeX = spawnCubeX - Distance; cubeX <= spawnCubeX + Distance; cubeX++) {
-			for (int cubeY = spawnCubeY - Distance; cubeY <= spawnCubeY + Distance; cubeY++) {
-				for (int cubeZ = spawnCubeZ - Distance; cubeZ <= spawnCubeZ + Distance; cubeZ++) {
-					worldServer.getCubeProvider().loadCubeAndNeighbors(cubeX, cubeY, cubeZ);
-				}
-			}
-		}
-		
-		// wait for the cubes to be loaded
-		GeneratorPipeline pipeline = worldServer.getGeneratorPipeline();
-		int numCubesTotal = pipeline.getNumCubes();
-		if (numCubesTotal > 0) {
-			long timeStart = System.currentTimeMillis();
-			log.info(String.format("Generating %d cubes for spawn at block (%d,%d,%d) cube (%d,%d,%d)...", numCubesTotal, spawnPoint.posX, spawnPoint.posY, spawnPoint.posZ, spawnCubeX, spawnCubeY, spawnCubeZ));
-			pipeline.generateAll();
-			long timeDiff = System.currentTimeMillis() - timeStart;
-			log.info(String.format("Done in %d ms", timeDiff));
-		}
-	}
-	
 	public void handleEvent(EntityPlayerMPUpdateEvent event) {
 		EntityPlayerMP player = event.getPlayer();
 		WorldServer world = (WorldServer)player.theItemInWorldManager.theWorld;

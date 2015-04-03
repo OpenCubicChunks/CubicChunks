@@ -29,6 +29,7 @@ import java.util.Random;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.packet.clientbound.PacketChunkData.EncodedChunk;
 import net.minecraft.server.management.PlayerManager;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldClient;
@@ -39,10 +40,12 @@ import net.minecraft.world.gen.ClientChunkCache;
 import net.minecraft.world.gen.ServerChunkCache;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
+import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.Coords;
 import cubicchunks.world.column.Column;
 import cuchaz.m3l.api.chunks.ChunkSystem;
 
@@ -172,5 +175,43 @@ public class CubicChunkSystem implements ChunkSystem {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public void generateWorld(WorldServer worldServer) {
+		if (isTallWorld(worldServer)) {
+			WorldServerContext context = WorldServerContext.get(worldServer);
+			ServerCubeCache serverCubeCache = context.getCubeCache();
+			
+			// load the cubes around the spawn point
+			TallWorldsMod.log.info("Loading cubes for spawn...");
+			final int Distance = 12;
+			BlockPos spawnPoint = worldServer.getSpawnPoint();
+			int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
+			int spawnCubeY = Coords.blockToCube(spawnPoint.getY());
+			int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
+			for (int cubeX = spawnCubeX - Distance; cubeX <= spawnCubeX + Distance; cubeX++) {
+				for (int cubeY = spawnCubeY - Distance; cubeY <= spawnCubeY + Distance; cubeY++) {
+					for (int cubeZ = spawnCubeZ - Distance; cubeZ <= spawnCubeZ + Distance; cubeZ++) {
+						serverCubeCache.loadCubeAndNeighbors(cubeX, cubeY, cubeZ);
+					}
+				}
+			}
+			
+			// wait for the cubes to be loaded
+			GeneratorPipeline pipeline = context.getGeneratorPipeline();
+			int numCubesTotal = pipeline.getNumCubes();
+			if (numCubesTotal > 0) {
+				long timeStart = System.currentTimeMillis();
+				TallWorldsMod.log.info("Generating {} cubes for spawn at block ({},{},{}) cube ({},{},{})...",
+					numCubesTotal,
+					spawnPoint.getX(), spawnPoint.getY(), spawnPoint.getZ(),
+					spawnCubeX, spawnCubeY, spawnCubeZ
+				);
+				pipeline.generateAll();
+				long timeDiff = System.currentTimeMillis() - timeStart;
+				TallWorldsMod.log.info("Done in {} ms", timeDiff);
+			}
+		}
 	}
 }
