@@ -34,6 +34,7 @@ import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.WorldSettings;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ClientChunkCache;
@@ -48,6 +49,7 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.column.Column;
 import cuchaz.m3l.api.chunks.ChunkSystem;
+import cuchaz.m3l.util.Util;
 
 public class CubicChunkSystem implements ChunkSystem {
 	
@@ -213,5 +215,78 @@ public class CubicChunkSystem implements ChunkSystem {
 				TallWorldsMod.log.info("Done in {} ms", timeDiff);
 			}
 		}
+	}
+	
+	@Override
+	public boolean calculateSpawn(WorldServer worldServer, WorldSettings worldSettings) {
+		
+		if (!isTallWorld(worldServer)) {
+			return false;
+		}
+		
+		WorldServerContext context = WorldServerContext.get(worldServer);
+		ServerCubeCache serverCubeCache = context.getCubeCache();
+		
+		// NOTE: this is called inside the world constructor
+		// this is apparently called before the world is generated
+		// we'll have to do our own generation to find the spawn point
+		
+		if (!worldServer.dimension.canRespawnHere()) {
+			worldServer.worldInfo.setSpawnPoint(BlockPos.ZEROED.above());
+			return false;
+		}
+		
+		// pick a default fail-safe spawn point
+		BlockPos.MutableBlockPos spawnPos = new BlockPos.MutableBlockPos(
+			0,
+			worldServer.dimension.getAverageGroundLevel(),
+			0
+		);
+		
+		Random rand = new Random(worldServer.getSeed());
+		
+		// defer to the column manager to find the x,z part of the spawn point
+		BiomeManager biomeManager = worldServer.dimension.getBiomeManager();
+		BlockPos spawnPosition = biomeManager.getRandomPositionInBiome(0, 0, 256, biomeManager.getSpawnableBiomes(), rand);
+		if (spawnPosition != null) {
+			spawnPos.x = spawnPosition.getX();
+			spawnPos.z = spawnPosition.getZ();
+		} else {
+			TallWorldsMod.log.warn("Unable to find spawn biome");
+		}
+		
+		TallWorldsMod.log.info("Searching for suitable spawn point...");
+		
+		// generate some world around the spawn x,z at sea level
+		int spawnCubeX = Coords.blockToCube(spawnPos.getX());
+		int spawnCubeY = Coords.blockToCube(worldServer.getSeaLevel());
+		int spawnCubeZ = Coords.blockToCube(spawnPos.getZ());
+		
+		final int SearchDistance = 4;
+		for (int cubeX = spawnCubeX - SearchDistance; cubeX <= spawnCubeX + SearchDistance; cubeX++) {
+			for (int cubeY = spawnCubeY - SearchDistance; cubeY <= spawnCubeY + SearchDistance; cubeY++) {
+				for (int cubeZ = spawnCubeZ - SearchDistance; cubeZ <= spawnCubeZ + SearchDistance; cubeZ++) {
+					serverCubeCache.loadCube(cubeX, cubeY, cubeZ);
+				}
+			}
+		}
+		context.getGeneratorPipeline().generateAll();
+		
+		// make some effort to find a suitable spawn point, but don't guarantee it
+		for (int i = 0; i < 1000 && !worldServer.dimension.canCoordinateBeSpawn(spawnPos.getX(), spawnPos.getZ()); i++) {
+			spawnPos.x += Util.randRange(rand, -16, 16);
+			spawnPos.z += Util.randRange(rand, -16, 16);
+		}
+		
+		// save the spawn point
+		worldServer.worldInfo.setSpawnPoint(spawnPos);
+		TallWorldsMod.log.info("Found spawn point at ({},{},{})", spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
+		
+		if (worldSettings.isBonusChestEnabled()) {
+			worldServer.generateBonusChests();
+		}
+		
+		// spawn point calculated successfully
+		return true;
 	}
 }
