@@ -24,8 +24,6 @@
 package cubicchunks.generator.terrain;
 
 import java.util.Random;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.builder.BasicBuilder;
@@ -37,10 +35,8 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.maxElev;
-import cubicchunks.server.CubeWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.ICubeCache;
-import net.minecraft.world.World;
 
 public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 	private Biome[] biomes;

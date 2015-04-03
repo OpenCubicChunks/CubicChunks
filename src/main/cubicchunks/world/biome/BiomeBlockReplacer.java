@@ -34,27 +34,27 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.biome.BiomePlains;
+import net.minecraft.world.biome.Biome;
 
-public class Plains extends BiomePlains implements ICubicBiome {
+public class BiomeBlockReplacer {
 
-	public Plains(final int biomeID) {
-		super(biomeID);
+	private final Biome baseBiome;
+	
+	public BiomeBlockReplacer(Biome biomeToUse) {
+		this.baseBiome = biomeToUse;
 	}
 
-	@Override
 	public void replaceBlocks(WorldServer worldServer, Random rand, Cube cube, Cube above, int xAbs, int zAbs, int top,
 			int bottom, int alterationTop, int seaLevel, double depthNoiseValue) {
 		this.replaceBlocks_do(worldServer, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel,
 				depthNoiseValue);
-
 	}
 
 	public final void replaceBlocks_do(WorldServer worldServer, Random rand, Cube cube, Cube above, int xAbs, int zAbs,
 			int top, int bottom, int alterationTop, int seaLevel, double depthNoiseValue) {
-		IBlockState surfaceBlock = this.topBlock;
+		IBlockState surfaceBlock = baseBiome.topBlock;
 		// byte metadata = (byte) (this.field_150604_aj & 255);
-		IBlockState groundBlock = this.fillerBlock;
+		IBlockState groundBlock = baseBiome.fillerBlock;
 
 		// How many biome blocks left to set in column? Initially -1
 		int numBlocksToChange = -1;
@@ -112,15 +112,15 @@ public class Plains extends BiomePlains implements ICubicBiome {
 				// If we are above or at 4 block under water and at or below one
 				// block above water
 				else if (yAbs >= seaLevel - 4 && yAbs <= seaLevel + 1) {
-					surfaceBlock = this.topBlock;
+					surfaceBlock = baseBiome.topBlock;
 					// metadata = (byte) (this.field_150604_aj & 255);
-					groundBlock = this.fillerBlock;
+					groundBlock = baseBiome.fillerBlock;
 				}
 
 				// If top block is air and we are below sea level use water
 				// instead
 				if (yAbs < seaLevel && (surfaceBlock == null || surfaceBlock.getBlock().getMaterial() == Material.AIR)) {
-					if (this.getTemp(new BlockPos(xAbs, yAbs, zAbs)) < 0.15F) {
+					if (baseBiome.getTemp(new BlockPos(xAbs, yAbs, zAbs)) < 0.15F) {
 						// or ice if it's cold
 						surfaceBlock = Blocks.ICE.getDefaultState();
 						// metadata = 0;
@@ -200,5 +200,4 @@ public class Plains extends BiomePlains implements ICubicBiome {
 			return above.getBlockAt(xRel, yRel, zRel);
 		}
 	}
-
 }

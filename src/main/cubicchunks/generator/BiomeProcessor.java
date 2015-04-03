@@ -32,8 +32,7 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.CubeTools;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
-import cubicchunks.world.biome.ICubicBiome;
-import cubicchunks.world.biome.Plains;
+import cubicchunks.world.biome.BiomeBlockReplacer;
 import cubicchunks.world.cube.Cube;
 
 public class BiomeProcessor extends CubeProcessor {
@@ -57,7 +56,7 @@ public class BiomeProcessor extends CubeProcessor {
 		this.noise = new double[256];
 		this.biomes = null;
 		
-		this.seaLevel = 16;
+		this.seaLevel = 64;
 	}
 	
 	@Override
@@ -76,12 +75,12 @@ public class BiomeProcessor extends CubeProcessor {
 		}
 		
 		// generate biome info. This is a hackjob.
-//		this.biomes = this.worldServer.dimension.getBiomeManager().getBiomeMap(
-//			this.biomes, 
-//			Coords.cubeToMinBlock(cube.getX()), 
-//			Coords.cubeToMinBlock(cube.getZ()), 
-//			16, 16
-//		);
+		this.biomes = cube.getWorld().dimension.getBiomeManager().getBiomeMap(
+			this.biomes, 
+			Coords.cubeToMinBlock(cube.getX()), 
+			Coords.cubeToMinBlock(cube.getZ()), 
+			16, 16
+		);
 		
 		this.noise = this.m_noiseGen.arrayNoise2D_pre(
 			this.noise, 
@@ -111,8 +110,8 @@ public class BiomeProcessor extends CubeProcessor {
 				int xzCoord = zRel << 4 | xRel;
 				
 				//TODO: Reimplement this
-				ICubicBiome biome = new Plains(0);//this.biomes[xzCoord];
-				biome.replaceBlocks(this.worldServer, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, noise[zRel * 16 + xRel]);
+				BiomeBlockReplacer blockReplacer = new BiomeBlockReplacer(this.biomes[xzCoord]);
+				blockReplacer.replaceBlocks(this.worldServer, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, noise[zRel * 16 + xRel]);
 			}
 		}
 		return true;
