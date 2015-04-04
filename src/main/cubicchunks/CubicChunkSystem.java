@@ -31,6 +31,7 @@ import net.minecraft.network.play.packet.clientbound.PacketChunkData.EncodedChun
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
@@ -42,11 +43,13 @@ import net.minecraft.world.gen.ServerChunkCache;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.generator.GeneratorPipeline;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
+import cubicchunks.world.WorldContexts;
 import cubicchunks.world.column.Column;
 import cuchaz.m3l.api.chunks.ChunkSystem;
 import cuchaz.m3l.util.Util;
@@ -306,6 +309,20 @@ public class CubicChunkSystem implements ChunkSystem {
 			// tall worlds will eventually have the horizon level at 0
 			// for now, let's just do the vanilla thing
 			return 63.0;
+		}
+		return null;
+	}
+
+	@Override
+	public Boolean updateLightingAt(World world, BlockPos pos) {
+		if (isTallWorld(world)) {
+			LightingManager lightingManager = WorldContexts.get(world).getLightingManager();
+			boolean success = false;
+			if (!world.dimension.hasNoSky()) {
+				success |= lightingManager.computeDiffuseLighting(pos, LightType.SKY);
+			}
+			success |= lightingManager.computeDiffuseLighting(pos, LightType.BLOCK);
+			return success;
 		}
 		return null;
 	}
