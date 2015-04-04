@@ -323,19 +323,13 @@ public class CubePlayerManager extends PlayerManager {
 		info.removeOutOfRangeOutgoingCubes();
 		info.sortOutgoingCubes();
 
-		/* DEBUG
-		Map<GeneratorStage,Integer> counts = Maps.newHashMap();
-		for (Cube cube : info.outgoingCubes) {
-			Integer count = counts.get(cube.getGeneratorStage());
-			if (count == null) {
-				count = 1;
-			} else {
-				count++;
+		/*{ // DEBUG
+			Multiset<GeneratorStage> counts = HashMultiset.create();
+			for (Cube cube : info.outgoingCubes) {
+				counts.add(cube.getGeneratorStage());
 			}
-			counts.put(cube.getGeneratorStage(), count);
-		}
-		TallWorldsMod.log.info("Server cubes: {}", counts);
-		*/
+			TallWorldsMod.log.info("Server cubes: {}", counts);
+		}*/
 		
 		// pull off enough cubes from the queue to fit in a packet
 		final int MaxCubesToSend = 100;
@@ -378,6 +372,16 @@ public class CubePlayerManager extends PlayerManager {
 			view.addCubeToView(cube);
 		}
 		List<Chunk> columnsToSend = new ArrayList<Chunk>(views.values());
+		
+		/*{ // DEBUG: what y-levels are we sending?
+			Multiset<Integer> counts = TreeMultiset.create();
+			for (Chunk chunk : columnsToSend) {
+				for (Cube cube : ((ColumnView)chunk).getCubes()) {
+					counts.add(cube.getY());
+				}
+			}
+			TallWorldsMod.log.info("Cube Y counts: {}", counts);
+		}*/
 		
 		// send the cube data with the first time flag set
 		player.netServerHandler.send(new PacketMapChunkBulk(columnsToSend));

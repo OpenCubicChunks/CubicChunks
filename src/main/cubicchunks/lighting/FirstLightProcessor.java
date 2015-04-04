@@ -25,6 +25,7 @@ package cubicchunks.lighting;
 
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
+import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
@@ -45,7 +46,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		
 		// only light if the neighboring cubes exist
 		WorldContext context = WorldContext.get(cube.getWorld());
-		if (!context.cubeAndNeighborsExist(cube.getX(), cube.getY(), cube.getZ(), false)) {
+		if (!context.cubeAndNeighborsExist(cube.getX(), cube.getY(), cube.getZ(), true, GeneratorStage.Features)) {
 			return false;
 		}
 		

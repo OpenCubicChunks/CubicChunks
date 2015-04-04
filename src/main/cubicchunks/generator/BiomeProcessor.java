@@ -69,7 +69,7 @@ public class BiomeProcessor extends CubeProcessor {
 		rand.setSeed(41 * cube.getWorld().getSeed() + cube.cubeRandomSeed());
 		
 		// only continue if the neighboring cubes exist
-		if (!WorldContext.get(cube.getWorld()).cubeAndNeighborsExist(cube.getX(), cube.getY(), cube.getZ(), false)) {
+		if (!WorldContext.get(cube.getWorld()).cubeAndNeighborsExist(cube.getX(), cube.getY(), cube.getZ(), true, GeneratorStage.Terrain)) {
 			return false;
 		}
 		

@@ -27,10 +27,12 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
 import cubicchunks.client.WorldClientContext;
+import cubicchunks.generator.GeneratorStage;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
+import cubicchunks.world.cube.Cube;
 
 public abstract class WorldContext {
 	
@@ -74,7 +76,7 @@ public abstract class WorldContext {
 		);
 	}
 	
-	public boolean blocksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyCubes) {
+	public boolean blocksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
 		
 		// convert block bounds to chunk bounds
 		int minCubeX = Coords.blockToCube(minBlockX);
@@ -84,19 +86,24 @@ public abstract class WorldContext {
 		int maxCubeY = Coords.blockToCube(maxBlockY);
 		int maxCubeZ = Coords.blockToCube(maxBlockZ);
 		
-		return cubesExist(minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ, allowEmptyCubes);
+		return cubesExist(minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ, allowEmptyCubes, minStageAllowed);
 	}
 	
-	public boolean cubeAndNeighborsExist(int cubeX, int cubeY, int cubeZ, boolean allowEmptyCubes) {
+	public boolean cubeAndNeighborsExist(int cubeX, int cubeY, int cubeZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
 		// TODO: optimize this with loop unrolling
-		return cubesExist(cubeX - 1, cubeY - 1, cubeZ - 1, cubeX + 1, cubeY + 1, cubeZ + 1, allowEmptyCubes);
+		return cubesExist(cubeX - 1, cubeY - 1, cubeZ - 1, cubeX + 1, cubeY + 1, cubeZ + 1, allowEmptyCubes, minStageAllowed);
 	}
 	
-	public boolean cubesExist(int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ, boolean allowEmptyCubes) {
+	public boolean cubesExist(int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
 		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
 			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {
-					if (!m_cubeCache.cubeExists(cubeX, cubeY, cubeZ) || (!allowEmptyCubes && m_cubeCache.getCube(cubeX, cubeY, cubeZ).isEmpty())) {
+					if (!m_cubeCache.cubeExists(cubeX, cubeY, cubeZ)) {
+						return false;
+					}
+					Cube cube = m_cubeCache.getCube(cubeX, cubeY, cubeZ);
+					if ((!allowEmptyCubes && cube.isEmpty())
+						|| (minStageAllowed != null && cube.getGeneratorStage().isLessThan(minStageAllowed))) {
 						return false;
 					}
 				}

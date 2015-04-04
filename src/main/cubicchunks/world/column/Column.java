@@ -457,12 +457,12 @@ public class Column extends Chunk {
 			entity.addedToChunk = false;
 			this.isModified = true;
 		} else {
-			log.warn(String.format("%s Tried to remove entity %s from column (%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
+			log.warn("{} Tried to remove entity {} from column ({},{}), but it was not there. Entity thinks it's in cube ({},{},{})",
 				this.world.isClient ? "CLIENT" : "SERVER",
 				entity.getClass().getName(),
 				this.chunkX, this.chunkZ,
 				entity.chunkX, entity.chunkY, entity.chunkZ
-			));
+			);
 		}
 	}
 	
@@ -515,10 +515,10 @@ public class Column extends Chunk {
 		if (cube != null) {
 			cube.addBlockEntity(pos, blockEntity);
 		} else {
-			log.warn(String.format("No cube at (%d,%d,%d) to add tile entity (block %d,%d,%d)!",
+			log.warn("No cube at ({},{},{}) to add tile entity (block {},{},{})!",
 				this.chunkX, cubeY, this.chunkZ,
 				pos.getX(), pos.getY(), pos.getZ()
-			));
+			);
 		}
 	}
 	
@@ -545,6 +545,10 @@ public class Column extends Chunk {
 	
 	public PacketChunkData.EncodedChunk encode(boolean isFirstTime, boolean hasSky, int sectionFlags)
 	throws IOException {
+		
+		if (!(this instanceof ColumnView)) {
+			throw new Error("we should never be encoding whole columns!");
+		}
 		
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
 		DataOutputStream out = new DataOutputStream(buf);
@@ -675,7 +679,7 @@ public class Column extends Chunk {
 			
 			in.close();
 		} catch (IOException ex) {
-			log.error(String.format("Unable to read data for column (%d,%d)", this.chunkX, this.chunkZ), ex);
+			log.error("Unable to read data for column ({},{})", this.chunkX, this.chunkZ, ex);
 		}
 		
 		// update lighting flags
