@@ -57,4 +57,9 @@ public class ColumnView extends Column {
 	public void addCubeToView(Cube cube) {
 		this.cubes.put(cube.getY(), cube);
 	}
+	
+	@Override
+	public byte[] getBiomeMap() {
+		return column.getBiomeMap();
+	}
 }
