@@ -95,13 +95,19 @@ public class CubicChunkSystem implements ChunkSystem {
 	}
 
 	@Override
-	public int getMinBlockY() {
-		return AddressTools.MinY;
+	public Integer getMinBlockY(World world) {
+		if (isTallWorld(world)) {
+			return AddressTools.MinY;
+		}
+		return null;
 	}
 
 	@Override
-	public int getMaxBlockY() {
-		return AddressTools.MaxY;
+	public Integer getMaxBlockY(World world) {
+		if (isTallWorld(world)) {
+			return AddressTools.MaxY;
+		}
+		return null;
 	}
 
 	@Override
