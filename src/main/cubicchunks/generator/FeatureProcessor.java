@@ -27,32 +27,33 @@ import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.MineshaftGenerator;
 import net.minecraft.world.gen.structure.StrongholdGenerator;
 import net.minecraft.world.gen.structure.VillageGenerator;
-import cubicchunks.generator.features.CubicCaveGen;
-import cubicchunks.generator.features.CubicRavineGen;
+import cubicchunks.generator.features.CubicCaveGenerator;
+import cubicchunks.generator.features.CubicFeatureGenerator;
+import cubicchunks.generator.features.CubicRavineGenerator;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
 public class FeatureProcessor extends CubeProcessor {
 	
-	private CubicCaveGen caveGenerator;
+	private CubicCaveGenerator caveGenerator;
 	private StrongholdGenerator strongholdGenerator;
 	private VillageGenerator villageGenerator;
 	private MineshaftGenerator mineshaftGenerator;
 //	private MapGenScatteredFeature scatteredFeatureGenerator;
-	private CubicRavineGen ravineGenerator;
+	private CubicFeatureGenerator ravineGenerator;
 	
 	private World worldObj;
 	
 	public FeatureProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 		
-		this.caveGenerator = new CubicCaveGen();
+		this.caveGenerator = new CubicCaveGenerator();
 		this.strongholdGenerator = new StrongholdGenerator();
 		this.villageGenerator = new VillageGenerator();
 		this.mineshaftGenerator = new MineshaftGenerator();
 //		this.scatteredFeatureGenerator = new TempleGenerator();
-		this.ravineGenerator = new CubicRavineGen();
+		this.ravineGenerator = new CubicRavineGenerator();
 	}
 	
 	@Override
