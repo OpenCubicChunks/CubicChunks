@@ -25,9 +25,6 @@ package cubicchunks.world.biome;
 
 import java.util.Random;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.WorldContexts;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
@@ -35,6 +32,9 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
+import cubicchunks.util.Coords;
+import cubicchunks.world.WorldContext;
+import cubicchunks.world.cube.Cube;
 
 public class BiomeBlockReplacer {
 
@@ -182,7 +182,7 @@ public class BiomeBlockReplacer {
 	}
 
 	protected final Block getBlock(Cube cube, Cube above, int xAbs, int yAbs, int zAbs) {
-		assert WorldContexts.get(cube.getWorld()).getCubeCache()
+		assert WorldContext.get(cube.getWorld()).getCubeCache()
 				.cubeExists(Coords.blockToCube(xAbs), Coords.blockToCube(yAbs), Coords.blockToCube(zAbs));
 
 		int xRel = xAbs & 15;

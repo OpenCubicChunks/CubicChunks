@@ -36,11 +36,10 @@ import cubicchunks.generator.GeneratorStage;
 import cubicchunks.generator.PopulationProcessor;
 import cubicchunks.generator.terrain.NewTerrainProcessor;
 import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.lighting.LightingManager;
 import cubicchunks.world.WorldContext;
 
 
-public class WorldServerContext implements WorldContext {
+public class WorldServerContext extends WorldContext {
 	
 	private static Map<WorldServer,WorldServerContext> m_instances;
 	
@@ -58,14 +57,13 @@ public class WorldServerContext implements WorldContext {
 	
 	private WorldServer m_worldServer;
 	private ServerCubeCache m_serverCubeCache;
-	private LightingManager m_lightingManager;
 	private GeneratorPipeline m_generatorPipeline;
 	
 	public WorldServerContext(WorldServer worldServer, ServerCubeCache serverCubeCache) {
+		super(worldServer, serverCubeCache);
 		
 		m_worldServer = worldServer;
 		m_serverCubeCache = serverCubeCache;
-		m_lightingManager = new LightingManager(worldServer, serverCubeCache);
 		m_generatorPipeline = new GeneratorPipeline(serverCubeCache);
 		
 		// init the generator pipeline
@@ -77,18 +75,14 @@ public class WorldServerContext implements WorldContext {
 		m_generatorPipeline.checkStages();
 	}
 	
-	public WorldServer getWorldServer() {
+	@Override
+	public WorldServer getWorld() {
 		return m_worldServer;
 	}
 	
 	@Override
 	public ServerCubeCache getCubeCache() {
 		return m_serverCubeCache;
-	}
-	
-	@Override
-	public LightingManager getLightingManager() {
-		return m_lightingManager;
 	}
 	
 	public GeneratorPipeline getGeneratorPipeline() {

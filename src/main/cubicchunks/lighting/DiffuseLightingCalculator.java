@@ -37,7 +37,7 @@ import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.FastIntQueue;
 import cubicchunks.world.ICubeCache;
-import cubicchunks.world.WorldContexts;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
 
 public class DiffuseLightingCalculator {
@@ -241,7 +241,7 @@ public class DiffuseLightingCalculator {
 		int cubeX = Coords.blockToCube(blockX);
 		int cubeY = Coords.blockToCube(blockY);
 		int cubeZ = Coords.blockToCube(blockZ);
-		ICubeCache cubeCache = WorldContexts.get(world).getCubeCache();
+		ICubeCache cubeCache = WorldContext.get(world).getCubeCache();
 		if (!cubeCache.cubeExists(cubeX, cubeY, cubeZ)) {
 			return false;
 		}

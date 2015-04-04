@@ -26,10 +26,12 @@ package cubicchunks;
 import java.io.IOException;
 import java.util.Random;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.packet.clientbound.PacketChunkData.EncodedChunk;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
@@ -49,7 +51,7 @@ import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
-import cubicchunks.world.WorldContexts;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cuchaz.m3l.api.chunks.ChunkSystem;
 import cuchaz.m3l.util.Util;
@@ -316,13 +318,34 @@ public class CubicChunkSystem implements ChunkSystem {
 	@Override
 	public Boolean updateLightingAt(World world, BlockPos pos) {
 		if (isTallWorld(world)) {
-			LightingManager lightingManager = WorldContexts.get(world).getLightingManager();
+			LightingManager lightingManager = WorldContext.get(world).getLightingManager();
 			boolean success = false;
 			if (!world.dimension.hasNoSky()) {
 				success |= lightingManager.computeDiffuseLighting(pos, LightType.SKY);
 			}
 			success |= lightingManager.computeDiffuseLighting(pos, LightType.BLOCK);
 			return success;
+		}
+		return null;
+	}
+
+	@Override
+	public Boolean checkBlockRangeIsInWorld(World world, int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyChunks) {
+		if (isTallWorld(world)) {
+			WorldContext context = WorldContext.get(world);
+			context.blocksExist(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ, allowEmptyChunks);
+		}
+		return null;
+	}
+
+	@Override
+	public Boolean checkEntityIsInWorld(World world, Entity entity, int minBlockX, int minBlockZ, int maxBlockX, int maxBlockZ, boolean allowEmptyChunks) {
+		if (isTallWorld(world)) {
+			WorldContext context = WorldContext.get(world);
+			
+			final int blockDist = 32;
+			int blockY = MathHelper.floor(entity.yPos);
+			context.blocksExist(minBlockX, blockY - blockDist, minBlockZ, maxBlockX, blockY + blockDist, maxBlockZ, allowEmptyChunks);
 		}
 		return null;
 	}

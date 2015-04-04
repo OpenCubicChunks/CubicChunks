@@ -24,9 +24,6 @@
 package cubicchunks.generator.terrain;
 
 import cubicchunks.util.Coords;
-import static cubicchunks.util.Coords.CUBE_MAX_X;
-import static cubicchunks.util.Coords.CUBE_MAX_Y;
-import static cubicchunks.util.Coords.CUBE_MAX_Z;
 
 public class GlobalGeneratorConfig {
 	public static final double maxElev = 64;

@@ -23,9 +23,85 @@
  */
 package cubicchunks.world;
 
+import net.minecraft.world.World;
+import net.minecraft.world.WorldClient;
+import net.minecraft.world.WorldServer;
+import cubicchunks.client.WorldClientContext;
 import cubicchunks.lighting.LightingManager;
+import cubicchunks.server.WorldServerContext;
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.Coords;
 
-public interface WorldContext {
-	ICubeCache getCubeCache();
-	LightingManager getLightingManager();
+public abstract class WorldContext {
+	
+	public static WorldContext get(World world) {
+		// TODO: hide client things from the server
+		if (world instanceof WorldClient) {
+			return WorldClientContext.get((WorldClient)world);
+		} else if (world instanceof WorldServer) {
+			return WorldServerContext.get((WorldServer)world);
+		}
+		throw new Error("Unknown world type!");
+	}
+
+	private World m_world;
+	private ICubeCache m_cubeCache;
+	private LightingManager m_lightingManager;
+	
+	protected WorldContext(World world, ICubeCache cubeCache) {
+		m_world = world;
+		m_cubeCache = cubeCache;
+		m_lightingManager = new LightingManager(world, cubeCache);
+	}
+	
+	public World getWorld() {
+		return m_world;
+	}
+	
+	public ICubeCache getCubeCache() {
+		return m_cubeCache;
+	}
+	
+	public LightingManager getLightingManager() {
+		return m_lightingManager;
+	}
+	
+	public long getSpawnPointCubeAddress() {
+		return AddressTools.getAddress(
+			Coords.blockToCube(m_world.getWorldInfo().getSpawnX()),
+			Coords.blockToCube(m_world.getWorldInfo().getSpawnY()),
+			Coords.blockToCube(m_world.getWorldInfo().getSpawnZ())
+		);
+	}
+	
+	public boolean blocksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyCubes) {
+		
+		// convert block bounds to chunk bounds
+		int minCubeX = Coords.blockToCube(minBlockX);
+		int minCubeY = Coords.blockToCube(minBlockY);
+		int minCubeZ = Coords.blockToCube(minBlockZ);
+		int maxCubeX = Coords.blockToCube(maxBlockX);
+		int maxCubeY = Coords.blockToCube(maxBlockY);
+		int maxCubeZ = Coords.blockToCube(maxBlockZ);
+		
+		return cubesExist(minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ, allowEmptyCubes);
+	}
+	
+	public boolean cubeAndNeighborsExist(int cubeX, int cubeY, int cubeZ, boolean allowEmptyCubes) {
+		// TODO: optimize this with loop unrolling
+		return cubesExist(cubeX - 1, cubeY - 1, cubeZ - 1, cubeX + 1, cubeY + 1, cubeZ + 1, allowEmptyCubes);
+	}
+	
+	public boolean cubesExist(int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ, boolean allowEmptyCubes) {
+		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
+			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
+				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {
+					if (!m_cubeCache.cubeExists(cubeX, cubeY, cubeZ) || (!allowEmptyCubes && m_cubeCache.getCube(cubeX, cubeY, cubeZ).isEmpty())) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
 }

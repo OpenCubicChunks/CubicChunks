@@ -29,10 +29,9 @@ import net.minecraft.world.WorldClient;
 
 import com.google.common.collect.Maps;
 
-import cubicchunks.lighting.LightingManager;
 import cubicchunks.world.WorldContext;
 
-public class WorldClientContext implements WorldContext {
+public class WorldClientContext extends WorldContext {
 	
 	private static Map<WorldClient,WorldClientContext> m_instances;
 	
@@ -50,25 +49,20 @@ public class WorldClientContext implements WorldContext {
 	
 	private WorldClient m_worldClient;
 	private ClientCubeCache m_clientCubeCache;
-	private LightingManager m_lightingManager;
 	
 	public WorldClientContext(WorldClient worldClient, ClientCubeCache clientCubeCache) {
+		super(worldClient, clientCubeCache);
 		m_worldClient = worldClient;
 		m_clientCubeCache = clientCubeCache;
-		m_lightingManager = new LightingManager(worldClient, clientCubeCache);
 	}
 	
-	public WorldClient getWorldClient() {
+	@Override
+	public WorldClient getWorld() {
 		return m_worldClient;
 	}
 	
 	@Override
 	public ClientCubeCache getCubeCache() {
 		return m_clientCubeCache;
-	}
-	
-	@Override
-	public LightingManager getLightingManager() {
-		return m_lightingManager;
 	}
 }

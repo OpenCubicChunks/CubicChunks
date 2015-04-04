@@ -29,7 +29,7 @@ import net.minecraft.world.World;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.BlockColumnProcessor;
 import cubicchunks.world.ICubeCache;
-import cubicchunks.world.WorldContexts;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 
 public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
@@ -73,7 +73,7 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	private boolean updateSkylight(World world, int blockX, int blockZ, int maxBlockY) {
 		
 		// get the skylight block for this block column
-		Column column = WorldContexts.get(world).getCubeCache().getColumn(
+		Column column = WorldContext.get(world).getCubeCache().getColumn(
 			Coords.blockToCube(blockX),
 			Coords.blockToCube(blockZ)
 		);
@@ -107,7 +107,7 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 		}
 		
 		for (int blockY = minBlockY; blockY <= maxBlockY; blockY++) {
-			WorldContexts.get(world).getLightingManager().computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
+			WorldContext.get(world).getLightingManager().computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
 		}
 		
 		return true;

@@ -28,7 +28,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import cubicchunks.util.Coords;
-import cubicchunks.world.WorldContexts;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
@@ -38,7 +38,7 @@ public class SkyLightUpdateCalculator {
 		// NOTE: maxBlockY is always the air block above the top block that was added or removed
 		
 		World world = column.getWorld();
-		LightingManager lightingManager = WorldContexts.get(world).getLightingManager();
+		LightingManager lightingManager = WorldContext.get(world).getLightingManager();
 		
 		if (world.dimension.hasNoSky()) {
 			return;

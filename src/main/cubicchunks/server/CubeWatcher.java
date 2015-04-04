@@ -198,7 +198,7 @@ public class CubeWatcher {
 		sendPacketToAllPlayers(packet);
 	}
 	
-	private void sendPacketToAllPlayers(IPacket packet) {
+	private void sendPacketToAllPlayers(IPacket<?> packet) {
 		for (PlayerEntry entry : this.players.values()) {
 			// has this player seen this cube before?
 			if (entry.sawCube) {

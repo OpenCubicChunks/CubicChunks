@@ -67,7 +67,7 @@ import cubicchunks.util.RangeInt;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.LightIndex;
-import cubicchunks.world.WorldContexts;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
 
 public class Column extends Chunk {
@@ -276,7 +276,7 @@ public class Column extends Chunk {
 			assert (minBlockY < maxBlockY) : "Values not sorted! " + minBlockY + ", " + maxBlockY;
 			
 			// update light and signal render update
-			WorldContexts.get(this.world).getLightingManager().computeSkyLightUpdate(this, x, z, minBlockY, maxBlockY);
+			WorldContext.get(this.world).getLightingManager().computeSkyLightUpdate(this, x, z, minBlockY, maxBlockY);
 			this.world.markBlockRangeForRenderUpdate(pos.getX(), minBlockY, pos.getZ(), pos.getX(), maxBlockY, pos.getZ());
 		}
 		
@@ -284,7 +284,7 @@ public class Column extends Chunk {
 		int skyLight = getLightAt(LightType.SKY, pos);
 		int blockLight = getLightAt(LightType.BLOCK, pos);
 		if (newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0)) {
-			WorldContexts.get(this.world).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
+			WorldContext.get(this.world).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
 		}
 		
 		// update lighting index

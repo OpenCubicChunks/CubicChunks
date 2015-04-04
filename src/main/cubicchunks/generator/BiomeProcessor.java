@@ -29,9 +29,9 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
 import cubicchunks.util.Coords;
-import cubicchunks.util.CubeTools;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.biome.BiomeBlockReplacer;
 import cubicchunks.world.cube.Cube;
 
@@ -69,7 +69,7 @@ public class BiomeProcessor extends CubeProcessor {
 		rand.setSeed(41 * cube.getWorld().getSeed() + cube.cubeRandomSeed());
 		
 		// only continue if the neighboring cubes exist
-		if (!CubeTools.cubeAndNeighborsExist(this.cache, cube.getX(), cube.getY(), cube.getZ())) {
+		if (!WorldContext.get(cube.getWorld()).cubeAndNeighborsExist(cube.getX(), cube.getY(), cube.getZ(), false)) {
 			return false;
 		}
 		
