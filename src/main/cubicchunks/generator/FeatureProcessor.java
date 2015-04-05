@@ -27,9 +27,9 @@ import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.MineshaftGenerator;
 import net.minecraft.world.gen.structure.StrongholdGenerator;
 import net.minecraft.world.gen.structure.VillageGenerator;
-import cubicchunks.generator.features.CubicCaveGenerator;
-import cubicchunks.generator.features.CubicFeatureGenerator;
-import cubicchunks.generator.features.CubicRavineGenerator;
+import cubicchunks.generator.structures.CubicCaveGenerator;
+import cubicchunks.generator.structures.CubicStructureGenerator;
+import cubicchunks.generator.structures.CubicRavineGenerator;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
@@ -41,7 +41,7 @@ public class FeatureProcessor extends CubeProcessor {
 	private VillageGenerator villageGenerator;
 	private MineshaftGenerator mineshaftGenerator;
 //	private MapGenScatteredFeature scatteredFeatureGenerator;
-	private CubicFeatureGenerator ravineGenerator;
+	private CubicStructureGenerator ravineGenerator;
 	
 	private World worldObj;
 	

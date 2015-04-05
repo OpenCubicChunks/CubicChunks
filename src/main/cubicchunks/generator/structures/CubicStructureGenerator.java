@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.features;
+package cubicchunks.generator.structures;
 
 import java.util.Random;
 
@@ -31,7 +31,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import cubicchunks.world.cube.Cube;
 
-public abstract class CubicFeatureGenerator {
+public abstract class CubicStructureGenerator {
 	
 	/** The number of Chunks to gen-check in any given direction. */
 	protected int range = 8;
