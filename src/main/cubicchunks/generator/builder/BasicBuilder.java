@@ -23,14 +23,14 @@
  */
 package cubicchunks.generator.builder;
 
-import libnoiseforjava.module.Clamp;
-import libnoiseforjava.module.ModuleBase;
-import libnoiseforjava.module.Perlin;
-import libnoiseforjava.module.ScaleBias;
-import libnoiseforjava.module.ScalePoint;
+import com.flowpowered.noise.module.Module;
+import com.flowpowered.noise.module.modifier.Clamp;
+import com.flowpowered.noise.module.modifier.ScaleBias;
+import com.flowpowered.noise.module.modifier.ScalePoint;
+import com.flowpowered.noise.module.source.Perlin;
 
 public class BasicBuilder implements IBuilder {
-	protected ModuleBase finalModule;
+	protected Module finalModule;
 
 	// Planet seed. Change this to generate a different planet.
 	int SEED = 0;
@@ -105,12 +105,16 @@ public class BasicBuilder implements IBuilder {
 		perlin.setPersistence(persistance);
 		perlin.setLacunarity(lacunarity);
 		perlin.setOctaveCount(NUM_OCTAVES);
-		perlin.build();
+//		perlin.build();
 
-		ScalePoint scalePoint = new ScalePoint(perlin);
-		scalePoint.setScale(SCALE_X, SCALE_Y, SCALE_Z);
+		ScalePoint scalePoint = new ScalePoint();
+		scalePoint.setSourceModule(0, perlin);
+		scalePoint.setXScale(SCALE_X);
+		scalePoint.setYScale(SCALE_Y);
+		scalePoint.setZScale(SCALE_Z);
 
-		ScaleBias scaleBias = new ScaleBias(scalePoint);
+		ScaleBias scaleBias = new ScaleBias();
+		scaleBias.setSourceModule(0, scalePoint);
 		// Max perlin noise value with N octaves and persistance p is
 		// 1 + 1/p + 1/(p^2) + ... + 1/(p^(N-1))
 		// It's equal to (1 - p^N) / (1 - p)
@@ -118,8 +122,10 @@ public class BasicBuilder implements IBuilder {
 		scaleBias.setScale(MAX_ELEV * (1 - persistance) / (1 - Math.pow(persistance, NUM_OCTAVES)));
 		scaleBias.setBias(SEA_LEVEL);
 
-		Clamp clamp = new Clamp(scaleBias);
-		clamp.setBounds(clampMin, clampMax);
+		Clamp clamp = new Clamp();
+		clamp.setSourceModule(0, scaleBias);
+		clamp.setLowerBound(clampMin);
+		clamp.setUpperBound(clampMax);
 
 		finalModule = clamp;
 	}
