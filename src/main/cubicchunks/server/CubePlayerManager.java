@@ -339,8 +339,10 @@ public class CubePlayerManager extends PlayerManager {
 		while (iter.hasNext() && cubesToSend.size() < MaxCubesToSend) {
 			Cube cube = iter.next();
 			
-			// wait for the cube to be live before sending this cube
+			// check to see if the cube is live before sending
+			// if it is not live, skip to the next cube in the iterator
 			if (!cube.getGeneratorStage().isLastStage()) {
+				TallWorldsMod.log.info("Cube at {}, {}, {} at stage {}, skipping!", cube.getX(), cube.getY(), cube.getZ(), cube.getGeneratorStage());
 				continue;
 			}
 			
