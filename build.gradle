@@ -68,12 +68,17 @@ sourceSets
 repositories
 {
 	mavenCentral()
+	mavenLocal()
 	maven
 	{
-		url "http://www.cuchazinteractive.com/maven"
+		name 'cuchaz'
+		url 'http://www.cuchazinteractive.com/maven'
 	}
-	mavenCentral()
-	mavenLocal()
+	maven
+	{
+		name 'sonatype'
+		url 'https://oss.sonatype.org/content/groups/public/'
+	}
 }
 
 //Hacks to allow controlling classpath order
