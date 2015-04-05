@@ -23,59 +23,20 @@
  */
 package cubicchunks.generator;
 
-import net.minecraft.world.World;
-import net.minecraft.world.gen.structure.MineshaftGenerator;
-import net.minecraft.world.gen.structure.StrongholdGenerator;
-import net.minecraft.world.gen.structure.VillageGenerator;
-import cubicchunks.generator.structures.CubicCaveGenerator;
-import cubicchunks.generator.structures.CubicStructureGenerator;
-import cubicchunks.generator.structures.CubicRavineGenerator;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
 public class FeatureProcessor extends CubeProcessor {
 	
-	private CubicCaveGenerator caveGenerator;
-	private StrongholdGenerator strongholdGenerator;
-	private VillageGenerator villageGenerator;
-	private MineshaftGenerator mineshaftGenerator;
-//	private MapGenScatteredFeature scatteredFeatureGenerator;
-	private CubicStructureGenerator ravineGenerator;
-	
-	private World worldObj;
-	
 	public FeatureProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
-		
-		this.caveGenerator = new CubicCaveGenerator();
-		this.strongholdGenerator = new StrongholdGenerator();
-		this.villageGenerator = new VillageGenerator();
-		this.mineshaftGenerator = new MineshaftGenerator();
-//		this.scatteredFeatureGenerator = new TempleGenerator();
-		this.ravineGenerator = new CubicRavineGenerator();
 	}
 	
 	@Override
 	public boolean calculate(Cube cube) {
 		
-		this.worldObj = cube.getWorld();
-		
-		// generate world features
-		if(!cube.isEmpty()) {	
-			this.caveGenerator.generate(this.worldObj, cube);
-			this.ravineGenerator.generate(this.worldObj, cube);
-		}
-		/*
-		UNDONE: enable feature generation 
-		if( m_mapFeaturesEnabled ) { 
-			m_mineshaftGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); 
-			m_villageGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); 
-			m_strongholdGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); 
-			m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); 
-		}
-		 */
-		
+		// TEMP: skip this stage
 		return true;
 	}
 }

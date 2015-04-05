@@ -30,10 +30,10 @@ import net.minecraft.world.WorldServer;
 import com.google.common.collect.Maps;
 
 import cubicchunks.generator.BiomeProcessor;
-import cubicchunks.generator.FeatureProcessor;
+import cubicchunks.generator.StructureProcessor;
 import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.generator.PopulationProcessor;
+import cubicchunks.generator.FeatureProcessor;
 import cubicchunks.generator.terrain.NewTerrainProcessor;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.world.WorldContext;
@@ -67,11 +67,11 @@ public class WorldServerContext extends WorldContext {
 		m_generatorPipeline = new GeneratorPipeline(serverCubeCache);
 		
 		// init the generator pipeline
-		m_generatorPipeline.addStage(GeneratorStage.Terrain, new NewTerrainProcessor("Terrain", m_worldServer, m_serverCubeCache, 5));
-		m_generatorPipeline.addStage(GeneratorStage.Biomes, new BiomeProcessor("Biomes", m_worldServer, m_serverCubeCache, 10));
-		m_generatorPipeline.addStage(GeneratorStage.Features, new FeatureProcessor("Features", m_serverCubeCache, 10));
-		m_generatorPipeline.addStage(GeneratorStage.Lighting, new FirstLightProcessor("Lighting", m_serverCubeCache, 5));
-		m_generatorPipeline.addStage(GeneratorStage.Population, new PopulationProcessor("Population", m_serverCubeCache, 100));
+		m_generatorPipeline.addStage(GeneratorStage.TERRAIN, new NewTerrainProcessor("Terrain", m_worldServer, m_serverCubeCache, 5));
+		m_generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor("Biomes", m_worldServer, m_serverCubeCache, 10));
+		m_generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", m_serverCubeCache, 10));
+		m_generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", m_serverCubeCache, 5));
+		m_generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", m_serverCubeCache, 100));
 		m_generatorPipeline.checkStages();
 	}
 	

@@ -353,7 +353,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	public Boolean checkBlockRangeIsInWorld(World world, int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyChunks) {
 		if (isTallWorld(world)) {
 			WorldContext context = WorldContext.get(world);
-			context.blocksExist(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ, allowEmptyChunks, GeneratorStage.Live);
+			context.blocksExist(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ, allowEmptyChunks, GeneratorStage.LIVE);
 		}
 		return null;
 	}
@@ -365,7 +365,7 @@ public class CubicChunkSystem implements ChunkSystem {
 			
 			final int blockDist = 32;
 			int blockY = MathHelper.floor(entity.yPos);
-			context.blocksExist(minBlockX, blockY - blockDist, minBlockZ, maxBlockX, blockY + blockDist, maxBlockZ, allowEmptyChunks, GeneratorStage.Live);
+			context.blocksExist(minBlockX, blockY - blockDist, minBlockZ, maxBlockX, blockY + blockDist, maxBlockZ, allowEmptyChunks, GeneratorStage.LIVE);
 		}
 		return null;
 	}
