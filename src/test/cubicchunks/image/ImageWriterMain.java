@@ -25,20 +25,19 @@ package cubicchunks.image;
 
 import java.util.Random;
 
-import libnoiseforjava.module.Simplex;
+import com.flowpowered.noise.module.source.Perlin;
 
 public class ImageWriterMain {
 	
 	public static void main(String[] args) {
 		Random rand = new Random();
 		int rnd = rand.nextInt();
-		Simplex baseContinentDef_pe0 = new Simplex();
+		Perlin baseContinentDef_pe0 = new Perlin();
 		baseContinentDef_pe0.setSeed(0);
 		baseContinentDef_pe0.setFrequency(1.0);
 		baseContinentDef_pe0.setPersistence(0.5);
 		baseContinentDef_pe0.setLacunarity(2.2089);
 		baseContinentDef_pe0.setOctaveCount(14);
-		baseContinentDef_pe0.build();
 		
 		double xStart = 0;
 		double xEnd = 960;

@@ -24,6 +24,7 @@
 package cubicchunks;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.TreeSet;
@@ -40,16 +41,36 @@ public class TestEllipsoidalCubeSelector {
 		EllipsoidalCubeSelector selector = new EllipsoidalCubeSelector();
 		selector.setPlayerPosition(AddressTools.getAddress(5, 5, 5), 1);
 		
+		/*	
+		 * 					0	-2	 0
+		 * 
+		 * 	-1	-1	-1		0	-1	-1		1	-1	-1
+		 * 	-1	-1	 0		0	-1	 0		1	-1	 0
+		 * 	-1	-1	 1		0	-1	 1		1	-1	 1
+		 * 
+		 * 	-1	 0	-1		0	 0	-1		1	 0	-1
+		 * 	-1	 0	 0		0	 0	 0		1	 0	 0
+		 * 	-1	 0	 1		0	 0	 1		1	 0	 1
+		 * 
+		 * 	-1	 1	-1		0	 1	-1		1	 1	-1
+		 * 	-1	 1	 0		0	 1	 0		1	 1	 0
+		 * 	-1	 1	 1		0	 1	 1		1	 1	 1
+		 * 
+		 * 					0	 2	 0
+		 */
+		
 		TreeSet<Long> addresses = (TreeSet<Long>)selector.getVisibleCubes();
-		assertTrue(addresses.contains(AddressTools.getAddress(4, 5, 5)));
-		assertTrue(addresses.contains(AddressTools.getAddress(5, 5, 4)));
-		assertTrue(addresses.contains(AddressTools.getAddress(5, 3, 5)));
-		assertTrue(addresses.contains(AddressTools.getAddress(5, 4, 5)));
-		assertTrue(addresses.contains(AddressTools.getAddress(5, 5, 5)));
-		assertTrue(addresses.contains(AddressTools.getAddress(5, 6, 5)));
-		assertTrue(addresses.contains(AddressTools.getAddress(5, 7, 5)));
-		assertTrue(addresses.contains(AddressTools.getAddress(5, 5, 6)));
-		assertTrue(addresses.contains(AddressTools.getAddress(6, 5, 5)));
-		assertEquals(9, addresses.size());
+		assertTrue(addresses.contains(AddressTools.getAddress(5, 2, 5)));	//	 0	-3	 0
+		assertTrue(addresses.contains(AddressTools.getAddress(5, 3, 5)));	//	 0	-2	 0
+		assertTrue(addresses.contains(AddressTools.getAddress(5, 4, 5)));	//	 0	-1	 0
+		assertTrue(addresses.contains(AddressTools.getAddress(4, 5, 5)));	//	-1	 0	 0
+		assertTrue(addresses.contains(AddressTools.getAddress(5, 5, 4)));	//	 0	 0	-1
+		assertTrue(addresses.contains(AddressTools.getAddress(5, 5, 5)));	//	 0	 0	 0
+		assertTrue(addresses.contains(AddressTools.getAddress(6, 5, 5)));	//	 1	 0	 0
+		assertTrue(addresses.contains(AddressTools.getAddress(5, 5, 6)));	//	 0	 0	 1
+		assertTrue(addresses.contains(AddressTools.getAddress(5, 6, 5)));	//	 0	 1	 0
+		assertTrue(addresses.contains(AddressTools.getAddress(5, 7, 5)));	//	 0	 2	 0
+		assertTrue(addresses.contains(AddressTools.getAddress(5, 8, 5)));	//	 0	 3	 0
+		assertEquals(11, addresses.size());
 	}
 }
