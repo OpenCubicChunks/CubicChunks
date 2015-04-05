@@ -26,11 +26,17 @@ package cubicchunks;
 import java.io.IOException;
 import java.util.Random;
 
+import net.minecraft.client.renderers.ChunkSectionRenderer;
+import net.minecraft.client.renderers.ChunkSectionRenderers;
+import net.minecraft.client.renderers.WorldRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntitySet;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.main.Minecraft;
 import net.minecraft.network.play.packet.clientbound.PacketChunkData.EncodedChunk;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.Facing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.LightType;
@@ -54,10 +60,17 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 import cuchaz.m3l.api.chunks.ChunkSystem;
 import cuchaz.m3l.util.Util;
 
 public class CubicChunkSystem implements ChunkSystem {
+	
+	private EntitySet<Entity> m_emptyEntitySet;
+	
+	public CubicChunkSystem() {
+		m_emptyEntitySet = new EntitySet<Entity>(Entity.class);
+	}
 	
 	@Override
 	public ServerChunkCache getServerChunkCache(WorldServer worldServer) {
@@ -353,6 +366,129 @@ public class CubicChunkSystem implements ChunkSystem {
 			final int blockDist = 32;
 			int blockY = MathHelper.floor(entity.yPos);
 			context.blocksExist(minBlockX, blockY - blockDist, minBlockZ, maxBlockX, blockY + blockDist, maxBlockZ, allowEmptyChunks, GeneratorStage.Live);
+		}
+		return null;
+	}
+
+	@Override
+	public boolean setChunkSectionRendererPositions(ChunkSectionRenderers renderers) {
+		
+		if (!isTallWorld(renderers.world)) {
+			return false;
+		}
+		
+		// get the position of the view entity
+		Entity view = Minecraft.instance.getViewEntity();
+		
+		// treat the y dimension the same as all the rest
+		int viewX = MathHelper.floor(view.xPos) - 8;
+		int viewY = MathHelper.floor(view.yPos) - 8;
+		int viewZ = MathHelper.floor(view.zPos) - 8;
+		
+		int xSizeInBlocks = renderers.numXBlockRenderers*16;
+		int ySizeInBlocks = renderers.numYBlockRenderers*16;
+		int zSizeInBlocks = renderers.numZBlockRenderers*16;
+		
+		for (int xIndex=0; xIndex<renderers.numXBlockRenderers; xIndex++) {
+			int blockX = renderers.getRendererBlockCoord(viewX, xSizeInBlocks, xIndex);
+			
+			for (int yIndex=0; yIndex<renderers.numYBlockRenderers; yIndex++) {
+				int blockY = renderers.getRendererBlockCoord(viewY, ySizeInBlocks, yIndex);
+				
+				for (int zIndex=0; zIndex<renderers.numZBlockRenderers; zIndex++) {	
+					int blockZ = renderers.getRendererBlockCoord(viewZ, zSizeInBlocks, zIndex);
+					
+					// get the renderer
+					int rendererIndex = (zIndex * renderers.numYBlockRenderers + yIndex) * renderers.numXBlockRenderers + xIndex;
+					ChunkSectionRenderer renderer = renderers.blockRenderers[rendererIndex];
+					
+					// update the position if needed
+					BlockPos oldPos = renderer.getBlockPos();
+					if (oldPos.getX() != blockX || oldPos.getY() != blockY || oldPos.getZ() != blockZ) {
+						renderer.setBlockPos(new BlockPos(blockX, blockY, blockZ));
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
+
+	@Override
+	public ChunkSectionRenderer getChunkSectionRenderer(ChunkSectionRenderers renderers, BlockPos pos) {
+		
+		if (!isTallWorld(renderers.world)) {
+			return null;
+		}
+		
+		// treat the y dimension the same as all the rest
+		int x = MathHelper.intFloorDiv(pos.getX(), 16);
+		int y = MathHelper.intFloorDiv(pos.getY(), 16);
+		int z = MathHelper.intFloorDiv(pos.getZ(), 16);
+		x %= renderers.numXBlockRenderers;
+		if (x < 0) {
+			x += renderers.numXBlockRenderers;
+		}
+		y %= renderers.numYBlockRenderers;
+		if (y < 0) {
+			y += renderers.numYBlockRenderers;
+		}
+		z %= renderers.numZBlockRenderers;
+		if (z < 0) {
+			z += renderers.numZBlockRenderers;
+		}
+		final int index = (z * renderers.numYBlockRenderers + y) * renderers.numXBlockRenderers + x;
+		return renderers.blockRenderers[index];
+	}
+
+	@Override
+	public boolean initChunkSectionRendererCounts(ChunkSectionRenderers renderers, int viewDistance) {
+		
+		if (!isTallWorld(renderers.world)) {
+			return false;
+		}
+
+		// treat the y dimension the same as all the rest
+		int size = viewDistance*2 + 1;
+		renderers.numXBlockRenderers = size;
+		renderers.numYBlockRenderers = size;
+		renderers.numZBlockRenderers = size;
+		return true;
+	}
+
+	@Override
+	public ChunkSectionRenderer getChunkSectionRendererNeighbor(WorldRenderer worldRenderer, BlockPos pos, ChunkSectionRenderer chunkSectionRenderer, Facing facing) {
+		
+		if (!isTallWorld(worldRenderer.worldClient)) {
+			return null;
+		}
+		
+		// treat the y dimension the same as all the rest
+		final BlockPos neighborPos = chunkSectionRenderer.getBlockPosNeighbor(facing);
+		if (MathHelper.abs(pos.getX() - neighborPos.getX()) > worldRenderer.renderDistance*16) {
+			return null;
+		}
+		if (MathHelper.abs(pos.getY() - neighborPos.getY()) > worldRenderer.renderDistance*16) {
+			return null;
+		}
+		if (MathHelper.abs(pos.getZ() - neighborPos.getZ()) > worldRenderer.renderDistance*16) {
+			return null;
+		}
+		return worldRenderer.chunkSectionRenderers.getRenderer(neighborPos);
+	}
+
+	@Override
+	public EntitySet<Entity> getEntityStore(Chunk chunk, int chunkSectionIndex) {
+		if (chunk instanceof Column) {
+			Column column = (Column)chunk;
+			int cubeY = chunkSectionIndex;
+			
+			Cube cube = column.getCube(cubeY);
+			if (cube != null) {
+				return cube.getEntityContainer().getEntitySet();
+			} else {
+				return m_emptyEntitySet;
+			}
 		}
 		return null;
 	}

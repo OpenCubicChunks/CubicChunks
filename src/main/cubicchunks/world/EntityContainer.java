@@ -49,6 +49,10 @@ public class EntityContainer {
 		m_lastSaveTime = 0;
 	}
 	
+	public EntitySet<Entity> getEntitySet() {
+		return m_entities;
+	}
+	
 	public boolean hasActiveEntities() {
 		return m_hasActiveEntities;
 	}
