@@ -342,7 +342,9 @@ public class CubePlayerManager extends PlayerManager {
 			// check to see if the cube is live before sending
 			// if it is not live, skip to the next cube in the iterator
 			if (!cube.getGeneratorStage().isLastStage()) {
+				/* DEBUG
 				TallWorldsMod.log.info("Cube at {}, {}, {} at stage {}, skipping!", cube.getX(), cube.getY(), cube.getZ(), cube.getGeneratorStage());
+				*/
 				continue;
 			}
 			

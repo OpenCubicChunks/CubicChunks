@@ -23,6 +23,7 @@
  */
 package cubicchunks.world;
 
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
@@ -76,6 +77,15 @@ public abstract class WorldContext {
 		);
 	}
 	
+	public boolean blocksExist(BlockPos pos, int dist, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
+		return blocksExist(
+			pos.getX() - dist, pos.getY() - dist, pos.getZ() - dist,
+			pos.getX() + dist, pos.getY() + dist, pos.getZ() + dist,
+			allowEmptyCubes,
+			minStageAllowed
+		);
+	}
+	
 	public boolean blocksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
 		
 		// convert block bounds to chunk bounds
@@ -87,6 +97,10 @@ public abstract class WorldContext {
 		int maxCubeZ = Coords.blockToCube(maxBlockZ);
 		
 		return cubesExist(minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ, allowEmptyCubes, minStageAllowed);
+	}
+	
+	public boolean cubeAndNeighborsExist(Cube cube, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
+		return cubeAndNeighborsExist(cube.getX(), cube.getY(), cube.getZ(), allowEmptyCubes, minStageAllowed);
 	}
 	
 	public boolean cubeAndNeighborsExist(int cubeX, int cubeY, int cubeZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {

@@ -33,6 +33,7 @@ import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.FastIntQueue;
@@ -53,7 +54,9 @@ public class DiffuseLightingCalculator {
 	public boolean calculate(World world, BlockPos pos, LightType lightType) {
 		
 		// are there enough nearby blocks to do the lighting?
-		if (!world.checkBlockRangeIsInWorld(pos, 16)) {
+		WorldContext worldContext = WorldContext.get(world);
+		
+		if (!worldContext.blocksExist(pos, 16, true, GeneratorStage.LIGHTING)) {
 			return false;
 		}
 		

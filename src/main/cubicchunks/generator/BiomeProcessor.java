@@ -60,24 +60,20 @@ public class BiomeProcessor extends CubeProcessor {
 	}
 	
 	@Override
-	public boolean calculate(Cube cube) {	
-		//if the cube is empty, there is nothing to do. Even if neighbors don't exist
+	public boolean calculate(Cube cube) {
+		
+		// if the cube is empty, there is nothing to do. Even if neighbors don't exist
 		if(cube.isEmpty()) {
 			return true;
 		}
 		
+		// only continue if the neighboring cubes are at least in the biome stage
+		WorldContext worldContext = WorldContext.get(cube.getWorld());
+		if (!worldContext.cubeAndNeighborsExist(cube, true, GeneratorStage.BIOMES)) {
+			return false;
+		}
+		
 		rand.setSeed(41 * cube.getWorld().getSeed() + cube.cubeRandomSeed());
-		
-		// only continue if the neighboring cubes exist
-		if (!WorldContext.get(cube.getWorld()).cubeAndNeighborsExist(cube.getX(), cube.getY(), cube.getZ(), true, GeneratorStage.TERRAIN)) {
-			return false;
-		}
-		
-		Cube above = this.cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
-		
-		if(above.getGeneratorStage().ordinal() < GeneratorStage.BIOMES.ordinal()){
-			return false;
-		}
 		
 		// generate biome info. This is a hackjob.
 		this.biomes = cube.getWorld().dimension.getBiomeManager().getBiomeMap(
@@ -104,6 +100,8 @@ public class BiomeProcessor extends CubeProcessor {
 		int alterationTop = topOfCube;
 		int top = topOfCubeAbove;
 		int bottom = bottomOfCube;
+		
+		Cube above = this.cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
 		
 		for (int xRel = 0; xRel < 16; xRel++) {
 			int xAbs = cube.getX() << 4 | xRel;

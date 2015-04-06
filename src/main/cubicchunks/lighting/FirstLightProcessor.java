@@ -42,11 +42,9 @@ public class FirstLightProcessor extends CubeProcessor {
 	@Override
 	public boolean calculate(Cube cube) {
 		
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-		
-		// only light if the neighboring cubes exist
-		WorldContext context = WorldContext.get(cube.getWorld());
-		if (!context.cubeAndNeighborsExist(cube.getX(), cube.getY(), cube.getZ(), true, GeneratorStage.STRUCTURES)) {
+		// only continue if the neighboring cubes are at least in the lighting stage
+		WorldContext worldContext = WorldContext.get(cube.getWorld());
+		if (!worldContext.cubeAndNeighborsExist(cube, true, GeneratorStage.LIGHTING)) {
 			return false;
 		}
 		
@@ -56,6 +54,8 @@ public class FirstLightProcessor extends CubeProcessor {
 		int maxBlockY = Coords.cubeToMaxBlock(cube.getY());
 		int minBlockZ = Coords.cubeToMinBlock(cube.getZ());
 		int maxBlockZ = Coords.cubeToMaxBlock(cube.getZ());
+		
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		
 		// update the sky light
 		for (pos.x = minBlockX; pos.x <= maxBlockX; pos.x++) {
