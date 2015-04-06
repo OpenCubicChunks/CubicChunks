@@ -111,7 +111,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	@Override
 	public Integer getMinBlockY(World world) {
 		if (isTallWorld(world)) {
-			return AddressTools.MinY;
+			return Coords.cubeToMinBlock(AddressTools.MinY);
 		}
 		return null;
 	}
@@ -119,7 +119,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	@Override
 	public Integer getMaxBlockY(World world) {
 		if (isTallWorld(world)) {
-			return AddressTools.MaxY;
+			return Coords.cubeToMaxBlock(AddressTools.MaxY);
 		}
 		return null;
 	}
