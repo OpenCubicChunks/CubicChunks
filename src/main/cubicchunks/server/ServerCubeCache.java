@@ -54,7 +54,7 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 	
 	private static final Logger log = Logging.getLogger();
 	
-	private static final int WorldSpawnChunkDistance = 12;
+	public static final int WorldSpawnChunkDistance = 12;
 	
 	private WorldServer worldServer;
 	private CubeIO cubeIO;
@@ -246,6 +246,7 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 		unloadCube(cube.getX(), cube.getY(), cube.getZ());
 	}
 	
+	@Override
 	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
 		
 		// don't unload cubes near the spawn
@@ -268,7 +269,7 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 	}
 	
 	@Override
-	public boolean unloadQueuedChunks() {
+	public boolean tick() {
 		
 		// NOTE: the return value is completely ignored
 		

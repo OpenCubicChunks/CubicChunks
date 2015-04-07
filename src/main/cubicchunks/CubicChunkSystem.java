@@ -137,7 +137,7 @@ public class CubicChunkSystem implements ChunkSystem {
 		WorldServer worldServer = (WorldServer)player.getWorld();
 		if (isTallWorld(worldServer)) {
 			CubePlayerManager playerManager = (CubePlayerManager)worldServer.getPlayerManager();
-			playerManager.processCubeLoadQueue(player);
+			playerManager.processCubeQueues(player);
 		}
 	}
 	
@@ -212,7 +212,7 @@ public class CubicChunkSystem implements ChunkSystem {
 			
 			// load the cubes around the spawn point
 			TallWorldsMod.log.info("Loading cubes for spawn...");
-			final int Distance = 12;
+			final int Distance = ServerCubeCache.WorldSpawnChunkDistance;
 			BlockPos spawnPoint = worldServer.getSpawnPoint();
 			int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
 			int spawnCubeY = Coords.blockToCube(spawnPoint.getY());

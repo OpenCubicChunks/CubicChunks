@@ -66,11 +66,15 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.RangeInt;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.EntityContainer;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.LightIndex;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
 
 public class Column extends Chunk {
+	
+	public static final int LOAD_CUBES = 1;
+	public static final int UNLOAD_CUBES = 2;
 	
 	private static final Logger log = LogManager.getLogger();
 	
@@ -607,14 +611,46 @@ public class Column extends Chunk {
 		
 		PacketChunkData.EncodedChunk encodedChunk = new PacketChunkData.EncodedChunk();
 		encodedChunk.data = buf.toByteArray();
-		encodedChunk.sectionFlags = 0;
+		encodedChunk.sectionFlags = LOAD_CUBES;
+		return encodedChunk;
+	}
+	
+	public PacketChunkData.EncodedChunk encodeUnload()
+	throws IOException {
+		
+		if (!(this instanceof ColumnView)) {
+			throw new Error("we should never be encoding whole columns!");
+		}
+		
+		// encode the number of cubes, and the y values
+		ByteArrayOutputStream buf = new ByteArrayOutputStream();
+		DataOutputStream out = new DataOutputStream(buf);
+		int numCubes = getCubes().size();
+		out.writeShort(numCubes);
+		for (Cube cube : getCubes()) {
+			out.writeInt(cube.getY());
+		}
+		out.close();
+		
+		PacketChunkData.EncodedChunk encodedChunk = new PacketChunkData.EncodedChunk();
+		encodedChunk.data = buf.toByteArray();
+		encodedChunk.sectionFlags = UNLOAD_CUBES;
 		return encodedChunk;
 	}
 	
 	@Override
-	public void readChunkIn(byte[] data, int segmentsToCopyBitFlags, boolean isFirstTime) {
+	public void readChunkIn(byte[] data, int sectionFlags, boolean isFirstTime) {
 		
 		// NOTE: this is called on the client when it receives chunk data from the server
+		
+		if (sectionFlags == LOAD_CUBES) {
+			loadCubes(data, isFirstTime);
+		} else if (sectionFlags == UNLOAD_CUBES) {
+			unloadCubes(data);
+		}
+	}
+	
+	private void loadCubes(byte[] data, boolean isFirstTime) {
 		
 		ByteArrayInputStream buf = new ByteArrayInputStream(data);
 		DataInputStream in = new DataInputStream(buf);
@@ -690,6 +726,26 @@ public class Column extends Chunk {
 			for (BlockEntity blockEntity : cube.getBlockEntities()) {
 				blockEntity.updateContainingBlockInfo();
 			}
+		}
+	}
+	
+	private void unloadCubes(byte[] data) {
+		
+		ByteArrayInputStream buf = new ByteArrayInputStream(data);
+		DataInputStream in = new DataInputStream(buf);
+		
+		ICubeCache cubeCache = WorldContext.get(this.world).getCubeCache();
+		
+		try {
+			// how many cubes are we reading?
+			int numCubes = in.readUnsignedShort();
+			for (int i = 0; i < numCubes; i++) {
+				int cubeY = in.readInt();
+				cubeCache.unloadCube(this.chunkX, cubeY, this.chunkZ);
+			}
+			in.close();
+		} catch (IOException ex) {
+			log.error("Unable to read data for column ({},{})", this.chunkX, this.chunkZ, ex);
 		}
 	}
 	

@@ -25,7 +25,9 @@ package cubicchunks.client;
 
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ClientChunkCache;
+import net.minecraft.world.gen.IChunkGenerator;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.BlankColumn;
@@ -64,6 +66,30 @@ public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 	}
 	
 	@Override
+	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
+		
+		// is this column loaded?
+		Column column = (Column)this.cacheMap.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		if (column == null) {
+			return;
+		}
+		
+		// is this cube loaded?
+		if (column.getCube(cubeY) == null) {
+			return;
+		}
+		
+		// unload the cube
+		column.removeCube(cubeY);
+		
+		// is the column empty?
+		if (!column.hasCubes()) {
+			this.cacheMap.remove(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+			this.cachedChunks.remove(column);
+		}
+	}
+	
+	@Override
 	public Column getColumn(int columnX, int columnZ) {
 		return getChunk(columnX, columnZ);
 	}
@@ -94,5 +120,11 @@ public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 		cube.setGeneratorStage(GeneratorStage.getLastStage());
 		
 		return cube;
+	}
+	
+	@Override
+	public boolean generateOceanMonument(IChunkGenerator p0, Chunk p1, int p2, int p3) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
