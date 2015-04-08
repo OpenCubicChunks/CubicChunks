@@ -11,9 +11,6 @@ buildscript
 	}
 }
 
-//for debugging
-def USE_ECJ = true
-
 // Apply plugins
 apply plugin: 'java'
 apply plugin: 'license'
@@ -28,7 +25,7 @@ ext.minecraftVersion = "1.8.3"
 defaultTasks 'licenseFormat', 'build'
 
 // Basic project information
-group = ""
+group = "tallworlds"
 archivesBaseName = "cubicchunks"
 version = "0.1"
 
@@ -46,8 +43,8 @@ ext.ciSystem = project.hasProperty("ciSystem") ? ciSystem : 'unknown'
 ext.commit = project.hasProperty("commit") ? commit : 'unknown'
 
 // Minimum version of Java required
-sourceCompatibility = '1.6'
-targetCompatibility = '1.6'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 
 // Project source locations
 sourceSets
@@ -72,7 +69,7 @@ repositories
 	maven
 	{
 		name 'cuchaz'
-		url 'http://www.cuchazinteractive.com/maven'
+		url 'http://maven.cuchazinteractive.com'
 	}
 	maven
 	{
@@ -85,36 +82,28 @@ repositories
 configurations
 { 
 	forge
-	m3l 
 	minecraft
-	minecraftDeps
-	minecraftObfJar
 }
 
 dependencies
 {
-	forge files('libs/forge-1.8-11.14.1.1336-universal.jar')
+	forge files('libs/forge-1.8-11.14.1.1334-universal.jar')
 	
-	m3l files('../m3l/lib/m3l-libs.jar')
-	m3l files('../m3l/lib/m3l.jar')
-	
-	minecraftObfJar files(getMinecraftJarLocation())
-	minecraftDeps files('../m3l/lib/minecraft-1.8.3-deps.jar')
 	minecraft files('../m3l/lib/minecraft-1.8.3-client-deobf.jar')
 	
+	compile 'cuchaz:m3l:1.8.3-0.1b'
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
 	compile 'org.mapdb:mapdb:1.0.7'
 	compile 'org.slf4j:slf4j-api:1.7.10'
+	compile 'ch.qos.logback:logback-classic:1.1.2'
 	testCompile 'junit:junit:4.11'
 }
+
 //ensure correct order
-sourceSets.main.compileClasspath = configurations.m3l + sourceSets.main.compileClasspath
-sourceSets.main.compileClasspath = configurations.minecraftDeps + sourceSets.main.compileClasspath
 sourceSets.main.compileClasspath = sourceSets.main.compileClasspath + configurations.minecraft
 sourceSets.main.compileClasspath = sourceSets.main.compileClasspath + configurations.forge
 
 sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + sourceSets.main.compileClasspath
-sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + configurations.minecraftObfJar
 
 sourceSets.test.runtimeClasspath = sourceSets.test.runtimeClasspath + sourceSets.main.runtimeClasspath
 
@@ -144,18 +133,7 @@ license {
 configure([compileJava, compileTestJava]) {
 	options.deprecation = true
 	options.encoding = 'utf8'
-	if(USE_ECJ){
-		options.fork = true
-		options.define compilerArgs: [
-			'-Xlint:all', 
-			'-Xlint:-path',
-			'-proceedOnError'
-		]
-		options.failOnError = false
-		options.fork executable: 'ecj'
-	}else{	
-		options.compilerArgs += ['-Xlint:all', '-Xlint:-path']
-	}
+	options.compilerArgs += ['-Xlint:all', '-Xlint:-path']
 }
 
 // JAR manifest configuration
@@ -219,22 +197,4 @@ task debug(type:JavaExec, dependsOn: build) {
 		configure runCfg
 		debug = true
 	}
-}
-
-//additional utils
-def getDotMinecraft(){
-	def location = null
-	if(System.getProperty("os.name").toUpperCase().contains("WIN")){
-		//windows
-		location = System.getenv("APPDATA")
-	}else{
-		//assume *nix
-		location = System.getProperty("user.home")
-	}
-	location += "/.minecraft"
-	return location
-}
-
-def getMinecraftJarLocation(){
-	return getDotMinecraft() + "/versions/" + ext.minecraftVersion + "/" + ext.minecraftVersion + ".jar"
 }

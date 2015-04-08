@@ -23,8 +23,8 @@
  */
 package cubicchunks.util.processor;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubeCache;
@@ -32,7 +32,7 @@ import cubicchunks.world.cube.Cube;
 
 public abstract class CubeProcessor extends QueueProcessor {
 	
-	private static final Logger log = LogManager.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(CubeProcessor.class);
 	
 	public CubeProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
