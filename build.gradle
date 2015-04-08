@@ -113,11 +113,10 @@ sourceSets.main.compileClasspath = configurations.minecraftDeps + sourceSets.mai
 sourceSets.main.compileClasspath = sourceSets.main.compileClasspath + configurations.minecraft
 sourceSets.main.compileClasspath = sourceSets.main.compileClasspath + configurations.forge
 
-sourceSets.main.runtimeClasspath = configurations.m3l + sourceSets.main.runtimeClasspath
-sourceSets.main.runtimeClasspath = configurations.minecraftDeps + sourceSets.main.runtimeClasspath
-sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + configurations.minecraft
-sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + configurations.forge
+sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + sourceSets.main.compileClasspath
 sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + configurations.minecraftObfJar
+
+sourceSets.test.runtimeClasspath = sourceSets.test.runtimeClasspath + sourceSets.main.runtimeClasspath
 
 // Filter, process, and include resources
 processResources {
