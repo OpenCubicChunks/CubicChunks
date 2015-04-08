@@ -132,8 +132,8 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 						xDist1 = 0;
 					}
 	
-					if (xDist2 > 15) {
-						xDist2 = 15;
+					if (xDist2 > 16) {
+						xDist2 = 16;
 					}
 	
 					if (yDist1 < 0)// 1
@@ -141,17 +141,17 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 						yDist1 = 0;// 1
 					}
 	
-					if (yDist2 > 15)// 120
+					if (yDist2 > 16)// 120
 					{
-						yDist2 = 15;// 120
+						yDist2 = 16;// 120
 					}
 	
 					if (zDist1 < 0) {
 						zDist1 = 0;
 					}
 	
-					if (zDist2 > 15) {
-						zDist2 = 15;
+					if (zDist2 > 16) {
+						zDist2 = 16;
 					}
 	
 					boolean hitLiquid = scanForLiquid(cube, xDist1, xDist2, yDist1, yDist2, zDist1, zDist2, Blocks.WATER, Blocks.FLOWING_WATER);
