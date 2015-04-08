@@ -10,6 +10,11 @@ public abstract class CubicFeatureGenerator {
 
 	private final boolean updateNeighbors;
 	
+	protected static int getMinCubeY(final int y) {
+		int minY = (y >> 4) << 4;
+		return minY;
+	}
+	
 	/**
 	 * The Constructor to use for world generation.
 	 */
@@ -48,7 +53,7 @@ public abstract class CubicFeatureGenerator {
 		
 	}
 	
-	private boolean setBlockOnly(final World world, final BlockPos blockPos, final IBlockState blockState) {
+	protected boolean setBlockOnly(final World world, final BlockPos blockPos, final IBlockState blockState) {
 		return world.tryPlaceBlock(blockPos, blockState, 2);
 	}
 	
