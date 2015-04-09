@@ -69,9 +69,9 @@ public class WorldServerContext extends WorldContext {
 		// init the generator pipeline
 		m_generatorPipeline.addStage(GeneratorStage.TERRAIN, new NewTerrainProcessor("Terrain", m_worldServer, m_serverCubeCache, 5));
 		m_generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor("Biomes", m_worldServer, m_serverCubeCache, 10));
-		m_generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", m_serverCubeCache, 10));
+		m_generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Structures", m_serverCubeCache, 10));
 		m_generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", m_serverCubeCache, 5));
-		m_generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", m_serverCubeCache, 100));
+		m_generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Features", m_worldServer, m_serverCubeCache, 10));
 		m_generatorPipeline.checkStages();
 	}
 	

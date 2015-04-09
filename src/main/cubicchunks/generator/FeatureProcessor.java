@@ -23,20 +23,56 @@
  */
 package cubicchunks.generator;
 
+import cubicchunks.generator.features.BiomeFeatures;
+import cubicchunks.generator.features.BaseFeatureGenerator;
+import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 
 public class FeatureProcessor extends CubeProcessor {
-	
-	public FeatureProcessor(String name, ICubeCache provider, int batchSize) {
+
+	private Map<Biome, BiomeFeatures> biomeFeaturesMap;
+
+	public FeatureProcessor(String name, World world, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
+
+		this.biomeFeaturesMap = new HashMap<Biome, BiomeFeatures>();
+
+		BiomeFeatures global = new BiomeFeatures(world);
+
+		// for now use global for all biomes
+		for (Biome biome : Biome.getBiomeArray()) {
+			this.biomeFeaturesMap.put(biome, global);
+		}
 	}
-	
+
 	@Override
 	public boolean calculate(Cube cube) {
+		WorldContext worldContext = WorldContext.get(cube.getWorld());
+		if (!worldContext.cubeAndNeighborsExist(cube, true, GeneratorStage.FEATURES)) {
+			return false;
+		}
+
+		Biome biome = worldContext.getWorld().getBiomeAt(Coords.getCubeCenter(cube));
+    
+		//For surface generators we should actually use special RNG with seed 
+		//that depends only in world seed and cube X/Z
+		//but using this for surface generation doesn't cause any noticable issues
+    Random rand = new Random(cube.cubeRandomSeed());
 		
-		// TEMP: skip this stage
+		BiomeFeatures features = this.biomeFeaturesMap.get(biome);
+		for (BaseFeatureGenerator gen : features.getBiomeFeatureGenerators()) {
+			gen.generate(rand, cube, biome);
+		}
+
 		return true;
 	}
 }

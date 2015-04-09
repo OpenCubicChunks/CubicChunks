@@ -73,7 +73,7 @@ public class BiomeProcessor extends CubeProcessor {
 			return false;
 		}
 		
-		rand.setSeed(41 * cube.getWorld().getSeed() + cube.cubeRandomSeed());
+		rand.setSeed(cube.cubeRandomSeed());
 		
 		// generate biome info. This is a hackjob.
 		this.biomes = cube.getWorld().dimension.getBiomeManager().getBiomeMap(
