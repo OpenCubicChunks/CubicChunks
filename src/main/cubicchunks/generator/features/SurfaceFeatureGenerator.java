@@ -31,7 +31,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
-public abstract class SurfaceFeatureGenerator extends BaseFeatureGenerator {
+public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
 	public SurfaceFeatureGenerator(World world) {
 		super(world);
@@ -62,7 +62,7 @@ public abstract class SurfaceFeatureGenerator extends BaseFeatureGenerator {
 				pos = below;
 			}
 			//next attempt. We didn't find place to generate it
-			if(!foundSurface){
+			if(!foundSurface) {
 				continue;
 			}
 			this.generateAt(rand, pos, biome);

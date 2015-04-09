@@ -30,18 +30,13 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
-public class SimpleTreeGenerator extends SurfaceFeatureGenerator{
+public class SimpleTreeGenerator extends TreeGenerator {
 
 	private static final int MIN_TRUNK_HEIGHT = 3;
 	private static final int MAX_TRUNK_HEIGHT = 5;//inclusive
 	
-	private final IBlockState wood;
-	private final IBlockState leaves;
-	
-	public SimpleTreeGenerator(World world, IBlockState wood, IBlockState leaves) {
-		super(world);
-		this.wood = wood;
-		this.leaves = leaves;
+	public SimpleTreeGenerator(World world, IBlockState woodBlock, IBlockState leafBlock) {
+		super(world, woodBlock, leafBlock);
 	}
 
 	@Override
@@ -58,17 +53,15 @@ public class SimpleTreeGenerator extends SurfaceFeatureGenerator{
 		final int treeRadius = 3;
 		final int leavesHeight = 4;
 		
-		if(!isEnoughSpace(pos, treeHeight, leavesHeight, treeRadius)){
-			//we don't have enough space
-			return;
+		if(isEnoughSpace(pos, treeHeight, leavesHeight, treeRadius)) {
+			generateTree(pos, trunkHeight, treeHeight, leavesHeight, treeRadius);
 		}
-		generateTree(pos, trunkHeight, treeHeight, leavesHeight, treeRadius);
 	}
 
 	private boolean isEnoughSpace(BlockPos pos, int treeHeight, int leavesHeight, int treeRadius) {
 		int noLeavesHeight = treeHeight - leavesHeight;
 		for(int i = 0; i < noLeavesHeight; i++){
-			if(getBlock(pos).getBlock().isSolid()){
+			if(!canReplaceBlock(getBlock(pos).getBlock())) {
 				return false;
 			}
 			pos.add(0, 1, 0);
@@ -78,7 +71,7 @@ public class SimpleTreeGenerator extends SurfaceFeatureGenerator{
 			for(int y = 0; y < leavesHeight; y++){
 				for(int z = -treeRadius; z <= treeRadius; z++){
 					BlockPos currentPos = pos.add(x, y, z);
-					if(getBlock(currentPos).getBlock().isSolid()){
+					if(!canReplaceBlock(getBlock(currentPos).getBlock())) {
 						return false;
 					}
 				}
@@ -91,7 +84,7 @@ public class SimpleTreeGenerator extends SurfaceFeatureGenerator{
 		//generate trunk
 		BlockPos currentPos = pos;
 		for(int i = 0; i < trunkHeight; i++){
-			setBlock(currentPos, wood);
+			this.setBlockOnly(currentPos, getWoodBlock());
 			currentPos = currentPos.add(0, 1, 0);
 		}
 		
@@ -118,7 +111,7 @@ public class SimpleTreeGenerator extends SurfaceFeatureGenerator{
 				if(getBlock(currentPos).getBlock().isSolid()){
 					continue;
 				}
-				setBlock(currentPos, leaves);
+				this.setBlockOnly(currentPos, getLeafBlock());
 			}
 		}
 	}

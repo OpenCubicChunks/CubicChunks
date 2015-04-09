@@ -9,13 +9,13 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 
-public abstract class CubicHugeTreeGenerator extends CubicTreeGenerator {
+public abstract class HugeTreeGenerator extends TreeGenerator {
 	
 	private final int baseHeight;
 	private final int heightRange;
 
-	public CubicHugeTreeGenerator(final boolean updateNeighbors, final int baseHeight, final int heightRange, final IBlockState woodBlock, final IBlockState leafBlock) {
-		super(updateNeighbors, woodBlock, leafBlock);
+	public HugeTreeGenerator(final World world, final int baseHeight, final int heightRange, final IBlockState woodBlock, final IBlockState leafBlock) {
+		super(world, woodBlock, leafBlock);
 		this.baseHeight = baseHeight;
 		this.heightRange = heightRange;
 	}
@@ -81,7 +81,7 @@ public abstract class CubicHugeTreeGenerator extends CubicTreeGenerator {
 		return true;
 	}
 	
-    protected void generateLayerAtLocationWithRadius2x2(World world, final BlockPos blockPos, final int radius) {
+    protected void generateLargeLeafLayer(final BlockPos blockPos, final int radius) {
         int r2 = radius * radius;
 
         for (int xAbs = -radius; xAbs <= radius + 1; ++xAbs) {
@@ -94,27 +94,27 @@ public abstract class CubicHugeTreeGenerator extends CubicTreeGenerator {
                 		|| xAbs * xAbs + zDist * zDist <= r2 
                 		|| xDist * xDist + zAbs * zAbs <= r2) {
                     BlockPos newPos = blockPos.add(xAbs, 0, zAbs);
-                    Material material = world.getBlockStateAt(newPos).getBlock().getMaterial();
+                    Material material = this.world.getBlockStateAt(newPos).getBlock().getMaterial();
 
                     if (material == Material.AIR || material == Material.LEAVES) {
-                        this.setBlock(world, newPos, this.getLeafBlock());
+                        this.setBlockOnly(newPos, this.getLeafBlock());
                     }
                 }
             }
         }
     }
 	
-    protected void generateLayerAtLocationWithRadius(final World world, final BlockPos blockPos, final int radius) {
+    protected void generateSmallLeafLayer(final BlockPos blockPos, final int radius) {
         int r2 = radius * radius;
 
         for (int xAbs = -radius; xAbs <= radius; ++xAbs) {
             for (int zAbs = -radius; zAbs <= radius; ++zAbs) {
                 if (xAbs * xAbs + zAbs * zAbs <= r2) {
                     BlockPos newPos = blockPos.add(xAbs, 0, zAbs);
-                    Material material = world.getBlockStateAt(newPos).getBlock().getMaterial();
+                    Material material = this.world.getBlockStateAt(newPos).getBlock().getMaterial();
 
                     if (material == Material.AIR || material == Material.LEAVES) {
-                        this.setBlock(world, newPos, this.getLeafBlock());
+                        this.setBlockOnly(newPos, this.getLeafBlock());
                     }
                 }
             }

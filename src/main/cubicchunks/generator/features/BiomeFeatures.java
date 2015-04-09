@@ -33,19 +33,19 @@ import net.minecraft.world.biome.Biome;
 public class BiomeFeatures {
   private final World world;
   
-  private final Collection<BaseFeatureGenerator> generators;
+  private final Collection<FeatureGenerator> generators;
   
   public BiomeFeatures(World world){
     this.world = world;
-    this.generators = new ArrayList<BaseFeatureGenerator>(20);
+    this.generators = new ArrayList<FeatureGenerator>(20);
     
 		addGen(new SimpleTreeGenerator(world, Blocks.LOG.defaultState, Blocks.LEAVES.defaultState));
   }
   
-  protected final void addGen(BaseFeatureGenerator gen){
+  protected final void addGen(FeatureGenerator gen){
     this.generators.add(gen);
   }
-  public Collection<BaseFeatureGenerator> getBiomeFeatureGenerators(){
+  public Collection<FeatureGenerator> getBiomeFeatureGenerators(){
     return generators;
   }
 }

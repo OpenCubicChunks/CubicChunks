@@ -24,7 +24,7 @@
 package cubicchunks.generator;
 
 import cubicchunks.generator.features.BiomeFeatures;
-import cubicchunks.generator.features.BaseFeatureGenerator;
+import cubicchunks.generator.features.FeatureGenerator;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
@@ -66,10 +66,10 @@ public class FeatureProcessor extends CubeProcessor {
 		//For surface generators we should actually use special RNG with seed 
 		//that depends only in world seed and cube X/Z
 		//but using this for surface generation doesn't cause any noticable issues
-    Random rand = new Random(cube.cubeRandomSeed());
+		Random rand = new Random(cube.cubeRandomSeed());
 		
 		BiomeFeatures features = this.biomeFeaturesMap.get(biome);
-		for (BaseFeatureGenerator gen : features.getBiomeFeatureGenerators()) {
+		for (FeatureGenerator gen : features.getBiomeFeatureGenerators()) {
 			gen.generate(rand, cube, biome);
 		}
 

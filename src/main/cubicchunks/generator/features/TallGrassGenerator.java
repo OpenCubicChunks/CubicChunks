@@ -2,6 +2,7 @@ package cubicchunks.generator.features;
 
 import java.util.Random;
 
+import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.Blocks;
@@ -9,17 +10,24 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 
-public class CubicTallGrassGenerator extends CubicFeatureGenerator {
+public class TallGrassGenerator extends SurfaceFeatureGenerator {
 	
 	private IBlockState tallGrassBlockState;
 	
-	public CubicTallGrassGenerator(final BlockTallGrass.TallGrassTypes tallGrassType) {
+	public TallGrassGenerator(final World world, final BlockTallGrass.TallGrassTypes tallGrassType) {
+		super(world);
 		this.tallGrassBlockState = Blocks.TALLGRASS.getDefaultState().setProperty(BlockTallGrass.type, tallGrassType);
 	}
 
 	@Override
-	public boolean generate(final World world, final Random rand, final BlockPos pos) {
+	public int getAttempts(Random rand, Biome biome) {
+		return biome.biomeDecorator.randomGrassPerChunk;
+	}
+	
+	@Override
+	public void generateAt(final Random rand, final BlockPos pos, final Biome biome) {
 		Block currentBlock;
 		BlockPos currentPos = pos;
 		
@@ -29,7 +37,7 @@ public class CubicTallGrassGenerator extends CubicFeatureGenerator {
 			currentPos = currentPos.below();
 			
 			if(currentPos.getY() < minY) {
-				return false;
+				return;
 			}
 		}
 		
@@ -39,12 +47,8 @@ public class CubicTallGrassGenerator extends CubicFeatureGenerator {
 					rand.nextInt(8) - rand.nextInt(8));
 			
 			if(world.hasAirAt(randomPos) && Blocks.TALLGRASS.canBePlacedAt(world, randomPos, tallGrassBlockState)) {
-				this.setBlockOnly(world, randomPos, tallGrassBlockState);
-			}
-			
+				this.setBlockOnly(randomPos, tallGrassBlockState);
+			}	
 		}
-
-		return true;
 	}
-
 }

@@ -31,20 +31,28 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
-public abstract class BaseFeatureGenerator {
-  private final World world;
-  
-  public BaseFeatureGenerator(World world){
-    this.world = world;
-  }
-  
-  public abstract void generate(Random rand, Cube cube, Biome biome);
-  
-  public boolean setBlock(BlockPos pos, IBlockState state){
-    return this.world.setBlockState(pos, state);
-  }
-  
-  public IBlockState getBlock(BlockPos pos){
-    return this.world.getBlockStateAt(pos);
-  }
+public abstract class FeatureGenerator {
+	protected final World	world;
+
+	public FeatureGenerator(final World world) {
+		this.world = world;
+	}
+
+	public abstract void generate(final Random rand, final Cube cube, final Biome biome);
+
+	protected boolean setBlockAndUpdateNeighbors(final BlockPos pos, final IBlockState state) {
+		return this.world.tryPlaceBlock(pos, state, 3);
+	}
+
+	protected boolean setBlockOnly(final BlockPos blockPos, final IBlockState blockState) {
+		return this.world.tryPlaceBlock(blockPos, blockState, 2);
+	}
+
+	protected IBlockState getBlock(final BlockPos pos) {
+		return this.world.getBlockStateAt(pos);
+	}
+
+	protected static int getMinCubeY(final int y) {
+		return (y >> 4) << 4;
+	}
 }

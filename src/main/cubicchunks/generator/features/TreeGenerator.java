@@ -1,7 +1,5 @@
 package cubicchunks.generator.features;
 
-import java.util.Random;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
@@ -9,19 +7,16 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 
-public abstract class CubicTreeGenerator extends CubicFeatureGenerator {
+public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 	
 	private IBlockState woodBlock;
 	private IBlockState leafBlock;
 
-	public CubicTreeGenerator(final boolean updateNeighbors, final IBlockState woodBlock, final IBlockState leafBlock) {
-		super(updateNeighbors);
+	public TreeGenerator(final World world, final IBlockState woodBlock, final IBlockState leafBlock) {
+		super(world);
 		this.woodBlock = woodBlock;
 		this.leafBlock = leafBlock;
 	}
-	
-	@Override
-	public abstract boolean generate(World world, Random rand, BlockPos pos);
 	
 	protected boolean canReplaceBlock(final Block blockToCheck) {
 		return testMaterialsForReplacement(blockToCheck) || testBlocksForReplacement(blockToCheck);
@@ -29,7 +24,7 @@ public abstract class CubicTreeGenerator extends CubicFeatureGenerator {
 	
 	protected boolean tryToPlaceDirtUnderTree(final World world, final BlockPos blockPos) {
 		if(world.getBlockStateAt(blockPos).getBlock() != Blocks.DIRT) {
-			return setBlock(world, blockPos, Blocks.DIRT.getDefaultState());
+			return this.setBlockOnly(blockPos, Blocks.DIRT.getDefaultState());
 		} else {
 			// it's already dirt, so just say it was placed successfully
 			return true;

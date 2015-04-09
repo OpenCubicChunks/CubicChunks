@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-public class TestCubicFeatureGenerator {
+public class TestFeatureGenerator {
 
 	@Test
 	public void testGetMinCubeY() {
@@ -13,7 +13,7 @@ public class TestCubicFeatureGenerator {
 		final int y2 = -24;
 		final int result2 = -32;
 		
-		assertEquals(result1, CubicFeatureGenerator.getMinCubeY(y1));
-		assertEquals(result2, CubicFeatureGenerator.getMinCubeY(y2));
+		assertEquals(result1, FeatureGenerator.getMinCubeY(y1));
+		assertEquals(result2, FeatureGenerator.getMinCubeY(y2));
 	}
 }
