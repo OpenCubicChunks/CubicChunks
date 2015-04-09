@@ -53,12 +53,13 @@ public class SimpleTreeGenerator extends TreeGenerator {
 		final int treeRadius = 3;
 		final int leavesHeight = 4;
 		
-		if(isEnoughSpace(pos, treeHeight, leavesHeight, treeRadius)) {
+		if(canGenerateTree(pos, treeHeight, leavesHeight, treeRadius)) {
 			generateTree(pos, trunkHeight, treeHeight, leavesHeight, treeRadius);
 		}
 	}
 
-	private boolean isEnoughSpace(BlockPos pos, int treeHeight, int leavesHeight, int treeRadius) {
+	private boolean canGenerateTree(BlockPos pos, int treeHeight, int leavesHeight, int treeRadius) {
+		//is there enough space for the tree?
 		int noLeavesHeight = treeHeight - leavesHeight;
 		for(int i = 0; i < noLeavesHeight; i++){
 			if(!canReplaceBlock(getBlock(pos).getBlock())) {
@@ -77,7 +78,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 				}
 			}
 		}
-		return true;
+		return this.tryToPlaceDirtUnderTree(world, pos);
 	}
 
 	private void generateTree(BlockPos pos, int trunkHeight, int treeHeight, int leavesHeight, int treeRadius) {

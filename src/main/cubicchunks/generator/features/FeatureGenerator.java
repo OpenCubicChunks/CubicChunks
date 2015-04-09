@@ -32,7 +32,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
 public abstract class FeatureGenerator {
-	protected final World	world;
+	protected final World world;
 
 	public FeatureGenerator(final World world) {
 		this.world = world;

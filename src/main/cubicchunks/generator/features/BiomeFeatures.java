@@ -26,26 +26,29 @@ package cubicchunks.generator.features;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
 public class BiomeFeatures {
-  private final World world;
-  
-  private final Collection<FeatureGenerator> generators;
-  
-  public BiomeFeatures(World world){
-    this.world = world;
-    this.generators = new ArrayList<FeatureGenerator>(20);
-    
+	private final World world;
+
+	private final Collection<FeatureGenerator> generators;
+
+	public BiomeFeatures(World world) {
+		this.world = world;
+		this.generators = new ArrayList<FeatureGenerator>(20);
+
 		addGen(new SimpleTreeGenerator(world, Blocks.LOG.defaultState, Blocks.LEAVES.defaultState));
-  }
-  
-  protected final void addGen(FeatureGenerator gen){
-    this.generators.add(gen);
-  }
-  public Collection<FeatureGenerator> getBiomeFeatureGenerators(){
-    return generators;
-  }
+		addGen(new TallGrassGenerator(world, BlockTallGrass.TallGrassTypes.GRASS));
+	}
+
+	protected final void addGen(FeatureGenerator gen) {
+		this.generators.add(gen);
+	}
+
+	public Collection<FeatureGenerator> getBiomeFeatureGenerators() {
+		return generators;
+	}
 }
