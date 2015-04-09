@@ -35,13 +35,8 @@ public class SimpleTreeGenerator extends TreeGenerator {
 	private static final int MIN_TRUNK_HEIGHT = 3;
 	private static final int MAX_TRUNK_HEIGHT = 5;//inclusive
 	
-	public SimpleTreeGenerator(World world, IBlockState woodBlock, IBlockState leafBlock) {
-		super(world, woodBlock, leafBlock);
-	}
-
-	@Override
-	public int getAttempts(Random rand, Biome biome) {
-		return biome.biomeDecorator.treesPerChunk;
+	public SimpleTreeGenerator(World world, IBlockState woodBlock, IBlockState leafBlock, int attempts, double prob) {
+		super(world, woodBlock, leafBlock, attempts, prob);
 	}
 
 	@Override

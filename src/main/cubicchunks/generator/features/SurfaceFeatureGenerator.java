@@ -39,7 +39,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
 	@Override
 	public void generate(Random rand, Cube cube, Biome biome) {
-		int attempts = this.getAttempts(rand, biome);
+		int attempts = this.getAttempts(rand);
 
 		BlockPos cubeCenter = Coords.getCubeCenter(cube);
 
@@ -69,7 +69,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 		}
 	}
 
-	public abstract int getAttempts(Random rand, Biome biome);
+	public abstract int getAttempts(Random rand);
 
 	/**
 	 * Generates feature at given position.

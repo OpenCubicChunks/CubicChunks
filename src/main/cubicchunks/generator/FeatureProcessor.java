@@ -46,11 +46,12 @@ public class FeatureProcessor extends CubeProcessor {
 
 		this.biomeFeaturesMap = new HashMap<Biome, BiomeFeatures>();
 
-		BiomeFeatures global = new BiomeFeatures(world);
-
 		// for now use global for all biomes
 		for (Biome biome : Biome.getBiomeArray()) {
-			this.biomeFeaturesMap.put(biome, global);
+			if(biome == null){
+				continue;
+			}
+			this.biomeFeaturesMap.put(biome, new BiomeFeatures(world, biome));
 		}
 	}
 

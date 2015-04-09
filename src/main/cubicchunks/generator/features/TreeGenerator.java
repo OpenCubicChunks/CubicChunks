@@ -23,22 +23,42 @@
  */
 package cubicchunks.generator.features;
 
+import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 
 public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 	
-	private IBlockState woodBlock;
-	private IBlockState leafBlock;
+	private final IBlockState woodBlock;
+	private final IBlockState leafBlock;
 
-	public TreeGenerator(final World world, final IBlockState woodBlock, final IBlockState leafBlock) {
+	protected final int attempts;
+	protected final double probability;
+	
+	public TreeGenerator(final World world, final IBlockState woodBlock, final IBlockState leafBlock, int attempts, double probability) {
 		super(world);
 		this.woodBlock = woodBlock;
 		this.leafBlock = leafBlock;
+		
+		this.attempts = attempts;
+		this.probability = probability;
+	}
+	
+	@Override
+	public int getAttempts(Random rand) {
+		int realAttempts = 0;
+		//TODO: Find faster way to calculate it?
+		for(int i = 0; i < this.attempts; i++){
+			if(rand.nextDouble() <= this.probability){
+				realAttempts++;
+			}
+		}
+		return realAttempts;
 	}
 	
 	protected boolean canReplaceBlock(final Block blockToCheck) {
