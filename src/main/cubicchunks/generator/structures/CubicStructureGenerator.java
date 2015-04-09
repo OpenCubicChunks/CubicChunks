@@ -26,7 +26,6 @@ package cubicchunks.generator.structures;
 import java.util.Random;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import cubicchunks.world.cube.Cube;

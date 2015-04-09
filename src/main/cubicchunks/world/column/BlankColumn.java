@@ -23,7 +23,6 @@
  */
 package cubicchunks.world.column;
 
-import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
@@ -34,6 +33,7 @@ import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.storage.ChunkSection;
 import net.minecraft.world.gen.IChunkGenerator;
+import cubicchunks.world.cube.Cube;
 
 public class BlankColumn extends Column {
 	

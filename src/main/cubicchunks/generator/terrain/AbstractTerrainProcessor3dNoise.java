@@ -23,19 +23,25 @@
  */
 package cubicchunks.generator.terrain;
 
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.*;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.maxElev;
 import static cubicchunks.util.Coords.CUBE_MAX_X;
 import static cubicchunks.util.Coords.CUBE_MAX_Y;
 import static cubicchunks.util.Coords.CUBE_MAX_Z;
-import cubicchunks.generator.builder.IBuilder;
-import cubicchunks.util.Coords;
-import cubicchunks.util.processor.CubeProcessor;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.ICubeCache;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
+import cubicchunks.generator.builder.IBuilder;
+import cubicchunks.util.Coords;
+import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.cube.Cube;
 
 public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 
