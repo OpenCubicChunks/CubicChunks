@@ -34,76 +34,92 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
 public abstract class TreeGenerator extends SurfaceFeatureGenerator {
-	
+
 	private final IBlockState woodBlock;
 	private final IBlockState leafBlock;
 
 	protected final int attempts;
 	protected final double probability;
-	
-	public TreeGenerator(final World world, final IBlockState woodBlock, final IBlockState leafBlock, int attempts, double probability) {
+
+	public TreeGenerator(final World world, final IBlockState woodBlock, final IBlockState leafBlock, int attempts,
+			double probability) {
 		super(world);
 		this.woodBlock = woodBlock;
 		this.leafBlock = leafBlock;
-		
+
 		this.attempts = attempts;
 		this.probability = probability;
 	}
-	
+
 	@Override
 	public int getAttempts(Random rand) {
 		int realAttempts = 0;
-		//TODO: Find faster way to calculate it?
-		for(int i = 0; i < this.attempts; i++){
-			if(rand.nextDouble() <= this.probability){
+		// TODO: Find faster way to calculate it?
+		for (int i = 0; i < this.attempts; i++) {
+			if (rand.nextDouble() <= this.probability) {
 				realAttempts++;
 			}
 		}
 		return realAttempts;
 	}
-	
+
 	protected boolean canReplaceBlock(final Block blockToCheck) {
-		return testMaterialsForReplacement(blockToCheck) || testBlocksForReplacement(blockToCheck);
+		return canReplaceWithLeaves(blockToCheck) || canReplaceWithWood(blockToCheck);
 	}
-	
+
 	protected boolean tryToPlaceDirtUnderTree(final World world, final BlockPos blockPos) {
-		if(world.getBlockStateAt(blockPos).getBlock() != Blocks.DIRT) {
+		if (world.getBlockStateAt(blockPos).getBlock() != Blocks.DIRT) {
 			return this.setBlockOnly(blockPos, Blocks.DIRT.getDefaultState());
 		} else {
 			// it's already dirt, so just say it was placed successfully
 			return true;
 		}
 	}
-	
-	private boolean testMaterialsForReplacement(final Block blockToCheck) {
+
+	private boolean canReplaceWithLeaves(final Block blockToCheck) {
 		final Material blockMaterial = blockToCheck.getMaterial();
-		return blockMaterial == Material.AIR
-				|| blockMaterial == Material.LEAVES;
+		return blockMaterial == Material.AIR || blockMaterial == Material.LEAVES;
 	}
-	
-	private boolean testBlocksForReplacement(final Block blockToCheck) {
-		return blockToCheck == Blocks.GRASS
-				|| blockToCheck == Blocks.DIRT
-				|| blockToCheck == Blocks.LOG
-				|| blockToCheck == Blocks.LOG2
-				|| blockToCheck == Blocks.SAPLING
-				|| blockToCheck == Blocks.VINE;
+
+	private boolean canReplaceWithWood(final Block blockToCheck) {
+		return blockToCheck == Blocks.GRASS || blockToCheck == Blocks.DIRT || blockToCheck == Blocks.LOG
+				|| blockToCheck == Blocks.LOG2 || blockToCheck == Blocks.SAPLING || blockToCheck == Blocks.VINE;
 	}
-	
+
 	protected void generateLeavesCircleLayerAt(BlockPos pos, double radius) {
 		double radiusSquared = radius * radius;
 		int r = MathHelper.ceil(radius);
-		for(int x = -r; x <= r; x++){
-			for(int z = -r; z <= r; z++){
-				if(x*x + z*z > radiusSquared){
+		for (int x = -r; x <= r; x++) {
+			for (int z = -r; z <= r; z++) {
+				if (x * x + z * z > radiusSquared) {
 					continue;
 				}
 				BlockPos currentPos = pos.add(x, 0, z);
-				//don't replace wood
-				if(getBlock(currentPos).getBlock().isSolid()){
+				// don't replace wood
+				if (getBlock(currentPos).getBlock().isSolid()) {
 					continue;
 				}
 				this.setBlockOnly(currentPos, getLeafBlock());
+			}
+		}
+	}
+
+	protected void generateLeavesSphereAt(BlockPos pos, double radius) {
+		double radiusSquared = radius * radius;
+		int r = MathHelper.ceil(radius);
+		for (int x = -r; x <= r; x++) {
+			for (int y = -r; y <= r; y++) {
+				for (int z = -r; z <= r; z++) {
+					if (x*x + y*y + z*z > radiusSquared) {
+						continue;
+					}
+					BlockPos currentPos = pos.add(x, y, z);
+					// don't replace wood
+					if (!this.canReplaceWithLeaves(getBlock(currentPos).getBlock())) {
+						continue;
+					}
+					this.setBlockOnly(currentPos, getLeafBlock());
+				}
 			}
 		}
 	}

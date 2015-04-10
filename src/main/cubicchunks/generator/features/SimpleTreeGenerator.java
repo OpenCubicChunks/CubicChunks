@@ -55,6 +55,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 
 	private boolean canGenerateTree(BlockPos pos, int treeHeight, int leavesHeight, int treeRadius) {
 		//is there enough space for the tree?
+		BlockPos originalPos = pos;
 		int noLeavesHeight = treeHeight - leavesHeight;
 		for(int i = 0; i < noLeavesHeight; i++){
 			if(!canReplaceBlock(getBlock(pos).getBlock())) {
@@ -73,7 +74,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 				}
 			}
 		}
-		return this.tryToPlaceDirtUnderTree(world, pos);
+		return this.tryToPlaceDirtUnderTree(world, originalPos);
 	}
 
 	private void generateTree(BlockPos pos, int trunkHeight, int treeHeight, int leavesHeight, int treeRadius) {
@@ -81,7 +82,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 		BlockPos currentPos = pos;
 		for(int i = 0; i < trunkHeight; i++){
 			this.setBlockOnly(currentPos, getWoodBlock());
-			pos = pos.above();
+			currentPos = currentPos.above();
 		}
 		
 		//generate leaves
