@@ -45,6 +45,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Facing;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3i;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -932,6 +933,7 @@ public class Column extends Chunk {
 		
 		// we get just a few updates this time
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
 		for (int i = 0; i < 2; i++) {
 			
 			// once we've checked all the blocks, stop checking
@@ -966,7 +968,12 @@ public class Column extends Chunk {
 					
 					// if there's a light source next to this block, update the light source
 					for (Facing facing : Facing.values()) {
-						BlockPos neighborPos = pos.addDirection(facing, 1);
+						Vec3i facingDir = facing.getBlockCoords();
+						neighborPos.setBlockPos(
+							pos.getX() + facingDir.getX(),
+							pos.getY() + facingDir.getY(),
+							pos.getZ() + facingDir.getZ()
+						);
 						if (this.world.getBlockStateAt(neighborPos).getBlock().getBrightness() > 0) {
 							this.world.updateLightingAt(neighborPos);
 						}
