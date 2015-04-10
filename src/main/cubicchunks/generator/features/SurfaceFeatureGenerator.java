@@ -54,7 +54,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
 			boolean foundSurface = false;
 			while (pos.getY() >= minY) {
-				BlockPos below = pos.add(0, -1, 0);
+				BlockPos below = pos.below();
 				if(getBlock(below).getBlock().isSolid() && getBlock(pos).getBlock() == Blocks.AIR){
 					foundSurface = true;
 					break;

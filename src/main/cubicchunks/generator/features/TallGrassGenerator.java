@@ -45,7 +45,7 @@ public class TallGrassGenerator extends SurfaceFeatureGenerator {
 	public TallGrassGenerator(final World world, final BlockTallGrass.TallGrassTypes tallGrassType, int attempts) {
 		super(world);
 		
-		// HACK! Obfuscation doesn't work correctly in this class when code below is used. 
+		// TODO: HACK! Obfuscation doesn't work correctly in this class when code below is used. 
 		// It fails at runtime with NoSuchMethodError:
 		// java.lang.NoSuchMethodError: ama.setProperty(Lamp;Ljava/lang/Object;)Lama;
 		// use metadata until it's fixed

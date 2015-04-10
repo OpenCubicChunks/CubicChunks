@@ -29,6 +29,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
@@ -87,6 +88,24 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 				|| blockToCheck == Blocks.LOG2
 				|| blockToCheck == Blocks.SAPLING
 				|| blockToCheck == Blocks.VINE;
+	}
+	
+	protected void generateLeavesCircleLayerAt(BlockPos pos, double radius) {
+		double radiusSquared = radius * radius;
+		int r = MathHelper.ceil(radius);
+		for(int x = -r; x <= r; x++){
+			for(int z = -r; z <= r; z++){
+				if(x*x + z*z > radiusSquared){
+					continue;
+				}
+				BlockPos currentPos = pos.add(x, 0, z);
+				//don't replace wood
+				if(getBlock(currentPos).getBlock().isSolid()){
+					continue;
+				}
+				this.setBlockOnly(currentPos, getLeafBlock());
+			}
+		}
 	}
 
 	public IBlockState getWoodBlock() {

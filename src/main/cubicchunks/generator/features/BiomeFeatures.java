@@ -71,9 +71,9 @@ public class BiomeFeatures {
 		addMineral(DIAMOND_ORE, cfg.diamondMinHeight, cfg.diamondMaxHeight, cfg.diamondSize, cfg.diamondCount);
 
 		//stone variants
-		// Actually we shoudl use this, but it's broken because of a bug in runtime obfuscator
+		// TODO: Actually we should write: Blocks.X.getDefaultState().setProperty(BlockX.type, BlockX.EnumXVariant.VARIANT);
+		// but it's broken because of a bug in runtime obfuscator
 		// explained in TallGrassGenerator
-		// Blocks.X.getDefaultState().setProperty(BlockX.type, BlockX.EnumXVariant.VARIANT);
 		addMineral(STONE.getBlockStateForMetadata(EnumStoneVariant.ANDESITE.getID()), 
 						cfg.andesiteMinHeight, cfg.andesiteMaxHeight, cfg.andesiteSize, cfg.andesiteCount);
 		

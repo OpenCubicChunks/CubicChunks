@@ -32,8 +32,8 @@ import net.minecraft.world.biome.Biome;
 
 public class SimpleTreeGenerator extends TreeGenerator {
 
-	private static final int MIN_TRUNK_HEIGHT = 3;
-	private static final int MAX_TRUNK_HEIGHT = 5;//inclusive
+	private static final int MIN_TRUNK_HEIGHT = 4;
+	private static final int MAX_TRUNK_HEIGHT = 6;//inclusive
 	
 	public SimpleTreeGenerator(World world, IBlockState woodBlock, IBlockState leafBlock, int attempts, double prob) {
 		super(world, woodBlock, leafBlock, attempts, prob);
@@ -60,7 +60,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 			if(!canReplaceBlock(getBlock(pos).getBlock())) {
 				return false;
 			}
-			pos.add(0, 1, 0);
+			pos = pos.above();
 		}
 		
 		for(int x = -treeRadius; x <= treeRadius; x++){
@@ -81,7 +81,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 		BlockPos currentPos = pos;
 		for(int i = 0; i < trunkHeight; i++){
 			this.setBlockOnly(currentPos, getWoodBlock());
-			currentPos = currentPos.add(0, 1, 0);
+			pos = pos.above();
 		}
 		
 		//generate leaves
@@ -90,25 +90,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 			int y2 = yRel >> 1 << 1;
 			double radiusSubstract = 0.7 * treeRadius * y2/(double)leavesHeight;
 			double radius = treeRadius - radiusSubstract;
-			this.generateCircleLayerAt(startPos.add(0, yRel, 0), radius);
-		}
-	}
-
-	private void generateCircleLayerAt(BlockPos pos, double radius) {
-		double radiusSquared = radius * radius;
-		int r = MathHelper.ceil(radius);
-		for(int x = -r; x <= r; x++){
-			for(int z = -r; z <= r; z++){
-				if(x*x + z*z > radiusSquared){
-					continue;
-				}
-				BlockPos currentPos = pos.add(x, 0, z);
-				//don't replace wood
-				if(getBlock(currentPos).getBlock().isSolid()){
-					continue;
-				}
-				this.setBlockOnly(currentPos, getLeafBlock());
-			}
+			this.generateLeavesCircleLayerAt(startPos.above(yRel), radius);
 		}
 	}
 }
