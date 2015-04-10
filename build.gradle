@@ -83,6 +83,9 @@ configurations
 { 
 	forge
 	minecraft
+	provided
+	
+	compile.extendsFrom provided
 }
 
 dependencies
@@ -91,11 +94,12 @@ dependencies
 	
 	minecraft files('../m3l/lib/minecraft-1.8.3-client-deobf.jar')
 	
-	compile 'cuchaz:m3l:1.8.3-0.1b'
+	provided 'cuchaz:m3l:1.8.3-0.1b'
+	provided 'org.slf4j:slf4j-api:1.7.10'
+	provided 'ch.qos.logback:logback-classic:1.1.2'
+	
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
 	compile 'org.mapdb:mapdb:1.0.7'
-	compile 'org.slf4j:slf4j-api:1.7.10'
-	compile 'ch.qos.logback:logback-classic:1.1.2'
 	testCompile 'junit:junit:4.11'
 }
 
@@ -144,7 +148,16 @@ jar.manifest.mainAttributes(
 	//"Implementation-Version": version + "+" + ciSystem + "-b" + buildNumber + ".git-" + commit,
 	//"Implementation-Vendor": url
 )
-	
+
+jar {
+	dependsOn configurations.runtime
+    from { 
+		(configurations.runtime - configurations.provided).collect {
+			it.isDirectory() ? it : zipTree(it)
+		}
+	}
+}
+
 task sourceJar(type: Jar) {
 	from sourceSets.main.java
 	from sourceSets.main.resources
