@@ -33,7 +33,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.MineralDepositGenerator;
 
-public class OreGenerator extends FeatureGenerator {
+public class MineralGenerator extends FeatureGenerator {
 	private final double minY;
 	private final double maxY;
 	private final int attempts;
@@ -52,7 +52,7 @@ public class OreGenerator extends FeatureGenerator {
 	 * @param size Maximum vein size
 	 * @param attempts Number of generation attempts. 
 	 */
-	public OreGenerator(World world, IBlockState state, double minY, double maxY, int size, int attempts, double probability) {
+	public MineralGenerator(World world, IBlockState state, double minY, double maxY, int size, int attempts, double probability) {
 		super(world);
 		// use vanilla generator. This class odesn't have height limits
 		this.vanillaGen = new MineralDepositGenerator(state, size);

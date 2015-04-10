@@ -25,11 +25,15 @@
 package cubicchunks.generator.features;
 
 import static net.minecraft.block.Blocks.*;
+import net.minecraft.block.BlockStone.EnumStoneVariant;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockStone;
 import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.decorator.Decorator;
@@ -54,51 +58,50 @@ public class BiomeFeatures {
 		this.addOreGenerators(config);
 	}
 
-	private void addOreGenerators(GeneratorSettings config) {
+	private void addOreGenerators(GeneratorSettings cfg) {
 		// it automatically scales with world height.
 		// if min height is 0 - it assumes that there is no lower limit
 		// if max height is 128 or 256 - it assumes there is no upper limit
-		addGen(new OreGenerator(world, 
-						Blocks.COAL_ORE.defaultState, 
-						getMinHeight(config.coalMinHeight),
-						getMaxHeight(config.coalMaxHeight), 
-						config.coalSize, 
-						config.coalCount, 
-						getProbability(config.coalMinHeight, config.coalMaxHeight)));
-
-		addGen(new OreGenerator(world, 
-						Blocks.IRON_ORE.defaultState, 
-						getMinHeight(config.ironMinHeight),
-						getMaxHeight(config.ironMaxHeight), 
-						config.ironSize, 
-						config.ironCount, 
-						getProbability(config.ironMinHeight, config.ironMaxHeight)));
-
-		addGen(new OreGenerator(world, 
-						Blocks.GOLD_ORE.defaultState, 
-						getMinHeight(config.goldMinHeight),
-						getMaxHeight(config.goldMaxHeight), 
-						config.goldSize, 
-						config.goldCount, 
-						getProbability(config.goldMinHeight, config.goldMaxHeight)));
 		
-		addGen(new OreGenerator(world, 
-						Blocks.REDSTONE_ORE.defaultState, 
-						getMinHeight(config.redstoneMinHeight),
-						getMaxHeight(config.redstoneMaxHeight), 
-						config.redstoneSize, 
-						config.redstoneCount, 
-						getProbability(config.redstoneMinHeight, config.redstoneMaxHeight)));
+		//ores
+		addMineral(COAL_ORE, cfg.coalMinHeight, cfg.coalMaxHeight, cfg.coalSize, cfg.coalCount);
+		addMineral(IRON_ORE, cfg.ironMinHeight, cfg.ironMaxHeight, cfg.ironSize, cfg.ironCount);
+		addMineral(GOLD_ORE, cfg.goldMinHeight, cfg.goldMaxHeight, cfg.goldSize, cfg.goldCount);
+		addMineral(REDSTONE_ORE, cfg.redstoneMinHeight, cfg.redstoneMaxHeight, cfg.redstoneSize, cfg.redstoneCount);
+		addMineral(DIAMOND_ORE, cfg.diamondMinHeight, cfg.diamondMaxHeight, cfg.diamondSize, cfg.diamondCount);
+
+		//stone variants
+		// Actually we shoudl use this, but it's broken because of a bug in runtime obfuscator
+		// explained in TallGrassGenerator
+		// Blocks.X.getDefaultState().setProperty(BlockX.type, BlockX.EnumXVariant.VARIANT);
+		addMineral(STONE.getBlockStateForMetadata(EnumStoneVariant.ANDESITE.getID()), 
+						cfg.andesiteMinHeight, cfg.andesiteMaxHeight, cfg.andesiteSize, cfg.andesiteCount);
 		
-		addGen(new OreGenerator(world, 
-						Blocks.DIAMOND_ORE.defaultState, 
-						getMinHeight(config.diamondMinHeight),
-						getMaxHeight(config.diamondMaxHeight), 
-						config.diamondSize, 
-						config.diamondCount, 
-						getProbability(config.diamondMinHeight, config.diamondMaxHeight)));
+		addMineral(STONE.getBlockStateForMetadata(EnumStoneVariant.DIORITE.getID()), 
+						cfg.dioriteMinHeight, cfg.dioriteMaxHeight, cfg.dioriteSize, cfg.dioriteCount);
+		
+		addMineral(STONE.getBlockStateForMetadata(EnumStoneVariant.GRANITE.getID()), 
+						cfg.graniteMinHeight, cfg.graniteMaxHeight, cfg.graniteSize, cfg.graniteCount);
+
+		//other
+		addMineral(DIRT, cfg.dirtMinHeight, cfg.dirtMaxHeight, cfg.dirtSize, cfg.dirtCount);
+		addMineral(GRAVEL, cfg.gravelMinHeight, cfg.gravelMaxHeight, cfg.gravelSize, cfg.gravelCount);
 	}
 
+	private void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
+		addGen(new MineralGenerator(world, 
+						state, 
+						getMinHeight(vanillaMinHeight),
+						getMaxHeight(vanillaMaxHeight), 
+						size, 
+						countPerChunk, 
+						getProbability(vanillaMinHeight, vanillaMaxHeight)));
+	}
+	
+	private void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
+		this.addMineral(block.getDefaultState(), vanillaMinHeight, vanillaMaxHeight, size, countPerChunk);
+	}
+	
 	private double getMinHeight(int vanillaHeight) {
 		if (vanillaHeight == 0) {
 			// extend down to infinity
