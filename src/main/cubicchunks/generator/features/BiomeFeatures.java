@@ -52,7 +52,7 @@ public class BiomeFeatures {
 		GeneratorSettings config = GeneratorSettings.GeneratorSettingsFactory.createWithOptions(
 				world.dimension.generatorOptions).getGeneratorSettings();
 		//we need to generate big trees before small trees, so that they actually have some chance to generate
-		addGen(new BigTreeGenerator(world, LOG.getDefaultState(), LEAVES.getDefaultState(), decorator.treesPerChunk, 0.1));
+		addGen(new BigTreeGenerator(world, decorator.treesPerChunk, 0.1));
 		addGen(new SimpleTreeGenerator(world, LOG.getDefaultState(), LEAVES.getDefaultState(), decorator.treesPerChunk, 0.9));
 		addGen(new TallGrassGenerator(world, BlockTallGrass.TallGrassTypes.GRASS, decorator.randomGrassPerChunk));
 		

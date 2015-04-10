@@ -91,7 +91,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 			int y2 = yRel >> 1 << 1;
 			double radiusSubstract = 0.7 * treeRadius * y2/(double)leavesHeight;
 			double radius = treeRadius - radiusSubstract;
-			this.generateLeavesCircleLayerAt(startPos.above(yRel), radius);
+			this.generateLeavesCircleLayerAt(this.getLeafBlock(), startPos.above(yRel), radius);
 		}
 	}
 }

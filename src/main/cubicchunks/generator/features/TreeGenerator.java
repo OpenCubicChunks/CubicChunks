@@ -86,7 +86,7 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 				|| blockToCheck == Blocks.LOG2 || blockToCheck == Blocks.SAPLING || blockToCheck == Blocks.VINE;
 	}
 
-	protected void generateLeavesCircleLayerAt(BlockPos pos, double radius) {
+	protected void generateLeavesCircleLayerAt(IBlockState state, BlockPos pos, double radius) {
 		double radiusSquared = radius * radius;
 		int r = MathHelper.ceil(radius);
 		for (int x = -r; x <= r; x++) {
@@ -104,7 +104,7 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 		}
 	}
 
-	protected void generateLeavesSphereAt(BlockPos pos, double radius) {
+	protected void generateLeavesSphereAt(IBlockState state, BlockPos pos, double radius) {
 		double radiusSquared = radius * radius;
 		int r = MathHelper.ceil(radius);
 		for (int x = -r; x <= r; x++) {
@@ -118,7 +118,7 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 					if (!this.canReplaceWithLeaves(getBlock(currentPos).getBlock())) {
 						continue;
 					}
-					this.setBlockOnly(currentPos, getLeafBlock());
+					this.setBlockOnly(currentPos, state);
 				}
 			}
 		}

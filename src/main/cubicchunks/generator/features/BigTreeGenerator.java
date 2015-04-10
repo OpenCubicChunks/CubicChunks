@@ -24,105 +24,24 @@
 package cubicchunks.generator.features;
 
 import java.util.Random;
+import net.minecraft.block.BlockLog;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.feature.TreeGeneratorBig;
 
 public class BigTreeGenerator extends TreeGenerator {
 
-	//TODO: Make BigTreeGenerator constants configurable
-	private static final int MIN_TRUNK_HEIGHT = 4;
-	private static final int MAX_TRUNK_HEIGHT = 6;//inclusive
-	
-	private static final int BRANCH_LENGTH = 4;
-	private static final int LEAVES_RADIUS = 3;
-					
-	private static final int MIN_BRANCH_NUMBER = 6;
-	private static final int MAX_BRANCH_NUMBER = 8;
-	
-	
-	public BigTreeGenerator(World world, IBlockState woodBlock, IBlockState leafBlock, int attempts, double probability) {
-		super(world, woodBlock, leafBlock, attempts, probability);
+	public BigTreeGenerator(World world, int attempts, double probability) {
+		super(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState(), attempts, probability);
 	}
 
 	@Override
 	public void generateAt(Random rand, BlockPos pos, Biome biome) {
-		int trunkHeight = rand.nextInt(MAX_TRUNK_HEIGHT - MIN_TRUNK_HEIGHT + 1) + MIN_TRUNK_HEIGHT;
-		int treeHeight = trunkHeight + BRANCH_LENGTH + 1;//add 1 for leaves block
-		
-		//don't scan the entire tree area. This class may be possibly used for bonemeal tree generation
-		//and it would be confusing if we sometimes could generate the tree at some location, and sometimes fail
-		//try to generate (possibly incomplete) tree if there is some space
-		if(!canGenerate(pos, MAX_TRUNK_HEIGHT + BRANCH_LENGTH, 2)){
-			return;
-		}
-		this.generateTrunk(pos, trunkHeight);
-		this.generateBranchesAndLeaves(rand, pos.above(trunkHeight));
-	}
-
-	private boolean canGenerate(BlockPos pos, int treeHeight, int scanRadius) {
-		if(!canReplaceBlock(getBlock(pos).getBlock())){
-			return false;
-		}
-		pos = pos.above();
-		
-		int scanHeight = treeHeight - 1;
-		
-		for(int y = 0; y < scanHeight; y++){
-			for(int x = 0; x < scanRadius; x++){
-				for(int z = 0; z < scanRadius; z++){
-					BlockPos currentPos = pos.add(x, y, z);
-					if(!this.canReplaceBlock(getBlock(currentPos).getBlock())){
-						return false;
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	private void generateTrunk(BlockPos pos, int trunkHeight) {
-		for(int i = 0; i < trunkHeight; i++){
-			setBlockOnly(pos, this.getWoodBlock());
-			pos = pos.above();
-		}
-	}
-
-	private void generateBranchesAndLeaves(Random rand, BlockPos startPos) {
-		int numBranches = rand.nextInt(MAX_BRANCH_NUMBER - MIN_BRANCH_NUMBER + 1) + MIN_BRANCH_NUMBER;
-		for(int i = 0; i < numBranches; i++){
-			this.generateBranch(rand, startPos);
-		}
-	}
-
-	private void generateBranch(Random rand, BlockPos startPos) {
-		Vec3 direction = getRandomNormalizedDirection(rand);
-		
-		Vec3 addPos = new Vec3(0, 0, 0);
-		for(int i = 0; i < BRANCH_LENGTH; i++){
-			//wtf? no getters?
-			BlockPos currentPos = add(startPos, addPos);
-			this.setBlockOnly(currentPos, this.getWoodBlock());
-			this.generateLeavesSphereAt(currentPos, LEAVES_RADIUS);
-			addPos = addPos.addVector(direction);
-		}
-	}
-
-	private BlockPos add(BlockPos pos, Vec3 vec){
-		return pos.add(vec.x + 0.5, vec.y, vec.z + 0.5);
-	}
-	private Vec3 getRandomNormalizedDirection(Random rand) {
-		double yDir = rand.nextDouble();
-		//at least one of the values has to be non-zero
-		if(yDir == 0){
-			//set it to something close enough to zero
-			yDir = 0.001;
-		}
-		double xDir = rand.nextDouble() * 2 - 1;
-		double zDir = rand.nextDouble() * 2 - 1;
-		Vec3 vec = new Vec3(xDir, yDir, zDir);
-		return vec.getUnitVector();
+		TreeGeneratorBig treeGen = new TreeGeneratorBig(false);
+		treeGen.generate(world, rand, pos);
 	}
 }
