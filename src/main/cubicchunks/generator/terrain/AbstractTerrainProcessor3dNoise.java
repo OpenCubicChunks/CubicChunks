@@ -29,7 +29,7 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.maxElev;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.MAX_ELEV;
 import static cubicchunks.util.Coords.CUBE_MAX_X;
 import static cubicchunks.util.Coords.CUBE_MAX_Y;
 import static cubicchunks.util.Coords.CUBE_MAX_Z;
@@ -79,7 +79,7 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 		this.builderAlpha = createAlphaBuilder();
 
 		this.amplify = true;
-		this.seaLevel = 64;
+		this.seaLevel = GlobalGeneratorConfig.SEA_LEVEL;
 	}
 
 	protected abstract IBuilder createHighBuilder();
@@ -143,7 +143,7 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 		for (int x = 0; x < X_SECTIONS; x++) {
 			for (int z = 0; z < Z_SECTIONS; z++) {
 				for (int y = 0; y < Y_SECTIONS; y++) {
-					this.rawTerrainArray[x][y][z] *= maxElev;
+					this.rawTerrainArray[x][y][z] *= MAX_ELEV;
 					this.rawTerrainArray[x][y][z] += seaLevel;
 				}
 			}

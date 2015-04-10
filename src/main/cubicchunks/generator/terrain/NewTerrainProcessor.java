@@ -29,7 +29,7 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.maxElev;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.MAX_ELEV;
 
 import java.util.Random;
 
@@ -62,7 +62,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 	public NewTerrainProcessor(String name, WorldServer worldServer, ICubeCache cache, int batchSize) {
 		super(name, worldServer, cache, batchSize);
 
-		this.maxSmoothRadius = 2 * (int) (maxElev / 64);
+		this.maxSmoothRadius = 2 * (int) (MAX_ELEV / 64);
 		this.maxSmoothDiameter = maxSmoothRadius * 2 + 1;
 
 		this.biomes = null;
@@ -80,7 +80,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 			}
 		}
 
-		double freq = 200.0 / Math.pow(2, 10) / (maxElev / 64);
+		double freq = 200.0 / Math.pow(2, 10) / (MAX_ELEV / 64);
 
 		builderHeight = new BasicBuilder();
 		builderHeight.setSeed(rand.nextInt());
@@ -93,7 +93,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 	@Override
 	protected IBuilder createHighBuilder() {
 		Random rand = new Random(worldServer.getSeed() * 2);
-		double freq = 684.412D / Math.pow(2, octaves) / (maxElev / 64.0);
+		double freq = 684.412D / Math.pow(2, octaves) / (MAX_ELEV / 64.0);
 
 		BasicBuilder builderHigh = new BasicBuilder();
 		builderHigh.setSeed(rand.nextInt());
@@ -111,7 +111,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 	@Override
 	protected IBuilder createLowBuilder() {
 		Random rand = new Random(worldServer.getSeed() * 3);
-		double freq = 684.412D / Math.pow(2, octaves) / (maxElev / 64.0);
+		double freq = 684.412D / Math.pow(2, octaves) / (MAX_ELEV / 64.0);
 
 		BasicBuilder builderLow = new BasicBuilder();
 		builderLow.setSeed(rand.nextInt());
@@ -128,7 +128,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 	@Override
 	protected IBuilder createAlphaBuilder() {
 		Random rand = new Random(worldServer.getSeed() * 4);
-		double freq = 8.55515 / Math.pow(2, 8) / (maxElev / 64.0);
+		double freq = 8.55515 / Math.pow(2, 8) / (MAX_ELEV / 64.0);
 
 		BasicBuilder builderAlpha = new BasicBuilder();
 		builderAlpha.setSeed(rand.nextInt());
@@ -167,7 +167,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 					double heightModifier = this.biomeHeight;
 					double volatilityModifier = this.biomeVolatility;
 
-					final double yAbs = (cube.getY() * 16.0 + y * 8.0) / maxElev;
+					final double yAbs = (cube.getY() * 16.0 + y * 8.0) / MAX_ELEV;
 					if (yAbs < heightModifier) {
 						// terrain below average biome geight is more flat
 						volatilityModifier /= 4.0;
@@ -184,8 +184,8 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 
 					// Since in TWM we don't have height limit we could skip it
 					// but PLATEAU biomes need it
-					int maxYSections = (int) Math.round(maxElev / Y_SECTION_SIZE);
-					if (yAbs * maxElev > maxYSections - 4) {
+					int maxYSections = (int) Math.round(MAX_ELEV / Y_SECTION_SIZE);
+					if (yAbs * MAX_ELEV > maxYSections - 4) {
 						// TODO: Convert this to work correctly with noise
 						// between -1 and 1
 						// final double a = ( yAbs - ( maxYSections - 4 ) ) /

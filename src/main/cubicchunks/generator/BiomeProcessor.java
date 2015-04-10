@@ -28,6 +28,7 @@ import java.util.Random;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
+import cubicchunks.generator.terrain.GlobalGeneratorConfig;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
@@ -56,7 +57,7 @@ public class BiomeProcessor extends CubeProcessor {
 		this.noise = new double[256];
 		this.biomes = null;
 		
-		this.seaLevel = 64;
+		this.seaLevel = GlobalGeneratorConfig.SEA_LEVEL;
 	}
 	
 	@Override
