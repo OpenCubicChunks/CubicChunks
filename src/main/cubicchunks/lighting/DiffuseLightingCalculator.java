@@ -27,12 +27,10 @@ import net.minecraft.block.Block;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Facing;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3i;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import cubicchunks.TallWorldsMod;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
@@ -43,8 +41,6 @@ import cubicchunks.world.cube.Cube;
 
 public class DiffuseLightingCalculator {
 	
-	private static final Logger log = LogManager.getLogger();
-	
 	private FastIntQueue queue;
 	
 	public DiffuseLightingCalculator() {
@@ -53,22 +49,25 @@ public class DiffuseLightingCalculator {
 	
 	public boolean calculate(World world, BlockPos pos, LightType lightType) {
 		
-		// are there enough nearby blocks to do the lighting?
 		WorldContext worldContext = WorldContext.get(world);
 		
+		// are there enough nearby blocks to do the lighting?
 		if (!worldContext.blocksExist(pos, 16, true, GeneratorStage.LIGHTING)) {
 			return false;
 		}
 		
 		this.queue.clear();
 		
-		// did we add or subtract light?
+		// should we add or subtract light?
 		int oldLight = world.getLightAt(lightType, pos);
 		int newLight = computeLightValue(world, pos, lightType);
 		if (newLight > oldLight) {
+			
 			// seed processing with this block
 			this.queue.add(packUpdate(0, 0, 0, 0));
+			
 		} else if (newLight < oldLight) {
+			
 			// subtract light from the area
 			world.profiler.startSection("diffuse light subtractions");
 			this.queue.add(packUpdate(0, 0, 0, oldLight));
@@ -84,10 +83,14 @@ public class DiffuseLightingCalculator {
 		processLightAdditions(world, pos, lightType);
 		world.profiler.endSection();
 		
-		// TEMP
+		// DEBUG
 		if (this.queue.size() > 32000) {
-			log.warn(String.format("%s Warning! Calculated %d light updates at (%d,%d,%d) for %s light.", 
-					world.isClient ? "CLIENT" : "SERVER", this.queue.size(), pos.getX(), pos.getY(), pos.getZ(), lightType.name()));
+			TallWorldsMod.log.warn("{} Warning! Calculated {} light updates at ({},{},{}) for {} light.", 
+				world.isClient ? "CLIENT" : "SERVER",
+				this.queue.size(),
+				pos.getX(), pos.getY(), pos.getZ(),
+				lightType.name()
+			);
 		}
 		
 		return true;
@@ -127,8 +130,12 @@ public class DiffuseLightingCalculator {
 			
 			// for each neighbor block...
 			for (Facing facing : Facing.values()) {
-				neighborPos.setBlockPos(updatePos.getX(), updatePos.getY(), updatePos.getZ());
-				neighborPos.addDirection(facing, 1);
+				Vec3i facingDir = facing.getBlockCoords();
+				neighborPos.setBlockPos(
+					updatePos.getX() + facingDir.getX(),
+					updatePos.getY() + facingDir.getY(),
+					updatePos.getZ() + facingDir.getZ()
+				);
 				
 				if (!shouldUpdateLight(world, pos, neighborPos)) {
 					continue;
@@ -194,8 +201,12 @@ public class DiffuseLightingCalculator {
 			
 			// for each neighbor block...
 			for (Facing facing : Facing.values()) {
-				neighborPos.setBlockPos(updatePos.getX(), updatePos.getY(), updatePos.getZ());
-				neighborPos.addDirection(facing, 1);
+				Vec3i facingDir = facing.getBlockCoords();
+				neighborPos.setBlockPos(
+					updatePos.getX() + facingDir.getX(),
+					updatePos.getY() + facingDir.getY(),
+					updatePos.getZ() + facingDir.getZ()
+				);
 				
 				if (!shouldUpdateLight(world, pos, neighborPos)) {
 					continue;
@@ -292,8 +303,12 @@ public class DiffuseLightingCalculator {
 				
 				// for each block face...
 				for (Facing facing : Facing.values()) {
-					neighborPos.setBlockPos(pos.getX(), pos.getY(), pos.getZ());
-					neighborPos.addDirection(facing, 1);
+					Vec3i facingDir = facing.getBlockCoords();
+					neighborPos.setBlockPos(
+						pos.getX() + facingDir.getX(),
+						pos.getY() + facingDir.getY(),
+						pos.getZ() + facingDir.getZ()
+					);
 					
 					int lightFromNeighbor = world.getLightAt(lightType, neighborPos) - blockOpacity;
 					
