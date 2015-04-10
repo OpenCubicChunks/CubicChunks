@@ -50,8 +50,6 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 	protected final IBuilder builderLow;
 	protected final IBuilder builderAlpha;
 
-	protected final int seaLevel;
-
 	protected boolean amplify;
 
 	protected final WorldServer worldServer;
@@ -73,7 +71,6 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 		this.builderAlpha = createAlphaBuilder();
 
 		this.amplify = true;
-		this.seaLevel = 64;
 	}
 
 	protected abstract IBuilder createHighBuilder();

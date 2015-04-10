@@ -33,6 +33,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.decorator.Decorator;
+import net.minecraft.world.gen.GeneratorSettings;
 
 public class BiomeFeatures {
 	private final World world;
@@ -44,9 +45,78 @@ public class BiomeFeatures {
 		this.generators = new ArrayList<FeatureGenerator>(20);
 
 		Decorator decorator = biome.biomeDecorator;
-		
+		GeneratorSettings config = GeneratorSettings.GeneratorSettingsFactory.createWithOptions(
+				world.dimension.generatorOptions).getGeneratorSettings();
+
 		addGen(new SimpleTreeGenerator(world, LOG.defaultState, LEAVES.defaultState, decorator.treesPerChunk, 1));
 		addGen(new TallGrassGenerator(world, BlockTallGrass.TallGrassTypes.GRASS, decorator.randomGrassPerChunk));
+
+		this.addOreGenerators(config);
+	}
+
+	private void addOreGenerators(GeneratorSettings config) {
+		// it automatically scales with world height.
+		// if min height is 0 - it assumes that there is no lower limit
+		// if max height is 128 or 256 - it assumes there is no upper limit
+		addGen(new OreGenerator(world, 
+						Blocks.COAL_ORE.defaultState, 
+						getMinHeight(config.coalMinHeight),
+						getMaxHeight(config.coalMaxHeight), 
+						config.coalSize, 
+						config.coalCount, 
+						getProbability(config.coalMinHeight, config.coalMaxHeight)));
+
+		addGen(new OreGenerator(world, 
+						Blocks.IRON_ORE.defaultState, 
+						getMinHeight(config.ironMinHeight),
+						getMaxHeight(config.ironMaxHeight), 
+						config.ironSize, 
+						config.ironCount, 
+						getProbability(config.ironMinHeight, config.ironMaxHeight)));
+
+		addGen(new OreGenerator(world, 
+						Blocks.GOLD_ORE.defaultState, 
+						getMinHeight(config.goldMinHeight),
+						getMaxHeight(config.goldMaxHeight), 
+						config.goldSize, 
+						config.goldCount, 
+						getProbability(config.goldMinHeight, config.goldMaxHeight)));
+		
+		addGen(new OreGenerator(world, 
+						Blocks.REDSTONE_ORE.defaultState, 
+						getMinHeight(config.redstoneMinHeight),
+						getMaxHeight(config.redstoneMaxHeight), 
+						config.redstoneSize, 
+						config.redstoneCount, 
+						getProbability(config.redstoneMinHeight, config.redstoneMaxHeight)));
+		
+		addGen(new OreGenerator(world, 
+						Blocks.DIAMOND_ORE.defaultState, 
+						getMinHeight(config.diamondMinHeight),
+						getMaxHeight(config.diamondMaxHeight), 
+						config.diamondSize, 
+						config.diamondCount, 
+						getProbability(config.diamondMinHeight, config.diamondMaxHeight)));
+	}
+
+	private double getMinHeight(int vanillaHeight) {
+		if (vanillaHeight == 0) {
+			// extend down to infinity
+			return -Double.MAX_VALUE;
+		}
+		return (vanillaHeight - 64.0) / 64.0;
+	}
+
+	private double getMaxHeight(int vanillaHeight) {
+		if (vanillaHeight == 128 || vanillaHeight == 256) {
+			// extend up to infinity
+			return Double.MAX_VALUE;
+		}
+		return (vanillaHeight - 64.0) / 64.0;
+	}
+
+	private double getProbability(int minY, int maxY) {
+		return 16.0 / (maxY - minY);
 	}
 
 	protected final void addGen(FeatureGenerator gen) {
