@@ -21,8 +21,9 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.features;
+package cubicchunks.generator.features.trees;
 
+import cubicchunks.generator.features.SurfaceFeatureGenerator;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;

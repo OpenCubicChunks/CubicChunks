@@ -24,6 +24,8 @@
 
 package cubicchunks.generator.features;
 
+import cubicchunks.generator.features.trees.SimpleTreeGenerator;
+import cubicchunks.generator.features.trees.BigTreeGenerator;
 import static net.minecraft.block.Blocks.*;
 import net.minecraft.block.BlockStone.EnumStoneVariant;
 
