@@ -51,17 +51,22 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
 		boolean foundSurface = false;
 		while (pos.getY() >= minY) {
-			BlockPos below = pos.below();
-			if (getBlock(below).getBlock().isSolid() && getBlock(pos).getBlock() == Blocks.AIR) {
+			if (isSurfaceAt(pos)) {
 				foundSurface = true;
 				break;
 			}
-			pos = below;
+			pos = pos.below();
 		}
 		// next attempt. We didn't find place to generate it
 		if (foundSurface) {
 			this.generateAt(rand, pos, biome);
 		}
+	}
+	
+	protected boolean isSurfaceAt(BlockPos pos) {
+		//we don't really know if it's the top block.
+		//assume it's sirface if there is solid block with air above it
+		return getBlock(pos.below()).getBlock().isSolid() && getBlock(pos).getBlock() == Blocks.AIR;
 	}
 
 	/**

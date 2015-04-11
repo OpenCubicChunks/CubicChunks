@@ -32,16 +32,21 @@ import java.util.Collection;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone.EnumStoneVariant;
 import net.minecraft.block.BlockTallGrass;
+import static net.minecraft.block.Blocks.AIR;
+import static net.minecraft.block.Blocks.CLAY;
 import static net.minecraft.block.Blocks.COAL_ORE;
 import static net.minecraft.block.Blocks.DIAMOND_ORE;
 import static net.minecraft.block.Blocks.DIRT;
 import static net.minecraft.block.Blocks.GOLD_ORE;
+import static net.minecraft.block.Blocks.GRASS;
 import static net.minecraft.block.Blocks.GRAVEL;
 import static net.minecraft.block.Blocks.IRON_ORE;
 import static net.minecraft.block.Blocks.LEAVES;
 import static net.minecraft.block.Blocks.LOG;
 import static net.minecraft.block.Blocks.REDSTONE_ORE;
+import static net.minecraft.block.Blocks.SAND;
 import static net.minecraft.block.Blocks.STONE;
+import static net.minecraft.block.Blocks.WATER;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -61,6 +66,21 @@ public class BiomeFeatures {
 		GeneratorSettings config = GeneratorSettings.GeneratorSettingsFactory.createWithOptions(
 				world.dimension.generatorOptions).getGeneratorSettings();
 		
+		//clay generator
+		this.addMultiGen(SurfaceBlockReplacer.builder().
+						world(world).height(1).radius(2).block(CLAY).
+						addAllowedAboveSurface(WATER).
+						addReplacable(SAND).addReplacable(DIRT).build(), decorator.clayPerChunk);
+		
+		//sand and gravel beach generators
+		this.addMultiGen(SurfaceBlockReplacer.builder().
+						world(world).height(1).radius(7).block(SAND).
+						addAllowedAboveSurface(WATER).
+						addReplacable(DIRT).addReplacable(GRASS).build(), decorator.sandBeachesPerChunk);
+		this.addMultiGen(SurfaceBlockReplacer.builder().
+						world(world).height(1).radius(6).block(GRAVEL).
+						addAllowedAboveSurface(WATER).
+						addReplacable(DIRT).addReplacable(GRASS).build(), decorator.gravelBeachesPerChunk);
 		this.addTreeGenerators(decorator);
 		addMultiGen(new TallGrassGenerator(world, BlockTallGrass.TallGrassTypes.GRASS), decorator.randomGrassPerChunk);
 		this.addOreGenerators(config);
