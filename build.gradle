@@ -1,59 +1,210 @@
-
+// Gradle repositories and dependencies
 buildscript
 {
-	repositories
-	{
-		maven
-		{
-			url "http://www.cuchazinteractive.com/maven"
-		}
+	repositories {
 		mavenCentral()
+		mavenLocal()
+		jcenter()
 	}
-	
-	dependencies
-	{
-		classpath "com.cuchazinteractive:magicMojoGradle:0.1"
+	dependencies {
+		classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'
 	}
 }
 
-apply plugin: "m3l"
+// Apply plugins
+apply plugin: 'java'
+apply plugin: 'license'
+//apply plugin: 'maven'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
 
-m3l
-{
-	minecraftVersion = "1.7.2"
-	pathMinecraftBin = "../mcp903/bin/minecraft"
-}
+//minecraft version to get Minecraft.jar for netbeans
+ext.minecraftVersion = "1.8.3"
 
-group = "com.cuchazinteractive"
-archivesBaseName = "cubicChunks"
-version = "0.1"
+// Default tasks
+defaultTasks 'licenseFormat', 'build'
 
+// Basic project information
+group = "tallworlds"
+archivesBaseName = "TallWorlds"
+version = "1.8.3-0.1"
+
+// Extended project information
+ext.projectName = 'Tall Worlds'
+ext.inceptionYear = '2014'
+ext.packaging = 'jar'
+ext.organizationUrl = ''
+ext.description = 'Tall Worlds Mod'
+ext.organization = 'Tall Worlds'
+
+// Define build and commit variables
+ext.buildNumber = project.hasProperty("buildNumber") ? buildNumber : '0'
+ext.ciSystem = project.hasProperty("ciSystem") ? ciSystem : 'unknown'
+ext.commit = project.hasProperty("commit") ? commit : 'unknown'
+
+// Minimum version of Java required
+sourceCompatibility = '1.7'
+targetCompatibility = '1.7'
+
+// Project source locations
 sourceSets
 {
-	main
-	{
-		java
-		{
-			srcDir "src"
+	main {
+		java {
+			srcDir 'src/main'
 		}
-		resources
-		{
-			srcDir "src"
+	}
+	test {
+		java {
+			srcDir 'src/test'
 		}
 	}
 }
 
+// Project repositories
 repositories
 {
+	mavenCentral()
+	mavenLocal()
 	maven
 	{
-		url "http://www.cuchazinteractive.com/maven"
+		name 'cuchaz'
+		url 'http://maven.cuchazinteractive.com'
 	}
-	mavenCentral()
+	maven
+	{
+		name 'sonatype'
+		url 'https://oss.sonatype.org/content/groups/public/'
+	}
+}
+
+//Hacks to allow controlling classpath order
+configurations
+{ 
+	forge
+	minecraft
+	provided
+	
+	compile.extendsFrom provided
 }
 
 dependencies
 {
-	compile "com.cuchazinteractive:magicMojoModLoader:1.7.2-0.1:dev"
-	compile "org.tmatesoft.sqljet:sqljet:1.1.10"
+	forge files('libs/forge-1.8-11.14.1.1334-universal.jar')
+	
+	minecraft files('../m3l/lib/minecraft-1.8.3-client-deobf.jar')
+	
+	provided 'cuchaz:m3l:1.8.3-0.1b'
+	provided 'org.slf4j:slf4j-api:1.7.10'
+	provided 'ch.qos.logback:logback-classic:1.1.2'
+	
+	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
+	compile 'org.mapdb:mapdb:1.0.7'
+	testCompile 'junit:junit:4.11'
+}
+
+//ensure correct order
+sourceSets.main.compileClasspath = sourceSets.main.compileClasspath + configurations.minecraft
+sourceSets.main.compileClasspath = sourceSets.main.compileClasspath + configurations.forge
+
+sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + sourceSets.main.compileClasspath
+
+sourceSets.test.runtimeClasspath = sourceSets.test.runtimeClasspath + sourceSets.main.runtimeClasspath
+
+// License header formatting
+license {
+	ext.project = projectName
+	ext.year = inceptionYear
+	ext.name = organization
+	ext.url = organizationUrl
+	exclude "**/*.info"
+	exclude "assets/*"
+	header file('HEADER.txt')
+	ignoreFailures false
+	strictCheck true
+	mapping {
+		java = 'SLASHSTAR_STYLE'
+	}
+}
+
+// Source compiler configuration
+configure([compileJava, compileTestJava]) {
+	options.deprecation = true
+	options.encoding = 'utf8'
+	options.compilerArgs += ['-Xlint:all', '-Xlint:-path']
+}
+
+// JAR manifest configuration
+jar.manifest.mainAttributes(
+	"Built-By": System.properties['user.name']
+	//"Created-By": System.properties['java.vm.version'] + " (" + System.properties['java.vm.vendor'] + ")",
+	//"Implementation-Title": name,
+	//"Implementation-Version": version + "+" + ciSystem + "-b" + buildNumber + ".git-" + commit,
+	//"Implementation-Vendor": url
+)
+
+jar {
+	dependsOn configurations.runtime
+    from { 
+		(configurations.runtime - configurations.provided).collect {
+			it.isDirectory() ? it : zipTree(it)
+		}
+	}
+	{
+        exclude "META-INF/"
+    }
+}
+
+task sourceJar(type: Jar) {
+	from sourceSets.main.java
+	from sourceSets.main.resources
+	classifier = "sources"
+}
+
+artifacts {
+	archives jar
+	archives sourceJar
+}
+
+def runCfg = {
+	standardInput = System.in//doesn't work on windows. gradle bug
+	workingDir = "eclipse"//this is usually used in forge projects
+
+	//make sure that workingDir exists and is a directory
+	File workDir = new File(getProjectDir(), 'eclipse');
+	System.out.println(workDir.getAbsolutePath())
+	if(!workDir.exists()){
+		workDir.mkdirs()
+		workDir.mkdir()
+	}
+	if(!workDir.isDirectory()){
+		//this provides more information than failed task...
+		throw new RuntimeException('workingDir is not a directory!')
+	}
+	//because gadle won't guess the classpath
+	classpath = sourceSets.main.runtimeClasspath
+	main = 'cuchaz.m3l.MainLauncher'
+	jvmArgs "-Xmx2G"
+	jvmArgs "-Djava.library.path=natives"//${workingDir}/natives
+	jvmArgs "-Dcuchaz.m3l.modClassNames=cubicchunks.TallWorldsMod"
+	args("client")
+	
+	ignoreExitValue = true
+	enableAssertions = true
+}
+
+/**
+ * Run and debug tasks. Used by Netbeans gradle plugin
+ */ 
+task run(type:JavaExec, dependsOn: build) {
+	doFirst { 
+		configure runCfg
+	}
+}
+
+task debug(type:JavaExec, dependsOn: build) {
+	doFirst {
+		configure runCfg
+		debug = true
+	}
 }
