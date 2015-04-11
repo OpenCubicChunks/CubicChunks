@@ -26,15 +26,15 @@ defaultTasks 'licenseFormat', 'build'
 
 // Basic project information
 group = "tallworlds"
-archivesBaseName = "cubicchunks"
-version = "0.1"
+archivesBaseName = "TallWorlds"
+version = "1.8.3-0.1"
 
 // Extended project information
-ext.projectName = 'Cubic Chunks'
+ext.projectName = 'Tall Worlds'
 ext.inceptionYear = '2014'
 ext.packaging = 'jar'
 ext.organizationUrl = ''
-ext.description = 'Cubic Chunks'
+ext.description = 'Tall Worlds Mod'
 ext.organization = 'Tall Worlds'
 
 // Define build and commit variables
@@ -43,8 +43,8 @@ ext.ciSystem = project.hasProperty("ciSystem") ? ciSystem : 'unknown'
 ext.commit = project.hasProperty("commit") ? commit : 'unknown'
 
 // Minimum version of Java required
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+sourceCompatibility = '1.7'
+targetCompatibility = '1.7'
 
 // Project source locations
 sourceSets
@@ -111,12 +111,6 @@ sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + sourceSets
 
 sourceSets.test.runtimeClasspath = sourceSets.test.runtimeClasspath + sourceSets.main.runtimeClasspath
 
-// Filter, process, and include resources
-processResources {
-	// Include in final JAR
-	from 'LICENSE.txt'
-}
-
 // License header formatting
 license {
 	ext.project = projectName
@@ -156,6 +150,9 @@ jar {
 			it.isDirectory() ? it : zipTree(it)
 		}
 	}
+	{
+        exclude "META-INF/"
+    }
 }
 
 task sourceJar(type: Jar) {
