@@ -50,10 +50,10 @@ import net.minecraft.world.chunk.storage.ChunkSection;
 import net.minecraft.world.storage.FileIOWorker;
 import net.minecraft.world.storage.IThreadedFileIO;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
@@ -66,7 +66,7 @@ import cubicchunks.world.cube.Cube;
 
 public class CubeIO implements IThreadedFileIO {
 	
-	private static final Logger log = LogManager.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(CubeIO.class);
 	
 	private static class SaveEntry {
 		

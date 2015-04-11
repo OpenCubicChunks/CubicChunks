@@ -30,10 +30,10 @@ import net.minecraft.world.WorldServer;
 import com.google.common.collect.Maps;
 
 import cubicchunks.generator.BiomeProcessor;
-import cubicchunks.generator.StructureProcessor;
+import cubicchunks.generator.FeatureProcessor;
 import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.generator.FeatureProcessor;
+import cubicchunks.generator.StructureProcessor;
 import cubicchunks.generator.terrain.NewTerrainProcessor;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.world.WorldContext;

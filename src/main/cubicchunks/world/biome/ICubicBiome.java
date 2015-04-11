@@ -25,8 +25,8 @@ package cubicchunks.world.biome;
 
 import java.util.Random;
 
-import cubicchunks.world.cube.Cube;
 import net.minecraft.world.WorldServer;
+import cubicchunks.world.cube.Cube;
 
 public interface ICubicBiome {
 	

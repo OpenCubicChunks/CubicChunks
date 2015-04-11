@@ -23,19 +23,25 @@
  */
 package cubicchunks.generator.terrain;
 
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.*;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.MAX_ELEV;
 import static cubicchunks.util.Coords.CUBE_MAX_X;
 import static cubicchunks.util.Coords.CUBE_MAX_Y;
 import static cubicchunks.util.Coords.CUBE_MAX_Z;
-import cubicchunks.generator.builder.IBuilder;
-import cubicchunks.util.Coords;
-import cubicchunks.util.processor.CubeProcessor;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.ICubeCache;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.WorldServer;
+import cubicchunks.generator.builder.IBuilder;
+import cubicchunks.util.Coords;
+import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.cube.Cube;
 
 public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 
@@ -73,7 +79,7 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 		this.builderAlpha = createAlphaBuilder();
 
 		this.amplify = true;
-		this.seaLevel = 64;
+		this.seaLevel = GlobalGeneratorConfig.SEA_LEVEL;
 	}
 
 	protected abstract IBuilder createHighBuilder();
@@ -137,7 +143,7 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 		for (int x = 0; x < X_SECTIONS; x++) {
 			for (int z = 0; z < Z_SECTIONS; z++) {
 				for (int y = 0; y < Y_SECTIONS; y++) {
-					this.rawTerrainArray[x][y][z] *= maxElev;
+					this.rawTerrainArray[x][y][z] *= MAX_ELEV;
 					this.rawTerrainArray[x][y][z] += seaLevel;
 				}
 			}
