@@ -39,8 +39,8 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 	private final int heightRange;
 
 	public HugeTreeGenerator(World world, int baseHeight, int heightRange, IBlockState woodBlock,
-			IBlockState leafBlock, int attempts, double prob) {
-		super(world, woodBlock, leafBlock, attempts, prob);
+			IBlockState leafBlock) {
+		super(world, woodBlock, leafBlock);
 		this.baseHeight = baseHeight;
 		this.heightRange = heightRange;
 	}

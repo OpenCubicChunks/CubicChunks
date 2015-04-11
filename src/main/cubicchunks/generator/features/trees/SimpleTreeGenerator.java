@@ -36,8 +36,8 @@ public class SimpleTreeGenerator extends TreeGenerator {
 	private static final int MIN_TRUNK_HEIGHT = 4;
 	private static final int MAX_TRUNK_HEIGHT = 6;//inclusive
 	
-	public SimpleTreeGenerator(World world, IBlockState woodBlock, IBlockState leafBlock, int attempts, double prob) {
-		super(world, woodBlock, leafBlock, attempts, prob);
+	public SimpleTreeGenerator(World world, IBlockState woodBlock, IBlockState leafBlock) {
+		super(world, woodBlock, leafBlock);
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 		
 		final int treeHeight = trunkHeight + 1;
 		//TODO: tweak these values
-		final int treeRadius = 3;
+		final int treeRadius = 2;
 		final int leavesHeight = 4;
 		
 		if(canGenerateTree(pos, treeHeight, leavesHeight, treeRadius)) {
@@ -92,7 +92,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 			int y2 = yRel >> 1 << 1;
 			double radiusSubstract = 0.7 * treeRadius * y2/(double)leavesHeight;
 			double radius = treeRadius - radiusSubstract;
-			this.generateLeavesCircleLayerAt(this.getLeafBlock(), startPos.above(yRel), radius);
+			this.generateLeavesCircleLayerAt(this.getLeafBlock(), startPos.above(yRel), radius + 0.5);
 		}
 	}
 }

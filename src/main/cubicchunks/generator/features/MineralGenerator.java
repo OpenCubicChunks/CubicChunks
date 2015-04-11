@@ -36,55 +36,44 @@ import net.minecraft.world.gen.feature.MineralDepositGenerator;
 public class MineralGenerator extends FeatureGenerator {
 	private final double minY;
 	private final double maxY;
-	private final int attempts;
-	
+
 	private final MineralDepositGenerator vanillaGen;
 	private final double probability;
 
 	/**
-	 * Creates new OreGenerator with given min/max height, vein size and number of generation attempts.
-	 * minY and maxY:
-	 * 0 - sea level. 
-	 * -1 - seaLevel-maxTerrainHeight
-	 * 1 - seaLevel+maxTerrainHeight
-	 * @param minY Minimum generation height
-	 * @param maxY Maximum generation height
-	 * @param size Maximum vein size
-	 * @param attempts Number of generation attempts. 
+	 * Creates new OreGenerator with given min/max height, vein size and number
+	 * of generation attempts. minY and maxY: 0 - sea level. -1 -
+	 * seaLevel-maxTerrainHeight 1 - seaLevel+maxTerrainHeight
+	 * 
+	 * @param minY
+	 *            Minimum generation height
+	 * @param maxY
+	 *            Maximum generation height
+	 * @param size
+	 *            Maximum vein size
 	 */
-	public MineralGenerator(World world, IBlockState state, double minY, double maxY, int size, int attempts, double probability) {
+	public MineralGenerator(World world, IBlockState state, double minY, double maxY, int size, double probability) {
 		super(world);
 		// use vanilla generator. This class odesn't have height limits
 		this.vanillaGen = new MineralDepositGenerator(state, size);
 		this.minY = minY;
 		this.maxY = maxY;
-		this.attempts = attempts;
 		this.probability = probability;
 	}
 
 	@Override
 	public void generate(Random rand, Cube cube, Biome biome) {
 		BlockPos cubeCenter = Coords.getCubeCenter(cube);
-		
+
 		double maxBlockY = maxY * GlobalGeneratorConfig.maxElev + GlobalGeneratorConfig.seaLevel;
 		double minBlockY = minY * GlobalGeneratorConfig.maxElev + GlobalGeneratorConfig.seaLevel;
-		
-		int y1 = cubeCenter.getY();
-		int y2 = y1 + 15;
-		
-		//are we in correct height range?
-		if(y1 > maxBlockY || y2 < minBlockY){
+
+		if (rand.nextDouble() > this.probability) {
 			return;
 		}
-		
-		for(int i = 0; i < this.attempts; i++){
-			if(rand.nextDouble() > this.probability){
-				continue;
-			}
-			BlockPos currentPos = cubeCenter.add(rand.nextInt(16), rand.nextInt(16), rand.nextInt(16));
-			if(currentPos.getY() <= maxBlockY && currentPos.getY() >= minBlockY){
-				this.vanillaGen.generate(world, rand, currentPos);
-			}
+		BlockPos currentPos = cubeCenter.add(rand.nextInt(16), rand.nextInt(16), rand.nextInt(16));
+		if (currentPos.getY() <= maxBlockY && currentPos.getY() >= minBlockY) {
+			this.vanillaGen.generate(world, rand, currentPos);
 		}
 	}
 }

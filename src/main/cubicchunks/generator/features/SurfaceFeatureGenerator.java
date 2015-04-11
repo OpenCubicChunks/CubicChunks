@@ -39,42 +39,38 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
 	@Override
 	public void generate(Random rand, Cube cube, Biome biome) {
-		int attempts = this.getAttempts(rand);
-
 		BlockPos cubeCenter = Coords.getCubeCenter(cube);
 
-		for (int i = 0; i < attempts; i++) {
-			int x = cubeCenter.getX() + rand.nextInt(16);
-			int z = cubeCenter.getZ() + rand.nextInt(16);
+		int x = cubeCenter.getX() + rand.nextInt(16);
+		int z = cubeCenter.getZ() + rand.nextInt(16);
 
-			int y = cubeCenter.getY() + 16;
-			int minY = cubeCenter.getY();
+		int y = cubeCenter.getY() + 16;
+		int minY = cubeCenter.getY();
 
-			BlockPos pos = new BlockPos(x, y, z);
+		BlockPos pos = new BlockPos(x, y, z);
 
-			boolean foundSurface = false;
-			while (pos.getY() >= minY) {
-				BlockPos below = pos.below();
-				if(getBlock(below).getBlock().isSolid() && getBlock(pos).getBlock() == Blocks.AIR){
-					foundSurface = true;
-					break;
-				}
-				pos = below;
+		boolean foundSurface = false;
+		while (pos.getY() >= minY) {
+			BlockPos below = pos.below();
+			if (getBlock(below).getBlock().isSolid() && getBlock(pos).getBlock() == Blocks.AIR) {
+				foundSurface = true;
+				break;
 			}
-			//next attempt. We didn't find place to generate it
-			if(!foundSurface) {
-				continue;
-			}
+			pos = below;
+		}
+		// next attempt. We didn't find place to generate it
+		if (foundSurface) {
 			this.generateAt(rand, pos, biome);
 		}
 	}
 
-	public abstract int getAttempts(Random rand);
-
 	/**
 	 * Generates feature at given position.
-	 * @param rand RNG to use
-	 * @param pos position of air block with solid block below it
+	 * 
+	 * @param rand
+	 *            RNG to use
+	 * @param pos
+	 *            position of air block with solid block below it
 	 */
 	public abstract void generateAt(Random rand, BlockPos pos, Biome biome);
 }

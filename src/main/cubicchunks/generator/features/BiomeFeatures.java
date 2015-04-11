@@ -24,17 +24,24 @@
 
 package cubicchunks.generator.features;
 
-import cubicchunks.generator.features.trees.SimpleTreeGenerator;
 import cubicchunks.generator.features.trees.BigTreeGenerator;
-import static net.minecraft.block.Blocks.*;
-import net.minecraft.block.BlockStone.EnumStoneVariant;
-
+import cubicchunks.generator.features.trees.SimpleTreeGenerator;
+import cubicchunks.generator.features.trees.TreeGenerator;
 import java.util.ArrayList;
 import java.util.Collection;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockStone;
+import net.minecraft.block.BlockStone.EnumStoneVariant;
 import net.minecraft.block.BlockTallGrass;
-import net.minecraft.block.Blocks;
+import static net.minecraft.block.Blocks.COAL_ORE;
+import static net.minecraft.block.Blocks.DIAMOND_ORE;
+import static net.minecraft.block.Blocks.DIRT;
+import static net.minecraft.block.Blocks.GOLD_ORE;
+import static net.minecraft.block.Blocks.GRAVEL;
+import static net.minecraft.block.Blocks.IRON_ORE;
+import static net.minecraft.block.Blocks.LEAVES;
+import static net.minecraft.block.Blocks.LOG;
+import static net.minecraft.block.Blocks.REDSTONE_ORE;
+import static net.minecraft.block.Blocks.STONE;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -53,15 +60,26 @@ public class BiomeFeatures {
 		Decorator decorator = biome.biomeDecorator;
 		GeneratorSettings config = GeneratorSettings.GeneratorSettingsFactory.createWithOptions(
 				world.dimension.generatorOptions).getGeneratorSettings();
-		//we need to generate big trees before small trees, so that they actually have some chance to generate
-		addGen(new BigTreeGenerator(world, decorator.treesPerChunk, 0.1));
-		addGen(new SimpleTreeGenerator(world, LOG.getDefaultState(), LEAVES.getDefaultState(), decorator.treesPerChunk, 0.9));
-		addGen(new TallGrassGenerator(world, BlockTallGrass.TallGrassTypes.GRASS, decorator.randomGrassPerChunk));
 		
+		this.addTreeGenerators(decorator);
+		addMultiGen(new TallGrassGenerator(world, BlockTallGrass.TallGrassTypes.GRASS), decorator.randomGrassPerChunk);
 		this.addOreGenerators(config);
 	}
 
-	private void addOreGenerators(GeneratorSettings cfg) {
+	protected void addTreeGenerators(Decorator decorator) {
+		//Other classes may override this methid to provide other tree generators
+		TreeGenerator bigTreeGen = new BigTreeGenerator(world);
+		TreeGenerator smallTreeGen = new SimpleTreeGenerator(world, LOG.getDefaultState(), LEAVES.getDefaultState());
+		
+		VariantFeatureGenerator randomTreeGen = VariantFeatureGenerator.builder()
+						.nextVariant(bigTreeGen, 0.1)
+						.nextVariant(smallTreeGen, 1.0)
+						.build();
+		
+		addMultiGen(randomTreeGen, decorator.treesPerChunk);
+	}
+	
+	protected void addOreGenerators(GeneratorSettings cfg) {
 		// it automatically scales with world height.
 		// if min height is 0 - it assumes that there is no lower limit
 		// if max height is 128 or 256 - it assumes there is no upper limit
@@ -91,21 +109,32 @@ public class BiomeFeatures {
 		addMineral(GRAVEL, cfg.gravelMinHeight, cfg.gravelMaxHeight, cfg.gravelSize, cfg.gravelCount);
 	}
 
-	private void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
-		addGen(new MineralGenerator(world, 
+	protected void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
+		addMultiGen(new MineralGenerator(world, 
 						state, 
 						getMinHeight(vanillaMinHeight),
 						getMaxHeight(vanillaMaxHeight), 
 						size, 
-						countPerChunk, 
-						getProbability(vanillaMinHeight, vanillaMaxHeight)));
+						getProbability(vanillaMinHeight, vanillaMaxHeight)), countPerChunk);
 	}
 	
-	private void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
+	protected void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
 		this.addMineral(block.getDefaultState(), vanillaMinHeight, vanillaMaxHeight, size, countPerChunk);
 	}
+
+	protected final void addGen(FeatureGenerator gen) {
+		this.generators.add(gen);
+	}
 	
-	private double getMinHeight(int vanillaHeight) {
+	protected final void addMultiGen(FeatureGenerator gen, int attempts) {
+		this.generators.add(new MultiFeatureGenerator(this.world, gen, attempts));
+	}
+
+	public Collection<FeatureGenerator> getBiomeFeatureGenerators() {
+		return generators;
+	}
+	
+	private static double getMinHeight(int vanillaHeight) {
 		if (vanillaHeight == 0) {
 			// extend down to infinity
 			return -Double.MAX_VALUE;
@@ -113,7 +142,7 @@ public class BiomeFeatures {
 		return (vanillaHeight - 64.0) / 64.0;
 	}
 
-	private double getMaxHeight(int vanillaHeight) {
+	private static double getMaxHeight(int vanillaHeight) {
 		if (vanillaHeight == 128 || vanillaHeight == 256) {
 			// extend up to infinity
 			return Double.MAX_VALUE;
@@ -121,15 +150,7 @@ public class BiomeFeatures {
 		return (vanillaHeight - 64.0) / 64.0;
 	}
 
-	private double getProbability(int minY, int maxY) {
+	private static double getProbability(int minY, int maxY) {
 		return 16.0 / (maxY - minY);
-	}
-
-	protected final void addGen(FeatureGenerator gen) {
-		this.generators.add(gen);
-	}
-
-	public Collection<FeatureGenerator> getBiomeFeatureGenerators() {
-		return generators;
 	}
 }

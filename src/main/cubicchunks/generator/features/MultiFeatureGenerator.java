@@ -21,24 +21,27 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.generator.features;
 
-import cubicchunks.generator.terrain.GlobalGeneratorConfig;
+import cubicchunks.world.cube.Cube;
+import java.util.Random;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 
-public class HeightHelper {
-	public static double getScaledHeight_Double(double y) {
-		return GlobalGeneratorConfig.maxElev * (y - 64D) / 64D;
+public class MultiFeatureGenerator extends FeatureGenerator {
+	private final FeatureGenerator gen;
+	private final int attempts;
+
+	public MultiFeatureGenerator(World world, FeatureGenerator gen, int attempts) {
+		super(world);
+		this.gen = gen;
+		this.attempts = attempts;
 	}
 
-	public static double getVanillaHeight_Double(double y) {
-		return 64D + 64D * y / GlobalGeneratorConfig.maxElev;
-	}
-
-	public static int getScaledHeight(int y) {
-		return (int) Math.round(getScaledHeight_Double(y));
-	}
-
-	public static int getVanillaHeight(int y) {
-		return (int) Math.round(getVanillaHeight_Double(y));
+	@Override
+	public void generate(Random rand, Cube cube, Biome biome) {
+		for(int i = 0; i < this.attempts; i++){
+			this.gen.generate(rand, cube, biome);
+		}
 	}
 }

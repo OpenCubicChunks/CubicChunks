@@ -36,8 +36,8 @@ import net.minecraft.world.gen.feature.TreeGeneratorBig;
 
 public class BigTreeGenerator extends TreeGenerator {
 
-	public BigTreeGenerator(World world, int attempts, double probability) {
-		super(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState(), attempts, probability);
+	public BigTreeGenerator(World world) {
+		super(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
 	}
 
 	@Override

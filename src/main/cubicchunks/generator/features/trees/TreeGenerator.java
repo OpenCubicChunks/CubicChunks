@@ -39,29 +39,10 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 	private final IBlockState woodBlock;
 	private final IBlockState leafBlock;
 
-	protected final int attempts;
-	protected final double probability;
-
-	public TreeGenerator(final World world, final IBlockState woodBlock, final IBlockState leafBlock, int attempts,
-			double probability) {
+	public TreeGenerator(final World world, final IBlockState woodBlock, final IBlockState leafBlock) {
 		super(world);
 		this.woodBlock = woodBlock;
 		this.leafBlock = leafBlock;
-
-		this.attempts = attempts;
-		this.probability = probability;
-	}
-
-	@Override
-	public int getAttempts(Random rand) {
-		int realAttempts = 0;
-		// TODO: Find faster way to calculate it?
-		for (int i = 0; i < this.attempts; i++) {
-			if (rand.nextDouble() <= this.probability) {
-				realAttempts++;
-			}
-		}
-		return realAttempts;
 	}
 
 	protected boolean canReplaceBlock(final Block blockToCheck) {

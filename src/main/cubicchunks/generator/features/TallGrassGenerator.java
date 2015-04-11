@@ -39,10 +39,9 @@ import net.minecraft.world.biome.Biome;
 
 public class TallGrassGenerator extends SurfaceFeatureGenerator {
 	
-	private IBlockState block;
-	private final int attempts;
+	private final IBlockState block;
 	
-	public TallGrassGenerator(final World world, final BlockTallGrass.TallGrassTypes tallGrassType, int attempts) {
+	public TallGrassGenerator(final World world, final BlockTallGrass.TallGrassTypes tallGrassType) {
 		super(world);
 		
 		// TODO: HACK! Obfuscation doesn't work correctly in this class when code below is used. 
@@ -54,12 +53,6 @@ public class TallGrassGenerator extends SurfaceFeatureGenerator {
 		// and I can't do that. So I used ordinal()
 		//this.block = Blocks.TALLGRASS.getDefaultState().setProperty(BlockTallGrass.type, tallGrassType);
 		this.block = Blocks.TALLGRASS.getBlockStateForMetadata(tallGrassType.ordinal());
-		this.attempts = attempts;
-	}
-
-	@Override
-	public int getAttempts(Random rand) {
-		return this.attempts;
 	}
 	
 	@Override
