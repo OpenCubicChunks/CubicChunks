@@ -159,7 +159,7 @@ public class CubeIO implements IThreadedFileIO {
 		// with concurrent access to world data structures
 		
 		// add the column to the save queue
-		m_columnsToSave.add(new SaveEntry(column.getAddress(), writeColumnToNbt(column)));
+		m_columnsToSave.add(new SaveEntry(column.getAddress(), IONbtWriter.writeColumnToNbt(column)));
 		column.markSaved();
 		
 		// signal the IO thread to process the save queue
@@ -199,7 +199,7 @@ public class CubeIO implements IThreadedFileIO {
 		for (SaveEntry entry : entries) {
 			try {
 				// save the column
-				byte[] data = writeNbtBytes(entry.nbt);
+				byte[] data = IONbtWriter.writeNbtBytes(entry.nbt);
 				m_columns.put(entry.address, data);
 				
 				numColumnsSaved++;
@@ -219,7 +219,7 @@ public class CubeIO implements IThreadedFileIO {
 		for (SaveEntry entry : entries) {
 			try {
 				// save the cube
-				byte[] data = writeNbtBytes(entry.nbt);
+				byte[] data = IONbtWriter.writeNbtBytes(entry.nbt);
 				m_cubes.put(entry.address, data);
 				
 				numCubesSaved++;
@@ -248,38 +248,6 @@ public class CubeIO implements IThreadedFileIO {
 		);
 		
 		return hasMoreColumns || hasMoreCubes;
-	}
-	
-	private byte[] writeNbtBytes(NbtTagCompound nbt) throws IOException {
-		ByteArrayOutputStream buf = new ByteArrayOutputStream();
-		DataOutputStream out = new DataOutputStream(buf);
-		CompressedStreamTools.writeNbtMapToOutputStream(nbt, out);
-		out.close();
-		return buf.toByteArray();
-	}
-	
-	private NbtTagCompound writeColumnToNbt(Column column) {
-		NbtTagCompound nbt = new NbtTagCompound();
-		
-		// coords
-		nbt.put("x", column.chunkX);
-		nbt.put("z", column.chunkZ);
-		
-		// column properties
-		nbt.put("v", (byte)1);
-		nbt.setBoolean("TerrainPopulated", column.isTerrainPopulated());
-		nbt.put("InhabitedTime", column.getInhabitedTime());
-		
-		// biome mappings
-		nbt.put("Biomes", column.getBiomeMap());
-		
-		// light index
-		nbt.put("LightIndex", column.getLightIndex().getData());
-		
-		// entities
-		column.getEntityContainer().writeToNbt(nbt, "Entities");
-		
-		return nbt;
 	}
 	
 	private Column readColumnFromNBT(World world, final int x, final int z, NbtTagCompound nbt) {
@@ -325,89 +293,6 @@ public class CubeIO implements IThreadedFileIO {
 		});
 		
 		return column;
-	}
-	
-	private NbtTagCompound writeCubeToNbt(final Cube cube) {
-		
-		NbtTagCompound nbt = new NbtTagCompound();
-		nbt.put("v", (byte)1);
-		
-		// coords
-		nbt.put("x", cube.getX());
-		nbt.put("y", cube.getY());
-		nbt.put("z", cube.getZ());
-		
-		nbt.put("GeneratorStage", (byte)cube.getGeneratorStage().ordinal());
-		
-		if (!cube.isEmpty()) {
-			
-			// blocks
-			ChunkSection storage = cube.getStorage();
-			nbt.put("Blocks", ChunkSectionHelper.getBlockLSBArray(storage));
-			NibbleArray msbArray = ChunkSectionHelper.getBlockMSBArray(storage);
-			if (msbArray != null) {
-				nbt.put("Add", msbArray.get());
-			}
-			
-			// metadata
-			nbt.put("Data", ChunkSectionHelper.getBlockMetaArray(storage).get());
-			
-			// light
-			nbt.put("BlockLight", storage.getBlockLightArray().get());
-			if (storage.getSkyLightArray() != null) {
-				nbt.put("SkyLight", storage.getSkyLightArray().get());
-			}
-		}
-		
-		// entities
-		cube.getEntityContainer().writeToNbt(nbt, "Entities", new IEntityActionListener() {
-			
-			@Override
-			public void onEntity(Entity entity) {
-				// make sure this entity is really in the chunk
-				int cubeX = Coords.getCubeXForEntity(entity);
-				int cubeY = Coords.getCubeYForEntity(entity);
-				int cubeZ = Coords.getCubeZForEntity(entity);
-				if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
-					LOGGER.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
-						entity.getClass().getName(),
-						cubeX, cubeY, cubeZ,
-						cube.getX(), cube.getY(), cube.getZ(),
-						entity.chunkX, entity.chunkY, entity.chunkZ
-					));
-				}
-			}
-		});
-		
-		// tile entities
-		NbtList nbtTileEntities = new NbtList();
-		nbt.put("TileEntities", nbtTileEntities);
-		for (BlockEntity blockEntity : cube.getBlockEntities()) {
-			NbtTagCompound nbtTileEntity = new NbtTagCompound();
-			blockEntity.save(nbtTileEntity);
-			nbtTileEntities.add(nbtTileEntity);
-		}
-		
-		// scheduled block ticks
-		Iterable<ScheduledBlockTick> scheduledTicks = getScheduledTicks(cube);
-		if (scheduledTicks != null) {
-			long time = cube.getWorld().getGameTime();
-			
-			NbtList nbtTicks = new NbtList();
-			nbt.put("TileTicks", nbtTicks);
-			for (ScheduledBlockTick scheduledTick : scheduledTicks) {
-				NbtTagCompound nbtScheduledTick = new NbtTagCompound();
-				nbtScheduledTick.put("i", Block.getBlockIndex(scheduledTick.getBlock()));
-				nbtScheduledTick.put("x", scheduledTick.blockPos.getX());
-				nbtScheduledTick.put("y", scheduledTick.blockPos.getY());
-				nbtScheduledTick.put("z", scheduledTick.blockPos.getZ());
-				nbtScheduledTick.put("t", (int)(scheduledTick.scheduledTime - time));
-				nbtScheduledTick.put("p", scheduledTick.priority);
-				nbtTicks.add(nbtScheduledTick);
-			}
-		}
-		
-		return nbt;
 	}
 	
 	private Cube readCubeFromNbtAndAddToColumn(World world, Column column, final int x, final int y, final int z, NbtTagCompound nbt) {
@@ -517,7 +402,124 @@ public class CubeIO implements IThreadedFileIO {
 		return cube;
 	}
 	
-	private List<ScheduledBlockTick> getScheduledTicks(Cube cube) {
+	private static class IONbtWriter {
+		private static byte[] writeNbtBytes(NbtTagCompound nbt) throws IOException {
+			ByteArrayOutputStream buf = new ByteArrayOutputStream();
+			DataOutputStream out = new DataOutputStream(buf);
+			CompressedStreamTools.writeNbtMapToOutputStream(nbt, out);
+			out.close();
+			return buf.toByteArray();
+		}
+		
+		private static NbtTagCompound writeColumnToNbt(Column column) {
+			NbtTagCompound nbt = new NbtTagCompound();
+			
+			// coords
+			nbt.put("x", column.chunkX);
+			nbt.put("z", column.chunkZ);
+			
+			// column properties
+			nbt.put("v", (byte)1);
+			nbt.setBoolean("TerrainPopulated", column.isTerrainPopulated());
+			nbt.put("InhabitedTime", column.getInhabitedTime());
+			
+			// biome mappings
+			nbt.put("Biomes", column.getBiomeMap());
+			
+			// light index
+			nbt.put("LightIndex", column.getLightIndex().getData());
+			
+			// entities
+			column.getEntityContainer().writeToNbt(nbt, "Entities");
+			
+			return nbt;
+		}
+	}
+	
+	private static NbtTagCompound writeCubeToNbt(final Cube cube) {
+		
+		NbtTagCompound nbt = new NbtTagCompound();
+		nbt.put("v", (byte)1);
+		
+		// coords
+		nbt.put("x", cube.getX());
+		nbt.put("y", cube.getY());
+		nbt.put("z", cube.getZ());
+		
+		nbt.put("GeneratorStage", (byte)cube.getGeneratorStage().ordinal());
+		
+		if (!cube.isEmpty()) {
+			
+			// blocks
+			ChunkSection storage = cube.getStorage();
+			nbt.put("Blocks", ChunkSectionHelper.getBlockLSBArray(storage));
+			NibbleArray msbArray = ChunkSectionHelper.getBlockMSBArray(storage);
+			if (msbArray != null) {
+				nbt.put("Add", msbArray.get());
+			}
+			
+			// metadata
+			nbt.put("Data", ChunkSectionHelper.getBlockMetaArray(storage).get());
+			
+			// light
+			nbt.put("BlockLight", storage.getBlockLightArray().get());
+			if (storage.getSkyLightArray() != null) {
+				nbt.put("SkyLight", storage.getSkyLightArray().get());
+			}
+		}
+		
+		// entities
+		cube.getEntityContainer().writeToNbt(nbt, "Entities", new IEntityActionListener() {
+			
+			@Override
+			public void onEntity(Entity entity) {
+				// make sure this entity is really in the chunk
+				int cubeX = Coords.getCubeXForEntity(entity);
+				int cubeY = Coords.getCubeYForEntity(entity);
+				int cubeZ = Coords.getCubeZForEntity(entity);
+				if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
+					LOGGER.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
+						entity.getClass().getName(),
+						cubeX, cubeY, cubeZ,
+						cube.getX(), cube.getY(), cube.getZ(),
+						entity.chunkX, entity.chunkY, entity.chunkZ
+					));
+				}
+			}
+		});
+		
+		// tile entities
+		NbtList nbtTileEntities = new NbtList();
+		nbt.put("TileEntities", nbtTileEntities);
+		for (BlockEntity blockEntity : cube.getBlockEntities()) {
+			NbtTagCompound nbtTileEntity = new NbtTagCompound();
+			blockEntity.save(nbtTileEntity);
+			nbtTileEntities.add(nbtTileEntity);
+		}
+		
+		// scheduled block ticks
+		Iterable<ScheduledBlockTick> scheduledTicks = getScheduledTicks(cube);
+		if (scheduledTicks != null) {
+			long time = cube.getWorld().getGameTime();
+			
+			NbtList nbtTicks = new NbtList();
+			nbt.put("TileTicks", nbtTicks);
+			for (ScheduledBlockTick scheduledTick : scheduledTicks) {
+				NbtTagCompound nbtScheduledTick = new NbtTagCompound();
+				nbtScheduledTick.put("i", Block.getBlockIndex(scheduledTick.getBlock()));
+				nbtScheduledTick.put("x", scheduledTick.blockPos.getX());
+				nbtScheduledTick.put("y", scheduledTick.blockPos.getY());
+				nbtScheduledTick.put("z", scheduledTick.blockPos.getZ());
+				nbtScheduledTick.put("t", (int)(scheduledTick.scheduledTime - time));
+				nbtScheduledTick.put("p", scheduledTick.priority);
+				nbtTicks.add(nbtScheduledTick);
+			}
+		}
+		
+		return nbt;
+	}
+	
+	private static List<ScheduledBlockTick> getScheduledTicks(Cube cube) {
 		ArrayList<ScheduledBlockTick> out = new ArrayList<ScheduledBlockTick>();
 		
 		// make sure this is a server
@@ -533,7 +535,7 @@ public class CubeIO implements IThreadedFileIO {
 		return out;
 	}
 	
-	private void copyScheduledTicks(ArrayList<ScheduledBlockTick> out, Collection<ScheduledBlockTick> scheduledTicks, Cube cube) {
+	private static void copyScheduledTicks(ArrayList<ScheduledBlockTick> out, Collection<ScheduledBlockTick> scheduledTicks, Cube cube) {
 		for (ScheduledBlockTick scheduledTick : scheduledTicks) {
 			if (cube.containsBlockPos(scheduledTick.blockPos)) {
 				out.add(scheduledTick);
