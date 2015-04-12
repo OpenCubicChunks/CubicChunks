@@ -9,5 +9,5 @@ public interface IThreadedFileIO {
      *         <p>
      *         FALSE - no more IO to write in the current object.
      */
-    boolean tryWrite();
+    boolean write();
 }
