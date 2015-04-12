@@ -66,7 +66,7 @@ import cubicchunks.world.cube.Cube;
 
 public class CubeIO implements IThreadedFileIO {
 	
-	private static final Logger log = LoggerFactory.getLogger(CubeIO.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(CubeIO.class);
 	
 	private static class SaveEntry {
 		
@@ -205,7 +205,7 @@ public class CubeIO implements IThreadedFileIO {
 				numColumnsSaved++;
 				numColumnBytesSaved += data.length;
 			} catch (Throwable t) {
-				log.error("Unable to write column {},{}",
+				LOGGER.error("Unable to write column {},{}",
 					AddressTools.getX(entry.address),
 					AddressTools.getZ(entry.address),
 					t
@@ -225,7 +225,7 @@ public class CubeIO implements IThreadedFileIO {
 				numCubesSaved++;
 				numCubeBytesSaved += data.length;
 			} catch (Throwable t) {
-				log.error("Unable to write cube {},{},{}",
+				LOGGER.error("Unable to write cube {},{},{}",
 					AddressTools.getX(entry.address),
 					AddressTools.getY(entry.address),
 					AddressTools.getZ(entry.address),
@@ -242,7 +242,7 @@ public class CubeIO implements IThreadedFileIO {
 		m_db.commit();
 		
 		long diff = System.currentTimeMillis() - start;
-		log.info("Wrote {} columns ({} remaining) ({}k) and {} cubes ({} remaining) ({}k) in {} ms",
+		LOGGER.info("Wrote {} columns ({} remaining) ({}k) and {} cubes ({} remaining) ({}k) in {} ms",
 			numColumnsSaved, numColumnsRemaining, numColumnBytesSaved / 1024,
 			numCubesSaved, numCubesRemaining, numCubeBytesSaved / 1024, diff
 		);
@@ -287,7 +287,7 @@ public class CubeIO implements IThreadedFileIO {
 		// check the version number
 		byte version = nbt.getAsByte("v");
 		if (version != 1) {
-			log.warn(String.format("Column has wrong version: %d. Column will be regenerated.", version));
+			LOGGER.warn(String.format("Column has wrong version: %d. Column will be regenerated.", version));
 			return null;
 		}
 		
@@ -295,7 +295,7 @@ public class CubeIO implements IThreadedFileIO {
 		int xCheck = nbt.getAsInt("x");
 		int zCheck = nbt.getAsInt("z");
 		if (xCheck != x || zCheck != z) {
-			log.warn(String.format("Column is corrupted! Expected (%d,%d) but got (%d,%d). Column will be regenerated.", x, z, xCheck, zCheck));
+			LOGGER.warn(String.format("Column is corrupted! Expected (%d,%d) but got (%d,%d). Column will be regenerated.", x, z, xCheck, zCheck));
 			return null;
 		}
 		
@@ -369,7 +369,7 @@ public class CubeIO implements IThreadedFileIO {
 				int cubeY = Coords.getCubeYForEntity(entity);
 				int cubeZ = Coords.getCubeZForEntity(entity);
 				if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
-					log.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
+					LOGGER.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
 						entity.getClass().getName(),
 						cubeX, cubeY, cubeZ,
 						cube.getX(), cube.getY(), cube.getZ(),
@@ -474,7 +474,7 @@ public class CubeIO implements IThreadedFileIO {
 				int cubeY = Coords.getCubeYForEntity(entity);
 				int cubeZ = Coords.getCubeZForEntity(entity);
 				if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
-					log.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass().getName(), cubeX, cubeY, cubeZ, cube.getX(), cube.getY(), cube.getZ()));
+					LOGGER.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass().getName(), cubeX, cubeY, cubeZ, cube.getX(), cube.getY(), cube.getZ()));
 				}
 				
 				entity.addedToChunk = true;
