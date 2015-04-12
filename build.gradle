@@ -76,6 +76,11 @@ repositories
 		name 'sonatype'
 		url 'https://oss.sonatype.org/content/groups/public/'
 	}
+	maven
+	{
+		name 'mojang'
+		url 'https://libraries.minecraft.net'
+	}
 }
 
 //Hacks to allow controlling classpath order
@@ -97,6 +102,7 @@ dependencies
 	provided 'cuchaz:m3l:1.8.3-0.1b'
 	provided 'org.slf4j:slf4j-api:1.7.10'
 	provided 'ch.qos.logback:logback-classic:1.1.2'
+	provided 'net.minecraft:launchwrapper:1.8'
 	
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
 	compile 'org.mapdb:mapdb:1.0.7'
