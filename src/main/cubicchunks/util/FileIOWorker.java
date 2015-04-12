@@ -3,10 +3,14 @@ package cubicchunks.util;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FileIOWorker implements Runnable {
 
 	/** Instance of FileIOWorker */
 	public static final FileIOWorker THREADED_IO_INSTANCE;
+	private static final Logger LOGGER = LoggerFactory.getLogger(FileIOWorker.class);
 
 	private BlockingQueue<IThreadedFileIO> queuedIO = new LinkedBlockingQueue<IThreadedFileIO>();
 
@@ -33,6 +37,7 @@ public class FileIOWorker implements Runnable {
 
 				// if there is no more work for the current IO, remove the head
 				if (!moreIO) {
+					LOGGER.debug("No more IO to write! Removing it from the head.\n");
 					this.queuedIO.remove();
 				}
 			} else {
@@ -50,7 +55,7 @@ public class FileIOWorker implements Runnable {
 			try {
 				this.queuedIO.put(threadedFileIO);
 			} catch (InterruptedException e) {
-				System.out.println("Interrupted when trying to put a object into the queue!");
+				LOGGER.info("Interrupted when trying to put a object into the queue!");
 				e.printStackTrace();
 			}
 		}
