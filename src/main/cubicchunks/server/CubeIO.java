@@ -79,6 +79,22 @@ public class CubeIO implements IThreadedFileIO {
 		}
 	}
 	
+	private static DB initializeDBConnection(final File saveFile, final Dimension dimension) {
+		// init database connection
+		File file = new File(saveFile, String.format("cubes.dim%d.db", dimension.getId()));
+		
+		file.getParentFile().mkdirs();
+		
+		DB db = DBMaker.newFileDB(file).closeOnJvmShutdown()
+		// .compressionEnable()
+			.make();
+		
+		return db;
+		// NOTE: could set different cache settings
+		// the default is a hash map cache with 32768 entries
+		// see: http://www.mapdb.org/features.html
+	}
+	
 	private World world;
 	
 	private DB db;
@@ -99,22 +115,6 @@ public class CubeIO implements IThreadedFileIO {
 		// init chunk save queue
 		this.columnsToSave = new ConcurrentBatchedQueue<SaveEntry>();
 		this.cubesToSave = new ConcurrentBatchedQueue<SaveEntry>();
-	}
-
-	private static DB initializeDBConnection(final File saveFile, final Dimension dimension) {
-		// init database connection
-		File file = new File(saveFile, String.format("cubes.dim%d.db", dimension.getId()));
-		
-		file.getParentFile().mkdirs();
-		
-		DB db = DBMaker.newFileDB(file).closeOnJvmShutdown()
-		// .compressionEnable()
-			.make();
-		
-		return db;
-		// NOTE: could set different cache settings
-		// the default is a hash map cache with 32768 entries
-		// see: http://www.mapdb.org/features.html
 	}
 	
 	public boolean columnExists(long address) {
