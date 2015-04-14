@@ -31,6 +31,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.biome.Biome;
+import cubicchunks.generator.terrain.GlobalGeneratorConfig;
 import cubicchunks.util.Coords;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
@@ -38,28 +39,27 @@ import cubicchunks.world.cube.Cube;
 public class BiomeBlockReplacer {
 
 	private final Biome baseBiome;
+	private final int seaLevel = GlobalGeneratorConfig.SEA_LEVEL;
 
 	public BiomeBlockReplacer(final Biome biomeToUse) {
 		this.baseBiome = biomeToUse;
 	}
 
 	public void replaceBlocks(final Random rand, final Cube cube, final Cube above, final int xAbs, final int zAbs,
-			final int top, final int bottom, final int alterationTop, final int seaLevel, final double depthNoiseValue) {
-		replaceBlocks_do(rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, depthNoiseValue);
+			final int top, final int bottom, final int alterationTop, final double depthNoiseValue) {
+		replaceBlocks_do(rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, depthNoiseValue);
 	}
 
 	public final void replaceBlocks_do(final Random rand, final Cube cube, final Cube above, final int xAbs,
-			final int zAbs, final int top, final int bottom, final int alterationTop, final int seaLevel,
-			final double depthNoiseValue) {
+			final int zAbs, final int top, final int bottom, final int alterationTop, final double depthNoiseValue) {
 		IBlockState surfaceBlock = this.baseBiome.topBlock;
-		// byte metadata = (byte) (this.field_150604_aj & 255);
 		IBlockState groundBlock = this.baseBiome.fillerBlock;
 
 		// How many biome blocks left to set in column? Initially -1
 		int numBlocksToChange = -1;
 
 		// Biome blocks depth in current block column. 0 for negative values.
-		int depth = (int) (depthNoiseValue / 3.0D + 3.0D + rand.nextDouble() * 0.25D);
+		final int depth = (int) (depthNoiseValue / 3.0D + 3.0D + rand.nextDouble() * 0.25D);
 
 		// TODO:
 		/*
@@ -79,8 +79,9 @@ public class BiomeBlockReplacer {
 		// } else
 
 		for (int yAbs = top; yAbs >= bottom; --yAbs) {
+			BlockPos pos = new BlockPos(xAbs, yAbs, zAbs);
 			// Current block
-			Block block = getBlock(cube, above, xAbs, yAbs, zAbs);
+			final Block block = getBlock(cube, above, pos);
 
 			// Set numBlocksToChange to -1 when we reach air, skip everything
 			// else
@@ -101,44 +102,44 @@ public class BiomeBlockReplacer {
 				// If depth is <= 0 - only stone
 				if (depth <= 0) {
 					surfaceBlock = Blocks.AIR.getDefaultState();
-					// metadata = 0;
 					groundBlock = Blocks.STONE.getDefaultState();
 				}
 				// If we are above or at 4 block under water and at or below one
 				// block above water
-				else if (yAbs >= seaLevel - 4 && yAbs <= seaLevel + 1) {
+				else if (yAbs >= this.seaLevel - 4 && yAbs <= this.seaLevel + 1) {
 					surfaceBlock = this.baseBiome.topBlock;
-					// metadata = (byte) (this.field_150604_aj & 255);
 					groundBlock = this.baseBiome.fillerBlock;
 				}
 
 				// If top block is air and we are below sea level use water
 				// instead
-				if (yAbs < seaLevel && (surfaceBlock == null || surfaceBlock.getBlock().getMaterial() == Material.AIR)) {
-					if (this.baseBiome.getTemp(new BlockPos(xAbs, yAbs, zAbs)) < 0.15F) {
+				if (yAbs < this.seaLevel && (surfaceBlock == null || surfaceBlock.getBlock().getMaterial() == Material.AIR)) {
+					if (this.baseBiome.getTemp(pos) < 0.15F) {
 						// or ice if it's cold
 						surfaceBlock = Blocks.ICE.getDefaultState();
-						// metadata = 0;
 					} else {
 						surfaceBlock = Blocks.WATER.getDefaultState();
-						// metadata = 0;
 					}
 				}
 
 				// Set num blocks to change to current depth.
 				numBlocksToChange = depth;
 
-				if (yAbs >= seaLevel - 1) {
+				if (yAbs >= this.seaLevel - 1) {
 					// If we are above sea level
-					setBlock(surfaceBlock, cube, xAbs, yAbs, zAbs, canSetBlock);
-				} else if (yAbs < seaLevel - 7 - depth) {
+					if(canSetBlock) {
+						setBlock(cube, pos, surfaceBlock);
+					}
+				} else if (yAbs < this.seaLevel - 7 - depth) {
 					// gravel beaches?
 					surfaceBlock = Blocks.AIR.getDefaultState();
 					groundBlock = Blocks.STONE.getDefaultState();
-					// setBlock(Blocks.GRAVEL.getDefaultState(), cube, xAbs, yAbs, zAbs, canSetBlock);
+					// setBlock(cube, pos, Blocks.GRAVEL.getDefaultState());
 				} else {
 					// no grass below sea level
-					setBlock(groundBlock, cube, xAbs, yAbs, zAbs, canSetBlock);
+					if(canSetBlock) {
+						setBlock(cube, pos, groundBlock);
+					}
 				}
 
 				continue;
@@ -151,7 +152,9 @@ public class BiomeBlockReplacer {
 			}
 			// Decrease blocks to change
 			--numBlocksToChange;
-			setBlock(groundBlock, cube, xAbs, yAbs, zAbs, canSetBlock);
+			if(canSetBlock) {
+				setBlock(cube, pos, groundBlock);
+			}
 
 			// random sandstone generation
 			if (numBlocksToChange == 0 && groundBlock == Blocks.SAND.getDefaultState()) {
@@ -161,39 +164,24 @@ public class BiomeBlockReplacer {
 		}
 	}
 
-	protected final void setBlock(final IBlockState blockState, final Cube cube, final int xAbs, final int yAbs,
-			final int zAbs, final boolean reallySet) {
-		// Modify blocks only if we are at or below alteration top
-		if (!reallySet) {
-			return;
-		}
-		assert Coords.blockToCube(yAbs) == cube.getY() || Coords.blockToCube(yAbs) == cube.getY() - 1;
+	protected final void setBlock(final Cube cube, final BlockPos pos, final IBlockState blockState) {
+		assert Coords.blockToCube(pos.getY()) == cube.getY() || Coords.blockToCube(pos.getY()) == cube.getY() - 1;
 
-		int xRel = xAbs & 15;
-		int yRel = yAbs & 15;
-		int zRel = zAbs & 15;
-
-		assert Coords.blockToCube(yAbs) == cube.getY();
-		cube.setBlockForGeneration(new BlockPos(xRel, yRel, zRel), blockState);
+		cube.setBlockForGeneration(pos, blockState);
 	}
 
-	protected final Block getBlock(final Cube cube, final Cube above, final int xAbs, final int yAbs, final int zAbs) {
+	protected final Block getBlock(final Cube cube, final Cube above, final BlockPos pos) {		
 		assert WorldContext.get(cube.getWorld()).getCubeCache()
-				.cubeExists(Coords.blockToCube(xAbs), Coords.blockToCube(yAbs), Coords.blockToCube(zAbs));
+				.cubeExists(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ()));
 
-		int xRel = xAbs & 15;
-		int yRel = yAbs & 15;
-		int zRel = zAbs & 15;
-
-		if (Coords.blockToCube(yAbs) == cube.getY()) // check if we're in the same cube as Cube
-		{
+		if (Coords.blockToCube(pos.getY()) == cube.getY()) {// check if we're in the same cube as Cube
 			// If we are in the same cube
-			return cube.getBlockAt(xRel, yRel, zRel);
+			return cube.getBlockAt(pos);
 		} else {
 			// we are in cube above
-			assert Coords.blockToCube(yAbs) == cube.getY() + 1;
+			assert Coords.blockToCube(pos.getY()) == cube.getY() + 1;
 			assert above != null;
-			return above.getBlockAt(xRel, yRel, zRel);
+			return above.getBlockAt(pos);
 		}
 	}
 }

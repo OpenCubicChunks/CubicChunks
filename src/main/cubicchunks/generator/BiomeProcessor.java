@@ -42,8 +42,6 @@ public class BiomeProcessor extends CubeProcessor {
 	private double[] noise;
 	private Biome[] biomes;
 	
-	private int seaLevel;
-	
 	public BiomeProcessor(final String name, final ICubeCache cubeCache, final int batchSize, final long seed) {
 		super(name, cubeCache, batchSize);
 		
@@ -51,8 +49,6 @@ public class BiomeProcessor extends CubeProcessor {
 		this.noiseGen = new NoiseGeneratorPerlin(this.rand, 4);
 		this.noise = new double[256];
 		this.biomes = null;
-		
-		this.seaLevel = GlobalGeneratorConfig.SEA_LEVEL;
 	}
 	
 	@Override
@@ -108,7 +104,7 @@ public class BiomeProcessor extends CubeProcessor {
 				
 				//TODO: Reimplement this
 				BiomeBlockReplacer blockReplacer = new BiomeBlockReplacer(this.biomes[xzCoord]);
-				blockReplacer.replaceBlocks(this.rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, this.seaLevel, this.noise[zRel * 16 + xRel]);
+				blockReplacer.replaceBlocks(this.rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, this.noise[zRel * 16 + xRel]);
 			}
 		}
 		return true;
