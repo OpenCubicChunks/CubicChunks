@@ -41,51 +41,51 @@ import cubicchunks.world.WorldContext;
 
 public class WorldServerContext extends WorldContext {
 	
-	private static Map<WorldServer,WorldServerContext> m_instances;
+	private static Map<WorldServer,WorldServerContext> instances;
 	
 	static {
-		m_instances = Maps.newHashMap();
+		instances = Maps.newHashMap();
 	}
 	
 	public static WorldServerContext get(WorldServer worldServer) {
-		return m_instances.get(worldServer);
+		return instances.get(worldServer);
 	}
 	
 	public static void put(WorldServer worldServer, WorldServerContext worldServerContext) {
-		m_instances.put(worldServer, worldServerContext);
+		instances.put(worldServer, worldServerContext);
 	}
 	
-	private WorldServer m_worldServer;
-	private ServerCubeCache m_serverCubeCache;
-	private GeneratorPipeline m_generatorPipeline;
+	private WorldServer worldServer;
+	private ServerCubeCache serverCubeCache;
+	private GeneratorPipeline generatorPipeline;
 	
 	public WorldServerContext(WorldServer worldServer, ServerCubeCache serverCubeCache) {
 		super(worldServer, serverCubeCache);
 		
-		m_worldServer = worldServer;
-		m_serverCubeCache = serverCubeCache;
-		m_generatorPipeline = new GeneratorPipeline(serverCubeCache);
+		this.worldServer = worldServer;
+		this.serverCubeCache = serverCubeCache;
+		this.generatorPipeline = new GeneratorPipeline(serverCubeCache);
 		
 		// init the generator pipeline
-		m_generatorPipeline.addStage(GeneratorStage.TERRAIN, new NewTerrainProcessor("Terrain", m_worldServer, m_serverCubeCache, 5));
-		m_generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor("Biomes", m_worldServer, m_serverCubeCache, 10));
-		m_generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", m_serverCubeCache, 10));
-		m_generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", m_serverCubeCache, 5));
-		m_generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", m_serverCubeCache, 100));
-		m_generatorPipeline.checkStages();
+		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new NewTerrainProcessor("Terrain", this.serverCubeCache, 5, this.worldServer.getSeed()));
+		this.generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor("Biomes", this.serverCubeCache, 10, this.worldServer.getSeed()));
+		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", this.serverCubeCache, 10));
+		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", this.serverCubeCache, 5));
+		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", this.serverCubeCache, 100));
+		this.generatorPipeline.checkStages();
 	}
 	
 	@Override
 	public WorldServer getWorld() {
-		return m_worldServer;
+		return this.worldServer;
 	}
 	
 	@Override
 	public ServerCubeCache getCubeCache() {
-		return m_serverCubeCache;
+		return this.serverCubeCache;
 	}
 	
 	public GeneratorPipeline getGeneratorPipeline() {
-		return m_generatorPipeline;
+		return this.generatorPipeline;
 	}
 }

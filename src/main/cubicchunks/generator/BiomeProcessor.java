@@ -25,7 +25,6 @@ package cubicchunks.generator;
 
 import java.util.Random;
 
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
 import cubicchunks.generator.terrain.GlobalGeneratorConfig;
@@ -38,22 +37,18 @@ import cubicchunks.world.cube.Cube;
 
 public class BiomeProcessor extends CubeProcessor {
 	
-	private WorldServer worldServer;
-	
 	private Random rand;
-	private NoiseGeneratorPerlin m_noiseGen;
+	private NoiseGeneratorPerlin noiseGen;
 	private double[] noise;
 	private Biome[] biomes;
 	
 	private int seaLevel;
 	
-	public BiomeProcessor(String name, WorldServer worldServer, ICubeCache cubeCache, int batchSize) {
+	public BiomeProcessor(final String name, final ICubeCache cubeCache, final int batchSize, final long seed) {
 		super(name, cubeCache, batchSize);
 		
-		this.worldServer = worldServer;
-		
-		this.rand = new Random(worldServer.getSeed());
-		this.m_noiseGen = new NoiseGeneratorPerlin(this.rand, 4);
+		this.rand = new Random(seed);
+		this.noiseGen = new NoiseGeneratorPerlin(this.rand, 4);
 		this.noise = new double[256];
 		this.biomes = null;
 		
@@ -61,7 +56,7 @@ public class BiomeProcessor extends CubeProcessor {
 	}
 	
 	@Override
-	public boolean calculate(Cube cube) {
+	public boolean calculate(final Cube cube) {
 		
 		// if the cube is empty, there is nothing to do. Even if neighbors don't exist
 		if(cube.isEmpty()) {
@@ -74,7 +69,7 @@ public class BiomeProcessor extends CubeProcessor {
 			return false;
 		}
 		
-		rand.setSeed(41 * cube.getWorld().getSeed() + cube.cubeRandomSeed());
+		this.rand.setSeed(41 * cube.getWorld().getSeed() + cube.cubeRandomSeed());
 		
 		// generate biome info. This is a hackjob.
 		this.biomes = cube.getWorld().dimension.getBiomeManager().getBiomeMap(
@@ -84,7 +79,7 @@ public class BiomeProcessor extends CubeProcessor {
 			16, 16
 		);
 		
-		this.noise = this.m_noiseGen.arrayNoise2D_pre(
+		this.noise = this.noiseGen.arrayNoise2D_pre(
 			this.noise, 
 			Coords.cubeToMinBlock(cube.getX()), 
 			Coords.cubeToMinBlock(cube.getZ()), 
@@ -113,7 +108,7 @@ public class BiomeProcessor extends CubeProcessor {
 				
 				//TODO: Reimplement this
 				BiomeBlockReplacer blockReplacer = new BiomeBlockReplacer(this.biomes[xzCoord]);
-				blockReplacer.replaceBlocks(this.worldServer, rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, seaLevel, noise[zRel * 16 + xRel]);
+				blockReplacer.replaceBlocks(this.rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, this.seaLevel, this.noise[zRel * 16 + xRel]);
 			}
 		}
 		return true;

@@ -45,6 +45,8 @@ import cubicchunks.world.cube.Cube;
 
 public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 
+	protected final long seed;
+	
 	protected final double[][][] noiseArrayHigh;
 	protected final double[][][] noiseArrayLow;
 	protected final double[][][] noiseArrayAlpha;
@@ -60,12 +62,10 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 
 	protected boolean amplify;
 
-	protected final WorldServer worldServer;
-
-	public AbstractTerrainProcessor3dNoise(String name, WorldServer worldServer, ICubeCache cache, int batchSize) {
+	public AbstractTerrainProcessor3dNoise(String name, ICubeCache cache, int batchSize, long seed) {
 		super(name, cache, batchSize);
-
-		this.worldServer = worldServer;
+		
+		this.seed = seed;
 
 		this.noiseArrayHigh = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 		this.noiseArrayLow = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
@@ -94,7 +94,7 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 
 		this.generateTerrainArray(cube);
 
-		if (amplify) {
+		if (this.amplify) {
 			this.amplifyNoiseArray();
 		}
 		this.expandNoiseArray();
@@ -128,9 +128,9 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 				for (int y = 0; y < Y_SECTIONS; y++) {
 					int yPos = cubeYMin + y;
 
-					this.noiseArrayHigh[x][y][z] = builderHigh.getValue(xPos, yPos, zPos);
-					this.noiseArrayLow[x][y][z] = builderLow.getValue(xPos, yPos, zPos);
-					this.noiseArrayAlpha[x][y][z] = builderAlpha.getValue(xPos, yPos, zPos);
+					this.noiseArrayHigh[x][y][z] = this.builderHigh.getValue(xPos, yPos, zPos);
+					this.noiseArrayLow[x][y][z] = this.builderLow.getValue(xPos, yPos, zPos);
+					this.noiseArrayAlpha[x][y][z] = this.builderAlpha.getValue(xPos, yPos, zPos);
 
 				}
 			}
@@ -144,7 +144,7 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 			for (int z = 0; z < Z_SECTIONS; z++) {
 				for (int y = 0; y < Y_SECTIONS; y++) {
 					this.rawTerrainArray[x][y][z] *= MAX_ELEV;
-					this.rawTerrainArray[x][y][z] += seaLevel;
+					this.rawTerrainArray[x][y][z] += this.seaLevel;
 				}
 			}
 		}
@@ -166,15 +166,15 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 			for (int noiseZ = 0; noiseZ < Z_SECTIONS - 1; noiseZ++) {
 				for (int noiseY = 0; noiseY < Y_SECTIONS - 1; noiseY++) {
 					// get the noise samples
-					double x0y0z0 = rawTerrainArray[noiseX][noiseY][noiseZ];
-					double x0y0z1 = rawTerrainArray[noiseX][noiseY][noiseZ + 1];
-					double x1y0z0 = rawTerrainArray[noiseX + 1][noiseY][noiseZ];
-					double x1y0z1 = rawTerrainArray[noiseX + 1][noiseY][noiseZ + 1];
+					double x0y0z0 = this.rawTerrainArray[noiseX][noiseY][noiseZ];
+					double x0y0z1 = this.rawTerrainArray[noiseX][noiseY][noiseZ + 1];
+					double x1y0z0 = this.rawTerrainArray[noiseX + 1][noiseY][noiseZ];
+					double x1y0z1 = this.rawTerrainArray[noiseX + 1][noiseY][noiseZ + 1];
 
-					double x0y1z0 = rawTerrainArray[noiseX][noiseY + 1][noiseZ];
-					double x0y1z1 = rawTerrainArray[noiseX][noiseY + 1][noiseZ + 1];
-					double x1y1z0 = rawTerrainArray[noiseX + 1][noiseY + 1][noiseZ];
-					double x1y1z1 = rawTerrainArray[noiseX + 1][noiseY + 1][noiseZ + 1];
+					double x0y1z0 = this.rawTerrainArray[noiseX][noiseY + 1][noiseZ];
+					double x0y1z1 = this.rawTerrainArray[noiseX][noiseY + 1][noiseZ + 1];
+					double x1y1z0 = this.rawTerrainArray[noiseX + 1][noiseY + 1][noiseZ];
+					double x1y1z1 = this.rawTerrainArray[noiseX + 1][noiseY + 1][noiseZ + 1];
 
 					for (int x = 0; x < xSteps; x++) {
 						int xRel = noiseX * xSteps + x;
@@ -204,7 +204,7 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 								// interpolate along y
 								double xyz = lerp(yd, xy0z, xy1z);
 
-								terrainArray[xRel][yRel][zRel] = xyz;
+								this.terrainArray[xRel][yRel][zRel] = xyz;
 							}
 						}
 					}
@@ -223,12 +223,12 @@ public abstract class AbstractTerrainProcessor3dNoise extends CubeProcessor {
 		for (int xRel = 0; xRel < 16; xRel++) {
 			for (int zRel = 0; zRel < 16; zRel++) {
 				for (int yRel = 0; yRel < 16; yRel++) {
-					double val = terrainArray[xRel][yRel][zRel];
+					double val = this.terrainArray[xRel][yRel][zRel];
 
 					int yAbs = Coords.localToBlock(cubeY, yRel);
 					BlockPos pos = new BlockPos(xRel, yRel, zRel);
 					Block block = val - yAbs > 0 ? Blocks.STONE
-							: yAbs < seaLevel ? Blocks.WATER : Blocks.AIR;
+							: yAbs < this.seaLevel ? Blocks.WATER : Blocks.AIR;
 					cube.setBlockForGeneration(pos, block.getDefaultState());
 				} // end yRel
 			} // end zRel

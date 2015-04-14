@@ -23,17 +23,16 @@
  */
 package cubicchunks.generator.terrain;
 
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.MAX_ELEV;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.MAX_ELEV;
 
 import java.util.Random;
 
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.builder.BasicBuilder;
 import cubicchunks.generator.builder.IBuilder;
@@ -59,40 +58,40 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 
 	private static final int octaves = 16;
 
-	public NewTerrainProcessor(String name, WorldServer worldServer, ICubeCache cache, int batchSize) {
-		super(name, worldServer, cache, batchSize);
+	public NewTerrainProcessor(String name, ICubeCache cache, int batchSize, long seed) {
+		super(name, cache, batchSize, seed);
 
 		this.maxSmoothRadius = 2 * (int) (MAX_ELEV / 64);
-		this.maxSmoothDiameter = maxSmoothRadius * 2 + 1;
+		this.maxSmoothDiameter = this.maxSmoothRadius * 2 + 1;
 
 		this.biomes = null;
 
-		this.rand = new Random(this.worldServer.getSeed());
+		this.rand = new Random(this.seed);
 
 		this.noiseArrayHeight = new double[X_SECTIONS][Z_SECTIONS];
 
-		this.nearBiomeWeightArray = new double[maxSmoothDiameter * maxSmoothDiameter];
+		this.nearBiomeWeightArray = new double[this.maxSmoothDiameter * this.maxSmoothDiameter];
 
-		for (int x = -maxSmoothRadius; x <= maxSmoothRadius; x++) {
-			for (int z = -maxSmoothRadius; z <= maxSmoothRadius; z++) {
+		for (int x = -this.maxSmoothRadius; x <= this.maxSmoothRadius; x++) {
+			for (int z = -this.maxSmoothRadius; z <= this.maxSmoothRadius; z++) {
 				final double f1 = 10.0F / Math.sqrt(x * x + z * z + 0.2F);
-				this.nearBiomeWeightArray[(x + maxSmoothRadius + (z + maxSmoothRadius) * maxSmoothDiameter)] = f1;
+				this.nearBiomeWeightArray[(x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * this.maxSmoothDiameter)] = f1;
 			}
 		}
 
 		double freq = 200.0 / Math.pow(2, 10) / (MAX_ELEV / 64);
 
-		builderHeight = new BasicBuilder();
-		builderHeight.setSeed(rand.nextInt());
-		builderHeight.setOctaves(10);
-		builderHeight.setMaxElev(8);
-		builderHeight.setFreq(freq);
-		builderHeight.build();
+		this.builderHeight = new BasicBuilder();
+		this.builderHeight.setSeed(this.rand.nextInt());
+		this.builderHeight.setOctaves(10);
+		this.builderHeight.setMaxElev(8);
+		this.builderHeight.setFreq(freq);
+		this.builderHeight.build();
 	}
 
 	@Override
 	protected IBuilder createHighBuilder() {
-		Random rand = new Random(worldServer.getSeed() * 2);
+		Random rand = new Random(this.seed * 2);
 		double freq = 684.412D / Math.pow(2, octaves) / (MAX_ELEV / 64.0);
 
 		BasicBuilder builderHigh = new BasicBuilder();
@@ -110,7 +109,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 
 	@Override
 	protected IBuilder createLowBuilder() {
-		Random rand = new Random(worldServer.getSeed() * 3);
+		Random rand = new Random(this.seed * 3);
 		double freq = 684.412D / Math.pow(2, octaves) / (MAX_ELEV / 64.0);
 
 		BasicBuilder builderLow = new BasicBuilder();
@@ -127,7 +126,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 
 	@Override
 	protected IBuilder createAlphaBuilder() {
-		Random rand = new Random(worldServer.getSeed() * 4);
+		Random rand = new Random(this.seed * 4);
 		double freq = 8.55515 / Math.pow(2, 8) / (MAX_ELEV / 64.0);
 
 		BasicBuilder builderAlpha = new BasicBuilder();
@@ -145,9 +144,9 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 
 	@Override
 	protected void generateTerrainArray(Cube cube) {
-		biomes = this.worldServer.dimension.getBiomeManager().getBiomeMap2(biomes,
-				cube.getX() * 4 - maxSmoothRadius, cube.getZ() * 4 - maxSmoothRadius,
-				X_SECTION_SIZE + maxSmoothDiameter, Z_SECTION_SIZE + maxSmoothDiameter);
+		this.biomes = cube.getWorld().dimension.getBiomeManager().getBiomeMap2(this.biomes,
+				cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius,
+				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
 
 		this.fillHeightArray(cube);
 		for (int x = 0; x < X_SECTIONS; x++) {
@@ -224,7 +223,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 		float biomeWeightSum = 0.0F;
 		final Biome centerBiomeConfig = this.biomes[(x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
 				* (X_SECTION_SIZE + this.maxSmoothDiameter))];
-		final int lookRadius = maxSmoothRadius;
+		final int lookRadius = this.maxSmoothRadius;
 
 		for (int nextX = -lookRadius; nextX <= lookRadius; nextX++) {
 			for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++) {
@@ -277,7 +276,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 			for (int z = 0; z < Z_SECTIONS; z++) {
 				int zPos = cubeZMin + z;
 
-				this.noiseArrayHeight[x][z] = builderHeight.getValue(xPos, 0, zPos);
+				this.noiseArrayHeight[x][z] = this.builderHeight.getValue(xPos, 0, zPos);
 
 			}
 		}
@@ -292,7 +291,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 	 * used.
 	 */
 	private double getAddHeight(int x, int z) {
-		double noiseHeight = noiseArrayHeight[x][z];
+		double noiseHeight = this.noiseArrayHeight[x][z];
 
 		assert noiseHeight <= 8 && noiseHeight >= -8;
 
