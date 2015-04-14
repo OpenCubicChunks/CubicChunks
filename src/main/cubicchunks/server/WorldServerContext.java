@@ -66,9 +66,11 @@ public class WorldServerContext extends WorldContext {
 		this.serverCubeCache = serverCubeCache;
 		this.generatorPipeline = new GeneratorPipeline(serverCubeCache);
 		
+		final long seed = this.worldServer.getSeed();
+		
 		// init the generator pipeline
-		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new NewTerrainProcessor("Terrain", this.serverCubeCache, 5, this.worldServer.getSeed()));
-		this.generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor("Biomes", this.serverCubeCache, 10, this.worldServer.getSeed()));
+		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new NewTerrainProcessor("Terrain", this.serverCubeCache, 5, seed));
+		this.generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor("Biomes", this.serverCubeCache, 10, seed));
 		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", this.serverCubeCache, 10));
 		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", this.serverCubeCache, 5));
 		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", this.serverCubeCache, 100));
