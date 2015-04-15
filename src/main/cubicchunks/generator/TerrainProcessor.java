@@ -36,7 +36,7 @@ import static cubicchunks.util.Coords.CUBE_MAX_Z;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
-import cubicchunks.generator.terrain.ITerrainGenerator;
+import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;

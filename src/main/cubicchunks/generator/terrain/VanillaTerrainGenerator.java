@@ -38,6 +38,7 @@ import static cubicchunks.util.Coords.CUBE_MAX_Z;
 import java.util.Random;
 
 import net.minecraft.world.biome.Biome;
+import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.generator.builder.BasicBuilder;
 import cubicchunks.generator.builder.IBuilder;
 import cubicchunks.world.cube.Cube;
