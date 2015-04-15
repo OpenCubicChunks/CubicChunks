@@ -499,7 +499,7 @@ public class CubePlayerManager extends PlayerManager {
 			int cubeX = AddressTools.getX(address);
 			int cubeY = AddressTools.getY(address);
 			int cubeZ = AddressTools.getZ(address);
-			m_cubeCache.loadCubeAndNeighbors(cubeX, cubeY, cubeZ);
+			m_cubeCache.loadCube(cubeX, cubeY, cubeZ);
 			
 			// make a new watcher
 			watcher = new CubeWatcher(m_cubeCache.getCube(cubeX, cubeY, cubeZ));

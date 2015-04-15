@@ -270,7 +270,6 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 	
 	@Override
 	public boolean tick() {
-		
 		// NOTE: the return value is completely ignored
 		
 		if (this.worldServer.disableSaving) {
