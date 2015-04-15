@@ -23,7 +23,7 @@
  */
 package cubicchunks.generator;
 
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.MAX_ELEV;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.SEA_LEVEL;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
@@ -36,7 +36,6 @@ import static cubicchunks.util.Coords.CUBE_MAX_Z;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
-import cubicchunks.generator.terrain.GlobalGeneratorConfig;
 import cubicchunks.generator.terrain.ITerrainGenerator;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
@@ -44,7 +43,6 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
 public class TerrainProcessor extends CubeProcessor {
-
 	private static final String PROCESSOR_NAME = "Terrain";
 	
 	public static double lerp(final double a, final double min, final double max) {
@@ -56,10 +54,6 @@ public class TerrainProcessor extends CubeProcessor {
 	protected double[][][] rawDensity;
 	private final double[][][] finalDensity;
 
-	protected final int seaLevel;
-
-	protected final boolean needsScaling;
-
 	public TerrainProcessor(final ICubeCache cache, final int batchSize, final ITerrainGenerator terrainGen) {
 		super(PROCESSOR_NAME, cache, batchSize);
 		
@@ -67,9 +61,6 @@ public class TerrainProcessor extends CubeProcessor {
 
 		this.rawDensity = new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
 		this.finalDensity = new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
-
-		this.needsScaling = true;
-		this.seaLevel = GlobalGeneratorConfig.SEA_LEVEL;
 	}
 
 	@Override
@@ -77,28 +68,11 @@ public class TerrainProcessor extends CubeProcessor {
 		
 		this.rawDensity = this.terrainGenerator.generate(cube);
 		
-		if (this.needsScaling) {
-			scaleNoiseArray();
-		}
 		expandNoiseArray();
 
 		generateTerrain(cube);
 
 		return true;
-	}
-
-	/**
-	 * if rawDensity is ranged from -1 to 1, use this to scale it up
-	 */
-	public final void scaleNoiseArray() {
-		for (int x = 0; x < X_SECTIONS; x++) {
-			for (int z = 0; z < Z_SECTIONS; z++) {
-				for (int y = 0; y < Y_SECTIONS; y++) {
-					this.rawDensity[x][y][z] *= MAX_ELEV;
-					this.rawDensity[x][y][z] += this.seaLevel;
-				}
-			}
-		}
 	}
 
 	/**
@@ -172,7 +146,7 @@ public class TerrainProcessor extends CubeProcessor {
 
 					int yAbs = Coords.localToBlock(cube.getY(), yRel);
 					BlockPos pos = new BlockPos(xRel, yRel, zRel);
-					Block block = val - yAbs > 0 ? Blocks.STONE : yAbs < this.seaLevel ? Blocks.WATER : Blocks.AIR;
+					Block block = val - yAbs > 0 ? Blocks.STONE : yAbs < SEA_LEVEL ? Blocks.WATER : Blocks.AIR;
 					cube.setBlockForGeneration(pos, block.getDefaultState());
 				} // end yRel
 			} // end zRel

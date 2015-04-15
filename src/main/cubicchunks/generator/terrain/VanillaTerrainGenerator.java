@@ -24,6 +24,7 @@
 package cubicchunks.generator.terrain;
 
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.MAX_ELEV;
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.SEA_LEVEL;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
@@ -43,22 +44,22 @@ import cubicchunks.world.cube.Cube;
 
 public class VanillaTerrainGenerator implements ITerrainGenerator {
 	private static final int octaves = 16;
-	
+
 	public static double lerp(final double a, final double min, final double max) {
 		return min + a * (max - min);
 	}
-	
+
 	private Biome[] biomes;
-	
+
 	private final long seed;
 	private final Random rand;
-	
+
 	private final double[][][] noiseArrayHigh;
 	private final double[][][] noiseArrayLow;
 	private final double[][][] noiseArrayAlpha;
-	
+
 	private final double[][][] rawDensity;
-	
+
 	private final IBuilder builderHigh;
 	private final IBuilder builderLow;
 	private final IBuilder builderAlpha;
@@ -75,22 +76,24 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 
 	private final BasicBuilder builderHeight;
 
-	public VanillaTerrainGenerator(long seed) {
-		
+	private final boolean needsScaling = true;
+
+	public VanillaTerrainGenerator(final long seed) {
+
 		this.seed = seed;
 		this.rand = new Random(seed);
-		
+
 		this.maxSmoothRadius = 2 * (int) (MAX_ELEV / 64);
 		this.maxSmoothDiameter = this.maxSmoothRadius * 2 + 1;
 
 		this.biomes = null;
-		
+
 		this.noiseArrayHigh = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 		this.noiseArrayLow = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 		this.noiseArrayAlpha = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
-		
+
 		this.rawDensity = new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
-		
+
 		this.builderHigh = createHighBuilder();
 		this.builderLow = createLowBuilder();
 		this.builderAlpha = createAlphaBuilder();
@@ -102,7 +105,8 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		for (int x = -this.maxSmoothRadius; x <= this.maxSmoothRadius; x++) {
 			for (int z = -this.maxSmoothRadius; z <= this.maxSmoothRadius; z++) {
 				final double f1 = 10.0F / Math.sqrt(x * x + z * z + 0.2F);
-				this.nearBiomeWeightArray[(x + this.maxSmoothRadius + (z + this.maxSmoothRadius) * this.maxSmoothDiameter)] = f1;
+				this.nearBiomeWeightArray[x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
+						* this.maxSmoothDiameter] = f1;
 			}
 		}
 
@@ -121,11 +125,29 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		generateNoiseArrays(cube);
 
 		generateTerrainArray(cube);
-		
+
+		if (this.needsScaling) {
+			scaleNoiseArray();
+		}
+
 		return this.rawDensity;
 	}
 
-	protected IBuilder createHighBuilder() {
+	/**
+	 * if rawDensity is ranged from -1 to 1, use this to scale it up
+	 */
+	private final void scaleNoiseArray() {
+		for (int x = 0; x < X_SECTIONS; x++) {
+			for (int z = 0; z < Z_SECTIONS; z++) {
+				for (int y = 0; y < Y_SECTIONS; y++) {
+					this.rawDensity[x][y][z] *= MAX_ELEV;
+					this.rawDensity[x][y][z] += SEA_LEVEL;
+				}
+			}
+		}
+	}
+
+	private IBuilder createHighBuilder() {
 		Random rand = new Random(this.seed * 2);
 		double freq = 684.412D / Math.pow(2, octaves) / (MAX_ELEV / 64.0);
 
@@ -142,7 +164,7 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		return builderHigh;
 	}
 
-	protected IBuilder createLowBuilder() {
+	private IBuilder createLowBuilder() {
 		Random rand = new Random(this.seed * 3);
 		double freq = 684.412D / Math.pow(2, octaves) / (MAX_ELEV / 64.0);
 
@@ -158,7 +180,7 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		return builderLow;
 	}
 
-	protected IBuilder createAlphaBuilder() {
+	private IBuilder createAlphaBuilder() {
 		Random rand = new Random(this.seed * 4);
 		double freq = 8.55515 / Math.pow(2, 8) / (MAX_ELEV / 64.0);
 
@@ -174,11 +196,12 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 
 		return builderAlpha;
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
 	 * @see cubicchunks.generator.terrain.ITerrainGenerator#generateNoiseArrays(cubicchunks.world.cube.Cube)
 	 */
-	public void generateNoiseArrays(Cube cube) {
+	private void generateNoiseArrays(final Cube cube) {
 		int cubeXMin = cube.getX() * (X_SECTIONS - 1);
 		int cubeYMin = cube.getY() * (Y_SECTIONS - 1);
 		int cubeZMin = cube.getZ() * (Z_SECTIONS - 1);
@@ -200,20 +223,19 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see cubicchunks.generator.terrain.ITerrainGenerator#generateTerrainArray(cubicchunks.world.cube.Cube)
 	 */
-	public void generateTerrainArray(Cube cube) {
-		this.biomes = cube.getWorld().dimension.getBiomeManager().getBiomeMap2(this.biomes,
-				cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius,
-				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
+	private void generateTerrainArray(final Cube cube) {
+		this.biomes = getBiomeMap(cube);
 
-		this.fillHeightArray(cube);
+		fillHeightArray(cube);
 		for (int x = 0; x < X_SECTIONS; x++) {
 			for (int z = 0; z < Z_SECTIONS; z++) {
 				// TODO: Remove addHeight?
 				double addHeight = getAddHeight(x, z);
-				this.biomeFactor(x, z, addHeight);
+				biomeFactor(x, z, addHeight);
 
 				for (int y = 0; y < Y_SECTIONS; y++) {
 					final double vol1Low = this.noiseArrayLow[x][y][z];
@@ -257,44 +279,45 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		}
 	}
 
+	private Biome[] getBiomeMap(final Cube cube) {
+		return cube.getWorld().dimension.getBiomeManager().getBiomeMap2(this.biomes,
+				cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius,
+				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
+	}
+
 	/**
-	 * Calculates biome height and volatility and adds addHeight to result. It
-	 * converts vanilla biome values to some more predictable format:
-	 * 
+	 * Calculates biome height and volatility and adds addHeight to result.
+	 * <p>
+	 * It converts vanilla biome values to some more predictable format:
+	 * <p>
 	 * biome volatility == 0 will generate flat terrain
-	 * 
-	 * biome volatility == 0.5 means that max difference between the actual
-	 * height and average height is 0.5 of max generation height from sea level.
-	 * High volatility will generate overhangs
-	 * 
+	 * <p>
+	 * biome volatility == 0.5 means that max difference between the actual height and average height is 0.5 of max
+	 * generation height from sea level. High volatility will generate overhangs
+	 * <p>
 	 * biome height == 0 will generate terrain at sea level
-	 * 
-	 * biome height == 1 will generate terrain will generate at max generation
-	 * height above sea level.
-	 * 
-	 * Volatility Note: Terrain below biome height has volatility divided by 4,
-	 * probably to add some flat terrain to mountanious biomes
+	 * <p>
+	 * biome height == 1 will generate terrain will generate at max generation height above sea level.
+	 * <p>
+	 * Volatility Note: Terrain below biome height has volatility divided by 4, probably to add some flat terrain to
+	 * mountanious biomes
 	 */
-	private void biomeFactor(int x, int z, double addHeight) {
+	private void biomeFactor(final int x, final int z, final double addHeight) {
 		// Calculate weighted average of nearby biomes height and volatility
 		float smoothVolatility = 0.0F;
 		float smoothHeight = 0.0F;
 
 		float biomeWeightSum = 0.0F;
-		final Biome centerBiomeConfig = this.biomes[(x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
-				* (X_SECTION_SIZE + this.maxSmoothDiameter))];
+		final Biome centerBiomeConfig = getCenterBiome(x, z);
 		final int lookRadius = this.maxSmoothRadius;
 
 		for (int nextX = -lookRadius; nextX <= lookRadius; nextX++) {
 			for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++) {
-				final Biome biome = this.biomes[(x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius)
-						* (X_SECTION_SIZE + this.maxSmoothDiameter))];
-				float biomeHeight = biome.height;
-				float biomeVolatility = biome.volatility;
+				final Biome biome = getOffsetBiome(x, z, nextX, nextZ);
+				final float biomeHeight = biome.height;
+				final float biomeVolatility = biome.volatility;
 
-				double biomeWeight = this.nearBiomeWeightArray[(nextX + this.maxSmoothRadius + (nextZ + this.maxSmoothRadius)
-						* this.maxSmoothDiameter)]
-						/ (biomeHeight + 2.0F);
+				double biomeWeight = calcBiomeWeight(nextX, nextZ, biomeHeight);
 
 				biomeWeight = Math.abs(biomeWeight);
 				if (biomeHeight > centerBiomeConfig.height) {
@@ -303,7 +326,7 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 				}
 				smoothVolatility += biomeVolatility * biomeWeight;
 				smoothHeight += biomeHeight * biomeWeight;
-				
+
 				biomeWeightSum += biomeWeight;
 			}
 		}
@@ -326,7 +349,23 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		this.biomeHeight += 0.2 * addHeight * 17.0 / 64.0;
 	}
 
-	private void fillHeightArray(Cube cube) {
+	private Biome getCenterBiome(final int x, final int z) {
+		return this.biomes[x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
+				* (X_SECTION_SIZE + this.maxSmoothDiameter)];
+	}
+
+	private Biome getOffsetBiome(final int x, final int z, int nextX, int nextZ) {
+		return this.biomes[x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius)
+				* (X_SECTION_SIZE + this.maxSmoothDiameter)];
+	}
+
+	private double calcBiomeWeight(int nextX, int nextZ, float biomeHeight) {
+		return this.nearBiomeWeightArray[nextX + this.maxSmoothRadius + (nextZ + this.maxSmoothRadius)
+				* this.maxSmoothDiameter]
+				/ (biomeHeight + 2.0F);
+	}
+
+	private void fillHeightArray(final Cube cube) {
 		int cubeXMin = cube.getX() * (X_SECTION_SIZE - 1);
 		int cubeZMin = cube.getZ() * (Z_SECTION_SIZE - 1);
 
@@ -343,14 +382,11 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 	}
 
 	/**
-	 * This method is there only because the code exists in vanilla, it affects
-	 * terrain height by at most 1 block (+/-0.425 blocks).
-	 * 
-	 * In Minecraft beta it was base terrain height, but as of beta 1.8 it
-	 * doesn't have any significant effect. It's multiplied 0.2 before it's
-	 * used.
+	 * This method is there only because the code exists in vanilla, it affects terrain height by at most 1 block
+	 * (+/-0.425 blocks). In Minecraft beta it was base terrain height, but as of beta 1.8 it doesn't have any
+	 * significant effect. It's multiplied 0.2 before it's used.
 	 */
-	private double getAddHeight(int x, int z) {
+	private double getAddHeight(final int x, final int z) {
 		double noiseHeight = this.noiseArrayHeight[x][z];
 
 		assert noiseHeight <= 8 && noiseHeight >= -8;
