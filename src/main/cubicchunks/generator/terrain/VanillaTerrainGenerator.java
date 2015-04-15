@@ -30,19 +30,38 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
+import static cubicchunks.util.Coords.CUBE_MAX_X;
+import static cubicchunks.util.Coords.CUBE_MAX_Y;
+import static cubicchunks.util.Coords.CUBE_MAX_Z;
 
 import java.util.Random;
 
 import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.builder.BasicBuilder;
 import cubicchunks.generator.builder.IBuilder;
-import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
-public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
+public class VanillaTerrainGenerator implements ITerrainGenerator {
+	private static final int octaves = 16;
+	
+	public static double lerp(final double a, final double min, final double max) {
+		return min + a * (max - min);
+	}
+	
 	private Biome[] biomes;
-
+	
+	private final long seed;
 	private final Random rand;
+	
+	private final double[][][] noiseArrayHigh;
+	private final double[][][] noiseArrayLow;
+	private final double[][][] noiseArrayAlpha;
+	
+	private final double[][][] rawDensity;
+	
+	private final IBuilder builderHigh;
+	private final IBuilder builderLow;
+	private final IBuilder builderAlpha;
 
 	private double biomeVolatility;
 	private double biomeHeight;
@@ -56,17 +75,25 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 
 	private final BasicBuilder builderHeight;
 
-	private static final int octaves = 16;
-
-	public NewTerrainProcessor(String name, ICubeCache cache, int batchSize, long seed) {
-		super(name, cache, batchSize, seed);
-
+	public VanillaTerrainGenerator(long seed) {
+		
+		this.seed = seed;
+		this.rand = new Random(seed);
+		
 		this.maxSmoothRadius = 2 * (int) (MAX_ELEV / 64);
 		this.maxSmoothDiameter = this.maxSmoothRadius * 2 + 1;
 
 		this.biomes = null;
-
-		this.rand = new Random(this.seed);
+		
+		this.noiseArrayHigh = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
+		this.noiseArrayLow = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
+		this.noiseArrayAlpha = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
+		
+		this.rawDensity = new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
+		
+		this.builderHigh = createHighBuilder();
+		this.builderLow = createLowBuilder();
+		this.builderAlpha = createAlphaBuilder();
 
 		this.noiseArrayHeight = new double[X_SECTIONS][Z_SECTIONS];
 
@@ -90,6 +117,14 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 	}
 
 	@Override
+	public double[][][] generate(final Cube cube) {
+		generateNoiseArrays(cube);
+
+		generateTerrainArray(cube);
+		
+		return this.rawDensity;
+	}
+
 	protected IBuilder createHighBuilder() {
 		Random rand = new Random(this.seed * 2);
 		double freq = 684.412D / Math.pow(2, octaves) / (MAX_ELEV / 64.0);
@@ -107,7 +142,6 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 		return builderHigh;
 	}
 
-	@Override
 	protected IBuilder createLowBuilder() {
 		Random rand = new Random(this.seed * 3);
 		double freq = 684.412D / Math.pow(2, octaves) / (MAX_ELEV / 64.0);
@@ -124,7 +158,6 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 		return builderLow;
 	}
 
-	@Override
 	protected IBuilder createAlphaBuilder() {
 		Random rand = new Random(this.seed * 4);
 		double freq = 8.55515 / Math.pow(2, 8) / (MAX_ELEV / 64.0);
@@ -141,9 +174,36 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 
 		return builderAlpha;
 	}
+	
+	/* (non-Javadoc)
+	 * @see cubicchunks.generator.terrain.ITerrainGenerator#generateNoiseArrays(cubicchunks.world.cube.Cube)
+	 */
+	public void generateNoiseArrays(Cube cube) {
+		int cubeXMin = cube.getX() * (X_SECTIONS - 1);
+		int cubeYMin = cube.getY() * (Y_SECTIONS - 1);
+		int cubeZMin = cube.getZ() * (Z_SECTIONS - 1);
 
-	@Override
-	protected void generateTerrainArray(Cube cube) {
+		for (int x = 0; x < X_SECTIONS; x++) {
+			int xPos = cubeXMin + x;
+
+			for (int z = 0; z < Z_SECTIONS; z++) {
+				int zPos = cubeZMin + z;
+
+				for (int y = 0; y < Y_SECTIONS; y++) {
+					int yPos = cubeYMin + y;
+
+					this.noiseArrayHigh[x][y][z] = this.builderHigh.getValue(xPos, yPos, zPos);
+					this.noiseArrayLow[x][y][z] = this.builderLow.getValue(xPos, yPos, zPos);
+					this.noiseArrayAlpha[x][y][z] = this.builderAlpha.getValue(xPos, yPos, zPos);
+				}
+			}
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see cubicchunks.generator.terrain.ITerrainGenerator#generateTerrainArray(cubicchunks.world.cube.Cube)
+	 */
+	public void generateTerrainArray(Cube cube) {
 		this.biomes = cube.getWorld().dimension.getBiomeManager().getBiomeMap2(this.biomes,
 				cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius,
 				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
@@ -191,7 +251,7 @@ public class NewTerrainProcessor extends AbstractTerrainProcessor3dNoise {
 						// 3.0F;
 						// output = output * ( 1.0D - a ) - 10.0D * a;
 					}
-					this.rawTerrainArray[x][y][z] = output;
+					this.rawDensity[x][y][z] = output;
 				}
 			}
 		}

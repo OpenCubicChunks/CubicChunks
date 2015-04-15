@@ -27,7 +27,6 @@ import java.util.Random;
 
 import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.noise.NoiseGeneratorPerlin;
-import cubicchunks.generator.terrain.GlobalGeneratorConfig;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
@@ -37,13 +36,15 @@ import cubicchunks.world.cube.Cube;
 
 public class BiomeProcessor extends CubeProcessor {
 	
+	private static final String PROCESSOR_NAME = "Biomes";
+	
 	private Random rand;
 	private NoiseGeneratorPerlin noiseGen;
 	private double[] noise;
 	private Biome[] biomes;
 	
-	public BiomeProcessor(final String name, final ICubeCache cubeCache, final int batchSize, final long seed) {
-		super(name, cubeCache, batchSize);
+	public BiomeProcessor(final ICubeCache cubeCache, final int batchSize, final long seed) {
+		super(PROCESSOR_NAME, cubeCache, batchSize);
 		
 		this.rand = new Random(seed);
 		this.noiseGen = new NoiseGeneratorPerlin(this.rand, 4);

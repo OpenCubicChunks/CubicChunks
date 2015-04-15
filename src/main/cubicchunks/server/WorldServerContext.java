@@ -34,7 +34,8 @@ import cubicchunks.generator.FeatureProcessor;
 import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.generator.StructureProcessor;
-import cubicchunks.generator.terrain.NewTerrainProcessor;
+import cubicchunks.generator.TerrainProcessor;
+import cubicchunks.generator.terrain.VanillaTerrainGenerator;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.world.WorldContext;
 
@@ -69,8 +70,8 @@ public class WorldServerContext extends WorldContext {
 		final long seed = this.worldServer.getSeed();
 		
 		// init the generator pipeline
-		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new NewTerrainProcessor("Terrain", this.serverCubeCache, 5, seed));
-		this.generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor("Biomes", this.serverCubeCache, 10, seed));
+		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(this.serverCubeCache, 5, new VanillaTerrainGenerator(seed)));
+		this.generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor(this.serverCubeCache, 10, seed));
 		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", this.serverCubeCache, 10));
 		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", this.serverCubeCache, 5));
 		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", this.serverCubeCache, 100));
