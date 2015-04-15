@@ -58,6 +58,7 @@ import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.column.ColumnView;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.entity.player.EntityPlayer;
 
 public class CubePlayerManager extends PlayerManager {
 	
@@ -272,6 +273,11 @@ public class CubePlayerManager extends PlayerManager {
 		info.blockZ = newBlockZ;
 		info.address = newAddress;
 		
+		this.updatePlayer(player, info, newAddress);
+	}
+	
+	private void updatePlayer(EntityPlayerMP player, PlayerInfo info, long newAddress){
+		
 		// calculate new visibility
 		info.cubeSelector.setPlayerPosition(newAddress, this.m_viewDistance);
 		
@@ -299,7 +305,6 @@ public class CubePlayerManager extends PlayerManager {
 			}
 		}
 	}
-	
 	@Override
 	public boolean isPlayerWatchingChunk(EntityPlayerMP player, int cubeX, int cubeZ) {
 		
@@ -506,5 +511,21 @@ public class CubePlayerManager extends PlayerManager {
 			this.m_watchers.put(address, watcher);
 		}
 		return watcher;
+	}
+	
+	@Override
+	public void setPlayerViewRadius(int newViewDistance) {
+		this.m_viewDistance = newViewDistance;
+		if(this.m_worldServer == null) {
+			//this method is used in superconstructor. Don't send chunks in this case.
+			return;
+		}
+		//load new chunks/unload old chunks
+		for(EntityPlayer player : this.m_worldServer.players) {
+			int id = player.getEntityId();
+			PlayerInfo info = this.m_players.get(id);
+			//use current address, player position didn't change
+			this.updatePlayer((EntityPlayerMP) player, info, info.address);
+		}
 	}
 }
