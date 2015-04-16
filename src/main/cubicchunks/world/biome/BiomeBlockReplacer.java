@@ -31,7 +31,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.biome.Biome;
-import cubicchunks.generator.terrain.GlobalGeneratorConfig;
 import cubicchunks.util.Coords;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
@@ -39,7 +38,6 @@ import cubicchunks.world.cube.Cube;
 public class BiomeBlockReplacer {
 
 	private final Biome baseBiome;
-	private final int seaLevel = GlobalGeneratorConfig.SEA_LEVEL;
 
 	public BiomeBlockReplacer(final Biome biomeToUse) {
 		this.baseBiome = biomeToUse;
@@ -54,6 +52,7 @@ public class BiomeBlockReplacer {
 			final int zAbs, final int top, final int bottom, final int alterationTop, final double depthNoiseValue) {
 		IBlockState surfaceBlock = this.baseBiome.topBlock;
 		IBlockState groundBlock = this.baseBiome.fillerBlock;
+		final int seaLevel = cube.getWorld().getSeaLevel();
 
 		// How many biome blocks left to set in column? Initially -1
 		int numBlocksToChange = -1;
@@ -106,14 +105,14 @@ public class BiomeBlockReplacer {
 				}
 				// If we are above or at 4 block under water and at or below one
 				// block above water
-				else if (yAbs >= this.seaLevel - 4 && yAbs <= this.seaLevel + 1) {
+				else if (yAbs >= seaLevel - 4 && yAbs <= seaLevel + 1) {
 					surfaceBlock = this.baseBiome.topBlock;
 					groundBlock = this.baseBiome.fillerBlock;
 				}
 
 				// If top block is air and we are below sea level use water
 				// instead
-				if (yAbs < this.seaLevel && (surfaceBlock == null || surfaceBlock.getBlock().getMaterial() == Material.AIR)) {
+				if (yAbs < seaLevel && (surfaceBlock == null || surfaceBlock.getBlock().getMaterial() == Material.AIR)) {
 					if (this.baseBiome.getTemp(pos) < 0.15F) {
 						// or ice if it's cold
 						surfaceBlock = Blocks.ICE.getDefaultState();
@@ -125,12 +124,12 @@ public class BiomeBlockReplacer {
 				// Set num blocks to change to current depth.
 				numBlocksToChange = depth;
 
-				if (yAbs >= this.seaLevel - 1) {
+				if (yAbs >= seaLevel - 1) {
 					// If we are above sea level
 					if(canSetBlock) {
 						setBlock(cube, pos, surfaceBlock);
 					}
-				} else if (yAbs < this.seaLevel - 7 - depth) {
+				} else if (yAbs < seaLevel - 7 - depth) {
 					// gravel beaches?
 					surfaceBlock = Blocks.AIR.getDefaultState();
 					groundBlock = Blocks.STONE.getDefaultState();

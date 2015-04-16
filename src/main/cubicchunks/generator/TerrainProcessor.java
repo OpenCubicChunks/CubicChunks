@@ -23,7 +23,6 @@
  */
 package cubicchunks.generator;
 
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.SEA_LEVEL;
 import static cubicchunks.util.TerrainGeneratorUtils.expandNoiseArray;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -61,7 +60,7 @@ public final class TerrainProcessor extends CubeProcessor {
 					int yAbs = Coords.localToBlock(cube.getY(), yRel);
 					BlockPos pos = new BlockPos(xRel, yRel, zRel);
 					Block block = densityField[xRel][yRel][zRel] - yAbs > 0 ? Blocks.STONE
-							: yAbs < SEA_LEVEL ? Blocks.WATER : Blocks.AIR;
+							: yAbs < cube.getWorld().getSeaLevel() ? Blocks.WATER : Blocks.AIR;
 					cube.setBlockForGeneration(pos, block.getDefaultState());
 				} // end yRel
 			} // end zRel

@@ -24,7 +24,6 @@
 package cubicchunks.generator.terrain;
 
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.MAX_ELEV;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.SEA_LEVEL;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
@@ -125,7 +124,7 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		generateTerrainArray(cube);
 
 		if (this.needsScaling) {
-			scaleNoiseArray();
+			scaleNoiseArray(cube.getWorld().getSeaLevel());
 		}
 
 		return this.rawDensity;
@@ -134,12 +133,12 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 	/**
 	 * if rawDensity is ranged from -1 to 1, use this to scale it up
 	 */
-	private final void scaleNoiseArray() {
+	private final void scaleNoiseArray(final int seaLevel) {
 		for (int x = 0; x < X_SECTIONS; x++) {
 			for (int z = 0; z < Z_SECTIONS; z++) {
 				for (int y = 0; y < Y_SECTIONS; y++) {
 					this.rawDensity[x][y][z] *= MAX_ELEV;
-					this.rawDensity[x][y][z] += SEA_LEVEL;
+					this.rawDensity[x][y][z] += seaLevel;
 				}
 			}
 		}
