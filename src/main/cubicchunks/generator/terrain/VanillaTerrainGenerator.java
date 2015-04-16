@@ -45,7 +45,7 @@ import cubicchunks.generator.builder.IBuilder;
 import cubicchunks.world.cube.Cube;
 
 public class VanillaTerrainGenerator implements ITerrainGenerator {
-	private static final int octaves = 16;
+	private static final int OCTAVES = 16;
 
 	private Biome[] biomes;
 
@@ -147,11 +147,11 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 
 	private IBuilder createHighBuilder() {
 		Random rand = new Random(this.seed * 2);
-		double freq = 684.412D / Math.pow(2, octaves) / (MAX_ELEV / 64.0);
+		double freq = 684.412D / Math.pow(2, OCTAVES) / (MAX_ELEV / 64.0);
 
 		BasicBuilder builderHigh = new BasicBuilder();
 		builderHigh.setSeed(rand.nextInt());
-		builderHigh.setOctaves(octaves);
+		builderHigh.setOctaves(OCTAVES);
 		builderHigh.setPersistance(0.5);
 		// with 16 octaves probability of getting 1 is too low
 		builderHigh.setMaxElev(2);
@@ -164,11 +164,11 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 
 	private IBuilder createLowBuilder() {
 		Random rand = new Random(this.seed * 3);
-		double freq = 684.412D / Math.pow(2, octaves) / (MAX_ELEV / 64.0);
+		double freq = 684.412D / Math.pow(2, OCTAVES) / (MAX_ELEV / 64.0);
 
 		BasicBuilder builderLow = new BasicBuilder();
 		builderLow.setSeed(rand.nextInt());
-		builderLow.setOctaves(octaves);
+		builderLow.setOctaves(OCTAVES);
 		builderLow.setPersistance(0.5);
 		builderLow.setMaxElev(2);
 		builderLow.setClamp(-1, 1);
