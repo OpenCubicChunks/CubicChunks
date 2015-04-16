@@ -34,6 +34,7 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE
 import static cubicchunks.util.Coords.CUBE_MAX_X;
 import static cubicchunks.util.Coords.CUBE_MAX_Y;
 import static cubicchunks.util.Coords.CUBE_MAX_Z;
+import static cubicchunks.util.MathHelper.lerp;
 
 import java.util.Random;
 
@@ -45,10 +46,6 @@ import cubicchunks.world.cube.Cube;
 
 public class VanillaTerrainGenerator implements ITerrainGenerator {
 	private static final int octaves = 16;
-
-	public static double lerp(final double a, final double min, final double max) {
-		return min + a * (max - min);
-	}
 
 	private Biome[] biomes;
 
@@ -255,23 +252,19 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 						volatilityModifier /= 4.0;
 					}
 
-					// NOTE: Multiplication by nonnegative number and addition
-					// when using 3d noise effects are the same as with
-					// heightmap.
+					// NOTE: Multiplication by nonnegative number and addition when using 3d noise effects are the same
+					// as with heightmap.
 
 					// make height range lower
 					output *= volatilityModifier;
 					// height shift
 					output += heightModifier;
 
-					// Since in TWM we don't have height limit we could skip it
-					// but PLATEAU biomes need it
+					// Since in TWM we don't have height limit we could skip it but PLATEAU biomes need it
 					int maxYSections = (int) Math.round(MAX_ELEV / Y_SECTION_SIZE);
 					if (yAbs * MAX_ELEV > maxYSections - 4) {
-						// TODO: Convert this to work correctly with noise
-						// between -1 and 1
-						// final double a = ( yAbs - ( maxYSections - 4 ) ) /
-						// 3.0F;
+						// TODO: Convert this to work correctly with noise between -1 and 1
+						// final double a = ( yAbs - ( maxYSections - 4 ) ) / 3.0F;
 						// output = output * ( 1.0D - a ) - 10.0D * a;
 					}
 					this.rawDensity[x][y][z] = output;
