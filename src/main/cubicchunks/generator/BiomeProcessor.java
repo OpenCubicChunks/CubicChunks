@@ -42,6 +42,7 @@ public class BiomeProcessor extends CubeProcessor {
 	private NoiseGeneratorPerlin noiseGen;
 	private double[] noise;
 	private Biome[] biomes;
+	private long seed;
 	
 	public BiomeProcessor(final ICubeCache cubeCache, final int batchSize, final long seed) {
 		super(PROCESSOR_NAME, cubeCache, batchSize);
@@ -50,6 +51,7 @@ public class BiomeProcessor extends CubeProcessor {
 		this.noiseGen = new NoiseGeneratorPerlin(this.rand, 4);
 		this.noise = new double[256];
 		this.biomes = null;
+		this.seed = seed;
 	}
 	
 	@Override
@@ -66,24 +68,16 @@ public class BiomeProcessor extends CubeProcessor {
 			return false;
 		}
 		
-		this.rand.setSeed(41 * cube.getWorld().getSeed() + cube.cubeRandomSeed());
+		this.biomes = getCubeBiomeMap(cube);
 		
-		// generate biome info. This is a hackjob.
-		this.biomes = cube.getWorld().dimension.getBiomeManager().getBiomeMap(
-			this.biomes, 
-			Coords.cubeToMinBlock(cube.getX()), 
-			Coords.cubeToMinBlock(cube.getZ()), 
-			16, 16
-		);
+		this.noise = getCubeNoiseMap(cube);
 		
-		this.noise = this.noiseGen.arrayNoise2D_pre(
-			this.noise, 
-			Coords.cubeToMinBlock(cube.getX()), 
-			Coords.cubeToMinBlock(cube.getZ()), 
-			16, 16,
-			16, 16,
-			1
-		);
+		replaceBlocks(cube);
+		return true;
+	}
+
+	private void replaceBlocks(final Cube cube) {
+		this.rand.setSeed(41 * this.seed + cube.cubeRandomSeed());
 		
 		int topOfCube = Coords.cubeToMaxBlock(cube.getY());
 		int topOfCubeAbove = Coords.cubeToMaxBlock(cube.getY() + 1);
@@ -108,6 +102,26 @@ public class BiomeProcessor extends CubeProcessor {
 				blockReplacer.replaceBlocks(this.rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, this.noise[zRel * 16 + xRel]);
 			}
 		}
-		return true;
+	}
+
+	private double[] getCubeNoiseMap(final Cube cube) {
+		return this.noiseGen.arrayNoise2D_pre(
+			this.noise, 
+			Coords.cubeToMinBlock(cube.getX()), 
+			Coords.cubeToMinBlock(cube.getZ()), 
+			16, 16,
+			16, 16,
+			1
+		);
+	}
+
+	private Biome[] getCubeBiomeMap(final Cube cube) {
+		// generate biome info. This is a hackjob.
+		return cube.getWorld().dimension.getBiomeManager().getBiomeMap(
+			this.biomes, 
+			Coords.cubeToMinBlock(cube.getX()), 
+			Coords.cubeToMinBlock(cube.getZ()), 
+			16, 16
+		);
 	}
 }
