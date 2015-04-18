@@ -90,9 +90,9 @@ public class ChunkSectionHelper {
 		for (int i=0; i<blockIdLsbs.length; i++) {
 			
 			// get the block
-			int blockId = blockIdLsbs[i];
+			int blockId = blockIdLsbs[i] & 0xFF;
 			if (blockIdMsbs != null) {
-				blockId |= (blockIdMsbs.getValue(i) << 12);
+				blockId |= (blockIdMsbs.getValue(i) << 8);
 			}
 			Block block = Block.getBlockFromIndex(blockId);
 			
