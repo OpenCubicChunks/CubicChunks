@@ -79,16 +79,8 @@ public class BiomeProcessor extends CubeProcessor {
 	private void replaceBlocks(final Cube cube) {
 		this.rand.setSeed(41 * this.seed + cube.cubeRandomSeed());
 		
-		int topOfCube = Coords.cubeToMaxBlock(cube.getY());
-		int topOfCubeAbove = Coords.cubeToMaxBlock(cube.getY() + 1);
-		int bottomOfCube = Coords.cubeToMinBlock(cube.getY());
-		
-		// already checked that cubes above and below exist
-		int alterationTop = topOfCube;
-		int top = topOfCubeAbove;
-		int bottom = bottomOfCube;
-		
-		Cube above = this.cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
+		Cube cubeAbove = this.cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
+		BiomeBlockReplacer blockReplacer = new BiomeBlockReplacer(this.rand, cube, cubeAbove);
 		
 		for (int xRel = 0; xRel < 16; xRel++) {
 			int xAbs = cube.getX() << 4 | xRel;
@@ -98,8 +90,7 @@ public class BiomeProcessor extends CubeProcessor {
 				int xzCoord = zRel << 4 | xRel;
 				
 				//TODO: Reimplement this
-				BiomeBlockReplacer blockReplacer = new BiomeBlockReplacer(this.biomes[xzCoord]);
-				blockReplacer.replaceBlocks(this.rand, cube, above, xAbs, zAbs, top, bottom, alterationTop, this.noise[zRel * 16 + xRel]);
+				blockReplacer.replaceBlocks(this.biomes[xzCoord], xAbs, zAbs, this.noise[zRel * 16 + xRel]);
 			}
 		}
 	}
