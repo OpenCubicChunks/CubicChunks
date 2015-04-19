@@ -106,4 +106,66 @@ public class ChunkSectionHelper {
 			chunkSection.setBlockStateAt(x, y, z, block.getBlockStateForMetadata(meta));
 		}
 	}
+	
+	public static byte[] getBlockIDArray(final ChunkSection storage) {
+		final char[] data = storage.getBlockDataArray();
+		byte[] out = new byte[16 * 16 * 16 * 2];
+
+		int byteIndex;
+		int charIndex;
+
+		charIndex = byteIndex = 0;
+
+		for (; charIndex < data.length;) {
+			// shift off the metadata
+			final int val = (data[charIndex] >> 4);
+			
+			out[byteIndex] = (byte)(val & 0xff);
+			out[byteIndex + 1] = (byte)(val >> 8);
+
+			charIndex += 1;
+			byteIndex += 2;
+		}
+
+		return out;
+	}
+
+	public static int[] byteArrayToIntArray(final byte[] in) {
+		int out[] = new int[16 * 16 * 16];
+
+		int byteIndex;
+		int intIndex;
+
+		intIndex = byteIndex = 0;
+
+		for (; byteIndex < in.length;) {
+			
+			final int msb = in[byteIndex] & 0xFF;
+			final int lsb = in[byteIndex + 1] << 8;
+
+			out[intIndex] = lsb | msb;
+
+			byteIndex += 2;
+			intIndex += 1;
+		}
+
+		return out;
+	}
+
+	public static void setBlockStates(final ChunkSection chunkSection, final int[] blockIDs,
+			final NibbleArray blockMetadata) {
+		for (int i = 0; i < blockIDs.length; i++) {
+			// get the block
+			final Block block = Block.getBlockFromIndex(blockIDs[i]);
+
+			// get the metadata
+			final int meta = blockMetadata.getValue(i);
+
+			// save it
+			final int x = i & 0xf;
+			final int y = (i >> 8) & 0xf;
+			final int z = (i >> 4) & 0xf;
+			chunkSection.setBlockStateAt(x, y, z, block.getBlockStateForMetadata(meta));
+		}
+	}
 }

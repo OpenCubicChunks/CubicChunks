@@ -574,27 +574,17 @@ public class Column extends Chunk {
 			if (!cube.isEmpty()) {
 				ChunkSection storage = cube.getStorage();
 				
-				// 1. block IDs, low bits
-				out.write(ChunkSectionHelper.getBlockLSBArray(storage));
+				// 1. block IDs
+				out.write(ChunkSectionHelper.getBlockIDArray(storage));
 				
-				// 2. block IDs, high bits
-				NibbleArray blockIdMsbs = ChunkSectionHelper.getBlockMSBArray(storage);
-				if (blockIdMsbs != null) {
-					out.writeByte(1);
-					out.write(blockIdMsbs.get());
-				} else {
-					// signal we're not sending this data
-					out.writeByte(0);
-				}
-				
-				// 3. metadata
+				// 2. metadata
 				out.write(ChunkSectionHelper.getBlockMetaArray(storage).get());
 				
-				// 4. block light
+				// 3. block light
 				out.write(storage.getBlockLightArray().get());
 				
 				if (hasSky) {
-					// 5. sky light
+					// 4. sky light
 					out.write(storage.getSkyLightArray().get());
 				}
 			}
@@ -672,30 +662,24 @@ public class Column extends Chunk {
 				
 				if (!isEmpty) {
 					ChunkSection storage = cube.getStorage();
+
+					// 1. block IDs
+					byte[] rawBlockIds = new byte[16*16*16*2];
+					in.read(rawBlockIds);
 					
-					// 1. block IDs, low bits
-					byte[] blockIdLsbs = new byte[16*16*16];
-					in.read(blockIdLsbs);
+					int[] blockIds = ChunkSectionHelper.byteArrayToIntArray(rawBlockIds);
 					
-					// 2. block IDs, high bits
-					NibbleArray blockIdMsbs = null;
-					boolean isHighBitsAttached = in.readByte() != 0;
-					if (isHighBitsAttached) {
-						blockIdMsbs = new NibbleArray();
-						in.read(blockIdMsbs.get());
-					}
-					
-					// 3. metadata
+					// 2. metadata
 					NibbleArray blockMetadata = new NibbleArray();
 					in.read(blockMetadata.get());
 					
-					ChunkSectionHelper.setBlockStates(storage, blockIdLsbs, blockIdMsbs, blockMetadata);
+					ChunkSectionHelper.setBlockStates(storage, blockIds, blockMetadata);
 					
-					// 4. block light
+					// 3. block light
 					in.read(storage.getBlockLightArray().get());
 					
 					if (!this.world.dimension.hasNoSky()) {
-						// 5. sky light
+						// 4. sky light
 						in.read(storage.getSkyLightArray().get());
 					}
 					
@@ -990,7 +974,7 @@ public class Column extends Chunk {
 		if (isEmpty()) {
 			return;
 		}
-		
+
 		for (Cube cube : this.cubes.values()) {
 			cube.doRandomTicks();
 		}
