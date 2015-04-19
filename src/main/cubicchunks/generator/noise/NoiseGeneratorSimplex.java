@@ -26,180 +26,159 @@ package cubicchunks.generator.noise;
 import java.util.Random;
 
 public class NoiseGeneratorSimplex {
-	
-	private static int[][] gradTable = new int[][] { { 1, 1, 0 }, { -1, 1, 0 }, { 1, -1, 0 }, { -1, -1, 0 }, { 1, 0, 1 }, { -1, 0, 1 }, { 1, 0, -1 }, { -1, 0, -1 }, { 0, 1, 1 }, { 0, -1, 1 }, { 0, 1, -1 }, { 0, -1, -1 } };
-	public static final double sqrt3 = Math.sqrt(3.0D);
+
+	private static Grad[] GRAD3 = { new Grad(1, 1, 0), new Grad(-1, 1, 0), new Grad(1, -1, 0), new Grad(-1, -1, 0),
+		new Grad(1, 0, 1), new Grad(-1, 0, 1), new Grad(1, 0, -1), new Grad(-1, 0, -1), new Grad(0, 1, 1),
+		new Grad(0, -1, 1), new Grad(0, 1, -1), new Grad(0, -1, -1) };
+	public static final double SQRT3 = Math.sqrt(3.0D);
+	private static final double F2 = 0.5D * (SQRT3 - 1.0D);
+	private static final double G2 = (3.0D - SQRT3) / 6.0D;
+
+	// Inner class to speed up gradient computations
+	// (array access is a lot slower than member access)
+	private static class Grad {
+		double x, y, z;
+
+		Grad(final double x, final double y, final double z) {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+	}
+
 	private int[] perm;
 	public double xCoord;
 	public double zCoord;
-	private static final double F3 = 0.5D * (sqrt3 - 1.0D);
-	private static final double G3 = (3.0D - sqrt3) / 6.0D;
-	
+
 	public NoiseGeneratorSimplex() {
 		this(new Random());
 	}
-	
-	public NoiseGeneratorSimplex(Random rand) {
+
+	public NoiseGeneratorSimplex(final Random rand) {
 		this.perm = new int[512];
 		this.xCoord = rand.nextDouble() * 256.0D;
 		this.zCoord = rand.nextDouble() * 256.0D;
 		int i;
-		
+
 		for (i = 0; i < 256; this.perm[i] = i++) {
 			;
 		}
-		
+
 		for (i = 0; i < 256; ++i) {
-			int var3 = rand.nextInt(256 - i) + i;
-			int var4 = this.perm[i];
-			this.perm[i] = this.perm[var3];
-			this.perm[var3] = var4;
+			int temp = rand.nextInt(256 - i) + i;
+			this.perm[i] = this.perm[temp];
+			this.perm[temp] = this.perm[i];
 			this.perm[i + 256] = this.perm[i];
 		}
 	}
-	
-	private static int fastfloor(double val) {
-		return val > 0.0D ? (int)val : (int)val - 1;
+
+	private static int fastfloor(final double x) {
+		int xi = (int) x;
+		return x < xi ? xi - 1 : xi;
 	}
-	
-	private static double func_151604_a(int[] p_151604_0_, double p_151604_1_, double p_151604_3_) {
-		return p_151604_0_[0] * p_151604_1_ + p_151604_0_[1] * p_151604_3_;
+
+	private static double dot(final Grad g, final double x, final double y) {
+		return g.x * x + g.y * y;
 	}
-	
-	public double noise2D(double p_151605_1_, double p_151605_3_) {
-		double var11 = 0.5D * (sqrt3 - 1.0D);
-		double var13 = (p_151605_1_ + p_151605_3_) * var11;
-		int var15 = fastfloor(p_151605_1_ + var13);
-		int var16 = fastfloor(p_151605_3_ + var13);
-		double var17 = (3.0D - sqrt3) / 6.0D;
-		double var19 = (var15 + var16) * var17;
-		double var21 = var15 - var19;
-		double var23 = var16 - var19;
-		double var25 = p_151605_1_ - var21;
-		double var27 = p_151605_3_ - var23;
-		byte var29;
-		byte var30;
-		
-		if (var25 > var27) {
-			var29 = 1;
-			var30 = 0;
-		} else {
-			var29 = 0;
-			var30 = 1;
-		}
-		
-		double var31 = var25 - var29 + var17;
-		double var33 = var27 - var30 + var17;
-		double var35 = var25 - 1.0D + 2.0D * var17;
-		double var37 = var27 - 1.0D + 2.0D * var17;
-		int var39 = var15 & 255;
-		int var40 = var16 & 255;
-		int var41 = this.perm[var39 + this.perm[var40]] % 12;
-		int var42 = this.perm[var39 + var29 + this.perm[var40 + var30]] % 12;
-		int var43 = this.perm[var39 + 1 + this.perm[var40 + 1]] % 12;
-		double var44 = 0.5D - var25 * var25 - var27 * var27;
-		double var5;
-		
-		if (var44 < 0.0D) {
-			var5 = 0.0D;
-		} else {
-			var44 *= var44;
-			var5 = var44 * var44 * func_151604_a(gradTable[var41], var25, var27);
-		}
-		
-		double var46 = 0.5D - var31 * var31 - var33 * var33;
-		double var7;
-		
-		if (var46 < 0.0D) {
-			var7 = 0.0D;
-		} else {
-			var46 *= var46;
-			var7 = var46 * var46 * func_151604_a(gradTable[var42], var31, var33);
-		}
-		
-		double var48 = 0.5D - var35 * var35 - var37 * var37;
-		double var9;
-		
-		if (var48 < 0.0D) {
-			var9 = 0.0D;
-		} else {
-			var48 *= var48;
-			var9 = var48 * var48 * func_151604_a(gradTable[var43], var35, var37);
-		}
-		
-		return 70.0D * (var5 + var7 + var9);
-	}
-	
-	public void arrayNoise2D(double[] noiseArray, double xOffset, double zOffset, int xSize, int zSize, double xScale, double zScale, double scale) {
-		int var14 = 0;
-		
-		for (int var15 = 0; var15 < zSize; ++var15) {
-			double var16 = (zOffset + var15) * zScale + this.zCoord;
-			
-			for (int var18 = 0; var18 < xSize; ++var18) {
-				double var19 = (xOffset + var18) * xScale + this.xCoord;
-				
-				double var27 = (var19 + var16) * F3;
-				int var29 = fastfloor(var19 + var27);
-				int var30 = fastfloor(var16 + var27);
-				double var31 = (var29 + var30) * G3;
-				double var33 = var29 - var31;
-				double var35 = var30 - var31;
-				double var37 = var19 - var33;
-				double var39 = var16 - var35;
-				byte var41;
-				byte var42;
-				
-				if (var37 > var39) {
-					var41 = 1;
-					var42 = 0;
-				} else {
-					var41 = 0;
-					var42 = 1;
-				}
-				
-				double var43 = var37 - var41 + G3;
-				double var45 = var39 - var42 + G3;
-				double var47 = var37 - 1.0D + 2.0D * G3;
-				double var49 = var39 - 1.0D + 2.0D * G3;
-				int var51 = var29 & 255;
-				int var52 = var30 & 255;
-				int var53 = this.perm[var51 + this.perm[var52]] % 12;
-				int var54 = this.perm[var51 + var41 + this.perm[var52 + var42]] % 12;
-				int var55 = this.perm[var51 + 1 + this.perm[var52 + 1]] % 12;
-				double var56 = 0.5D - var37 * var37 - var39 * var39;
-				double var21;
-				
-				if (var56 < 0.0D) {
-					var21 = 0.0D;
-				} else {
-					var56 *= var56;
-					var21 = var56 * var56 * func_151604_a(gradTable[var53], var37, var39);
-				}
-				
-				double var58 = 0.5D - var43 * var43 - var45 * var45;
-				double var23;
-				
-				if (var58 < 0.0D) {
-					var23 = 0.0D;
-				} else {
-					var58 *= var58;
-					var23 = var58 * var58 * func_151604_a(gradTable[var54], var43, var45);
-				}
-				
-				double var60 = 0.5D - var47 * var47 - var49 * var49;
-				double var25;
-				
-				if (var60 < 0.0D) {
-					var25 = 0.0D;
-				} else {
-					var60 *= var60;
-					var25 = var60 * var60 * func_151604_a(gradTable[var55], var47, var49);
-				}
-				
-				int var10001 = var14++;
-				noiseArray[var10001] += 70.0D * (var21 + var23 + var25) * scale;
+
+	public void getValueArray(final double[] noiseArray, final double xOffset, final double zOffset, final int xSize,
+			final int zSize, final double xScale, final double zScale, final double scale) {
+		int counter = 0;
+
+		for (int z = 0; z < zSize; ++z) {
+			double yIn = (zOffset + z) * zScale + this.zCoord;
+
+			for (int x = 0; x < xSize; ++x) {
+				double xIn = (xOffset + x) * xScale + this.xCoord;
+
+				noiseArray[counter++] += getValue(xIn, yIn) * scale;
 			}
 		}
+	}
+
+	public double getValue(final double xIn, final double yIn) {
+		// Skew the input space to determine the simplex cell we're in
+		double s = (xIn + yIn) * F2;
+
+		int i = fastfloor(xIn + s);
+		int j = fastfloor(yIn + s);
+
+		double t = (i + j) * G2;
+
+		// Unskew the cell origin back to (x,y) space
+		double X0 = i - t;
+		double Y0 = j - t;
+
+		// the x,y distances from the cell origin
+		double x0 = xIn - X0;
+		double y0 = yIn - Y0;
+
+		// For the 2D case, the simplex shape is an equilateral triangle.
+		// Determine which simplex we are in.
+
+		// Offsets for second (middle) corner of simplex in (i,j) coords
+		byte i1;
+		byte j1;
+
+		if (x0 > y0) { // lower triangle, XY order: (0,0)->(1,0)->(1,1)
+			i1 = 1;
+			j1 = 0;
+		} else { // upper triangle, YX order: (0,0)->(0,1)->(1,1)
+			i1 = 0;
+			j1 = 1;
+		}
+
+		// A step of (1, 0) in (i, j) means a step of (1 - c, -c) in (x, y), and
+		// a step of (0, 1) in (i, j) means a step of (-c, 1 - c) in (x, y), where
+		// c = (3 - sqrt(3)) / 6
+
+		// Offsets for middle corner in (x,y) unskewed coords
+		double x1 = x0 - i1 + G2;
+		double y1 = y0 - j1 + G2;
+
+		// Offsets for last corner in (x,y) unskewed coords
+		double x2 = x0 - 1.0D + 2.0D * G2;
+		double y2 = y0 - 1.0D + 2.0D * G2;
+
+		// Work out the hashed gradient indices of the three simplex corners
+		int ii = i & 255;
+		int jj = j & 255;
+
+		int gi0 = this.perm[ii + this.perm[jj]] % 12;
+		int gi1 = this.perm[ii + i1 + this.perm[jj + j1]] % 12;
+		int gi2 = this.perm[ii + 1 + this.perm[jj + 1]] % 12;
+
+		// Calculate the contribution from the three corners
+		double t0 = 0.5D - x0 * x0 - y0 * y0;
+		double n0;
+
+		if (t0 < 0.0D) {
+			n0 = 0.0D;
+		} else {
+			t0 *= t0;
+			n0 = t0 * t0 * dot(GRAD3[gi0], x0, y0);
+		}
+
+		double t1 = 0.5D - x1 * x1 - y1 * y1;
+		double n1;
+
+		if (t1 < 0.0D) {
+			n1 = 0.0D;
+		} else {
+			t1 *= t1;
+			n1 = t1 * t1 * dot(GRAD3[gi1], x1, y1);
+		}
+
+		double t2 = 0.5D - x2 * x2 - y2 * y2;
+		double n2;
+
+		if (t2 < 0.0D) {
+			n2 = 0.0D;
+		} else {
+			t2 *= t2;
+			n2 = t2 * t2 * dot(GRAD3[gi2], x2, y2);
+		}
+
+		return 70.0D * (n0 + n1 + n2);
 	}
 }
