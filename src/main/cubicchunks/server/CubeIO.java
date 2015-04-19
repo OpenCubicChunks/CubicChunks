@@ -47,8 +47,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ChunkSection;
-import net.minecraft.world.storage.FileIOWorker;
-import net.minecraft.world.storage.IThreadedFileIO;
 
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -59,6 +57,8 @@ import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
+import cubicchunks.util.FileIOWorker;
+import cubicchunks.util.IThreadedFileIO;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.IEntityActionListener;
 import cubicchunks.world.column.Column;
@@ -66,7 +66,7 @@ import cubicchunks.world.cube.Cube;
 
 public class CubeIO implements IThreadedFileIO {
 	
-	private static final Logger log = LoggerFactory.getLogger(CubeIO.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(CubeIO.class);
 	
 	private static class SaveEntry {
 		
@@ -79,42 +79,52 @@ public class CubeIO implements IThreadedFileIO {
 		}
 	}
 	
-	private DB m_db;
-	private ConcurrentNavigableMap<Long,byte[]> m_columns;
-	private ConcurrentNavigableMap<Long,byte[]> m_cubes;
-	private ConcurrentBatchedQueue<SaveEntry> m_columnsToSave;
-	private ConcurrentBatchedQueue<SaveEntry> m_cubesToSave;
-	
-	public CubeIO(File saveFile, Dimension dimension) {
-		
+	private static DB initializeDBConnection(final File saveFile, final Dimension dimension) {
 		// init database connection
 		File file = new File(saveFile, String.format("cubes.dim%d.db", dimension.getId()));
 		
 		file.getParentFile().mkdirs();
-		m_db = DBMaker.newFileDB(file).closeOnJvmShutdown()
+		
+		DB db = DBMaker.newFileDB(file).closeOnJvmShutdown()
 		// .compressionEnable()
 			.make();
 		
+		return db;
 		// NOTE: could set different cache settings
 		// the default is a hash map cache with 32768 entries
 		// see: http://www.mapdb.org/features.html
+	}
+	
+	private World world;
+	
+	private DB db;
+	private ConcurrentNavigableMap<Long,byte[]> columns;
+	private ConcurrentNavigableMap<Long,byte[]> cubes;
+	private ConcurrentBatchedQueue<SaveEntry> columnsToSave;
+	private ConcurrentBatchedQueue<SaveEntry> cubesToSave;
+	
+	public CubeIO(World world) {
 		
-		m_columns = m_db.getTreeMap("columns");
-		m_cubes = m_db.getTreeMap("chunks");
+		this.world = world;
+		
+		this.db = initializeDBConnection(this.world.getSaveHandler().getSaveFile(), this.world.dimension);
+		
+		this.columns = this.db.getTreeMap("columns");
+		this.cubes = this.db.getTreeMap("chunks");
 		
 		// init chunk save queue
-		m_columnsToSave = new ConcurrentBatchedQueue<SaveEntry>();
-		m_cubesToSave = new ConcurrentBatchedQueue<SaveEntry>();
+		this.columnsToSave = new ConcurrentBatchedQueue<SaveEntry>();
+		this.cubesToSave = new ConcurrentBatchedQueue<SaveEntry>();
 	}
 	
 	public boolean columnExists(long address) {
-		return m_columns.containsKey(address);
+		return this.columns.containsKey(address);
 	}
 	
-	public Column loadColumn(World world, int cubeX, int cubeZ) throws IOException {
+	public Column loadColumn(int chunkX, int chunkZ) throws IOException {
 		// does the database have the column?
-		long address = AddressTools.getAddress(cubeX, cubeZ);
-		byte[] data = m_columns.get(address);
+		long address = AddressTools.getAddress(chunkX, chunkZ);
+		byte[] data = this.columns.get(address);
 		if (data == null) {
 			// returning null tells the world to generate a new column
 			return null;
@@ -126,16 +136,16 @@ public class CubeIO implements IThreadedFileIO {
 		in.close();
 		
 		// restore the column
-		return readColumnFromNBT(world, cubeX, cubeZ, nbt);
+		return readColumnFromNBT(chunkX, chunkZ, nbt);
 	}
 	
 	public boolean cubeExists(long address) {
-		return m_cubes.containsKey(address);
+		return this.cubes.containsKey(address);
 	}
 	
-	public Cube loadCubeAndAddToColumn(World world, Column column, long address) throws IOException {
+	public Cube loadCubeAndAddToColumn(Column column, long address) throws IOException {
 		// does the database have the cube?
-		byte[] data = m_cubes.get(address);
+		byte[] data = this.cubes.get(address);
 		if (data == null) {
 			return null;
 		}
@@ -146,10 +156,10 @@ public class CubeIO implements IThreadedFileIO {
 		in.close();
 		
 		// restore the cube
-		int x = AddressTools.getX(address);
-		int y = AddressTools.getY(address);
-		int z = AddressTools.getZ(address);
-		return readCubeFromNbtAndAddToColumn(world, column, x, y, z, nbt);
+		int cubeX = AddressTools.getX(address);
+		int cubeY = AddressTools.getY(address);
+		int cubeZ = AddressTools.getZ(address);
+		return readCubeFromNbtAndAddToColumn(column, cubeX, cubeY, cubeZ, nbt);
 	}
 	
 	public void saveColumn(Column column) {
@@ -159,7 +169,7 @@ public class CubeIO implements IThreadedFileIO {
 		// with concurrent access to world data structures
 		
 		// add the column to the save queue
-		m_columnsToSave.add(new SaveEntry(column.getAddress(), writeColumnToNbt(column)));
+		this.columnsToSave.add(new SaveEntry(column.getAddress(), IONbtWriter.writeColumnToNbt(column)));
 		column.markSaved();
 		
 		// signal the IO thread to process the save queue
@@ -169,7 +179,7 @@ public class CubeIO implements IThreadedFileIO {
 	public void saveCube(Cube cube) {
 		// NOTE: this function blocks the world thread, so make it fast
 		
-		m_cubesToSave.add(new SaveEntry(cube.getAddress(), writeCubeToNbt(cube)));
+		this.cubesToSave.add(new SaveEntry(cube.getAddress(), writeCubeToNbt(cube)));
 		cube.markSaved();
 		
 		// signal the IO thread to process the save queue
@@ -177,7 +187,7 @@ public class CubeIO implements IThreadedFileIO {
 	}
 	
 	@Override
-	public boolean tryWrite() {
+	public boolean write() {
 		
 		// NOTE: return true to redo this call (used for batching)
 		
@@ -195,17 +205,17 @@ public class CubeIO implements IThreadedFileIO {
 		List<SaveEntry> entries = new ArrayList<SaveEntry>(Math.max(ColumnsBatchSize, CubesBatchSize));
 		
 		// save a batch of columns
-		boolean hasMoreColumns = m_columnsToSave.getBatch(entries, ColumnsBatchSize);
+		boolean hasMoreColumns = this.columnsToSave.getBatch(entries, ColumnsBatchSize);
 		for (SaveEntry entry : entries) {
 			try {
 				// save the column
-				byte[] data = writeNbtBytes(entry.nbt);
-				m_columns.put(entry.address, data);
+				byte[] data = IONbtWriter.writeNbtBytes(entry.nbt);
+				this.columns.put(entry.address, data);
 				
 				numColumnsSaved++;
 				numColumnBytesSaved += data.length;
 			} catch (Throwable t) {
-				log.error("Unable to write column {},{}",
+				LOGGER.error("Unable to write column {},{}",
 					AddressTools.getX(entry.address),
 					AddressTools.getZ(entry.address),
 					t
@@ -215,17 +225,17 @@ public class CubeIO implements IThreadedFileIO {
 		entries.clear();
 		
 		// save a batch of cubes
-		boolean hasMoreCubes = m_cubesToSave.getBatch(entries, CubesBatchSize);
+		boolean hasMoreCubes = this.cubesToSave.getBatch(entries, CubesBatchSize);
 		for (SaveEntry entry : entries) {
 			try {
 				// save the cube
-				byte[] data = writeNbtBytes(entry.nbt);
-				m_cubes.put(entry.address, data);
+				byte[] data = IONbtWriter.writeNbtBytes(entry.nbt);
+				this.cubes.put(entry.address, data);
 				
 				numCubesSaved++;
 				numCubeBytesSaved += data.length;
 			} catch (Throwable t) {
-				log.error("Unable to write cube {},{},{}",
+				LOGGER.error("Unable to write cube {},{},{}",
 					AddressTools.getX(entry.address),
 					AddressTools.getY(entry.address),
 					AddressTools.getZ(entry.address),
@@ -235,14 +245,14 @@ public class CubeIO implements IThreadedFileIO {
 		}
 		entries.clear();
 		
-		numColumnsRemaining = m_columnsToSave.size();
-		numCubesRemaining = m_cubesToSave.size();
+		numColumnsRemaining = this.columnsToSave.size();
+		numCubesRemaining = this.cubesToSave.size();
 		
 		// flush changes to disk
-		m_db.commit();
+		this.db.commit();
 		
 		long diff = System.currentTimeMillis() - start;
-		log.info("Wrote {} columns ({} remaining) ({}k) and {} cubes ({} remaining) ({}k) in {} ms",
+		LOGGER.info("Wrote {} columns ({} remaining) ({}k) and {} cubes ({} remaining) ({}k) in {} ms",
 			numColumnsSaved, numColumnsRemaining, numColumnBytesSaved / 1024,
 			numCubesSaved, numCubesRemaining, numCubeBytesSaved / 1024, diff
 		);
@@ -250,44 +260,12 @@ public class CubeIO implements IThreadedFileIO {
 		return hasMoreColumns || hasMoreCubes;
 	}
 	
-	private byte[] writeNbtBytes(NbtTagCompound nbt) throws IOException {
-		ByteArrayOutputStream buf = new ByteArrayOutputStream();
-		DataOutputStream out = new DataOutputStream(buf);
-		CompressedStreamTools.writeNbtMapToOutputStream(nbt, out);
-		out.close();
-		return buf.toByteArray();
-	}
-	
-	private NbtTagCompound writeColumnToNbt(Column column) {
-		NbtTagCompound nbt = new NbtTagCompound();
-		
-		// coords
-		nbt.put("x", column.chunkX);
-		nbt.put("z", column.chunkZ);
-		
-		// column properties
-		nbt.put("v", (byte)1);
-		nbt.setBoolean("TerrainPopulated", column.isTerrainPopulated());
-		nbt.put("InhabitedTime", column.getInhabitedTime());
-		
-		// biome mappings
-		nbt.put("Biomes", column.getBiomeMap());
-		
-		// light index
-		nbt.put("LightIndex", column.getLightIndex().getData());
-		
-		// entities
-		column.getEntityContainer().writeToNbt(nbt, "Entities");
-		
-		return nbt;
-	}
-	
-	private Column readColumnFromNBT(World world, final int x, final int z, NbtTagCompound nbt) {
+	private Column readColumnFromNBT(final int x, final int z, NbtTagCompound nbt) {
 		
 		// check the version number
 		byte version = nbt.getAsByte("v");
 		if (version != 1) {
-			log.warn(String.format("Column has wrong version: %d. Column will be regenerated.", version));
+			LOGGER.warn(String.format("Column has wrong version: %d. Column will be regenerated.", version));
 			return null;
 		}
 		
@@ -295,12 +273,12 @@ public class CubeIO implements IThreadedFileIO {
 		int xCheck = nbt.getAsInt("x");
 		int zCheck = nbt.getAsInt("z");
 		if (xCheck != x || zCheck != z) {
-			log.warn(String.format("Column is corrupted! Expected (%d,%d) but got (%d,%d). Column will be regenerated.", x, z, xCheck, zCheck));
+			LOGGER.warn(String.format("Column is corrupted! Expected (%d,%d) but got (%d,%d). Column will be regenerated.", x, z, xCheck, zCheck));
 			return null;
 		}
 		
 		// create the column
-		Column column = new Column(world, x, z);
+		Column column = new Column(this.world, x, z);
 		
 		// read the rest of the column properties
 		column.setTerrainPopulated(nbt.getAsBoolean("TerrainPopulated"));
@@ -313,7 +291,7 @@ public class CubeIO implements IThreadedFileIO {
 		column.getLightIndex().readData(nbt.getAsByteArray("LightIndex"));
 		
 		// entities
-		column.getEntityContainer().readFromNbt(nbt, "Entities", world, new IEntityActionListener() {
+		column.getEntityContainer().readFromNbt(nbt, "Entities", this.world, new IEntityActionListener() {
 			
 			@Override
 			public void onEntity(Entity entity) {
@@ -327,7 +305,148 @@ public class CubeIO implements IThreadedFileIO {
 		return column;
 	}
 	
-	private NbtTagCompound writeCubeToNbt(final Cube cube) {
+	private Cube readCubeFromNbtAndAddToColumn(Column column, final int cubeX, final int cubeY, final int cubeZ, NbtTagCompound nbt) {
+		// NBT types:
+		// 0 1 2 3 4 5 6 7 8 9 10 11
+		// "END", "BYTE", "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "BYTE[]", "STRING", "LIST", "COMPOUND", "INT[]"
+		
+		// check the version number
+		byte version = nbt.getAsByte("v");
+		if (version != 1) {
+			throw new IllegalArgumentException("Cube has wrong version! " + version);
+		}
+		
+		// check the coordinates
+		int xCheck = nbt.getAsInt("x");
+		int yCheck = nbt.getAsInt("y");
+		int zCheck = nbt.getAsInt("z");
+		if (xCheck != cubeX || yCheck != cubeY || zCheck != cubeZ) {
+			throw new Error(String.format("Cube is corrupted! Expected (%d,%d,%d) but got (%d,%d,%d)", cubeX, cubeY, cubeZ, xCheck, yCheck, zCheck));
+		}
+		
+		// check against column
+		if (cubeX != column.chunkX || cubeZ != column.chunkZ) {
+			throw new Error(String.format("Cube is corrupted! Cube (%d,%d,%d) does not match column (%d,%d)", cubeX, cubeY, cubeZ, column.chunkX, column.chunkZ));
+		}
+		
+		// build the cube
+		boolean hasSky = !this.world.dimension.hasNoSky();
+		final Cube cube = column.getOrCreateCube(cubeY, false);
+		
+		// get the generator stage
+		cube.setGeneratorStage(GeneratorStage.values()[nbt.getAsByte("GeneratorStage")]);
+		
+		// is this an empty cube?
+		boolean isEmpty = !nbt.containsKey("Blocks");
+		cube.setEmpty(isEmpty);
+		if (!isEmpty) {
+			ChunkSection storage = cube.getStorage();
+			
+			// block ids and metadata (ie block states)
+			byte[] blockIdLsbs = nbt.getAsByteArray("Blocks");
+			NibbleArray blockIdMsbs = null;
+			if (nbt.containsKey("Add")) {
+				blockIdMsbs = new NibbleArray(nbt.getAsByteArray("Add"));
+			}
+			NibbleArray blockMetadata = new NibbleArray(nbt.getAsByteArray("Data"));
+			ChunkSectionHelper.setBlockStates(storage, blockIdLsbs, blockIdMsbs, blockMetadata);
+			
+			// lights
+			storage.setBlockLightArray(new NibbleArray(nbt.getAsByteArray("BlockLight")));
+			if (hasSky) {
+				storage.setSkyLightArray(new NibbleArray(nbt.getAsByteArray("SkyLight")));
+			}
+			storage.countBlocksInSection();
+		}
+		
+		// entities
+		cube.getEntityContainer().readFromNbt(nbt, "Entities", this.world, new IEntityActionListener() {
+			
+			@Override
+			public void onEntity(Entity entity) {
+				// make sure this entity is really in the chunk
+				int entityCubeX = Coords.getCubeXForEntity(entity);
+				int entityCubeY = Coords.getCubeYForEntity(entity);
+				int entityCubeZ = Coords.getCubeZForEntity(entity);
+				if (entityCubeX != cube.getX() || entityCubeY != cube.getY() || entityCubeZ != cube.getZ()) {
+					LOGGER.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass().getName(), entityCubeX, entityCubeY, entityCubeZ, cube.getX(), cube.getY(), cube.getZ()));
+				}
+				
+				entity.addedToChunk = true;
+				entity.chunkX = cubeX;
+				entity.chunkY = cubeY;
+				entity.chunkZ = cubeZ;
+			}
+		});
+		
+		// tile entities
+		NbtList nbtTileEntities = nbt.getAsNbtList("TileEntities", 10);
+		if (nbtTileEntities != null) {
+			for (int i = 0; i < nbtTileEntities.getSize(); i++) {
+				NbtTagCompound nbtTileEntity = nbtTileEntities.getAsNbtMap(i);
+				BlockEntity blockEntity = BlockEntity.createAndLoadEntity(nbtTileEntity);
+				if (blockEntity != null) {
+					column.setBlockEntity(blockEntity);
+				}
+			}
+		}
+		
+		// scheduled block ticks
+		NbtList nbtScheduledTicks = nbt.getAsNbtList("TileTicks", 10);
+		if (nbtScheduledTicks != null) {
+			for (int i = 0; i < nbtScheduledTicks.getSize(); i++) {
+				NbtTagCompound nbtScheduledTick = nbtScheduledTicks.getAsNbtMap(i);
+				this.world.scheduleBlockTickForced(
+					new BlockPos(
+						nbtScheduledTick.getAsInt("x"),
+						nbtScheduledTick.getAsInt("y"),
+						nbtScheduledTick.getAsInt("z")
+					),
+					Block.getBlockFromIndex(nbtScheduledTick.getAsInt("i")),
+					nbtScheduledTick.getAsInt("t"),
+					nbtScheduledTick.getAsInt("p")
+				);
+			}
+		}
+		
+		return cube;
+	}
+	
+	private static class IONbtWriter {
+		private static byte[] writeNbtBytes(NbtTagCompound nbt) throws IOException {
+			ByteArrayOutputStream buf = new ByteArrayOutputStream();
+			DataOutputStream out = new DataOutputStream(buf);
+			CompressedStreamTools.writeNbtMapToOutputStream(nbt, out);
+			out.close();
+			return buf.toByteArray();
+		}
+		
+		private static NbtTagCompound writeColumnToNbt(Column column) {
+			NbtTagCompound nbt = new NbtTagCompound();
+			
+			// coords
+			nbt.put("x", column.chunkX);
+			nbt.put("z", column.chunkZ);
+			
+			// column properties
+			nbt.put("v", (byte)1);
+			nbt.setBoolean("TerrainPopulated", column.isTerrainPopulated());
+			nbt.put("InhabitedTime", column.getInhabitedTime());
+			
+			// biome mappings
+			nbt.put("Biomes", column.getBiomeMap());
+			
+			// light index
+			nbt.put("LightIndex", column.getLightIndex().getData());
+			
+			// entities
+			column.getEntityContainer().writeToNbt(nbt, "Entities");
+			
+			return nbt;
+		}
+	}
+	
+	private static NbtTagCompound writeCubeToNbt(final Cube cube) {
 		
 		NbtTagCompound nbt = new NbtTagCompound();
 		nbt.put("v", (byte)1);
@@ -369,7 +488,7 @@ public class CubeIO implements IThreadedFileIO {
 				int cubeY = Coords.getCubeYForEntity(entity);
 				int cubeZ = Coords.getCubeZForEntity(entity);
 				if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
-					log.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
+					LOGGER.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
 						entity.getClass().getName(),
 						cubeX, cubeY, cubeZ,
 						cube.getX(), cube.getY(), cube.getZ(),
@@ -410,114 +529,7 @@ public class CubeIO implements IThreadedFileIO {
 		return nbt;
 	}
 	
-	private Cube readCubeFromNbtAndAddToColumn(World world, Column column, final int x, final int y, final int z, NbtTagCompound nbt) {
-		// NBT types:
-		// 0 1 2 3 4 5 6 7 8 9 10 11
-		// "END", "BYTE", "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "BYTE[]", "STRING", "LIST", "COMPOUND", "INT[]"
-		
-		// check the version number
-		byte version = nbt.getAsByte("v");
-		if (version != 1) {
-			throw new IllegalArgumentException("Cube has wrong version! " + version);
-		}
-		
-		// check the coordinates
-		int xCheck = nbt.getAsInt("x");
-		int yCheck = nbt.getAsInt("y");
-		int zCheck = nbt.getAsInt("z");
-		if (xCheck != x || yCheck != y || zCheck != z) {
-			throw new Error(String.format("Cube is corrupted! Expected (%d,%d,%d) but got (%d,%d,%d)", x, y, z, xCheck, yCheck, zCheck));
-		}
-		
-		// check against column
-		if (x != column.chunkX || z != column.chunkZ) {
-			throw new Error(String.format("Cube is corrupted! Cube (%d,%d,%d) does not match column (%d,%d)", x, y, z, column.chunkX, column.chunkZ));
-		}
-		
-		// build the cube
-		boolean hasSky = !world.dimension.hasNoSky();
-		final Cube cube = column.getOrCreateCube(y, false);
-		
-		// get the generator stage
-		cube.setGeneratorStage(GeneratorStage.values()[nbt.getAsByte("GeneratorStage")]);
-		
-		// is this an empty cube?
-		boolean isEmpty = !nbt.containsKey("Blocks");
-		cube.setEmpty(isEmpty);
-		if (!isEmpty) {
-			ChunkSection storage = cube.getStorage();
-			
-			// block ids and metadata (ie block states)
-			byte[] blockIdLsbs = nbt.getAsByteArray("Blocks");
-			NibbleArray blockIdMsbs = null;
-			if (nbt.containsKey("Add")) {
-				blockIdMsbs = new NibbleArray(nbt.getAsByteArray("Add"));
-			}
-			NibbleArray blockMetadata = new NibbleArray(nbt.getAsByteArray("Data"));
-			ChunkSectionHelper.setBlockStates(storage, blockIdLsbs, blockIdMsbs, blockMetadata);
-			
-			// lights
-			storage.setBlockLightArray(new NibbleArray(nbt.getAsByteArray("BlockLight")));
-			if (hasSky) {
-				storage.setSkyLightArray(new NibbleArray(nbt.getAsByteArray("SkyLight")));
-			}
-			storage.countBlocksInSection();
-		}
-		
-		// entities
-		cube.getEntityContainer().readFromNbt(nbt, "Entities", world, new IEntityActionListener() {
-			
-			@Override
-			public void onEntity(Entity entity) {
-				// make sure this entity is really in the chunk
-				int cubeX = Coords.getCubeXForEntity(entity);
-				int cubeY = Coords.getCubeYForEntity(entity);
-				int cubeZ = Coords.getCubeZForEntity(entity);
-				if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
-					log.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass().getName(), cubeX, cubeY, cubeZ, cube.getX(), cube.getY(), cube.getZ()));
-				}
-				
-				entity.addedToChunk = true;
-				entity.chunkX = x;
-				entity.chunkY = y;
-				entity.chunkZ = z;
-			}
-		});
-		
-		// tile entities
-		NbtList nbtTileEntities = nbt.getAsNbtList("TileEntities", 10);
-		if (nbtTileEntities != null) {
-			for (int i = 0; i < nbtTileEntities.getSize(); i++) {
-				NbtTagCompound nbtTileEntity = nbtTileEntities.getAsNbtMap(i);
-				BlockEntity blockEntity = BlockEntity.createAndLoadEntity(nbtTileEntity);
-				if (blockEntity != null) {
-					column.setBlockEntity(blockEntity);
-				}
-			}
-		}
-		
-		// scheduled block ticks
-		NbtList nbtScheduledTicks = nbt.getAsNbtList("TileTicks", 10);
-		if (nbtScheduledTicks != null) {
-			for (int i = 0; i < nbtScheduledTicks.getSize(); i++) {
-				NbtTagCompound nbtScheduledTick = nbtScheduledTicks.getAsNbtMap(i);
-				world.scheduleBlockTickForced(
-					new BlockPos(
-						nbtScheduledTick.getAsInt("x"),
-						nbtScheduledTick.getAsInt("y"),
-						nbtScheduledTick.getAsInt("z")
-					),
-					Block.getBlockFromIndex(nbtScheduledTick.getAsInt("i")),
-					nbtScheduledTick.getAsInt("t"),
-					nbtScheduledTick.getAsInt("p")
-				);
-			}
-		}
-		
-		return cube;
-	}
-	
-	private List<ScheduledBlockTick> getScheduledTicks(Cube cube) {
+	private static List<ScheduledBlockTick> getScheduledTicks(Cube cube) {
 		ArrayList<ScheduledBlockTick> out = new ArrayList<ScheduledBlockTick>();
 		
 		// make sure this is a server
@@ -533,7 +545,7 @@ public class CubeIO implements IThreadedFileIO {
 		return out;
 	}
 	
-	private void copyScheduledTicks(ArrayList<ScheduledBlockTick> out, Collection<ScheduledBlockTick> scheduledTicks, Cube cube) {
+	private static void copyScheduledTicks(ArrayList<ScheduledBlockTick> out, Collection<ScheduledBlockTick> scheduledTicks, Cube cube) {
 		for (ScheduledBlockTick scheduledTick : scheduledTicks) {
 			if (cube.containsBlockPos(scheduledTick.blockPos)) {
 				out.add(scheduledTick);
