@@ -33,7 +33,7 @@ public class EllipsoidalCubeSelector extends CubeSelector {
 	private static final int SemiAxisY2 = SemiAxisY * SemiAxisY;
 	
 	@Override
-	protected void computeVisible(Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance) {
+	protected void computeVisibleCubes(Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance) {
 		// equation for an axis-aligned ellipsoid:
 		// x^2/a^2 + y^2/b^2 + z^2/c^2 = 1
 		// where a,b,c are the semi-principal axes
