@@ -99,7 +99,8 @@ dependencies
 	
 	minecraft files('../m3l/lib/minecraft-1.8.3-client-deobf.jar')
 	
-	provided 'cuchaz:m3l:1.8.3-0.1b'
+	provided 'cuchaz:m3l:1.8.3-0.2b'
+	provided 'cuchaz:m3l-forge-api:1.8.3-0.2b-1334'
 	provided 'org.slf4j:slf4j-api:1.7.10'
 	provided 'ch.qos.logback:logback-classic:1.1.2'
 	provided 'net.minecraft:launchwrapper:1.8'
