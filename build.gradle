@@ -27,7 +27,7 @@ defaultTasks 'licenseFormat', 'build'
 // Basic project information
 group = "tallworlds"
 archivesBaseName = "TallWorlds"
-version = "1.8.3-0.1"
+version = "1.8.3-0.2"
 
 // Extended project information
 ext.projectName = 'Tall Worlds'
@@ -104,6 +104,7 @@ dependencies
 	provided 'org.slf4j:slf4j-api:1.7.10'
 	provided 'ch.qos.logback:logback-classic:1.1.2'
 	provided 'net.minecraft:launchwrapper:1.8'
+	provided 'io.netty:netty-all:4.0.27.Final'
 	
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
 	compile 'org.mapdb:mapdb:1.0.7'
