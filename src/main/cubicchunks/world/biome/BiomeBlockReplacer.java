@@ -91,10 +91,16 @@ public class BiomeBlockReplacer {
 		for (int yAbs = this.top; yAbs >= this.bottom; --yAbs) {
 			pos.setBlockPos(xAbs, yAbs, zAbs);
 			
+			boolean canSetBlock = yAbs <= this.alterationTop;
+			
 			if (yAbs <= AddressTools.MinY + 16 + this.rand.nextInt(16)) {
-				setBlock(this.cube, pos, Blocks.BEDROCK.getDefaultState());
+				if (canSetBlock) {
+					setBlock(this.cube, pos, Blocks.BEDROCK.getDefaultState());
+				}
 			} else if (yAbs < -32768 + this.rand.nextInt(256)) {
-				setBlock(this.cube, pos, Blocks.LAVA.getDefaultState());
+				if (canSetBlock) {
+					setBlock(this.cube, pos, Blocks.LAVA.getDefaultState());
+				}
 			} else {
 				// Current block
 				final Block block = getBlock(this.cube, this.cubeAbove, pos);
@@ -109,8 +115,6 @@ public class BiomeBlockReplacer {
 				if (block != Blocks.STONE && block != this.surfaceBlock && block != this.groundBlock && block != Blocks.SANDSTONE) {
 					continue;
 				}
-	
-				boolean canSetBlock = yAbs <= this.alterationTop;
 	
 				// If we are 1 block below air...
 				if (blocksToChange == -1) {
