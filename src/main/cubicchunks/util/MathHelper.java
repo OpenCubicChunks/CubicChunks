@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -21,8 +21,11 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.noise;
+package cubicchunks.util;
 
-public abstract class NoiseGenerator {
-	
+public class MathHelper {
+
+	public static double lerp(final double a, final double min, final double max) {
+		return min + a * (max - min);
+	}
 }

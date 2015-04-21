@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -81,6 +81,7 @@ public class LightingManager {
 		numProcessed += this.skyLightOcclusionProcessor.processQueue(timeStop);
 		numProcessed += this.firstLightProcessor.processQueue(timeStop);
 		
+		/* disable this spam for now
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
@@ -88,5 +89,6 @@ public class LightingManager {
 			log.info(this.skyLightOcclusionProcessor.getProcessingReport());
 			log.info(this.firstLightProcessor.getProcessingReport());
 		}
+		*/
 	}
 }

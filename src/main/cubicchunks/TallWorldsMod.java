@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -23,6 +23,8 @@
  */
 package cubicchunks;
 
+import net.minecraft.network.ConnectionState;
+import net.minecraft.network.PacketDirection;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 
@@ -30,6 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cubicchunks.client.ClientCubeCache;
+import cubicchunks.network.PacketBulkCubeData;
+import cubicchunks.network.PacketCubeBlockChange;
+import cubicchunks.network.PacketCubeChange;
+import cubicchunks.network.PacketUnloadCubes;
 import cubicchunks.server.CubeIO;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
@@ -77,5 +83,17 @@ public class TallWorldsMod {
 		} catch (AlreadyRegisteredException ex) {
 			log.error("Cannot register cubic chunk system. Someone else beat us to it. =(", ex);
 		}
+		
+		// register our packets
+		// I'm not even sure this is used in standalone mode...
+		// TODO: get a real M3L networking system
+		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketBulkCubeData.class);
+		ConnectionState.directionMaps.put(PacketBulkCubeData.class, ConnectionState.PLAY);
+		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketUnloadCubes.class);
+		ConnectionState.directionMaps.put(PacketUnloadCubes.class, ConnectionState.PLAY);
+		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketCubeBlockChange.class);
+		ConnectionState.directionMaps.put(PacketCubeBlockChange.class, ConnectionState.PLAY);
+		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketCubeChange.class);
+		ConnectionState.directionMaps.put(PacketCubeChange.class, ConnectionState.PLAY);
 	}
 }

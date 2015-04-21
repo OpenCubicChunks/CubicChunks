@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -33,56 +33,100 @@ import cubicchunks.util.AddressTools;
 
 public abstract class CubeSelector {
 	
-	private TreeSet<Long> m_visible;
-	private TreeSet<Long> m_newlyVisible;
-	private TreeSet<Long> m_newlyHidden;
-	private TreeSet<Long> m_nextVisible;
+	private TreeSet<Long> m_visibleCubes;
+	private TreeSet<Long> m_newlyVisibleCubes;
+	private TreeSet<Long> m_newlyHiddenCubes;
+	private TreeSet<Long> m_nextVisibleCubes;
+	
+	private TreeSet<Long> m_visibleColumns;
+	private TreeSet<Long> m_newlyVisibleColumns;
+	private TreeSet<Long> m_newlyHiddenColumns;
+	private TreeSet<Long> m_nextVisibleColumns;
 	
 	public CubeSelector() {
-		m_visible = Sets.newTreeSet();
-		m_newlyVisible = Sets.newTreeSet();
-		m_newlyHidden = Sets.newTreeSet();
-		m_nextVisible = Sets.newTreeSet();
+		m_visibleCubes = Sets.newTreeSet();
+		m_newlyVisibleCubes = Sets.newTreeSet();
+		m_newlyHiddenCubes = Sets.newTreeSet();
+		m_nextVisibleCubes = Sets.newTreeSet();
+		
+		m_visibleColumns = Sets.newTreeSet();
+		m_newlyVisibleColumns = Sets.newTreeSet();
+		m_newlyHiddenColumns = Sets.newTreeSet();
+		m_nextVisibleColumns = Sets.newTreeSet();
 	}
 	
 	public void setPlayerPosition(long address, int viewDistance) {
+		
 		int cubeX = AddressTools.getX(address);
 		int cubeY = AddressTools.getY(address);
 		int cubeZ = AddressTools.getZ(address);
 		
 		// compute the cube visibility
-		m_nextVisible.clear();
-		computeVisible(m_nextVisible, cubeX, cubeY, cubeZ, viewDistance);
+		m_nextVisibleCubes.clear();
+		computeVisibleCubes(m_nextVisibleCubes, cubeX, cubeY, cubeZ, viewDistance);
 		
-		m_newlyVisible.clear();
-		m_newlyVisible.addAll(m_nextVisible);
-		m_newlyVisible.removeAll(m_visible);
+		m_newlyVisibleCubes.clear();
+		m_newlyVisibleCubes.addAll(m_nextVisibleCubes);
+		m_newlyVisibleCubes.removeAll(m_visibleCubes);
 		
-		m_newlyHidden.clear();
-		m_newlyHidden.addAll(m_visible);
-		m_newlyHidden.removeAll(m_nextVisible);
+		m_newlyHiddenCubes.clear();
+		m_newlyHiddenCubes.addAll(m_visibleCubes);
+		m_newlyHiddenCubes.removeAll(m_nextVisibleCubes);
+		
+		// compute the column visibility
+		m_nextVisibleColumns.clear();
+		for (long cubeAddress : m_nextVisibleCubes) {
+			m_nextVisibleColumns.add(AddressTools.cubeToColumn(cubeAddress));
+		}
+		
+		m_newlyVisibleColumns.clear();
+		m_newlyVisibleColumns.addAll(m_nextVisibleColumns);
+		m_newlyVisibleColumns.removeAll(m_visibleColumns);
+		
+		m_newlyHiddenColumns.clear();
+		m_newlyHiddenColumns.addAll(m_visibleColumns);
+		m_newlyHiddenColumns.removeAll(m_nextVisibleColumns);
 		
 		// swap the buffers
-		TreeSet<Long> swap = m_visible;
-		m_visible = m_nextVisible;
-		m_nextVisible = swap;
+		TreeSet<Long> swap = m_visibleCubes;
+		m_visibleCubes = m_nextVisibleCubes;
+		m_nextVisibleCubes = swap;
+		swap = m_visibleColumns;
+		m_visibleColumns = m_nextVisibleColumns;
+		m_nextVisibleColumns = swap;
 	}
 	
 	public Set<Long> getVisibleCubes() {
-		return m_visible;
+		return m_visibleCubes;
 	}
 	
 	public Set<Long> getNewlyVisibleCubes() {
-		return m_newlyVisible;
+		return m_newlyVisibleCubes;
 	}
 	
 	public Set<Long> getNewlyHiddenCubes() {
-		return m_newlyHidden;
+		return m_newlyHiddenCubes;
 	}
 	
-	public boolean isVisible(long address) {
-		return m_visible.contains(address);
+	public boolean isCubeVisible(long address) {
+		return m_visibleCubes.contains(address);
 	}
 	
-	protected abstract void computeVisible(Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance);
+	protected abstract void computeVisibleCubes(Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance);
+	
+	public Set<Long> getVisibleColumns() {
+		return m_visibleColumns;
+	}
+	
+	public Set<Long> getNewlyVisibleColumns() {
+		return m_newlyVisibleColumns;
+	}
+	
+	public Set<Long> getNewlyHiddenColumns() {
+		return m_newlyHiddenColumns;
+	}
+	
+	public boolean isColumnVisible(long address) {
+		return m_visibleColumns.contains(address);
+	}
 }

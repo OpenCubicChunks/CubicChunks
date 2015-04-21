@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -23,6 +23,7 @@
  */
 package cubicchunks.client;
 
+import cubicchunks.world.cube.BlankCube;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -35,65 +36,73 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
 public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
-	
+
 	private World world;
 	private BlankColumn blankColumn;
-	
+	private Cube blankCube;
+
 	public ClientCubeCache(World world) {
 		super(world);
-		
+
 		this.world = world;
 		this.blankColumn = new BlankColumn(world, 0, 0);
+		this.blankCube = new BlankCube(world, blankColumn);
 	}
-	
+
 	@Override
 	public Column loadChunk(int cubeX, int cubeZ) {
-		
+
 		// is this chunk already loaded?
 		Column column = (Column)this.cacheMap.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}
-		
+
 		// make a new one
 		column = new Column(this.world, cubeX, cubeZ);
-		
+
 		this.cacheMap.add(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ), column);
 		this.cachedChunks.add(column);
-		
+
 		column.setChunkLoaded(true);
 		return column;
 	}
-	
+
 	@Override
 	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
 		
 		// is this column loaded?
 		Column column = (Column)this.cacheMap.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
 		if (column == null) {
+			//TallWorldsMod.log.warn("Unloading cube from non-existing column: ({}, {}, {})", cubeX, cubeY, cubeZ);
 			return;
 		}
 		
 		// is this cube loaded?
 		if (column.getCube(cubeY) == null) {
+			//TallWorldsMod.log.warn("Unloading non-existing cube: ({}, {}, {})", cubeX, cubeY, cubeZ);
+			this.unloadColumnIfEmpty(column);
 			return;
 		}
 		
 		// unload the cube
 		column.removeCube(cubeY);
-		
+		this.unloadColumnIfEmpty(column);
+	}
+	
+	private void unloadColumnIfEmpty(Column column){
 		// is the column empty?
 		if (!column.hasCubes()) {
-			this.cacheMap.remove(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+			this.cacheMap.remove(ChunkCoordIntPair.chunkXZ2Int(column.chunkX, column.chunkZ));
 			this.cachedChunks.remove(column);
 		}
 	}
-	
+
 	@Override
 	public Column getColumn(int columnX, int columnZ) {
 		return getChunk(columnX, columnZ);
 	}
-	
+
 	@Override
 	public Column getChunk(int cubeX, int cubeZ) {
 		
@@ -102,26 +111,29 @@ public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 		if (column != null) {
 			return column;
 		}
-		
+
 		return this.blankColumn;
 	}
-	
+
 	@Override
 	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
 		// cubes always exist on the client
 		return true;
 	}
-	
+
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
-		Cube cube = loadChunk(cubeX, cubeZ).getOrCreateCube(cubeY, false);
-		
+		Cube cube = getColumn(cubeX, cubeZ).getCube(cubeY);
+		if(cube == null){
+			return this.blankCube;
+		}
+
 		// cubes are always live on the client
 		cube.setGeneratorStage(GeneratorStage.getLastStage());
 		
 		return cube;
 	}
-	
+
 	@Override
 	public boolean generateOceanMonument(IChunkGenerator p0, Chunk p1, int p2, int p3) {
 		// TODO Auto-generated method stub

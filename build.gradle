@@ -27,7 +27,7 @@ defaultTasks 'licenseFormat', 'build'
 // Basic project information
 group = "tallworlds"
 archivesBaseName = "TallWorlds"
-version = "1.8.3-0.1"
+version = "1.8.3-0.2"
 
 // Extended project information
 ext.projectName = 'Tall Worlds'
@@ -76,6 +76,11 @@ repositories
 		name 'sonatype'
 		url 'https://oss.sonatype.org/content/groups/public/'
 	}
+	maven
+	{
+		name 'mojang'
+		url 'https://libraries.minecraft.net'
+	}
 }
 
 //Hacks to allow controlling classpath order
@@ -94,9 +99,12 @@ dependencies
 	
 	minecraft files('../m3l/lib/minecraft-1.8.3-client-deobf.jar')
 	
-	provided 'cuchaz:m3l:1.8.3-0.1b'
+	provided 'cuchaz:m3l:1.8.3-0.2b'
+	provided 'cuchaz:m3l-forge-api:1.8.3-0.2b-1334'
 	provided 'org.slf4j:slf4j-api:1.7.10'
 	provided 'ch.qos.logback:logback-classic:1.1.2'
+	provided 'net.minecraft:launchwrapper:1.8'
+	provided 'io.netty:netty-all:4.0.27.Final'
 	
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
 	compile 'org.mapdb:mapdb:1.0.7'

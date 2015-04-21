@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -21,45 +21,11 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.column;
+package cubicchunks.api.generators;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.TreeMap;
-
-import cubicchunks.world.LightIndex;
 import cubicchunks.world.cube.Cube;
 
-public class ColumnView extends Column {
-	
-	// these are the only things we really need to override 
-	
-	private Column column;
-	private Map<Integer,Cube> cubes;
-	
-	public ColumnView(Column column) {
-		super(column.getWorld(), column.chunkX, column.chunkZ);
-		
-		this.column = column;
-		this.cubes = new TreeMap<Integer,Cube>();
-	}
-	
-	@Override
-	public LightIndex getLightIndex() {
-		return this.column.getLightIndex();
-	}
-	
-	@Override
-	public Collection<Cube> getCubes() {
-		return this.cubes.values();
-	}
-	
-	public void addCubeToView(Cube cube) {
-		this.cubes.put(cube.getY(), cube);
-	}
-	
-	@Override
-	public byte[] getBiomeMap() {
-		return column.getBiomeMap();
-	}
+public interface ITerrainGenerator {
+
+	public abstract double[][][] generate(final Cube cube);
 }
