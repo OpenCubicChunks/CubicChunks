@@ -27,7 +27,7 @@ defaultTasks 'licenseFormat', 'build'
 // Basic project information
 group = "tallworlds"
 archivesBaseName = "TallWorlds"
-version = "1.8.3-0.1"
+version = "1.8.3-0.2"
 
 // Extended project information
 ext.projectName = 'Tall Worlds'
