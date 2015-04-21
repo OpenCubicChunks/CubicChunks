@@ -104,10 +104,10 @@ dependencies
 	provided 'org.slf4j:slf4j-api:1.7.10'
 	provided 'ch.qos.logback:logback-classic:1.1.2'
 	provided 'net.minecraft:launchwrapper:1.8'
+	provided 'io.netty:netty-all:4.0.27.Final'
 	
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
 	compile 'org.mapdb:mapdb:1.0.7'
-	compile 'io.netty:netty-all:4.0.27.Final'
 	testCompile 'junit:junit:4.11'
 }
 
