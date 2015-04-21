@@ -107,6 +107,7 @@ dependencies
 	
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
 	compile 'org.mapdb:mapdb:1.0.7'
+	compile 'io.netty:netty-all:4.0.27.Final'
 	testCompile 'junit:junit:4.11'
 }
 
