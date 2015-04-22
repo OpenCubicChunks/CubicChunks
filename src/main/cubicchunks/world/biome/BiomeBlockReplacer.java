@@ -93,7 +93,7 @@ public class BiomeBlockReplacer {
 			
 			boolean canSetBlock = yAbs <= this.alterationTop;
 			
-			if (yAbs <= AddressTools.MinY + 16 + this.rand.nextInt(16)) {
+			if (yAbs <= ((AddressTools.MinY + 64) << 4) + this.rand.nextInt(16)) {
 				if (canSetBlock) {
 					setBlock(this.cube, pos, Blocks.BEDROCK.getDefaultState());
 				}
