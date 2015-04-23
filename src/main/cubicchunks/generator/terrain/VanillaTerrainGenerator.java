@@ -30,10 +30,9 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
-import static cubicchunks.util.Coords.CUBE_MAX_X;
-import static cubicchunks.util.Coords.CUBE_MAX_Y;
-import static cubicchunks.util.Coords.CUBE_MAX_Z;
 import static cubicchunks.util.MathHelper.lerp;
+import static cubicchunks.util.TerrainGeneratorUtils.expandNoiseArray;
+import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
 
 import java.util.Random;
 
@@ -89,7 +88,7 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		this.noiseArrayLow = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 		this.noiseArrayAlpha = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 
-		this.rawDensity = new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
+		this.rawDensity = getNewCubeSizedArray();
 
 		this.builderHigh = createHighBuilder();
 		this.builderLow = createLowBuilder();
@@ -127,7 +126,7 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 			scaleNoiseArray(cube.getWorld().getSeaLevel());
 		}
 
-		return this.rawDensity;
+		return expandNoiseArray(this.rawDensity);
 	}
 
 	/**

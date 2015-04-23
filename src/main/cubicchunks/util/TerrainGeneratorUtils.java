@@ -29,9 +29,7 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
-import static cubicchunks.util.Coords.CUBE_MAX_X;
-import static cubicchunks.util.Coords.CUBE_MAX_Y;
-import static cubicchunks.util.Coords.CUBE_MAX_Z;
+import static cubicchunks.util.Coords.CUBE_SIZE;
 import static cubicchunks.util.MathHelper.lerp;
 
 public final class TerrainGeneratorUtils {
@@ -98,7 +96,7 @@ public final class TerrainGeneratorUtils {
 		return result;
 	}
 
-	private static double[][][] getNewCubeSizedArray() {
-		return new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
+	public static double[][][] getNewCubeSizedArray() {
+		return new double[CUBE_SIZE][CUBE_SIZE][CUBE_SIZE];
 	}
 }
