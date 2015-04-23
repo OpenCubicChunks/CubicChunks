@@ -23,7 +23,6 @@
  */
 package cubicchunks.generator;
 
-import static cubicchunks.util.TerrainGeneratorUtils.expandNoiseArray;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
@@ -48,7 +47,7 @@ public final class TerrainProcessor extends CubeProcessor {
 	public boolean calculate(final Cube cube) {
 		double[][][] rawDensity = this.terrainGenerator.generate(cube);
 
-		generateTerrain(cube, expandNoiseArray(rawDensity));
+		generateTerrain(cube, rawDensity);
 
 		return true;
 	}

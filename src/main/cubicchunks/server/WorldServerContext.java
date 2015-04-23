@@ -25,6 +25,7 @@ package cubicchunks.server;
 
 import java.util.Map;
 
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldServer;
 
 import com.google.common.collect.Maps;
@@ -36,63 +37,74 @@ import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.generator.StructureProcessor;
 import cubicchunks.generator.TerrainProcessor;
+import cubicchunks.generator.terrain.FlatTerrainGenerator;
 import cubicchunks.generator.terrain.VanillaTerrainGenerator;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.world.WorldContext;
 
-
 public class WorldServerContext extends WorldContext {
-	
-	private static Map<WorldServer,WorldServerContext> instances;
-	
+
+	private static Map<WorldServer, WorldServerContext> instances;
+
 	static {
 		instances = Maps.newHashMap();
 	}
-	
-	public static WorldServerContext get(WorldServer worldServer) {
+
+	public static WorldServerContext get(final WorldServer worldServer) {
 		return instances.get(worldServer);
 	}
-	
-	public static void put(WorldServer worldServer, WorldServerContext worldServerContext) {
+
+	public static void put(final WorldServer worldServer, final WorldServerContext worldServerContext) {
 		instances.put(worldServer, worldServerContext);
 	}
-	
+
 	private WorldServer worldServer;
 	private ServerCubeCache serverCubeCache;
 	private GeneratorPipeline generatorPipeline;
 	private ITerrainGenerator terrainGenerator;
-	
-	public WorldServerContext(WorldServer worldServer, ServerCubeCache serverCubeCache) {
+
+	public WorldServerContext(final WorldServer worldServer, final ServerCubeCache serverCubeCache) {
 		super(worldServer, serverCubeCache);
-		
+
 		this.worldServer = worldServer;
 		this.serverCubeCache = serverCubeCache;
 		this.generatorPipeline = new GeneratorPipeline(serverCubeCache);
-		
+
 		final long seed = this.worldServer.getSeed();
-		
-		this.terrainGenerator = new VanillaTerrainGenerator(seed);
-		
+
+		this.terrainGenerator = getTerrainGenerator(this.worldServer.dimension.dimensionType);
+
 		// init the generator pipeline
-		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(this.serverCubeCache, 5, this.terrainGenerator));
+		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(this.serverCubeCache, 5,
+				this.terrainGenerator));
 		this.generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor(this.serverCubeCache, 10, seed));
-		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", this.serverCubeCache, 10));
-		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", this.serverCubeCache, 5));
-		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", this.serverCubeCache, 100));
+		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features",
+				this.serverCubeCache, 10));
+		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting",
+				this.serverCubeCache, 5));
+		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population",
+				this.serverCubeCache, 100));
 		this.generatorPipeline.checkStages();
 	}
-	
+
 	@Override
 	public WorldServer getWorld() {
 		return this.worldServer;
 	}
-	
+
 	@Override
 	public ServerCubeCache getCubeCache() {
 		return this.serverCubeCache;
 	}
-	
+
 	public GeneratorPipeline getGeneratorPipeline() {
 		return this.generatorPipeline;
+	}
+
+	public ITerrainGenerator getTerrainGenerator(final DimensionType dimensionType) {
+		if (dimensionType == DimensionType.FLAT) {
+			return new FlatTerrainGenerator(this.worldServer.getSeed());
+		}
+		return new VanillaTerrainGenerator(this.worldServer.getSeed());
 	}
 }
