@@ -34,6 +34,7 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import debug.CubeProviderDebug;
 
 public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 
@@ -81,21 +82,20 @@ public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 		// is this cube loaded?
 		if (column.getCube(cubeY) == null) {
 			//TallWorldsMod.log.warn("Unloading non-existing cube: ({}, {}, {})", cubeX, cubeY, cubeZ);
-			this.unloadColumnIfEmpty(column);
 			return;
 		}
 		
 		// unload the cube
 		column.removeCube(cubeY);
-		this.unloadColumnIfEmpty(column);
 	}
 	
-	private void unloadColumnIfEmpty(Column column){
-		// is the column empty?
-		if (!column.hasCubes()) {
-			this.cacheMap.remove(ChunkCoordIntPair.chunkXZ2Int(column.chunkX, column.chunkZ));
-			this.cachedChunks.remove(column);
-		}
+	public void unloadColumn(int columnX, int columnZ){
+		//unload even if not empty
+		//server sends unload packets, it must be right.
+		
+		//TODO: Unload cubes before removing column?
+		Column column = (Column) this.cacheMap.remove(ChunkCoordIntPair.chunkXZ2Int(columnX, columnZ));
+		this.cachedChunks.remove(column);
 	}
 
 	@Override

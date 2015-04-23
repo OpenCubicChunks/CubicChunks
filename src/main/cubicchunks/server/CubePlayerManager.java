@@ -48,6 +48,7 @@ import com.google.common.collect.Maps;
 
 import cubicchunks.TallWorldsMod;
 import cubicchunks.network.PacketBulkCubeData;
+import cubicchunks.network.PacketUnloadColumns;
 import cubicchunks.network.PacketUnloadCubes;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
@@ -65,6 +66,7 @@ public class CubePlayerManager extends PlayerManager {
 		public List<Cube> cubesToLoad;
 		public List<Cube> cubesToUnload;
 		public Set<Long> columnAddressesToLoad;
+		public List<Long> columnAddressesToUnload;
 		public CubeSelector cubeSelector;
 		public int blockX;
 		public int blockY;
@@ -72,11 +74,12 @@ public class CubePlayerManager extends PlayerManager {
 		public long address;
 		
 		public PlayerInfo() {
-			this.watchedCubeAddresses = new TreeSet<Long>();
-			this.watchedColumnAddresses = new TreeSet<Long>();
-			this.cubesToLoad = new LinkedList<Cube>();
-			this.cubesToUnload = new LinkedList<Cube>();
-			this.columnAddressesToLoad = new TreeSet<Long>();
+			this.watchedCubeAddresses = new TreeSet<>();
+			this.watchedColumnAddresses = new TreeSet<>();
+			this.cubesToLoad = new LinkedList<>();
+			this.cubesToUnload = new LinkedList<>();
+			this.columnAddressesToLoad = new TreeSet<>();
+			this.columnAddressesToUnload = new ArrayList<>();
 			this.cubeSelector = new CuboidalCubeSelector();
 			this.blockX = 0;
 			this.blockY = 0;
@@ -312,6 +315,7 @@ public class CubePlayerManager extends PlayerManager {
 		info.watchedColumnAddresses.removeAll(info.cubeSelector.getNewlyHiddenColumns());
 		info.watchedColumnAddresses.addAll(info.cubeSelector.getNewlyVisibleColumns());
 		info.columnAddressesToLoad.addAll(info.cubeSelector.getNewlyVisibleColumns());
+		info.columnAddressesToUnload.addAll(info.cubeSelector.getNewlyHiddenColumns());
 	}
 	
 	@Override
@@ -339,7 +343,7 @@ public class CubePlayerManager extends PlayerManager {
 			sendCubesAndColumnsToLoad(player, info);
 		}
 		if (!info.cubesToUnload.isEmpty()) {
-			sendCubesToUnload(player, info);
+			sendCubesAndColumnsToUnload(player, info);
 		}
 	}
 	
@@ -442,7 +446,7 @@ public class CubePlayerManager extends PlayerManager {
 		}
 	}
 
-	private void sendCubesToUnload(EntityPlayerMP player, PlayerInfo info) {
+	private void sendCubesAndColumnsToUnload(EntityPlayerMP player, PlayerInfo info) {
 		int numPackets = (info.cubesToUnload.size() + PacketUnloadCubes.MAX_SIZE - 1)/PacketUnloadCubes.MAX_SIZE;
 		for (int i=0; i<numPackets; i++) {
 			int from = i*PacketUnloadCubes.MAX_SIZE;
@@ -451,6 +455,12 @@ public class CubePlayerManager extends PlayerManager {
 			TallWorldsMod.log.info("Server sent {} cubes to player to unload", info.cubesToUnload.size());
 		}
 		info.cubesToUnload.clear();
+		
+		//even with render distance 64 and teleporting it's not possible with current MAX_SIZE
+		assert info.columnAddressesToUnload.size() < PacketUnloadColumns.MAX_SIZE;
+		player.netServerHandler.send(new PacketUnloadColumns(info.columnAddressesToUnload));
+		TallWorldsMod.log.info("Server sent {} columns to player to unload", info.columnAddressesToUnload.size());
+		info.columnAddressesToUnload.clear();
 	}
 	
 	public Iterable<Long> getVisibleCubeAddresses(EntityPlayerMP player) {

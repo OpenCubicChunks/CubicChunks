@@ -154,6 +154,32 @@ public class ClientHandler implements INetHandler {
 		}
 	}
 	
+	public void handle(final PacketUnloadColumns packet) {
+		
+		// TODO: build better network system in M3L
+		TaskQueue taskQueue = Minecraft.getMinecraft();
+		if (!taskQueue.isInMainThread()) {
+			taskQueue.runTask(new Runnable() {
+				@Override
+				public void run() {
+					handle(packet);
+				}
+			});
+			throw ThreadQuickExitException.INSTANCE;
+		}
+		
+		WorldClient worldClient = Minecraft.getMinecraft().levelClient;
+		WorldClientContext context = WorldClientContext.get(worldClient);
+		ClientCubeCache cubeCache = context.getCubeCache();
+		
+		for (long cubeAddress : packet.columnAddresses) {
+			cubeCache.unloadColumn(
+				AddressTools.getX(cubeAddress),
+				AddressTools.getZ(cubeAddress)
+			);
+		}
+	}
+	
 	public void handle(final PacketCubeChange packet) {
 		
 		// TODO: build better network system in M3L

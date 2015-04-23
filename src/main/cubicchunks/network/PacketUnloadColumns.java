@@ -21,35 +21,60 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.terrain;
+package cubicchunks.network;
 
-import static cubicchunks.util.Coords.CUBE_SIZE;
-import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
-import cubicchunks.api.generators.ITerrainGenerator;
+import java.io.IOException;
+import java.util.List;
+
+import net.minecraft.network.INetHandler;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.PacketBuffer;
 import cubicchunks.world.cube.Cube;
 
-public class FlatTerrainGenerator implements ITerrainGenerator {
 
-	private final double[][][] rawDensity;
+public class PacketUnloadColumns implements IPacket<INetHandler> {
 
-	public FlatTerrainGenerator(final long seed) {
-		this.rawDensity = getNewCubeSizedArray();
+	public static final int MAX_SIZE = 65535;
+	
+	public long[] columnAddresses;
+	
+	public PacketUnloadColumns(List<Long> columns) {
+		
+		if (columns.size() > MAX_SIZE) {
+			throw new IllegalArgumentException("Don't send more than " + MAX_SIZE + " column unloads at a time!");
+		}
+		
+		columnAddresses = new long[columns.size()];
+		
+		int i = 0;
+		for (long addr : columns) {
+			columnAddresses[i] = addr;
+			i++;
+		}
 	}
 
 	@Override
-	public double[][][] generate(final Cube cube) {
-		generateTerrainArray(cube);
-
-		return this.rawDensity;
+	public void read(PacketBuffer in)
+	throws IOException {
+		columnAddresses = new long[in.readUnsignedShort()];
+		for (int i=0; i<columnAddresses.length; i++) {
+			columnAddresses[i] = in.readLong();
+		}
 	}
 
-	private void generateTerrainArray(final Cube cube) {
-		for (int x = 0; x < CUBE_SIZE; x++) {
-			for (int z = 0; z < CUBE_SIZE; z++) {
-				for (int y = 0; y < CUBE_SIZE; y++) {
-					this.rawDensity[x][y][z] = 1;
-				}
-			}
+	@Override
+	public void write(PacketBuffer out)
+	throws IOException {
+		out.writeShort(columnAddresses.length);
+		for (long addr : columnAddresses) {
+			out.writeLong(addr);
 		}
+	}
+
+	@Override
+	public void handle(INetHandler vanillaHandler) {
+		// don't use the vanilla handler, use our own
+		// TODO: make a real network system for M3L
+		ClientHandler.getInstance().handle(this);
 	}
 }
