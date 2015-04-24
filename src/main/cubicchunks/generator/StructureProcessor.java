@@ -59,6 +59,9 @@ public class StructureProcessor extends CubeProcessor {
 	@Override
 	public boolean calculate(Cube cube) {
 		
+		if(!this.canGenerate(cube)) {
+			return false;
+		}
 		this.worldObj = cube.getWorld();
 		
 		// generate world features
@@ -77,5 +80,19 @@ public class StructureProcessor extends CubeProcessor {
 		 */
 		
 		return true;
+	}
+
+	private boolean canGenerate(Cube cube) {
+		//BiomeProcessor requires that we make sure that we don't generate structures 
+		//when biome blocks aren't placed in cube below
+		int cubeX = cube.getX();
+		int cubeY = cube.getY() - 1;
+		int cubeZ = cube.getZ();
+		boolean exists = this.cache.cubeExists(cubeX, cubeY, cubeZ);
+		if (!exists) {
+			return false;
+		}
+		Cube below = this.cache.getCube(cubeX, cubeY, cubeZ);
+		return !below.getGeneratorStage().isLessThan(GeneratorStage.STRUCTURES);
 	}
 }
