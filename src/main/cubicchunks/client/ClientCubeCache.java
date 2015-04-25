@@ -23,18 +23,17 @@
  */
 package cubicchunks.client;
 
+import cubicchunks.generator.GeneratorStage;
+import cubicchunks.world.ICubeCache;
+import cubicchunks.world.column.BlankColumn;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
+import cubicchunks.world.cube.Cube;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ClientChunkCache;
 import net.minecraft.world.gen.IChunkGenerator;
-import cubicchunks.generator.GeneratorStage;
-import cubicchunks.world.ICubeCache;
-import cubicchunks.world.column.BlankColumn;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
-import debug.CubeProviderDebug;
 
 public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 

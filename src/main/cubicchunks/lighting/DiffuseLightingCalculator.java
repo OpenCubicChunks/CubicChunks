@@ -69,7 +69,7 @@ public class DiffuseLightingCalculator {
 		} else if (newLight < oldLight) {
 			
 			// subtract light from the area
-			world.profiler.startSection("diffuse light subtractions");
+			world.profiler.addSection("diffuse light subtractions");
 			this.queue.add(packUpdate(0, 0, 0, oldLight));
 			processLightSubtractions(world, pos, lightType);
 			world.profiler.endSection();
@@ -79,7 +79,7 @@ public class DiffuseLightingCalculator {
 		}
 		
 		// add light to the area
-		world.profiler.startSection("diffuse light additions");
+		world.profiler.addSection("diffuse light additions");
 		processLightAdditions(world, pos, lightType);
 		world.profiler.endSection();
 		
