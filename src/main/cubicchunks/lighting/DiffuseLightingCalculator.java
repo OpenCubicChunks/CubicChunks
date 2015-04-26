@@ -48,6 +48,7 @@ public class DiffuseLightingCalculator {
 	}
 	
 	public boolean calculate(World world, BlockPos pos, LightType lightType) {
+		world.profiler.addSection("diffuseLighting");
 		
 		WorldContext worldContext = WorldContext.get(world);
 		
@@ -69,19 +70,15 @@ public class DiffuseLightingCalculator {
 		} else if (newLight < oldLight) {
 			
 			// subtract light from the area
-			world.profiler.addSection("diffuse light subtractions");
 			this.queue.add(packUpdate(0, 0, 0, oldLight));
 			processLightSubtractions(world, pos, lightType);
-			world.profiler.endSection();
 			
 			// reset the queue so the next processing method re-processes all the entries
 			this.queue.reset();
 		}
 		
 		// add light to the area
-		world.profiler.addSection("diffuse light additions");
 		processLightAdditions(world, pos, lightType);
-		world.profiler.endSection();
 		
 		// DEBUG
 		if (this.queue.size() > 32000) {
@@ -93,10 +90,12 @@ public class DiffuseLightingCalculator {
 			);
 		}
 		
+		world.profiler.endSection();
 		return true;
 	}
 	
 	private void processLightSubtractions(World world, BlockPos pos, LightType lightType) {
+		world.profiler.addSection("subtractions");
 		
 		// TODO: optimize out news?
 		BlockPos.MutableBlockPos updatePos = new BlockPos.MutableBlockPos();
@@ -165,9 +164,11 @@ public class DiffuseLightingCalculator {
 				}
 			}
 		}
+		world.profiler.endSection();
 	}
 	
 	private void processLightAdditions(World world, BlockPos pos, LightType lightType) {
+		world.profiler.addSection("additions");
 		
 		// TODO: optimize out news?
 		BlockPos.MutableBlockPos updatePos = new BlockPos.MutableBlockPos();
@@ -229,6 +230,8 @@ public class DiffuseLightingCalculator {
 				}
 			}
 		}
+		
+		world.profiler.endSection();
 	}
 	
 	private boolean shouldUpdateLight(World world, BlockPos pos, BlockPos targetPos) {
