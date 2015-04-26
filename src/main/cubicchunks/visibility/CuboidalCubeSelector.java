@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -32,7 +32,7 @@ public class CuboidalCubeSelector extends CubeSelector {
 	private static final int ViewDistanceY = 8;
 	
 	@Override
-	protected void computeVisible(Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance) {
+	protected void computeVisibleCubes(Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance) {
 		for (int x = cubeX - viewDistance; x <= cubeX + viewDistance; x++) {
 			for (int y = cubeY - ViewDistanceY; y <= cubeY + ViewDistanceY; y++) {
 				for (int z = cubeZ - viewDistance; z <= cubeZ + viewDistance; z++) {

@@ -23,15 +23,16 @@
  */
 package cubicchunks.generator.features;
 
-import cubicchunks.generator.terrain.GlobalGeneratorConfig;
-import cubicchunks.util.Coords;
-import cubicchunks.world.cube.Cube;
 import java.util.Random;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.MineralDepositGenerator;
+import cubicchunks.generator.terrain.GlobalGeneratorConfig;
+import cubicchunks.util.Coords;
+import cubicchunks.world.cube.Cube;
 
 public class MineralGenerator extends FeatureGenerator {
 	private final double minY;
@@ -41,10 +42,15 @@ public class MineralGenerator extends FeatureGenerator {
 	private final double probability;
 
 	/**
-	 * Creates new OreGenerator with given min/max height, vein size and number
-	 * of generation attempts. minY and maxY: 0 - sea level. -1 -
-	 * seaLevel-maxTerrainHeight 1 - seaLevel+maxTerrainHeight
-	 * 
+	 * Creates new OreGenerator with given min/max height, vein size and number of generation attempts.
+	 * <p>
+	 * minY and maxY:
+	 * <ul>
+	 * <li>-1 - seaLevel-maxTerrainHeight
+	 * <li>0 - sea level.
+	 * <li>1 - seaLevel+maxTerrainHeight
+	 * </ul>
+	 *
 	 * @param minY
 	 *            Minimum generation height
 	 * @param maxY
@@ -52,7 +58,8 @@ public class MineralGenerator extends FeatureGenerator {
 	 * @param size
 	 *            Maximum vein size
 	 */
-	public MineralGenerator(World world, IBlockState state, double minY, double maxY, int size, double probability) {
+	public MineralGenerator(final World world, final IBlockState state, final double minY, final double maxY,
+			final int size, final double probability) {
 		super(world);
 		// use vanilla generator. This class odesn't have height limits
 		this.vanillaGen = new MineralDepositGenerator(state, size);
@@ -62,18 +69,18 @@ public class MineralGenerator extends FeatureGenerator {
 	}
 
 	@Override
-	public void generate(Random rand, Cube cube, Biome biome) {
+	public void generate(final Random rand, final Cube cube, final Biome biome) {
 		BlockPos cubeCenter = Coords.getCubeCenter(cube);
 
-		double maxBlockY = maxY * GlobalGeneratorConfig.maxElev + GlobalGeneratorConfig.seaLevel;
-		double minBlockY = minY * GlobalGeneratorConfig.maxElev + GlobalGeneratorConfig.seaLevel;
+		double maxBlockY = this.maxY * GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
+		double minBlockY = this.minY * GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
 
 		if (rand.nextDouble() > this.probability) {
 			return;
 		}
 		BlockPos currentPos = cubeCenter.add(rand.nextInt(16), rand.nextInt(16), rand.nextInt(16));
 		if (currentPos.getY() <= maxBlockY && currentPos.getY() >= minBlockY) {
-			this.vanillaGen.generate(world, rand, currentPos);
+			this.vanillaGen.generate(this.world, rand, currentPos);
 		}
 	}
 }

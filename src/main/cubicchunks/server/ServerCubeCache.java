@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -67,7 +67,7 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 		super(worldServer, null, null);
 		
 		this.worldServer = worldServer;
-		this.cubeIO = new CubeIO(worldServer.getSaveHandler().getSaveFile(), worldServer.dimension);
+		this.cubeIO = new CubeIO(worldServer);
 		this.columnGenerator = new ColumnGenerator(worldServer);
 		this.loadedColumns = Maps.newHashMap();
 		this.blankColumn = new BlankColumn(worldServer, 0, 0);
@@ -175,7 +175,7 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 		if (column == null) {
 			// try loading it
 			try {
-				column = this.cubeIO.loadColumn(this.worldServer, cubeX, cubeZ);
+				column = this.cubeIO.loadColumn(cubeX, cubeZ);
 			} catch (IOException ex) {
 				log.error("Unable to load column ({},{})", cubeX, cubeZ, ex);
 				return;
@@ -201,7 +201,7 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 		
 		// try to load the cube
 		try {
-			cube = this.cubeIO.loadCubeAndAddToColumn(this.worldServer, column, cubeAddress);
+			cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeAddress);
 		} catch (IOException ex) {
 			log.error("Unable to load cube ({},{},{})", cubeX, cubeY, cubeZ, ex);
 			return;
@@ -270,7 +270,6 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 	
 	@Override
 	public boolean tick() {
-		
 		// NOTE: the return value is completely ignored
 		
 		if (this.worldServer.disableSaving) {

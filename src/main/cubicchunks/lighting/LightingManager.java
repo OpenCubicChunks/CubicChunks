@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -27,8 +27,8 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cubicchunks.util.Bits;
 import cubicchunks.world.ICubeCache;
@@ -36,7 +36,7 @@ import cubicchunks.world.column.Column;
 
 public class LightingManager {
 	
-	private static final Logger log = LogManager.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(LightingManager.class);
 	
 	private static final int TickBudget = 40; // ms. Only 50 ms in a tick
 	
@@ -78,9 +78,13 @@ public class LightingManager {
 		
 		// process the queues
 		int numProcessed = 0;
+		this.world.profiler.addSection("skyLightOcclusion");
 		numProcessed += this.skyLightOcclusionProcessor.processQueue(timeStop);
+		this.world.profiler.startSection("firstLight");
 		numProcessed += this.firstLightProcessor.processQueue(timeStop);
+		this.world.profiler.endSection();
 		
+		/* disable this spam for now
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
@@ -88,5 +92,6 @@ public class LightingManager {
 			log.info(this.skyLightOcclusionProcessor.getProcessingReport());
 			log.info(this.firstLightProcessor.getProcessingReport());
 		}
+		*/
 	}
 }

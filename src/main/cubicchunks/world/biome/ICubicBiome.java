@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -25,8 +25,8 @@ package cubicchunks.world.biome;
 
 import java.util.Random;
 
-import cubicchunks.world.cube.Cube;
 import net.minecraft.world.WorldServer;
+import cubicchunks.world.cube.Cube;
 
 public interface ICubicBiome {
 	

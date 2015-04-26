@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -21,8 +21,35 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.noise;
+package cubicchunks.generator.terrain;
 
-public abstract class NoiseGenerator {
-	
+import static cubicchunks.util.Coords.CUBE_SIZE;
+import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
+import cubicchunks.api.generators.ITerrainGenerator;
+import cubicchunks.world.cube.Cube;
+
+public class FlatTerrainGenerator implements ITerrainGenerator {
+
+	private final double[][][] rawDensity;
+
+	public FlatTerrainGenerator(final long seed) {
+		this.rawDensity = getNewCubeSizedArray();
+	}
+
+	@Override
+	public double[][][] generate(final Cube cube) {
+		generateTerrainArray(cube);
+
+		return this.rawDensity;
+	}
+
+	private void generateTerrainArray(final Cube cube) {
+		for (int x = 0; x < CUBE_SIZE; x++) {
+			for (int z = 0; z < CUBE_SIZE; z++) {
+				for (int y = 0; y < CUBE_SIZE; y++) {
+					this.rawDensity[x][y][z] = 1;
+				}
+			}
+		}
+	}
 }

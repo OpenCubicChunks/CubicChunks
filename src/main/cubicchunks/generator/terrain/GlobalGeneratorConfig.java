@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -26,8 +26,8 @@ package cubicchunks.generator.terrain;
 import cubicchunks.util.Coords;
 
 public class GlobalGeneratorConfig {
-	public static final double maxElev = 64;
-	public static final double seaLevel = 64;
+	public static final int SEA_LEVEL = 0;
+	public static final double MAX_ELEV = 500;
 
 	// these are constants. Changing them may cause issues.
 	public static final int X_SECTION_SIZE = 4 + 1;

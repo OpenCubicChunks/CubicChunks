@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -60,14 +60,16 @@ public class AddressTools {
 	public static final int MaxZ = Bits.getMaxSigned(ZSize);
 
 	public static long getAddress(int x, int y, int z) {
-		return Bits.packSignedToLong(y, YSize, YOffset) | Bits.packSignedToLong(x, XSize, XOffset)
-				| Bits.packSignedToLong(z, ZSize, ZOffset);
+		return Bits.packSignedToLong(y, YSize, YOffset)
+			| Bits.packSignedToLong(x, XSize, XOffset)
+			| Bits.packSignedToLong(z, ZSize, ZOffset);
 	}
 
 	public static long getAddress(int x, int z) {
-		return Bits.packSignedToLong(x, XSize, XOffset) | Bits.packSignedToLong(z, ZSize, ZOffset);
+		return Bits.packSignedToLong(x, XSize, XOffset)
+			| Bits.packSignedToLong(z, ZSize, ZOffset);
 	}
-
+	
 	public static int getY(long address) {
 		return Bits.unpackSigned(address, YSize, YOffset);
 	}
@@ -78,5 +80,27 @@ public class AddressTools {
 
 	public static int getZ(long address) {
 		return Bits.unpackSigned(address, ZSize, ZOffset);
+	}
+
+	public static long cubeToColumn(long cubeAddress) {
+		return getAddress(getX(cubeAddress), getZ(cubeAddress));
+	}
+	
+	public static int getLocalAddress(int localX, int localY, int localZ) {
+		return Bits.packUnsignedToInt(localX, 4, 0)
+			| Bits.packUnsignedToInt(localY, 4, 4)
+			| Bits.packUnsignedToInt(localZ, 4, 8);
+	}
+	
+	public static int getLocalX(int localAddress) {
+		return Bits.unpackUnsigned(localAddress, 4, 0);
+	}
+	
+	public static int getLocalY(int localAddress) {
+		return Bits.unpackUnsigned(localAddress, 4, 4);
+	}
+	
+	public static int getLocalZ(int localAddress) {
+		return Bits.unpackUnsigned(localAddress, 4, 8);
 	}
 }

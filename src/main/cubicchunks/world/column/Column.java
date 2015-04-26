@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -23,10 +23,6 @@
  */
 package cubicchunks.world.column;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,7 +36,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.network.play.packet.clientbound.PacketChunkData;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Facing;
@@ -51,23 +46,17 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.chunk.storage.ChunkSection;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
 
-import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.RangeInt;
-import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.EntityContainer;
-import cubicchunks.world.ICubeCache;
 import cubicchunks.world.LightIndex;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
@@ -77,7 +66,7 @@ public class Column extends Chunk {
 	public static final int LOAD_CUBES = 1;
 	public static final int UNLOAD_CUBES = 2;
 	
-	private static final Logger log = LogManager.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(Column.class);
 	
 	private TreeMap<Integer,Cube> cubes;
 	private LightIndex lightIndex;
@@ -548,208 +537,6 @@ public class Column extends Chunk {
 		this.chunkLoaded = false;
 	}
 	
-	public PacketChunkData.EncodedChunk encode(boolean isFirstTime, boolean hasSky, int sectionFlags)
-	throws IOException {
-		
-		if (!(this instanceof ColumnView)) {
-			throw new Error("we should never be encoding whole columns!");
-		}
-		
-		ByteArrayOutputStream buf = new ByteArrayOutputStream();
-		DataOutputStream out = new DataOutputStream(buf);
-		
-		// NOTE: there's no need to do compression here. This output is compressed later
-		
-		// how many cubes are we sending?
-		int numCubes = getCubes().size();
-		out.writeShort(numCubes);
-		
-		// send the actual cube data
-		for (Cube cube : getCubes()) {
-			
-			// signal we're sending this cube
-			out.writeInt(cube.getY());
-			
-			out.writeBoolean(cube.isEmpty());
-			if (!cube.isEmpty()) {
-				ChunkSection storage = cube.getStorage();
-				
-				// 1. block IDs, low bits
-				out.write(ChunkSectionHelper.getBlockLSBArray(storage));
-				
-				// 2. block IDs, high bits
-				NibbleArray blockIdMsbs = ChunkSectionHelper.getBlockMSBArray(storage);
-				if (blockIdMsbs != null) {
-					out.writeByte(1);
-					out.write(blockIdMsbs.get());
-				} else {
-					// signal we're not sending this data
-					out.writeByte(0);
-				}
-				
-				// 3. metadata
-				out.write(ChunkSectionHelper.getBlockMetaArray(storage).get());
-				
-				// 4. block light
-				out.write(storage.getBlockLightArray().get());
-				
-				if (hasSky) {
-					// 5. sky light
-					out.write(storage.getSkyLightArray().get());
-				}
-			}
-		}
-		
-		if (isFirstTime) {
-			// 6. biomes
-			out.write(getBiomeMap());
-		}
-		
-		// 7. light index
-		getLightIndex().writeData(out);
-		
-		out.close();
-		
-		PacketChunkData.EncodedChunk encodedChunk = new PacketChunkData.EncodedChunk();
-		encodedChunk.data = buf.toByteArray();
-		encodedChunk.sectionFlags = LOAD_CUBES;
-		return encodedChunk;
-	}
-	
-	public PacketChunkData.EncodedChunk encodeUnload()
-	throws IOException {
-		
-		if (!(this instanceof ColumnView)) {
-			throw new Error("we should never be encoding whole columns!");
-		}
-		
-		// encode the number of cubes, and the y values
-		ByteArrayOutputStream buf = new ByteArrayOutputStream();
-		DataOutputStream out = new DataOutputStream(buf);
-		int numCubes = getCubes().size();
-		out.writeShort(numCubes);
-		for (Cube cube : getCubes()) {
-			out.writeInt(cube.getY());
-		}
-		out.close();
-		
-		PacketChunkData.EncodedChunk encodedChunk = new PacketChunkData.EncodedChunk();
-		encodedChunk.data = buf.toByteArray();
-		encodedChunk.sectionFlags = UNLOAD_CUBES;
-		return encodedChunk;
-	}
-	
-	@Override
-	public void readChunkIn(byte[] data, int sectionFlags, boolean isFirstTime) {
-		
-		// NOTE: this is called on the client when it receives chunk data from the server
-		
-		if (sectionFlags == LOAD_CUBES) {
-			loadCubes(data, isFirstTime);
-		} else if (sectionFlags == UNLOAD_CUBES) {
-			unloadCubes(data);
-		}
-	}
-	
-	private void loadCubes(byte[] data, boolean isFirstTime) {
-		
-		ByteArrayInputStream buf = new ByteArrayInputStream(data);
-		DataInputStream in = new DataInputStream(buf);
-		
-		try {
-			// how many cubes are we reading?
-			int numCubes = in.readUnsignedShort();
-			for (int i = 0; i < numCubes; i++) {
-				int cubeY = in.readInt();
-				Cube cube = getOrCreateCube(cubeY, false);
-				
-				// if the cube came from the server, it must be live
-				cube.setGeneratorStage(GeneratorStage.getLastStage());
-				
-				// is the cube empty?
-				boolean isEmpty = in.readBoolean();
-				cube.setEmpty(isEmpty);
-				
-				if (!isEmpty) {
-					ChunkSection storage = cube.getStorage();
-					
-					// 1. block IDs, low bits
-					byte[] blockIdLsbs = new byte[16*16*16];
-					in.read(blockIdLsbs);
-					
-					// 2. block IDs, high bits
-					NibbleArray blockIdMsbs = null;
-					boolean isHighBitsAttached = in.readByte() != 0;
-					if (isHighBitsAttached) {
-						blockIdMsbs = new NibbleArray();
-						in.read(blockIdMsbs.get());
-					}
-					
-					// 3. metadata
-					NibbleArray blockMetadata = new NibbleArray();
-					in.read(blockMetadata.get());
-					
-					ChunkSectionHelper.setBlockStates(storage, blockIdLsbs, blockIdMsbs, blockMetadata);
-					
-					// 4. block light
-					in.read(storage.getBlockLightArray().get());
-					
-					if (!this.world.dimension.hasNoSky()) {
-						// 5. sky light
-						in.read(storage.getSkyLightArray().get());
-					}
-					
-					storage.countBlocksInSection();
-				}
-				
-				// flag cube for render update
-				cube.markForRenderUpdate();
-			}
-			
-			if (isFirstTime) {
-				// 6. biomes
-				in.read(getBiomeMap());
-			}
-			
-			// 7. light index
-			getLightIndex().readData(in);
-			
-			in.close();
-		} catch (IOException ex) {
-			log.error("Unable to read data for column ({},{})", this.chunkX, this.chunkZ, ex);
-		}
-		
-		// update lighting flags
-		this.terrainPopulated = true;
-		
-		// update tile entities in each chunk
-		for (Cube cube : this.cubes.values()) {
-			for (BlockEntity blockEntity : cube.getBlockEntities()) {
-				blockEntity.updateContainingBlockInfo();
-			}
-		}
-	}
-	
-	private void unloadCubes(byte[] data) {
-		
-		ByteArrayInputStream buf = new ByteArrayInputStream(data);
-		DataInputStream in = new DataInputStream(buf);
-		
-		ICubeCache cubeCache = WorldContext.get(this.world).getCubeCache();
-		
-		try {
-			// how many cubes are we reading?
-			int numCubes = in.readUnsignedShort();
-			for (int i = 0; i < numCubes; i++) {
-				int cubeY = in.readInt();
-				cubeCache.unloadCube(this.chunkX, cubeY, this.chunkZ);
-			}
-			in.close();
-		} catch (IOException ex) {
-			log.error("Unable to read data for column ({},{})", this.chunkX, this.chunkZ, ex);
-		}
-	}
-	
 	/**
 	 * This method retrieves the biome at a set of coordinates
 	 */
@@ -990,7 +777,7 @@ public class Column extends Chunk {
 		if (isEmpty()) {
 			return;
 		}
-		
+
 		for (Cube cube : this.cubes.values()) {
 			cube.doRandomTicks();
 		}

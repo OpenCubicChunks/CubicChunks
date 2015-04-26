@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -26,7 +26,6 @@ package cubicchunks.generator.structures;
 import java.util.Random;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import cubicchunks.world.cube.Cube;

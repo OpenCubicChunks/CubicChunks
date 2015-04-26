@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -25,67 +25,86 @@ package cubicchunks.server;
 
 import java.util.Map;
 
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldServer;
 
 import com.google.common.collect.Maps;
 
+import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.generator.BiomeProcessor;
-import cubicchunks.generator.StructureProcessor;
+import cubicchunks.generator.FeatureProcessor;
 import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.generator.FeatureProcessor;
-import cubicchunks.generator.terrain.NewTerrainProcessor;
+import cubicchunks.generator.StructureProcessor;
+import cubicchunks.generator.TerrainProcessor;
+import cubicchunks.generator.terrain.FlatTerrainGenerator;
+import cubicchunks.generator.terrain.VanillaTerrainGenerator;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.world.WorldContext;
 
-
 public class WorldServerContext extends WorldContext {
-	
-	private static Map<WorldServer,WorldServerContext> m_instances;
-	
+
+	private static Map<WorldServer, WorldServerContext> instances;
+
 	static {
-		m_instances = Maps.newHashMap();
+		instances = Maps.newHashMap();
 	}
-	
-	public static WorldServerContext get(WorldServer worldServer) {
-		return m_instances.get(worldServer);
+
+	public static WorldServerContext get(final WorldServer worldServer) {
+		return instances.get(worldServer);
 	}
-	
-	public static void put(WorldServer worldServer, WorldServerContext worldServerContext) {
-		m_instances.put(worldServer, worldServerContext);
+
+	public static void put(final WorldServer worldServer, final WorldServerContext worldServerContext) {
+		instances.put(worldServer, worldServerContext);
 	}
-	
-	private WorldServer m_worldServer;
-	private ServerCubeCache m_serverCubeCache;
-	private GeneratorPipeline m_generatorPipeline;
-	
-	public WorldServerContext(WorldServer worldServer, ServerCubeCache serverCubeCache) {
+
+	private WorldServer worldServer;
+	private ServerCubeCache serverCubeCache;
+	private GeneratorPipeline generatorPipeline;
+	private ITerrainGenerator terrainGenerator;
+
+	public WorldServerContext(final WorldServer worldServer, final ServerCubeCache serverCubeCache) {
 		super(worldServer, serverCubeCache);
-		
-		m_worldServer = worldServer;
-		m_serverCubeCache = serverCubeCache;
-		m_generatorPipeline = new GeneratorPipeline(serverCubeCache);
-		
+
+		this.worldServer = worldServer;
+		this.serverCubeCache = serverCubeCache;
+		this.generatorPipeline = new GeneratorPipeline(serverCubeCache);
+
+		final long seed = this.worldServer.getSeed();
+
+		this.terrainGenerator = getTerrainGenerator(this.worldServer.dimension.dimensionType);
+
 		// init the generator pipeline
-		m_generatorPipeline.addStage(GeneratorStage.TERRAIN, new NewTerrainProcessor("Terrain", m_worldServer, m_serverCubeCache, 5));
-		m_generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor("Biomes", m_worldServer, m_serverCubeCache, 10));
-		m_generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Structures", m_serverCubeCache, 10));
-		m_generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", m_serverCubeCache, 5));
-		m_generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Features", m_worldServer, m_serverCubeCache, 10));
-		m_generatorPipeline.checkStages();
+		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(this.serverCubeCache, 5,
+				this.terrainGenerator));
+		this.generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor(this.serverCubeCache, 10, seed));
+		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features",
+				this.serverCubeCache, 10));
+		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting",
+				this.serverCubeCache, 5));
+		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", worldServer,
+				this.serverCubeCache, 100));
+		this.generatorPipeline.checkStages();
 	}
-	
+
 	@Override
 	public WorldServer getWorld() {
-		return m_worldServer;
+		return this.worldServer;
 	}
-	
+
 	@Override
 	public ServerCubeCache getCubeCache() {
-		return m_serverCubeCache;
+		return this.serverCubeCache;
 	}
-	
+
 	public GeneratorPipeline getGeneratorPipeline() {
-		return m_generatorPipeline;
+		return this.generatorPipeline;
+	}
+
+	public ITerrainGenerator getTerrainGenerator(final DimensionType dimensionType) {
+		if (dimensionType == DimensionType.FLAT) {
+			return new FlatTerrainGenerator(this.worldServer.getSeed());
+		}
+		return new VanillaTerrainGenerator(this.worldServer.getSeed());
 	}
 }

@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -23,49 +23,50 @@
  */
 package cubicchunks.server;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.EntityTracker;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.IPacket;
-import net.minecraft.network.play.packet.clientbound.PacketChunkData;
-import net.minecraft.network.play.packet.clientbound.PacketMapChunkBulk;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.Chunk;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import cubicchunks.TallWorldsMod;
+import cubicchunks.network.PacketBulkCubeData;
+import cubicchunks.network.PacketUnloadColumns;
+import cubicchunks.network.PacketUnloadCubes;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.column.Column;
-import cubicchunks.world.column.ColumnView;
 import cubicchunks.world.cube.Cube;
 
 public class CubePlayerManager extends PlayerManager {
 	
 	private static class PlayerInfo {
 		
-		public Set<Long> watchedAddresses;
-		public List<Cube> outgoingCubesToLoad;
-		public List<Cube> outgoingCubesToUnload;
+		public Set<Long> watchedCubeAddresses;
+		public Set<Long> watchedColumnAddresses;
+		public List<Cube> cubesToLoad;
+		public List<Cube> cubesToUnload;
+		public Set<Long> columnAddressesToLoad;
+		public List<Long> columnAddressesToUnload;
 		public CubeSelector cubeSelector;
 		public int blockX;
 		public int blockY;
@@ -73,9 +74,12 @@ public class CubePlayerManager extends PlayerManager {
 		public long address;
 		
 		public PlayerInfo() {
-			this.watchedAddresses = new TreeSet<Long>();
-			this.outgoingCubesToLoad = new LinkedList<Cube>();
-			this.outgoingCubesToUnload = new LinkedList<Cube>();
+			this.watchedCubeAddresses = new TreeSet<>();
+			this.watchedColumnAddresses = new TreeSet<>();
+			this.cubesToLoad = new LinkedList<>();
+			this.cubesToUnload = new LinkedList<>();
+			this.columnAddressesToLoad = new TreeSet<>();
+			this.columnAddressesToUnload = new ArrayList<>();
 			this.cubeSelector = new CuboidalCubeSelector();
 			this.blockX = 0;
 			this.blockY = 0;
@@ -91,7 +95,7 @@ public class CubePlayerManager extends PlayerManager {
 			final int cubeZ = AddressTools.getZ(this.address);
 			
 			// sort cubes so they load radially away from the player
-			Collections.sort(this.outgoingCubesToLoad, new Comparator<Cube>() {
+			Collections.sort(this.cubesToLoad, new Comparator<Cube>() {
 				
 				@Override
 				public int compare(Cube a, Cube b) {
@@ -108,10 +112,10 @@ public class CubePlayerManager extends PlayerManager {
 		}
 		
 		public void removeOutOfRangeOutgoingCubesToLoad() {
-			Iterator<Cube> iter = this.outgoingCubesToLoad.iterator();
+			Iterator<Cube> iter = this.cubesToLoad.iterator();
 			while (iter.hasNext()) {
 				Cube cube = iter.next();
-				if (!this.cubeSelector.isVisible(cube.getAddress())) {
+				if (!this.cubeSelector.isCubeVisible(cube.getAddress())) {
 					iter.remove();
 				}
 			}
@@ -157,9 +161,11 @@ public class CubePlayerManager extends PlayerManager {
 		for (long address : info.cubeSelector.getVisibleCubes()) {
 			CubeWatcher watcher = getOrCreateWatcher(address);
 			watcher.addPlayer(player);
-			info.watchedAddresses.add(address);
-			info.outgoingCubesToLoad.add(watcher.getCube());
+			info.watchedCubeAddresses.add(address);
+			info.cubesToLoad.add(watcher.getCube());
 		}
+		info.watchedColumnAddresses.addAll(info.cubeSelector.getVisibleColumns());
+		info.columnAddressesToLoad.addAll(info.cubeSelector.getVisibleColumns());
 	}
 	
 	@Override
@@ -172,7 +178,8 @@ public class CubePlayerManager extends PlayerManager {
 		}
 		
 		// remove player from all its cubes
-		for (long address : info.watchedAddresses) {
+		for (long address : info.watchedCubeAddresses) {
+			
 			// skip non-existent cubes
 			if (!cubeExists(address)) {
 				continue;
@@ -272,6 +279,11 @@ public class CubePlayerManager extends PlayerManager {
 		info.blockZ = newBlockZ;
 		info.address = newAddress;
 		
+		this.updatePlayer(player, info, newAddress);
+	}
+	
+	private void updatePlayer(EntityPlayerMP player, PlayerInfo info, long newAddress){
+		
 		// calculate new visibility
 		info.cubeSelector.setPlayerPosition(newAddress, this.m_viewDistance);
 		
@@ -279,7 +291,7 @@ public class CubePlayerManager extends PlayerManager {
 		for (long address : info.cubeSelector.getNewlyVisibleCubes()) {
 			CubeWatcher watcher = getOrCreateWatcher(address);
 			watcher.addPlayer(player);
-			info.outgoingCubesToLoad.add(watcher.getCube());
+			info.cubesToLoad.add(watcher.getCube());
 		}
 		
 		// remove from old watchers
@@ -290,7 +302,7 @@ public class CubePlayerManager extends PlayerManager {
 			}
 			
 			watcher.removePlayer(player);
-			info.outgoingCubesToUnload.add(watcher.getCube());
+			info.cubesToUnload.add(watcher.getCube());
 			
 			// cleanup empty watchers and cubes
 			if (!watcher.hasPlayers()) {
@@ -298,6 +310,12 @@ public class CubePlayerManager extends PlayerManager {
 				m_cubeCache.unloadCube(watcher.getCube());
 			}
 		}
+		
+		// handle columns too
+		info.watchedColumnAddresses.removeAll(info.cubeSelector.getNewlyHiddenColumns());
+		info.watchedColumnAddresses.addAll(info.cubeSelector.getNewlyVisibleColumns());
+		info.columnAddressesToLoad.addAll(info.cubeSelector.getNewlyVisibleColumns());
+		info.columnAddressesToUnload.addAll(info.cubeSelector.getNewlyHiddenColumns());
 	}
 	
 	@Override
@@ -309,15 +327,7 @@ public class CubePlayerManager extends PlayerManager {
 			return false;
 		}
 		
-		// check the player's watched addresses
-		for (long address : info.watchedAddresses) {
-			int x = AddressTools.getX(address);
-			int z = AddressTools.getZ(address);
-			if (x == cubeX && z == cubeZ) {
-				return true;
-			}
-		}
-		return false;
+		return info.watchedColumnAddresses.contains(AddressTools.getAddress(cubeX, cubeZ));
 	}
 	
 	public void processCubeQueues(EntityPlayerMP player) {
@@ -329,15 +339,15 @@ public class CubePlayerManager extends PlayerManager {
 			return;
 		}
 		
-		if (!info.outgoingCubesToLoad.isEmpty()) {
-			sendCubesToLoad(player, info);
+		if (!info.cubesToLoad.isEmpty()) {
+			sendCubesAndColumnsToLoad(player, info);
 		}
-		if (!info.outgoingCubesToUnload.isEmpty()) {
-			sendCubesToUnload(player, info);
+		if (!info.cubesToUnload.isEmpty()) {
+			sendCubesAndColumnsToUnload(player, info);
 		}
 	}
 	
-	private void sendCubesToLoad(EntityPlayerMP player, PlayerInfo info) {
+	private void sendCubesAndColumnsToLoad(EntityPlayerMP player, PlayerInfo info) {
 		
 		info.removeOutOfRangeOutgoingCubesToLoad();
 		info.sortOutgoingCubesToLoad();
@@ -354,7 +364,7 @@ public class CubePlayerManager extends PlayerManager {
 		final int MaxCubesToSend = 100;
 		List<Cube> cubesToSend = new ArrayList<Cube>();
 		List<BlockEntity> blockEntitiesToSend = new ArrayList<BlockEntity>();
-		Iterator<Cube> iter = info.outgoingCubesToLoad.iterator();
+		Iterator<Cube> iter = info.cubesToLoad.iterator();
 		while (iter.hasNext() && cubesToSend.size() < MaxCubesToSend) {
 			Cube cube = iter.next();
 			
@@ -381,8 +391,6 @@ public class CubePlayerManager extends PlayerManager {
 			return;
 		}
 		
-		List<Chunk> columnsToSend = new ArrayList<Chunk>(getColumnViewsFromCubes(cubesToSend));
-		
 		/*{ // DEBUG: what y-levels are we sending?
 			Multiset<Integer> counts = TreeMultiset.create();
 			for (Chunk chunk : columnsToSend) {
@@ -392,13 +400,28 @@ public class CubePlayerManager extends PlayerManager {
 			}
 			TallWorldsMod.log.info("Cube Y counts: {}", counts);
 		}*/
+		
+		// get the columns to send
+		List<Column> columnsToSend = Lists.newArrayList();
+		for (Cube cube : cubesToSend) {
+			Column column = cube.getColumn();
+			long columnAddress = column.getAddress();
+			if (info.columnAddressesToLoad.contains(columnAddress)) {
+				info.columnAddressesToLoad.remove(columnAddress);
+				columnsToSend.add(column);
+			}
+		}
 
-		// send the cube data with the first time flag set
-		player.netServerHandler.send(new PacketMapChunkBulk(columnsToSend));
-		TallWorldsMod.log.info("Server sent {} cubes to player, {} remaining", cubesToSend.size(), info.outgoingCubesToLoad.size());
+		// send the cube data
+		player.netServerHandler.send(new PacketBulkCubeData(columnsToSend, cubesToSend));
+		TallWorldsMod.log.info("Server sent {}/{} cubes, {}/{} columns to player",
+			cubesToSend.size(), cubesToSend.size() + info.cubesToLoad.size(),
+			columnsToSend.size(), columnsToSend.size() + info.columnAddressesToLoad.size()
+		);
 		
 		// tell the cube watchers which cubes were sent for this player
 		for (Cube cube : cubesToSend) {
+			
 			// get the watcher
 			CubeWatcher watcher = getWatcher(cube.getAddress());
 			if (watcher == null) {
@@ -416,58 +439,32 @@ public class CubePlayerManager extends PlayerManager {
 			}
 		}
 		
-		// watch entities on the chunks we just sent
-		for (Chunk chunk : columnsToSend) {
-			this.m_worldServer.getEntityTracker().a(player, chunk);
+		// watch entities on the columns we just sent
+		EntityTracker entityTracker = this.m_worldServer.getEntityTracker();
+		for (Column column : columnsToSend) {
+			entityTracker.a(player, column);
 		}
 	}
 
-	private void sendCubesToUnload(EntityPlayerMP player, PlayerInfo info) {
-		
-		List<ColumnView> columnsToUnload = Lists.newArrayList(getColumnViewsFromCubes(info.outgoingCubesToUnload));
-		
-		try {
-			// prep the unload packet
-			int n = columnsToUnload.size();
-			PacketMapChunkBulk packet = new PacketMapChunkBulk();
-			packet.x = new int[n];
-			packet.y = new int[n];
-			packet.data = new PacketChunkData.EncodedChunk[n];
-			packet.hasSky = !m_worldServer.dimension.hasNoSky();
-			for (int i=0; i<n; i++) {
-				final Column column = columnsToUnload.get(i);
-				packet.x[i] = column.chunkX;
-				packet.y[i] = column.chunkZ;
-				packet.data[i] = column.encodeUnload();
-			}
-	
-			player.netServerHandler.send(packet);
-			TallWorldsMod.log.info("Server sent {} cubes to player to unload", info.outgoingCubesToUnload.size());
-			
-		} catch (IOException ex) {
-			TallWorldsMod.log.error("Unable to unload cubes", ex);
+	private void sendCubesAndColumnsToUnload(EntityPlayerMP player, PlayerInfo info) {
+		int numPackets = (info.cubesToUnload.size() + PacketUnloadCubes.MAX_SIZE - 1)/PacketUnloadCubes.MAX_SIZE;
+		for (int i=0; i<numPackets; i++) {
+			int from = i*PacketUnloadCubes.MAX_SIZE;
+			int to = Math.min((i+1)*PacketUnloadCubes.MAX_SIZE, info.cubesToUnload.size() - 1);
+			player.netServerHandler.send(new PacketUnloadCubes(info.cubesToUnload.subList(from, to)));
+			TallWorldsMod.log.info("Server sent {} cubes to player to unload", info.cubesToUnload.size());
 		}
+		info.cubesToUnload.clear();
 		
-		info.outgoingCubesToUnload.clear();
+		//even with render distance 64 and teleporting it's not possible with current MAX_SIZE
+		assert info.columnAddressesToUnload.size() < PacketUnloadColumns.MAX_SIZE;
+		player.netServerHandler.send(new PacketUnloadColumns(info.columnAddressesToUnload));
+		TallWorldsMod.log.info("Server sent {} columns to player to unload", info.columnAddressesToUnload.size());
+		info.columnAddressesToUnload.clear();
 	}
 	
-	private Collection<ColumnView> getColumnViewsFromCubes(Collection<Cube> cubesToSend) {
-		Map<Long,ColumnView> views = new TreeMap<Long,ColumnView>();
-		for (Cube cube : cubesToSend) {
-			// is there a column view for this cube?
-			long columnAddress = AddressTools.getAddress(cube.getX(), cube.getZ());
-			ColumnView view = views.get(columnAddress);
-			if (view == null) {
-				view = new ColumnView(cube.getColumn());
-				views.put(columnAddress, view);
-			}
-			
-			view.addCubeToView(cube);
-		}
-		return views.values();
-	}
-
 	public Iterable<Long> getVisibleCubeAddresses(EntityPlayerMP player) {
+		
 		// get the info
 		PlayerInfo info = this.m_players.get(player.getEntityId());
 		if (info == null) {
@@ -499,12 +496,28 @@ public class CubePlayerManager extends PlayerManager {
 			int cubeX = AddressTools.getX(address);
 			int cubeY = AddressTools.getY(address);
 			int cubeZ = AddressTools.getZ(address);
-			m_cubeCache.loadCubeAndNeighbors(cubeX, cubeY, cubeZ);
+			m_cubeCache.loadCube(cubeX, cubeY, cubeZ);
 			
 			// make a new watcher
 			watcher = new CubeWatcher(m_cubeCache.getCube(cubeX, cubeY, cubeZ));
 			this.m_watchers.put(address, watcher);
 		}
 		return watcher;
+	}
+	
+	@Override
+	public void setPlayerViewRadius(int newViewDistance) {
+		this.m_viewDistance = newViewDistance;
+		if(this.m_worldServer == null) {
+			//this method is used in superconstructor. Don't send chunks in this case.
+			return;
+		}
+		//load new chunks/unload old chunks
+		for(EntityPlayer player : this.m_worldServer.players) {
+			int id = player.getEntityId();
+			PlayerInfo info = this.m_players.get(id);
+			//use current address, player position didn't change
+			this.updatePlayer((EntityPlayerMP) player, info, info.address);
+		}
 	}
 }

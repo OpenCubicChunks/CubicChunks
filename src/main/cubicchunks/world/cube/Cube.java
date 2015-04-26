@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -38,8 +38,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk.ChunkEntityCreationType;
 import net.minecraft.world.chunk.storage.ChunkSection;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
 
@@ -52,7 +52,7 @@ import cubicchunks.world.column.Column;
 
 public class Cube {
 	
-	private static final Logger LOGGER = LogManager.getLogger();
+	private static final Logger LOGGER = LoggerFactory.getLogger(Cube.class);
 	
 	private World world;
 	private Column column;
@@ -101,6 +101,13 @@ public class Cube {
 	
 	public long getAddress() {
 		return AddressTools.getAddress(this.cubeX, this.cubeY, this.cubeZ);
+	}
+	
+	public BlockPos.MutableBlockPos localAddressToBlockPos(BlockPos.MutableBlockPos pos, int localAddress) {
+		pos.x = Coords.localToBlock(this.cubeX, AddressTools.getLocalX(localAddress));
+		pos.y = Coords.localToBlock(this.cubeY, AddressTools.getLocalY(localAddress));
+		pos.z = Coords.localToBlock(this.cubeZ, AddressTools.getLocalZ(localAddress));
+		return pos;
 	}
 	
 	public World getWorld() {
@@ -570,7 +577,10 @@ public class Cube {
 	}
 	
 	public void markForRenderUpdate() {
-		this.world.markBlockRangeForRenderUpdate(Coords.cubeToMinBlock(this.cubeX), Coords.cubeToMinBlock(this.cubeY), Coords.cubeToMinBlock(this.cubeZ), Coords.cubeToMaxBlock(this.cubeX), Coords.cubeToMaxBlock(this.cubeY), Coords.cubeToMaxBlock(this.cubeZ));
+		this.world.markBlockRangeForRenderUpdate(
+			Coords.cubeToMinBlock(this.cubeX), Coords.cubeToMinBlock(this.cubeY), Coords.cubeToMinBlock(this.cubeZ),
+			Coords.cubeToMaxBlock(this.cubeX), Coords.cubeToMaxBlock(this.cubeY), Coords.cubeToMaxBlock(this.cubeZ)
+		);
 	}
 	
 	public long cubeRandomSeed() {

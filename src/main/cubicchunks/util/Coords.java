@@ -1,5 +1,5 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -29,11 +29,12 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 
 public class Coords {
-
-	public static final int CUBE_MAX_X = 16;
-	public static final int CUBE_MAX_Y = 16;
-	public static final int CUBE_MAX_Z = 16;
-
+	public static final int CUBE_SIZE = 16;
+	
+	public static final int CUBE_MAX_X = CUBE_SIZE;
+	public static final int CUBE_MAX_Y = CUBE_SIZE;
+	public static final int CUBE_MAX_Z = CUBE_SIZE;
+	
 	public static final int HALF_CUBE_MAX_X = CUBE_MAX_X / 2;
 	public static final int HALF_CUBE_MAX_Y = CUBE_MAX_Y / 2;
 	public static final int HALF_CUBE_MAX_Z = CUBE_MAX_Z / 2;
