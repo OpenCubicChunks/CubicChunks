@@ -31,7 +31,7 @@ import net.minecraft.world.WorldServer;
 import com.google.common.collect.Maps;
 
 import cubicchunks.api.generators.ITerrainGenerator;
-import cubicchunks.generator.BiomeProcessor;
+import cubicchunks.generator.SurfaceProcessor;
 import cubicchunks.generator.FeatureProcessor;
 import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.GeneratorStage;
@@ -77,7 +77,7 @@ public class WorldServerContext extends WorldContext {
 		// init the generator pipeline
 		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(this.serverCubeCache, 5,
 				this.terrainGenerator));
-		this.generatorPipeline.addStage(GeneratorStage.BIOMES, new BiomeProcessor(this.serverCubeCache, 10, seed));
+		this.generatorPipeline.addStage(GeneratorStage.SURFACE, new SurfaceProcessor(this.serverCubeCache, 10, seed));
 		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features",
 				this.serverCubeCache, 10));
 		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting",

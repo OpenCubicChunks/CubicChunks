@@ -34,9 +34,9 @@ import cubicchunks.world.WorldContext;
 import cubicchunks.world.biome.BiomeBlockReplacer;
 import cubicchunks.world.cube.Cube;
 
-public class BiomeProcessor extends CubeProcessor {
+public class SurfaceProcessor extends CubeProcessor {
 
-	private static final String PROCESSOR_NAME = "Biomes";
+	private static final String PROCESSOR_NAME = "Surface";
 
 	private Random rand;
 	private NoiseGeneratorMultiFractal noiseGen;
@@ -44,7 +44,7 @@ public class BiomeProcessor extends CubeProcessor {
 	private Biome[] biomes;
 	private long seed;
 
-	public BiomeProcessor(final ICubeCache cubeCache, final int batchSize, final long seed) {
+	public SurfaceProcessor(final ICubeCache cubeCache, final int batchSize, final long seed) {
 		super(PROCESSOR_NAME, cubeCache, batchSize);
 		this.rand = new Random(seed);
 		this.noiseGen = new NoiseGeneratorMultiFractal(this.rand, 4);
@@ -116,6 +116,6 @@ public class BiomeProcessor extends CubeProcessor {
 			return false;
 		}
 		Cube above = this.cache.getCube(cubeX, cubeY, cubeZ);
-		return !above.getGeneratorStage().isLessThan(GeneratorStage.BIOMES);
+		return !above.getGeneratorStage().isLessThan(GeneratorStage.SURFACE);
 	}
 }
