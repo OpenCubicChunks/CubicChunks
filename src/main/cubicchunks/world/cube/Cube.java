@@ -279,7 +279,7 @@ public class Cube {
 			return false;
 		}
 		
-		return !this.storage.isSectionEmpty();
+		return !this.storage.isEmpty();
 	}
 	
 	public Iterable<BlockEntity> getBlockEntities() {
@@ -547,7 +547,7 @@ public class Cube {
 	
 	public void doRandomTicks() {
 		
-		if (isEmpty() || this.storage.isSectionEmpty()) {
+		if (isEmpty() || this.storage.isEmpty()) {
 			return;
 		}
 		
