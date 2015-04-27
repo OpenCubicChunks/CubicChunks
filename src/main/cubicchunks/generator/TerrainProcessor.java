@@ -65,7 +65,7 @@ public final class TerrainProcessor extends CubeProcessor {
 				for (int yRel = 0; yRel < 16; yRel++) {
 					int yAbs = Coords.localToBlock(cube.getY(), yRel);
 					BlockPos pos = new BlockPos(xRel, yRel, zRel);
-					Block block = densityField[xRel][yRel][zRel] - yAbs > 0 ? Blocks.STONE
+					Block block = densityField[xRel][yRel][zRel] > 0 ? Blocks.STONE
 							: yAbs < cube.getWorld().getSeaLevel() ? Blocks.WATER : Blocks.AIR;
 					cube.setBlockForGeneration(pos, block.getDefaultState());
 				} // end yRel

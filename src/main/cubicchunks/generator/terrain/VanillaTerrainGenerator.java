@@ -31,8 +31,7 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
 import static cubicchunks.util.MathHelper.lerp;
-import static cubicchunks.util.TerrainGeneratorUtils.expandNoiseArray;
-import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
+import static cubicchunks.util.TerrainGeneratorUtils.*;
 
 import java.util.Random;
 
@@ -126,7 +125,7 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 			scaleNoiseArray(cube.getWorld().getSeaLevel());
 		}
 
-		return expandNoiseArray(this.rawDensity);
+		return applyHeightGradient(cube, expandNoiseArray(this.rawDensity));
 	}
 
 	/**

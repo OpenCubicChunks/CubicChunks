@@ -24,6 +24,8 @@
 package cubicchunks.generator.terrain;
 
 import static cubicchunks.util.Coords.CUBE_SIZE;
+import static cubicchunks.util.TerrainGeneratorUtils.applyHeightGradient;
+import static cubicchunks.util.TerrainGeneratorUtils.expandNoiseArray;
 import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
 import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.world.cube.Cube;
@@ -40,7 +42,7 @@ public class FlatTerrainGenerator implements ITerrainGenerator {
 	public double[][][] generate(final Cube cube) {
 		generateTerrainArray(cube);
 
-		return this.rawDensity;
+		return applyHeightGradient(cube, this.rawDensity);
 	}
 
 	private void generateTerrainArray(final Cube cube) {
