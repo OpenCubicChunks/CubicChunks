@@ -58,6 +58,10 @@ public class WorldServerContext extends WorldContext {
 		instances.put(worldServer, worldServerContext);
 	}
 
+	public static void clear() {
+		instances.clear();
+	}
+	
 	private WorldServer worldServer;
 	private ServerCubeCache serverCubeCache;
 	private GeneratorPipeline generatorPipeline;
@@ -75,15 +79,11 @@ public class WorldServerContext extends WorldContext {
 		this.terrainGenerator = getTerrainGenerator(this.worldServer.dimension.dimensionType);
 
 		// init the generator pipeline
-		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(this.serverCubeCache, 5,
-				this.terrainGenerator));
+		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(this.serverCubeCache, 5, this.terrainGenerator));
 		this.generatorPipeline.addStage(GeneratorStage.SURFACE, new SurfaceProcessor(this.serverCubeCache, 10, seed));
-		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features",
-				this.serverCubeCache, 10));
-		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting",
-				this.serverCubeCache, 5));
-		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population",
-				this.serverCubeCache, 100));
+		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", this.serverCubeCache, 10));
+		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", this.serverCubeCache, 5));
+		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", this.serverCubeCache, 100));
 		this.generatorPipeline.checkStages();
 	}
 

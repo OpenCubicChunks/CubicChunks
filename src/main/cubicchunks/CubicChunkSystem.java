@@ -476,4 +476,18 @@ public class CubicChunkSystem implements ChunkSystem {
 		}
 		return null;
 	}
+
+	@Override
+	public void onServerStop() {
+		WorldServerContext.clear();
+		// TEMP
+		TallWorldsMod.log.info("\n\nCLEAR SERVER\n\n");
+	}
+
+	@Override
+	public void unloadClientWorld() {
+		WorldClientContext.clear();
+		// TEMP
+		TallWorldsMod.log.info("\n\nCLEAR CLIENT\n\n");
+	}
 }

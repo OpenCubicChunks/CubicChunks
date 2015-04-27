@@ -47,6 +47,10 @@ public class WorldClientContext extends WorldContext {
 		m_instances.put(worldClient, worldClientContext);
 	}
 	
+	public static void clear() {
+		m_instances.clear();
+	}
+	
 	private WorldClient m_worldClient;
 	private ClientCubeCache m_clientCubeCache;
 	
