@@ -49,7 +49,7 @@ public class FlatTerrainGenerator implements ITerrainGenerator {
 		for (int x = 0; x < CUBE_SIZE; x++) {
 			for (int z = 0; z < CUBE_SIZE; z++) {
 				for (int y = 0; y < CUBE_SIZE; y++) {
-					this.rawDensity[x][y][z] = 1;
+					this.rawDensity[x][y][z] = 0;
 				}
 			}
 		}
