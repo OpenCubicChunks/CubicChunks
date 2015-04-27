@@ -327,7 +327,7 @@ public class Cube {
 	}
 	
 	public Iterable<Entity> entities() {
-		return this.entities.entities();
+		return this.entities.getEntities();
 	}
 	
 	public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
@@ -339,7 +339,7 @@ public class Cube {
 	}
 	
 	public void getMigratedEntities(List<Entity> out) {
-		for (Entity entity : this.entities.entities()) {
+		for (Entity entity : this.entities.getEntities()) {
 			int cubeX = Coords.getCubeXForEntity(entity);
 			int cubeY = Coords.getCubeYForEntity(entity);
 			int cubeZ = Coords.getCubeZForEntity(entity);
@@ -429,11 +429,11 @@ public class Cube {
 	public void onLoad() {
 		
 		// tell the world about entities
-		for (Entity entity : this.entities.entities()) {
+		for (Entity entity : this.entities.getEntities()) {
 			entity.onChunkLoad();
 		}
 		
-		this.world.loadEntitiesInBulk(this.entities.entities());
+		this.world.loadEntitiesInBulk(this.entities.getEntities());
 		
 		// tell the world about tile entities
 		this.world.addBlockEntities(this.blockEntities.values());
@@ -442,7 +442,7 @@ public class Cube {
 	public void onUnload() {
 		
 		// tell the world to forget about entities
-		this.world.unloadEntitiesInBulk(this.entities.entities());
+		this.world.unloadEntitiesInBulk(this.entities.getEntities());
 		
 		// tell the world to forget about tile entities
 		for (BlockEntity blockEntity : this.blockEntities.values()) {
