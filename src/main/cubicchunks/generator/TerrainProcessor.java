@@ -45,9 +45,9 @@ public final class TerrainProcessor extends CubeProcessor {
 
 	@Override
 	public boolean calculate(final Cube cube) {
-		cube.getWorld().profiler.addSection("terrainProcessor");
+		cube.getWorld().profiler.startSection("terrainProcessor");
 		
-		cube.getWorld().profiler.addSection("generation");
+		cube.getWorld().profiler.startSection("generation");
 		double[][][] rawDensity = this.terrainGenerator.generate(cube);
 		cube.getWorld().profiler.endSection();
 		
@@ -59,7 +59,7 @@ public final class TerrainProcessor extends CubeProcessor {
 	}
 
 	protected void generateTerrain(final Cube cube, final double[][][] densityField) {
-		cube.getWorld().profiler.addSection("placement");
+		cube.getWorld().profiler.startSection("placement");
 		for (int xRel = 0; xRel < 16; xRel++) {
 			for (int zRel = 0; zRel < 16; zRel++) {
 				for (int yRel = 0; yRel < 16; yRel++) {

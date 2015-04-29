@@ -48,7 +48,7 @@ public class DiffuseLightingCalculator {
 	}
 	
 	public boolean calculate(World world, BlockPos pos, LightType lightType) {
-		world.profiler.addSection("diffuseLighting");
+		world.profiler.startSection("diffuseLighting");
 		
 		WorldContext worldContext = WorldContext.get(world);
 		
@@ -95,7 +95,7 @@ public class DiffuseLightingCalculator {
 	}
 	
 	private void processLightSubtractions(World world, BlockPos pos, LightType lightType) {
-		world.profiler.addSection("subtractions");
+		world.profiler.startSection("subtractions");
 		
 		// TODO: optimize out news?
 		BlockPos.MutableBlockPos updatePos = new BlockPos.MutableBlockPos();
@@ -168,7 +168,7 @@ public class DiffuseLightingCalculator {
 	}
 	
 	private void processLightAdditions(World world, BlockPos pos, LightType lightType) {
-		world.profiler.addSection("additions");
+		world.profiler.startSection("additions");
 		
 		// TODO: optimize out news?
 		BlockPos.MutableBlockPos updatePos = new BlockPos.MutableBlockPos();

@@ -149,7 +149,7 @@ public class CubicChunkSystem implements ChunkSystem {
 			WorldClientContext context = WorldClientContext.get(worldClient);
 
 			// tick all the things!
-			worldClient.profiler.addSection("lightingEngine");
+			worldClient.profiler.startSection("lightingEngine");
 			context.getLightingManager().tick();
 			worldClient.profiler.endSection();
 		}
@@ -161,13 +161,11 @@ public class CubicChunkSystem implements ChunkSystem {
 			WorldServerContext context = WorldServerContext.get(worldServer);
 
 			// tick all the things!
-			worldServer.profiler.addSection("generatorPipeline");
+			worldServer.profiler.startSection("generatorPipeline");
 			context.getGeneratorPipeline().tick();
-			worldServer.profiler.endSection();
 
 			worldServer.profiler.addSection("lightingEngine");
 			context.getLightingManager().tick();
-			worldServer.profiler.endSection();
 
 			worldServer.profiler.addSection("randomCubeTicks");
 			ServerCubeCache cubeCache = context.getCubeCache();
