@@ -47,6 +47,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ChunkSection;
+import net.minecraft.world.storage.FileIOWorker;
+import net.minecraft.world.storage.IThreadedFileIO;
 
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -57,8 +59,6 @@ import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
-import cubicchunks.util.FileIOWorker;
-import cubicchunks.util.IThreadedFileIO;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.IEntityActionListener;
 import cubicchunks.world.column.Column;
@@ -187,7 +187,7 @@ public class CubeIO implements IThreadedFileIO {
 	}
 	
 	@Override
-	public boolean write() {
+	public boolean tryWrite() {
 		
 		// NOTE: return true to redo this call (used for batching)
 		
