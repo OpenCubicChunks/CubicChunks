@@ -203,7 +203,7 @@ public class OpacityIndex {
 		}
 		
 		// didn't hit a segment start, but mini-1 is the lower segment start index
-		setOpacityWithDataAfter(i, blockY, mini - 1, opacity);
+		setOpacityWithSegmentsAfter(i, blockY, mini - 1, opacity);
 	}
 
 	private void setOpacityWithSegmentsAt(int i, int blockY, int j, int opacity) {
@@ -248,8 +248,8 @@ public class OpacityIndex {
 				if (isFirstSegment && isLastSegment) {
 					removeSegments(i);
 				} else {
-					// TODO
-					throw new Error("Both without room not implemented yet!");
+					removeSegment(i, j);
+					removeSegment(i, j);
 				}
 			}
 		} else if (sameOpacityAsPrev) {
@@ -260,8 +260,8 @@ public class OpacityIndex {
 			}
 		} else if (sameOpacityAsNext) {
 			if (isRoomAfter) {
-				// TODO
-				throw new Error("Adding segments not implemented yet!");
+				addSegment(i, j+1, blockY+1, oldOpacity);
+				m_segments[i][j] = packSegment(blockY, opacity);
 			} else {
 				if (isLastSegment) {
 					removeSegment(i, j);
@@ -272,14 +272,57 @@ public class OpacityIndex {
 				}
 			}
 		} else {
-			// TODO
-			throw new Error("Neither not implemented yet!");
+			if (isRoomAfter) {
+				addSegment(i, j+1, blockY+1, oldOpacity);
+			}
+			m_segments[i][j] = packSegment(blockY, opacity);
 		}
 	}
 
-	private void setOpacityWithDataAfter(int i, int blockY, int j, int opacity) {
-		// TODO Auto-generated method stub
+	private void setOpacityWithSegmentsAfter(int i, int blockY, int j, int opacity) {
 		
+		int[] segments = m_segments[i];
+		
+		// will the opacity even change?
+		int oldSegment = segments[j];
+		int oldOpacity = unpackOpacity(oldSegment);
+		if (opacity == oldOpacity) {
+			return;
+		}
+		
+		boolean isLastSegment = j == segments.length - 1;
+		
+		boolean sameOpacityAsNext;
+		if (isLastSegment) {
+			sameOpacityAsNext = opacity == 0;
+		} else {
+			sameOpacityAsNext = opacity == unpackOpacity(segments[j+1]);
+		}
+		
+		boolean isRoomAfter;
+		if (j + 1 < segments.length) {
+			isRoomAfter = unpackPos(segments[j+1]) > blockY + 1;
+		} else {
+			isRoomAfter = m_ymax[i] > blockY;
+		}
+		
+		if (sameOpacityAsNext) {
+			if (isRoomAfter) {
+				addSegment(i, j+1, blockY, opacity);
+				addSegment(i, j+2, blockY+1, oldOpacity);
+			} else {
+				if (isLastSegment) {
+					m_ymax[i]--;
+				} else {
+					addSegment(i, j+1, blockY, opacity);
+				}
+			}
+		} else {
+			addSegment(i, j+1, blockY, opacity);
+			if (isRoomAfter) {
+				addSegment(i, j+2, blockY+1, oldOpacity);
+			}
+		}
 	}
 	
 	private void moveSegmentStartUp(int i, int j) {
@@ -317,9 +360,6 @@ public class OpacityIndex {
 		int[] segments = m_segments[i];
 		int jmax = getLastSegmentIndex(segments);
 		
-		// can only remove one-block segments
-		assert(getSegmentLength(i, j) == 1);
-		
 		// remove the segment
 		for (int n=j; n<jmax; n++) {
 			segments[n] = segments[n+1];
@@ -332,6 +372,28 @@ public class OpacityIndex {
 		}
 	}
 	
+	private void addSegment(int i, int j, int pos, int opacity) {
+		int lastIndex = getLastSegmentIndex(m_segments[i]);
+		if (lastIndex + 1 == m_segments[i].length) {
+			
+			// allocate more space
+			int[] newSegments = new int[lastIndex + 2];
+			for (int n=0; n<=lastIndex; n++) {
+				newSegments[n] = m_segments[i][n];
+			}
+			m_segments[i] = newSegments;
+		}
+		
+		// shift the segments by one
+		lastIndex++;
+		for (int n=lastIndex; n>j; n--) {
+			m_segments[i][n] = m_segments[i][n-1];
+		}
+		
+		m_segments[i][j] = packSegment(pos, opacity);
+	}
+	
+	@SuppressWarnings("unused")
 	private int getSegmentLength(int i, int j) {
 		int[] segments = m_segments[i];
 		int pos = unpackPos(segments[j]);
@@ -400,12 +462,15 @@ public class OpacityIndex {
 	}
 	
 	public String dump(int localX, int localZ) {
-		int index = getIndex(localX, localZ);
+		return dump(getIndex(localX, localZ));
+	}
+	
+	private String dump(int i) {
 		StringBuilder buf = new StringBuilder();
 		buf.append("t=");
-		buf.append(m_ymax[index]);
+		buf.append(m_ymax[i]);
 		buf.append(", d(p,o)=");
-		for (int packed : m_segments[index]) {
+		for (int packed : m_segments[i]) {
 			int pos = unpackPos(packed);
 			int opacity = unpackOpacity(packed);
 			buf.append("(");
@@ -441,5 +506,4 @@ public class OpacityIndex {
 		}
 		throw new Error("Invalid segments state");
 	}
-
 }

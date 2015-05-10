@@ -397,6 +397,143 @@ public class TestOpacityIndex {
 		), getSegments(index));
 	}
 
+	@Test
+	public void setDataStartSameAsBothNoRoomBeforeNext() {
+		OpacityIndex index = makeIndex(2, 7,
+			2, 1,
+			4, 2,
+			5, 1
+		);
+		
+		index.setOpacity(0, 4, 0, 1);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(7, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 1
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setDataStartUniqueNoRoomAfter() {
+		OpacityIndex index = makeIndex(2, 7,
+			2, 1,
+			4, 2,
+			5, 1
+		);
+		
+		index.setOpacity(0, 4, 0, 3);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(7, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 1,
+			4, 3,
+			5, 1
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setDataStartUniqueRoomAfter() {
+		OpacityIndex index = makeIndex(2, 7,
+			2, 1,
+			4, 2,
+			6, 1
+		);
+		
+		index.setOpacity(0, 4, 0, 3);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(7, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 1,
+			4, 3,
+			5, 2,
+			6, 1
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setDataNotStartSameAsNextNoRoomAfter() {
+		OpacityIndex index = makeIndex(2, 7,
+			2, 1,
+			5, 2
+		);
+		
+		index.setOpacity(0, 4, 0, 3);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(7, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 1,
+			4, 3,
+			5, 2
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setDataNotStartSameAsNextRoomAfter() {
+		OpacityIndex index = makeIndex(2, 7,
+			2, 1,
+			6, 2
+		);
+		
+		index.setOpacity(0, 4, 0, 3);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(7, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 1,
+			4, 3,
+			5, 1,
+			6, 2
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setDataNotStartSameAsTopNoRoomAfter() {
+		OpacityIndex index = makeIndex(2, 4,
+			2, 1
+		);
+		
+		index.setOpacity(0, 4, 0, 0);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(3, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 1
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setDataNotStartUniqueNoRoomAfter() {
+		OpacityIndex index = makeIndex(2, 7,
+			2, 1,
+			5, 2
+		);
+		
+		index.setOpacity(0, 4, 0, 3);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(7, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 1,
+			4, 3,
+			5, 2
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setDataNotStartUniqueRoomAfter() {
+		OpacityIndex index = makeIndex(2, 7,
+			2, 1,
+			6, 2
+		);
+		
+		index.setOpacity(0, 4, 0, 3);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(7, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 1,
+			4, 3,
+			5, 1,
+			6, 2
+		), getSegments(index));
+	}
+	
 	private OpacityIndex makeIndex(int ymin, int ymax, int ... segments) {
 		OpacityIndex index = new OpacityIndex();
 		
