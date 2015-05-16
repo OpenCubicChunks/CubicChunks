@@ -79,9 +79,9 @@ public class LightingManager {
 		// process the queues
 		int numProcessed = 0;
 		this.world.profiler.addSection("skyLightOcclusion");
-		numProcessed += this.skyLightOcclusionProcessor.processQueue(timeStop);
+		numProcessed += this.skyLightOcclusionProcessor.processQueueUntil(timeStop);
 		this.world.profiler.startSection("firstLight");
-		numProcessed += this.firstLightProcessor.processQueue(timeStop);
+		numProcessed += this.firstLightProcessor.processQueueUntil(timeStop);
 		this.world.profiler.endSection();
 		
 		/* disable this spam for now

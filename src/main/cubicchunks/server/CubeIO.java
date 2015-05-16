@@ -288,7 +288,7 @@ public class CubeIO implements IThreadedFileIO {
 		column.setBiomeMap(nbt.getAsByteArray("Biomes"));
 		
 		// read light index
-		column.getLightIndex().readData(nbt.getAsByteArray("LightIndex"));
+		column.getOpacityIndex().readData(nbt.getAsByteArray("OpacityIndex"));
 		
 		// entities
 		column.getEntityContainer().readFromNbt(nbt, "Entities", this.world, new IEntityActionListener() {
@@ -437,7 +437,7 @@ public class CubeIO implements IThreadedFileIO {
 			nbt.put("Biomes", column.getBiomeMap());
 			
 			// light index
-			nbt.put("LightIndex", column.getLightIndex().getData());
+			nbt.put("OpacityIndex", column.getOpacityIndex().getData());
 			
 			// entities
 			column.getEntityContainer().writeToNbt(nbt, "Entities");

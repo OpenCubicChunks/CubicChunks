@@ -217,6 +217,9 @@ public class CubicChunkSystem implements ChunkSystem {
 				long timeDiff = System.currentTimeMillis() - timeStart;
 				TallWorldsMod.log.info("Done in {} ms", timeDiff);
 			}
+			
+			// save the cubes now
+			serverCubeCache.saveAllChunks();
 		}
 	}
 

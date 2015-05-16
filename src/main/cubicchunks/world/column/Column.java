@@ -23,7 +23,8 @@
  */
 package cubicchunks.world.column;
 
-import static cubicchunks.util.Coords.CUBE_SIZE;
+import static cubicchunks.util.Coords.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,7 +59,7 @@ import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.RangeInt;
 import cubicchunks.world.EntityContainer;
-import cubicchunks.world.LightIndex;
+import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
 
@@ -67,7 +68,7 @@ public class Column extends Chunk {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Column.class);
 
 	private TreeMap<Integer, Cube> cubes;
-	private LightIndex lightIndex;
+	private OpacityIndex opacityIndex;
 	private int roundRobinLightUpdatePointer;
 	private List<Cube> roundRobinCubes;
 	private EntityContainer entities;
@@ -98,7 +99,7 @@ public class Column extends Chunk {
 	private void init() {
 
 		this.cubes = new TreeMap<Integer, Cube>();
-		this.lightIndex = new LightIndex(this.world.getSeaLevel());
+		this.opacityIndex = new OpacityIndex();
 		this.roundRobinLightUpdatePointer = 0;
 		this.roundRobinCubes = new ArrayList<Cube>();
 		this.entities = new EntityContainer();
@@ -132,8 +133,8 @@ public class Column extends Chunk {
 		return this.entities;
 	}
 
-	public LightIndex getLightIndex() {
-		return this.lightIndex;
+	public OpacityIndex getOpacityIndex() {
+		return this.opacityIndex;
 	}
 
 	@Override
@@ -254,7 +255,7 @@ public class Column extends Chunk {
 
 		// did the top non-transparent block change?
 		Integer oldSkylightY = getSkylightBlockY(x, z);
-		getLightIndex().setOpacity(x, pos.getY(), z, newOpacity);
+		this.opacityIndex.setOpacity(x, pos.getY(), z, newOpacity);
 		Integer newSkylightY = getSkylightBlockY(x, z);
 
 		if (oldSkylightY != null && newSkylightY != null && !oldSkylightY.equals(newSkylightY)) {
@@ -281,8 +282,8 @@ public class Column extends Chunk {
 			WorldContext.get(this.world).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
 		}
 
-		// update lighting index
-		getLightIndex().setOpacity(x, pos.getY(), z, newBlock.getOpacity());
+		// update opacity index
+		this.opacityIndex.setOpacity(x, pos.getY(), z, newBlock.getOpacity());
 
 		this.isModified = true;
 
@@ -324,7 +325,15 @@ public class Column extends Chunk {
 	}
 
 	public Integer getTopFilledCubeY() {
-		Integer blockY = getLightIndex().getTopNonTransparentBlockY();
+		Integer blockY = null;
+		for (int localX=0; localX<Coords.CUBE_SIZE; localX++) {
+			for (int localZ=0; localZ<Coords.CUBE_SIZE; localZ++) {
+				Integer y = this.opacityIndex.getTopBlockY(localX, localZ);
+				if (y != null && (blockY == null || y > blockY)) {
+					blockY = y;
+				}
+			}
+		}
 		if (blockY == null) {
 			return null;
 		}
@@ -374,9 +383,8 @@ public class Column extends Chunk {
 	}
 
 	public Integer getSkylightBlockY(int localX, int localZ) {
-		// NOTE: a "skylight" block is the transparent block that is directly one block above the top non-transparent
-		// block
-		Integer topBlockY = getLightIndex().getTopNonTransparentBlockY(localX, localZ);
+		// NOTE: a "skylight" block is the transparent block that is directly one block above the top non-transparent block
+		Integer topBlockY = this.opacityIndex.getTopBlockY(localX, localZ);
 		if (topBlockY != null) {
 			return topBlockY + 1;
 		}
@@ -407,7 +415,7 @@ public class Column extends Chunk {
 	public int getBlockOpacityAt(BlockPos pos) {
 		int x = Coords.blockToLocal(pos.getX());
 		int z = Coords.blockToLocal(pos.getZ());
-		return getLightIndex().getOpacity(x, pos.getY(), z);
+		return this.opacityIndex.getOpacity(x, pos.getY(), z);
 	}
 
 	public Iterable<Entity> entities() {

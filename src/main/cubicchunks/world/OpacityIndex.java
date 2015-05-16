@@ -1,3 +1,26 @@
+/*
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *
+ *  Copyright (c) 2014 Tall Worlds
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 package cubicchunks.world;
 
 import java.io.ByteArrayInputStream;
@@ -5,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import cubicchunks.util.Bits;
 
@@ -51,7 +75,7 @@ public class OpacityIndex {
 			// there are no shades of grey =P
 			return 255;
 		}
-			
+		
 		// scan the shades of grey with binary search
 		int mini = 0;
 		int maxi = getLastSegmentIndex(segments);
@@ -70,7 +94,7 @@ public class OpacityIndex {
 		}
 		
 		// didn't hit a segment start, mini is the correct answer + 1
-		assert(mini > 0);
+		assert(mini > 0) : String.format("can't find %d in %d", blockY, Arrays.toString(segments));
 		return unpackOpacity(segments[mini - 1]);
 	}
 	
@@ -488,12 +512,31 @@ public class OpacityIndex {
 	
 	public void readData(DataInputStream in)
 	throws IOException {
-		// TODO
+		for (int i=0; i<m_segments.length; i++) {
+			m_ymin[i] = in.readInt();
+			m_ymax[i] = in.readInt();
+			int[] segments = new int[in.readUnsignedShort()];
+			for (int j=0; j<segments.length; j++) {
+				segments[j] = in.readInt();
+			}
+		}
 	}
 	
 	public void writeData(DataOutputStream out)
 	throws IOException {
-		// TODO
+		for (int i=0; i<m_segments.length; i++) {
+			out.writeInt(m_ymin[i]);
+			out.writeInt(m_ymax[i]);
+			int[] segments = m_segments[i];
+			if (segments == null) {
+				out.writeShort(0);
+			} else {
+				out.writeShort(segments.length);
+				for (int j=0; j<segments.length; j++) {
+					out.writeInt(segments[j]);
+				}
+			}
+		}
 	}
 	
 	public String dump(int localX, int localZ) {

@@ -88,7 +88,7 @@ public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 		column.removeCube(cubeY);
 	}
 	
-	public void unloadColumn(int columnX, int columnZ){
+	public void unloadColumn(int columnX, int columnZ) {
 		//unload even if not empty
 		//server sends unload packets, it must be right.
 		

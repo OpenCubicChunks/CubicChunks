@@ -269,7 +269,7 @@ public class Cube {
 		
 		// update the column light index
 		int blockY = Coords.localToBlock(this.cubeY, y);
-		this.column.getLightIndex().setOpacity(x, blockY, z, newBlock.getOpacity());
+		this.column.getOpacityIndex().setOpacity(x, blockY, z, newBlock.getOpacity());
 		
 		return oldBlockState;
 	}
@@ -462,7 +462,7 @@ public class Cube {
 	public boolean isUnderground(BlockPos pos) {
 		int x = Coords.blockToLocal(pos.getX());
 		int z = Coords.blockToLocal(pos.getZ());
-		Integer topNonTransparentBlockY = this.column.getLightIndex().getTopNonTransparentBlockY(x, z);
+		Integer topNonTransparentBlockY = this.column.getOpacityIndex().getTopBlockY(x, z);
 		if (topNonTransparentBlockY == null) {
 			return false;
 		}

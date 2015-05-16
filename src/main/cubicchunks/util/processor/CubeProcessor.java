@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.Progress;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
@@ -39,7 +40,7 @@ public abstract class CubeProcessor extends QueueProcessor {
 	}
 	
 	@Override
-	public void processBatch() {
+	public void processBatch(Progress progress) {
 		
 		// start processing
 		for (long address : this.incomingAddresses) {
@@ -60,6 +61,10 @@ public abstract class CubeProcessor extends QueueProcessor {
 				this.processedAddresses.add(address);
 			} else {
 				this.deferredAddresses.add(address);
+			}
+			
+			if (progress != null) {
+				progress.incrementProgress();
 			}
 		}
 	}
