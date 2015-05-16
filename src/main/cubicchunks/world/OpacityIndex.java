@@ -86,8 +86,7 @@ public class OpacityIndex {
 			} else if (opacity == 0) {
 				setOpacityNoSegmentsTransparent(i, blockY);
 			} else {
-				makeSegmentsFromOpaqueRange(i);
-				setOpacityWithSegments(i, blockY, opacity);
+				setOpacityNoSegmentsTranslucent(i, blockY, opacity);
 			}
 		} else {
 			setOpacityWithSegments(i, blockY, opacity);
@@ -154,6 +153,11 @@ public class OpacityIndex {
 			return;
 		}
 		
+		// out of range?
+		if (blockY < m_ymin[i] || blockY > m_ymax[i]) {
+			return;
+		}
+		
 		// shrinking the range?
 		if (blockY == m_ymin[i]) {
 			m_ymin[i]++;
@@ -164,7 +168,7 @@ public class OpacityIndex {
 		}
 		
 		// we must be bisecting the range, need to make segments
-		assert (blockY >= m_ymin[i] && blockY <= m_ymax[i]);
+		assert (blockY >= m_ymin[i] && blockY <= m_ymax[i]) : String.format("%d -> [%d,%d]", blockY, m_ymin[i], m_ymax[i]);
 		m_segments[i] = new int[] {
 			packSegment(m_ymin[i], 255),
 			packSegment(blockY, 0),
@@ -172,10 +176,30 @@ public class OpacityIndex {
 		};
 	}
 	
+	private void setOpacityNoSegmentsTranslucent(int i, int blockY, int opacity) {
+		
+		// is there no range yet?
+		if (m_ymin[i] == None && m_ymax[i] == None) {
+			
+			// make a new segment
+			m_segments[i] = new int[] {
+				packSegment(blockY, opacity)
+			};
+			m_ymin[i] = blockY;
+			m_ymax[i] = blockY;
+			
+			return;
+		}
+		
+		// convert the range into a segment and continue in with-segments mode
+		makeSegmentsFromOpaqueRange(i);
+		setOpacityWithSegments(i, blockY, opacity);
+	}
+	
 	private void makeSegmentsFromOpaqueRange(int i) {
 		assert (m_segments[i] == null);
-		assert (m_ymin[i] == None);
-		assert (m_ymax[i] == None);
+		assert (m_ymin[i] != None);
+		assert (m_ymax[i] != None);
 		m_segments[i] = new int[] {
 			packSegment(m_ymin[i], 255)
 		};
@@ -185,25 +209,33 @@ public class OpacityIndex {
 
 		// binary search to find the insertion point
 		int[] segments = m_segments[i];
-		int mini = 0;
-		int maxi = getLastSegmentIndex(segments);
-		while (mini <= maxi) {
-			int midi = (mini + maxi) >>> 1;
-			int midPos = unpackPos(segments[midi]);
+		int minj = 0;
+		int maxj = getLastSegmentIndex(segments);
+		while (minj <= maxj) {
+			int midj = (minj + maxj) >>> 1;
+			int midPos = unpackPos(segments[midj]);
 			
 			if (midPos < blockY) {
-				mini = midi + 1;
+				minj = midj + 1;
 			} else if (midPos > blockY) {
-				maxi = midi - 1;
+				maxj = midj - 1;
 			} else {
 				// set would overwrite a segment start
-				setOpacityWithSegmentsAt(i, blockY, midi, opacity);
+				setOpacityWithSegmentsAt(i, blockY, midj, opacity);
 				return;
 			}
 		}
 		
-		// didn't hit a segment start, but mini-1 is the lower segment start index
-		setOpacityWithSegmentsAfter(i, blockY, mini - 1, opacity);
+		// didn't hit a segment start, but minj-1 is the containing segment, or -1 if we're off the bottom
+		int j = minj - 1;
+		if (j < 0) {
+			addSegment(i, 0, blockY + 1, 0);
+			addSegment(i, 0, blockY, opacity);
+			m_ymin[i] = blockY;
+		} else {
+			// j is the containing segment, and blockY is not at the start
+			setOpacityWithSegmentsAfter(i, blockY, j, opacity);
+		}
 	}
 
 	private void setOpacityWithSegmentsAt(int i, int blockY, int j, int opacity) {
@@ -321,6 +353,9 @@ public class OpacityIndex {
 			addSegment(i, j+1, blockY, opacity);
 			if (isRoomAfter) {
 				addSegment(i, j+2, blockY+1, oldOpacity);
+			} else if (blockY > m_ymax[i]) {
+				addSegment(i, j+1, m_ymax[i]+1, 0);
+				m_ymax[i] = blockY;
 			}
 		}
 	}

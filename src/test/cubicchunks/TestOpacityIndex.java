@@ -534,6 +534,91 @@ public class TestOpacityIndex {
 		), getSegments(index));
 	}
 	
+	@Test
+	public void setTranslucentFromEmpty() {
+		OpacityIndex index = new OpacityIndex();
+		index.setOpacity(0, 10, 0, 5);
+		assertEquals(10, (int)index.getBottomBlockY(0, 0));
+		assertEquals(10, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			10, 5
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setTranslucentFromOpaqueBlock() {
+		OpacityIndex index = makeIndex(2, 2);
+		index.setOpacity(0, 2, 0, 5);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(2, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 5
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setTranslucentTopFromOpaqueRange() {
+		OpacityIndex index = makeIndex(2, 6);
+		index.setOpacity(0, 6, 0, 5);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(6, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 255,
+			6, 5
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setTranslucentBottomFromOpaqueRange() {
+		OpacityIndex index = makeIndex(2, 6);
+		index.setOpacity(0, 2, 0, 5);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(6, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 5,
+			3, 255
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setTranslucentMiddleFromOpaqueRange() {
+		OpacityIndex index = makeIndex(2, 6);
+		index.setOpacity(0, 4, 0, 5);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(6, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 255,
+			4, 5,
+			5, 255
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setTranslucentAboveOpaqueRange() {
+		OpacityIndex index = makeIndex(2, 6);
+		index.setOpacity(0, 12, 0, 5);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(12, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 255,
+			7, 0,
+			12, 5
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setTranslucentBelowOpaqueRange() {
+		OpacityIndex index = makeIndex(2, 6);
+		index.setOpacity(0, -2, 0, 5);
+		assertEquals(-2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(6, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			-2, 5,
+			-1, 0,
+			2, 255
+		), getSegments(index));
+	}
+	
 	private OpacityIndex makeIndex(int ymin, int ymax, int ... segments) {
 		OpacityIndex index = new OpacityIndex();
 		
