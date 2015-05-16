@@ -23,17 +23,12 @@
  */
 package cubicchunks.util.processor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Progress;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
 public abstract class CubeProcessor extends QueueProcessor {
-	
-	private static final Logger log = LoggerFactory.getLogger(CubeProcessor.class);
 	
 	public CubeProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
@@ -51,7 +46,8 @@ public abstract class CubeProcessor extends QueueProcessor {
 			int cubeZ = AddressTools.getZ(address);
 			Cube cube = this.cache.getCube(cubeX, cubeY, cubeZ);
 			if (cube == null) {
-				log.warn("Unloaded cube ({},{},{}) dropped from {} processor queue.", cubeX, cubeY, cubeZ, this.name);
+				// this cube probably got unloaded before it could be processed
+				// just drop it from the queue
 				continue;
 			}
 			
