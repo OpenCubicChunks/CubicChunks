@@ -35,6 +35,7 @@ import com.google.common.collect.Lists;
 
 import cubicchunks.util.Bits;
 import cubicchunks.world.OpacityIndex;
+import java.util.Collections;
 
 
 public class TestOpacityIndex {
@@ -640,6 +641,30 @@ public class TestOpacityIndex {
 			-1, 0,
 			2, 255
 		), getSegments(index));
+	}
+        
+	@Test
+	public void setTransparentInOpaqueAndClear() {
+		OpacityIndex index = new OpacityIndex();
+		
+                //place blocks
+		index.setOpacity(0, 0, 0, 255);
+		index.setOpacity(0, 1, 0, 255);
+		index.setOpacity(0, 2, 0, 255);
+		
+                //and remove them
+		index.setOpacity(0, 1, 0, 0);
+		index.setOpacity(0, 0, 0, 0);
+ 		index.setOpacity(0, 2, 0, 0);
+		
+		assertEquals(0, index.getOpacity(0, -100, 0));
+		assertEquals(0, index.getOpacity(0, -10, 0));
+		assertEquals(0, index.getOpacity(0, 0, 0));
+		assertEquals(0, index.getOpacity(0, 10, 0));
+		assertEquals(0, index.getOpacity(0, 100, 0));
+		
+		assertEquals(null, index.getTopBlockY(0, 0));
+		assertEquals(null, index.getBottomBlockY(0, 0));
 	}
 	
 	private OpacityIndex makeIndex(int ymin, int ymax, int ... segments) {
