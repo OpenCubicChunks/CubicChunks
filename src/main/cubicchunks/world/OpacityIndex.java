@@ -274,7 +274,7 @@ public class OpacityIndex {
 		}
 		
 		boolean isFirstSegment = j == 0;
-		boolean isLastSegment = j == segments.length - 1;
+		boolean isLastSegment = j == getLastSegmentIndex(segments);
 		
 		boolean sameOpacityAsPrev;
 		if (isFirstSegment) {
@@ -291,10 +291,10 @@ public class OpacityIndex {
 		}
 		
 		boolean isRoomAfter;
-		if (j + 1 < segments.length) {
-			isRoomAfter = unpackPos(segments[j+1]) > blockY + 1;
-		} else {
+		if (isLastSegment) {
 			isRoomAfter = m_ymax[i] > blockY;
+		} else {
+			isRoomAfter = unpackPos(segments[j+1]) > blockY + 1;
 		}
 		
 		if (sameOpacityAsPrev && sameOpacityAsNext) {
@@ -346,7 +346,7 @@ public class OpacityIndex {
 			return;
 		}
 		
-		boolean isLastSegment = j == segments.length - 1;
+		boolean isLastSegment = j == getLastSegmentIndex(segments);
 		
 		boolean sameOpacityAsNext;
 		if (isLastSegment) {
@@ -356,10 +356,10 @@ public class OpacityIndex {
 		}
 		
 		boolean isRoomAfter;
-		if (j + 1 < segments.length) {
-			isRoomAfter = unpackPos(segments[j+1]) > blockY + 1;
-		} else {
+		if (isLastSegment) {
 			isRoomAfter = m_ymax[i] > blockY;
+		} else {
+			isRoomAfter = unpackPos(segments[j+1]) > blockY + 1;
 		}
 		
 		if (sameOpacityAsNext) {
@@ -531,8 +531,9 @@ public class OpacityIndex {
 			if (segments == null) {
 				out.writeShort(0);
 			} else {
-				out.writeShort(segments.length);
-				for (int j=0; j<segments.length; j++) {
+				int lastSegmentIndex = getLastSegmentIndex(segments);
+				out.writeShort(lastSegmentIndex + 1);
+				for (int j=0; j<=lastSegmentIndex; j++) {
 					out.writeInt(segments[j]);
 				}
 			}
@@ -545,17 +546,21 @@ public class OpacityIndex {
 	
 	private String dump(int i) {
 		StringBuilder buf = new StringBuilder();
-		buf.append("t=");
+		buf.append("range=[");
+		buf.append(m_ymin[i]);
+		buf.append(",");
 		buf.append(m_ymax[i]);
-		buf.append(", d(p,o)=");
-		for (int packed : m_segments[i]) {
-			int pos = unpackPos(packed);
-			int opacity = unpackOpacity(packed);
-			buf.append("(");
-			buf.append(pos);
-			buf.append(",");
-			buf.append(opacity);
-			buf.append(")");
+		buf.append("], segments(p,o)=");
+		if (m_segments[i] != null) {
+			for (int packed : m_segments[i]) {
+				int pos = unpackPos(packed);
+				int opacity = unpackOpacity(packed);
+				buf.append("(");
+				buf.append(pos);
+				buf.append(",");
+				buf.append(opacity);
+				buf.append(")");
+			}
 		}
 		return buf.toString();
 	}

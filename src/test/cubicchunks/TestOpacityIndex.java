@@ -35,7 +35,6 @@ import com.google.common.collect.Lists;
 
 import cubicchunks.util.Bits;
 import cubicchunks.world.OpacityIndex;
-import java.util.Collections;
 
 
 public class TestOpacityIndex {
@@ -652,17 +651,45 @@ public class TestOpacityIndex {
 		index.setOpacity(0, 1, 0, 255);
 		index.setOpacity(0, 2, 0, 255);
 		
-		// and remove them
+		// check
+		assertEquals(0, index.getOpacity(0, -1, 0));
+		assertEquals(255, index.getOpacity(0, 0, 0));
+		assertEquals(255, index.getOpacity(0, 1, 0));
+		assertEquals(255, index.getOpacity(0, 2, 0));
+		assertEquals(0, index.getOpacity(0, 3, 0));
+		assertEquals(2, (int)index.getTopBlockY(0, 0));
+		assertEquals(0, (int)index.getBottomBlockY(0, 0));
+		
+		// remove the middle one
 		index.setOpacity(0, 1, 0, 0);
+		
+		assertEquals(0, index.getOpacity(0, -1, 0));
+		assertEquals(255, index.getOpacity(0, 0, 0));
+		assertEquals(0, index.getOpacity(0, 1, 0));
+		assertEquals(255, index.getOpacity(0, 2, 0));
+		assertEquals(0, index.getOpacity(0, 3, 0));
+		assertEquals(2, (int)index.getTopBlockY(0, 0));
+		assertEquals(0, (int)index.getBottomBlockY(0, 0));
+		
+		// remove the bottom one
 		index.setOpacity(0, 0, 0, 0);
+		
+		assertEquals(0, index.getOpacity(0, -1, 0));
+		assertEquals(0, index.getOpacity(0, 0, 0));
+		assertEquals(0, index.getOpacity(0, 1, 0));
+		assertEquals(255, index.getOpacity(0, 2, 0));
+		assertEquals(0, index.getOpacity(0, 3, 0));
+		assertEquals(2, (int)index.getTopBlockY(0, 0));
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		
+		// remove the top one
 		index.setOpacity(0, 2, 0, 0);
 		
-		assertEquals(0, index.getOpacity(0, -100, 0));
-		assertEquals(0, index.getOpacity(0, -10, 0));
+		assertEquals(0, index.getOpacity(0, -1, 0));
 		assertEquals(0, index.getOpacity(0, 0, 0));
-		assertEquals(0, index.getOpacity(0, 10, 0));
-		assertEquals(0, index.getOpacity(0, 100, 0));
-		
+		assertEquals(0, index.getOpacity(0, 1, 0));
+		assertEquals(0, index.getOpacity(0, 2, 0));
+		assertEquals(0, index.getOpacity(0, 3, 0));
 		assertEquals(null, index.getTopBlockY(0, 0));
 		assertEquals(null, index.getBottomBlockY(0, 0));
 	}
