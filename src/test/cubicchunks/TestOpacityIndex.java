@@ -198,6 +198,82 @@ public class TestOpacityIndex {
 	}
 	
 	@Test
+	public void setDisjointOpaqueAboveOpaques() {
+		OpacityIndex index = makeIndex(9, 16,
+			9, 255,
+			12, 0,
+			16, 255
+		);
+		
+		index.setOpacity(0, 20, 0, 255);
+		assertEquals(9, (int)index.getBottomBlockY(0, 0));
+		assertEquals(20, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			9, 255,
+			12, 0,
+			16, 255,
+			17, 0,
+			20, 255
+		), getSegments(index));
+	}
+	
+	@Test
+	public void setDisjointOpaqueBelowOpaques() {
+		OpacityIndex index = makeIndex(9, 16,
+			9, 255,
+			12, 0,
+			16, 255
+		);
+		
+		index.setOpacity(0, 3, 0, 255);
+		assertEquals(3, (int)index.getBottomBlockY(0, 0));
+		assertEquals(16, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			3, 255,
+			4, 0,
+			9, 255,
+			12, 0,
+			16, 255
+		), getSegments(index));
+	}
+	
+	@Test
+	public void extendTopOpaqueUp() {
+		OpacityIndex index = makeIndex(9, 16,
+			9, 255,
+			12, 0,
+			16, 255
+		);
+		
+		index.setOpacity(0, 17, 0, 255);
+		assertEquals(9, (int)index.getBottomBlockY(0, 0));
+		assertEquals(17, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			9, 255,
+			12, 0,
+			16, 255
+		), getSegments(index));
+	}
+	
+	@Test
+	public void extendBottomOpaqueDown() {
+		OpacityIndex index = makeIndex(9, 16,
+			9, 255,
+			12, 0,
+			16, 255
+		);
+		
+		index.setOpacity(0, 8, 0, 255);
+		assertEquals(8, (int)index.getBottomBlockY(0, 0));
+		assertEquals(16, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			8, 255,
+			12, 0,
+			16, 255
+		), getSegments(index));
+	}
+	
+	@Test
 	public void setBisectOpaue() {
 		OpacityIndex index = makeIndex(9, 11);
 		
@@ -523,6 +599,20 @@ public class TestOpacityIndex {
 	}
 	
 	@Test
+	public void setDataAfterTopSameAsPrevious() {
+		OpacityIndex index = makeIndex(2, 4,
+			2, 1
+		);
+		
+		index.setOpacity(0, 4, 0, 0);
+		assertEquals(2, (int)index.getBottomBlockY(0, 0));
+		assertEquals(3, (int)index.getTopBlockY(0, 0));
+		assertEquals(Arrays.asList(
+			2, 1
+		), getSegments(index));
+	}
+	
+	@Test
 	public void setDataNotStartUniqueNoRoomAfter() {
 		OpacityIndex index = makeIndex(2, 7,
 			2, 1,
@@ -692,6 +782,44 @@ public class TestOpacityIndex {
 		assertEquals(0, index.getOpacity(0, 3, 0));
 		assertEquals(null, index.getTopBlockY(0, 0));
 		assertEquals(null, index.getBottomBlockY(0, 0));
+	}
+	
+	@Test
+	public void checkFloatingIsland() {
+		
+		// make an index with a surface
+		OpacityIndex index = makeIndex(100, 102);
+		
+		// start setting blocks in the sky
+		index.setOpacity(0, 200, 0, 255);
+		
+		assertEquals(0, index.getOpacity(0, 199, 0));
+		assertEquals(255, index.getOpacity(0, 200, 0));
+		assertEquals(0, index.getOpacity(0, 201, 0));
+		assertEquals(0, index.getOpacity(0, 202, 0));
+		assertEquals(0, index.getOpacity(0, 203, 0));
+		assertEquals(200, (int)index.getTopBlockY(0, 0));
+		assertEquals(100, (int)index.getBottomBlockY(0, 0));
+		
+		index.setOpacity(0, 201, 0, 255);
+		
+		assertEquals(0, index.getOpacity(0, 199, 0));
+		assertEquals(255, index.getOpacity(0, 200, 0));
+		assertEquals(255, index.getOpacity(0, 201, 0));
+		assertEquals(0, index.getOpacity(0, 202, 0));
+		assertEquals(0, index.getOpacity(0, 203, 0));
+		assertEquals(201, (int)index.getTopBlockY(0, 0));
+		assertEquals(100, (int)index.getBottomBlockY(0, 0));
+		
+		index.setOpacity(0, 202, 0, 255);
+		
+		assertEquals(0, index.getOpacity(0, 199, 0));
+		assertEquals(255, index.getOpacity(0, 200, 0));
+		assertEquals(255, index.getOpacity(0, 201, 0));
+		assertEquals(255, index.getOpacity(0, 202, 0));
+		assertEquals(0, index.getOpacity(0, 203, 0));
+		assertEquals(202, (int)index.getTopBlockY(0, 0));
+		assertEquals(100, (int)index.getBottomBlockY(0, 0));
 	}
 	
 	private OpacityIndex makeIndex(int ymin, int ymax, int ... segments) {

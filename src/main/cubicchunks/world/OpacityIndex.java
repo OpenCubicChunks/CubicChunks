@@ -253,9 +253,9 @@ public class OpacityIndex {
 		// didn't hit a segment start, but minj-1 is the containing segment, or -1 if we're off the bottom
 		int j = minj - 1;
 		if (j < 0) {
-			addSegment(i, 0, blockY + 1, 0);
-			addSegment(i, 0, blockY, opacity);
-			m_ymin[i] = blockY;
+			setOpacityWithSegmentsBeforeBottom(i, blockY, opacity);
+		} else if (blockY > m_ymax[i]) {
+			setOpacityWithSegmentsAfterTop(i, blockY, opacity);
 		} else {
 			// j is the containing segment, and blockY is not at the start
 			setOpacityWithSegmentsAfter(i, blockY, j, opacity);
@@ -377,13 +377,61 @@ public class OpacityIndex {
 			addSegment(i, j+1, blockY, opacity);
 			if (isRoomAfter) {
 				addSegment(i, j+2, blockY+1, oldOpacity);
-			} else if (blockY > m_ymax[i]) {
-				addSegment(i, j+1, m_ymax[i]+1, 0);
-				m_ymax[i] = blockY;
 			}
 		}
 	}
 	
+	private void setOpacityWithSegmentsAfterTop(int i, int blockY, int opacity) {
+	
+		// will the opacity even change?
+		if (opacity == 0) {
+			return;
+		}
+		
+		int[] segments = m_segments[i];
+		int j = getLastSegmentIndex(segments);
+		
+		boolean nextToLastSegment = blockY == m_ymax[i] + 1;
+		if (nextToLastSegment) {
+			boolean extendSegment = opacity == unpackOpacity(segments[j]);
+			if (extendSegment) {
+				// nothing to do, just increment ymax at end of func
+			} else {
+				addSegment(i, j+1, blockY, opacity);
+			}
+		} else {
+			addSegment(i, j+1, m_ymax[i] + 1, 0);
+			addSegment(i, j+2, blockY, opacity);
+		}
+		
+		m_ymax[i] = blockY;
+	}
+
+	private void setOpacityWithSegmentsBeforeBottom(int i, int blockY, int opacity) {
+		
+		// will the opacity even change?
+		if (opacity == 0) {
+			return;
+		}
+		
+		int[] segments = m_segments[i];
+		
+		boolean nextToFirstSegment = blockY == m_ymin[i] - 1;
+		if (nextToFirstSegment) {
+			boolean extendSegment = opacity == unpackOpacity(segments[0]);
+			if (extendSegment) {
+				moveSegmentStartDown(i, 0);
+			} else {
+				addSegment(i, 0, blockY, opacity);
+				m_ymin[i] = blockY;
+			}
+		} else {
+			addSegment(i, 0, blockY + 1, 0);
+			addSegment(i, 0, blockY, opacity);
+			m_ymin[i] = blockY;
+		}
+	}
+
 	private void moveSegmentStartUp(int i, int j) {
 		
 		int segment = m_segments[i][j];
