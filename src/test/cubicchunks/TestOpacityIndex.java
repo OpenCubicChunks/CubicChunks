@@ -647,15 +647,15 @@ public class TestOpacityIndex {
 	public void setTransparentInOpaqueAndClear() {
 		OpacityIndex index = new OpacityIndex();
 		
-                //place blocks
+		// place blocks
 		index.setOpacity(0, 0, 0, 255);
 		index.setOpacity(0, 1, 0, 255);
 		index.setOpacity(0, 2, 0, 255);
 		
-                //and remove them
+		// and remove them
 		index.setOpacity(0, 1, 0, 0);
 		index.setOpacity(0, 0, 0, 0);
- 		index.setOpacity(0, 2, 0, 0);
+		index.setOpacity(0, 2, 0, 0);
 		
 		assertEquals(0, index.getOpacity(0, -100, 0));
 		assertEquals(0, index.getOpacity(0, -10, 0));
