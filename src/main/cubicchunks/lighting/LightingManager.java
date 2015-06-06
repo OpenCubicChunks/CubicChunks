@@ -33,7 +33,7 @@ import cubicchunks.world.column.Column;
 
 public class LightingManager {
 	
-	private static final int TickBudget = 40; // ms. Only 50 ms in a tick
+	private static final int TickBudget = 10; // ms. Only 50 ms in a tick @ 20 tps
 	
 	private World world;
 	private SkyLightOcclusionProcessor skyLightOcclusionProcessor;
@@ -45,7 +45,7 @@ public class LightingManager {
 		this.world = world;
 		
 		this.skyLightOcclusionProcessor = new SkyLightOcclusionProcessor("Sky Light Occlusion", provider, 50);
-		this.firstLightProcessor = new FirstLightProcessor("First Light", provider, 10);
+		this.firstLightProcessor = new FirstLightProcessor("First Light", provider, 1);
 		this.diffuseLightingCalculator = new DiffuseLightingCalculator();
 		this.skyLightUpdateCalculator = new SkyLightUpdateCalculator();
 	}
