@@ -26,6 +26,7 @@ package cubicchunks.lighting;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import cubicchunks.TallWorldsMod;
 import cubicchunks.util.Bits;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.Column;
@@ -71,20 +72,20 @@ public class LightingManager {
 		long timeStop = timeStart + TickBudget;
 		
 		// process the queues
+		int numProcessed = 0;
 		this.world.profiler.addSection("skyLightOcclusion");
-		this.skyLightOcclusionProcessor.processQueueUntil(timeStop);
+		numProcessed += this.skyLightOcclusionProcessor.processQueueUntil(timeStop);
 		this.world.profiler.startSection("firstLight");
-		this.firstLightProcessor.processQueueUntil(timeStop);
+		numProcessed += this.firstLightProcessor.processQueueUntil(timeStop);
 		this.world.profiler.endSection();
 		
-		/* disable this spam for now
+		// disable this spam for now
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			log.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isClient ? "CLIENT" : "SERVER", numProcessed, timeDiff));
-			log.info(this.skyLightOcclusionProcessor.getProcessingReport());
-			log.info(this.firstLightProcessor.getProcessingReport());
+			TallWorldsMod.log.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isClient ? "CLIENT" : "SERVER", numProcessed, timeDiff));
+			TallWorldsMod.log.info(this.skyLightOcclusionProcessor.getProcessingReport());
+			TallWorldsMod.log.info(this.firstLightProcessor.getProcessingReport());
 		}
-		*/
 	}
 }

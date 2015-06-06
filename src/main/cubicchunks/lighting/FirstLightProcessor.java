@@ -224,7 +224,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		Block block = cube.getBlockAt(pos);
 		
 		// should we diffuse sky light?
-		if (!world.dimension.hasNoSky && pos.getY() > world.getSeaLevel() - 16 && block.getOpacity() == 0) {
+		if (!world.dimension.hasNoSky && pos.getY() > world.getSeaLevel() - 16 && block.getOpacity() == 0 && world.getLightAt(LightType.SKY, pos) == 0) {
 			boolean wasLit = world.updateLightingAt(LightType.SKY, pos);
 			if (!wasLit) {
 				return false;
