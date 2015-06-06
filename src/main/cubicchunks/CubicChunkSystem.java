@@ -52,7 +52,6 @@ import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;

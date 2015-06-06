@@ -29,7 +29,6 @@ import java.util.List;
 import net.minecraft.network.INetHandler;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
-import cubicchunks.world.cube.Cube;
 
 
 public class PacketUnloadColumns implements IPacket<INetHandler> {

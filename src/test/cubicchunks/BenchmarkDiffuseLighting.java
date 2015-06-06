@@ -77,6 +77,7 @@ public class BenchmarkDiffuseLighting {
 				log.error(report.getReport());
 			}
 			
+			@SuppressWarnings("unused")
 			StandaloneWorld world = new StandaloneWorld(savesDir, worldName, dimensionId);
 			
 			/*

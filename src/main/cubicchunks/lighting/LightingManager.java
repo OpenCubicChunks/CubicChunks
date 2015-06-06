@@ -26,17 +26,11 @@ package cubicchunks.lighting;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import cubicchunks.util.Bits;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.Column;
 
 public class LightingManager {
-	
-	private static final Logger log = LoggerFactory.getLogger(LightingManager.class);
 	
 	private static final int TickBudget = 40; // ms. Only 50 ms in a tick
 	
@@ -77,11 +71,10 @@ public class LightingManager {
 		long timeStop = timeStart + TickBudget;
 		
 		// process the queues
-		int numProcessed = 0;
 		this.world.profiler.addSection("skyLightOcclusion");
-		numProcessed += this.skyLightOcclusionProcessor.processQueueUntil(timeStop);
+		this.skyLightOcclusionProcessor.processQueueUntil(timeStop);
 		this.world.profiler.startSection("firstLight");
-		numProcessed += this.firstLightProcessor.processQueueUntil(timeStop);
+		this.firstLightProcessor.processQueueUntil(timeStop);
 		this.world.profiler.endSection();
 		
 		/* disable this spam for now

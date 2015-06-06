@@ -23,10 +23,8 @@
  */
 package cubicchunks.generator.terrain;
 
-import static cubicchunks.util.Coords.CUBE_SIZE;
-import static cubicchunks.util.TerrainGeneratorUtils.applyHeightGradient;
-import static cubicchunks.util.TerrainGeneratorUtils.expandNoiseArray;
-import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
+import static cubicchunks.util.Coords.*;
+import static cubicchunks.util.TerrainGeneratorUtils.*;
 import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.world.cube.Cube;
 

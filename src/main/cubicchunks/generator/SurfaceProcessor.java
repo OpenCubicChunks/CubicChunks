@@ -30,7 +30,6 @@ import cubicchunks.generator.noise.NoiseGeneratorMultiFractal;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
-import cubicchunks.world.WorldContext;
 import cubicchunks.world.biome.BiomeBlockReplacer;
 import cubicchunks.world.cube.Cube;
 
