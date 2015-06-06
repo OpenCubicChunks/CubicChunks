@@ -315,16 +315,14 @@ public class CubicChunkSystem implements ChunkSystem {
 	}
 
 	@Override
-	public Boolean updateLightingAt(World world, BlockPos pos) {
+	public Boolean updateLightingAt(World world, LightType type, BlockPos pos) {
+		/* TEMP: for now, the vanilla lighting implementation is much faster than mine
+		 * let's just use that for now
 		if (isTallWorld(world)) {
 			LightingManager lightingManager = WorldContext.get(world).getLightingManager();
-			boolean success = false;
-			if (!world.dimension.hasNoSky()) {
-				success |= lightingManager.computeDiffuseLighting(pos, LightType.SKY);
-			}
-			success |= lightingManager.computeDiffuseLighting(pos, LightType.BLOCK);
-			return success;
+			return lightingManager.computeDiffuseLighting(pos, type);
 		}
+		*/
 		return null;
 	}
 
