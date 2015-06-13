@@ -47,7 +47,7 @@ import cuchaz.m3l.api.registry.AlreadyRegisteredException;
 @Mod(
 	modid = TallWorldsMod.Id,
 	name = "Tall Worlds",
-	version = "1.8.3-0.1"
+	version = "1.8.3-0.3.1"
 )
 public class TallWorldsMod {
 	
