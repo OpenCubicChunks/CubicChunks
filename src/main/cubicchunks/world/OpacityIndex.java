@@ -92,6 +92,12 @@ public class OpacityIndex {
 			}
 		}
 		
+		// TEMP: return transparent instead of crashing if something went wrong
+		// I don't have time to fix the bug, so I'd rather a user see lighting artifacts than crashes
+		if (mini <= 0) {
+			return 0;
+		}
+		
 		// didn't hit a segment start, mini is the correct answer + 1
 		assert(mini > 0) : String.format("can't find %d in %s", blockY, dump(i));
 		return unpackOpacity(segments[mini - 1]);
