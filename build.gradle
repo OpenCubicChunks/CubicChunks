@@ -27,7 +27,7 @@ defaultTasks 'licenseFormat', 'build'
 // Basic project information
 group = "tallworlds"
 archivesBaseName = "TallWorlds"
-version = "1.8.3-0.2"
+version = "1.8.3-0.3.1"
 
 // Extended project information
 ext.projectName = 'Tall Worlds'
@@ -99,7 +99,7 @@ dependencies
 	
 	minecraft files('../m3l/lib/minecraft-1.8.3-client-deobf.jar')
 	
-	provided 'cuchaz:m3l:1.8.3-0.2b'
+	provided 'cuchaz:m3l:1.8.3-0.3b'
 	provided 'cuchaz:m3l-forge-api:1.8.3-0.2b-1334'
 	provided 'org.slf4j:slf4j-api:1.7.10'
 	provided 'ch.qos.logback:logback-classic:1.1.2'
