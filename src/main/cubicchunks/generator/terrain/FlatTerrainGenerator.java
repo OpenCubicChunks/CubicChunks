@@ -21,16 +21,35 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.generator.terrain;
 
-public interface IThreadedFileIO {
+import static cubicchunks.util.Coords.*;
+import static cubicchunks.util.TerrainGeneratorUtils.*;
+import cubicchunks.api.generators.ITerrainGenerator;
+import cubicchunks.world.cube.Cube;
 
-    /**
-     * Returns a boolean stating if there is more IO to write.
-     * 
-     * @return TRUE - more IO to write in the current object.
-     *         <p>
-     *         FALSE - no more IO to write in the current object.
-     */
-    boolean write();
+public class FlatTerrainGenerator implements ITerrainGenerator {
+
+	private final double[][][] rawDensity;
+
+	public FlatTerrainGenerator(final long seed) {
+		this.rawDensity = getNewCubeSizedArray();
+	}
+
+	@Override
+	public double[][][] generate(final Cube cube) {
+		generateTerrainArray(cube);
+
+		return applyHeightGradient(cube, this.rawDensity);
+	}
+
+	private void generateTerrainArray(final Cube cube) {
+		for (int x = 0; x < CUBE_SIZE; x++) {
+			for (int z = 0; z < CUBE_SIZE; z++) {
+				for (int y = 0; y < CUBE_SIZE; y++) {
+					this.rawDensity[x][y][z] = 0;
+				}
+			}
+		}
+	}
 }

@@ -23,42 +23,22 @@
  */
 package cubicchunks.util;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
-public class BatchedSetQueue<T> {
+public class ArrayBatchedQueue<T> extends ArrayDeque<T> {
 	
-	private Set<T> setQueue;
-	
-	public BatchedSetQueue() {
-		this.setQueue = new LinkedHashSet<T>();
-	}
-	
-	public boolean add(T val) {
-		return this.setQueue.add(val);
-	}
-	
-	public void addAll(Iterable<T> vals) {
-		for (T val : vals) {
-			this.setQueue.add(val);
-		}
-	}
-	
-	public boolean contains(T val) {
-		return this.setQueue.contains(val);
-	}
-	
+	private static final long serialVersionUID = 542092146475009002L;
+
 	public void getBatch(Collection<T> out, int size) {
-		Iterator<T> iter = this.setQueue.iterator();
-		for (int i = 0; i < size && iter.hasNext(); i++) {
-			out.add(iter.next());
-			iter.remove();
+		for (int i=0; i<size && !isEmpty(); i++) {
+			out.add(poll());
 		}
 	}
 	
-	public int size() {
-		return this.setQueue.size();
+	public void getAll(Collection<T> out) {
+		while (!isEmpty()) {
+			out.add(poll());
+		}
 	}
 }

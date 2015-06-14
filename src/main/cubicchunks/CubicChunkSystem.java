@@ -52,7 +52,6 @@ import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
@@ -163,13 +162,11 @@ public class CubicChunkSystem implements ChunkSystem {
 			// tick all the things!
 			worldServer.profiler.startSection("generatorPipeline");
 			context.getGeneratorPipeline().tick();
-			worldServer.profiler.endSection();
 
-			worldServer.profiler.startSection("lightingEngine");
+			worldServer.profiler.addSection("lightingEngine");
 			context.getLightingManager().tick();
-			worldServer.profiler.endSection();
 
-			worldServer.profiler.startSection("randomCubeTicks");
+			worldServer.profiler.addSection("randomCubeTicks");
 			ServerCubeCache cubeCache = context.getCubeCache();
 			for (ChunkCoordIntPair coords : worldServer.activeChunkSet) {
 				Column column = cubeCache.getChunk(coords.chunkX, coords.chunkZ);
@@ -219,6 +216,9 @@ public class CubicChunkSystem implements ChunkSystem {
 				long timeDiff = System.currentTimeMillis() - timeStart;
 				TallWorldsMod.log.info("Done in {} ms", timeDiff);
 			}
+			
+			// save the cubes now
+			serverCubeCache.saveAllChunks();
 		}
 	}
 
@@ -314,16 +314,14 @@ public class CubicChunkSystem implements ChunkSystem {
 	}
 
 	@Override
-	public Boolean updateLightingAt(World world, BlockPos pos) {
+	public Boolean updateLightingAt(World world, LightType type, BlockPos pos) {
+		/* TEMP: for now, the vanilla lighting implementation is much faster than mine
+		 * let's just use that for now
 		if (isTallWorld(world)) {
 			LightingManager lightingManager = WorldContext.get(world).getLightingManager();
-			boolean success = false;
-			if (!world.dimension.hasNoSky()) {
-				success |= lightingManager.computeDiffuseLighting(pos, LightType.SKY);
-			}
-			success |= lightingManager.computeDiffuseLighting(pos, LightType.BLOCK);
-			return success;
+			return lightingManager.computeDiffuseLighting(pos, type);
 		}
+		*/
 		return null;
 	}
 
@@ -475,5 +473,15 @@ public class CubicChunkSystem implements ChunkSystem {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public void onServerStop() {
+		WorldServerContext.clear();
+	}
+
+	@Override
+	public void unloadClientWorld() {
+		WorldClientContext.clear();
 	}
 }

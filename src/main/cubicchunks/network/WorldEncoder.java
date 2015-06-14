@@ -69,7 +69,7 @@ public class WorldEncoder {
 		out.write(column.getBiomeMap());
 		
 		// 2. light index
-		column.getLightIndex().writeData(out);
+		column.getOpacityIndex().writeData(out);
 	}
 
 	public static void decodeColumn(DataInputStream in, Column column)
@@ -79,7 +79,7 @@ public class WorldEncoder {
 		in.read(column.getBiomeMap());
 		
 		// 2. light index
-		column.getLightIndex().readData(in);
+		column.getOpacityIndex().readData(in);
 	}
 
 	public static void decodeCube(DataInputStream in, Cube cube)

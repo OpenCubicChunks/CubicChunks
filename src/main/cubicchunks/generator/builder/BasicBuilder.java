@@ -29,6 +29,7 @@ import com.flowpowered.noise.module.modifier.ScaleBias;
 import com.flowpowered.noise.module.modifier.ScalePoint;
 import com.flowpowered.noise.module.source.Perlin;
 
+@SuppressWarnings("unused")
 public class BasicBuilder implements IBuilder {
 	protected Module finalModule;
 

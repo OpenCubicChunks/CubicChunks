@@ -29,10 +29,9 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
-import static cubicchunks.util.Coords.CUBE_MAX_X;
-import static cubicchunks.util.Coords.CUBE_MAX_Y;
-import static cubicchunks.util.Coords.CUBE_MAX_Z;
+import static cubicchunks.util.Coords.CUBE_SIZE;
 import static cubicchunks.util.MathHelper.lerp;
+import cubicchunks.world.cube.Cube;
 
 public final class TerrainGeneratorUtils {
 	/**
@@ -98,7 +97,25 @@ public final class TerrainGeneratorUtils {
 		return result;
 	}
 
-	private static double[][][] getNewCubeSizedArray() {
-		return new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
+	public static double[][][] getNewCubeSizedArray() {
+		return new double[CUBE_SIZE][CUBE_SIZE][CUBE_SIZE];
+	}
+
+	public static double[][][] applyHeightGradient(final Cube cube, final double[][][] rawDensity) {
+		final double [][][] result = getNewCubeSizedArray();
+		
+		final int cubeYMin = Coords.cubeToMinBlock(cube.getY());
+		
+		for (int x = 0; x < CUBE_SIZE; x++) {
+			for (int z = 0; z < CUBE_SIZE; z++) {
+				for (int y = 0; y < CUBE_SIZE; y++) {
+					final int yAbs = cubeYMin + y;
+					
+					result[x][y][z] = rawDensity[x][y][z] - yAbs;
+				}
+			}
+		}
+		
+		return result;
 	}
 }

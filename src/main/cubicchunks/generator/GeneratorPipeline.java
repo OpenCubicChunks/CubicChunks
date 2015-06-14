@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 
 import cubicchunks.TallWorldsMod;
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.Progress;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.util.processor.QueueProcessor;
 import cubicchunks.world.ICubeCache;
@@ -125,7 +126,7 @@ public class GeneratorPipeline {
 			
 			int numMsToProcess = (int)(Math.ceil(processor.share*TickBudget));
 			long stageTimeStart = System.currentTimeMillis();
-			int numStageProcessed = processor.processor.processQueue(stageTimeStart + numMsToProcess);
+			int numStageProcessed = processor.processor.processQueueUntil(stageTimeStart + numMsToProcess);
 			
 			/* DEBUG
 			TallWorldsMod.log.info("Stage {} processed {} cubes in {} ms of {}/{} ms ({}%).",
@@ -140,21 +141,7 @@ public class GeneratorPipeline {
 			
 			numProcessed += numStageProcessed;
 			
-			// move the processed entries into the next stage of the pipeline
-			int nextStage = stage + 1;
-			for (long address : processor.processor.getProcessedAddresses()) {
-				
-				// set the generator stage flag on the cube
-				int cubeX = AddressTools.getX(address);
-				int cubeY = AddressTools.getY(address);
-				int cubeZ = AddressTools.getZ(address);
-				this.cubes.getCube(cubeX, cubeY, cubeZ).setGeneratorStage(GeneratorStage.values()[nextStage]);
-				
-				// advance the address to the next stage
-				if (nextStage < this.processors.size()) {
-					this.processors.get(nextStage).processor.add(address);
-				}
-			}
+			advanceCubes(processor.processor, stage);
 		}
 		
 		// reporting
@@ -170,6 +157,40 @@ public class GeneratorPipeline {
 	}
 	
 	public void generateAll() {
-		while (tick() > 0);
+		for (int stage = 0; stage < this.processors.size(); stage++) {
+			
+			QueueProcessor processor = this.processors.get(stage).processor;
+			
+			TallWorldsMod.log.info("Stage: {}", processor.getName());
+			
+			// process all the cubes in this stage at once
+			int numProcessed = 0;
+			int round = 0;
+			do {
+				TallWorldsMod.log.info("\tround {} - {} cubes", ++round, processor.getNumInQueue());
+				Progress progress = new Progress(processor.getNumInQueue(), 1000);
+				numProcessed = processor.processQueue(progress);
+				advanceCubes(processor, stage);
+			} while (numProcessed > 0 && processor.getNumInQueue() > 0);
+		}
+	}
+	
+	private void advanceCubes(QueueProcessor processor, int stage) {
+		
+		// move the processed entries into the next stage of the pipeline
+		int nextStage = stage + 1;
+		for (long address : processor.getProcessedAddresses()) {
+			
+			// set the generator stage flag on the cube
+			int cubeX = AddressTools.getX(address);
+			int cubeY = AddressTools.getY(address);
+			int cubeZ = AddressTools.getZ(address);
+			this.cubes.getCube(cubeX, cubeY, cubeZ).setGeneratorStage(GeneratorStage.values()[nextStage]);
+			
+			// advance the address to the next stage
+			if (nextStage < this.processors.size()) {
+				this.processors.get(nextStage).processor.add(address);
+			}
+		}
 	}
 }

@@ -30,13 +30,12 @@ import cubicchunks.generator.noise.NoiseGeneratorMultiFractal;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
-import cubicchunks.world.WorldContext;
 import cubicchunks.world.biome.BiomeBlockReplacer;
 import cubicchunks.world.cube.Cube;
 
-public class BiomeProcessor extends CubeProcessor {
+public class SurfaceProcessor extends CubeProcessor {
 
-	private static final String PROCESSOR_NAME = "Biomes";
+	private static final String PROCESSOR_NAME = "Surface";
 
 	private Random rand;
 	private NoiseGeneratorMultiFractal noiseGen;
@@ -44,7 +43,7 @@ public class BiomeProcessor extends CubeProcessor {
 	private Biome[] biomes;
 	private long seed;
 
-	public BiomeProcessor(final ICubeCache cubeCache, final int batchSize, final long seed) {
+	public SurfaceProcessor(final ICubeCache cubeCache, final int batchSize, final long seed) {
 		super(PROCESSOR_NAME, cubeCache, batchSize);
 		this.rand = new Random(seed);
 		this.noiseGen = new NoiseGeneratorMultiFractal(this.rand, 4);
@@ -56,14 +55,13 @@ public class BiomeProcessor extends CubeProcessor {
 	@Override
 	public boolean calculate(final Cube cube) {
 
-		// if the cube is empty, there is nothing to do. Even if neighbors don't exist
+		// if the cube is empty, there is nothing to do. Even if neighbors don't
+		// exist
 		if (cube.isEmpty()) {
 			return true;
 		}
 
-		// only continue if the neighboring cubes are at least in the biome stage
-		WorldContext worldContext = WorldContext.get(cube.getWorld());
-		if (!worldContext.cubeAndNeighborsExist(cube, true, GeneratorStage.BIOMES)) {
+		if (!this.canGenerate(cube)) {
 			return false;
 		}
 
@@ -103,5 +101,20 @@ public class BiomeProcessor extends CubeProcessor {
 		// generate biome info. This is a hackjob.
 		return cube.getWorld().dimension.getBiomeManager().getBiomeMap(this.biomes, Coords.cubeToMinBlock(cube.getX()),
 				Coords.cubeToMinBlock(cube.getZ()), 16, 16);
+	}
+
+	private boolean canGenerate(Cube cube) {
+		//cube above must exist and can't be before BIOMES stage.
+		//also in the next stage need to make sure that we don't generate structures 
+		//when biome blocks aren't placed in cube below
+		int cubeX = cube.getX();
+		int cubeY = cube.getY() + 1;
+		int cubeZ = cube.getZ();
+		boolean exists = this.cache.cubeExists(cubeX, cubeY, cubeZ);
+		if (!exists) {
+			return false;
+		}
+		Cube above = this.cache.getCube(cubeX, cubeY, cubeZ);
+		return !above.getGeneratorStage().isLessThan(GeneratorStage.SURFACE);
 	}
 }

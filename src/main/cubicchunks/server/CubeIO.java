@@ -47,6 +47,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ChunkSection;
+import net.minecraft.world.storage.FileIOWorker;
+import net.minecraft.world.storage.IThreadedFileIO;
 
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -57,8 +59,6 @@ import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
-import cubicchunks.util.FileIOWorker;
-import cubicchunks.util.IThreadedFileIO;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.IEntityActionListener;
 import cubicchunks.world.column.Column;
@@ -187,7 +187,7 @@ public class CubeIO implements IThreadedFileIO {
 	}
 	
 	@Override
-	public boolean write() {
+	public boolean tryWrite() {
 		
 		// NOTE: return true to redo this call (used for batching)
 		
@@ -288,7 +288,7 @@ public class CubeIO implements IThreadedFileIO {
 		column.setBiomeMap(nbt.getAsByteArray("Biomes"));
 		
 		// read light index
-		column.getLightIndex().readData(nbt.getAsByteArray("LightIndex"));
+		column.getOpacityIndex().readData(nbt.getAsByteArray("OpacityIndex"));
 		
 		// entities
 		column.getEntityContainer().readFromNbt(nbt, "Entities", this.world, new IEntityActionListener() {
@@ -437,7 +437,7 @@ public class CubeIO implements IThreadedFileIO {
 			nbt.put("Biomes", column.getBiomeMap());
 			
 			// light index
-			nbt.put("LightIndex", column.getLightIndex().getData());
+			nbt.put("OpacityIndex", column.getOpacityIndex().getData());
 			
 			// entities
 			column.getEntityContainer().writeToNbt(nbt, "Entities");

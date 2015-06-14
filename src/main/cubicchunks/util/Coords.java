@@ -28,9 +28,11 @@ import net.minecraft.util.MathHelper;
 
 public class Coords {
 	
-	public static final int CUBE_MAX_X = 16;
-	public static final int CUBE_MAX_Y = 16;
-	public static final int CUBE_MAX_Z = 16;
+	public static final int CUBE_SIZE = 16;
+	
+	public static final int CUBE_MAX_X = CUBE_SIZE;
+	public static final int CUBE_MAX_Y = CUBE_SIZE;
+	public static final int CUBE_MAX_Z = CUBE_SIZE;
 	
 	public static final int HALF_CUBE_MAX_X = CUBE_MAX_X / 2;
 	public static final int HALF_CUBE_MAX_Y = CUBE_MAX_Y / 2;

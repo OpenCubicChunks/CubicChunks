@@ -70,16 +70,14 @@ public class PacketBulkCubeData implements IPacket<INetHandler> {
 			
 			// encode the cubes and columns
 			ByteArrayOutputStream buf = new ByteArrayOutputStream();
-			DataOutputStream out = new DataOutputStream(buf);
-			for (int i=0; i<columns.size(); i++) {
-				Column column = columns.get(i);
-				WorldEncoder.encodeColumn(out, column);
+			try (DataOutputStream out = new DataOutputStream(buf)) {
+				for (Column column : columns) {
+					WorldEncoder.encodeColumn(out, column);
+				}
+				for (Cube cube : cubes) {
+					WorldEncoder.encodeCube(out, cube);
+				}
 			}
-			for (int i=0; i<cubes.size(); i++) {
-				Cube cube = cubes.get(i);
-				WorldEncoder.encodeCube(out, cube);
-			}
-			out.close();
 			data = buf.toByteArray();
 
 		} catch (IOException ex) {

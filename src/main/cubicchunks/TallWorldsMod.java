@@ -35,6 +35,7 @@ import cubicchunks.client.ClientCubeCache;
 import cubicchunks.network.PacketBulkCubeData;
 import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketCubeChange;
+import cubicchunks.network.PacketUnloadColumns;
 import cubicchunks.network.PacketUnloadCubes;
 import cubicchunks.server.CubeIO;
 import cubicchunks.server.CubePlayerManager;
@@ -91,6 +92,8 @@ public class TallWorldsMod {
 		ConnectionState.directionMaps.put(PacketBulkCubeData.class, ConnectionState.PLAY);
 		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketUnloadCubes.class);
 		ConnectionState.directionMaps.put(PacketUnloadCubes.class, ConnectionState.PLAY);
+		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketUnloadColumns.class);
+		ConnectionState.directionMaps.put(PacketUnloadColumns.class, ConnectionState.PLAY);
 		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketCubeBlockChange.class);
 		ConnectionState.directionMaps.put(PacketCubeBlockChange.class, ConnectionState.PLAY);
 		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketCubeChange.class);

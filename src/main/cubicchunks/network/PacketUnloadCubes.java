@@ -45,8 +45,10 @@ public class PacketUnloadCubes implements IPacket<INetHandler> {
 		}
 		
 		cubeAddresses = new long[cubes.size()];
-		for (int i=0; i<cubes.size(); i++) {
-			cubeAddresses[i] = cubes.get(i).getAddress();
+		int i = 0;
+		for (Cube cube : cubes) {
+			cubeAddresses[i] = cube.getAddress();
+			i++;
 		}
 	}
 

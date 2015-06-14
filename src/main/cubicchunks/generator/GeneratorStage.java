@@ -25,7 +25,7 @@ package cubicchunks.generator;
 
 public enum GeneratorStage {
 	TERRAIN,
-	BIOMES,
+	SURFACE,
 	STRUCTURES,
 	LIGHTING,
 	FEATURES,

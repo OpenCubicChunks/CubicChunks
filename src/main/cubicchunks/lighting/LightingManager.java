@@ -26,19 +26,14 @@ package cubicchunks.lighting;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import cubicchunks.TallWorldsMod;
 import cubicchunks.util.Bits;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.Column;
 
 public class LightingManager {
 	
-	private static final Logger log = LoggerFactory.getLogger(LightingManager.class);
-	
-	private static final int TickBudget = 40; // ms. Only 50 ms in a tick
+	private static final int TickBudget = 10; // ms. Only 50 ms in a tick @ 20 tps
 	
 	private World world;
 	private SkyLightOcclusionProcessor skyLightOcclusionProcessor;
@@ -50,7 +45,7 @@ public class LightingManager {
 		this.world = world;
 		
 		this.skyLightOcclusionProcessor = new SkyLightOcclusionProcessor("Sky Light Occlusion", provider, 50);
-		this.firstLightProcessor = new FirstLightProcessor("First Light", provider, 10);
+		this.firstLightProcessor = new FirstLightProcessor("First Light", provider, 1);
 		this.diffuseLightingCalculator = new DiffuseLightingCalculator();
 		this.skyLightUpdateCalculator = new SkyLightUpdateCalculator();
 	}
@@ -78,17 +73,19 @@ public class LightingManager {
 		
 		// process the queues
 		int numProcessed = 0;
-		numProcessed += this.skyLightOcclusionProcessor.processQueue(timeStop);
-		numProcessed += this.firstLightProcessor.processQueue(timeStop);
+		this.world.profiler.addSection("skyLightOcclusion");
+		numProcessed += this.skyLightOcclusionProcessor.processQueueUntil(timeStop);
+		this.world.profiler.startSection("firstLight");
+		numProcessed += this.firstLightProcessor.processQueueUntil(timeStop);
+		this.world.profiler.endSection();
 		
-		/* disable this spam for now
+		// disable this spam for now
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			log.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isClient ? "CLIENT" : "SERVER", numProcessed, timeDiff));
-			log.info(this.skyLightOcclusionProcessor.getProcessingReport());
-			log.info(this.firstLightProcessor.getProcessingReport());
+			TallWorldsMod.log.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isClient ? "CLIENT" : "SERVER", numProcessed, timeDiff));
+			TallWorldsMod.log.info(this.skyLightOcclusionProcessor.getProcessingReport());
+			TallWorldsMod.log.info(this.firstLightProcessor.getProcessingReport());
 		}
-		*/
 	}
 }

@@ -36,6 +36,7 @@ public class NoiseGeneratorSimplex {
 
 	// Inner class to speed up gradient computations
 	// (array access is a lot slower than member access)
+	@SuppressWarnings("unused")
 	private static class Grad {
 		double x, y, z;
 

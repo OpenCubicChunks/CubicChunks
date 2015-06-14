@@ -21,49 +21,59 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.network;
 
-import java.util.TreeMap;
+import java.io.IOException;
+import java.util.List;
 
-import net.minecraft.block.BlockAir;
+import net.minecraft.network.INetHandler;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.PacketBuffer;
 
-@Deprecated
-public class LightIndexBlockProxy extends BlockAir {
+
+public class PacketUnloadColumns implements IPacket<INetHandler> {
+
+	public static final int MAX_SIZE = 65535;
 	
-	private static TreeMap<Integer,LightIndexBlockProxy> cache;
+	public long[] columnAddresses;
 	
-	static {
-		cache = new TreeMap<Integer,LightIndexBlockProxy>();
-	}
-	
-	public static LightIndexBlockProxy get(int opacity) {
-		LightIndexBlockProxy proxy = cache.get(opacity);
-		if (proxy == null) {
-			proxy = new LightIndexBlockProxy(opacity);
-			cache.put(opacity, proxy);
+	public PacketUnloadColumns(List<Long> columns) {
+		
+		if (columns.size() > MAX_SIZE) {
+			throw new IllegalArgumentException("Don't send more than " + MAX_SIZE + " column unloads at a time!");
 		}
-		return proxy;
+		
+		columnAddresses = new long[columns.size()];
+		
+		int i = 0;
+		for (long addr : columns) {
+			columnAddresses[i] = addr;
+			i++;
+		}
 	}
-	
-	private int opacity;
-	
-	protected LightIndexBlockProxy(int opacity) {
-		this.opacity = opacity;
-	}
-	
+
 	@Override
-	public int getOpacity() {
-		return this.opacity;
+	public void read(PacketBuffer in)
+	throws IOException {
+		columnAddresses = new long[in.readUnsignedShort()];
+		for (int i=0; i<columnAddresses.length; i++) {
+			columnAddresses[i] = in.readLong();
+		}
 	}
-	
+
 	@Override
-	public int getBrightness() {
-		// assume lights in unloaded cubes are turned off
-		return 0;
+	public void write(PacketBuffer out)
+	throws IOException {
+		out.writeShort(columnAddresses.length);
+		for (long addr : columnAddresses) {
+			out.writeLong(addr);
+		}
 	}
-	
+
 	@Override
-	public boolean isOpaque() {
-		return this.opacity == 255;
+	public void handle(INetHandler vanillaHandler) {
+		// don't use the vanilla handler, use our own
+		// TODO: make a real network system for M3L
+		ClientHandler.getInstance().handle(this);
 	}
 }

@@ -23,15 +23,11 @@
  */
 package cubicchunks.image;
 
-import java.util.Random;
-
 import com.flowpowered.noise.module.source.Perlin;
 
 public class ImageWriterMain {
 	
 	public static void main(String[] args) {
-		Random rand = new Random();
-		int rnd = rand.nextInt();
 		Perlin baseContinentDef_pe0 = new Perlin();
 		baseContinentDef_pe0.setSeed(0);
 		baseContinentDef_pe0.setFrequency(1.0);
