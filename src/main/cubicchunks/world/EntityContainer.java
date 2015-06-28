@@ -39,51 +39,51 @@ import com.google.common.base.Predicate;
 
 public class EntityContainer {
 	
-	private EntitySet<Entity> m_entities;
-	private boolean m_hasActiveEntities;
-	private long m_lastSaveTime;
+	private EntitySet<Entity> entities;
+	private boolean hasActiveEntities;
+	private long lastSaveTime;
 	
 	public EntityContainer() {
-		m_entities = new EntitySet<Entity>(Entity.class);
-		m_hasActiveEntities = false;
-		m_lastSaveTime = 0;
+		this.entities = new EntitySet<Entity>(Entity.class);
+		this.hasActiveEntities = false;
+		this.lastSaveTime = 0;
 	}
 	
 	public EntitySet<Entity> getEntitySet() {
-		return m_entities;
+		return this.entities;
 	}
 	
 	public boolean hasActiveEntities() {
-		return m_hasActiveEntities;
+		return this.hasActiveEntities;
 	}
 	
 	public void setHasActiveEntities(boolean val) {
-		m_hasActiveEntities = val;
+		this.hasActiveEntities = val;
 	}
 	
 	public void add(Entity entity) {
-		m_entities.add(entity);
-		m_hasActiveEntities = true;
+		this.entities.add(entity);
+		this.hasActiveEntities = true;
 	}
 	
 	public boolean remove(Entity entity) {
-		return m_entities.remove(entity);
+		return this.entities.remove(entity);
 	}
 	
 	public void clear() {
-		m_entities.clear();
+		this.entities.clear();
 	}
 	
-	public Collection<Entity> entities() {
-		return Collections.unmodifiableCollection(m_entities);
+	public Collection<Entity> getEntities() {
+		return Collections.unmodifiableCollection(this.entities);
 	}
 	
 	public int size() {
-		return m_entities.size();
+		return this.entities.size();
 	}
 	
 	public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
-		for (T entity : m_entities.getEntities(entityType)) {
+		for (T entity : this.entities.getEntities(entityType)) {
 			if (entityType.isAssignableFrom(entity.getClass()) && entity.getBoundingBox().intersects(queryBox) && (predicate == null || predicate.apply(entity))) {
 				out.add(entity);
 			}
@@ -92,7 +92,7 @@ public class EntityContainer {
 	
 	public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
 		
-		for (Entity entity : m_entities) {
+		for (Entity entity : this.entities) {
 			
 			// handle entity exclusion
 			if (entity == excludedEntity) {
@@ -115,11 +115,11 @@ public class EntityContainer {
 	}
 	
 	public boolean needsSaving(long time) {
-		return m_hasActiveEntities && time >= m_lastSaveTime + 600;
+		return this.hasActiveEntities && time >= this.lastSaveTime + 600;
 	}
 	
 	public void markSaved(long time) {
-		m_lastSaveTime = time;
+		this.lastSaveTime = time;
 	}
 	
 	public void writeToNbt(NbtTagCompound nbt, String name) {
@@ -127,14 +127,14 @@ public class EntityContainer {
 	}
 	
 	public void writeToNbt(NbtTagCompound nbt, String name, IEntityActionListener listener) {
-		m_hasActiveEntities = false;
+		this.hasActiveEntities = false;
 		NbtList nbtEntities = new NbtList();
 		nbt.put(name, nbtEntities);
-		for (Entity entity : m_entities) {
+		for (Entity entity : this.entities) {
 			
 			NbtTagCompound nbtEntity = new NbtTagCompound();
 			entity.saveToNbt(nbtEntity);
-			m_hasActiveEntities = true;
+			this.hasActiveEntities = true;
 			nbtEntities.add(nbtEntity);
 			
 			if (listener != null) {

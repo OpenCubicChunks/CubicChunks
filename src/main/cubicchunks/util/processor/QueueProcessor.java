@@ -27,7 +27,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import cubicchunks.util.BatchedSetQueue;
+import cubicchunks.util.ArrayBatchedQueue;
+import cubicchunks.util.Progress;
 import cubicchunks.world.ICubeCache;
 
 public abstract class QueueProcessor {
@@ -35,7 +36,7 @@ public abstract class QueueProcessor {
 	protected String name;
 	protected ICubeCache cache;
 	private int batchSize;
-	private BatchedSetQueue<Long> queue;
+	private ArrayBatchedQueue<Long> queue;
 	protected List<Long> incomingAddresses;
 	protected List<Long> processedAddresses;
 	protected List<Long> deferredAddresses;
@@ -45,7 +46,7 @@ public abstract class QueueProcessor {
 		this.cache = cache;
 		this.batchSize = batchSize;
 		
-		this.queue = new BatchedSetQueue<Long>();
+		this.queue = new ArrayBatchedQueue<Long>();
 		this.incomingAddresses = Lists.newArrayList();
 		this.processedAddresses = Lists.newArrayList();
 		this.deferredAddresses = Lists.newArrayList();
@@ -67,7 +68,7 @@ public abstract class QueueProcessor {
 		return this.queue.size();
 	}
 	
-	public int processQueue(long timeStop) {
+	public int processQueueUntil(long timeStop) {
 		this.processedAddresses.clear();
 		this.deferredAddresses.clear();
 		
@@ -88,9 +89,22 @@ public abstract class QueueProcessor {
 		}
 		
 		// put the deferred addresses back on the queue
-		for (long address : this.deferredAddresses) {
-			this.queue.add(address);
-		}
+		this.queue.addAll(this.deferredAddresses);
+		
+		return this.processedAddresses.size();
+	}
+	
+	public int processQueue(Progress progress) {
+		this.processedAddresses.clear();
+		this.deferredAddresses.clear();
+		
+		// process all the addresses
+		this.incomingAddresses.clear();
+		this.queue.getAll(this.incomingAddresses);
+		processBatch(progress);
+		
+		// put the deferred addresses back on the queue
+		this.queue.addAll(this.deferredAddresses);
 		
 		return this.processedAddresses.size();
 	}
@@ -103,5 +117,9 @@ public abstract class QueueProcessor {
 		return String.format("\t%22s: %3d processed, %d remaining", this.name, this.processedAddresses.size(), this.queue.size());
 	}
 	
-	public abstract void processBatch();
+	public void processBatch() {
+		processBatch(null);
+	}
+	
+	public abstract void processBatch(Progress progress);
 }

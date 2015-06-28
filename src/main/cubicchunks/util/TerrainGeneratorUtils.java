@@ -31,6 +31,7 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
 import static cubicchunks.util.Coords.CUBE_SIZE;
 import static cubicchunks.util.MathHelper.lerp;
+import cubicchunks.world.cube.Cube;
 
 public final class TerrainGeneratorUtils {
 	/**
@@ -98,5 +99,23 @@ public final class TerrainGeneratorUtils {
 
 	public static double[][][] getNewCubeSizedArray() {
 		return new double[CUBE_SIZE][CUBE_SIZE][CUBE_SIZE];
+	}
+
+	public static double[][][] applyHeightGradient(final Cube cube, final double[][][] rawDensity) {
+		final double [][][] result = getNewCubeSizedArray();
+		
+		final int cubeYMin = Coords.cubeToMinBlock(cube.getY());
+		
+		for (int x = 0; x < CUBE_SIZE; x++) {
+			for (int z = 0; z < CUBE_SIZE; z++) {
+				for (int y = 0; y < CUBE_SIZE; y++) {
+					final int yAbs = cubeYMin + y;
+					
+					result[x][y][z] = rawDensity[x][y][z] - yAbs;
+				}
+			}
+		}
+		
+		return result;
 	}
 }

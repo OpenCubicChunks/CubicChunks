@@ -26,9 +26,7 @@ package cubicchunks.world.biome;
 import java.util.Random;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockSand;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.IBlockProperty;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;

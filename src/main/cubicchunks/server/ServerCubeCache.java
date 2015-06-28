@@ -54,7 +54,7 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 	
 	private static final Logger log = Logging.getLogger();
 	
-	public static final int WorldSpawnChunkDistance = 12;
+	public static final int WorldSpawnChunkDistance = 12; // highest render distance is 32
 	
 	private WorldServer worldServer;
 	private CubeIO cubeIO;
@@ -303,13 +303,17 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 			
 			// unload empty columns
 			if (!column.hasCubes()) {
-				column.onChunkLoad();
+				column.onChunkUnload();
 				this.loadedColumns.remove(columnAddress);
 				this.cubeIO.saveColumn(column);
 			}
 		}
 		
 		return false;
+	}
+	
+	public void saveAllChunks() {
+		saveAllChunks(true, null);
 	}
 	
 	@Override

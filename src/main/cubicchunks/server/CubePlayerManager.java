@@ -414,10 +414,13 @@ public class CubePlayerManager extends PlayerManager {
 
 		// send the cube data
 		player.netServerHandler.send(new PacketBulkCubeData(columnsToSend, cubesToSend));
+		
+		/* DEBUG
 		TallWorldsMod.log.info("Server sent {}/{} cubes, {}/{} columns to player",
 			cubesToSend.size(), cubesToSend.size() + info.cubesToLoad.size(),
 			columnsToSend.size(), columnsToSend.size() + info.columnAddressesToLoad.size()
 		);
+		*/
 		
 		// tell the cube watchers which cubes were sent for this player
 		for (Cube cube : cubesToSend) {

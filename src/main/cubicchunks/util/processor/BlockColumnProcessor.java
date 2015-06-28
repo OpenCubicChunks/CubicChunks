@@ -25,6 +25,7 @@ package cubicchunks.util.processor;
 
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
+import cubicchunks.util.Progress;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
@@ -36,9 +37,9 @@ public abstract class BlockColumnProcessor extends QueueProcessor {
 	}
 	
 	@Override
-	public void processBatch() {
-		// start processing
+	public void processBatch(Progress progress) {
 		for (long address : this.incomingAddresses) {
+			
 			// get the block coords
 			int blockX = Bits.unpackSigned(address, 26, 0);
 			int blockZ = Bits.unpackSigned(address, 26, 26);
@@ -63,6 +64,10 @@ public abstract class BlockColumnProcessor extends QueueProcessor {
 				this.processedAddresses.add(address);
 			} else {
 				this.deferredAddresses.add(address);
+			}
+			
+			if (progress != null) {
+				progress.incrementProgress();
 			}
 		}
 	}

@@ -34,6 +34,7 @@ import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
+@SuppressWarnings("unused")
 public class StructureProcessor extends CubeProcessor {
 	
 	private CubicCaveGenerator caveGenerator;
