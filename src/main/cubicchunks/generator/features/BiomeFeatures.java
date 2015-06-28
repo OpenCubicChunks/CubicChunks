@@ -73,14 +73,14 @@ public class BiomeFeatures {
 						addReplacable(SAND).addReplacable(DIRT).build(), decorator.clayPerChunk);
 		
 		//sand and gravel beach generators
-		this.addMultiGen(SurfaceBlockReplacer.builder().
-						world(world).height(1).radius(7).block(SAND).
-						addAllowedAboveSurface(WATER).
-						addReplacable(DIRT).addReplacable(GRASS).build(), decorator.sandBeachesPerChunk);
-		this.addMultiGen(SurfaceBlockReplacer.builder().
-						world(world).height(1).radius(6).block(GRAVEL).
-						addAllowedAboveSurface(WATER).
-						addReplacable(DIRT).addReplacable(GRASS).build(), decorator.gravelBeachesPerChunk);
+//		this.addMultiGen(SurfaceBlockReplacer.builder().
+//						world(world).height(1).radius(7).block(SAND).
+//						addAllowedAboveSurface(WATER).
+//						addReplacable(DIRT).addReplacable(GRASS).build(), decorator.sandBeachesPerChunk);
+//		this.addMultiGen(SurfaceBlockReplacer.builder().
+//						world(world).height(1).radius(6).block(GRAVEL).
+//						addAllowedAboveSurface(WATER).
+//						addReplacable(DIRT).addReplacable(GRASS).build(), decorator.gravelBeachesPerChunk);
 		this.addTreeGenerators(decorator);
 		addMultiGen(new TallGrassGenerator(world, BlockTallGrass.TallGrassTypes.GRASS), decorator.randomGrassPerChunk);
 		this.addOreGenerators(config);
