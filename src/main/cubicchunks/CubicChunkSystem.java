@@ -296,8 +296,6 @@ public class CubicChunkSystem implements ChunkSystem {
 	@Override
 	public Integer getSeaLevel(World world) {
 		if (isTallWorld(world)) {
-			// tall worlds will eventually have the sea level at 0
-			// for now, let's just do the vanilla thing
 			return SEA_LEVEL;
 		}
 		return null;
@@ -330,7 +328,7 @@ public class CubicChunkSystem implements ChunkSystem {
 			int maxBlockY, int maxBlockZ, boolean allowEmptyChunks) {
 		if (isTallWorld(world)) {
 			WorldContext context = WorldContext.get(world);
-			context.blocksExist(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ, allowEmptyChunks,
+			return context.blocksExist(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ, allowEmptyChunks,
 					GeneratorStage.LIVE);
 		}
 		return null;
@@ -344,7 +342,7 @@ public class CubicChunkSystem implements ChunkSystem {
 
 			final int blockDist = 32;
 			int blockY = MathHelper.floor(entity.yPos);
-			context.blocksExist(minBlockX, blockY - blockDist, minBlockZ, maxBlockX, blockY + blockDist, maxBlockZ,
+			return context.blocksExist(minBlockX, blockY - blockDist, minBlockZ, maxBlockX, blockY + blockDist, maxBlockZ,
 					allowEmptyChunks, GeneratorStage.LIVE);
 		}
 		return null;
