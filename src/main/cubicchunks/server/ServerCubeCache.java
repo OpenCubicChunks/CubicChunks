@@ -216,7 +216,7 @@ public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
 		if (!cube.getGeneratorStage().isLastStage()) {
 			// queue the cube to finish generation
 			WorldServerContext.get(this.worldServer).getGeneratorPipeline().generate(cube);
-		} else {
+		} else if (cube.needsRelightAfterLoad()) {
 			// queue the cube for re-lighting
 			WorldServerContext.get(this.worldServer).getLightingManager().queueFirstLightCalculation(cubeAddress);
 		}

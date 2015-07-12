@@ -409,6 +409,15 @@ public class CubeIO implements IThreadedFileIO {
 			}
 		}
 		
+		// check to see if the cube needs to be relit
+		if (nbt.containsKey("OpacityIndex")) {
+			int savedHash = nbt.getAsInt("OpacityIndex");
+			int currentHash = column.getOpacityIndex().hashCode();
+			cube.setNeedsRelightAfterLoad(savedHash != currentHash);
+		} else {
+			cube.setNeedsRelightAfterLoad(true);
+		}
+		
 		return cube;
 	}
 	
@@ -525,6 +534,9 @@ public class CubeIO implements IThreadedFileIO {
 				nbtTicks.add(nbtScheduledTick);
 			}
 		}
+		
+		// opacity index hash
+		nbt.put("OpacityIndex", cube.getColumn().getOpacityIndex().hashCode());
 		
 		return nbt;
 	}

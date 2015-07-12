@@ -46,6 +46,9 @@ public class OpacityIndex {
 	private int[] m_ymax;
 	private int[][] m_segments;
 	
+	private int m_hash;
+	private boolean m_needsHash;
+	
 	public OpacityIndex() {
 		
 		m_ymin = new int[16*16];
@@ -57,6 +60,9 @@ public class OpacityIndex {
 			m_ymin[i] = None;
 			m_ymax[i] = None;
 		}
+		
+		m_hash = 0;
+		m_needsHash = true;
 	}
 	
 	public int getOpacity(int localX, int blockY, int localZ) {
@@ -120,9 +126,11 @@ public class OpacityIndex {
 		} else {
 			setOpacityWithSegments(i, blockY, opacity);
 		}
+		
+		m_needsHash = true;
 	}
 	
-	public void setOpacityNoSegmentsOpaque(int i, int blockY) {
+	private void setOpacityNoSegmentsOpaque(int i, int blockY) {
 		
 		// something from nothing?
 		if (m_ymin[i] == None && m_ymax[i] == None) {
@@ -641,5 +649,34 @@ public class OpacityIndex {
 			}
 		}
 		throw new Error("Invalid segments state");
+	}
+	
+	@Override
+	public int hashCode() {
+		if (m_needsHash) {
+			m_hash = computeHash();
+			m_needsHash = false;
+		}
+		return m_hash;
+	}
+	
+	private int computeHash() {
+		final int MyFavoritePrime = 37;
+		int hash = 1;
+		for (int i=0; i<m_segments.length; i++) {
+			hash *= MyFavoritePrime;
+			hash += m_ymin[i];
+			hash *= MyFavoritePrime;
+			hash += m_ymax[i];
+			if (m_segments[i] == null) {
+				hash *= MyFavoritePrime;
+			} else {
+				for (int n : m_segments[i]) {
+					hash *= MyFavoritePrime;
+					hash += n;
+				}
+			}
+		}
+		return hash;
 	}
 }

@@ -64,6 +64,7 @@ public class Cube {
 	private EntityContainer entities;
 	private CubeBlockMap<BlockEntity> blockEntities;
 	private GeneratorStage generatorStage;
+	private boolean needsRelightAfterLoad;
 	
 	public Cube(World world, Column column, int x, int y, int z, boolean isModified) {
 		this.world = world;
@@ -77,6 +78,7 @@ public class Cube {
 		this.entities = new EntityContainer();
 		this.blockEntities = new CubeBlockMap<BlockEntity>();
 		this.generatorStage = null;
+		this.needsRelightAfterLoad = false;
 	}
 	
 	public boolean isEmpty() {
@@ -588,5 +590,12 @@ public class Cube {
 		hash = 41 * hash + getX();
 		hash = 41 * hash + getY();
 		return 41 * hash + getZ();
+	}
+
+	public boolean needsRelightAfterLoad() {
+		return this.needsRelightAfterLoad;
+	}
+	public void setNeedsRelightAfterLoad(boolean val) {
+		this.needsRelightAfterLoad = val;
 	}
 }
