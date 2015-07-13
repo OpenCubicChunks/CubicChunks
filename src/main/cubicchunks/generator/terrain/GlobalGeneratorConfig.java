@@ -27,7 +27,7 @@ import cubicchunks.util.Coords;
 
 public class GlobalGeneratorConfig {
 	public static final int SEA_LEVEL = 0;
-	public static final double MAX_ELEV = 500;
+	public static final double MAX_ELEV = 200;
 
 	// these are constants. Changing them may cause issues.
 	public static final int X_SECTION_SIZE = 4 + 1;

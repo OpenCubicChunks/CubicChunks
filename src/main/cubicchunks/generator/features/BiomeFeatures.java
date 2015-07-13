@@ -126,7 +126,7 @@ public class BiomeFeatures {
 
 		//other
 		addMineral(DIRT, cfg.dirtMinHeight, cfg.dirtMaxHeight, cfg.dirtSize, cfg.dirtCount);
-		addMineral(GRAVEL, cfg.gravelMinHeight, cfg.gravelMaxHeight, cfg.gravelSize, cfg.gravelCount);
+//		addMineral(GRAVEL, cfg.gravelMinHeight, cfg.gravelMaxHeight, cfg.gravelSize, cfg.gravelCount);
 	}
 
 	protected void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
