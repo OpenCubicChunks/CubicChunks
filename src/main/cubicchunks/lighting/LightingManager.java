@@ -83,9 +83,9 @@ public class LightingManager {
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			TallWorldsMod.log.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isClient ? "CLIENT" : "SERVER", numProcessed, timeDiff));
-			TallWorldsMod.log.info(this.skyLightOcclusionProcessor.getProcessingReport());
-			TallWorldsMod.log.info(this.firstLightProcessor.getProcessingReport());
+			TallWorldsMod.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isClient ? "CLIENT" : "SERVER", numProcessed, timeDiff));
+			TallWorldsMod.LOGGER.info(this.skyLightOcclusionProcessor.getProcessingReport());
+			TallWorldsMod.LOGGER.info(this.firstLightProcessor.getProcessingReport());
 		}
 	}
 }

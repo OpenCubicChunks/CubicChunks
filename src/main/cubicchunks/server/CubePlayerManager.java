@@ -33,6 +33,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
@@ -42,9 +45,10 @@ import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.TreeMultiset;
 
 import cubicchunks.TallWorldsMod;
 import cubicchunks.network.PacketBulkCubeData;
@@ -58,6 +62,8 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
 public class CubePlayerManager extends PlayerManager {
+	
+	private final Logger LOGGER = LoggerFactory.getLogger("CubePlayerManager");
 	
 	private static class PlayerInfo {
 		
@@ -352,13 +358,7 @@ public class CubePlayerManager extends PlayerManager {
 		info.removeOutOfRangeOutgoingCubesToLoad();
 		info.sortOutgoingCubesToLoad();
 
-		/*{ // DEBUG
-			Multiset<GeneratorStage> counts = HashMultiset.create();
-			for (Cube cube : info.outgoingCubes) {
-				counts.add(cube.getGeneratorStage());
-			}
-			TallWorldsMod.log.info("Server cubes: {}", counts);
-		}*/
+		LOGGER.trace("Server cubes to load: {}", info.cubesToLoad.size());
 		
 		// pull off enough cubes from the queue to fit in a packet
 		final int MaxCubesToSend = 100;
@@ -371,9 +371,7 @@ public class CubePlayerManager extends PlayerManager {
 			// check to see if the cube is live before sending
 			// if it is not live, skip to the next cube in the iterator
 			if (!cube.getGeneratorStage().isLastStage()) {
-				/* DEBUG
-				TallWorldsMod.log.info("Cube at {}, {}, {} at stage {}, skipping!", cube.getX(), cube.getY(), cube.getZ(), cube.getGeneratorStage());
-				*/
+				LOGGER.trace("Cube at {}, {}, {} at stage {}, skipping!", cube.getX(), cube.getY(), cube.getZ(), cube.getGeneratorStage());
 				continue;
 			}
 			
@@ -391,16 +389,6 @@ public class CubePlayerManager extends PlayerManager {
 			return;
 		}
 		
-		/*{ // DEBUG: what y-levels are we sending?
-			Multiset<Integer> counts = TreeMultiset.create();
-			for (Chunk chunk : columnsToSend) {
-				for (Cube cube : ((ColumnView)chunk).getCubes()) {
-					counts.add(cube.getY());
-				}
-			}
-			TallWorldsMod.log.info("Cube Y counts: {}", counts);
-		}*/
-		
 		// get the columns to send
 		List<Column> columnsToSend = Lists.newArrayList();
 		for (Cube cube : cubesToSend) {
@@ -411,16 +399,26 @@ public class CubePlayerManager extends PlayerManager {
 				columnsToSend.add(column);
 			}
 		}
+		
+		{ // DEBUG: what y-levels are we sending?
+			Multiset<Integer> counts = TreeMultiset.create();
+			for (Column column : columnsToSend) {
+				for (Cube cube : column.getCubes()) {
+					counts.add(cube.getY());
+				}
+			}
+			LOGGER.trace("Cube Y counts: {}", counts);
+		}
 
 		// send the cube data
 		player.netServerHandler.send(new PacketBulkCubeData(columnsToSend, cubesToSend));
 		
-		/* DEBUG
-		TallWorldsMod.log.info("Server sent {}/{} cubes, {}/{} columns to player",
-			cubesToSend.size(), cubesToSend.size() + info.cubesToLoad.size(),
-			columnsToSend.size(), columnsToSend.size() + info.columnAddressesToLoad.size()
-		);
-		*/
+		{// DEBUG
+			LOGGER.debug("Server sent {}/{} cubes, {}/{} columns to player",
+					cubesToSend.size(), cubesToSend.size() + info.cubesToLoad.size(),
+					columnsToSend.size(), columnsToSend.size() + info.columnAddressesToLoad.size()
+					);
+		}
 		
 		// tell the cube watchers which cubes were sent for this player
 		for (Cube cube : cubesToSend) {
@@ -455,14 +453,14 @@ public class CubePlayerManager extends PlayerManager {
 			int from = i*PacketUnloadCubes.MAX_SIZE;
 			int to = Math.min((i+1)*PacketUnloadCubes.MAX_SIZE, info.cubesToUnload.size() - 1);
 			player.netServerHandler.send(new PacketUnloadCubes(info.cubesToUnload.subList(from, to)));
-			TallWorldsMod.log.info("Server sent {} cubes to player to unload", info.cubesToUnload.size());
+			LOGGER.debug("Server sent {} cubes to player to unload", info.cubesToUnload.size());
 		}
 		info.cubesToUnload.clear();
 		
 		//even with render distance 64 and teleporting it's not possible with current MAX_SIZE
 		assert info.columnAddressesToUnload.size() < PacketUnloadColumns.MAX_SIZE;
 		player.netServerHandler.send(new PacketUnloadColumns(info.columnAddressesToUnload));
-		TallWorldsMod.log.info("Server sent {} columns to player to unload", info.columnAddressesToUnload.size());
+		LOGGER.debug("Server sent {} columns to player to unload", info.columnAddressesToUnload.size());
 		info.columnAddressesToUnload.clear();
 	}
 	

@@ -66,7 +66,7 @@ import cubicchunks.world.cube.Cube;
 
 public class CubeIO implements IThreadedFileIO {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(CubeIO.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger("CubeIO");
 	
 	private static class SaveEntry {
 		
@@ -80,8 +80,13 @@ public class CubeIO implements IThreadedFileIO {
 	}
 	
 	private static DB initializeDBConnection(final File saveFile, final Dimension dimension) {
+		
 		// init database connection
+		LOGGER.info("Initializing db connection...");
+		
 		File file = new File(saveFile, String.format("cubes.dim%d.db", dimension.getId()));
+		
+		LOGGER.info("Connected to db at ()", file);
 		
 		file.getParentFile().mkdirs();
 		
@@ -252,7 +257,7 @@ public class CubeIO implements IThreadedFileIO {
 		this.db.commit();
 		
 		long diff = System.currentTimeMillis() - start;
-		LOGGER.info("Wrote {} columns ({} remaining) ({}k) and {} cubes ({} remaining) ({}k) in {} ms",
+		LOGGER.debug("Wrote {} columns ({} remaining) ({}k) and {} cubes ({} remaining) ({}k) in {} ms",
 			numColumnsSaved, numColumnsRemaining, numColumnBytesSaved / 1024,
 			numCubesSaved, numCubesRemaining, numCubeBytesSaved / 1024, diff
 		);

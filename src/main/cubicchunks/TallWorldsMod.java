@@ -31,6 +31,8 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.core.util.StatusPrinter;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.network.PacketBulkCubeData;
 import cubicchunks.network.PacketCubeBlockChange;
@@ -52,7 +54,7 @@ import cuchaz.m3l.api.registry.AlreadyRegisteredException;
 public class TallWorldsMod {
 	
 	public static final String Id = "tallworlds";
-	public static final Logger log = LoggerFactory.getLogger(Id);
+	public static final Logger LOGGER = LoggerFactory.getLogger(Id);
 	
 	@Mod.Instance(Id)
 	public static TallWorldsMod instance;
@@ -64,8 +66,16 @@ public class TallWorldsMod {
 		return m_system;
 	}
 	
+	@SuppressWarnings("unused")
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
+		
+		LOGGER.info("Initializing Tall Worlds...");
+		
+		// Logger setup confirmation
+		LOGGER.info("Displaying logger configuration...");
+		LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+		StatusPrinter.print(lc);
 		
 		// HACKHACK: tweak the class load order so the runtime obfuscator works correctly
 		// load subclasses of Minecraft classes first, so the runtime obfuscator can record
@@ -82,7 +92,7 @@ public class TallWorldsMod {
 		try {
 			M3L.instance.getRegistry().chunkSystem.register(m_system);
 		} catch (AlreadyRegisteredException ex) {
-			log.error("Cannot register cubic chunk system. Someone else beat us to it. =(", ex);
+			LOGGER.error("Cannot register cubic chunk system. Someone else beat us to it. =(", ex);
 		}
 		
 		// register our packets

@@ -123,7 +123,7 @@ public class Progress {
 			msg.append("\tETA: ");
 			msg.append(formatTimeInterval(getEta()));
 			
-			TallWorldsMod.log.info(msg.toString());
+			TallWorldsMod.LOGGER.info(msg.toString());
 			
 			pruneLog();
 			m_lastReportMilliseconds = elapsedMilliseconds;
@@ -132,7 +132,7 @@ public class Progress {
 		
 		// add the finished message if needed
 		if (m_currentWork == m_totalWork) {
-			TallWorldsMod.log.info("Finished in " + m_timer.getElapsedTime());
+			TallWorldsMod.LOGGER.info("Finished in " + m_timer.getElapsedTime());
 		}
 		
 		return report;

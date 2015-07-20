@@ -114,7 +114,7 @@ public abstract class QueueProcessor {
 	}
 	
 	public String getProcessingReport() {
-		return String.format("\t%22s: %3d processed, %d remaining", this.name, this.processedAddresses.size(), this.queue.size());
+		return String.format("\t%15s: %3d processed, %d remaining", this.name, this.processedAddresses.size(), this.queue.size());
 	}
 	
 	public void processBatch() {

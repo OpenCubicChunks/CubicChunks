@@ -25,6 +25,9 @@ package cubicchunks.generator;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Lists;
 
 import cubicchunks.TallWorldsMod;
@@ -36,6 +39,8 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
 public class GeneratorPipeline {
+	
+	public static final Logger LOGGER = LoggerFactory.getLogger("GenPipeline");
 	
 	private static final int TickBudget = 40; // ms. There are only 50 ms per tick
 	
@@ -147,9 +152,9 @@ public class GeneratorPipeline {
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			TallWorldsMod.log.info("Generation pipeline processed {} cubes in {} ms.", numProcessed, timeDiff);
+			LOGGER.debug("Processed {} cubes in {} ms.", numProcessed, timeDiff);
 			for (StageProcessor processor : this.processors) {
-				TallWorldsMod.log.info(processor.processor.getProcessingReport());
+				LOGGER.debug(processor.processor.getProcessingReport());
 			}
 		}
 		
@@ -161,13 +166,13 @@ public class GeneratorPipeline {
 			
 			QueueProcessor processor = this.processors.get(stage).processor;
 			
-			TallWorldsMod.log.info("Stage: {}", processor.getName());
+			TallWorldsMod.LOGGER.info("Stage: {}", processor.getName());
 			
 			// process all the cubes in this stage at once
 			int numProcessed = 0;
 			int round = 0;
 			do {
-				TallWorldsMod.log.info("\tround {} - {} cubes", ++round, processor.getNumInQueue());
+				TallWorldsMod.LOGGER.info("\tround {} - {} cubes", ++round, processor.getNumInQueue());
 				Progress progress = new Progress(processor.getNumInQueue(), 1000);
 				numProcessed = processor.processQueue(progress);
 				advanceCubes(processor, stage);

@@ -190,7 +190,7 @@ public class CubicChunkSystem implements ChunkSystem {
 			ServerCubeCache serverCubeCache = context.getCubeCache();
 
 			// load the cubes around the spawn point
-			TallWorldsMod.log.info("Loading cubes for spawn...");
+			TallWorldsMod.LOGGER.info("Loading cubes for spawn...");
 			final int Distance = ServerCubeCache.WorldSpawnChunkDistance;
 			BlockPos spawnPoint = worldServer.getSpawnPoint();
 			int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
@@ -209,12 +209,12 @@ public class CubicChunkSystem implements ChunkSystem {
 			int numCubesTotal = pipeline.getNumCubes();
 			if (numCubesTotal > 0) {
 				long timeStart = System.currentTimeMillis();
-				TallWorldsMod.log.info("Generating {} cubes for spawn at block ({},{},{}) cube ({},{},{})...",
+				TallWorldsMod.LOGGER.info("Generating {} cubes for spawn at block ({},{},{}) cube ({},{},{})...",
 						numCubesTotal, spawnPoint.getX(), spawnPoint.getY(), spawnPoint.getZ(), spawnCubeX, spawnCubeY,
 						spawnCubeZ);
 				pipeline.generateAll();
 				long timeDiff = System.currentTimeMillis() - timeStart;
-				TallWorldsMod.log.info("Done in {} ms", timeDiff);
+				TallWorldsMod.LOGGER.info("Done in {} ms", timeDiff);
 			}
 			
 			// save the cubes now
@@ -255,10 +255,10 @@ public class CubicChunkSystem implements ChunkSystem {
 			spawnPos.x = spawnPosition.getX();
 			spawnPos.z = spawnPosition.getZ();
 		} else {
-			TallWorldsMod.log.warn("Unable to find spawn biome");
+			TallWorldsMod.LOGGER.warn("Unable to find spawn biome");
 		}
 
-		TallWorldsMod.log.info("Searching for suitable spawn point...");
+		TallWorldsMod.LOGGER.info("Searching for suitable spawn point...");
 
 		// generate some world around the spawn x,z at sea level
 		int spawnCubeX = Coords.blockToCube(spawnPos.getX());
@@ -283,7 +283,7 @@ public class CubicChunkSystem implements ChunkSystem {
 
 		// save the spawn point
 		worldServer.worldInfo.setSpawnPoint(spawnPos);
-		TallWorldsMod.log.info("Found spawn point at ({},{},{})", spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
+		TallWorldsMod.LOGGER.info("Found spawn point at ({},{},{})", spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
 
 		if (worldSettings.isBonusChestEnabled()) {
 			worldServer.generateBonusChests();

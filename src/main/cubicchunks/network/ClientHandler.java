@@ -103,7 +103,7 @@ public class ClientHandler implements INetHandler {
 			cube.markForRenderUpdate();
 		}
 		if (outOfOrderCubes > 0) {
-			TallWorldsMod.log.error("Ignored {}/{} cubes that arrived before their columns", outOfOrderCubes, packet.cubeAddresses.length);
+			TallWorldsMod.LOGGER.error("Ignored {}/{} cubes that arrived before their columns", outOfOrderCubes, packet.cubeAddresses.length);
 		}
 		
 		packet.finishDecoding();
@@ -204,7 +204,7 @@ public class ClientHandler implements INetHandler {
 		int cubeZ = AddressTools.getZ(packet.cubeAddress);
 		Cube cube = cubeCache.getCube(cubeX, cubeY, cubeZ);
 		if (cube instanceof BlankCube) {
-			TallWorldsMod.log.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
+			TallWorldsMod.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
 			return;
 		}
 		
@@ -240,7 +240,7 @@ public class ClientHandler implements INetHandler {
 		int cubeZ = AddressTools.getZ(packet.cubeAddress);
 		Cube cube = cubeCache.getCube(cubeX, cubeY, cubeZ);
 		if (cube instanceof BlankCube) {
-			TallWorldsMod.log.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
+			TallWorldsMod.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
 			return;
 		}
 		

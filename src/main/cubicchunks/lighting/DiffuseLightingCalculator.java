@@ -82,7 +82,7 @@ public class DiffuseLightingCalculator {
 		
 		// DEBUG
 		if (this.queue.size() > 32000) {
-			TallWorldsMod.log.warn("{} Warning! Calculated {} light updates at ({},{},{}) for {} light.", 
+			TallWorldsMod.LOGGER.warn("{} Warning! Calculated {} light updates at ({},{},{}) for {} light.", 
 				world.isClient ? "CLIENT" : "SERVER",
 				this.queue.size(),
 				pos.getX(), pos.getY(), pos.getZ(),
