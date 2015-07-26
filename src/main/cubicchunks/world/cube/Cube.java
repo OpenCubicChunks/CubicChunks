@@ -587,6 +587,7 @@ public class Cube {
 	
 	public long cubeRandomSeed() {
 		long hash = 3;
+		hash = 41 * hash + this.world.getSeed();
 		hash = 41 * hash + getX();
 		hash = 41 * hash + getY();
 		return 41 * hash + getZ();

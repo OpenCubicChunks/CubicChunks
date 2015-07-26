@@ -21,20 +21,22 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.terrain;
+package cubicchunks.generator.features;
 
-import cubicchunks.util.Coords;
+import static org.junit.Assert.*;
 
-public class GlobalGeneratorConfig {
-	public static final int SEA_LEVEL = 0;
-	public static final double MAX_ELEV = 200;
+import org.junit.Test;
 
-	// these are constants. Changing them may cause issues.
-	public static final int X_SECTION_SIZE = 4 + 1;
-	public static final int Y_SECTION_SIZE = 8 + 1;
-	public static final int Z_SECTION_SIZE = 4 + 1;
+public class TestFeatureGenerator {
 
-	public static final int X_SECTIONS = Coords.CUBE_MAX_X / (X_SECTION_SIZE - 1) + 1;
-	public static final int Y_SECTIONS = Coords.CUBE_MAX_Y / (Y_SECTION_SIZE - 1) + 1;
-	public static final int Z_SECTIONS = Coords.CUBE_MAX_Z / (Z_SECTION_SIZE - 1) + 1;
+	@Test
+	public void testGetMinCubeY() {
+		final int y1 = 15;
+		final int result1 = 0;
+		final int y2 = -24;
+		final int result2 = -32;
+		
+		assertEquals(result1, FeatureGenerator.getMinCubeY(y1));
+		assertEquals(result2, FeatureGenerator.getMinCubeY(y2));
+	}
 }

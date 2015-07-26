@@ -1,5 +1,5 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -21,20 +21,27 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.terrain;
+package cubicchunks.generator.features;
 
-import cubicchunks.util.Coords;
+import cubicchunks.world.cube.Cube;
+import java.util.Random;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 
-public class GlobalGeneratorConfig {
-	public static final int SEA_LEVEL = 0;
-	public static final double MAX_ELEV = 200;
+public class MultiFeatureGenerator extends FeatureGenerator {
+	private final FeatureGenerator gen;
+	private final int attempts;
 
-	// these are constants. Changing them may cause issues.
-	public static final int X_SECTION_SIZE = 4 + 1;
-	public static final int Y_SECTION_SIZE = 8 + 1;
-	public static final int Z_SECTION_SIZE = 4 + 1;
+	public MultiFeatureGenerator(World world, FeatureGenerator gen, int attempts) {
+		super(world);
+		this.gen = gen;
+		this.attempts = attempts;
+	}
 
-	public static final int X_SECTIONS = Coords.CUBE_MAX_X / (X_SECTION_SIZE - 1) + 1;
-	public static final int Y_SECTIONS = Coords.CUBE_MAX_Y / (Y_SECTION_SIZE - 1) + 1;
-	public static final int Z_SECTIONS = Coords.CUBE_MAX_Z / (Z_SECTION_SIZE - 1) + 1;
+	@Override
+	public void generate(Random rand, Cube cube, Biome biome) {
+		for(int i = 0; i < this.attempts; i++){
+			this.gen.generate(rand, cube, biome);
+		}
+	}
 }

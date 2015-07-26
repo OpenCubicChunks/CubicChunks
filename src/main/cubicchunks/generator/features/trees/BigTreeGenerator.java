@@ -1,5 +1,5 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -21,24 +21,28 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.generator.features.trees;
 
-import cubicchunks.generator.terrain.GlobalGeneratorConfig;
+import cubicchunks.generator.features.trees.TreeGenerator;
+import java.util.Random;
+import net.minecraft.block.BlockLog;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.feature.TreeGeneratorBig;
 
-public class HeightHelper {
-	public static double getScaledHeight_Double(double y) {
-		return GlobalGeneratorConfig.MAX_ELEV * (y - 64D) / 64D;
+public class BigTreeGenerator extends TreeGenerator {
+
+	public BigTreeGenerator(World world) {
+		super(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
 	}
 
-	public static double getVanillaHeight_Double(double y) {
-		return 64D + 64D * y / GlobalGeneratorConfig.MAX_ELEV;
-	}
-
-	public static int getScaledHeight(int y) {
-		return (int) Math.round(getScaledHeight_Double(y));
-	}
-
-	public static int getVanillaHeight(int y) {
-		return (int) Math.round(getVanillaHeight_Double(y));
+	@Override
+	public void generateAt(Random rand, BlockPos pos, Biome biome) {
+		TreeGeneratorBig treeGen = new TreeGeneratorBig(false);
+		treeGen.generate(world, rand, pos);
 	}
 }

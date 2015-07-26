@@ -1,5 +1,5 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
  *
  *  Copyright (c) 2014 Tall Worlds
  *
@@ -21,20 +21,38 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.terrain;
 
-import cubicchunks.util.Coords;
+package cubicchunks.generator.features;
 
-public class GlobalGeneratorConfig {
-	public static final int SEA_LEVEL = 0;
-	public static final double MAX_ELEV = 200;
+import cubicchunks.world.cube.Cube;
+import java.util.Random;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 
-	// these are constants. Changing them may cause issues.
-	public static final int X_SECTION_SIZE = 4 + 1;
-	public static final int Y_SECTION_SIZE = 8 + 1;
-	public static final int Z_SECTION_SIZE = 4 + 1;
+public abstract class FeatureGenerator {
+	protected final World world;
 
-	public static final int X_SECTIONS = Coords.CUBE_MAX_X / (X_SECTION_SIZE - 1) + 1;
-	public static final int Y_SECTIONS = Coords.CUBE_MAX_Y / (Y_SECTION_SIZE - 1) + 1;
-	public static final int Z_SECTIONS = Coords.CUBE_MAX_Z / (Z_SECTION_SIZE - 1) + 1;
+	public FeatureGenerator(final World world) {
+		this.world = world;
+	}
+
+	public abstract void generate(final Random rand, final Cube cube, final Biome biome);
+
+	protected boolean setBlockAndUpdateNeighbors(final BlockPos pos, final IBlockState state) {
+		return this.world.tryPlaceBlock(pos, state, 3);
+	}
+
+	protected boolean setBlockOnly(final BlockPos blockPos, final IBlockState blockState) {
+		return this.world.tryPlaceBlock(blockPos, blockState, 2);
+	}
+
+	protected IBlockState getBlock(final BlockPos pos) {
+		return this.world.getBlockStateAt(pos);
+	}
+
+	protected static int getMinCubeY(final int y) {
+		return (y >> 4) << 4;
+	}
 }

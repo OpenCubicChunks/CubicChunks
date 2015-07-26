@@ -83,7 +83,7 @@ public class WorldServerContext extends WorldContext {
 		this.generatorPipeline.addStage(GeneratorStage.SURFACE, new SurfaceProcessor(this.serverCubeCache, 10, seed));
 		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", this.serverCubeCache, 10));
 		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", this.serverCubeCache, 5));
-		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", this.serverCubeCache, 100));
+		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", worldServer, this.serverCubeCache, 100));
 		this.generatorPipeline.checkStages();
 	}
 
