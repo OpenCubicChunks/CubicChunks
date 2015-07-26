@@ -328,8 +328,9 @@ public class CubicChunkSystem implements ChunkSystem {
 			int maxBlockY, int maxBlockZ, boolean allowEmptyColumns) {
 		if (isTallWorld(world)) {
 			WorldContext context = WorldContext.get(world);
-			return context.blocksExist(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ, allowEmptyColumns,
-					GeneratorStage.LIVE);
+			// the min stage here has to be at least lighting, since the lighting system in World checks for blocks, but doesn't know about stages
+			final GeneratorStage minCubeStage = GeneratorStage.LIGHTING;
+			return context.blocksExist(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ, allowEmptyColumns, minCubeStage);
 		}
 		return null;
 	}
@@ -342,8 +343,10 @@ public class CubicChunkSystem implements ChunkSystem {
 
 			final int blockDist = 32;
 			int blockY = MathHelper.floor(entity.yPos);
-			return context.blocksExist(minBlockX, blockY - blockDist, minBlockZ, maxBlockX, blockY + blockDist, maxBlockZ,
-					allowEmptyColumns, GeneratorStage.LIVE);
+			
+			// the min cube stage can be live here since players should be in fully-generated cubes
+			final GeneratorStage minCubeStage = GeneratorStage.LIVE;
+			return context.blocksExist(minBlockX, blockY - blockDist, minBlockZ, maxBlockX, blockY + blockDist, maxBlockZ, allowEmptyColumns, minCubeStage);
 		}
 		return null;
 	}

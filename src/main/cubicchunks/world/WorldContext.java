@@ -33,6 +33,7 @@ import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
+import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
@@ -118,7 +119,7 @@ public abstract class WorldContext {
 					}
 					Cube cube = m_cubeCache.getCube(cubeX, cubeY, cubeZ);
 					Column column = cube.getColumn();
-					if ((!allowEmptyColumns && column.isEmpty())
+					if ((!allowEmptyColumns && column instanceof BlankColumn)
 						|| (minStageAllowed != null && cube.getGeneratorStage().isLessThan(minStageAllowed))) {
 						return false;
 					}
