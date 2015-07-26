@@ -26,6 +26,7 @@ package cubicchunks.lighting;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.BlockColumnProcessor;
 import cubicchunks.world.ICubeCache;
@@ -34,8 +35,13 @@ import cubicchunks.world.column.Column;
 
 public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	
+	private ThreadLocal<BlockPos.MutableBlockPos> m_pos;
+	
 	public SkyLightOcclusionProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
+		
+		m_pos = new ThreadLocal<>();
+		m_pos.set(new BlockPos.MutableBlockPos());
 	}
 	
 	@Override
@@ -99,15 +105,17 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 			return false;
 		}
 		
-		// TODO: optimize out news?
-		BlockPos bottom = new BlockPos(blockX, minBlockY, blockZ);
-		BlockPos top = new BlockPos(blockX, maxBlockY, blockZ);
-		if (!world.checkBlockRangeIsInWorld(bottom, top)) {
+		boolean blocksExist = WorldContext.get(world).blocksExist(blockX, minBlockY, blockZ, blockX, maxBlockY, blockZ, false, GeneratorStage.LIVE);
+		if (!blocksExist) {
 			return false;
 		}
 		
-		for (int blockY = minBlockY; blockY <= maxBlockY; blockY++) {
-			WorldContext.get(world).getLightingManager().computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
+		BlockPos.MutableBlockPos pos = m_pos.get();
+		pos.setBlockPos(blockX, minBlockY, blockZ);
+		for (pos.y = minBlockY; pos.y <= maxBlockY; pos.y++) {
+			// use the vanilla light calculator, it's much faster now than my hacks
+			//WorldContext.get(world).getLightingManager().computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
+			world.updateLightingAt(LightType.SKY, pos);
 		}
 		
 		return true;
