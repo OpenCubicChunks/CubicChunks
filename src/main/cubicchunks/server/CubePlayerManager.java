@@ -33,9 +33,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
@@ -45,12 +42,13 @@ import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.TreeMultiset;
 
-import cubicchunks.TallWorldsMod;
 import cubicchunks.network.PacketBulkCubeData;
 import cubicchunks.network.PacketUnloadColumns;
 import cubicchunks.network.PacketUnloadCubes;
@@ -358,7 +356,7 @@ public class CubePlayerManager extends PlayerManager {
 		info.removeOutOfRangeOutgoingCubesToLoad();
 		info.sortOutgoingCubesToLoad();
 
-		LOGGER.trace("Server cubes to load: {}", info.cubesToLoad.size());
+		//LOGGER.trace("Server cubes to load: {}", info.cubesToLoad.size());
 		
 		// pull off enough cubes from the queue to fit in a packet
 		final int MaxCubesToSend = 100;
@@ -400,7 +398,7 @@ public class CubePlayerManager extends PlayerManager {
 			}
 		}
 		
-		{ // DEBUG: what y-levels are we sending?
+		/*{ // DEBUG: what y-levels are we sending?
 			Multiset<Integer> counts = TreeMultiset.create();
 			for (Column column : columnsToSend) {
 				for (Cube cube : column.getCubes()) {
@@ -408,17 +406,17 @@ public class CubePlayerManager extends PlayerManager {
 				}
 			}
 			LOGGER.trace("Cube Y counts: {}", counts);
-		}
+		}*/
 
 		// send the cube data
 		player.netServerHandler.send(new PacketBulkCubeData(columnsToSend, cubesToSend));
 		
-		{// DEBUG
-			LOGGER.debug("Server sent {}/{} cubes, {}/{} columns to player",
-					cubesToSend.size(), cubesToSend.size() + info.cubesToLoad.size(),
-					columnsToSend.size(), columnsToSend.size() + info.columnAddressesToLoad.size()
-					);
-		}
+		/*
+		LOGGER.trace("Server sent {}/{} cubes, {}/{} columns to player",
+			cubesToSend.size(), cubesToSend.size() + info.cubesToLoad.size(),
+			columnsToSend.size(), columnsToSend.size() + info.columnAddressesToLoad.size()
+		);
+		*/
 		
 		// tell the cube watchers which cubes were sent for this player
 		for (Cube cube : cubesToSend) {
@@ -453,14 +451,14 @@ public class CubePlayerManager extends PlayerManager {
 			int from = i*PacketUnloadCubes.MAX_SIZE;
 			int to = Math.min((i+1)*PacketUnloadCubes.MAX_SIZE, info.cubesToUnload.size() - 1);
 			player.netServerHandler.send(new PacketUnloadCubes(info.cubesToUnload.subList(from, to)));
-			LOGGER.debug("Server sent {} cubes to player to unload", info.cubesToUnload.size());
+			//LOGGER.debug("Server sent {} cubes to player to unload", info.cubesToUnload.size());
 		}
 		info.cubesToUnload.clear();
 		
 		//even with render distance 64 and teleporting it's not possible with current MAX_SIZE
 		assert info.columnAddressesToUnload.size() < PacketUnloadColumns.MAX_SIZE;
 		player.netServerHandler.send(new PacketUnloadColumns(info.columnAddressesToUnload));
-		LOGGER.debug("Server sent {} columns to player to unload", info.columnAddressesToUnload.size());
+		//LOGGER.debug("Server sent {} columns to player to unload", info.columnAddressesToUnload.size());
 		info.columnAddressesToUnload.clear();
 	}
 	
