@@ -33,6 +33,7 @@ import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
 public abstract class WorldContext {
@@ -86,7 +87,7 @@ public abstract class WorldContext {
 		);
 	}
 	
-	public boolean blocksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
+	public boolean blocksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyColumns, GeneratorStage minStageAllowed) {
 		
 		// convert block bounds to chunk bounds
 		int minCubeX = Coords.blockToCube(minBlockX);
@@ -96,7 +97,7 @@ public abstract class WorldContext {
 		int maxCubeY = Coords.blockToCube(maxBlockY);
 		int maxCubeZ = Coords.blockToCube(maxBlockZ);
 		
-		return cubesExist(minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ, allowEmptyCubes, minStageAllowed);
+		return cubesExist(minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ, allowEmptyColumns, minStageAllowed);
 	}
 	
 	public boolean cubeAndNeighborsExist(Cube cube, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
@@ -108,7 +109,7 @@ public abstract class WorldContext {
 		return cubesExist(cubeX - 1, cubeY - 1, cubeZ - 1, cubeX + 1, cubeY + 1, cubeZ + 1, allowEmptyCubes, minStageAllowed);
 	}
 	
-	public boolean cubesExist(int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
+	public boolean cubesExist(int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ, boolean allowEmptyColumns, GeneratorStage minStageAllowed) {
 		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
 			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {
@@ -116,7 +117,8 @@ public abstract class WorldContext {
 						return false;
 					}
 					Cube cube = m_cubeCache.getCube(cubeX, cubeY, cubeZ);
-					if ((!allowEmptyCubes && cube.isEmpty())
+					Column column = cube.getColumn();
+					if ((!allowEmptyColumns && column.isEmpty())
 						|| (minStageAllowed != null && cube.getGeneratorStage().isLessThan(minStageAllowed))) {
 						return false;
 					}

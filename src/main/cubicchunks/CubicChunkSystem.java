@@ -325,10 +325,10 @@ public class CubicChunkSystem implements ChunkSystem {
 
 	@Override
 	public Boolean checkBlockRangeIsInWorld(World world, int minBlockX, int minBlockY, int minBlockZ, int maxBlockX,
-			int maxBlockY, int maxBlockZ, boolean allowEmptyChunks) {
+			int maxBlockY, int maxBlockZ, boolean allowEmptyColumns) {
 		if (isTallWorld(world)) {
 			WorldContext context = WorldContext.get(world);
-			return context.blocksExist(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ, allowEmptyChunks,
+			return context.blocksExist(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ, allowEmptyColumns,
 					GeneratorStage.LIVE);
 		}
 		return null;
@@ -336,14 +336,14 @@ public class CubicChunkSystem implements ChunkSystem {
 
 	@Override
 	public Boolean checkEntityIsInWorld(World world, Entity entity, int minBlockX, int minBlockZ, int maxBlockX,
-			int maxBlockZ, boolean allowEmptyChunks) {
+			int maxBlockZ, boolean allowEmptyColumns) {
 		if (isTallWorld(world)) {
 			WorldContext context = WorldContext.get(world);
 
 			final int blockDist = 32;
 			int blockY = MathHelper.floor(entity.yPos);
 			return context.blocksExist(minBlockX, blockY - blockDist, minBlockZ, maxBlockX, blockY + blockDist, maxBlockZ,
-					allowEmptyChunks, GeneratorStage.LIVE);
+					allowEmptyColumns, GeneratorStage.LIVE);
 		}
 		return null;
 	}
