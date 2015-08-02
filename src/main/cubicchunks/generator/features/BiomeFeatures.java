@@ -27,19 +27,18 @@ package cubicchunks.generator.features;
 import cubicchunks.generator.features.trees.BigTreeGenerator;
 import cubicchunks.generator.features.trees.SimpleTreeGenerator;
 import cubicchunks.generator.features.trees.TreeGenerator;
+
 import java.util.ArrayList;
 import java.util.Collection;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone.EnumStoneVariant;
 import net.minecraft.block.BlockTallGrass;
-import static net.minecraft.block.Blocks.AIR;
 import static net.minecraft.block.Blocks.CLAY;
 import static net.minecraft.block.Blocks.COAL_ORE;
 import static net.minecraft.block.Blocks.DIAMOND_ORE;
 import static net.minecraft.block.Blocks.DIRT;
 import static net.minecraft.block.Blocks.GOLD_ORE;
-import static net.minecraft.block.Blocks.GRASS;
-import static net.minecraft.block.Blocks.GRAVEL;
 import static net.minecraft.block.Blocks.IRON_ORE;
 import static net.minecraft.block.Blocks.LEAVES;
 import static net.minecraft.block.Blocks.LOG;
@@ -88,15 +87,16 @@ public class BiomeFeatures {
 
 	protected void addTreeGenerators(Decorator decorator) {
 		//Other classes may override this methid to provide other tree generators
-		TreeGenerator bigTreeGen = new BigTreeGenerator(world);
 		TreeGenerator smallTreeGen = new SimpleTreeGenerator(world, LOG.getDefaultState(), LEAVES.getDefaultState());
+		BigTreeGenerator bigTreeGen2 = new BigTreeGenerator(world, LOG.getDefaultState(), LEAVES.getDefaultState());
+		bigTreeGen2.setHeightRange(28, 32);
 		
 		VariantFeatureGenerator randomTreeGen = VariantFeatureGenerator.builder()
-						.nextVariant(bigTreeGen, 0.1)
 						.nextVariant(smallTreeGen, 1.0)
 						.build();
 		
-		addMultiGen(randomTreeGen, decorator.treesPerChunk);
+//		addMultiGen(randomTreeGen, decorator.treesPerChunk);
+		addMultiGen(bigTreeGen2, decorator.treesPerChunk / 10);
 	}
 	
 	protected void addOreGenerators(GeneratorSettings cfg) {

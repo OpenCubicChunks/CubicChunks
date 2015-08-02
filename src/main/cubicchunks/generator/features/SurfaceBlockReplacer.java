@@ -58,7 +58,7 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 						continue;
 					}
 					BlockPos currentPos = pos.add(x, y, z);
-					Block currrentBlock = getBlock(currentPos).getBlock();
+					Block currrentBlock = getBlockState(currentPos).getBlock();
 					if(this.canReplace(currrentBlock)) {
 						this.setBlockOnly(currentPos, this.block);
 					}
@@ -69,11 +69,11 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 
 	@Override
 	protected boolean isSurfaceAt(BlockPos pos) {
-		Block below = getBlock(pos.below()).getBlock();
+		Block below = getBlockState(pos.below()).getBlock();
 		if (!below.isSolid()) {
 			return false;
 		}
-		Block blockAboveSurface = getBlock(pos).getBlock();
+		Block blockAboveSurface = getBlockState(pos).getBlock();
 		for (Block b : this.allowedAboveSurface) {
 			if (blockAboveSurface == b) {
 				return true;

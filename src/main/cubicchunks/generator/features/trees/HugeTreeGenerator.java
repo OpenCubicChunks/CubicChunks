@@ -93,7 +93,7 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 				for (int zAbs = blockPos.getZ() - radius; zAbs <= blockPos.getZ() + radius; ++zAbs) {
 					Block block = world.getBlockStateAt(new BlockPos(xAbs, yAbs, zAbs)).getBlock();
 
-					if (!this.canReplaceBlock(block)) {
+					if (!canReplaceBlockDefault(block)) {
 						return false;
 					}
 				}
@@ -117,7 +117,7 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 					Material material = this.world.getBlockStateAt(newPos).getBlock().getMaterial();
 
 					if (material == Material.AIR || material == Material.LEAVES) {
-						this.setBlockOnly(newPos, this.getLeafBlock());
+						this.setBlockOnly(newPos, this.leafBlock);
 					}
 				}
 			}
@@ -134,7 +134,7 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 					Material material = this.world.getBlockStateAt(newPos).getBlock().getMaterial();
 
 					if (material == Material.AIR || material == Material.LEAVES) {
-						this.setBlockOnly(newPos, this.getLeafBlock());
+						this.setBlockOnly(newPos, this.leafBlock);
 					}
 				}
 			}

@@ -39,16 +39,16 @@ public abstract class FeatureGenerator {
 	}
 
 	public abstract void generate(final Random rand, final Cube cube, final Biome biome);
+	
+	protected boolean setBlockOnly(final BlockPos blockPos, final IBlockState blockState) {
+		return this.world.tryPlaceBlock(blockPos, blockState, 2);
+	}
 
 	protected boolean setBlockAndUpdateNeighbors(final BlockPos pos, final IBlockState state) {
 		return this.world.tryPlaceBlock(pos, state, 3);
 	}
 
-	protected boolean setBlockOnly(final BlockPos blockPos, final IBlockState blockState) {
-		return this.world.tryPlaceBlock(blockPos, blockState, 2);
-	}
-
-	protected IBlockState getBlock(final BlockPos pos) {
+	protected IBlockState getBlockState(final BlockPos pos) {
 		return this.world.getBlockStateAt(pos);
 	}
 

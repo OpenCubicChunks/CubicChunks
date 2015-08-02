@@ -66,7 +66,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 	protected boolean isSurfaceAt(BlockPos pos) {
 		//we don't really know if it's the top block.
 		//assume it's sirface if there is solid block with air above it
-		return getBlock(pos.below()).getBlock().isSolid() && getBlock(pos).getBlock() == Blocks.AIR;
+		return getBlockState(pos.below()).getBlock().isSolid() && getBlockState(pos).getBlock() == Blocks.AIR;
 	}
 
 	/**

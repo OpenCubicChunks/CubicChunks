@@ -44,7 +44,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 
 	@Override
 	public void generateAt(Random rand, BlockPos pos, Biome biome) {
-		Block below = getBlock(pos.below()).getBlock();
+		Block below = getBlockState(pos.below()).getBlock();
 		if (below != Blocks.DIRT && below != Blocks.GRASS) {
 			return;
 		}
@@ -65,7 +65,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 		BlockPos originalPos = pos;
 		int noLeavesHeight = treeHeight - leavesHeight;
 		for (int i = 0; i < noLeavesHeight; i++) {
-			if (!canReplaceBlock(getBlock(pos).getBlock())) {
+			if (!canReplaceBlockDefault(getBlockState(pos).getBlock())) {
 				return false;
 			}
 			pos = pos.above();
@@ -75,7 +75,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 			for (int y = 0; y < leavesHeight; y++) {
 				for (int z = -treeRadius; z <= treeRadius; z++) {
 					BlockPos currentPos = pos.add(x, y, z);
-					if (!canReplaceBlock(getBlock(currentPos).getBlock())) {
+					if (!canReplaceBlockDefault(getBlockState(currentPos).getBlock())) {
 						return false;
 					}
 				}
@@ -88,7 +88,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 		// generate trunk
 		BlockPos currentPos = pos;
 		for (int i = 0; i < trunkHeight; i++) {
-			this.setBlockOnly(currentPos, getWoodBlock());
+			this.setBlockOnly(currentPos, this.woodBlock);
 			currentPos = currentPos.above();
 		}
 
@@ -98,7 +98,45 @@ public class SimpleTreeGenerator extends TreeGenerator {
 			int y2 = yRel >> 1 << 1;
 			double radiusSubstract = 0.7 * treeRadius * y2 / (double) leavesHeight;
 			double radius = treeRadius - radiusSubstract;
-			this.generateLeavesCircleLayerAt(this.getLeafBlock(), startPos.above(yRel), radius + 0.5);
+			this.generateLeavesCircleLayerAt(this.leafBlock, startPos.above(yRel), radius + 0.5);
+		}
+	}
+	
+	private void generateLeavesCircleLayerAt(IBlockState state, BlockPos pos, double radius) {
+		double radiusSquared = radius * radius;
+		int r = MathHelper.ceil(radius);
+		for (int x = -r; x <= r; x++) {
+			for (int z = -r; z <= r; z++) {
+				if (x * x + z * z > radiusSquared) {
+					continue;
+				}
+				BlockPos currentPos = pos.add(x, 0, z);
+				// don't replace wood
+				if (getBlockState(currentPos).getBlock().isSolid()) {
+					continue;
+				}
+				this.setBlockOnly(currentPos, this.leafBlock);
+			}
+		}
+	}
+	
+	private void generateLeavesSphereAt(IBlockState state, BlockPos pos, double radius) {
+		double radiusSquared = radius * radius;
+		int r = MathHelper.ceil(radius);
+		for (int x = -r; x <= r; x++) {
+			for (int y = -r; y <= r; y++) {
+				for (int z = -r; z <= r; z++) {
+					if (x*x + y*y + z*z > radiusSquared) {
+						continue;
+					}
+					BlockPos currentPos = pos.add(x, y, z);
+					// don't replace wood
+					if (!canReplaceWithLeaves(getBlockState(currentPos).getBlock())) {
+						continue;
+					}
+					this.setBlockOnly(currentPos, state);
+				}
+			}
 		}
 	}
 }

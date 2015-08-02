@@ -25,12 +25,8 @@ package cubicchunks.generator.features;
 
 import cubicchunks.world.cube.Cube;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
-import java.util.Set;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 

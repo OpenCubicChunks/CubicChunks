@@ -24,29 +24,52 @@
 package cubicchunks.generator.features.trees;
 
 import cubicchunks.generator.features.SurfaceFeatureGenerator;
-import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
 
 public abstract class TreeGenerator extends SurfaceFeatureGenerator {
+	
+	private static final Block[] REPLACABLE_OPEN_BLOCKS = { Blocks.AIR, Blocks.SAPLING, Blocks.FLOWING_WATER, Blocks.WATER, Blocks.FLOWING_LAVA,
+		Blocks.LAVA, Blocks.LOG, Blocks.LOG2, Blocks.LEAVES, Blocks.LEAVES2 };
+	
+	private static final Block[] REPLACABLE_SOLID_BLOCKS = { Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL };
+	
+	protected static boolean canReplaceBlockDefault(final Block blockToCheck) {
+		return canReplace(blockToCheck, REPLACABLE_OPEN_BLOCKS) || canReplace(blockToCheck, REPLACABLE_SOLID_BLOCKS);
+	}
+	
+	protected static boolean canReplace(final Block blockToCheck, final Block[] blockArray) {
+		final Material blockMaterial = blockToCheck.getMaterial();
+		
+		for(Block block : blockArray){
+				if(blockMaterial == block.getMaterial()){
+					return true;
+				}
+		}
+		return false;
+	}
+	
+	protected static boolean canReplaceWithLeaves(final Block blockToCheck) {
+		final Material blockMaterial = blockToCheck.getMaterial();
+		return blockMaterial == Material.AIR || blockMaterial == Material.LEAVES;
+	}
 
-	private final IBlockState woodBlock;
-	private final IBlockState leafBlock;
+	protected static boolean canReplaceWithWood(final Block blockToCheck) {
+		return blockToCheck == Blocks.GRASS || blockToCheck == Blocks.DIRT || blockToCheck == Blocks.LOG
+				|| blockToCheck == Blocks.LOG2 || blockToCheck == Blocks.SAPLING || blockToCheck == Blocks.VINE;
+	}
+
+	protected final IBlockState woodBlock;
+	protected final IBlockState leafBlock;
 
 	public TreeGenerator(final World world, final IBlockState woodBlock, final IBlockState leafBlock) {
 		super(world);
 		this.woodBlock = woodBlock;
 		this.leafBlock = leafBlock;
-	}
-
-	protected boolean canReplaceBlock(final Block blockToCheck) {
-		return canReplaceWithLeaves(blockToCheck) || canReplaceWithWood(blockToCheck);
 	}
 
 	protected boolean tryToPlaceDirtUnderTree(final World world, final BlockPos blockPos) {
@@ -57,61 +80,4 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 			return true;
 		}
 	}
-
-	private boolean canReplaceWithLeaves(final Block blockToCheck) {
-		final Material blockMaterial = blockToCheck.getMaterial();
-		return blockMaterial == Material.AIR || blockMaterial == Material.LEAVES;
-	}
-
-	private boolean canReplaceWithWood(final Block blockToCheck) {
-		return blockToCheck == Blocks.GRASS || blockToCheck == Blocks.DIRT || blockToCheck == Blocks.LOG
-				|| blockToCheck == Blocks.LOG2 || blockToCheck == Blocks.SAPLING || blockToCheck == Blocks.VINE;
-	}
-
-	protected void generateLeavesCircleLayerAt(IBlockState state, BlockPos pos, double radius) {
-		double radiusSquared = radius * radius;
-		int r = MathHelper.ceil(radius);
-		for (int x = -r; x <= r; x++) {
-			for (int z = -r; z <= r; z++) {
-				if (x * x + z * z > radiusSquared) {
-					continue;
-				}
-				BlockPos currentPos = pos.add(x, 0, z);
-				// don't replace wood
-				if (getBlock(currentPos).getBlock().isSolid()) {
-					continue;
-				}
-				this.setBlockOnly(currentPos, getLeafBlock());
-			}
-		}
-	}
-
-	protected void generateLeavesSphereAt(IBlockState state, BlockPos pos, double radius) {
-		double radiusSquared = radius * radius;
-		int r = MathHelper.ceil(radius);
-		for (int x = -r; x <= r; x++) {
-			for (int y = -r; y <= r; y++) {
-				for (int z = -r; z <= r; z++) {
-					if (x*x + y*y + z*z > radiusSquared) {
-						continue;
-					}
-					BlockPos currentPos = pos.add(x, y, z);
-					// don't replace wood
-					if (!this.canReplaceWithLeaves(getBlock(currentPos).getBlock())) {
-						continue;
-					}
-					this.setBlockOnly(currentPos, state);
-				}
-			}
-		}
-	}
-
-	public IBlockState getWoodBlock() {
-		return woodBlock;
-	}
-
-	public IBlockState getLeafBlock() {
-		return leafBlock;
-	}
-
 }
