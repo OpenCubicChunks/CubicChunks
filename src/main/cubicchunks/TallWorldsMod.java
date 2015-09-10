@@ -44,6 +44,9 @@ import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.column.Column;
 import cuchaz.m3l.M3L;
+import cuchaz.m3l.Side;
+import cuchaz.m3l.api.CodeAnnotation;
+import cuchaz.m3l.api.Environment;
 import cuchaz.m3l.api.registry.AlreadyRegisteredException;
 
 @Mod(
@@ -66,7 +69,6 @@ public class TallWorldsMod {
 		return m_system;
 	}
 	
-	@SuppressWarnings("unused")
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
 		
@@ -84,7 +86,12 @@ public class TallWorldsMod {
 		Column.class.getName();
 		CubePlayerManager.class.getName();
 		ServerCubeCache.class.getName();
+		
+		// client only loads
+		CodeAnnotation.startClientOnly();
 		ClientCubeCache.class.getName();
+		CodeAnnotation.stopClientOnly();
+		
 		CubeIO.class.getName();
 		
 		// register our chunk system

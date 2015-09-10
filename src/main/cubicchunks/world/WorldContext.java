@@ -36,16 +36,22 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cuchaz.m3l.api.CodeAnnotation;
 
 public abstract class WorldContext {
 	
 	public static WorldContext get(World world) {
-		// TODO: hide client things from the server
+		
+		CodeAnnotation.startClientOnly();
 		if (world instanceof WorldClient) {
 			return WorldClientContext.get((WorldClient)world);
-		} else if (world instanceof WorldServer) {
+		}
+		CodeAnnotation.stopClientOnly();
+		
+		if (world instanceof WorldServer) {
 			return WorldServerContext.get((WorldServer)world);
 		}
+		
 		throw new Error("Unknown world type!");
 	}
 

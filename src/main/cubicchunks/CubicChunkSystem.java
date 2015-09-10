@@ -61,6 +61,7 @@ import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cuchaz.m3l.api.chunks.ChunkSystem;
+import cuchaz.m3l.classTranslation.ClientOnly;
 import cuchaz.m3l.util.Util;
 
 public class CubicChunkSystem implements ChunkSystem {
@@ -82,6 +83,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	}
 
 	@Override
+	@ClientOnly
 	public ClientChunkCache getClientChunkCache(WorldClient worldClient) {
 		if (isTallWorld(worldClient)) {
 			ClientCubeCache clientCubeCache = new ClientCubeCache(worldClient);
@@ -143,6 +145,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	}
 
 	@Override
+	@ClientOnly
 	public void onWorldClientTick(WorldClient worldClient) {
 		if (isTallWorld(worldClient)) {
 			WorldClientContext context = WorldClientContext.get(worldClient);
@@ -352,6 +355,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	}
 
 	@Override
+	@ClientOnly
 	public boolean setChunkSectionRendererPositions(ChunkSectionRenderers renderers) {
 
 		if (!isTallWorld(renderers.world)) {
@@ -397,6 +401,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	}
 
 	@Override
+	@ClientOnly
 	public ChunkSectionRenderer getChunkSectionRenderer(ChunkSectionRenderers renderers, BlockPos pos) {
 
 		if (!isTallWorld(renderers.world)) {
@@ -424,6 +429,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	}
 
 	@Override
+	@ClientOnly
 	public boolean initChunkSectionRendererCounts(ChunkSectionRenderers renderers, int viewDistance) {
 
 		if (!isTallWorld(renderers.world)) {
@@ -439,6 +445,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	}
 
 	@Override
+	@ClientOnly
 	public ChunkSectionRenderer getChunkSectionRendererNeighbor(WorldRenderer worldRenderer, BlockPos pos,
 			ChunkSectionRenderer chunkSectionRenderer, Facing facing) {
 
@@ -482,6 +489,7 @@ public class CubicChunkSystem implements ChunkSystem {
 	}
 
 	@Override
+	@ClientOnly
 	public void unloadClientWorld() {
 		WorldClientContext.clear();
 	}
