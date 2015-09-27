@@ -3,121 +3,105 @@ buildscript
 {
 	repositories {
 		mavenCentral()
-		mavenLocal()
 		jcenter()
-	}
-	dependencies {
-		classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'
 	}
 }
 
-// Apply plugins
-apply plugin: 'java'
-apply plugin: 'license'
-//apply plugin: 'maven'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
+plugins {
+	id "net.minecraftforge.gradle.forge" version "2.0.1"
+	id "java"
+	id "com.github.hierynomus.license" version "0.11.0"
+	id "eclipse"
+	id "idea"
+}
 
-//minecraft version to get Minecraft.jar for netbeans
-ext.minecraftVersion = "1.8.3"
-
-// Default tasks
 defaultTasks 'licenseFormat', 'build'
 
-// Basic project information
-group = "tallworlds"
-archivesBaseName = "TallWorlds"
-version = "1.8.3-0.3.1"
-
-// Extended project information
-ext.projectName = 'Tall Worlds'
-ext.inceptionYear = '2014'
-ext.packaging = 'jar'
-ext.organizationUrl = ''
-ext.description = 'Tall Worlds Mod'
-ext.organization = 'Tall Worlds'
-
-// Define build and commit variables
-ext.buildNumber = project.hasProperty("buildNumber") ? buildNumber : '0'
-ext.ciSystem = project.hasProperty("ciSystem") ? ciSystem : 'unknown'
-ext.commit = project.hasProperty("commit") ? commit : 'unknown'
+group = "cubichunks"
+archivesBaseName = "CubicChunks"
+version = "1.8.3-0.4"
 
 // Minimum version of Java required
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
-// Project source locations
-sourceSets
-{
-	main {
-		java {
-			srcDir 'src/main'
-		}
-	}
-	test {
-		java {
-			srcDir 'src/test'
-		}
-	}
+//used for license header
+ext.projectName = 'Tall Worlds'
+ext.inceptionYear = '2014'
+ext.organizationUrl = ''
+ext.organization = 'Tall Worlds'
+minecraft {
+	version = "1.8-11.14.3.1516"
+	runDir = "run"
+	    
+	// the mappings can be changed at any time, and must be in the following format.
+	// snapshot_YYYYMMDD   snapshot are built nightly.
+	// stable_#            stables are built at the discretion of the MCP team.
+	// Use non-default mappings at your own risk. they may not allways work.
+	// simply re-run your setup task after changing the mappings to update your workspace.
+	mappings = "snapshot_20141130"
+	// makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
 // Project repositories
 repositories
 {
 	mavenCentral()
-	mavenLocal()
-	maven
-	{
-		name 'cuchaz'
-		url 'http://maven.cuchazinteractive.com'
-	}
 	maven
 	{
 		name 'sonatype'
 		url 'https://oss.sonatype.org/content/groups/public/'
 	}
-	maven
-	{
-		name 'mojang'
-		url 'https://libraries.minecraft.net'
-	}
 }
 
-//Hacks to allow controlling classpath order
-configurations
-{ 
-	forge
-	minecraft
-	provided
-	
-	compile.extendsFrom provided
-}
+dependencies {
+    // you may put jars on which you depend on in ./libs
+    // or you may define them like so..
+    //compile "some.group:artifact:version:classifier"
+    //compile "some.group:artifact:version"
+      
+    // real examples
+    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
+    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
 
-dependencies
-{
-	forge files('libs/forge-1.8-11.14.1.1334-universal.jar')
-	
-	minecraft files('../m3l/lib/minecraft-1.8.3-client-deobf.jar')
-	
-	provided 'cuchaz:m3l:1.8.3-0.3b'
-	provided 'cuchaz:m3l-forge-api:1.8.3-0.2b-1334'
-	provided 'org.slf4j:slf4j-api:1.7.10'
-	provided 'ch.qos.logback:logback-classic:1.1.2'
-	provided 'net.minecraft:launchwrapper:1.8'
-	provided 'io.netty:netty-all:4.0.27.Final'
-	
+    // the 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
+    //provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+
+    // the deobf configurations:  'deobfCompile' and 'deobfProvided' are the same as the normal compile and provided,
+    // except that these dependencies get remapped to your current MCP mappings
+    //deobfCompile 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+    //deobfProvided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+
+    // for more info...
+    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
+    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
 	compile 'org.mapdb:mapdb:1.0.7'
 	testCompile 'junit:junit:4.11'
+
 }
 
-//ensure correct order
-sourceSets.main.compileClasspath = sourceSets.main.compileClasspath + configurations.minecraft
-sourceSets.main.compileClasspath = sourceSets.main.compileClasspath + configurations.forge
+processResources
+{
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
 
-sourceSets.main.runtimeClasspath = sourceSets.main.runtimeClasspath + sourceSets.main.compileClasspath
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+                
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+        
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
 
-sourceSets.test.runtimeClasspath = sourceSets.test.runtimeClasspath + sourceSets.main.runtimeClasspath
 
 // License header formatting
 license {
@@ -135,69 +119,11 @@ license {
 	}
 }
 
-// Source compiler configuration
-configure([compileJava, compileTestJava]) {
-	options.deprecation = true
-	options.encoding = 'utf8'
-	options.compilerArgs += ['-Xlint:all', '-Xlint:-path']
-}
-
-// JAR manifest configuration
-jar.manifest.mainAttributes(
-	"Built-By": System.properties['user.name']
-	//"Created-By": System.properties['java.vm.version'] + " (" + System.properties['java.vm.vendor'] + ")",
-	//"Implementation-Title": name,
-	//"Implementation-Version": version + "+" + ciSystem + "-b" + buildNumber + ".git-" + commit,
-	//"Implementation-Vendor": url
-)
-
-jar {
-	dependsOn configurations.runtime
-    from { 
-		(configurations.runtime - configurations.provided).collect {
-			it.isDirectory() ? it : zipTree(it)
-		}
-	}
-	{
-        exclude "META-INF/"
-    }
-}
-
-task sourceJar(type: Jar) {
-	from sourceSets.main.java
-	from sourceSets.main.resources
-	classifier = "sources"
-}
-
-artifacts {
-	archives jar
-	archives sourceJar
-}
-
 def runCfg = {
-	standardInput = System.in//doesn't work on windows. gradle bug
-	workingDir = "eclipse"//this is usually used in forge projects
-
-	//make sure that workingDir exists and is a directory
-	File workDir = new File(getProjectDir(), 'eclipse');
-	System.out.println(workDir.getAbsolutePath())
-	if(!workDir.exists()){
-		workDir.mkdirs()
-		workDir.mkdir()
-	}
-	if(!workDir.isDirectory()){
-		//this provides more information than failed task...
-		throw new RuntimeException('workingDir is not a directory!')
-	}
-	//because gadle won't guess the classpath
-	classpath = sourceSets.main.runtimeClasspath
-	main = 'cuchaz.m3l.MainLauncher'
+	standardInput = System.in
+	workingDir = "eclipse"
+	main = 'GradleStart'
 	jvmArgs "-Xmx2G"
-	jvmArgs "-Djava.library.path=natives"//${workingDir}/natives
-	jvmArgs "-Dcuchaz.m3l.modClassNames=cubicchunks.TallWorldsMod"
-	args("client")
-	
-	ignoreExitValue = true
 	enableAssertions = true
 }
 
