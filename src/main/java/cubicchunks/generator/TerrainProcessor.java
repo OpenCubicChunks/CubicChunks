@@ -24,13 +24,13 @@
 package cubicchunks.generator;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockPos;
 import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.init.Blocks;
 
 public final class TerrainProcessor extends CubeProcessor {
 	private static final String PROCESSOR_NAME = "Terrain";
@@ -45,32 +45,32 @@ public final class TerrainProcessor extends CubeProcessor {
 
 	@Override
 	public boolean calculate(final Cube cube) {
-		cube.getWorld().profiler.startSection("terrainProcessor");
+		//cube.getWorld().profiler.startSection("terrainProcessor");
 		
-		cube.getWorld().profiler.startSection("generation");
+		//cube.getWorld().profiler.startSection("generation");
 		double[][][] rawDensity = this.terrainGenerator.generate(cube);
-		cube.getWorld().profiler.endSection();
+		//cube.getWorld().profiler.endSection();
 		
 		generateTerrain(cube, rawDensity);
 		
-		cube.getWorld().profiler.endSection();
+		//cube.getWorld().profiler.endSection();
 
 		return true;
 	}
 
 	protected void generateTerrain(final Cube cube, final double[][][] densityField) {
-		cube.getWorld().profiler.startSection("placement");
+		//cube.getWorld().profiler.startSection("placement");
 		for (int xRel = 0; xRel < 16; xRel++) {
 			for (int zRel = 0; zRel < 16; zRel++) {
 				for (int yRel = 0; yRel < 16; yRel++) {
 					int yAbs = Coords.localToBlock(cube.getY(), yRel);
 					BlockPos pos = new BlockPos(xRel, yRel, zRel);
-					Block block = densityField[xRel][yRel][zRel] > 0 ? Blocks.STONE
-							: yAbs < cube.getWorld().getSeaLevel() ? Blocks.WATER : Blocks.AIR;
+					Block block = densityField[xRel][yRel][zRel] > 0 ? Blocks.stone
+							: yAbs < cube.getWorld().getSeaLevel() ? Blocks.water : Blocks.air;
 					cube.setBlockForGeneration(pos, block.getDefaultState());
 				} // end yRel
 			} // end zRel
 		} // end xRel
-		cube.getWorld().profiler.endSection();
+		//cube.getWorld().profiler.endSection();
 	}
 }

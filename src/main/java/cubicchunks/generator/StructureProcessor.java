@@ -24,23 +24,23 @@
 package cubicchunks.generator;
 
 import net.minecraft.world.World;
-import net.minecraft.world.gen.structure.MineshaftGenerator;
-import net.minecraft.world.gen.structure.StrongholdGenerator;
-import net.minecraft.world.gen.structure.VillageGenerator;
 import cubicchunks.generator.structures.CubicCaveGenerator;
 import cubicchunks.generator.structures.CubicRavineGenerator;
 import cubicchunks.generator.structures.CubicStructureGenerator;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.world.gen.structure.MapGenMineshaft;
+import net.minecraft.world.gen.structure.MapGenStronghold;
+import net.minecraft.world.gen.structure.MapGenVillage;
 
 @SuppressWarnings("unused")
 public class StructureProcessor extends CubeProcessor {
 	
 	private CubicCaveGenerator caveGenerator;
-	private StrongholdGenerator strongholdGenerator;
-	private VillageGenerator villageGenerator;
-	private MineshaftGenerator mineshaftGenerator;
+	private MapGenStronghold strongholdGenerator;
+	private MapGenVillage villageGenerator;
+	private MapGenMineshaft mineshaftGenerator;
 //	private MapGenScatteredFeature scatteredFeatureGenerator;
 	private CubicStructureGenerator ravineGenerator;
 	
@@ -50,9 +50,9 @@ public class StructureProcessor extends CubeProcessor {
 		super(name, provider, batchSize);
 		
 		this.caveGenerator = new CubicCaveGenerator();
-		this.strongholdGenerator = new StrongholdGenerator();
-		this.villageGenerator = new VillageGenerator();
-		this.mineshaftGenerator = new MineshaftGenerator();
+		this.strongholdGenerator = new MapGenStronghold();
+		this.villageGenerator = new MapGenVillage();
+		this.mineshaftGenerator = new MapGenMineshaft();
 //		this.scatteredFeatureGenerator = new TempleGenerator();
 		this.ravineGenerator = new CubicRavineGenerator();
 	}

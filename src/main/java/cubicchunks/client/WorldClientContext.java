@@ -25,11 +25,10 @@ package cubicchunks.client;
 
 import java.util.Map;
 
-import net.minecraft.world.WorldClient;
-
 import com.google.common.collect.Maps;
 
 import cubicchunks.world.WorldContext;
+import net.minecraft.client.multiplayer.WorldClient;
 
 public class WorldClientContext extends WorldContext {
 	

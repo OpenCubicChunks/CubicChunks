@@ -35,19 +35,19 @@ import java.util.Map;
 import java.util.Random;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class FeatureProcessor extends CubeProcessor {
 
-	private Map<Biome, BiomeFeatures> biomeFeaturesMap;
+	private Map<BiomeGenBase, BiomeFeatures> biomeFeaturesMap;
 
 	public FeatureProcessor(String name, World world, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 
-		this.biomeFeaturesMap = new HashMap<Biome, BiomeFeatures>();
+		this.biomeFeaturesMap = new HashMap<>();
 
 		// for now use global for all biomes
-		for (Biome biome : Biome.getBiomeArray()) {
+		for (BiomeGenBase biome : BiomeGenBase.getBiomeGenArray()) {
 			if(biome == null){
 				continue;
 			}
@@ -62,7 +62,7 @@ public class FeatureProcessor extends CubeProcessor {
 			return false;
 		}
 
-		Biome biome = worldContext.getWorld().getBiomeAt(Coords.getCubeCenter(cube));
+		BiomeGenBase biome = worldContext.getWorld().getBiomeGenForCoords(Coords.getCubeCenter(cube));
     
 		//For surface generators we should actually use special RNG with seed 
 		//that depends only in world seed and cube X/Z

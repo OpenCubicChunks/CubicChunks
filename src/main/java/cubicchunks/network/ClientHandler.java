@@ -23,15 +23,9 @@
  */
 package cubicchunks.network;
 
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.chat.IChatComponent;
-import net.minecraft.main.Minecraft;
 import net.minecraft.network.INetHandler;
 import net.minecraft.network.ThreadQuickExitException;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.TaskQueue;
-import net.minecraft.world.DimensionOverworld;
-import net.minecraft.world.WorldClient;
 import cubicchunks.TallWorldsMod;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;

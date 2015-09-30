@@ -24,12 +24,12 @@
 package cubicchunks.lighting;
 
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import cubicchunks.TallWorldsMod;
 import cubicchunks.util.Bits;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.Column;
+import net.minecraft.world.EnumSkyBlock;
 
 public class LightingManager {
 	
@@ -59,7 +59,7 @@ public class LightingManager {
 		this.firstLightProcessor.add(cubeAddress);
 	}
 	
-	public boolean computeDiffuseLighting(BlockPos pos, LightType lightType) {
+	public boolean computeDiffuseLighting(BlockPos pos, EnumSkyBlock lightType) {
 		return this.diffuseLightingCalculator.calculate(this.world, pos, lightType);
 	}
 	
@@ -73,17 +73,17 @@ public class LightingManager {
 		
 		// process the queues
 		int numProcessed = 0;
-		this.world.profiler.addSection("skyLightOcclusion");
+		//this.world.profiler.addSection("skyLightOcclusion");
 		numProcessed += this.skyLightOcclusionProcessor.processQueueUntil(timeStop);
-		this.world.profiler.startSection("firstLight");
+		//this.world.profiler.startSection("firstLight");
 		numProcessed += this.firstLightProcessor.processQueueUntil(timeStop);
-		this.world.profiler.endSection();
+		//this.world.profiler.endSection();
 		
 		// disable this spam for now
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			TallWorldsMod.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isClient ? "CLIENT" : "SERVER", numProcessed, timeDiff));
+			TallWorldsMod.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isRemote ? "CLIENT" : "SERVER", numProcessed, timeDiff));
 			TallWorldsMod.LOGGER.info(this.skyLightOcclusionProcessor.getProcessingReport());
 			TallWorldsMod.LOGGER.info(this.firstLightProcessor.getProcessingReport());
 		}

@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class VariantFeatureGenerator extends FeatureGenerator {
 
@@ -48,7 +48,7 @@ public class VariantFeatureGenerator extends FeatureGenerator {
 	}
 
 	@Override
-	public void generate(Random rand, Cube cube, Biome biome) {
+	public void generate(Random rand, Cube cube, BiomeGenBase biome) {
 		for (int i = 0; i < probabilities.length; i++) {
 			if (rand.nextDouble() <= this.probabilities[i]) {
 				this.generators[i].generate(rand, cube, biome);

@@ -24,7 +24,6 @@
 package cubicchunks.lighting;
 
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Coords;
@@ -32,6 +31,7 @@ import cubicchunks.util.processor.BlockColumnProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
+import net.minecraft.world.EnumSkyBlock;
 
 public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	
@@ -115,7 +115,7 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 		for (pos.y = minBlockY; pos.y <= maxBlockY; pos.y++) {
 			// use the vanilla light calculator, it's much faster now than my hacks
 			//WorldContext.get(world).getLightingManager().computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
-			world.updateLightingAt(LightType.SKY, pos);
+			world.updateLightingAt(EnumSkyBlock.SKY, pos);
 		}
 		
 		return true;

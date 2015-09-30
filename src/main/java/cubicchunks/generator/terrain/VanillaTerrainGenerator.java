@@ -35,16 +35,16 @@ import static cubicchunks.util.TerrainGeneratorUtils.*;
 
 import java.util.Random;
 
-import net.minecraft.world.biome.Biome;
 import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.generator.builder.BasicBuilder;
 import cubicchunks.generator.builder.IBuilder;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class VanillaTerrainGenerator implements ITerrainGenerator {
 	private static final int OCTAVES = 16;
 
-	private Biome[] biomes;
+	private BiomeGenBase[] biomes;
 
 	private final long seed;
 	private final Random rand;
@@ -270,8 +270,8 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		}
 	}
 
-	private Biome[] getBiomeMap(final Cube cube) {
-		return cube.getWorld().dimension.getBiomeManager().getBiomeMap2(this.biomes,
+	private BiomeGenBase[] getBiomeMap(final Cube cube) {
+		return cube.getWorld().provider.getWorldChunkManager().getBiomesForGeneration(this.biomes,
 				cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius,
 				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
 	}
@@ -299,19 +299,19 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		float smoothHeight = 0.0F;
 
 		float biomeWeightSum = 0.0F;
-		final Biome centerBiomeConfig = getCenterBiome(x, z);
+		final BiomeGenBase centerBiomeConfig = getCenterBiome(x, z);
 		final int lookRadius = this.maxSmoothRadius;
 
 		for (int nextX = -lookRadius; nextX <= lookRadius; nextX++) {
 			for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++) {
-				final Biome biome = getOffsetBiome(x, z, nextX, nextZ);
-				final float biomeHeight = biome.height;
-				final float biomeVolatility = biome.volatility;
+				final BiomeGenBase biome = getOffsetBiome(x, z, nextX, nextZ);
+				final float biomeHeight = biome.minHeight;//it's actually height
+				final float biomeVolatility = biome.maxHeight;//it's actually volatility, how much the height is varying
 
 				double biomeWeight = calcBiomeWeight(nextX, nextZ, biomeHeight);
 
 				biomeWeight = Math.abs(biomeWeight);
-				if (biomeHeight > centerBiomeConfig.height) {
+				if (biomeHeight > centerBiomeConfig.minHeight) {
 					// prefer biomes with lower height?
 					biomeWeight /= 2.0F;
 				}
@@ -340,12 +340,12 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		this.biomeHeight += 0.2 * addHeight * 17.0 / 64.0;
 	}
 
-	private Biome getCenterBiome(final int x, final int z) {
+	private BiomeGenBase getCenterBiome(final int x, final int z) {
 		return this.biomes[x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
 				* (X_SECTION_SIZE + this.maxSmoothDiameter)];
 	}
 
-	private Biome getOffsetBiome(final int x, final int z, int nextX, int nextZ) {
+	private BiomeGenBase getOffsetBiome(final int x, final int z, int nextX, int nextZ) {
 		return this.biomes[x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius)
 				* (X_SECTION_SIZE + this.maxSmoothDiameter)];
 	}

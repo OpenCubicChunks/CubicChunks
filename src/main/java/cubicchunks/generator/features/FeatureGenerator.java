@@ -29,7 +29,7 @@ import java.util.Random;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public abstract class FeatureGenerator {
 	protected final World world;
@@ -38,18 +38,18 @@ public abstract class FeatureGenerator {
 		this.world = world;
 	}
 
-	public abstract void generate(final Random rand, final Cube cube, final Biome biome);
+	public abstract void generate(final Random rand, final Cube cube, final BiomeGenBase biome);
 	
 	protected boolean setBlockOnly(final BlockPos blockPos, final IBlockState blockState) {
-		return this.world.tryPlaceBlock(blockPos, blockState, 2);
+		return this.world.setBlockState(blockPos, blockState, 2);
 	}
 
 	protected boolean setBlockAndUpdateNeighbors(final BlockPos pos, final IBlockState state) {
-		return this.world.tryPlaceBlock(pos, state, 3);
+		return this.world.setBlockState(pos, state, 3);
 	}
 
 	protected IBlockState getBlockState(final BlockPos pos) {
-		return this.world.getBlockStateAt(pos);
+		return this.world.getBlockState(pos);
 	}
 
 	protected static int getMinCubeY(final int y) {

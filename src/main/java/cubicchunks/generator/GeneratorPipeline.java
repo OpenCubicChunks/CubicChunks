@@ -25,9 +25,6 @@ package cubicchunks.generator;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
 
 import cubicchunks.TallWorldsMod;
@@ -39,8 +36,6 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
 public class GeneratorPipeline {
-	
-	public static final Logger LOGGER = LoggerFactory.getLogger("GenPipeline");
 	
 	private static final int TickBudget = 40; // ms. There are only 50 ms per tick
 	
@@ -152,9 +147,9 @@ public class GeneratorPipeline {
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			LOGGER.debug("Processed {} cubes in {} ms.", numProcessed, timeDiff);
+			TallWorldsMod.LOGGER.debug("Processed {} cubes in {} ms.", numProcessed, timeDiff);
 			for (StageProcessor processor : this.processors) {
-				LOGGER.debug(processor.processor.getProcessingReport());
+				TallWorldsMod.LOGGER.debug(processor.processor.getProcessingReport());
 			}
 		}
 		

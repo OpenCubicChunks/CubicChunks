@@ -25,13 +25,13 @@ package cubicchunks.generator;
 
 import java.util.Random;
 
-import net.minecraft.world.biome.Biome;
 import cubicchunks.generator.noise.NoiseGeneratorMultiFractal;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.biome.BiomeBlockReplacer;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class SurfaceProcessor extends CubeProcessor {
 
@@ -40,7 +40,7 @@ public class SurfaceProcessor extends CubeProcessor {
 	private Random rand;
 	private NoiseGeneratorMultiFractal noiseGen;
 	private double[] noise;
-	private Biome[] biomes;
+	private BiomeGenBase[] biomes;
 	private long seed;
 
 	public SurfaceProcessor(final ICubeCache cubeCache, final int batchSize, final long seed) {
@@ -97,9 +97,9 @@ public class SurfaceProcessor extends CubeProcessor {
 				Coords.cubeToMinBlock(cube.getZ()), 16, 16, 16, 16, 1);
 	}
 
-	private Biome[] getCubeBiomeMap(final Cube cube) {
+	private BiomeGenBase[] getCubeBiomeMap(final Cube cube) {
 		// generate biome info. This is a hackjob.
-		return cube.getWorld().dimension.getBiomeManager().getBiomeMap(this.biomes, Coords.cubeToMinBlock(cube.getX()),
+		return cube.getWorld().provider.getWorldChunkManager().loadBlockGeneratorData(this.biomes, Coords.cubeToMinBlock(cube.getX()),
 				Coords.cubeToMinBlock(cube.getZ()), 16, 16);
 	}
 

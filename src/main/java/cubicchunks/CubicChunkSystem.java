@@ -27,27 +27,6 @@ import static cubicchunks.generator.terrain.GlobalGeneratorConfig.*;
 
 import java.util.Random;
 
-import net.minecraft.client.renderers.ChunkSectionRenderer;
-import net.minecraft.client.renderers.ChunkSectionRenderers;
-import net.minecraft.client.renderers.WorldRenderer;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntitySet;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.main.Minecraft;
-import net.minecraft.server.management.PlayerManager;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.Facing;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldClient;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.biome.BiomeManager;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.ClientChunkCache;
-import net.minecraft.world.gen.ServerChunkCache;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.generator.GeneratorPipeline;
@@ -60,20 +39,39 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cuchaz.m3l.api.chunks.ChunkSystem;
-import cuchaz.m3l.classTranslation.ClientOnly;
-import cuchaz.m3l.util.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ChunkProviderClient;
+import net.minecraft.client.multiplayer.PlayerControllerMP;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.renderer.ChunkRenderContainer;
+import net.minecraft.client.renderer.RenderGlobal;
+import net.minecraft.client.renderer.ViewFrustum;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
+import net.minecraft.client.renderer.chunk.RenderChunk;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.management.PlayerManager;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
+import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.WorldSettings;
+import net.minecraft.world.biome.WorldChunkManager;
+import net.minecraft.world.gen.ChunkProviderServer;
 
-public class CubicChunkSystem implements ChunkSystem {
+public class CubicChunkSystem {
 
 	private EntitySet<Entity> m_emptyEntitySet;
 
 	public CubicChunkSystem() {
 		m_emptyEntitySet = new EntitySet<Entity>(Entity.class);
 	}
-
-	@Override
-	public ServerChunkCache getServerChunkCache(WorldServer worldServer) {
+	public ChunkProviderServer getServerChunkCache(WorldServer worldServer) {
 		if (isTallWorld(worldServer)) {
 			ServerCubeCache serverCubeCache = new ServerCubeCache(worldServer);
 			WorldServerContext.put(worldServer, new WorldServerContext(worldServer, serverCubeCache));
@@ -82,9 +80,8 @@ public class CubicChunkSystem implements ChunkSystem {
 		return null;
 	}
 
-	@Override
-	@ClientOnly
-	public ClientChunkCache getClientChunkCache(WorldClient worldClient) {
+	//@ClientOnly
+	public ChunkProviderClient getClientChunkCache(WorldClient worldClient) {
 		if (isTallWorld(worldClient)) {
 			ClientCubeCache clientCubeCache = new ClientCubeCache(worldClient);
 			WorldClientContext.put(worldClient, new WorldClientContext(worldClient, clientCubeCache));
@@ -93,8 +90,7 @@ public class CubicChunkSystem implements ChunkSystem {
 		return null;
 	}
 
-	@Override
-	public BiomeManager getBiomeManager(World world) {
+	public WorldChunkManager getBiomeManager(World world) {
 
 		/*
 		 * TEMP: disable fancy generation // for now, only muck with the overworld if (world.dimension.getId() == 0) {
@@ -106,7 +102,6 @@ public class CubicChunkSystem implements ChunkSystem {
 		return null;
 	}
 
-	@Override
 	public Integer getMinBlockY(World world) {
 		if (isTallWorld(world)) {
 			return Coords.cubeToMinBlock(AddressTools.MinY);
@@ -114,7 +109,6 @@ public class CubicChunkSystem implements ChunkSystem {
 		return null;
 	}
 
-	@Override
 	public Integer getMaxBlockY(World world) {
 		if (isTallWorld(world)) {
 			return Coords.cubeToMaxBlock(AddressTools.MaxY);
@@ -122,7 +116,6 @@ public class CubicChunkSystem implements ChunkSystem {
 		return null;
 	}
 
-	@Override
 	public PlayerManager getPlayerManager(WorldServer worldServer) {
 		if (isTallWorld(worldServer)) {
 			return new CubePlayerManager(worldServer);
@@ -130,9 +123,8 @@ public class CubicChunkSystem implements ChunkSystem {
 		return null;
 	}
 
-	@Override
 	public void processChunkLoadQueue(EntityPlayerMP player) {
-		WorldServer worldServer = (WorldServer) player.getWorld();
+		WorldServer worldServer = (WorldServer) player.getServerForPlayer();
 		if (isTallWorld(worldServer)) {
 			CubePlayerManager playerManager = (CubePlayerManager) worldServer.getPlayerManager();
 			playerManager.processCubeQueues(player);
@@ -141,59 +133,55 @@ public class CubicChunkSystem implements ChunkSystem {
 
 	private boolean isTallWorld(World world) {
 		// for now, only tall-ify the overworld
-		return world.dimension.getId() == 0;
+		return world.provider.getDimensionId()== 0;
 	}
 
-	@Override
-	@ClientOnly
+	//@ClientOnly
 	public void onWorldClientTick(WorldClient worldClient) {
 		if (isTallWorld(worldClient)) {
 			WorldClientContext context = WorldClientContext.get(worldClient);
 
 			// tick all the things!
-			worldClient.profiler.startSection("lightingEngine");
+			//worldClient.profiler.startSection("lightingEngine");
 			context.getLightingManager().tick();
-			worldClient.profiler.endSection();
+			//worldClient.profiler.endSection();
 		}
 	}
 
-	@Override
 	public void onWorldServerTick(WorldServer worldServer) {
 		if (isTallWorld(worldServer)) {
 			WorldServerContext context = WorldServerContext.get(worldServer);
 
 			// tick all the things!
-			worldServer.profiler.startSection("generatorPipeline");
+			//worldServer.profiler.startSection("generatorPipeline");
 			context.getGeneratorPipeline().tick();
 
-			worldServer.profiler.addSection("lightingEngine");
+			//worldServer.profiler.addSection("lightingEngine");
 			context.getLightingManager().tick();
 
-			worldServer.profiler.addSection("randomCubeTicks");
+			//worldServer.profiler.addSection("randomCubeTicks");
 			ServerCubeCache cubeCache = context.getCubeCache();
 			for (ChunkCoordIntPair coords : worldServer.activeChunkSet) {
-				Column column = cubeCache.getChunk(coords.chunkX, coords.chunkZ);
+				Column column = cubeCache.getChunk(coords.chunkXPos, coords.chunkZPos);
 				column.doRandomTicks();
 			}
-			worldServer.profiler.endSection();
+			//worldServer.profiler.endSection();
 		}
 	}
 
-	@Override
 	public Integer getRandomBlockYForMobSpawnAttempt(Random rand, int upper, World world, int cubeX, int cubeZ) {
 		// need to return a random blockY between the "bottom" of the world and upper
 		// TEMP: well... we don't really have a bottom, so just clamp the val to [15,upper] for now
 		return rand.nextInt(Math.max(15, upper));
 	}
 
-	@Override
 	public void generateWorld(WorldServer worldServer) {
 		if (isTallWorld(worldServer)) {
 			WorldServerContext context = WorldServerContext.get(worldServer);
 			ServerCubeCache serverCubeCache = context.getCubeCache();
 
 			// load the cubes around the spawn point
-			TallWorldsMod.LOGGER.info("Loading cubes for spawn...");
+			//TallWorldsMod.LOGGER.info("Loading cubes for spawn...");
 			final int Distance = ServerCubeCache.WorldSpawnChunkDistance;
 			BlockPos spawnPoint = worldServer.getSpawnPoint();
 			int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
@@ -212,12 +200,12 @@ public class CubicChunkSystem implements ChunkSystem {
 			int numCubesTotal = pipeline.getNumCubes();
 			if (numCubesTotal > 0) {
 				long timeStart = System.currentTimeMillis();
-				TallWorldsMod.LOGGER.info("Generating {} cubes for spawn at block ({},{},{}) cube ({},{},{})...",
-						numCubesTotal, spawnPoint.getX(), spawnPoint.getY(), spawnPoint.getZ(), spawnCubeX, spawnCubeY,
-						spawnCubeZ);
+				//TallWorldsMod.LOGGER.info("Generating {} cubes for spawn at block ({},{},{}) cube ({},{},{})...",
+				//		numCubesTotal, spawnPoint.getX(), spawnPoint.getY(), spawnPoint.getZ(), spawnCubeX, spawnCubeY,
+				//		spawnCubeZ);
 				pipeline.generateAll();
 				long timeDiff = System.currentTimeMillis() - timeStart;
-				TallWorldsMod.LOGGER.info("Done in {} ms", timeDiff);
+				//TallWorldsMod.LOGGER.info("Done in {} ms", timeDiff);
 			}
 			
 			// save the cubes now
@@ -225,7 +213,6 @@ public class CubicChunkSystem implements ChunkSystem {
 		}
 	}
 
-	@Override
 	public boolean calculateSpawn(WorldServer worldServer, WorldSettings worldSettings) {
 
 		if (!isTallWorld(worldServer)) {
@@ -239,29 +226,29 @@ public class CubicChunkSystem implements ChunkSystem {
 		// this is apparently called before the world is generated
 		// we'll have to do our own generation to find the spawn point
 
-		if (!worldServer.dimension.canRespawnHere()) {
-			worldServer.worldInfo.setSpawnPoint(BlockPos.ZEROED.above());
+		if (!worldServer.provider.canRespawnHere()) {
+			worldServer.worldInfo.setSpawnPoint(BlockPos.ORIGIN.up());
 			return false;
 		}
 
 		// pick a default fail-safe spawn point
 		BlockPos.MutableBlockPos spawnPos = new BlockPos.MutableBlockPos(0,
-				worldServer.dimension.getAverageGroundLevel(), 0);
+				worldServer.provider.getAverageGroundLevel(), 0, null);
 
 		Random rand = new Random(worldServer.getSeed());
 
 		// defer to the column manager to find the x,z part of the spawn point
-		BiomeManager biomeManager = worldServer.dimension.getBiomeManager();
-		BlockPos spawnPosition = biomeManager.getRandomPositionInBiome(0, 0, 256, biomeManager.getSpawnableBiomes(),
+		WorldChunkManager biomeManager = worldServer.provider.getWorldChunkManager();
+		BlockPos spawnPosition = biomeManager.findBiomePosition(0, 0, 256, biomeManager.getBiomesToSpawnIn(),
 				rand);
 		if (spawnPosition != null) {
 			spawnPos.x = spawnPosition.getX();
 			spawnPos.z = spawnPosition.getZ();
 		} else {
-			TallWorldsMod.LOGGER.warn("Unable to find spawn biome");
+			//TallWorldsMod.LOGGER.warn("Unable to find spawn biome");
 		}
 
-		TallWorldsMod.LOGGER.info("Searching for suitable spawn point...");
+		//TallWorldsMod.LOGGER.info("Searching for suitable spawn point...");
 
 		// generate some world around the spawn x,z at sea level
 		int spawnCubeX = Coords.blockToCube(spawnPos.getX());
@@ -279,14 +266,14 @@ public class CubicChunkSystem implements ChunkSystem {
 		context.getGeneratorPipeline().generateAll();
 
 		// make some effort to find a suitable spawn point, but don't guarantee it
-		for (int i = 0; i < 1000 && !worldServer.dimension.canCoordinateBeSpawn(spawnPos.getX(), spawnPos.getZ()); i++) {
+		for (int i = 0; i < 1000 && !worldServer.provider.canCoordinateBeSpawn(spawnPos.getX(), spawnPos.getZ()); i++) {
 			spawnPos.x += Util.randRange(rand, -16, 16);
 			spawnPos.z += Util.randRange(rand, -16, 16);
 		}
 
 		// save the spawn point
 		worldServer.worldInfo.setSpawnPoint(spawnPos);
-		TallWorldsMod.LOGGER.info("Found spawn point at ({},{},{})", spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
+		//TallWorldsMod.LOGGER.info("Found spawn point at ({},{},{})", spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
 
 		if (worldSettings.isBonusChestEnabled()) {
 			worldServer.generateBonusChests();
@@ -296,7 +283,6 @@ public class CubicChunkSystem implements ChunkSystem {
 		return true;
 	}
 
-	@Override
 	public Integer getSeaLevel(World world) {
 		if (isTallWorld(world)) {
 			return SEA_LEVEL;
@@ -304,7 +290,6 @@ public class CubicChunkSystem implements ChunkSystem {
 		return null;
 	}
 
-	@Override
 	public Double getHorizonLevel(World world) {
 		if (isTallWorld(world)) {
 			// tall worlds will eventually have the horizon level at 0
@@ -314,8 +299,7 @@ public class CubicChunkSystem implements ChunkSystem {
 		return null;
 	}
 
-	@Override
-	public Boolean updateLightingAt(World world, LightType type, BlockPos pos) {
+	public Boolean updateLightingAt(World world, EnumSkyBlock type, BlockPos pos) {
 		/* TEMP: for now, the vanilla lighting implementation is much faster than mine
 		 * let's just use that for now
 		if (isTallWorld(world)) {
@@ -326,7 +310,6 @@ public class CubicChunkSystem implements ChunkSystem {
 		return null;
 	}
 
-	@Override
 	public Boolean checkBlockRangeIsInWorld(World world, int minBlockX, int minBlockY, int minBlockZ, int maxBlockX,
 			int maxBlockY, int maxBlockZ, boolean allowEmptyColumns) {
 		if (isTallWorld(world)) {
@@ -338,14 +321,13 @@ public class CubicChunkSystem implements ChunkSystem {
 		return null;
 	}
 
-	@Override
 	public Boolean checkEntityIsInWorld(World world, Entity entity, int minBlockX, int minBlockZ, int maxBlockX,
 			int maxBlockZ, boolean allowEmptyColumns) {
 		if (isTallWorld(world)) {
 			WorldContext context = WorldContext.get(world);
 
 			final int blockDist = 32;
-			int blockY = MathHelper.floor(entity.yPos);
+			int blockY = MathHelper.floor_double(entity.posY);
 			
 			// the min cube stage can be live here since players should be in fully-generated cubes
 			final GeneratorStage minCubeStage = GeneratorStage.LIVE;
@@ -356,42 +338,43 @@ public class CubicChunkSystem implements ChunkSystem {
 
 	@Override
 	@ClientOnly
-	public boolean setChunkSectionRendererPositions(ChunkSectionRenderers renderers) {
+	public boolean setChunkSectionRendererPositions(ViewFrustum renderers) {
 
 		if (!isTallWorld(renderers.world)) {
 			return false;
 		}
 
 		// get the position of the view entity
-		Entity view = Minecraft.instance.getViewEntity();
+		Entity view = Minecraft.getMinecraft().getRenderViewEntity();
 
 		// treat the y dimension the same as all the rest
-		int viewX = MathHelper.floor(view.xPos) - 8;
-		int viewY = MathHelper.floor(view.yPos) - 8;
-		int viewZ = MathHelper.floor(view.zPos) - 8;
+		int viewX = MathHelper.floor_double(view.posX) - 8;
+		int viewY = MathHelper.floor_double(view.posY) - 8;
+		int viewZ = MathHelper.floor_double(view.posZ) - 8;
 
-		int xSizeInBlocks = renderers.numXBlockRenderers * 16;
-		int ySizeInBlocks = renderers.numYBlockRenderers * 16;
-		int zSizeInBlocks = renderers.numZBlockRenderers * 16;
+		int xSizeInBlocks = renderers.countChunksX * 16;
+		int ySizeInBlocks = renderers.countChunksY * 16;
+		int zSizeInBlocks = renderers.countChunksZ * 16;
 
-		for (int xIndex = 0; xIndex < renderers.numXBlockRenderers; xIndex++) {
-			int blockX = renderers.getRendererBlockCoord(viewX, xSizeInBlocks, xIndex);
+		for (int xIndex = 0; xIndex < renderers.countChunksX; xIndex++) {
+			//getRendererBlockCoord
+			int blockX = renderers.func_178157_a(viewX, xSizeInBlocks, xIndex);
 
-			for (int yIndex = 0; yIndex < renderers.numYBlockRenderers; yIndex++) {
-				int blockY = renderers.getRendererBlockCoord(viewY, ySizeInBlocks, yIndex);
+			for (int yIndex = 0; yIndex < renderers.countChunksY; yIndex++) {
+				int blockY = renderers.func_178157_a(viewY, ySizeInBlocks, yIndex);
 
-				for (int zIndex = 0; zIndex < renderers.numZBlockRenderers; zIndex++) {
-					int blockZ = renderers.getRendererBlockCoord(viewZ, zSizeInBlocks, zIndex);
+				for (int zIndex = 0; zIndex < renderers.countChunksZ; zIndex++) {
+					int blockZ = renderers.func_178157_a(viewZ, zSizeInBlocks, zIndex);
 
 					// get the renderer
-					int rendererIndex = (zIndex * renderers.numYBlockRenderers + yIndex) * renderers.numXBlockRenderers
+					int rendererIndex = (zIndex * renderers.countChunksY + yIndex) * renderers.countChunksX
 							+ xIndex;
-					ChunkSectionRenderer renderer = renderers.blockRenderers[rendererIndex];
+					RenderChunk renderer = renderers.renderChunks[rendererIndex];
 
 					// update the position if needed
-					BlockPos oldPos = renderer.getBlockPos();
+					BlockPos oldPos = renderer.getPosition();
 					if (oldPos.getX() != blockX || oldPos.getY() != blockY || oldPos.getZ() != blockZ) {
-						renderer.setBlockPos(new BlockPos(blockX, blockY, blockZ));
+						renderer.setPosition(new BlockPos(blockX, blockY, blockZ));
 					}
 				}
 			}
@@ -400,37 +383,35 @@ public class CubicChunkSystem implements ChunkSystem {
 		return true;
 	}
 
-	@Override
-	@ClientOnly
-	public ChunkSectionRenderer getChunkSectionRenderer(ChunkSectionRenderers renderers, BlockPos pos) {
+	//@ClientOnly
+	public RenderChunk getChunkSectionRenderer(ViewFrustum renderers, BlockPos pos) {
 
 		if (!isTallWorld(renderers.world)) {
 			return null;
 		}
 
 		// treat the y dimension the same as all the rest
-		int x = MathHelper.intFloorDiv(pos.getX(), 16);
-		int y = MathHelper.intFloorDiv(pos.getY(), 16);
-		int z = MathHelper.intFloorDiv(pos.getZ(), 16);
-		x %= renderers.numXBlockRenderers;
+		int x = MathHelper.bucketInt(pos.getX(), 16);
+		int y = MathHelper.bucketInt(pos.getY(), 16);
+		int z = MathHelper.bucketInt(pos.getZ(), 16);
+		x %= renderers.countChunksX;
 		if (x < 0) {
-			x += renderers.numXBlockRenderers;
+			x += renderers.countChunksX;
 		}
-		y %= renderers.numYBlockRenderers;
+		y %= renderers.countChunksY;
 		if (y < 0) {
-			y += renderers.numYBlockRenderers;
+			y += renderers.countChunksY;
 		}
-		z %= renderers.numZBlockRenderers;
+		z %= renderers.countChunksZ;
 		if (z < 0) {
-			z += renderers.numZBlockRenderers;
+			z += renderers.countChunksZ;
 		}
-		final int index = (z * renderers.numYBlockRenderers + y) * renderers.numXBlockRenderers + x;
-		return renderers.blockRenderers[index];
+		final int index = (z * renderers.countChunksY + y) * renderers.countChunksX + x;
+		return renderers.renderChunks[index];
 	}
 
-	@Override
-	@ClientOnly
-	public boolean initChunkSectionRendererCounts(ChunkSectionRenderers renderers, int viewDistance) {
+	//@ClientOnly
+	public boolean initChunkSectionRendererCounts(ViewFrustum renderers, int viewDistance) {
 
 		if (!isTallWorld(renderers.world)) {
 			return false;
@@ -438,18 +419,18 @@ public class CubicChunkSystem implements ChunkSystem {
 
 		// treat the y dimension the same as all the rest
 		int size = viewDistance * 2 + 1;
-		renderers.numXBlockRenderers = size;
-		renderers.numYBlockRenderers = size;
-		renderers.numZBlockRenderers = size;
+		renderers.countChunksX = size;
+		renderers.countChunksY = size;
+		renderers.countChunksZ = size;
 		return true;
 	}
 
-	@Override
-	@ClientOnly
-	public ChunkSectionRenderer getChunkSectionRendererNeighbor(WorldRenderer worldRenderer, BlockPos pos,
-			ChunkSectionRenderer chunkSectionRenderer, Facing facing) {
+	//TODO: I can't find it in 1.8.11
+	//@ClientOnly
+	public RenderChunk getChunkSectionRendererNeighbor(RenderGlobal worldRenderer, BlockPos pos,
+			ChunkSectionRenderer chunkSectionRenderer, EnumFacing facing) {
 
-		if (!isTallWorld(worldRenderer.worldClient)) {
+		if (!isTallWorld(worldRenderer.theWorld)) {
 			return null;
 		}
 

@@ -26,7 +26,7 @@ package cubicchunks.generator.structures;
 import java.util.Random;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
@@ -121,12 +121,12 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 				if (x >= xOCenter - 16.0D - modSin * 2.0D && y >= yOCenter - 16.0D - yModSin * 2.0D
 						&& z >= zOCenter - 16.0D - modSin * 2.0D && x <= xOCenter + 16.0D + modSin * 2.0D
 						&& y <= yOCenter + 16.0D + yModSin * 2.0D && z <= zOCenter + 16.0D + modSin * 2.0D) {
-					int xDist1 = MathHelper.floor(x - modSin) - xOrigin * 16 - 1;
-					int xDist2 = MathHelper.floor(x + modSin) - xOrigin * 16 + 1;
-					int yDist1 = MathHelper.floor(y - yModSin) - yOrigin * 16 - 1;
-					int yDist2 = MathHelper.floor(y + yModSin) - yOrigin * 16 + 1;
-					int zDist1 = MathHelper.floor(z - modSin) - zOrigin * 16 - 1;
-					int zDist2 = MathHelper.floor(z + modSin) - zOrigin * 16 + 1;
+					int xDist1 = MathHelper.floor_double(x - modSin) - xOrigin * 16 - 1;
+					int xDist2 = MathHelper.floor_double(x + modSin) - xOrigin * 16 + 1;
+					int yDist1 = MathHelper.floor_double(y - yModSin) - yOrigin * 16 - 1;
+					int yDist2 = MathHelper.floor_double(y + yModSin) - yOrigin * 16 + 1;
+					int zDist1 = MathHelper.floor_double(z - modSin) - zOrigin * 16 - 1;
+					int zDist2 = MathHelper.floor_double(z + modSin) - zOrigin * 16 + 1;
 	
 					if (xDist1 < 0) {
 						xDist1 = 0;
@@ -154,7 +154,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 						zDist2 = 16;
 					}
 	
-					boolean hitLiquid = scanForLiquid(cube, xDist1, xDist2, yDist1, yDist2, zDist1, zDist2, Blocks.WATER, Blocks.FLOWING_WATER);
+					boolean hitLiquid = scanForLiquid(cube, xDist1, xDist2, yDist1, yDist2, zDist1, zDist2, Blocks.water, Blocks.flowing_water);
 	
 					if (!hitLiquid) {
 						for (int x1 = xDist1; x1 < xDist2; ++x1) {
@@ -178,23 +178,23 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 									BlockPos pos = new BlockPos(x1, y1, z1);
 									Block block = cube.getBlockState(pos).getBlock();
 	
-									if (block != Blocks.STONE && block != Blocks.DIRT && block != Blocks.GRASS) {
+									if (block != Blocks.stone && block != Blocks.dirt && block != Blocks.grass) {
 										continue;
-									} else if (block == Blocks.GRASS) {
+									} else if (block == Blocks.grass) {
 										grass = true;
 									}
 									// used to place lava at the bottom of ravines if it was deep enough
 									if (y1 + yOrigin * 16 < /* 10 */0) {
 										// BUG: crash when it's lava
 										// cube.setBlockForGeneration(pos, Blocks.FLOWING_LAVA.getDefaultState());
-										cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
+										cube.setBlockForGeneration(pos, Blocks.air.getDefaultState());
 									} else {
-										cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
+										cube.setBlockForGeneration(pos, Blocks.air.getDefaultState());
 									}
 									
-									if (grass && block == Blocks.DIRT) {
-										cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
-										cube.setBlockForGeneration(pos.above(), Blocks.AIR.getDefaultState());
+									if (grass && block == Blocks.dirt) {
+										cube.setBlockForGeneration(pos, Blocks.grass.getDefaultState());
+										cube.setBlockForGeneration(pos.up(), Blocks.air.getDefaultState());
 									}
 								}
 							}

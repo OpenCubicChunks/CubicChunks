@@ -24,14 +24,14 @@
 package cubicchunks.generator;
 
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.biome.Biome;
 import cubicchunks.util.Coords;
 import cubicchunks.world.column.Column;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class ColumnGenerator {
 	
 	private WorldServer m_worldServer;
-	private Biome[] m_biomes;
+	private BiomeGenBase[] m_biomes;
 	
 	public ColumnGenerator(WorldServer worldServer) {
 		this.m_worldServer = worldServer;
@@ -40,7 +40,7 @@ public class ColumnGenerator {
 	public Column generateColumn(int cubeX, int cubeZ) {
 		
 		// generate biome info. This is a hackjob.
-		this.m_biomes = this.m_worldServer.dimension.getBiomeManager().getBiomeMap(
+		this.m_biomes = this.m_worldServer.provider.getWorldChunkManager().loadBlockGeneratorData(
 			this.m_biomes,
 			Coords.cubeToMinBlock(cubeX), 
 			Coords.cubeToMinBlock(cubeZ),

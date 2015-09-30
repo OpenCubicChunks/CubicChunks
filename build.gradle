@@ -19,7 +19,7 @@ defaultTasks 'licenseFormat', 'build'
 
 group = "cubichunks"
 archivesBaseName = "CubicChunks"
-version = "1.8.3-0.4"
+version = "1.8.11-0.5"
 
 // Minimum version of Java required
 sourceCompatibility = '1.7'
@@ -141,4 +141,10 @@ task debug(type:JavaExec, dependsOn: build) {
 		configure runCfg
 		debug = true
 	}
+}
+
+gradle.projectsEvaluated {
+   tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xmaxerrs" << "10000"
+    }
 }

@@ -26,12 +26,12 @@ package cubicchunks.generator.features.trees;
 import cubicchunks.generator.features.trees.TreeGenerator;
 import java.util.Random;
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
+import net.minecraft.init.Blocks;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class SimpleTreeGenerator extends TreeGenerator {
 
@@ -43,9 +43,9 @@ public class SimpleTreeGenerator extends TreeGenerator {
 	}
 
 	@Override
-	public void generateAt(Random rand, BlockPos pos, Biome biome) {
-		Block below = getBlockState(pos.below()).getBlock();
-		if (below != Blocks.DIRT && below != Blocks.GRASS) {
+	public void generateAt(Random rand, BlockPos pos, BiomeGenBase biome) {
+		Block below = getBlockState(pos.down()).getBlock();
+		if (below != Blocks.dirt && below != Blocks.grass) {
 			return;
 		}
 		final int trunkHeight = rand.nextInt(MAX_TRUNK_HEIGHT + 1 - MIN_TRUNK_HEIGHT) + MIN_TRUNK_HEIGHT;
@@ -68,7 +68,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 			if (!canReplaceBlockDefault(getBlockState(pos).getBlock())) {
 				return false;
 			}
-			pos = pos.above();
+			pos = pos.up();
 		}
 
 		for (int x = -treeRadius; x <= treeRadius; x++) {
@@ -89,7 +89,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 		BlockPos currentPos = pos;
 		for (int i = 0; i < trunkHeight; i++) {
 			this.setBlockOnly(currentPos, this.woodBlock);
-			currentPos = currentPos.above();
+			currentPos = currentPos.up();
 		}
 
 		// generate leaves
@@ -98,13 +98,13 @@ public class SimpleTreeGenerator extends TreeGenerator {
 			int y2 = yRel >> 1 << 1;
 			double radiusSubstract = 0.7 * treeRadius * y2 / (double) leavesHeight;
 			double radius = treeRadius - radiusSubstract;
-			this.generateLeavesCircleLayerAt(this.leafBlock, startPos.above(yRel), radius + 0.5);
+			this.generateLeavesCircleLayerAt(this.leafBlock, startPos.up(yRel), radius + 0.5);
 		}
 	}
 	
 	private void generateLeavesCircleLayerAt(IBlockState state, BlockPos pos, double radius) {
 		double radiusSquared = radius * radius;
-		int r = MathHelper.ceil(radius);
+		int r = MathHelper.ceiling_double_int(radius);
 		for (int x = -r; x <= r; x++) {
 			for (int z = -r; z <= r; z++) {
 				if (x * x + z * z > radiusSquared) {
@@ -112,7 +112,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 				}
 				BlockPos currentPos = pos.add(x, 0, z);
 				// don't replace wood
-				if (getBlockState(currentPos).getBlock().isSolid()) {
+				if (getBlockState(currentPos).getBlock().isSolidFullCube()) {
 					continue;
 				}
 				this.setBlockOnly(currentPos, this.leafBlock);
@@ -122,7 +122,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 	
 	private void generateLeavesSphereAt(IBlockState state, BlockPos pos, double radius) {
 		double radiusSquared = radius * radius;
-		int r = MathHelper.ceil(radius);
+		int r = MathHelper.ceiling_double_int(radius);
 		for (int x = -r; x <= r; x++) {
 			for (int y = -r; y <= r; y++) {
 				for (int z = -r; z <= r; z++) {

@@ -26,15 +26,15 @@ package cubicchunks.world.biome;
 import java.util.Random;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.biome.Biome;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.init.Blocks;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class BiomeBlockReplacer {
 
@@ -46,7 +46,7 @@ public class BiomeBlockReplacer {
 	private final int alterationTop;
 	private final int seaLevel;
 	
-	private Biome baseBiome;
+	private BiomeGenBase baseBiome;
 	private IBlockState surfaceBlock;
 	private IBlockState groundBlock;
 
@@ -60,12 +60,12 @@ public class BiomeBlockReplacer {
 		this.seaLevel = cube.getWorld().getSeaLevel();
 	}
 
-	public void replaceBlocks(final Biome biomeToUse, final int xAbs, final int zAbs, final double depthNoiseValue) {
+	public void replaceBlocks(final BiomeGenBase biomeToUse, final int xAbs, final int zAbs, final double depthNoiseValue) {
 		setBiome(biomeToUse);
 		process(xAbs, zAbs, depthNoiseValue);
 	}
 
-	private void setBiome(final Biome biomeToUse) {
+	private void setBiome(final BiomeGenBase biomeToUse) {
 		this.baseBiome = biomeToUse;
 		this.surfaceBlock = biomeToUse.topBlock;
 		this.groundBlock = biomeToUse.fillerBlock;
@@ -93,24 +93,24 @@ public class BiomeBlockReplacer {
 			
 			if (yAbs <= ((AddressTools.MinY + 64) << 4) + this.rand.nextInt(16)) {
 				if (canSetBlock) {
-					setBlock(this.cube, pos, Blocks.BEDROCK.getDefaultState());
+					setBlock(this.cube, pos, Blocks.bedrock.getDefaultState());
 				}
 			} else if (yAbs < -32768 + this.rand.nextInt(256)) {
 				if (canSetBlock) {
-					setBlock(this.cube, pos, Blocks.LAVA.getDefaultState());
+					setBlock(this.cube, pos, Blocks.lava.getDefaultState());
 				}
 			} else {
 				// Current block
 				final Block block = getBlock(this.cube, this.cubeAbove, pos);
 	
 				// Set numBlocksToChange to -1 when we reach air, skip everything else
-				if (block == null || block.getMaterial() == Material.AIR) {
+				if (block == null || block.getMaterial() == Material.air) {
 					blocksToChange = -1;
 					continue;
 				}
 	
 				// Do not replace any blocks except already replaced and stone
-				if (block != Blocks.STONE && block != this.surfaceBlock && block != this.groundBlock && block != Blocks.SANDSTONE) {
+				if (block != Blocks.stone && block != this.surfaceBlock && block != this.groundBlock && block != Blocks.sandstone) {
 					continue;
 				}
 	
@@ -118,8 +118,8 @@ public class BiomeBlockReplacer {
 				if (blocksToChange == -1) {
 					// If depth is <= 0 - only stone
 					if (depth <= 0) {
-						this.surfaceBlock = Blocks.AIR.getDefaultState();
-						this.groundBlock = Blocks.STONE.getDefaultState();
+						this.surfaceBlock = Blocks.air.getDefaultState();
+						this.groundBlock = Blocks.stone.getDefaultState();
 					}
 					// If we are above or at 4 block under water and at or below one block above water
 					else if (yAbs >= this.seaLevel - 4 && yAbs <= this.seaLevel + 1) {
@@ -132,9 +132,9 @@ public class BiomeBlockReplacer {
 					if (yAbs < this.seaLevel && (this.surfaceBlock == null || this.surfaceBlock.getBlock().getMaterial() == Material.AIR)) {
 						if (this.baseBiome.getTemp(pos) < 0.15F) {
 							// or ice if it's cold
-							this.surfaceBlock = Blocks.ICE.getDefaultState();
+							this.surfaceBlock = Blocks.ice.getDefaultState();
 						} else {
-							this.surfaceBlock = Blocks.WATER.getDefaultState();
+							this.surfaceBlock = Blocks.water.getDefaultState();
 						}
 					}
 	
@@ -142,8 +142,8 @@ public class BiomeBlockReplacer {
 					blocksToChange = depth;
 					
 					if (yAbs < this.seaLevel - 7 - depth) {
-						this.surfaceBlock = Blocks.AIR.getDefaultState();
-						this.groundBlock = Blocks.STONE.getDefaultState();
+						this.surfaceBlock = Blocks.air.getDefaultState();
+						this.groundBlock = Blocks.stone.getDefaultState();
 					}
 					
 					if(canSetBlock) {

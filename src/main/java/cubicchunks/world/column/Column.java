@@ -33,25 +33,12 @@ import java.util.List;
 import java.util.TreeMap;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.Facing;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3i;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.chunk.Chunk;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Predicate;
 
 import cubicchunks.util.AddressTools;
@@ -62,10 +49,10 @@ import cubicchunks.world.EntityContainer;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class Column extends Chunk {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(Column.class);
 
 	private TreeMap<Integer, Cube> cubes;
 	private OpacityIndex opacityIndex;
@@ -81,7 +68,7 @@ public class Column extends Chunk {
 		init();
 	}
 
-	public Column(World world, int cubeX, int cubeZ, Biome[] biomes) {
+	public Column(World world, int cubeX, int cubeZ, BiomeGenBase[] biomes) {
 
 		// NOTE: this constructor is called by the column generator
 		this(world, cubeX, cubeZ);
@@ -90,7 +77,7 @@ public class Column extends Chunk {
 
 		// save the biome data
 		for (int i = 0; i < biomes.length; i++) {
-			this.biomeMap[i] = (byte) biomes[i].biomeID;
+			this.blockBiomeArray[i] = (byte) biomes[i].biomeID;
 		}
 
 		this.isModified = true;
@@ -114,7 +101,7 @@ public class Column extends Chunk {
 		// this.heightMap = null;
 		// this.skylightUpdateMap = null;
 
-		Arrays.fill(this.biomeMap, (byte) -1);
+		Arrays.fill(this.blockBiomeArray, (byte) -1);
 	}
 
 	public long getAddress() {

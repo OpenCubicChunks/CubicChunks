@@ -49,6 +49,8 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.column.Column;
+import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 public class Cube {
 	
@@ -138,7 +140,7 @@ public class Cube {
 			&& this.cubeZ == Coords.blockToCube(blockPos.getZ());
 	}
 	
-	public ChunkSection getStorage() {
+	public ExtendedBlockStorage getStorage() {
 		return this.storage;
 	}
 	
@@ -521,7 +523,7 @@ public class Cube {
 		}
 	}
 	
-	public void setLightValue(LightType lightType, BlockPos pos, int light) {
+	public void setLightValue(EnumSkyBlock lightType, BlockPos pos, int light) {
 		
 		// make sure we're not empty
 		if (isEmpty()) {

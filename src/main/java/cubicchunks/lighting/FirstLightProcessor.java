@@ -25,7 +25,6 @@ package cubicchunks.lighting;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Coords;
@@ -34,6 +33,7 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.world.EnumSkyBlock;
 
 public class FirstLightProcessor extends CubeProcessor {
 	
@@ -117,14 +117,14 @@ public class FirstLightProcessor extends CubeProcessor {
 			
 			// set everything to sky light
 			for (pos.y=cubeMinBlockY; pos.y<=cubeMaxBlockY; pos.y++) {
-				cube.setLightValue(LightType.SKY, pos, 15);
+				cube.setLightValue(EnumSkyBlock.SKY, pos, 15);
 			}
 			
 		} else if (cubeMaxBlockY < gradientMinBlockY) {
 			
 			// set everything to dark
 			for (pos.y=cubeMinBlockY; pos.y<=cubeMaxBlockY; pos.y++) {
-				cube.setLightValue(LightType.SKY, pos, 0);
+				cube.setLightValue(EnumSkyBlock.SKY, pos, 0);
 			}
 			
 		} else {
@@ -145,7 +145,7 @@ public class FirstLightProcessor extends CubeProcessor {
 				
 				if (pos.y <= cubeMaxBlockY) {
 					// apply the light
-					cube.setLightValue(LightType.SKY, pos, light);
+					cube.setLightValue(EnumSkyBlock.SKY, pos, light);
 				}
 			}
 		}
@@ -224,16 +224,16 @@ public class FirstLightProcessor extends CubeProcessor {
 		Block block = cube.getBlockAt(pos);
 		
 		// should we diffuse sky light?
-		if (!world.dimension.hasNoSky && pos.getY() > world.getSeaLevel() - 16 && block.getOpacity() == 0 && world.getLightAt(LightType.SKY, pos) == 0) {
-			boolean wasLit = world.updateLightingAt(LightType.SKY, pos);
+		if (!world.provider.hasNoSky && pos.getY() > world.getSeaLevel() - 16 && block.getLightOpacity() == 0 && world.getLightFor(EnumSkyBlock.SKY, pos) == 0) {
+			boolean wasLit = world.updateLightingAt(EnumSkyBlock.SKY, pos);
 			if (!wasLit) {
 				return false;
 			}
 		}
 		
 		// should we diffuse block light?
-		if (block.getBrightness() > 0) {
-			boolean wasLit = world.updateLightingAt(LightType.BLOCK, pos);
+		if (block.getLightValue()> 0) {
+			boolean wasLit = world.updateLightingAt(EnumSkyBlock.BLOCK, pos);
 			if (!wasLit) {
 				return false;
 			}

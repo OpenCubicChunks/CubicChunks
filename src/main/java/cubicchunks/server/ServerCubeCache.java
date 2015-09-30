@@ -29,15 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Queue;
 
-import net.minecraft.entity.CreatureTypes;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.IProgressBar;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.ServerChunkCache;
-
-import org.slf4j.Logger;
-
 import com.google.common.collect.Maps;
 
 import cubicchunks.generator.ColumnGenerator;
@@ -48,9 +39,10 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cuchaz.m3l.util.Logging;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.gen.ChunkProviderServer;
 
-public class ServerCubeCache extends ServerChunkCache implements ICubeCache {
+public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	
 	private static final Logger log = Logging.getLogger();
 	

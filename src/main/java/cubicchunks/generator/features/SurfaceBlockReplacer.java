@@ -30,7 +30,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 	private final IBlockState block;
@@ -49,7 +49,7 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 	}
 
 	@Override
-	public void generateAt(Random rand, BlockPos pos, Biome biome) {
+	public void generateAt(Random rand, BlockPos pos, BiomeGenBase biome) {
 		double radiusSq = this.radius * this.radius;
 		for (int x = -this.radius; x <= this.radius; x++) {
 			for (int y = -this.height; y <= this.height; y++) {
@@ -69,8 +69,8 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 
 	@Override
 	protected boolean isSurfaceAt(BlockPos pos) {
-		Block below = getBlockState(pos.below()).getBlock();
-		if (!below.isSolid()) {
+		Block below = getBlockState(pos.down()).getBlock();
+		if (!below.isSolidFullCube()) {
 			return false;
 		}
 		Block blockAboveSurface = getBlockState(pos).getBlock();

@@ -29,13 +29,12 @@ import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.ClientChunkCache;
-import net.minecraft.world.gen.IChunkGenerator;
 
-public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
+public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 	private World world;
 	private BlankColumn blankColumn;
@@ -53,7 +52,7 @@ public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 	public Column loadChunk(int cubeX, int cubeZ) {
 
 		// is this chunk already loaded?
-		Column column = (Column)this.cacheMap.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		Column column = (Column)this.chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}
@@ -61,8 +60,8 @@ public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 		// make a new one
 		column = new Column(this.world, cubeX, cubeZ);
 
-		this.cacheMap.add(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ), column);
-		this.cachedChunks.add(column);
+		this.chunkMapping.add(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ), column);
+		this.chunkListing.add(column);
 
 		column.setChunkLoaded(true);
 		return column;
@@ -72,7 +71,7 @@ public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
 		
 		// is this column loaded?
-		Column column = (Column)this.cacheMap.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		Column column = (Column)this.chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
 		if (column == null) {
 			//TallWorldsMod.log.warn("Unloading cube from non-existing column: ({}, {}, {})", cubeX, cubeY, cubeZ);
 			return;
@@ -93,20 +92,20 @@ public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 		//server sends unload packets, it must be right.
 		
 		//TODO: Unload cubes before removing column?
-		Column column = (Column) this.cacheMap.remove(ChunkCoordIntPair.chunkXZ2Int(columnX, columnZ));
-		this.cachedChunks.remove(column);
+		Column column = (Column) this.chunkMapping.remove(ChunkCoordIntPair.chunkXZ2Int(columnX, columnZ));
+		this.chunkListing.remove(column);
 	}
 
 	@Override
 	public Column getColumn(int columnX, int columnZ) {
-		return getChunk(columnX, columnZ);
+		return provideChunk(columnX, columnZ);
 	}
 
-	@Override
-	public Column getChunk(int cubeX, int cubeZ) {
+	@Override//I hope it was provideChunk
+	public Column provideChunk(int cubeX, int cubeZ) {
 		
 		// is this chunk already loaded?
-		Column column = (Column)this.cacheMap.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		Column column = (Column)this.chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}
@@ -131,11 +130,5 @@ public class ClientCubeCache extends ClientChunkCache implements ICubeCache {
 		cube.setGeneratorStage(GeneratorStage.getLastStage());
 		
 		return cube;
-	}
-
-	@Override
-	public boolean generateOceanMonument(IChunkGenerator p0, Chunk p1, int p2, int p3) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 }

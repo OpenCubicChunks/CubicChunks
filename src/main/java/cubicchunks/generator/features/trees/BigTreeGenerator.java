@@ -8,13 +8,13 @@ package cubicchunks.generator.features.trees;
 import java.util.Random;
 import java.lang.Math;
 
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.World;
 import net.minecraft.block.Block;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class BigTreeGenerator extends TreeGenerator {
 	
@@ -100,8 +100,8 @@ public class BigTreeGenerator extends TreeGenerator {
 					// if(d1 < -5D) d1 = -5D;
 					// branch angle (around trunk)
 					double d2 = rand.nextFloat() * 2D * 3.1415899999999999D;
-					int k1 = MathHelper.floor(d1 * Math.sin(d2) + basePos[0] + d);
-					int l1 = MathHelper.floor(d1 * Math.cos(d2) + basePos[2] + d);
+					int k1 = MathHelper.floor_double(d1 * Math.sin(d2) + basePos[0] + d);
+					int l1 = MathHelper.floor_double(d1 * Math.cos(d2) + basePos[2] + d);
 					int ai1[] = { k1, j, l1 };
 					int ai2[] = { k1, j + leafDistanceLimit, l1 };
 					if (checkBlockLine(ai1, ai2) != -1) {
@@ -158,7 +158,7 @@ public class BigTreeGenerator extends TreeGenerator {
 				} else {
 					ai1[byte2] = ai[byte2] + l1;
 					Block i2 = this.getBlockState(new BlockPos(ai1[0], ai1[1], ai1[2])).getBlock();
-					if (i2 != Blocks.AIR && i2 != Blocks.LEAVES) {
+					if (i2 != Blocks.air && i2 != Blocks.leaves) {
 						l1++;
 					} else {
 						this.setBlockOnly(new BlockPos(ai1[0], ai1[1], ai1[2]), this.leafBlock);
@@ -263,9 +263,9 @@ public class BigTreeGenerator extends TreeGenerator {
 		int ai3[] = { 0, 0, 0 };
 		int k = 0;
 		for (int l = ai2[j] + byte3; k != l; k += byte3) {
-			ai3[j] = MathHelper.floor(ai[j] + k + 0.5D);
-			ai3[byte1] = MathHelper.floor(ai[byte1] + k * d + 0.5D);
-			ai3[byte2] = MathHelper.floor(ai[byte2] + k * d1 + 0.5D);
+			ai3[j] = MathHelper.floor_double(ai[j] + k + 0.5D);
+			ai3[byte1] = MathHelper.floor_double(ai[byte1] + k * d + 0.5D);
+			ai3[byte2] = MathHelper.floor_double(ai[byte2] + k * d1 + 0.5D);
 			this.setBlockOnly(new BlockPos(ai3[0], ai3[1], ai3[2]), this.woodBlock);
 			// worldObj.setBlock(ai3[0], ai3[1], ai3[2], i);
 		}
@@ -468,9 +468,9 @@ public class BigTreeGenerator extends TreeGenerator {
 
 	private int getMedium(int i, int j, int k) {
 		// Roots can grow through the following block types.
-		Block canGrowOpen[] = { Blocks.AIR, Blocks.SAPLING, Blocks.FLOWING_WATER, Blocks.WATER, Blocks.FLOWING_LAVA,
-				Blocks.LAVA, Blocks.LOG, Blocks.LOG2, Blocks.LEAVES, Blocks.LEAVES2 };// more to be re-added
-		Block canGrowSolid[] = { Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL }; // more to be re-added
+		Block canGrowOpen[] = { Blocks.air, Blocks.sapling, Blocks.flowing_water, Blocks.water, Blocks.flowing_lava,
+				Blocks.lava, Blocks.log, Blocks.log2, Blocks.leaves, Blocks.leaves2 };// more to be re-added
+		Block canGrowSolid[] = { Blocks.grass, Blocks.dirt, Blocks.sand, Blocks.gravel }; // more to be re-added
 		Block qq = this.getBlockState(new BlockPos(i, j, k)).getBlock();
 		int medium = 0;
 		for (int m = 0; m < canGrowOpen.length; m++) {
@@ -880,10 +880,10 @@ public class BigTreeGenerator extends TreeGenerator {
 				break;
 			}
 			ai3[i] = ai[i] + j;
-			ai3[byte1] = MathHelper.floor(ai[byte1] + j * d);
-			ai3[byte2] = MathHelper.floor(ai[byte2] + j * d1);
+			ai3[byte1] = MathHelper.floor_double(ai[byte1] + j * d);
+			ai3[byte2] = MathHelper.floor_double(ai[byte2] + j * d1);
 			Block l = this.getBlockState(new BlockPos(ai3[0], ai3[1], ai3[2])).getBlock();
-			if (l != Blocks.AIR && l != Blocks.LEAVES && l != Blocks.LOG) {
+			if (l != Blocks.air && l != Blocks.leaves && l != Blocks.log) {
 				break;
 			}
 			j += byte3;
@@ -904,7 +904,7 @@ public class BigTreeGenerator extends TreeGenerator {
 		// if(basePos[1] + heightLimit >= 80) return false;
 		
 		// Can grow tree on dirt, grass, or sand...
-		if (i != Blocks.GRASS && i != Blocks.DIRT && i != Blocks.SAND) 
+		if (i != Blocks.grass && i != Blocks.dirt && i != Blocks.sand) 
 		{
 			return false;
 		}
@@ -917,7 +917,7 @@ public class BigTreeGenerator extends TreeGenerator {
 	}
 
 	@Override
-	public void generateAt(Random rand, BlockPos pos, Biome biome) {
+	public void generateAt(Random rand, BlockPos pos, BiomeGenBase biome) {
 		generate(rand, pos);
 	}
 

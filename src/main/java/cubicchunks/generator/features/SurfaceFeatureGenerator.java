@@ -26,10 +26,10 @@ package cubicchunks.generator.features;
 import cubicchunks.util.Coords;
 import cubicchunks.world.cube.Cube;
 import java.util.Random;
-import net.minecraft.block.Blocks;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
@@ -38,7 +38,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 	}
 
 	@Override
-	public void generate(Random rand, Cube cube, Biome biome) {
+	public void generate(Random rand, Cube cube, BiomeGenBase biome) {
 		BlockPos cubeCenter = Coords.getCubeCenter(cube);
 
 		int x = cubeCenter.getX() + rand.nextInt(16);
@@ -55,7 +55,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 				foundSurface = true;
 				break;
 			}
-			pos = pos.below();
+			pos = pos.down();
 		}
 		// next attempt. We didn't find place to generate it
 		if (foundSurface) {
@@ -66,7 +66,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 	protected boolean isSurfaceAt(BlockPos pos) {
 		//we don't really know if it's the top block.
 		//assume it's sirface if there is solid block with air above it
-		return getBlockState(pos.below()).getBlock().isSolid() && getBlockState(pos).getBlock() == Blocks.AIR;
+		return getBlockState(pos.down()).getBlock().isSolidFullCube()&& getBlockState(pos).getBlock() == Blocks.air;
 	}
 
 	/**
@@ -77,5 +77,5 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 	 * @param pos
 	 *            position of air block with solid block below it
 	 */
-	public abstract void generateAt(Random rand, BlockPos pos, Biome biome);
+	public abstract void generateAt(Random rand, BlockPos pos, BiomeGenBase biome);
 }

@@ -23,16 +23,9 @@
  */
 package cubicchunks;
 
-import net.minecraft.network.ConnectionState;
-import net.minecraft.network.PacketDirection;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.core.util.StatusPrinter;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.network.PacketBulkCubeData;
 import cubicchunks.network.PacketCubeBlockChange;
@@ -43,11 +36,8 @@ import cubicchunks.server.CubeIO;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.column.Column;
-import cuchaz.m3l.M3L;
-import cuchaz.m3l.Side;
-import cuchaz.m3l.api.CodeAnnotation;
-import cuchaz.m3l.api.Environment;
-import cuchaz.m3l.api.registry.AlreadyRegisteredException;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.apache.logging.log4j.Logger;
 
 @Mod(
 	modid = TallWorldsMod.Id,
@@ -57,7 +47,7 @@ import cuchaz.m3l.api.registry.AlreadyRegisteredException;
 public class TallWorldsMod {
 	
 	public static final String Id = "tallworlds";
-	public static final Logger LOGGER = LoggerFactory.getLogger(Id);
+	public static Logger LOGGER;
 	
 	@Mod.Instance(Id)
 	public static TallWorldsMod instance;
@@ -68,16 +58,15 @@ public class TallWorldsMod {
 		// TODO: maybe this could be named better...
 		return m_system;
 	}
+        
+        public void preInit(FMLPreInitializationEvent e) {
+            LOGGER = e.getModLog();
+        }
 	
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
 		
 		LOGGER.info("Initializing Tall Worlds...");
-		
-		// Logger setup confirmation
-		LOGGER.info("Displaying logger configuration...");
-		LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-		StatusPrinter.print(lc);
 		
 		// HACKHACK: tweak the class load order so the runtime obfuscator works correctly
 		// load subclasses of Minecraft classes first, so the runtime obfuscator can record

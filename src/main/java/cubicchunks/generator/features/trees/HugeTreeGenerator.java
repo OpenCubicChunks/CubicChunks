@@ -29,7 +29,7 @@ import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 
@@ -55,10 +55,10 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 	}
 
 	private boolean canGenerateOnBlocksBelow(final World world, final BlockPos blockPos) {
-		BlockPos groundPos = blockPos.below();
-		Block groundBlock = world.getBlockStateAt(groundPos).getBlock();
+		BlockPos groundPos = blockPos.down();
+		Block groundBlock = world.getBlockState(groundPos).getBlock();
 
-		if (groundBlock == Blocks.GRASS || groundBlock == Blocks.DIRT) {
+		if (groundBlock == Blocks.grass || groundBlock == Blocks.dirt) {
 			return this.tryToPlaceDirtUnderHugeTree(world, groundPos);
 		} else {
 			return false;
@@ -66,7 +66,7 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 	}
 
 	private boolean tryToPlaceDirtUnderHugeTree(final World world, final BlockPos blockPos) {
-		BlockPos groundPos = blockPos.below();
+		BlockPos groundPos = blockPos.down();
 
 		return this.tryToPlaceDirtUnderTree(world, groundPos) && this.tryToPlaceDirtUnderTree(world, groundPos.east())
 				&& this.tryToPlaceDirtUnderTree(world, groundPos.south())
@@ -91,7 +91,7 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 
 			for (int xAbs = blockPos.getX() - radius; xAbs <= blockPos.getX() + radius; ++xAbs) {
 				for (int zAbs = blockPos.getZ() - radius; zAbs <= blockPos.getZ() + radius; ++zAbs) {
-					Block block = world.getBlockStateAt(new BlockPos(xAbs, yAbs, zAbs)).getBlock();
+					Block block = world.getBlockState(new BlockPos(xAbs, yAbs, zAbs)).getBlock();
 
 					if (!canReplaceBlockDefault(block)) {
 						return false;
@@ -114,9 +114,9 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 				if (xAbs * xAbs + zAbs * zAbs <= r2 || xDist * xDist + zDist * zDist <= r2
 						|| xAbs * xAbs + zDist * zDist <= r2 || xDist * xDist + zAbs * zAbs <= r2) {
 					BlockPos newPos = blockPos.add(xAbs, 0, zAbs);
-					Material material = this.world.getBlockStateAt(newPos).getBlock().getMaterial();
+					Material material = this.world.getBlockState(newPos).getBlock().getMaterial();
 
-					if (material == Material.AIR || material == Material.LEAVES) {
+					if (material == Material.air || material == Material.leaves) {
 						this.setBlockOnly(newPos, this.leafBlock);
 					}
 				}
@@ -131,9 +131,9 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 			for (int zAbs = -radius; zAbs <= radius; ++zAbs) {
 				if (xAbs * xAbs + zAbs * zAbs <= r2) {
 					BlockPos newPos = blockPos.add(xAbs, 0, zAbs);
-					Material material = this.world.getBlockStateAt(newPos).getBlock().getMaterial();
+					Material material = this.world.getBlockState(newPos).getBlock().getMaterial();
 
-					if (material == Material.AIR || material == Material.LEAVES) {
+					if (material == Material.air || material == Material.leaves) {
 						this.setBlockOnly(newPos, this.leafBlock);
 					}
 				}

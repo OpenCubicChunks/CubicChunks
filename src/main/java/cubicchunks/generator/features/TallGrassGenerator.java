@@ -26,32 +26,24 @@ package cubicchunks.generator.features;
 import java.util.Random;
 
 import net.minecraft.block.BlockTallGrass;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class TallGrassGenerator extends SurfaceFeatureGenerator {
 	
 	private final IBlockState block;
 	
-	public TallGrassGenerator(final World world, final BlockTallGrass.TallGrassTypes tallGrassType) {
+	public TallGrassGenerator(final World world, final BlockTallGrass.EnumType tallGrassType) {
 		super(world);
 		
-		// TODO: HACK! Obfuscation doesn't work correctly in this class when code below is used. 
-		// It fails at runtime with NoSuchMethodError:
-		// java.lang.NoSuchMethodError: ama.setProperty(Lamp;Ljava/lang/Object;)Lama;
-		// use metadata until it's fixed
-		// actually there is method to get metadata but it doesn't have deobf mappings
-		// And to use new mappings I would need to update m3l
-		// and I can't do that. So I used ordinal()
-		//this.block = Blocks.TALLGRASS.getDefaultState().setProperty(BlockTallGrass.type, tallGrassType);
-		this.block = Blocks.TALLGRASS.getBlockStateForMetadata(tallGrassType.ordinal());
+		this.block = Blocks.tallgrass.getDefaultState().withProperty(BlockTallGrass.TYPE, tallGrassType);
 	}
 	
 	@Override
-	public void generateAt(final Random rand, final BlockPos pos, final Biome biome) {
+	public void generateAt(final Random rand, final BlockPos pos, final BiomeGenBase biome) {
 		BlockPos currentPos = pos;
 
 		for(int i = 0; i < 128; ++i) {
@@ -59,7 +51,7 @@ public class TallGrassGenerator extends SurfaceFeatureGenerator {
 					rand.nextInt(4) - rand.nextInt(4),
 					rand.nextInt(8) - rand.nextInt(8));
 			
-			if(world.hasAirAt(randomPos) && Blocks.TALLGRASS.canBePlacedAt(world, randomPos, block)) {
+			if(world.isAirBlock(randomPos) && Blocks.tallgrass.canBlockStay(world, randomPos, block)) {
 				this.setBlockOnly(randomPos, block);
 			}	
 		}

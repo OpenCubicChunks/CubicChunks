@@ -25,10 +25,8 @@ package cubicchunks.lighting;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.Facing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3i;
-import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import cubicchunks.TallWorldsMod;
 import cubicchunks.generator.GeneratorStage;
@@ -38,6 +36,8 @@ import cubicchunks.util.FastIntQueue;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.world.EnumSkyBlock;
 
 public class DiffuseLightingCalculator {
 	
@@ -47,8 +47,8 @@ public class DiffuseLightingCalculator {
 		this.queue = new FastIntQueue();
 	}
 	
-	public boolean calculate(World world, BlockPos pos, LightType lightType) {
-		world.profiler.startSection("diffuseLighting");
+	public boolean calculate(World world, BlockPos pos, EnumSkyBlock lightType) {
+		//world.profiler.startSection("diffuseLighting");
 		
 		WorldContext worldContext = WorldContext.get(world);
 		
@@ -60,7 +60,7 @@ public class DiffuseLightingCalculator {
 		this.queue.clear();
 		
 		// should we add or subtract light?
-		int oldLight = world.getLightAt(lightType, pos);
+		int oldLight = world.getLightFor(lightType, pos);
 		int newLight = computeLightValue(world, pos, lightType);
 		if (newLight > oldLight) {
 			
@@ -83,19 +83,19 @@ public class DiffuseLightingCalculator {
 		// DEBUG
 		if (this.queue.size() > 32000) {
 			TallWorldsMod.LOGGER.warn("{} Warning! Calculated {} light updates at ({},{},{}) for {} light.", 
-				world.isClient ? "CLIENT" : "SERVER",
+				world.isRemote ? "CLIENT" : "SERVER",
 				this.queue.size(),
 				pos.getX(), pos.getY(), pos.getZ(),
 				lightType.name()
 			);
 		}
 		
-		world.profiler.endSection();
+		//world.profiler.endSection();
 		return true;
 	}
 	
-	private void processLightSubtractions(World world, BlockPos pos, LightType lightType) {
-		world.profiler.startSection("subtractions");
+	private void processLightSubtractions(World world, BlockPos pos, EnumSkyBlock lightType) {
+		//world.profiler.startSection("subtractions");
 		
 		// TODO: optimize out news?
 		BlockPos.MutableBlockPos updatePos = new BlockPos.MutableBlockPos();
@@ -114,13 +114,13 @@ public class DiffuseLightingCalculator {
 			int updateLight = unpackUpdateLight(update);
 			
 			// if the light changed, skip this update
-			int oldLight = world.getLightAt(lightType, updatePos);
+			int oldLight = world.getLightFor(lightType, updatePos);
 			if (oldLight != updateLight) {
 				continue;
 			}
 			
 			// set update block light to 0
-			world.setLightAt(lightType, updatePos, 0);
+			world.setLightFor(lightType, updatePos, 0);
 			
 			// if we ran out of light, don't propagate
 			if (updateLight <= 0) {
@@ -128,8 +128,8 @@ public class DiffuseLightingCalculator {
 			}
 			
 			// for each neighbor block...
-			for (Facing facing : Facing.values()) {
-				Vec3i facingDir = facing.getBlockCoords();
+			for (EnumFacing facing : EnumFacing.values()) {
+				Vec3i facingDir = facing.getDirectionVec();
 				neighborPos.setBlockPos(
 					updatePos.getX() + facingDir.getX(),
 					updatePos.getY() + facingDir.getY(),
@@ -141,14 +141,14 @@ public class DiffuseLightingCalculator {
 				}
 				
 				// get the neighbor opacity
-				int neighborOpacity = world.getBlockStateAt(neighborPos).getBlock().getOpacity();
+				int neighborOpacity = world.getBlockState(neighborPos).getBlock().getOpacity();
 				if (neighborOpacity < 1) {
 					neighborOpacity = 1;
 				}
 				
 				// if the neighbor block doesn't have the light we expect, bail
 				int expectedLight = updateLight - neighborOpacity;
-				int actualLight = world.getLightAt(lightType, neighborPos);
+				int actualLight = world.getLightFor(lightType, neighborPos);
 				if (actualLight != expectedLight) {
 					continue;
 				}
@@ -164,11 +164,11 @@ public class DiffuseLightingCalculator {
 				}
 			}
 		}
-		world.profiler.endSection();
+		//world.profiler.endSection();
 	}
 	
-	private void processLightAdditions(World world, BlockPos pos, LightType lightType) {
-		world.profiler.startSection("additions");
+	private void processLightAdditions(World world, BlockPos pos, EnumSkyBlock lightType) {
+		//world.profiler.startSection("additions");
 		
 		// TODO: optimize out news?
 		BlockPos.MutableBlockPos updatePos = new BlockPos.MutableBlockPos();
@@ -186,14 +186,14 @@ public class DiffuseLightingCalculator {
 			);
 			
 			// skip updates that don't change the light
-			int oldLight = world.getLightAt(lightType, updatePos);
+			int oldLight = world.getLightFor(lightType, updatePos);
 			int newLight = computeLightValue(world, updatePos, lightType);
 			if (newLight == oldLight) {
 				continue;
 			}
 			
 			// update the light here
-			world.setLightAt(lightType, updatePos, newLight);
+			world.setLightFor(lightType, updatePos, newLight);
 			
 			// if we didn't get brighter, don't propagate light to the area
 			if (newLight <= oldLight) {
@@ -201,8 +201,8 @@ public class DiffuseLightingCalculator {
 			}
 			
 			// for each neighbor block...
-			for (Facing facing : Facing.values()) {
-				Vec3i facingDir = facing.getBlockCoords();
+			for (EnumFacing facing : EnumFacing.values()) {
+				Vec3i facingDir = facing.getDirectionVec();
 				neighborPos.setBlockPos(
 					updatePos.getX() + facingDir.getX(),
 					updatePos.getY() + facingDir.getY(),
@@ -214,7 +214,7 @@ public class DiffuseLightingCalculator {
 				}
 				
 				// if the neighbor already has enough light, bail
-				int neighborLight = world.getLightAt(lightType, neighborPos);
+				int neighborLight = world.getLightFor(lightType, neighborPos);
 				if (neighborLight >= newLight) {
 					continue;
 				}
@@ -231,15 +231,15 @@ public class DiffuseLightingCalculator {
 			}
 		}
 		
-		world.profiler.endSection();
+		//world.profiler.endSection();
 	}
 	
 	private boolean shouldUpdateLight(World world, BlockPos pos, BlockPos targetPos) {
 		
 		// don't update blocks that are too far away
-		int manhattanDistance = MathHelper.abs(targetPos.getX() - pos.getX()) 
-								+ MathHelper.abs(targetPos.getY() - pos.getY()) 
-								+ MathHelper.abs(targetPos.getZ() - pos.getZ());
+		int manhattanDistance = MathHelper.abs_int(targetPos.getX() - pos.getX()) 
+								+ MathHelper.abs_int(targetPos.getY() - pos.getY()) 
+								+ MathHelper.abs_int(targetPos.getZ() - pos.getZ());
 		if (manhattanDistance > 16) {
 			return false;
 		}
@@ -267,24 +267,24 @@ public class DiffuseLightingCalculator {
 		return !cube.isEmpty();
 	}
 	
-	private int computeLightValue(World world, BlockPos pos, LightType lightType) {
+	private int computeLightValue(World world, BlockPos pos, c lightType) {
 		
 		// TODO: optimize out news?
 		BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
 
-		if (lightType == LightType.SKY && world.canSeeSky(pos)) {
+		if (lightType == EnumSkyBlock.SKY && world.canSeeSky(pos)) {
 			// sky light is easy
 			return 15;
 		} else {
-			Block block = world.getBlockStateAt(pos).getBlock();
+			Block block = world.getBlockState(pos).getBlock();
 			
 			// init this block's computed light with the light it generates
-			int lightAtThisBlock = lightType == LightType.SKY ? 0 : block.getBrightness();
+			int lightAtThisBlock = lightType == EnumSkyBlock.SKY ? 0 : block.getLightValue();
 			
-			int blockOpacity = block.getOpacity();
+			int blockOpacity = block.getLightOpacity();
 			
 			// if the block emits light and also blocks it
-			if (blockOpacity >= 15 && block.getBrightness() > 0) {
+			if (blockOpacity >= 15 && block.getLightValue() > 0) {
 				// reduce blocking
 				blockOpacity = 1;
 			}
@@ -305,8 +305,8 @@ public class DiffuseLightingCalculator {
 			} else {
 				
 				// for each block face...
-				for (Facing facing : Facing.values()) {
-					Vec3i facingDir = facing.getBlockCoords();
+				for (EnumFacing facing : EnumFacing.values()) {
+					Vec3i facingDir = facing.getDirectionVec();
 					neighborPos.setBlockPos(
 						pos.getX() + facingDir.getX(),
 						pos.getY() + facingDir.getY(),

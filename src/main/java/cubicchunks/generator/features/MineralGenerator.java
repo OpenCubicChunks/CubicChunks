@@ -28,17 +28,17 @@ import java.util.Random;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.feature.MineralDepositGenerator;
 import cubicchunks.generator.terrain.GlobalGeneratorConfig;
 import cubicchunks.util.Coords;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.gen.feature.WorldGenMinable;
 
 public class MineralGenerator extends FeatureGenerator {
 	private final double minY;
 	private final double maxY;
 
-	private final MineralDepositGenerator vanillaGen;
+	private final WorldGenMinable vanillaGen;
 	private final double probability;
 
 	/**
@@ -62,14 +62,14 @@ public class MineralGenerator extends FeatureGenerator {
 			final int size, final double probability) {
 		super(world);
 		// use vanilla generator. This class odesn't have height limits
-		this.vanillaGen = new MineralDepositGenerator(state, size);
+		this.vanillaGen = new WorldGenMinable(state, size);
 		this.minY = minY;
 		this.maxY = maxY;
 		this.probability = probability;
 	}
 
 	@Override
-	public void generate(final Random rand, final Cube cube, final Biome biome) {
+	public void generate(final Random rand, final Cube cube, final BiomeGenBase biome) {
 		BlockPos cubeCenter = Coords.getCubeCenter(cube);
 
 		double maxBlockY = this.maxY * GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;

@@ -26,7 +26,7 @@ package cubicchunks.generator.features;
 import cubicchunks.world.cube.Cube;
 import java.util.Random;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class MultiFeatureGenerator extends FeatureGenerator {
 	private final FeatureGenerator gen;
@@ -39,7 +39,7 @@ public class MultiFeatureGenerator extends FeatureGenerator {
 	}
 
 	@Override
-	public void generate(Random rand, Cube cube, Biome biome) {
+	public void generate(Random rand, Cube cube, BiomeGenBase biome) {
 		for(int i = 0; i < this.attempts; i++){
 			this.gen.generate(rand, cube, biome);
 		}

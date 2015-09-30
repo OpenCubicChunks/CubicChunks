@@ -23,14 +23,14 @@
  */
 package cubicchunks.lighting;
 
-import net.minecraft.block.Blocks;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import cubicchunks.util.Coords;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.world.EnumSkyBlock;
 
 public class SkyLightUpdateCalculator {
 	
@@ -40,7 +40,7 @@ public class SkyLightUpdateCalculator {
 		World world = column.getWorld();
 		LightingManager lightingManager = WorldContext.get(world).getLightingManager();
 		
-		if (world.dimension.hasNoSky()) {
+		if (world.provider.hasNoSky) {
 			return;
 		}
 		
@@ -66,7 +66,7 @@ public class SkyLightUpdateCalculator {
 					blockY,
 					blockPos.getZ()
 				);
-				cube.setLightValue(LightType.SKY, blockPos, lightValue);
+				cube.setLightValue(EnumSkyBlock.SKY, blockPos, lightValue);
 			}
 		}
 		
@@ -81,7 +81,7 @@ public class SkyLightUpdateCalculator {
 				blockY,
 				blockPos.getZ()
 			);
-			int lightOpacity = Math.max(1, column.getBlockState(blockPos).getBlock().getOpacity());
+			int lightOpacity = Math.max(1, column.getBlockState(blockPos).getBlock().getLightOpacity());
 			
 			// compute the falloff
 			lightValue = Math.max(lightValue - lightOpacity, 0);
@@ -90,7 +90,7 @@ public class SkyLightUpdateCalculator {
 			int cubeY = Coords.blockToCube(blockY);
 			Cube cube = column.getCube(cubeY);
 			if (cube != null) {
-				cube.setLightValue(LightType.SKY, blockPos, lightValue);
+				cube.setLightValue(EnumSkyBlock.SKY, blockPos, lightValue);
 			}
 			
 			if (lightValue == 0) {
@@ -114,7 +114,7 @@ public class SkyLightUpdateCalculator {
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		for (int blockY = minBlockY; blockY < maxBlockY; blockY++) {
 			pos.setBlockPos(blockX, blockY, blockZ);
-			lightingManager.computeDiffuseLighting(pos, LightType.SKY);
+			lightingManager.computeDiffuseLighting(pos, EnumSkyBlock.SKY);
 		}
 	}
 }
