@@ -34,6 +34,12 @@ import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.IThreadListener;
+import net.minecraft.world.WorldProviderSurface;
 
 public class ClientHandler implements INetHandler {
 	
@@ -54,18 +60,18 @@ public class ClientHandler implements INetHandler {
 	public void handle(final PacketBulkCubeData packet) {
 		
 		// TODO: build better network system in M3L
-		TaskQueue taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isInMainThread()) {
-			taskQueue.runTask(new Runnable() {
+		IThreadListener taskQueue = Minecraft.getMinecraft();
+		if (!taskQueue.isCallingFromMinecraftThread()) {
+			taskQueue.addScheduledTask(new Runnable() {
 				@Override
 				public void run() {
 					handle(packet);
 				}
 			});
-			throw ThreadQuickExitException.INSTANCE;
+			throw ThreadQuickExitException.field_179886_a;//the instance
 		}
 		
-		WorldClient worldClient = Minecraft.getMinecraft().levelClient;
+		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
 		WorldClientContext context = WorldClientContext.get(worldClient);
 		ClientCubeCache cubeCache = context.getCubeCache();
 		
@@ -107,14 +113,14 @@ public class ClientHandler implements INetHandler {
 			Column column = cubeCache.getColumn(AddressTools.getX(columnAddress), AddressTools.getZ(columnAddress));
 			
 			// update lighting flags
-			if (! (worldClient.dimension instanceof DimensionOverworld)) {
+			if (! (worldClient.provider instanceof WorldProviderSurface)) {
 				column.resetRelightChecks();
 			}
-			column.terrainPopulated = true;
+			column.setTerrainPopulated(true);
 			
 			// update tile entities in each chunk
 			for (Cube cube : column.getCubes()) {
-				for (BlockEntity blockEntity : cube.getBlockEntities()) {
+				for (TileEntity blockEntity : cube.getBlockEntities()) {
 					blockEntity.updateContainingBlockInfo();
 				}
 			}
@@ -124,18 +130,18 @@ public class ClientHandler implements INetHandler {
 	public void handle(final PacketUnloadCubes packet) {
 		
 		// TODO: build better network system in M3L
-		TaskQueue taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isInMainThread()) {
-			taskQueue.runTask(new Runnable() {
+		IThreadListener taskQueue = Minecraft.getMinecraft();
+		if (!taskQueue.isCallingFromMinecraftThread()) {
+			taskQueue.addScheduledTask(new Runnable() {
 				@Override
 				public void run() {
 					handle(packet);
 				}
 			});
-			throw ThreadQuickExitException.INSTANCE;
+			throw ThreadQuickExitException.field_179886_a;
 		}
 		
-		WorldClient worldClient = Minecraft.getMinecraft().levelClient;
+		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
 		WorldClientContext context = WorldClientContext.get(worldClient);
 		ClientCubeCache cubeCache = context.getCubeCache();
 		
@@ -151,18 +157,18 @@ public class ClientHandler implements INetHandler {
 	public void handle(final PacketUnloadColumns packet) {
 		
 		// TODO: build better network system in M3L
-		TaskQueue taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isInMainThread()) {
-			taskQueue.runTask(new Runnable() {
+		IThreadListener taskQueue = Minecraft.getMinecraft();
+		if (!taskQueue.isCallingFromMinecraftThread()) {
+			taskQueue.addScheduledTask(new Runnable() {
 				@Override
 				public void run() {
 					handle(packet);
 				}
 			});
-			throw ThreadQuickExitException.INSTANCE;
+			throw ThreadQuickExitException.field_179886_a;
 		}
 		
-		WorldClient worldClient = Minecraft.getMinecraft().levelClient;
+		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
 		WorldClientContext context = WorldClientContext.get(worldClient);
 		ClientCubeCache cubeCache = context.getCubeCache();
 		
@@ -177,18 +183,18 @@ public class ClientHandler implements INetHandler {
 	public void handle(final PacketCubeChange packet) {
 		
 		// TODO: build better network system in M3L
-		TaskQueue taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isInMainThread()) {
-			taskQueue.runTask(new Runnable() {
+		IThreadListener taskQueue = Minecraft.getMinecraft();
+		if (!taskQueue.isCallingFromMinecraftThread()) {
+			taskQueue.addScheduledTask(new Runnable() {
 				@Override
 				public void run() {
 					handle(packet);
 				}
 			});
-			throw ThreadQuickExitException.INSTANCE;
+			throw ThreadQuickExitException.field_179886_a;
 		}
 		
-		WorldClient worldClient = Minecraft.getMinecraft().levelClient;
+		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
 		WorldClientContext context = WorldClientContext.get(worldClient);
 		ClientCubeCache cubeCache = context.getCubeCache();
 		
@@ -205,7 +211,7 @@ public class ClientHandler implements INetHandler {
 		// apply the update
 		packet.decodeCube(cube);
 		cube.markForRenderUpdate();
-		for (BlockEntity blockEntity : cube.getBlockEntities()) {
+		for (TileEntity blockEntity : cube.getBlockEntities()) {
 			blockEntity.updateContainingBlockInfo();
 		}
 	}
@@ -213,18 +219,18 @@ public class ClientHandler implements INetHandler {
 	public void handle(final PacketCubeBlockChange packet) {
 		
 		// TODO: build better network system in M3L
-		TaskQueue taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isInMainThread()) {
-			taskQueue.runTask(new Runnable() {
+		IThreadListener taskQueue = Minecraft.getMinecraft();
+		if (!taskQueue.isCallingFromMinecraftThread()) {
+			taskQueue.addScheduledTask(new Runnable() {
 				@Override
 				public void run() {
 					handle(packet);
 				}
 			});
-			throw ThreadQuickExitException.INSTANCE;
+			throw ThreadQuickExitException.field_179886_a;
 		}
 		
-		WorldClient worldClient = Minecraft.getMinecraft().levelClient;
+		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
 		WorldClientContext context = WorldClientContext.get(worldClient);
 		ClientCubeCache cubeCache = context.getCubeCache();
 		
@@ -244,7 +250,7 @@ public class ClientHandler implements INetHandler {
 			cube.setBlockState(cube.localAddressToBlockPos(pos, packet.localAddresses[i]), packet.blockStates[i]);
 		}
 		cube.markForRenderUpdate();
-		for (BlockEntity blockEntity : cube.getBlockEntities()) {
+		for (TileEntity blockEntity : cube.getBlockEntities()) {
 			blockEntity.updateContainingBlockInfo();
 		}	
 	}

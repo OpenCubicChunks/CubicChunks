@@ -28,13 +28,13 @@ import java.util.Collection;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.network.INetHandler;
-import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.network.Packet;
 
 
-public class PacketCubeBlockChange implements IPacket<INetHandler> {
+public class PacketCubeBlockChange implements Packet {
 
 	public long cubeAddress;
 	public int[] localAddresses;
@@ -57,19 +57,19 @@ public class PacketCubeBlockChange implements IPacket<INetHandler> {
 	}
 
 	@Override
-	public void read(PacketBuffer in)
+	public void readPacketData(PacketBuffer in)
 	throws IOException {
 		// you know what... I think these aren't even used in standalone mode
 	}
 
 	@Override
-	public void write(PacketBuffer out)
+	public void writePacketData(PacketBuffer out)
 	throws IOException {
 		// you know what... I think these aren't even used in standalone mode
 	}
 
 	@Override
-	public void handle(INetHandler vanillaHandler) {
+	public void processPacket(INetHandler vanillaHandler) {
 		// don't use the vanilla handler, use our own
 		// TODO: make a real network system for M3L
 		ClientHandler.getInstance().handle(this);

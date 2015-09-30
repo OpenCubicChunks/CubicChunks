@@ -27,12 +27,12 @@ import java.io.IOException;
 import java.util.List;
 
 import net.minecraft.network.INetHandler;
-import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.network.Packet;
 
 
-public class PacketUnloadCubes implements IPacket<INetHandler> {
+public class PacketUnloadCubes implements Packet {
 
 	public static final int MAX_SIZE = 65535;
 	
@@ -53,7 +53,7 @@ public class PacketUnloadCubes implements IPacket<INetHandler> {
 	}
 
 	@Override
-	public void read(PacketBuffer in)
+	public void readPacketData(PacketBuffer in)
 	throws IOException {
 		cubeAddresses = new long[in.readUnsignedShort()];
 		for (int i=0; i<cubeAddresses.length; i++) {
@@ -62,7 +62,7 @@ public class PacketUnloadCubes implements IPacket<INetHandler> {
 	}
 
 	@Override
-	public void write(PacketBuffer out)
+	public void writePacketData(PacketBuffer out)
 	throws IOException {
 		out.writeShort(cubeAddresses.length);
 		for (int i=0; i<cubeAddresses.length; i++) {
@@ -71,7 +71,7 @@ public class PacketUnloadCubes implements IPacket<INetHandler> {
 	}
 
 	@Override
-	public void handle(INetHandler vanillaHandler) {
+	public void processPacket(INetHandler vanillaHandler) {
 		// don't use the vanilla handler, use our own
 		// TODO: make a real network system for M3L
 		ClientHandler.getInstance().handle(this);

@@ -30,12 +30,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import net.minecraft.network.INetHandler;
-import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.network.Packet;
 
 
-public class PacketCubeChange implements IPacket<INetHandler> {
+public class PacketCubeChange implements Packet {
 	
 	public long cubeAddress;
 	public byte[] data;
@@ -66,23 +66,22 @@ public class PacketCubeChange implements IPacket<INetHandler> {
 	}
 
 	@Override
-	public void read(PacketBuffer in)
+	public void readPacketData(PacketBuffer in)
 	throws IOException {
 		cubeAddress = in.readLong();
 		in.readBytes(data);
 	}
 
 	@Override
-	public void write(PacketBuffer out)
+	public void writePacketData(PacketBuffer out)
 	throws IOException {
 		out.writeLong(cubeAddress);
 		out.writeBytes(data);
 	}
 
 	@Override
-	public void handle(INetHandler vanillaHandler) {
+	public void processPacket(INetHandler vanillaHandler) {
 		// don't use the vanilla handler, use our own
-		// TODO: make a real network system for M3L
 		ClientHandler.getInstance().handle(this);
 	}
 }

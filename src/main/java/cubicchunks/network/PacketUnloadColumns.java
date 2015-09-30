@@ -27,11 +27,11 @@ import java.io.IOException;
 import java.util.List;
 
 import net.minecraft.network.INetHandler;
-import net.minecraft.network.IPacket;
+import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
 
 
-public class PacketUnloadColumns implements IPacket<INetHandler> {
+public class PacketUnloadColumns implements Packet {
 
 	public static final int MAX_SIZE = 65535;
 	
@@ -53,7 +53,7 @@ public class PacketUnloadColumns implements IPacket<INetHandler> {
 	}
 
 	@Override
-	public void read(PacketBuffer in)
+	public void readPacketData(PacketBuffer in)
 	throws IOException {
 		columnAddresses = new long[in.readUnsignedShort()];
 		for (int i=0; i<columnAddresses.length; i++) {
@@ -62,7 +62,7 @@ public class PacketUnloadColumns implements IPacket<INetHandler> {
 	}
 
 	@Override
-	public void write(PacketBuffer out)
+	public void writePacketData(PacketBuffer out)
 	throws IOException {
 		out.writeShort(columnAddresses.length);
 		for (long addr : columnAddresses) {
@@ -71,7 +71,7 @@ public class PacketUnloadColumns implements IPacket<INetHandler> {
 	}
 
 	@Override
-	public void handle(INetHandler vanillaHandler) {
+	public void processPacket(INetHandler vanillaHandler) {
 		// don't use the vanilla handler, use our own
 		// TODO: make a real network system for M3L
 		ClientHandler.getInstance().handle(this);

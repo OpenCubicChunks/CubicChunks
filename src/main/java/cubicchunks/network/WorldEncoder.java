@@ -28,11 +28,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.chunk.storage.ChunkSection;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 
 public class WorldEncoder {
@@ -44,20 +44,20 @@ public class WorldEncoder {
 		out.writeBoolean(cube.isEmpty());
 		
 		if (!cube.isEmpty()) {
-			ChunkSection storage = cube.getStorage();
+			ExtendedBlockStorage storage = cube.getStorage();
 			
 			// 2. block IDs
 			out.write(ChunkSectionHelper.getBlockIDArray(storage));
 			
 			// 3. metadata
-			out.write(ChunkSectionHelper.getBlockMetaArray(storage).get());
+			out.write(ChunkSectionHelper.getBlockMetaArray(storage).getData());
 			
 			// 4. block light
-			out.write(storage.getBlockLightArray().get());
+			out.write(storage.getBlocklightArray().getData());
 			
-			if (!cube.getWorld().dimension.hasNoSky) {
+			if (!cube.getWorld().provider.getHasNoSky()) {
 				// 5. sky light
-				out.write(storage.getSkyLightArray().get());
+				out.write(storage.getSkylightArray().getData());
 			}
 		}
 	}
@@ -66,7 +66,7 @@ public class WorldEncoder {
 	throws IOException {
 		
 		// 1. biomes
-		out.write(column.getBiomeMap());
+		out.write(column.getBiomeArray());
 		
 		// 2. light index
 		column.getOpacityIndex().writeData(out);
@@ -76,7 +76,7 @@ public class WorldEncoder {
 	throws IOException {
 		
 		// 1. biomes
-		in.read(column.getBiomeMap());
+		in.read(column.getBiomeArray());
 		
 		// 2. light index
 		column.getOpacityIndex().readData(in);
@@ -93,7 +93,7 @@ public class WorldEncoder {
 		cube.setEmpty(isEmpty);
 		
 		if (!isEmpty) {
-			ChunkSection storage = cube.getStorage();
+			ExtendedBlockStorage storage = cube.getStorage();
 
 			// 2. block IDs
 			byte[] rawBlockIds = new byte[16*16*16*2];
@@ -103,19 +103,19 @@ public class WorldEncoder {
 			
 			// 3. metadata
 			NibbleArray blockMetadata = new NibbleArray();
-			in.read(blockMetadata.get());
+			in.read(blockMetadata.getData());
 			
 			ChunkSectionHelper.setBlockStates(storage, blockIds, blockMetadata);
 			
 			// 4. block light
-			in.read(storage.getBlockLightArray().get());
+			in.read(storage.getBlocklightArray().getData());
 			
-			if (!cube.getWorld().dimension.hasNoSky()) {
+			if (!cube.getWorld().provider.getHasNoSky()) {
 				// 5. sky light
-				in.read(storage.getSkyLightArray().get());
+				in.read(storage.getSkylightArray().getData());
 			}
 			
-			storage.countBlocksInSection();
+			storage.removeInvalidBlocks();
 		}
 	}
 }

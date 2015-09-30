@@ -28,28 +28,27 @@ import java.util.Collections;
 import java.util.List;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityRegistry;
-import net.minecraft.entity.EntitySet;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
 import com.google.common.base.Predicate;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.ClassInheritanceMultiMap;
 
 public class EntityContainer {
 	
-	private EntitySet<Entity> entities;
+	private ClassInheritanceMultiMap entities;
 	private boolean hasActiveEntities;
 	private long lastSaveTime;
 	
 	public EntityContainer() {
-		this.entities = new EntitySet<Entity>(Entity.class);
+		this.entities = new ClassInheritanceMultiMap(Entity.class);
 		this.hasActiveEntities = false;
 		this.lastSaveTime = 0;
 	}
 	
-	public EntitySet<Entity> getEntitySet() {
+	public ClassInheritanceMultiMap getEntitySet() {
 		return this.entities;
 	}
 	
@@ -83,8 +82,9 @@ public class EntityContainer {
 	}
 	
 	public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
-		for (T entity : this.entities.getEntities(entityType)) {
-			if (entityType.isAssignableFrom(entity.getClass()) && entity.getBoundingBox().intersects(queryBox) && (predicate == null || predicate.apply(entity))) {
+		//func_180215_b --> getIterableForType
+		for (T entity : (Iterable<T>) this.entities.func_180215_b(entityType)) {
+			if (entityType.isAssignableFrom(entity.getClass()) && entity.getBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(entity))) {
 				out.add(entity);
 			}
 		}
@@ -92,20 +92,20 @@ public class EntityContainer {
 	
 	public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
 		
-		for (Entity entity : this.entities) {
+		for (Entity entity : (Iterable<Entity>) this.entities) {
 			
 			// handle entity exclusion
 			if (entity == excludedEntity) {
 				continue;
 			}
 			
-			if (entity.getBoundingBox().intersects(queryBox) && (predicate == null || predicate.apply(entity))) {
+			if (entity.getBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(entity))) {
 				out.add(entity);
 				
 				// also check entity parts
 				if (entity.getParts() != null) {
 					for (Entity part : entity.getParts()) {
-						if (part != excludedEntity && part.getBoundingBox().intersects(queryBox) && (predicate == null || predicate.apply(part))) {
+						if (part != excludedEntity && part.getBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(part))) {
 							out.add(part);
 						}
 					}
@@ -122,20 +122,20 @@ public class EntityContainer {
 		this.lastSaveTime = time;
 	}
 	
-	public void writeToNbt(NbtTagCompound nbt, String name) {
+	public void writeToNbt(NBTTagCompound nbt, String name) {
 		writeToNbt(nbt, name, null);
 	}
 	
-	public void writeToNbt(NbtTagCompound nbt, String name, IEntityActionListener listener) {
+	public void writeToNbt(NBTTagCompound nbt, String name, IEntityActionListener listener) {
 		this.hasActiveEntities = false;
-		NbtList nbtEntities = new NbtList();
-		nbt.put(name, nbtEntities);
-		for (Entity entity : this.entities) {
+		NBTTagList nbtEntities = new NBTTagList();
+		nbt.setTag(name, nbtEntities);
+		for (Entity entity : (Iterable<Entity>) this.entities) {
 			
-			NbtTagCompound nbtEntity = new NbtTagCompound();
-			entity.saveToNbt(nbtEntity);
+			NBTTagCompound nbtEntity = new NBTTagCompound();
+			entity.writeToNBT(nbtEntity);
 			this.hasActiveEntities = true;
-			nbtEntities.add(nbtEntity);
+			nbtEntities.appendTag(nbtEntity);
 			
 			if (listener != null) {
 				listener.onEntity(entity);
@@ -143,16 +143,17 @@ public class EntityContainer {
 		}
 	}
 	
-	public void readFromNbt(NbtTagCompound nbt, String name, World world, IEntityActionListener listener) {
-		NbtList nbtEntities = nbt.getAsNbtList(name, 10);
+	public void readFromNbt(NBTTagCompound nbt, String name, World world, IEntityActionListener listener) {
+		NBTTagList nbtEntities = nbt.getTagList(name, 10);
 		if (nbtEntities == null) {
 			return;
 		}
 		
-		for (int i = 0; i < nbtEntities.getSize(); i++) {
-			NbtTagCompound nbtEntity = nbtEntities.getAsNbtMap(i);
+		for (int i = 0; i < nbtEntities.tagCount(); i++) {
+			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
 			
 			// create the entity
+			//Note: This probably isn't the forge EntityRegistry
 			Entity entity = EntityRegistry.createEntity(nbtEntity, world);
 			if (entity == null) {
 				continue;
@@ -165,10 +166,10 @@ public class EntityContainer {
 			}
 			
 			// deal with riding
-			while (nbtEntity.containsKey("Riding")) {
+			while (nbtEntity.hasKey("Riding")) {
 				
 				// create the ridden entity
-				NbtTagCompound nbtRiddenEntity = nbtEntity.getAsNbtMap("Riding");
+				NBTTagCompound nbtRiddenEntity = nbtEntity.getCompoundTag("Riding");
 				Entity riddenEntity = EntityRegistry.createEntity(nbtRiddenEntity, world);
 				if (riddenEntity == null) {
 					break;
@@ -176,7 +177,7 @@ public class EntityContainer {
 				
 				// RIDE THE PIG!!
 				add(riddenEntity);
-				entity.mount(riddenEntity);
+				entity.mountEntity(riddenEntity);
 				
 				// point to the ridden entity and iterate
 				entity = riddenEntity;

@@ -25,14 +25,14 @@ package cubicchunks.world;
 
 import net.minecraft.block.Block;
 import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.chunk.storage.ChunkSection;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 public class ChunkSectionHelper {
 	
-	public static byte[] getBlockLSBArray(ChunkSection storage) {
+	public static byte[] getBlockLSBArray(ExtendedBlockStorage storage) {
 		byte[] out = new byte[16 * 16 * 16];
 		
-		char[] data = storage.getBlockDataArray();
+		char[] data = storage.getData();
 		for (int i = 0; i<data.length; i++) {
 			final int val = data[i];
 			
@@ -44,10 +44,10 @@ public class ChunkSectionHelper {
 		return out;
 	}
 	
-	public static NibbleArray getBlockMSBArray(ChunkSection storage) {
+	public static NibbleArray getBlockMSBArray(ExtendedBlockStorage storage) {
 		NibbleArray out = null;
 		
-		char[] data = storage.getBlockDataArray();
+		char[] data = storage.getData();
 		for (int i = 0; i<data.length; i++) {
 			final int val = data[i];
 			
@@ -61,17 +61,17 @@ public class ChunkSectionHelper {
 				int z = (i >> 4) & 0xf;
 				
 				// the 4 high bits are block id MSBs
-				out.setValueAtCoords(x, y, z, val >> 12);
+				out.set(x, y, z, val >> 12);
 			}
 		}
 		
 		return out;
 	}
 	
-	public static NibbleArray getBlockMetaArray(ChunkSection storage) {
+	public static NibbleArray getBlockMetaArray(ExtendedBlockStorage storage) {
 		NibbleArray out = new NibbleArray();
 		
-		char[] data = storage.getBlockDataArray();
+		char[] data = storage.getData();
 		for (int i = 0; i<data.length; i++) {
 			final int val = data[i];
 			
@@ -80,35 +80,35 @@ public class ChunkSectionHelper {
 			int z = (i >> 4) & 0xf;
 			
 			// the 4 low bits are metadata
-			out.setValueAtCoords(x, y, z, val & 0xf);
+			out.set(x, y, z, val & 0xf);
 		}
 		
 		return out;
 	}
 
-	public static void setBlockStates(ChunkSection chunkSection, byte[] blockIdLsbs, NibbleArray blockIdMsbs, NibbleArray blockMetadata) {
+	public static void setBlockStates(ExtendedBlockStorage chunkSection, byte[] blockIdLsbs, NibbleArray blockIdMsbs, NibbleArray blockMetadata) {
 		for (int i=0; i<blockIdLsbs.length; i++) {
 			
 			// get the block
 			int blockId = blockIdLsbs[i] & 0xFF;
 			if (blockIdMsbs != null) {
-				blockId |= (blockIdMsbs.getValue(i) << 8);
+				blockId |= (blockIdMsbs.getFromIndex(i) << 8);
 			}
-			Block block = Block.getBlockFromIndex(blockId);
+			Block block = Block.getBlockById(blockId);
 			
 			// get the metadata
-			int meta = blockMetadata.getValue(i);
+			int meta = blockMetadata.getFromIndex(i);
 
 			// save it
 			int x = i & 0xf;
 			int y = (i >> 8) & 0xf;
 			int z = (i >> 4) & 0xf;
-			chunkSection.setBlockStateAt(x, y, z, block.getBlockStateForMetadata(meta));
+			chunkSection.set(x, y, z, block.getStateFromMeta(meta));
 		}
 	}
 	
-	public static byte[] getBlockIDArray(final ChunkSection storage) {
-		final char[] data = storage.getBlockDataArray();
+	public static byte[] getBlockIDArray(final ExtendedBlockStorage storage) {
+		final char[] data = storage.getData();
 		byte[] out = new byte[16 * 16 * 16 * 2];
 
 		int byteIndex;
@@ -152,20 +152,20 @@ public class ChunkSectionHelper {
 		return out;
 	}
 
-	public static void setBlockStates(final ChunkSection chunkSection, final int[] blockIDs,
+	public static void setBlockStates(final ExtendedBlockStorage chunkSection, final int[] blockIDs,
 			final NibbleArray blockMetadata) {
 		for (int i = 0; i < blockIDs.length; i++) {
 			// get the block
-			final Block block = Block.getBlockFromIndex(blockIDs[i]);
+			final Block block = Block.getBlockById(blockIDs[i]);
 
 			// get the metadata
-			final int meta = blockMetadata.getValue(i);
+			final int meta = blockMetadata.getFromIndex(i);
 
 			// save it
 			final int x = i & 0xf;
 			final int y = (i >> 8) & 0xf;
 			final int z = (i >> 4) & 0xf;
-			chunkSection.setBlockStateAt(x, y, z, block.getBlockStateForMetadata(meta));
+			chunkSection.set(x, y, z, block.getStateFromMeta(meta));
 		}
 	}
 }

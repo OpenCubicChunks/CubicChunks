@@ -26,22 +26,15 @@ package cubicchunks.world.cube;
 import java.util.List;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.IBlockEntityProvider;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.LightType;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk.ChunkEntityCreationType;
-import net.minecraft.world.chunk.storage.ChunkSection;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.minecraft.tileentity.TileEntity;
 
 import com.google.common.base.Predicate;
+import cubicchunks.TallWorldsMod;
 
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
@@ -54,7 +47,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 public class Cube {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(Cube.class);
+	private static final Logger LOGGER = TallWorldsMod.LOGGER;
 	
 	private World world;
 	private Column column;
@@ -62,9 +55,9 @@ public class Cube {
 	private int cubeY;
 	private int cubeZ;
 	private boolean isModified;
-	private ChunkSection storage;
+	private ExtendedBlockStorage storage;
 	private EntityContainer entities;
-	private CubeBlockMap<BlockEntity> blockEntities;
+	private CubeBlockMap<TileEntity> blockEntities;
 	private GeneratorStage generatorStage;
 	private boolean needsRelightAfterLoad;
 	
@@ -78,7 +71,7 @@ public class Cube {
 		
 		this.storage = null;
 		this.entities = new EntityContainer();
-		this.blockEntities = new CubeBlockMap<BlockEntity>();
+		this.blockEntities = new CubeBlockMap<>();
 		this.generatorStage = null;
 		this.needsRelightAfterLoad = false;
 	}
@@ -91,7 +84,7 @@ public class Cube {
 		if (isEmpty) {
 			this.storage = null;
 		} else {
-			this.storage = new ChunkSection(Coords.cubeToMinBlock(this.cubeY), !this.world.dimension.hasNoSky());
+			this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(this.cubeY), !this.world.provider.getHasNoSky());
 		}
 	}
 	
@@ -286,7 +279,7 @@ public class Cube {
 		return !this.storage.isEmpty();
 	}
 	
-	public Iterable<BlockEntity> getBlockEntities() {
+	public Iterable<TileEntity> getBlockEntities() {
 		return this.blockEntities.values();
 	}
 	
