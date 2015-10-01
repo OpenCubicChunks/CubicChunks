@@ -31,6 +31,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
+import cubicchunks.util.MutableBlockPos;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.init.Blocks;
@@ -57,7 +58,7 @@ public class BiomeBlockReplacer {
 		this.top = Coords.cubeToMaxBlock(cubeAbove.getY());
 		this.bottom = Coords.cubeToMinBlock(cube.getY());
 		this.alterationTop = Coords.cubeToMaxBlock(cube.getY());
-		this.seaLevel = cube.getWorld().getSeaLevel();
+		this.seaLevel = cube.getWorld().provider.getAverageGroundLevel();
 	}
 
 	public void replaceBlocks(final BiomeGenBase biomeToUse, final int xAbs, final int zAbs, final double depthNoiseValue) {
@@ -78,7 +79,7 @@ public class BiomeBlockReplacer {
 		// Biome blocks depth in current block column. 0 for negative values.
 		final int depth = (int) (depthNoiseValue / 3.0D + 3.0D + this.rand.nextDouble() * 0.25D);
 
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		MutableBlockPos pos = new MutableBlockPos();
 
 		/*
 		 * Default BuildDepth is 8,388,608. the Earth has a radius of ~6,378,100m. Not too far off. Let's make this
@@ -129,8 +130,8 @@ public class BiomeBlockReplacer {
 					}
 	
 					// If top block is air and we are below sea level use water instead
-					if (yAbs < this.seaLevel && (this.surfaceBlock == null || this.surfaceBlock.getBlock().getMaterial() == Material.AIR)) {
-						if (this.baseBiome.getTemp(pos) < 0.15F) {
+					if (yAbs < this.seaLevel && (this.surfaceBlock == null || this.surfaceBlock.getBlock().getMaterial() == Material.air)) {
+						if (this.baseBiome.getFloatTemperature(pos) < 0.15F) {
 							// or ice if it's cold
 							this.surfaceBlock = Blocks.ice.getDefaultState();
 						} else {
@@ -152,7 +153,7 @@ public class BiomeBlockReplacer {
 							setBlock(this.cube, pos, this.surfaceBlock);
 						} else if (yAbs < this.seaLevel - 7 - depth) {
 							// Covers the ocean floor with gravel.
-							setBlock(this.cube, pos, Blocks.GRAVEL.getDefaultState());
+							setBlock(this.cube, pos, Blocks.gravel.getDefaultState());
 						} else {
 							// no surface blocks below sea level
 							setBlock(this.cube, pos, this.groundBlock);
@@ -182,9 +183,9 @@ public class BiomeBlockReplacer {
 
 	private int placeRandomSandstone(final int numBlocksToChange, final int yAbs) {
 		int result = 0;
-		if (numBlocksToChange == 0 && this.groundBlock == Blocks.SAND.getDefaultState()) {
+		if (numBlocksToChange == 0 && this.groundBlock == Blocks.sand.getDefaultState()) {
 			result = this.rand.nextInt(4) + Math.max(0, yAbs - 63);
-			this.groundBlock = Blocks.SANDSTONE.getDefaultState();
+			this.groundBlock = Blocks.sandstone.getDefaultState();
 		}
 		return result;
 	}

@@ -77,23 +77,17 @@ public class TallWorldsMod {
 		ServerCubeCache.class.getName();
 		
 		// client only loads
-		CodeAnnotation.startClientOnly();
+		//CodeAnnotation.startClientOnly();
 		ClientCubeCache.class.getName();
-		CodeAnnotation.stopClientOnly();
+		//CodeAnnotation.stopClientOnly();
 		
 		CubeIO.class.getName();
 		
 		// register our chunk system
 		m_system = new CubicChunkSystem();
-		try {
-			M3L.instance.getRegistry().chunkSystem.register(m_system);
-		} catch (AlreadyRegisteredException ex) {
-			LOGGER.error("Cannot register cubic chunk system. Someone else beat us to it. =(", ex);
-		}
 		
-		// register our packets
-		// I'm not even sure this is used in standalone mode...
-		// TODO: get a real M3L networking system
+		//TODO: Port it to forge
+		/*
 		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketBulkCubeData.class);
 		ConnectionState.directionMaps.put(PacketBulkCubeData.class, ConnectionState.PLAY);
 		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketUnloadCubes.class);
@@ -104,5 +98,6 @@ public class TallWorldsMod {
 		ConnectionState.directionMaps.put(PacketCubeBlockChange.class, ConnectionState.PLAY);
 		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketCubeChange.class);
 		ConnectionState.directionMaps.put(PacketCubeChange.class, ConnectionState.PLAY);
+		*/
 	}
 }

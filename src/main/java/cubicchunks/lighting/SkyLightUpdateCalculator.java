@@ -27,6 +27,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import cubicchunks.util.Coords;
+import cubicchunks.util.MutableBlockPos;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
@@ -40,17 +41,17 @@ public class SkyLightUpdateCalculator {
 		World world = column.getWorld();
 		LightingManager lightingManager = WorldContext.get(world).getLightingManager();
 		
-		if (world.provider.hasNoSky) {
+		if (world.provider.getHasNoSky()) {
 			return;
 		}
 		
 		// did we add or remove sky?
-		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(
-			Coords.localToBlock(column.chunkX, localX),
+		MutableBlockPos blockPos = new MutableBlockPos(
+			Coords.localToBlock(column.xPosition, localX),
 			maxBlockY - 1,
-			Coords.localToBlock(column.chunkZ, localZ)
+			Coords.localToBlock(column.zPosition, localZ)
 		);
-		boolean addedSky = column.getBlockState(blockPos).getBlock() == Blocks.AIR;
+		boolean addedSky = column.getBlockState(blockPos).getBlock() == Blocks.air;
 		int newMaxBlockY = addedSky ? minBlockY : maxBlockY;
 		
 		// reset sky light for the affected y range
@@ -100,8 +101,8 @@ public class SkyLightUpdateCalculator {
 		}
 		
 		// update this block and its xz neighbors
-		int blockX = Coords.localToBlock(column.chunkX, localX);
-		int blockZ = Coords.localToBlock(column.chunkZ, localZ);
+		int blockX = Coords.localToBlock(column.xPosition, localX);
+		int blockZ = Coords.localToBlock(column.zPosition, localZ);
 		diffuseSkyLightForBlockColumn(lightingManager, blockX - 1, blockZ, minBlockY, maxBlockY);
 		diffuseSkyLightForBlockColumn(lightingManager, blockX + 1, blockZ, minBlockY, maxBlockY);
 		diffuseSkyLightForBlockColumn(lightingManager, blockX, blockZ - 1, minBlockY, maxBlockY);
@@ -111,7 +112,7 @@ public class SkyLightUpdateCalculator {
 	
 	private void diffuseSkyLightForBlockColumn(LightingManager lightingManager, int blockX, int blockZ, int minBlockY, int maxBlockY) {
 		// TODO: optimize out new?
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		MutableBlockPos pos = new MutableBlockPos();
 		for (int blockY = minBlockY; blockY < maxBlockY; blockY++) {
 			pos.setBlockPos(blockX, blockY, blockZ);
 			lightingManager.computeDiffuseLighting(pos, EnumSkyBlock.SKY);

@@ -54,6 +54,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.ChunkCoordIntPair;
@@ -62,14 +63,15 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.biome.WorldChunkManager;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 
 public class CubicChunkSystem {
 
-	private EntitySet<Entity> m_emptyEntitySet;
+	private ClassInheritanceMultiMap m_emptyEntitySet;
 
 	public CubicChunkSystem() {
-		m_emptyEntitySet = new EntitySet<Entity>(Entity.class);
+		m_emptyEntitySet = new ClassInheritanceMultiMap(Entity.class);
 	}
 	public ChunkProviderServer getServerChunkCache(WorldServer worldServer) {
 		if (isTallWorld(worldServer)) {
@@ -227,7 +229,7 @@ public class CubicChunkSystem {
 		// we'll have to do our own generation to find the spawn point
 
 		if (!worldServer.provider.canRespawnHere()) {
-			worldServer.worldInfo.setSpawnPoint(BlockPos.ORIGIN.up());
+			worldServer.worldInfo.setSpawn(BlockPos.ORIGIN.up());
 			return false;
 		}
 
@@ -267,16 +269,16 @@ public class CubicChunkSystem {
 
 		// make some effort to find a suitable spawn point, but don't guarantee it
 		for (int i = 0; i < 1000 && !worldServer.provider.canCoordinateBeSpawn(spawnPos.getX(), spawnPos.getZ()); i++) {
-			spawnPos.x += Util.randRange(rand, -16, 16);
-			spawnPos.z += Util.randRange(rand, -16, 16);
+			spawnPos.x += cubicchunks.util.MathHelper.randRange(rand, -16, 16);
+			spawnPos.z += cubicchunks.util.MathHelper.randRange(rand, -16, 16);
 		}
 
 		// save the spawn point
-		worldServer.worldInfo.setSpawnPoint(spawnPos);
+		worldServer.worldInfo.setSpawn(spawnPos);
 		//TallWorldsMod.LOGGER.info("Found spawn point at ({},{},{})", spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
 
 		if (worldSettings.isBonusChestEnabled()) {
-			worldServer.generateBonusChests();
+			//worldServer.generateBonusChests();
 		}
 
 		// spawn point calculated successfully
@@ -336,8 +338,7 @@ public class CubicChunkSystem {
 		return null;
 	}
 
-	@Override
-	@ClientOnly
+	//@ClientOnly
 	public boolean setChunkSectionRendererPositions(ViewFrustum renderers) {
 
 		if (!isTallWorld(renderers.world)) {
@@ -427,6 +428,7 @@ public class CubicChunkSystem {
 
 	//TODO: I can't find it in 1.8.11
 	//@ClientOnly
+	/*
 	public RenderChunk getChunkSectionRendererNeighbor(RenderGlobal worldRenderer, BlockPos pos,
 			ChunkSectionRenderer chunkSectionRenderer, EnumFacing facing) {
 
@@ -446,10 +448,9 @@ public class CubicChunkSystem {
 			return null;
 		}
 		return worldRenderer.chunkSectionRenderers.getRenderer(neighborPos);
-	}
+	}*/
 
-	@Override
-	public EntitySet<Entity> getEntityStore(Chunk chunk, int chunkSectionIndex) {
+	public ClassInheritanceMultiMap getEntityStore(Chunk chunk, int chunkSectionIndex) {
 		if (chunk instanceof Column) {
 			Column column = (Column) chunk;
 			int cubeY = chunkSectionIndex;
@@ -464,13 +465,11 @@ public class CubicChunkSystem {
 		return null;
 	}
 
-	@Override
 	public void onServerStop() {
 		WorldServerContext.clear();
 	}
 
-	@Override
-	@ClientOnly
+	//@ClientOnly
 	public void unloadClientWorld() {
 		WorldClientContext.clear();
 	}

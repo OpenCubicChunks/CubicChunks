@@ -60,13 +60,15 @@ public final class TerrainProcessor extends CubeProcessor {
 
 	protected void generateTerrain(final Cube cube, final double[][][] densityField) {
 		//cube.getWorld().profiler.startSection("placement");
+		//todo: find better way to do it
+		int seaLevel = cube.getWorld().provider.getAverageGroundLevel();
 		for (int xRel = 0; xRel < 16; xRel++) {
 			for (int zRel = 0; zRel < 16; zRel++) {
 				for (int yRel = 0; yRel < 16; yRel++) {
 					int yAbs = Coords.localToBlock(cube.getY(), yRel);
 					BlockPos pos = new BlockPos(xRel, yRel, zRel);
 					Block block = densityField[xRel][yRel][zRel] > 0 ? Blocks.stone
-							: yAbs < cube.getWorld().getSeaLevel() ? Blocks.water : Blocks.air;
+							: yAbs < seaLevel ? Blocks.water : Blocks.air;
 					cube.setBlockForGeneration(pos, block.getDefaultState());
 				} // end yRel
 			} // end zRel

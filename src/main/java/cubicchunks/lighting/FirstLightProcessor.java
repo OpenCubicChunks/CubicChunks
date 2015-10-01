@@ -28,6 +28,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Coords;
+import cubicchunks.util.MutableBlockPos;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.OpacityIndex;
@@ -57,7 +58,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		int minBlockZ = Coords.cubeToMinBlock(cube.getZ());
 		int maxBlockZ = Coords.cubeToMaxBlock(cube.getZ());
 		
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		MutableBlockPos pos = new MutableBlockPos();
 		
 		// update the sky light
 		for (pos.x = minBlockX; pos.x <= maxBlockX; pos.x++) {
@@ -93,7 +94,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		return true;
 	}
 	
-	private void updateSkylight(Cube cube, BlockPos.MutableBlockPos pos) {
+	private void updateSkylight(Cube cube, MutableBlockPos pos) {
 		
 		int localX = Coords.blockToLocal(pos.getX());
 		int localZ = Coords.blockToLocal(pos.getZ());
@@ -151,7 +152,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		}
 	}
 	
-	private void diffuseXSlab(Cube cube, int localX, BlockPos.MutableBlockPos pos) {
+	private void diffuseXSlab(Cube cube, int localX, MutableBlockPos pos) {
 		pos.x = Coords.localToBlock(cube.getX(), localX);
 		int minBlockY = Coords.cubeToMinBlock(cube.getY());
 		int maxBlockY = Coords.cubeToMaxBlock(cube.getY());
@@ -164,7 +165,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		}
 	}
 	
-	private void diffuseYSlab(Cube cube, int localY, BlockPos.MutableBlockPos pos) {
+	private void diffuseYSlab(Cube cube, int localY, MutableBlockPos pos) {
 		int minBlockX = Coords.cubeToMinBlock(cube.getX());
 		int maxBlockX = Coords.cubeToMaxBlock(cube.getX());
 		pos.y = Coords.localToBlock(cube.getY(), localY);
@@ -177,7 +178,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		}
 	}
 	
-	private void diffuseZSlab(Cube cube, int localZ, BlockPos.MutableBlockPos pos) {
+	private void diffuseZSlab(Cube cube, int localZ, MutableBlockPos pos) {
 		int minBlockX = Coords.cubeToMinBlock(cube.getX());
 		int maxBlockX = Coords.cubeToMaxBlock(cube.getX());
 		int minBlockY = Coords.cubeToMinBlock(cube.getY());
@@ -224,8 +225,8 @@ public class FirstLightProcessor extends CubeProcessor {
 		Block block = cube.getBlockAt(pos);
 		
 		// should we diffuse sky light?
-		if (!world.provider.hasNoSky && pos.getY() > world.getSeaLevel() - 16 && block.getLightOpacity() == 0 && world.getLightFor(EnumSkyBlock.SKY, pos) == 0) {
-			boolean wasLit = world.updateLightingAt(EnumSkyBlock.SKY, pos);
+		if (!world.provider.getHasNoSky() && pos.getY() > world.provider.getAverageGroundLevel()- 16 && block.getLightOpacity() == 0 && world.getLightFor(EnumSkyBlock.SKY, pos) == 0) {
+			boolean wasLit = world.checkLightFor(EnumSkyBlock.SKY, pos);
 			if (!wasLit) {
 				return false;
 			}
@@ -233,7 +234,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		
 		// should we diffuse block light?
 		if (block.getLightValue()> 0) {
-			boolean wasLit = world.updateLightingAt(EnumSkyBlock.BLOCK, pos);
+			boolean wasLit = world.checkLightFor(EnumSkyBlock.BLOCK, pos);
 			if (!wasLit) {
 				return false;
 			}

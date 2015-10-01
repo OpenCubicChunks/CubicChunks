@@ -23,15 +23,51 @@
  */
 package cubicchunks.util;
 
-import java.util.Random;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Vec3;
+import net.minecraft.util.Vec3i;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class MathHelper {
+/**
+ * Mutable block pos to optimize lighting
+ */
+public class MutableBlockPos extends BlockPos {
 
-	public static double lerp(final double a, final double min, final double max) {
-		return min + a * (max - min);
+	public int x, y, z;
+
+	public MutableBlockPos() {
+		super(0, 0, 0);
+	}
+
+	public MutableBlockPos(int x, int y, int z) {
+		super(0, 0, 0);
+
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+
+	@Override
+	public int getX() {
+		return x;
+	}
+
+	@Override
+	public int getY() {
+		return y;
+	}
+
+	@Override
+	public int getZ() {
+		return z;
 	}
 	
-	public static int randRange(Random rand, int start, int end) {
-		return rand.nextInt(end - start + 1) + start;
+	public void setBlockPos(int x, int y, int z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
 	}
 }

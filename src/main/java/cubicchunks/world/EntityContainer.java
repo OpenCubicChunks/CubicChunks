@@ -32,6 +32,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
 import com.google.common.base.Predicate;
+import net.minecraft.entity.EntityList;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ClassInheritanceMultiMap;
@@ -153,8 +154,7 @@ public class EntityContainer {
 			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
 			
 			// create the entity
-			//Note: This probably isn't the forge EntityRegistry
-			Entity entity = EntityRegistry.createEntity(nbtEntity, world);
+			Entity entity = EntityList.createEntityFromNBT(nbtEntity, world);
 			if (entity == null) {
 				continue;
 			}
@@ -170,7 +170,7 @@ public class EntityContainer {
 				
 				// create the ridden entity
 				NBTTagCompound nbtRiddenEntity = nbtEntity.getCompoundTag("Riding");
-				Entity riddenEntity = EntityRegistry.createEntity(nbtRiddenEntity, world);
+				Entity riddenEntity = EntityList.createEntityFromNBT(nbtRiddenEntity, world);
 				if (riddenEntity == null) {
 					break;
 				}

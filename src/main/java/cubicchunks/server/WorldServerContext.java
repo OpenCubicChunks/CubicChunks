@@ -25,7 +25,6 @@ package cubicchunks.server;
 
 import java.util.Map;
 
-import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldServer;
 
 import com.google.common.collect.Maps;
@@ -41,6 +40,7 @@ import cubicchunks.generator.terrain.FlatTerrainGenerator;
 import cubicchunks.generator.terrain.VanillaTerrainGenerator;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.world.WorldContext;
+import net.minecraft.world.WorldType;
 
 public class WorldServerContext extends WorldContext {
 
@@ -76,7 +76,7 @@ public class WorldServerContext extends WorldContext {
 
 		final long seed = this.worldServer.getSeed();
 
-		this.terrainGenerator = getTerrainGenerator(this.worldServer.dimension.dimensionType);
+		this.terrainGenerator = getTerrainGenerator(this.worldServer.getWorldType());
 
 		// init the generator pipeline
 		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(this.serverCubeCache, 5, this.terrainGenerator));
@@ -101,8 +101,8 @@ public class WorldServerContext extends WorldContext {
 		return this.generatorPipeline;
 	}
 
-	public ITerrainGenerator getTerrainGenerator(final DimensionType dimensionType) {
-		if (dimensionType == DimensionType.FLAT) {
+	public ITerrainGenerator getTerrainGenerator(final WorldType dimensionType) {
+		if (dimensionType == WorldType.FLAT) {
 			return new FlatTerrainGenerator(this.worldServer.getSeed());
 		}
 		return new VanillaTerrainGenerator(this.worldServer.getSeed());

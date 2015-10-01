@@ -50,7 +50,7 @@ public class BiomeFeatures {
 	public BiomeFeatures(World world, BiomeGenBase biome) {
 		this.world = world;
 		this.generators = new ArrayList<FeatureGenerator>(20);
-		BiomeDecorator decorator = biome.decorator;
+		BiomeDecorator decorator = biome.theBiomeDecorator;
 		ChunkProviderSettings config = ChunkProviderSettings.Factory.func_177865_a(
 				world.provider.generatorSettings).func_177864_b();
 		

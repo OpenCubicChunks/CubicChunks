@@ -40,10 +40,12 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 import com.google.common.base.Predicate;
+import cubicchunks.TallWorldsMod;
 
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
+import cubicchunks.util.MutableBlockPos;
 import cubicchunks.util.RangeInt;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.OpacityIndex;
@@ -274,8 +276,8 @@ public class Column extends Chunk {
 		}
 
 		// if opacity changed and ( opacity decreased or block now has any light )
-		int skyLight = getLightAt(EnumSkyBlock.SKY, pos);
-		int blockLight = getLightAt(EnumSkyBlock.BLOCK, pos);
+		int skyLight = getLightFor(EnumSkyBlock.SKY, pos);
+		int blockLight = getLightFor(EnumSkyBlock.BLOCK, pos);
 		if (newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0)) {
 			WorldContext.get(this.getWorld()).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
 		}
@@ -353,7 +355,7 @@ public class Column extends Chunk {
 			// we don't actually know where the surface is yet, because maybe it hasn't been generated
 			// but we do know that the surface has to be at least at sea level,
 			// so let's go with that for now and hope for the best
-			return this.getWorld().getSeaLevel();
+			return this.getWorld().provider.getAverageGroundLevel();
 		}
 	}
 
@@ -405,7 +407,7 @@ public class Column extends Chunk {
 			// we don't actually know where the surface is yet, because maybe it hasn't been generated
 			// but we do know that the surface has to be at least at sea level,
 			// so let's go with that for now and hope for the best
-			skylightBlockY = this.getWorld().getSeaLevel() + 1;
+			skylightBlockY = this.getWorld().provider.getAverageGroundLevel() + 1;
 		}
 		return skylightBlockY;
 	}
@@ -465,7 +467,7 @@ public class Column extends Chunk {
 			entity.addedToChunk = false;
 			this.setModified(true);
 		} else {
-			LOGGER.warn(
+			TallWorldsMod.LOGGER.warn(
 					"{} Tried to remove entity {} from column ({},{}), but it was not there. Entity thinks it's in cube ({},{},{})",
 					this.getWorld().isRemote ? "CLIENT" : "SERVER", entity.getClass().getName(), this.xPosition, this.zPosition,
 					entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ);
@@ -489,8 +491,8 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out,
-			Predicate<? super T> predicate) {
+	public void getEntitiesOfTypeWithinAAAB(Class entityType, AxisAlignedBB queryBox, List out,
+			Predicate predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
 		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - 2));
@@ -524,7 +526,7 @@ public class Column extends Chunk {
 		if (cube != null) {
 			cube.addBlockEntity(pos, blockEntity);
 		} else {
-			LOGGER.warn("No cube at ({},{},{}) to add tile entity (block {},{},{})!", this.chunkX, cubeY, this.chunkZ,
+			TallWorldsMod.LOGGER.warn("No cube at ({},{},{}) to add tile entity (block {},{},{})!", this.xPosition, cubeY, this.zPosition,
 					pos.getX(), pos.getY(), pos.getZ());
 		}
 	}
@@ -728,8 +730,8 @@ public class Column extends Chunk {
 		}
 
 		// we get just a few updates this time
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-		BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
+		MutableBlockPos pos = new MutableBlockPos();
+		MutableBlockPos neighborPos = new MutableBlockPos();
 		for (int i = 0; i < 2; i++) {
 
 			// once we've checked all the blocks, stop checking
@@ -760,7 +762,7 @@ public class Column extends Chunk {
 				int blockY = Coords.localToBlock(cube.getY(), localY);
 				pos.setBlockPos(blockX, blockY, blockZ);
 
-				if (cube.getBlockState(pos).getBlock().getMaterial() == Material.AIR) {
+				if (cube.getBlockState(pos).getBlock().getMaterial() == Material.air) {
 
 					// if there's a light source next to this block, update the light source
 					for (EnumFacing facing : EnumFacing.values()) {
@@ -768,12 +770,12 @@ public class Column extends Chunk {
 						neighborPos.setBlockPos(pos.getX() + facingDir.getX(), pos.getY() + facingDir.getY(),
 								pos.getZ() + facingDir.getZ());
 						if (this.getWorld().getBlockState(neighborPos).getBlock().getLightValue()> 0) {
-							this.getWorld().updateLightingAt(neighborPos);
+							this.getWorld().checkLight(neighborPos);
 						}
 					}
 
 					// then update this block
-					this.getWorld().updateLightingAt(pos);
+					this.getWorld().checkLight(pos);
 				}
 			}
 		}

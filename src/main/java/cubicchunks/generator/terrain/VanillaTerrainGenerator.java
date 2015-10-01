@@ -122,7 +122,7 @@ public class VanillaTerrainGenerator implements ITerrainGenerator {
 		generateTerrainArray(cube);
 
 		if (this.needsScaling) {
-			scaleNoiseArray(cube.getWorld().getSeaLevel());
+			scaleNoiseArray(cube.getWorld().provider.getAverageGroundLevel());
 		}
 
 		return applyHeightGradient(cube, expandNoiseArray(this.rawDensity));

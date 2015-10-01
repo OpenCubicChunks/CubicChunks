@@ -27,6 +27,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Coords;
+import cubicchunks.util.MutableBlockPos;
 import cubicchunks.util.processor.BlockColumnProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.WorldContext;
@@ -35,13 +36,13 @@ import net.minecraft.world.EnumSkyBlock;
 
 public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	
-	private ThreadLocal<BlockPos.MutableBlockPos> m_pos;
+	private ThreadLocal<MutableBlockPos> m_pos;
 	
 	public SkyLightOcclusionProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 		
 		m_pos = new ThreadLocal<>();
-		m_pos.set(new BlockPos.MutableBlockPos());
+		m_pos.set(new MutableBlockPos());
 	}
 	
 	@Override
@@ -56,10 +57,10 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 		}
 		
 		// get the min column height among neighbors
-		int minHeight1 = world.getChunkMinimumHeight(blockX - 1, blockZ);
-		int minHeight2 = world.getChunkMinimumHeight(blockX + 1, blockZ);
-		int minHeight3 = world.getChunkMinimumHeight(blockX, blockZ - 1);
-		int minHeight4 = world.getChunkMinimumHeight(blockX, blockZ + 1);
+		int minHeight1 = world.getChunksLowestHorizon(blockX - 1, blockZ);
+		int minHeight2 = world.getChunksLowestHorizon(blockX + 1, blockZ);
+		int minHeight3 = world.getChunksLowestHorizon(blockX, blockZ - 1);
+		int minHeight4 = world.getChunksLowestHorizon(blockX, blockZ + 1);
 		int minNeighborHeight = Math.min(minHeight1, Math.min(minHeight2, Math.min(minHeight3, minHeight4)));
 		
 		boolean actuallyUpdated = false;
@@ -110,12 +111,12 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 			return false;
 		}
 		
-		BlockPos.MutableBlockPos pos = m_pos.get();
+		MutableBlockPos pos = m_pos.get();
 		pos.setBlockPos(blockX, minBlockY, blockZ);
 		for (pos.y = minBlockY; pos.y <= maxBlockY; pos.y++) {
 			// use the vanilla light calculator, it's much faster now than my hacks
 			//WorldContext.get(world).getLightingManager().computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
-			world.updateLightingAt(EnumSkyBlock.SKY, pos);
+			world.checkLightFor(EnumSkyBlock.SKY, pos);
 		}
 		
 		return true;

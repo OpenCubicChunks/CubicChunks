@@ -33,6 +33,7 @@ import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.FastIntQueue;
+import cubicchunks.util.MutableBlockPos;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
@@ -98,8 +99,8 @@ public class DiffuseLightingCalculator {
 		//world.profiler.startSection("subtractions");
 		
 		// TODO: optimize out news?
-		BlockPos.MutableBlockPos updatePos = new BlockPos.MutableBlockPos();
-		BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
+		MutableBlockPos updatePos = new MutableBlockPos();
+		MutableBlockPos neighborPos = new MutableBlockPos();
 		
 		// for each queued light update...
 		while (this.queue.hasNext()) {
@@ -141,7 +142,7 @@ public class DiffuseLightingCalculator {
 				}
 				
 				// get the neighbor opacity
-				int neighborOpacity = world.getBlockState(neighborPos).getBlock().getOpacity();
+				int neighborOpacity = world.getBlockState(neighborPos).getBlock().getLightOpacity();
 				if (neighborOpacity < 1) {
 					neighborOpacity = 1;
 				}
@@ -171,8 +172,8 @@ public class DiffuseLightingCalculator {
 		//world.profiler.startSection("additions");
 		
 		// TODO: optimize out news?
-		BlockPos.MutableBlockPos updatePos = new BlockPos.MutableBlockPos();
-		BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
+		MutableBlockPos updatePos = new MutableBlockPos();
+		MutableBlockPos neighborPos = new MutableBlockPos();
 
 		// for each queued light update...
 		while (this.queue.hasNext()) {
@@ -267,10 +268,10 @@ public class DiffuseLightingCalculator {
 		return !cube.isEmpty();
 	}
 	
-	private int computeLightValue(World world, BlockPos pos, c lightType) {
+	private int computeLightValue(World world, BlockPos pos, EnumSkyBlock lightType) {
 		
 		// TODO: optimize out news?
-		BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
+		MutableBlockPos neighborPos = new MutableBlockPos();
 
 		if (lightType == EnumSkyBlock.SKY && world.canSeeSky(pos)) {
 			// sky light is easy
@@ -313,7 +314,7 @@ public class DiffuseLightingCalculator {
 						pos.getZ() + facingDir.getZ()
 					);
 					
-					int lightFromNeighbor = world.getLightAt(lightType, neighborPos) - blockOpacity;
+					int lightFromNeighbor = world.getLightFor(lightType, neighborPos) - blockOpacity;
 					
 					// take the max of light from neighbors
 					if (lightFromNeighbor > lightAtThisBlock) {

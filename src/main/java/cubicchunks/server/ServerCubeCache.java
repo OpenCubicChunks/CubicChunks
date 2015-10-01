@@ -95,16 +95,16 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public Column loadChunk(int cubeX, int cubeZ) {
 		// in the tall worlds scheme, load and provide columns/chunks are semantically the same thing
 		// but load/provide cube do actually do different things
-		return getChunk(cubeX, cubeZ);
+		return provideChunk(cubeX, cubeZ);
 	}
 	
 	@Override
 	public Column getColumn(int columnX, int columnZ) {
-		return getChunk(columnX, columnZ);
+		return provideChunk(columnX, columnZ);
 	}
 	
 	@Override
-	public Column getChunk(int cubeX, int cubeZ) {
+	public Column provideChunk(int cubeX, int cubeZ) {
 		// check for the column
 		Column column = this.loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
 		if (column != null) {
@@ -234,7 +234,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 	
 	@Override
-	public void unloadChunk(int cubeX, int cubeZ) {
+	public void dropChunk(int cubeX, int cubeZ) {
 		// don't call this, unload cubes instead
 		throw new UnsupportedOperationException();
 	}
@@ -267,10 +267,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 	
 	@Override
-	public boolean tick() {
+	public boolean unloadQueuedChunks() {
 		// NOTE: the return value is completely ignored
 		
-		if (this.worldServer.disableSaving) {
+		if (this.worldServer.disableLevelSaving) {
 			return false;
 		}
 		
@@ -311,11 +311,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 	
 	public void saveAllChunks() {
-		saveAllChunks(true, null);
+		saveChunks(true, null);
 	}
 	
 	@Override
-	public boolean saveAllChunks(boolean alwaysTrue, IProgressUpdate progress) {
+	public boolean saveChunks(boolean alwaysTrue, IProgressUpdate progress) {
 		
 		for (Column column : this.loadedColumns.values()) {
 			// save the column
@@ -345,7 +345,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 	
 	@Override
-    public List<BiomeGenBase.SpawnListEntry> getSpawnableAtPos(final EnumCreatureType a1, final BlockPos a2) {
+	//getSpawnableAtPos
+    public List<BiomeGenBase.SpawnListEntry> func_177458_a(final EnumCreatureType a1, final BlockPos a2) {
 		return null;
 	}
 	
