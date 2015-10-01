@@ -29,16 +29,16 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import java.util.List;
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.LightType;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.ChunkSection;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 /**
  * Cube implementation used clientside used when cube is not loaded. 
@@ -78,33 +78,33 @@ public class BlankCube extends Cube {
 	}
 	
 	@Override
-	public ChunkSection getStorage() {
+	public ExtendedBlockStorage getStorage() {
 		return null;
 	}
 	
 	@Override
 	public Block getBlockAt(final BlockPos pos) {
-		return Blocks.AIR;
+		return Blocks.air;
 	}
 	
 	@Override
 	public Block getBlockAt(final int localX, final int localY, final int localZ) {
-		return Blocks.AIR;
+		return Blocks.air;
 	}
 	
 	@Override
 	public IBlockState getBlockState(BlockPos pos) {
-		return Blocks.AIR.getDefaultState();
+		return Blocks.air.getDefaultState();
 	}
 	
 	@Override
 	public IBlockState getBlockState(int localX, int localY, int localZ) {
-		return Blocks.AIR.getDefaultState();
+		return Blocks.air.getDefaultState();
 	}
 	
 	@Override
 	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
-		return Blocks.AIR.getDefaultState();
+		return Blocks.air.getDefaultState();
 	}
 	
 	@Override
@@ -135,12 +135,12 @@ public class BlankCube extends Cube {
 	public void getMigratedEntities(List<Entity> out) {}
 	
 	@Override
-	public BlockEntity getBlockEntity(BlockPos pos, Chunk.ChunkEntityCreationType creationType) {
+	public TileEntity getBlockEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
 		return null;
 	}
 	
 	@Override
-	public void addBlockEntity(BlockPos pos, BlockEntity blockEntity) {}
+	public void addBlockEntity(BlockPos pos, TileEntity blockEntity) {}
 	
 	@Override
 	public void removeBlockEntity(BlockPos pos) {}
@@ -172,13 +172,13 @@ public class BlankCube extends Cube {
 	}
 	
 	@Override
-	public int getLightValue(LightType lightType, BlockPos pos) {
+	public int getLightValue(EnumSkyBlock lightType, BlockPos pos) {
 		//TODO: BlankCube.getLightValue - maybe return 0?
 		return 15;
 	}
 	
 	@Override
-	public void setLightValue(LightType lightType, BlockPos pos, int light) {}
+	public void setLightValue(EnumSkyBlock lightType, BlockPos pos, int light) {}
 	
 	@Override
 	public void doRandomTicks() {}

@@ -42,8 +42,12 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.column.Column;
+import net.minecraft.block.ITileEntityProvider;
+import net.minecraft.init.Blocks;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import org.apache.logging.log4j.Logger;
 
 public class Cube {
 	
@@ -100,11 +104,11 @@ public class Cube {
 		return AddressTools.getAddress(this.cubeX, this.cubeY, this.cubeZ);
 	}
 	
-	public BlockPos.MutableBlockPos localAddressToBlockPos(BlockPos.MutableBlockPos pos, int localAddress) {
-		pos.x = Coords.localToBlock(this.cubeX, AddressTools.getLocalX(localAddress));
-		pos.y = Coords.localToBlock(this.cubeY, AddressTools.getLocalY(localAddress));
-		pos.z = Coords.localToBlock(this.cubeZ, AddressTools.getLocalZ(localAddress));
-		return pos;
+	public BlockPos localAddressToBlockPos(int localAddress) {
+		int x = Coords.localToBlock(this.cubeX, AddressTools.getLocalX(localAddress));
+		int y = Coords.localToBlock(this.cubeY, AddressTools.getLocalY(localAddress));
+		int z = Coords.localToBlock(this.cubeZ, AddressTools.getLocalZ(localAddress));
+		return new BlockPos(x, y, z);
 	}
 	
 	public World getWorld() {
@@ -146,14 +150,15 @@ public class Cube {
 	
 	public Block getBlockAt(final int localX, final int localY, final int localZ) {
 		if (isEmpty()) {
-			return Blocks.AIR;
+			return Blocks.air;
 		}
-		return this.storage.getBlockAt(localX, localY, localZ);
+		//actually: getBlockAt. WTF!?
+		return this.storage.getBlockByExtId(localX, localY, localZ);
 	}
 	
 	public IBlockState getBlockState(BlockPos pos) {
 		if (isEmpty()) {
-			return Blocks.AIR.getDefaultState();
+			return Blocks.air.getDefaultState();
 		}
 		int x = Coords.blockToLocal(pos.getX());
 		int y = Coords.blockToLocal(pos.getY());
@@ -163,9 +168,9 @@ public class Cube {
 	
 	public IBlockState getBlockState(int localX, int localY, int localZ) {
 		if (isEmpty()) {
-			return Blocks.AIR.getDefaultState();
+			return Blocks.air.getDefaultState();
 		}
-		return this.storage.getBlockStateAt(localX, localY, localZ);
+		return this.storage.get(localX, localY, localZ);
 	}
 	
 	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
@@ -186,46 +191,46 @@ public class Cube {
 		int z = Coords.blockToLocal(pos.getZ());
 
 		// set the block
-		this.storage.setBlockStateAt(x, y, z, newBlockState);
+		this.storage.set(x, y, z, newBlockState);
 		
 		Block newBlock = newBlockState.getBlock();
 		Block oldBlock = oldBlockState.getBlock();
 		
 		if (newBlock != oldBlock) {
-			if (!this.world.isClient) {
+			if (!this.world.isRemote) {
 				// on the server, break the old block
-				oldBlock.onRemoved(this.world, pos, oldBlockState);
-			} else if (oldBlock instanceof IBlockEntityProvider) {
+				oldBlock.breakBlock(this.world, pos, oldBlockState);
+			} else if (oldBlock instanceof ITileEntityProvider) {
 				// on the client, remove the tile entity
-				this.world.removeBlockEntity(pos);
+				this.world.removeTileEntity(pos);
 			}
 		}
 		
 		// did the block change work correctly?
-		if (this.storage.getBlockAt(x, y, z) != newBlock) {
+		if (this.storage.getBlockByExtId(x, y, z) != newBlock) {
 			return null;
 		}
 		this.isModified = true;
 		
-		if (oldBlock instanceof IBlockEntityProvider) {
+		if (oldBlock instanceof ITileEntityProvider) {
 			// update tile entity
-			BlockEntity blockEntity = getBlockEntity(pos, ChunkEntityCreationType.CHECK);
+			TileEntity blockEntity = getBlockEntity(pos, Chunk.EnumCreateEntityType.CHECK);
 			if (blockEntity != null) {
 				blockEntity.updateContainingBlockInfo();
 			}
 		}
 		
-		if (!this.world.isClient && newBlock != oldBlock) {
+		if (!this.world.isRemote && newBlock != oldBlock) {
 			// on the server, tell the block it was added
-			newBlock.onSet(this.world, pos, newBlockState);
+			newBlock.onBlockAdded(this.world, pos, newBlockState);
 		}
 		
-		if (newBlock instanceof IBlockEntityProvider) {
+		if (newBlock instanceof ITileEntityProvider) {
 			// make sure the tile entity is good
-			BlockEntity blockEntity = getBlockEntity(pos, ChunkEntityCreationType.CHECK);
+			TileEntity blockEntity = getBlockEntity(pos, Chunk.EnumCreateEntityType.CHECK);
 			if (blockEntity == null) {
-				blockEntity = ((IBlockEntityProvider)newBlock).getBlockEntity(this.world, newBlock.getMetadataForBlockState(newBlockState));
-				this.world.setBlockEntity(pos, blockEntity);
+				blockEntity = ((ITileEntityProvider)newBlock).createNewTileEntity(this.world, newBlock.getMetaFromState(newBlockState));
+				this.world.setTileEntity(pos, blockEntity);
 			}
 			if (blockEntity != null) {
 				blockEntity.updateContainingBlockInfo();
@@ -254,19 +259,19 @@ public class Cube {
 		int z = Coords.blockToLocal(pos.getZ());
 
 		// set the block
-		this.storage.setBlockStateAt(x, y, z, newBlockState);
+		this.storage.set(x, y, z, newBlockState);
 		
 		Block newBlock = newBlockState.getBlock();
 		
 		// did the block change work correctly?
-		if (this.storage.getBlockAt(x, y, z) != newBlock) {
+		if (this.storage.getBlockByExtId(x, y, z) != newBlock) {
 			return null;
 		}
 		this.isModified = true;
 		
 		// update the column light index
 		int blockY = Coords.localToBlock(this.cubeY, y);
-		this.column.getOpacityIndex().setOpacity(x, blockY, z, newBlock.getOpacity());
+		this.column.getOpacityIndex().setOpacity(x, blockY, z, newBlock.getLightOpacity());
 		
 		return oldBlockState;
 	}
@@ -299,9 +304,9 @@ public class Cube {
 		
 		// tell the entity it's in this cube
 		entity.addedToChunk = true;
-		entity.chunkX = this.cubeX;
-		entity.chunkY = this.cubeY;
-		entity.chunkZ = this.cubeZ;
+		entity.chunkCoordX = this.cubeX;
+		entity.chunkCoordY = this.cubeY;
+		entity.chunkCoordZ = this.cubeZ;
 		
 		this.entities.add(entity);
 		this.isModified = true;
@@ -314,10 +319,10 @@ public class Cube {
 			this.isModified = true;
 		} else {
 			LOGGER.warn(String.format("%s Tried to remove entity %s from cube (%d,%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
-				this.world.isClient ? "CLIENT" : "SERVER",
+				this.world.isRemote ? "CLIENT" : "SERVER",
 				entity.getClass().getName(),
 				this.cubeX, this.cubeY, this.cubeZ,
-				entity.chunkX, entity.chunkY, entity.chunkZ
+				entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
 			));
 		}
 		return wasRemoved;
@@ -346,30 +351,30 @@ public class Cube {
 		}
 	}
 	
-	public BlockEntity getBlockEntity(BlockPos pos, ChunkEntityCreationType creationType) {
+	public TileEntity getBlockEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
         
-		BlockEntity blockEntity = this.blockEntities.get(pos);
+		TileEntity blockEntity = this.blockEntities.get(pos);
 		if (blockEntity == null) {
 			
-			if (creationType == ChunkEntityCreationType.IMMEDIATE) {
+			if (creationType == Chunk.EnumCreateEntityType.IMMEDIATE) {
 				blockEntity = createBlockEntity(pos);
-				this.world.setBlockEntity(pos, blockEntity);
-			} else if (creationType == ChunkEntityCreationType.IMMEDIATE) {
+				this.world.setTileEntity(pos, blockEntity);
+			} else if (creationType == Chunk.EnumCreateEntityType.IMMEDIATE) {
 				throw new Error("TODO: implement block entity creation queue!");
 			}
 			
 			// is this block not supposed to have a tile entity?
 			IBlockState blockState = getBlockState(pos);
 			Block block = blockState.getBlock();
-			int meta = block.getMetadataForBlockState(blockState);
+			int meta = block.getMetaFromState(blockState);
 			
-			if (!block.hasBlockEntity()) {
+			if (!block.hasTileEntity()) {
 				return null;
 			}
 			
 			// make a new tile entity for the block
-			blockEntity = ((IBlockEntityProvider)block).getBlockEntity(this.world, meta);
-			this.world.setBlockEntity(pos, blockEntity);
+			blockEntity = ((ITileEntityProvider)block).createNewTileEntity(this.world, meta);
+			this.world.setTileEntity(pos, blockEntity);
 			
 		} else if (blockEntity.isInvalid()) {
 			
@@ -381,44 +386,44 @@ public class Cube {
 		return blockEntity;
 	}
 	
-	private BlockEntity createBlockEntity(BlockPos pos) {
+	private TileEntity createBlockEntity(BlockPos pos) {
 		
 		IBlockState blockState = getBlockState(pos);
 		Block block = blockState.getBlock();
-		int meta = block.getMetadataForBlockState(blockState);
+		int meta = block.getMetaFromState(blockState);
 		
-		if (block.hasBlockEntity()) {
-			return ((IBlockEntityProvider)block).getBlockEntity(this.world, meta);
+		if (block.hasTileEntity()) {
+			return ((ITileEntityProvider)block).createNewTileEntity(this.world, meta);
 		}
 		return null;
 	}
 
-	public void addBlockEntity(BlockPos pos, BlockEntity blockEntity) {
+	public void addBlockEntity(BlockPos pos, TileEntity blockEntity) {
 		
 		// update the tile entity
-		blockEntity.setLevel(this.world);
-		blockEntity.setPosition(pos);
+		blockEntity.setWorldObj(this.getWorld());
+		blockEntity.setPos(pos);
 		
 		// is this block supposed to have a tile entity?
-		if (getBlockState(pos).getBlock() instanceof IBlockEntityProvider) {
+		if (getBlockState(pos).getBlock() instanceof ITileEntityProvider) {
 			
 			// cleanup the old tile entity
-			BlockEntity oldBlockEntity = this.blockEntities.get(pos);
+			TileEntity oldBlockEntity = this.blockEntities.get(pos);
 			if (oldBlockEntity != null) {
-				oldBlockEntity.setInvalid();
+				oldBlockEntity.invalidate();
 			}
 			
 			// install the new tile entity
-			blockEntity.setValid();
+			blockEntity.validate();
 			this.blockEntities.put(pos, blockEntity);
 			this.isModified = true;
 		}
 	}
 	
 	public void removeBlockEntity(BlockPos pos) {
-		BlockEntity blockEntity = this.blockEntities.remove(pos);
+		TileEntity blockEntity = this.blockEntities.remove(pos);
 		if (blockEntity != null) {
-			blockEntity.setInvalid();
+			blockEntity.invalidate();
 			this.isModified = true;
 		}
 	}
@@ -430,29 +435,29 @@ public class Cube {
 			entity.onChunkLoad();
 		}
 		
-		this.world.loadEntitiesInBulk(this.entities.getEntities());
+		this.world.loadEntities(this.entities.getEntities());
 		
 		// tell the world about tile entities
-		this.world.addBlockEntities(this.blockEntities.values());
+		this.world.addTileEntities(this.blockEntities.values());
 	}
 	
 	public void onUnload() {
 		
 		// tell the world to forget about entities
-		this.world.unloadEntitiesInBulk(this.entities.getEntities());
+		this.world.unloadEntities(this.entities.getEntities());
 		
 		// tell the world to forget about tile entities
-		for (BlockEntity blockEntity : this.blockEntities.values()) {
-			this.world.removeBlockEntity(blockEntity.getBlockCoords());
+		for (TileEntity blockEntity : this.blockEntities.values()) {
+			this.world.removeTileEntity(blockEntity.getPos());
 		}
 	}
 	
 	public boolean needsSaving() {
-		return this.entities.needsSaving(this.world.getGameTime()) || this.isModified;
+		return this.entities.needsSaving(this.world.getTotalWorldTime()) || this.isModified;
 	}
 	
 	public void markSaved() {
-		this.entities.markSaved(this.world.getGameTime());
+		this.entities.markSaved(this.world.getTotalWorldTime());
 		this.isModified = false;
 	}
 	
@@ -469,11 +474,11 @@ public class Cube {
 	public int getBrightestLight(BlockPos pos, int skyLightDampeningTerm) {
 		
 		// get sky light
-		int skyLight = getLightValue(LightType.SKY, pos);
+		int skyLight = getLightValue(EnumSkyBlock.SKY, pos);
 		skyLight -= skyLightDampeningTerm;
 		
 		// get block light
-		int blockLight = getLightValue(LightType.BLOCK, pos);
+		int blockLight = getLightValue(EnumSkyBlock.BLOCK, pos);
 		
 		// FIGHT!!!
 		if (blockLight > skyLight) {
@@ -482,7 +487,7 @@ public class Cube {
 		return skyLight;
 	}
 	
-	public int getLightValue(LightType lightType, BlockPos pos) {
+	public int getLightValue(EnumSkyBlock lightType, BlockPos pos) {
 		
 		int x = Coords.blockToLocal(pos.getX());
 		int y = Coords.blockToLocal(pos.getY());
@@ -490,7 +495,7 @@ public class Cube {
 		
 		switch (lightType) {
 			case SKY:
-				if (!this.world.dimension.hasNoSky()) {
+				if (!this.world.provider.getHasNoSky()) {
 					if (isEmpty()) {
 						if (isUnderground(pos)) {
 							return 0;
@@ -499,7 +504,7 @@ public class Cube {
 						}
 					}
 					
-					return this.storage.getSkyLightAtCoords(x, y, z);
+					return this.storage.getExtSkylightValue(x, y, z);
 				} else {
 					return 0;
 				}
@@ -509,10 +514,10 @@ public class Cube {
 					return 0;
 				}
 				
-				return this.storage.getBlockLightAtCoords(x, y, z);
+				return this.storage.getExtBlocklightValue(x, y, z);
 				
 			default:
-				return lightType.defaultValue;
+				return lightType.defaultLightValue;
 		}
 	}
 	
@@ -529,14 +534,14 @@ public class Cube {
 		
 		switch (lightType) {
 			case SKY:
-				if (!this.world.dimension.hasNoSky()) {
-					this.storage.setSkyLightAtCoords(x, y, z, light);
+				if (!this.world.provider.getHasNoSky()) {
+					this.storage.setExtSkylightValue(x, y, z, light);
 					this.isModified = true;
 				}
 			break;
 			
 			case BLOCK:
-				this.storage.setBlockLightAtCoords(x, y, z, light);
+				this.storage.setExtBlocklightValue(x, y, z, light);
 				this.isModified = true;
 			break;
 		}
@@ -549,26 +554,25 @@ public class Cube {
 		}
 		
 		// do three random ticks
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		for (int i = 0; i < 3; i++) {
 			
 			// get a random block
 			int index = this.world.rand.nextInt();
-			int x = index & 15;
-			int y = (index >> 8) & 15;
-			int z = (index >> 16) & 15;
+			int x = index & 0xF;
+			int y = (index >> 8) & 0xF;
+			int z = (index >> 16) & 0xF;
 			
-			IBlockState blockState = this.storage.getBlockStateAt(x, y, z);
+			IBlockState blockState = this.storage.get(x, y, z);
 			Block block = blockState.getBlock();
 			
-			if (block.hasRandomTick()) {
+			if (block.getTickRandomly()) {
 				// tick it
-				pos.setBlockPos(
+				BlockPos pos = new BlockPos(
 					Coords.localToBlock(this.cubeX, x),
 					Coords.localToBlock(this.cubeY, y),
 					Coords.localToBlock(this.cubeZ, z)
 				);
-				block.onTick(this.world, pos, blockState, this.world.rand);
+				block.randomTick(this.world, pos, blockState, this.world.rand);
 			}
 		}
 	}

@@ -49,8 +49,17 @@ import cubicchunks.world.EntityContainer;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.init.Blocks;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3i;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.WorldChunkManager;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class Column extends Chunk {
 
@@ -75,12 +84,13 @@ public class Column extends Chunk {
 
 		init();
 
+		byte[] biomeArray = super.getBiomeArray();
 		// save the biome data
 		for (int i = 0; i < biomes.length; i++) {
-			this.blockBiomeArray[i] = (byte) biomes[i].biomeID;
+			biomeArray[i] = (byte) biomes[i].biomeID;
 		}
 
-		this.isModified = true;
+		super.setModified(true);
 	}
 
 	private void init() {
@@ -101,19 +111,19 @@ public class Column extends Chunk {
 		// this.heightMap = null;
 		// this.skylightUpdateMap = null;
 
-		Arrays.fill(this.blockBiomeArray, (byte) -1);
+		Arrays.fill(super.getBiomeArray(), (byte) -1);
 	}
 
 	public long getAddress() {
-		return AddressTools.getAddress(this.chunkX, this.chunkZ);
+		return AddressTools.getAddress(this.xPosition, this.zPosition);
 	}
 
 	public int getX() {
-		return this.chunkX;
+		return this.xPosition;
 	}
 
 	public int getZ() {
-		return this.chunkZ;
+		return this.zPosition;
 	}
 
 	public EntityContainer getEntityContainer() {
@@ -125,7 +135,8 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public void generateHeightMap() {
+	@SideOnly(Side.CLIENT)
+	protected void generateHeightMap() {
 		// override this so no height map is generated
 	}
 
@@ -153,7 +164,7 @@ public class Column extends Chunk {
 		Cube cube = getCube(cubeY);
 		
 		if (cube == null) {
-			cube = new Cube(this.world, this, this.chunkX, cubeY, this.chunkZ, isModified);
+			cube = new Cube(this.getWorld(), this, this.xPosition, cubeY, this.zPosition, isModified);
 			this.cubes.put(cubeY, cube);
 		}
 		return cube;
@@ -169,21 +180,21 @@ public class Column extends Chunk {
 
 	@Override
 	public boolean needsSaving(boolean alwaysTrue) {
-		return this.entities.needsSaving(this.world.getGameTime()) || this.isModified;
+		return this.entities.needsSaving(this.getWorld().getTotalWorldTime()) || this.isModified;
 	}
 
 	public void markSaved() {
-		this.entities.markSaved(this.world.getGameTime());
-		this.isModified = false;
+		this.entities.markSaved(this.getWorld().getTotalWorldTime());
+		this.setModified(false);
 	}
 
 	@Override
-	public Block getBlockAt(final int x, final int y, final int z) {
-		return getBlockAt(new BlockPos(x, y, z));
+	public Block getBlock(final int x, final int y, final int z) {
+		return getBlock(new BlockPos(x, y, z));
 	}
 
 	@Override
-	public Block getBlockAt(final BlockPos pos) {
+	public Block getBlock(final BlockPos pos) {
 		// pass to cube
 		Cube cube = getCube(pos);
 
@@ -191,7 +202,7 @@ public class Column extends Chunk {
 			return cube.getBlockAt(pos);
 		}
 
-		return Blocks.AIR;
+		return Blocks.air;
 	}
 
 	@Override
@@ -203,7 +214,7 @@ public class Column extends Chunk {
 			return cube.getBlockState(pos);
 		}
 
-		return Blocks.AIR.getDefaultState();
+		return Blocks.air.getDefaultState();
 	}
 
 	@Override
@@ -232,13 +243,13 @@ public class Column extends Chunk {
 		int x = Coords.blockToLocal(pos.getX());
 		int z = Coords.blockToLocal(pos.getZ());
 		int xzCoord = z << 4 | x;
-		if (pos.getY() >= this.rainfallMap[xzCoord] - 1) {
+		if (pos.getY() >= this.precipitationHeightMap[xzCoord] - 1) {
 			// invalidate the rain height map value
-			this.rainfallMap[xzCoord] = -999;
+			this.precipitationHeightMap[xzCoord] = -999;
 		}
 
-		int newOpacity = newBlock.getOpacity();
-		int oldOpacity = oldBlock.getOpacity();
+		int newOpacity = newBlock.getLightOpacity();
+		int oldOpacity = oldBlock.getLightOpacity();
 
 		// did the top non-transparent block change?
 		Integer oldSkylightY = getSkylightBlockY(x, z);
@@ -257,22 +268,22 @@ public class Column extends Chunk {
 			assert (minBlockY < maxBlockY) : "Values not sorted! " + minBlockY + ", " + maxBlockY;
 
 			// update light and signal render update
-			WorldContext.get(this.world).getLightingManager().computeSkyLightUpdate(this, x, z, minBlockY, maxBlockY);
-			this.world.markBlockRangeForRenderUpdate(pos.getX(), minBlockY, pos.getZ(), pos.getX(), maxBlockY,
+			WorldContext.get(this.getWorld()).getLightingManager().computeSkyLightUpdate(this, x, z, minBlockY, maxBlockY);
+			this.getWorld().markBlockRangeForRenderUpdate(pos.getX(), minBlockY, pos.getZ(), pos.getX(), maxBlockY,
 					pos.getZ());
 		}
 
 		// if opacity changed and ( opacity decreased or block now has any light )
-		int skyLight = getLightAt(LightType.SKY, pos);
-		int blockLight = getLightAt(LightType.BLOCK, pos);
+		int skyLight = getLightAt(EnumSkyBlock.SKY, pos);
+		int blockLight = getLightAt(EnumSkyBlock.BLOCK, pos);
 		if (newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0)) {
-			WorldContext.get(this.world).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
+			WorldContext.get(this.getWorld()).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
 		}
 
 		// update opacity index
-		this.opacityIndex.setOpacity(x, pos.getY(), z, newBlock.getOpacity());
+		this.opacityIndex.setOpacity(x, pos.getY(), z, newBlock.getLightOpacity());
 
-		this.isModified = true;
+		this.setModified(true);
 
 		// NOTE: after this method, the World calls updateLights on the source block which changes light values again
 
@@ -291,17 +302,18 @@ public class Column extends Chunk {
 			IBlockState blockState = cube.getBlockState(Coords.blockToLocal(pos.getX()),
 					Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()));
 			if (blockState != null) {
-				return blockState.getBlock().getMetadataForBlockState(blockState);
+				return blockState.getBlock().getMetaFromState(blockState);
 			}
 		}
 		return 0;
 	}
 
+	//this is private
+	/*@Deprecated
 	@Override
-	@Deprecated
 	public int getBlockMetadata(int localX, int blockY, int localZ) {
 		return getBlockMetadata(new BlockPos(localX, blockY, localZ));
-	}
+	}*/
 
 	public int getTopCubeY() {
 		return this.cubes.lastKey();
@@ -330,7 +342,7 @@ public class Column extends Chunk {
 	@Override
 	@Deprecated
 	// don't use this! It's only here because vanilla needs it, but we need to be hacky about it
-	public int getBlockStoreY() {
+	public int getTopFilledSegment() {
 		Integer cubeY = getTopFilledCubeY();
 		if (cubeY != null) {
 			return Coords.cubeToMinBlock(cubeY);
@@ -341,7 +353,7 @@ public class Column extends Chunk {
 			// we don't actually know where the surface is yet, because maybe it hasn't been generated
 			// but we do know that the surface has to be at least at sea level,
 			// so let's go with that for now and hope for the best
-			return this.world.getSeaLevel();
+			return this.getWorld().getSeaLevel();
 		}
 	}
 
@@ -381,7 +393,7 @@ public class Column extends Chunk {
 	@Override
 	@Deprecated
 	// don't use this! It's only here because vanilla needs it, but we need to be hacky about it
-	public int getHeightAtCoords(int localX, int localZ) {
+	public int getHeight(int localX, int localZ) {
 		// NOTE: the "height value" here is the height of the transparent block on top of the highest non-transparent
 		// block
 
@@ -393,17 +405,20 @@ public class Column extends Chunk {
 			// we don't actually know where the surface is yet, because maybe it hasn't been generated
 			// but we do know that the surface has to be at least at sea level,
 			// so let's go with that for now and hope for the best
-			skylightBlockY = this.world.getSeaLevel() + 1;
+			skylightBlockY = this.getWorld().getSeaLevel() + 1;
 		}
 		return skylightBlockY;
 	}
 
 	@Override
-	public int getBlockOpacityAt(BlockPos pos) {
+	public int getBlockLightOpacity(BlockPos pos) {
 		int x = Coords.blockToLocal(pos.getX());
 		int z = Coords.blockToLocal(pos.getZ());
 		return this.opacityIndex.getOpacity(x, pos.getY(), z);
 	}
+	
+	//this calls getBlockLightOpacity(BlockPos)
+	//private int getBlockLightOpacity(int x, int y, int z)
 
 	public Iterable<Entity> entities() {
 		return this.entities.getEntities();
@@ -420,22 +435,22 @@ public class Column extends Chunk {
 		} else {
 			// entities don't have to be in cubes, just add it directly to the column
 			entity.addedToChunk = true;
-			entity.chunkX = this.chunkX;
-			entity.chunkY = cubeY;
-			entity.chunkZ = this.chunkZ;
+			entity.chunkCoordX = this.xPosition;
+			entity.chunkCoordY = cubeY;
+			entity.chunkCoordZ = this.zPosition;
 
 			this.entities.add(entity);
-			this.isModified = true;
+			this.setModified(true);
 		}
 	}
 
 	@Override
 	public void removeEntity(Entity entity) {
-		removeEntity(entity, entity.chunkY);
+		removeEntityAtIndex(entity, entity.chunkCoordY);
 	}
 
 	@Override
-	public void removeEntity(Entity entity, int cubeY) {
+	public void removeEntityAtIndex(Entity entity, int cubeY) {
 
 		if (!entity.addedToChunk) {
 			return;
@@ -448,22 +463,22 @@ public class Column extends Chunk {
 			cube.removeEntity(entity);
 		} else if (this.entities.remove(entity)) {
 			entity.addedToChunk = false;
-			this.isModified = true;
+			this.setModified(true);
 		} else {
 			LOGGER.warn(
 					"{} Tried to remove entity {} from column ({},{}), but it was not there. Entity thinks it's in cube ({},{},{})",
-					this.world.isClient ? "CLIENT" : "SERVER", entity.getClass().getName(), this.chunkX, this.chunkZ,
-					entity.chunkX, entity.chunkY, entity.chunkZ);
+					this.getWorld().isRemote ? "CLIENT" : "SERVER", entity.getClass().getName(), this.xPosition, this.zPosition,
+					entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ);
 		}
 	}
 
+	//findEntitiesExcept
 	@Override
-	public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out,
-			Predicate<? super Entity> predicate) {
+	public void getEntitiesWithinAABBForEntity(Entity excludedEntity, AxisAlignedBB queryBox, List out, Predicate predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
-		int minCubeY = Coords.blockToCube(MathHelper.floor(queryBox.minY - 2));
-		int maxCubeY = Coords.blockToCube(MathHelper.floor(queryBox.maxY + 2));
+		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - 2));
+		int maxCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.maxY + 2));
 
 		for (Cube cube : getCubes(minCubeY, maxCubeY)) {
 			cube.findEntitiesExcept(excludedEntity, queryBox, out, predicate);
@@ -478,8 +493,8 @@ public class Column extends Chunk {
 			Predicate<? super T> predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
-		int minCubeY = Coords.blockToCube(MathHelper.floor(queryBox.minY - 2));
-		int maxCubeY = Coords.blockToCube(MathHelper.floor(queryBox.maxY + 2));
+		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - 2));
+		int maxCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.maxY + 2));
 
 		for (Cube cube : getCubes(minCubeY, maxCubeY)) {
 			cube.findEntities(entityType, queryBox, out, predicate);
@@ -490,7 +505,7 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public BlockEntity getBlockEntityAt(BlockPos pos, ChunkEntityCreationType creationType) {
+	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
 		Cube cube = getCube(pos);
 
 		if (cube != null) {
@@ -500,7 +515,7 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public void setBlockEntityAt(BlockPos pos, BlockEntity blockEntity) {
+	public void addTileEntity(BlockPos pos, TileEntity blockEntity) {
 
 		// pass off to the cube
 		int cubeY = Coords.blockToCube(pos.getY());
@@ -515,7 +530,7 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public void removeBlockEntityAt(BlockPos pos) {
+	public void removeTileEntity(BlockPos pos) {
 		// pass off to the cube
 		Cube cube = getCube(pos);
 
@@ -526,29 +541,29 @@ public class Column extends Chunk {
 
 	@Override
 	public void onChunkLoad() {
-		this.chunkLoaded = true;
+		this.isChunkLoaded = true;
 	}
 
 	@Override
 	public void onChunkUnload() {
-		this.chunkLoaded = false;
+		this.isChunkLoaded = false;
 	}
 
 	/**
 	 * This method retrieves the biome at a set of coordinates
 	 */
 	@Override
-	public Biome getBiome(BlockPos pos, BiomeManager biomeManager) {
+	public BiomeGenBase getBiome(BlockPos pos, WorldChunkManager biomeManager) {
 
-		int biomeID = this.biomeMap[Coords.blockToLocal(pos.getZ()) << 4 | Coords.blockToLocal(pos.getX())] & 255;
+		int biomeID = this.getBiomeArray()[Coords.blockToLocal(pos.getZ()) << 4 | Coords.blockToLocal(pos.getX())] & 255;
 
 		if (biomeID == 255) {
-			Biome biome = biomeManager.getBiome(pos);
+			BiomeGenBase biome = biomeManager.getBiomeGenerator(pos);
 			biomeID = biome.biomeID;
-			this.biomeMap[Coords.blockToLocal(pos.getZ()) << 4 | Coords.blockToLocal(pos.getX())] = (byte) (biomeID & 255);
+			this.getBiomeArray()[Coords.blockToLocal(pos.getZ()) << 4 | Coords.blockToLocal(pos.getX())] = (byte) (biomeID & 255);
 		}
 
-		return Biome.getBiome(biomeID) == null ? Biome.PLAINS : Biome.getBiome(biomeID);
+		return BiomeGenBase.getBiome(biomeID) == null ? BiomeGenBase.plains : BiomeGenBase.getBiome(biomeID);
 	}
 
 	@Override
@@ -557,12 +572,15 @@ public class Column extends Chunk {
 		for (Cube cube : this.cubes.values()) {
 			isAnyCubeLive |= cube.getGeneratorStage().isLastStage();
 		}
-		return this.ticked && this.terrainPopulated && isAnyCubeLive;
+		return this.field_150815_m && this.isTerrainPopulated && isAnyCubeLive;
 	}
 
+	/**
+	 * TickChunk
+	 */
 	@Override
-	public void tickChunk(boolean tryToTickFaster) {
-		this.ticked = true;
+	public void func_150804_b(boolean tryToTickFaster) {
+		this.field_150815_m = true;//ticked=true;
 
 		// don't need to do anything else here
 		// lighting is handled elsewhere now
@@ -582,13 +600,13 @@ public class Column extends Chunk {
 		for (int localX = 0; localX < CUBE_SIZE; localX++) {
 			for (int localZ = 0; localZ < CUBE_SIZE; localZ++) {
 				int xzCoord = localX | localZ << 4;
-				this.rainfallMap[xzCoord] = -999;
+				this.precipitationHeightMap[xzCoord] = -999;
 			}
 		}
 	}
 
 	@Override
-	public BlockPos getRainfallHeight(BlockPos pos) {
+	public BlockPos getPrecipitationHeight(BlockPos pos) {
 
 		// TODO: update this calculation to use better data structures
 
@@ -596,7 +614,7 @@ public class Column extends Chunk {
 		int z = Coords.blockToLocal(pos.getZ());
 
 		int xzCoord = x | z << 4;
-		int height = this.rainfallMap[xzCoord];
+		int height = this.precipitationHeightMap[xzCoord];
 		if (height == -999) {
 
 			/*
@@ -607,14 +625,15 @@ public class Column extends Chunk {
 			 */
 
 			// TEMP: just rain down to the sea
-			this.rainfallMap[xzCoord] = this.world.getSeaLevel();
+			this.precipitationHeightMap[xzCoord] = (int) this.getWorld().provider.getAverageGroundLevel();
 		}
 
 		return new BlockPos(pos.getX(), height, pos.getZ());
 	}
 
 	@Override
-	public int getBrightestLight(BlockPos pos, int skyLightDampeningTerm) {
+	//getBroghtestLight. It actually returns light value... 
+	public int setLight(BlockPos pos, int skyLightDampeningTerm) {
 		// NOTE: this is called by WorldRenderers
 
 		// pass off to cube
@@ -624,14 +643,14 @@ public class Column extends Chunk {
 		}
 
 		// defaults
-		if (!this.world.dimension.hasNoSky() && skyLightDampeningTerm < LightType.SKY.defaultValue) {
-			return LightType.SKY.defaultValue - skyLightDampeningTerm;
+		if (!this.getWorld().provider.getHasNoSky() && skyLightDampeningTerm < EnumSkyBlock.SKY.defaultLightValue) {
+			return EnumSkyBlock.SKY.defaultLightValue - skyLightDampeningTerm;
 		}
 		return 0;
 	}
 
 	@Override
-	public int getLightAt(LightType lightType, BlockPos pos) {
+	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
 		// NOTE: this is the light function that is called by the rendering code on client
 
 		// pass off to cube
@@ -641,9 +660,9 @@ public class Column extends Chunk {
 		}
 
 		// there's no cube, rely on defaults
-		if (lightType == LightType.SKY) {
+		if (lightType == EnumSkyBlock.SKY) {
 			if (canSeeSky(pos)) {
-				return lightType.defaultValue;
+				return lightType.defaultLightValue;
 			} else {
 				return 0;
 			}
@@ -652,20 +671,20 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public void setLightAt(LightType lightType, BlockPos pos, int light) {
+	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {
 
 		// pass off to cube
 		Cube cube = getCube(pos);
 		if (cube != null) {
 			cube.setLightValue(lightType, pos, light);
-			this.isModified = true;
+			this.setModified(true);
 		}
 	}
 
 	protected List<RangeInt> getRanges(Iterable<Integer> yValues) {
 
 		// compute a kind of run-length encoding on the cube y-values
-		List<RangeInt> ranges = new ArrayList<RangeInt>();
+		List<RangeInt> ranges = new ArrayList<>();
 		Integer start = null;
 		Integer stop = null;
 		for (int cubeY : yValues) {
@@ -702,7 +721,7 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public void processRelightChecks() {
+	public void enqueueRelightChecks() {
 
 		if (this.roundRobinCubes.isEmpty()) {
 			resetRelightChecks();
@@ -732,8 +751,8 @@ public class Column extends Chunk {
 			// get the cube that was pointed to
 			Cube cube = this.roundRobinCubes.get(cubeIndex);
 
-			int blockX = Coords.localToBlock(this.chunkX, localX);
-			int blockZ = Coords.localToBlock(this.chunkZ, localZ);
+			int blockX = Coords.localToBlock(this.xPosition, localX);
+			int blockZ = Coords.localToBlock(this.zPosition, localZ);
 
 			// for each block in this segment block column...
 			for (int localY = 0; localY < 16; ++localY) {
@@ -744,17 +763,17 @@ public class Column extends Chunk {
 				if (cube.getBlockState(pos).getBlock().getMaterial() == Material.AIR) {
 
 					// if there's a light source next to this block, update the light source
-					for (Facing facing : Facing.values()) {
-						Vec3i facingDir = facing.getBlockCoords();
+					for (EnumFacing facing : EnumFacing.values()) {
+						Vec3i facingDir = facing.getDirectionVec();
 						neighborPos.setBlockPos(pos.getX() + facingDir.getX(), pos.getY() + facingDir.getY(),
 								pos.getZ() + facingDir.getZ());
-						if (this.world.getBlockStateAt(neighborPos).getBlock().getBrightness() > 0) {
-							this.world.updateLightingAt(neighborPos);
+						if (this.getWorld().getBlockState(neighborPos).getBlock().getLightValue()> 0) {
+							this.getWorld().updateLightingAt(neighborPos);
 						}
 					}
 
 					// then update this block
-					this.world.updateLightingAt(pos);
+					this.getWorld().updateLightingAt(pos);
 				}
 			}
 		}

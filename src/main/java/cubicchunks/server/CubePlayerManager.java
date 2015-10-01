@@ -33,21 +33,17 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.IPacket;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import cubicchunks.TallWorldsMod;
 
 import cubicchunks.network.PacketBulkCubeData;
 import cubicchunks.network.PacketUnloadColumns;
@@ -58,10 +54,13 @@ import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.network.Packet;
+import net.minecraft.tileentity.TileEntity;
+import org.apache.logging.log4j.Logger;
 
 public class CubePlayerManager extends PlayerManager {
 	
-	private final Logger LOGGER = LoggerFactory.getLogger("CubePlayerManager");
+	private final Logger LOGGER = TallWorldsMod.LOGGER;
 	
 	private static class PlayerInfo {
 		
@@ -136,8 +135,8 @@ public class CubePlayerManager extends PlayerManager {
 		super(worldServer);
 		
 		this.m_worldServer = worldServer;
-		this.m_cubeCache = (ServerCubeCache)m_worldServer.serverChunkCache;
-		this.m_viewDistance = worldServer.getMinecraftServer().getConfigurationManager().getViewRadius();
+		this.m_cubeCache = (ServerCubeCache)m_worldServer.theChunkProviderServer;
+		this.m_viewDistance = worldServer.getMinecraftServer().getConfigurationManager().getViewDistance();
 		this.m_watchers = Maps.newTreeMap();
 		this.m_players = Maps.newTreeMap();
 	}
@@ -150,9 +149,9 @@ public class CubePlayerManager extends PlayerManager {
 		this.m_players.put(player.getEntityId(), info);
 		
 		// set initial player position
-		info.blockX = MathHelper.floor(player.xPos);
-		info.blockY = MathHelper.floor(player.yPos);
-		info.blockZ = MathHelper.floor(player.zPos);
+		info.blockX = MathHelper.floor_double(player.posX);
+		info.blockY = MathHelper.floor_double(player.posY);
+		info.blockZ = MathHelper.floor_double(player.posZ);
 		int cubeX = Coords.blockToCube(info.blockX);
 		int cubeY = Coords.blockToCube(info.blockY);
 		int cubeZ = Coords.blockToCube(info.blockZ);
@@ -222,7 +221,7 @@ public class CubePlayerManager extends PlayerManager {
 		}
 		
 		// did all the players leave an alternate dimension?
-		if (this.m_players.isEmpty() && !this.m_worldServer.dimension.canRespawnHere()) {
+		if (this.m_players.isEmpty() && !this.m_worldServer.provider.canRespawnHere()) {
 			// unload everything
 			m_cubeCache.unloadAllChunks();
 		}
@@ -260,9 +259,9 @@ public class CubePlayerManager extends PlayerManager {
 		}
 		
 		// did the player move far enough to matter?
-		int newBlockX = MathHelper.floor(player.xPos);
-		int newBlockY = MathHelper.floor(player.yPos);
-		int newBlockZ = MathHelper.floor(player.zPos);
+		int newBlockX = MathHelper.floor_double(player.posX);
+		int newBlockY = MathHelper.floor_double(player.posY);
+		int newBlockZ = MathHelper.floor_double(player.posZ);
 		int manhattanDistance = Math.abs(newBlockX - info.blockX) + Math.abs(newBlockY - info.blockY) + Math.abs(newBlockZ - info.blockZ);
 		if (manhattanDistance < 8) {
 			return;
@@ -361,7 +360,7 @@ public class CubePlayerManager extends PlayerManager {
 		// pull off enough cubes from the queue to fit in a packet
 		final int MaxCubesToSend = 100;
 		List<Cube> cubesToSend = new ArrayList<Cube>();
-		List<BlockEntity> blockEntitiesToSend = new ArrayList<BlockEntity>();
+		List<TileEntity> blockEntitiesToSend = new ArrayList<>();
 		Iterator<Cube> iter = info.cubesToLoad.iterator();
 		while (iter.hasNext() && cubesToSend.size() < MaxCubesToSend) {
 			Cube cube = iter.next();
@@ -378,7 +377,7 @@ public class CubePlayerManager extends PlayerManager {
 			iter.remove();
 			
 			// add tile entities too
-			for (BlockEntity blockEntity : cube.getBlockEntities()) {
+			for (TileEntity blockEntity : cube.getBlockEntities()) {
 				blockEntitiesToSend.add(blockEntity);
 			}
 		}
@@ -409,7 +408,7 @@ public class CubePlayerManager extends PlayerManager {
 		}*/
 
 		// send the cube data
-		player.netServerHandler.send(new PacketBulkCubeData(columnsToSend, cubesToSend));
+		player.playerNetServerHandler.sendPacket(new PacketBulkCubeData(columnsToSend, cubesToSend));
 		
 		/*
 		LOGGER.trace("Server sent {}/{} cubes, {}/{} columns to player",
@@ -431,17 +430,18 @@ public class CubePlayerManager extends PlayerManager {
 		}
 		
 		// send tile entity data
-		for (BlockEntity blockEntity : blockEntitiesToSend) {
-			IPacket<?> packet = blockEntity.getDescriptionPacket();
+		for (TileEntity blockEntity : blockEntitiesToSend) {
+			Packet packet = blockEntity.getDescriptionPacket();
 			if (packet != null) {
-				player.netServerHandler.send(packet);
+				player.playerNetServerHandler.sendPacket(packet);
 			}
 		}
 		
 		// watch entities on the columns we just sent
 		EntityTracker entityTracker = this.m_worldServer.getEntityTracker();
 		for (Column column : columnsToSend) {
-			entityTracker.a(player, column);
+			//TODO: What does it do?
+			entityTracker.func_85172_a(player, column);
 		}
 	}
 
@@ -450,14 +450,14 @@ public class CubePlayerManager extends PlayerManager {
 		for (int i=0; i<numPackets; i++) {
 			int from = i*PacketUnloadCubes.MAX_SIZE;
 			int to = Math.min((i+1)*PacketUnloadCubes.MAX_SIZE, info.cubesToUnload.size() - 1);
-			player.netServerHandler.send(new PacketUnloadCubes(info.cubesToUnload.subList(from, to)));
+			player.playerNetServerHandler.sendPacket(new PacketUnloadCubes(info.cubesToUnload.subList(from, to)));
 			//LOGGER.debug("Server sent {} cubes to player to unload", info.cubesToUnload.size());
 		}
 		info.cubesToUnload.clear();
 		
 		//even with render distance 64 and teleporting it's not possible with current MAX_SIZE
 		assert info.columnAddressesToUnload.size() < PacketUnloadColumns.MAX_SIZE;
-		player.netServerHandler.send(new PacketUnloadColumns(info.columnAddressesToUnload));
+		player.playerNetServerHandler.sendPacket(new PacketUnloadColumns(info.columnAddressesToUnload));
 		//LOGGER.debug("Server sent {} columns to player to unload", info.columnAddressesToUnload.size());
 		info.columnAddressesToUnload.clear();
 	}
@@ -512,7 +512,7 @@ public class CubePlayerManager extends PlayerManager {
 			return;
 		}
 		//load new chunks/unload old chunks
-		for(EntityPlayer player : this.m_worldServer.players) {
+		for(EntityPlayer player : (List<EntityPlayer>) this.m_worldServer.playerEntities) {
 			int id = player.getEntityId();
 			PlayerInfo info = this.m_players.get(id);
 			//use current address, player position didn't change

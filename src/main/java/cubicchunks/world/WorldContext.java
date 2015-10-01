@@ -25,7 +25,6 @@ package cubicchunks.world;
 
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldClient;
 import net.minecraft.world.WorldServer;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.generator.GeneratorStage;
@@ -36,17 +35,17 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cuchaz.m3l.api.CodeAnnotation;
+import net.minecraft.client.multiplayer.WorldClient;
 
 public abstract class WorldContext {
 	
 	public static WorldContext get(World world) {
 		
-		CodeAnnotation.startClientOnly();
+		//CodeAnnotation.startClientOnly();
 		if (world instanceof WorldClient) {
 			return WorldClientContext.get((WorldClient)world);
 		}
-		CodeAnnotation.stopClientOnly();
+		//CodeAnnotation.stopClientOnly();
 		
 		if (world instanceof WorldServer) {
 			return WorldServerContext.get((WorldServer)world);

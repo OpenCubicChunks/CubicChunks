@@ -245,9 +245,8 @@ public class ClientHandler implements INetHandler {
 		}
 		
 		// apply the update
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		for (int i=0; i<packet.localAddresses.length; i++) {
-			cube.setBlockState(cube.localAddressToBlockPos(pos, packet.localAddresses[i]), packet.blockStates[i]);
+			cube.setBlockState(cube.localAddressToBlockPos(packet.localAddresses[i]), packet.blockStates[i]);
 		}
 		cube.markForRenderUpdate();
 		for (TileEntity blockEntity : cube.getBlockEntities()) {

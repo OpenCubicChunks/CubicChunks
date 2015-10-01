@@ -24,16 +24,17 @@
 package cubicchunks.world.column;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.BlockPos;
-import net.minecraft.world.LightType;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.storage.ChunkSection;
-import net.minecraft.world.gen.IChunkGenerator;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.init.Blocks;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 public class BlankColumn extends Column {
 	
@@ -60,17 +61,17 @@ public class BlankColumn extends Column {
 	// chunk overrides
 	
 	@Override
-	public int getHeightAtCoords(final BlockPos a1) {
+	public int getHeight(final BlockPos a1) {
 		return 0;
 	}
 	
 	@Override
-	public int getHeightAtCoords(final int a1, final int a2) {
+	public int getHeight(final int a1, final int a2) {
 		return 0;
 	}
 	
 	@Override
-	public int getBlockStoreY() {
+	public int getTopFilledSegment() {
 		return 0;
 	}
 	
@@ -79,23 +80,23 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public int getBlockOpacityAt(final BlockPos a1) {
+	public int getBlockLightOpacity(final BlockPos a1) {
 		return 0;
 	}
 	
 	@Override
-	public Block getBlockAt(final int a1, final int a2, final int a3) {
-		return Blocks.AIR;
+	public Block getBlock(final int a1, final int a2, final int a3) {
+		return Blocks.air;
 	}
 	
 	@Override
-	public Block getBlockAt(final BlockPos a1) {
-		return Blocks.AIR;
+	public Block getBlock(final BlockPos a1) {
+		return Blocks.air;
 	}
 	
 	@Override
 	public IBlockState getBlockState(final BlockPos a1) {
-		return Blocks.AIR.getDefaultState();
+		return Blocks.air.getDefaultState();
 	}
 	
 	@Override
@@ -109,7 +110,7 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public int getLightAt(final LightType lightType, final BlockPos pos) {
+	public int getLightFor(final EnumSkyBlock lightType, final BlockPos pos) {
 		switch (lightType) {
 			case SKY: return 15;
 			case BLOCK: return 0;
@@ -118,13 +119,14 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public void setLightAt(final LightType a1, final BlockPos a2, final int a3) {
+	public void setLightFor(final EnumSkyBlock a1, final BlockPos a2, final int a3) {
 	}
 	
+	//getBroghtestLight. It actually returns light value... 
 	@Override
-	public int getBrightestLight(final BlockPos pos, final int skyLightDampeningTerm) {
-		if (!this.world.dimension.hasNoSky() && skyLightDampeningTerm < LightType.SKY.defaultValue) {
-			return LightType.SKY.defaultValue - skyLightDampeningTerm;
+	public int setLight(BlockPos pos, int skyLightDampeningTerm) {
+		if (!this.getWorld().provider.getHasNoSky() && skyLightDampeningTerm < EnumSkyBlock.SKY.defaultLightValue) {
+			return EnumSkyBlock.SKY.defaultLightValue - skyLightDampeningTerm;
 		}
 		return 0;
 	}
@@ -138,7 +140,7 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public void removeEntity(final Entity a1, int a2) {
+	public void removeEntityAtIndex(final Entity a1, int a2) {
 	}
 	
 	@Override
@@ -147,20 +149,20 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public BlockEntity getBlockEntityAt(final BlockPos a1, final ChunkEntityCreationType a2) {
+	public TileEntity getTileEntity(final BlockPos a1, final Chunk.EnumCreateEntityType a2) {
 		return null;
 	}
 	
 	@Override
-	public void setBlockEntity(final BlockEntity a1) {
+	public void addTileEntity(final TileEntity a1) {
 	}
 	
 	@Override
-	public void setBlockEntityAt(final BlockPos a1, final BlockEntity a2) {
+	public void addTileEntity(final BlockPos a1, final TileEntity a2) {
 	}
 	
 	@Override
-	public void removeBlockEntityAt(final BlockPos a1) {
+	public void removeTileEntity(final BlockPos a1) {
 	}
 	
 	@Override
@@ -186,16 +188,18 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public void populateChunk(final IChunkGenerator a1, final IChunkGenerator a2, final int a3, final int a4) {
+	public void populateChunk(final IChunkProvider a1, final IChunkProvider a2, final int a3, final int a4) {
 	}
 	
 	@Override
-	public BlockPos getRainfallHeight(final BlockPos pos) {
+	public BlockPos getPrecipitationHeight(final BlockPos pos) {
 		return new BlockPos(pos.getX(), 0, pos.getZ());
 	}
-	
+	/**
+	 * TickChunk
+	 */
 	@Override
-	public void tickChunk(final boolean a1) {
+	public void func_150804_b(final boolean a1) {
 	}
 	
 	@Override
@@ -204,15 +208,15 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public void setChunkSections(final ChunkSection[] a1) {
+	public void setStorageArrays(final ExtendedBlockStorage[] a1) {
 	}
 	
 	@Override
-	public void readChunkIn(final byte[] a1, final int a2, final boolean a3) {
+	public void fillChunk(final byte[] a1, final int a2, final boolean a3) {
 	}
 	
 	@Override
-	public void setBiomeMap(final byte[] a1) {
+	public void setBiomeArray(final byte[] a1) {
 	}
 	
 	@Override
@@ -220,15 +224,16 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public void processRelightChecks() {
+	//processRelightChecks
+	public void func_150809_p() {
 	}
 	
 	@Override
-	public void queueRelightChecks() {
+	public void enqueueRelightChecks() {
 	}
 	
 	@Override
-	public boolean isChunkLoaded() {
+	public boolean isLoaded() {
 		return true;
 	}
 	
@@ -271,7 +276,7 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public int getHeightMapMinimum() {
+	public int getLowestHeight() {
 		return 0;
 	}
 	

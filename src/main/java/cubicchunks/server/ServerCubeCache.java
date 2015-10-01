@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Queue;
 
 import com.google.common.collect.Maps;
+import cubicchunks.TallWorldsMod;
 
 import cubicchunks.generator.ColumnGenerator;
 import cubicchunks.generator.GeneratorStage;
@@ -39,12 +40,17 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.IProgressUpdate;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.gen.ChunkProviderServer;
+import org.apache.logging.log4j.Logger;
 
 public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	
-	private static final Logger log = Logging.getLogger();
+	private static final Logger log = TallWorldsMod.LOGGER;
 	
 	public static final int WorldSpawnChunkDistance = 12; // highest render distance is 32
 	
@@ -178,7 +184,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				column = this.columnGenerator.generateColumn(cubeX, cubeZ);
 			} else {
 				// the column was loaded
-				column.setLastSaveTime(this.worldServer.getGameTime());
+				column.setLastSaveTime(this.worldServer.getTotalWorldTime());
 			}
 		}
 		assert (column != null);
@@ -217,7 +223,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		this.loadedColumns.put(columnAddress, column);
 		
 		// init the column
-		if (!column.isChunkLoaded()) {
+		if (!column.isLoaded()) {
 			column.onChunkLoad();
 		}
 		column.setTerrainPopulated(true);
@@ -309,7 +315,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 	
 	@Override
-	public boolean saveAllChunks(boolean alwaysTrue, IProgressBar progress) {
+	public boolean saveAllChunks(boolean alwaysTrue, IProgressUpdate progress) {
 		
 		for (Column column : this.loadedColumns.values()) {
 			// save the column
@@ -329,7 +335,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 	
 	@Override
-	public String getName() {
+	public String makeString() {
 		return "ServerCubeCache: " + this.loadedColumns.size() + " columns, Unload: " + this.cubesToUnload.size() + " cubes";
 	}
 	
@@ -339,13 +345,13 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 	
 	@Override
-    public List<Biome.SpawnMob> getSpawnableAtPos(final CreatureTypes a1, final BlockPos a2) {
+    public List<BiomeGenBase.SpawnListEntry> getSpawnableAtPos(final EnumCreatureType a1, final BlockPos a2) {
 		return null;
 	}
 	
 	private boolean cubeIsNearSpawn(int cubeX, int cubeY, int cubeZ) {
 		
-		if (!this.worldServer.dimension.canRespawnHere()) {
+		if (!this.worldServer.provider.canRespawnHere()) {
 			// no spawn points
 			return false;
 		}

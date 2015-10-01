@@ -27,9 +27,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.IPacket;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 
@@ -39,6 +37,8 @@ import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketCubeChange;
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.network.Packet;
+import net.minecraft.tileentity.TileEntity;
 
 public class CubeWatcher {
 	
@@ -101,7 +101,7 @@ public class CubeWatcher {
 	}
 	
 	private long getWorldTime() {
-		return this.cube.getWorld().getGameTime();
+		return this.cube.getWorld().getWorldTime();
 	}
 	
 	private void updateInhabitedTime() {
@@ -136,7 +136,7 @@ public class CubeWatcher {
 			
 			// send whole cube
 			sendPacketToAllPlayers(new PacketCubeChange(cube));
-			for (BlockEntity blockEntity : this.cube.getBlockEntities()) {
+			for (TileEntity blockEntity : this.cube.getBlockEntities()) {
 				sendBlockEntityToAllPlayers(blockEntity);
 			}
 			
@@ -146,11 +146,10 @@ public class CubeWatcher {
 			sendPacketToAllPlayers(new PacketCubeBlockChange(this.cube, this.dirtyBlocks));
 			
 			// send the block entites on those blocks too
-			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 			for (int address : this.dirtyBlocks) {
-				cube.localAddressToBlockPos(pos, address);
-				if (world.getBlockEntityAt(pos) != null) {
-					sendBlockEntityToAllPlayers(world.getBlockEntityAt(pos));
+				BlockPos pos = cube.localAddressToBlockPos(address);
+				if (world.getTileEntity(pos) != null) {
+					sendBlockEntityToAllPlayers(world.getTileEntity(pos));
 				}
 			}
 		}
@@ -158,22 +157,22 @@ public class CubeWatcher {
 		this.dirtyBlocks.clear();
 	}
 	
-	private void sendBlockEntityToAllPlayers(BlockEntity blockEntity) {
+	private void sendBlockEntityToAllPlayers(TileEntity blockEntity) {
 		if (blockEntity == null) {
 			return;
 		}
-		IPacket<?> packet = blockEntity.getDescriptionPacket();
+		Packet packet = blockEntity.getDescriptionPacket();
 		if (packet == null) {
 			return;
 		}
 		sendPacketToAllPlayers(packet);
 	}
 	
-	private void sendPacketToAllPlayers(IPacket<?> packet) {
+	private void sendPacketToAllPlayers(Packet packet) {
 		for (PlayerEntry entry : this.players.values()) {
 			// has this player seen this cube before?
 			if (entry.sawCube) {
-				entry.player.netServerHandler.send(packet);
+				entry.player.playerNetServerHandler.sendPacket(packet);
 			}
 		}
 	}
