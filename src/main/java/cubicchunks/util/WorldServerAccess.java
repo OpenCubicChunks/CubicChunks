@@ -21,27 +21,25 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.features;
+package cubicchunks.util;
 
-import cubicchunks.world.cube.Cube;
-import java.util.Random;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.List;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
-public class MultiFeatureGenerator extends FeatureGenerator {
-	private final FeatureGenerator gen;
-	private final int attempts;
-
-	public MultiFeatureGenerator(World world, FeatureGenerator gen, int attempts) {
-		super(world);
-		this.gen = gen;
-		this.attempts = attempts;
+public class WorldServerAccess {
+	private static final Field ws_pendingTickListEntriesHashSet = 
+			ReflectionHelper.findField(WorldServer.class, "pendingTickListEntriesHashSet", "field_73064_N");
+	private static final Field ws_pendingTickListEntriesThisTick = 
+			ReflectionHelper.findField(WorldServer.class, "pendingTickListEntriesThisTick", "field_94579_S");
+	
+	public static final List getPendingTickListEntriesThisTick(WorldServer ws) {
+		return ReflectionUtil.get(ws, ws_pendingTickListEntriesThisTick, List.class);
 	}
-
-	@Override
-	public void generate(Random rand, Cube cube, BiomeGenBase biome) {
-		for(int i = 0; i < this.attempts; i++){
-			this.gen.generate(rand, cube, biome);
-		}
+	
+	public static final HashSet getPendingTickListEntriesHashSet(WorldServer ws) {
+		return ReflectionUtil.get(ws, ws_pendingTickListEntriesHashSet, HashSet.class);
 	}
 }

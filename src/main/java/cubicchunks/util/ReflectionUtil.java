@@ -21,27 +21,32 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.features;
+package cubicchunks.util;
 
-import cubicchunks.world.cube.Cube;
-import java.util.Random;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import java.lang.reflect.Field;
 
-public class MultiFeatureGenerator extends FeatureGenerator {
-	private final FeatureGenerator gen;
-	private final int attempts;
-
-	public MultiFeatureGenerator(World world, FeatureGenerator gen, int attempts) {
-		super(world);
-		this.gen = gen;
-		this.attempts = attempts;
+public class ReflectionUtil {
+	public static final <T> T get(Object obj, Field f, Class<T> ret) {
+		try {
+			return (T) f.get(obj);
+		} catch (IllegalArgumentException | IllegalAccessException ex) {
+			throw new RuntimeException(ex);
+		} 
 	}
-
-	@Override
-	public void generate(Random rand, Cube cube, BiomeGenBase biome) {
-		for(int i = 0; i < this.attempts; i++){
-			this.gen.generate(rand, cube, biome);
+	
+	public static final Field findField(Class<?> inClass, Class<?> type) {
+		Field found = null;
+		for(Field f : inClass.getDeclaredFields()) {
+			if(f.getType().equals(type)) {
+				if(found != null) {
+					throw new RuntimeException("More than one field of type " + type + " found in class " + inClass);
+				}
+				found = f;
+			}
 		}
+		if(found == null) {
+			throw new RuntimeException("Field of type " + type + " not found in class " + inClass);
+		}
+		return found;
 	}
 }

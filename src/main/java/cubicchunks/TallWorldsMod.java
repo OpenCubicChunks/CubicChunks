@@ -1,7 +1,7 @@
 /*
  *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2014 Tall Worlds
+ *  Copyright (c) 2015 Tall Worlds
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -36,20 +36,22 @@ import cubicchunks.server.CubeIO;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.column.Column;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.Logger;
 
 @Mod(
-	modid = TallWorldsMod.Id,
-	name = "Tall Worlds",
-	version = "1.8.3-0.3.1"
+	modid = TallWorldsMod.MODID,
+	name = "CubicChunks",
+	version = "1.8.11-0.5"
 )
 public class TallWorldsMod {
 	
-	public static final String Id = "tallworlds";
+	public static final String MODID = "cubicchunks";
 	public static Logger LOGGER;
 	
-	@Mod.Instance(Id)
+	@Instance(value = MODID)
 	public static TallWorldsMod instance;
 	
 	private CubicChunkSystem m_system;
@@ -58,12 +60,13 @@ public class TallWorldsMod {
 		// TODO: maybe this could be named better...
 		return m_system;
 	}
-        
-        public void preInit(FMLPreInitializationEvent e) {
-            LOGGER = e.getModLog();
-        }
 	
-	@Mod.EventHandler
+	@EventHandler
+	public void preInit(FMLPreInitializationEvent e) {
+		LOGGER = e.getModLog();
+	}
+	
+	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		
 		LOGGER.info("Initializing Tall Worlds...");

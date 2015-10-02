@@ -27,7 +27,7 @@ targetCompatibility = '1.7'
 
 //used for license header
 ext.projectName = 'Tall Worlds'
-ext.inceptionYear = '2014'
+ext.inceptionYear = '2015'
 ext.organizationUrl = ''
 ext.organization = 'Tall Worlds'
 minecraft {
@@ -140,5 +140,11 @@ task debug(type:JavaExec, dependsOn: build) {
 	doFirst {
 		configure runCfg
 		debug = true
+	}
+}
+
+jar {
+	manifest {
+		attributes 'FMLAT': 'cubicchunks_at.cfg'
 	}
 }

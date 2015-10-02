@@ -21,27 +21,15 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.features;
+package cubicchunks.util;
 
-import cubicchunks.world.cube.Cube;
-import java.util.Random;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import java.lang.reflect.Field;
+import net.minecraft.world.WorldProvider;
 
-public class MultiFeatureGenerator extends FeatureGenerator {
-	private final FeatureGenerator gen;
-	private final int attempts;
-
-	public MultiFeatureGenerator(World world, FeatureGenerator gen, int attempts) {
-		super(world);
-		this.gen = gen;
-		this.attempts = attempts;
-	}
-
-	@Override
-	public void generate(Random rand, Cube cube, BiomeGenBase biome) {
-		for(int i = 0; i < this.attempts; i++){
-			this.gen.generate(rand, cube, biome);
-		}
+public class WorldProviderAccess {
+	private static final Field generatorSettings = ReflectionUtil.findField(WorldProvider.class, String.class);
+	
+	public static final String getGeneratorSettings(WorldProvider wp) {
+		return ReflectionUtil.get(wp, generatorSettings, String.class);
 	}
 }

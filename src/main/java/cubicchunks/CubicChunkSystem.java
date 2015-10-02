@@ -1,7 +1,7 @@
 /*
  *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2014 Tall Worlds
+ *  Copyright (c) 2015 Tall Worlds
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,8 @@ import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
+import cubicchunks.util.MutableBlockPos;
+import cubicchunks.util.WorldAccess;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
@@ -163,8 +165,8 @@ public class CubicChunkSystem {
 
 			//worldServer.profiler.addSection("randomCubeTicks");
 			ServerCubeCache cubeCache = context.getCubeCache();
-			for (ChunkCoordIntPair coords : worldServer.activeChunkSet) {
-				Column column = cubeCache.getChunk(coords.chunkXPos, coords.chunkZPos);
+			for (ChunkCoordIntPair coords : WorldAccess.getActiveChunkSet(worldServer)) {
+				Column column = cubeCache.provideChunk(coords.chunkXPos, coords.chunkZPos);
 				column.doRandomTicks();
 			}
 			//worldServer.profiler.endSection();
@@ -229,13 +231,12 @@ public class CubicChunkSystem {
 		// we'll have to do our own generation to find the spawn point
 
 		if (!worldServer.provider.canRespawnHere()) {
-			worldServer.worldInfo.setSpawn(BlockPos.ORIGIN.up());
+			worldServer.getWorldInfo().setSpawn(BlockPos.ORIGIN.up());
 			return false;
 		}
 
 		// pick a default fail-safe spawn point
-		BlockPos.MutableBlockPos spawnPos = new BlockPos.MutableBlockPos(0,
-				worldServer.provider.getAverageGroundLevel(), 0, null);
+		MutableBlockPos spawnPos = new MutableBlockPos(0, worldServer.provider.getAverageGroundLevel(), 0);
 
 		Random rand = new Random(worldServer.getSeed());
 
@@ -254,7 +255,7 @@ public class CubicChunkSystem {
 
 		// generate some world around the spawn x,z at sea level
 		int spawnCubeX = Coords.blockToCube(spawnPos.getX());
-		int spawnCubeY = Coords.blockToCube(worldServer.getSeaLevel());
+		int spawnCubeY = Coords.blockToCube(worldServer.provider.getAverageGroundLevel());
 		int spawnCubeZ = Coords.blockToCube(spawnPos.getZ());
 
 		final int SearchDistance = 4;
@@ -274,7 +275,7 @@ public class CubicChunkSystem {
 		}
 
 		// save the spawn point
-		worldServer.worldInfo.setSpawn(spawnPos);
+		worldServer.getWorldInfo().setSpawn(spawnPos);
 		//TallWorldsMod.LOGGER.info("Found spawn point at ({},{},{})", spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
 
 		if (worldSettings.isBonusChestEnabled()) {

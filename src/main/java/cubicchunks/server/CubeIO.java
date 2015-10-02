@@ -1,7 +1,7 @@
 /*
  *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2014 Tall Worlds
+ *  Copyright (c) 2015 Tall Worlds
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -50,10 +50,12 @@ import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
+import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.IEntityActionListener;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import java.util.HashSet;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
@@ -63,6 +65,8 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraft.world.storage.ThreadedFileIOBase;
 import org.apache.logging.log4j.Logger;
+
+import static cubicchunks.util.WorldServerAccess.*;
 
 public class CubeIO implements IThreadedFileIO {
 	
@@ -547,7 +551,7 @@ public class CubeIO implements IThreadedFileIO {
 	}
 	
 	private static List<NextTickListEntry> getScheduledTicks(Cube cube) {
-		ArrayList<NextTickListEntry> out = new ArrayList<NextTickListEntry>();
+		ArrayList<NextTickListEntry> out = new ArrayList<>();
 		
 		// make sure this is a server
 		if (!(cube.getWorld() instanceof WorldServer)) {
@@ -556,8 +560,8 @@ public class CubeIO implements IThreadedFileIO {
 		WorldServer worldServer = (WorldServer)cube.getWorld();
 		
 		// copy the ticks for this cube
-		copyScheduledTicks(out, worldServer.lastSyncedTickNextTick, cube);
-		copyScheduledTicks(out, worldServer.tickNextTick, cube);
+		copyScheduledTicks(out, getPendingTickListEntriesHashSet(worldServer), cube);
+		copyScheduledTicks(out, getPendingTickListEntriesThisTick(worldServer), cube);
 		
 		return out;
 	}

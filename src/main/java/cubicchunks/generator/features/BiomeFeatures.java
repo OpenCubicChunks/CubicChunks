@@ -1,7 +1,7 @@
 /*
- *  This file is part of Cubic Chunks, licensed under the MIT License (MIT).
+ *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2014 Tall Worlds
+ *  Copyright (c) 2015 Tall Worlds
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -21,12 +21,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-
 package cubicchunks.generator.features;
 
 import cubicchunks.generator.features.trees.BigTreeGenerator;
 import cubicchunks.generator.features.trees.SimpleTreeGenerator;
 import cubicchunks.generator.features.trees.TreeGenerator;
+import cubicchunks.util.WorldProviderAccess;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,7 +39,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeDecorator;
 import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.gen.ChunkProviderGenerate;
 import net.minecraft.world.gen.ChunkProviderSettings;
 
 public class BiomeFeatures {
@@ -49,10 +48,11 @@ public class BiomeFeatures {
 
 	public BiomeFeatures(World world, BiomeGenBase biome) {
 		this.world = world;
-		this.generators = new ArrayList<FeatureGenerator>(20);
+		this.generators = new ArrayList<>(20);
 		BiomeDecorator decorator = biome.theBiomeDecorator;
+		
 		ChunkProviderSettings config = ChunkProviderSettings.Factory.func_177865_a(
-				world.provider.generatorSettings).func_177864_b();
+				WorldProviderAccess.getGeneratorSettings(world.provider)).func_177864_b();
 		
 		//clay generator
 		this.addMultiGen(SurfaceBlockReplacer.builder().
@@ -74,7 +74,7 @@ public class BiomeFeatures {
 		this.addOreGenerators(config);
 	}
 
-	protected void addTreeGenerators(BiomeDecorator decorator) {
+	protected final void addTreeGenerators(BiomeDecorator decorator) {
 		//Other classes may override this methid to provide other tree generators
 		TreeGenerator smallTreeGen = new SimpleTreeGenerator(world, Blocks.log.getDefaultState(), Blocks.leaves.getDefaultState());
 		BigTreeGenerator bigTreeGen2 = new BigTreeGenerator(world, Blocks.log.getDefaultState(), Blocks.leaves.getDefaultState());
@@ -88,7 +88,7 @@ public class BiomeFeatures {
 		addMultiGen(bigTreeGen2, decorator.treesPerChunk / 10);
 	}
 	
-	protected void addOreGenerators(ChunkProviderSettings cfg) {
+	protected final void addOreGenerators(ChunkProviderSettings cfg) {
 		// it automatically scales with world height.
 		// if min height is 0 - it assumes that there is no lower limit
 		// if max height is 128 or 256 - it assumes there is no upper limit
@@ -116,7 +116,7 @@ public class BiomeFeatures {
 //		addMineral(GRAVEL, cfg.gravelMinHeight, cfg.gravelMaxHeight, cfg.gravelSize, cfg.gravelCount);
 	}
 
-	protected void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
+	protected final void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
 		addMultiGen(new MineralGenerator(world, 
 						state, 
 						getMinHeight(vanillaMinHeight),
@@ -125,7 +125,7 @@ public class BiomeFeatures {
 						getProbability(vanillaMinHeight, vanillaMaxHeight)), countPerChunk);
 	}
 	
-	protected void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
+	protected final void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
 		this.addMineral(block.getDefaultState(), vanillaMinHeight, vanillaMaxHeight, size, countPerChunk);
 	}
 

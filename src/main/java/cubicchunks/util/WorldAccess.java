@@ -21,27 +21,18 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.generator.features;
+package cubicchunks.util;
 
-import cubicchunks.world.cube.Cube;
-import java.util.Random;
+import java.lang.reflect.Field;
+import java.util.Set;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
-public class MultiFeatureGenerator extends FeatureGenerator {
-	private final FeatureGenerator gen;
-	private final int attempts;
-
-	public MultiFeatureGenerator(World world, FeatureGenerator gen, int attempts) {
-		super(world);
-		this.gen = gen;
-		this.attempts = attempts;
-	}
-
-	@Override
-	public void generate(Random rand, Cube cube, BiomeGenBase biome) {
-		for(int i = 0; i < this.attempts; i++){
-			this.gen.generate(rand, cube, biome);
-		}
+public class WorldAccess {
+	private static final Field activeChunkSet = ReflectionHelper.findField(World.class, "activeChunkSet", "field_72993_I");
+	
+	public static final Set<ChunkCoordIntPair> getActiveChunkSet(World world) {
+		return ReflectionUtil.get(world, activeChunkSet, Set.class);
 	}
 }
