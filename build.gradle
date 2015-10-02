@@ -119,30 +119,6 @@ license {
 	}
 }
 
-def runCfg = {
-	standardInput = System.in
-	workingDir = "eclipse"
-	main = 'GradleStart'
-	jvmArgs "-Xmx2G"
-	enableAssertions = true
-}
-
-/**
- * Run and debug tasks. Used by Netbeans gradle plugin
- */ 
-task run(type:JavaExec, dependsOn: build) {
-	doFirst { 
-		configure runCfg
-	}
-}
-
-task debug(type:JavaExec, dependsOn: build) {
-	doFirst {
-		configure runCfg
-		debug = true
-	}
-}
-
 jar {
 	manifest {
 		attributes 'FMLAT': 'cubicchunks_at.cfg'
