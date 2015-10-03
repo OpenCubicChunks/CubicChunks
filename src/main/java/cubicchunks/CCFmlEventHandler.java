@@ -21,21 +21,40 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
+package cubicchunks;
 
-package cubicchunks.util;
-
-import java.lang.reflect.Field;
-import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-public class WorldClientAccess {
-	private static final Field wc_clientChunkProvider = ReflectionUtil.findFieldNonStatic(WorldClient.class, ChunkProviderClient.class);
-	
-	static {
-		wc_clientChunkProvider.setAccessible(true);
+public class CCFmlEventHandler {
+
+	private final CubicChunkSystem ccSystem;
+
+	public CCFmlEventHandler(CubicChunkSystem ccSystem) {
+		this.ccSystem = ccSystem;
 	}
-	
-	public static final void setChunkProviderClient(WorldClient wc, ChunkProviderClient cpc) {
-		ReflectionUtil.set(wc, wc_clientChunkProvider, cpc);
+
+	@SubscribeEvent
+	public void onWorldTick(TickEvent.WorldTickEvent evt) {
+		try {
+			System.out.println(evt.world.getClass() + ", phase=" + evt.phase + ", side=" + evt.side + ", type=" + evt.type);
+			World world = evt.world;
+			if (evt.phase == TickEvent.Phase.END && ccSystem.isTallWorld(world)) {
+				switch (evt.side) {
+					case CLIENT:
+						ccSystem.onWorldClientTick((WorldClient) world);
+						break;
+					case SERVER:
+						ccSystem.onWorldServerTick((WorldServer) world);
+						break;
+				}
+			}
+		}catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
 	}
 }

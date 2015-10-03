@@ -214,7 +214,7 @@ public class CubePlayerManager extends PlayerManager {
 		// responsibilities:
 		// update chunk properties
 		// send chunk updates to players
-		
+		try{
 		for (CubeWatcher watcher : this.m_watchers.values()) {
 			watcher.sendUpdates();
 			watcher.tick();
@@ -224,6 +224,10 @@ public class CubePlayerManager extends PlayerManager {
 		if (this.m_players.isEmpty() && !this.m_worldServer.provider.canRespawnHere()) {
 			// unload everything
 			m_cubeCache.unloadAllChunks();
+		}
+		}catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
 		}
 	}
 	

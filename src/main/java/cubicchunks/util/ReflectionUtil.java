@@ -58,4 +58,21 @@ public class ReflectionUtil {
 		}
 		return found;
 	}
+
+	public static final void removeFinalModifier(Field f) {
+		int mod = f.getModifiers();
+		mod = mod & ~Modifier.FINAL;
+		Field modifiersField = null;
+		try {
+			modifiersField = Field.class.getDeclaredField("modifiers");
+		} catch (NoSuchFieldException e) {
+			throw new AssertionError("Field modifiers not found in class Field", e);
+		}
+		modifiersField.setAccessible(true);
+		try {
+			modifiersField.setInt(f, mod);
+		} catch (IllegalAccessException e) {
+			throw new AssertionError("Cannot set field modifiers in class Field", e);
+		}
+	}
 }

@@ -28,16 +28,16 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 
 import net.minecraft.world.WorldType;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.apache.logging.log4j.Logger;
 
 @Mod(
 	modid = TallWorldsMod.MODID,
 	name = "CubicChunks",
-	version = "1.8.11-0.5"
+	version = "${version}"
 )
 public class TallWorldsMod {
 	
@@ -50,6 +50,7 @@ public class TallWorldsMod {
 	public static WorldType CC_WORLD_TYPE;
 	private CubicChunkSystem ccSystem;
 	private CCEventHandler evtHandler;
+	private CCFmlEventHandler fmlEvtHandler;
 	
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
@@ -65,8 +66,10 @@ public class TallWorldsMod {
 		
 		CC_WORLD_TYPE = new CubicChunksWorldType(ccSystem);
 		this.evtHandler = new CCEventHandler(ccSystem);
+		this.fmlEvtHandler = new CCFmlEventHandler(ccSystem);
 		
-		MinecraftForge.EVENT_BUS.register(evtHandler);
+		MinecraftForge.EVENT_BUS.register(this.evtHandler);
+		FMLCommonHandler.instance().bus().register(this.fmlEvtHandler);
 		//TODO: Port it to forge
 		/*
 		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketBulkCubeData.class);

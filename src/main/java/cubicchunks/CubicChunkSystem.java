@@ -23,10 +23,6 @@
  */
 package cubicchunks;
 
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.*;
-
-import java.util.Random;
-
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.generator.GeneratorPipeline;
@@ -43,31 +39,25 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
-import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.renderer.ChunkRenderContainer;
-import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ClassInheritanceMultiMap;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
-import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.WorldSettings;
+import net.minecraft.world.*;
 import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 
+import java.util.Random;
+
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.SEA_LEVEL;
+
+//TODO: Get rid of this class, move it's parts to other classes
 public class CubicChunkSystem {
 
 	private ClassInheritanceMultiMap m_emptyEntitySet;
@@ -80,6 +70,7 @@ public class CubicChunkSystem {
 			ServerCubeCache serverCubeCache = new ServerCubeCache(worldServer);
 			WorldServerContext.put(worldServer, new WorldServerContext(worldServer, serverCubeCache));
 			return serverCubeCache;
+			
 		}
 		return null;
 	}

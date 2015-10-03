@@ -23,12 +23,14 @@
  */
 package cubicchunks.util;
 
+import net.minecraft.server.management.PlayerManager;
+import net.minecraft.world.SpawnerAnimals;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
+
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.List;
-import net.minecraft.server.management.PlayerManager;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class WorldServerAccess {
 	private static final Field ws_pendingTickListEntriesHashSet = 
@@ -37,11 +39,13 @@ public class WorldServerAccess {
 			ReflectionHelper.findField(WorldServer.class, "pendingTickListEntriesThisTick", "field_94579_S");
 	
 	private static final Field ws_playerManager = ReflectionUtil.findFieldNonStatic(WorldServer.class, PlayerManager.class);
-	
+	private static final Field ws_mobSpawner = ReflectionUtil.findFieldNonStatic(WorldServer.class, SpawnerAnimals.class);
+
 	static {
 		ws_pendingTickListEntriesHashSet.setAccessible(true);
 		ws_pendingTickListEntriesThisTick.setAccessible(true);
 		ws_playerManager.setAccessible(true);
+		ws_mobSpawner.setAccessible(true); ReflectionUtil.removeFinalModifier(ws_mobSpawner);
 	}
 	
 	public static final List getPendingTickListEntriesThisTick(WorldServer ws) {
@@ -54,5 +58,9 @@ public class WorldServerAccess {
 	
 	public static final void setPlayerManager(WorldServer ws, PlayerManager pm) {
 		ReflectionUtil.set(ws, ws_playerManager, pm);
+	}
+
+	public static final void setMobSpawner(WorldServer ws, SpawnerAnimals sa) {
+		ReflectionUtil.set(ws, ws_mobSpawner, sa);
 	}
 }

@@ -45,6 +45,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.IProgressUpdate;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.gen.ChunkProviderServer;
 import org.apache.logging.log4j.Logger;
 
@@ -70,6 +71,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		this.loadedColumns = Maps.newHashMap();
 		this.blankColumn = new BlankColumn(worldServer, 0, 0);
 		this.cubesToUnload = new ArrayDeque<Long>();
+		
+		//set vanilla fields
+		super.chunkLoader = new AnvilChunkLoader(worldServer.getSaveHandler().getWorldDirectory());
+		super.serverChunkGenerator = null;//todo: fixit
 	}
 	
 	@Override
@@ -268,6 +273,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	
 	@Override
 	public boolean unloadQueuedChunks() {
+		try{
 		// NOTE: the return value is completely ignored
 		
 		if (this.worldServer.disableLevelSaving) {
@@ -308,6 +314,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		}
 		
 		return false;
+		}catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
 	}
 	
 	public void saveAllChunks() {

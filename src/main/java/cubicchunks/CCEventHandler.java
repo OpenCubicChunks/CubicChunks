@@ -24,12 +24,9 @@
 
 package cubicchunks;
 
-import cubicchunks.server.ServerCubeCache;
-import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.WorldAccess;
 import cubicchunks.util.WorldClientAccess;
 import cubicchunks.util.WorldServerAccess;
-import cubicchunks.world.WorldContext;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.world.World;
@@ -61,6 +58,7 @@ public class CCEventHandler {
 		worldServer.theChunkProviderServer = cubeCache;
 		WorldAccess.setChunkProvider(worldServer, cubeCache);
 		WorldServerAccess.setPlayerManager(worldServer, cc.getPlayerManager(worldServer));
+		worldServer.getGameRules().setOrCreateGameRule("doMobSpawning", String.valueOf(false));
 	}
 	
 	private void modifyWorld(WorldClient worldClient) {
