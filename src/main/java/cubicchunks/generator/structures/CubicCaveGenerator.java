@@ -69,11 +69,8 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 					f2 *= this.rand.nextFloat() * this.rand.nextFloat() * 3.0F + 1.0F;
 				}
 
-				this.generateNode(cube, this.rand.nextLong(), xOrigin, yOrigin, zOrigin, x1, y1, z1, f2/*
-																										 * *
-																										 * 2.0F
-																										 */, curve,
-						angle, 0, 0, /* 0.5D */1.0D);
+				this.generateNode(cube, this.rand.nextLong(), xOrigin, yOrigin, zOrigin, x1, y1, z1, f2, curve,
+						angle, 0, 0, 1.0D);
 			}
 		}
 	}

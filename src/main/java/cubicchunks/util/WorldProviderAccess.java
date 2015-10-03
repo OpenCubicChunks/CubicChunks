@@ -27,9 +27,13 @@ import java.lang.reflect.Field;
 import net.minecraft.world.WorldProvider;
 
 public class WorldProviderAccess {
-	private static final Field generatorSettings = ReflectionUtil.findField(WorldProvider.class, String.class);
+	private static final Field wp_generatorSettings = ReflectionUtil.findFieldNonStatic(WorldProvider.class, String.class);
+	
+	static {
+		wp_generatorSettings.setAccessible(true);
+	}
 	
 	public static final String getGeneratorSettings(WorldProvider wp) {
-		return ReflectionUtil.get(wp, generatorSettings, String.class);
+		return ReflectionUtil.get(wp, wp_generatorSettings, String.class);
 	}
 }

@@ -26,6 +26,7 @@ package cubicchunks.util;
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.List;
+import net.minecraft.server.management.PlayerManager;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
@@ -35,11 +36,23 @@ public class WorldServerAccess {
 	private static final Field ws_pendingTickListEntriesThisTick = 
 			ReflectionHelper.findField(WorldServer.class, "pendingTickListEntriesThisTick", "field_94579_S");
 	
+	private static final Field ws_playerManager = ReflectionUtil.findFieldNonStatic(WorldServer.class, PlayerManager.class);
+	
+	static {
+		ws_pendingTickListEntriesHashSet.setAccessible(true);
+		ws_pendingTickListEntriesThisTick.setAccessible(true);
+		ws_playerManager.setAccessible(true);
+	}
+	
 	public static final List getPendingTickListEntriesThisTick(WorldServer ws) {
 		return ReflectionUtil.get(ws, ws_pendingTickListEntriesThisTick, List.class);
 	}
 	
 	public static final HashSet getPendingTickListEntriesHashSet(WorldServer ws) {
 		return ReflectionUtil.get(ws, ws_pendingTickListEntriesHashSet, HashSet.class);
+	}
+	
+	public static final void setPlayerManager(WorldServer ws, PlayerManager pm) {
+		ReflectionUtil.set(ws, ws_playerManager, pm);
 	}
 }

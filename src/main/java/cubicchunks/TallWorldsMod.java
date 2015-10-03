@@ -26,14 +26,12 @@ package cubicchunks;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 
-import cubicchunks.client.ClientCubeCache;
-import cubicchunks.server.CubeIO;
-import cubicchunks.server.CubePlayerManager;
-import cubicchunks.server.ServerCubeCache;
-import cubicchunks.world.column.Column;
+import net.minecraft.world.WorldType;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.apache.logging.log4j.Logger;
 
 @Mod(
@@ -49,12 +47,9 @@ public class TallWorldsMod {
 	@Instance(value = MODID)
 	public static TallWorldsMod instance;
 	
-	private CubicChunkSystem m_system;
-	
-	public CubicChunkSystem getSystem() {
-		// TODO: maybe this could be named better...
-		return m_system;
-	}
+	public static WorldType CC_WORLD_TYPE;
+	private CubicChunkSystem ccSystem;
+	private CCEventHandler evtHandler;
 	
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
@@ -64,26 +59,14 @@ public class TallWorldsMod {
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		
-		LOGGER.info("Initializing Tall Worlds...");
+		LOGGER.info("Initializing Tall Worlds..."); 
 		
-		// HACKHACK: tweak the class load order so the runtime obfuscator works correctly
-		// load subclasses of Minecraft classes first, so the runtime obfuscator can record
-		// the superclass information before any other classes need it
-		// TODO: make a way to explicitly record superclass info without needing to change load order
-		Column.class.getName();
-		CubePlayerManager.class.getName();
-		ServerCubeCache.class.getName();
+		this.ccSystem = new CubicChunkSystem();
 		
-		// client only loads
-		//CodeAnnotation.startClientOnly();
-		ClientCubeCache.class.getName();
-		//CodeAnnotation.stopClientOnly();
+		CC_WORLD_TYPE = new CubicChunksWorldType(ccSystem);
+		this.evtHandler = new CCEventHandler(ccSystem);
 		
-		CubeIO.class.getName();
-		
-		// register our chunk system
-		m_system = new CubicChunkSystem();
-		
+		MinecraftForge.EVENT_BUS.register(evtHandler);
 		//TODO: Port it to forge
 		/*
 		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketBulkCubeData.class);

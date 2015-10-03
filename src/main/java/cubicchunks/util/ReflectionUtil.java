@@ -24,20 +24,29 @@
 package cubicchunks.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 public class ReflectionUtil {
-	public static final <T> T get(Object obj, Field f, Class<T> ret) {
+	public static final <T> T get(Object inObject, Field field, Class<T> fieldType) {
 		try {
-			return (T) f.get(obj);
+			return (T) field.get(inObject);
 		} catch (IllegalArgumentException | IllegalAccessException ex) {
 			throw new RuntimeException(ex);
 		} 
 	}
 	
-	public static final Field findField(Class<?> inClass, Class<?> type) {
+	public static void set(Object inObject, Field field, Object newValue) {
+		try {
+			field.set(inObject, newValue);
+		} catch (IllegalArgumentException | IllegalAccessException ex) {
+			throw new RuntimeException(ex);
+		} 
+	}
+		
+	public static final Field findFieldNonStatic(Class<?> inClass, Class<?> type) {
 		Field found = null;
 		for(Field f : inClass.getDeclaredFields()) {
-			if(f.getType().equals(type)) {
+			if(f.getType().equals(type) && !Modifier.isStatic(f.getModifiers())) {
 				if(found != null) {
 					throw new RuntimeException("More than one field of type " + type + " found in class " + inClass);
 				}

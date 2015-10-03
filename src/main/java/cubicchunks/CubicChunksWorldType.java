@@ -21,47 +21,17 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
 
-import net.minecraft.util.BlockPos;
+package cubicchunks;
 
-/**
- * Mutable block pos to optimize lighting
- */
-public class MutableBlockPos extends BlockPos {
+import net.minecraft.world.WorldType;
 
-	public int x, y, z;
+class CubicChunksWorldType extends WorldType {
+	private final CubicChunkSystem ccSystem;
 
-	public MutableBlockPos() {
-		super(0, 0, 0);
-	}
-
-	public MutableBlockPos(int x, int y, int z) {
-		super(0, 0, 0);
-
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	}
-
-	@Override
-	public int getX() {
-		return x;
-	}
-
-	@Override
-	public int getY() {
-		return y;
-	}
-
-	@Override
-	public int getZ() {
-		return z;
+	public CubicChunksWorldType(CubicChunkSystem ccSystem) {
+		super("CubicChunks");
+		this.ccSystem = ccSystem;
 	}
 	
-	public void setBlockPos(int x, int y, int z) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	}
 }

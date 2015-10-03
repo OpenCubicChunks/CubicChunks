@@ -75,7 +75,7 @@ public class CubicChunkSystem {
 	public CubicChunkSystem() {
 		m_emptyEntitySet = new ClassInheritanceMultiMap(Entity.class);
 	}
-	public ChunkProviderServer getServerChunkCache(WorldServer worldServer) {
+	public ChunkProviderServer getServerChunkCacheAndInitWorld(WorldServer worldServer) {
 		if (isTallWorld(worldServer)) {
 			ServerCubeCache serverCubeCache = new ServerCubeCache(worldServer);
 			WorldServerContext.put(worldServer, new WorldServerContext(worldServer, serverCubeCache));
@@ -85,7 +85,7 @@ public class CubicChunkSystem {
 	}
 
 	//@ClientOnly
-	public ChunkProviderClient getClientChunkCache(WorldClient worldClient) {
+	public ChunkProviderClient getClientChunkCacheAndInitWorld(WorldClient worldClient) {
 		if (isTallWorld(worldClient)) {
 			ClientCubeCache clientCubeCache = new ClientCubeCache(worldClient);
 			WorldClientContext.put(worldClient, new WorldClientContext(worldClient, clientCubeCache));
@@ -135,9 +135,9 @@ public class CubicChunkSystem {
 		}
 	}
 
-	private boolean isTallWorld(World world) {
+	public boolean isTallWorld(World world) {
 		// for now, only tall-ify the overworld
-		return world.provider.getDimensionId()== 0;
+		return world.provider.getDimensionId()== 0 && world.getWorldType() == TallWorldsMod.CC_WORLD_TYPE;
 	}
 
 	//@ClientOnly
