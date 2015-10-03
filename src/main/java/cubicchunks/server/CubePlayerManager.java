@@ -23,28 +23,9 @@
  */
 package cubicchunks.server;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import net.minecraft.entity.EntityTracker;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.management.PlayerManager;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.WorldServer;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cubicchunks.TallWorldsMod;
-
 import cubicchunks.network.PacketBulkCubeData;
 import cubicchunks.network.PacketUnloadColumns;
 import cubicchunks.network.PacketUnloadCubes;
@@ -54,9 +35,18 @@ import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.entity.EntityTracker;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
+import net.minecraft.server.management.PlayerManager;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
+import net.minecraft.world.WorldServer;
 import org.apache.logging.log4j.Logger;
+
+import java.util.*;
 
 public class CubePlayerManager extends PlayerManager {
 	
@@ -214,7 +204,6 @@ public class CubePlayerManager extends PlayerManager {
 		// responsibilities:
 		// update chunk properties
 		// send chunk updates to players
-		try{
 		for (CubeWatcher watcher : this.m_watchers.values()) {
 			watcher.sendUpdates();
 			watcher.tick();
@@ -224,10 +213,6 @@ public class CubePlayerManager extends PlayerManager {
 		if (this.m_players.isEmpty() && !this.m_worldServer.provider.canRespawnHere()) {
 			// unload everything
 			m_cubeCache.unloadAllChunks();
-		}
-		}catch(Throwable t) {
-			t.printStackTrace();
-			throw t;
 		}
 	}
 	

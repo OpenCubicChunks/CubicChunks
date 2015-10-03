@@ -39,22 +39,17 @@ public class CCFmlEventHandler {
 
 	@SubscribeEvent
 	public void onWorldTick(TickEvent.WorldTickEvent evt) {
-		try {
-			System.out.println(evt.world.getClass() + ", phase=" + evt.phase + ", side=" + evt.side + ", type=" + evt.type);
-			World world = evt.world;
-			if (evt.phase == TickEvent.Phase.END && ccSystem.isTallWorld(world)) {
-				switch (evt.side) {
-					case CLIENT:
-						ccSystem.onWorldClientTick((WorldClient) world);
-						break;
-					case SERVER:
-						ccSystem.onWorldServerTick((WorldServer) world);
-						break;
-				}
+		System.out.println(evt.world.getClass() + ", phase=" + evt.phase + ", side=" + evt.side + ", type=" + evt.type);
+		World world = evt.world;
+		if (evt.phase == TickEvent.Phase.END && ccSystem.isTallWorld(world)) {
+			switch (evt.side) {
+				case CLIENT:
+					ccSystem.onWorldClientTick((WorldClient) world);
+					break;
+				case SERVER:
+					ccSystem.onWorldServerTick((WorldServer) world);
+					break;
 			}
-		}catch(Throwable t) {
-			t.printStackTrace();
-			throw t;
 		}
 	}
 }

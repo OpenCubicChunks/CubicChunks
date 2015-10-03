@@ -23,15 +23,8 @@
  */
 package cubicchunks.server;
 
-import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Queue;
-
 import com.google.common.collect.Maps;
 import cubicchunks.TallWorldsMod;
-
 import cubicchunks.generator.ColumnGenerator;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
@@ -48,6 +41,12 @@ import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.gen.ChunkProviderServer;
 import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Queue;
 
 public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	
@@ -273,7 +272,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	
 	@Override
 	public boolean unloadQueuedChunks() {
-		try{
 		// NOTE: the return value is completely ignored
 		
 		if (this.worldServer.disableLevelSaving) {
@@ -314,10 +312,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		}
 		
 		return false;
-		}catch(Throwable t) {
-			t.printStackTrace();
-			throw t;
-		}
 	}
 	
 	public void saveAllChunks() {
