@@ -66,7 +66,7 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public int getHeight(final int a1, final int a2) {
+	public int getHeightValue(final int a1, final int a2) {
 		return 0;
 	}
 	
@@ -124,7 +124,7 @@ public class BlankColumn extends Column {
 	
 	//getBroghtestLight. It actually returns light value... 
 	@Override
-	public int setLight(BlockPos pos, int skyLightDampeningTerm) {
+	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
 		if (!this.getWorld().provider.getHasNoSky() && skyLightDampeningTerm < EnumSkyBlock.SKY.defaultLightValue) {
 			return EnumSkyBlock.SKY.defaultLightValue - skyLightDampeningTerm;
 		}

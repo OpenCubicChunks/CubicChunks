@@ -23,9 +23,6 @@
  */
 package cubicchunks.network;
 
-import net.minecraft.network.INetHandler;
-import net.minecraft.network.ThreadQuickExitException;
-import net.minecraft.util.BlockPos;
 import cubicchunks.TallWorldsMod;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
@@ -36,6 +33,7 @@ import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.network.INetHandler;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IThreadListener;
@@ -58,8 +56,7 @@ public class ClientHandler implements INetHandler {
 	}
 	
 	public void handle(final PacketBulkCubeData packet) {
-		
-		// TODO: build better network system in M3L
+
 		IThreadListener taskQueue = Minecraft.getMinecraft();
 		if (!taskQueue.isCallingFromMinecraftThread()) {
 			taskQueue.addScheduledTask(new Runnable() {
@@ -68,7 +65,7 @@ public class ClientHandler implements INetHandler {
 					handle(packet);
 				}
 			});
-			throw ThreadQuickExitException.field_179886_a;//the instance
+			return;
 		}
 		
 		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
@@ -128,8 +125,7 @@ public class ClientHandler implements INetHandler {
 	}
 	
 	public void handle(final PacketUnloadCubes packet) {
-		
-		// TODO: build better network system in M3L
+
 		IThreadListener taskQueue = Minecraft.getMinecraft();
 		if (!taskQueue.isCallingFromMinecraftThread()) {
 			taskQueue.addScheduledTask(new Runnable() {
@@ -138,7 +134,7 @@ public class ClientHandler implements INetHandler {
 					handle(packet);
 				}
 			});
-			throw ThreadQuickExitException.field_179886_a;
+			return;
 		}
 		
 		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
@@ -155,8 +151,7 @@ public class ClientHandler implements INetHandler {
 	}
 	
 	public void handle(final PacketUnloadColumns packet) {
-		
-		// TODO: build better network system in M3L
+
 		IThreadListener taskQueue = Minecraft.getMinecraft();
 		if (!taskQueue.isCallingFromMinecraftThread()) {
 			taskQueue.addScheduledTask(new Runnable() {
@@ -165,7 +160,7 @@ public class ClientHandler implements INetHandler {
 					handle(packet);
 				}
 			});
-			throw ThreadQuickExitException.field_179886_a;
+			return;
 		}
 		
 		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
@@ -181,8 +176,7 @@ public class ClientHandler implements INetHandler {
 	}
 	
 	public void handle(final PacketCubeChange packet) {
-		
-		// TODO: build better network system in M3L
+
 		IThreadListener taskQueue = Minecraft.getMinecraft();
 		if (!taskQueue.isCallingFromMinecraftThread()) {
 			taskQueue.addScheduledTask(new Runnable() {
@@ -191,7 +185,7 @@ public class ClientHandler implements INetHandler {
 					handle(packet);
 				}
 			});
-			throw ThreadQuickExitException.field_179886_a;
+			return;
 		}
 		
 		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
@@ -217,8 +211,7 @@ public class ClientHandler implements INetHandler {
 	}
 	
 	public void handle(final PacketCubeBlockChange packet) {
-		
-		// TODO: build better network system in M3L
+
 		IThreadListener taskQueue = Minecraft.getMinecraft();
 		if (!taskQueue.isCallingFromMinecraftThread()) {
 			taskQueue.addScheduledTask(new Runnable() {
@@ -227,7 +220,7 @@ public class ClientHandler implements INetHandler {
 					handle(packet);
 				}
 			});
-			throw ThreadQuickExitException.field_179886_a;
+			return;
 		}
 		
 		WorldClient worldClient = Minecraft.getMinecraft().theWorld;

@@ -349,8 +349,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 	
 	@Override
-	//getSpawnableAtPos
-    public List<BiomeGenBase.SpawnListEntry> func_177458_a(final EnumCreatureType a1, final BlockPos a2) {
+    public List<BiomeGenBase.SpawnListEntry> getPossibleCreatures(final EnumCreatureType a1, final BlockPos a2) {
 		return null;
 	}
 	

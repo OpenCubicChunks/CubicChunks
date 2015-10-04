@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cubicchunks.TallWorldsMod;
 import cubicchunks.network.PacketBulkCubeData;
+import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadColumns;
 import cubicchunks.network.PacketUnloadCubes;
 import cubicchunks.util.AddressTools;
@@ -347,7 +348,7 @@ public class CubePlayerManager extends PlayerManager {
 		//LOGGER.trace("Server cubes to load: {}", info.cubesToLoad.size());
 		
 		// pull off enough cubes from the queue to fit in a packet
-		final int MaxCubesToSend = 100;
+		final int MaxCubesToSend = 8;
 		List<Cube> cubesToSend = new ArrayList<Cube>();
 		List<TileEntity> blockEntitiesToSend = new ArrayList<>();
 		Iterator<Cube> iter = info.cubesToLoad.iterator();
@@ -357,7 +358,7 @@ public class CubePlayerManager extends PlayerManager {
 			// check to see if the cube is live before sending
 			// if it is not live, skip to the next cube in the iterator
 			if (!cube.getGeneratorStage().isLastStage()) {
-				LOGGER.trace("Cube at {}, {}, {} at stage {}, skipping!", cube.getX(), cube.getY(), cube.getZ(), cube.getGeneratorStage());
+				//LOGGER.trace("Cube at {}, {}, {} at stage {}, skipping!", cube.getX(), cube.getY(), cube.getZ(), cube.getGeneratorStage());
 				continue;
 			}
 			
@@ -397,15 +398,13 @@ public class CubePlayerManager extends PlayerManager {
 		}*/
 
 		// send the cube data
-		player.playerNetServerHandler.sendPacket(new PacketBulkCubeData(columnsToSend, cubesToSend));
-		
-		/*
+		PacketDispatcher.sendTo(new PacketBulkCubeData(columnsToSend, cubesToSend), player);
+
 		LOGGER.trace("Server sent {}/{} cubes, {}/{} columns to player",
 			cubesToSend.size(), cubesToSend.size() + info.cubesToLoad.size(),
 			columnsToSend.size(), columnsToSend.size() + info.columnAddressesToLoad.size()
 		);
-		*/
-		
+
 		// tell the cube watchers which cubes were sent for this player
 		for (Cube cube : cubesToSend) {
 			
@@ -439,15 +438,15 @@ public class CubePlayerManager extends PlayerManager {
 		for (int i=0; i<numPackets; i++) {
 			int from = i*PacketUnloadCubes.MAX_SIZE;
 			int to = Math.min((i+1)*PacketUnloadCubes.MAX_SIZE, info.cubesToUnload.size() - 1);
-			player.playerNetServerHandler.sendPacket(new PacketUnloadCubes(info.cubesToUnload.subList(from, to)));
+			PacketDispatcher.sendTo(new PacketUnloadCubes(info.cubesToUnload.subList(from, to)), player);
 			//LOGGER.debug("Server sent {} cubes to player to unload", info.cubesToUnload.size());
 		}
 		info.cubesToUnload.clear();
 		
 		//even with render distance 64 and teleporting it's not possible with current MAX_SIZE
 		assert info.columnAddressesToUnload.size() < PacketUnloadColumns.MAX_SIZE;
-		player.playerNetServerHandler.sendPacket(new PacketUnloadColumns(info.columnAddressesToUnload));
-		//LOGGER.debug("Server sent {} columns to player to unload", info.columnAddressesToUnload.size());
+		PacketDispatcher.sendTo(new PacketUnloadColumns(info.columnAddressesToUnload), player);
+		LOGGER.debug("Server sent {} columns to player to unload", info.columnAddressesToUnload.size());
 		info.columnAddressesToUnload.clear();
 	}
 	

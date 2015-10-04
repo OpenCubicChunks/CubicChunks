@@ -23,23 +23,26 @@
  */
 package cubicchunks.network;
 
-import java.io.IOException;
-import java.util.Collection;
-
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.network.INetHandler;
-import net.minecraft.network.PacketBuffer;
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.network.Packet;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import java.util.Collection;
 
-public class PacketCubeBlockChange implements Packet {
+public class PacketCubeBlockChange implements IMessage {
 
 	public long cubeAddress;
 	public int[] localAddresses;
 	public IBlockState[] blockStates;
-	
+
+	public PacketCubeBlockChange(){}
+
 	public PacketCubeBlockChange(Cube cube, Collection<Integer> localAddresses) {
 		this.cubeAddress = cube.getAddress();
 		this.localAddresses = new int[localAddresses.size()];
@@ -57,21 +60,34 @@ public class PacketCubeBlockChange implements Packet {
 	}
 
 	@Override
-	public void readPacketData(PacketBuffer in)
-	throws IOException {
-		// you know what... I think these aren't even used in standalone mode
+	public void fromBytes(ByteBuf in) {
+		this.cubeAddress = in.readLong();
+		short numBlocks = in.readShort();
+		localAddresses = new int[numBlocks];
+		blockStates = new IBlockState[numBlocks];
+
+		for(int i = 0; i < numBlocks; i++) {
+			localAddresses[i] = in.readInt();
+			blockStates[i] = (IBlockState) Block.BLOCK_STATE_IDS.getByValue(ByteBufUtils.readVarInt(in, 4));
+		}
 	}
 
 	@Override
-	public void writePacketData(PacketBuffer out)
-	throws IOException {
-		// you know what... I think these aren't even used in standalone mode
+	public void toBytes(ByteBuf out) {
+		out.writeLong(cubeAddress);
+		out.writeShort(localAddresses.length);
+		for(int i = 0; i < localAddresses.length; i++) {
+			out.writeInt(localAddresses[i]);
+			ByteBufUtils.writeVarInt(out, Block.BLOCK_STATE_IDS.get(blockStates[i]), 4);
+		}
 	}
 
-	@Override
-	public void processPacket(INetHandler vanillaHandler) {
-		// don't use the vanilla handler, use our own
-		// TODO: make a real network system for M3L
-		ClientHandler.getInstance().handle(this);
+	public static class Handler extends AbstractClientMessageHandler<PacketCubeBlockChange> {
+
+		@Override
+		public IMessage handleClientMessage(EntityPlayer player, PacketCubeBlockChange message, MessageContext ctx) {
+			ClientHandler.getInstance().handle(message);
+			return null;
+		}
 	}
 }

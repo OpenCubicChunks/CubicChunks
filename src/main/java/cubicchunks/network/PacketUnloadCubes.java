@@ -23,21 +23,22 @@
  */
 package cubicchunks.network;
 
-import java.io.IOException;
+import cubicchunks.world.cube.Cube;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+
 import java.util.List;
 
-import net.minecraft.network.INetHandler;
-import net.minecraft.network.PacketBuffer;
-import cubicchunks.world.cube.Cube;
-import net.minecraft.network.Packet;
+public class PacketUnloadCubes implements IMessage {
 
-
-public class PacketUnloadCubes implements Packet {
-
-	public static final int MAX_SIZE = 65535;
+	public static final int MAX_SIZE = 0xFFFF;
 	
 	public long[] cubeAddresses;
-	
+
+	public PacketUnloadCubes(){}
+
 	public PacketUnloadCubes(List<Cube> cubes) {
 		
 		if (cubes.size() > MAX_SIZE) {
@@ -53,8 +54,7 @@ public class PacketUnloadCubes implements Packet {
 	}
 
 	@Override
-	public void readPacketData(PacketBuffer in)
-	throws IOException {
+	public void fromBytes(ByteBuf in) {
 		cubeAddresses = new long[in.readUnsignedShort()];
 		for (int i=0; i<cubeAddresses.length; i++) {
 			cubeAddresses[i] = in.readLong();
@@ -62,18 +62,19 @@ public class PacketUnloadCubes implements Packet {
 	}
 
 	@Override
-	public void writePacketData(PacketBuffer out)
-	throws IOException {
+	public void toBytes(ByteBuf out) {
 		out.writeShort(cubeAddresses.length);
 		for (int i=0; i<cubeAddresses.length; i++) {
 			out.writeLong(cubeAddresses[i]);
 		}
 	}
 
-	@Override
-	public void processPacket(INetHandler vanillaHandler) {
-		// don't use the vanilla handler, use our own
-		// TODO: make a real network system for M3L
-		ClientHandler.getInstance().handle(this);
+	public static class Handler extends AbstractClientMessageHandler<PacketUnloadCubes> {
+
+		@Override
+		public IMessage handleClientMessage(EntityPlayer player, PacketUnloadCubes message, MessageContext ctx) {
+			ClientHandler.getInstance().handle(message);
+			return null;
+		}
 	}
 }

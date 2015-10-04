@@ -21,59 +21,16 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.network;
+package cubicchunks.proxy;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import java.util.List;
-
-public class PacketUnloadColumns implements IMessage {
-
-	public static final int MAX_SIZE = 0xFFFF;
-	
-	public long[] columnAddresses;
-
-	public PacketUnloadColumns(){}
-	public PacketUnloadColumns(List<Long> columns) {
-		
-		if (columns.size() > MAX_SIZE) {
-			throw new IllegalArgumentException("Don't send more than " + MAX_SIZE + " column unloads at a time!");
-		}
-		
-		columnAddresses = new long[columns.size()];
-		
-		int i = 0;
-		for (long addr : columns) {
-			columnAddresses[i] = addr;
-			i++;
-		}
-	}
-
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		columnAddresses = new long[buf.readUnsignedShort()];
-		for (int i=0; i<columnAddresses.length; i++) {
-			columnAddresses[i] = buf.readLong();
-		}
-	}
-
-	@Override
-	public void toBytes(ByteBuf buf) {
-		buf.writeShort(columnAddresses.length);
-		for (long addr : columnAddresses) {
-			buf.writeLong(addr);
-		}
-	}
-
-	public static class Handler extends AbstractClientMessageHandler<PacketUnloadColumns> {
-
-		@Override
-		public IMessage handleClientMessage(EntityPlayer player, PacketUnloadColumns message, MessageContext ctx) {
-			ClientHandler.getInstance().handle(message);
-			return null;
-		}
+public class CommonProxy {
+	/**
+	 * Returns a side-appropriate EntityPlayer for use during message handling
+	 */
+	public EntityPlayer getPlayerEntity(MessageContext ctx) {
+		return ctx.getServerHandler().playerEntity;
 	}
 }

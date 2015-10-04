@@ -23,31 +23,33 @@
  */
 package cubicchunks;
 
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-
+import cubicchunks.network.PacketDispatcher;
+import cubicchunks.proxy.CommonProxy;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.Logger;
 
-@Mod(
-	modid = TallWorldsMod.MODID,
-	name = "CubicChunks",
-	version = "${version}"
-)
+@Mod(modid = TallWorldsMod.MODID, name = "CubicChunks", version = "${version}")
 public class TallWorldsMod {
-	
-	public static final String MODID = "cubicchunks";
+
 	public static Logger LOGGER;
-	
+
+	public static final String MODID = "cubicchunks";
+
 	@Instance(value = MODID)
 	public static TallWorldsMod instance;
-	
+
+	@SidedProxy(clientSide="cubicchunks.proxy.ClientProxy", serverSide="cubicchunks.proxy.CommonProxy")
+	public static CommonProxy proxy;
 	public static WorldType CC_WORLD_TYPE;
+
 	private CubicChunkSystem ccSystem;
 	private CCEventHandler evtHandler;
 	private CCFmlEventHandler fmlEvtHandler;
@@ -55,13 +57,11 @@ public class TallWorldsMod {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
 		LOGGER = e.getModLog();
+		PacketDispatcher.registerPackets();
 	}
 	
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
-		
-		LOGGER.info("Initializing Tall Worlds..."); 
-		
 		this.ccSystem = new CubicChunkSystem();
 		
 		CC_WORLD_TYPE = new CubicChunksWorldType(ccSystem);
@@ -70,6 +70,8 @@ public class TallWorldsMod {
 		
 		MinecraftForge.EVENT_BUS.register(this.evtHandler);
 		FMLCommonHandler.instance().bus().register(this.fmlEvtHandler);
+
+
 		//TODO: Port it to forge
 		/*
 		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketBulkCubeData.class);

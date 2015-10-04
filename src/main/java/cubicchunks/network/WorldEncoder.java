@@ -23,16 +23,15 @@
  */
 package cubicchunks.network;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.world.chunk.NibbleArray;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.world.ChunkSectionHelper;
+import cubicchunks.util.ArrayConverter;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 
 public class WorldEncoder {
@@ -46,17 +45,14 @@ public class WorldEncoder {
 		if (!cube.isEmpty()) {
 			ExtendedBlockStorage storage = cube.getStorage();
 			
-			// 2. block IDs
-			out.write(ChunkSectionHelper.getBlockIDArray(storage));
-			
-			// 3. metadata
-			out.write(ChunkSectionHelper.getBlockMetaArray(storage).getData());
-			
-			// 4. block light
+			// 2. block IDs and metadata
+			out.write(ArrayConverter.toByteArray(storage.getData()));
+
+			// 3. block light
 			out.write(storage.getBlocklightArray().getData());
 			
 			if (!cube.getWorld().provider.getHasNoSky()) {
-				// 5. sky light
+				// 4. sky light
 				out.write(storage.getSkylightArray().getData());
 			}
 		}
@@ -95,23 +91,17 @@ public class WorldEncoder {
 		if (!isEmpty) {
 			ExtendedBlockStorage storage = cube.getStorage();
 
-			// 2. block IDs
+			// 2. block IDs and metadata
 			byte[] rawBlockIds = new byte[16*16*16*2];
 			in.read(rawBlockIds);
-			
-			int[] blockIds = ChunkSectionHelper.byteArrayToIntArray(rawBlockIds);
-			
-			// 3. metadata
-			NibbleArray blockMetadata = new NibbleArray();
-			in.read(blockMetadata.getData());
-			
-			ChunkSectionHelper.setBlockStates(storage, blockIds, blockMetadata);
-			
-			// 4. block light
+
+			storage.setData(ArrayConverter.toCharArray(rawBlockIds));
+
+			// 3. block light
 			in.read(storage.getBlocklightArray().getData());
 			
 			if (!cube.getWorld().provider.getHasNoSky()) {
-				// 5. sky light
+				// 4. sky light
 				in.read(storage.getSkylightArray().getData());
 			}
 			

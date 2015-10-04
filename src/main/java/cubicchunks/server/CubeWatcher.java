@@ -23,22 +23,22 @@
  */
 package cubicchunks.server;
 
+import com.google.common.collect.Maps;
+import cubicchunks.network.PacketCubeBlockChange;
+import cubicchunks.network.PacketCubeChange;
+import cubicchunks.network.PacketDispatcher;
+import cubicchunks.util.AddressTools;
+import cubicchunks.world.cube.Cube;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.Packet;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.BlockPos;
-import net.minecraft.world.World;
-
-import com.google.common.collect.Maps;
-
-import cubicchunks.network.PacketCubeBlockChange;
-import cubicchunks.network.PacketCubeChange;
-import cubicchunks.util.AddressTools;
-import cubicchunks.world.cube.Cube;
-import net.minecraft.network.Packet;
-import net.minecraft.tileentity.TileEntity;
 
 public class CubeWatcher {
 	
@@ -167,12 +167,22 @@ public class CubeWatcher {
 		}
 		sendPacketToAllPlayers(packet);
 	}
-	
+
+	//Java really needs templates...
 	private void sendPacketToAllPlayers(Packet packet) {
 		for (PlayerEntry entry : this.players.values()) {
 			// has this player seen this cube before?
 			if (entry.sawCube) {
 				entry.player.playerNetServerHandler.sendPacket(packet);
+			}
+		}
+	}
+
+	private void sendPacketToAllPlayers(IMessage packet) {
+		for (PlayerEntry entry : this.players.values()) {
+			// has this player seen this cube before?
+			if (entry.sawCube) {
+				PacketDispatcher.sendTo(packet, entry.player);
 			}
 		}
 	}

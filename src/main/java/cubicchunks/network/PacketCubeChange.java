@@ -23,22 +23,20 @@
  */
 package cubicchunks.network;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import net.minecraft.network.INetHandler;
-import net.minecraft.network.PacketBuffer;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.network.Packet;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import java.io.*;
 
-public class PacketCubeChange implements Packet {
+public class PacketCubeChange implements IMessage {
 	
 	public long cubeAddress;
 	public byte[] data;
+
+	public PacketCubeChange(){}
 
 	public PacketCubeChange(Cube cube) {
 		cubeAddress = cube.getAddress();
@@ -66,22 +64,26 @@ public class PacketCubeChange implements Packet {
 	}
 
 	@Override
-	public void readPacketData(PacketBuffer in)
-	throws IOException {
-		cubeAddress = in.readLong();
-		in.readBytes(data);
+	public void fromBytes(ByteBuf buf) {
+		cubeAddress = buf.readLong();
+		int len = buf.readInt();
+		data = new byte[len];
+		buf.readBytes(data);
 	}
 
 	@Override
-	public void writePacketData(PacketBuffer out)
-	throws IOException {
-		out.writeLong(cubeAddress);
-		out.writeBytes(data);
+	public void toBytes(ByteBuf buf) {
+		buf.writeLong(cubeAddress);
+		buf.writeInt(data.length);
+		buf.writeBytes(data);
 	}
 
-	@Override
-	public void processPacket(INetHandler vanillaHandler) {
-		// don't use the vanilla handler, use our own
-		ClientHandler.getInstance().handle(this);
+	public static class Handler extends AbstractClientMessageHandler<PacketCubeChange> {
+
+		@Override
+		public IMessage handleClientMessage(EntityPlayer player, PacketCubeChange message, MessageContext ctx) {
+			ClientHandler.getInstance().handle(message);
+			return null;
+		}
 	}
 }

@@ -27,10 +27,6 @@ import cubicchunks.generator.features.trees.BigTreeGenerator;
 import cubicchunks.generator.features.trees.SimpleTreeGenerator;
 import cubicchunks.generator.features.trees.TreeGenerator;
 import cubicchunks.util.WorldProviderAccess;
-
-import java.util.ArrayList;
-import java.util.Collection;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone;
 import net.minecraft.block.BlockTallGrass;
@@ -40,6 +36,9 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeDecorator;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.gen.ChunkProviderSettings;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class BiomeFeatures {
 	private final World world;
@@ -51,7 +50,7 @@ public class BiomeFeatures {
 		this.generators = new ArrayList<>(20);
 		BiomeDecorator decorator = biome.theBiomeDecorator;
 		
-		ChunkProviderSettings config = ChunkProviderSettings.Factory.func_177865_a(
+		ChunkProviderSettings config = ChunkProviderSettings.Factory.jsonToFactory(
 				WorldProviderAccess.getGeneratorSettings(world.provider)).func_177864_b();
 		
 		//clay generator

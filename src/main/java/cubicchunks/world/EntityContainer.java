@@ -23,19 +23,18 @@
  */
 package cubicchunks.world;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.world.World;
-
 import com.google.common.base.Predicate;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ClassInheritanceMultiMap;
+import net.minecraft.world.World;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class EntityContainer {
 	
@@ -83,9 +82,8 @@ public class EntityContainer {
 	}
 	
 	public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
-		//func_180215_b --> getIterableForType
-		for (T entity : (Iterable<T>) this.entities.func_180215_b(entityType)) {
-			if (entityType.isAssignableFrom(entity.getClass()) && entity.getBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(entity))) {
+		for (T entity : (Iterable<T>) this.entities.getByClass(entityType)) {
+			if (entityType.isAssignableFrom(entity.getClass()) && entity.getEntityBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(entity))) {
 				out.add(entity);
 			}
 		}
@@ -100,13 +98,13 @@ public class EntityContainer {
 				continue;
 			}
 			
-			if (entity.getBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(entity))) {
+			if (entity.getEntityBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(entity))) {
 				out.add(entity);
 				
 				// also check entity parts
 				if (entity.getParts() != null) {
 					for (Entity part : entity.getParts()) {
-						if (part != excludedEntity && part.getBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(part))) {
+						if (part != excludedEntity && part.getEntityBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(part))) {
 							out.add(part);
 						}
 					}

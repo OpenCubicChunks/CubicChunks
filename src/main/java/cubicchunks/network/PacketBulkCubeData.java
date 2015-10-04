@@ -23,29 +23,26 @@
  */
 package cubicchunks.network;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.List;
-
-import net.minecraft.network.INetHandler;
-import net.minecraft.network.PacketBuffer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.network.Packet;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+
+import java.io.*;
+import java.util.List;
 
 
-public class PacketBulkCubeData implements Packet {
+public class PacketBulkCubeData implements IMessage {
 
 	public long[] columnAddresses;
 	public long[] cubeAddresses;
 	public byte[] data;
 	private DataInputStream m_in;
-	
-	public PacketBulkCubeData() {
-	}
+
+	//this constructor must be there to instantiate packet via reflection
+	public PacketBulkCubeData() {}
 	
 	public PacketBulkCubeData(List<Column> columns, List<Cube> cubes) {
 		
@@ -117,10 +114,9 @@ public class PacketBulkCubeData implements Packet {
 		}
 		m_in = null;
 	}
-	
+
 	@Override
-	public void readPacketData(PacketBuffer in)
-	throws IOException {
+	public void fromBytes(ByteBuf in) {
 		cubeAddresses = new long[in.readUnsignedByte()];
 		for (int i=0; i<cubeAddresses.length; i++) {
 			cubeAddresses[i] = in.readLong();
@@ -129,27 +125,33 @@ public class PacketBulkCubeData implements Packet {
 		for (int i=0; i<columnAddresses.length; i++) {
 			columnAddresses[i] = in.readLong();
 		}
+		data = new byte[in.readInt()];
+		System.out.println("Receive " + data.length + " bytes, " + cubeAddresses.length + " cubes, " + columnAddresses.length + " columns");
 		in.readBytes(data);
 	}
 
 	@Override
-	public void writePacketData(PacketBuffer out)
-	throws IOException {
+	public void toBytes(ByteBuf out) {
 		out.writeByte(cubeAddresses.length);
 		for (int i=0; i<cubeAddresses.length; i++) {
 			out.writeLong(cubeAddresses[i]);
 		}
-		out.writeByte(cubeAddresses.length);
-		for (int i=0; i<cubeAddresses.length; i++) {
-			out.writeLong(cubeAddresses[i]);
+		out.writeByte(columnAddresses.length);
+		for (int i=0; i<columnAddresses.length; i++) {
+			out.writeLong(columnAddresses[i]);
 		}
+		out.writeInt(data.length);
+		System.out.println("Send " + data.length + " bytes, " + cubeAddresses.length + " cubes, " + columnAddresses.length + " columns");
 		out.writeBytes(data);
 	}
 
-	@Override
-	public void processPacket(INetHandler vanillaHandler) {
-		// don't use the vanilla handler, use our own
-		// TODO: make a real network system for M3L
-		ClientHandler.getInstance().handle(this);
+	public static class Handler extends AbstractClientMessageHandler<PacketBulkCubeData> {
+
+		@Override
+		public IMessage handleClientMessage(EntityPlayer player, PacketBulkCubeData message, MessageContext ctx) {
+			//TODO: move packet handling to specific handler classes
+			ClientHandler.getInstance().handle(message);
+			return null;
+		}
 	}
 }

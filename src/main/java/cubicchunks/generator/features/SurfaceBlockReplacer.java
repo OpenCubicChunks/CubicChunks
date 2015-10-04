@@ -23,14 +23,15 @@
  */
 package cubicchunks.generator.features;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 	private final IBlockState block;
@@ -70,7 +71,7 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 	@Override
 	protected boolean isSurfaceAt(BlockPos pos) {
 		Block below = getBlockState(pos.down()).getBlock();
-		if (!below.isSolidFullCube()) {
+		if (!below.isOpaqueCube()) {
 			return false;
 		}
 		Block blockAboveSurface = getBlockState(pos).getBlock();

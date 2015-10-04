@@ -23,45 +23,32 @@
  */
 package cubicchunks.world.column;
 
-import static cubicchunks.util.Coords.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.TreeMap;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.world.chunk.Chunk;
 import com.google.common.base.Predicate;
 import cubicchunks.TallWorldsMod;
-
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.Bits;
-import cubicchunks.util.Coords;
-import cubicchunks.util.MutableBlockPos;
-import cubicchunks.util.RangeInt;
+import cubicchunks.util.*;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.*;
 import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3i;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.biome.WorldChunkManager;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import java.util.*;
+
+import static cubicchunks.util.Coords.CUBE_SIZE;
 
 public class Column extends Chunk {
 
@@ -395,7 +382,7 @@ public class Column extends Chunk {
 	@Override
 	@Deprecated
 	// don't use this! It's only here because vanilla needs it, but we need to be hacky about it
-	public int getHeight(int localX, int localZ) {
+	public int getHeightValue(int localX, int localZ) {
 		// NOTE: the "height value" here is the height of the transparent block on top of the highest non-transparent
 		// block
 
@@ -634,8 +621,8 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	//getBroghtestLight. It actually returns light value... 
-	public int setLight(BlockPos pos, int skyLightDampeningTerm) {
+	//getBrightestLight. It actually returns light value...
+	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
 		// NOTE: this is called by WorldRenderers
 
 		// pass off to cube

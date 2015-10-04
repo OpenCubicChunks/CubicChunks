@@ -25,11 +25,12 @@ package cubicchunks.generator.features;
 
 import cubicchunks.util.Coords;
 import cubicchunks.world.cube.Cube;
-import java.util.Random;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
+
+import java.util.Random;
 
 public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
@@ -66,7 +67,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 	protected boolean isSurfaceAt(BlockPos pos) {
 		//we don't really know if it's the top block.
 		//assume it's sirface if there is solid block with air above it
-		return getBlockState(pos.down()).getBlock().isSolidFullCube()&& getBlockState(pos).getBlock() == Blocks.air;
+		return getBlockState(pos.down()).getBlock().isOpaqueCube()&& getBlockState(pos).getBlock() == Blocks.air;
 	}
 
 	/**
