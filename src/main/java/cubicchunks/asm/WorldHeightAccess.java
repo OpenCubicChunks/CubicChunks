@@ -34,12 +34,19 @@ public final class WorldHeightAccess {
 	private static CubicChunkSystem cc;
 
 	public static int getMinHeight(World world) {
-		//System.out.println("GetMinHeight");
-		return cc.getMinBlockY(world);
+		Integer h = cc.getMinBlockY(world);
+		if(h != null) {
+			return h;
+		}
+		return 0;
 	}
 
 	public static int getMaxHeight(World world) {
-		return cc.getMaxBlockY(world);
+		Integer h = cc.getMaxBlockY(world);
+		if(h != null) {
+			return h;
+		}
+		return 256;
 	}
 
 	public static void registerChunkSystem(CubicChunkSystem cc) {
