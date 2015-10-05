@@ -46,7 +46,7 @@ ext {
 
 group = "cubichunks"
 archivesBaseName = "CubicChunks"
-version = getModVersion("${git.describe()}", lastMinorVersion, isFinalBuild)
+version = getModVersionAndWriteToFile("${git.describe()}", lastMinorVersion, isFinalBuild)
 
 minecraft {
 	version = "1.8-11.14.3.1519"
@@ -150,7 +150,7 @@ jar {
 //returns version string according to this: http://mcforge.readthedocs.org/en/latest/conventions/versioning/
 //format: MCVERSION-MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)
 //rcX and betaX are not implemented yet
-private String getModVersion(String describe, int lastMinor, boolean isFinal) {
+private String getModVersionAndWriteToFile(String describe, int lastMinor, boolean isFinal) {
 	String[] parts = describe.split("-");
 
 	if(parts.length < 2) {
@@ -193,5 +193,24 @@ private String getModVersion(String describe, int lastMinor, boolean isFinal) {
 		patch = commitSinceTag - lastMinor;
 	}
 	String version = String.format("%s-%s.%d.%d%s", mcVersion, modAndApiVersion, minor, patch, isFinal ? "-final" : "");
+
+	//write to file
+	File file = new File("VERSION");
+	PrintWriter pw = null;
+	try {
+		if(file.exists()) {
+			file.delete();
+		}
+		file.createNewFile();
+		pw = new PrintWriter(new FileOutputStream(file));
+		pw.println("VERSION=" + version);
+	} catch(IOException ex) {
+		ex.printStackTrace();
+	} finally {
+		if(pw != null) {
+			try{pw.close()}catch(IOException ex){}
+		}
+	}
+
 	return version;
 }
