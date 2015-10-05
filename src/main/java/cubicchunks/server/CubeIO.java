@@ -426,7 +426,7 @@ public class CubeIO implements IThreadedFileIO {
 		private static byte[] writeNbtBytes(NBTTagCompound nbt) throws IOException {
 			ByteArrayOutputStream buf = new ByteArrayOutputStream();
 			DataOutputStream out = new DataOutputStream(buf);
-			CompressedStreamTools.write(nbt, out);
+			CompressedStreamTools.writeCompressed(nbt, out);
 			out.close();
 			return buf.toByteArray();
 		}
