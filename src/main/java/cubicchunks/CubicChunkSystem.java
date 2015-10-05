@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -128,7 +128,7 @@ public class CubicChunkSystem {
 
 	public boolean isTallWorld(World world) {
 		// for now, only tall-ify the overworld
-		return world.provider.getDimensionId()== 0 && world.getWorldType() == TallWorldsMod.CC_WORLD_TYPE;
+		return world.provider.getDimensionId()== 0 && world.getWorldType() == CubicChunks.CC_WORLD_TYPE;
 	}
 
 	//@ClientOnly
@@ -176,7 +176,7 @@ public class CubicChunkSystem {
 			ServerCubeCache serverCubeCache = context.getCubeCache();
 
 			// load the cubes around the spawn point
-			//TallWorldsMod.LOGGER.info("Loading cubes for spawn...");
+			//CubicChunks.LOGGER.info("Loading cubes for spawn...");
 			final int Distance = ServerCubeCache.WorldSpawnChunkDistance;
 			BlockPos spawnPoint = worldServer.getSpawnPoint();
 			int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
@@ -195,12 +195,12 @@ public class CubicChunkSystem {
 			int numCubesTotal = pipeline.getNumCubes();
 			if (numCubesTotal > 0) {
 				long timeStart = System.currentTimeMillis();
-				//TallWorldsMod.LOGGER.info("Generating {} cubes for spawn at block ({},{},{}) cube ({},{},{})...",
+				//CubicChunks.LOGGER.info("Generating {} cubes for spawn at block ({},{},{}) cube ({},{},{})...",
 				//		numCubesTotal, spawnPoint.getX(), spawnPoint.getY(), spawnPoint.getZ(), spawnCubeX, spawnCubeY,
 				//		spawnCubeZ);
 				pipeline.generateAll();
 				long timeDiff = System.currentTimeMillis() - timeStart;
-				//TallWorldsMod.LOGGER.info("Done in {} ms", timeDiff);
+				//CubicChunks.LOGGER.info("Done in {} ms", timeDiff);
 			}
 			
 			// save the cubes now
@@ -239,10 +239,10 @@ public class CubicChunkSystem {
 			spawnPos.x = spawnPosition.getX();
 			spawnPos.z = spawnPosition.getZ();
 		} else {
-			//TallWorldsMod.LOGGER.warn("Unable to find spawn biome");
+			//CubicChunks.LOGGER.warn("Unable to find spawn biome");
 		}
 
-		//TallWorldsMod.LOGGER.info("Searching for suitable spawn point...");
+		//CubicChunks.LOGGER.info("Searching for suitable spawn point...");
 
 		// generate some world around the spawn x,z at sea level
 		int spawnCubeX = Coords.blockToCube(spawnPos.getX());
@@ -267,7 +267,7 @@ public class CubicChunkSystem {
 
 		// save the spawn point
 		worldServer.getWorldInfo().setSpawn(spawnPos);
-		//TallWorldsMod.LOGGER.info("Found spawn point at ({},{},{})", spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
+		//CubicChunks.LOGGER.info("Found spawn point at ({},{},{})", spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
 
 		if (worldSettings.isBonusChestEnabled()) {
 			//worldServer.generateBonusChests();

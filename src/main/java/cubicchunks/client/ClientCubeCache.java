@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,6 @@ import cubicchunks.world.cube.Cube;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 
 public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
@@ -73,13 +72,13 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		// is this column loaded?
 		Column column = (Column)this.chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
 		if (column == null) {
-			//TallWorldsMod.log.warn("Unloading cube from non-existing column: ({}, {}, {})", cubeX, cubeY, cubeZ);
+			//CubicChunks.log.warn("Unloading cube from non-existing column: ({}, {}, {})", cubeX, cubeY, cubeZ);
 			return;
 		}
 		
 		// is this cube loaded?
 		if (column.getCube(cubeY) == null) {
-			//TallWorldsMod.log.warn("Unloading non-existing cube: ({}, {}, {})", cubeX, cubeY, cubeZ);
+			//CubicChunks.log.warn("Unloading non-existing cube: ({}, {}, {})", cubeX, cubeY, cubeZ);
 			return;
 		}
 		

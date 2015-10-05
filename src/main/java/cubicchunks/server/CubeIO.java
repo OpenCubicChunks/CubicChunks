@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,54 +23,46 @@
  */
 package cubicchunks.server;
 
-import cubicchunks.TallWorldsMod;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.ConcurrentNavigableMap;
-
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.storage.IThreadedFileIO;
-
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-
+import cubicchunks.CubicChunks;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
-import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.IEntityActionListener;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import java.util.HashSet;
+import net.minecraft.block.Block;
+import net.minecraft.entity.Entity;
+import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.NextTickListEntry;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraft.world.storage.IThreadedFileIO;
 import net.minecraft.world.storage.ThreadedFileIOBase;
 import org.apache.logging.log4j.Logger;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 
-import static cubicchunks.util.WorldServerAccess.*;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.ConcurrentNavigableMap;
+
+import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesHashSet;
+import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesThisTick;
 
 public class CubeIO implements IThreadedFileIO {
 	
-	private static final Logger LOGGER = TallWorldsMod.LOGGER;
+	private static final Logger LOGGER = CubicChunks.LOGGER;
 	
 	private static class SaveEntry {
 		

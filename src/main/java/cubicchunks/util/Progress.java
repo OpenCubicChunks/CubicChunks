@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ package cubicchunks.util;
 
 import java.util.LinkedList;
 
-import cubicchunks.TallWorldsMod;
+import cubicchunks.CubicChunks;
 
 public class Progress {
 	
@@ -123,7 +123,7 @@ public class Progress {
 			msg.append("\tETA: ");
 			msg.append(formatTimeInterval(getEta()));
 			
-			TallWorldsMod.LOGGER.info(msg.toString());
+			CubicChunks.LOGGER.info(msg.toString());
 			
 			pruneLog();
 			m_lastReportMilliseconds = elapsedMilliseconds;
@@ -132,7 +132,7 @@ public class Progress {
 		
 		// add the finished message if needed
 		if (m_currentWork == m_totalWork) {
-			TallWorldsMod.LOGGER.info("Finished in " + m_timer.getElapsedTime());
+			CubicChunks.LOGGER.info("Finished in " + m_timer.getElapsedTime());
 		}
 		
 		return report;

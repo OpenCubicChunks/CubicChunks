@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,12 +23,12 @@
  */
 package cubicchunks.lighting;
 
+import cubicchunks.CubicChunks;
 import net.minecraft.block.Block;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3i;
 import net.minecraft.world.World;
-import cubicchunks.TallWorldsMod;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
@@ -83,7 +83,7 @@ public class DiffuseLightingCalculator {
 		
 		// DEBUG
 		if (this.queue.size() > 32000) {
-			TallWorldsMod.LOGGER.warn("{} Warning! Calculated {} light updates at ({},{},{}) for {} light.", 
+			CubicChunks.LOGGER.warn("{} Warning! Calculated {} light updates at ({},{},{}) for {} light.",
 				world.isRemote ? "CLIENT" : "SERVER",
 				this.queue.size(),
 				pos.getX(), pos.getY(), pos.getZ(),

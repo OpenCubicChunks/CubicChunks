@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +23,6 @@
  */
 package cubicchunks.generator;
 
-import java.util.Random;
-
 import cubicchunks.generator.noise.NoiseGeneratorMultiFractal;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
@@ -32,6 +30,8 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.biome.BiomeBlockReplacer;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.world.biome.BiomeGenBase;
+
+import java.util.Random;
 
 public class SurfaceProcessor extends CubeProcessor {
 

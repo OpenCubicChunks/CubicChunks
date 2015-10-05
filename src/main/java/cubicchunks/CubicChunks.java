@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -36,15 +36,15 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = TallWorldsMod.MODID, name = "CubicChunks", version = "${version}")
-public class TallWorldsMod {
+@Mod(modid = CubicChunks.MODID, name = "CubicChunks", version = "${version}")
+public class CubicChunks {
 
 	public static Logger LOGGER;
 
 	public static final String MODID = "cubicchunks";
 
 	@Instance(value = MODID)
-	public static TallWorldsMod instance;
+	public static CubicChunks instance;
 
 	@SidedProxy(clientSide="cubicchunks.proxy.ClientProxy", serverSide="cubicchunks.proxy.CommonProxy")
 	public static CommonProxy proxy;

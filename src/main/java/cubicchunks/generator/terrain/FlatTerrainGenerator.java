@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,12 @@
  */
 package cubicchunks.generator.terrain;
 
-import static cubicchunks.util.Coords.*;
-import static cubicchunks.util.TerrainGeneratorUtils.*;
 import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.world.cube.Cube;
+
+import static cubicchunks.util.Coords.CUBE_SIZE;
+import static cubicchunks.util.TerrainGeneratorUtils.applyHeightGradient;
+import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
 
 public class FlatTerrainGenerator implements ITerrainGenerator {
 

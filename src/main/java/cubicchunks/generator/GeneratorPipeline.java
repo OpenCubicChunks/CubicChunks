@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,17 +23,16 @@
  */
 package cubicchunks.generator;
 
-import java.util.List;
-
 import com.google.common.collect.Lists;
-
-import cubicchunks.TallWorldsMod;
+import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Progress;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.util.processor.QueueProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
+
+import java.util.List;
 
 public class GeneratorPipeline {
 	
@@ -129,7 +128,7 @@ public class GeneratorPipeline {
 			int numStageProcessed = processor.processor.processQueueUntil(stageTimeStart + numMsToProcess);
 			
 			/* DEBUG
-			TallWorldsMod.log.info("Stage {} processed {} cubes in {} ms of {}/{} ms ({}%).",
+			CubicChunks.log.info("Stage {} processed {} cubes in {} ms of {}/{} ms ({}%).",
 				processor.processor.getName(),
 				numStageProcessed,
 				System.currentTimeMillis() - stageTimeStart,
@@ -147,9 +146,9 @@ public class GeneratorPipeline {
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			TallWorldsMod.LOGGER.debug("Processed {} cubes in {} ms.", numProcessed, timeDiff);
+			CubicChunks.LOGGER.debug("Processed {} cubes in {} ms.", numProcessed, timeDiff);
 			for (StageProcessor processor : this.processors) {
-				TallWorldsMod.LOGGER.debug(processor.processor.getProcessingReport());
+				CubicChunks.LOGGER.debug(processor.processor.getProcessingReport());
 			}
 		}
 		
@@ -161,13 +160,13 @@ public class GeneratorPipeline {
 			
 			QueueProcessor processor = this.processors.get(stage).processor;
 			
-			TallWorldsMod.LOGGER.info("Stage: {}", processor.getName());
+			CubicChunks.LOGGER.info("Stage: {}", processor.getName());
 			
 			// process all the cubes in this stage at once
 			int numProcessed = 0;
 			int round = 0;
 			do {
-				TallWorldsMod.LOGGER.info("\tround {} - {} cubes", ++round, processor.getNumInQueue());
+				CubicChunks.LOGGER.info("\tround {} - {} cubes", ++round, processor.getNumInQueue());
 				Progress progress = new Progress(processor.getNumInQueue(), 1000);
 				numProcessed = processor.processQueue(progress);
 				advanceCubes(processor, stage);

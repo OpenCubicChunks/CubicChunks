@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,24 +23,17 @@
  */
 package cubicchunks.server;
 
-import java.util.Map;
-
-import net.minecraft.world.WorldServer;
-
 import com.google.common.collect.Maps;
-
 import cubicchunks.api.generators.ITerrainGenerator;
-import cubicchunks.generator.SurfaceProcessor;
-import cubicchunks.generator.FeatureProcessor;
-import cubicchunks.generator.GeneratorPipeline;
-import cubicchunks.generator.GeneratorStage;
-import cubicchunks.generator.StructureProcessor;
-import cubicchunks.generator.TerrainProcessor;
+import cubicchunks.generator.*;
 import cubicchunks.generator.terrain.FlatTerrainGenerator;
 import cubicchunks.generator.terrain.VanillaTerrainGenerator;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.world.WorldContext;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
+
+import java.util.Map;
 
 public class WorldServerContext extends WorldContext {
 

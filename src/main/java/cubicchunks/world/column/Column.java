@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
 package cubicchunks.world.column;
 
 import com.google.common.base.Predicate;
-import cubicchunks.TallWorldsMod;
+import cubicchunks.CubicChunks;
 import cubicchunks.util.*;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.OpacityIndex;
@@ -454,7 +454,7 @@ public class Column extends Chunk {
 			entity.addedToChunk = false;
 			this.setModified(true);
 		} else {
-			TallWorldsMod.LOGGER.warn(
+			CubicChunks.LOGGER.warn(
 					"{} Tried to remove entity {} from column ({},{}), but it was not there. Entity thinks it's in cube ({},{},{})",
 					this.getWorld().isRemote ? "CLIENT" : "SERVER", entity.getClass().getName(), this.xPosition, this.zPosition,
 					entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ);
@@ -513,7 +513,7 @@ public class Column extends Chunk {
 		if (cube != null) {
 			cube.addBlockEntity(pos, blockEntity);
 		} else {
-			TallWorldsMod.LOGGER.warn("No cube at ({},{},{}) to add tile entity (block {},{},{})!", this.xPosition, cubeY, this.zPosition,
+			CubicChunks.LOGGER.warn("No cube at ({},{},{}) to add tile entity (block {},{},{})!", this.xPosition, cubeY, this.zPosition,
 					pos.getX(), pos.getY(), pos.getZ());
 		}
 	}

@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,6 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-
 package cubicchunks;
 
 import cubicchunks.util.WorldAccess;
@@ -43,7 +42,7 @@ public class CCEventHandler {
 	}
 	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load evt) {
-		TallWorldsMod.LOGGER.info("Initializing world " + evt.world + " with type " + evt.world.getWorldType());
+		CubicChunks.LOGGER.info("Initializing world " + evt.world + " with type " + evt.world.getWorldType());
 		World world = evt.world;
 		if(world instanceof WorldServer && cc.isTallWorld(world)) {
 			modifyWorld((WorldServer)world);

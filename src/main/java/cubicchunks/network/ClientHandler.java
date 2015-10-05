@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.TallWorldsMod;
+import cubicchunks.CubicChunks;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.util.AddressTools;
@@ -100,7 +100,7 @@ public class ClientHandler implements INetHandler {
 			cube.markForRenderUpdate();
 		}
 		if (outOfOrderCubes > 0) {
-			TallWorldsMod.LOGGER.error("Ignored {}/{} cubes that arrived before their columns", outOfOrderCubes, packet.cubeAddresses.length);
+			CubicChunks.LOGGER.error("Ignored {}/{} cubes that arrived before their columns", outOfOrderCubes, packet.cubeAddresses.length);
 		}
 		
 		packet.finishDecoding();
@@ -198,7 +198,7 @@ public class ClientHandler implements INetHandler {
 		int cubeZ = AddressTools.getZ(packet.cubeAddress);
 		Cube cube = cubeCache.getCube(cubeX, cubeY, cubeZ);
 		if (cube instanceof BlankCube) {
-			TallWorldsMod.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
+			CubicChunks.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
 			return;
 		}
 		
@@ -233,7 +233,7 @@ public class ClientHandler implements INetHandler {
 		int cubeZ = AddressTools.getZ(packet.cubeAddress);
 		Cube cube = cubeCache.getCube(cubeX, cubeY, cubeZ);
 		if (cube instanceof BlankCube) {
-			TallWorldsMod.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
+			CubicChunks.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
 			return;
 		}
 		

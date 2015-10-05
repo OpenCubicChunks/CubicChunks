@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.TallWorldsMod;
+import cubicchunks.CubicChunks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -44,7 +44,7 @@ public class PacketDispatcher {
 	 * Since I will be adding wrapper methods, this field is private, but you should
 	 * make it public if you plan on using it directly.
 	 */
-	private static final SimpleNetworkWrapper dispatcher = NetworkRegistry.INSTANCE.newSimpleChannel(TallWorldsMod.MODID);
+	private static final SimpleNetworkWrapper dispatcher = NetworkRegistry.INSTANCE.newSimpleChannel(CubicChunks.MODID);
 
 	/**
 	 * Registers all packets. Side of a packet is the side on which the packet is handled.

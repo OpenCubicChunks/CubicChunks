@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ import net.minecraft.world.World;
 import net.minecraft.tileentity.TileEntity;
 
 import com.google.common.base.Predicate;
-import cubicchunks.TallWorldsMod;
+import cubicchunks.CubicChunks;
 
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
@@ -51,7 +51,7 @@ import org.apache.logging.log4j.Logger;
 
 public class Cube {
 	
-	private static final Logger LOGGER = TallWorldsMod.LOGGER;
+	private static final Logger LOGGER = CubicChunks.LOGGER;
 	
 	private World world;
 	private Column column;

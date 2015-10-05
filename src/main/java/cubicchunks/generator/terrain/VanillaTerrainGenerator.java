@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,23 +23,17 @@
  */
 package cubicchunks.generator.terrain;
 
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.MAX_ELEV;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTIONS;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTION_SIZE;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
-import static cubicchunks.util.MathHelper.lerp;
-import static cubicchunks.util.TerrainGeneratorUtils.*;
-
-import java.util.Random;
-
 import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.generator.builder.BasicBuilder;
 import cubicchunks.generator.builder.IBuilder;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.world.biome.BiomeGenBase;
+
+import java.util.Random;
+
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.*;
+import static cubicchunks.util.MathHelper.lerp;
+import static cubicchunks.util.TerrainGeneratorUtils.*;
 
 public class VanillaTerrainGenerator implements ITerrainGenerator {
 	private static final int OCTAVES = 16;

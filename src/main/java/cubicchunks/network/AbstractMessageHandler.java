@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.TallWorldsMod;
+import cubicchunks.CubicChunks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -67,10 +67,10 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
 		if (ctx.side.isClient()) {
 			// the only reason to check side here is to use our more aptly named handling methods
 			// client side proxy will return the client side EntityPlayer
-			return handleClientMessage(TallWorldsMod.proxy.getPlayerEntity(ctx), message, ctx);
+			return handleClientMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
 		} else {
 			// server side proxy will return the server side EntityPlayer
-			return handleServerMessage(TallWorldsMod.proxy.getPlayerEntity(ctx), message, ctx);
+			return handleServerMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
 		}
 	}
 }

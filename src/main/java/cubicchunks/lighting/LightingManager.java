@@ -1,7 +1,7 @@
 /*
- *  This file is part of Tall Worlds, licensed under the MIT License (MIT).
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 Tall Worlds
+ *  Copyright (c) 2015 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,9 +23,9 @@
  */
 package cubicchunks.lighting;
 
+import cubicchunks.CubicChunks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import cubicchunks.TallWorldsMod;
 import cubicchunks.util.Bits;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.Column;
@@ -83,9 +83,9 @@ public class LightingManager {
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			TallWorldsMod.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isRemote ? "CLIENT" : "SERVER", numProcessed, timeDiff));
-			TallWorldsMod.LOGGER.info(this.skyLightOcclusionProcessor.getProcessingReport());
-			TallWorldsMod.LOGGER.info(this.firstLightProcessor.getProcessingReport());
+			CubicChunks.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isRemote ? "CLIENT" : "SERVER", numProcessed, timeDiff));
+			CubicChunks.LOGGER.info(this.skyLightOcclusionProcessor.getProcessingReport());
+			CubicChunks.LOGGER.info(this.firstLightProcessor.getProcessingReport());
 		}
 	}
 }
