@@ -51,7 +51,7 @@ public abstract class WorldContext {
 			return WorldServerContext.get((WorldServer)world);
 		}
 		
-		throw new Error("Unknown world type!");
+		return null;
 	}
 
 	private World m_world;

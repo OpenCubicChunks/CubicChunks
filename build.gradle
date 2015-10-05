@@ -144,6 +144,7 @@ license {
 jar {
 	manifest {
 		attributes 'FMLAT': 'cubicchunks_at.cfg'
+		attributes 'FMLCorePlugin': 'cubicchunks.asm.CoreModLoadingPlugin', 'FMLCorePluginContainsFMLMod': 'true'
 	}
 }
 

@@ -23,6 +23,7 @@
  */
 package cubicchunks;
 
+import cubicchunks.asm.WorldHeightAccess;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
 import net.minecraft.world.WorldType;
@@ -57,12 +58,14 @@ public class CubicChunks {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
 		LOGGER = e.getModLog();
+		this.ccSystem = new CubicChunkSystem();
+		WorldHeightAccess.registerChunkSystem(ccSystem);
 		PacketDispatcher.registerPackets();
 	}
 	
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
-		this.ccSystem = new CubicChunkSystem();
+
 		
 		CC_WORLD_TYPE = new CubicChunksWorldType(ccSystem);
 		this.evtHandler = new CCEventHandler(ccSystem);
