@@ -42,7 +42,10 @@ public class ArrayConverter {
 
 		char[] arr = new char[b.length/2];
 		for(int i = 0; i < arr.length; i++) {
-			arr[i] = (char) (b[i*2] | (b[i*2+1] << 8));
+			arr[i] = (char) (
+							((b[i*2+0] & 0xFF) << 0) |
+							((b[i*2+1] & 0xFF) << 8)
+			);
 		}
 		return arr;
 	}
