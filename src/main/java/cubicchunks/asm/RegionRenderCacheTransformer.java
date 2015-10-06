@@ -30,19 +30,14 @@ import org.objectweb.asm.tree.*;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Replaces hardcoded height checks in World class with getWorldHeight method
- */
-public class WorldTransformer extends AbstractClassTransformer{
-	private static final String WORLD_CLASS_NAME = "net.minecraft.world.World";
+public class RegionRenderCacheTransformer extends AbstractClassTransformer{
 
-	private static final MethodInfo WORLD_IS_VALID = new MethodInfo("func_175701_a", "isValid");
+	private static final MethodInfo GET_BLOCK_STATE_RAW = new MethodInfo("func_175631_c", "getBlockStateRaw");
 
-	private static final List<MethodInfo> TO_TRANSFORM = Lists.newArrayList(WORLD_IS_VALID);
-
+	private static final List<MethodInfo> TO_TRANSFORM = Lists.newArrayList(GET_BLOCK_STATE_RAW);
 	@Override
 	protected String getTransformedClassName() {
-		return WORLD_CLASS_NAME;
+		return "net.minecraft.client.renderer.RegionRenderCache";
 	}
 
 	@Override
@@ -53,16 +48,15 @@ public class WorldTransformer extends AbstractClassTransformer{
 	@Override
 	protected void transformMethod(MethodInfo methodInfo, MethodNode node) {
 		InsnList insns = node.instructions;
-		//the y < 0 is the only IFLT Opcode in this method
-		AbstractInsnNode ifltInsn = AsmUtils.findInsn(insns, JumpInsnNode.class, Opcodes.IFLT, 0);
-		//the label we want to jump to is the second label
-		LabelNode label = AsmUtils.findInsn(insns, LabelNode.class, -1, 1);
-		insns.insertBefore(ifltInsn, new VarInsnNode(Opcodes.ALOAD, 0));
-		insns.insertBefore(ifltInsn, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/WorldHeightAccess", "getMinHeight", "(Lnet/minecraft/world/World;)I", false));
-		insns.set(ifltInsn, new JumpInsnNode(Opcodes.IF_ICMPLT, label));
 
-		AbstractInsnNode sipushInsn = AsmUtils.findInsn(insns, IntInsnNode.class, Opcodes.SIPUSH, 0);
-		insns.insertBefore(sipushInsn, new VarInsnNode(Opcodes.ALOAD, 0));
-		insns.set(sipushInsn, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/WorldHeightAccess", "getMaxHeight", "(Lnet/minecraft/world/World;)I", false));
+		LabelNode startNode = new LabelNode();
+		insns.insert(startNode);
+
+		insns.insertBefore(startNode, new VarInsnNode(Opcodes.ALOAD, 0));
+		insns.insertBefore(startNode, new VarInsnNode(Opcodes.ALOAD, 1));
+		insns.insertBefore(startNode, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/RenderGlobalUtils", "getBlockStateRawFromCache", "(Lnet/minecraft/client/renderer/RegionRenderCache;Lnet/minecraft/util/BlockPos;)Lnet/minecraft/block/state/IBlockState;", false));
+		insns.insertBefore(startNode, new InsnNode(Opcodes.DUP));
+		insns.insertBefore(startNode, new JumpInsnNode(Opcodes.IFNULL, startNode));
+		insns.insertBefore(startNode, new InsnNode(Opcodes.ARETURN));
 	}
 }

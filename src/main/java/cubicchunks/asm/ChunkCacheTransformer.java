@@ -30,19 +30,14 @@ import org.objectweb.asm.tree.*;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Replaces hardcoded height checks in World class with getWorldHeight method
- */
-public class WorldTransformer extends AbstractClassTransformer{
-	private static final String WORLD_CLASS_NAME = "net.minecraft.world.World";
+public class ChunkCacheTransformer extends AbstractClassTransformer{
+	private static final MethodInfo GET_BLOCK_STATE = new MethodInfo("func_180495_p", "getBlockState");
 
-	private static final MethodInfo WORLD_IS_VALID = new MethodInfo("func_175701_a", "isValid");
-
-	private static final List<MethodInfo> TO_TRANSFORM = Lists.newArrayList(WORLD_IS_VALID);
+	private static final List<MethodInfo> TO_TRANSFORM = Lists.newArrayList(GET_BLOCK_STATE);
 
 	@Override
 	protected String getTransformedClassName() {
-		return WORLD_CLASS_NAME;
+		return "net.minecraft.world.ChunkCache";
 	}
 
 	@Override
@@ -58,11 +53,13 @@ public class WorldTransformer extends AbstractClassTransformer{
 		//the label we want to jump to is the second label
 		LabelNode label = AsmUtils.findInsn(insns, LabelNode.class, -1, 1);
 		insns.insertBefore(ifltInsn, new VarInsnNode(Opcodes.ALOAD, 0));
+		insns.insertBefore(ifltInsn, new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/world/ChunkCache", getName("field_72815_e", "worldObj"), "Lnet/minecraft/world/World;"));
 		insns.insertBefore(ifltInsn, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/WorldHeightAccess", "getMinHeight", "(Lnet/minecraft/world/World;)I", false));
 		insns.set(ifltInsn, new JumpInsnNode(Opcodes.IF_ICMPLT, label));
 
 		AbstractInsnNode sipushInsn = AsmUtils.findInsn(insns, IntInsnNode.class, Opcodes.SIPUSH, 0);
 		insns.insertBefore(sipushInsn, new VarInsnNode(Opcodes.ALOAD, 0));
+		insns.insertBefore(sipushInsn, new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/world/ChunkCache", getName("field_72815_e", "worldObj"), "Lnet/minecraft/world/World;"));
 		insns.set(sipushInsn, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/WorldHeightAccess", "getMaxHeight", "(Lnet/minecraft/world/World;)I", false));
 	}
 }

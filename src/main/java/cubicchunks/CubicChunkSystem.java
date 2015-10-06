@@ -37,9 +37,9 @@ import cubicchunks.util.WorldAccess;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.entity.Entity;
@@ -47,6 +47,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ClassInheritanceMultiMap;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.*;
 import net.minecraft.world.biome.WorldChunkManager;
@@ -128,7 +129,7 @@ public class CubicChunkSystem {
 
 	public boolean isTallWorld(World world) {
 		// for now, only tall-ify the overworld
-		return world.provider.getDimensionId()== 0 && world.getWorldType() == CubicChunks.CC_WORLD_TYPE;
+		return world.provider.getDimensionId() == 0 && world.getWorldType() == CubicChunks.CC_WORLD_TYPE;
 	}
 
 	//@ClientOnly
@@ -331,19 +332,18 @@ public class CubicChunkSystem {
 	}
 
 	//@ClientOnly
-	public boolean setChunkSectionRendererPositions(ViewFrustum renderers) {
+	public void frustumViewUpdateChunkPositions(ViewFrustum renderers, double x, double y, double z) {
 
 		if (!isTallWorld(renderers.world)) {
-			return false;
+			renderers.updateChunkPositions(x, z);
+			return;
 		}
-
-		// get the position of the view entity
-		Entity view = Minecraft.getMinecraft().getRenderViewEntity();
+		System.out.println("frustumViewUpdateChunkPositions");
 
 		// treat the y dimension the same as all the rest
-		int viewX = MathHelper.floor_double(view.posX) - 8;
-		int viewY = MathHelper.floor_double(view.posY) - 8;
-		int viewZ = MathHelper.floor_double(view.posZ) - 8;
+		int viewX = MathHelper.floor_double(x) - 8;
+		int viewY = MathHelper.floor_double(y) - 8;
+		int viewZ = MathHelper.floor_double(z) - 8;
 
 		int xSizeInBlocks = renderers.countChunksX * 16;
 		int ySizeInBlocks = renderers.countChunksY * 16;
@@ -372,8 +372,6 @@ public class CubicChunkSystem {
 				}
 			}
 		}
-
-		return true;
 	}
 
 	//@ClientOnly
@@ -382,7 +380,6 @@ public class CubicChunkSystem {
 		if (!isTallWorld(renderers.world)) {
 			return null;
 		}
-
 		// treat the y dimension the same as all the rest
 		int x = MathHelper.bucketInt(pos.getX(), 16);
 		int y = MathHelper.bucketInt(pos.getY(), 16);
@@ -418,29 +415,30 @@ public class CubicChunkSystem {
 		return true;
 	}
 
-	//TODO: I can't find it in 1.8.11
+	//In 1.8.11 MCP mappings it's called getRenderChunkOffset
+	//it actually makes some sort of twisted sense... (get RenderChunk (for) offset (offset == Facing)?)
 	//@ClientOnly
-	/*
-	public RenderChunk getChunkSectionRendererNeighbor(RenderGlobal worldRenderer, BlockPos pos,
-			ChunkSectionRenderer chunkSectionRenderer, EnumFacing facing) {
 
+	public RenderChunk getChunkSectionRendererNeighbor(RenderGlobal worldRenderer, BlockPos poseye,
+	                                                   BlockPos posChunk, EnumFacing facing) {
+/*
 		if (!isTallWorld(worldRenderer.theWorld)) {
 			return null;
 		}
 
 		// treat the y dimension the same as all the rest
-		final BlockPos neighborPos = chunkSectionRenderer.getBlockPosNeighbor(facing);
-		if (MathHelper.abs(pos.getX() - neighborPos.getX()) > worldRenderer.renderDistance * 16) {
+		final BlockPos neighborPos = posChunk.offset(facing);
+		if (MathHelper.abs(poseye.getX() - neighborPos.getX()) > worldRenderer.renderDistanceChunks * 16) {
 			return null;
 		}
-		if (MathHelper.abs(pos.getY() - neighborPos.getY()) > worldRenderer.renderDistance * 16) {
+		if (MathHelper.abs(poseye.getY() - neighborPos.getY()) > worldRenderer.renderDistanceChunks * 16) {
 			return null;
 		}
-		if (MathHelper.abs(pos.getZ() - neighborPos.getZ()) > worldRenderer.renderDistance * 16) {
+		if (MathHelper.abs(poseye.getZ() - neighborPos.getZ()) > worldRenderer.renderDistanceChunks * 16) {
 			return null;
 		}
-		return worldRenderer.chunkSectionRenderers.getRenderer(neighborPos);
-	}*/
+		return worldRenderer.viewFrustum.getRenderChunk(neighborPos);*/ return null;
+	}
 
 	public ClassInheritanceMultiMap getEntityStore(Chunk chunk, int chunkSectionIndex) {
 		if (chunk instanceof Column) {

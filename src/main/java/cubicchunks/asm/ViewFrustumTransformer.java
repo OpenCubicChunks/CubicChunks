@@ -30,19 +30,18 @@ import org.objectweb.asm.tree.*;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Replaces hardcoded height checks in World class with getWorldHeight method
- */
-public class WorldTransformer extends AbstractClassTransformer{
-	private static final String WORLD_CLASS_NAME = "net.minecraft.world.World";
+public class ViewFrustumTransformer extends AbstractClassTransformer {
 
-	private static final MethodInfo WORLD_IS_VALID = new MethodInfo("func_175701_a", "isValid");
+	private static final MethodInfo SET_COUNT_CHUNKS = new MethodInfo("func_178159_a", "setCountChunksXYZ");
+	private static final MethodInfo GET_RENDER_CHUNK = new MethodInfo("func_178161_a", "getRenderChunk");
 
-	private static final List<MethodInfo> TO_TRANSFORM = Lists.newArrayList(WORLD_IS_VALID);
+	private static final List<MethodInfo> TO_TRANSFORM = Lists.newArrayList(
+			SET_COUNT_CHUNKS, GET_RENDER_CHUNK
+	);
 
 	@Override
 	protected String getTransformedClassName() {
-		return WORLD_CLASS_NAME;
+		return "net.minecraft.client.renderer.ViewFrustum";
 	}
 
 	@Override
@@ -52,17 +51,32 @@ public class WorldTransformer extends AbstractClassTransformer{
 
 	@Override
 	protected void transformMethod(MethodInfo methodInfo, MethodNode node) {
-		InsnList insns = node.instructions;
-		//the y < 0 is the only IFLT Opcode in this method
-		AbstractInsnNode ifltInsn = AsmUtils.findInsn(insns, JumpInsnNode.class, Opcodes.IFLT, 0);
-		//the label we want to jump to is the second label
-		LabelNode label = AsmUtils.findInsn(insns, LabelNode.class, -1, 1);
-		insns.insertBefore(ifltInsn, new VarInsnNode(Opcodes.ALOAD, 0));
-		insns.insertBefore(ifltInsn, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/WorldHeightAccess", "getMinHeight", "(Lnet/minecraft/world/World;)I", false));
-		insns.set(ifltInsn, new JumpInsnNode(Opcodes.IF_ICMPLT, label));
+		if(methodInfo == GET_RENDER_CHUNK)
+			transformGetRenderChunk(node);
+		else
+			transformSetCountChunks(node);
+	}
 
-		AbstractInsnNode sipushInsn = AsmUtils.findInsn(insns, IntInsnNode.class, Opcodes.SIPUSH, 0);
-		insns.insertBefore(sipushInsn, new VarInsnNode(Opcodes.ALOAD, 0));
-		insns.set(sipushInsn, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/WorldHeightAccess", "getMaxHeight", "(Lnet/minecraft/world/World;)I", false));
+	private void transformSetCountChunks(MethodNode node) {
+		InsnList insns = node.instructions;
+		//16 - the default height - is pushed to the stack using BIPUSH
+		AbstractInsnNode bipush = AsmUtils.findInsn(insns, IntInsnNode.class, Opcodes.BIPUSH, 0);
+		//replace it with ILOAD 2 (the same as for x and z)
+		insns.set(bipush, new VarInsnNode(Opcodes.ILOAD, 2));
+	}
+
+	private void transformGetRenderChunk(MethodNode node) {
+		InsnList insns = node.instructions;
+
+		LabelNode startLabel = new LabelNode();
+		insns.insert(startLabel);
+
+		insns.insertBefore(startLabel, new VarInsnNode(Opcodes.ALOAD, 0));
+		insns.insertBefore(startLabel, new VarInsnNode(Opcodes.ALOAD, 1));
+
+		insns.insertBefore(startLabel, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/RenderGlobalUtils", "getRenderChunk", "(Lnet/minecraft/client/renderer/ViewFrustum;Lnet/minecraft/util/BlockPos;)Lnet/minecraft/client/renderer/chunk/RenderChunk;", false));
+		insns.insertBefore(startLabel, new InsnNode(Opcodes.DUP));
+		insns.insertBefore(startLabel, new JumpInsnNode(Opcodes.IFNULL, startLabel));
+		insns.insertBefore(startLabel, new InsnNode(Opcodes.ARETURN));
 	}
 }

@@ -23,6 +23,7 @@
  */
 package cubicchunks;
 
+import cubicchunks.asm.RenderGlobalUtils;
 import cubicchunks.asm.WorldHeightAccess;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
@@ -60,6 +61,7 @@ public class CubicChunks {
 		LOGGER = e.getModLog();
 		this.ccSystem = new CubicChunkSystem();
 		WorldHeightAccess.registerChunkSystem(ccSystem);
+		RenderGlobalUtils.registerChunkSystem(ccSystem);
 		PacketDispatcher.registerPackets();
 	}
 	

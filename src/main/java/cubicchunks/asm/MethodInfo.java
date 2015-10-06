@@ -39,7 +39,12 @@ public class MethodInfo {
 		return srg;
 	}
 
+	public String getDeobf() {
+		return deobf;
+	}
+
 	public boolean sameAs(String name) {
 		return srg.equals(name) || deobf.equals(name);
 	}
+
 }
