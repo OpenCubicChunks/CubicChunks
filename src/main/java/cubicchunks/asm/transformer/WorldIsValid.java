@@ -21,44 +21,44 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm;
+package cubicchunks.asm.transformer;
 
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import cubicchunks.asm.Mappings;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import static org.objectweb.asm.Type.*;
 
-import java.util.Map;
+public class WorldIsValid extends MethodVisitor {
+	private static final String WORLD_HEIGHT_ACCESS = "cubicchunks/asm/WorldHeightAccess";
 
-@IFMLLoadingPlugin.MCVersion(value = "1.8")
-@IFMLLoadingPlugin.SortingIndex(value = 5000)
-@IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
-public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
-	@Override
-	public String[] getASMTransformerClass() {
-		return new String[]{
-				"cubicchunks.asm.VisitorClassTransformer",
-				"cubicchunks.asm.RenderGlobalTransformer",
-				"cubicchunks.asm.ViewFrustumTransformer",
-				"cubicchunks.asm.ChunkCacheTransformer",
-				"cubicchunks.asm.RegionRenderCacheTransformer"
-		};
+	public WorldIsValid(MethodVisitor mv) {
+		super(Opcodes.ASM4, mv);
 	}
 
 	@Override
-	public String getModContainerClass() {
-		return null;
+	public void visitJumpInsn(int opcode, Label label) {
+		if(opcode == Opcodes.IFLT) {
+			String getMinHeightDesc = getMethodDescriptor(getType(int.class), getObjectType(Mappings.WORLD));
+
+			super.visitVarInsn(Opcodes.ALOAD, 0);
+			super.visitMethodInsn(Opcodes.INVOKESTATIC, WORLD_HEIGHT_ACCESS, "getMinHeight", getMinHeightDesc, false);
+			super.visitJumpInsn(Opcodes.IF_ICMPLT, label);
+			return;
+		}
+		super.visitJumpInsn(opcode, label);
 	}
 
 	@Override
-	public String getSetupClass() {
-		return null;
+	public void visitIntInsn(int opcode, int arg) {
+		if(opcode == Opcodes.SIPUSH) {
+			String getMaxHeightDesc = getMethodDescriptor(getType(int.class), getObjectType(Mappings.WORLD));
+
+			super.visitVarInsn(Opcodes.ALOAD, 0);
+			super.visitMethodInsn(Opcodes.INVOKESTATIC, WORLD_HEIGHT_ACCESS,  "getMaxHeight", getMaxHeightDesc, false);
+			return;
+		}
+		super.visitIntInsn(opcode, arg);
 	}
 
-	@Override
-	public void injectData(Map<String, Object> data) {
-
-	}
-
-	@Override
-	public String getAccessTransformerClass() {
-		return null;
-	}
 }

@@ -23,6 +23,11 @@
  */
 package cubicchunks.util;
 
+import com.google.common.base.Throwables;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -73,6 +78,14 @@ public class ReflectionUtil {
 			modifiersField.setInt(f, mod);
 		} catch (IllegalAccessException e) {
 			throw new AssertionError("Cannot set field modifiers in class Field", e);
+		}
+	}
+
+	public static MethodHandle getConstructorMethodHandle(Class<?> visitor, Class<?>...args) {
+		try {
+			return MethodHandles.lookup().findConstructor(visitor, MethodType.methodType(void.class, args));
+		} catch (IllegalAccessException | NoSuchMethodException e) {
+			throw Throwables.propagate(e);
 		}
 	}
 }
