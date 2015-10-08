@@ -27,10 +27,10 @@ import cubicchunks.CubicChunkSystem;
 import net.minecraft.world.World;
 
 /**
- * This class has methods to get world height and depth.
+ * This class has methods to get information about works.
  * Should be used from asm transformed code.
  */
-public final class WorldHeightAccess {
+public final class WorldMethods {
 	private static CubicChunkSystem cc;
 
 	public static int getMinHeight(World world) {
@@ -49,7 +49,11 @@ public final class WorldHeightAccess {
 		return 256;
 	}
 
+	public static boolean isTallWorld(World world) {
+		return cc.isTallWorld(world);
+	}
+
 	public static void registerChunkSystem(CubicChunkSystem cc) {
-		WorldHeightAccess.cc = cc;
+		WorldMethods.cc = cc;
 	}
 }

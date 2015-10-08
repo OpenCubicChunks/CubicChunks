@@ -54,12 +54,12 @@ public class ChunkCacheTransformer extends AbstractClassTransformer{
 		LabelNode label = AsmUtils.findInsn(insns, LabelNode.class, -1, 1);
 		insns.insertBefore(ifltInsn, new VarInsnNode(Opcodes.ALOAD, 0));
 		insns.insertBefore(ifltInsn, new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/world/ChunkCache", getName("field_72815_e", "worldObj"), "Lnet/minecraft/world/World;"));
-		insns.insertBefore(ifltInsn, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/WorldHeightAccess", "getMinHeight", "(Lnet/minecraft/world/World;)I", false));
+		insns.insertBefore(ifltInsn, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/WorldMethods", "getMinHeight", "(Lnet/minecraft/world/World;)I", false));
 		insns.set(ifltInsn, new JumpInsnNode(Opcodes.IF_ICMPLT, label));
 
 		AbstractInsnNode sipushInsn = AsmUtils.findInsn(insns, IntInsnNode.class, Opcodes.SIPUSH, 0);
 		insns.insertBefore(sipushInsn, new VarInsnNode(Opcodes.ALOAD, 0));
 		insns.insertBefore(sipushInsn, new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/world/ChunkCache", getName("field_72815_e", "worldObj"), "Lnet/minecraft/world/World;"));
-		insns.set(sipushInsn, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/WorldHeightAccess", "getMaxHeight", "(Lnet/minecraft/world/World;)I", false));
+		insns.set(sipushInsn, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/WorldMethods", "getMaxHeight", "(Lnet/minecraft/world/World;)I", false));
 	}
 }

@@ -24,6 +24,7 @@
 package cubicchunks.asm;
 
 import com.google.common.base.Throwables;
+import org.objectweb.asm.Type;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,8 +37,6 @@ public class Mappings {
 	//since srg field and method names are guarranted not to collide -  we can store them in one map
 	private static final Map<String, String> srgToMcp = new HashMap<>();
 
-	public static final String WORLD = "net/minecraft/world/World";
-
 	static {
 		String location = System.getProperty("net.minecraftforge.gradle.GradleStart.srg.srg-mcp");
 		IS_DEV = location != null;
@@ -45,6 +44,23 @@ public class Mappings {
 			initMappings(location);
 		}
 	}
+
+	//classes
+	public static final String WORLD = "net/minecraft/world/World";
+	public static final String VIEW_FRUSTUM = "net/minecraft/client/renderer/ViewFrustum";
+
+	//methods
+	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
+	public static final String VIEW_FRUSTUM_SET_COUNT_CHUNKS = getNameFromSrg("func_178159_a");
+
+	//fields
+	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");
+
+	//classes referenced from asm
+	public static final String WORLD_METHODS = "cubicchunks/asm/WorldMethods";
+	public static final String WORLD_METHODS_IS_TALL_WORLD_DESC = Type.getMethodDescriptor(Type.getType(boolean.class), Type.getObjectType(WORLD));
+
+
 	public static String getNameFromSrg(String srgName) {
 		if(IS_DEV) {
 			return srgToMcp.get(srgName);

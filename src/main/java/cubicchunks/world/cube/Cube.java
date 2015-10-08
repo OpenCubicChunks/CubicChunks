@@ -23,31 +23,29 @@
  */
 package cubicchunks.world.cube;
 
-import java.util.List;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.tileentity.TileEntity;
-
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
-
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.column.Column;
+import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.apache.logging.log4j.Logger;
+
+import java.util.List;
 
 public class Cube {
 	
@@ -572,7 +570,7 @@ public class Cube {
 					Coords.localToBlock(this.cubeY, y),
 					Coords.localToBlock(this.cubeZ, z)
 				);
-				block.randomTick(this.world, pos, blockState, this.world.rand);
+				//block.randomTick(this.world, pos, blockState, this.world.rand);
 			}
 		}
 	}

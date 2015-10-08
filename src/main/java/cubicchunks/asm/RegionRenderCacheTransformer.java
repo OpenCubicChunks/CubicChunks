@@ -54,7 +54,7 @@ public class RegionRenderCacheTransformer extends AbstractClassTransformer{
 
 		insns.insertBefore(startNode, new VarInsnNode(Opcodes.ALOAD, 0));
 		insns.insertBefore(startNode, new VarInsnNode(Opcodes.ALOAD, 1));
-		insns.insertBefore(startNode, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/RenderGlobalUtils", "getBlockStateRawFromCache", "(Lnet/minecraft/client/renderer/RegionRenderCache;Lnet/minecraft/util/BlockPos;)Lnet/minecraft/block/state/IBlockState;", false));
+		insns.insertBefore(startNode, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/RenderMethods", "getBlockStateRawFromCache", "(Lnet/minecraft/client/renderer/RegionRenderCache;Lnet/minecraft/util/BlockPos;)Lnet/minecraft/block/state/IBlockState;", false));
 		insns.insertBefore(startNode, new InsnNode(Opcodes.DUP));
 		insns.insertBefore(startNode, new JumpInsnNode(Opcodes.IFNULL, startNode));
 		insns.insertBefore(startNode, new InsnNode(Opcodes.ARETURN));

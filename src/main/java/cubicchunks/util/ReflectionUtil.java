@@ -88,4 +88,8 @@ public class ReflectionUtil {
 			throw Throwables.propagate(e);
 		}
 	}
+
+	public static String getFieldDescriptor(String name) {
+		return "L" + name + ";";
+	}
 }

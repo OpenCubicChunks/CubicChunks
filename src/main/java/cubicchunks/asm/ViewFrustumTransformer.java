@@ -32,11 +32,10 @@ import java.util.List;
 
 public class ViewFrustumTransformer extends AbstractClassTransformer {
 
-	private static final MethodInfo SET_COUNT_CHUNKS = new MethodInfo("func_178159_a", "setCountChunksXYZ");
 	private static final MethodInfo GET_RENDER_CHUNK = new MethodInfo("func_178161_a", "getRenderChunk");
 
 	private static final List<MethodInfo> TO_TRANSFORM = Lists.newArrayList(
-			SET_COUNT_CHUNKS, GET_RENDER_CHUNK
+			GET_RENDER_CHUNK
 	);
 
 	@Override
@@ -51,19 +50,9 @@ public class ViewFrustumTransformer extends AbstractClassTransformer {
 
 	@Override
 	protected void transformMethod(MethodInfo methodInfo, MethodNode node) {
-		if(methodInfo == GET_RENDER_CHUNK)
-			transformGetRenderChunk(node);
-		else
-			transformSetCountChunks(node);
+		transformGetRenderChunk(node);
 	}
 
-	private void transformSetCountChunks(MethodNode node) {
-		InsnList insns = node.instructions;
-		//16 - the default height - is pushed to the stack using BIPUSH
-		AbstractInsnNode bipush = AsmUtils.findInsn(insns, IntInsnNode.class, Opcodes.BIPUSH, 0);
-		//replace it with ILOAD 2 (the same as for x and z)
-		insns.set(bipush, new VarInsnNode(Opcodes.ILOAD, 2));
-	}
 
 	private void transformGetRenderChunk(MethodNode node) {
 		InsnList insns = node.instructions;
@@ -74,7 +63,7 @@ public class ViewFrustumTransformer extends AbstractClassTransformer {
 		insns.insertBefore(startLabel, new VarInsnNode(Opcodes.ALOAD, 0));
 		insns.insertBefore(startLabel, new VarInsnNode(Opcodes.ALOAD, 1));
 
-		insns.insertBefore(startLabel, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/RenderGlobalUtils", "getRenderChunk", "(Lnet/minecraft/client/renderer/ViewFrustum;Lnet/minecraft/util/BlockPos;)Lnet/minecraft/client/renderer/chunk/RenderChunk;", false));
+		insns.insertBefore(startLabel, new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/RenderMethods", "getRenderChunk", "(Lnet/minecraft/client/renderer/ViewFrustum;Lnet/minecraft/util/BlockPos;)Lnet/minecraft/client/renderer/chunk/RenderChunk;", false));
 		insns.insertBefore(startLabel, new InsnNode(Opcodes.DUP));
 		insns.insertBefore(startLabel, new JumpInsnNode(Opcodes.IFNULL, startLabel));
 		insns.insertBefore(startLabel, new InsnNode(Opcodes.ARETURN));

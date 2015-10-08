@@ -24,6 +24,7 @@
 package cubicchunks.asm;
 
 import com.google.common.base.Throwables;
+import cubicchunks.asm.transformer.ViewFrustumSetCountChunks;
 import cubicchunks.asm.transformer.WorldIsValid;
 import cubicchunks.util.ReflectionUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -34,22 +35,21 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
+import static cubicchunks.asm.Mappings.*;
+
 /**
  * Class transformer that allows to use MethodVisitor. Inspired by diesieben07's SevenCommons code.
  */
 public class VisitorClassTransformer implements IClassTransformer{
 
-	private static final String WORLD_IS_VALID = "func_175701_a";
-
 	private List<Transformer> transformers = new ArrayList<>();
 
 	public VisitorClassTransformer() {
-		add(WorldIsValid.class, "net/minecraft/world/World", WORLD_IS_VALID);
+		add(WorldIsValid.class, WORLD , WORLD_IS_VALID);
+		add(ViewFrustumSetCountChunks.class, VIEW_FRUSTUM, VIEW_FRUSTUM_SET_COUNT_CHUNKS);
 	}
 
-	private void add(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String srgMethodName) {
-		String methodName = Mappings.getNameFromSrg(srgMethodName);
-
+	private void add(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String methodName) {
 		MethodHandle methodVisitorConstr = ReflectionUtil.getConstructorMethodHandle(methodTransformer, MethodVisitor.class);
 
 		MethodHandle classVisitor = MethodHandles.insertArguments(MethodClassVisitor.HANDLE, 1, methodVisitorConstr, methodName);

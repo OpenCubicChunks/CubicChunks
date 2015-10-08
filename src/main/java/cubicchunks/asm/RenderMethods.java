@@ -42,7 +42,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 
-public class RenderGlobalUtils {
+public class RenderMethods {
 	private static CubicChunkSystem cc;
 
 	private static MethodHandle getWorldRenderGlobal = getMethodHandleGetWorld();
@@ -116,7 +116,7 @@ public class RenderGlobalUtils {
 	}
 
 	public static final void registerChunkSystem(CubicChunkSystem cc) {
-		RenderGlobalUtils.cc = cc;
+		RenderMethods.cc = cc;
 	}
 
 	public static final IBlockState getBlockStateRawFromCache(RegionRenderCache cache, BlockPos pos) throws Throwable {

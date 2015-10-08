@@ -773,8 +773,12 @@ public class Column extends Chunk {
 			return;
 		}
 
-		for (Cube cube : this.cubes.values()) {
-			cube.doRandomTicks();
+		for (Map.Entry<Integer, Cube> cube : this.cubes.entrySet()) {
+			Cube c = cube.getValue();
+			if(c.getY() != cube.getKey()) {
+				throw new IllegalStateException(String .format("Column in inconsistent state! Cube at (%d, %d, %d) thinks it's at (%d, %d, %d)", xPosition, (int)cube.getKey(), zPosition, c.getX(), c.getY(), c.getZ()));
+			}
+			c.doRandomTicks();
 		}
 	}
 }

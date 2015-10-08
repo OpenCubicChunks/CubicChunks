@@ -23,42 +23,42 @@
  */
 package cubicchunks.asm.transformer;
 
-import cubicchunks.asm.Mappings;
+import cubicchunks.util.ReflectionUtil;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import static org.objectweb.asm.Type.*;
 
-public class WorldIsValid extends MethodVisitor {
-	private static final String WORLD_HEIGHT_ACCESS = "cubicchunks/asm/WorldMethods";
+import static cubicchunks.asm.Mappings.*;
+import static org.objectweb.asm.Opcodes.*;
 
-	public WorldIsValid(MethodVisitor mv) {
-		super(Opcodes.ASM4, mv);
-	}
-
-	@Override
-	public void visitJumpInsn(int opcode, Label label) {
-		if(opcode == Opcodes.IFLT) {
-			String getMinHeightDesc = getMethodDescriptor(getType(int.class), getObjectType(Mappings.WORLD));
-
-			super.visitVarInsn(Opcodes.ALOAD, 0);
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, WORLD_HEIGHT_ACCESS, "getMinHeight", getMinHeightDesc, false);
-			super.visitJumpInsn(Opcodes.IF_ICMPLT, label);
-			return;
-		}
-		super.visitJumpInsn(opcode, label);
+public class ViewFrustumSetCountChunks extends MethodVisitor {
+	public ViewFrustumSetCountChunks(MethodVisitor mv) {
+		super(ASM4, mv);
 	}
 
 	@Override
 	public void visitIntInsn(int opcode, int arg) {
-		if(opcode == Opcodes.SIPUSH) {
-			String getMaxHeightDesc = getMethodDescriptor(getType(int.class), getObjectType(Mappings.WORLD));
+		if(opcode == BIPUSH) {
+			Label notCubicChunksLabel = new Label();
+			Label afterIfLabel = new Label();
+			String worldTypeFieldDesc = ReflectionUtil.getFieldDescriptor(WORLD);
+			//get world field
+			super.visitVarInsn(ALOAD, 0);
+			super.visitFieldInsn(GETFIELD, VIEW_FRUSTUM, VIEW_FRUSTUM_WORLD, worldTypeFieldDesc);
+			//is it CubicChunks world?
+			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "isTallWorld", WORLD_METHODS_IS_TALL_WORLD_DESC, false);
+			//compare to false
+			//if not cubic chunks - go to vanilla instructions label
+			super.visitJumpInsn(IFEQ, notCubicChunksLabel);
+			//cubic chunks
+			super.visitVarInsn(ILOAD, 2); //load variable that stores render distance
+			super.visitJumpInsn(GOTO, afterIfLabel);
 
-			super.visitVarInsn(Opcodes.ALOAD, 0);
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, WORLD_HEIGHT_ACCESS,  "getMaxHeight", getMaxHeightDesc, false);
+			super.visitLabel(notCubicChunksLabel);
+			//vanilla
+			super.visitIntInsn(opcode, arg);
+			super.visitLabel(afterIfLabel);
 			return;
 		}
 		super.visitIntInsn(opcode, arg);
 	}
-
 }

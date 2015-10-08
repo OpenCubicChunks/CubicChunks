@@ -127,7 +127,7 @@ public class RenderGlobalTransformer extends AbstractClassTransformer {
 		//now we can actually call our external static method
 		insns.add(new MethodInsnNode(
 				Opcodes.INVOKESTATIC,
-				"cubicchunks/asm/RenderGlobalUtils",
+				"cubicchunks/asm/RenderMethods",
 				"getEntityList",
 				"([Lnet/minecraft/util/ClassInheritanceMultiMap;Lnet/minecraft/util/BlockPos;Lnet/minecraft/client/renderer/RenderGlobal;)Lnet/minecraft/util/ClassInheritanceMultiMap;",
 				false));
@@ -148,7 +148,7 @@ public class RenderGlobalTransformer extends AbstractClassTransformer {
 
 		insns.add(new VarInsnNode(Opcodes.ALOAD, entityVar));
 		insns.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/entity/Entity", getName("field_70163_u", "posY"), "D"));
-		insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/RenderGlobalUtils", "updateChunkPositions", "(Lnet/minecraft/client/renderer/ViewFrustum;DDD)V", false));
+		insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/RenderMethods", "updateChunkPositions", "(Lnet/minecraft/client/renderer/ViewFrustum;DDD)V", false));
 		insns.add(new JumpInsnNode(Opcodes.GOTO, afterUpdatePosLabel));
 	}
 
