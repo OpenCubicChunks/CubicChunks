@@ -24,9 +24,7 @@
 package cubicchunks.asm;
 
 import com.google.common.base.Throwables;
-import cubicchunks.asm.transformer.ViewFrustumGetRenderChunk;
-import cubicchunks.asm.transformer.ViewFrustumSetCountChunks;
-import cubicchunks.asm.transformer.WorldIsValid;
+import cubicchunks.asm.transformer.*;
 import cubicchunks.util.ReflectionUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.*;
@@ -49,6 +47,10 @@ public class VisitorClassTransformer implements IClassTransformer{
 		add(WorldIsValid.class, WORLD , WORLD_IS_VALID);
 		add(ViewFrustumSetCountChunks.class, VIEW_FRUSTUM, VIEW_FRUSTUM_SET_COUNT_CHUNKS);
 		add(ViewFrustumGetRenderChunk.class, VIEW_FRUSTUM, VIEW_FRUSTUM_GET_RENDER_CHUNK);
+		add(ViewFrustumUpdateChunkPositions.class, VIEW_FRUSTUM, VIEW_FRUSTUM_UPDATE_CHUNK_POSITIONS);
+		add(ChunkCacheGetBlockState.class, CHUNK_CACHE, CHUNK_CACHE_GET_BLOCK_STATE);
+		add(RenderGlobalGetRenderChunkOffset.class, RENDER_GLOBAL, RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET);
+		add(RegionRenderCacheGetBlockStateRaw.class, REGION_RENDER_CACHE, REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW);
 	}
 
 	private void add(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String methodName) {

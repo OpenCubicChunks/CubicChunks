@@ -21,41 +21,33 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm;
+package cubicchunks.asm.transformer;
 
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 
-import java.util.Map;
+import static cubicchunks.asm.Mappings.RENDER_METHODS;
+import static cubicchunks.asm.Mappings.RENDER_METHODS_BLOCK_FROM_CACHE_DESC;
+import static org.objectweb.asm.Opcodes.*;
 
-@IFMLLoadingPlugin.MCVersion(value = "1.8")
-@IFMLLoadingPlugin.SortingIndex(value = 5000)
-@IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
-public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
-	@Override
-	public String[] getASMTransformerClass() {
-		return new String[]{
-				"cubicchunks.asm.VisitorClassTransformer",
-				"cubicchunks.asm.RegionRenderCacheTransformer"
-		};
+public class RegionRenderCacheGetBlockStateRaw extends MethodVisitor {
+	public RegionRenderCacheGetBlockStateRaw(MethodVisitor mv) {
+		super(ASM4, mv);
 	}
 
 	@Override
-	public String getModContainerClass() {
-		return null;
-	}
+	public void visitCode() {
+		super.visitCode();
 
-	@Override
-	public String getSetupClass() {
-		return null;
-	}
+		Label vanillaCode = new Label();
 
-	@Override
-	public void injectData(Map<String, Object> data) {
-
-	}
-
-	@Override
-	public String getAccessTransformerClass() {
-		return null;
+		super.visitVarInsn(ALOAD, 0);
+		super.visitVarInsn(ALOAD, 1);
+		super.visitMethodInsn(INVOKESTATIC, RENDER_METHODS, "blockFromCache", RENDER_METHODS_BLOCK_FROM_CACHE_DESC, false);
+		super.visitInsn(DUP);
+		super.visitJumpInsn(IFNULL, vanillaCode);
+		super.visitInsn(ARETURN);
+		super.visitLabel(vanillaCode);
+		super.visitInsn(POP);
 	}
 }

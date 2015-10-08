@@ -21,41 +21,41 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm;
+package cubicchunks.asm.transformer;
 
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 
-import java.util.Map;
+import static cubicchunks.asm.Mappings.*;
+import static org.objectweb.asm.Opcodes.*;
 
-@IFMLLoadingPlugin.MCVersion(value = "1.8")
-@IFMLLoadingPlugin.SortingIndex(value = 5000)
-@IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
-public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
-	@Override
-	public String[] getASMTransformerClass() {
-		return new String[]{
-				"cubicchunks.asm.VisitorClassTransformer",
-				"cubicchunks.asm.RegionRenderCacheTransformer"
-		};
+public class ChunkCacheGetBlockState extends MethodVisitor {
+	public ChunkCacheGetBlockState(MethodVisitor mv) {
+		super(ASM4, mv);
 	}
 
 	@Override
-	public String getModContainerClass() {
-		return null;
+	public void visitJumpInsn(int opcode, Label label) {
+		if(opcode == IFLT) {
+			this.loadHeight("getMinHeight");
+			super.visitJumpInsn(IF_ICMPLT, label);
+			return;
+		}
+		super.visitJumpInsn(opcode, label);
 	}
 
 	@Override
-	public String getSetupClass() {
-		return null;
+	public void visitIntInsn(int opcode, int arg) {
+		if(opcode == SIPUSH) {
+			this.loadHeight("getMaxHeight");
+			return;
+		}
+		super.visitIntInsn(opcode, arg);
 	}
 
-	@Override
-	public void injectData(Map<String, Object> data) {
-
-	}
-
-	@Override
-	public String getAccessTransformerClass() {
-		return null;
+	private void loadHeight(String methodName) {
+		super.visitVarInsn(ALOAD, 0);
+		super.visitFieldInsn(GETFIELD, CHUNK_CACHE, CHUNK_CACHE_WORLD_OBJ, WORLD_FIELD_DESC);
+		super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, methodName, WORLD_METHODS_GET_HEIGHT_DESC, false);
 	}
 }

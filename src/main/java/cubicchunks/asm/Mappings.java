@@ -48,25 +48,47 @@ public class Mappings {
 
 	//classes
 	public static final String WORLD = "net/minecraft/world/World";
+	public static final String WORLD_CLIENT = "net/minecraft/client/multiplayer/WorldClient";
 	public static final String VIEW_FRUSTUM = "net/minecraft/client/renderer/ViewFrustum";
 	public static final String RENDER_CHUNK = "net/minecraft/client/renderer/chunk/RenderChunk";
 	public static final String BLOCK_POS = "net/minecraft/util/BlockPos";
-
+	public static final String CHUNK_CACHE = "net/minecraft/world/ChunkCache";
+	public static final String RENDER_GLOBAL = "net/minecraft/client/renderer/RenderGlobal";
+	public static final String IBLOCK_STATE = "net/minecraft/block/state/IBlockState";
+	public static final String REGION_RENDER_CACHE = "net/minecraft/client/renderer/RegionRenderCache";
 	//methods
 	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
+
 	public static final String VIEW_FRUSTUM_SET_COUNT_CHUNKS = getNameFromSrg("func_178159_a");
 	public static final String VIEW_FRUSTUM_GET_RENDER_CHUNK = getNameFromSrg("func_178161_a");
+	public static final String VIEW_FRUSTUM_UPDATE_CHUNK_POSITIONS = getNameFromSrg("func_178163_a");
+
+	public static final String CHUNK_CACHE_GET_BLOCK_STATE = getNameFromSrg("func_180495_p");
+
+	public static final String RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET = getNameFromSrg("func_174973_a");
+
+	public static final String REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW = getNameFromSrg("func_175631_c");
 
 	//fields
 	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");
+	public static final String CHUNK_CACHE_WORLD_OBJ = getNameFromSrg("field_72815_e");
+	public static final String RENDER_GLOBAL_THE_WORLD = getNameFromSrg("field_72769_h");
 
 	//classes referenced from asm
 	public static final String WORLD_METHODS = "cubicchunks/asm/WorldMethods";
+	public static final String WORLD_METHODS_GET_HEIGHT_DESC = getMethodDescriptor(INT_TYPE, getObjectType(WORLD));
 	public static final String WORLD_METHODS_IS_TALL_WORLD_DESC =
-			getMethodDescriptor(getType(boolean.class), getObjectType(WORLD));
+			getMethodDescriptor(BOOLEAN_TYPE, getObjectType(WORLD));
 	public static final String RENDER_METHODS = "cubicchunks/asm/RenderMethods";
 	public static final String RENDER_METHODS_GET_RENDER_CHUNK_DESC =
 			getMethodDescriptor(getObjectType(RENDER_CHUNK), getObjectType(VIEW_FRUSTUM), getObjectType(BLOCK_POS));
+	public static final String RENDER_METHODS_UPDATE_CHUNK_POSITIONS_DESC =
+			getMethodDescriptor(BOOLEAN_TYPE, getObjectType(VIEW_FRUSTUM));
+	public static final String RENDER_METHODS_BLOCK_FROM_CACHE_DESC =
+			getMethodDescriptor(getObjectType(IBLOCK_STATE), getObjectType(REGION_RENDER_CACHE), getObjectType(BLOCK_POS));
+
+	//other
+	public static final String WORLD_FIELD_DESC = getObjectType(WORLD_CLIENT).getDescriptor();
 
 	public static String getNameFromSrg(String srgName) {
 		if(IS_DEV) {

@@ -37,6 +37,7 @@ import cubicchunks.util.WorldAccess;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.RenderGlobal;
@@ -332,13 +333,13 @@ public class CubicChunkSystem {
 	}
 
 	//@ClientOnly
-	public void frustumViewUpdateChunkPositions(ViewFrustum renderers, double x, double y, double z) {
+	public boolean frustumViewUpdateChunkPositions(ViewFrustum renderers) {
+		if (!isTallWorld(renderers.world)) return false;
 
-		if (!isTallWorld(renderers.world)) {
-			renderers.updateChunkPositions(x, z);
-			return;
-		}
-		System.out.println("frustumViewUpdateChunkPositions");
+		Entity view = Minecraft.getMinecraft().getRenderViewEntity();
+		double x = view.posX;
+		double y = view.posY;
+		double z = view.posZ;
 
 		// treat the y dimension the same as all the rest
 		int viewX = MathHelper.floor_double(x) - 8;
@@ -372,6 +373,7 @@ public class CubicChunkSystem {
 				}
 			}
 		}
+		return true;
 	}
 
 	//@ClientOnly

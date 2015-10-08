@@ -32,14 +32,9 @@ import java.util.List;
 
 public class RenderGlobalTransformer extends AbstractClassTransformer {
 
-	private static final MethodInfo LOAD_RENDERERS = new MethodInfo("func_72712_a", "loadRenderers");
-	private static final MethodInfo SETUP_TERRAIN = new MethodInfo("func_174970_a", "setupTerrain");
 	private static final MethodInfo RENDER_ENTITIES = new MethodInfo("func_180446_a", "renderEntities");
-	private static final MethodInfo GET_RENDER_CHUNK_NEIGHBOR = new MethodInfo("func_174973_a", "getRenderChunkOffset");
 
-	private static final MethodInfo VIEWFRUSTUM_UPD_CHUNK_POS = new MethodInfo("func_178163_a", "updateChunkPositions");
-
-	private static final List<MethodInfo> TO_TRANSFORM = Lists.newArrayList(LOAD_RENDERERS, SETUP_TERRAIN, RENDER_ENTITIES, GET_RENDER_CHUNK_NEIGHBOR);
+	private static final List<MethodInfo> TO_TRANSFORM = Lists.newArrayList(RENDER_ENTITIES);
 	@Override
 	protected String getTransformedClassName() {
 		return "net.minecraft.client.renderer.RenderGlobal";
@@ -52,33 +47,12 @@ public class RenderGlobalTransformer extends AbstractClassTransformer {
 
 	@Override
 	protected void transformMethod(MethodInfo methodInfo, MethodNode node) {
-		if(methodInfo == SETUP_TERRAIN ||methodInfo == LOAD_RENDERERS)
-			replaceUpdateChunkPos(node, methodInfo == LOAD_RENDERERS ? 2 : 1);
-		else if(methodInfo == RENDER_ENTITIES)
-			replaceChunkGetEntityListsUsage(node);
-		else
-			fixRenderChunkOffset(node);
+		replaceChunkGetEntityListsUsage(node);
 	}
 
-	private void fixRenderChunkOffset(MethodNode node) {
-		InsnList insns = node.instructions;
-
-		IntInsnNode sipush = AsmUtils.findInsn(insns, IntInsnNode.class, Opcodes.SIPUSH, 0);
-		int index = insns.indexOf(sipush);
-
-		insns.set(insns.get(index-2), new InsnNode(Opcodes.NOP));
-		insns.set(insns.get(index-1), new InsnNode(Opcodes.NOP));
-		insns.set(sipush, new InsnNode(Opcodes.NOP));
-		insns.set(insns.get(index+1), new InsnNode(Opcodes.NOP));
-
-		JumpInsnNode iflt = AsmUtils.findInsn(insns, JumpInsnNode.class, Opcodes.IFLT, 0);
-		index = insns.indexOf(iflt);;
-		insns.set(insns.get(index-2), new InsnNode(Opcodes.NOP));
-		insns.set(insns.get(index-1), new InsnNode(Opcodes.NOP));
-		insns.set(iflt, new InsnNode(Opcodes.NOP));
-
-	}
-
+	/**
+	 * I have no idea how to do it using MethodVisitor...
+	 */
 	private void replaceChunkGetEntityListsUsage(MethodNode node) {
 		/*
 		 * It should replace chunk.getEntityLists[chunkY] with method call that will return ClassInheritanceMultiMap
@@ -134,22 +108,4 @@ public class RenderGlobalTransformer extends AbstractClassTransformer {
 		//and  then go back to Minecraft code
 		insns.add(new JumpInsnNode(Opcodes.GOTO, beforeGetIterLabel));
 	}
-
-	private void replaceUpdateChunkPos(MethodNode node, int entityVar) {
-		InsnList insns = node.instructions;
-		MethodInsnNode methodCall = AsmUtils.findMethodCall(insns, "net/minecraft/client/renderer/ViewFrustum", VIEWFRUSTUM_UPD_CHUNK_POS);
-
-		LabelNode newCodeLabel = new LabelNode();
-		LabelNode afterUpdatePosLabel = new LabelNode();
-		insns.add(newCodeLabel);
-
-		insns.insertBefore(methodCall, new JumpInsnNode(Opcodes.GOTO, newCodeLabel));
-		insns.insert(methodCall, afterUpdatePosLabel);
-
-		insns.add(new VarInsnNode(Opcodes.ALOAD, entityVar));
-		insns.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/entity/Entity", getName("field_70163_u", "posY"), "D"));
-		insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "cubicchunks/asm/RenderMethods", "updateChunkPositions", "(Lnet/minecraft/client/renderer/ViewFrustum;DDD)V", false));
-		insns.add(new JumpInsnNode(Opcodes.GOTO, afterUpdatePosLabel));
-	}
-
 }

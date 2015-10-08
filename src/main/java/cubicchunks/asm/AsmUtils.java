@@ -29,24 +29,6 @@ import org.objectweb.asm.tree.*;
 import java.util.Iterator;
 
 class AsmUtils {
-	static <T extends AbstractInsnNode> T findInsn(InsnList insns, Class<T> toFind, int opcode, int occurrence) {
-		Iterator<AbstractInsnNode> it = insns.iterator();
-		T found = null;
-		int count = 0;
-		while(it.hasNext()) {
-			AbstractInsnNode node = it.next();
-			System.out.println(node.getClass() + ", " + node.getOpcode() + ", " + count + ", " + occurrence);
-			if(node.getClass() == toFind && node.getOpcode() == opcode) {
-				if(count == occurrence) {
-					found = (T) node;
-					break;
-				}
-				count++;
-			}
-		}
-		System.out.println(found);
-		return found;
-	}
 
 	static MethodNode findMethod(ClassNode cn, MethodInfo mi) {
 		MethodNode found = null;

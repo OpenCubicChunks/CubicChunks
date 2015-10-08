@@ -94,8 +94,8 @@ public class RenderMethods {
 		}
 	}
 
-	public static final void updateChunkPositions(ViewFrustum _this, double posX, double posZ, double posY) {
-		cc.frustumViewUpdateChunkPositions(_this, posX, posY, posZ);
+	public static final boolean updateChunkPositions(ViewFrustum _this) {
+		return cc.frustumViewUpdateChunkPositions(_this);
 	}
 
 	public static final ClassInheritanceMultiMap getEntityList(ClassInheritanceMultiMap[] vanillaMultiMap, BlockPos rendererPos, RenderGlobal render) {
@@ -119,7 +119,7 @@ public class RenderMethods {
 		RenderMethods.cc = cc;
 	}
 
-	public static final IBlockState getBlockStateRawFromCache(RegionRenderCache cache, BlockPos pos) throws Throwable {
+	public static final IBlockState blockFromCache(RegionRenderCache cache, BlockPos pos) throws Throwable {
 		if(cache.getWorldType() != CubicChunks.CC_WORLD_TYPE) {
 			return null;
 		}
