@@ -24,6 +24,7 @@
 package cubicchunks.asm;
 
 import com.google.common.base.Throwables;
+import cubicchunks.asm.transformer.ViewFrustumGetRenderChunk;
 import cubicchunks.asm.transformer.ViewFrustumSetCountChunks;
 import cubicchunks.asm.transformer.WorldIsValid;
 import cubicchunks.util.ReflectionUtil;
@@ -47,6 +48,7 @@ public class VisitorClassTransformer implements IClassTransformer{
 	public VisitorClassTransformer() {
 		add(WorldIsValid.class, WORLD , WORLD_IS_VALID);
 		add(ViewFrustumSetCountChunks.class, VIEW_FRUSTUM, VIEW_FRUSTUM_SET_COUNT_CHUNKS);
+		add(ViewFrustumGetRenderChunk.class, VIEW_FRUSTUM, VIEW_FRUSTUM_GET_RENDER_CHUNK);
 	}
 
 	private void add(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String methodName) {
@@ -75,7 +77,6 @@ public class VisitorClassTransformer implements IClassTransformer{
 					writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 					visitor = writer;
 				}
-				System.out.println("Transform: " + transformedName);
 				visitor = t.newVisitor(visitor);
 			}
 		}
@@ -126,7 +127,7 @@ public class VisitorClassTransformer implements IClassTransformer{
 		@Override
 		public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 			MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-			System.out.println("Visiting method " + name);
+
 			if (name.equals(this.methodName)) {
 				try {
 					MethodVisitor newMV = (MethodVisitor) methodVisitorConstr.invoke(mv);

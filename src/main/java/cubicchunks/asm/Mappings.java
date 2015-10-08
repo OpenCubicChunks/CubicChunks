@@ -24,13 +24,14 @@
 package cubicchunks.asm;
 
 import com.google.common.base.Throwables;
-import org.objectweb.asm.Type;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+
+import static org.objectweb.asm.Type.*;
 
 public class Mappings {
 	private static boolean IS_DEV;
@@ -48,18 +49,24 @@ public class Mappings {
 	//classes
 	public static final String WORLD = "net/minecraft/world/World";
 	public static final String VIEW_FRUSTUM = "net/minecraft/client/renderer/ViewFrustum";
+	public static final String RENDER_CHUNK = "net/minecraft/client/renderer/chunk/RenderChunk";
+	public static final String BLOCK_POS = "net/minecraft/util/BlockPos";
 
 	//methods
 	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
 	public static final String VIEW_FRUSTUM_SET_COUNT_CHUNKS = getNameFromSrg("func_178159_a");
+	public static final String VIEW_FRUSTUM_GET_RENDER_CHUNK = getNameFromSrg("func_178161_a");
 
 	//fields
 	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");
 
 	//classes referenced from asm
 	public static final String WORLD_METHODS = "cubicchunks/asm/WorldMethods";
-	public static final String WORLD_METHODS_IS_TALL_WORLD_DESC = Type.getMethodDescriptor(Type.getType(boolean.class), Type.getObjectType(WORLD));
-
+	public static final String WORLD_METHODS_IS_TALL_WORLD_DESC =
+			getMethodDescriptor(getType(boolean.class), getObjectType(WORLD));
+	public static final String RENDER_METHODS = "cubicchunks/asm/RenderMethods";
+	public static final String RENDER_METHODS_GET_RENDER_CHUNK_DESC =
+			getMethodDescriptor(getObjectType(RENDER_CHUNK), getObjectType(VIEW_FRUSTUM), getObjectType(BLOCK_POS));
 
 	public static String getNameFromSrg(String srgName) {
 		if(IS_DEV) {
