@@ -54,8 +54,10 @@ public class Mappings {
 	public static final String BLOCK_POS = "net/minecraft/util/BlockPos";
 	public static final String CHUNK_CACHE = "net/minecraft/world/ChunkCache";
 	public static final String RENDER_GLOBAL = "net/minecraft/client/renderer/RenderGlobal";
-	public static final String IBLOCK_STATE = "net/minecraft/block/state/IBlockState";
+	public static final String RG_CONTAINER_LOCAL_RENDER_INFORMATION = "net/minecraft/client/renderer/RenderGlobal$ContainerLocalRenderInformation";
+	public static final String I_BLOCK_STATE = "net/minecraft/block/state/IBlockState";
 	public static final String REGION_RENDER_CACHE = "net/minecraft/client/renderer/RegionRenderCache";
+	public static final String CLASS_INHERITANCE_MULTI_MAP = "net/minecraft/util/ClassInheritanceMultiMap";
 	//methods
 	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
 
@@ -66,6 +68,7 @@ public class Mappings {
 	public static final String CHUNK_CACHE_GET_BLOCK_STATE = getNameFromSrg("func_180495_p");
 
 	public static final String RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET = getNameFromSrg("func_174973_a");
+	public static final String RENDER_GLOBAL_RENDER_ENTITIES = getNameFromSrg("func_180446_a");
 
 	public static final String REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW = getNameFromSrg("func_175631_c");
 
@@ -73,6 +76,7 @@ public class Mappings {
 	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");
 	public static final String CHUNK_CACHE_WORLD_OBJ = getNameFromSrg("field_72815_e");
 	public static final String RENDER_GLOBAL_THE_WORLD = getNameFromSrg("field_72769_h");
+	public static final String RG_CLRI_RENDER_CHUNK = getNameFromSrg("field_178036_a");
 
 	//classes referenced from asm
 	public static final String WORLD_METHODS = "cubicchunks/asm/WorldMethods";
@@ -85,10 +89,13 @@ public class Mappings {
 	public static final String RENDER_METHODS_UPDATE_CHUNK_POSITIONS_DESC =
 			getMethodDescriptor(BOOLEAN_TYPE, getObjectType(VIEW_FRUSTUM));
 	public static final String RENDER_METHODS_BLOCK_FROM_CACHE_DESC =
-			getMethodDescriptor(getObjectType(IBLOCK_STATE), getObjectType(REGION_RENDER_CACHE), getObjectType(BLOCK_POS));
+			getMethodDescriptor(getObjectType(I_BLOCK_STATE), getObjectType(REGION_RENDER_CACHE), getObjectType(BLOCK_POS));
+	public static final String RENDER_METHODS_GET_ENTITY_LIST_DESC =
+			getMethodDescriptor(getObjectType(CLASS_INHERITANCE_MULTI_MAP), getObjectType(RENDER_GLOBAL), getObjectType(RENDER_CHUNK));
 
 	//other
 	public static final String WORLD_FIELD_DESC = getObjectType(WORLD_CLIENT).getDescriptor();
+	public static final String RENDER_CHUNK_FIELD_DESC = getObjectType(RENDER_CHUNK).getDescriptor();
 
 	public static String getNameFromSrg(String srgName) {
 		if(IS_DEV) {

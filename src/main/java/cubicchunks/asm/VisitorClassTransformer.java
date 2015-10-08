@@ -51,6 +51,7 @@ public class VisitorClassTransformer implements IClassTransformer{
 		add(ChunkCacheGetBlockState.class, CHUNK_CACHE, CHUNK_CACHE_GET_BLOCK_STATE);
 		add(RenderGlobalGetRenderChunkOffset.class, RENDER_GLOBAL, RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET);
 		add(RegionRenderCacheGetBlockStateRaw.class, REGION_RENDER_CACHE, REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW);
+		add(RenderGlobalRenderEntities.class, RENDER_GLOBAL, RENDER_GLOBAL_RENDER_ENTITIES);
 	}
 
 	private void add(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String methodName) {

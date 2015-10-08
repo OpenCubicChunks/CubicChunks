@@ -23,6 +23,7 @@
  */
 package cubicchunks.asm;
 
+import com.google.common.base.Throwables;
 import cubicchunks.CubicChunkSystem;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.ReflectionUtil;
@@ -98,17 +99,15 @@ public class RenderMethods {
 		return cc.frustumViewUpdateChunkPositions(_this);
 	}
 
-	public static final ClassInheritanceMultiMap getEntityList(ClassInheritanceMultiMap[] vanillaMultiMap, BlockPos rendererPos, RenderGlobal render) {
+	public static final ClassInheritanceMultiMap getEntityList(RenderGlobal render, RenderChunk renderer) {
 		WorldClient w;
 		try {
 			w = (WorldClient) getWorldRenderGlobal.invoke(render);
 		} catch (Throwable throwable) {
-			throw new Error(throwable);
+			throw Throwables.propagate(throwable);
 		}
-		if(!cc.isTallWorld(w)) {
-			return vanillaMultiMap[rendererPos.getY() / 16];
-		}
-		return cc.getEntityStore(w.getChunkFromBlockCoords(rendererPos), rendererPos.getY() >> 4);
+		BlockPos pos = renderer.getPosition();
+		return cc.getEntityStore(w.getChunkFromBlockCoords(pos), pos.getY() >> 4);
 	}
 
 	public static final RenderChunk getRenderChunk(ViewFrustum vf, BlockPos pos) {
