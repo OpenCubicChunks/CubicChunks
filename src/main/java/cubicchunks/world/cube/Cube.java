@@ -570,7 +570,7 @@ public class Cube {
 					Coords.localToBlock(this.cubeY, y),
 					Coords.localToBlock(this.cubeZ, z)
 				);
-				//block.randomTick(this.world, pos, blockState, this.world.rand);
+				block.randomTick(this.world, pos, blockState, this.world.rand);
 			}
 		}
 	}
