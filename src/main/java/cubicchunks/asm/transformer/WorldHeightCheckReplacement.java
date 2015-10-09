@@ -23,27 +23,29 @@
  */
 package cubicchunks.asm.transformer;
 
-import cubicchunks.asm.Mappings;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+
+import static cubicchunks.asm.Mappings.WORLD;
+import static cubicchunks.asm.Mappings.WORLD_METHODS;
+import static cubicchunks.asm.Mappings.WORLD_METHODS_GET_HEIGHT_DESC;
+import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
-public class WorldIsValid extends MethodVisitor {
+public class WorldHeightCheckReplacement extends MethodVisitor {
 	private static final String WORLD_HEIGHT_ACCESS = "cubicchunks/asm/WorldMethods";
 
-	public WorldIsValid(MethodVisitor mv) {
+	public WorldHeightCheckReplacement(MethodVisitor mv) {
 		super(Opcodes.ASM4, mv);
 	}
 
 	@Override
 	public void visitJumpInsn(int opcode, Label label) {
-		if(opcode == Opcodes.IFLT) {
-			String getMinHeightDesc = getMethodDescriptor(getType(int.class), getObjectType(Mappings.WORLD));
-
-			super.visitVarInsn(Opcodes.ALOAD, 0);
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, WORLD_HEIGHT_ACCESS, "getMinHeight", getMinHeightDesc, false);
-			super.visitJumpInsn(Opcodes.IF_ICMPLT, label);
+		if(opcode == IFLT || opcode == IFGE) {
+			super.visitVarInsn(ALOAD, 0);
+			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMinHeight", WORLD_METHODS_GET_HEIGHT_DESC, false);
+			super.visitJumpInsn(opcode == IFLT ? IF_ICMPLT : IF_ICMPGE, label);
 			return;
 		}
 		super.visitJumpInsn(opcode, label);
@@ -52,10 +54,16 @@ public class WorldIsValid extends MethodVisitor {
 	@Override
 	public void visitIntInsn(int opcode, int arg) {
 		if(opcode == Opcodes.SIPUSH) {
-			String getMaxHeightDesc = getMethodDescriptor(getType(int.class), getObjectType(Mappings.WORLD));
+			String getMaxHeightDesc = getMethodDescriptor(INT_TYPE, getObjectType(WORLD));
 
-			super.visitVarInsn(Opcodes.ALOAD, 0);
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, WORLD_HEIGHT_ACCESS,  "getMaxHeight", getMaxHeightDesc, false);
+			super.visitVarInsn(ALOAD, 0);
+			super.visitMethodInsn(INVOKESTATIC, WORLD_HEIGHT_ACCESS,  "getMaxHeight", getMaxHeightDesc, false);
+			if(arg == 255) {
+				//height-1
+				//i'm not sure if BIPUSH would work here, so to be safe - use LDC and let JVM do it's optimization magic
+				super.visitLdcInsn(-1);
+				super.visitInsn(IADD);
+			}
 			return;
 		}
 		super.visitIntInsn(opcode, arg);

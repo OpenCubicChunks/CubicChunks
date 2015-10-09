@@ -60,6 +60,8 @@ public class Mappings {
 	public static final String CLASS_INHERITANCE_MULTI_MAP = "net/minecraft/util/ClassInheritanceMultiMap";
 	//methods
 	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
+	public static final String WORLD_GET_LIGHT = getNameFromSrg("func_175699_k");
+	public static final String WORLD_GET_LIGHT_CHECK = getNameFromSrg("func_175721_c");//the one with additional boolean argument
 
 	public static final String VIEW_FRUSTUM_SET_COUNT_CHUNKS = getNameFromSrg("func_178159_a");
 	public static final String VIEW_FRUSTUM_GET_RENDER_CHUNK = getNameFromSrg("func_178161_a");

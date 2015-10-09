@@ -27,6 +27,7 @@ import com.google.common.base.Throwables;
 import cubicchunks.asm.transformer.*;
 import cubicchunks.util.ReflectionUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
+import net.minecraft.potion.PotionEffect;
 import org.objectweb.asm.*;
 
 import java.lang.invoke.MethodHandle;
@@ -44,7 +45,10 @@ public class VisitorClassTransformer implements IClassTransformer{
 	private List<Transformer> transformers = new ArrayList<>();
 
 	public VisitorClassTransformer() {
-		add(WorldIsValid.class, WORLD , WORLD_IS_VALID);
+		add(WorldHeightCheckReplacement.class, WORLD , WORLD_IS_VALID);
+		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT);
+		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT_CHECK);
+
 		add(ViewFrustumSetCountChunks.class, VIEW_FRUSTUM, VIEW_FRUSTUM_SET_COUNT_CHUNKS);
 		add(ViewFrustumGetRenderChunk.class, VIEW_FRUSTUM, VIEW_FRUSTUM_GET_RENDER_CHUNK);
 		add(ViewFrustumUpdateChunkPositions.class, VIEW_FRUSTUM, VIEW_FRUSTUM_UPDATE_CHUNK_POSITIONS);
