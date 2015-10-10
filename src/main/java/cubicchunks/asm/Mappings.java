@@ -62,6 +62,8 @@ public class Mappings {
 	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
 	public static final String WORLD_GET_LIGHT = getNameFromSrg("func_175699_k");
 	public static final String WORLD_GET_LIGHT_CHECK = getNameFromSrg("func_175721_c");//the one with additional boolean argument
+	public static final String WORLD_GET_LIGHT_FOR = getNameFromSrg("func_175642_b");
+	public static final String WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR = getNameFromSrg("func_175705_a");
 
 	public static final String VIEW_FRUSTUM_SET_COUNT_CHUNKS = getNameFromSrg("func_178159_a");
 	public static final String VIEW_FRUSTUM_GET_RENDER_CHUNK = getNameFromSrg("func_178161_a");
@@ -74,6 +76,7 @@ public class Mappings {
 
 	public static final String REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW = getNameFromSrg("func_175631_c");
 
+	public static final String VEC_3_I_GET_X = getNameFromSrg("func_177958_n");
 	//fields
 	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");
 	public static final String CHUNK_CACHE_WORLD_OBJ = getNameFromSrg("field_72815_e");

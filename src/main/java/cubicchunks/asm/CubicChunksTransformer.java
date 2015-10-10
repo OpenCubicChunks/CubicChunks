@@ -41,9 +41,11 @@ public class CubicChunksTransformer implements IClassTransformer{
 	private List<Transformer> transformers = new ArrayList<>();
 
 	public CubicChunksTransformer() {
-		add(WorldHeightCheckReplacement.class, WORLD , WORLD_IS_VALID);
+		add(WorldHeightCheckReplacement.class, WORLD, WORLD_IS_VALID);
 		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT);
 		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT_CHECK);
+		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FOR);
+		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR);
 
 		add(ViewFrustumSetCountChunks.class, VIEW_FRUSTUM, VIEW_FRUSTUM_SET_COUNT_CHUNKS);
 		add(ViewFrustumGetRenderChunk.class, VIEW_FRUSTUM, VIEW_FRUSTUM_GET_RENDER_CHUNK);

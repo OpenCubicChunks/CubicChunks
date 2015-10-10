@@ -33,6 +33,18 @@ import static cubicchunks.asm.Mappings.WORLD_METHODS_GET_HEIGHT_DESC;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
+/**
+ * General method transformer used to replace height checks.
+ * Replaces all of the following:
+ * (iflt/ifge) if(anything < 0) {...} --> with if(anything < minHeight) {...}
+ * (iflt/ifge) if(anything >= 0) {...} --> with if(anything >= minHeight) {...}
+ * (sipuch) 256 --> maxHeight
+ * (sipuch) 255 --> maxHeight - 1
+ * (iconst_0) 0 --> minHeight
+ *
+ * In methods where these occur for other reasons than height checks '
+ * other more specific trasformer needs to be used.
+ */
 public class WorldHeightCheckReplacement extends MethodVisitor {
 	private static final String WORLD_HEIGHT_ACCESS = "cubicchunks/asm/WorldMethods";
 
@@ -43,8 +55,7 @@ public class WorldHeightCheckReplacement extends MethodVisitor {
 	@Override
 	public void visitJumpInsn(int opcode, Label label) {
 		if(opcode == IFLT || opcode == IFGE) {
-			super.visitVarInsn(ALOAD, 0);
-			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMinHeight", WORLD_METHODS_GET_HEIGHT_DESC, false);
+			this.loadMinHeight();
 			super.visitJumpInsn(opcode == IFLT ? IF_ICMPLT : IF_ICMPGE, label);
 			return;
 		}
@@ -69,4 +80,8 @@ public class WorldHeightCheckReplacement extends MethodVisitor {
 		super.visitIntInsn(opcode, arg);
 	}
 
+	protected void loadMinHeight() {
+		super.visitVarInsn(ALOAD, 0);
+		super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMinHeight", WORLD_METHODS_GET_HEIGHT_DESC, false);
+	}
 }
