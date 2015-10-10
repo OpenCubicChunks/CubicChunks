@@ -29,16 +29,20 @@ import org.objectweb.asm.MethodVisitor;
 import static cubicchunks.asm.Mappings.*;
 import static org.objectweb.asm.Opcodes.*;
 
-public class ChunkCacheGetBlockState extends MethodVisitor {
-	public ChunkCacheGetBlockState(MethodVisitor mv) {
+public class ChunkCacheHeightCheckReplacement extends MethodVisitor {
+	private boolean transformedLower, transformedUpper;
+
+	public ChunkCacheHeightCheckReplacement(MethodVisitor mv) {
 		super(ASM4, mv);
+		new Exception("TEST!!!!!!!!!!!!!").printStackTrace();
 	}
 
 	@Override
 	public void visitJumpInsn(int opcode, Label label) {
-		if(opcode == IFLT) {
+		if(!transformedLower && opcode == IFLT) {
 			this.loadHeight("getMinHeight");
 			super.visitJumpInsn(IF_ICMPLT, label);
+			transformedLower = true;
 			return;
 		}
 		super.visitJumpInsn(opcode, label);
@@ -46,8 +50,10 @@ public class ChunkCacheGetBlockState extends MethodVisitor {
 
 	@Override
 	public void visitIntInsn(int opcode, int arg) {
-		if(opcode == SIPUSH) {
+		if(!transformedUpper && opcode == SIPUSH && arg == 256) {
+			//System.out.println("TRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR");
 			this.loadHeight("getMaxHeight");
+			transformedUpper = true;
 			return;
 		}
 		super.visitIntInsn(opcode, arg);

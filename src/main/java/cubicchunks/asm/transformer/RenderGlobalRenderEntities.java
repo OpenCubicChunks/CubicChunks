@@ -54,7 +54,7 @@ public class RenderGlobalRenderEntities extends MethodVisitor {
 			Label vanilla = new Label();
 			//load world
 			super.visitVarInsn(ALOAD, 0);
-			super.visitFieldInsn(GETFIELD, RENDER_GLOBAL, RENDER_GLOBAL_THE_WORLD, WORLD_FIELD_DESC);
+			super.visitFieldInsn(GETFIELD, RENDER_GLOBAL, RENDER_GLOBAL_THE_WORLD, WORLD_CLIENT_FIELD_DESC);
 			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "isTallWorld", WORLD_METHODS_IS_TALL_WORLD_DESC, false);
 			//if not cubic chunks (equal to 0) - jump to vanilla
 			super.visitJumpInsn(IFEQ, vanilla);

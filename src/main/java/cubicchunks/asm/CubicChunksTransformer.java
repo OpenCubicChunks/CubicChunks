@@ -47,10 +47,13 @@ public class CubicChunksTransformer implements IClassTransformer{
 		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FOR);
 		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR);
 
+		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_BLOCK_STATE);
+		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_LIGHT_FOR_EXT);
+		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_LIGHT_FOR);
+
 		add(ViewFrustumSetCountChunks.class, VIEW_FRUSTUM, VIEW_FRUSTUM_SET_COUNT_CHUNKS);
 		add(ViewFrustumGetRenderChunk.class, VIEW_FRUSTUM, VIEW_FRUSTUM_GET_RENDER_CHUNK);
 		add(ViewFrustumUpdateChunkPositions.class, VIEW_FRUSTUM, VIEW_FRUSTUM_UPDATE_CHUNK_POSITIONS);
-		add(ChunkCacheGetBlockState.class, CHUNK_CACHE, CHUNK_CACHE_GET_BLOCK_STATE);
 		add(RenderGlobalGetRenderChunkOffset.class, RENDER_GLOBAL, RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET);
 		add(RegionRenderCacheGetBlockStateRaw.class, REGION_RENDER_CACHE, REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW);
 		add(RenderGlobalRenderEntities.class, RENDER_GLOBAL, RENDER_GLOBAL_RENDER_ENTITIES);

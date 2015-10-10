@@ -48,15 +48,17 @@ import static org.objectweb.asm.Type.*;
 public class WorldHeightCheckReplacement extends MethodVisitor {
 	private static final String WORLD_HEIGHT_ACCESS = "cubicchunks/asm/WorldMethods";
 
+	private boolean transformedLower, transformedUpper;
 	public WorldHeightCheckReplacement(MethodVisitor mv) {
 		super(Opcodes.ASM4, mv);
 	}
 
 	@Override
 	public void visitJumpInsn(int opcode, Label label) {
-		if(opcode == IFLT || opcode == IFGE) {
+		if(!transformedLower && (opcode == IFLT || opcode == IFGE)) {
 			this.loadMinHeight();
 			super.visitJumpInsn(opcode == IFLT ? IF_ICMPLT : IF_ICMPGE, label);
+			transformedLower = true;
 			return;
 		}
 		super.visitJumpInsn(opcode, label);
@@ -64,7 +66,7 @@ public class WorldHeightCheckReplacement extends MethodVisitor {
 
 	@Override
 	public void visitIntInsn(int opcode, int arg) {
-		if(opcode == Opcodes.SIPUSH) {
+		if(!transformedUpper && opcode == Opcodes.SIPUSH) {
 			String getMaxHeightDesc = getMethodDescriptor(INT_TYPE, getObjectType(WORLD));
 
 			super.visitVarInsn(ALOAD, 0);
@@ -75,6 +77,7 @@ public class WorldHeightCheckReplacement extends MethodVisitor {
 				super.visitLdcInsn(-1);
 				super.visitInsn(IADD);
 			}
+			transformedUpper = true;
 			return;
 		}
 		super.visitIntInsn(opcode, arg);

@@ -70,6 +70,8 @@ public class Mappings {
 	public static final String VIEW_FRUSTUM_UPDATE_CHUNK_POSITIONS = getNameFromSrg("func_178163_a");
 
 	public static final String CHUNK_CACHE_GET_BLOCK_STATE = getNameFromSrg("func_180495_p");
+	public static final String CHUNK_CACHE_GET_LIGHT_FOR_EXT = getNameFromSrg("func_175629_a");
+	public static final String CHUNK_CACHE_GET_LIGHT_FOR = getNameFromSrg("func_175628_b");
 
 	public static final String RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET = getNameFromSrg("func_174973_a");
 	public static final String RENDER_GLOBAL_RENDER_ENTITIES = getNameFromSrg("func_180446_a");
@@ -99,7 +101,8 @@ public class Mappings {
 			getMethodDescriptor(getObjectType(CLASS_INHERITANCE_MULTI_MAP), getObjectType(RENDER_GLOBAL), getObjectType(RENDER_CHUNK));
 
 	//other
-	public static final String WORLD_FIELD_DESC = getObjectType(WORLD_CLIENT).getDescriptor();
+	public static final String WORLD_FIELD_DESC = getObjectType(WORLD).getDescriptor();
+	public static final String WORLD_CLIENT_FIELD_DESC = getObjectType(WORLD_CLIENT).getDescriptor();
 	public static final String RENDER_CHUNK_FIELD_DESC = getObjectType(RENDER_CHUNK).getDescriptor();
 
 	public static String getNameFromSrg(String srgName) {

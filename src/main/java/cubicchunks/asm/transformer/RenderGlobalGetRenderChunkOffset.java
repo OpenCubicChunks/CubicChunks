@@ -55,7 +55,7 @@ public class RenderGlobalGetRenderChunkOffset extends MethodVisitor {
 
 	private void loadHeight(String methodName) {
 		super.visitVarInsn(ALOAD, 0);
-		super.visitFieldInsn(GETFIELD, RENDER_GLOBAL, RENDER_GLOBAL_THE_WORLD, WORLD_FIELD_DESC);
+		super.visitFieldInsn(GETFIELD, RENDER_GLOBAL, RENDER_GLOBAL_THE_WORLD, WORLD_CLIENT_FIELD_DESC);
 		super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, methodName, WORLD_METHODS_GET_HEIGHT_DESC, false);
 	}
 }
