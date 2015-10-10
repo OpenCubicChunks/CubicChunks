@@ -27,7 +27,6 @@ import com.google.common.base.Throwables;
 import cubicchunks.asm.transformer.*;
 import cubicchunks.util.ReflectionUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
-import net.minecraft.potion.PotionEffect;
 import org.objectweb.asm.*;
 
 import java.lang.invoke.MethodHandle;
@@ -37,14 +36,11 @@ import java.util.List;
 
 import static cubicchunks.asm.Mappings.*;
 
-/**
- * Class transformer that allows to use MethodVisitor. Inspired by diesieben07's SevenCommons code.
- */
-public class VisitorClassTransformer implements IClassTransformer{
+public class CubicChunksTransformer implements IClassTransformer{
 
 	private List<Transformer> transformers = new ArrayList<>();
 
-	public VisitorClassTransformer() {
+	public CubicChunksTransformer() {
 		add(WorldHeightCheckReplacement.class, WORLD , WORLD_IS_VALID);
 		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT);
 		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT_CHECK);

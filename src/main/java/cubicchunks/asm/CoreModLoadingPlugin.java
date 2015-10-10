@@ -33,7 +33,7 @@ import java.util.Map;
 public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
 	@Override
 	public String[] getASMTransformerClass() {
-		return new String[]{"cubicchunks.asm.VisitorClassTransformer"};
+		return new String[]{"cubicchunks.asm.CubicChunksTransformer"};
 	}
 
 	@Override
