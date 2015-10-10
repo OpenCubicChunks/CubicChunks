@@ -34,7 +34,6 @@ public class ChunkCacheHeightCheckReplacement extends MethodVisitor {
 
 	public ChunkCacheHeightCheckReplacement(MethodVisitor mv) {
 		super(ASM4, mv);
-		new Exception("TEST!!!!!!!!!!!!!").printStackTrace();
 	}
 
 	@Override
@@ -51,7 +50,6 @@ public class ChunkCacheHeightCheckReplacement extends MethodVisitor {
 	@Override
 	public void visitIntInsn(int opcode, int arg) {
 		if(!transformedUpper && opcode == SIPUSH && arg == 256) {
-			//System.out.println("TRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR");
 			this.loadHeight("getMaxHeight");
 			transformedUpper = true;
 			return;
