@@ -23,18 +23,16 @@
  */
 package cubicchunks;
 
-import static org.junit.Assert.*;
+import com.google.common.collect.Lists;
+import cubicchunks.util.Bits;
+import cubicchunks.world.OpacityIndex;
+import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
-
-import com.google.common.collect.Lists;
-
-import cubicchunks.util.Bits;
-import cubicchunks.world.OpacityIndex;
+import static org.junit.Assert.assertEquals;
 
 
 public class TestOpacityIndex {
@@ -821,7 +819,36 @@ public class TestOpacityIndex {
 		assertEquals(202, (int)index.getTopBlockY(0, 0));
 		assertEquals(100, (int)index.getBottomBlockY(0, 0));
 	}
-	
+
+	@Test
+	public void allCombinationsTest4() {
+		int set1 = 0, set2 = 0, set3 = 0, set4 = 0;
+		while(true) {
+			OpacityIndex index = new OpacityIndex();
+			ArrayOpacityIndexImpl test = new ArrayOpacityIndexImpl();
+
+			index.setOpacity(0, set1/2, 0, (set1&1) == 0 ?  0 : 255);
+			test.set(set1/2, (set1&1) == 0 ?  0 : 255);
+
+			index.setOpacity(0, set2/2, 0, (set2&1) == 0 ?  0 : 255);
+			test.set(set2/2, (set2&1) == 0 ?  0 : 255);
+
+			index.setOpacity(0, set3/2, 0, (set3&1) == 0 ?  0 : 255);
+			test.set(set3/2, (set3&1) == 0 ?  0 : 255);
+
+			index.setOpacity(0, set4/2, 0, (set4&1) == 0 ?  0 : 255);
+			test.set(set4/2, (set4&1) == 0 ?  0 : 255);
+
+			for(int i = 0; i < 5; i++) {
+				assertEquals(String.format("i[%d]=%d, i[%d]=%d, i[%d]=%d, i[%d]=%d, at y=%d", set1/2, set1 & 1, set2/2, set2&1, set3/2, set3&1, set4/2, set4&1, i), test.get(i), index.getOpacity(0, i, 0));
+			}
+			set1++;
+			if(set1 == 10) {set2++; set1 = 0;}
+			if(set2 == 10) {set3++; set2 = 0;}
+			if(set3 == 10) {set4++; set3 = 0;}
+			if(set4 == 10) break;
+		}
+	}
 	private OpacityIndex makeIndex(int ymin, int ymax, int ... segments) {
 		OpacityIndex index = new OpacityIndex();
 		
@@ -867,6 +894,17 @@ public class TestOpacityIndex {
 			
 		} catch (IllegalArgumentException | IllegalAccessException ex) {
 			throw new Error(ex);
+		}
+	}
+
+	private static class ArrayOpacityIndexImpl {
+		private int[] arr = new int[100];
+		private void set(int y, int val) {
+			arr[y] = val;
+		}
+
+		private int get(int y) {
+			return arr[y];
 		}
 	}
 }
