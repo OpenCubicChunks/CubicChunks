@@ -360,7 +360,6 @@ public class TestOpacityIndex {
 			2, 1,
 			4, 2
 		);
-		
 		index.setOpacity(0, 4, 0, 1);
 		assertEquals(2, (int)index.getBottomBlockY(0, 0));
 		assertEquals(4, (int)index.getTopBlockY(0, 0));
@@ -391,9 +390,8 @@ public class TestOpacityIndex {
 			4, 2,
 			5, 3
 		);
-		
 		index.setOpacity(0, 4, 0, 0);
-		assertEquals(5, (int)index.getBottomBlockY(0, 0));
+		assertEquals(5, (int) index.getBottomBlockY(0, 0));
 		assertEquals(7, (int)index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			5, 3
@@ -821,32 +819,48 @@ public class TestOpacityIndex {
 	}
 
 	@Test
-	public void allCombinationsTest4() {
-		int set1 = 0, set2 = 0, set3 = 0, set4 = 0;
+	public void allCombinationsTest() {
+		//tested with value up to 7 (takes a lot of time)
+		int maxHeightNumBlocks = 5;
+		int[] s = new int[maxHeightNumBlocks];
 		while(true) {
 			OpacityIndex index = new OpacityIndex();
 			ArrayOpacityIndexImpl test = new ArrayOpacityIndexImpl();
 
-			index.setOpacity(0, set1/2, 0, (set1&1) == 0 ?  0 : 255);
-			test.set(set1/2, (set1&1) == 0 ?  0 : 255);
-
-			index.setOpacity(0, set2/2, 0, (set2&1) == 0 ?  0 : 255);
-			test.set(set2/2, (set2&1) == 0 ?  0 : 255);
-
-			index.setOpacity(0, set3/2, 0, (set3&1) == 0 ?  0 : 255);
-			test.set(set3/2, (set3&1) == 0 ?  0 : 255);
-
-			index.setOpacity(0, set4/2, 0, (set4&1) == 0 ?  0 : 255);
-			test.set(set4/2, (set4&1) == 0 ?  0 : 255);
-
-			for(int i = 0; i < 5; i++) {
-				assertEquals(String.format("i[%d]=%d, i[%d]=%d, i[%d]=%d, i[%d]=%d, at y=%d", set1/2, set1 & 1, set2/2, set2&1, set3/2, set3&1, set4/2, set4&1, i), test.get(i), index.getOpacity(0, i, 0));
+			StringBuilder msg = new StringBuilder();
+			for(int v : s) {
+				msg.append("i[").append(v/3).append("]=").append(v%3).append(", ");
 			}
-			set1++;
-			if(set1 == 10) {set2++; set1 = 0;}
-			if(set2 == 10) {set3++; set2 = 0;}
-			if(set3 == 10) {set4++; set3 = 0;}
-			if(set4 == 10) break;
+			String message = msg.toString();
+			try{
+				for(int i = 0; i < s.length; i++) {
+					int op = s[i]%3;
+					op = op == 0 ? 0 : op == 1 ? 128 : 255;
+					index.setOpacity(0, s[i]/3, 0, op);
+					test.set(s[i]/3, op);
+				}
+			} catch(Throwable t) {
+				System.out.println(message + "exception");
+				throw t;
+			}
+
+
+			for(int i = 0; i < maxHeightNumBlocks; i++) {
+				assertEquals(message + "y=" + i, test.get(i), index.getOpacity(0, i, 0));
+			}
+			assertEquals(message + "minY", test.getMinY(), index.getBottomBlockY(0, 0));
+			assertEquals(message + "maxY", test.getMaxY(), index.getTopBlockY(0, 0));
+
+			s[0]++;
+			for(int i = 0; i < maxHeightNumBlocks-1; i++) {
+				if(s[i] == maxHeightNumBlocks*3) {
+					s[i] = 0;
+					s[i+1]++;
+				}
+			}
+			if(s[maxHeightNumBlocks-1] == maxHeightNumBlocks*3) {
+				break;
+			}
 		}
 	}
 	private OpacityIndex makeIndex(int ymin, int ymax, int ... segments) {
@@ -905,6 +919,24 @@ public class TestOpacityIndex {
 
 		private int get(int y) {
 			return arr[y];
+		}
+
+		public Integer getMinY() {
+			for(int i = 0; i < arr.length; i++) {
+				if(arr[i] != 0) {
+					return i;
+				}
+			}
+			return null;
+		}
+
+		public Integer getMaxY() {
+			for(int i = arr.length - 1; i >= 0; i--) {
+				if(arr[i] != 0) {
+					return i;
+				}
+			}
+			return null;
 		}
 	}
 }

@@ -23,13 +23,9 @@
  */
 package cubicchunks.world;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 import cubicchunks.util.Bits;
+
+import java.io.*;
 
 
 public class OpacityIndex {
@@ -110,69 +106,66 @@ public class OpacityIndex {
 	}
 	
 	public void setOpacity(int localX, int blockY, int localZ, int opacity) {
-		
 		// what's the range?
-		int i = getIndex(localX, localZ);
+		int xzIndex = getIndex(localX, localZ);
 		
 		// try to stay in no-segments mode as long as we can
-		if (m_segments[i] == null) {
+		if (m_segments[xzIndex] == null) {
 			if (opacity == 255) {
-				setOpacityNoSegmentsOpaque(i, blockY);
+				setOpacityNoSegmentsOpaque(xzIndex, blockY);
 			} else if (opacity == 0) {
-				setOpacityNoSegmentsTransparent(i, blockY);
+				setOpacityNoSegmentsTransparent(xzIndex, blockY);
 			} else {
-				setOpacityNoSegmentsTranslucent(i, blockY, opacity);
+				setOpacityNoSegmentsTranslucent(xzIndex, blockY, opacity);
 			}
 		} else {
-			setOpacityWithSegments(i, blockY, opacity);
+			setOpacityWithSegments(xzIndex, blockY, opacity);
 		}
 		
 		m_needsHash = true;
 	}
 	
-	private void setOpacityNoSegmentsOpaque(int i, int blockY) {
-		
+	private void setOpacityNoSegmentsOpaque(int xzIndex, int blockY) {
 		// something from nothing?
-		if (m_ymin[i] == None && m_ymax[i] == None) {
-			m_ymin[i] = blockY;
-			m_ymax[i] = blockY;
+		if (m_ymin[xzIndex] == None && m_ymax[xzIndex] == None) {
+			m_ymin[xzIndex] = blockY;
+			m_ymax[xzIndex] = blockY;
 			return;
 		}
 		
 		// extending the range?
-		if (blockY == m_ymin[i] - 1) {
-			m_ymin[i]--;
+		if (blockY == m_ymin[xzIndex] - 1) {
+			m_ymin[xzIndex]--;
 			return;
-		} else if (blockY == m_ymax[i] + 1) {
-			m_ymax[i]++;
+		} else if (blockY == m_ymax[xzIndex] + 1) {
+			m_ymax[xzIndex]++;
 			return;
 		}
 		
 		// making a new section?
-		if (blockY > m_ymax[i] + 1) {
-			m_segments[i] = new int[] {
-				packSegment(m_ymin[i], 255),
-				packSegment(m_ymax[i] + 1, 0),
+		if (blockY > m_ymax[xzIndex] + 1) {
+			m_segments[xzIndex] = new int[] {
+				packSegment(m_ymin[xzIndex], 255),
+				packSegment(m_ymax[xzIndex] + 1, 0),
 				packSegment(blockY, 255)
 			};
-			m_ymax[i] = blockY;
+			m_ymax[xzIndex] = blockY;
 			return;
-		} else if (blockY < m_ymin[i] - 1) {
-			m_segments[i] = new int[] {
+		} else if (blockY < m_ymin[xzIndex] - 1) {
+			m_segments[xzIndex] = new int[] {
 				packSegment(blockY, 255),
 				packSegment(blockY + 1, 0),
-				packSegment(m_ymin[i], 255)
+				packSegment(m_ymin[xzIndex], 255)
 			};
-			m_ymin[i] = blockY;
+			m_ymin[xzIndex] = blockY;
 			return;
 		}
 		
 		// must already be in range
-		assert (blockY >= m_ymin[i] && blockY <= m_ymax[i]);
+		assert (blockY >= m_ymin[xzIndex] && blockY <= m_ymax[xzIndex]);
 	}
 	
 	private void setOpacityNoSegmentsTransparent(int i, int blockY) {
-		
 		// nothing into nothing?
 		if (m_ymin[i] == None && m_ymax[i] == None) {
 			return;
@@ -214,7 +207,6 @@ public class OpacityIndex {
 	}
 	
 	private void setOpacityNoSegmentsTranslucent(int i, int blockY, int opacity) {
-		
 		// is there no range yet?
 		if (m_ymin[i] == None && m_ymax[i] == None) {
 			
@@ -243,7 +235,6 @@ public class OpacityIndex {
 	}
 	
 	private void setOpacityWithSegments(int i, int blockY, int opacity) {
-
 		// binary search to find the insertion point
 		int[] segments = m_segments[i];
 		int minj = 0;
@@ -276,7 +267,6 @@ public class OpacityIndex {
 	}
 
 	private void setOpacityWithSegmentsAt(int i, int blockY, int j, int opacity) {
-		
 		int[] segments = m_segments[i];
 		
 		// will the opacity even change?
@@ -317,8 +307,19 @@ public class OpacityIndex {
 				if (isFirstSegment && isLastSegment) {
 					removeSegments(i);
 				} else {
-					removeSegment(i, j);
-					removeSegment(i, j);
+
+					if(isLastSegment) {
+						int lastSegment = getLastSegmentIndex(segments);
+						m_ymax[i] = unpackPos(segments[lastSegment - 1]) - 1;
+					} else if(isFirstSegment) {
+						assert !isLastSegment;
+						m_ymin[i] = unpackPos(segments[2]);
+					}
+					if(isLastSegment) {
+						removeTwoSegments(i, j - 1);
+					} else {
+						removeTwoSegments(i, j);
+					}
 				}
 			}
 		} else if (sameOpacityAsPrev) {
@@ -349,7 +350,6 @@ public class OpacityIndex {
 	}
 
 	private void setOpacityWithSegmentsAfter(int i, int blockY, int j, int opacity) {
-		
 		int[] segments = m_segments[i];
 		
 		// will the opacity even change?
@@ -383,7 +383,7 @@ public class OpacityIndex {
 				if (isLastSegment) {
 					m_ymax[i]--;
 				} else {
-					addSegment(i, j+1, blockY, opacity);
+					moveSegmentStartDown(i, j+1);
 				}
 			}
 		} else {
@@ -395,7 +395,6 @@ public class OpacityIndex {
 	}
 	
 	private void setOpacityWithSegmentsAfterTop(int i, int blockY, int opacity) {
-	
 		// will the opacity even change?
 		if (opacity == 0) {
 			return;
@@ -421,7 +420,6 @@ public class OpacityIndex {
 	}
 
 	private void setOpacityWithSegmentsBeforeBottom(int i, int blockY, int opacity) {
-		
 		// will the opacity even change?
 		if (opacity == 0) {
 			return;
@@ -479,16 +477,37 @@ public class OpacityIndex {
 		
 		int[] segments = m_segments[i];
 		int jmax = getLastSegmentIndex(segments);
-		
+
+		// move the bounds if needed
+		// for reasons I can't explain it's only needed to move lower bound here and only by one.
+		if (j == 0) {
+			m_ymin[i]++;
+		}
 		// remove the segment
 		for (int n=j; n<jmax; n++) {
 			segments[n] = segments[n+1];
 		}
 		segments[jmax] = NoneSegment;
 		
-		// move the bounds if needed
-		if (j == 0) {
-			m_ymin[i]++;
+		if(segments[0] == NoneSegment) {
+			m_segments[i] = null;
+		}
+	}
+
+	private void removeTwoSegments(int i, int j) {
+
+		int[] segments = m_segments[i];
+		int jmax = getLastSegmentIndex(segments);
+
+		// remove the segment
+		for (int n=j; n<jmax-1; n++) {
+			segments[n] = segments[n+2];
+		}
+		segments[jmax] = NoneSegment;
+		segments[jmax-1] = NoneSegment;
+
+		if(segments[0] == NoneSegment) {
+			m_segments[i] = null;
 		}
 	}
 	
