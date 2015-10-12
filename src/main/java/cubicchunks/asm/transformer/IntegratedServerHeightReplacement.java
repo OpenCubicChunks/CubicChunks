@@ -21,46 +21,27 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm;
+package cubicchunks.asm.transformer;
 
-import cubicchunks.CubicChunkSystem;
-import cubicchunks.CubicChunks;
-import cubicchunks.util.AddressTools;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldType;
+import org.objectweb.asm.MethodVisitor;
 
-/**
- * This class has methods to get information about works.
- * Should be used from asm transformed code.
- */
-public final class WorldMethods {
-	private static CubicChunkSystem cc;
+import static cubicchunks.asm.Mappings.*;
+import static org.objectweb.asm.Opcodes.*;
 
-	public static int getMinHeight(World world) {
-		Integer h = cc.getMinBlockY(world);
-		if(h != null) {
-			return h;
+public class IntegratedServerHeightReplacement extends MethodVisitor {
+	public IntegratedServerHeightReplacement(MethodVisitor mv) {
+		super(ASM4, mv);
+	}
+
+	@Override
+	public void visitIntInsn(int opcode, int val) {
+		if (opcode == SIPUSH) {
+			super.visitIntInsn(ALOAD, 4);
+			super.visitMethodInsn(INVOKEVIRTUAL, WORLD_SETTINGS, WORLD_SETTINGS_GET_TERRAIN_TYPE, WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC, false);
+			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMaxHeight", WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC, false);
+			return;
 		}
-		return 0;
+		super.visitIntInsn(opcode, val);
 	}
 
-	public static int getMaxHeight(World world) {
-		Integer h = cc.getMaxBlockY(world);
-		if(h != null) {
-			return h;
-		}
-		return 256;
-	}
-
-	public static boolean isTallWorld(World world) {
-		return cc.isTallWorld(world);
-	}
-
-	public static int getMaxHeight(WorldType world) {
-		return world == CubicChunks.CC_WORLD_TYPE ? AddressTools.MaxY * 16 : 256;
-	}
-
-	public static void registerChunkSystem(CubicChunkSystem cc) {
-		WorldMethods.cc = cc;
-	}
 }

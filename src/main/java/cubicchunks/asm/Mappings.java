@@ -59,6 +59,11 @@ public class Mappings {
 	public static final String REGION_RENDER_CACHE = "net/minecraft/client/renderer/RegionRenderCache";
 	public static final String CLASS_INHERITANCE_MULTI_MAP = "net/minecraft/util/ClassInheritanceMultiMap";
 	public static final String ENTITY = "net/minecraft/entity/Entity";
+	public static final String MINECRAFT = "net/minecraft/client/Minecraft";
+	public static final String WORLD_SETTINGS = "net/minecraft/world/WorldSettings";
+	public static final String INTEGRATED_SERVER = "net/minecraft/server/integrated/IntegratedServer";
+	public static final String WORLD_TYPE = "net/minecraft/world/WorldType";
+
 	//methods
 	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
 	public static final String WORLD_GET_LIGHT = getNameFromSrg("func_175699_k");
@@ -83,6 +88,8 @@ public class Mappings {
 
 	public static final String ENTITY_ON_ENTITY_UPDATE = getNameFromSrg("func_70030_z");
 
+	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE = getNameFromSrg("func_77165_h");
+
 	//fields
 	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");
 	public static final String CHUNK_CACHE_WORLD_OBJ = getNameFromSrg("field_72815_e");
@@ -95,6 +102,8 @@ public class Mappings {
 	public static final String WORLD_METHODS_GET_HEIGHT_DESC = getMethodDescriptor(INT_TYPE, getObjectType(WORLD));
 	public static final String WORLD_METHODS_IS_TALL_WORLD_DESC =
 			getMethodDescriptor(BOOLEAN_TYPE, getObjectType(WORLD));
+	public static final String WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC =
+			getMethodDescriptor(INT_TYPE, getObjectType(WORLD_TYPE));
 	public static final String RENDER_METHODS = "cubicchunks/asm/RenderMethods";
 	public static final String RENDER_METHODS_GET_RENDER_CHUNK_DESC =
 			getMethodDescriptor(getObjectType(RENDER_CHUNK), getObjectType(VIEW_FRUSTUM), getObjectType(BLOCK_POS));
@@ -109,7 +118,9 @@ public class Mappings {
 	public static final String WORLD_FIELD_DESC = getObjectType(WORLD).getDescriptor();
 	public static final String WORLD_CLIENT_FIELD_DESC = getObjectType(WORLD_CLIENT).getDescriptor();
 	public static final String RENDER_CHUNK_FIELD_DESC = getObjectType(RENDER_CHUNK).getDescriptor();
-
+	public static final String CONSTR_INTEGRATED_SERVER =
+			getMethodDescriptor(VOID_TYPE, getObjectType(MINECRAFT), getType(String.class), getType(String.class), getObjectType(WORLD_SETTINGS));
+	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC = getMethodDescriptor(getObjectType(WORLD_TYPE));
 	public static String getNameFromSrg(String srgName) {
 		if(IS_DEV) {
 			return srgToMcp.get(srgName);

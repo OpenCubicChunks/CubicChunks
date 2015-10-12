@@ -58,12 +58,22 @@ public class CubicChunksTransformer implements IClassTransformer{
 		add(RegionRenderCacheGetBlockStateRaw.class, REGION_RENDER_CACHE, REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW);
 		add(RenderGlobalRenderEntities.class, RENDER_GLOBAL, RENDER_GLOBAL_RENDER_ENTITIES);
 		add(EntityChangeKillHeight.class, ENTITY, ENTITY_ON_ENTITY_UPDATE);
+
+		addConstr(IntegratedServerHeightReplacement.class, INTEGRATED_SERVER, CONSTR_INTEGRATED_SERVER);
 	}
 
 	private void add(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String methodName) {
 		MethodHandle methodVisitorConstr = ReflectionUtil.getConstructorMethodHandle(methodTransformer, MethodVisitor.class);
 
-		MethodHandle classVisitor = MethodHandles.insertArguments(MethodClassVisitor.HANDLE, 1, methodVisitorConstr, methodName);
+		MethodHandle classVisitor = MethodHandles.insertArguments(MethodClassVisitor.HANDLE, 1, methodVisitorConstr, methodName, null);
+
+		this.transformers.add(new Transformer(classVisitor, jvmClassName));
+	}
+
+	private void addConstr(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String desc) {
+		MethodHandle methodVisitorConstr = ReflectionUtil.getConstructorMethodHandle(methodTransformer, MethodVisitor.class);
+
+		MethodHandle classVisitor = MethodHandles.insertArguments(MethodClassVisitor.HANDLE, 1, methodVisitorConstr, "<init>", desc);
 
 		this.transformers.add(new Transformer(classVisitor, jvmClassName));
 	}
@@ -121,23 +131,25 @@ public class CubicChunksTransformer implements IClassTransformer{
 
 	public static final class MethodClassVisitor extends ClassVisitor {
 
-		private static final MethodHandle HANDLE = ReflectionUtil.getConstructorMethodHandle(MethodClassVisitor.class, ClassVisitor.class, MethodHandle.class, String.class);
+		private static final MethodHandle HANDLE = ReflectionUtil.getConstructorMethodHandle(MethodClassVisitor.class, ClassVisitor.class, MethodHandle.class, String.class, String.class);
 
 		private MethodHandle methodVisitorConstr;
 		private String methodName;
+		private String methodDescriptor;
 
-		public MethodClassVisitor(ClassVisitor cv, MethodHandle methodVisitorConstr, String methodName) {
+		public MethodClassVisitor(ClassVisitor cv, MethodHandle methodVisitorConstr, String methodName, String methodDescriptor) {
 			super(Opcodes.ASM4, cv);
 
 			this.methodVisitorConstr = methodVisitorConstr;
 			this.methodName = methodName;
+			this.methodDescriptor = methodDescriptor;
 		}
 
 		@Override
 		public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 			MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 
-			if (name.equals(this.methodName)) {
+			if (name.equals(this.methodName) && (methodDescriptor == null || desc.equals(methodDescriptor))) {
 				try {
 					MethodVisitor newMV = (MethodVisitor) methodVisitorConstr.invoke(mv);
 					return newMV;

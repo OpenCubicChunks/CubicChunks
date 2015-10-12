@@ -59,6 +59,9 @@ minecraft {
 	// simply re-run your setup task after changing the mappings to update your workspace.
 	mappings = "snapshot_20151004"
 	// makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+
+	replace "@@VERSION@@", project.version
+	replaceIn "cubicchunks/CubicChunks.java"
 }
 
 // Project repositories
@@ -113,12 +116,6 @@ processResources
         // replace version and mcversion
         expand 'version':project.version, 'mcversion':project.minecraft.version
     }
-
-	from(sourceSets.main.allJava.srcDirs) {
-		include 'cubicchunks/CubicChunks.java'
-
-		expand 'version':project.version
-	}
         
     // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
