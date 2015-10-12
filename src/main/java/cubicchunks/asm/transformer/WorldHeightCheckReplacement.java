@@ -44,6 +44,8 @@ import static org.objectweb.asm.Type.*;
  *
  * In methods where these occur for other reasons than height checks '
  * other more specific trasformer needs to be used.
+ *
+ * Transformed methods: World.isValid, World.getLight(BlockPos), World.getLight(BlockPos, boolean)
  */
 public class WorldHeightCheckReplacement extends MethodVisitor {
 	private static final String WORLD_HEIGHT_ACCESS = "cubicchunks/asm/WorldMethods";

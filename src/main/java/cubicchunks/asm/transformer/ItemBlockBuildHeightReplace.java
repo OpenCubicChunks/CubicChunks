@@ -25,26 +25,28 @@ package cubicchunks.asm.transformer;
 
 import org.objectweb.asm.MethodVisitor;
 
-import static cubicchunks.asm.Mappings.*;
+import static cubicchunks.asm.Mappings.WORLD_METHODS;
+import static cubicchunks.asm.Mappings.WORLD_METHODS_GET_HEIGHT_DESC;
 import static org.objectweb.asm.Opcodes.*;
 
 /**
- * Transforms IntegratedServer constructor.
+ * Replaces 255 constant in onItemUse.
  */
-public class IntegratedServerHeightReplacement extends MethodVisitor {
-	public IntegratedServerHeightReplacement(MethodVisitor mv) {
+public class ItemBlockBuildHeightReplace extends MethodVisitor {
+	public ItemBlockBuildHeightReplace(MethodVisitor mv) {
 		super(ASM4, mv);
 	}
 
 	@Override
 	public void visitIntInsn(int opcode, int val) {
-		if (opcode == SIPUSH) {
-			super.visitIntInsn(ALOAD, 4);
-			super.visitMethodInsn(INVOKEVIRTUAL, WORLD_SETTINGS, WORLD_SETTINGS_GET_TERRAIN_TYPE, WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC, false);
-			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMaxHeight", WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC, false);
+		if(opcode == SIPUSH && val == 255) {
+			//load world
+			super.visitIntInsn(ALOAD, 3);
+			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMaxHeight", WORLD_METHODS_GET_HEIGHT_DESC, false);
+			super.visitLdcInsn(-1);
+			super.visitInsn(IADD);
 			return;
 		}
 		super.visitIntInsn(opcode, val);
 	}
-
 }

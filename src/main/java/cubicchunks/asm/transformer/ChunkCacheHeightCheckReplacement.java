@@ -29,6 +29,10 @@ import org.objectweb.asm.MethodVisitor;
 import static cubicchunks.asm.Mappings.*;
 import static org.objectweb.asm.Opcodes.*;
 
+/**
+ * Replaced height checks in ChunkCache class.
+ * Transformed methods: getBlockState, GetLightFor, getLightForExt
+ */
 public class ChunkCacheHeightCheckReplacement extends MethodVisitor {
 	private boolean transformedLower, transformedUpper;
 

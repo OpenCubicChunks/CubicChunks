@@ -29,6 +29,10 @@ import static cubicchunks.asm.Mappings.BLOCK_POS;
 import static cubicchunks.asm.Mappings.VEC_3_I_GET_X;
 import static org.objectweb.asm.Opcodes.ICONST_0;
 
+/**
+ * Special transformer used for methods that use ICONST_0 and it's also used in other placed than height checks.
+ * Transformed methods: World.getLightFromNeighborsFor, World.getLightFor
+ */
 public class WorldHeightCheckReplacementSpecial extends WorldHeightCheckReplacement {
 	//transform only after BlockPos.getX() has beeb called
 	private boolean getXCalled = false;

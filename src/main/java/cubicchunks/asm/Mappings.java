@@ -63,6 +63,7 @@ public class Mappings {
 	public static final String WORLD_SETTINGS = "net/minecraft/world/WorldSettings";
 	public static final String INTEGRATED_SERVER = "net/minecraft/server/integrated/IntegratedServer";
 	public static final String WORLD_TYPE = "net/minecraft/world/WorldType";
+	public static final String ITEM_BLOCK = "net/minecraft/item/ItemBlock";
 
 	//methods
 	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
@@ -90,6 +91,7 @@ public class Mappings {
 
 	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE = getNameFromSrg("func_77165_h");
 
+	public static final String ITEM_BLOCK_ON_ITEM_USE = getNameFromSrg("func_179546_a");
 	//fields
 	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");
 	public static final String CHUNK_CACHE_WORLD_OBJ = getNameFromSrg("field_72815_e");

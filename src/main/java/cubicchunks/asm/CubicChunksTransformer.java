@@ -58,6 +58,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 		add(RegionRenderCacheGetBlockStateRaw.class, REGION_RENDER_CACHE, REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW);
 		add(RenderGlobalRenderEntities.class, RENDER_GLOBAL, RENDER_GLOBAL_RENDER_ENTITIES);
 		add(EntityChangeKillHeight.class, ENTITY, ENTITY_ON_ENTITY_UPDATE);
+		add(ItemBlockBuildHeightReplace.class, ITEM_BLOCK, ITEM_BLOCK_ON_ITEM_USE);
 
 		addConstr(IntegratedServerHeightReplacement.class, INTEGRATED_SERVER, CONSTR_INTEGRATED_SERVER);
 	}

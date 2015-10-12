@@ -28,6 +28,9 @@ import org.objectweb.asm.MethodVisitor;
 import static cubicchunks.asm.Mappings.*;
 import static org.objectweb.asm.Opcodes.*;
 
+/**
+ * Transformed method: onEntityUpdate
+ */
 public class EntityChangeKillHeight extends MethodVisitor {
 	public EntityChangeKillHeight(MethodVisitor mv) {
 		super(ASM4, mv);
