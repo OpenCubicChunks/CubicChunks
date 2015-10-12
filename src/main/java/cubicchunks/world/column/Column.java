@@ -571,8 +571,10 @@ public class Column extends Chunk {
 	public void func_150804_b(boolean tryToTickFaster) {
 		this.field_150815_m = true;//ticked=true;
 
-		// don't need to do anything else here
-		// lighting is handled elsewhere now
+		for (Map.Entry<Integer, Cube> cube : this.cubes.entrySet()) {
+			Cube c = cube.getValue();
+			c.tickCube();
+		}
 	}
 
 	@Override

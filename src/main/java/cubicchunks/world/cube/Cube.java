@@ -46,6 +46,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Cube {
 	
@@ -62,6 +63,8 @@ public class Cube {
 	private CubeBlockMap<TileEntity> blockEntities;
 	private GeneratorStage generatorStage;
 	private boolean needsRelightAfterLoad;
+	/** "queue containing the BlockPos of tile entities queued for creation" */
+	private ConcurrentLinkedQueue tileEntityPosQueue;
 	
 	public Cube(World world, Column column, int x, int y, int z, boolean isModified) {
 		this.world = world;
@@ -76,6 +79,7 @@ public class Cube {
 		this.blockEntities = new CubeBlockMap<>();
 		this.generatorStage = null;
 		this.needsRelightAfterLoad = false;
+		this.tileEntityPosQueue = new ConcurrentLinkedQueue();
 	}
 	
 	public boolean isEmpty() {
@@ -352,33 +356,18 @@ public class Cube {
 	public TileEntity getBlockEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
         
 		TileEntity blockEntity = this.blockEntities.get(pos);
+		if(blockEntity != null && blockEntity.isInvalid()) {
+			this.blockEntities.remove(pos);
+			blockEntity = null;
+		}
+
 		if (blockEntity == null) {
-			
 			if (creationType == Chunk.EnumCreateEntityType.IMMEDIATE) {
 				blockEntity = createBlockEntity(pos);
 				this.world.setTileEntity(pos, blockEntity);
-			} else if (creationType == Chunk.EnumCreateEntityType.IMMEDIATE) {
-				throw new Error("TODO: implement block entity creation queue!");
+			} else if (creationType == Chunk.EnumCreateEntityType.QUEUED) {
+				this.tileEntityPosQueue.add(pos);
 			}
-			
-			// is this block not supposed to have a tile entity?
-			IBlockState blockState = getBlockState(pos);
-			Block block = blockState.getBlock();
-			int meta = block.getMetaFromState(blockState);
-			
-			if (!block.hasTileEntity()) {
-				return null;
-			}
-			
-			// make a new tile entity for the block
-			blockEntity = ((ITileEntityProvider)block).createNewTileEntity(this.world, meta);
-			this.world.setTileEntity(pos, blockEntity);
-			
-		} else if (blockEntity.isInvalid()) {
-			
-			// remove the tile entity
-			this.blockEntities.remove(pos);
-			blockEntity = null;
 		}
 		
 		return blockEntity;
@@ -390,7 +379,7 @@ public class Cube {
 		Block block = blockState.getBlock();
 		int meta = block.getMetaFromState(blockState);
 		
-		if (block.hasTileEntity()) {
+		if (block.hasTileEntity(blockState)) {
 			return ((ITileEntityProvider)block).createNewTileEntity(this.world, meta);
 		}
 		return null;
@@ -595,5 +584,21 @@ public class Cube {
 	}
 	public void setNeedsRelightAfterLoad(boolean val) {
 		this.needsRelightAfterLoad = val;
+	}
+
+	public void tickCube() {
+		while (!this.tileEntityPosQueue.isEmpty())
+		{
+			BlockPos blockpos = (BlockPos)this.tileEntityPosQueue.poll();
+			Block block = this.getBlockAt(blockpos);
+			IBlockState state = this.getBlockState(blockpos);
+
+			if (this.getBlockEntity(blockpos, Chunk.EnumCreateEntityType.CHECK) == null && block.hasTileEntity(state))
+			{
+				TileEntity tileentity = this.createBlockEntity(blockpos);
+				this.world.setTileEntity(blockpos, tileentity);
+				this.world.markBlockRangeForRenderUpdate(blockpos, blockpos);
+			}
+		}
 	}
 }
