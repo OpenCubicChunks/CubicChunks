@@ -51,7 +51,7 @@ version = getModVersionAndWriteToFile("${git.describe()}", lastMinorVersion, isF
 minecraft {
 	version = "1.8-11.14.3.1519"
 	runDir = "run"
-	    
+
 	// the mappings can be changed at any time, and must be in the following format.
 	// snapshot_YYYYMMDD   snapshot are built nightly.
 	// stable_#            stables are built at the discretion of the MCP team.
@@ -62,6 +62,12 @@ minecraft {
 
 	replace "@@VERSION@@", project.version
 	replaceIn "cubicchunks/CubicChunks.java"
+
+}
+
+reobfJar {
+	addExtraSrgLine "PK: org/mapdb cubicchunks/org/mappdb"
+	addExtraSrgLine "PK: com/flowpowered cubicchunks/com/flowpowered"
 }
 
 // Project repositories
@@ -73,6 +79,11 @@ repositories
 		name 'sonatype'
 		url 'https://oss.sonatype.org/content/groups/public/'
 	}
+}
+
+configurations {
+	shade
+	compile.extendsFrom shade
 }
 
 dependencies {
@@ -97,8 +108,8 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
-	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
-	compile 'org.mapdb:mapdb:1.0.7'
+	shade 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
+	shade 'org.mapdb:mapdb:1.0.7'
 	testCompile 'junit:junit:4.11'
 
 }
@@ -142,6 +153,11 @@ jar {
 	manifest {
 		attributes 'FMLAT': 'cubicchunks_at.cfg'
 		attributes 'FMLCorePlugin': 'cubicchunks.asm.CoreModLoadingPlugin', 'FMLCorePluginContainsFMLMod': 'true'
+	}
+	configurations.shade.each { dep ->
+		from(project.zipTree(dep)){
+			exclude 'META-INF', 'META-INF/**'
+		}
 	}
 }
 
