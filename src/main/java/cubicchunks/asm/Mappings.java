@@ -58,6 +58,7 @@ public class Mappings {
 	public static final String I_BLOCK_STATE = "net/minecraft/block/state/IBlockState";
 	public static final String REGION_RENDER_CACHE = "net/minecraft/client/renderer/RegionRenderCache";
 	public static final String CLASS_INHERITANCE_MULTI_MAP = "net/minecraft/util/ClassInheritanceMultiMap";
+	public static final String ENTITY = "net/minecraft/entity/Entity";
 	//methods
 	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
 	public static final String WORLD_GET_LIGHT = getNameFromSrg("func_175699_k");
@@ -79,11 +80,15 @@ public class Mappings {
 	public static final String REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW = getNameFromSrg("func_175631_c");
 
 	public static final String VEC_3_I_GET_X = getNameFromSrg("func_177958_n");
+
+	public static final String ENTITY_ON_ENTITY_UPDATE = getNameFromSrg("func_70030_z");
+
 	//fields
 	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");
 	public static final String CHUNK_CACHE_WORLD_OBJ = getNameFromSrg("field_72815_e");
 	public static final String RENDER_GLOBAL_THE_WORLD = getNameFromSrg("field_72769_h");
 	public static final String RG_CLRI_RENDER_CHUNK = getNameFromSrg("field_178036_a");
+	public static final String ENTITY_WORLD_OBJ = getNameFromSrg("field_70170_p");
 
 	//classes referenced from asm
 	public static final String WORLD_METHODS = "cubicchunks/asm/WorldMethods";
