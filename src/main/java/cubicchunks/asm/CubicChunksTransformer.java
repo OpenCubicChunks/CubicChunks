@@ -46,6 +46,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT_CHECK);
 		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FOR);
 		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR);
+		add(WorldIsAreaLoadedReplace.class, WORLD, WORLD_IS_AREA_LOADED_IIIIIIZ, WORLD_IS_AREA_LOADED_IIIIIIZ_DESC);
 
 		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_BLOCK_STATE);
 		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_LIGHT_FOR_EXT);
@@ -72,13 +73,16 @@ public class CubicChunksTransformer implements IClassTransformer{
 	}
 
 	private void addConstr(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String desc) {
+		add(methodTransformer, jvmClassName, "<init>", desc);
+	}
+
+	private void add(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String methodName, String desc) {
 		MethodHandle methodVisitorConstr = ReflectionUtil.getConstructorMethodHandle(methodTransformer, MethodVisitor.class);
 
-		MethodHandle classVisitor = MethodHandles.insertArguments(MethodClassVisitor.HANDLE, 1, methodVisitorConstr, "<init>", desc);
+		MethodHandle classVisitor = MethodHandles.insertArguments(MethodClassVisitor.HANDLE, 1, methodVisitorConstr, methodName, desc);
 
 		this.transformers.add(new Transformer(classVisitor, jvmClassName));
 	}
-
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] bytes) {
 		if(bytes == null) return bytes;

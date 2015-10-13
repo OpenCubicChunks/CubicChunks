@@ -21,50 +21,36 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm;
+package cubicchunks.asm.transformer;
 
-import cubicchunks.CubicChunkSystem;
-import cubicchunks.CubicChunks;
-import cubicchunks.util.AddressTools;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldType;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 
-/**
- * This class has methods to get information about works.
- * Should be used from asm transformed code.
- */
-public final class WorldMethods {
-	private static CubicChunkSystem cc;
+import static cubicchunks.asm.Mappings.WORLD;
+import static cubicchunks.asm.Mappings.WORLD_METHODS;
+import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Type.*;
 
-	public static int getMinHeight(World world) {
-		Integer h = cc.getMinBlockY(world);
-		if(h != null) {
-			return h;
+public class WorldIsAreaLoadedReplace extends MethodVisitor {
+	public WorldIsAreaLoadedReplace(MethodVisitor mv) {
+		super(ASM4, mv);
+	}
+
+	@Override
+	public void visitCode() {
+		String desc = getMethodDescriptor(getType(Boolean.class), getObjectType(WORLD), INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, BOOLEAN_TYPE);
+		Label vanilla = new Label();
+		super.visitCode();
+		for(int i = 0; i <= 7; i++) {
+			super.visitIntInsn(i == 0 ? ALOAD : ILOAD, i);
 		}
-		return 0;
-	}
 
-	public static int getMaxHeight(World world) {
-		Integer h = cc.getMaxBlockY(world);
-		if(h != null) {
-			return h;
-		}
-		return 256;
-	}
-
-	public static boolean isTallWorld(World world) {
-		return cc.isTallWorld(world);
-	}
-
-	public static int getMaxHeight(WorldType world) {
-		return world == CubicChunks.CC_WORLD_TYPE ? AddressTools.MaxY * 16 : 256;
-	}
-
-	public static void registerChunkSystem(CubicChunkSystem cc) {
-		WorldMethods.cc = cc;
-	}
-
-	public static Boolean isAreaLoaded(World world, int minx, int miny, int minz, int maxx, int maxy, int maxz, boolean allowEmpty) {
-		return cc.checkBlockRangeIsInWorld(world, minx, miny, minz, maxx, maxy, maxz, allowEmpty);
+		super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "isAreaLoaded", desc, false);
+		super.visitInsn(DUP);
+		super.visitJumpInsn(IFNULL, vanilla);
+		super.visitMethodInsn(INVOKEVIRTUAL, Boolean.class.getCanonicalName().replace(".", "/"), "booleanValue", "()Z", false);
+		super.visitInsn(IRETURN);
+		super.visitLabel(vanilla);
+		super.visitInsn(POP);
 	}
 }

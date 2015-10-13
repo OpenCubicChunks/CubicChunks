@@ -71,6 +71,7 @@ public class Mappings {
 	public static final String WORLD_GET_LIGHT_CHECK = getNameFromSrg("func_175721_c");//the one with additional boolean argument
 	public static final String WORLD_GET_LIGHT_FOR = getNameFromSrg("func_175642_b");
 	public static final String WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR = getNameFromSrg("func_175705_a");
+	public static final String WORLD_IS_AREA_LOADED_IIIIIIZ = getNameFromSrg("func_175663_a");
 
 	public static final String VIEW_FRUSTUM_SET_COUNT_CHUNKS = getNameFromSrg("func_178159_a");
 	public static final String VIEW_FRUSTUM_GET_RENDER_CHUNK = getNameFromSrg("func_178161_a");
@@ -123,6 +124,7 @@ public class Mappings {
 	public static final String CONSTR_INTEGRATED_SERVER =
 			getMethodDescriptor(VOID_TYPE, getObjectType(MINECRAFT), getType(String.class), getType(String.class), getObjectType(WORLD_SETTINGS));
 	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC = getMethodDescriptor(getObjectType(WORLD_TYPE));
+	public static final String WORLD_IS_AREA_LOADED_IIIIIIZ_DESC = getMethodDescriptor(BOOLEAN_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, BOOLEAN_TYPE);
 	public static String getNameFromSrg(String srgName) {
 		if(IS_DEV) {
 			return srgToMcp.get(srgName);
