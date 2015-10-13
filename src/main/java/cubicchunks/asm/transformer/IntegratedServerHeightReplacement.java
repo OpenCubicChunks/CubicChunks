@@ -39,7 +39,7 @@ public class IntegratedServerHeightReplacement extends MethodVisitor {
 	@Override
 	public void visitIntInsn(int opcode, int val) {
 		if (opcode == SIPUSH) {
-			super.visitIntInsn(ALOAD, 4);
+			super.visitVarInsn(ALOAD, 4);
 			super.visitMethodInsn(INVOKEVIRTUAL, WORLD_SETTINGS, WORLD_SETTINGS_GET_TERRAIN_TYPE, WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC, false);
 			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMaxHeight", WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC, false);
 			return;

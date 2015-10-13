@@ -41,7 +41,7 @@ public class ItemBlockBuildHeightReplace extends MethodVisitor {
 	public void visitIntInsn(int opcode, int val) {
 		if(opcode == SIPUSH && val == 255) {
 			//load world
-			super.visitIntInsn(ALOAD, 3);
+			super.visitVarInsn(ALOAD, 3);
 			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMaxHeight", WORLD_METHODS_GET_HEIGHT_DESC, false);
 			super.visitLdcInsn(-1);
 			super.visitInsn(IADD);

@@ -47,6 +47,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FOR);
 		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR);
 		add(WorldIsAreaLoadedReplace.class, WORLD, WORLD_IS_AREA_LOADED_IIIIIIZ, WORLD_IS_AREA_LOADED_IIIIIIZ_DESC);
+		add(WorldEntityUpdateFix.class, WORLD, WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE);
 
 		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_BLOCK_STATE);
 		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_LIGHT_FOR_EXT);

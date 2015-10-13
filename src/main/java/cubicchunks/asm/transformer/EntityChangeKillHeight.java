@@ -53,7 +53,7 @@ public class EntityChangeKillHeight extends MethodVisitor {
 	}
 
 	protected void loadMinHeight() {
-		super.visitIntInsn(ALOAD, 0);
+		super.visitVarInsn(ALOAD, 0);
 		super.visitFieldInsn(GETFIELD, ENTITY, ENTITY_WORLD_OBJ, WORLD_FIELD_DESC);
 		super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMinHeight", WORLD_METHODS_GET_HEIGHT_DESC, false);
 	}

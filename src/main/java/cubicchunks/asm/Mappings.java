@@ -64,6 +64,7 @@ public class Mappings {
 	public static final String INTEGRATED_SERVER = "net/minecraft/server/integrated/IntegratedServer";
 	public static final String WORLD_TYPE = "net/minecraft/world/WorldType";
 	public static final String ITEM_BLOCK = "net/minecraft/item/ItemBlock";
+	public static final String MATH_HELPER = "net/minecraft/util/MathHelper";
 
 	//methods
 	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
@@ -72,6 +73,7 @@ public class Mappings {
 	public static final String WORLD_GET_LIGHT_FOR = getNameFromSrg("func_175642_b");
 	public static final String WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR = getNameFromSrg("func_175705_a");
 	public static final String WORLD_IS_AREA_LOADED_IIIIIIZ = getNameFromSrg("func_175663_a");
+	public static final String WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE = getNameFromSrg("func_72866_a");
 
 	public static final String VIEW_FRUSTUM_SET_COUNT_CHUNKS = getNameFromSrg("func_178159_a");
 	public static final String VIEW_FRUSTUM_GET_RENDER_CHUNK = getNameFromSrg("func_178161_a");
@@ -93,12 +95,17 @@ public class Mappings {
 	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE = getNameFromSrg("func_77165_h");
 
 	public static final String ITEM_BLOCK_ON_ITEM_USE = getNameFromSrg("func_179546_a");
+
+	public static final String MATH_HELPER_FLOOR_DOUBLE = getNameFromSrg("func_76128_c");
+
 	//fields
+	public static final String ENTITY_POS_Y = getNameFromSrg("field_70163_u");
+	public static final String ENTITY_WORLD_OBJ = getNameFromSrg("field_70170_p");
+
 	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");
 	public static final String CHUNK_CACHE_WORLD_OBJ = getNameFromSrg("field_72815_e");
 	public static final String RENDER_GLOBAL_THE_WORLD = getNameFromSrg("field_72769_h");
 	public static final String RG_CLRI_RENDER_CHUNK = getNameFromSrg("field_178036_a");
-	public static final String ENTITY_WORLD_OBJ = getNameFromSrg("field_70170_p");
 
 	//classes referenced from asm
 	public static final String WORLD_METHODS = "cubicchunks/asm/WorldMethods";
