@@ -25,10 +25,9 @@ package cubicchunks.world.cube;
 
 import com.google.common.base.Predicate;
 import cubicchunks.generator.GeneratorStage;
-
-import java.util.List;
-
 import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;

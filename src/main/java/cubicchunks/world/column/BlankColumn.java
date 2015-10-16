@@ -23,12 +23,12 @@
  */
 package cubicchunks.world.column;
 
-import cubicchunks.world.chunk.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
+import cubicchunks.world.cube.Cube;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.EnumSkyBlock;

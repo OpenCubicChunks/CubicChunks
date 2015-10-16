@@ -29,7 +29,7 @@ import cubicchunks.util.*;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.WorldContext;
-import cubicchunks.world.chunk.Cube;
+import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -216,6 +216,16 @@ public class Column extends Chunk {
 			return null;
 		}
 
+		// did anything change?
+		IBlockState oldBlockState = cube.setBlockState(pos, newBlockState);
+		if (oldBlockState == null) {
+			// nothing changed
+			return null;
+		}
+
+		Block oldBlock = oldBlockState.getBlock();
+		Block newBlock = newBlockState.getBlock();
+
 		// update rain map
 		// NOTE: rainfallMap[xzCoord] is he lowest block that will contain rain
 		// so rainfallMap[xzCoord] - 1 is the block that is being rained on
@@ -226,29 +236,6 @@ public class Column extends Chunk {
 			// invalidate the rain height map value
 			this.precipitationHeightMap[xzCoord] = -999;
 		}
-
-		// did anything change?
-		IBlockState oldBlockState = cube.setBlockState(pos, newBlockState);
-
-		if (oldBlockState == null) {
-			// nothing changed
-			return null;
-		}
-
-
-		this.setModified(true);
-
-		// NOTE: after this method, the World calls updateLights on the source block which changes light values again
-
-		return oldBlockState;
-	}
-
-	/*package-protected*/ void onBlockSetLightUpdate(BlockPos pos, IBlockState oldBlockState, IBlockState newBlockState) {
-		int x = Coords.blockToLocal(pos.getX());
-		int z = Coords.blockToLocal(pos.getZ());
-
-		Block oldBlock = oldBlockState.getBlock();
-		Block newBlock = newBlockState.getBlock();
 
 		int newOpacity = newBlock.getLightOpacity();
 		int oldOpacity = oldBlock.getLightOpacity();
@@ -284,7 +271,14 @@ public class Column extends Chunk {
 
 		// update opacity index
 		this.opacityIndex.setOpacity(x, pos.getY(), z, newBlock.getLightOpacity());
+
+		this.setModified(true);
+
+		// NOTE: after this method, the World calls updateLights on the source block which changes light values again
+
+		return oldBlockState;
 	}
+
 	@Override
 	public int getBlockMetadata(BlockPos pos) {
 		// pos has LocalX, worldY, LocalZ if called from Chunk.getBlockMetadata(blockPos)
@@ -562,18 +556,12 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	@Deprecated
-	/**
-	 * With cubic chunks terrain generation happens at cube level so this method doesn't make sense.
-	 * But because vanilla needs is - we need to return relatively useful value.
-	 * So return true if any loaded cube is in LIVE stage.
-	 */
 	public boolean isPopulated() {
 		boolean isAnyCubeLive = false;
 		for (Cube cube : this.cubes.values()) {
 			isAnyCubeLive |= cube.getGeneratorStage().isLastStage();
 		}
-		return this.field_150815_m && isAnyCubeLive;
+		return this.field_150815_m && this.isTerrainPopulated && isAnyCubeLive;
 	}
 
 	/**
@@ -594,10 +582,6 @@ public class Column extends Chunk {
 	public void generateSkylightMap() {
 		// don't call this, use the lighting manager
 		throw new UnsupportedOperationException();
-	}
-
-	public int getLowestHeight() {
-		return this.opacityIndex.getLowestTopBlockY();
 	}
 
 	public void resetPrecipitationHeight() {
