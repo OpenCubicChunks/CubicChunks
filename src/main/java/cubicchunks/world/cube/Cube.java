@@ -197,13 +197,20 @@ public class Cube {
 		
 		Block newBlock = newBlockState.getBlock();
 		Block oldBlock = oldBlockState.getBlock();
-		
-		if (newBlock != oldBlock) {
-			if (!this.world.isRemote) {
-				// on the server, break the old block
+
+		if (!this.world.isRemote) {
+			// on the server, break the old block
+			if(oldBlock != newBlock) {
 				oldBlock.breakBlock(this.world, pos, oldBlockState);
-			} else if (oldBlock instanceof ITileEntityProvider) {
-				// on the client, remove the tile entity
+			}
+			TileEntity te = this.getBlockEntity(pos, Chunk.EnumCreateEntityType.CHECK);
+			if(te != null && te.shouldRefresh(world, pos, oldBlockState, newBlockState)) {
+				this.world.removeTileEntity(pos);
+			}
+		} else if (oldBlock.hasTileEntity(newBlockState)) {
+			// on the client, remove the old tile entity
+			TileEntity te = this.getBlockEntity(pos, Chunk.EnumCreateEntityType.CHECK);
+			if(te != null && te.shouldRefresh(world, pos, oldBlockState, newBlockState)) {
 				this.world.removeTileEntity(pos);
 			}
 		}
@@ -227,18 +234,21 @@ public class Cube {
 			newBlock.onBlockAdded(this.world, pos, newBlockState);
 		}
 		
-		if (newBlock instanceof ITileEntityProvider) {
+		if (newBlock.hasTileEntity(newBlockState)) {
 			// make sure the tile entity is good
 			TileEntity blockEntity = getBlockEntity(pos, Chunk.EnumCreateEntityType.CHECK);
 			if (blockEntity == null) {
-				blockEntity = ((ITileEntityProvider)newBlock).createNewTileEntity(this.world, newBlock.getMetaFromState(newBlockState));
+				blockEntity = newBlock.createTileEntity(this.world, newBlockState);
 				this.world.setTileEntity(pos, blockEntity);
 			}
 			if (blockEntity != null) {
 				blockEntity.updateContainingBlockInfo();
 			}
 		}
-		
+
+		if(oldBlockState != null) {
+			this.column.onBlockSetLightUpdate(pos, oldBlockState, newBlockState);
+		}
 		return oldBlockState;
 	}
 	
