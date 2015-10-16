@@ -40,12 +40,14 @@ public class CCEventHandler {
 	public CCEventHandler(CubicChunkSystem cc) {
 		this.cc = cc;
 	}
+
 	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load evt) {
 		CubicChunks.LOGGER.info("Initializing world " + evt.world + " with type " + evt.world.getWorldType());
 		World world = evt.world;
 		if(world instanceof WorldServer && cc.isTallWorld(world)) {
 			modifyWorld((WorldServer)world);
+			cc.generateWorld((WorldServer)world);
 		}
 		if(world instanceof WorldClient && cc.isTallWorld(world)) {
 			modifyWorld((WorldClient)world);

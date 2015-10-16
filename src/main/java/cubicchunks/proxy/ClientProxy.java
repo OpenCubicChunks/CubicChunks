@@ -25,6 +25,7 @@ package cubicchunks.proxy;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class ClientProxy extends CommonProxy {
@@ -36,5 +37,10 @@ public class ClientProxy extends CommonProxy {
 
 		// Solution is to double-check side before returning the player:
 		return (ctx.side.isClient() ? Minecraft.getMinecraft().thePlayer : super.getPlayerEntity(ctx));
+	}
+
+	@Override
+	public void registerEvents() {
+		MinecraftForge.EVENT_BUS.register(new ClientDebugRender());
 	}
 }

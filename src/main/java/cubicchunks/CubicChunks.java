@@ -63,6 +63,7 @@ public class CubicChunks {
 		WorldMethods.registerChunkSystem(ccSystem);
 		RenderMethods.registerChunkSystem(ccSystem);
 		PacketDispatcher.registerPackets();
+		proxy.registerEvents();
 	}
 	
 	@EventHandler

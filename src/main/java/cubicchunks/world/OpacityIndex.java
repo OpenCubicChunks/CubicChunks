@@ -64,7 +64,7 @@ public class OpacityIndex {
 	}
 	
 	public int getOpacity(int localX, int blockY, int localZ) {
-	
+
 		// are we out of range?
 		int i = getIndex(localX, localZ);
 		if (blockY > m_ymax[i] || blockY < m_ymin[i]) {
@@ -610,9 +610,13 @@ public class OpacityIndex {
 			m_ymin[i] = in.readInt();
 			m_ymax[i] = in.readInt();
 			int[] segments = new int[in.readUnsignedShort()];
+			if(segments.length == 0) {
+				continue;
+			}
 			for (int j=0; j<segments.length; j++) {
 				segments[j] = in.readInt();
 			}
+			m_segments[i] = segments;
 		}
 	}
 	
@@ -622,7 +626,7 @@ public class OpacityIndex {
 			out.writeInt(m_ymin[i]);
 			out.writeInt(m_ymax[i]);
 			int[] segments = m_segments[i];
-			if (segments == null) {
+			if (segments == null || segments.length == 0) {
 				out.writeShort(0);
 			} else {
 				int lastSegmentIndex = getLastSegmentIndex(segments);

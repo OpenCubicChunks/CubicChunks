@@ -32,6 +32,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 
@@ -821,8 +822,9 @@ public class TestOpacityIndex {
 	@Test
 	public void allCombinationsTest() {
 		//tested with value up to 7 (takes a lot of time)
-		int maxHeightNumBlocks = 5;
-		int[] s = new int[maxHeightNumBlocks];
+		final int maxHeight = 4, numBlocks = 4;
+		int[] s = new int[numBlocks];
+
 		while(true) {
 			OpacityIndex index = new OpacityIndex();
 			ArrayOpacityIndexImpl test = new ArrayOpacityIndexImpl();
@@ -839,26 +841,32 @@ public class TestOpacityIndex {
 					index.setOpacity(0, s[i]/3, 0, op);
 					test.set(s[i]/3, op);
 				}
+				//store-read-store test
+				byte[] b = index.getData();
+				OpacityIndex newIndex = new OpacityIndex();
+				newIndex.readData(b);
+				assertArrayEquals("Got different data after creating index based on read data\n" + message + "\n", b, newIndex.getData());
 			} catch(Throwable t) {
 				System.out.println(message + "exception");
 				throw t;
 			}
 
 
-			for(int i = 0; i < maxHeightNumBlocks; i++) {
+			for(int i = 0; i < maxHeight; i++) {
 				assertEquals(message + "y=" + i, test.get(i), index.getOpacity(0, i, 0));
 			}
 			assertEquals(message + "minY", test.getMinY(), index.getBottomBlockY(0, 0));
 			assertEquals(message + "maxY", test.getMaxY(), index.getTopBlockY(0, 0));
 
+
 			s[0]++;
-			for(int i = 0; i < maxHeightNumBlocks-1; i++) {
-				if(s[i] == maxHeightNumBlocks*3) {
+			for(int i = 0; i < numBlocks-1; i++) {
+				if(s[i] == maxHeight*3) {
 					s[i] = 0;
 					s[i+1]++;
 				}
 			}
-			if(s[maxHeightNumBlocks-1] == maxHeightNumBlocks*3) {
+			if(s[numBlocks-1] == maxHeight*3) {
 				break;
 			}
 		}

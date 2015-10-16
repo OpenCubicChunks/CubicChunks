@@ -33,4 +33,6 @@ public class CommonProxy {
 	public EntityPlayer getPlayerEntity(MessageContext ctx) {
 		return ctx.getServerHandler().playerEntity;
 	}
+
+	public void registerEvents() {}
 }

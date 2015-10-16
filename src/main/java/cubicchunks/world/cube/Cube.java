@@ -89,7 +89,7 @@ public class Cube {
 	public void setEmpty(boolean isEmpty) {
 		if (isEmpty) {
 			this.storage = null;
-		} else {
+		} else if(storage == null){
 			this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(this.cubeY), !this.world.provider.getHasNoSky());
 		}
 	}

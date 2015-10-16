@@ -239,7 +239,8 @@ public class ClientHandler implements INetHandler {
 		
 		// apply the update
 		for (int i=0; i<packet.localAddresses.length; i++) {
-			cube.setBlockState(cube.localAddressToBlockPos(packet.localAddresses[i]), packet.blockStates[i]);
+			//TODO: Actually set block in Column
+			cube.setBlockForGeneration(cube.localAddressToBlockPos(packet.localAddresses[i]), packet.blockStates[i]);
 		}
 		cube.markForRenderUpdate();
 		for (TileEntity blockEntity : cube.getBlockEntities()) {
