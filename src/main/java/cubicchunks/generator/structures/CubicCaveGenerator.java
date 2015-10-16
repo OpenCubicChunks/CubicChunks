@@ -211,7 +211,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 								for (int y1 = yDist2 - 1; y1 >= yDist1; --y1) {
 									double distY = calculateDistance(yOrigin, y1, y, yModSin);
 
-									BlockPos pos = new BlockPos(x1, y1, z1);
+									BlockPos pos = new BlockPos(x1 + xOrigin, y1 + yOrigin, z1 + zOrigin);
 									Block block = cube.getBlockState(pos).getBlock();
 
 									if (block != Blocks.stone && block != Blocks.dirt && block != Blocks.grass) {
