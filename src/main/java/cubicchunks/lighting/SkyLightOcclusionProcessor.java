@@ -23,8 +23,6 @@
  */
 package cubicchunks.lighting;
 
-import net.minecraft.util.BlockPos;
-import net.minecraft.world.World;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Coords;
 import cubicchunks.util.MutableBlockPos;
@@ -33,6 +31,7 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.World;
 
 public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 	
@@ -61,6 +60,7 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 		int minHeight2 = world.getChunksLowestHorizon(blockX + 1, blockZ);
 		int minHeight3 = world.getChunksLowestHorizon(blockX, blockZ - 1);
 		int minHeight4 = world.getChunksLowestHorizon(blockX, blockZ + 1);
+		System.out.println("minHeight1:" + minHeight1);
 		int minNeighborHeight = Math.min(minHeight1, Math.min(minHeight2, Math.min(minHeight3, minHeight4)));
 		
 		boolean actuallyUpdated = false;
@@ -106,17 +106,16 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 			return false;
 		}
 		
-		boolean blocksExist = WorldContext.get(world).blocksExist(blockX, minBlockY, blockZ, blockX, maxBlockY, blockZ, false, GeneratorStage.LIVE);
+		boolean blocksExist = WorldContext.get(world).blocksExist(blockX, minBlockY, blockZ, blockX, maxBlockY, blockZ, true, GeneratorStage.LIVE);
 		if (!blocksExist) {
 			return false;
 		}
 		
 		MutableBlockPos pos = m_pos.get();
 		pos.setBlockPos(blockX, minBlockY, blockZ);
+		LightingManager lm = WorldContext.get(world).getLightingManager();
 		for (pos.y = minBlockY; pos.y <= maxBlockY; pos.y++) {
-			// use the vanilla light calculator, it's much faster now than my hacks
-			//WorldContext.get(world).getLightingManager().computeDiffuseLighting(new BlockPos(blockX, blockY, blockZ), LightType.SKY);
-			world.checkLightFor(EnumSkyBlock.SKY, pos);
+			lm.computeDiffuseLighting(pos, EnumSkyBlock.SKY);
 		}
 		
 		return true;

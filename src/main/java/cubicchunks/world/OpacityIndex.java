@@ -41,6 +41,8 @@ public class OpacityIndex {
 	private int[] m_ymin;
 	private int[] m_ymax;
 	private int[][] m_segments;
+
+	private int heightMapLowest = None;
 	
 	private int m_hash;
 	private boolean m_needsHash;
@@ -121,7 +123,7 @@ public class OpacityIndex {
 		} else {
 			setOpacityWithSegments(xzIndex, blockY, opacity);
 		}
-		
+		heightMapLowest = None;
 		m_needsHash = true;
 	}
 	
@@ -565,6 +567,18 @@ public class OpacityIndex {
 			return null;
 		}
 		return pos;
+	}
+
+	public int getLowestTopBlockY() {
+		if(heightMapLowest == None) {
+			heightMapLowest = Integer.MAX_VALUE;
+			for(int i = 0; i < m_ymax.length; i++) {
+				if(m_ymax[i] < heightMapLowest) {
+					heightMapLowest = m_ymax[i];
+				}
+			}
+		}
+		return heightMapLowest;
 	}
 	
 	public byte[] getData() {

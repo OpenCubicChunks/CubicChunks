@@ -783,4 +783,9 @@ public class Column extends Chunk {
 			c.doRandomTicks();
 		}
 	}
+
+	@Override
+	public int getLowestHeight() {
+		return opacityIndex.getLowestTopBlockY();
+	}
 }
