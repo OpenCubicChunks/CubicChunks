@@ -25,6 +25,7 @@ package cubicchunks.world.column;
 
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.*;
 import cubicchunks.world.*;
 import cubicchunks.world.cube.Cube;
@@ -85,7 +86,7 @@ public class Column extends Chunk {
 		this.cubes = new TreeMap<>();
 		//clientside we don't really need that much data. we actually only need top and bottom block Y positions
 		if(this.getWorld().isRemote) {
-			this.opacityIndex = new DummyClientOpacityIndex(this);
+			this.opacityIndex = new ClientOpacityIndex(this);
 		} else {
 			this.opacityIndex = new OpacityIndex();
 		}
@@ -211,7 +212,6 @@ public class Column extends Chunk {
 
 	@Override
 	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
-
 		// is there a chunk for this block?
 		int cubeY = Coords.blockToCube(pos.getY());
 		Cube cube = this.cubes.get(cubeY);
@@ -246,34 +246,42 @@ public class Column extends Chunk {
 		// did the top non-transparent block change?
 		Integer oldSkylightY = getSkylightBlockY(x, z);
 		this.opacityIndex.setOpacity(x, pos.getY(), z, newOpacity);
-		Integer newSkylightY = getSkylightBlockY(x, z);
+		Integer newSkylightY = oldSkylightY;
+		if(!getWorld().isRemote) {
+			newSkylightY = getSkylightBlockY(x, z);
+		} else {
+			Integer oldSkylightActual = oldSkylightY == null ? null : oldSkylightY - 1;
+			//to avoid unnecessary delay when breaking blocks we need to hack it clientside
+			if((oldSkylightActual == null || pos.getY() > oldSkylightActual-1) && newBlock.getLightOpacity() != 0) {
+				//we added block, so we can be sure it's correct. Server update will be ignored
+				newSkylightY = pos.getY() + 1;
+			} else if(newBlock.getLightOpacity() == 0 && pos.getY() == oldSkylightY - 1) {
+				//we changed block to something transparent. Heightmap can change only if we break top block
 
-		if (oldSkylightY != null && newSkylightY != null && !oldSkylightY.equals(newSkylightY)) {
-
-			// sort the y-values
-			int minBlockY = oldSkylightY;
-			int maxBlockY = newSkylightY;
-			if (minBlockY > maxBlockY) {
-				minBlockY = newSkylightY;
-				maxBlockY = oldSkylightY;
+				//we don't know by how much we changed heightmap, and we could have changed it by any value
+				//but for client code any value higher than render distance means the same
+				//we need to update it enough not to be unresponsive, and then wait for information from server
+				//so only scan 64 blocks down. If we updated more - we would need to wait for renderer updates anyway
+				int newTop = oldSkylightActual - 1;
+				while(getBlock(x, newTop, z).getLightOpacity() == 0) newTop--;
+				newSkylightY = newTop;
+			} else {
+				// no change
+				newSkylightY = oldSkylightActual;
 			}
-			assert (minBlockY < maxBlockY) : "Values not sorted! " + minBlockY + ", " + maxBlockY;
-
-			// update light and signal render update
-			WorldContext.get(this.getWorld()).getLightingManager().computeSkyLightUpdate(this, x, z, minBlockY, maxBlockY);
-			this.getWorld().markBlockRangeForRenderUpdate(pos.getX(), minBlockY, pos.getZ(), pos.getX(), maxBlockY,
-					pos.getZ());
+			//update the heightmap. If out update it not accurate - it will be corrected when server sends block update
+			((ClientOpacityIndex)opacityIndex).setHeight(x, z, newSkylightY);
 		}
+
+		LightingManager lightManager = WorldContext.get(this.getWorld()).getLightingManager();
+		lightManager.updateSkyLightForBlockChange(this, pos.getX(), pos.getZ(), oldSkylightY, newSkylightY);
 
 		// if opacity changed and ( opacity decreased or block now has any light )
-		int skyLight = getLightFor(EnumSkyBlock.SKY, pos);
-		int blockLight = getLightFor(EnumSkyBlock.BLOCK, pos);
+		int skyLight = this.getLightFor(EnumSkyBlock.SKY, pos);
+		int blockLight = this.getLightFor(EnumSkyBlock.BLOCK, pos);
 		if (newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0)) {
-			WorldContext.get(this.getWorld()).getLightingManager().queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
+			lightManager.queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
 		}
-
-		// update opacity index
-		this.opacityIndex.setOpacity(x, pos.getY(), z, newBlock.getLightOpacity());
 
 		this.setModified(true);
 

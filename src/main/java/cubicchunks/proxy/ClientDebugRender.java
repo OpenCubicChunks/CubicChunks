@@ -24,7 +24,7 @@
 package cubicchunks.proxy;
 
 import cubicchunks.util.Coords;
-import cubicchunks.world.DummyClientOpacityIndex;
+import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import net.minecraft.client.Minecraft;
@@ -75,7 +75,7 @@ public class ClientDebugRender {
 			Column clientColumn = (Column) clientWorld.getChunkFromBlockCoords(pos);
 
 			OpacityIndex serverIndex = (OpacityIndex) serverColumn.getOpacityIndex();
-			DummyClientOpacityIndex clientIndex = (DummyClientOpacityIndex) clientColumn.getOpacityIndex();
+			ClientOpacityIndex clientIndex = (ClientOpacityIndex) clientColumn.getOpacityIndex();
 
 			GL11.glPushMatrix();
 			{
@@ -100,7 +100,6 @@ public class ClientDebugRender {
 					GL11.glCallList(cubeDisplayList);
 					GL11.glPopMatrix();
 				}
-				System.out.println("Client ymin="+clientIndex.getBottomBlockY(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getZ())) + ", ymax=" + clientIndex.getTopBlockY(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getZ())) );
 				GL11.glEnable(GL11.GL_CULL_FACE);
 				GL11.glEnable(GL11.GL_DEPTH_TEST);
 			}
@@ -112,8 +111,5 @@ public class ClientDebugRender {
 			//we are doing stuff in thread unsafe way. Weird things may happen. catch everything.
 			t.printStackTrace();
 		}
-
-
-
 	}
 }

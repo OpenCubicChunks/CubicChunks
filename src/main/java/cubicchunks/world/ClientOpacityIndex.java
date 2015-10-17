@@ -24,24 +24,31 @@
 package cubicchunks.world;
 
 import com.google.common.base.Throwables;
+import cubicchunks.util.Coords;
 import cubicchunks.world.column.Column;
+import net.minecraft.world.World;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
-public class DummyClientOpacityIndex implements IOpacityIndex {
+public class ClientOpacityIndex implements IOpacityIndex {
 	private static final int NONE = Integer.MIN_VALUE;
 	private final Column chunk;
 	private int[] hmap;
 	private int[] bottomBlocks;
 	private int heightMapLowest = NONE;
 
-	public DummyClientOpacityIndex(Column column) {
+	public ClientOpacityIndex(Column column) {
 		this.chunk = column;
 		this.hmap = new int[256];
 		this.bottomBlocks = new int[256];
+
+		Arrays.fill(hmap, NONE);
+		Arrays.fill(bottomBlocks, NONE);
 	}
+
 	@Override
 	public int getOpacity(int localX, int blockY, int localZ) {
 		return chunk.getBlock(localX, blockY, localZ).getLightOpacity();
@@ -66,10 +73,10 @@ public class DummyClientOpacityIndex implements IOpacityIndex {
 
 	@Override
 	public int getLowestTopBlockY() {
-		if(heightMapLowest == NONE) {
+		if (heightMapLowest == NONE) {
 			heightMapLowest = Integer.MAX_VALUE;
-			for(int i = 0; i < hmap.length; i++) {
-				if(hmap[i] < heightMapLowest) {
+			for (int i = 0; i < hmap.length; i++) {
+				if (hmap[i] < heightMapLowest) {
 					heightMapLowest = hmap[i];
 				}
 			}
@@ -86,12 +93,26 @@ public class DummyClientOpacityIndex implements IOpacityIndex {
 	}
 
 	public void setData(byte[] data) {
-		try{
+		try {
 			ByteArrayInputStream buf = new ByteArrayInputStream(data);
 			DataInputStream in = new DataInputStream(buf);
 
-			for(int i = 0; i < 256; i++) bottomBlocks[i] = in.readInt();
-			for(int i = 0; i < 256; i++) hmap[i] = in.readInt();
+			for (int i = 0; i < 256; i++) {
+				bottomBlocks[i] = in.readInt();
+			}
+			for (int i = 0; i < 256; i++) {
+				int oldValue = hmap[i];
+				hmap[i] = in.readInt();
+				//TODO: optimize serverside data sending to avoid unnecessary recalculations?
+				if (oldValue != hmap[i]) {
+					World world = chunk.getWorld();
+					int x = Coords.localToBlock(chunk.getX(), unpackX(i));
+					int z = Coords.localToBlock(chunk.getZ(), unpackZ(i));
+					Integer old = oldValue == NONE ? null : oldValue;
+					Integer newV = hmap[i] == NONE ? null : hmap[i];
+					WorldContext.get(world).getLightingManager().updateSkyLightForBlockChange(chunk, x, z, old, newV);
+				}
+			}
 
 			in.close();
 		} catch (IOException e) {
@@ -101,6 +122,14 @@ public class DummyClientOpacityIndex implements IOpacityIndex {
 
 	private static int getIndex(int localX, int localZ) {
 		return (localZ << 4) | localX;
+	}
+
+	private static int unpackX(int index) {
+		return index & 0xF;
+	}
+
+	private static int unpackZ(int index) {
+		return (index >> 4) & 0xF;
 	}
 
 }

@@ -24,12 +24,13 @@
 package cubicchunks.lighting;
 
 import cubicchunks.CubicChunks;
-import net.minecraft.util.BlockPos;
-import net.minecraft.world.World;
 import cubicchunks.util.Bits;
+import cubicchunks.util.Coords;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.Column;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.World;
 
 public class LightingManager {
 	
@@ -65,6 +66,28 @@ public class LightingManager {
 	
 	public void computeSkyLightUpdate(Column column, int localX, int localZ, int oldMaxBlockY, int newMaxBlockY) {
 		this.skyLightUpdateCalculator.calculate(column, localX, localZ, oldMaxBlockY, newMaxBlockY);
+	}
+
+	public void updateSkyLightForBlockChange(Column column, int blockX, int blockZ, Integer oldHeight, Integer newHeight) {
+		int localX = Coords.blockToLocal(blockX);
+		int localZ = Coords.blockToLocal(blockZ);
+
+		if (oldHeight != null && newHeight != null && !oldHeight.equals(newHeight)) {
+
+			// sort the y-values
+			int minBlockY = oldHeight;
+			int maxBlockY = newHeight;
+			if (minBlockY > maxBlockY) {
+				minBlockY = newHeight;
+				maxBlockY = oldHeight;
+			}
+			assert (minBlockY < maxBlockY) : "Values not sorted! " + minBlockY + ", " + maxBlockY;
+
+			// update light and signal render update
+			this.computeSkyLightUpdate(column, localX, localZ, minBlockY, maxBlockY);
+			column.getWorld().markBlockRangeForRenderUpdate(blockX, minBlockY, blockZ, blockX, maxBlockY, blockZ);
+		}
+
 	}
 	
 	public void tick() {

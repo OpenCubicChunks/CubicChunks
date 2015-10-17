@@ -34,9 +34,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class PacketCubeBlockChange implements IMessage {
 
+	public int[] heightValues;
 	public long cubeAddress;
 	public int[] localAddresses;
 	public IBlockState[] blockStates;
@@ -48,13 +51,22 @@ public class PacketCubeBlockChange implements IMessage {
 		this.localAddresses = new int[localAddresses.size()];
 		this.blockStates = new IBlockState[localAddresses.size()];
 		int i = 0;
+		Set<Integer> xzAddresses = new HashSet<>();
 		for (int localAddress : localAddresses) {
 			this.localAddresses[i] = localAddress;
-			this.blockStates[i] = cube.getBlockState(
-				AddressTools.getLocalX(localAddress),
-				AddressTools.getLocalY(localAddress),
-				AddressTools.getLocalZ(localAddress)
-			);
+			int x = AddressTools.getLocalX(localAddress);
+			int y = AddressTools.getLocalY(localAddress);
+			int z = AddressTools.getLocalZ(localAddress);
+			this.blockStates[i] = cube.getBlockState(x, y, z);
+			xzAddresses.add(x | z << 4);
+			i++;
+		}
+		this.heightValues = new int[xzAddresses.size()];
+		i = 0;
+		for(Integer v : xzAddresses) {
+			Integer height = cube.getColumn().getOpacityIndex().getTopBlockY(v & 0xF, v >> 4);
+			v |= (height == null ? Integer.MIN_VALUE : height) << 8;
+			heightValues[i] = v;
 			i++;
 		}
 	}
@@ -70,6 +82,11 @@ public class PacketCubeBlockChange implements IMessage {
 			localAddresses[i] = in.readInt();
 			blockStates[i] = (IBlockState) Block.BLOCK_STATE_IDS.getByValue(ByteBufUtils.readVarInt(in, 4));
 		}
+		int numHmapChanges = in.readUnsignedByte();
+		heightValues = new int[numHmapChanges];
+		for(int i = 0; i < numHmapChanges; i++) {
+			heightValues[i] = in.readInt();
+		}
 	}
 
 	@Override
@@ -79,6 +96,10 @@ public class PacketCubeBlockChange implements IMessage {
 		for(int i = 0; i < localAddresses.length; i++) {
 			out.writeInt(localAddresses[i]);
 			ByteBufUtils.writeVarInt(out, Block.BLOCK_STATE_IDS.get(blockStates[i]), 4);
+		}
+		out.writeByte(heightValues.length);
+		for(int v : heightValues) {
+			out.writeInt(v);
 		}
 	}
 

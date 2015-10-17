@@ -25,7 +25,7 @@ package cubicchunks.network;
 
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.ArrayConverter;
-import cubicchunks.world.DummyClientOpacityIndex;
+import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
@@ -110,8 +110,9 @@ public class WorldEncoder {
 			// 5. heughtmaps
 			byte[] heightmaps = new byte[256*2*4];
 			in.read(heightmaps);
-			((DummyClientOpacityIndex)cube.getColumn().getOpacityIndex()).setData(heightmaps);
-			
+			((ClientOpacityIndex)cube.getColumn().getOpacityIndex()).setData(heightmaps);
+			cube.queueInitialSkylightOcclusion();
+
 			storage.removeInvalidBlocks();
 		}
 	}

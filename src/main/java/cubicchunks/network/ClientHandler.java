@@ -26,7 +26,9 @@ package cubicchunks.network;
 import cubicchunks.CubicChunks;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
+import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
@@ -35,8 +37,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.network.INetHandler;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IThreadListener;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldProviderSurface;
 
 public class ClientHandler implements INetHandler {
@@ -236,13 +240,30 @@ public class ClientHandler implements INetHandler {
 			CubicChunks.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
 			return;
 		}
-		
+
+		ClientOpacityIndex index = (ClientOpacityIndex) cube.getColumn().getOpacityIndex();
+		LightingManager lm = context.getLightingManager();
+		for(int hmapUpdate : packet.heightValues) {
+			int x = hmapUpdate & 0xF;
+			int z = (hmapUpdate >> 4) & 0xF;
+			//height is signed, so don't use unsigned shift
+			int height = hmapUpdate >> 8;
+
+			Integer oldHeight = index.getTopBlockY(x, z);
+			index.setHeight(x, z, height);
+			if(oldHeight == null || height == Integer.MIN_VALUE) {
+				continue;
+			}
+			lm.updateSkyLightForBlockChange(cube.getColumn(), x + cubeX * 16, z + cubeZ * 16, oldHeight, height);
+			//TODO: Optimize it. it's not always needed.
+			lm.queueSkyLightOcclusionCalculation(x + cubeX * 16, z + cubeZ * 16);
+		}
 		// apply the update
 		for (int i=0; i<packet.localAddresses.length; i++) {
-			//TODO: Actually set block in Column
-			cube.setBlockForGeneration(cube.localAddressToBlockPos(packet.localAddresses[i]), packet.blockStates[i]);
+			BlockPos pos = cube.localAddressToBlockPos(packet.localAddresses[i]);
+			worldClient.invalidateRegionAndSetBlock(pos, packet.blockStates[i]);
+			worldClient.checkLightFor(EnumSkyBlock.SKY, pos);
 		}
-		cube.markForRenderUpdate();
 		for (TileEntity blockEntity : cube.getBlockEntities()) {
 			blockEntity.updateContainingBlockInfo();
 		}	

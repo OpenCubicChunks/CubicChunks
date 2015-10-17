@@ -26,10 +26,13 @@ package cubicchunks.world.cube;
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.generator.GeneratorStage;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;
+import cubicchunks.util.MutableBlockPos;
 import cubicchunks.world.EntityContainer;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -598,6 +601,31 @@ public class Cube {
 				TileEntity tileentity = this.createBlockEntity(blockpos);
 				this.world.setTileEntity(blockpos, tileentity);
 				this.world.markBlockRangeForRenderUpdate(blockpos, blockpos);
+			}
+		}
+	}
+
+	public void queueInitialSkylightOcclusion() {
+		//is there anything to update?
+		if(!this.hasBlocks()) {
+			return;
+		}
+		MutableBlockPos pos = new MutableBlockPos();
+		LightingManager lm = WorldContext.get(world).getLightingManager();
+		for(int xz = 0; xz < 256; xz++) {
+			int x = xz & 0xF;
+			int z = xz >> 4;
+
+			//for each xz column scan from top to bottom
+			for(int i = 15; i >= 0; i--) {
+				pos.setBlockPos(x, i, z);
+				int skyLight = this.getLightValue(EnumSkyBlock.SKY, pos);
+				int blockLight = this.getLightValue(EnumSkyBlock.BLOCK, pos);
+				int newOpacity = getBlockAt(pos).getLightOpacity();
+				//oldOpacity = 0;
+				if (newOpacity != 0 && (skyLight > 0 || blockLight > 0)) {
+					lm.queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
+				}
 			}
 		}
 	}
