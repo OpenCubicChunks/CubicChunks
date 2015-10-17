@@ -30,6 +30,7 @@ import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.IEntityActionListener;
+import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
@@ -289,7 +290,7 @@ public class CubeIO implements IThreadedFileIO {
 		column.setBiomeArray(nbt.getByteArray("Biomes"));
 		
 		// read light index
-		column.getOpacityIndex().readData(nbt.getByteArray("OpacityIndex"));
+		((OpacityIndex)column.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
 		
 		// entities
 		column.getEntityContainer().readFromNbt(nbt, "Entities", this.world, new IEntityActionListener() {
@@ -447,7 +448,7 @@ public class CubeIO implements IThreadedFileIO {
 			nbt.setByteArray("Biomes", column.getBiomeArray());
 			
 			// light index
-			nbt.setByteArray("OpacityIndex", column.getOpacityIndex().getData());
+			nbt.setByteArray("OpacityIndex", ((OpacityIndex)column.getOpacityIndex()).getData());
 			
 			// entities
 			column.getEntityContainer().writeToNbt(nbt, "Entities");

@@ -60,7 +60,7 @@ public class SkyLightOcclusionProcessor extends BlockColumnProcessor {
 		int minHeight2 = world.getChunksLowestHorizon(blockX + 1, blockZ);
 		int minHeight3 = world.getChunksLowestHorizon(blockX, blockZ - 1);
 		int minHeight4 = world.getChunksLowestHorizon(blockX, blockZ + 1);
-		System.out.println("minHeight1:" + minHeight1);
+
 		int minNeighborHeight = Math.min(minHeight1, Math.min(minHeight2, Math.min(minHeight3, minHeight4)));
 		
 		boolean actuallyUpdated = false;

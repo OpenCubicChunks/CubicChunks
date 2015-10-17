@@ -23,18 +23,18 @@
  */
 package cubicchunks.lighting;
 
-import net.minecraft.block.Block;
-import net.minecraft.util.BlockPos;
-import net.minecraft.world.World;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Coords;
 import cubicchunks.util.MutableBlockPos;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
-import cubicchunks.world.OpacityIndex;
+import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.block.Block;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.World;
 
 public class FirstLightProcessor extends CubeProcessor {
 	
@@ -129,7 +129,7 @@ public class FirstLightProcessor extends CubeProcessor {
 			}
 			
 		} else {
-			OpacityIndex index = cube.getColumn().getOpacityIndex();
+			IOpacityIndex index = cube.getColumn().getOpacityIndex();
 			
 			// need to calculate the light
 			int light = 15;

@@ -25,6 +25,8 @@ package cubicchunks.network;
 
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.ArrayConverter;
+import cubicchunks.world.DummyClientOpacityIndex;
+import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -55,6 +57,12 @@ public class WorldEncoder {
 				// 4. sky light
 				out.write(storage.getSkylightArray().getData());
 			}
+
+			// 5. heightmap and bottom-block-y. Each non-empty cube has a chance to update this data.
+			// trying to keep track of when it changes would be complex, so send it wil all cubes
+			byte[] heightmaps = ((OpacityIndex) cube.getColumn().getOpacityIndex()).getDataForClient();
+			assert  heightmaps.length == 256*2*4;
+			out.write(heightmaps);
 		}
 	}
 
@@ -63,9 +71,6 @@ public class WorldEncoder {
 		
 		// 1. biomes
 		out.write(column.getBiomeArray());
-		
-		// 2. light index
-		column.getOpacityIndex().writeData(out);
 	}
 
 	public static void decodeColumn(DataInputStream in, Column column)
@@ -73,9 +78,6 @@ public class WorldEncoder {
 		
 		// 1. biomes
 		in.read(column.getBiomeArray());
-		
-		// 2. light index
-		column.getOpacityIndex().readData(in);
 	}
 
 	public static void decodeCube(DataInputStream in, Cube cube)
@@ -104,6 +106,11 @@ public class WorldEncoder {
 				// 4. sky light
 				in.read(storage.getSkylightArray().getData());
 			}
+
+			// 5. heughtmaps
+			byte[] heightmaps = new byte[256*2*4];
+			in.read(heightmaps);
+			((DummyClientOpacityIndex)cube.getColumn().getOpacityIndex()).setData(heightmaps);
 			
 			storage.removeInvalidBlocks();
 		}

@@ -26,9 +26,7 @@ package cubicchunks.world.column;
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.*;
-import cubicchunks.world.EntityContainer;
-import cubicchunks.world.OpacityIndex;
-import cubicchunks.world.WorldContext;
+import cubicchunks.world.*;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -53,7 +51,7 @@ import static cubicchunks.util.Coords.CUBE_SIZE;
 public class Column extends Chunk {
 
 	private TreeMap<Integer, Cube> cubes;
-	private OpacityIndex opacityIndex;
+	private IOpacityIndex opacityIndex;
 	private int roundRobinLightUpdatePointer;
 	private List<Cube> roundRobinCubes;
 	private EntityContainer entities;
@@ -84,8 +82,13 @@ public class Column extends Chunk {
 
 	private void init() {
 
-		this.cubes = new TreeMap<Integer, Cube>();
-		this.opacityIndex = new OpacityIndex();
+		this.cubes = new TreeMap<>();
+		//clientside we don't really need that much data. we actually only need top and bottom block Y positions
+		if(this.getWorld().isRemote) {
+			this.opacityIndex = new DummyClientOpacityIndex(this);
+		} else {
+			this.opacityIndex = new OpacityIndex();
+		}
 		this.roundRobinLightUpdatePointer = 0;
 		this.roundRobinCubes = new ArrayList<Cube>();
 		this.entities = new EntityContainer();
@@ -119,7 +122,7 @@ public class Column extends Chunk {
 		return this.entities;
 	}
 
-	public OpacityIndex getOpacityIndex() {
+	public IOpacityIndex getOpacityIndex() {
 		return this.opacityIndex;
 	}
 
