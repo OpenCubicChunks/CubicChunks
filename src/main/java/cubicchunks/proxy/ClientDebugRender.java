@@ -40,6 +40,9 @@ public class ClientDebugRender {
 	int cubeDisplayList = -1;
 	@SubscribeEvent
 	public void onRender(RenderWorldLastEvent evt) {
+		if(!"true".equals(System.getProperty("cubicchunks.debug"))) {
+			return;
+		}
 		if(cubeDisplayList == -1) {
 			cubeDisplayList = GL11.glGenLists(1);
 

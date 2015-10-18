@@ -263,7 +263,9 @@ public class Column extends Chunk {
 				//we need to update it enough not to be unresponsive, and then wait for information from server
 				//so only scan 64 blocks down. If we updated more - we would need to wait for renderer updates anyway
 				int newTop = oldSkylightActual - 1;
-				while(getBlock(x, newTop, z).getLightOpacity() == 0) newTop--;
+				while(getBlock(x, newTop, z).getLightOpacity() == 0 && newTop > oldSkylightActual - 33) {
+					newTop--;
+				}
 				newSkylightY = newTop;
 			} else {
 				// no change

@@ -23,6 +23,8 @@
  */
 package cubicchunks;
 
+import cubicchunks.client.WorldClientContext;
+import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.WorldAccess;
 import cubicchunks.util.WorldClientAccess;
 import cubicchunks.util.WorldServerAccess;
@@ -51,6 +53,17 @@ public class CCEventHandler {
 		}
 		if(world instanceof WorldClient && cc.isTallWorld(world)) {
 			modifyWorld((WorldClient)world);
+		}
+	}
+
+	@SubscribeEvent
+	public void onWorldUnload(WorldEvent.Unload evt) {
+		World world = evt.world;
+		if(world instanceof WorldServer && cc.isTallWorld(world)) {
+			WorldServerContext.clear();
+		}
+		if(world instanceof WorldClient && cc.isTallWorld(world)) {
+			WorldClientContext.clear();
 		}
 	}
 

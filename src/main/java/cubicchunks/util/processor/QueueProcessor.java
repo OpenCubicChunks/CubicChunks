@@ -23,13 +23,13 @@
  */
 package cubicchunks.util.processor;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-
+import com.google.common.collect.Sets;
 import cubicchunks.util.ArrayBatchedQueue;
 import cubicchunks.util.Progress;
 import cubicchunks.world.ICubeCache;
+
+import java.util.List;
+import java.util.Set;
 
 public abstract class QueueProcessor {
 	
@@ -37,19 +37,19 @@ public abstract class QueueProcessor {
 	protected ICubeCache cache;
 	private int batchSize;
 	private ArrayBatchedQueue<Long> queue;
-	protected List<Long> incomingAddresses;
-	protected List<Long> processedAddresses;
-	protected List<Long> deferredAddresses;
+	protected Set<Long> incomingAddresses;
+	protected Set<Long> processedAddresses;
+	protected Set<Long> deferredAddresses;
 	
 	public QueueProcessor(String name, ICubeCache cache, int batchSize) {
 		this.name = name;
 		this.cache = cache;
 		this.batchSize = batchSize;
 		
-		this.queue = new ArrayBatchedQueue<Long>();
-		this.incomingAddresses = Lists.newArrayList();
-		this.processedAddresses = Lists.newArrayList();
-		this.deferredAddresses = Lists.newArrayList();
+		this.queue = new ArrayBatchedQueue<>();
+		this.incomingAddresses = Sets.newHashSet();
+		this.processedAddresses = Sets.newHashSet();
+		this.deferredAddresses = Sets.newHashSet();
 	}
 	
 	public String getName() {
@@ -109,7 +109,7 @@ public abstract class QueueProcessor {
 		return this.processedAddresses.size();
 	}
 	
-	public List<Long> getProcessedAddresses() {
+	public Set<Long> getProcessedAddresses() {
 		return this.processedAddresses;
 	}
 	
