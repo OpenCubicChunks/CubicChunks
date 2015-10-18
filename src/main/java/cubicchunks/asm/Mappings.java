@@ -94,7 +94,7 @@ public class Mappings {
 
 	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE = getNameFromSrg("func_77165_h");
 
-	public static final String ITEM_BLOCK_ON_ITEM_USE = getNameFromSrg("func_179546_a");
+	public static final String ITEM_BLOCK_ON_ITEM_USE = getNameFromSrg("func_180614_a");
 
 	public static final String MATH_HELPER_FLOOR_DOUBLE = getNameFromSrg("func_76128_c");
 
