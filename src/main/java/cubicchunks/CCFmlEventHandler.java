@@ -23,12 +23,14 @@
  */
 package cubicchunks;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 public class CCFmlEventHandler {
 
@@ -39,17 +41,24 @@ public class CCFmlEventHandler {
 	}
 
 	@SubscribeEvent
-	public void onWorldTick(TickEvent.WorldTickEvent evt) {
+	public void onWorldServerTick(TickEvent.WorldTickEvent evt) {
 		World world = evt.world;
+		//Forge (at least version 11.14.3.1521) doesn't call this event for client world.
+		if (evt.phase == TickEvent.Phase.END && ccSystem.isTallWorld(world) && evt.side == Side.SERVER) {
+			ccSystem.onWorldServerTick((WorldServer) world);
+		}
+	}
+
+	@SubscribeEvent
+	public void onWorldClientTickEvent(TickEvent.ClientTickEvent evt) {
+		World world = Minecraft.getMinecraft().theWorld;
+		//does the world exist? Is the game paused?
+		//TODO: Maybe we should still process light updates when game is paused?
+		if(world == null || Minecraft.getMinecraft().isGamePaused()) {
+			return;
+		}
 		if (evt.phase == TickEvent.Phase.END && ccSystem.isTallWorld(world)) {
-			switch (evt.side) {
-				case CLIENT:
-					ccSystem.onWorldClientTick((WorldClient) world);
-					break;
-				case SERVER:
-					ccSystem.onWorldServerTick((WorldServer) world);
-					break;
-			}
+			ccSystem.onWorldClientTick((WorldClient) world);
 		}
 	}
 

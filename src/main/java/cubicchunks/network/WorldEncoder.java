@@ -24,9 +24,12 @@
 package cubicchunks.network;
 
 import cubicchunks.generator.GeneratorStage;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.ArrayConverter;
+import cubicchunks.util.Coords;
 import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.OpacityIndex;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -34,6 +37,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 
 public class WorldEncoder {
@@ -107,12 +111,25 @@ public class WorldEncoder {
 				in.read(storage.getSkylightArray().getData());
 			}
 
-			// 5. heughtmaps
+			// 5. heightmaps
 			byte[] heightmaps = new byte[256*2*4];
 			in.read(heightmaps);
-			((ClientOpacityIndex)cube.getColumn().getOpacityIndex()).setData(heightmaps);
-			cube.queueInitialSkylightOcclusion();
+			ClientOpacityIndex coi = ((ClientOpacityIndex)cube.getColumn().getOpacityIndex());
+			int[] hmapOld = Arrays.copyOf(coi.getHeightmap(), 256);
+			coi.setData(heightmaps);
+			int[] hmapNew = coi.getHeightmap();
+			LightingManager lm = WorldContext.get(cube.getWorld()).getLightingManager();
+			for(int xz = 0; xz < 256; xz++) {
+				if(hmapNew[xz] != hmapOld[xz] || cube.getY()*16 < hmapNew[xz]) {
+					int x = xz & 0xF;
+					int z = xz >> 4;
 
+					int blockX = Coords.localToBlock(cube.getX(), x);
+					int blockZ = Coords.localToBlock(cube.getZ(), z);
+
+					lm.queueSkyLightOcclusionCalculation(blockX, blockZ);
+				}
+			}
 			storage.removeInvalidBlocks();
 		}
 	}

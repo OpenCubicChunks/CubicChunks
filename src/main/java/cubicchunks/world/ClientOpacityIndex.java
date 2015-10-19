@@ -120,6 +120,10 @@ public class ClientOpacityIndex implements IOpacityIndex {
 		}
 	}
 
+	public int[] getHeightmap() {
+		return this.hmap;
+	}
+
 	private static int getIndex(int localX, int localZ) {
 		return (localZ << 4) | localX;
 	}
