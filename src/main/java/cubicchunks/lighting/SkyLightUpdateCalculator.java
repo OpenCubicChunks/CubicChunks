@@ -23,99 +23,114 @@
  */
 package cubicchunks.lighting;
 
-import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
-import net.minecraft.world.World;
 import cubicchunks.util.Coords;
 import cubicchunks.util.MutableBlockPos;
-import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.World;
 
-public class SkyLightUpdateCalculator {
-	
-	public void calculate(Column column, int localX, int localZ, int minBlockY, int maxBlockY) {
-		// NOTE: maxBlockY is always the air block above the top block that was added or removed
-		
+import java.util.HashSet;
+import java.util.Set;
+
+class SkyLightUpdateCalculator {
+
+	/**
+	 * Calculates light update for given positions.
+	 * @param column Column to calculate light in
+	 * @param localX in-column X position
+	 * @param localZ in-column Z position
+	 * @param minBlockY minimum light update Y. Integer.MIN_VALUE for no lower limit.
+	 * @param startBlockY position from which updating should be started. Integer.MAX_VALUE tu update from top of the world.
+	 * @return set of affected cube Y positions
+	 */
+	public Set<Integer> calculate(Column column, int localX, int localZ, int minBlockY, int startBlockY) {
+		// NOTE: startBlockY is always the air block above the top block that was added or removed
 		World world = column.getWorld();
-		LightingManager lightingManager = WorldContext.get(world).getLightingManager();
-		
+
 		if (world.provider.getHasNoSky()) {
-			return;
+			return new HashSet<>(0);
 		}
-		
+
 		// did we add or remove sky?
 		MutableBlockPos blockPos = new MutableBlockPos(
 			Coords.localToBlock(column.xPosition, localX),
-			maxBlockY - 1,
+			startBlockY - 1,
 			Coords.localToBlock(column.zPosition, localZ)
 		);
-		boolean addedSky = column.getBlockState(blockPos).getBlock() == Blocks.air;
-		int newMaxBlockY = addedSky ? minBlockY : maxBlockY;
-		
-		// reset sky light for the affected y range
-		int lightValue = addedSky ? 15 : 0;
-		for (int blockY = minBlockY; blockY < maxBlockY; blockY++) {
-			
-			// save the light value
-			int cubeY = Coords.blockToCube(blockY);
-			Cube cube = column.getCube(cubeY);
-			if (cube != null) {
-				blockPos.setBlockPos(
-					blockPos.getX(),
-					blockY,
-					blockPos.getZ()
-				);
-				cube.setLightValue(EnumSkyBlock.SKY, blockPos, lightValue);
+		Integer newMaxBlockY = column.getSkylightBlockY(localX, localZ);
+		int maxCubeY = Coords.blockToCube(newMaxBlockY == null ? Integer.MIN_VALUE : newMaxBlockY);
+
+		Set<Integer> cubesToDiffuse = new HashSet<>();
+
+		//attempt to update lighting only in loaded cubes
+		for(Cube cube : column.getCubes()) {
+			int cubeY = cube.getY();
+			int minCubeBlockY = cubeY * 16;
+
+			//do we even need to do anything here?
+			if(startBlockY < minCubeBlockY) {
+				continue;
+			}
+			if(cubeY > maxCubeY) {
+				//if light value at the bottom is already correct - nothing to do here
+				blockPos.setBlockPos(localX, 0, localZ);
+				if(cube.getLightValue(EnumSkyBlock.SKY, blockPos) == 15) {
+					continue;
+				}
+				//we are above top block - set to light level = 15
+				for(int y = 0; y < 16; y++) {
+					blockPos.setBlockPos(localX, y, localZ);
+					cube.setLightValue(EnumSkyBlock.SKY, blockPos, 15);
+				}
+				cubesToDiffuse.add(cube.getY());
+			} else if(/*cubeY == maxCubeY - 1 || */cubeY == maxCubeY) {
+				//we actually also attempt to update cube at maxCubeY - 1 here
+				int light = 15, maxOpacity = 0;
+
+				//TODO: remove code duplication here
+				for(int y = 15; y >=0; y--) {
+					blockPos.setBlockPos(localX, y, localZ);
+					maxOpacity = Math.max(maxOpacity, cube.getBlockAt(blockPos).getLightOpacity());
+					light -= maxOpacity;
+					if(light < 0) light = 0;
+
+					cube.setLightValue(EnumSkyBlock.SKY, blockPos, light);
+				}
+
+				cubesToDiffuse.add(cube.getY());
+
+				//light can propagate to cube below too
+				if((cube = column.getCube(maxCubeY - 1)) != null) {
+					for(int y = 15; y >=0; y--) {
+						blockPos.setBlockPos(localX, y, localZ);
+						maxOpacity = Math.max(maxOpacity, cube.getBlockAt(blockPos).getLightOpacity());
+						light -= maxOpacity;
+						if(light < 0) light = 0;
+
+						cube.setLightValue(EnumSkyBlock.SKY, blockPos, light);
+					}
+					cubesToDiffuse.add(cube.getY());
+				}
+			} else if(cubeY == maxCubeY - 1) {
+				//it's done in code above
+				continue;
+			} else {
+				assert cubeY < maxCubeY - 1;
+				blockPos.setBlockPos(localX, 15, localZ);
+				//if we are below minBlockY or if the top block has correct light value (0) - nothing to do
+				if(minCubeBlockY+15 < minBlockY || cube.getLightValue(EnumSkyBlock.SKY, blockPos) == 0) {
+					continue;
+				}
+				do {
+					cube.setLightValue(EnumSkyBlock.SKY, blockPos, 0);
+					blockPos.y--;
+				}while(blockPos.y >= 0);
+
+				cubesToDiffuse.add(cube.getY());
 			}
 		}
-		
-		// compute the skylight falloff starting at the new top block
-		lightValue = 15;
-		int bottomBlockY = Coords.cubeToMinBlock(column.getBottomCubeY());
-		for (int blockY = newMaxBlockY - 1; blockY > bottomBlockY; blockY--) {
-			
-			// get the opacity to apply for this block
-			blockPos.setBlockPos(
-				blockPos.getX(),
-				blockY,
-				blockPos.getZ()
-			);
-			int lightOpacity = Math.max(1, column.getBlockState(blockPos).getBlock().getLightOpacity());
-			
-			// compute the falloff
-			lightValue = Math.max(lightValue - lightOpacity, 0);
-			
-			// save the light value
-			int cubeY = Coords.blockToCube(blockY);
-			Cube cube = column.getCube(cubeY);
-			if (cube != null) {
-				cube.setLightValue(EnumSkyBlock.SKY, blockPos, lightValue);
-			}
-			
-			if (lightValue == 0) {
-				// we ran out of light
-				break;
-			}
-		}
-		
-		// update this block and its xz neighbors
-		int blockX = Coords.localToBlock(column.xPosition, localX);
-		int blockZ = Coords.localToBlock(column.zPosition, localZ);
-		diffuseSkyLightForBlockColumn(lightingManager, blockX - 1, blockZ, minBlockY, maxBlockY);
-		diffuseSkyLightForBlockColumn(lightingManager, blockX + 1, blockZ, minBlockY, maxBlockY);
-		diffuseSkyLightForBlockColumn(lightingManager, blockX, blockZ - 1, minBlockY, maxBlockY);
-		diffuseSkyLightForBlockColumn(lightingManager, blockX, blockZ + 1, minBlockY, maxBlockY);
-		diffuseSkyLightForBlockColumn(lightingManager, blockX, blockZ, minBlockY, maxBlockY);
-	}
-	
-	private void diffuseSkyLightForBlockColumn(LightingManager lightingManager, int blockX, int blockZ, int minBlockY, int maxBlockY) {
-		// TODO: optimize out new?
-		MutableBlockPos pos = new MutableBlockPos();
-		for (int blockY = minBlockY; blockY < maxBlockY; blockY++) {
-			pos.setBlockPos(blockX, blockY, blockZ);
-			lightingManager.computeDiffuseLighting(pos, EnumSkyBlock.SKY);
-		}
+
+		return cubesToDiffuse;
 	}
 }

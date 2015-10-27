@@ -23,22 +23,23 @@
  */
 package cubicchunks.util;
 
-import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Iterator;
 
-public class ArrayBatchedQueue<T> extends ArrayDeque<T> {
+public class ArrayBatchedQueue<T> extends ArrayDequeHashSet<T> {
 	
 	private static final long serialVersionUID = 542092146475009002L;
 
 	public void getBatch(Collection<T> out, int size) {
+		Iterator<T> it = iterator();
 		for (int i=0; i<size && !isEmpty(); i++) {
-			out.add(poll());
+			out.add(it.next());
+			it.remove();
 		}
 	}
 	
 	public void getAll(Collection<T> out) {
-		while (!isEmpty()) {
-			out.add(poll());
-		}
+		out.addAll(this);
+		this.clear();
 	}
 }

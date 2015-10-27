@@ -24,6 +24,7 @@
 package cubicchunks.lighting;
 
 import cubicchunks.generator.GeneratorStage;
+import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.MutableBlockPos;
 import cubicchunks.util.processor.CubeProcessor;
@@ -61,10 +62,15 @@ public class FirstLightProcessor extends CubeProcessor {
 		MutableBlockPos pos = new MutableBlockPos();
 		
 		// update the sky light
+		boolean cubeBelowNeedUpdate = false;
 		for (pos.x = minBlockX; pos.x <= maxBlockX; pos.x++) {
 			for (pos.z = minBlockZ; pos.z <= maxBlockZ; pos.z++) {
-				updateSkylight(cube, pos);
+				cubeBelowNeedUpdate |= updateSkylight(cube, pos);
 			}
+		}
+
+		if(cubeBelowNeedUpdate) {
+			this.add(AddressTools.getAddress(cube.getX(), cube.getY() - 1, cube.getZ()));
 		}
 		
 		// smooth the sky light by applying diffuse lighting
@@ -94,7 +100,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		return true;
 	}
 	
-	private void updateSkylight(Cube cube, MutableBlockPos pos) {
+	private boolean updateSkylight(Cube cube, MutableBlockPos pos) {
 		
 		int localX = Coords.blockToLocal(pos.getX());
 		int localZ = Coords.blockToLocal(pos.getZ());
@@ -112,7 +118,10 @@ public class FirstLightProcessor extends CubeProcessor {
 		// get the cube bounds
 		int cubeMinBlockY = Coords.cubeToMinBlock(cube.getY());
 		int cubeMaxBlockY = Coords.cubeToMaxBlock(cube.getY());
-		
+
+		pos.y = Coords.cubeToMaxBlock(cube.getY());
+		int lightBelow = cache.getCube(cube.getX(), cube.getY()-1, cube.getZ()).getLightValue(EnumSkyBlock.SKY, pos);
+
 		// could this sky light possibly reach this cube?
 		if (cubeMinBlockY > gradientMaxBlockY) {
 			
@@ -120,14 +129,17 @@ public class FirstLightProcessor extends CubeProcessor {
 			for (pos.y=cubeMinBlockY; pos.y<=cubeMaxBlockY; pos.y++) {
 				cube.setLightValue(EnumSkyBlock.SKY, pos, 15);
 			}
-			
+			//this may cause unnecessary updates in some cases
+			return lightBelow != 15;
+
 		} else if (cubeMaxBlockY < gradientMinBlockY) {
 			
 			// set everything to dark
 			for (pos.y=cubeMinBlockY; pos.y<=cubeMaxBlockY; pos.y++) {
 				cube.setLightValue(EnumSkyBlock.SKY, pos, 0);
 			}
-			
+			return lightBelow != 0;
+
 		} else {
 			IOpacityIndex index = cube.getColumn().getOpacityIndex();
 			
@@ -149,6 +161,10 @@ public class FirstLightProcessor extends CubeProcessor {
 					cube.setLightValue(EnumSkyBlock.SKY, pos, light);
 				}
 			}
+			if(light != 15) light--;
+			if(light < 0) light = 0;
+			//this may cause unnecessary updates in some cases
+			return lightBelow != light;
 		}
 	}
 	
@@ -226,7 +242,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		
 		// should we diffuse sky light?
 		if (!world.provider.getHasNoSky() && pos.getY() > world.provider.getAverageGroundLevel()- 16 && block.getLightOpacity() == 0 && world.getLightFor(EnumSkyBlock.SKY, pos) == 0) {
-			boolean wasLit = world.checkLightFor(EnumSkyBlock.SKY, pos);
+			boolean wasLit = true;//world.checkLightFor(EnumSkyBlock.SKY, pos);
 			if (!wasLit) {
 				return false;
 			}

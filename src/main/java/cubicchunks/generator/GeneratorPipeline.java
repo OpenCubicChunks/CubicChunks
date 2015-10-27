@@ -170,11 +170,12 @@ public class GeneratorPipeline {
 				Progress progress = new Progress(processor.getNumInQueue(), 1000);
 				numProcessed = processor.processQueue(progress);
 				advanceCubes(processor, stage);
+				CubicChunks.LOGGER.info("\t\tprocessed {}", numProcessed);
 			} while (numProcessed > 0 && processor.getNumInQueue() > 0);
 		}
 	}
 	
-	private void advanceCubes(QueueProcessor processor, int stage) {
+	private void advanceCubes(QueueProcessor<Long> processor, int stage) {
 		
 		// move the processed entries into the next stage of the pipeline
 		int nextStage = stage + 1;

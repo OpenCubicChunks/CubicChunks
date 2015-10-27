@@ -254,9 +254,10 @@ public class ClientHandler implements INetHandler {
 			if(oldHeight == null || height == Integer.MIN_VALUE) {
 				continue;
 			}
-			//TODO: Optimize it. it's not always needed.
-			lm.queueSkyLightOcclusionCalculation(x + cubeX * 16, z + cubeZ * 16);
-			lm.updateSkyLightForBlockChange(cube.getColumn(), x + cubeX * 16, z + cubeZ * 16, oldHeight, height);
+
+			int minY = Math.min(oldHeight, height);
+			int maxY = Math.max(oldHeight, height);
+			lm.columnSkylightUpdate(LightingManager.UpdateType.IMMEDIATE, cube.getColumn(), x, minY, maxY, z);
 		}
 		// apply the update
 		for (int i=0; i<packet.localAddresses.length; i++) {

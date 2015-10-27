@@ -28,7 +28,7 @@ import cubicchunks.util.Progress;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
-public abstract class CubeProcessor extends QueueProcessor {
+public abstract class CubeProcessor extends QueueProcessor<Long> {
 	
 	public CubeProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);

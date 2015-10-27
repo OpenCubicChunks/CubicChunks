@@ -26,10 +26,13 @@ package cubicchunks.world.cube;
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.generator.GeneratorStage;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;
+import cubicchunks.util.MutableBlockPos;
 import cubicchunks.world.EntityContainer;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -598,6 +601,23 @@ public class Cube {
 				TileEntity tileentity = this.createBlockEntity(blockpos);
 				this.world.setTileEntity(blockpos, tileentity);
 				this.world.markBlockRangeForRenderUpdate(blockpos, blockpos);
+			}
+		}
+	}
+
+	public void initialClientSkylight() {
+		LightingManager lm = WorldContext.get(world).getLightingManager();
+		MutableBlockPos pos = new MutableBlockPos();
+		for(int x = 0; x < 16; x++) {
+			for(int z = 0; z < 16; z++) {
+				for(int y = 15; y >= 0; y--) {
+					int minY = Coords.cubeToMinBlock(getY());
+					int maxY = Coords.cubeToMaxBlock(getY());
+					pos.setBlockPos(x, y, z);
+					if(this.getBlockAt(pos).getLightOpacity() != 0) {
+						lm.columnSkylightUpdate(LightingManager.UpdateType.IMMEDIATE_UPDATE_QUEUED_DIFFUSE, getColumn(), x, minY, maxY, z);
+					}
+				}
 			}
 		}
 	}

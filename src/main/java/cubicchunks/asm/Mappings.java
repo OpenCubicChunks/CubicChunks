@@ -87,15 +87,10 @@ public class Mappings {
 	public static final String RENDER_GLOBAL_RENDER_ENTITIES = getNameFromSrg("func_180446_a");
 
 	public static final String REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW = getNameFromSrg("func_175631_c");
-
 	public static final String VEC_3_I_GET_X = getNameFromSrg("func_177958_n");
-
 	public static final String ENTITY_ON_ENTITY_UPDATE = getNameFromSrg("func_70030_z");
-
 	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE = getNameFromSrg("func_77165_h");
-
 	public static final String ITEM_BLOCK_ON_ITEM_USE = getNameFromSrg("func_180614_a");
-
 	public static final String MATH_HELPER_FLOOR_DOUBLE = getNameFromSrg("func_76128_c");
 
 	//fields

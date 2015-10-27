@@ -34,4 +34,24 @@ public class MathHelper {
 	public static int randRange(Random rand, int start, int end) {
 		return rand.nextInt(end - start + 1) + start;
 	}
+
+	public static int minInteger(Integer a, Integer b) {
+		if(a == null || b == null) {
+			return Integer.MIN_VALUE;
+		}
+		return Math.min(a, b);
+	}
+
+	public static int maxInteger(Integer a, Integer b) {
+		if(a == null && b == null) {
+			return Integer.MIN_VALUE;
+		}
+		if(a == null) {
+			return b;
+		}
+		if(b == null) {
+			return a;
+		}
+		return Math.max(a, b);
+	}
 }

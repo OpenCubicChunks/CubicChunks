@@ -23,21 +23,42 @@
  */
 package cubicchunks.lighting;
 
-import cubicchunks.util.FastIntQueue;
-import net.minecraft.util.BlockPos;
+import cubicchunks.util.Coords;
+import cubicchunks.util.MutableBlockPos;
+import cubicchunks.world.column.Column;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 
-public class DiffuseLightingCalculator {
-	
-	private FastIntQueue queue;
-	
-	public DiffuseLightingCalculator() {
-		this.queue = new FastIntQueue();
+class SkyLightCubeDiffuseCalculator {
+
+	private final MutableBlockPos pos = new MutableBlockPos();
+
+	boolean calculate(Column column, int localX, int localZ, int cubeY) {
+		// update this block and its xz neighbors
+		int blockX = Coords.localToBlock(column.xPosition, localX);
+		int blockZ = Coords.localToBlock(column.zPosition, localZ);
+
+		World world = column.getWorld();
+
+		boolean updated = true;
+		updated &= diffuseSkyLightForBlockColumn(world, blockX - 1, blockZ, cubeY);
+		updated &= diffuseSkyLightForBlockColumn(world, blockX + 1, blockZ, cubeY);
+		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ - 1, cubeY);
+		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ + 1, cubeY);
+		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ, cubeY);
+
+		if(updated) {
+			column.setModified(true);
+		}
+		return updated;
 	}
-	
-	public boolean calculate(World world, BlockPos pos, EnumSkyBlock lightType) {
-		//use vanilla, it's already optimized and it works
-		return world.checkLightFor(lightType, pos);
+
+	private boolean diffuseSkyLightForBlockColumn(World world, int blockX, int blockZ, int cubeY) {
+		boolean ok = true;
+		for (int y = 0; y < 16; y++) {
+			pos.setBlockPos(blockX, y + cubeY * 16, blockZ);
+			ok &= world.checkLightFor(EnumSkyBlock.SKY, pos);
+		}
+		return ok;
 	}
 }

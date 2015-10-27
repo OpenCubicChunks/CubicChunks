@@ -275,15 +275,19 @@ public class Column extends Chunk {
 			((ClientOpacityIndex)opacityIndex).setHeight(x, z, newSkylightY);
 		}
 
-		LightingManager lightManager = WorldContext.get(this.getWorld()).getLightingManager();
-		lightManager.updateSkyLightForBlockChange(this, pos.getX(), pos.getZ(), oldSkylightY, newSkylightY);
+		int minY = cubicchunks.util.MathHelper.minInteger(oldSkylightY, newSkylightY);
+		int maxY = cubicchunks.util.MathHelper.maxInteger(oldSkylightY, newSkylightY);
 
+		LightingManager lightManager = WorldContext.get(this.getWorld()).getLightingManager();
+		lightManager.columnSkylightUpdate(LightingManager.UpdateType.IMMEDIATE_UPDATE_QUEUED_DIFFUSE, this, x, minY, maxY, z);
+
+		//is it even needed?
 		// if opacity changed and ( opacity decreased or block now has any light )
-		int skyLight = this.getLightFor(EnumSkyBlock.SKY, pos);
-		int blockLight = this.getLightFor(EnumSkyBlock.BLOCK, pos);
-		if (newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0)) {
-			lightManager.queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
-		}
+		//int skyLight = this.getLightFor(EnumSkyBlock.SKY, pos);
+		//int blockLight = this.getLightFor(EnumSkyBlock.BLOCK, pos);
+		//if (newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0)) {
+		//	lightManager.queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
+		//}
 
 		this.setModified(true);
 

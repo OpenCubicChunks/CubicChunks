@@ -28,18 +28,18 @@ import cubicchunks.util.ArrayBatchedQueue;
 import cubicchunks.util.Progress;
 import cubicchunks.world.ICubeCache;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 
-public abstract class QueueProcessor {
+public abstract class QueueProcessor<T> {
 	
 	protected String name;
 	protected ICubeCache cache;
 	private int batchSize;
-	private ArrayBatchedQueue<Long> queue;
-	protected Set<Long> incomingAddresses;
-	protected Set<Long> processedAddresses;
-	protected Set<Long> deferredAddresses;
+	private ArrayBatchedQueue<T> queue;
+	protected Set<T> incomingAddresses;
+	protected Set<T> processedAddresses;
+	protected Set<T> deferredAddresses;
 	
 	public QueueProcessor(String name, ICubeCache cache, int batchSize) {
 		this.name = name;
@@ -56,11 +56,11 @@ public abstract class QueueProcessor {
 		return this.name;
 	}
 	
-	public void add(long address) {
+	public void add(T address) {
 		this.queue.add(address);
 	}
 	
-	public void addAll(List<Long> addresses) {
+	public void addAll(Collection<T> addresses) {
 		this.queue.addAll(addresses);
 	}
 	
@@ -109,7 +109,7 @@ public abstract class QueueProcessor {
 		return this.processedAddresses.size();
 	}
 	
-	public Set<Long> getProcessedAddresses() {
+	public Set<T> getProcessedAddresses() {
 		return this.processedAddresses;
 	}
 	

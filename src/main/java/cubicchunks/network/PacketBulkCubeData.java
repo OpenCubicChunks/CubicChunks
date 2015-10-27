@@ -126,7 +126,6 @@ public class PacketBulkCubeData implements IMessage {
 			columnAddresses[i] = in.readLong();
 		}
 		data = new byte[in.readInt()];
-		System.out.println("Receive " + data.length + " bytes, " + cubeAddresses.length + " cubes, " + columnAddresses.length + " columns");
 		in.readBytes(data);
 	}
 
@@ -141,7 +140,6 @@ public class PacketBulkCubeData implements IMessage {
 			out.writeLong(columnAddresses[i]);
 		}
 		out.writeInt(data.length);
-		System.out.println("Send " + data.length + " bytes, " + cubeAddresses.length + " cubes, " + columnAddresses.length + " columns");
 		out.writeBytes(data);
 	}
 

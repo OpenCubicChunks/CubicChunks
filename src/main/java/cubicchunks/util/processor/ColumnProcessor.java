@@ -28,7 +28,7 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 
-public abstract class ColumnProcessor extends QueueProcessor {
+public abstract class ColumnProcessor extends QueueProcessor<Long> {
 	
 	public ColumnProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);

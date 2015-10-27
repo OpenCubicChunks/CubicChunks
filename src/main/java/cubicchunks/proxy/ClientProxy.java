@@ -25,7 +25,6 @@ package cubicchunks.proxy;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class ClientProxy extends CommonProxy {
@@ -41,6 +40,6 @@ public class ClientProxy extends CommonProxy {
 
 	@Override
 	public void registerEvents() {
-		MinecraftForge.EVENT_BUS.register(new ClientDebugRender());
+
 	}
 }

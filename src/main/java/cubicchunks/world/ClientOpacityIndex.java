@@ -24,9 +24,7 @@
 package cubicchunks.world;
 
 import com.google.common.base.Throwables;
-import cubicchunks.util.Coords;
 import cubicchunks.world.column.Column;
-import net.minecraft.world.World;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -101,17 +99,7 @@ public class ClientOpacityIndex implements IOpacityIndex {
 				bottomBlocks[i] = in.readInt();
 			}
 			for (int i = 0; i < 256; i++) {
-				int oldValue = hmap[i];
 				hmap[i] = in.readInt();
-				//TODO: optimize serverside data sending to avoid unnecessary recalculations?
-				if (oldValue != hmap[i]) {
-					World world = chunk.getWorld();
-					int x = Coords.localToBlock(chunk.getX(), unpackX(i));
-					int z = Coords.localToBlock(chunk.getZ(), unpackZ(i));
-					Integer old = oldValue == NONE ? null : oldValue;
-					Integer newV = hmap[i] == NONE ? null : hmap[i];
-					WorldContext.get(world).getLightingManager().updateSkyLightForBlockChange(chunk, x, z, old, newV);
-				}
 			}
 
 			in.close();
