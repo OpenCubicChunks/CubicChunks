@@ -27,6 +27,7 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.Progress;
 import cubicchunks.util.processor.QueueProcessor;
 import cubicchunks.world.ICubeCache;
+import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 
 import java.util.Set;
@@ -44,7 +45,7 @@ import java.util.Set;
 		SkyLightUpdateCalculator skylightUpdateCalculator = lightingManager.getSkylightUpdateCalculator();
 		for(Entry entry : incomingAddresses) {
 			Column column = cache.getColumn(entry.blockX >> 4, entry.blockZ >> 4);
-			if(column == null) {
+			if(column == null || column instanceof BlankColumn) {
 				continue;
 			}
 			int localX = Coords.blockToLocal(entry.blockX);

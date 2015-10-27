@@ -27,6 +27,7 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.Progress;
 import cubicchunks.util.processor.QueueProcessor;
 import cubicchunks.world.ICubeCache;
+import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 
 class SkyLightCubeDiffuseProcessor extends QueueProcessor<SkyLightCubeDiffuseProcessor.Entry> {
@@ -42,18 +43,40 @@ class SkyLightCubeDiffuseProcessor extends QueueProcessor<SkyLightCubeDiffusePro
 	@Override
 	public void processBatch(Progress progress) {
 		SkyLightCubeDiffuseCalculator skylightCubeDiffuseCalculator = lightingManager.getSkylightCubeDiffuseCalculator();
-		for(Entry e : incomingAddresses) {
+		for (Entry e : incomingAddresses) {
 			int columnX = Coords.blockToCube(e.blockX);
 			int columnZ = Coords.blockToCube(e.blockZ);
 
 			Column column = cache.getColumn(columnX, columnZ);
+			if(empty(column)) {
+				continue;
+			}
+			if(column.getCube(e.cubeY) == null) {
+				continue;
+			}
+			if (empty(cache.getColumn(columnX + 1, columnZ)) ||
+					empty(cache.getColumn(columnX - 1, columnZ)) ||
+					empty(cache.getColumn(columnX, columnZ + 1)) ||
+					empty(cache.getColumn(columnX, columnZ - 1)) ||
+					empty(cache.getColumn(columnX + 1, columnZ + 1)) ||
+					empty(cache.getColumn(columnX + 1, columnZ - 1)) ||
+					empty(cache.getColumn(columnX - 1, columnZ + 1)) ||
+					empty(cache.getColumn(columnX - 1, columnZ - 1))) {
+				deferredAddresses.add(e);
+				continue;
+			}
+
 
 			int localX = Coords.blockToLocal(e.blockX);
 			int localZ = Coords.blockToLocal(e.blockZ);
 
-			skylightCubeDiffuseCalculator.calculate(column, localX, localZ, e.cubeY);
-			processedAddresses.add(e);
+			boolean updated = skylightCubeDiffuseCalculator.calculate(column, localX, localZ, e.cubeY);
+			(updated ? processedAddresses : deferredAddresses).add(e);
 		}
+	}
+
+	private boolean empty(Column column) {
+		return column == null || column instanceof BlankColumn;
 	}
 
 	public static class Entry {

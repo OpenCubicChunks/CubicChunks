@@ -63,9 +63,6 @@ public class LightingManager {
 	public void columnSkylightUpdate(UpdateType type, Column column, int localX, int minY, int maxY, int localZ) {
 		int blockX = Coords.localToBlock(column.getX(), localX);
 		int blockZ = Coords.localToBlock(column.getZ(), localZ);
-		if(column.getWorld().isRemote && column.xPosition == 0) {
-			int i = 0;
-		}
 		switch(type) {
 			case IMMEDIATE:
 				Set<Integer> toDiffuse = skylightUpdateCalculator.calculate(column, localX, localZ, minY, maxY);

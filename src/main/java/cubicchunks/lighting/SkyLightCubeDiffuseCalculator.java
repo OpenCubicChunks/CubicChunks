@@ -25,6 +25,7 @@ package cubicchunks.lighting;
 
 import cubicchunks.util.Coords;
 import cubicchunks.util.MutableBlockPos;
+import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
@@ -34,14 +35,25 @@ class SkyLightCubeDiffuseCalculator {
 	private final MutableBlockPos pos = new MutableBlockPos();
 
 	boolean calculate(Column column, int localX, int localZ, int cubeY) {
-		if(column.getWorld().isRemote) {
-			int i = 0;
+		if(column instanceof BlankColumn || column.getCube(cubeY) == null) {
+			return true;
 		}
 		// update this block and its xz neighbors
 		int blockX = Coords.localToBlock(column.xPosition, localX);
 		int blockZ = Coords.localToBlock(column.zPosition, localZ);
 
 		World world = column.getWorld();
+
+		int minY = Coords.cubeToMinBlock(cubeY);
+		int maxY = Coords.cubeToMaxBlock(cubeY);
+		pos.setBlockPos(blockX, minY, blockZ);
+		if(!world.isAreaLoaded(pos, 18, false)) {
+			return false;
+		}
+		pos.y = maxY;
+		if(!world.isAreaLoaded(pos, 18, false)) {
+			return false;
+		}
 
 		boolean updated = true;
 		updated &= diffuseSkyLightForBlockColumn(world, blockX - 1, blockZ, cubeY);
@@ -50,10 +62,9 @@ class SkyLightCubeDiffuseCalculator {
 		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ + 1, cubeY);
 		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ, cubeY);
 
-		if(updated) {
-			column.setModified(true);
-		}
-		return updated;
+		assert updated;
+		column.setModified(true);
+		return true;
 	}
 
 	private boolean diffuseSkyLightForBlockColumn(World world, int blockX, int blockZ, int cubeY) {
