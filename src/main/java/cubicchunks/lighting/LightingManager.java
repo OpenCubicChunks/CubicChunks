@@ -57,9 +57,15 @@ public class LightingManager {
 		this.skylightUpdateCalculator = new SkyLightUpdateCalculator();
 	}
 
+	public void columnSkylightUpdate(UpdateType type, Column column, int localX, int maxY, int localZ) {
+		columnSkylightUpdate(type, column, localX, Integer.MIN_VALUE, maxY, localZ);
+	}
 	public void columnSkylightUpdate(UpdateType type, Column column, int localX, int minY, int maxY, int localZ) {
 		int blockX = Coords.localToBlock(column.getX(), localX);
 		int blockZ = Coords.localToBlock(column.getZ(), localZ);
+		if(column.getWorld().isRemote && column.xPosition == 0) {
+			int i = 0;
+		}
 		switch(type) {
 			case IMMEDIATE:
 				Set<Integer> toDiffuse = skylightUpdateCalculator.calculate(column, localX, localZ, minY, maxY);
@@ -91,8 +97,7 @@ public class LightingManager {
 		numProcessed += this.firstLightProcessor.processQueueUntil(timeStop);
 		//this.world.profiler.endSection();
 		numProcessed += this.skylightUpdateProcessor.processQueueUntil(timeStop);
-		
-		// disable this spam for now
+
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
@@ -111,7 +116,7 @@ public class LightingManager {
 		return skylightCubeDiffuseCalculator;
 	}
 
-	public SkyLightCubeDiffuseProcessor getSkylightCubeDiffuseProcessor() {
+	SkyLightCubeDiffuseProcessor getSkylightCubeDiffuseProcessor() {
 		return skylightCubeDiffuseProcessor;
 	}
 

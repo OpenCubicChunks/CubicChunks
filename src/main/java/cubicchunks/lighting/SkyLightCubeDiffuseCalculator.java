@@ -34,6 +34,9 @@ class SkyLightCubeDiffuseCalculator {
 	private final MutableBlockPos pos = new MutableBlockPos();
 
 	boolean calculate(Column column, int localX, int localZ, int cubeY) {
+		if(column.getWorld().isRemote) {
+			int i = 0;
+		}
 		// update this block and its xz neighbors
 		int blockX = Coords.localToBlock(column.xPosition, localX);
 		int blockZ = Coords.localToBlock(column.zPosition, localZ);

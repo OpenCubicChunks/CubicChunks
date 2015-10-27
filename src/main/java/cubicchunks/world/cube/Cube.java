@@ -611,11 +611,11 @@ public class Cube {
 		for(int x = 0; x < 16; x++) {
 			for(int z = 0; z < 16; z++) {
 				for(int y = 15; y >= 0; y--) {
-					int minY = Coords.cubeToMinBlock(getY());
 					int maxY = Coords.cubeToMaxBlock(getY());
 					pos.setBlockPos(x, y, z);
 					if(this.getBlockAt(pos).getLightOpacity() != 0) {
-						lm.columnSkylightUpdate(LightingManager.UpdateType.IMMEDIATE_UPDATE_QUEUED_DIFFUSE, getColumn(), x, minY, maxY, z);
+						lm.columnSkylightUpdate(LightingManager.UpdateType.QUEUED, getColumn(), x, maxY, z);
+						break;
 					}
 				}
 			}

@@ -43,13 +43,16 @@ class SkyLightCubeDiffuseProcessor extends QueueProcessor<SkyLightCubeDiffusePro
 	public void processBatch(Progress progress) {
 		SkyLightCubeDiffuseCalculator skylightCubeDiffuseCalculator = lightingManager.getSkylightCubeDiffuseCalculator();
 		for(Entry e : incomingAddresses) {
-			Column column = cache.getColumn(e.blockX, e.blockZ);
+			int columnX = Coords.blockToCube(e.blockX);
+			int columnZ = Coords.blockToCube(e.blockZ);
+
+			Column column = cache.getColumn(columnX, columnZ);
 
 			int localX = Coords.blockToLocal(e.blockX);
 			int localZ = Coords.blockToLocal(e.blockZ);
 
-			boolean processed = skylightCubeDiffuseCalculator.calculate(column, localX, localZ, e.cubeY);
-			(processed ? processedAddresses : deferredAddresses).add(e);
+			skylightCubeDiffuseCalculator.calculate(column, localX, localZ, e.cubeY);
+			processedAddresses.add(e);
 		}
 	}
 
