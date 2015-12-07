@@ -10,7 +10,7 @@ buildscript
 		}
 	}
 	dependencies {
-		classpath 'net.minecraftforge.gradle:ForgeGradle:2.0-SNAPSHOT'
+		classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
 		classpath 'org.ajoberstar:grgit:1.4.+'
 	}
 }
@@ -49,7 +49,7 @@ archivesBaseName = "CubicChunks"
 version = getModVersionAndWriteToFile("${git.describe()}", lastMinorVersion, isFinalBuild)
 
 minecraft {
-	version = "1.8-11.14.3.1519"
+	version = "1.8.8-11.15.0.1609-1.8.8"
 	runDir = "run"
 
 	// the mappings can be changed at any time, and must be in the following format.
@@ -57,7 +57,7 @@ minecraft {
 	// stable_#            stables are built at the discretion of the MCP team.
 	// Use non-default mappings at your own risk. they may not allways worke.
 	// simply re-run your setup task after changing the mappings to update your workspace.
-	mappings = "snapshot_20151004"
+	mappings = "snapshot_20151207"
 	// makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
 	replace "@@VERSION@@", project.version
