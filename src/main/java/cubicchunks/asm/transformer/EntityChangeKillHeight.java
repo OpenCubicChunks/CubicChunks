@@ -31,7 +31,7 @@ import static org.objectweb.asm.Opcodes.*;
 /**
  * Transformed method: onEntityUpdate
  */
-public class EntityChangeKillHeight extends MethodVisitor {
+public class EntityChangeKillHeight extends AbstractMethodTransformer {
 	public EntityChangeKillHeight(MethodVisitor mv) {
 		super(ASM4, mv);
 	}
@@ -46,6 +46,7 @@ public class EntityChangeKillHeight extends MethodVisitor {
 				super.visitInsn(I2D);
 				super.visitLdcInsn(-64.0);
 				super.visitInsn(DADD);
+				this.setSuccessful();
 				return;
 			}
 		}

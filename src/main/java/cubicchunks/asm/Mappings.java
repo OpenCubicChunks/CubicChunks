@@ -41,6 +41,7 @@ public class Mappings {
 	static {
 		String location = System.getProperty("net.minecraftforge.gradle.GradleStart.srg.srg-mcp");
 		IS_DEV = location != null;
+		System.out.println("-------------------IS_DEV->" + IS_DEV);
 		if(IS_DEV) {
 			initMappings(location);
 		}
@@ -67,40 +68,40 @@ public class Mappings {
 	public static final String MATH_HELPER = "net/minecraft/util/MathHelper";
 
 	//methods
-	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");
-	public static final String WORLD_GET_LIGHT = getNameFromSrg("func_175699_k");
-	public static final String WORLD_GET_LIGHT_CHECK = getNameFromSrg("func_175721_c");//the one with additional boolean argument
-	public static final String WORLD_GET_LIGHT_FOR = getNameFromSrg("func_175642_b");
-	public static final String WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR = getNameFromSrg("func_175705_a");
-	public static final String WORLD_IS_AREA_LOADED_IIIIIIZ = getNameFromSrg("func_175663_a");
-	public static final String WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE = getNameFromSrg("func_72866_a");
+	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");//1.8.8
+	public static final String WORLD_GET_LIGHT = getNameFromSrg("func_175699_k");//1.8.8
+	public static final String WORLD_GET_LIGHT_CHECK = getNameFromSrg("func_175721_c");//1.8.8, the one with additional boolean argument
+	public static final String WORLD_GET_LIGHT_FOR = getNameFromSrg("func_175642_b");//1.8.8
+	public static final String WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR = getNameFromSrg("func_175705_a");//1.8.8
+	public static final String WORLD_IS_AREA_LOADED_IIIIIIZ = getNameFromSrg("func_175663_a");//1.8.8
+	public static final String WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE = getNameFromSrg("func_72866_a");//1.8.8
 
-	public static final String VIEW_FRUSTUM_SET_COUNT_CHUNKS = getNameFromSrg("func_178159_a");
-	public static final String VIEW_FRUSTUM_GET_RENDER_CHUNK = getNameFromSrg("func_178161_a");
-	public static final String VIEW_FRUSTUM_UPDATE_CHUNK_POSITIONS = getNameFromSrg("func_178163_a");
+	public static final String VIEW_FRUSTUM_SET_COUNT_CHUNKS = getNameFromSrg("func_178159_a");//1.8.8
+	public static final String VIEW_FRUSTUM_GET_RENDER_CHUNK = getNameFromSrg("func_178161_a");//1.8.8
+	public static final String VIEW_FRUSTUM_UPDATE_CHUNK_POSITIONS = getNameFromSrg("func_178163_a");//1.8.8
 
-	public static final String CHUNK_CACHE_GET_BLOCK_STATE = getNameFromSrg("func_180495_p");
-	public static final String CHUNK_CACHE_GET_LIGHT_FOR_EXT = getNameFromSrg("func_175629_a");
-	public static final String CHUNK_CACHE_GET_LIGHT_FOR = getNameFromSrg("func_175628_b");
+	public static final String CHUNK_CACHE_GET_BLOCK_STATE = getNameFromSrg("func_180495_p");//1.8.8
+	public static final String CHUNK_CACHE_GET_LIGHT_FOR_EXT = getNameFromSrg("func_175629_a");//1.8.8
+	public static final String CHUNK_CACHE_GET_LIGHT_FOR = getNameFromSrg("func_175628_b");//1.8.8
 
-	public static final String RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET = getNameFromSrg("func_174973_a");
-	public static final String RENDER_GLOBAL_RENDER_ENTITIES = getNameFromSrg("func_180446_a");
+	public static final String RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET = getNameFromSrg("func_181562_a");//func_181562_a??
+	public static final String RENDER_GLOBAL_RENDER_ENTITIES = getNameFromSrg("func_180446_a");//1.8.8
 
-	public static final String REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW = getNameFromSrg("func_175631_c");
-	public static final String VEC_3_I_GET_X = getNameFromSrg("func_177958_n");
-	public static final String ENTITY_ON_ENTITY_UPDATE = getNameFromSrg("func_70030_z");
-	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE = getNameFromSrg("func_77165_h");
-	public static final String ITEM_BLOCK_ON_ITEM_USE = getNameFromSrg("func_180614_a");
-	public static final String MATH_HELPER_FLOOR_DOUBLE = getNameFromSrg("func_76128_c");
+	public static final String REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW = getNameFromSrg("func_175631_c");//1.8.8
+	public static final String VEC_3_I_GET_X = getNameFromSrg("func_177958_n");//1.8.8
+	public static final String ENTITY_ON_ENTITY_UPDATE = getNameFromSrg("func_70030_z");//1.8.8
+	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE = getNameFromSrg("func_77165_h");//1.8.8
+	public static final String ITEM_BLOCK_ON_ITEM_USE = getNameFromSrg("func_180614_a");//1.8.8
+	public static final String MATH_HELPER_FLOOR_DOUBLE = getNameFromSrg("func_76128_c");//1.8.8
 
 	//fields
-	public static final String ENTITY_POS_Y = getNameFromSrg("field_70163_u");
-	public static final String ENTITY_WORLD_OBJ = getNameFromSrg("field_70170_p");
+	public static final String ENTITY_POS_Y = getNameFromSrg("field_70163_u");//1.8.8
+	public static final String ENTITY_WORLD_OBJ = getNameFromSrg("field_70170_p");//1.8.8
 
-	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");
-	public static final String CHUNK_CACHE_WORLD_OBJ = getNameFromSrg("field_72815_e");
-	public static final String RENDER_GLOBAL_THE_WORLD = getNameFromSrg("field_72769_h");
-	public static final String RG_CLRI_RENDER_CHUNK = getNameFromSrg("field_178036_a");
+	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");//1.8.8
+	public static final String CHUNK_CACHE_WORLD_OBJ = getNameFromSrg("field_72815_e");//1.8.8
+	public static final String RENDER_GLOBAL_THE_WORLD = getNameFromSrg("field_72769_h");//1.8.8
+	public static final String RG_CLRI_RENDER_CHUNK = getNameFromSrg("field_178036_a");//1.8.8, RenderGlobal$ContainerLocalRenderInformation
 
 	//classes referenced from asm
 	public static final String WORLD_METHODS = "cubicchunks/asm/WorldMethods";
@@ -127,9 +128,14 @@ public class Mappings {
 			getMethodDescriptor(VOID_TYPE, getObjectType(MINECRAFT), getType(String.class), getType(String.class), getObjectType(WORLD_SETTINGS));
 	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC = getMethodDescriptor(getObjectType(WORLD_TYPE));
 	public static final String WORLD_IS_AREA_LOADED_IIIIIIZ_DESC = getMethodDescriptor(BOOLEAN_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, BOOLEAN_TYPE);
+	public static final String WORLD_GET_LIGHT_DESC = getMethodDescriptor(INT_TYPE, getObjectType(BLOCK_POS));
+	public static final String WORLD_GET_LIGHT_CHECK_DESC = getMethodDescriptor(INT_TYPE, getObjectType(BLOCK_POS), BOOLEAN_TYPE);
+
+
 	public static String getNameFromSrg(String srgName) {
 		if(IS_DEV) {
-			return srgToMcp.get(srgName);
+			String result = srgToMcp.get(srgName);
+			return result == null ? srgName : result;
 		}
 		return srgName;
 	}

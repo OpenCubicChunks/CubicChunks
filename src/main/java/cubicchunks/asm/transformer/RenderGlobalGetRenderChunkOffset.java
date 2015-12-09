@@ -29,16 +29,19 @@ import org.objectweb.asm.MethodVisitor;
 import static cubicchunks.asm.Mappings.*;
 import static org.objectweb.asm.Opcodes.*;
 
-public class RenderGlobalGetRenderChunkOffset extends MethodVisitor {
+public class RenderGlobalGetRenderChunkOffset extends AbstractMethodTransformer {
 	public RenderGlobalGetRenderChunkOffset(MethodVisitor mv) {
 		super(ASM4, mv);
 	}
 
+	private boolean minHeightTransformed, maxHeightTransformed;
 	@Override
 	public void visitJumpInsn(int opcode, Label label) {
 		if(opcode == IFLT) {
 			this.loadHeight("getMinHeight");
 			super.visitJumpInsn(IF_ICMPLT, label);
+			this.minHeightTransformed = true;
+			this.updateState();
 			return;
 		}
 		super.visitJumpInsn(opcode, label);
@@ -48,9 +51,17 @@ public class RenderGlobalGetRenderChunkOffset extends MethodVisitor {
 	public void visitIntInsn(int opcode, int arg) {
 		if(opcode == SIPUSH) {
 			loadHeight("getMaxHeight");
+			this.maxHeightTransformed = true;
+			this.updateState();
 			return;
 		}
 		super.visitIntInsn(opcode, arg);
+	}
+
+	private void updateState() {
+		if(this.minHeightTransformed && this.maxHeightTransformed) {
+			this.setSuccessful();
+		}
 	}
 
 	private void loadHeight(String methodName) {

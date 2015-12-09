@@ -32,7 +32,9 @@ import org.objectweb.asm.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static cubicchunks.asm.Mappings.*;
 
@@ -44,8 +46,8 @@ public class CubicChunksTransformer implements IClassTransformer{
 		//This transformation makes the World see blocks outside of 0..255 height
 		add(WorldHeightCheckReplacement.class, WORLD, WORLD_IS_VALID);
 		//these 4 transformations allow the internals of Minecraft code to see non-default light values outside of 0..255 height
-		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT);
-		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT_CHECK);
+		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT, WORLD_GET_LIGHT_DESC);
+		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT_CHECK, WORLD_GET_LIGHT_CHECK_DESC);
 		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FOR);
 		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR);
 		//World.isAreaLoaded is used to check if some things can be updated (like light). If it returns false - update doesn't happen. This fixes it
@@ -55,7 +57,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 		add(WorldEntityUpdateFix.class, WORLD, WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE);
 
 		//ChunkCache is used by some AI code and (as subclass of ChunkCache) - rendering code.
-		// //getBlockState is used only in AI code but the same transformation as for other 2 methods works for it
+		//getBlockState is used only in AI code but the same transformation as for other 2 methods works for it
 		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_BLOCK_STATE);
 		//these 2 methods are actually used by rendering code. Moving hardcoded limits in these methods
 		//makes it possible to actually see non-default light values outside of 0..255
@@ -72,7 +74,6 @@ public class CubicChunksTransformer implements IClassTransformer{
 		//without this transformation only blocks 0..renderDistance*16 are rendered (or 0..255 if SetCountChunks transformation is disabled)
 		add(ViewFrustumUpdateChunkPositions.class, VIEW_FRUSTUM, VIEW_FRUSTUM_UPDATE_CHUNK_POSITIONS);
 		//this transformation removes hardcoded limits from method that returns neighbor renderer (misleading name)
-		//without this transformation cubes outside of 0..255 have fully opaque black borders
 		add(RenderGlobalGetRenderChunkOffset.class, RENDER_GLOBAL, RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET);
 		//removes hardcoded limits from subclass of ChunkCache. Allows renderers to "see" blocks outside of 0..255 height
 		add(RegionRenderCacheGetBlockStateRaw.class, REGION_RENDER_CACHE, REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW);
@@ -81,14 +82,12 @@ public class CubicChunksTransformer implements IClassTransformer{
 		add(RenderGlobalRenderEntities.class, RENDER_GLOBAL, RENDER_GLOBAL_RENDER_ENTITIES);
 		//fixes entities dying below y=-64
 		add(EntityChangeKillHeight.class, ENTITY, ENTITY_ON_ENTITY_UPDATE);
-		//ItemBlock contains hardcoded check for height == 255. This transformation moves it to CubicChunks height limit.
-		add(ItemBlockBuildHeightReplace.class, ITEM_BLOCK, ITEM_BLOCK_ON_ITEM_USE);
 
 		//changes Integrated server build limit.
 		addConstr(IntegratedServerHeightReplacement.class, INTEGRATED_SERVER, CONSTR_INTEGRATED_SERVER);
 	}
 
-	private void add(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String methodName) {
+	private void add(Class<? extends AbstractMethodTransformer> methodTransformer, String jvmClassName, String methodName) {
 		MethodHandle methodVisitorConstr = ReflectionUtil.getConstructorMethodHandle(methodTransformer, MethodVisitor.class);
 
 		MethodHandle classVisitor = MethodHandles.insertArguments(MethodClassVisitor.HANDLE, 1, methodVisitorConstr, methodName, null);
@@ -96,17 +95,18 @@ public class CubicChunksTransformer implements IClassTransformer{
 		this.transformers.add(new Transformer(classVisitor, jvmClassName));
 	}
 
-	private void addConstr(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String desc) {
+	private void addConstr(Class<? extends AbstractMethodTransformer> methodTransformer, String jvmClassName, String desc) {
 		add(methodTransformer, jvmClassName, "<init>", desc);
 	}
 
-	private void add(Class<? extends MethodVisitor> methodTransformer, String jvmClassName, String methodName, String desc) {
+	private void add(Class<? extends AbstractMethodTransformer> methodTransformer, String jvmClassName, String methodName, String desc) {
 		MethodHandle methodVisitorConstr = ReflectionUtil.getConstructorMethodHandle(methodTransformer, MethodVisitor.class);
 
 		MethodHandle classVisitor = MethodHandles.insertArguments(MethodClassVisitor.HANDLE, 1, methodVisitorConstr, methodName, desc);
 
 		this.transformers.add(new Transformer(classVisitor, jvmClassName));
 	}
+
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] bytes) {
 		if(bytes == null) return bytes;
@@ -117,6 +117,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 		ClassVisitor visitor = null;
 
 		ClassWriter writer = null;
+		Set<MethodClassVisitor> visitors = new HashSet<>();
 		for(Transformer t : transformers) {
 			if(t.shouldTransform(transformedName)) {
 				if(reader == null) {
@@ -126,10 +127,18 @@ public class CubicChunksTransformer implements IClassTransformer{
 					visitor = writer;
 				}
 				visitor = t.newVisitor(visitor);
+				if(visitor instanceof MethodClassVisitor) {
+					visitors.add((MethodClassVisitor) visitor);
+				}
 			}
 		}
 		if(visitor != null) {
 			reader.accept(visitor, 0);
+			for(MethodClassVisitor mcv : visitors) {
+				if(!mcv.isSuccessful()) {
+					throw new RuntimeException("Transformation failed for class " + name + " for method: " + mcv);
+				}
+			}
 			return writer.toByteArray();
 		}
 		return bytes;
@@ -165,6 +174,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 		private MethodHandle methodVisitorConstr;
 		private String methodName;
 		private String methodDescriptor;
+		private AbstractMethodTransformer newMV;
 
 		public MethodClassVisitor(ClassVisitor cv, MethodHandle methodVisitorConstr, String methodName, String methodDescriptor) {
 			super(Opcodes.ASM4, cv);
@@ -180,7 +190,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 
 			if (name.equals(this.methodName) && (methodDescriptor == null || desc.equals(methodDescriptor))) {
 				try {
-					MethodVisitor newMV = (MethodVisitor) methodVisitorConstr.invoke(mv);
+					this.newMV = (AbstractMethodTransformer) methodVisitorConstr.invoke(mv);
 					return newMV;
 				} catch (Throwable throwable) {
 					throw Throwables.propagate(throwable);
@@ -188,6 +198,18 @@ public class CubicChunksTransformer implements IClassTransformer{
 			} else {
 				return mv;
 			}
+		}
+
+		public boolean isSuccessful() {
+			if(newMV == null) {
+				return false;
+			}
+			return this.newMV.isSuccessful();
+		}
+
+		@Override
+		public String toString() {
+			return String.format("%s: %s", methodName, methodDescriptor);
 		}
 	}
 }

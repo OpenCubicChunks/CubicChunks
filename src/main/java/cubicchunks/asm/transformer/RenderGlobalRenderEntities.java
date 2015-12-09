@@ -29,7 +29,7 @@ import org.objectweb.asm.MethodVisitor;
 import static cubicchunks.asm.Mappings.*;
 import static org.objectweb.asm.Opcodes.*;
 
-public class RenderGlobalRenderEntities extends MethodVisitor {
+public class RenderGlobalRenderEntities extends AbstractMethodTransformer {
 
 	private int containerLocalRendererInfoVar = -1;
 
@@ -50,6 +50,11 @@ public class RenderGlobalRenderEntities extends MethodVisitor {
 	@Override
 	public void visitInsn(int opcode) {
 		if(opcode == AALOAD) {
+			if(containerLocalRendererInfoVar < 0) {
+				this.setFailed();
+				super.visitInsn(opcode);
+				return;
+			}
 			Label endif = new Label();
 			Label vanilla = new Label();
 			//load world
@@ -78,6 +83,7 @@ public class RenderGlobalRenderEntities extends MethodVisitor {
 				super.visitInsn(opcode);
 			}
 			super.visitLabel(endif);
+			this.setSuccessful();
 			return;
 		}
 		super.visitInsn(opcode);

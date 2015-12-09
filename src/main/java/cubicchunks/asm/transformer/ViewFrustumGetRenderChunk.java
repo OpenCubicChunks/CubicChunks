@@ -30,7 +30,7 @@ import static cubicchunks.asm.Mappings.RENDER_METHODS;
 import static cubicchunks.asm.Mappings.RENDER_METHODS_GET_RENDER_CHUNK_DESC;
 import static org.objectweb.asm.Opcodes.*;
 
-public class ViewFrustumGetRenderChunk extends MethodVisitor {
+public class ViewFrustumGetRenderChunk extends AbstractMethodTransformer {
 	public ViewFrustumGetRenderChunk(MethodVisitor mv) {
 		super(ASM4, mv);
 	}
@@ -50,5 +50,6 @@ public class ViewFrustumGetRenderChunk extends MethodVisitor {
 		super.visitLabel(vanillaCode);
 		//pop the additional null
 		super.visitInsn(POP);
+		this.setSuccessful();
 	}
 }

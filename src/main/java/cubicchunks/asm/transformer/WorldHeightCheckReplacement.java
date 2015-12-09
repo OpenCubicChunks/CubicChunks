@@ -27,9 +27,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import static cubicchunks.asm.Mappings.WORLD;
-import static cubicchunks.asm.Mappings.WORLD_METHODS;
-import static cubicchunks.asm.Mappings.WORLD_METHODS_GET_HEIGHT_DESC;
+import static cubicchunks.asm.Mappings.*;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
@@ -47,10 +45,11 @@ import static org.objectweb.asm.Type.*;
  *
  * Transformed methods: World.isValid, World.getLight(BlockPos), World.getLight(BlockPos, boolean)
  */
-public class WorldHeightCheckReplacement extends MethodVisitor {
+public class WorldHeightCheckReplacement extends AbstractMethodTransformer {
 	private static final String WORLD_HEIGHT_ACCESS = "cubicchunks/asm/WorldMethods";
 
-	private boolean transformedLower, transformedUpper;
+	protected boolean transformedLower;
+	private boolean transformedUpper;
 	public WorldHeightCheckReplacement(MethodVisitor mv) {
 		super(Opcodes.ASM4, mv);
 	}
@@ -61,6 +60,7 @@ public class WorldHeightCheckReplacement extends MethodVisitor {
 			this.loadMinHeight();
 			super.visitJumpInsn(opcode == IFLT ? IF_ICMPLT : IF_ICMPGE, label);
 			transformedLower = true;
+			this.updateState();
 			return;
 		}
 		super.visitJumpInsn(opcode, label);
@@ -68,7 +68,7 @@ public class WorldHeightCheckReplacement extends MethodVisitor {
 
 	@Override
 	public void visitIntInsn(int opcode, int arg) {
-		if(!transformedUpper && opcode == Opcodes.SIPUSH) {
+		if(opcode == Opcodes.SIPUSH && (arg == 255 || arg == 256)) {
 			String getMaxHeightDesc = getMethodDescriptor(INT_TYPE, getObjectType(WORLD));
 
 			super.visitVarInsn(ALOAD, 0);
@@ -80,9 +80,16 @@ public class WorldHeightCheckReplacement extends MethodVisitor {
 				super.visitInsn(IADD);
 			}
 			transformedUpper = true;
+			this.updateState();
 			return;
 		}
 		super.visitIntInsn(opcode, arg);
+	}
+
+	protected void updateState() {
+		if(transformedUpper && transformedLower) {
+			this.setSuccessful();
+		}
 	}
 
 	protected void loadMinHeight() {

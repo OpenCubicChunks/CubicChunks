@@ -30,7 +30,7 @@ import org.objectweb.asm.MethodVisitor;
 import static cubicchunks.asm.Mappings.*;
 import static org.objectweb.asm.Opcodes.*;
 
-public class ViewFrustumSetCountChunks extends MethodVisitor {
+public class ViewFrustumSetCountChunks extends AbstractMethodTransformer {
 	public ViewFrustumSetCountChunks(MethodVisitor mv) {
 		super(ASM4, mv);
 	}
@@ -57,6 +57,7 @@ public class ViewFrustumSetCountChunks extends MethodVisitor {
 			//vanilla
 			super.visitIntInsn(opcode, arg);
 			super.visitLabel(afterIfLabel);
+			this.setSuccessful();
 			return;
 		}
 		super.visitIntInsn(opcode, arg);

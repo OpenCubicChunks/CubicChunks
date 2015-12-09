@@ -23,32 +23,34 @@
  */
 package cubicchunks.asm.transformer;
 
-import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
-import static cubicchunks.asm.Mappings.RENDER_METHODS;
-import static cubicchunks.asm.Mappings.RENDER_METHODS_BLOCK_FROM_CACHE_DESC;
-import static org.objectweb.asm.Opcodes.*;
+public abstract class AbstractMethodTransformer extends MethodVisitor {
+	//default state is failed
+	private TransformationState state = TransformationState.FAILED;
 
-public class RegionRenderCacheGetBlockStateRaw extends AbstractMethodTransformer {
-	public RegionRenderCacheGetBlockStateRaw(MethodVisitor mv) {
-		super(ASM4, mv);
+	public AbstractMethodTransformer(int api) {
+		super(api);
 	}
 
-	@Override
-	public void visitCode() {
-		super.visitCode();
+	public AbstractMethodTransformer(int api, MethodVisitor mv) {
+		super(api, mv);
+	}
 
-		Label vanillaCode = new Label();
+	protected void setFailed() {
+		this.state = TransformationState.FAILED;
+	}
 
-		super.visitVarInsn(ALOAD, 0);
-		super.visitVarInsn(ALOAD, 1);
-		super.visitMethodInsn(INVOKESTATIC, RENDER_METHODS, "blockFromCache", RENDER_METHODS_BLOCK_FROM_CACHE_DESC, false);
-		super.visitInsn(DUP);
-		super.visitJumpInsn(IFNULL, vanillaCode);
-		super.visitInsn(ARETURN);
-		super.visitLabel(vanillaCode);
-		super.visitInsn(POP);
-		this.setSuccessful();
+	protected void setSuccessful() {
+		this.state = TransformationState.SUCCESSFUL;
+	}
+
+	public boolean isSuccessful() {
+		return this.state == TransformationState.SUCCESSFUL;
+	}
+
+	public enum TransformationState {
+		FAILED,
+		SUCCESSFUL
 	}
 }

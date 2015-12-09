@@ -34,8 +34,9 @@ import static org.objectweb.asm.Opcodes.ICONST_0;
  * Transformed methods: World.getLightFromNeighborsFor, World.getLightFor
  */
 public class WorldHeightCheckReplacementSpecial extends WorldHeightCheckReplacement {
-	//transform only after BlockPos.getX() has beeb called
+	//transform only after BlockPos.getX() has been called
 	private boolean getXCalled = false;
+	private boolean transformedIconst0;
 
 	public WorldHeightCheckReplacementSpecial(MethodVisitor mv) {
 		super(mv);
@@ -51,11 +52,20 @@ public class WorldHeightCheckReplacementSpecial extends WorldHeightCheckReplacem
 
 	@Override
 	public void visitInsn(int opcode) {
-		if(opcode == ICONST_0) {
+		if(opcode == ICONST_0 && getXCalled) {
 			this.loadMinHeight();
 			getXCalled = false;
+			transformedIconst0 = true;
+			this.updateState();
 			return;
 		}
 		super.visitInsn(opcode);
+	}
+
+	@Override
+	protected void updateState() {
+		if(transformedIconst0 && transformedLower) {
+			this.setSuccessful();
+		}
 	}
 }

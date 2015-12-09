@@ -29,7 +29,7 @@ import org.objectweb.asm.MethodVisitor;
 import static cubicchunks.asm.Mappings.*;
 import static org.objectweb.asm.Opcodes.*;
 
-public class WorldEntityUpdateFix extends MethodVisitor {
+public class WorldEntityUpdateFix extends AbstractMethodTransformer {
 	//current number of usages of ICONST_0
 	private int numZeroUse = 0;
 	private int checkRadiusLoadInt = -1;
@@ -74,6 +74,9 @@ public class WorldEntityUpdateFix extends MethodVisitor {
 				super.visitLabel(vanilla);
 				super.visitInsn(opcode);
 				super.visitLabel(end);
+				if(numZeroUse == 3 && checkRadiusLoadInt >= 0) {
+					this.setSuccessful();
+				}
 				return;
 			}
 		}

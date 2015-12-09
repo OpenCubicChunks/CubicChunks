@@ -31,7 +31,7 @@ import static org.objectweb.asm.Opcodes.*;
 /**
  * Transforms IntegratedServer constructor.
  */
-public class IntegratedServerHeightReplacement extends MethodVisitor {
+public class IntegratedServerHeightReplacement extends AbstractMethodTransformer {
 	public IntegratedServerHeightReplacement(MethodVisitor mv) {
 		super(ASM4, mv);
 	}
@@ -42,6 +42,7 @@ public class IntegratedServerHeightReplacement extends MethodVisitor {
 			super.visitVarInsn(ALOAD, 4);
 			super.visitMethodInsn(INVOKEVIRTUAL, WORLD_SETTINGS, WORLD_SETTINGS_GET_TERRAIN_TYPE, WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC, false);
 			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMaxHeight", WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC, false);
+			this.setSuccessful();
 			return;
 		}
 		super.visitIntInsn(opcode, val);

@@ -33,7 +33,7 @@ import static org.objectweb.asm.Opcodes.*;
  * Replaced height checks in ChunkCache class.
  * Transformed methods: getBlockState, GetLightFor, getLightForExt
  */
-public class ChunkCacheHeightCheckReplacement extends MethodVisitor {
+public class ChunkCacheHeightCheckReplacement extends AbstractMethodTransformer {
 	private boolean transformedLower, transformedUpper;
 
 	public ChunkCacheHeightCheckReplacement(MethodVisitor mv) {
@@ -46,6 +46,7 @@ public class ChunkCacheHeightCheckReplacement extends MethodVisitor {
 			this.loadHeight("getMinHeight");
 			super.visitJumpInsn(IF_ICMPLT, label);
 			transformedLower = true;
+			this.updateState();
 			return;
 		}
 		super.visitJumpInsn(opcode, label);
@@ -56,9 +57,16 @@ public class ChunkCacheHeightCheckReplacement extends MethodVisitor {
 		if(!transformedUpper && opcode == SIPUSH && arg == 256) {
 			this.loadHeight("getMaxHeight");
 			transformedUpper = true;
+			this.updateState();
 			return;
 		}
 		super.visitIntInsn(opcode, arg);
+	}
+
+	private void updateState() {
+		if(this.transformedLower && this.transformedUpper) {
+			this.setSuccessful();
+		}
 	}
 
 	private void loadHeight(String methodName) {

@@ -31,7 +31,7 @@ import static cubicchunks.asm.Mappings.WORLD_METHODS;
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
 
-public class WorldIsAreaLoadedReplace extends MethodVisitor {
+public class WorldIsAreaLoadedReplace extends AbstractMethodTransformer {
 	public WorldIsAreaLoadedReplace(MethodVisitor mv) {
 		super(ASM4, mv);
 	}
@@ -52,5 +52,6 @@ public class WorldIsAreaLoadedReplace extends MethodVisitor {
 		super.visitInsn(IRETURN);
 		super.visitLabel(vanilla);
 		super.visitInsn(POP);
+		this.setSuccessful();
 	}
 }

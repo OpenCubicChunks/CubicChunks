@@ -30,7 +30,7 @@ import static cubicchunks.asm.Mappings.RENDER_METHODS;
 import static cubicchunks.asm.Mappings.RENDER_METHODS_UPDATE_CHUNK_POSITIONS_DESC;
 import static org.objectweb.asm.Opcodes.*;
 
-public class ViewFrustumUpdateChunkPositions extends MethodVisitor {
+public class ViewFrustumUpdateChunkPositions extends AbstractMethodTransformer {
 
 	public ViewFrustumUpdateChunkPositions(MethodVisitor mv) {
 		super(ASM4, mv);
@@ -47,5 +47,6 @@ public class ViewFrustumUpdateChunkPositions extends MethodVisitor {
 		super.visitJumpInsn(IFEQ, vanillaCode);
 		super.visitInsn(RETURN);
 		super.visitLabel(vanillaCode);
+		this.setSuccessful();
 	}
 }

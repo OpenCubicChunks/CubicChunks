@@ -27,7 +27,7 @@ import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
 import java.util.Map;
 
-@IFMLLoadingPlugin.MCVersion(value = "1.8")
+@IFMLLoadingPlugin.MCVersion(value = "1.8.8")
 @IFMLLoadingPlugin.SortingIndex(value = 5000)
 @IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
 public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
