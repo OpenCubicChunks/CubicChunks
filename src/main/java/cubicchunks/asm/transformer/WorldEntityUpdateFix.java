@@ -54,7 +54,6 @@ public class WorldEntityUpdateFix extends AbstractMethodTransformer {
 			//counting from one, zeroes we want to replace are the second and the third one
 			if(numZeroUse == 2 || numZeroUse == 3) {
 				assert checkRadiusLoadInt != -1;
-				System.out.println(checkRadiusLoadInt);
 				Label end = new Label();
 				Label vanilla = new Label();
 				super.visitVarInsn(ALOAD, 0);

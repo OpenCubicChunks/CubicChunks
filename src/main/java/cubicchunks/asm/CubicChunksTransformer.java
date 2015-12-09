@@ -74,6 +74,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 		//without this transformation only blocks 0..renderDistance*16 are rendered (or 0..255 if SetCountChunks transformation is disabled)
 		add(ViewFrustumUpdateChunkPositions.class, VIEW_FRUSTUM, VIEW_FRUSTUM_UPDATE_CHUNK_POSITIONS);
 		//this transformation removes hardcoded limits from method that returns neighbor renderer (misleading name)
+		//without this transformation cubes outside of 0..255 have fully opaque black borders
 		add(RenderGlobalGetRenderChunkOffset.class, RENDER_GLOBAL, RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET);
 		//removes hardcoded limits from subclass of ChunkCache. Allows renderers to "see" blocks outside of 0..255 height
 		add(RegionRenderCacheGetBlockStateRaw.class, REGION_RENDER_CACHE, REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW);

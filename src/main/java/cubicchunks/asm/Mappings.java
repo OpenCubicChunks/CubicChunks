@@ -41,7 +41,6 @@ public class Mappings {
 	static {
 		String location = System.getProperty("net.minecraftforge.gradle.GradleStart.srg.srg-mcp");
 		IS_DEV = location != null;
-		System.out.println("-------------------IS_DEV->" + IS_DEV);
 		if(IS_DEV) {
 			initMappings(location);
 		}
