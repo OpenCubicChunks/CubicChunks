@@ -32,8 +32,10 @@ public class ArrayBatchedQueue<T> extends ArrayDequeHashSet<T> {
 
 	public void getBatch(Collection<T> out, int size) {
 		Iterator<T> it = iterator();
-		for (int i=0; i<size && !isEmpty(); i++) {
-			out.add(it.next());
+		for (int i=0; it.hasNext() && i < size; i++) {
+			T v = it.next();
+			assert v != null;
+			out.add(v);
 			it.remove();
 		}
 	}

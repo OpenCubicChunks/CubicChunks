@@ -26,8 +26,6 @@ package cubicchunks.world.cube;
 import com.google.common.base.Predicate;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
-import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -39,6 +37,8 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+
+import java.util.List;
 
 /**
  * Cube implementation used clientside used when cube is not loaded. 
@@ -130,10 +130,7 @@ public class BlankCube extends Cube {
 	
 	@Override
 	public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {}
-	
-	@Override
-	public void getMigratedEntities(List<Entity> out) {}
-	
+
 	@Override
 	public TileEntity getBlockEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
 		return null;

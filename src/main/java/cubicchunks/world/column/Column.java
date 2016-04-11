@@ -85,7 +85,7 @@ public class Column extends Chunk {
 
 		this.cubes = new TreeMap<>();
 		//clientside we don't really need that much data. we actually only need top and bottom block Y positions
-		if(this.getWorld().isRemote) {
+		if (this.getWorld().isRemote) {
 			this.opacityIndex = new ClientOpacityIndex(this);
 		} else {
 			this.opacityIndex = new OpacityIndex();
@@ -136,7 +136,7 @@ public class Column extends Chunk {
 	public Collection<Cube> getCubes() {
 		return Collections.unmodifiableCollection(this.cubes.values());
 	}
-	
+
 	public Iterable<Cube> getCubes(int minY, int maxY) {
 		return this.cubes.subMap(minY, true, maxY, true).values();
 	}
@@ -155,7 +155,7 @@ public class Column extends Chunk {
 
 	public Cube getOrCreateCube(int cubeY, boolean isModified) {
 		Cube cube = getCube(cubeY);
-		
+
 		if (cube == null) {
 			cube = new Cube(this.getWorld(), this, this.xPosition, cubeY, this.zPosition, isModified);
 			this.cubes.put(cubeY, cube);
@@ -244,18 +244,18 @@ public class Column extends Chunk {
 		int oldOpacity = oldBlock.getLightOpacity();
 
 		// did the top non-transparent block change?
-		Integer oldSkylightY = getSkylightBlockY(x, z);
+		Integer oldSkylightY = getHeightmapAt(x, z);
 		this.opacityIndex.setOpacity(x, pos.getY(), z, newOpacity);
 		Integer newSkylightY = oldSkylightY;
-		if(!getWorld().isRemote) {
-			newSkylightY = getSkylightBlockY(x, z);
+		if (!getWorld().isRemote) {
+			newSkylightY = getHeightmapAt(x, z);
 		} else {
 			Integer oldSkylightActual = oldSkylightY == null ? null : oldSkylightY - 1;
 			//to avoid unnecessary delay when breaking blocks we need to hack it clientside
-			if((oldSkylightActual == null || pos.getY() > oldSkylightActual-1) && newBlock.getLightOpacity() != 0) {
+			if ((oldSkylightActual == null || pos.getY() > oldSkylightActual - 1) && newBlock.getLightOpacity() != 0) {
 				//we added block, so we can be sure it's correct. Server update will be ignored
 				newSkylightY = pos.getY() + 1;
-			} else if(newBlock.getLightOpacity() == 0 && pos.getY() == oldSkylightY - 1) {
+			} else if (newBlock.getLightOpacity() == 0 && pos.getY() == oldSkylightY - 1) {
 				//we changed block to something transparent. Heightmap can change only if we break top block
 
 				//we don't know by how much we changed heightmap, and we could have changed it by any value
@@ -263,7 +263,7 @@ public class Column extends Chunk {
 				//we need to update it enough not to be unresponsive, and then wait for information from server
 				//so only scan 64 blocks down. If we updated more - we would need to wait for renderer updates anyway
 				int newTop = oldSkylightActual - 1;
-				while(getBlock(x, newTop, z).getLightOpacity() == 0 && newTop > oldSkylightActual - 33) {
+				while (getBlock(x, newTop, z).getLightOpacity() == 0 && newTop > oldSkylightActual - 33) {
 					newTop--;
 				}
 				newSkylightY = newTop;
@@ -272,27 +272,21 @@ public class Column extends Chunk {
 				newSkylightY = oldSkylightActual;
 			}
 			//update the heightmap. If out update it not accurate - it will be corrected when server sends block update
-			((ClientOpacityIndex)opacityIndex).setHeight(x, z, newSkylightY);
+			((ClientOpacityIndex) opacityIndex).setHeight(x, z, newSkylightY);
 		}
 
 		int minY = cubicchunks.util.MathHelper.minInteger(oldSkylightY, newSkylightY);
 		int maxY = cubicchunks.util.MathHelper.maxInteger(oldSkylightY, newSkylightY);
+		if(minY > maxY) {
+			int t = minY;
+			minY = maxY;
+			maxY = t;
+		}
 
 		LightingManager lightManager = WorldContext.get(this.getWorld()).getLightingManager();
-		lightManager.columnSkylightUpdate(LightingManager.UpdateType.IMMEDIATE_UPDATE_QUEUED_DIFFUSE, this, x, minY, maxY, z);
-
-		//is it even needed?
-		// if opacity changed and ( opacity decreased or block now has any light )
-		//int skyLight = this.getLightFor(EnumSkyBlock.SKY, pos);
-		//int blockLight = this.getLightFor(EnumSkyBlock.BLOCK, pos);
-		//if (newOpacity != oldOpacity && (newOpacity < oldOpacity || skyLight > 0 || blockLight > 0)) {
-		//	lightManager.queueSkyLightOcclusionCalculation(pos.getX(), pos.getZ());
-		//}
+		lightManager.columnSkylightUpdate(LightingManager.UpdateType.IMMEDIATE, this, x, minY, maxY, z);
 
 		this.setModified(true);
-
-		// NOTE: after this method, the World calls updateLights on the source block which changes light values again
-
 		return oldBlockState;
 	}
 
@@ -331,8 +325,8 @@ public class Column extends Chunk {
 
 	public Integer getTopFilledCubeY() {
 		Integer blockY = null;
-		for (int localX=0; localX<Coords.CUBE_SIZE; localX++) {
-			for (int localZ=0; localZ<Coords.CUBE_SIZE; localZ++) {
+		for (int localX = 0; localX < Coords.CUBE_SIZE; localX++) {
+			for (int localZ = 0; localZ < Coords.CUBE_SIZE; localZ++) {
 				Integer y = this.opacityIndex.getTopBlockY(localX, localZ);
 				if (y != null && (blockY == null || y > blockY)) {
 					blockY = y;
@@ -380,14 +374,18 @@ public class Column extends Chunk {
 	public boolean canSeeSky(BlockPos pos) {
 		int x = Coords.blockToLocal(pos.getX());
 		int z = Coords.blockToLocal(pos.getZ());
-		Integer skylightBlockY = getSkylightBlockY(x, z);
+		Integer skylightBlockY = getHeightmapAt(x, z);
 		if (skylightBlockY == null) {
 			return true;
 		}
 		return pos.getY() >= skylightBlockY;
 	}
 
-	public Integer getSkylightBlockY(int localX, int localZ) {
+	/**
+	 * Returns Y position of the block directly above the top non-transparent block,
+	 * or null is there are no non-transparent blocks
+	 */
+	public Integer getHeightmapAt(int localX, int localZ) {
 		// NOTE: a "skylight" block is the transparent block that is directly one block above the top non-transparent block
 		Integer topBlockY = this.opacityIndex.getTopBlockY(localX, localZ);
 		if (topBlockY != null) {
@@ -403,7 +401,7 @@ public class Column extends Chunk {
 		// NOTE: the "height value" here is the height of the transparent block on top of the highest non-transparent
 		// block
 
-		Integer skylightBlockY = getSkylightBlockY(localX, localZ);
+		Integer skylightBlockY = getHeightmapAt(localX, localZ);
 		if (skylightBlockY == null) {
 			// PANIC!
 			// this column doesn't have any blocks in it that aren't air!
@@ -422,7 +420,7 @@ public class Column extends Chunk {
 		int z = Coords.blockToLocal(pos.getZ());
 		return this.opacityIndex.getOpacity(x, pos.getY(), z);
 	}
-	
+
 	//this calls getBlockLightOpacity(BlockPos)
 	//private int getBlockLightOpacity(int x, int y, int z)
 
@@ -496,7 +494,7 @@ public class Column extends Chunk {
 
 	@Override
 	public void getEntitiesOfTypeWithinAAAB(Class entityType, AxisAlignedBB queryBox, List out,
-			Predicate predicate) {
+	                                        Predicate predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
 		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - 2));
@@ -775,7 +773,7 @@ public class Column extends Chunk {
 						Vec3i facingDir = facing.getDirectionVec();
 						neighborPos.setBlockPos(pos.getX() + facingDir.getX(), pos.getY() + facingDir.getY(),
 								pos.getZ() + facingDir.getZ());
-						if (this.getWorld().getBlockState(neighborPos).getBlock().getLightValue()> 0) {
+						if (this.getWorld().getBlockState(neighborPos).getBlock().getLightValue() > 0) {
 							this.getWorld().checkLight(neighborPos);
 						}
 					}
@@ -794,8 +792,8 @@ public class Column extends Chunk {
 
 		for (Map.Entry<Integer, Cube> cube : this.cubes.entrySet()) {
 			Cube c = cube.getValue();
-			if(c.getY() != cube.getKey()) {
-				throw new IllegalStateException(String .format("Column in inconsistent state! Cube at (%d, %d, %d) thinks it's at (%d, %d, %d)", xPosition, (int)cube.getKey(), zPosition, c.getX(), c.getY(), c.getZ()));
+			if (c.getY() != cube.getKey()) {
+				throw new IllegalStateException(String.format("Column in inconsistent state! Cube at (%d, %d, %d) thinks it's at (%d, %d, %d)", xPosition, (int) cube.getKey(), zPosition, c.getX(), c.getY(), c.getZ()));
 			}
 			c.doRandomTicks();
 		}

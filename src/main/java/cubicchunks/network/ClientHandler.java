@@ -40,7 +40,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IThreadListener;
-import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldProviderSurface;
 
 public class ClientHandler implements INetHandler {
@@ -257,13 +256,12 @@ public class ClientHandler implements INetHandler {
 
 			int minY = Math.min(oldHeight, height);
 			int maxY = Math.max(oldHeight, height);
-			lm.columnSkylightUpdate(LightingManager.UpdateType.IMMEDIATE, cube.getColumn(), x, minY, maxY, z);
+			lm.columnSkylightUpdate(LightingManager.UpdateType.QUEUED, cube.getColumn(), x, minY, maxY, z);
 		}
 		// apply the update
 		for (int i=0; i<packet.localAddresses.length; i++) {
 			BlockPos pos = cube.localAddressToBlockPos(packet.localAddresses[i]);
 			worldClient.invalidateRegionAndSetBlock(pos, packet.blockStates[i]);
-			worldClient.checkLightFor(EnumSkyBlock.SKY, pos);
 		}
 		for (TileEntity blockEntity : cube.getBlockEntities()) {
 			blockEntity.updateContainingBlockInfo();

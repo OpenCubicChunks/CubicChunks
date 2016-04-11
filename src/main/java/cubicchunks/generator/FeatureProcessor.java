@@ -57,6 +57,7 @@ public class FeatureProcessor extends CubeProcessor {
 
 	@Override
 	public boolean calculate(Cube cube) {
+		if(true)return true;
 		WorldContext worldContext = WorldContext.get(cube.getWorld());
 		if (!worldContext.cubeAndNeighborsExist(cube, true, GeneratorStage.FEATURES)) {
 			return false;

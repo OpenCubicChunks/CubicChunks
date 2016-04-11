@@ -31,6 +31,9 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 
 	@Override
 	public void addFirst(E e) {
+		if(e == null) {
+			throw new NullPointerException();
+		}
 		if (set.add(e)) {
 			deque.addFirst(e);
 		} else {
@@ -42,6 +45,9 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 
 	@Override
 	public void addLast(E e) {
+		if(e == null) {
+			throw new NullPointerException();
+		}
 		if (set.add(e)) {
 			deque.addLast(e);
 		} else {
@@ -137,6 +143,9 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 
 	@Override
 	public boolean add(E e) {
+		if(e == null) {
+			throw new NullPointerException();
+		}
 		boolean b = set.add(e) && deque.add(e);
 		assert set.size() == deque.size();
 		return b;
@@ -176,6 +185,9 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 
 	@Override
 	public void push(E e) {
+		if(e == null) {
+			throw new NullPointerException();
+		}
 		if (set.add(e)) {
 			deque.push(e);
 		}
@@ -208,6 +220,9 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 	@Override
 	public boolean addAll(Collection<? extends E> c) {
 		for (E e : c) {
+			if(e == null) {
+				throw new NullPointerException();
+			}
 			if (!set.contains(e)) {
 				deque.add(e);
 			}

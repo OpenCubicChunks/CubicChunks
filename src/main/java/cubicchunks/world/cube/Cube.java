@@ -26,13 +26,10 @@ package cubicchunks.world.cube;
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;
-import cubicchunks.util.MutableBlockPos;
 import cubicchunks.world.EntityContainer;
-import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -42,12 +39,14 @@ import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -68,6 +67,8 @@ public class Cube {
 	private boolean needsRelightAfterLoad;
 	/** "queue containing the BlockPos of tile entities queued for creation" */
 	private ConcurrentLinkedQueue tileEntityPosQueue;
+
+	private final LightUpdateData lightUpdateData = new LightUpdateData(this);
 	
 	public Cube(World world, Column column, int x, int y, int z, boolean isModified) {
 		this.world = world;
@@ -333,27 +334,12 @@ public class Cube {
 		return wasRemoved;
 	}
 	
-	public Iterable<Entity> entities() {
-		return this.entities.getEntities();
-	}
-	
 	public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
 		this.entities.findEntitiesExcept(excludedEntity, queryBox, out, predicate);
 	}
 	
 	public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
 		this.entities.findEntities(entityType, queryBox, out, predicate);
-	}
-	
-	public void getMigratedEntities(List<Entity> out) {
-		for (Entity entity : this.entities.getEntities()) {
-			int cubeX = Coords.getCubeXForEntity(entity);
-			int cubeY = Coords.getCubeYForEntity(entity);
-			int cubeZ = Coords.getCubeZForEntity(entity);
-			if (cubeX != this.cubeX || cubeY != this.cubeY || cubeZ != this.cubeZ) {
-				out.add(entity);
-			}
-		}
 	}
 	
 	public TileEntity getBlockEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
@@ -585,6 +571,7 @@ public class Cube {
 	public boolean needsRelightAfterLoad() {
 		return this.needsRelightAfterLoad;
 	}
+
 	public void setNeedsRelightAfterLoad(boolean val) {
 		this.needsRelightAfterLoad = val;
 	}
@@ -605,20 +592,91 @@ public class Cube {
 		}
 	}
 
-	public void initialClientSkylight() {
-		LightingManager lm = WorldContext.get(world).getLightingManager();
-		MutableBlockPos pos = new MutableBlockPos();
-		for(int x = 0; x < 16; x++) {
-			for(int z = 0; z < 16; z++) {
-				for(int y = 15; y >= 0; y--) {
-					int maxY = Coords.cubeToMaxBlock(getY());
-					pos.setBlockPos(x, y, z);
-					if(this.getBlockAt(pos).getLightOpacity() != 0) {
-						lm.columnSkylightUpdate(LightingManager.UpdateType.QUEUED, getColumn(), x, maxY, z);
-						break;
-					}
-				}
+	public LightUpdateData getLightUpdateData() {
+		return this.lightUpdateData;
+	}
+
+	public static class LightUpdateData {
+		private final Cube cube;
+		private final short[] minMaxHeights = new short[256];
+		//TODO: nullify minMaxHeights if toUpdateCounter is 0
+		private int toUpdateCounter = 0;
+
+		public LightUpdateData(Cube cube) {
+			this.cube = cube;
+			Arrays.fill(minMaxHeights, (short) 0xFFFF);
+		}
+
+		public void add(int localX, int localZ, int minY, int maxY) {
+			if (localX < 0 || localX > 15) {
+				throw new IndexOutOfBoundsException("LocalX must be between 0 and 15, but was " + localX);
 			}
+			if (localZ < 0 || localZ > 15) {
+				throw new IndexOutOfBoundsException("LocalZ must be between 0 and 15, but was " + localZ);
+			}
+			if(minY > maxY) {
+				throw new IllegalArgumentException("minY > maxY (" + minY + " > " + maxY + ")");
+			}
+
+			minY -= Coords.cubeToMinBlock(cube.getY());
+			maxY -= Coords.cubeToMinBlock(cube.getY());
+
+			minY = MathHelper.clamp_int(minY, 0, 15);
+			maxY = MathHelper.clamp_int(maxY, 0, 15);
+
+			int index = index(localX, localZ);
+			short v = minMaxHeights[localX << 4 | localZ];
+			if(v == -1) {
+				toUpdateCounter++;
+				assert toUpdateCounter >= 0 && toUpdateCounter <= 256;
+			}
+			int min = unpackMin(v);
+			int max = unpackMax(v);
+
+			if (minY < min) {
+				min = minY;
+			}
+			if (maxY > max) {
+				max = maxY;
+			}
+
+			v = pack(min, max);
+			assert v >= 0 && v < 256;
+			this.minMaxHeights[index] = v;
+		}
+
+		public int getMin(int localX, int localZ) {
+			return unpackMin(minMaxHeights[index(localX, localZ)]);
+		}
+
+		public int getMax(int localX, int localZ) {
+			return unpackMax(minMaxHeights[index(localX, localZ)]);
+		}
+
+		public void remove(int localX, int localZ) {
+			minMaxHeights[index(localX, localZ)] = -1;
+		}
+
+		private short pack(int min, int max) {
+			return (short) (min << 4 | max);
+		}
+
+		private int unpackMin(short val) {
+			if (val == -1) {
+				return 16;
+			}
+			return val >> 4;
+		}
+
+		private int unpackMax(short val) {
+			if (val == -1) {
+				return -1;
+			}
+			return val & 0xf;
+		}
+
+		private int index(int x, int z) {
+			return x << 4 | z;
 		}
 	}
 }

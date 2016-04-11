@@ -49,91 +49,94 @@ import java.util.List;
 import java.util.Queue;
 
 public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
-	
+
 	private static final Logger log = CubicChunks.LOGGER;
-	
+
 	public static final int WorldSpawnChunkDistance = 12; // highest render distance is 32
-	
+
 	private WorldServer worldServer;
 	private CubeIO cubeIO;
 	private ColumnGenerator columnGenerator;
-	private HashMap<Long,Column> loadedColumns;
+	private HashMap<Long, Column> loadedColumns;
 	private BlankColumn blankColumn;
 	private Queue<Long> cubesToUnload;
-	
+
 	public ServerCubeCache(WorldServer worldServer) {
 		super(worldServer, null, null);
-		
+
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer);
 		this.columnGenerator = new ColumnGenerator(worldServer);
 		this.loadedColumns = Maps.newHashMap();
 		this.blankColumn = new BlankColumn(worldServer, 0, 0);
 		this.cubesToUnload = new ArrayDeque<Long>();
-		
+
 		//set vanilla fields
 		super.chunkLoader = new AnvilChunkLoader(worldServer.getSaveHandler().getWorldDirectory());
 		super.serverChunkGenerator = null;//todo: fixit
 	}
-	
+
 	@Override
 	public boolean chunkExists(int cubeX, int cubeZ) {
+		//columnAccessStats(cubeX, cubeZ);
 		return this.loadedColumns.containsKey(AddressTools.getAddress(cubeX, cubeZ));
 	}
-	
+
 	@Override
 	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
-		
+		//cubeAccessStats(cubeX, cubeY, cubeZ);
 		// is the column loaded?
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
 		Column column = this.loadedColumns.get(columnAddress);
 		if (column == null) {
 			return false;
 		}
-		
+
 		// is the cube loaded?
 		return column.getCube(cubeY) != null;
 	}
-	
+
 	@Override
 	public Column loadChunk(int cubeX, int cubeZ) {
 		// in the tall worlds scheme, load and provide columns/chunks are semantically the same thing
 		// but load/provide cube do actually do different things
 		return provideChunk(cubeX, cubeZ);
 	}
-	
+
 	@Override
 	public Column getColumn(int columnX, int columnZ) {
 		return provideChunk(columnX, columnZ);
 	}
-	
+
 	@Override
 	public Column provideChunk(int cubeX, int cubeZ) {
+		columnAccessStats(cubeX, cubeZ);
 		// check for the column
 		Column column = this.loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}
-		
+
 		return this.blankColumn;
 	}
-	
+
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
+		cubeAccessStats(cubeX, cubeY, cubeZ);
 		// is the column loaded?
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
 		Column column = this.loadedColumns.get(columnAddress);
 		if (column == null) {
 			return null;
 		}
-		
+
 		return column.getCube(cubeY);
 	}
-	
+
 	public void loadCubeAndNeighbors(int cubeX, int cubeY, int cubeZ) {
 		// load the requested cube
 		loadCube(cubeX, cubeY, cubeZ);
-		
+
 		// load the neighbors
 		loadCube(cubeX - 1, cubeY - 1, cubeZ - 1);
 		loadCube(cubeX - 1, cubeY - 1, cubeZ + 0);
@@ -144,7 +147,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		loadCube(cubeX + 1, cubeY - 1, cubeZ - 1);
 		loadCube(cubeX + 1, cubeY - 1, cubeZ + 0);
 		loadCube(cubeX + 1, cubeY - 1, cubeZ + 1);
-		
+
 		loadCube(cubeX - 1, cubeY + 0, cubeZ - 1);
 		loadCube(cubeX - 1, cubeY + 0, cubeZ + 0);
 		loadCube(cubeX - 1, cubeY + 0, cubeZ + 1);
@@ -153,7 +156,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		loadCube(cubeX + 1, cubeY + 0, cubeZ - 1);
 		loadCube(cubeX + 1, cubeY + 0, cubeZ + 0);
 		loadCube(cubeX + 1, cubeY + 0, cubeZ + 1);
-		
+
 		loadCube(cubeX - 1, cubeY + 1, cubeZ - 1);
 		loadCube(cubeX - 1, cubeY + 1, cubeZ + 0);
 		loadCube(cubeX - 1, cubeY + 1, cubeZ + 1);
@@ -164,14 +167,14 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		loadCube(cubeX + 1, cubeY + 1, cubeZ + 0);
 		loadCube(cubeX + 1, cubeY + 1, cubeZ + 1);
 	}
-	
+
 	public void loadCube(int cubeX, int cubeY, int cubeZ) {
-		
+
 		long cubeAddress = AddressTools.getAddress(cubeX, cubeY, cubeZ);
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-		
+
 		// step 1: get a column
-		
+
 		// is the column already loaded?
 		Column column = this.loadedColumns.get(columnAddress);
 		if (column == null) {
@@ -182,7 +185,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				log.error("Unable to load column ({},{})", cubeX, cubeZ, ex);
 				return;
 			}
-			
+
 			if (column == null) {
 				// there wasn't a column, generate a new one
 				column = this.columnGenerator.generateColumn(cubeX, cubeZ);
@@ -192,15 +195,15 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 		}
 		assert (column != null);
-		
+
 		// step 2: get a cube
-		
+
 		// is the cube already loaded?
 		Cube cube = column.getCube(cubeY);
 		if (cube != null) {
 			return;
 		}
-		
+
 		// try to load the cube
 		try {
 			cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeAddress);
@@ -208,13 +211,13 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			log.error("Unable to load cube ({},{},{})", cubeX, cubeY, cubeZ, ex);
 			return;
 		}
-		
+
 		if (cube == null) {
 			// start the cube generation process with an empty cube
 			cube = column.getOrCreateCube(cubeY, true);
 			cube.setGeneratorStage(GeneratorStage.getFirstStage());
 		}
-		
+
 		if (!cube.getGeneratorStage().isLastStage()) {
 			// queue the cube to finish generation
 			WorldServerContext.get(this.worldServer).getGeneratorPipeline().generate(cube);
@@ -222,44 +225,44 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			// queue the cube for re-lighting
 			WorldServerContext.get(this.worldServer).getLightingManager().queueFirstLightCalculation(cubeAddress);
 		}
-		
+
 		// add the column to the cache
 		this.loadedColumns.put(columnAddress, column);
-		
+
 		// init the column
 		if (!column.isLoaded()) {
 			column.onChunkLoad();
 		}
 		column.setTerrainPopulated(true);
 		column.resetPrecipitationHeight();
-		
+
 		// init the cube
 		cube.onLoad();
 	}
-	
+
 	@Override
 	public void dropChunk(int cubeX, int cubeZ) {
 		// don't call this, unload cubes instead
 		throw new UnsupportedOperationException();
 	}
-	
+
 	public void unloadCube(Cube cube) {
 		// NOTE: this is the main unload method for block data!
 		unloadCube(cube.getX(), cube.getY(), cube.getZ());
 	}
-	
+
 	@Override
 	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
-		
+
 		// don't unload cubes near the spawn
 		if (cubeIsNearSpawn(cubeX, cubeY, cubeZ)) {
 			return;
 		}
-		
+
 		// queue the cube for unloading
 		this.cubesToUnload.add(AddressTools.getAddress(cubeX, cubeY, cubeZ));
 	}
-	
+
 	@Override
 	public void unloadAllChunks() {
 		// unload all the cubes in the columns
@@ -269,40 +272,40 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 		}
 	}
-	
+
 	@Override
 	public boolean unloadQueuedChunks() {
 		// NOTE: the return value is completely ignored
-		
+
 		if (this.worldServer.disableLevelSaving) {
 			return false;
 		}
-		
+
 		final int MaxNumToUnload = 400;
-		
+
 		// unload cubes
 		for (int i = 0; i < MaxNumToUnload && !this.cubesToUnload.isEmpty(); i++) {
 			long cubeAddress = this.cubesToUnload.poll();
 			long columnAddress = AddressTools.getAddress(AddressTools.getX(cubeAddress), AddressTools.getZ(cubeAddress));
-			
+
 			// get the cube
 			Column column = this.loadedColumns.get(columnAddress);
 			if (column == null) {
 				// already unloaded
 				continue;
 			}
-			
+
 			// unload the cube
 			int cubeY = AddressTools.getY(cubeAddress);
 			Cube cube = column.removeCube(cubeY);
 			if (cube != null) {
 				// tell the cube it has been unloaded
 				cube.onUnload();
-				
+
 				// save the cube
 				this.cubeIO.saveCube(cube);
 			}
-			
+
 			// unload empty columns
 			if (!column.hasCubes()) {
 				column.onChunkUnload();
@@ -310,23 +313,23 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				this.cubeIO.saveColumn(column);
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	public void saveAllChunks() {
 		saveChunks(true, null);
 	}
-	
+
 	@Override
 	public boolean saveChunks(boolean alwaysTrue, IProgressUpdate progress) {
-		
+
 		for (Column column : this.loadedColumns.values()) {
 			// save the column
 			if (column.needsSaving(alwaysTrue)) {
 				this.cubeIO.saveColumn(column);
 			}
-			
+
 			// save the cubes
 			for (Cube cube : column.getCubes()) {
 				if (cube.needsSaving()) {
@@ -334,32 +337,32 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				}
 			}
 		}
-		
+
 		return true;
 	}
-	
+
 	@Override
 	public String makeString() {
 		return "ServerCubeCache: " + this.loadedColumns.size() + " columns, Unload: " + this.cubesToUnload.size() + " cubes";
 	}
-	
+
 	@Override
 	public int getLoadedChunkCount() {
 		return this.loadedColumns.size();
 	}
-	
+
 	@Override
-    public List<BiomeGenBase.SpawnListEntry> getPossibleCreatures(final EnumCreatureType a1, final BlockPos a2) {
+	public List<BiomeGenBase.SpawnListEntry> getPossibleCreatures(final EnumCreatureType a1, final BlockPos a2) {
 		return null;
 	}
-	
+
 	private boolean cubeIsNearSpawn(int cubeX, int cubeY, int cubeZ) {
-		
+
 		if (!this.worldServer.provider.canRespawnHere()) {
 			// no spawn points
 			return false;
 		}
-		
+
 		BlockPos spawnPoint = this.worldServer.getSpawnPoint();
 		int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
 		int spawnCubeY = Coords.blockToCube(spawnPoint.getY());
@@ -368,5 +371,46 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		int dy = Math.abs(spawnCubeY - cubeY);
 		int dz = Math.abs(spawnCubeZ - cubeZ);
 		return dx <= WorldSpawnChunkDistance && dy <= WorldSpawnChunkDistance && dz <= WorldSpawnChunkDistance;
+	}
+
+	private int lastColumnX, lastColumnZ;
+	private int lastColumnX2, lastColumnZ2;
+	private int lastCubeX, lastCubeY, lastCubeZ;
+	private int lastCubeX2, lastCubeY2, lastCubeZ2;
+	private long lastColumnAccessSame = 0, totalColumnAccess = 0;
+	private long lastCubeAccessSame = 0, totalCubeAccess = 0;
+
+	private void columnAccessStats(int x, int z) {
+		if ((lastColumnX == x && lastColumnZ == z) || (lastColumnX2 == x && lastColumnZ2 == z)) {
+			lastColumnAccessSame++;
+		}
+		if (!(lastColumnX == x && lastColumnZ == z)) {
+			lastColumnZ2 = lastColumnZ;
+			lastColumnX2 = lastColumnX;
+		}
+		lastColumnX = x;
+		lastColumnZ = z;
+		totalColumnAccess++;
+		if (totalColumnAccess % 1000000 == 0) {
+			System.out.printf("COLUMN %d/%d accesses the same as last2 (%f%%)\n", lastColumnAccessSame, totalColumnAccess, 100 * lastColumnAccessSame / (double) totalColumnAccess);
+		}
+	}
+
+	private void cubeAccessStats(int x, int y, int z) {
+		if ((lastCubeX == x && lastCubeY == y && lastCubeZ == z) || (lastCubeX2 == x && lastCubeY2 == y && lastCubeZ2 == z)) {
+			lastCubeAccessSame++;
+		}
+		if (!(lastCubeX == x && lastCubeY == y && lastCubeZ == z)) {
+			lastCubeX2 = lastCubeX;
+			lastCubeY2 = lastCubeY;
+			lastCubeZ2 = lastCubeZ;
+		}
+		lastCubeX = x;
+		lastCubeY = y;
+		lastCubeZ = z;
+		totalCubeAccess++;
+		if (totalCubeAccess % 10000000 == 0) {
+			System.out.printf("CUBE %d/%d accesses the same as last2 (%f%%)\n", lastCubeAccessSame, totalCubeAccess, 100 * lastCubeAccessSame / (double) totalCubeAccess);
+		}
 	}
 }

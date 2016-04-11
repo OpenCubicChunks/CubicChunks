@@ -111,7 +111,6 @@ public abstract class WorldContext {
 	}
 	
 	public boolean cubeAndNeighborsExist(int cubeX, int cubeY, int cubeZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
-		// TODO: optimize this with loop unrolling
 		return cubesExist(cubeX - 1, cubeY - 1, cubeZ - 1, cubeX + 1, cubeY + 1, cubeZ + 1, allowEmptyCubes, minStageAllowed);
 	}
 	
@@ -132,5 +131,13 @@ public abstract class WorldContext {
 			}
 		}
 		return true;
+	}
+
+	public Cube getCubeForAddress(long address) {
+		int x = AddressTools.getX(address);
+		int y = AddressTools.getY(address);
+		int z = AddressTools.getZ(address);
+
+		return m_cubeCache.getCube(x, y, z);
 	}
 }

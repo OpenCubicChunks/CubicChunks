@@ -12,6 +12,7 @@ buildscript
 	dependencies {
 		classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
 		classpath 'org.ajoberstar:grgit:1.4.+'
+		classpath 'me.tatarka:gradle-retrolambda:3.2.4'
 	}
 }
 
@@ -28,8 +29,8 @@ idea { module { inheritOutputDirs = true } }
 defaultTasks 'licenseFormat', 'build'
 
 // Minimum version of Java required
-sourceCompatibility = '1.7'
-targetCompatibility = '1.7'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 
 ext {
 	git = org.ajoberstar.grgit.Grgit.open(file('.'))

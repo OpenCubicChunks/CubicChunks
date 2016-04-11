@@ -23,90 +23,79 @@
  */
 package cubicchunks.lighting;
 
-import cubicchunks.util.Coords;
 import cubicchunks.util.Progress;
 import cubicchunks.util.processor.QueueProcessor;
 import cubicchunks.world.ICubeCache;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
+import net.minecraft.world.World;
 
-class SkyLightCubeDiffuseProcessor extends QueueProcessor<SkyLightCubeDiffuseProcessor.Entry> {
+class SkyLightCubeDiffuseProcessor extends QueueProcessor<Long> {
 
+	private World world;
+	private WorldContext worldContext;
 
-	private LightingManager lightingManager;
-
-	public SkyLightCubeDiffuseProcessor(LightingManager lightingManager, String name, ICubeCache provider, int batchSize) {
+	SkyLightCubeDiffuseProcessor(World world, String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
-		this.lightingManager = lightingManager;
+		this.world = world;
 	}
 
 	@Override
 	public void processBatch(Progress progress) {
-		SkyLightCubeDiffuseCalculator skylightCubeDiffuseCalculator = lightingManager.getSkylightCubeDiffuseCalculator();
-		for (Entry e : incomingAddresses) {
-			int columnX = Coords.blockToCube(e.blockX);
-			int columnZ = Coords.blockToCube(e.blockZ);
-
-			Column column = cache.getColumn(columnX, columnZ);
-			if(empty(column)) {
-				continue;
+		//this can't be done in construct9or because WorldContext isn't fully initialized there.
+		this.worldContext = WorldContext.get(world);
+		for (Long address : incomingAddresses) {
+			if (address == null) {
+				throw new Error();
 			}
-			if(column.getCube(e.cubeY) == null) {
-				continue;
-			}
-			if (empty(cache.getColumn(columnX + 1, columnZ)) ||
-					empty(cache.getColumn(columnX - 1, columnZ)) ||
-					empty(cache.getColumn(columnX, columnZ + 1)) ||
-					empty(cache.getColumn(columnX, columnZ - 1)) ||
-					empty(cache.getColumn(columnX + 1, columnZ + 1)) ||
-					empty(cache.getColumn(columnX + 1, columnZ - 1)) ||
-					empty(cache.getColumn(columnX - 1, columnZ + 1)) ||
-					empty(cache.getColumn(columnX - 1, columnZ - 1))) {
-				deferredAddresses.add(e);
-				continue;
-			}
-
-
-			int localX = Coords.blockToLocal(e.blockX);
-			int localZ = Coords.blockToLocal(e.blockZ);
-
-			boolean updated = skylightCubeDiffuseCalculator.calculate(column, localX, localZ, e.cubeY);
-			(updated ? processedAddresses : deferredAddresses).add(e);
+			Cube cube = worldContext.getCubeForAddress(address);
+			if (cube != null)
+				this.process(cube, address);
 		}
+	}
+
+	private void process(Cube cube, long address) {
+		int columnX = cube.getX();
+		int columnZ = cube.getZ();
+		int cubeY = cube.getY();
+
+		Cube.LightUpdateData data = cube.getLightUpdateData();
+
+		Column column = cache.getColumn(columnX, columnZ);
+		if (empty(column)) {
+			return;
+		}
+		if (column.getCube(cubeY) == null) {
+			return;
+		}
+
+		int done = 0;
+		for (int i = 0; i < 256; i++) {
+			int x = i >> 4;
+			int z = i & 0xf;
+
+			int minYLocal = data.getMin(x, z);
+			int maxYLocal = data.getMax(x, z);
+
+			if (minYLocal > maxYLocal) {
+				done++;
+				continue;
+			}
+			boolean b = SkyLightCubeDiffuseCalculator.calculate(column, x, z, cubeY, minYLocal, maxYLocal);
+			if (b) {
+				data.remove(x, z);
+				done++;
+			} else {
+				//failed, don't waste more time here. Wait until we can do something here.
+				break;
+			}
+		}
+		(done == 256 ? processedAddresses : deferredAddresses).add(address);
 	}
 
 	private boolean empty(Column column) {
 		return column == null || column instanceof BlankColumn;
-	}
-
-	public static class Entry {
-		private final int blockX, blockZ, cubeY;
-
-		public Entry(int blockX, int blockZ, int cubeY) {
-			this.blockX = blockX;
-			this.blockZ = blockZ;
-			this.cubeY = cubeY;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			Entry entry = (Entry) o;
-
-			if (blockX != entry.blockX) return false;
-			if (blockZ != entry.blockZ) return false;
-			return cubeY == entry.cubeY;
-
-		}
-
-		@Override
-		public int hashCode() {
-			int result = blockX;
-			result = 31 * result + blockZ;
-			result = 31 * result + cubeY;
-			return result;
-		}
 	}
 }

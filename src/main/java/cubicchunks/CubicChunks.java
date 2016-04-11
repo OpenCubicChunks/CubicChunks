@@ -29,7 +29,6 @@ import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -71,11 +70,12 @@ public class CubicChunks {
 
 		
 		CC_WORLD_TYPE = new CubicChunksWorldType(ccSystem);
+		//TODO: Combine these into one
 		this.evtHandler = new CCEventHandler(ccSystem);
 		this.fmlEvtHandler = new CCFmlEventHandler(ccSystem);
 		
 		MinecraftForge.EVENT_BUS.register(this.evtHandler);
-		FMLCommonHandler.instance().bus().register(this.fmlEvtHandler);
+		MinecraftForge.EVENT_BUS.register(this.fmlEvtHandler);
 
 
 		//TODO: Port it to forge

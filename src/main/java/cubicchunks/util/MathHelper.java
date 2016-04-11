@@ -30,28 +30,68 @@ public class MathHelper {
 	public static double lerp(final double a, final double min, final double max) {
 		return min + a * (max - min);
 	}
-	
+
 	public static int randRange(Random rand, int start, int end) {
 		return rand.nextInt(end - start + 1) + start;
 	}
 
 	public static int minInteger(Integer a, Integer b) {
-		if(a == null || b == null) {
+		if (a == null || b == null) {
 			return Integer.MIN_VALUE;
 		}
 		return Math.min(a, b);
 	}
 
 	public static int maxInteger(Integer a, Integer b) {
-		if(a == null && b == null) {
+		if (a == null && b == null) {
 			return Integer.MIN_VALUE;
 		}
-		if(a == null) {
+		if (a == null) {
 			return b;
 		}
-		if(b == null) {
+		if (b == null) {
 			return a;
 		}
 		return Math.max(a, b);
+	}
+
+	public static int min(int a, int b) {
+		return Math.min(a, b);
+	}
+
+	public static int min(int a, int b, int c) {
+		return Math.min(Math.min(a, b), c);
+	}
+
+	public static int min(int a, int b, int c, int d) {
+		return Math.min(Math.min(a, b), Math.min(c, d));
+	}
+
+	public static int min(int... a) {
+		int min = a[0];
+		for (int i = 1; i < a.length; i++) {
+			if (a[i] < min) min = a[i];
+		}
+		return min;
+	}
+
+	public static int max(int a, int b) {
+		return Math.max(a, b);
+	}
+
+	public static int max(int a, int b, int c) {
+		return Math.max(Math.max(a, b), c);
+	}
+
+	public static int max(int a, int b, int c, int d) {
+		return Math.max(Math.max(a, b), Math.max(c, d));
+	}
+
+	public static int max(int... a) {
+		int max = a[0];
+		for (int i = 1; i < a.length; i++) {
+			if (a[i] > max) max = a[i];
+		}
+		return max;
 	}
 }

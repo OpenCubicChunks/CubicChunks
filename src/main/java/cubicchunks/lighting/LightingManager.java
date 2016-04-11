@@ -27,65 +27,59 @@ import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 import net.minecraft.world.World;
 
 import java.util.Set;
 
 public class LightingManager {
-	
+
 	private static final int TickBudget = 10; // ms. Only 50 ms in a tick @ 20 tps
-	
+
 	private World world;
 
-	private SkyLightUpdateProcessor skylightUpdateProcessor;
 	private SkyLightCubeDiffuseProcessor skylightCubeDiffuseProcessor;
 
 	private FirstLightProcessor firstLightProcessor;
 
-	private SkyLightUpdateCalculator skylightUpdateCalculator;
-	private SkyLightCubeDiffuseCalculator skylightCubeDiffuseCalculator;
-
 	public LightingManager(World world, ICubeCache provider) {
 		this.world = world;
-		
-		this.skylightCubeDiffuseProcessor = new SkyLightCubeDiffuseProcessor(this ,"Sky Light Diffuse", provider, 50);
-		this.skylightUpdateProcessor = new SkyLightUpdateProcessor(this, "Sky Light Update", provider, 10);
+
+		this.skylightCubeDiffuseProcessor = new SkyLightCubeDiffuseProcessor(world, "Sky Light Diffuse", provider, 5);
 
 		this.firstLightProcessor = new FirstLightProcessor("First Light", provider, 1);
-
-		this.skylightCubeDiffuseCalculator = new SkyLightCubeDiffuseCalculator();
-		this.skylightUpdateCalculator = new SkyLightUpdateCalculator();
 	}
 
-	public void columnSkylightUpdate(UpdateType type, Column column, int localX, int maxY, int localZ) {
-		columnSkylightUpdate(type, column, localX, Integer.MIN_VALUE, maxY, localZ);
-	}
 	public void columnSkylightUpdate(UpdateType type, Column column, int localX, int minY, int maxY, int localZ) {
 		int blockX = Coords.localToBlock(column.getX(), localX);
 		int blockZ = Coords.localToBlock(column.getZ(), localZ);
-		switch(type) {
+		switch (type) {
 			case IMMEDIATE:
-				Set<Integer> toDiffuse = skylightUpdateCalculator.calculate(column, localX, localZ, minY, maxY);
-				for(int y : toDiffuse)
-					skylightCubeDiffuseCalculator.calculate(column, localX, localZ, y);
-				break;
-			case IMMEDIATE_UPDATE_QUEUED_DIFFUSE:
-				toDiffuse = skylightUpdateCalculator.calculate(column, localX, localZ, minY, maxY);
-				for(int y : toDiffuse) {
-					SkyLightCubeDiffuseProcessor.Entry entry = new SkyLightCubeDiffuseProcessor.Entry(blockX, blockZ, y);
-					skylightCubeDiffuseProcessor.add(entry);
+				Set<Integer> toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
+				for (int cubeY : toDiffuse) {
+					boolean success = SkyLightCubeDiffuseCalculator.calculate(column, localX, localZ, cubeY);
+					if(!success) {
+						CubicChunks.LOGGER.warn("Diffuse lighting update at ({}, {}/{}, {}): needed cubes not loaded. Adding to queue.",
+								Coords.localToBlock(column.getX(), localX),
+								Coords.cubeToMinBlock(cubeY), Coords.cubeToMaxBlock(cubeY),
+								Coords.localToBlock(column.getZ(), localZ));
+						queueDiffuseUpdate(column.getCube(cubeY), blockX, blockZ, minY, maxY);
+					}
 				}
 				break;
 			case QUEUED:
-				skylightUpdateProcessor.add(new SkyLightUpdateProcessor.Entry(blockX, blockZ, minY, maxY));
+				toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
+				for (int cubeY : toDiffuse) {
+					queueDiffuseUpdate(column.getCube(cubeY), blockX, blockZ, minY, maxY);
+				}
 				break;
 		}
 	}
-	
+
 	public void tick() {
 		long timeStart = System.currentTimeMillis();
 		long timeStop = timeStart + TickBudget;
-		
+
 		// process the queues
 		int numProcessed = 0;
 		//this.world.profiler.addSection("skyLightOcclusion");
@@ -93,7 +87,6 @@ public class LightingManager {
 		//this.world.profiler.startSection("firstLight");
 		numProcessed += this.firstLightProcessor.processQueueUntil(timeStop);
 		//this.world.profiler.endSection();
-		numProcessed += this.skylightUpdateProcessor.processQueueUntil(timeStop);
 
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
@@ -101,20 +94,14 @@ public class LightingManager {
 			CubicChunks.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isRemote ? "CLIENT" : "SERVER", numProcessed, timeDiff));
 			CubicChunks.LOGGER.info(this.skylightCubeDiffuseProcessor.getProcessingReport());
 			CubicChunks.LOGGER.info(this.firstLightProcessor.getProcessingReport());
-			CubicChunks.LOGGER.info(this.skylightUpdateProcessor.getProcessingReport());
 		}
 	}
 
-	SkyLightUpdateCalculator getSkylightUpdateCalculator() {
-		return skylightUpdateCalculator;
-	}
+	public void queueDiffuseUpdate(Cube cube, int blockX, int blockZ, int minY, int maxY) {
 
-	SkyLightCubeDiffuseCalculator getSkylightCubeDiffuseCalculator() {
-		return skylightCubeDiffuseCalculator;
-	}
-
-	SkyLightCubeDiffuseProcessor getSkylightCubeDiffuseProcessor() {
-		return skylightCubeDiffuseProcessor;
+		Cube.LightUpdateData data = cube.getLightUpdateData();
+		data.add(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ), minY, maxY);
+		skylightCubeDiffuseProcessor.add(cube.getAddress());
 	}
 
 	public void queueFirstLightCalculation(long cubeAddress) {
@@ -122,6 +109,6 @@ public class LightingManager {
 	}
 
 	public enum UpdateType {
-		IMMEDIATE, IMMEDIATE_UPDATE_QUEUED_DIFFUSE, QUEUED
+		IMMEDIATE, QUEUED
 	}
 }

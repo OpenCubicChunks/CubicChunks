@@ -28,7 +28,6 @@ import cubicchunks.util.ArrayBatchedQueue;
 import cubicchunks.util.Progress;
 import cubicchunks.world.ICubeCache;
 
-import java.util.Collection;
 import java.util.Set;
 
 public abstract class QueueProcessor<T> {
@@ -57,11 +56,10 @@ public abstract class QueueProcessor<T> {
 	}
 	
 	public void add(T address) {
+		if(address == null) {
+			throw new NullPointerException();
+		}
 		this.queue.add(address);
-	}
-	
-	public void addAll(Collection<T> addresses) {
-		this.queue.addAll(addresses);
 	}
 	
 	public int getNumInQueue() {

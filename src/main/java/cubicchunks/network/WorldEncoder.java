@@ -24,11 +24,9 @@
 package cubicchunks.network;
 
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.ArrayConverter;
 import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.OpacityIndex;
-import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -36,7 +34,6 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 
 public class WorldEncoder {
@@ -115,7 +112,7 @@ public class WorldEncoder {
 			in.read(heightmaps);
 			ClientOpacityIndex coi = ((ClientOpacityIndex)cube.getColumn().getOpacityIndex());
 			coi.setData(heightmaps);
-			cube.initialClientSkylight();
+			//cube.initialClientSkylight();
 			storage.removeInvalidBlocks();
 		}
 	}

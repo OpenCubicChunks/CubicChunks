@@ -32,45 +32,57 @@ import net.minecraft.world.World;
 
 class SkyLightCubeDiffuseCalculator {
 
-	private final MutableBlockPos pos = new MutableBlockPos();
+	//world.checkLightFor needs 17 but we also update neighbor blocks - so it needs to be 18
+	private static final int LOADED_BLOCKS_MIN_RADIUS = 18;
 
-	boolean calculate(Column column, int localX, int localZ, int cubeY) {
+	private static final MutableBlockPos pos = new MutableBlockPos();
+
+	private SkyLightCubeDiffuseCalculator() {
+		throw new RuntimeException();
+	}
+
+	static boolean calculate(Column column, int localX, int localZ, int cubeY) {
+		return calculate(column, localX, localZ, cubeY, 0, 15);
+	}
+
+	static boolean calculate(Column column, int localX, int localZ, int cubeY, int minYLocal, int maxYLocal) {
 		if(column instanceof BlankColumn || column.getCube(cubeY) == null) {
 			return true;
 		}
 		// update this block and its xz neighbors
 		int blockX = Coords.localToBlock(column.xPosition, localX);
+		int minY = Coords.localToBlock(cubeY, minYLocal);
+		int maxY = Coords.localToBlock(cubeY, maxYLocal);
 		int blockZ = Coords.localToBlock(column.zPosition, localZ);
 
 		World world = column.getWorld();
 
-		int minY = Coords.cubeToMinBlock(cubeY);
-		int maxY = Coords.cubeToMaxBlock(cubeY);
+		//check at mincube Y and max cube Y
 		pos.setBlockPos(blockX, minY, blockZ);
-		if(!world.isAreaLoaded(pos, 18, false)) {
+		if(!world.isAreaLoaded(pos, LOADED_BLOCKS_MIN_RADIUS, false)) {
 			return false;
 		}
 		pos.y = maxY;
-		if(!world.isAreaLoaded(pos, 18, false)) {
+		if(!world.isAreaLoaded(pos, LOADED_BLOCKS_MIN_RADIUS, false)) {
 			return false;
 		}
 
 		boolean updated = true;
-		updated &= diffuseSkyLightForBlockColumn(world, blockX - 1, blockZ, cubeY);
-		updated &= diffuseSkyLightForBlockColumn(world, blockX + 1, blockZ, cubeY);
-		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ - 1, cubeY);
-		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ + 1, cubeY);
-		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ, cubeY);
+		updated &= diffuseSkyLightForBlockColumn(world, blockX - 1, blockZ, minY, maxY);
+		updated &= diffuseSkyLightForBlockColumn(world, blockX + 1, blockZ, minY, maxY);
+		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ - 1, minY, maxY);
+		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ + 1, minY, maxY);
+		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ, minY, maxY);
 
 		assert updated;
 		column.setModified(true);
 		return true;
 	}
 
-	private boolean diffuseSkyLightForBlockColumn(World world, int blockX, int blockZ, int cubeY) {
+	private static boolean diffuseSkyLightForBlockColumn(World world, int blockX, int blockZ, int minY, int maxY) {
 		boolean ok = true;
-		for (int y = 0; y < 16; y++) {
-			pos.setBlockPos(blockX, y + cubeY * 16, blockZ);
+		for (int y = minY; y <= maxY; y++) {
+			pos.setBlockPos(blockX, y, blockZ);
 			ok &= world.checkLightFor(EnumSkyBlock.SKY, pos);
 		}
 		return ok;
