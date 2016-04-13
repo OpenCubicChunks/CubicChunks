@@ -25,6 +25,7 @@ package cubicchunks.world;
 
 import com.google.common.base.Throwables;
 import cubicchunks.world.column.Column;
+import net.minecraft.block.state.IBlockState;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -49,7 +50,8 @@ public class ClientOpacityIndex implements IOpacityIndex {
 
 	@Override
 	public int getOpacity(int localX, int blockY, int localZ) {
-		return chunk.getBlock(localX, blockY, localZ).getLightOpacity();
+		IBlockState state = chunk.getBlockState(localX, blockY ,localZ);
+		return state.getLightOpacity();
 	}
 
 	@Override

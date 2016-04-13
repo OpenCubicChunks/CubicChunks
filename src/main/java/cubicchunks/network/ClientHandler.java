@@ -37,9 +37,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.network.INetHandler;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.IChatComponent;
 import net.minecraft.util.IThreadListener;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.WorldProviderSurface;
 
 public class ClientHandler implements INetHandler {
@@ -54,7 +54,7 @@ public class ClientHandler implements INetHandler {
 	}
 	
 	@Override
-	public void onDisconnect(IChatComponent chat) {
+	public void onDisconnect(ITextComponent chat) {
 		// nothing to do
 	}
 	

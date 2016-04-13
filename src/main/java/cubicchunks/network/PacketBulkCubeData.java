@@ -26,11 +26,13 @@ package cubicchunks.network;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.List;
 
 
@@ -39,57 +41,66 @@ public class PacketBulkCubeData implements IMessage {
 	public long[] columnAddresses;
 	public long[] cubeAddresses;
 	public byte[] data;
-	private DataInputStream m_in;
+	private PacketBuffer in;
 
 	//this constructor must be there to instantiate packet via reflection
-	public PacketBulkCubeData() {}
-	
+	public PacketBulkCubeData() {
+	}
+
 	public PacketBulkCubeData(List<Column> columns, List<Cube> cubes) {
-		
+
 		if (columns.size() > 255) {
 			throw new IllegalArgumentException("Don't send more than 255 columns at a time!");
 		}
 		if (cubes.size() > 255) {
 			throw new IllegalArgumentException("Don't send more than 255 cubes at a time!");
 		}
-		
+
 		// save the addresses
 		columnAddresses = new long[columns.size()];
-		for (int i=0; i<columns.size(); i++) {
+		for (int i = 0; i < columns.size(); i++) {
 			columnAddresses[i] = columns.get(i).getAddress();
 		}
 		cubeAddresses = new long[cubes.size()];
-		for (int i=0; i<cubes.size(); i++) {
+		for (int i = 0; i < cubes.size(); i++) {
 			cubeAddresses[i] = cubes.get(i).getAddress();
 		}
-		
-		try {
-			
-			// encode the cubes and columns
-			ByteArrayOutputStream buf = new ByteArrayOutputStream();
-			try (DataOutputStream out = new DataOutputStream(buf)) {
-				for (Column column : columns) {
-					WorldEncoder.encodeColumn(out, column);
-				}
-				for (Cube cube : cubes) {
-					WorldEncoder.encodeCube(out, cube);
-				}
-			}
-			data = buf.toByteArray();
 
+		try {
+
+			this.data = new byte[getDataSize(columns, cubes)];
+			// encode the cubes and columns
+			PacketBuffer buf = new PacketBuffer(createByteBufForWrite(this.data));
+			for (Column column : columns) {
+				WorldEncoder.encodeColumn(buf, column);
+			}
+			for (Cube cube : cubes) {
+				WorldEncoder.encodeCube(buf, cube);
+			}
 		} catch (IOException ex) {
 			// writing to byte arrays doesn't throw exceptions... Java is dumb sometimes
 			throw new Error(ex);
 		}
 	}
 
-	public void startDecoding() {
-		m_in = new DataInputStream(new ByteArrayInputStream(data));
+	private int getDataSize(List<Column> columns, List<Cube> cubes) {
+		int size = 0;
+		for (Column column : columns) {
+			size += WorldEncoder.getEncodedSize(column);
+		}
+		for (Cube cube : cubes) {
+			size += WorldEncoder.getEncodedSize(cube);
+		}
+		return size;
 	}
-	
+
+	public void startDecoding() {
+		in = new PacketBuffer(createByteBufForRead(data));
+	}
+
 	public void decodeNextColumn(Column column) {
 		try {
-			WorldEncoder.decodeColumn(m_in, column);
+			WorldEncoder.decodeColumn(in, column);
 		} catch (IOException ex) {
 			// if you saw this exception, you're probably not using the decode functions correctly
 			throw new Error(ex);
@@ -98,31 +109,25 @@ public class PacketBulkCubeData implements IMessage {
 
 	public void decodeNextCube(Cube cube) {
 		try {
-			WorldEncoder.decodeCube(m_in, cube);
+			WorldEncoder.decodeCube(in, cube);
 		} catch (IOException ex) {
 			// if you saw this exception, you're probably not using the decode functions correctly
 			throw new Error(ex);
 		}
 	}
-	
+
 	public void finishDecoding() {
-		try {
-			m_in.close();
-		} catch (IOException ex) {
-			// if you saw this exception, you're probably not using the decode functions correctly
-			throw new Error(ex);
-		}
-		m_in = null;
+		in = null;
 	}
 
 	@Override
 	public void fromBytes(ByteBuf in) {
 		cubeAddresses = new long[in.readUnsignedByte()];
-		for (int i=0; i<cubeAddresses.length; i++) {
+		for (int i = 0; i < cubeAddresses.length; i++) {
 			cubeAddresses[i] = in.readLong();
 		}
 		columnAddresses = new long[in.readUnsignedByte()];
-		for (int i=0; i<columnAddresses.length; i++) {
+		for (int i = 0; i < columnAddresses.length; i++) {
 			columnAddresses[i] = in.readLong();
 		}
 		data = new byte[in.readInt()];
@@ -132,15 +137,27 @@ public class PacketBulkCubeData implements IMessage {
 	@Override
 	public void toBytes(ByteBuf out) {
 		out.writeByte(cubeAddresses.length);
-		for (int i=0; i<cubeAddresses.length; i++) {
+		for (int i = 0; i < cubeAddresses.length; i++) {
 			out.writeLong(cubeAddresses[i]);
 		}
 		out.writeByte(columnAddresses.length);
-		for (int i=0; i<columnAddresses.length; i++) {
+		for (int i = 0; i < columnAddresses.length; i++) {
 			out.writeLong(columnAddresses[i]);
 		}
 		out.writeInt(data.length);
 		out.writeBytes(data);
+	}
+
+	private static ByteBuf createByteBufForWrite(byte[] data) {
+		ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
+		bytebuf.writerIndex(0);
+		return bytebuf;
+	}
+
+	private static ByteBuf createByteBufForRead(byte[] data) {
+		ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
+		bytebuf.readerIndex(0);
+		return bytebuf;
 	}
 
 	public static class Handler extends AbstractClientMessageHandler<PacketBulkCubeData> {

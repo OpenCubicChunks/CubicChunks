@@ -65,6 +65,7 @@ public class ReflectionUtil {
 	}
 
 	public static final void removeFinalModifier(Field f) {
+		f.setAccessible(true);
 		int mod = f.getModifiers();
 		mod = mod & ~Modifier.FINAL;
 		Field modifiersField = null;

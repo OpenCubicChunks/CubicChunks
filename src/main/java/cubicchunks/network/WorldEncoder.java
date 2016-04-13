@@ -24,21 +24,19 @@
 package cubicchunks.network;
 
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.util.ArrayConverter;
 import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 
 public class WorldEncoder {
 	
-	public static void encodeCube(DataOutputStream out, Cube cube)
+	public static void encodeCube(PacketBuffer out, Cube cube)
 	throws IOException {
 		
 		// 1. emptiness
@@ -48,39 +46,39 @@ public class WorldEncoder {
 			ExtendedBlockStorage storage = cube.getStorage();
 			
 			// 2. block IDs and metadata
-			out.write(ArrayConverter.toByteArray(storage.getData()));
+			storage.getData().write(out);
 
 			// 3. block light
-			out.write(storage.getBlocklightArray().getData());
+			out.writeBytes(storage.getBlocklightArray().getData());
 			
 			if (!cube.getWorld().provider.getHasNoSky()) {
 				// 4. sky light
-				out.write(storage.getSkylightArray().getData());
+				out.writeBytes(storage.getSkylightArray().getData());
 			}
 
 			// 5. heightmap and bottom-block-y. Each non-empty cube has a chance to update this data.
 			// trying to keep track of when it changes would be complex, so send it wil all cubes
 			byte[] heightmaps = ((OpacityIndex) cube.getColumn().getOpacityIndex()).getDataForClient();
 			assert  heightmaps.length == 256*2*4;
-			out.write(heightmaps);
+			out.writeBytes(heightmaps);
 		}
 	}
 
-	public static void encodeColumn(DataOutputStream out, Column column)
+	public static void encodeColumn(PacketBuffer out, Column column)
 	throws IOException {
 		
 		// 1. biomes
-		out.write(column.getBiomeArray());
+		out.writeBytes(column.getBiomeArray());
 	}
 
-	public static void decodeColumn(DataInputStream in, Column column)
+	public static void decodeColumn(PacketBuffer in, Column column)
 	throws IOException {
 		
 		// 1. biomes
-		in.read(column.getBiomeArray());
+		in.readBytes(column.getBiomeArray());
 	}
 
-	public static void decodeCube(DataInputStream in, Cube cube)
+	public static void decodeCube(PacketBuffer in, Cube cube)
 	throws IOException {
 			
 		// if the cube came from the server, it must be live
@@ -93,27 +91,43 @@ public class WorldEncoder {
 		if (!isEmpty) {
 			ExtendedBlockStorage storage = cube.getStorage();
 
-			// 2. block IDs and metadata
-			byte[] rawBlockIds = new byte[16*16*16*2];
-			in.read(rawBlockIds);
-
-			storage.setData(ArrayConverter.toCharArray(rawBlockIds));
+			storage.getData().read(in);
 
 			// 3. block light
-			in.read(storage.getBlocklightArray().getData());
+			in.readBytes(storage.getBlocklightArray().getData());
 			
 			if (!cube.getWorld().provider.getHasNoSky()) {
 				// 4. sky light
-				in.read(storage.getSkylightArray().getData());
+				in.readBytes(storage.getSkylightArray().getData());
 			}
 
 			// 5. heightmaps
 			byte[] heightmaps = new byte[256*2*4];
-			in.read(heightmaps);
+			in.readBytes(heightmaps);
 			ClientOpacityIndex coi = ((ClientOpacityIndex)cube.getColumn().getOpacityIndex());
 			coi.setData(heightmaps);
 			//cube.initialClientSkylight();
 			storage.removeInvalidBlocks();
 		}
+	}
+
+	public static int getEncodedSize(Column column) {
+		return column.getBiomeArray().length;
+	}
+
+	public static int getEncodedSize(Cube cube) {
+		int size = 0;
+		size++;//isEmpty
+		if(!cube.isEmpty()) {
+			ExtendedBlockStorage storage = cube.getStorage();
+			size += storage.getData().func_186018_a();//.getNumBytes();
+			size += storage.getBlocklightArray().getData().length;
+			if (!cube.getWorld().provider.getHasNoSky()) {
+				size += storage.getSkylightArray().getData().length;
+			}
+			//heightmaps
+			size += 256*2*4;
+		}
+		return size;
 	}
 }

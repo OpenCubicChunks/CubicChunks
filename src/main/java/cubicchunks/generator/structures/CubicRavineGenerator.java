@@ -26,8 +26,8 @@ package cubicchunks.generator.structures;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 import java.util.Random;
@@ -154,7 +154,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 						zDist2 = 16;
 					}
 	
-					boolean hitLiquid = scanForLiquid(cube, xDist1, xDist2, yDist1, yDist2, zDist1, zDist2, Blocks.water, Blocks.flowing_water);
+					boolean hitLiquid = scanForLiquid(cube, xDist1, xDist2, yDist1, yDist2, zDist1, zDist2, Blocks.WATER, Blocks.FLOWING_WATER);
 	
 					if (!hitLiquid) {
 						for (int x1 = xDist1; x1 < xDist2; ++x1) {
@@ -178,23 +178,23 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 									BlockPos pos = new BlockPos(x1, y1, z1);
 									Block block = cube.getBlockState(pos).getBlock();
 	
-									if (block != Blocks.stone && block != Blocks.dirt && block != Blocks.grass) {
+									if (block != Blocks.STONE && block != Blocks.DIRT && block != Blocks.GRASS) {
 										continue;
-									} else if (block == Blocks.grass) {
+									} else if (block == Blocks.GRASS) {
 										grass = true;
 									}
 									// used to place lava at the bottom of ravines if it was deep enough
 									if (y1 + yOrigin * 16 < /* 10 */0) {
 										// BUG: crash when it's lava
 										// cube.setBlockForGeneration(pos, Blocks.FLOWING_LAVA.getDefaultState());
-										cube.setBlockForGeneration(pos, Blocks.air.getDefaultState());
+										cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
 									} else {
-										cube.setBlockForGeneration(pos, Blocks.air.getDefaultState());
+										cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
 									}
 									
-									if (grass && block == Blocks.dirt) {
-										cube.setBlockForGeneration(pos, Blocks.grass.getDefaultState());
-										cube.setBlockForGeneration(pos.up(), Blocks.air.getDefaultState());
+									if (grass && block == Blocks.DIRT) {
+										cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
+										cube.setBlockForGeneration(pos.up(), Blocks.AIR.getDefaultState());
 									}
 								}
 							}

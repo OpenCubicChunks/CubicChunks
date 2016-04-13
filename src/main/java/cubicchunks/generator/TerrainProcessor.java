@@ -23,14 +23,14 @@
  */
 package cubicchunks.generator;
 
-import net.minecraft.block.Block;
-import net.minecraft.util.BlockPos;
 import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
 
 public final class TerrainProcessor extends CubeProcessor {
 	private static final String PROCESSOR_NAME = "Terrain";
@@ -67,8 +67,8 @@ public final class TerrainProcessor extends CubeProcessor {
 				for (int yRel = 0; yRel < 16; yRel++) {
 					int yAbs = Coords.localToBlock(cube.getY(), yRel);
 					BlockPos pos = new BlockPos(xRel, yRel, zRel);
-					Block block = densityField[xRel][yRel][zRel] > 0 ? Blocks.stone
-							: yAbs < seaLevel ? Blocks.water : Blocks.air;
+					Block block = densityField[xRel][yRel][zRel] > 0 ? Blocks.STONE
+							: yAbs < seaLevel ? Blocks.WATER : Blocks.AIR;
 					cube.setBlockForGeneration(pos, block.getDefaultState());
 				} // end yRel
 			} // end zRel

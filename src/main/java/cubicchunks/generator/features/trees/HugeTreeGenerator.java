@@ -27,7 +27,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.Random;
@@ -57,7 +57,7 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 		BlockPos groundPos = blockPos.down();
 		Block groundBlock = world.getBlockState(groundPos).getBlock();
 
-		if (groundBlock == Blocks.grass || groundBlock == Blocks.dirt) {
+		if (groundBlock == Blocks.GRASS || groundBlock == Blocks.DIRT) {
 			return this.tryToPlaceDirtUnderHugeTree(world, groundPos);
 		} else {
 			return false;
@@ -113,9 +113,10 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 				if (xAbs * xAbs + zAbs * zAbs <= r2 || xDist * xDist + zDist * zDist <= r2
 						|| xAbs * xAbs + zDist * zDist <= r2 || xDist * xDist + zAbs * zAbs <= r2) {
 					BlockPos newPos = blockPos.add(xAbs, 0, zAbs);
-					Material material = this.world.getBlockState(newPos).getBlock().getMaterial();
+					IBlockState state = this.world.getBlockState(newPos);
+					Material material = state.getBlock().getMaterial(state);
 
-					if (material == Material.air || material == Material.leaves) {
+					if (material == Material.AIR || material == Material.LEAVES) {
 						this.setBlockOnly(newPos, this.leafBlock);
 					}
 				}
@@ -130,9 +131,10 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 			for (int zAbs = -radius; zAbs <= radius; ++zAbs) {
 				if (xAbs * xAbs + zAbs * zAbs <= r2) {
 					BlockPos newPos = blockPos.add(xAbs, 0, zAbs);
-					Material material = this.world.getBlockState(newPos).getBlock().getMaterial();
+					IBlockState state = this.world.getBlockState(newPos);
+					Material material = state.getBlock().getMaterial(state);
 
-					if (material == Material.air || material == Material.leaves) {
+					if (material == Material.AIR || material == Material.LEAVES) {
 						this.setBlockOnly(newPos, this.leafBlock);
 					}
 				}

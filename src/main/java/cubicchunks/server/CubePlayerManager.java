@@ -42,8 +42,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.WorldServer;
 import org.apache.logging.log4j.Logger;
 
@@ -126,8 +126,8 @@ public class CubePlayerManager extends PlayerManager {
 		super(worldServer);
 		
 		this.m_worldServer = worldServer;
-		this.m_cubeCache = (ServerCubeCache)m_worldServer.theChunkProviderServer;
-		this.m_viewDistance = worldServer.getMinecraftServer().getConfigurationManager().getViewDistance();
+		this.m_cubeCache = (ServerCubeCache)m_worldServer.getChunkProvider();
+		this.m_viewDistance = worldServer.getMinecraftServer().getPlayerList().getViewDistance();
 		this.m_watchers = Maps.newTreeMap();
 		this.m_players = Maps.newTreeMap();
 	}
@@ -428,8 +428,7 @@ public class CubePlayerManager extends PlayerManager {
 		// watch entities on the columns we just sent
 		EntityTracker entityTracker = this.m_worldServer.getEntityTracker();
 		for (Column column : columnsToSend) {
-			//TODO: What does it do?
-			entityTracker.func_85172_a(player, column);
+			entityTracker.sendLeashedEntitiesInChunk(player, column);
 		}
 	}
 

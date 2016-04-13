@@ -25,11 +25,13 @@ package cubicchunks.network;
 
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import java.io.*;
+import java.io.IOException;
 
 public class PacketCubeChange implements IMessage {
 	
@@ -40,13 +42,12 @@ public class PacketCubeChange implements IMessage {
 
 	public PacketCubeChange(Cube cube) {
 		cubeAddress = cube.getAddress();
-		
+
 		try {
-			ByteArrayOutputStream buf = new ByteArrayOutputStream();
-			DataOutputStream out = new DataOutputStream(buf);
+			data = new byte[WorldEncoder.getEncodedSize(cube)];
+			PacketBuffer out = new PacketBuffer(Unpooled.wrappedBuffer(data));
+			out.writerIndex(0);
 			WorldEncoder.encodeCube(out, cube);
-			out.close();
-			data = buf.toByteArray();
 		} catch (IOException ex) {
 			// writing to byte arrays doesn't throw exceptions... Java is dumb sometimes
 			throw new Error(ex);
@@ -55,9 +56,10 @@ public class PacketCubeChange implements IMessage {
 	
 	public void decodeCube(Cube cube) {
 		try {
-			DataInputStream in = new DataInputStream(new ByteArrayInputStream(data));		
+			data = new byte[WorldEncoder.getEncodedSize(cube)];
+			PacketBuffer in = new PacketBuffer(Unpooled.wrappedBuffer(data));
+			in.readerIndex(0);
 			WorldEncoder.decodeCube(in, cube);
-			in.close();
 		} catch (IOException ex) {
 			throw new Error(ex);
 		}

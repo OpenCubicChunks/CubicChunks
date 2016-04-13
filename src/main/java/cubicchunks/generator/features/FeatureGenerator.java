@@ -24,11 +24,12 @@
 package cubicchunks.generator.features;
 
 import cubicchunks.world.cube.Cube;
-import java.util.Random;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
+
+import java.util.Random;
 
 public abstract class FeatureGenerator {
 	protected final World world;

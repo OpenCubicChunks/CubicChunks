@@ -26,8 +26,8 @@ package cubicchunks.generator.features.trees;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 
@@ -45,7 +45,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 	@Override
 	public void generateAt(Random rand, BlockPos pos, BiomeGenBase biome) {
 		Block below = getBlockState(pos.down()).getBlock();
-		if (below != Blocks.dirt && below != Blocks.grass) {
+		if (below != Blocks.DIRT && below != Blocks.GRASS) {
 			return;
 		}
 		final int trunkHeight = rand.nextInt(MAX_TRUNK_HEIGHT + 1 - MIN_TRUNK_HEIGHT) + MIN_TRUNK_HEIGHT;
@@ -112,7 +112,8 @@ public class SimpleTreeGenerator extends TreeGenerator {
 				}
 				BlockPos currentPos = pos.add(x, 0, z);
 				// don't replace wood
-				if (getBlockState(currentPos).getBlock().isOpaqueCube()) {
+				IBlockState currentState = getBlockState(currentPos);
+				if (currentState.getBlock().isOpaqueCube(currentState)) {
 					continue;
 				}
 				this.setBlockOnly(currentPos, this.leafBlock);

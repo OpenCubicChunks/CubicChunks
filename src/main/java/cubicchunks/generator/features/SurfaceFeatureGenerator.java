@@ -25,8 +25,8 @@ package cubicchunks.generator.features;
 
 import cubicchunks.util.Coords;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 
@@ -66,8 +66,11 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 	
 	protected boolean isSurfaceAt(BlockPos pos) {
 		//we don't really know if it's the top block.
-		//assume it's sirface if there is solid block with air above it
-		return getBlockState(pos.down()).getBlock().isOpaqueCube()&& getBlockState(pos).getBlock() == Blocks.air;
+		//assume it's surface if there is solid block with air above it
+		IBlockState stateBelow = getBlockState(pos.down());
+		IBlockState state = getBlockState(pos);
+
+		return stateBelow.getBlock().isOpaqueCube(stateBelow) && state.getBlock().isAir(state, world, pos);
 	}
 
 	/**

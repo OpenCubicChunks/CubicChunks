@@ -47,7 +47,7 @@ public class FeatureProcessor extends CubeProcessor {
 		this.biomeFeaturesMap = new HashMap<>();
 
 		// for now use global for all biomes
-		for (BiomeGenBase biome : BiomeGenBase.getBiomeGenArray()) {
+		for (BiomeGenBase biome : BiomeGenBase.REGISTRY) {
 			if(biome == null){
 				continue;
 			}

@@ -39,7 +39,7 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
@@ -81,7 +81,7 @@ public class CubeIO implements IThreadedFileIO {
 		// init database connection
 		LOGGER.info("Initializing db connection...");
 		
-		File file = new File(saveFile, String.format("cubes.dim%d.db", dimension.getDimensionId()));
+		File file = new File(saveFile, String.format("cubes.dim%d.db", dimension.getDimension()));
 		
 		LOGGER.info("Connected to db at ()", file);
 		
@@ -293,15 +293,11 @@ public class CubeIO implements IThreadedFileIO {
 		((OpacityIndex)column.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
 		
 		// entities
-		column.getEntityContainer().readFromNbt(nbt, "Entities", this.world, new IEntityActionListener() {
-			
-			@Override
-			public void onEntity(Entity entity) {
-				entity.addedToChunk = true;
-				entity.chunkCoordX = x;
-				entity.chunkCoordY = Coords.getCubeYForEntity(entity);
-				entity.chunkCoordZ = z;
-			}
+		column.getEntityContainer().readFromNbt(nbt, "Entities", this.world, entity -> {
+			entity.addedToChunk = true;
+			entity.chunkCoordX = x;
+			entity.chunkCoordY = Coords.getCubeYForEntity(entity);
+			entity.chunkCoordZ = z;
 		});
 		
 		return column;
@@ -386,7 +382,7 @@ public class CubeIO implements IThreadedFileIO {
 		if (nbtTileEntities != null) {
 			for (int i = 0; i < nbtTileEntities.tagCount(); i++) {
 				NBTTagCompound nbtTileEntity = nbtTileEntities.getCompoundTagAt(i);
-				TileEntity blockEntity = TileEntity.createAndLoadEntity(nbtTileEntity);
+				TileEntity blockEntity = TileEntity.createTileEntity(world.getMinecraftServer(), nbtTileEntity);
 				if (blockEntity != null) {
 					column.addTileEntity(blockEntity);
 				}
@@ -473,15 +469,20 @@ public class CubeIO implements IThreadedFileIO {
 			
 			// blocks
 			ExtendedBlockStorage storage = cube.getStorage();
-			nbt.setByteArray("Blocks", ChunkSectionHelper.getBlockLSBArray(storage));
-			NibbleArray msbArray = ChunkSectionHelper.getBlockMSBArray(storage);
-			if (msbArray != null) {
-				nbt.setByteArray("Add", msbArray.getData());
+			byte[] idLsb = new byte[4096];
+			byte[] idMsb = new byte[2048];
+			byte[] meta = new byte[2048];
+			int flags = ChunkSectionHelper.getBlockDataArray(storage, idLsb, idMsb, meta);
+			nbt.setByteArray("Blocks", idLsb);
+
+			if ((flags & ChunkSectionHelper.HAS_MSB) != 0) {
+				nbt.setByteArray("Add", idMsb);
 			}
 			
 			// metadata
-			nbt.setByteArray("Data", ChunkSectionHelper.getBlockMetaArray(storage).getData());
-			
+			if((flags & ChunkSectionHelper.HAS_META) != 0) {
+				nbt.setByteArray("Data", meta);
+			}
 			// light
 			nbt.setByteArray("BlockLight", storage.getBlocklightArray().getData());
 			if (storage.getSkylightArray() != null) {

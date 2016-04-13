@@ -21,10 +21,31 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.util;
 
-import net.minecraft.entity.Entity;
+import net.minecraft.world.chunk.IChunkGenerator;
+import net.minecraft.world.chunk.storage.IChunkLoader;
+import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
-public interface IEntityActionListener {
-	void onEntity(Entity entity);
+import java.lang.reflect.Field;
+
+public class ChunkProviderAccess {
+	private static final Field cps_chunkLoader =
+			ReflectionHelper.findField(ChunkProviderServer.class, "chunkLoader", "field_73247_e");
+	private static final Field cps_chunkGenerator =
+			ReflectionHelper.findField(ChunkProviderServer.class, "chunkGenerator", "field_186029_c");
+
+	static {
+		ReflectionUtil.removeFinalModifier(cps_chunkLoader);
+		ReflectionUtil.removeFinalModifier(cps_chunkGenerator);
+	}
+
+	public static final void setChunkLoader(ChunkProviderServer cps, IChunkLoader loader) {
+		ReflectionUtil.set(cps, cps_chunkLoader, loader);
+	}
+
+	public static final void setChunkGenerator(ChunkProviderServer cps, IChunkGenerator chunkGen) {
+		ReflectionUtil.set(cps, cps_chunkGenerator, chunkGen);
+	}
 }

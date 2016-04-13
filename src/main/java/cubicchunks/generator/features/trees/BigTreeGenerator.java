@@ -31,8 +31,8 @@ package cubicchunks.generator.features.trees;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 
@@ -180,7 +180,7 @@ public class BigTreeGenerator extends TreeGenerator {
 				} else {
 					ai1[byte2] = ai[byte2] + l1;
 					Block i2 = this.getBlockState(new BlockPos(ai1[0], ai1[1], ai1[2])).getBlock();
-					if (i2 != Blocks.air && i2 != Blocks.leaves) {
+					if (i2 != Blocks.AIR && i2 != Blocks.LEAVES) {
 						l1++;
 					} else {
 						this.setBlockOnly(new BlockPos(ai1[0], ai1[1], ai1[2]), this.leafBlock);
@@ -489,10 +489,8 @@ public class BigTreeGenerator extends TreeGenerator {
 	}
 
 	private int getMedium(int i, int j, int k) {
-		// Roots can grow through the following block types.
-		Block canGrowOpen[] = { Blocks.air, Blocks.sapling, Blocks.flowing_water, Blocks.water, Blocks.flowing_lava,
-				Blocks.lava, Blocks.log, Blocks.log2, Blocks.leaves, Blocks.leaves2 };// more to be re-added
-		Block canGrowSolid[] = { Blocks.grass, Blocks.dirt, Blocks.sand, Blocks.gravel }; // more to be re-added
+		Block canGrowOpen[] = REPLACEABLE_OPEN_BLOCKS;
+		Block canGrowSolid[] = REPLACEABLE_SOLID_BLOCKS;
 		Block qq = this.getBlockState(new BlockPos(i, j, k)).getBlock();
 		int medium = 0;
 		for (int m = 0; m < canGrowOpen.length; m++) {
@@ -905,7 +903,7 @@ public class BigTreeGenerator extends TreeGenerator {
 			ai3[byte1] = MathHelper.floor_double(ai[byte1] + j * d);
 			ai3[byte2] = MathHelper.floor_double(ai[byte2] + j * d1);
 			Block l = this.getBlockState(new BlockPos(ai3[0], ai3[1], ai3[2])).getBlock();
-			if (l != Blocks.air && l != Blocks.leaves && l != Blocks.log) {
+			if (l != Blocks.AIR && l != Blocks.LEAVES && l != Blocks.LOG) {
 				break;
 			}
 			j += byte3;
@@ -926,7 +924,7 @@ public class BigTreeGenerator extends TreeGenerator {
 		// if(basePos[1] + heightLimit >= 80) return false;
 		
 		// Can grow tree on dirt, grass, or sand...
-		if (i != Blocks.grass && i != Blocks.dirt && i != Blocks.sand) 
+		if (i != Blocks.GRASS && i != Blocks.DIRT && i != Blocks.SAND)
 		{
 			return false;
 		}

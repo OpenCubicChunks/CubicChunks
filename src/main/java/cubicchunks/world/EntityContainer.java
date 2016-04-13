@@ -31,17 +31,18 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 public class EntityContainer {
-	
+
 	private ClassInheritanceMultiMap<Entity> entities;
 	private boolean hasActiveEntities;
 	private long lastSaveTime;
-	
+
 	public EntityContainer() {
 		this.entities = new ClassInheritanceMultiMap<>(Entity.class);
 		this.hasActiveEntities = false;
@@ -71,7 +72,7 @@ public class EntityContainer {
 		for (Entity entity : this.entities) {
 
 			// handle entity exclusion
-			if(!canAddEntityExcluded(entity, excluded, queryBox, predicate));
+			if (!canAddEntityExcluded(entity, excluded, queryBox, predicate)) ;
 			out.add(entity);
 
 			// also check entity parts
@@ -95,112 +96,111 @@ public class EntityContainer {
 	}
 
 
-
-
-
-
-
-
 	public ClassInheritanceMultiMap<Entity> getEntitySet() {
 		return this.entities;
 	}
-	
+
 	public boolean hasActiveEntities() {
 		return this.hasActiveEntities;
 	}
-	
+
 	public void setHasActiveEntities(boolean val) {
 		this.hasActiveEntities = val;
 	}
-	
+
 	public void clear() {
 		this.entities.clear();
 	}
-	
+
 	public Collection<Entity> getEntities() {
 		return Collections.unmodifiableCollection(this.entities);
 	}
-	
+
 	public int size() {
 		return this.entities.size();
 	}
 
-	
+
 	public boolean needsSaving(boolean flag, long time, boolean isModified) {
-		if(flag) {
-			if(this.hasActiveEntities &&  time != lastSaveTime || isModified) {
+		if (flag) {
+			if (this.hasActiveEntities && time != lastSaveTime || isModified) {
 				return true;
 			}
-		} else if(this.hasActiveEntities && time >= this.lastSaveTime + 600) {
+		} else if (this.hasActiveEntities && time >= this.lastSaveTime + 600) {
 			return true;
 		}
 		return isModified;
 	}
-	
+
 	public void markSaved(long time) {
 		this.lastSaveTime = time;
 	}
-	
+
 	public void writeToNbt(NBTTagCompound nbt, String name) {
 		writeToNbt(nbt, name, null);
 	}
-	
+
 	public void writeToNbt(NBTTagCompound nbt, String name, IEntityActionListener listener) {
 		this.hasActiveEntities = false;
 		NBTTagList nbtEntities = new NBTTagList();
 		nbt.setTag(name, nbtEntities);
 		for (Entity entity : this.entities) {
-			
+
 			NBTTagCompound nbtEntity = new NBTTagCompound();
 			entity.writeToNBT(nbtEntity);
 			this.hasActiveEntities = true;
 			nbtEntities.appendTag(nbtEntity);
-			
+
 			if (listener != null) {
 				listener.onEntity(entity);
 			}
 		}
 	}
-	
+
+	//listener is passed from CubeIO to set chunk position
 	public void readFromNbt(NBTTagCompound nbt, String name, World world, IEntityActionListener listener) {
 		NBTTagList nbtEntities = nbt.getTagList(name, 10);
 		if (nbtEntities == null) {
 			return;
 		}
-		
+
 		for (int i = 0; i < nbtEntities.tagCount(); i++) {
 			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
-			
-			// create the entity
-			Entity entity = EntityList.createEntityFromNBT(nbtEntity, world);
-			if (entity == null) {
-				continue;
-			}
-			
-			addEntity(entity);
-			
-			if (listener != null) {
-				listener.onEntity(entity);
-			}
-			
-			// deal with riding
-			while (nbtEntity.hasKey("Riding")) {
-				
-				// create the ridden entity
-				NBTTagCompound nbtRiddenEntity = nbtEntity.getCompoundTag("Riding");
-				Entity riddenEntity = EntityList.createEntityFromNBT(nbtRiddenEntity, world);
-				if (riddenEntity == null) {
-					break;
-				}
-				
-				// RIDE THE PIG!!
-				addEntity(riddenEntity);
-				entity.mountEntity(riddenEntity);
-				
-				// point to the ridden entity and iterate
-				entity = riddenEntity;
-				nbtEntity = nbtRiddenEntity;
+			Entity entity = readEntity(nbtEntity, world, listener);
+			if (entity != null) {
+				addEntity(entity);
 			}
 		}
+	}
+
+	private Entity readEntity(NBTTagCompound nbtEntity, World world, IEntityActionListener listener) {
+
+		// create the entity
+		Entity entity = EntityList.createEntityFromNBT(nbtEntity, world);
+		if (entity == null) {
+			return null;
+		}
+
+		addEntity(entity);
+
+		if(listener != null) {
+			listener.onEntity(entity);
+		}
+		// deal with riding
+		if (nbtEntity.hasKey("Passengers", Constants.NBT.TAG_LIST)) {
+
+			NBTTagList nbttaglist = nbtEntity.getTagList("Passengers", 10);
+
+			for (int i = 0; i < nbttaglist.tagCount(); ++i)
+			{
+				Entity entity1 = readEntity(nbttaglist.getCompoundTagAt(i), world, listener);
+
+				if (entity1 != null)
+				{
+					entity1.startRiding(entity, true);
+				}
+			}
+		}
+		return entity;
 	}
 }

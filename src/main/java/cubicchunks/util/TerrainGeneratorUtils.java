@@ -23,15 +23,11 @@
  */
 package cubicchunks.util;
 
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTIONS;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.X_SECTION_SIZE;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTIONS;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Y_SECTION_SIZE;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTIONS;
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.Z_SECTION_SIZE;
-import static cubicchunks.util.Coords.CUBE_SIZE;
-import static cubicchunks.util.MathHelper.lerp;
 import cubicchunks.world.cube.Cube;
+
+import static cubicchunks.generator.terrain.GlobalGeneratorConfig.*;
+import static cubicchunks.util.Coords.CUBE_SIZE;
+import static cubicchunks.util.MathUtil.lerp;
 
 public final class TerrainGeneratorUtils {
 	/**

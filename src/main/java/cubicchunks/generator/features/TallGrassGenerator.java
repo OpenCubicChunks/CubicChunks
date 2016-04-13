@@ -23,14 +23,14 @@
  */
 package cubicchunks.generator.features;
 
-import java.util.Random;
-
 import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
+
+import java.util.Random;
 
 public class TallGrassGenerator extends SurfaceFeatureGenerator {
 	
@@ -39,7 +39,7 @@ public class TallGrassGenerator extends SurfaceFeatureGenerator {
 	public TallGrassGenerator(final World world, final BlockTallGrass.EnumType tallGrassType) {
 		super(world);
 		
-		this.block = Blocks.tallgrass.getDefaultState().withProperty(BlockTallGrass.TYPE, tallGrassType);
+		this.block = Blocks.TALLGRASS.getDefaultState().withProperty(BlockTallGrass.TYPE, tallGrassType);
 	}
 	
 	@Override
@@ -51,7 +51,7 @@ public class TallGrassGenerator extends SurfaceFeatureGenerator {
 					rand.nextInt(4) - rand.nextInt(4),
 					rand.nextInt(8) - rand.nextInt(8));
 			
-			if(world.isAirBlock(randomPos) && Blocks.tallgrass.canBlockStay(world, randomPos, block)) {
+			if(world.isAirBlock(randomPos) && Blocks.TALLGRASS.canBlockStay(world, randomPos, block)) {
 				this.setBlockOnly(randomPos, block);
 			}	
 		}

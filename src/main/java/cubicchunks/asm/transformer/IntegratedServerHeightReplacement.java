@@ -37,15 +37,21 @@ public class IntegratedServerHeightReplacement extends AbstractMethodTransformer
 	}
 
 	@Override
-	public void visitIntInsn(int opcode, int val) {
-		if (opcode == SIPUSH) {
-			super.visitVarInsn(ALOAD, 4);
-			super.visitMethodInsn(INVOKEVIRTUAL, WORLD_SETTINGS, WORLD_SETTINGS_GET_TERRAIN_TYPE, WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC, false);
-			super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMaxHeight", WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC, false);
-			this.setSuccessful();
-			return;
-		}
-		super.visitIntInsn(opcode, val);
+	public void visitEnd() {
+		//load this
+		super.visitVarInsn(ALOAD, 0);
+
+		//load WorldSettings argument
+		super.visitVarInsn(ALOAD, 4);
+		//worldSettings.getTerrainType
+		super.visitMethodInsn(INVOKEVIRTUAL, WORLD_SETTINGS, WORLD_SETTINGS_GET_TERRAIN_TYPE, WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC, false);
+		//WorldMethods.getMaxHeight
+		super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMaxHeight", WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC, false);
+
+		//stack contains: this, maxHeight
+		//this.setBuildLimit();
+		super.visitMethodInsn(INVOKEVIRTUAL, MINECRAFT_SERVER, MINECRAFT_SERVER_SET_BUILD_LIMIT, "(I)V", false);
+		this.setSuccessful();
 	}
 
 }

@@ -28,17 +28,16 @@ import cubicchunks.CubicChunks;
 import cubicchunks.generator.ColumnGenerator;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.ChunkProviderAccess;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.IProgressUpdate;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.gen.ChunkProviderServer;
 import org.apache.logging.log4j.Logger;
 
@@ -69,11 +68,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		this.columnGenerator = new ColumnGenerator(worldServer);
 		this.loadedColumns = Maps.newHashMap();
 		this.blankColumn = new BlankColumn(worldServer, 0, 0);
-		this.cubesToUnload = new ArrayDeque<Long>();
+		this.cubesToUnload = new ArrayDeque<>();
 
 		//set vanilla fields
-		super.chunkLoader = new AnvilChunkLoader(worldServer.getSaveHandler().getWorldDirectory());
-		super.serverChunkGenerator = null;//todo: fixit
+		ChunkProviderAccess.setChunkGenerator(this, null);
+		ChunkProviderAccess.setChunkLoader(this, worldServer.getSaveHandler().getChunkLoader(worldObj.provider));
 	}
 
 	@Override
@@ -234,7 +233,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			column.onChunkLoad();
 		}
 		column.setTerrainPopulated(true);
-		column.resetPrecipitationHeight();
+		//column.resetPrecipitationHeight();
 
 		// init the cube
 		cube.onLoad();
@@ -318,11 +317,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 
 	public void saveAllChunks() {
-		saveChunks(true, null);
+		saveChunks(true);
 	}
 
 	@Override
-	public boolean saveChunks(boolean alwaysTrue, IProgressUpdate progress) {
+	public boolean saveChunks(boolean alwaysTrue) {
 
 		for (Column column : this.loadedColumns.values()) {
 			// save the column

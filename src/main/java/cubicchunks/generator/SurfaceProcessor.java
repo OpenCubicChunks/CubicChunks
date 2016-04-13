@@ -99,7 +99,7 @@ public class SurfaceProcessor extends CubeProcessor {
 
 	private BiomeGenBase[] getCubeBiomeMap(final Cube cube) {
 		// generate biome info. This is a hackjob.
-		return cube.getWorld().provider.getWorldChunkManager().loadBlockGeneratorData(this.biomes, Coords.cubeToMinBlock(cube.getX()),
+		return cube.getWorld().provider.getBiomeProvider().loadBlockGeneratorData(this.biomes, Coords.cubeToMinBlock(cube.getX()),
 				Coords.cubeToMinBlock(cube.getZ()), 16, 16);
 	}
 

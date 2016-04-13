@@ -40,7 +40,7 @@ public class ColumnGenerator {
 	public Column generateColumn(int cubeX, int cubeZ) {
 		
 		// generate biome info. This is a hackjob.
-		this.m_biomes = this.m_worldServer.provider.getWorldChunkManager().loadBlockGeneratorData(
+		this.m_biomes = this.m_worldServer.provider.getBiomeProvider().loadBlockGeneratorData(
 			this.m_biomes,
 			Coords.cubeToMinBlock(cubeX), 
 			Coords.cubeToMinBlock(cubeZ),

@@ -28,62 +28,22 @@ import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 public class ChunkSectionHelper {
-	
-	public static byte[] getBlockLSBArray(ExtendedBlockStorage storage) {
-		byte[] out = new byte[16 * 16 * 16];
-		
-		char[] data = storage.getData();
-		for (int i = 0; i<data.length; i++) {
-			final int val = data[i];
-			
-			// lowest 4 bits are metadata, so shift them off
-			// take the next 8 bits as block id LSBs
-			out[i] = (byte)((val >> 4) & 0xff);
+	public static final int HAS_MSB = 1<<0;
+	public static final int HAS_META = 1<<1;
+
+	public static int getBlockDataArray(ExtendedBlockStorage storage, byte[] idLSB, byte[] idMSB, byte[] metadata) {
+		NibbleArray metadataNibble = new NibbleArray();
+		NibbleArray idMSBNibble = storage.getData().getDataForNBT(idLSB, metadataNibble);
+		int retFlags = 0;
+		if(idMSBNibble != null) {
+			System.arraycopy(idMSBNibble.getData(), 0, idMSB, 0, idMSB.length);
+			retFlags |= HAS_MSB;
 		}
-		
-		return out;
-	}
-	
-	public static NibbleArray getBlockMSBArray(ExtendedBlockStorage storage) {
-		NibbleArray out = null;
-		
-		char[] data = storage.getData();
-		for (int i = 0; i<data.length; i++) {
-			final int val = data[i];
-			
-			// do we have high bits?
-			if (val >> 12 != 0) {
-				if (out == null) {
-					out = new NibbleArray();
-				}
-				int x = i & 0xf;
-				int y = (i >> 8) & 0xf;
-				int z = (i >> 4) & 0xf;
-				
-				// the 4 high bits are block id MSBs
-				out.set(x, y, z, val >> 12);
-			}
+		if(metadataNibble != null) {
+			System.arraycopy(metadataNibble.getData(), 0, metadata, 0, metadata.length);
+			retFlags |= HAS_META;
 		}
-		
-		return out;
-	}
-	
-	public static NibbleArray getBlockMetaArray(ExtendedBlockStorage storage) {
-		NibbleArray out = new NibbleArray();
-		
-		char[] data = storage.getData();
-		for (int i = 0; i<data.length; i++) {
-			final int val = data[i];
-			
-			int x = i & 0xf;
-			int y = (i >> 8) & 0xf;
-			int z = (i >> 4) & 0xf;
-			
-			// the 4 low bits are metadata
-			out.set(x, y, z, val & 0xf);
-		}
-		
-		return out;
+		return retFlags;
 	}
 
 	public static void setBlockStates(ExtendedBlockStorage chunkSection, byte[] blockIdLsbs, NibbleArray blockIdMsbs, NibbleArray blockMetadata) {
@@ -105,29 +65,6 @@ public class ChunkSectionHelper {
 			int z = (i >> 4) & 0xf;
 			chunkSection.set(x, y, z, block.getStateFromMeta(meta));
 		}
-	}
-	
-	public static byte[] getBlockIDArray(final ExtendedBlockStorage storage) {
-		final char[] data = storage.getData();
-		byte[] out = new byte[16 * 16 * 16 * 2];
-
-		int byteIndex;
-		int charIndex;
-
-		charIndex = byteIndex = 0;
-
-		for (; charIndex < data.length;) {
-			// shift off the metadata
-			final int val = (data[charIndex] >> 4);
-			
-			out[byteIndex] = (byte)(val & 0xff);
-			out[byteIndex + 1] = (byte)(val >> 8);
-
-			charIndex += 1;
-			byteIndex += 2;
-		}
-
-		return out;
 	}
 
 	public static int[] byteArrayToIntArray(final byte[] in) {

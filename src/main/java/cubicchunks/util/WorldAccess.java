@@ -23,24 +23,17 @@
  */
 package cubicchunks.util;
 
-import java.lang.reflect.Field;
-import java.util.Set;
-import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
+import java.lang.reflect.Field;
+
 public class WorldAccess {
-	private static final Field w_activeChunkSet = ReflectionHelper.findField(World.class, "activeChunkSet", "field_72993_I");
-	private static final Field w_chunkProvider = ReflectionUtil.findFieldNonStatic(World.class, IChunkProvider.class);
+	private static final Field w_chunkProvider = ReflectionHelper.findField(World.class, "chunkProvider", "field_73020_y");
 	
 	static {
-		w_activeChunkSet.setAccessible(true);
 		w_chunkProvider.setAccessible(true);
-	}
-	
-	public static final Set<ChunkCoordIntPair> getActiveChunkSet(World world) {
-		return ReflectionUtil.get(world, w_activeChunkSet, Set.class);
 	}
 
 	public static void setChunkProvider(World w, IChunkProvider chunkProvider) {

@@ -25,42 +25,43 @@ package cubicchunks.generator.features.trees;
 
 import cubicchunks.generator.features.SurfaceFeatureGenerator;
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.BlockPos;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public abstract class TreeGenerator extends SurfaceFeatureGenerator {
-	
-	private static final Block[] REPLACABLE_OPEN_BLOCKS = { Blocks.air, Blocks.sapling, Blocks.flowing_water, Blocks.water, Blocks.flowing_lava,
-		Blocks.lava, Blocks.log, Blocks.log2, Blocks.leaves, Blocks.leaves2 };
-	
-	private static final Block[] REPLACABLE_SOLID_BLOCKS = { Blocks.grass, Blocks.dirt, Blocks.sand, Blocks.gravel };
-	
+
+	static final Block[] REPLACEABLE_OPEN_BLOCKS = {
+			Blocks.AIR, Blocks.SAPLING, Blocks.FLOWING_WATER, Blocks.WATER, Blocks.FLOWING_LAVA,
+			Blocks.LAVA, Blocks.LOG, Blocks.LOG2, Blocks.LEAVES, Blocks.LEAVES2};
+
+	static final Block[] REPLACEABLE_SOLID_BLOCKS = {
+			Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL};
+
 	protected static boolean canReplaceBlockDefault(final Block blockToCheck) {
-		return canReplace(blockToCheck, REPLACABLE_OPEN_BLOCKS) || canReplace(blockToCheck, REPLACABLE_SOLID_BLOCKS);
+		return canReplace(blockToCheck, REPLACEABLE_OPEN_BLOCKS) || canReplace(blockToCheck, REPLACEABLE_SOLID_BLOCKS);
 	}
-	
-	protected static boolean canReplace(final Block blockToCheck, final Block[] blockArray) {
-		final Material blockMaterial = blockToCheck.getMaterial();
-		
-		for(Block block : blockArray){
-				if(blockMaterial == block.getMaterial()){
-					return true;
-				}
+
+	protected static boolean canReplace(final Block blockToCheck, final Block[] allowedBlocks) {
+		for (Block block : allowedBlocks) {
+			if (blockToCheck == block) {
+				return true;
+			}
 		}
 		return false;
 	}
-	
+
 	protected static boolean canReplaceWithLeaves(final Block blockToCheck) {
-		final Material blockMaterial = blockToCheck.getMaterial();
-		return blockMaterial == Material.air || blockMaterial == Material.leaves;
+		//TODO: fix canReplaceWithLeaves
+		final Material blockMaterial = blockToCheck.getMaterial(blockToCheck.getDefaultState());
+		return blockMaterial == Material.AIR || blockMaterial == Material.LEAVES;
 	}
 
 	protected static boolean canReplaceWithWood(final Block blockToCheck) {
-		return blockToCheck == Blocks.grass || blockToCheck == Blocks.dirt || blockToCheck == Blocks.log
-				|| blockToCheck == Blocks.log2 || blockToCheck == Blocks.sapling || blockToCheck == Blocks.vine;
+		return blockToCheck == Blocks.GRASS || blockToCheck == Blocks.DIRT || blockToCheck == Blocks.LOG
+				|| blockToCheck == Blocks.LOG2 || blockToCheck == Blocks.SAPLING || blockToCheck == Blocks.VINE;
 	}
 
 	protected final IBlockState woodBlock;
@@ -73,8 +74,8 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 	}
 
 	protected boolean tryToPlaceDirtUnderTree(final World world, final BlockPos blockPos) {
-		if (world.getBlockState(blockPos).getBlock() != Blocks.dirt) {
-			return this.setBlockOnly(blockPos, Blocks.dirt.getDefaultState());
+		if (world.getBlockState(blockPos).getBlock() != Blocks.DIRT) {
+			return this.setBlockOnly(blockPos, Blocks.DIRT.getDefaultState());
 		} else {
 			// it's already dirt, so just say it was placed successfully
 			return true;

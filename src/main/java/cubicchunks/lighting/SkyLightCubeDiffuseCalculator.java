@@ -26,6 +26,7 @@ package cubicchunks.lighting;
 import cubicchunks.util.Coords;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 
@@ -34,7 +35,7 @@ class SkyLightCubeDiffuseCalculator {
 	//world.checkLightFor needs 17 but we also update neighbor blocks - so it needs to be 18
 	private static final int LOADED_BLOCKS_MIN_RADIUS = 18;
 
-	private static final MutableBlockPos pos = new MutableBlockPos();
+	private static final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
 	private SkyLightCubeDiffuseCalculator() {
 		throw new RuntimeException();
@@ -57,11 +58,11 @@ class SkyLightCubeDiffuseCalculator {
 		World world = column.getWorld();
 
 		//check at mincube Y and max cube Y
-		pos.setBlockPos(blockX, minY, blockZ);
+		pos.set(blockX, minY, blockZ);
 		if(!world.isAreaLoaded(pos, LOADED_BLOCKS_MIN_RADIUS, false)) {
 			return false;
 		}
-		pos.y = maxY;
+		pos.setY(maxY);
 		if(!world.isAreaLoaded(pos, LOADED_BLOCKS_MIN_RADIUS, false)) {
 			return false;
 		}
@@ -81,7 +82,7 @@ class SkyLightCubeDiffuseCalculator {
 	private static boolean diffuseSkyLightForBlockColumn(World world, int blockX, int blockZ, int minY, int maxY) {
 		boolean ok = true;
 		for (int y = minY; y <= maxY; y++) {
-			pos.setBlockPos(blockX, y, blockZ);
+			pos.set(blockX, y, blockZ);
 			ok &= world.checkLightFor(EnumSkyBlock.SKY, pos);
 		}
 		return ok;

@@ -23,18 +23,17 @@
  */
 package cubicchunks.world.biome;
 
-import java.util.Random;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.BlockPos;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.BiomeGenBase;
+
+import java.util.Random;
 
 public class BiomeBlockReplacer {
 
@@ -78,7 +77,7 @@ public class BiomeBlockReplacer {
 		// Biome blocks depth in current block column. 0 for negative values.
 		final int depth = (int) (depthNoiseValue / 3.0D + 3.0D + this.rand.nextDouble() * 0.25D);
 
-		MutableBlockPos pos = new MutableBlockPos();
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
 		/*
 		 * Default BuildDepth is 8,388,608. the Earth has a radius of ~6,378,100m. Not too far off. Let's make this
@@ -87,30 +86,31 @@ public class BiomeBlockReplacer {
 		 * - 5150km to 6360km - apparently, the innermost sections of the core could be a plasma! Crazy!
 		 */
 		for (int yAbs = this.top; yAbs >= this.bottom; --yAbs) {
-			pos.setBlockPos(xAbs, yAbs, zAbs);
+			pos.set(xAbs, yAbs, zAbs);
 			
 			boolean canSetBlock = yAbs <= this.alterationTop;
 			
 			if (yAbs <= ((AddressTools.MinY + 64) << 4) + this.rand.nextInt(16)) {
 				if (canSetBlock) {
-					setBlock(this.cube, pos, Blocks.bedrock.getDefaultState());
+					setBlock(this.cube, pos, Blocks.BEDROCK.getDefaultState());
 				}
 			} else if (yAbs < -32768 + this.rand.nextInt(256)) {
 				if (canSetBlock) {
-					setBlock(this.cube, pos, Blocks.lava.getDefaultState());
+					setBlock(this.cube, pos, Blocks.LAVA.getDefaultState());
 				}
 			} else {
 				// Current block
 				final Block block = getBlock(this.cube, this.cubeAbove, pos);
 	
 				// Set numBlocksToChange to -1 when we reach air, skip everything else
-				if (block == null || block.getMaterial() == Material.air) {
+				//TODO: check block material for AIR
+				if (block == null || block == Blocks.AIR) {
 					blocksToChange = -1;
 					continue;
 				}
 	
 				// Do not replace any blocks except already replaced and stone
-				if (block != Blocks.stone && block != this.surfaceBlock && block != this.groundBlock && block != Blocks.sandstone) {
+				if (block != Blocks.STONE && block != this.surfaceBlock && block != this.groundBlock && block != Blocks.SANDSTONE) {
 					continue;
 				}
 	
@@ -118,8 +118,8 @@ public class BiomeBlockReplacer {
 				if (blocksToChange == -1) {
 					// If depth is <= 0 - only stone
 					if (depth <= 0) {
-						this.surfaceBlock = Blocks.air.getDefaultState();
-						this.groundBlock = Blocks.stone.getDefaultState();
+						this.surfaceBlock = Blocks.AIR.getDefaultState();
+						this.groundBlock = Blocks.STONE.getDefaultState();
 					}
 					// If we are above or at 4 block under water and at or below one block above water
 					else if (yAbs >= this.seaLevel - 4 && yAbs <= this.seaLevel + 1) {
@@ -129,12 +129,13 @@ public class BiomeBlockReplacer {
 					}
 	
 					// If top block is air and we are below sea level use water instead
-					if (yAbs < this.seaLevel && (this.surfaceBlock == null || this.surfaceBlock.getBlock().getMaterial() == Material.air)) {
+					//TODO: check material for AIR
+					if (yAbs < this.seaLevel && (this.surfaceBlock == null || this.surfaceBlock.getBlock() == Blocks.AIR)) {
 						if (this.baseBiome.getFloatTemperature(pos) < 0.15F) {
 							// or ice if it's cold
-							this.surfaceBlock = Blocks.ice.getDefaultState();
+							this.surfaceBlock = Blocks.ICE.getDefaultState();
 						} else {
-							this.surfaceBlock = Blocks.water.getDefaultState();
+							this.surfaceBlock = Blocks.WATER.getDefaultState();
 						}
 					}
 	
@@ -142,8 +143,8 @@ public class BiomeBlockReplacer {
 					blocksToChange = depth;
 					
 					if (yAbs < this.seaLevel - 7 - depth) {
-						this.surfaceBlock = Blocks.air.getDefaultState();
-						this.groundBlock = Blocks.stone.getDefaultState();
+						this.surfaceBlock = Blocks.AIR.getDefaultState();
+						this.groundBlock = Blocks.STONE.getDefaultState();
 					}
 					
 					if(canSetBlock) {
@@ -152,7 +153,7 @@ public class BiomeBlockReplacer {
 							setBlock(this.cube, pos, this.surfaceBlock);
 						} else if (yAbs < this.seaLevel - 7 - depth) {
 							// Covers the ocean floor with gravel.
-							setBlock(this.cube, pos, Blocks.gravel.getDefaultState());
+							setBlock(this.cube, pos, Blocks.GRAVEL.getDefaultState());
 						} else {
 							// no surface blocks below sea level
 							setBlock(this.cube, pos, this.groundBlock);
@@ -182,9 +183,9 @@ public class BiomeBlockReplacer {
 
 	private int placeRandomSandstone(final int numBlocksToChange, final int yAbs) {
 		int result = 0;
-		if (numBlocksToChange == 0 && this.groundBlock == Blocks.sand.getDefaultState()) {
+		if (numBlocksToChange == 0 && this.groundBlock == Blocks.SAND.getDefaultState()) {
 			result = this.rand.nextInt(4) + Math.max(0, yAbs - 63);
-			this.groundBlock = Blocks.sandstone.getDefaultState();
+			this.groundBlock = Blocks.SANDSTONE.getDefaultState();
 		}
 		return result;
 	}

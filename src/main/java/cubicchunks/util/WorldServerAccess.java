@@ -24,7 +24,7 @@
 package cubicchunks.util;
 
 import net.minecraft.server.management.PlayerManager;
-import net.minecraft.world.SpawnerAnimals;
+import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
@@ -39,8 +39,7 @@ public class WorldServerAccess {
 			ReflectionHelper.findField(WorldServer.class, "pendingTickListEntriesThisTick", "field_94579_S");
 	
 	private static final Field ws_playerManager = ReflectionUtil.findFieldNonStatic(WorldServer.class, PlayerManager.class);
-	private static final Field ws_mobSpawner = ReflectionUtil.findFieldNonStatic(WorldServer.class, SpawnerAnimals.class);
-
+	private static final Field ws_mobSpawner = ReflectionUtil.findFieldNonStatic(WorldServer.class, WorldEntitySpawner.class);
 	static {
 		ws_pendingTickListEntriesHashSet.setAccessible(true);
 		ws_pendingTickListEntriesThisTick.setAccessible(true);
@@ -60,7 +59,7 @@ public class WorldServerAccess {
 		ReflectionUtil.set(ws, ws_playerManager, pm);
 	}
 
-	public static final void setMobSpawner(WorldServer ws, SpawnerAnimals sa) {
+	public static final void setMobSpawner(WorldServer ws, WorldEntitySpawner sa) {
 		ReflectionUtil.set(ws, ws_mobSpawner, sa);
 	}
 }

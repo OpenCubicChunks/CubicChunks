@@ -51,13 +51,13 @@ public class BiomeFeatures {
 		BiomeDecorator decorator = biome.theBiomeDecorator;
 		
 		ChunkProviderSettings config = ChunkProviderSettings.Factory.jsonToFactory(
-				WorldProviderAccess.getGeneratorSettings(world.provider)).func_177864_b();
+				WorldProviderAccess.getGeneratorSettings(world.provider)).build();
 		
 		//clay generator
 		this.addMultiGen(SurfaceBlockReplacer.builder().
-						world(world).height(1).radius(2).block(Blocks.clay).
-						addAllowedAboveSurface(Blocks.water).
-						addReplacable(Blocks.sand).addReplacable(Blocks.dirt).build(), decorator.clayPerChunk);
+						world(world).height(1).radius(2).block(Blocks.CLAY).
+						addAllowedAboveSurface(Blocks.WATER).
+						addReplacable(Blocks.SAND).addReplacable(Blocks.DIRT).build(), decorator.clayPerChunk);
 		
 		//sand and gravel beach generators
 //		this.addMultiGen(SurfaceBlockReplacer.builder().
@@ -75,8 +75,8 @@ public class BiomeFeatures {
 
 	protected final void addTreeGenerators(BiomeDecorator decorator) {
 		//Other classes may override this methid to provide other tree generators
-		TreeGenerator smallTreeGen = new SimpleTreeGenerator(world, Blocks.log.getDefaultState(), Blocks.leaves.getDefaultState());
-		BigTreeGenerator bigTreeGen2 = new BigTreeGenerator(world, Blocks.log.getDefaultState(), Blocks.leaves.getDefaultState());
+		TreeGenerator smallTreeGen = new SimpleTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
+		BigTreeGenerator bigTreeGen2 = new BigTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
 		bigTreeGen2.setHeightRange(28, 32);
 		
 		VariantFeatureGenerator randomTreeGen = VariantFeatureGenerator.builder()
@@ -93,14 +93,14 @@ public class BiomeFeatures {
 		// if max height is 128 or 256 - it assumes there is no upper limit
 		
 		//ores
-		addMineral(Blocks.coal_ore, cfg.coalMinHeight, cfg.coalMaxHeight, cfg.coalSize, cfg.coalCount);
-		addMineral(Blocks.iron_ore, cfg.ironMinHeight, cfg.ironMaxHeight, cfg.ironSize, cfg.ironCount);
-		addMineral(Blocks.gold_ore, cfg.goldMinHeight, cfg.goldMaxHeight, cfg.goldSize, cfg.goldCount);
-		addMineral(Blocks.redstone_ore, cfg.redstoneMinHeight, cfg.redstoneMaxHeight, cfg.redstoneSize, cfg.redstoneCount);
-		addMineral(Blocks.diamond_ore, cfg.diamondMinHeight, cfg.diamondMaxHeight, cfg.diamondSize, cfg.diamondCount);
+		addMineral(Blocks.COAL_ORE, cfg.coalMinHeight, cfg.coalMaxHeight, cfg.coalSize, cfg.coalCount);
+		addMineral(Blocks.IRON_ORE, cfg.ironMinHeight, cfg.ironMaxHeight, cfg.ironSize, cfg.ironCount);
+		addMineral(Blocks.GOLD_ORE, cfg.goldMinHeight, cfg.goldMaxHeight, cfg.goldSize, cfg.goldCount);
+		addMineral(Blocks.REDSTONE_ORE, cfg.redstoneMinHeight, cfg.redstoneMaxHeight, cfg.redstoneSize, cfg.redstoneCount);
+		addMineral(Blocks.DIAMOND_ORE, cfg.diamondMinHeight, cfg.diamondMaxHeight, cfg.diamondSize, cfg.diamondCount);
 
 		//stone variants
-		IBlockState stone = Blocks.stone.getDefaultState();
+		IBlockState stone = Blocks.STONE.getDefaultState();
 		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE), 
 						cfg.andesiteMinHeight, cfg.andesiteMaxHeight, cfg.andesiteSize, cfg.andesiteCount);
 		
@@ -111,7 +111,7 @@ public class BiomeFeatures {
 						cfg.graniteMinHeight, cfg.graniteMaxHeight, cfg.graniteSize, cfg.graniteCount);
 
 		//other
-		addMineral(Blocks.dirt, cfg.dirtMinHeight, cfg.dirtMaxHeight, cfg.dirtSize, cfg.dirtCount);
+		addMineral(Blocks.DIRT, cfg.dirtMinHeight, cfg.dirtMaxHeight, cfg.dirtSize, cfg.dirtCount);
 //		addMineral(GRAVEL, cfg.gravelMinHeight, cfg.gravelMaxHeight, cfg.gravelSize, cfg.gravelCount);
 	}
 
