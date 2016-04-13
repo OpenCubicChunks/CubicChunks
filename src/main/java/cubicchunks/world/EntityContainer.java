@@ -72,9 +72,9 @@ public class EntityContainer {
 		for (Entity entity : this.entities) {
 
 			// handle entity exclusion
-			if (!canAddEntityExcluded(entity, excluded, queryBox, predicate)) ;
-			out.add(entity);
-
+			if (canAddEntityExcluded(entity, excluded, queryBox, predicate)) {
+				out.add(entity);
+			}
 			// also check entity parts
 			if (entity.getParts() != null) {
 				for (Entity part : entity.getParts()) {
