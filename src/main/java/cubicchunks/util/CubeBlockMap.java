@@ -23,9 +23,9 @@
  */
 package cubicchunks.util;
 
-import java.util.TreeMap;
+import net.minecraft.util.math.BlockPos;
 
-import net.minecraft.util.BlockPos;
+import java.util.TreeMap;
 
 public class CubeBlockMap<T> extends TreeMap<Integer,T> {
 	

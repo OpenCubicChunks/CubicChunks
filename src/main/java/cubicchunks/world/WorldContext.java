@@ -23,9 +23,6 @@
  */
 package cubicchunks.world;
 
-import net.minecraft.util.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.lighting.LightingManager;
@@ -36,6 +33,9 @@ import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 public abstract class WorldContext {
 	

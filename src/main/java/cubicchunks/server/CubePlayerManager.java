@@ -367,7 +367,7 @@ public class CubePlayerManager extends PlayerManager {
 			iter.remove();
 			
 			// add tile entities too
-			for (TileEntity blockEntity : cube.getBlockEntities()) {
+			for (TileEntity blockEntity : cube.getTileEntityMap()) {
 				blockEntitiesToSend.add(blockEntity);
 			}
 		}

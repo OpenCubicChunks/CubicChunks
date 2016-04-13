@@ -23,17 +23,15 @@
  */
 package cubicchunks.world.column;
 
-import net.minecraft.block.Block;
+import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.BlockPos;
-import net.minecraft.world.World;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 public class BlankColumn extends Column {
@@ -83,27 +81,12 @@ public class BlankColumn extends Column {
 	public int getBlockLightOpacity(final BlockPos a1) {
 		return 0;
 	}
-	
-	@Override
-	public Block getBlock(final int a1, final int a2, final int a3) {
-		return Blocks.air;
-	}
-	
-	@Override
-	public Block getBlock(final BlockPos a1) {
-		return Blocks.air;
-	}
-	
+
 	@Override
 	public IBlockState getBlockState(final BlockPos a1) {
-		return Blocks.air.getDefaultState();
+		return Blocks.AIR.getDefaultState();
 	}
-	
-	@Override
-	public int getBlockMetadata(final BlockPos a1) {
-		return 0;
-	}
-	
+
     @Override
 	public IBlockState setBlockState(final BlockPos a1, final IBlockState a2) {
     	return null;
@@ -186,20 +169,14 @@ public class BlankColumn extends Column {
 	public boolean isEmpty() {
 		return true;
 	}
-	
-	@Override
-	public void populateChunk(final IChunkProvider a1, final IChunkProvider a2, final int a3, final int a4) {
-	}
-	
+
 	@Override
 	public BlockPos getPrecipitationHeight(final BlockPos pos) {
 		return new BlockPos(pos.getX(), 0, pos.getZ());
 	}
-	/**
-	 * TickChunk
-	 */
+
 	@Override
-	public void func_150804_b(final boolean a1) {
+	public void onTick(final boolean a1) {
 	}
 	
 	@Override
@@ -210,11 +187,7 @@ public class BlankColumn extends Column {
 	@Override
 	public void setStorageArrays(final ExtendedBlockStorage[] a1) {
 	}
-	
-	@Override
-	public void fillChunk(final byte[] a1, final int a2, final boolean a3) {
-	}
-	
+
 	@Override
 	public void setBiomeArray(final byte[] a1) {
 	}
@@ -222,12 +195,7 @@ public class BlankColumn extends Column {
 	@Override
 	public void resetRelightChecks() {
 	}
-	
-	@Override
-	//processRelightChecks
-	public void func_150809_p() {
-	}
-	
+
 	@Override
 	public void enqueueRelightChecks() {
 	}

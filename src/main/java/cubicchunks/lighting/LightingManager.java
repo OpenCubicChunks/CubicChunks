@@ -100,7 +100,7 @@ public class LightingManager {
 	public void queueDiffuseUpdate(Cube cube, int blockX, int blockZ, int minY, int maxY) {
 
 		Cube.LightUpdateData data = cube.getLightUpdateData();
-		data.add(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ), minY, maxY);
+		data.queueLightUpdate(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ), minY, maxY);
 		skylightCubeDiffuseProcessor.add(cube.getAddress());
 	}
 

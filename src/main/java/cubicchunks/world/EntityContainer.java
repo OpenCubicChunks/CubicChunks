@@ -28,8 +28,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ClassInheritanceMultiMap;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 
 import java.util.Collection;
@@ -38,17 +38,70 @@ import java.util.List;
 
 public class EntityContainer {
 	
-	private ClassInheritanceMultiMap entities;
+	private ClassInheritanceMultiMap<Entity> entities;
 	private boolean hasActiveEntities;
 	private long lastSaveTime;
 	
 	public EntityContainer() {
-		this.entities = new ClassInheritanceMultiMap(Entity.class);
+		this.entities = new ClassInheritanceMultiMap<>(Entity.class);
 		this.hasActiveEntities = false;
 		this.lastSaveTime = 0;
 	}
-	
-	public ClassInheritanceMultiMap getEntitySet() {
+
+	//=======================================
+	//========Methods for Chunk/Cube=========
+	//=======================================
+
+	public void addEntity(Entity entity) {
+		this.entities.add(entity);
+		this.hasActiveEntities = true;
+	}
+
+	public boolean remove(Entity entity) {
+		return this.entities.remove(entity);
+	}
+
+	private boolean canAddEntityExcluded(Entity toAdd, Entity excluded, AxisAlignedBB queryBox, Predicate<? super Entity> predicate) {
+		return toAdd != excluded &&
+				toAdd.getEntityBoundingBox().intersectsWith(queryBox) &&
+				(predicate == null || predicate.apply(toAdd));
+	}
+
+	public void getEntitiesWithinAABBForEntity(Entity excluded, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
+		for (Entity entity : this.entities) {
+
+			// handle entity exclusion
+			if(!canAddEntityExcluded(entity, excluded, queryBox, predicate));
+			out.add(entity);
+
+			// also check entity parts
+			if (entity.getParts() != null) {
+				for (Entity part : entity.getParts()) {
+					if (canAddEntityExcluded(part, excluded, queryBox, predicate)) {
+						out.add(part);
+					}
+				}
+			}
+		}
+	}
+
+	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
+		for (T entity : this.entities.getByClass(entityType)) {
+			if (entity.getEntityBoundingBox().intersectsWith(queryBox) &&
+					(predicate == null || predicate.apply(entity))) {
+				out.add(entity);
+			}
+		}
+	}
+
+
+
+
+
+
+
+
+	public ClassInheritanceMultiMap<Entity> getEntitySet() {
 		return this.entities;
 	}
 	
@@ -58,15 +111,6 @@ public class EntityContainer {
 	
 	public void setHasActiveEntities(boolean val) {
 		this.hasActiveEntities = val;
-	}
-	
-	public void add(Entity entity) {
-		this.entities.add(entity);
-		this.hasActiveEntities = true;
-	}
-	
-	public boolean remove(Entity entity) {
-		return this.entities.remove(entity);
 	}
 	
 	public void clear() {
@@ -80,41 +124,17 @@ public class EntityContainer {
 	public int size() {
 		return this.entities.size();
 	}
+
 	
-	public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
-		for (T entity : (Iterable<T>) this.entities.getByClass(entityType)) {
-			if (entityType.isAssignableFrom(entity.getClass()) && entity.getEntityBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(entity))) {
-				out.add(entity);
+	public boolean needsSaving(boolean flag, long time, boolean isModified) {
+		if(flag) {
+			if(this.hasActiveEntities &&  time != lastSaveTime || isModified) {
+				return true;
 			}
+		} else if(this.hasActiveEntities && time >= this.lastSaveTime + 600) {
+			return true;
 		}
-	}
-	
-	public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
-		
-		for (Entity entity : (Iterable<Entity>) this.entities) {
-			
-			// handle entity exclusion
-			if (entity == excludedEntity) {
-				continue;
-			}
-			
-			if (entity.getEntityBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(entity))) {
-				out.add(entity);
-				
-				// also check entity parts
-				if (entity.getParts() != null) {
-					for (Entity part : entity.getParts()) {
-						if (part != excludedEntity && part.getEntityBoundingBox().intersectsWith(queryBox) && (predicate == null || predicate.apply(part))) {
-							out.add(part);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	public boolean needsSaving(long time) {
-		return this.hasActiveEntities && time >= this.lastSaveTime + 600;
+		return isModified;
 	}
 	
 	public void markSaved(long time) {
@@ -129,7 +149,7 @@ public class EntityContainer {
 		this.hasActiveEntities = false;
 		NBTTagList nbtEntities = new NBTTagList();
 		nbt.setTag(name, nbtEntities);
-		for (Entity entity : (Iterable<Entity>) this.entities) {
+		for (Entity entity : this.entities) {
 			
 			NBTTagCompound nbtEntity = new NBTTagCompound();
 			entity.writeToNBT(nbtEntity);
@@ -157,7 +177,7 @@ public class EntityContainer {
 				continue;
 			}
 			
-			add(entity);
+			addEntity(entity);
 			
 			if (listener != null) {
 				listener.onEntity(entity);
@@ -174,7 +194,7 @@ public class EntityContainer {
 				}
 				
 				// RIDE THE PIG!!
-				add(riddenEntity);
+				addEntity(riddenEntity);
 				entity.mountEntity(riddenEntity);
 				
 				// point to the ridden entity and iterate

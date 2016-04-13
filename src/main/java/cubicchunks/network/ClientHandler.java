@@ -120,7 +120,7 @@ public class ClientHandler implements INetHandler {
 			
 			// update tile entities in each chunk
 			for (Cube cube : column.getCubes()) {
-				for (TileEntity blockEntity : cube.getBlockEntities()) {
+				for (TileEntity blockEntity : cube.getTileEntityMap()) {
 					blockEntity.updateContainingBlockInfo();
 				}
 			}
@@ -208,7 +208,7 @@ public class ClientHandler implements INetHandler {
 		// apply the update
 		packet.decodeCube(cube);
 		cube.markForRenderUpdate();
-		for (TileEntity blockEntity : cube.getBlockEntities()) {
+		for (TileEntity blockEntity : cube.getTileEntityMap()) {
 			blockEntity.updateContainingBlockInfo();
 		}
 	}
@@ -263,7 +263,7 @@ public class ClientHandler implements INetHandler {
 			BlockPos pos = cube.localAddressToBlockPos(packet.localAddresses[i]);
 			worldClient.invalidateRegionAndSetBlock(pos, packet.blockStates[i]);
 		}
-		for (TileEntity blockEntity : cube.getBlockEntities()) {
+		for (TileEntity blockEntity : cube.getTileEntityMap()) {
 			blockEntity.updateContainingBlockInfo();
 		}	
 	}

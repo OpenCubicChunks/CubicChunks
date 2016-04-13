@@ -136,7 +136,7 @@ public class CubeWatcher {
 			
 			// send whole cube
 			sendPacketToAllPlayers(new PacketCubeChange(cube));
-			for (TileEntity blockEntity : this.cube.getBlockEntities()) {
+			for (TileEntity blockEntity : this.cube.getTileEntityMap()) {
 				sendBlockEntityToAllPlayers(blockEntity);
 			}
 			

@@ -512,7 +512,7 @@ public class CubeIO implements IThreadedFileIO {
 		// tile entities
 		NBTTagList nbtTileEntities = new NBTTagList();
 		nbt.setTag("TileEntities", nbtTileEntities);
-		for (TileEntity blockEntity : cube.getBlockEntities()) {
+		for (TileEntity blockEntity : cube.getTileEntityMap()) {
 			NBTTagCompound nbtTileEntity = new NBTTagCompound();
 			blockEntity.writeToNBT(nbtTileEntity);
 			nbtTileEntities.appendTag(nbtTileEntity);

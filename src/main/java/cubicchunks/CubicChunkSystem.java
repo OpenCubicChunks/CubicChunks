@@ -30,10 +30,7 @@ import cubicchunks.generator.GeneratorStage;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.Coords;
-import cubicchunks.util.MutableBlockPos;
-import cubicchunks.util.WorldAccess;
+import cubicchunks.util.*;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
@@ -263,8 +260,8 @@ public class CubicChunkSystem {
 
 		// make some effort to find a suitable spawn point, but don't guarantee it
 		for (int i = 0; i < 1000 && !worldServer.provider.canCoordinateBeSpawn(spawnPos.getX(), spawnPos.getZ()); i++) {
-			spawnPos.x += cubicchunks.util.MathHelper.randRange(rand, -16, 16);
-			spawnPos.z += cubicchunks.util.MathHelper.randRange(rand, -16, 16);
+			spawnPos.x += MathUtil.randRange(rand, -16, 16);
+			spawnPos.z += MathUtil.randRange(rand, -16, 16);
 		}
 
 		// save the spawn point

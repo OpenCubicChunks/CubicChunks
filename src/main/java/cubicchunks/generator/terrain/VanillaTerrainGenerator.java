@@ -32,7 +32,7 @@ import net.minecraft.world.biome.BiomeGenBase;
 import java.util.Random;
 
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.*;
-import static cubicchunks.util.MathHelper.lerp;
+import static cubicchunks.util.MathUtil.lerp;
 import static cubicchunks.util.TerrainGeneratorUtils.*;
 
 public class VanillaTerrainGenerator implements ITerrainGenerator {

@@ -24,7 +24,6 @@
 package cubicchunks.lighting;
 
 import cubicchunks.util.Coords;
-import cubicchunks.util.MutableBlockPos;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import net.minecraft.world.EnumSkyBlock;

@@ -25,8 +25,8 @@ package cubicchunks.util;
 
 import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 
 public class Coords {
 	public static final int CUBE_SIZE = 16;

@@ -24,7 +24,6 @@
 package cubicchunks.lighting;
 
 import cubicchunks.util.Coords;
-import cubicchunks.util.MutableBlockPos;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.world.EnumSkyBlock;
@@ -82,7 +81,7 @@ class SkyLightUpdateCubeSelector {
 				//if light value at the bottom is already correct - nothing to do here
 				//so update only if incorrect
 				blockPos.setBlockPos(localX, 0, localZ);
-				if(cube.getLightValue(EnumSkyBlock.SKY, blockPos) != 15) {
+				if(cube.getLightFor(EnumSkyBlock.SKY, blockPos) != 15) {
 					cubesToDiffuse.add(cube.getY());
 				}
 			} else if(cubeY == maxCubeY) {
@@ -100,7 +99,7 @@ class SkyLightUpdateCubeSelector {
 				assert cubeY < maxCubeY - 1;
 				blockPos.setBlockPos(localX, 15, localZ);
 				//if we are below minBlockY or if the top block has correct light value (0) - nothing to do
-				if(minCubeBlockY+15 < minBlockY || cube.getLightValue(EnumSkyBlock.SKY, blockPos) == 0) {
+				if(minCubeBlockY+15 < minBlockY || cube.getLightFor(EnumSkyBlock.SKY, blockPos) == 0) {
 					continue;
 				}
 				cubesToDiffuse.add(cube.getY());

@@ -25,7 +25,7 @@ package cubicchunks.util;
 
 import java.util.Random;
 
-public class MathHelper {
+public class MathUtil {
 
 	public static double lerp(final double a, final double min, final double max) {
 		return min + a * (max - min);

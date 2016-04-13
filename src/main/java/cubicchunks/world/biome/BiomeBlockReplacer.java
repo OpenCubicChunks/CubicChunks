@@ -31,7 +31,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
-import cubicchunks.util.MutableBlockPos;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.init.Blocks;

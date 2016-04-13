@@ -25,7 +25,6 @@ package cubicchunks.lighting;
 
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.Coords;
-import cubicchunks.util.MutableBlockPos;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.IOpacityIndex;
@@ -37,7 +36,7 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 
 import static cubicchunks.util.Coords.*;
-import static cubicchunks.util.MathHelper.min;
+import static cubicchunks.util.MathUtil.min;
 
 public class FirstLightProcessor extends CubeProcessor {
 
@@ -111,7 +110,7 @@ public class FirstLightProcessor extends CubeProcessor {
 	private void cubeSetLight(Cube cube, MutableBlockPos pos, int lightValue) {
 		for (int y = 0; y < 16; y++) {
 			pos.y = y;
-			cube.setLightValue(EnumSkyBlock.SKY, pos, lightValue);
+			cube.setLightFor(EnumSkyBlock.SKY, pos, lightValue);
 		}
 	}
 
@@ -134,7 +133,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		//set everything above to max light value
 		for (int blockY = maxCubeY; blockY > y; blockY--) {
 			pos.y = blockY;
-			cube.setLightValue(EnumSkyBlock.SKY, pos, 15);
+			cube.setLightFor(EnumSkyBlock.SKY, pos, 15);
 		}
 
 		//we only need to go down to the cubeMinY block
@@ -154,7 +153,7 @@ public class FirstLightProcessor extends CubeProcessor {
 			}
 			pos.y = y;
 			if (blockToCube(y) == cube.getY()) {
-				cube.setLightValue(EnumSkyBlock.SKY, pos, light);
+				cube.setLightFor(EnumSkyBlock.SKY, pos, light);
 			}
 			y--;
 		}

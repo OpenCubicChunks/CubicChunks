@@ -31,8 +31,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -84,28 +84,26 @@ public class BlankCube extends Cube {
 	
 	@Override
 	public Block getBlockAt(final BlockPos pos) {
-		return Blocks.air;
+		return Blocks.AIR;
 	}
 	
 	@Override
 	public Block getBlockAt(final int localX, final int localY, final int localZ) {
-		return Blocks.air;
+		return Blocks.AIR;
 	}
 	
 	@Override
 	public IBlockState getBlockState(BlockPos pos) {
-		return Blocks.air.getDefaultState();
+		return Blocks.AIR.getDefaultState();
 	}
 	
 	@Override
-	public IBlockState getBlockState(int localX, int localY, int localZ) {
-		return Blocks.air.getDefaultState();
+	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
+		return Blocks.AIR.getDefaultState();
 	}
 	
 	@Override
-	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
-		return Blocks.air.getDefaultState();
-	}
+	public void setBlockStateDirect(BlockPos pos, IBlockState newBlockState) {}
 	
 	@Override
 	public IBlockState setBlockForGeneration(BlockPos pos, IBlockState newBlockState) {
@@ -124,23 +122,23 @@ public class BlankCube extends Cube {
 	public boolean removeEntity(Entity entity) {
 		return false;
 	}
-	
-	@Override
-	public void findEntitiesExcept(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {}
-	
-	@Override
-	public <T extends Entity> void findEntities(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {}
 
 	@Override
-	public TileEntity getBlockEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
+	public void getEntitiesWithinAABBForEntity(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {}
+
+	@Override
+	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {}
+
+	@Override
+	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
 		return null;
 	}
 	
 	@Override
-	public void addBlockEntity(BlockPos pos, TileEntity blockEntity) {}
+	public void addTileEntity(BlockPos pos, TileEntity blockEntity) {}
 	
 	@Override
-	public void removeBlockEntity(BlockPos pos) {}
+	public void removeTileEntity(BlockPos pos) {}
 	
 	@Override
 	public void onLoad() {}
@@ -163,19 +161,19 @@ public class BlankCube extends Cube {
 	}
 	
 	@Override
-	public int getBrightestLight(BlockPos pos, int skyLightDampeningTerm) {
-		//TODO: BlankCube.getBrightnessLight - is it correct?
+	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
+		//TODO: BlankCube.getLightSubtracted - is it correct?
 		return 15 - skyLightDampeningTerm;
 	}
 	
 	@Override
-	public int getLightValue(EnumSkyBlock lightType, BlockPos pos) {
-		//TODO: BlankCube.getLightValue - maybe return 0?
+	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
+		//TODO: BlankCube.getLightFor - maybe return 0?
 		return 15;
 	}
 	
 	@Override
-	public void setLightValue(EnumSkyBlock lightType, BlockPos pos, int light) {}
+	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {}
 	
 	@Override
 	public void doRandomTicks() {}
