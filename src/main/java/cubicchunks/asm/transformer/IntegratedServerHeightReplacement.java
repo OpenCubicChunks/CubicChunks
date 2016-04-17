@@ -37,7 +37,11 @@ public class IntegratedServerHeightReplacement extends AbstractMethodTransformer
 	}
 
 	@Override
-	public void visitEnd() {
+	public void visitInsn(int opcode) {
+		if(opcode != RETURN) {
+			super.visitInsn(opcode);
+			return;
+		}
 		//load this
 		super.visitVarInsn(ALOAD, 0);
 
@@ -51,6 +55,7 @@ public class IntegratedServerHeightReplacement extends AbstractMethodTransformer
 		//stack contains: this, maxHeight
 		//this.setBuildLimit();
 		super.visitMethodInsn(INVOKEVIRTUAL, MINECRAFT_SERVER, MINECRAFT_SERVER_SET_BUILD_LIMIT, "(I)V", false);
+		super.visitInsn(RETURN);
 		this.setSuccessful();
 	}
 
