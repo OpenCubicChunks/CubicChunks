@@ -30,6 +30,7 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;
 import cubicchunks.world.EntityContainer;
+import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -430,15 +431,17 @@ public class Cube {
 		Block newBlock = newBlockState.getBlock();
 
 		// did the block change work correctly?
-		if (this.storage.get(x, y, z) != newBlock) {
+		if (this.storage.get(x, y, z) != newBlockState) {
 			return null;
 		}
 		this.isModified = true;
 
 		// update the column light index
 		int blockY = Coords.localToBlock(this.cubeY, y);
-		this.column.getOpacityIndex().setOpacity(x, blockY, z, newBlock.getLightOpacity(newBlockState));
 
+		IOpacityIndex index = this.column.getOpacityIndex();
+		int opacity = newBlock.getLightOpacity(newBlockState);
+		index.setOpacity(x, blockY, z, opacity);
 		return oldBlockState;
 	}
 

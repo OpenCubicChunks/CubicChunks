@@ -79,4 +79,8 @@ public class Coords {
 			cubeToMinBlock(cube.getZ()) + 8
 		);
 	}
+
+	public static int blockToCube(double blockPos) {
+		return blockToCube(MathHelper.floor_double(blockPos));
+	}
 }

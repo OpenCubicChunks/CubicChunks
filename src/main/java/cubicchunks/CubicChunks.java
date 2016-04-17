@@ -70,26 +70,11 @@ public class CubicChunks {
 
 		
 		CC_WORLD_TYPE = new CubicChunksWorldType(ccSystem);
-		//TODO: Combine these into one
+		//TODO: Combine CCEventHandler and CCFmlEventHandler into one class
 		this.evtHandler = new CCEventHandler(ccSystem);
 		this.fmlEvtHandler = new CCFmlEventHandler(ccSystem);
 		
 		MinecraftForge.EVENT_BUS.register(this.evtHandler);
 		MinecraftForge.EVENT_BUS.register(this.fmlEvtHandler);
-
-
-		//TODO: Port it to forge
-		/*
-		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketBulkCubeData.class);
-		ConnectionState.directionMaps.put(PacketBulkCubeData.class, ConnectionState.PLAY);
-		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketUnloadCubes.class);
-		ConnectionState.directionMaps.put(PacketUnloadCubes.class, ConnectionState.PLAY);
-		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketUnloadColumns.class);
-		ConnectionState.directionMaps.put(PacketUnloadColumns.class, ConnectionState.PLAY);
-		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketCubeBlockChange.class);
-		ConnectionState.directionMaps.put(PacketCubeBlockChange.class, ConnectionState.PLAY);
-		ConnectionState.PLAY.registerPacket(PacketDirection.CLIENTBOUND, PacketCubeChange.class);
-		ConnectionState.directionMaps.put(PacketCubeChange.class, ConnectionState.PLAY);
-		*/
 	}
 }

@@ -21,31 +21,17 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.server;
 
-import net.minecraft.world.chunk.IChunkGenerator;
-import net.minecraft.world.chunk.storage.IChunkLoader;
-import net.minecraft.world.gen.ChunkProviderServer;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraft.entity.player.EntityPlayerMP;
 
-import java.lang.reflect.Field;
+class WatcherPlayerEntry {
 
-public class ChunkProviderAccess {
-	private static final Field cps_chunkLoader =
-			ReflectionHelper.findField(ChunkProviderServer.class, "chunkLoader", "field_73247_e");
-	private static final Field cps_chunkGenerator =
-			ReflectionHelper.findField(ChunkProviderServer.class, "chunkGenerator", "field_186029_c");
+	EntityPlayerMP player;
+	boolean sawChunk;
 
-	static {
-		ReflectionUtil.removeFinalModifier(cps_chunkLoader);
-		ReflectionUtil.removeFinalModifier(cps_chunkGenerator);
-	}
-
-	public static final void setChunkLoader(ChunkProviderServer cps, IChunkLoader loader) {
-		ReflectionUtil.set(cps, cps_chunkLoader, loader);
-	}
-
-	public static final void setChunkGenerator(ChunkProviderServer cps, IChunkGenerator chunkGen) {
-		ReflectionUtil.set(cps, cps_chunkGenerator, chunkGen);
+	public WatcherPlayerEntry(EntityPlayerMP player) {
+		this.player = player;
+		this.sawChunk = false;
 	}
 }

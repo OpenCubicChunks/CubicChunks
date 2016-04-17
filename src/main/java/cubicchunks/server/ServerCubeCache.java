@@ -28,16 +28,15 @@ import cubicchunks.CubicChunks;
 import cubicchunks.generator.ColumnGenerator;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
-import cubicchunks.util.ChunkProviderAccess;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubeCache;
-import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 import org.apache.logging.log4j.Logger;
 
@@ -47,6 +46,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Queue;
 
+import static cubicchunks.server.ServerCubeCache.LoadType.*;
+
+/**
+ * Thic is CubicChunks equivalent of ChunkProviderServer, it loads and unloads Cubes and Columns.
+ *
+ * There are a few necessary changes to the way vanilla methods work:
+ *  * Because loading a Chunk (Column) doesn't make much sense with CubicChunks,
+ *    all methods that load Chunks, actually load  an empry column with no blocks in it
+ *    (there may be some entities that are not in any Cube yet).
+ *  * dropChunk method is not supported. Columns are unloaded automatically when the last cube is unloaded
+ *
+ */
 public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	private static final Logger log = CubicChunks.LOGGER;
@@ -57,209 +68,27 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	private CubeIO cubeIO;
 	private ColumnGenerator columnGenerator;
 	private HashMap<Long, Column> loadedColumns;
-	private BlankColumn blankColumn;
 	private Queue<Long> cubesToUnload;
 
 	public ServerCubeCache(WorldServer worldServer) {
-		super(worldServer, null, null);
+		super(worldServer, worldServer.getSaveHandler().getChunkLoader(worldServer.provider), null);
 
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer);
 		this.columnGenerator = new ColumnGenerator(worldServer);
 		this.loadedColumns = Maps.newHashMap();
-		this.blankColumn = new BlankColumn(worldServer, 0, 0);
 		this.cubesToUnload = new ArrayDeque<>();
-
-		//set vanilla fields
-		ChunkProviderAccess.setChunkGenerator(this, null);
-		ChunkProviderAccess.setChunkLoader(this, worldServer.getSaveHandler().getChunkLoader(worldObj.provider));
 	}
 
 	@Override
-	public boolean chunkExists(int cubeX, int cubeZ) {
-		//columnAccessStats(cubeX, cubeZ);
-		return this.loadedColumns.containsKey(AddressTools.getAddress(cubeX, cubeZ));
-	}
-
-	@Override
-	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
-		//cubeAccessStats(cubeX, cubeY, cubeZ);
-		// is the column loaded?
-		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-		Column column = this.loadedColumns.get(columnAddress);
-		if (column == null) {
-			return false;
-		}
-
-		// is the cube loaded?
-		return column.getCube(cubeY) != null;
-	}
-
-	@Override
-	public Column loadChunk(int cubeX, int cubeZ) {
-		// in the tall worlds scheme, load and provide columns/chunks are semantically the same thing
-		// but load/provide cube do actually do different things
-		return provideChunk(cubeX, cubeZ);
-	}
-
-	@Override
-	public Column getColumn(int columnX, int columnZ) {
-		return provideChunk(columnX, columnZ);
-	}
-
-	@Override
-	public Column provideChunk(int cubeX, int cubeZ) {
-		columnAccessStats(cubeX, cubeZ);
-		// check for the column
-		Column column = this.loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
-		if (column != null) {
-			return column;
-		}
-
-		return this.blankColumn;
-	}
-
-	@Override
-	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
-		cubeAccessStats(cubeX, cubeY, cubeZ);
-		// is the column loaded?
-		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-		Column column = this.loadedColumns.get(columnAddress);
-		if (column == null) {
-			return null;
-		}
-
-		return column.getCube(cubeY);
-	}
-
-	public void loadCubeAndNeighbors(int cubeX, int cubeY, int cubeZ) {
-		// load the requested cube
-		loadCube(cubeX, cubeY, cubeZ);
-
-		// load the neighbors
-		loadCube(cubeX - 1, cubeY - 1, cubeZ - 1);
-		loadCube(cubeX - 1, cubeY - 1, cubeZ + 0);
-		loadCube(cubeX - 1, cubeY - 1, cubeZ + 1);
-		loadCube(cubeX + 0, cubeY - 1, cubeZ - 1);
-		loadCube(cubeX + 0, cubeY - 1, cubeZ + 0);
-		loadCube(cubeX + 0, cubeY - 1, cubeZ + 1);
-		loadCube(cubeX + 1, cubeY - 1, cubeZ - 1);
-		loadCube(cubeX + 1, cubeY - 1, cubeZ + 0);
-		loadCube(cubeX + 1, cubeY - 1, cubeZ + 1);
-
-		loadCube(cubeX - 1, cubeY + 0, cubeZ - 1);
-		loadCube(cubeX - 1, cubeY + 0, cubeZ + 0);
-		loadCube(cubeX - 1, cubeY + 0, cubeZ + 1);
-		loadCube(cubeX + 0, cubeY + 0, cubeZ - 1);
-		loadCube(cubeX + 0, cubeY + 0, cubeZ + 1);
-		loadCube(cubeX + 1, cubeY + 0, cubeZ - 1);
-		loadCube(cubeX + 1, cubeY + 0, cubeZ + 0);
-		loadCube(cubeX + 1, cubeY + 0, cubeZ + 1);
-
-		loadCube(cubeX - 1, cubeY + 1, cubeZ - 1);
-		loadCube(cubeX - 1, cubeY + 1, cubeZ + 0);
-		loadCube(cubeX - 1, cubeY + 1, cubeZ + 1);
-		loadCube(cubeX + 0, cubeY + 1, cubeZ - 1);
-		loadCube(cubeX + 0, cubeY + 1, cubeZ + 0);
-		loadCube(cubeX + 0, cubeY + 1, cubeZ + 1);
-		loadCube(cubeX + 1, cubeY + 1, cubeZ - 1);
-		loadCube(cubeX + 1, cubeY + 1, cubeZ + 0);
-		loadCube(cubeX + 1, cubeY + 1, cubeZ + 1);
-	}
-
-	public void loadCube(int cubeX, int cubeY, int cubeZ) {
-
-		long cubeAddress = AddressTools.getAddress(cubeX, cubeY, cubeZ);
-		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-
-		// step 1: get a column
-
-		// is the column already loaded?
-		Column column = this.loadedColumns.get(columnAddress);
-		if (column == null) {
-			// try loading it
-			try {
-				column = this.cubeIO.loadColumn(cubeX, cubeZ);
-			} catch (IOException ex) {
-				log.error("Unable to load column ({},{})", cubeX, cubeZ, ex);
-				return;
-			}
-
-			if (column == null) {
-				// there wasn't a column, generate a new one
-				column = this.columnGenerator.generateColumn(cubeX, cubeZ);
-			} else {
-				// the column was loaded
-				column.setLastSaveTime(this.worldServer.getTotalWorldTime());
-			}
-		}
-		assert (column != null);
-
-		// step 2: get a cube
-
-		// is the cube already loaded?
-		Cube cube = column.getCube(cubeY);
-		if (cube != null) {
-			return;
-		}
-
-		// try to load the cube
-		try {
-			cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeAddress);
-		} catch (IOException ex) {
-			log.error("Unable to load cube ({},{},{})", cubeX, cubeY, cubeZ, ex);
-			return;
-		}
-
-		if (cube == null) {
-			// start the cube generation process with an empty cube
-			cube = column.getOrCreateCube(cubeY, true);
-			cube.setGeneratorStage(GeneratorStage.getFirstStage());
-		}
-
-		if (!cube.getGeneratorStage().isLastStage()) {
-			// queue the cube to finish generation
-			WorldServerContext.get(this.worldServer).getGeneratorPipeline().generate(cube);
-		} else if (cube.needsRelightAfterLoad()) {
-			// queue the cube for re-lighting
-			WorldServerContext.get(this.worldServer).getLightingManager().queueFirstLightCalculation(cubeAddress);
-		}
-
-		// add the column to the cache
-		this.loadedColumns.put(columnAddress, column);
-
-		// init the column
-		if (!column.isLoaded()) {
-			column.onChunkLoad();
-		}
-		column.setTerrainPopulated(true);
-		//column.resetPrecipitationHeight();
-
-		// init the cube
-		cube.onLoad();
+	public List<Chunk> getLoadedChunks() {
+		return this.loadedChunks;
 	}
 
 	@Override
 	public void dropChunk(int cubeX, int cubeZ) {
 		// don't call this, unload cubes instead
 		throw new UnsupportedOperationException();
-	}
-
-	public void unloadCube(Cube cube) {
-		// NOTE: this is the main unload method for block data!
-		unloadCube(cube.getX(), cube.getY(), cube.getZ());
-	}
-
-	@Override
-	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
-
-		// don't unload cubes near the spawn
-		if (cubeIsNearSpawn(cubeX, cubeY, cubeZ)) {
-			return;
-		}
-
-		// queue the cube for unloading
-		this.cubesToUnload.add(AddressTools.getAddress(cubeX, cubeY, cubeZ));
 	}
 
 	@Override
@@ -270,6 +99,68 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				this.cubesToUnload.add(cube.getAddress());
 			}
 		}
+	}
+
+	/**
+	 * Vanilla method, returns a Chunk (Column) only of it's already loaded.
+	 * Same as getColumn(cubeX, cubeZ)
+	 */
+	@Override
+	public Chunk getLoadedChunk(int cubeX, int cubeZ) {
+		return this.getColumn(cubeX, cubeZ);
+	}
+
+	/**
+	 * Loads Chunk (Column) if it can be loaded from disk, or returns already loaded one.
+	 * Doesn't generate new Columns.
+	 */
+	@Override
+	public Column loadChunk(int cubeX, int cubeZ) {
+		return this.loadColumn(cubeX, cubeZ, LOAD_ONLY);
+	}
+
+	/**
+	 * If this Column is already loaded - returns it.
+	 * Loads from disk if possible, otherwise generated new Column.
+	 */
+	@Override
+	public Column provideChunk(int cubeX, int cubeZ) {
+		return loadChunk(cubeX, cubeZ, null);
+	}
+
+	@Override
+	public Column loadChunk(int cubeX, int cubeZ, Runnable runnable) {
+		Column column = this.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
+		if(runnable == null) {
+			return column;
+		}
+		runnable.run();
+		return null;
+	}
+
+	@Override
+	public Column originalLoadChunk(int cubeX, int cubeZ) {
+		return this.loadColumn(cubeX, cubeZ, FORCE_LOAD);
+	}
+
+	@Override
+	public boolean saveChunks(boolean alwaysTrue) {
+
+		for (Column column : this.loadedColumns.values()) {
+			// save the column
+			if (column.needsSaving(alwaysTrue)) {
+				this.cubeIO.saveColumn(column);
+			}
+
+			// save the cubes
+			for (Cube cube : column.getCubes()) {
+				if (cube.needsSaving()) {
+					this.cubeIO.saveCube(cube);
+				}
+			}
+		}
+
+		return true;
 	}
 
 	@Override
@@ -316,33 +207,14 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		return false;
 	}
 
-	public void saveAllChunks() {
-		saveChunks(true);
-	}
-
-	@Override
-	public boolean saveChunks(boolean alwaysTrue) {
-
-		for (Column column : this.loadedColumns.values()) {
-			// save the column
-			if (column.needsSaving(alwaysTrue)) {
-				this.cubeIO.saveColumn(column);
-			}
-
-			// save the cubes
-			for (Cube cube : column.getCubes()) {
-				if (cube.needsSaving()) {
-					this.cubeIO.saveCube(cube);
-				}
-			}
-		}
-
-		return true;
-	}
-
 	@Override
 	public String makeString() {
 		return "ServerCubeCache: " + this.loadedColumns.size() + " columns, Unload: " + this.cubesToUnload.size() + " cubes";
+	}
+
+	@Override
+	public List<BiomeGenBase.SpawnListEntry> getPossibleCreatures(final EnumCreatureType a1, final BlockPos a2) {
+		return null;
 	}
 
 	@Override
@@ -350,9 +222,170 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		return this.loadedColumns.size();
 	}
 
+
+	//==============================
+	//=====CubicChunks methods======
+	//==============================
+
 	@Override
-	public List<BiomeGenBase.SpawnListEntry> getPossibleCreatures(final EnumCreatureType a1, final BlockPos a2) {
-		return null;
+	public boolean chunkExists(int cubeX, int cubeZ) {
+		//columnAccessStats(cubeX, cubeZ);
+		return this.loadedColumns.containsKey(AddressTools.getAddress(cubeX, cubeZ));
+	}
+
+	@Override
+	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
+		//cubeAccessStats(cubeX, cubeY, cubeZ);
+		// is the column loaded?
+		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
+		Column column = this.loadedColumns.get(columnAddress);
+		if (column == null) {
+			return false;
+		}
+
+		// is the cube loaded?
+		return column.getCube(cubeY) != null;
+	}
+
+	@Override
+	public Column getColumn(int columnX, int columnZ) {
+		return this.loadedColumns.get(AddressTools.getAddress(columnX, columnZ));
+	}
+
+
+	@Override
+	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
+		// is the column loaded?
+		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
+		Column column = this.loadedColumns.get(columnAddress);
+		if (column == null) {
+			return null;
+		}
+
+		return column.getCube(cubeY);
+	}
+
+	public void loadCubeAndNeighbors(int cubeX, int cubeY, int cubeZ) {
+		// load the requested cube
+		loadCube(cubeX, cubeY, cubeZ, LOAD_OR_GENERATE);
+
+		for(int dx = -1; dx <=1; dx++) {
+			for(int dy = -1; dy <= 1; dy++) {
+				for(int dz = -1; dz <= 1; dz++) {
+					loadCube(cubeX + dx, cubeY + dy, cubeZ + dz, LOAD_OR_GENERATE);
+				}
+			}
+		}
+	}
+
+	public void loadCube(int cubeX, int cubeY, int cubeZ, LoadType loadType) {
+		//TODO: clean up loadCube(int, int, int, LoadType)
+		if(loadType == FORCE_LOAD) {
+			throw new UnsupportedOperationException("Cannot Force Load a cube");
+		}
+
+		long cubeAddress = AddressTools.getAddress(cubeX, cubeY, cubeZ);
+		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
+
+		// step 1: get a column
+
+		// is the column already loaded?
+		Column column = this.loadedColumns.get(columnAddress);
+		if (column == null) {
+			// try loading it
+			column = this.loadColumn(cubeX, cubeZ, loadType);
+		}
+		//if we couldn't load or generate the column - give up
+		if(column == null) {
+			return;
+		}
+
+		// step 2: get a cube
+
+		// is the cube already loaded?
+		Cube cube = column.getCube(cubeY);
+		if (cube != null) {
+			return;
+		}
+
+		// try to load the cube
+		try {
+			cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeAddress);
+		} catch (IOException ex) {
+			log.error("Unable to load cube ({},{},{})", cubeX, cubeY, cubeZ, ex);
+			return;
+		}
+		if (loadType == LOAD_OR_GENERATE && cube == null) {
+			// start the cube generation process with an empty cube
+			cube = column.getOrCreateCube(cubeY, true);
+			cube.setGeneratorStage(GeneratorStage.getFirstStage());
+		}
+		//if couldn't generate it - return
+		if(cube == null) {
+			return;
+		}
+		if (!cube.getGeneratorStage().isLastStage()) {
+			// queue the cube to finish generation
+			WorldServerContext.get(this.worldServer).getGeneratorPipeline().generate(cube);
+		} else if (cube.needsRelightAfterLoad()) {
+			// queue the cube for re-lighting
+			WorldServerContext.get(this.worldServer).getLightingManager().queueFirstLightCalculation(cubeAddress);
+		}
+
+		// init the column
+		if (!column.isLoaded()) {
+			column.onChunkLoad();
+		}
+		column.setTerrainPopulated(true);
+
+		// init the cube
+		cube.onLoad();
+	}
+
+	public Column loadColumn(int cubeX, int cubeZ, LoadType loadType) {
+		Column column = null;
+		//if we are not forced to load from disk - try to get it first
+		if(loadType != FORCE_LOAD) {
+			column = getColumn(cubeX, cubeZ);
+		}
+		if(column != null) {
+			this.loadedColumns.put(AddressTools.getAddress(cubeX, cubeZ), column);
+			return column;
+		}
+		try {
+			column = this.cubeIO.loadColumn(cubeX, cubeZ);
+		} catch (IOException ex) {
+			log.error("Unable to load column ({},{})", cubeX, cubeZ, ex);
+			return null;
+		}
+
+		if (column == null) {
+			// there wasn't a column, generate a new one (if allowed to generate)
+			if(loadType == LOAD_OR_GENERATE) {
+				column = this.columnGenerator.generateColumn(cubeX, cubeZ);
+			}
+		} else {
+			// the column was loaded
+			column.setLastSaveTime(this.worldServer.getTotalWorldTime());
+		}
+		this.loadedColumns.put(AddressTools.getAddress(cubeX, cubeZ), column);
+		return column;
+	}
+
+	@Override
+	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
+
+		// don't unload cubes near the spawn
+		if (cubeIsNearSpawn(cubeX, cubeY, cubeZ)) {
+			return;
+		}
+
+		// queue the cube for unloading
+		this.cubesToUnload.add(AddressTools.getAddress(cubeX, cubeY, cubeZ));
+	}
+
+	public void saveAllChunks() {
+		saveChunks(true);
 	}
 
 	private boolean cubeIsNearSpawn(int cubeX, int cubeY, int cubeZ) {
@@ -372,44 +405,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		return dx <= WorldSpawnChunkDistance && dy <= WorldSpawnChunkDistance && dz <= WorldSpawnChunkDistance;
 	}
 
-	private int lastColumnX, lastColumnZ;
-	private int lastColumnX2, lastColumnZ2;
-	private int lastCubeX, lastCubeY, lastCubeZ;
-	private int lastCubeX2, lastCubeY2, lastCubeZ2;
-	private long lastColumnAccessSame = 0, totalColumnAccess = 0;
-	private long lastCubeAccessSame = 0, totalCubeAccess = 0;
-
-	private void columnAccessStats(int x, int z) {
-		if ((lastColumnX == x && lastColumnZ == z) || (lastColumnX2 == x && lastColumnZ2 == z)) {
-			lastColumnAccessSame++;
-		}
-		if (!(lastColumnX == x && lastColumnZ == z)) {
-			lastColumnZ2 = lastColumnZ;
-			lastColumnX2 = lastColumnX;
-		}
-		lastColumnX = x;
-		lastColumnZ = z;
-		totalColumnAccess++;
-		if (totalColumnAccess % 1000000 == 0) {
-			System.out.printf("COLUMN %d/%d accesses the same as last2 (%f%%)\n", lastColumnAccessSame, totalColumnAccess, 100 * lastColumnAccessSame / (double) totalColumnAccess);
-		}
-	}
-
-	private void cubeAccessStats(int x, int y, int z) {
-		if ((lastCubeX == x && lastCubeY == y && lastCubeZ == z) || (lastCubeX2 == x && lastCubeY2 == y && lastCubeZ2 == z)) {
-			lastCubeAccessSame++;
-		}
-		if (!(lastCubeX == x && lastCubeY == y && lastCubeZ == z)) {
-			lastCubeX2 = lastCubeX;
-			lastCubeY2 = lastCubeY;
-			lastCubeZ2 = lastCubeZ;
-		}
-		lastCubeX = x;
-		lastCubeY = y;
-		lastCubeZ = z;
-		totalCubeAccess++;
-		if (totalCubeAccess % 10000000 == 0) {
-			System.out.printf("CUBE %d/%d accesses the same as last2 (%f%%)\n", lastCubeAccessSame, totalCubeAccess, 100 * lastCubeAccessSame / (double) totalCubeAccess);
-		}
+	public enum LoadType {
+		LOAD_ONLY, LOAD_OR_GENERATE, FORCE_LOAD
 	}
 }

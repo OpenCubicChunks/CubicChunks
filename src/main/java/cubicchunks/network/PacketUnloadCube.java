@@ -23,56 +23,37 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import java.util.List;
+public class PacketUnloadCube implements IMessage {
+	private long cubeAddress;
 
-public class PacketUnloadCubes implements IMessage {
+	public PacketUnloadCube(){}
 
-	public static final int MAX_SIZE = 0xFFFF;
-	
-	public long[] cubeAddresses;
-
-	public PacketUnloadCubes(){}
-
-	public PacketUnloadCubes(List<Cube> cubes) {
-		
-		if (cubes.size() > MAX_SIZE) {
-			throw new IllegalArgumentException("Don't send more than " + MAX_SIZE + " cube unloads at a time!");
-		}
-		
-		cubeAddresses = new long[cubes.size()];
-		int i = 0;
-		for (Cube cube : cubes) {
-			cubeAddresses[i] = cube.getAddress();
-			i++;
-		}
+	public PacketUnloadCube(long cubeAddress) {
+		this.cubeAddress = cubeAddress;
 	}
 
 	@Override
 	public void fromBytes(ByteBuf in) {
-		cubeAddresses = new long[in.readUnsignedShort()];
-		for (int i=0; i<cubeAddresses.length; i++) {
-			cubeAddresses[i] = in.readLong();
-		}
+		this.cubeAddress = in.readLong();
 	}
 
 	@Override
 	public void toBytes(ByteBuf out) {
-		out.writeShort(cubeAddresses.length);
-		for (int i=0; i<cubeAddresses.length; i++) {
-			out.writeLong(cubeAddresses[i]);
-		}
+		out.writeLong(cubeAddress);
 	}
 
-	public static class Handler extends AbstractClientMessageHandler<PacketUnloadCubes> {
+	public long getCubeAddress() {
+		return cubeAddress;
+	}
 
+	public static class Handler extends AbstractClientMessageHandler<PacketUnloadCube> {
 		@Override
-		public IMessage handleClientMessage(EntityPlayer player, PacketUnloadCubes message, MessageContext ctx) {
+		public IMessage handleClientMessage(EntityPlayer player, PacketUnloadCube message, MessageContext ctx) {
 			ClientHandler.getInstance().handle(message);
 			return null;
 		}

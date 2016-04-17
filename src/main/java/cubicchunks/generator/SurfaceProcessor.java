@@ -86,7 +86,7 @@ public class SurfaceProcessor extends CubeProcessor {
 				int zAbs = cube.getZ() << 4 | zRel;
 				int xzCoord = zRel << 4 | xRel;
 
-				// TODO: Reimplement this
+				// TODO: Reimplement biome block replacement
 				blockReplacer.replaceBlocks(this.biomes[xzCoord], xAbs, zAbs, this.noise[zRel * 16 + xRel]);
 			}
 		}

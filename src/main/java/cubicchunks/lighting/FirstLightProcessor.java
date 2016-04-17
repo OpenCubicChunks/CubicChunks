@@ -55,16 +55,18 @@ public class FirstLightProcessor extends CubeProcessor {
 			return false;
 		}
 
-		int minBlockX = cubeToMinBlock(cube.getX()) - 1;
-		int maxBlockX = cubeToMaxBlock(cube.getX()) + 1;
+		int minBlockX = cubeToMinBlock(cube.getX());
+		int maxBlockX = cubeToMaxBlock(cube.getX());
 
-		int minBlockZ = cubeToMinBlock(cube.getZ()) - 1;
-		int maxBlockZ = cubeToMaxBlock(cube.getZ()) + 1;
+		int minBlockZ = cubeToMinBlock(cube.getZ());
+		int maxBlockZ = cubeToMaxBlock(cube.getZ());
 
 		ICubeCache cache = worldContext.getCubeCache();
 
 		setRawSkylight(cache, cube, minBlockX, maxBlockX, minBlockZ, maxBlockZ);
-		diffuseSkylight(cache, worldContext, cube, minBlockX, maxBlockX, minBlockZ, maxBlockZ);
+		//I can't explain why btut it needs to be 1 block more in each direction
+		//otherwise it will cause light glitches
+		diffuseSkylight(cache, worldContext, cube, minBlockX - 1, maxBlockX + 1, minBlockZ - 1, maxBlockZ + 1);
 		return true;
 	}
 
@@ -74,22 +76,22 @@ public class FirstLightProcessor extends CubeProcessor {
 				//so that it's clearly visible that this value is not set to any value
 				int y = Integer.MIN_VALUE;
 				mutablePos.set(x, y, z);
-				setRawSkylightXZ(cube, mutablePos);
+				setRawSkylightXZ(cache, cube, mutablePos);
 			}
 		}
 	}
 
 	// technically the MutableBlockPos argument is redundant as it's a private field,
 	// but not passing any position is just confusing
-	private void setRawSkylightXZ(Cube cube, BlockPos.MutableBlockPos pos) {
+	private void setRawSkylightXZ(ICubeCache cache, Cube cube, BlockPos.MutableBlockPos pos) {
 
 		int cubeY = cube.getY();
+
+		int topBlockY = getHeightmapValue(cache, pos.getX(), pos.getZ()) - 1;
 
 		int localX = blockToLocal(pos.getX());
 		int localZ = blockToLocal(pos.getZ());
 
-		// compute bounds on the sky light gradient
-		int topBlockY = getHeightmapValue(cube.getColumn(), localX, localZ) - 1;
 		int topBlockCubeY = blockToCube(topBlockY);
 
 		if (topBlockCubeY == cubeY) {
@@ -303,7 +305,7 @@ public class FirstLightProcessor extends CubeProcessor {
 
 	private int getHeightmapValue(Column column, int localX, int localZ) {
 		Integer val = column.getHeightmapAt(localX, localZ);
-		return val == null ? Integer.MIN_VALUE : val;
+		return val == null ? Integer.MIN_VALUE/2 : val;
 	}
 
 	private boolean canUpdateCube(Cube cube, WorldContext worldContext) {

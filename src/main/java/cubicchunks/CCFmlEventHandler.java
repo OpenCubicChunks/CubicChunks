@@ -25,7 +25,6 @@ package cubicchunks;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -59,13 +58,6 @@ public class CCFmlEventHandler {
 		}
 		if (evt.phase == TickEvent.Phase.END && ccSystem.isTallWorld(world)) {
 			ccSystem.onWorldClientTick((WorldClient) world);
-		}
-	}
-
-	@SubscribeEvent
-	public void onEntityPlayerMPTick(TickEvent.PlayerTickEvent evt) {
-		if(evt.side.isServer() && evt.player instanceof EntityPlayerMP) {
-			ccSystem.processChunkLoadQueue((EntityPlayerMP) evt.player);
 		}
 	}
 }

@@ -268,7 +268,8 @@ public class Column extends Chunk {
 		Integer newSkylightY = oldSkylightY;
 		if (!getWorld().isRemote) {
 			newSkylightY = getHeightmapAt(localX, localZ);
-		} else {
+			//if oldSkylightY == null and newOpacity == 0 then we didn't change anything
+		} else if(!(oldSkylightY == null && newOpacity == 0)) {
 			Integer oldSkylightActual = oldSkylightY == null ? null : oldSkylightY - 1;
 			//to avoid unnecessary delay when breaking blocks we need to hack it clientside
 			if ((oldSkylightActual == null || pos.getY() > oldSkylightActual - 1) && newOpacity != 0) {
@@ -543,12 +544,9 @@ public class Column extends Chunk {
 	}
 
 	@Override
+	@Deprecated
 	public boolean isPopulated() {
-		boolean isAnyCubeLive = false;
-		for (Cube cube : this.cubes.values()) {
-			isAnyCubeLive |= cube.getGeneratorStage().isLastStage();
-		}
-		return this.chunkTicked && this.isTerrainPopulated && isAnyCubeLive;
+		return this.chunkTicked && isTerrainPopulated();
 	}
 
 	//isCHunkTicked() doesn't need changes
@@ -683,6 +681,19 @@ public class Column extends Chunk {
 		//TODO: need to make it returns something that contains correct data
 		//Forge needs it and editing Forge classes with ASM is a bad idea
 		return super.getEntityLists();
+	}
+
+	@Override
+	@Deprecated
+	public boolean isTerrainPopulated() {
+		//with cubic chunks the whole column is never fully generated,
+		//So some heuristic is needed to tell vanilla is terrain is populated here
+		//for now - tell it that it is if any cube is populated
+		boolean isAnyCubeLive = false;
+		for (Cube cube : this.cubes.values()) {
+			isAnyCubeLive |= cube.getGeneratorStage().isLastStage();
+		}
+		return isAnyCubeLive;
 	}
 
 	@Override

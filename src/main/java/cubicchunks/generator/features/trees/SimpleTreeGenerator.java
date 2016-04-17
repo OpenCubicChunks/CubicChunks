@@ -51,7 +51,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 		final int trunkHeight = rand.nextInt(MAX_TRUNK_HEIGHT + 1 - MIN_TRUNK_HEIGHT) + MIN_TRUNK_HEIGHT;
 
 		final int treeHeight = trunkHeight + 1;
-		// TODO: tweak these values
+		// TODO: tweak treeRadius and leavesHeight values
 		final int treeRadius = 2;
 		final int leavesHeight = 4;
 

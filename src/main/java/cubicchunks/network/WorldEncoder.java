@@ -28,6 +28,8 @@ import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -130,4 +132,17 @@ public class WorldEncoder {
 		}
 		return size;
 	}
+
+	public static ByteBuf createByteBufForWrite(byte[] data) {
+		ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
+		bytebuf.writerIndex(0);
+		return bytebuf;
+	}
+
+	public static ByteBuf createByteBufForRead(byte[] data) {
+		ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
+		bytebuf.readerIndex(0);
+		return bytebuf;
+	}
+
 }

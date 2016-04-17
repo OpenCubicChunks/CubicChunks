@@ -27,9 +27,9 @@ import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.GeneratorStage;
-import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
+import cubicchunks.server.CubePlayerManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.MathUtil;
@@ -43,7 +43,6 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.EnumFacing;
@@ -60,6 +59,7 @@ import net.minecraft.world.gen.ChunkProviderServer;
 import java.util.Random;
 
 import static cubicchunks.generator.terrain.GlobalGeneratorConfig.SEA_LEVEL;
+import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 //TODO: Get rid of this class, move it's parts to other classes
 public class CubicChunkSystem {
@@ -69,12 +69,13 @@ public class CubicChunkSystem {
 	public CubicChunkSystem() {
 		m_emptyEntitySet = new ClassInheritanceMultiMap(Entity.class);
 	}
+
 	public ChunkProviderServer getServerChunkCacheAndInitWorld(WorldServer worldServer) {
 		if (isTallWorld(worldServer)) {
 			ServerCubeCache serverCubeCache = new ServerCubeCache(worldServer);
 			WorldServerContext.put(worldServer, new WorldServerContext(worldServer, serverCubeCache));
 			return serverCubeCache;
-			
+
 		}
 		return null;
 	}
@@ -110,14 +111,6 @@ public class CubicChunkSystem {
 		return null;
 	}
 
-	public void processChunkLoadQueue(EntityPlayerMP player) {
-		WorldServer worldServer = player.getServerWorld();
-		if (isTallWorld(worldServer)) {
-			CubePlayerManager playerManager = (CubePlayerManager) worldServer.getPlayerChunkMap();
-			playerManager.processCubeQueues(player);
-		}
-	}
-
 	public boolean isTallWorld(World world) {
 		// for now, only tall-ify the overworld
 		return world.provider.getDimension() == 0 && world.getWorldType() == CubicChunks.CC_WORLD_TYPE;
@@ -148,7 +141,7 @@ public class CubicChunkSystem {
 
 			//worldServer.profiler.addSection("randomCubeTicks");
 			ServerCubeCache cubeCache = context.getCubeCache();
-			//TODO: Fix block tick
+			//TODO: Readd block tick
 			//for (ChunkCoordIntPair coords : WorldAccess.getActiveChunkSet(worldServer)) {
 			//	Column column = cubeCache.provideChunk(coords.chunkXPos, coords.chunkZPos);
 			//	column.doRandomTicks();
@@ -170,9 +163,9 @@ public class CubicChunkSystem {
 			int spawnCubeY = Coords.blockToCube(spawnPoint.getY());
 			int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
 			for (int cubeX = spawnCubeX - Distance; cubeX <= spawnCubeX + Distance; cubeX++) {
-				for (int cubeY = spawnCubeY - Distance; cubeY <= spawnCubeY + Distance; cubeY++) {
-					for (int cubeZ = spawnCubeZ - Distance; cubeZ <= spawnCubeZ + Distance; cubeZ++) {
-						serverCubeCache.loadCubeAndNeighbors(cubeX, cubeY, cubeZ);
+				for (int cubeZ = spawnCubeZ - Distance; cubeZ <= spawnCubeZ + Distance; cubeZ++) {
+					for (int cubeY = spawnCubeY + Distance; cubeY >= spawnCubeY - Distance; cubeY--) {
+						serverCubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_OR_GENERATE);
 					}
 				}
 			}
@@ -189,7 +182,7 @@ public class CubicChunkSystem {
 				long timeDiff = System.currentTimeMillis() - timeStart;
 				//CubicChunks.LOGGER.info("Done in {} ms", timeDiff);
 			}
-			
+
 			// save the cubes now
 			serverCubeCache.saveAllChunks();
 		}
@@ -239,7 +232,7 @@ public class CubicChunkSystem {
 		for (int cubeX = spawnCubeX - SearchDistance; cubeX <= spawnCubeX + SearchDistance; cubeX++) {
 			for (int cubeY = spawnCubeY - SearchDistance; cubeY <= spawnCubeY + SearchDistance; cubeY++) {
 				for (int cubeZ = spawnCubeZ - SearchDistance; cubeZ <= spawnCubeZ + SearchDistance; cubeZ++) {
-					serverCubeCache.loadCube(cubeX, cubeY, cubeZ);
+					serverCubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_OR_GENERATE);
 				}
 			}
 		}
@@ -294,7 +287,7 @@ public class CubicChunkSystem {
 	}
 
 	public Boolean checkBlockRangeIsInWorld(World world, int minBlockX, int minBlockY, int minBlockZ, int maxBlockX,
-			int maxBlockY, int maxBlockZ, boolean allowEmptyColumns) {
+	                                        int maxBlockY, int maxBlockZ, boolean allowEmptyColumns) {
 		if (isTallWorld(world)) {
 			WorldContext context = WorldContext.get(world);
 			// the min stage here has to be at least lighting, since the lighting system in World checks for blocks, but doesn't know about stages
@@ -305,13 +298,13 @@ public class CubicChunkSystem {
 	}
 
 	public Boolean checkEntityIsInWorld(World world, Entity entity, int minBlockX, int minBlockZ, int maxBlockX,
-			int maxBlockZ, boolean allowEmptyColumns) {
+	                                    int maxBlockZ, boolean allowEmptyColumns) {
 		if (isTallWorld(world)) {
 			WorldContext context = WorldContext.get(world);
 
 			final int blockDist = 32;
 			int blockY = MathHelper.floor_double(entity.posY);
-			
+
 			// the min cube stage can be live here since players should be in fully-generated cubes
 			final GeneratorStage minCubeStage = GeneratorStage.LIVE;
 			return context.blocksExist(minBlockX, blockY - blockDist, minBlockZ, maxBlockX, blockY + blockDist, maxBlockZ, allowEmptyColumns, minCubeStage);
@@ -426,7 +419,8 @@ public class CubicChunkSystem {
 		if (MathHelper.abs(poseye.getZ() - neighborPos.getZ()) > worldRenderer.renderDistanceChunks * 16) {
 			return null;
 		}
-		return worldRenderer.viewFrustum.getRenderChunk(neighborPos);*/ return null;
+		return worldRenderer.viewFrustum.getRenderChunk(neighborPos);*/
+		return null;
 	}
 
 	public ClassInheritanceMultiMap getEntityStore(Chunk chunk, int chunkSectionIndex) {

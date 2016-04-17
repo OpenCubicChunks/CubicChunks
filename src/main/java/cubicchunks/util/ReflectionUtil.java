@@ -24,12 +24,15 @@
 package cubicchunks.util;
 
 import com.google.common.base.Throwables;
+import scala.actors.threadpool.Arrays;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ReflectionUtil {
 	public static final <T> T get(Object inObject, Field field, Class<T> fieldType) {
@@ -92,5 +95,40 @@ public class ReflectionUtil {
 
 	public static String getFieldDescriptor(String name) {
 		return "L" + name + ";";
+	}
+
+	private static final Field getField(Class<?> owner, Class<?> type, String... possibleNames) {
+		Field[] allFields = owner.getDeclaredFields();
+		Field foundField = null;
+		Set<String> names = new HashSet<>();
+		names.addAll(Arrays.asList(possibleNames));
+
+		for(Field field : allFields) {
+			if(field.getType() == type && names.contains(field.getName())) {
+				foundField = field;
+				break;
+			}
+		}
+		foundField.setAccessible(true);
+		return foundField;
+	}
+	public static MethodHandle getFieldGetterHandle(Class<?> owner, Class<?> type, String... possibleNames) {
+		Field field = getField(owner, type, possibleNames);
+		try {
+			return MethodHandles.lookup().unreflectGetter(field);
+		} catch (IllegalAccessException e) {
+			//if it happens - eighter something has gone horribly wrong or the JVM is blocking access
+			throw new Error(e);
+		}
+	}
+
+	public static MethodHandle getFieldSetterHandle(Class<?> owner, Class<?> type, String... possibleNames) {
+		Field field = getField(owner, type, possibleNames);
+		try {
+			return MethodHandles.lookup().unreflectSetter(field);
+		} catch (IllegalAccessException e) {
+			//if it happens - eighter something has gone horribly wrong or the JVM is blocking access
+			throw new Error(e);
+		}
 	}
 }

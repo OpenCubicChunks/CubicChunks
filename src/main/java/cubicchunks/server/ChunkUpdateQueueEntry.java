@@ -21,38 +21,30 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.visibility;
+package cubicchunks.server;
 
-import java.util.Collection;
+/**
+ * Queued chunk entry for a specific player.
+ * Stores address of the cube/column to update and type of update,
+ */
+class ChunkUpdateQueueEntry {
+	private final long cubeAddress;
+	private final Type type;
 
-import cubicchunks.util.AddressTools;
+	ChunkUpdateQueueEntry(long address, ChunkUpdateQueueEntry.Type type) {
+		this.type = type;
+		this.cubeAddress = address;
+	}
 
-public class EllipsoidalCubeSelector extends CubeSelector {
-	
-	private static final int SemiAxisY = 3;
-	private static final int SemiAxisY2 = SemiAxisY * SemiAxisY;
-	
-	@Override
-	protected void computeVisibleCubes(Collection<Long> out, int cubeX, int cubeY, int cubeZ, int viewDistance) {
-		// equation for an axis-aligned ellipsoid:
-		// x^2/a^2 + y^2/b^2 + z^2/c^2 = 1
-		// where a,b,c are the semi-principal axes
-		int SemiAxisXZ = viewDistance;
-		int SemiAxisXZ2 = SemiAxisXZ * SemiAxisXZ;
-		
-		for (int x = -SemiAxisXZ; x <= SemiAxisXZ; x++) {
-			int x2 = x * x;
-			for (int z = -SemiAxisXZ; z <= SemiAxisXZ; z++) {
-				int z2 = z * z;
-				int test = (x2 + z2 - SemiAxisXZ2) * SemiAxisY2;
-				for (int y = -SemiAxisY; y <= SemiAxisY; y++) {
-					int y2 = y * y;
-					if (test <= -y2 * SemiAxisXZ2) // test for point in ellipsoid, but using only integer arithmetic
-					{
-						out.add(AddressTools.getAddress(x + cubeX, y + cubeY, z + cubeZ));
-					}
-				}
-			}
-		}
+	long getCubeAddress() {
+		return cubeAddress;
+	}
+
+	Type getType() {
+		return type;
+	}
+
+	enum Type {
+		COLUMN_LOAD, COLUMN_UNLOAD, CUBE_LOAD, CUBE_UNLOAD
 	}
 }
