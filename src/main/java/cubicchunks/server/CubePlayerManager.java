@@ -26,7 +26,6 @@ package cubicchunks.server;
 import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Iterators;
 import cubicchunks.CubicChunks;
 import cubicchunks.network.*;
 import cubicchunks.util.AddressTools;
@@ -156,8 +155,6 @@ public class CubePlayerManager extends PlayerManager {
 	@Override
 	@Deprecated
 	public Iterator<Chunk> getChunkIterator() {
-		//TODO: Fix issue with crash in WorldServer on tick when this returns correct iterator
-		if (true) return Iterators.emptyIterator();
 		final Iterator<ColumnWatcher> iterator = this.columnWatchers.valueCollection().iterator();
 		return new AbstractIterator<Chunk>() {
 			protected Chunk computeNext() {
@@ -760,10 +757,6 @@ public class CubePlayerManager extends PlayerManager {
 				return;
 			}
 
-			//TODO: fix it. if there is any player that still didn't get this cube - don't send updates yet
-			if (!this.players.forEachValue(v -> v.sawChunk)) {
-				return;
-			}
 			World world = this.cube.getWorld();
 
 			if (this.dirtyBlocks.size() >= ForgeModContainer.clumpingThreshold) {
@@ -868,10 +861,6 @@ public class CubePlayerManager extends PlayerManager {
 
 		public long getCubeAddress() {
 			return cubeAddress;
-		}
-
-		public void setPlayerSawCube(EntityPlayerMP player) {
-			this.players.get(player.getEntityId()).sawChunk = true;
 		}
 	}
 

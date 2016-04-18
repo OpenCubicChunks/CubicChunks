@@ -28,10 +28,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 class WatcherPlayerEntry {
 
 	EntityPlayerMP player;
-	boolean sawChunk;
 
 	public WatcherPlayerEntry(EntityPlayerMP player) {
 		this.player = player;
-		this.sawChunk = false;
 	}
 }

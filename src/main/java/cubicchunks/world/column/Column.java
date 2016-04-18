@@ -147,7 +147,9 @@ public class Column extends Chunk {
 
 	@Override
 	public ExtendedBlockStorage[] getBlockStorageArray() {
-		throw new UnsupportedOperationException("This method is incompatible with CubicChunks. Don't use it.");
+		//return an empty array for vanilla. The only place other than packets and chunk saving/loading is world.updateBlocks.
+		//we update blocks somewhere else.
+		return new ExtendedBlockStorage[0];
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -157,7 +159,7 @@ public class Column extends Chunk {
 
 	@Override
 	public void generateSkylightMap() {
-		throw new UnsupportedOperationException("Functionality of this methid is replaced with LightingManager");
+		throw new UnsupportedOperationException("Functionality of this method is replaced with LightingManager");
 	}
 
 	@Override
@@ -213,41 +215,41 @@ public class Column extends Chunk {
 
 		//if(oldBlock != newBlock) {
 		{
-			if(!this.getWorld().isRemote) {
-				if(oldBlock != newBlock) {
+			if (!this.getWorld().isRemote) {
+				if (oldBlock != newBlock) {
 					oldBlock.breakBlock(this.getWorld(), pos, oldBlockState);
 				}
 				TileEntity te = this.getTileEntity(pos, EnumCreateEntityType.CHECK);
-				if(te != null && te.shouldRefresh(this.getWorld(), pos, oldBlockState, newBlockState)) {
+				if (te != null && te.shouldRefresh(this.getWorld(), pos, oldBlockState, newBlockState)) {
 					this.getWorld().removeTileEntity(pos);
 				}
-			} else if(oldBlock.hasTileEntity(oldBlockState)) {
+			} else if (oldBlock.hasTileEntity(oldBlockState)) {
 				TileEntity te = this.getTileEntity(pos, EnumCreateEntityType.CHECK);
-				if(te != null && te.shouldRefresh(this.getWorld(), pos, oldBlockState, newBlockState)) {
+				if (te != null && te.shouldRefresh(this.getWorld(), pos, oldBlockState, newBlockState)) {
 					this.getWorld().removeTileEntity(pos);
 				}
 			}
 		}
 
-		if(cube.getBlockState(pos).getBlock() != newBlock) {
+		if (cube.getBlockState(pos).getBlock() != newBlock) {
 			return null;
 		}
 
 		this.doOnBlockSetLightUpdates(pos, newBlockState);
 
-		if(!this.getWorld().isRemote && oldBlock != newBlock) {
+		if (!this.getWorld().isRemote && oldBlock != newBlock) {
 			newBlock.onBlockAdded(this.getWorld(), pos, newBlockState);
 		}
 
-		if(newBlock.hasTileEntity(newBlockState)) {
+		if (newBlock.hasTileEntity(newBlockState)) {
 			TileEntity te = this.getTileEntity(pos, EnumCreateEntityType.CHECK);
 
-			if(te == null) {
+			if (te == null) {
 				te = newBlock.createTileEntity(this.getWorld(), newBlockState);
 				this.getWorld().setTileEntity(pos, te);
 			}
 
-			if(te != null) {
+			if (te != null) {
 				te.updateContainingBlockInfo();
 			}
 		}
@@ -269,7 +271,7 @@ public class Column extends Chunk {
 		if (!getWorld().isRemote) {
 			newSkylightY = getHeightmapAt(localX, localZ);
 			//if oldSkylightY == null and newOpacity == 0 then we didn't change anything
-		} else if(!(oldSkylightY == null && newOpacity == 0)) {
+		} else if (!(oldSkylightY == null && newOpacity == 0)) {
 			Integer oldSkylightActual = oldSkylightY == null ? null : oldSkylightY - 1;
 			//to avoid unnecessary delay when breaking blocks we need to hack it clientside
 			if ((oldSkylightActual == null || pos.getY() > oldSkylightActual - 1) && newOpacity != 0) {
@@ -397,7 +399,7 @@ public class Column extends Chunk {
 			this.setModified(true);
 		} else {
 			CubicChunks.LOGGER.warn(
-					"{} Tried to remove entity {} from cube ({}, {},{}), but it was not there. Entity thinks it's in cube ({},{},{})",
+					"{} Tried to remove entity {} from cube ({}, {}, {}) from column entity list, but it was not there. Entity thinks it's in cube ({},{},{})",
 					this.getWorld().isRemote ? "CLIENT" : "SERVER",
 					entity.getClass().getName(),
 					this.xPosition, cubeY, this.zPosition,
@@ -424,11 +426,16 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public void addTileEntity(TileEntity tileEntityIn) {
-		this.addTileEntity(tileEntityIn.getPos(), tileEntityIn);
+	public void addTileEntity(TileEntity tileEntity) {
+		// pass off to the cube
+		int cubeY = Coords.blockToCube(tileEntity.getPos().getY());
+		Cube cube = getCube(cubeY);
 
-		if (this.isChunkLoaded) {
-			this.getWorld().addTileEntity(tileEntityIn);
+		if (cube != null) {
+			cube.addTileEntity(tileEntity);
+		} else {
+			CubicChunks.LOGGER.warn("No cube at ({},{},{}) to add tile entity (block {},{},{})!", this.xPosition, cubeY, this.zPosition,
+					tileEntity.getPos().getX(), tileEntity.getPos().getY(), tileEntity.getPos().getZ());
 		}
 	}
 
@@ -698,7 +705,7 @@ public class Column extends Chunk {
 
 	@Override
 	public void removeInvalidTileEntity(BlockPos pos) {
-		throw new UnsupportedOperationException("Not implemented ebcause not used");
+		throw new UnsupportedOperationException("Not implemented because not used");
 	}
 
 	//===========================================

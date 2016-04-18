@@ -26,6 +26,7 @@ package cubicchunks.world;
 import com.google.common.base.Predicate;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ClassInheritanceMultiMap;
@@ -147,12 +148,16 @@ public class EntityContainer {
 		for (Entity entity : this.entities) {
 
 			NBTTagCompound nbtEntity = new NBTTagCompound();
-			entity.writeToNBT(nbtEntity);
-			this.hasActiveEntities = true;
-			nbtEntities.appendTag(nbtEntity);
+			if(entity.writeToNBTOptional(nbtEntity)) {
+				if(entity instanceof EntityPlayerMP) {
+					int i = 0;
+				}
+				this.hasActiveEntities = true;
+				nbtEntities.appendTag(nbtEntity);
 
-			if (listener != null) {
-				listener.onEntity(entity);
+				if (listener != null) {
+					listener.onEntity(entity);
+				}
 			}
 		}
 	}

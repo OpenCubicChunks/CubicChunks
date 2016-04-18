@@ -267,6 +267,13 @@ public class Cube {
 		return blockEntity;
 	}
 
+	public void addTileEntity(TileEntity tileEntity) {
+		this.addTileEntity(tileEntity.getPos(), tileEntity);
+		if (this.isCubeLoaded) {
+			this.getWorld().addTileEntity(tileEntity);
+		}
+	}
+
 	public void addTileEntity(BlockPos pos, TileEntity tileEntity) {
 		// update the tile entity
 		tileEntity.setWorldObj(this.getWorld());
@@ -622,7 +629,11 @@ public class Cube {
 		}
 
 		public void remove(int localX, int localZ) {
-			minMaxHeights[index(localX, localZ)] = -1;
+			int index = index(localX, localZ);
+			if(minMaxHeights[index] != -1) {
+				toUpdateCounter--;
+			}
+			minMaxHeights[index] = -1;
 		}
 
 		private short pack(int min, int max) {

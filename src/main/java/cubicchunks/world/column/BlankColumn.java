@@ -137,7 +137,7 @@ public class BlankColumn extends Column {
 	}
 	
 	@Override
-	public void addTileEntity(final TileEntity a1) {
+	public void addTileEntity(final TileEntity tileEntity) {
 	}
 	
 	@Override
