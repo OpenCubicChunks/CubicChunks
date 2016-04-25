@@ -415,7 +415,6 @@ public class Cube {
 	}
 
 	public IBlockState setBlockForGeneration(BlockPos pos, IBlockState newBlockState) {
-
 		IBlockState oldBlockState = getBlockState(pos);
 
 		// did anything actually change?
@@ -443,12 +442,12 @@ public class Cube {
 		}
 		this.isModified = true;
 
-		// update the column light index
+		//update the column light index
 		int blockY = Coords.localToBlock(this.cubeY, y);
 
 		IOpacityIndex index = this.column.getOpacityIndex();
 		int opacity = newBlock.getLightOpacity(newBlockState);
-		index.setOpacity(x, blockY, z, opacity);
+		index.onOpacityChange(x, blockY, z, opacity);
 		return oldBlockState;
 	}
 

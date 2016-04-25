@@ -193,7 +193,9 @@ public class Column extends Chunk {
 	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
 		// is there a chunk for this block?
 		int cubeY = Coords.blockToCube(pos.getY());
-
+		if(!getWorld().isRemote) {
+			int i = 0;
+		}
 		// did anything change?
 		IBlockState oldBlockState = this.getBlockState(pos);
 		if (oldBlockState == newBlockState) {
@@ -266,7 +268,7 @@ public class Column extends Chunk {
 
 		// did the top non-transparent block change?
 		Integer oldSkylightY = getHeightmapAt(localX, localZ);
-		this.opacityIndex.setOpacity(localX, pos.getY(), localZ, newOpacity);
+		this.opacityIndex.onOpacityChange(localX, pos.getY(), localZ, newOpacity);
 		Integer newSkylightY = oldSkylightY;
 		if (!getWorld().isRemote) {
 			newSkylightY = getHeightmapAt(localX, localZ);
@@ -822,6 +824,14 @@ public class Column extends Chunk {
 		Integer topBlockY = this.opacityIndex.getTopBlockY(localX, localZ);
 		if (topBlockY != null) {
 			return topBlockY + 1;
+		}
+		return null;
+	}
+
+	public Integer getHeightmapBelow(int localX, int blockY, int localZ) {
+		Integer topBelow = this.opacityIndex.getTopBlockYBelow(localX, localZ, blockY);
+		if(topBelow != null) {
+			return topBelow + 1;
 		}
 		return null;
 	}

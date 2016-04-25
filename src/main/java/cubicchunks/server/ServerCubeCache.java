@@ -368,6 +368,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			// the column was loaded
 			column.setLastSaveTime(this.worldServer.getTotalWorldTime());
 		}
+		if(column == null) {
+			return null;
+		}
 		this.loadedColumns.put(AddressTools.getAddress(cubeX, cubeZ), column);
 		return column;
 	}

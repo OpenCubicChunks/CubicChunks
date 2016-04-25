@@ -40,10 +40,10 @@ public class GeneratorPipeline {
 	
 	private static class StageProcessor {
 		
-		public QueueProcessor processor;
+		public QueueProcessor<Long> processor;
 		public float share;
 		
-		public StageProcessor(QueueProcessor processor) {
+		public StageProcessor(QueueProcessor<Long> processor) {
 			this.processor = processor;
 			this.share = 0f;
 		}

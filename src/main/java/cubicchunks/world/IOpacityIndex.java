@@ -26,13 +26,13 @@ package cubicchunks.world;
 public interface IOpacityIndex {
 
 	/**
-	 * Returns opacity at given position.
+	 * Returns true if opacity at given position != 0, or false if it is 0
 	 * @param localX local block X position (0..15).
 	 * @param blockY block Y position (any integer from CubicChunks mod height range).
 	 * @param localZ local block Z position (0..15)
-	 * @return Opacity value 0..255
+	 * @return True is opacity != 0
 	 */
-	int getOpacity(int localX, int blockY, int localZ);
+	boolean isOpaque(int localX, int blockY, int localZ);
 
 	/**
 	 * Set opacity at given position.
@@ -41,7 +41,7 @@ public interface IOpacityIndex {
 	 * @param localZ local block Z position (0..15)
 	 * @param opacity new opacity (0..255)
 	 */
-	void setOpacity(int localX, int blockY, int localZ, int opacity);
+	void onOpacityChange(int localX, int blockY, int localZ, int opacity);
 
 	/**
 	 * Returns Y position of the top non-transparent block.
@@ -50,6 +50,14 @@ public interface IOpacityIndex {
 	 * @return Y position of the top non-transparent block, or null if one doesn't exist
 	 */
 	Integer getTopBlockY(int localX, int localZ);
+
+	/**
+	 * Returns Y position of the top non-transparent block that is below given blockY.
+	 * @param localX local block X position (0..15).
+	 * @param localZ local block Z position (0..15)
+	 * @return Y position of the top non-transparent block below blockY, or null if one doesn't exist.
+	 */
+	Integer getTopBlockYBelow(int localX, int localZ, int blockY);
 
 	/**
 	 * Returns Y position of the bottom non-transparent block.

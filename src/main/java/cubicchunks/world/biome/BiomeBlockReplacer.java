@@ -80,6 +80,7 @@ public class BiomeBlockReplacer {
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
 		/*
+		 * TODO: Readd this
 		 * Default BuildDepth is 8,388,608. the Earth has a radius of ~6,378,100m. Not too far off. Let's make this
 		 * world similar to the earth! Crust - 0 to 35km (varies between 5 and 70km thick due to the sea and mountains)
 		 * Upper Mesosphere - 35km to 660km Lower Mesosphere - 660km to 2890km Outer Core - 2890km to 5150km Inner Core
@@ -93,10 +94,6 @@ public class BiomeBlockReplacer {
 			if (yAbs <= ((AddressTools.MinY + 64) << 4) + this.rand.nextInt(16)) {
 				if (canSetBlock) {
 					setBlock(this.cube, pos, Blocks.BEDROCK.getDefaultState());
-				}
-			} else if (yAbs < -32768 + this.rand.nextInt(256)) {
-				if (canSetBlock) {
-					setBlock(this.cube, pos, Blocks.LAVA.getDefaultState());
 				}
 			} else {
 				// Current block

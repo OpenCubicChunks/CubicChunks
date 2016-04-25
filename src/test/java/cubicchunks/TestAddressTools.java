@@ -23,14 +23,13 @@
  */
 package cubicchunks;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import cubicchunks.util.AddressTools;
+import org.junit.Test;
 
 import java.util.HashSet;
 
-import org.junit.Test;
-
-import cubicchunks.util.AddressTools;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class TestAddressTools {
 	

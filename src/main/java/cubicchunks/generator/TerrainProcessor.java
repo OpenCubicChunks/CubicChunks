@@ -54,7 +54,6 @@ public final class TerrainProcessor extends CubeProcessor {
 		generateTerrain(cube, rawDensity);
 		
 		//cube.getWorld().profiler.endSection();
-
 		return true;
 	}
 
