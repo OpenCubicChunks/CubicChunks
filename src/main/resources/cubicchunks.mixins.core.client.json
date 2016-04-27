@@ -1,0 +1,10 @@
+{
+  "required": true,
+  "package": "cubicchunks.asm.mixin.client",
+  "refmap": "cubicchunks.mixins.core.client.refmap.json",
+  "client": [
+    "MixinWorld_HeightLimits",
+    "MixinRenderGlobal_EntityRenderFix",
+    "MixinChunkCache_HeightLimits"
+  ]
+}

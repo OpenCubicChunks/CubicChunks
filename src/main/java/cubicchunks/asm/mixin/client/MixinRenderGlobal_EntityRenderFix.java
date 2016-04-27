@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin;
+package cubicchunks.asm.mixin.client;
 
 import cubicchunks.asm.AsmRender;
 import cubicchunks.asm.AsmWorldHooks;
@@ -34,6 +34,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -42,19 +43,23 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Fixes renderEntities crashing when rendering cubes
+ * that are not at existing array index in chunk.getEntityLists()
+ */
 @Mixin(RenderGlobal.class)
-public class MixinRenderGlobal {
+public class MixinRenderGlobal_EntityRenderFix {
 
 	private BlockPos position;
 
 	/**
 	 * This allows to get the Y position by injecting itself directly before call to chunk.getEntityLists
 	 */
+	@Group(name = "renderEntitiesFix", max = 3)
 	@Inject(
 			method = "renderEntities",
 			at = @At(
 					value = "INVOKE",
-					//target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getPosition()Lnet/minecraft/util/math/BlockPos;"
 					target = "Lnet/minecraft/client/multiplayer/WorldClient;getChunkFromBlockCoords(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/chunk/Chunk;"
 			),
 			locals = LocalCapture.CAPTURE_FAILHARD,
@@ -79,6 +84,7 @@ public class MixinRenderGlobal {
 	 * <p>
 	 * Then chunk.getEntityLists is redirected to a method that returns a 1-element array.
 	 */
+	@Group(name = "renderEntitiesFix")
 	@Redirect(
 			method = "renderEntities",
 			at = @At(
@@ -94,6 +100,11 @@ public class MixinRenderGlobal {
 		return pos.getY();
 	}
 
+	/**
+	 * Return a 1-element array for Cubic Chunks code,
+	 * or original chunk.getEntityLists if not cubic chunks world.
+	 */
+	@Group(name = "renderEntitiesFix")
 	@Redirect(
 			method = "renderEntities",
 			at = @At(

@@ -21,72 +21,65 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin;
+package cubicchunks.asm.mixin.client;
 
-import cubicchunks.asm.AsmWorldHooks;
 import cubicchunks.util.MathUtil;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldProvider;
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import static cubicchunks.asm.AsmWorldHooks.getMaxHeight;
 import static cubicchunks.asm.AsmWorldHooks.getMinHeight;
 
 @Mixin(World.class)
-public abstract class MixinWorld {
+public abstract class MixinWorld_HeightLimits {
 
-	@Shadow private int skylightSubtracted;
+	@Shadow public WorldProvider provider;
 
-	@Shadow public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
+	@Shadow public abstract boolean isValid(BlockPos pos);
+
+	@Shadow public abstract boolean isBlockLoaded(BlockPos pos);
 
 	@Shadow public abstract IBlockState getBlockState(BlockPos pos);
 
-	@Overwrite
-	public boolean isValid(BlockPos pos) {
-		if (pos.getX() < -30000000 || pos.getX() > 30000000) {
-			return false;
-		}
-		if (pos.getY() < getMinHeight((World) (Object) this) || pos.getY() >= AsmWorldHooks.getMaxHeight((World) (Object) this)) {
-			return false;
-		}
-		if (pos.getZ() < -30000000 || pos.getZ() > 30000000) {
-			return false;
-		}
-		return true;
-	}
+	@Shadow public abstract int getLightFor(EnumSkyBlock type, BlockPos pos);
 
+	@Shadow public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
+
+	/**
+	 * Overwrite getLightFromNeighborsFor to use modified height limit.
+	 */
+	//TODO: Use @Redirect if possible when constant redirecting gets implemented.
 	@Overwrite
-	public int getLight(BlockPos pos) {
-		if (pos.getY() < getMinHeight((World) (Object) this)) {
+	public int getLightFromNeighborsFor(EnumSkyBlock type, BlockPos pos) {
+		if (this.provider.getHasNoSky() && type == EnumSkyBlock.SKY) {
 			return 0;
 		}
-		if (pos.getY() > getMaxHeight((World) (Object) this)) {
-			return 15;
+		//changed 0 to minY
+		int minY = getMinHeight((World) (Object) this);
+		if (pos.getY() < minY) {
+			pos = new BlockPos(pos.getX(), minY, pos.getZ());
 		}
-		return this.getChunkFromBlockCoords(pos).getLightSubtracted(pos, 0);
-	}
 
-	@Overwrite
-	public int getLight(BlockPos pos, boolean checkNeighbors) {
 		if (!this.isValid(pos)) {
-			if (pos.getY() < getMinHeight((World) (Object) this)) {
-				return 0;
-			}
-			return 15;
+			return type.defaultLightValue;
 		}
-		if (checkNeighbors && this.getBlockState(pos).useNeighborBrightness()) {
-			int up = this.getLight(pos.up(), false);
-			int east = this.getLight(pos.east(), false);
-			int west = this.getLight(pos.west(), false);
-			int south = this.getLight(pos.south(), false);
-			int north = this.getLight(pos.north(), false);
+		if (!this.isBlockLoaded(pos)) {
+			return type.defaultLightValue;
+		}
+		if (this.getBlockState(pos).useNeighborBrightness()) {
+			int up = this.getLightFor(type, pos.up());
+			int east = this.getLightFor(type, pos.east());
+			int west = this.getLightFor(type, pos.west());
+			int south = this.getLightFor(type, pos.south());
+			int north = this.getLightFor(type, pos.north());
 			return MathUtil.max(up, east, west, south, north);
 		}
-		Chunk chunk = this.getChunkFromBlockCoords(pos);
-		return chunk.getLightSubtracted(pos, this.skylightSubtracted);
+		return this.getChunkFromBlockCoords(pos).getLightFor(type, pos);
 	}
 }

@@ -39,6 +39,7 @@ targetCompatibility = '1.8'
 
 mixin {
 	add sourceSets.main, "cubicchunks.mixins.core.refmap.json"
+	add sourceSets.main, "cubicchunks.mixins.core.client.refmap.json"
 }
 
 repositories {
@@ -160,7 +161,7 @@ jar {
 		attributes 'FMLCorePlugin': 'cubicchunks.asm.CoreModLoadingPlugin', 'FMLCorePluginContainsFMLMod': 'true'
 		attributes 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
 		attributes 'TweakOrder': '0'
-		attributes 'MixinConfigs': 'cubicchunks.mixins.core.json'
+		attributes 'MixinConfigs': 'cubicchunks.mixins.core.json', 'cubicchunks.mixins.core.client.json'
 	}
 	configurations.shade.each { dep ->
 		from(project.zipTree(dep)){

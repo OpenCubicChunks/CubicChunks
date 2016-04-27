@@ -23,47 +23,14 @@
  */
 package cubicchunks.asm;
 
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.mixin.MixinEnvironment;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import org.spongepowered.asm.mixin.extensibility.IMixinErrorHandler;
+import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
-import java.util.Map;
-
-@IFMLLoadingPlugin.MCVersion(value = "1.9")
-@IFMLLoadingPlugin.SortingIndex(value = 5000)
-@IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
-public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
-
-	public CoreModLoadingPlugin() {
-		MixinBootstrap.init();
-		MixinEnvironment.setCompatibilityLevel(MixinEnvironment.CompatibilityLevel.JAVA_8);
-		MixinEnvironment.getDefaultEnvironment()
-				.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
-		MixinEnvironment.getDefaultEnvironment().
-				addConfiguration("cubicchunks.mixins.core.json").
-				addConfiguration("cubicchunks.mixins.core.client.json");
-	}
-
+public class MixinErrorHandler implements IMixinErrorHandler {
 	@Override
-	public String[] getASMTransformerClass() {
-		return new String[]{"cubicchunks.asm.CubicChunksTransformer"};
-	}
-
-	@Override
-	public String getModContainerClass() {
-		return null;
-	}
-
-	@Override
-	public String getSetupClass() {
-		return null;
-	}
-
-	@Override
-	public void injectData(Map<String, Object> data) { }
-
-	@Override
-	public String getAccessTransformerClass() {
-		return null;
+	public ErrorAction onError(String targetClassName, Throwable th, IMixinInfo mixin, ErrorAction action) {
+		FMLCommonHandler.instance().exitJava(-1, false);
+		throw new AssertionError();
 	}
 }

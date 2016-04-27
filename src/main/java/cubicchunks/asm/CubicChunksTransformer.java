@@ -29,6 +29,7 @@ import cubicchunks.util.ReflectionUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.*;
 
+import javax.annotation.Resource;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import java.util.Set;
 
 import static cubicchunks.asm.Mappings.*;
 
+@Resource
 public class CubicChunksTransformer implements IClassTransformer{
 
 	private List<Transformer> transformers = new ArrayList<>();
@@ -48,21 +50,21 @@ public class CubicChunksTransformer implements IClassTransformer{
 		//these 4 transformations allow the internals of Minecraft code to see non-default light values outside of 0..255 height
 		//add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT, WORLD_GET_LIGHT_DESC);
 		//add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT_CHECK, WORLD_GET_LIGHT_CHECK_DESC);
-		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FOR);
-		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR);
+		//add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FOR);
+		//add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR);
 		//World.isAreaLoaded is used to check if some things can be updated (like light). If it returns false - update doesn't happen. This fixes it
 		//Note: there are some methods that use it incorrectly ie. by checking it at some constant height (usually 0).
-		add(WorldIsAreaLoadedReplace.class, WORLD, WORLD_IS_AREA_LOADED_IIIIIIZ, WORLD_IS_AREA_LOADED_IIIIIIZ_DESC);
+		//add(WorldIsAreaLoadedReplace.class, WORLD, WORLD_IS_AREA_LOADED_IIIIIIZ, WORLD_IS_AREA_LOADED_IIIIIIZ_DESC);
 		//updateEntityWithOptionalForce uses isAreaLoaded with height of 0. Change it to use entity position.
-		add(WorldEntityUpdateFix.class, WORLD, WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE);
+		//add(WorldEntityUpdateFix.class, WORLD, WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE);
 
 		//ChunkCache is used by some AI code and (as subclass of ChunkCache) - rendering code.
 		//getBlockState is used only in AI code but the same transformation as for other 2 methods works for it
-		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_BLOCK_STATE);
+		//add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_BLOCK_STATE);
 		//these 2 methods are actually used by rendering code. Moving hardcoded limits in these methods
 		//makes it possible to actually see non-default light values outside of 0..255
-		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_LIGHT_FOR_EXT);
-		add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_LIGHT_FOR);
+		//add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_LIGHT_FOR_EXT);
+		//add(ChunkCacheHeightCheckReplacement.class, CHUNK_CACHE, CHUNK_CACHE_GET_LIGHT_FOR);
 
 		//this transformation makes render distance a cube (height dependent on render distance)
 		add(ViewFrustumSetCountChunks.class, VIEW_FRUSTUM, VIEW_FRUSTUM_SET_COUNT_CHUNKS);
@@ -138,7 +140,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 			reader.accept(visitor, 0);
 			for(MethodClassVisitor mcv : visitors) {
 				if(!mcv.isSuccessful()) {
-					throw new RuntimeException("Transformation failed for class " + name + " for method: " + mcv);
+					throw new RuntimeException("Transformation failed for class " + transformedName + " for method: " + mcv);
 				}
 			}
 			return writer.toByteArray();
