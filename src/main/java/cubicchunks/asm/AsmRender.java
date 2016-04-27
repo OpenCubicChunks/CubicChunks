@@ -23,7 +23,6 @@
  */
 package cubicchunks.asm;
 
-import com.google.common.base.Throwables;
 import cubicchunks.CubicChunkSystem;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.ReflectionUtil;
@@ -43,7 +42,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 
-public class RenderMethods {
+public class AsmRender {
 	private static CubicChunkSystem cc;
 
 	private static MethodHandle getWorldRenderGlobal = getMethodHandleGetWorld();
@@ -99,15 +98,8 @@ public class RenderMethods {
 		return cc.frustumViewUpdateChunkPositions(_this);
 	}
 
-	public static final ClassInheritanceMultiMap getEntityList(RenderGlobal render, RenderChunk renderer) {
-		WorldClient w;
-		try {
-			w = (WorldClient) getWorldRenderGlobal.invoke(render);
-		} catch (Throwable throwable) {
-			throw Throwables.propagate(throwable);
-		}
-		BlockPos pos = renderer.getPosition();
-		return cc.getEntityStore(w.getChunkFromBlockCoords(pos), pos.getY() >> 4);
+	public static final ClassInheritanceMultiMap getEntityList(Chunk chunk, int y) {
+		return cc.getEntityStore(chunk, y);
 	}
 
 	public static final RenderChunk getRenderChunk(ViewFrustum vf, BlockPos pos) {
@@ -115,7 +107,7 @@ public class RenderMethods {
 	}
 
 	public static final void registerChunkSystem(CubicChunkSystem cc) {
-		RenderMethods.cc = cc;
+		AsmRender.cc = cc;
 	}
 
 	public static final IBlockState blockFromCache(RegionRenderCache cache, BlockPos pos) throws Throwable {

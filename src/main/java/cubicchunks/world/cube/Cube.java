@@ -237,13 +237,6 @@ public class Cube {
 		boolean wasRemoved = this.entities.remove(entity);
 		if (wasRemoved) {
 			this.isModified = true;
-		} else {
-			LOGGER.warn(String.format("%s Tried to remove entity %s from cube (%d,%d,%d), but it was not there. Entity thinks it's in cube (%d,%d,%d)",
-					this.world.isRemote ? "CLIENT" : "SERVER",
-					entity.getClass().getName(),
-					this.cubeX, this.cubeY, this.cubeZ,
-					entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
-			));
 		}
 		return wasRemoved;
 	}

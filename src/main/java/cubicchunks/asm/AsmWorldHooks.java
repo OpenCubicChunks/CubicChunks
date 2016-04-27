@@ -33,7 +33,7 @@ import net.minecraft.world.WorldType;
  * This class has methods to get information about works.
  * Should be used from asm transformed code.
  */
-public final class WorldMethods {
+public final class AsmWorldHooks {
 	private static CubicChunkSystem cc;
 
 	public static int getMinHeight(World world) {
@@ -61,7 +61,7 @@ public final class WorldMethods {
 	}
 
 	public static void registerChunkSystem(CubicChunkSystem cc) {
-		WorldMethods.cc = cc;
+		AsmWorldHooks.cc = cc;
 	}
 
 	public static Boolean isAreaLoaded(World world, int minx, int miny, int minz, int maxx, int maxy, int maxz, boolean allowEmpty) {

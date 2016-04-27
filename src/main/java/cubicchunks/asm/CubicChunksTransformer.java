@@ -44,10 +44,10 @@ public class CubicChunksTransformer implements IClassTransformer{
 
 	public CubicChunksTransformer() {
 		//This transformation makes the World see blocks outside of 0..255 height
-		add(WorldHeightCheckReplacement.class, WORLD, WORLD_IS_VALID);
+		//add(WorldHeightCheckReplacement.class, WORLD, WORLD_IS_VALID);
 		//these 4 transformations allow the internals of Minecraft code to see non-default light values outside of 0..255 height
-		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT, WORLD_GET_LIGHT_DESC);
-		add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT_CHECK, WORLD_GET_LIGHT_CHECK_DESC);
+		//add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT, WORLD_GET_LIGHT_DESC);
+		//add(WorldHeightCheckReplacement.class, WORLD, WORLD_GET_LIGHT_CHECK, WORLD_GET_LIGHT_CHECK_DESC);
 		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FOR);
 		add(WorldHeightCheckReplacementSpecial.class, WORLD, WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR);
 		//World.isAreaLoaded is used to check if some things can be updated (like light). If it returns false - update doesn't happen. This fixes it
@@ -80,7 +80,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 		add(RegionRenderCacheGetBlockStateRaw.class, REGION_RENDER_CACHE, REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW);
 		//fixes crash when rendering entities when renderers have chunk position outside 0..15 (inclusive) range
 		//replaces usage of entityStorage array with method call that returns correct entit list
-		add(RenderGlobalRenderEntities.class, RENDER_GLOBAL, RENDER_GLOBAL_RENDER_ENTITIES);
+		//add(RenderGlobalRenderEntities.class, RENDER_GLOBAL, RENDER_GLOBAL_RENDER_ENTITIES);
 		//fixes entities dying below y=-64
 		add(EntityChangeKillHeight.class, ENTITY, ENTITY_ON_ENTITY_UPDATE);
 
@@ -110,6 +110,7 @@ public class CubicChunksTransformer implements IClassTransformer{
 
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] bytes) {
+		//if(true) return bytes;
 		if(bytes == null) return bytes;
 
 		transformedName = transformedName.replace(".", "/");

@@ -109,13 +109,13 @@ public class Mappings {
 	public static final String RG_CLRI_RENDER_CHUNK = getNameFromSrg("field_178036_a");//1.8.8, RenderGlobal$ContainerLocalRenderInformation
 
 	//classes referenced from asm
-	public static final String WORLD_METHODS = "cubicchunks/asm/WorldMethods";
+	public static final String WORLD_METHODS = "cubicchunks/asm/AsmWorldHooks";
 	public static final String WORLD_METHODS_GET_HEIGHT_DESC = getMethodDescriptor(INT_TYPE, getObjectType(WORLD));
 	public static final String WORLD_METHODS_IS_TALL_WORLD_DESC =
 			getMethodDescriptor(BOOLEAN_TYPE, getObjectType(WORLD));
 	public static final String WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC =
 			getMethodDescriptor(INT_TYPE, getObjectType(WORLD_TYPE));
-	public static final String RENDER_METHODS = "cubicchunks/asm/RenderMethods";
+	public static final String RENDER_METHODS = "cubicchunks/asm/AsmRender";
 	public static final String RENDER_METHODS_GET_RENDER_CHUNK_DESC =
 			getMethodDescriptor(getObjectType(RENDER_CHUNK), getObjectType(VIEW_FRUSTUM), getObjectType(BLOCK_POS));
 	public static final String RENDER_METHODS_UPDATE_CHUNK_POSITIONS_DESC =

@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "cubicchunks.asm.mixin",
+  "mixins": [
+    "MixinWorld"
+
+  ],
+  "client": [
+ //   "MixinIntegratedServer",
+ //   "MixinWorldClient"
+    "MixinRenderGlobal"
+  ]
+ // "server": [
+//    "MixinDedicatedServer"
+ // ]
+}

@@ -23,8 +23,8 @@
  */
 package cubicchunks;
 
-import cubicchunks.asm.RenderMethods;
-import cubicchunks.asm.WorldMethods;
+import cubicchunks.asm.AsmRender;
+import cubicchunks.asm.AsmWorldHooks;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
 import net.minecraft.world.WorldType;
@@ -59,8 +59,8 @@ public class CubicChunks {
 	public void preInit(FMLPreInitializationEvent e) {
 		LOGGER = e.getModLog();
 		this.ccSystem = new CubicChunkSystem();
-		WorldMethods.registerChunkSystem(ccSystem);
-		RenderMethods.registerChunkSystem(ccSystem);
+		AsmWorldHooks.registerChunkSystem(ccSystem);
+		AsmRender.registerChunkSystem(ccSystem);
 		PacketDispatcher.registerPackets();
 		proxy.registerEvents();
 	}

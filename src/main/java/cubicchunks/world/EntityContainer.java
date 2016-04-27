@@ -24,6 +24,7 @@
 package cubicchunks.world;
 
 import com.google.common.base.Predicate;
+import cubicchunks.CubicChunks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -149,9 +150,6 @@ public class EntityContainer {
 
 			NBTTagCompound nbtEntity = new NBTTagCompound();
 			if(entity.writeToNBTOptional(nbtEntity)) {
-				if(entity instanceof EntityPlayerMP) {
-					int i = 0;
-				}
 				this.hasActiveEntities = true;
 				nbtEntities.appendTag(nbtEntity);
 
@@ -172,6 +170,10 @@ public class EntityContainer {
 		for (int i = 0; i < nbtEntities.tagCount(); i++) {
 			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
 			Entity entity = readEntity(nbtEntity, world, listener);
+			if(entity instanceof EntityPlayerMP) {
+				CubicChunks.LOGGER.error("EntityPlayerMP is serialized in save file! Reading the entity would break world ticking, skipping");
+				continue;
+			}
 			if (entity != null) {
 				addEntity(entity);
 			}

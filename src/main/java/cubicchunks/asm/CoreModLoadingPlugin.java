@@ -24,6 +24,8 @@
 package cubicchunks.asm;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import org.spongepowered.asm.launch.MixinBootstrap;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 
 import java.util.Map;
 
@@ -31,6 +33,13 @@ import java.util.Map;
 @IFMLLoadingPlugin.SortingIndex(value = 5000)
 @IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
 public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
+
+	public CoreModLoadingPlugin() {
+		MixinBootstrap.init();
+		MixinEnvironment.setCompatibilityLevel(MixinEnvironment.CompatibilityLevel.JAVA_8);
+		MixinEnvironment.getDefaultEnvironment().addConfiguration("cubicchunks.mixins.core.json");
+	}
+
 	@Override
 	public String[] getASMTransformerClass() {
 		return new String[]{"cubicchunks.asm.CubicChunksTransformer"};

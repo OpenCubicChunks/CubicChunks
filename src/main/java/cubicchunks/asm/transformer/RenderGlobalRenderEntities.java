@@ -23,6 +23,7 @@
  */
 package cubicchunks.asm.transformer;
 
+import net.minecraft.client.renderer.DestroyBlockProgress;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
@@ -35,6 +36,7 @@ public class RenderGlobalRenderEntities extends AbstractMethodTransformer {
 
 	public RenderGlobalRenderEntities(MethodVisitor mv) {
 		super(ASM4, mv);
+		DestroyBlockProgress.class.getName();
 	}
 
 	@Override

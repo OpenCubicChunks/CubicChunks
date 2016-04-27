@@ -49,7 +49,7 @@ public class IntegratedServerHeightReplacement extends AbstractMethodTransformer
 		super.visitVarInsn(ALOAD, 4);
 		//worldSettings.getTerrainType
 		super.visitMethodInsn(INVOKEVIRTUAL, WORLD_SETTINGS, WORLD_SETTINGS_GET_TERRAIN_TYPE, WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC, false);
-		//WorldMethods.getMaxHeight
+		//AsmWorldHooks.getMaxHeight
 		super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMaxHeight", WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC, false);
 
 		//stack contains: this, maxHeight

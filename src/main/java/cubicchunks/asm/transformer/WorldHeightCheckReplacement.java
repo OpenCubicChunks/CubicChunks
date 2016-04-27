@@ -46,7 +46,7 @@ import static org.objectweb.asm.Type.*;
  * Transformed methods: World.isValid, World.getLight(BlockPos), World.getLight(BlockPos, boolean)
  */
 public class WorldHeightCheckReplacement extends AbstractMethodTransformer {
-	private static final String WORLD_HEIGHT_ACCESS = "cubicchunks/asm/WorldMethods";
+	private static final String WORLD_HEIGHT_ACCESS = "cubicchunks/asm/AsmWorldHooks";
 
 	protected boolean transformedLower;
 	private boolean transformedUpper;
