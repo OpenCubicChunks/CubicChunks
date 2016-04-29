@@ -21,34 +21,28 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.transformer;
+package cubicchunks.asm.mixin.nocritical.client;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
+import net.minecraft.client.renderer.ViewFrustum;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static cubicchunks.asm.Mappings.RENDER_METHODS;
-import static cubicchunks.asm.Mappings.RENDER_METHODS_BLOCK_FROM_CACHE_DESC;
-import static org.objectweb.asm.Opcodes.*;
+@Mixin(ViewFrustum.class)
+public class MixinViewFrustum_VertViewDistance {
+	private int renderDistance = 16;
 
-public class RegionRenderCacheGetBlockStateRaw extends AbstractMethodTransformer {
-	public RegionRenderCacheGetBlockStateRaw(MethodVisitor mv) {
-		super(ASM4, mv);
+	//this one can fail, there is safe default
+	@Inject(method = "setCountChunksXYZ", at = @At(value = "HEAD"))
+	private void onSetCountChunks(int renderDistance, CallbackInfo cbi) {
+		this.renderDistance = renderDistance;
 	}
 
-	@Override
-	public void visitCode() {
-		super.visitCode();
-
-		Label vanillaCode = new Label();
-
-		super.visitVarInsn(ALOAD, 0);
-		super.visitVarInsn(ALOAD, 1);
-		super.visitMethodInsn(INVOKESTATIC, RENDER_METHODS, "blockFromCache", RENDER_METHODS_BLOCK_FROM_CACHE_DESC, false);
-		super.visitInsn(DUP);
-		super.visitJumpInsn(IFNULL, vanillaCode);
-		super.visitInsn(ARETURN);
-		super.visitLabel(vanillaCode);
-		super.visitInsn(POP);
-		this.setSuccessful();
+	@ModifyConstant(method = "setCountChunksXYZ", constant = @Constant(intValue = 16))
+	private int getYViewDistance(int oldDistance) {
+		return renderDistance;
 	}
 }

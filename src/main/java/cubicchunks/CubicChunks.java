@@ -35,6 +35,7 @@ import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import org.apache.logging.log4j.Logger;
 
 @Mod(modid = CubicChunks.MODID, name = "CubicChunks", version = "@@VERSION@@}")
@@ -58,23 +59,31 @@ public class CubicChunks {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
 		LOGGER = e.getModLog();
+		LOGGER.debug("CubicChunks preInitialization begin");
 		this.ccSystem = new CubicChunkSystem();
 		AsmWorldHooks.registerChunkSystem(ccSystem);
 		AsmRender.registerChunkSystem(ccSystem);
 		PacketDispatcher.registerPackets();
 		proxy.registerEvents();
+		LOGGER.debug("CubicChunks preInitialization end");
 	}
 	
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
-
-		
+		LOGGER.debug("CubicChunks initialization begin");
 		CC_WORLD_TYPE = new CubicChunksWorldType(ccSystem);
+		LOGGER.debug("CubicChunks registered world type " + CC_WORLD_TYPE);
 		//TODO: Combine CCEventHandler and CCFmlEventHandler into one class
 		this.evtHandler = new CCEventHandler(ccSystem);
 		this.fmlEvtHandler = new CCFmlEventHandler(ccSystem);
 		
 		MinecraftForge.EVENT_BUS.register(this.evtHandler);
 		MinecraftForge.EVENT_BUS.register(this.fmlEvtHandler);
+		LOGGER.debug("CubicChunks initialization end");
+	}
+
+	@EventHandler
+	public void onServerAboutToStart(FMLServerAboutToStartEvent event) {
+		proxy.setBuildLimit(event.getServer());
 	}
 }

@@ -57,6 +57,8 @@ public abstract class WorldContext {
 	private World m_world;
 	private ICubeCache m_cubeCache;
 	private LightingManager m_lightingManager;
+
+	public static boolean DEBUG = false;
 	
 	protected WorldContext(World world, ICubeCache cubeCache) {
 		m_world = world;
@@ -115,21 +117,28 @@ public abstract class WorldContext {
 	}
 	
 	public boolean cubesExist(int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ, boolean allowEmptyColumns, GeneratorStage minStageAllowed) {
+		if(DEBUG) System.out.printf("\n\n" + (this.m_world.isRemote?"CLIENT ":"SERVER ")+"CubesExist (%d, %d, %d) -> (%d, %d, %d)\n", minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ);
 		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
 			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {
+					if(DEBUG) System.out.printf( (this.m_world.isRemote?"CLIENT ":"SERVER ")+"CheckCube(%d, %d, %d)\n", cubeX, cubeY, cubeZ);
 					if (!m_cubeCache.cubeExists(cubeX, cubeY, cubeZ)) {
+						if(DEBUG) System.out.printf("\t" + (this.m_world.isRemote?"CLIENT ":"SERVER ")+"NonExisting\n");
 						return false;
 					}
+
 					Cube cube = m_cubeCache.getCube(cubeX, cubeY, cubeZ);
 					Column column = cube.getColumn();
+					if(DEBUG) System.out.printf("\t" + (this.m_world.isRemote?"CLIENT ":"SERVER ")+"Exists allowEmpty=%s, column=%s, minStage=%s, cube=%s, cubeState=%s\n", allowEmptyColumns+"", column, minStageAllowed+"", cube, cube.getGeneratorStage());
 					if ((!allowEmptyColumns && column instanceof BlankColumn)
 						|| (minStageAllowed != null && cube.getGeneratorStage().isLessThan(minStageAllowed))) {
+						if(DEBUG) System.out.printf("\t" + (this.m_world.isRemote?"CLIENT ":"SERVER ")+"WrongCube\n");
 						return false;
 					}
 				}
 			}
 		}
+		if(DEBUG) System.out.printf("\n\n\n" + (this.m_world.isRemote?"CLIENT ":"SERVER ")+"DONE\n");
 		return true;
 	}
 

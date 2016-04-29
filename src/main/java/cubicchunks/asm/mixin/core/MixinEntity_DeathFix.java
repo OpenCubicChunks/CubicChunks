@@ -21,42 +21,23 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.transformer;
+package cubicchunks.asm.mixin.core;
 
-import org.objectweb.asm.MethodVisitor;
+import cubicchunks.asm.AsmWorldHooks;
+import net.minecraft.entity.Entity;
+import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-import static cubicchunks.asm.Mappings.*;
-import static org.objectweb.asm.Opcodes.*;
+@Mixin(Entity.class)
+public class MixinEntity_DeathFix {
 
-/**
- * Transforms IntegratedServer constructor.
- */
-public class IntegratedServerHeightReplacement extends AbstractMethodTransformer {
-	public IntegratedServerHeightReplacement(MethodVisitor mv) {
-		super(ASM4, mv);
+	@Shadow public World worldObj;
+
+	@ModifyConstant(method = "onEntityUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
+	private double getDeathY(double originalY) {
+		return AsmWorldHooks.getMinHeight(worldObj) - originalY;
 	}
-
-	@Override
-	public void visitInsn(int opcode) {
-		if(opcode != RETURN) {
-			super.visitInsn(opcode);
-			return;
-		}
-		//load this
-		super.visitVarInsn(ALOAD, 0);
-
-		//load WorldSettings argument
-		super.visitVarInsn(ALOAD, 4);
-		//worldSettings.getTerrainType
-		super.visitMethodInsn(INVOKEVIRTUAL, WORLD_SETTINGS, WORLD_SETTINGS_GET_TERRAIN_TYPE, WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC, false);
-		//AsmWorldHooks.getMaxHeight
-		super.visitMethodInsn(INVOKESTATIC, WORLD_METHODS, "getMaxHeight", WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC, false);
-
-		//stack contains: this, maxHeight
-		//this.setBuildLimit();
-		super.visitMethodInsn(INVOKEVIRTUAL, MINECRAFT_SERVER, MINECRAFT_SERVER_SET_BUILD_LIMIT, "(I)V", false);
-		super.visitInsn(RETURN);
-		this.setSuccessful();
-	}
-
 }

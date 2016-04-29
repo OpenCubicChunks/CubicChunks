@@ -23,14 +23,18 @@
  */
 package cubicchunks.asm;
 
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import org.spongepowered.asm.mixin.extensibility.IMixinConfig;
 import org.spongepowered.asm.mixin.extensibility.IMixinErrorHandler;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 public class MixinErrorHandler implements IMixinErrorHandler {
 	@Override
-	public ErrorAction onError(String targetClassName, Throwable th, IMixinInfo mixin, ErrorAction action) {
-		FMLCommonHandler.instance().exitJava(-1, false);
-		throw new AssertionError();
+	public ErrorAction onPrepareError(IMixinConfig config, Throwable th, IMixinInfo mixin, ErrorAction action) {
+		return ErrorAction.ERROR;
+	}
+
+	@Override
+	public ErrorAction onApplyError(String targetClassName, Throwable th, IMixinInfo mixin, ErrorAction action) {
+		return ErrorAction.ERROR;
 	}
 }

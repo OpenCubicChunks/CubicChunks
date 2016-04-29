@@ -1,10 +1,20 @@
 {
   "required": true,
   "package": "cubicchunks.asm.mixin",
-  "refmap": "cubicchunks.mixins.core.refmap.json",
+  "refmap": "cubicchunks.mixins.refmap.json",
   "mixins": [
-    "MixinWorld_Tick",
-    "MixinWorld_HeightLimits",
-    "MixinChunkCache_HeightLimits"
+    "core.MixinWorld_Tick",
+    "core.MixinWorld_HeightLimits",
+    "core.MixinChunkCache_HeightLimits",
+    "core.MixinEntity_DeathFix"
+  ],
+  "client": [
+    "core.client.MixinWorld_HeightLimits",
+    "core.client.MixinRenderGlobal",
+    "core.client.MixinChunkCache_HeightLimits",
+    "core.client.MixinViewFrustum_RenderHeightFix",
+    "core.client.MixinRegionRenderCache_HeightLimits",
+
+    "nocritical.client.MixinViewFrustum_VertViewDistance"
   ]
 }

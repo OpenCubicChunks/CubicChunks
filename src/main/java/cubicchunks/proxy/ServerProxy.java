@@ -21,35 +21,16 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.transformer;
+package cubicchunks.proxy;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
+import net.minecraft.server.MinecraftServer;
 
-import static cubicchunks.asm.Mappings.RENDER_METHODS;
-import static cubicchunks.asm.Mappings.RENDER_METHODS_GET_RENDER_CHUNK_DESC;
-import static org.objectweb.asm.Opcodes.*;
+public class ServerProxy extends CommonProxy {
+	@Override public void registerEvents() {
 
-public class ViewFrustumGetRenderChunk extends AbstractMethodTransformer {
-	public ViewFrustumGetRenderChunk(MethodVisitor mv) {
-		super(ASM4, mv);
 	}
 
-	@Override
-	public void visitCode() {
-		super.visitCode();
-		Label vanillaCode = new Label();
-
-		super.visitVarInsn(ALOAD, 0);
-		super.visitVarInsn(ALOAD, 1);
-
-		super.visitMethodInsn(INVOKESTATIC, RENDER_METHODS, "getRenderChunk", RENDER_METHODS_GET_RENDER_CHUNK_DESC, false);
-		super.visitInsn(DUP);
-		super.visitJumpInsn(IFNULL, vanillaCode);
-		super.visitInsn(ARETURN);
-		super.visitLabel(vanillaCode);
-		//pop the additional null
-		super.visitInsn(POP);
-		this.setSuccessful();
+	@Override public void setBuildLimit(MinecraftServer server) {
+		//TODO: set dedicated server build limit
 	}
 }

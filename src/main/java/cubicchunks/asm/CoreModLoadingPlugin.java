@@ -39,14 +39,13 @@ public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
 		MixinEnvironment.setCompatibilityLevel(MixinEnvironment.CompatibilityLevel.JAVA_8);
 		MixinEnvironment.getDefaultEnvironment()
 				.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
-		MixinEnvironment.getDefaultEnvironment().
-				addConfiguration("cubicchunks.mixins.core.json").
-				addConfiguration("cubicchunks.mixins.core.client.json");
+		MixinEnvironment.getDefaultEnvironment()
+				.addConfiguration("cubicchunks.mixins.core.json");//*/
 	}
 
 	@Override
 	public String[] getASMTransformerClass() {
-		return new String[]{"cubicchunks.asm.CubicChunksTransformer"};
+		return new String[]{};
 	}
 
 	@Override

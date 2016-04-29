@@ -35,8 +35,6 @@ class SkyLightCubeDiffuseCalculator {
 	//world.checkLightFor needs 17 but we also update neighbor blocks - so it needs to be 18
 	private static final int LOADED_BLOCKS_MIN_RADIUS = 18;
 
-	private static final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-
 	private SkyLightCubeDiffuseCalculator() {
 		throw new RuntimeException();
 	}
@@ -57,22 +55,21 @@ class SkyLightCubeDiffuseCalculator {
 
 		World world = column.getWorld();
 
+
 		//check at mincube Y and max cube Y
-		pos.set(blockX, minY, blockZ);
-		if(!world.isAreaLoaded(pos, LOADED_BLOCKS_MIN_RADIUS, false)) {
+		if(!world.isAreaLoaded(new BlockPos(blockX, minY, blockZ), LOADED_BLOCKS_MIN_RADIUS, false)) {
 			return false;
 		}
-		pos.setY(maxY);
-		if(!world.isAreaLoaded(pos, LOADED_BLOCKS_MIN_RADIUS, false)) {
+		if(!world.isAreaLoaded(new BlockPos(blockX, maxY, blockZ), LOADED_BLOCKS_MIN_RADIUS, false)) {
 			return false;
 		}
 
 		boolean updated = true;
+		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ, minY, maxY);
 		updated &= diffuseSkyLightForBlockColumn(world, blockX - 1, blockZ, minY, maxY);
 		updated &= diffuseSkyLightForBlockColumn(world, blockX + 1, blockZ, minY, maxY);
 		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ - 1, minY, maxY);
 		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ + 1, minY, maxY);
-		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ, minY, maxY);
 
 		assert updated;
 		column.setModified(true);
@@ -81,6 +78,7 @@ class SkyLightCubeDiffuseCalculator {
 
 	private static boolean diffuseSkyLightForBlockColumn(World world, int blockX, int blockZ, int minY, int maxY) {
 		boolean ok = true;
+		final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		for (int y = minY; y <= maxY; y++) {
 			pos.set(blockX, y, blockZ);
 			ok &= world.checkLightFor(EnumSkyBlock.SKY, pos);

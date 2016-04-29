@@ -21,10 +21,9 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin;
+package cubicchunks.asm.mixin.core;
 
 import cubicchunks.asm.AsmWorldHooks;
-import cubicchunks.util.MathUtil;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -34,9 +33,7 @@ import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Group;
-import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static cubicchunks.asm.AsmWorldHooks.getMaxHeight;
@@ -55,6 +52,10 @@ public abstract class MixinWorld_HeightLimits {
 
 	@Shadow public abstract boolean isBlockLoaded(BlockPos pos);
 
+	private World this_() {
+		return (World) (Object) this;
+	}
+
 	/**
 	 * This @Overwrite allows World to "see" blocks outside of 0..255 height range.
 	 * Currently redirecting constant loading is not supported.
@@ -63,16 +64,9 @@ public abstract class MixinWorld_HeightLimits {
 	 */
 	@Overwrite
 	public boolean isValid(BlockPos pos) {
-		if (pos.getX() < -30000000 || pos.getX() > 30000000) {
-			return false;
-		}
-		if (pos.getY() < getMinHeight((World) (Object) this) || pos.getY() >= AsmWorldHooks.getMaxHeight((World) (Object) this)) {
-			return false;
-		}
-		if (pos.getZ() < -30000000 || pos.getZ() > 30000000) {
-			return false;
-		}
-		return true;
+		return pos.getX() >= -30000000 && pos.getX() <= 30000000 &&
+				pos.getY() >= getMinHeight(this_()) && pos.getY() < getMaxHeight(this_()) &&
+				pos.getZ() >= -30000000 && pos.getZ() <= 30000000;
 	}
 
 	/**
@@ -86,9 +80,9 @@ public abstract class MixinWorld_HeightLimits {
 	 */
 	@Overwrite
 	public int getLight(BlockPos pos) {
-		int minY = getMinHeight((World) (Object) this);
+		int minY = getMinHeight(this_());
 		if (pos.getY() < minY) {
-			pos = new BlockPos(pos.getX(), minY, pos.getZ());
+			return 0;
 		}
 		if (pos.getY() >= getMaxHeight((World) (Object) this)) {
 			return EnumSkyBlock.SKY.defaultLightValue;
@@ -97,34 +91,37 @@ public abstract class MixinWorld_HeightLimits {
 	}
 
 	/**
-	 * Replace getLight() with method that returns non-default light values
-	 * outside of 0..255 height range.
-	 * <p>
-	 * Used in parts of game logic and entity rendering code.
-	 * Doesn't directly affect block rendering.
+	 * Redirect pos.getY() in getLight to return value in range 0..255
+	 * when Y position is within cubic chunks height range, to workaround vanilla height check.
 	 *
-	 * @author Barteks2x
+	 * this getLight method is used in parts of game logic and entity rendering code.
+	 * Doesn't directly affect block rendering.
 	 */
-	@Overwrite
-	public int getLight(BlockPos pos, boolean checkNeighbors) {
-		if (!this.isValid(pos)) {
-			int minY = getMinHeight((World) (Object) this);
-			if (pos.getY() < minY) {
-				pos = new BlockPos(pos.getX(), minY, pos.getZ());
-			} else {
-				return 15;
-			}
+	@Group(name = "getLightHeightOverride", max = 3)
+	@Redirect(
+			method = "getLight(Lnet/minecraft/util/math/BlockPos;Z)I",
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"),
+			require = 2
+	)
+	private int onGetYGetLight(BlockPos pos) {
+		if(pos.getY() < getMinHeight(this_()) || pos.getY() >= getMaxHeight(this_())) {
+			return 64;//any value between 0 and 255
 		}
-		if (checkNeighbors && this.getBlockState(pos).useNeighborBrightness()) {
-			int up = this.getLight(pos.up(), false);
-			int east = this.getLight(pos.east(), false);
-			int west = this.getLight(pos.west(), false);
-			int south = this.getLight(pos.south(), false);
-			int north = this.getLight(pos.north(), false);
-			return MathUtil.max(up, east, west, south, north);
-		}
-		Chunk chunk = this.getChunkFromBlockCoords(pos);
-		return chunk.getLightSubtracted(pos, this.skylightSubtracted);
+		return pos.getY();
+	}
+
+	/**
+	 * If max height is exceeded, the height is clamped to y=255,
+	 * replace that 255 with actual world height
+	 */
+	@Group(name = "getLightHeightOverride")
+	@ModifyConstant(
+			method = "getLight(Lnet/minecraft/util/math/BlockPos;Z)I",
+			constant = @Constant(intValue = 255),
+			require = 1
+	)
+	private int getLightGetReplacementYForTooHighY(int original) {
+		return getMaxHeight(this_()) - 1;
 	}
 
 	/**
@@ -155,7 +152,7 @@ public abstract class MixinWorld_HeightLimits {
 	 * (continues with vanilla code if it's not a cubic chunks world).
 	 * World.isAreaLoaded is used to check if some things can be updated (like light).
 	 * If it returns false - update doesn't happen. This fixes it
-	 *
+	 * <p>
 	 * NOTE: there are some methods that use it incorrectly
 	 * ie. by checking it at some constant height (usually 0 or 64).
 	 * These places need to be modified.

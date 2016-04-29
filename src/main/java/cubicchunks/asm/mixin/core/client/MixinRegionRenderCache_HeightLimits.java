@@ -21,32 +21,29 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.transformer;
+package cubicchunks.asm.mixin.core.client;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
+import cubicchunks.asm.AsmWorldHooks;
+import net.minecraft.client.renderer.RegionRenderCache;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.ChunkCache;
+import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-import static cubicchunks.asm.Mappings.RENDER_METHODS;
-import static cubicchunks.asm.Mappings.RENDER_METHODS_UPDATE_CHUNK_POSITIONS_DESC;
-import static org.objectweb.asm.Opcodes.*;
+@Mixin(RegionRenderCache.class)
+public class MixinRegionRenderCache_HeightLimits extends ChunkCache{
 
-public class ViewFrustumUpdateChunkPositions extends AbstractMethodTransformer {
-
-	public ViewFrustumUpdateChunkPositions(MethodVisitor mv) {
-		super(ASM4, mv);
+	public MixinRegionRenderCache_HeightLimits(World worldIn, BlockPos posFromIn, BlockPos posToIn, int subIn) {
+		super(worldIn, posFromIn, posToIn, subIn);
 	}
 
-	@Override
-	public void visitCode() {
-		super.visitCode();
-
-		Label vanillaCode = new Label();
-
-		super.visitVarInsn(ALOAD, 0);
-		super.visitMethodInsn(INVOKESTATIC, RENDER_METHODS, "updateChunkPositions", RENDER_METHODS_UPDATE_CHUNK_POSITIONS_DESC, false);
-		super.visitJumpInsn(IFEQ, vanillaCode);
-		super.visitInsn(RETURN);
-		super.visitLabel(vanillaCode);
-		this.setSuccessful();
+	@Redirect(method = "getBlockStateRaw", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"), require = 1)
+	public int getPosYOverride(BlockPos pos) {
+		if(pos.getY() >= AsmWorldHooks.getMinHeight(worldObj) && pos.getY() < AsmWorldHooks.getMaxHeight(worldObj)) {
+			return 64;
+		}
+		return pos.getY();
 	}
 }

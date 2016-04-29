@@ -38,8 +38,8 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 mixin {
-	add sourceSets.main, "cubicchunks.mixins.core.refmap.json"
-	add sourceSets.main, "cubicchunks.mixins.core.client.refmap.json"
+	add sourceSets.main, "cubicchunks.mixins.refmap.json"
+	//add sourceSets.main,
 }
 
 repositories {
@@ -113,7 +113,7 @@ dependencies {
 	shade 'org.mapdb:mapdb:1.0.7'
 	testCompile 'junit:junit:4.11'
 
-	shade('org.spongepowered:mixin:0.5.3-SNAPSHOT') {
+	shade('org.spongepowered:mixin:0.5.5-SNAPSHOT') {
 		exclude module: 'launchwrapper'
 		exclude module: 'guava'
 	}
@@ -161,7 +161,7 @@ jar {
 		attributes 'FMLCorePlugin': 'cubicchunks.asm.CoreModLoadingPlugin', 'FMLCorePluginContainsFMLMod': 'true'
 		attributes 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
 		attributes 'TweakOrder': '0'
-		attributes 'MixinConfigs': 'cubicchunks.mixins.core.json', 'cubicchunks.mixins.core.client.json'
+		attributes 'ForceLoadAsMod': 'true'
 	}
 	configurations.shade.each { dep ->
 		from(project.zipTree(dep)){

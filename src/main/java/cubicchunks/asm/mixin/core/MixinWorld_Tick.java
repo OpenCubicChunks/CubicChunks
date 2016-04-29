@@ -21,17 +21,16 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin;
+package cubicchunks.asm.mixin.core;
 
+import cubicchunks.asm.AsmWorldHooks;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Group;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 /**
@@ -41,44 +40,31 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public abstract class MixinWorld_Tick {
 
 	private int updateEntity_entityPosY;
-	private int updateEntity_checkRadius;
+	private int updateEntity_entityPosX;
+	private int updateEntity_entityPosZ;
 
-	@Shadow public abstract  boolean isAreaLoaded(int startX, int startY, int startZ, int endX, int endY, int endZ, boolean allowEmpty);
+	@Shadow private boolean isValid(BlockPos pos){throw new Error();}
 
-	/**
-	 * Replace isAreaLoaded startBlockY argument
-	 */
-	@Group(name = "updateEntity", max = 4)
-	@ModifyArg(method = "updateEntityWithOptionalForce",
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;isAreaLoaded(IIIIIIZ)Z"),
-			index = 1/*startBlockY*/, require = 1)
-	private int onEntityUpdateIsLoadedStartYPos(int oldStartBlockY) {
-		return updateEntity_entityPosY - updateEntity_checkRadius;
-	}
+	@Shadow public abstract boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty);
 
-	/**
-	 * Replace isAreaLoaded startBlockY argument
-	 */
-	@Group(name = "updateEntity")
-	@ModifyArg(method = "updateEntityWithOptionalForce",
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;isAreaLoaded(IIIIIIZ)Z"),
-			index = 4/*startBlockY*/, require = 1)
-	private int onEntityUpdateIsLoadedEndYPos(int oldStartBlockY) {
-		return updateEntity_entityPosY + updateEntity_checkRadius;
-	}
-
-	/**
-	 * This exists just to get the check radius, doesn't actually change the value.
-	 */
-	@Group(name = "updateEntity")
-	@ModifyArg(
-			method = "updateEntityWithOptionalForce",
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;isAreaLoaded(IIIIIIZ)Z"),
-			index = 0/*startBlockX*/, require = 1)
-	private int onEntityUpdateIsLoadedStartXPos(int startBlockX) {
+	@Redirect(method = "updateEntityWithOptionalForce", at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/world/World;isAreaLoaded(IIIIIIZ)Z"), require = 1)
+	private boolean canUpdateEntity(World _this, int startBlockX, int oldStartBlockY, int startBlockZ, int endBlockX, int oldEndBlockY, int endBlockZ, boolean allowEmpty) {
+		if(!AsmWorldHooks.isTallWorld((World)(Object)this)) {
+			return isAreaLoaded(startBlockX, oldStartBlockY, startBlockZ, endBlockX, oldEndBlockY, endBlockZ, allowEmpty);
+		}
 		//startBlockX == entityPosX - checkRadius <==> checkRadius == entityPosX - startBlockX
-		this.updateEntity_checkRadius = updateEntity_entityPosY - startBlockX;
-		return startBlockX;
+		int checkRadius = updateEntity_entityPosX - startBlockX;
+		//calculate Y range
+		int startBlockY = updateEntity_entityPosY - checkRadius;
+		int endBlockY = updateEntity_entityPosY + checkRadius;
+		//if entity is in "invalid area" (outside of the world)  we need to keep ticking it.
+		//otherwise entities that fall out of the world will never die
+		BlockPos entityPos = new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ);
+		if(!isValid(entityPos)) {
+			return true;
+		}
+		return isAreaLoaded(startBlockX, startBlockY, startBlockZ, endBlockX, endBlockY, endBlockZ, allowEmpty);
 	}
 
 	/**
@@ -93,5 +79,7 @@ public abstract class MixinWorld_Tick {
 	)
 	public void onIsAreaLoadedForUpdateEntityWithOptionalForce(Entity entity, boolean force, CallbackInfo ci, int i, int j) {
 		updateEntity_entityPosY = MathHelper.floor_double(entity.posY);
+		updateEntity_entityPosX = MathHelper.floor_double(entity.posX);
+		updateEntity_entityPosZ = MathHelper.floor_double(entity.posZ);
 	}
 }

@@ -21,18 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.client;
+package cubicchunks.asm.mixin.core.client;
 
 import cubicchunks.asm.AsmRender;
 import cubicchunks.asm.AsmWorldHooks;
 import cubicchunks.util.Coords;
 import net.minecraft.client.renderer.RenderGlobal;
+import net.minecraft.client.renderer.ViewFrustum;
+import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ClassInheritanceMultiMap;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -45,12 +51,18 @@ import java.util.List;
 
 /**
  * Fixes renderEntities crashing when rendering cubes
- * that are not at existing array index in chunk.getEntityLists()
+ * that are not at existing array index in chunk.getEntityLists(),
+ *
+ * Allows to render cubes outside of 0..256 height range.
  */
 @Mixin(RenderGlobal.class)
-public class MixinRenderGlobal_EntityRenderFix {
+public class MixinRenderGlobal {
 
 	private BlockPos position;
+
+	@Shadow private int renderDistanceChunks;
+
+	@Shadow private ViewFrustum viewFrustum;
 
 	/**
 	 * This allows to get the Y position by injecting itself directly before call to chunk.getEntityLists
@@ -120,5 +132,14 @@ public class MixinRenderGlobal_EntityRenderFix {
 		return new ClassInheritanceMultiMap[]{
 				AsmRender.getEntityList(chunk, Coords.blockToCube(position.getY()))
 		};
+	}
+
+	@Overwrite
+	private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
+		BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
+		return MathHelper.abs_int(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks * 16 ? null :
+				MathHelper.abs_int(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * 16 ? null :
+						MathHelper.abs_int(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * 16 ? null :
+								this.viewFrustum.getRenderChunk(blockpos);
 	}
 }

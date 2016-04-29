@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.client;
+package cubicchunks.asm.mixin.core.client;
 
 import cubicchunks.util.MathUtil;
 import net.minecraft.block.state.IBlockState;

@@ -24,13 +24,14 @@
 package cubicchunks.util;
 
 import com.google.common.base.Throwables;
-import scala.actors.threadpool.Arrays;
+import cubicchunks.asm.Mappings;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -129,6 +130,23 @@ public class ReflectionUtil {
 		} catch (IllegalAccessException e) {
 			//if it happens - eighter something has gone horribly wrong or the JVM is blocking access
 			throw new Error(e);
+		}
+	}
+
+	/**
+	 * Returns value of given field.
+	 *
+	 * Warning: Slow.
+	 */
+	public static <T> T getFieldFromSrg(Object from, String srgName) {
+		String name = Mappings.getNameFromSrg(srgName);
+		Class<?> cl = from.getClass();
+		try {
+			Field fld = cl.getDeclaredField(name);
+			fld.setAccessible(true);
+			return (T) fld.get(from);
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			throw new RuntimeException(e);
 		}
 	}
 }
