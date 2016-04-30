@@ -23,14 +23,34 @@
  */
 package cubicchunks;
 
+import cubicchunks.api.generators.ITerrainGenerator;
+import cubicchunks.generator.*;
+import cubicchunks.generator.terrain.VanillaTerrainGenerator;
+import cubicchunks.lighting.FirstLightProcessor;
+import cubicchunks.server.ServerCubeCache;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 
-class CubicChunksWorldType extends WorldType {
-	private final CubicChunkSystem ccSystem;
+public class CubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
 
-	public CubicChunksWorldType(CubicChunkSystem ccSystem) {
-		super("CubicChunks");
-		this.ccSystem = ccSystem;
+	public CubicChunksWorldType() {
+		super("CustomCubic");
 	}
-	
+
+	@Override public void registerWorldGen(WorldServer world, GeneratorPipeline pipeline) {
+
+		ITerrainGenerator terrainGenerator = new VanillaTerrainGenerator(world.getSeed());
+
+		ServerCubeCache cubeCache = (ServerCubeCache) world.getChunkProvider();
+		// init the generator pipeline
+		pipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(cubeCache, 5, terrainGenerator));
+		pipeline.addStage(GeneratorStage.SURFACE, new SurfaceProcessor(cubeCache, 10, world.getSeed()));
+		pipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", cubeCache, 10));
+		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", cubeCache, 5));
+		pipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", world, cubeCache, 100));
+	}
+
+	public static void create() {
+		new CubicChunksWorldType();
+	}
 }

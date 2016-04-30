@@ -23,16 +23,17 @@
  */
 package cubicchunks;
 
+import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
+import cubicchunks.server.CubePlayerManager;
+import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.WorldAccess;
 import cubicchunks.util.WorldClientAccess;
 import cubicchunks.util.WorldServerAccess;
-import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -68,16 +69,18 @@ public class CCEventHandler {
 	}
 
 	private void modifyWorld(WorldServer worldServer) {
-		ChunkProviderServer cubeCache = cc.getServerChunkCacheAndInitWorld(worldServer);
-		WorldAccess.setChunkProvider(worldServer, cubeCache);
-		WorldServerAccess.setPlayerManager(worldServer, cc.getPlayerManager(worldServer));
+		ServerCubeCache serverCubeCache = new ServerCubeCache(worldServer);
+		WorldAccess.setChunkProvider(worldServer, serverCubeCache);
+		WorldServerAccess.setPlayerManager(worldServer, new CubePlayerManager(worldServer));
 		//TODO: Fix mob spawning
 		worldServer.getGameRules().setOrCreateGameRule("doMobSpawning", String.valueOf(false));
+		WorldServerContext.put(worldServer, new WorldServerContext(worldServer, serverCubeCache));
 	}
 	
 	private void modifyWorld(WorldClient worldClient) {
-		ChunkProviderClient cubeCache = cc.getClientChunkCacheAndInitWorld(worldClient);
-		WorldClientAccess.setChunkProviderClient(worldClient, cubeCache);
-		WorldAccess.setChunkProvider(worldClient, cubeCache);
+		ClientCubeCache clientCubeCache = new ClientCubeCache(worldClient);
+		WorldClientAccess.setChunkProviderClient(worldClient, clientCubeCache);
+		WorldAccess.setChunkProvider(worldClient, clientCubeCache);
+		WorldClientContext.put(worldClient, new WorldClientContext(worldClient, clientCubeCache));
 	}
 }

@@ -27,7 +27,6 @@ import cubicchunks.asm.AsmRender;
 import cubicchunks.asm.AsmWorldHooks;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
-import net.minecraft.world.WorldType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -50,7 +49,6 @@ public class CubicChunks {
 
 	@SidedProxy(clientSide="cubicchunks.proxy.ClientProxy", serverSide="cubicchunks.proxy.CommonProxy")
 	public static CommonProxy proxy;
-	public static WorldType CC_WORLD_TYPE;
 
 	private CubicChunkSystem ccSystem;
 	private CCEventHandler evtHandler;
@@ -71,8 +69,9 @@ public class CubicChunks {
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		LOGGER.debug("CubicChunks initialization begin");
-		CC_WORLD_TYPE = new CubicChunksWorldType(ccSystem);
-		LOGGER.debug("CubicChunks registered world type " + CC_WORLD_TYPE);
+		VanillaCubicChunksWorldType.create();
+		CubicChunksWorldType.create();
+		LOGGER.debug("CubicChunks registered world types");
 		//TODO: Combine CCEventHandler and CCFmlEventHandler into one class
 		this.evtHandler = new CCEventHandler(ccSystem);
 		this.fmlEvtHandler = new CCFmlEventHandler(ccSystem);

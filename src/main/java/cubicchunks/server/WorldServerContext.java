@@ -24,14 +24,10 @@
 package cubicchunks.server;
 
 import com.google.common.collect.Maps;
-import cubicchunks.api.generators.ITerrainGenerator;
-import cubicchunks.generator.*;
-import cubicchunks.generator.terrain.FlatTerrainGenerator;
-import cubicchunks.generator.terrain.VanillaTerrainGenerator;
-import cubicchunks.lighting.FirstLightProcessor;
+import cubicchunks.ICubicChunksWorldType;
+import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.world.WorldContext;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.WorldType;
 
 import java.util.Map;
 
@@ -58,7 +54,6 @@ public class WorldServerContext extends WorldContext {
 	private WorldServer worldServer;
 	private ServerCubeCache serverCubeCache;
 	private GeneratorPipeline generatorPipeline;
-	private ITerrainGenerator terrainGenerator;
 
 	public WorldServerContext(final WorldServer worldServer, final ServerCubeCache serverCubeCache) {
 		super(worldServer, serverCubeCache);
@@ -67,16 +62,8 @@ public class WorldServerContext extends WorldContext {
 		this.serverCubeCache = serverCubeCache;
 		this.generatorPipeline = new GeneratorPipeline(serverCubeCache);
 
-		final long seed = this.worldServer.getSeed();
-
-		this.terrainGenerator = getTerrainGenerator(this.worldServer.getWorldType());
-
-		// init the generator pipeline
-		this.generatorPipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(this.serverCubeCache, 5, this.terrainGenerator));
-		this.generatorPipeline.addStage(GeneratorStage.SURFACE, new SurfaceProcessor(this.serverCubeCache, 10, seed));
-		this.generatorPipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", this.serverCubeCache, 10));
-		this.generatorPipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", this.serverCubeCache, 5));
-		this.generatorPipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", worldServer, this.serverCubeCache, 100));
+		ICubicChunksWorldType type = (ICubicChunksWorldType) worldServer.getWorldType();
+		type.registerWorldGen(this.worldServer, this.generatorPipeline);
 		this.generatorPipeline.checkStages();
 	}
 
@@ -92,12 +79,5 @@ public class WorldServerContext extends WorldContext {
 
 	public GeneratorPipeline getGeneratorPipeline() {
 		return this.generatorPipeline;
-	}
-
-	public ITerrainGenerator getTerrainGenerator(final WorldType dimensionType) {
-		if (dimensionType == WorldType.FLAT) {
-			return new FlatTerrainGenerator(this.worldServer.getSeed());
-		}
-		return new VanillaTerrainGenerator(this.worldServer.getSeed());
 	}
 }

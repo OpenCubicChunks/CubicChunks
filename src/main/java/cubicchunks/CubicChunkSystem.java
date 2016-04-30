@@ -23,13 +23,11 @@
  */
 package cubicchunks;
 
-import cubicchunks.client.ClientCubeCache;
 import cubicchunks.client.WorldClientContext;
 import cubicchunks.generator.GeneratorPipeline;
 import cubicchunks.generator.GeneratorStage;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
-import cubicchunks.server.CubePlayerManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.MathUtil;
@@ -37,28 +35,21 @@ import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.entity.Entity;
-import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.ClassInheritanceMultiMap;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.ChunkProviderServer;
 
 import java.util.Random;
 
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.SEA_LEVEL;
 import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 //TODO: Get rid of this class, move it's parts to other classes
@@ -68,26 +59,6 @@ public class CubicChunkSystem {
 
 	public CubicChunkSystem() {
 		m_emptyEntitySet = new ClassInheritanceMultiMap(Entity.class);
-	}
-
-	public ChunkProviderServer getServerChunkCacheAndInitWorld(WorldServer worldServer) {
-		if (isTallWorld(worldServer)) {
-			ServerCubeCache serverCubeCache = new ServerCubeCache(worldServer);
-			WorldServerContext.put(worldServer, new WorldServerContext(worldServer, serverCubeCache));
-			return serverCubeCache;
-
-		}
-		return null;
-	}
-
-	//@ClientOnly
-	public ChunkProviderClient getClientChunkCacheAndInitWorld(WorldClient worldClient) {
-		if (isTallWorld(worldClient)) {
-			ClientCubeCache clientCubeCache = new ClientCubeCache(worldClient);
-			WorldClientContext.put(worldClient, new WorldClientContext(worldClient, clientCubeCache));
-			return clientCubeCache;
-		}
-		return null;
 	}
 
 	public Integer getMinBlockY(World world) {
@@ -104,16 +75,9 @@ public class CubicChunkSystem {
 		return null;
 	}
 
-	public PlayerManager getPlayerManager(WorldServer worldServer) {
-		if (isTallWorld(worldServer)) {
-			return new CubePlayerManager(worldServer);
-		}
-		return null;
-	}
-
 	public boolean isTallWorld(World world) {
 		// for now, only tall-ify the overworld
-		return world.provider.getDimension() == 0 && world.getWorldType() == CubicChunks.CC_WORLD_TYPE;
+		return world.provider.getDimension() == 0 && (world.getWorldType() instanceof ICubicChunksWorldType);
 	}
 
 	//@ClientOnly
@@ -259,33 +223,6 @@ public class CubicChunkSystem {
 		return true;
 	}
 
-	public Integer getSeaLevel(World world) {
-		if (isTallWorld(world)) {
-			return SEA_LEVEL;
-		}
-		return null;
-	}
-
-	public Double getHorizonLevel(World world) {
-		if (isTallWorld(world)) {
-			// tall worlds will eventually have the horizon level at 0
-			// for now, let's just do the vanilla thing
-			return 63.0;
-		}
-		return null;
-	}
-
-	public Boolean updateLightingAt(World world, EnumSkyBlock type, BlockPos pos) {
-		/* TEMP: for now, the vanilla lighting implementation is much faster than mine
-		 * let's just use that for now
-		if (isTallWorld(world)) {
-			LightingManager lightingManager = WorldContext.get(world).getLightingManager();
-			return lightingManager.computeDiffuseLighting(pos, type);
-		}
-		*/
-		return null;
-	}
-
 	public Boolean checkBlockRangeIsInWorld(World world, int minBlockX, int minBlockY, int minBlockZ, int maxBlockX,
 	                                        int maxBlockY, int maxBlockZ, boolean allowEmptyColumns) {
 		if (isTallWorld(world)) {
@@ -382,47 +319,6 @@ public class CubicChunkSystem {
 		return renderers.renderChunks[index];
 	}
 
-	//@ClientOnly
-	public boolean initChunkSectionRendererCounts(ViewFrustum renderers, int viewDistance) {
-
-		if (!isTallWorld(renderers.world)) {
-			return false;
-		}
-
-		// treat the y dimension the same as all the rest
-		int size = viewDistance * 2 + 1;
-		renderers.countChunksX = size;
-		renderers.countChunksY = size;
-		renderers.countChunksZ = size;
-		return true;
-	}
-
-	//In 1.8.11 MCP mappings it's called getRenderChunkOffset
-	//it actually makes some sort of twisted sense... (get RenderChunk (for) offset (offset == Facing)?)
-	//@ClientOnly
-
-	public RenderChunk getChunkSectionRendererNeighbor(RenderGlobal worldRenderer, BlockPos poseye,
-	                                                   BlockPos posChunk, EnumFacing facing) {
-/*
-		if (!isTallWorld(worldRenderer.theWorld)) {
-			return null;
-		}
-
-		// treat the y dimension the same as all the rest
-		final BlockPos neighborPos = posChunk.offset(facing);
-		if (MathHelper.abs(poseye.getX() - neighborPos.getX()) > worldRenderer.renderDistanceChunks * 16) {
-			return null;
-		}
-		if (MathHelper.abs(poseye.getY() - neighborPos.getY()) > worldRenderer.renderDistanceChunks * 16) {
-			return null;
-		}
-		if (MathHelper.abs(poseye.getZ() - neighborPos.getZ()) > worldRenderer.renderDistanceChunks * 16) {
-			return null;
-		}
-		return worldRenderer.viewFrustum.getRenderChunk(neighborPos);*/
-		return null;
-	}
-
 	public ClassInheritanceMultiMap getEntityStore(Chunk chunk, int chunkSectionIndex) {
 		if (chunk instanceof Column) {
 			Column column = (Column) chunk;
@@ -436,14 +332,5 @@ public class CubicChunkSystem {
 			}
 		}
 		return null;
-	}
-
-	public void onServerStop() {
-		WorldServerContext.clear();
-	}
-
-	//@ClientOnly
-	public void unloadClientWorld() {
-		WorldClientContext.clear();
 	}
 }

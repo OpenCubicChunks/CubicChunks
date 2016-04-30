@@ -24,7 +24,7 @@
 package cubicchunks.asm;
 
 import cubicchunks.CubicChunkSystem;
-import cubicchunks.CubicChunks;
+import cubicchunks.ICubicChunksWorldType;
 import cubicchunks.util.AddressTools;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
@@ -56,8 +56,8 @@ public final class AsmWorldHooks {
 		return cc.isTallWorld(world);
 	}
 
-	public static int getMaxHeight(WorldType world) {
-		return world == CubicChunks.CC_WORLD_TYPE ? AddressTools.MaxY * 16 : 256;
+	public static int getMaxHeight(WorldType type) {
+		return (type instanceof ICubicChunksWorldType) ? AddressTools.MaxY * 16 : 256;
 	}
 
 	public static void registerChunkSystem(CubicChunkSystem cc) {

@@ -24,75 +24,14 @@
 package cubicchunks.asm;
 
 import cubicchunks.CubicChunkSystem;
-import cubicchunks.CubicChunks;
-import cubicchunks.util.ReflectionUtil;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.renderer.RegionRenderCache;
-import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ChunkCache;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Field;
 
 public class AsmRender {
 	private static CubicChunkSystem cc;
-
-	private static MethodHandle getWorldRenderGlobal = getMethodHandleGetWorld();
-	private static MethodHandle chunkX = getChunkXMethodHandle();
-	private static MethodHandle chunkZ = getChunkZMethodHandle();
-	private static MethodHandle chunkArray = getChunkArrayMethodHandle();
-
-	private static MethodHandle getChunkXMethodHandle() {
-		Field f = ReflectionHelper.findField(ChunkCache.class, "chunkX", "field_72818_a");
-		f.setAccessible(true);
-		try {
-			MethodHandle mh = MethodHandles.lookup().unreflectGetter(f);
-			return mh;
-		} catch (IllegalAccessException e) {
-			throw new IllegalStateException(e);
-		}
-	}
-
-	private static MethodHandle getChunkZMethodHandle() {
-		Field f = ReflectionHelper.findField(ChunkCache.class, "chunkZ", "field_72816_b");
-		f.setAccessible(true);
-		try {
-			MethodHandle mh = MethodHandles.lookup().unreflectGetter(f);
-			return mh;
-		} catch (IllegalAccessException e) {
-			throw new IllegalStateException(e);
-		}
-	}
-
-	private static MethodHandle getChunkArrayMethodHandle() {
-		Field f = ReflectionHelper.findField(ChunkCache.class, "chunkArray", "field_72817_c");
-		f.setAccessible(true);
-		try {
-			MethodHandle mh = MethodHandles.lookup().unreflectGetter(f);
-			return mh;
-		} catch (IllegalAccessException e) {
-			throw new IllegalStateException(e);
-		}
-	}
-
-	private static MethodHandle getMethodHandleGetWorld() {
-		Field f = ReflectionUtil.findFieldNonStatic(RenderGlobal.class, WorldClient.class);
-		f.setAccessible(true);
-		try {
-			MethodHandle mh = MethodHandles.lookup().unreflectGetter(f);
-			return mh;
-		} catch (IllegalAccessException e) {
-			throw new IllegalStateException(e);
-		}
-	}
 
 	public static final boolean updateChunkPositions(ViewFrustum _this) {
 		return cc.frustumViewUpdateChunkPositions(_this);
@@ -108,14 +47,5 @@ public class AsmRender {
 
 	public static final void registerChunkSystem(CubicChunkSystem cc) {
 		AsmRender.cc = cc;
-	}
-
-	public static final IBlockState blockFromCache(RegionRenderCache cache, BlockPos pos) throws Throwable {
-		if(cache.getWorldType() != CubicChunks.CC_WORLD_TYPE) {
-			return null;
-		}
-		int i = (pos.getX() >> 4) - (Integer)chunkX.invoke(cache);
-		int j = (pos.getZ() >> 4) - (Integer)chunkZ.invoke(cache);
-		return ((Chunk[][])chunkArray.invoke(cache))[i][j].getBlockState(pos);
 	}
 }

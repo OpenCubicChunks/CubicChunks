@@ -21,35 +21,23 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.proxy;
+package cubicchunks;
 
-import cubicchunks.ICubicChunksWorldType;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.ReflectionUtil;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.WorldSettings;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import cubicchunks.generator.GeneratorPipeline;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.WorldType;
 
-public class ClientProxy extends CommonProxy {
-	@Override public EntityPlayer getPlayerEntity(MessageContext ctx) {
-		// Note that if you simply return 'Minecraft.getMinecraft().thePlayer',
-		// your packets will not work because you will be getting a client
-		// player even when you are on the server! Sounds absurd, but it's true.
+public class VanillaCubicChunksWorldType extends WorldType implements ICubicChunksWorldType{
 
-		// Solution is to double-check side before returning the player:
-		return (ctx.side.isClient() ? Minecraft.getMinecraft().thePlayer : super.getPlayerEntity(ctx));
+	public VanillaCubicChunksWorldType() {
+		super("VanillaCubic");
 	}
 
-	@Override public void registerEvents() {
-
+	@Override public void registerWorldGen(WorldServer world, GeneratorPipeline pipeline) {
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
-	@Override public void setBuildLimit(MinecraftServer server) {
-		WorldSettings settings = ReflectionUtil.getFieldFromSrg(server, "field_71350_m");//theWorldSettings
-		if(settings.getTerrainType() instanceof ICubicChunksWorldType) {
-			server.setBuildLimit(AddressTools.MaxY * 16);
-		}
+	public static void create() {
+		new VanillaCubicChunksWorldType();
 	}
 }
