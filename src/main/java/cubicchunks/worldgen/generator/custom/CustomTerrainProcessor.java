@@ -21,37 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.flat;
+package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.api.generators.ITerrainGenerator;
+import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.world.WorldServer;
 
-import static cubicchunks.util.Coords.CUBE_SIZE;
-import static cubicchunks.util.TerrainGeneratorUtils.applyHeightGradient;
-import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
+public final class CustomTerrainProcessor extends CubeProcessor {
+	private final CustomTerrainGenerator terrainGenerator;
 
-public class FlatTerrainGenerator implements ITerrainGenerator {
-
-	private final double[][][] rawDensity;
-
-	public FlatTerrainGenerator(final long seed) {
-		this.rawDensity = getNewCubeSizedArray();
+	public CustomTerrainProcessor(ICubeCache cache, WorldServer world, int batchSize) {
+		super("Terrain", cache, batchSize);
+		this.terrainGenerator = new CustomTerrainGenerator(world.getSeed());
 	}
 
 	@Override
-	public double[][][] generate(final Cube cube) {
-		generateTerrainArray(cube);
-
-		return applyHeightGradient(cube, this.rawDensity);
+	public boolean calculate(final Cube cube) {
+		this.terrainGenerator.generate(cube);
+		return true;
 	}
 
-	private void generateTerrainArray(final Cube cube) {
-		for (int x = 0; x < CUBE_SIZE; x++) {
-			for (int z = 0; z < CUBE_SIZE; z++) {
-				for (int y = 0; y < CUBE_SIZE; y++) {
-					this.rawDensity[x][y][z] = 64;
-				}
-			}
-		}
-	}
+
 }

@@ -24,6 +24,9 @@
 package cubicchunks.util;
 
 import cubicchunks.world.cube.Cube;
+import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
 
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.*;
 import static cubicchunks.util.Coords.CUBE_SIZE;
@@ -33,8 +36,7 @@ public final class TerrainGeneratorUtils {
 	/**
 	 * expand the noise array to 16x16x16 by interpolating the values.
 	 */
-	public static double[][][] expandNoiseArray(final double[][][] input) {
-		double[][][] result = getNewCubeSizedArray();
+	public static double[][][] expandNoiseArray(double[][][] input, double[][][] output) {
 		int xSteps = X_SECTION_SIZE - 1;
 		int ySteps = Y_SECTION_SIZE - 1;
 		int zSteps = Z_SECTION_SIZE - 1;
@@ -82,7 +84,7 @@ public final class TerrainGeneratorUtils {
 								// interpolate along y
 								double xyz = lerp(yd, xy0z, xy1z);
 
-								result[xRel][yRel][zRel] = xyz;
+								output[xRel][yRel][zRel] = xyz;
 							}
 						}
 					}
@@ -90,16 +92,14 @@ public final class TerrainGeneratorUtils {
 			}
 		}
 
-		return result;
+		return output;
 	}
 
 	public static double[][][] getNewCubeSizedArray() {
 		return new double[CUBE_SIZE][CUBE_SIZE][CUBE_SIZE];
 	}
 
-	public static double[][][] applyHeightGradient(final Cube cube, final double[][][] rawDensity) {
-		final double [][][] result = getNewCubeSizedArray();
-		
+	public static void applyHeightGradient(final Cube cube, final double[][][] rawDensity) {
 		final int cubeYMin = Coords.cubeToMinBlock(cube.getY());
 		
 		for (int x = 0; x < CUBE_SIZE; x++) {
@@ -107,11 +107,28 @@ public final class TerrainGeneratorUtils {
 				for (int y = 0; y < CUBE_SIZE; y++) {
 					final int yAbs = cubeYMin + y;
 					
-					result[x][y][z] = rawDensity[x][y][z] - yAbs;
+					rawDensity[x][y][z] -= yAbs;
 				}
 			}
 		}
-		
-		return result;
+	}
+
+	public static void generateTerrain(final Cube cube, final double[][][] densityField) {
+		//cube.getWorld().profiler.startSection("placement");
+		//todo: find better way to do it
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		int seaLevel = cube.getWorld().provider.getAverageGroundLevel();
+		for (int xRel = 0; xRel < 16; xRel++) {
+			for (int zRel = 0; zRel < 16; zRel++) {
+				for (int yRel = 0; yRel < 16; yRel++) {
+					int yAbs = Coords.localToBlock(cube.getY(), yRel);
+					pos.set(xRel, yRel, zRel);
+					Block block = densityField[xRel][yRel][zRel] > 0 ? Blocks.STONE
+							: yAbs < seaLevel ? Blocks.WATER : Blocks.AIR;
+					cube.setBlockForGeneration(pos, block.getDefaultState());
+				} // end yRel
+			} // end zRel
+		} // end xRel
+		//cube.getWorld().profiler.endSection();
 	}
 }

@@ -407,8 +407,8 @@ public class Cube {
 		return this.storage.get(localX, localY, localZ).getBlock();
 	}
 
-	public IBlockState setBlockForGeneration(BlockPos pos, IBlockState newBlockState) {
-		IBlockState oldBlockState = getBlockState(pos);
+	public IBlockState setBlockForGeneration(BlockPos blockOrLocalPos, IBlockState newBlockState) {
+		IBlockState oldBlockState = getBlockState(blockOrLocalPos);
 
 		// did anything actually change?
 		if (newBlockState == oldBlockState) {
@@ -420,9 +420,9 @@ public class Cube {
 			setEmpty(false);
 		}
 
-		int x = Coords.blockToLocal(pos.getX());
-		int y = Coords.blockToLocal(pos.getY());
-		int z = Coords.blockToLocal(pos.getZ());
+		int x = Coords.blockToLocal(blockOrLocalPos.getX());
+		int y = Coords.blockToLocal(blockOrLocalPos.getY());
+		int z = Coords.blockToLocal(blockOrLocalPos.getZ());
 
 		// set the block
 		this.storage.set(x, y, z, newBlockState);

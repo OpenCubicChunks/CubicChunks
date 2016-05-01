@@ -23,13 +23,12 @@
  */
 package cubicchunks;
 
-import cubicchunks.api.generators.ITerrainGenerator;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.generator.custom.*;
-import cubicchunks.worldgen.generator.flat.FlatTerrainGenerator;
+import cubicchunks.worldgen.generator.NullProcessor;
+import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 
@@ -40,16 +39,13 @@ public class FlatCubicChunksWorldType extends WorldType implements ICubicChunksW
 	}
 
 	@Override public void registerWorldGen(WorldServer world, GeneratorPipeline pipeline) {
-
-		ITerrainGenerator terrainGenerator = new FlatTerrainGenerator(world.getSeed());
-
 		ServerCubeCache cubeCache = (ServerCubeCache) world.getChunkProvider();
 		// init the worldgen pipeline
-		pipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(cubeCache, 5, terrainGenerator));
-		pipeline.addStage(GeneratorStage.SURFACE, new SurfaceProcessor(cubeCache, 10, world.getSeed()));
-		pipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", cubeCache, 10));
+		pipeline.addStage(GeneratorStage.TERRAIN, new FlatTerrainProcessor(cubeCache, 5));
+		pipeline.addStage(GeneratorStage.SURFACE, new NullProcessor("Surface", cubeCache));
+		pipeline.addStage(GeneratorStage.FEATURES, new NullProcessor("Features", cubeCache));
 		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", cubeCache, 5));
-		pipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", world, cubeCache, 100));
+		pipeline.addStage(GeneratorStage.POPULATION, new NullProcessor("Population", cubeCache));
 	}
 
 	public static void create() {

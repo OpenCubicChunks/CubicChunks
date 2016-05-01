@@ -38,11 +38,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class FeatureProcessor extends CubeProcessor {
+public class CustomPopulationProcessor extends CubeProcessor {
 
 	private Map<BiomeGenBase, BiomeFeatures> biomeFeaturesMap;
 
-	public FeatureProcessor(String name, World world, ICubeCache provider, int batchSize) {
+	public CustomPopulationProcessor(String name, World world, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 
 		this.biomeFeaturesMap = new HashMap<>();
@@ -60,7 +60,7 @@ public class FeatureProcessor extends CubeProcessor {
 	public boolean calculate(Cube cube) {
 		if(true)return true;
 		WorldContext worldContext = WorldContext.get(cube.getWorld());
-		if (!worldContext.cubeAndNeighborsExist(cube, true, GeneratorStage.FEATURES)) {
+		if (!worldContext.cubeAndNeighborsExist(cube, true, GeneratorStage.POPULATION)) {
 			return false;
 		}
 

@@ -23,19 +23,18 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.api.generators.ITerrainGenerator;
+import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.builder.BasicBuilder;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.world.biome.BiomeGenBase;
 
 import java.util.Random;
 
-import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.*;
 import static cubicchunks.util.MathUtil.lerp;
 import static cubicchunks.util.TerrainGeneratorUtils.*;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.*;
 
-public class CustomTerrainGenerator implements ITerrainGenerator {
+public class CustomTerrainGenerator {
 	private static final int OCTAVES = 16;
 
 	private BiomeGenBase[] biomes;
@@ -48,6 +47,8 @@ public class CustomTerrainGenerator implements ITerrainGenerator {
 	private final double[][][] noiseArrayAlpha;
 
 	private final double[][][] rawDensity;
+
+	private final double[][][] expandedDensity;
 
 	private final IBuilder builderHigh;
 	private final IBuilder builderLow;
@@ -82,6 +83,7 @@ public class CustomTerrainGenerator implements ITerrainGenerator {
 		this.noiseArrayAlpha = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 
 		this.rawDensity = getNewCubeSizedArray();
+		this.expandedDensity = getNewCubeSizedArray();
 
 		this.builderHigh = createHighBuilder();
 		this.builderLow = createLowBuilder();
@@ -109,8 +111,7 @@ public class CustomTerrainGenerator implements ITerrainGenerator {
 		this.builderHeight.build();
 	}
 
-	@Override
-	public double[][][] generate(final Cube cube) {
+	public void generate(final Cube cube) {
 		generateNoiseArrays(cube);
 
 		generateTerrainArray(cube);
@@ -118,8 +119,9 @@ public class CustomTerrainGenerator implements ITerrainGenerator {
 		if (this.needsScaling) {
 			scaleNoiseArray(cube.getWorld().provider.getAverageGroundLevel());
 		}
-
-		return applyHeightGradient(cube, expandNoiseArray(this.rawDensity));
+		expandNoiseArray(this.rawDensity, this.expandedDensity);
+		applyHeightGradient(cube, this.expandedDensity);
+		generateTerrain(cube, this.expandedDensity);
 	}
 
 	/**

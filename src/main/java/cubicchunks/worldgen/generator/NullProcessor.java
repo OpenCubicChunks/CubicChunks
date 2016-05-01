@@ -21,10 +21,18 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.api.generators;
+package cubicchunks.worldgen.generator;
 
+import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
-public interface ITerrainGenerator {
-	double[][][] generate(final Cube cube);
+public class NullProcessor extends CubeProcessor {
+	public NullProcessor(String name, ICubeCache provider) {
+		super(name, provider, 100);
+	}
+
+	@Override public boolean calculate(Cube cube) {
+		return true;
+	}
 }

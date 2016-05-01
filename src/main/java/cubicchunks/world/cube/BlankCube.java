@@ -106,7 +106,7 @@ public class BlankCube extends Cube {
 	public void setBlockStateDirect(BlockPos pos, IBlockState newBlockState) {}
 	
 	@Override
-	public IBlockState setBlockForGeneration(BlockPos pos, IBlockState newBlockState) {
+	public IBlockState setBlockForGeneration(BlockPos blockOrLocalPos, IBlockState newBlockState) {
 		throw new UnsupportedOperationException("Eighter someone used BlankCube on server or someone generates generator on client.");
 	}
 	

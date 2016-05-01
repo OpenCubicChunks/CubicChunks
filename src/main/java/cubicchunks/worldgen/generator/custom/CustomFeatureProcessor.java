@@ -36,7 +36,7 @@ import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
 
 @SuppressWarnings("unused")
-public class StructureProcessor extends CubeProcessor {
+public class CustomFeatureProcessor extends CubeProcessor {
 	
 	private CubicCaveGenerator caveGenerator;
 	private MapGenStronghold strongholdGenerator;
@@ -47,7 +47,7 @@ public class StructureProcessor extends CubeProcessor {
 	
 	private World worldObj;
 	
-	public StructureProcessor(String name, ICubeCache provider, int batchSize) {
+	public CustomFeatureProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 		
 		this.caveGenerator = new CubicCaveGenerator();
@@ -95,6 +95,6 @@ public class StructureProcessor extends CubeProcessor {
 			return false;
 		}
 		Cube below = this.cache.getCube(cubeX, cubeY, cubeZ);
-		return !below.getGeneratorStage().isLessThan(GeneratorStage.STRUCTURES);
+		return !below.getGeneratorStage().isLessThan(GeneratorStage.FEATURES);
 	}
 }

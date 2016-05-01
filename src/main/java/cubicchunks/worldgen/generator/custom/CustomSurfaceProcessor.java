@@ -34,7 +34,7 @@ import net.minecraft.world.biome.BiomeGenBase;
 
 import java.util.Random;
 
-public class SurfaceProcessor extends CubeProcessor {
+public class CustomSurfaceProcessor extends CubeProcessor {
 
 	private static final String PROCESSOR_NAME = "Surface";
 
@@ -44,7 +44,7 @@ public class SurfaceProcessor extends CubeProcessor {
 	private BiomeGenBase[] biomes;
 	private long seed;
 
-	public SurfaceProcessor(final ICubeCache cubeCache, final int batchSize, final long seed) {
+	public CustomSurfaceProcessor(final ICubeCache cubeCache, final int batchSize, final long seed) {
 		super(PROCESSOR_NAME, cubeCache, batchSize);
 		this.rand = new Random(seed);
 		this.noiseGen = new NoiseGeneratorMultiFractal(this.rand, 4);

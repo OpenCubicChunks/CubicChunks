@@ -26,9 +26,9 @@ package cubicchunks.worldgen;
 public enum GeneratorStage {
 	TERRAIN,
 	SURFACE,
-	STRUCTURES,
-	LIGHTING,
 	FEATURES,
+	LIGHTING,
+	POPULATION,
 	LIVE;
 	
 	public static GeneratorStage getFirstStage() {
