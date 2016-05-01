@@ -25,8 +25,8 @@ package cubicchunks.server;
 
 import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
-import cubicchunks.generator.ColumnGenerator;
-import cubicchunks.generator.GeneratorStage;
+import cubicchunks.worldgen.ColumnGenerator;
+import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubeCache;

@@ -21,11 +21,38 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator.custom.features;
 
-import cubicchunks.worldgen.GeneratorPipeline;
-import net.minecraft.world.WorldServer;
+import cubicchunks.world.cube.Cube;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
 
-public interface ICubicChunksWorldType {
-	void registerWorldGen(WorldServer world, GeneratorPipeline pipeline);
+import java.util.Random;
+
+public abstract class FeatureGenerator {
+	protected final World world;
+
+	public FeatureGenerator(final World world) {
+		this.world = world;
+	}
+
+	public abstract void generate(final Random rand, final Cube cube, final BiomeGenBase biome);
+	
+	protected boolean setBlockOnly(final BlockPos blockPos, final IBlockState blockState) {
+		return this.world.setBlockState(blockPos, blockState, 2);
+	}
+
+	protected boolean setBlockAndUpdateNeighbors(final BlockPos pos, final IBlockState state) {
+		return this.world.setBlockState(pos, state, 3);
+	}
+
+	protected IBlockState getBlockState(final BlockPos pos) {
+		return this.world.getBlockState(pos);
+	}
+
+	protected static int getMinCubeY(final int y) {
+		return (y >> 4) << 4;
+	}
 }

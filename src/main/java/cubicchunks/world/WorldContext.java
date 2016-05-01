@@ -24,7 +24,7 @@
 package cubicchunks.world;
 
 import cubicchunks.client.WorldClientContext;
-import cubicchunks.generator.GeneratorStage;
+import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;

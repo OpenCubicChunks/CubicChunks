@@ -21,11 +21,29 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen;
 
-import cubicchunks.worldgen.GeneratorPipeline;
-import net.minecraft.world.WorldServer;
-
-public interface ICubicChunksWorldType {
-	void registerWorldGen(WorldServer world, GeneratorPipeline pipeline);
+public enum GeneratorStage {
+	TERRAIN,
+	SURFACE,
+	STRUCTURES,
+	LIGHTING,
+	FEATURES,
+	LIVE;
+	
+	public static GeneratorStage getFirstStage() {
+		return values()[0];
+	}
+	
+	public static GeneratorStage getLastStage() {
+		return values()[values().length - 1];
+	}
+	
+	public boolean isLastStage() {
+		return ordinal() == values().length - 1;
+	}
+	
+	public boolean isLessThan(GeneratorStage other) {
+		return ordinal() < other.ordinal();
+	}
 }

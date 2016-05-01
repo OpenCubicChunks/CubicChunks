@@ -21,11 +21,39 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator.custom.features;
 
-import cubicchunks.worldgen.GeneratorPipeline;
-import net.minecraft.world.WorldServer;
+import net.minecraft.block.BlockTallGrass;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
 
-public interface ICubicChunksWorldType {
-	void registerWorldGen(WorldServer world, GeneratorPipeline pipeline);
+import java.util.Random;
+
+public class TallGrassGenerator extends SurfaceFeatureGenerator {
+	
+	private final IBlockState block;
+	
+	public TallGrassGenerator(final World world, final BlockTallGrass.EnumType tallGrassType) {
+		super(world);
+		
+		this.block = Blocks.TALLGRASS.getDefaultState().withProperty(BlockTallGrass.TYPE, tallGrassType);
+	}
+	
+	@Override
+	public void generateAt(final Random rand, final BlockPos pos, final BiomeGenBase biome) {
+		BlockPos currentPos = pos;
+
+		for(int i = 0; i < 128; ++i) {
+			BlockPos randomPos = currentPos.add(rand.nextInt(8) - rand.nextInt(8),
+					rand.nextInt(4) - rand.nextInt(4),
+					rand.nextInt(8) - rand.nextInt(8));
+			
+			if(world.isAirBlock(randomPos) && Blocks.TALLGRASS.canBlockStay(world, randomPos, block)) {
+				this.setBlockOnly(randomPos, block);
+			}	
+		}
+	}
 }

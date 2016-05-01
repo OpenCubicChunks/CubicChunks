@@ -21,11 +21,20 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator;
 
-import cubicchunks.worldgen.GeneratorPipeline;
-import net.minecraft.world.WorldServer;
+import cubicchunks.util.Coords;
 
-public interface ICubicChunksWorldType {
-	void registerWorldGen(WorldServer world, GeneratorPipeline pipeline);
+public class GlobalGeneratorConfig {
+	public static final int SEA_LEVEL = 0;
+	public static final double MAX_ELEV = 200;
+
+	// these are constants. Changing them may cause issues.
+	public static final int X_SECTION_SIZE = 4 + 1;
+	public static final int Y_SECTION_SIZE = 8 + 1;
+	public static final int Z_SECTION_SIZE = 4 + 1;
+
+	public static final int X_SECTIONS = Coords.CUBE_MAX_X / (X_SECTION_SIZE - 1) + 1;
+	public static final int Y_SECTIONS = Coords.CUBE_MAX_Y / (Y_SECTION_SIZE - 1) + 1;
+	public static final int Z_SECTIONS = Coords.CUBE_MAX_Z / (Z_SECTION_SIZE - 1) + 1;
 }

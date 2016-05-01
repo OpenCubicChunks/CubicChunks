@@ -23,7 +23,7 @@
  */
 package cubicchunks;
 
-import cubicchunks.generator.GeneratorPipeline;
+import cubicchunks.worldgen.GeneratorPipeline;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 

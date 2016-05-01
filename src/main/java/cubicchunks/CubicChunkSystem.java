@@ -24,8 +24,8 @@
 package cubicchunks;
 
 import cubicchunks.client.WorldClientContext;
-import cubicchunks.generator.GeneratorPipeline;
-import cubicchunks.generator.GeneratorStage;
+import cubicchunks.worldgen.GeneratorPipeline;
+import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.WorldServerContext;
 import cubicchunks.util.AddressTools;

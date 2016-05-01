@@ -25,7 +25,7 @@ package cubicchunks.world.cube;
 
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
-import cubicchunks.generator.GeneratorStage;
+import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;

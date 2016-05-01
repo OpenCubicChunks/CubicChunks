@@ -23,7 +23,7 @@
  */
 package cubicchunks.client;
 
-import cubicchunks.generator.GeneratorStage;
+import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;

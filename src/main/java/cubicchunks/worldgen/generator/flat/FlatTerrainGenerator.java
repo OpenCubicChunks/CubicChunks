@@ -21,36 +21,37 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator.flat;
 
 import cubicchunks.api.generators.ITerrainGenerator;
-import cubicchunks.worldgen.*;
-import cubicchunks.worldgen.generator.custom.*;
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.ServerCubeCache;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.WorldType;
+import cubicchunks.world.cube.Cube;
 
-public class CubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
+import static cubicchunks.util.Coords.CUBE_SIZE;
+import static cubicchunks.util.TerrainGeneratorUtils.applyHeightGradient;
+import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
 
-	public CubicChunksWorldType() {
-		super("CustomCubic");
+public class FlatTerrainGenerator implements ITerrainGenerator {
+
+	private final double[][][] rawDensity;
+
+	public FlatTerrainGenerator(final long seed) {
+		this.rawDensity = getNewCubeSizedArray();
 	}
 
-	@Override public void registerWorldGen(WorldServer world, GeneratorPipeline pipeline) {
+	@Override
+	public double[][][] generate(final Cube cube) {
+		generateTerrainArray(cube);
 
-		ITerrainGenerator terrainGenerator = new CustomTerrainGenerator(world.getSeed());
-
-		ServerCubeCache cubeCache = (ServerCubeCache) world.getChunkProvider();
-		// init the worldgen pipeline
-		pipeline.addStage(GeneratorStage.TERRAIN, new TerrainProcessor(cubeCache, 5, terrainGenerator));
-		pipeline.addStage(GeneratorStage.SURFACE, new SurfaceProcessor(cubeCache, 10, world.getSeed()));
-		pipeline.addStage(GeneratorStage.STRUCTURES, new StructureProcessor("Features", cubeCache, 10));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", cubeCache, 5));
-		pipeline.addStage(GeneratorStage.FEATURES, new FeatureProcessor("Population", world, cubeCache, 100));
+		return applyHeightGradient(cube, this.rawDensity);
 	}
 
-	public static void create() {
-		new CubicChunksWorldType();
+	private void generateTerrainArray(final Cube cube) {
+		for (int x = 0; x < CUBE_SIZE; x++) {
+			for (int z = 0; z < CUBE_SIZE; z++) {
+				for (int y = 0; y < CUBE_SIZE; y++) {
+					this.rawDensity[x][y][z] = 0;
+				}
+			}
+		}
 	}
 }

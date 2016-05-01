@@ -21,11 +21,36 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen;
 
-import cubicchunks.worldgen.GeneratorPipeline;
 import net.minecraft.world.WorldServer;
+import cubicchunks.util.Coords;
+import cubicchunks.world.column.Column;
+import net.minecraft.world.biome.BiomeGenBase;
 
-public interface ICubicChunksWorldType {
-	void registerWorldGen(WorldServer world, GeneratorPipeline pipeline);
+public class ColumnGenerator {
+	
+	private WorldServer m_worldServer;
+	private BiomeGenBase[] m_biomes;
+	
+	public ColumnGenerator(WorldServer worldServer) {
+		this.m_worldServer = worldServer;
+	}
+	
+	public Column generateColumn(int cubeX, int cubeZ) {
+		
+		// generate biome info. This is a hackjob.
+		this.m_biomes = this.m_worldServer.provider.getBiomeProvider().loadBlockGeneratorData(
+			this.m_biomes,
+			Coords.cubeToMinBlock(cubeX), 
+			Coords.cubeToMinBlock(cubeZ),
+			16,
+			16
+		);
+		
+		// UNDONE: generate temperature map
+		// UNDONE: generate rainfall map
+		
+		return new Column(this.m_worldServer, cubeX, cubeZ, this.m_biomes);
+	}
 }

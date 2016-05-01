@@ -23,7 +23,7 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.generator.GeneratorStage;
+import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;

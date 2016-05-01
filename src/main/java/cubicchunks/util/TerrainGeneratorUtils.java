@@ -25,7 +25,7 @@ package cubicchunks.util;
 
 import cubicchunks.world.cube.Cube;
 
-import static cubicchunks.generator.terrain.GlobalGeneratorConfig.*;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.*;
 import static cubicchunks.util.Coords.CUBE_SIZE;
 import static cubicchunks.util.MathUtil.lerp;
 
@@ -39,7 +39,7 @@ public final class TerrainGeneratorUtils {
 		int ySteps = Y_SECTION_SIZE - 1;
 		int zSteps = Z_SECTION_SIZE - 1;
 
-		// use the noise to generate the terrain
+		// use the noise to generate the generator
 		for (int noiseX = 0; noiseX < X_SECTIONS - 1; noiseX++) {
 			for (int noiseZ = 0; noiseZ < Z_SECTIONS - 1; noiseZ++) {
 				for (int noiseY = 0; noiseY < Y_SECTIONS - 1; noiseY++) {

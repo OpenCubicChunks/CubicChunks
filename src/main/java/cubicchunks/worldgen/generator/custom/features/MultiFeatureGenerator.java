@@ -21,11 +21,27 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator.custom.features;
 
-import cubicchunks.worldgen.GeneratorPipeline;
-import net.minecraft.world.WorldServer;
+import cubicchunks.world.cube.Cube;
+import java.util.Random;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
 
-public interface ICubicChunksWorldType {
-	void registerWorldGen(WorldServer world, GeneratorPipeline pipeline);
+public class MultiFeatureGenerator extends FeatureGenerator {
+	private final FeatureGenerator gen;
+	private final int attempts;
+
+	public MultiFeatureGenerator(World world, FeatureGenerator gen, int attempts) {
+		super(world);
+		this.gen = gen;
+		this.attempts = attempts;
+	}
+
+	@Override
+	public void generate(Random rand, Cube cube, BiomeGenBase biome) {
+		for(int i = 0; i < this.attempts; i++){
+			this.gen.generate(rand, cube, biome);
+		}
+	}
 }

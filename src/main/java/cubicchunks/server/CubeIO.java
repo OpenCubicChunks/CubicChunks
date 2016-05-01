@@ -24,7 +24,7 @@
 package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.generator.GeneratorStage;
+import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
@@ -331,7 +331,7 @@ public class CubeIO implements IThreadedFileIO {
 		boolean hasSky = !this.world.provider.getHasNoSky();
 		final Cube cube = column.getOrCreateCube(cubeY, false);
 		
-		// get the generator stage
+		// get the worldgen stage
 		cube.setGeneratorStage(GeneratorStage.values()[nbt.getByte("GeneratorStage")]);
 		
 		// is this an empty cube?

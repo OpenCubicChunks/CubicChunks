@@ -24,7 +24,7 @@
 package cubicchunks.world.cube;
 
 import com.google.common.base.Predicate;
-import cubicchunks.generator.GeneratorStage;
+import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.world.column.Column;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -107,7 +107,7 @@ public class BlankCube extends Cube {
 	
 	@Override
 	public IBlockState setBlockForGeneration(BlockPos pos, IBlockState newBlockState) {
-		throw new UnsupportedOperationException("Eighter someone used BlankCube on server or someone generates terrain on client.");
+		throw new UnsupportedOperationException("Eighter someone used BlankCube on server or someone generates generator on client.");
 	}
 	
 	@Override

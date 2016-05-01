@@ -21,11 +21,15 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator.custom.builder;
 
-import cubicchunks.worldgen.GeneratorPipeline;
-import net.minecraft.world.WorldServer;
-
-public interface ICubicChunksWorldType {
-	void registerWorldGen(WorldServer world, GeneratorPipeline pipeline);
+public abstract interface IBuilder {
+	
+	public void setSeed(int seed);
+	
+	public void setSeaLevel(double seaLevel);
+	
+	public void build() throws IllegalArgumentException;
+	
+	public double getValue(double x, double y, double z);
 }

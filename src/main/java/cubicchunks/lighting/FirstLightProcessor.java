@@ -24,7 +24,7 @@
 package cubicchunks.lighting;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.generator.GeneratorStage;
+import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.util.Coords;
 import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.util.processor.CubeProcessor;

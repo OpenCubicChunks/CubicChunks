@@ -21,11 +21,22 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator.custom.features;
 
-import cubicchunks.worldgen.GeneratorPipeline;
-import net.minecraft.world.WorldServer;
+import static org.junit.Assert.*;
 
-public interface ICubicChunksWorldType {
-	void registerWorldGen(WorldServer world, GeneratorPipeline pipeline);
+import org.junit.Test;
+
+public class TestFeatureGenerator {
+
+	@Test
+	public void testGetMinCubeY() {
+		final int y1 = 15;
+		final int result1 = 0;
+		final int y2 = -24;
+		final int result2 = -32;
+		
+		assertEquals(result1, FeatureGenerator.getMinCubeY(y1));
+		assertEquals(result2, FeatureGenerator.getMinCubeY(y2));
+	}
 }

@@ -25,7 +25,7 @@ package cubicchunks.server;
 
 import com.google.common.collect.Maps;
 import cubicchunks.ICubicChunksWorldType;
-import cubicchunks.generator.GeneratorPipeline;
+import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.world.WorldContext;
 import net.minecraft.world.WorldServer;
 

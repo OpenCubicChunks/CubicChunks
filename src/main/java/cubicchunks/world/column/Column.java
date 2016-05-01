@@ -77,7 +77,7 @@ public class Column extends Chunk {
 	}
 
 	public Column(World world, int cubeX, int cubeZ, BiomeGenBase[] biomes) {
-		// NOTE: this constructor is called by the column generator
+		// NOTE: this constructor is called by the column worldgen
 		this(world, cubeX, cubeZ);
 
 		byte[] biomeArray = super.getBiomeArray();
@@ -700,7 +700,7 @@ public class Column extends Chunk {
 	@Deprecated
 	public boolean isTerrainPopulated() {
 		//with cubic chunks the whole column is never fully generated,
-		//So some heuristic is needed to tell vanilla is terrain is populated here
+		//So some heuristic is needed to tell vanilla is generator is populated here
 		//for now - tell it that it is if any cube is populated
 		boolean isAnyCubeLive = false;
 		for (Cube cube : this.cubes.values()) {
