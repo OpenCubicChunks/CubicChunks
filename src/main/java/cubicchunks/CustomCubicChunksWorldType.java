@@ -31,9 +31,9 @@ import cubicchunks.server.ServerCubeCache;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 
-public class CubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
+public class CustomCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
 
-	public CubicChunksWorldType() {
+	public CustomCubicChunksWorldType() {
 		super("CustomCubic");
 	}
 
@@ -51,6 +51,6 @@ public class CubicChunksWorldType extends WorldType implements ICubicChunksWorld
 	}
 
 	public static void create() {
-		new CubicChunksWorldType();
+		new CustomCubicChunksWorldType();
 	}
 }

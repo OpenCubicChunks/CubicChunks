@@ -70,7 +70,8 @@ public class CubicChunks {
 	public void init(FMLInitializationEvent event) {
 		LOGGER.debug("CubicChunks initialization begin");
 		VanillaCubicChunksWorldType.create();
-		CubicChunksWorldType.create();
+		FlatCubicChunksWorldType.create();
+		CustomCubicChunksWorldType.create();
 		LOGGER.debug("CubicChunks registered world types");
 		//TODO: Combine CCEventHandler and CCFmlEventHandler into one class
 		this.evtHandler = new CCEventHandler(ccSystem);
