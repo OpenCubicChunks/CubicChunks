@@ -30,10 +30,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 public class ReflectionUtil {
 	public static final <T> T get(Object inObject, Field field, Class<T> fieldType) {
@@ -98,14 +96,13 @@ public class ReflectionUtil {
 		return "L" + name + ";";
 	}
 
-	private static final Field getField(Class<?> owner, Class<?> type, String... possibleNames) {
+	private static final Field getField(Class<?> owner, String srgName) {
 		Field[] allFields = owner.getDeclaredFields();
 		Field foundField = null;
-		Set<String> names = new HashSet<>();
-		names.addAll(Arrays.asList(possibleNames));
+		String name = Mappings.getNameFromSrg(srgName);
 
 		for(Field field : allFields) {
-			if(field.getType() == type && names.contains(field.getName())) {
+			if(name.equals(field.getName())) {
 				foundField = field;
 				break;
 			}
@@ -113,8 +110,9 @@ public class ReflectionUtil {
 		foundField.setAccessible(true);
 		return foundField;
 	}
-	public static MethodHandle getFieldGetterHandle(Class<?> owner, Class<?> type, String... possibleNames) {
-		Field field = getField(owner, type, possibleNames);
+	public static MethodHandle getFieldGetterHandle(Class<?> owner, String srgName) {
+		String name = Mappings.getNameFromSrg(srgName);
+		Field field = getField(owner, name);
 		try {
 			return MethodHandles.lookup().unreflectGetter(field);
 		} catch (IllegalAccessException e) {
@@ -123,8 +121,9 @@ public class ReflectionUtil {
 		}
 	}
 
-	public static MethodHandle getFieldSetterHandle(Class<?> owner, Class<?> type, String... possibleNames) {
-		Field field = getField(owner, type, possibleNames);
+	public static MethodHandle getFieldSetterHandle(Class<?> owner, String srgName) {
+		String name = Mappings.getNameFromSrg(srgName);
+		Field field = getField(owner, name);
 		try {
 			return MethodHandles.lookup().unreflectSetter(field);
 		} catch (IllegalAccessException e) {
@@ -147,6 +146,25 @@ public class ReflectionUtil {
 			return (T) fld.get(from);
 		} catch (NoSuchFieldException | IllegalAccessException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	public static MethodHandle getMethodHandle(Class<?> theClass, String srgName) {
+		String name = Mappings.getNameFromSrg(srgName);
+		try {
+			Method method = null;
+			for(Method meth : theClass.getDeclaredMethods()) {
+				if(name.equals(meth.getName())) {
+					if(method != null) {
+						throw new RuntimeException("Duplicate method names: " + name);
+					}
+					method = meth;
+				}
+			}
+			method.setAccessible(true);
+			return MethodHandles.lookup().unreflect(method);
+		} catch (IllegalAccessException e) {
+			throw Throwables.propagate(e);
 		}
 	}
 }

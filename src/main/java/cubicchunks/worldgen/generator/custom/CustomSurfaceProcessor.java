@@ -23,16 +23,19 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.noise.NoiseGeneratorMultiFractal;
+import com.google.common.collect.Sets;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.biome.BiomeBlockReplacer;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.GeneratorStage;
+import cubicchunks.worldgen.noise.NoiseGeneratorMultiFractal;
 import net.minecraft.world.biome.BiomeGenBase;
 
+import java.util.Collections;
 import java.util.Random;
+import java.util.Set;
 
 public class CustomSurfaceProcessor extends CubeProcessor {
 
@@ -54,16 +57,16 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 	}
 
 	@Override
-	public boolean calculate(final Cube cube) {
+	public Set<Cube> calculate(final Cube cube) {
 
 		// if the cube is empty, there is nothing to do. Even if neighbors don't
 		// exist
 		if (cube.isEmpty()) {
-			return true;
+			return Sets.newHashSet(cube);
 		}
 
 		if (!this.canGenerate(cube)) {
-			return false;
+			return Collections.EMPTY_SET;
 		}
 
 		this.biomes = getCubeBiomeMap(cube);
@@ -71,7 +74,7 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 		this.noise = getCubeNoiseMap(cube);
 
 		replaceBlocks(cube);
-		return true;
+		return Sets.newHashSet(cube);
 	}
 
 	private void replaceBlocks(final Cube cube) {

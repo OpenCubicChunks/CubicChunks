@@ -23,17 +23,21 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.worldgen.GeneratorStage;
-import net.minecraft.world.World;
-import cubicchunks.worldgen.generator.custom.structures.CubicCaveGenerator;
-import cubicchunks.worldgen.generator.custom.structures.CubicRavineGenerator;
-import cubicchunks.worldgen.generator.custom.structures.CubicStructureGenerator;
+import com.google.common.collect.Sets;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.GeneratorStage;
+import cubicchunks.worldgen.generator.custom.structures.CubicCaveGenerator;
+import cubicchunks.worldgen.generator.custom.structures.CubicRavineGenerator;
+import cubicchunks.worldgen.generator.custom.structures.CubicStructureGenerator;
+import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.MapGenMineshaft;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
+
+import java.util.Collections;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 public class CustomFeatureProcessor extends CubeProcessor {
@@ -59,10 +63,10 @@ public class CustomFeatureProcessor extends CubeProcessor {
 	}
 	
 	@Override
-	public boolean calculate(Cube cube) {
+	public Set<Cube> calculate(Cube cube) {
 		
 		if(!this.canGenerate(cube)) {
-			return false;
+			return Collections.EMPTY_SET;
 		}
 		this.worldObj = cube.getWorld();
 		
@@ -81,7 +85,7 @@ public class CustomFeatureProcessor extends CubeProcessor {
 		}
 		 */
 		
-		return true;
+		return Sets.newHashSet(cube);
 	}
 
 	private boolean canGenerate(Cube cube) {

@@ -23,8 +23,8 @@
  */
 package cubicchunks.lighting;
 
+import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
-import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.util.Coords;
 import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.util.processor.CubeProcessor;
@@ -33,11 +33,15 @@ import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.Collections;
+import java.util.Set;
 
 import static cubicchunks.util.Coords.*;
 
@@ -59,17 +63,17 @@ public class FirstLightProcessor extends CubeProcessor {
 	}
 
 	@Override
-	public boolean calculate(Cube cube) {
+	public Set<Cube> calculate(Cube cube) {
 		WorldContext worldContext = WorldContext.get(cube.getWorld());
 
 		if (!canUpdateCube(cube, worldContext)) {
-			return false;
+			return Collections.EMPTY_SET;
 		}
 		ICubeCache cache = worldContext.getCubeCache();
 
 		setRawSkylight(cache, cube);
 		diffuseSkylight(cache, worldContext, cube);
-		return true;
+		return Sets.newHashSet(cube);
 	}
 
 	private void setRawSkylight(ICubeCache cache, Cube cube) {

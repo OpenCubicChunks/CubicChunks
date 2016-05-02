@@ -23,20 +23,19 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
-import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
+import com.google.common.collect.Sets;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.GeneratorStage;
+import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
+import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class CustomPopulationProcessor extends CubeProcessor {
 
@@ -57,11 +56,11 @@ public class CustomPopulationProcessor extends CubeProcessor {
 	}
 
 	@Override
-	public boolean calculate(Cube cube) {
-		if(true)return true;
+	public Set<Cube> calculate(Cube cube) {
+		if(true)return Sets.newHashSet(cube);
 		WorldContext worldContext = WorldContext.get(cube.getWorld());
 		if (!worldContext.cubeAndNeighborsExist(cube, true, GeneratorStage.POPULATION)) {
-			return false;
+			return Collections.EMPTY_SET;
 		}
 
 		BiomeGenBase biome = worldContext.getWorld().getBiomeGenForCoords(Coords.getCubeCenter(cube));
@@ -76,6 +75,6 @@ public class CustomPopulationProcessor extends CubeProcessor {
 			gen.generate(rand, cube, biome);
 		}
 
-		return true;
+		return Sets.newHashSet(cube);
 	}
 }

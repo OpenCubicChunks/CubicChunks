@@ -25,13 +25,13 @@ package cubicchunks.server;
 
 import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
-import cubicchunks.worldgen.ColumnGenerator;
-import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.ColumnGenerator;
+import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
@@ -41,10 +41,7 @@ import net.minecraft.world.gen.ChunkProviderServer;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 import static cubicchunks.server.ServerCubeCache.LoadType.*;
 
@@ -70,6 +67,16 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	private HashMap<Long, Column> loadedColumns;
 	private Queue<Long> cubesToUnload;
 
+	/**
+	 * Cube generator can add cubes into world that are "linked" with other cube -
+	 * Usually when generating one cube requires generating more than just neighbors.
+	 *
+	 * This is a mapping of which cubes are linked with which other cubes,
+	 * allows to automatically unload these additional cubes.
+	 */
+	private Map<Cube, Set<Cube>> forceAdded;
+	private Map<Cube, Set<Cube>> forceAddedReverse;
+
 	public ServerCubeCache(WorldServer worldServer) {
 		super(worldServer, worldServer.getSaveHandler().getChunkLoader(worldServer.provider), null);
 
@@ -78,6 +85,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		this.columnGenerator = new ColumnGenerator(worldServer);
 		this.loadedColumns = Maps.newHashMap();
 		this.cubesToUnload = new ArrayDeque<>();
+		this.forceAdded = new HashMap<>();
+		this.forceAddedReverse = new HashMap<>();
 	}
 
 	@Override
@@ -189,6 +198,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			int cubeY = AddressTools.getY(cubeAddress);
 			Cube cube = column.removeCube(cubeY);
 			if (cube != null) {
+				this.recursivelyRemoveForceLoadedCube(cube);
 				// tell the cube it has been unloaded
 				cube.onUnload();
 
@@ -263,19 +273,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		}
 
 		return column.getCube(cubeY);
-	}
-
-	public void loadCubeAndNeighbors(int cubeX, int cubeY, int cubeZ) {
-		// load the requested cube
-		loadCube(cubeX, cubeY, cubeZ, LOAD_OR_GENERATE);
-
-		for(int dx = -1; dx <=1; dx++) {
-			for(int dy = -1; dy <= 1; dy++) {
-				for(int dz = -1; dz <= 1; dz++) {
-					loadCube(cubeX + dx, cubeY + dy, cubeZ + dz, LOAD_OR_GENERATE);
-				}
-			}
-		}
 	}
 
 	public void loadCube(int cubeX, int cubeY, int cubeZ, LoadType loadType) {
@@ -386,6 +383,42 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		// queue the cube for unloading
 		this.cubesToUnload.add(AddressTools.getAddress(cubeX, cubeY, cubeZ));
+	}
+
+	public Cube forceLoadCube(Cube forcedBy, int cubeX, int cubeY, int cubeZ) {
+
+		this.loadCube(cubeX, cubeY, cubeZ, LOAD_ONLY);
+		Cube cube = getCube(cubeX, cubeY, cubeZ);
+		if(cube != null) {
+			addForcedByMapping(forcedBy, cube);
+			return cube;
+		}
+		Column column = this.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
+		cube = column.getOrCreateCube(cubeY, true);
+		addForcedByMapping(forcedBy, cube);
+		return cube;
+	}
+
+	private void addForcedByMapping(Cube forcedBy, Cube cube) {
+		Set<Cube> forcedCubes = this.forceAdded.get(forcedBy);
+
+		if(forcedCubes == null) {
+			forcedCubes = new HashSet<Cube>();
+			this.forceAdded.put(forcedBy, forcedCubes);
+		}
+		Set<Cube> forcedReverse = this.forceAddedReverse.get(cube);
+		if(forcedReverse == null) {
+			forcedReverse = new HashSet<>();
+			this.forceAddedReverse.put(cube, forcedReverse);
+		}
+
+		forcedCubes.add(cube);
+		forcedReverse.add(forcedBy);
+	}
+
+	private boolean recursivelyRemoveForceLoadedCube(Cube cube) {
+		//TODO: unload force-loaded cubes
+		return true;
 	}
 
 	public void saveAllChunks() {

@@ -23,16 +23,19 @@
  */
 package cubicchunks.worldgen.generator;
 
+import com.google.common.collect.Sets;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
+
+import java.util.Set;
 
 public class NullProcessor extends CubeProcessor {
 	public NullProcessor(String name, ICubeCache provider) {
 		super(name, provider, 100);
 	}
 
-	@Override public boolean calculate(Cube cube) {
-		return true;
+	@Override public Set<Cube> calculate(Cube cube) {
+		return Sets.newHashSet(cube);
 	}
 }

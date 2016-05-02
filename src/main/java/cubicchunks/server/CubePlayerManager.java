@@ -867,9 +867,9 @@ public class CubePlayerManager extends PlayerManager {
 
 	public class ColumnWatcher extends PlayerManager.PlayerInstance {
 
-		private MethodHandle getPlayers = getFieldGetterHandle(PlayerManager.PlayerInstance.class, List.class, "players", "field_187283_c");
-		private MethodHandle setLastUpdateInhabitedTime = getFieldSetterHandle(PlayerManager.PlayerInstance.class, long.class, "lastUpdateInhabitedTime", "field_187289_i");
-		private MethodHandle setSentToPlayers = getFieldSetterHandle(PlayerManager.PlayerInstance.class, boolean.class, "sentToPlayers", "field_187290_j");
+		private MethodHandle getPlayers = getFieldGetterHandle(PlayerManager.PlayerInstance.class, "field_187283_c");
+		private MethodHandle setLastUpdateInhabitedTime = getFieldSetterHandle(PlayerManager.PlayerInstance.class, "field_187289_i");
+		private MethodHandle setSentToPlayers = getFieldSetterHandle(PlayerManager.PlayerInstance.class, "field_187290_j");
 
 		public ColumnWatcher(int cubeX, int cubeZ) {
 			super(cubeX, cubeZ);

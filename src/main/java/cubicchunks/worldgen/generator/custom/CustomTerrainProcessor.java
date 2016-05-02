@@ -23,10 +23,13 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
+import com.google.common.collect.Sets;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.world.WorldServer;
+
+import java.util.Set;
 
 public final class CustomTerrainProcessor extends CubeProcessor {
 	private final CustomTerrainGenerator terrainGenerator;
@@ -37,10 +40,8 @@ public final class CustomTerrainProcessor extends CubeProcessor {
 	}
 
 	@Override
-	public boolean calculate(final Cube cube) {
+	public Set<Cube> calculate(final Cube cube) {
 		this.terrainGenerator.generate(cube);
-		return true;
+		return Sets.newHashSet(cube);
 	}
-
-
 }
