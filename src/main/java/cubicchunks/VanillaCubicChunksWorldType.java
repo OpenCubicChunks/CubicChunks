@@ -49,7 +49,7 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicChun
 		pipeline.addStage(GeneratorStage.SURFACE, new NullProcessor("Surface", cubeCache));
 		pipeline.addStage(GeneratorStage.FEATURES, new NullProcessor("Features", cubeCache));
 		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", cubeCache, 5));
-		pipeline.addStage(GeneratorStage.POPULATION, new VanillaPopulationProcessor(cubeCache, vanillaGen, 5));
+		pipeline.addStage(GeneratorStage.POPULATION, new VanillaPopulationProcessor(cubeCache, world, vanillaGen, 5));
 
 	}
 

@@ -104,7 +104,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public void unloadAllChunks() {
 		// unload all the cubes in the columns
 		for (Column column : this.loadedColumns.values()) {
-			for (Cube cube : column.getCubes()) {
+			for (Cube cube : column.getCubeMap()) {
 				this.cubesToUnload.add(cube.getAddress());
 			}
 		}
@@ -162,7 +162,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 
 			// save the cubes
-			for (Cube cube : column.getCubes()) {
+			for (Cube cube : column.getCubeMap()) {
 				if (cube.needsSaving()) {
 					this.cubeIO.saveCube(cube);
 				}

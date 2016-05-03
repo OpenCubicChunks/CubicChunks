@@ -176,7 +176,7 @@ public class FirstLightProcessor extends CubeProcessor {
 
 		BlockPos.MutableBlockPos pos = mutablePos;
 
-		for (Cube c : column.getCubes()) {
+		for (Cube c : column.getCubeMap()) {
 			boolean canUpdateCube = canUpdateCube(cube, context);
 			FastCubeBlockAccess blockAccess = new FastCubeBlockAccess(cache, c, 1);
 

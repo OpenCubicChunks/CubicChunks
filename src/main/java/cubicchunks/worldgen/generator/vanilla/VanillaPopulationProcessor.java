@@ -26,8 +26,10 @@ package cubicchunks.worldgen.generator.vanilla;
 import com.google.common.collect.Sets;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
+import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
+import net.minecraft.world.World;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
 import java.util.Collections;
@@ -36,11 +38,13 @@ import java.util.Set;
 
 public class VanillaPopulationProcessor extends CubeProcessor {
 	private ICubeCache provider;
+	private World world;
 	private ChunkProviderOverworld vanillaGen;
 
-	public VanillaPopulationProcessor(ICubeCache provider, ChunkProviderOverworld vanillaGen, int batchSize) {
+	public VanillaPopulationProcessor(ICubeCache provider, World world, ChunkProviderOverworld vanillaGen, int batchSize) {
 		super("Population", provider, batchSize);
 		this.provider = provider;
+		this.world = world;
 		this.vanillaGen = vanillaGen;
 	}
 
@@ -60,7 +64,9 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 			}
 			cubes.add(currentCube);
 		}
+		WorldContext.get(this.world).worldGenPerfHack = true;
 		this.vanillaGen.populate(cube.getX(), cube.getZ());
+		WorldContext.get(this.world).worldGenPerfHack = false;
 		return cubes;
 	}
 
