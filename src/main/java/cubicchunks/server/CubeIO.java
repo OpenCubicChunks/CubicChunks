@@ -29,13 +29,11 @@ import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.IEntityActionListener;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -359,23 +357,19 @@ CubeIO implements IThreadedFileIO {
 		}
 		
 		// entities
-		cube.getEntityContainer().readFromNbt(nbt, "Entities", this.world, new IEntityActionListener() {
-			
-			@Override
-			public void onEntity(Entity entity) {
-				// make sure this entity is really in the chunk
-				int entityCubeX = Coords.getCubeXForEntity(entity);
-				int entityCubeY = Coords.getCubeYForEntity(entity);
-				int entityCubeZ = Coords.getCubeZForEntity(entity);
-				if (entityCubeX != cube.getX() || entityCubeY != cube.getY() || entityCubeZ != cube.getZ()) {
-					LOGGER.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass().getName(), entityCubeX, entityCubeY, entityCubeZ, cube.getX(), cube.getY(), cube.getZ()));
-				}
-				
-				entity.addedToChunk = true;
-				entity.chunkCoordX = cubeX;
-				entity.chunkCoordY = cubeY;
-				entity.chunkCoordZ = cubeZ;
+		cube.getEntityContainer().readFromNbt(nbt, "Entities", this.world, entity -> {
+			// make sure this entity is really in the chunk
+			int entityCubeX = Coords.getCubeXForEntity(entity);
+			int entityCubeY = Coords.getCubeYForEntity(entity);
+			int entityCubeZ = Coords.getCubeZForEntity(entity);
+			if (entityCubeX != cube.getX() || entityCubeY != cube.getY() || entityCubeZ != cube.getZ()) {
+				LOGGER.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass().getName(), entityCubeX, entityCubeY, entityCubeZ, cube.getX(), cube.getY(), cube.getZ()));
 			}
+
+			entity.addedToChunk = true;
+			entity.chunkCoordX = cubeX;
+			entity.chunkCoordY = cubeY;
+			entity.chunkCoordZ = cubeZ;
 		});
 		
 		// tile entities
@@ -492,22 +486,18 @@ CubeIO implements IThreadedFileIO {
 		}
 		
 		// entities
-		cube.getEntityContainer().writeToNbt(nbt, "Entities", new IEntityActionListener() {
-			
-			@Override
-			public void onEntity(Entity entity) {
-				// make sure this entity is really in the chunk
-				int cubeX = Coords.getCubeXForEntity(entity);
-				int cubeY = Coords.getCubeYForEntity(entity);
-				int cubeZ = Coords.getCubeZForEntity(entity);
-				if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
-					LOGGER.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
-						entity.getClass().getName(),
-						cubeX, cubeY, cubeZ,
-						cube.getX(), cube.getY(), cube.getZ(),
-						entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
-					));
-				}
+		cube.getEntityContainer().writeToNbt(nbt, "Entities", entity -> {
+			// make sure this entity is really in the chunk
+			int cubeX = Coords.getCubeXForEntity(entity);
+			int cubeY = Coords.getCubeYForEntity(entity);
+			int cubeZ = Coords.getCubeZForEntity(entity);
+			if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
+				LOGGER.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
+					entity.getClass().getName(),
+					cubeX, cubeY, cubeZ,
+					cube.getX(), cube.getY(), cube.getZ(),
+					entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
+				));
 			}
 		});
 		

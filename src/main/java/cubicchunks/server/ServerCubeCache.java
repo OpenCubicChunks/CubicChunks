@@ -347,7 +347,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			column = getColumn(cubeX, cubeZ);
 		}
 		if(column != null) {
-			this.loadedColumns.put(AddressTools.getAddress(cubeX, cubeZ), column);
 			return column;
 		}
 		try {

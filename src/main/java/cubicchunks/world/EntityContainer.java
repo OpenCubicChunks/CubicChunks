@@ -170,13 +170,7 @@ public class EntityContainer {
 		for (int i = 0; i < nbtEntities.tagCount(); i++) {
 			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
 			Entity entity = readEntity(nbtEntity, world, listener);
-			if(entity instanceof EntityPlayerMP) {
-				CubicChunks.LOGGER.error("EntityPlayerMP is serialized in save file! Reading the entity would break world ticking, skipping");
-				continue;
-			}
-			if (entity != null) {
-				addEntity(entity);
-			}
+
 		}
 	}
 
@@ -187,7 +181,10 @@ public class EntityContainer {
 		if (entity == null) {
 			return null;
 		}
-
+		if(entity instanceof EntityPlayerMP) {
+			CubicChunks.LOGGER.error("EntityPlayerMP is serialized in save file! Reading the entity would break world ticking, skipping");
+			return null;
+		}
 		addEntity(entity);
 
 		if(listener != null) {
