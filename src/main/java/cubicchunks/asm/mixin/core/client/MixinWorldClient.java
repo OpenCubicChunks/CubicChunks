@@ -26,6 +26,7 @@ package cubicchunks.asm.mixin.core.client;
 import cubicchunks.asm.mixin.core.MixinWorld;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubicWorldClient;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
@@ -47,6 +48,9 @@ public abstract class MixinWorldClient extends MixinWorld implements ICubicWorld
 		this.chunkProvider = clientCubeCache;
 		this.clientChunkProvider = clientCubeCache;
 		this.lightingManager = new LightingManager(this);
+
+		this.maxBlockY = AddressTools.MAX_BLOCK_Y + 1;
+		this.minBlockY = AddressTools.MIN_BLOCK_Y;
 	}
 
 	@Override public ClientCubeCache getCubeCache() {

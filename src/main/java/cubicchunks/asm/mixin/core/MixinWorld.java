@@ -61,6 +61,7 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	protected LightingManager lightingManager;
 	protected boolean isCubicWorld;
+	protected int minBlockY = 0, maxBlockY = 256;
 	private boolean enableWorldGenPerfHack;
 
 	@Shadow public abstract WorldType getWorldType();
@@ -93,17 +94,11 @@ public abstract class MixinWorld implements ICubicWorld {
 	}
 
 	@Override public int getMinHeight() {
-		if (this.isCubicWorld()) {
-			return AddressTools.MIN_BLOCK_Y;
-		}
-		return 0;
+		return this.minBlockY;
 	}
 
 	@Override public int getMaxHeight() {
-		if (this.isCubicWorld()) {
-			return AddressTools.MAX_BLOCK_Y + 1;
-		}
-		return 256;
+		return this.maxBlockY;
 	}
 
 	@Override public ICubeCache getCubeCache() {

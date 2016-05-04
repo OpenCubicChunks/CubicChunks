@@ -61,7 +61,8 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesHashSet;
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesThisTick;
 
-public class CubeIO implements IThreadedFileIO {
+public class
+CubeIO implements IThreadedFileIO {
 	
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 	

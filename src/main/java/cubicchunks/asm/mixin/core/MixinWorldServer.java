@@ -28,6 +28,7 @@ import cubicchunks.ICubicChunksWorldType;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
+import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
@@ -61,6 +62,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
 		type.registerWorldGen(this, this.generatorPipeline);
 		this.generatorPipeline.checkStages();
+
+		this.maxBlockY = AddressTools.MAX_BLOCK_Y + 1;
+		this.minBlockY = AddressTools.MIN_BLOCK_Y;
 	}
 
 	@Override public void generateWorld() {
@@ -68,14 +72,14 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		// load the cubes around the spawn point
 		CubicChunks.LOGGER.info("Loading cubes for spawn...");
-		final int Distance = ServerCubeCache.WorldSpawnChunkDistance;
+		final int spawnDistance = ServerCubeCache.WorldSpawnChunkDistance;
 		BlockPos spawnPoint = this.getSpawnPoint();
 		int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
 		int spawnCubeY = Coords.blockToCube(spawnPoint.getY());
 		int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
-		for (int cubeX = spawnCubeX - Distance; cubeX <= spawnCubeX + Distance; cubeX++) {
-			for (int cubeZ = spawnCubeZ - Distance; cubeZ <= spawnCubeZ + Distance; cubeZ++) {
-				for (int cubeY = spawnCubeY + Distance; cubeY >= spawnCubeY - Distance; cubeY--) {
+		for (int cubeX = spawnCubeX - spawnDistance; cubeX <= spawnCubeX + spawnDistance; cubeX++) {
+			for (int cubeZ = spawnCubeZ - spawnDistance; cubeZ <= spawnCubeZ + spawnDistance; cubeZ++) {
+				for (int cubeY = spawnCubeY + spawnDistance; cubeY >= spawnCubeY - spawnDistance; cubeY--) {
 					serverCubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_OR_GENERATE);
 				}
 			}
@@ -94,8 +98,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 			//CubicChunks.LOGGER.info("Done in {} ms", timeDiff);
 		}
 
-		// save the cubes now
-		serverCubeCache.saveAllChunks();
+		// don't save cubes here. Vanilla doesn't do that.
+		// and saving chunks here would be extremely slow
+		// serverCubeCache.saveAllChunks();
 	}
 
 	@Override public ServerCubeCache getCubeCache() {

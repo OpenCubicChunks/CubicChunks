@@ -206,6 +206,8 @@ public class Column extends Chunk {
 			return null;
 		}
 
+		int oldOpacity = oldBlockState.getLightOpacity(this.getWorld(), pos);
+
 		Block oldBlock = oldBlockState.getBlock();
 		Block newBlock = newBlockState.getBlock();
 
@@ -240,7 +242,7 @@ public class Column extends Chunk {
 			return null;
 		}
 
-		this.doOnBlockSetLightUpdates(pos, newBlockState);
+		this.doOnBlockSetLightUpdates(pos, newBlockState, oldOpacity);
 
 		if (!this.getWorld().isRemote && oldBlock != newBlock) {
 			newBlock.onBlockAdded(this.getWorld(), pos, newBlockState);
@@ -263,8 +265,12 @@ public class Column extends Chunk {
 		return oldBlockState;
 	}
 
-	private void doOnBlockSetLightUpdates(BlockPos pos, IBlockState newBlockState) {
+	private void doOnBlockSetLightUpdates(BlockPos pos, IBlockState newBlockState, int oldOpacity) {
 		int newOpacity = newBlockState.getLightOpacity(this.getWorld(), pos);
+		if(oldOpacity == newOpacity || (oldOpacity >= 15 && newOpacity >= 15)) {
+			//nothing to update, this will frequently happen in ore generation
+			return;
+		}
 
 		int localX = Coords.blockToLocal(pos.getX());
 		int localZ = Coords.blockToLocal(pos.getZ());
