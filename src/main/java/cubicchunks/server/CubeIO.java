@@ -24,15 +24,16 @@
 package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ChunkSectionHelper;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IEntityActionListener;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.CompressedStreamTools;
@@ -41,7 +42,6 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.NextTickListEntry;
-import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.NibbleArray;
@@ -97,7 +97,7 @@ public class CubeIO implements IThreadedFileIO {
 		// see: http://www.mapdb.org/features.html
 	}
 	
-	private World world;
+	private ICubicWorld world;
 	
 	private DB db;
 	private ConcurrentNavigableMap<Long,byte[]> columns;
@@ -105,11 +105,11 @@ public class CubeIO implements IThreadedFileIO {
 	private ConcurrentBatchedQueue<SaveEntry> columnsToSave;
 	private ConcurrentBatchedQueue<SaveEntry> cubesToSave;
 	
-	public CubeIO(World world) {
+	public CubeIO(ICubicWorld world) {
 		
 		this.world = world;
 		
-		this.db = initializeDBConnection(this.world.getSaveHandler().getWorldDirectory(), this.world.provider);
+		this.db = initializeDBConnection(this.world.getSaveHandler().getWorldDirectory(), this.world.getProvider());
 		
 		this.columns = this.db.getTreeMap("columns");
 		this.cubes = this.db.getTreeMap("chunks");
@@ -328,7 +328,7 @@ public class CubeIO implements IThreadedFileIO {
 		}
 		
 		// build the cube
-		boolean hasSky = !this.world.provider.getHasNoSky();
+		boolean hasSky = !this.world.getProvider().getHasNoSky();
 		final Cube cube = column.getOrCreateCube(cubeY, false);
 		
 		// get the worldgen stage

@@ -21,50 +21,19 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm;
+package cubicchunks.world;
 
-import cubicchunks.CubicChunkSystem;
-import cubicchunks.ICubicChunksWorldType;
-import cubicchunks.util.AddressTools;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldType;
+import cubicchunks.server.ServerCubeCache;
+import cubicchunks.worldgen.GeneratorPipeline;
 
-/**
- * This class has methods to get information about works.
- * Should be used from asm transformed code.
- */
-public final class AsmWorldHooks {
-	private static CubicChunkSystem cc;
+public interface ICubicWorldServer extends ICubicWorld {
 
-	public static int getMinHeight(World world) {
-		Integer h = cc.getMinBlockY(world);
-		if(h != null) {
-			return h;
-		}
-		return 0;
-	}
+	void generateWorld();
 
-	public static int getMaxHeight(World world) {
-		Integer h = cc.getMaxBlockY(world);
-		if(h != null) {
-			return h;
-		}
-		return 256;
-	}
+	GeneratorPipeline getGeneratorPipeline();
 
-	public static boolean isTallWorld(World world) {
-		return cc.isTallWorld(world);
-	}
+	ServerCubeCache getCubeCache();
 
-	public static int getMaxHeight(WorldType type) {
-		return (type instanceof ICubicChunksWorldType) ? AddressTools.MaxY * 16 : 256;
-	}
-
-	public static void registerChunkSystem(CubicChunkSystem cc) {
-		AsmWorldHooks.cc = cc;
-	}
-
-	public static Boolean isAreaLoaded(World world, int minx, int miny, int minz, int maxx, int maxy, int maxz, boolean allowEmpty) {
-		return cc.checkBlockRangeIsInWorld(world, minx, miny, minz, maxx, maxy, maxz, allowEmpty);
-	}
+	//field accessors
+	boolean getDisableLevelSaving();
 }

@@ -23,12 +23,12 @@
  */
 package cubicchunks.worldgen.generator.custom.features.trees;
 
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 
 import java.util.Random;
@@ -38,7 +38,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 	private static final int MIN_TRUNK_HEIGHT = 4;
 	private static final int MAX_TRUNK_HEIGHT = 6;// inclusive
 
-	public SimpleTreeGenerator(World world, IBlockState woodBlock, IBlockState leafBlock) {
+	public SimpleTreeGenerator(ICubicWorld world, IBlockState woodBlock, IBlockState leafBlock) {
 		super(world, woodBlock, leafBlock);
 	}
 

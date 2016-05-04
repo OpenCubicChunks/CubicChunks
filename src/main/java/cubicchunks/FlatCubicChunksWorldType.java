@@ -25,11 +25,11 @@ package cubicchunks;
 
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ServerCubeCache;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.generator.NullProcessor;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 
 public class FlatCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
@@ -38,8 +38,8 @@ public class FlatCubicChunksWorldType extends WorldType implements ICubicChunksW
 		super("FlatCubic");
 	}
 
-	@Override public void registerWorldGen(WorldServer world, GeneratorPipeline pipeline) {
-		ServerCubeCache cubeCache = (ServerCubeCache) world.getChunkProvider();
+	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
+		ServerCubeCache cubeCache = world.getCubeCache();
 		// init the worldgen pipeline
 		pipeline.addStage(GeneratorStage.TERRAIN, new FlatTerrainProcessor(cubeCache, 5));
 		pipeline.addStage(GeneratorStage.SURFACE, new NullProcessor("Surface", cubeCache));

@@ -23,13 +23,13 @@
  */
 package cubicchunks.worldgen.generator.custom.features.trees;
 
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.custom.features.SurfaceFeatureGenerator;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 
@@ -67,13 +67,13 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 	protected final IBlockState woodBlock;
 	protected final IBlockState leafBlock;
 
-	public TreeGenerator(final World world, final IBlockState woodBlock, final IBlockState leafBlock) {
+	public TreeGenerator(final ICubicWorld world, final IBlockState woodBlock, final IBlockState leafBlock) {
 		super(world);
 		this.woodBlock = woodBlock;
 		this.leafBlock = leafBlock;
 	}
 
-	protected boolean tryToPlaceDirtUnderTree(final World world, final BlockPos blockPos) {
+	protected boolean tryToPlaceDirtUnderTree(final ICubicWorld world, final BlockPos blockPos) {
 		if (world.getBlockState(blockPos).getBlock() != Blocks.DIRT) {
 			return this.setBlockOnly(blockPos, Blocks.DIRT.getDefaultState());
 		} else {

@@ -25,10 +25,9 @@ package cubicchunks.lighting;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.world.World;
 
 import java.util.Set;
 
@@ -36,18 +35,18 @@ public class LightingManager {
 
 	private static final int TickBudget = 10; // ms. Only 50 ms in a tick @ 20 tps
 
-	private World world;
+	private ICubicWorld world;
 
 	private SkyLightCubeDiffuseProcessor skylightCubeDiffuseProcessor;
 
 	private FirstLightProcessor firstLightProcessor;
 
-	public LightingManager(World world, ICubeCache provider) {
+	public LightingManager(ICubicWorld world) {
 		this.world = world;
 
-		this.skylightCubeDiffuseProcessor = new SkyLightCubeDiffuseProcessor(world, "Sky Light Diffuse", provider, 5);
+		this.skylightCubeDiffuseProcessor = new SkyLightCubeDiffuseProcessor(world, "Sky Light Diffuse", 5);
 
-		this.firstLightProcessor = new FirstLightProcessor("First Light", provider, 1);
+		this.firstLightProcessor = new FirstLightProcessor("First Light", world.getCubeCache(), 1);
 	}
 
 	public void columnSkylightUpdate(UpdateType type, Column column, int localX, int minY, int maxY, int localZ) {
@@ -91,7 +90,7 @@ public class LightingManager {
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			CubicChunks.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isRemote ? "CLIENT" : "SERVER", numProcessed, timeDiff));
+			CubicChunks.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isRemote() ? "CLIENT" : "SERVER", numProcessed, timeDiff));
 			CubicChunks.LOGGER.info(this.skylightCubeDiffuseProcessor.getProcessingReport());
 			CubicChunks.LOGGER.info(this.firstLightProcessor.getProcessingReport());
 		}

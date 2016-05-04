@@ -26,15 +26,14 @@ package cubicchunks.network;
 import com.google.common.base.Throwables;
 import cubicchunks.CubicChunks;
 import cubicchunks.client.ClientCubeCache;
-import cubicchunks.client.WorldClientContext;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.world.ClientOpacityIndex;
+import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.network.INetHandler;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
@@ -68,9 +67,8 @@ public class ClientHandler implements INetHandler {
 			taskQueue.addScheduledTask(() -> handle(packet));
 			return;
 		}
-		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
-		WorldClientContext context = WorldClientContext.get(worldClient);
-		ClientCubeCache cubeCache = context.getCubeCache();
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
 		long cubeAddress = packet.getCubeAddress();
 
@@ -101,9 +99,8 @@ public class ClientHandler implements INetHandler {
 			taskQueue.addScheduledTask(() -> handle(packet));
 			return;
 		}
-		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
-		WorldClientContext context = WorldClientContext.get(worldClient);
-		ClientCubeCache cubeCache = context.getCubeCache();
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
 		long cubeAddress = packet.getCubeAddress();
 
@@ -129,9 +126,8 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
-		WorldClientContext context = WorldClientContext.get(worldClient);
-		ClientCubeCache cubeCache = context.getCubeCache();
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ClientCubeCache cubeCache = worldClient.getCubeCache();
 		long cubeAddress = packet.getCubeAddress();
 		cubeCache.unloadCube(
 				getX(cubeAddress),
@@ -149,9 +145,8 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
-		WorldClientContext context = WorldClientContext.get(worldClient);
-		ClientCubeCache cubeCache = context.getCubeCache();
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
 		long cubeAddress = packet.getCubeAddress();
 		cubeCache.unloadColumn(
@@ -168,9 +163,8 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
-		WorldClientContext context = WorldClientContext.get(worldClient);
-		ClientCubeCache cubeCache = context.getCubeCache();
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
 		// get the cube
 		int cubeX = getX(packet.cubeAddress);
@@ -198,9 +192,8 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		WorldClient worldClient = Minecraft.getMinecraft().theWorld;
-		WorldClientContext context = WorldClientContext.get(worldClient);
-		ClientCubeCache cubeCache = context.getCubeCache();
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
 		// get the cube
 		int cubeX = getX(packet.cubeAddress);
@@ -213,7 +206,7 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ClientOpacityIndex index = (ClientOpacityIndex) cube.getColumn().getOpacityIndex();
-		LightingManager lm = context.getLightingManager();
+		LightingManager lm = worldClient.getLightingManager();
 		for (int hmapUpdate : packet.heightValues) {
 			int x = hmapUpdate & 0xF;
 			int z = (hmapUpdate >> 4) & 0xF;

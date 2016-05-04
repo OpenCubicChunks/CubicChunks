@@ -31,6 +31,8 @@ import cubicchunks.network.*;
 import cubicchunks.util.AddressTools;
 import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.map.TIntObjectMap;
@@ -142,8 +144,8 @@ public class CubePlayerManager extends PlayerManager {
 
 	private ServerCubeCache cubeCache;
 
-	public CubePlayerManager(WorldServer worldServer) {
-		super(worldServer);
+	public CubePlayerManager(ICubicWorldServer worldServer) {
+		super((WorldServer) worldServer);
 		this.cubeCache = (ServerCubeCache) getWorldServer().getChunkProvider();
 		//this.viewDistance = worldServer.getMinecraftServer().getPlayerList().getViewDistance();
 		this.setPlayerViewRadius(worldServer.getMinecraftServer().getPlayerList().getViewDistance());
@@ -757,7 +759,7 @@ public class CubePlayerManager extends PlayerManager {
 				return;
 			}
 
-			World world = this.cube.getWorld();
+			ICubicWorld world = this.cube.getWorld();
 
 			if (this.dirtyBlocks.size() >= ForgeModContainer.clumpingThreshold) {
 				// send whole cube

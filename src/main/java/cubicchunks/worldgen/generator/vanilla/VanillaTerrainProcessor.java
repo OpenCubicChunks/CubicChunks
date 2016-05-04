@@ -27,11 +27,12 @@ import com.google.common.collect.Sets;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.ChunkProviderOverworld;
@@ -44,13 +45,13 @@ import static cubicchunks.util.ChunkProviderOverworldAccess.*;
 
 public class VanillaTerrainProcessor extends CubeProcessor {
 	private final ChunkProviderOverworld vanillaGen;
-	private WorldServer world;
+	private ICubicWorldServer world;
 	private ServerCubeCache provider;
 
-	public VanillaTerrainProcessor(WorldServer world, ServerCubeCache provider, ChunkProviderOverworld vanillaGen, int batchSize) {
-		super("Terrain", provider, batchSize);
+	public VanillaTerrainProcessor(ICubicWorldServer world, ChunkProviderOverworld vanillaGen, int batchSize) {
+		super("Terrain", world.getCubeCache(), batchSize);
 		this.world = world;
-		this.provider = provider;
+		this.provider = world.getCubeCache();
 		this.vanillaGen = vanillaGen;
 	}
 
@@ -96,32 +97,32 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 
 		ChunkProviderSettings settings = getSettings(this.vanillaGen);
 		if (settings.useCaves) {
-			getCaveGenerator(this.vanillaGen).generate(this.world, x, z, chunkprimer);
+			getCaveGenerator(this.vanillaGen).generate((World) this.world, x, z, chunkprimer);
 		}
 
 		if (settings.useRavines) {
-			getRavineGenerator(this.vanillaGen).generate(this.world, x, z, chunkprimer);
+			getRavineGenerator(this.vanillaGen).generate((World) this.world, x, z, chunkprimer);
 		}
 
 		if (getMapFeaturesEnabled(this.vanillaGen)) {
 			if (settings.useMineShafts) {
-				getMineshaftGenerator(this.vanillaGen).generate(this.world, x, z, chunkprimer);
+				getMineshaftGenerator(this.vanillaGen).generate((World) this.world, x, z, chunkprimer);
 			}
 
 			if (settings.useVillages) {
-				getVillageGenerator(this.vanillaGen).generate(this.world, x, z, chunkprimer);
+				getVillageGenerator(this.vanillaGen).generate((World) this.world, x, z, chunkprimer);
 			}
 
 			if (settings.useStrongholds) {
-				getStrongholdGenerator(this.vanillaGen).generate(this.world, x, z, chunkprimer);
+				getStrongholdGenerator(this.vanillaGen).generate((World) this.world, x, z, chunkprimer);
 			}
 
 			if (settings.useTemples) {
-				getScatteredFeatureGenerator(this.vanillaGen).generate(this.world, x, z, chunkprimer);
+				getScatteredFeatureGenerator(this.vanillaGen).generate((World) this.world, x, z, chunkprimer);
 			}
 
 			if (settings.useMonuments) {
-				getOceanMonumentGenerator(this.vanillaGen).generate(this.world, x, z, chunkprimer);
+				getOceanMonumentGenerator(this.vanillaGen).generate((World) this.world, x, z, chunkprimer);
 			}
 		}
 		for(int cubeY = 0; cubeY < 16; cubeY++) {

@@ -25,17 +25,16 @@ package cubicchunks.worldgen.generator.custom;
 
 import com.google.common.collect.Sets;
 import cubicchunks.util.processor.CubeProcessor;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.world.WorldServer;
 
 import java.util.Set;
 
 public final class CustomTerrainProcessor extends CubeProcessor {
 	private final CustomTerrainGenerator terrainGenerator;
 
-	public CustomTerrainProcessor(ICubeCache cache, WorldServer world, int batchSize) {
-		super("Terrain", cache, batchSize);
+	public CustomTerrainProcessor(ICubicWorldServer world, int batchSize) {
+		super("Terrain", world.getCubeCache(), batchSize);
 		this.terrainGenerator = new CustomTerrainGenerator(world.getSeed());
 	}
 

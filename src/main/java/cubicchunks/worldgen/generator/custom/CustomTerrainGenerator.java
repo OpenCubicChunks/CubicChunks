@@ -117,7 +117,7 @@ public class CustomTerrainGenerator {
 		generateTerrainArray(cube);
 
 		if (this.needsScaling) {
-			scaleNoiseArray(cube.getWorld().provider.getAverageGroundLevel());
+			scaleNoiseArray(cube.getWorld().getProvider().getAverageGroundLevel());
 		}
 		expandNoiseArray(this.rawDensity, this.expandedDensity);
 		applyHeightGradient(cube, this.expandedDensity);
@@ -267,7 +267,7 @@ public class CustomTerrainGenerator {
 	}
 
 	private BiomeGenBase[] getBiomeMap(final Cube cube) {
-		return cube.getWorld().provider.getBiomeProvider().getBiomesForGeneration(this.biomes,
+		return cube.getWorld().getProvider().getBiomeProvider().getBiomesForGeneration(this.biomes,
 				cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius,
 				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
 	}

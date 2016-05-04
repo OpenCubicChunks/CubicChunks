@@ -23,9 +23,9 @@
  */
 package cubicchunks;
 
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
-import net.minecraft.world.WorldServer;
 
 public interface ICubicChunksWorldType {
-	void registerWorldGen(WorldServer world, GeneratorPipeline pipeline);
+	void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline);
 }

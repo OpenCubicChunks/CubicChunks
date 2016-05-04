@@ -23,9 +23,10 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
-import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
 import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -58,8 +59,8 @@ public class MineralGenerator extends FeatureGenerator {
 	 * @param size
 	 *            Maximum vein size
 	 */
-	public MineralGenerator(final World world, final IBlockState state, final double minY, final double maxY,
-			final int size, final double probability) {
+	public MineralGenerator(final ICubicWorld world, final IBlockState state, final double minY, final double maxY,
+	                        final int size, final double probability) {
 		super(world);
 		// use vanilla worldgen. This class odesn't have height limits
 		this.vanillaGen = new WorldGenMinable(state, size);
@@ -80,7 +81,7 @@ public class MineralGenerator extends FeatureGenerator {
 		}
 		BlockPos currentPos = cubeCenter.add(rand.nextInt(16), rand.nextInt(16), rand.nextInt(16));
 		if (currentPos.getY() <= maxBlockY && currentPos.getY() >= minBlockY) {
-			this.vanillaGen.generate(this.world, rand, currentPos);
+			this.vanillaGen.generate((World) this.world, rand, currentPos);
 		}
 	}
 }

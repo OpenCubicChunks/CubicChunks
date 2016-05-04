@@ -25,6 +25,7 @@ package cubicchunks.world.cube;
 
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
@@ -59,7 +60,7 @@ public class Cube {
 
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 
-	private World world;
+	private ICubicWorld world;
 	private Column column;
 	private int cubeX;
 	private int cubeY;
@@ -79,7 +80,7 @@ public class Cube {
 
 	private boolean isCubeLoaded;
 
-	public Cube(World world, Column column, int x, int y, int z, boolean isModified) {
+	public Cube(ICubicWorld world, Column column, int x, int y, int z, boolean isModified) {
 		this.world = world;
 		this.column = column;
 		this.cubeX = x;
@@ -150,7 +151,7 @@ public class Cube {
 
 		switch (lightType) {
 			case SKY:
-				if(this.world.provider.getHasNoSky()) {
+				if(this.world.getProvider().getHasNoSky()) {
 					return 0;
 				}
 				return this.storage.getExtSkylightValue(localX, localY, localZ);
@@ -175,7 +176,7 @@ public class Cube {
 
 		switch (lightType) {
 			case SKY:
-				if (!this.world.provider.getHasNoSky()) {
+				if (!this.world.getProvider().getHasNoSky()) {
 					this.storage.setExtSkylightValue(x, y, z, light);
 				}
 				break;
@@ -203,7 +204,7 @@ public class Cube {
 		Block block = blockState.getBlock();
 
 		if (block.hasTileEntity(blockState)) {
-			return block.createTileEntity(this.world, blockState);
+			return block.createTileEntity((World) this.world, blockState);
 		}
 		return null;
 	}
@@ -269,7 +270,7 @@ public class Cube {
 
 	public void addTileEntity(BlockPos pos, TileEntity tileEntity) {
 		// update the tile entity
-		tileEntity.setWorldObj(this.getWorld());
+		tileEntity.setWorldObj((World) this.world);
 		tileEntity.setPos(pos);
 
 		IBlockState blockState = this.getBlockState(pos);
@@ -337,7 +338,7 @@ public class Cube {
 		if (isEmpty) {
 			this.storage = null;
 		} else if (storage == null) {
-			this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(this.cubeY), !this.world.provider.getHasNoSky());
+			this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(this.cubeY), !this.world.getProvider().getHasNoSky());
 		}
 	}
 
@@ -360,7 +361,7 @@ public class Cube {
 		return new BlockPos(x, y, z);
 	}
 
-	public World getWorld() {
+	public ICubicWorld getWorld() {
 		return this.world;
 	}
 
@@ -516,7 +517,7 @@ public class Cube {
 		for (int i = 0; i < 3; i++) {
 
 			// get a random block
-			int index = this.world.rand.nextInt();
+			int index = this.world.getRand().nextInt();
 			int x = index & 0xF;
 			int y = (index >> 8) & 0xF;
 			int z = (index >> 16) & 0xF;
@@ -531,7 +532,7 @@ public class Cube {
 						Coords.localToBlock(this.cubeY, y),
 						Coords.localToBlock(this.cubeZ, z)
 				);
-				block.randomTick(this.world, pos, blockState, this.world.rand);
+				block.randomTick((World) this.world, pos, blockState, this.world.getRand());
 			}
 		}
 	}

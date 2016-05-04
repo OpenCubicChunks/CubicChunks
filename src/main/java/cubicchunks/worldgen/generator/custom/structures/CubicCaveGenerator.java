@@ -23,12 +23,12 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
 
 import java.util.Random;
 
@@ -39,7 +39,7 @@ import java.util.Random;
 public class CubicCaveGenerator extends CubicStructureGenerator {
 
 	@Override
-	protected void generate(World world, Cube cube, int x, int y, int z, int xOrigin, int yOrigin, int zOrigin) {
+	protected void generate(ICubicWorld world, Cube cube, int x, int y, int z, int xOrigin, int yOrigin, int zOrigin) {
 		if (this.rand.nextInt(16) != 0) {
 			return;
 		}

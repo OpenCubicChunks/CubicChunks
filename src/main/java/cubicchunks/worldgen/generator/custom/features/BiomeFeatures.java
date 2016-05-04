@@ -23,16 +23,16 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.util.WorldProviderAccess;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.custom.features.trees.BigTreeGenerator;
 import cubicchunks.worldgen.generator.custom.features.trees.SimpleTreeGenerator;
 import cubicchunks.worldgen.generator.custom.features.trees.TreeGenerator;
-import cubicchunks.util.WorldProviderAccess;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone;
 import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeDecorator;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.gen.ChunkProviderSettings;
@@ -41,17 +41,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class BiomeFeatures {
-	private final World world;
+	private final ICubicWorld world;
 
 	private final Collection<FeatureGenerator> generators;
 
-	public BiomeFeatures(World world, BiomeGenBase biome) {
+	public BiomeFeatures(ICubicWorld world, BiomeGenBase biome) {
 		this.world = world;
 		this.generators = new ArrayList<>(20);
 		BiomeDecorator decorator = biome.theBiomeDecorator;
 		
 		ChunkProviderSettings config = ChunkProviderSettings.Factory.jsonToFactory(
-				WorldProviderAccess.getGeneratorSettings(world.provider)).build();
+				WorldProviderAccess.getGeneratorSettings(world.getProvider())).build();
 		
 		//clay worldgen
 		this.addMultiGen(SurfaceBlockReplacer.builder().

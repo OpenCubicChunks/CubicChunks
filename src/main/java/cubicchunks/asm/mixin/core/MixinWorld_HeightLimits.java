@@ -23,7 +23,8 @@
  */
 package cubicchunks.asm.mixin.core;
 
-import cubicchunks.asm.AsmWorldHooks;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -36,11 +37,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static cubicchunks.asm.AsmWorldHooks.getMaxHeight;
-import static cubicchunks.asm.AsmWorldHooks.getMinHeight;
-
 @Mixin(World.class)
-public abstract class MixinWorld_HeightLimits {
+public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
 	@Shadow private int skylightSubtracted;
 
@@ -52,10 +50,6 @@ public abstract class MixinWorld_HeightLimits {
 
 	@Shadow public abstract boolean isBlockLoaded(BlockPos pos);
 
-	private World this_() {
-		return (World) (Object) this;
-	}
-
 	/**
 	 * This @Overwrite allows World to "see" blocks outside of 0..255 height range.
 	 * Currently redirecting constant loading is not supported.
@@ -65,7 +59,7 @@ public abstract class MixinWorld_HeightLimits {
 	@Overwrite
 	public boolean isValid(BlockPos pos) {
 		return pos.getX() >= -30000000 && pos.getX() <= 30000000 &&
-				pos.getY() >= getMinHeight(this_()) && pos.getY() < getMaxHeight(this_()) &&
+				pos.getY() >= this.getMinHeight() && pos.getY() < this.getMaxHeight() &&
 				pos.getZ() >= -30000000 && pos.getZ() <= 30000000;
 	}
 
@@ -80,11 +74,10 @@ public abstract class MixinWorld_HeightLimits {
 	 */
 	@Overwrite
 	public int getLight(BlockPos pos) {
-		int minY = getMinHeight(this_());
-		if (pos.getY() < minY) {
+		if (pos.getY() < this.getMinHeight()) {
 			return 0;
 		}
-		if (pos.getY() >= getMaxHeight((World) (Object) this)) {
+		if (pos.getY() >= this.getMaxHeight()) {
 			return EnumSkyBlock.SKY.defaultLightValue;
 		}
 		return this.getChunkFromBlockCoords(pos).getLightSubtracted(pos, 0);
@@ -104,7 +97,7 @@ public abstract class MixinWorld_HeightLimits {
 			require = 2
 	)
 	private int onGetYGetLight(BlockPos pos) {
-		if(pos.getY() < getMinHeight(this_()) || pos.getY() >= getMaxHeight(this_())) {
+		if(pos.getY() < this.getMinHeight() || pos.getY() >= this.getMaxHeight()) {
 			return 64;//any value between 0 and 255
 		}
 		return pos.getY();
@@ -121,7 +114,7 @@ public abstract class MixinWorld_HeightLimits {
 			require = 1
 	)
 	private int getLightGetReplacementYForTooHighY(int original) {
-		return getMaxHeight(this_()) - 1;
+		return this.getMaxHeight() - 1;
 	}
 
 	/**
@@ -134,9 +127,8 @@ public abstract class MixinWorld_HeightLimits {
 	 */
 	@Overwrite
 	public int getLightFor(EnumSkyBlock type, BlockPos pos) {
-		int minY = getMinHeight((World) (Object) this);
-		if (pos.getY() < minY) {
-			pos = new BlockPos(pos.getX(), minY, pos.getZ());
+		if (pos.getY() < this.getMinHeight()) {
+			pos = new BlockPos(pos.getX(), this.getMinHeight(), pos.getZ());
 		}
 		if (!this.isValid(pos)) {
 			return type.defaultLightValue;
@@ -167,12 +159,13 @@ public abstract class MixinWorld_HeightLimits {
 			require = 1
 	)
 	private void isAreaLoadedInject(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd, boolean allowEmpty, CallbackInfoReturnable cbi) {
-		if (!AsmWorldHooks.isTallWorld((World) (Object) this)) {
+		if (!this.isCubicWorld()) {
 			return;
 		}
-		boolean ret = AsmWorldHooks.isAreaLoaded(
-				(World) (Object) this,
-				xStart, yStart, zStart, xEnd, yEnd, zEnd, allowEmpty
+		boolean ret = this.blocksExist(
+				xStart, yStart, zStart,
+				xEnd, yEnd, zEnd,
+				allowEmpty, GeneratorStage.LIGHTING
 		);
 		cbi.cancel();
 		cbi.setReturnValue(ret);

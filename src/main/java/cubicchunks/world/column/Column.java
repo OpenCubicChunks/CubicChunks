@@ -68,15 +68,17 @@ public class Column extends Chunk {
 	private int roundRobinLightUpdatePointer;
 	private List<Cube> roundRobinCubes;
 	private EntityContainer entities;
+	private ICubicWorld world;
 
-	public Column(World world, int x, int z) {
+	public Column(ICubicWorld world, int x, int z) {
 		// NOTE: this constructor is called by the chunk loader
-		super(world, x, z);
+		super((World) world, x, z);
+		this.world = world;
 
 		init();
 	}
 
-	public Column(World world, int cubeX, int cubeZ, BiomeGenBase[] biomes) {
+	public Column(ICubicWorld world, int cubeX, int cubeZ, BiomeGenBase[] biomes) {
 		// NOTE: this constructor is called by the column worldgen
 		this(world, cubeX, cubeZ);
 
@@ -309,7 +311,7 @@ public class Column extends Chunk {
 			maxY = t;
 		}
 
-		LightingManager lightManager = WorldContext.get(this.getWorld()).getLightingManager();
+		LightingManager lightManager = this.world.getLightingManager();
 		lightManager.columnSkylightUpdate(LightingManager.UpdateType.IMMEDIATE, this, localX, minY, maxY, localZ);
 
 	}
@@ -779,7 +781,7 @@ public class Column extends Chunk {
 		Cube cube = getCube(cubeY);
 
 		if (cube == null) {
-			cube = new Cube(this.getWorld(), this, this.xPosition, cubeY, this.zPosition, isModified);
+			cube = new Cube(this.world, this, this.xPosition, cubeY, this.zPosition, isModified);
 			this.cubeMap.put(cubeY, cube);
 		}
 		return cube;

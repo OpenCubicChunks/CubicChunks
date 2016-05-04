@@ -50,6 +50,7 @@ classes/
 # Misc #
 ########
 *.bak
+*.hprof
 
 # Libraries #
 #############

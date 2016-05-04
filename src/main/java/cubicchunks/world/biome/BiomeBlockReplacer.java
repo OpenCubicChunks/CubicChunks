@@ -25,7 +25,6 @@ package cubicchunks.world.biome;
 
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
-import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -56,7 +55,7 @@ public class BiomeBlockReplacer {
 		this.top = Coords.cubeToMaxBlock(cubeAbove.getY());
 		this.bottom = Coords.cubeToMinBlock(cube.getY());
 		this.alterationTop = Coords.cubeToMaxBlock(cube.getY());
-		this.seaLevel = cube.getWorld().provider.getAverageGroundLevel();
+		this.seaLevel = cube.getWorld().getProvider().getAverageGroundLevel();
 	}
 
 	public void replaceBlocks(final BiomeGenBase biomeToUse, final int xAbs, final int zAbs, final double depthNoiseValue) {
@@ -91,7 +90,7 @@ public class BiomeBlockReplacer {
 			
 			boolean canSetBlock = yAbs <= this.alterationTop;
 			
-			if (yAbs <= ((AddressTools.MinY + 64) << 4) + this.rand.nextInt(16)) {
+			if (yAbs <= ((AddressTools.MIN_CUBE_Y + 64) << 4) + this.rand.nextInt(16)) {
 				if (canSetBlock) {
 					setBlock(this.cube, pos, Blocks.BEDROCK.getDefaultState());
 				}
@@ -194,7 +193,7 @@ public class BiomeBlockReplacer {
 	}
 
 	protected final Block getBlock(final Cube cube, final Cube cubeAbove, final BlockPos pos) {
-		assert WorldContext.get(cube.getWorld()).getCubeCache()
+		assert cube.getWorld().getCubeCache()
 				.cubeExists(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()),	Coords.blockToCube(pos.getZ()));
 
 		if (Coords.blockToCube(pos.getY()) == cube.getY()) {// check if we're in the same cube as Cube

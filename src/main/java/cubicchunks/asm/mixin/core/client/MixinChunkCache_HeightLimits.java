@@ -23,8 +23,8 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.asm.AsmWorldHooks;
 import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -54,10 +54,9 @@ public abstract class MixinChunkCache_HeightLimits {
 	 *
 	 * @author Barteks2x
 	 */
-	@Overwrite
-	public int getLightFor(EnumSkyBlock type, BlockPos pos) {
-		int minBlockY = AsmWorldHooks.getMinHeight(worldObj);
-		int maxBlockY = AsmWorldHooks.getMaxHeight(worldObj);
+	@Overwrite public int getLightFor(EnumSkyBlock type, BlockPos pos) {
+		int minBlockY = ((ICubicWorld) worldObj).getMinHeight();
+		int maxBlockY = ((ICubicWorld) worldObj).getMaxHeight();
 		if (pos.getY() < minBlockY || pos.getY() >= maxBlockY) {
 			return type.defaultLightValue;
 		}
@@ -75,13 +74,12 @@ public abstract class MixinChunkCache_HeightLimits {
 	 *
 	 * @author Barteks2x
 	 */
-	@Overwrite
-	private int getLightForExt(EnumSkyBlock type, BlockPos pos) {
+	@Overwrite private int getLightForExt(EnumSkyBlock type, BlockPos pos) {
 		if (type == EnumSkyBlock.SKY && this.worldObj.provider.getHasNoSky()) {
 			return 0;
 		}
-		int minBlockY = AsmWorldHooks.getMinHeight(worldObj);
-		int maxBlockY = AsmWorldHooks.getMaxHeight(worldObj);
+		int minBlockY = ((ICubicWorld) worldObj).getMinHeight();
+		int maxBlockY = ((ICubicWorld) worldObj).getMaxHeight();
 		if (pos.getY() < minBlockY || pos.getY() >= maxBlockY) {
 			return type.defaultLightValue;
 		}

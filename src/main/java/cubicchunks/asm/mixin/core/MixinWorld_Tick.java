@@ -23,34 +23,37 @@
  */
 package cubicchunks.asm.mixin.core;
 
-import cubicchunks.asm.AsmWorldHooks;
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Group;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 /**
  * World class mixins related to block and entity ticking.
  */
 @Mixin(World.class)
-public abstract class MixinWorld_Tick {
+public abstract class MixinWorld_Tick implements ICubicWorld {
 
 	private int updateEntity_entityPosY;
 	private int updateEntity_entityPosX;
 	private int updateEntity_entityPosZ;
 
-	@Shadow private boolean isValid(BlockPos pos){throw new Error();}
+	@Shadow private boolean isValid(BlockPos pos){ throw new Error();}
 
 	@Shadow public abstract boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty);
 
 	@Redirect(method = "updateEntityWithOptionalForce", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/world/World;isAreaLoaded(IIIIIIZ)Z"), require = 1)
 	private boolean canUpdateEntity(World _this, int startBlockX, int oldStartBlockY, int startBlockZ, int endBlockX, int oldEndBlockY, int endBlockZ, boolean allowEmpty) {
-		if(!AsmWorldHooks.isTallWorld((World)(Object)this)) {
+		if(!this.isCubicWorld()) {
 			return isAreaLoaded(startBlockX, oldStartBlockY, startBlockZ, endBlockX, oldEndBlockY, endBlockZ, allowEmpty);
 		}
 		//startBlockX == entityPosX - checkRadius <==> checkRadius == entityPosX - startBlockX

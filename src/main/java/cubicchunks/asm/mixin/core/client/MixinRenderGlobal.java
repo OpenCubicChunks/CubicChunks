@@ -23,9 +23,10 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.asm.AsmRender;
-import cubicchunks.asm.AsmWorldHooks;
 import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
@@ -52,7 +53,7 @@ import java.util.List;
 /**
  * Fixes renderEntities crashing when rendering cubes
  * that are not at existing array index in chunk.getEntityLists(),
- *
+ * <p>
  * Allows to render cubes outside of 0..256 height range.
  */
 @Mixin(RenderGlobal.class)
@@ -82,7 +83,8 @@ public class MixinRenderGlobal {
 	                          Entity entity, double d3, double d4, double d5,
 	                          List list, List list1, List list2, Iterator var21,
 	                          RenderGlobal.ContainerLocalRenderInformation info) {
-		if (AsmWorldHooks.isTallWorld(info.renderChunk.getWorld())) {
+		ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
+		if (world.isCubicWorld()) {
 			this.position = info.renderChunk.getPosition();
 		} else {
 			this.position = null;
@@ -126,11 +128,20 @@ public class MixinRenderGlobal {
 			require = 1
 	)
 	public ClassInheritanceMultiMap<Entity>[] getEntityList(Chunk chunk) {
-		if(position == null) {
+		if (position == null) {
 			return chunk.getEntityLists();
 		}
+		Column column = (Column) chunk;
+		int cubeY = Coords.blockToCube(position.getY());
+
+		Cube cube = column.getCube(cubeY);
+		if (cube == null) {
+			return new ClassInheritanceMultiMap[]{
+					new ClassInheritanceMultiMap(Entity.class)
+			};
+		}
 		return new ClassInheritanceMultiMap[]{
-				AsmRender.getEntityList(chunk, Coords.blockToCube(position.getY()))
+				cube.getEntityContainer().getEntitySet()
 		};
 	}
 

@@ -24,12 +24,11 @@
 package cubicchunks.worldgen.generator.vanilla;
 
 import com.google.common.collect.Sets;
+import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.processor.CubeProcessor;
-import cubicchunks.world.ICubeCache;
-import cubicchunks.world.WorldContext;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
-import net.minecraft.world.World;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
 import java.util.Collections;
@@ -37,13 +36,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class VanillaPopulationProcessor extends CubeProcessor {
-	private ICubeCache provider;
-	private World world;
+	private ServerCubeCache provider;
+	private ICubicWorldServer world;
 	private ChunkProviderOverworld vanillaGen;
 
-	public VanillaPopulationProcessor(ICubeCache provider, World world, ChunkProviderOverworld vanillaGen, int batchSize) {
-		super("Population", provider, batchSize);
-		this.provider = provider;
+	public VanillaPopulationProcessor(ICubicWorldServer world, ChunkProviderOverworld vanillaGen, int batchSize) {
+		super("Population", world.getCubeCache(), batchSize);
+		this.provider = world.getCubeCache();
 		this.world = world;
 		this.vanillaGen = vanillaGen;
 	}
@@ -53,20 +52,24 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 		if (cube.getY() < 0 || cube.getY() >= 16) {
 			return Sets.newHashSet(cube);
 		}
-		if(!canPopulate(cube)) {
+		if (!canPopulate(cube)) {
 			return Collections.EMPTY_SET;
 		}
 		Set<Cube> cubes = new HashSet<>();
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
+			this.provider.forceLoadCube(cube, cube.getX(), cubeY, cube.getZ());
+			this.provider.forceLoadCube(cube, cube.getX() + 1, cubeY, cube.getZ());
+			this.provider.forceLoadCube(cube, cube.getX(), cubeY, cube.getZ() + 1);
+			this.provider.forceLoadCube(cube, cube.getX() + 1, cubeY, cube.getZ() + 1);
 			Cube currentCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
 			if (currentCube == null) {
 				throw new IllegalStateException();
 			}
 			cubes.add(currentCube);
 		}
-		WorldContext.get(this.world).worldGenPerfHack = true;
+		world.setGeneratingWorld(true);
 		this.vanillaGen.populate(cube.getX(), cube.getZ());
-		WorldContext.get(this.world).worldGenPerfHack = false;
+		world.setGeneratingWorld(false);
 		return cubes;
 	}
 
@@ -74,8 +77,8 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 		Cube c01 = provider.getCube(c00.getX(), c00.getY(), c00.getZ() + 1);
 		Cube c11 = provider.getCube(c00.getX() + 1, c00.getY(), c00.getZ() + 1);
 		Cube c10 = provider.getCube(c00.getX() + 1, c00.getY(), c00.getZ());
-		return !c01.getGeneratorStage().isLessThan(GeneratorStage.POPULATION) &&
-				!c11.getGeneratorStage().isLessThan(GeneratorStage.POPULATION) &&
-				!c10.getGeneratorStage().isLessThan(GeneratorStage.POPULATION);
+		return c01 != null && !c01.getGeneratorStage().isLessThan(GeneratorStage.POPULATION) &&
+				c11 != null && !c11.getGeneratorStage().isLessThan(GeneratorStage.POPULATION) &&
+				c10 != null && !c10.getGeneratorStage().isLessThan(GeneratorStage.POPULATION);
 	}
 }

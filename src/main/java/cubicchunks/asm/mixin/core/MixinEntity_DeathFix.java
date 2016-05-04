@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.core;
 
-import cubicchunks.asm.AsmWorldHooks;
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,6 +38,6 @@ public class MixinEntity_DeathFix {
 
 	@ModifyConstant(method = "onEntityUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
 	private double getDeathY(double originalY) {
-		return AsmWorldHooks.getMinHeight(worldObj) - originalY;
+		return ((ICubicWorld) worldObj).getMinHeight() - originalY;
 	}
 }

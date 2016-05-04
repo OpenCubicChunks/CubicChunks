@@ -21,38 +21,39 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.features;
+package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
+import cubicchunks.asm.mixin.core.MixinWorld;
+import cubicchunks.client.ClientCubeCache;
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.world.ICubicWorldClient;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.multiplayer.ChunkProviderClient;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.BiomeGenBase;
+import org.spongepowered.asm.mixin.*;
 
-import java.util.Random;
+@Mixin(WorldClient.class)
+@Implements(@Interface(iface = ICubicWorldClient.class, prefix = "world$"))
+public abstract class MixinWorldClient extends MixinWorld implements ICubicWorldClient {
 
-public abstract class FeatureGenerator {
-	protected final ICubicWorld world;
+	@Shadow private ChunkProviderClient clientChunkProvider;
 
-	public FeatureGenerator(final ICubicWorld world) {
-		this.world = world;
+	@Shadow public abstract boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
+
+	@Override public void initCubicWorld() {
+		this.isCubicWorld = true;
+		ClientCubeCache clientCubeCache = new ClientCubeCache(this);
+		this.chunkProvider = clientCubeCache;
+		this.clientChunkProvider = clientCubeCache;
+		this.lightingManager = new LightingManager(this);
 	}
 
-	public abstract void generate(final Random rand, final Cube cube, final BiomeGenBase biome);
-	
-	protected boolean setBlockOnly(final BlockPos blockPos, final IBlockState blockState) {
-		return this.world.setBlockState(blockPos, blockState, 2);
+	@Override public ClientCubeCache getCubeCache() {
+		return (ClientCubeCache) this.clientChunkProvider;
 	}
 
-	protected boolean setBlockAndUpdateNeighbors(final BlockPos pos, final IBlockState state) {
-		return this.world.setBlockState(pos, state, 3);
-	}
-
-	protected IBlockState getBlockState(final BlockPos pos) {
-		return this.world.getBlockState(pos);
-	}
-
-	protected static int getMinCubeY(final int y) {
-		return (y >> 4) << 4;
+	@Intrinsic public boolean world$invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState) {
+		return this.invalidateRegionAndSetBlock(pos, blockState);
 	}
 }

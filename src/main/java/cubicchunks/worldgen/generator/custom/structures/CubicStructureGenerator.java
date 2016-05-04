@@ -23,10 +23,10 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 import java.util.Random;
 
@@ -39,9 +39,9 @@ public abstract class CubicStructureGenerator {
 	protected Random rand = new Random();
 	
 	/** This world object. */
-	protected World m_world;
+	protected ICubicWorld m_world;
 	
-	public void generate(World world, Cube cube) {
+	public void generate(ICubicWorld world, Cube cube) {
 		int xOrigin = cube.getX();
 		int yOrigin = cube.getY();
 		int zOrigin = cube.getZ();
@@ -67,7 +67,7 @@ public abstract class CubicStructureGenerator {
 		}
 	}
 	
-	protected abstract void generate(World world, Cube cube, int x, int y, int z, int xOrig, int yOrig, int zOrig);
+	protected abstract void generate(ICubicWorld world, Cube cube, int x, int y, int z, int xOrig, int yOrig, int zOrig);
 	
 	protected abstract void generateNode(Cube cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y, double z, float size_base, float curve, float angle, int numTry, int tries, double yModSinMultiplier);
 

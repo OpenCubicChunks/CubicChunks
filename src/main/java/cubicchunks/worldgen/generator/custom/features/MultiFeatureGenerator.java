@@ -23,16 +23,17 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
-import java.util.Random;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
+
+import java.util.Random;
 
 public class MultiFeatureGenerator extends FeatureGenerator {
 	private final FeatureGenerator gen;
 	private final int attempts;
 
-	public MultiFeatureGenerator(World world, FeatureGenerator gen, int attempts) {
+	public MultiFeatureGenerator(ICubicWorld world, FeatureGenerator gen, int attempts) {
 		super(world);
 		this.gen = gen;
 		this.attempts = attempts;

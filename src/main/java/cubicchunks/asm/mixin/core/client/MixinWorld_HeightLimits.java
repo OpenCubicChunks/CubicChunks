@@ -24,6 +24,7 @@
 package cubicchunks.asm.mixin.core.client;
 
 import cubicchunks.util.MathUtil;
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -34,10 +35,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import static cubicchunks.asm.AsmWorldHooks.getMinHeight;
-
 @Mixin(World.class)
-public abstract class MixinWorld_HeightLimits {
+public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
 	@Shadow public WorldProvider provider;
 
@@ -61,7 +60,7 @@ public abstract class MixinWorld_HeightLimits {
 			return 0;
 		}
 		//changed 0 to minY
-		int minY = getMinHeight((World) (Object) this);
+		int minY = this.getMinHeight();
 		if (pos.getY() < minY) {
 			pos = new BlockPos(pos.getX(), minY, pos.getZ());
 		}

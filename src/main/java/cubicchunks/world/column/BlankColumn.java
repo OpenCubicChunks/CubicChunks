@@ -23,6 +23,7 @@
  */
 package cubicchunks.world.column;
 
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -30,13 +31,12 @@ import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 public class BlankColumn extends Column {
 	
-	public BlankColumn(World world, int cubeX, int cubeZ) {
+	public BlankColumn(ICubicWorld world, int cubeX, int cubeZ) {
 		super(world, cubeX, cubeZ);
 	}
 	

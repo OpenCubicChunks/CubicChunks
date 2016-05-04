@@ -23,8 +23,8 @@
  */
 package cubicchunks.asm.mixin.core;
 
-import cubicchunks.asm.AsmWorldHooks;
 import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -52,6 +52,10 @@ public class MixinChunkCache_HeightLimits {
 
 	@Shadow protected World worldObj;
 
+	private ICubicWorld world() {
+		return (ICubicWorld) worldObj;
+	}
+
 	/**
 	 * Overwrite to support extended world height.
 	 *
@@ -59,8 +63,8 @@ public class MixinChunkCache_HeightLimits {
 	 */
 	@Overwrite
 	public IBlockState getBlockState(BlockPos pos) {
-		int minBlockY = AsmWorldHooks.getMinHeight(worldObj);
-		int maxBlockY = AsmWorldHooks.getMaxHeight(worldObj);
+		int minBlockY = world().getMinHeight();
+		int maxBlockY = world().getMaxHeight();
 		if (pos.getY() < minBlockY || pos.getY() >= maxBlockY) {
 			return Blocks.AIR.getDefaultState();
 		}

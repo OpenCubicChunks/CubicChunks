@@ -29,14 +29,13 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
-import cubicchunks.world.WorldContext;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -64,19 +63,18 @@ public class FirstLightProcessor extends CubeProcessor {
 
 	@Override
 	public Set<Cube> calculate(Cube cube) {
-		WorldContext worldContext = WorldContext.get(cube.getWorld());
-
-		if (!canUpdateCube(cube, worldContext)) {
+		ICubicWorld world = cube.getWorld();
+		if (!canUpdateCube(cube)) {
 			return Collections.EMPTY_SET;
 		}
-		ICubeCache cache = worldContext.getCubeCache();
+		ICubeCache cache = world.getCubeCache();
 
-		setRawSkylight(cache, cube);
-		diffuseSkylight(cache, worldContext, cube);
+		setRawSkylight(cube);
+		diffuseSkylight(cube);
 		return Sets.newHashSet(cube);
 	}
 
-	private void setRawSkylight(ICubeCache cache, Cube cube) {
+	private void setRawSkylight(Cube cube) {
 		int minBlockX = cubeToMinBlock(cube.getX());
 		int maxBlockX = cubeToMaxBlock(cube.getX());
 
@@ -88,14 +86,14 @@ public class FirstLightProcessor extends CubeProcessor {
 				//so that it's clearly visible that this value is not set to any value
 				int y = Integer.MIN_VALUE;
 				mutablePos.set(x, y, z);
-				setRawSkylightXZ(cache, cube, mutablePos);
+				setRawSkylightXZ(cube, mutablePos);
 			}
 		}
 	}
 
 	// technically the MutableBlockPos argument is redundant as it's a private field,
 	// but not passing any position is just confusing
-	private void setRawSkylightXZ(ICubeCache cache, Cube cube, BlockPos.MutableBlockPos blockPos) {
+	private void setRawSkylightXZ(Cube cube, BlockPos.MutableBlockPos blockPos) {
 		int cubeY = cube.getY();
 
 		int topBlockY = getHeightmapValue(cache, blockPos.getX(), blockPos.getZ()) - 1;
@@ -151,9 +149,9 @@ public class FirstLightProcessor extends CubeProcessor {
 		}
 	}
 
-	private void diffuseSkylight(ICubeCache cache, WorldContext context, Cube cube) {
+	private void diffuseSkylight(Cube cube) {
 		Column column = cube.getColumn();
-		World world = column.getWorld();
+		ICubicWorld world = cube.getWorld();
 
 		//cache min/max Y, generating them may be expensive
 		int[][] minBlockYArr = new int[16][16];
@@ -177,7 +175,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		BlockPos.MutableBlockPos pos = mutablePos;
 
 		for (Cube c : column.getCubeMap()) {
-			boolean canUpdateCube = canUpdateCube(cube, context);
+			boolean canUpdateCube = canUpdateCube(cube);
 			FastCubeBlockAccess blockAccess = new FastCubeBlockAccess(cache, c, 1);
 
 			int cubeY = c.getY();
@@ -194,7 +192,7 @@ public class FirstLightProcessor extends CubeProcessor {
 					int maxCubeY = blockToCube(maxBlockY);
 					if (!canUpdateCube) {
 						//schedule update
-						context.getLightingManager().queueDiffuseUpdate(
+						world.getLightingManager().queueDiffuseUpdate(
 								cube,
 								Coords.blockToLocal(pos.getX()),
 								Coords.blockToLocal(pos.getZ()),
@@ -295,13 +293,13 @@ public class FirstLightProcessor extends CubeProcessor {
 		return val == null ? Integer.MIN_VALUE / 2 : val;
 	}
 
-	private boolean canUpdateCube(Cube cube, WorldContext worldContext) {
+	private boolean canUpdateCube(Cube cube) {
 		BlockPos cubeCenter = getCubeCenter(cube);
 		final int lightUpdateRadius = 17;
 		final int cubeSizeRadius = 8;
 		final int bufferRadius = 2;
 
 		// only continue if the neighboring cubes are at least in the lighting stage
-		return worldContext.blocksExist(cubeCenter, lightUpdateRadius + cubeSizeRadius + bufferRadius, false, GeneratorStage.LIGHTING);
+		return cube.getWorld().blocksExist(cubeCenter, lightUpdateRadius + cubeSizeRadius + bufferRadius, false, GeneratorStage.LIGHTING);
 	}
 }

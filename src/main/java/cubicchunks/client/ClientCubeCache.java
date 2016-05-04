@@ -23,6 +23,7 @@
  */
 package cubicchunks.client;
 
+import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.column.BlankColumn;
@@ -35,12 +36,12 @@ import net.minecraft.world.World;
 
 public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
-	private World world;
+	private ICubicWorldClient world;
 	private BlankColumn blankColumn;
 	private Cube blankCube;
 
-	public ClientCubeCache(World world) {
-		super(world);
+	public ClientCubeCache(ICubicWorldClient world) {
+		super((World) world);
 
 		this.world = world;
 		this.blankColumn = new BlankColumn(world, 0, 0);

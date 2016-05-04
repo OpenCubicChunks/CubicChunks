@@ -24,6 +24,7 @@
 package cubicchunks.util;
 
 import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -38,7 +39,7 @@ import net.minecraft.world.World;
 public class FastCubeBlockAccess {
 	private final Cube[][][] cache;
 	private final int originX, originY, originZ;
-	private final World world;
+	private final ICubicWorld world;
 
 	public FastCubeBlockAccess(ICubeCache cache, Cube cube, int radius) {
 		int n = radius * 2 + 1;
@@ -76,7 +77,7 @@ public class FastCubeBlockAccess {
 	}
 
 	public int getBlockLightOpacity(BlockPos pos) {
-		return this.getBlockState(pos.getX(), pos.getY(), pos.getZ()).getLightOpacity(world, pos);
+		return this.getBlockState(pos.getX(), pos.getY(), pos.getZ()).getLightOpacity((World) world, pos);
 	}
 
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {

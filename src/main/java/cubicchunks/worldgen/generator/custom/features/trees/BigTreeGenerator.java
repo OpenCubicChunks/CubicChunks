@@ -28,12 +28,12 @@
 
 package cubicchunks.worldgen.generator.custom.features.trees;
 
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 
 import java.util.Random;
@@ -60,7 +60,7 @@ public class BigTreeGenerator extends TreeGenerator {
 	private int heightmin;
 	private int heightmax;
 
-	public BigTreeGenerator(final World world, final IBlockState wood, final IBlockState leaf) {
+	public BigTreeGenerator(final ICubicWorld world, final IBlockState wood, final IBlockState leaf) {
 		super(world, wood, leaf);
 		this.rand = new Random(world.getSeed());
 		this.rootRand = 0;

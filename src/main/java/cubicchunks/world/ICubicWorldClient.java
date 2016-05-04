@@ -21,50 +21,14 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.client;
+package cubicchunks.world;
 
-import com.google.common.collect.Maps;
-import cubicchunks.world.WorldContext;
-import net.minecraft.client.multiplayer.WorldClient;
+import cubicchunks.client.ClientCubeCache;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
 
-import java.util.Map;
+public interface ICubicWorldClient  extends ICubicWorld {
+	ClientCubeCache getCubeCache();
 
-public class WorldClientContext extends WorldContext {
-	
-	private static Map<WorldClient,WorldClientContext> m_instances;
-	
-	static {
-		m_instances = Maps.newHashMap();
-	}
-	
-	public static WorldClientContext get(WorldClient worldClient) {
-		return m_instances.get(worldClient);
-	}
-	
-	public static void put(WorldClient worldClient, WorldClientContext worldClientContext) {
-		m_instances.put(worldClient, worldClientContext);
-	}
-	
-	public static void clear() {
-		m_instances.clear();
-	}
-	
-	private WorldClient m_worldClient;
-	private ClientCubeCache m_clientCubeCache;
-	
-	public WorldClientContext(WorldClient worldClient, ClientCubeCache clientCubeCache) {
-		super(worldClient, clientCubeCache);
-		m_worldClient = worldClient;
-		m_clientCubeCache = clientCubeCache;
-	}
-	
-	@Override
-	public WorldClient getWorld() {
-		return m_worldClient;
-	}
-	
-	@Override
-	public ClientCubeCache getCubeCache() {
-		return m_clientCubeCache;
-	}
+	boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
 }

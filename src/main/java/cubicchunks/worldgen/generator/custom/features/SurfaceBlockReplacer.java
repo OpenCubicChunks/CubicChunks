@@ -23,10 +23,10 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 
 import java.util.ArrayList;
@@ -103,7 +103,7 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 		private final List<Block> allowedAboveSurface;
 		private int radius;
 		private int height;
-		private World world;
+		private ICubicWorld world;
 		
 		private Builder() {
 			this.replacable = new ArrayList<Block>(2);
@@ -140,7 +140,7 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 			return this;
 		}
 		
-		public Builder world(World world){
+		public Builder world(ICubicWorld world){
 			this.world = world;
 			return this;
 		}

@@ -25,32 +25,27 @@ package cubicchunks.lighting;
 
 import cubicchunks.util.Progress;
 import cubicchunks.util.processor.QueueProcessor;
-import cubicchunks.world.ICubeCache;
-import cubicchunks.world.WorldContext;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.world.World;
 
 class SkyLightCubeDiffuseProcessor extends QueueProcessor<Long> {
 
-	private World world;
-	private WorldContext worldContext;
+	private ICubicWorld world;
 
-	SkyLightCubeDiffuseProcessor(World world, String name, ICubeCache provider, int batchSize) {
-		super(name, provider, batchSize);
+	SkyLightCubeDiffuseProcessor(ICubicWorld world, String name, int batchSize) {
+		super(name, world.getCubeCache(), batchSize);
 		this.world = world;
 	}
 
 	@Override
 	public void processBatch(Progress progress) {
-		//this can't be done in construct9or because WorldContext isn't fully initialized there.
-		this.worldContext = WorldContext.get(world);
 		for (Long address : incomingAddresses) {
 			if (address == null) {
 				throw new Error();
 			}
-			Cube cube = worldContext.getCubeForAddress(address);
+			Cube cube = world.getCubeForAddress(address);
 			if (cube != null)
 				this.process(cube, address);
 		}

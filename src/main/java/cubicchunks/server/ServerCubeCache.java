@@ -28,6 +28,7 @@ import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.ColumnGenerator;
@@ -61,7 +62,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	public static final int WorldSpawnChunkDistance = 12; // highest render distance is 32
 
-	private WorldServer worldServer;
+	private ICubicWorldServer worldServer;
 	private CubeIO cubeIO;
 	private ColumnGenerator columnGenerator;
 	private HashMap<Long, Column> loadedColumns;
@@ -77,8 +78,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	private Map<Cube, Set<Cube>> forceAdded;
 	private Map<Cube, Set<Cube>> forceAddedReverse;
 
-	public ServerCubeCache(WorldServer worldServer) {
-		super(worldServer, worldServer.getSaveHandler().getChunkLoader(worldServer.provider), null);
+	public ServerCubeCache(ICubicWorldServer worldServer) {
+		super((WorldServer) worldServer, worldServer.getSaveHandler().getChunkLoader(worldServer.getProvider()), null);
 
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer);
@@ -176,7 +177,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public boolean unloadQueuedChunks() {
 		// NOTE: the return value is completely ignored
 
-		if (this.worldServer.disableLevelSaving) {
+		if (this.worldServer.getDisableLevelSaving()) {
 			return false;
 		}
 
@@ -323,10 +324,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		}
 		if (!cube.getGeneratorStage().isLastStage()) {
 			// queue the cube to finish generation
-			WorldServerContext.get(this.worldServer).getGeneratorPipeline().generate(cube);
+			this.worldServer.getGeneratorPipeline().generate(cube);
 		} else if (cube.needsRelightAfterLoad()) {
 			// queue the cube for re-lighting
-			WorldServerContext.get(this.worldServer).getLightingManager().queueFirstLightCalculation(cubeAddress);
+			this.worldServer.getLightingManager().queueFirstLightCalculation(cubeAddress);
 		}
 
 		// init the column
@@ -427,7 +428,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	private boolean cubeIsNearSpawn(int cubeX, int cubeY, int cubeZ) {
 
-		if (!this.worldServer.provider.canRespawnHere()) {
+		if (!this.worldServer.getProvider().canRespawnHere()) {
 			// no spawn points
 			return false;
 		}

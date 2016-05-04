@@ -117,7 +117,7 @@ public final class TerrainGeneratorUtils {
 		//cube.getWorld().profiler.startSection("placement");
 		//todo: find better way to do it
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-		int seaLevel = cube.getWorld().provider.getAverageGroundLevel();
+		int seaLevel = cube.getWorld().getProvider().getAverageGroundLevel();
 		for (int xRel = 0; xRel < 16; xRel++) {
 			for (int zRel = 0; zRel < 16; zRel++) {
 				for (int yRel = 0; yRel < 16; yRel++) {

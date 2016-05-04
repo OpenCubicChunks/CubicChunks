@@ -26,6 +26,7 @@ package cubicchunks.worldgen.generator.custom;
 import com.google.common.collect.Sets;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.generator.custom.structures.CubicCaveGenerator;
@@ -49,7 +50,7 @@ public class CustomFeatureProcessor extends CubeProcessor {
 //	private MapGenScatteredFeature scatteredFeatureGenerator;
 	private CubicStructureGenerator ravineGenerator;
 	
-	private World worldObj;
+	private ICubicWorld worldObj;
 	
 	public CustomFeatureProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);

@@ -23,12 +23,12 @@
  */
 package cubicchunks.worldgen.generator.custom.features.trees;
 
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 import java.util.Random;
 
@@ -37,8 +37,8 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 	private final int baseHeight;
 	private final int heightRange;
 
-	public HugeTreeGenerator(World world, int baseHeight, int heightRange, IBlockState woodBlock,
-			IBlockState leafBlock) {
+	public HugeTreeGenerator(ICubicWorld world, int baseHeight, int heightRange, IBlockState woodBlock,
+	                         IBlockState leafBlock) {
 		super(world, woodBlock, leafBlock);
 		this.baseHeight = baseHeight;
 		this.heightRange = heightRange;
@@ -53,7 +53,7 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 		return result;
 	}
 
-	private boolean canGenerateOnBlocksBelow(final World world, final BlockPos blockPos) {
+	private boolean canGenerateOnBlocksBelow(final ICubicWorld world, final BlockPos blockPos) {
 		BlockPos groundPos = blockPos.down();
 		Block groundBlock = world.getBlockState(groundPos).getBlock();
 
@@ -64,7 +64,7 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 		}
 	}
 
-	private boolean tryToPlaceDirtUnderHugeTree(final World world, final BlockPos blockPos) {
+	private boolean tryToPlaceDirtUnderHugeTree(final ICubicWorld world, final BlockPos blockPos) {
 		BlockPos groundPos = blockPos.down();
 
 		return this.tryToPlaceDirtUnderTree(world, groundPos) && this.tryToPlaceDirtUnderTree(world, groundPos.east())
@@ -72,11 +72,11 @@ public abstract class HugeTreeGenerator extends TreeGenerator {
 				&& this.tryToPlaceDirtUnderTree(world, groundPos.south().east());
 	}
 
-	protected boolean canGenerate(final World world, final Random rand, final BlockPos blockPos, final int height) {
+	protected boolean canGenerate(final ICubicWorld world, final Random rand, final BlockPos blockPos, final int height) {
 		return this.isEnoughSpaceToGenerate(world, blockPos, height) && this.canGenerateOnBlocksBelow(world, blockPos);
 	}
 
-	private boolean isEnoughSpaceToGenerate(World world, BlockPos blockPos, int height) {
+	private boolean isEnoughSpaceToGenerate(ICubicWorld world, BlockPos blockPos, int height) {
 		final int baseY = blockPos.getY();
 
 		for (int yAbs = baseY; yAbs <= baseY + 1 + height; ++yAbs) {

@@ -24,6 +24,7 @@
 package cubicchunks.worldgen.generator.custom.features;
 
 import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -34,7 +35,7 @@ import java.util.Random;
 
 public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
-	public SurfaceFeatureGenerator(World world) {
+	public SurfaceFeatureGenerator(ICubicWorld world) {
 		super(world);
 	}
 
@@ -70,7 +71,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 		IBlockState stateBelow = getBlockState(pos.down());
 		IBlockState state = getBlockState(pos);
 
-		return stateBelow.getBlock().isOpaqueCube(stateBelow) && state.getBlock().isAir(state, world, pos);
+		return stateBelow.getBlock().isOpaqueCube(stateBelow) && state.getBlock().isAir(state, (World) world, pos);
 	}
 
 	/**
