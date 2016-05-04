@@ -23,6 +23,7 @@
  */
 package cubicchunks.util;
 
+import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
@@ -52,8 +53,22 @@ public class FastCubeBlockAccess {
 		for (int relativeCubeX = -radius; relativeCubeX <= radius; relativeCubeX++) {
 			for (int relativeCubeY = -radius; relativeCubeY <= radius; relativeCubeY++) {
 				for (int relativeCubeZ = -radius; relativeCubeZ <= radius; relativeCubeZ++) {
-					this.cache[relativeCubeX + radius][relativeCubeY + radius][relativeCubeZ + radius] =
-							cache.getCube(originX + relativeCubeX + radius, originY + relativeCubeY + radius, originZ + relativeCubeZ + radius);
+					Cube currentCube = cache.getCube(
+							originX + relativeCubeX + radius,
+							originY + relativeCubeY + radius,
+							originZ + relativeCubeZ + radius
+					);
+					if (currentCube == null) {
+						String cubes = ((ServerCubeCache) cache).dumpLoadedCubes();
+
+						String addInfo = String.format("Getting cube at [%d, %d, %d] returned null, blocks near center cube loaded",
+								originX + relativeCubeX + radius,
+								originY + relativeCubeY + radius,
+								originZ + relativeCubeZ + radius
+						);
+						throw new NullPointerException(addInfo + cubes);
+					}
+					this.cache[relativeCubeX + radius][relativeCubeY + radius][relativeCubeZ + radius] = currentCube;
 				}
 			}
 		}

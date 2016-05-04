@@ -57,11 +57,10 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 		}
 		Set<Cube> cubes = new HashSet<>();
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
-			this.provider.forceLoadCube(cube, cube.getX(), cubeY, cube.getZ());
+			Cube currentCube = this.provider.forceLoadCube(cube, cube.getX(), cubeY, cube.getZ());
 			this.provider.forceLoadCube(cube, cube.getX() + 1, cubeY, cube.getZ());
 			this.provider.forceLoadCube(cube, cube.getX(), cubeY, cube.getZ() + 1);
 			this.provider.forceLoadCube(cube, cube.getX() + 1, cubeY, cube.getZ() + 1);
-			Cube currentCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
 			if (currentCube == null) {
 				throw new IllegalStateException();
 			}

@@ -605,7 +605,7 @@ public class Column extends Chunk {
 	public void resetRelightChecks() {
 		this.roundRobinLightUpdatePointer = 0;
 		this.roundRobinCubes.clear();
-		this.roundRobinCubes.addAll(this.cubeMap);
+		this.roundRobinCubes.addAll(this.cubeMap.all());
 	}
 
 	@Override
@@ -706,7 +706,7 @@ public class Column extends Chunk {
 		//with cubic chunks the whole column is never fully generated,
 		//So some heuristic is needed to tell vanilla is generator is populated here
 		//for now - tell it that it is if any cube is populated
-		return this.cubeMap.stream().anyMatch(c -> c.getGeneratorStage().isLastStage());
+		return this.cubeMap.all().stream().anyMatch(c -> c.getGeneratorStage().isLastStage());
 	}
 
 	@Override
@@ -763,8 +763,8 @@ public class Column extends Chunk {
 		return this.opacityIndex;
 	}
 
-	public Collection<Cube> getCubeMap() {
-		return Collections.unmodifiableCollection(this.cubeMap);
+	public Collection<Cube> getAllCubes() {
+		return Collections.unmodifiableCollection(this.cubeMap.all());
 	}
 
 	public Iterable<Cube> getCubes(int minY, int maxY) {

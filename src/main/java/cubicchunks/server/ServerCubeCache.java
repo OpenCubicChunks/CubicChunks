@@ -105,7 +105,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public void unloadAllChunks() {
 		// unload all the cubes in the columns
 		for (Column column : this.loadedColumns.values()) {
-			for (Cube cube : column.getCubeMap()) {
+			for (Cube cube : column.getAllCubes()) {
 				this.cubesToUnload.add(cube.getAddress());
 			}
 		}
@@ -163,7 +163,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 
 			// save the cubes
-			for (Cube cube : column.getCubeMap()) {
+			for (Cube cube : column.getAllCubes()) {
 				if (cube.needsSaving()) {
 					this.cubeIO.saveCube(cube);
 				}
@@ -397,6 +397,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		Column column = this.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
 		cube = column.getOrCreateCube(cubeY, true);
 		addForcedByMapping(forcedBy, cube);
+		//set generator stage, technically shouldn't be needed because it's set in worldgen code
+		//but in case not all cubes are saved - it would crash.
+		cube.setGeneratorStage(GeneratorStage.TERRAIN);
 		return cube;
 	}
 
@@ -441,6 +444,31 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		int dy = Math.abs(spawnCubeY - cubeY);
 		int dz = Math.abs(spawnCubeZ - cubeZ);
 		return dx <= WorldSpawnChunkDistance && dy <= WorldSpawnChunkDistance && dz <= WorldSpawnChunkDistance;
+	}
+
+	public String dumpLoadedCubes() {
+		StringBuilder sb = new StringBuilder(10000).append("\n");
+		for (Column column : this.loadedColumns.values()) {
+			if(column == null) {
+				sb.append("column = null\n");
+				continue;
+			}
+			sb.append("Column[").append(column.getX()).append(", ").append(column.getZ()).append("] {");
+			boolean isFirst = true;
+			for(Cube cube : column.getAllCubes()) {
+				if(!isFirst) {
+					sb.append(", ");
+				}
+				isFirst = false;
+				if(cube == null) {
+					sb.append("cube = null");
+					continue;
+				}
+				sb.append("Cube[").append(cube.getY()).append("]");
+			}
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 
 	public enum LoadType {

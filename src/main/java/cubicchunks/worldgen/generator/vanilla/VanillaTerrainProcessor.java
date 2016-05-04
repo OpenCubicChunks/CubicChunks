@@ -127,6 +127,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 		}
 		for(int cubeY = 0; cubeY < 16; cubeY++) {
 			Cube currCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
+			currCube.setGeneratorStage(GeneratorStage.SURFACE);
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 			for(int localX = 0; localX < 16; localX++) {
 				for(int localY = 0; localY < 16; localY++) {
@@ -134,7 +135,6 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 						int blockY = Coords.localToBlock(cubeY, localY);
 						pos.set(localX, localY, localZ);
 						currCube.setBlockForGeneration(pos, chunkprimer.getBlockState(localX, blockY, localZ));
-						currCube.setGeneratorStage(GeneratorStage.SURFACE);
 					}
 				}
 			}
