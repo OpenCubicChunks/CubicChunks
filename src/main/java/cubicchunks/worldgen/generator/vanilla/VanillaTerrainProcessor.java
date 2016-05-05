@@ -30,6 +30,7 @@ import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -134,7 +135,11 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 					for(int localZ = 0; localZ < 16; localZ++) {
 						int blockY = Coords.localToBlock(cubeY, localY);
 						pos.set(localX, localY, localZ);
-						currCube.setBlockForGeneration(pos, chunkprimer.getBlockState(localX, blockY, localZ));
+						IBlockState block = chunkprimer.getBlockState(localX, blockY, localZ);
+						if(block.getBlock() == Blocks.BEDROCK) {
+							block = Blocks.STONE.getDefaultState();
+						}
+						currCube.setBlockForGeneration(pos, block);
 					}
 				}
 			}

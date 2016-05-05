@@ -35,7 +35,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
-public class VanillaCubicChunksWorldType extends WorldType implements ICubicChunksWorldType{
+public class VanillaCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
 
 	public VanillaCubicChunksWorldType() {
 		super("VanillaCubic");
@@ -56,5 +56,20 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicChun
 
 	public static void create() {
 		new VanillaCubicChunksWorldType();
+	}
+
+	/**
+	 * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
+	 *
+	 * In EntityRenderer.updateFogColor entity Y position is multiplied by
+	 * value returned by this method.
+	 *
+	 * If this method returns any real number - then the void fog factor can be <= 0.
+	 * But if this method returns NaN - the result is always NaN. And Minecraft enables void fog only of the value is < 1.
+	 * And since any comparison with NaN returns false - void fog is effectively disabled.
+	 */
+	@Override
+	public double voidFadeMagnitude() {
+		return Double.NaN;
 	}
 }
