@@ -24,24 +24,22 @@
 package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.generator.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ChunkSectionHelper;
-import cubicchunks.world.IEntityActionListener;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.NextTickListEntry;
-import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.NibbleArray;
@@ -61,7 +59,8 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesHashSet;
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesThisTick;
 
-public class CubeIO implements IThreadedFileIO {
+public class
+CubeIO implements IThreadedFileIO {
 	
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 	
@@ -97,7 +96,7 @@ public class CubeIO implements IThreadedFileIO {
 		// see: http://www.mapdb.org/features.html
 	}
 	
-	private World world;
+	private ICubicWorld world;
 	
 	private DB db;
 	private ConcurrentNavigableMap<Long,byte[]> columns;
@@ -105,11 +104,11 @@ public class CubeIO implements IThreadedFileIO {
 	private ConcurrentBatchedQueue<SaveEntry> columnsToSave;
 	private ConcurrentBatchedQueue<SaveEntry> cubesToSave;
 	
-	public CubeIO(World world) {
+	public CubeIO(ICubicWorld world) {
 		
 		this.world = world;
 		
-		this.db = initializeDBConnection(this.world.getSaveHandler().getWorldDirectory(), this.world.provider);
+		this.db = initializeDBConnection(this.world.getSaveHandler().getWorldDirectory(), this.world.getProvider());
 		
 		this.columns = this.db.getTreeMap("columns");
 		this.cubes = this.db.getTreeMap("chunks");
@@ -328,10 +327,10 @@ public class CubeIO implements IThreadedFileIO {
 		}
 		
 		// build the cube
-		boolean hasSky = !this.world.provider.getHasNoSky();
+		boolean hasSky = !this.world.getProvider().getHasNoSky();
 		final Cube cube = column.getOrCreateCube(cubeY, false);
 		
-		// get the generator stage
+		// get the worldgen stage
 		cube.setGeneratorStage(GeneratorStage.values()[nbt.getByte("GeneratorStage")]);
 		
 		// is this an empty cube?
@@ -358,23 +357,19 @@ public class CubeIO implements IThreadedFileIO {
 		}
 		
 		// entities
-		cube.getEntityContainer().readFromNbt(nbt, "Entities", this.world, new IEntityActionListener() {
-			
-			@Override
-			public void onEntity(Entity entity) {
-				// make sure this entity is really in the chunk
-				int entityCubeX = Coords.getCubeXForEntity(entity);
-				int entityCubeY = Coords.getCubeYForEntity(entity);
-				int entityCubeZ = Coords.getCubeZForEntity(entity);
-				if (entityCubeX != cube.getX() || entityCubeY != cube.getY() || entityCubeZ != cube.getZ()) {
-					LOGGER.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass().getName(), entityCubeX, entityCubeY, entityCubeZ, cube.getX(), cube.getY(), cube.getZ()));
-				}
-				
-				entity.addedToChunk = true;
-				entity.chunkCoordX = cubeX;
-				entity.chunkCoordY = cubeY;
-				entity.chunkCoordZ = cubeZ;
+		cube.getEntityContainer().readFromNbt(nbt, "Entities", this.world, entity -> {
+			// make sure this entity is really in the chunk
+			int entityCubeX = Coords.getCubeXForEntity(entity);
+			int entityCubeY = Coords.getCubeYForEntity(entity);
+			int entityCubeZ = Coords.getCubeZForEntity(entity);
+			if (entityCubeX != cube.getX() || entityCubeY != cube.getY() || entityCubeZ != cube.getZ()) {
+				LOGGER.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass().getName(), entityCubeX, entityCubeY, entityCubeZ, cube.getX(), cube.getY(), cube.getZ()));
 			}
+
+			entity.addedToChunk = true;
+			entity.chunkCoordX = cubeX;
+			entity.chunkCoordY = cubeY;
+			entity.chunkCoordZ = cubeZ;
 		});
 		
 		// tile entities
@@ -491,22 +486,18 @@ public class CubeIO implements IThreadedFileIO {
 		}
 		
 		// entities
-		cube.getEntityContainer().writeToNbt(nbt, "Entities", new IEntityActionListener() {
-			
-			@Override
-			public void onEntity(Entity entity) {
-				// make sure this entity is really in the chunk
-				int cubeX = Coords.getCubeXForEntity(entity);
-				int cubeY = Coords.getCubeYForEntity(entity);
-				int cubeZ = Coords.getCubeZForEntity(entity);
-				if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
-					LOGGER.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
-						entity.getClass().getName(),
-						cubeX, cubeY, cubeZ,
-						cube.getX(), cube.getY(), cube.getZ(),
-						entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
-					));
-				}
+		cube.getEntityContainer().writeToNbt(nbt, "Entities", entity -> {
+			// make sure this entity is really in the chunk
+			int cubeX = Coords.getCubeXForEntity(entity);
+			int cubeY = Coords.getCubeYForEntity(entity);
+			int cubeZ = Coords.getCubeZForEntity(entity);
+			if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
+				LOGGER.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
+					entity.getClass().getName(),
+					cubeX, cubeY, cubeZ,
+					cube.getX(), cube.getY(), cube.getZ(),
+					entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
+				));
 			}
 		});
 		

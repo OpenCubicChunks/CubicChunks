@@ -23,40 +23,39 @@
  */
 package cubicchunks;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import cubicchunks.util.AddressTools;
+import org.junit.Test;
 
 import java.util.HashSet;
 
-import org.junit.Test;
-
-import cubicchunks.util.AddressTools;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class TestAddressTools {
 	
 	@Test
 	public void testY() {
-		assertEquals(-524288, AddressTools.MinY);
-		assertEquals(524287, AddressTools.MaxY);
-		for (int i = AddressTools.MinY; i <= AddressTools.MaxY; i++) {
+		assertEquals(-524288, AddressTools.MIN_CUBE_Y);
+		assertEquals(524287, AddressTools.MAX_CUBE_Y);
+		for (int i = AddressTools.MIN_CUBE_Y; i <= AddressTools.MAX_CUBE_Y; i++) {
 			assertEquals(i, AddressTools.getY(AddressTools.getAddress(0, i, 0)));
 		}
 	}
 	
 	@Test
 	public void testX() {
-		assertEquals(-2097152, AddressTools.MinX);
-		assertEquals(2097151, AddressTools.MaxX);
-		for (int i = AddressTools.MinX; i <= AddressTools.MaxX; i++) {
+		assertEquals(-2097152, AddressTools.MIN_CUBE_X);
+		assertEquals(2097151, AddressTools.MAX_CUBE_X);
+		for (int i = AddressTools.MIN_CUBE_X; i <= AddressTools.MAX_CUBE_X; i++) {
 			assertEquals(i, AddressTools.getX(AddressTools.getAddress(i, 0, 0)));
 		}
 	}
 	
 	@Test
 	public void testZ() {
-		assertEquals(-2097152, AddressTools.MinZ);
-		assertEquals(2097151, AddressTools.MaxZ);
-		for (int i = AddressTools.MinZ; i <= AddressTools.MaxZ; i++) {
+		assertEquals(-2097152, AddressTools.MIN_CUBE_Z);
+		assertEquals(2097151, AddressTools.MAX_CUBE_Z);
+		for (int i = AddressTools.MIN_CUBE_Z; i <= AddressTools.MAX_CUBE_Z; i++) {
 			assertEquals(i, AddressTools.getZ(AddressTools.getAddress(0, 0, i)));
 		}
 	}

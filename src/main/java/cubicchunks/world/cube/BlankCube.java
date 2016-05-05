@@ -24,8 +24,9 @@
 package cubicchunks.world.cube;
 
 import com.google.common.base.Predicate;
-import cubicchunks.generator.GeneratorStage;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
+import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -34,7 +35,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -46,7 +46,7 @@ import java.util.List;
  */
 public class BlankCube extends Cube {
 
-	public BlankCube(World world, Column column) {
+	public BlankCube(ICubicWorld world, Column column) {
 		super(world, column, 0, 0, 0, false);
 	}
 	
@@ -106,8 +106,8 @@ public class BlankCube extends Cube {
 	public void setBlockStateDirect(BlockPos pos, IBlockState newBlockState) {}
 	
 	@Override
-	public IBlockState setBlockForGeneration(BlockPos pos, IBlockState newBlockState) {
-		throw new UnsupportedOperationException("Eighter someone used BlankCube on server or someone generates terrain on client.");
+	public IBlockState setBlockForGeneration(BlockPos blockOrLocalPos, IBlockState newBlockState) {
+		throw new UnsupportedOperationException("Eighter someone used BlankCube on server or someone generates generator on client.");
 	}
 	
 	@Override

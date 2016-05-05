@@ -8,11 +8,15 @@ buildscript
 			name = "forge"
 			url = "http://files.minecraftforge.net/maven"
 		}
+		maven {
+			name = 'sponge'
+			url = 'http://repo.spongepowered.org/maven'
+		}
 	}
 	dependencies {
 		classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
 		classpath 'org.ajoberstar:grgit:1.4.+'
-		classpath 'me.tatarka:gradle-retrolambda:3.2.4'
+		classpath 'org.spongepowered:mixingradle:0.3-SNAPSHOT'
 	}
 }
 
@@ -23,6 +27,7 @@ plugins {
 	id "idea"
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'org.spongepowered.mixin'
 
 idea { module { inheritOutputDirs = true } }
 
@@ -31,6 +36,19 @@ defaultTasks 'licenseFormat', 'build'
 // Minimum version of Java required
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
+
+mixin {
+	add sourceSets.main, "cubicchunks.mixins.refmap.json"
+	//add sourceSets.main,
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		name = 'sponge'
+		url = 'http://repo.spongepowered.org/maven'
+	}
+}
 
 ext {
 	git = org.ajoberstar.grgit.Grgit.open(file('.'))
@@ -71,9 +89,12 @@ reobfJar {
 	addExtraSrgLine "PK: com/flowpowered cubicchunks/com/flowpowered"
 }
 
+jar {
+	exclude 'LICENSE.txt'
+}
+
 // Project repositories
-repositories
-{
+repositories {
 	mavenCentral()
 	maven
 	{
@@ -92,6 +113,10 @@ dependencies {
 	shade 'org.mapdb:mapdb:1.0.7'
 	testCompile 'junit:junit:4.11'
 
+	shade('org.spongepowered:mixin:0.5.5-SNAPSHOT') {
+		exclude module: 'launchwrapper'
+		exclude module: 'guava'
+	}
 }
 
 processResources
@@ -120,6 +145,7 @@ license {
 	ext.project = projectName
 	ext.year = inceptionYear
 	exclude "**/*.info"
+	exclude "**/*.json"
 	exclude "assets/*"
 	header file('HEADER.txt')
 	ignoreFailures false
@@ -133,6 +159,9 @@ jar {
 	manifest {
 		attributes 'FMLAT': 'cubicchunks_at.cfg'
 		attributes 'FMLCorePlugin': 'cubicchunks.asm.CoreModLoadingPlugin', 'FMLCorePluginContainsFMLMod': 'true'
+		attributes 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
+		attributes 'TweakOrder': '0'
+		attributes 'ForceLoadAsMod': 'true'
 	}
 	configurations.shade.each { dep ->
 		from(project.zipTree(dep)){

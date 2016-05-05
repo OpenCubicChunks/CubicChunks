@@ -44,42 +44,45 @@ public class AddressTools {
 	// 0123456789012345678901234567890123456789012345678901234567890123
 	// yyyyyyyyyyyyyyyyyyyyxxxxxxxxxxxxxxxxxxxxxxzzzzzzzzzzzzzzzzzzzzzz
 
-	private static final int YSize = 20;
-	private static final int XSize = 22;
-	private static final int ZSize = 22;
+	private static final int Y_BITS = 20;
+	private static final int X_BITS = 22;
+	private static final int Z_BITS = 22;
 
-	private static final int ZOffset = 0;
-	private static final int XOffset = ZOffset + ZSize;
-	private static final int YOffset = XOffset + XSize;
+	private static final int Z_BIT_OFFSET = 0;
+	private static final int X_BIT_OFFSET = Z_BIT_OFFSET + Z_BITS;
+	private static final int Y_BIT_OFFSET = X_BIT_OFFSET + X_BITS;
 
-	public static final int MinY = Bits.getMinSigned(YSize);
-	public static final int MaxY = Bits.getMaxSigned(YSize);
-	public static final int MinX = Bits.getMinSigned(XSize);
-	public static final int MaxX = Bits.getMaxSigned(XSize);
-	public static final int MinZ = Bits.getMinSigned(ZSize);
-	public static final int MaxZ = Bits.getMaxSigned(ZSize);
+	public static final int MIN_CUBE_Y = Bits.getMinSigned(Y_BITS);
+	public static final int MAX_CUBE_Y = Bits.getMaxSigned(Y_BITS);
+	public static final int MIN_CUBE_X = Bits.getMinSigned(X_BITS);
+	public static final int MAX_CUBE_X = Bits.getMaxSigned(X_BITS);
+	public static final int MIN_CUBE_Z = Bits.getMinSigned(Z_BITS);
+	public static final int MAX_CUBE_Z = Bits.getMaxSigned(Z_BITS);
+
+	public static final int MIN_BLOCK_Y = Coords.cubeToMinBlock(MIN_CUBE_Y);
+	public static final int MAX_BLOCK_Y = Coords.cubeToMaxBlock(MAX_CUBE_Y);
 
 	public static long getAddress(int x, int y, int z) {
-		return Bits.packSignedToLong(y, YSize, YOffset)
-			| Bits.packSignedToLong(x, XSize, XOffset)
-			| Bits.packSignedToLong(z, ZSize, ZOffset);
+		return Bits.packSignedToLong(y, Y_BITS, Y_BIT_OFFSET)
+			| Bits.packSignedToLong(x, X_BITS, X_BIT_OFFSET)
+			| Bits.packSignedToLong(z, Z_BITS, Z_BIT_OFFSET);
 	}
 
 	public static long getAddress(int x, int z) {
-		return Bits.packSignedToLong(x, XSize, XOffset)
-			| Bits.packSignedToLong(z, ZSize, ZOffset);
+		return Bits.packSignedToLong(x, X_BITS, X_BIT_OFFSET)
+			| Bits.packSignedToLong(z, Z_BITS, Z_BIT_OFFSET);
 	}
 	
 	public static int getY(long address) {
-		return Bits.unpackSigned(address, YSize, YOffset);
+		return Bits.unpackSigned(address, Y_BITS, Y_BIT_OFFSET);
 	}
 
 	public static int getX(long address) {
-		return Bits.unpackSigned(address, XSize, XOffset);
+		return Bits.unpackSigned(address, X_BITS, X_BIT_OFFSET);
 	}
 
 	public static int getZ(long address) {
-		return Bits.unpackSigned(address, ZSize, ZOffset);
+		return Bits.unpackSigned(address, Z_BITS, Z_BIT_OFFSET);
 	}
 
 	public static long cubeToColumn(long cubeAddress) {

@@ -28,6 +28,8 @@ import cubicchunks.util.Progress;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
+import java.util.Set;
+
 public abstract class CubeProcessor extends QueueProcessor<Long> {
 	
 	public CubeProcessor(String name, ICubeCache provider, int batchSize) {
@@ -39,6 +41,10 @@ public abstract class CubeProcessor extends QueueProcessor<Long> {
 		
 		// start processing
 		for (long address : this.incomingAddresses) {
+			if(processedAddresses.contains(address)) {
+				//this address has been processed additionally
+				continue;
+			}
 			
 			// get the cube
 			int cubeX = AddressTools.getX(address);
@@ -52,11 +58,12 @@ public abstract class CubeProcessor extends QueueProcessor<Long> {
 			}
 			
 			// add unsuccessful calculations back onto the queue
-			boolean success = calculate(cube);
-			if (success) {
-				this.processedAddresses.add(address);
-			} else {
+			Set<Cube> generatedCubes = calculate(cube);
+			if (!generatedCubes.contains(cube)) {
 				this.deferredAddresses.add(address);
+			}
+			for(Cube c : generatedCubes) {
+				this.processedAddresses.add(c.getAddress());
 			}
 			
 			if (progress != null) {
@@ -65,5 +72,5 @@ public abstract class CubeProcessor extends QueueProcessor<Long> {
 		}
 	}
 	
-	public abstract boolean calculate(Cube cube);
+	public abstract Set<Cube> calculate(Cube cube);
 }

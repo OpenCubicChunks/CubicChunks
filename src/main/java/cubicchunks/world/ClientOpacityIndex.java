@@ -48,14 +48,18 @@ public class ClientOpacityIndex implements IOpacityIndex {
 		Arrays.fill(bottomBlocks, NONE);
 	}
 
-	@Override
 	public int getOpacity(int localX, int blockY, int localZ) {
 		IBlockState state = chunk.getBlockState(localX, blockY ,localZ);
 		return state.getLightOpacity();
 	}
 
 	@Override
-	public void setOpacity(int localX, int blockY, int localZ, int opacity) {
+	public boolean isOpaque(int localX, int blockY, int localZ) {
+		return false;
+	}
+
+	@Override
+	public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
 		//do nothing, we return values based on real blocks
 	}
 
@@ -82,6 +86,11 @@ public class ClientOpacityIndex implements IOpacityIndex {
 			}
 		}
 		return heightMapLowest;
+	}
+
+	@Override
+	public Integer getTopBlockYBelow(int localX, int localZ, int blockY) {
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	public void setHeight(int localX, int localZ, int height) {

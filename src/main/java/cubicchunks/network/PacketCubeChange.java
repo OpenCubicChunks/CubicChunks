@@ -56,7 +56,6 @@ public class PacketCubeChange implements IMessage {
 	
 	public void decodeCube(Cube cube) {
 		try {
-			data = new byte[WorldEncoder.getEncodedSize(cube)];
 			PacketBuffer in = new PacketBuffer(Unpooled.wrappedBuffer(data));
 			in.readerIndex(0);
 			WorldEncoder.decodeCube(in, cube);

@@ -24,6 +24,7 @@
 package cubicchunks.world;
 
 import com.google.common.base.Predicate;
+import cubicchunks.CubicChunks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -149,9 +150,6 @@ public class EntityContainer {
 
 			NBTTagCompound nbtEntity = new NBTTagCompound();
 			if(entity.writeToNBTOptional(nbtEntity)) {
-				if(entity instanceof EntityPlayerMP) {
-					int i = 0;
-				}
 				this.hasActiveEntities = true;
 				nbtEntities.appendTag(nbtEntity);
 
@@ -163,7 +161,7 @@ public class EntityContainer {
 	}
 
 	//listener is passed from CubeIO to set chunk position
-	public void readFromNbt(NBTTagCompound nbt, String name, World world, IEntityActionListener listener) {
+	public void readFromNbt(NBTTagCompound nbt, String name, ICubicWorld world, IEntityActionListener listener) {
 		NBTTagList nbtEntities = nbt.getTagList(name, 10);
 		if (nbtEntities == null) {
 			return;
@@ -172,20 +170,21 @@ public class EntityContainer {
 		for (int i = 0; i < nbtEntities.tagCount(); i++) {
 			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
 			Entity entity = readEntity(nbtEntity, world, listener);
-			if (entity != null) {
-				addEntity(entity);
-			}
+
 		}
 	}
 
-	private Entity readEntity(NBTTagCompound nbtEntity, World world, IEntityActionListener listener) {
+	private Entity readEntity(NBTTagCompound nbtEntity, ICubicWorld world, IEntityActionListener listener) {
 
 		// create the entity
-		Entity entity = EntityList.createEntityFromNBT(nbtEntity, world);
+		Entity entity = EntityList.createEntityFromNBT(nbtEntity, (World) world);
 		if (entity == null) {
 			return null;
 		}
-
+		if(entity instanceof EntityPlayerMP) {
+			CubicChunks.LOGGER.error("EntityPlayerMP is serialized in save file! Reading the entity would break world ticking, skipping");
+			return null;
+		}
 		addEntity(entity);
 
 		if(listener != null) {

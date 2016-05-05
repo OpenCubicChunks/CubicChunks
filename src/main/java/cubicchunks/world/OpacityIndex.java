@@ -27,7 +27,6 @@ import cubicchunks.util.Bits;
 
 import java.io.*;
 
-
 public class OpacityIndex implements IOpacityIndex {
 
 	private static int None = Integer.MIN_VALUE;
@@ -40,6 +39,9 @@ public class OpacityIndex implements IOpacityIndex {
 
 	private int[] m_ymin;
 	private int[] m_ymax;
+	/**
+	 * The array of segments for each x/z position stores Y positions at which the opaque/transparent state changes.
+	 */
 	private int[][] m_segments;
 
 	private int heightMapLowest = None;
@@ -48,7 +50,6 @@ public class OpacityIndex implements IOpacityIndex {
 	private boolean m_needsHash;
 
 	public OpacityIndex() {
-
 		m_ymin = new int[16 * 16];
 		m_ymax = new int[16 * 16];
 		m_segments = new int[16 * 16][];
@@ -64,12 +65,97 @@ public class OpacityIndex implements IOpacityIndex {
 	}
 
 	@Override
-	public int getOpacity(int localX, int blockY, int localZ) {
+	public Integer getTopBlockYBelow(int localX, int localZ, int blockY) {
+		int i = getIndex(localX, localZ);
+		if (blockY > m_ymax[i]) {
+			return getTopBlockY(localX, localZ);
+		}
+		//below or at the minimum height, so no blocks below
+		if (blockY <= m_ymin[i]) {
+			return null;
+		}
+		int[] segments = m_segments[i];
+		if (segments == null) {
+			//there are no opacity changes, it's solid opaque column from ymin to ymax
+			//and blockY is between ymin and ymax, so the next opaque block below blockY
+			//is blockY - 1.
+			return blockY - 1;
+		}
+		int mini = 0;
+		int maxi = getLastSegmentIndex(segments);
+
+		//binary search
+		while (mini <= maxi) {
+			int midi = (mini + maxi) >>> 1;
+			int midPos = unpackPos(segments[midi]);
+
+			if (midPos < blockY) {
+				mini = midi + 1;
+			} else if (midPos > blockY) {
+				maxi = midi - 1;
+			} else {
+				// hit a segment start exactly
+				mini = midi + 1;
+				break;
+			}
+		}
+		// didn't hit a segment start, mini is the correct answer + 1
+		assert (mini > 0) : String.format("can't find %d in %s", blockY, dump(i));
+		//now mini - 1 is index that contains blockY
+		//so subtract 1
+		int segmentIndex = mini - 1;
+		int blockYSegment = segments[segmentIndex];
+		int blockYSegmentOpacity = unpackOpacity(blockYSegment);
+		/*
+		 [X]
+		 ---
+		 [X] <-- if it's anywhere here or above in this segment - there is opaque block just below
+		 ---
+		 [X] <-- blockY can't be here, excluded by checking ymin
+		 ---
+		 [ ]
+		  ^ going up
+		 */
+		if (segmentIndex == 0) {
+			assert blockYSegmentOpacity != 0 : "The bottom opacity segment is transparent!";
+			return blockY - 1;
+		}
+		//there is a segment below current segment
+		int belowYSegment = segments[segmentIndex - 1];
+		int belowYSegmentHeight = unpackPos(belowYSegment);
+
+		int blockYSegmentHeight = unpackPos(blockYSegment);
+		/*
+		 If code reaches this point, it means that there is segment below blockY segment.
+		 Now there may be a few cases:
+		  * segment with blockY is fully transparent:
+		    '-> so the segment below must be opaque.
+		        Next opaque block Y below is the top of the next segment (bottom of blockY segment - 1)
+		  * segment with blockY is opaque:
+		    '-> so there are a few cases possible
+		    * blockY is not at the bottom of it
+		      '-> next opaque block below is at blockY - 1
+		    * blockY is at the bottom of it
+		      '-> the next opaque block must be in some segment below.
+		          The segment below must be transparent, and the segment below it is opaque.
+		          So the block we want if 1 block below the bottom of the segment below blockYSegment
+		 */
+		if(blockYSegmentOpacity == 0) {
+			return blockYSegmentHeight - 1;
+		}
+		if(blockY != blockYSegmentHeight) {
+			return blockY - 1;
+		}
+		return belowYSegmentHeight - 1;
+	}
+
+	@Override
+	public boolean isOpaque(int localX, int blockY, int localZ) {
 
 		// are we out of range?
 		int i = getIndex(localX, localZ);
 		if (blockY > m_ymax[i] || blockY < m_ymin[i]) {
-			return 0;
+			return false;
 		}
 
 		// are there segments for this column?
@@ -77,7 +163,7 @@ public class OpacityIndex implements IOpacityIndex {
 		if (segments == null) {
 			// this column is black or white
 			// there are no shades of grey =P
-			return 255;
+			return true;
 		}
 
 		// scan the shades of grey with binary search
@@ -93,43 +179,40 @@ public class OpacityIndex implements IOpacityIndex {
 				maxi = midi - 1;
 			} else {
 				// hit a segment start exactly
-				return unpackOpacity(segments[midi]);
+				return unpackOpacity(segments[midi]) != 0;
 			}
-		}
-
-		// TEMP: return transparent instead of crashing if something went wrong
-		// I don't have time to fix the bug, so I'd rather a user see lighting artifacts than crashes
-		if (mini <= 0) {
-			return 0;
 		}
 
 		// didn't hit a segment start, mini is the correct answer + 1
 		assert (mini > 0) : String.format("can't find %d in %s", blockY, dump(i));
-		return unpackOpacity(segments[mini - 1]);
+
+		return unpackOpacity(segments[mini - 1]) != 0;
 	}
 
 	@Override
-	public void setOpacity(int localX, int blockY, int localZ, int opacity) {
+	public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
 		// what's the range?
 		int xzIndex = getIndex(localX, localZ);
-
-		// try to stay in no-segments mode as long as we can
+		boolean isOpaque = opacity != 0;
+		// try to stay in no-segments mode as long as we can, this is the simple case
 		if (m_segments[xzIndex] == null) {
-			if (opacity == 255) {
-				setOpacityNoSegmentsOpaque(xzIndex, blockY);
-			} else if (opacity == 0) {
-				setOpacityNoSegmentsTransparent(xzIndex, blockY);
-			} else {
-				setOpacityNoSegmentsTranslucent(xzIndex, blockY, opacity);
-			}
+			setNoSegments(xzIndex, blockY, isOpaque);
 		} else {
-			setOpacityWithSegments(xzIndex, blockY, opacity);
+			setOpacityWithSegments(xzIndex, blockY, isOpaque);
 		}
 		heightMapLowest = None;
 		m_needsHash = true;
 	}
 
-	private void setOpacityNoSegmentsOpaque(int xzIndex, int blockY) {
+	private void setNoSegments(int xzIndex, int blockY, boolean isOpaque) {
+		if (isOpaque) {
+			setNoSegmentsOpaque(xzIndex, blockY);
+		} else {
+			setNoSegmentsTransparent(xzIndex, blockY);
+		}
+	}
+
+	private void setNoSegmentsOpaque(int xzIndex, int blockY) {
 		// something from nothing?
 		if (m_ymin[xzIndex] == None && m_ymax[xzIndex] == None) {
 			m_ymin[xzIndex] = blockY;
@@ -146,20 +229,68 @@ public class OpacityIndex implements IOpacityIndex {
 			return;
 		}
 
-		// making a new section?
+		// making a new section
+
+		//more than one block above ymax?
 		if (blockY > m_ymax[xzIndex] + 1) {
+			/*
+			 A visualization of what happens:
+
+			 X - already opaque, within min-max
+			 # - newly set opaque
+
+			 [ ]
+			 --- --> no segment here, new_ymax=blockY
+			 [#] (block at blockY)
+			 --- --> segment=2, height=blockY, isOpaque=1
+			 [ ]
+			 ---
+			 [ ]
+			 --- --> segment=1, height=old_ymax + 1, isOpaque=0
+			 [X] (block at old_ymax)
+			 ---
+			 [X]
+			 ---
+			 [X] (block at ymin)
+			 --- --> segment=0, height=ymin, isOpaque=1
+			 [ ]
+			  ^ going up from there
+			 */
 			m_segments[xzIndex] = new int[]{
-					packSegment(m_ymin[xzIndex], 255),
+					packSegment(m_ymin[xzIndex], 1),
 					packSegment(m_ymax[xzIndex] + 1, 0),
-					packSegment(blockY, 255)
+					packSegment(blockY, 1)
 			};
 			m_ymax[xzIndex] = blockY;
 			return;
+			//more than one block below ymin?
 		} else if (blockY < m_ymin[xzIndex] - 1) {
+			/*
+			 X - already opaque, within min-max
+			 # - newly set opaque
+
+			 ---
+			 [ ]
+			 --- --> no segment, limited by ymax
+			 [X] (block at ymax)
+			 ---
+			 [X]
+			 ---
+			 [X] (block at old_ymin)
+			 --- --> segment=2, height=old_ymin, isOpaque=1
+			 [ ]
+			 ---
+			 [ ]
+			 --- --> segment=1, height=blockY + 1, isOpaque=0
+			 [#] (block at blockY)
+			 --- --> segment=0, height=blockY, isOpaque=1
+			 [ ]
+			  ^ going up from there
+			 */
 			m_segments[xzIndex] = new int[]{
-					packSegment(blockY, 255),
+					packSegment(blockY, 1),
 					packSegment(blockY + 1, 0),
-					packSegment(m_ymin[xzIndex], 255)
+					packSegment(m_ymin[xzIndex], 1)
 			};
 			m_ymin[xzIndex] = blockY;
 			return;
@@ -169,14 +300,15 @@ public class OpacityIndex implements IOpacityIndex {
 		assert (blockY >= m_ymin[xzIndex] && blockY <= m_ymax[xzIndex]);
 	}
 
-	private void setOpacityNoSegmentsTransparent(int i, int blockY) {
+	private void setNoSegmentsTransparent(int i, int blockY) {
 		// nothing into nothing?
 		if (m_ymin[i] == None && m_ymax[i] == None) {
 			return;
 		}
+		assert !(m_ymin[i] == None || m_ymax[i] == None) : "Only one of ymin and ymax is None! This is not possible";
 
 		// only one block left?
-		if (m_ymax[i] - m_ymin[i] == 0) {
+		if (m_ymax[i] == m_ymin[i]) {
 
 			// something into nothing?
 			if (blockY == m_ymin[i]) {
@@ -184,6 +316,7 @@ public class OpacityIndex implements IOpacityIndex {
 				m_ymax[i] = None;
 			}
 
+			// if setting to transparent somewhere else - nothing changes
 			return;
 		}
 
@@ -202,43 +335,33 @@ public class OpacityIndex implements IOpacityIndex {
 		}
 
 		// we must be bisecting the range, need to make segments
-		assert (blockY >= m_ymin[i] && blockY <= m_ymax[i]) : String.format("%d -> [%d,%d]", blockY, m_ymin[i], m_ymax[i]);
+		assert (blockY > m_ymin[i] && blockY < m_ymax[i]) : String.format("blockY outside of ymin/ymax range: %d -> [%d,%d]", blockY, m_ymin[i], m_ymax[i]);
+		/*
+		 Example:
+		 ---
+		 [ ]
+		 --- --> no segment, limited by ymax
+		 [X] (block at ymax)
+		 ---
+		 [X]
+		 --- --> segment=2, height=blockY + 1, isOpaque=1
+		 [-] <--removing this, at y=blockY
+		 --- --> segment=1, height=blockY, isOpaque=0
+		 [X]
+		 ---
+		 [X] (block ay ymin)
+		 --- --> segment=0, height=ymin, isOpaque=1
+		 [ ]
+		  ^ going up
+		*/
 		m_segments[i] = new int[]{
-				packSegment(m_ymin[i], 255),
+				packSegment(m_ymin[i], 1),
 				packSegment(blockY, 0),
-				packSegment(blockY + 1, 255)
+				packSegment(blockY + 1, 1)
 		};
 	}
 
-	private void setOpacityNoSegmentsTranslucent(int i, int blockY, int opacity) {
-		// is there no range yet?
-		if (m_ymin[i] == None && m_ymax[i] == None) {
-
-			// make a new segment
-			m_segments[i] = new int[]{
-					packSegment(blockY, opacity)
-			};
-			m_ymin[i] = blockY;
-			m_ymax[i] = blockY;
-
-			return;
-		}
-
-		// convert the range into a segment and continue in with-segments mode
-		makeSegmentsFromOpaqueRange(i);
-		setOpacityWithSegments(i, blockY, opacity);
-	}
-
-	private void makeSegmentsFromOpaqueRange(int i) {
-		assert (m_segments[i] == null);
-		assert (m_ymin[i] != None);
-		assert (m_ymax[i] != None);
-		m_segments[i] = new int[]{
-				packSegment(m_ymin[i], 255)
-		};
-	}
-
-	private void setOpacityWithSegments(int i, int blockY, int opacity) {
+	private void setOpacityWithSegments(int i, int blockY, boolean isOpaque) {
 		// binary search to find the insertion point
 		int[] segments = m_segments[i];
 		int minj = 0;
@@ -252,305 +375,338 @@ public class OpacityIndex implements IOpacityIndex {
 			} else if (midPos > blockY) {
 				maxj = midj - 1;
 			} else {
-				// set would overwrite a segment start
-				setOpacityWithSegmentsAt(i, blockY, midj, opacity);
-				return;
+				minj = midj + 1;
+				break;
 			}
 		}
 
-		// didn't hit a segment start, but minj-1 is the containing segment, or -1 if we're off the bottom
+		// minj-1 is the containing segment, or -1 if we're off the bottom
 		int j = minj - 1;
 		if (j < 0) {
-			setOpacityWithSegmentsBeforeBottom(i, blockY, opacity);
+			setOpacityWithSegmentsBelowBottom(i, blockY, isOpaque);
 		} else if (blockY > m_ymax[i]) {
-			setOpacityWithSegmentsAfterTop(i, blockY, opacity);
+			setOpacityWithSegmentsAboveTop(i, blockY, isOpaque);
 		} else {
-			// j is the containing segment, and blockY is not at the start
-			setOpacityWithSegmentsAfter(i, blockY, j, opacity);
+			// j is the containing segment, blockY may be at the start
+			setOpacityWithSegmentsFor(i, blockY, j, isOpaque);
 		}
 	}
 
-	private void setOpacityWithSegmentsAt(int i, int blockY, int j, int opacity) {
-		int[] segments = m_segments[i];
-
+	private void setOpacityWithSegmentsBelowBottom(int xzIndex, int blockY, boolean isOpaque) {
 		// will the opacity even change?
-		int oldSegment = segments[j];
-		int oldOpacity = unpackOpacity(oldSegment);
-		if (opacity == oldOpacity) {
+		if (!isOpaque) {
 			return;
 		}
 
-		boolean isFirstSegment = j == 0;
-		boolean isLastSegment = j == getLastSegmentIndex(segments);
+		int[] segments = m_segments[xzIndex];
 
-		boolean sameOpacityAsPrev;
-		if (isFirstSegment) {
-			sameOpacityAsPrev = opacity == 0;
+		boolean extendsBottomSegmentByOne = blockY == m_ymin[xzIndex] - 1;
+		if (extendsBottomSegmentByOne) {
+			/*
+			 ---
+			 [X]
+			 ---
+			 [X]
+			 --- <-- the current bottom segment starts here
+			 [#] <-- inserting here
+			 --- <-- new bottom segment start
+			 [ ]
+			  ^ going up
+			 */
+			assert unpackOpacity(segments[0]) == 1 : "The bottom segment is transparent!";
+			moveSegmentStartDownAndUpdateMinY(xzIndex, 0);
 		} else {
-			sameOpacityAsPrev = opacity == unpackOpacity(segments[j - 1]);
-		}
-
-		boolean sameOpacityAsNext;
-		if (isLastSegment) {
-			sameOpacityAsNext = opacity == 0;
-		} else {
-			sameOpacityAsNext = opacity == unpackOpacity(segments[j + 1]);
-		}
-
-		boolean isRoomAfter;
-		if (isLastSegment) {
-			isRoomAfter = m_ymax[i] > blockY;
-		} else {
-			isRoomAfter = unpackPos(segments[j + 1]) > blockY + 1;
-		}
-
-		if (sameOpacityAsPrev && sameOpacityAsNext) {
-			if (isRoomAfter) {
-				moveSegmentStartUp(i, j);
-			} else {
-				if (isFirstSegment && isLastSegment) {
-					removeSegments(i);
-				} else {
-
-					if (isLastSegment) {
-						int lastSegment = getLastSegmentIndex(segments);
-						m_ymax[i] = unpackPos(segments[lastSegment - 1]) - 1;
-					} else if (isFirstSegment) {
-						assert !isLastSegment;
-						m_ymin[i] = unpackPos(segments[2]);
-					}
-					if (isLastSegment) {
-						removeTwoSegments(i, j - 1);
-					} else {
-						removeTwoSegments(i, j);
-					}
-				}
-			}
-		} else if (sameOpacityAsPrev) {
-			if (isRoomAfter) {
-				moveSegmentStartUp(i, j);
-			} else {
-				removeSegment(i, j);
-			}
-		} else if (sameOpacityAsNext) {
-			if (isRoomAfter) {
-				addSegment(i, j + 1, blockY + 1, oldOpacity);
-				m_segments[i][j] = packSegment(blockY, opacity);
-			} else {
-				if (isLastSegment) {
-					removeSegment(i, j);
-					m_ymax[i]--;
-				} else {
-					removeSegment(i, j);
-					moveSegmentStartDown(i, j);
-				}
-			}
-		} else {
-			if (isRoomAfter) {
-				addSegment(i, j + 1, blockY + 1, oldOpacity);
-			}
-			m_segments[i][j] = packSegment(blockY, opacity);
+			/*
+			 ---
+			 [X]
+			 ---
+			 [X]
+			 --- <-- the current bottom segment starts here, now segment 2
+			 [ ]
+			 --- <-- new segment 1, height=blockY + 1, isOpaque=0
+			 [#] <-- inserting here
+			 --- <-- new segment 0, height=blockY, isOpaque=1
+			 [ ]
+			  ^ going up
+			 */
+			int segment0 = packSegment(blockY, 1);
+			int segment1 = packSegment(blockY + 1, 0);
+			insertSegmentsBelow(xzIndex, 0, segment0, segment1);
+			m_ymin[xzIndex] = blockY;
 		}
 	}
 
-	private void setOpacityWithSegmentsAfter(int i, int blockY, int j, int opacity) {
-		int[] segments = m_segments[i];
-
+	private void setOpacityWithSegmentsAboveTop(int xzIndex, int blockY, boolean isOpaque) {
 		// will the opacity even change?
-		int oldSegment = segments[j];
-		int oldOpacity = unpackOpacity(oldSegment);
-		if (opacity == oldOpacity) {
+		if (!isOpaque) {
 			return;
 		}
 
-		boolean isLastSegment = j == getLastSegmentIndex(segments);
+		int[] segments = m_segments[xzIndex];
+		int lastIndex = getLastSegmentIndex(segments);
 
-		boolean sameOpacityAsNext;
-		if (isLastSegment) {
-			sameOpacityAsNext = opacity == 0;
+		boolean extendsTopSegmentByOne = blockY == m_ymax[xzIndex] + 1;
+		if (extendsTopSegmentByOne) {
+			/*
+			 [ ]
+			 --- <-- new ymax
+			 [#] <-- inserting here
+			 --- <-- current top segment ends here, limited by ymax
+			 [X]
+			 ---
+			 [X]
+			  ^ going up
+			 */
+			assert unpackOpacity(segments[lastIndex]) == 1 : "The top segment is transparent!";
+			m_ymax[xzIndex] = blockY;
 		} else {
-			sameOpacityAsNext = opacity == unpackOpacity(segments[j + 1]);
-		}
-
-		boolean isRoomAfter;
-		if (isLastSegment) {
-			isRoomAfter = m_ymax[i] > blockY;
-		} else {
-			isRoomAfter = unpackPos(segments[j + 1]) > blockY + 1;
-		}
-
-		if (sameOpacityAsNext) {
-			if (isRoomAfter) {
-				addSegment(i, j + 1, blockY, opacity);
-				addSegment(i, j + 2, blockY + 1, oldOpacity);
-			} else {
-				if (isLastSegment) {
-					m_ymax[i]--;
-				} else {
-					moveSegmentStartDown(i, j + 1);
-				}
-			}
-		} else {
-			addSegment(i, j + 1, blockY, opacity);
-			if (isRoomAfter) {
-				addSegment(i, j + 2, blockY + 1, oldOpacity);
-			}
+			/*
+			 [ ]
+			 --- <-- limited by newMaxY
+			 [#] <-- inserting here
+			 --- <-- new segment [previousLastSegment+2], height=blockY, isOpaque=1
+			 [ ] <-- possibly many blocks here
+			 ---
+			 [ ] <-- block at prevMaxY+1
+			 --- <-- previously limited by ymax, add segment=[previousLastSegment+1], height=prevMaxY+1, isOpaque=0
+			 [X] <-- block at prevMaxY
+			 ---
+			 [X]
+			  ^ going up
+			 */
+			int segmentPrevLastPlus1 = packSegment(m_ymax[xzIndex] + 1, 0);
+			int segmentPrevLastPlus2 = packSegment(blockY, 1);
+			//insert below the segment above the last segment, so above the last segment
+			insertSegmentsBelow(xzIndex, lastIndex + 1, segmentPrevLastPlus1, segmentPrevLastPlus2);
+			m_ymax[xzIndex] = blockY;
 		}
 	}
 
-	private void setOpacityWithSegmentsAfterTop(int i, int blockY, int opacity) {
-		// will the opacity even change?
-		if (opacity == 0) {
+	private void setOpacityWithSegmentsFor(int xzIndex, int blockY, int segmentIndexWithBlockY, boolean isOpaque) {
+		int[] segments = m_segments[xzIndex];
+		int isOpaqueInt = isOpaque ? 1 : 0;
+
+		int segmentWithBlockY = segments[segmentIndexWithBlockY];
+
+		//does it even change anything?
+		if (unpackOpacity(segmentWithBlockY) == isOpaqueInt) {
 			return;
 		}
 
-		int[] segments = m_segments[i];
-		int j = getLastSegmentIndex(segments);
+		int segmentBottom = unpackPos(segmentWithBlockY);
+		int segmentTop = getSegmentTopBlockY(xzIndex, segmentIndexWithBlockY);
 
-		boolean nextToLastSegment = blockY == m_ymax[i] + 1;
-		if (nextToLastSegment) {
-			boolean extendSegment = opacity == unpackOpacity(segments[j]);
-			if (extendSegment) {
-				// nothing to do, just increment ymax at end of func
-			} else {
-				addSegment(i, j + 1, blockY, opacity);
-			}
-		} else {
-			addSegment(i, j + 1, m_ymax[i] + 1, 0);
-			addSegment(i, j + 2, blockY, opacity);
-		}
-
-		m_ymax[i] = blockY;
-	}
-
-	private void setOpacityWithSegmentsBeforeBottom(int i, int blockY, int opacity) {
-		// will the opacity even change?
-		if (opacity == 0) {
+		if (segmentTop == segmentBottom) {
+			assert segmentBottom == blockY;
+			negateOneBlockSegment(xzIndex, segmentIndexWithBlockY);
 			return;
 		}
-
-		int[] segments = m_segments[i];
-
-		boolean nextToFirstSegment = blockY == m_ymin[i] - 1;
-		if (nextToFirstSegment) {
-			boolean extendSegment = opacity == unpackOpacity(segments[0]);
-			if (extendSegment) {
-				moveSegmentStartDown(i, 0);
-			} else {
-				addSegment(i, 0, blockY, opacity);
-				m_ymin[i] = blockY;
+		/*
+		 3 possible cases:
+		  * change at the top of segment
+		  * change at the bottom of segment
+		  * change in the middle of segment
+		*/
+		int lastSegment = getLastSegmentIndex(segments);
+		if (blockY == segmentTop) {
+			//if it's the top of the top segment - just change ymax
+			if (segmentIndexWithBlockY == lastSegment) {
+				assert unpackOpacity(segments[lastSegment]) == 1 : "The top segment is transparent!";
+				m_ymax[xzIndex]--;
+				return;
 			}
-		} else {
-			addSegment(i, 0, blockY + 1, 0);
-			addSegment(i, 0, blockY, opacity);
-			m_ymin[i] = blockY;
+			/*
+			 [-]
+			 ---
+			 [#] <-- changing this from [X] to [-]
+			 ---
+			 [X] <-- segmentWithBlockY
+			  ^ going up
+			 */
+			moveSegmentStartDownAndUpdateMinY(xzIndex, segmentIndexWithBlockY + 1);
+			return;
+		}
+		if (blockY == segmentBottom) {
+			moveSegmentStartUpAndUpdateMinY(xzIndex, segmentIndexWithBlockY);
+			return;
+		}
+		/*
+		 ---
+		 [X]
+		 ---
+		 [X]
+		 --- <-- insert this (newSegment2), height=blockY + 1, opacity=!isOpaque
+		 [#] <-- changing this
+		 --- <-- insert this (newSegment1), height=blockY, opacity=isOpaque
+		 [X]
+		 ---
+		 [X]
+		 --- <-- segmentWithBlockY
+		 [-]
+		 */
+		int newSegment1 = packSegment(blockY, isOpaqueInt);
+		int newSegment2 = packSegment(blockY + 1, 1 - isOpaqueInt);
+		insertSegmentsBelow(xzIndex, segmentIndexWithBlockY + 1, newSegment1, newSegment2);
+	}
+
+	private void negateOneBlockSegment(int xzIndex, int segmentIndexWithBlockY) {
+
+		int[] segments = m_segments[xzIndex];
+		int lastSegmentIndex = getLastSegmentIndex(segments);
+
+		assert lastSegmentIndex >= 2 : "Less than 3 segments in array!";
+		if (segmentIndexWithBlockY == lastSegmentIndex) {
+
+			assert unpackOpacity(segments[segmentIndexWithBlockY]) == 1 : "The top segment is transparent!";
+			//the top segment must be opaque, so we set it to transparent
+			//and the segment below it is also transparent.
+			//set both of them to None and decrease maxY
+			int segmentBelow = segments[segmentIndexWithBlockY - 1];
+			m_ymax[xzIndex] = unpackPos(segmentBelow) - 1;
+			if (segmentIndexWithBlockY == 2) {
+				//after removing top 2 segments we will be left with 1 segment
+				//remove them entirely to guarantee at least 3 segments and use min/maxY
+				m_segments[xzIndex] = null;
+				return;
+			}
+			segments[segmentIndexWithBlockY] = NoneSegment;
+			segments[segmentIndexWithBlockY - 1] = NoneSegment;
+			return;
+		}
+		if (segmentIndexWithBlockY == 0) {
+			assert unpackOpacity(segments[segmentIndexWithBlockY]) == 1 : "The top segment is transparent!";
+			//same logic as for top segment applies
+			int segmentAbove = segments[1];
+			m_ymin[xzIndex] = unpackPos(segments[2]);
+			if (lastSegmentIndex == 2) {
+				m_segments[xzIndex] = null;
+				return;
+			}
+			removeTwoSegments(xzIndex, 0);
+			return;
+		}
+		/*
+		 The situation:
+		 # - opacity to set
+		 - - opposite opacity
+
+		 ---
+		 [#]
+		 ---
+		 [#]
+		 --- <-- old segment=segmentIndexWithBlockY+1, height=blockY+1
+		 [-]
+		 --- <-- old segment=segmentIndexWithBlockY, height=blockY, opacity=(-)
+		 [#]
+		 ---
+		 [#]
+		  ^ going up
+
+		  Since this is not the top/bottom segment - we can remove it.
+		  And to avoid 2 identical segments in a row - remove the one above too
+		 */
+		removeTwoSegments(xzIndex, segmentIndexWithBlockY);
+		//but in case after the removal there are less than 3 segments
+		//remove them entirely and rely only on min/maxY
+		if (lastSegmentIndex == 2) {
+			m_segments[xzIndex] = null;
+			return;
 		}
 	}
 
-	private void moveSegmentStartUp(int i, int j) {
+	private void moveSegmentStartUpAndUpdateMinY(int xzIndex, int segmentIndex) {
 
-		int segment = m_segments[i][j];
+		int segment = m_segments[xzIndex][segmentIndex];
 		int pos = unpackPos(segment);
 		int opacity = unpackOpacity(segment);
 
 		// move the segment
-		m_segments[i][j] = packSegment(pos + 1, opacity);
+		m_segments[xzIndex][segmentIndex] = packSegment(pos + 1, opacity);
 
 		// move the bottom if needed
-		if (j == 0) {
-			m_ymin[i]++;
+		if (segmentIndex == 0) {
+			m_ymin[xzIndex]++;
 		}
 	}
 
-	private void moveSegmentStartDown(int i, int j) {
+	private void moveSegmentStartDownAndUpdateMinY(int xzIndex, int segmentIndex) {
 
-		int segment = m_segments[i][j];
+		int segment = m_segments[xzIndex][segmentIndex];
 		int pos = unpackPos(segment);
 		int opacity = unpackOpacity(segment);
 
 		// move the segment
-		m_segments[i][j] = packSegment(pos - 1, opacity);
+		m_segments[xzIndex][segmentIndex] = packSegment(pos - 1, opacity);
 
 		// move the bottom if needed
-		if (j == 0) {
-			m_ymin[i]--;
+		if (segmentIndex == 0) {
+			m_ymin[xzIndex]--;
 		}
 	}
 
-	private void removeSegment(int i, int j) {
+	private void removeTwoSegments(int xzIndex, int firstSegmentToRemove) {
 
-		int[] segments = m_segments[i];
-		int jmax = getLastSegmentIndex(segments);
-
-		// move the bounds if needed
-		// for reasons I can't explain it's only needed to move lower bound here and only by one.
-		if (j == 0) {
-			m_ymin[i]++;
-		}
-		// remove the segment
-		for (int n = j; n < jmax; n++) {
-			segments[n] = segments[n + 1];
-		}
-		segments[jmax] = NoneSegment;
-
-		if (segments[0] == NoneSegment) {
-			m_segments[i] = null;
-		}
-	}
-
-	private void removeTwoSegments(int i, int j) {
-
-		int[] segments = m_segments[i];
+		int[] segments = m_segments[xzIndex];
 		int jmax = getLastSegmentIndex(segments);
 
 		// remove the segment
-		for (int n = j; n < jmax - 1; n++) {
+		for (int n = firstSegmentToRemove; n < jmax - 1; n++) {
 			segments[n] = segments[n + 2];
 		}
 		segments[jmax] = NoneSegment;
 		segments[jmax - 1] = NoneSegment;
 
 		if (segments[0] == NoneSegment) {
-			m_segments[i] = null;
+			m_segments[xzIndex] = null;
 		}
 	}
 
-	private void addSegment(int i, int j, int pos, int opacity) {
-		int lastIndex = getLastSegmentIndex(m_segments[i]);
-		if (lastIndex + 1 == m_segments[i].length) {
-
-			// allocate more space
-			int[] newSegments = new int[lastIndex + 2];
-			for (int n = 0; n <= lastIndex; n++) {
-				newSegments[n] = m_segments[i][n];
+	//is theIndex = lastSegmentIndex+1, it will be inserted after last segment
+	private void insertSegmentsBelow(int xzIndex, int theIndex, int... newSegments) {
+		int lastIndex = getLastSegmentIndex(m_segments[xzIndex]);
+		int expandSize = newSegments.length;
+		//will it fit in current array?
+		if (m_segments[xzIndex].length >= lastIndex + expandSize) {
+			//shift all segments up
+			for (int i = lastIndex; i >= theIndex; i--) {
+				m_segments[xzIndex][i + expandSize] = m_segments[xzIndex][i];
 			}
-			m_segments[i] = newSegments;
-		}
-
-		// shift the segments by one
-		lastIndex++;
-		for (int n = lastIndex; n > j; n--) {
-			m_segments[i][n] = m_segments[i][n - 1];
-		}
-
-		m_segments[i][j] = packSegment(pos, opacity);
-	}
-
-	@SuppressWarnings("unused")
-	private int getSegmentLength(int i, int j) {
-		int[] segments = m_segments[i];
-		int pos = unpackPos(segments[j]);
-		if (j + 1 < segments.length) {
-			return unpackPos(segments[j + 1]) - pos;
+			for (int i = 0; i < expandSize; i++) {
+				m_segments[xzIndex][theIndex + i] = newSegments[i];
+			}
 		} else {
-			return m_ymax[i] - pos + 1;
+			//need to expand the array
+			int[] newSegmentArr = new int[(lastIndex + 1) + expandSize];
+			int newArrIndex = 0;
+			int oldArrIndex = 0;
+			//copy all index up to before theIndex
+			for (int i = 0; i < theIndex; i++) {
+				newSegmentArr[newArrIndex] = m_segments[xzIndex][oldArrIndex];
+				newArrIndex++;
+				oldArrIndex++;
+			}
+			//copy new elements
+			for (int i = 0; i < expandSize; i++) {
+				newSegmentArr[newArrIndex] = newSegments[i];
+				newArrIndex++;
+			}
+			//copy everything else
+			while (newArrIndex < newSegmentArr.length) {
+				newSegmentArr[newArrIndex] = m_segments[xzIndex][oldArrIndex];
+				newArrIndex++;
+				oldArrIndex++;
+			}
+			m_segments[xzIndex] = newSegmentArr;
 		}
 	}
 
-	private void removeSegments(int i) {
-		m_segments[i] = null;
-		m_ymin[i] = None;
-		m_ymax[i] = None;
+	private int getSegmentTopBlockY(int xzIndex, int segmentIndex) {
+		int[] segments = m_segments[xzIndex];
+		//if it's the last segment in the array, or the one above is NoneSegment
+		if (segments.length - 1 == segmentIndex || segments[segmentIndex + 1] == NoneSegment) {
+			return m_ymax[xzIndex];
+		}
+		return unpackPos(segments[segmentIndex + 1]) - 1;
 	}
 
 	@Override
@@ -605,7 +761,7 @@ public class OpacityIndex implements IOpacityIndex {
 			for (int v : m_ymin) {
 				out.writeInt(v);
 			}
-			for(int v : m_ymax) {
+			for (int v : m_ymax) {
 				out.writeInt(v);
 			}
 

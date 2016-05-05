@@ -25,7 +25,6 @@ package cubicchunks.world.biome;
 
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
-import cubicchunks.world.WorldContext;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -56,7 +55,7 @@ public class BiomeBlockReplacer {
 		this.top = Coords.cubeToMaxBlock(cubeAbove.getY());
 		this.bottom = Coords.cubeToMinBlock(cube.getY());
 		this.alterationTop = Coords.cubeToMaxBlock(cube.getY());
-		this.seaLevel = cube.getWorld().provider.getAverageGroundLevel();
+		this.seaLevel = cube.getWorld().getProvider().getAverageGroundLevel();
 	}
 
 	public void replaceBlocks(final BiomeGenBase biomeToUse, final int xAbs, final int zAbs, final double depthNoiseValue) {
@@ -80,6 +79,7 @@ public class BiomeBlockReplacer {
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
 		/*
+		 * TODO: Readd this
 		 * Default BuildDepth is 8,388,608. the Earth has a radius of ~6,378,100m. Not too far off. Let's make this
 		 * world similar to the earth! Crust - 0 to 35km (varies between 5 and 70km thick due to the sea and mountains)
 		 * Upper Mesosphere - 35km to 660km Lower Mesosphere - 660km to 2890km Outer Core - 2890km to 5150km Inner Core
@@ -90,13 +90,9 @@ public class BiomeBlockReplacer {
 			
 			boolean canSetBlock = yAbs <= this.alterationTop;
 			
-			if (yAbs <= ((AddressTools.MinY + 64) << 4) + this.rand.nextInt(16)) {
+			if (yAbs <= ((AddressTools.MIN_CUBE_Y + 64) << 4) + this.rand.nextInt(16)) {
 				if (canSetBlock) {
 					setBlock(this.cube, pos, Blocks.BEDROCK.getDefaultState());
-				}
-			} else if (yAbs < -32768 + this.rand.nextInt(256)) {
-				if (canSetBlock) {
-					setBlock(this.cube, pos, Blocks.LAVA.getDefaultState());
 				}
 			} else {
 				// Current block
@@ -197,7 +193,7 @@ public class BiomeBlockReplacer {
 	}
 
 	protected final Block getBlock(final Cube cube, final Cube cubeAbove, final BlockPos pos) {
-		assert WorldContext.get(cube.getWorld()).getCubeCache()
+		assert cube.getWorld().getCubeCache()
 				.cubeExists(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()),	Coords.blockToCube(pos.getZ()));
 
 		if (Coords.blockToCube(pos.getY()) == cube.getY()) {// check if we're in the same cube as Cube

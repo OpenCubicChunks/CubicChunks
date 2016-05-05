@@ -23,41 +23,41 @@
  */
 package cubicchunks;
 
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 public class CCFmlEventHandler {
 
-	private final CubicChunkSystem ccSystem;
-
-	public CCFmlEventHandler(CubicChunkSystem ccSystem) {
-		this.ccSystem = ccSystem;
-	}
-
 	@SubscribeEvent
 	public void onWorldServerTick(TickEvent.WorldTickEvent evt) {
-		World world = evt.world;
+		ICubicWorldServer world = (ICubicWorldServer) evt.world;
 		//Forge (at least version 11.14.3.1521) doesn't call this event for client world.
-		if (evt.phase == TickEvent.Phase.END && ccSystem.isTallWorld(world) && evt.side == Side.SERVER) {
-			ccSystem.onWorldServerTick((WorldServer) world);
+		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
+			world.getLightingManager().tick();
+			world.getGeneratorPipeline().tick();
+			//TODO: Readd block tick
+			//for (ChunkCoordIntPair coords : WorldAccess.getActiveChunkSet(worldServer)) {
+			//	Column column = cubeCache.provideChunk(coords.chunkXPos, coords.chunkZPos);
+			//	column.doRandomTicks();
+			//}
+			//worldServer.profiler.endSection();
 		}
 	}
 
 	@SubscribeEvent
 	public void onWorldClientTickEvent(TickEvent.ClientTickEvent evt) {
-		World world = Minecraft.getMinecraft().theWorld;
+		ICubicWorld world = (ICubicWorld) Minecraft.getMinecraft().theWorld;
 		//does the world exist? Is the game paused?
 		//TODO: Maybe we should still process light updates when game is paused?
 		if(world == null || Minecraft.getMinecraft().isGamePaused()) {
 			return;
 		}
-		if (evt.phase == TickEvent.Phase.END && ccSystem.isTallWorld(world)) {
-			ccSystem.onWorldClientTick((WorldClient) world);
+		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld()) {
+			world.getLightingManager().tick();
 		}
 	}
 }

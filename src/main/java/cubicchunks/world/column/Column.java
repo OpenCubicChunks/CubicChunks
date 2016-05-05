@@ -62,21 +62,23 @@ import java.util.*;
 
 public class Column extends Chunk {
 
-	private TreeMap<Integer, Cube> cubes;
+	private CubeMap cubeMap;
 	private IOpacityIndex opacityIndex;
 	private int roundRobinLightUpdatePointer;
 	private List<Cube> roundRobinCubes;
 	private EntityContainer entities;
+	private ICubicWorld world;
 
-	public Column(World world, int x, int z) {
+	public Column(ICubicWorld world, int x, int z) {
 		// NOTE: this constructor is called by the chunk loader
-		super(world, x, z);
+		super((World) world, x, z);
+		this.world = world;
 
 		init();
 	}
 
-	public Column(World world, int cubeX, int cubeZ, BiomeGenBase[] biomes) {
-		// NOTE: this constructor is called by the column generator
+	public Column(ICubicWorld world, int cubeX, int cubeZ, BiomeGenBase[] biomes) {
+		// NOTE: this constructor is called by the column worldgen
 		this(world, cubeX, cubeZ);
 
 		byte[] biomeArray = super.getBiomeArray();
@@ -193,7 +195,9 @@ public class Column extends Chunk {
 	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
 		// is there a chunk for this block?
 		int cubeY = Coords.blockToCube(pos.getY());
-
+		if (!getWorld().isRemote) {
+			int i = 0;
+		}
 		// did anything change?
 		IBlockState oldBlockState = this.getBlockState(pos);
 		if (oldBlockState == newBlockState) {
@@ -201,10 +205,12 @@ public class Column extends Chunk {
 			return null;
 		}
 
+		int oldOpacity = oldBlockState.getLightOpacity(this.getWorld(), pos);
+
 		Block oldBlock = oldBlockState.getBlock();
 		Block newBlock = newBlockState.getBlock();
 
-		Cube cube = this.cubes.get(cubeY);
+		Cube cube = this.cubeMap.get(cubeY);
 
 		if (cube == null) {
 			//nothing we can do. vanilla creates new EBS here
@@ -235,7 +241,7 @@ public class Column extends Chunk {
 			return null;
 		}
 
-		this.doOnBlockSetLightUpdates(pos, newBlockState);
+		this.doOnBlockSetLightUpdates(pos, newBlockState, oldOpacity);
 
 		if (!this.getWorld().isRemote && oldBlock != newBlock) {
 			newBlock.onBlockAdded(this.getWorld(), pos, newBlockState);
@@ -258,15 +264,19 @@ public class Column extends Chunk {
 		return oldBlockState;
 	}
 
-	private void doOnBlockSetLightUpdates(BlockPos pos, IBlockState newBlockState) {
+	private void doOnBlockSetLightUpdates(BlockPos pos, IBlockState newBlockState, int oldOpacity) {
 		int newOpacity = newBlockState.getLightOpacity(this.getWorld(), pos);
+		if(oldOpacity == newOpacity || (oldOpacity >= 15 && newOpacity >= 15)) {
+			//nothing to update, this will frequently happen in ore generation
+			return;
+		}
 
 		int localX = Coords.blockToLocal(pos.getX());
 		int localZ = Coords.blockToLocal(pos.getZ());
 
 		// did the top non-transparent block change?
 		Integer oldSkylightY = getHeightmapAt(localX, localZ);
-		this.opacityIndex.setOpacity(localX, pos.getY(), localZ, newOpacity);
+		this.opacityIndex.onOpacityChange(localX, pos.getY(), localZ, newOpacity);
 		Integer newSkylightY = oldSkylightY;
 		if (!getWorld().isRemote) {
 			newSkylightY = getHeightmapAt(localX, localZ);
@@ -306,7 +316,7 @@ public class Column extends Chunk {
 			maxY = t;
 		}
 
-		LightingManager lightManager = WorldContext.get(this.getWorld()).getLightingManager();
+		LightingManager lightManager = this.world.getLightingManager();
 		lightManager.columnSkylightUpdate(LightingManager.UpdateType.IMMEDIATE, this, localX, minY, maxY, localZ);
 
 	}
@@ -357,7 +367,7 @@ public class Column extends Chunk {
 		if (cube != null) {
 			cube.addEntity(entity);
 		} else {
-			// entities don't have to be in cubes, just add it directly to the column
+			// entities don't have to be in cubeMap, just add it directly to the column
 			int cubeX = MathHelper.floor_double(entity.posX / 16.0D);
 			int cubeZ = MathHelper.floor_double(entity.posZ / 16.0D);
 
@@ -543,11 +553,7 @@ public class Column extends Chunk {
 	@Override
 	public void onTick(boolean tryToTickFaster) {
 		this.chunkTicked = true;
-
-		for (Map.Entry<Integer, Cube> cube : this.cubes.entrySet()) {
-			Cube c = cube.getValue();
-			c.tickCube();
-		}
+		cubeMap.forEach(Cube::tickCube);
 	}
 
 	@Override
@@ -595,7 +601,7 @@ public class Column extends Chunk {
 	public void resetRelightChecks() {
 		this.roundRobinLightUpdatePointer = 0;
 		this.roundRobinCubes.clear();
-		this.roundRobinCubes.addAll(this.cubes.values());
+		this.roundRobinCubes.addAll(this.cubeMap.all());
 	}
 
 	@Override
@@ -679,7 +685,7 @@ public class Column extends Chunk {
 
 	@Override
 	public Map<BlockPos, TileEntity> getTileEntityMap() {
-		//TODO: Important: Fix getTileEntityMap. Need to implement special Map that accesses tile entities from cubes
+		//TODO: Important: Fix getTileEntityMap. Need to implement special Map that accesses tile entities from cubeMap
 		return super.getTileEntityMap();
 	}
 
@@ -694,13 +700,9 @@ public class Column extends Chunk {
 	@Deprecated
 	public boolean isTerrainPopulated() {
 		//with cubic chunks the whole column is never fully generated,
-		//So some heuristic is needed to tell vanilla is terrain is populated here
+		//So some heuristic is needed to tell vanilla is generator is populated here
 		//for now - tell it that it is if any cube is populated
-		boolean isAnyCubeLive = false;
-		for (Cube cube : this.cubes.values()) {
-			isAnyCubeLive |= cube.getGeneratorStage().isLastStage();
-		}
-		return isAnyCubeLive;
+		return this.cubeMap.all().stream().anyMatch(c -> c.getGeneratorStage().isLastStage());
 	}
 
 	@Override
@@ -713,8 +715,7 @@ public class Column extends Chunk {
 	//===========================================
 
 	private void init() {
-
-		this.cubes = new TreeMap<>();
+		this.cubeMap = new CubeMap();
 		//clientside we don't really need that much data. we actually only need top and bottom block Y positions
 		if (this.getWorld().isRemote) {
 			this.opacityIndex = new ClientOpacityIndex(this);
@@ -758,20 +759,20 @@ public class Column extends Chunk {
 		return this.opacityIndex;
 	}
 
-	public Collection<Cube> getCubes() {
-		return Collections.unmodifiableCollection(this.cubes.values());
+	public Collection<Cube> getAllCubes() {
+		return Collections.unmodifiableCollection(this.cubeMap.all());
 	}
 
 	public Iterable<Cube> getCubes(int minY, int maxY) {
-		return this.cubes.subMap(minY, true, maxY, true).values();
+		return this.cubeMap.cubes(minY, maxY);
 	}
 
 	public boolean hasCubes() {
-		return !this.cubes.isEmpty();
+		return !this.cubeMap.isEmpty();
 	}
 
 	public Cube getCube(int cubeY) {
-		return this.cubes.get(cubeY);
+		return this.cubeMap.get(cubeY);
 	}
 
 	private Cube getCube(BlockPos pos) {
@@ -782,14 +783,14 @@ public class Column extends Chunk {
 		Cube cube = getCube(cubeY);
 
 		if (cube == null) {
-			cube = new Cube(this.getWorld(), this, this.xPosition, cubeY, this.zPosition, isModified);
-			this.cubes.put(cubeY, cube);
+			cube = new Cube(this.world, this, this.xPosition, cubeY, this.zPosition, isModified);
+			this.cubeMap.put(cubeY, cube);
 		}
 		return cube;
 	}
 
 	public Cube removeCube(int cubeY) {
-		return this.cubes.remove(cubeY);
+		return this.cubeMap.remove(cubeY);
 	}
 
 	public void markSaved() {
@@ -826,6 +827,14 @@ public class Column extends Chunk {
 		return null;
 	}
 
+	public Integer getHeightmapBelow(int localX, int blockY, int localZ) {
+		Integer topBelow = this.opacityIndex.getTopBlockYBelow(localX, localZ, blockY);
+		if (topBelow != null) {
+			return topBelow + 1;
+		}
+		return null;
+	}
+
 	public Iterable<Entity> entities() {
 		return this.entities.getEntities();
 	}
@@ -835,13 +844,7 @@ public class Column extends Chunk {
 			return;
 		}
 
-		for (Map.Entry<Integer, Cube> cube : this.cubes.entrySet()) {
-			Cube c = cube.getValue();
-			if (c.getY() != cube.getKey()) {
-				throw new IllegalStateException(String.format("Column in inconsistent state! Cube at (%d, %d, %d) thinks it's at (%d, %d, %d)", xPosition, (int) cube.getKey(), zPosition, c.getX(), c.getY(), c.getZ()));
-			}
-			c.doRandomTicks();
-		}
+		this.cubeMap.forEach(Cube::doRandomTicks);
 	}
 
 	@Override

@@ -31,8 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-import static org.objectweb.asm.Type.*;
-
 public class Mappings {
 	private static boolean IS_DEV;
 	//since srg field and method names are guarranted not to collide -  we can store them in one map
@@ -45,106 +43,6 @@ public class Mappings {
 			initMappings(location);
 		}
 	}
-
-	//classes
-	public static final String WORLD = "net/minecraft/world/World";
-	public static final String WORLD_CLIENT = "net/minecraft/client/multiplayer/WorldClient";
-	public static final String VIEW_FRUSTUM = "net/minecraft/client/renderer/ViewFrustum";
-	public static final String RENDER_CHUNK = "net/minecraft/client/renderer/chunk/RenderChunk";
-	public static final String BLOCK_POS = "net/minecraft/util/math/BlockPos";
-	public static final String CHUNK_CACHE = "net/minecraft/world/ChunkCache";
-	public static final String RENDER_GLOBAL = "net/minecraft/client/renderer/RenderGlobal";
-	public static final String RG_CONTAINER_LOCAL_RENDER_INFORMATION = "net/minecraft/client/renderer/RenderGlobal$ContainerLocalRenderInformation";
-	public static final String I_BLOCK_STATE = "net/minecraft/block/state/IBlockState";
-	public static final String REGION_RENDER_CACHE = "net/minecraft/client/renderer/RegionRenderCache";
-	public static final String CLASS_INHERITANCE_MULTI_MAP = "net/minecraft/util/ClassInheritanceMultiMap";
-	public static final String ENTITY = "net/minecraft/entity/Entity";
-	public static final String MINECRAFT = "net/minecraft/client/Minecraft";
-	public static final String WORLD_SETTINGS = "net/minecraft/world/WorldSettings";
-	public static final String INTEGRATED_SERVER = "net/minecraft/server/integrated/IntegratedServer";
-	public static final String WORLD_TYPE = "net/minecraft/world/WorldType";
-	public static final String ITEM_BLOCK = "net/minecraft/item/ItemBlock";
-	public static final String MATH_HELPER = "net/minecraft/util/math/MathHelper";
-	public static final String MINECRAFT_SERVER = "net/minecraft/server/MinecraftServer";
-	public static final String YGGDRASIL_AUTHENTICATION_SERVICE = "com/mojang/authlib/yggdrasil/YggdrasilAuthenticationService";
-	public static final String GAME_PROFILE_REPOSITORY = "com/mojang/authlib/GameProfileRepository";
-	public static final String PLAYER_PROFILE_CACHE = "net/minecraft/server/management/PlayerProfileCache";
-	public static final String MINECRAFT_SESSION_SERVICE = "com/mojang/authlib/minecraft/MinecraftSessionService";
-
-	//methods
-	public static final String WORLD_IS_VALID = getNameFromSrg("func_175701_a");//1.8.8
-	public static final String WORLD_GET_LIGHT = getNameFromSrg("func_175699_k");//1.8.8
-	public static final String WORLD_GET_LIGHT_CHECK = getNameFromSrg("func_175721_c");//1.8.8, the one with additional boolean argument
-	public static final String WORLD_GET_LIGHT_FOR = getNameFromSrg("func_175642_b");//1.8.8
-	public static final String WORLD_GET_LIGHT_FROM_NEIGHBORS_FOR = getNameFromSrg("func_175705_a");//1.8.8
-	public static final String WORLD_IS_AREA_LOADED_IIIIIIZ = getNameFromSrg("func_175663_a");//1.8.8
-	public static final String WORLD_UPDATE_ENTITY_WITH_OPTIONAL_FORCE = getNameFromSrg("func_72866_a");//1.8.8
-
-	public static final String VIEW_FRUSTUM_SET_COUNT_CHUNKS = getNameFromSrg("func_178159_a");//1.8.8
-	public static final String VIEW_FRUSTUM_GET_RENDER_CHUNK = getNameFromSrg("func_178161_a");//1.8.8
-	public static final String VIEW_FRUSTUM_UPDATE_CHUNK_POSITIONS = getNameFromSrg("func_178163_a");//1.8.8
-
-	public static final String CHUNK_CACHE_GET_BLOCK_STATE = getNameFromSrg("func_180495_p");//1.8.8
-	public static final String CHUNK_CACHE_GET_LIGHT_FOR_EXT = getNameFromSrg("func_175629_a");//1.8.8
-	public static final String CHUNK_CACHE_GET_LIGHT_FOR = getNameFromSrg("func_175628_b");//1.8.8
-
-	public static final String RENDER_GLOBAL_GET_RENDER_CHUNK_OFFSET = getNameFromSrg("func_181562_a");//func_181562_a??
-	public static final String RENDER_GLOBAL_RENDER_ENTITIES = getNameFromSrg("func_180446_a");//1.8.8
-
-	public static final String REGION_RENDER_CACHE_GET_BLOCK_STATE_RAW = getNameFromSrg("func_175631_c");//1.8.8
-	public static final String VEC_3_I_GET_X = getNameFromSrg("func_177958_n");//1.8.8
-	public static final String ENTITY_ON_ENTITY_UPDATE = getNameFromSrg("func_70030_z");//1.8.8
-	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE = getNameFromSrg("func_77165_h");//1.8.8
-	public static final String ITEM_BLOCK_ON_ITEM_USE = getNameFromSrg("func_180614_a");//1.8.8
-	public static final String MATH_HELPER_FLOOR_DOUBLE = getNameFromSrg("func_76128_c");//1.8.8
-	public static final String MINECRAFT_SERVER_SET_BUILD_LIMIT = getNameFromSrg("func_71191_d");
-
-	//fields
-	public static final String ENTITY_POS_Y = getNameFromSrg("field_70163_u");//1.8.8
-	public static final String ENTITY_WORLD_OBJ = getNameFromSrg("field_70170_p");//1.8.8
-
-	public static final String VIEW_FRUSTUM_WORLD = getNameFromSrg("field_178167_b");//1.8.8
-	public static final String CHUNK_CACHE_WORLD_OBJ = getNameFromSrg("field_72815_e");//1.8.8
-	public static final String RENDER_GLOBAL_THE_WORLD = getNameFromSrg("field_72769_h");//1.8.8
-	public static final String RG_CLRI_RENDER_CHUNK = getNameFromSrg("field_178036_a");//1.8.8, RenderGlobal$ContainerLocalRenderInformation
-
-	//classes referenced from asm
-	public static final String WORLD_METHODS = "cubicchunks/asm/WorldMethods";
-	public static final String WORLD_METHODS_GET_HEIGHT_DESC = getMethodDescriptor(INT_TYPE, getObjectType(WORLD));
-	public static final String WORLD_METHODS_IS_TALL_WORLD_DESC =
-			getMethodDescriptor(BOOLEAN_TYPE, getObjectType(WORLD));
-	public static final String WORLD_METHODS_GET_MAX_HEIGHT_WORLD_TYPE_DESC =
-			getMethodDescriptor(INT_TYPE, getObjectType(WORLD_TYPE));
-	public static final String RENDER_METHODS = "cubicchunks/asm/RenderMethods";
-	public static final String RENDER_METHODS_GET_RENDER_CHUNK_DESC =
-			getMethodDescriptor(getObjectType(RENDER_CHUNK), getObjectType(VIEW_FRUSTUM), getObjectType(BLOCK_POS));
-	public static final String RENDER_METHODS_UPDATE_CHUNK_POSITIONS_DESC =
-			getMethodDescriptor(BOOLEAN_TYPE, getObjectType(VIEW_FRUSTUM));
-	public static final String RENDER_METHODS_BLOCK_FROM_CACHE_DESC =
-			getMethodDescriptor(getObjectType(I_BLOCK_STATE), getObjectType(REGION_RENDER_CACHE), getObjectType(BLOCK_POS));
-	public static final String RENDER_METHODS_GET_ENTITY_LIST_DESC =
-			getMethodDescriptor(getObjectType(CLASS_INHERITANCE_MULTI_MAP), getObjectType(RENDER_GLOBAL), getObjectType(RENDER_CHUNK));
-
-	//other
-	public static final String WORLD_FIELD_DESC = getObjectType(WORLD).getDescriptor();
-	public static final String WORLD_CLIENT_FIELD_DESC = getObjectType(WORLD_CLIENT).getDescriptor();
-	public static final String RENDER_CHUNK_FIELD_DESC = getObjectType(RENDER_CHUNK).getDescriptor();
-
-	public static final String CONSTR_INTEGRATED_SERVER =
-			getMethodDescriptor(VOID_TYPE,
-					getObjectType(MINECRAFT),
-					getType(String.class),
-					getType(String.class),
-					getObjectType(WORLD_SETTINGS),
-					getObjectType(YGGDRASIL_AUTHENTICATION_SERVICE),
-					getObjectType(MINECRAFT_SESSION_SERVICE),
-					getObjectType(GAME_PROFILE_REPOSITORY),
-					getObjectType(PLAYER_PROFILE_CACHE));
-	public static final String WORLD_SETTINGS_GET_TERRAIN_TYPE_DESC = getMethodDescriptor(getObjectType(WORLD_TYPE));
-	public static final String WORLD_IS_AREA_LOADED_IIIIIIZ_DESC = getMethodDescriptor(BOOLEAN_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, BOOLEAN_TYPE);
-	public static final String WORLD_GET_LIGHT_DESC = getMethodDescriptor(INT_TYPE, getObjectType(BLOCK_POS));
-	public static final String WORLD_GET_LIGHT_CHECK_DESC = getMethodDescriptor(INT_TYPE, getObjectType(BLOCK_POS), BOOLEAN_TYPE);
-
 
 	public static String getNameFromSrg(String srgName) {
 		if(IS_DEV) {

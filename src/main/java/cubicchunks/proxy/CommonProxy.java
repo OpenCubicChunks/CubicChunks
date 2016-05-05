@@ -24,9 +24,10 @@
 package cubicchunks.proxy;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class CommonProxy {
+public abstract class CommonProxy {
 	/**
 	 * Returns a side-appropriate EntityPlayer for use during message handling
 	 */
@@ -34,5 +35,7 @@ public class CommonProxy {
 		return ctx.getServerHandler().playerEntity;
 	}
 
-	public void registerEvents() {}
+	public abstract void registerEvents();
+
+	public abstract void setBuildLimit(MinecraftServer server);
 }
