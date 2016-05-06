@@ -54,10 +54,6 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicChun
 
 	}
 
-	public static void create() {
-		new VanillaCubicChunksWorldType();
-	}
-
 	/**
 	 * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
 	 *
@@ -71,5 +67,9 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicChun
 	@Override
 	public double voidFadeMagnitude() {
 		return Double.NaN;
+	}
+
+	public static void create() {
+		new VanillaCubicChunksWorldType();
 	}
 }

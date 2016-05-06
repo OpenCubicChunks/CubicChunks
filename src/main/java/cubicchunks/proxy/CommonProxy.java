@@ -23,19 +23,21 @@
  */
 package cubicchunks.proxy;
 
+import cubicchunks.CommonEventHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public abstract class CommonProxy {
 	/**
 	 * Returns a side-appropriate EntityPlayer for use during message handling
 	 */
-	public EntityPlayer getPlayerEntity(MessageContext ctx) {
-		return ctx.getServerHandler().playerEntity;
-	}
+	public abstract EntityPlayer getPlayerEntity(MessageContext ctx);
 
-	public abstract void registerEvents();
+	public void registerEvents() {
+		MinecraftForge.EVENT_BUS.register(new CommonEventHandler());
+	}
 
 	public abstract void setBuildLimit(MinecraftServer server);
 }

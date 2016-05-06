@@ -27,8 +27,10 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
-public class CCEventHandler {
+public class CommonEventHandler {
 
 	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load evt) {
@@ -46,4 +48,21 @@ public class CCEventHandler {
 			world.getGameRules().setOrCreateGameRule("doMobSpawning", String.valueOf(false));
 		}
 	}
+
+	@SubscribeEvent
+	public void onWorldServerTick(TickEvent.WorldTickEvent evt) {
+		ICubicWorldServer world = (ICubicWorldServer) evt.world;
+		//Forge (at least version 11.14.3.1521) doesn't call this event for client world.
+		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
+			world.getLightingManager().tick();
+			world.getGeneratorPipeline().tick();
+			//TODO: Readd block tick
+			//for (ChunkCoordIntPair coords : WorldAccess.getActiveChunkSet(worldServer)) {
+			//	Column column = cubeCache.provideChunk(coords.chunkXPos, coords.chunkZPos);
+			//	column.doRandomTicks();
+			//}
+			//worldServer.profiler.endSection();
+		}
+	}
+
 }

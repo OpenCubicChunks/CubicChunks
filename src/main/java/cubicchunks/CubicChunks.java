@@ -23,9 +23,9 @@
  */
 package cubicchunks;
 
+import cubicchunks.client.ClientEventHandler;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -45,35 +45,27 @@ public class CubicChunks {
 	@Instance(value = MODID)
 	public static CubicChunks instance;
 
-	@SidedProxy(clientSide="cubicchunks.proxy.ClientProxy", serverSide="cubicchunks.proxy.CommonProxy")
+	@SidedProxy(clientSide="cubicchunks.proxy.ClientProxy", serverSide="cubicchunks.proxy.ServerProxy")
 	public static CommonProxy proxy;
 
-	private CCEventHandler evtHandler;
-	private CCFmlEventHandler fmlEvtHandler;
+	private CommonEventHandler evtHandler;
+	private ClientEventHandler fmlEvtHandler;
 	
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
 		LOGGER = e.getModLog();
-		LOGGER.debug("CubicChunks preInitialization begin");
-		PacketDispatcher.registerPackets();
-		proxy.registerEvents();
-		LOGGER.debug("CubicChunks preInitialization end");
 	}
 	
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
-		LOGGER.debug("CubicChunks initialization begin");
+		proxy.registerEvents();
+
 		VanillaCubicChunksWorldType.create();
 		FlatCubicChunksWorldType.create();
 		CustomCubicChunksWorldType.create();
-		LOGGER.debug("CubicChunks registered world types");
-		//TODO: Combine CCEventHandler and CCFmlEventHandler into one class
-		this.evtHandler = new CCEventHandler();
-		this.fmlEvtHandler = new CCFmlEventHandler();
-		
-		MinecraftForge.EVENT_BUS.register(this.evtHandler);
-		MinecraftForge.EVENT_BUS.register(this.fmlEvtHandler);
-		LOGGER.debug("CubicChunks initialization end");
+		LOGGER.debug("Registered world types");
+
+		PacketDispatcher.registerPackets();
 	}
 
 	@EventHandler

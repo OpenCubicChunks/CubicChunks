@@ -41,7 +41,7 @@ public class TestAddressTools {
 			assertEquals(i, AddressTools.getY(AddressTools.getAddress(0, i, 0)));
 		}
 	}
-	
+
 	@Test
 	public void testX() {
 		assertEquals(-2097152, AddressTools.MIN_CUBE_X);

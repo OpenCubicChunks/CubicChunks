@@ -24,12 +24,14 @@
 package cubicchunks.proxy;
 
 import cubicchunks.ICubicChunksWorldType;
+import cubicchunks.client.ClientEventHandler;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ReflectionUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldSettings;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class ClientProxy extends CommonProxy {
@@ -39,11 +41,14 @@ public class ClientProxy extends CommonProxy {
 		// player even when you are on the server! Sounds absurd, but it's true.
 
 		// Solution is to double-check side before returning the player:
-		return (ctx.side.isClient() ? Minecraft.getMinecraft().thePlayer : super.getPlayerEntity(ctx));
+		return (ctx.side.isClient() ?
+				Minecraft.getMinecraft().thePlayer :
+				ctx.getServerHandler().playerEntity);
 	}
 
 	@Override public void registerEvents() {
-
+		super.registerEvents();
+		MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
 	}
 
 	@Override public void setBuildLimit(MinecraftServer server) {

@@ -28,7 +28,6 @@ import cubicchunks.ICubicChunksWorldType;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
-import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
@@ -63,8 +62,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		type.registerWorldGen(this, this.generatorPipeline);
 		this.generatorPipeline.checkStages();
 
-		this.maxBlockY = AddressTools.MAX_BLOCK_Y + 1;
-		this.minBlockY = AddressTools.MIN_BLOCK_Y;
+		this.maxHeight = type.getMaxHeight();
+		this.minHeight = type.getMinHeight();
 	}
 
 	@Override public void generateWorld() {

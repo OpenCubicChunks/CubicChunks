@@ -56,16 +56,11 @@ ext {
 	//used for license header
 	projectName = 'Cubic Chunks Mod'
 	inceptionYear = '2015'
-
-	//versioning related data
-	isFinalBuild = false
-	//-1 means none
-	lastMinorVersion = -1
 }
 
 group = "cubichunks"
 archivesBaseName = "CubicChunks"
-version = getModVersionAndWriteToFile("${git.describe()}", lastMinorVersion, isFinalBuild)
+version = getModVersionAndWriteToFile("${git.describe()}")
 
 minecraft {
 	version = "1.9-12.16.0.1864-1.9"
@@ -173,50 +168,57 @@ jar {
 //returns version string according to this: http://mcforge.readthedocs.org/en/latest/conventions/versioning/
 //format: MCVERSION-MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)
 //rcX and betaX are not implemented yet
-private String getModVersionAndWriteToFile(String describe, int lastMinor, boolean isFinal) {
-	String[] parts = describe.split("-");
-
-	if(parts.length < 2) {
-		System.out.println("Unknown version format: " + describe);
-		//we don't know the version, so return 0.0.0.0
-		return "X.Y-0.0.0.0" + (isFinal ? "-final" : "");
-	}
-	//the first part is MCX.X.X from the TAG
-	if(!parts[0].startsWith("MC")) {
-		System.out.println("Unknown MC version " + describe + " (" + parts[0] + ")");
-		return "X.Y-0.0.0.0" + (isFinal ? "-final" : "");
-	}
-	//strip down the MC part
-	String mcVersion = parts[0].substring("MC".length());
-	//next we have MAJORMOD.MAJORAPI from the TAG
-	//it should contain a dot in the middle
-	if(!parts[1].contains(".")) {
-		System.out.println("Unknown mod version " + describe + " (" + parts[1] + ")");
-		return mcVersion + "-0.0.0.0" + (isFinal ? "-final" : "");
-	}
-	String modAndApiVersion = parts[1];
-	//next we eighter have commit-since-tag or nothing
-	int commitSinceTag = 0;
-	if(parts.length > 2) {
-		try {
-			commitSinceTag = Integer.parseInt(parts[2]);
-		}catch(NumberFormatException ex) {
-			//ignore the error and assume 0
-			ex.printStackTrace();
+private String getModVersion(String describe) {
+	final String baseVersionRegex = "v[0-9]+\\.[0-9]+";
+	final String unknownVersion = String.format("%s-UNKNOWN_VERSION%s", mcVersion, versionSuffix);
+	if (!describe.contains('-')) {
+		//is it the "vX.Y" format?
+		if (describe.matches(baseVersionRegex)) {
+			return String.format("%s-%s.0.0%s", mcVersion, describe, versionSuffix);
 		}
+		return unknownVersion;
+	}
+	//Describe format: vX.Y-build-hash
+	String[] parts = describe.split("-");
+	if (!parts[0].matches(baseVersionRegex)) {
+		return unknownVersion;
+	}
+	if (!parts[1].matches("[0-9]+")) {
+		return unknownVersion;
+	}
+	String mcVersion = mcVersion;
+	String modAndApiVersion = parts[0].substring(1);
+	//next we have commit-since-tag
+	int commitSinceTag;
+	try {
+		commitSinceTag = Integer.parseInt(parts[1]);
+	} catch (NumberFormatException ex) {
+		ex.printStackTrace();
+		return unknownVersion;
 	}
 
 	int minor;
 	int patch;
-	if(lastMinor == -1) {
+	int minorFreeze = -1;
+	if (!(versionMinorFreeze == null || versionMinorFreeze.isEmpty())) {
+		try {
+			minorFreeze = Integer.parseInt(versionMinorFreeze);
+		} catch (NumberFormatException ex) {
+			ex.printStackTrace();
+		}
+	}
+	if (minorFreeze < 0) {
 		minor = commitSinceTag;
 		patch = 0;
 	} else {
-		minor = lastMinor;
-		patch = commitSinceTag - lastMinor;
+		minor = minorFreeze;
+		patch = commitSinceTag - minorFreeze;
 	}
-	String version = String.format("%s-%s.%d.%d%s", mcVersion, modAndApiVersion, minor, patch, isFinal ? "-final" : "");
-
+	String version = String.format("%s-%s.%d.%d%s", mcVersion, modAndApiVersion, minor, patch, versionSuffix);
+	return version;
+}
+private String getModVersionAndWriteToFile(String describe) {
+	String version = getModVersion(describe)
 	//write to file
 	File file = new File("VERSION");
 	PrintWriter pw = null;

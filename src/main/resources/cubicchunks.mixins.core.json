@@ -19,5 +19,8 @@
     "core.client.MixinRegionRenderCache_HeightLimits",
 
     "nocritical.client.MixinViewFrustum_VertViewDistance"
+  ],
+  "server": [
+    "core.server.MixinDedicatedServer_HeightLimits"
   ]
 }

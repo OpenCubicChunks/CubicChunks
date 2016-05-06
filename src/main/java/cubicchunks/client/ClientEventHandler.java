@@ -21,32 +21,14 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.client;
 
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldServer;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
 
-public class CCFmlEventHandler {
-
-	@SubscribeEvent
-	public void onWorldServerTick(TickEvent.WorldTickEvent evt) {
-		ICubicWorldServer world = (ICubicWorldServer) evt.world;
-		//Forge (at least version 11.14.3.1521) doesn't call this event for client world.
-		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
-			world.getLightingManager().tick();
-			world.getGeneratorPipeline().tick();
-			//TODO: Readd block tick
-			//for (ChunkCoordIntPair coords : WorldAccess.getActiveChunkSet(worldServer)) {
-			//	Column column = cubeCache.provideChunk(coords.chunkXPos, coords.chunkZPos);
-			//	column.doRandomTicks();
-			//}
-			//worldServer.profiler.endSection();
-		}
-	}
+public class ClientEventHandler {
 
 	@SubscribeEvent
 	public void onWorldClientTickEvent(TickEvent.ClientTickEvent evt) {

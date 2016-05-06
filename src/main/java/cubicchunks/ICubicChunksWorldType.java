@@ -23,9 +23,24 @@
  */
 package cubicchunks;
 
+import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
 
 public interface ICubicChunksWorldType {
 	void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline);
+
+	/**
+	 * Returns Y position of the bottom block in the world
+	 */
+	default int getMinHeight() {
+		return AddressTools.MIN_BLOCK_Y;
+	}
+
+	/**
+	 * Returns Y position of block above the top block in the world,
+	 */
+	default int getMaxHeight() {
+		return AddressTools.MAX_BLOCK_Y + 1;
+	}
 }

@@ -23,20 +23,21 @@
  */
 package cubicchunks.world.column;
 
+import com.google.common.collect.Iterators;
 import cubicchunks.world.cube.Cube;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.TreeMap;
+import java.util.*;
 
 class CubeMap implements Iterable<Cube> {
 	private final TreeMap<Integer, Cube> cubeMap = new TreeMap<>();
+	private final Map<Integer, Cube> map = new HashMap<>();
 
 	Cube get(int cubeY) {
-		return cubeMap.get(cubeY);
+		return map.get(cubeY);
 	}
 
 	Cube remove(int cubeY) {
+		this.map.remove(cubeY);
 		return cubeMap.remove(cubeY);
 	}
 
@@ -48,6 +49,7 @@ class CubeMap implements Iterable<Cube> {
 			throw new IllegalArgumentException("Cube at " + cubeY + " already exists!");
 		}
 		this.cubeMap.put(cubeY, cube);
+		map.put(cubeY, cube);
 		return true;
 	}
 
@@ -56,15 +58,15 @@ class CubeMap implements Iterable<Cube> {
 	}
 
 	private boolean contains(int cubeY) {
-		return this.cubeMap.containsKey(cubeY);
+		return this.map.containsKey(cubeY);
 	}
 
 	@Override public Iterator<Cube> iterator() {
-		return this.cubeMap.values().iterator();
+		return Iterators.unmodifiableIterator(this.map.values().iterator());
 	}
 
 	public Collection<Cube> all() {
-		return this.cubeMap.values();
+		return Collections.unmodifiableCollection(this.map.values());
 	}
 
 	public boolean isEmpty() {
