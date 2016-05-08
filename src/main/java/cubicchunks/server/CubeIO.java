@@ -115,9 +115,10 @@ CubeIO implements IThreadedFileIO {
 			public void run() {
 				try {
 					ThreadedFileIOBase.getThreadedIOInstance().waitForFinish();
-					CubeIO.this.db.close();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
+				} finally {
+					CubeIO.this.db.close();
 				}
 
 			}
