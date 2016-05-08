@@ -122,7 +122,7 @@ public class WorldEncoder {
 		size++;//isEmpty
 		if(!cube.isEmpty()) {
 			ExtendedBlockStorage storage = cube.getStorage();
-			size += storage.getData().func_186018_a();//.getNumBytes();
+			size += storage.getData().getSerializedSize();
 			size += storage.getBlocklightArray().getData().length;
 			if (!cube.getWorld().getProvider().getHasNoSky()) {
 				size += storage.getSkylightArray().getData().length;
