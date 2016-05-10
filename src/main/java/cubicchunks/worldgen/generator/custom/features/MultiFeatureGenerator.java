@@ -41,7 +41,7 @@ public class MultiFeatureGenerator extends FeatureGenerator {
 
 	@Override
 	public void generate(Random rand, Cube cube, BiomeGenBase biome) {
-		for(int i = 0; i < this.attempts; i++){
+		for (int i = 0; i < this.attempts; i++) {
 			this.gen.generate(rand, cube, biome);
 		}
 	}

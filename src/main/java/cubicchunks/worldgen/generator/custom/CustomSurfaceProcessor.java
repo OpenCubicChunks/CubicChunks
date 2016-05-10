@@ -78,7 +78,7 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 	}
 
 	private void replaceBlocks(final Cube cube) {
-		this.rand.setSeed(41 * this.seed + cube.cubeRandomSeed());
+		this.rand.setSeed(41*this.seed + cube.cubeRandomSeed());
 
 		Cube cubeAbove = this.cache.getCube(cube.getX(), cube.getY() + 1, cube.getZ());
 		BiomeBlockReplacer blockReplacer = new BiomeBlockReplacer(this.rand, cube, cubeAbove);
@@ -91,7 +91,7 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 				int xzCoord = zRel << 4 | xRel;
 
 				// TODO: Reimplement biome block replacement
-				blockReplacer.replaceBlocks(this.biomes[xzCoord], xAbs, zAbs, this.noise[zRel * 16 + xRel]);
+				blockReplacer.replaceBlocks(this.biomes[xzCoord], xAbs, zAbs, this.noise[zRel*16 + xRel]);
 			}
 		}
 	}
@@ -103,8 +103,11 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 
 	private BiomeGenBase[] getCubeBiomeMap(final Cube cube) {
 		// generate biome info. This is a hackjob.
-		return cube.getWorld().getProvider().getBiomeProvider().loadBlockGeneratorData(this.biomes, Coords.cubeToMinBlock(cube.getX()),
-				Coords.cubeToMinBlock(cube.getZ()), 16, 16);
+		return cube.getWorld()
+				.getProvider()
+				.getBiomeProvider()
+				.loadBlockGeneratorData(this.biomes, Coords.cubeToMinBlock(cube.getX()),
+						Coords.cubeToMinBlock(cube.getZ()), 16, 16);
 	}
 
 	private boolean canGenerate(Cube cube) {

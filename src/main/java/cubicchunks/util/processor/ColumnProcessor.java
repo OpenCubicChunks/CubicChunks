@@ -29,11 +29,11 @@ import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 
 public abstract class ColumnProcessor extends QueueProcessor<Long> {
-	
+
 	public ColumnProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 	}
-	
+
 	@Override
 	public void processBatch() {
 		// start processing
@@ -42,12 +42,12 @@ public abstract class ColumnProcessor extends QueueProcessor<Long> {
 			int cubeX = AddressTools.getX(address);
 			int cubeZ = AddressTools.getZ(address);
 			Column column = this.cache.getColumn(cubeX, cubeZ);
-			
+
 			// skip blank columns
 			if (column == null || column instanceof BlankColumn) {
 				continue;
 			}
-			
+
 			// add unsuccessful calculations back onto the queue
 			boolean success = calculate(column);
 			if (success) {
@@ -57,6 +57,6 @@ public abstract class ColumnProcessor extends QueueProcessor<Long> {
 			}
 		}
 	}
-	
+
 	public abstract boolean calculate(Column column);
 }

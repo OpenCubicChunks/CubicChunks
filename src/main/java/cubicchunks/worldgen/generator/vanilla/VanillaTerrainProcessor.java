@@ -42,7 +42,20 @@ import net.minecraft.world.gen.ChunkProviderSettings;
 import java.util.HashSet;
 import java.util.Set;
 
-import static cubicchunks.util.ChunkProviderOverworldAccess.*;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getBiomesForGeneration;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getCaveGenerator;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getMapFeaturesEnabled;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getMineshaftGenerator;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getOceanMonumentGenerator;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getRand;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getRavineGenerator;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getScatteredFeatureGenerator;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getSettings;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getStrongholdGenerator;
+import static cubicchunks.util.ChunkProviderOverworldAccess.getVillageGenerator;
+import static cubicchunks.util.ChunkProviderOverworldAccess.replaceBiomeBlocks;
+import static cubicchunks.util.ChunkProviderOverworldAccess.setBiomesForGeneration;
+import static cubicchunks.util.ChunkProviderOverworldAccess.setBlocksInChunk;
 
 public class VanillaTerrainProcessor extends CubeProcessor {
 	private final ChunkProviderOverworld vanillaGen;
@@ -88,11 +101,12 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 	private void generateVanillaChunk(Cube cube) {
 		int x = cube.getX();
 		int z = cube.getZ();
-		getRand(this.vanillaGen).setSeed((long) x * 341873128712L + (long) z * 132897987541L);
+		getRand(this.vanillaGen).setSeed((long) x*341873128712L + (long) z*132897987541L);
 		ChunkPrimer chunkprimer = new ChunkPrimer();
 
 		setBlocksInChunk(this.vanillaGen, x, z, chunkprimer);
-		BiomeGenBase[] newBiomes = this.world.getBiomeProvider().loadBlockGeneratorData(getBiomesForGeneration(this.vanillaGen), x * 16, z * 16, 16, 16);
+		BiomeGenBase[] newBiomes = this.world.getBiomeProvider()
+				.loadBlockGeneratorData(getBiomesForGeneration(this.vanillaGen), x*16, z*16, 16, 16);
 		setBiomesForGeneration(this.vanillaGen, newBiomes);
 		replaceBiomeBlocks(this.vanillaGen, x, z, chunkprimer, newBiomes);
 
@@ -126,17 +140,17 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 				getOceanMonumentGenerator(this.vanillaGen).generate((World) this.world, x, z, chunkprimer);
 			}
 		}
-		for(int cubeY = 0; cubeY < 16; cubeY++) {
+		for (int cubeY = 0; cubeY < 16; cubeY++) {
 			Cube currCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
 			currCube.setGeneratorStage(GeneratorStage.SURFACE);
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-			for(int localX = 0; localX < 16; localX++) {
-				for(int localY = 0; localY < 16; localY++) {
-					for(int localZ = 0; localZ < 16; localZ++) {
+			for (int localX = 0; localX < 16; localX++) {
+				for (int localY = 0; localY < 16; localY++) {
+					for (int localZ = 0; localZ < 16; localZ++) {
 						int blockY = Coords.localToBlock(cubeY, localY);
 						pos.set(localX, localY, localZ);
 						IBlockState block = chunkprimer.getBlockState(localX, blockY, localZ);
-						if(block.getBlock() == Blocks.BEDROCK) {
+						if (block.getBlock() == Blocks.BEDROCK) {
 							block = Blocks.STONE.getDefaultState();
 						}
 						currCube.setBlockForGeneration(pos, block);

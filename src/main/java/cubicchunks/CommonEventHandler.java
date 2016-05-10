@@ -34,14 +34,14 @@ public class CommonEventHandler {
 
 	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load evt) {
-		if(!(evt.getWorld().getWorldType() instanceof ICubicChunksWorldType) ||
+		if (!(evt.getWorld().getWorldType() instanceof ICubicChunksWorldType) ||
 				evt.getWorld().provider.getDimension() != 0) {
 			return;
 		}
 		CubicChunks.LOGGER.info("Initializing world " + evt.getWorld() + " with type " + evt.getWorld().getWorldType());
 		ICubicWorld world = (ICubicWorld) evt.getWorld();
 		world.initCubicWorld();
-		if(world instanceof ICubicWorldServer) {
+		if (world instanceof ICubicWorldServer) {
 			ICubicWorldServer worldServer = (ICubicWorldServer) world;
 			worldServer.generateWorld();
 			//TODO: Fix mob spawning

@@ -27,19 +27,19 @@ import java.util.Collection;
 import java.util.Iterator;
 
 public class ArrayBatchedQueue<T> extends ArrayDequeHashSet<T> {
-	
+
 	private static final long serialVersionUID = 542092146475009002L;
 
 	public void getBatch(Collection<T> out, int size) {
 		Iterator<T> it = iterator();
-		for (int i=0; it.hasNext() && i < size; i++) {
+		for (int i = 0; it.hasNext() && i < size; i++) {
 			T v = it.next();
 			assert v != null;
 			out.add(v);
 			it.remove();
 		}
 	}
-	
+
 	public void getAll(Collection<T> out) {
 		out.addAll(this);
 		this.clear();

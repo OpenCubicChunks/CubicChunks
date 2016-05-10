@@ -30,14 +30,14 @@ import net.minecraft.util.math.MathHelper;
 
 public class Coords {
 	public static final int CUBE_SIZE = 16;
-	
+
 	public static final int CUBE_MAX_X = CUBE_SIZE;
 	public static final int CUBE_MAX_Y = CUBE_SIZE;
 	public static final int CUBE_MAX_Z = CUBE_SIZE;
-	
-	public static final int HALF_CUBE_MAX_X = CUBE_MAX_X / 2;
-	public static final int HALF_CUBE_MAX_Y = CUBE_MAX_Y / 2;
-	public static final int HALF_CUBE_MAX_Z = CUBE_MAX_Z / 2;
+
+	public static final int HALF_CUBE_MAX_X = CUBE_MAX_X/2;
+	public static final int HALF_CUBE_MAX_Y = CUBE_MAX_Y/2;
+	public static final int HALF_CUBE_MAX_Z = CUBE_MAX_Z/2;
 
 	public static int blockToLocal(int val) {
 		return val & 0xf;
@@ -74,9 +74,9 @@ public class Coords {
 
 	public static BlockPos getCubeCenter(Cube cube) {
 		return new BlockPos(
-			cubeToMinBlock(cube.getX()) + 8, 
-			cubeToMinBlock(cube.getY()) + 8,
-			cubeToMinBlock(cube.getZ()) + 8
+				cubeToMinBlock(cube.getX()) + 8,
+				cubeToMinBlock(cube.getY()) + 8,
+				cubeToMinBlock(cube.getZ()) + 8
 		);
 	}
 

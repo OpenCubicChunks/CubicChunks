@@ -28,7 +28,7 @@ import java.util.Random;
 public class MathUtil {
 
 	public static double lerp(final double a, final double min, final double max) {
-		return min + a * (max - min);
+		return min + a*(max - min);
 	}
 
 	public static int randRange(Random rand, int start, int end) {

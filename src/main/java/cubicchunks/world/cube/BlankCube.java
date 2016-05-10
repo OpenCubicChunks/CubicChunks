@@ -41,7 +41,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import java.util.List;
 
 /**
- * Cube implementation used clientside used when cube is not loaded. 
+ * Cube implementation used clientside used when cube is not loaded.
  * It does nothing. Contains only Blocks.AIR.
  */
 public class BlankCube extends Cube {
@@ -49,75 +49,75 @@ public class BlankCube extends Cube {
 	public BlankCube(ICubicWorld world, Column column) {
 		super(world, column, 0, 0, 0, false);
 	}
-	
+
 	@Override
 	public boolean isEmpty() {
 		return true;
 	}
-	
+
 	@Override
 	public void setEmpty(boolean isEmpty) {}
-	
+
 	@Override
 	public GeneratorStage getGeneratorStage() {
 		//if client has it - it must be LIVE
 		return GeneratorStage.LIVE;
 	}
-	
+
 	@Override
 	public void setGeneratorStage(GeneratorStage val) {}
-	
+
 	@Override
 	public long getAddress() {
 		return 0;
 	}
-	
+
 	@Override
 	public boolean containsBlockPos(BlockPos blockPos) {
 		return false;
 	}
-	
+
 	@Override
 	public ExtendedBlockStorage getStorage() {
 		return null;
 	}
-	
+
 	@Override
 	public Block getBlockAt(final BlockPos pos) {
 		return Blocks.AIR;
 	}
-	
+
 	@Override
 	public Block getBlockAt(final int localX, final int localY, final int localZ) {
 		return Blocks.AIR;
 	}
-	
+
 	@Override
 	public IBlockState getBlockState(BlockPos pos) {
 		return Blocks.AIR.getDefaultState();
 	}
-	
+
 	@Override
 	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
 		return Blocks.AIR.getDefaultState();
 	}
-	
+
 	@Override
 	public void setBlockStateDirect(BlockPos pos, IBlockState newBlockState) {}
-	
+
 	@Override
 	public IBlockState setBlockForGeneration(BlockPos blockOrLocalPos, IBlockState newBlockState) {
 		throw new UnsupportedOperationException("Eighter someone used BlankCube on server or someone generates generator on client.");
 	}
-	
+
 	@Override
 	public boolean hasBlocks() {
 		return false;
 	}
-	
+
 	@Override
 	public void addEntity(Entity entity) {}
-	
+
 	@Override
 	public boolean removeEntity(Entity entity) {
 		return false;
@@ -133,51 +133,51 @@ public class BlankCube extends Cube {
 	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
 		return null;
 	}
-	
+
 	@Override
 	public void addTileEntity(BlockPos pos, TileEntity blockEntity) {}
-	
+
 	@Override
 	public void removeTileEntity(BlockPos pos) {}
-	
+
 	@Override
 	public void onLoad() {}
-	
+
 	@Override
 	public void onUnload() {}
-	
+
 	@Override
 	public boolean needsSaving() {
 		return false;
 	}
-	
+
 	@Override
 	public void markSaved() {
 	}
-	
+
 	@Override
 	public boolean isUnderground(BlockPos pos) {
 		return false;
 	}
-	
+
 	@Override
 	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
 		//TODO: BlankCube.getLightSubtracted - is it correct?
 		return 15 - skyLightDampeningTerm;
 	}
-	
+
 	@Override
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
 		//TODO: BlankCube.getLightFor - maybe return 0?
 		return 15;
 	}
-	
+
 	@Override
 	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {}
-	
+
 	@Override
 	public void doRandomTicks() {}
-	
+
 	@Override
 	public void markForRenderUpdate() {}
 }

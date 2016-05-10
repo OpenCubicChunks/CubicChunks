@@ -44,7 +44,7 @@ class SkyLightCubeDiffuseCalculator {
 	}
 
 	static boolean calculate(Column column, int localX, int localZ, int cubeY, int minYLocal, int maxYLocal) {
-		if(column instanceof BlankColumn || column.getCube(cubeY) == null) {
+		if (column instanceof BlankColumn || column.getCube(cubeY) == null) {
 			return true;
 		}
 		// update this block and its xz neighbors
@@ -56,11 +56,11 @@ class SkyLightCubeDiffuseCalculator {
 		World world = column.getWorld();
 
 
-		//check at mincube Y and max cube Y
-		if(!world.isAreaLoaded(new BlockPos(blockX, minY, blockZ), LOADED_BLOCKS_MIN_RADIUS, false)) {
+		//check at min cube Y and max cube Y
+		if (!world.isAreaLoaded(new BlockPos(blockX, minY, blockZ), LOADED_BLOCKS_MIN_RADIUS, false)) {
 			return false;
 		}
-		if(!world.isAreaLoaded(new BlockPos(blockX, maxY, blockZ), LOADED_BLOCKS_MIN_RADIUS, false)) {
+		if (!world.isAreaLoaded(new BlockPos(blockX, maxY, blockZ), LOADED_BLOCKS_MIN_RADIUS, false)) {
 			return false;
 		}
 

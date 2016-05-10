@@ -49,16 +49,16 @@ public class BiomeFeatures {
 		this.world = world;
 		this.generators = new ArrayList<>(20);
 		BiomeDecorator decorator = biome.theBiomeDecorator;
-		
+
 		ChunkProviderSettings config = ChunkProviderSettings.Factory.jsonToFactory(
 				WorldProviderAccess.getGeneratorSettings(world.getProvider())).build();
-		
+
 		//clay worldgen
 		this.addMultiGen(SurfaceBlockReplacer.builder().
-						world(world).height(1).radius(2).block(Blocks.CLAY).
-						addAllowedAboveSurface(Blocks.WATER).
-						addReplacable(Blocks.SAND).addReplacable(Blocks.DIRT).build(), decorator.clayPerChunk);
-		
+				world(world).height(1).radius(2).block(Blocks.CLAY).
+				addAllowedAboveSurface(Blocks.WATER).
+				addReplacable(Blocks.SAND).addReplacable(Blocks.DIRT).build(), decorator.clayPerChunk);
+
 		//sand and gravel beach generators
 //		this.addMultiGen(SurfaceBlockReplacer.builder().
 //						world(world).height(1).radius(7).block(SAND).
@@ -78,20 +78,20 @@ public class BiomeFeatures {
 		TreeGenerator smallTreeGen = new SimpleTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
 		BigTreeGenerator bigTreeGen2 = new BigTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
 		bigTreeGen2.setHeightRange(28, 32);
-		
+
 		VariantFeatureGenerator randomTreeGen = VariantFeatureGenerator.builder()
-						.nextVariant(smallTreeGen, 1.0)
-						.build();
-		
+				.nextVariant(smallTreeGen, 1.0)
+				.build();
+
 //		addMultiGen(randomTreeGen, decorator.treesPerChunk);
-		addMultiGen(bigTreeGen2, decorator.treesPerChunk / 10);
+		addMultiGen(bigTreeGen2, decorator.treesPerChunk/10);
 	}
-	
+
 	protected final void addOreGenerators(ChunkProviderSettings cfg) {
 		// it automatically scales with world height.
 		// if min height is 0 - it assumes that there is no lower limit
 		// if max height is 128 or 256 - it assumes there is no upper limit
-		
+
 		//ores
 		addMineral(Blocks.COAL_ORE, cfg.coalMinHeight, cfg.coalMaxHeight, cfg.coalSize, cfg.coalCount);
 		addMineral(Blocks.IRON_ORE, cfg.ironMinHeight, cfg.ironMaxHeight, cfg.ironSize, cfg.ironCount);
@@ -101,37 +101,37 @@ public class BiomeFeatures {
 
 		//stone variants
 		IBlockState stone = Blocks.STONE.getDefaultState();
-		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE), 
-						cfg.andesiteMinHeight, cfg.andesiteMaxHeight, cfg.andesiteSize, cfg.andesiteCount);
-		
-		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE), 
-						cfg.dioriteMinHeight, cfg.dioriteMaxHeight, cfg.dioriteSize, cfg.dioriteCount);
-		
-		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE), 
-						cfg.graniteMinHeight, cfg.graniteMaxHeight, cfg.graniteSize, cfg.graniteCount);
+		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE),
+				cfg.andesiteMinHeight, cfg.andesiteMaxHeight, cfg.andesiteSize, cfg.andesiteCount);
+
+		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE),
+				cfg.dioriteMinHeight, cfg.dioriteMaxHeight, cfg.dioriteSize, cfg.dioriteCount);
+
+		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE),
+				cfg.graniteMinHeight, cfg.graniteMaxHeight, cfg.graniteSize, cfg.graniteCount);
 
 		//other
 		addMineral(Blocks.DIRT, cfg.dirtMinHeight, cfg.dirtMaxHeight, cfg.dirtSize, cfg.dirtCount);
 //		addMineral(GRAVEL, cfg.gravelMinHeight, cfg.gravelMaxHeight, cfg.gravelSize, cfg.gravelCount);
 	}
 
-	protected final void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
-		addMultiGen(new MineralGenerator(world, 
-						state, 
-						getMinHeight(vanillaMinHeight),
-						getMaxHeight(vanillaMaxHeight), 
-						size, 
-						getProbability(vanillaMinHeight, vanillaMaxHeight)), countPerChunk);
+	protected final void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk) {
+		addMultiGen(new MineralGenerator(world,
+				state,
+				getMinHeight(vanillaMinHeight),
+				getMaxHeight(vanillaMaxHeight),
+				size,
+				getProbability(vanillaMinHeight, vanillaMaxHeight)), countPerChunk);
 	}
-	
-	protected final void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk){
+
+	protected final void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk) {
 		this.addMineral(block.getDefaultState(), vanillaMinHeight, vanillaMaxHeight, size, countPerChunk);
 	}
 
 	protected final void addGen(FeatureGenerator gen) {
 		this.generators.add(gen);
 	}
-	
+
 	protected final void addMultiGen(FeatureGenerator gen, int attempts) {
 		this.generators.add(new MultiFeatureGenerator(this.world, gen, attempts));
 	}
@@ -139,13 +139,13 @@ public class BiomeFeatures {
 	public Collection<FeatureGenerator> getBiomeFeatureGenerators() {
 		return generators;
 	}
-	
+
 	private static double getMinHeight(int vanillaHeight) {
 		if (vanillaHeight == 0) {
 			// extend down to infinity
 			return -Double.MAX_VALUE;
 		}
-		return (vanillaHeight - 64.0) / 64.0;
+		return (vanillaHeight - 64.0)/64.0;
 	}
 
 	private static double getMaxHeight(int vanillaHeight) {
@@ -153,10 +153,10 @@ public class BiomeFeatures {
 			// extend up to infinity
 			return Double.MAX_VALUE;
 		}
-		return (vanillaHeight - 64.0) / 64.0;
+		return (vanillaHeight - 64.0)/64.0;
 	}
 
 	private static double getProbability(int minY, int maxY) {
-		return 16.0 / (maxY - minY);
+		return 16.0/(maxY - minY);
 	}
 }

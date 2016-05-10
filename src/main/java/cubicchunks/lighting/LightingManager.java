@@ -57,7 +57,7 @@ public class LightingManager {
 				Set<Integer> toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
 				for (int cubeY : toDiffuse) {
 					boolean success = SkyLightCubeDiffuseCalculator.calculate(column, localX, localZ, cubeY);
-					if(!success) {
+					if (!success) {
 						CubicChunks.LOGGER.warn("Diffuse lighting update at ({}, {}/{}, {}): needed cubes not loaded. Adding to queue.",
 								Coords.localToBlock(column.getX(), localX),
 								Coords.cubeToMinBlock(cubeY), Coords.cubeToMaxBlock(cubeY),
@@ -90,7 +90,8 @@ public class LightingManager {
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (numProcessed > 0) {
-			CubicChunks.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.", this.world.isRemote() ? "CLIENT" : "SERVER", numProcessed, timeDiff));
+			CubicChunks.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.",
+					this.world.isRemote() ? "CLIENT" : "SERVER", numProcessed, timeDiff));
 			CubicChunks.LOGGER.info(this.skylightCubeDiffuseProcessor.getProcessingReport());
 			CubicChunks.LOGGER.info(this.firstLightProcessor.getProcessingReport());
 		}

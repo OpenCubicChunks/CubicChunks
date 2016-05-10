@@ -27,64 +27,65 @@ import net.minecraft.util.math.BlockPos;
 
 import java.util.TreeMap;
 
-public class CubeBlockMap<T> extends TreeMap<Integer,T> {
-	
+public class CubeBlockMap<T> extends TreeMap<Integer, T> {
+
 	private static final long serialVersionUID = -356507892710221222L;
-	
+
 	// each coordinate is only 4 bits since a chunk is 16x16x16
 	private static final int XSize = 4;
 	private static final int YSize = 4;
 	private static final int ZSize = 4;
-	
+
 	private static final int ZOffset = 0;
 	private static final int YOffset = ZOffset + ZSize;
 	private static final int XOffset = YOffset + YSize;
-	
+
 	public T put(BlockPos pos, T val) {
 		int x = Coords.blockToLocal(pos.getX());
 		int y = Coords.blockToLocal(pos.getY());
 		int z = Coords.blockToLocal(pos.getZ());
 		return put(x, y, z, val);
 	}
-	
+
 	public T put(int x, int y, int z, T val) {
 		return put(getKey(x, y, z), val);
 	}
-	
+
 	public T get(BlockPos pos) {
 		int x = Coords.blockToLocal(pos.getX());
 		int y = Coords.blockToLocal(pos.getY());
 		int z = Coords.blockToLocal(pos.getZ());
 		return get(x, y, z);
 	}
-	
+
 	public T get(int x, int y, int z) {
 		return get(getKey(x, y, z));
 	}
-	
+
 	public T remove(BlockPos pos) {
 		int x = Coords.blockToLocal(pos.getX());
 		int y = Coords.blockToLocal(pos.getY());
 		int z = Coords.blockToLocal(pos.getZ());
 		return remove(x, y, z);
 	}
-	
+
 	public T remove(int x, int y, int z) {
 		return remove(getKey(x, y, z));
 	}
-	
+
 	private int getKey(int x, int y, int z) {
-		return Bits.packSignedToInt(x, XSize, XOffset) | Bits.packSignedToInt(y, YSize, YOffset) | Bits.packSignedToInt(z, ZSize, ZOffset);
+		return Bits.packSignedToInt(x, XSize, XOffset) | Bits.packSignedToInt(y, YSize, YOffset) |
+				Bits.packSignedToInt(z, ZSize, ZOffset);
 	}
-	
+
 	public int getKeyX(int key) {
 		return Bits.unpackSigned(key, XSize, XOffset);
 	}
-	
+
 	public int getKeyY(int key) {
 		return Bits.unpackSigned(key, YSize, YOffset);
 	}
-	
+
 	public int getKeyZ(int key) {
 		return Bits.unpackSigned(key, ZSize, ZOffset);
 	}

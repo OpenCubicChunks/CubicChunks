@@ -39,13 +39,13 @@ public class Mappings {
 	static {
 		String location = System.getProperty("net.minecraftforge.gradle.GradleStart.srg.srg-mcp");
 		IS_DEV = location != null;
-		if(IS_DEV) {
+		if (IS_DEV) {
 			initMappings(location);
 		}
 	}
 
 	public static String getNameFromSrg(String srgName) {
-		if(IS_DEV) {
+		if (IS_DEV) {
 			String result = srgToMcp.get(srgName);
 			return result == null ? srgName : result;
 		}
@@ -53,8 +53,8 @@ public class Mappings {
 	}
 
 	private static void initMappings(String property) {
-		try(Scanner scanner = new Scanner(new File(property))) {
-			while(scanner.hasNextLine()) {
+		try (Scanner scanner = new Scanner(new File(property))) {
+			while (scanner.hasNextLine()) {
 				String line = scanner.nextLine();
 				parseLine(line);
 			}
@@ -64,10 +64,10 @@ public class Mappings {
 	}
 
 	private static void parseLine(String line) {
-		if(line.startsWith("FD: ")) {
+		if (line.startsWith("FD: ")) {
 			parseField(line.substring("FD: ".length()));
 		}
-		if(line.startsWith("MD: ")) {
+		if (line.startsWith("MD: ")) {
 			parseMethod(line.substring("MD: ".length()));
 		}
 	}
@@ -78,12 +78,12 @@ public class Mappings {
 		final int SRG_NAME = 0, SRG_DESC = 1, MCP_NAME = 2, MCP_DESC = 3;
 
 		int lastIndex = s[SRG_NAME].lastIndexOf('/') + 1;
-		if(lastIndex < 0) lastIndex = 0;
+		if (lastIndex < 0) lastIndex = 0;
 
 		s[SRG_NAME] = s[SRG_NAME].substring(lastIndex);
 
 		lastIndex = s[MCP_NAME].lastIndexOf("/") + 1;
-		if(lastIndex < 0) lastIndex = 0;
+		if (lastIndex < 0) lastIndex = 0;
 
 		s[MCP_NAME] = s[MCP_NAME].substring(lastIndex);
 
@@ -91,19 +91,19 @@ public class Mappings {
 	}
 
 	private static void parseField(String str) {
-		if(!str.contains(" ")) {
+		if (!str.contains(" ")) {
 			return;
 		}
 		String[] s = str.split(" ");
 		assert s.length == 2;
 
 		int lastIndex = s[0].lastIndexOf('/') + 1;
-		if(lastIndex < 0) lastIndex = 0;
+		if (lastIndex < 0) lastIndex = 0;
 
 		s[0] = s[0].substring(lastIndex);
 
 		lastIndex = s[1].lastIndexOf("/") + 1;
-		if(lastIndex < 0) lastIndex = 0;
+		if (lastIndex < 0) lastIndex = 0;
 
 		s[1] = s[1].substring(lastIndex);
 

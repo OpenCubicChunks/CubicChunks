@@ -37,7 +37,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 /**
  * Modifies ChunkCache to support extended world height.
- *
+ * <p>
  * ChunkCache is used by some AI code and (as subclass of ChunkCache) - block rendering code.
  * getBlockState is used only in AI code.
  */

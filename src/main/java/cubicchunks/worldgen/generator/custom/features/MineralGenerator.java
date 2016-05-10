@@ -52,12 +52,9 @@ public class MineralGenerator extends FeatureGenerator {
 	 * <li>1 - seaLevel+maxTerrainHeight
 	 * </ul>
 	 *
-	 * @param minY
-	 *            Minimum generation height
-	 * @param maxY
-	 *            Maximum generation height
-	 * @param size
-	 *            Maximum vein size
+	 * @param minY Minimum generation height
+	 * @param maxY Maximum generation height
+	 * @param size Maximum vein size
 	 */
 	public MineralGenerator(final ICubicWorld world, final IBlockState state, final double minY, final double maxY,
 	                        final int size, final double probability) {
@@ -73,8 +70,8 @@ public class MineralGenerator extends FeatureGenerator {
 	public void generate(final Random rand, final Cube cube, final BiomeGenBase biome) {
 		BlockPos cubeCenter = Coords.getCubeCenter(cube);
 
-		double maxBlockY = this.maxY * GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
-		double minBlockY = this.minY * GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
+		double maxBlockY = this.maxY*GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
+		double minBlockY = this.minY*GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
 
 		if (rand.nextDouble() > this.probability) {
 			return;

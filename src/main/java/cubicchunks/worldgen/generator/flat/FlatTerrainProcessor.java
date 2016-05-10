@@ -39,20 +39,20 @@ public class FlatTerrainProcessor extends CubeProcessor {
 	}
 
 	@Override public Set<Cube> calculate(Cube cube) {
-		if(cube.getY() >= 0) {
+		if (cube.getY() >= 0) {
 			return Sets.newHashSet(cube);
 		}
-		if(cube.getY() == -1) {
+		if (cube.getY() == -1) {
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-			for(int x = 0; x < 16; x++) {
-				for(int z = 0; z < 16; z++) {
+			for (int x = 0; x < 16; x++) {
+				for (int z = 0; z < 16; z++) {
 					pos.set(x, 15, z);
 					cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
-					for(int y = 14; y >= 10; y--) {
+					for (int y = 14; y >= 10; y--) {
 						pos.set(x, y, z);
 						cube.setBlockForGeneration(pos, Blocks.DIRT.getDefaultState());
 					}
-					for(int y = 9; y >= 0; y--) {
+					for (int y = 9; y >= 0; y--) {
 						pos.set(x, y, z);
 						cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
 					}
@@ -61,9 +61,9 @@ public class FlatTerrainProcessor extends CubeProcessor {
 			return Sets.newHashSet(cube);
 		}
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-		for(int x = 0; x < 16; x++) {
-			for(int z = 0; z < 16; z++) {
-				for(int y = 0; y < 16; y++) {
+		for (int x = 0; x < 16; x++) {
+			for (int z = 0; z < 16; z++) {
+				for (int y = 0; y < 16; y++) {
 					pos.set(x, y, z);
 					cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
 				}

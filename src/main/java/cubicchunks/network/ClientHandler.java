@@ -43,7 +43,9 @@ import net.minecraft.util.text.ITextComponent;
 
 import java.io.IOException;
 
-import static cubicchunks.util.AddressTools.*;
+import static cubicchunks.util.AddressTools.getX;
+import static cubicchunks.util.AddressTools.getY;
+import static cubicchunks.util.AddressTools.getZ;
 
 public class ClientHandler implements INetHandler {
 
@@ -119,7 +121,6 @@ public class ClientHandler implements INetHandler {
 	}
 
 	public void handle(final PacketUnloadCube packet) {
-
 		IThreadListener taskQueue = Minecraft.getMinecraft();
 		if (!taskQueue.isCallingFromMinecraftThread()) {
 			taskQueue.addScheduledTask(() -> handle(packet));
@@ -138,7 +139,6 @@ public class ClientHandler implements INetHandler {
 	}
 
 	public void handle(final PacketUnloadColumn packet) {
-
 		IThreadListener taskQueue = Minecraft.getMinecraft();
 		if (!taskQueue.isCallingFromMinecraftThread()) {
 			taskQueue.addScheduledTask(() -> handle(packet));
@@ -156,7 +156,6 @@ public class ClientHandler implements INetHandler {
 	}
 
 	public void handle(final PacketCubeChange packet) {
-
 		IThreadListener taskQueue = Minecraft.getMinecraft();
 		if (!taskQueue.isCallingFromMinecraftThread()) {
 			taskQueue.addScheduledTask(() -> handle(packet));
@@ -185,7 +184,6 @@ public class ClientHandler implements INetHandler {
 	}
 
 	public void handle(final PacketCubeBlockChange packet) {
-
 		IThreadListener taskQueue = Minecraft.getMinecraft();
 		if (!taskQueue.isCallingFromMinecraftThread()) {
 			taskQueue.addScheduledTask(() -> handle(packet));

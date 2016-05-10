@@ -39,14 +39,14 @@ import net.minecraft.world.biome.BiomeGenBase;
 import java.util.Random;
 
 public class BigTreeGenerator extends TreeGenerator {
-	
-	static final byte COORD_PAIRS[] = { 2, 0, 0, 1, 2, 1 };
-	
+
+	static final byte COORD_PAIRS[] = {2, 0, 0, 1, 2, 1};
+
 	protected final Random rand;
 	protected int rootRand;
 	protected int rootAlt;
 	protected int tapRootRand;
-	int basePos[] = { 0, 0, 0 };
+	int basePos[] = {0, 0, 0};
 	int heightLimit;
 	int height;
 	double heightAttenuation;
@@ -85,15 +85,15 @@ public class BigTreeGenerator extends TreeGenerator {
 
 	private boolean generateLeafNodeList() {
 		// calculate trunk height
-		height = (int) (heightLimit * heightAttenuation);
+		height = (int) (heightLimit*heightAttenuation);
 		// minimal 1 block branch height
 		if (height >= heightLimit)
 			height = heightLimit - 1;
-		int i = (int) (1.3819999999999999D + Math.pow((field_872_k * heightLimit) / 13D, 2D));
+		int i = (int) (1.3819999999999999D + Math.pow((field_872_k*heightLimit)/13D, 2D));
 		if (i < 1) {
 			i = 1;
 		}
-		int ai[][] = new int[i * heightLimit][4];
+		int ai[][] = new int[i*heightLimit][4];
 		int j = (basePos[1] + heightLimit) - leafDistanceLimit;
 		int k = 1;
 		int l = basePos[1] + height;
@@ -107,7 +107,7 @@ public class BigTreeGenerator extends TreeGenerator {
 		while (i1 >= 0) {
 			int j1 = 0;
 			float f = growBranches(i1); // Conditional AND branch length factor.
-			if (k >= i * heightLimit)
+			if (k >= i*heightLimit)
 				f = -1.0F;
 			if (f < 0.0F) { // not time to grow branches
 				j--;
@@ -117,19 +117,19 @@ public class BigTreeGenerator extends TreeGenerator {
 				double d = 0.5D;
 				for (; j1 < i; j1++) {
 					// branch length
-					double d1 = branchLength * (f * (rand.nextFloat() + 0.32800000000000001D));
+					double d1 = branchLength*(f*(rand.nextFloat() + 0.32800000000000001D));
 					// if(d1 > 8D) d1 = 8D;
 					// if(d1 < -5D) d1 = -5D;
 					// branch angle (around trunk)
-					double d2 = rand.nextFloat() * 2D * 3.1415899999999999D;
-					int k1 = MathHelper.floor_double(d1 * Math.sin(d2) + basePos[0] + d);
-					int l1 = MathHelper.floor_double(d1 * Math.cos(d2) + basePos[2] + d);
-					int ai1[] = { k1, j, l1 };
-					int ai2[] = { k1, j + leafDistanceLimit, l1 };
+					double d2 = rand.nextFloat()*2D*3.1415899999999999D;
+					int k1 = MathHelper.floor_double(d1*Math.sin(d2) + basePos[0] + d);
+					int l1 = MathHelper.floor_double(d1*Math.cos(d2) + basePos[2] + d);
+					int ai1[] = {k1, j, l1};
+					int ai2[] = {k1, j + leafDistanceLimit, l1};
 					if (checkBlockLine(ai1, ai2) != -1) {
 						continue;
 					}
-					int ai3[] = { basePos[0], basePos[1], basePos[2] };
+					int ai3[] = {basePos[0], basePos[1], basePos[2]};
 					// double d3 = Math.sqrt(Math.pow(Math.abs(basePos[0] -
 					// ai1[0]), 2D) + Math.pow(Math.abs(basePos[2] - ai1[2]),
 					// 2D));
@@ -166,13 +166,13 @@ public class BigTreeGenerator extends TreeGenerator {
 		int i1 = (int) (f + 0.61799999999999999D);
 		byte byte1 = COORD_PAIRS[byte0];
 		byte byte2 = COORD_PAIRS[byte0 + 3];
-		int ai[] = { x, y, z };
-		int ai1[] = { 0, 0, 0 };
+		int ai[] = {x, y, z};
+		int ai1[] = {0, 0, 0};
 		int j1 = -i1;
 		ai1[byte0] = ai[byte0];
 		for (; j1 <= i1; j1++) {
 			ai1[byte1] = ai[byte1] + j1;
-			for (int l1 = -i1; l1 <= i1;) {
+			for (int l1 = -i1; l1 <= i1; ) {
 				double d = Math.sqrt(Math.pow(Math.abs(j1) + 0.5D, 2D)
 						+ Math.pow(Math.abs(l1) + 0.5D, 2D));
 				if (d > f) {
@@ -207,22 +207,22 @@ public class BigTreeGenerator extends TreeGenerator {
 		}
 		// Branch tips have to be at least 30% up the tree.
 		if (trunkSize < 3) {
-			if (i < heightLimit * 0.29999999999999999D) {
+			if (i < heightLimit*0.29999999999999999D) {
 				return -1.618F;
 			}
 		}
 		if (trunkSize == 3) {
-			if (i < heightLimit * 0.19999999999999999D) {
+			if (i < heightLimit*0.19999999999999999D) {
 				return -1.618F;
 			}
 		}
 		if (trunkSize == 4) {
-			if (i < heightLimit * 0.15999999999999999D) {
+			if (i < heightLimit*0.15999999999999999D) {
 				return -1.618F;
 			}
 		}
-		float f = heightLimit / 2.0F;
-		float f1 = heightLimit / 2.0F - i;
+		float f = heightLimit/2.0F;
+		float f1 = heightLimit/2.0F - i;
 		float f2;
 		if (f1 == 0.0F) {
 			// If at middle of tree, pass.
@@ -259,7 +259,7 @@ public class BigTreeGenerator extends TreeGenerator {
 
 	// GENERATES WOOD BLOCKS FROM ai TO ai1 (used by trunk and branch)
 	void placeBlockLine(int ai[], int ai1[]) {
-		int ai2[] = { 0, 0, 0 };
+		int ai2[] = {0, 0, 0};
 		byte byte0 = 0;
 		int j = 0;
 		for (; byte0 < 3; byte0++) {
@@ -280,14 +280,14 @@ public class BigTreeGenerator extends TreeGenerator {
 		} else {
 			byte3 = -1;
 		}
-		double d = (double) ai2[byte1] / (double) ai2[j];
-		double d1 = (double) ai2[byte2] / (double) ai2[j];
-		int ai3[] = { 0, 0, 0 };
+		double d = (double) ai2[byte1]/(double) ai2[j];
+		double d1 = (double) ai2[byte2]/(double) ai2[j];
+		int ai3[] = {0, 0, 0};
 		int k = 0;
 		for (int l = ai2[j] + byte3; k != l; k += byte3) {
 			ai3[j] = MathHelper.floor_double(ai[j] + k + 0.5D);
-			ai3[byte1] = MathHelper.floor_double(ai[byte1] + k * d + 0.5D);
-			ai3[byte2] = MathHelper.floor_double(ai[byte2] + k * d1 + 0.5D);
+			ai3[byte1] = MathHelper.floor_double(ai[byte1] + k*d + 0.5D);
+			ai3[byte2] = MathHelper.floor_double(ai[byte2] + k*d1 + 0.5D);
 			this.setBlockOnly(new BlockPos(ai3[0], ai3[1], ai3[2]), this.woodBlock);
 			// worldObj.setBlock(ai3[0], ai3[1], ai3[2], i);
 		}
@@ -310,7 +310,7 @@ public class BigTreeGenerator extends TreeGenerator {
 	boolean leafNodeNeedsBase(int i) {
 		if (trunkSize != 2)
 			return true;
-		return i >= heightLimit * 0.20000000000000001D;
+		return i >= heightLimit*0.20000000000000001D;
 	}
 
 	// GENERATES TRUNK
@@ -327,8 +327,8 @@ public class BigTreeGenerator extends TreeGenerator {
 		// if(trunksize == 2) j = j + 1;
 		int k = basePos[1] + height + 2;
 		int l = basePos[2];
-		int ai[] = { i, j, l };
-		int ai1[] = { i, k, l };
+		int ai[] = {i, j, l};
+		int ai1[] = {i, k, l};
 		// Create various trunk sizes.
 		/*
 		 * placeBlockLine(ai, ai1, 17); if(trunkSize == 2) { ai[0]++; ai1[0]++;
@@ -341,35 +341,35 @@ public class BigTreeGenerator extends TreeGenerator {
 		if (trunkSize == 2) {
 			rootAlt = 0;
 			growTapRoot(ai[0], ai[1], ai[2], 1.0);
-			growRoot(ai[0], ai[1] - 2, ai[2], 5.0 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] - 2, ai[2], 5.0/8.0, -1.0/16.0);
 			rootAlt = 1;
-			growRoot(ai[0], ai[1], ai[2], 5.7 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1], ai[2], 5.7/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 			ai[0]++;
 			ai1[0]++;
 			growTapRoot(ai[0], ai[1], ai[2], 1.0);
-			growRoot(ai[0], ai[1], ai[2], 6.3 / 8.0, -1.0 / 16.0);
-			growRoot(ai[0], ai[1] - 2, ai[2], 7.0 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1], ai[2], 6.3/8.0, -1.0/16.0);
+			growRoot(ai[0], ai[1] - 2, ai[2], 7.0/8.0, -1.0/16.0);
 			rootAlt = 1;
-			growRoot(ai[0], ai[1], ai[2], 7.7 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1], ai[2], 7.7/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 			ai[2]++;
 			ai1[2]++;
 			growTapRoot(ai[0], ai[1], ai[2], 1.0);
-			growRoot(ai[0], ai[1], ai[2], 0.3 / 8.0, -1.0 / 16.0);
-			growRoot(ai[0], ai[1] - 2, ai[2], 1.0 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1], ai[2], 0.3/8.0, -1.0/16.0);
+			growRoot(ai[0], ai[1] - 2, ai[2], 1.0/8.0, -1.0/16.0);
 			rootAlt = 1;
-			growRoot(ai[0], ai[1], ai[2], 1.7 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1], ai[2], 1.7/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 			ai[0]--;
 			ai1[0]--;
 			growTapRoot(ai[0], ai[1], ai[2], 1.0);
-			growRoot(ai[0], ai[1], ai[2], 2.3 / 8.0, -1.0 / 16.0);
-			growRoot(ai[0], ai[1] - 2, ai[2], 3.0 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1], ai[2], 2.3/8.0, -1.0/16.0);
+			growRoot(ai[0], ai[1] - 2, ai[2], 3.0/8.0, -1.0/16.0);
 			rootAlt = 1;
-			growRoot(ai[0], ai[1], ai[2], 3.7 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1], ai[2], 3.7/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
-			growRoot(ai[0], ai[1], ai[2] - 1, 4.3 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1], ai[2] - 1, 4.3/8.0, -1.0/16.0);
 		}
 		if (trunkSize == 3) {
 			growTapRoot(ai[0], ai[1], ai[2], 1.0);
@@ -405,31 +405,34 @@ public class BigTreeGenerator extends TreeGenerator {
 		if (trunkSize == 4) {
 			rootAlt = 10;
 			growTapRoot(ai[0], ai[1], ai[2], 1.0);
-			growRoot(ai[0], ai[1] + 1, ai[2], 5.0 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 5.0/8.0, -1.0/16.0);
 			/*
 			 * growRoot(ai[0],ai[1],ai[2],4.3/8.0,-1.0/16.0);
 			 * growRoot(ai[0],ai[1],ai[2],5.7/8.0,-1.0/16.0); placeBlockLine(ai,
 			 * ai1);
-			 */ai[0]++;
+			 */
+			ai[0]++;
 			ai1[0]++;
 			growTapRoot(ai[0], ai[1], ai[2], 1.0);
-			growRoot(ai[0], ai[1] + 1, ai[2], 7.0 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 7.0/8.0, -1.0/16.0);
 			/*
 			 * growRoot(ai[0],ai[1],ai[2],6.3/8.0,-1.0/16.0);
 			 * growRoot(ai[0],ai[1],ai[2],7.7/8.0,-1.0/16.0); placeBlockLine(ai,
 			 * ai1);
-			 */ai[2]++;
+			 */
+			ai[2]++;
 			ai1[2]++;
 			growTapRoot(ai[0], ai[1], ai[2], 1.0);
-			growRoot(ai[0], ai[1] + 1, ai[2], 1.0 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 1.0/8.0, -1.0/16.0);
 			/*
 			 * growRoot(ai[0],ai[1],ai[2],0.3/8.0,-1.0/16.0);
 			 * growRoot(ai[0],ai[1],ai[2],1.7/8.0,-1.0/16.0); placeBlockLine(ai,
 			 * ai1);
-			 */ai[0]--;
+			 */
+			ai[0]--;
 			ai1[0]--;
 			growTapRoot(ai[0], ai[1], ai[2], 1.0);
-			growRoot(ai[0], ai[1] + 1, ai[2], 3.0 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 3.0/8.0, -1.0/16.0);
 			/*
 			 * growRoot(ai[0],ai[1],ai[2],2.3/8.0,-1.0/16.0);
 			 * growRoot(ai[0],ai[1],ai[2],3.7/8.0,-1.0/16.0); placeBlockLine(ai,
@@ -440,50 +443,50 @@ public class BigTreeGenerator extends TreeGenerator {
 			ai[2]--;
 			ai1[2]--;
 			growTapRoot(ai[0], ai[1], ai[2], 0.5);
-			growRoot(ai[0], ai[1] + 1, ai[2], 4.4 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 4.4/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 			ai[0]++;
 			ai1[0]++;
 			ai[2]--;
 			ai1[2]--;
 			growTapRoot(ai[0], ai[1], ai[2], 0.5);
-			growRoot(ai[0], ai[1] + 1, ai[2], 5.6 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 5.6/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 			ai[0]++;
 			ai1[0]++;
 			growTapRoot(ai[0], ai[1], ai[2], 0.5);
-			growRoot(ai[0], ai[1] + 1, ai[2], 6.4 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 6.4/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 			ai[0]++;
 			ai1[0]++;
 			ai[2]++;
 			ai1[2]++;
 			growTapRoot(ai[0], ai[1], ai[2], 0.5);
-			growRoot(ai[0], ai[1] + 1, ai[2], 7.6 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 7.6/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 			ai[2]++;
 			ai1[2]++;
 			growTapRoot(ai[0], ai[1], ai[2], 0.5);
-			growRoot(ai[0], ai[1] + 1, ai[2], 0.4 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 0.4/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 			ai[0]--;
 			ai1[0]--;
 			ai[2]++;
 			ai1[2]++;
 			growTapRoot(ai[0], ai[1], ai[2], 0.5);
-			growRoot(ai[0], ai[1] + 1, ai[2], 1.6 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 1.6/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 			ai[0]--;
 			ai1[0]--;
 			growTapRoot(ai[0], ai[1], ai[2], 0.5);
-			growRoot(ai[0], ai[1] + 1, ai[2], 2.4 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 2.4/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 			ai[0]--;
 			ai1[0]--;
 			ai[2]--;
 			ai1[2]--;
 			growTapRoot(ai[0], ai[1], ai[2], 0.5);
-			growRoot(ai[0], ai[1] + 1, ai[2], 3.6 / 8.0, -1.0 / 16.0);
+			growRoot(ai[0], ai[1] + 1, ai[2], 3.6/8.0, -1.0/16.0);
 			placeBlockLine(ai, ai1);
 		}
 	}
@@ -515,9 +518,9 @@ public class BigTreeGenerator extends TreeGenerator {
 		// if(KTreeCfg.rootsEnable == false) return;
 		// int len = 2 + (3*trunkSize) + rand.nextInt(2);
 		int med;
-		int len = (int) ((6.0 + rand.nextFloat() * 6.0) * flen);
+		int len = (int) ((6.0 + rand.nextFloat()*6.0)*flen);
 		if (len == tapRootRand || len == tapRootRand + 1 || len == tapRootRand - 1) {
-			len = (int) ((6.0 + rand.nextFloat() * 6.0) * flen);
+			len = (int) ((6.0 + rand.nextFloat()*6.0)*flen);
 		}
 		for (int jj = 1; jj <= len; jj++) {
 			med = getMedium(i, j - jj, k);
@@ -567,12 +570,12 @@ public class BigTreeGenerator extends TreeGenerator {
 			m -= rand.nextInt(2);
 		}
 		m += 1;
-		phi -= rand.nextFloat() * 0.05;
-		theta += rand.nextFloat() * 0.1 - 0.05;
-		double direction = (2.0 * Math.PI) * theta;
-		double curl = rand.nextFloat() * 0.4F - 0.2F;
-		double pitch = (2.0 * Math.PI) * phi;
-		int length = 2 + (3 * trunkSize) + rand.nextInt(2);
+		phi -= rand.nextFloat()*0.05;
+		theta += rand.nextFloat()*0.1 - 0.05;
+		double direction = (2.0*Math.PI)*theta;
+		double curl = rand.nextFloat()*0.4F - 0.2F;
+		double pitch = (2.0*Math.PI)*phi;
+		int length = 2 + (3*trunkSize) + rand.nextInt(2);
 		double x, y, z;
 		if (l > 0)
 			x = l + 0.5;
@@ -590,27 +593,27 @@ public class BigTreeGenerator extends TreeGenerator {
 		int k = (int) z;
 		int i2, j2, k2, di, dk;
 		int med = getMedium(i, j, k); // Check the "Medium" of a block for root
-										// growing - solid, open, or forbidden.
+		// growing - solid, open, or forbidden.
 		int cnt = 0;
 		while (length > 0.0) {
 			length--;
 			// direction = direction + curl;
-			curl = curl + rand.nextFloat() * 0.06F - 0.03F;
+			curl = curl + rand.nextFloat()*0.06F - 0.03F;
 			if (med == 1) { // Root growing in openness.
-				pitch = (pitch + Math.PI / 2.0) * 0.7 - Math.PI / 2.0;
+				pitch = (pitch + Math.PI/2.0)*0.7 - Math.PI/2.0;
 				// if(pitch > 0.0){
 				// pitch = pitch - 10.0*Math.PI/180.0;
 				// }else{
 				// pitch = (pitch + Math.PI/2.0)*0.7 - Math.PI/2.0;
 				// }
 			} else { // Root growing in solid.
-				pitch = (pitch + Math.PI / 2.0) * 0.9 - Math.PI / 2.0;
+				pitch = (pitch + Math.PI/2.0)*0.9 - Math.PI/2.0;
 			}
 
 			hoz = Math.cos(pitch);
-			x2 = x + Math.cos(direction) * hoz;
+			x2 = x + Math.cos(direction)*hoz;
 			y2 = y + Math.sin(pitch);
-			z2 = z + Math.sin(direction) * hoz;
+			z2 = z + Math.sin(direction)*hoz;
 			i2 = (int) x2;
 			j2 = (int) y2;
 			k2 = (int) z2;
@@ -634,7 +637,7 @@ public class BigTreeGenerator extends TreeGenerator {
 					if (med != 0) { // Grow down.
 						y = y - 1.0;
 						j = j - 1;
-						pitch = -Math.PI / 2.0;
+						pitch = -Math.PI/2.0;
 					} else { // Try to grow out now.
 						x2 = x + Math.cos(direction);
 						z2 = z + Math.sin(direction);
@@ -649,16 +652,16 @@ public class BigTreeGenerator extends TreeGenerator {
 							pitch = 0.0;
 						} else { // Try bending now.
 							// Integer direction - 16 = complete rotation.
-							int dir = ((int) (direction * 8.0 / Math.PI)); 
+							int dir = ((int) (direction*8.0/Math.PI));
 							if (dir < 0)
-								dir = 15 - (15 - dir) % 16;
+								dir = 15 - (15 - dir)%16;
 							else
-								dir = dir % 16;
+								dir = dir%16;
 							// 'Polarity' of bending root - preferred bending direction.
-							int pol = dir % 2; 
+							int pol = dir%2;
 							di = i2 - i;
 							dk = k2 - k;
-							int[] tdir = { 0, 0, 0, 0 }; // Testing directions.
+							int[] tdir = {0, 0, 0, 0}; // Testing directions.
 							if (di == 0 && dk == 0) {
 								if (dir < 1) {
 									di = 1;
@@ -829,7 +832,7 @@ public class BigTreeGenerator extends TreeGenerator {
 									x = i + 0.5;
 									z = k + 0.5;
 									pitch = 0;
-									direction = tdir[q] * 2.0 * Math.PI / 16.0;
+									direction = tdir[q]*2.0*Math.PI/16.0;
 									break;
 								}
 							}
@@ -853,10 +856,10 @@ public class BigTreeGenerator extends TreeGenerator {
 		// }
 		int i = 0;
 		int j = leafNodes.length;
-		int ai[] = { basePos[0], basePos[1], basePos[2] };
+		int ai[] = {basePos[0], basePos[1], basePos[2]};
 		for (; i < j; i++) {
 			int ai1[] = leafNodes[i];
-			int ai2[] = { ai1[0], ai1[1], ai1[2] };
+			int ai2[] = {ai1[0], ai1[1], ai1[2]};
 			ai[1] = ai1[3];
 			int k = ai[1] - basePos[1];
 			if (leafNodeNeedsBase(k)) {
@@ -869,7 +872,7 @@ public class BigTreeGenerator extends TreeGenerator {
 
 	// CHECKS IF STUFF IS IN AIR/LEAVES OR IN SOLID
 	int checkBlockLine(int ai[], int ai1[]) {
-		int ai2[] = { 0, 0, 0 };
+		int ai2[] = {0, 0, 0};
 		byte byte0 = 0;
 		int i = 0;
 		for (; byte0 < 3; byte0++) {
@@ -890,9 +893,9 @@ public class BigTreeGenerator extends TreeGenerator {
 		} else {
 			byte3 = -1;
 		}
-		double d = (double) ai2[byte1] / (double) ai2[i];
-		double d1 = (double) ai2[byte2] / (double) ai2[i];
-		int ai3[] = { 0, 0, 0 };
+		double d = (double) ai2[byte1]/(double) ai2[i];
+		double d1 = (double) ai2[byte2]/(double) ai2[i];
+		int ai3[] = {0, 0, 0};
 		int j = 0;
 		int k = ai2[i] + byte3;
 		do {
@@ -900,8 +903,8 @@ public class BigTreeGenerator extends TreeGenerator {
 				break;
 			}
 			ai3[i] = ai[i] + j;
-			ai3[byte1] = MathHelper.floor_double(ai[byte1] + j * d);
-			ai3[byte2] = MathHelper.floor_double(ai[byte2] + j * d1);
+			ai3[byte1] = MathHelper.floor_double(ai[byte1] + j*d);
+			ai3[byte2] = MathHelper.floor_double(ai[byte2] + j*d1);
 			Block l = this.getBlockState(new BlockPos(ai3[0], ai3[1], ai3[2])).getBlock();
 			if (l != Blocks.AIR && l != Blocks.LEAVES && l != Blocks.LOG) {
 				break;
@@ -922,10 +925,9 @@ public class BigTreeGenerator extends TreeGenerator {
 		 */
 		Block i = this.getBlockState(new BlockPos(basePos[0], basePos[1] - 1, basePos[2])).getBlock();
 		// if(basePos[1] + heightLimit >= 80) return false;
-		
+
 		// Can grow tree on dirt, grass, or sand...
-		if (i != Blocks.GRASS && i != Blocks.DIRT && i != Blocks.SAND)
-		{
+		if (i != Blocks.GRASS && i != Blocks.DIRT && i != Blocks.SAND) {
 			return false;
 		}
 		/*
@@ -943,7 +945,7 @@ public class BigTreeGenerator extends TreeGenerator {
 
 	public boolean generate(Random random, BlockPos pos) {
 		type = 0;
-		return this.generator( random, pos);
+		return this.generator(random, pos);
 	}
 
 	public boolean desertGenerate(Random random, BlockPos pos) {
@@ -1012,7 +1014,7 @@ public class BigTreeGenerator extends TreeGenerator {
 			qq = 87;
 		}
 		// qq=89;
-		int[] heightvector = { heightmin, heightmax - heightmin };
+		int[] heightvector = {heightmin, heightmax - heightmin};
 		heightLimit = vary(rand, heightvector);
 		if (qq < 8) {
 			// WIDE TREE
@@ -1053,7 +1055,7 @@ public class BigTreeGenerator extends TreeGenerator {
 			// leafBlock = Block.getBlockById(KTreeCfg.oak1LeafType);
 			// leafMeta = KTreeCfg.oak1LeafMeta;
 			if (qbirch) {
-				int[] birchheightvector = { 19, 5 };
+				int[] birchheightvector = {19, 5};
 				heightLimit = vary(rand, birchheightvector);
 				// trunkBlock = Block.getBlockById(KTreeCfg.birchWoodType);
 				// trunkMeta = KTreeCfg.birchWoodMeta;
@@ -1084,8 +1086,8 @@ public class BigTreeGenerator extends TreeGenerator {
 		}
 		if (type == 1) {
 			if (trunkSize != 1) {
-				branchLength = branchLength * 1.0D; // Double branch length on
-													// desert trees.
+				branchLength = branchLength*1.0D; // Double branch length on
+				// desert trees.
 				// heightLimit = KTreeCfg.vary(rand,KTreeCfg.deadHeight); //Tree
 				// Height
 			}
@@ -1102,13 +1104,13 @@ public class BigTreeGenerator extends TreeGenerator {
 			// leafMeta = KTreeCfg.swoakLeafMeta;
 		}
 		if (heightLimitLimit > 0)
-			heightLimit = heightLimit + rand.nextInt(heightLimitLimit * 2) - heightLimitLimit;
+			heightLimit = heightLimit + rand.nextInt(heightLimitLimit*2) - heightLimitLimit;
 		if (!validTreeLocation()) {
 			return false;
 		} else {
 			rootRand = rand.nextInt(4);
 			if (generateLeafNodeList()) { // Generate tree and branch arrays.
-			// world.lightUpdates = false;
+				// world.lightUpdates = false;
 				generateLeaves(); // Grow leaves from branches.
 				generateTrunk(); // Add trunk blocks to world.
 				generateLeafNodeBases(); // Add branch blocks to world.

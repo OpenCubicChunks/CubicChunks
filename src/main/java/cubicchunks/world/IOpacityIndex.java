@@ -27,15 +27,18 @@ public interface IOpacityIndex {
 
 	/**
 	 * Returns true if opacity at given position != 0, or false if it is 0
+	 *
 	 * @param localX local block X position (0..15).
 	 * @param blockY block Y position (any integer from CubicChunks mod height range).
 	 * @param localZ local block Z position (0..15)
+	 *
 	 * @return True is opacity != 0
 	 */
 	boolean isOpaque(int localX, int blockY, int localZ);
 
 	/**
 	 * Set opacity at given position.
+	 *
 	 * @param localX local block X position (0..15).
 	 * @param blockY block Y position (any integer from CubicChunks mod height range).
 	 * @param localZ local block Z position (0..15)
@@ -45,24 +48,30 @@ public interface IOpacityIndex {
 
 	/**
 	 * Returns Y position of the top non-transparent block.
+	 *
 	 * @param localX local block X position (0..15).
 	 * @param localZ local block Z position (0..15)
+	 *
 	 * @return Y position of the top non-transparent block, or null if one doesn't exist
 	 */
 	Integer getTopBlockY(int localX, int localZ);
 
 	/**
 	 * Returns Y position of the top non-transparent block that is below given blockY.
+	 *
 	 * @param localX local block X position (0..15).
 	 * @param localZ local block Z position (0..15)
+	 *
 	 * @return Y position of the top non-transparent block below blockY, or null if one doesn't exist.
 	 */
 	Integer getTopBlockYBelow(int localX, int localZ, int blockY);
 
 	/**
 	 * Returns Y position of the bottom non-transparent block.
+	 *
 	 * @param localX local block X position (0..15).
 	 * @param localZ local block Z position (0..15)
+	 *
 	 * @return Y position of the bottom non-transparent block, or null if one doesn't exist
 	 */
 	Integer getBottomBlockY(int localX, int localZ);

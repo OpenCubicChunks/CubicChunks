@@ -44,7 +44,7 @@ public class PacketCubeBlockChange implements IMessage {
 	public int[] localAddresses;
 	public IBlockState[] blockStates;
 
-	public PacketCubeBlockChange(){}
+	public PacketCubeBlockChange() {}
 
 	public PacketCubeBlockChange(Cube cube, Collection<Integer> localAddresses) {
 		this.cubeAddress = cube.getAddress();
@@ -63,7 +63,7 @@ public class PacketCubeBlockChange implements IMessage {
 		}
 		this.heightValues = new int[xzAddresses.size()];
 		i = 0;
-		for(Integer v : xzAddresses) {
+		for (Integer v : xzAddresses) {
 			Integer height = cube.getColumn().getOpacityIndex().getTopBlockY(v & 0xF, v >> 4);
 			v |= (height == null ? Integer.MIN_VALUE : height) << 8;
 			heightValues[i] = v;
@@ -78,13 +78,13 @@ public class PacketCubeBlockChange implements IMessage {
 		localAddresses = new int[numBlocks];
 		blockStates = new IBlockState[numBlocks];
 
-		for(int i = 0; i < numBlocks; i++) {
+		for (int i = 0; i < numBlocks; i++) {
 			localAddresses[i] = in.readInt();
 			blockStates[i] = (IBlockState) Block.BLOCK_STATE_IDS.getByValue(ByteBufUtils.readVarInt(in, 4));
 		}
 		int numHmapChanges = in.readUnsignedByte();
 		heightValues = new int[numHmapChanges];
-		for(int i = 0; i < numHmapChanges; i++) {
+		for (int i = 0; i < numHmapChanges; i++) {
 			heightValues[i] = in.readInt();
 		}
 	}
@@ -93,12 +93,12 @@ public class PacketCubeBlockChange implements IMessage {
 	public void toBytes(ByteBuf out) {
 		out.writeLong(cubeAddress);
 		out.writeShort(localAddresses.length);
-		for(int i = 0; i < localAddresses.length; i++) {
+		for (int i = 0; i < localAddresses.length; i++) {
 			out.writeInt(localAddresses[i]);
 			ByteBufUtils.writeVarInt(out, Block.BLOCK_STATE_IDS.get(blockStates[i]), 4);
 		}
 		out.writeByte(heightValues.length);
-		for(int v : heightValues) {
+		for (int v : heightValues) {
 			out.writeInt(v);
 		}
 	}

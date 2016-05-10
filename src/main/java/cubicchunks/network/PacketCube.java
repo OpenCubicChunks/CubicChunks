@@ -39,7 +39,7 @@ public class PacketCube implements IMessage {
 	private byte[] data;
 	private PacketBuffer in;
 
-	public PacketCube(){}
+	public PacketCube() {}
 
 	public PacketCube(Cube cube) {
 		this.cubeAddress = cube.getAddress();

@@ -27,12 +27,14 @@ import java.util.Random;
 
 public class NoiseGeneratorSimplex {
 
-	private static Grad[] GRAD3 = { new Grad(1, 1, 0), new Grad(-1, 1, 0), new Grad(1, -1, 0), new Grad(-1, -1, 0),
-		new Grad(1, 0, 1), new Grad(-1, 0, 1), new Grad(1, 0, -1), new Grad(-1, 0, -1), new Grad(0, 1, 1),
-		new Grad(0, -1, 1), new Grad(0, 1, -1), new Grad(0, -1, -1) };
+	private static Grad[] GRAD3 = {
+			new Grad(1, 1, 0), new Grad(-1, 1, 0), new Grad(1, -1, 0), new Grad(-1, -1, 0),
+			new Grad(1, 0, 1), new Grad(-1, 0, 1), new Grad(1, 0, -1), new Grad(-1, 0, -1), new Grad(0, 1, 1),
+			new Grad(0, -1, 1), new Grad(0, 1, -1), new Grad(0, -1, -1)
+	};
 	public static final double SQRT3 = Math.sqrt(3.0D);
-	private static final double F2 = 0.5D * (SQRT3 - 1.0D);
-	private static final double G2 = (3.0D - SQRT3) / 6.0D;
+	private static final double F2 = 0.5D*(SQRT3 - 1.0D);
+	private static final double G2 = (3.0D - SQRT3)/6.0D;
 
 	// Inner class to speed up gradient computations
 	// (array access is a lot slower than member access)
@@ -57,8 +59,8 @@ public class NoiseGeneratorSimplex {
 
 	public NoiseGeneratorSimplex(final Random rand) {
 		this.perm = new int[512];
-		this.xCoord = rand.nextDouble() * 256.0D;
-		this.zCoord = rand.nextDouble() * 256.0D;
+		this.xCoord = rand.nextDouble()*256.0D;
+		this.zCoord = rand.nextDouble()*256.0D;
 		int i;
 
 		for (i = 0; i < 256; this.perm[i] = i++) {
@@ -79,32 +81,32 @@ public class NoiseGeneratorSimplex {
 	}
 
 	private static double dot(final Grad g, final double x, final double y) {
-		return g.x * x + g.y * y;
+		return g.x*x + g.y*y;
 	}
 
 	public void getValueArray(final double[] noiseArray, final double xOffset, final double zOffset, final int xSize,
-			final int zSize, final double xScale, final double zScale, final double scale) {
+	                          final int zSize, final double xScale, final double zScale, final double scale) {
 		int counter = 0;
 
 		for (int z = 0; z < zSize; ++z) {
-			double yIn = (zOffset + z) * zScale + this.zCoord;
+			double yIn = (zOffset + z)*zScale + this.zCoord;
 
 			for (int x = 0; x < xSize; ++x) {
-				double xIn = (xOffset + x) * xScale + this.xCoord;
+				double xIn = (xOffset + x)*xScale + this.xCoord;
 
-				noiseArray[counter++] += getValue(xIn, yIn) * scale;
+				noiseArray[counter++] += getValue(xIn, yIn)*scale;
 			}
 		}
 	}
 
 	public double getValue(final double xIn, final double yIn) {
 		// Skew the input space to determine the simplex cell we're in
-		double s = (xIn + yIn) * F2;
+		double s = (xIn + yIn)*F2;
 
 		int i = fastfloor(xIn + s);
 		int j = fastfloor(yIn + s);
 
-		double t = (i + j) * G2;
+		double t = (i + j)*G2;
 
 		// Unskew the cell origin back to (x,y) space
 		double X0 = i - t;
@@ -138,48 +140,48 @@ public class NoiseGeneratorSimplex {
 		double y1 = y0 - j1 + G2;
 
 		// Offsets for last corner in (x,y) unskewed coords
-		double x2 = x0 - 1.0D + 2.0D * G2;
-		double y2 = y0 - 1.0D + 2.0D * G2;
+		double x2 = x0 - 1.0D + 2.0D*G2;
+		double y2 = y0 - 1.0D + 2.0D*G2;
 
 		// Work out the hashed gradient indices of the three simplex corners
 		int ii = i & 255;
 		int jj = j & 255;
 
-		int gi0 = this.perm[ii + this.perm[jj]] % 12;
-		int gi1 = this.perm[ii + i1 + this.perm[jj + j1]] % 12;
-		int gi2 = this.perm[ii + 1 + this.perm[jj + 1]] % 12;
+		int gi0 = this.perm[ii + this.perm[jj]]%12;
+		int gi1 = this.perm[ii + i1 + this.perm[jj + j1]]%12;
+		int gi2 = this.perm[ii + 1 + this.perm[jj + 1]]%12;
 
 		// Calculate the contribution from the three corners
-		double t0 = 0.5D - x0 * x0 - y0 * y0;
+		double t0 = 0.5D - x0*x0 - y0*y0;
 		double n0;
 
 		if (t0 < 0.0D) {
 			n0 = 0.0D;
 		} else {
 			t0 *= t0;
-			n0 = t0 * t0 * dot(GRAD3[gi0], x0, y0);
+			n0 = t0*t0*dot(GRAD3[gi0], x0, y0);
 		}
 
-		double t1 = 0.5D - x1 * x1 - y1 * y1;
+		double t1 = 0.5D - x1*x1 - y1*y1;
 		double n1;
 
 		if (t1 < 0.0D) {
 			n1 = 0.0D;
 		} else {
 			t1 *= t1;
-			n1 = t1 * t1 * dot(GRAD3[gi1], x1, y1);
+			n1 = t1*t1*dot(GRAD3[gi1], x1, y1);
 		}
 
-		double t2 = 0.5D - x2 * x2 - y2 * y2;
+		double t2 = 0.5D - x2*x2 - y2*y2;
 		double n2;
 
 		if (t2 < 0.0D) {
 			n2 = 0.0D;
 		} else {
 			t2 *= t2;
-			n2 = t2 * t2 * dot(GRAD3[gi2], x2, y2);
+			n2 = t2*t2*dot(GRAD3[gi2], x2, y2);
 		}
 
-		return 70.0D * (n0 + n1 + n2);
+		return 70.0D*(n0 + n1 + n2);
 	}
 }

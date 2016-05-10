@@ -23,7 +23,12 @@
  */
 package cubicchunks.util;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 	private Set<E> set = new HashSet<>();
@@ -31,7 +36,7 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 
 	@Override
 	public void addFirst(E e) {
-		if(e == null) {
+		if (e == null) {
 			throw new NullPointerException();
 		}
 		if (set.add(e)) {
@@ -45,7 +50,7 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 
 	@Override
 	public void addLast(E e) {
-		if(e == null) {
+		if (e == null) {
 			throw new NullPointerException();
 		}
 		if (set.add(e)) {
@@ -143,7 +148,7 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 
 	@Override
 	public boolean add(E e) {
-		if(e == null) {
+		if (e == null) {
 			throw new NullPointerException();
 		}
 		boolean b = set.add(e) && deque.add(e);
@@ -185,7 +190,7 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 
 	@Override
 	public void push(E e) {
-		if(e == null) {
+		if (e == null) {
 			throw new NullPointerException();
 		}
 		if (set.add(e)) {
@@ -220,7 +225,7 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 	@Override
 	public boolean addAll(Collection<? extends E> c) {
 		for (E e : c) {
-			if(e == null) {
+			if (e == null) {
 				throw new NullPointerException();
 			}
 			if (!set.contains(e)) {

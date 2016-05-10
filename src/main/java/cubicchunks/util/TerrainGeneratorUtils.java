@@ -28,9 +28,14 @@ import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 
-import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.*;
 import static cubicchunks.util.Coords.CUBE_SIZE;
 import static cubicchunks.util.MathUtil.lerp;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.X_SECTIONS;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.X_SECTION_SIZE;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Y_SECTIONS;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Y_SECTION_SIZE;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTIONS;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTION_SIZE;
 
 public final class TerrainGeneratorUtils {
 	/**
@@ -57,9 +62,9 @@ public final class TerrainGeneratorUtils {
 					double x1y1z1 = input[noiseX + 1][noiseY + 1][noiseZ + 1];
 
 					for (int x = 0; x < xSteps; x++) {
-						int xRel = noiseX * xSteps + x;
+						int xRel = noiseX*xSteps + x;
 
-						double xd = (double) x / xSteps;
+						double xd = (double) x/xSteps;
 
 						// interpolate along x
 						double xy0z0 = lerp(xd, x0y0z0, x1y0z0);
@@ -68,18 +73,18 @@ public final class TerrainGeneratorUtils {
 						double xy1z1 = lerp(xd, x0y1z1, x1y1z1);
 
 						for (int z = 0; z < zSteps; z++) {
-							int zRel = noiseZ * zSteps + z;
+							int zRel = noiseZ*zSteps + z;
 
-							double zd = (double) z / zSteps;
+							double zd = (double) z/zSteps;
 
 							// interpolate along z
 							double xy0z = lerp(zd, xy0z0, xy0z1);
 							double xy1z = lerp(zd, xy1z0, xy1z1);
 
 							for (int y = 0; y < ySteps; y++) {
-								int yRel = noiseY * ySteps + y;
+								int yRel = noiseY*ySteps + y;
 
-								double yd = (double) y / ySteps;
+								double yd = (double) y/ySteps;
 
 								// interpolate along y
 								double xyz = lerp(yd, xy0z, xy1z);
@@ -101,12 +106,12 @@ public final class TerrainGeneratorUtils {
 
 	public static void applyHeightGradient(final Cube cube, final double[][][] rawDensity) {
 		final int cubeYMin = Coords.cubeToMinBlock(cube.getY());
-		
+
 		for (int x = 0; x < CUBE_SIZE; x++) {
 			for (int z = 0; z < CUBE_SIZE; z++) {
 				for (int y = 0; y < CUBE_SIZE; y++) {
 					final int yAbs = cubeYMin + y;
-					
+
 					rawDensity[x][y][z] -= yAbs;
 				}
 			}

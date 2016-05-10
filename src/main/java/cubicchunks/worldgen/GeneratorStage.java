@@ -30,19 +30,19 @@ public enum GeneratorStage {
 	LIGHTING,
 	POPULATION,
 	LIVE;
-	
+
 	public static GeneratorStage getFirstStage() {
 		return values()[0];
 	}
-	
+
 	public static GeneratorStage getLastStage() {
 		return values()[values().length - 1];
 	}
-	
+
 	public boolean isLastStage() {
 		return ordinal() == values().length - 1;
 	}
-	
+
 	public boolean isLessThan(GeneratorStage other) {
 		return ordinal() < other.ordinal();
 	}

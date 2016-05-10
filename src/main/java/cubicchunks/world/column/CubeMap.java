@@ -26,7 +26,12 @@ package cubicchunks.world.column;
 import com.google.common.collect.Iterators;
 import cubicchunks.world.cube.Cube;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 class CubeMap implements Iterable<Cube> {
 	private final TreeMap<Integer, Cube> cubeMap = new TreeMap<>();
@@ -42,10 +47,10 @@ class CubeMap implements Iterable<Cube> {
 	}
 
 	boolean put(int cubeY, Cube cube) {
-		if(cube == null) {
+		if (cube == null) {
 			throw new NullPointerException();
 		}
-		if(this.contains(cubeY)) {
+		if (this.contains(cubeY)) {
 			throw new IllegalArgumentException("Cube at " + cubeY + " already exists!");
 		}
 		this.cubeMap.put(cubeY, cube);

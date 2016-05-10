@@ -42,9 +42,10 @@ public class MixinDedicatedServer_HeightLimits {
 	private WorldType worldtype;
 
 	@Inject(method = "startServer",
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/server/dedicated/DedicatedServer;isAnnouncingPlayerAchievements()Z"),
-			locals = LocalCapture.CAPTURE_FAILHARD,
-			require = 1
+	        at = @At(value = "INVOKE",
+	                 target = "Lnet/minecraft/server/dedicated/DedicatedServer;isAnnouncingPlayerAchievements()Z"),
+	        locals = LocalCapture.CAPTURE_FAILHARD,
+	        require = 1
 	)
 	private void getWorldTypeForBuildHeight(CallbackInfoReturnable<Boolean> cir, Thread thread, int i, InetAddress inetaddress, long j, String s, String s1, String s2, long k, WorldType worldtype) {
 		this.worldtype = worldtype;
@@ -52,8 +53,8 @@ public class MixinDedicatedServer_HeightLimits {
 
 	@ModifyConstant(method = "startServer", constant = @Constant(intValue = 256), require = 2)
 	private int getBuildHeight(int oldValue) {
-		if(worldtype instanceof ICubicChunksWorldType) {
-			return ((ICubicChunksWorldType)worldtype).getMaxHeight();
+		if (worldtype instanceof ICubicChunksWorldType) {
+			return ((ICubicChunksWorldType) worldtype).getMaxHeight();
 		}
 		return oldValue;
 	}

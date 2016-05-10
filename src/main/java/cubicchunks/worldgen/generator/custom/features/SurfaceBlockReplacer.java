@@ -40,7 +40,7 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 	private final int radius;
 	private final int height;
 
-	private SurfaceBlockReplacer(Builder builder){
+	private SurfaceBlockReplacer(Builder builder) {
 		super(builder.world);
 		this.block = builder.block;
 		this.replacable = new ArrayList<Block>(builder.replacable);
@@ -51,16 +51,16 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 
 	@Override
 	public void generateAt(Random rand, BlockPos pos, BiomeGenBase biome) {
-		double radiusSq = this.radius * this.radius;
+		double radiusSq = this.radius*this.radius;
 		for (int x = -this.radius; x <= this.radius; x++) {
 			for (int y = -this.height; y <= this.height; y++) {
 				for (int z = -this.radius; z <= this.radius; z++) {
-					if(x*x + z*z > radiusSq){
+					if (x*x + z*z > radiusSq) {
 						continue;
 					}
 					BlockPos currentPos = pos.add(x, y, z);
 					Block currrentBlock = getBlockState(currentPos).getBlock();
-					if(this.canReplace(currrentBlock)) {
+					if (this.canReplace(currrentBlock)) {
 						this.setBlockOnly(currentPos, this.block);
 					}
 				}
@@ -92,11 +92,11 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 		}
 		return false;
 	}
-	
-	public static Builder builder(){
+
+	public static Builder builder() {
 		return new Builder();
 	}
-	
+
 	public static class Builder {
 		private IBlockState block;
 		private final List<Block> replacable;
@@ -104,7 +104,7 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 		private int radius;
 		private int height;
 		private ICubicWorld world;
-		
+
 		private Builder() {
 			this.replacable = new ArrayList<Block>(2);
 			this.allowedAboveSurface = new ArrayList<Block>(2);
@@ -114,7 +114,7 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 			this.block = block;
 			return this;
 		}
-		
+
 		public Builder block(Block block) {
 			this.block = block.getDefaultState();
 			return this;
@@ -129,23 +129,23 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 			this.height = height;
 			return this;
 		}
-		
-		public Builder addReplacable(Block block){
+
+		public Builder addReplacable(Block block) {
 			this.replacable.add(block);
 			return this;
 		}
-		
-		public Builder addAllowedAboveSurface(Block block){
+
+		public Builder addAllowedAboveSurface(Block block) {
 			this.allowedAboveSurface.add(block);
 			return this;
 		}
-		
-		public Builder world(ICubicWorld world){
+
+		public Builder world(ICubicWorld world) {
 			this.world = world;
 			return this;
 		}
-		
-		public SurfaceBlockReplacer build(){
+
+		public SurfaceBlockReplacer build() {
 			return new SurfaceBlockReplacer(this);
 		}
 	}

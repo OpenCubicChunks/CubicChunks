@@ -28,7 +28,10 @@ import cubicchunks.world.cube.Cube;
 
 public interface ICubeCache {
 	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
+
 	Cube getCube(int cubeX, int cubeY, int cubeZ);
+
 	Column getColumn(int cubeX, int cubeZ);
+
 	void unloadCube(int cubeX, int cubeY, int cubeZ);
 }

@@ -31,7 +31,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public class PacketUnloadCube implements IMessage {
 	private long cubeAddress;
 
-	public PacketUnloadCube(){}
+	public PacketUnloadCube() {}
 
 	public PacketUnloadCube(long cubeAddress) {
 		this.cubeAddress = cubeAddress;

@@ -30,7 +30,11 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.MathUtil;
-import cubicchunks.world.*;
+import cubicchunks.world.ClientOpacityIndex;
+import cubicchunks.world.EntityContainer;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IOpacityIndex;
+import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -58,7 +62,12 @@ import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class Column extends Chunk {
 
@@ -266,7 +275,7 @@ public class Column extends Chunk {
 
 	private void doOnBlockSetLightUpdates(BlockPos pos, IBlockState newBlockState, int oldOpacity) {
 		int newOpacity = newBlockState.getLightOpacity(this.getWorld(), pos);
-		if(oldOpacity == newOpacity || (oldOpacity >= 15 && newOpacity >= 15)) {
+		if (oldOpacity == newOpacity || (oldOpacity >= 15 && newOpacity >= 15)) {
 			//nothing to update, this will frequently happen in ore generation
 			return;
 		}
@@ -368,11 +377,13 @@ public class Column extends Chunk {
 			cube.addEntity(entity);
 		} else {
 			// entities don't have to be in cubeMap, just add it directly to the column
-			int cubeX = MathHelper.floor_double(entity.posX / 16.0D);
-			int cubeZ = MathHelper.floor_double(entity.posZ / 16.0D);
+			int cubeX = MathHelper.floor_double(entity.posX/16.0D);
+			int cubeZ = MathHelper.floor_double(entity.posZ/16.0D);
 
 			if (cubeX != this.xPosition || cubeZ != this.zPosition) {
-				CubicChunks.LOGGER.warn("Wrong location! (" + cubeX + ", " + cubeZ + ") should be (" + this.xPosition + ", " + this.zPosition + "), " + entity, new Object[]{entity});
+				CubicChunks.LOGGER.warn(
+						"Wrong location! (" + cubeX + ", " + cubeZ + ") should be (" + this.xPosition + ", " +
+								this.zPosition + "), " + entity, new Object[]{entity});
 				entity.setDead();
 			}
 
@@ -616,7 +627,7 @@ public class Column extends Chunk {
 		for (int i = 0; i < 2; i++) {
 
 			// once we've checked all the blocks, stop checking
-			int maxPointer = 16 * 16 * this.roundRobinCubes.size();
+			int maxPointer = 16*16*this.roundRobinCubes.size();
 			if (this.roundRobinLightUpdatePointer >= maxPointer) {
 				break;
 			}

@@ -24,12 +24,12 @@
 package cubicchunks.worldgen.generator.custom.builder;
 
 public abstract interface IBuilder {
-	
+
 	public void setSeed(int seed);
-	
+
 	public void setSeaLevel(double seaLevel);
-	
+
 	public void build() throws IllegalArgumentException;
-	
+
 	public double getValue(double x, double y, double z);
 }

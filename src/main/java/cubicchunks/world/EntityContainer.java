@@ -149,7 +149,7 @@ public class EntityContainer {
 		for (Entity entity : this.entities) {
 
 			NBTTagCompound nbtEntity = new NBTTagCompound();
-			if(entity.writeToNBTOptional(nbtEntity)) {
+			if (entity.writeToNBTOptional(nbtEntity)) {
 				this.hasActiveEntities = true;
 				nbtEntities.appendTag(nbtEntity);
 
@@ -181,13 +181,13 @@ public class EntityContainer {
 		if (entity == null) {
 			return null;
 		}
-		if(entity instanceof EntityPlayerMP) {
+		if (entity instanceof EntityPlayerMP) {
 			CubicChunks.LOGGER.error("EntityPlayerMP is serialized in save file! Reading the entity would break world ticking, skipping");
 			return null;
 		}
 		addEntity(entity);
 
-		if(listener != null) {
+		if (listener != null) {
 			listener.onEntity(entity);
 		}
 		// deal with riding
@@ -195,12 +195,10 @@ public class EntityContainer {
 
 			NBTTagList nbttaglist = nbtEntity.getTagList("Passengers", 10);
 
-			for (int i = 0; i < nbttaglist.tagCount(); ++i)
-			{
+			for (int i = 0; i < nbttaglist.tagCount(); ++i) {
 				Entity entity1 = readEntity(nbttaglist.getCompoundTagAt(i), world, listener);
 
-				if (entity1 != null)
-				{
+				if (entity1 != null) {
 					entity1.startRiding(entity, true);
 				}
 			}

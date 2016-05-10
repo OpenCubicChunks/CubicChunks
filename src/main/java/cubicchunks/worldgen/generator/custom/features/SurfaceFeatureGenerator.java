@@ -64,7 +64,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 			this.generateAt(rand, pos, biome);
 		}
 	}
-	
+
 	protected boolean isSurfaceAt(BlockPos pos) {
 		//we don't really know if it's the top block.
 		//assume it's surface if there is solid block with air above it
@@ -76,11 +76,9 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
 	/**
 	 * Generates feature at given position.
-	 * 
-	 * @param rand
-	 *            RNG to use
-	 * @param pos
-	 *            position of air block with solid block below it
+	 *
+	 * @param rand RNG to use
+	 * @param pos position of air block with solid block below it
 	 */
 	public abstract void generateAt(Random rand, BlockPos pos, BiomeGenBase biome);
 }

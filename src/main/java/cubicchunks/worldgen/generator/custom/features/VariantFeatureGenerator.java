@@ -58,10 +58,10 @@ public class VariantFeatureGenerator extends FeatureGenerator {
 		}
 	}
 
-	public static Builder builder(){
+	public static Builder builder() {
 		return new Builder();
 	}
-	
+
 	public static class Builder {
 
 		// use lists because order is important

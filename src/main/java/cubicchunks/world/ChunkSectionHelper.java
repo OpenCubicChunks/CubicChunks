@@ -28,18 +28,18 @@ import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 public class ChunkSectionHelper {
-	public static final int HAS_MSB = 1<<0;
-	public static final int HAS_META = 1<<1;
+	public static final int HAS_MSB = 1 << 0;
+	public static final int HAS_META = 1 << 1;
 
 	public static int getBlockDataArray(ExtendedBlockStorage storage, byte[] idLSB, byte[] idMSB, byte[] metadata) {
 		NibbleArray metadataNibble = new NibbleArray();
 		NibbleArray idMSBNibble = storage.getData().getDataForNBT(idLSB, metadataNibble);
 		int retFlags = 0;
-		if(idMSBNibble != null) {
+		if (idMSBNibble != null) {
 			System.arraycopy(idMSBNibble.getData(), 0, idMSB, 0, idMSB.length);
 			retFlags |= HAS_MSB;
 		}
-		if(metadataNibble != null) {
+		if (metadataNibble != null) {
 			System.arraycopy(metadataNibble.getData(), 0, metadata, 0, metadata.length);
 			retFlags |= HAS_META;
 		}
@@ -47,15 +47,15 @@ public class ChunkSectionHelper {
 	}
 
 	public static void setBlockStates(ExtendedBlockStorage chunkSection, byte[] blockIdLsbs, NibbleArray blockIdMsbs, NibbleArray blockMetadata) {
-		for (int i=0; i<blockIdLsbs.length; i++) {
-			
+		for (int i = 0; i < blockIdLsbs.length; i++) {
+
 			// get the block
 			int blockId = blockIdLsbs[i] & 0xFF;
 			if (blockIdMsbs != null) {
 				blockId |= (blockIdMsbs.getFromIndex(i) << 8);
 			}
 			Block block = Block.getBlockById(blockId);
-			
+
 			// get the metadata
 			int meta = blockMetadata.getFromIndex(i);
 
@@ -68,15 +68,15 @@ public class ChunkSectionHelper {
 	}
 
 	public static int[] byteArrayToIntArray(final byte[] in) {
-		int out[] = new int[16 * 16 * 16];
+		int out[] = new int[16*16*16];
 
 		int byteIndex;
 		int intIndex;
 
 		intIndex = byteIndex = 0;
 
-		for (; byteIndex < in.length;) {
-			
+		for (; byteIndex < in.length; ) {
+
 			final int msb = in[byteIndex] & 0xFF;
 			final int lsb = in[byteIndex + 1] << 8;
 
@@ -90,7 +90,7 @@ public class ChunkSectionHelper {
 	}
 
 	public static void setBlockStates(final ExtendedBlockStorage chunkSection, final int[] blockIDs,
-			final NibbleArray blockMetadata) {
+	                                  final NibbleArray blockMetadata) {
 		for (int i = 0; i < blockIDs.length; i++) {
 			// get the block
 			final Block block = Block.getBlockById(blockIDs[i]);

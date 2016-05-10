@@ -28,25 +28,25 @@ import java.util.Collection;
 import java.util.List;
 
 public class ConcurrentBatchedQueue<T> {
-	
+
 	private ArrayDeque<T> m_queue;
-	
+
 	public ConcurrentBatchedQueue() {
 		m_queue = new ArrayDeque<T>();
 	}
-	
+
 	public synchronized void add(T val) {
 		m_queue.add(val);
 	}
-	
+
 	public synchronized void addAll(Collection<T> vals) {
 		m_queue.addAll(vals);
 	}
-	
+
 	public synchronized T get() {
 		return m_queue.poll();
 	}
-	
+
 	public synchronized boolean getBatch(List<T> out, int size) {
 		// copy the batch to the out list
 		for (int i = 0; i < size; i++) {
@@ -56,11 +56,11 @@ public class ConcurrentBatchedQueue<T> {
 			}
 			out.add(val);
 		}
-		
+
 		// are there more entries?
 		return !m_queue.isEmpty();
 	}
-	
+
 	public synchronized int size() {
 		return m_queue.size();
 	}

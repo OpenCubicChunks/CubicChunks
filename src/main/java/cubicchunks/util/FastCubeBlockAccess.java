@@ -43,7 +43,7 @@ public class FastCubeBlockAccess {
 	private final ICubicWorld world;
 
 	public FastCubeBlockAccess(ICubeCache cache, Cube cube, int radius) {
-		int n = radius * 2 + 1;
+		int n = radius*2 + 1;
 		this.world = cube.getWorld();
 		this.cache = new Cube[n][n][n];
 		this.originX = cube.getX() - radius;

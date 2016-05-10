@@ -39,7 +39,7 @@ public abstract class FeatureGenerator {
 	}
 
 	public abstract void generate(final Random rand, final Cube cube, final BiomeGenBase biome);
-	
+
 	protected boolean setBlockOnly(final BlockPos blockPos, final IBlockState blockState) {
 		return this.world.setBlockState(blockPos, blockState, 2);
 	}

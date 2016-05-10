@@ -37,13 +37,22 @@ import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.*;
+import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.GameRules;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
+import org.spongepowered.asm.mixin.Intrinsic;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Collection;
 import java.util.Random;
@@ -65,28 +74,52 @@ public abstract class MixinWorld implements ICubicWorld {
 	private boolean enableWorldGenPerfHack;
 
 	@Shadow public abstract WorldType getWorldType();
+
 	@Shadow public abstract void loadEntities(Collection<Entity> entities);
+
 	@Shadow public abstract void addTileEntities(Collection<TileEntity> values);
+
 	@Shadow public abstract void unloadEntities(Collection<Entity> entities);
+
 	@Shadow public abstract void removeTileEntity(BlockPos pos);
+
 	@Shadow public abstract long getTotalWorldTime();
+
 	@Shadow public abstract void setTileEntity(BlockPos blockpos, TileEntity tileentity);
+
 	@Shadow public abstract void markBlockRangeForRenderUpdate(BlockPos blockpos, BlockPos blockpos1);
+
 	@Shadow public abstract boolean addTileEntity(TileEntity tileEntity);
-	@Shadow public abstract void markBlockRangeForRenderUpdate(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ);
+
+	@Shadow
+	public abstract void markBlockRangeForRenderUpdate(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ);
+
 	@Shadow public abstract long getSeed();
+
 	@Shadow public abstract boolean checkLightFor(EnumSkyBlock sky, BlockPos pos);
+
 	@Shadow public abstract ISaveHandler getSaveHandler();
+
 	@Shadow public abstract MinecraftServer getMinecraftServer();
+
 	@Shadow public abstract void addBlockEvent(BlockPos blockPos, Block i, int t, int p);
+
 	@Shadow public abstract GameRules getGameRules();
+
 	@Shadow public abstract WorldInfo getWorldInfo();
+
 	@Shadow public abstract TileEntity getTileEntity(BlockPos pos);
+
 	@Shadow public abstract boolean setBlockState(BlockPos blockPos, IBlockState blockState, int i);
+
 	@Shadow public abstract IBlockState getBlockState(BlockPos pos);
+
 	@Shadow public abstract boolean isAirBlock(BlockPos randomPos);
+
 	@Shadow public abstract BiomeGenBase getBiomeGenForCoords(BlockPos cubeCenter);
+
 	@Shadow public abstract BiomeProvider getBiomeProvider();
+
 	@Shadow public abstract BlockPos getSpawnPoint();
 
 	@Override public boolean isCubicWorld() {
@@ -109,7 +142,8 @@ public abstract class MixinWorld implements ICubicWorld {
 		return this.lightingManager;
 	}
 
-	@Override public boolean blocksExist(BlockPos pos, int dist, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
+	@Override
+	public boolean blocksExist(BlockPos pos, int dist, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
 		return blocksExist(
 				pos.getX() - dist, pos.getY() - dist, pos.getZ() - dist,
 				pos.getX() + dist, pos.getY() + dist, pos.getZ() + dist,
@@ -118,7 +152,8 @@ public abstract class MixinWorld implements ICubicWorld {
 		);
 	}
 
-	@Override public boolean blocksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyColumns, GeneratorStage minStageAllowed) {
+	@Override
+	public boolean blocksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyColumns, GeneratorStage minStageAllowed) {
 
 		// convert block bounds to chunk bounds
 		int minCubeX = blockToCube(minBlockX);
@@ -157,11 +192,12 @@ public abstract class MixinWorld implements ICubicWorld {
 	}
 
 	private boolean cubeAndNeighborsExist(int cubeX, int cubeY, int cubeZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
-		return cubesExist(cubeX - 1, cubeY - 1, cubeZ - 1, cubeX + 1, cubeY + 1, cubeZ + 1, allowEmptyCubes, minStageAllowed);
+		return cubesExist(
+				cubeX - 1, cubeY - 1, cubeZ - 1, cubeX + 1, cubeY + 1, cubeZ + 1, allowEmptyCubes, minStageAllowed);
 	}
 
 	private boolean cubesExist(int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ, boolean allowEmptyColumns, GeneratorStage minStageAllowed) {
-		if(this.enableWorldGenPerfHack) {
+		if (this.enableWorldGenPerfHack) {
 			return true;
 		}
 		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {

@@ -42,7 +42,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Collections;
 import java.util.Set;
 
-import static cubicchunks.util.Coords.*;
+import static cubicchunks.util.Coords.blockToCube;
+import static cubicchunks.util.Coords.blockToLocal;
+import static cubicchunks.util.Coords.cubeToMaxBlock;
+import static cubicchunks.util.Coords.cubeToMinBlock;
+import static cubicchunks.util.Coords.getCubeCenter;
 
 public class FirstLightProcessor extends CubeProcessor {
 
@@ -167,8 +171,10 @@ public class FirstLightProcessor extends CubeProcessor {
 			for (int blockZ = minBlockZ; blockZ <= maxBlockZ; blockZ++) {
 				Pair<Integer, Integer> minMax = getMinMaxLightUpdateY(cache, cube, blockX, blockZ);
 				//if there is nothing to update - store contradicting data so we can detect it later
-				minBlockYArr[blockX - minBlockX][blockZ - minBlockZ] = minMax == null ? Integer.MAX_VALUE : minMax.getLeft();
-				maxBlockYArr[blockX - minBlockX][blockZ - minBlockZ] = minMax == null ? Integer.MIN_VALUE : minMax.getRight();
+				minBlockYArr[blockX - minBlockX][blockZ - minBlockZ] =
+						minMax == null ? Integer.MAX_VALUE : minMax.getLeft();
+				maxBlockYArr[blockX - minBlockX][blockZ - minBlockZ] =
+						minMax == null ? Integer.MIN_VALUE : minMax.getRight();
 			}
 		}
 
@@ -283,14 +289,14 @@ public class FirstLightProcessor extends CubeProcessor {
 
 	private int getHeightmapValue(Column column, int localX, int localZ) {
 		Integer val = column.getHeightmapAt(localX, localZ);
-		return val == null ? Integer.MIN_VALUE / 2 : val;
+		return val == null ? Integer.MIN_VALUE/2 : val;
 	}
 
 	private int getHeightmapBelowCubeY(ICubeCache cache, int blockX, int blockZ, int cubeY) {
 		int blockY = cubeToMinBlock(cubeY);
 		IOpacityIndex index = cache.getColumn(blockToCube(blockX), blockToCube(blockZ)).getOpacityIndex();
 		Integer val = index.getTopBlockYBelow(blockToLocal(blockX), blockToLocal(blockZ), blockY);
-		return val == null ? Integer.MIN_VALUE / 2 : val;
+		return val == null ? Integer.MIN_VALUE/2 : val;
 	}
 
 	private boolean canUpdateCube(Cube cube) {
@@ -298,8 +304,9 @@ public class FirstLightProcessor extends CubeProcessor {
 		final int lightUpdateRadius = 17;
 		final int cubeSizeRadius = 8;
 		final int bufferRadius = 2;
+		final int totalRadius = lightUpdateRadius + cubeSizeRadius + bufferRadius;
 
 		// only continue if the neighboring cubes are at least in the lighting stage
-		return cube.getWorld().blocksExist(cubeCenter, lightUpdateRadius + cubeSizeRadius + bufferRadius, false, GeneratorStage.LIGHTING);
+		return cube.getWorld().blocksExist(cubeCenter, totalRadius, false, GeneratorStage.LIGHTING);
 	}
 }

@@ -33,16 +33,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(RegionRenderCache.class)
-public class MixinRegionRenderCache_HeightLimits extends ChunkCache{
+public class MixinRegionRenderCache_HeightLimits extends ChunkCache {
 
 	public MixinRegionRenderCache_HeightLimits(World worldIn, BlockPos posFromIn, BlockPos posToIn, int subIn) {
 		super(worldIn, posFromIn, posToIn, subIn);
 	}
 
-	@Redirect(method = "getBlockStateRaw", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"), require = 1)
+	@Redirect(method = "getBlockStateRaw",
+	          at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"),
+	          require = 1)
 	public int getPosYOverride(BlockPos pos) {
 		ICubicWorld world = (ICubicWorld) worldObj;
-		if(pos.getY() >= world.getMinHeight() && pos.getY() < world.getMaxHeight()) {
+		if (pos.getY() >= world.getMinHeight() && pos.getY() < world.getMaxHeight()) {
 			return 64;
 		}
 		return pos.getY();

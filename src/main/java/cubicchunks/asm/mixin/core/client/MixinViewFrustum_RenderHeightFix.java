@@ -48,11 +48,11 @@ public class MixinViewFrustum_RenderHeightFix {
 	@Shadow private int countChunksY;
 	@Shadow private int countChunksZ;
 
-	@Shadow private int getBaseCoordinate(int arg1, int arg2, int arg3){ throw new Error();};
+	@Shadow private int getBaseCoordinate(int arg1, int arg2, int arg3) { throw new Error();}
 
 	@Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
 	private void updateChunkPositionsInject(double viewEntityX, double viewEntityZ, CallbackInfo cbi) {
-		if(!((ICubicWorld)world).isCubicWorld()) {
+		if (!((ICubicWorld) world).isCubicWorld()) {
 			return;
 		}
 		Entity view = Minecraft.getMinecraft().getRenderViewEntity();
@@ -65,9 +65,9 @@ public class MixinViewFrustum_RenderHeightFix {
 		int viewY = MathHelper.floor_double(y) - 8;
 		int viewZ = MathHelper.floor_double(z) - 8;
 
-		int xSizeInBlocks = this.countChunksX * 16;
-		int ySizeInBlocks = this.countChunksY * 16;
-		int zSizeInBlocks = this.countChunksZ * 16;
+		int xSizeInBlocks = this.countChunksX*16;
+		int ySizeInBlocks = this.countChunksY*16;
+		int zSizeInBlocks = this.countChunksZ*16;
 
 		for (int xIndex = 0; xIndex < this.countChunksX; xIndex++) {
 			//getRendererBlockCoord
@@ -80,7 +80,7 @@ public class MixinViewFrustum_RenderHeightFix {
 					int blockZ = this.getBaseCoordinate(viewZ, zSizeInBlocks, zIndex);
 
 					// get the renderer
-					int rendererIndex = (zIndex * this.countChunksY + yIndex) * this.countChunksX + xIndex;
+					int rendererIndex = (zIndex*this.countChunksY + yIndex)*this.countChunksX + xIndex;
 					RenderChunk renderer = this.renderChunks[rendererIndex];
 
 					// update the position if needed
@@ -96,7 +96,7 @@ public class MixinViewFrustum_RenderHeightFix {
 
 	@Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true, require = 1)
 	private void getRenderChunkInject(BlockPos pos, CallbackInfoReturnable<RenderChunk> cbi) {
-		if(!((ICubicWorld)world).isCubicWorld()) {
+		if (!((ICubicWorld) world).isCubicWorld()) {
 			return;
 		}
 		// treat the y dimension the same as all the rest
@@ -115,7 +115,7 @@ public class MixinViewFrustum_RenderHeightFix {
 		if (z < 0) {
 			z += this.countChunksZ;
 		}
-		final int index = (z * this.countChunksY + y) * this.countChunksX + x;
+		final int index = (z*this.countChunksY + y)*this.countChunksX + x;
 		RenderChunk renderChunk = this.renderChunks[index];
 		cbi.cancel();
 		cbi.setReturnValue(renderChunk);

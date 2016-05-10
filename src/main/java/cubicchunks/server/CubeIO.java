@@ -50,7 +50,12 @@ import org.apache.logging.log4j.Logger;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -79,7 +84,6 @@ CubeIO implements IThreadedFileIO {
 	}
 
 	private static DB initializeDBConnection(final File saveFile, final WorldProvider dimension) {
-
 		// init database connection
 		LOGGER.info("Initializing db connection...");
 
@@ -105,7 +109,6 @@ CubeIO implements IThreadedFileIO {
 	private ConcurrentBatchedQueue<SaveEntry> cubesToSave;
 
 	public CubeIO(ICubicWorld world) {
-
 		this.world = world;
 
 		this.db = initializeDBConnection(this.world.getSaveHandler().getWorldDirectory(), this.world.getProvider());
@@ -203,7 +206,6 @@ CubeIO implements IThreadedFileIO {
 	@Override
 	public boolean writeNextIO() {
 		try {
-
 			// NOTE: return true to redo this call (used for batching)
 
 			final int ColumnsBatchSize = 25;
@@ -251,7 +253,7 @@ CubeIO implements IThreadedFileIO {
 					numCubeBytesSaved += data.length;
 				} catch (Throwable t) {
 					//LOGGER is disabled when shutting down, but we still want to log the error
-					if(!LOGGER.isErrorEnabled()) {
+					if (!LOGGER.isErrorEnabled()) {
 						System.err.printf("Unable to write cube %d, %d, %d",
 								getX(entry.address), getY(entry.address), getZ(entry.address));
 						t.printStackTrace();
@@ -275,13 +277,13 @@ CubeIO implements IThreadedFileIO {
 
 			long diff = System.currentTimeMillis() - start;
 			LOGGER.debug("Wrote {} columns ({} remaining) ({}k) and {} cubes ({} remaining) ({}k) in {} ms",
-					numColumnsSaved, numColumnsRemaining, numColumnBytesSaved / 1024,
-					numCubesSaved, numCubesRemaining, numCubeBytesSaved / 1024, diff
+					numColumnsSaved, numColumnsRemaining, numColumnBytesSaved/1024,
+					numCubesSaved, numCubesRemaining, numCubeBytesSaved/1024, diff
 			);
 
 			return hasMoreColumns || hasMoreCubes;
 		} catch (Throwable t) {
-			if(!LOGGER.isErrorEnabled()) {
+			if (!LOGGER.isErrorEnabled()) {
 				t.printStackTrace();
 			} else {
 				LOGGER.error("Exception occurred when saving cubes", t);
@@ -291,7 +293,6 @@ CubeIO implements IThreadedFileIO {
 	}
 
 	private Column readColumnFromNBT(final int x, final int z, NBTTagCompound nbt) {
-
 		// check the version number
 		byte version = nbt.getByte("v");
 		if (version != 1) {
@@ -392,7 +393,8 @@ CubeIO implements IThreadedFileIO {
 			int entityCubeY = Coords.getCubeYForEntity(entity);
 			int entityCubeZ = Coords.getCubeZForEntity(entity);
 			if (entityCubeX != cube.getX() || entityCubeY != cube.getY() || entityCubeZ != cube.getZ()) {
-				LOGGER.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass().getName(), entityCubeX, entityCubeY, entityCubeZ, cube.getX(), cube.getY(), cube.getZ()));
+				LOGGER.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass()
+						.getName(), entityCubeX, entityCubeY, entityCubeZ, cube.getX(), cube.getY(), cube.getZ()));
 			}
 
 			entity.addedToChunk = true;
@@ -478,7 +480,6 @@ CubeIO implements IThreadedFileIO {
 	}
 
 	private static NBTTagCompound writeCubeToNbt(final Cube cube) {
-
 		NBTTagCompound nbt = new NBTTagCompound();
 		nbt.setByte("v", (byte) 1);
 

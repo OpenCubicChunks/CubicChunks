@@ -72,7 +72,7 @@ public class BasicBuilder implements IBuilder {
 
 	public void setOctaves(int numOctaves) {
 		this.NUM_OCTAVES = numOctaves;
-		this.scaleOctaves = 1 / (2 - Math.pow(2, numOctaves - 1));
+		this.scaleOctaves = 1/(2 - Math.pow(2, numOctaves - 1));
 	}
 
 	public void setFreq(double scale) {
@@ -120,7 +120,7 @@ public class BasicBuilder implements IBuilder {
 		// 1 + 1/p + 1/(p^2) + ... + 1/(p^(N-1))
 		// It's equal to (1 - p^N) / (1 - p)
 		// Divide result by it to make sure that result is between -1 and 1
-		scaleBias.setScale(MAX_ELEV * (1 - persistance) / (1 - Math.pow(persistance, NUM_OCTAVES)));
+		scaleBias.setScale(MAX_ELEV*(1 - persistance)/(1 - Math.pow(persistance, NUM_OCTAVES)));
 		scaleBias.setBias(SEA_LEVEL);
 
 		Clamp clamp = new Clamp();

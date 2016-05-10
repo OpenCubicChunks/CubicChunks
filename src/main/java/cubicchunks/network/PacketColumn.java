@@ -38,7 +38,7 @@ public class PacketColumn implements IMessage {
 	private long cubeAddress;
 	private byte[] data;
 
-	public PacketColumn(){}
+	public PacketColumn() {}
 
 	public PacketColumn(Column column) {
 		this.cubeAddress = AddressTools.getAddress(column.getX(), column.getZ());

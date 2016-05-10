@@ -36,6 +36,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
 /**
  * World class mixins related to block and entity ticking.
  */
@@ -46,14 +47,16 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 	private int updateEntity_entityPosX;
 	private int updateEntity_entityPosZ;
 
-	@Shadow private boolean isValid(BlockPos pos){ throw new Error();}
+	@Shadow private boolean isValid(BlockPos pos) { throw new Error();}
 
 	@Shadow public abstract boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty);
 
-	@Redirect(method = "updateEntityWithOptionalForce", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/world/World;isAreaLoaded(IIIIIIZ)Z"), require = 1)
+	@Redirect(method = "updateEntityWithOptionalForce",
+	          at = @At(value = "INVOKE",
+	                   target = "Lnet/minecraft/world/World;isAreaLoaded(IIIIIIZ)Z"),
+	          require = 1)
 	private boolean canUpdateEntity(World _this, int startBlockX, int oldStartBlockY, int startBlockZ, int endBlockX, int oldEndBlockY, int endBlockZ, boolean allowEmpty) {
-		if(!this.isCubicWorld()) {
+		if (!this.isCubicWorld()) {
 			return isAreaLoaded(startBlockX, oldStartBlockY, startBlockZ, endBlockX, oldEndBlockY, endBlockZ, allowEmpty);
 		}
 		//startBlockX == entityPosX - checkRadius <==> checkRadius == entityPosX - startBlockX
@@ -64,7 +67,7 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 		//if entity is in "invalid area" (outside of the world)  we need to keep ticking it.
 		//otherwise entities that fall out of the world will never die
 		BlockPos entityPos = new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ);
-		if(!isValid(entityPos)) {
+		if (!isValid(entityPos)) {
 			return true;
 		}
 		return isAreaLoaded(startBlockX, startBlockY, startBlockZ, endBlockX, endBlockY, endBlockZ, allowEmpty);

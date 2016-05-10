@@ -42,19 +42,26 @@ import net.minecraft.world.gen.ChunkProviderServer;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
-import static cubicchunks.server.ServerCubeCache.LoadType.*;
+import static cubicchunks.server.ServerCubeCache.LoadType.FORCE_LOAD;
+import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_ONLY;
+import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 /**
  * Thic is CubicChunks equivalent of ChunkProviderServer, it loads and unloads Cubes and Columns.
- *
+ * <p>
  * There are a few necessary changes to the way vanilla methods work:
- *  * Because loading a Chunk (Column) doesn't make much sense with CubicChunks,
- *    all methods that load Chunks, actually load  an empry column with no blocks in it
- *    (there may be some entities that are not in any Cube yet).
- *  * dropChunk method is not supported. Columns are unloaded automatically when the last cube is unloaded
- *
+ * * Because loading a Chunk (Column) doesn't make much sense with CubicChunks,
+ * all methods that load Chunks, actually load  an empry column with no blocks in it
+ * (there may be some entities that are not in any Cube yet).
+ * * dropChunk method is not supported. Columns are unloaded automatically when the last cube is unloaded
  */
 public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
@@ -71,7 +78,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	/**
 	 * Cube generator can add cubes into world that are "linked" with other cube -
 	 * Usually when generating one cube requires generating more than just neighbors.
-	 *
+	 * <p>
 	 * This is a mapping of which cubes are linked with which other cubes,
 	 * allows to automatically unload these additional cubes.
 	 */
@@ -141,7 +148,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	@Override
 	public Column loadChunk(int cubeX, int cubeZ, Runnable runnable) {
 		Column column = this.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
-		if(runnable == null) {
+		if (runnable == null) {
 			return column;
 		}
 		runnable.run();
@@ -220,7 +227,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	@Override
 	public String makeString() {
-		return "ServerCubeCache: " + this.loadedColumns.size() + " columns, Unload: " + this.cubesToUnload.size() + " cubes";
+		return "ServerCubeCache: " + this.loadedColumns.size() + " columns, Unload: " + this.cubesToUnload.size() +
+				" cubes";
 	}
 
 	@Override
@@ -278,7 +286,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	public void loadCube(int cubeX, int cubeY, int cubeZ, LoadType loadType) {
 		//TODO: clean up loadCube(int, int, int, LoadType)
-		if(loadType == FORCE_LOAD) {
+		if (loadType == FORCE_LOAD) {
 			throw new UnsupportedOperationException("Cannot Force Load a cube");
 		}
 
@@ -294,7 +302,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			column = this.loadColumn(cubeX, cubeZ, loadType);
 		}
 		//if we couldn't load or generate the column - give up
-		if(column == null) {
+		if (column == null) {
 			return;
 		}
 
@@ -319,7 +327,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			cube.setGeneratorStage(GeneratorStage.getFirstStage());
 		}
 		//if couldn't generate it - return
-		if(cube == null) {
+		if (cube == null) {
 			return;
 		}
 		if (!cube.getGeneratorStage().isLastStage()) {
@@ -343,10 +351,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public Column loadColumn(int cubeX, int cubeZ, LoadType loadType) {
 		Column column = null;
 		//if we are not forced to load from disk - try to get it first
-		if(loadType != FORCE_LOAD) {
+		if (loadType != FORCE_LOAD) {
 			column = getColumn(cubeX, cubeZ);
 		}
-		if(column != null) {
+		if (column != null) {
 			return column;
 		}
 		try {
@@ -358,14 +366,14 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		if (column == null) {
 			// there wasn't a column, generate a new one (if allowed to generate)
-			if(loadType == LOAD_OR_GENERATE) {
+			if (loadType == LOAD_OR_GENERATE) {
 				column = this.columnGenerator.generateColumn(cubeX, cubeZ);
 			}
 		} else {
 			// the column was loaded
 			column.setLastSaveTime(this.worldServer.getTotalWorldTime());
 		}
-		if(column == null) {
+		if (column == null) {
 			return null;
 		}
 		this.loadedColumns.put(AddressTools.getAddress(cubeX, cubeZ), column);
@@ -389,7 +397,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		this.loadCube(cubeX, cubeY, cubeZ, LOAD_ONLY);
 		Cube cube = getCube(cubeX, cubeY, cubeZ);
-		if(cube != null) {
+		if (cube != null) {
 			addForcedByMapping(forcedBy, cube);
 			return cube;
 		}
@@ -405,12 +413,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	private void addForcedByMapping(Cube forcedBy, Cube cube) {
 		Set<Cube> forcedCubes = this.forceAdded.get(forcedBy);
 
-		if(forcedCubes == null) {
+		if (forcedCubes == null) {
 			forcedCubes = new HashSet<Cube>();
 			this.forceAdded.put(forcedBy, forcedCubes);
 		}
 		Set<Cube> forcedReverse = this.forceAddedReverse.get(cube);
-		if(forcedReverse == null) {
+		if (forcedReverse == null) {
 			forcedReverse = new HashSet<>();
 			this.forceAddedReverse.put(cube, forcedReverse);
 		}
@@ -448,18 +456,18 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public String dumpLoadedCubes() {
 		StringBuilder sb = new StringBuilder(10000).append("\n");
 		for (Column column : this.loadedColumns.values()) {
-			if(column == null) {
+			if (column == null) {
 				sb.append("column = null\n");
 				continue;
 			}
 			sb.append("Column[").append(column.getX()).append(", ").append(column.getZ()).append("] {");
 			boolean isFirst = true;
-			for(Cube cube : column.getAllCubes()) {
-				if(!isFirst) {
+			for (Cube cube : column.getAllCubes()) {
+				if (!isFirst) {
 					sb.append(", ");
 				}
 				isFirst = false;
-				if(cube == null) {
+				if (cube == null) {
 					sb.append("cube = null");
 					continue;
 				}

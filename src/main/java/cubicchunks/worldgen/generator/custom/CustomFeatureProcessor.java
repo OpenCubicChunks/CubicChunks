@@ -32,7 +32,6 @@ import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.generator.custom.structures.CubicCaveGenerator;
 import cubicchunks.worldgen.generator.custom.structures.CubicRavineGenerator;
 import cubicchunks.worldgen.generator.custom.structures.CubicStructureGenerator;
-import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.MapGenMineshaft;
 import net.minecraft.world.gen.structure.MapGenStronghold;
 import net.minecraft.world.gen.structure.MapGenVillage;
@@ -42,19 +41,19 @@ import java.util.Set;
 
 @SuppressWarnings("unused")
 public class CustomFeatureProcessor extends CubeProcessor {
-	
+
 	private CubicCaveGenerator caveGenerator;
 	private MapGenStronghold strongholdGenerator;
 	private MapGenVillage villageGenerator;
 	private MapGenMineshaft mineshaftGenerator;
-//	private MapGenScatteredFeature scatteredFeatureGenerator;
+	//	private MapGenScatteredFeature scatteredFeatureGenerator;
 	private CubicStructureGenerator ravineGenerator;
-	
+
 	private ICubicWorld worldObj;
-	
+
 	public CustomFeatureProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
-		
+
 		this.caveGenerator = new CubicCaveGenerator();
 		this.strongholdGenerator = new MapGenStronghold();
 		this.villageGenerator = new MapGenVillage();
@@ -62,17 +61,17 @@ public class CustomFeatureProcessor extends CubeProcessor {
 //		this.scatteredFeatureGenerator = new TempleGenerator();
 		this.ravineGenerator = new CubicRavineGenerator();
 	}
-	
+
 	@Override
 	public Set<Cube> calculate(Cube cube) {
-		
-		if(!this.canGenerate(cube)) {
+
+		if (!this.canGenerate(cube)) {
 			return Collections.EMPTY_SET;
 		}
 		this.worldObj = cube.getWorld();
-		
+
 		// generate world features
-		if(!cube.isEmpty()) {	
+		if (!cube.isEmpty()) {
 			this.caveGenerator.generate(this.worldObj, cube);
 			this.ravineGenerator.generate(this.worldObj, cube);
 		}
@@ -85,7 +84,7 @@ public class CustomFeatureProcessor extends CubeProcessor {
 			m_scatteredFeatureGenerator.func_151539_a( null, m_world, cubeX, cubeZ, m_blocks ); 
 		}
 		 */
-		
+
 		return Sets.newHashSet(cube);
 	}
 

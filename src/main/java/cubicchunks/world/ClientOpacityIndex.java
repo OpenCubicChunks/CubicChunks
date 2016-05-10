@@ -49,7 +49,7 @@ public class ClientOpacityIndex implements IOpacityIndex {
 	}
 
 	public int getOpacity(int localX, int blockY, int localZ) {
-		IBlockState state = chunk.getBlockState(localX, blockY ,localZ);
+		IBlockState state = chunk.getBlockState(localX, blockY, localZ);
 		return state.getLightOpacity();
 	}
 

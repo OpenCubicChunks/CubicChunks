@@ -35,10 +35,12 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 
 	static final Block[] REPLACEABLE_OPEN_BLOCKS = {
 			Blocks.AIR, Blocks.SAPLING, Blocks.FLOWING_WATER, Blocks.WATER, Blocks.FLOWING_LAVA,
-			Blocks.LAVA, Blocks.LOG, Blocks.LOG2, Blocks.LEAVES, Blocks.LEAVES2};
+			Blocks.LAVA, Blocks.LOG, Blocks.LOG2, Blocks.LEAVES, Blocks.LEAVES2
+	};
 
 	static final Block[] REPLACEABLE_SOLID_BLOCKS = {
-			Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL};
+			Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL
+	};
 
 	protected static boolean canReplaceBlockDefault(final Block blockToCheck) {
 		return canReplace(blockToCheck, REPLACEABLE_OPEN_BLOCKS) || canReplace(blockToCheck, REPLACEABLE_SOLID_BLOCKS);

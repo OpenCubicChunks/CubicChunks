@@ -43,7 +43,7 @@ public class BiomeBlockReplacer {
 	private final int bottom;
 	private final int alterationTop;
 	private final int seaLevel;
-	
+
 	private BiomeGenBase baseBiome;
 	private IBlockState surfaceBlock;
 	private IBlockState groundBlock;
@@ -74,7 +74,7 @@ public class BiomeBlockReplacer {
 		int blocksToChange = -1;
 
 		// Biome blocks depth in current block column. 0 for negative values.
-		final int depth = (int) (depthNoiseValue / 3.0D + 3.0D + this.rand.nextDouble() * 0.25D);
+		final int depth = (int) (depthNoiseValue/3.0D + 3.0D + this.rand.nextDouble()*0.25D);
 
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
@@ -87,9 +87,9 @@ public class BiomeBlockReplacer {
 		 */
 		for (int yAbs = this.top; yAbs >= this.bottom; --yAbs) {
 			pos.set(xAbs, yAbs, zAbs);
-			
+
 			boolean canSetBlock = yAbs <= this.alterationTop;
-			
+
 			if (yAbs <= ((AddressTools.MIN_CUBE_Y + 64) << 4) + this.rand.nextInt(16)) {
 				if (canSetBlock) {
 					setBlock(this.cube, pos, Blocks.BEDROCK.getDefaultState());
@@ -97,19 +97,20 @@ public class BiomeBlockReplacer {
 			} else {
 				// Current block
 				final Block block = getBlock(this.cube, this.cubeAbove, pos);
-	
+
 				// Set numBlocksToChange to -1 when we reach air, skip everything else
 				//TODO: check block material for AIR
 				if (block == null || block == Blocks.AIR) {
 					blocksToChange = -1;
 					continue;
 				}
-	
+
 				// Do not replace any blocks except already replaced and stone
-				if (block != Blocks.STONE && block != this.surfaceBlock && block != this.groundBlock && block != Blocks.SANDSTONE) {
+				if (block != Blocks.STONE && block != this.surfaceBlock && block != this.groundBlock &&
+						block != Blocks.SANDSTONE) {
 					continue;
 				}
-	
+
 				// If we are 1 block below air...
 				if (blocksToChange == -1) {
 					// If depth is <= 0 - only stone
@@ -123,10 +124,11 @@ public class BiomeBlockReplacer {
 						this.surfaceBlock = this.baseBiome.topBlock;
 						this.groundBlock = this.baseBiome.fillerBlock;
 					}
-	
+
 					// If top block is air and we are below sea level use water instead
 					//TODO: check material for AIR
-					if (yAbs < this.seaLevel && (this.surfaceBlock == null || this.surfaceBlock.getBlock() == Blocks.AIR)) {
+					if (yAbs < this.seaLevel &&
+							(this.surfaceBlock == null || this.surfaceBlock.getBlock() == Blocks.AIR)) {
 						if (this.baseBiome.getFloatTemperature(pos) < 0.15F) {
 							// or ice if it's cold
 							this.surfaceBlock = Blocks.ICE.getDefaultState();
@@ -134,16 +136,16 @@ public class BiomeBlockReplacer {
 							this.surfaceBlock = Blocks.WATER.getDefaultState();
 						}
 					}
-	
+
 					// Set num blocks to change to current depth.
 					blocksToChange = depth;
-					
+
 					if (yAbs < this.seaLevel - 7 - depth) {
 						this.surfaceBlock = Blocks.AIR.getDefaultState();
 						this.groundBlock = Blocks.STONE.getDefaultState();
 					}
-					
-					if(canSetBlock) {
+
+					if (canSetBlock) {
 						if (yAbs >= this.seaLevel - 1) {
 							// If we are above sea level
 							setBlock(this.cube, pos, this.surfaceBlock);
@@ -155,23 +157,23 @@ public class BiomeBlockReplacer {
 							setBlock(this.cube, pos, this.groundBlock);
 						}
 					}
-	
+
 					continue;
 				}
-	
+
 				// Nothing left to do...
 				// so continue
 				if (blocksToChange <= 0) {
 					continue;
 				}
-				
+
 				// Decrease blocks to change
 				--blocksToChange;
-				
-				if(canSetBlock) {
+
+				if (canSetBlock) {
 					setBlock(this.cube, pos, this.groundBlock);
 				}
-	
+
 				blocksToChange = placeRandomSandstone(blocksToChange, yAbs);
 			}
 		}
@@ -194,7 +196,7 @@ public class BiomeBlockReplacer {
 
 	protected final Block getBlock(final Cube cube, final Cube cubeAbove, final BlockPos pos) {
 		assert cube.getWorld().getCubeCache()
-				.cubeExists(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()),	Coords.blockToCube(pos.getZ()));
+				.cubeExists(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ()));
 
 		if (Coords.blockToCube(pos.getY()) == cube.getY()) {// check if we're in the same cube as Cube
 			// If we are in the same cube

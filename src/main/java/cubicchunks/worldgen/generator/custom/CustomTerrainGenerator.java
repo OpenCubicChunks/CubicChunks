@@ -31,8 +31,17 @@ import net.minecraft.world.biome.BiomeGenBase;
 import java.util.Random;
 
 import static cubicchunks.util.MathUtil.lerp;
-import static cubicchunks.util.TerrainGeneratorUtils.*;
-import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.*;
+import static cubicchunks.util.TerrainGeneratorUtils.applyHeightGradient;
+import static cubicchunks.util.TerrainGeneratorUtils.expandNoiseArray;
+import static cubicchunks.util.TerrainGeneratorUtils.generateTerrain;
+import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.MAX_ELEV;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.X_SECTIONS;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.X_SECTION_SIZE;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Y_SECTIONS;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Y_SECTION_SIZE;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTIONS;
+import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTION_SIZE;
 
 public class CustomTerrainGenerator {
 	private static final int OCTAVES = 16;
@@ -73,8 +82,8 @@ public class CustomTerrainGenerator {
 		this.seed = seed;
 		this.rand = new Random(seed);
 
-		this.maxSmoothRadius = 2 * (int) (MAX_ELEV / 64);
-		this.maxSmoothDiameter = this.maxSmoothRadius * 2 + 1;
+		this.maxSmoothRadius = 2*(int) (MAX_ELEV/64);
+		this.maxSmoothDiameter = this.maxSmoothRadius*2 + 1;
 
 		this.biomes = null;
 
@@ -91,17 +100,17 @@ public class CustomTerrainGenerator {
 
 		this.noiseArrayHeight = new double[X_SECTIONS][Z_SECTIONS];
 
-		this.nearBiomeWeightArray = new double[this.maxSmoothDiameter * this.maxSmoothDiameter];
+		this.nearBiomeWeightArray = new double[this.maxSmoothDiameter*this.maxSmoothDiameter];
 
 		for (int x = -this.maxSmoothRadius; x <= this.maxSmoothRadius; x++) {
 			for (int z = -this.maxSmoothRadius; z <= this.maxSmoothRadius; z++) {
-				final double f1 = 10.0F / Math.sqrt(x * x + z * z + 0.2F);
+				final double f1 = 10.0F/Math.sqrt(x*x + z*z + 0.2F);
 				this.nearBiomeWeightArray[x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
-						* this.maxSmoothDiameter] = f1;
+						*this.maxSmoothDiameter] = f1;
 			}
 		}
 
-		double freq = 200.0 / Math.pow(2, 10) / (MAX_ELEV / 64);
+		double freq = 200.0/Math.pow(2, 10)/(MAX_ELEV/64);
 
 		this.builderHeight = new BasicBuilder();
 		this.builderHeight.setSeed(this.rand.nextInt());
@@ -139,8 +148,8 @@ public class CustomTerrainGenerator {
 	}
 
 	private IBuilder createHighBuilder() {
-		Random rand = new Random(this.seed * 2);
-		double freq = 684.412D / Math.pow(2, OCTAVES) / (MAX_ELEV / 64.0);
+		Random rand = new Random(this.seed*2);
+		double freq = 684.412D/Math.pow(2, OCTAVES)/(MAX_ELEV/64.0);
 
 		BasicBuilder builderHigh = new BasicBuilder();
 		builderHigh.setSeed(rand.nextInt());
@@ -156,8 +165,8 @@ public class CustomTerrainGenerator {
 	}
 
 	private IBuilder createLowBuilder() {
-		Random rand = new Random(this.seed * 3);
-		double freq = 684.412D / Math.pow(2, OCTAVES) / (MAX_ELEV / 64.0);
+		Random rand = new Random(this.seed*3);
+		double freq = 684.412D/Math.pow(2, OCTAVES)/(MAX_ELEV/64.0);
 
 		BasicBuilder builderLow = new BasicBuilder();
 		builderLow.setSeed(rand.nextInt());
@@ -172,8 +181,8 @@ public class CustomTerrainGenerator {
 	}
 
 	private IBuilder createAlphaBuilder() {
-		Random rand = new Random(this.seed * 4);
-		double freq = 8.55515 / Math.pow(2, 8) / (MAX_ELEV / 64.0);
+		Random rand = new Random(this.seed*4);
+		double freq = 8.55515/Math.pow(2, 8)/(MAX_ELEV/64.0);
 
 		BasicBuilder builderAlpha = new BasicBuilder();
 		builderAlpha.setSeed(rand.nextInt());
@@ -182,7 +191,7 @@ public class CustomTerrainGenerator {
 		builderAlpha.setMaxElev(25.6);
 		builderAlpha.setSeaLevel(0.5);
 		builderAlpha.setClamp(0, 1);
-		builderAlpha.setFreq(freq, freq * 2, freq);
+		builderAlpha.setFreq(freq, freq*2, freq);
 		builderAlpha.build();
 
 		return builderAlpha;
@@ -193,9 +202,9 @@ public class CustomTerrainGenerator {
 	 * @see cubicchunks.worldgen.generator.ITerrainGenerator#generateNoiseArrays(cubicchunks.world.cube.Cube)
 	 */
 	private void generateNoiseArrays(final Cube cube) {
-		int cubeXMin = cube.getX() * (X_SECTIONS - 1);
-		int cubeYMin = cube.getY() * (Y_SECTIONS - 1);
-		int cubeZMin = cube.getZ() * (Z_SECTIONS - 1);
+		int cubeXMin = cube.getX()*(X_SECTIONS - 1);
+		int cubeYMin = cube.getY()*(Y_SECTIONS - 1);
+		int cubeZMin = cube.getZ()*(Z_SECTIONS - 1);
 
 		for (int x = 0; x < X_SECTIONS; x++) {
 			int xPos = cubeXMin + x;
@@ -239,7 +248,7 @@ public class CustomTerrainGenerator {
 					double heightModifier = this.biomeHeight;
 					double volatilityModifier = this.biomeVolatility;
 
-					final double yAbs = (cube.getY() * 16.0 + y * 8.0) / MAX_ELEV;
+					final double yAbs = (cube.getY()*16.0 + y*8.0)/MAX_ELEV;
 					if (yAbs < heightModifier) {
 						// generator below average biome geight is more flat
 						volatilityModifier /= 4.0;
@@ -254,8 +263,8 @@ public class CustomTerrainGenerator {
 					output += heightModifier;
 
 					// Since in TWM we don't have height limit we could skip it but PLATEAU biomes need it
-					int maxYSections = (int) Math.round(MAX_ELEV / Y_SECTION_SIZE);
-					if (yAbs * MAX_ELEV > maxYSections - 4) {
+					int maxYSections = (int) Math.round(MAX_ELEV/Y_SECTION_SIZE);
+					if (yAbs*MAX_ELEV > maxYSections - 4) {
 						// TODO: Convert Y cutoff to work correctly with noise between -1 and 1
 						// final double a = ( yAbs - ( maxYSections - 4 ) ) / 3.0F;
 						// output = output * ( 1.0D - a ) - 10.0D * a;
@@ -268,7 +277,7 @@ public class CustomTerrainGenerator {
 
 	private BiomeGenBase[] getBiomeMap(final Cube cube) {
 		return cube.getWorld().getProvider().getBiomeProvider().getBiomesForGeneration(this.biomes,
-				cube.getX() * 4 - this.maxSmoothRadius, cube.getZ() * 4 - this.maxSmoothRadius,
+				cube.getX()*4 - this.maxSmoothRadius, cube.getZ()*4 - this.maxSmoothRadius,
 				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
 	}
 
@@ -311,8 +320,8 @@ public class CustomTerrainGenerator {
 					// prefer biomes with lower height?
 					biomeWeight /= 2.0F;
 				}
-				smoothVolatility += biomeVolatility * biomeWeight;
-				smoothHeight += biomeHeight * biomeWeight;
+				smoothVolatility += biomeVolatility*biomeWeight;
+				smoothHeight += biomeHeight*biomeWeight;
 
 				biomeWeightSum += biomeWeight;
 			}
@@ -323,38 +332,38 @@ public class CustomTerrainGenerator {
 
 		// Convert from vanilla height/volatility format
 		// to something easier to predict
-		this.biomeVolatility = smoothVolatility * 0.9 + 0.1;
-		this.biomeVolatility *= 4.0 / 3.0;
+		this.biomeVolatility = smoothVolatility*0.9 + 0.1;
+		this.biomeVolatility *= 4.0/3.0;
 
 		// divide everything by 64, then it will be multpllied by maxElev
 		// vanilla sea level: 63.75 / 64.00
 
 		// sea level 0.75/64 of height above sea level (63.75 = 63+0.75)
-		this.biomeHeight = 0.75 / 64.0;
-		this.biomeHeight += smoothHeight * 17.0 / 64.0;
+		this.biomeHeight = 0.75/64.0;
+		this.biomeHeight += smoothHeight*17.0/64.0;
 		// TODO: Remove addHeight? it changes the result by at most 1 block
-		this.biomeHeight += 0.2 * addHeight * 17.0 / 64.0;
+		this.biomeHeight += 0.2*addHeight*17.0/64.0;
 	}
 
 	private BiomeGenBase getCenterBiome(final int x, final int z) {
 		return this.biomes[x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
-				* (X_SECTION_SIZE + this.maxSmoothDiameter)];
+				*(X_SECTION_SIZE + this.maxSmoothDiameter)];
 	}
 
 	private BiomeGenBase getOffsetBiome(final int x, final int z, int nextX, int nextZ) {
 		return this.biomes[x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius)
-				* (X_SECTION_SIZE + this.maxSmoothDiameter)];
+				*(X_SECTION_SIZE + this.maxSmoothDiameter)];
 	}
 
 	private double calcBiomeWeight(int nextX, int nextZ, float biomeHeight) {
 		return this.nearBiomeWeightArray[nextX + this.maxSmoothRadius + (nextZ + this.maxSmoothRadius)
-				* this.maxSmoothDiameter]
-				/ (biomeHeight + 2.0F);
+				*this.maxSmoothDiameter]
+				/(biomeHeight + 2.0F);
 	}
 
 	private void fillHeightArray(final Cube cube) {
-		int cubeXMin = cube.getX() * (X_SECTION_SIZE - 1);
-		int cubeZMin = cube.getZ() * (Z_SECTION_SIZE - 1);
+		int cubeXMin = cube.getX()*(X_SECTION_SIZE - 1);
+		int cubeZMin = cube.getZ()*(Z_SECTION_SIZE - 1);
 
 		for (int x = 0; x < X_SECTIONS; x++) {
 			int xPos = cubeXMin + x;
@@ -379,10 +388,10 @@ public class CustomTerrainGenerator {
 		assert noiseHeight <= 8 && noiseHeight >= -8;
 
 		if (noiseHeight < 0.0D) {
-			noiseHeight = -noiseHeight * 0.3D;
+			noiseHeight = -noiseHeight*0.3D;
 		}
 
-		noiseHeight = noiseHeight * 3.0D - 2.0D;
+		noiseHeight = noiseHeight*3.0D - 2.0D;
 
 		if (noiseHeight < 0.0D) {
 			noiseHeight /= 2.0D;

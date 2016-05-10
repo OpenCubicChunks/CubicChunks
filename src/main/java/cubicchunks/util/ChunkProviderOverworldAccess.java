@@ -29,12 +29,18 @@ import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.ChunkProviderSettings;
 import net.minecraft.world.gen.MapGenBase;
-import net.minecraft.world.gen.structure.*;
+import net.minecraft.world.gen.structure.MapGenMineshaft;
+import net.minecraft.world.gen.structure.MapGenScatteredFeature;
+import net.minecraft.world.gen.structure.MapGenStronghold;
+import net.minecraft.world.gen.structure.MapGenVillage;
+import net.minecraft.world.gen.structure.StructureOceanMonument;
 
 import java.lang.invoke.MethodHandle;
 import java.util.Random;
 
-import static cubicchunks.util.ReflectionUtil.*;
+import static cubicchunks.util.ReflectionUtil.getFieldGetterHandle;
+import static cubicchunks.util.ReflectionUtil.getFieldSetterHandle;
+import static cubicchunks.util.ReflectionUtil.getMethodHandle;
 
 public class ChunkProviderOverworldAccess {
 	private static MethodHandle getRand = fieldGetter("field_185990_i");

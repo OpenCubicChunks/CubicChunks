@@ -35,9 +35,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * Abstract implementation od IMessageHandler that makes EntityPlayer available.
  * It also has separate methods for handling messages serverside and clientside.
  */
-public abstract class AbstractMessageHandler<T extends IMessage> implements IMessageHandler<T, IMessage>
-
-{
+public abstract class AbstractMessageHandler<T extends IMessage> implements IMessageHandler<T, IMessage> {
 	/**
 	 * Handle a message received on the client side
 	 *

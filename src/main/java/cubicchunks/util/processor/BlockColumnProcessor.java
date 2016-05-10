@@ -31,33 +31,32 @@ import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 
 public abstract class BlockColumnProcessor extends QueueProcessor<Long> {
-	
+
 	public BlockColumnProcessor(String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
 	}
-	
+
 	@Override
 	public void processBatch(Progress progress) {
 		for (long address : this.incomingAddresses) {
-			
 			// get the block coords
 			int blockX = Bits.unpackSigned(address, 26, 0);
 			int blockZ = Bits.unpackSigned(address, 26, 26);
-			
+
 			// get the column
 			int cubeX = Coords.blockToCube(blockX);
 			int cubeZ = Coords.blockToCube(blockZ);
 			Column column = this.cache.getColumn(cubeX, cubeZ);
-			
+
 			// skip blank columns
 			if (column == null || column instanceof BlankColumn) {
 				continue;
 			}
-			
+
 			// get the local coords
 			int localX = Coords.blockToLocal(blockX);
 			int localZ = Coords.blockToLocal(blockZ);
-			
+
 			// add unsuccessful calculations back onto the queue
 			boolean success = calculate(column, localX, localZ, blockX, blockZ);
 			if (success) {
@@ -65,12 +64,12 @@ public abstract class BlockColumnProcessor extends QueueProcessor<Long> {
 			} else {
 				this.deferredAddresses.add(address);
 			}
-			
+
 			if (progress != null) {
 				progress.incrementProgress();
 			}
 		}
 	}
-	
+
 	public abstract boolean calculate(Column column, int localX, int localZ, int blockX, int blockZ);
 }

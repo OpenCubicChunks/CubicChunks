@@ -31,72 +31,71 @@ import net.minecraft.util.math.BlockPos;
 import java.util.Random;
 
 public abstract class CubicStructureGenerator {
-	
+
 	/** The number of Chunks to gen-check in any given direction. */
 	protected int range = 8;
-	
+
 	/** The RNG used by the MapGen classes. */
 	protected Random rand = new Random();
-	
+
 	/** This world object. */
 	protected ICubicWorld m_world;
-	
+
 	public void generate(ICubicWorld world, Cube cube) {
 		int xOrigin = cube.getX();
 		int yOrigin = cube.getY();
 		int zOrigin = cube.getZ();
-		
+
 		int radius = this.range;
 		this.m_world = world;
 		this.rand.setSeed(world.getSeed());
 		long randX = this.rand.nextLong();
 		long randY = this.rand.nextLong();
 		long randZ = this.rand.nextLong();
-		
+
 		for (int x = xOrigin - radius; x <= xOrigin + radius; ++x) {
 			for (int y = yOrigin - radius; y <= yOrigin + radius; ++y) {
 				for (int z = zOrigin - radius; z <= zOrigin + radius; ++z) {
-					long randX_mul = x * randX;
-					long randY_mul = y * randY;
-					long randZ_mul = z * randZ;
+					long randX_mul = x*randX;
+					long randY_mul = y*randY;
+					long randZ_mul = z*randZ;
 					this.rand.setSeed(randX_mul ^ randY_mul ^ randZ_mul ^ world.getSeed());
 					this.generate(world, cube, x, y, z, xOrigin, yOrigin, zOrigin);
 				}
 			}
-			
+
 		}
 	}
-	
+
 	protected abstract void generate(ICubicWorld world, Cube cube, int x, int y, int z, int xOrig, int yOrig, int zOrig);
-	
+
 	protected abstract void generateNode(Cube cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y, double z, float size_base, float curve, float angle, int numTry, int tries, double yModSinMultiplier);
 
 	protected boolean scanForLiquid(Cube cube, int xDist1, int xDist2, int yDist1, int yDist2, int zDist1,
-			int zDist2, Block stationaryLiquid, Block flowingLiquid) {
-				boolean result = false;
-				for (int x1 = xDist1; !result && x1 < xDist2; ++x1) {
-					for (int z1 = zDist1; !result && z1 < zDist2; ++z1) {
-						for (int y1 = yDist2; !result && y1 >= yDist1; --y1) {
-							Block block = cube.getBlockState(new BlockPos(x1, y1, z1)).getBlock();
-			
-							if (y1 < 0 || y1 >= 16)
-							{
-								continue;
-							}
-							if (block == stationaryLiquid || block == flowingLiquid) {
-								result = true;
-							}
-			
-							if (y1 != yDist1 - 1 && x1 != xDist1 && x1 != xDist2 - 1 && z1 != zDist1 && z1 != zDist2 - 1) {
-								y1 = yDist1;
-							}
-						}
+	                                int zDist2, Block stationaryLiquid, Block flowingLiquid) {
+		boolean result = false;
+		for (int x1 = xDist1; !result && x1 < xDist2; ++x1) {
+			for (int z1 = zDist1; !result && z1 < zDist2; ++z1) {
+				for (int y1 = yDist2; !result && y1 >= yDist1; --y1) {
+					Block block = cube.getBlockState(new BlockPos(x1, y1, z1)).getBlock();
+
+					if (y1 < 0 || y1 >= 16) {
+						continue;
+					}
+					if (block == stationaryLiquid || block == flowingLiquid) {
+						result = true;
+					}
+
+					if (y1 != yDist1 - 1 && x1 != xDist1 && x1 != xDist2 - 1 && z1 != zDist1 && z1 != zDist2 - 1) {
+						y1 = yDist1;
 					}
 				}
-				return result;
 			}
+		}
+		return result;
+	}
 
 	protected double calculateDistance(int origin, int x1, double x, double modSin) {
-		return (x1 + origin * 16 + 0.5D - x) / modSin;
+		return (x1 + origin*16 + 0.5D - x)/modSin;
 	}
 }

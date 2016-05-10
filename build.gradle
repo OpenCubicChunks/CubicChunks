@@ -17,6 +17,7 @@ buildscript
 		classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
 		classpath 'org.ajoberstar:grgit:1.4.+'
 		classpath 'org.spongepowered:mixingradle:0.3-SNAPSHOT'
+		classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
 	}
 }
 
@@ -25,6 +26,7 @@ plugins {
 	id "com.github.hierynomus.license" version "0.11.0"
 	id "eclipse"
 	id "idea"
+	id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'org.spongepowered.mixin'
@@ -79,9 +81,13 @@ minecraft {
 
 }
 
-reobfJar {
-	addExtraSrgLine "PK: org/mapdb cubicchunks/org/mappdb"
-	addExtraSrgLine "PK: com/flowpowered cubicchunks/com/flowpowered"
+shadowJar {
+	dependencies {
+		include(dependency('com.flowpowered:flow-noise'))
+		include(dependency('org.mapdb:mapdb'))
+	}
+	relocate 'org/mapdb', 'cubicchunks/org/mappdb'
+	relocate 'com/flowpowered', 'cubicchunks/com/flowpowered'
 }
 
 jar {
@@ -98,17 +104,12 @@ repositories {
 	}
 }
 
-configurations {
-	shade
-	compile.extendsFrom shade
-}
-
 dependencies {
-	shade 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
-	shade 'org.mapdb:mapdb:1.0.7'
+	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
+	compile 'org.mapdb:mapdb:1.0.7'
 	testCompile 'junit:junit:4.11'
 
-	shade('org.spongepowered:mixin:0.5.5-SNAPSHOT') {
+	compile('org.spongepowered:mixin:0.5.5-SNAPSHOT') {
 		exclude module: 'launchwrapper'
 		exclude module: 'guava'
 	}
@@ -157,11 +158,6 @@ jar {
 		attributes 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
 		attributes 'TweakOrder': '0'
 		attributes 'ForceLoadAsMod': 'true'
-	}
-	configurations.shade.each { dep ->
-		from(project.zipTree(dep)){
-			exclude 'META-INF', 'META-INF/**'
-		}
 	}
 }
 

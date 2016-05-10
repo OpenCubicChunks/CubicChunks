@@ -34,11 +34,11 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import java.io.IOException;
 
 public class PacketCubeChange implements IMessage {
-	
+
 	public long cubeAddress;
 	public byte[] data;
 
-	public PacketCubeChange(){}
+	public PacketCubeChange() {}
 
 	public PacketCubeChange(Cube cube) {
 		cubeAddress = cube.getAddress();
@@ -53,7 +53,7 @@ public class PacketCubeChange implements IMessage {
 			throw new Error(ex);
 		}
 	}
-	
+
 	public void decodeCube(Cube cube) {
 		try {
 			PacketBuffer in = new PacketBuffer(Unpooled.wrappedBuffer(data));

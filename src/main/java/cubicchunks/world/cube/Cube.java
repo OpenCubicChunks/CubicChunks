@@ -25,14 +25,14 @@ package cubicchunks.world.cube;
 
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;
 import cubicchunks.world.EntityContainer;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
+import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
@@ -106,7 +106,7 @@ public class Cube {
 
 	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
 		try {
-			if(this.isEmpty()) {
+			if (this.isEmpty()) {
 				return Blocks.AIR.getDefaultState();
 			}
 			int localX = Coords.blockToLocal(blockX);
@@ -138,8 +138,8 @@ public class Cube {
 
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
 		//it may not look like this but it's actually the same logic as in vanilla
-		if(this.isEmpty()) {
-			if(this.column.canSeeSky(pos)) {
+		if (this.isEmpty()) {
+			if (this.column.canSeeSky(pos)) {
 				return lightType.defaultLightValue;
 			}
 			return 0;
@@ -151,7 +151,7 @@ public class Cube {
 
 		switch (lightType) {
 			case SKY:
-				if(this.world.getProvider().getHasNoSky()) {
+				if (this.world.getProvider().getHasNoSky()) {
 					return 0;
 				}
 				return this.storage.getExtSkylightValue(localX, localY, localZ);
@@ -293,7 +293,7 @@ public class Cube {
 
 	public void removeTileEntity(BlockPos pos) {
 		//it doesn't make sense to me to check if cube is loaded, but vanilla does it
-		if(this.isCubeLoaded) {
+		if (this.isCubeLoaded) {
 			TileEntity tileEntity = this.tileEntityMap.remove(pos);
 			if (tileEntity != null) {
 				tileEntity.invalidate();
@@ -338,7 +338,8 @@ public class Cube {
 		if (isEmpty) {
 			this.storage = null;
 		} else if (storage == null) {
-			this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(this.cubeY), !this.world.getProvider().getHasNoSky());
+			this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(this.cubeY), !this.world.getProvider()
+					.getHasNoSky());
 		}
 	}
 
@@ -546,10 +547,10 @@ public class Cube {
 
 	public long cubeRandomSeed() {
 		long hash = 3;
-		hash = 41 * hash + this.world.getSeed();
-		hash = 41 * hash + getX();
-		hash = 41 * hash + getY();
-		return 41 * hash + getZ();
+		hash = 41*hash + this.world.getSeed();
+		hash = 41*hash + getX();
+		hash = 41*hash + getY();
+		return 41*hash + getZ();
 	}
 
 	public boolean needsRelightAfterLoad() {
@@ -623,7 +624,7 @@ public class Cube {
 
 		public void remove(int localX, int localZ) {
 			int index = index(localX, localZ);
-			if(minMaxHeights[index] != -1) {
+			if (minMaxHeights[index] != -1) {
 				toUpdateCounter--;
 			}
 			minMaxHeights[index] = -1;

@@ -31,7 +31,7 @@ import cubicchunks.world.ICubeCache;
 import java.util.Set;
 
 public abstract class QueueProcessor<T> {
-	
+
 	protected String name;
 	protected ICubeCache cache;
 	private int batchSize;
@@ -39,85 +39,85 @@ public abstract class QueueProcessor<T> {
 	protected Set<T> incomingAddresses;
 	protected Set<T> processedAddresses;
 	protected Set<T> deferredAddresses;
-	
+
 	public QueueProcessor(String name, ICubeCache cache, int batchSize) {
 		this.name = name;
 		this.cache = cache;
 		this.batchSize = batchSize;
-		
+
 		this.queue = new ArrayBatchedQueue<>();
 		this.incomingAddresses = Sets.newHashSet();
 		this.processedAddresses = Sets.newHashSet();
 		this.deferredAddresses = Sets.newHashSet();
 	}
-	
+
 	public String getName() {
 		return this.name;
 	}
-	
+
 	public void add(T address) {
-		if(address == null) {
+		if (address == null) {
 			throw new NullPointerException();
 		}
 		this.queue.add(address);
 	}
-	
+
 	public int getNumInQueue() {
 		return this.queue.size();
 	}
-	
+
 	public int processQueueUntil(long timeStop) {
 		this.processedAddresses.clear();
 		this.deferredAddresses.clear();
-		
+
 		// is there time left?
 		while (System.currentTimeMillis() < timeStop) {
-			
 			// get a batch of addresses
 			this.incomingAddresses.clear();
 			this.queue.getBatch(this.incomingAddresses, this.batchSize);
-			
+
 			// nothing left to do?
 			if (this.incomingAddresses.isEmpty()) {
 				break;
 			}
-			
+
 			// process it
 			processBatch();
 		}
-		
+
 		// put the deferred addresses back on the queue
 		this.queue.addAll(this.deferredAddresses);
-		
+
 		return this.processedAddresses.size();
 	}
-	
+
 	public int processQueue(Progress progress) {
 		this.processedAddresses.clear();
 		this.deferredAddresses.clear();
-		
+
 		// process all the addresses
 		this.incomingAddresses.clear();
 		this.queue.getAll(this.incomingAddresses);
 		processBatch(progress);
-		
+
 		// put the deferred addresses back on the queue
 		this.queue.addAll(this.deferredAddresses);
-		
+
 		return this.processedAddresses.size();
 	}
-	
+
 	public Set<T> getProcessedAddresses() {
 		return this.processedAddresses;
 	}
-	
+
 	public String getProcessingReport() {
-		return String.format("\t%15s: %3d processed, %d remaining", this.name, this.processedAddresses.size(), this.queue.size());
+		return String.format("\t%15s: %3d processed, %d remaining", this.name, this.processedAddresses.size(), this.queue
+				.size());
 	}
-	
+
 	public void processBatch() {
 		processBatch(null);
 	}
-	
+
 	public abstract void processBatch(Progress progress);
 }

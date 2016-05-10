@@ -40,27 +40,27 @@ public class NoiseGeneratorMultiFractal {
 	}
 
 	public double[] getNoiseMap(final double[] noiseMap, final double xOffset, final double zOffset, final int xSize,
-			final int zSize, final double xScale, final double zScale, final double lacunarity) {
+	                            final int zSize, final double xScale, final double zScale, final double lacunarity) {
 		return calculate(noiseMap, xOffset, zOffset, xSize, zSize, xScale, zScale, lacunarity, 0.5D);
 	}
 
 	public double[] calculate(double[] noiseArray, final double xOffset, final double zOffset, final int xSize,
-			final int zSize, final double xScale, final double zScale, final double lacunarity, final double gain) {
-		if (noiseArray != null && noiseArray.length >= xSize * zSize) {
+	                          final int zSize, final double xScale, final double zScale, final double lacunarity, final double gain) {
+		if (noiseArray != null && noiseArray.length >= xSize*zSize) {
 			for (int i = 0; i < noiseArray.length; ++i) // clear the array
 			{
 				noiseArray[i] = 0.0D;
 			}
 		} else {
-			noiseArray = new double[xSize * zSize];
+			noiseArray = new double[xSize*zSize];
 		}
 
 		double amplitude = 1.0D;
 		double frequency = 1.0D;
 
 		for (int octave = 0; octave < this.numOctaves; ++octave) {
-			this.generators[octave].getValueArray(noiseArray, xOffset, zOffset, xSize, zSize, xScale * frequency
-					* amplitude, zScale * frequency * amplitude, 0.55D / amplitude);
+			this.generators[octave].getValueArray(noiseArray, xOffset, zOffset, xSize, zSize, xScale*frequency
+					*amplitude, zScale*frequency*amplitude, 0.55D/amplitude);
 			frequency *= lacunarity;
 			amplitude *= gain;
 		}

@@ -33,7 +33,11 @@ import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
 import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 import net.minecraft.world.biome.BiomeGenBase;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 public class CustomPopulationProcessor extends CubeProcessor {
 
@@ -46,7 +50,7 @@ public class CustomPopulationProcessor extends CubeProcessor {
 
 		// for now use global for all biomes
 		for (BiomeGenBase biome : BiomeGenBase.REGISTRY) {
-			if(biome == null){
+			if (biome == null) {
 				continue;
 			}
 			this.biomeFeaturesMap.put(biome, new BiomeFeatures(world, biome));
@@ -55,18 +59,18 @@ public class CustomPopulationProcessor extends CubeProcessor {
 
 	@Override
 	public Set<Cube> calculate(Cube cube) {
-		if(true)return Sets.newHashSet(cube);
+		if (true) return Sets.newHashSet(cube);
 		if (!cube.getWorld().cubeAndNeighborsExist(cube, true, GeneratorStage.POPULATION)) {
 			return Collections.EMPTY_SET;
 		}
 
 		BiomeGenBase biome = cube.getWorld().getBiomeGenForCoords(Coords.getCubeCenter(cube));
-    
+
 		//For surface generators we should actually use special RNG with seed 
 		//that depends only in world seed and cube X/Z
 		//but using this for surface generation doesn't cause any noticable issues
 		Random rand = new Random(cube.cubeRandomSeed());
-		
+
 		BiomeFeatures features = this.biomeFeaturesMap.get(biome);
 		for (FeatureGenerator gen : features.getBiomeFeatureGenerators()) {
 			gen.generate(rand, cube, biome);

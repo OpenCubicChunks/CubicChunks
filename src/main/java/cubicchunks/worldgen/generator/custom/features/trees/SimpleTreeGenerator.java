@@ -96,18 +96,18 @@ public class SimpleTreeGenerator extends TreeGenerator {
 		BlockPos startPos = pos.add(0, treeHeight - leavesHeight, 0);
 		for (int yRel = 0; yRel < leavesHeight; yRel++) {
 			int y2 = yRel >> 1 << 1;
-			double radiusSubstract = 0.7 * treeRadius * y2 / (double) leavesHeight;
+			double radiusSubstract = 0.7*treeRadius*y2/(double) leavesHeight;
 			double radius = treeRadius - radiusSubstract;
 			this.generateLeavesCircleLayerAt(this.leafBlock, startPos.up(yRel), radius + 0.5);
 		}
 	}
-	
+
 	private void generateLeavesCircleLayerAt(IBlockState state, BlockPos pos, double radius) {
-		double radiusSquared = radius * radius;
+		double radiusSquared = radius*radius;
 		int r = MathHelper.ceiling_double_int(radius);
 		for (int x = -r; x <= r; x++) {
 			for (int z = -r; z <= r; z++) {
-				if (x * x + z * z > radiusSquared) {
+				if (x*x + z*z > radiusSquared) {
 					continue;
 				}
 				BlockPos currentPos = pos.add(x, 0, z);
@@ -120,9 +120,9 @@ public class SimpleTreeGenerator extends TreeGenerator {
 			}
 		}
 	}
-	
+
 	private void generateLeavesSphereAt(IBlockState state, BlockPos pos, double radius) {
-		double radiusSquared = radius * radius;
+		double radiusSquared = radius*radius;
 		int r = MathHelper.ceiling_double_int(radius);
 		for (int x = -r; x <= r; x++) {
 			for (int y = -r; y <= r; y++) {

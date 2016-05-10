@@ -39,28 +39,28 @@ public class ReflectionUtil {
 			return (T) field.get(inObject);
 		} catch (IllegalArgumentException | IllegalAccessException ex) {
 			throw new RuntimeException(ex);
-		} 
+		}
 	}
-	
+
 	public static void set(Object inObject, Field field, Object newValue) {
 		try {
 			field.set(inObject, newValue);
 		} catch (IllegalArgumentException | IllegalAccessException ex) {
 			throw new RuntimeException(ex);
-		} 
+		}
 	}
-		
+
 	public static final Field findFieldNonStatic(Class<?> inClass, Class<?> type) {
 		Field found = null;
-		for(Field f : inClass.getDeclaredFields()) {
-			if(f.getType().equals(type) && !Modifier.isStatic(f.getModifiers())) {
-				if(found != null) {
+		for (Field f : inClass.getDeclaredFields()) {
+			if (f.getType().equals(type) && !Modifier.isStatic(f.getModifiers())) {
+				if (found != null) {
 					throw new RuntimeException("More than one field of type " + type + " found in class " + inClass);
 				}
 				found = f;
 			}
 		}
-		if(found == null) {
+		if (found == null) {
 			throw new RuntimeException("Field of type " + type + " not found in class " + inClass);
 		}
 		return found;
@@ -84,7 +84,7 @@ public class ReflectionUtil {
 		}
 	}
 
-	public static MethodHandle getConstructorMethodHandle(Class<?> visitor, Class<?>...args) {
+	public static MethodHandle getConstructorMethodHandle(Class<?> visitor, Class<?>... args) {
 		try {
 			return MethodHandles.lookup().findConstructor(visitor, MethodType.methodType(void.class, args));
 		} catch (IllegalAccessException | NoSuchMethodException e) {
@@ -101,8 +101,8 @@ public class ReflectionUtil {
 		Field foundField = null;
 		String name = Mappings.getNameFromSrg(srgName);
 
-		for(Field field : allFields) {
-			if(name.equals(field.getName())) {
+		for (Field field : allFields) {
+			if (name.equals(field.getName())) {
 				foundField = field;
 				break;
 			}
@@ -110,6 +110,7 @@ public class ReflectionUtil {
 		foundField.setAccessible(true);
 		return foundField;
 	}
+
 	public static MethodHandle getFieldGetterHandle(Class<?> owner, String srgName) {
 		String name = Mappings.getNameFromSrg(srgName);
 		Field field = getField(owner, name);
@@ -134,7 +135,7 @@ public class ReflectionUtil {
 
 	/**
 	 * Returns value of given field.
-	 *
+	 * <p>
 	 * Warning: Slow.
 	 */
 	public static <T> T getFieldFromSrg(Object from, String srgName) {
@@ -153,9 +154,9 @@ public class ReflectionUtil {
 		String name = Mappings.getNameFromSrg(srgName);
 		try {
 			Method method = null;
-			for(Method meth : theClass.getDeclaredMethods()) {
-				if(name.equals(meth.getName())) {
-					if(method != null) {
+			for (Method meth : theClass.getDeclaredMethods()) {
+				if (name.equals(meth.getName())) {
+					if (method != null) {
 						throw new RuntimeException("Duplicate method names: " + name);
 					}
 					method = meth;

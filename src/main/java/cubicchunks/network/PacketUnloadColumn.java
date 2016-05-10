@@ -32,7 +32,8 @@ public class PacketUnloadColumn implements IMessage {
 
 	public long cubeAddress;
 
-	public PacketUnloadColumn(){}
+	public PacketUnloadColumn() {}
+
 	public PacketUnloadColumn(long cubeAddress) {
 		this.cubeAddress = cubeAddress;
 	}

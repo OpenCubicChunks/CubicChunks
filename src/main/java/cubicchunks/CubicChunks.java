@@ -23,7 +23,6 @@
  */
 package cubicchunks;
 
-import cubicchunks.client.ClientEventHandler;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
 import net.minecraftforge.fml.common.Mod;
@@ -45,17 +44,14 @@ public class CubicChunks {
 	@Instance(value = MODID)
 	public static CubicChunks instance;
 
-	@SidedProxy(clientSide="cubicchunks.proxy.ClientProxy", serverSide="cubicchunks.proxy.ServerProxy")
+	@SidedProxy(clientSide = "cubicchunks.proxy.ClientProxy", serverSide = "cubicchunks.proxy.ServerProxy")
 	public static CommonProxy proxy;
 
-	private CommonEventHandler evtHandler;
-	private ClientEventHandler fmlEvtHandler;
-	
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
 		LOGGER = e.getModLog();
 	}
-	
+
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		proxy.registerEvents();

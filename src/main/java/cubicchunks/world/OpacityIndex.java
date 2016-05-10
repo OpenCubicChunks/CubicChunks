@@ -25,7 +25,11 @@ package cubicchunks.world;
 
 import cubicchunks.util.Bits;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 public class OpacityIndex implements IOpacityIndex {
 
@@ -50,12 +54,12 @@ public class OpacityIndex implements IOpacityIndex {
 	private boolean m_needsHash;
 
 	public OpacityIndex() {
-		m_ymin = new int[16 * 16];
-		m_ymax = new int[16 * 16];
-		m_segments = new int[16 * 16][];
+		m_ymin = new int[16*16];
+		m_ymax = new int[16*16];
+		m_segments = new int[16*16][];
 
 		// init to empty
-		for (int i = 0; i < 16 * 16; i++) {
+		for (int i = 0; i < 16*16; i++) {
 			m_ymin[i] = None;
 			m_ymax[i] = None;
 		}
@@ -140,10 +144,10 @@ public class OpacityIndex implements IOpacityIndex {
 		          The segment below must be transparent, and the segment below it is opaque.
 		          So the block we want if 1 block below the bottom of the segment below blockYSegment
 		 */
-		if(blockYSegmentOpacity == 0) {
+		if (blockYSegmentOpacity == 0) {
 			return blockYSegmentHeight - 1;
 		}
-		if(blockY != blockYSegmentHeight) {
+		if (blockY != blockYSegmentHeight) {
 			return blockY - 1;
 		}
 		return belowYSegmentHeight - 1;
@@ -335,7 +339,8 @@ public class OpacityIndex implements IOpacityIndex {
 		}
 
 		// we must be bisecting the range, need to make segments
-		assert (blockY > m_ymin[i] && blockY < m_ymax[i]) : String.format("blockY outside of ymin/ymax range: %d -> [%d,%d]", blockY, m_ymin[i], m_ymax[i]);
+		assert (blockY > m_ymin[i] && blockY <
+				m_ymax[i]) : String.format("blockY outside of ymin/ymax range: %d -> [%d,%d]", blockY, m_ymin[i], m_ymax[i]);
 		/*
 		 Example:
 		 ---

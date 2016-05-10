@@ -43,6 +43,6 @@ public class MixinViewFrustum_VertViewDistance {
 
 	@ModifyConstant(method = "setCountChunksXYZ", constant = @Constant(intValue = 16))
 	private int getYViewDistance(int oldDistance) {
-		return renderDistance * 2 + 1;
+		return renderDistance*2 + 1;
 	}
 }

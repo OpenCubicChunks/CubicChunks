@@ -34,7 +34,12 @@ import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Group;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(World.class)
@@ -86,7 +91,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 	/**
 	 * Redirect pos.getY() in getLight to return value in range 0..255
 	 * when Y position is within cubic chunks height range, to workaround vanilla height check.
-	 *
+	 * <p>
 	 * this getLight method is used in parts of game logic and entity rendering code.
 	 * Doesn't directly affect block rendering.
 	 */
@@ -97,7 +102,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 			require = 2
 	)
 	private int onGetYGetLight(BlockPos pos) {
-		if(pos.getY() < this.getMinHeight() || pos.getY() >= this.getMaxHeight()) {
+		if (pos.getY() < this.getMinHeight() || pos.getY() >= this.getMaxHeight()) {
 			return 64;//any value between 0 and 255
 		}
 		return pos.getY();

@@ -34,27 +34,27 @@ import net.minecraft.world.biome.BiomeGenBase;
 import java.util.Random;
 
 public class TallGrassGenerator extends SurfaceFeatureGenerator {
-	
+
 	private final IBlockState block;
-	
+
 	public TallGrassGenerator(final ICubicWorld world, final BlockTallGrass.EnumType tallGrassType) {
 		super(world);
-		
+
 		this.block = Blocks.TALLGRASS.getDefaultState().withProperty(BlockTallGrass.TYPE, tallGrassType);
 	}
-	
+
 	@Override
 	public void generateAt(final Random rand, final BlockPos pos, final BiomeGenBase biome) {
 		BlockPos currentPos = pos;
 
-		for(int i = 0; i < 128; ++i) {
+		for (int i = 0; i < 128; ++i) {
 			BlockPos randomPos = currentPos.add(rand.nextInt(8) - rand.nextInt(8),
 					rand.nextInt(4) - rand.nextInt(4),
 					rand.nextInt(8) - rand.nextInt(8));
-			
-			if(world.isAirBlock(randomPos) && Blocks.TALLGRASS.canBlockStay((World) world, randomPos, block)) {
+
+			if (world.isAirBlock(randomPos) && Blocks.TALLGRASS.canBlockStay((World) world, randomPos, block)) {
 				this.setBlockOnly(randomPos, block);
-			}	
+			}
 		}
 	}
 }

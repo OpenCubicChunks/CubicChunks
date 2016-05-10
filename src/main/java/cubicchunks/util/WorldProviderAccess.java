@@ -23,16 +23,17 @@
  */
 package cubicchunks.util;
 
-import java.lang.reflect.Field;
 import net.minecraft.world.WorldProvider;
+
+import java.lang.reflect.Field;
 
 public class WorldProviderAccess {
 	private static final Field wp_generatorSettings = ReflectionUtil.findFieldNonStatic(WorldProvider.class, String.class);
-	
+
 	static {
 		wp_generatorSettings.setAccessible(true);
 	}
-	
+
 	public static final String getGeneratorSettings(WorldProvider wp) {
 		return ReflectionUtil.get(wp, wp_generatorSettings, String.class);
 	}

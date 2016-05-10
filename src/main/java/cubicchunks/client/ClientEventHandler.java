@@ -35,7 +35,7 @@ public class ClientEventHandler {
 		ICubicWorld world = (ICubicWorld) Minecraft.getMinecraft().theWorld;
 		//does the world exist? Is the game paused?
 		//TODO: Maybe we should still process light updates when game is paused?
-		if(world == null || Minecraft.getMinecraft().isGamePaused()) {
+		if (world == null || Minecraft.getMinecraft().isGamePaused()) {
 			return;
 		}
 		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld()) {
