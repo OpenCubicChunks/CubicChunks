@@ -478,6 +478,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		return sb.toString();
 	}
 
+	public void flush() {
+		this.cubeIO.flush();
+	}
+
 	public enum LoadType {
 		LOAD_ONLY, LOAD_OR_GENERATE, FORCE_LOAD
 	}

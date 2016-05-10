@@ -29,11 +29,13 @@ import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.CubePlayerManager;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
+import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
 import net.minecraft.server.management.PlayerManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.storage.ISaveHandler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -64,6 +66,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		this.maxHeight = type.getMaxHeight();
 		this.minHeight = type.getMinHeight();
+
+		final ISaveHandler orig = this.getSaveHandler();
+		this.setSaveHandler(new CubicChunksSaveHandler(this, orig));
 	}
 
 	@Override public void generateWorld() {
@@ -115,4 +120,5 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	@Override public boolean getDisableLevelSaving() {
 		return this.disableLevelSaving;
 	}
+
 }

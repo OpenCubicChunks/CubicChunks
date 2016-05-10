@@ -106,7 +106,7 @@ repositories {
 
 dependencies {
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
-	compile 'org.mapdb:mapdb:1.0.7'
+	compile 'org.mapdb:mapdb:3.0.0-beta3'
 	testCompile 'junit:junit:4.11'
 
 	compile('org.spongepowered:mixin:0.5.5-SNAPSHOT') {

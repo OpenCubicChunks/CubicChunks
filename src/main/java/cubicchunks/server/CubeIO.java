@@ -49,6 +49,7 @@ import net.minecraft.world.storage.ThreadedFileIOBase;
 import org.apache.logging.log4j.Logger;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -67,8 +68,7 @@ import static cubicchunks.util.AddressTools.getZ;
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesHashSet;
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesThisTick;
 
-public class
-CubeIO implements IThreadedFileIO {
+public class CubeIO implements IThreadedFileIO {
 
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 
@@ -93,7 +93,7 @@ CubeIO implements IThreadedFileIO {
 
 		file.getParentFile().mkdirs();
 
-		DB db = DBMaker.newFileDB(file).make();
+		DB db = DBMaker.fileDB(file).make();
 		return db;
 		// NOTE: could set different cache settings
 		// the default is a hash map cache with 32768 entries
@@ -108,30 +108,52 @@ CubeIO implements IThreadedFileIO {
 	private ConcurrentBatchedQueue<SaveEntry> columnsToSave;
 	private ConcurrentBatchedQueue<SaveEntry> cubesToSave;
 
+	private final Thread theShutdownHook;
+
 	public CubeIO(ICubicWorld world) {
 		this.world = world;
 
 		this.db = initializeDBConnection(this.world.getSaveHandler().getWorldDirectory(), this.world.getProvider());
 		//we can't use closeOnJvmShutdown() because Minecraft saves all unsaved things on shutdown
 		//so the DB will be closed while we are still saving.
-		Runtime.getRuntime().addShutdownHook(new Thread() {
+		//also we need to save the thread into field because in client environment we need to remove the shutdown hook
+		Runtime.getRuntime().addShutdownHook(theShutdownHook = new Thread() {
 			public void run() {
 				try {
 					ThreadedFileIOBase.getThreadedIOInstance().waitForFinish();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} finally {
-					CubeIO.this.db.close();
+					if (!CubeIO.this.db.isClosed()) {
+						CubeIO.this.db.close();
+					}
 				}
 
 			}
 		});
-		this.columns = this.db.getTreeMap("columns");
-		this.cubes = this.db.getTreeMap("chunks");
+		this.columns = this.db.treeMap("columns", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
+		this.cubes = this.db.treeMap("chunks", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
 
 		// init chunk save queue
-		this.columnsToSave = new ConcurrentBatchedQueue<SaveEntry>();
-		this.cubesToSave = new ConcurrentBatchedQueue<SaveEntry>();
+		this.columnsToSave = new ConcurrentBatchedQueue<>();
+		this.cubesToSave = new ConcurrentBatchedQueue<>();
+	}
+
+	public void flush() {
+		if (columnsToSave.size() != 0 || cubesToSave.size() != 0) {
+			err("Attempt to flush() CubeIO when there are remaining cubes to save! Saving remaining cubes to avoid corruption");
+			while (this.writeNextIO()) ;
+		}
+		if (!Runtime.getRuntime().removeShutdownHook(theShutdownHook)) {
+			err("WARNING!!!");
+			err("Shutdown hook removing failed!");
+			err("This may cause memory leak and/or crash");
+		}
+		if (!this.db.isClosed()) {
+			this.db.close();
+		} else {
+			err("DB already closed!");
+		}
 	}
 
 	public boolean columnExists(long address) {
@@ -232,11 +254,7 @@ CubeIO implements IThreadedFileIO {
 					numColumnsSaved++;
 					numColumnBytesSaved += data.length;
 				} catch (Throwable t) {
-					LOGGER.error("Unable to write column {},{}",
-							getX(entry.address),
-							getZ(entry.address),
-							t
-					);
+					err(String.format("Unable to write column (%d, %d)", getX(entry.address), getZ(entry.address)), t);
 				}
 			}
 			entries.clear();
@@ -252,19 +270,7 @@ CubeIO implements IThreadedFileIO {
 					numCubesSaved++;
 					numCubeBytesSaved += data.length;
 				} catch (Throwable t) {
-					//LOGGER is disabled when shutting down, but we still want to log the error
-					if (!LOGGER.isErrorEnabled()) {
-						System.err.printf("Unable to write cube %d, %d, %d",
-								getX(entry.address), getY(entry.address), getZ(entry.address));
-						t.printStackTrace();
-					} else {
-						LOGGER.error("Unable to write cube {},{},{}",
-								getX(entry.address),
-								getY(entry.address),
-								getZ(entry.address),
-								t
-						);
-					}
+					err(String.format("Unable to write cube %d, %d, %d", getX(entry.address), getY(entry.address), getZ(entry.address)), t);
 				}
 			}
 			entries.clear();
@@ -283,11 +289,7 @@ CubeIO implements IThreadedFileIO {
 
 			return hasMoreColumns || hasMoreCubes;
 		} catch (Throwable t) {
-			if (!LOGGER.isErrorEnabled()) {
-				t.printStackTrace();
-			} else {
-				LOGGER.error("Exception occurred when saving cubes", t);
-			}
+			err("Exception occurred when saving cubes", t);
 			return cubesToSave.size() != 0 || columnsToSave.size() != 0;
 		}
 	}
@@ -586,6 +588,29 @@ CubeIO implements IThreadedFileIO {
 			if (cube.containsBlockPos(scheduledTick.position)) {
 				out.add(scheduledTick);
 			}
+		}
+	}
+
+	/**
+	 * Method that prints error message even when shutting down (ie. LOGGER is disabled)
+	 */
+	private static void err(String message) {
+		if (!LOGGER.isErrorEnabled()) {
+			System.err.println(message);
+		} else {
+			LOGGER.error(message);
+		}
+	}
+
+	/**
+	 * Method that prints error message even when shutting down (ie. LOGGER is disabled)
+	 */
+	private static void err(String message, Throwable t) {
+		if (!LOGGER.isErrorEnabled()) {
+			System.err.println(message);
+			t.printStackTrace();
+		} else {
+			LOGGER.error(message, t);
 		}
 	}
 }

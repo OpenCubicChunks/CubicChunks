@@ -52,6 +52,7 @@ import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Collection;
@@ -67,11 +68,16 @@ public abstract class MixinWorld implements ICubicWorld {
 	@Shadow @Final public WorldProvider provider;
 	@Shadow @Final public Random rand;
 	@Shadow @Final public boolean isRemote;
+	@Shadow @Final @Mutable protected ISaveHandler saveHandler;
 
 	protected LightingManager lightingManager;
 	protected boolean isCubicWorld;
 	protected int minHeight = 0, maxHeight = 256;
 	private boolean enableWorldGenPerfHack;
+
+	protected void setSaveHandler(ISaveHandler newSaveHandler) {
+		this.saveHandler = newSaveHandler;
+	}
 
 	@Shadow public abstract WorldType getWorldType();
 
