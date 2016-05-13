@@ -67,7 +67,11 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 			cubes.add(currentCube);
 		}
 		world.setGeneratingWorld(true);
-		this.vanillaGen.populate(cube.getX(), cube.getZ());
+		try {
+			this.vanillaGen.populate(cube.getX(), cube.getZ());
+		} catch (RuntimeException ex) {
+			ex.printStackTrace();
+		}
 		world.setGeneratingWorld(false);
 		return cubes;
 	}

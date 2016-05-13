@@ -109,7 +109,7 @@ public class MixinRenderGlobal {
 	)
 	public int getRenderChunkYPos(BlockPos pos) {
 		if (this.position != null) {
-			return 0;
+			return 0;//must be 0 (or anything between 0 and 15)
 		}
 		return pos.getY();
 	}
@@ -145,6 +145,13 @@ public class MixinRenderGlobal {
 		};
 	}
 
+	/**
+	 * Overwrite getRenderChunk(For)Offset to support extended height.
+	 *
+	 * @author Barteks2x
+	 * @reason it's a simple method and doing it differently would be problematic and confusing
+	 * (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
+	 */
 	@Overwrite
 	private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
 		BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);

@@ -21,32 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core;
+package cubicchunks.asm;
 
-import cubicchunks.asm.MixinUtils;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ChunkCache;
-import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+public class JvmNames {
+	private JvmNames() {}
 
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-import static cubicchunks.asm.JvmNames.CHUNK_CACHE_GET_BLOCK_STATE;
+	public static final String
+			BLOCK_POS = "Lnet/minecraft/util/math/BlockPos;",
+			WORLD = "Lnet/minecraft/world/World;",
+			ENUM_SKY_BLOCK = "Lnet/minecraft/world/EnumSkyBlock;",
+			CHUNK_CACHE = "Lnet/minecraft/world/ChunkCache;",
+			IMMUTABLE_SET_MULTIMAP = "Lcom/google/common/collect/ImmutableSetMultimap;",
+			IBLOCK_STATE = "Lnet/minecraft/block/state/IBlockState;";
 
-/**
- * Modifies ChunkCache to support extended world height.
- * <p>
- * ChunkCache is used by some AI code and (as subclass of ChunkCache) - block rendering code.
- * getBlockState is used only in AI code.
- */
-@Mixin(ChunkCache.class)
-public class MixinChunkCache_HeightLimits {
-	@Shadow protected World worldObj;
-
-	@Redirect(method = CHUNK_CACHE_GET_BLOCK_STATE, at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
-	private int blockPosGetYRedirect(BlockPos pos) {
-		return MixinUtils.getReplacementY(worldObj, pos);
-	}
+	public static final String
+			BLOCK_POS_GETY = BLOCK_POS + "getY()I",
+			WORLD_IS_AREA_LOADED = WORLD + "isAreaLoaded(IIIIIIZ)Z",
+			WORLD_GET_PERSISTENT_CHUNKS = WORLD + "getPersistentChunks()" + IMMUTABLE_SET_MULTIMAP,
+			WORLD_GET_LIGHT_WITH_FLAG = WORLD + "getLight(" + BLOCK_POS + "Z)I",
+			WORLD_GET_LIGHT_FOR = WORLD + "getLightFor(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
+			CHUNK_CACHE_GET_LIGHT_FOR = CHUNK_CACHE + "getLightFor(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
+			CHUNK_CACHE_GET_LIGHT_FOR_EXT = CHUNK_CACHE + "getLightForExt(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
+			CHUNK_CACHE_GET_BLOCK_STATE = CHUNK_CACHE + "getBlockState(" + BLOCK_POS + ")" + IBLOCK_STATE;
 }

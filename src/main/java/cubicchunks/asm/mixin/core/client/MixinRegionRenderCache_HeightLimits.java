@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.asm.MixinUtils;
 import net.minecraft.client.renderer.RegionRenderCache;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCache;
@@ -32,6 +32,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+
 @Mixin(RegionRenderCache.class)
 public class MixinRegionRenderCache_HeightLimits extends ChunkCache {
 
@@ -39,14 +41,8 @@ public class MixinRegionRenderCache_HeightLimits extends ChunkCache {
 		super(worldIn, posFromIn, posToIn, subIn);
 	}
 
-	@Redirect(method = "getBlockStateRaw",
-	          at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"),
-	          require = 1)
+	@Redirect(method = "getBlockStateRaw", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
 	public int getPosYOverride(BlockPos pos) {
-		ICubicWorld world = (ICubicWorld) worldObj;
-		if (pos.getY() >= world.getMinHeight() && pos.getY() < world.getMaxHeight()) {
-			return 64;
-		}
-		return pos.getY();
+		return MixinUtils.getReplacementY(worldObj, pos);
 	}
 }

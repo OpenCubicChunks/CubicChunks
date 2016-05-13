@@ -23,6 +23,7 @@
  */
 package cubicchunks.asm.mixin.core;
 
+import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.state.IBlockState;
@@ -42,6 +43,11 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_FOR;
+import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_WITH_FLAG;
+import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
+
 @Mixin(World.class)
 public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
@@ -57,9 +63,9 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
 	/**
 	 * This @Overwrite allows World to "see" blocks outside of 0..255 height range.
-	 * Currently redirecting constant loading is not supported.
 	 *
 	 * @author Barteks2x
+	 * @reason It's very simple method and this seems to be the cleanest way to modify it.
 	 */
 	@Overwrite
 	public boolean isValid(BlockPos pos) {
@@ -69,13 +75,15 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 	}
 
 	/**
-	 * Replace getLight() with method that returns non-default light values
-	 * outside of 0..255 height range.
-	 * <p>
-	 * Used in parts of game logic and entity rendering code.
-	 * Doesn't directly affect block rendering.
-	 *
 	 * @author Barteks2x
+	 * @reason Replace {@link World#getLight(BlockPos)} with method that works outside of 0..255 height range.
+	 * It would be possible to fix it using @Redirect and @ModifyConstant but this way is much cleaner,
+	 * especially for simple method.
+	 * A @{@link ModifyConstant} wouldn't work because it can't replace comparison to 0.
+	 * This is because there is a special instruction to compare something to 0, so the constant is never used.
+	 * <p>
+	 * Note: The getLight method is used in parts of game logic and entity rendering code.
+	 * Doesn't directly affect block rendering.
 	 */
 	@Overwrite
 	public int getLight(BlockPos pos) {
@@ -83,65 +91,63 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 			return 0;
 		}
 		if (pos.getY() >= this.getMaxHeight()) {
+			//CubicChunks edit
+			//return default light value above maxHeight instead of the same value as at maxHeight
 			return EnumSkyBlock.SKY.defaultLightValue;
+			//CubicChunks end
 		}
 		return this.getChunkFromBlockCoords(pos).getLightSubtracted(pos, 0);
 	}
 
 	/**
-	 * Redirect pos.getY() in getLight to return value in range 0..255
-	 * when Y position is within cubic chunks height range, to workaround vanilla height check.
+	 * Redirect BlockPos#getY() in {@link World#getLight(BlockPos)} to return value in range 0..255
+	 * when Y position is within cubic chunks height range, to workaround vanilla height checks.
 	 * <p>
-	 * this getLight method is used in parts of game logic and entity rendering code.
+	 * {@link MixinWorld_HeightLimits#getLightGetReplacementYTooHigh} fixes clamping height value.
+	 * <p>
+	 * This can't be done with @ModifyConstant
+	 * <p>
+	 * The reason @{@link ModifyConstant}
+	 * <p>
+	 * This getLight method is used in parts of game logic and entity rendering code.
 	 * Doesn't directly affect block rendering.
 	 */
 	@Group(name = "getLightHeightOverride", max = 3)
-	@Redirect(
-			method = "getLight(Lnet/minecraft/util/math/BlockPos;Z)I",
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"),
-			require = 2
-	)
-	private int onGetYGetLight(BlockPos pos) {
-		if (pos.getY() < this.getMinHeight() || pos.getY() >= this.getMaxHeight()) {
-			return 64;//any value between 0 and 255
-		}
-		return pos.getY();
+	@Redirect(method = WORLD_GET_LIGHT_WITH_FLAG, at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
+	private int getLightGetYReplace(BlockPos pos) {
+		return MixinUtils.getReplacementY(this, pos);
 	}
 
 	/**
-	 * If max height is exceeded, the height is clamped to y=255,
-	 * replace that 255 with actual world height
+	 * Modify constant 255 in {@link World#getLight(BlockPos)} used in case tha height check didn't pass.
+	 * When max height is exceeded vanilla clamps the value to 255 (maxHeight - 1 = actual max allowed block Y).
 	 */
 	@Group(name = "getLightHeightOverride")
-	@ModifyConstant(
-			method = "getLight(Lnet/minecraft/util/math/BlockPos;Z)I",
-			constant = @Constant(intValue = 255),
-			require = 1
-	)
-	private int getLightGetReplacementYForTooHighY(int original) {
+	@ModifyConstant(method = WORLD_GET_LIGHT_WITH_FLAG, constant = @Constant(intValue = 255), require = 1)
+	private int getLightGetReplacementYTooHigh(int original) {
 		return this.getMaxHeight() - 1;
 	}
 
 	/**
-	 * Replace getLightFor() with method that returns non-default light values
-	 * outside of 0..255 height range.
+	 * Redirect BlockPos#getY in {@link World#getLightFor(EnumSkyBlock, BlockPos)} to this method
+	 * to ignore height check if the position is not below minHeight.
 	 * <p>
-	 * Used in parts of game logic, entity rendering code and indirectly in block rendering.
-	 *
-	 * @author Barteks2x
+	 * Works similar to {@link MixinWorld_HeightLimits#getLightGetYReplace(BlockPos)}.
 	 */
-	@Overwrite
-	public int getLightFor(EnumSkyBlock type, BlockPos pos) {
-		if (pos.getY() < this.getMinHeight()) {
-			pos = new BlockPos(pos.getX(), this.getMinHeight(), pos.getZ());
-		}
-		if (!this.isValid(pos)) {
-			return type.defaultLightValue;
-		}
-		if (!this.isBlockLoaded(pos)) {
-			return type.defaultLightValue;
-		}
-		return this.getChunkFromBlockCoords(pos).getLightFor(type, pos);
+	@Group(name = "getLightForHeightOverride", max = 2)
+	@Redirect(method = WORLD_GET_LIGHT_FOR, at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
+	private int getLightForGetBlockPosYRedirect(BlockPos pos) {
+		return MixinUtils.getReplacementY(this, pos);
+	}
+
+	/**
+	 * Redirect 0 constant in getLightFor(EnumSkyBlock, BlockPos)
+	 * so that getLightFor returns light at y=minHeight when below minHeight.
+	 */
+	@Group(name = "getLightForHeightOverride")
+	@ModifyConstant(method = WORLD_GET_LIGHT_FOR, constant = @Constant(intValue = 0), require = 1)
+	private int getLightForGetMinYReplace(int origY) {
+		return this.getMinHeight();
 	}
 
 	/**
@@ -157,12 +163,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 	 * @author Barteks2x
 	 */
 	@Group(name = "isLoaded", max = 1)
-	@Inject(
-			method = "isAreaLoaded(IIIIIIZ)Z",
-			at = @At(value = "HEAD"),
-			cancellable = true,
-			require = 1
-	)
+	@Inject(method = WORLD_IS_AREA_LOADED, at = @At(value = "HEAD"), cancellable = true, require = 1)
 	private void isAreaLoadedInject(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd, boolean allowEmpty, CallbackInfoReturnable cbi) {
 		if (!this.isCubicWorld()) {
 			return;

@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.util.MathUtil;
+import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -32,8 +32,14 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Group;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
+
+import static cubicchunks.asm.JvmNames.BLOCK_POS;
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
 @Mixin(World.class)
 public abstract class MixinWorld_HeightLimits implements ICubicWorld {
@@ -51,34 +57,20 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 	@Shadow public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
 
 	/**
-	 * Overwrite getLightFromNeighborsFor to use modified height limit.
+	 * Redirect {@link BlockPos#getY()} here to modify vanilla height check
 	 */
-	//TODO: Use @Redirect if possible when constant redirecting gets implemented.
-	@Overwrite
-	public int getLightFromNeighborsFor(EnumSkyBlock type, BlockPos pos) {
-		if (this.provider.getHasNoSky() && type == EnumSkyBlock.SKY) {
-			return 0;
-		}
-		//changed 0 to minY
-		int minY = this.getMinHeight();
-		if (pos.getY() < minY) {
-			pos = new BlockPos(pos.getX(), minY, pos.getZ());
-		}
+	@Group(name = "getLightFromNeighborsFor", min = 2, max = 2)
+	@Redirect(method = "getLightFromNeighborsFor", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
+	private int getLightFromNeighborsForBlockPosGetYRedirect(BlockPos pos) {
+		return MixinUtils.getReplacementY(this, pos);
+	}
 
-		if (!this.isValid(pos)) {
-			return type.defaultLightValue;
-		}
-		if (!this.isBlockLoaded(pos)) {
-			return type.defaultLightValue;
-		}
-		if (this.getBlockState(pos).useNeighborBrightness()) {
-			int up = this.getLightFor(type, pos.up());
-			int east = this.getLightFor(type, pos.east());
-			int west = this.getLightFor(type, pos.west());
-			int south = this.getLightFor(type, pos.south());
-			int north = this.getLightFor(type, pos.north());
-			return MathUtil.max(up, east, west, south, north);
-		}
-		return this.getChunkFromBlockCoords(pos).getLightFor(type, pos);
+	@Group(name = "getLightFromNeighborsFor")
+	@ModifyArg(method = "getLightFromNeighborsFor",
+	           at = @At(value = "INVOKE", target = BLOCK_POS + "<init>(III)V"),
+	           index = 1,
+	           require = 1)
+	private int getLightFromNeighborsForGetMinHeight(int origY) {
+		return this.getMinHeight();
 	}
 }

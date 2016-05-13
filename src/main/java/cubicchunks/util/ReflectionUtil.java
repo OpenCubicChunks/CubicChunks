@@ -24,7 +24,6 @@
 package cubicchunks.util;
 
 import com.google.common.base.Throwables;
-import cubicchunks.asm.Mappings;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

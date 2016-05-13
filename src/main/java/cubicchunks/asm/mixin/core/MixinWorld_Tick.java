@@ -37,6 +37,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import static cubicchunks.asm.JvmNames.WORLD_GET_PERSISTENT_CHUNKS;
+import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
+
 /**
  * World class mixins related to block and entity ticking.
  */
@@ -51,9 +54,9 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 
 	@Shadow public abstract boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty);
 
+	@Group(name = "updateEntity", max = 2, min = 2)
 	@Redirect(method = "updateEntityWithOptionalForce",
-	          at = @At(value = "INVOKE",
-	                   target = "Lnet/minecraft/world/World;isAreaLoaded(IIIIIIZ)Z"),
+	          at = @At(value = "INVOKE", target = WORLD_IS_AREA_LOADED),
 	          require = 1)
 	private boolean canUpdateEntity(World _this, int startBlockX, int oldStartBlockY, int startBlockZ, int endBlockX, int oldEndBlockY, int endBlockZ, boolean allowEmpty) {
 		if (!this.isCubicWorld()) {
@@ -77,12 +80,10 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 	 * Allows to get Y position of the updated entity.
 	 */
 	@Group(name = "updateEntity")
-	@Inject(
-			method = "updateEntityWithOptionalForce",
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getPersistentChunks()" +
-					"Lcom/google/common/collect/ImmutableSetMultimap;"),
-			locals = LocalCapture.CAPTURE_FAILHARD, require = 1
-	)
+	@Inject(method = "updateEntityWithOptionalForce",
+	        at = @At(value = "INVOKE", target = WORLD_GET_PERSISTENT_CHUNKS, remap = false),
+	        locals = LocalCapture.CAPTURE_FAILHARD,
+	        require = 1)
 	public void onIsAreaLoadedForUpdateEntityWithOptionalForce(Entity entity, boolean force, CallbackInfo ci, int i, int j) {
 		updateEntity_entityPosY = MathHelper.floor_double(entity.posY);
 		updateEntity_entityPosX = MathHelper.floor_double(entity.posX);
