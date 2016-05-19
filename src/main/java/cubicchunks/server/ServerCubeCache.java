@@ -42,6 +42,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -244,12 +245,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 
 	@Override
-	public List<Biome.SpawnListEntry> getPossibleCreatures(final EnumCreatureType a1, final BlockPos a2) {
+	public List<Biome.SpawnListEntry> getPossibleCreatures(@Nonnull final EnumCreatureType a1, @Nonnull final BlockPos a2) {
 		return null;
 	}
 
 	@Nullable
-	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position) {
+	public BlockPos getStrongholdGen(@Nonnull World worldIn, @Nonnull String structureName, @Nonnull BlockPos position) {
 		return null;
 	}
 

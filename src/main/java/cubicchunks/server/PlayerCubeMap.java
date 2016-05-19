@@ -46,6 +46,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -490,7 +491,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	}
 
 	@Override
-	public boolean isPlayerWatchingChunk(EntityPlayerMP player, int cubeX, int cubeZ) {
+	public boolean isPlayerWatchingChunk(@Nonnull EntityPlayerMP player, int cubeX, int cubeZ) {
 		PlayerCubeMapColumnEntry playerCubeMapColumnEntry = this.getColumnWatcher(getAddress(cubeX, cubeZ));
 		return playerCubeMapColumnEntry != null &&
 				playerCubeMapColumnEntry.containsPlayer(player) &&
@@ -570,7 +571,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	}
 
 	@Override
-	public void addEntry(PlayerChunkMapEntry entry) {
+	public void addEntry(@Nonnull PlayerChunkMapEntry entry) {
 		throw new UnsupportedOperationException();
 	}
 

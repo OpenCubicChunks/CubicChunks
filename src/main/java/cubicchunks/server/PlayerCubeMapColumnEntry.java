@@ -35,6 +35,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkWatchEvent;
 
+import javax.annotation.Nonnull;
 import java.lang.invoke.MethodHandle;
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 		return super.getPos();
 	}
 
-	public void addPlayer(EntityPlayerMP player) {
+	public void addPlayer(@Nonnull EntityPlayerMP player) {
 		if (this.getPlayers().contains(player)) {
 			CubicChunks.LOGGER.debug("Failed to add player. {} already is in chunk {}, {}", new Object[]{
 					player,
@@ -89,7 +90,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 		//}
 	}
 
-	public void removePlayer(EntityPlayerMP player) {
+	public void removePlayer(@Nonnull EntityPlayerMP player) {
 		if (!this.getPlayers().contains(player)) {
 			return;
 		}
@@ -141,7 +142,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 
 	@Override
 	@Deprecated
-	public void sendNearbySpecialEntities(EntityPlayerMP player) {
+	public void sendNearbySpecialEntities(@Nonnull EntityPlayerMP player) {
 		//done by cube watcher
 	}
 

@@ -60,6 +60,7 @@ import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
@@ -174,7 +175,7 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public int getBlockLightOpacity(BlockPos pos) {
+	public int getBlockLightOpacity(@Nonnull BlockPos pos) {
 		return super.getBlockLightOpacity(pos);
 	}
 
@@ -201,7 +202,7 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public IBlockState setBlockState(BlockPos pos, IBlockState newBlockState) {
+	public IBlockState setBlockState(BlockPos pos, @Nonnull IBlockState newBlockState) {
 		// is there a chunk for this block?
 		int cubeY = Coords.blockToCube(pos.getY());
 		if (!getWorld().isRemote) {
@@ -332,7 +333,7 @@ public class Column extends Chunk {
 
 	//forward to cube
 	@Override
-	public int getLightFor(EnumSkyBlock type, BlockPos pos) {
+	public int getLightFor(@Nonnull EnumSkyBlock type, BlockPos pos) {
 		Cube cube = this.getCube(pos);
 		if (cube == null) {
 			return this.canSeeSky(pos) ? type.defaultLightValue : 0;
@@ -406,7 +407,7 @@ public class Column extends Chunk {
 
 	//forward to cube when possible
 	@Override
-	public void removeEntityAtIndex(Entity entity, int cubeY) {
+	public void removeEntityAtIndex(@Nonnull Entity entity, int cubeY) {
 		if (!entity.addedToChunk) {
 			return;
 		}
@@ -438,7 +439,7 @@ public class Column extends Chunk {
 
 	//forward to cube
 	@Override
-	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType createType) {
+	public TileEntity getTileEntity(@Nonnull BlockPos pos, Chunk.EnumCreateEntityType createType) {
 		Cube cube = this.getCube(pos);
 		if (cube == null) {
 			return null;
@@ -462,7 +463,7 @@ public class Column extends Chunk {
 
 	//forward to cube
 	@Override
-	public void addTileEntity(BlockPos pos, TileEntity blockEntity) {
+	public void addTileEntity(@Nonnull BlockPos pos, TileEntity blockEntity) {
 		// pass off to the cube
 		int cubeY = Coords.blockToCube(pos.getY());
 		Cube cube = getCube(cubeY);
@@ -477,7 +478,7 @@ public class Column extends Chunk {
 
 	//forward to cube
 	@Override
-	public void removeTileEntity(BlockPos pos) {
+	public void removeTileEntity(@Nonnull BlockPos pos) {
 		Cube cube = this.getCube(pos);
 		if (cube == null) {
 			return;
@@ -511,7 +512,7 @@ public class Column extends Chunk {
 
 	//forward to cube, then to EntityContainer
 	@Override
-	public void getEntitiesWithinAABBForEntity(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
+	public void getEntitiesWithinAABBForEntity(Entity excludedEntity, AxisAlignedBB queryBox, @Nonnull List<Entity> out, Predicate<? super Entity> predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
 		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - 2));
@@ -527,7 +528,7 @@ public class Column extends Chunk {
 
 	//forward to cube, then to EntityContainer
 	@Override
-	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
+	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(@Nonnull Class<? extends T> entityType, AxisAlignedBB queryBox, @Nonnull List<T> out, Predicate<? super T> predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
 		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - World.MAX_ENTITY_RADIUS));
@@ -551,7 +552,7 @@ public class Column extends Chunk {
 	//isEmpty() doesn't need changes
 
 	@Override
-	public void populateChunk(IChunkProvider chunkProvider, IChunkGenerator chunkGenerator) {
+	public void populateChunk(IChunkProvider chunkProvider, @Nonnull IChunkGenerator chunkGenerator) {
 		throw new UnsupportedOperationException("This method is incompatible with CubicChunks");
 	}
 
@@ -597,7 +598,7 @@ public class Column extends Chunk {
 
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void fillChunk(PacketBuffer buf, int p_186033_2_, boolean p_186033_3_) {
+	public void fillChunk(@Nonnull PacketBuffer buf, int p_186033_2_, boolean p_186033_3_) {
 		throw new UnsupportedOperationException("This method is incompatible with Cubic Chunks");
 	}
 
@@ -713,7 +714,7 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	public void removeInvalidTileEntity(BlockPos pos) {
+	public void removeInvalidTileEntity(@Nonnull BlockPos pos) {
 		throw new UnsupportedOperationException("Not implemented because not used");
 	}
 

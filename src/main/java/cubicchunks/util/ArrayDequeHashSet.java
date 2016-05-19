@@ -23,6 +23,7 @@
  */
 package cubicchunks.util;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
@@ -218,12 +219,12 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 	}
 
 	@Override
-	public boolean containsAll(Collection<?> c) {
+	public boolean containsAll(@Nonnull Collection<?> c) {
 		return set.containsAll(c);
 	}
 
 	@Override
-	public boolean addAll(Collection<? extends E> c) {
+	public boolean addAll(@Nonnull Collection<? extends E> c) {
 		for (E e : c) {
 			if (e == null) {
 				throw new NullPointerException();
@@ -238,7 +239,7 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 	}
 
 	@Override
-	public boolean removeAll(Collection<?> c) {
+	public boolean removeAll(@Nonnull Collection<?> c) {
 		boolean b = set.removeAll(c);
 		boolean b2 = deque.removeAll(c);
 		assert b == b2;
@@ -247,7 +248,7 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 	}
 
 	@Override
-	public boolean retainAll(Collection<?> c) {
+	public boolean retainAll(@Nonnull Collection<?> c) {
 		boolean b = set.retainAll(c);
 		if (b) {
 			deque.retainAll(c);
@@ -310,7 +311,7 @@ public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 	}
 
 	@Override
-	public <T> T[] toArray(T[] a) {
+	public <T> T[] toArray(@Nonnull T[] a) {
 		return deque.toArray(a);
 	}
 

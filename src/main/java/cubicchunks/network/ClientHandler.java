@@ -41,6 +41,7 @@ import net.minecraft.util.IThreadListener;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 
 import static cubicchunks.util.AddressTools.getX;
@@ -59,7 +60,7 @@ public class ClientHandler implements INetHandler {
 	}
 
 	@Override
-	public void onDisconnect(ITextComponent chat) {
+	public void onDisconnect(@Nonnull ITextComponent chat) {
 		// nothing to do
 	}
 
