@@ -30,7 +30,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
@@ -44,7 +44,7 @@ public class BiomeBlockReplacer {
 	private final int alterationTop;
 	private final int seaLevel;
 
-	private BiomeGenBase baseBiome;
+	private Biome baseBiome;
 	private IBlockState surfaceBlock;
 	private IBlockState groundBlock;
 
@@ -58,12 +58,12 @@ public class BiomeBlockReplacer {
 		this.seaLevel = cube.getWorld().getProvider().getAverageGroundLevel();
 	}
 
-	public void replaceBlocks(final BiomeGenBase biomeToUse, final int xAbs, final int zAbs, final double depthNoiseValue) {
+	public void replaceBlocks(final Biome biomeToUse, final int xAbs, final int zAbs, final double depthNoiseValue) {
 		setBiome(biomeToUse);
 		process(xAbs, zAbs, depthNoiseValue);
 	}
 
-	private void setBiome(final BiomeGenBase biomeToUse) {
+	private void setBiome(final Biome biomeToUse) {
 		this.baseBiome = biomeToUse;
 		this.surfaceBlock = biomeToUse.topBlock;
 		this.groundBlock = biomeToUse.fillerBlock;
@@ -86,7 +86,7 @@ public class BiomeBlockReplacer {
 		 * - 5150km to 6360km - apparently, the innermost sections of the core could be a plasma! Crazy!
 		 */
 		for (int yAbs = this.top; yAbs >= this.bottom; --yAbs) {
-			pos.set(xAbs, yAbs, zAbs);
+			pos.setPos(xAbs, yAbs, zAbs);
 
 			boolean canSetBlock = yAbs <= this.alterationTop;
 

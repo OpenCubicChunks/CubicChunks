@@ -24,7 +24,7 @@
 package cubicchunks.util;
 
 import com.google.common.base.Throwables;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.ChunkProviderSettings;
@@ -86,7 +86,7 @@ public class ChunkProviderOverworldAccess {
 		}
 	}
 
-	public static final void setBiomesForGeneration(ChunkProviderOverworld prov, BiomeGenBase[] arr) {
+	public static final void setBiomesForGeneration(ChunkProviderOverworld prov, Biome[] arr) {
 		try {
 			setBiomesForGeneration.invoke(prov, arr);
 		} catch (Throwable throwable) {
@@ -94,15 +94,15 @@ public class ChunkProviderOverworldAccess {
 		}
 	}
 
-	public static final BiomeGenBase[] getBiomesForGeneration(ChunkProviderOverworld prov) {
+	public static final Biome[] getBiomesForGeneration(ChunkProviderOverworld prov) {
 		try {
-			return (BiomeGenBase[]) getBiomesForGeneration.invoke(prov);
+			return (Biome[]) getBiomesForGeneration.invoke(prov);
 		} catch (Throwable throwable) {
 			throw Throwables.propagate(throwable);
 		}
 	}
 
-	public static final void replaceBiomeBlocks(ChunkProviderOverworld prov, int x, int z, ChunkPrimer primer, BiomeGenBase[] biomes) {
+	public static final void replaceBiomeBlocks(ChunkProviderOverworld prov, int x, int z, ChunkPrimer primer, Biome[] biomes) {
 		try {
 			replaceBiomeBlocks.invoke(prov, x, z, primer, biomes);
 		} catch (Throwable throwable) {

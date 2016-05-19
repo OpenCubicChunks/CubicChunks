@@ -27,7 +27,7 @@ import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +50,7 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 	}
 
 	@Override
-	public void generateAt(Random rand, BlockPos pos, BiomeGenBase biome) {
+	public void generateAt(Random rand, BlockPos pos, Biome biome) {
 		double radiusSq = this.radius*this.radius;
 		for (int x = -this.radius; x <= this.radius; x++) {
 			for (int y = -this.height; y <= this.height; y++) {

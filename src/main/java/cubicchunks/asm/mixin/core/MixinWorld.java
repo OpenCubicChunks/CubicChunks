@@ -42,7 +42,7 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
@@ -122,7 +122,7 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Shadow public abstract boolean isAirBlock(BlockPos randomPos);
 
-	@Shadow public abstract BiomeGenBase getBiomeGenForCoords(BlockPos cubeCenter);
+	@Shadow public abstract Biome getBiomeGenForCoords(BlockPos cubeCenter);
 
 	@Shadow public abstract BiomeProvider getBiomeProvider();
 
@@ -321,7 +321,7 @@ public abstract class MixinWorld implements ICubicWorld {
 		return this.isAirBlock(pos);
 	}
 
-	@Intrinsic public BiomeGenBase world$getBiomeGenForCoords(BlockPos pos) {
+	@Intrinsic public Biome world$getBiomeGenForCoords(BlockPos pos) {
 		return this.getBiomeGenForCoords(pos);
 	}
 

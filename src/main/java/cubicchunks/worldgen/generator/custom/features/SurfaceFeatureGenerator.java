@@ -29,7 +29,7 @@ import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
@@ -40,7 +40,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 	}
 
 	@Override
-	public void generate(Random rand, Cube cube, BiomeGenBase biome) {
+	public void generate(Random rand, Cube cube, Biome biome) {
 		BlockPos cubeCenter = Coords.getCubeCenter(cube);
 
 		int x = cubeCenter.getX() + rand.nextInt(16);
@@ -71,7 +71,7 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 		IBlockState stateBelow = getBlockState(pos.down());
 		IBlockState state = getBlockState(pos);
 
-		return stateBelow.getBlock().isOpaqueCube(stateBelow) && state.getBlock().isAir(state, (World) world, pos);
+		return stateBelow.isOpaqueCube() && state.getBlock().isAir(state, (World) world, pos);
 	}
 
 	/**
@@ -80,5 +80,5 @@ public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 	 * @param rand RNG to use
 	 * @param pos position of air block with solid block below it
 	 */
-	public abstract void generateAt(Random rand, BlockPos pos, BiomeGenBase biome);
+	public abstract void generateAt(Random rand, BlockPos pos, Biome biome);
 }

@@ -80,7 +80,7 @@ class SkyLightCubeDiffuseCalculator {
 		boolean ok = true;
 		final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		for (int y = minY; y <= maxY; y++) {
-			pos.set(blockX, y, blockZ);
+			pos.setPos(blockX, y, blockZ);
 			ok &= world.checkLightFor(EnumSkyBlock.SKY, pos);
 		}
 		return ok;

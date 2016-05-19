@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.MixinEnvironment;
 
 import java.util.Map;
 
-@IFMLLoadingPlugin.MCVersion(value = "1.9")
+@IFMLLoadingPlugin.MCVersion(value = "1.9.4")
 @IFMLLoadingPlugin.SortingIndex(value = 5000)
 @IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
 public class CoreModLoadingPlugin implements IFMLLoadingPlugin {

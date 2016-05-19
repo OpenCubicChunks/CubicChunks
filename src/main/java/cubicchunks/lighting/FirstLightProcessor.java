@@ -89,7 +89,7 @@ public class FirstLightProcessor extends CubeProcessor {
 			for (int z = minBlockZ; z <= maxBlockZ; z++) {
 				//so that it's clearly visible that this value is not set to any value
 				int y = Integer.MIN_VALUE;
-				mutablePos.set(x, y, z);
+				mutablePos.setPos(x, y, z);
 				setRawSkylightXZ(cube, mutablePos);
 			}
 		}
@@ -188,7 +188,7 @@ public class FirstLightProcessor extends CubeProcessor {
 			int cubeMinY = cubeToMinBlock(cubeY);
 			for (int blockX = minBlockX; blockX <= maxBlockX; blockX++) {
 				for (int blockZ = minBlockZ; blockZ <= maxBlockZ; blockZ++) {
-					pos.set(blockX, pos.getY(), blockZ);
+					pos.setPos(blockX, pos.getY(), blockZ);
 					int minBlockY = minBlockYArr[blockX - minBlockX][blockZ - minBlockZ];
 					int maxBlockY = maxBlockYArr[blockX - minBlockX][blockZ - minBlockZ];
 					if (minBlockY > maxBlockY) {
@@ -237,7 +237,7 @@ public class FirstLightProcessor extends CubeProcessor {
 		}
 		int opacity = access.getBlockLightOpacity(pos);
 		for (int[] offset : neighborDirections) {
-			pos.set(
+			pos.setPos(
 					pos.getX() + offset[0],
 					pos.getY() + offset[1],
 					pos.getZ() + offset[2]
@@ -245,7 +245,7 @@ public class FirstLightProcessor extends CubeProcessor {
 
 			int currentLight = access.getLightFor(EnumSkyBlock.SKY, pos);
 
-			pos.set(
+			pos.setPos(
 					pos.getX() - offset[0],
 					pos.getY() - offset[1],
 					pos.getZ() - offset[2]

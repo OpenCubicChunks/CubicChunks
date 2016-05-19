@@ -34,7 +34,7 @@ import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.biome.BiomeDecorator;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.ChunkProviderSettings;
 
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ public class BiomeFeatures {
 
 	private final Collection<FeatureGenerator> generators;
 
-	public BiomeFeatures(ICubicWorld world, BiomeGenBase biome) {
+	public BiomeFeatures(ICubicWorld world, Biome biome) {
 		this.world = world;
 		this.generators = new ArrayList<>(20);
 		BiomeDecorator decorator = biome.theBiomeDecorator;

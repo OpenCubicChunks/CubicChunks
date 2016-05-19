@@ -35,7 +35,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.WorldProvider;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
@@ -127,7 +127,7 @@ public interface ICubicWorld {
 
 	boolean isAirBlock(BlockPos randomPos);
 
-	BiomeGenBase getBiomeGenForCoords(BlockPos cubeCenter);
+	Biome getBiomeGenForCoords(BlockPos cubeCenter);
 
 	BiomeProvider getBiomeProvider();
 

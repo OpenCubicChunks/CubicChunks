@@ -46,14 +46,14 @@ public class FlatTerrainProcessor extends CubeProcessor {
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 			for (int x = 0; x < 16; x++) {
 				for (int z = 0; z < 16; z++) {
-					pos.set(x, 15, z);
+					pos.setPos(x, 15, z);
 					cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
 					for (int y = 14; y >= 10; y--) {
-						pos.set(x, y, z);
+						pos.setPos(x, y, z);
 						cube.setBlockForGeneration(pos, Blocks.DIRT.getDefaultState());
 					}
 					for (int y = 9; y >= 0; y--) {
-						pos.set(x, y, z);
+						pos.setPos(x, y, z);
 						cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
 					}
 				}
@@ -64,7 +64,7 @@ public class FlatTerrainProcessor extends CubeProcessor {
 		for (int x = 0; x < 16; x++) {
 			for (int z = 0; z < 16; z++) {
 				for (int y = 0; y < 16; y++) {
-					pos.set(x, y, z);
+					pos.setPos(x, y, z);
 					cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
 				}
 			}

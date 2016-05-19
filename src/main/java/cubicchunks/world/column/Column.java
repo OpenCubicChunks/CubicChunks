@@ -37,7 +37,6 @@ import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -48,10 +47,9 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -62,19 +60,21 @@ import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Column extends Chunk {
 
 	private CubeMap cubeMap;
 	private IOpacityIndex opacityIndex;
 	private int roundRobinLightUpdatePointer;
-	private List<Cube> roundRobinCubes;
+	private Deque<Integer> roundRobinCubeQueue;
 	private EntityContainer entities;
 	private ICubicWorld world;
 
@@ -86,14 +86,14 @@ public class Column extends Chunk {
 		init();
 	}
 
-	public Column(ICubicWorld world, int cubeX, int cubeZ, BiomeGenBase[] biomes) {
+	public Column(ICubicWorld world, int cubeX, int cubeZ, Biome[] biomes) {
 		// NOTE: this constructor is called by the column worldgen
 		this(world, cubeX, cubeZ);
 
 		byte[] biomeArray = super.getBiomeArray();
 		// save the biome data
 		for (int i = 0; i < biomes.length; i++) {
-			biomeArray[i] = (byte) BiomeGenBase.getIdForBiome(biomes[i]);
+			biomeArray[i] = (byte) Biome.getIdForBiome(biomes[i]);
 		}
 
 		super.setModified(true);
@@ -611,65 +611,61 @@ public class Column extends Chunk {
 	@Override
 	public void resetRelightChecks() {
 		this.roundRobinLightUpdatePointer = 0;
-		this.roundRobinCubes.clear();
-		this.roundRobinCubes.addAll(this.cubeMap.all());
+		this.roundRobinCubeQueue.clear();
+		this.roundRobinCubeQueue.addAll(this.cubeMap.all().stream().map(c -> c.getY()).collect(Collectors.toSet()));
 	}
 
 	@Override
 	public void enqueueRelightChecks() {
-		if (this.roundRobinCubes.isEmpty()) {
-			resetRelightChecks();
+		if (this.roundRobinCubeQueue.isEmpty()) {
+			return;
 		}
-
-		// we get just a few updates this time
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-		BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
-		for (int i = 0; i < 2; i++) {
-
-			// once we've checked all the blocks, stop checking
-			int maxPointer = 16*16*this.roundRobinCubes.size();
-			if (this.roundRobinLightUpdatePointer >= maxPointer) {
-				break;
+		int maxPointer = 16*16 - 1;
+		BlockPos blockpos = new BlockPos(Coords.cubeToMinBlock(this.xPosition), 0, Coords.cubeToMinBlock(this.zPosition));
+		for (int i = 0; i < 8; ++i) {
+			if (this.roundRobinLightUpdatePointer > maxPointer) {
+				//next cube
+				this.roundRobinLightUpdatePointer = 0;
+				if (this.roundRobinCubeQueue.isEmpty()) {
+					break;
+				}
+				this.roundRobinCubeQueue.removeLast();
 			}
+			int cubeY = this.roundRobinCubeQueue.getLast();
+			Cube cube = this.getCube(cubeY);
 
-			// get this update's arguments
-			int cubeIndex = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 8);
 			int localX = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 4);
+			int blockYMin = Coords.cubeToMinBlock(cubeY);
 			int localZ = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 0);
-
-			// advance to the next block
-			// this pointer advances over segment block columns
-			// starting from the block columns in the bottom segment and moving upwards
 			this.roundRobinLightUpdatePointer++;
 
-			// get the cube that was pointed to
-			Cube cube = this.roundRobinCubes.get(cubeIndex);
+			boolean cubeEmpty = cube == null || cube.isEmpty();
 
-			int blockX = Coords.localToBlock(this.xPosition, localX);
-			int blockZ = Coords.localToBlock(this.zPosition, localZ);
-
-			// for each block in this segment block column...
 			for (int localY = 0; localY < 16; ++localY) {
+				BlockPos currentPos = blockpos.add(localX, blockYMin + localY, localZ);
+				boolean isEdge = localY == 0 || localY == 15 ||
+						localX == 0 || localX == 15 ||
+						localZ == 0 || localZ == 15;
 
-				int blockY = Coords.localToBlock(cube.getY(), localY);
-				pos.set(blockX, blockY, blockZ);
+				if(!(cubeEmpty && isEdge)) {
+					continue;
+				}
+				IBlockState currentState = cubeEmpty ? null : cube.getStorage().get(localX, localY, localZ);
+				//only air blocks need to be updated, but no need to update when this and all surrounding blocks are air
+				boolean airInNonEmptyCube = !cubeEmpty && currentState.getBlock().isAir(currentState, this.getWorld(), currentPos);
+				//surrounding blocks may not be air if the block is at the edge of empty cube
+				boolean edgeOfEmptyCube = cubeEmpty && isEdge;
+				if (edgeOfEmptyCube || airInNonEmptyCube) {
+					for (EnumFacing enumfacing : EnumFacing.values()) {
+						BlockPos offsetPos = currentPos.offset(enumfacing);
 
-				IBlockState state = this.getBlockState(pos);
-				if (state.getBlock().getMaterial(state) == Material.AIR) {
-
-					// if there's a light source next to this block, update the light source
-					for (EnumFacing facing : EnumFacing.values()) {
-						Vec3i facingDir = facing.getDirectionVec();
-						neighborPos.set(pos.getX() + facingDir.getX(), pos.getY() + facingDir.getY(),
-								pos.getZ() + facingDir.getZ());
-						IBlockState neighborState = this.getWorld().getBlockState(neighborPos);
-						if (neighborState.getBlock().getLightValue(neighborState) > 0) {
-							this.getWorld().checkLight(neighborPos);
+						//is it light source?
+						if (this.getWorld().getBlockState(offsetPos).getLightValue(this.getWorld(), offsetPos) > 0) {
+							this.getWorld().checkLight(offsetPos);
 						}
 					}
 
-					// then update this block
-					this.getWorld().checkLight(pos);
+					this.getWorld().checkLight(currentPos);
 				}
 			}
 		}
@@ -734,7 +730,7 @@ public class Column extends Chunk {
 			this.opacityIndex = new OpacityIndex();
 		}
 		this.roundRobinLightUpdatePointer = 0;
-		this.roundRobinCubes = new ArrayList<Cube>();
+		this.roundRobinCubeQueue = new ArrayDeque<>();
 		this.entities = new EntityContainer();
 
 		// make sure no one's using data structures that have been replaced
@@ -796,6 +792,7 @@ public class Column extends Chunk {
 		if (cube == null) {
 			cube = new Cube(this.world, this, this.xPosition, cubeY, this.zPosition, isModified);
 			this.cubeMap.put(cubeY, cube);
+			this.roundRobinCubeQueue.addFirst(cubeY);
 		}
 		return cube;
 	}

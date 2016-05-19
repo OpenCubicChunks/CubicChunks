@@ -81,7 +81,8 @@ public class MixinRenderGlobal {
 	public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks, CallbackInfo ci,
 	                          int pass, double d0, double d1, double d2,
 	                          Entity entity, double d3, double d4, double d5,
-	                          List list, List list1, List list2, Iterator var21,
+	                          List list, List list1, List list2,
+	                          BlockPos.PooledMutableBlockPos pos, Iterator var21,
 	                          RenderGlobal.ContainerLocalRenderInformation info) {
 		ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
 		if (world.isCubicWorld()) {

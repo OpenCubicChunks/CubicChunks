@@ -16,7 +16,6 @@
     "core.client.MixinRenderGlobal",
     "core.client.MixinChunkCache_HeightLimits",
     "core.client.MixinViewFrustum_RenderHeightFix",
-    "core.client.MixinRegionRenderCache_HeightLimits",
 
     "nocritical.client.MixinViewFrustum_VertViewDistance"
   ],

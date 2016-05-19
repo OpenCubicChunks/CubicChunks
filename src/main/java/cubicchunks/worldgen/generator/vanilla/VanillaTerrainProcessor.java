@@ -34,7 +34,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.ChunkProviderSettings;
@@ -76,7 +76,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 			for (int x = 0; x < 16; x++) {
 				for (int z = 0; z < 16; z++) {
 					for (int y = 0; y < 16; y++) {
-						pos.set(x, y, z);
+						pos.setPos(x, y, z);
 						cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
 					}
 				}
@@ -105,7 +105,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 		ChunkPrimer chunkprimer = new ChunkPrimer();
 
 		setBlocksInChunk(this.vanillaGen, x, z, chunkprimer);
-		BiomeGenBase[] newBiomes = this.world.getBiomeProvider()
+		Biome[] newBiomes = this.world.getBiomeProvider()
 				.loadBlockGeneratorData(getBiomesForGeneration(this.vanillaGen), x*16, z*16, 16, 16);
 		setBiomesForGeneration(this.vanillaGen, newBiomes);
 		replaceBiomeBlocks(this.vanillaGen, x, z, chunkprimer, newBiomes);
@@ -148,7 +148,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 				for (int localY = 0; localY < 16; localY++) {
 					for (int localZ = 0; localZ < 16; localZ++) {
 						int blockY = Coords.localToBlock(cubeY, localY);
-						pos.set(localX, localY, localZ);
+						pos.setPos(localX, localY, localZ);
 						IBlockState block = chunkprimer.getBlockState(localX, blockY, localZ);
 						if (block.getBlock() == Blocks.BEDROCK) {
 							block = Blocks.STONE.getDefaultState();

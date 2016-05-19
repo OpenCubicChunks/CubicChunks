@@ -34,7 +34,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
@@ -939,7 +939,7 @@ public class BigTreeGenerator extends TreeGenerator {
 	}
 
 	@Override
-	public void generateAt(Random rand, BlockPos pos, BiomeGenBase biome) {
+	public void generateAt(Random rand, BlockPos pos, Biome biome) {
 		generate(rand, pos);
 	}
 

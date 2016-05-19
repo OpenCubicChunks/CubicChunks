@@ -35,14 +35,17 @@ import cubicchunks.worldgen.ColumnGenerator;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -98,14 +101,16 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 
 	@Override
-	public List<Chunk> getLoadedChunks() {
-		return this.loadedChunks;
+	public Collection<Chunk> getLoadedChunks() {
+		return (Collection<Chunk>) (Object) this.loadedColumns.values();
 	}
 
 	@Override
-	public void dropChunk(int cubeX, int cubeZ) {
-		// don't call this, unload cubes instead
-		throw new UnsupportedOperationException();
+	public void unload(Chunk chunk) {
+		Column column = (Column) chunk;
+		for(Cube cube : column.getAllCubes()) {
+			this.unloadCube(cube.getX(), cube.getY(), cube.getZ());
+		}
 	}
 
 	@Override
@@ -123,6 +128,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	 * Same as getColumn(cubeX, cubeZ)
 	 */
 	@Override
+	@Nullable
 	public Chunk getLoadedChunk(int cubeX, int cubeZ) {
 		return this.getColumn(cubeX, cubeZ);
 	}
@@ -132,20 +138,16 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	 * Doesn't generate new Columns.
 	 */
 	@Override
+	@Nullable
 	public Column loadChunk(int cubeX, int cubeZ) {
 		return this.loadColumn(cubeX, cubeZ, LOAD_ONLY);
 	}
 
 	/**
-	 * If this Column is already loaded - returns it.
-	 * Loads from disk if possible, otherwise generated new Column.
+	 * Load chunk asynchronously. Currently CubicChunks only loads synchronously.
 	 */
 	@Override
-	public Column provideChunk(int cubeX, int cubeZ) {
-		return loadChunk(cubeX, cubeZ, null);
-	}
-
-	@Override
+	@Nullable
 	public Column loadChunk(int cubeX, int cubeZ, Runnable runnable) {
 		Column column = this.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
 		if (runnable == null) {
@@ -158,6 +160,16 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	@Override
 	public Column originalLoadChunk(int cubeX, int cubeZ) {
 		return this.loadColumn(cubeX, cubeZ, FORCE_LOAD);
+	}
+
+
+	/**
+	 * If this Column is already loaded - returns it.
+	 * Loads from disk if possible, otherwise generated new Column.
+	 */
+	@Override
+	public Column provideChunk(int cubeX, int cubeZ) {
+		return loadChunk(cubeX, cubeZ, null);
 	}
 
 	@Override
@@ -232,7 +244,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 
 	@Override
-	public List<BiomeGenBase.SpawnListEntry> getPossibleCreatures(final EnumCreatureType a1, final BlockPos a2) {
+	public List<Biome.SpawnListEntry> getPossibleCreatures(final EnumCreatureType a1, final BlockPos a2) {
+		return null;
+	}
+
+	@Nullable
+	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position) {
 		return null;
 	}
 
@@ -241,16 +258,15 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		return this.loadedColumns.size();
 	}
 
-
-	//==============================
-	//=====CubicChunks methods======
-	//==============================
-
 	@Override
 	public boolean chunkExists(int cubeX, int cubeZ) {
 		//columnAccessStats(cubeX, cubeZ);
 		return this.loadedColumns.containsKey(AddressTools.getAddress(cubeX, cubeZ));
 	}
+
+	//==============================
+	//=====CubicChunks methods======
+	//==============================
 
 	@Override
 	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {

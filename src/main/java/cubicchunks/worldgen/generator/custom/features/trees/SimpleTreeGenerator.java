@@ -29,7 +29,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
@@ -43,7 +43,7 @@ public class SimpleTreeGenerator extends TreeGenerator {
 	}
 
 	@Override
-	public void generateAt(Random rand, BlockPos pos, BiomeGenBase biome) {
+	public void generateAt(Random rand, BlockPos pos, Biome biome) {
 		Block below = getBlockState(pos.down()).getBlock();
 		if (below != Blocks.DIRT && below != Blocks.GRASS) {
 			return;

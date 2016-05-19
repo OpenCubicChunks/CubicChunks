@@ -31,7 +31,7 @@ import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
 public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
@@ -52,7 +52,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	public Column loadChunk(int cubeX, int cubeZ) {
 
 		// is this chunk already loaded?
-		Column column = (Column) this.chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		Column column = (Column) this.chunkMapping.get(ChunkPos.chunkXZ2Int(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}
@@ -60,8 +60,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		// make a new one
 		column = new Column(this.world, cubeX, cubeZ);
 
-		this.chunkMapping.add(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ), column);
-		this.chunkListing.add(column);
+		this.chunkMapping.put(ChunkPos.chunkXZ2Int(cubeX, cubeZ), column);
 
 		column.setChunkLoaded(true);
 		return column;
@@ -70,7 +69,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	@Override
 	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
 		// is this column loaded?
-		Column column = (Column) this.chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		Column column = (Column) this.chunkMapping.get(ChunkPos.chunkXZ2Int(cubeX, cubeZ));
 		if (column == null) {
 			//CubicChunks.log.warn("Unloading cube from non-existing column: ({}, {}, {})", cubeX, cubeY, cubeZ);
 			return;
@@ -91,8 +90,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		//server sends unload packets, it must be right.
 
 		//TODO: Unload cubes before removing column?
-		Column column = (Column) this.chunkMapping.remove(ChunkCoordIntPair.chunkXZ2Int(columnX, columnZ));
-		this.chunkListing.remove(column);
+		Column column = (Column) this.chunkMapping.remove(ChunkPos.chunkXZ2Int(columnX, columnZ));
 	}
 
 	@Override
@@ -103,7 +101,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	@Override//I hope it was provideChunk
 	public Column provideChunk(int cubeX, int cubeZ) {
 		// is this chunk already loaded?
-		Column column = (Column) this.chunkMapping.getValueByKey(ChunkCoordIntPair.chunkXZ2Int(cubeX, cubeZ));
+		Column column = (Column) this.chunkMapping.get(ChunkPos.chunkXZ2Int(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}

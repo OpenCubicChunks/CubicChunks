@@ -26,12 +26,12 @@ package cubicchunks.worldgen;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 
 public class ColumnGenerator {
 
 	private ICubicWorldServer m_worldServer;
-	private BiomeGenBase[] m_biomes;
+	private Biome[] m_biomes;
 
 	public ColumnGenerator(ICubicWorldServer worldServer) {
 		this.m_worldServer = worldServer;

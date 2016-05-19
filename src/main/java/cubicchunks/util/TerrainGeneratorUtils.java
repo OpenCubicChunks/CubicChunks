@@ -127,7 +127,7 @@ public final class TerrainGeneratorUtils {
 			for (int zRel = 0; zRel < 16; zRel++) {
 				for (int yRel = 0; yRel < 16; yRel++) {
 					int yAbs = Coords.localToBlock(cube.getY(), yRel);
-					pos.set(xRel, yRel, zRel);
+					pos.setPos(xRel, yRel, zRel);
 					Block block = densityField[xRel][yRel][zRel] > 0 ? Blocks.STONE
 							: yAbs < seaLevel ? Blocks.WATER : Blocks.AIR;
 					cube.setBlockForGeneration(pos, block.getDefaultState());

@@ -37,6 +37,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
+import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
@@ -116,7 +117,12 @@ public class Cube {
 		} catch (Throwable t) {
 			CrashReport report = CrashReport.makeCrashReport(t, "Getting block state");
 			CrashReportCategory category = report.makeCategory("Block being got");
-			category.addCrashSectionCallable("Location", () -> CrashReportCategory.getCoordinateInfo(blockX, blockY, blockZ));
+			category.setDetail("Location", new ICrashReportDetail<String>() {
+				@Override
+				public String call() throws Exception {
+					return CrashReportCategory.getCoordinateInfo(blockX, blockY, blockZ);
+				}
+			});
 			throw new ReportedException(report);
 		}
 	}

@@ -31,7 +31,7 @@ import cubicchunks.world.biome.BiomeBlockReplacer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.noise.NoiseGeneratorMultiFractal;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 
 import java.util.Collections;
 import java.util.Random;
@@ -44,7 +44,7 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 	private Random rand;
 	private NoiseGeneratorMultiFractal noiseGen;
 	private double[] noise;
-	private BiomeGenBase[] biomes;
+	private Biome[] biomes;
 	private long seed;
 
 	public CustomSurfaceProcessor(final ICubeCache cubeCache, final int batchSize, final long seed) {
@@ -101,7 +101,7 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 				Coords.cubeToMinBlock(cube.getZ()), 16, 16, 16, 16, 1);
 	}
 
-	private BiomeGenBase[] getCubeBiomeMap(final Cube cube) {
+	private Biome[] getCubeBiomeMap(final Cube cube) {
 		// generate biome info. This is a hackjob.
 		return cube.getWorld()
 				.getProvider()

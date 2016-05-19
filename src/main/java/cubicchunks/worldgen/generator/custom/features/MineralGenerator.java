@@ -30,7 +30,7 @@ import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.WorldGenMinable;
 
 import java.util.Random;
@@ -67,7 +67,7 @@ public class MineralGenerator extends FeatureGenerator {
 	}
 
 	@Override
-	public void generate(final Random rand, final Cube cube, final BiomeGenBase biome) {
+	public void generate(final Random rand, final Cube cube, final Biome biome) {
 		BlockPos cubeCenter = Coords.getCubeCenter(cube);
 
 		double maxBlockY = this.maxY*GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;

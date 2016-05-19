@@ -410,7 +410,7 @@ public class CubeIO implements IThreadedFileIO {
 		if (nbtTileEntities != null) {
 			for (int i = 0; i < nbtTileEntities.tagCount(); i++) {
 				NBTTagCompound nbtTileEntity = nbtTileEntities.getCompoundTagAt(i);
-				TileEntity blockEntity = TileEntity.createTileEntity(world.getMinecraftServer(), nbtTileEntity);
+				TileEntity blockEntity = TileEntity.create(nbtTileEntity);
 				if (blockEntity != null) {
 					column.addTileEntity(blockEntity);
 				}

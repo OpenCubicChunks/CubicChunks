@@ -26,7 +26,7 @@ package cubicchunks.worldgen.generator.custom;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.builder.BasicBuilder;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
@@ -46,7 +46,7 @@ import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTION_SIZ
 public class CustomTerrainGenerator {
 	private static final int OCTAVES = 16;
 
-	private BiomeGenBase[] biomes;
+	private Biome[] biomes;
 
 	private final long seed;
 	private final Random rand;
@@ -275,7 +275,7 @@ public class CustomTerrainGenerator {
 		}
 	}
 
-	private BiomeGenBase[] getBiomeMap(final Cube cube) {
+	private Biome[] getBiomeMap(final Cube cube) {
 		return cube.getWorld().getProvider().getBiomeProvider().getBiomesForGeneration(this.biomes,
 				cube.getX()*4 - this.maxSmoothRadius, cube.getZ()*4 - this.maxSmoothRadius,
 				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
@@ -304,12 +304,12 @@ public class CustomTerrainGenerator {
 		float smoothHeight = 0.0F;
 
 		float biomeWeightSum = 0.0F;
-		final BiomeGenBase centerBiomeConfig = getCenterBiome(x, z);
+		final Biome centerBiomeConfig = getCenterBiome(x, z);
 		final int lookRadius = this.maxSmoothRadius;
 
 		for (int nextX = -lookRadius; nextX <= lookRadius; nextX++) {
 			for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++) {
-				final BiomeGenBase biome = getOffsetBiome(x, z, nextX, nextZ);
+				final Biome biome = getOffsetBiome(x, z, nextX, nextZ);
 				final float biomeHeight = biome.getBaseHeight();
 				final float biomeVolatility = biome.getHeightVariation();
 
@@ -345,12 +345,12 @@ public class CustomTerrainGenerator {
 		this.biomeHeight += 0.2*addHeight*17.0/64.0;
 	}
 
-	private BiomeGenBase getCenterBiome(final int x, final int z) {
+	private Biome getCenterBiome(final int x, final int z) {
 		return this.biomes[x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
 				*(X_SECTION_SIZE + this.maxSmoothDiameter)];
 	}
 
-	private BiomeGenBase getOffsetBiome(final int x, final int z, int nextX, int nextZ) {
+	private Biome getOffsetBiome(final int x, final int z, int nextX, int nextZ) {
 		return this.biomes[x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius)
 				*(X_SECTION_SIZE + this.maxSmoothDiameter)];
 	}

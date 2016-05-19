@@ -26,13 +26,13 @@ package cubicchunks.asm.mixin.core;
 import cubicchunks.CubicChunks;
 import cubicchunks.ICubicChunksWorldType;
 import cubicchunks.lighting.LightingManager;
-import cubicchunks.server.CubePlayerManager;
+import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
 import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
-import net.minecraft.server.management.PlayerManager;
+import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.ISaveHandler;
@@ -45,7 +45,7 @@ import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 @Mixin(WorldServer.class)
 public abstract class MixinWorldServer extends MixinWorld implements ICubicWorldServer {
-	@Shadow @Mutable @Final private PlayerManager thePlayerManager;
+	@Shadow @Mutable @Final private PlayerChunkMap thePlayerManager;
 	@Shadow public boolean disableLevelSaving;
 
 	private GeneratorPipeline generatorPipeline;
@@ -55,7 +55,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		ServerCubeCache serverCubeCache = new ServerCubeCache(this);
 		this.chunkProvider = serverCubeCache;
-		this.thePlayerManager = new CubePlayerManager(this);
+		this.thePlayerManager = new PlayerCubeMap(this);
 
 		this.lightingManager = new LightingManager(this);
 		this.generatorPipeline = new GeneratorPipeline(serverCubeCache);

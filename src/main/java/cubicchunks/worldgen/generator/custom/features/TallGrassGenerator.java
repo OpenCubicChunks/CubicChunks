@@ -29,7 +29,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
@@ -44,7 +44,7 @@ public class TallGrassGenerator extends SurfaceFeatureGenerator {
 	}
 
 	@Override
-	public void generateAt(final Random rand, final BlockPos pos, final BiomeGenBase biome) {
+	public void generateAt(final Random rand, final BlockPos pos, final Biome biome) {
 		BlockPos currentPos = pos;
 
 		for (int i = 0; i < 128; ++i) {

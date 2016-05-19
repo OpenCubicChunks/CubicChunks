@@ -84,7 +84,7 @@ class SkyLightUpdateCubeSelector {
 			if (cubeY > maxCubeY) {
 				//if light value at the bottom is already correct - nothing to do here
 				//so update only if incorrect
-				blockPos.set(localX, 0, localZ);
+				blockPos.setPos(localX, 0, localZ);
 				if (cube.getLightFor(EnumSkyBlock.SKY, blockPos) != 15) {
 					cubesToDiffuse.add(cube.getY());
 				}
@@ -101,7 +101,7 @@ class SkyLightUpdateCubeSelector {
 				continue;
 			} else {
 				assert cubeY < maxCubeY - 1;
-				blockPos.set(localX, 15, localZ);
+				blockPos.setPos(localX, 15, localZ);
 				//if we are below minBlockY or if the top block has correct light value (0) - nothing to do
 				if (minCubeBlockY + 15 < minBlockY || cube.getLightFor(EnumSkyBlock.SKY, blockPos) == 0) {
 					continue;

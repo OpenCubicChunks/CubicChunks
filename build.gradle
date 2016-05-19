@@ -14,7 +14,7 @@ buildscript
 		}
 	}
 	dependencies {
-		classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+		classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
 		classpath 'org.ajoberstar:grgit:1.4.+'
 		classpath 'org.spongepowered:mixingradle:0.3-SNAPSHOT'
 		classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
@@ -65,7 +65,7 @@ archivesBaseName = "CubicChunks"
 version = getModVersionAndWriteToFile("${git.describe()}")
 
 minecraft {
-	version = "1.9-12.16.1.1891"
+	version = "1.9.4-12.17.0.1909-1.9.4"
 	runDir = "run"
 
 	// the mappings can be changed at any time, and must be in the following format.
@@ -73,7 +73,7 @@ minecraft {
 	// stable_#            stables are built at the discretion of the MCP team.
 	// Use non-default mappings at your own risk. they may not always work.
 	// simply re-run your setup task after changing the mappings to update your workspace.
-	mappings = "snapshot_20160508"
+	mappings = "snapshot_20160519"
 	// makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
 	replace "@@VERSION@@", project.version
@@ -82,13 +82,38 @@ minecraft {
 }
 
 shadowJar {
-	dependencies {
-		include(dependency('com.flowpowered:flow-noise'))
-		include(dependency('org.mapdb:mapdb'))
-	}
-	relocate 'org/mapdb', 'cubicchunks/org/mappdb'
-	relocate 'com/flowpowered', 'cubicchunks/com/flowpowered'
+	//MapDB stuff
+	relocate 'org.mapdb', 'cubicchunks.org.mappdb'
+	relocate 'kotlin', 'cubicchunks.org.mappdb.com.google'
+	relocate 'net.jcip', 'cubicchunks.org.mappdb.net.jcip'
+	relocate 'org.eclipse.collections', 'cubicchunks.org.mappdb.org.eclipse.collections'
+	relocate 'net.jpountz', 'cubicchunks.org.mappdb.net.jpountz'
+
+	//MapDB natives. Will it work?
+	relocate 'win32', 'cubicchunks.org.mappdb.win32'
+	relocate 'linux', 'cubicchunks.org.mappdb.linux'
+	relocate 'darwin', 'cubicchunks.org.mappdb.darwin'
+
+	relocate 'com.flowpowered', 'cubicchunks.com.flowpowered'
+	/*
+	Mixin shouldn't be relocated. Mixin dependencies:
+	 org.spongepowered:mixin:0.5.5-SNAPSHOT
+     +--- org.slf4j:slf4j-api:1.7.7
+     +--- commons-codec:commons-codec:1.9
+     +--- org.ow2.asm:asm-commons:5.0.3
+     |    \--- org.ow2.asm:asm-tree:5.0.3
+     |         \--- org.ow2.asm:asm:5.0.3
+     +--- commons-io:commons-io:2.4
+     \--- com.googlecode.jarjar:jarjar:1.1
+	 */
+	classifier = ''
 }
+
+reobf {
+	shadowJar { mappingType = 'SEARGE' }
+}
+
+tasks.build.dependsOn reobfShadowJar
 
 jar {
 	exclude 'LICENSE.txt'
@@ -106,12 +131,15 @@ repositories {
 
 dependencies {
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
-	compile 'org.mapdb:mapdb:3.0.0-beta3'
+	compile('org.mapdb:mapdb:3.0.0-beta3'){
+		exclude module: 'guava'
+	}
 	testCompile 'junit:junit:4.11'
 
 	compile('org.spongepowered:mixin:0.5.5-SNAPSHOT') {
 		exclude module: 'launchwrapper'
 		exclude module: 'guava'
+		exclude module: 'gson'
 	}
 }
 
@@ -142,6 +170,7 @@ license {
 	ext.year = inceptionYear
 	exclude "**/*.info"
 	exclude "**/*.json"
+	exclude "**/*.xml"
 	exclude "assets/*"
 	header file('HEADER.txt')
 	ignoreFailures false
