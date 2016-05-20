@@ -32,7 +32,14 @@ public class JvmNames {
 			ENUM_SKY_BLOCK = "Lnet/minecraft/world/EnumSkyBlock;",
 			CHUNK_CACHE = "Lnet/minecraft/world/ChunkCache;",
 			IMMUTABLE_SET_MULTIMAP = "Lcom/google/common/collect/ImmutableSetMultimap;",
-			IBLOCK_STATE = "Lnet/minecraft/block/state/IBlockState;";
+			IBLOCK_STATE = "Lnet/minecraft/block/state/IBlockState;",
+			COMMAND_BASE = "Lnet/minecraft/command/CommandBase;",
+			COMMAND_TELEPORT = "Lnet/minecraft/command/server/CommandTeleport;",
+			MINECRAFT_SERVER = "Lnet/minecraft/server/MinecraftServer;",
+			ICOMMAND_SENDER = "Lnet/minecraft/command/ICommandSender;",
+			STRING = "Ljava/lang/String;",
+			ENTITY = "Lnet/minecraft/entity/Entity;",
+			ENTITy_PLAYER_MP = "Lnet/minecraft/entity/player/EntityPlayerMP;";
 
 	public static final String
 			BLOCK_POS_GETY = BLOCK_POS + "getY()I",
@@ -42,5 +49,7 @@ public class JvmNames {
 			WORLD_GET_LIGHT_FOR = WORLD + "getLightFor(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
 			CHUNK_CACHE_GET_LIGHT_FOR = CHUNK_CACHE + "getLightFor(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
 			CHUNK_CACHE_GET_LIGHT_FOR_EXT = CHUNK_CACHE + "getLightForExt(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
-			CHUNK_CACHE_GET_BLOCK_STATE = CHUNK_CACHE + "getBlockState(" + BLOCK_POS + ")" + IBLOCK_STATE;
+			CHUNK_CACHE_GET_BLOCK_STATE = CHUNK_CACHE + "getBlockState(" + BLOCK_POS + ")" + IBLOCK_STATE,
+			COMMAND_TELEPORT_GET_ENTITY = COMMAND_TELEPORT + "getEntity(" + MINECRAFT_SERVER + ICOMMAND_SENDER + STRING + ")" + ENTITY,
+			COMMAND_TELEPORT_GET_COMMAND_SENDER_AS_PLAYER = COMMAND_TELEPORT + "getCommandSenderAsPlayer(" + ICOMMAND_SENDER + ")" + ENTITy_PLAYER_MP;
 }

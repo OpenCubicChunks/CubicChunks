@@ -8,7 +8,8 @@
     "core.MixinWorldServer",
     "core.MixinWorld_HeightLimits",
     "core.MixinChunkCache_HeightLimits",
-    "core.MixinEntity_DeathFix"
+    "core.MixinEntity_DeathFix",
+    "core.MixinCommandTeleport"
   ],
   "client": [
     "core.client.MixinWorld_HeightLimits",
