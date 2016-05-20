@@ -38,6 +38,6 @@ public class MixinEntity_DeathFix {
 
 	@ModifyConstant(method = "onEntityUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
 	private double getDeathY(double originalY) {
-		return ((ICubicWorld) worldObj).getMinHeight() - originalY;
+		return ((ICubicWorld) worldObj).getMinHeight() + originalY;
 	}
 }
