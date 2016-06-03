@@ -47,13 +47,12 @@ public class CustomCubicChunksWorldType extends WorldType implements ICubicChunk
 		GeneratorStage terrain = new GeneratorStage("terrain");
 		GeneratorStage surface = new GeneratorStage("surface");
 		GeneratorStage features = new GeneratorStage("features");
-		GeneratorStage lighting = new GeneratorStage("lighting");
 		GeneratorStage population = new GeneratorStage("population");		
 		
 		pipeline.addStage(terrain, new CustomTerrainProcessor(world, 5));
 		pipeline.addStage(surface, new CustomSurfaceProcessor(surface, cubeCache, 10, world.getSeed()));
 		pipeline.addStage(features, new CustomFeatureProcessor(features, "Features", cubeCache, 10));
-		pipeline.addStage(lighting, new FirstLightProcessor(lighting, "Lighting", cubeCache, 5));
+		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(GeneratorStage.LIGHTING, "Lighting", cubeCache, 5));
 		pipeline.addStage(population, new CustomPopulationProcessor(population, "Population", world, 100));
 	}
 

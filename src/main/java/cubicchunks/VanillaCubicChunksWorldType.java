@@ -49,13 +49,9 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicChun
 		// init the worldgen pipeline
 		GeneratorStage terrain = new GeneratorStage("terrain");
 		GeneratorStage surface = new GeneratorStage("surface");
-		GeneratorStage features = new GeneratorStage("features");
-		GeneratorStage lighting = new GeneratorStage("lighting");
 		GeneratorStage population = new GeneratorStage("population");		
 		
 		pipeline.addStage(terrain, new VanillaTerrainProcessor(surface, world, vanillaGen, 5));
-		pipeline.addStage(surface, new NullProcessor("Surface", cubeCache));
-		pipeline.addStage(features, new NullProcessor("Features", cubeCache));
 		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(GeneratorStage.LIGHTING, "Lighting", cubeCache, 5));
 		pipeline.addStage(population, new VanillaPopulationProcessor(population, world, vanillaGen, 5));
 
