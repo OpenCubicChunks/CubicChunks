@@ -65,7 +65,7 @@ archivesBaseName = "CubicChunks"
 version = getModVersionAndWriteToFile("${git.describe()}")
 
 minecraft {
-	version = "1.9.4-12.17.0.1909-1.9.4"
+	version = "1.9.4-12.17.0.1940"
 	runDir = "run"
 
 	// the mappings can be changed at any time, and must be in the following format.
@@ -73,7 +73,7 @@ minecraft {
 	// stable_#            stables are built at the discretion of the MCP team.
 	// Use non-default mappings at your own risk. they may not always work.
 	// simply re-run your setup task after changing the mappings to update your workspace.
-	mappings = "snapshot_20160519"
+	mappings = "snapshot_20160602"
 	// makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
 	replace "@@VERSION@@", project.version
@@ -136,7 +136,7 @@ dependencies {
 	}
 	testCompile 'junit:junit:4.11'
 
-	compile('org.spongepowered:mixin:0.5.5-SNAPSHOT') {
+	compile('org.spongepowered:mixin:0.5.6-SNAPSHOT') {
 		exclude module: 'launchwrapper'
 		exclude module: 'guava'
 		exclude module: 'gson'

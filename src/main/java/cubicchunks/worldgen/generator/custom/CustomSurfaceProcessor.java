@@ -106,7 +106,7 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 		return cube.getWorld()
 				.getProvider()
 				.getBiomeProvider()
-				.loadBlockGeneratorData(this.biomes, Coords.cubeToMinBlock(cube.getX()),
+				.getBiomes(this.biomes, Coords.cubeToMinBlock(cube.getX()),
 						Coords.cubeToMinBlock(cube.getZ()), 16, 16);
 	}
 

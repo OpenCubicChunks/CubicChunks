@@ -627,10 +627,10 @@ public class Column extends Chunk {
 			if (this.roundRobinLightUpdatePointer > maxPointer) {
 				//next cube
 				this.roundRobinLightUpdatePointer = 0;
+				this.roundRobinCubeQueue.removeLast();
 				if (this.roundRobinCubeQueue.isEmpty()) {
 					break;
 				}
-				this.roundRobinCubeQueue.removeLast();
 			}
 			int cubeY = this.roundRobinCubeQueue.getLast();
 			Cube cube = this.getCube(cubeY);

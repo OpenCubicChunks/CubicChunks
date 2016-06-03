@@ -127,7 +127,7 @@ public interface ICubicWorld {
 
 	boolean isAirBlock(BlockPos randomPos);
 
-	Biome getBiomeGenForCoords(BlockPos cubeCenter);
+	Biome getBiome(BlockPos blockPos);
 
 	BiomeProvider getBiomeProvider();
 

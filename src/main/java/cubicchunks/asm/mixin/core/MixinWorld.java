@@ -122,7 +122,7 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Shadow public abstract boolean isAirBlock(BlockPos randomPos);
 
-	@Shadow public abstract Biome getBiomeGenForCoords(BlockPos cubeCenter);
+	@Shadow public abstract Biome getBiome(BlockPos cubeCenter);
 
 	@Shadow public abstract BiomeProvider getBiomeProvider();
 
@@ -321,8 +321,8 @@ public abstract class MixinWorld implements ICubicWorld {
 		return this.isAirBlock(pos);
 	}
 
-	@Intrinsic public Biome world$getBiomeGenForCoords(BlockPos pos) {
-		return this.getBiomeGenForCoords(pos);
+	@Intrinsic public Biome world$getBiome(BlockPos pos) {
+		return this.getBiome(pos);
 	}
 
 	@Intrinsic public BiomeProvider world$getBiomeProvider() {

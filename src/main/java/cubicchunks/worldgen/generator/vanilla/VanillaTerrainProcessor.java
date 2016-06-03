@@ -106,7 +106,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 
 		setBlocksInChunk(this.vanillaGen, x, z, chunkprimer);
 		Biome[] newBiomes = this.world.getBiomeProvider()
-				.loadBlockGeneratorData(getBiomesForGeneration(this.vanillaGen), x*16, z*16, 16, 16);
+				.getBiomes(getBiomesForGeneration(this.vanillaGen), x*16, z*16, 16, 16);
 		setBiomesForGeneration(this.vanillaGen, newBiomes);
 		replaceBiomeBlocks(this.vanillaGen, x, z, chunkprimer, newBiomes);
 
