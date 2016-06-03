@@ -25,11 +25,7 @@ package cubicchunks.worldgen;
 
 public class GeneratorStage {
 	
-	public static GeneratorStage TERRAIN = new GeneratorStage("terrain");
-	public static GeneratorStage SURFACE = new GeneratorStage("surface");
-	public static GeneratorStage FEATURES = new GeneratorStage("features");
 	public static GeneratorStage LIGHTING = new GeneratorStage("lighting");
-	public static GeneratorStage POPULATION = new GeneratorStage("population");
 	
 	public static GeneratorStage LIVE = new GeneratorStage("live");
 	static {
