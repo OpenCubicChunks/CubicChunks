@@ -45,12 +45,15 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicChun
 		ServerCubeCache cubeCache = world.getCubeCache();
 
 		ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
+		
 		// init the worldgen pipeline
-		pipeline.addStage(GeneratorStage.TERRAIN, new VanillaTerrainProcessor(world, vanillaGen, 5));
-		pipeline.addStage(GeneratorStage.SURFACE, new NullProcessor("Surface", cubeCache));
-		pipeline.addStage(GeneratorStage.FEATURES, new NullProcessor("Features", cubeCache));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", cubeCache, 5));
-		pipeline.addStage(GeneratorStage.POPULATION, new VanillaPopulationProcessor(world, vanillaGen, 5));
+		GeneratorStage terrain = new GeneratorStage("terrain");
+		GeneratorStage surface = new GeneratorStage("surface");
+		GeneratorStage population = new GeneratorStage("population");		
+		
+		pipeline.addStage(terrain, new VanillaTerrainProcessor(surface, world, vanillaGen, 5));
+		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(GeneratorStage.LIGHTING, "Lighting", cubeCache, 5));
+		pipeline.addStage(population, new VanillaPopulationProcessor(population, world, vanillaGen, 5));
 
 	}
 

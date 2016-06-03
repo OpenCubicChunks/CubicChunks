@@ -341,7 +341,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		if (loadType == LOAD_OR_GENERATE && cube == null) {
 			// start the cube generation process with an empty cube
 			cube = column.getOrCreateCube(cubeY, true);
-			cube.setGeneratorStage(GeneratorStage.getFirstStage());
+			cube.setGeneratorStage(this.worldServer.getGeneratorPipeline().getFirstStage());
 		}
 		//if couldn't generate it - return
 		if (cube == null) {
@@ -423,7 +423,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		addForcedByMapping(forcedBy, cube);
 		//set generator stage, technically shouldn't be needed because it's set in worldgen code
 		//but in case not all cubes are saved - it would crash.
-		cube.setGeneratorStage(GeneratorStage.TERRAIN);
+		cube.setGeneratorStage(this.worldServer.getGeneratorPipeline().getFirstStage());
 		return cube;
 	}
 

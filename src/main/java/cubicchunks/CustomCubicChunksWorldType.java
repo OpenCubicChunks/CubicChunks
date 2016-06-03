@@ -42,12 +42,18 @@ public class CustomCubicChunksWorldType extends WorldType implements ICubicChunk
 
 	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
 		ServerCubeCache cubeCache = world.getCubeCache();
+		
 		// init the worldgen pipeline
-		pipeline.addStage(GeneratorStage.TERRAIN, new CustomTerrainProcessor(world, 5));
-		pipeline.addStage(GeneratorStage.SURFACE, new CustomSurfaceProcessor(cubeCache, 10, world.getSeed()));
-		pipeline.addStage(GeneratorStage.FEATURES, new CustomFeatureProcessor("Features", cubeCache, 10));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", cubeCache, 5));
-		pipeline.addStage(GeneratorStage.POPULATION, new CustomPopulationProcessor("Population", world, 100));
+		GeneratorStage terrain = new GeneratorStage("terrain");
+		GeneratorStage surface = new GeneratorStage("surface");
+		GeneratorStage features = new GeneratorStage("features");
+		GeneratorStage population = new GeneratorStage("population");		
+		
+		pipeline.addStage(terrain, new CustomTerrainProcessor(world, 5));
+		pipeline.addStage(surface, new CustomSurfaceProcessor(surface, cubeCache, 10, world.getSeed()));
+		pipeline.addStage(features, new CustomFeatureProcessor(features, "Features", cubeCache, 10));
+		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(GeneratorStage.LIGHTING, "Lighting", cubeCache, 5));
+		pipeline.addStage(population, new CustomPopulationProcessor(population, "Population", world, 100));
 	}
 
 	public static void create() {

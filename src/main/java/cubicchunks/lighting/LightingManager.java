@@ -28,6 +28,7 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.GeneratorStage;
 
 import java.util.Set;
 
@@ -46,7 +47,7 @@ public class LightingManager {
 
 		this.skylightCubeDiffuseProcessor = new SkyLightCubeDiffuseProcessor(world, "Sky Light Diffuse", 5);
 
-		this.firstLightProcessor = new FirstLightProcessor("First Light", world.getCubeCache(), 1);
+		this.firstLightProcessor = new FirstLightProcessor(GeneratorStage.LIGHTING, "First Light", world.getCubeCache(), 1);
 	}
 
 	public void columnSkylightUpdate(UpdateType type, Column column, int localX, int minY, int maxY, int localZ) {

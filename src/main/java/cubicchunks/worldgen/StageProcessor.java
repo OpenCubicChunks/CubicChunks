@@ -24,63 +24,15 @@
 
 package cubicchunks.worldgen;
 
-public class GeneratorStage {
-	
-	public static GeneratorStage LIGHTING = new GeneratorStage("lighting");
-	
-	public static GeneratorStage LIVE = new GeneratorStage("live");
-	static {
-		LIVE.setLastStage();
-		LIVE.setOrdinal(Integer.MAX_VALUE);
-	}
-	
-	private final String name;
-	
-	private boolean isLast;
-	
-	private int ordinal;
-	
-	private StageProcessor processor;
-	
-		
-	public GeneratorStage(String name) {
-		this.name = name;
-		this.isLast = false;
-	}
-	
-	
-	public String getName() {
-		return this.name;
-	}
-	
-	
-	public void setLastStage() {
-		this.isLast = true;
-	}
+import cubicchunks.util.processor.QueueProcessor;
 
-	public boolean isLastStage() {
-		return this.isLast;
-	}
-	
-	
-	public void setProcessor(StageProcessor processor) {
+public class StageProcessor {
+
+	public QueueProcessor<Long> processor;
+	public float share;
+
+	public StageProcessor(QueueProcessor<Long> processor) {
 		this.processor = processor;
-	}
-
-	public StageProcessor getProcessor() {
-		return this.processor;
-	}
-	
-	
-	void setOrdinal(int ordinal) {
-		this.ordinal = ordinal;
-	}
-	
-	int getOrdinal() {
-		return this.ordinal;
-	}
-
-	public boolean precedes(GeneratorStage other) {
-		return this.ordinal < other.ordinal;
+		this.share = 0f;
 	}
 }
