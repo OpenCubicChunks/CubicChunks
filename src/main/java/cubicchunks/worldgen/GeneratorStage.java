@@ -72,11 +72,11 @@ public class GeneratorStage {
 	}
 	
 	
-	public void setOrdinal(int ordinal) {
+	void setOrdinal(int ordinal) {
 		this.ordinal = ordinal;
 	}
 	
-	public int getOrdinal() {
+	int getOrdinal() {
 		return this.ordinal;
 	}
 
