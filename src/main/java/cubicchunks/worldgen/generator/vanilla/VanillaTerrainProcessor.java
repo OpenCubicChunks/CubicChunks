@@ -58,12 +58,15 @@ import static cubicchunks.util.ChunkProviderOverworldAccess.setBiomesForGenerati
 import static cubicchunks.util.ChunkProviderOverworldAccess.setBlocksInChunk;
 
 public class VanillaTerrainProcessor extends CubeProcessor {
+	
+	private GeneratorStage surfaceStage;
 	private final ChunkProviderOverworld vanillaGen;
 	private ICubicWorldServer world;
 	private ServerCubeCache provider;
 
-	public VanillaTerrainProcessor(ICubicWorldServer world, ChunkProviderOverworld vanillaGen, int batchSize) {
+	public VanillaTerrainProcessor(GeneratorStage surfaceStage, ICubicWorldServer world, ChunkProviderOverworld vanillaGen, int batchSize) {
 		super("Terrain", world.getCubeCache(), batchSize);
+		this.surfaceStage = surfaceStage;
 		this.world = world;
 		this.provider = world.getCubeCache();
 		this.vanillaGen = vanillaGen;
@@ -142,7 +145,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 		}
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
 			Cube currCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
-			currCube.setGeneratorStage(GeneratorStage.SURFACE);
+			currCube.setGeneratorStage(surfaceStage);
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 			for (int localX = 0; localX < 16; localX++) {
 				for (int localY = 0; localY < 16; localY++) {

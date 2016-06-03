@@ -36,12 +36,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class VanillaPopulationProcessor extends CubeProcessor {
+	
+	private GeneratorStage generatorStage;
 	private ServerCubeCache provider;
 	private ICubicWorldServer world;
 	private ChunkProviderOverworld vanillaGen;
 
-	public VanillaPopulationProcessor(ICubicWorldServer world, ChunkProviderOverworld vanillaGen, int batchSize) {
+	public VanillaPopulationProcessor(GeneratorStage generatorStage, ICubicWorldServer world, ChunkProviderOverworld vanillaGen, int batchSize) {
 		super("Population", world.getCubeCache(), batchSize);
+		this.generatorStage = generatorStage;
 		this.provider = world.getCubeCache();
 		this.world = world;
 		this.vanillaGen = vanillaGen;
@@ -80,8 +83,8 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 		Cube c01 = provider.getCube(c00.getX(), c00.getY(), c00.getZ() + 1);
 		Cube c11 = provider.getCube(c00.getX() + 1, c00.getY(), c00.getZ() + 1);
 		Cube c10 = provider.getCube(c00.getX() + 1, c00.getY(), c00.getZ());
-		return c01 != null && !c01.getGeneratorStage().isLessThan(GeneratorStage.POPULATION) &&
-				c11 != null && !c11.getGeneratorStage().isLessThan(GeneratorStage.POPULATION) &&
-				c10 != null && !c10.getGeneratorStage().isLessThan(GeneratorStage.POPULATION);
+		return c01 != null && !c01.getGeneratorStage().precedes(generatorStage) &&
+				c11 != null && !c11.getGeneratorStage().precedes(generatorStage) &&
+				c10 != null && !c10.getGeneratorStage().precedes(generatorStage);
 	}
 }

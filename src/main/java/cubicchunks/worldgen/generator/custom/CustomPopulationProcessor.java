@@ -41,11 +41,13 @@ import java.util.Set;
 
 public class CustomPopulationProcessor extends CubeProcessor {
 
+	private GeneratorStage generatorStage;
 	private Map<Biome, BiomeFeatures> biomeFeaturesMap;
 
-	public CustomPopulationProcessor(String name, ICubicWorld world, int batchSize) {
+	public CustomPopulationProcessor(GeneratorStage generatorStage, String name, ICubicWorld world, int batchSize) {
 		super(name, world.getCubeCache(), batchSize);
 
+		this.generatorStage = generatorStage;
 		this.biomeFeaturesMap = new HashMap<>();
 
 		// for now use global for all biomes
@@ -60,7 +62,7 @@ public class CustomPopulationProcessor extends CubeProcessor {
 	@Override
 	public Set<Cube> calculate(Cube cube) {
 		if (true) return Sets.newHashSet(cube);
-		if (!cube.getWorld().cubeAndNeighborsExist(cube, true, GeneratorStage.POPULATION)) {
+		if (!cube.getWorld().cubeAndNeighborsExist(cube, true, generatorStage)) {
 			return Collections.EMPTY_SET;
 		}
 

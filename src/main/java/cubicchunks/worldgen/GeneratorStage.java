@@ -23,27 +23,67 @@
  */
 package cubicchunks.worldgen;
 
-public enum GeneratorStage {
-	TERRAIN,
-	SURFACE,
-	FEATURES,
-	LIGHTING,
-	POPULATION,
-	LIVE;
-
-	public static GeneratorStage getFirstStage() {
-		return values()[0];
+public class GeneratorStage {
+	
+	public static GeneratorStage TERRAIN = new GeneratorStage("terrain");
+	public static GeneratorStage SURFACE = new GeneratorStage("surface");
+	public static GeneratorStage FEATURES = new GeneratorStage("features");
+	public static GeneratorStage LIGHTING = new GeneratorStage("lighting");
+	public static GeneratorStage POPULATION = new GeneratorStage("population");
+	
+	public static GeneratorStage LIVE = new GeneratorStage("live");
+	static {
+		LIVE.setLastStage();
+		LIVE.setOrdinal(Integer.MAX_VALUE);
 	}
-
-	public static GeneratorStage getLastStage() {
-		return values()[values().length - 1];
+	
+	private final String name;
+	
+	private boolean isLast;
+	
+	private int ordinal;
+	
+	private StageProcessor processor;
+	
+		
+	public GeneratorStage(String name) {
+		this.name = name;
+		this.isLast = false;
+	}
+	
+	
+	public String getName() {
+		return this.name;
+	}
+	
+	
+	public void setLastStage() {
+		this.isLast = true;
 	}
 
 	public boolean isLastStage() {
-		return ordinal() == values().length - 1;
+		return this.isLast;
+	}
+	
+	
+	public void setProcessor(StageProcessor processor) {
+		this.processor = processor;
 	}
 
-	public boolean isLessThan(GeneratorStage other) {
-		return ordinal() < other.ordinal();
+	public StageProcessor getProcessor() {
+		return this.processor;
+	}
+	
+	
+	public void setOrdinal(int ordinal) {
+		this.ordinal = ordinal;
+	}
+	
+	public int getOrdinal() {
+		return this.ordinal;
+	}
+
+	public boolean precedes(GeneratorStage other) {
+		return this.ordinal < other.ordinal;
 	}
 }

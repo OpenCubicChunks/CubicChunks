@@ -61,8 +61,11 @@ public class FirstLightProcessor extends CubeProcessor {
 	//mutableBlockPos variable to avoid creating thousands of instances of BlockPos
 	private BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
-	public FirstLightProcessor(String name, ICubeCache cache, int batchSize) {
+	private GeneratorStage generatorStage;
+	
+	public FirstLightProcessor(GeneratorStage lighting, String name, ICubeCache cache, int batchSize) {
 		super(name, cache, batchSize);
+		this.generatorStage = lighting;
 	}
 
 	@Override
@@ -307,6 +310,6 @@ public class FirstLightProcessor extends CubeProcessor {
 		final int totalRadius = lightUpdateRadius + cubeSizeRadius + bufferRadius;
 
 		// only continue if the neighboring cubes are at least in the lighting stage
-		return cube.getWorld().blocksExist(cubeCenter, totalRadius, false, GeneratorStage.LIGHTING);
+		return cube.getWorld().blocksExist(cubeCenter, totalRadius, false, generatorStage);
 	}
 }

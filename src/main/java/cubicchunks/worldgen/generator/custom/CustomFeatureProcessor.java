@@ -42,6 +42,7 @@ import java.util.Set;
 @SuppressWarnings("unused")
 public class CustomFeatureProcessor extends CubeProcessor {
 
+	private GeneratorStage generatorStage;
 	private CubicCaveGenerator caveGenerator;
 	private MapGenStronghold strongholdGenerator;
 	private MapGenVillage villageGenerator;
@@ -51,9 +52,10 @@ public class CustomFeatureProcessor extends CubeProcessor {
 
 	private ICubicWorld worldObj;
 
-	public CustomFeatureProcessor(String name, ICubeCache provider, int batchSize) {
+	public CustomFeatureProcessor(GeneratorStage generatorStage, String name, ICubeCache provider, int batchSize) {
 		super(name, provider, batchSize);
-
+		
+		this.generatorStage = generatorStage;
 		this.caveGenerator = new CubicCaveGenerator();
 		this.strongholdGenerator = new MapGenStronghold();
 		this.villageGenerator = new MapGenVillage();
@@ -99,6 +101,6 @@ public class CustomFeatureProcessor extends CubeProcessor {
 			return false;
 		}
 		Cube below = this.cache.getCube(cubeX, cubeY, cubeZ);
-		return !below.getGeneratorStage().isLessThan(GeneratorStage.FEATURES);
+		return !below.getGeneratorStage().precedes(generatorStage);
 	}
 }

@@ -215,7 +215,7 @@ public abstract class MixinWorld implements ICubicWorld {
 					}
 					Column column = cube.getColumn();
 					if ((!allowEmptyColumns && column instanceof BlankColumn)
-							|| (minStageAllowed != null && cube.getGeneratorStage().isLessThan(minStageAllowed))) {
+							|| (minStageAllowed != null && cube.getGeneratorStage().precedes(minStageAllowed))) {
 						return false;
 					}
 				}

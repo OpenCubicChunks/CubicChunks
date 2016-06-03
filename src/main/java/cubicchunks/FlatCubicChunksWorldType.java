@@ -44,7 +44,7 @@ public class FlatCubicChunksWorldType extends WorldType implements ICubicChunksW
 		pipeline.addStage(GeneratorStage.TERRAIN, new FlatTerrainProcessor(cubeCache, 5));
 		pipeline.addStage(GeneratorStage.SURFACE, new NullProcessor("Surface", cubeCache));
 		pipeline.addStage(GeneratorStage.FEATURES, new NullProcessor("Features", cubeCache));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor("Lighting", cubeCache, 5));
+		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(null, "Lighting", cubeCache, 5));
 		pipeline.addStage(GeneratorStage.POPULATION, new NullProcessor("Population", cubeCache));
 	}
 

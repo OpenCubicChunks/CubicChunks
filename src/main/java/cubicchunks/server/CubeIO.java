@@ -29,6 +29,7 @@ import cubicchunks.util.ConcurrentBatchedQueue;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
@@ -100,7 +101,7 @@ public class CubeIO implements IThreadedFileIO {
 		// see: http://www.mapdb.org/features.html
 	}
 
-	private ICubicWorld world;
+	private ICubicWorldServer world;
 
 	private final DB db;
 	private ConcurrentNavigableMap<Long, byte[]> columns;
@@ -110,7 +111,7 @@ public class CubeIO implements IThreadedFileIO {
 
 	private final Thread theShutdownHook;
 
-	public CubeIO(ICubicWorld world) {
+	public CubeIO(ICubicWorldServer world) {
 		this.world = world;
 
 		this.db = initializeDBConnection(this.world.getSaveHandler().getWorldDirectory(), this.world.getProvider());
@@ -363,7 +364,7 @@ public class CubeIO implements IThreadedFileIO {
 		final Cube cube = column.getOrCreateCube(cubeY, false);
 
 		// get the worldgen stage
-		cube.setGeneratorStage(GeneratorStage.values()[nbt.getByte("GeneratorStage")]);
+		cube.setGeneratorStage(this.world.getGeneratorPipeline().getStage(nbt.getString("GeneratorStage")));
 
 		// is this an empty cube?
 		boolean isEmpty = !nbt.hasKey("Blocks");
@@ -490,7 +491,7 @@ public class CubeIO implements IThreadedFileIO {
 		nbt.setInteger("y", cube.getY());
 		nbt.setInteger("z", cube.getZ());
 
-		nbt.setByte("GeneratorStage", (byte) cube.getGeneratorStage().ordinal());
+		nbt.setString("GeneratorStage", cube.getGeneratorStage().getName());
 
 		if (!cube.isEmpty()) {
 
