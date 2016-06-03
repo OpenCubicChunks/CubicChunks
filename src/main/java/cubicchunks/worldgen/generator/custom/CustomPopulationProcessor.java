@@ -64,7 +64,7 @@ public class CustomPopulationProcessor extends CubeProcessor {
 			return Collections.EMPTY_SET;
 		}
 
-		Biome biome = cube.getWorld().getBiomeGenForCoords(Coords.getCubeCenter(cube));
+		Biome biome = cube.getWorld().getBiome(Coords.getCubeCenter(cube));
 
 		//For surface generators we should actually use special RNG with seed 
 		//that depends only in world seed and cube X/Z
