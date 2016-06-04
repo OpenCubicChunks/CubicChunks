@@ -123,6 +123,6 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 			return false;
 		}
 		Cube above = this.cache.getCube(cubeX, cubeY, cubeZ);
-		return !above.getGeneratorStage().precedes(generatorStage);
+		return !above.getCurrentStage().precedes(generatorStage);
 	}
 }

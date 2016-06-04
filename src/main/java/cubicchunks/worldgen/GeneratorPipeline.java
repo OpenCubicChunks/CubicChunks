@@ -30,6 +30,7 @@ import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.util.processor.QueueProcessor;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.dependency.DependencyManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,12 +44,16 @@ public class GeneratorPipeline {
 	private ICubeCache cubes;
 	private List<GeneratorStage> stages;
 	private Map<String, GeneratorStage> stageMap;
+	
+	private DependencyManager dependencyManager;
+	
 
 	public GeneratorPipeline(ICubeCache cubes) {
 		this.cubes = cubes;
 		this.stages = new ArrayList<GeneratorStage>();
 		this.stageMap = new HashMap<String, GeneratorStage>();
 		this.stageMap.put(GeneratorStage.LIVE.getName(), GeneratorStage.LIVE);
+		this.dependencyManager = new DependencyManager();
 	}
 
 	public void addStage(GeneratorStage stage, CubeProcessor processor) {
@@ -70,7 +75,7 @@ public class GeneratorPipeline {
 	}
 
 	public void generate(Cube cube) {
-		GeneratorStage stage = cube.getGeneratorStage();
+		GeneratorStage stage = cube.getCurrentStage();
 		if (!stage.isLastStage()) {
 			stage.getProcessor().processor.add(cube.getAddress());
 		}
@@ -178,7 +183,7 @@ public class GeneratorPipeline {
 				int cubeY = AddressTools.getY(address);
 				int cubeZ = AddressTools.getZ(address);
 				
-				this.cubes.getCube(cubeX, cubeY, cubeZ).setGeneratorStage(nextStage);
+				this.cubes.getCube(cubeX, cubeY, cubeZ).setCurrentStage(nextStage);
 				nextStage.getProcessor().processor.add(address);
 			}
 		} 
@@ -189,7 +194,7 @@ public class GeneratorPipeline {
 				int cubeY = AddressTools.getY(address);
 				int cubeZ = AddressTools.getZ(address);
 
-				this.cubes.getCube(cubeX, cubeY, cubeZ).setGeneratorStage(GeneratorStage.LIVE);
+				this.cubes.getCube(cubeX, cubeY, cubeZ).setCurrentStage(GeneratorStage.LIVE);
 			}
 		}
 	}

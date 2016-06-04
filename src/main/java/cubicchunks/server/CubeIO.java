@@ -364,7 +364,7 @@ public class CubeIO implements IThreadedFileIO {
 		final Cube cube = column.getOrCreateCube(cubeY, false);
 
 		// get the worldgen stage
-		cube.setGeneratorStage(this.world.getGeneratorPipeline().getStage(nbt.getString("GeneratorStage")));
+		cube.setCurrentStage(this.world.getGeneratorPipeline().getStage(nbt.getString("GeneratorStage")));
 
 		// is this an empty cube?
 		boolean isEmpty = !nbt.hasKey("Blocks");
@@ -491,7 +491,7 @@ public class CubeIO implements IThreadedFileIO {
 		nbt.setInteger("y", cube.getY());
 		nbt.setInteger("z", cube.getZ());
 
-		nbt.setString("GeneratorStage", cube.getGeneratorStage().getName());
+		nbt.setString("GeneratorStage", cube.getCurrentStage().getName());
 
 		if (!cube.isEmpty()) {
 

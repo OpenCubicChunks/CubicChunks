@@ -70,7 +70,10 @@ public class Cube {
 	private ExtendedBlockStorage storage;
 	private EntityContainer entities;
 	private CubeBlockMap<TileEntity> tileEntityMap;
-	private GeneratorStage generatorStage;
+	
+	private GeneratorStage targetStage;
+	private GeneratorStage currentStage;
+	
 	private boolean needsRelightAfterLoad;
 	/**
 	 * "queue containing the BlockPos of tile entities queued for creation"
@@ -92,7 +95,7 @@ public class Cube {
 		this.storage = null;
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new CubeBlockMap<>();
-		this.generatorStage = null;
+		this.currentStage = null;
 		this.needsRelightAfterLoad = false;
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
 	}
@@ -349,14 +352,22 @@ public class Cube {
 		}
 	}
 
-	public GeneratorStage getGeneratorStage() {
-		return this.generatorStage;
+	public GeneratorStage getCurrentStage() {
+		return this.currentStage;
 	}
 
-	public void setGeneratorStage(GeneratorStage val) {
-		this.generatorStage = val;
+	public void setCurrentStage(GeneratorStage val) {
+		this.currentStage = val;
 	}
 
+	public GeneratorStage getTargetStage() {
+		return this.targetStage;
+	}
+	
+	public void setTargetStage(GeneratorStage val) {
+		this.targetStage = val;
+	}
+	
 	public long getAddress() {
 		return AddressTools.getAddress(this.cubeX, this.cubeY, this.cubeZ);
 	}

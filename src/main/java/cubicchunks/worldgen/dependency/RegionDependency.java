@@ -39,7 +39,7 @@ public class RegionDependency implements Dependency {
 
 	@Override
 	public boolean update(Cube cube) {
-		if (!cube.getGeneratorStage().precedes(stage)) {
+		if (!cube.getCurrentStage().precedes(stage)) {
 			this.requirements.remove(cube.getAddress());
 		}
 		return this.requirements.size() == 0;

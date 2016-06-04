@@ -101,6 +101,6 @@ public class CustomFeatureProcessor extends CubeProcessor {
 			return false;
 		}
 		Cube below = this.cache.getCube(cubeX, cubeY, cubeZ);
-		return !below.getGeneratorStage().precedes(generatorStage);
+		return !below.getCurrentStage().precedes(generatorStage);
 	}
 }

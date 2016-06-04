@@ -24,7 +24,10 @@
 
 package cubicchunks.worldgen;
 
-public class GeneratorStage {
+import cubicchunks.worldgen.dependency.Dependency;
+import cubicchunks.worldgen.dependency.Dependent;
+
+public class GeneratorStage implements Dependent {
 	
 	public static GeneratorStage LIGHTING = new GeneratorStage("lighting");
 	
@@ -82,5 +85,25 @@ public class GeneratorStage {
 
 	public boolean precedes(GeneratorStage other) {
 		return this.ordinal < other.ordinal;
+	}
+
+
+	
+	
+	/*
+	 * Dependent
+	 * @see cubicchunks.worldgen.dependency.Dependent
+	 */
+	
+	@Override
+	public Dependency getDependency() {
+		return null;
+	}
+
+
+
+	@Override
+	public void onSatisfaction() {
+		/* nothing */
 	}
 }
