@@ -59,10 +59,10 @@ public class LightingManager {
 				for (int cubeY : toDiffuse) {
 					boolean success = SkyLightCubeDiffuseCalculator.calculate(column, localX, localZ, cubeY);
 					if (!success) {
-						CubicChunks.LOGGER.warn("Diffuse lighting update at ({}, {}/{}, {}): needed cubes not loaded. Adding to queue.",
-								Coords.localToBlock(column.getX(), localX),
-								Coords.cubeToMinBlock(cubeY), Coords.cubeToMaxBlock(cubeY),
-								Coords.localToBlock(column.getZ(), localZ));
+//						CubicChunks.LOGGER.warn("Diffuse lighting update at ({}, {}/{}, {}): needed cubes not loaded. Adding to queue.",
+//								Coords.localToBlock(column.getX(), localX),
+//								Coords.cubeToMinBlock(cubeY), Coords.cubeToMaxBlock(cubeY),
+//								Coords.localToBlock(column.getZ(), localZ));
 						queueDiffuseUpdate(column.getCube(cubeY), blockX, blockZ, minY, maxY);
 					}
 				}

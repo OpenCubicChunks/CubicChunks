@@ -10,14 +10,14 @@ import cubicchunks.worldgen.GeneratorStage;
 
 public class RegionDependency implements Dependency {
 	
-	private GeneratorStage stage;
+	private GeneratorStage targetStage;
 	
-	private Set<Long> requirements;
+	private Set<Requirement> requirements;
 
-	public RegionDependency(Cube cube, GeneratorStage stage, int radius) {
+	public RegionDependency(Cube cube, GeneratorStage targetStage, int radius) {
 		
-		this.stage = stage;
-		this.requirements = new HashSet<Long>();
+		this.targetStage = targetStage;
+		this.requirements = new HashSet<Requirement>();
 		
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();
@@ -26,7 +26,29 @@ public class RegionDependency implements Dependency {
 		for (int x = -radius; x <= radius; ++x) {
 			for (int y = -radius; y <= radius; ++y) {
 				for (int z = -radius; z <= radius; ++z) {
-					requirements.add(AddressTools.getAddress(cubeX + x, cubeY + y, cubeZ + z));
+					if (x != 0 || y != 0 || z != 0) {
+						requirements.add(new Requirement(cubeX + x, cubeY + y, cubeZ + z, targetStage));
+					}
+				}
+			}
+		}
+	}
+	
+	public RegionDependency(Cube cube, GeneratorStage stage, int xLow, int xHigh, int yLow, int yHigh, int zLow, int zHigh) {
+
+		this.targetStage = stage;
+		this.requirements = new HashSet<Requirement>();
+		
+		int cubeX = cube.getX();
+		int cubeY = cube.getY();
+		int cubeZ = cube.getZ();
+		
+		for (int x = xLow; x <= xHigh; ++x) {
+			for (int y = yLow; y <= yHigh; ++y) {
+				for (int z = zLow; z <= zHigh; ++z) {
+					if (x != 0 || y != 0 || z != 0) {
+						requirements.add(new Requirement(cubeX + x, cubeY + y, cubeZ + z, targetStage));
+					}
 				}
 			}
 		}
@@ -38,20 +60,18 @@ public class RegionDependency implements Dependency {
 	}
 
 	@Override
-	public boolean update(Cube cube) {
-		if (!cube.getCurrentStage().precedes(stage)) {
-			this.requirements.remove(cube.getAddress());
+	public boolean update(DependencyManager manager, Dependent dependent) {
+		if (!dependent.cube.getCurrentStage().precedes(targetStage)) {
+			this.requirements.remove(dependent.cube.getAddress());
 		}
-		return this.requirements.size() == 0;
+		return true;
 	}
 
 	@Override
-	public Collection<Long> getRequirements() {
-		// TODO Auto-generated method stub
-		return null;
+	public Collection<Requirement> getRequirements() {
+		return this.requirements;
 	}
 
-	
 	@Override
 	public boolean dependsOn(Cube cube) {
 		return this.requirements.contains(cube.getAddress());

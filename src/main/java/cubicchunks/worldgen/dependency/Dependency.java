@@ -8,10 +8,10 @@ public interface Dependency {
 
 	public boolean isSatisfied();
 
-	public boolean update(Cube cube);
-
-	public Collection<Long> getRequirements();
+	public Collection<Requirement> getRequirements();
 
 	public boolean dependsOn(Cube cube);
-	
+
+	public boolean update(DependencyManager manager, Dependent dependent);
+
 }

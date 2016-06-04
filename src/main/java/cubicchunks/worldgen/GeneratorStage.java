@@ -24,39 +24,41 @@
 
 package cubicchunks.worldgen;
 
+import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.dependency.Dependency;
+import cubicchunks.worldgen.dependency.DependencyProvider;
 import cubicchunks.worldgen.dependency.Dependent;
 
-public class GeneratorStage implements Dependent {
-	
+public class GeneratorStage implements DependencyProvider {
+
 	public static GeneratorStage LIGHTING = new GeneratorStage("lighting");
-	
+
 	public static GeneratorStage LIVE = new GeneratorStage("live");
 	static {
 		LIVE.setLastStage();
 		LIVE.setOrdinal(Integer.MAX_VALUE);
 	}
-	
+
 	private final String name;
-	
+
 	private boolean isLast;
-	
+
 	private int ordinal;
-	
+
 	private StageProcessor processor;
+
 	
-		
 	public GeneratorStage(String name) {
 		this.name = name;
 		this.isLast = false;
 	}
-	
-	
+
+
 	public String getName() {
 		return this.name;
 	}
-	
-	
+
+
 	public void setLastStage() {
 		this.isLast = true;
 	}
@@ -94,16 +96,13 @@ public class GeneratorStage implements Dependent {
 	 * Dependent
 	 * @see cubicchunks.worldgen.dependency.Dependent
 	 */
-	
+
 	@Override
-	public Dependency getDependency() {
+	public Dependency getDependency(Cube cube) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
 
 
-	@Override
-	public void onSatisfaction() {
-		/* nothing */
-	}
 }
