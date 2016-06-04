@@ -124,7 +124,8 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 		// cubes are always live on the client
 		cube.setCurrentStage(GeneratorStage.LIVE);
-
+		cube.setTargetStage(GeneratorStage.LIVE);
+		
 		return cube;
 	}
 }

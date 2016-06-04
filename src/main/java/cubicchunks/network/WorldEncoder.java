@@ -77,6 +77,7 @@ public class WorldEncoder {
 	public static void decodeCube(PacketBuffer in, Cube cube) throws IOException {
 		// if the cube came from the server, it must be live
 		cube.setCurrentStage(GeneratorStage.LIVE);
+		cube.setTargetStage(GeneratorStage.LIVE);
 
 		// 1. emptiness
 		boolean isEmpty = in.readBoolean();
