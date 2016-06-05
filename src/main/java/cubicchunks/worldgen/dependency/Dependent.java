@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 
 public class Dependent {
@@ -38,7 +39,7 @@ public class Dependent {
 
 	public Dependency dependency;
 
-	public Map<Long, Requirement> requirements;
+	public Map<CubeCoords, Requirement> requirements;
 	
 	public int remaining;
 
@@ -46,9 +47,9 @@ public class Dependent {
 	public Dependent(Cube cube, Dependency dependency) {
 		this.cube = cube;
 		this.dependency = dependency;
-		this.requirements = new HashMap<Long, Requirement>();
+		this.requirements = new HashMap<CubeCoords, Requirement>();
 		for (Requirement requirement : dependency.getRequirements(cube)) {
-			this.requirements.put(requirement.getCoords().getAddress(), requirement);
+			this.requirements.put(requirement.getCoords(), requirement);
 		}
 		this.remaining = this.requirements.size();
 	}
