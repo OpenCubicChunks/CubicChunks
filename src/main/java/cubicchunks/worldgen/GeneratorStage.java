@@ -24,11 +24,13 @@
 
 package cubicchunks.worldgen;
 
-public class GeneratorStage {
+import cubicchunks.worldgen.dependency.DependencyProvider;
+
+public abstract class GeneratorStage implements DependencyProvider {
 	
-	public static GeneratorStage LIGHTING = new GeneratorStage("lighting");
+	public static GeneratorStage LIGHTING = new IndependentGeneratorStage("lighting");
 	
-	public static GeneratorStage LIVE = new GeneratorStage("live");
+	public static GeneratorStage LIVE = new IndependentGeneratorStage("live");
 	static {
 		LIVE.setLastStage();
 		LIVE.setOrdinal(Integer.MAX_VALUE);

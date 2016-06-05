@@ -21,34 +21,20 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen;
 
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.ServerCubeCache;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorPipeline;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.worldgen.generator.NullProcessor;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
-import net.minecraft.world.WorldType;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.dependency.Dependency;
 
-public class FlatCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
+public class IndependentGeneratorStage extends GeneratorStage {
 
-	public FlatCubicChunksWorldType() {
-		super("FlatCubic");
+	public IndependentGeneratorStage(String name) {
+		super(name);
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
-		ServerCubeCache cubeCache = world.getCubeCache();
-		// init the worldgen pipeline
-		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
-		
-		pipeline.addStage(terrain, new FlatTerrainProcessor(cubeCache, 5));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(null, "Lighting", cubeCache, 5));
+	@Override
+	public Dependency getDependency(Cube cube) {
+		return null;
 	}
 
-	public static void create() {
-		new FlatCubicChunksWorldType();
-	}
 }

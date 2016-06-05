@@ -28,6 +28,7 @@ import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
+import cubicchunks.worldgen.IndependentGeneratorStage;
 import cubicchunks.worldgen.generator.custom.CustomFeatureProcessor;
 import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import cubicchunks.worldgen.generator.custom.CustomSurfaceProcessor;
@@ -44,10 +45,10 @@ public class CustomCubicChunksWorldType extends WorldType implements ICubicChunk
 		ServerCubeCache cubeCache = world.getCubeCache();
 		
 		// init the worldgen pipeline
-		GeneratorStage terrain = new GeneratorStage("terrain");
-		GeneratorStage surface = new GeneratorStage("surface");
-		GeneratorStage features = new GeneratorStage("features");
-		GeneratorStage population = new GeneratorStage("population");		
+		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
+		GeneratorStage surface = new IndependentGeneratorStage("surface");
+		GeneratorStage features = new IndependentGeneratorStage("features");
+		GeneratorStage population = new IndependentGeneratorStage("population");		
 		
 		pipeline.addStage(terrain, new CustomTerrainProcessor(world, 5));
 		pipeline.addStage(surface, new CustomSurfaceProcessor(surface, cubeCache, 10, world.getSeed()));
