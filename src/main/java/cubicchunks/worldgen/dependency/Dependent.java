@@ -25,7 +25,7 @@ public class Dependent {
 		this.cube = cube;
 		this.dependency = dependency;
 		this.requirements = new HashMap<Long, Requirement>();
-		for (Requirement requirement : dependency.getRequirements()) {
+		for (Requirement requirement : dependency.getRequirements(cube)) {
 			this.requirements.put(requirement.getAddress(), requirement);
 		}
 		this.remaining = this.requirements.size();
@@ -45,5 +45,9 @@ public class Dependent {
 
 	public boolean isSatisfied() {
 		return this.remaining == 0;
+	}
+
+	public Collection<Requirement> getRequirements() {
+		return requirements.values();
 	}
 }

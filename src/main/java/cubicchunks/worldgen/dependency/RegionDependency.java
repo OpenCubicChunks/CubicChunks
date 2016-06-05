@@ -16,25 +16,24 @@ public class RegionDependency implements Dependency {
 	
 	private Set<Requirement> requirements;
 
+	private int xLow;
+	private int xHigh;
+	private int yLow;
+	private int yHigh;
+	private int zLow;
+	private int zHigh;
 	
-	public RegionDependency(Cube cube, GeneratorStage targetStage, int radius) {
-		
+	
+	public RegionDependency(GeneratorStage targetStage, int radius) {
+
 		this.targetStage = targetStage;
-		this.requirements = new HashSet<Requirement>();
 		
-		int cubeX = cube.getX();
-		int cubeY = cube.getY();
-		int cubeZ = cube.getZ();
-		
-		for (int x = -radius; x <= radius; ++x) {
-			for (int y = -radius; y <= radius; ++y) {
-				for (int z = -radius; z <= radius; ++z) {
-					if (x != 0 || y != 0 || z != 0) {
-						this.requirements.add(new Requirement(cubeX + x, cubeY + y, cubeZ + z, targetStage));
-					}
-				}
-			}
-		}
+		this.xLow = -radius;
+		this.xHigh = radius;
+		this.yLow = -radius;
+		this.yHigh = radius;
+		this.zLow = -radius;
+		this.zHigh = radius;
 	}
 	
 	public RegionDependency(Cube cube, GeneratorStage stage, int xLow, int xHigh, int yLow, int yHigh, int zLow, int zHigh) {
@@ -58,26 +57,30 @@ public class RegionDependency implements Dependency {
 	}
 
 	@Override
-	public boolean isSatisfied() {
-		return this.requirements.size() == 0;
-	}
-
-	@Override
 	public boolean update(DependencyManager manager, Dependent dependent, Cube requiredCube) {
-		if (!dependent.cube.getCurrentStage().precedes(targetStage)) {
-			this.requirements.remove(requiredCube.getAddress());
+		return requiredCube.getCurrentStage() == targetStage;
+	}
+
+	@Override
+	public Collection<Requirement> getRequirements(Cube cube) {
+		
+		Set<Requirement> requirements = new HashSet<Requirement>();
+		
+		int cubeX = cube.getX();
+		int cubeY = cube.getY();
+		int cubeZ = cube.getZ();
+		
+		for (int x = xLow; x <= xHigh; ++x) {
+			for (int y = yLow; y <= yHigh; ++y) {
+				for (int z = zLow; z <= zHigh; ++z) {
+					if (x != 0 || y != 0 || z != 0) {
+						requirements.add(new Requirement(cubeX + x, cubeY + y, cubeZ + z, targetStage));
+					}
+				}
+			}
 		}
-		return true;
-	}
-
-	@Override
-	public Collection<Requirement> getRequirements() {
-		return this.requirements;
-	}
-
-	@Override
-	public boolean dependsOn(Cube cube) {
-		return this.requirements.contains(cube.getAddress());
+		
+		return requirements;
 	}
 
 }

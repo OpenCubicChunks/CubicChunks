@@ -71,7 +71,7 @@ public class DependencyManager {
 		// Remember the dependent.
 		this.dependentMap.put(dependent.cube.getAddress(), dependent);
 		
-		for (Requirement requirement : dependent.dependency.getRequirements()) {
+		for (Requirement requirement : dependent.getRequirements()) {
 			
 			// Map from the required cube to the dependent.
 			HashSet<Dependent> dependents = this.requirementsToDependents.get(requirement.getAddress());
@@ -96,7 +96,7 @@ public class DependencyManager {
 		}
 		
 		// If all requirements are met, resume.
-		if (dependent.remaining == 0) {
+		if (dependent.remaining == 0) {		
 			generatorPipeline.resume(dependent.cube);
 		}
 	}

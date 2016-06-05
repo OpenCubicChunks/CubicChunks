@@ -33,6 +33,7 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.dependency.Dependency;
 import cubicchunks.worldgen.dependency.DependencyManager;
+import cubicchunks.worldgen.dependency.DependencyProvider;
 import cubicchunks.worldgen.dependency.Dependent;
 
 import java.util.ArrayList;
@@ -97,14 +98,17 @@ public class GeneratorPipeline {
 		if (cube.getCurrentStage().precedes(cube.getTargetStage())) {
 			
 			// Register dependencies.
-			Dependency dependency = stage.getDependency(cube);
-			if (dependency != null) {
-				Dependent dependent = new Dependent(cube, dependency);
-				this.dependencyManager.register(dependent);
-			}
-			
-			// If there are no dependencies, queue the cube for further processing.
-			if (dependency == null) {
+			if (stage instanceof DependencyProvider) {
+				Dependency dependency = ((DependencyProvider) stage).getDependency(cube);
+				if (dependency != null) {
+					Dependent dependent = new Dependent(cube, dependency);
+					this.dependencyManager.register(dependent);
+
+					if (dependent.isSatisfied()) {
+						stage.getProcessor().processor.add(cube.getAddress());
+					}
+				}
+			} else {
 				stage.getProcessor().processor.add(cube.getAddress());
 			}
 		}
@@ -230,13 +234,17 @@ public class GeneratorPipeline {
 				// If the cube has not yet reached its target stage, continue.
 				if (cube.getTargetStage() != cube.getCurrentStage()) {
 					
-					Dependency dependency = stage.getDependency(cube);
-					if (dependency != null) {
-						Dependent dependent = new Dependent(cube, dependency);
-						this.dependencyManager.register(dependent);
-					}
-					
-					if (dependency == null || dependency.isSatisfied()) {
+					if (stage instanceof DependencyProvider) {
+						Dependency dependency = ((DependencyProvider) stage).getDependency(cube);
+						if (dependency != null) {
+							Dependent dependent = new Dependent(cube, dependency);
+							this.dependencyManager.register(dependent);
+
+							if (dependent.isSatisfied()) {
+								nextStage.getProcessor().processor.add(address);
+							}
+						}
+					} else {
 						nextStage.getProcessor().processor.add(address);
 					}
 				}

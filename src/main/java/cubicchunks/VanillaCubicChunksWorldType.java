@@ -29,6 +29,7 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.generator.NullProcessor;
+import cubicchunks.worldgen.generator.vanilla.TestStage;
 import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
 import net.minecraft.world.World;
@@ -49,10 +50,12 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicChun
 		// init the worldgen pipeline
 		GeneratorStage terrain = new GeneratorStage("terrain");
 		GeneratorStage surface = new GeneratorStage("surface");
+		GeneratorStage testStage = new TestStage("testStage");
 		GeneratorStage population = new GeneratorStage("population");		
 		
 		pipeline.addStage(terrain, new VanillaTerrainProcessor(surface, world, vanillaGen, 5));
 		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(GeneratorStage.LIGHTING, "Lighting", cubeCache, 5));
+		pipeline.addStage(testStage, new NullProcessor("Testing", cubeCache));
 		pipeline.addStage(population, new VanillaPopulationProcessor(population, world, vanillaGen, 5));
 
 	}
