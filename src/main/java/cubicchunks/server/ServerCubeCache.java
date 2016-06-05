@@ -372,6 +372,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		
 		// Init the cube.
 		cube.onLoad();
+		this.dependencyManager.updateDependents(cube);
 	}
 	
 	public void loadCube(int cubeX, int cubeY, int cubeZ, LoadType loadType) {

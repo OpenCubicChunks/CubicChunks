@@ -20,5 +20,4 @@ public class Requirement {
 	public Long getAddress() {
 		return AddressTools.getAddress(cubeX, cubeY, cubeZ);
 	}
-
 }

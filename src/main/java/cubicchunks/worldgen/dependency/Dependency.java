@@ -12,6 +12,7 @@ public interface Dependency {
 
 	public boolean dependsOn(Cube cube);
 
-	public boolean update(DependencyManager manager, Dependent dependent);
+	// Returns true iff the dependent no longer requires the given cube.
+	public boolean update(DependencyManager manager, Dependent dependent, Cube requiredCube);
 
 }

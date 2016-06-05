@@ -11,14 +11,16 @@ import cubicchunks.world.cube.Cube;
 public class Dependent {
 
 	public Cube cube;
-	
+
 	public Dependency dependency;
-	
+
 	private DependencyManager manager;
-	
+
 	public Map<Long, Requirement> requirements;
 	
-	
+	public int remaining;
+
+
 	public Dependent(Cube cube, Dependency dependency) {
 		this.cube = cube;
 		this.dependency = dependency;
@@ -26,14 +28,22 @@ public class Dependent {
 		for (Requirement requirement : dependency.getRequirements()) {
 			this.requirements.put(requirement.getAddress(), requirement);
 		}
+		this.remaining = this.requirements.size();
 	}
-	
+
 	public void register(DependencyManager manager) {
 		this.manager = manager;
 	}
-	
-	public boolean update() {
-		return this.dependency.update(manager, this);
+
+	public boolean update(Cube requiredCube) {
+		boolean noLongerRequired = this.dependency.update(this.manager, this, requiredCube);
+		if (noLongerRequired) {
+			--this.remaining;
+		}
+		return noLongerRequired;
 	}
-	
+
+	public boolean isSatisfied() {
+		return this.remaining == 0;
+	}
 }

@@ -99,7 +99,6 @@ public class GeneratorStage implements DependencyProvider {
 
 	@Override
 	public Dependency getDependency(Cube cube) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

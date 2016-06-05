@@ -56,7 +56,7 @@ public class GeneratorPipeline {
 		this.stages = new ArrayList<GeneratorStage>();
 		this.stageMap = new HashMap<String, GeneratorStage>();
 		this.stageMap.put(GeneratorStage.LIVE.getName(), GeneratorStage.LIVE);
-		this.dependencyManager = new DependencyManager(cubes);
+		this.dependencyManager = new DependencyManager(cubes, this);
 	}
 
 	public void addStage(GeneratorStage stage, CubeProcessor processor) {
@@ -81,15 +81,12 @@ public class GeneratorPipeline {
 		this.generate(cube, GeneratorStage.LIVE);
 	}
 
+	public void resume(Cube cube) {
+		cube.getCurrentStage().getProcessor().processor.add(cube.getAddress());
+	}
+
 	public void generate(Cube cube, GeneratorStage targetStage) {
 		GeneratorStage stage = cube.getCurrentStage();
-		
-		// Register dependencies.
-		Dependency dependency = stage.getDependency(cube);
-		if (dependency != null) {
-			Dependent dependent = new Dependent(cube, dependency);
-			this.dependencyManager.register(dependent);
-		}
 		
 		// Make sure the proper target stage is set.
 		if (cube.getTargetStage().precedes(targetStage)) {
@@ -98,7 +95,18 @@ public class GeneratorPipeline {
 		
 		// If the cube has not yet reached the target stage, queue it for processing.
 		if (cube.getCurrentStage().precedes(cube.getTargetStage())) {
-			stage.getProcessor().processor.add(cube.getAddress());
+			
+			// Register dependencies.
+			Dependency dependency = stage.getDependency(cube);
+			if (dependency != null) {
+				Dependent dependent = new Dependent(cube, dependency);
+				this.dependencyManager.register(dependent);
+			}
+			
+			// If there are no dependencies, queue the cube for further processing.
+			if (dependency == null) {
+				stage.getProcessor().processor.add(cube.getAddress());
+			}
 		}
 	}
 
@@ -213,12 +221,24 @@ public class GeneratorPipeline {
 				Cube cube = this.cubes.getCube(cubeX, cubeY, cubeZ);
 				cube.setCurrentStage(nextStage);
 				
-				// Update dependent cubes.
-				this.dependencyManager.update(cube);
+				// Clear the cube's dependency.
+				this.dependencyManager.unregister(cube);
+				
+				// Update cubes depending on this cube.
+				this.dependencyManager.updateDependents(cube);
 				
 				// If the cube has not yet reached its target stage, continue.
 				if (cube.getTargetStage() != cube.getCurrentStage()) {
-					nextStage.getProcessor().processor.add(address);
+					
+					Dependency dependency = stage.getDependency(cube);
+					if (dependency != null) {
+						Dependent dependent = new Dependent(cube, dependency);
+						this.dependencyManager.register(dependent);
+					}
+					
+					if (dependency == null || dependency.isSatisfied()) {
+						nextStage.getProcessor().processor.add(address);
+					}
 				}
 			}
 		} 
@@ -234,7 +254,7 @@ public class GeneratorPipeline {
 				cube.setCurrentStage(GeneratorStage.LIVE);
 
 				// Update dependent cubes.
-				this.dependencyManager.update(cube);
+				this.dependencyManager.updateDependents(cube);
 			}
 		}
 	}

@@ -12,8 +12,11 @@ public class RegionDependency implements Dependency {
 	
 	private GeneratorStage targetStage;
 	
+	private Set<Long> requiredCubes;
+	
 	private Set<Requirement> requirements;
 
+	
 	public RegionDependency(Cube cube, GeneratorStage targetStage, int radius) {
 		
 		this.targetStage = targetStage;
@@ -27,7 +30,7 @@ public class RegionDependency implements Dependency {
 			for (int y = -radius; y <= radius; ++y) {
 				for (int z = -radius; z <= radius; ++z) {
 					if (x != 0 || y != 0 || z != 0) {
-						requirements.add(new Requirement(cubeX + x, cubeY + y, cubeZ + z, targetStage));
+						this.requirements.add(new Requirement(cubeX + x, cubeY + y, cubeZ + z, targetStage));
 					}
 				}
 			}
@@ -47,7 +50,7 @@ public class RegionDependency implements Dependency {
 			for (int y = yLow; y <= yHigh; ++y) {
 				for (int z = zLow; z <= zHigh; ++z) {
 					if (x != 0 || y != 0 || z != 0) {
-						requirements.add(new Requirement(cubeX + x, cubeY + y, cubeZ + z, targetStage));
+						this.requirements.add(new Requirement(cubeX + x, cubeY + y, cubeZ + z, targetStage));
 					}
 				}
 			}
@@ -60,9 +63,9 @@ public class RegionDependency implements Dependency {
 	}
 
 	@Override
-	public boolean update(DependencyManager manager, Dependent dependent) {
+	public boolean update(DependencyManager manager, Dependent dependent, Cube requiredCube) {
 		if (!dependent.cube.getCurrentStage().precedes(targetStage)) {
-			this.requirements.remove(dependent.cube.getAddress());
+			this.requirements.remove(requiredCube.getAddress());
 		}
 		return true;
 	}
@@ -76,5 +79,5 @@ public class RegionDependency implements Dependency {
 	public boolean dependsOn(Cube cube) {
 		return this.requirements.contains(cube.getAddress());
 	}
-	
+
 }
