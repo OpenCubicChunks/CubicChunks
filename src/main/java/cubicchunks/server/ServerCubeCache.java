@@ -25,8 +25,10 @@ package cubicchunks.server;
 
 import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
+import cubicchunks.server.ServerCubeCache.LoadType;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
@@ -289,11 +291,14 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		return column.getCube(cubeY) != null;
 	}
 
+	public boolean cubeExists(CubeCoords coords) {
+		return this.cubeExists(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+	}
+	
 	@Override
 	public Column getColumn(int columnX, int columnZ) {
 		return this.loadedColumns.get(AddressTools.getAddress(columnX, columnZ));
 	}
-
 
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
@@ -305,6 +310,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		}
 
 		return column.getCube(cubeY);
+	}
+
+	public Cube getCube(CubeCoords coords) {
+		return this.getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
 	public void loadCube(int cubeX, int cubeY, int cubeZ, LoadType loadType, GeneratorStage targetStage) {
@@ -379,6 +388,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		this.loadCube(cubeX, cubeY, cubeZ, loadType, GeneratorStage.LIVE);
 	}
 
+	public void loadCube(CubeCoords coords, LoadType loadType, GeneratorStage targetStage) {
+		this.loadCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ(), loadType, targetStage);
+	}
+	
 	public Column loadColumn(int cubeX, int cubeZ, LoadType loadType) {
 		Column column = null;
 		//if we are not forced to load from disk - try to get it first
@@ -527,4 +540,5 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public void setDependencyManager(DependencyManager dependencyManager) {
 		this.dependencyManager = dependencyManager;
 	}
+
 }

@@ -48,7 +48,7 @@ public class Dependent {
 		this.dependency = dependency;
 		this.requirements = new HashMap<Long, Requirement>();
 		for (Requirement requirement : dependency.getRequirements(cube)) {
-			this.requirements.put(requirement.getAddress(), requirement);
+			this.requirements.put(requirement.coords.getAddress(), requirement);
 		}
 		this.remaining = this.requirements.size();
 	}

@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
 
@@ -73,7 +74,8 @@ public class RegionDependency implements Dependency {
 			for (int y = yLow; y <= yHigh; ++y) {
 				for (int z = zLow; z <= zHigh; ++z) {
 					if (x != 0 || y != 0 || z != 0) {
-						this.requirements.add(new Requirement(cubeX + x, cubeY + y, cubeZ + z, targetStage));
+						CubeCoords coords = new CubeCoords(cubeX + x, cubeY + y, cubeZ + z);
+						requirements.add(new Requirement(coords, targetStage));
 					}
 				}
 			}
@@ -98,7 +100,8 @@ public class RegionDependency implements Dependency {
 			for (int y = yLow; y <= yHigh; ++y) {
 				for (int z = zLow; z <= zHigh; ++z) {
 					if (x != 0 || y != 0 || z != 0) {
-						requirements.add(new Requirement(cubeX + x, cubeY + y, cubeZ + z, targetStage));
+						CubeCoords coords = new CubeCoords(cubeX + x, cubeY + y, cubeZ + z);
+						requirements.add(new Requirement(coords, targetStage));
 					}
 				}
 			}
