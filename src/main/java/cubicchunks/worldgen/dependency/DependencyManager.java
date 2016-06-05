@@ -59,7 +59,7 @@ public class DependencyManager {
 	
 	public void initialize(Dependent dependent) {
 		for (Requirement requirement : dependent.requirements.values()) {
-			Cube cube = cubeProvider.getCube(requirement.coords);
+			Cube cube = cubeProvider.getCube(requirement.getCoords());
 			if (cube != null) {
 				dependent.update(this, cube);
 			}
@@ -88,7 +88,7 @@ public class DependencyManager {
 	}
 	
 	public boolean isSatisfied(Requirement requirement) {
-		return this.cubeProvider.cubeExists(requirement.coords);
+		return this.cubeProvider.cubeExists(requirement.getCoords());
 	}
 	
 	/**
@@ -101,7 +101,7 @@ public class DependencyManager {
 	public void addRequirement(Dependent dependent, Requirement requirement) {
 		
 		// Does the dependent already depend on the cube?
-		Requirement existing = dependent.requirements.get(requirement.coords.getAddress());
+		Requirement existing = dependent.requirements.get(requirement.getCoords().getAddress());
 		if (existing != null) {
 			
 			// If it does, return.
@@ -110,11 +110,11 @@ public class DependencyManager {
 			}
 			
 			// Otherwise, replace the old requirement.
-			dependent.requirements.get(requirement.coords.getAddress());
+			dependent.requirements.get(requirement.getCoords().getAddress());
 			
 			// If the old requirement was satisfied and the new one is not, increment the remaining counter.
-			Cube requiredCube = this.cubeProvider.getCube(requirement.coords);
-			if (requiredCube != null && !requiredCube.getCurrentStage().precedes(existing.targetStage) && requiredCube.getCurrentStage().precedes(requirement.targetStage)) {
+			Cube requiredCube = this.cubeProvider.getCube(requirement.getCoords());
+			if (requiredCube != null && !requiredCube.getCurrentStage().precedes(existing.getTargetStage()) && requiredCube.getCurrentStage().precedes(requirement.getTargetStage())) {
 				++dependent.remaining;
 			}
 			
@@ -126,23 +126,23 @@ public class DependencyManager {
 	
 	private void addNewRequirement(Dependent dependent, Requirement requirement) {
 		// Map from the required cube to the dependent.
-		HashSet<Dependent> dependents = this.requirementsToDependents.get(requirement.coords.getAddress());			
+		HashSet<Dependent> dependents = this.requirementsToDependents.get(requirement.getCoords().getAddress());			
 		if (dependents == null) {
 			dependents = new HashSet<Dependent>();
-			requirementsToDependents.put(requirement.coords.getAddress(), dependents);
+			requirementsToDependents.put(requirement.getCoords().getAddress(), dependents);
 		}
 		
 		dependents.add(dependent);
 
 		// Check if the cube is loaded.
-		Cube requiredCube = this.cubeProvider.getCube(requirement.coords);
+		Cube requiredCube = this.cubeProvider.getCube(requirement.getCoords());
 		
 		// If the cube is loaded, update the dependent.
 		if (requiredCube != null) {
 			dependent.update(this, requiredCube);
 		// Otherwise load it.
 		} else {
-			this.cubeProvider.loadCube(requirement.coords, LoadType.LOAD_OR_GENERATE, requirement.targetStage);
+			this.cubeProvider.loadCube(requirement.getCoords(), LoadType.LOAD_OR_GENERATE, requirement.getTargetStage());
 		}		
 	}
 	
@@ -166,7 +166,7 @@ public class DependencyManager {
 		Dependent dependent = this.dependentMap.get(cube.getAddress());
 		if (dependent != null) {
 			for (Requirement requirement : dependent.requirements.values()) {
-				Set<Dependent> dependents = this.requirementsToDependents.get(requirement.coords.getAddress());
+				Set<Dependent> dependents = this.requirementsToDependents.get(requirement.getCoords().getAddress());
 				if (dependents != null) {
 					dependents.remove(dependent);
 					if (dependents.size() == 0) {

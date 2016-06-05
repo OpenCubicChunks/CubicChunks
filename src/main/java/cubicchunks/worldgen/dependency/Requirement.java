@@ -29,14 +29,22 @@ import cubicchunks.worldgen.GeneratorStage;
 
 public class Requirement {
 
-	public CubeCoords coords;
-	public GeneratorStage targetStage;
+	private CubeCoords coords;
+	private GeneratorStage targetStage;
 	
 	public Requirement(CubeCoords coords, GeneratorStage targetStage) {
 		this.coords = coords;
 		this.targetStage = targetStage;
 	}
 	
+	public CubeCoords getCoords() {
+		return coords;
+	}
+
+	public GeneratorStage getTargetStage() {
+		return targetStage;
+	}
+
 	public boolean contains(Requirement requirement) {
 		return !targetStage.precedes(requirement.targetStage);
 	}
