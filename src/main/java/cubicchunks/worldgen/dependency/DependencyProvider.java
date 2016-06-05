@@ -21,34 +21,19 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
 
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.ServerCubeCache;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorPipeline;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.worldgen.generator.NullProcessor;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
-import net.minecraft.world.WorldType;
+package cubicchunks.worldgen.dependency;
 
-public class FlatCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
+import cubicchunks.world.cube.Cube;
 
-	public FlatCubicChunksWorldType() {
-		super("FlatCubic");
-	}
+public interface DependencyProvider {
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
-		ServerCubeCache cubeCache = world.getCubeCache();
-		// init the worldgen pipeline
-		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
-		
-		pipeline.addStage(terrain, new FlatTerrainProcessor(cubeCache, 5));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(null, "Lighting", cubeCache, 5));
-	}
+	/**
+	 * Given a cube, may return a Dependency for determining the cube's requirements.
+	 * 
+	 * @param cube The cube for which the Dependency shall provide requirements.
+	 * @return A Dependency providing a list of Requirements for the given cube or null.
+	 */
+	public Dependency getDependency(Cube cube);
 
-	public static void create() {
-		new FlatCubicChunksWorldType();
-	}
 }

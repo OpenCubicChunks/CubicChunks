@@ -33,6 +33,7 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.CompressedStreamTools;
@@ -363,8 +364,10 @@ public class CubeIO implements IThreadedFileIO {
 		boolean hasSky = !this.world.getProvider().getHasNoSky();
 		final Cube cube = column.getOrCreateCube(cubeY, false);
 
-		// get the worldgen stage
-		cube.setGeneratorStage(this.world.getGeneratorPipeline().getStage(nbt.getString("GeneratorStage")));
+		// get the worldgen stage and the target stage
+		GeneratorPipeline pipeline = this.world.getGeneratorPipeline();
+		cube.setCurrentStage(pipeline.getStage(nbt.getString("currentStage")));
+		cube.setTargetStage(pipeline.getStage(nbt.getString("targetStage")));
 
 		// is this an empty cube?
 		boolean isEmpty = !nbt.hasKey("Blocks");
@@ -491,7 +494,9 @@ public class CubeIO implements IThreadedFileIO {
 		nbt.setInteger("y", cube.getY());
 		nbt.setInteger("z", cube.getZ());
 
-		nbt.setString("GeneratorStage", cube.getGeneratorStage().getName());
+		// save the worldgen stage and the target stage
+		nbt.setString("currentStage", cube.getCurrentStage().getName());
+		nbt.setString("targetStage", cube.getTargetStage().getName());
 
 		if (!cube.isEmpty()) {
 

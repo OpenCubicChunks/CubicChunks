@@ -59,13 +59,13 @@ public class BlankCube extends Cube {
 	public void setEmpty(boolean isEmpty) {}
 
 	@Override
-	public GeneratorStage getGeneratorStage() {
+	public GeneratorStage getCurrentStage() {
 		//if client has it - it must be LIVE
 		return GeneratorStage.LIVE;
 	}
 
 	@Override
-	public void setGeneratorStage(GeneratorStage val) {}
+	public void setCurrentStage(GeneratorStage val) {}
 
 	@Override
 	public long getAddress() {

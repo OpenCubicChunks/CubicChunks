@@ -21,34 +21,52 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
 
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.ServerCubeCache;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorPipeline;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.worldgen.generator.NullProcessor;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
-import net.minecraft.world.WorldType;
+package cubicchunks.worldgen.dependency;
 
-public class FlatCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-	public FlatCubicChunksWorldType() {
-		super("FlatCubic");
+import cubicchunks.util.CubeCoords;
+import cubicchunks.world.cube.Cube;
+
+public class Dependent {
+
+	public Cube cube;
+
+	public Dependency dependency;
+
+	public Map<CubeCoords, Requirement> requirements;
+	
+	public int remaining;
+
+
+	public Dependent(Cube cube, Dependency dependency) {
+		this.cube = cube;
+		this.dependency = dependency;
+		this.requirements = new HashMap<CubeCoords, Requirement>();
+		for (Requirement requirement : dependency.getRequirements(cube)) {
+			this.requirements.put(requirement.getCoords(), requirement);
+		}
+		this.remaining = this.requirements.size();
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
-		ServerCubeCache cubeCache = world.getCubeCache();
-		// init the worldgen pipeline
-		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
-		
-		pipeline.addStage(terrain, new FlatTerrainProcessor(cubeCache, 5));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(null, "Lighting", cubeCache, 5));
+	public boolean update(DependencyManager manager, Cube requiredCube) {
+		boolean noLongerRequired = this.dependency.update(manager, this, requiredCube);
+		if (noLongerRequired) {
+			--this.remaining;
+		}
+		return noLongerRequired;
 	}
 
-	public static void create() {
-		new FlatCubicChunksWorldType();
+	public boolean isSatisfied() {
+		return this.remaining == 0;
+	}
+
+	public Collection<Requirement> getRequirements() {
+		return requirements.values();
 	}
 }

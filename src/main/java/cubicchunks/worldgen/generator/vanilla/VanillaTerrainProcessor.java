@@ -145,7 +145,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 		}
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
 			Cube currCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
-			currCube.setGeneratorStage(surfaceStage);
+			currCube.setCurrentStage(surfaceStage);
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 			for (int localX = 0; localX < 16; localX++) {
 				for (int localY = 0; localY < 16; localY++) {

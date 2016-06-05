@@ -21,34 +21,30 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
 
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.ServerCubeCache;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorPipeline;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.worldgen.generator.NullProcessor;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
-import net.minecraft.world.WorldType;
+package cubicchunks.worldgen.dependency;
 
-public class FlatCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
+import java.util.Collection;
 
-	public FlatCubicChunksWorldType() {
-		super("FlatCubic");
-	}
+import cubicchunks.world.cube.Cube;
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
-		ServerCubeCache cubeCache = world.getCubeCache();
-		// init the worldgen pipeline
-		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
-		
-		pipeline.addStage(terrain, new FlatTerrainProcessor(cubeCache, 5));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(null, "Lighting", cubeCache, 5));
-	}
+public interface Dependency {
 
-	public static void create() {
-		new FlatCubicChunksWorldType();
-	}
+	/**
+	 * This collection specifies which cubes must be loaded for a given cube's requirements to be satisfied.
+	 * 
+	 * @return A collection of Requirements specifying the given cube's requirements.
+	 */
+	public Collection<Requirement> getRequirements(Cube cube);
+
+	/**
+	 * Called when the given cube is loaded or entered the next generation stage.
+	 * 
+	 * @param manager The DependencyManager used by the server.
+	 * @param dependent The dependent for which the update is called.
+	 * @param requiredCube The updated cube.
+	 * @return True iff the dependent no longer requires the given cube.
+	 */
+	public boolean update(DependencyManager manager, Dependent dependent, Cube requiredCube);
+
 }

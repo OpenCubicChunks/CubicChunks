@@ -49,7 +49,7 @@ public class CubeCoords {
 	private final int cubeY;
 	private final int cubeZ;
 
-	protected CubeCoords(int cubeX, int cubeY, int cubeZ) {
+	public CubeCoords(int cubeX, int cubeY, int cubeZ) {
 		this.cubeX = cubeX;
 		this.cubeY = cubeY;
 		this.cubeZ = cubeZ;
@@ -127,7 +127,26 @@ public class CubeCoords {
 
 		return true;
 	}
+	
+	/**
+	 * Calculates a 64bit encoding of these coordinates.
+	 * 
+	 * @return 64bit encoding of these coordinates.
+	 */
+	public long getAddress() {
+		return AddressTools.getAddress(cubeX, cubeY, cubeZ);
+	}
 
+	/**
+	 * Returns a specification compliant hashCode for this object.
+	 * 
+	 * @return A 32bit hashCode for this instance of CubeCoords.
+	 */
+	@Override
+	public int hashCode() {
+		return Long.hashCode(this.getAddress());
+	}
+	
 	/**
 	 * Gets the absolute position of the cube's center on the x axis.
 	 *

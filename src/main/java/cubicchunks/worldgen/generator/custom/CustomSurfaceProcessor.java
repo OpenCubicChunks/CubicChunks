@@ -50,6 +50,7 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 
 	public CustomSurfaceProcessor(GeneratorStage generatorStage, final ICubeCache cubeCache, final int batchSize, final long seed) {
 		super(PROCESSOR_NAME, cubeCache, batchSize);
+		this.generatorStage = generatorStage;
 		this.rand = new Random(seed);
 		this.noiseGen = new NoiseGeneratorMultiFractal(this.rand, 4);
 		this.noise = new double[256];
@@ -123,6 +124,6 @@ public class CustomSurfaceProcessor extends CubeProcessor {
 			return false;
 		}
 		Cube above = this.cache.getCube(cubeX, cubeY, cubeZ);
-		return !above.getGeneratorStage().precedes(generatorStage);
+		return !above.getCurrentStage().precedes(generatorStage);
 	}
 }

@@ -28,6 +28,7 @@ import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
+import cubicchunks.worldgen.IndependentGeneratorStage;
 import cubicchunks.worldgen.generator.NullProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
@@ -47,9 +48,9 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicChun
 		ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
 		
 		// init the worldgen pipeline
-		GeneratorStage terrain = new GeneratorStage("terrain");
-		GeneratorStage surface = new GeneratorStage("surface");
-		GeneratorStage population = new GeneratorStage("population");		
+		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
+		GeneratorStage surface = new IndependentGeneratorStage("surface");
+		GeneratorStage population = new IndependentGeneratorStage("population");		
 		
 		pipeline.addStage(terrain, new VanillaTerrainProcessor(surface, world, vanillaGen, 5));
 		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(GeneratorStage.LIGHTING, "Lighting", cubeCache, 5));
