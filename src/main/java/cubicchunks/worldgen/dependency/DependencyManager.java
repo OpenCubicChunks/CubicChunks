@@ -44,16 +44,16 @@ public class DependencyManager {
 	
 	private GeneratorPipeline generatorPipeline;
 	
-	private Map<Long, HashSet<Dependent>> requirementsToDependents;
+	private Map<CubeCoords, HashSet<Dependent>> requirementsToDependents;
 
-	private Map<Long, Dependent> dependentMap;
+	private Map<CubeCoords, Dependent> dependentMap;
 	
 	
 	public DependencyManager(ServerCubeCache cubeProvider, GeneratorPipeline generatorPipeline) {
 		this.cubeProvider = cubeProvider;
 		this.generatorPipeline = generatorPipeline;
-		this.dependentMap = new HashMap<Long, Dependent>();
-		this.requirementsToDependents = new HashMap<Long, HashSet<Dependent>>();
+		this.dependentMap = new HashMap<CubeCoords, Dependent>();
+		this.requirementsToDependents = new HashMap<CubeCoords, HashSet<Dependent>>();
 	}
 	
 	
@@ -69,7 +69,7 @@ public class DependencyManager {
 
 	// Updates all dependents waiting for the given cube.
 	public boolean updateDependents(Cube requiredCube) {
-		HashSet<Dependent> dependents = this.requirementsToDependents.get(requiredCube.getAddress());
+		HashSet<Dependent> dependents = this.requirementsToDependents.get(requiredCube.getCoords());
 		if (dependents != null) {
 			
 			Iterator<Dependent> iter = dependents.iterator();
@@ -101,7 +101,7 @@ public class DependencyManager {
 	public void addRequirement(Dependent dependent, Requirement requirement) {
 		
 		// Does the dependent already depend on the cube?
-		Requirement existing = dependent.requirements.get(requirement.getCoords().getAddress());
+		Requirement existing = dependent.requirements.get(requirement.getCoords());
 		if (existing != null) {
 			
 			// If it does, return.
@@ -110,7 +110,7 @@ public class DependencyManager {
 			}
 			
 			// Otherwise, replace the old requirement.
-			dependent.requirements.get(requirement.getCoords().getAddress());
+			dependent.requirements.get(requirement.getCoords());
 			
 			// If the old requirement was satisfied and the new one is not, increment the remaining counter.
 			Cube requiredCube = this.cubeProvider.getCube(requirement.getCoords());
@@ -126,10 +126,10 @@ public class DependencyManager {
 	
 	private void addNewRequirement(Dependent dependent, Requirement requirement) {
 		// Map from the required cube to the dependent.
-		HashSet<Dependent> dependents = this.requirementsToDependents.get(requirement.getCoords().getAddress());			
+		HashSet<Dependent> dependents = this.requirementsToDependents.get(requirement.getCoords());			
 		if (dependents == null) {
 			dependents = new HashSet<Dependent>();
-			requirementsToDependents.put(requirement.getCoords().getAddress(), dependents);
+			requirementsToDependents.put(requirement.getCoords(), dependents);
 		}
 		
 		dependents.add(dependent);
@@ -150,7 +150,7 @@ public class DependencyManager {
 
 		// Remember the dependent.
 		CubeCoords coords = new CubeCoords(dependent.cube.getX(), dependent.cube.getY(), dependent.cube.getZ());
-		this.dependentMap.put(dependent.cube.getAddress(), dependent);
+		this.dependentMap.put(dependent.cube.getCoords(), dependent);
 		
 		for (Requirement requirement : dependent.getRequirements()) {
 			addNewRequirement(dependent, requirement);
@@ -163,10 +163,10 @@ public class DependencyManager {
 	}
 		
 	public void unregister(Cube cube) {
-		Dependent dependent = this.dependentMap.get(cube.getAddress());
+		Dependent dependent = this.dependentMap.get(cube.getCoords());
 		if (dependent != null) {
 			for (Requirement requirement : dependent.requirements.values()) {
-				Set<Dependent> dependents = this.requirementsToDependents.get(requirement.getCoords().getAddress());
+				Set<Dependent> dependents = this.requirementsToDependents.get(requirement.getCoords());
 				if (dependents != null) {
 					dependents.remove(dependent);
 					if (dependents.size() == 0) {
@@ -180,8 +180,8 @@ public class DependencyManager {
 	
 	
 	// Returns true if the cube at the given point is required by other cubes currently being generated.
-	public boolean isRequired(int cubeX, int cubeY, int cubeZ) {
-		return requirementsToDependents.get(AddressTools.getAddress(cubeX, cubeY, cubeZ)) != null;
+	public boolean isRequired(CubeCoords coords) {
+		return requirementsToDependents.get(coords) != null;
 	}
 
 

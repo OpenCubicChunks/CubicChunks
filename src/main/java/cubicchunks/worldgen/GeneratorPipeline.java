@@ -98,7 +98,7 @@ public class GeneratorPipeline {
 		if (cube.getCurrentStage().precedes(cube.getTargetStage())) {
 			
 			// Register dependencies.
-			Dependency dependency = ((DependencyProvider) stage).getDependency(cube);
+			Dependency dependency = stage.getDependency(cube);
 			if (dependency != null) {
 				Dependent dependent = new Dependent(cube, dependency);
 				this.dependencyManager.register(dependent);
@@ -233,7 +233,7 @@ public class GeneratorPipeline {
 				// If the cube has not yet reached its target stage, continue.
 				if (cube.getTargetStage() != cube.getCurrentStage()) {
 					
-					Dependency dependency = ((DependencyProvider) stage).getDependency(cube);
+					Dependency dependency = stage.getDependency(cube);
 					if (dependency != null) {
 						Dependent dependent = new Dependent(cube, dependency);
 						this.dependencyManager.register(dependent);

@@ -144,7 +144,7 @@ public class CubeCoords {
 	 */
 	@Override
 	public int hashCode() {
-		return (int) (getAddress() & 0xFFFFFFFF);
+		return Long.hashCode(this.getAddress());
 	}
 	
 	/**

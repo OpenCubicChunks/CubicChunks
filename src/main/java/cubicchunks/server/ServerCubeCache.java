@@ -427,6 +427,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	@Override
 	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
+		
+		// TODO: Change to use CubeCoords instead.
 
 		// don't unload cubes near the spawn
 		if (cubeIsNearSpawn(cubeX, cubeY, cubeZ)) {
@@ -434,7 +436,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		}
 		
 		// Do not unload cubes which are required for generating currently loaded cubes.
-		if (dependencyManager.isRequired(cubeX, cubeY, cubeZ)) {
+		if (dependencyManager.isRequired(new CubeCoords(cubeX, cubeY, cubeZ))) {
 			return;
 		}
 

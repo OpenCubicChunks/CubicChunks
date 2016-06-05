@@ -28,6 +28,7 @@ import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeBlockMap;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
@@ -63,9 +64,7 @@ public class Cube {
 
 	private ICubicWorld world;
 	private Column column;
-	private int cubeX;
-	private int cubeY;
-	private int cubeZ;
+	private CubeCoords coords;
 	private boolean isModified;
 	private ExtendedBlockStorage storage;
 	private EntityContainer entities;
@@ -87,9 +86,7 @@ public class Cube {
 	public Cube(ICubicWorld world, Column column, int x, int y, int z, boolean isModified) {
 		this.world = world;
 		this.column = column;
-		this.cubeX = x;
-		this.cubeY = y;
-		this.cubeZ = z;
+		this.coords = new CubeCoords(x, y, z);
 		this.isModified = isModified;
 
 		this.storage = null;
@@ -223,9 +220,9 @@ public class Cube {
 		int cubeX = Coords.getCubeXForEntity(entity);
 		int cubeY = Coords.getCubeYForEntity(entity);
 		int cubeZ = Coords.getCubeZForEntity(entity);
-		if (cubeX != this.cubeX || cubeY != this.cubeY || cubeZ != this.cubeZ) {
+		if (cubeX != this.coords.getCubeX() || cubeY != this.coords.getCubeY() || cubeZ != this.coords.getCubeZ()) {
 			LOGGER.warn(String.format("Wrong entity location. Entity thinks it's in (%d,%d,%d) but actua location is (%d,%d,%d)!",
-					entity.getClass().getName(), cubeX, cubeY, cubeZ, this.cubeX, this.cubeY, this.cubeZ));
+					entity.getClass().getName(), cubeX, cubeY, cubeZ, this.coords.getCubeX(), this.coords.getCubeY(), this.coords.getCubeZ()));
 			entity.setDead();
 		}
 
@@ -235,9 +232,9 @@ public class Cube {
 
 		// tell the entity it's in this cube
 		entity.addedToChunk = true;
-		entity.chunkCoordX = this.cubeX;
-		entity.chunkCoordY = this.cubeY;
-		entity.chunkCoordZ = this.cubeZ;
+		entity.chunkCoordX = this.coords.getCubeX();
+		entity.chunkCoordY = this.coords.getCubeY();
+		entity.chunkCoordZ = this.coords.getCubeZ();
 
 		this.entities.addEntity(entity);
 		this.isModified = true;
@@ -347,7 +344,7 @@ public class Cube {
 		if (isEmpty) {
 			this.storage = null;
 		} else if (storage == null) {
-			this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(this.cubeY), !this.world.getProvider()
+			this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(this.coords.getCubeY()), !this.world.getProvider()
 					.getHasNoSky());
 		}
 	}
@@ -369,13 +366,13 @@ public class Cube {
 	}
 	
 	public long getAddress() {
-		return AddressTools.getAddress(this.cubeX, this.cubeY, this.cubeZ);
+		return AddressTools.getAddress(this.coords.getCubeX(), this.coords.getCubeY(), this.coords.getCubeZ());
 	}
 
 	public BlockPos localAddressToBlockPos(int localAddress) {
-		int x = Coords.localToBlock(this.cubeX, AddressTools.getLocalX(localAddress));
-		int y = Coords.localToBlock(this.cubeY, AddressTools.getLocalY(localAddress));
-		int z = Coords.localToBlock(this.cubeZ, AddressTools.getLocalZ(localAddress));
+		int x = Coords.localToBlock(this.coords.getCubeX(), AddressTools.getLocalX(localAddress));
+		int y = Coords.localToBlock(this.coords.getCubeY(), AddressTools.getLocalY(localAddress));
+		int z = Coords.localToBlock(this.coords.getCubeZ(), AddressTools.getLocalZ(localAddress));
 		return new BlockPos(x, y, z);
 	}
 
@@ -388,21 +385,25 @@ public class Cube {
 	}
 
 	public int getX() {
-		return this.cubeX;
+		return this.coords.getCubeX();
 	}
 
 	public int getY() {
-		return this.cubeY;
+		return this.coords.getCubeY();
 	}
 
 	public int getZ() {
-		return this.cubeZ;
+		return this.coords.getCubeZ();
 	}
 
+	public CubeCoords getCoords() {
+		return this.coords;
+	}
+	
 	public boolean containsBlockPos(BlockPos blockPos) {
-		return this.cubeX == Coords.blockToCube(blockPos.getX())
-				&& this.cubeY == Coords.blockToCube(blockPos.getY())
-				&& this.cubeZ == Coords.blockToCube(blockPos.getZ());
+		return this.coords.getCubeX() == Coords.blockToCube(blockPos.getX())
+				&& this.coords.getCubeY() == Coords.blockToCube(blockPos.getY())
+				&& this.coords.getCubeZ() == Coords.blockToCube(blockPos.getZ());
 	}
 
 	public ExtendedBlockStorage getStorage() {
@@ -455,7 +456,7 @@ public class Cube {
 		this.isModified = true;
 
 		//update the column light index
-		int blockY = Coords.localToBlock(this.cubeY, y);
+		int blockY = Coords.localToBlock(this.coords.getCubeY(), y);
 
 		IOpacityIndex index = this.column.getOpacityIndex();
 		int opacity = newBlock.getLightOpacity(newBlockState);
@@ -546,9 +547,9 @@ public class Cube {
 			if (block.getTickRandomly()) {
 				// tick it
 				BlockPos pos = new BlockPos(
-						Coords.localToBlock(this.cubeX, x),
-						Coords.localToBlock(this.cubeY, y),
-						Coords.localToBlock(this.cubeZ, z)
+						Coords.localToBlock(this.coords.getCubeX(), x),
+						Coords.localToBlock(this.coords.getCubeY(), y),
+						Coords.localToBlock(this.coords.getCubeZ(), z)
 				);
 				block.randomTick((World) this.world, pos, blockState, this.world.getRand());
 			}
@@ -557,8 +558,8 @@ public class Cube {
 
 	public void markForRenderUpdate() {
 		this.world.markBlockRangeForRenderUpdate(
-				Coords.cubeToMinBlock(this.cubeX), Coords.cubeToMinBlock(this.cubeY), Coords.cubeToMinBlock(this.cubeZ),
-				Coords.cubeToMaxBlock(this.cubeX), Coords.cubeToMaxBlock(this.cubeY), Coords.cubeToMaxBlock(this.cubeZ)
+				Coords.cubeToMinBlock(this.coords.getCubeX()), Coords.cubeToMinBlock(this.coords.getCubeY()), Coords.cubeToMinBlock(this.coords.getCubeZ()),
+				Coords.cubeToMaxBlock(this.coords.getCubeX()), Coords.cubeToMaxBlock(this.coords.getCubeY()), Coords.cubeToMaxBlock(this.coords.getCubeZ())
 		);
 	}
 
@@ -669,4 +670,5 @@ public class Cube {
 			return x << 4 | z;
 		}
 	}
+
 }
