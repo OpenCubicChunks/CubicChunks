@@ -74,7 +74,7 @@ public class WorldEncoder {
 		in.readBytes(column.getBiomeArray());
 	}
 
-	public static void decodeCube(PacketBuffer in, Cube cube) throws IOException {
+	public static void decodeCube(PacketBuffer in, Cube cube) {
 		// if the cube came from the server, it must be live
 		cube.setCurrentStage(GeneratorStage.LIVE);
 		cube.setTargetStage(GeneratorStage.LIVE);

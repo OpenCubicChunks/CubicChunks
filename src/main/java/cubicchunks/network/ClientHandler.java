@@ -34,6 +34,7 @@ import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.INetHandler;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
@@ -85,15 +86,32 @@ public class ClientHandler implements INetHandler {
 			CubicChunks.LOGGER.error("Out of order cube received! No column for cube at ({}, {}, {}) exists!", cubeX, cubeY, cubeZ);
 			return;
 		}
-		Cube cube = column.getOrCreateCube(cubeY, false);
+		Cube cube;
+		if(packet.getType() == PacketCube.Type.NEW_CUBE) {
+			cube = column.getOrCreateCube(cubeY, false);
+		} else {
+			cube = column.getCube(cubeY);
+			if (cube == null) {
+				CubicChunks.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
+				return;
+			}
+		}
 		byte[] data = packet.getData();
 		ByteBuf buf = WorldEncoder.createByteBufForRead(data);
-		try {
-			WorldEncoder.decodeCube(new PacketBuffer(buf), cube);
-		} catch (IOException e) {
-			throw Throwables.propagate(e);
-		}
+		WorldEncoder.decodeCube(new PacketBuffer(buf), cube);
 		cube.markForRenderUpdate();
+
+		for (NBTTagCompound tag : packet.getTileEntityTags()) {
+			int blockX = tag.getInteger("x");
+			int blockY = tag.getInteger("y");
+			int blockZ = tag.getInteger("z");
+			BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+			TileEntity tileEntity = worldClient.getTileEntity(pos);
+
+			if (tileEntity != null) {
+				tileEntity.handleUpdateTag(tag);
+			}
+		}
 	}
 
 	public void handle(PacketColumn packet) {
@@ -156,34 +174,6 @@ public class ClientHandler implements INetHandler {
 		);
 	}
 
-	public void handle(final PacketCubeChange packet) {
-		IThreadListener taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isCallingFromMinecraftThread()) {
-			taskQueue.addScheduledTask(() -> handle(packet));
-			return;
-		}
-
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
-
-		// get the cube
-		int cubeX = getX(packet.cubeAddress);
-		int cubeY = getY(packet.cubeAddress);
-		int cubeZ = getZ(packet.cubeAddress);
-		Cube cube = cubeCache.getCube(cubeX, cubeY, cubeZ);
-		if (cube instanceof BlankCube) {
-			CubicChunks.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
-			return;
-		}
-
-		// apply the update
-		packet.decodeCube(cube);
-		cube.markForRenderUpdate();
-		for (TileEntity blockEntity : cube.getTileEntityMap()) {
-			blockEntity.updateContainingBlockInfo();
-		}
-	}
-
 	public void handle(final PacketCubeBlockChange packet) {
 		IThreadListener taskQueue = Minecraft.getMinecraft();
 		if (!taskQueue.isCallingFromMinecraftThread()) {
@@ -227,7 +217,7 @@ public class ClientHandler implements INetHandler {
 			BlockPos pos = cube.localAddressToBlockPos(packet.localAddresses[i]);
 			worldClient.invalidateRegionAndSetBlock(pos, packet.blockStates[i]);
 		}
-		for (TileEntity blockEntity : cube.getTileEntityMap()) {
+		for (TileEntity blockEntity : cube.getTileEntityMap().values()) {
 			blockEntity.updateContainingBlockInfo();
 		}
 	}

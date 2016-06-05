@@ -26,7 +26,6 @@ package cubicchunks.server;
 import cubicchunks.CubicChunks;
 import cubicchunks.network.PacketCube;
 import cubicchunks.network.PacketCubeBlockChange;
-import cubicchunks.network.PacketCubeChange;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadCube;
 import cubicchunks.util.AddressTools;
@@ -103,7 +102,8 @@ public class PlayerCubeMapEntry {
 				this.players.remove(player.getEntityId());
 
 				if (this.players.isEmpty()) {
-					//TODO: ChunkIOExecutor.dropQueuedChunkLoad: Is it needed? Should it be ported to CubicChunks?
+					//TODO: Implement threaded chunk loading
+					//TODO: Port dropQueuedChunk it to cubic chunks?
 					//net.minecraftforge.common.chunkio.ChunkIOExecutor.dropQueuedChunkLoad(PlayerManager.this.getWorldServer(), this.pos.chunkXPos, this.pos.chunkZPos, this.loadedRunnable);
 					playerCubeMap.removeEntry(this);
 				}
@@ -112,7 +112,6 @@ public class PlayerCubeMapEntry {
 
 			if (this.sentToPlayers) {
 				PacketDispatcher.sendTo(new PacketUnloadCube(this.cubeAddress), player);
-				//player.playerNetServerHandler.sendPacket(new SPacketUnloadChunk(this.pos.chunkXPos, this.pos.chunkZPos));
 			}
 
 			this.players.remove(player.getEntityId());
@@ -165,7 +164,7 @@ public class PlayerCubeMapEntry {
 		if (!this.sentToPlayers) {
 			return;
 		}
-		PacketDispatcher.sendTo(new PacketCube(this.cube), player);
+		PacketDispatcher.sendTo(new PacketCube(this.cube, PacketCube.Type.NEW_CUBE), player);
 	}
 
 	public void updateInhabitedTime() {
@@ -206,22 +205,20 @@ public class PlayerCubeMapEntry {
 
 		if (this.dirtyBlocks.size() >= ForgeModContainer.clumpingThreshold) {
 			// send whole cube
-			sendPacketToAllPlayers(new PacketCubeChange(cube));
+			sendPacketToAllPlayers(new PacketCube(cube, PacketCube.Type.UPDATE));
 		} else {
 			// send all the dirty blocks
 			sendPacketToAllPlayers(new PacketCubeBlockChange(this.cube, this.dirtyBlocks));
-		}
+			// send the block entites on those blocks too
+			for (int localAddress : this.dirtyBlocks) {
+				BlockPos pos = cube.localAddressToBlockPos(localAddress);
 
-		// send the block entites on those blocks too
-		for (int localAddress : this.dirtyBlocks) {
-			BlockPos pos = cube.localAddressToBlockPos(localAddress);
-
-			IBlockState state = this.cube.getBlockState(pos);
-			if (state.getBlock().hasTileEntity(state)) {
-				sendBlockEntityToAllPlayers(world.getTileEntity(pos));
+				IBlockState state = this.cube.getBlockState(pos);
+				if (state.getBlock().hasTileEntity(state)) {
+					sendBlockEntityToAllPlayers(world.getTileEntity(pos));
+				}
 			}
 		}
-
 		this.dirtyBlocks.clear();
 	}
 
@@ -245,13 +242,6 @@ public class PlayerCubeMapEntry {
 		return !this.players.forEachValue(value -> !predicate.test(value.player));
 	}
 
-	public boolean hasPlayerMatchingInRange(double range, Predicate<EntityPlayerMP> predicate) {
-		//if any of them is true - stop and return false, then negate the result to get true
-		return !this.players.forEachValue(v ->
-				!(getDistanceSq(cubeAddress, v.player) < range*range && predicate.test(v.player))
-		);
-	}
-
 	public double getDistanceSq(long cubeAddress, Entity entity) {
 		double blockX = localToBlock(getX(cubeAddress), 8);
 		double blockY = localToBlock(getY(cubeAddress), 8);
@@ -260,10 +250,6 @@ public class PlayerCubeMapEntry {
 		double dy = blockY - entity.posY;
 		double dz = blockZ - entity.posZ;
 		return dx*dx + dy*dy + dz*dz;
-	}
-
-	public boolean isSentToPlayers() {
-		return this.sentToPlayers;
 	}
 
 	public Cube getCube() {
@@ -282,10 +268,6 @@ public class PlayerCubeMapEntry {
 		}
 
 		return min;
-	}
-
-	public boolean hasPlayers() {
-		return !this.players.isEmpty();
 	}
 
 	private long getWorldTime() {

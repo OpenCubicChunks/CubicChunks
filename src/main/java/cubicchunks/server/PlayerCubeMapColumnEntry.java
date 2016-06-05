@@ -75,19 +75,13 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 
 		this.getPlayers().add(player);
 
-		/*
-		 * TODO: ChunkWatchEvent.Watch: is it implemented correctly?
-		 * TODO: at the moment I'm writing it Forge doesn't have this implemented, I think it should be here:
-		 */
-		MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(this.getPos(), player));
-
-		//always sent to players
-		//if (this.isSentToPlayers()) {
+		//always sent to players, no need to check it
 		PacketDispatcher.sendTo(new PacketColumn(this.getColumn()), player);
 		playerCubeMap.getWorldServer()
 				.getEntityTracker()
 				.sendLeashedEntitiesInChunk(player, this.getColumn());
-		//}
+		//TODO: ChunkWatchEvent.Watch: is it implemented correctly? at the moment I'm writing it Forge doesn't have this implemented, I think it should be here:
+		MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(this.getPos(), player));
 	}
 
 	public void removePlayer(@Nonnull EntityPlayerMP player) {
@@ -127,7 +121,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 		}
 	}
 
-	//procidePlayerChunk - ok
+	//providePlayerChunk - ok
 
 	@Override
 	//actually sendToPlayers
@@ -135,7 +129,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 		try {
 			this.setSentToPlayers.invoke(this, true);
 		} catch (Throwable throwable) {
-			throw Throwables.propagate(throwable);
+			throw new RuntimeException(throwable);
 		}
 		return true;
 	}

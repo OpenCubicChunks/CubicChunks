@@ -27,7 +27,6 @@ import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
-import cubicchunks.util.CubeBlockMap;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
@@ -55,7 +54,9 @@ import net.minecraftforge.event.entity.EntityEvent;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Cube {
@@ -68,11 +69,11 @@ public class Cube {
 	private boolean isModified;
 	private ExtendedBlockStorage storage;
 	private EntityContainer entities;
-	private CubeBlockMap<TileEntity> tileEntityMap;
+	private Map<BlockPos, TileEntity> tileEntityMap;
 	
 	private GeneratorStage targetStage;
 	private GeneratorStage currentStage;
-	
+
 	private boolean needsRelightAfterLoad;
 	/**
 	 * "queue containing the BlockPos of tile entities queued for creation"
@@ -91,7 +92,7 @@ public class Cube {
 
 		this.storage = null;
 		this.entities = new EntityContainer();
-		this.tileEntityMap = new CubeBlockMap<>();
+		this.tileEntityMap = new HashMap<>();
 		this.currentStage = null;
 		this.needsRelightAfterLoad = false;
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
@@ -472,8 +473,8 @@ public class Cube {
 		return !this.storage.isEmpty();
 	}
 
-	public Iterable<TileEntity> getTileEntityMap() {
-		return this.tileEntityMap.values();
+	public Map<BlockPos, TileEntity> getTileEntityMap() {
+		return this.tileEntityMap;
 	}
 
 	public EntityContainer getEntityContainer() {
