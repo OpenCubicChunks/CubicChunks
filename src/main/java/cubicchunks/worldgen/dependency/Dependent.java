@@ -24,24 +24,22 @@
 
 package cubicchunks.worldgen.dependency;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 public class Dependent {
 
-	public Cube cube;
+	private Cube cube;
 
-	public Dependency dependency;
+	private Dependency dependency;
 
-	public Map<CubeCoords, Requirement> requirements;
+	private Map<CubeCoords, Requirement> requirements;
 	
-	public int remaining;
+	int remaining;
 
 
 	public Dependent(Cube cube, Dependency dependency) {
@@ -68,5 +66,17 @@ public class Dependent {
 
 	public Collection<Requirement> getRequirements() {
 		return requirements.values();
+	}
+
+	public Cube getCube() {
+		return cube;
+	}
+
+	public Requirement getRequirementFor(CubeCoords coords) {
+		return this.requirements.get(coords);
+	}
+
+	void putRequirement(Requirement requirement) {
+		this.requirements.put(requirement.getCoords(), requirement);
 	}
 }

@@ -24,19 +24,17 @@
 
 package cubicchunks.worldgen.dependency;
 
+import cubicchunks.server.ServerCubeCache;
+import cubicchunks.server.ServerCubeCache.LoadType;
+import cubicchunks.util.CubeCoords;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.GeneratorPipeline;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
-import cubicchunks.CubicChunks;
-import cubicchunks.server.ServerCubeCache;
-import cubicchunks.server.ServerCubeCache.LoadType;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorPipeline;
 
 public class DependencyManager {
 
@@ -58,7 +56,7 @@ public class DependencyManager {
 	
 	
 	public void initialize(Dependent dependent) {
-		for (Requirement requirement : dependent.requirements.values()) {
+		for (Requirement requirement : dependent.getRequirements()) {
 			Cube cube = cubeProvider.getCube(requirement.getCoords());
 			if (cube != null) {
 				dependent.update(this, cube);
@@ -79,7 +77,7 @@ public class DependencyManager {
 				dependent.update(this, requiredCube);
 				
 				if (dependent.remaining == 0) {
-					generatorPipeline.resume(dependent.cube);
+					generatorPipeline.resume(dependent.getCube());
 				}
 			}
 			return true;
@@ -101,7 +99,7 @@ public class DependencyManager {
 	public void addRequirement(Dependent dependent, Requirement requirement) {
 		
 		// Does the dependent already depend on the cube?
-		Requirement existing = dependent.requirements.get(requirement.getCoords());
+		Requirement existing = dependent.getRequirementFor(requirement.getCoords());
 		if (existing != null) {
 			
 			// If it does, return.
@@ -110,7 +108,7 @@ public class DependencyManager {
 			}
 			
 			// Otherwise, replace the old requirement.
-			dependent.requirements.get(requirement.getCoords());
+			dependent.putRequirement(requirement);
 			
 			// If the old requirement was satisfied and the new one is not, increment the remaining counter.
 			Cube requiredCube = this.cubeProvider.getCube(requirement.getCoords());
@@ -149,8 +147,8 @@ public class DependencyManager {
 	public void register(Dependent dependent) {
 
 		// Remember the dependent.
-		CubeCoords coords = new CubeCoords(dependent.cube.getX(), dependent.cube.getY(), dependent.cube.getZ());
-		this.dependentMap.put(dependent.cube.getCoords(), dependent);
+		CubeCoords coords = dependent.getCube().getCoords();
+		this.dependentMap.put(coords, dependent);
 		
 		for (Requirement requirement : dependent.getRequirements()) {
 			addNewRequirement(dependent, requirement);
@@ -158,14 +156,14 @@ public class DependencyManager {
 		
 		// If all requirements are met, resume.
 		if (dependent.remaining == 0) {		
-			generatorPipeline.resume(dependent.cube);
+			generatorPipeline.resume(dependent.getCube());
 		}
 	}
 		
 	public void unregister(Cube cube) {
 		Dependent dependent = this.dependentMap.get(cube.getCoords());
 		if (dependent != null) {
-			for (Requirement requirement : dependent.requirements.values()) {
+			for (Requirement requirement : dependent.getRequirements()) {
 				Set<Dependent> dependents = this.requirementsToDependents.get(requirement.getCoords());
 				if (dependents != null) {
 					dependents.remove(dependent);
