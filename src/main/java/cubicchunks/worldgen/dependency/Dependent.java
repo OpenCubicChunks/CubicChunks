@@ -14,8 +14,6 @@ public class Dependent {
 
 	public Dependency dependency;
 
-	private DependencyManager manager;
-
 	public Map<Long, Requirement> requirements;
 	
 	public int remaining;
@@ -31,12 +29,8 @@ public class Dependent {
 		this.remaining = this.requirements.size();
 	}
 
-	public void register(DependencyManager manager) {
-		this.manager = manager;
-	}
-
-	public boolean update(Cube requiredCube) {
-		boolean noLongerRequired = this.dependency.update(this.manager, this, requiredCube);
+	public boolean update(DependencyManager manager, Cube requiredCube) {
+		boolean noLongerRequired = this.dependency.update(manager, this, requiredCube);
 		if (noLongerRequired) {
 			--this.remaining;
 		}

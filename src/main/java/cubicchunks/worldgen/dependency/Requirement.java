@@ -20,4 +20,8 @@ public class Requirement {
 	public Long getAddress() {
 		return AddressTools.getAddress(cubeX, cubeY, cubeZ);
 	}
+	
+	public boolean contains(Requirement requirement) {
+		return !targetStage.precedes(requirement.targetStage);
+	}
 }
