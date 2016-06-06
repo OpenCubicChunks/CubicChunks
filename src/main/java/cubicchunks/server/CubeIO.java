@@ -95,7 +95,7 @@ public class CubeIO implements IThreadedFileIO {
 
 		file.getParentFile().mkdirs();
 
-		DB db = DBMaker.fileDB(file).transactionEnable().make();
+		DB db = DBMaker.fileDB(file).make();
 		return db;
 		// NOTE: could set different cache settings
 		// the default is a hash map cache with 32768 entries
@@ -542,7 +542,7 @@ public class CubeIO implements IThreadedFileIO {
 		// tile entities
 		NBTTagList nbtTileEntities = new NBTTagList();
 		nbt.setTag("TileEntities", nbtTileEntities);
-		for (TileEntity blockEntity : cube.getTileEntityMap().values()) {
+		for (TileEntity blockEntity : cube.getTileEntityMap()) {
 			NBTTagCompound nbtTileEntity = new NBTTagCompound();
 			blockEntity.writeToNBT(nbtTileEntity);
 			nbtTileEntities.appendTag(nbtTileEntity);
