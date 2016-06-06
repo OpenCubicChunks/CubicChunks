@@ -362,8 +362,8 @@ public class Cube {
 		return this.targetStage;
 	}
 	
-	public void setTargetStage(GeneratorStage val) {
-		this.targetStage = val;
+	public void setTargetStage(GeneratorStage targetStage) {
+		this.targetStage = targetStage;
 	}
 	
 	public long getAddress() {

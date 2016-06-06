@@ -24,6 +24,8 @@
 package cubicchunks.server;
 
 import com.google.common.collect.Maps;
+
+import cubicchunks.CubeProviderDebug;
 import cubicchunks.CubicChunks;
 import cubicchunks.server.ServerCubeCache.LoadType;
 import cubicchunks.util.AddressTools;
@@ -104,12 +106,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		this.forceAdded = new HashMap<>();		
 		this.forceAddedReverse = new HashMap<>();
 	}
-
-	@Override
-	public Collection<Chunk> getLoadedChunks() {
-		return (Collection<Chunk>) (Object) this.loadedColumns.values();
-	}
-
+	
 	@Override
 	public void unload(Chunk chunk) {
 		Column column = (Column) chunk;

@@ -24,8 +24,10 @@
 
 package cubicchunks.worldgen.dependency;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.ServerCubeCache.LoadType;
+import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorPipeline;
@@ -55,18 +57,9 @@ public class DependencyManager {
 	}
 	
 	
-	public void initialize(Dependent dependent) {
-		for (Requirement requirement : dependent.getRequirements()) {
-			Cube cube = cubeProvider.getCube(requirement.getCoords());
-			if (cube != null) {
-				dependent.update(this, cube);
-			}
-		}
-	}
-	
-
 	// Updates all dependents waiting for the given cube.
 	public boolean updateDependents(Cube requiredCube) {
+		
 		HashSet<Dependent> dependents = this.requirementsToDependents.get(requiredCube.getCoords());
 		if (dependents != null) {
 			
@@ -137,7 +130,7 @@ public class DependencyManager {
 		
 		// If the cube is loaded, update the dependent.
 		if (requiredCube != null) {
-			dependent.update(this, requiredCube);
+//			dependent.update(this, requiredCube);
 		// Otherwise load it.
 		} else {
 			this.cubeProvider.loadCube(requirement.getCoords(), LoadType.LOAD_OR_GENERATE, requirement.getTargetStage());
@@ -149,13 +142,13 @@ public class DependencyManager {
 		// Remember the dependent.
 		CubeCoords coords = dependent.getCube().getCoords();
 		this.dependentMap.put(coords, dependent);
-		
+
 		for (Requirement requirement : dependent.getRequirements()) {
 			addNewRequirement(dependent, requirement);
 		}
 		
 		// If all requirements are met, resume.
-		if (dependent.remaining == 0) {		
+		if (dependent.isSatisfied()) {
 			generatorPipeline.resume(dependent.getCube());
 		}
 	}
