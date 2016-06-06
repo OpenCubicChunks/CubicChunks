@@ -130,7 +130,7 @@ public class DependencyManager {
 		
 		// If the cube is loaded, update the dependent.
 		if (requiredCube != null) {
-//			dependent.update(this, requiredCube);
+			dependent.update(this, requiredCube);
 		// Otherwise load it.
 		} else {
 			this.cubeProvider.loadCube(requirement.getCoords(), LoadType.LOAD_OR_GENERATE, requirement.getTargetStage());
