@@ -24,10 +24,8 @@
 
 package cubicchunks.worldgen.dependency;
 
-import cubicchunks.CubicChunks;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.ServerCubeCache.LoadType;
-import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorPipeline;
@@ -44,124 +42,82 @@ public class DependencyManager {
 	
 	private GeneratorPipeline generatorPipeline;
 	
-	private Map<CubeCoords, HashSet<Dependent>> requirementsToDependents;
+	private Map<CubeCoords, HashSet<DependentCube>> requirementsToDependents;
 
-	private Map<CubeCoords, Dependent> dependentMap;
+	private Map<CubeCoords, DependentCube> dependentMap;
 	
 	
 	public DependencyManager(ServerCubeCache cubeProvider, GeneratorPipeline generatorPipeline) {
 		this.cubeProvider = cubeProvider;
 		this.generatorPipeline = generatorPipeline;
-		this.dependentMap = new HashMap<CubeCoords, Dependent>();
-		this.requirementsToDependents = new HashMap<CubeCoords, HashSet<Dependent>>();
+		this.dependentMap = new HashMap<>();
+		this.requirementsToDependents = new HashMap<>();
 	}
 	
 	
 	// Updates all dependents waiting for the given cube.
 	public boolean updateDependents(Cube requiredCube) {
 		
-		HashSet<Dependent> dependents = this.requirementsToDependents.get(requiredCube.getCoords());
-		if (dependents != null) {
-			
-			Iterator<Dependent> iter = dependents.iterator();
-			while (iter.hasNext()) {
-				Dependent dependent = iter.next();
-				
-				dependent.update(this, requiredCube);
-				
-				if (dependent.remaining == 0) {
-					generatorPipeline.resume(dependent.getCube());
+		HashSet<DependentCube> dependentCubes = this.requirementsToDependents.get(requiredCube.getCoords());
+		if (dependentCubes != null) {
+			for (DependentCube dependentCube : dependentCubes) {
+				dependentCube.update(this, requiredCube);
+				if (dependentCube.isSatisfied()) {
+					generatorPipeline.resume(dependentCube.getCube());
 				}
 			}
 			return true;
 		}
 		return false;
 	}
-	
-	public boolean isSatisfied(Requirement requirement) {
-		return this.cubeProvider.cubeExists(requirement.getCoords());
-	}
-	
-	/**
-	 * Adds a new requirement for the given dependent.
-	 * The requirement must not yet be part of the dependent's map of requirements.
-	 * 
-	 * @param dependent The dependent to which the requirement is to be added.
-	 * @param requirement The requirement to be added to the dependent.
-	 */
-	public void addRequirement(Dependent dependent, Requirement requirement) {
-		
-		// Does the dependent already depend on the cube?
-		Requirement existing = dependent.getRequirementFor(requirement.getCoords());
-		if (existing != null) {
-			
-			// If it does, return.
-			if (existing.contains(requirement)) {
-				return;
-			}
-			
-			// Otherwise, replace the old requirement.
-			dependent.putRequirement(requirement);
-			
-			// If the old requirement was satisfied and the new one is not, increment the remaining counter.
-			Cube requiredCube = this.cubeProvider.getCube(requirement.getCoords());
-			if (requiredCube != null && !requiredCube.getCurrentStage().precedes(existing.getTargetStage()) && requiredCube.getCurrentStage().precedes(requirement.getTargetStage())) {
-				++dependent.remaining;
-			}
-			
-		// If it does not, simply add it.
-		} else {
-			addNewRequirement(dependent, requirement);
-		}
-	}
-	
-	private void addNewRequirement(Dependent dependent, Requirement requirement) {
-		// Map from the required cube to the dependent.
-		HashSet<Dependent> dependents = this.requirementsToDependents.get(requirement.getCoords());			
-		if (dependents == null) {
-			dependents = new HashSet<Dependent>();
-			requirementsToDependents.put(requirement.getCoords(), dependents);
+
+	private void addNewRequirement(DependentCube dependentCube, Requirement requirement) {
+		// Map from the required cube to the dependentCube.
+		HashSet<DependentCube> dependentCubes = this.requirementsToDependents.get(requirement.getCoords());
+		if (dependentCubes == null) {
+			dependentCubes = new HashSet<>();
+			requirementsToDependents.put(requirement.getCoords(), dependentCubes);
 		}
 		
-		dependents.add(dependent);
+		dependentCubes.add(dependentCube);
 
 		// Check if the cube is loaded.
 		Cube requiredCube = this.cubeProvider.getCube(requirement.getCoords());
 		
-		// If the cube is loaded, update the dependent.
+		// If the cube is loaded, update the dependentCube.
 		if (requiredCube != null) {
-			dependent.update(this, requiredCube);
+			dependentCube.update(this, requiredCube);
 		// Otherwise load it.
 		} else {
 			this.cubeProvider.loadCube(requirement.getCoords(), LoadType.LOAD_OR_GENERATE, requirement.getTargetStage());
 		}		
 	}
 	
-	public void register(Dependent dependent) {
+	public void register(DependentCube dependentCube) {
 
-		// Remember the dependent.
-		CubeCoords coords = dependent.getCube().getCoords();
-		this.dependentMap.put(coords, dependent);
+		// Remember the dependentCube.
+		CubeCoords coords = dependentCube.getCube().getCoords();
+		this.dependentMap.put(coords, dependentCube);
 
-		for (Requirement requirement : dependent.getRequirements()) {
-			addNewRequirement(dependent, requirement);
+		for (Requirement requirement : dependentCube.getRequirements()) {
+			addNewRequirement(dependentCube, requirement);
 		}
 		
 		// If all requirements are met, resume.
-		if (dependent.isSatisfied()) {
-			generatorPipeline.resume(dependent.getCube());
+		if (dependentCube.isSatisfied()) {
+			generatorPipeline.resume(dependentCube.getCube());
 		}
 	}
 		
 	public void unregister(Cube cube) {
-		Dependent dependent = this.dependentMap.get(cube.getCoords());
-		if (dependent != null) {
-			for (Requirement requirement : dependent.getRequirements()) {
-				Set<Dependent> dependents = this.requirementsToDependents.get(requirement.getCoords());
-				if (dependents != null) {
-					dependents.remove(dependent);
-					if (dependents.size() == 0) {
-						this.requirementsToDependents.remove(dependents);
+		DependentCube dependentCube = this.dependentMap.get(cube.getCoords());
+		if (dependentCube != null) {
+			for (Requirement requirement : dependentCube.getRequirements()) {
+				Set<DependentCube> dependentCubes = this.requirementsToDependents.get(requirement.getCoords());
+				if (dependentCubes != null) {
+					dependentCubes.remove(dependentCube);
+					if (dependentCubes.size() == 0) {
+						this.requirementsToDependents.remove(requirement.getCoords());
 					}
 				}
 			}

@@ -28,16 +28,61 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-public interface Dependent {
+public class DependentCube implements Dependent {
 
-	public boolean update(DependencyManager manager, Cube requiredCube);
+	private Cube cube;
 
-	public boolean isSatisfied();
+	private Dependency dependency;
 
-	public Collection<Requirement> getRequirements();
+	private Map<CubeCoords, Requirement> requirements;
 
-	public Requirement getRequirementFor(CubeCoords coords);
+	int remaining;
 
-	void addRequirement(Requirement requirement);
+
+	public DependentCube(Cube cube, Dependency dependency) {
+		this.cube = cube;
+		this.dependency = dependency;
+		this.requirements = new HashMap<>();
+		for (Requirement requirement : dependency.getRequirements(cube)) {
+			this.requirements.put(requirement.getCoords(), requirement);
+		}
+		this.remaining = this.requirements.size();
+	}
+
+	public Cube getCube() {
+		return cube;
+	}
+
+
+	/*
+	 * Interface: DependentCube
+	 */
+
+	public Collection<Requirement> getRequirements() {
+		return requirements.values();
+	}
+
+	public Requirement getRequirementFor(CubeCoords coords) {
+		return this.requirements.get(coords);
+	}
+
+	public void addRequirement(Requirement requirement) {
+		this.requirements.put(requirement.getCoords(), requirement);
+	}
+
+	public boolean update(DependencyManager manager, Cube requiredCube) {
+		boolean noLongerRequired = this.dependency.update(manager, this, requiredCube);
+		if (noLongerRequired) {
+			--this.remaining;
+		}
+		return noLongerRequired;
+	}
+
+	public boolean isSatisfied() {
+		return this.remaining == 0;
+	}
+
 }
