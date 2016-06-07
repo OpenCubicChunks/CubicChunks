@@ -28,18 +28,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
 
 public class RegionDependency implements Dependency {
-	
+
 	private GeneratorStage targetStage;
-	
-	private Set<Long> requiredCubes;
-	
-	private Set<Requirement> requirements;
 
 	private int xLow;
 	private int xHigh;
@@ -47,12 +42,12 @@ public class RegionDependency implements Dependency {
 	private int yHigh;
 	private int zLow;
 	private int zHigh;
-	
-	
+
+
 	public RegionDependency(GeneratorStage targetStage, int radius) {
 
 		this.targetStage = targetStage;
-		
+
 		this.xLow = -radius;
 		this.xHigh = radius;
 		this.yLow = -radius;
@@ -60,45 +55,34 @@ public class RegionDependency implements Dependency {
 		this.zLow = -radius;
 		this.zHigh = radius;
 	}
-	
-	public RegionDependency(Cube cube, GeneratorStage stage, int xLow, int xHigh, int yLow, int yHigh, int zLow, int zHigh) {
+
+	public RegionDependency(GeneratorStage stage, int xLow, int xHigh, int yLow, int yHigh, int zLow, int zHigh) {
 
 		this.targetStage = stage;
-		this.requirements = new HashSet<Requirement>();
-		
-		int cubeX = cube.getX();
-		int cubeY = cube.getY();
-		int cubeZ = cube.getZ();
-		
-		for (int x = xLow; x <= xHigh; ++x) {
-			for (int y = yLow; y <= yHigh; ++y) {
-				for (int z = zLow; z <= zHigh; ++z) {
-					if (x != 0 || y != 0 || z != 0) {
-						CubeCoords coords = new CubeCoords(cubeX + x, cubeY + y, cubeZ + z);
-						requirements.add(new Requirement(coords, targetStage));
-					}
-				}
-			}
-		}
+
+		this.xLow = xLow;
+		this.xHigh = xHigh;
+		this.yLow = yLow;
+		this.yHigh = yHigh;
+		this.zLow = zLow;
+		this.zHigh = zHigh;
 	}
 
-	@Override
-	public boolean update(DependencyManager manager, Dependent dependent, Cube requiredCube) {
+	public boolean update(DependencyManager manager, DependentCube dependent, Cube requiredCube) {
 		return requiredCube.getCurrentStage() == targetStage;
 	}
 
-	@Override
 	public Collection<Requirement> getRequirements(Cube cube) {
-		
+
 		Set<Requirement> requirements = new HashSet<Requirement>();
-		
+
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();
-		
-		for (int x = xLow; x <= xHigh; ++x) {
-			for (int y = yLow; y <= yHigh; ++y) {
-				for (int z = zLow; z <= zHigh; ++z) {
+
+		for (int x = this.xLow; x <= this.xHigh; ++x) {
+			for (int y = this.yLow; y <= this.yHigh; ++y) {
+				for (int z = this.zLow; z <= this.zHigh; ++z) {
 					if (x != 0 || y != 0 || z != 0) {
 						CubeCoords coords = new CubeCoords(cubeX + x, cubeY + y, cubeZ + z);
 						requirements.add(new Requirement(coords, targetStage));
@@ -106,7 +90,7 @@ public class RegionDependency implements Dependency {
 				}
 			}
 		}
-		
+
 		return requirements;
 	}
 

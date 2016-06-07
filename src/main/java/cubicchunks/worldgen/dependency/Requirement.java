@@ -31,12 +31,12 @@ public class Requirement {
 
 	private CubeCoords coords;
 	private GeneratorStage targetStage;
-	
+
 	public Requirement(CubeCoords coords, GeneratorStage targetStage) {
 		this.coords = coords;
 		this.targetStage = targetStage;
 	}
-	
+
 	public CubeCoords getCoords() {
 		return coords;
 	}

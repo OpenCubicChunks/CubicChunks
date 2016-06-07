@@ -29,12 +29,10 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.util.Progress;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.util.processor.QueueProcessor;
-import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.dependency.Dependency;
 import cubicchunks.worldgen.dependency.DependencyManager;
-import cubicchunks.worldgen.dependency.DependencyProvider;
-import cubicchunks.worldgen.dependency.Dependent;
+import cubicchunks.worldgen.dependency.DependentCube;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,7 +98,7 @@ public class GeneratorPipeline {
 			// Register dependencies.
 			Dependency dependency = stage.getDependency(cube);
 			if (dependency != null) {
-				Dependent dependent = new Dependent(cube, dependency);
+				DependentCube dependent = new DependentCube(cube, dependency);
 				this.dependencyManager.register(dependent);
 
 				if (dependent.isSatisfied()) {
@@ -235,7 +233,7 @@ public class GeneratorPipeline {
 					
 					Dependency dependency = stage.getDependency(cube);
 					if (dependency != null) {
-						Dependent dependent = new Dependent(cube, dependency);
+						DependentCube dependent = new DependentCube(cube, dependency);
 						this.dependencyManager.register(dependent);
 
 						if (dependent.isSatisfied()) {

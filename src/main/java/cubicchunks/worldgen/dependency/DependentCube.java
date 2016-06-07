@@ -21,23 +21,68 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
+
 package cubicchunks.worldgen.dependency;
 
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-public interface Dependent {
+public class DependentCube implements Dependent {
 
-	public Collection<Requirement> getRequirements();
+	private Cube cube;
 
-	public Requirement getRequirementFor(CubeCoords coords);
+	private Dependency dependency;
 
-	public void addRequirement(Requirement requirement);
+	private Map<CubeCoords, Requirement> requirements;
 
-	public boolean update(DependencyManager manager, Cube requiredCube);
+	int remaining;
 
-	public boolean isSatisfied();
+
+	public DependentCube(Cube cube, Dependency dependency) {
+		this.cube = cube;
+		this.dependency = dependency;
+		this.requirements = new HashMap<CubeCoords, Requirement>();
+		for (Requirement requirement : dependency.getRequirements(cube)) {
+			this.requirements.put(requirement.getCoords(), requirement);
+		}
+		this.remaining = this.requirements.size();
+	}
+
+	public Cube getCube() {
+		return cube;
+	}
+
+
+	/*
+	 * Interface: Dependent
+	 */
+
+	public Collection<Requirement> getRequirements() {
+		return requirements.values();
+	}
+
+	public Requirement getRequirementFor(CubeCoords coords) {
+		return this.requirements.get(coords);
+	}
+
+	public void addRequirement(Requirement requirement) {
+		this.requirements.put(requirement.getCoords(), requirement);
+	}
+
+	public boolean update(DependencyManager manager, Cube requiredCube) {
+		boolean noLongerRequired = this.dependency.update(manager, this, requiredCube);
+		if (noLongerRequired) {
+			--this.remaining;
+		}
+		return noLongerRequired;
+	}
+
+	public boolean isSatisfied() {
+		return this.remaining == 0;
+	}
 
 }
