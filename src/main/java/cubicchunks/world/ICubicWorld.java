@@ -75,8 +75,6 @@ public interface ICubicWorld {
 
 	Cube getCubeFromBlockCoords(BlockPos pos);
 
-	void setGeneratingWorld(boolean b);
-
 	//vanilla part
 
 	//field accessors
