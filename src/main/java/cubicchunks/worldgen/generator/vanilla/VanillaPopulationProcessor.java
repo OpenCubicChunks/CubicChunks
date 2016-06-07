@@ -30,7 +30,7 @@ import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
-import debug.Prof;
+import cubicchunks.debug.Prof;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
 import java.util.Collections;

@@ -1,4 +1,4 @@
-package debug;
+package cubicchunks.debug;
 
 import javax.swing.*;
 import java.awt.*;
