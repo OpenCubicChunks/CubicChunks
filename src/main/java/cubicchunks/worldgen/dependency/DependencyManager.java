@@ -36,6 +36,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+/*
+ * TODO: Abstraction to allow for non-cube dependents.
+ * TODO: Commenting
+ */
 public class DependencyManager {
 
 	private ServerCubeCache cubeProvider;

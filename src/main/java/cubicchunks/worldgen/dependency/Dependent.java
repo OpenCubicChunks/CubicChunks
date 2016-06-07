@@ -27,6 +27,9 @@ package cubicchunks.worldgen.dependency;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 
+/*
+ * TODO: Commenting
+ */
 import java.util.Collection;
 
 public interface Dependent {

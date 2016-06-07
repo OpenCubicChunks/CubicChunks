@@ -27,6 +27,9 @@ package cubicchunks.worldgen.dependency;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.worldgen.GeneratorStage;
 
+/*
+ * TODO: Commenting
+ */
 public class Requirement {
 
 	private CubeCoords coords;

@@ -30,7 +30,15 @@ import java.util.HashSet;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
+import net.minecraft.util.math.Vec3i;
 
+/*
+ * TODO: Commenting
+ */
+/**
+ * Specifies the dependency of a cube to other cubes in its vicinity during terrain generation.
+ * @see cubicchunks.worldgen.dependency.DependencyManager
+ */
 public class RegionDependency implements Dependency {
 	
 	private GeneratorStage targetStage;
@@ -55,24 +63,22 @@ public class RegionDependency implements Dependency {
 		this.zHigh = radius;
 	}
 	
-	public RegionDependency(GeneratorStage targetStage, int xLow, int xHigh, int yLow, int yHigh, int zLow, int zHigh) {
+	public RegionDependency(GeneratorStage targetStage, Vec3i relA, Vec3i relB) {
 
 		this.targetStage = targetStage;
 
-		this.xLow = xLow;
-		this.xHigh = xHigh;
-		this.yLow = yLow;
-		this.yHigh = yHigh;
-		this.zLow = zLow;
-		this.zHigh = zHigh;
+		this.xLow = Math.min(relA.getX(), relB.getX());
+		this.xHigh = Math.max(relA.getX(), relB.getX());
+		this.yLow = Math.min(relA.getY(), relB.getY());
+		this.yHigh = Math.max(relA.getY(), relB.getY());
+		this.zLow = Math.min(relA.getZ(), relB.getZ());
+		this.zHigh = Math.max(relA.getZ(), relB.getZ());
 	}
 
-	@Override
 	public boolean update(DependencyManager manager, DependentCube dependentCube, Cube requiredCube) {
 		return requiredCube.getCurrentStage() == targetStage;
 	}
 
-	@Override
 	public Collection<Requirement> getRequirements(Cube cube) {
 
 		HashSet<Requirement> requirements = new HashSet<>();
