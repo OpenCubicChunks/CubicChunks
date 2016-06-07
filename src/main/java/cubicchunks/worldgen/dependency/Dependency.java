@@ -41,10 +41,10 @@ public interface Dependency {
 	 * Called when the given cube is loaded or entered the next generation stage.
 	 * 
 	 * @param manager The DependencyManager used by the server.
-	 * @param dependent The dependent for which the update is called.
+	 * @param dependentCube The dependentCube for which the update is called.
 	 * @param requiredCube The updated cube.
-	 * @return True iff the dependent no longer requires the given cube.
+	 * @return True iff the dependentCube no longer requires the given cube.
 	 */
-	public boolean update(DependencyManager manager, Dependent dependent, Cube requiredCube);
+	public boolean update(DependencyManager manager, DependentCube dependentCube, Cube requiredCube);
 
 }
