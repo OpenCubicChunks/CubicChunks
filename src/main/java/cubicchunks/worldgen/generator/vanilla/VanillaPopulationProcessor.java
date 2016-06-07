@@ -24,7 +24,6 @@
 package cubicchunks.worldgen.generator.vanilla;
 
 import com.google.common.collect.Sets;
-import cubicchunks.CubicChunks;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
@@ -70,11 +69,13 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 			}
 			cubes.add(currentCube);
 		}
+		world.setGeneratingWorld(true);
 		try {
 			this.vanillaGen.populate(cube.getX(), cube.getZ());
 		} catch (RuntimeException ex) {
-			CubicChunks.LOGGER.error("Exception when populating chunk at " + cube.getX() + ", " + cube.getZ(), ex);
+			ex.printStackTrace();
 		}
+		world.setGeneratingWorld(false);
 		return cubes;
 	}
 

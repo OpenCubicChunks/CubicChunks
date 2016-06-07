@@ -73,6 +73,7 @@ public abstract class MixinWorld implements ICubicWorld {
 	protected LightingManager lightingManager;
 	protected boolean isCubicWorld;
 	protected int minHeight = 0, maxHeight = 256;
+	private boolean enableWorldGenPerfHack;
 
 	protected void setSaveHandler(ISaveHandler newSaveHandler) {
 		this.saveHandler = newSaveHandler;
@@ -192,12 +193,19 @@ public abstract class MixinWorld implements ICubicWorld {
 		return this.getCubeFromCubeCoords(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()));
 	}
 
+	@Override public void setGeneratingWorld(boolean enable) {
+		this.enableWorldGenPerfHack = enable;
+	}
+
 	private boolean cubeAndNeighborsExist(int cubeX, int cubeY, int cubeZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
 		return cubesExist(
 				cubeX - 1, cubeY - 1, cubeZ - 1, cubeX + 1, cubeY + 1, cubeZ + 1, allowEmptyCubes, minStageAllowed);
 	}
 
 	private boolean cubesExist(int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ, boolean allowEmptyColumns, GeneratorStage minStageAllowed) {
+		if (this.enableWorldGenPerfHack) {
+			return true;
+		}
 		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
 			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {
