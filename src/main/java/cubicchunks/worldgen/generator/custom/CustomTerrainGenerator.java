@@ -128,10 +128,10 @@ public class CustomTerrainGenerator {
 		generateNoiseArrays(cube);
 		generateTerrainArray(cube);
 
-		generateTerrain_new(cube, this.rawDensity);
+		generateTerrain(cube, this.rawDensity);
 	}
 
-	private void generateTerrain_new(Cube cube, double[][][] input) {
+	private void generateTerrain(Cube cube, double[][][] input) {
 		int xSteps = X_SECTION_SIZE - 1;
 		int ySteps = Y_SECTION_SIZE - 1;
 		int zSteps = Z_SECTION_SIZE - 1;
