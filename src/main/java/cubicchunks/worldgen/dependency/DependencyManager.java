@@ -30,14 +30,13 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorPipeline;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 /*
- * TODO: Abstraction to allow for non-cube dependents.
  * TODO: Commenting
  */
 public class DependencyManager {
@@ -67,7 +66,7 @@ public class DependencyManager {
 			for (DependentCube dependentCube : dependentCubes) {
 				dependentCube.update(this, requiredCube);
 				if (dependentCube.isSatisfied()) {
-					generatorPipeline.resume(dependentCube.getCube());
+					this.generatorPipeline.resume(dependentCube.getCube());
 				}
 			}
 			return true;
@@ -80,9 +79,8 @@ public class DependencyManager {
 		HashSet<DependentCube> dependentCubes = this.requirementsToDependents.get(requirement.getCoords());
 		if (dependentCubes == null) {
 			dependentCubes = new HashSet<>();
-			requirementsToDependents.put(requirement.getCoords(), dependentCubes);
+			this.requirementsToDependents.put(requirement.getCoords(), dependentCubes);
 		}
-		
 		dependentCubes.add(dependentCube);
 
 		// Check if the cube is loaded.
@@ -99,16 +97,23 @@ public class DependencyManager {
 	
 	public void register(DependentCube dependentCube) {
 
-		// Remember the dependentCube.
-		CubeCoords coords = dependentCube.getCube().getCoords();
-		this.dependentMap.put(coords, dependentCube);
+		// Get the requirements
+		Collection<Requirement> requirements = dependentCube.getRequirements();
 
-		for (Requirement requirement : dependentCube.getRequirements()) {
-			addNewRequirement(dependentCube, requirement);
-		}
+		if (requirements.size() > 0) {
+			// Remember the dependentCube.
+			CubeCoords coords = dependentCube.getCube().getCoords();
+			this.dependentMap.put(coords, dependentCube);
+
+			for (Requirement requirement : dependentCube.getRequirements()) {
+				addNewRequirement(dependentCube, requirement);
+			}
 		
-		// If all requirements are met, resume.
-		if (dependentCube.isSatisfied()) {
+			// If all requirements are met, resume.
+			if (dependentCube.isSatisfied()) {
+				generatorPipeline.resume(dependentCube.getCube());
+			}
+		} else {
 			generatorPipeline.resume(dependentCube.getCube());
 		}
 	}
@@ -132,7 +137,7 @@ public class DependencyManager {
 	
 	// Returns true if the cube at the given point is required by other cubes currently being generated.
 	public boolean isRequired(CubeCoords coords) {
-		return requirementsToDependents.get(coords) != null;
+		return this.requirementsToDependents.get(coords) != null;
 	}
 
 

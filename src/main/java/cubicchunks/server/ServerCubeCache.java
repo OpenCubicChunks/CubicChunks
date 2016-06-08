@@ -344,6 +344,17 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		// Is the cube loaded?
 		Cube cube = column.getCube(cubeY);
 		if (cube != null) {
+
+			// Make sure the proper target stage is set.
+			if (cube.getTargetStage().precedes(targetStage)) {
+				cube.setTargetStage(targetStage);
+			}
+
+			// Resume generation if necessary.
+			if (cube.getCurrentStage().precedes(targetStage)) {
+				this.worldServer.getGeneratorPipeline().generate(cube);
+			}
+
 			return;
 		}
 
@@ -355,18 +366,15 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			return;
 		}
 
-		// If loading it didn't work...
-		if (cube == null) {
-			// ... and generating it was requested, generate it.
-			if (loadType == LOAD_OR_GENERATE) {
-				cube = column.getOrCreateCube(cubeY, true);
-				cube.setCurrentStage(this.worldServer.getGeneratorPipeline().getFirstStage());
-				cube.setTargetStage(targetStage);
-			// ... or quit.
-			} else {
-				return;
-			}
+		// If loading it didn't work and generating it was not requested, quit.
+		if (cube == null && loadType != LoadType.LOAD_OR_GENERATE) {
+			return;
 		}
+
+		// Have the column generate a new cube object and configure it for generation.
+		cube = column.getOrCreateCube(cubeY, true);
+		cube.setCurrentStage(this.worldServer.getGeneratorPipeline().getFirstStage());
+		cube.setTargetStage(targetStage);
 
 		// If the cube has yet to reach the target stage, resume generation.
 		if (cube.getCurrentStage().precedes(targetStage)) {
