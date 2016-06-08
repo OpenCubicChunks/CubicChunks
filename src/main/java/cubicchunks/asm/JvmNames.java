@@ -39,7 +39,8 @@ public class JvmNames {
 			ICOMMAND_SENDER = "Lnet/minecraft/command/ICommandSender;",
 			STRING = "Ljava/lang/String;",
 			ENTITY = "Lnet/minecraft/entity/Entity;",
-			ENTITy_PLAYER_MP = "Lnet/minecraft/entity/player/EntityPlayerMP;";
+			ENTITY_PLAYER_MP = "Lnet/minecraft/entity/player/EntityPlayerMP;",
+			STRUCTURE_BOUNDING_BOX = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;";
 
 	public static final String
 			BLOCK_POS_GETY = BLOCK_POS + "getY()I",
@@ -51,5 +52,6 @@ public class JvmNames {
 			CHUNK_CACHE_GET_LIGHT_FOR_EXT = CHUNK_CACHE + "getLightForExt(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
 			CHUNK_CACHE_GET_BLOCK_STATE = CHUNK_CACHE + "getBlockState(" + BLOCK_POS + ")" + IBLOCK_STATE,
 			COMMAND_TELEPORT_GET_ENTITY = COMMAND_TELEPORT + "getEntity(" + MINECRAFT_SERVER + ICOMMAND_SENDER + STRING + ")" + ENTITY,
-			COMMAND_TELEPORT_GET_COMMAND_SENDER_AS_PLAYER = COMMAND_TELEPORT + "getCommandSenderAsPlayer(" + ICOMMAND_SENDER + ")" + ENTITy_PLAYER_MP;
+			COMMAND_TELEPORT_GET_COMMAND_SENDER_AS_PLAYER = COMMAND_TELEPORT + "getCommandSenderAsPlayer(" + ICOMMAND_SENDER + ")" + ENTITY_PLAYER_MP,
+			COMMAND_BASE_PARSE_DOUBLE = COMMAND_BASE + "parseDouble" + "(D" + STRING + "IIZ)D";
 }
