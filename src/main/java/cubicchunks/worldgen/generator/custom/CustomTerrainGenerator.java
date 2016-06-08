@@ -24,17 +24,21 @@
 package cubicchunks.worldgen.generator.custom;
 
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
 import cubicchunks.worldgen.generator.custom.builder.BasicBuilder;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
+import static cubicchunks.util.Coords.CUBE_MAX_X;
+import static cubicchunks.util.Coords.CUBE_MAX_Y;
+import static cubicchunks.util.Coords.CUBE_MAX_Z;
+import static cubicchunks.util.Coords.localToBlock;
 import static cubicchunks.util.MathUtil.lerp;
-import static cubicchunks.util.TerrainGeneratorUtils.applyHeightGradient;
-import static cubicchunks.util.TerrainGeneratorUtils.expandNoiseArray;
-import static cubicchunks.util.TerrainGeneratorUtils.generateTerrain;
-import static cubicchunks.util.TerrainGeneratorUtils.getNewCubeSizedArray;
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.MAX_ELEV;
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.X_SECTIONS;
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.X_SECTION_SIZE;
@@ -91,8 +95,8 @@ public class CustomTerrainGenerator {
 		this.noiseArrayLow = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 		this.noiseArrayAlpha = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 
-		this.rawDensity = getNewCubeSizedArray();
-		this.expandedDensity = getNewCubeSizedArray();
+		this.rawDensity = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
+		this.expandedDensity = new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
 
 		this.builderHigh = createHighBuilder();
 		this.builderLow = createLowBuilder();
@@ -122,29 +126,109 @@ public class CustomTerrainGenerator {
 
 	public void generate(final Cube cube) {
 		generateNoiseArrays(cube);
-
 		generateTerrainArray(cube);
 
-		if (this.needsScaling) {
-			scaleNoiseArray(cube.getWorld().getProvider().getAverageGroundLevel());
-		}
-		expandNoiseArray(this.rawDensity, this.expandedDensity);
-		applyHeightGradient(cube, this.expandedDensity);
-		generateTerrain(cube, this.expandedDensity);
+		generateTerrain_new(cube, this.rawDensity);
 	}
 
-	/**
-	 * if rawDensity is ranged from -1 to 1, use this to scale it up
-	 */
-	private final void scaleNoiseArray(final int seaLevel) {
-		for (int x = 0; x < X_SECTIONS; x++) {
-			for (int z = 0; z < Z_SECTIONS; z++) {
-				for (int y = 0; y < Y_SECTIONS; y++) {
-					this.rawDensity[x][y][z] *= MAX_ELEV;
-					this.rawDensity[x][y][z] += seaLevel;
+	private void generateTerrain_new(Cube cube, double[][][] input) {
+		int xSteps = X_SECTION_SIZE - 1;
+		int ySteps = Y_SECTION_SIZE - 1;
+		int zSteps = Z_SECTION_SIZE - 1;
+
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+
+		// use the noise to generate the generator
+		for (int noiseX = 0; noiseX < X_SECTIONS - 1; noiseX++) {
+			for (int noiseZ = 0; noiseZ < Z_SECTIONS - 1; noiseZ++) {
+				for (int noiseY = 0; noiseY < Y_SECTIONS - 1; noiseY++) {
+					// get the noise samples
+					double x0y0z0 = input[noiseX][noiseY][noiseZ];
+					double x0y0z1 = input[noiseX][noiseY][noiseZ + 1];
+					double x1y0z0 = input[noiseX + 1][noiseY][noiseZ];
+					double x1y0z1 = input[noiseX + 1][noiseY][noiseZ + 1];
+
+					double x0y1z0 = input[noiseX][noiseY + 1][noiseZ];
+					double x0y1z1 = input[noiseX][noiseY + 1][noiseZ + 1];
+					double x1y1z0 = input[noiseX + 1][noiseY + 1][noiseZ];
+					double x1y1z1 = input[noiseX + 1][noiseY + 1][noiseZ + 1];
+
+					for (int x = 0; x < xSteps; x++) {
+						int xRel = noiseX*xSteps + x;
+
+						double xd = (double) x/xSteps;
+
+						// interpolate along x
+						double xy0z0 = lerp(xd, x0y0z0, x1y0z0);
+						double xy0z1 = lerp(xd, x0y0z1, x1y0z1);
+						double xy1z0 = lerp(xd, x0y1z0, x1y1z0);
+						double xy1z1 = lerp(xd, x0y1z1, x1y1z1);
+
+						for (int z = 0; z < zSteps; z++) {
+							int zRel = noiseZ*zSteps + z;
+
+							double zd = (double) z/zSteps;
+
+							// interpolate along z
+							double xy0z = lerp(zd, xy0z0, xy0z1);
+							double xy1z = lerp(zd, xy1z0, xy1z1);
+
+							for (int y = 0; y < ySteps; y++) {
+								int yRel = noiseY*ySteps + y;
+
+								double yd = (double) y/ySteps;
+
+								// interpolate along y
+								double xyz = lerp(yd, xy0z, xy1z);
+
+								//values needed to calculate gradient vector
+								double xyz0 = lerp(yd, xy0z0, xy1z0);
+								double xyz1 = lerp(yd, xy0z1, xy1z1);
+
+								double x0y0z = lerp(zd, x0y0z0, x0y0z1);
+								double x0y1z = lerp(zd, x0y1z0, x0y1z1);
+								double x1y0z = lerp(zd, x1y0z0, x1y0z1);
+								double x1y1z = lerp(zd, x1y1z0, x1y1z1);
+
+								double x0yz = lerp(yd, x0y0z, x0y1z);
+								double x1yz = lerp(yd, x1y0z, x1y1z);
+
+								//calculate gradient vector
+								double xGrad = (x1yz - x0yz)/xSteps;
+								double yGrad = (xy1z - xy0z)/ySteps;
+								double zGrad = (xyz1 - xyz0)/zSteps;
+
+								pos.setPos(
+										localToBlock(cube.getX(), xRel),
+										localToBlock(cube.getY(), yRel),
+										localToBlock(cube.getZ(), zRel)
+								);
+								IBlockState state = getBlockStateFor(pos, xyz, xGrad, yGrad, zGrad);
+								cube.setBlockForGeneration(pos, state);
+							}
+						}
+					}
 				}
 			}
 		}
+	}
+
+	private IBlockState getBlockStateFor(BlockPos pos, double density, double xGrad, double yGrad, double zGrad) {
+		final double dirtDepth = 4;
+		IBlockState state = Blocks.AIR.getDefaultState();
+		if(density > 0) {
+			state = Blocks.STONE.getDefaultState();
+			//if the block above would be empty:
+			if(density + yGrad <= 0) {
+				state = Blocks.GRASS.getDefaultState();
+				//if density decreases as we go down && density < dirtDepth
+			} else if(yGrad < 0 && density < dirtDepth) {
+				state = Blocks.DIRT.getDefaultState();
+			}
+		} else if(pos.getY() < 64) {
+			state = Blocks.WATER.getDefaultState();
+		}
+		return state;
 	}
 
 	private IBuilder createHighBuilder() {
@@ -269,7 +353,7 @@ public class CustomTerrainGenerator {
 						// final double a = ( yAbs - ( maxYSections - 4 ) ) / 3.0F;
 						// output = output * ( 1.0D - a ) - 10.0D * a;
 					}
-					this.rawDensity[x][y][z] = output;
+					this.rawDensity[x][y][z] = output*GlobalGeneratorConfig.MAX_ELEV + 64 - yAbs * MAX_ELEV;
 				}
 			}
 		}
