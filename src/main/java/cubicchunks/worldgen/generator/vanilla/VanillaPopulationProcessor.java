@@ -86,8 +86,8 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 		Cube c01 = provider.getCube(c00.getX(), c00.getY(), c00.getZ() + 1);
 		Cube c11 = provider.getCube(c00.getX() + 1, c00.getY(), c00.getZ() + 1);
 		Cube c10 = provider.getCube(c00.getX() + 1, c00.getY(), c00.getZ());
-		return c01 != null && !c01.getCurrentStage().precedes(generatorStage) &&
-				c11 != null && !c11.getCurrentStage().precedes(generatorStage) &&
-				c10 != null && !c10.getCurrentStage().precedes(generatorStage);
+		return c01 != null && !c01.isBeforeStage(generatorStage) &&
+				c11 != null && !c11.isBeforeStage(generatorStage) &&
+				c10 != null && !c10.isBeforeStage(generatorStage);
 	}
 }

@@ -310,6 +310,6 @@ public class FirstLightProcessor extends CubeProcessor {
 		final int totalRadius = lightUpdateRadius + cubeSizeRadius + bufferRadius;
 
 		// only continue if the neighboring cubes are at least in the lighting stage
-		return cube.getWorld().blocksExist(cubeCenter, totalRadius, false, generatorStage);
+		return cube.getWorld().testForCubes(cubeCenter, totalRadius, c -> !c.isBeforeStage(generatorStage));
 	}
 }

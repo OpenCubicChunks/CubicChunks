@@ -25,12 +25,11 @@ package cubicchunks.asm.mixin.core;
 
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.BlankColumn;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -55,8 +54,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Random;
+import java.util.function.Predicate;
 
 import static cubicchunks.util.Coords.blockToCube;
 
@@ -140,40 +141,40 @@ public abstract class MixinWorld implements ICubicWorld {
 	}
 
 	@Override public ICubeCache getCubeCache() {
+		if(!this.isCubicWorld()) {
+			throw new NotCubicChunksWorldException();
+		}
 		return (ICubeCache) this.chunkProvider;
 	}
 
 	@Override public LightingManager getLightingManager() {
+		if(!this.isCubicWorld()) {
+			throw new NotCubicChunksWorldException();
+		}
 		return this.lightingManager;
 	}
 
 	@Override
-	public boolean blocksExist(BlockPos pos, int dist, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
-		return blocksExist(
-				pos.getX() - dist, pos.getY() - dist, pos.getZ() - dist,
-				pos.getX() + dist, pos.getY() + dist, pos.getZ() + dist,
-				allowEmptyCubes,
-				minStageAllowed
-		);
-	}
-
-	@Override
-	public boolean blocksExist(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, boolean allowEmptyColumns, GeneratorStage minStageAllowed) {
-
+	public boolean testForCubes(CubeCoords start, CubeCoords end, @Nullable Predicate<Cube> cubeAllowed) {
 		// convert block bounds to chunk bounds
-		int minCubeX = blockToCube(minBlockX);
-		int minCubeY = blockToCube(minBlockY);
-		int minCubeZ = blockToCube(minBlockZ);
-		int maxCubeX = blockToCube(maxBlockX);
-		int maxCubeY = blockToCube(maxBlockY);
-		int maxCubeZ = blockToCube(maxBlockZ);
+		int minCubeX = start.getCubeX();
+		int minCubeY = start.getCubeY();
+		int minCubeZ = start.getCubeZ();
+		int maxCubeX = end.getCubeX();
+		int maxCubeY = end.getCubeY();
+		int maxCubeZ = end.getCubeZ();
 
-		return cubesExist(minCubeX, minCubeY, minCubeZ, maxCubeX, maxCubeY, maxCubeZ, allowEmptyColumns, minStageAllowed);
-
-	}
-
-	@Override public boolean cubeAndNeighborsExist(Cube cube, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
-		return cubeAndNeighborsExist(cube.getX(), cube.getY(), cube.getZ(), allowEmptyCubes, minStageAllowed);
+		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
+			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
+				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {
+					Cube cube = this.getCubeCache().getCube(cubeX, cubeY, cubeZ);
+					if (cube == null || (cubeAllowed != null && !cubeAllowed.test(cube))) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
 	}
 
 	@Override public Cube getCubeForAddress(long address) {
@@ -190,30 +191,6 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Override public Cube getCubeFromBlockCoords(BlockPos pos) {
 		return this.getCubeFromCubeCoords(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()));
-	}
-
-	private boolean cubeAndNeighborsExist(int cubeX, int cubeY, int cubeZ, boolean allowEmptyCubes, GeneratorStage minStageAllowed) {
-		return cubesExist(
-				cubeX - 1, cubeY - 1, cubeZ - 1, cubeX + 1, cubeY + 1, cubeZ + 1, allowEmptyCubes, minStageAllowed);
-	}
-
-	private boolean cubesExist(int minCubeX, int minCubeY, int minCubeZ, int maxCubeX, int maxCubeY, int maxCubeZ, boolean allowEmptyColumns, GeneratorStage minStageAllowed) {
-		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
-			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
-				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {
-					Cube cube = this.getCubeCache().getCube(cubeX, cubeY, cubeZ);
-					if (cube == null) {
-						return false;
-					}
-					Column column = cube.getColumn();
-					if ((!allowEmptyColumns && column instanceof BlankColumn)
-							|| (minStageAllowed != null && cube.getCurrentStage().precedes(minStageAllowed))) {
-						return false;
-					}
-				}
-			}
-		}
-		return true;
 	}
 
 	//vanilla field accessors

@@ -62,7 +62,7 @@ public class CustomPopulationProcessor extends CubeProcessor {
 	@Override
 	public Set<Cube> calculate(Cube cube) {
 		if (true) return Sets.newHashSet(cube);
-		if (!cube.getWorld().cubeAndNeighborsExist(cube, true, generatorStage)) {
+		if (!cube.getWorld().testForCubeAndNeighbor(cube, c -> c.isBeforeStage(generatorStage))) {
 			return Collections.EMPTY_SET;
 		}
 
