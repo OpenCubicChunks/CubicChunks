@@ -30,6 +30,7 @@ import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
+import cubicchunks.debug.Prof;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -58,7 +59,7 @@ import static cubicchunks.util.ChunkProviderOverworldAccess.setBiomesForGenerati
 import static cubicchunks.util.ChunkProviderOverworldAccess.setBlocksInChunk;
 
 public class VanillaTerrainProcessor extends CubeProcessor {
-	
+
 	private GeneratorStage surfaceStage;
 	private final ChunkProviderOverworld vanillaGen;
 	private ICubicWorldServer world;
@@ -74,6 +75,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 
 
 	@Override public Set<Cube> calculate(Cube cube) {
+		Prof.call("VanillaTerrainProcessor#calculate(Cube)");
 		if (cube.getY() < 0) {
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 			for (int x = 0; x < 16; x++) {
@@ -102,6 +104,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 	}
 
 	private void generateVanillaChunk(Cube cube) {
+		Prof.call("VanillaTerrainProcessor#generateVanillaChunk(Cube)");
 		int x = cube.getX();
 		int z = cube.getZ();
 		getRand(this.vanillaGen).setSeed((long) x*341873128712L + (long) z*132897987541L);

@@ -25,6 +25,7 @@ package cubicchunks.asm.mixin.core;
 
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.BlankCube;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -166,10 +167,11 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 		if (!this.isCubicWorld()) {
 			return;
 		}
-		boolean ret = this.blocksExist(
+		boolean ret = this.testForCubes(
 				xStart, yStart, zStart,
 				xEnd, yEnd, zEnd,
-				allowEmpty, GeneratorStage.LIGHTING
+				cube -> (allowEmpty || !(cube instanceof BlankCube)) &&
+						!cube.isBeforeStage(GeneratorStage.LIGHTING)
 		);
 		cbi.cancel();
 		cbi.setReturnValue(ret);

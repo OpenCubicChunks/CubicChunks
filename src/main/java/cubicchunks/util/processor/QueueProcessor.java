@@ -83,6 +83,8 @@ public abstract class QueueProcessor<T> {
 
 			// process it
 			processBatch();
+
+			this.queue.removeAll(this.processedAddresses);
 		}
 
 		// put the deferred addresses back on the queue
@@ -102,6 +104,7 @@ public abstract class QueueProcessor<T> {
 
 		// put the deferred addresses back on the queue
 		this.queue.addAll(this.deferredAddresses);
+		this.queue.removeAll(this.processedAddresses);
 
 		return this.processedAddresses.size();
 	}
