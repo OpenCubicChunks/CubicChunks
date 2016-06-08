@@ -21,25 +21,28 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.dependency;
+package cubicchunks.world;
 
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.cube.Cube;
+public class NotCubicChunksWorldException extends RuntimeException {
+	public NotCubicChunksWorldException() {
+		super();
+	}
 
-/*
- * TODO: Commenting
- */
-import java.util.Collection;
+	public NotCubicChunksWorldException(String message) {
+		super(message);
+	}
 
-public interface Dependent {
+	public NotCubicChunksWorldException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-	boolean update(DependencyManager manager, Cube requiredCube);
+	public NotCubicChunksWorldException(Throwable cause) {
+		super(cause);
+	}
 
-	boolean isSatisfied();
-
-	Collection<Requirement> getRequirements();
-
-	Requirement getRequirementFor(CubeCoords coords);
-
-	void addRequirement(Requirement requirement);
+	protected NotCubicChunksWorldException(String message, Throwable cause,
+	                           boolean enableSuppression,
+	                           boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
 }

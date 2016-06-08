@@ -23,12 +23,15 @@
  */
 package cubicchunks.util;
 
+import net.minecraft.util.math.BlockPos;
+
 import static cubicchunks.util.Coords.CUBE_MAX_X;
 import static cubicchunks.util.Coords.CUBE_MAX_Y;
 import static cubicchunks.util.Coords.CUBE_MAX_Z;
 import static cubicchunks.util.Coords.HALF_CUBE_MAX_X;
 import static cubicchunks.util.Coords.HALF_CUBE_MAX_Y;
 import static cubicchunks.util.Coords.HALF_CUBE_MAX_Z;
+import static cubicchunks.util.Coords.blockToCube;
 
 /**
  * Position of a cube.
@@ -184,5 +187,21 @@ public class CubeCoords {
 
 	public int getMinBlockZ() {
 		return Coords.cubeToMinBlock(cubeX);
+	}
+
+	public BlockPos getCenterBlockPos() {
+		return new BlockPos(getXCenter(), getYCenter(), getZCenter());
+	}
+
+	public CubeCoords sub(int dx, int dy, int dz) {
+		return this.add(-dx, -dy, -dz);
+	}
+
+	public CubeCoords add(int dx, int dy, int dz) {
+		return new CubeCoords(getCubeX() + dx, getCubeY() + dy, getCubeZ() + dz);
+	}
+
+	public static CubeCoords fromBlockCoords(int blockX, int blockY, int blockZ) {
+		return new CubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
 	}
 }

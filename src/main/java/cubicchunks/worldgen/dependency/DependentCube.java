@@ -39,13 +39,14 @@ public class DependentCube implements Dependent {
 
 	private Map<CubeCoords, Requirement> requirements;
 
-	int remaining;
+	private int remaining;
 
 
 	public DependentCube(Cube cube, Dependency dependency) {
 		this.cube = cube;
 		this.dependency = dependency;
 		this.requirements = new HashMap<>();
+
 		for (Requirement requirement : dependency.getRequirements(cube)) {
 			this.requirements.put(requirement.getCoords(), requirement);
 		}

@@ -24,11 +24,13 @@
 package cubicchunks.worldgen.generator.vanilla;
 
 import com.google.common.collect.Sets;
+import cubicchunks.CubicChunks;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
+import cubicchunks.debug.Prof;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
 import java.util.Collections;
@@ -58,6 +60,7 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 		if (!canPopulate(cube)) {
 			return Collections.EMPTY_SET;
 		}
+		Prof.call("VanillaPopulationProcessor#calculate(Cube)[s]");
 		Set<Cube> cubes = new HashSet<>();
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
 			Cube currentCube = this.provider.forceLoadCube(cube, cube.getX(), cubeY, cube.getZ());
@@ -69,22 +72,22 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 			}
 			cubes.add(currentCube);
 		}
-		world.setGeneratingWorld(true);
 		try {
+			Prof.call("ChunkProviderOverworld#populate(Cube)");
 			this.vanillaGen.populate(cube.getX(), cube.getZ());
 		} catch (RuntimeException ex) {
-			ex.printStackTrace();
+			CubicChunks.LOGGER.error("Exception when populating chunk at " + cube.getX() + ", " + cube.getZ(), ex);
 		}
-		world.setGeneratingWorld(false);
 		return cubes;
 	}
 
 	private boolean canPopulate(Cube c00) {
+		Prof.call("VanillaPopulationProcessor#canPopulate(Cube)");
 		Cube c01 = provider.getCube(c00.getX(), c00.getY(), c00.getZ() + 1);
 		Cube c11 = provider.getCube(c00.getX() + 1, c00.getY(), c00.getZ() + 1);
 		Cube c10 = provider.getCube(c00.getX() + 1, c00.getY(), c00.getZ());
-		return c01 != null && !c01.getCurrentStage().precedes(generatorStage) &&
-				c11 != null && !c11.getCurrentStage().precedes(generatorStage) &&
-				c10 != null && !c10.getCurrentStage().precedes(generatorStage);
+		return c01 != null && !c01.isBeforeStage(generatorStage) &&
+				c11 != null && !c11.isBeforeStage(generatorStage) &&
+				c10 != null && !c10.isBeforeStage(generatorStage);
 	}
 }

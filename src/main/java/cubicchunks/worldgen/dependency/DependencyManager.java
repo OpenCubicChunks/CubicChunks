@@ -42,9 +42,9 @@ import java.util.Set;
 public class DependencyManager {
 
 	private ServerCubeCache cubeProvider;
-	
+
 	private GeneratorPipeline generatorPipeline;
-	
+
 	private Map<CubeCoords, HashSet<DependentCube>> requirementsToDependents;
 
 	private Map<CubeCoords, DependentCube> dependentMap;
@@ -92,9 +92,9 @@ public class DependencyManager {
 		// Otherwise load it.
 		} else {
 			this.cubeProvider.loadCube(requirement.getCoords(), LoadType.LOAD_OR_GENERATE, requirement.getTargetStage());
-		}		
+		}
 	}
-	
+
 	public void register(DependentCube dependentCube) {
 
 		// Get the requirements
@@ -117,7 +117,7 @@ public class DependencyManager {
 			generatorPipeline.resume(dependentCube.getCube());
 		}
 	}
-		
+
 	public void unregister(Cube cube) {
 		DependentCube dependentCube = this.dependentMap.get(cube.getCoords());
 		if (dependentCube != null) {
@@ -132,9 +132,8 @@ public class DependencyManager {
 			}
 		}
 	}
-	
-	
-	
+
+
 	// Returns true if the cube at the given point is required by other cubes currently being generated.
 	public boolean isRequired(CubeCoords coords) {
 		return this.requirementsToDependents.get(coords) != null;

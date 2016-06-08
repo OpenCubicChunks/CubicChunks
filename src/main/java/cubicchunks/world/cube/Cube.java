@@ -354,6 +354,10 @@ public class Cube {
 		return this.currentStage;
 	}
 
+	public boolean isBeforeStage(GeneratorStage stage) {
+		return this.getCurrentStage().precedes(stage);
+	}
+
 	public void setCurrentStage(GeneratorStage val) {
 		this.currentStage = val;
 	}

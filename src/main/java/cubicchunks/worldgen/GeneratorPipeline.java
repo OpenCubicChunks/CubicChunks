@@ -52,8 +52,8 @@ public class GeneratorPipeline {
 
 	public GeneratorPipeline(ServerCubeCache cubes) {
 		this.cubes = cubes;
-		this.stages = new ArrayList<GeneratorStage>();
-		this.stageMap = new HashMap<String, GeneratorStage>();
+		this.stages = new ArrayList<>();
+		this.stageMap = new HashMap<>();
 		this.stageMap.put(GeneratorStage.LIVE.getName(), GeneratorStage.LIVE);
 		this.dependencyManager = new DependencyManager(cubes, this);
 	}

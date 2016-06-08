@@ -23,8 +23,12 @@
  */
 package cubicchunks.asm.mixin.nocritical.client;
 
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.client.renderer.ViewFrustum;
+import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -33,16 +37,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ViewFrustum.class)
 public class MixinViewFrustum_VertViewDistance {
+	@Shadow @Final protected World world;
 	private int renderDistance = 16;
 
 	//this one can fail, there is safe default
 	@Inject(method = "setCountChunksXYZ", at = @At(value = "HEAD"))
 	private void onSetCountChunks(int renderDistance, CallbackInfo cbi) {
-		this.renderDistance = renderDistance;
+		if (((ICubicWorld) world).isCubicWorld()) {
+			this.renderDistance = renderDistance * 2 + 1;
+		} else {
+			this.renderDistance = 16;
+		}
 	}
 
 	@ModifyConstant(method = "setCountChunksXYZ", constant = @Constant(intValue = 16))
 	private int getYViewDistance(int oldDistance) {
-		return renderDistance*2 + 1;
+		return renderDistance;
 	}
 }

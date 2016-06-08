@@ -26,6 +26,7 @@ package cubicchunks.worldgen.dependency;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
@@ -40,7 +41,7 @@ import net.minecraft.util.math.Vec3i;
  * @see cubicchunks.worldgen.dependency.DependencyManager
  */
 public class RegionDependency implements Dependency {
-	
+
 	private GeneratorStage targetStage;
 
 	private int xLow;
@@ -81,7 +82,7 @@ public class RegionDependency implements Dependency {
 
 	public Collection<Requirement> getRequirements(Cube cube) {
 
-		HashSet<Requirement> requirements = new HashSet<>();
+		Set<Requirement> requirements = new HashSet<>();
 
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();

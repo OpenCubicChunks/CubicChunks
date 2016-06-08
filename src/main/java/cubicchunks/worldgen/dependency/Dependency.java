@@ -35,19 +35,20 @@ public interface Dependency {
 
 	/**
 	 * This collection specifies which cubes must be loaded for a given cube's requirements to be satisfied.
-	 * 
+	 *
 	 * @return A collection of Requirements specifying the given cube's requirements.
 	 */
-	public Collection<Requirement> getRequirements(Cube cube);
+	Collection<Requirement> getRequirements(Cube cube);
 
 	/**
 	 * Called when the given cube is loaded or entered the next generation stage.
-	 * 
+	 *
 	 * @param manager The DependencyManager used by the server.
 	 * @param dependentCube The dependentCube for which the update is called.
 	 * @param requiredCube The updated cube.
 	 * @return True iff the dependentCube no longer requires the given cube.
 	 */
-	public boolean update(DependencyManager manager, DependentCube dependentCube, Cube requiredCube);
+	boolean update(DependencyManager manager, DependentCube dependentCube, Cube requiredCube);
+
 
 }

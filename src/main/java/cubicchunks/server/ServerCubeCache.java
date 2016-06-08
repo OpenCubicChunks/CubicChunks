@@ -25,7 +25,6 @@ package cubicchunks.server;
 
 import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
-import cubicchunks.server.ServerCubeCache.LoadType;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
@@ -377,7 +376,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		cube.setTargetStage(targetStage);
 
 		// If the cube has yet to reach the target stage, resume generation.
-		if (cube.getCurrentStage().precedes(targetStage)) {
+		if (cube.isBeforeStage(targetStage)) {
 			this.worldServer.getGeneratorPipeline().generate(cube);
 		}
 
