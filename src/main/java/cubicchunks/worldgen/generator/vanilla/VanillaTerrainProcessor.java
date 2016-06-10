@@ -77,15 +77,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 	@Override public Set<Cube> calculate(Cube cube) {
 		Prof.call("VanillaTerrainProcessor#calculate(Cube)");
 		if (cube.getY() < 0) {
-			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-			for (int x = 0; x < 16; x++) {
-				for (int z = 0; z < 16; z++) {
-					for (int y = 0; y < 16; y++) {
-						pos.setPos(x, y, z);
-						cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
-					}
-				}
-			}
+			fillCube(cube, Blocks.STONE.getDefaultState());
 			return Sets.newHashSet(cube);
 		}
 		if (cube.getY() >= 16) {
@@ -152,6 +144,9 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 			Cube currCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
 			currCube.setCurrentStage(nextStage);
 			if(cubeY < 0 || cubeY >= 16) {
+				if(cubeY < 0) {
+					fillCube(currCube, Blocks.STONE.getDefaultState());
+				}
 				continue;
 			}
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
@@ -171,4 +166,15 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 		}
 	}
 
+	private void fillCube(Cube cube, IBlockState state) {
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		for (int x = 0; x < 16; x++) {
+			for (int z = 0; z < 16; z++) {
+				for (int y = 0; y < 16; y++) {
+					pos.setPos(x, y, z);
+					cube.setBlockForGeneration(pos, state);
+				}
+			}
+		}
+	}
 }
