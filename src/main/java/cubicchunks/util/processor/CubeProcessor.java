@@ -69,6 +69,7 @@ public abstract class CubeProcessor extends QueueProcessor<Long> {
 				progress.incrementProgress();
 			}
 		}
+		this.deferredAddresses.removeAll(this.processedAddresses);
 	}
 
 	public abstract Set<Cube> calculate(Cube cube);

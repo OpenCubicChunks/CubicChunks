@@ -60,14 +60,14 @@ import static cubicchunks.util.ChunkProviderOverworldAccess.setBlocksInChunk;
 
 public class VanillaTerrainProcessor extends CubeProcessor {
 
-	private GeneratorStage surfaceStage;
+	private GeneratorStage nextStage;
 	private final ChunkProviderOverworld vanillaGen;
 	private ICubicWorldServer world;
 	private ServerCubeCache provider;
 
-	public VanillaTerrainProcessor(GeneratorStage surfaceStage, ICubicWorldServer world, ChunkProviderOverworld vanillaGen, int batchSize) {
+	public VanillaTerrainProcessor(GeneratorStage nextStage, ICubicWorldServer world, ChunkProviderOverworld vanillaGen, int batchSize) {
 		super("Terrain", world.getCubeCache(), batchSize);
-		this.surfaceStage = surfaceStage;
+		this.nextStage = nextStage;
 		this.world = world;
 		this.provider = world.getCubeCache();
 		this.vanillaGen = vanillaGen;
@@ -92,7 +92,9 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 			return Sets.newHashSet(cube);
 		}
 		Set<Cube> cubes = new HashSet<>();
-		for (int i = 0; i < 16; i++) {
+
+		//+/-2 for lighting
+		for (int i = 0 - 2; i < 16 + 2; i++) {
 			if (i != cube.getY()) {
 				Cube newCube = this.provider.forceLoadCube(cube, cube.getX(), i, cube.getZ());
 				cubes.add(newCube);
@@ -146,9 +148,12 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 				getOceanMonumentGenerator(this.vanillaGen).generate((World) this.world, x, z, chunkprimer);
 			}
 		}
-		for (int cubeY = 0; cubeY < 16; cubeY++) {
+		for (int cubeY = 0-2; cubeY < 16+2; cubeY++) {
 			Cube currCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
-			currCube.setCurrentStage(surfaceStage);
+			currCube.setCurrentStage(nextStage);
+			if(cubeY < 0 || cubeY >= 16) {
+				continue;
+			}
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 			for (int localX = 0; localX < 16; localX++) {
 				for (int localY = 0; localY < 16; localY++) {

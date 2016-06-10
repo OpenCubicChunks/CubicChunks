@@ -24,6 +24,7 @@
 package cubicchunks.world.column;
 
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -34,22 +35,28 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
+import java.util.Collection;
+import java.util.Collections;
+
 public class BlankColumn extends Column {
+
+	private final Cube blankCube;
 
 	public BlankColumn(ICubicWorld world, int cubeX, int cubeZ) {
 		super(world, cubeX, cubeZ);
+		this.blankCube = new BlankCube(world, this);
 	}
 
 	// column overrides
 
 	@Override
 	public Cube getOrCreateCube(int cubeY, boolean isModified) {
-		throw new UnsupportedOperationException();
+		return blankCube;
 	}
 
 	@Override
 	public Cube removeCube(int cubeY) {
-		throw new UnsupportedOperationException();
+		return blankCube;
 	}
 
 	@Override
@@ -258,5 +265,15 @@ public class BlankColumn extends Column {
 
 	@Override
 	public void setInhabitedTime(final long a1) {
+	}
+
+	@Override
+	public Collection<Cube> getAllCubes() {
+		return Collections.EMPTY_SET;
+	}
+
+	@Override
+	public Iterable<Cube> getCubes(int minY, int maxY) {
+		return Collections.EMPTY_SET;
 	}
 }

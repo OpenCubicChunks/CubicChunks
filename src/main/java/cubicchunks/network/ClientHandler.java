@@ -91,8 +91,9 @@ public class ClientHandler implements INetHandler {
 			cube = column.getOrCreateCube(cubeY, false);
 		} else {
 			cube = column.getCube(cubeY);
-			if (cube == null) {
-				CubicChunks.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
+			assert cube != null;
+			if (cube instanceof BlankCube) {
+				CubicChunks.LOGGER.error("Ignored cube update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
 				return;
 			}
 		}
@@ -190,7 +191,7 @@ public class ClientHandler implements INetHandler {
 		int cubeZ = getZ(packet.cubeAddress);
 		Cube cube = cubeCache.getCube(cubeX, cubeY, cubeZ);
 		if (cube instanceof BlankCube) {
-			CubicChunks.LOGGER.error("Ignored update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
+			CubicChunks.LOGGER.error("Ignored block update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
 			return;
 		}
 

@@ -74,6 +74,7 @@ public abstract class MixinWorld implements ICubicWorld {
 	protected LightingManager lightingManager;
 	protected boolean isCubicWorld;
 	protected int minHeight = 0, maxHeight = 256;
+	private boolean wgenFullRelight;
 
 	protected void setSaveHandler(ISaveHandler newSaveHandler) {
 		this.saveHandler = newSaveHandler;
@@ -156,6 +157,9 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Override
 	public boolean testForCubes(CubeCoords start, CubeCoords end, @Nullable Predicate<Cube> cubeAllowed) {
+		if(wgenFullRelight) {
+			return true;
+		}
 		// convert block bounds to chunk bounds
 		int minCubeX = start.getCubeX();
 		int minCubeY = start.getCubeY();
@@ -300,5 +304,10 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Intrinsic public BlockPos world$getSpawnPoint() {
 		return this.getSpawnPoint();
+	}
+
+	@Override
+	public void setGeneratingWorld(boolean generating) {
+		this.wgenFullRelight = generating;
 	}
 }

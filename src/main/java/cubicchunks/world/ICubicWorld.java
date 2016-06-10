@@ -181,4 +181,7 @@ public interface ICubicWorld {
 	BiomeProvider getBiomeProvider();
 
 	BlockPos getSpawnPoint();
+
+	//this is a hack
+	void setGeneratingWorld(boolean generating);
 }
