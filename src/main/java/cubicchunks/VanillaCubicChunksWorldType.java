@@ -32,10 +32,9 @@ import cubicchunks.worldgen.generator.vanilla.VanillaFirstLightProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
-public class VanillaCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
+public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 
 	public VanillaCubicChunksWorldType() {
 		super("VanillaCubic");

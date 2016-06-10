@@ -23,31 +23,26 @@
  */
 package cubicchunks;
 
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.ServerCubeCache;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorPipeline;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import net.minecraft.world.WorldType;
 
-public class FlatCubicChunksWorldType extends BaseCubicWorldType {
+public abstract class BaseCubicWorldType extends WorldType implements ICubicChunksWorldType {
 
-	public FlatCubicChunksWorldType() {
-		super("FlatCubic");
+	public BaseCubicWorldType(String name) {
+		super(name);
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
-		ServerCubeCache cubeCache = world.getCubeCache();
-		// init the worldgen pipeline
-		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
-		GeneratorStage lighting = new IndependentGeneratorStage("lighting");
-		
-		pipeline.addStage(terrain, new FlatTerrainProcessor(cubeCache, 5));
-		pipeline.addStage(lighting, new FirstLightProcessor(lighting, "Lighting", cubeCache, 5));
-	}
-
-	public static void create() {
-		new FlatCubicChunksWorldType();
+	/**
+	 * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
+	 * <p>
+	 * In EntityRenderer.updateFogColor entity Y position is multiplied by
+	 * value returned by this method.
+	 * <p>
+	 * If this method returns any real number - then the void fog factor can be <= 0.
+	 * But if this method returns NaN - the result is always NaN. And Minecraft enables void fog only of the value is < 1.
+	 * And since any comparison with NaN returns false - void fog is effectively disabled.
+	 */
+	@Override
+	public double voidFadeMagnitude() {
+		return Double.NaN;
 	}
 }

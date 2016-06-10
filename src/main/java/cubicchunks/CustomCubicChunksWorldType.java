@@ -32,9 +32,8 @@ import cubicchunks.worldgen.IndependentGeneratorStage;
 import cubicchunks.worldgen.generator.custom.CustomFeatureProcessor;
 import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
-import net.minecraft.world.WorldType;
 
-public class CustomCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
+public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 
 	public CustomCubicChunksWorldType() {
 		super("CustomCubic");
