@@ -69,7 +69,7 @@ public class GeneratorPipeline {
 		for (GeneratorStage stage : this.stages) {
 			if (!stage.isLastStage()) {
 				if (stage.getProcessor() == null) {
-					throw new Error("Generator pipline configured incorrectly! Stage " + stage.getName() +
+					throw new Error("Generator pipeline configured incorrectly! Stage " + stage.getName() +
 							" is null! Fix your WorldServerContext constructor!");
 				}
 			}

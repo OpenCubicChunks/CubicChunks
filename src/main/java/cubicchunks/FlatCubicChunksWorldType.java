@@ -29,7 +29,6 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.worldgen.generator.NullProcessor;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 import net.minecraft.world.WorldType;
 
@@ -43,9 +42,10 @@ public class FlatCubicChunksWorldType extends WorldType implements ICubicChunksW
 		ServerCubeCache cubeCache = world.getCubeCache();
 		// init the worldgen pipeline
 		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
+		GeneratorStage lighting = new IndependentGeneratorStage("lighting");
 		
 		pipeline.addStage(terrain, new FlatTerrainProcessor(cubeCache, 5));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(null, "Lighting", cubeCache, 5));
+		pipeline.addStage(lighting, new FirstLightProcessor(lighting, "Lighting", cubeCache, 5));
 	}
 
 	public static void create() {

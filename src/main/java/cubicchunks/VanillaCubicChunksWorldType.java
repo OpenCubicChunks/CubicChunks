@@ -35,8 +35,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
-import static cubicchunks.worldgen.GeneratorStage.LIGHTING;
-
 public class VanillaCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
 
 	public VanillaCubicChunksWorldType() {
@@ -50,10 +48,11 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicChun
 		
 		// init the worldgen pipeline
 		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
+		GeneratorStage lighting = new IndependentGeneratorStage("lighting");
 		GeneratorStage population = new IndependentGeneratorStage("population");		
 		
-		pipeline.addStage(terrain, new VanillaTerrainProcessor(LIGHTING, world, vanillaGen, 5));
-		pipeline.addStage(LIGHTING, new VanillaFirstLightProcessor(LIGHTING, population, cubeCache, 5));
+		pipeline.addStage(terrain, new VanillaTerrainProcessor(lighting, world, vanillaGen, 5));
+		pipeline.addStage(lighting, new VanillaFirstLightProcessor(lighting, population, cubeCache, 5));
 		pipeline.addStage(population, new VanillaPopulationProcessor(population, world, vanillaGen, 5));
 
 	}
