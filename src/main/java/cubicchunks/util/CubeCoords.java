@@ -98,7 +98,7 @@ public class CubeCoords {
 	 */
 	@Override
 	public String toString() {
-		return this.cubeX + "," + this.cubeY + "," + this.cubeZ;
+		return String.format("CubeCoords(%d, %d, %d)", cubeX, cubeY, cubeZ);
 	}
 
 	/**

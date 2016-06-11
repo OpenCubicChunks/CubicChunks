@@ -70,8 +70,8 @@ public class FirstLightProcessor extends CubeProcessor {
 
 	@Override
 	public Set<Cube> calculate(Cube cube) {
-		ICubicWorld world = cube.getWorld();
 
+		ICubicWorld world = cube.getWorld();
 		ICubeCache cache = world.getCubeCache();
 
 		setRawSkylight(cube);
@@ -132,6 +132,10 @@ public class FirstLightProcessor extends CubeProcessor {
 		Iterable<Cube> subMap = column.getCubes(prevTopBlockCubeY, topBlockCubeY);
 
 		for (Cube cube : subMap) {
+			//do we even need to update it?
+			if(shouldSkipCube(cube, topBlockCubeY)) {
+				continue;
+			}
 			int cubeY = cube.getY();
 
 			if (cubeY == topBlockCubeY) {
@@ -182,6 +186,10 @@ public class FirstLightProcessor extends CubeProcessor {
 		BlockPos.MutableBlockPos pos = mutablePos;
 
 		for (Cube currentCube : column.getAllCubes()) {
+			//do we even need to update it?
+			if(shouldSkipCube(currentCube, cube.getY())) {
+				continue;
+			}
 			boolean canUpdateCube = canUpdateCube(currentCube);
 			FastCubeBlockAccess blockAccess = canUpdateCube ? new FastCubeBlockAccess(cache, currentCube, 1) : null;
 
@@ -309,5 +317,11 @@ public class FirstLightProcessor extends CubeProcessor {
 
 		// only continue if the neighboring cubes are at least in the lighting stage
 		return cube.getWorld().testForCubes(cubeCenter, totalRadius, c -> !c.isBeforeStage(generatorStage));
+	}
+
+	private boolean shouldSkipCube(Cube cube, int excludedCubeY) {
+		//if cubeStage <= lighting
+		//then lighting in that cube will be calculated later, skip
+		return cube.getY() != excludedCubeY && (cube.isBeforeStage(this.generatorStage) || cube.getCurrentStage() == this.generatorStage);
 	}
 }

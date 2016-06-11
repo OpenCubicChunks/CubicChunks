@@ -23,12 +23,10 @@
  */
 package cubicchunks.lighting;
 
-import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorStage;
 
 import java.util.Set;
 
@@ -40,14 +38,10 @@ public class LightingManager {
 
 	private SkyLightCubeDiffuseProcessor skylightCubeDiffuseProcessor;
 
-	private FirstLightProcessor firstLightProcessor;
-
 	public LightingManager(ICubicWorld world) {
 		this.world = world;
 
 		this.skylightCubeDiffuseProcessor = new SkyLightCubeDiffuseProcessor(world, "Sky Light Diffuse", 5);
-
-		this.firstLightProcessor = new FirstLightProcessor(GeneratorStage.LIGHTING, "First Light", world.getCubeCache(), 1);
 	}
 
 	public void columnSkylightUpdate(UpdateType type, Column column, int localX, int minY, int maxY, int localZ) {
@@ -84,8 +78,6 @@ public class LightingManager {
 		int numProcessed = 0;
 		//this.world.profiler.addSection("skyLightOcclusion");
 		numProcessed += this.skylightCubeDiffuseProcessor.processQueueUntil(timeStop);
-		//this.world.profiler.startSection("firstLight");
-		numProcessed += this.firstLightProcessor.processQueueUntil(timeStop);
 		//this.world.profiler.endSection();
 
 		// reporting
@@ -103,10 +95,6 @@ public class LightingManager {
 		Cube.LightUpdateData data = cube.getLightUpdateData();
 		data.queueLightUpdate(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ), minY, maxY);
 		skylightCubeDiffuseProcessor.add(cube.getAddress());
-	}
-
-	public void queueFirstLightCalculation(long cubeAddress) {
-		this.firstLightProcessor.add(cubeAddress);
 	}
 
 	public enum UpdateType {

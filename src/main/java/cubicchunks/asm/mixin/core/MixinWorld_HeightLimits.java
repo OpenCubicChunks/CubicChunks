@@ -26,7 +26,6 @@ package cubicchunks.asm.mixin.core;
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.BlankCube;
-import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -171,7 +170,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 				xStart, yStart, zStart,
 				xEnd, yEnd, zEnd,
 				cube -> (allowEmpty || !(cube instanceof BlankCube)) &&
-						!cube.isBeforeStage(GeneratorStage.LIGHTING)
+						!cube.getCurrentStage().isInitialStage()
 		);
 		cbi.cancel();
 		cbi.setReturnValue(ret);

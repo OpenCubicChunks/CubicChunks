@@ -60,23 +60,26 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 		if (!canPopulate(cube)) {
 			return Collections.EMPTY_SET;
 		}
-		Prof.call("VanillaPopulationProcessor#calculate(Cube)[s]");
 		Set<Cube> cubes = new HashSet<>();
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
 			Cube currentCube = this.provider.forceLoadCube(cube, cube.getX(), cubeY, cube.getZ());
+			if(currentCube.getCurrentStage().isLastStage()) {
+				//some cubes in that vanilla chunks have been populated already -> the whole thing is populated
+				return Sets.newHashSet(cube);
+			}
 			this.provider.forceLoadCube(cube, cube.getX() + 1, cubeY, cube.getZ());
 			this.provider.forceLoadCube(cube, cube.getX(), cubeY, cube.getZ() + 1);
 			this.provider.forceLoadCube(cube, cube.getX() + 1, cubeY, cube.getZ() + 1);
-			if (currentCube == null) {
-				throw new IllegalStateException();
-			}
 			cubes.add(currentCube);
+			currentCube.setCurrentStage(GeneratorStage.LIVE);
 		}
 		try {
-			Prof.call("ChunkProviderOverworld#populate(Cube)");
+			world.setGeneratingWorld(true);
 			this.vanillaGen.populate(cube.getX(), cube.getZ());
 		} catch (RuntimeException ex) {
 			CubicChunks.LOGGER.error("Exception when populating chunk at " + cube.getX() + ", " + cube.getZ(), ex);
+		} finally {
+			world.setGeneratingWorld(false);
 		}
 		return cubes;
 	}

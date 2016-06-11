@@ -28,11 +28,10 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.Dependency;
 import cubicchunks.world.dependency.DependencyProvider;
 import cubicchunks.worldgen.dependency.RegionDependency;
+import net.minecraft.world.World;
 
 public abstract class GeneratorStage implements DependencyProvider {
-	
-	public static GeneratorStage LIGHTING = new IndependentGeneratorStage("lighting");
-	
+
 	public static GeneratorStage LIVE = new IndependentGeneratorStage("live");
 	static {
 		LIVE.setLastStage();
@@ -93,5 +92,13 @@ public abstract class GeneratorStage implements DependencyProvider {
 
 	public boolean precedes(GeneratorStage other) {
 		return this.ordinal < other.ordinal;
+	}
+
+	/**
+	 * Returns true if cubes that are in this stage (not yet processed with the stage processor)
+	 * should be considered as not loaded by {@link World#isAreaLoaded}
+	 */
+	public boolean isInitialStage() {
+		return this.ordinal == 0;
 	}
 }
