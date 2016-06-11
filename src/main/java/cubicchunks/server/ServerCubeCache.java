@@ -239,7 +239,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				cube.onUnload();
 
 				// Make sure the cube does not keep any other cubes around.
-				// TODO: Clean up.
 				this.worldServer.getGeneratorPipeline().getDependentCubeManager().unregister(cube);
 
 				// save the cube
@@ -356,14 +355,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		Cube cube = column.getCube(cubeY);
 		if (cube != null) {
 
-			// Make sure the proper target stage is set.
-			if (cube.getTargetStage().precedes(targetStage)) {
-				cube.setTargetStage(targetStage);
-			}
-
-			// Resume generation if necessary.
+			// Resume/continue generation if necessary.
 			if (cube.getCurrentStage().precedes(targetStage)) {
-				this.worldServer.getGeneratorPipeline().generate(cube);
+				this.worldServer.getGeneratorPipeline().generate(cube, targetStage);
 			}
 
 			return;

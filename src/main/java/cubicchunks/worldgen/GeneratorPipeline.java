@@ -43,7 +43,7 @@ public class GeneratorPipeline {
 
 	private static final int TickBudget = 40; // ms. There are only 50 ms per tick
 
-	private ServerCubeCache cubes;
+	private ServerCubeCache cubeProvider;
 
 	private List<GeneratorStage> stages;
 
@@ -52,12 +52,12 @@ public class GeneratorPipeline {
 	private DependentCubeManager dependentCubeManager;
 
 
-	public GeneratorPipeline(ServerCubeCache cubes) {
-		this.cubes = cubes;
+	public GeneratorPipeline(ServerCubeCache cubeProvider) {
+		this.cubeProvider = cubeProvider;
 		this.stages = new ArrayList<>();
 		this.stageMap = new HashMap<>();
 		this.stageMap.put(GeneratorStage.LIVE.getName(), GeneratorStage.LIVE);
-		this.dependentCubeManager = new DependentCubeManager(cubes.getDependencyManager());
+		this.dependentCubeManager = new DependentCubeManager(cubeProvider.getDependencyManager());
 	}
 
 	public void addStage(GeneratorStage stage, CubeProcessor processor) {
@@ -101,15 +101,14 @@ public class GeneratorPipeline {
 	}
 
 	public void generate(Cube cube) {
-		GeneratorStage currentStage = cube.getCurrentStage();
 
 		// If the cube has reached its target stage, don't do anything.
-		if (!currentStage.precedes(cube.getTargetStage())) {
+		if (cube.hasReachedTargetStage()) {
 			return;
 		}
 
 		// If the cube has dependencies, register it at the dependency manager and let it handle the rest.
-		Dependency dependency = currentStage.getDependency(cube);
+		Dependency dependency = cube.getCurrentStage().getDependency(cube);
 		if (dependency != null) {
 			DependentCube dependentCube = new DependentCube(this, cube, dependency);
 			this.dependentCubeManager.register(dependentCube);
@@ -127,7 +126,7 @@ public class GeneratorPipeline {
 			cube.setTargetStage(targetStage);
 		}
 
-		generate(cube);
+		this.generate(cube);
 	}
 
 	public int tick() {
@@ -215,7 +214,7 @@ public class GeneratorPipeline {
 				int cubeY = AddressTools.getY(address);
 				int cubeZ = AddressTools.getZ(address);
 
-				Cube cube = this.cubes.getCube(cubeX, cubeY, cubeZ);
+				Cube cube = this.cubeProvider.getCube(cubeX, cubeY, cubeZ);
 				
 				// Clear the cube's dependency.
 				this.dependentCubeManager.unregister(cube);
@@ -239,16 +238,16 @@ public class GeneratorPipeline {
 				int cubeY = AddressTools.getY(address);
 				int cubeZ = AddressTools.getZ(address);
 
-				Cube cube = this.cubes.getCube(cubeX, cubeY, cubeZ);
+				Cube cube = this.cubeProvider.getCube(cubeX, cubeY, cubeZ);
 
 				// Clear the cube's dependency.
 				this.dependentCubeManager.unregister(cube);
 
-				// Update cubes depending on this cube.
-				this.dependentCubeManager.updateDependents(cube);
-
 				// Update the cube's stage.
 				cube.setCurrentStage(GeneratorStage.LIVE);
+
+				// Update cubes depending on this cube.
+				this.dependentCubeManager.updateDependents(cube);
 			}
 		}
 	}

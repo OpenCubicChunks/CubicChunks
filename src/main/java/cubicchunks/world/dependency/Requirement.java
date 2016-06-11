@@ -27,28 +27,62 @@ package cubicchunks.world.dependency;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.worldgen.GeneratorStage;
 
-/*
- * TODO: Commenting
- */
+import javax.annotation.Nonnull;
+
 public class Requirement {
 
+	/**
+	 * The required cube's coordinates
+	 */
 	private CubeCoords coords;
+
+	/**
+	 * The GeneratorStage the required cube must be at for this Requirement to be satisfied.
+	 */
 	private GeneratorStage targetStage;
 
-	public Requirement(CubeCoords coords, GeneratorStage targetStage) {
+	/**
+	 * Creates a new instance of Requirement specifying that the cube at the given location must be at the given
+	 * GeneratorStage.
+	 *
+	 * @param coords The coordinates of the required cube.
+	 * @param targetStage The GeneratorStage the required cube must be at.
+	 */
+	public Requirement(@Nonnull CubeCoords coords, @Nonnull GeneratorStage targetStage) {
 		this.coords = coords;
 		this.targetStage = targetStage;
 	}
 
+	/**
+	 * Returns the coordinates of the required cube.
+	 *
+	 * @return The required cube's coordinates
+	 */
+	@Nonnull
 	public CubeCoords getCoords() {
 		return coords;
 	}
 
+	/**
+	 * Returns the GeneratorStage the required cube must be at.
+	 *
+	 * @return The GeneratorStage the required cube must be at.
+	 */
+	@Nonnull
 	public GeneratorStage getTargetStage() {
 		return targetStage;
 	}
 
-	public boolean encompasses(Requirement requirement) {
-		return !targetStage.precedes(requirement.targetStage);
+	/**
+	 * Returns true iff this instance of Requirement and the given Requirement share the same coordinates and the
+	 * given Requirement's targetStage precedes or equals this instance's targetStage. If several Dependents require
+	 * the same cube, this method is used to determine the earliest GeneratorStage at which the required cube must be.
+	 *
+	 * @param other The cube for which it has to be checked, whether this instance encompasses it.
+	 * @return True iff this instance and the given Requirement share the same coordinates and the given Requirement's
+	 *         targetStage precedes or equals this instance's targetStage.
+	 */
+	public boolean encompasses(@Nonnull Requirement other) {
+		return this.coords.equals(other.coords) && !targetStage.precedes(other.targetStage);
 	}
 }

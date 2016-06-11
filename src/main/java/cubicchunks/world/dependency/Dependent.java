@@ -26,20 +26,46 @@ package cubicchunks.world.dependency;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 
-/*
- * TODO: Commenting
- */
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 public interface Dependent {
 
-	void update(DependencyManager manager, Cube requiredCube);
-
-	boolean isSatisfied();
-
+	/**
+	 * Provides a collection containing the coordinates of all of this Dependent's required cubes and the
+	 * GeneratorStages it requires those cubes to be at, in form of Requirements.
+	 * @see Requirement
+	 *
+	 * @return A collection containing all of the Dependent's Requirements.
+	 */
+	@Nonnull
 	Collection<Requirement> getRequirements();
 
-	Requirement getRequirementFor(CubeCoords coords);
+	/**
+	 * Provides a Requirement specifying the GeneratorStage at which this Dependent requires the cube at the given
+	 * coordinates to be or null if this Dependent does not require it to be loaded.
+	 *
+	 * @param coords The coordinates for which the Requirement is to be retrieved.
+	 * @return A Requirement if this Dependent requires the cube at the given coordinates to be loaded. Null otherwise.
+	 */
+	@Nullable
+	Requirement getRequirementFor(@Nonnull CubeCoords coords);
 
-	void addRequirement(Requirement requirement);
+	/**
+	 * Called whenever a cube which this Dependent requires is loaded or advances a GeneratorStage, such that the
+	 * Dependent can check if its requirements changed.
+	 *
+	 * @param manager The DependencyManager responsible for the current world.
+	 * @param requiredCube The cube which has been updated.
+	 */
+	void update(@Nonnull DependencyManager manager, @Nonnull Cube requiredCube);
+
+	/**
+	 * Determines if all of the Dependent's requirements are fulfilled.
+	 *
+	 * @return True iff all of the Dependent's requirements are fulfilled.
+	 */
+	boolean isSatisfied();
+
 }

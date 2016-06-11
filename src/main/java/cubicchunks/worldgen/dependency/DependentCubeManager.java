@@ -24,27 +24,49 @@
 
 package cubicchunks.worldgen.dependency;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.DependencyManager;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
 public class DependentCubeManager {
 
+	/**
+	 * The underlying DependencyManager used by the current world.
+	 */
 	private DependencyManager dependencyManager;
 
+	/**
+	 * Contains an instance of DependentCube for each cube which depends on other cubes to be loaded.
+	 */
 	private Map<CubeCoords, DependentCube> dependentMap;
 
-
-	public DependentCubeManager(DependencyManager dependencyManager) {
+	/**
+	 * Creates a new instance of DependentCubeManager wrapping the given DependencyManager.
+	 *
+	 * @param dependencyManager The underlying DependencyManager.
+	 */
+	public DependentCubeManager(@Nonnull DependencyManager dependencyManager) {
 		this.dependencyManager = dependencyManager;
 		this.dependentMap = new HashMap<>();
 	}
 
+	/**
+	 * Registers a given DependentCube with this DependentCubeManager and the underlying instance of DependencyManager.
+	 *
+	 * @see public void DependencyManager.register(Dependent dependent)
+	 * @param dependentCube The DependentCube to be registered.
+	 */
+	public void register(@Nonnull DependentCube dependentCube) {
 
-	public void register(DependentCube dependentCube) {
+		// Prevent duplicate registrations.
+		if (this.dependentMap.containsKey(dependentCube.getCube().getCoords())) {
+			return;
+		}
 
 		// Remember the dependent.
 		this.dependentMap.put(dependentCube.getCube().getCoords(), dependentCube);
@@ -54,12 +76,24 @@ public class DependentCubeManager {
 
 	}
 
-	public void unregister(DependentCube dependentCube) {
+	/**
+	 * Unregisters a given DependentCube from this DependentCubeManager and the underlying instance of
+	 * DependencyManager.
+	 *
+	 * @see public void DependencyManager.unregister(Dependent dependent)
+	 * @param dependentCube The DependentCube to be unregistered.
+	 */
+	public void unregister(@Nonnull DependentCube dependentCube) {
 		this.dependencyManager.unregister(dependentCube);
 		this.dependentMap.remove(dependentCube.getCube().getCoords());
 	}
 
-	public void unregister(Cube cube) {
+	/**
+	 * If the given cube is registered with this DependentCubeManager, unregisters it. Otherwise, does nothing.
+	 *
+	 * @param cube The cube to be unregistered.
+	 */
+	public void unregister(@Nonnull Cube cube) {
 		DependentCube dependentCube = this.dependentMap.get(cube.getCoords());
 		if (dependentCube != null) {
 			this.unregister(dependentCube);
@@ -71,8 +105,16 @@ public class DependentCubeManager {
 	 *
 	 * @param cube The cube for which its dependents will be notified.
 	 */
-	public void updateDependents(Cube cube) {
+	public void updateDependents(@Nonnull Cube cube) {
 		this.dependencyManager.updateDependents(cube);
 	}
 
+	/**
+	 * Returns the total number of cubes currently depending on other cubes being loaded.
+	 *
+	 * @return The number of cubes currently depending on other cubes being loaded.
+	 */
+	public int getDependentCubeCount() {
+		return this.dependentMap.size();
+	}
 }

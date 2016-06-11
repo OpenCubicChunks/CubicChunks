@@ -24,28 +24,35 @@
 
 package cubicchunks.world.dependency;
 
-import cubicchunks.CubicChunks;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.ServerCubeCache.LoadType;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-/*
- * TODO: Commenting
- */
 public class DependencyManager {
 
-	// TODO: Make private.
-	public ServerCubeCache cubeProvider;
+	/**
+	 * The ServerCubeCache utilizing this DependencyManager.
+	 */
+	private ServerCubeCache cubeProvider;
 
+	/**
+	 * Contains an instance of RequiredCube for each cube which is currently required by at least one Dependent.
+	 */
 	private Map<CubeCoords, RequiredCube> requiredMap;
 
 
-	public DependencyManager(ServerCubeCache cubeProvider) {
+	/**
+	 * Creates a new instance of DependencyManager for managing cube dependencies for the given ServerCubeCache.
+	 *
+	 * @param cubeProvider The ServerCubeCache using this instance.
+	 */
+	public DependencyManager(@Nonnull ServerCubeCache cubeProvider) {
 		this.cubeProvider = cubeProvider;
 		this.requiredMap = new HashMap<>();
 	}
@@ -57,7 +64,7 @@ public class DependencyManager {
 	 *
 	 * @param dependent The Dependent to be registered.
 	 */
-	public void register(Dependent dependent) {
+	public void register(@Nonnull Dependent dependent) {
 
 		// If the dependent does not have any requirements, there is nothing left to do here.
 		Collection<Requirement> requirements = dependent.getRequirements();
@@ -90,17 +97,17 @@ public class DependencyManager {
 			// Add the dependent to the required cubes list of dependents.
 			requiredCube.addDependent(dependent);
 
-			// If the required cube is loaded, notify the dependent.
+			// If the required cube is loaded, ...
 			if (requiredCube.isAvailable()) {
-				dependent.update(this, requiredCube.getCube());
 
-				// Has the cube reached its target stage?
-				if (!requiredCube.getCube().isBeforeStage(requiredCube.getCube().getTargetStage())) {
-
-					// If the cube is supposed to reach a later stage, resume its generation.
-					if (requiredCube.getCube().getCurrentStage().precedes(requirement.getTargetStage())) {
-						this.cubeProvider.loadCube(requirement.getCoords(), LoadType.LOAD_OR_GENERATE, requirement.getTargetStage());
-					}
+				// and it has reached the required target stage, notify the dependent.
+				if (!requiredCube.getCube().isBeforeStage(requirement.getTargetStage())) {
+					dependent.update(this, requiredCube.getCube());
+				}
+				// If the required cube's target stage precedes the required target stage, load it up to the required
+				// target stage.
+				else if (requiredCube.getCube().getTargetStage().precedes(requirement.getTargetStage())) {
+					this.cubeProvider.loadCube(requirement.getCoords(), LoadType.LOAD_OR_GENERATE, requirement.getTargetStage());
 				}
 			}
 			// Otherwise load it.
@@ -115,9 +122,9 @@ public class DependencyManager {
 	 * other dependencies keep them around. The DependentCube will no longer be notified if one of its former
 	 * requirements advances a stage.
 	 *
-	 * @param dependent The DependentCube to be unregistered.
+	 * @param dependent The Dependent to be unregistered.
 	 */
-	public void unregister(Dependent dependent) {
+	public void unregister(@Nonnull Dependent dependent) {
 
 		// Remove all of the requirements.
 		Collection<Requirement> requirements = dependent.getRequirements();
@@ -142,11 +149,11 @@ public class DependencyManager {
 	 *
 	 * @param cube The newly loaded cube.
 	 */
-	public void onLoad(Cube cube) {
+	public void onLoad(@Nonnull Cube cube) {
 		RequiredCube requiredCube = this.requiredMap.get(cube.getCoords());
 		if (requiredCube != null) {
 			requiredCube.setCube(cube);
-			requiredCube.update(this);
+			requiredCube.updateDependents(this);
 		}
 	}
 
@@ -155,7 +162,7 @@ public class DependencyManager {
 	 *
 	 * @return True iff there exists at least one dependent requiring the given cube to remain loaded.
 	 */
-	public boolean isRequired(CubeCoords coords) {
+	public boolean isRequired(@Nonnull CubeCoords coords) {
 		RequiredCube requiredCube = this.requiredMap.get(coords);
 		return requiredCube != null && requiredCube.isRequired();
 	}
@@ -165,20 +172,20 @@ public class DependencyManager {
 	 *
 	 * @param cube The cube for which its dependents will be notified.
 	 */
-	public void updateDependents(Cube cube) {
+	public void updateDependents(@Nonnull Cube cube) {
 		RequiredCube requiredCube = this.requiredMap.get(cube.getCoords());
 		if (requiredCube != null) {
-			requiredCube.update(this);
+			requiredCube.updateDependents(this);
 		}
 	}
 
 	/**
-	 * {@link #isRequired(CubeCoords coords)}
+	 * Returns the total number of cubes currently being required.
 	 *
-	 * @return True iff there exists at least one dependent requiring the given cube to remain loaded.
+	 * @return The number of cubes currently being required to be loaded.
 	 */
-	public boolean isRequired(Cube cube) {
-		return this.isRequired(cube.getCoords());
+	public int getRequiredCubeCount() {
+		return this.requiredMap.size();
 	}
 
 }

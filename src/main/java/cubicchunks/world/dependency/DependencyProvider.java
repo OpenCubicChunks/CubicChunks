@@ -25,11 +25,10 @@
 package cubicchunks.world.dependency;
 
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.Dependency;
 
-/*
- * TODO: Commenting
- */
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 public interface DependencyProvider {
 
 	/**
@@ -39,6 +38,7 @@ public interface DependencyProvider {
 	 *
 	 * @return A Dependency providing a list of Requirements for the given cube or null.
 	 */
-	Dependency getDependency(Cube cube);
+	@Nullable
+	Dependency getDependency(@Nonnull Cube cube);
 
 }

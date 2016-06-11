@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.Dependency;
 import cubicchunks.world.dependency.DependencyManager;
@@ -37,17 +36,21 @@ import cubicchunks.world.dependency.Requirement;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.util.math.Vec3i;
 
-/*
- * TODO: Commenting
- */
 /**
- * Specifies the dependency of a cube to other cubes in its vicinity during terrain generation.
+ * Specifies the dependency of a cube on other cubes in its vicinity.
+ * @see Dependency
  * @see DependencyManager
  */
 public class RegionDependency implements Dependency {
 
+	/**
+	 * The minimum GeneratorStage all cubes included in this region must be at for this Dependency to be satisfied.
+	 */
 	private GeneratorStage targetStage;
 
+	/*
+	 * The corners of the region.
+	 */
 	private int xLow;
 	private int xHigh;
 	private int yLow;
@@ -55,7 +58,14 @@ public class RegionDependency implements Dependency {
 	private int zLow;
 	private int zHigh;
 
-
+	/**
+	 * Creates a new instance of RegionDependency. All cubes within the given radius must be at the given targetStage
+	 * for this Dependency to be satisifed.
+	 *
+	 * @param targetStage The minimum GeneratorStage all cubes within the given radius must be at for this Dependency to
+	 *                    be satisfied.
+	 * @param radius The radius of the cuboid including all requried cubes.
+	 */
 	public RegionDependency(GeneratorStage targetStage, int radius) {
 
 		this.targetStage = targetStage;
@@ -67,7 +77,17 @@ public class RegionDependency implements Dependency {
 		this.zLow = -radius;
 		this.zHigh = radius;
 	}
-	
+
+	/**
+	 * Creates a new instance of RegionDependency. All cubes inside of the cuboid specified by relA and relB must be at
+	 * the given targetStage for this Dependency to be satisfied. The relative orientation of relA and relB to each
+	 * other is not relevant.
+	 *
+	 * @param targetStage The minimum GeneratorStage all cubes within the specified region must be at for this
+	 *                    Dependency to be satisfied.
+	 * @param relA First corner of the cuboid including all required cubes.
+	 * @param relB Second corner of the cuboid including all required cubes.
+	 */
 	public RegionDependency(GeneratorStage targetStage, Vec3i relA, Vec3i relB) {
 
 		this.targetStage = targetStage;
@@ -80,9 +100,9 @@ public class RegionDependency implements Dependency {
 		this.zHigh = Math.max(relA.getZ(), relB.getZ());
 	}
 
-	public boolean update(DependencyManager manager, DependentCube dependentCube, Cube requiredCube) {
-		return !requiredCube.getCurrentStage().precedes(targetStage);
-	}
+	/*
+	 * Interface: Dependency
+	 */
 
 	public Collection<Requirement> getRequirements(Cube cube) {
 
@@ -106,20 +126,8 @@ public class RegionDependency implements Dependency {
 		return requirements;
 	}
 
-	/**
-	 * Returns true iff the given cube's dependencies defined by this object are satisfied.
-	 *
-	 * @param cube The cube for which satisfaction is to be checked.
-	 * @param cubeProvider A cube provider granting access to all cubes of the world.
-	 * @return True iff the cube's dependencies defined by this object are satisfied.
-	 */
-	public boolean isSatisfied(Cube cube, ICubeCache cubeProvider) {
-		// For this dependency to be satisfied, all required cubes must be loaded and their stage must not precede the target stage.
-		for (Requirement requirement : this.getRequirements(cube)) {
-			if (!cubeProvider.cubeExists(requirement.getCoords()) || cubeProvider.getCube(requirement.getCoords()).getCurrentStage().precedes(targetStage)) {
-				return false;
-			}
-		}
-		return true;
+	public boolean isSatisfied(DependencyManager manager, DependentCube dependentCube, Cube requiredCube) {
+		return !requiredCube.getCurrentStage().precedes(targetStage);
 	}
+
 }

@@ -24,10 +24,7 @@
 
 package cubicchunks.worldgen;
 
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.Dependency;
 import cubicchunks.world.dependency.DependencyProvider;
-import cubicchunks.worldgen.dependency.RegionDependency;
 import net.minecraft.world.World;
 
 public abstract class GeneratorStage implements DependencyProvider {
