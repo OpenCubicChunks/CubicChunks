@@ -23,20 +23,18 @@
  */
 package cubicchunks;
 
-import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.worldgen.generator.NullProcessor;
+import cubicchunks.worldgen.generator.vanilla.VanillaFirstLightProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
-public class VanillaCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
+public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 
 	public VanillaCubicChunksWorldType() {
 		super("VanillaCubic");
@@ -49,11 +47,11 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicChun
 		
 		// init the worldgen pipeline
 		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
-		GeneratorStage surface = new IndependentGeneratorStage("surface");
+		GeneratorStage lighting = new IndependentGeneratorStage("lighting");
 		GeneratorStage population = new IndependentGeneratorStage("population");		
 		
-		pipeline.addStage(terrain, new VanillaTerrainProcessor(surface, world, vanillaGen, 5));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(GeneratorStage.LIGHTING, "Lighting", cubeCache, 5));
+		pipeline.addStage(terrain, new VanillaTerrainProcessor(lighting, world, vanillaGen, 5));
+		pipeline.addStage(lighting, new VanillaFirstLightProcessor(lighting, population, cubeCache, 5));
 		pipeline.addStage(population, new VanillaPopulationProcessor(population, world, vanillaGen, 5));
 
 	}

@@ -23,6 +23,7 @@
  */
 package cubicchunks;
 
+import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
 import net.minecraftforge.fml.common.Mod;
@@ -59,6 +60,7 @@ public class CubicChunks {
 		VanillaCubicChunksWorldType.create();
 		FlatCubicChunksWorldType.create();
 		CustomCubicChunksWorldType.create();
+		DebugWorldType.create();
 		LOGGER.debug("Registered world types");
 
 		PacketDispatcher.registerPackets();

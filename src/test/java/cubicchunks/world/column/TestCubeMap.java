@@ -30,6 +30,8 @@ import static org.junit.Assert.assertEquals;
 
 public class TestCubeMap {
 
+	//this test class has been made when attempting to optimize CubeMap for 3 last used cubeY positions.
+	//this feature may need to be readded, so keeping it there
 	@Test
 	public void testSequentialGet() {
 		CubeMap map = new CubeMap();

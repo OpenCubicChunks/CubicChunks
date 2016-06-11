@@ -21,38 +21,28 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.image;
+package cubicchunks;
 
-import com.flowpowered.noise.module.source.Perlin;
+import net.minecraft.world.WorldType;
 
-public class ImageWriterMain {
-	
-	public static void main(String[] args) {
-		Perlin baseContinentDef_pe0 = new Perlin();
-		baseContinentDef_pe0.setSeed(0);
-		baseContinentDef_pe0.setFrequency(1.0);
-		baseContinentDef_pe0.setPersistence(0.5);
-		baseContinentDef_pe0.setLacunarity(2.2089);
-		baseContinentDef_pe0.setOctaveCount(14);
-		
-		double xStart = 0;
-		double xEnd = 960;
-		double yStart = 0;
-		double yEnd = 540;
-		
-		int xResolution = 1920;
-		int yResolution = 1080;
-		
-		double[][] result = new double[xResolution][yResolution];
-		
-		for (int i = 0; i < xResolution; i++) {
-			for (int j = 0; j < yResolution; j++) {
-				int x = (int) (xStart + i * ( (xEnd - xStart) / xResolution));
-				int y = (int) (yStart + j * ( (yEnd - yStart) / yResolution));
-				result[i][j] = 0.5 * (1 + baseContinentDef_pe0.getValue(x, y, 0));
-			}
-		}
-		
-		ImageWriter.greyWriteImage(result);
+public abstract class BaseCubicWorldType extends WorldType implements ICubicChunksWorldType {
+
+	public BaseCubicWorldType(String name) {
+		super(name);
+	}
+
+	/**
+	 * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
+	 * <p>
+	 * In EntityRenderer.updateFogColor entity Y position is multiplied by
+	 * value returned by this method.
+	 * <p>
+	 * If this method returns any real number - then the void fog factor can be <= 0.
+	 * But if this method returns NaN - the result is always NaN. And Minecraft enables void fog only of the value is < 1.
+	 * And since any comparison with NaN returns false - void fog is effectively disabled.
+	 */
+	@Override
+	public double voidFadeMagnitude() {
+		return Double.NaN;
 	}
 }

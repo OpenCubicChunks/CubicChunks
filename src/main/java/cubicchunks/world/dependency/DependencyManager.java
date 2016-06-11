@@ -95,7 +95,7 @@ public class DependencyManager {
 				dependent.update(this, requiredCube.getCube());
 
 				// Has the cube reached its target stage?
-				if (requiredCube.getCube().getCurrentStage() == requiredCube.getCube().getTargetStage()) {
+				if (!requiredCube.getCube().isBeforeStage(requiredCube.getCube().getTargetStage())) {
 
 					// If the cube is supposed to reach a later stage, resume its generation.
 					if (requiredCube.getCube().getCurrentStage().precedes(requirement.getTargetStage())) {
@@ -181,7 +181,4 @@ public class DependencyManager {
 		return this.isRequired(cube.getCoords());
 	}
 
-	public void tick() {
-		CubicChunks.LOGGER.info("{}", this.requiredMap.size());
-	}
 }

@@ -31,29 +31,36 @@ public class MixinUtils {
 	/**
 	 * This method should be used as a replacement of {@link BlockPos#getY()}
 	 * when modifying vanilla height check.
-	 *
+	 * <p>
 	 * Most of the time modifying it using {@link org.spongepowered.asm.mixin.injection.ModifyConstant}
 	 * is not possible because 0 can't be replaced when used in comparison (JVM has separate instruction for it).
-	 *
+	 * <p>
 	 * So instead of trying to fix these height checks, it's eaier to modify value returned by BlockPos#getY()
 	 * to fit within the vanilla height range when the check should be successful, and be outside of that range otherwise.
-	 *
+	 * <p>
 	 * This hack has some limitations - it can't be used in methods where BlockPos#getY() is used
 	 * for anything other than a height check since the retuned value would be completely wrong.
 	 * Fortunately most vanilla methods with hardcoded height checks don't use BlockPos#getY() for anything else.
 	 */
 	public static int getReplacementY(ICubicWorld world, BlockPos pos) {
-		int y = pos.getY();
-		if(y < world.getMinHeight() || y >= world.getMaxHeight()) {
-			return y;
-		}
-		return 64;
+		return getReplacementY(world, pos.getY());
 	}
 
 	/**
 	 * Convenience method with World as argument that calls {@link MixinUtils#getReplacementY(ICubicWorld, BlockPos)}
 	 */
 	public static int getReplacementY(World world, BlockPos pos) {
-		return getReplacementY((ICubicWorld)world, pos);
+		return getReplacementY((ICubicWorld) world, pos);
+	}
+
+	public static int getReplacementY(World world, int y) {
+		return getReplacementY((ICubicWorld) world, y);
+	}
+
+	public static int getReplacementY(ICubicWorld world, int y) {
+		if (y < world.getMinHeight() || y >= world.getMaxHeight()) {
+			return y;
+		}
+		return 64;
 	}
 }

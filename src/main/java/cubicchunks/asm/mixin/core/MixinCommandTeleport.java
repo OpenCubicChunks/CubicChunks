@@ -36,7 +36,6 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.lang.ref.WeakReference;
 
@@ -49,22 +48,24 @@ import static net.minecraft.command.CommandBase.getEntity;
 public class MixinCommandTeleport {
 	private WeakReference<Entity> entity;
 
-	@Inject(method = "execute",
-	        at = @At(value = "INVOKE", target = COMMAND_TELEPORT_GET_ENTITY, ordinal = 0),
-	        locals = LocalCapture.CAPTURE_FAILHARD,
-	        require = 1)
-	private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci, int i) {
+	@Inject(
+			method = "execute",
+			at = @At(value = "INVOKE", target = COMMAND_TELEPORT_GET_ENTITY, ordinal = 0),
+			require = 1
+	)
+	private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
 		try {
 			entity = new WeakReference<>(getEntity(server, sender, args[0]));
 		} catch (EntityNotFoundException e) {
 		}
 	}
 
-	@Inject(method = "execute",
-	        at = @At(value = "INVOKE", target = COMMAND_TELEPORT_GET_COMMAND_SENDER_AS_PLAYER, ordinal = 0),
-	        locals = LocalCapture.CAPTURE_FAILHARD,
-	        require = 1)
-	private void postGetEntityPlayerInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci, int i) {
+	@Inject(
+			method = "execute",
+			at = @At(value = "INVOKE", target = COMMAND_TELEPORT_GET_COMMAND_SENDER_AS_PLAYER, ordinal = 0),
+			require = 1
+	)
+	private void postGetEntityPlayerInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
 		try {
 			entity = new WeakReference<>(getCommandSenderAsPlayer(sender));
 		} catch (PlayerNotFoundException e) {

@@ -195,7 +195,9 @@ public class PlayerCubeMapEntry {
 	}
 
 	public void update() {
-
+		if(!this.sentToPlayers) {
+			return;
+		}
 		// are there any updates?
 		if (this.dirtyBlocks.isEmpty()) {
 			return;

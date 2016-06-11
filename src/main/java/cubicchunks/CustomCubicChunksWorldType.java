@@ -32,9 +32,8 @@ import cubicchunks.worldgen.IndependentGeneratorStage;
 import cubicchunks.worldgen.generator.custom.CustomFeatureProcessor;
 import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
-import net.minecraft.world.WorldType;
 
-public class CustomCubicChunksWorldType extends WorldType implements ICubicChunksWorldType {
+public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 
 	public CustomCubicChunksWorldType() {
 		super("CustomCubic");
@@ -46,11 +45,12 @@ public class CustomCubicChunksWorldType extends WorldType implements ICubicChunk
 		// init the worldgen pipeline
 		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
 		GeneratorStage features = new IndependentGeneratorStage("features");
-		GeneratorStage population = new IndependentGeneratorStage("population");		
+		GeneratorStage lighting = new IndependentGeneratorStage("lighting");
+		GeneratorStage population = new IndependentGeneratorStage("population");
 		
 		pipeline.addStage(terrain, new CustomTerrainProcessor(world, 5));
 		pipeline.addStage(features, new CustomFeatureProcessor(features, "Features", cubeCache, 10));
-		pipeline.addStage(GeneratorStage.LIGHTING, new FirstLightProcessor(GeneratorStage.LIGHTING, "Lighting", cubeCache, 5));
+		pipeline.addStage(lighting, new FirstLightProcessor(lighting, "Lighting", cubeCache, 5));
 		pipeline.addStage(population, new CustomPopulationProcessor(population, "Population", world, 100));
 	}
 

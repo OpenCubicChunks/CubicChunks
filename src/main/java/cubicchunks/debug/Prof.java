@@ -36,39 +36,41 @@ public class Prof {
 	private static volatile JFrame frame;
 	private static volatile int y = 0;
 
-	private static final int width = 800, height = 600;
+	private static final int width = 100, height = 100;
 
 	static {
-		EventQueue.invokeLater(() -> {
-			frame = new JFrame("CubeCacheClient - loaded chunks");
-			frame.setSize(width, height);
-			frame.setLayout(null);
-			frame.setVisible(true);
-			frame.setResizable(false);
+		if(System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true")) {
+			EventQueue.invokeLater(() -> {
+				frame = new JFrame("Debug");
+				frame.setSize(width, height);
+				frame.setLayout(null);
+				frame.setVisible(true);
+				frame.setResizable(false);
 
-			frame.addWindowListener(new WindowAdapter() {
-				@Override
-				public void windowClosing(WindowEvent windowEvent) {
-					frame.dispose();
-					frame = null;
-				}
-			});
-
-			new Thread("ProfGUI") {
-				@Override
-				public void run() {
-					while (frame != null) {
-						updateProf();
-						try {
-							Thread.sleep(100);
-						} catch (InterruptedException e) {
-							throw new RuntimeException(e);
-						}
+				frame.addWindowListener(new WindowAdapter() {
+					@Override
+					public void windowClosing(WindowEvent windowEvent) {
+						frame.dispose();
+						frame = null;
 					}
-					throw new Error("done?");
-				}
-			}.start();
-		});
+				});
+
+				new Thread("ProfGUI") {
+					@Override
+					public void run() {
+						while (frame != null) {
+							updateProf();
+							try {
+								Thread.sleep(100);
+							} catch (InterruptedException e) {
+								throw new RuntimeException(e);
+							}
+						}
+						throw new Error("done?");
+					}
+				}.start();
+			});
+		}
 	}
 
 	private static void updateProf() {
