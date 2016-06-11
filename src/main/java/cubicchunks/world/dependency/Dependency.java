@@ -22,22 +22,35 @@
  *  THE SOFTWARE.
  */
 
-package cubicchunks.worldgen.dependency;
+package cubicchunks.world.dependency;
 
+import java.util.Collection;
+
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.dependency.DependentCube;
 
 /*
  * TODO: Commenting
  */
-public interface DependencyProvider {
+public interface Dependency {
 
 	/**
-	 * Given a cube, may return a Dependency for determining the cube's requirements.
+	 * This collection specifies which cubes must be loaded for a given cube's requirements to be satisfied.
 	 *
-	 * @param cube The cube for which the Dependency shall provide requirements.
-	 *
-	 * @return A Dependency providing a list of Requirements for the given cube or null.
+	 * @return A collection of Requirements specifying the given cube's requirements.
 	 */
-	Dependency getDependency(Cube cube);
+	Collection<Requirement> getRequirements(Cube cube);
 
+	/**
+	 * Called when the given cube is loaded or entered the next generation stage.
+	 *
+	 * @param manager The DependencyManager used by the server.
+	 * @param dependentCube The dependentCube for which the update is called.
+	 * @param requiredCube The updated cube.
+	 * @return True iff the dependentCube no longer requires the given cube.
+	 */
+	boolean update(DependencyManager manager, DependentCube dependentCube, Cube requiredCube);
+
+	boolean isSatisfied(Cube cube, ICubeCache cubeProvider);
 }

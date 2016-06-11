@@ -21,20 +21,34 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen;
 
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.Dependency;
+package cubicchunks.world.dependency;
 
-public class IndependentGeneratorStage extends GeneratorStage {
+import cubicchunks.util.CubeCoords;
+import cubicchunks.worldgen.GeneratorStage;
 
-	public IndependentGeneratorStage(String name) {
-		super(name);
+/*
+ * TODO: Commenting
+ */
+public class Requirement {
+
+	private CubeCoords coords;
+	private GeneratorStage targetStage;
+
+	public Requirement(CubeCoords coords, GeneratorStage targetStage) {
+		this.coords = coords;
+		this.targetStage = targetStage;
 	}
 
-	@Override
-	public Dependency getDependency(Cube cube) {
-		return null;
+	public CubeCoords getCoords() {
+		return coords;
 	}
 
+	public GeneratorStage getTargetStage() {
+		return targetStage;
+	}
+
+	public boolean encompasses(Requirement requirement) {
+		return !targetStage.precedes(requirement.targetStage);
+	}
 }

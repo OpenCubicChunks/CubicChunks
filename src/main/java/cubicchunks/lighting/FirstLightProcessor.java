@@ -71,9 +71,7 @@ public class FirstLightProcessor extends CubeProcessor {
 	@Override
 	public Set<Cube> calculate(Cube cube) {
 		ICubicWorld world = cube.getWorld();
-		if (!canUpdateCube(cube)) {
-			return Collections.EMPTY_SET;
-		}
+
 		ICubeCache cache = world.getCubeCache();
 
 		setRawSkylight(cube);

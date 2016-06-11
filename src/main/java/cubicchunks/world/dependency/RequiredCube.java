@@ -22,33 +22,71 @@
  *  THE SOFTWARE.
  */
 
-package cubicchunks.worldgen.dependency;
-
-import java.util.Collection;
+package cubicchunks.world.dependency;
 
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.GeneratorStage;
 
-/*
- * TODO: Commenting
- */
-public interface Dependency {
+import java.util.Collection;
+import java.util.HashSet;
+
+public class RequiredCube {
+
+	private Cube cube;
+
+	private Collection<Dependent> dependents;
+
+
+	public RequiredCube() {
+		this.cube = null;
+		this.dependents = new HashSet<>();
+	}
+
+	public RequiredCube(Cube cube) {
+		this.cube = cube;
+		this.dependents = new HashSet<>();
+	}
+
+
+	public Cube getCube() {
+		return this.cube;
+	}
+
+	public void setCube(Cube cube) {
+		this.cube = cube;
+	}
+
+	public boolean isAvailable() {
+		return this.cube != null;
+	}
+
+
+	public boolean addDependent(Dependent dependent) {
+		return this.dependents.add(dependent);
+	}
+
+	public boolean removeDependent(Dependent dependent) {
+		return this.dependents.remove(dependent);
+	}
+
+	public boolean isRequired() {
+		return this.dependents.size() > 0;
+	}
+
 
 	/**
-	 * This collection specifies which cubes must be loaded for a given cube's requirements to be satisfied.
-	 *
-	 * @return A collection of Requirements specifying the given cube's requirements.
+	 * Notifies all of the cube's dependents about the cube's current status.
 	 */
-	Collection<Requirement> getRequirements(Cube cube);
+	public void update(DependencyManager manager) {
+		for (Dependent dependent : this.dependents) {
+			dependent.update(manager, this.cube);
+		}
+	}
 
-	/**
-	 * Called when the given cube is loaded or entered the next generation stage.
-	 *
-	 * @param manager The DependencyManager used by the server.
-	 * @param dependentCube The dependentCube for which the update is called.
-	 * @param requiredCube The updated cube.
-	 * @return True iff the dependentCube no longer requires the given cube.
-	 */
-	boolean update(DependencyManager manager, DependentCube dependentCube, Cube requiredCube);
-
+	public void setTargetStage(GeneratorStage requiredStage) {
+		if (this.cube.getTargetStage().precedes(requiredStage)) {
+			this.cube.setTargetStage(requiredStage);
+		}
+	}
 
 }

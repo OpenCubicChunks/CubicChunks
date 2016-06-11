@@ -24,14 +24,22 @@
 
 package cubicchunks.worldgen.dependency;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.dependency.Dependency;
+import cubicchunks.world.dependency.DependencyManager;
+import cubicchunks.world.dependency.Dependent;
+import cubicchunks.world.dependency.Requirement;
+import cubicchunks.worldgen.GeneratorPipeline;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 public class DependentCube implements Dependent {
+
+	private GeneratorPipeline generatorPipeline;
 
 	private Cube cube;
 
@@ -42,7 +50,8 @@ public class DependentCube implements Dependent {
 	private int remaining;
 
 
-	public DependentCube(Cube cube, Dependency dependency) {
+	public DependentCube(GeneratorPipeline generatorPipeline, Cube cube, Dependency dependency) {
+		this.generatorPipeline = generatorPipeline;
 		this.cube = cube;
 		this.dependency = dependency;
 		this.requirements = new HashMap<>();
@@ -55,6 +64,10 @@ public class DependentCube implements Dependent {
 
 	public Cube getCube() {
 		return cube;
+	}
+
+	public Dependency getDependency() {
+		return dependency;
 	}
 
 
@@ -74,12 +87,23 @@ public class DependentCube implements Dependent {
 		this.requirements.put(requirement.getCoords(), requirement);
 	}
 
-	public boolean update(DependencyManager manager, Cube requiredCube) {
+	public void update(DependencyManager manager, Cube requiredCube) {
 		boolean noLongerRequired = this.dependency.update(manager, this, requiredCube);
 		if (noLongerRequired) {
 			--this.remaining;
+
+			if (this.isSatisfied()) {
+
+				for (Requirement requirement : this.requirements.values()) {
+					if (!manager.cubeProvider.cubeExists(requirement.getCoords())) {
+						CubicChunks.LOGGER.info("LIES!");
+						System.exit(1);
+					}
+				}
+
+				this.generatorPipeline.resume(cube);
+			}
 		}
-		return noLongerRequired;
 	}
 
 	public boolean isSatisfied() {

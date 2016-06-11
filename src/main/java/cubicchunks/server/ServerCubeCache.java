@@ -34,7 +34,7 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.ColumnGenerator;
 import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.dependency.DependencyManager;
+import cubicchunks.world.dependency.DependencyManager;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -102,6 +102,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		this.cubesToUnload = new ArrayDeque<>();
 		this.forceAdded = new HashMap<>();		
 		this.forceAddedReverse = new HashMap<>();
+		this.dependencyManager = new DependencyManager(this);
+	}
+
+	public DependencyManager getDependencyManager() {
+		return this.dependencyManager;
 	}
 
 	@Override
@@ -209,6 +214,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		// unload cubes
 		for (int i = 0; i < MaxNumToUnload && !this.cubesToUnload.isEmpty(); i++) {
 			long cubeAddress = this.cubesToUnload.poll();
+
+			// Skip unloading the cube if it is required.
+			if (this.dependencyManager.isRequired(new CubeCoords(cubeAddress))) {
+				continue;
+			}
+
 			long columnAddress = AddressTools.getAddress(AddressTools.getX(cubeAddress), AddressTools.getZ(cubeAddress));
 
 			// get the cube
@@ -226,9 +237,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				
 				// tell the cube it has been unloaded
 				cube.onUnload();
-				
-				// Clear the cube's dependencies.
-				this.dependencyManager.unregister(cube);
+
+				// Make sure the cube does not keep any other cubes around.
+				// TODO: Clean up.
+				this.worldServer.getGeneratorPipeline().getDependentCubeManager().unregister(cube);
 
 				// save the cube
 				this.cubeIO.saveCube(cube);
@@ -388,7 +400,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		
 		// Init the cube.
 		cube.onLoad();
-		this.dependencyManager.updateDependents(cube);
+		this.dependencyManager.onLoad(cube);
 	}
 	
 	public void loadCube(int cubeX, int cubeY, int cubeZ, LoadType loadType) {

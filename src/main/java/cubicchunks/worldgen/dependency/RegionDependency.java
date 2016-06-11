@@ -29,7 +29,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import cubicchunks.util.CubeCoords;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.dependency.Dependency;
+import cubicchunks.world.dependency.DependencyManager;
+import cubicchunks.world.dependency.Requirement;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.util.math.Vec3i;
 
@@ -38,7 +42,7 @@ import net.minecraft.util.math.Vec3i;
  */
 /**
  * Specifies the dependency of a cube to other cubes in its vicinity during terrain generation.
- * @see cubicchunks.worldgen.dependency.DependencyManager
+ * @see DependencyManager
  */
 public class RegionDependency implements Dependency {
 
@@ -77,7 +81,7 @@ public class RegionDependency implements Dependency {
 	}
 
 	public boolean update(DependencyManager manager, DependentCube dependentCube, Cube requiredCube) {
-		return requiredCube.getCurrentStage() == targetStage;
+		return !requiredCube.getCurrentStage().precedes(targetStage);
 	}
 
 	public Collection<Requirement> getRequirements(Cube cube) {
@@ -102,4 +106,20 @@ public class RegionDependency implements Dependency {
 		return requirements;
 	}
 
+	/**
+	 * Returns true iff the given cube's dependencies defined by this object are satisfied.
+	 *
+	 * @param cube The cube for which satisfaction is to be checked.
+	 * @param cubeProvider A cube provider granting access to all cubes of the world.
+	 * @return True iff the cube's dependencies defined by this object are satisfied.
+	 */
+	public boolean isSatisfied(Cube cube, ICubeCache cubeProvider) {
+		// For this dependency to be satisfied, all required cubes must be loaded and their stage must not precede the target stage.
+		for (Requirement requirement : this.getRequirements(cube)) {
+			if (!cubeProvider.cubeExists(requirement.getCoords()) || cubeProvider.getCube(requirement.getCoords()).getCurrentStage().precedes(targetStage)) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

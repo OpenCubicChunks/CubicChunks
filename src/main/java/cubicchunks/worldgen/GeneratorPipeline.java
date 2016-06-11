@@ -30,9 +30,9 @@ import cubicchunks.util.Progress;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.util.processor.QueueProcessor;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.dependency.Dependency;
-import cubicchunks.worldgen.dependency.DependencyManager;
+import cubicchunks.world.dependency.Dependency;
 import cubicchunks.worldgen.dependency.DependentCube;
+import cubicchunks.worldgen.dependency.DependentCubeManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,18 +44,20 @@ public class GeneratorPipeline {
 	private static final int TickBudget = 40; // ms. There are only 50 ms per tick
 
 	private ServerCubeCache cubes;
+
 	private List<GeneratorStage> stages;
+
 	private Map<String, GeneratorStage> stageMap;
-	
-	private DependencyManager dependencyManager;
-	
+
+	private DependentCubeManager dependentCubeManager;
+
 
 	public GeneratorPipeline(ServerCubeCache cubes) {
 		this.cubes = cubes;
 		this.stages = new ArrayList<>();
 		this.stageMap = new HashMap<>();
 		this.stageMap.put(GeneratorStage.LIVE.getName(), GeneratorStage.LIVE);
-		this.dependencyManager = new DependencyManager(cubes, this);
+		this.dependentCubeManager = new DependentCubeManager(cubes.getDependencyManager());
 	}
 
 	public void addStage(GeneratorStage stage, CubeProcessor processor) {
@@ -69,12 +71,30 @@ public class GeneratorPipeline {
 		for (GeneratorStage stage : this.stages) {
 			if (!stage.isLastStage()) {
 				if (stage.getProcessor() == null) {
-					throw new Error("Generator pipline configured incorrectly! Stage " + stage.getName() +
+					throw new Error("Generator pipeline configured incorrectly! Stage " + stage.getName() +
 							" is null! Fix your WorldServerContext constructor!");
 				}
 			}
 		}
 	}
+
+
+	public int getNumCubes() {
+		int num = 0;
+
+		for (GeneratorStage stage : this.stages) {
+			if (!stage.isLastStage()) {
+				num += stage.getProcessor().processor.getNumInQueue();
+			}
+		}
+
+		return num;
+	}
+
+	public DependentCubeManager getDependentCubeManager() {
+		return this.dependentCubeManager;
+	}
+
 
 	public void resume(Cube cube) {
 		cube.getCurrentStage().getProcessor().processor.add(cube.getAddress());
@@ -91,12 +111,12 @@ public class GeneratorPipeline {
 		// If the cube has dependencies, register it at the dependency manager and let it handle the rest.
 		Dependency dependency = currentStage.getDependency(cube);
 		if (dependency != null) {
-			DependentCube dependentCube = new DependentCube(cube, dependency);
-			this.dependencyManager.register(dependentCube);
+			DependentCube dependentCube = new DependentCube(this, cube, dependency);
+			this.dependentCubeManager.register(dependentCube);
 
 		// Otherwise, start processing.
 		} else {
-			currentStage.getProcessor().processor.add(cube.getAddress());
+			resume(cube);
 		}
 	}
 
@@ -110,19 +130,8 @@ public class GeneratorPipeline {
 		generate(cube);
 	}
 
-	public int getNumCubes() {
-		int num = 0;
-		
-		for (GeneratorStage stage : this.stages) {
-			if (!stage.isLastStage()) {
-				num += stage.getProcessor().processor.getNumInQueue();
-			}
-		}
-		
-		return num;
-	}
-
 	public int tick() {
+
 		long timeStart = System.currentTimeMillis();
 
 		// allocate time to each stage depending on busy it is
@@ -153,17 +162,6 @@ public class GeneratorPipeline {
 			int numMsToProcess = (int) (Math.ceil(processor.share*TickBudget));
 			long stageTimeStart = System.currentTimeMillis();
 			int numStageProcessed = processor.processor.processQueueUntil(stageTimeStart + numMsToProcess);
-			
-			/* DEBUG
-			CubicChunks.log.info("Stage {} processed {} cubes in {} ms of {}/{} ms ({}%).",
-				processor.processor.getName(),
-				numStageProcessed,
-				System.currentTimeMillis() - stageTimeStart,
-				(long)(processor.share*TickBudget),
-				TickBudget,
-				processor.share*100
-			);
-			*/
 
 			numProcessed += numStageProcessed;
 
@@ -220,27 +218,17 @@ public class GeneratorPipeline {
 				Cube cube = this.cubes.getCube(cubeX, cubeY, cubeZ);
 				
 				// Clear the cube's dependency.
-				this.dependencyManager.unregister(cube);
+				this.dependentCubeManager.unregister(cube);
 				
 				// Advance the cube's stage.
 				cube.setCurrentStage(nextStage);
 
 				// Update cubes depending on this cube.
-				this.dependencyManager.updateDependents(cube);
-				
-				// If the cube has not yet reached its target stage, continue.
-				if (cube.getCurrentStage().precedes(cube.getTargetStage())) {
-					Dependency dependency = stage.getDependency(cube);
-					if (dependency != null) {
-						DependentCube dependentCube = new DependentCube(cube, dependency);
-						this.dependencyManager.register(dependentCube);
+				this.dependentCubeManager.updateDependents(cube);
 
-						if (dependentCube.isSatisfied()) {
-							nextStage.getProcessor().processor.add(address);
-						}
-					} else {
-						nextStage.getProcessor().processor.add(address);
-					}
+				// If the next stage is not the cube's target stage, carry on.
+				if (nextStage.precedes(cube.getTargetStage())) {
+					generate(cube);
 				}
 			}
 		} 
@@ -254,7 +242,10 @@ public class GeneratorPipeline {
 				Cube cube = this.cubes.getCube(cubeX, cubeY, cubeZ);
 
 				// Clear the cube's dependency.
-				this.dependencyManager.unregister(cube);
+				this.dependentCubeManager.unregister(cube);
+
+				// Update cubes depending on this cube.
+				this.dependentCubeManager.updateDependents(cube);
 
 				// Update the cube's stage.
 				cube.setCurrentStage(GeneratorStage.LIVE);
@@ -271,8 +262,4 @@ public class GeneratorPipeline {
 		return this.stages.get(0);
 	}
 
-
-	public DependencyManager getDependencyManager() {
-		return this.dependencyManager;
-	}
 }

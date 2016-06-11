@@ -24,7 +24,10 @@
 
 package cubicchunks.worldgen;
 
-import cubicchunks.worldgen.dependency.DependencyProvider;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.world.dependency.Dependency;
+import cubicchunks.world.dependency.DependencyProvider;
+import cubicchunks.worldgen.dependency.RegionDependency;
 
 public abstract class GeneratorStage implements DependencyProvider {
 	
@@ -50,7 +53,13 @@ public abstract class GeneratorStage implements DependencyProvider {
 		this.isLast = false;
 	}
 	
-	
+
+	@Override
+	public String toString() {
+		return this.getName();
+	}
+
+
 	public String getName() {
 		return this.name;
 	}

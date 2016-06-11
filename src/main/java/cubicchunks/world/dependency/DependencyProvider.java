@@ -21,25 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.dependency;
 
-import cubicchunks.util.CubeCoords;
+package cubicchunks.world.dependency;
+
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.dependency.Dependency;
 
 /*
  * TODO: Commenting
  */
-import java.util.Collection;
+public interface DependencyProvider {
 
-public interface Dependent {
+	/**
+	 * Given a cube, may return a Dependency for determining the cube's requirements.
+	 *
+	 * @param cube The cube for which the Dependency shall provide requirements.
+	 *
+	 * @return A Dependency providing a list of Requirements for the given cube or null.
+	 */
+	Dependency getDependency(Cube cube);
 
-	boolean update(DependencyManager manager, Cube requiredCube);
-
-	boolean isSatisfied();
-
-	Collection<Requirement> getRequirements();
-
-	Requirement getRequirementFor(CubeCoords coords);
-
-	void addRequirement(Requirement requirement);
 }
