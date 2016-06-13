@@ -161,12 +161,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		return null;
 	}
 
-	@Override
-	public Column originalLoadChunk(int cubeX, int cubeZ) {
-		return this.loadColumn(cubeX, cubeZ, FORCE_LOAD);
-	}
-
-
 	/**
 	 * If this Column is already loaded - returns it.
 	 * Loads from disk if possible, otherwise generated new Column.

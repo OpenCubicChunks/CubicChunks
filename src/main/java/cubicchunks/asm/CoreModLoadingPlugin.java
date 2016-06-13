@@ -25,7 +25,7 @@ package cubicchunks.asm;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.asm.mixin.Mixins;
 
 import java.util.Map;
 
@@ -36,11 +36,8 @@ public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
 
 	public CoreModLoadingPlugin() {
 		MixinBootstrap.init();
-		MixinEnvironment.setCompatibilityLevel(MixinEnvironment.CompatibilityLevel.JAVA_8);
-		MixinEnvironment.getDefaultEnvironment()
-				.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
-		MixinEnvironment.getDefaultEnvironment()
-				.addConfiguration("cubicchunks.mixins.core.json");//*/
+		Mixins.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
+		Mixins.addConfiguration("cubicchunks.mixins.core.json");
 	}
 
 	@Override
