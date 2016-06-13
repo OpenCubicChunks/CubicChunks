@@ -50,7 +50,7 @@ public class MixinCommandFill {
 		return MixinUtils.getReplacementY(currentSender.getEntityWorld(), pos);
 	}
 
-	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6))
+	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 7))
 	private int getBlockPosYRedirectMax(BlockPos pos) {
 		return MixinUtils.getReplacementY(currentSender.getEntityWorld(), pos);
 	}
