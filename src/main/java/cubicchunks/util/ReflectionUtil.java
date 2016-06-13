@@ -41,7 +41,17 @@ public class ReflectionUtil {
 		}
 	}
 
-	public static void set(Object inObject, Field field, Object newValue) {
+	public static void setFieldValue(Object inObject, Field field, Object newValue) {
+		try {
+			field.set(inObject, newValue);
+		} catch (IllegalArgumentException | IllegalAccessException ex) {
+			throw new RuntimeException(ex);
+		}
+	}
+
+	public static void setFieldValue(Object inObject, String srgName, Object newValue) {
+		Field field = getFieldFromSrg(inObject.getClass(), srgName);
+		removeFinalModifier(field);
 		try {
 			field.set(inObject, newValue);
 		} catch (IllegalArgumentException | IllegalAccessException ex) {
@@ -95,7 +105,7 @@ public class ReflectionUtil {
 		return "L" + name + ";";
 	}
 
-	private static final Field getField(Class<?> owner, String srgName) {
+	private static final Field getFieldFromSrg(Class<?> owner, String srgName) {
 		Field[] allFields = owner.getDeclaredFields();
 		Field foundField = null;
 		String name = Mappings.getNameFromSrg(srgName);
@@ -112,7 +122,7 @@ public class ReflectionUtil {
 
 	public static MethodHandle getFieldGetterHandle(Class<?> owner, String srgName) {
 		String name = Mappings.getNameFromSrg(srgName);
-		Field field = getField(owner, name);
+		Field field = getFieldFromSrg(owner, name);
 		try {
 			return MethodHandles.lookup().unreflectGetter(field);
 		} catch (IllegalAccessException e) {
@@ -123,7 +133,7 @@ public class ReflectionUtil {
 
 	public static MethodHandle getFieldSetterHandle(Class<?> owner, String srgName) {
 		String name = Mappings.getNameFromSrg(srgName);
-		Field field = getField(owner, name);
+		Field field = getFieldFromSrg(owner, name);
 		try {
 			return MethodHandles.lookup().unreflectSetter(field);
 		} catch (IllegalAccessException e) {
@@ -137,7 +147,7 @@ public class ReflectionUtil {
 	 * <p>
 	 * Warning: Slow.
 	 */
-	public static <T> T getFieldFromSrg(Object from, String srgName) {
+	public static <T> T getFieldValueFromSrg(Object from, String srgName) {
 		String name = Mappings.getNameFromSrg(srgName);
 		Class<?> cl = from.getClass();
 		try {
