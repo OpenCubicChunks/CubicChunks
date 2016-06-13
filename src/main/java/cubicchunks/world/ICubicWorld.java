@@ -164,6 +164,8 @@ public interface ICubicWorld {
 
 	void addBlockEvent(BlockPos blockPos, Block i, int t, int p);
 
+	void scheduleBlockUpdate(BlockPos blockPos, Block i, int t, int p);
+
 	GameRules getGameRules();
 
 	WorldInfo getWorldInfo();

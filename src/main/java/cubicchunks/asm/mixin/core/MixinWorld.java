@@ -111,6 +111,8 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Shadow public abstract void addBlockEvent(BlockPos blockPos, Block i, int t, int p);
 
+	@Shadow public abstract void scheduleBlockUpdate(BlockPos blockPos, Block i, int t, int p);
+
 	@Shadow public abstract GameRules getGameRules();
 
 	@Shadow public abstract WorldInfo getWorldInfo();
@@ -268,6 +270,10 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Intrinsic public void world$addBlockEvent(BlockPos blockPos, Block i, int t, int p) {
 		this.addBlockEvent(blockPos, i, t, p);
+	}
+
+	@Intrinsic public void world$scheduleBlockUpdate(BlockPos blockPos, Block i, int t, int p) {
+		this.scheduleBlockUpdate(blockPos, i, t, p);
 	}
 
 	@Intrinsic public GameRules world$getGameRules() {
