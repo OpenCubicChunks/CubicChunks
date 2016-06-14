@@ -71,22 +71,6 @@ public class FirstLightProcessor extends CubeProcessor {
 
 	@Override
 	public Set<Cube> calculate(Cube cube) {
-
-		ICubicWorld world = cube.getWorld();
-		ICubeCache cache = world.getCubeCache();
-
-		for (int x = -2; x <= 2; ++x) {
-			for (int y = -2; y <= 2; ++y) {
-				for (int z = -2; z <= 2; ++z) {
-					CubeCoords coords = new CubeCoords(cube.getX() + x, cube.getY() + y, cube.getZ() + z);
-					if (!cache.cubeExists(coords) || cache.getCube(coords).getCurrentStage().precedes(generatorStage)) {
-						CubicChunks.LOGGER.error("Missing cube ({})! {}/{}", coords, cache.getCube(coords).getCurrentStage().getName(), generatorStage.getName());
-						System.exit(1);
-					}
-				}
-			}
-		}
-
 		setRawSkylight(cube);
 		diffuseSkylight(cube);
 		return Sets.newHashSet(cube);

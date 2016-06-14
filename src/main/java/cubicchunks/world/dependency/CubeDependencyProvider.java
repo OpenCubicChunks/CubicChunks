@@ -33,11 +33,11 @@ import javax.annotation.Nullable;
 public interface CubeDependencyProvider {
 
 	/**
-	 * Given a cube, may return a CubeDependency for determining the cube's requirements.
+	 * Given a Cube, may return a CubeDependency for determining the Cube's Requirements.
 	 *
-	 * @param cube The cube for which the CubeDependency shall provide requirements.
+	 * @param cube The Cube for which the CubeDependency shall provide Requirements.
 	 *
-	 * @return A CubeDependency providing a list of Requirements for the given cube or null.
+	 * @return A CubeDependency providing a list of Requirements for the given Cube or null.
 	 */
 	@Nullable
 	CubeDependency getCubeDependency(@Nonnull Cube cube);

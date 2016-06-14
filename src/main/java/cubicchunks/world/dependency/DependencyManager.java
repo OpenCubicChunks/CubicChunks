@@ -34,7 +34,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: Documentation
+/**
+ * The DependencyManager keeps track of Dependents and the cubes they require. When a Dependent is registered, the
+ * DependencyManager retrieves the Dependent's Requirements. It will automatically load required Cubes and notify the
+ * Dependents whenever the state of a RequiredCube changes.
+ * RequiredCubes will not be generated fully, as this would cause an infinite chain of Cubes being loaded. Instead,
+ * Requirements specify the GeneratorStage that they require a cube to be in and the DependencyManager in combination
+ * with the ServerCubeCache and the GeneratorPipeline will process the Cube up to that stage. If multiple Dependents
+ * require the same Cube, it will be processed up to the latest required stage.
+ */
 public class DependencyManager {
 
 	/**
@@ -47,7 +55,6 @@ public class DependencyManager {
 	 */
 	private Map<CubeCoords, RequiredCube> requiredMap;
 
-
 	/**
 	 * Creates a new instance of DependencyManager for managing cube dependencies for the given ServerCubeCache.
 	 *
@@ -58,10 +65,9 @@ public class DependencyManager {
 		this.requiredMap = new HashMap<>();
 	}
 
-
 	/**
-	 * Registers a given Dependent. All of the cubes it requires will be loaded up to the stage it needs them to be
-	 * at and it will be notified whenever one of its required cubes advances a stage.
+	 * Registers a given Dependent. All of the Cubes it requires will be loaded up to the GeneratorStage it needs them
+	 * to be at and it will be notified whenever one of the Cubes it requires advances a stage.
 	 *
 	 * @param dependent The Dependent to be registered.
 	 */
@@ -119,9 +125,9 @@ public class DependencyManager {
 	}
 
 	/**
-	 * Unregisters a given Dependent. Formerly required cubes will no longer be protected from being unloaded unless
-	 * other dependencies keep them around. The DependentCube will no longer be notified if one of its former
-	 * requirements advances a stage.
+	 * Unregisters a given Dependent. Formerly required Cubes will no longer be protected from being unloaded unless
+	 * other Dependents keep them around. The DependentCube will no longer be notified if one of its former
+	 * Requirements advances a stage.
 	 *
 	 * @param dependent The Dependent to be unregistered.
 	 */
@@ -145,10 +151,9 @@ public class DependencyManager {
 	}
 
 	/**
-	 * Must be invoked whenever a cube, which has reached its target stage, has been loaded. Notifies all dependents of
-	 * the cube.
+	 * Must be invoked whenever a Cube, has been loaded. Notifies all Dependents of said Cube.
 	 *
-	 * @param cube The newly loaded cube.
+	 * @param cube The newly loaded Cube.
 	 */
 	public void onLoad(@Nonnull Cube cube) {
 		RequiredCube requiredCube = this.requiredMap.get(cube.getCoords());
@@ -159,9 +164,9 @@ public class DependencyManager {
 	}
 
 	/**
-	 * Checks if the cube at a given set of coordinates is currently required to be loaded.
+	 * Checks if the Cube at a given set of coordinates is currently required to be loaded.
 	 *
-	 * @return True iff there exists at least one dependent requiring the given cube to remain loaded.
+	 * @return True iff there exists at least one Dependent requiring the given Cube to remain loaded.
 	 */
 	public boolean isRequired(@Nonnull CubeCoords coords) {
 		RequiredCube requiredCube = this.requiredMap.get(coords);
@@ -169,9 +174,9 @@ public class DependencyManager {
 	}
 
 	/**
-	 * Must be invoked whenever a cube advances to a new stage. Notifies all dependents of the cube.
+	 * Must be invoked whenever a Cube advances to a new GeneratorStage. Notifies all Dependents of the Cube.
 	 *
-	 * @param cube The cube for which its dependents will be notified.
+	 * @param cube The Cube for which its Dependents will be notified.
 	 */
 	public void updateDependents(@Nonnull Cube cube) {
 		RequiredCube requiredCube = this.requiredMap.get(cube.getCoords());
@@ -181,23 +186,12 @@ public class DependencyManager {
 	}
 
 	/**
-	 * Returns the total number of cubes currently being required.
+	 * Returns the total number of Cubes currently being required.
 	 *
-	 * @return The number of cubes currently being required to be loaded.
+	 * @return The number of Cubes currently being required to be loaded.
 	 */
 	public int getRequiredCubeCount() {
 		return this.requiredMap.size();
 	}
 
-
-	// TODO: Remove
-	public int getRogueCubes(ServerCubeCache cubeProvider) {
-		int rogue = 0;
-		for (RequiredCube cube : this.requiredMap.values()) {
-			if (!cubeProvider.cubeExists(cube.getCube().getCoords())) {
-				++rogue;
-			}
-		}
-		return rogue;
-	}
 }

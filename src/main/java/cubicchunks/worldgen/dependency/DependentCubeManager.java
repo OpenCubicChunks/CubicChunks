@@ -43,7 +43,7 @@ public class DependentCubeManager {
 	private DependencyManager dependencyManager;
 
 	/**
-	 * Contains an instance of DependentCube for each cube which depends on other cubes to be loaded.
+	 * Contains an instance of DependentCube for each Cube which depends on other cubes to be loaded.
 	 */
 	private Map<CubeCoords, DependentCube> dependentMap;
 
@@ -91,9 +91,9 @@ public class DependentCubeManager {
 	}
 
 	/**
-	 * If the given cube is registered with this DependentCubeManager, unregisters it. Otherwise, does nothing.
+	 * If the given Cube is registered with this DependentCubeManager, unregisters it. Otherwise, does nothing.
 	 *
-	 * @param cube The cube to be unregistered.
+	 * @param cube The Cube to be unregistered.
 	 */
 	public void unregister(@Nonnull Cube cube) {
 		DependentCube dependentCube = this.dependentMap.get(cube.getCoords());
@@ -103,32 +103,21 @@ public class DependentCubeManager {
 	}
 
 	/**
-	 * Must be invoked whenever a cube advances to a new stage. Notifies all dependents of the cube.
+	 * Must be invoked whenever a Cube advances to the next GeneratorStage. Notifies the Cube's Dependents.
 	 *
-	 * @param cube The cube for which its dependents will be notified.
+	 * @param cube The Cube for which its Dependents will be notified.
 	 */
 	public void updateDependents(@Nonnull Cube cube) {
 		this.dependencyManager.updateDependents(cube);
 	}
 
 	/**
-	 * Returns the total number of cubes currently depending on other cubes being loaded.
+	 * Returns the total number of Cubes currently depending on other Cubes being loaded.
 	 *
-	 * @return The number of cubes currently depending on other cubes being loaded.
+	 * @return The number of Cubes currently depending on other Cubes being loaded.
 	 */
 	public int getDependentCubeCount() {
 		return this.dependentMap.size();
 	}
 
-
-	// TODO: Remove
-	public int getRogueCubes(ICubeCache cubeCache) {
-		int rogue = 0;
-		for (DependentCube cube : this.dependentMap.values()) {
-			if (!cubeCache.cubeExists(cube.getCube().getCoords())) {
-				++rogue;
-			}
-		}
-		return rogue;
-	}
 }

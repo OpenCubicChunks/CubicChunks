@@ -29,27 +29,31 @@ import cubicchunks.worldgen.GeneratorStage;
 
 import javax.annotation.Nonnull;
 
-// TODO: Documentation
+/**
+ * Specifies the requirements of a Dependent for a Cube. The requirement includes the required stage for the Cube to be
+ * at, such that the CubeProvider and its GeneratorPipeline can determine when a Cube loaded for a Dependent does not
+ * require further processing.
+ */
 public class Requirement {
 
 	/**
-	 * The required cube's coordinates
+	 * The required Cube's coordinates
 	 */
 	private CubeCoords coords;
 
 	/**
-	 * The GeneratorStage the required cube must be at for this Requirement to be satisfied.
+	 * The GeneratorStage the required Cube must be at for this Requirement to be satisfied.
 	 */
 	private GeneratorStage targetStage;
 
 	private boolean satisfied;
 
 	/**
-	 * Creates a new instance of Requirement specifying that the cube at the given location must be at the given
+	 * Creates a new instance of Requirement specifying that the Cube at the given location must be at the given
 	 * GeneratorStage.
 	 *
-	 * @param coords The coordinates of the required cube.
-	 * @param targetStage The GeneratorStage the required cube must be at.
+	 * @param coords The coordinates of the required Cube.
+	 * @param targetStage The GeneratorStage the required Cube must be at.
 	 */
 	public Requirement(@Nonnull CubeCoords coords, @Nonnull GeneratorStage targetStage) {
 		this.coords = coords;
@@ -57,9 +61,9 @@ public class Requirement {
 	}
 
 	/**
-	 * Returns the coordinates of the required cube.
+	 * Returns the coordinates of this instance of RequiredCube.
 	 *
-	 * @return The required cube's coordinates
+	 * @return The required Cube's coordinates
 	 */
 	@Nonnull
 	public CubeCoords getCoords() {
@@ -67,9 +71,9 @@ public class Requirement {
 	}
 
 	/**
-	 * Returns the GeneratorStage the required cube must be at.
+	 * Returns the GeneratorStage the required Cube must be at.
 	 *
-	 * @return The GeneratorStage the required cube must be at.
+	 * @return The GeneratorStage the required Cube must be at.
 	 */
 	@Nonnull
 	public GeneratorStage getTargetStage() {
@@ -79,9 +83,9 @@ public class Requirement {
 	/**
 	 * Returns true iff this instance of Requirement and the given Requirement share the same coordinates and the
 	 * given Requirement's targetStage precedes or equals this instance's targetStage. If several Dependents require
-	 * the same cube, this method is used to determine the earliest GeneratorStage at which the required cube must be.
+	 * the same Cube, this method is used to determine the earliest GeneratorStage at which the required Cube must be.
 	 *
-	 * @param other The cube for which it has to be checked, whether this instance encompasses it.
+	 * @param other The Cube for which it has to be checked, whether this instance encompasses it.
 	 * @return True iff this instance and the given Requirement share the same coordinates and the given Requirement's
 	 *         targetStage precedes or equals this instance's targetStage.
 	 */
@@ -89,10 +93,21 @@ public class Requirement {
 		return this.coords.equals(other.coords) && !targetStage.precedes(other.targetStage);
 	}
 
+	/**
+	 * Sets whether this Requirement has been satisfied. May be used by the Dependent using this instance of Requirement
+	 * to keep track of which Requirements have been satisfied and those that it needs to wait for.
+	 *
+	 * @param satisfied True iff this Requirement is satisfied, false otherwise.
+	 */
 	public void setSatisfied(boolean satisfied) {
 		this.satisfied = satisfied;
 	}
 
+	/**
+	 * Returns true iff this Requirement was marked as being satisfied using setSatisfied, returns false otherwise.
+	 *
+	 * @return True iff this Requirement was marked as being satisfied, false otherwise.
+	 */
 	public boolean isSatisfied() {
 		return this.satisfied;
 	}

@@ -32,29 +32,29 @@ import cubicchunks.worldgen.dependency.DependentCube;
 import javax.annotation.Nonnull;
 
 /**
- * A class implementing this interface defines some form of dependence between cubes. It can provide requirements for
- * a given cube on other cubes, such that the dependency system can ensure that the required cubes are available.
+ * A class implementing this interface defines some form of dependence between cubes. It can provide Requirements for a
+ * given Cube on other Cubes, such that the dependency system can ensure that the required Cubes are available.
  */
 public interface CubeDependency {
 
 	/**
-	 * Provides a collection of requirements specifying the given cube's required cubes and the GeneratorStages they
+	 * Provides a collection of Requirements specifying the given Cube's required Cubes and the GeneratorStages they
 	 * need to be at.
 	 *
-	 * @return A collection of Requirements specifying the given cube's requirements.
+	 * @return A collection of Requirements specifying the given Cube's requirements.
 	 */
 	@Nonnull
 	Collection<Requirement> getRequirements(@Nonnull Cube cube);
 
 	/**
-	 * Called when the requiredCube is either loaded or advanced to its next GeneratorStage. The dependency must
-	 * determine if the given requiredCube has reached the required stage with respect to the given dependentCube and
+	 * Called when a RequiredCube is either loaded or advanced to its next GeneratorStage. This CubeDependency must
+	 * determine if the given RequiredCube has reached the required stage with respect to the given DependentCube and
 	 * return either true or false accordingly.
 	 *
 	 * @param manager The DependencyManager used by the server.
 	 * @param dependentCube The dependentCube for which the update is called.
 	 * @param requiredCube The updated cube.
-	 * @return True iff the requiredCube satisfies the dependentCube's requirements.
+	 * @return True iff the RequiredCube satisfies the DependentCube's requirements.
 	 */
 	boolean isSatisfied(@Nonnull DependencyManager manager, @Nonnull DependentCube dependentCube, @Nonnull Cube requiredCube);
 

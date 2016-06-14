@@ -33,8 +33,8 @@ import java.util.Collection;
 public interface Dependent {
 
 	/**
-	 * Provides a collection containing the coordinates of all of this Dependent's required cubes and the
-	 * GeneratorStages it requires those cubes to be at, in form of Requirements.
+	 * Provides a collection containing the coordinates of all of this Dependent's required Cubes and the
+	 * GeneratorStages it requires those Cubes to be at, in form of Requirements.
 	 * @see Requirement
 	 *
 	 * @return A collection containing all of the Dependent's Requirements.
@@ -43,7 +43,7 @@ public interface Dependent {
 	Collection<Requirement> getRequirements();
 
 	/**
-	 * Provides a Requirement specifying the GeneratorStage at which this Dependent requires the cube at the given
+	 * Provides a Requirement specifying the GeneratorStage at which this Dependent requires the Cube at the given
 	 * coordinates to be or null if this Dependent does not require it to be loaded.
 	 *
 	 * @param coords The coordinates for which the Requirement is to be retrieved.
@@ -53,18 +53,18 @@ public interface Dependent {
 	Requirement getRequirementFor(@Nonnull CubeCoords coords);
 
 	/**
-	 * Called whenever a cube which this Dependent requires is loaded or advances a GeneratorStage, such that the
+	 * Called whenever a Cube which this Dependent requires is loaded or advances a GeneratorStage, such that the
 	 * Dependent can check if its requirements changed.
 	 *
 	 * @param manager The DependencyManager responsible for the current world.
-	 * @param requiredCube The cube which has been updated.
+	 * @param requiredCube The Cube which has been updated.
 	 */
 	void update(@Nonnull DependencyManager manager, @Nonnull Cube requiredCube);
 
 	/**
-	 * Determines if all of the Dependent's requirements are fulfilled.
+	 * Determines if all of the Dependent's Requirements are satisfied.
 	 *
-	 * @return True iff all of the Dependent's requirements are fulfilled.
+	 * @return True iff all of the Dependent's Requirements are satisfied.
 	 */
 	boolean isSatisfied();
 

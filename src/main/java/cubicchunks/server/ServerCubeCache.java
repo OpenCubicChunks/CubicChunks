@@ -389,7 +389,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		// If the cube has yet to reach the target stage, resume generation.
 		if (cube.isBeforeStage(targetStage)) {
-			this.worldServer.getGeneratorPipeline().generate(cube);
+			this.worldServer.getGeneratorPipeline().generate(cube, targetStage);
 		}
 
 		// Init the column.

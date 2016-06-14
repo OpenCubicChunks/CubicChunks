@@ -36,15 +36,18 @@ import cubicchunks.world.dependency.Requirement;
 import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.util.math.Vec3i;
 
+import javax.annotation.Nonnull;
+
 /**
- * Specifies the dependency of a cube on other cubes in its vicinity.
+ * Specifies the dependency of a Cube on other cubes in its vicinity.
+ *
  * @see CubeDependency
  * @see DependencyManager
  */
 public class RegionDependency implements CubeDependency {
 
 	/**
-	 * The minimum GeneratorStage all cubes included in this region must be at for this CubeDependency to be satisfied.
+	 * The minimum GeneratorStage all Cubes included in this region must be at for this CubeDependency to be satisfied.
 	 */
 	private GeneratorStage targetStage;
 
@@ -59,14 +62,14 @@ public class RegionDependency implements CubeDependency {
 	private int zHigh;
 
 	/**
-	 * Creates a new instance of RegionDependency. All cubes within the given radius must be at the given targetStage
+	 * Creates a new instance of RegionDependency. All Cubes within the given radius must be at the given GeneratorStage
 	 * for this CubeDependency to be satisifed.
 	 *
-	 * @param targetStage The minimum GeneratorStage all cubes within the given radius must be at for this CubeDependency to
-	 *                    be satisfied.
-	 * @param radius The radius of the cuboid including all requried cubes.
+	 * @param targetStage The minimum GeneratorStage all Cubes within the given radius must be at for this
+	 *                    CubeDependency to be satisfied.
+	 * @param radius The radius of the cuboid including all required Cubes.
 	 */
-	public RegionDependency(GeneratorStage targetStage, int radius) {
+	public RegionDependency(@Nonnull GeneratorStage targetStage, int radius) {
 
 		this.targetStage = targetStage;
 
@@ -79,16 +82,16 @@ public class RegionDependency implements CubeDependency {
 	}
 
 	/**
-	 * Creates a new instance of RegionDependency. All cubes inside of the cuboid specified by relA and relB must be at
-	 * the given targetStage for this CubeDependency to be satisfied. The relative orientation of relA and relB to each
-	 * other is not relevant.
+	 * Creates a new instance of RegionDependency. All Cubes inside of the cuboid specified by relA and relB must be at
+	 * the given GeneratorStage for this CubeDependency to be satisfied. The relative orientation of relA and relB to
+	 * each is irrelevant.
 	 *
-	 * @param targetStage The minimum GeneratorStage all cubes within the specified region must be at for this
+	 * @param targetStage The minimum GeneratorStage all Cubes within the specified region must be at for this
 	 *                    CubeDependency to be satisfied.
-	 * @param relA First corner of the cuboid including all required cubes.
-	 * @param relB Second corner of the cuboid including all required cubes.
+	 * @param relA First corner of the cuboid including all required Cubes.
+	 * @param relB Second corner of the cuboid including all required Cubes.
 	 */
-	public RegionDependency(GeneratorStage targetStage, Vec3i relA, Vec3i relB) {
+	public RegionDependency(@Nonnull GeneratorStage targetStage, @Nonnull Vec3i relA, @Nonnull Vec3i relB) {
 
 		this.targetStage = targetStage;
 
@@ -127,7 +130,7 @@ public class RegionDependency implements CubeDependency {
 	}
 
 	public boolean isSatisfied(DependencyManager manager, DependentCube dependentCube, Cube requiredCube) {
-		return !requiredCube.getCurrentStage().precedes(targetStage);
+		return requiredCube.hasReachedStage(this.targetStage);
 	}
 
 }

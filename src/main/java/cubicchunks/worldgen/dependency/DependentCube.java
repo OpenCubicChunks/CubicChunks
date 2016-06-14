@@ -24,6 +24,7 @@
 
 package cubicchunks.worldgen.dependency;
 
+import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.CubeDependency;
@@ -37,7 +38,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: Documentation
+/**
+ * Wrapper for Cubes using the interface Dependent. When a Cube is being generated, the GeneratorPipeline of the world
+ * determines if the given Cube has Requirements that need to be fulfilled. If that case, an instance of DependentCube
+ * keeps track of the Requirements of the Cube. Once all required Cubes have reached the required stage, the
+ * DependentCube will resume its cube's generation.
+ *
+ * @see GeneratorPipeline
+ * @see ServerCubeCache
+ */
 public class DependentCube implements Dependent {
 
 	/**
@@ -46,17 +55,17 @@ public class DependentCube implements Dependent {
 	private GeneratorPipeline generatorPipeline;
 
 	/**
-	 * The depending cube.
+	 * The depending Cube.
 	 */
 	private Cube cube;
 
 	/**
-	 * The CubeDependency defining the cube's Requirements.
+	 * The CubeDependency defining the Cube's Requirements.
 	 */
 	private CubeDependency cubeDependency;
 
 	/**
-	 * Contains all of this instance's cube's Requirements arranged by their cubes' coordinates.
+	 * Contains all of this instance's Cube's Requirements arranged by their Cbes' coordinates.
 	 */
 	private Map<CubeCoords, Requirement> requirements;
 
@@ -69,8 +78,8 @@ public class DependentCube implements Dependent {
 	 * Creates a new instance of DependentCube.
 	 *
 	 * @param generatorPipeline The world's GeneratorPipeline.
-	 * @param cube The depending cube.
-	 * @param cubeDependency The CubeDependency defining the cube's Requirements.
+	 * @param cube The depending Cube.
+	 * @param cubeDependency The CubeDependency defining the Cube's Requirements.
 	 */
 	public DependentCube(@Nonnull GeneratorPipeline generatorPipeline, @Nonnull Cube cube, @Nonnull CubeDependency cubeDependency) {
 		this.generatorPipeline = generatorPipeline;
@@ -85,9 +94,9 @@ public class DependentCube implements Dependent {
 	}
 
 	/**
-	 * Returns the cube whose Requirements this DependentCube manages.
+	 * Returns the Cube whose Requirements this DependentCube manages.
 	 *
-	 * @return The cube whose Requirements this DependentCube manages.
+	 * @return The Cube whose Requirements this DependentCube manages.
 	 */
 	@Nonnull
 	public Cube getCube() {
@@ -95,9 +104,9 @@ public class DependentCube implements Dependent {
 	}
 
 	/**
-	 * Returns the CubeDependency defining this cube's Requirements.
+	 * Returns the CubeDependency defining this Cube's Requirements.
 	 *
-	 * @return The CubeDependency defining this cube's Requirements.
+	 * @return The CubeDependency defining this Cube's Requirements.
 	 */
 	@Nonnull
 	public CubeDependency getCubeDependency() {

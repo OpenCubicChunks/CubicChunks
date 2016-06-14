@@ -32,22 +32,25 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 
-// TODO: Documentation
+/**
+ * Keeps track of Dependents of a given Cube and provides encapsulation for adding, removing and updating the
+ * Dependents.
+ */
 public class RequiredCube {
 
 	/**
-	 * The cube whose Dependents this RequiredCube manages. Null if the cube has not yet been loaded.
+	 * The Cube whose Dependents this RequiredCube manages. Null if the Cube has not yet been loaded.
 	 */
 	private Cube cube;
 
 	/**
-	 * A Collection containing all Dependents requiring this cube to remain loaded.
+	 * A Collection containing all Dependents requiring this Cube to remain loaded.
 	 */
 	private Collection<Dependent> dependents;
 
 
 	/**
-	 * Creates a new instance of RequiredCube for a cube that has not yet been loaded.
+	 * Creates a new instance of RequiredCube for a Cube that has not yet been loaded.
 	 */
 	public RequiredCube() {
 		this.cube = null;
@@ -55,9 +58,9 @@ public class RequiredCube {
 	}
 
 	/**
-	 * Creates a new instance of RequiredCube for a given cube.
+	 * Creates a new instance of RequiredCube for a given Cube.
 	 *
-	 * @param cube The cube for which this instance will keep track of its Dependents.
+	 * @param cube The Cube for which this instance will keep track of its Dependents.
 	 */
 	public RequiredCube(@Nonnull Cube cube) {
 		this.cube = cube;
@@ -65,9 +68,9 @@ public class RequiredCube {
 	}
 
 	/**
-	 * Returns the cube whose Dependents this RequiredCube manages.
+	 * Returns the Cube whose Dependents this RequiredCube manages.
 	 *
-	 * @return The cube whose Dependents this RequiredCube manages.
+	 * @return The Cube whose Dependents this RequiredCube manages.
 	 */
 	@Nullable
 	public Cube getCube() {
@@ -75,16 +78,16 @@ public class RequiredCube {
 	}
 
 	/**
-	 * Sets the cube whose Dependents this RequiredCube manages.
+	 * Sets the Cube whose Dependents this RequiredCube manages.
 	 *
-	 * @param cube The cube whose Dependents this RequiredCube manages
+	 * @param cube The Cube whose Dependents this RequiredCube manages
 	 */
 	public void setCube(@Nonnull Cube cube) {
 		this.cube = cube;
 	}
 
 	/**
-	 * Sets the GeneratorStage at which this cube must be for all of its Dependents to be satisfied. If the current
+	 * Sets the GeneratorStage at which this Cube must be for all of its Dependents to be satisfied. If the current
 	 * targetStage precedes the given stage, sets the new stage. Otherwise, does nothing.
 	 *
 	 * @param requiredStage The stage to be set.
@@ -96,9 +99,9 @@ public class RequiredCube {
 	}
 
 	/**
-	 * Returns true iff this cube is currently loaded on the server.
+	 * Returns true iff this Cube is currently loaded on the server.
 	 *
-	 * @return True iff this cube is currently available.
+	 * @return True iff this Cube is currently available.
 	 */
 	public boolean isAvailable() {
 		return this.cube != null;
@@ -118,14 +121,14 @@ public class RequiredCube {
 	 * Removes a Dependent of this RequiredCube.
 	 *
 	 * @param dependent The Dependent to be removed.
-	 * @return True iff the dependent was removed.
+	 * @return True iff the Dependent was removed.
 	 */
 	public boolean removeDependent(@Nonnull Dependent dependent) {
 		return this.dependents.remove(dependent);
 	}
 
 	/**
-	 * Returns true iff there is at least one cube requiring this cube to be loaded.
+	 * Returns true iff there is at least one Cube requiring this Cube to be loaded.
 	 * @return
 	 */
 	public boolean isRequired() {
@@ -133,7 +136,7 @@ public class RequiredCube {
 	}
 
 	/**
-	 * Notifies all of the cube's dependents about the cube's current status.
+	 * Notifies all of the Cube's dependents about the Cube's current status.
 	 */
 	public void updateDependents(@Nonnull DependencyManager manager) {
 		for (Dependent dependent : this.dependents) {

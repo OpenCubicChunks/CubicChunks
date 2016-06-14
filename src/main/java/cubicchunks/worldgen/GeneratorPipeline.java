@@ -133,11 +133,6 @@ public class GeneratorPipeline {
 
 		long timeStart = System.currentTimeMillis();
 
-		CubicChunks.LOGGER.info("Dependent: {}", this.dependentCubeManager.getDependentCubeCount());
-		CubicChunks.LOGGER.info("Rogue dependent: {}", this.dependentCubeManager.getRogueCubes(this.cubeProvider));
-		CubicChunks.LOGGER.info("Required: {}", this.cubeProvider.getDependencyManager().getRequiredCubeCount());
-		CubicChunks.LOGGER.info("Rogue required: {}", this.cubeProvider.getDependencyManager().getRogueCubes(this.cubeProvider));
-
 		// allocate time to each stage depending on busy it is
 		final int sizeCap = 500;
 		int numCubes = 0;
