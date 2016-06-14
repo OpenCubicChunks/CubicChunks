@@ -26,7 +26,7 @@ package cubicchunks.worldgen.dependency;
 
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.Dependency;
+import cubicchunks.world.dependency.CubeDependency;
 import cubicchunks.world.dependency.DependencyManager;
 import cubicchunks.world.dependency.Dependent;
 import cubicchunks.world.dependency.Requirement;
@@ -37,6 +37,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+// TODO: Documentation
 public class DependentCube implements Dependent {
 
 	/**
@@ -50,9 +51,9 @@ public class DependentCube implements Dependent {
 	private Cube cube;
 
 	/**
-	 * The Dependency defining the cube's Requirements.
+	 * The CubeDependency defining the cube's Requirements.
 	 */
-	private Dependency dependency;
+	private CubeDependency cubeDependency;
 
 	/**
 	 * Contains all of this instance's cube's Requirements arranged by their cubes' coordinates.
@@ -69,15 +70,15 @@ public class DependentCube implements Dependent {
 	 *
 	 * @param generatorPipeline The world's GeneratorPipeline.
 	 * @param cube The depending cube.
-	 * @param dependency The dependency defining the cube's Requirements.
+	 * @param cubeDependency The CubeDependency defining the cube's Requirements.
 	 */
-	public DependentCube(@Nonnull GeneratorPipeline generatorPipeline, @Nonnull Cube cube, @Nonnull Dependency dependency) {
+	public DependentCube(@Nonnull GeneratorPipeline generatorPipeline, @Nonnull Cube cube, @Nonnull CubeDependency cubeDependency) {
 		this.generatorPipeline = generatorPipeline;
 		this.cube = cube;
-		this.dependency = dependency;
+		this.cubeDependency = cubeDependency;
 		this.requirements = new HashMap<>();
 
-		for (Requirement requirement : dependency.getRequirements(cube)) {
+		for (Requirement requirement : cubeDependency.getRequirements(cube)) {
 			this.requirements.put(requirement.getCoords(), requirement);
 		}
 		this.remaining = this.requirements.size();
@@ -94,13 +95,13 @@ public class DependentCube implements Dependent {
 	}
 
 	/**
-	 * Returns the Dependency defining this cube's Requirements.
+	 * Returns the CubeDependency defining this cube's Requirements.
 	 *
-	 * @return The Dependency defining this cube's Requirements.
+	 * @return The CubeDependency defining this cube's Requirements.
 	 */
 	@Nonnull
-	public Dependency getDependency() {
-		return dependency;
+	public CubeDependency getCubeDependency() {
+		return cubeDependency;
 	}
 
 
@@ -117,8 +118,9 @@ public class DependentCube implements Dependent {
 	}
 
 	public void update(DependencyManager manager, Cube requiredCube) {
-		boolean satisfied = this.dependency.isSatisfied(manager, this, requiredCube);
-		if (satisfied) {
+		boolean satisfied = this.cubeDependency.isSatisfied(manager, this, requiredCube);
+		if (satisfied && !this.requirements.get(requiredCube.getCoords()).isSatisfied()) {
+			this.requirements.get(requiredCube.getCoords()).setSatisfied(true);
 			--this.remaining;
 
 			if (this.isSatisfied()) {

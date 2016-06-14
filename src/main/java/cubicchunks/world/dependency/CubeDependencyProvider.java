@@ -22,20 +22,24 @@
  *  THE SOFTWARE.
  */
 
-package cubicchunks.worldgen;
+package cubicchunks.world.dependency;
 
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.CubeDependency;
 
-public class IndependentGeneratorStage extends GeneratorStage {
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-	public IndependentGeneratorStage(String name) {
-		super(name);
-	}
+// TODO: Documentation
+public interface CubeDependencyProvider {
 
-	@Override
-	public CubeDependency getCubeDependency(Cube cube) {
-		return null;
-	}
+	/**
+	 * Given a cube, may return a CubeDependency for determining the cube's requirements.
+	 *
+	 * @param cube The cube for which the CubeDependency shall provide requirements.
+	 *
+	 * @return A CubeDependency providing a list of Requirements for the given cube or null.
+	 */
+	@Nullable
+	CubeDependency getCubeDependency(@Nonnull Cube cube);
 
 }

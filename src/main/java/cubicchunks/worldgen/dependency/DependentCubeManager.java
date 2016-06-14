@@ -24,15 +24,17 @@
 
 package cubicchunks.worldgen.dependency;
 
-import cubicchunks.CubicChunks;
 import cubicchunks.util.CubeCoords;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.DependencyManager;
+import cubicchunks.worldgen.GeneratorPipeline;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
+// TODO: Documentation
 public class DependentCubeManager {
 
 	/**
@@ -116,5 +118,17 @@ public class DependentCubeManager {
 	 */
 	public int getDependentCubeCount() {
 		return this.dependentMap.size();
+	}
+
+
+	// TODO: Remove
+	public int getRogueCubes(ICubeCache cubeCache) {
+		int rogue = 0;
+		for (DependentCube cube : this.dependentMap.values()) {
+			if (!cubeCache.cubeExists(cube.getCube().getCoords())) {
+				++rogue;
+			}
+		}
+		return rogue;
 	}
 }

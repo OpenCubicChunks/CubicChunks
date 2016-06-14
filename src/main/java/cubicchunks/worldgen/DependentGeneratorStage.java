@@ -22,36 +22,27 @@
  *  THE SOFTWARE.
  */
 
-package cubicchunks.world.dependency;
-
-import java.util.Collection;
+package cubicchunks.worldgen;
 
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.dependency.DependentCube;
+import cubicchunks.world.dependency.CubeDependency;
 
-import javax.annotation.Nonnull;
+public class DependentGeneratorStage  extends GeneratorStage {
 
-public interface Dependency {
+	private CubeDependency cubeDependency;
 
-	/**
-	 * Provides a collection of requirements specifying the given cube's required cubes and the GeneratorStages they
-	 * need to be at.
-	 *
-	 * @return A collection of Requirements specifying the given cube's requirements.
-	 */
-	@Nonnull
-	Collection<Requirement> getRequirements(@Nonnull Cube cube);
+	public DependentGeneratorStage(String name, CubeDependency cubeDependency) {
+		super(name);
+		this.cubeDependency = cubeDependency;
+	}
 
-	/**
-	 * Called when the requiredCube is either loaded or advanced to its next GeneratorStage. The dependency must
-	 * determine if the given requiredCube has reached the required stage with respect to the given dependentCube and
-	 * return either true or false accordingly.
-	 *
-	 * @param manager The DependencyManager used by the server.
-	 * @param dependentCube The dependentCube for which the update is called.
-	 * @param requiredCube The updated cube.
-	 * @return True iff the requiredCube satisfies the dependentCube's requirements.
-	 */
-	boolean isSatisfied(@Nonnull DependencyManager manager, @Nonnull DependentCube dependentCube, @Nonnull Cube requiredCube);
+	@Override
+	public CubeDependency getCubeDependency(Cube cube) {
+		return this.cubeDependency;
+	}
+
+	public void setCubeDependency(CubeDependency cubeDependency) {
+		this.cubeDependency = cubeDependency;
+	}
 
 }

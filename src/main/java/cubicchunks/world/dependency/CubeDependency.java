@@ -24,21 +24,38 @@
 
 package cubicchunks.world.dependency;
 
+import java.util.Collection;
+
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.dependency.DependentCube;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-public interface DependencyProvider {
+/**
+ * A class implementing this interface defines some form of dependence between cubes. It can provide requirements for
+ * a given cube on other cubes, such that the dependency system can ensure that the required cubes are available.
+ */
+public interface CubeDependency {
 
 	/**
-	 * Given a cube, may return a Dependency for determining the cube's requirements.
+	 * Provides a collection of requirements specifying the given cube's required cubes and the GeneratorStages they
+	 * need to be at.
 	 *
-	 * @param cube The cube for which the Dependency shall provide requirements.
-	 *
-	 * @return A Dependency providing a list of Requirements for the given cube or null.
+	 * @return A collection of Requirements specifying the given cube's requirements.
 	 */
-	@Nullable
-	Dependency getDependency(@Nonnull Cube cube);
+	@Nonnull
+	Collection<Requirement> getRequirements(@Nonnull Cube cube);
+
+	/**
+	 * Called when the requiredCube is either loaded or advanced to its next GeneratorStage. The dependency must
+	 * determine if the given requiredCube has reached the required stage with respect to the given dependentCube and
+	 * return either true or false accordingly.
+	 *
+	 * @param manager The DependencyManager used by the server.
+	 * @param dependentCube The dependentCube for which the update is called.
+	 * @param requiredCube The updated cube.
+	 * @return True iff the requiredCube satisfies the dependentCube's requirements.
+	 */
+	boolean isSatisfied(@Nonnull DependencyManager manager, @Nonnull DependentCube dependentCube, @Nonnull Cube requiredCube);
 
 }

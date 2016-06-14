@@ -29,6 +29,7 @@ import cubicchunks.worldgen.GeneratorStage;
 
 import javax.annotation.Nonnull;
 
+// TODO: Documentation
 public class Requirement {
 
 	/**
@@ -40,6 +41,8 @@ public class Requirement {
 	 * The GeneratorStage the required cube must be at for this Requirement to be satisfied.
 	 */
 	private GeneratorStage targetStage;
+
+	private boolean satisfied;
 
 	/**
 	 * Creates a new instance of Requirement specifying that the cube at the given location must be at the given
@@ -84,5 +87,13 @@ public class Requirement {
 	 */
 	public boolean encompasses(@Nonnull Requirement other) {
 		return this.coords.equals(other.coords) && !targetStage.precedes(other.targetStage);
+	}
+
+	public void setSatisfied(boolean satisfied) {
+		this.satisfied = satisfied;
+	}
+
+	public boolean isSatisfied() {
+		return this.satisfied;
 	}
 }

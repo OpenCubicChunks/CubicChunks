@@ -24,10 +24,10 @@
 
 package cubicchunks.worldgen;
 
-import cubicchunks.world.dependency.DependencyProvider;
+import cubicchunks.world.dependency.CubeDependencyProvider;
 import net.minecraft.world.World;
 
-public abstract class GeneratorStage implements DependencyProvider {
+public abstract class GeneratorStage implements CubeDependencyProvider {
 
 	public static GeneratorStage LIVE = new IndependentGeneratorStage("live");
 	static {

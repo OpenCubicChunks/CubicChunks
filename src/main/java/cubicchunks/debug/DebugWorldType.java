@@ -33,7 +33,7 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.world.dependency.Dependency;
+import cubicchunks.world.dependency.CubeDependency;
 import cubicchunks.worldgen.dependency.RegionDependency;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 import net.minecraft.init.Blocks;
@@ -52,7 +52,7 @@ public class DebugWorldType extends BaseCubicWorldType {
 		// init the worldgen pipeline
 		GeneratorStage terrain = new IndependentGeneratorStage("debug");
 		GeneratorStage randomblock = new GeneratorStage("debug_randomblock") {
-			@Override public Dependency getDependency(Cube cube) {
+			@Override public CubeDependency getCubeDependency(Cube cube) {
 				return new RegionDependency(this, 1);
 			}
 		};

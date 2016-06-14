@@ -30,7 +30,7 @@ import cubicchunks.util.Progress;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.util.processor.QueueProcessor;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.Dependency;
+import cubicchunks.world.dependency.CubeDependency;
 import cubicchunks.worldgen.dependency.DependentCube;
 import cubicchunks.worldgen.dependency.DependentCubeManager;
 
@@ -108,9 +108,9 @@ public class GeneratorPipeline {
 		}
 
 		// If the cube has dependencies, register it at the dependency manager and let it handle the rest.
-		Dependency dependency = cube.getCurrentStage().getDependency(cube);
-		if (dependency != null) {
-			DependentCube dependentCube = new DependentCube(this, cube, dependency);
+		CubeDependency cubeDependency = cube.getCurrentStage().getCubeDependency(cube);
+		if (cubeDependency != null) {
+			DependentCube dependentCube = new DependentCube(this, cube, cubeDependency);
 			this.dependentCubeManager.register(dependentCube);
 
 		// Otherwise, start processing.
@@ -132,6 +132,11 @@ public class GeneratorPipeline {
 	public int tick() {
 
 		long timeStart = System.currentTimeMillis();
+
+		CubicChunks.LOGGER.info("Dependent: {}", this.dependentCubeManager.getDependentCubeCount());
+		CubicChunks.LOGGER.info("Rogue dependent: {}", this.dependentCubeManager.getRogueCubes(this.cubeProvider));
+		CubicChunks.LOGGER.info("Required: {}", this.cubeProvider.getDependencyManager().getRequiredCubeCount());
+		CubicChunks.LOGGER.info("Rogue required: {}", this.cubeProvider.getDependencyManager().getRogueCubes(this.cubeProvider));
 
 		// allocate time to each stage depending on busy it is
 		final int sizeCap = 500;

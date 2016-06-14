@@ -371,15 +371,21 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			return;
 		}
 
-		// If loading it didn't work and generating it was not requested, quit.
-		if (cube == null && loadType != LoadType.LOAD_OR_GENERATE) {
-			return;
+		// If loading it didn't work...
+		if (cube == null) {
+			// ... and generating was requested, generate it.
+			if (loadType == LoadType.LOAD_OR_GENERATE) {
+				// Have the column generate a new cube object and configure it for generation.
+				cube = column.getOrCreateCube(cubeY, true);
+				cube.setCurrentStage(this.worldServer.getGeneratorPipeline().getFirstStage());
+				cube.setTargetStage(targetStage);
+			}
+			// ... otherwise quit.
+			else {
+				return;
+			}
 		}
 
-		// Have the column generate a new cube object and configure it for generation.
-		cube = column.getOrCreateCube(cubeY, true);
-		cube.setCurrentStage(this.worldServer.getGeneratorPipeline().getFirstStage());
-		cube.setTargetStage(targetStage);
 
 		// If the cube has yet to reach the target stage, resume generation.
 		if (cube.isBeforeStage(targetStage)) {

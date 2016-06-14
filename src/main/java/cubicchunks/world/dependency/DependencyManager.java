@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+// TODO: Documentation
 public class DependencyManager {
 
 	/**
@@ -188,4 +189,15 @@ public class DependencyManager {
 		return this.requiredMap.size();
 	}
 
+
+	// TODO: Remove
+	public int getRogueCubes(ServerCubeCache cubeProvider) {
+		int rogue = 0;
+		for (RequiredCube cube : this.requiredMap.values()) {
+			if (!cubeProvider.cubeExists(cube.getCube().getCoords())) {
+				++rogue;
+			}
+		}
+		return rogue;
+	}
 }
