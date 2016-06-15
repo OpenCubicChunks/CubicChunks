@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--This should be used only in dev environment, it should be removed for release
+TODO: figure out how to automatically remove log4j2.xml for release
+-->
 <Configuration status="WARN" packages="com.mojang.util">
     <Appenders>
         <Console name="FmlSysOut" target="SYSTEM_OUT">

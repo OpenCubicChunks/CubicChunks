@@ -26,6 +26,9 @@ package cubicchunks;
 import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
+import cubicchunks.util.ReflectionUtil;
+import cubicchunks.world.CubicWorldProviderSurface;
+import net.minecraft.world.DimensionType;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -51,6 +54,11 @@ public class CubicChunks {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
 		LOGGER = e.getModLog();
+		//Set custom WorldProvider for Overworld
+		//for vanilla world this world provider will work the same way as vanilla world provider
+
+		//set "clazz" field
+		ReflectionUtil.setFieldValue(DimensionType.OVERWORLD, "field_186077_g", CubicWorldProviderSurface.class);
 	}
 
 	@EventHandler

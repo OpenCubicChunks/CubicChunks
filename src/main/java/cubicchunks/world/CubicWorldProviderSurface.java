@@ -21,45 +21,21 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm;
+package cubicchunks.world;
 
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.mixin.Mixins;
+import net.minecraft.world.WorldProviderSurface;
 
-import java.util.Map;
-
-@IFMLLoadingPlugin.MCVersion(value = "1.9.4")
-@IFMLLoadingPlugin.SortingIndex(value = 5000)
-@IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
-public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
-
-	public CoreModLoadingPlugin() {
-		MixinBootstrap.init();
-		Mixins.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
-		Mixins.addConfiguration("cubicchunks.mixins.core.json");
+/**
+ * CubicChunks WorldProvider for Overworld.
+ */
+public class CubicWorldProviderSurface extends WorldProviderSurface {
+	@Override
+	public int getHeight() {
+		return ((ICubicWorld) this.worldObj).getMaxHeight();
 	}
 
 	@Override
-	public String[] getASMTransformerClass() {
-		return new String[]{};
-	}
-
-	@Override
-	public String getModContainerClass() {
-		return null;
-	}
-
-	@Override
-	public String getSetupClass() {
-		return null;
-	}
-
-	@Override
-	public void injectData(Map<String, Object> data) { }
-
-	@Override
-	public String getAccessTransformerClass() {
-		return null;
+	public int getActualHeight() {
+		return hasNoSky ? 128 : getHeight();
 	}
 }

@@ -21,45 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm;
+package cubicchunks.asm.mixin.core;
 
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.mixin.Mixins;
+import cubicchunks.asm.MixinUtils;
+import net.minecraft.block.BlockPistonBase;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Group;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.util.Map;
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
-@IFMLLoadingPlugin.MCVersion(value = "1.9.4")
-@IFMLLoadingPlugin.SortingIndex(value = 5000)
-@IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
-public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
-
-	public CoreModLoadingPlugin() {
-		MixinBootstrap.init();
-		Mixins.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
-		Mixins.addConfiguration("cubicchunks.mixins.core.json");
-	}
-
-	@Override
-	public String[] getASMTransformerClass() {
-		return new String[]{};
-	}
-
-	@Override
-	public String getModContainerClass() {
-		return null;
-	}
-
-	@Override
-	public String getSetupClass() {
-		return null;
-	}
-
-	@Override
-	public void injectData(Map<String, Object> data) { }
-
-	@Override
-	public String getAccessTransformerClass() {
-		return null;
+@Mixin(BlockPistonBase.class)
+public class MixinBlockPistonBase_HeightFix {
+	@Group(min = 4, max = 4)
+	@Redirect(method = "canPush", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 4)
+	private static int getBlockYRedirect(BlockPos pos, IBlockState blockStateIn, World worldIn, BlockPos posArg, EnumFacing facing, boolean destroyBlocks) {
+		return MixinUtils.getReplacementY(worldIn, pos);
 	}
 }

@@ -142,6 +142,10 @@ public class PlayerCubeMapEntry {
 		return this.cube != null;
 	}
 
+	public boolean isSentToPlayers() {
+		return sentToPlayers;
+	}
+
 	public boolean sendToPlayers() {
 		if (this.sentToPlayers) {
 			return true;

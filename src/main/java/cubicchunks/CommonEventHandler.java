@@ -41,12 +41,6 @@ public class CommonEventHandler {
 		CubicChunks.LOGGER.info("Initializing world " + evt.getWorld() + " with type " + evt.getWorld().getWorldType());
 		ICubicWorld world = (ICubicWorld) evt.getWorld();
 		world.initCubicWorld();
-		if (world instanceof ICubicWorldServer) {
-			ICubicWorldServer worldServer = (ICubicWorldServer) world;
-			worldServer.generateWorld();
-			//TODO: Fix mob spawning
-			world.getGameRules().setOrCreateGameRule("doMobSpawning", String.valueOf(false));
-		}
 	}
 
 	@SubscribeEvent

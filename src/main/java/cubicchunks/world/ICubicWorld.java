@@ -30,20 +30,25 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
 
@@ -126,12 +131,19 @@ public interface ICubicWorld {
 
 	@Nullable Cube getCubeFromBlockCoords(BlockPos pos);
 
+	int getEffectiveHeight(int blockX, int blockZ);
+
+	//this is a hack
+	void setGeneratingWorld(boolean generating);
+
 	//vanilla part
 
 	//field accessors
 	WorldProvider getProvider();
 
 	Random getRand();
+
+	List<EntityPlayer> getPlayerEntities();
 
 	boolean isRemote();
 
@@ -164,6 +176,8 @@ public interface ICubicWorld {
 
 	void addBlockEvent(BlockPos blockPos, Block i, int t, int p);
 
+	void scheduleBlockUpdate(BlockPos blockPos, Block i, int t, int p);
+
 	GameRules getGameRules();
 
 	WorldInfo getWorldInfo();
@@ -182,6 +196,13 @@ public interface ICubicWorld {
 
 	BlockPos getSpawnPoint();
 
-	//this is a hack
-	void setGeneratingWorld(boolean generating);
+	WorldBorder getWorldBorder();
+
+	int countEntities(EnumCreatureType type, boolean flag);
+
+	boolean isAnyPlayerWithinRangeAt(double f, double i3, double f1, double v);
+
+	DifficultyInstance getDifficultyForLocation(BlockPos pos);
+
+	boolean spawnEntityInWorld(Entity entityliving);
 }

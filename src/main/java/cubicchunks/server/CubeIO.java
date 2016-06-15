@@ -38,6 +38,7 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldProvider;
@@ -46,6 +47,7 @@ import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraft.world.storage.IThreadedFileIO;
 import net.minecraft.world.storage.ThreadedFileIOBase;
+import net.minecraftforge.common.util.Constants;
 import org.apache.logging.log4j.Logger;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -424,13 +426,19 @@ public class CubeIO implements IThreadedFileIO {
 		if (nbtScheduledTicks != null) {
 			for (int i = 0; i < nbtScheduledTicks.tagCount(); i++) {
 				NBTTagCompound nbtScheduledTick = nbtScheduledTicks.getCompoundTagAt(i);
-				this.world.addBlockEvent(
+				Block block;
+				if (nbtScheduledTick.hasKey("i", Constants.NBT.TAG_STRING)) {
+					block = Block.getBlockFromName(nbtScheduledTick.getString("i"));
+				} else {
+					block = Block.getBlockById(nbtScheduledTick.getInteger("i"));
+				}
+				this.world.scheduleBlockUpdate(
 						new BlockPos(
 								nbtScheduledTick.getInteger("x"),
 								nbtScheduledTick.getInteger("y"),
 								nbtScheduledTick.getInteger("z")
 						),
-						Block.getBlockById(nbtScheduledTick.getInteger("i")),
+						block,
 						nbtScheduledTick.getInteger("t"),
 						nbtScheduledTick.getInteger("p")
 				);
@@ -555,7 +563,8 @@ public class CubeIO implements IThreadedFileIO {
 			nbt.setTag("TileTicks", nbtTicks);
 			for (NextTickListEntry scheduledTick : scheduledTicks) {
 				NBTTagCompound nbtScheduledTick = new NBTTagCompound();
-				nbtScheduledTick.setInteger("i", Block.getIdFromBlock(scheduledTick.getBlock()));
+				ResourceLocation resourcelocation = Block.REGISTRY.getNameForObject(scheduledTick.getBlock());
+				nbtScheduledTick.setString("i", resourcelocation.toString());
 				nbtScheduledTick.setInteger("x", scheduledTick.position.getX());
 				nbtScheduledTick.setInteger("y", scheduledTick.position.getY());
 				nbtScheduledTick.setInteger("z", scheduledTick.position.getZ());

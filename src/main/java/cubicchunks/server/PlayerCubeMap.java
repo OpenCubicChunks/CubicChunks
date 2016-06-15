@@ -27,6 +27,7 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.ICubicWorldServer;
@@ -96,7 +97,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	 * Mapping of Cube addresses to CubeWatchers (Cube equivalent of PlayerManager.PlayerInstance).
 	 * Contains cube addresses of all cubes loaded by players.
 	 */
-	private final TLongObjectMap<cubicchunks.server.PlayerCubeMapEntry> cubeWatchers = new TLongObjectHashMap<>();
+	private final TLongObjectMap<PlayerCubeMapEntry> cubeWatchers = new TLongObjectHashMap<>();
 
 	/**
 	 * Mapping of Column addresses to ColumnWatchers.
@@ -109,7 +110,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	/**
 	 * All cubeWatchers that have pending block updates to send.
 	 */
-	private final Set<cubicchunks.server.PlayerCubeMapEntry> cubeWatchersToUpdate = new HashSet<>();
+	private final Set<PlayerCubeMapEntry> cubeWatchersToUpdate = new HashSet<>();
 
 	/**
 	 * Contains all CubeWatchers that need to be sent to clients,
@@ -118,7 +119,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	 * Note that this is not the same as toGenerate list.
 	 * Cube can be loaded while not being fully generated yet (not in the last GeneratorPipeline stage).
 	 */
-	private final List<cubicchunks.server.PlayerCubeMapEntry> toSendToClient = new ArrayList<>();
+	private final List<PlayerCubeMapEntry> toSendToClient = new ArrayList<>();
 
 	/**
 	 * Contains all CubeWatchers that still need to be loaded/generated.
@@ -126,7 +127,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	 * Technically it can generate it, especially with GeneratorPipeline
 	 * but spectator players can't generate chunks if spectatorsGenerateChunks gamerule is set.
 	 */
-	private final List<cubicchunks.server.PlayerCubeMapEntry> toGenerate = new ArrayList<>();
+	private final List<PlayerCubeMapEntry> toGenerate = new ArrayList<>();
 
 	private int viewDistance;
 
@@ -193,14 +194,14 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		if (currentTime - this.previousWorldTime > 8000L) {
 			this.previousWorldTime = currentTime;
 
-			for (cubicchunks.server.PlayerCubeMapEntry playerInstance : this.cubeWatchers.valueCollection()) {
+			for (PlayerCubeMapEntry playerInstance : this.cubeWatchers.valueCollection()) {
 				playerInstance.update();
 				playerInstance.updateInhabitedTime();
 			}
 		}
 
 		//process instances to update
-		for (cubicchunks.server.PlayerCubeMapEntry playerInstance : this.cubeWatchersToUpdate) {
+		for (PlayerCubeMapEntry playerInstance : this.cubeWatchersToUpdate) {
 			playerInstance.update();
 		}
 		this.cubeWatchersToUpdate.clear();
@@ -228,10 +229,10 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		if (!this.toGenerate.isEmpty()) {
 			long stopTime = System.nanoTime() + 50000000L;
 			int maxChunksToLoad = 49;
-			Iterator<cubicchunks.server.PlayerCubeMapEntry> iterator = this.toGenerate.iterator();
+			Iterator<PlayerCubeMapEntry> iterator = this.toGenerate.iterator();
 
 			while (iterator.hasNext()) {
-				cubicchunks.server.PlayerCubeMapEntry watcher = iterator.next();
+				PlayerCubeMapEntry watcher = iterator.next();
 
 				if (watcher.getCube() == null) {
 					boolean flag = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
@@ -256,10 +257,10 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		//actually this will only add then to a queue
 		if (!this.toSendToClient.isEmpty()) {
 			int toSend = 81*8;//sending cubes, so  send 8x more at once
-			Iterator<cubicchunks.server.PlayerCubeMapEntry> it = this.toSendToClient.iterator();
+			Iterator<PlayerCubeMapEntry> it = this.toSendToClient.iterator();
 
 			while (it.hasNext() && toSend >= 0) {
-				cubicchunks.server.PlayerCubeMapEntry playerInstance = it.next();
+				PlayerCubeMapEntry playerInstance = it.next();
 
 				if (playerInstance.sendToPlayers()) {
 					it.remove();
@@ -294,14 +295,14 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	 * If it can't load it or send it to client - adds it to toGenerate/toSendToClient
 	 */
 	private PlayerCubeMapEntry getOrCreateCubeWatcher(long cubeAddress) {
-		cubicchunks.server.PlayerCubeMapEntry cubeWatcher = this.cubeWatchers.get(cubeAddress);
+		PlayerCubeMapEntry cubeWatcher = this.cubeWatchers.get(cubeAddress);
 
 		if (cubeWatcher == null) {
 			int cubeX = getX(cubeAddress);
 			int cubeY = getY(cubeAddress);
 			int cubeZ = getZ(cubeAddress);
 			// make a new watcher
-			cubeWatcher = new cubicchunks.server.PlayerCubeMapEntry(this, cubeX, cubeY, cubeZ);
+			cubeWatcher = new PlayerCubeMapEntry(this, cubeX, cubeY, cubeZ);
 			this.cubeWatchers.put(cubeAddress, cubeWatcher);
 			if (cubeWatcher.getCube() == null) {
 				this.toGenerate.add(cubeWatcher);
@@ -361,8 +362,10 @@ public class PlayerCubeMap extends PlayerChunkMap {
 
 		this.cubeSelector.forAllVisibleFrom(address, viewDistance, (currentAddress) -> {
 			//create cubeWatcher and chunkWatcher
-			cubicchunks.server.PlayerCubeMapEntry cubeWatcher = getOrCreateCubeWatcher(currentAddress);
+			//order is important
 			PlayerCubeMapColumnEntry chunkWatcher = getOrCreateColumnWatcher(cubeToColumn(currentAddress));
+			PlayerCubeMapEntry cubeWatcher = getOrCreateCubeWatcher(currentAddress);
+
 			//and add the player to them
 			if (!chunkWatcher.containsPlayer(player)) {
 				chunkWatcher.addPlayer(player);
@@ -389,7 +392,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 			}
 
 			// get the watcher
-			cubicchunks.server.PlayerCubeMapEntry watcher = getCubeWatcher(address);
+			PlayerCubeMapEntry watcher = getCubeWatcher(address);
 			if (watcher == null) {
 				CubicChunks.LOGGER.warn(
 						"Found existing cube with no cube watcher that should be watched by a player at address " +
@@ -465,6 +468,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		// calculate new visibility
 		this.cubeSelector.findChanged(oldAddress, newAddress, viewDistance, cubesToRemove, cubesToLoad, columnsToRemove, columnsToLoad);
 
+		//order is important, columns first
 		columnsToLoad.forEach(address -> {
 			this.getOrCreateColumnWatcher(address).addPlayer(entry.playerEntity);
 			return true;
@@ -475,7 +479,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		});
 
 		cubesToRemove.forEach(address -> {
-			cubicchunks.server.PlayerCubeMapEntry cubeWatcher = this.getCubeWatcher(address);
+			PlayerCubeMapEntry cubeWatcher = this.getCubeWatcher(address);
 			if (cubeWatcher != null) {
 				cubeWatcher.removePlayer(entry.playerEntity);
 			}
@@ -525,13 +529,14 @@ public class PlayerCubeMap extends PlayerChunkMap {
 			if (newViewDistance > oldViewDistance) {
 				//if newRadius is bigger, we only need to load new cubes
 				this.cubeSelector.forAllVisibleFrom(playerAddress, newViewDistance, address -> {
-					cubicchunks.server.PlayerCubeMapEntry cubeWatcher = this.getOrCreateCubeWatcher(address);
-					if (!cubeWatcher.containsPlayer(player)) {
-						cubeWatcher.addPlayer(player);
-					}
+					//order is important
 					PlayerCubeMapColumnEntry playerCubeMapColumnEntry = this.getOrCreateColumnWatcher(cubeToColumn(address));
 					if (!playerCubeMapColumnEntry.containsPlayer(player)) {
 						playerCubeMapColumnEntry.addPlayer(player);
+					}
+					PlayerCubeMapEntry cubeWatcher = this.getOrCreateCubeWatcher(address);
+					if (!cubeWatcher.containsPlayer(player)) {
+						cubeWatcher.addPlayer(player);
 					}
 				});
 			} else {
@@ -541,7 +546,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 				this.cubeSelector.findAllUnloadedOnViewDistanceDecrease(playerAddress, oldViewDistance, newViewDistance, cubesToUnload, columnsToUnload);
 
 				cubesToUnload.forEach(address -> {
-					cubicchunks.server.PlayerCubeMapEntry cubeWatcher = this.getCubeWatcher(address);
+					PlayerCubeMapEntry cubeWatcher = this.getCubeWatcher(address);
 					if (cubeWatcher != null && cubeWatcher.containsPlayer(player)) {
 						cubeWatcher.removePlayer(player);
 					} else {
@@ -580,11 +585,11 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		throw new UnsupportedOperationException();
 	}
 
-	void addToUpdateEntry(cubicchunks.server.PlayerCubeMapEntry cubeWatcher) {
+	void addToUpdateEntry(PlayerCubeMapEntry cubeWatcher) {
 		this.cubeWatchersToUpdate.add(cubeWatcher);
 	}
 
-	void removeEntry(cubicchunks.server.PlayerCubeMapEntry cubeWatcher) {
+	void removeEntry(PlayerCubeMapEntry cubeWatcher) {
 		long address = cubeWatcher.getCubeAddress();
 		cubeWatcher.updateInhabitedTime();
 		this.cubeWatchers.remove(address);
@@ -601,15 +606,19 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		this.columnWatchers.remove(address);
 	}
 
-	private cubicchunks.server.PlayerCubeMapEntry getCubeWatcher(int cubeX, int cubeY, int cubeZ) {
+	public PlayerCubeMapEntry getCubeWatcher(CubeCoords pos) {
+		return getCubeWatcher(pos.getAddress());
+	}
+
+	public PlayerCubeMapEntry getCubeWatcher(int cubeX, int cubeY, int cubeZ) {
 		return getCubeWatcher(AddressTools.getAddress(cubeX, cubeY, cubeZ));
 	}
 
-	private cubicchunks.server.PlayerCubeMapEntry getCubeWatcher(long address) {
+	private PlayerCubeMapEntry getCubeWatcher(long address) {
 		return this.cubeWatchers.get(address);
 	}
 
-	private PlayerCubeMapColumnEntry getColumnWatcher(long address) {
+	public PlayerCubeMapColumnEntry getColumnWatcher(long address) {
 		return this.columnWatchers.get(address);
 	}
 
