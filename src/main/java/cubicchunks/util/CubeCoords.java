@@ -23,7 +23,9 @@
  */
 package cubicchunks.util;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 
 import static cubicchunks.util.Coords.CUBE_MAX_X;
 import static cubicchunks.util.Coords.CUBE_MAX_Y;
@@ -32,6 +34,9 @@ import static cubicchunks.util.Coords.HALF_CUBE_MAX_X;
 import static cubicchunks.util.Coords.HALF_CUBE_MAX_Y;
 import static cubicchunks.util.Coords.HALF_CUBE_MAX_Z;
 import static cubicchunks.util.Coords.blockToCube;
+import static cubicchunks.util.Coords.getCubeXForEntity;
+import static cubicchunks.util.Coords.getCubeYForEntity;
+import static cubicchunks.util.Coords.getCubeZForEntity;
 
 /**
  * Position of a cube.
@@ -203,5 +208,13 @@ public class CubeCoords {
 
 	public static CubeCoords fromBlockCoords(int blockX, int blockY, int blockZ) {
 		return new CubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
+	}
+
+	public static CubeCoords fromEntity(Entity entity) {
+		return new CubeCoords(getCubeXForEntity(entity), getCubeYForEntity(entity), getCubeZForEntity(entity));
+	}
+
+	public ChunkPos chunkPos() {
+		return new ChunkPos(getCubeX(), getCubeZ());
 	}
 }

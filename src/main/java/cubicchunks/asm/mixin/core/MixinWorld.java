@@ -29,13 +29,17 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.NotCubicChunksWorldException;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
@@ -43,6 +47,7 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
@@ -56,10 +61,12 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
 
 import static cubicchunks.util.Coords.blockToCube;
+import static cubicchunks.util.Coords.blockToLocal;
 
 @Mixin(World.class)
 @Implements(@Interface(iface = ICubicWorld.class, prefix = "world$"))
@@ -75,10 +82,6 @@ public abstract class MixinWorld implements ICubicWorld {
 	protected boolean isCubicWorld;
 	protected int minHeight = 0, maxHeight = 256;
 	private boolean wgenFullRelight;
-
-	protected void setSaveHandler(ISaveHandler newSaveHandler) {
-		this.saveHandler = newSaveHandler;
-	}
 
 	@Shadow public abstract WorldType getWorldType();
 
@@ -131,6 +134,16 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Shadow public abstract BlockPos getSpawnPoint();
 
+	@Shadow public abstract WorldBorder getWorldBorder();
+
+	@Shadow(remap = false) public abstract int countEntities(EnumCreatureType type, boolean flag);
+
+	@Shadow public abstract boolean isAnyPlayerWithinRangeAt(double f, double i3, double f1, double v);
+
+	@Shadow public abstract DifficultyInstance getDifficultyForLocation(BlockPos pos);
+
+	@Shadow public abstract boolean spawnEntityInWorld(Entity entity);
+
 	@Override public boolean isCubicWorld() {
 		return this.isCubicWorld;
 	}
@@ -144,14 +157,14 @@ public abstract class MixinWorld implements ICubicWorld {
 	}
 
 	@Override public ICubeCache getCubeCache() {
-		if(!this.isCubicWorld()) {
+		if (!this.isCubicWorld()) {
 			throw new NotCubicChunksWorldException();
 		}
 		return (ICubeCache) this.chunkProvider;
 	}
 
 	@Override public LightingManager getLightingManager() {
-		if(!this.isCubicWorld()) {
+		if (!this.isCubicWorld()) {
 			throw new NotCubicChunksWorldException();
 		}
 		return this.lightingManager;
@@ -159,7 +172,7 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Override
 	public boolean testForCubes(CubeCoords start, CubeCoords end, @Nullable Predicate<Cube> cubeAllowed) {
-		if(wgenFullRelight) {
+		if (wgenFullRelight) {
 			return true;
 		}
 		// convert block bounds to chunk bounds
@@ -199,6 +212,23 @@ public abstract class MixinWorld implements ICubicWorld {
 		return this.getCubeFromCubeCoords(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()));
 	}
 
+	@Override public void setGeneratingWorld(boolean generating) {
+		this.wgenFullRelight = generating;
+	}
+
+	@Override public int getEffectiveHeight(int blockX, int blockZ) {
+		Column column = this.getCubeCache().getColumn(blockToCube(blockX), blockToCube(blockZ));
+		if(column == null) {
+			return this.getMinHeight();
+		}
+		Integer height = column.getHeightmapAt(blockToLocal(blockX), blockToLocal(blockZ));
+		if (height == null) {
+			return this.getMinHeight();
+		}
+		return height;
+	}
+
+
 	//vanilla field accessors
 
 	@Override public WorldProvider getProvider() {
@@ -211,6 +241,10 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Override public boolean isRemote() {
 		return this.isRemote;
+	}
+
+	@Override public List<EntityPlayer> getPlayerEntities() {
+		return ((World) (Object) this).playerEntities;
 	}
 
 	//vanilla methods
@@ -312,8 +346,23 @@ public abstract class MixinWorld implements ICubicWorld {
 		return this.getSpawnPoint();
 	}
 
-	@Override
-	public void setGeneratingWorld(boolean generating) {
-		this.wgenFullRelight = generating;
+	@Intrinsic public WorldBorder world$getWorldBorder() {
+		return this.getWorldBorder();
+	}
+
+	@Intrinsic public int world$countEntities(EnumCreatureType type, boolean flag) {
+		return this.countEntities(type, flag);
+	}
+
+	@Intrinsic public boolean world$isAnyPlayerWithinRangeAt(double f, double i3, double f1, double v) {
+		return this.isAnyPlayerWithinRangeAt(f, i3, f1, v);
+	}
+
+	@Intrinsic public DifficultyInstance world$getDifficultyForLocation(BlockPos pos) {
+		return this.getDifficultyForLocation(pos);
+	}
+
+	@Intrinsic public boolean world$spawnEntityInWorld(Entity entity) {
+		return this.spawnEntityInWorld(entity);
 	}
 }

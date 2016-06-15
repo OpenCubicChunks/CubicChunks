@@ -29,14 +29,21 @@ import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
+import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
+import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.storage.ISaveHandler;
 import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
+import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,14 +51,23 @@ import org.spongepowered.asm.mixin.Shadow;
 import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 @Mixin(WorldServer.class)
+@Implements(@Interface(iface = ICubicWorldServer.class, prefix = "world$"))
 public abstract class MixinWorldServer extends MixinWorld implements ICubicWorldServer {
 	@Shadow @Mutable @Final private PlayerChunkMap thePlayerManager;
+	@Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
 	@Shadow public boolean disableLevelSaving;
 
 	private GeneratorPipeline generatorPipeline;
 
+	//vanilla method shadows
+	@Shadow public abstract Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
+
+	@Shadow public abstract boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
+	//vanilla methods end
 	@Override public void initCubicWorld() {
 		this.isCubicWorld = true;
+
+		this.entitySpawner = new CubeWorldEntitySpawner();
 
 		ServerCubeCache serverCubeCache = new ServerCubeCache(this);
 		this.chunkProvider = serverCubeCache;
@@ -69,7 +85,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.minHeight = type.getMinHeight();
 
 		final ISaveHandler orig = this.getSaveHandler();
-		this.setSaveHandler(new CubicChunksSaveHandler(this, orig));
+		this.saveHandler = new CubicChunksSaveHandler(this, orig);
+
+		this.generateWorld();
 	}
 
 	@Override public void generateWorld() {
@@ -122,4 +140,17 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		return this.disableLevelSaving;
 	}
 
+	@Override public PlayerCubeMap getPlayerCubeMap() {
+		return (PlayerCubeMap) this.thePlayerManager;
+	}
+
+	//vanilla methods
+
+	@Intrinsic public Biome.SpawnListEntry world$getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos) {
+		return this.getSpawnListEntryForTypeAt(type, pos);
+	}
+
+	@Intrinsic public boolean world$canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos) {
+		return this.canCreatureTypeSpawnHere(type, entry, pos);
+	}
 }
