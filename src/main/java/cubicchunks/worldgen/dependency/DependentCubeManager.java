@@ -25,10 +25,8 @@
 package cubicchunks.worldgen.dependency;
 
 import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.DependencyManager;
-import cubicchunks.worldgen.GeneratorPipeline;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;

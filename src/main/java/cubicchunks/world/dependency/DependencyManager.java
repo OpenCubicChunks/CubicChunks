@@ -111,9 +111,9 @@ public class DependencyManager {
 				if (!requiredCube.getCube().isBeforeStage(requirement.getTargetStage())) {
 					dependent.update(this, requiredCube.getCube());
 				}
-				// If the required cube's target stage precedes the required target stage, load it up to the required
+				// If the required cube's current stage precedes the required target stage, load it up to the required
 				// target stage.
-				else if (requiredCube.getCube().getTargetStage().precedes(requirement.getTargetStage())) {
+				else if (requiredCube.getCube().getCurrentStage().precedes(requirement.getTargetStage())) {
 					this.cubeProvider.loadCube(requirement.getCoords(), LoadType.LOAD_OR_GENERATE, requirement.getTargetStage());
 				}
 			}
