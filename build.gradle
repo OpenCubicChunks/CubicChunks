@@ -131,7 +131,7 @@ repositories {
 
 dependencies {
 	compile 'com.flowpowered:flow-noise:1.0.1-SNAPSHOT'
-	compile('org.mapdb:mapdb:3.0.0-beta5'){
+	compile('org.mapdb:mapdb:3.0.0-RC1'){
 		exclude module: 'guava'
 	}
 	testCompile 'junit:junit:4.11'
