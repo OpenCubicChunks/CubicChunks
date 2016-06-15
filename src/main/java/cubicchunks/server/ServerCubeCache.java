@@ -48,9 +48,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -79,7 +81,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	private CubeIO cubeIO;
 	private ColumnGenerator columnGenerator;
 	private HashMap<Long, Column> loadedColumns;
-	private Queue<Long> cubesToUnload;
+	private Queue<CubeCoords> cubesToUnload;
 	private DependencyManager dependencyManager;
 
 	/**
@@ -127,7 +129,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		// unload all the cubes in the columns
 		for (Column column : this.loadedColumns.values()) {
 			for (Cube cube : column.getAllCubes()) {
-				this.cubesToUnload.add(cube.getAddress());
+				this.cubesToUnload.add(cube.getCoords());
 			}
 		}
 	}
@@ -212,15 +214,16 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		final int MaxNumToUnload = 400;
 
 		// unload cubes
-		for (int i = 0; i < MaxNumToUnload && !this.cubesToUnload.isEmpty(); i++) {
-			long cubeAddress = this.cubesToUnload.poll();
+		Iterator<CubeCoords> iter = this.cubesToUnload.iterator();
+		while (iter.hasNext()) {
+			CubeCoords coords = iter.next();
 
 			// Skip unloading the cube if it is required.
-			if (this.dependencyManager.isRequired(new CubeCoords(cubeAddress))) {
+			if (this.dependencyManager.isRequired(coords)) {
 				continue;
 			}
 
-			long columnAddress = AddressTools.getAddress(AddressTools.getX(cubeAddress), AddressTools.getZ(cubeAddress));
+			long columnAddress = AddressTools.getAddress(coords.getCubeX(), coords.getCubeZ());
 
 			// get the cube
 			Column column = this.loadedColumns.get(columnAddress);
@@ -230,8 +233,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 
 			// unload the cube
-			int cubeY = AddressTools.getY(cubeAddress);
-			Cube cube = column.removeCube(cubeY);
+			Cube cube = column.removeCube(coords.getCubeY());
 			if (cube != null) {
 				this.recursivelyRemoveForceLoadedCube(cube);
 				
@@ -251,6 +253,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				this.loadedColumns.remove(columnAddress);
 				this.cubeIO.saveColumn(column);
 			}
+
+			iter.remove();
 		}
 
 		return false;
@@ -453,14 +457,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		if (cubeIsNearSpawn(cubeX, cubeY, cubeZ)) {
 			return;
 		}
-		
-		// Do not unload cubes which are required for generating currently loaded cubes.
-		if (dependencyManager.isRequired(new CubeCoords(cubeX, cubeY, cubeZ))) {
-			return;
-		}
 
 		// queue the cube for unloading
-		this.cubesToUnload.add(AddressTools.getAddress(cubeX, cubeY, cubeZ));
+		this.cubesToUnload.add(new CubeCoords(cubeX, cubeY, cubeZ));
 	}
 
 	public Cube forceLoadCube(Cube forcedBy, int cubeX, int cubeY, int cubeZ) {
