@@ -187,11 +187,11 @@ public class CubeCoords {
 	}
 
 	public int getMinBlockY() {
-		return Coords.cubeToMinBlock(cubeX);
+		return Coords.cubeToMinBlock(cubeY);
 	}
 
 	public int getMinBlockZ() {
-		return Coords.cubeToMinBlock(cubeX);
+		return Coords.cubeToMinBlock(cubeZ);
 	}
 
 	public BlockPos getCenterBlockPos() {
