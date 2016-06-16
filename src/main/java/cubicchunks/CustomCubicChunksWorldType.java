@@ -48,8 +48,7 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 		// init the worldgen pipeline
 		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
 
-		DependentGeneratorStage features = new DependentGeneratorStage("features", null);
-		features.setCubeDependency(new RegionDependency(features, new Vec3i(0, -1, 0), new Vec3i(0, 0, 0)));
+		GeneratorStage features = new IndependentGeneratorStage("features");
 
 		DependentGeneratorStage lighting = new DependentGeneratorStage("lighting", null);
 		lighting.setCubeDependency(new RegionDependency(lighting, 2));

@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core;
+package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
@@ -48,6 +48,9 @@ import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_FOR;
 import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_WITH_FLAG;
 import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
 
+/**
+ * Contains fixes for hardcoded height checks and other height-related issues.
+ */
 @Mixin(World.class)
 public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 

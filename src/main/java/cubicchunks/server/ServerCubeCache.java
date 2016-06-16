@@ -23,6 +23,7 @@
  */
 package cubicchunks.server;
 
+import com.flowpowered.noise.module.combiner.Max;
 import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
@@ -213,7 +214,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		// unload cubes
 		Iterator<CubeCoords> iter = this.cubesToUnload.iterator();
-		while (iter.hasNext()) {
+		int processed = 0;
+
+		while (iter.hasNext() && processed < MaxNumToUnload) {
 			CubeCoords coords = iter.next();
 
 			// Skip unloading the cube if it is required.
@@ -253,6 +256,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 
 			iter.remove();
+			++processed;
 		}
 
 		return false;

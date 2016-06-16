@@ -33,8 +33,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-import static cubicchunks.asm.JvmNames.CHUNK_CACHE_GET_LIGHT_FOR;
-import static cubicchunks.asm.JvmNames.CHUNK_CACHE_GET_LIGHT_FOR_EXT;
 
 @Mixin(ChunkCache.class)
 public abstract class MixinChunkCache_HeightLimits {
@@ -42,16 +40,20 @@ public abstract class MixinChunkCache_HeightLimits {
 
 	/**
 	 * Redirect to modify vanilla height check.
+	 *
+	 * @see MixinUtils#getReplacementY(cubicchunks.world.ICubicWorld, BlockPos)
 	 */
-	@Redirect(method = CHUNK_CACHE_GET_LIGHT_FOR, at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
-	private int getLightForgetYReplace(BlockPos pos) {
+	@Redirect(method = "getLightFor", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
+	private int getLightForGetYReplace(BlockPos pos) {
 		return MixinUtils.getReplacementY(worldObj, pos);
 	}
 
 	/**
 	 * Redirect to modify vanilla height check.
+	 *
+	 * @see MixinUtils#getReplacementY(cubicchunks.world.ICubicWorld, BlockPos)
 	 */
-	@Redirect(method = CHUNK_CACHE_GET_LIGHT_FOR_EXT, at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
+	@Redirect(method = "getLightForExt", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
 	private int getLightForExtGetYReplace(BlockPos pos) {
 		return  MixinUtils.getReplacementY(worldObj, pos);
 	}

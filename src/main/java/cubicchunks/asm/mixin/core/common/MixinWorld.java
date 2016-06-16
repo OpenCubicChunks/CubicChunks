@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core;
+package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
@@ -68,6 +68,9 @@ import java.util.function.Predicate;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
 
+/**
+ * Contains implementation of {@link ICubicWorld} interface.
+ */
 @Mixin(World.class)
 @Implements(@Interface(iface = ICubicWorld.class, prefix = "world$"))
 public abstract class MixinWorld implements ICubicWorld {

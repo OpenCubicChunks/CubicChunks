@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core;
+package cubicchunks.asm.mixin.noncritical.common.command;
 
 import cubicchunks.asm.MixinUtils;
 import net.minecraft.command.CommandClone;
@@ -37,22 +37,22 @@ import static cubicchunks.asm.JvmNames.STRUCTURE_BOUNDING_BOX;
 @Mixin(CommandClone.class)
 public class MixinCommandClone {
 
-	@Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "minY:I", ordinal = 0), require = 1)
+	@Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "minY:I", ordinal = 0))
 	private int getMinY1(StructureBoundingBox sbb, MinecraftServer server, ICommandSender sender, String[] args) {
 		return MixinUtils.getReplacementY(sender.getEntityWorld(), sbb.minY);
 	}
 
-	@Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "minY:I", ordinal = 1), require = 1)
+	@Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "minY:I", ordinal = 1))
 	private int getMinY2(StructureBoundingBox sbb, MinecraftServer server, ICommandSender sender, String[] args) {
 		return MixinUtils.getReplacementY(sender.getEntityWorld(), sbb.minY);
 	}
 
-	@Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "maxY:I", ordinal = 0), require = 1)
+	@Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "maxY:I", ordinal = 0))
 	private int getMaxY1(StructureBoundingBox sbb, MinecraftServer server, ICommandSender sender, String[] args) {
 		return MixinUtils.getReplacementY(sender.getEntityWorld(), sbb.maxY);
 	}
 
-	@Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "maxY:I", ordinal = 1), require = 1)
+	@Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "maxY:I", ordinal = 1))
 	private int getMaxY2(StructureBoundingBox sbb, MinecraftServer server, ICommandSender sender, String[] args) {
 		return MixinUtils.getReplacementY(sender.getEntityWorld(), sbb.maxY);
 	}
