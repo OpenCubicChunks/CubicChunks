@@ -39,6 +39,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Replace updateChunkPositions and getRenderChunk with cubic chunks versions
+ * that support extended world height.
+ */
 @Mixin(ViewFrustum.class)
 public class MixinViewFrustum_RenderHeightFix {
 

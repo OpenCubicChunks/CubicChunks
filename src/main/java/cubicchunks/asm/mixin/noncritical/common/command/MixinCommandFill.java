@@ -21,37 +21,41 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.nocritical.client;
+package cubicchunks.asm.mixin.noncritical.common.command;
 
-import cubicchunks.world.ICubicWorld;
-import net.minecraft.client.renderer.ViewFrustum;
-import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Final;
+import cubicchunks.asm.MixinUtils;
+import net.minecraft.command.CommandFill;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ViewFrustum.class)
-public class MixinViewFrustum_VertViewDistance {
-	@Shadow @Final protected World world;
-	private int renderDistance = 16;
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
-	//this one can fail, there is safe default
-	@Inject(method = "setCountChunksXYZ", at = @At(value = "HEAD"))
-	private void onSetCountChunks(int renderDistance, CallbackInfo cbi) {
-		if (((ICubicWorld) world).isCubicWorld()) {
-			this.renderDistance = renderDistance * 2 + 1;
-		} else {
-			this.renderDistance = 16;
-		}
+@Mixin(CommandFill.class)
+public class MixinCommandFill {
+	private ICommandSender currentSender;
+
+	//get command sender, can't fail (inject at HEAD
+	@Inject(method = "execute", at = @At(value = "HEAD"), require = 1)
+	private void getWorldFromExecute(MinecraftServer server, ICommandSender sender, String[] args, CallbackInfo cbi) {
+		this.currentSender = sender;
 	}
 
-	@ModifyConstant(method = "setCountChunksXYZ", constant = @Constant(intValue = 16))
-	private int getYViewDistance(int oldDistance) {
-		return renderDistance;
+	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6))
+	private int getBlockPosYRedirectMin(BlockPos pos) {
+		if(currentSender == null) {
+			return pos.getY();
+		}
+		return MixinUtils.getReplacementY(currentSender.getEntityWorld(), pos);
+	}
+
+	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 7))
+	private int getBlockPosYRedirectMax(BlockPos pos) {
+		return MixinUtils.getReplacementY(currentSender.getEntityWorld(), pos);
 	}
 }

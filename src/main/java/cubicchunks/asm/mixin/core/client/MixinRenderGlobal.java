@@ -50,6 +50,10 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Iterator;
 import java.util.List;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+import static cubicchunks.asm.JvmNames.CHUNK_GET_ENTITY_LISTS;
+import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
+
 /**
  * Fixes renderEntities crashing when rendering cubes
  * that are not at existing array index in chunk.getEntityLists(),
@@ -66,18 +70,14 @@ public class MixinRenderGlobal {
 	@Shadow private ViewFrustum viewFrustum;
 
 	/**
-	 * This allows to get the Y position by injecting itself directly before call to chunk.getEntityLists
+	 * This allows to get the Y position of rendered entity by injecting itself directly before call to
+	 * chunk.getEntityLists
 	 */
 	@Group(name = "renderEntitiesFix", max = 3)
-	@Inject(
-			method = "renderEntities",
-			at = @At(
-					value = "INVOKE",
-					target = "Lnet/minecraft/client/multiplayer/WorldClient;getChunkFromBlockCoords(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/chunk/Chunk;"
-			),
-			locals = LocalCapture.CAPTURE_FAILHARD,
-			require = 1
-	)
+	@Inject(method = "renderEntities",
+	        at = @At(value = "INVOKE", target = WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS),
+	        locals = LocalCapture.CAPTURE_FAILHARD,
+	        require = 1)
 	public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks, CallbackInfo ci,
 	                          int pass, double d0, double d1, double d2,
 	                          Entity entity, double d3, double d4, double d5,
@@ -93,22 +93,16 @@ public class MixinRenderGlobal {
 	}
 
 	/**
-	 * After chunk.getEntityLists() renderGlobal needs to get correct element of the arrsy
+	 * After chunk.getEntityLists() renderGlobal needs to get correct element of the array.
 	 * The array element number is calculated using renderChunk.getPosition().getY() / 16.
 	 * getY() is redirected to this method to always return 0.
 	 * <p>
 	 * Then chunk.getEntityLists is redirected to a method that returns a 1-element array.
 	 */
 	@Group(name = "renderEntitiesFix")
-	@Redirect(
-			method = "renderEntities",
-			at = @At(
-					value = "INVOKE",
-					target = "Lnet/minecraft/util/math/BlockPos;getY()I"
-			),
-			require = 1
-	)
+	@Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
 	public int getRenderChunkYPos(BlockPos pos) {
+		//position is null when it's not cubic chunks renderer
 		if (this.position != null) {
 			return 0;//must be 0 (or anything between 0 and 15)
 		}
@@ -116,18 +110,11 @@ public class MixinRenderGlobal {
 	}
 
 	/**
-	 * Return a 1-element array for Cubic Chunks code,
+	 * Return a 1-element array for Cubic Chunks world,
 	 * or original chunk.getEntityLists if not cubic chunks world.
 	 */
 	@Group(name = "renderEntitiesFix")
-	@Redirect(
-			method = "renderEntities",
-			at = @At(
-					value = "INVOKE",
-					target = "Lnet/minecraft/world/chunk/Chunk;getEntityLists()[Lnet/minecraft/util/ClassInheritanceMultiMap;"
-			),
-			require = 1
-	)
+	@Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = CHUNK_GET_ENTITY_LISTS), require = 1)
 	public ClassInheritanceMultiMap<Entity>[] getEntityList(Chunk chunk) {
 		if (position == null) {
 			return chunk.getEntityLists();
@@ -137,6 +124,7 @@ public class MixinRenderGlobal {
 
 		Cube cube = column.getCube(cubeY);
 		if (cube == null) {
+			//create array, can't use private final field because of a bug in Mixin
 			return new ClassInheritanceMultiMap[]{
 					new ClassInheritanceMultiMap(Entity.class)
 			};
@@ -150,7 +138,7 @@ public class MixinRenderGlobal {
 	 * Overwrite getRenderChunk(For)Offset to support extended height.
 	 *
 	 * @author Barteks2x
-	 * @reason it's a simple method and doing it differently would be problematic and confusing
+	 * @reason Remove hardcoded height checks, it's a simple method and doing it differently would be problematic and confusing
 	 * (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
 	 */
 	@Overwrite

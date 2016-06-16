@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core;
+package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.ICubicChunksWorldType;
@@ -50,6 +50,9 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
+/**
+ * Implementation of {@link ICubicWorldServer} interface.
+ */
 @Mixin(WorldServer.class)
 @Implements(@Interface(iface = ICubicWorldServer.class, prefix = "world$"))
 public abstract class MixinWorldServer extends MixinWorld implements ICubicWorldServer {
@@ -112,13 +115,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		GeneratorPipeline pipeline = this.getGeneratorPipeline();
 		int numCubesTotal = pipeline.getNumCubes();
 		if (numCubesTotal > 0) {
-			long timeStart = System.currentTimeMillis();
-			//CubicChunks.LOGGER.info("Generating {} cubes for spawn at block ({},{},{}) cube ({},{},{})...",
-			//		numCubesTotal, spawnPoint.getX(), spawnPoint.getY(), spawnPoint.getZ(), spawnCubeX, spawnCubeY,
-			//		spawnCubeZ);
 			pipeline.generateAll();
-			long timeDiff = System.currentTimeMillis() - timeStart;
-			//CubicChunks.LOGGER.info("Done in {} ms", timeDiff);
 		}
 
 		// don't save cubes here. Vanilla doesn't do that.

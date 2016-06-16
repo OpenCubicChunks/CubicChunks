@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core;
+package cubicchunks.asm.mixin.noncritical.common;
 
 import cubicchunks.asm.MixinUtils;
 import net.minecraft.block.BlockPistonBase;
@@ -39,7 +39,7 @@ import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 @Mixin(BlockPistonBase.class)
 public class MixinBlockPistonBase_HeightFix {
 	@Group(min = 4, max = 4)
-	@Redirect(method = "canPush", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 4)
+	@Redirect(method = "canPush", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), expect = 4)
 	private static int getBlockYRedirect(BlockPos pos, IBlockState blockStateIn, World worldIn, BlockPos posArg, EnumFacing facing, boolean destroyBlocks) {
 		return MixinUtils.getReplacementY(worldIn, pos);
 	}

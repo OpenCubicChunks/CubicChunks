@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core;
+package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.world.ICubicWorld;
 import net.minecraft.entity.Entity;
@@ -54,6 +54,11 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 
 	@Shadow public abstract boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty);
 
+	/**
+	 * Redirect {@code isAreaLoaded} here, to use Y coordinate of the entity.
+	 * <p>
+	 * Vanilla uses a constant Y because blocks below y=0 and above y=256 are never loaded, which means that entities would be getting stuck there.
+	 */
 	@Group(name = "updateEntity", max = 2, min = 2)
 	@Redirect(method = "updateEntityWithOptionalForce",
 	          at = @At(value = "INVOKE", target = WORLD_IS_AREA_LOADED),
@@ -67,8 +72,8 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 		//calculate Y range
 		int startBlockY = updateEntity_entityPosY - checkRadius;
 		int endBlockY = updateEntity_entityPosY + checkRadius;
-		//if entity is in "invalid area" (outside of the world)  we need to keep ticking it.
-		//otherwise entities that fall out of the world will never die
+		//if entity is in "invalid area" (outside of the world) we need to keep ticking it.
+		//otherwise entities would no longer be updated after falling out of the world
 		BlockPos entityPos = new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ);
 		if (!isValid(entityPos)) {
 			return true;

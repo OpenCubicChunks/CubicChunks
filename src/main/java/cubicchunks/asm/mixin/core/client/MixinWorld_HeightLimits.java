@@ -57,7 +57,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 	@Shadow public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
 
 	/**
-	 * Redirect {@link BlockPos#getY()} here to modify vanilla height check
+	 * Redirect BlockPos.getY() here to modify vanilla height check
 	 */
 	@Group(name = "getLightFromNeighborsFor", min = 2, max = 2)
 	@Redirect(method = "getLightFromNeighborsFor", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)

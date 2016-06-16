@@ -21,32 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core;
+package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.asm.MixinUtils;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ChunkCache;
+import cubicchunks.world.ICubicWorld;
+import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-import static cubicchunks.asm.JvmNames.CHUNK_CACHE_GET_BLOCK_STATE;
+@Mixin(Entity.class)
+public class MixinEntity_DeathFix {
 
-/**
- * Modifies ChunkCache to support extended world height.
- * <p>
- * ChunkCache is used by some AI code and (as subclass of ChunkCache) - block rendering code.
- * getBlockState is used only in AI code.
- */
-@Mixin(ChunkCache.class)
-public class MixinChunkCache_HeightLimits {
-	@Shadow protected World worldObj;
+	@Shadow public World worldObj;
 
-	@Redirect(method = CHUNK_CACHE_GET_BLOCK_STATE, at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
-	private int blockPosGetYRedirect(BlockPos pos) {
-		return MixinUtils.getReplacementY(worldObj, pos);
+	/**
+	 * Replace -64 constant, to avoid killing entities below y=-64
+	 */
+	@ModifyConstant(method = "onEntityUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
+	private double getDeathY(double originalY) {
+		return ((ICubicWorld) worldObj).getMinHeight() + originalY;
 	}
 }

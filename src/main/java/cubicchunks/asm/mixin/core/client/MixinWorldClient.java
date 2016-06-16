@@ -24,7 +24,7 @@
 package cubicchunks.asm.mixin.core.client;
 
 import cubicchunks.ICubicChunksWorldType;
-import cubicchunks.asm.mixin.core.MixinWorld;
+import cubicchunks.asm.mixin.core.common.MixinWorld;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.world.ICubicWorldClient;

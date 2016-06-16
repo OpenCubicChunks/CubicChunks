@@ -3,18 +3,19 @@
   "package": "cubicchunks.asm.mixin",
   "refmap": "cubicchunks.mixins.refmap.json",
   "mixins": [
-    "core.MixinWorld_Tick",
-    "core.MixinWorld",
-    "core.MixinWorldServer",
-    "core.MixinWorld_HeightLimits",
-    "core.MixinChunkCache_HeightLimits",
-    "core.MixinEntity_DeathFix",
-    "core.MixinCommandTeleport",
-    "core.MixinCommandBase",
-    "core.MixinCommandFill",
-    "core.MixinCommandClone",
-    "core.MixinCommandCompare",
-    "core.MixinBlockPistonBase_HeightFix"
+    "core.common.MixinWorld_Tick",
+    "core.common.MixinWorld",
+    "core.common.MixinWorldServer",
+    "core.common.MixinWorld_HeightLimits",
+    "core.common.MixinChunkCache_HeightLimits",
+    "core.common.MixinEntity_DeathFix",
+
+    "noncritical.common.command.MixinCommandTeleport",
+    "noncritical.common.command.MixinCommandBase",
+    "noncritical.common.command.MixinCommandFill",
+    "noncritical.common.command.MixinCommandClone",
+    "noncritical.common.command.MixinCommandCompare",
+    "noncritical.common.MixinBlockPistonBase_HeightFix"
   ],
   "client": [
     "core.client.MixinWorld_HeightLimits",
@@ -23,7 +24,7 @@
     "core.client.MixinChunkCache_HeightLimits",
     "core.client.MixinViewFrustum_RenderHeightFix",
 
-    "nocritical.client.MixinViewFrustum_VertViewDistance"
+    "noncritical.client.MixinViewFrustum_VertViewDistance"
   ],
   "server": [
     "core.server.MixinDedicatedServer_HeightLimits"

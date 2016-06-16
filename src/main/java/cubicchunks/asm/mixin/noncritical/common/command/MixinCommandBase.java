@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core;
+package cubicchunks.asm.mixin.noncritical.common.command;
 
 import cubicchunks.world.ICubicWorld;
 import net.minecraft.command.CommandBase;
@@ -39,28 +39,25 @@ public class MixinCommandBase {
 	//I hope there are no threads involved...
 	private static ICommandSender currentSender;
 
+	//get command sender, can't fail (inject at HEAD)
 	@Inject(method = "parseBlockPos", at = @At(value = "HEAD"), require = 1)
 	private static void parseBlockPosPre(ICommandSender sender, String[] args, int startIndex, boolean centerBlock, CallbackInfoReturnable<?> cbi) {
 		currentSender = sender;
 	}
 
-	@ModifyArg(
-			method = "parseBlockPos",
+	//modify parseDouble min argument
+	@ModifyArg(method = "parseBlockPos",
 			at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
-			index = 2,
-			require = 1
-	)
+			index = 2)
 	private static int getMinY(int original) {
 		ICubicWorld world = (ICubicWorld) currentSender.getEntityWorld();
 		return world.getMinHeight();
 	}
 
-	@ModifyArg(
-			method = "parseBlockPos",
+	//modify parseDouble max argument
+	@ModifyArg(method = "parseBlockPos",
 			at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
-			index = 3,
-			require = 1
-	)
+			index = 3)
 	private static int getMaxY(int original) {
 		ICubicWorld world = (ICubicWorld) currentSender.getEntityWorld();
 		return world.getMaxHeight();

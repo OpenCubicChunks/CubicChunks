@@ -36,23 +36,32 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.net.InetAddress;
 
+import static cubicchunks.asm.JvmNames.DEDICATED_SERVER_IS_ANNOUNCING_PLAYER_ACHIEVEMENTS;
+
+/**
+ * Fix height limits in {@code DedicatedServer}
+ */
 @Mixin(DedicatedServer.class)
 public class MixinDedicatedServer_HeightLimits {
 
 	private WorldType worldtype;
 
+	/**
+	 * Get the worldType local variable
+	 */
 	@Inject(method = "startServer",
-	        at = @At(value = "INVOKE",
-	                 target = "Lnet/minecraft/server/dedicated/DedicatedServer;isAnnouncingPlayerAchievements()Z"),
+	        at = @At(value = "INVOKE", target = DEDICATED_SERVER_IS_ANNOUNCING_PLAYER_ACHIEVEMENTS),
 	        locals = LocalCapture.CAPTURE_FAILHARD,
-	        require = 1
-	)
+	        require = 1)
 	private void getWorldTypeForBuildHeight(CallbackInfoReturnable<Boolean> cir, Thread thread, int i, InetAddress inetaddress, long j, String s, String s1, String s2, long k, WorldType worldtype) {
 		this.worldtype = worldtype;
 	}
 
+	/**
+	 * Replace the default build height (256).
+	 */
 	@ModifyConstant(method = "startServer", constant = @Constant(intValue = 256), require = 2)
-	private int getBuildHeight(int oldValue) {
+	private int getDefaultBuildHeight(int oldValue) {
 		if (worldtype instanceof ICubicChunksWorldType) {
 			return ((ICubicChunksWorldType) worldtype).getMaxHeight();
 		}
