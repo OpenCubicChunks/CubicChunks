@@ -62,16 +62,9 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 		}
 		Set<Cube> cubes = new HashSet<>();
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
-			Cube currentCube = this.provider.forceLoadCube(cube, cube.getX(), cubeY, cube.getZ());
-			if(currentCube.getCurrentStage().isLastStage()) {
-				//some cubes in that vanilla chunks have been populated already -> the whole thing is populated
-				return Sets.newHashSet(cube);
-			}
-			this.provider.forceLoadCube(cube, cube.getX() + 1, cubeY, cube.getZ());
-			this.provider.forceLoadCube(cube, cube.getX(), cubeY, cube.getZ() + 1);
-			this.provider.forceLoadCube(cube, cube.getX() + 1, cubeY, cube.getZ() + 1);
+			Cube currentCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
+			assert currentCube != null;
 			cubes.add(currentCube);
-			currentCube.setCurrentStage(GeneratorStage.LIVE);
 		}
 		try {
 			world.setGeneratingWorld(true);

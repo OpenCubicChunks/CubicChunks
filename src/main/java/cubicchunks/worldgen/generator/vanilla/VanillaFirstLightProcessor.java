@@ -24,13 +24,14 @@
 package cubicchunks.worldgen.generator.vanilla;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.debug.Prof;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 public class VanillaFirstLightProcessor extends CubeProcessor {
@@ -45,29 +46,21 @@ public class VanillaFirstLightProcessor extends CubeProcessor {
 
 	@Override public Set<Cube> calculate(Cube cube) {
 		if (cube.getY() < 0 || cube.getY() >= 16) {
+			Prof.call("VanillaFirstLightProcessor.calculate_actualProcessor(Cube)");
 			return this.actualProcessor.calculate(cube);
 		}
-		Set<Cube> updated = this.actualProcessor.calculate(cube);
-		if (!updated.contains(cube)) {
-			return Collections.emptySet();
-		}
+		Prof.call("VanillaFirstLightProcessor.calculate(Cube)");
+		Set<Cube> updated = new HashSet<>();
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
 			//it should never fail, but in case it does - just ignore the error
 			//and continue with wrong light values
 			Cube toUpdate = cube.getColumn().getCube(cubeY);
-			if (toUpdate == null) {
-				CubicChunks.LOGGER.error(
-						"Generating lighting for vanilla chunk (" + cube.getX() + ", " + cube.getZ() +
-								"), cube at " + cubeY + " doesn't exist. Skipping update.");
-				continue;
-			}
+			assert toUpdate != null;
 			Set<Cube> currentUpdated = this.actualProcessor.calculate(toUpdate);
 			if (!currentUpdated.contains(toUpdate)) {
 				CubicChunks.LOGGER.error(
-						"Generating lighting for vanilla chunk (" + cube.getX() + ", " + cube.getZ() +
-								"), cube at " + cubeY + " - failed to update lighting.");
+						"Generating lighting for vanilla chunk " + cube.getCoords() + " - failed to update lighting.");
 			}
-			toUpdate.setCurrentStage(nextStage);
 			updated.add(toUpdate);
 		}
 		return updated;

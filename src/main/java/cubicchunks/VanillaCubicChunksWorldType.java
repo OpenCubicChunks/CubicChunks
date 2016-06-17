@@ -25,14 +25,20 @@ package cubicchunks;
 
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.world.dependency.CubeDependency;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.IndependentGeneratorStage;
+import cubicchunks.worldgen.dependency.RegionDependency;
 import cubicchunks.worldgen.generator.vanilla.VanillaFirstLightProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.ChunkProviderOverworld;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 
@@ -44,34 +50,50 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 		ServerCubeCache cubeCache = world.getCubeCache();
 
 		ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
-		
+
 		// init the worldgen pipeline
-		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
-		GeneratorStage lighting = new IndependentGeneratorStage("lighting");
-		GeneratorStage population = new IndependentGeneratorStage("population");		
-		
+		GeneratorStage terrain = new VanillaStage("terrain", new Vec3i(0, 0, 0), new Vec3i(0, 15, 0), null, null);
+		GeneratorStage lighting = new VanillaStage("lighting", new Vec3i(-2, -2, -2), new Vec3i(2, 15 + 2, 2),
+				new Vec3i(-2, -2, -2), new Vec3i(2, 2, 2));
+		GeneratorStage population = new VanillaStage("population", new Vec3i(0, 0, 0), new Vec3i(1, 15, 1), null, null);
+
 		pipeline.addStage(terrain, new VanillaTerrainProcessor(lighting, world, vanillaGen, 5));
 		pipeline.addStage(lighting, new VanillaFirstLightProcessor(lighting, population, cubeCache, 5));
 		pipeline.addStage(population, new VanillaPopulationProcessor(population, world, vanillaGen, 5));
 
 	}
 
-	/**
-	 * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
-	 * <p>
-	 * In EntityRenderer.updateFogColor entity Y position is multiplied by
-	 * value returned by this method.
-	 * <p>
-	 * If this method returns any real number - then the void fog factor can be <= 0.
-	 * But if this method returns NaN - the result is always NaN. And Minecraft enables void fog only of the value is < 1.
-	 * And since any comparison with NaN returns false - void fog is effectively disabled.
-	 */
-	@Override
-	public double voidFadeMagnitude() {
-		return Double.NaN;
-	}
-
 	public static void create() {
 		new VanillaCubicChunksWorldType();
+	}
+
+	private static class VanillaStage extends GeneratorStage {
+		private final CubeDependency[] depsForHeight = new CubeDependency[16];
+		private CubeDependency normal;
+
+		private VanillaStage(String name, Vec3i depStart, Vec3i depEnd, @Nullable Vec3i normalDepStart, @Nullable Vec3i normalDepEnd) {
+			super(name);
+			if (normalDepEnd != null && normalDepStart != null) {
+				this.normal = new RegionDependency(this, normalDepStart, normalDepEnd);
+			}
+			for (int y = 0; y < 16; y++) {
+				//each cube requires cubes from y=0 to y=15
+				//but relative to them, these positions are different
+				//relative coords: requiredCubePos - currentCubePos
+				int startY = depStart.getY() - y;
+				int endY = depEnd.getY() - y;
+				Vec3i start = new Vec3i(depStart.getX(), startY, depStart.getZ());
+				Vec3i end = new Vec3i(depEnd.getX(), endY, depEnd.getZ());
+				CubeDependency dep = new RegionDependency(this, start, end);
+				depsForHeight[y] = dep;
+			}
+		}
+
+		@Nullable @Override public CubeDependency getCubeDependency(@Nonnull Cube cube) {
+			if (cube.getY() < 0 || cube.getY() >= depsForHeight.length) {
+				return normal;
+			}
+			return depsForHeight[cube.getY()];
+		}
 	}
 }

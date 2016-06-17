@@ -84,15 +84,11 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 			return Sets.newHashSet(cube);
 		}
 		Set<Cube> cubes = new HashSet<>();
-
-		//+/-2 for lighting
-		for (int i = 0 - 2; i < 16 + 2; i++) {
-			if (i != cube.getY()) {
-				Cube newCube = this.provider.forceLoadCube(cube, cube.getX(), i, cube.getZ());
-				cubes.add(newCube);
-			}
+		for(int y = 0; y < 16; y++) {
+			Cube currentCube = this.cache.getCube(cube.getX(), y, cube.getZ());
+			assert currentCube != null;
+			cubes.add(currentCube);
 		}
-		cubes.add(cube);
 		generateVanillaChunk(cube);
 		return cubes;
 	}
@@ -140,7 +136,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 				getOceanMonumentGenerator(this.vanillaGen).generate((World) this.world, x, z, chunkprimer);
 			}
 		}
-		for (int cubeY = 0-2; cubeY < 16+2; cubeY++) {
+		for (int cubeY = 0; cubeY < 16; cubeY++) {
 			Cube currCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
 			currCube.setCurrentStage(nextStage);
 			if(cubeY < 0 || cubeY >= 16) {
