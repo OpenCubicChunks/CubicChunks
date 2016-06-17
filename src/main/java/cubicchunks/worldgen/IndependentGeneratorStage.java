@@ -21,10 +21,11 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
+
 package cubicchunks.worldgen;
 
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.dependency.Dependency;
+import cubicchunks.world.dependency.CubeDependency;
 
 public class IndependentGeneratorStage extends GeneratorStage {
 
@@ -33,7 +34,7 @@ public class IndependentGeneratorStage extends GeneratorStage {
 	}
 
 	@Override
-	public Dependency getDependency(Cube cube) {
+	public CubeDependency getCubeDependency(Cube cube) {
 		return null;
 	}
 

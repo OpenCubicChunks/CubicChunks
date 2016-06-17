@@ -28,31 +28,51 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.dependency.CubeDependency;
+import cubicchunks.world.dependency.DependencyManager;
+import cubicchunks.world.dependency.Requirement;
 import cubicchunks.worldgen.GeneratorStage;
+import net.minecraft.util.math.Vec3i;
 
-public class RegionDependency implements Dependency {
-	
+import javax.annotation.Nonnull;
+
+/**
+ * Specifies the dependency of a Cube on other cubes in its vicinity.
+ *
+ * @see CubeDependency
+ * @see DependencyManager
+ */
+public class RegionDependency implements CubeDependency {
+
+	/**
+	 * The minimum GeneratorStage all Cubes included in this region must be at for this CubeDependency to be satisfied.
+	 */
 	private GeneratorStage targetStage;
-	
-	private Set<Long> requiredCubes;
-	
-	private Set<Requirement> requirements;
 
+	/*
+	 * The corners of the region.
+	 */
 	private int xLow;
 	private int xHigh;
 	private int yLow;
 	private int yHigh;
 	private int zLow;
 	private int zHigh;
-	
-	
-	public RegionDependency(GeneratorStage targetStage, int radius) {
+
+	/**
+	 * Creates a new instance of RegionDependency. All Cubes within the given radius must be at the given GeneratorStage
+	 * for this CubeDependency to be satisifed.
+	 *
+	 * @param targetStage The minimum GeneratorStage all Cubes within the given radius must be at for this
+	 *                    CubeDependency to be satisfied.
+	 * @param radius The radius of the cuboid including all required Cubes.
+	 */
+	public RegionDependency(@Nonnull GeneratorStage targetStage, int radius) {
 
 		this.targetStage = targetStage;
-		
+
 		this.xLow = -radius;
 		this.xHigh = radius;
 		this.yLow = -radius;
@@ -60,45 +80,44 @@ public class RegionDependency implements Dependency {
 		this.zLow = -radius;
 		this.zHigh = radius;
 	}
-	
-	public RegionDependency(Cube cube, GeneratorStage stage, int xLow, int xHigh, int yLow, int yHigh, int zLow, int zHigh) {
 
-		this.targetStage = stage;
-		this.requirements = new HashSet<Requirement>();
-		
-		int cubeX = cube.getX();
-		int cubeY = cube.getY();
-		int cubeZ = cube.getZ();
-		
-		for (int x = xLow; x <= xHigh; ++x) {
-			for (int y = yLow; y <= yHigh; ++y) {
-				for (int z = zLow; z <= zHigh; ++z) {
-					if (x != 0 || y != 0 || z != 0) {
-						CubeCoords coords = new CubeCoords(cubeX + x, cubeY + y, cubeZ + z);
-						requirements.add(new Requirement(coords, targetStage));
-					}
-				}
-			}
-		}
+	/**
+	 * Creates a new instance of RegionDependency. All Cubes inside of the cuboid specified by relA and relB must be at
+	 * the given GeneratorStage for this CubeDependency to be satisfied. The relative orientation of relA and relB to
+	 * each is irrelevant.
+	 *
+	 * @param targetStage The minimum GeneratorStage all Cubes within the specified region must be at for this
+	 *                    CubeDependency to be satisfied.
+	 * @param relA First corner of the cuboid including all required Cubes.
+	 * @param relB Second corner of the cuboid including all required Cubes.
+	 */
+	public RegionDependency(@Nonnull GeneratorStage targetStage, @Nonnull Vec3i relA, @Nonnull Vec3i relB) {
+
+		this.targetStage = targetStage;
+
+		this.xLow = Math.min(relA.getX(), relB.getX());
+		this.xHigh = Math.max(relA.getX(), relB.getX());
+		this.yLow = Math.min(relA.getY(), relB.getY());
+		this.yHigh = Math.max(relA.getY(), relB.getY());
+		this.zLow = Math.min(relA.getZ(), relB.getZ());
+		this.zHigh = Math.max(relA.getZ(), relB.getZ());
 	}
 
-	@Override
-	public boolean update(DependencyManager manager, Dependent dependent, Cube requiredCube) {
-		return requiredCube.getCurrentStage() == targetStage;
-	}
+	/*
+	 * Interface: CubeDependency
+	 */
 
-	@Override
 	public Collection<Requirement> getRequirements(Cube cube) {
-		
-		Set<Requirement> requirements = new HashSet<Requirement>();
-		
+
+		Set<Requirement> requirements = new HashSet<>();
+
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();
-		
-		for (int x = xLow; x <= xHigh; ++x) {
-			for (int y = yLow; y <= yHigh; ++y) {
-				for (int z = zLow; z <= zHigh; ++z) {
+
+		for (int x = this.xLow; x <= this.xHigh; ++x) {
+			for (int y = this.yLow; y <= this.yHigh; ++y) {
+				for (int z = this.zLow; z <= this.zHigh; ++z) {
 					if (x != 0 || y != 0 || z != 0) {
 						CubeCoords coords = new CubeCoords(cubeX + x, cubeY + y, cubeZ + z);
 						requirements.add(new Requirement(coords, targetStage));
@@ -106,8 +125,12 @@ public class RegionDependency implements Dependency {
 				}
 			}
 		}
-		
+
 		return requirements;
+	}
+
+	public boolean isSatisfied(DependencyManager manager, DependentCube dependentCube, Cube requiredCube) {
+		return requiredCube.hasReachedStage(this.targetStage);
 	}
 
 }

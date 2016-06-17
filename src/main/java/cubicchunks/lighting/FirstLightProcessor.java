@@ -26,6 +26,7 @@ package cubicchunks.lighting;
 import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
@@ -70,9 +71,6 @@ public class FirstLightProcessor extends CubeProcessor {
 
 	@Override
 	public Set<Cube> calculate(Cube cube) {
-		if (!canUpdateCube(cube)) {
-			return Collections.EMPTY_SET;
-		}
 		setRawSkylight(cube);
 		diffuseSkylight(cube);
 		return Sets.newHashSet(cube);

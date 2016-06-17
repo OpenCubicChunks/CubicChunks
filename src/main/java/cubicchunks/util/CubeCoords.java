@@ -63,6 +63,12 @@ public class CubeCoords {
 		this.cubeZ = cubeZ;
 	}
 
+	public CubeCoords(long address) {
+		this.cubeX = AddressTools.getX(address);
+		this.cubeY = AddressTools.getY(address);
+		this.cubeZ = AddressTools.getZ(address);
+	}
+
 	/**
 	 * Gets the x position of the cube in the world.
 	 *
@@ -106,34 +112,13 @@ public class CubeCoords {
 	 * @return True if the cube matches the given object, but false if it doesn't match, or is null, or not a CubeCoordinate object.
 	 */
 	@Override
-	public boolean equals(Object otherObject) {
-		if (otherObject == this) {
-			return true;
-		}
-
-		if (otherObject == null) {
+	public boolean equals(Object obj) {
+		if (obj instanceof CubeCoords) {
+			CubeCoords otherCoords = (CubeCoords) obj;
+			return otherCoords.cubeX == cubeX && otherCoords.cubeY == cubeY && otherCoords.cubeZ == cubeZ;
+		} else {
 			return false;
 		}
-
-		if (!(otherObject instanceof Coords)) {
-			return false;
-		}
-
-		CubeCoords otherCubeCoordinate = (CubeCoords) otherObject;
-
-		if (otherCubeCoordinate.cubeX != cubeX) {
-			return false;
-		}
-
-		if (otherCubeCoordinate.cubeY != cubeY) {
-			return false;
-		}
-
-		if (otherCubeCoordinate.cubeZ != cubeZ) {
-			return false;
-		}
-
-		return true;
 	}
 	
 	/**

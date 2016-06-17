@@ -22,29 +22,40 @@
  *  THE SOFTWARE.
  */
 
-package cubicchunks.worldgen.dependency;
+package cubicchunks.world.dependency;
 
 import java.util.Collection;
 
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.dependency.DependentCube;
 
-public interface Dependency {
+import javax.annotation.Nonnull;
+
+/**
+ * A class implementing this interface defines some form of dependence between cubes. It can provide Requirements for a
+ * given Cube on other Cubes, such that the dependency system can ensure that the required Cubes are available.
+ */
+public interface CubeDependency {
 
 	/**
-	 * This collection specifies which cubes must be loaded for a given cube's requirements to be satisfied.
-	 * 
-	 * @return A collection of Requirements specifying the given cube's requirements.
+	 * Provides a collection of Requirements specifying the given Cube's required Cubes and the GeneratorStages they
+	 * need to be at.
+	 *
+	 * @return A collection of Requirements specifying the given Cube's requirements.
 	 */
-	public Collection<Requirement> getRequirements(Cube cube);
+	@Nonnull
+	Collection<Requirement> getRequirements(@Nonnull Cube cube);
 
 	/**
-	 * Called when the given cube is loaded or entered the next generation stage.
-	 * 
+	 * Called when a RequiredCube is either loaded or advanced to its next GeneratorStage. This CubeDependency must
+	 * determine if the given RequiredCube has reached the required stage with respect to the given DependentCube and
+	 * return either true or false accordingly.
+	 *
 	 * @param manager The DependencyManager used by the server.
-	 * @param dependent The dependent for which the update is called.
+	 * @param dependentCube The dependentCube for which the update is called.
 	 * @param requiredCube The updated cube.
-	 * @return True iff the dependent no longer requires the given cube.
+	 * @return True iff the RequiredCube satisfies the DependentCube's requirements.
 	 */
-	public boolean update(DependencyManager manager, Dependent dependent, Cube requiredCube);
+	boolean isSatisfied(@Nonnull DependencyManager manager, @Nonnull DependentCube dependentCube, @Nonnull Cube requiredCube);
 
 }

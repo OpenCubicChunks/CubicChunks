@@ -23,6 +23,7 @@
  */
 package cubicchunks.client;
 
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.BlankColumn;
@@ -116,6 +117,11 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	}
 
 	@Override
+	public boolean cubeExists(CubeCoords coords) {
+		return this.cubeExists(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+	}
+
+	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
 		Cube cube = getColumn(cubeX, cubeZ).getCube(cubeY);
 		if (cube == null) {
@@ -128,4 +134,9 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		
 		return cube;
 	}
+
+	public Cube getCube(CubeCoords coords) {
+		return this.getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+	}
+
 }

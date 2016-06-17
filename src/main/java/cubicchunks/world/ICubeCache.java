@@ -23,13 +23,18 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
 public interface ICubeCache {
 	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
 
+	boolean cubeExists(CubeCoords coords);
+
 	Cube getCube(int cubeX, int cubeY, int cubeZ);
+
+	Cube getCube(CubeCoords coords);
 
 	Column getColumn(int cubeX, int cubeZ);
 

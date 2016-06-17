@@ -358,6 +358,14 @@ public class Cube {
 		return this.getCurrentStage().precedes(stage);
 	}
 
+	public boolean hasReachedStage(GeneratorStage stage) {
+		return !this.getCurrentStage().precedes(stage);
+	}
+
+	public boolean hasReachedTargetStage() {
+		return this.hasReachedStage(this.targetStage);
+	}
+
 	public void setCurrentStage(GeneratorStage val) {
 		this.currentStage = val;
 	}
@@ -366,8 +374,8 @@ public class Cube {
 		return this.targetStage;
 	}
 	
-	public void setTargetStage(GeneratorStage val) {
-		this.targetStage = val;
+	public void setTargetStage(GeneratorStage targetStage) {
+		this.targetStage = targetStage;
 	}
 	
 	public long getAddress() {

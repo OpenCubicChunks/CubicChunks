@@ -67,9 +67,6 @@ public class CustomFeatureProcessor extends CubeProcessor {
 	@Override
 	public Set<Cube> calculate(Cube cube) {
 
-		if (!this.canGenerate(cube)) {
-			return Collections.EMPTY_SET;
-		}
 		this.worldObj = cube.getWorld();
 
 		// generate world features

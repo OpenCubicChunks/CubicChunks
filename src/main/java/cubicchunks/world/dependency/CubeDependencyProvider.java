@@ -22,30 +22,24 @@
  *  THE SOFTWARE.
  */
 
-package cubicchunks.worldgen.dependency;
+package cubicchunks.world.dependency;
 
-import cubicchunks.util.CubeCoords;
-import cubicchunks.worldgen.GeneratorStage;
+import cubicchunks.world.cube.Cube;
 
-public class Requirement {
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-	private CubeCoords coords;
-	private GeneratorStage targetStage;
-	
-	public Requirement(CubeCoords coords, GeneratorStage targetStage) {
-		this.coords = coords;
-		this.targetStage = targetStage;
-	}
-	
-	public CubeCoords getCoords() {
-		return coords;
-	}
+// TODO: Documentation
+public interface CubeDependencyProvider {
 
-	public GeneratorStage getTargetStage() {
-		return targetStage;
-	}
+	/**
+	 * Given a Cube, may return a CubeDependency for determining the Cube's Requirements.
+	 *
+	 * @param cube The Cube for which the CubeDependency shall provide Requirements.
+	 *
+	 * @return A CubeDependency providing a list of Requirements for the given Cube or null.
+	 */
+	@Nullable
+	CubeDependency getCubeDependency(@Nonnull Cube cube);
 
-	public boolean contains(Requirement requirement) {
-		return !targetStage.precedes(requirement.targetStage);
-	}
 }
