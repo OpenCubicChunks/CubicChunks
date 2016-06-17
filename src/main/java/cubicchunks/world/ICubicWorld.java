@@ -57,6 +57,11 @@ import java.util.function.Predicate;
 public interface ICubicWorld {
 
 	/**
+	 * Updates the world
+	 */
+	void tickCubicWorld();
+
+	/**
 	 * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks are loaded.
 	 * Cannot be used more than once.
 	 */

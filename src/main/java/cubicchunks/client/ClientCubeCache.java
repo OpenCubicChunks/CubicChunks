@@ -68,30 +68,14 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	}
 
 	@Override
-	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
-		// is this column loaded?
-		Column column = (Column) this.chunkMapping.get(ChunkPos.chunkXZ2Int(cubeX, cubeZ));
-		if (column == null) {
-			//CubicChunks.log.warn("Unloading cube from non-existing column: ({}, {}, {})", cubeX, cubeY, cubeZ);
-			return;
-		}
-
-		// is this cube loaded?
-		if (column.getCube(cubeY) == null) {
-			//CubicChunks.log.warn("Unloading non-existing cube: ({}, {}, {})", cubeX, cubeY, cubeZ);
-			return;
-		}
-
-		// unload the cube
-		column.removeCube(cubeY);
+	public void unloadCube(Cube cube) {
+		cube.getColumn().removeCube(cube.getY());
 	}
 
 	public void unloadColumn(int columnX, int columnZ) {
 		//unload even if not empty
 		//server sends unload packets, it must be right.
-
-		//TODO: Unload cubes before removing column?
-		Column column = (Column) this.chunkMapping.remove(ChunkPos.chunkXZ2Int(columnX, columnZ));
+		this.chunkMapping.remove(ChunkPos.chunkXZ2Int(columnX, columnZ));
 	}
 
 	@Override

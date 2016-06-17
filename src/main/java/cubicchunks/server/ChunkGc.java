@@ -21,22 +21,47 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.server;
 
-import cubicchunks.util.CubeCoords;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.world.chunk.Chunk;
 
-public interface ICubeCache {
-	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
+import java.util.Collection;
 
-	boolean cubeExists(CubeCoords coords);
+/**
+ * Chunk Garbage Collector, automatically unloads unused chunks.
+ */
+public class ChunkGc {
+	// GC every 10 seconds by default
+	private static final int GC_INTERVAL = 20*10;
 
-	Cube getCube(int cubeX, int cubeY, int cubeZ);
+	private final ServerCubeCache cubeCache;
+	private final PlayerCubeMap cubeMap;
 
-	Cube getCube(CubeCoords coords);
+	private int tick = 0;
 
-	Column getColumn(int cubeX, int cubeZ);
+	public ChunkGc(ServerCubeCache cubeCache, PlayerCubeMap cubeMap) {
+		this.cubeCache = cubeCache;
+		this.cubeMap = cubeMap;
+	}
 
-	void unloadCube(Cube cube);
+	public void tick() {
+		tick++;
+		if (tick > GC_INTERVAL) {
+			tick = 0;
+			chunkGc();
+		}
+	}
+
+	private void chunkGc() {
+		for (Chunk chunk : cubeCache.getLoadedChunks()) {
+			Column column = (Column) chunk;
+			Collection<Cube> cubes = column.getAllCubes();
+			cubes.stream().filter(c -> !cubeMap.contains(c.getCoords())).forEach(cubeCache::unloadCube);
+			if(!column.hasCubes() || !cubeMap.contains(column.getX(), column.getZ())) {
+				cubeCache.unloadColumn(column);
+			}
+		}
+	}
 }

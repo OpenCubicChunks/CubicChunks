@@ -395,9 +395,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 			PlayerCubeMapEntry watcher = getCubeWatcher(address);
 			if (watcher == null) {
 				CubicChunks.LOGGER.warn(
-						"Found existing cube with no cube watcher that should be watched by a player at address " +
-								String.format("0x%16x", address) + ". Possible memory leak. Forcing unload");
-				cubeCache.unloadCube(getX(address), getY(address), getZ(address));
+						"Found existing cube with no cube watcher that should be watched by a player at " + new CubeCoords(address));
 				return;
 			}
 
@@ -596,7 +594,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		this.cubeWatchersToUpdate.remove(cubeWatcher);
 		this.toGenerate.remove(cubeWatcher);
 		this.toSendToClient.remove(cubeWatcher);
-		this.cubeCache.unloadCube(getX(address), getY(address), getZ(address));
+		//don't unload, ChunkGc unloads chunks
 	}
 
 	public void removeEntry(PlayerCubeMapColumnEntry entry) {
@@ -631,6 +629,10 @@ public class PlayerCubeMap extends PlayerChunkMap {
 
 	public ICubicWorldServer getWorld() {
 		return (ICubicWorldServer) this.getWorldServer();
+	}
+
+	public boolean contains(CubeCoords coords) {
+		return this.cubeWatchers.containsKey(coords.getAddress());
 	}
 
 	private static final class PlayerWrapper {

@@ -248,6 +248,10 @@ public class PlayerCubeMapEntry {
 		return !this.players.forEachValue(value -> !predicate.test(value.player));
 	}
 
+	public boolean hasPlayers() {
+		return !this.players.isEmpty();
+	}
+
 	public double getDistanceSq(long cubeAddress, Entity entity) {
 		double blockX = localToBlock(getX(cubeAddress), 8);
 		double blockY = localToBlock(getY(cubeAddress), 8);

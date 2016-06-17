@@ -159,6 +159,10 @@ public abstract class MixinWorld implements ICubicWorld {
 		return this.maxHeight;
 	}
 
+	@Override public void tickCubicWorld() {
+		this.lightingManager.tick();
+	}
+
 	@Override public ICubeCache getCubeCache() {
 		if (!this.isCubicWorld()) {
 			throw new NotCubicChunksWorldException();

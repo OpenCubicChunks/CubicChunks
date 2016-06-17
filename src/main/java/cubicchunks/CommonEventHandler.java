@@ -48,14 +48,7 @@ public class CommonEventHandler {
 		ICubicWorldServer world = (ICubicWorldServer) evt.world;
 		//Forge (at least version 11.14.3.1521) doesn't call this event for client world.
 		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
-			world.getLightingManager().tick();
-			world.getGeneratorPipeline().tick();
-			//TODO: Readd block tick
-			//for (ChunkCoordIntPair coords : WorldAccess.getActiveChunkSet(worldServer)) {
-			//	Column column = cubeCache.provideChunk(coords.chunkXPos, coords.chunkZPos);
-			//	column.doRandomTicks();
-			//}
-			//worldServer.profiler.endSection();
+			world.tickCubicWorld();
 		}
 	}
 

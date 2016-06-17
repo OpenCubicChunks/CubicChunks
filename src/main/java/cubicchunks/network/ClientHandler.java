@@ -27,6 +27,7 @@ import com.google.common.base.Throwables;
 import cubicchunks.CubicChunks;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.Column;
@@ -149,13 +150,10 @@ public class ClientHandler implements INetHandler {
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
 		ClientCubeCache cubeCache = worldClient.getCubeCache();
-		long cubeAddress = packet.getCubeAddress();
-		cubeCache.unloadCube(
-				getX(cubeAddress),
-				getY(cubeAddress),
-				getZ(cubeAddress)
-		);
-
+		Cube cube = cubeCache.getCube(new CubeCoords(packet.getCubeAddress()));
+		if(cube != null) {
+			cubeCache.unloadCube(cube);
+		}
 	}
 
 	public void handle(final PacketUnloadColumn packet) {

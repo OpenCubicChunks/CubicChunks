@@ -34,13 +34,9 @@ public class LightingManager {
 
 	private static final int TickBudget = 10; // ms. Only 50 ms in a tick @ 20 tps
 
-	private ICubicWorld world;
-
 	private SkyLightCubeDiffuseProcessor skylightCubeDiffuseProcessor;
 
 	public LightingManager(ICubicWorld world) {
-		this.world = world;
-
 		this.skylightCubeDiffuseProcessor = new SkyLightCubeDiffuseProcessor(world, "Sky Light Diffuse", 5);
 	}
 
@@ -53,10 +49,6 @@ public class LightingManager {
 				for (int cubeY : toDiffuse) {
 					boolean success = SkyLightCubeDiffuseCalculator.calculate(column, localX, localZ, cubeY);
 					if (!success) {
-//						CubicChunks.LOGGER.warn("Diffuse lighting update at ({}, {}/{}, {}): needed cubes not loaded. Adding to queue.",
-//								Coords.localToBlock(column.getX(), localX),
-//								Coords.cubeToMinBlock(cubeY), Coords.cubeToMaxBlock(cubeY),
-//								Coords.localToBlock(column.getZ(), localZ));
 						queueDiffuseUpdate(column.getCube(cubeY), blockX, blockZ, minY, maxY);
 					}
 				}
@@ -74,24 +66,10 @@ public class LightingManager {
 		long timeStart = System.currentTimeMillis();
 		long timeStop = timeStart + TickBudget;
 
-		// process the queues
-		int numProcessed = 0;
-		//this.world.profiler.addSection("skyLightOcclusion");
-		numProcessed += this.skylightCubeDiffuseProcessor.processQueueUntil(timeStop);
-		//this.world.profiler.endSection();
-
-		// reporting
-		long timeDiff = System.currentTimeMillis() - timeStart;
-		if (numProcessed > 0) {
-//			CubicChunks.LOGGER.info(String.format("%s Lighting manager processed %d calculations in %d ms.",
-//					this.world.isRemote() ? "CLIENT" : "SERVER", numProcessed, timeDiff));
-//			CubicChunks.LOGGER.info(this.skylightCubeDiffuseProcessor.getProcessingReport());
-//			CubicChunks.LOGGER.info(this.firstLightProcessor.getProcessingReport());
-		}
+		this.skylightCubeDiffuseProcessor.processQueueUntil(timeStop);
 	}
 
 	public void queueDiffuseUpdate(Cube cube, int blockX, int blockZ, int minY, int maxY) {
-
 		Cube.LightUpdateData data = cube.getLightUpdateData();
 		data.queueLightUpdate(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ), minY, maxY);
 		skylightCubeDiffuseProcessor.add(cube.getAddress());
