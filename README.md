@@ -12,7 +12,11 @@ To run this mod from your IDE you need to add at least the following JVM options
 ```
 
 Some other useful options:
+
 `-Dmixin.debug.verbose=true` - enable mixin verbose output
+
 `-Dmixin.debug.export=true` - export classes after applying mixins to `run/.mixin.out/`, if you add this director as library - it allows you to set breakpoints in mixins and see decompiled code after applying mixins in IDE
+
 `-Dcubicchunks.debug=true` - enable cubic chunks debug options
+
 `-XX:-OmitStackTraceInFastThrow` - some parts of cubic chunks code cause fast throw hen they fail, use when you see exception with no stacktrace
