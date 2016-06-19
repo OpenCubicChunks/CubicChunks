@@ -27,6 +27,7 @@ import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.CubeDependency;
+import cubicchunks.worldgen.DependentGeneratorStage;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.dependency.RegionDependency;
@@ -52,10 +53,10 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 		ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
 
 		// init the worldgen pipeline
-		GeneratorStage terrain = new VanillaStage("terrain", new Vec3i(0, 0, 0), new Vec3i(0, 15, 0), null, null);
-		GeneratorStage lighting = new VanillaStage("lighting", new Vec3i(-2, -2, -2), new Vec3i(2, 15 + 2, 2),
-				new Vec3i(-2, -2, -2), new Vec3i(2, 2, 2));
-		GeneratorStage population = new VanillaStage("population", new Vec3i(0, 0, 0), new Vec3i(1, 15, 1), null, null);
+		GeneratorStage terrain = new VanillaStage("terrain", new Vec3i(0, 0, 0), new Vec3i(0, 0, 0));
+		DependentGeneratorStage lighting = new DependentGeneratorStage("lighting", null);
+		lighting.setCubeDependency(new RegionDependency(lighting, 2));
+		GeneratorStage population = new VanillaStage("population", new Vec3i(0, 0, 0), new Vec3i(1, 0, 1));
 
 		pipeline.addStage(terrain, new VanillaTerrainProcessor(lighting, world, vanillaGen, 5));
 		pipeline.addStage(lighting, new VanillaFirstLightProcessor(lighting, population, cubeCache, 5));
@@ -69,29 +70,25 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 
 	private static class VanillaStage extends GeneratorStage {
 		private final CubeDependency[] depsForHeight = new CubeDependency[16];
-		private CubeDependency normal;
 
-		private VanillaStage(String name, Vec3i depStart, Vec3i depEnd, @Nullable Vec3i normalDepStart, @Nullable Vec3i normalDepEnd) {
+		private VanillaStage(String name, Vec3i depStart, Vec3i depEnd) {
 			super(name);
-			if (normalDepEnd != null && normalDepStart != null) {
-				this.normal = new RegionDependency(this, normalDepStart, normalDepEnd);
-			}
-			for (int y = 0; y < 16; y++) {
-				//each cube requires cubes from y=0 to y=15
-				//but relative to them, these positions are different
-				//relative coords: requiredCubePos - currentCubePos
+			//all cubes from y=1 to y=15 depend on cube at y=0, which generates all of them
+			for (int y = 1; y < 16; y++) {
 				int startY = depStart.getY() - y;
-				int endY = depEnd.getY() - y;
+				int endY = startY;
 				Vec3i start = new Vec3i(depStart.getX(), startY, depStart.getZ());
 				Vec3i end = new Vec3i(depEnd.getX(), endY, depEnd.getZ());
 				CubeDependency dep = new RegionDependency(this, start, end);
 				depsForHeight[y] = dep;
 			}
+			//cube at y=0 depends on all other so that they are loaded
+			depsForHeight[0] = new RegionDependency(this, new Vec3i(0, 1, 0), new Vec3i(0, 15, 0));
 		}
 
 		@Nullable @Override public CubeDependency getCubeDependency(@Nonnull Cube cube) {
 			if (cube.getY() < 0 || cube.getY() >= depsForHeight.length) {
-				return normal;
+				return null;
 			}
 			return depsForHeight[cube.getY()];
 		}

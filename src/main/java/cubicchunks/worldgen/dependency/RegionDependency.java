@@ -24,10 +24,6 @@
 
 package cubicchunks.worldgen.dependency;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.CubeDependency;
@@ -37,6 +33,9 @@ import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.util.math.Vec3i;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Specifies the dependency of a Cube on other cubes in its vicinity.
@@ -66,7 +65,7 @@ public class RegionDependency implements CubeDependency {
 	 * for this CubeDependency to be satisifed.
 	 *
 	 * @param targetStage The minimum GeneratorStage all Cubes within the given radius must be at for this
-	 *                    CubeDependency to be satisfied.
+	 * CubeDependency to be satisfied.
 	 * @param radius The radius of the cuboid including all required Cubes.
 	 */
 	public RegionDependency(@Nonnull GeneratorStage targetStage, int radius) {
@@ -87,7 +86,7 @@ public class RegionDependency implements CubeDependency {
 	 * each is irrelevant.
 	 *
 	 * @param targetStage The minimum GeneratorStage all Cubes within the specified region must be at for this
-	 *                    CubeDependency to be satisfied.
+	 * CubeDependency to be satisfied.
 	 * @param relA First corner of the cuboid including all required Cubes.
 	 * @param relB Second corner of the cuboid including all required Cubes.
 	 */
@@ -109,7 +108,7 @@ public class RegionDependency implements CubeDependency {
 
 	public Collection<Requirement> getRequirements(Cube cube) {
 
-		Set<Requirement> requirements = new HashSet<>();
+		List<Requirement> requirements = new ArrayList<>((xHigh - xLow + 1)*(yHigh - yLow + 1)*(zHigh - zLow + 1));
 
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();
