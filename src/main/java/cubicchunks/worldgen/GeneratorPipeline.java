@@ -43,6 +43,11 @@ public class GeneratorPipeline {
 
 	private static final int MAX_CUBES_PER_TICK = 500;
 
+	private static final int MAX_DURATION_PER_TICK = 40;
+
+	private static final int REPORT_INTERVAL = 40;
+
+
 	private final ServerCubeCache cubeProvider;
 
 	private final List<GeneratorStage> stages;
@@ -52,6 +57,12 @@ public class GeneratorPipeline {
 	private final DependentCubeManager dependentCubeManager;
 
 	private List<LinkedList<CubeCoords>> queues;
+
+	// Reporting
+
+	private int[] stageProcessed;
+
+	private int[] stageDuration;
 
 
 	public GeneratorPipeline(ServerCubeCache cubeProvider) {
@@ -84,7 +95,9 @@ public class GeneratorPipeline {
 			this.queues.add(new LinkedList<>());
 		}
 
-
+		// Reporting
+		this.stageProcessed = new int[this.stages.size()];
+		this.stageDuration = new int[this.stages.size()];
 	}
 
 
@@ -126,14 +139,12 @@ public class GeneratorPipeline {
 		this.generate(cube);
 	}
 
-	int totalTime = 0;
 	int totalProcessed = 0;
+	int totalDuration = 0;
 	int ticksSinceReport = 0;
 	int totalFinished = 0;
 
 	public int tick() {
-
-		long timeStart = System.currentTimeMillis();
 
 		// Sum up the amount of work to be done.
 		int numCubes = 0;
@@ -154,23 +165,25 @@ public class GeneratorPipeline {
 		}
 
 		// process the queues
+		long timeStart = System.currentTimeMillis();
+
 		int processed = 0;
 		for (int i = 0; i < this.queues.size(); ++i) {
 			GeneratorStage stage = this.stages.get(i);
 			processed += processStage(stage, shares[i]);
+			stageProcessed[i] += processed;
+
+			if (System.currentTimeMillis() - timeStart > MAX_DURATION_PER_TICK) {
+				break;
+			}
 		}
 
-		// reporting
-		long timeDiff = System.currentTimeMillis() - timeStart;
-		totalTime += timeDiff;
-		totalProcessed += processed;
 		this.report();
 
 		return processed;
 	}
 
 	public void processAll() {
-		long timeStart = System.currentTimeMillis();
 
 		// Process all queues until they are completely empty.
 		boolean done = false;
@@ -180,7 +193,6 @@ public class GeneratorPipeline {
 			for (int i = 0; i < this.stages.size(); ++i) {
 				GeneratorStage stage = this.stages.get(i);
 				int processed = processStage(stage);
-				totalProcessed += processed;
 				if (processed > 0) {
 					done = false;
 					break;
@@ -188,13 +200,14 @@ public class GeneratorPipeline {
 			}
 		}
 
-		long timeDiff = System.currentTimeMillis() - timeStart;
-		totalTime += timeDiff;
-
+		// Force a report.
+		this.ticksSinceReport = REPORT_INTERVAL;
 		this.report();
 	}
 
 	public int processStage(GeneratorStage stage, int maxCubes) {
+
+		long timeStart = System.currentTimeMillis();
 
 		GeneratorStage nextStage = stage.getOrdinal() < this.stages.size() - 1 ? this.stages.get(stage.getOrdinal() + 1) : GeneratorStage.LIVE;
 		Queue<CubeCoords> queue = this.queues.get(stage.getOrdinal());
@@ -235,6 +248,12 @@ public class GeneratorPipeline {
 			++processed;
 		}
 
+		long timeDiff = System.currentTimeMillis() - timeStart;
+
+		stageProcessed[stage.getOrdinal()] += processed;
+		stageDuration[stage.getOrdinal()] += timeDiff;
+
+
 		return processed;
 	}
 
@@ -244,8 +263,18 @@ public class GeneratorPipeline {
 
 	private void report() {
 		++ticksSinceReport;
-		if (ticksSinceReport == 20) {
-			CubicChunks.LOGGER.info("Processed: {}/s Finished: {}/s", ((double) totalProcessed * 1000f) / totalTime, ((double) totalFinished * 1000f) / totalTime);
+		if (ticksSinceReport >= REPORT_INTERVAL) {
+
+			for (int i = 0; i < this.queues.size(); ++i) {
+				CubicChunks.LOGGER.info(String.format("\t%15s: %3d processed (%.1f/s), %d in queue", this.stages.get(i).getName(), stageProcessed[i], ((float) stageProcessed[i] * 1000f) / stageDuration[i], this.queues.get(i).size()));
+
+				totalProcessed += stageProcessed[i];
+				stageProcessed[i] = 0;
+				totalDuration += stageDuration[i];
+				stageDuration[i] = 0;
+			}
+			CubicChunks.LOGGER.info("Total: Processed: {}/s Finished: {}/s", ((double) totalProcessed * 1000f) / totalDuration, ((double) totalFinished * 1000f) / totalDuration);
+
 			ticksSinceReport = 0;
 		}
 	}
