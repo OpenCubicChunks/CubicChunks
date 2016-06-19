@@ -24,14 +24,14 @@
 
 package cubicchunks.worldgen;
 
-import cubicchunks.util.processor.QueueProcessor;
+import cubicchunks.util.processor.CubeProcessor;
 
 public class StageProcessor {
 
-	public QueueProcessor<Long> processor;
+	public CubeProcessor processor;
 	public float share;
 
-	public StageProcessor(QueueProcessor<Long> processor) {
+	public StageProcessor(CubeProcessor processor) {
 		this.processor = processor;
 		this.share = 0f;
 	}
