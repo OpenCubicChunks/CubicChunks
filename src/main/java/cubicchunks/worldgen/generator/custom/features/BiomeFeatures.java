@@ -74,17 +74,19 @@ public class BiomeFeatures {
 	}
 
 	protected final void addTreeGenerators(BiomeDecorator decorator) {
-		//Other classes may override this methid to provide other tree generators
+		//Other classes may override this method to provide other tree generators
 		TreeGenerator smallTreeGen = new SimpleTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
-		BigTreeGenerator bigTreeGen2 = new BigTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
-		bigTreeGen2.setHeightRange(28, 32);
+		BigTreeGenerator bigTreeGen = new BigTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
+		bigTreeGen.setHeightRange(28, 32);
 
+		//TODO: fix it to actually generate big trees
+		//TODO: use vanilla big tree generator
 		VariantFeatureGenerator randomTreeGen = VariantFeatureGenerator.builder()
 				.nextVariant(smallTreeGen, 1.0)
+				.nextVariant(bigTreeGen, 0.1)
 				.build();
 
-//		addMultiGen(randomTreeGen, decorator.treesPerChunk);
-		addMultiGen(bigTreeGen2, decorator.treesPerChunk/10);
+		addMultiGen(randomTreeGen, decorator.treesPerChunk);
 	}
 
 	protected final void addOreGenerators(ChunkProviderSettings cfg) {

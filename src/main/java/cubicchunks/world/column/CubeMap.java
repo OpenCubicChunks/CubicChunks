@@ -25,17 +25,18 @@ package cubicchunks.world.column;
 
 import com.google.common.collect.Iterators;
 import cubicchunks.world.cube.Cube;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.TreeMap;
 
 class CubeMap implements Iterable<Cube> {
+
 	private final TreeMap<Integer, Cube> cubeMap = new TreeMap<>();
-	private final Map<Integer, Cube> map = new HashMap<>();
+	private final Int2ObjectMap<Cube> map = new Int2ObjectOpenHashMap<>();
 
 	Cube get(int cubeY) {
 		return map.get(cubeY);
