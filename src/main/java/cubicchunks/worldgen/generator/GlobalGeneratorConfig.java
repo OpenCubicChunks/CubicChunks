@@ -26,7 +26,7 @@ package cubicchunks.worldgen.generator;
 import cubicchunks.util.Coords;
 
 public class GlobalGeneratorConfig {
-	public static final int SEA_LEVEL = 0;
+	public static final int SEA_LEVEL = 64;
 	public static final double MAX_ELEV = 200;
 
 	// these are constants. Changing them may cause issues.

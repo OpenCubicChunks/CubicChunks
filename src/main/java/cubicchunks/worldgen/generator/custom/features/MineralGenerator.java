@@ -23,7 +23,6 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
-import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
@@ -68,7 +67,7 @@ public class MineralGenerator extends FeatureGenerator {
 
 	@Override
 	public void generate(final Random rand, final Cube cube, final Biome biome) {
-		BlockPos cubeCenter = Coords.getCubeCenter(cube);
+		BlockPos cubeStart = cube.getCoords().getMinBlockPos();
 
 		double maxBlockY = this.maxY*GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
 		double minBlockY = this.minY*GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
@@ -76,7 +75,7 @@ public class MineralGenerator extends FeatureGenerator {
 		if (rand.nextDouble() > this.probability) {
 			return;
 		}
-		BlockPos currentPos = cubeCenter.add(rand.nextInt(16), rand.nextInt(16), rand.nextInt(16));
+		BlockPos currentPos = cubeStart.add(rand.nextInt(16), rand.nextInt(16), rand.nextInt(16));
 		if (currentPos.getY() <= maxBlockY && currentPos.getY() >= minBlockY) {
 			this.vanillaGen.generate((World) this.world, rand, currentPos);
 		}

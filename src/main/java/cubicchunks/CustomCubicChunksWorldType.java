@@ -44,7 +44,7 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 
 	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
 		ServerCubeCache cubeCache = world.getCubeCache();
-		
+
 		// init the worldgen pipeline
 		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
 
@@ -53,8 +53,9 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 		DependentGeneratorStage lighting = new DependentGeneratorStage("lighting", null);
 		lighting.setCubeDependency(new RegionDependency(lighting, 2));
 
-		GeneratorStage population = new IndependentGeneratorStage("population");
-		
+		DependentGeneratorStage population = new DependentGeneratorStage("population", null);
+		population.setCubeDependency(new RegionDependency(population, new Vec3i(0, 0, 0), new Vec3i(1, 1, 1)));
+
 		pipeline.addStage(terrain, new CustomTerrainProcessor(world, 5));
 		pipeline.addStage(features, new CustomFeatureProcessor(features, "Features", cubeCache, 10));
 		pipeline.addStage(lighting, new FirstLightProcessor(lighting, "Lighting", cubeCache, 5));

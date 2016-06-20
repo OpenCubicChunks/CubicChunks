@@ -120,10 +120,10 @@ public class CubeCoords {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Calculates a 64bit encoding of these coordinates.
-	 * 
+	 *
 	 * @return 64bit encoding of these coordinates.
 	 */
 	public long getAddress() {
@@ -132,14 +132,14 @@ public class CubeCoords {
 
 	/**
 	 * Returns a specification compliant hashCode for this object.
-	 * 
+	 *
 	 * @return A 32bit hashCode for this instance of CubeCoords.
 	 */
 	@Override
 	public int hashCode() {
 		return Long.hashCode(this.getAddress());
 	}
-	
+
 	/**
 	 * Gets the absolute position of the cube's center on the x axis.
 	 *
@@ -181,6 +181,10 @@ public class CubeCoords {
 
 	public BlockPos getCenterBlockPos() {
 		return new BlockPos(getXCenter(), getYCenter(), getZCenter());
+	}
+
+	public BlockPos getMinBlockPos() {
+		return new BlockPos(getMinBlockX(), getMinBlockY(), getMinBlockZ());
 	}
 
 	public CubeCoords sub(int dx, int dy, int dz) {

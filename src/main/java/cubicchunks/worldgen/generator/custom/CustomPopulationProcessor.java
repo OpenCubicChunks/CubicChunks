@@ -33,7 +33,6 @@ import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
 import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 import net.minecraft.world.biome.Biome;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -61,11 +60,6 @@ public class CustomPopulationProcessor extends CubeProcessor {
 
 	@Override
 	public Set<Cube> calculate(Cube cube) {
-		if (true) return Sets.newHashSet(cube);
-		if (!cube.getWorld().testForCubeAndNeighbor(cube, c -> c.isBeforeStage(generatorStage))) {
-			return Collections.EMPTY_SET;
-		}
-
 		Biome biome = cube.getWorld().getBiome(Coords.getCubeCenter(cube));
 
 		//For surface generators we should actually use special RNG with seed 
