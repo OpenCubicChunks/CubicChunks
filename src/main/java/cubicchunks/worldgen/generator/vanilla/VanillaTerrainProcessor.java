@@ -80,7 +80,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 			fillCube(cube, Blocks.STONE.getDefaultState());
 			return Sets.newHashSet(cube);
 		}
-		if (cube.getY() >= 16) {
+		if (cube.getY() > 0) {
 			return Sets.newHashSet(cube);
 		}
 		Set<Cube> cubes = new HashSet<>();

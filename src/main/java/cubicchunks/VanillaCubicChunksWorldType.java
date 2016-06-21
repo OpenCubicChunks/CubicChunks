@@ -23,6 +23,7 @@
  */
 package cubicchunks;
 
+import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
@@ -31,7 +32,6 @@ import cubicchunks.worldgen.DependentGeneratorStage;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.dependency.RegionDependency;
-import cubicchunks.worldgen.generator.vanilla.VanillaFirstLightProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
 import net.minecraft.util.math.Vec3i;
@@ -59,7 +59,7 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 		GeneratorStage population = new VanillaStage("population", new Vec3i(0, 0, 0), new Vec3i(1, 0, 1));
 
 		pipeline.addStage(terrain, new VanillaTerrainProcessor(lighting, world, vanillaGen, 5));
-		pipeline.addStage(lighting, new VanillaFirstLightProcessor(lighting, population, cubeCache, 5));
+		pipeline.addStage(lighting, new FirstLightProcessor(lighting, "lighting", cubeCache, 5));
 		pipeline.addStage(population, new VanillaPopulationProcessor(population, world, vanillaGen, 5));
 
 	}

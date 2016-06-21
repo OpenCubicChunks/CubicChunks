@@ -30,10 +30,8 @@ import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.debug.Prof;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -54,11 +52,8 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 
 	@Override
 	public Set<Cube> calculate(Cube cube) {
-		if (cube.getY() < 0 || cube.getY() >= 16) {
+		if (cube.getY() != 0) {
 			return Sets.newHashSet(cube);
-		}
-		if (!canPopulate(cube)) {
-			return Collections.EMPTY_SET;
 		}
 		Set<Cube> cubes = new HashSet<>();
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
@@ -75,15 +70,5 @@ public class VanillaPopulationProcessor extends CubeProcessor {
 			world.setGeneratingWorld(false);
 		}
 		return cubes;
-	}
-
-	private boolean canPopulate(Cube c00) {
-		Prof.call("VanillaPopulationProcessor#canPopulate(Cube)");
-		Cube c01 = provider.getCube(c00.getX(), c00.getY(), c00.getZ() + 1);
-		Cube c11 = provider.getCube(c00.getX() + 1, c00.getY(), c00.getZ() + 1);
-		Cube c10 = provider.getCube(c00.getX() + 1, c00.getY(), c00.getZ());
-		return c01 != null && !c01.isBeforeStage(generatorStage) &&
-				c11 != null && !c11.isBeforeStage(generatorStage) &&
-				c10 != null && !c10.isBeforeStage(generatorStage);
 	}
 }
