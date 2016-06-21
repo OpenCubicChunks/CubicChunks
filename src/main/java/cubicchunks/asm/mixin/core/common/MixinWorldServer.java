@@ -110,7 +110,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		// wait for the cubes to be loaded
 		GeneratorPipeline pipeline = this.getGeneratorPipeline();
-		pipeline.processAll();
+		int numCubesTotal = pipeline.getNumCubes();
+		if (numCubesTotal > 0) {
+			pipeline.generateAll();
+		}
 
 		// don't save cubes here. Vanilla doesn't do that.
 		// and saving chunks here would be extremely slow

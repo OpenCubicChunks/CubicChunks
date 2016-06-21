@@ -24,7 +24,6 @@
 
 package cubicchunks.worldgen;
 
-import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.dependency.CubeDependencyProvider;
 import net.minecraft.world.World;
 
@@ -42,7 +41,7 @@ public abstract class GeneratorStage implements CubeDependencyProvider {
 	
 	private int ordinal;
 	
-	private CubeProcessor processor;
+	private StageProcessor processor;
 	
 		
 	public GeneratorStage(String name) {
@@ -71,11 +70,11 @@ public abstract class GeneratorStage implements CubeDependencyProvider {
 	}
 	
 	
-	public void setCubeProcessor(CubeProcessor processor) {
+	public void setProcessor(StageProcessor processor) {
 		this.processor = processor;
 	}
 
-	public CubeProcessor getCubeProcessor() {
+	public StageProcessor getProcessor() {
 		return this.processor;
 	}
 	
