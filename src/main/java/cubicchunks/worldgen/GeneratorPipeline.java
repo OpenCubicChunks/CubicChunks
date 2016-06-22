@@ -80,7 +80,7 @@ public class GeneratorPipeline {
 
 	public void addStage(GeneratorStage stage, CubeProcessor processor) {
 		stage.setOrdinal(this.stages.size());
-		stage.setProcessor(new StageProcessor(processor));
+		stage.setProcessor(processor);
 		this.stages.add(stage);
 		this.stageMap.put(stage.getName(), stage);
 	}
@@ -191,7 +191,7 @@ public class GeneratorPipeline {
 			return null;
 		}
 		GeneratorStage previousStage = cube.getCurrentStage();
-		previousStage.getProcessor().processor.calculate(cube);
+		previousStage.getProcessor().calculate(cube);
 
 		//advance to next stage
 		boolean isLastStage = previousStage.getOrdinal() + 1 >= this.stages.size();
@@ -264,6 +264,7 @@ public class GeneratorPipeline {
 		}
 	}
 
+	//TODO: Track progress properly
 	private void updateProgress(Progress progress, int[] cubesInStage, int finished, int skipped) {
 		int[] actualStages = new int[cubesInStage.length + 1];
 		System.arraycopy(cubesInStage, 0, actualStages, 0, cubesInStage.length);
