@@ -41,6 +41,8 @@ public abstract class GeneratorStage implements CubeDependencyProvider {
 	private boolean isLast;
 	
 	private int ordinal;
+
+	private GeneratorStage nextStage;
 	
 	private CubeProcessor processor;
 	
@@ -50,6 +52,14 @@ public abstract class GeneratorStage implements CubeDependencyProvider {
 		this.isLast = false;
 	}
 	
+
+	public void setNextStage(GeneratorStage nextStage) {
+		this.nextStage = nextStage;
+	}
+
+	public GeneratorStage getNextStage() {
+		return this.nextStage;
+	}
 
 	@Override
 	public String toString() {
@@ -84,7 +94,7 @@ public abstract class GeneratorStage implements CubeDependencyProvider {
 		this.ordinal = ordinal;
 	}
 	
-	int getOrdinal() {
+	public int getOrdinal() {
 		return this.ordinal;
 	}
 

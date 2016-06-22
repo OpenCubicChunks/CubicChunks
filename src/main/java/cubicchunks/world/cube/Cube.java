@@ -354,6 +354,10 @@ public class Cube {
 		return this.currentStage;
 	}
 
+	public GeneratorStage getNextStage() {
+		return this.currentStage.getNextStage();
+	}
+
 	public boolean isBeforeStage(GeneratorStage stage) {
 		return this.getCurrentStage().precedes(stage);
 	}
@@ -595,6 +599,7 @@ public class Cube {
 	public LightUpdateData getLightUpdateData() {
 		return this.lightUpdateData;
 	}
+
 
 	public static class LightUpdateData {
 		private final Cube cube;

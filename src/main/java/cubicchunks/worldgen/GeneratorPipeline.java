@@ -29,15 +29,15 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.CubeDependency;
+import cubicchunks.worldgen.concurrency.CubeWorkerQueue;
+import cubicchunks.worldgen.concurrency.GeneratorWorker;
 import cubicchunks.worldgen.dependency.DependentCube;
 import cubicchunks.worldgen.dependency.DependentCubeManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 public class GeneratorPipeline {
 
@@ -56,13 +56,17 @@ public class GeneratorPipeline {
 
 	private final DependentCubeManager dependentCubeManager;
 
-	private List<LinkedList<CubeCoords>> queues;
+	private List<CubeWorkerQueue> queues;
 
 	// Reporting
 
 	private int[] stageProcessed;
 
 	private int[] stageDuration;
+
+	// TODO: Remove
+
+	private List<GeneratorWorker> workers;
 
 
 	public GeneratorPipeline(ServerCubeCache cubeProvider) {
@@ -78,11 +82,16 @@ public class GeneratorPipeline {
 		stage.setCubeProcessor(processor);
 		this.stages.add(stage);
 		this.stageMap.put(stage.getName(), stage);
+
+		if (this.stages.size() > 1) {
+			this.stages.get(this.stages.size() - 2).setNextStage(stage);
+		}
 	}
 
 	public void checkStages() {
 
 		this.queues = new ArrayList<>(this.stages.size());
+		this.workers = new ArrayList<>(this.stages.size());
 
 		for (GeneratorStage stage : this.stages) {
 			if (!stage.isLastStage()) {
@@ -92,8 +101,23 @@ public class GeneratorPipeline {
 				}
 			}
 
-			this.queues.add(new LinkedList<>());
+			CubeWorkerQueue queue = new CubeWorkerQueue(stage.getName(), this.cubeProvider);
+			GeneratorWorker worker = new GeneratorWorker(this, stage, queue);
+
+			this.queues.add(queue);
+			this.workers.add(worker);
 		}
+
+		for (GeneratorWorker worker : this.workers) {
+			for (CubeWorkerQueue queue : this.queues) {
+				queue.register(worker);
+			}
+
+			worker.signalPause();
+			new Thread(worker).start();
+		}
+
+		this.stages.get(this.stages.size() - 1).setNextStage(GeneratorStage.LIVE);
 
 		// Reporting
 		this.stageProcessed = new int[this.stages.size()];
@@ -146,138 +170,78 @@ public class GeneratorPipeline {
 
 	public int tick() {
 
-		// Sum up the amount of work to be done.
-		int numCubes = 0;
-		for (Queue<CubeCoords> queue : this.queues) {
-			numCubes += Math.min(MAX_CUBES_PER_TICK, queue.size());
+		for (GeneratorWorker worker : this.workers) {
+			worker.signalUnpause();
 		}
 
-		// If there is nothing to do, return now.
-		if (numCubes < 0) {
-			return 0;
+		try {
+			Thread.sleep(40);
+		} catch (Exception e) {
+
 		}
 
-		// Allocate load to each stage depending on busy it is.
-		int[] shares = new int[this.queues.size()];
-		for (int i = 0; i < this.stages.size(); ++i) {
-			int size = Math.min(MAX_CUBES_PER_TICK, this.queues.get(i).size());
-			shares[i] = Math.round(MAX_CUBES_PER_TICK * (float)size / (float)numCubes);
+		for (GeneratorWorker worker : this.workers) {
+			worker.signalPause();
 		}
 
-		// process the queues
-		long timeStart = System.currentTimeMillis();
+		for (GeneratorWorker worker : this.workers) {
+			worker.waitUntilPaused();
+	 }
 
-		int processed = 0;
-		for (int i = 0; i < this.queues.size(); ++i) {
-			GeneratorStage stage = this.stages.get(i);
-			processed += processStage(stage, shares[i]);
-			stageProcessed[i] += processed;
-
-			if (System.currentTimeMillis() - timeStart > MAX_DURATION_PER_TICK) {
-				break;
-			}
+		for (GeneratorWorker worker : this.workers) {
+			worker.report();
 		}
 
-		this.report();
+		for (CubeWorkerQueue queue : this.queues) {
+			queue.report();
+		}
 
-		return processed;
+		return 0;
 	}
 
 	public void processAll() {
 
-		// Process all queues until they are completely empty.
-		boolean done = false;
-		while (!done) {
-			done = true;
+		for (GeneratorWorker worker : this.workers) {
+			worker.signalUnpause();
+		}
 
-			for (int i = 0; i < this.stages.size(); ++i) {
-				GeneratorStage stage = this.stages.get(i);
-				int processed = processStage(stage);
-				if (processed > 0) {
-					done = false;
-					break;
-				}
-			}
+		try {
+			Thread.sleep(40);
+		} catch (Exception e) {
+
+		}
+
+		for (GeneratorWorker worker : this.workers) {
+			worker.signalPause();
+		}
+
+		for (GeneratorWorker worker : this.workers) {
+			worker.waitUntilPaused();
 		}
 
 		// Force a report.
 		this.ticksSinceReport = REPORT_INTERVAL;
-		this.report();
+
 	}
 
-	public int processStage(GeneratorStage stage, int maxCubes) {
 
-		long timeStart = System.currentTimeMillis();
-
-		GeneratorStage nextStage = stage.getOrdinal() < this.stages.size() - 1 ? this.stages.get(stage.getOrdinal() + 1) : GeneratorStage.LIVE;
-		Queue<CubeCoords> queue = this.queues.get(stage.getOrdinal());
-		CubeProcessor processor = stage.getCubeProcessor();
-
-		int processed = 0;
-		while (!queue.isEmpty() && processed < maxCubes) {
-			Cube cube = this.cubeProvider.getCube(queue.poll());
-
-			// If the cube has been unloaded, skip it.
-			if (cube == null) {
-				continue;
-			}
-
-			// If the cube has passed this stage, skip it.
-			if (cube.getCurrentStage() != stage) {
-				continue;
-			}
-
-			processor.calculate(cube);
-
-			// Free the cube's requirements.
-			this.dependentCubeManager.unregister(cube);
-
-			// Advance the cube's stage.
-			cube.setCurrentStage(nextStage);
-
-			// Update cubes depending on this cube.
-			this.dependentCubeManager.updateDependents(cube);
-
-			// If the next stage is not the cube's target stage, carry on.
-			if (nextStage != GeneratorStage.LIVE && !cube.hasReachedTargetStage()) {
-				generate(cube);
-			} else {
-				++totalFinished;
-			}
-
-			++processed;
-		}
-
-		long timeDiff = System.currentTimeMillis() - timeStart;
-
-		stageProcessed[stage.getOrdinal()] += processed;
-		stageDuration[stage.getOrdinal()] += timeDiff;
-
-
-		return processed;
-	}
-
-	public int processStage(GeneratorStage stage) {
-		return processStage(stage, Integer.MAX_VALUE);
-	}
-
-	private void report() {
-		++ticksSinceReport;
-		if (ticksSinceReport >= REPORT_INTERVAL) {
-
-			for (int i = 0; i < this.queues.size(); ++i) {
-				CubicChunks.LOGGER.info(String.format("\t%15s: %3d processed (%.1f/s), %d in queue", this.stages.get(i).getName(), stageProcessed[i], ((float) stageProcessed[i] * 1000f) / stageDuration[i], this.queues.get(i).size()));
-
-				totalProcessed += stageProcessed[i];
-				stageProcessed[i] = 0;
-				totalDuration += stageDuration[i];
-				stageDuration[i] = 0;
-			}
-			CubicChunks.LOGGER.info("Total: Processed: {}/s Finished: {}/s", ((double) totalProcessed * 1000f) / totalDuration, ((double) totalFinished * 1000f) / totalDuration);
-
-			ticksSinceReport = 0;
-		}
-	}
+//	private void report() {
+//		++ticksSinceReport;
+//		if (ticksSinceReport >= REPORT_INTERVAL) {
+//
+//			for (int i = 0; i < this.queues.size(); ++i) {
+//				CubicChunks.LOGGER.info(String.format("\t%15s: %3d processed (%.1f/s), %d in queue", this.stages.get(i).getName(), stageProcessed[i], ((float) stageProcessed[i] * 1000f) / stageDuration[i], this.queues.get(i).size()));
+//
+//				totalProcessed += stageProcessed[i];
+//				stageProcessed[i] = 0;
+//				totalDuration += stageDuration[i];
+//				stageDuration[i] = 0;
+//			}
+//			CubicChunks.LOGGER.info("Total: Processed: {}/s Finished: {}/s", ((double) totalProcessed * 1000f) / totalDuration, ((double) totalFinished * 1000f) / totalDuration);
+//
+//			ticksSinceReport = 0;
+//		}
+//	}
 
 	public GeneratorStage getStage(String name) {
 		return this.stageMap.get(name);
