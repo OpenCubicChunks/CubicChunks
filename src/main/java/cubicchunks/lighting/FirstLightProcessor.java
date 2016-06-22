@@ -23,10 +23,8 @@
  */
 package cubicchunks.lighting;
 
-import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
-import cubicchunks.util.CubeCoords;
 import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
@@ -40,16 +38,13 @@ import net.minecraft.world.EnumSkyBlock;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Collections;
-import java.util.Set;
-
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
 import static cubicchunks.util.Coords.cubeToMaxBlock;
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.getCubeCenter;
 
-public class FirstLightProcessor extends CubeProcessor {
+public class FirstLightProcessor implements CubeProcessor {
 
 	private static final int[][] neighborDirections = new int[][]{
 			{0, 0, -1},
@@ -61,19 +56,18 @@ public class FirstLightProcessor extends CubeProcessor {
 	};
 	//mutableBlockPos variable to avoid creating thousands of instances of BlockPos
 	private BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
-
 	private GeneratorStage generatorStage;
-	
-	public FirstLightProcessor(GeneratorStage lighting, String name, ICubeCache cache, int batchSize) {
-		super(name, cache, batchSize);
+	private ICubeCache cache;
+
+	public FirstLightProcessor(GeneratorStage lighting, ICubicWorld world) {
 		this.generatorStage = lighting;
+		this.cache = world.getCubeCache();
 	}
 
 	@Override
-	public Set<Cube> calculate(Cube cube) {
+	public void calculate(Cube cube) {
 		setRawSkylight(cube);
 		diffuseSkylight(cube);
-		return Sets.newHashSet(cube);
 	}
 
 	private void setRawSkylight(Cube cube) {

@@ -23,24 +23,19 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import com.google.common.collect.Sets;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 
-import java.util.Set;
-
-public final class CustomTerrainProcessor extends CubeProcessor {
+public final class CustomTerrainProcessor implements CubeProcessor {
 	private final CustomTerrainGenerator terrainGenerator;
 
-	public CustomTerrainProcessor(ICubicWorldServer world, int batchSize) {
-		super("Terrain", world.getCubeCache(), batchSize);
+	public CustomTerrainProcessor(ICubicWorldServer world) {
 		this.terrainGenerator = new CustomTerrainGenerator(world.getSeed());
 	}
 
 	@Override
-	public Set<Cube> calculate(final Cube cube) {
+	public void calculate(final Cube cube) {
 		this.terrainGenerator.generate(cube);
-		return Sets.newHashSet(cube);
 	}
 }

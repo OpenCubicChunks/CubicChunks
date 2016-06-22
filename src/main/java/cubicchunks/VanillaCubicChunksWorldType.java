@@ -24,7 +24,6 @@
 package cubicchunks;
 
 import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.CubeDependency;
@@ -48,8 +47,6 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 	}
 
 	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
-		ServerCubeCache cubeCache = world.getCubeCache();
-
 		ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
 
 		// init the worldgen pipeline
@@ -58,10 +55,9 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 		lighting.setCubeDependency(new RegionDependency(lighting, 2));
 		GeneratorStage population = new VanillaStage("population", new Vec3i(0, 0, 0), new Vec3i(1, 0, 1));
 
-		pipeline.addStage(terrain, new VanillaTerrainProcessor(lighting, world, vanillaGen, 5));
-		pipeline.addStage(lighting, new FirstLightProcessor(lighting, "lighting", cubeCache, 5));
-		pipeline.addStage(population, new VanillaPopulationProcessor(population, world, vanillaGen, 5));
-
+		pipeline.addStage(terrain, new VanillaTerrainProcessor(world, vanillaGen));
+		pipeline.addStage(lighting, new FirstLightProcessor(lighting, world));
+		pipeline.addStage(population, new VanillaPopulationProcessor(vanillaGen));
 	}
 
 	public static void create() {

@@ -23,24 +23,16 @@
  */
 package cubicchunks.worldgen.generator.flat;
 
-import com.google.common.collect.Sets;
 import cubicchunks.util.processor.CubeProcessor;
-import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.Set;
+public class FlatTerrainProcessor implements CubeProcessor {
 
-public class FlatTerrainProcessor extends CubeProcessor {
-
-	public FlatTerrainProcessor(ICubeCache provider, int batchSize) {
-		super("Terrain", provider, batchSize);
-	}
-
-	@Override public Set<Cube> calculate(Cube cube) {
+	@Override public void calculate(Cube cube) {
 		if (cube.getY() >= 0) {
-			return Sets.newHashSet(cube);
+			return;
 		}
 		if (cube.getY() == -1) {
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
@@ -58,7 +50,7 @@ public class FlatTerrainProcessor extends CubeProcessor {
 					}
 				}
 			}
-			return Sets.newHashSet(cube);
+			return;
 		}
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		for (int x = 0; x < 16; x++) {
@@ -69,6 +61,5 @@ public class FlatTerrainProcessor extends CubeProcessor {
 				}
 			}
 		}
-		return Sets.newHashSet(cube);
 	}
 }

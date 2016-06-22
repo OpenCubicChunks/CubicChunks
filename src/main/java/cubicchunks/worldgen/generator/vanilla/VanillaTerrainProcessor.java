@@ -23,14 +23,11 @@
  */
 package cubicchunks.worldgen.generator.vanilla;
 
-import com.google.common.collect.Sets;
-import cubicchunks.server.ServerCubeCache;
+import cubicchunks.debug.Prof;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.debug.Prof;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -39,9 +36,6 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.ChunkProviderSettings;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import static cubicchunks.util.ChunkProviderOverworldAccess.getBiomesForGeneration;
 import static cubicchunks.util.ChunkProviderOverworldAccess.getCaveGenerator;
@@ -58,39 +52,26 @@ import static cubicchunks.util.ChunkProviderOverworldAccess.replaceBiomeBlocks;
 import static cubicchunks.util.ChunkProviderOverworldAccess.setBiomesForGeneration;
 import static cubicchunks.util.ChunkProviderOverworldAccess.setBlocksInChunk;
 
-public class VanillaTerrainProcessor extends CubeProcessor {
-
-	private GeneratorStage nextStage;
+public class VanillaTerrainProcessor implements CubeProcessor {
+	private final ICubicWorldServer world;
 	private final ChunkProviderOverworld vanillaGen;
-	private ICubicWorldServer world;
-	private ServerCubeCache provider;
 
-	public VanillaTerrainProcessor(GeneratorStage nextStage, ICubicWorldServer world, ChunkProviderOverworld vanillaGen, int batchSize) {
-		super("Terrain", world.getCubeCache(), batchSize);
-		this.nextStage = nextStage;
+	public VanillaTerrainProcessor(ICubicWorldServer world, ChunkProviderOverworld vanillaGen) {
 		this.world = world;
-		this.provider = world.getCubeCache();
 		this.vanillaGen = vanillaGen;
 	}
 
 
-	@Override public Set<Cube> calculate(Cube cube) {
+	@Override public void calculate(Cube cube) {
 		Prof.call("VanillaTerrainProcessor#calculate(Cube)");
 		if (cube.getY() < 0) {
 			fillCube(cube, Blocks.STONE.getDefaultState());
-			return Sets.newHashSet(cube);
+			return;
 		}
 		if (cube.getY() > 0) {
-			return Sets.newHashSet(cube);
-		}
-		Set<Cube> cubes = new HashSet<>();
-		for(int y = 0; y < 16; y++) {
-			Cube currentCube = this.cache.getCube(cube.getX(), y, cube.getZ());
-			assert currentCube != null;
-			cubes.add(currentCube);
+			return;
 		}
 		generateVanillaChunk(cube);
-		return cubes;
 	}
 
 	private void generateVanillaChunk(Cube cube) {
@@ -137,14 +118,7 @@ public class VanillaTerrainProcessor extends CubeProcessor {
 			}
 		}
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
-			Cube currCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
-			currCube.setCurrentStage(nextStage);
-			if(cubeY < 0 || cubeY >= 16) {
-				if(cubeY < 0) {
-					fillCube(currCube, Blocks.STONE.getDefaultState());
-				}
-				continue;
-			}
+			Cube currCube = this.world.getCubeCache().getCube(cube.getX(), cubeY, cube.getZ());
 			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 			for (int localX = 0; localX < 16; localX++) {
 				for (int localY = 0; localY < 16; localY++) {

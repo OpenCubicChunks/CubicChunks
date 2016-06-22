@@ -45,7 +45,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -79,8 +78,6 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	private static final Predicate<EntityPlayerMP> NOT_SPECTATOR = player -> player != null && !player.isSpectator();
 	private static final Predicate<EntityPlayerMP> CAN_GENERATE_CHUNKS = player -> player != null &&
 			(!player.isSpectator() || player.getServerWorld().getGameRules().getBoolean("spectatorsGenerateChunks"));
-
-	private final Logger LOGGER = CubicChunks.LOGGER;
 
 	/**
 	 * Cube selector is used to find whuch cube positions need to be loaded/unloaded
@@ -144,7 +141,6 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	public PlayerCubeMap(ICubicWorldServer worldServer) {
 		super((WorldServer) worldServer);
 		this.cubeCache = (ServerCubeCache) getWorldServer().getChunkProvider();
-		//this.viewDistance = worldServer.getMinecraftServer().getPlayerList().getViewDistance();
 		this.setPlayerViewRadius(worldServer.getMinecraftServer().getPlayerList().getViewDistance());
 	}
 

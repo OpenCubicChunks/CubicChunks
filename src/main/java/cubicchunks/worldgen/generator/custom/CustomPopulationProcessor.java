@@ -23,12 +23,10 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import com.google.common.collect.Sets;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
 import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 import net.minecraft.world.biome.Biome;
@@ -36,17 +34,12 @@ import net.minecraft.world.biome.Biome;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
-public class CustomPopulationProcessor extends CubeProcessor {
+public class CustomPopulationProcessor implements CubeProcessor {
 
-	private GeneratorStage generatorStage;
 	private Map<Biome, BiomeFeatures> biomeFeaturesMap;
 
-	public CustomPopulationProcessor(GeneratorStage generatorStage, String name, ICubicWorld world, int batchSize) {
-		super(name, world.getCubeCache(), batchSize);
-
-		this.generatorStage = generatorStage;
+	public CustomPopulationProcessor(ICubicWorld world) {
 		this.biomeFeaturesMap = new HashMap<>();
 
 		// for now use global for all biomes
@@ -59,7 +52,7 @@ public class CustomPopulationProcessor extends CubeProcessor {
 	}
 
 	@Override
-	public Set<Cube> calculate(Cube cube) {
+	public void calculate(Cube cube) {
 		Biome biome = cube.getWorld().getBiome(Coords.getCubeCenter(cube));
 
 		//For surface generators we should actually use special RNG with seed 
@@ -71,7 +64,5 @@ public class CustomPopulationProcessor extends CubeProcessor {
 		for (FeatureGenerator gen : features.getBiomeFeatureGenerators()) {
 			gen.generate(rand, cube, biome);
 		}
-
-		return Sets.newHashSet(cube);
 	}
 }

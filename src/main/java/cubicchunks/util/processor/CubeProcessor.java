@@ -23,54 +23,8 @@
  */
 package cubicchunks.util.processor;
 
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.Progress;
-import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
-import java.util.Set;
-
-public abstract class CubeProcessor extends QueueProcessor<Long> {
-
-	public CubeProcessor(String name, ICubeCache provider, int batchSize) {
-		super(name, provider, batchSize);
-	}
-
-	@Override
-	public void processBatch(Progress progress) {
-		// start processing
-		for (long address : this.incomingAddresses) {
-			if (processedAddresses.contains(address)) {
-				//this address has been processed additionally
-				continue;
-			}
-
-			// get the cube
-			int cubeX = AddressTools.getX(address);
-			int cubeY = AddressTools.getY(address);
-			int cubeZ = AddressTools.getZ(address);
-			Cube cube = this.cache.getCube(cubeX, cubeY, cubeZ);
-			if (cube == null) {
-				// this cube probably got unloaded before it could be processed
-				// just drop it from the queue
-				continue;
-			}
-
-			// add unsuccessful calculations back onto the queue
-			Set<Cube> generatedCubes = calculate(cube);
-			if (!generatedCubes.contains(cube)) {
-				this.deferredAddresses.add(address);
-			}
-			for (Cube c : generatedCubes) {
-				this.processedAddresses.add(c.getAddress());
-			}
-
-			if (progress != null) {
-				progress.incrementProgress();
-			}
-		}
-		this.deferredAddresses.removeAll(this.processedAddresses);
-	}
-
-	public abstract Set<Cube> calculate(Cube cube);
+public interface CubeProcessor {
+	void calculate(Cube cube);
 }

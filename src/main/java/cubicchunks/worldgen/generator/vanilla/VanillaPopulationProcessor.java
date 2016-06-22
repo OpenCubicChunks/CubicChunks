@@ -23,52 +23,27 @@
  */
 package cubicchunks.worldgen.generator.vanilla;
 
-import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
-import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.processor.CubeProcessor;
-import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
-import java.util.HashSet;
-import java.util.Set;
-
-public class VanillaPopulationProcessor extends CubeProcessor {
-	
-	private GeneratorStage generatorStage;
-	private ServerCubeCache provider;
-	private ICubicWorldServer world;
+public class VanillaPopulationProcessor implements CubeProcessor {
 	private ChunkProviderOverworld vanillaGen;
 
-	public VanillaPopulationProcessor(GeneratorStage generatorStage, ICubicWorldServer world, ChunkProviderOverworld vanillaGen, int batchSize) {
-		super("Population", world.getCubeCache(), batchSize);
-		this.generatorStage = generatorStage;
-		this.provider = world.getCubeCache();
-		this.world = world;
+	public VanillaPopulationProcessor(ChunkProviderOverworld vanillaGen) {
 		this.vanillaGen = vanillaGen;
 	}
 
 	@Override
-	public Set<Cube> calculate(Cube cube) {
+	public void calculate(Cube cube) {
 		if (cube.getY() != 0) {
-			return Sets.newHashSet(cube);
-		}
-		Set<Cube> cubes = new HashSet<>();
-		for (int cubeY = 0; cubeY < 16; cubeY++) {
-			Cube currentCube = this.provider.getCube(cube.getX(), cubeY, cube.getZ());
-			assert currentCube != null;
-			cubes.add(currentCube);
+			return;
 		}
 		try {
-			world.setGeneratingWorld(true);
 			this.vanillaGen.populate(cube.getX(), cube.getZ());
 		} catch (RuntimeException ex) {
 			CubicChunks.LOGGER.error("Exception when populating chunk at " + cube.getX() + ", " + cube.getZ(), ex);
-		} finally {
-			world.setGeneratingWorld(false);
 		}
-		return cubes;
 	}
 }

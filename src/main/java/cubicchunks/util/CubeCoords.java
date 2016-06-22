@@ -206,4 +206,11 @@ public class CubeCoords {
 	public ChunkPos chunkPos() {
 		return new ChunkPos(getCubeX(), getCubeZ());
 	}
+
+	public int distSquared(CubeCoords coords) {
+		int dx = coords.cubeX - this.cubeX;
+		int dy = coords.cubeY - this.cubeY;
+		int dz = coords.cubeZ - this.cubeZ;
+		return dx*dx + dy*dy + dz*dz;
+	}
 }

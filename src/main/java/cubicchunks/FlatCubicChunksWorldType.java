@@ -24,7 +24,6 @@
 package cubicchunks;
 
 import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
@@ -38,13 +37,12 @@ public class FlatCubicChunksWorldType extends BaseCubicWorldType {
 	}
 
 	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
-		ServerCubeCache cubeCache = world.getCubeCache();
 		// init the worldgen pipeline
 		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
 		GeneratorStage lighting = new IndependentGeneratorStage("lighting");
 		
-		pipeline.addStage(terrain, new FlatTerrainProcessor(cubeCache, 5));
-		pipeline.addStage(lighting, new FirstLightProcessor(lighting, "Lighting", cubeCache, 5));
+		pipeline.addStage(terrain, new FlatTerrainProcessor());
+		pipeline.addStage(lighting, new FirstLightProcessor(lighting, world));
 	}
 
 	public static void create() {

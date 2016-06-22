@@ -76,7 +76,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.thePlayerManager = new PlayerCubeMap(this);
 		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
 		this.lightingManager = new LightingManager(this);
-		this.generatorPipeline = new GeneratorPipeline(this.getCubeCache());
+		this.generatorPipeline = new GeneratorPipeline(this);
 
 		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
 		type.registerWorldGen(this, this.generatorPipeline);

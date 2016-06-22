@@ -23,23 +23,19 @@
  */
 package cubicchunks.debug;
 
-import com.google.common.collect.Sets;
 import cubicchunks.BaseCubicWorldType;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.CubeCoords;
-import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.dependency.CubeDependency;
 import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.world.dependency.CubeDependency;
 import cubicchunks.worldgen.dependency.RegionDependency;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-
-import java.util.Set;
 
 public class DebugWorldType extends BaseCubicWorldType {
 
@@ -57,25 +53,20 @@ public class DebugWorldType extends BaseCubicWorldType {
 			}
 		};
 
-		pipeline.addStage(terrain, new FlatTerrainProcessor(cubeCache, 5));
-		pipeline.addStage(randomblock, new CubeProcessor("debug_randomblock", cubeCache, 5) {
-			@Override public Set<Cube> calculate(Cube cube) {
-				cube.setBlockForGeneration(new BlockPos(0, 0, 0), Blocks.DIAMOND_BLOCK.getDefaultState());
-				for (int dx = -1; dx <= 1; dx++) {
-					for (int dy = -1; dy <= 1; dy++) {
-						for (int dz = -1; dz <= 1; dz++) {
-							Cube cubeOffset = this.cache.getCube(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz);
-							if (cubeOffset == null) {
-								throw new RuntimeException("Generating cube at " + cube.getCoords() + " - cube at " +
-										new CubeCoords(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz) +
-										" doesn't exist");
-							}
+		pipeline.addStage(terrain, new FlatTerrainProcessor());
+		pipeline.addStage(randomblock, cube -> {
+			cube.setBlockForGeneration(new BlockPos(0, 0, 0), Blocks.DIAMOND_BLOCK.getDefaultState());
+			for (int dx = -1; dx <= 1; dx++) {
+				for (int dy = -1; dy <= 1; dy++) {
+					for (int dz = -1; dz <= 1; dz++) {
+						Cube cubeOffset = cubeCache.getCube(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz);
+						if (cubeOffset == null) {
+							throw new RuntimeException("Generating cube at " + cube.getCoords() + " - cube at " +
+									new CubeCoords(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz) +
+									" doesn't exist");
 						}
 					}
 				}
-
-
-				return Sets.newHashSet(cube);
 			}
 		});
 	}
