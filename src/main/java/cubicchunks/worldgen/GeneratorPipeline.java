@@ -33,9 +33,11 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.CubeDependency;
 import cubicchunks.worldgen.dependency.DependentCube;
 import cubicchunks.worldgen.dependency.DependentCubeManager;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,6 +49,8 @@ import java.util.Set;
 
 import static cubicchunks.CubicChunks.LOGGER;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class GeneratorPipeline {
 
 	private static final int TickBudget = 40; // ms. There are only 50 ms per tick
@@ -305,7 +309,7 @@ public class GeneratorPipeline {
 		progress.setProgress(progressInt);
 	}
 
-	public GeneratorStage getStage(String name) {
+	@Nullable public GeneratorStage getStage(String name) {
 		return this.stageMap.get(name);
 	}
 
