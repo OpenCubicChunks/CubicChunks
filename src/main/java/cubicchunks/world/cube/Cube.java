@@ -494,21 +494,13 @@ public class Cube {
 	}
 
 	public void onLoad() {
-
-		// tell the world about entities
-		for (Entity entity : this.entities.getEntities()) {
-			entity.onChunkLoad();
-		}
-
-		this.world.loadEntities(this.entities.getEntities());
-
 		// tell the world about tile entities
 		this.world.addTileEntities(this.tileEntityMap.values());
+		this.world.loadEntities(this.entities.getEntities());
 		this.isCubeLoaded = true;
 	}
 
 	public void onUnload() {
-
 		// tell the world to forget about entities
 		this.world.unloadEntities(this.entities.getEntities());
 

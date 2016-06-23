@@ -489,9 +489,6 @@ public class Column extends Chunk {
 	@Override
 	public void onChunkLoad() {
 		this.isChunkLoaded = true;
-		for (Entity entity : this.entities.getEntitySet()) {
-			entity.onChunkLoad();
-		}
 		this.getWorld().loadEntities(this.entities.getEntities());
 		//the whole logic is actually moved to Cube, but mods still need to get the event
 		MinecraftForge.EVENT_BUS.post(new ChunkEvent.Load(this));

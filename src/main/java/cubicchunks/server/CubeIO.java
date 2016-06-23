@@ -41,6 +41,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.NextTickListEntry;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.NibbleArray;
@@ -414,7 +415,8 @@ public class CubeIO implements IThreadedFileIO {
 		if (nbtTileEntities != null) {
 			for (int i = 0; i < nbtTileEntities.tagCount(); i++) {
 				NBTTagCompound nbtTileEntity = nbtTileEntities.getCompoundTagAt(i);
-				TileEntity blockEntity = TileEntity.create(nbtTileEntity);
+				//TileEntity.create
+				TileEntity blockEntity = TileEntity.func_190200_a((World) this.world, nbtTileEntity);
 				if (blockEntity != null) {
 					column.addTileEntity(blockEntity);
 				}

@@ -10,7 +10,7 @@
     "core.common.MixinChunkCache_HeightLimits",
     "core.common.MixinEntity_DeathFix",
 
-    "noncritical.common.command.MixinCommandTeleport",
+    //"noncritical.common.command.MixinCommandTeleport",
     "noncritical.common.command.MixinCommandBase",
     "noncritical.common.command.MixinCommandFill",
     "noncritical.common.command.MixinCommandClone",
