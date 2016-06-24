@@ -32,34 +32,45 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.lang.ref.WeakReference;
+
 import static cubicchunks.asm.JvmNames.COMMAND_BASE_PARSE_DOUBLE;
 
 @Mixin(CommandBase.class)
 public class MixinCommandBase {
 	//I hope there are no threads involved...
-	private static ICommandSender currentSender;
+	private static WeakReference<ICubicWorld> commandWorld;
 
 	//get command sender, can't fail (inject at HEAD)
-	@Inject(method = "parseBlockPos", at = @At(value = "HEAD"), require = 1)
+	@Inject(method = "parseBlockPos", at = @At(value = "HEAD"))
 	private static void parseBlockPosPre(ICommandSender sender, String[] args, int startIndex, boolean centerBlock, CallbackInfoReturnable<?> cbi) {
-		currentSender = sender;
+		commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
 	}
 
 	//modify parseDouble min argument
 	@ModifyArg(method = "parseBlockPos",
-			at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
-			index = 2)
+	           at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
+	           index = 2)
 	private static int getMinY(int original) {
-		ICubicWorld world = (ICubicWorld) currentSender.getEntityWorld();
+		if(commandWorld == null) {
+			return original;
+		}
+		ICubicWorld world = commandWorld.get();
+		if (world == null) {
+			return original;
+		}
 		return world.getMinHeight();
 	}
 
 	//modify parseDouble max argument
 	@ModifyArg(method = "parseBlockPos",
-			at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
-			index = 3)
+	           at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
+	           index = 3)
 	private static int getMaxY(int original) {
-		ICubicWorld world = (ICubicWorld) currentSender.getEntityWorld();
+		ICubicWorld world = commandWorld.get();
+		if (world == null) {
+			return original;
+		}
 		return world.getMaxHeight();
 	}
 }

@@ -27,7 +27,6 @@ import cubicchunks.world.ICubicWorld;
 import net.minecraft.command.EntityNotFoundException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.server.CommandTeleport;
-import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,38 +35,46 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.lang.ref.WeakReference;
+
 import static cubicchunks.asm.JvmNames.COMMAND_TELEPORT_GET_ENTITY;
 import static net.minecraft.command.CommandBase.getEntity;
 
 @Mixin(CommandTeleport.class)
 public class MixinCommandTeleport {
-	private Entity entity;
+	private WeakReference<ICubicWorld> commandWorld;
 
 	@Inject(method = "execute",
-	        at = @At(value = "INVOKE", target = COMMAND_TELEPORT_GET_ENTITY, ordinal = 0),
-	        require = 1)
+	        at = @At(value = "INVOKE", target = COMMAND_TELEPORT_GET_ENTITY, ordinal = 0))
 	private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
 		try {
-			entity = getEntity(server, sender, args[0]);
+			commandWorld = new WeakReference<>((ICubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
 		} catch (EntityNotFoundException e) {
-			e.printStackTrace();
+			commandWorld = null;
 		}
 	}
 
-	@ModifyConstant(method = "execute", constant = @Constant(intValue = -4096), require = 1)
-	private int getMinY(int orig) {
-		if (entity == null) {
-			return orig;
+	@ModifyConstant(method = "execute", constant = @Constant(intValue = -4096))
+	private int getMinY(int original) {
+		if(commandWorld == null) {
+			return original;
 		}
-		System.out.println(((ICubicWorld) entity.getEntityWorld()).getMinHeight());
-		return ((ICubicWorld) entity.getEntityWorld()).getMinHeight() + orig;
+		ICubicWorld world = commandWorld.get();
+		if (world == null) {
+			return original;
+		}
+		return world.getMinHeight() + original;
 	}
 
-	@ModifyConstant(method = "execute", constant = @Constant(intValue = 4096), require = 2)
-	private int getMaxY(int orig) {
-		if (entity == null) {
-			return orig;
+	@ModifyConstant(method = "execute", constant = @Constant(intValue = 4096), expect = 2)
+	private int getMaxY(int original) {
+		if(commandWorld == null) {
+			return original;
 		}
-		return ((ICubicWorld) entity.getEntityWorld()).getMaxHeight() + orig - 256;
+		ICubicWorld world = commandWorld.get();
+		if (world == null) {
+			return original;
+		}
+		return world.getMaxHeight() + original;
 	}
 }

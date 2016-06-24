@@ -28,7 +28,6 @@ import net.minecraft.command.CommandTP;
 import net.minecraft.command.EntityNotFoundException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.PlayerNotFoundException;
-import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,6 +36,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.lang.ref.WeakReference;
+
 import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER;
 import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_ENTITY;
 import static net.minecraft.command.CommandBase.getCommandSenderAsPlayer;
@@ -44,43 +45,49 @@ import static net.minecraft.command.CommandBase.getEntity;
 
 @Mixin(CommandTP.class)
 public class MixinCommandTP {
-	private Entity entity;
+	private WeakReference<ICubicWorld> commandWorld;
 
 	@Inject(method = "execute",
-	        at = @At(value = "INVOKE", target = COMMAND_TP_GET_ENTITY, ordinal = 0),
-	        require = 1)
+	        at = @At(value = "INVOKE", target = COMMAND_TP_GET_ENTITY, ordinal = 0))
 	private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
 		try {
-			entity = getEntity(server, sender, args[0]);
+			commandWorld = new WeakReference<>((ICubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
 		} catch (EntityNotFoundException e) {
+			commandWorld = null;
 		}
 	}
 
-	@Inject(
-			method = "execute",
-			at = @At(value = "INVOKE", target = COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER, ordinal = 0),
-			require = 1
-	)
+	@Inject(method = "execute",
+	        at = @At(value = "INVOKE", target = COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER, ordinal = 0))
 	private void postGetEntityPlayerInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
 		try {
-			entity = getCommandSenderAsPlayer(sender);
+			commandWorld = new WeakReference<>((ICubicWorld) getCommandSenderAsPlayer(sender).getEntityWorld());
 		} catch (PlayerNotFoundException e) {
+			commandWorld = null;
 		}
 	}
 
-	@ModifyConstant(method = "execute", constant = @Constant(intValue = -4096), require = 1)
+	@ModifyConstant(method = "execute", constant = @Constant(intValue = -4096))
 	private int getMinY(int orig) {
-		if (entity == null) {
+		if (commandWorld == null) {
 			return orig;
 		}
-		return ((ICubicWorld) entity.getEntityWorld()).getMinHeight() + orig;
+		ICubicWorld world = commandWorld.get();
+		if(world == null) {
+			return orig;
+		}
+		return world.getMinHeight() + orig;
 	}
 
-	@ModifyConstant(method = "execute", constant = @Constant(intValue = 4096), require = 1)
+	@ModifyConstant(method = "execute", constant = @Constant(intValue = 4096))
 	private int getMaxY(int orig) {
-		if (entity == null) {
+		if (commandWorld == null) {
 			return orig;
 		}
-		return ((ICubicWorld) entity.getEntityWorld()).getMaxHeight() + orig;
+		ICubicWorld world = commandWorld.get();
+		if(world == null) {
+			return orig;
+		}
+		return world.getMaxHeight() + orig - 256;
 	}
 }

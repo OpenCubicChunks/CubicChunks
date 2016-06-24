@@ -24,6 +24,7 @@
 package cubicchunks.asm.mixin.noncritical.common.command;
 
 import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
 import net.minecraft.command.CommandFill;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -34,28 +35,41 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.lang.ref.WeakReference;
+
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
 @Mixin(CommandFill.class)
 public class MixinCommandFill {
-	private ICommandSender currentSender;
+	private WeakReference<ICubicWorld> commandWorld;
 
 	//get command sender, can't fail (inject at HEAD
 	@Inject(method = "execute", at = @At(value = "HEAD"), require = 1)
 	private void getWorldFromExecute(MinecraftServer server, ICommandSender sender, String[] args, CallbackInfo cbi) {
-		this.currentSender = sender;
+		commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
 	}
 
-	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6))
+	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6), constraints = "")
 	private int getBlockPosYRedirectMin(BlockPos pos) {
-		if(currentSender == null) {
+		if(commandWorld == null) {
 			return pos.getY();
 		}
-		return MixinUtils.getReplacementY(currentSender.getEntityWorld(), pos);
+		ICubicWorld world = commandWorld.get();
+		if(world == null) {
+			return pos.getY();
+		}
+		return MixinUtils.getReplacementY(world, pos);
 	}
 
 	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 7))
 	private int getBlockPosYRedirectMax(BlockPos pos) {
-		return MixinUtils.getReplacementY(currentSender.getEntityWorld(), pos);
+		if(commandWorld == null) {
+			return pos.getY();
+		}
+		ICubicWorld world = commandWorld.get();
+		if(world == null) {
+			return pos.getY();
+		}
+		return MixinUtils.getReplacementY(world, pos);
 	}
 }
