@@ -27,7 +27,6 @@ import com.google.common.base.Predicate;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.worldgen.GeneratorStage;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -56,9 +55,6 @@ public class BlankCube extends Cube {
 	}
 
 	@Override
-	public void setEmpty(boolean isEmpty) {}
-
-	@Override
 	public GeneratorStage getCurrentStage() {
 		//if client has it - it must be LIVE
 		return GeneratorStage.LIVE;
@@ -80,16 +76,6 @@ public class BlankCube extends Cube {
 	@Override
 	public ExtendedBlockStorage getStorage() {
 		return null;
-	}
-
-	@Override
-	public Block getBlockAt(final BlockPos pos) {
-		return Blocks.AIR;
-	}
-
-	@Override
-	public Block getBlockAt(final int localX, final int localY, final int localZ) {
-		return Blocks.AIR;
 	}
 
 	@Override
@@ -156,11 +142,6 @@ public class BlankCube extends Cube {
 	}
 
 	@Override
-	public boolean isUnderground(BlockPos pos) {
-		return false;
-	}
-
-	@Override
 	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
 		//TODO: BlankCube.getLightSubtracted - is it correct?
 		return 15 - skyLightDampeningTerm;
@@ -174,9 +155,6 @@ public class BlankCube extends Cube {
 
 	@Override
 	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {}
-
-	@Override
-	public void doRandomTicks() {}
 
 	@Override
 	public void markForRenderUpdate() {}

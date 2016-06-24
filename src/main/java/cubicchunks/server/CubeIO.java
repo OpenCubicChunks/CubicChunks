@@ -372,7 +372,6 @@ public class CubeIO implements IThreadedFileIO {
 
 		// is this an empty cube?
 		boolean isEmpty = !nbt.hasKey("Blocks");
-		cube.setEmpty(isEmpty);
 		if (!isEmpty) {
 			ExtendedBlockStorage storage = cube.getStorage();
 

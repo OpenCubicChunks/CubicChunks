@@ -159,9 +159,7 @@ public class Column extends Chunk {
 
 	@Override
 	public ExtendedBlockStorage[] getBlockStorageArray() {
-		//return an empty array for vanilla. The only place other than packets and chunk saving/loading is world.updateBlocks.
-		//we update blocks somewhere else.
-		return new ExtendedBlockStorage[0];
+		return cubeMap.getStorageArrays();
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -645,12 +643,13 @@ public class Column extends Chunk {
 						localX == 0 || localX == 15 ||
 						localZ == 0 || localZ == 15;
 
-				if(!(cubeEmpty && isEdge)) {
+				if (!(cubeEmpty && isEdge)) {
 					continue;
 				}
 				IBlockState currentState = cubeEmpty ? null : cube.getStorage().get(localX, localY, localZ);
 				//only air blocks need to be updated, but no need to update when this and all surrounding blocks are air
-				boolean airInNonEmptyCube = !cubeEmpty && currentState.getBlock().isAir(currentState, this.getWorld(), currentPos);
+				boolean airInNonEmptyCube =
+						!cubeEmpty && currentState.getBlock().isAir(currentState, this.getWorld(), currentPos);
 				//surrounding blocks may not be air if the block is at the edge of empty cube
 				boolean edgeOfEmptyCube = cubeEmpty && isEdge;
 				if (edgeOfEmptyCube || airInNonEmptyCube) {
@@ -831,26 +830,6 @@ public class Column extends Chunk {
 			return topBlockY + 1;
 		}
 		return null;
-	}
-
-	public Integer getHeightmapBelow(int localX, int blockY, int localZ) {
-		Integer topBelow = this.opacityIndex.getTopBlockYBelow(localX, localZ, blockY);
-		if (topBelow != null) {
-			return topBelow + 1;
-		}
-		return null;
-	}
-
-	public Iterable<Entity> entities() {
-		return this.entities.getEntities();
-	}
-
-	public void doRandomTicks() {
-		if (isEmpty()) {
-			return;
-		}
-
-		this.cubeMap.forEach(Cube::doRandomTicks);
 	}
 
 	@Override

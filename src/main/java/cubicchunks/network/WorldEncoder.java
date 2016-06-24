@@ -81,7 +81,6 @@ public class WorldEncoder {
 
 		// 1. emptiness
 		boolean isEmpty = in.readBoolean();
-		cube.setEmpty(isEmpty);
 
 		if (!isEmpty) {
 			ExtendedBlockStorage storage = cube.getStorage();

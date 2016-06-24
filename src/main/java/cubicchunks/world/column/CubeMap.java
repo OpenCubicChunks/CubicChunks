@@ -27,6 +27,7 @@ import com.google.common.collect.Iterators;
 import cubicchunks.world.cube.Cube;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -37,13 +38,17 @@ class CubeMap implements Iterable<Cube> {
 
 	private final TreeMap<Integer, Cube> cubeMap = new TreeMap<>();
 	private final Int2ObjectMap<Cube> map = new Int2ObjectOpenHashMap<>();
+	private final ExtendedBlockStorageSet set = new ExtendedBlockStorageSet();
 
 	Cube get(int cubeY) {
 		return map.get(cubeY);
 	}
 
 	Cube remove(int cubeY) {
-		this.map.remove(cubeY);
+		Cube cube = this.map.remove(cubeY);
+		if(cube != null) {
+			set.remove(cube.getStorage());
+		}
 		return cubeMap.remove(cubeY);
 	}
 
@@ -56,6 +61,7 @@ class CubeMap implements Iterable<Cube> {
 		}
 		this.cubeMap.put(cubeY, cube);
 		map.put(cubeY, cube);
+		set.add(cube.getStorage());
 		return true;
 	}
 
@@ -77,5 +83,9 @@ class CubeMap implements Iterable<Cube> {
 
 	public boolean isEmpty() {
 		return this.cubeMap.isEmpty();
+	}
+
+	ExtendedBlockStorage[] getStorageArrays() {
+		return set.getArray();
 	}
 }

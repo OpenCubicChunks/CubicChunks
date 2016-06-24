@@ -67,7 +67,7 @@ public class Cube {
 	private Column column;
 	private CubeCoords coords;
 	private boolean isModified;
-	private ExtendedBlockStorage storage;
+	private final ExtendedBlockStorage storage;
 	private EntityContainer entities;
 	private Map<BlockPos, TileEntity> tileEntityMap;
 	
@@ -90,7 +90,7 @@ public class Cube {
 		this.coords = new CubeCoords(x, y, z);
 		this.isModified = isModified;
 
-		this.storage = null;
+		this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(y), !world.getProvider().getHasNoSky());
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new HashMap<>();
 		this.currentStage = null;
@@ -129,11 +129,8 @@ public class Cube {
 	}
 
 	public void setBlockStateDirect(BlockPos pos, IBlockState newBlockState) {
-		if (this.isEmpty()) {
-			if (newBlockState.getBlock() == Blocks.AIR) {
-				return;
-			}
-			this.setEmpty(false);
+		if (this.isEmpty() && newBlockState.getBlock() == Blocks.AIR) {
+			return;
 		}
 		this.isModified = true;
 
@@ -170,11 +167,6 @@ public class Cube {
 	}
 
 	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {
-		// make sure we're not empty
-		if (isEmpty()) {
-			setEmpty(false);
-		}
-
 		this.isModified = true;
 
 		int x = Coords.blockToLocal(pos.getX());
@@ -338,16 +330,7 @@ public class Cube {
 	//=================================
 
 	public boolean isEmpty() {
-		return this.storage == null;
-	}
-
-	public void setEmpty(boolean isEmpty) {
-		if (isEmpty) {
-			this.storage = null;
-		} else if (storage == null) {
-			this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(this.coords.getCubeY()), !this.world.getProvider()
-					.getHasNoSky());
-		}
+		return this.storage.isEmpty();
 	}
 
 	public GeneratorStage getCurrentStage() {
@@ -423,34 +406,12 @@ public class Cube {
 		return this.storage;
 	}
 
-	@Deprecated
-	public Block getBlockAt(final BlockPos pos) {
-		int x = Coords.blockToLocal(pos.getX());
-		int y = Coords.blockToLocal(pos.getY());
-		int z = Coords.blockToLocal(pos.getZ());
-		return getBlockAt(x, y, z);
-	}
-
-	@Deprecated
-	public Block getBlockAt(final int localX, final int localY, final int localZ) {
-		if (isEmpty()) {
-			return Blocks.AIR;
-		}
-		//actually: getBlockAt. WTF!?
-		return this.storage.get(localX, localY, localZ).getBlock();
-	}
-
 	public IBlockState setBlockForGeneration(BlockPos blockOrLocalPos, IBlockState newBlockState) {
 		IBlockState oldBlockState = getBlockState(blockOrLocalPos);
 
 		// did anything actually change?
 		if (newBlockState == oldBlockState) {
 			return null;
-		}
-
-		// make sure we're not empty
-		if (isEmpty()) {
-			setEmpty(false);
 		}
 
 		int x = Coords.blockToLocal(blockOrLocalPos.getX());
@@ -519,46 +480,6 @@ public class Cube {
 	public void markSaved() {
 		this.entities.markSaved(this.world.getTotalWorldTime());
 		this.isModified = false;
-	}
-
-	public boolean isUnderground(BlockPos pos) {
-		int x = Coords.blockToLocal(pos.getX());
-		int z = Coords.blockToLocal(pos.getZ());
-		Integer topNonTransparentBlockY = this.column.getOpacityIndex().getTopBlockY(x, z);
-		if (topNonTransparentBlockY == null) {
-			return false;
-		}
-		return pos.getY() < topNonTransparentBlockY;
-	}
-
-	public void doRandomTicks() {
-
-		if (isEmpty() || this.storage.isEmpty()) {
-			return;
-		}
-
-		// do three random ticks
-		for (int i = 0; i < 3; i++) {
-
-			// get a random block
-			int index = this.world.getRand().nextInt();
-			int x = index & 0xF;
-			int y = (index >> 8) & 0xF;
-			int z = (index >> 16) & 0xF;
-
-			IBlockState blockState = this.storage.get(x, y, z);
-			Block block = blockState.getBlock();
-
-			if (block.getTickRandomly()) {
-				// tick it
-				BlockPos pos = new BlockPos(
-						Coords.localToBlock(this.coords.getCubeX(), x),
-						Coords.localToBlock(this.coords.getCubeY(), y),
-						Coords.localToBlock(this.coords.getCubeZ(), z)
-				);
-				block.randomTick((World) this.world, pos, blockState, this.world.getRand());
-			}
-		}
 	}
 
 	public void markForRenderUpdate() {
