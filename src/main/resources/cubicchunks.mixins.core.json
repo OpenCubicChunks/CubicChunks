@@ -25,7 +25,8 @@
     "core.client.MixinChunkCache_HeightLimits",
     "core.client.MixinViewFrustum_RenderHeightFix",
 
-    "noncritical.client.MixinViewFrustum_VertViewDistance"
+    "noncritical.client.MixinViewFrustum_VertViewDistance",
+    "noncritical.client.MixinRenderChunk"
   ],
   "server": [
     "core.server.MixinDedicatedServer_HeightLimits"
