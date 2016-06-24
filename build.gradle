@@ -65,7 +65,7 @@ archivesBaseName = "CubicChunks"
 version = getModVersionAndWriteToFile("${git.describe()}", "${git.branch.getCurrent().getName()}")
 
 minecraft {
-	version = "1.9.4-12.17.0.1969"
+	version = "1.10-12.18.0.1983-1.10.0"
 	runDir = "run"
 
 	// the mappings can be changed at any time, and must be in the following format.
