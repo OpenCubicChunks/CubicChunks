@@ -98,7 +98,7 @@ public class GeneratorPipeline {
 
 
 	public int getNumCubes() {
-		return this.toUpdate.size();
+		return this.toUpdateSet.size();
 	}
 
 	public DependentCubeManager getDependentCubeManager() {
@@ -154,7 +154,8 @@ public class GeneratorPipeline {
 		int totalProcessed = 0;
 
 		do {
-			if (this.toUpdate.isEmpty()) {
+			if (this.toUpdateSet.isEmpty()) {
+				this.toUpdate.clear();
 				break;
 			}
 			GeneratorStage stage = processNext();
@@ -168,7 +169,7 @@ public class GeneratorPipeline {
 		// reporting
 		long timeDiff = System.currentTimeMillis() - timeStart;
 		if (LOGGER.isDebugEnabled() && totalProcessed > 0) {
-			LOGGER.debug("Processed {} cubes, skipped {} cubes in {} ms ({} in queue, {} dependents).", totalProcessed, skipped, timeDiff, this.toUpdate
+			LOGGER.debug("Processed {} cubes, skipped {} cubes in {} ms ({} in queue, {} dependents).", totalProcessed, skipped, timeDiff, this.toUpdateSet
 					.size(), this.dependentCubeManager.getDependentCubeCount());
 			for (GeneratorStage stage : this.stages) {
 				String message = String.format("\t%15s: %3d processed", stage.getName(), stageProcessed[stage.getOrdinal()]);
@@ -210,12 +211,20 @@ public class GeneratorPipeline {
 	}
 
 	private CubeCoords next() {
-		CubeCoords coords = this.toUpdate.remove(toUpdate.size() - 1);
-		this.toUpdateSet.remove(coords);
-		return coords;
+		//throws exception when there is no next cube
+		while(true) {
+			CubeCoords coords = this.toUpdate.remove(toUpdate.size() - 1);
+			if(this.toUpdateSet.remove(coords)) {
+				return coords;
+			}
+		}
 	}
 
 	private void sort() {
+		if(this.toUpdate.size() != this.toUpdateSet.size()) {
+			toUpdate.clear();
+			toUpdate.addAll(toUpdateSet);
+		}
 		//TODO: make GeneratorPipeline sort() faster
 		Collection<EntityPlayer> players = world.getPlayerEntities();
 
@@ -245,7 +254,7 @@ public class GeneratorPipeline {
 		int[] cubesInStage = new int[this.stages.size()];
 		Progress progress = new Progress(Integer.MAX_VALUE, 1000);
 		int numUpdated = 0;
-		while (!toUpdate.isEmpty()) {
+		while (!toUpdateSet.isEmpty()) {
 			numUpdated++;
 			GeneratorStage stage = processNext();
 			if (stage == null) {
@@ -277,7 +286,7 @@ public class GeneratorPipeline {
 			//TODO: is it accurate enough?
 			totalKnownUnfinished += Math.max(0, cubesInStage[n] - cubesInStage[n - 1]);
 		}
-		int unknown = toUpdate.size() + finished + skipped - totalKnownUnfinished;
+		int unknown = toUpdateSet.size() + finished + skipped - totalKnownUnfinished;
 		if (unknown < 0) {
 			unknown = 0;
 		}
@@ -316,5 +325,14 @@ public class GeneratorPipeline {
 
 	public GeneratorStage getFirstStage() {
 		return this.stages.get(0);
+	}
+
+	public void remove(CubeCoords coords) {
+		Cube cube = this.cubeProvider.getCube(coords);
+		if(cube != null) {
+			//removing from array list is a bit expensive, remove from set and skip cubes that don't exist in the set
+			this.toUpdateSet.remove(coords);
+			this.dependentCubeManager.unregister(cube);
+		}
 	}
 }
