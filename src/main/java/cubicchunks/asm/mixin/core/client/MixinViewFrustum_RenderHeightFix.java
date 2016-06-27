@@ -90,7 +90,7 @@ public class MixinViewFrustum_RenderHeightFix {
 					// update the position if needed
 					BlockPos oldPos = renderer.getPosition();
 					if (oldPos.getX() != blockX || oldPos.getY() != blockY || oldPos.getZ() != blockZ) {
-						renderer.setOrigin(blockX, blockY, blockZ);
+						renderer.setPosition(blockX, blockY, blockZ);
 					}
 				}
 			}
