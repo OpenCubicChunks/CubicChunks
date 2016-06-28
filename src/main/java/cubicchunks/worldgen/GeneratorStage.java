@@ -28,18 +28,22 @@ import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.dependency.CubeDependencyProvider;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 public abstract class GeneratorStage implements CubeDependencyProvider {
 
 	public static GeneratorStage LIVE = new IndependentGeneratorStage("live");
+
 	static {
 		LIVE.setLastStage();
 		LIVE.setOrdinal(Integer.MAX_VALUE);
 	}
-	
+
 	private final String name;
-	
+
 	private boolean isLast;
-	
+
 	private int ordinal;
 
 	private CubeProcessor processor;
@@ -50,20 +54,20 @@ public abstract class GeneratorStage implements CubeDependencyProvider {
 	public GeneratorStage(String name) {
 		this.name = name;
 		this.isLast = false;
+		this.ordinal = -1;
 	}
-	
 
-	@Override
+
+	@Override @Nonnull
 	public String toString() {
 		return this.getName();
 	}
 
-
+	@Nonnull
 	public String getName() {
 		return this.name;
 	}
-	
-	
+
 	public void setLastStage() {
 		this.isLast = true;
 	}
@@ -72,41 +76,36 @@ public abstract class GeneratorStage implements CubeDependencyProvider {
 		return this.isLast;
 	}
 
-
-	public void setNextStage(GeneratorStage nextStage) {
-		this.nextStage = nextStage;
-	}
-
-	public GeneratorStage getNextStage() {
-		return this.nextStage;
-	}
-
-
-	public void setProcessor(CubeProcessor processor) {
-		this.processor = processor;
-	}
-
-	public CubeProcessor getProcessor() {
-		return this.processor;
-	}
-
-
 	void setOrdinal(int ordinal) {
 		this.ordinal = ordinal;
 	}
-	
+
 	int getOrdinal() {
 		return this.ordinal;
 	}
 
-	public boolean precedes(GeneratorStage other) {
+	public void setProcessor(@Nonnull CubeProcessor processor) {
+		this.processor = processor;
+	}
+
+	@Nullable
+	public CubeProcessor getProcessor() {
+		return this.processor;
+	}
+
+	public void setNextStage(@Nonnull GeneratorStage nextStage) {
+		this.nextStage = nextStage;
+	}
+
+	@Nullable
+	public GeneratorStage getNextStage() {
+		return this.nextStage;
+	}
+
+	public boolean precedes(@Nonnull GeneratorStage other) {
 		return this.ordinal < other.ordinal;
 	}
 
-	/**
-	 * Returns true if cubes that are in this stage (not yet processed with the stage processor)
-	 * should be considered as not loaded by {@link World#isAreaLoaded}
-	 */
 	public boolean isInitialStage() {
 		return this.ordinal == 0;
 	}

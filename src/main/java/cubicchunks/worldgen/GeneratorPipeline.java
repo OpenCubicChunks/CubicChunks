@@ -21,11 +21,13 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
+
 package cubicchunks.worldgen;
 
 import cubicchunks.util.processor.CubeProcessor;
 import mcp.MethodsReturnNonnullByDefault;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -37,12 +39,14 @@ import java.util.Map;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class GeneratorPipeline implements Iterable<GeneratorStage>  {
+public class GeneratorPipeline implements Iterable<GeneratorStage> {
 
 	private List<GeneratorStage> stages;
+
 	private Map<String, GeneratorStage> stageMap;
 
-	public static void checkStages(GeneratorPipeline pipeline) {
+
+	public static void checkStages(@Nonnull GeneratorPipeline pipeline) {
 		for (GeneratorStage stage : pipeline.stages) {
 			if (!stage.isLastStage()) {
 				if (stage.getProcessor() == null) {
@@ -63,7 +67,7 @@ public class GeneratorPipeline implements Iterable<GeneratorStage>  {
 		this.stageMap.put(GeneratorStage.LIVE.getName(), GeneratorStage.LIVE);
 	}
 
-	public void addStage(GeneratorStage stage, CubeProcessor processor) {
+	public void addStage(@Nonnull GeneratorStage stage, @Nonnull CubeProcessor processor) {
 		stage.setOrdinal(this.stages.size());
 		stage.setProcessor(processor);
 		this.stages.add(stage);
@@ -75,6 +79,7 @@ public class GeneratorPipeline implements Iterable<GeneratorStage>  {
 		}
 	}
 
+	@Nonnull
 	public Iterator<GeneratorStage> iterator() {
 		return this.stages.iterator();
 	}
@@ -85,10 +90,11 @@ public class GeneratorPipeline implements Iterable<GeneratorStage>  {
 	}
 
 	@Nullable
-	public GeneratorStage getStage(String name) {
+	public GeneratorStage getStage(@Nonnull String name) {
 		return this.stageMap.get(name);
 	}
 
+	@Nonnull
 	public GeneratorStage getFirstStage() {
 		return this.stages.get(0);
 	}

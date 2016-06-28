@@ -1,3 +1,27 @@
+/*
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
+ *
+ *  Copyright (c) 2015 contributors
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
+
 package cubicchunks.worldgen;
 
 import com.google.common.collect.ComparisonChain;
@@ -12,6 +36,7 @@ import cubicchunks.worldgen.dependency.DependentCube;
 import cubicchunks.worldgen.dependency.DependentCubeManager;
 import net.minecraft.entity.player.EntityPlayer;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,7 +89,7 @@ public class WorldGenerator implements ICubeGenerator {
 	private long durationRecent;
 
 
-	public WorldGenerator(ICubicWorldServer world, GeneratorPipeline generatorPipeline) {
+	public WorldGenerator(@Nonnull ICubicWorldServer world, @Nonnull GeneratorPipeline generatorPipeline) {
 
 		this.world = world;
 		this.cubeCache = world.getCubeCache();
@@ -97,18 +122,18 @@ public class WorldGenerator implements ICubeGenerator {
 		return this.toUpdateSet.size();
 	}
 
-	@Override
+	@Override @Nonnull
 	public GeneratorPipeline getGeneratorPipeline() {
 		return this.generatorPipeline;
 	}
 
-	@Override
+	@Override @Nonnull
 	public DependentCubeManager getDependentCubeManager() {
 		return this.dependentCubeManager;
 	}
 
 	@Override
-	public void resumeCube(Cube cube) {
+	public void resumeCube(@Nonnull  Cube cube) {
 		CubeCoords coords = cube.getCoords();
 		if (toUpdateSet.add(coords)) {
 			this.toUpdate.add(coords);
@@ -117,7 +142,7 @@ public class WorldGenerator implements ICubeGenerator {
 	}
 
 	@Override
-	public void generateCube(Cube cube) {
+	public void generateCube(@Nonnull  Cube cube) {
 
 		// If the cube has reached its target stage, don't do anything.
 		if (cube.hasReachedTargetStage()) {
@@ -137,7 +162,7 @@ public class WorldGenerator implements ICubeGenerator {
 	}
 
 	@Override
-	public void generateCube(Cube cube, GeneratorStage targetStage) {
+	public void generateCube(@Nonnull Cube cube, @Nonnull GeneratorStage targetStage) {
 
 		// Make sure the proper target stage is set.
 		if (cube.getTargetStage().precedes(targetStage)) {
@@ -147,8 +172,8 @@ public class WorldGenerator implements ICubeGenerator {
 		this.generateCube(cube);
 	}
 
-	@Override
-	public Cube generateCube(CubeCoords coords, GeneratorStage targetStage) {
+	@Override @Nullable
+	public Cube generateCube(@Nonnull CubeCoords coords, @Nonnull GeneratorStage targetStage) {
 
 		// Get the cube's column. It must've been loaded in advance.
 		Column column = this.cubeCache.getColumn(coords.getCubeX(), coords.getCubeZ());
@@ -164,7 +189,12 @@ public class WorldGenerator implements ICubeGenerator {
 		return cube;
 	}
 
-	@Override
+	@Override @Nullable
+	public Cube generateCube(@Nonnull CubeCoords coords) {
+		return this.generateCube(coords, GeneratorStage.LIVE);
+	}
+
+	@Override @Nullable
 	public Column generateColumn(int cubeX, int cubeZ) {
 		return this.columnGenerator.generateColumn(cubeX, cubeZ);
 	}
@@ -242,7 +272,7 @@ public class WorldGenerator implements ICubeGenerator {
 	}
 
 	@Override
-	public void removeCube(CubeCoords coords) {
+	public void removeCube(@Nonnull CubeCoords coords) {
 		Cube cube = this.cubeCache.getCube(coords);
 		if(cube != null) {
 			//removing from array list is a bit expensive, remove from set and skip cubes that don't exist in the set
@@ -275,7 +305,7 @@ public class WorldGenerator implements ICubeGenerator {
 	// ---------------------------------------------------- Helper -----------------------------------------------------
 
 	//TODO: Track progress properly
-	private void updateProgress(Progress progress, int[] cubesInStage, int finished, int skipped) {
+	private void updateProgress(@Nonnull Progress progress, int[] cubesInStage, int finished, int skipped) {
 		int[] actualStages = new int[cubesInStage.length + 1];
 		System.arraycopy(cubesInStage, 0, actualStages, 0, cubesInStage.length);
 		actualStages[actualStages.length - 1] = finished + skipped;
@@ -353,6 +383,7 @@ public class WorldGenerator implements ICubeGenerator {
 		return previousStage;
 	}
 
+	@Nonnull
 	private CubeCoords next() {
 		//throws exception when there is no next cube
 		while(true) {
@@ -379,7 +410,7 @@ public class WorldGenerator implements ICubeGenerator {
 				).result());
 	}
 
-	private int getClosestPlayerDistance(CubeCoords coords, Collection<EntityPlayer> players) {
+	private int getClosestPlayerDistance(@Nonnull CubeCoords coords, @Nonnull Collection<EntityPlayer> players) {
 		int min = Integer.MAX_VALUE;
 		for (EntityPlayer player : players) {
 			int dist = CubeCoords.fromEntity(player).distSquared(coords);
