@@ -49,7 +49,6 @@ import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
-import sun.nio.cs.Surrogate;
 
 import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
@@ -79,8 +78,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		ServerCubeCache chunkProvider = new ServerCubeCache(this);
 		this.chunkProvider = chunkProvider;
 		this.generatorPipeline = new GeneratorPipeline();
-		this.thePlayerManager = new PlayerCubeMap(this);
-		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
 		this.lightingManager = new LightingManager(this);
 
 		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
@@ -88,6 +85,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		GeneratorPipeline.checkStages(this.generatorPipeline);
 		this.cubeGenerator = new WorldGenerator(this, this.generatorPipeline);
 
+		this.thePlayerManager = new PlayerCubeMap(this);
+		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
+		
 		this.maxHeight = type.getMaxHeight();
 		this.minHeight = type.getMinHeight();
 

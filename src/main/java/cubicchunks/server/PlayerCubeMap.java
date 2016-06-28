@@ -31,7 +31,6 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.ICubeGenerator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.TLongObjectMap;

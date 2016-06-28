@@ -26,7 +26,6 @@ package cubicchunks.worldgen;
 
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.dependency.CubeDependencyProvider;
-import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

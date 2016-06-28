@@ -248,7 +248,7 @@ public class WorldGenerator implements ICubeGenerator {
 		++this.ticksSinceSorting;
 
 		long timeStart = System.currentTimeMillis();
-		long timeEnd = timeStart - TICK_BUDGET;
+		long timeEnd = timeStart + TICK_BUDGET;
 
 		do {
 			// If no cubes require updates, make sure the queue is empty and break.

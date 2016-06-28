@@ -25,7 +25,6 @@ package cubicchunks.world;
 
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.server.ServerCubeCache;
-import cubicchunks.worldgen.GeneratorPipeline;
 import cubicchunks.worldgen.ICubeGenerator;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
