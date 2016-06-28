@@ -183,8 +183,19 @@ public class WorldGenerator implements ICubeGenerator {
 
 		// Create the cube object.
 		Cube cube = column.getOrCreateCube(coords.getCubeY(), true);
-		cube.setCurrentStage(this.generatorPipeline.getFirstStage());
-		cube.setTargetStage(targetStage);
+
+		// Set the current stage.
+		if (cube.getCurrentStage() == null) {
+			cube.setCurrentStage(this.generatorPipeline.getFirstStage());
+		}
+
+		// Set the target stage.
+		if (cube.getTargetStage() == null || cube.getTargetStage().precedes(targetStage)) {
+			cube.setTargetStage(targetStage);
+		}
+
+		// Generate the cube if necessary (check performed in generateCube)
+		this.generateCube(cube);
 
 		return cube;
 	}

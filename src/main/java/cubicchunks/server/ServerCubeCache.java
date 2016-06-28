@@ -364,7 +364,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		}
 
 		// If the cube has yet to reach the target stage, resume generation.
-		if (cube.isBeforeStage(targetStage)) {
+		else if (cube.isBeforeStage(targetStage)) {
 			this.worldServer.getCubeGenerator().generateCube(cube, targetStage);
 		}
 
@@ -429,7 +429,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			return cube;
 		}
 		Column column = this.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
-		cube = this.worldServer.getCubeGenerator().generateCube(new CubeCoords(cubeX, cubeY, cubeZ), GeneratorStage.LIVE);
+		cube = this.worldServer.getCubeGenerator().generateCube(new CubeCoords(cubeX, cubeY, cubeZ));
 		addForcedByMapping(forcedBy, cube);
 
 		return cube;

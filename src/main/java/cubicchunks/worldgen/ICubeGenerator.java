@@ -34,33 +34,109 @@ import javax.annotation.Nullable;
 
 public interface ICubeGenerator {
 
+	/**
+	 * Returns the number of cubes that are queued for generation.
+	 *
+	 * @return The number of cubes that are queued for generation.
+	 */
 	int getQueuedCubeCount();
 
+	/**
+	 * Returns the GeneratorPipeline used by this ICubeGenerator. This pipeline dictates the stages every cube has to
+	 * go through and the processors used in each given stage. Modifications on this pipeline are strongly discouraged
+	 * as they are likely to disrupt generation of currently queued cubes.
+	 *
+	 * @return The GeneratorPipeline used by this ICubeGenerator.
+	 */
 	@Nonnull
 	GeneratorPipeline getGeneratorPipeline();
 
+	/**
+	 * Returns the DependentCubeManager used by this ICubeGenerator. The DependentCubeManager keeps track of all cubes
+	 * requiring other cubes to be loaded for their generation. Removing cubes that have been registered by the
+	 * ICubeGenerator from the DependentCubeCache will result in them not being generated further or may disrupt its
+	 * processing.
+	 *
+	 * @return The DependentCubeManager used by this ICubeGenerator.
+	 */
 	@Nonnull
 	DependentCubeManager getDependentCubeManager();
 
+	/**
+	 * Immediately queues the given cube for generation. All cubes required for processing the given cube must be
+	 * loaded prior to passing it to this method. If a required cube is not available, undocumented behaviour might
+	 * occur.
+	 *
+	 * @param cube The cube to be queued for generation.
+	 */
 	void resumeCube(@Nonnull Cube cube);
 
+	/**
+	 * Schedules the given cube for generation. The cube will be generated up to its set target stage. This
+	 * ICubeGenerator will ensure that all cubes required for generating this cube are available when needed.
+	 *
+	 * @param cube The cube to be generated.
+	 */
 	void generateCube(@Nonnull Cube cube);
 
+	/**
+	 * Schedules the given cube for generation up to the given target stage.
+	 * @see #generateCube(Cube)
+	 *
+	 * @param cube The cube to be generated.
+	 */
 	void generateCube(@Nonnull Cube cube, @Nonnull GeneratorStage targetStage);
 
+	/**
+	 * Schedules the cube at the given coordinates for generation. If the cube does already exist, updates the target
+	 * stage if necessary. Otherwise a new cube object will be created and added to the proper column. If the cube did
+	 * not yet exist or if it had not reached the target stage, it will be queued for generation.
+	 * @see #generateCube(Cube)
+	 *
+	 * @param coords The coordinates of the cube to be generated.
+	 * @param targetStage The target stage up until which the cube is supposed to be generated.
+	 * @return The cube being generated or null if the cube did not already exist and creating it failed.
+	 */
 	@Nullable
 	Cube generateCube(@Nonnull CubeCoords coords, @Nonnull GeneratorStage targetStage);
 
+	/**
+	 * Schedules the cube at the given coordinates for generation. The cube will be generated up to the final stage
+	 * GeneratorStage.LIVE at which point it is considered to be final.
+	 * @see #generateCube(CubeCoords, GeneratorStage)
+	 * @see #generateCube(Cube)
+	 *
+	 * @param coords The coordinates of the cube to be generated.
+	 * @return The cube being generated or null if the cube did not already exist and creating it failed.
+	 */
 	@Nullable
 	Cube generateCube(@Nonnull CubeCoords coords);
 
+	/**
+	 * Creates a new column for the given coordinates.
+	 *
+	 * @param cubeX The x-coordinate of the column to be created.
+	 * @param cubeZ The z-coordinate of the column to be created.
+	 * @return A new instance of Column for the given coordinates.
+	 */
 	@Nullable
 	Column generateColumn(int cubeX, int cubeZ);
 
+	/**
+	 * Removes the cube at the given coordinates from the generator queue.
+	 *
+	 * @param coords The coordinates of the cube to be removed from the generator queue.
+	 */
 	void removeCube(@Nonnull CubeCoords coords);
 
+	/**
+	 * Processes all currently queued cubes up to their respective target stage.
+	 */
 	void calculateAll();
 
+	/**
+	 * Processes queued cubes.
+	 */
 	void tick();
 
 }

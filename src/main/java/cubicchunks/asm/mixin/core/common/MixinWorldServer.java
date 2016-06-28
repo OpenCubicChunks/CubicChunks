@@ -87,7 +87,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		this.thePlayerManager = new PlayerCubeMap(this);
 		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
-		
+
 		this.maxHeight = type.getMaxHeight();
 		this.minHeight = type.getMinHeight();
 
