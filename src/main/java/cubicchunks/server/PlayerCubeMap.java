@@ -32,6 +32,7 @@ import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.GeneratorPipeline;
+import cubicchunks.worldgen.ICubeGenerator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -126,7 +127,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	 * but spectator players can't generate chunks if spectatorsGenerateChunks gamerule is set.
 	 */
 	private final List<PlayerCubeMapEntry> toGenerate = new ArrayList<>();
-	private final GeneratorPipeline generatorPipeline;
+	private final ICubeGenerator cubeGenerator;
 
 	private int viewDistance;
 
@@ -144,7 +145,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		super((WorldServer) worldServer);
 		this.cubeCache = (ServerCubeCache) getWorldServer().getChunkProvider();
 		this.setPlayerViewRadius(worldServer.getMinecraftServer().getPlayerList().getViewDistance());
-		this.generatorPipeline = worldServer.getGeneratorPipeline();
+		this.cubeGenerator = worldServer.getCubeGenerator();
 	}
 
 	/**
@@ -593,7 +594,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		this.cubeWatchersToUpdate.remove(cubeWatcher);
 		this.toGenerate.remove(cubeWatcher);
 		this.toSendToClient.remove(cubeWatcher);
-		this.generatorPipeline.remove(new CubeCoords(cubeWatcher.getCubeAddress()));
+		this.cubeGenerator.removeCube(new CubeCoords(cubeWatcher.getCubeAddress()));
 		//don't unload, ChunkGc unloads chunks
 	}
 

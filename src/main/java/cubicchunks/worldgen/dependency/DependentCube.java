@@ -32,6 +32,7 @@ import cubicchunks.world.dependency.DependencyManager;
 import cubicchunks.world.dependency.Dependent;
 import cubicchunks.world.dependency.Requirement;
 import cubicchunks.worldgen.GeneratorPipeline;
+import cubicchunks.worldgen.ICubeGenerator;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -50,9 +51,9 @@ import java.util.Map;
 public class DependentCube implements Dependent {
 
 	/**
-	 * The world's GeneratorPipeline.
+	 * The world's cube generator.
 	 */
-	private GeneratorPipeline generatorPipeline;
+	private ICubeGenerator cubeGenerator;
 
 	/**
 	 * The depending Cube.
@@ -77,12 +78,12 @@ public class DependentCube implements Dependent {
 	/**
 	 * Creates a new instance of DependentCube.
 	 *
-	 * @param generatorPipeline The world's GeneratorPipeline.
+	 * @param cubeGenerator The world's GeneratorPipeline.
 	 * @param cube The depending Cube.
 	 * @param cubeDependency The CubeDependency defining the Cube's Requirements.
 	 */
-	public DependentCube(@Nonnull GeneratorPipeline generatorPipeline, @Nonnull Cube cube, @Nonnull CubeDependency cubeDependency) {
-		this.generatorPipeline = generatorPipeline;
+	public DependentCube(@Nonnull ICubeGenerator cubeGenerator, @Nonnull Cube cube, @Nonnull CubeDependency cubeDependency) {
+		this.cubeGenerator = cubeGenerator;
 		this.cube = cube;
 		this.cubeDependency = cubeDependency;
 		this.requirements = new HashMap<>();
@@ -133,7 +134,7 @@ public class DependentCube implements Dependent {
 			--this.remaining;
 
 			if (this.isSatisfied()) {
-				this.generatorPipeline.resume(cube);
+				this.cubeGenerator.resumeCube(cube);
 			}
 		}
 	}

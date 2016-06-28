@@ -35,6 +35,7 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.DependencyManager;
 import cubicchunks.worldgen.ColumnGenerator;
 import cubicchunks.worldgen.GeneratorStage;
+import cubicchunks.worldgen.ICubeGenerator;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -79,7 +80,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	private ICubicWorldServer worldServer;
 	private CubeIO cubeIO;
-	private ColumnGenerator columnGenerator;
 	private HashMap<Long, Column> loadedColumns;
 	private Queue<CubeCoords> cubesToUnload;
 	private DependencyManager dependencyManager;
@@ -102,7 +102,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer);
-		this.columnGenerator = new ColumnGenerator(worldServer);
 		this.loadedColumns = Maps.newHashMap();
 		this.cubesToUnload = new ArrayDeque<>();
 		this.forceAdded = new HashMap<>();
@@ -228,7 +227,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			Cube cube = column.removeCube(coords.getCubeY());
 			if (cube != null) {
 				cube.onUnload();
-				this.worldServer.getGeneratorPipeline().getDependentCubeManager().unregister(cube);
+				this.worldServer.getCubeGenerator().getDependentCubeManager().unregister(cube);
 				this.cubeIO.saveCube(cube);
 			}
 			if (!column.hasCubes()) {
@@ -339,7 +338,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 			// Resume/continue generation if necessary.
 			if (cube.getCurrentStage().precedes(targetStage)) {
-				this.worldServer.getGeneratorPipeline().generate(cube, targetStage);
+				this.worldServer.getCubeGenerator().generateCube(cube, targetStage);
 			}
 
 			return;
@@ -358,9 +357,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			// ... and generating was requested, generate it.
 			if (loadType == LoadType.LOAD_OR_GENERATE) {
 				// Have the column generate a new cube object and configure it for generation.
-				cube = column.getOrCreateCube(cubeY, true);
-				cube.setCurrentStage(this.worldServer.getGeneratorPipeline().getFirstStage());
-				cube.setTargetStage(targetStage);
+				cube = this.worldServer.getCubeGenerator().generateCube(new CubeCoords(cubeX, cubeY, cubeZ), targetStage);
 			}
 			// ... or quit.
 			else {
@@ -368,10 +365,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 		}
 
-
 		// If the cube has yet to reach the target stage, resume generation.
 		if (cube.isBeforeStage(targetStage)) {
-			this.worldServer.getGeneratorPipeline().generate(cube, targetStage);
+			this.worldServer.getCubeGenerator().generateCube(cube, targetStage);
 		}
 
 		// Init the column.
@@ -412,7 +408,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		if (column == null) {
 			// there wasn't a column, generate a new one (if allowed to generate)
 			if (loadType == LOAD_OR_GENERATE) {
-				column = this.columnGenerator.generateColumn(cubeX, cubeZ);
+				column = this.worldServer.getCubeGenerator().generateColumn(cubeX, cubeZ);
 			}
 		} else {
 			// the column was loaded
@@ -435,13 +431,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			return cube;
 		}
 		Column column = this.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
-		cube = column.getOrCreateCube(cubeY, true);
+		cube = this.worldServer.getCubeGenerator().generateCube(new CubeCoords(cubeX, cubeY, cubeZ), GeneratorStage.LIVE);
 		addForcedByMapping(forcedBy, cube);
 
-		//set generator stage, technically shouldn't be needed because it's set in worldgen code
-		//but in case not all cubes are saved - it would crash.
-		cube.setCurrentStage(this.worldServer.getGeneratorPipeline().getFirstStage());
-		cube.setTargetStage(GeneratorStage.LIVE);
 		return cube;
 	}
 

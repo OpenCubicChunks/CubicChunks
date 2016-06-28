@@ -366,7 +366,7 @@ public class CubeIO implements IThreadedFileIO {
 		final Cube cube = column.getOrCreateCube(cubeY, false);
 
 		// get the worldgen stage and the target stage
-		GeneratorPipeline pipeline = this.world.getGeneratorPipeline();
+		GeneratorPipeline pipeline = this.world.getCubeGenerator().getGeneratorPipeline();
 		cube.setCurrentStage(pipeline.getStage(nbt.getString("currentStage")));
 		cube.setTargetStage(pipeline.getStage(nbt.getString("targetStage")));
 

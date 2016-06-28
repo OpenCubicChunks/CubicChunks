@@ -44,6 +44,8 @@ public abstract class GeneratorStage implements CubeDependencyProvider {
 
 	private CubeProcessor processor;
 
+	private GeneratorStage nextStage;
+
 
 	public GeneratorStage(String name) {
 		this.name = name;
@@ -68,6 +70,15 @@ public abstract class GeneratorStage implements CubeDependencyProvider {
 
 	public boolean isLastStage() {
 		return this.isLast;
+	}
+
+
+	public void setNextStage(GeneratorStage nextStage) {
+		this.nextStage = nextStage;
+	}
+
+	public GeneratorStage getNextStage() {
+		return this.nextStage;
 	}
 
 
