@@ -23,7 +23,6 @@
  */
 package cubicchunks.worldgen.generator.vanilla;
 
-import cubicchunks.debug.Prof;
 import cubicchunks.util.Coords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
@@ -63,7 +62,6 @@ public class VanillaTerrainProcessor implements CubeProcessor {
 
 
 	@Override public void calculate(Cube cube) {
-		Prof.call("VanillaTerrainProcessor#calculate(Cube)");
 		if (cube.getY() < 0) {
 			fillCube(cube, Blocks.STONE.getDefaultState());
 			return;
@@ -75,7 +73,6 @@ public class VanillaTerrainProcessor implements CubeProcessor {
 	}
 
 	private void generateVanillaChunk(Cube cube) {
-		Prof.call("VanillaTerrainProcessor#generateVanillaChunk(Cube)");
 		int x = cube.getX();
 		int z = cube.getZ();
 		getRand(this.vanillaGen).setSeed((long) x*341873128712L + (long) z*132897987541L);
