@@ -23,29 +23,30 @@
  */
 package cubicchunks.util;
 
+import com.google.common.base.Throwables;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
-import java.lang.reflect.Field;
+import java.lang.invoke.MethodHandle;
 import java.util.HashSet;
 import java.util.List;
 
 public class WorldServerAccess {
-	private static final Field ws_pendingTickListEntriesHashSet =
-			ReflectionHelper.findField(WorldServer.class, "pendingTickListEntriesHashSet", "field_73064_N");
-	private static final Field ws_pendingTickListEntriesThisTick =
-			ReflectionHelper.findField(WorldServer.class, "pendingTickListEntriesThisTick", "field_94579_S");
-
-	static {
-		ws_pendingTickListEntriesHashSet.setAccessible(true);
-		ws_pendingTickListEntriesThisTick.setAccessible(true);
-	}
+	private static final MethodHandle ws_pendingTickListEntriesHashSet = ReflectionUtil.getFieldGetterHandle(WorldServer.class, "field_73064_N");
+	private static final MethodHandle ws_pendingTickListEntriesThisTick = ReflectionUtil.getFieldGetterHandle(WorldServer.class, "field_94579_S");
 
 	public static final List getPendingTickListEntriesThisTick(WorldServer ws) {
-		return ReflectionUtil.get(ws, ws_pendingTickListEntriesThisTick, List.class);
+		try {
+			return (List) ws_pendingTickListEntriesThisTick.invoke(ws);
+		} catch (Throwable throwable) {
+			throw Throwables.propagate(throwable);
+		}
 	}
 
 	public static final HashSet getPendingTickListEntriesHashSet(WorldServer ws) {
-		return ReflectionUtil.get(ws, ws_pendingTickListEntriesHashSet, HashSet.class);
+		try {
+			return (HashSet) ws_pendingTickListEntriesHashSet.invoke(ws);
+		} catch (Throwable throwable) {
+			throw Throwables.propagate(throwable);
+		}
 	}
 }

@@ -52,7 +52,7 @@ public class ClientProxy extends CommonProxy {
 	}
 
 	@Override public void setBuildLimit(MinecraftServer server) {
-		WorldSettings settings = ReflectionUtil.getFieldValueFromSrg(server, "field_71350_m");//theWorldSettings
+		WorldSettings settings = ReflectionUtil.getFieldValueSrg(server, "field_71350_m");//theWorldSettings
 		if (settings.getTerrainType() instanceof ICubicChunksWorldType) {
 			server.setBuildLimit(AddressTools.MAX_CUBE_Y*16);
 		}

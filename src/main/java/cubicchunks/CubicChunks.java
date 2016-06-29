@@ -58,7 +58,7 @@ public class CubicChunks {
 		//for vanilla world this world provider will work the same way as vanilla world provider
 
 		//set "clazz" field
-		ReflectionUtil.setFieldValue(DimensionType.OVERWORLD, "field_186077_g", CubicWorldProviderSurface.class);
+		ReflectionUtil.setFieldValueSrg(DimensionType.OVERWORLD, "field_186077_g", CubicWorldProviderSurface.class);
 	}
 
 	@EventHandler

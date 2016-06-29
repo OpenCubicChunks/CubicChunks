@@ -27,99 +27,11 @@ import com.google.common.base.Throwables;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 public class ReflectionUtil {
-	public static final <T> T get(Object inObject, Field field, Class<T> fieldType) {
-		try {
-			return (T) field.get(inObject);
-		} catch (IllegalArgumentException | IllegalAccessException ex) {
-			throw new RuntimeException(ex);
-		}
-	}
-
-	public static void setFieldValue(Object inObject, Field field, Object newValue) {
-		try {
-			field.set(inObject, newValue);
-		} catch (IllegalArgumentException | IllegalAccessException ex) {
-			throw new RuntimeException(ex);
-		}
-	}
-
-	public static void setFieldValue(Object inObject, String srgName, Object newValue) {
-		Field field = getFieldFromSrg(inObject.getClass(), srgName);
-		removeFinalModifier(field);
-		try {
-			field.set(inObject, newValue);
-		} catch (IllegalArgumentException | IllegalAccessException ex) {
-			throw new RuntimeException(ex);
-		}
-	}
-
-	public static final Field findFieldNonStatic(Class<?> inClass, Class<?> type) {
-		Field found = null;
-		for (Field f : inClass.getDeclaredFields()) {
-			if (f.getType().equals(type) && !Modifier.isStatic(f.getModifiers())) {
-				if (found != null) {
-					throw new RuntimeException("More than one field of type " + type + " found in class " + inClass);
-				}
-				found = f;
-			}
-		}
-		if (found == null) {
-			throw new RuntimeException("Field of type " + type + " not found in class " + inClass);
-		}
-		return found;
-	}
-
-	public static final void removeFinalModifier(Field f) {
-		f.setAccessible(true);
-		int mod = f.getModifiers();
-		mod = mod & ~Modifier.FINAL;
-		Field modifiersField = null;
-		try {
-			modifiersField = Field.class.getDeclaredField("modifiers");
-		} catch (NoSuchFieldException e) {
-			throw new AssertionError("Field modifiers not found in class Field", e);
-		}
-		modifiersField.setAccessible(true);
-		try {
-			modifiersField.setInt(f, mod);
-		} catch (IllegalAccessException e) {
-			throw new AssertionError("Cannot set field modifiers in class Field", e);
-		}
-	}
-
-	public static MethodHandle getConstructorMethodHandle(Class<?> visitor, Class<?>... args) {
-		try {
-			return MethodHandles.lookup().findConstructor(visitor, MethodType.methodType(void.class, args));
-		} catch (IllegalAccessException | NoSuchMethodException e) {
-			throw Throwables.propagate(e);
-		}
-	}
-
-	public static String getFieldDescriptor(String name) {
-		return "L" + name + ";";
-	}
-
-	private static final Field getFieldFromSrg(Class<?> owner, String srgName) {
-		Field[] allFields = owner.getDeclaredFields();
-		Field foundField = null;
-		String name = Mappings.getNameFromSrg(srgName);
-
-		for (Field field : allFields) {
-			if (name.equals(field.getName())) {
-				foundField = field;
-				break;
-			}
-		}
-		foundField.setAccessible(true);
-		return foundField;
-	}
-
 	public static MethodHandle getFieldGetterHandle(Class<?> owner, String srgName) {
 		String name = Mappings.getNameFromSrg(srgName);
 		Field field = getFieldFromSrg(owner, name);
@@ -142,23 +54,6 @@ public class ReflectionUtil {
 		}
 	}
 
-	/**
-	 * Returns value of given field.
-	 * <p>
-	 * Warning: Slow.
-	 */
-	public static <T> T getFieldValueFromSrg(Object from, String srgName) {
-		String name = Mappings.getNameFromSrg(srgName);
-		Class<?> cl = from.getClass();
-		try {
-			Field fld = cl.getDeclaredField(name);
-			fld.setAccessible(true);
-			return (T) fld.get(from);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public static MethodHandle getMethodHandle(Class<?> theClass, String srgName) {
 		String name = Mappings.getNameFromSrg(srgName);
 		try {
@@ -175,6 +70,71 @@ public class ReflectionUtil {
 			return MethodHandles.lookup().unreflect(method);
 		} catch (IllegalAccessException e) {
 			throw Throwables.propagate(e);
+		}
+	}
+
+	/**
+	 * Sets value of given field
+	 * <p>
+	 * Warning: Slow.
+	 */
+	public static void setFieldValueSrg(Object inObject, String srgName, Object newValue) {
+		Field field = getFieldFromSrg(inObject.getClass(), srgName);
+		removeFinalModifier(field);
+		try {
+			field.set(inObject, newValue);
+		} catch (IllegalArgumentException | IllegalAccessException ex) {
+			throw new RuntimeException(ex);
+		}
+	}
+
+	/**
+	 * Returns value of given field.
+	 * <p>
+	 * Warning: Slow.
+	 */
+	public static <T> T getFieldValueSrg(Object from, String srgName) {
+		String name = Mappings.getNameFromSrg(srgName);
+		Class<?> cl = from.getClass();
+		try {
+			Field fld = cl.getDeclaredField(name);
+			fld.setAccessible(true);
+			return (T) fld.get(from);
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static final Field getFieldFromSrg(Class<?> owner, String srgName) {
+		Field[] allFields = owner.getDeclaredFields();
+		Field foundField = null;
+		String name = Mappings.getNameFromSrg(srgName);
+
+		for (Field field : allFields) {
+			if (name.equals(field.getName())) {
+				foundField = field;
+				break;
+			}
+		}
+		foundField.setAccessible(true);
+		return foundField;
+	}
+
+	private static final void removeFinalModifier(Field f) {
+		f.setAccessible(true);
+		int mod = f.getModifiers();
+		mod = mod & ~Modifier.FINAL;
+		Field modifiersField;
+		try {
+			modifiersField = Field.class.getDeclaredField("modifiers");
+		} catch (NoSuchFieldException e) {
+			throw new AssertionError("Field modifiers not found in class Field", e);
+		}
+		modifiersField.setAccessible(true);
+		try {
+			modifiersField.setInt(f, mod);
+		} catch (IllegalAccessException e) {
+			throw new AssertionError("Cannot set field modifiers in class Field", e);
 		}
 	}
 }
