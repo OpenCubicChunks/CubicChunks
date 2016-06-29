@@ -29,7 +29,7 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.CubeDependency;
-import cubicchunks.worldgen.GeneratorPipeline;
+import cubicchunks.worldgen.GeneratorStageRegistry;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.IndependentGeneratorStage;
 import cubicchunks.worldgen.dependency.RegionDependency;
@@ -43,7 +43,7 @@ public class DebugWorldType extends BaseCubicWorldType {
 		super("DebugCubic");
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
+	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry) {
 		ServerCubeCache cubeCache = world.getCubeCache();
 		// init the worldgen pipeline
 		GeneratorStage terrain = new IndependentGeneratorStage("debug");
@@ -53,8 +53,8 @@ public class DebugWorldType extends BaseCubicWorldType {
 			}
 		};
 
-		pipeline.addStage(terrain, new FlatTerrainProcessor());
-		pipeline.addStage(randomblock, cube -> {
+		generatorStageRegistry.addStage(terrain, new FlatTerrainProcessor());
+		generatorStageRegistry.addStage(randomblock, cube -> {
 			cube.setBlockForGeneration(new BlockPos(0, 0, 0), Blocks.DIAMOND_BLOCK.getDefaultState());
 			for (int dx = -1; dx <= 1; dx++) {
 				for (int dy = -1; dy <= 1; dy++) {

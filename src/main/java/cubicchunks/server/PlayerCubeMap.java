@@ -31,7 +31,7 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.ICubeGenerator;
+import cubicchunks.worldgen.IGeneratorPipeline;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -115,18 +115,18 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	 * but these cubes are not fully loaded/generated yet.
 	 * <p>
 	 * Note that this is not the same as toGenerate list.
-	 * Cube can be loaded while not being fully generated yet (not in the last GeneratorPipeline stage).
+	 * Cube can be loaded while not being fully generated yet (not in the last GeneratorStageRegistry stage).
 	 */
 	private final List<PlayerCubeMapEntry> toSendToClient = new ArrayList<>();
 
 	/**
 	 * Contains all CubeWatchers that still need to be loaded/generated.
 	 * CubeWatcher constructor attempts to load cube from disk, but it won't generate it.
-	 * Technically it can generate it, especially with GeneratorPipeline
+	 * Technically it can generate it, using the world's IGeneratorPipeline,
 	 * but spectator players can't generate chunks if spectatorsGenerateChunks gamerule is set.
 	 */
 	private final List<PlayerCubeMapEntry> toGenerate = new ArrayList<>();
-	private final ICubeGenerator cubeGenerator;
+	private final IGeneratorPipeline cubeGenerator;
 
 	private int viewDistance;
 

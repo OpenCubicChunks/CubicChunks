@@ -40,7 +40,7 @@ import java.util.Map;
  * Dependents whenever the state of a RequiredCube changes.
  * RequiredCubes will not be generated fully, as this would cause an infinite chain of Cubes being loaded. Instead,
  * Requirements specify the GeneratorStage that they require a cube to be in and the DependencyManager in combination
- * with the ServerCubeCache and the GeneratorPipeline will process the Cube up to that stage. If multiple Dependents
+ * with the ServerCubeCache and the IGeneratorPipeline will process the Cube up to that stage. If multiple Dependents
  * require the same Cube, it will be processed up to the latest required stage.
  */
 public class DependencyManager {

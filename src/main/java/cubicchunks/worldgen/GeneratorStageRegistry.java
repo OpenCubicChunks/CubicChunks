@@ -39,29 +39,29 @@ import java.util.Map;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class GeneratorPipeline implements Iterable<GeneratorStage> {
+public class GeneratorStageRegistry implements Iterable<GeneratorStage> {
 
 	private List<GeneratorStage> stages;
 
 	private Map<String, GeneratorStage> stageMap;
 
 
-	public static void checkStages(@Nonnull GeneratorPipeline pipeline) {
-		for (GeneratorStage stage : pipeline.stages) {
+	public static void checkStages(@Nonnull GeneratorStageRegistry generatorStageRegistry) {
+		for (GeneratorStage stage : generatorStageRegistry.stages) {
 			if (!stage.isLastStage()) {
 				if (stage.getProcessor() == null) {
-					throw new Error("Generator pipeline configured incorrectly! Stage " + stage.getName() +
+					throw new Error("Generator generatorStageRegistry configured incorrectly! Stage " + stage.getName() +
 							" is null! Fix your WorldServerContext constructor!");
 				}
 			}
 		}
 
 		// TODO: Move to WorldGenerator?
-		pipeline.addStage(GeneratorStage.LIVE, null);
+		generatorStageRegistry.addStage(GeneratorStage.LIVE, null);
 	}
 
 
-	public GeneratorPipeline() {
+	public GeneratorStageRegistry() {
 		this.stages = new ArrayList<>();
 		this.stageMap = new HashMap<>();
 		this.stageMap.put(GeneratorStage.LIVE.getName(), GeneratorStage.LIVE);

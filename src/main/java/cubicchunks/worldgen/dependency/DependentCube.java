@@ -31,8 +31,7 @@ import cubicchunks.world.dependency.CubeDependency;
 import cubicchunks.world.dependency.DependencyManager;
 import cubicchunks.world.dependency.Dependent;
 import cubicchunks.world.dependency.Requirement;
-import cubicchunks.worldgen.GeneratorPipeline;
-import cubicchunks.worldgen.ICubeGenerator;
+import cubicchunks.worldgen.IGeneratorPipeline;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -40,12 +39,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Wrapper for Cubes using the interface Dependent. When a Cube is being generated, the GeneratorPipeline of the world
+ * Wrapper for Cubes using the interface Dependent. When a Cube is being generated, the IGeneratorPipeline of the world
  * determines if the given Cube has Requirements that need to be fulfilled. If that case, an instance of DependentCube
  * keeps track of the Requirements of the Cube. Once all required Cubes have reached the required stage, the
  * DependentCube will resume its cube's generation.
- *
- * @see GeneratorPipeline
+ * @see IGeneratorPipeline
  * @see ServerCubeCache
  */
 public class DependentCube implements Dependent {
@@ -53,7 +51,7 @@ public class DependentCube implements Dependent {
 	/**
 	 * The world's cube generator.
 	 */
-	private ICubeGenerator cubeGenerator;
+	private IGeneratorPipeline cubeGenerator;
 
 	/**
 	 * The depending Cube.
@@ -78,11 +76,11 @@ public class DependentCube implements Dependent {
 	/**
 	 * Creates a new instance of DependentCube.
 	 *
-	 * @param cubeGenerator The world's GeneratorPipeline.
+	 * @param cubeGenerator The world's GeneratorStageRegistry.
 	 * @param cube The depending Cube.
 	 * @param cubeDependency The CubeDependency defining the Cube's Requirements.
 	 */
-	public DependentCube(@Nonnull ICubeGenerator cubeGenerator, @Nonnull Cube cube, @Nonnull CubeDependency cubeDependency) {
+	public DependentCube(@Nonnull IGeneratorPipeline cubeGenerator, @Nonnull Cube cube, @Nonnull CubeDependency cubeDependency) {
 		this.cubeGenerator = cubeGenerator;
 		this.cube = cube;
 		this.cubeDependency = cubeDependency;

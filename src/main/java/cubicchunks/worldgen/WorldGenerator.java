@@ -48,7 +48,7 @@ import java.util.Set;
 
 import static cubicchunks.CubicChunks.LOGGER;
 
-public class WorldGenerator implements ICubeGenerator {
+public class WorldGenerator implements IGeneratorPipeline {
 
 	private static final int TICK_BUDGET = 40; //ms
 
@@ -58,7 +58,7 @@ public class WorldGenerator implements ICubeGenerator {
 
 	private final ColumnGenerator columnGenerator;
 
-	private final GeneratorPipeline generatorPipeline;
+	private final GeneratorStageRegistry generatorStageRegistry;
 
 	private final DependentCubeManager dependentCubeManager;
 
@@ -89,12 +89,12 @@ public class WorldGenerator implements ICubeGenerator {
 	private long durationRecent;
 
 
-	public WorldGenerator(@Nonnull ICubicWorldServer world, @Nonnull GeneratorPipeline generatorPipeline) {
+	public WorldGenerator(@Nonnull ICubicWorldServer world, @Nonnull GeneratorStageRegistry generatorStageRegistry) {
 
 		this.world = world;
 		this.cubeCache = world.getCubeCache();
 		this.columnGenerator = new ColumnGenerator(this.world);
-		this.generatorPipeline = generatorPipeline;
+		this.generatorStageRegistry = generatorStageRegistry;
 		this.dependentCubeManager = new DependentCubeManager(this.cubeCache.getDependencyManager());
 
 		this.toUpdate = new ArrayList<>();
@@ -104,8 +104,8 @@ public class WorldGenerator implements ICubeGenerator {
 		this.ticksSinceSorting = 0;
 
 		// Note: At this point in time, the pipeline does not yet contain LIVE. Thus, the array sizes.
-		this.stageProcessedRecent = new int[generatorPipeline.stageCount()];
-		this.stageProcessedTotal = new int[generatorPipeline.stageCount()];
+		this.stageProcessedRecent = new int[generatorStageRegistry.stageCount()];
+		this.stageProcessedTotal = new int[generatorStageRegistry.stageCount()];
 		this.processedRecent = 0;
 		this.processedTotal = 0;
 		this.skippedRecent = 0;
@@ -115,16 +115,16 @@ public class WorldGenerator implements ICubeGenerator {
 	}
 
 
-	// ------------------------------------------- Interface: ICubeGenerator -------------------------------------------
+	// ------------------------------------------- Interface: IGeneratorPipeline -------------------------------------------
 
 	@Override
 	public int getQueuedCubeCount() {
 		return this.toUpdateSet.size();
 	}
 
-	@Override @Nonnull
-	public GeneratorPipeline getGeneratorPipeline() {
-		return this.generatorPipeline;
+	@Nonnull
+	public GeneratorStageRegistry getGeneratorStageRegistry() {
+		return this.generatorStageRegistry;
 	}
 
 	@Override @Nonnull
@@ -186,7 +186,7 @@ public class WorldGenerator implements ICubeGenerator {
 
 		// Set the current stage.
 		if (cube.getCurrentStage() == null) {
-			cube.setCurrentStage(this.generatorPipeline.getFirstStage());
+			cube.setCurrentStage(this.generatorStageRegistry.getFirstStage());
 		}
 
 		// Set the target stage.
@@ -218,7 +218,7 @@ public class WorldGenerator implements ICubeGenerator {
 		int processed = 0;
 		int skipped = 0;
 		int finished = 0;
-		int[] cubesInStage = new int[this.generatorPipeline.stageCount()];
+		int[] cubesInStage = new int[this.generatorStageRegistry.stageCount()];
 
 		Progress progress = new Progress(Integer.MAX_VALUE, 1000);
 
@@ -296,7 +296,7 @@ public class WorldGenerator implements ICubeGenerator {
 
 		if (LOGGER.isDebugEnabled() && processedRecent > 0) {
 			LOGGER.debug("Processed {} cubes, skipped {} in {} ms ({} in queue, {} dependents}", processedRecent, skippedRecent, durationRecent, this.toUpdateSet.size(), this.dependentCubeManager.getDependentCubeCount());
-			for (GeneratorStage stage : this.generatorPipeline) {
+			for (GeneratorStage stage : this.generatorStageRegistry) {
 				if (stage != GeneratorStage.LIVE) {
 					String message = String.format("\t%15s: %3d processed", stage.getName(), stageProcessedRecent[stage.getOrdinal()]);
 					LOGGER.debug(message);
@@ -410,7 +410,7 @@ public class WorldGenerator implements ICubeGenerator {
 			this.toUpdate.clear();
 			this.toUpdate.addAll(toUpdateSet);
 		}
-		//TODO: make GeneratorPipeline sort() faster
+		//TODO: make GeneratorStageRegistry sort() faster
 		Collection<EntityPlayer> players = world.getPlayerEntities();
 
 		//TODO: is it correct order?

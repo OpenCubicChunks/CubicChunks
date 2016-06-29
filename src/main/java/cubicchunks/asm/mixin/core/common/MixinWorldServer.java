@@ -33,8 +33,8 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorPipeline;
-import cubicchunks.worldgen.ICubeGenerator;
+import cubicchunks.worldgen.GeneratorStageRegistry;
+import cubicchunks.worldgen.IGeneratorPipeline;
 import cubicchunks.worldgen.WorldGenerator;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
@@ -62,8 +62,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	@Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
 	@Shadow public boolean disableLevelSaving;
 
-	private GeneratorPipeline generatorPipeline;
-	private ICubeGenerator cubeGenerator;
+	private GeneratorStageRegistry generatorStageRegistry;
+	private IGeneratorPipeline cubeGenerator;
 	private ChunkGc chunkGc;
 
 	//vanilla method shadows
@@ -77,13 +77,13 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.entitySpawner = new CubeWorldEntitySpawner();
 		ServerCubeCache chunkProvider = new ServerCubeCache(this);
 		this.chunkProvider = chunkProvider;
-		this.generatorPipeline = new GeneratorPipeline();
+		this.generatorStageRegistry = new GeneratorStageRegistry();
 		this.lightingManager = new LightingManager(this);
 
 		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
-		type.registerWorldGen(this, this.generatorPipeline);
-		GeneratorPipeline.checkStages(this.generatorPipeline);
-		this.cubeGenerator = new WorldGenerator(this, this.generatorPipeline);
+		type.registerWorldGen(this, this.generatorStageRegistry);
+		GeneratorStageRegistry.checkStages(this.generatorStageRegistry);
+		this.cubeGenerator = new WorldGenerator(this, this.generatorStageRegistry);
 
 		this.thePlayerManager = new PlayerCubeMap(this);
 		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
@@ -139,7 +139,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		return (ServerCubeCache) this.chunkProvider;
 	}
 
-	@Override public ICubeGenerator getCubeGenerator() {
+	@Override public IGeneratorPipeline getCubeGenerator() {
 		return this.cubeGenerator;
 	}
 

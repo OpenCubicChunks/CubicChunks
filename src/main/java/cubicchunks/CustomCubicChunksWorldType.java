@@ -26,7 +26,7 @@ package cubicchunks;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.DependentGeneratorStage;
-import cubicchunks.worldgen.GeneratorPipeline;
+import cubicchunks.worldgen.GeneratorStageRegistry;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.IndependentGeneratorStage;
 import cubicchunks.worldgen.dependency.RegionDependency;
@@ -41,8 +41,8 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 		super("CustomCubic");
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
-		// init the worldgen pipeline
+	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry) {
+		// init the world's GeneratorStageRegistry
 		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
 
 		GeneratorStage features = new IndependentGeneratorStage("features");
@@ -53,10 +53,10 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 		DependentGeneratorStage population = new DependentGeneratorStage("population", null);
 		population.setCubeDependency(new RegionDependency(population, new Vec3i(0, 0, 0), new Vec3i(1, 1, 1)));
 
-		pipeline.addStage(terrain, new CustomTerrainProcessor(world));
-		pipeline.addStage(features, new CustomFeatureProcessor());
-		pipeline.addStage(lighting, new FirstLightProcessor(lighting, world));
-		pipeline.addStage(population, new CustomPopulationProcessor(world));
+		generatorStageRegistry.addStage(terrain, new CustomTerrainProcessor(world));
+		generatorStageRegistry.addStage(features, new CustomFeatureProcessor());
+		generatorStageRegistry.addStage(lighting, new FirstLightProcessor(lighting, world));
+		generatorStageRegistry.addStage(population, new CustomPopulationProcessor(world));
 	}
 
 	public static void create() {

@@ -32,7 +32,7 @@ import cubicchunks.worldgen.dependency.DependentCubeManager;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public interface ICubeGenerator {
+public interface IGeneratorPipeline {
 
 	/**
 	 * Returns the number of cubes that are queued for generation.
@@ -42,22 +42,22 @@ public interface ICubeGenerator {
 	int getQueuedCubeCount();
 
 	/**
-	 * Returns the GeneratorPipeline used by this ICubeGenerator. This pipeline dictates the stages every cube has to
-	 * go through and the processors used in each given stage. Modifications on this pipeline are strongly discouraged
-	 * as they are likely to disrupt generation of currently queued cubes.
+	 * Returns the GeneratorStageRegistry used by this IGeneratorPipeline. This registry dictates the stages every cube
+	 * has to go through and the processors used in each given stage. Modifications on this registry are strongly
+	 * discouraged as they are likely to disrupt the generation of currently queued cubes.
 	 *
-	 * @return The GeneratorPipeline used by this ICubeGenerator.
+	 * @return The GeneratorStageRegistry used by this IGeneratorPipeline.
 	 */
 	@Nonnull
-	GeneratorPipeline getGeneratorPipeline();
+	GeneratorStageRegistry getGeneratorStageRegistry();
 
 	/**
-	 * Returns the DependentCubeManager used by this ICubeGenerator. The DependentCubeManager keeps track of all cubes
-	 * requiring other cubes to be loaded for their generation. Removing cubes that have been registered by the
-	 * ICubeGenerator from the DependentCubeCache will result in them not being generated further or may disrupt its
-	 * processing.
+	 * Returns the DependentCubeManager used by this IGeneratorPipeline. The DependentCubeManager keeps track of all
+	 * cubes requiring other cubes to be loaded for their generation. Removing cubes that have been registered by the
+	 * IGeneratorPipeline from the DependentCubeCache will result in them not being generated further or may disrupt
+	 * its processing.
 	 *
-	 * @return The DependentCubeManager used by this ICubeGenerator.
+	 * @return The DependentCubeManager used by this IGeneratorPipeline.
 	 */
 	@Nonnull
 	DependentCubeManager getDependentCubeManager();
@@ -73,7 +73,7 @@ public interface ICubeGenerator {
 
 	/**
 	 * Schedules the given cube for generation. The cube will be generated up to its set target stage. This
-	 * ICubeGenerator will ensure that all cubes required for generating this cube are available when needed.
+	 * IGeneratorPipeline will ensure that all cubes required for generating this cube are available when needed.
 	 *
 	 * @param cube The cube to be generated.
 	 */
@@ -138,5 +138,4 @@ public interface ICubeGenerator {
 	 * Processes queued cubes.
 	 */
 	void tick();
-
 }
