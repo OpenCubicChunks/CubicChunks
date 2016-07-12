@@ -35,7 +35,6 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.ChunkProviderSettings;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import static cubicchunks.util.ChunkProviderOverworldAccess.getBiomesForGeneration;
 import static cubicchunks.util.ChunkProviderOverworldAccess.getCaveGenerator;
@@ -66,7 +65,6 @@ public class VanillaTerrainProcessor implements CubeProcessor {
 	 * {@link cubicchunks.worldgen.GeneratorStage#LIVE}
 	 */
 	@Override public void calculate(Cube cube) {
-		GameRegistry.register()
 		if (cube.getY() < 0) {
 			fillCube(cube, Blocks.STONE.getDefaultState());
 			return;
