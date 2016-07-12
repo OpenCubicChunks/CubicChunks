@@ -33,7 +33,9 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorPipeline;
+import cubicchunks.worldgen.GeneratorStageRegistry;
+import cubicchunks.worldgen.IGeneratorPipeline;
+import cubicchunks.worldgen.WorldGenerator;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.BlockPos;
@@ -60,7 +62,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	@Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
 	@Shadow public boolean disableLevelSaving;
 
-	private GeneratorPipeline generatorPipeline;
+	private GeneratorStageRegistry generatorStageRegistry;
+	private IGeneratorPipeline cubeGenerator;
 	private ChunkGc chunkGc;
 
 	//vanilla method shadows
@@ -72,16 +75,18 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.isCubicWorld = true;
 
 		this.entitySpawner = new CubeWorldEntitySpawner();
-		this.chunkProvider = new ServerCubeCache(this);
-		this.generatorPipeline = new GeneratorPipeline(this);
-		this.thePlayerManager = new PlayerCubeMap(this);
-		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
+		ServerCubeCache chunkProvider = new ServerCubeCache(this);
+		this.chunkProvider = chunkProvider;
+		this.generatorStageRegistry = new GeneratorStageRegistry();
 		this.lightingManager = new LightingManager(this);
 
-
 		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
-		type.registerWorldGen(this, this.generatorPipeline);
-		this.generatorPipeline.checkStages();
+		type.registerWorldGen(this, this.generatorStageRegistry);
+		GeneratorStageRegistry.checkStages(this.generatorStageRegistry);
+		this.cubeGenerator = new WorldGenerator(this, this.generatorStageRegistry);
+
+		this.thePlayerManager = new PlayerCubeMap(this);
+		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
 
 		this.maxHeight = type.getMaxHeight();
 		this.minHeight = type.getMinHeight();
@@ -110,10 +115,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		}
 
 		// wait for the cubes to be loaded
-		GeneratorPipeline pipeline = this.getGeneratorPipeline();
-		int numCubesTotal = pipeline.getNumCubes();
-		if (numCubesTotal > 0) {
-			pipeline.generateAll();
+		if (this.cubeGenerator.getQueuedCubeCount() > 0) {
+			this.cubeGenerator.calculateAll();
 		}
 
 		// don't save cubes here. Vanilla doesn't do that.
@@ -123,7 +126,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 	@Override public void tickCubicWorld() {
 		this.lightingManager.tick();
-		this.generatorPipeline.tick();
+		this.cubeGenerator.tick();
 		this.chunkGc.tick();
 		//TODO: Readd block tick
 		//for (ChunkCoordIntPair coords : WorldAccess.getActiveChunkSet(worldServer)) {
@@ -136,8 +139,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		return (ServerCubeCache) this.chunkProvider;
 	}
 
-	@Override public GeneratorPipeline getGeneratorPipeline() {
-		return this.generatorPipeline;
+	@Override public IGeneratorPipeline getCubeGenerator() {
+		return this.cubeGenerator;
 	}
 
 	//vanilla field accessors

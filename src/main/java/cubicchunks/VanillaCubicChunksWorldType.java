@@ -28,7 +28,7 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.dependency.CubeDependency;
 import cubicchunks.worldgen.DependentGeneratorStage;
-import cubicchunks.worldgen.GeneratorPipeline;
+import cubicchunks.worldgen.GeneratorStageRegistry;
 import cubicchunks.worldgen.GeneratorStage;
 import cubicchunks.worldgen.dependency.RegionDependency;
 import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
@@ -46,18 +46,18 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 		super("VanillaCubic");
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline) {
+	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry) {
 		ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
 
-		// init the worldgen pipeline
+		// init the world's GeneratorStageRegistry
 		GeneratorStage terrain = new VanillaStage("terrain", new Vec3i(0, 0, 0), new Vec3i(0, 0, 0));
 		DependentGeneratorStage lighting = new DependentGeneratorStage("lighting", null);
 		lighting.setCubeDependency(new RegionDependency(lighting, 2));
 		GeneratorStage population = new VanillaStage("population", new Vec3i(0, 0, 0), new Vec3i(1, 0, 1));
 
-		pipeline.addStage(terrain, new VanillaTerrainProcessor(world, vanillaGen));
-		pipeline.addStage(lighting, new FirstLightProcessor(lighting, world));
-		pipeline.addStage(population, new VanillaPopulationProcessor(vanillaGen));
+		generatorStageRegistry.addStage(terrain, new VanillaTerrainProcessor(world, vanillaGen));
+		generatorStageRegistry.addStage(lighting, new FirstLightProcessor(lighting, world));
+		generatorStageRegistry.addStage(population, new VanillaPopulationProcessor(vanillaGen));
 	}
 
 	public static void create() {

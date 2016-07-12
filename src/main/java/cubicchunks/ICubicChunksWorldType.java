@@ -25,10 +25,10 @@ package cubicchunks;
 
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorPipeline;
+import cubicchunks.worldgen.GeneratorStageRegistry;
 
 public interface ICubicChunksWorldType {
-	void registerWorldGen(ICubicWorldServer world, GeneratorPipeline pipeline);
+	void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry);
 
 	/**
 	 * Returns Y position of the bottom block in the world

@@ -31,7 +31,7 @@ import javax.annotation.Nonnull;
 
 /**
  * Specifies the requirements of a Dependent for a Cube. The requirement includes the required stage for the Cube to be
- * at, such that the CubeProvider and its GeneratorPipeline can determine when a Cube loaded for a Dependent does not
+ * at, such that the CubeProvider and its IGeneratorPipeline can determine when a Cube loaded for a Dependent does not
  * require further processing.
  */
 public class Requirement {

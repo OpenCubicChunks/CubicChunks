@@ -25,7 +25,7 @@ package cubicchunks.world;
 
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.server.ServerCubeCache;
-import cubicchunks.worldgen.GeneratorPipeline;
+import cubicchunks.worldgen.IGeneratorPipeline;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -34,7 +34,7 @@ public interface ICubicWorldServer extends ICubicWorld {
 
 	void generateWorld();
 
-	GeneratorPipeline getGeneratorPipeline();
+	IGeneratorPipeline getCubeGenerator();
 
 	ServerCubeCache getCubeCache();
 
