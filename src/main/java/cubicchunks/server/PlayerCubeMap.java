@@ -306,7 +306,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 			if (cubeWatcher.getCube() == null) {
 				this.toGenerate.add(cubeWatcher);
 			}
-			if (!cubeWatcher.sendToPlayers()) {
+			if (!cubeWatcher.isSentToPlayers()) {
 				this.toSendToClient.add(cubeWatcher);
 			}
 		}
