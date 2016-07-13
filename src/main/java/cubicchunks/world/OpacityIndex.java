@@ -30,6 +30,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class OpacityIndex implements IOpacityIndex {
 
@@ -744,6 +745,10 @@ public class OpacityIndex implements IOpacityIndex {
 			}
 		}
 		return heightMapLowest;
+	}
+
+	@Override public int[] getHeightmap() {
+		return Arrays.copyOf(m_ymax, m_ymax.length);
 	}
 
 	public byte[] getData() {

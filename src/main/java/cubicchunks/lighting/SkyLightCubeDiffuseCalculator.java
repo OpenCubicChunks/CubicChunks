@@ -55,7 +55,6 @@ class SkyLightCubeDiffuseCalculator {
 
 		World world = column.getWorld();
 
-
 		//check at min cube Y and max cube Y
 		if (!world.isAreaLoaded(new BlockPos(blockX, minY, blockZ), LOADED_BLOCKS_MIN_RADIUS, false)) {
 			return false;
@@ -64,25 +63,21 @@ class SkyLightCubeDiffuseCalculator {
 			return false;
 		}
 
-		boolean updated = true;
-		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ, minY, maxY);
-		updated &= diffuseSkyLightForBlockColumn(world, blockX - 1, blockZ, minY, maxY);
-		updated &= diffuseSkyLightForBlockColumn(world, blockX + 1, blockZ, minY, maxY);
-		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ - 1, minY, maxY);
-		updated &= diffuseSkyLightForBlockColumn(world, blockX, blockZ + 1, minY, maxY);
+		diffuseSkyLightForBlockColumn(world, blockX, blockZ, minY, maxY);
+		diffuseSkyLightForBlockColumn(world, blockX - 1, blockZ, minY, maxY);
+		diffuseSkyLightForBlockColumn(world, blockX + 1, blockZ, minY, maxY);
+		diffuseSkyLightForBlockColumn(world, blockX, blockZ - 1, minY, maxY);
+		diffuseSkyLightForBlockColumn(world, blockX, blockZ + 1, minY, maxY);
 
-		assert updated;
 		column.setModified(true);
 		return true;
 	}
 
-	private static boolean diffuseSkyLightForBlockColumn(World world, int blockX, int blockZ, int minY, int maxY) {
-		boolean ok = true;
+	private static void diffuseSkyLightForBlockColumn(World world, int blockX, int blockZ, int minY, int maxY) {
 		final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		for (int y = minY; y <= maxY; y++) {
 			pos.setPos(blockX, y, blockZ);
-			ok &= world.checkLightFor(EnumSkyBlock.SKY, pos);
+			world.checkLightFor(EnumSkyBlock.SKY, pos);
 		}
-		return ok;
 	}
 }

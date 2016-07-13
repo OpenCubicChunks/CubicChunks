@@ -80,4 +80,6 @@ public interface IOpacityIndex {
 	 * Returns the lowest value that could be returned by getTopBlockY (for any localX and localZ values).
 	 */
 	int getLowestTopBlockY();
+
+	int[] getHeightmap();
 }

@@ -679,7 +679,7 @@ public class Column extends Chunk {
 
 	@Override
 	public int[] getHeightMap() {
-		throw new UnsupportedOperationException();
+		return this.opacityIndex.getHeightmap();
 	}
 
 	@Override
