@@ -247,7 +247,7 @@ private String getModVersionAndWriteToFile() {
 	try {
 		git = org.ajoberstar.grgit.Grgit.open(file('.'))
 	} catch(org.eclipse.jgit.errors.RepositoryNotFoundException ex) {//TODO: Is there better way to check if the repository can be opened?
-		logger.error("Git repository not found! Version will be incorrec!");
+		logger.error("Git repository not found! Version will be incorrect!");
 		return getModVersion("", "master");
 	}
 	String describe = git.describe();
