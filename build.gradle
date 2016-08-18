@@ -53,7 +53,7 @@ repositories {
 }
 
 ext {
-	git = org.ajoberstar.grgit.Grgit.open(file('.'))
+	
 
 	//used for license header
 	projectName = 'Cubic Chunks Mod'
@@ -62,7 +62,7 @@ ext {
 
 group = "cubichunks"
 archivesBaseName = "CubicChunks"
-version = getModVersionAndWriteToFile("${git.describe()}", "${git.branch.getCurrent().getName()}")
+version = getModVersionAndWriteToFile()
 
 minecraft {
 	version = "1.10-12.18.0.2000-1.10.0"
@@ -207,36 +207,30 @@ private String getModVersion(String describe, String branch) {
 		if (describe.matches(baseVersionRegex)) {
 			return String.format("%s-%s.0.0%s%s", mcVersion, describe, versionSuffix, branchSuffix);
 		}
+		logger.error("Git describe information: \"" + describe + "\" in unknown/incorrect format");
 		return unknownVersion;
 	}
 	//Describe format: vX.Y-build-hash
 	String[] parts = describe.split("-");
 	if (!parts[0].matches(baseVersionRegex)) {
+		logger.error("Git describe information: \"" + describe + "\" in unknown/incorrect format");
 		return unknownVersion;
 	}
 	if (!parts[1].matches("[0-9]+")) {
+		logger.error("Git describe information: \"" + describe + "\" in unknown/incorrect format");
 		return unknownVersion;
 	}
 	String mcVersion = mcVersion;
 	String modAndApiVersion = parts[0].substring(1);
 	//next we have commit-since-tag
 	int commitSinceTag;
-	try {
-		commitSinceTag = Integer.parseInt(parts[1]);
-	} catch (NumberFormatException ex) {
-		ex.printStackTrace();
-		return unknownVersion;
-	}
+	commitSinceTag = Integer.parseInt(parts[1]);
 
 	int minor;
 	int patch;
 	int minorFreeze = -1;
 	if (!(versionMinorFreeze == null || versionMinorFreeze.isEmpty())) {
-		try {
-			minorFreeze = Integer.parseInt(versionMinorFreeze);
-		} catch (NumberFormatException ex) {
-			ex.printStackTrace();
-		}
+		minorFreeze = Integer.parseInt(versionMinorFreeze);
 	}
 	if (minorFreeze < 0) {
 		minor = commitSinceTag;
@@ -248,7 +242,16 @@ private String getModVersion(String describe, String branch) {
 	String version = String.format("%s-%s.%d.%d%s%s", mcVersion, modAndApiVersion, minor, patch, versionSuffix, branchSuffix);
 	return version;
 }
-private String getModVersionAndWriteToFile(String describe, String branch) {
+private String getModVersionAndWriteToFile() {
+	def git;
+	try {
+		git = org.ajoberstar.grgit.Grgit.open(file('.'))
+	} catch(org.eclipse.jgit.errors.RepositoryNotFoundException ex) {//TODO: Is there better way to check if the repository can be opened?
+		logger.error("Git repository not found! Version will be incorrec!");
+		return getModVersion("", "master");
+	}
+	String describe = git.describe();
+	String branch = git.branch().getCurrent().getName();
 	String version = getModVersion(describe, branch)
 	//write to file
 	File file = new File("VERSION");
