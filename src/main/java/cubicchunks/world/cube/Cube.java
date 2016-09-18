@@ -214,7 +214,7 @@ public class Cube {
 		int cubeY = Coords.getCubeYForEntity(entity);
 		int cubeZ = Coords.getCubeZForEntity(entity);
 		if (cubeX != this.coords.getCubeX() || cubeY != this.coords.getCubeY() || cubeZ != this.coords.getCubeZ()) {
-			LOGGER.warn(String.format("Wrong entity location. Entity thinks it's in (%d,%d,%d) but actua location is (%d,%d,%d)!",
+			LOGGER.warn(String.format("Wrong entity (%s) location. Entity thinks it's in (%d,%d,%d) but actua location is (%d,%d,%d)!",
 					entity.getClass().getName(), cubeX, cubeY, cubeZ, this.coords.getCubeX(), this.coords.getCubeY(), this.coords.getCubeZ()));
 			entity.setDead();
 		}
