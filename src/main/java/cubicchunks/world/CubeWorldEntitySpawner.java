@@ -181,7 +181,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 					try {
 						toSpawn = biomeMobs.entityClass.getConstructor(new Class[]{
 								World.class
-						}).newInstance(new Object[]{world});
+						}).newInstance(world);
 					} catch (Exception exception) {
 						exception.printStackTrace();
 						//TODO: throw when entity creation fails
