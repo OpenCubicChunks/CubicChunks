@@ -235,20 +235,34 @@ public class IONbtReader {
 		int[] lastHeightMap = lightingInfo.getIntArray("LastHeightMap");
 		int[] currentHeightMap = cube.getColumn().getHeightMap();
 
+		// assume changes outside of this cube have no effect on this cube.
+		// In practice changes up to 15 blocks above can affect it,
+		// but it will be fixed by lighting update in other cube anyway
 		int minBlockY = Coords.cubeToMinBlock(cube.getY());
-		int maxBlockYCube = Coords.cubeToMaxBlock(cube.getY());
-		//any changes more than 15 blocks above current cube don't have any effect
-		int maxBlockY = maxBlockYCube + 15;
+		int maxBlockY = Coords.cubeToMaxBlock(cube.getY());
 		for (int i = 0; i < currentHeightMap.length; i++) {
 			int currentY = currentHeightMap[i];
 			int lastY = lastHeightMap[i];
 
-			boolean needLightUpdate = currentY != lastY &&
-					(currentY >= minBlockY || lastY >= minBlockY) &&
-					(currentY <= maxBlockY || lastY <= maxBlockY);
+			//sort currentY and lastY
+			int minUpdateY = Math.min(currentY, lastY);
+			int maxUpdateY = Math.max(currentY, lastY);
+
+			boolean needLightUpdate = minUpdateY != maxUpdateY &&
+					//if max update Y is below minY - nothing to update
+					!(maxUpdateY < minBlockY) &&
+					//if min update Y is above maxY - nothing to update
+					!(minUpdateY > maxBlockY);
 			if (needLightUpdate) {
-				int minUpdateY = Math.max(minBlockY, Math.min(currentY, lastY));
-				int maxUpdateY = Math.min(minBlockY, Math.max(currentY, lastY));
+
+				//clamp min/max update Y to be within current cube bounds
+				if(minUpdateY < minBlockY) {
+					minUpdateY = minBlockY;
+				}
+				if(maxUpdateY > maxBlockY) {
+					maxUpdateY = maxBlockY;
+				}
+				assert minUpdateY < maxUpdateY : "minUpdateY > maxUpdateY";
 
 				int localX = i & 0xF;
 				int localZ = i >> 4;
