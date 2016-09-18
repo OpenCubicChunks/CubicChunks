@@ -197,7 +197,7 @@ public class IONbtReader {
 		for (int i = 0; i < nbtTileEntities.tagCount(); i++) {
 			NBTTagCompound nbtTileEntity = nbtTileEntities.getCompoundTagAt(i);
 			//TileEntity.create
-			TileEntity blockEntity = TileEntity.func_190200_a((World) world, nbtTileEntity);
+			TileEntity blockEntity = TileEntity.create((World) world, nbtTileEntity);
 			if (blockEntity != null) {
 				column.addTileEntity(blockEntity);
 			}

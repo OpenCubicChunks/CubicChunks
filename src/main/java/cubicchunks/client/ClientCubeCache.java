@@ -53,7 +53,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	public Column loadChunk(int cubeX, int cubeZ) {
 
 		// is this chunk already loaded?
-		Column column = (Column) this.chunkMapping.get(ChunkPos.chunkXZ2Int(cubeX, cubeZ));
+		Column column = (Column) this.chunkMapping.get(ChunkPos.asLong(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}
@@ -61,7 +61,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		// make a new one
 		column = new Column(this.world, cubeX, cubeZ);
 
-		this.chunkMapping.put(ChunkPos.chunkXZ2Int(cubeX, cubeZ), column);
+		this.chunkMapping.put(ChunkPos.asLong(cubeX, cubeZ), column);
 
 		column.setChunkLoaded(true);
 		return column;
@@ -75,7 +75,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	public void unloadColumn(int columnX, int columnZ) {
 		//unload even if not empty
 		//server sends unload packets, it must be right.
-		this.chunkMapping.remove(ChunkPos.chunkXZ2Int(columnX, columnZ));
+		this.chunkMapping.remove(ChunkPos.asLong(columnX, columnZ));
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	@Override//I hope it was provideChunk
 	public Column provideChunk(int cubeX, int cubeZ) {
 		// is this chunk already loaded?
-		Column column = (Column) this.chunkMapping.get(ChunkPos.chunkXZ2Int(cubeX, cubeZ));
+		Column column = (Column) this.chunkMapping.get(ChunkPos.asLong(cubeX, cubeZ));
 		if (column != null) {
 			return column;
 		}

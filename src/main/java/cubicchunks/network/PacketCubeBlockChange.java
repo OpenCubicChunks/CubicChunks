@@ -80,7 +80,7 @@ public class PacketCubeBlockChange implements IMessage {
 
 		for (int i = 0; i < numBlocks; i++) {
 			localAddresses[i] = in.readInt();
-			blockStates[i] = (IBlockState) Block.BLOCK_STATE_IDS.getByValue(ByteBufUtils.readVarInt(in, 4));
+			blockStates[i] = Block.BLOCK_STATE_IDS.getByValue(ByteBufUtils.readVarInt(in, 4));
 		}
 		int numHmapChanges = in.readUnsignedByte();
 		heightValues = new int[numHmapChanges];
