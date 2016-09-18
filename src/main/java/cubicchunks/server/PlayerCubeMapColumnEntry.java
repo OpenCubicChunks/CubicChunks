@@ -63,8 +63,8 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 	public void addPlayer(@Nonnull EntityPlayerMP player) {
 		if (this.getPlayers().contains(player)) {
 			CubicChunks.LOGGER.debug("Failed to add player. {} already is in chunk {}, {}", player,
-                    this.getPos().chunkXPos,
-                    this.getPos().chunkZPos);
+					this.getPos().chunkXPos,
+					this.getPos().chunkZPos);
 			return;
 		}
 		if (this.getPlayers().isEmpty()) {
