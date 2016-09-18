@@ -656,9 +656,7 @@ public class OpacityIndex implements IOpacityIndex {
 		int jmax = getLastSegmentIndex(segments);
 
 		// remove the segment
-		for (int n = firstSegmentToRemove; n < jmax - 1; n++) {
-			segments[n] = segments[n + 2];
-		}
+		System.arraycopy(segments, firstSegmentToRemove + 2, segments, firstSegmentToRemove, jmax - 1 - firstSegmentToRemove);
 		segments[jmax] = NoneSegment;
 		segments[jmax - 1] = NoneSegment;
 
@@ -674,12 +672,8 @@ public class OpacityIndex implements IOpacityIndex {
 		//will it fit in current array?
 		if (m_segments[xzIndex].length >= lastIndex + expandSize) {
 			//shift all segments up
-			for (int i = lastIndex; i >= theIndex; i--) {
-				m_segments[xzIndex][i + expandSize] = m_segments[xzIndex][i];
-			}
-			for (int i = 0; i < expandSize; i++) {
-				m_segments[xzIndex][theIndex + i] = newSegments[i];
-			}
+			System.arraycopy(m_segments[xzIndex], theIndex, m_segments[xzIndex], theIndex + expandSize, lastIndex + 1 - theIndex);
+			System.arraycopy(newSegments, 0, m_segments[xzIndex], theIndex + 0, expandSize);
 		} else {
 			//need to expand the array
 			int[] newSegmentArr = new int[(lastIndex + 1) + expandSize];
