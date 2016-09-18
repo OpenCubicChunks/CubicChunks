@@ -79,10 +79,8 @@ public class PlayerCubeMapEntry {
 
 	public void addPlayer(EntityPlayerMP player) {
 		if (this.players.containsKey(player.getEntityId())) {
-			CubicChunks.LOGGER.debug("Failed to add player. {} already is in cube at address {}", new Object[]{
-					player,
-					String.format("0x%016x", cubeAddress)
-			});
+			CubicChunks.LOGGER.debug("Failed to add player. {} already is in cube at address {}", player,
+					String.format("0x%016x", cubeAddress));
 			return;
 		}
 		if (this.players.isEmpty()) {
