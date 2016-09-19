@@ -262,7 +262,7 @@ public class IONbtReader {
 				if(maxUpdateY > maxBlockY) {
 					maxUpdateY = maxBlockY;
 				}
-				assert minUpdateY < maxUpdateY : "minUpdateY > maxUpdateY";
+				assert minUpdateY <= maxUpdateY : "minUpdateY > maxUpdateY: " + minUpdateY + ">" + maxUpdateY;
 
 				int localX = i & 0xF;
 				int localZ = i >> 4;
