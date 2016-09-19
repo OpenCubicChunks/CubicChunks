@@ -110,8 +110,8 @@ class IONbtWriter {
 		cubeNbt.setInteger("z", cube.getZ());
 
 		// save the worldgen stage and the target stage
-		cubeNbt.setString("currentStage", cube.getCurrentStage().getName());
-		cubeNbt.setString("targetStage", cube.getTargetStage().getName());
+		cubeNbt.setBoolean("populated", cube.isPopulated());
+		cubeNbt.setBoolean("initLightDone", cube.isInitialLightingDone());
 	}
 
 	private static void writeBlocks(Cube cube, NBTTagCompound cubeNbt) {

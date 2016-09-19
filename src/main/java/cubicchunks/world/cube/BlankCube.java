@@ -26,7 +26,6 @@ package cubicchunks.world.cube;
 import com.google.common.base.Predicate;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
-import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -53,15 +52,6 @@ public class BlankCube extends Cube {
 	public boolean isEmpty() {
 		return true;
 	}
-
-	@Override
-	public GeneratorStage getCurrentStage() {
-		//if client has it - it must be LIVE
-		return GeneratorStage.LIVE;
-	}
-
-	@Override
-	public void setCurrentStage(GeneratorStage val) {}
 
 	@Override
 	public long getAddress() {

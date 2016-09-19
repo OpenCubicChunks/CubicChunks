@@ -76,6 +76,7 @@ public class VanillaTerrainProcessor implements CubeProcessor {
 	}
 
 	private void generateVanillaChunk(Cube cube) {
+		long time = -System.currentTimeMillis();
 		int x = cube.getX();
 		int z = cube.getZ();
 		getRand(this.vanillaGen).setSeed((long) x*341873128712L + (long) z*132897987541L);
@@ -134,6 +135,8 @@ public class VanillaTerrainProcessor implements CubeProcessor {
 				}
 			}
 		}
+		time += System.currentTimeMillis();
+		System.out.println(time);
 	}
 
 	private void fillCube(Cube cube, IBlockState state) {

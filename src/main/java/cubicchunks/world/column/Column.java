@@ -706,7 +706,7 @@ public class Column extends Chunk {
 		//with cubic chunks the whole column is never fully generated,
 		//So some heuristic is needed to tell vanilla is generator is populated here
 		//for now - tell it that it is if any cube is populated
-		return this.cubeMap.all().stream().anyMatch(c -> c.getCurrentStage().isLastStage());
+		return this.cubeMap.all().stream().anyMatch(c -> c.isPopulated());
 	}
 
 	@Override

@@ -23,22 +23,8 @@
  */
 package cubicchunks;
 
-import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.CubeDependency;
-import cubicchunks.worldgen.DependentGeneratorStage;
-import cubicchunks.worldgen.GeneratorStageRegistry;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.dependency.RegionDependency;
-import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
-import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.ChunkProviderOverworld;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import cubicchunks.worldgen.ICubicChunkGenerator;
 
 public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 
@@ -46,6 +32,15 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 		super("VanillaCubic");
 	}
 
+	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
+		//TODO: vanillaCubic needs it's own chunkloader and chunkGC behavior
+		return null;
+	}
+
+	public static void create() {
+
+	}
+/*
 	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry) {
 		ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
 
@@ -88,5 +83,5 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 			}
 			return depsForHeight[cube.getY()];
 		}
-	}
+	}*/
 }

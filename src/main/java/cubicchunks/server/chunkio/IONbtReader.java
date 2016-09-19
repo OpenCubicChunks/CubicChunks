@@ -32,7 +32,6 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorStageRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -141,10 +140,9 @@ public class IONbtReader {
 		// build the cube
 		final Cube cube = column.getOrCreateCube(cubeY, false);
 
-		// get the worldgen stage and the target stage
-		GeneratorStageRegistry generatorStageRegistry = world.getCubeGenerator().getGeneratorStageRegistry();
-		cube.setCurrentStage(generatorStageRegistry.getStage(nbt.getString("currentStage")));
-		cube.setTargetStage(generatorStageRegistry.getStage(nbt.getString("targetStage")));
+		// set the worldgen stage
+		cube.setPopulated(nbt.getBoolean("populated"));
+		cube.setInitialLightingDone(nbt.getBoolean("initLightDone"));
 		return cube;
 	}
 

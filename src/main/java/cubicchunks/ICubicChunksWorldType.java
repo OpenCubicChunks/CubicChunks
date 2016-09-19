@@ -25,11 +25,10 @@ package cubicchunks;
 
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorStageRegistry;
+import cubicchunks.worldgen.ColumnGenerator;
+import cubicchunks.worldgen.ICubicChunkGenerator;
 
 public interface ICubicChunksWorldType {
-	void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry);
-
 	/**
 	 * Returns Y position of the bottom block in the world
 	 */
@@ -43,4 +42,8 @@ public interface ICubicChunksWorldType {
 	default int getMaxHeight() {
 		return AddressTools.MAX_BLOCK_Y + 1;
 	}
+
+	ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world);
+
+	ColumnGenerator createColumnGenerator(ICubicWorldServer world);
 }

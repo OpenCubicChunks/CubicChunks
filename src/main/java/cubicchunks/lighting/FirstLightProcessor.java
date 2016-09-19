@@ -32,7 +32,6 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -56,11 +55,9 @@ public class FirstLightProcessor implements CubeProcessor {
 	};
 	//mutableBlockPos variable to avoid creating thousands of instances of BlockPos
 	private BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
-	private GeneratorStage generatorStage;
 	private ICubeCache cache;
 
-	public FirstLightProcessor(GeneratorStage lighting, ICubicWorld world) {
-		this.generatorStage = lighting;
+	public FirstLightProcessor(ICubicWorld world) {
 		this.cache = world.getCubeCache();
 	}
 
@@ -306,13 +303,13 @@ public class FirstLightProcessor implements CubeProcessor {
 		final int bufferRadius = 2;
 		final int totalRadius = lightUpdateRadius + cubeSizeRadius + bufferRadius;
 
-		// only continue if the neighboring cubes are at least in the lighting stage
-		return cube.getWorld().testForCubes(cubeCenter, totalRadius, c -> !c.isBeforeStage(generatorStage));
+		// only continue if the neighboring cubes exist
+		return cube.getWorld().testForCubes(cubeCenter, totalRadius, c->true);
 	}
 
 	private boolean shouldSkipCube(Cube cube, int excludedCubeY) {
-		//if cubeStage <= lighting
+		//if initial lighting isn't done in this cube yet
 		//then lighting in that cube will be calculated later, skip
-		return cube.getY() != excludedCubeY && (cube.isBeforeStage(this.generatorStage) || cube.getCurrentStage() == this.generatorStage);
+		return cube.getY() != excludedCubeY && !cube.isInitialLightingDone();
 	}
 }

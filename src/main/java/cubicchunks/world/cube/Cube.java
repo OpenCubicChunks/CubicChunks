@@ -32,7 +32,6 @@ import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
-import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
@@ -71,8 +70,8 @@ public class Cube {
 	private EntityContainer entities;
 	private Map<BlockPos, TileEntity> tileEntityMap;
 	
-	private GeneratorStage targetStage;
-	private GeneratorStage currentStage;
+	private boolean isPopulated = false;
+	private boolean isInitialLightingDone = false;
 
 	private boolean needsRelightAfterLoad;
 	/**
@@ -93,7 +92,6 @@ public class Cube {
 		this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(y), !world.getProvider().getHasNoSky());
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new HashMap<>();
-		this.currentStage = null;
 		this.needsRelightAfterLoad = false;
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
 	}
@@ -333,34 +331,6 @@ public class Cube {
 		return this.storage.isEmpty();
 	}
 
-	public GeneratorStage getCurrentStage() {
-		return this.currentStage;
-	}
-
-	public boolean isBeforeStage(GeneratorStage stage) {
-		return this.getCurrentStage().precedes(stage);
-	}
-
-	public boolean hasReachedStage(GeneratorStage stage) {
-		return !this.getCurrentStage().precedes(stage);
-	}
-
-	public boolean hasReachedTargetStage() {
-		return this.hasReachedStage(this.targetStage);
-	}
-
-	public void setCurrentStage(GeneratorStage val) {
-		this.currentStage = val;
-	}
-
-	public GeneratorStage getTargetStage() {
-		return this.targetStage;
-	}
-	
-	public void setTargetStage(GeneratorStage targetStage) {
-		this.targetStage = targetStage;
-	}
-	
 	public long getAddress() {
 		return AddressTools.getAddress(this.coords.getCubeX(), this.coords.getCubeY(), this.coords.getCubeZ());
 	}
@@ -507,6 +477,27 @@ public class Cube {
 
 	public LightUpdateData getLightUpdateData() {
 		return this.lightUpdateData;
+	}
+
+	public void setClientCube() {
+		this.isPopulated = true;
+		this.isInitialLightingDone = true;
+	}
+
+	public void setPopulated(boolean populated) {
+		this.isPopulated = populated;
+	}
+
+	public void setInitialLightingDone(boolean initialLightingDone) {
+		this.isInitialLightingDone = initialLightingDone;
+	}
+
+	public boolean isInitialLightingDone() {
+		return isInitialLightingDone;
+	}
+
+	public boolean isPopulated() {
+		return isPopulated;
 	}
 
 	public static class LightUpdateData {

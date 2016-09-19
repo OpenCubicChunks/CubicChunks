@@ -172,8 +172,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 		boolean ret = this.testForCubes(
 				xStart, yStart, zStart,
 				xEnd, yEnd, zEnd,
-				cube -> (allowEmpty || !(cube instanceof BlankCube)) &&
-						!cube.getCurrentStage().isInitialStage()
+				cube -> (allowEmpty || !(cube instanceof BlankCube))
 		);
 		cbi.cancel();
 		cbi.setReturnValue(ret);

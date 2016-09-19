@@ -148,7 +148,7 @@ public class PlayerCubeMapEntry {
 		if (this.sentToPlayers) {
 			return true;
 		}
-		if (this.cube == null || !this.cube.getCurrentStage().isLastStage()) {
+		if (this.cube == null || !this.cube.isPopulated() || !this.cube.isInitialLightingDone()) {
 			return false;
 		}
 		this.dirtyBlocks.clear();

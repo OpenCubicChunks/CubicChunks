@@ -21,28 +21,19 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-
 package cubicchunks.worldgen;
 
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.CubeDependency;
 
-public class DependentGeneratorStage  extends GeneratorStage {
+public interface ICubicChunkGenerator {
 
-	private CubeDependency cubeDependency;
+	/**
+	 * Generate everything that can be generated without neighbor chunk or access to world block and entity manipulation.
+	 */
+	void generateCube(Cube cube);
 
-	public DependentGeneratorStage(String name, CubeDependency cubeDependency) {
-		super(name);
-		this.cubeDependency = cubeDependency;
-	}
-
-	@Override
-	public CubeDependency getCubeDependency(Cube cube) {
-		return this.cubeDependency;
-	}
-
-	public void setCubeDependency(CubeDependency cubeDependency) {
-		this.cubeDependency = cubeDependency;
-	}
-
+	/**
+	 * Populate the cube - generate structures where information about neighbor cubes is needed.
+	 */
+	void populateCube(Cube cube);
 }

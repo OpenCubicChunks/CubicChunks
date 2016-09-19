@@ -24,15 +24,12 @@
 package cubicchunks.debug;
 
 import cubicchunks.BaseCubicWorldType;
-import cubicchunks.server.ServerCubeCache;
+import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.util.CubeCoords;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.CubeDependency;
-import cubicchunks.worldgen.GeneratorStageRegistry;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.worldgen.dependency.RegionDependency;
+import cubicchunks.worldgen.ICubicChunkGenerator;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -43,34 +40,6 @@ public class DebugWorldType extends BaseCubicWorldType {
 		super("DebugCubic");
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry) {
-		ServerCubeCache cubeCache = world.getCubeCache();
-		// init the worldgen pipeline
-		GeneratorStage terrain = new IndependentGeneratorStage("debug");
-		GeneratorStage randomblock = new GeneratorStage("debug_randomblock") {
-			@Override public CubeDependency getCubeDependency(Cube cube) {
-				return new RegionDependency(this, 1);
-			}
-		};
-
-		generatorStageRegistry.addStage(terrain, new FlatTerrainProcessor());
-		generatorStageRegistry.addStage(randomblock, cube -> {
-			cube.setBlockForGeneration(new BlockPos(0, 0, 0), Blocks.DIAMOND_BLOCK.getDefaultState());
-			for (int dx = -1; dx <= 1; dx++) {
-				for (int dy = -1; dy <= 1; dy++) {
-					for (int dz = -1; dz <= 1; dz++) {
-						Cube cubeOffset = cubeCache.getCube(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz);
-						if (cubeOffset == null) {
-							throw new RuntimeException("Generating cube at " + cube.getCoords() + " - cube at " +
-									new CubeCoords(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz) +
-									" doesn't exist");
-						}
-					}
-				}
-			}
-		});
-	}
-
 	@Override
 	public boolean getCanBeCreated() {
 		return System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
@@ -78,5 +47,33 @@ public class DebugWorldType extends BaseCubicWorldType {
 
 	public static void create() {
 		new DebugWorldType();
+	}
+
+	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
+		FlatTerrainProcessor gen =  new FlatTerrainProcessor();
+		//TODO: move first light processor directly into cube?
+		FirstLightProcessor light = new FirstLightProcessor(world);
+		return new ICubicChunkGenerator() {
+			@Override public void generateCube(Cube cube) {
+				gen.calculate(cube);
+			}
+
+			@Override public void populateCube(Cube cube) {
+				ICubicWorld world = cube.getWorld();
+				cube.setBlockForGeneration(new BlockPos(8, 8, 8), Blocks.DIAMOND_BLOCK.getDefaultState());
+				for (int dx = 0; dx <= 1; dx++) {
+					for (int dy = 0; dy <= 1; dy++) {
+						for (int dz = 0; dz <= 1; dz++) {
+							Cube cubeOffset = world.getCubeCache().getCube(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz);
+							if (cubeOffset == null) {
+								throw new RuntimeException("Generating cube at " + cube.getCoords() + " - cube at " +
+										new CubeCoords(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz) +
+										" doesn't exist");
+							}
+						}
+					}
+				}
+			}
+		};
 	}
 }
