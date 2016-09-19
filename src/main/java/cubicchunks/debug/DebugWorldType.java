@@ -54,7 +54,7 @@ public class DebugWorldType extends BaseCubicWorldType {
 		//TODO: move first light processor directly into cube?
 		FirstLightProcessor light = new FirstLightProcessor(world);
 		return new ICubicChunkGenerator() {
-			@Override public void generateCube(Cube cube) {
+			@Override public void generateTerrain(Cube cube) {
 				gen.calculate(cube);
 			}
 

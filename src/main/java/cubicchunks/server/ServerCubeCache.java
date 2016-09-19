@@ -322,7 +322,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			// ... and generating has been requested, generate it.
 			if (loadType == LoadType.LOAD_OR_GENERATE) {
 				cube = column.getOrCreateCube(cubeY, true);
-				this.worldServer.getCubeGenerator().generateCube(cube);
+				this.worldServer.getCubeGenerator().generateCube(this, cube);
 			}
 			// ... or quit.
 			else {

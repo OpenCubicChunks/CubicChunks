@@ -46,7 +46,7 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 		CubeProcessor features = new CustomFeatureProcessor();
 		CubeProcessor population = new CustomPopulationProcessor(world);
 		return new ICubicChunkGenerator() {
-			@Override public void generateCube(Cube cube) {
+			@Override public void generateTerrain(Cube cube) {
 				terrain.calculate(cube);
 				features.calculate(cube);
 			}

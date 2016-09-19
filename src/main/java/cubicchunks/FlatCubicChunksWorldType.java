@@ -41,7 +41,7 @@ public class FlatCubicChunksWorldType extends BaseCubicWorldType {
 	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
 		FlatTerrainProcessor gen =  new FlatTerrainProcessor();
 		return new ICubicChunkGenerator() {
-			@Override public void generateCube(Cube cube) {
+			@Override public void generateTerrain(Cube cube) {
 				gen.calculate(cube);
 			}
 

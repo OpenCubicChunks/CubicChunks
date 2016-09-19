@@ -71,7 +71,7 @@ public class Cube {
 	private Map<BlockPos, TileEntity> tileEntityMap;
 	
 	private boolean isPopulated = false;
-	private boolean isInitialLightingDone = false;
+	private boolean isInitialLightingDone = true;
 
 	private boolean needsRelightAfterLoad;
 	/**
