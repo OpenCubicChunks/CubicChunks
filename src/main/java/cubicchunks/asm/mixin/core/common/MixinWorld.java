@@ -147,6 +147,8 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Shadow public abstract boolean spawnEntityInWorld(Entity entity);
 
+	@Shadow public abstract boolean isAreaLoaded(BlockPos start, BlockPos end);
+
 	@Override public boolean isCubicWorld() {
 		return this.isCubicWorld;
 	}
@@ -371,5 +373,9 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Intrinsic public boolean world$spawnEntityInWorld(Entity entity) {
 		return this.spawnEntityInWorld(entity);
+	}
+
+	@Intrinsic public boolean world$isAreaLoaded(BlockPos start, BlockPos end) {
+		return this.isAreaLoaded(start, end);
 	}
 }

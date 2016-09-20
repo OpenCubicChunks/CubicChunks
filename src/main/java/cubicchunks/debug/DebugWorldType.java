@@ -24,7 +24,6 @@
 package cubicchunks.debug;
 
 import cubicchunks.BaseCubicWorldType;
-import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
@@ -52,7 +51,6 @@ public class DebugWorldType extends BaseCubicWorldType {
 	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
 		FlatTerrainProcessor gen =  new FlatTerrainProcessor();
 		//TODO: move first light processor directly into cube?
-		FirstLightProcessor light = new FirstLightProcessor(world);
 		return new ICubicChunkGenerator() {
 			@Override public void generateTerrain(Cube cube) {
 				gen.calculate(cube);

@@ -210,4 +210,6 @@ public interface ICubicWorld {
 	DifficultyInstance getDifficultyForLocation(BlockPos pos);
 
 	boolean spawnEntityInWorld(Entity entityliving);
+
+	boolean isAreaLoaded(BlockPos startPos, BlockPos endPos);
 }

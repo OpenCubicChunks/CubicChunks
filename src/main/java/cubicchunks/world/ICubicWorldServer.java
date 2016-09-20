@@ -23,6 +23,7 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.worldgen.ColumnGenerator;
@@ -42,6 +43,8 @@ public interface ICubicWorldServer extends ICubicWorld {
 	ServerCubeCache getCubeCache();
 
 	PlayerCubeMap getPlayerCubeMap();
+
+	FirstLightProcessor getFirstLightProcessor();
 
 	//field accessors
 	boolean getDisableLevelSaving();

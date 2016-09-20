@@ -23,8 +23,6 @@
  */
 package cubicchunks.lighting;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.util.Coords;
 import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubeCache;
@@ -32,8 +30,10 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -42,7 +42,13 @@ import static cubicchunks.util.Coords.blockToLocal;
 import static cubicchunks.util.Coords.cubeToMaxBlock;
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.getCubeCenter;
+import static cubicchunks.util.Coords.localToBlock;
 
+/**
+ * Generates and updates cube initial lighting.
+ * <p>
+ * Used only when changes are caused by pre-populator terrain generation.
+ */
 public class FirstLightProcessor implements CubeProcessor {
 
 	private static final int[][] neighborDirections = new int[][]{
@@ -61,10 +67,16 @@ public class FirstLightProcessor implements CubeProcessor {
 		this.cache = world.getCubeCache();
 	}
 
+	/**
+	 * Requirements: All neighbor cubes exist
+	 */
 	@Override
 	public void calculate(Cube cube) {
+		//setRawSkylight is redundant but it allows to get reasonable light values even if neighbor chunks aren't loaded
 		setRawSkylight(cube);
-		diffuseSkylight(cube);
+		if(diffuseSkylight(cube)) {
+			cube.setInitialLightingDone(true);
+		}
 	}
 
 	private void setRawSkylight(Cube cube) {
@@ -97,8 +109,11 @@ public class FirstLightProcessor implements CubeProcessor {
 			//heightmap is in this cube, so generating this cube may cause light updates below
 			columnLightUpdate(cube.getColumn(), blockPos);
 		} else if (topBlockCubeY < cubeY) {
-			//it's above the heightmap, so this cube didn't change anything ans is fully lit at this x/z coords
+			//it's above the heightmap, so this cube didn't change anything and is fully lit at this x/z coords
 			cubeSetLight(cube, blockPos, 15);
+		} else if (topBlockCubeY == cubeY + 1) {
+			//this cube is just 1 cube below the heightmap so it may be affected.
+			updateRawLightFromAbove(cube.getColumn(), cube, blockPos);
 		}
 	}
 
@@ -114,40 +129,69 @@ public class FirstLightProcessor implements CubeProcessor {
 		int topBlockCubeY = blockToCube(topBlockY);
 
 		int prevTopBlockY = getHeightmapBelowCubeY(cache, pos.getX(), pos.getZ(), topBlockCubeY);
-		int prevTopLocalY = blockToLocal(prevTopBlockY);
 		int prevTopBlockCubeY = blockToCube(prevTopBlockY);
 
 		Iterable<Cube> subMap = column.getCubes(prevTopBlockCubeY, topBlockCubeY);
 
 		for (Cube cube : subMap) {
 			//do we even need to update it?
-			if(shouldSkipCube(cube, topBlockCubeY)) {
+			if (shouldSkipCube(cube, topBlockCubeY)) {
 				continue;
 			}
 			int cubeY = cube.getY();
 
 			if (cubeY == topBlockCubeY) {
-				pos.setY(topBlockY);
-				int opacity = cube.getBlockState(pos).getLightOpacity(column.getWorld(), pos);
-				cube.setLightFor(EnumSkyBlock.SKY, pos, Math.max(0, 15 - opacity));
-				int minCubeY = cubeToMinBlock(cubeY);
-
-				for (int localY = blockToLocal(topBlockY) + 1; localY < 16; localY++) {
-					pos.setY(minCubeY + localY);
-					cube.setLightFor(EnumSkyBlock.SKY, pos, 15);
+				//scan top-down decreasing light value by max opacity
+				int maxOpacity = 0;
+				int light = 15;
+				for (int localY = 15; localY >= 0; localY--) {
+					pos.setY(localToBlock(cubeY, localY));
+					int opacity = cube.getBlockState(pos).getLightOpacity(column.getWorld(), pos);
+					maxOpacity = Math.max(maxOpacity, opacity);
+					light -= maxOpacity;
+					if(light < 0) {//only 4 LSB are used, so it can't be < 0
+						light = 0;
+					}
+					cube.setLightFor(EnumSkyBlock.SKY, pos, light);
 				}
-				continue;
-			}
-
-			for (int yLocal = 15; yLocal > prevTopLocalY && yLocal >= 0; yLocal--) {
-				pos.setY(blockToCube(topBlockCubeY) + yLocal);
-				cube.setLightFor(EnumSkyBlock.SKY, pos, 0);
+			} else {
+				//mark initial lighting to be re-done
+				cube.setInitialLightingDone(false);
 			}
 		}
 	}
 
-	private void diffuseSkylight(Cube cube) {
-		Column column = cube.getColumn();
+	private void updateRawLightFromAbove(Column column, Cube cubeToUpdate, BlockPos.MutableBlockPos pos) {
+		int topBlockY = getHeightmapValue(column, blockToLocal(pos.getX()), blockToLocal(pos.getZ())) - 1;
+		int light = 15;
+		int maxOpacity = 0;
+		int cubeYUpperBound = cubeToUpdate.getCoords().getMaxBlockY();
+
+		Cube cubeAbove = column.getCube(cubeToUpdate.getY() + 1);
+		assert blockToCube(topBlockY) == cubeAbove.getY();
+
+		pos.setY(topBlockY);
+		do {
+			//get block and its opacity from correct cube
+			IBlockState block = (pos.getY() > cubeYUpperBound ? cubeAbove : cubeToUpdate).getBlockState(pos);
+			int opacity = block.getLightOpacity((World) cubeAbove.getWorld(), pos);
+			maxOpacity = Math.max(opacity, maxOpacity);
+			assert maxOpacity >
+					0 : "Inconsistent opacity values: Expected > 0 but got <= 0 (top opaque block is transparent)";
+			//once opaque block is hit - always decrease light value
+			light -= maxOpacity;
+			if(light < 0) {//only 4 LSB are used, so it can't be < 0
+				light = 0;
+			}
+			//only set light in this cube
+			if (pos.getY() <= cubeYUpperBound) {
+				cubeToUpdate.setLightFor(EnumSkyBlock.SKY, pos, light);
+			}
+			pos.setY(pos.getY() - 1);
+		} while (light > 0);
+	}
+
+	private boolean diffuseSkylight(Cube cube) {
 		ICubicWorld world = cube.getWorld();
 
 		//cache min/max Y, generating them may be expensive
@@ -173,54 +217,37 @@ public class FirstLightProcessor implements CubeProcessor {
 
 		BlockPos.MutableBlockPos pos = mutablePos;
 
-		for (Cube currentCube : column.getAllCubes()) {
-			//do we even need to update it?
-			if(shouldSkipCube(currentCube, cube.getY())) {
-				continue;
-			}
-			boolean canUpdateCube = canUpdateCube(currentCube);
-			FastCubeBlockAccess blockAccess = canUpdateCube ? new FastCubeBlockAccess(cache, currentCube, 1) : null;
+		FastCubeBlockAccess blockAccess = new FastCubeBlockAccess(cache, cube, 1);
 
-			int cubeY = currentCube.getY();
-			int cubeMinY = cubeToMinBlock(cubeY);
-			for (int blockX = minBlockX; blockX <= maxBlockX; blockX++) {
-				for (int blockZ = minBlockZ; blockZ <= maxBlockZ; blockZ++) {
-					pos.setPos(blockX, pos.getY(), blockZ);
-					int minBlockY = minBlockYArr[blockX - minBlockX][blockZ - minBlockZ];
-					int maxBlockY = maxBlockYArr[blockX - minBlockX][blockZ - minBlockZ];
-					if (minBlockY > maxBlockY) {
+		int cubeY = cube.getY();
+		int cubeMinBlockY = cubeToMinBlock(cubeY);
+		for (int blockX = minBlockX; blockX <= maxBlockX; blockX++) {
+			for (int blockZ = minBlockZ; blockZ <= maxBlockZ; blockZ++) {
+				pos.setPos(blockX, pos.getY(), blockZ);
+				int minBlockY = minBlockYArr[blockX - minBlockX][blockZ - minBlockZ];
+				int maxBlockY = maxBlockYArr[blockX - minBlockX][blockZ - minBlockZ];
+				if (minBlockY > maxBlockY) {//is update needed?
+					continue;
+				}
+
+				for (int y = 0; y < 16; y++) {
+					int blockY = y + cubeMinBlockY;
+
+					if (blockY > maxBlockY || blockY < minBlockY) {
 						continue;
 					}
-					int minCubeY = blockToCube(minBlockY);
-					int maxCubeY = blockToCube(maxBlockY);
-					if (!canUpdateCube) {
-						//schedule update
-						world.getLightingManager().queueDiffuseUpdate(
-								cube,
-								Coords.blockToLocal(pos.getX()),
-								Coords.blockToLocal(pos.getZ()),
-								minCubeY, maxCubeY
-						);
+					pos.setY(blockY);
+					if (!needsUpdate(blockAccess, pos)) {
 						continue;
 					}
-					for (int y = 0; y < 16; y++) {
-						int blockY = y + cubeMinY;
 
-						if (blockY > maxBlockY || blockY < minBlockY) {
-							continue;
-						}
-						pos.setY(blockY);
-						if (!needsUpdate(blockAccess, pos)) {
-							continue;
-						}
-
-						if (!world.checkLightFor(EnumSkyBlock.SKY, pos)) {
-							CubicChunks.LOGGER.warn("world.checkLightFor returned false! Light values may be incorrect.");
-						}
+					if (!world.checkLightFor(EnumSkyBlock.SKY, pos)) {
+						return false;
 					}
 				}
 			}
 		}
+		return true;
 	}
 
 	private boolean needsUpdate(FastCubeBlockAccess access, BlockPos.MutableBlockPos pos) {
@@ -300,11 +327,11 @@ public class FirstLightProcessor implements CubeProcessor {
 		BlockPos cubeCenter = getCubeCenter(cube);
 		final int lightUpdateRadius = 17;
 		final int cubeSizeRadius = 8;
-		final int bufferRadius = 2;
+		final int bufferRadius = 1;
 		final int totalRadius = lightUpdateRadius + cubeSizeRadius + bufferRadius;
 
-		// only continue if the neighboring cubes exist
-		return cube.getWorld().testForCubes(cubeCenter, totalRadius, c->true);
+		// only continue if the neighbor cubes exist
+		return cube.getWorld().testForCubes(cubeCenter, totalRadius, c -> true);
 	}
 
 	private boolean shouldSkipCube(Cube cube, int excludedCubeY) {

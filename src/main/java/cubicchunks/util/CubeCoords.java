@@ -179,12 +179,28 @@ public class CubeCoords {
 		return Coords.cubeToMinBlock(cubeZ);
 	}
 
+	public int getMaxBlockX() {
+		return Coords.cubeToMaxBlock(this.cubeX);
+	}
+
+	public int getMaxBlockY() {
+		return Coords.cubeToMaxBlock(this.cubeY);
+	}
+
+	public int getMaxBlockZ() {
+		return Coords.cubeToMaxBlock(this.cubeZ);
+	}
+
 	public BlockPos getCenterBlockPos() {
 		return new BlockPos(getXCenter(), getYCenter(), getZCenter());
 	}
 
 	public BlockPos getMinBlockPos() {
 		return new BlockPos(getMinBlockX(), getMinBlockY(), getMinBlockZ());
+	}
+
+	public BlockPos localToBlock(int localX, int localY, int localZ) {
+		return new BlockPos(getMinBlockX() + localX, getMinBlockY() + localY, getMinBlockZ() + localZ);
 	}
 
 	public CubeCoords sub(int dx, int dy, int dz) {

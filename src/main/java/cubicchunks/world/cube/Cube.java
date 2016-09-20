@@ -30,6 +30,7 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
 import net.minecraft.block.Block;
@@ -71,9 +72,7 @@ public class Cube {
 	private Map<BlockPos, TileEntity> tileEntityMap;
 	
 	private boolean isPopulated = false;
-	private boolean isInitialLightingDone = true;
-
-	private boolean needsRelightAfterLoad;
+	private boolean isInitialLightingDone = false;
 	/**
 	 * "queue containing the BlockPos of tile entities queued for creation"
 	 */
@@ -92,7 +91,6 @@ public class Cube {
 		this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(y), !world.getProvider().getHasNoSky());
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new HashMap<>();
-		this.needsRelightAfterLoad = false;
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
 	}
 
@@ -307,7 +305,10 @@ public class Cube {
 		this.entities.getEntitiesOfTypeWithinAAAB(entityType, queryBox, out, predicate);
 	}
 
-	public void tickCube() {
+	public void tickCube(boolean tryToTickFaster) {
+		if (!this.isInitialLightingDone && this.isPopulated) {
+			this.tryDoFirstLight();
+		}
 		while (!this.tileEntityPosQueue.isEmpty()) {
 			BlockPos blockpos = this.tileEntityPosQueue.poll();
 
@@ -321,6 +322,16 @@ public class Cube {
 				this.world.markBlockRangeForRenderUpdate(blockpos, blockpos);
 			}
 		}
+	}
+
+	private void tryDoFirstLight() {
+		BlockPos pos = this.getCoords().getMinBlockPos();
+
+		if(!world.isAreaLoaded(pos.add(-1, -1, -1), pos.add(16, 16, 16))) {
+			return;
+		}
+		//client cubes (setClientCube) are always fully generated, isInitialLightingDone is never false
+		((ICubicWorldServer)this.world).getFirstLightProcessor().calculate(this);
 	}
 
 	//=================================
@@ -384,27 +395,25 @@ public class Cube {
 			return null;
 		}
 
-		int x = Coords.blockToLocal(blockOrLocalPos.getX());
-		int y = Coords.blockToLocal(blockOrLocalPos.getY());
-		int z = Coords.blockToLocal(blockOrLocalPos.getZ());
+		int localX = Coords.blockToLocal(blockOrLocalPos.getX());
+		int localY = Coords.blockToLocal(blockOrLocalPos.getY());
+		int localZ = Coords.blockToLocal(blockOrLocalPos.getZ());
 
 		// set the block
-		this.storage.set(x, y, z, newBlockState);
-
-		Block newBlock = newBlockState.getBlock();
+		this.storage.set(localX, localY, localZ, newBlockState);
 
 		// did the block change work correctly?
-		if (this.storage.get(x, y, z) != newBlockState) {
+		if (this.storage.get(localX, localY, localZ) != newBlockState) {
 			return null;
 		}
 		this.isModified = true;
 
 		//update the column light index
-		int blockY = Coords.localToBlock(this.coords.getCubeY(), y);
+		int blockY = Coords.localToBlock(this.coords.getCubeY(), localY);
 
 		IOpacityIndex index = this.column.getOpacityIndex();
-		int opacity = newBlock.getLightOpacity(newBlockState);
-		index.onOpacityChange(x, blockY, z, opacity);
+		int opacity = newBlockState.getLightOpacity((World) world, this.coords.localToBlock(localX, localY, localZ));
+		index.onOpacityChange(localX, blockY, localZ, opacity);
 		return oldBlockState;
 	}
 
@@ -465,14 +474,6 @@ public class Cube {
 		hash = 41*hash + getX();
 		hash = 41*hash + getY();
 		return 41*hash + getZ();
-	}
-
-	public boolean needsRelightAfterLoad() {
-		return this.needsRelightAfterLoad;
-	}
-
-	public void setNeedsRelightAfterLoad(boolean val) {
-		this.needsRelightAfterLoad = val;
 	}
 
 	public LightUpdateData getLightUpdateData() {

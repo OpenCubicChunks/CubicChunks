@@ -25,6 +25,7 @@ package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.ICubicChunksWorldType;
+import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.PlayerCubeMap;
@@ -64,6 +65,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	private ICubicChunkGenerator cubeGenerator;
 	private ColumnGenerator columnGenerator;
 	private ChunkGc chunkGc;
+	private FirstLightProcessor firstLightProcessor;
 
 	//vanilla method shadows
 	@Shadow public abstract Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
@@ -89,6 +91,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.minHeight = type.getMinHeight();
 
 		this.saveHandler = new CubicChunksSaveHandler(this, this.getSaveHandler());
+
+		this.firstLightProcessor = new FirstLightProcessor(this);
 
 		this.generateWorld();
 	}
@@ -134,6 +138,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		return this.columnGenerator;
 	}
 
+	@Override public FirstLightProcessor getFirstLightProcessor() {
+		return this.firstLightProcessor;
+	}
 	//vanilla field accessors
 
 	@Override public boolean getDisableLevelSaving() {

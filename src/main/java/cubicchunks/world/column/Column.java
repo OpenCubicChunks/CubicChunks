@@ -560,7 +560,7 @@ public class Column extends Chunk {
 	@Override
 	public void onTick(boolean tryToTickFaster) {
 		this.chunkTicked = true;
-		cubeMap.forEach(Cube::tickCube);
+		cubeMap.forEach((c) -> c.tickCube(tryToTickFaster));
 	}
 
 	@Override
