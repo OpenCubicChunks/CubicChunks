@@ -23,13 +23,13 @@
  */
 package cubicchunks.debug;
 
+import com.flowpowered.noise.module.source.Perlin;
 import cubicchunks.BaseCubicWorldType;
 import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.ICubicChunkGenerator;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 
@@ -49,28 +49,45 @@ public class DebugWorldType extends BaseCubicWorldType {
 	}
 
 	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
-		FlatTerrainProcessor gen =  new FlatTerrainProcessor();
 		//TODO: move first light processor directly into cube?
 		return new ICubicChunkGenerator() {
-			@Override public void generateTerrain(Cube cube) {
-				gen.calculate(cube);
+			Perlin perlin = new Perlin();
+			{
+				perlin.setFrequency(0.0473);
+				perlin.setOctaveCount(1);
+				perlin.setSeed((int) world.getSeed());
 			}
 
-			@Override public void populateCube(Cube cube) {
-				ICubicWorld world = cube.getWorld();
-				cube.setBlockForGeneration(new BlockPos(8, 8, 8), Blocks.DIAMOND_BLOCK.getDefaultState());
-				for (int dx = 0; dx <= 1; dx++) {
-					for (int dy = 0; dy <= 1; dy++) {
-						for (int dz = 0; dz <= 1; dz++) {
-							Cube cubeOffset = world.getCubeCache().getCube(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz);
-							if (cubeOffset == null) {
-								throw new RuntimeException("Generating cube at " + cube.getCoords() + " - cube at " +
-										new CubeCoords(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz) +
-										" doesn't exist");
-							}
+			CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
+			@Override public void generateTerrain(Cube cube) {
+				if(cube.getY() > 20) {
+					return;
+				}
+				if(cube.getX() == 100 && cube.getZ() == 100) {
+					return;//hole in the world
+				}
+				CubeCoords cubePos = cube.getCoords();
+				for(BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
+					double currDensity = perlin.getValue(pos.getX(), pos.getY()*0.5, pos.getZ());
+					double aboveDensity = perlin.getValue(pos.getX(), (pos.getY()+1)*0.5, pos.getZ());
+					if(cube.getY() > 16) {
+						currDensity -= (pos.getY() - 16*16)/32;
+						aboveDensity -= (pos.getY() + 1 - 16*16)/32;
+					}
+					if(currDensity > 0.5) {
+						if(currDensity > 0.5 && aboveDensity <= 0.5) {
+							cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
+						} else if(currDensity > aboveDensity && currDensity < 0.7) {
+							cube.setBlockForGeneration(pos, Blocks.DIRT.getDefaultState());
+						} else {
+							cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
 						}
 					}
 				}
+			}
+
+			@Override public void populateCube(Cube cube) {
+				populator.calculate(cube);
 			}
 		};
 	}

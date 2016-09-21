@@ -52,6 +52,8 @@ import static cubicchunks.util.AddressTools.getZ;
 
 public class CubeIO implements IThreadedFileIO {
 
+	private static final long kB = 1024;
+	private static final long MB = kB*1024;
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 
 	private static class SaveEntry {
@@ -77,8 +79,9 @@ public class CubeIO implements IThreadedFileIO {
 
 		DB db = DBMaker.
 				fileDB(file).
-				//transactionEnable().
 				fileMmapEnable().
+				allocateStartSize(5*MB).
+				allocateIncrement(1*MB).
 				make();
 		return db;
 		// NOTE: could set different cache settings

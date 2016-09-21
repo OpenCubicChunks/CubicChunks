@@ -229,7 +229,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		getWorld().getProfiler().endStartSection("generate");
 		if (!this.toGenerate.isEmpty()) {
 			long stopTime = System.nanoTime() + 50_000_000L;
-			int chunksToGenerate = 49;
+			int chunksToGenerate = 49*16;
 			Iterator<PlayerCubeMapEntry> iterator = this.toGenerate.iterator();
 
 			while (iterator.hasNext() && chunksToGenerate >= 0 && System.nanoTime() < stopTime) {

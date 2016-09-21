@@ -215,6 +215,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			Column column = loadedColumns.get(address);
 			if(column == null) {
 				it.remove();
+				continue;
 			}
 			if (!column.hasCubes()) {
 				column.onChunkUnload();

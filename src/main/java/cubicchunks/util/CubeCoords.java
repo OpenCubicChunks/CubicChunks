@@ -199,6 +199,10 @@ public class CubeCoords {
 		return new BlockPos(getMinBlockX(), getMinBlockY(), getMinBlockZ());
 	}
 
+	public BlockPos getMaxBlockPos() {
+		return new BlockPos(getMaxBlockX(), getMaxBlockY(), getMaxBlockZ());
+	}
+
 	public BlockPos localToBlock(int localX, int localY, int localZ) {
 		return new BlockPos(getMinBlockX() + localX, getMinBlockY() + localY, getMinBlockZ() + localZ);
 	}

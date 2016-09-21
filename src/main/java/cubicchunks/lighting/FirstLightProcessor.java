@@ -177,7 +177,7 @@ public class FirstLightProcessor implements CubeProcessor {
 			int opacity = block.getLightOpacity((World) cubeAbove.getWorld(), pos);
 			maxOpacity = Math.max(opacity, maxOpacity);
 			assert maxOpacity >
-					0 : "Inconsistent opacity values: Expected > 0 but got <= 0 (top opaque block is transparent)";
+					0 : "Inconsistent opacity values: Expected > 0 but got <= 0 (top opaque block is transparent, block = " + block.getBlock().getUnlocalizedName() + ")";
 			//once opaque block is hit - always decrease light value
 			light -= maxOpacity;
 			if(light < 0) {//only 4 LSB are used, so it can't be < 0
