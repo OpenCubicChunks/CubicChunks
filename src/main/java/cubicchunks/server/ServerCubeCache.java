@@ -288,7 +288,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		// Try loading the column.
 		if (column == null) {
+			worldServer.getProfiler().startSection("loadColumn");
 			column = this.loadColumn(cubeX, cubeZ, loadType);
+			worldServer.getProfiler().endSection();
 		}
 
 		// If we couldn't load or generate the column - give up.
@@ -311,18 +313,24 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		// Try loading the cube.
 		try {
+			worldServer.getProfiler().startSection("cubeIOLoad");
 			cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeAddress);
 		} catch (IOException ex) {
 			log.error("Unable to load cube ({},{},{})", cubeX, cubeY, cubeZ, ex);
 			return;
+		} finally {
+			worldServer.getProfiler().endSection();
 		}
 
 		// If loading it didn't work...
 		if (cube == null) {
 			// ... and generating has been requested, generate it.
 			if (loadType == LoadType.LOAD_OR_GENERATE) {
+				worldServer.getProfiler().startSection("createEmptyCube");
 				cube = column.getOrCreateCube(cubeY, true);
+				worldServer.getProfiler().endStartSection("generateBlocks");
 				this.worldServer.getCubeGenerator().generateCube(this, cube);
+				worldServer.getProfiler().endSection();
 			}
 			// ... or quit.
 			else {

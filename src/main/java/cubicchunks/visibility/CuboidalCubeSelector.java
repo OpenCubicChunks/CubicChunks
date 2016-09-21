@@ -77,16 +77,10 @@ public class CuboidalCubeSelector extends CubeSelector {
 						//now handle cubes, the same way
 						if (!this.isPointWithinCubeVolume(oldX, oldY, oldZ, currentX, currentY, currentZ, radius)) {
 							cubesToLoad.add(getAddress(currentX, currentY, currentZ));
-							if (cubesToRemove.contains(getAddress(currentX, currentY, currentZ))) {
-								int debugLine = 0;
-							}
 						}
 						if (!this.isPointWithinCubeVolume(newX, newY, newZ,
 								currentX - dx, currentY - dy, currentZ - dz, radius)) {
 							cubesToRemove.add(getAddress(currentX - dx, currentY - dy, currentZ - dz));
-							if (cubesToLoad.contains(getAddress(currentX - dx, currentY - dy, currentZ - dz))) {
-								int debugLine = 0;
-							}
 						}
 					}
 				}

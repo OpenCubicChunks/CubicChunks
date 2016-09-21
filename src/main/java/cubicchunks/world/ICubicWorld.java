@@ -32,6 +32,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -150,7 +151,10 @@ public interface ICubicWorld {
 
 	List<EntityPlayer> getPlayerEntities();
 
+	//true if it's clientside
 	boolean isRemote();
+
+	Profiler getProfiler();
 
 	//methods
 	void loadEntities(Collection<Entity> entities);

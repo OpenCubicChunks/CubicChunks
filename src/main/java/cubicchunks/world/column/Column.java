@@ -83,7 +83,6 @@ public class Column extends Chunk {
 		// NOTE: this constructor is called by the chunk loader
 		super((World) world, x, z);
 		this.world = world;
-
 		init();
 	}
 
@@ -704,9 +703,21 @@ public class Column extends Chunk {
 	@Deprecated
 	public boolean isTerrainPopulated() {
 		//with cubic chunks the whole column is never fully generated,
-		//So some heuristic is needed to tell vanilla is generator is populated here
-		//for now - tell it that it is if any cube is populated
-		return this.cubeMap.all().stream().anyMatch(c -> c.isPopulated());
+		//this method is currently used to determine list of chunks to be ticked
+		//so let's say a chunk needs to be ticked if any cube needs to be ticked
+		//for chunk to be ticked, it needs to be populated (or not ticked before, or close enough t player)
+		return this.cubeMap.all().stream().anyMatch(Cube::isPopulated);
+	}
+
+	@Override
+	@Deprecated
+	public boolean isLightPopulated() {
+		//with cubic chunks light is never generated in the whole column
+		//this method is currently used to determine list of chunks to be ticked
+		//so let's say a chunk needs to be ticked if any cube needs to be ticked
+		//for chunk to be ticked, light can't be populated. So let's say it's populated
+		//only if initial lighting is done in all cubes
+		return this.cubeMap.all().stream().allMatch(Cube::isInitialLightingDone);
 	}
 
 	@Override

@@ -44,7 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static cubicchunks.util.AddressTools.getX;
 import static cubicchunks.util.AddressTools.getY;
@@ -75,7 +75,11 @@ public class CubeIO implements IThreadedFileIO {
 
 		file.getParentFile().mkdirs();
 
-		DB db = DBMaker.fileDB(file).transactionEnable().make();
+		DB db = DBMaker.
+				fileDB(file).
+				//transactionEnable().
+				fileMmapEnable().
+				make();
 		return db;
 		// NOTE: could set different cache settings
 		// the default is a hash map cache with 32768 entries
@@ -85,8 +89,8 @@ public class CubeIO implements IThreadedFileIO {
 	private ICubicWorldServer world;
 
 	private final DB db;
-	private ConcurrentNavigableMap<Long, byte[]> columns;
-	private ConcurrentNavigableMap<Long, byte[]> cubes;
+	private ConcurrentMap<Long, byte[]> columns;
+	private ConcurrentMap<Long, byte[]> cubes;
 	private ConcurrentBatchedQueue<SaveEntry> columnsToSave;
 	private ConcurrentBatchedQueue<SaveEntry> cubesToSave;
 
@@ -113,8 +117,8 @@ public class CubeIO implements IThreadedFileIO {
 
 			}
 		});
-		this.columns = this.db.treeMap("columns", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
-		this.cubes = this.db.treeMap("chunks", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
+		this.columns = this.db.hashMap("columns", Serializer.LONG_PACKED, Serializer.BYTE_ARRAY).createOrOpen();
+		this.cubes = this.db.hashMap("chunks", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
 
 		// init chunk save queue
 		this.columnsToSave = new ConcurrentBatchedQueue<>();
@@ -156,18 +160,23 @@ public class CubeIO implements IThreadedFileIO {
 
 	public Cube loadCubeAndAddToColumn(Column column, long address) throws IOException {
 		// does the database have the cube?
+		world.getProfiler().startSection("getBytes");
 		byte[] data = this.cubes.get(address);
 		if (data == null) {
+			world.getProfiler().endSection();
 			return null;
 		}
-
+		world.getProfiler().endStartSection("readCompressed");
 		NBTTagCompound nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(data));
-
+		world.getProfiler().endSection();
 		// restore the cube
 		int cubeX = getX(address);
 		int cubeY = getY(address);
 		int cubeZ = getZ(address);
-		return IONbtReader.readCube(column, cubeX, cubeY, cubeZ, nbt);
+		world.getProfiler().startSection("nbt2cube");
+		Cube cube = IONbtReader.readCube(column, cubeX, cubeY, cubeZ, nbt);
+		world.getProfiler().endSection();
+		return cube;
 	}
 
 	public void saveColumn(Column column) {

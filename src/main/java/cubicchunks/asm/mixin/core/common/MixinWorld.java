@@ -36,6 +36,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -79,6 +80,7 @@ public abstract class MixinWorld implements ICubicWorld {
 	@Shadow @Final public WorldProvider provider;
 	@Shadow @Final public Random rand;
 	@Shadow @Final public boolean isRemote;
+	@Shadow @Final public Profiler theProfiler;
 	@Shadow @Final @Mutable protected ISaveHandler saveHandler;
 
 	protected LightingManager lightingManager;
@@ -256,6 +258,9 @@ public abstract class MixinWorld implements ICubicWorld {
 		return ((World) (Object) this).playerEntities;
 	}
 
+	@Override public Profiler getProfiler() {
+		return this.theProfiler;
+	}
 	//vanilla methods
 
 	@Intrinsic public void world$loadEntities(Collection<Entity> entities) {
