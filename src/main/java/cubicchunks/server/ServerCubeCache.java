@@ -25,6 +25,7 @@ package cubicchunks.server;
 
 import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
+import cubicchunks.VanillaCubicChunksWorldType;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
@@ -178,7 +179,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	@Override
 	public boolean unloadQueuedChunks() {
 		// NOTE: the return value is completely ignored
-
 		if (this.worldServer.getDisableLevelSaving()) {
 			return false;
 		}
@@ -186,7 +186,34 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		final int maxUnload = 400;
 		final int maxColumnsUnload = 40;
 
-		Iterator<CubeCoords> iter = this.cubesToUnload.iterator();
+		unloadQueuedCubes(maxUnload);
+		unloadQueuedColumns(maxColumnsUnload);
+
+		return false;
+	}
+
+	private void unloadQueuedColumns(int maxColumnsUnload) {
+		int unloaded = 0;
+		Iterator<ChunkPos> it = columnsToUnload.iterator();
+		while(it.hasNext() && unloaded < maxColumnsUnload) {
+			ChunkPos pos = it.next();
+			long address = AddressTools.getAddress(pos.chunkXPos, pos.chunkZPos);
+			Column column = loadedColumns.get(address);
+			if(column == null) {
+				it.remove();
+				continue;
+			}
+			if (!column.hasCubes()) {
+				column.onChunkUnload();
+				this.loadedColumns.remove(address);
+				this.cubeIO.saveColumn(column);
+				unloaded++;
+				it.remove();
+			}
+		}
+	}
+
+	private void unloadQueuedCubes(int maxUnload) {Iterator<CubeCoords> iter = this.cubesToUnload.iterator();
 		int processed = 0;
 
 		while (iter.hasNext() && processed < maxUnload) {
@@ -206,27 +233,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				this.cubeIO.saveCube(cube);
 			}
 		}
-
-		int unloaded = 0;
-		Iterator<ChunkPos> it = columnsToUnload.iterator();
-		while(it.hasNext() && unloaded < maxColumnsUnload) {
-			ChunkPos pos = it.next();
-			long address = AddressTools.getAddress(pos.chunkXPos, pos.chunkZPos);
-			Column column = loadedColumns.get(address);
-			if(column == null) {
-				it.remove();
-				continue;
-			}
-			if (!column.hasCubes()) {
-				column.onChunkUnload();
-				this.loadedColumns.remove(address);
-				this.cubeIO.saveColumn(column);
-				unloaded++;
-				it.remove();
-			}
-		}
-
-		return false;
 	}
 
 	@Override
@@ -450,6 +456,16 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 
 	public void unloadCube(Cube cube) {
+		if(this.worldServer.getWorldInfo().getTerrainType() instanceof VanillaCubicChunksWorldType) {
+			final int bufferSize = 1;
+			if(cube.getY() >= 0 - bufferSize && cube.getY() < 16 + bufferSize) {
+				return;//don't unload
+			}
+		}
+		unloadCubeIgnoreVanilla(cube);
+	}
+
+	private void unloadCubeIgnoreVanilla(Cube cube) {
 		// don't unload cubes near the spawn
 		if (cubeIsNearSpawn(cube)) {
 			return;
@@ -461,9 +477,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	public void unloadColumn(Column column) {
 		//unload all cubes in that column
-		column.getAllCubes().forEach(this::unloadCube);
+		//since it's unloading the whole column - ignore vanilla
+		//this allows to special-case 0-255 height range with VanillaCubic
+		column.getAllCubes().forEach(this::unloadCubeIgnoreVanilla);
 		//unload that column
-		// TODO: columns that have cubes near spawn will never be removed from unload queue
+		//TODO: columns that have cubes near spawn will never be removed from unload queue
+		//there is only a finte amount of them (about 1000) so it's not a big issue
 		columnsToUnload.add(column.getChunkCoordIntPair());
 	}
 

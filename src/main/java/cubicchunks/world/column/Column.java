@@ -79,6 +79,11 @@ public class Column extends Chunk {
 	private EntityContainer entities;
 	private ICubicWorld world;
 
+	//used by vanillaCubic to mark this column as generated
+	private boolean compatBaseTerrainDone = false;
+	//used bt vanillaCubic to mark this column as populated
+	private boolean compatPopulationDone = false;
+
 	public Column(ICubicWorld world, int x, int z) {
 		// NOTE: this constructor is called by the chunk loader
 		super((World) world, x, z);
@@ -846,5 +851,21 @@ public class Column extends Chunk {
 	@Override
 	public int getLowestHeight() {
 		return opacityIndex.getLowestTopBlockY();
+	}
+
+	public boolean isCompatBaseTerrainDone() {
+		return compatBaseTerrainDone;
+	}
+
+	public void setCompatBaseTerrainDone(boolean terrain) {
+		this.compatBaseTerrainDone = true;
+	}
+
+	public boolean isCompatPopulationDone() {
+		return compatPopulationDone;
+	}
+
+	public void setCompatPopulationDone(boolean populated) {
+		this.compatPopulationDone = populated;
 	}
 }

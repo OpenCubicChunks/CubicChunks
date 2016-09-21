@@ -85,8 +85,10 @@ class IONbtWriter {
 
 		// column properties
 		nbt.setByte("v", (byte) 1);
-		nbt.setBoolean("TerrainPopulated", column.isTerrainPopulated());
 		nbt.setLong("InhabitedTime", column.getInhabitedTime());
+
+		nbt.setBoolean("VanillaCubicTerrain", column.isCompatBaseTerrainDone());
+		nbt.setBoolean("VanillaCubicPopulated", column.isCompatPopulationDone());
 	}
 
 	private static void writeBiomes(Column column, NBTTagCompound nbt) {// biomes

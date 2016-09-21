@@ -76,8 +76,9 @@ public class IONbtReader {
 		Column column = new Column(world, x, z);
 
 		// read the rest of the column properties
-		column.setTerrainPopulated(nbt.getBoolean("TerrainPopulated"));
 		column.setInhabitedTime(nbt.getLong("InhabitedTime"));
+		column.setCompatBaseTerrainDone(nbt.getBoolean("VanillaCubicTerrain"));
+		column.setCompatPopulationDone(nbt.getBoolean("VanillaCubicPopulated"));
 		return column;
 	}
 
