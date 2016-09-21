@@ -35,6 +35,7 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
@@ -76,6 +77,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	private CubeIO cubeIO;
 	private HashMap<Long, Column> loadedColumns;
 	private Queue<CubeCoords> cubesToUnload;
+	private Queue<ChunkPos> columnsToUnload;
 
 	public ServerCubeCache(ICubicWorldServer worldServer) {
 		//TODO: Replace add ChunkGenerator argument and use chunk generator object for generating terrain?
@@ -87,6 +89,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		this.cubeIO = new CubeIO(worldServer);
 		this.loadedColumns = Maps.newHashMap();
 		this.cubesToUnload = new ArrayDeque<>();
+		this.columnsToUnload = new ArrayDeque<>();
 	}
 
 	@Override
@@ -181,6 +184,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		}
 
 		final int maxUnload = 400;
+		final int maxColumnsUnload = 40;
 
 		Iterator<CubeCoords> iter = this.cubesToUnload.iterator();
 		int processed = 0;
@@ -201,10 +205,23 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				cube.onUnload();
 				this.cubeIO.saveCube(cube);
 			}
+		}
+
+		int unloaded = 0;
+		Iterator<ChunkPos> it = columnsToUnload.iterator();
+		while(it.hasNext() && unloaded < maxColumnsUnload) {
+			ChunkPos pos = it.next();
+			long address = AddressTools.getAddress(pos.chunkXPos, pos.chunkZPos);
+			Column column = loadedColumns.get(address);
+			if(column == null) {
+				it.remove();
+			}
 			if (!column.hasCubes()) {
 				column.onChunkUnload();
-				this.loadedColumns.remove(columnAddress);
+				this.loadedColumns.remove(address);
 				this.cubeIO.saveColumn(column);
+				unloaded++;
+				it.remove();
 			}
 		}
 
@@ -442,14 +459,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 
 	public void unloadColumn(Column column) {
-		if(!column.hasCubes()) {
-			//TODO: remove unloadColumn hack
-			//the column has no cubes, to unload the column - try to unload already unloaded cube
-			//unloadQueuedChunks will automatically unload column once it's empty
-			//just in case additional cube gets loaded between call to this method
-			//and actual unload - specify impossible Y coordinate
-			this.cubesToUnload.add(new CubeCoords(column.getX(), Integer.MIN_VALUE, column.getZ()));
-		}
+		//unload all cubes in that column
+		column.getAllCubes().forEach(this::unloadCube);
+		//unload that column
+		// TODO: columns that have cubes near spawn will never be removed from unload queue
+		columnsToUnload.add(column.getChunkCoordIntPair());
 	}
 
 	public enum LoadType {
