@@ -23,12 +23,13 @@
  */
 package cubicchunks.lighting;
 
+import com.carrotsearch.hppc.IntSet;
+import com.carrotsearch.hppc.cursors.IntCursor;
+import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-
-import java.util.Set;
 
 public class LightingManager {
 
@@ -45,18 +46,18 @@ public class LightingManager {
 		int blockZ = Coords.localToBlock(column.getZ(), localZ);
 		switch (type) {
 			case IMMEDIATE:
-				Set<Integer> toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
-				for (int cubeY : toDiffuse) {
-					boolean success = SkyLightCubeDiffuseCalculator.calculate(column, localX, localZ, cubeY);
+				IntSet toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
+				for (IntCursor cubeY : toDiffuse) {
+					boolean success = SkyLightCubeDiffuseCalculator.calculate(column, localX, localZ, cubeY.value);
 					if (!success) {
-						queueDiffuseUpdate(column.getCube(cubeY), blockX, blockZ, minY, maxY);
+						queueDiffuseUpdate(column.getCube(cubeY.value), blockX, blockZ, minY, maxY);
 					}
 				}
 				break;
 			case QUEUED:
 				toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
-				for (int cubeY : toDiffuse) {
-					queueDiffuseUpdate(column.getCube(cubeY), blockX, blockZ, minY, maxY);
+				for (IntCursor cubeY : toDiffuse) {
+					queueDiffuseUpdate(column.getCube(cubeY.value), blockX, blockZ, minY, maxY);
 				}
 				break;
 		}

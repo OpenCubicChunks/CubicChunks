@@ -141,6 +141,8 @@ dependencies {
 		exclude module: 'guava'
 		exclude module: 'gson'
 	}
+
+	compile group: 'com.carrotsearch', name: 'hppc', version: '0.7.1'
 }
 
 processResources

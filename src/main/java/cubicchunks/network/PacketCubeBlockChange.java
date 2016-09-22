@@ -23,6 +23,9 @@
  */
 package cubicchunks.network;
 
+import com.carrotsearch.hppc.IntHashSet;
+import com.carrotsearch.hppc.IntSet;
+import com.carrotsearch.hppc.cursors.IntCursor;
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
@@ -34,8 +37,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 public class PacketCubeBlockChange implements IMessage {
 
@@ -51,7 +52,7 @@ public class PacketCubeBlockChange implements IMessage {
 		this.localAddresses = new int[localAddresses.size()];
 		this.blockStates = new IBlockState[localAddresses.size()];
 		int i = 0;
-		Set<Integer> xzAddresses = new HashSet<>();
+		IntSet xzAddresses = new IntHashSet();
 		for (int localAddress : localAddresses) {
 			this.localAddresses[i] = localAddress;
 			int x = AddressTools.getLocalX(localAddress);
@@ -63,10 +64,10 @@ public class PacketCubeBlockChange implements IMessage {
 		}
 		this.heightValues = new int[xzAddresses.size()];
 		i = 0;
-		for (Integer v : xzAddresses) {
-			Integer height = cube.getColumn().getOpacityIndex().getTopBlockY(v & 0xF, v >> 4);
-			v |= (height == null ? Integer.MIN_VALUE : height) << 8;
-			heightValues[i] = v;
+		for (IntCursor v : xzAddresses) {
+			Integer height = cube.getColumn().getOpacityIndex().getTopBlockY(v.value & 0xF, v.value >> 4);
+			v.value |= (height == null ? Integer.MIN_VALUE : height) << 8;
+			heightValues[i] = v.value;
 			i++;
 		}
 	}
