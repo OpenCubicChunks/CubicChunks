@@ -63,7 +63,7 @@ public class MixinDedicatedServer_HeightLimits {
 	@ModifyConstant(method = "startServer", constant = @Constant(intValue = 256), require = 2)
 	private int getDefaultBuildHeight(int oldValue) {
 		if (worldtype instanceof ICubicChunksWorldType) {
-			return ((ICubicChunksWorldType) worldtype).getMaxHeight();
+			return ((ICubicChunksWorldType) worldtype).getMaximumPossibleHeight();
 		}
 		return oldValue;
 	}

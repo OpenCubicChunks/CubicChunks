@@ -72,6 +72,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	@Shadow public abstract boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
 	//vanilla methods end
 	@Override public void initCubicWorld() {
+		super.initCubicWorld();
 		this.isCubicWorld = true;
 
 		this.entitySpawner = new CubeWorldEntitySpawner();
@@ -87,9 +88,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		this.thePlayerManager = new PlayerCubeMap(this);
 		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
-
-		this.maxHeight = type.getMaxHeight();
-		this.minHeight = type.getMinHeight();
 
 		this.saveHandler = new CubicChunksSaveHandler(this, this.getSaveHandler());
 

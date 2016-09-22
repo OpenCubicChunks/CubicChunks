@@ -33,8 +33,6 @@ import cubicchunks.world.cube.Cube;
 
 public class LightingManager {
 
-	private static final int TickBudget = 10; // ms. Only 50 ms in a tick @ 20 tps
-
 	private SkyLightCubeDiffuseProcessor skylightCubeDiffuseProcessor;
 
 	public LightingManager(ICubicWorld world) {
@@ -65,7 +63,7 @@ public class LightingManager {
 
 	public void tick() {
 		long timeStart = System.currentTimeMillis();
-		long timeStop = timeStart + TickBudget;
+		long timeStop = timeStart + CubicChunks.Config.getLightingTickBudget();
 
 		this.skylightCubeDiffuseProcessor.processQueueUntil(timeStop);
 	}
