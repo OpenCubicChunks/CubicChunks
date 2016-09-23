@@ -28,9 +28,9 @@ import gnu.trove.set.TLongSet;
 import java.util.function.Consumer;
 
 public abstract class CubeSelector {
-	public abstract void forAllVisibleFrom(long cubeAddress, int viewDistance, Consumer<Long> consumer);
+	public abstract void forAllVisibleFrom(long cubeAddress, int horizontalViewDistance, int verticalViewDistance, Consumer<Long> consumer);
 
-	public abstract void findChanged(long oldAddress, long newAddress, int viewDistance, TLongSet hiddenAddresses, TLongSet newAddresses, TLongSet columnsToRemove, TLongSet columnsToLoad);
+	public abstract void findChanged(long oldAddress, long newAddress, int horizontalViewDistance, int verticalViewDistance, TLongSet cubesToRemove, TLongSet cubesToLoad, TLongSet columnsToRemove, TLongSet columnsToLoad);
 
-	public abstract void findAllUnloadedOnViewDistanceDecrease(long playerAddress, int oldViewDistance, int newViewDistance, TLongSet cubesToemove, TLongSet columnsToRemove);
+	public abstract void findAllUnloadedOnViewDistanceDecrease(long playerAddress, int oldHorizontalViewDistance, int newHorizontalViewDistance, int oldVerticalViewDistance, int newVerticalViewDistance, TLongSet cubesToUnload, TLongSet columnsToUnload);
 }

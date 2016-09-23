@@ -52,7 +52,7 @@ public class VanillaPopulationProcessor implements CubeProcessor {
 	private void populate(Cube cube) {
 		Column column = cube.getColumn();
 		for(int y = 0; y < 16; y++) {
-			if(column.getCube(y) == null) {
+			if(column.getCube(y) == null || column.getCube(y).unloaded) {
 				//doing that here should avoid population of the same chunk while loading/generating needed cubes
 				//this shouldn't really generate anything, but it may happen when world save is incomplete
 				((ServerCubeCache)cube.getWorld().getCubeCache()).loadCube(new CubeCoords(cube.getX(), y, cube.getZ()), ServerCubeCache.LoadType.LOAD_OR_GENERATE);

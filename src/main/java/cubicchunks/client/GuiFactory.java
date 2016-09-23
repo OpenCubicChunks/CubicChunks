@@ -21,29 +21,30 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.client;
 
-import cubicchunks.util.AddressTools;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.ColumnGenerator;
-import cubicchunks.worldgen.ICubicChunkGenerator;
+import cubicchunks.CubicChunks;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraftforge.fml.client.IModGuiFactory;
 
-public interface ICubicChunksWorldType {
-	/**
-	 * Returns Y position of the bottom block in the world
-	 */
-	default int getMinimumPossibleHeight() {
-		return AddressTools.MIN_BLOCK_Y;
+import java.util.Set;
+
+public class GuiFactory implements IModGuiFactory {
+	@Override public void initialize(Minecraft minecraftInstance) {
+
 	}
 
-	/**
-	 * Returns Y position of block above the top block in the world,
-	 */
-	default int getMaximumPossibleHeight() {
-		return AddressTools.MAX_BLOCK_Y + 1;
+	@Override public Class<? extends GuiScreen> mainConfigGuiClass() {
+		return CubicChunks.Config.GUI.class;
 	}
 
-	ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world);
+	@Override public Set<RuntimeOptionCategoryElement> runtimeGuiCategories() {
+		return null;
+	}
 
-	ColumnGenerator createColumnGenerator(ICubicWorldServer world);
+	@Override
+	public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element) {
+		return null;
+	}
 }

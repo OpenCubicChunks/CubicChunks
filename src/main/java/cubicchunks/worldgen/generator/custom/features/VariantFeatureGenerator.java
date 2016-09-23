@@ -26,6 +26,8 @@ package cubicchunks.worldgen.generator.custom.features;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.world.biome.Biome;
+import org.eclipse.collections.api.list.primitive.DoubleList;
+import org.eclipse.collections.impl.list.mutable.primitive.DoubleArrayList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +38,7 @@ public class VariantFeatureGenerator extends FeatureGenerator {
 	private final FeatureGenerator[] generators;
 	private final double[] probabilities;
 
-	private VariantFeatureGenerator(ICubicWorld world, List<FeatureGenerator> generators, List<Double> probabilities) {
+	private VariantFeatureGenerator(ICubicWorld world, List<FeatureGenerator> generators, DoubleList probabilities) {
 		super(world);
 		assert generators.size() == probabilities.size();
 		int size = generators.size();
@@ -66,12 +68,12 @@ public class VariantFeatureGenerator extends FeatureGenerator {
 
 		// use lists because order is important
 		private final List<FeatureGenerator> generators;
-		private final List<Double> probabilities;
+		private final DoubleArrayList probabilities;
 		private ICubicWorld world;
 
 		private Builder() {
 			this.generators = new ArrayList<FeatureGenerator>(2);
-			this.probabilities = new ArrayList<Double>(2);
+			this.probabilities = new DoubleArrayList(2);
 		}
 
 		public Builder world(ICubicWorld world) {

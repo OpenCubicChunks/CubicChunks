@@ -33,13 +33,13 @@ import static cubicchunks.util.AddressTools.getAddress;
 public class CuboidalCubeSelector extends CubeSelector {
 
 	@Override
-	public void forAllVisibleFrom(long cubeAddress, int viewDistance, Consumer<Long> consumer) {
+	public void forAllVisibleFrom(long cubeAddress, int horizontalViewDistance, int verticalViewDistance, Consumer<Long> consumer) {
 		int cubeX = AddressTools.getX(cubeAddress);
 		int cubeY = AddressTools.getY(cubeAddress);
 		int cubeZ = AddressTools.getZ(cubeAddress);
-		for (int x = cubeX - viewDistance; x <= cubeX + viewDistance; x++) {
-			for (int y = cubeY - viewDistance; y <= cubeY + viewDistance; y++) {
-				for (int z = cubeZ - viewDistance; z <= cubeZ + viewDistance; z++) {
+		for (int x = cubeX - horizontalViewDistance; x <= cubeX + horizontalViewDistance; x++) {
+			for (int y = cubeY - verticalViewDistance; y <= cubeY + verticalViewDistance; y++) {
+				for (int z = cubeZ - horizontalViewDistance; z <= cubeZ + horizontalViewDistance; z++) {
 					consumer.accept(getAddress(x, y, z));
 				}
 			}
@@ -47,11 +47,10 @@ public class CuboidalCubeSelector extends CubeSelector {
 	}
 
 	@Override
-	public void findChanged(long oldAddress, long newAddress, int viewDistance, TLongSet cubesToRemove, TLongSet cubesToLoad, TLongSet columnsToRemove, TLongSet columnsToLoad) {
+	public void findChanged(long oldAddress, long newAddress, int horizontalViewDistance, int verticalViewDistance, TLongSet cubesToRemove, TLongSet cubesToLoad, TLongSet columnsToRemove, TLongSet columnsToLoad) {
 		int oldX = AddressTools.getX(oldAddress);
 		int oldY = AddressTools.getY(oldAddress);
 		int oldZ = AddressTools.getZ(oldAddress);
-		int radius = viewDistance;
 		int newX = AddressTools.getX(newAddress);
 		int newY = AddressTools.getY(newAddress);
 		int newZ = AddressTools.getZ(newAddress);
@@ -60,26 +59,26 @@ public class CuboidalCubeSelector extends CubeSelector {
 		int dz = newZ - oldZ;
 
 		if (dx != 0 || dy != 0 || dz != 0) {
-			for (int currentX = newX - radius; currentX <= newX + radius; ++currentX) {
-				for (int currentZ = newZ - radius; currentZ <= newZ + radius; ++currentZ) {
+			for (int currentX = newX - horizontalViewDistance; currentX <= newX + horizontalViewDistance; ++currentX) {
+				for (int currentZ = newZ - horizontalViewDistance; currentZ <= newZ + horizontalViewDistance; ++currentZ) {
 					//first handle columns
 					//is current position outside of the old render distance square?
-					if (!this.isPointWithinCubeVolume(oldX, 0, oldZ, currentX, 0, currentZ, radius)) {
+					if (!this.isPointWithinCubeVolume(oldX, 0, oldZ, currentX, 0, currentZ, horizontalViewDistance, verticalViewDistance)) {
 						columnsToLoad.add(getAddress(currentX, currentZ));
 					}
 
 					//if we moved the current point to where it would be previously,
 					//would it be outside of current render distance square?
-					if (!this.isPointWithinCubeVolume(newX, 0, newZ, currentX - dx, 0, currentZ - dz, radius)) {
+					if (!this.isPointWithinCubeVolume(newX, 0, newZ, currentX - dx, 0, currentZ - dz, horizontalViewDistance, verticalViewDistance)) {
 						columnsToRemove.add(getAddress(currentX - dx, currentZ - dz));
 					}
-					for (int currentY = newY - radius; currentY <= newY + radius; ++currentY) {
+					for (int currentY = newY - verticalViewDistance; currentY <= newY + verticalViewDistance; ++currentY) {
 						//now handle cubes, the same way
-						if (!this.isPointWithinCubeVolume(oldX, oldY, oldZ, currentX, currentY, currentZ, radius)) {
+						if (!this.isPointWithinCubeVolume(oldX, oldY, oldZ, currentX, currentY, currentZ, horizontalViewDistance, verticalViewDistance)) {
 							cubesToLoad.add(getAddress(currentX, currentY, currentZ));
 						}
 						if (!this.isPointWithinCubeVolume(newX, newY, newZ,
-								currentX - dx, currentY - dy, currentZ - dz, radius)) {
+								currentX - dx, currentY - dy, currentZ - dz, horizontalViewDistance, verticalViewDistance)) {
 							cubesToRemove.add(getAddress(currentX - dx, currentY - dy, currentZ - dz));
 						}
 					}
@@ -91,31 +90,31 @@ public class CuboidalCubeSelector extends CubeSelector {
 	}
 
 	@Override
-	public void findAllUnloadedOnViewDistanceDecrease(long playerAddress, int oldViewDistance, int newViewDistance, TLongSet cubesToemove, TLongSet columnsToRemove) {
+	public void findAllUnloadedOnViewDistanceDecrease(long playerAddress, int oldHorizontalViewDistance, int newHorizontalViewDistance, int oldVerticalViewDistance, int newVerticalViewDistance, TLongSet cubesToUnload, TLongSet columnsToUnload) {
 		int playerCubeX = AddressTools.getX(playerAddress);
 		int playerCubeY = AddressTools.getY(playerAddress);
 		int playerCubeZ = AddressTools.getZ(playerAddress);
 
-		for (int cubeX = playerCubeX - oldViewDistance; cubeX <= playerCubeX + oldViewDistance; cubeX++) {
-			for (int cubeZ = playerCubeZ - oldViewDistance; cubeZ <= playerCubeZ + oldViewDistance; cubeZ++) {
-				if (!isPointWithinCubeVolume(playerCubeX, 0, playerCubeZ, cubeX, 0, cubeZ, newViewDistance)) {
-					columnsToRemove.add(getAddress(cubeX, cubeZ));
+		for (int cubeX = playerCubeX - oldHorizontalViewDistance; cubeX <= playerCubeX + oldHorizontalViewDistance; cubeX++) {
+			for (int cubeZ = playerCubeZ - oldHorizontalViewDistance; cubeZ <= playerCubeZ + oldHorizontalViewDistance; cubeZ++) {
+				if (!isPointWithinCubeVolume(playerCubeX, 0, playerCubeZ, cubeX, 0, cubeZ, newHorizontalViewDistance, newVerticalViewDistance)) {
+					columnsToUnload.add(getAddress(cubeX, cubeZ));
 				}
-				for (int cubeY = playerCubeY - oldViewDistance; cubeY <= playerCubeY + oldViewDistance; cubeY++) {
-					if (!isPointWithinCubeVolume(playerCubeX, playerCubeY, playerCubeZ, cubeX, cubeY, cubeZ, newViewDistance)) {
-						cubesToemove.add(getAddress(cubeX, cubeY, cubeZ));
+				for (int cubeY = playerCubeY - oldVerticalViewDistance; cubeY <= playerCubeY + oldVerticalViewDistance; cubeY++) {
+					if (!isPointWithinCubeVolume(playerCubeX, playerCubeY, playerCubeZ, cubeX, cubeY, cubeZ, newHorizontalViewDistance, newVerticalViewDistance)) {
+						cubesToUnload.add(getAddress(cubeX, cubeY, cubeZ));
 					}
 				}
 			}
 		}
 	}
 
-	private boolean isPointWithinCubeVolume(int cubeX, int cubeY, int cubeZ, int pointX, int pointY, int pointZ, int radius) {
+	private boolean isPointWithinCubeVolume(int cubeX, int cubeY, int cubeZ, int pointX, int pointY, int pointZ, int horizontal, int vertical) {
 		int dx = cubeX - pointX;
 		int dy = cubeY - pointY;
 		int dz = cubeZ - pointZ;
-		return dx >= -radius && dx <= radius
-				&& dy >= -radius && dy <= radius
-				&& dz >= -radius && dz <= radius;
+		return dx >= -horizontal && dx <= horizontal
+				&& dy >= -vertical && dy <= vertical
+				&& dz >= -horizontal && dz <= horizontal;
 	}
 }

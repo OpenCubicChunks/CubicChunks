@@ -23,6 +23,8 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
+import cubicchunks.CubicChunks;
+import cubicchunks.ICubicChunksWorldType;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
@@ -87,6 +89,21 @@ public abstract class MixinWorld implements ICubicWorld {
 	protected boolean isCubicWorld;
 	protected int minHeight = 0, maxHeight = 256;
 	private boolean wgenFullRelight;
+
+	@Override public void initCubicWorld() {
+		// Set the world height boundaries to their highest and lowest values respectively
+		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
+		this.maxHeight = type.getMaximumPossibleHeight();
+		this.minHeight = type.getMinimumPossibleHeight();
+
+		// If the configuration file contains valid boundaries, use them instead of the defaults
+		if (CubicChunks.Config.getWorldHeightLowerBound() >= type.getMinimumPossibleHeight()) {
+			this.minHeight = CubicChunks.Config.getWorldHeightLowerBound();
+		}
+		if (CubicChunks.Config.getWorldHeightUpperBound() <= this.maxHeight) {
+			this.maxHeight = CubicChunks.Config.getWorldHeightUpperBound();
+		}
+	}
 
 	@Shadow public abstract WorldType getWorldType();
 

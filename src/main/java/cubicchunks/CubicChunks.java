@@ -26,9 +26,16 @@ package cubicchunks;
 import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
+import cubicchunks.util.AddressTools;
 import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.CubicWorldProviderSurface;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.world.DimensionType;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.ConfigElement;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.client.config.GuiConfig;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -36,9 +43,12 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = CubicChunks.MODID, name = "CubicChunks", version = "@@VERSION@@}")
+import static cubicchunks.CubicChunks.Config.syncConfig;
+
+@Mod(modid = CubicChunks.MODID, name = "CubicChunks", version = "@@VERSION@@}", guiFactory = "cubicchunks.client.GuiFactory")
 public class CubicChunks {
 
 	public static Logger LOGGER;
@@ -59,6 +69,10 @@ public class CubicChunks {
 
 		//set "clazz" field
 		ReflectionUtil.setFieldValueSrg(DimensionType.OVERWORLD, "field_186077_g", CubicWorldProviderSurface.class);
+
+		Config.loadConfig(new Configuration(e.getSuggestedConfigurationFile()));
+		syncConfig();
+		MinecraftForge.EVENT_BUS.register(this); // Register our config reload hook
 	}
 
 	@EventHandler
@@ -77,5 +91,61 @@ public class CubicChunks {
 	@EventHandler
 	public void onServerAboutToStart(FMLServerAboutToStartEvent event) {
 		proxy.setBuildLimit(event.getServer());
+	}
+
+	@SubscribeEvent
+	public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
+		if(eventArgs.getModID().equals(CubicChunks.MODID))
+			Config.syncConfig();
+	}
+
+	public static class Config {
+		private static int maxGeneratedCubesPerTick;
+		private static int lightingTickBudget;
+		private static int verticalCubeLoadDistance;
+		private static int worldHeightLowerBound;
+		private static int worldHeightUpperBound;
+		private static Configuration configuration;
+
+		static void loadConfig(Configuration configuration) {
+			Config.configuration = configuration;
+		}
+
+		static void syncConfig() {
+			maxGeneratedCubesPerTick = configuration.getInt("maxGeneratedCubesPerTick", Configuration.CATEGORY_GENERAL,
+					49*16, 1, Integer.MAX_VALUE, "The number of cubic chunks to generate per tick.");
+			lightingTickBudget = configuration.getInt("lightingTickBudget", Configuration.CATEGORY_GENERAL, 10, 1, Integer.MAX_VALUE, "The maximum amount of time in milliseconds per tick to spend performing lighting calculations.");
+			verticalCubeLoadDistance = configuration.getInt("verticalCubeLoadDistance", Configuration.CATEGORY_GENERAL, 8, 2, 32, "Similar to Minecraft's view distance, only for vertical chunks.");
+			worldHeightLowerBound = configuration.getInt("worldHeightLowerBound", Configuration.CATEGORY_GENERAL, -4096, AddressTools.MIN_BLOCK_Y, 0, "The lower boundary on the world. Blocks will not generate or load below this point.");
+			worldHeightUpperBound = configuration.getInt("worldHeightUpperBound", Configuration.CATEGORY_GENERAL, 4096, 256, AddressTools.MAX_BLOCK_Y, "The upper boundary on the world. Blocks will not generate or load above this point.");
+
+			if (configuration.hasChanged()) configuration.save();
+		}
+
+		public static class GUI extends GuiConfig {
+			public GUI(GuiScreen parent) {
+				super(parent, new ConfigElement(configuration.getCategory(Configuration.CATEGORY_GENERAL)).getChildElements(), "CubicChunks", false, false, GuiConfig.getAbridgedConfigPath(configuration.toString()));
+			}
+		}
+
+		public static int getMaxGeneratedCubesPerTick() {
+			return maxGeneratedCubesPerTick;
+		}
+
+		public static int getLightingTickBudget() {
+			return lightingTickBudget;
+		}
+
+		public static int getVerticalCubeLoadDistance() {
+			return verticalCubeLoadDistance;
+		}
+
+		public static int getWorldHeightLowerBound() {
+			return worldHeightLowerBound;
+		}
+
+		public static int getWorldHeightUpperBound() {
+			return worldHeightUpperBound;
+		}
 	}
 }
