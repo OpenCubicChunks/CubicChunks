@@ -23,7 +23,6 @@
  */
 package cubicchunks.lighting;
 
-import cubicchunks.util.Progress;
 import cubicchunks.util.processor.QueueProcessor;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.BlankColumn;
@@ -40,7 +39,7 @@ class SkyLightCubeDiffuseProcessor extends QueueProcessor<Long> {
 	}
 
 	@Override
-	public void processBatch(Progress progress) {
+	public void processBatch() {
 		for (Long address : incomingAddresses) {
 			if (address == null) {
 				throw new Error();

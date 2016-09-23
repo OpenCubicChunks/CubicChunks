@@ -2,7 +2,8 @@
 <!--This should be used only in dev environment, it should be removed for release
 TODO: figure out how to automatically remove log4j2.xml for release
 -->
-<Configuration status="WARN" packages="com.mojang.util">
+<Configuration status="WARN" packages="com.mojang.util" shutdownHook="disable">
+
     <Appenders>
         <Console name="FmlSysOut" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level] [%logger]: %msg%n" />

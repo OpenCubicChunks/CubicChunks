@@ -791,6 +791,10 @@ public class Column extends Chunk {
 		return !this.cubeMap.isEmpty();
 	}
 
+	/**
+	 * Warning: This method may give cube that is queued to be unloaded.
+	 * You may want to use CubeCache instead
+	 */
 	public Cube getCube(int cubeY) {
 		return this.cubeMap.get(cubeY);
 	}

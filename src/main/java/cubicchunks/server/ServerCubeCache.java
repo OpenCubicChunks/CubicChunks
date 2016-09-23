@@ -23,7 +23,6 @@
  */
 package cubicchunks.server;
 
-import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
 import cubicchunks.VanillaCubicChunksWorldType;
 import cubicchunks.server.chunkio.CubeIO;
@@ -88,7 +87,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer);
-		this.loadedColumns = Maps.newHashMap();
+		this.loadedColumns = new HashMap<>();
 		this.cubesToUnload = new ArrayDeque<>();
 		this.columnsToUnload = new ArrayDeque<>();
 	}
@@ -149,7 +148,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	/**
 	 * If this Column is already loaded - returns it.
-	 * Loads from disk if possible, otherwise generated new Column.
+	 * Loads from disk if possible, otherwise generates new Column.
 	 */
 	@Override
 	public Column provideChunk(int cubeX, int cubeZ) {
@@ -199,21 +198,22 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			ChunkPos pos = it.next();
 			long address = AddressTools.getAddress(pos.chunkXPos, pos.chunkZPos);
 			Column column = loadedColumns.get(address);
+			it.remove();
 			if(column == null) {
-				it.remove();
 				continue;
 			}
-			if (!column.hasCubes()) {
+			if (!column.hasCubes() && column.unloaded) {
+
 				column.onChunkUnload();
 				this.loadedColumns.remove(address);
 				this.cubeIO.saveColumn(column);
 				unloaded++;
-				it.remove();
 			}
 		}
 	}
 
-	private void unloadQueuedCubes(int maxUnload) {Iterator<CubeCoords> iter = this.cubesToUnload.iterator();
+	private void unloadQueuedCubes(int maxUnload) {
+		Iterator<CubeCoords> iter = this.cubesToUnload.iterator();
 		int processed = 0;
 
 		while (iter.hasNext() && processed < maxUnload) {
@@ -227,9 +227,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			if (column == null) {
 				continue;
 			}
-			Cube cube = column.removeCube(coords.getCubeY());
-			if (cube != null) {
+			Cube cube = column.getCube(coords.getCubeY());
+			//unload the cube if we are unloading the column
+			if (cube != null && (cube.unloaded || column.unloaded)) {
 				cube.onUnload();
+				column.removeCube(coords.getCubeY());
 				this.cubeIO.saveCube(cube);
 			}
 		}
@@ -258,7 +260,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	@Override
 	public boolean chunkExists(int cubeX, int cubeZ) {
-		return this.loadedColumns.containsKey(AddressTools.getAddress(cubeX, cubeZ));
+		Column column = this.loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
+		return column != null && !column.unloaded;
 	}
 
 	//==============================
@@ -269,10 +272,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
 		Column column = this.loadedColumns.get(columnAddress);
-		if (column == null) {
+		if (column == null || column.unloaded) {
 			return false;
 		}
-		return column.getCube(cubeY) != null;
+		Cube cube = column.getCube(cubeY);
+		return cube != null && !cube.unloaded;
 	}
 
 	public boolean cubeExists(CubeCoords coords) {
@@ -281,17 +285,24 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	@Override
 	public Column getColumn(int columnX, int columnZ) {
-		return this.loadedColumns.get(AddressTools.getAddress(columnX, columnZ));
+		Column column = this.loadedColumns.get(AddressTools.getAddress(columnX, columnZ));
+		if(column != null) {
+			column.unloaded = false;
+		}
+		return column;
 	}
 
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
-		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-		Column column = this.loadedColumns.get(columnAddress);
+		Column column = getColumn(cubeX, cubeZ);
 		if (column == null) {
 			return null;
 		}
-		return column.getCube(cubeY);
+		Cube cube = column.getCube(cubeY);
+		if(cube != null) {
+			cube.unloaded = false;
+		}
+		return cube;
 	}
 
 	public Cube getCube(CubeCoords coords) {
@@ -305,10 +316,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		}
 
 		// Get the column
-		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-
-		// Is it loaded?
-		Column column = this.loadedColumns.get(columnAddress);
+		Column column = getColumn(cubeX, cubeZ);
 
 		// Try loading the column.
 		if (column == null) {
@@ -332,6 +340,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		// Is the cube loaded?
 		Cube cube = column.getCube(cubeY);
 		if (cube != null) {
+			cube.unloaded = false;
 			return;
 		}
 
@@ -462,6 +471,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 				return;//don't unload
 			}
 		}
+
 		unloadCubeIgnoreVanilla(cube);
 	}
 
@@ -473,6 +483,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		// queue the cube for unloading
 		this.cubesToUnload.add(cube.getCoords());
+		cube.unloaded = true;
 	}
 
 	public void unloadColumn(Column column) {
@@ -482,8 +493,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		column.getAllCubes().forEach(this::unloadCubeIgnoreVanilla);
 		//unload that column
 		//TODO: columns that have cubes near spawn will never be removed from unload queue
-		//there is only a finte amount of them (about 1000) so it's not a big issue
+		//there is only a finite amount of them (about 1000) so it's not a big issue
 		columnsToUnload.add(column.getChunkCoordIntPair());
+		column.unloaded = true;
 	}
 
 	public enum LoadType {

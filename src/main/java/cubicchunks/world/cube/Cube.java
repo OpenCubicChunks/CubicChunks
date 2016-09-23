@@ -63,6 +63,10 @@ public class Cube {
 
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 
+	//used to track if the cube should be unloaded or not, done instead of removing cube from
+	//unloadQueue each time something loads it
+	public boolean unloaded;
+
 	private ICubicWorld world;
 	private Column column;
 	private CubeCoords coords;
@@ -134,6 +138,9 @@ public class Cube {
 		int localY = Coords.blockToLocal(pos.getY());
 		int localZ = Coords.blockToLocal(pos.getZ());
 		this.getStorage().set(localX, localY, localZ, newBlockState);
+		if(this.isEmpty() && this.getY() <= 4) {
+			int i = 0;
+		}
 	}
 
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
@@ -414,6 +421,9 @@ public class Cube {
 		IOpacityIndex index = this.column.getOpacityIndex();
 		int opacity = newBlockState.getLightOpacity((World) world, this.coords.localToBlock(localX, localY, localZ));
 		index.onOpacityChange(localX, blockY, localZ, opacity);
+		if(this.isEmpty() && this.getY() <= 4) {
+			int i = 0;
+		}
 		return oldBlockState;
 	}
 
@@ -441,6 +451,10 @@ public class Cube {
 	}
 
 	public void onUnload() {
+		//first mark as unloaded so that entity list and tile entity map isn't modified while iterating
+		//and it also preserves all entities/time entities so they can be saved
+		this.isCubeLoaded = false;
+
 		// tell the world to forget about entities
 		this.world.unloadEntities(this.entities.getEntities());
 
@@ -448,8 +462,6 @@ public class Cube {
 		for (TileEntity blockEntity : this.tileEntityMap.values()) {
 			this.world.removeTileEntity(blockEntity.getPos());
 		}
-
-		this.isCubeLoaded = false;
 	}
 
 	public boolean needsSaving() {
@@ -487,6 +499,9 @@ public class Cube {
 
 	public void setPopulated(boolean populated) {
 		this.isPopulated = populated;
+		if(this.isEmpty() && this.getY() <= 4) {
+			int i;
+		}
 	}
 
 	public void setInitialLightingDone(boolean initialLightingDone) {
