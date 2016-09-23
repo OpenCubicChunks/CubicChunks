@@ -128,7 +128,8 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	private final List<PlayerCubeMapEntry> toGenerate = new ArrayList<>();
 	private final IGeneratorPipeline cubeGenerator;
 
-	private int viewDistance;
+	private int horizontalViewDistance;
+	private int verticalViewDistance;
 
 	/**
 	 * This is used only to force update of all CubeWatchers every 8000 ticks
@@ -143,7 +144,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	public PlayerCubeMap(ICubicWorldServer worldServer) {
 		super((WorldServer) worldServer);
 		this.cubeCache = (ServerCubeCache) getWorldServer().getChunkProvider();
-		this.setPlayerViewRadius(worldServer.getMinecraftServer().getPlayerList().getViewDistance());
+		this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(), CubicChunks.Config.getVerticalCubeLoadDistance());
 		this.cubeGenerator = worldServer.getCubeGenerator();
 	}
 
@@ -227,7 +228,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 
 		if (!this.toGenerate.isEmpty()) {
 			long stopTime = System.nanoTime() + 50000000L;
-			int maxChunksToLoad = 49;
+			int maxChunksToLoad = CubicChunks.Config.getMaxGeneratedCubesPerTick();
 			Iterator<PlayerCubeMapEntry> iterator = this.toGenerate.iterator();
 
 			while (iterator.hasNext()) {
@@ -359,7 +360,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		int cubeZ = blockToCube(blockZ);
 		long address = AddressTools.getAddress(cubeX, cubeY, cubeZ);
 
-		this.cubeSelector.forAllVisibleFrom(address, viewDistance, (currentAddress) -> {
+		this.cubeSelector.forAllVisibleFrom(address, horizontalViewDistance, verticalViewDistance, (currentAddress) -> {
 			//create cubeWatcher and chunkWatcher
 			//order is important
 			PlayerCubeMapColumnEntry chunkWatcher = getOrCreateColumnWatcher(cubeToColumn(currentAddress));
@@ -384,7 +385,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 
 		long cubeAddress = getAddress(cubeX, cubeY, cubeZ);
 
-		this.cubeSelector.forAllVisibleFrom(cubeAddress, viewDistance, (address) -> {
+		this.cubeSelector.forAllVisibleFrom(cubeAddress, horizontalViewDistance, verticalViewDistance, (address) -> {
 			// skip non-existent cubes
 			if (!cubeExists(address)) {
 				return;
@@ -463,7 +464,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		TLongSet columnsToRemove = new TLongHashSet();
 		TLongSet columnsToLoad = new TLongHashSet();
 		// calculate new visibility
-		this.cubeSelector.findChanged(oldAddress, newAddress, viewDistance, cubesToRemove, cubesToLoad, columnsToRemove, columnsToLoad);
+		this.cubeSelector.findChanged(oldAddress, newAddress, horizontalViewDistance, verticalViewDistance, cubesToRemove, cubesToLoad, columnsToRemove, columnsToLoad);
 
 		//order is important, columns first
 		columnsToLoad.forEach(address -> {
@@ -500,19 +501,26 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	}
 
 	@Override
-	public final void setPlayerViewRadius(int newViewDistance) {
+	@Deprecated
+	public final void setPlayerViewRadius(int newHorizontalViewDistance) {
+		this.setPlayerViewDistance(newHorizontalViewDistance, verticalViewDistance);
+	}
+
+	public final void setPlayerViewDistance(int newHorizontalViewDistance, int newVerticalViewDistance) {
 		//this method is called by vanilla before these fields are initialized.
 		//and it doesn't really need to be called because in this case
 		//it reduces to setting the viewRadius field
 		if (this.players == null) {
 			return;
 		}
-		newViewDistance = clamp_int(newViewDistance, 3, 32);
+		newHorizontalViewDistance = clamp_int(newHorizontalViewDistance, 3, 32);
+		newVerticalViewDistance = clamp_int(newVerticalViewDistance, 3, 32);
 
-		if (newViewDistance == this.viewDistance) {
+		if (newHorizontalViewDistance == this.horizontalViewDistance && newVerticalViewDistance == this.verticalViewDistance) {
 			return;
 		}
-		int oldViewDistance = this.viewDistance;
+		int oldHorizontalViewDistance = this.horizontalViewDistance;
+		int oldVerticalViewDistance = this.verticalViewDistance;
 
 		for (PlayerWrapper playerWrapper : this.players.valueCollection()) {
 			EntityPlayerMP player = playerWrapper.playerEntity;
@@ -523,9 +531,16 @@ public class PlayerCubeMap extends PlayerChunkMap {
 
 			long playerAddress = getAddress(playerCubeX, playerCubeY, playerCubeZ);
 
-			if (newViewDistance > oldViewDistance) {
+			// Somehow the view distances went in opposite directions
+			if ((newHorizontalViewDistance - oldHorizontalViewDistance < 0 && newHorizontalViewDistance - oldVerticalViewDistance > 0) ||
+					(newHorizontalViewDistance - oldHorizontalViewDistance > 0 && newHorizontalViewDistance - oldVerticalViewDistance < 0)) {
+				// Adjust the values separately to avoid imploding
+				setPlayerViewDistance(newHorizontalViewDistance, oldVerticalViewDistance);
+				setPlayerViewDistance(newHorizontalViewDistance, newVerticalViewDistance);
+				return;
+			} else if (newHorizontalViewDistance > oldHorizontalViewDistance || newVerticalViewDistance > oldVerticalViewDistance) {
 				//if newRadius is bigger, we only need to load new cubes
-				this.cubeSelector.forAllVisibleFrom(playerAddress, newViewDistance, address -> {
+				this.cubeSelector.forAllVisibleFrom(playerAddress, newHorizontalViewDistance, newVerticalViewDistance, address -> {
 					//order is important
 					PlayerCubeMapColumnEntry playerCubeMapColumnEntry = this.getOrCreateColumnWatcher(cubeToColumn(address));
 					if (!playerCubeMapColumnEntry.containsPlayer(player)) {
@@ -536,11 +551,12 @@ public class PlayerCubeMap extends PlayerChunkMap {
 						cubeWatcher.addPlayer(player);
 					}
 				});
+			// Both view distances got smaller
 			} else {
 				//if it got smaller...
 				TLongSet cubesToUnload = new TLongHashSet();
 				TLongSet columnsToUnload = new TLongHashSet();
-				this.cubeSelector.findAllUnloadedOnViewDistanceDecrease(playerAddress, oldViewDistance, newViewDistance, cubesToUnload, columnsToUnload);
+				this.cubeSelector.findAllUnloadedOnViewDistanceDecrease(playerAddress, oldHorizontalViewDistance, newHorizontalViewDistance, oldVerticalViewDistance, newVerticalViewDistance, cubesToUnload, columnsToUnload);
 
 				cubesToUnload.forEach(address -> {
 					PlayerCubeMapEntry cubeWatcher = this.getCubeWatcher(address);
@@ -563,7 +579,8 @@ public class PlayerCubeMap extends PlayerChunkMap {
 			}
 		}
 
-		this.viewDistance = newViewDistance;
+		this.horizontalViewDistance = newHorizontalViewDistance;
+		this.verticalViewDistance = newVerticalViewDistance;
 		this.setNeedSort();
 	}
 
