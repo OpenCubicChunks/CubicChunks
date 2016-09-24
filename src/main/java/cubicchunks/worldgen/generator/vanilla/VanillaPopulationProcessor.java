@@ -61,7 +61,7 @@ public class VanillaPopulationProcessor implements CubeProcessor {
 		try {
 			this.vanillaGen.populate(cube.getX(), cube.getZ());
 		} catch (RuntimeException ex) {
-			CubicChunks.LOGGER.error("Exception when populating chunk at " + cube.getX() + ", " + cube.getZ(), ex);
+			CubicChunks.LOGGER.error("Exception when populating chunk at {}", cube.getCoords(), ex);
 		}
 	}
 }

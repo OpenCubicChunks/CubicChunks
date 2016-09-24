@@ -810,8 +810,6 @@ public class Column extends Chunk {
 			cube = new Cube(this.world, this, this.xPosition, cubeY, this.zPosition, isModified);
 			this.cubeMap.put(cubeY, cube);
 			this.roundRobinCubeQueue.addFirst(cubeY);
-			//System.out.println("CREATECUBE=" + cube.getCoords());
-			//new Exception().printStackTrace();
 		}
 		return cube;
 	}
@@ -864,7 +862,7 @@ public class Column extends Chunk {
 	}
 
 	public void setCompatBaseTerrainDone(boolean terrain) {
-		this.compatBaseTerrainDone = true;
+		this.compatBaseTerrainDone = false;
 	}
 
 	public boolean isCompatPopulationDone() {

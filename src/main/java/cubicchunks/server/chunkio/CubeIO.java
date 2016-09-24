@@ -184,9 +184,9 @@ public class CubeIO implements IThreadedFileIO {
 			}
 			world.getProfiler().endStartSection("readCompressed");
 			nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(data));
+			world.getProfiler().endSection();
 		}
 
-		world.getProfiler().endSection();
 		// restore the cube
 		int cubeX = getX(address);
 		int cubeY = getY(address);
@@ -264,10 +264,14 @@ public class CubeIO implements IThreadedFileIO {
 				try {
 					// save the cube
 					byte[] data = IONbtWriter.writeNbtBytes(entry.nbt);
-					this.cubes.put(entry.address, data);
-					//cube can be removed from toSave queue only after writing to disk
-					//to avoid race conditions
-					it.remove();
+					try {
+						this.cubes.put(entry.address, data);
+					} finally {
+						//cube can be removed from toSave queue only after writing to disk
+						//to avoid race conditions
+						it.remove();
+					}
+
 					numCubeBytesSaved += data.length;
 				} catch (Throwable t) {
 					err(String.format("Unable to write cube %d, %d, %d", getX(entry.address), getY(entry.address), getZ(entry.address)), t);
