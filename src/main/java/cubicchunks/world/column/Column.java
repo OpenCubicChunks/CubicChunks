@@ -862,7 +862,7 @@ public class Column extends Chunk {
 	}
 
 	public void setCompatBaseTerrainDone(boolean terrain) {
-		this.compatBaseTerrainDone = false;
+		this.compatBaseTerrainDone = terrain;
 	}
 
 	public boolean isCompatPopulationDone() {
