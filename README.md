@@ -1,6 +1,6 @@
 #Cubic Chunks Minecraft Mod
 
-+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/CubicChunks-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/CubicChunks-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [![Build Status](https://travis-ci.org/Barteks2x/CubicChunks.svg?branch=master)](https://travis-ci.org/Barteks2x/CubicChunks)
 
