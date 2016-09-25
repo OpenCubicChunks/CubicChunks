@@ -27,6 +27,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 
+import java.util.function.Consumer;
+
 import static cubicchunks.util.Coords.CUBE_MAX_X;
 import static cubicchunks.util.Coords.CUBE_MAX_Y;
 import static cubicchunks.util.Coords.CUBE_MAX_Z;
@@ -215,14 +217,6 @@ public class CubeCoords {
 		return new CubeCoords(getCubeX() + dx, getCubeY() + dy, getCubeZ() + dz);
 	}
 
-	public static CubeCoords fromBlockCoords(int blockX, int blockY, int blockZ) {
-		return new CubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
-	}
-
-	public static CubeCoords fromEntity(Entity entity) {
-		return new CubeCoords(getCubeXForEntity(entity), getCubeYForEntity(entity), getCubeZForEntity(entity));
-	}
-
 	public ChunkPos chunkPos() {
 		return new ChunkPos(getCubeX(), getCubeZ());
 	}
@@ -232,5 +226,27 @@ public class CubeCoords {
 		int dy = coords.cubeY - this.cubeY;
 		int dz = coords.cubeZ - this.cubeZ;
 		return dx*dx + dy*dy + dz*dz;
+	}
+
+	public void forEachWithinRange(int range, Consumer<CubeCoords> action) {
+		for (int x = this.cubeX - range; x < this.cubeX + range; x++) {
+			for (int y = this.cubeY - range; y < this.cubeY + range; y++) {
+				for (int z = this.cubeZ - range; z < this.cubeZ + range; z++) {
+					action.accept(new CubeCoords(x, y, z));
+				}
+			}
+		}
+	}
+
+	public static CubeCoords fromBlockCoords(int blockX, int blockY, int blockZ) {
+		return new CubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
+	}
+
+	public static CubeCoords fromEntity(Entity entity) {
+		return new CubeCoords(getCubeXForEntity(entity), getCubeYForEntity(entity), getCubeZForEntity(entity));
+	}
+
+	public static CubeCoords fromBlockCoords(BlockPos pos) {
+		return CubeCoords.fromBlockCoords(pos.getX(), pos.getY(), pos.getZ());
 	}
 }

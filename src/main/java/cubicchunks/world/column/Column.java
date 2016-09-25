@@ -207,9 +207,6 @@ public class Column extends Chunk {
 	public IBlockState setBlockState(BlockPos pos, @Nonnull IBlockState newBlockState) {
 		// is there a chunk for this block?
 		int cubeY = Coords.blockToCube(pos.getY());
-		if (!getWorld().isRemote) {
-			int i = 0;
-		}
 		// did anything change?
 		IBlockState oldBlockState = this.getBlockState(pos);
 		if (oldBlockState == newBlockState) {

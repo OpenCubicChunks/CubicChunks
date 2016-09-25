@@ -25,6 +25,7 @@ package cubicchunks.debug;
 
 import com.flowpowered.noise.module.source.Perlin;
 import cubicchunks.BaseCubicWorldType;
+import cubicchunks.CubicChunks;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
@@ -41,7 +42,7 @@ public class DebugWorldType extends BaseCubicWorldType {
 
 	@Override
 	public boolean getCanBeCreated() {
-		return System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
+		return CubicChunks.DEBUG_ENABLED;
 	}
 
 	public static void create() {

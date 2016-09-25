@@ -1,3 +1,5 @@
 generator.VanillaCubic=Vanilla Cubic
 generator.FlatCubic=Flat Cubic
 generator.CustomCubic=Custom Cubic
+
+itemGroup.cubic_chunks_debug_tab=Cubic Chunks debug items
