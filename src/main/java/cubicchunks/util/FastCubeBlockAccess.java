@@ -32,6 +32,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 
+import static cubicchunks.util.Coords.blockToLocal;
+
 /**
  * Simple class that allows to quickly access blocks near specified cube without the overhead of getting these cubes.
  * <p>
@@ -101,5 +103,12 @@ public class FastCubeBlockAccess {
 
 	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
 		this.getCube(pos.getX(), pos.getY(), pos.getZ()).setLightFor(lightType, pos, val);
+	}
+
+
+	public boolean isDirectlyExposedToSkylight(BlockPos.MutableBlockPos pos) {
+		Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
+		Integer height = cube.getColumn().getHeightmapAt(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
+		return height == null || pos.getY() >= height;
 	}
 }

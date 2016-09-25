@@ -43,6 +43,7 @@ public class FlatCubicChunksWorldType extends BaseCubicWorldType {
 		return new ICubicChunkGenerator() {
 			@Override public void generateTerrain(Cube cube) {
 				gen.calculate(cube);
+				cube.initSkyLight();
 			}
 
 			@Override public void populateCube(Cube cube) {

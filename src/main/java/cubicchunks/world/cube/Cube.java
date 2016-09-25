@@ -333,12 +333,14 @@ public class Cube {
 
 	private void tryDoFirstLight() {
 		BlockPos pos = this.getCoords().getMinBlockPos();
-
-		if(!world.isAreaLoaded(pos.add(-1, -1, -1), pos.add(16, 16, 16))) {
+		final int radius = 17;
+		if(!world.isAreaLoaded(pos.add(-radius, -radius, -radius), pos.add(15+radius, 15+radius, 15+radius))) {
 			return;
 		}
 		//client cubes (setClientCube) are always fully generated, isInitialLightingDone is never false
-		((ICubicWorldServer)this.world).getFirstLightProcessor().calculate(this);
+		if(((ICubicWorldServer)this.world).getFirstLightProcessor().diffuseSkylight(this)) {
+			this.isInitialLightingDone = true;
+		}
 	}
 
 	//=================================
@@ -421,9 +423,6 @@ public class Cube {
 		IOpacityIndex index = this.column.getOpacityIndex();
 		int opacity = newBlockState.getLightOpacity((World) world, this.coords.localToBlock(localX, localY, localZ));
 		index.onOpacityChange(localX, blockY, localZ, opacity);
-		if(this.isEmpty() && this.getY() <= 4) {
-			int i = 0;
-		}
 		return oldBlockState;
 	}
 
@@ -499,9 +498,6 @@ public class Cube {
 
 	public void setPopulated(boolean populated) {
 		this.isPopulated = populated;
-		if(this.isEmpty() && this.getY() <= 4) {
-			int i;
-		}
 	}
 
 	public void setInitialLightingDone(boolean initialLightingDone) {
@@ -514,6 +510,14 @@ public class Cube {
 
 	public boolean isPopulated() {
 		return isPopulated;
+	}
+
+	/**
+	 * Equivalent of {@link Chunk#generateSkylightMap}. Generated Minecraft classic-like lighting.
+	 * Also updates values in cubes below
+	 */
+	public void initSkyLight() {
+		((ICubicWorldServer)this.getWorld()).getFirstLightProcessor().setRawSkylight(this);
 	}
 
 	public static class LightUpdateData {

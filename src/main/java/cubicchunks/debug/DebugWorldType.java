@@ -53,14 +53,15 @@ public class DebugWorldType extends BaseCubicWorldType {
 		return new ICubicChunkGenerator() {
 			Perlin perlin = new Perlin();
 			{
-				perlin.setFrequency(0.0473);
+				perlin.setFrequency(0.180);
 				perlin.setOctaveCount(1);
 				perlin.setSeed((int) world.getSeed());
 			}
 
 			CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
+
 			@Override public void generateTerrain(Cube cube) {
-				if(cube.getY() > 20) {
+				if(cube.getY() > 30) {
 					return;
 				}
 				if(cube.getX() == 100 && cube.getZ() == 100) {
@@ -70,9 +71,9 @@ public class DebugWorldType extends BaseCubicWorldType {
 				for(BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
 					double currDensity = perlin.getValue(pos.getX(), pos.getY()*0.5, pos.getZ());
 					double aboveDensity = perlin.getValue(pos.getX(), (pos.getY()+1)*0.5, pos.getZ());
-					if(cube.getY() > 16) {
-						currDensity -= (pos.getY() - 16*16)/32;
-						aboveDensity -= (pos.getY() + 1 - 16*16)/32;
+					if(cube.getY() >= 16) {
+						currDensity -= (pos.getY() - 16*16)/100;
+						aboveDensity -= (pos.getY() + 1 - 16*16)/100;
 					}
 					if(currDensity > 0.5) {
 						if(currDensity > 0.5 && aboveDensity <= 0.5) {
@@ -84,10 +85,11 @@ public class DebugWorldType extends BaseCubicWorldType {
 						}
 					}
 				}
+				cube.initSkyLight();
 			}
 
 			@Override public void populateCube(Cube cube) {
-				populator.calculate(cube);
+				//populator.calculate(cube);
 			}
 		};
 	}

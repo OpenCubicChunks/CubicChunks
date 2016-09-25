@@ -46,6 +46,7 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 		return new ICubicChunkGenerator() {
 			@Override public void generateTerrain(Cube cube) {
 				terrainProcessor.calculate(cube);
+				cube.initSkyLight();
 			}
 
 			@Override public void populateCube(Cube cube) {

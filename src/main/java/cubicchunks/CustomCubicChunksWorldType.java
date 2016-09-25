@@ -49,6 +49,7 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 			@Override public void generateTerrain(Cube cube) {
 				terrain.calculate(cube);
 				features.calculate(cube);
+				cube.initSkyLight();
 			}
 
 			@Override public void populateCube(Cube cube) {
