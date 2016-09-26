@@ -106,7 +106,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public void unloadAllChunks() {
 		// unload all the cubes in the columns
 		for (Column column : this.loadedColumns.values()) {
-			for (Cube cube : column.getAllCubes()) {
+			for (Cube cube : column.getLoadedCubes()) {
 				this.cubesToUnload.add(cube.getCoords());
 			}
 		}
@@ -165,7 +165,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 
 			// save the cubes
-			for (Cube cube : column.getAllCubes()) {
+			for (Cube cube : column.getLoadedCubes()) {
 				if (cube.needsSaving()) {
 					this.cubeIO.saveCube(cube);
 				}
@@ -202,7 +202,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			if(column == null) {
 				continue;
 			}
-			if (!column.hasCubes() && column.unloaded) {
+			if (!column.hasLoadedCubes() && column.unloaded) {
 
 				column.onChunkUnload();
 				this.loadedColumns.remove(address);
@@ -444,7 +444,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 			sb.append("Column[").append(column.getX()).append(", ").append(column.getZ()).append("] {");
 			boolean isFirst = true;
-			for (Cube cube : column.getAllCubes()) {
+			for (Cube cube : column.getLoadedCubes()) {
 				if (!isFirst) {
 					sb.append(", ");
 				}
@@ -490,7 +490,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		//unload all cubes in that column
 		//since it's unloading the whole column - ignore vanilla
 		//this allows to special-case 0-255 height range with VanillaCubic
-		column.getAllCubes().forEach(this::unloadCubeIgnoreVanilla);
+		column.getLoadedCubes().forEach(this::unloadCubeIgnoreVanilla);
 		//unload that column
 		//TODO: columns that have cubes near spawn will never be removed from unload queue
 		//there is only a finite amount of them (about 1000) so it's not a big issue

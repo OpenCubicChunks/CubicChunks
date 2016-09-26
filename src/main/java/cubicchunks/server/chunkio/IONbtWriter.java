@@ -196,7 +196,7 @@ class IONbtWriter {
 		cubeNbt.setTag("LightingInfo", lightingInfo);
 
 		int[] lastHeightmap = cube.getColumn().getHeightMap();
-		lightingInfo.setIntArray("LastHeightMap", lastHeightmap);
+		lightingInfo.setIntArray("LastHeightMap", lastHeightmap); //TODO: why are we storing the height map on a Cube???
 	}
 
 	private static List<NextTickListEntry> getScheduledTicks(Cube cube) {

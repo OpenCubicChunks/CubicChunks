@@ -149,7 +149,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	 * This method exists only because vanilla needs it. It shouldn't be used anywhere else.
 	 */
 	@Override
-	@Deprecated
+	@Deprecated // BUG: no vertical filtering! TODO: do filtering and return a sort of 'ColumnView'
 	public Iterator<Chunk> getChunkIterator() {
 		final Iterator<PlayerCubeMapColumnEntry> iterator = this.columnWatchers.valueCollection().iterator();
 		return new AbstractIterator<Chunk>() {
@@ -158,12 +158,14 @@ public class PlayerCubeMap extends PlayerChunkMap {
 					PlayerCubeMapColumnEntry watcher = iterator.next();
 					Chunk column = watcher.getChunk();
 
+					// TODO: test Cubes, not Column
+					
 					if (column == null) {
 						continue;
 					}
 					//columns that don't have light calculated or haven't been ticked
 					//have higher priority
-					if (!column.isLightPopulated() && column.isTerrainPopulated()) {
+					if (!column.isLightPopulated() && column.isTerrainPopulated()) { 
 						return column;
 					}
 					if (!column.isChunkTicked()) {

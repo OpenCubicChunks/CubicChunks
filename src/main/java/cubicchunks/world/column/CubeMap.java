@@ -38,6 +38,8 @@ class CubeMap implements Iterable<Cube> {
 
 	private final TreeMap<Integer, Cube> cubeMap = new TreeMap<>();
 	private final Int2ObjectMap<Cube> map = new Int2ObjectOpenHashMap<>();
+	
+	//TODO: Don't force Cube's to have an ExtendedBlockStorage (empty Cube's eat memory)
 	private final ExtendedBlockStorageSet set = new ExtendedBlockStorageSet();
 
 	Cube get(int cubeY) {
@@ -61,10 +63,11 @@ class CubeMap implements Iterable<Cube> {
 		}
 		this.cubeMap.put(cubeY, cube);
 		map.put(cubeY, cube);
-		set.add(cube.getStorage());
+		set.add(cube.getStorage()); //TODO: Don't force Cube's to have an ExtendedBlockStorage (empty Cube's eat memory)
 		return true;
 	}
 
+	//TODO: optimize this... iterating over a map is kinda slow
 	Iterable<Cube> cubes(int startY, int endY) {
 		if(startY > endY) {
 			return this.cubeMap.subMap(endY, true, startY, true).descendingMap().values();
@@ -77,6 +80,7 @@ class CubeMap implements Iterable<Cube> {
 		return this.map.containsKey(cubeY);
 	}
 
+	//TODO: optimize this... iterating over a map is so slow! (and this is used for ticking chunks :/)
 	@Override public Iterator<Cube> iterator() {
 		return Iterators.unmodifiableIterator(this.map.values().iterator());
 	}
@@ -90,6 +94,7 @@ class CubeMap implements Iterable<Cube> {
 	}
 
 	ExtendedBlockStorage[] getStorageArrays() {
-		return set.getArray();
+		//TODO: automatically update set if there is a Cube with a new ExtendedBlockStorage
+		return set.getArray(); 
 	}
 }

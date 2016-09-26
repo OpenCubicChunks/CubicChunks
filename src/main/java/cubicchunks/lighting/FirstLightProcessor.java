@@ -122,7 +122,7 @@ public class FirstLightProcessor {
 					continue;
 				}
 
-				Iterable<Cube> cubes = column.getCubes(blockToCube(maxBlockY), blockToCube(minBlockY));
+				Iterable<Cube> cubes = column.getLoadedCubes(blockToCube(maxBlockY), blockToCube(minBlockY));
 				for(Cube cube : cubes) {
 					int cubeY = cube.getY();
 					//is the update even possible?
