@@ -780,8 +780,12 @@ public class Column extends Chunk {
 		return Collections.unmodifiableCollection(this.cubeMap.all());
 	}
 
-	public Iterable<Cube> getCubes(int minY, int maxY) {
-		return this.cubeMap.cubes(minY, maxY);
+	/**
+	 * Returns ordered Iterable of cubes. If startY < endY - order is bottom to top.
+	 * If startY > endY - order is top to bottom.
+	 */
+	public Iterable<Cube> getCubes(int startY, int endY) {
+		return this.cubeMap.cubes(startY, endY);
 	}
 
 	public boolean hasCubes() {

@@ -273,7 +273,7 @@ public class BlankColumn extends Column {
 	}
 
 	@Override
-	public Iterable<Cube> getCubes(int minY, int maxY) {
+	public Iterable<Cube> getCubes(int startY, int endY) {
 		return Collections.EMPTY_SET;
 	}
 }

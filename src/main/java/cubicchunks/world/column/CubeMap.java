@@ -65,8 +65,12 @@ class CubeMap implements Iterable<Cube> {
 		return true;
 	}
 
-	Iterable<Cube> cubes(int minCubeY, int maxCubeY) {
-		return this.cubeMap.subMap(minCubeY, true, maxCubeY, true).values();
+	Iterable<Cube> cubes(int startY, int endY) {
+		if(startY > endY) {
+			return this.cubeMap.subMap(endY, true, startY, true).descendingMap().values();
+		} else {
+			return this.cubeMap.subMap(startY, true, endY, true).values();
+		}
 	}
 
 	private boolean contains(int cubeY) {

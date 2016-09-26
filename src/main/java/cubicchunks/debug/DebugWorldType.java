@@ -63,9 +63,11 @@ public class DebugWorldType extends BaseCubicWorldType {
 
 			@Override public void generateTerrain(Cube cube) {
 				if(cube.getY() > 30) {
+					cube.initSkyLight();
 					return;
 				}
 				if(cube.getX() == 100 && cube.getZ() == 100) {
+					cube.initSkyLight();
 					return;//hole in the world
 				}
 				CubeCoords cubePos = cube.getCoords();

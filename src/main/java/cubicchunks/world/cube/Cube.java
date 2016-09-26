@@ -513,11 +513,10 @@ public class Cube {
 	}
 
 	/**
-	 * Equivalent of {@link Chunk#generateSkylightMap}. Generated Minecraft classic-like lighting.
-	 * Also updates values in cubes below
+	 * Lights up all blocks that will definitely be lit. It's faster than using world.checkLightFor on everything.
 	 */
 	public void initSkyLight() {
-		((ICubicWorldServer)this.getWorld()).getFirstLightProcessor().setRawSkylight(this);
+		((ICubicWorldServer)this.getWorld()).getFirstLightProcessor().earlySkylightMap(this);
 	}
 
 	public static class LightUpdateData {
