@@ -25,6 +25,7 @@ package cubicchunks.world;
 
 import cubicchunks.util.Bits;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.util.Coords;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,11 +35,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class OpacityIndex implements IOpacityIndex {
-
-	/**
-	 * Special value to indicate the absence of a segment in the minimum and maximum arrays.
-	 */
-	private static final int NONE = Integer.MIN_VALUE;
 
 	/**
 	 * Special value to indicate the absence of a segment in the segments arrays.
@@ -79,11 +75,11 @@ public class OpacityIndex implements IOpacityIndex {
 
 		// init to empty
 		for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
-			this.ymin[i] = NONE;
-			this.ymax[i] = NONE;
+			this.ymin[i] = Coords.VARY_LOW;
+			this.ymax[i] = Coords.VARY_LOW;
 		}
 
-		this.heightMapLowest = NONE;
+		this.heightMapLowest = Coords.VARY_LOW;
 		this.hash = 0;
 		this.needsHash = true;
 	}
@@ -166,28 +162,22 @@ public class OpacityIndex implements IOpacityIndex {
 			this.setOpacityWithSegments(xzIndex, blockY, isOpaque);
 		}
 
-		this.heightMapLowest = NONE;
+		this.heightMapLowest = Coords.VARY_LOW;
 		this.needsHash = true;
 	}
 
 	@Override
 	public boolean isOccluded(int localX, int blockY, int localZ) {
-		Integer topY = this.getTopBlockY(localX, localZ);
-		return topY != null && blockY <= topY;
+		return blockY <= this.getTopBlockY(localX, localZ);
 	}
 
 	@Override
-	public Integer getTopBlockY(int localX, int localZ) {
-		int i = getIndex(localX, localZ);
-		int pos = this.ymax[i];
-		if (pos == NONE) {
-			return null;
-		}
-		return pos;
+	public int getTopBlockY(int localX, int localZ) {
+		return this.ymax[getIndex(localX, localZ)];
 	}
 
 	@Override
-	public Integer getTopBlockYBelow(int localX, int localZ, int blockY) {
+	public int getTopBlockYBelow(int localX, int localZ, int blockY) {
 
 		// within the highest segment or there exists no segment for this block column
 		int i = getIndex(localX, localZ);
@@ -197,7 +187,7 @@ public class OpacityIndex implements IOpacityIndex {
 
 		// below or at the minimum height, thus there are no blocks below
 		if (blockY <= this.ymin[i]) {
-			return null;
+			return Coords.VARY_LOW;
 		}
 
 		// There are no opacity changes, everything is opaque from ymin to ymax. blockY is between ymin and ymax, thus
@@ -262,13 +252,8 @@ public class OpacityIndex implements IOpacityIndex {
 	}
 
 	@Override
-	public Integer getBottomBlockY(int localX, int localZ) {
-		int i = getIndex(localX, localZ);
-		int pos = this.ymin[i];
-		if (pos == NONE) {
-			return null;
-		}
-		return pos;
+	public int getBottomBlockY(int localX, int localZ) {
+		return this.ymin[getIndex(localX, localZ)];
 	}
 
 	@Override
@@ -278,12 +263,15 @@ public class OpacityIndex implements IOpacityIndex {
 
 	@Override
 	public int getLowestTopBlockY() {
-		if (this.heightMapLowest == NONE) {
+		if (this.heightMapLowest == Coords.VARY_LOW) {
 			this.heightMapLowest = Integer.MAX_VALUE;
 			for (int i = 0; i < this.ymax.length; i++) {
 				if (this.ymax[i] < this.heightMapLowest) {
 					this.heightMapLowest = this.ymax[i];
 				}
+			}
+			if(this.heightMapLowest == Coords.VARY_LOW){
+				this.heightMapLowest--; // just so its no longer == to Coords.VARY_LOW
 			}
 		}
 		return this.heightMapLowest;
@@ -303,7 +291,7 @@ public class OpacityIndex implements IOpacityIndex {
 	private void setNoSegmentsOpaque(int xzIndex, int blockY) {
 
 		// something from nothing?
-		if (this.ymin[xzIndex] == NONE && this.ymax[xzIndex] == NONE) {
+		if (this.ymin[xzIndex] == Coords.VARY_LOW && this.ymax[xzIndex] == Coords.VARY_LOW) {
 			this.ymin[xzIndex] = blockY;
 			this.ymax[xzIndex] = blockY;
 			return;
@@ -391,18 +379,18 @@ public class OpacityIndex implements IOpacityIndex {
 
 	private void setNoSegmentsTransparent(int xzIndex, int blockY) {
 		// nothing into nothing?
-		if (this.ymin[xzIndex] == NONE && this.ymax[xzIndex] == NONE) {
+		if (this.ymin[xzIndex] == Coords.VARY_LOW && this.ymax[xzIndex] == Coords.VARY_LOW) {
 			return;
 		}
-		assert !(this.ymin[xzIndex] == NONE || this.ymax[xzIndex] == NONE) : "Only one of ymin and ymax is NONE! This is not possible";
+		assert !(this.ymin[xzIndex] == Coords.VARY_LOW || this.ymax[xzIndex] == Coords.VARY_LOW) : "Only one of ymin and ymax is NONE! This is not possible";
 
 		// only one block left?
 		if (this.ymax[xzIndex] == this.ymin[xzIndex]) {
 
 			// something into nothing?
 			if (blockY == this.ymin[xzIndex]) {
-				this.ymin[xzIndex] = NONE;
-				this.ymax[xzIndex] = NONE;
+				this.ymin[xzIndex] = Coords.VARY_LOW;
+				this.ymax[xzIndex] = Coords.VARY_LOW;
 			}
 
 			// if setting to transparent somewhere else - nothing changes

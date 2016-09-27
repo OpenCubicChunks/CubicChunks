@@ -26,6 +26,7 @@ package cubicchunks;
 import com.google.common.collect.Lists;
 import cubicchunks.launch.LaunchWrapperTestRunner;
 import cubicchunks.util.Bits;
+import cubicchunks.util.Coords;
 import cubicchunks.world.OpacityIndex;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,8 +61,8 @@ public class TestOpacityIndex {
 	@Test
 	public void getWithAllTransparent() {
 		OpacityIndex index = new OpacityIndex();
-		assertEquals(null, index.getBottomBlockY(0, 0));
-		assertEquals(null, index.getTopBlockY(0, 0));
+		assertEquals(Coords.VARY_LOW, index.getBottomBlockY(0, 0));
+		assertEquals(Coords.VARY_LOW, index.getTopBlockY(0, 0));
 		assertEquals(false, index.isOpaque(0, -100, 0));
 		assertEquals(false, index.isOpaque(0, -10, 0));
 		assertEquals(false, index.isOpaque(0, 0, 0));
@@ -118,8 +119,8 @@ public class TestOpacityIndex {
 	public void setSingleTransparentFromSingleOpaque() {
 		OpacityIndex index = makeIndex(10, 10);
 		index.onOpacityChange(0, 10, 0, 0);
-		assertEquals(null, index.getBottomBlockY(0, 0));
-		assertEquals(null, index.getTopBlockY(0, 0));
+		assertEquals(Coords.VARY_LOW, index.getBottomBlockY(0, 0));
+		assertEquals(Coords.VARY_LOW, index.getTopBlockY(0, 0));
 		assertEquals(null, getSegments(index));
 	}
 
@@ -377,8 +378,8 @@ public class TestOpacityIndex {
 		assertEquals(false, index.isOpaque(0, 1, 0));
 		assertEquals(false, index.isOpaque(0, 2, 0));
 		assertEquals(false, index.isOpaque(0, 3, 0));
-		assertEquals(null, index.getTopBlockY(0, 0));
-		assertEquals(null, index.getBottomBlockY(0, 0));
+		assertEquals(Coords.VARY_LOW, index.getTopBlockY(0, 0));
+		assertEquals(Coords.VARY_LOW, index.getBottomBlockY(0, 0));
 	}
 
 	@Test
@@ -624,8 +625,8 @@ public class TestOpacityIndex {
 		assertEquals(false, index.isOpaque(0, 3, 0));
 		assertEquals(false, index.isOpaque(0, 4, 0));
 		assertEquals(false, index.isOpaque(0, 5, 0));
-		assertEquals(null, index.getTopBlockY(0, 0));
-		assertEquals(null, index.getBottomBlockY(0, 0));
+		assertEquals(Coords.VARY_LOW, index.getTopBlockY(0, 0));
+		assertEquals(Coords.VARY_LOW, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 0, 0, 0);
 
@@ -636,8 +637,8 @@ public class TestOpacityIndex {
 		assertEquals(false, index.isOpaque(0, 3, 0));
 		assertEquals(false, index.isOpaque(0, 4, 0));
 		assertEquals(false, index.isOpaque(0, 5, 0));
-		assertEquals(null, index.getTopBlockY(0, 0));
-		assertEquals(null, index.getBottomBlockY(0, 0));
+		assertEquals(Coords.VARY_LOW, index.getTopBlockY(0, 0));
+		assertEquals(Coords.VARY_LOW, index.getBottomBlockY(0, 0));
 	}
 
 	@Test
@@ -680,14 +681,14 @@ public class TestOpacityIndex {
 				throw t;
 			}
 			for(int i = 0; i < maxHeight; i++) {
-				assertEquals(message + ", maxHBelow(" + i + ")", test.getMaxYBelow(i), index.getTopBlockYBelow(0, 0, i));
+				assertEquals(message + ", maxHBelow(" + i + ")", (Integer)test.getMaxYBelow(i), (Integer)index.getTopBlockYBelow(0, 0, i));
 			}
 
 			for (int i = 0; i < maxHeight; i++) {
 				assertEquals(message + "y=" + i, test.get(i), index.isOpaque(0, i, 0) ? 1 : 0);
 			}
-			assertEquals(message + "minY", test.getMinY(), index.getBottomBlockY(0, 0));
-			assertEquals(message + "maxY", test.getMaxY(), index.getTopBlockY(0, 0));
+			assertEquals(message + "minY", (Integer)test.getMinY(), (Integer)index.getBottomBlockY(0, 0));
+			assertEquals(message + "maxY", (Integer)test.getMaxY(), (Integer)index.getTopBlockY(0, 0));
 
 
 			yPosOpacityEncoded[0]++;
@@ -762,31 +763,31 @@ public class TestOpacityIndex {
 			return arr[y];
 		}
 
-		public Integer getMinY() {
+		public int getMinY() {
 			for (int i = 0; i < arr.length; i++) {
 				if (arr[i] != 0) {
 					return i;
 				}
 			}
-			return null;
+			return Coords.VARY_LOW;
 		}
 
-		public Integer getMaxY() {
+		public int getMaxY() {
 			for (int i = arr.length - 1; i >= 0; i--) {
 				if (arr[i] != 0) {
 					return i;
 				}
 			}
-			return null;
+			return Coords.VARY_LOW;
 		}
 
-		public Integer getMaxYBelow(int y) {
+		public int getMaxYBelow(int y) {
 			for(int i = y - 1; i >= 0; i--) {
 				if(arr[i] != 0) {
 					return i;
 				}
 			}
-			return null;
+			return Coords.VARY_LOW;
 		}
 	}
 }

@@ -27,6 +27,7 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
+//TODO: make this estend ICubeProvider (I mean... it provides Cubes right?)
 public interface ICubicChunkGenerator {
 
 	/**
@@ -49,6 +50,7 @@ public interface ICubicChunkGenerator {
 	/**
 	 * Generates and (if possible) populates the cube, populates all neighbor cubes if possible.
 	 */
+	//TODO: fix this... It should create a Cube not get one form the cache
 	default void generateCube(ICubeCache cache, Cube cube) {
 		this.generateTerrain(cube);
 		CubeCoords baseCoords = cube.getCoords();
@@ -65,8 +67,6 @@ public interface ICubicChunkGenerator {
 				}
 			}
 		}
-
-
 	}
 
 	static boolean cubesForPopulationExist(ICubeCache cache, CubeCoords coords) {

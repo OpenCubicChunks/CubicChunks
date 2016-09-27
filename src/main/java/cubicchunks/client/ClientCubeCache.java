@@ -37,8 +37,9 @@ import net.minecraft.world.World;
 public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 	private ICubicWorldClient world;
+	
 	private BlankColumn blankColumn;
-	private Cube blankCube;
+	private Cube        blankCube;
 
 	public ClientCubeCache(ICubicWorldClient world) {
 		super((World) world);
@@ -50,18 +51,12 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 	@Override
 	public Column loadChunk(int cubeX, int cubeZ) {
+		Column column = new Column(this.world, cubeX, cubeZ);         // make a new one
+		this.chunkMapping.put(ChunkPos.asLong(cubeX, cubeZ), column); // add it to the cache
 
-		// is this chunk already loaded?
-		Column column = (Column) this.chunkMapping.get(ChunkPos.asLong(cubeX, cubeZ));
-		if (column != null) {
-			return column;
-		}
-
-		// make a new one
-		column = new Column(this.world, cubeX, cubeZ);
-
-		this.chunkMapping.put(ChunkPos.asLong(cubeX, cubeZ), column);
-
+		// fire a forge event... make mods happy :)
+		net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(column));
+		
 		column.setChunkLoaded(true);
 		return column;
 	}

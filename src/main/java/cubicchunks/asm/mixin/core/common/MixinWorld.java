@@ -254,15 +254,8 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	}
 
 	@Override public int getEffectiveHeight(int blockX, int blockZ) {
-		Column column = this.getCubeCache().getColumn(blockToCube(blockX), blockToCube(blockZ));
-		if(column == null) {
-			return this.getMinHeight();
-		}
-		Integer height = column.getHeightmapAt(blockToLocal(blockX), blockToLocal(blockZ));
-		if (height == null) {
-			return this.getMinHeight();
-		}
-		return height;
+		return this.chunkProvider.provideChunk(blockToCube(blockX), blockToCube(blockZ))
+				.getHeightValue(blockToLocal(blockX), blockToLocal(blockX));
 	}
 
 

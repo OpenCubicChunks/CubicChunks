@@ -45,5 +45,6 @@ public interface ICubicChunksWorldType {
 
 	ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world);
 
+	//TODO: change return type to IChunkProvider
 	ColumnGenerator createColumnGenerator(ICubicWorldServer world);
 }

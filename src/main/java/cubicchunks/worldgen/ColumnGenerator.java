@@ -28,6 +28,7 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import net.minecraft.world.biome.Biome;
 
+//TODO: Redo this implementing IChunkProvider (Thats what it does does'nt it?)
 public class ColumnGenerator {
 
 	private ICubicWorldServer m_worldServer;
@@ -47,8 +48,8 @@ public class ColumnGenerator {
 				16
 		);
 
-		// UNDONE: generate temperature map
-		// UNDONE: generate rainfall map
+		// TODO: generate temperature map
+		// TODO: generate rainfall map
 
 		return new Column(this.m_worldServer, cubeX, cubeZ, this.m_biomes);
 	}

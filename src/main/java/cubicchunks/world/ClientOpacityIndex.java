@@ -24,6 +24,8 @@
 package cubicchunks.world;
 
 import com.google.common.base.Throwables;
+
+import cubicchunks.util.Coords;
 import cubicchunks.world.column.Column;
 import net.minecraft.block.state.IBlockState;
 
@@ -34,19 +36,18 @@ import java.util.Arrays;
 
 public class ClientOpacityIndex implements IOpacityIndex {
 
-	private static final int NONE = Integer.MIN_VALUE;
 	private final Column chunk;
 	private int[] hmap;
 	private int[] bottomBlocks;
-	private int heightMapLowest = NONE;
+	private int heightMapLowest = Coords.VARY_LOW;
 
 	public ClientOpacityIndex(Column column) {
 		this.chunk = column;
 		this.hmap = new int[256];
 		this.bottomBlocks = new int[256];
 
-		Arrays.fill(hmap, NONE);
-		Arrays.fill(bottomBlocks, NONE);
+		Arrays.fill(hmap, Coords.VARY_LOW);
+		Arrays.fill(bottomBlocks, Coords.VARY_LOW);
 	}
 
 	public int getOpacity(int localX, int blockY, int localZ) {
@@ -71,20 +72,18 @@ public class ClientOpacityIndex implements IOpacityIndex {
 	}
 
 	@Override
-	public Integer getTopBlockY(int localX, int localZ) {
-		int v = hmap[getIndex(localX, localZ)];
-		return v == NONE ? null : v;
+	public int getTopBlockY(int localX, int localZ) {
+		return hmap[getIndex(localX, localZ)];
 	}
 
 	@Override
-	public Integer getBottomBlockY(int localX, int localZ) {
-		int v = bottomBlocks[getIndex(localX, localZ)];
-		return v == NONE ? null : v;
+	public int getBottomBlockY(int localX, int localZ) {
+		return bottomBlocks[getIndex(localX, localZ)];
 	}
 
 	@Override
 	public int getLowestTopBlockY() {
-		if (heightMapLowest == NONE) {
+		if (heightMapLowest == Coords.VARY_LOW) {
 			heightMapLowest = Integer.MAX_VALUE;
 			for (int i = 0; i < hmap.length; i++) {
 				if (hmap[i] < heightMapLowest) {
@@ -96,7 +95,7 @@ public class ClientOpacityIndex implements IOpacityIndex {
 	}
 
 	@Override
-	public Integer getTopBlockYBelow(int localX, int localZ, int blockY) {
+	public int getTopBlockYBelow(int localX, int localZ, int blockY) {
 		throw new UnsupportedOperationException("Not implemented");
 	}
 

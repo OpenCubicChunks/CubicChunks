@@ -319,8 +319,7 @@ public class FirstLightProcessor {
 	 *         {@link #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
 	 */
 	private static int getOcclusionHeight(Column column, int localX, int localZ) {
-		Integer val = column.getOpacityIndex().getTopBlockY(localX, localZ);
-		return val == null ? DEFAULT_OCCLUSION_HEIGHT : val;
+		return column.getOpacityIndex().getTopBlockY(localX, localZ);
 	}
 
 	/**
@@ -337,8 +336,7 @@ public class FirstLightProcessor {
 	 */
 	private static int getOcclusionHeightBelowCubeY(Column column, int blockX, int blockZ, int cubeY) {
 		IOpacityIndex index = column.getOpacityIndex();
-		Integer val = index.getTopBlockYBelow(blockToLocal(blockX), blockToLocal(blockZ), cubeToMinBlock(cubeY));
-		return val == null ? Integer.MIN_VALUE/2 : val;
+		return index.getTopBlockYBelow(blockToLocal(blockX), blockToLocal(blockZ), cubeToMinBlock(cubeY));
 	}
 
 	/**

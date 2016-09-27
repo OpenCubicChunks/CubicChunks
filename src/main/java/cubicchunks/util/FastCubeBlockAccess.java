@@ -114,7 +114,7 @@ public class FastCubeBlockAccess {
 	public int computeLightValue(BlockPos pos) {
 		Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
 		Column column = cube.getColumn();
-		Integer heightObj = column.getHeightmapAt(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
+		Integer heightObj = column.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
 		int height = heightObj == null ? AddressTools.MIN_BLOCK_Y - 1 : heightObj.intValue();
 		if (pos.getY() > height) {
 			return 15;

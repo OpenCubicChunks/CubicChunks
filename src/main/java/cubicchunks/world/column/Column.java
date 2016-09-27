@@ -108,33 +108,26 @@ public class Column extends Chunk {
 	//===============VANILLA METHODS===================
 	//=================================================
 
+	/**
+	 * Returns Y position of the block directly above the top non-transparent block,
+	 * or null is there are no non-transparent blocks
+	 */
 	@Override
-	@Deprecated
-	// don't use this! It's only here because vanilla needs it
 	public int getHeight(BlockPos pos) {
-		int localX = Coords.blockToLocal(pos.getX());
-		int localZ = Coords.blockToLocal(pos.getZ());
-		return this.getHeightValue(localX, localZ);
+		return this.getHeightValue(
+				Coords.blockToLocal(pos.getX()),
+				Coords.blockToLocal(pos.getZ()));
 	}
 
+	/**
+	 * Returns Y position of the block directly above the top non-transparent block,
+	 * or null is there are no non-transparent blocks
+	 */
 	@Override
-	@Deprecated
-	// don't use this! It's only here because vanilla needs it
 	public int getHeightValue(int localX, int localZ) {
 		// NOTE: the "height value" here is the height of the transparent block
 		// on top of the highest non-transparent block
-
-		Integer skylightBlockY = getHeightmapAt(localX, localZ);
-		if (skylightBlockY == null) {
-			// PANIC! TODO: Test this some more, and find solutions
-			// this column doesn't have any blocks in it that aren't air!
-			// but we can't return null here because vanilla code expects there to be a surface down there somewhere
-			// we don't actually know where the surface is yet, because maybe it hasn't been generated
-			// but we do know that the surface has to be at least at sea level,
-			// so let's go with that for now and hope for the best
-			skylightBlockY = this.getWorld().provider.getAverageGroundLevel() + 1;
-		}
-		return skylightBlockY;
+		return opacityIndex.getTopBlockY(localX, localZ) + 1;
 	}
 
 	@Override
@@ -163,7 +156,6 @@ public class Column extends Chunk {
 	}
 
 	@SideOnly(Side.CLIENT)
-	@Deprecated // The server has a better feel for chunks anyway! The client should never try do this. TODO: make shore it does not
 	protected void generateHeightMap() {
 		//this method reduces to no-op with CubicChunks, heightmap is generated in real time
 	}
@@ -279,11 +271,11 @@ public class Column extends Chunk {
 		int localZ = Coords.blockToLocal(pos.getZ());
 
 		// did the top non-transparent block change?
-		Integer oldSkylightY = getHeightmapAt(localX, localZ);
+		Integer oldSkylightY = getHeightValue(localX, localZ);
 		this.opacityIndex.onOpacityChange(localX, pos.getY(), localZ, newOpacity);
 		Integer newSkylightY = oldSkylightY;
 		if (!getWorld().isRemote) {
-			newSkylightY = getHeightmapAt(localX, localZ);
+			newSkylightY = getHeightValue(localX, localZ);
 			//if oldSkylightY == null and newOpacity == 0 then we didn't change anything
 		} else if (!(oldSkylightY == null && newOpacity == 0)) {
 			Integer oldSkylightActual = oldSkylightY == null ? null : oldSkylightY - 1;
@@ -427,7 +419,7 @@ public class Column extends Chunk {
 	public boolean canSeeSky(BlockPos pos) {
 		int localX = Coords.blockToLocal(pos.getX());
 		int localZ = Coords.blockToLocal(pos.getZ());
-		Integer height = this.getHeightmapAt(localX, localZ);
+		Integer height = this.getHeightValue(localX, localZ);
 		return height == null || pos.getY() >= height;
 	}
 
@@ -845,19 +837,6 @@ public class Column extends Chunk {
 			return null;
 		}
 		return Coords.blockToCube(blockY);
-	}
-
-	/**
-	 * Returns Y position of the block directly above the top non-transparent block,
-	 * or null is there are no non-transparent blocks
-	 */
-	public Integer getHeightmapAt(int localX, int localZ) {
-		// NOTE: a "skylight" block is the transparent block that is directly one block above the top non-transparent block
-		Integer topBlockY = this.opacityIndex.getTopBlockY(localX, localZ);
-		if (topBlockY != null) {
-			return topBlockY + 1;
-		}
-		return null;
 	}
 
 	@Override

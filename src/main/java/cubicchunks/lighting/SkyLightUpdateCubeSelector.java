@@ -65,11 +65,11 @@ class SkyLightUpdateCubeSelector {
 				Coords.localToBlock(column.zPosition, localZ)
 		);
 
-		Integer newMaxBlockY = column.getHeightmapAt(localX, localZ);
+		int newMaxBlockY = column.getHeightValue(localX, localZ);
 
 		//if there is no min block - there are no blocks here
 		//so assume it's at Integer.MIN_VALUE
-		int maxCubeY = Coords.blockToCube(newMaxBlockY == null ? Integer.MIN_VALUE : newMaxBlockY);
+		int maxCubeY = Coords.blockToCube(newMaxBlockY);
 
 		//attempt to update lighting only in loaded cubes
 		for (Cube cube : column.getLoadedCubes()) {
