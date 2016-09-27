@@ -46,7 +46,8 @@ public class JvmNames {
 		STRUCTURE_BOUNDING_BOX = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;",
 		CHUNK = "Lnet/minecraft/world/chunk/Chunk;",
 		CLASS_INHERITANCE_MULTI_MAP = "Lnet/minecraft/util/ClassInheritanceMultiMap;",
-		DEDICATED_SERVER = "Lnet/minecraft/server/dedicated/DedicatedServer;";
+		DEDICATED_SERVER = "Lnet/minecraft/server/dedicated/DedicatedServer;",
+		GUI_OVERLAY_DEBUG = "Lnet/minecraft/client/gui/GuiOverlayDebug;";
 
 	public static final String
 		BLOCK_POS_GETY = BLOCK_POS + "getY()I",
@@ -61,6 +62,7 @@ public class JvmNames {
 		COMMAND_BASE_PARSE_DOUBLE = COMMAND_BASE + "parseDouble(D" + STRING + "IIZ)D",
 		WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS = WORLD_CLIENT + "getChunkFromBlockCoords(" + BLOCK_POS + ")" + CHUNK,
 		CHUNK_GET_ENTITY_LISTS = CHUNK + "getEntityLists()[" + CLASS_INHERITANCE_MULTI_MAP,
-		DEDICATED_SERVER_IS_ANNOUNCING_PLAYER_ACHIEVEMENTS = DEDICATED_SERVER + "isAnnouncingPlayerAchievements()Z";
+		DEDICATED_SERVER_IS_ANNOUNCING_PLAYER_ACHIEVEMENTS = DEDICATED_SERVER + "isAnnouncingPlayerAchievements()Z",
+		GUI_OVERLAY_DEBUG_CALL = GUI_OVERLAY_DEBUG + "call()Ljava/util/List;";
 	// @formatter:on
 }
