@@ -189,7 +189,6 @@ jar {
 		attributes 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
 		attributes 'TweakOrder': '0'
 		attributes 'ForceLoadAsMod': 'true'
-		attributes 'MixinCompatibilityLevel': 'JAVA_8'
 	}
 }
 
