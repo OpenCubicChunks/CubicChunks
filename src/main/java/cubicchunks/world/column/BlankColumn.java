@@ -268,12 +268,12 @@ public class BlankColumn extends Column {
 	}
 
 	@Override
-	public Collection<Cube> getAllCubes() {
+	public Collection<Cube> getLoadedCubes() {
 		return Collections.EMPTY_SET;
 	}
 
 	@Override
-	public Iterable<Cube> getCubes(int startY, int endY) {
+	public Iterable<Cube> getLoadedCubes(int startY, int endY) {
 		return Collections.EMPTY_SET;
 	}
 }

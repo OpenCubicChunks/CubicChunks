@@ -231,7 +231,7 @@ public class IONbtReader {
 
 	private static void readLightingInfo(Cube cube, NBTTagCompound nbt, ICubicWorldServer world) {
 		NBTTagCompound lightingInfo = nbt.getCompoundTag("LightingInfo");
-		int[] lastHeightMap = lightingInfo.getIntArray("LastHeightMap");
+		int[] lastHeightMap = lightingInfo.getIntArray("LastHeightMap"); // NO NO NO! TODO: Why is hightmap being stored in Cube's data?! kill it!
 		int[] currentHeightMap = cube.getColumn().getHeightMap();
 
 		// assume changes outside of this cube have no effect on this cube.
