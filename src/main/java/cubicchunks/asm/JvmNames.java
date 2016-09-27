@@ -27,6 +27,8 @@ public class JvmNames {
 	private JvmNames() {}
 
 	// @formatter:off
+	// We sort variables alphabetically here to make finding pre-existing constants easier
+	// If you add a new one, please follow this sorting instead of adding them at the end
 	public static final String
 		BLOCK_POS = "Lnet/minecraft/util/math/BlockPos;",
 		CHUNK = "Lnet/minecraft/world/chunk/Chunk;",
@@ -49,6 +51,7 @@ public class JvmNames {
 		WORLD = "Lnet/minecraft/world/World;",
 		WORLD_CLIENT = "Lnet/minecraft/client/multiplayer/WorldClient;";
 
+	// Sorted as above
 	public static final String
 		BLOCK_POS_GETY = BLOCK_POS + "getY()I",
 		CHUNK_CACHE_GET_BLOCK_STATE = CHUNK_CACHE + "getBlockState(" + BLOCK_POS + ")" + IBLOCK_STATE,
