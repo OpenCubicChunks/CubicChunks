@@ -27,7 +27,6 @@ import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorStage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.PacketBuffer;
@@ -76,8 +75,7 @@ public class WorldEncoder {
 
 	public static void decodeCube(PacketBuffer in, Cube cube) {
 		// if the cube came from the server, it must be live
-		cube.setCurrentStage(GeneratorStage.LIVE);
-		cube.setTargetStage(GeneratorStage.LIVE);
+		cube.setClientCube();
 
 		// 1. emptiness
 		boolean isEmpty = in.readBoolean();

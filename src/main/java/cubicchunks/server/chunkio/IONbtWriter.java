@@ -85,8 +85,10 @@ class IONbtWriter {
 
 		// column properties
 		nbt.setByte("v", (byte) 1);
-		nbt.setBoolean("TerrainPopulated", column.isTerrainPopulated());
 		nbt.setLong("InhabitedTime", column.getInhabitedTime());
+
+		nbt.setBoolean("VanillaCubicTerrain", column.isCompatBaseTerrainDone());
+		nbt.setBoolean("VanillaCubicPopulated", column.isCompatPopulationDone());
 	}
 
 	private static void writeBiomes(Column column, NBTTagCompound nbt) {// biomes
@@ -110,8 +112,8 @@ class IONbtWriter {
 		cubeNbt.setInteger("z", cube.getZ());
 
 		// save the worldgen stage and the target stage
-		cubeNbt.setString("currentStage", cube.getCurrentStage().getName());
-		cubeNbt.setString("targetStage", cube.getTargetStage().getName());
+		cubeNbt.setBoolean("populated", cube.isPopulated());
+		cubeNbt.setBoolean("initLightDone", cube.isInitialLightingDone());
 	}
 
 	private static void writeBlocks(Cube cube, NBTTagCompound cubeNbt) {

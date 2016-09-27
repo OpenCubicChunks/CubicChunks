@@ -25,7 +25,6 @@ package cubicchunks.util.processor;
 
 import com.google.common.collect.Sets;
 import cubicchunks.util.ArrayBatchedQueue;
-import cubicchunks.util.Progress;
 import cubicchunks.world.ICubeCache;
 
 import java.util.Set;
@@ -93,14 +92,14 @@ public abstract class QueueProcessor<T> {
 		return this.processedAddresses.size();
 	}
 
-	public int processQueue(Progress progress) {
+	public int processQueue() {
 		this.processedAddresses.clear();
 		this.deferredAddresses.clear();
 
 		// process all the addresses
 		this.incomingAddresses.clear();
 		this.queue.getAll(this.incomingAddresses);
-		processBatch(progress);
+		processBatch();
 
 		// put the deferred addresses back on the queue
 		this.queue.addAll(this.deferredAddresses);
@@ -113,9 +112,5 @@ public abstract class QueueProcessor<T> {
 		return this.processedAddresses;
 	}
 
-	public void processBatch() {
-		processBatch(null);
-	}
-
-	public abstract void processBatch(Progress progress);
+	public abstract void processBatch();
 }

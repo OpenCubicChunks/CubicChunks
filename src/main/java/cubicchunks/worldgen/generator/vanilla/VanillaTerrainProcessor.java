@@ -23,7 +23,7 @@
  */
 package cubicchunks.worldgen.generator.vanilla;
 
-import cubicchunks.util.Coords;
+import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
@@ -50,6 +50,7 @@ import static cubicchunks.util.ChunkProviderOverworldAccess.getVillageGenerator;
 import static cubicchunks.util.ChunkProviderOverworldAccess.replaceBiomeBlocks;
 import static cubicchunks.util.ChunkProviderOverworldAccess.setBiomesForGeneration;
 import static cubicchunks.util.ChunkProviderOverworldAccess.setBlocksInChunk;
+import static cubicchunks.util.Coords.blockToLocal;
 
 public class VanillaTerrainProcessor implements CubeProcessor {
 	private final ICubicWorldServer world;
@@ -60,22 +61,29 @@ public class VanillaTerrainProcessor implements CubeProcessor {
 		this.vanillaGen = vanillaGen;
 	}
 
-
-	/**
-	 * {@link cubicchunks.worldgen.GeneratorStage#LIVE}
-	 */
 	@Override public void calculate(Cube cube) {
 		if (cube.getY() < 0) {
 			fillCube(cube, Blocks.STONE.getDefaultState());
 			return;
 		}
-		if (cube.getY() > 0) {
+		if (cube.getY() >= 16) {
 			return;
 		}
-		generateVanillaChunk(cube);
+		if(!cube.getColumn().isCompatBaseTerrainDone()) {
+			//setting it before generation is important as the generator trues to generate more cubes
+			//these generated cubes should be empty so that they can be filled with blocks
+			//not doing that will cause severe performance issues
+			cube.getColumn().setCompatBaseTerrainDone(true);
+			this.generateVanillaChunk(cube);
+
+		}
 	}
 
 	private void generateVanillaChunk(Cube cube) {
+		for(int y = 0; y < 16; y++) {
+			//force create empty cubes
+			world.getCubeCache().loadCube(cube.getX(), y, cube.getZ(), ServerCubeCache.LoadType.LOAD_OR_GENERATE);
+		}
 		int x = cube.getX();
 		int z = cube.getZ();
 		getRand(this.vanillaGen).setSeed((long) x*341873128712L + (long) z*132897987541L);
@@ -119,19 +127,17 @@ public class VanillaTerrainProcessor implements CubeProcessor {
 		}
 		for (int cubeY = 0; cubeY < 16; cubeY++) {
 			Cube currCube = this.world.getCubeCache().getCube(cube.getX(), cubeY, cube.getZ());
-			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-			for (int localX = 0; localX < 16; localX++) {
-				for (int localY = 0; localY < 16; localY++) {
-					for (int localZ = 0; localZ < 16; localZ++) {
-						int blockY = Coords.localToBlock(cubeY, localY);
-						pos.setPos(localX, localY, localZ);
-						IBlockState block = chunkprimer.getBlockState(localX, blockY, localZ);
-						if (block.getBlock() == Blocks.BEDROCK) {
-							block = Blocks.STONE.getDefaultState();
-						}
-						currCube.setBlockForGeneration(pos, block);
-					}
+			for(BlockPos pos : BlockPos.getAllInBoxMutable(currCube.getCoords().getMinBlockPos(), currCube.getCoords().getMaxBlockPos())) {
+				int localX = blockToLocal(pos.getX());
+				int localZ = blockToLocal(pos.getZ());
+				IBlockState block = chunkprimer.getBlockState(localX, pos.getY(), localZ);
+				if(block.getBlock() == Blocks.AIR) {
+					continue;
 				}
+				if (block.getBlock() == Blocks.BEDROCK) {
+					block = Blocks.STONE.getDefaultState();
+				}
+				currCube.setBlockForGeneration(pos, block);
 			}
 		}
 	}

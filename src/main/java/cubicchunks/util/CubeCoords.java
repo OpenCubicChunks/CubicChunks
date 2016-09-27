@@ -24,8 +24,12 @@
 package cubicchunks.util;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static cubicchunks.util.Coords.CUBE_MAX_X;
 import static cubicchunks.util.Coords.CUBE_MAX_Y;
@@ -179,6 +183,18 @@ public class CubeCoords {
 		return Coords.cubeToMinBlock(cubeZ);
 	}
 
+	public int getMaxBlockX() {
+		return Coords.cubeToMaxBlock(this.cubeX);
+	}
+
+	public int getMaxBlockY() {
+		return Coords.cubeToMaxBlock(this.cubeY);
+	}
+
+	public int getMaxBlockZ() {
+		return Coords.cubeToMaxBlock(this.cubeZ);
+	}
+
 	public BlockPos getCenterBlockPos() {
 		return new BlockPos(getXCenter(), getYCenter(), getZCenter());
 	}
@@ -187,20 +203,20 @@ public class CubeCoords {
 		return new BlockPos(getMinBlockX(), getMinBlockY(), getMinBlockZ());
 	}
 
+	public BlockPos getMaxBlockPos() {
+		return new BlockPos(getMaxBlockX(), getMaxBlockY(), getMaxBlockZ());
+	}
+
+	public BlockPos localToBlock(int localX, int localY, int localZ) {
+		return new BlockPos(getMinBlockX() + localX, getMinBlockY() + localY, getMinBlockZ() + localZ);
+	}
+
 	public CubeCoords sub(int dx, int dy, int dz) {
 		return this.add(-dx, -dy, -dz);
 	}
 
 	public CubeCoords add(int dx, int dy, int dz) {
 		return new CubeCoords(getCubeX() + dx, getCubeY() + dy, getCubeZ() + dz);
-	}
-
-	public static CubeCoords fromBlockCoords(int blockX, int blockY, int blockZ) {
-		return new CubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
-	}
-
-	public static CubeCoords fromEntity(Entity entity) {
-		return new CubeCoords(getCubeXForEntity(entity), getCubeYForEntity(entity), getCubeZForEntity(entity));
 	}
 
 	public ChunkPos chunkPos() {
@@ -212,5 +228,50 @@ public class CubeCoords {
 		int dy = coords.cubeY - this.cubeY;
 		int dz = coords.cubeZ - this.cubeZ;
 		return dx*dx + dy*dy + dz*dz;
+	}
+
+	public void forEachWithinRange(int range, Consumer<CubeCoords> action) {
+		for (int x = this.cubeX - range; x < this.cubeX + range; x++) {
+			for (int y = this.cubeY - range; y < this.cubeY + range; y++) {
+				for (int z = this.cubeZ - range; z < this.cubeZ + range; z++) {
+					action.accept(new CubeCoords(x, y, z));
+				}
+			}
+		}
+	}
+
+	/**
+	 * For each x/z coordinate pair in this cube position - goes top-down and calls func for each BlockPos.
+	 * Once func returns false - processing of next block column begins.
+	 */
+	public void forEachBlockPosMutableTopDown(Predicate<BlockPos> func) {
+		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
+		int baseX = getMinBlockX();
+		int baseZ = getMinBlockZ();
+		int blockYMax = getMaxBlockY();
+		for (int x = 0; x < 16; x++) {
+			for (int z = 0; z < 16; z++) {
+				blockPos.setPos(baseX + x, blockYMax, baseZ + z);
+				for (int y = 15; y >= 0; y--) {
+					boolean cont = func.test(blockPos);
+					blockPos.move(EnumFacing.DOWN);
+					if(!cont) {
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	public static CubeCoords fromBlockCoords(int blockX, int blockY, int blockZ) {
+		return new CubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
+	}
+
+	public static CubeCoords fromEntity(Entity entity) {
+		return new CubeCoords(getCubeXForEntity(entity), getCubeYForEntity(entity), getCubeZForEntity(entity));
+	}
+
+	public static CubeCoords fromBlockCoords(BlockPos pos) {
+		return CubeCoords.fromBlockCoords(pos.getX(), pos.getY(), pos.getZ());
 	}
 }

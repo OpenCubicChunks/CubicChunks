@@ -23,9 +23,11 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.server.ServerCubeCache;
-import cubicchunks.worldgen.IGeneratorPipeline;
+import cubicchunks.worldgen.ColumnGenerator;
+import cubicchunks.worldgen.ICubicChunkGenerator;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -34,11 +36,15 @@ public interface ICubicWorldServer extends ICubicWorld {
 
 	void generateWorld();
 
-	IGeneratorPipeline getCubeGenerator();
+	ICubicChunkGenerator getCubeGenerator();
+
+	ColumnGenerator getColumnGenerator();
 
 	ServerCubeCache getCubeCache();
 
 	PlayerCubeMap getPlayerCubeMap();
+
+	FirstLightProcessor getFirstLightProcessor();
 
 	//field accessors
 	boolean getDisableLevelSaving();

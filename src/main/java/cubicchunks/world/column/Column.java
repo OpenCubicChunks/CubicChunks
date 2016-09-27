@@ -79,11 +79,15 @@ public class Column extends Chunk {
 	private EntityContainer entities;
 	private ICubicWorld world;
 
+	//used by vanillaCubic to mark this column as generated
+	private boolean compatBaseTerrainDone = false;
+	//used bt vanillaCubic to mark this column as populated
+	private boolean compatPopulationDone = false;
+
 	public Column(ICubicWorld world, int x, int z) {
 		// NOTE: this constructor is called by the chunk loader
 		super((World) world, x, z);
 		this.world = world;
-
 		init();
 	}
 
@@ -203,9 +207,6 @@ public class Column extends Chunk {
 	public IBlockState setBlockState(BlockPos pos, @Nonnull IBlockState newBlockState) {
 		// is there a chunk for this block?
 		int cubeY = Coords.blockToCube(pos.getY());
-		if (!getWorld().isRemote) {
-			int i = 0;
-		}
 		// did anything change?
 		IBlockState oldBlockState = this.getBlockState(pos);
 		if (oldBlockState == newBlockState) {
@@ -560,7 +561,7 @@ public class Column extends Chunk {
 	@Override
 	public void onTick(boolean tryToTickFaster) {
 		this.chunkTicked = true;
-		cubeMap.forEach(Cube::tickCube);
+		cubeMap.forEach((c) -> c.tickCube(tryToTickFaster));
 	}
 
 	@Override
@@ -704,9 +705,21 @@ public class Column extends Chunk {
 	@Deprecated
 	public boolean isTerrainPopulated() {
 		//with cubic chunks the whole column is never fully generated,
-		//So some heuristic is needed to tell vanilla is generator is populated here
-		//for now - tell it that it is if any cube is populated
-		return this.cubeMap.all().stream().anyMatch(c -> c.getCurrentStage().isLastStage());
+		//this method is currently used to determine list of chunks to be ticked
+		//so let's say a chunk needs to be ticked if any cube needs to be ticked
+		//for chunk to be ticked, it needs to be populated (or not ticked before, or close enough t player)
+		return this.cubeMap.all().stream().anyMatch(Cube::isPopulated);
+	}
+
+	@Override
+	@Deprecated
+	public boolean isLightPopulated() {
+		//with cubic chunks light is never generated in the whole column
+		//this method is currently used to determine list of chunks to be ticked
+		//so let's say a chunk needs to be ticked if any cube needs to be ticked
+		//for chunk to be ticked, light can't be populated. So let's say it's populated
+		//only if initial lighting is done in all cubes
+		return this.cubeMap.all().stream().allMatch(Cube::isInitialLightingDone);
 	}
 
 	@Override
@@ -767,14 +780,22 @@ public class Column extends Chunk {
 		return Collections.unmodifiableCollection(this.cubeMap.all());
 	}
 
-	public Iterable<Cube> getCubes(int minY, int maxY) {
-		return this.cubeMap.cubes(minY, maxY);
+	/**
+	 * Returns ordered Iterable of cubes. If startY < endY - order is bottom to top.
+	 * If startY > endY - order is top to bottom.
+	 */
+	public Iterable<Cube> getCubes(int startY, int endY) {
+		return this.cubeMap.cubes(startY, endY);
 	}
 
 	public boolean hasCubes() {
 		return !this.cubeMap.isEmpty();
 	}
 
+	/**
+	 * Warning: This method may give cube that is queued to be unloaded.
+	 * You may want to use CubeCache instead
+	 */
 	public Cube getCube(int cubeY) {
 		return this.cubeMap.get(cubeY);
 	}
@@ -835,5 +856,21 @@ public class Column extends Chunk {
 	@Override
 	public int getLowestHeight() {
 		return opacityIndex.getLowestTopBlockY();
+	}
+
+	public boolean isCompatBaseTerrainDone() {
+		return compatBaseTerrainDone;
+	}
+
+	public void setCompatBaseTerrainDone(boolean terrain) {
+		this.compatBaseTerrainDone = terrain;
+	}
+
+	public boolean isCompatPopulationDone() {
+		return compatPopulationDone;
+	}
+
+	public void setCompatPopulationDone(boolean populated) {
+		this.compatPopulationDone = populated;
 	}
 }

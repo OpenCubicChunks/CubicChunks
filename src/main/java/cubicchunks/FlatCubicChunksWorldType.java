@@ -23,11 +23,9 @@
  */
 package cubicchunks;
 
-import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorStageRegistry;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.IndependentGeneratorStage;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.ICubicChunkGenerator;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 
 public class FlatCubicChunksWorldType extends BaseCubicWorldType {
@@ -36,16 +34,21 @@ public class FlatCubicChunksWorldType extends BaseCubicWorldType {
 		super("FlatCubic");
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry) {
-		// init the world's GeneratorStageRegistry
-		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
-		GeneratorStage lighting = new IndependentGeneratorStage("lighting");
-
-		generatorStageRegistry.addStage(terrain, new FlatTerrainProcessor());
-		generatorStageRegistry.addStage(lighting, new FirstLightProcessor(lighting, world));
-	}
-
 	public static void create() {
 		new FlatCubicChunksWorldType();
+	}
+
+	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
+		FlatTerrainProcessor gen =  new FlatTerrainProcessor();
+		return new ICubicChunkGenerator() {
+			@Override public void generateTerrain(Cube cube) {
+				gen.calculate(cube);
+				cube.initSkyLight();
+			}
+
+			@Override public void populateCube(Cube cube) {
+				//no-op
+			}
+		};
 	}
 }

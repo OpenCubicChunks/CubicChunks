@@ -68,7 +68,7 @@ public class PlayerCubeMapEntry {
 	public PlayerCubeMapEntry(PlayerCubeMap playerCubeMap, int cubeX, int cubeY, int cubeZ) {
 		this.playerCubeMap = playerCubeMap;
 		this.cubeCache = playerCubeMap.getWorld().getCubeCache();
-		this.cubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_ONLY);
+		this.cubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_ONLY);//TODO: async loading
 		this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ);
 		this.players = new TIntObjectHashMap<>();
 		this.previousWorldTime = 0;
@@ -130,13 +130,15 @@ public class PlayerCubeMapEntry {
 		int cubeY = getY(cubeAddress);
 		int cubeZ = getZ(cubeAddress);
 
+		playerCubeMap.getWorld().getProfiler().startSection("loadCube");
 		if (canGenerate) {
 			this.cubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_OR_GENERATE);
 		} else {
 			this.cubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_ONLY);
 		}
+		playerCubeMap.getWorld().getProfiler().endStartSection("getCube");
 		this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ);
-
+		playerCubeMap.getWorld().getProfiler().endSection();
 		return this.cube != null;
 	}
 
@@ -148,7 +150,7 @@ public class PlayerCubeMapEntry {
 		if (this.sentToPlayers) {
 			return true;
 		}
-		if (this.cube == null || !this.cube.getCurrentStage().isLastStage()) {
+		if (this.cube == null || !this.cube.isPopulated() || !this.cube.isInitialLightingDone()) {
 			return false;
 		}
 		this.dirtyBlocks.clear();

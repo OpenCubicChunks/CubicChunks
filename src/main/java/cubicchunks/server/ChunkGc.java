@@ -59,7 +59,7 @@ public class ChunkGc {
 			Column column = (Column) chunk;
 			Collection<Cube> cubes = column.getAllCubes();
 			cubes.stream().filter(c -> !cubeMap.contains(c.getCoords())).forEach(cubeCache::unloadCube);
-			if(!column.hasCubes() || !cubeMap.contains(column.getX(), column.getZ())) {
+			if(!cubeMap.contains(column.getX(), column.getZ())) {
 				cubeCache.unloadColumn(column);
 			}
 		}

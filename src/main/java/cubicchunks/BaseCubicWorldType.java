@@ -23,6 +23,8 @@
  */
 package cubicchunks;
 
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.worldgen.ColumnGenerator;
 import net.minecraft.world.WorldType;
 
 public abstract class BaseCubicWorldType extends WorldType implements ICubicChunksWorldType {
@@ -44,5 +46,9 @@ public abstract class BaseCubicWorldType extends WorldType implements ICubicChun
 	@Override
 	public double voidFadeMagnitude() {
 		return Double.NaN;
+	}
+
+	@Override public ColumnGenerator createColumnGenerator(ICubicWorldServer world) {
+		return new ColumnGenerator(world);
 	}
 }
