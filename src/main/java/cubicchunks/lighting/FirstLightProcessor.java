@@ -241,7 +241,7 @@ public class FirstLightProcessor {
 	 * Returns Y coordinate of the top block at (localX, localZ) in column.
 	 */
 	private int getHeightmapValue(Column column, int localX, int localZ) {
-		Integer val = column.getHeightmapAt(localX, localZ);
+		Integer val = column.getOpacityIndex().getTopBlockY(localX, localZ);
 		return val == null ? Integer.MIN_VALUE/2 : val;
 	}
 
