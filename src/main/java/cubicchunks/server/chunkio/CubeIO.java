@@ -169,7 +169,10 @@ public class CubeIO implements IThreadedFileIO {
 		return IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
 	}
 
-	public Cube loadCubeAndAddToColumn(Column column, long address) throws IOException {
+	public Cube loadCubeAndAddToColumn(Column column, int cubeY) throws IOException {
+		// TODO address is due for refactor
+		long address = AddressTools.getAddress(column.getX(), cubeY, column.getZ());
+
 		NBTTagCompound nbt;
 		SaveEntry saveEntry;
 		if((saveEntry = this.cubesToSave.get(new CubeCoords(address)))!= null) {
@@ -188,11 +191,8 @@ public class CubeIO implements IThreadedFileIO {
 		}
 
 		// restore the cube
-		int cubeX = getX(address);
-		int cubeY = getY(address);
-		int cubeZ = getZ(address);
 		world.getProfiler().startSection("nbt2cube");
-		Cube cube = IONbtReader.readCube(column, cubeX, cubeY, cubeZ, nbt);
+		Cube cube = IONbtReader.readCube(column, column.getX(), cubeY, column.getZ(), nbt);
 		world.getProfiler().endSection();
 		return cube;
 	}

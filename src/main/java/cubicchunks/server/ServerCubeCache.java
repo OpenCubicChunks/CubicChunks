@@ -334,9 +334,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			return;
 		}
 
-		// Get the cube.
-		long cubeAddress = AddressTools.getAddress(cubeX, cubeY, cubeZ);
-
 		// Is the cube loaded?
 		Cube cube = column.getCube(cubeY);
 		if (cube != null) {
@@ -347,7 +344,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		// Try loading the cube.
 		try {
 			worldServer.getProfiler().startSection("cubeIOLoad");
-			cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeAddress);
+			cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeY);
 		} catch (IOException ex) {
 			log.error("Unable to load cube ({},{},{})", cubeX, cubeY, cubeZ, ex);
 			return;
