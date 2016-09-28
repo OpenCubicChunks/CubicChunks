@@ -29,6 +29,7 @@ import cubicchunks.client.ClientCubeCache;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ClientOpacityIndex;
+import cubicchunks.world.IColumnProvider;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
@@ -73,7 +74,7 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		IColumnProvider cubeCache = worldClient.getCubeCache();
 
 		long cubeAddress = packet.getCubeAddress();
 
@@ -81,7 +82,7 @@ public class ClientHandler implements INetHandler {
 		int cubeY = getY(cubeAddress);
 		int cubeZ = getZ(cubeAddress);
 
-		Column column = cubeCache.getColumn(cubeX, cubeZ);
+		Column column = cubeCache.provideChunk(cubeX, cubeZ);
 		//isEmpty actually checks if the column is a BlankColumn
 		if (column.isEmpty()) {
 			CubicChunks.LOGGER.error("Out of order cube received! No column for cube at ({}, {}, {}) exists!", cubeX, cubeY, cubeZ);
@@ -167,7 +168,7 @@ public class ClientHandler implements INetHandler {
 		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
 		long cubeAddress = packet.getCubeAddress();
-		cubeCache.unloadColumn(
+		cubeCache.unloadChunk(
 				getX(cubeAddress),
 				getZ(cubeAddress)
 		);
@@ -201,11 +202,8 @@ public class ClientHandler implements INetHandler {
 			//height is signed, so don't use unsigned shift
 			int height = hmapUpdate >> 8;
 
-			Integer oldHeight = index.getTopBlockY(x, z);
+			int oldHeight = index.getTopBlockY(x, z);
 			index.setHeight(x, z, height);
-			if (oldHeight == null || height == Integer.MIN_VALUE) {
-				continue;
-			}
 
 			int minY = Math.min(oldHeight, height);
 			int maxY = Math.max(oldHeight, height);

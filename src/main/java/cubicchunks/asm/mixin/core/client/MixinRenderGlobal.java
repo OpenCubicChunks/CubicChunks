@@ -81,8 +81,8 @@ public class MixinRenderGlobal {
 	public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks, CallbackInfo ci,
 	                          int pass, double d0, double d1, double d2,
 	                          Entity entity, double d3, double d4, double d5,
-	                          List list, List list1, List list2,
-	                          BlockPos.PooledMutableBlockPos pos, Iterator var21,
+	                          List<Entity> list, List<Entity> list1, List<Entity> list2,
+	                          BlockPos.PooledMutableBlockPos pos, Iterator<RenderGlobal.ContainerLocalRenderInformation> var21,
 	                          RenderGlobal.ContainerLocalRenderInformation info) {
 		ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
 		if (world.isCubicWorld()) {
@@ -113,6 +113,7 @@ public class MixinRenderGlobal {
 	 * Return a 1-element array for Cubic Chunks world,
 	 * or original chunk.getEntityLists if not cubic chunks world.
 	 */
+	@SuppressWarnings("unchecked")
 	@Group(name = "renderEntitiesFix")
 	@Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = CHUNK_GET_ENTITY_LISTS), require = 1)
 	public ClassInheritanceMultiMap<Entity>[] getEntityList(Chunk chunk) {

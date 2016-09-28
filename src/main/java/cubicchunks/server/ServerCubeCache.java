@@ -29,6 +29,7 @@ import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
+import cubicchunks.world.IColumnProvider;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
@@ -48,8 +49,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
@@ -67,7 +66,7 @@ import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
  * (there may be some entities that are not in any Cube yet).
  * * dropChunk method is not supported. Columns are unloaded automatically when the last cube is unloaded
  */
-public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
+public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, IColumnProvider {
 
 	private static final Logger log = CubicChunks.LOGGER;
 
@@ -75,7 +74,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	private ICubicWorldServer worldServer;
 	private CubeIO cubeIO;
-	private HashMap<Long, Column> loadedColumns;
 	private Queue<CubeCoords> cubesToUnload;
 	private Queue<ChunkPos> columnsToUnload;
 
@@ -87,26 +85,21 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer);
-		this.loadedColumns = new HashMap<>();
 		this.cubesToUnload = new ArrayDeque<>();
 		this.columnsToUnload = new ArrayDeque<>();
 	}
 
 	@Override
-	public Collection<Chunk> getLoadedChunks() {
-		return (Collection<Chunk>) (Object) this.loadedColumns.values();
-	}
-
-	@Override
 	public void unload(Chunk chunk) {
 		//ignore, ChunkGc unloads cubes
+		//note: WorldServer.saveAllChunks()
 	}
 
 	@Override
 	public void unloadAllChunks() {
 		// unload all the cubes in the columns
-		for (Column column : this.loadedColumns.values()) {
-			for (Cube cube : column.getLoadedCubes()) {
+		for (Chunk column : this.id2ChunkMap.values()) {
+			for (Cube cube : ((Column)column).getLoadedCubes()) {
 				this.cubesToUnload.add(cube.getCoords());
 			}
 		}
@@ -114,12 +107,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	/**
 	 * Vanilla method, returns a Chunk (Column) only of it's already loaded.
-	 * Same as getColumn(cubeX, cubeZ)
 	 */
 	@Override
 	@Nullable
-	public Chunk getLoadedChunk(int cubeX, int cubeZ) {
-		return this.getColumn(cubeX, cubeZ);
+	public Column getLoadedChunk(int columnX, int columnZ) {
+		return (Column)super.getLoadedChunk(columnX, columnZ);
 	}
 
 	/**
@@ -128,8 +120,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	 */
 	@Override
 	@Nullable
-	public Column loadChunk(int cubeX, int cubeZ) {
-		return this.loadColumn(cubeX, cubeZ, LOAD_ONLY);
+	public Column loadChunk(int columnX, int columnZ) {
+		return this.loadColumn(columnX, columnZ, LOAD_ONLY);
 	}
 
 	/**
@@ -137,8 +129,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	 */
 	@Override
 	@Nullable
-	public Column loadChunk(int cubeX, int cubeZ, Runnable runnable) {
-		Column column = this.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
+	public Column loadChunk(int columnX, int columnZ, Runnable runnable) {
+		Column column = this.loadColumn(columnX, columnZ, LOAD_OR_GENERATE);
 		if (runnable == null) {
 			return column;
 		}
@@ -158,7 +150,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	@Override
 	public boolean saveChunks(boolean alwaysTrue) {
 
-		for (Column column : this.loadedColumns.values()) {
+		for (Chunk chunk : this.id2ChunkMap.values()) {
+			Column column = (Column)chunk;
 			// save the column
 			if (column.needsSaving(alwaysTrue)) {
 				this.cubeIO.saveColumn(column);
@@ -197,7 +190,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		while(it.hasNext() && unloaded < maxColumnsUnload) {
 			ChunkPos pos = it.next();
 			long address = AddressTools.getAddress(pos.chunkXPos, pos.chunkZPos);
-			Column column = loadedColumns.get(address);
+			Column column = (Column)id2ChunkMap.get(address);
 			it.remove();
 			if(column == null) {
 				continue;
@@ -205,7 +198,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			if (!column.hasLoadedCubes() && column.unloaded) {
 
 				column.onChunkUnload();
-				this.loadedColumns.remove(address);
+				this.id2ChunkMap.remove(address);
 				this.cubeIO.saveColumn(column);
 				unloaded++;
 			}
@@ -223,7 +216,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 			long columnAddress = AddressTools.getAddress(coords.getCubeX(), coords.getCubeZ());
 
-			Column column = this.loadedColumns.get(columnAddress);
+			Column column = (Column)this.id2ChunkMap.get(columnAddress);
 			if (column == null) {
 				continue;
 			}
@@ -239,7 +232,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	@Override
 	public String makeString() {
-		return "ServerCubeCache: " + this.loadedColumns.size() + " columns, Unload: " + this.cubesToUnload.size() +
+		return "ServerCubeCache: " + this.id2ChunkMap.size() + " columns, Unload: " + this.cubesToUnload.size() +
 				" cubes";
 	}
 
@@ -255,12 +248,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	@Override
 	public int getLoadedChunkCount() {
-		return this.loadedColumns.size();
+		return this.id2ChunkMap.size();
 	}
 
 	@Override
 	public boolean chunkExists(int cubeX, int cubeZ) {
-		Column column = this.loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
+		Chunk column = this.id2ChunkMap.get(AddressTools.getAddress(cubeX, cubeZ));
 		return column != null && !column.unloaded;
 	}
 
@@ -271,7 +264,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	@Override
 	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-		Column column = this.loadedColumns.get(columnAddress);
+		Column column = (Column)this.id2ChunkMap.get(columnAddress);
 		if (column == null || column.unloaded) {
 			return false;
 		}
@@ -284,17 +277,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 
 	@Override
-	public Column getColumn(int columnX, int columnZ) {
-		Column column = this.loadedColumns.get(AddressTools.getAddress(columnX, columnZ));
-		if(column != null) {
-			column.unloaded = false;
-		}
-		return column;
-	}
-
-	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
-		Column column = getColumn(cubeX, cubeZ);
+		Column column = provideChunk(cubeX, cubeZ);
 		if (column == null) {
 			return null;
 		}
@@ -316,7 +300,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		}
 
 		// Get the column
-		Column column = getColumn(cubeX, cubeZ);
+		Column column = provideChunk(cubeX, cubeZ);
 
 		// Try loading the column.
 		if (column == null) {
@@ -389,7 +373,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		Column column = null;
 		//if we are not forced to load from disk - try to get it first
 		if (loadType != FORCE_LOAD) {
-			column = getColumn(cubeX, cubeZ);
+			column = getLoadedChunk(cubeX, cubeZ);
 		}
 		if (column != null) {
 			return column;
@@ -413,7 +397,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		if (column == null) {
 			return null;
 		}
-		this.loadedColumns.put(AddressTools.getAddress(cubeX, cubeZ), column);
+		this.id2ChunkMap.put(AddressTools.getAddress(cubeX, cubeZ), column);
 		column.onChunkLoad();
 		return column;
 	}
@@ -437,7 +421,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	public String dumpLoadedCubes() {
 		StringBuilder sb = new StringBuilder(10000).append("\n");
-		for (Column column : this.loadedColumns.values()) {
+		for (Chunk chunk : this.id2ChunkMap.values()) {
+			Column column = (Column)chunk;
 			if (column == null) {
 				sb.append("column = null\n");
 				continue;

@@ -25,21 +25,20 @@ package cubicchunks.util.processor;
 
 import com.google.common.collect.Sets;
 import cubicchunks.util.ArrayBatchedQueue;
-import cubicchunks.world.ICubeCache;
-
+import cubicchunks.world.IColumnProvider;
 import java.util.Set;
 
 public abstract class QueueProcessor<T> {
 
 	protected String name;
-	protected ICubeCache cache;
+	protected IColumnProvider cache;
 	private int batchSize;
 	private ArrayBatchedQueue<T> queue;
 	protected Set<T> incomingAddresses;
 	protected Set<T> processedAddresses;
 	protected Set<T> deferredAddresses;
 
-	public QueueProcessor(String name, ICubeCache cache, int batchSize) {
+	public QueueProcessor(String name, IColumnProvider cache, int batchSize) {
 		this.name = name;
 		this.cache = cache;
 		this.batchSize = batchSize;

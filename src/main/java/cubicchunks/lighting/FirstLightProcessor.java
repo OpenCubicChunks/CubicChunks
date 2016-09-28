@@ -23,9 +23,8 @@
  */
 package cubicchunks.lighting;
 
-import cubicchunks.util.Coords;
 import cubicchunks.util.FastCubeBlockAccess;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.world.IColumnProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
@@ -61,7 +60,6 @@ import static cubicchunks.util.Coords.getCubeCenter;
  */
 //TODO: make it also update blocklight
 public class FirstLightProcessor {
-
 	private static final int LIGHT_UPDATE_RADIUS = 17;
 
 	private static final int CUBE_RADIUS = Cube.SIZE / 2;
@@ -69,8 +67,6 @@ public class FirstLightProcessor {
 	private static final int UPDATE_BUFFER_RADIUS = 1;
 
 	private static final int UPDATE_RADIUS = LIGHT_UPDATE_RADIUS + CUBE_RADIUS + UPDATE_BUFFER_RADIUS;
-
-	private static final int DEFAULT_OCCLUSION_HEIGHT = Integer.MIN_VALUE / 2;
 
 	private static final IntHash.Strategy CUBE_Y_HASH = new IntHash.Strategy() {
 
@@ -88,7 +84,7 @@ public class FirstLightProcessor {
 
 	private final MutableBlockPos mutablePos = new MutableBlockPos();
 
-	private final ICubeCache cache;
+	private final IColumnProvider cache;
 
 
 	/**
@@ -97,7 +93,7 @@ public class FirstLightProcessor {
 	 * @param world the world for which the FirstLightProcessor will be used
 	 */
 	public FirstLightProcessor(ICubicWorld world) {
-		this.cache = world.getCubeCache();
+		this.cache = world.getColumnProvider();
 	}
 
 
@@ -285,7 +281,7 @@ public class FirstLightProcessor {
 	 */
 	private static boolean canUpdateCube(Cube cube) {
 		BlockPos cubeCenter = getCubeCenter(cube);
-		return cube.getWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> true);
+		return cube.getWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> c == null);
 	}
 
 	/**

@@ -30,7 +30,6 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.ICubicChunkGenerator;
-import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 
@@ -58,8 +57,9 @@ public class DebugWorldType extends BaseCubicWorldType {
 				perlin.setOctaveCount(1);
 				perlin.setSeed((int) world.getSeed());
 			}
-
-			CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
+			
+			//TODO: find out what this was/should have been for (it was never used)
+			//CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
 
 			@Override public void generateTerrain(Cube cube) {
 				if(cube.getY() > 30) {

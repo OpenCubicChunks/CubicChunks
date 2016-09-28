@@ -23,30 +23,44 @@
  */
 package cubicchunks.client;
 
+import javax.annotation.Nullable;
+
 import cubicchunks.util.CubeCoords;
+import cubicchunks.util.ReflectionUtil;
+import cubicchunks.world.IColumnProvider;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
-public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
+//TODO: break off ICubeCache
+public class ClientCubeCache extends ChunkProviderClient implements ICubeCache, IColumnProvider {
 
 	private ICubicWorldClient world;
-	
-	private BlankColumn blankColumn;
-	private Cube        blankCube;
+	//private Cube blankCube;
 
 	public ClientCubeCache(ICubicWorldClient world) {
 		super((World) world);
 
 		this.world = world;
-		this.blankColumn = new BlankColumn(world, 0, 0);
-		this.blankCube = new BlankCube(world, blankColumn);
+		ReflectionUtil.setFieldValueSrg(this, "field_73238_a", new BlankColumn(world, 0, 0));
+		//this.blankCube = new BlankCube(world, (Column)blankChunk);
+	}
+	
+	@Override
+	@Nullable
+    public Column getLoadedChunk(int x, int z)
+    {
+        return (Column)super.getLoadedChunk(x, z);
+    }
+	
+	@Override
+	public Column provideChunk(int x, int z){
+		return (Column)super.provideChunk(x, z);
 	}
 
 	@Override
@@ -61,31 +75,14 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		return column;
 	}
 
+	
+	//===========================
+	//========Cube stuff=========
+	//===========================
+	
 	@Override
 	public void unloadCube(Cube cube) {
 		cube.getColumn().removeCube(cube.getY());
-	}
-
-	public void unloadColumn(int columnX, int columnZ) {
-		//unload even if not empty
-		//server sends unload packets, it must be right.
-		this.chunkMapping.remove(ChunkPos.asLong(columnX, columnZ));
-	}
-
-	@Override
-	public Column getColumn(int columnX, int columnZ) {
-		return provideChunk(columnX, columnZ);
-	}
-
-	@Override//I hope it was provideChunk
-	public Column provideChunk(int cubeX, int cubeZ) {
-		// is this chunk already loaded?
-		Column column = (Column) this.chunkMapping.get(ChunkPos.asLong(cubeX, cubeZ));
-		if (column != null) {
-			return column;
-		}
-
-		return this.blankColumn;
 	}
 
 	@Override
@@ -101,12 +98,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
-		Cube cube = getColumn(cubeX, cubeZ).getCube(cubeY);
-		if (cube == null) {
-			return this.blankCube;
-		}
-
-		return cube;
+		return provideChunk(cubeX, cubeZ).getCube(cubeY);
 	}
 
 	public Cube getCube(CubeCoords coords) {

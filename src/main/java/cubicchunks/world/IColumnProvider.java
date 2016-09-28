@@ -23,18 +23,15 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.util.CubeCoords;
+import javax.annotation.Nullable;
+
 import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunkProvider;
 
-public interface ICubeCache {
-	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
+public interface IColumnProvider extends IChunkProvider {
+	@Nullable
+    Column getLoadedChunk(int x, int z); // more strictly define the return type
 
-	boolean cubeExists(CubeCoords coords);
-
-	Cube getCube(int cubeX, int cubeY, int cubeZ);
-
-	Cube getCube(CubeCoords coords);
-
-	void unloadCube(Cube cube);
+    Column provideChunk(int x, int z);   // more strictly define the return type
 }

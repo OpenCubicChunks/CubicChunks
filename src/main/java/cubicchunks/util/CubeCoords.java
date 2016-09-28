@@ -120,9 +120,8 @@ public class CubeCoords {
 		if (obj instanceof CubeCoords) {
 			CubeCoords otherCoords = (CubeCoords) obj;
 			return otherCoords.cubeX == cubeX && otherCoords.cubeY == cubeY && otherCoords.cubeZ == cubeZ;
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	/**

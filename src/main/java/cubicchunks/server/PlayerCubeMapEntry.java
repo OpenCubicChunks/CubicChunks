@@ -37,6 +37,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.ForgeModContainer;
@@ -232,7 +233,7 @@ public class PlayerCubeMapEntry {
 		if (blockEntity == null) {
 			return;
 		}
-		Packet packet = blockEntity.getUpdatePacket();
+		SPacketUpdateTileEntity packet = blockEntity.getUpdatePacket();
 		if (packet == null) {
 			return;
 		}
@@ -284,7 +285,7 @@ public class PlayerCubeMapEntry {
 		return playerCubeMap.getWorldServer().getWorldTime();
 	}
 
-	private void sendPacketToAllPlayers(Packet packet) {
+	private void sendPacketToAllPlayers(Packet<?> packet) {
 		for (WatcherPlayerEntry entry : this.players.valueCollection()) {
 			entry.player.connection.sendPacket(packet);
 		}

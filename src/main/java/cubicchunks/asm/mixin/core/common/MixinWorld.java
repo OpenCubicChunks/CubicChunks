@@ -29,10 +29,10 @@ import cubicchunks.ICubicChunksWorldType;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
+import cubicchunks.world.IColumnProvider;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.NotCubicChunksWorldException;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -198,6 +198,10 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 			throw new NotCubicChunksWorldException();
 		}
 		return (ICubeCache) this.chunkProvider;
+	}
+	
+	@Override public IColumnProvider getColumnProvider() {
+		return (IColumnProvider)chunkProvider; // non Cubic worlds will not call this so its safe to cast
 	}
 
 	@Override public LightingManager getLightingManager() {

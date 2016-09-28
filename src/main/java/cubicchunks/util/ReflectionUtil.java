@@ -93,6 +93,7 @@ public class ReflectionUtil {
 	 * <p>
 	 * Warning: Slow.
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> T getFieldValueSrg(Object from, String srgName) {
 		String name = Mappings.getNameFromSrg(srgName);
 		Class<?> cl = from.getClass();

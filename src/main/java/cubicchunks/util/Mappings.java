@@ -75,7 +75,7 @@ public class Mappings {
 	private static void parseMethod(String substring) {
 		String[] s = substring.split(" ");
 
-		final int SRG_NAME = 0, SRG_DESC = 1, MCP_NAME = 2, MCP_DESC = 3;
+		final int SRG_NAME = 0/*, SRG_DESC = 1*/, MCP_NAME = 2/*, MCP_DESC = 3*/;
 
 		int lastIndex = s[SRG_NAME].lastIndexOf('/') + 1;
 		if (lastIndex < 0) lastIndex = 0;

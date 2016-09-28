@@ -85,6 +85,11 @@ public interface ICubicWorld {
 	 * if this is not a CubicChunks world.
 	 */
 	ICubeCache getCubeCache();
+	
+	/**
+	 * Returns the IColumnProvider. This is a more strict version of IChunkProvider
+	 */
+	IColumnProvider getColumnProvider();
 
 	/**
 	 * Returns the {@link LightingManager} for this world, or throws {@link NotCubicChunksWorldException}

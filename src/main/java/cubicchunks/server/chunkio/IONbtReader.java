@@ -77,8 +77,6 @@ public class IONbtReader {
 
 		// read the rest of the column properties
 		column.setInhabitedTime(nbt.getLong("InhabitedTime"));
-		column.setCompatBaseTerrainDone(nbt.getBoolean("VanillaCubicTerrain"));
-		column.setCompatPopulationDone(nbt.getBoolean("VanillaCubicPopulated"));
 		return column;
 	}
 
@@ -147,26 +145,26 @@ public class IONbtReader {
 		return cube;
 	}
 
-	private static void readBlocks(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {// is this an empty cube?
-		boolean isEmpty = !nbt.hasKey("Blocks");
+	private static void readBlocks(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {
+		boolean isEmpty = !nbt.hasKey("Blocks");// is this an empty cube?
 		if (!isEmpty) {
-			ExtendedBlockStorage storage = cube.getStorage();
+			ExtendedBlockStorage ebs = new ExtendedBlockStorage(cube.getY(), !cube.getWorld().getProvider().getHasNoSky());
+            
+			byte[] abyte = nbt.getByteArray("Blocks");
+            NibbleArray data = new NibbleArray(nbt.getByteArray("Data"));
+            NibbleArray add = nbt.hasKey("Add", 7) ? new NibbleArray(nbt.getByteArray("Add")) : null;
+            
+            ebs.getData().setDataFromNBT(abyte, data, add);
+            
+            ebs.setBlocklightArray(new NibbleArray(nbt.getByteArray("BlockLight")));
 
-			// block ids and metadata (ie block states)
-			byte[] blockIdLsbs = nbt.getByteArray("Blocks");
-			NibbleArray blockIdMsbs = null;
-			if (nbt.hasKey("Add")) {
-				blockIdMsbs = new NibbleArray(nbt.getByteArray("Add"));
-			}
-			NibbleArray blockMetadata = new NibbleArray(nbt.getByteArray("Data"));
-			ChunkSectionHelper.setBlockStates(storage, blockIdLsbs, blockIdMsbs, blockMetadata);
+            if (!world.getProvider().getHasNoSky())
+            {
+                ebs.setSkylightArray(new NibbleArray(nbt.getByteArray("SkyLight")));
+            }
 
-			// lights
-			storage.setBlocklightArray(new NibbleArray(nbt.getByteArray("BlockLight")));
-			if (!world.getProvider().getHasNoSky()) {
-				storage.setSkylightArray(new NibbleArray(nbt.getByteArray("SkyLight")));
-			}
-			storage.removeInvalidBlocks();
+            ebs.removeInvalidBlocks();
+            cube.setStorage(ebs);
 		}
 	}
 

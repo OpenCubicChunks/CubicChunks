@@ -79,11 +79,6 @@ public class Column extends Chunk {
 	private EntityContainer entities;           // TODO: remove this field
 	private ICubicWorld world;
 
-	//used by vanillaCubic to mark this column as generated
-	private boolean compatBaseTerrainDone = false;
-	//used bt vanillaCubic to mark this column as populated
-	private boolean compatPopulationDone = false;
-
 	public Column(ICubicWorld world, int x, int z) {
 		// NOTE: this constructor is called by the chunk loader
 		super((World) world, x, z);
@@ -135,18 +130,27 @@ public class Column extends Chunk {
 	// don't use this! It's only here because vanilla needs it
 	public int getTopFilledSegment() {
 		//NOTE: this method actually returns block Y coords
-		Integer cubeY = getTopFilledCubeY();
-		if (cubeY != null) {
-			return Coords.cubeToMinBlock(cubeY);
-		} else {
-			// PANIC!
-			// this column doesn't have any blocks in it that aren't air!
-			// but we can't return null here because vanilla code expects there to be a surface down there somewhere
-			// we don't actually know where the surface is yet, because maybe it hasn't been generated
-			// but we do know that the surface has to be at least at sea level,
-			// so let's go with that for now and hope for the best
-			return this.getWorld().provider.getAverageGroundLevel();
+
+		// PANIC!
+		// this column doesn't have any blocks in it that aren't air!
+		// but we can't return null here because vanilla code expects there to be a surface down there somewhere
+		// we don't actually know where the surface is yet, because maybe it hasn't been generated
+		// but we do know that the surface has to be at least at sea level,
+		// so let's go with that for now and hope for the best
+		
+		// old solution
+		// return this.getWorld().provider.getAverageGroundLevel();
+		
+		int blockY = Coords.VARY_LOW;
+		for (int localX = 0; localX < Coords.CUBE_SIZE; localX++) {
+			for (int localZ = 0; localZ < Coords.CUBE_SIZE; localZ++) {
+				int y = this.opacityIndex.getTopBlockY(localX, localZ);
+				if (y > blockY) {
+					blockY = y;
+				}
+			}
 		}
+		return Coords.cubeToMinBlock(Coords.blockToCube(blockY)); // return the lowest block in the Cube (kinda weird I know)
 	}
 
 	@Override
@@ -271,16 +275,16 @@ public class Column extends Chunk {
 		int localZ = Coords.blockToLocal(pos.getZ());
 
 		// did the top non-transparent block change?
-		Integer oldSkylightY = getHeightValue(localX, localZ);
+		int oldSkylightY = getHeightValue(localX, localZ);
 		this.opacityIndex.onOpacityChange(localX, pos.getY(), localZ, newOpacity);
-		Integer newSkylightY = oldSkylightY;
+		int newSkylightY = oldSkylightY;
 		if (!getWorld().isRemote) {
 			newSkylightY = getHeightValue(localX, localZ);
 			//if oldSkylightY == null and newOpacity == 0 then we didn't change anything
-		} else if (!(oldSkylightY == null && newOpacity == 0)) {
-			Integer oldSkylightActual = oldSkylightY == null ? null : oldSkylightY - 1;
+		} else if (!(oldSkylightY < world.getMinHeight() && newOpacity == 0)) {
+			int oldSkylightActual = oldSkylightY - 1;
 			//to avoid unnecessary delay when breaking blocks we need to hack it clientside
-			if ((oldSkylightActual == null || pos.getY() > oldSkylightActual - 1) && newOpacity != 0) {
+			if ((pos.getY() > oldSkylightActual - 1) && newOpacity != 0) {
 				//we added block, so we can be sure it's correct. Server update will be ignored
 				newSkylightY = pos.getY() + 1;
 			} else if (newOpacity == 0 && pos.getY() == oldSkylightY - 1) {
@@ -347,9 +351,8 @@ public class Column extends Chunk {
 			boolean hasSky = !this.getWorld().provider.getHasNoSky();
 			if (hasSky && amount < EnumSkyBlock.SKY.defaultLightValue) {
 				return EnumSkyBlock.SKY.defaultLightValue - amount;
-			} else {
-				return 0;
 			}
+			return 0;
 		}
 		return cube.getLightSubtracted(pos, amount);
 	}
@@ -419,8 +422,8 @@ public class Column extends Chunk {
 	public boolean canSeeSky(BlockPos pos) {
 		int localX = Coords.blockToLocal(pos.getX());
 		int localZ = Coords.blockToLocal(pos.getZ());
-		Integer height = this.getHeightValue(localX, localZ);
-		return height == null || pos.getY() >= height;
+		int height = this.getHeightValue(localX, localZ);
+		return pos.getY() >= height;
 	}
 
 	//forward to cube
@@ -822,41 +825,8 @@ public class Column extends Chunk {
 		this.entities.markSaved(this.getWorld().getTotalWorldTime());
 		this.setModified(false);
 	}
-
-	public Integer getTopFilledCubeY() {
-		Integer blockY = null;
-		for (int localX = 0; localX < Coords.CUBE_SIZE; localX++) {
-			for (int localZ = 0; localZ < Coords.CUBE_SIZE; localZ++) {
-				Integer y = this.opacityIndex.getTopBlockY(localX, localZ);
-				if (y != null && (blockY == null || y > blockY)) {
-					blockY = y;
-				}
-			}
-		}
-		if (blockY == null) {
-			return null;
-		}
-		return Coords.blockToCube(blockY);
-	}
-
 	@Override
 	public int getLowestHeight() {
 		return opacityIndex.getLowestTopBlockY();
-	}
-
-	public boolean isCompatBaseTerrainDone() {
-		return compatBaseTerrainDone;
-	}
-
-	public void setCompatBaseTerrainDone(boolean terrain) {
-		this.compatBaseTerrainDone = terrain;
-	}
-
-	public boolean isCompatPopulationDone() {
-		return compatPopulationDone;
-	}
-
-	public void setCompatPopulationDone(boolean populated) {
-		this.compatPopulationDone = populated;
 	}
 }

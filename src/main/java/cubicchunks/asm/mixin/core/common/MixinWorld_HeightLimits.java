@@ -165,7 +165,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 	 */
 	@Group(name = "isLoaded", max = 1)
 	@Inject(method = WORLD_IS_AREA_LOADED, at = @At(value = "HEAD"), cancellable = true, require = 1)
-	private void isAreaLoadedInject(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd, boolean allowEmpty, CallbackInfoReturnable cbi) {
+	private void isAreaLoadedInject(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd, boolean allowEmpty, CallbackInfoReturnable<Boolean> cbi) {
 		if (!this.isCubicWorld()) {
 			return;
 		}

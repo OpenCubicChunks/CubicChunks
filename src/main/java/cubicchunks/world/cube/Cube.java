@@ -73,7 +73,7 @@ public class Cube {
 	private Column column;
 	private CubeCoords coords;
 	private boolean isModified;
-	private final ExtendedBlockStorage storage;
+	private ExtendedBlockStorage storage;
 	private EntityContainer entities;
 	private Map<BlockPos, TileEntity> tileEntityMap;
 	
@@ -412,6 +412,10 @@ public class Cube {
 
 	public ExtendedBlockStorage getStorage() {
 		return this.storage;
+	}
+	
+	public ExtendedBlockStorage setStorage(ExtendedBlockStorage ebs) {
+		return this.storage = ebs;
 	}
 
 	public IBlockState setBlockForGeneration(BlockPos blockOrLocalPos, IBlockState newBlockState) {

@@ -37,6 +37,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.io.ByteArrayOutputStream;
@@ -86,9 +87,6 @@ class IONbtWriter {
 		// column properties
 		nbt.setByte("v", (byte) 1);
 		nbt.setLong("InhabitedTime", column.getInhabitedTime());
-
-		nbt.setBoolean("VanillaCubicTerrain", column.isCompatBaseTerrainDone());
-		nbt.setBoolean("VanillaCubicPopulated", column.isCompatPopulationDone());
 	}
 
 	private static void writeBiomes(Column column, NBTTagCompound nbt) {// biomes
@@ -117,30 +115,29 @@ class IONbtWriter {
 	}
 
 	private static void writeBlocks(Cube cube, NBTTagCompound cubeNbt) {
+		ExtendedBlockStorage ebs = cube.getStorage();
+		if(ebs == null){
+			return; // no data to save anyway
+		}
+		
+        byte[] abyte = new byte[4096];
+        NibbleArray data = new NibbleArray();
+        NibbleArray add = ebs.getData().getDataForNBT(abyte, data);
+        
+        cubeNbt.setByteArray("Blocks", abyte);
+        cubeNbt.setByteArray("Data", data.getData());
 
-		if (cube.isEmpty()) {
-			return;
-		}
-		ExtendedBlockStorage storage = cube.getStorage();
-		byte[] idLsb = new byte[4096];
-		byte[] idMsb = new byte[2048];
-		byte[] meta = new byte[2048];
-		int flags = ChunkSectionHelper.getBlockDataArray(storage, idLsb, idMsb, meta);
-		cubeNbt.setByteArray("Blocks", idLsb);
+        if (add != null)
+        {
+        	cubeNbt.setByteArray("Add", add.getData());
+        }
 
-		if ((flags & ChunkSectionHelper.HAS_MSB) != 0) {
-			cubeNbt.setByteArray("Add", idMsb);
-		}
+        cubeNbt.setByteArray("BlockLight", ebs.getBlocklightArray().getData());
 
-		// metadata
-		if ((flags & ChunkSectionHelper.HAS_META) != 0) {
-			cubeNbt.setByteArray("Data", meta);
-		}
-		// light
-		cubeNbt.setByteArray("BlockLight", storage.getBlocklightArray().getData());
-		if (storage.getSkylightArray() != null) {
-			cubeNbt.setByteArray("SkyLight", storage.getSkylightArray().getData());
-		}
+        if (!cube.getWorld().getProvider().getHasNoSky())
+        {
+        	cubeNbt.setByteArray("SkyLight", ebs.getSkylightArray().getData());
+        }
 	}
 
 	private static void writeEntities(Cube cube, NBTTagCompound cubeNbt) {// entities
