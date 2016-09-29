@@ -23,7 +23,13 @@
  */
 package cubicchunks.world.provider;
 
+import java.util.List;
+
 import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.biome.Biome;
 
 public interface IColumnGenerator {
 	
@@ -34,5 +40,28 @@ public interface IColumnGenerator {
 	 * @param column the column that needs new biomes and other data
 	 * @return the column with biome's and other data added
 	 */
-	 Column genColumn(Column column);
+	Column genColumn(Column column);
+	
+	/**
+	 * Called to reload structures that apply to {@code cube}.
+	 * Mostly used to get ready for calls to {@link IColumnGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))}
+	 * <br>
+	 * Note: if your generator works better on a 3D system you can do your 3D
+	 * loading in {@link ICubeGenerator#recreateStructures(Cube)}
+	 * 
+	 * @param cube The cube that is being loaded
+	 */
+	void recreateStructures(Column column);
+	
+	/**
+	 * Gets a list of entitys that can spawn at pos...
+	 * Used for things like skeletons and blazes spawning in nether forts.<br>
+	 * <br>
+	 * Note: this method will take priority over {@link ICubeGenerator#getPossibleCreatures()}
+	 * 
+	 * @param creatureType the creature type that we are interested in getting
+	 * @param pos the block position where we need to see what entitys can spawn at
+	 * @return a list of mobs that can spawn (example: nether forts return, EntityBlaze, EntityPigZombie, EntitySkeleton, EntityMagmaCube)
+	 */
+	List<Biome.SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos);
 }
