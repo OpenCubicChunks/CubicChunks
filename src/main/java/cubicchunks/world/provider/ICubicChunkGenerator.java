@@ -21,10 +21,9 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen;
+package cubicchunks.world.provider;
 
 import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ICubeCache;
 import cubicchunks.world.cube.Cube;
 
 //TODO: make this estend ICubeProvider (I mean... it provides Cubes right?)

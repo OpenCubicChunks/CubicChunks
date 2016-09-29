@@ -23,7 +23,7 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.client.ClientCubeCache;
+import cubicchunks.world.provider.ClientCubeCache;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 

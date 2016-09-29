@@ -29,7 +29,7 @@ import cubicchunks.CubicChunks;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.ICubicChunkGenerator;
+import cubicchunks.world.provider.ICubicChunkGenerator;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 

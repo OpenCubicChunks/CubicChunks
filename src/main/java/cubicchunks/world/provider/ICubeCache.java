@@ -21,36 +21,20 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.world.provider;
 
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.PlayerCubeMap;
-import cubicchunks.world.provider.ICubicChunkGenerator;
-import cubicchunks.world.provider.ServerCubeCache;
-import cubicchunks.worldgen.ColumnGenerator;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
+import cubicchunks.util.CubeCoords;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
-public interface ICubicWorldServer extends ICubicWorld {
+public interface ICubeCache {
+	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
 
-	void generateWorld();
+	boolean cubeExists(CubeCoords coords);
 
-	ICubicChunkGenerator getCubeGenerator();
+	Cube getCube(int cubeX, int cubeY, int cubeZ);
 
-	ColumnGenerator getColumnGenerator();
+	Cube getCube(CubeCoords coords);
 
-	ServerCubeCache getCubeCache();
-
-	PlayerCubeMap getPlayerCubeMap();
-
-	FirstLightProcessor getFirstLightProcessor();
-
-	//field accessors
-	boolean getDisableLevelSaving();
-
-	//vanilla methods
-	Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
-
-	boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
+	void unloadCube(Cube cube);
 }

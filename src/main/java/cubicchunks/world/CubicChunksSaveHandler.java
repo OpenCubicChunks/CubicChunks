@@ -23,7 +23,6 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.server.ServerCubeCache;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.WorldProvider;
@@ -34,6 +33,9 @@ import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 
 import javax.annotation.Nonnull;
+
+import cubicchunks.world.provider.ServerCubeCache;
+
 import java.io.File;
 
 public class CubicChunksSaveHandler implements ISaveHandler {

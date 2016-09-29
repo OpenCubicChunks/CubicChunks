@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.server;
+package cubicchunks.world.provider;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.VanillaCubicChunksWorldType;
@@ -29,8 +29,6 @@ import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
-import cubicchunks.world.IColumnProvider;
-import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
@@ -47,15 +45,16 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import static cubicchunks.world.provider.ServerCubeCache.LoadType.FORCE_LOAD;
+import static cubicchunks.world.provider.ServerCubeCache.LoadType.LOAD_ONLY;
+import static cubicchunks.world.provider.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
+
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
-
-import static cubicchunks.server.ServerCubeCache.LoadType.FORCE_LOAD;
-import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_ONLY;
-import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 /**
  * This is CubicChunks equivalent of ChunkProviderServer, it loads and unloads Cubes and Columns.

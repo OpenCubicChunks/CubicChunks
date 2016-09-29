@@ -29,19 +29,22 @@ import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.PlayerCubeMap;
-import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.provider.ICubicChunkGenerator;
+import cubicchunks.world.provider.ServerCubeCache;
 import cubicchunks.worldgen.ColumnGenerator;
-import cubicchunks.worldgen.ICubicChunkGenerator;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
+
+import static cubicchunks.world.provider.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -49,8 +52,6 @@ import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
-
-import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 /**
  * Implementation of {@link ICubicWorldServer} interface.

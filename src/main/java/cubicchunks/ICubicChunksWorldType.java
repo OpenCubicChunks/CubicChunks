@@ -25,8 +25,8 @@ package cubicchunks;
 
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.provider.ICubicChunkGenerator;
 import cubicchunks.worldgen.ColumnGenerator;
-import cubicchunks.worldgen.ICubicChunkGenerator;
 
 public interface ICubicChunksWorldType {
 	/**

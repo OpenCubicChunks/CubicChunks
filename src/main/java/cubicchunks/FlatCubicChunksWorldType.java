@@ -25,7 +25,7 @@ package cubicchunks;
 
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.ICubicChunkGenerator;
+import cubicchunks.world.provider.ICubicChunkGenerator;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 
 public class FlatCubicChunksWorldType extends BaseCubicWorldType {

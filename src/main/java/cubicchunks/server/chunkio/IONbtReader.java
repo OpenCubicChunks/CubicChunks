@@ -26,7 +26,6 @@ package cubicchunks.server.chunkio;
 import cubicchunks.CubicChunks;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.OpacityIndex;

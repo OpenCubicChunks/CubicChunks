@@ -26,7 +26,7 @@ package cubicchunks;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.ICubicChunkGenerator;
+import cubicchunks.world.provider.ICubicChunkGenerator;
 import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
 import net.minecraft.world.World;

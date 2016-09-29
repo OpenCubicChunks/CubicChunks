@@ -21,14 +21,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.client;
+package cubicchunks.world.provider;
 
 import javax.annotation.Nullable;
 
 import cubicchunks.util.CubeCoords;
 import cubicchunks.util.ReflectionUtil;
-import cubicchunks.world.IColumnProvider;
-import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;

@@ -23,10 +23,10 @@
  */
 package cubicchunks.worldgen.generator.vanilla;
 
-import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.ServerCubeCache;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;

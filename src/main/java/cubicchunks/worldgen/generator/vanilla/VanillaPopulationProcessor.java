@@ -24,11 +24,11 @@
 package cubicchunks.worldgen.generator.vanilla;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.ServerCubeCache;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
 public class VanillaPopulationProcessor implements CubeProcessor {

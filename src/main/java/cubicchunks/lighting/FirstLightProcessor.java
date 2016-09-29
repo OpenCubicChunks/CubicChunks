@@ -24,14 +24,16 @@
 package cubicchunks.lighting;
 
 import cubicchunks.util.FastCubeBlockAccess;
-import cubicchunks.world.IColumnProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.IColumnProvider;
+
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenCustomHashMap;
 import it.unimi.dsi.fastutil.ints.IntHash;
+
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;

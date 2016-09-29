@@ -26,6 +26,8 @@ package cubicchunks.world;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.IColumnProvider;
+import cubicchunks.world.provider.ICubeCache;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;

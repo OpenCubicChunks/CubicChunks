@@ -23,10 +23,10 @@
  */
 package cubicchunks.util;
 
-import cubicchunks.world.IColumnProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.IColumnProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;

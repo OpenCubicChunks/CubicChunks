@@ -24,9 +24,9 @@
 package cubicchunks.asm.mixin.core.client;
 
 import cubicchunks.asm.mixin.core.common.MixinWorld;
-import cubicchunks.client.ClientCubeCache;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.world.ICubicWorldClient;
+import cubicchunks.world.provider.ClientCubeCache;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;

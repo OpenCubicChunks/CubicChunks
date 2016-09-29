@@ -21,20 +21,18 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.world.provider;
 
-import cubicchunks.util.CubeCoords;
 import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
 
-public interface ICubeCache {
-	boolean cubeExists(int cubeX, int cubeY, int cubeZ);
-
-	boolean cubeExists(CubeCoords coords);
-
-	Cube getCube(int cubeX, int cubeY, int cubeZ);
-
-	Cube getCube(CubeCoords coords);
-
-	void unloadCube(Cube cube);
+public interface IColumnGenerator {
+	
+	/**
+	 * Adds biome's and optionally other stuff to a Column
+	 * (can pre-add Cubes but this is not recommended)
+	 * 
+	 * @param column the column that needs new biomes and other data
+	 * @return the column with biome's and other data added
+	 */
+	 Column genColumn(Column column);
 }
