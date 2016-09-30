@@ -110,7 +110,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		if (cube == null) {
 			return this.blankCube;
 		}
-		
+
 		return cube;
 	}
 
@@ -118,4 +118,8 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		return this.getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
+	@Override
+	public String makeString() {
+		return "MultiplayerChunkCache: " + this.chunkMapping.values().stream().map(c->((Column)c).getLoadedCubes().size()).reduce((a,b)->a+b).orElse(-1) + "/" + this.chunkMapping.size();
+	}
 }

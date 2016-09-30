@@ -30,6 +30,9 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenCustomHashMap;
+import it.unimi.dsi.fastutil.ints.IntHash;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -57,6 +60,15 @@ import static cubicchunks.util.Coords.getCubeCenter;
  */
 //TODO: make it also update blocklight
 public class FirstLightProcessor {
+	private static final IntHash.Strategy CUBE_Y_HASH = new IntHash.Strategy() {
+		@Override public int hashCode(int e) {
+			return e;
+		}
+
+		@Override public boolean equals(int a, int b) {
+			return a == b;
+		}
+	};
 	//mutableBlockPos variable to avoid creating thousands of instances of BlockPos
 	private BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 	private ICubeCache cache;
@@ -111,6 +123,8 @@ public class FirstLightProcessor {
 		}
 
 		BlockPos.MutableBlockPos pos = mutablePos;
+		Int2ObjectMap<FastCubeBlockAccess> blockAccess =
+				new Int2ObjectOpenCustomHashMap<>(10, 0.75f, CUBE_Y_HASH);
 
 		Column column = generatedCube.getColumn();
 		for (int blockX = minBlockX; blockX <= maxBlockX; blockX++) {
@@ -123,7 +137,19 @@ public class FirstLightProcessor {
 				}
 
 				Iterable<Cube> cubes = column.getLoadedCubes(blockToCube(maxBlockY), blockToCube(minBlockY));
+				int topBlockY = getHeightmapValue(column, blockToLocal(blockX), blockToLocal(blockZ));
+				//going top-down
 				for(Cube cube : cubes) {
+					//generatedCube must be updated
+					//the logic in canStopUpdating doesn't apply to it
+					if(cube != generatedCube && canStopUpdating(cube, pos, topBlockY)) {
+						break;
+					}
+					//if FirstLight isn't done in tha cube yet (and it's not the current cube) - t will be done later
+					//so skip it there
+					if(cube != generatedCube && !cube.isInitialLightingDone()) {
+						continue;
+					}
 					int cubeY = cube.getY();
 					//is the update even possible?
 					if(!canUpdateCube(cube)) {
@@ -136,7 +162,7 @@ public class FirstLightProcessor {
 						continue;
 					}
 
-					if (!diffuseBlockColumnInCube(cube, minBlockY, maxBlockY, pos)) {
+					if (!diffuseBlockColumnInCube(cube, minBlockY, maxBlockY, pos, topBlockY, blockAccess)) {
 						throw new IllegalStateException("Check light failed at " + pos + "!");
 					}
 				}
@@ -145,10 +171,14 @@ public class FirstLightProcessor {
 		return true;
 	}
 
-	private boolean diffuseBlockColumnInCube(Cube cube, int minBlockY, int maxBlockY, BlockPos.MutableBlockPos pos) {
+	private boolean diffuseBlockColumnInCube(Cube cube, int minBlockY, int maxBlockY, BlockPos.MutableBlockPos pos, int topBlockY, Int2ObjectMap<FastCubeBlockAccess> blockAccessMap) {
 		ICubicWorld world = cube.getWorld();
 		int cubeMinBlockY = cubeToMinBlock(cube.getY());
-		FastCubeBlockAccess blockAccess = new FastCubeBlockAccess(cache, cube, 1);
+		FastCubeBlockAccess blockAccess = blockAccessMap.get(cube.getY());
+		if(blockAccess == null) {
+			blockAccess = new FastCubeBlockAccess(cache, cube, 1);
+			blockAccessMap.put(cube.getY(), blockAccess);
+		}
 		for (int y = 15; y >= 0; y--) {
 			int blockY = y + cubeMinBlockY;
 
@@ -156,7 +186,7 @@ public class FirstLightProcessor {
 				continue;
 			}
 			pos.setY(blockY);
-			if (!needsUpdate(blockAccess, pos)) {
+			if (!needsUpdate(blockAccess, pos, topBlockY)) {
 				continue;
 			}
 
@@ -167,7 +197,7 @@ public class FirstLightProcessor {
 		return true;
 	}
 
-	private boolean needsUpdate(FastCubeBlockAccess access, BlockPos.MutableBlockPos pos) {
+	private boolean needsUpdate(FastCubeBlockAccess access, BlockPos.MutableBlockPos pos, int topBlockY) {
 		//opaque blocks don't need update. Nothing can emit skylight, and skylight can't get into them nor out of them
 		if (access.getBlockLightOpacity(pos) >= 15) {
 			return false;
@@ -191,6 +221,23 @@ public class FirstLightProcessor {
 			}
 		}
 		return false;
+	}
+
+	private boolean canStopUpdating(Cube cube, BlockPos.MutableBlockPos pos, int topBlockY) {
+		//NOTE: The logic here doesn't apply to the main cube currently being updated. Only to cubes below it.
+		pos.setY(cube.getCoords().getMaxBlockY());
+		boolean isDirectSkylight = pos.getY() > topBlockY;
+		int lightValue = cube.getLightFor(EnumSkyBlock.SKY, pos);
+		//if the top of the cube has no direct sunlight and the light value doesn't need update
+		//then all blocks below also don't need update (as you go down skylight can only decrease,
+		//and with worldgen light updates only whole block columns are updated at a time
+		//in other cases update will be queued or done on load time
+		//when there is no direct skylight, update is needed only
+		//if the light value is 15 - exposed to direct skylight
+
+		//the same logic can't be applied in case there is direct skylight -
+		//at the top of the first cube the light value is correct
+		return !isDirectSkylight && lightValue < 15;
 	}
 
 	private Pair<Integer, Integer> getMinMaxLightUpdateY(ICubeCache cache, Cube cube, int blockX, int blockZ) {
