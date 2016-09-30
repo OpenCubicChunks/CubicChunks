@@ -9,6 +9,7 @@
     "core.common.MixinWorld_HeightLimits",
     "core.common.MixinChunkCache_HeightLimits",
     "core.common.MixinEntity_DeathFix",
+    "core.server.MixinMinecraftServer_AsyncCubeIO",
 
     "noncritical.common.command.MixinCommandTeleport",
     "noncritical.common.command.MixinCommandTP",
