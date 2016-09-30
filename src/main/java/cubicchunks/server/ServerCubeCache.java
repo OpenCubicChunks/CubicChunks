@@ -26,6 +26,7 @@ package cubicchunks.server;
 import cubicchunks.CubicChunks;
 import cubicchunks.VanillaCubicChunksWorldType;
 import cubicchunks.server.chunkio.CubeIO;
+import cubicchunks.server.chunkio.async.AsyncWorldIOExecutor;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
@@ -33,7 +34,10 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import net.minecraft.crash.CrashReport;
+import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -46,13 +50,13 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
+import java.util.function.Consumer;
 
 import static cubicchunks.server.ServerCubeCache.LoadType.FORCE_LOAD;
 import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_ONLY;
@@ -133,16 +137,23 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 
 	/**
-	 * Load chunk asynchronously. Currently CubicChunks only loads synchronously.
+	 * Load a chunk. If nullable is passed, the chunk is loaded asynchronously and the callback is called
+	 * when the load finishes. Otherwise, the chunk is loaded synchronously and returned.
+	 *
+	 * @param cubeX Column x position
+	 * @param cubeZ Column z position
+	 * @param runnable The callback, optionally to be called when the load is finished
+	 *
+	 * @return The chunk, if loaded synchronously. <code>null</code> otherwise
 	 */
 	@Override
 	@Nullable
-	public Column loadChunk(int cubeX, int cubeZ, Runnable runnable) {
-		Column column = this.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
+	public Column loadChunk(int cubeX, int cubeZ, @Nullable Runnable runnable) {
 		if (runnable == null) {
-			return column;
+			return loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
 		}
-		runnable.run();
+
+		asyncLoadColumn(cubeX, cubeZ, col -> runnable.run());
 		return null;
 	}
 
@@ -151,8 +162,19 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	 * Loads from disk if possible, otherwise generates new Column.
 	 */
 	@Override
+	@Nonnull // Explicit nonnull annotation because super is annotated
 	public Column provideChunk(int cubeX, int cubeZ) {
-		return loadChunk(cubeX, cubeZ, null);
+		Column column = loadChunk(cubeX, cubeZ, null);
+		if (column == null) {
+			// Forge throws an exception here, so do we
+			CrashReport crashreport = CrashReport.makeCrashReport(new Exception(), "Failed generating a column");
+			CrashReportCategory crashreportcategory = crashreport.makeCategory("Column to be generated");
+			crashreportcategory.addCrashSection("Location", String.format("%d,%d", cubeX, cubeZ));
+			crashreportcategory.addCrashSection("Position hash", AddressTools.getAddress(cubeX, cubeZ));
+			crashreportcategory.addCrashSection("Generator", this.chunkGenerator);
+			throw new ReportedException(crashreport);
+		}
+		return column;
 	}
 
 	@Override
@@ -194,12 +216,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	private void unloadQueuedColumns(int maxColumnsUnload) {
 		int unloaded = 0;
 		Iterator<ChunkPos> it = columnsToUnload.iterator();
-		while(it.hasNext() && unloaded < maxColumnsUnload) {
+		while (it.hasNext() && unloaded < maxColumnsUnload) {
 			ChunkPos pos = it.next();
 			long address = AddressTools.getAddress(pos.chunkXPos, pos.chunkZPos);
 			Column column = loadedColumns.get(address);
 			it.remove();
-			if(column == null) {
+			if (column == null) {
 				continue;
 			}
 			if (!column.hasCubes() && column.unloaded) {
@@ -286,12 +308,19 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	@Override
 	public Column getColumn(int columnX, int columnZ) {
 		Column column = this.loadedColumns.get(AddressTools.getAddress(columnX, columnZ));
-		if(column != null) {
+		if (column != null) {
 			column.unloaded = false;
 		}
 		return column;
 	}
 
+	/**
+	 * Retrieve the cube at the specified coodinates, if present
+	 * @param cubeX cube x position
+	 * @param cubeY cube y position
+	 * @param cubeZ cube z position
+	 * @return The cube, or <code>null</code> if not loaded
+	 */
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
 		Column column = getColumn(cubeX, cubeZ);
@@ -299,7 +328,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			return null;
 		}
 		Cube cube = column.getCube(cubeY);
-		if(cube != null) {
+		if (cube != null) {
 			cube.unloaded = false;
 		}
 		return cube;
@@ -309,79 +338,180 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		return this.getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
-	public void loadCube(int cubeX, int cubeY, int cubeZ, LoadType loadType) {
+
+	/**
+	 * Load a cube asynchronously
+	 *
+	 * @param cubeX cube x position
+	 * @param cubeY cube y position
+	 * @param cubeZ cube z position
+	 * @param callback Callback to be called on load finish. Passed null if load fails
+	 */
+	public void asyncLoadCube(int cubeX, int cubeY, int cubeZ, Consumer<Cube> callback) {
+		// Fast return if both is already loaded
+		Column column = getColumn(cubeX, cubeZ);
+		if (column != null) {
+			Cube cube = column.getCube(cubeY);
+
+			if (cube != null) {
+				callback.accept(cube);
+			} else {
+				AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, column, cubeY,
+						result -> {
+							try {
+								callback.accept(postprocessLoadedCube(cubeX, cubeY, cubeZ, true, result.cube, column));
+							} catch (ReportedException ex) {
+								// Async never fails
+								callback.accept(null);
+							}
+						});
+			}
+
+			return;
+		}
+
+		AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, cubeX, cubeY, cubeZ,
+				result -> {
+					try {
+						callback.accept(postprocessLoadedCube(cubeX, cubeY, cubeZ, true, result.cube, result.column));
+					} catch (ReportedException ex) {
+						// Async never fails
+						callback.accept(null);
+					}
+				});
+	}
+
+	/**
+	 * Load a cube. Fails spectacularly if the column can't be loaded, otherwise returns null on failure for some reason.
+	 *
+	 * @param cubeX cube x position
+	 * @param cubeY cube y position
+	 * @param cubeZ cube z position
+	 * @param loadType Loading behavior - Force a reload {@link LoadType#FORCE_LOAD}, load from disk if not present
+	 * {@link LoadType#LOAD_ONLY}, or generate a cube if it does not exist at all {@link LoadType#LOAD_OR_GENERATE}
+	 */
+	public Cube loadCube(int cubeX, int cubeY, int cubeZ, @Nonnull LoadType loadType) {
 
 		if (loadType == FORCE_LOAD) {
 			throw new UnsupportedOperationException("Cannot force load a cube");
 		}
 
 		// Get the column
-		Column column = getColumn(cubeX, cubeZ);
+		// Column column = getColumn(cubeX, cubeZ);
+		// Handled in loadColumn
 
-		// Try loading the column.
-		if (column == null) {
-			worldServer.getProfiler().startSection("loadColumn");
-			column = this.loadColumn(cubeX, cubeZ, loadType);
-			worldServer.getProfiler().endSection();
-		}
+
+		worldServer.getProfiler().startSection("loadColumn");
+		Column column = this.loadColumn(cubeX, cubeZ, loadType);
+		worldServer.getProfiler().endSection();
 
 		// If we couldn't load or generate the column - give up.
 		if (column == null) {
-			if (loadType == LOAD_OR_GENERATE) {
-				CubicChunks.LOGGER.error(
-						"Loading cube at " + cubeX + ", " + cubeY + ", " + cubeZ + " failed, couldn't load column");
-			}
-			return;
+			failOnColumnFailure(cubeX, cubeY, cubeZ, loadType);
 		}
 
 		// Is the cube loaded?
 		Cube cube = column.getCube(cubeY);
-		if (cube != null) {
-			cube.unloaded = false;
-			return;
-		}
+
 
 		// Try loading the cube.
-		try {
+		if (cube == null) {
 			worldServer.getProfiler().startSection("cubeIOLoad");
-			cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeY);
-		} catch (IOException ex) {
-			log.error("Unable to load cube ({},{},{})", cubeX, cubeY, cubeZ, ex);
-			return;
-		} finally {
+			cube = AsyncWorldIOExecutor.syncCubeLoad(worldObj, cubeIO, cubeY, column);
 			worldServer.getProfiler().endSection();
 		}
 
-		// If loading it didn't work...
-		if (cube == null) {
-			// ... and generating has been requested, generate it.
-			if (loadType == LoadType.LOAD_OR_GENERATE) {
-				worldServer.getProfiler().startSection("createEmptyCube");
-				cube = column.getOrCreateCube(cubeY, true);
-				worldServer.getProfiler().endStartSection("generateBlocks");
-				this.worldServer.getCubeGenerator().generateCube(this, cube);
-				worldServer.getProfiler().endSection();
+		return postprocessLoadedCube(cubeX, cubeY, cubeZ, loadType == LOAD_OR_GENERATE, cube, column);
+	}
+
+
+	@Nullable
+	private Cube postprocessLoadedCube(int cubeX, int cubeY, int cubeZ, boolean allowedToGenerate, Cube cube, Column column) {
+		if (cube == null && allowedToGenerate) {
+			if (column == null) {
+				failOnColumnFailure(cubeX, cubeY, cubeZ, LOAD_OR_GENERATE);
 			}
-			// ... or quit.
-			else {
-				return;
-			}
+
+			worldServer.getProfiler().startSection("createEmptyCube");
+			cube = column.getOrCreateCube(cubeY, true);
+			worldServer.getProfiler().endStartSection("generateBlocks");
+			this.worldServer.getCubeGenerator().generateCube(this, cube);
+			worldServer.getProfiler().endSection();
 		}
 
-		// Init the column.
-		if (!column.isLoaded()) {
-			column.onChunkLoad();
-		}
-		column.setTerrainPopulated(true);
 
-		// Init the cube.
-		cube.onLoad();
+		if (cube != null) {
+			// Init the column.
+			if (!column.isLoaded()) {
+				column.onChunkLoad();
+			}
+			column.setTerrainPopulated(true);
+
+			// Init the cube.
+			cube.onLoad();
+			cube.unloaded = false;
+		}
+
+		return cube;
+	}
+
+	/**
+	 * Raise an exception on cube load if the column failed to load. Always fails!
+	 *
+	 * @param cubeX cube x position
+	 * @param cubeY cube y position
+	 * @param cubeZ cube z position
+	 * @param loadType Load type to report
+	 */
+	private void failOnColumnFailure(int cubeX, int cubeY, int cubeZ, @Nonnull LoadType loadType) {
+		// Roughly mirroring forge behavior for chunks
+		CrashReport crashreport = CrashReport.makeCrashReport(new Exception(), "Exception generating new cube");
+		CrashReportCategory crashreportcategory = crashreport.makeCategory("Cube to be generated");
+		crashreportcategory.addCrashSection("Location", String.format("x=%d,y=%d,z=%d", cubeX, cubeY, cubeZ));
+		crashreportcategory.addCrashSection("Position hash", AddressTools.getAddress(cubeX, cubeY, cubeZ));
+		crashreportcategory.addCrashSection("Load type", loadType);
+		crashreportcategory.addCrashSection("Generator", this.chunkGenerator);
+		crashreportcategory.addCrashSection("Failure type", "Unable to load or generate column");
+		throw new ReportedException(crashreport);
 	}
 
 	public void loadCube(CubeCoords coords, LoadType loadType) {
 		this.loadCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ(), loadType);
 	}
 
+	/**
+	 * Load a column asynchronously, generating it if it doesn't exist
+	 *
+	 * @param cubeX column x position
+	 * @param cubeZ column z position
+	 * @param callback The callback to be executed when the column is loaded
+	 */
+	public void asyncLoadColumn(int cubeX, int cubeZ, Consumer<Column> callback) {
+		Column column = getColumn(cubeX, cubeZ);
+		if (column != null) {
+			callback.accept(column);
+			return;
+		}
+
+		AsyncWorldIOExecutor.queueColumnLoad(worldObj, cubeIO, cubeX, cubeZ, col -> {
+			col = postprocessLoadedColumn(cubeX, cubeZ, true, col);
+			// TODO Up to three callbacks deep at this point
+			callback.accept(col);
+		});
+	}
+
+	/**
+	 * Load a column synchronously
+	 *
+	 * @param cubeX column x position
+	 * @param cubeZ column z position
+	 * @param loadType Type of load behavior - Force a reload {@link LoadType#FORCE_LOAD}, load if necessary, returning
+	 * null if the column does not exist {@link LoadType#LOAD_ONLY}, or try to load, generating the column if it doesn't
+	 * exist {@link LoadType#LOAD_OR_GENERATE}
+	 *
+	 * @return The generated column, or <code>null</code> if the loading process failed
+	 */
+	@Nullable
 	public Column loadColumn(int cubeX, int cubeZ, LoadType loadType) {
 		Column column = null;
 		//if we are not forced to load from disk - try to get it first
@@ -391,27 +521,39 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		if (column != null) {
 			return column;
 		}
-		try {
-			column = this.cubeIO.loadColumn(cubeX, cubeZ);
-		} catch (IOException ex) {
-			log.error("Unable to load column ({},{})", cubeX, cubeZ, ex);
-			return null;
-		}
 
+		column = AsyncWorldIOExecutor.syncColumnLoad(worldObj, cubeIO, cubeX, cubeZ);
+		// TODO we swallow IOExceptions here - is that ok?
+
+		column = postprocessLoadedColumn(cubeX, cubeZ, loadType == LOAD_OR_GENERATE, column);
 		if (column == null) {
+			throw new RuntimeException("column total fail");
+		}
+		return column;
+	}
+
+	/**
+	 * Postprocess a loaded column, assigning last-load times etc. Necessary step after loading the column
+	 *
+	 * @param cubeX column x position
+	 * @param cubeZ column z position
+	 * @param allowedToGenerate can the column be generated if it wasn't loaded
+	 * @param column The loaded column
+	 *
+	 * @return The loaded or generated column, or <code>null</code> if the process failed
+	 */
+	@Nullable
+	private Column postprocessLoadedColumn(int cubeX, int cubeZ, boolean allowedToGenerate, @Nullable Column column) {
+		if (column == null && allowedToGenerate) {
 			// there wasn't a column, generate a new one (if allowed to generate)
-			if (loadType == LOAD_OR_GENERATE) {
-				column = this.worldServer.getColumnGenerator().generateColumn(cubeX, cubeZ);
-			}
-		} else {
-			// the column was loaded
-			column.setLastSaveTime(this.worldServer.getTotalWorldTime());
+			column = this.worldServer.getColumnGenerator().generateColumn(cubeX, cubeZ);
 		}
-		if (column == null) {
-			return null;
+		// Column.setLastSaveTime moved to async load
+		if (column != null) {
+			this.loadedColumns.put(AddressTools.getAddress(cubeX, cubeZ), column);
+			column.onChunkLoad();
+			column.unloaded = false;
 		}
-		this.loadedColumns.put(AddressTools.getAddress(cubeX, cubeZ), column);
-		column.onChunkLoad();
 		return column;
 	}
 
@@ -462,9 +604,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 
 	public void unloadCube(Cube cube) {
-		if(this.worldServer.getWorldInfo().getTerrainType() instanceof VanillaCubicChunksWorldType) {
+		if (this.worldServer.getWorldInfo().getTerrainType() instanceof VanillaCubicChunksWorldType) {
 			final int bufferSize = 1;
-			if(cube.getY() >= 0 - bufferSize && cube.getY() < 16 + bufferSize) {
+			if (cube.getY() >= 0 - bufferSize && cube.getY() < 16 + bufferSize) {
 				return;//don't unload
 			}
 		}

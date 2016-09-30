@@ -36,6 +36,12 @@ public interface ICubeCache {
 
 	Cube getCube(CubeCoords coords);
 
+	/**
+	 * Retrieve a column, if it exists and is loaded
+	 * @param cubeX The x position of the column
+	 * @param cubeZ The y position of the column
+	 * @return The column, if loaded. Null, otherwise.
+	 */
 	Column getColumn(int cubeX, int cubeZ);
 
 	void unloadCube(Cube cube);
