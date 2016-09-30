@@ -36,6 +36,7 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.ICubeCache;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -74,14 +75,15 @@ public class Column extends Chunk {
 
 	private CubeMap cubeMap;
 	private IOpacityIndex opacityIndex;
-	private int roundRobinLightUpdatePointer;   // TODO: dont do lighting in Column
-	private Deque<Integer> roundRobinCubeQueue; // TODO: dont do lighting in Column
-	private EntityContainer entities;           // TODO: remove this field
+	
+	private ICubeCache provider;
 	private ICubicWorld world;
 
-	public Column(ICubicWorld world, int x, int z) {
+	public Column(ICubeCache provider, ICubicWorld world, int x, int z) {
 		// NOTE: this constructor is called by the chunk loader
 		super((World) world, x, z);
+		
+		this.provider = provider;
 		this.world = world;
 		init();
 	}
@@ -209,12 +211,7 @@ public class Column extends Chunk {
 		Block oldBlock = oldBlockState.getBlock();
 		Block newBlock = newBlockState.getBlock();
 
-		Cube cube = this.cubeMap.get(cubeY); // TODO: use getCube()
-
-		if (cube == null) { //TODO: THIS IS VARY BAD!!! (make it so getCube() never returns null)
-			//nothing we can do. vanilla creates new EBS here
-			return null;
-		}
+		Cube cube = getCube(cubeY);
 
 		cube.setBlockStateDirect(pos, newBlockState);
 
@@ -324,69 +321,25 @@ public class Column extends Chunk {
 	//forward to cube
 	@Override
 	public int getLightFor(@Nonnull EnumSkyBlock type, BlockPos pos) {
-		Cube cube = this.getCube(pos);
-		if (cube == null) { //TODO: if getCube() never returns null, delete lots of this code
-			return this.canSeeSky(pos) ? type.defaultLightValue : 0;
-		}
-		return cube.getLightFor(type, pos);
+		return getCube(pos).getLightFor(type, pos);
 	}
 
 	//forward to cube
 	@Override
 	public void setLightFor(EnumSkyBlock type, BlockPos pos, int value) {
-		Cube cube = this.getCube(pos);
-		if (cube == null) { //TODO: if getCube() never returns null, delete lots of this code
-			//What now? There is no such cube; do nothing?
-			return;
-		}
-		cube.setLightFor(type, pos, value);
+		getCube(pos).setLightFor(type, pos, value);
 	}
 
 	//forward to cube
 	@Override
 	public int getLightSubtracted(BlockPos pos, int amount) {
-		Cube cube = this.getCube(pos);
-		if (cube == null) { //TODO: if getCube() never returns null, delete lots of this code
-			//If there is no cube - apply the same logic as vanilla does when EBS doesn't exist
-			boolean hasSky = !this.getWorld().provider.getHasNoSky();
-			if (hasSky && amount < EnumSkyBlock.SKY.defaultLightValue) {
-				return EnumSkyBlock.SKY.defaultLightValue - amount;
-			}
-			return 0;
-		}
-		return cube.getLightSubtracted(pos, amount);
+		return getCube(pos).getLightSubtracted(pos, amount);
 	}
 
-	//forward to cube when possible
+	//forward to cube
 	@Override
 	public void addEntity(Entity entity) {
-		int cubeY = Coords.getCubeYForEntity(entity);
-
-		Cube cube = getCube(cubeY);
-		if (cube != null) { //TODO: if getCube() never returns null, delete lots of this code
-			cube.addEntity(entity);
-		} else {
-			// entities don't have to be in cubeMap, just add it directly to the column
-			int cubeX = MathHelper.floor_double(entity.posX/16.0D);
-			int cubeZ = MathHelper.floor_double(entity.posZ/16.0D);
-
-			if (cubeX != this.xPosition || cubeZ != this.zPosition) {
-				CubicChunks.LOGGER.warn(
-						"Wrong location! (" + cubeX + ", " + cubeZ + ") should be (" + this.xPosition + ", " +
-								this.zPosition + "), " + entity, new Object[]{entity});
-				entity.setDead();
-			}
-
-			MinecraftForge.EVENT_BUS.post(new EntityEvent.EnteringChunk(entity, this.xPosition, this.zPosition, entity.chunkCoordX, entity.chunkCoordZ));
-
-			entity.addedToChunk = true;
-			entity.chunkCoordX = this.xPosition;
-			entity.chunkCoordY = cubeY;
-			entity.chunkCoordZ = this.zPosition;
-
-			this.entities.addEntity(entity); // no no no! this will cause lots of bugs (see TODO above)
-			this.setModified(true);
-		}
+		getCube(Coords.getCubeYForEntity(entity)).addEntity(entity);
 	}
 
 	@Override
@@ -394,122 +347,72 @@ public class Column extends Chunk {
 		this.removeEntityAtIndex(entityIn, entityIn.chunkCoordY);
 	}
 
-	//forward to cube when possible
+	//forward to cube
 	@Override
 	public void removeEntityAtIndex(@Nonnull Entity entity, int cubeY) {
-		if (!entity.addedToChunk) {
-			return;
-		}
-
-		// pass off to the cube
-		Cube cube = getCube(cubeY);
-
-		if (cube != null) { //TODO: if getCube() never returns null, delete lots of this code
-			cube.removeEntity(entity);
-		} else if (this.entities.remove(entity)) { // TODO: dont use this entity list!!!
-			this.setModified(true);
-		} else {
-			CubicChunks.LOGGER.warn(
-					"{} Tried to remove entity {} from cube ({}, {}, {}) from column entity list, but it was not there. Entity thinks it's in cube ({},{},{})",
-					this.getWorld().isRemote ? "CLIENT" : "SERVER",
-					entity.getClass().getName(),
-					this.xPosition, cubeY, this.zPosition,
-					entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ);
-		}
+		getCube(cubeY).removeEntity(entity);
 	}
 
 	@Override
 	public boolean canSeeSky(BlockPos pos) {
-		int localX = Coords.blockToLocal(pos.getX());
-		int localZ = Coords.blockToLocal(pos.getZ());
-		int height = this.getHeightValue(localX, localZ);
+		int height = this.getHeightValue(
+				Coords.blockToLocal(pos.getX()),
+				Coords.blockToLocal(pos.getZ()));
+		
 		return pos.getY() >= height;
 	}
 
 	//forward to cube
 	@Override
 	public TileEntity getTileEntity(@Nonnull BlockPos pos, Chunk.EnumCreateEntityType createType) {
-		Cube cube = this.getCube(pos);
-		if (cube == null) { //TODO: if getCube() never returns null, delete lots of this code
-			return null;
-		}
-		return cube.getTileEntity(pos, createType);
+		return getCube(pos).getTileEntity(pos, createType);
 	}
 
 	@Override
 	public void addTileEntity(TileEntity tileEntity) {
 		// pass off to the cube
-		int cubeY = Coords.blockToCube(tileEntity.getPos().getY());
-		Cube cube = getCube(cubeY);
-
-		if (cube != null) { //TODO: if getCube() never returns null, delete lots of this code
-			cube.addTileEntity(tileEntity);
-		} else {
-			CubicChunks.LOGGER.warn("No cube at ({},{},{}) to add tile entity (block {},{},{})!", this.xPosition, cubeY, this.zPosition,
-					tileEntity.getPos().getX(), tileEntity.getPos().getY(), tileEntity.getPos().getZ());
-		}
+		getCube(tileEntity.getPos()).addTileEntity(tileEntity);
 	}
 
 	//forward to cube
 	@Override
 	public void addTileEntity(@Nonnull BlockPos pos, TileEntity blockEntity) {
 		// pass off to the cube
-		int cubeY = Coords.blockToCube(pos.getY());
-		Cube cube = getCube(cubeY);
-
-		if (cube != null) { //TODO: if getCube() never returns null, delete lots of this code
-			cube.addTileEntity(pos, blockEntity);
-		} else {
-			CubicChunks.LOGGER.warn("No cube at ({},{},{}) to add tile entity (block {},{},{})!", this.xPosition, cubeY, this.zPosition,
-					pos.getX(), pos.getY(), pos.getZ());
-		}
+		getCube(pos).addTileEntity(pos, blockEntity);
 	}
 
 	//forward to cube
 	@Override
 	public void removeTileEntity(@Nonnull BlockPos pos) {
-		Cube cube = this.getCube(pos);
-		if (cube == null) { //TODO: if getCube() never returns null, delete lots of this code
-			return;
-		}
-		cube.removeTileEntity(pos);
+		this.getCube(pos).removeTileEntity(pos);
 	}
 
 	@Override
 	public void onChunkLoad() {
 		this.isChunkLoaded = true;
-		this.getWorld().loadEntities(this.entities.getEntities()); //TODO: dont use this.entitys
-		//the whole logic is actually moved to Cube, but mods still need to get the event
 		MinecraftForge.EVENT_BUS.post(new ChunkEvent.Load(this));
-
-		//NOTE: cube.onLoad() is called from ServerCubeCache
 	}
 
 	@Override
 	public void onChunkUnload() {
 		this.isChunkLoaded = false;
-		this.getWorld().unloadEntities(this.entities.getEntities()); //TODO: dont use this.entitys
 		MinecraftForge.EVENT_BUS.post(new ChunkEvent.Unload(this));
-
-		//NOTE: cube.onUnload() is called from ServerCubeCache
 	}
 
 	//setChunkModified() goes here, it's unchanged
 
 	//forward to cube, then to EntityContainer
 	@Override
-	public void getEntitiesWithinAABBForEntity(Entity excludedEntity, AxisAlignedBB queryBox, @Nonnull List<Entity> out, Predicate<? super Entity> predicate) {
+	public void getEntitiesWithinAABBForEntity(Entity exclude, AxisAlignedBB queryBox, @Nonnull List<Entity> out, Predicate<? super Entity> predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
 		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - World.MAX_ENTITY_RADIUS));
 		int maxCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.maxY + World.MAX_ENTITY_RADIUS));
 
-		for (Cube cube : getLoadedCubes(minCubeY, maxCubeY)) {
-			cube.getEntitiesWithinAABBForEntity(excludedEntity, queryBox, out, predicate);
+		for (int cubeY = minCubeY;cubeY < maxCubeY + 1;cubeY++) {
+			Cube cube = getCube(cubeY);
+			cube.getEntitiesWithinAABBForEntity(exclude, queryBox, out, predicate);
 		}
-
-		// check the column too
-		this.entities.getEntitiesWithinAABBForEntity(excludedEntity, queryBox, out, predicate); // TODO: dont use this.entitys
 	}
 
 	//forward to cube, then to EntityContainer
@@ -520,18 +423,15 @@ public class Column extends Chunk {
 		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - World.MAX_ENTITY_RADIUS));
 		int maxCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.maxY + World.MAX_ENTITY_RADIUS));
 
-		for (Cube cube : getLoadedCubes(minCubeY, maxCubeY)) {
+		for (int cubeY = minCubeY;cubeY < maxCubeY + 1;cubeY++) {
+			Cube cube = getCube(cubeY);
 			cube.getEntitiesOfTypeWithinAAAB(entityType, queryBox, out, predicate);
 		}
-
-		// check the column too
-		this.entities.getEntitiesOfTypeWithinAAAB(entityType, queryBox, out, predicate); // TODO: dont use this.entitys
 	}
 
 	@Override
 	public boolean needsSaving(boolean flag) {
-		//TODO: dont use this.entitys
-		return this.entities.needsSaving(flag, this.getWorld().getTotalWorldTime(), this.isModified);
+		return this.isModified;
 	}
 
 	//getRandomWithSeed(seed) doesn't need changes
@@ -543,8 +443,8 @@ public class Column extends Chunk {
 		throw new UnsupportedOperationException("This method is incompatible with CubicChunks");
 	}
 
-	//TODO: Actual precipitation heightmap, currently skylight heightmap is used which triggers an old MC alpha bug
 	@Override
+	//TODO: Actual precipitation heightmap, currently skylight heightmap is used which triggers an old MC alpha bug
 	public BlockPos getPrecipitationHeight(BlockPos pos) {
 		return new BlockPos(pos.getX(), this.getHeight(pos), pos.getZ());
 	}
@@ -557,10 +457,8 @@ public class Column extends Chunk {
 
 	@Override
 	@Deprecated
-	public boolean isPopulated() {
-		//TODO: replace this with throw new UnsupportedOperationException("This method is incompatible with CubicChunks");
-		//      its broken and only used in World.markAndNotifyBlock() and PlayerChunkMapEntry.sendToPlayers()
-		return this.chunkTicked && isTerrainPopulated(); 
+	public boolean isPopulated() {  
+		return true; //stub... its broken and only used in World.markAndNotifyBlock()
 	}
 
 	//isCHunkTicked() doesn't need changes
@@ -568,12 +466,15 @@ public class Column extends Chunk {
 	//getChunkCoordIntPair doesn't need changes
 
 	@Override
+	// used for by ChunkCache, and that is used for rendering to see
+	// if there are any blocks, or is there just air
 	public boolean getAreLevelsEmpty(int minBlockY, int maxBlockY) {
 		int minCubeY = Coords.blockToCube(minBlockY);
 		int maxCubeY = Coords.blockToCube(maxBlockY);
 		for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
-			Cube cube = getCube(cubeY);
-			if (cube != null && cube.hasBlocks()) {
+			Cube cube = getCube(cubeY); // yes, load/generate a chunk if there is none... 
+			                            // even if its not loaded there is still technical something there
+			if (cube.hasBlocks()) {
 				return false;
 			}
 		}
@@ -600,71 +501,20 @@ public class Column extends Chunk {
 
 	// TODO: lighting should not be done in Column
 	@Override
+	@Deprecated
 	public void resetRelightChecks() {
-		this.roundRobinLightUpdatePointer = 0;
-		this.roundRobinCubeQueue.clear();
-		this.roundRobinCubeQueue.addAll(this.cubeMap.all().stream().map(c -> c.getY()).collect(Collectors.toSet()));
+		throw new UnsupportedOperationException("This method is incompatible with Cubic Chunks");
 	}
 
 	//TODO: enqueueRelightChecks() must die! (it should be in its own lighting system or at least only in Cube)
 	@Override
+	@Deprecated
 	public void enqueueRelightChecks() {
-		if (this.roundRobinCubeQueue.isEmpty()) {
-			return;
-		}
-		int maxPointer = 16*16 - 1;
-		BlockPos blockpos = new BlockPos(Coords.cubeToMinBlock(this.xPosition), 0, Coords.cubeToMinBlock(this.zPosition));
-		for (int i = 0; i < 8; ++i) {
-			if (this.roundRobinLightUpdatePointer > maxPointer) {
-				//next cube
-				this.roundRobinLightUpdatePointer = 0;
-				this.roundRobinCubeQueue.removeLast();
-				if (this.roundRobinCubeQueue.isEmpty()) {
-					break;
-				}
-			}
-			int cubeY = this.roundRobinCubeQueue.getLast();
-			Cube cube = this.getCube(cubeY);
-
-			int localX = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 4);
-			int blockYMin = Coords.cubeToMinBlock(cubeY);
-			int localZ = Bits.unpackUnsigned(this.roundRobinLightUpdatePointer, 4, 0);
-			this.roundRobinLightUpdatePointer++;
-
-			boolean cubeEmpty = cube == null || cube.isEmpty();
-
-			for (int localY = 0; localY < 16; ++localY) {
-				BlockPos currentPos = blockpos.add(localX, blockYMin + localY, localZ);
-				boolean isEdge = localY == 0 || localY == 15 ||
-						localX == 0 || localX == 15 ||
-						localZ == 0 || localZ == 15;
-
-				if (!(cubeEmpty && isEdge)) {
-					continue;
-				}
-				IBlockState currentState = cubeEmpty ? null : cube.getStorage().get(localX, localY, localZ);
-				//only air blocks need to be updated, but no need to update when this and all surrounding blocks are air
-				boolean airInNonEmptyCube =
-						!cubeEmpty && currentState.getBlock().isAir(currentState, this.getWorld(), currentPos);
-				//surrounding blocks may not be air if the block is at the edge of empty cube
-				boolean edgeOfEmptyCube = cubeEmpty && isEdge;
-				if (edgeOfEmptyCube || airInNonEmptyCube) {
-					for (EnumFacing enumfacing : EnumFacing.values()) {
-						BlockPos offsetPos = currentPos.offset(enumfacing);
-
-						//is it light source?
-						if (this.getWorld().getBlockState(offsetPos).getLightValue(this.getWorld(), offsetPos) > 0) {
-							this.getWorld().checkLight(offsetPos);
-						}
-					}
-
-					this.getWorld().checkLight(currentPos);
-				}
-			}
-		}
+		// stub
 	}
 
 	@Override
+	@Deprecated
 	public void checkLight() {
 		//no-op on cubic chunks
 	}
@@ -704,9 +554,8 @@ public class Column extends Chunk {
 	public boolean isTerrainPopulated() {
 		//with cubic chunks the whole column is never fully generated,
 		//this method is currently used to determine list of chunks to be ticked
-		//so let's say a chunk needs to be ticked if any cube needs to be ticked
-		//for chunk to be ticked, it needs to be populated (or not ticked before, or close enough t player)
-		return this.cubeMap.all().stream().anyMatch(Cube::isPopulated);
+		//and PlayerCubeMap :(
+		return true; //TODO: stub, replace with new UnsupportedOperationException();
 	}
 
 	@Override
@@ -714,10 +563,8 @@ public class Column extends Chunk {
 	public boolean isLightPopulated() {
 		//with cubic chunks light is never generated in the whole column
 		//this method is currently used to determine list of chunks to be ticked
-		//so let's say a chunk needs to be ticked if any cube needs to be ticked
-		//for chunk to be ticked, light can't be populated. So let's say it's populated
-		//only if initial lighting is done in all cubes
-		return this.cubeMap.all().stream().allMatch(Cube::isInitialLightingDone);
+		//and PlayerCubeMap :(
+		return true; //TODO: stub, replace with new UnsupportedOperationException();
 	}
 
 	@Override
@@ -737,14 +584,11 @@ public class Column extends Chunk {
 		} else {
 			this.opacityIndex = new OpacityIndex();
 		}
-		this.roundRobinLightUpdatePointer = 0;
-		this.roundRobinCubeQueue = new ArrayDeque<>();
-		this.entities = new EntityContainer();
 
 		// make sure no one's using data structures that have been replaced
 		// also saves memory
 		/*
-		 * TODO: setting these vars to null would save memory, but they're final. =( also... make sure we're actually
+		 * TODO: setting these vars to null would save memory, also... make sure we're actually
 		 * not using them
 		 */
 		// this.chunkSections = null;
@@ -754,22 +598,12 @@ public class Column extends Chunk {
 		Arrays.fill(super.getBiomeArray(), (byte) -1);
 	}
 
-	//TODO: remove the long address hack
-	public long getAddress() {
-		return AddressTools.getAddress(this.xPosition, this.zPosition);
-	}
-
 	public int getX() {
 		return this.xPosition;
 	}
 
 	public int getZ() {
 		return this.zPosition;
-	}
-
-	//TODO: Remove this along with this.entitys
-	public EntityContainer getEntityContainer() {
-		return this.entities;
 	}
 
 	public IOpacityIndex getOpacityIndex() {
@@ -788,45 +622,36 @@ public class Column extends Chunk {
 		return this.cubeMap.cubes(startY, endY);
 	}
 
-	public boolean hasLoadedCubes() {
-		return !this.cubeMap.isEmpty();
-	}
-
-	/**
-	 * Warning: This method may give cube that is queued to be unloaded.
-	 * You may want to use CubeCache instead
-	 */
 	public Cube getCube(int cubeY) {
-		//TODO: if the Cube is not in cubeMap load/generate it
-		return this.cubeMap.get(cubeY);
+		return provider.getCube(getX(), cubeY, getZ());
 	}
 
 	private Cube getCube(BlockPos pos) {
 		return getCube(Coords.blockToCube(pos.getY()));
 	}
 
-	//TODO: O NO! ... no no no! D: ... I just found out how bad the generator is...
-	public Cube getOrCreateCube(int cubeY, boolean isModified) {
-		Cube cube = getCube(cubeY);
-
-		if (cube == null) {
-			cube = new Cube(this.world, this, this.xPosition, cubeY, this.zPosition, isModified);
-			this.cubeMap.put(cubeY, cube);
-			this.roundRobinCubeQueue.addFirst(cubeY);
-		}
-		return cube;
+	public void addCube(Cube cube) {
+		this.cubeMap.put(cube.getY(), cube);
 	}
 
 	public Cube removeCube(int cubeY) {
 		return this.cubeMap.remove(cubeY);
 	}
 
+	public boolean hasLoadedCubes() {
+		return !this.cubeMap.isEmpty();
+	}
+
 	public void markSaved() {
-		this.entities.markSaved(this.getWorld().getTotalWorldTime());
 		this.setModified(false);
 	}
+	
 	@Override
 	public int getLowestHeight() {
 		return opacityIndex.getLowestTopBlockY();
+	}
+	
+	public ICubicWorld getCubicWorld() {
+		return world;
 	}
 }

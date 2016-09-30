@@ -78,8 +78,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.isCubicWorld = true;
 
 		this.entitySpawner = new CubeWorldEntitySpawner();
-		ServerCubeCache chunkProvider = new ServerCubeCache(this);
-		this.chunkProvider = chunkProvider;
+		this.chunkProvider = new ServerCubeCache(this);
 		this.lightingManager = new LightingManager(this);
 
 		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();

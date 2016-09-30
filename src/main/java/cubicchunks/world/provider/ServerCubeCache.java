@@ -32,6 +32,7 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.CompatChunkProvider;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -76,11 +77,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	private Queue<CubeCoords> cubesToUnload;
 	private Queue<ChunkPos> columnsToUnload;
 
-	public ServerCubeCache(ICubicWorldServer worldServer) {
+	public ServerCubeCache(ICubicWorldServer worldServer, ICubeGenerator cubeGen, IColumnGenerator columnGen) {
 		//TODO: Replace add ChunkGenerator argument and use chunk generator object for generating terrain?
 		//ChunkGenerator has to exist for mob spawning to work
-		super((WorldServer) worldServer, worldServer.getSaveHandler().getChunkLoader(worldServer.getProvider()),
-				new ChunkProviderOverworld((World) worldServer, worldServer.getSeed(), false, null));
+		super((WorldServer) worldServer,
+				worldServer.getSaveHandler().getChunkLoader(worldServer.getProvider()),
+				new CompatChunkProvider(cubeGen, columnGen));
 
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer);
