@@ -21,28 +21,14 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
+package cubicchunks.debug;
 
-package cubicchunks.worldgen;
+import cubicchunks.CubicChunks;
+import net.minecraft.item.Item;
 
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.CubeDependency;
-
-public class DependentGeneratorStage  extends GeneratorStage {
-
-	private CubeDependency cubeDependency;
-
-	public DependentGeneratorStage(String name, CubeDependency cubeDependency) {
-		super(name);
-		this.cubeDependency = cubeDependency;
+public class ItemRegistered extends Item {
+	public ItemRegistered(String name) {
+		setRegistryName(name);
+		setUnlocalizedName(CubicChunks.MODID + "." + name);
 	}
-
-	@Override
-	public CubeDependency getCubeDependency(Cube cube) {
-		return this.cubeDependency;
-	}
-
-	public void setCubeDependency(CubeDependency cubeDependency) {
-		this.cubeDependency = cubeDependency;
-	}
-
 }

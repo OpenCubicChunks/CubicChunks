@@ -23,8 +23,8 @@
  */
 package cubicchunks.server;
 
-import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
+import cubicchunks.VanillaCubicChunksWorldType;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
@@ -33,10 +33,9 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.DependencyManager;
-import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
@@ -51,12 +50,9 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 
 import static cubicchunks.server.ServerCubeCache.LoadType.FORCE_LOAD;
 import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_ONLY;
@@ -81,17 +77,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	private CubeIO cubeIO;
 	private HashMap<Long, Column> loadedColumns;
 	private Queue<CubeCoords> cubesToUnload;
-	private DependencyManager dependencyManager;
-
-	/**
-	 * Cube generator can add cubes into world that are "linked" with other cube -
-	 * Usually when generating one cube requires generating more than just neighbors.
-	 * <p>
-	 * This is a mapping of which cubes are linked with which other cubes,
-	 * allows to automatically unload these additional cubes.
-	 */
-	private Map<Cube, Set<Cube>> forceAdded;
-	private Map<Cube, Set<Cube>> forceAddedReverse;
+	private Queue<ChunkPos> columnsToUnload;
 
 	public ServerCubeCache(ICubicWorldServer worldServer) {
 		//TODO: Replace add ChunkGenerator argument and use chunk generator object for generating terrain?
@@ -101,15 +87,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer);
-		this.loadedColumns = Maps.newHashMap();
+		this.loadedColumns = new HashMap<>();
 		this.cubesToUnload = new ArrayDeque<>();
-		this.forceAdded = new HashMap<>();
-		this.forceAddedReverse = new HashMap<>();
-		this.dependencyManager = new DependencyManager(this);
-	}
-
-	public DependencyManager getDependencyManager() {
-		return this.dependencyManager;
+		this.columnsToUnload = new ArrayDeque<>();
 	}
 
 	@Override
@@ -126,7 +106,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public void unloadAllChunks() {
 		// unload all the cubes in the columns
 		for (Column column : this.loadedColumns.values()) {
-			for (Cube cube : column.getAllCubes()) {
+			for (Cube cube : column.getLoadedCubes()) {
 				this.cubesToUnload.add(cube.getCoords());
 			}
 		}
@@ -168,7 +148,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	/**
 	 * If this Column is already loaded - returns it.
-	 * Loads from disk if possible, otherwise generated new Column.
+	 * Loads from disk if possible, otherwise generates new Column.
 	 */
 	@Override
 	public Column provideChunk(int cubeX, int cubeZ) {
@@ -185,7 +165,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 
 			// save the cubes
-			for (Cube cube : column.getAllCubes()) {
+			for (Cube cube : column.getLoadedCubes()) {
 				if (cube.needsSaving()) {
 					this.cubeIO.saveCube(cube);
 				}
@@ -198,13 +178,41 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	@Override
 	public boolean unloadQueuedChunks() {
 		// NOTE: the return value is completely ignored
-
 		if (this.worldServer.getDisableLevelSaving()) {
 			return false;
 		}
 
 		final int maxUnload = 400;
+		final int maxColumnsUnload = 40;
 
+		unloadQueuedCubes(maxUnload);
+		unloadQueuedColumns(maxColumnsUnload);
+
+		return false;
+	}
+
+	private void unloadQueuedColumns(int maxColumnsUnload) {
+		int unloaded = 0;
+		Iterator<ChunkPos> it = columnsToUnload.iterator();
+		while(it.hasNext() && unloaded < maxColumnsUnload) {
+			ChunkPos pos = it.next();
+			long address = AddressTools.getAddress(pos.chunkXPos, pos.chunkZPos);
+			Column column = loadedColumns.get(address);
+			it.remove();
+			if(column == null) {
+				continue;
+			}
+			if (!column.hasLoadedCubes() && column.unloaded) {
+
+				column.onChunkUnload();
+				this.loadedColumns.remove(address);
+				this.cubeIO.saveColumn(column);
+				unloaded++;
+			}
+		}
+	}
+
+	private void unloadQueuedCubes(int maxUnload) {
 		Iterator<CubeCoords> iter = this.cubesToUnload.iterator();
 		int processed = 0;
 
@@ -213,30 +221,20 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			iter.remove();
 			++processed;
 
-			if (this.dependencyManager.isRequired(coords)) {
-				continue;
-			}
-
 			long columnAddress = AddressTools.getAddress(coords.getCubeX(), coords.getCubeZ());
 
 			Column column = this.loadedColumns.get(columnAddress);
 			if (column == null) {
 				continue;
 			}
-			Cube cube = column.removeCube(coords.getCubeY());
-			if (cube != null) {
+			Cube cube = column.getCube(coords.getCubeY());
+			//unload the cube if we are unloading the column
+			if (cube != null && (cube.unloaded || column.unloaded)) {
 				cube.onUnload();
-				this.worldServer.getCubeGenerator().getDependentCubeManager().unregister(cube);
+				column.removeCube(coords.getCubeY());
 				this.cubeIO.saveCube(cube);
 			}
-			if (!column.hasCubes()) {
-				column.onChunkUnload();
-				this.loadedColumns.remove(columnAddress);
-				this.cubeIO.saveColumn(column);
-			}
 		}
-
-		return false;
 	}
 
 	@Override
@@ -262,7 +260,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	@Override
 	public boolean chunkExists(int cubeX, int cubeZ) {
-		return this.loadedColumns.containsKey(AddressTools.getAddress(cubeX, cubeZ));
+		Column column = this.loadedColumns.get(AddressTools.getAddress(cubeX, cubeZ));
+		return column != null && !column.unloaded;
 	}
 
 	//==============================
@@ -273,10 +272,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
 		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
 		Column column = this.loadedColumns.get(columnAddress);
-		if (column == null) {
+		if (column == null || column.unloaded) {
 			return false;
 		}
-		return column.getCube(cubeY) != null;
+		Cube cube = column.getCube(cubeY);
+		return cube != null && !cube.unloaded;
 	}
 
 	public boolean cubeExists(CubeCoords coords) {
@@ -285,38 +285,44 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	@Override
 	public Column getColumn(int columnX, int columnZ) {
-		return this.loadedColumns.get(AddressTools.getAddress(columnX, columnZ));
+		Column column = this.loadedColumns.get(AddressTools.getAddress(columnX, columnZ));
+		if(column != null) {
+			column.unloaded = false;
+		}
+		return column;
 	}
 
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
-		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-		Column column = this.loadedColumns.get(columnAddress);
+		Column column = getColumn(cubeX, cubeZ);
 		if (column == null) {
 			return null;
 		}
-		return column.getCube(cubeY);
+		Cube cube = column.getCube(cubeY);
+		if(cube != null) {
+			cube.unloaded = false;
+		}
+		return cube;
 	}
 
 	public Cube getCube(CubeCoords coords) {
 		return this.getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
-	public void loadCube(int cubeX, int cubeY, int cubeZ, LoadType loadType, GeneratorStage targetStage) {
+	public void loadCube(int cubeX, int cubeY, int cubeZ, LoadType loadType) {
 
 		if (loadType == FORCE_LOAD) {
 			throw new UnsupportedOperationException("Cannot force load a cube");
 		}
 
 		// Get the column
-		long columnAddress = AddressTools.getAddress(cubeX, cubeZ);
-
-		// Is it loaded?
-		Column column = this.loadedColumns.get(columnAddress);
+		Column column = getColumn(cubeX, cubeZ);
 
 		// Try loading the column.
 		if (column == null) {
+			worldServer.getProfiler().startSection("loadColumn");
 			column = this.loadColumn(cubeX, cubeZ, loadType);
+			worldServer.getProfiler().endSection();
 		}
 
 		// If we couldn't load or generate the column - give up.
@@ -334,39 +340,35 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		// Is the cube loaded?
 		Cube cube = column.getCube(cubeY);
 		if (cube != null) {
-
-			// Resume/continue generation if necessary.
-			if (cube.getCurrentStage().precedes(targetStage)) {
-				this.worldServer.getCubeGenerator().generateCube(cube, targetStage);
-			}
-
+			cube.unloaded = false;
 			return;
 		}
 
 		// Try loading the cube.
 		try {
+			worldServer.getProfiler().startSection("cubeIOLoad");
 			cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeAddress);
 		} catch (IOException ex) {
 			log.error("Unable to load cube ({},{},{})", cubeX, cubeY, cubeZ, ex);
 			return;
+		} finally {
+			worldServer.getProfiler().endSection();
 		}
 
 		// If loading it didn't work...
 		if (cube == null) {
-			// ... and generating was requested, generate it.
+			// ... and generating has been requested, generate it.
 			if (loadType == LoadType.LOAD_OR_GENERATE) {
-				// Have the column generate a new cube object and configure it for generation.
-				cube = this.worldServer.getCubeGenerator().generateCube(new CubeCoords(cubeX, cubeY, cubeZ), targetStage);
+				worldServer.getProfiler().startSection("createEmptyCube");
+				cube = column.getOrCreateCube(cubeY, true);
+				worldServer.getProfiler().endStartSection("generateBlocks");
+				this.worldServer.getCubeGenerator().generateCube(this, cube);
+				worldServer.getProfiler().endSection();
 			}
 			// ... or quit.
 			else {
 				return;
 			}
-		}
-
-		// If the cube has yet to reach the target stage, resume generation.
-		else if (cube.isBeforeStage(targetStage)) {
-			this.worldServer.getCubeGenerator().generateCube(cube, targetStage);
 		}
 
 		// Init the column.
@@ -377,15 +379,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		// Init the cube.
 		cube.onLoad();
-		this.dependencyManager.onLoad(cube);
 	}
 
-	public void loadCube(int cubeX, int cubeY, int cubeZ, LoadType loadType) {
-		this.loadCube(cubeX, cubeY, cubeZ, loadType, GeneratorStage.LIVE);
-	}
-
-	public void loadCube(CubeCoords coords, LoadType loadType, GeneratorStage targetStage) {
-		this.loadCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ(), loadType, targetStage);
+	public void loadCube(CubeCoords coords, LoadType loadType) {
+		this.loadCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ(), loadType);
 	}
 
 	public Column loadColumn(int cubeX, int cubeZ, LoadType loadType) {
@@ -407,7 +404,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		if (column == null) {
 			// there wasn't a column, generate a new one (if allowed to generate)
 			if (loadType == LOAD_OR_GENERATE) {
-				column = this.worldServer.getCubeGenerator().generateColumn(cubeX, cubeZ);
+				column = this.worldServer.getColumnGenerator().generateColumn(cubeX, cubeZ);
 			}
 		} else {
 			// the column was loaded
@@ -419,38 +416,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		this.loadedColumns.put(AddressTools.getAddress(cubeX, cubeZ), column);
 		column.onChunkLoad();
 		return column;
-	}
-
-	public Cube forceLoadCube(Cube forcedBy, int cubeX, int cubeY, int cubeZ) {
-
-		this.loadCube(cubeX, cubeY, cubeZ, LOAD_ONLY);
-		Cube cube = getCube(cubeX, cubeY, cubeZ);
-		if (cube != null) {
-			addForcedByMapping(forcedBy, cube);
-			return cube;
-		}
-		Column column = this.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
-		cube = this.worldServer.getCubeGenerator().generateCube(new CubeCoords(cubeX, cubeY, cubeZ));
-		addForcedByMapping(forcedBy, cube);
-
-		return cube;
-	}
-
-	private void addForcedByMapping(Cube forcedBy, Cube cube) {
-		Set<Cube> forcedCubes = this.forceAdded.get(forcedBy);
-
-		if (forcedCubes == null) {
-			forcedCubes = new HashSet<Cube>();
-			this.forceAdded.put(forcedBy, forcedCubes);
-		}
-		Set<Cube> forcedReverse = this.forceAddedReverse.get(cube);
-		if (forcedReverse == null) {
-			forcedReverse = new HashSet<>();
-			this.forceAddedReverse.put(cube, forcedReverse);
-		}
-
-		forcedCubes.add(cube);
-		forcedReverse.add(forcedBy);
 	}
 
 	private boolean cubeIsNearSpawn(Cube cube) {
@@ -479,7 +444,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			}
 			sb.append("Column[").append(column.getX()).append(", ").append(column.getZ()).append("] {");
 			boolean isFirst = true;
-			for (Cube cube : column.getAllCubes()) {
+			for (Cube cube : column.getLoadedCubes()) {
 				if (!isFirst) {
 					sb.append(", ");
 				}
@@ -500,6 +465,17 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 	}
 
 	public void unloadCube(Cube cube) {
+		if(this.worldServer.getWorldInfo().getTerrainType() instanceof VanillaCubicChunksWorldType) {
+			final int bufferSize = 1;
+			if(cube.getY() >= 0 - bufferSize && cube.getY() < 16 + bufferSize) {
+				return;//don't unload
+			}
+		}
+
+		unloadCubeIgnoreVanilla(cube);
+	}
+
+	private void unloadCubeIgnoreVanilla(Cube cube) {
 		// don't unload cubes near the spawn
 		if (cubeIsNearSpawn(cube)) {
 			return;
@@ -507,17 +483,19 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 		// queue the cube for unloading
 		this.cubesToUnload.add(cube.getCoords());
+		cube.unloaded = true;
 	}
 
 	public void unloadColumn(Column column) {
-		if(!column.hasCubes()) {
-			//TODO: remove unloadColumn hack
-			//the column has no cubes, to unload the column - try to unload already unloaded cube
-			//unloadQueuedChunks will automatically unload column once it's empty
-			//just in case additional cube gets loaded between call to this method
-			//and actual unload - specify impossible Y coordinate
-			this.cubesToUnload.add(new CubeCoords(column.getX(), Integer.MIN_VALUE, column.getZ()));
-		}
+		//unload all cubes in that column
+		//since it's unloading the whole column - ignore vanilla
+		//this allows to special-case 0-255 height range with VanillaCubic
+		column.getLoadedCubes().forEach(this::unloadCubeIgnoreVanilla);
+		//unload that column
+		//TODO: columns that have cubes near spawn will never be removed from unload queue
+		//there is only a finite amount of them (about 1000) so it's not a big issue
+		columnsToUnload.add(column.getChunkCoordIntPair());
+		column.unloaded = true;
 	}
 
 	public enum LoadType {

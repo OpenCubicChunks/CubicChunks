@@ -25,12 +25,13 @@ package cubicchunks.server.chunkio;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
-import cubicchunks.util.ConcurrentBatchedQueue;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.storage.IThreadedFileIO;
 import net.minecraft.world.storage.ThreadedFileIOBase;
@@ -42,9 +43,9 @@ import org.mapdb.Serializer;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static cubicchunks.util.AddressTools.getX;
 import static cubicchunks.util.AddressTools.getY;
@@ -52,6 +53,8 @@ import static cubicchunks.util.AddressTools.getZ;
 
 public class CubeIO implements IThreadedFileIO {
 
+	private static final long kB = 1024;
+	private static final long MB = kB*1024;
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 
 	private static class SaveEntry {
@@ -75,7 +78,12 @@ public class CubeIO implements IThreadedFileIO {
 
 		file.getParentFile().mkdirs();
 
-		DB db = DBMaker.fileDB(file).transactionEnable().make();
+		DB db = DBMaker.
+				fileDB(file).
+				fileMmapEnable().
+				allocateStartSize(5*MB).
+				allocateIncrement(1*MB).
+				make();
 		return db;
 		// NOTE: could set different cache settings
 		// the default is a hash map cache with 32768 entries
@@ -85,10 +93,10 @@ public class CubeIO implements IThreadedFileIO {
 	private ICubicWorldServer world;
 
 	private final DB db;
-	private ConcurrentNavigableMap<Long, byte[]> columns;
-	private ConcurrentNavigableMap<Long, byte[]> cubes;
-	private ConcurrentBatchedQueue<SaveEntry> columnsToSave;
-	private ConcurrentBatchedQueue<SaveEntry> cubesToSave;
+	private ConcurrentMap<Long, byte[]> columns;
+	private ConcurrentMap<Long, byte[]> cubes;
+	private ConcurrentMap<ChunkPos, SaveEntry> columnsToSave;
+	private ConcurrentMap<CubeCoords, SaveEntry> cubesToSave;
 
 	private final Thread theShutdownHook;
 
@@ -113,24 +121,25 @@ public class CubeIO implements IThreadedFileIO {
 
 			}
 		});
-		this.columns = this.db.treeMap("columns", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
-		this.cubes = this.db.treeMap("chunks", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
+		this.columns = this.db.hashMap("columns", Serializer.LONG_PACKED, Serializer.BYTE_ARRAY).createOrOpen();
+		this.cubes = this.db.hashMap("chunks", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
 
 		// init chunk save queue
-		this.columnsToSave = new ConcurrentBatchedQueue<>();
-		this.cubesToSave = new ConcurrentBatchedQueue<>();
+		this.columnsToSave = new ConcurrentHashMap<>();
+		this.cubesToSave = new ConcurrentHashMap<>();
 	}
 
 	public void flush() {
-		if (columnsToSave.size() != 0 || cubesToSave.size() != 0) {
-			err("Attempt to flush() CubeIO when there are remaining cubes to save! Saving remaining cubes to avoid corruption");
-			while (this.writeNextIO()) ;
-		}
 		if (!Runtime.getRuntime().removeShutdownHook(theShutdownHook)) {
 			err("WARNING!!!");
 			err("Shutdown hook removing failed!");
 			err("This may cause memory leak and/or crash");
 		}
+		if (columnsToSave.size() != 0 || cubesToSave.size() != 0) {
+			err("Attempt to flush() CubeIO when there are remaining cubes to save! Saving remaining cubes to avoid corruption");
+			while (this.writeNextIO()) ;
+		}
+
 		if (!this.db.isClosed()) {
 			this.db.close();
 		} else {
@@ -139,35 +148,53 @@ public class CubeIO implements IThreadedFileIO {
 	}
 
 	public Column loadColumn(int chunkX, int chunkZ) throws IOException {
-		// does the database have the column?
-		long address = AddressTools.getAddress(chunkX, chunkZ);
-		byte[] data = this.columns.get(address);
-		if (data == null) {
-			// returning null tells the world to generate a new column
-			return null;
-		}
+		NBTTagCompound nbt;
+		SaveEntry saveEntry;
+		if((saveEntry = columnsToSave.get(new ChunkPos(chunkX, chunkZ))) != null) {
+			nbt = saveEntry.nbt;
+		} else {
+			// does the database have the column?
+			long address = AddressTools.getAddress(chunkX, chunkZ);
+			byte[] data = this.columns.get(address);
+			if (data == null) {
+				// returning null tells the world to generate a new column
+				return null;
+			}
 
-		// read the NBT
-		NBTTagCompound nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(data));
+			// read the NBT
+			nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(data));
+		}
 
 		// restore the column
 		return IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
 	}
 
 	public Cube loadCubeAndAddToColumn(Column column, long address) throws IOException {
-		// does the database have the cube?
-		byte[] data = this.cubes.get(address);
-		if (data == null) {
-			return null;
+		NBTTagCompound nbt;
+		SaveEntry saveEntry;
+		if((saveEntry = this.cubesToSave.get(new CubeCoords(address)))!= null) {
+			nbt = saveEntry.nbt;
+		} else {
+			// does the database have the cube?
+			world.getProfiler().startSection("getBytes");
+			byte[] data = this.cubes.get(address);
+			if (data == null) {
+				world.getProfiler().endSection();
+				return null;
+			}
+			world.getProfiler().endStartSection("readCompressed");
+			nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(data));
+			world.getProfiler().endSection();
 		}
-
-		NBTTagCompound nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(data));
 
 		// restore the cube
 		int cubeX = getX(address);
 		int cubeY = getY(address);
 		int cubeZ = getZ(address);
-		return IONbtReader.readCube(column, cubeX, cubeY, cubeZ, nbt);
+		world.getProfiler().startSection("nbt2cube");
+		Cube cube = IONbtReader.readCube(column, cubeX, cubeY, cubeZ, nbt);
+		world.getProfiler().endSection();
+		return cube;
 	}
 
 	public void saveColumn(Column column) {
@@ -177,7 +204,7 @@ public class CubeIO implements IThreadedFileIO {
 		// with concurrent access to world data structures
 
 		// add the column to the save queue
-		this.columnsToSave.add(new SaveEntry(column.getAddress(), IONbtWriter.write(column)));
+		this.columnsToSave.put(column.getChunkCoordIntPair(), new SaveEntry(column.getAddress(), IONbtWriter.write(column)));
 		column.markSaved();
 
 		// signal the IO thread to process the save queue
@@ -187,7 +214,7 @@ public class CubeIO implements IThreadedFileIO {
 	public void saveCube(Cube cube) {
 		// NOTE: this function blocks the world thread, so make it fast
 
-		this.cubesToSave.add(new SaveEntry(cube.getAddress(), IONbtWriter.write(cube)));
+		this.cubesToSave.put(cube.getCoords(), new SaveEntry(cube.getAddress(), IONbtWriter.write(cube)));
 		cube.markSaved();
 
 		// signal the IO thread to process the save queue
@@ -210,39 +237,47 @@ public class CubeIO implements IThreadedFileIO {
 			int numCubeBytesSaved = 0;
 			long start = System.currentTimeMillis();
 
-			List<SaveEntry> entries = new ArrayList<SaveEntry>(Math.max(ColumnsBatchSize, CubesBatchSize));
-
 			// save a batch of columns
-			boolean hasMoreColumns = this.columnsToSave.getBatch(entries, ColumnsBatchSize);
-			for (SaveEntry entry : entries) {
+			Iterator<SaveEntry> it = columnsToSave.values().iterator();
+			for (SaveEntry entry; it.hasNext() && numColumnsSaved < ColumnsBatchSize; numColumnsSaved++) {
+				entry = it.next();
 				try {
 					// save the column
 					byte[] data = IONbtWriter.writeNbtBytes(entry.nbt);
 					this.columns.put(entry.address, data);
-
-					numColumnsSaved++;
+					//column can be removed from toSave queue only after writing to disk
+					//to avoid race conditions
+					it.remove();
 					numColumnBytesSaved += data.length;
 				} catch (Throwable t) {
 					err(String.format("Unable to write column (%d, %d)", getX(entry.address), getZ(entry.address)), t);
 				}
 			}
-			entries.clear();
 
+			boolean hasMoreColumns = it.hasNext();
+
+			it = cubesToSave.values().iterator();
 			// save a batch of cubes
-			boolean hasMoreCubes = this.cubesToSave.getBatch(entries, CubesBatchSize);
-			for (SaveEntry entry : entries) {
+
+			for (SaveEntry entry; it.hasNext() && numCubesSaved < CubesBatchSize; numCubesSaved++) {
+				entry = it.next();
 				try {
 					// save the cube
 					byte[] data = IONbtWriter.writeNbtBytes(entry.nbt);
-					this.cubes.put(entry.address, data);
+					try {
+						this.cubes.put(entry.address, data);
+					} finally {
+						//cube can be removed from toSave queue only after writing to disk
+						//to avoid race conditions
+						it.remove();
+					}
 
-					numCubesSaved++;
 					numCubeBytesSaved += data.length;
 				} catch (Throwable t) {
 					err(String.format("Unable to write cube %d, %d, %d", getX(entry.address), getY(entry.address), getZ(entry.address)), t);
 				}
 			}
-			entries.clear();
+			boolean hasMoreCubes = it.hasNext();
 
 			numColumnsRemaining = this.columnsToSave.size();
 			numCubesRemaining = this.cubesToSave.size();

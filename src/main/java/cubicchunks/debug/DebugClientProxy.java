@@ -21,25 +21,17 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
+package cubicchunks.debug;
 
-package cubicchunks.world.dependency;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraftforge.client.model.ModelLoader;
 
-import cubicchunks.world.cube.Cube;
+import static cubicchunks.debug.DebugTools.itemRelightSkyBlock;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-// TODO: Documentation
-public interface CubeDependencyProvider {
-
-	/**
-	 * Given a Cube, may return a CubeDependency for determining the Cube's Requirements.
-	 *
-	 * @param cube The Cube for which the CubeDependency shall provide Requirements.
-	 *
-	 * @return A CubeDependency providing a list of Requirements for the given Cube or null.
-	 */
-	@Nullable
-	CubeDependency getCubeDependency(@Nonnull Cube cube);
-
+public class DebugClientProxy extends DebugProxy {
+	@Override public void initItems() {
+		super.initItems();
+		ModelLoader.setCustomModelResourceLocation(itemRelightSkyBlock, 0,
+				new ModelResourceLocation(itemRelightSkyBlock.getRegistryName(), "inventory"));
+	}
 }

@@ -30,7 +30,6 @@ import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -112,10 +111,6 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 			return this.blankCube;
 		}
 
-		// cubes are always live on the client
-		cube.setCurrentStage(GeneratorStage.LIVE);
-		cube.setTargetStage(GeneratorStage.LIVE);
-		
 		return cube;
 	}
 
@@ -123,4 +118,8 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		return this.getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
+	@Override
+	public String makeString() {
+		return "MultiplayerChunkCache: " + this.chunkMapping.values().stream().map(c->((Column)c).getLoadedCubes().size()).reduce((a,b)->a+b).orElse(-1) + "/" + this.chunkMapping.size();
+	}
 }

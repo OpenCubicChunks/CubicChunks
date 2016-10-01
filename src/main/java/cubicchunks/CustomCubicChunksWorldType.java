@@ -23,17 +23,13 @@
  */
 package cubicchunks;
 
-import cubicchunks.lighting.FirstLightProcessor;
+import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.DependentGeneratorStage;
-import cubicchunks.worldgen.GeneratorStageRegistry;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.worldgen.dependency.RegionDependency;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.ICubicChunkGenerator;
 import cubicchunks.worldgen.generator.custom.CustomFeatureProcessor;
 import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
-import net.minecraft.util.math.Vec3i;
 
 public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 
@@ -41,25 +37,24 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 		super("CustomCubic");
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry) {
-		// init the world's GeneratorStageRegistry
-		GeneratorStage terrain = new IndependentGeneratorStage("terrain");
-
-		GeneratorStage features = new IndependentGeneratorStage("features");
-
-		DependentGeneratorStage lighting = new DependentGeneratorStage("lighting", null);
-		lighting.setCubeDependency(new RegionDependency(lighting, 2));
-
-		DependentGeneratorStage population = new DependentGeneratorStage("population", null);
-		population.setCubeDependency(new RegionDependency(population, new Vec3i(0, 0, 0), new Vec3i(1, 1, 1)));
-
-		generatorStageRegistry.addStage(terrain, new CustomTerrainProcessor(world));
-		generatorStageRegistry.addStage(features, new CustomFeatureProcessor());
-		generatorStageRegistry.addStage(lighting, new FirstLightProcessor(lighting, world));
-		generatorStageRegistry.addStage(population, new CustomPopulationProcessor(world));
-	}
-
 	public static void create() {
 		new CustomCubicChunksWorldType();
+	}
+
+	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
+		CubeProcessor terrain = new CustomTerrainProcessor(world);
+		CubeProcessor features = new CustomFeatureProcessor();
+		CubeProcessor population = new CustomPopulationProcessor(world);
+		return new ICubicChunkGenerator() {
+			@Override public void generateTerrain(Cube cube) {
+				terrain.calculate(cube);
+				features.calculate(cube);
+				cube.initSkyLight();
+			}
+
+			@Override public void populateCube(Cube cube) {
+				population.calculate(cube);
+			}
+		};
 	}
 }

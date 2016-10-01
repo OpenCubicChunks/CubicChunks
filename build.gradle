@@ -185,14 +185,19 @@ license {
 jar {
 	manifest {
 		attributes 'FMLAT': 'cubicchunks_at.cfg'
-		attributes 'FMLCorePlugin': 'cubicchunks.asm.CoreModLoadingPlugin', 'FMLCorePluginContainsFMLMod': 'true'
+		attributes 'FMLCorePlugin': 'cubicchunks.asm.CoreModLoadingPlugin'
 		attributes 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
 		attributes 'TweakOrder': '0'
 		attributes 'ForceLoadAsMod': 'true'
-		attributes 'MixinCompatibilityLevel': 'JAVA_8'
 	}
 }
 
+idea {
+	module {
+		downloadJavadoc = true
+		downloadSources = true
+	}
+}
 //returns version string according to this: http://mcforge.readthedocs.org/en/latest/conventions/versioning/
 //format: MCVERSION-MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)
 //rcX and betaX are not implemented yet

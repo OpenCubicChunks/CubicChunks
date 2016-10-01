@@ -23,17 +23,14 @@
  */
 package cubicchunks.debug;
 
+import com.flowpowered.noise.module.source.Perlin;
 import cubicchunks.BaseCubicWorldType;
-import cubicchunks.server.ServerCubeCache;
+import cubicchunks.CubicChunks;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.CubeDependency;
-import cubicchunks.worldgen.GeneratorStageRegistry;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.IndependentGeneratorStage;
-import cubicchunks.worldgen.dependency.RegionDependency;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import cubicchunks.worldgen.ICubicChunkGenerator;
+import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 
@@ -43,40 +40,60 @@ public class DebugWorldType extends BaseCubicWorldType {
 		super("DebugCubic");
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry) {
-		ServerCubeCache cubeCache = world.getCubeCache();
-		// init the worldgen pipeline
-		GeneratorStage terrain = new IndependentGeneratorStage("debug");
-		GeneratorStage randomblock = new GeneratorStage("debug_randomblock") {
-			@Override public CubeDependency getCubeDependency(Cube cube) {
-				return new RegionDependency(this, 1);
-			}
-		};
-
-		generatorStageRegistry.addStage(terrain, new FlatTerrainProcessor());
-		generatorStageRegistry.addStage(randomblock, cube -> {
-			cube.setBlockForGeneration(new BlockPos(0, 0, 0), Blocks.DIAMOND_BLOCK.getDefaultState());
-			for (int dx = -1; dx <= 1; dx++) {
-				for (int dy = -1; dy <= 1; dy++) {
-					for (int dz = -1; dz <= 1; dz++) {
-						Cube cubeOffset = cubeCache.getCube(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz);
-						if (cubeOffset == null) {
-							throw new RuntimeException("Generating cube at " + cube.getCoords() + " - cube at " +
-									new CubeCoords(cube.getX() + dx, cube.getY() + dy, cube.getZ() + dz) +
-									" doesn't exist");
-						}
-					}
-				}
-			}
-		});
-	}
-
 	@Override
 	public boolean getCanBeCreated() {
-		return System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
+		return CubicChunks.DEBUG_ENABLED;
 	}
 
 	public static void create() {
 		new DebugWorldType();
+	}
+
+	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
+		//TODO: move first light processor directly into cube?
+		return new ICubicChunkGenerator() {
+			Perlin perlin = new Perlin();
+			{
+				perlin.setFrequency(0.180);
+				perlin.setOctaveCount(1);
+				perlin.setSeed((int) world.getSeed());
+			}
+
+			CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
+
+			@Override public void generateTerrain(Cube cube) {
+				if(cube.getY() > 30) {
+					cube.initSkyLight();
+					return;
+				}
+				if(cube.getX() == 100 && cube.getZ() == 100) {
+					cube.initSkyLight();
+					return;//hole in the world
+				}
+				CubeCoords cubePos = cube.getCoords();
+				for(BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
+					double currDensity = perlin.getValue(pos.getX(), pos.getY()*0.5, pos.getZ());
+					double aboveDensity = perlin.getValue(pos.getX(), (pos.getY()+1)*0.5, pos.getZ());
+					if(cube.getY() >= 16) {
+						currDensity -= (pos.getY() - 16*16)/100;
+						aboveDensity -= (pos.getY() + 1 - 16*16)/100;
+					}
+					if(currDensity > 0.5) {
+						if(currDensity > 0.5 && aboveDensity <= 0.5) {
+							cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
+						} else if(currDensity > aboveDensity && currDensity < 0.7) {
+							cube.setBlockForGeneration(pos, Blocks.DIRT.getDefaultState());
+						} else {
+							cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
+						}
+					}
+				}
+				cube.initSkyLight();
+			}
+
+			@Override public void populateCube(Cube cube) {
+				//populator.calculate(cube);
+			}
+		};
 	}
 }

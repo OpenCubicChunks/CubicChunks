@@ -26,11 +26,16 @@ package cubicchunks.util;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+
+import static cubicchunks.util.Coords.blockToLocal;
 
 /**
  * Simple class that allows to quickly access blocks near specified cube without the overhead of getting these cubes.
@@ -101,5 +106,46 @@ public class FastCubeBlockAccess {
 
 	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
 		this.getCube(pos.getX(), pos.getY(), pos.getZ()).setLightFor(lightType, pos, val);
+	}
+
+	/**
+	 * Faster version of world.getRawLight that works for skylight
+	 */
+	public int computeLightValue(BlockPos pos) {
+		Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
+		Column column = cube.getColumn();
+		Integer heightObj = column.getHeightmapAt(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
+		int height = heightObj == null ? AddressTools.MIN_BLOCK_Y - 1 : heightObj.intValue();
+		if (pos.getY() > height) {
+			return 15;
+		} else {
+			IBlockState iblockstate = cube.getBlockState(pos);
+			int lightSubtract = iblockstate.getLightOpacity((IBlockAccess) world, pos);
+
+			if (lightSubtract < 1) {
+				lightSubtract = 1;
+			}
+
+			if (lightSubtract >= 15) {
+				return 0;
+			}
+			BlockPos.PooledMutableBlockPos currentPos = BlockPos.PooledMutableBlockPos.retain();
+			int maxValue = 0;
+			for (EnumFacing enumfacing : EnumFacing.values()) {
+				currentPos.setPos(pos).move(enumfacing);
+				int currentValue = this.getLightFor(EnumSkyBlock.SKY,currentPos) - lightSubtract;
+
+				if (currentValue > maxValue) {
+					maxValue = currentValue;
+				}
+
+				if (maxValue >= 14) {
+					return maxValue;
+				}
+			}
+
+			currentPos.release();
+			return maxValue;
+		}
 	}
 }

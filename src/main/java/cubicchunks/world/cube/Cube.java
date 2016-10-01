@@ -30,9 +30,9 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
-import cubicchunks.worldgen.GeneratorStage;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
@@ -65,6 +65,10 @@ public class Cube {
 
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 
+	//used to track if the cube should be unloaded or not, done instead of removing cube from
+	//unloadQueue each time something loads it
+	public boolean unloaded;
+
 	private ICubicWorld world;
 	private Column column;
 	private CubeCoords coords;
@@ -73,10 +77,8 @@ public class Cube {
 	private EntityContainer entities;
 	private Map<BlockPos, TileEntity> tileEntityMap;
 	
-	private GeneratorStage targetStage;
-	private GeneratorStage currentStage;
-
-	private boolean needsRelightAfterLoad;
+	private boolean isPopulated = false;
+	private boolean isInitialLightingDone = false;
 	/**
 	 * "queue containing the BlockPos of tile entities queued for creation"
 	 */
@@ -92,11 +94,10 @@ public class Cube {
 		this.coords = new CubeCoords(x, y, z);
 		this.isModified = isModified;
 
+		// TODO: let storage be null in an empty chunk (just like vanilla's Chunk does)
 		this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(y), !world.getProvider().getHasNoSky());
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new HashMap<>();
-		this.currentStage = null;
-		this.needsRelightAfterLoad = false;
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
 	}
 
@@ -140,6 +141,9 @@ public class Cube {
 		int localY = Coords.blockToLocal(pos.getY());
 		int localZ = Coords.blockToLocal(pos.getZ());
 		this.getStorage().set(localX, localY, localZ, newBlockState);
+		if(this.isEmpty() && this.getY() <= 4) {
+			int i = 0;
+		}
 	}
 
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
@@ -311,7 +315,10 @@ public class Cube {
 		this.entities.getEntitiesOfTypeWithinAAAB(entityType, queryBox, out, predicate);
 	}
 
-	public void tickCube() {
+	public void tickCube(boolean tryToTickFaster) {
+		if (!this.isInitialLightingDone && this.isPopulated) {
+			this.tryDoFirstLight();
+		}
 		while (!this.tileEntityPosQueue.isEmpty()) {
 			BlockPos blockpos = this.tileEntityPosQueue.poll();
 
@@ -327,6 +334,18 @@ public class Cube {
 		}
 	}
 
+	private void tryDoFirstLight() {
+		BlockPos pos = this.getCoords().getMinBlockPos();
+		final int radius = 17;
+		if(!world.isAreaLoaded(pos.add(-radius, -radius, -radius), pos.add(15+radius, 15+radius, 15+radius))) {
+			return;
+		}
+		//client cubes (setClientCube) are always fully generated, isInitialLightingDone is never false
+		if(((ICubicWorldServer)this.world).getFirstLightProcessor().diffuseSkylight(this)) {
+			this.isInitialLightingDone = true;
+		}
+	}
+
 	//=================================
 	//=========Other methods===========
 	//=================================
@@ -335,34 +354,6 @@ public class Cube {
 		return this.storage.isEmpty();
 	}
 
-	public GeneratorStage getCurrentStage() {
-		return this.currentStage;
-	}
-
-	public boolean isBeforeStage(GeneratorStage stage) {
-		return this.getCurrentStage().precedes(stage);
-	}
-
-	public boolean hasReachedStage(GeneratorStage stage) {
-		return !this.getCurrentStage().precedes(stage);
-	}
-
-	public boolean hasReachedTargetStage() {
-		return this.hasReachedStage(this.targetStage);
-	}
-
-	public void setCurrentStage(GeneratorStage val) {
-		this.currentStage = val;
-	}
-
-	public GeneratorStage getTargetStage() {
-		return this.targetStage;
-	}
-	
-	public void setTargetStage(GeneratorStage targetStage) {
-		this.targetStage = targetStage;
-	}
-	
 	public long getAddress() {
 		return AddressTools.getAddress(this.coords.getCubeX(), this.coords.getCubeY(), this.coords.getCubeZ());
 	}
@@ -416,27 +407,25 @@ public class Cube {
 			return null;
 		}
 
-		int x = Coords.blockToLocal(blockOrLocalPos.getX());
-		int y = Coords.blockToLocal(blockOrLocalPos.getY());
-		int z = Coords.blockToLocal(blockOrLocalPos.getZ());
+		int localX = Coords.blockToLocal(blockOrLocalPos.getX());
+		int localY = Coords.blockToLocal(blockOrLocalPos.getY());
+		int localZ = Coords.blockToLocal(blockOrLocalPos.getZ());
 
 		// set the block
-		this.storage.set(x, y, z, newBlockState);
-
-		Block newBlock = newBlockState.getBlock();
+		this.storage.set(localX, localY, localZ, newBlockState);
 
 		// did the block change work correctly?
-		if (this.storage.get(x, y, z) != newBlockState) {
+		if (this.storage.get(localX, localY, localZ) != newBlockState) {
 			return null;
 		}
 		this.isModified = true;
 
 		//update the column light index
-		int blockY = Coords.localToBlock(this.coords.getCubeY(), y);
+		int blockY = Coords.localToBlock(this.coords.getCubeY(), localY);
 
 		IOpacityIndex index = this.column.getOpacityIndex();
-		int opacity = newBlock.getLightOpacity(newBlockState);
-		index.onOpacityChange(x, blockY, z, opacity);
+		int opacity = newBlockState.getLightOpacity((World) world, this.coords.localToBlock(localX, localY, localZ));
+		index.onOpacityChange(localX, blockY, localZ, opacity);
 		return oldBlockState;
 	}
 
@@ -464,6 +453,10 @@ public class Cube {
 	}
 
 	public void onUnload() {
+		//first mark as unloaded so that entity list and tile entity map isn't modified while iterating
+		//and it also preserves all entities/time entities so they can be saved
+		this.isCubeLoaded = false;
+
 		// tell the world to forget about entities
 		this.world.unloadEntities(this.entities.getEntities());
 
@@ -471,8 +464,6 @@ public class Cube {
 		for (TileEntity blockEntity : this.tileEntityMap.values()) {
 			this.world.removeTileEntity(blockEntity.getPos());
 		}
-
-		this.isCubeLoaded = false;
 	}
 
 	public boolean needsSaving() {
@@ -499,16 +490,36 @@ public class Cube {
 		return 41*hash + getZ();
 	}
 
-	public boolean needsRelightAfterLoad() {
-		return this.needsRelightAfterLoad;
-	}
-
-	public void setNeedsRelightAfterLoad(boolean val) {
-		this.needsRelightAfterLoad = val;
-	}
-
 	public LightUpdateData getLightUpdateData() {
 		return this.lightUpdateData;
+	}
+
+	public void setClientCube() {
+		this.isPopulated = true;
+		this.isInitialLightingDone = true;
+	}
+
+	public void setPopulated(boolean populated) {
+		this.isPopulated = populated;
+	}
+
+	public void setInitialLightingDone(boolean initialLightingDone) {
+		this.isInitialLightingDone = initialLightingDone;
+	}
+
+	public boolean isInitialLightingDone() {
+		return isInitialLightingDone;
+	}
+
+	public boolean isPopulated() {
+		return isPopulated;
+	}
+
+	/**
+	 * Lights up all blocks that will definitely be lit. It's faster than using world.checkLightFor on everything.
+	 */
+	public void initSkyLight() {
+		((ICubicWorldServer)this.getWorld()).getFirstLightProcessor().earlySkylightMap(this);
 	}
 
 	public static class LightUpdateData {

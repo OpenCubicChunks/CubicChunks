@@ -21,21 +21,27 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
+package cubicchunks.debug;
 
-package cubicchunks.worldgen;
+import cubicchunks.debug.item.RelightSkyBlockItem;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
+import net.minecraftforge.fml.common.SidedProxy;
 
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.CubeDependency;
+public class DebugTools {
 
-public class IndependentGeneratorStage extends GeneratorStage {
+	@SidedProxy(serverSide = "cubicchunks.debug.DebugProxy", clientSide = "cubicchunks.debug.DebugClientProxy")
+	private static DebugProxy proxy;
 
-	public IndependentGeneratorStage(String name) {
-		super(name);
+	public static final Item itemRelightSkyBlock = new RelightSkyBlockItem("relight_sky_block");
+
+	public static final CreativeTabs CUBIC_CHUNKS_DEBUG_TAB = new CreativeTabs("cubic_chunks_debug_tab") {
+		@Override public Item getTabIconItem() {
+			return itemRelightSkyBlock;
+		}
+	};
+
+	public static void init() {
+		proxy.initItems();
 	}
-
-	@Override
-	public CubeDependency getCubeDependency(Cube cube) {
-		return null;
-	}
-
 }

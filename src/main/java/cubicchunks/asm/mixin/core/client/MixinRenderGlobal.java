@@ -124,9 +124,8 @@ public class MixinRenderGlobal {
 
 		Cube cube = column.getCube(cubeY);
 		if (cube == null) {
-			//create array, can't use private final field because of a bug in Mixin
 			return new ClassInheritanceMultiMap[]{
-					new ClassInheritanceMultiMap(Entity.class)
+					column.getEntityContainer().getEntitySet()
 			};
 		}
 		return new ClassInheritanceMultiMap[]{

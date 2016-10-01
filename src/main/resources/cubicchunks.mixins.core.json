@@ -2,6 +2,7 @@
   "required": true,
   "package": "cubicchunks.asm.mixin",
   "refmap": "cubicchunks.mixins.refmap.json",
+  "compatibilityLevel": "JAVA_8",
   "mixins": [
     "core.common.MixinWorld_Tick",
     "core.common.MixinWorld",
@@ -26,7 +27,8 @@
     "core.client.MixinViewFrustum_RenderHeightFix",
 
     "noncritical.client.MixinViewFrustum_VertViewDistance",
-    "noncritical.client.MixinRenderChunk"
+    "noncritical.client.MixinRenderChunk",
+    "noncritical.client.MixinGuiOverlayDebug"
   ],
   "server": [
     "core.server.MixinDedicatedServer_HeightLimits"

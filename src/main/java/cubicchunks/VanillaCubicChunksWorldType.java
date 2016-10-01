@@ -23,22 +23,15 @@
  */
 package cubicchunks;
 
-import cubicchunks.lighting.FirstLightProcessor;
+import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.dependency.CubeDependency;
-import cubicchunks.worldgen.DependentGeneratorStage;
-import cubicchunks.worldgen.GeneratorStageRegistry;
-import cubicchunks.worldgen.GeneratorStage;
-import cubicchunks.worldgen.dependency.RegionDependency;
+import cubicchunks.worldgen.ICubicChunkGenerator;
 import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
 import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 
@@ -46,47 +39,23 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 		super("VanillaCubic");
 	}
 
-	@Override public void registerWorldGen(ICubicWorldServer world, GeneratorStageRegistry generatorStageRegistry) {
-		ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
+	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
+		final ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
+		final CubeProcessor terrainProcessor = new VanillaTerrainProcessor(world, vanillaGen);
+		final CubeProcessor populationProcessor = new VanillaPopulationProcessor(vanillaGen);
+		return new ICubicChunkGenerator() {
+			@Override public void generateTerrain(Cube cube) {
+				terrainProcessor.calculate(cube);
+				cube.initSkyLight();
+			}
 
-		// init the world's GeneratorStageRegistry
-		GeneratorStage terrain = new VanillaStage("terrain", new Vec3i(0, 0, 0), new Vec3i(0, 0, 0));
-		DependentGeneratorStage lighting = new DependentGeneratorStage("lighting", null);
-		lighting.setCubeDependency(new RegionDependency(lighting, 2));
-		GeneratorStage population = new VanillaStage("population", new Vec3i(0, 0, 0), new Vec3i(1, 0, 1));
-
-		generatorStageRegistry.addStage(terrain, new VanillaTerrainProcessor(world, vanillaGen));
-		generatorStageRegistry.addStage(lighting, new FirstLightProcessor(lighting, world));
-		generatorStageRegistry.addStage(population, new VanillaPopulationProcessor(vanillaGen));
+			@Override public void populateCube(Cube cube) {
+				populationProcessor.calculate(cube);
+			}
+		};
 	}
 
 	public static void create() {
 		new VanillaCubicChunksWorldType();
-	}
-
-	private static class VanillaStage extends GeneratorStage {
-		private final CubeDependency[] depsForHeight = new CubeDependency[16];
-
-		private VanillaStage(String name, Vec3i depStart, Vec3i depEnd) {
-			super(name);
-			//all cubes from y=1 to y=15 depend on cube at y=0, which generates all of them
-			for (int y = 1; y < 16; y++) {
-				int startY = depStart.getY() - y;
-				int endY = startY;
-				Vec3i start = new Vec3i(depStart.getX(), startY, depStart.getZ());
-				Vec3i end = new Vec3i(depEnd.getX(), endY, depEnd.getZ());
-				CubeDependency dep = new RegionDependency(this, start, end);
-				depsForHeight[y] = dep;
-			}
-			//cube at y=0 depends on all other so that they are loaded
-			depsForHeight[0] = new RegionDependency(this, new Vec3i(0, 1, 0), new Vec3i(0, 15, 0));
-		}
-
-		@Nullable @Override public CubeDependency getCubeDependency(@Nonnull Cube cube) {
-			if (cube.getY() < 0 || cube.getY() >= depsForHeight.length) {
-				return null;
-			}
-			return depsForHeight[cube.getY()];
-		}
 	}
 }

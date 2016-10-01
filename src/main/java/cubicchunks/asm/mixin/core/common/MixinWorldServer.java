@@ -25,6 +25,7 @@ package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.ICubicChunksWorldType;
+import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.PlayerCubeMap;
@@ -33,9 +34,8 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.GeneratorStageRegistry;
-import cubicchunks.worldgen.IGeneratorPipeline;
-import cubicchunks.worldgen.WorldGenerator;
+import cubicchunks.worldgen.ColumnGenerator;
+import cubicchunks.worldgen.ICubicChunkGenerator;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.BlockPos;
@@ -62,9 +62,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	@Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
 	@Shadow public boolean disableLevelSaving;
 
-	private GeneratorStageRegistry generatorStageRegistry;
-	private IGeneratorPipeline cubeGenerator;
+	private ICubicChunkGenerator cubeGenerator;
+	private ColumnGenerator columnGenerator;
 	private ChunkGc chunkGc;
+	private FirstLightProcessor firstLightProcessor;
 
 	//vanilla method shadows
 	@Shadow public abstract Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
@@ -78,18 +79,18 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.entitySpawner = new CubeWorldEntitySpawner();
 		ServerCubeCache chunkProvider = new ServerCubeCache(this);
 		this.chunkProvider = chunkProvider;
-		this.generatorStageRegistry = new GeneratorStageRegistry();
 		this.lightingManager = new LightingManager(this);
 
 		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
-		type.registerWorldGen(this, this.generatorStageRegistry);
-		GeneratorStageRegistry.checkStages(this.generatorStageRegistry);
-		this.cubeGenerator = new WorldGenerator(this, this.generatorStageRegistry);
+		this.cubeGenerator = type.createCubeGenerator(this);
+		this.columnGenerator = type.createColumnGenerator(this);
 
 		this.thePlayerManager = new PlayerCubeMap(this);
 		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
 
 		this.saveHandler = new CubicChunksSaveHandler(this, this.getSaveHandler());
+
+		this.firstLightProcessor = new FirstLightProcessor(this);
 
 		this.generateWorld();
 	}
@@ -108,13 +109,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 			for (int cubeZ = spawnCubeZ - spawnDistance; cubeZ <= spawnCubeZ + spawnDistance; cubeZ++) {
 				for (int cubeY = spawnCubeY + spawnDistance; cubeY >= spawnCubeY - spawnDistance; cubeY--) {
 					serverCubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_OR_GENERATE);
+					//TODO: progress reporting
 				}
 			}
-		}
-
-		// wait for the cubes to be loaded
-		if (this.cubeGenerator.getQueuedCubeCount() > 0) {
-			this.cubeGenerator.calculateAll();
 		}
 
 		// don't save cubes here. Vanilla doesn't do that.
@@ -124,23 +121,24 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 	@Override public void tickCubicWorld() {
 		this.lightingManager.tick();
-		this.cubeGenerator.tick();
 		this.chunkGc.tick();
-		//TODO: Readd block tick
-		//for (ChunkCoordIntPair coords : WorldAccess.getActiveChunkSet(worldServer)) {
-		//	Column column = cubeCache.provideChunk(coords.chunkXPos, coords.chunkZPos);
-		//	column.doRandomTicks();
-		//}
 	}
 
 	@Override public ServerCubeCache getCubeCache() {
 		return (ServerCubeCache) this.chunkProvider;
 	}
 
-	@Override public IGeneratorPipeline getCubeGenerator() {
+	@Override public ICubicChunkGenerator getCubeGenerator() {
 		return this.cubeGenerator;
 	}
 
+	@Override public ColumnGenerator getColumnGenerator() {
+		return this.columnGenerator;
+	}
+
+	@Override public FirstLightProcessor getFirstLightProcessor() {
+		return this.firstLightProcessor;
+	}
 	//vanilla field accessors
 
 	@Override public boolean getDisableLevelSaving() {

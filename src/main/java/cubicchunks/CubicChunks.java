@@ -23,6 +23,7 @@
  */
 package cubicchunks;
 
+import cubicchunks.debug.DebugTools;
 import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
@@ -51,6 +52,7 @@ import static cubicchunks.CubicChunks.Config.syncConfig;
 @Mod(modid = CubicChunks.MODID, name = "CubicChunks", version = "@@VERSION@@}", guiFactory = "cubicchunks.client.GuiFactory")
 public class CubicChunks {
 
+	public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
 	public static Logger LOGGER;
 
 	public static final String MODID = "cubicchunks";
@@ -73,6 +75,10 @@ public class CubicChunks {
 		Config.loadConfig(new Configuration(e.getSuggestedConfigurationFile()));
 		syncConfig();
 		MinecraftForge.EVENT_BUS.register(this); // Register our config reload hook
+
+		if(DEBUG_ENABLED) {
+			DebugTools.init();
+		}
 	}
 
 	@EventHandler

@@ -32,7 +32,6 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.GeneratorStageRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -77,8 +76,9 @@ public class IONbtReader {
 		Column column = new Column(world, x, z);
 
 		// read the rest of the column properties
-		column.setTerrainPopulated(nbt.getBoolean("TerrainPopulated"));
 		column.setInhabitedTime(nbt.getLong("InhabitedTime"));
+		column.setCompatBaseTerrainDone(nbt.getBoolean("VanillaCubicTerrain"));
+		column.setCompatPopulationDone(nbt.getBoolean("VanillaCubicPopulated"));
 		return column;
 	}
 
@@ -141,10 +141,9 @@ public class IONbtReader {
 		// build the cube
 		final Cube cube = column.getOrCreateCube(cubeY, false);
 
-		// get the worldgen stage and the target stage
-		GeneratorStageRegistry generatorStageRegistry = world.getCubeGenerator().getGeneratorStageRegistry();
-		cube.setCurrentStage(generatorStageRegistry.getStage(nbt.getString("currentStage")));
-		cube.setTargetStage(generatorStageRegistry.getStage(nbt.getString("targetStage")));
+		// set the worldgen stage
+		cube.setPopulated(nbt.getBoolean("populated"));
+		cube.setInitialLightingDone(nbt.getBoolean("initLightDone"));
 		return cube;
 	}
 
@@ -232,7 +231,7 @@ public class IONbtReader {
 
 	private static void readLightingInfo(Cube cube, NBTTagCompound nbt, ICubicWorldServer world) {
 		NBTTagCompound lightingInfo = nbt.getCompoundTag("LightingInfo");
-		int[] lastHeightMap = lightingInfo.getIntArray("LastHeightMap");
+		int[] lastHeightMap = lightingInfo.getIntArray("LastHeightMap"); // NO NO NO! TODO: Why is hightmap being stored in Cube's data?! kill it!
 		int[] currentHeightMap = cube.getColumn().getHeightMap();
 
 		// assume changes outside of this cube have no effect on this cube.
