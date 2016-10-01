@@ -44,11 +44,11 @@ public class TestOpacityIndex {
 
 	static {
 		try {
-			YminField = OpacityIndex.class.getDeclaredField("m_ymin");
+			YminField = OpacityIndex.class.getDeclaredField("ymin");
 			YminField.setAccessible(true);
-			YmaxField = OpacityIndex.class.getDeclaredField("m_ymax");
+			YmaxField = OpacityIndex.class.getDeclaredField("ymax");
 			YmaxField.setAccessible(true);
-			SegmentsField = OpacityIndex.class.getDeclaredField("m_segments");
+			SegmentsField = OpacityIndex.class.getDeclaredField("segments");
 			SegmentsField.setAccessible(true);
 		} catch (NoSuchFieldException | SecurityException ex) {
 			throw new Error(ex);
