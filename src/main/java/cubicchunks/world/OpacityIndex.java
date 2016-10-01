@@ -62,20 +62,20 @@ public class OpacityIndex implements IOpacityIndex {
 	/**
 	 * Array containing an array of segments for each x/z position in a column.
 	 */
-	private final int[][] m_segments;
+	private final int[][] segments;
 
 	private int heightMapLowest;
 
-	private int m_hash;
+	private int hash;
 
-	private boolean m_needsHash;
+	private boolean needsHash;
 
 
 	public OpacityIndex() {
 		this.ymin = new int[Cube.SIZE * Cube.SIZE];
 		this.ymax = new int[Cube.SIZE * Cube.SIZE];
 
-		this.m_segments = new int[Cube.SIZE * Cube.SIZE][];
+		this.segments = new int[Cube.SIZE * Cube.SIZE][];
 
 		// init to empty
 		for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
@@ -84,8 +84,8 @@ public class OpacityIndex implements IOpacityIndex {
 		}
 
 		this.heightMapLowest = NONE;
-		this.m_hash = 0;
-		this.m_needsHash = true;
+		this.hash = 0;
+		this.needsHash = true;
 	}
 
 
@@ -123,7 +123,7 @@ public class OpacityIndex implements IOpacityIndex {
 		}
 
 		// Are there segments for this block column?
-		int[] segments = this.m_segments[i];
+		int[] segments = this.segments[i];
 		if (segments == null) {
 			// this column is black or white
 			// there are no shades of grey =P
@@ -160,14 +160,14 @@ public class OpacityIndex implements IOpacityIndex {
 
 		// try to stay in no-segments mode as long as we can, this is the simple case
 		boolean isOpaque = opacity != 0;
-		if (this.m_segments[xzIndex] == null) {
+		if (this.segments[xzIndex] == null) {
 			this.setNoSegments(xzIndex, blockY, isOpaque);
 		} else {
 			this.setOpacityWithSegments(xzIndex, blockY, isOpaque);
 		}
 
 		this.heightMapLowest = NONE;
-		this.m_needsHash = true;
+		this.needsHash = true;
 	}
 
 	@Override
@@ -196,7 +196,7 @@ public class OpacityIndex implements IOpacityIndex {
 
 		// There are no opacity changes, everything is opaque from ymin to ymax. blockY is between ymin and ymax, thus
 		// the next opaque block below blockY is blockY - 1.
-		int[] segments = this.m_segments[i];
+		int[] segments = this.segments[i];
 		if (segments == null) {
 			return blockY - 1;
 		}
@@ -339,7 +339,7 @@ public class OpacityIndex implements IOpacityIndex {
 			 [ ]
 			  ^ going up from there
 			 */
-			this.m_segments[xzIndex] = new int[]{
+			this.segments[xzIndex] = new int[]{
 					packSegment(this.ymin[xzIndex], 1),
 					packSegment(this.ymax[xzIndex] + 1, 0),
 					packSegment(blockY, 1)
@@ -370,7 +370,7 @@ public class OpacityIndex implements IOpacityIndex {
 			 [ ]
 			  ^ going up from there
 			 */
-			this.m_segments[xzIndex] = new int[]{
+			this.segments[xzIndex] = new int[]{
 					packSegment(blockY, 1),
 					packSegment(blockY + 1, 0),
 					packSegment(this.ymin[xzIndex], 1)
@@ -383,20 +383,20 @@ public class OpacityIndex implements IOpacityIndex {
 		assert (blockY >= this.ymin[xzIndex] && blockY <= this.ymax[xzIndex]);
 	}
 
-	private void setNoSegmentsTransparent(int i, int blockY) {
+	private void setNoSegmentsTransparent(int xzIndex, int blockY) {
 		// nothing into nothing?
-		if (this.ymin[i] == NONE && this.ymax[i] == NONE) {
+		if (this.ymin[xzIndex] == NONE && this.ymax[xzIndex] == NONE) {
 			return;
 		}
-		assert !(this.ymin[i] == NONE || this.ymax[i] == NONE) : "Only one of ymin and ymax is NONE! This is not possible";
+		assert !(this.ymin[xzIndex] == NONE || this.ymax[xzIndex] == NONE) : "Only one of ymin and ymax is NONE! This is not possible";
 
 		// only one block left?
-		if (this.ymax[i] == this.ymin[i]) {
+		if (this.ymax[xzIndex] == this.ymin[xzIndex]) {
 
 			// something into nothing?
-			if (blockY == this.ymin[i]) {
-				this.ymin[i] = NONE;
-				this.ymax[i] = NONE;
+			if (blockY == this.ymin[xzIndex]) {
+				this.ymin[xzIndex] = NONE;
+				this.ymax[xzIndex] = NONE;
 			}
 
 			// if setting to transparent somewhere else - nothing changes
@@ -404,22 +404,22 @@ public class OpacityIndex implements IOpacityIndex {
 		}
 
 		// out of range?
-		if (blockY < this.ymin[i] || blockY > this.ymax[i]) {
+		if (blockY < this.ymin[xzIndex] || blockY > this.ymax[xzIndex]) {
 			return;
 		}
 
 		// shrinking the range?
-		if (blockY == this.ymin[i]) {
-			this.ymin[i]++;
+		if (blockY == this.ymin[xzIndex]) {
+			this.ymin[xzIndex]++;
 			return;
-		} else if (blockY == this.ymax[i]) {
-			this.ymax[i]--;
+		} else if (blockY == this.ymax[xzIndex]) {
+			this.ymax[xzIndex]--;
 			return;
 		}
 
 		// we must be bisecting the range, need to make segments
-		assert (blockY > this.ymin[i] && blockY <
-				this.ymax[i]) : String.format("blockY outside of ymin/ymax range: %d -> [%d,%d]", blockY, this.ymin[i], this.ymax[i]);
+		assert (blockY > this.ymin[xzIndex] && blockY <
+				this.ymax[xzIndex]) : String.format("blockY outside of ymin/ymax range: %d -> [%d,%d]", blockY, this.ymin[xzIndex], this.ymax[xzIndex]);
 		/*
 		 Example:
 		 ---
@@ -438,16 +438,16 @@ public class OpacityIndex implements IOpacityIndex {
 		 [ ]
 		  ^ going up
 		*/
-		this.m_segments[i] = new int[]{
-				packSegment(this.ymin[i], 1),
+		this.segments[xzIndex] = new int[]{
+				packSegment(this.ymin[xzIndex], 1),
 				packSegment(blockY, 0),
 				packSegment(blockY + 1, 1)
 		};
 	}
 
-	private void setOpacityWithSegments(int i, int blockY, boolean isOpaque) {
+	private void setOpacityWithSegments(int xzIndex, int blockY, boolean isOpaque) {
 		// binary search to find the insertion point
-		int[] segments = this.m_segments[i];
+		int[] segments = this.segments[xzIndex];
 		int minj = 0;
 		int maxj = getLastSegmentIndex(segments);
 		while (minj <= maxj) {
@@ -467,12 +467,12 @@ public class OpacityIndex implements IOpacityIndex {
 		// minj-1 is the containing segment, or -1 if we're off the bottom
 		int j = minj - 1;
 		if (j < 0) {
-			setOpacityWithSegmentsBelowBottom(i, blockY, isOpaque);
-		} else if (blockY > this.ymax[i]) {
-			setOpacityWithSegmentsAboveTop(i, blockY, isOpaque);
+			setOpacityWithSegmentsBelowBottom(xzIndex, blockY, isOpaque);
+		} else if (blockY > this.ymax[xzIndex]) {
+			setOpacityWithSegmentsAboveTop(xzIndex, blockY, isOpaque);
 		} else {
 			// j is the containing segment, blockY may be at the start
-			setOpacityWithSegmentsFor(i, blockY, j, isOpaque);
+			setOpacityWithSegmentsFor(xzIndex, blockY, j, isOpaque);
 		}
 	}
 
@@ -482,7 +482,7 @@ public class OpacityIndex implements IOpacityIndex {
 			return;
 		}
 
-		int[] segments = this.m_segments[xzIndex];
+		int[] segments = this.segments[xzIndex];
 
 		boolean extendsBottomSegmentByOne = blockY == this.ymin[xzIndex] - 1;
 		if (extendsBottomSegmentByOne) {
@@ -526,7 +526,7 @@ public class OpacityIndex implements IOpacityIndex {
 			return;
 		}
 
-		int[] segments = this.m_segments[xzIndex];
+		int[] segments = this.segments[xzIndex];
 		int lastIndex = getLastSegmentIndex(segments);
 
 		boolean extendsTopSegmentByOne = blockY == this.ymax[xzIndex] + 1;
@@ -567,7 +567,7 @@ public class OpacityIndex implements IOpacityIndex {
 	}
 
 	private void setOpacityWithSegmentsFor(int xzIndex, int blockY, int segmentIndexWithBlockY, boolean isOpaque) {
-		int[] segments = this.m_segments[xzIndex];
+		int[] segments = this.segments[xzIndex];
 		int isOpaqueInt = isOpaque ? 1 : 0;
 
 		int segmentWithBlockY = segments[segmentIndexWithBlockY];
@@ -635,7 +635,7 @@ public class OpacityIndex implements IOpacityIndex {
 
 	private void negateOneBlockSegment(int xzIndex, int segmentIndexWithBlockY) {
 
-		int[] segments = this.m_segments[xzIndex];
+		int[] segments = this.segments[xzIndex];
 		int lastSegmentIndex = getLastSegmentIndex(segments);
 
 		assert lastSegmentIndex >= 2 : "Less than 3 segments in array!";
@@ -650,7 +650,7 @@ public class OpacityIndex implements IOpacityIndex {
 			if (segmentIndexWithBlockY == 2) {
 				//after removing top 2 segments we will be left with 1 segment
 				//remove them entirely to guarantee at least 3 segments and use min/maxY
-				this.m_segments[xzIndex] = null;
+				this.segments[xzIndex] = null;
 				return;
 			}
 			segments[segmentIndexWithBlockY] = NONE_SEGMENT;
@@ -663,7 +663,7 @@ public class OpacityIndex implements IOpacityIndex {
 			int segmentAbove = segments[1];
 			this.ymin[xzIndex] = unpackPosition(segments[2]);
 			if (lastSegmentIndex == 2) {
-				this.m_segments[xzIndex] = null;
+				this.segments[xzIndex] = null;
 				return;
 			}
 			removeTwoSegments(xzIndex, 0);
@@ -693,19 +693,19 @@ public class OpacityIndex implements IOpacityIndex {
 		//but in case after the removal there are less than 3 segments
 		//remove them entirely and rely only on min/maxY
 		if (lastSegmentIndex == 2) {
-			this.m_segments[xzIndex] = null;
+			this.segments[xzIndex] = null;
 			return;
 		}
 	}
 
 	private void moveSegmentStartUpAndUpdateMinY(int xzIndex, int segmentIndex) {
 
-		int segment = this.m_segments[xzIndex][segmentIndex];
+		int segment = this.segments[xzIndex][segmentIndex];
 		int pos = unpackPosition(segment);
 		int opacity = unpackOpacity(segment);
 
 		// move the segment
-		this.m_segments[xzIndex][segmentIndex] = packSegment(pos + 1, opacity);
+		this.segments[xzIndex][segmentIndex] = packSegment(pos + 1, opacity);
 
 		// move the bottom if needed
 		if (segmentIndex == 0) {
@@ -715,12 +715,12 @@ public class OpacityIndex implements IOpacityIndex {
 
 	private void moveSegmentStartDownAndUpdateMinY(int xzIndex, int segmentIndex) {
 
-		int segment = this.m_segments[xzIndex][segmentIndex];
+		int segment = this.segments[xzIndex][segmentIndex];
 		int pos = unpackPosition(segment);
 		int opacity = unpackOpacity(segment);
 
 		// move the segment
-		this.m_segments[xzIndex][segmentIndex] = packSegment(pos - 1, opacity);
+		this.segments[xzIndex][segmentIndex] = packSegment(pos - 1, opacity);
 
 		// move the bottom if needed
 		if (segmentIndex == 0) {
@@ -730,7 +730,7 @@ public class OpacityIndex implements IOpacityIndex {
 
 	private void removeTwoSegments(int xzIndex, int firstSegmentToRemove) {
 
-		int[] segments = this.m_segments[xzIndex];
+		int[] segments = this.segments[xzIndex];
 		int jmax = getLastSegmentIndex(segments);
 
 		// remove the segment
@@ -739,19 +739,19 @@ public class OpacityIndex implements IOpacityIndex {
 		segments[jmax - 1] = NONE_SEGMENT;
 
 		if (segments[0] == NONE_SEGMENT) {
-			this.m_segments[xzIndex] = null;
+			this.segments[xzIndex] = null;
 		}
 	}
 
 	//is theIndex = lastSegmentIndex+1, it will be inserted after last segment
 	private void insertSegmentsBelow(int xzIndex, int theIndex, int... newSegments) {
-		int lastIndex = getLastSegmentIndex(this.m_segments[xzIndex]);
+		int lastIndex = getLastSegmentIndex(this.segments[xzIndex]);
 		int expandSize = newSegments.length;
 		//will it fit in current array?
-		if (this.m_segments[xzIndex].length >= lastIndex + expandSize) {
+		if (this.segments[xzIndex].length >= lastIndex + expandSize) {
 			//shift all segments up
-			System.arraycopy(this.m_segments[xzIndex], theIndex, this.m_segments[xzIndex], theIndex + expandSize, lastIndex + 1 - theIndex);
-			System.arraycopy(newSegments, 0, this.m_segments[xzIndex], theIndex + 0, expandSize);
+			System.arraycopy(this.segments[xzIndex], theIndex, this.segments[xzIndex], theIndex + expandSize, lastIndex + 1 - theIndex);
+			System.arraycopy(newSegments, 0, this.segments[xzIndex], theIndex + 0, expandSize);
 		} else {
 			//need to expand the array
 			int[] newSegmentArr = new int[(lastIndex + 1) + expandSize];
@@ -759,7 +759,7 @@ public class OpacityIndex implements IOpacityIndex {
 			int oldArrIndex = 0;
 			//copy all index up to before theIndex
 			for (int i = 0; i < theIndex; i++) {
-				newSegmentArr[newArrIndex] = this.m_segments[xzIndex][oldArrIndex];
+				newSegmentArr[newArrIndex] = this.segments[xzIndex][oldArrIndex];
 				newArrIndex++;
 				oldArrIndex++;
 			}
@@ -770,16 +770,16 @@ public class OpacityIndex implements IOpacityIndex {
 			}
 			//copy everything else
 			while (newArrIndex < newSegmentArr.length) {
-				newSegmentArr[newArrIndex] = this.m_segments[xzIndex][oldArrIndex];
+				newSegmentArr[newArrIndex] = this.segments[xzIndex][oldArrIndex];
 				newArrIndex++;
 				oldArrIndex++;
 			}
-			this.m_segments[xzIndex] = newSegmentArr;
+			this.segments[xzIndex] = newSegmentArr;
 		}
 	}
 
 	private int getSegmentTopBlockY(int xzIndex, int segmentIndex) {
-		int[] segments = this.m_segments[xzIndex];
+		int[] segments = this.segments[xzIndex];
 		//if it's the last segment in the array, or the one above is NoneSegment
 		if (segments.length - 1 == segmentIndex || segments[segmentIndex + 1] == NONE_SEGMENT) {
 			return this.ymax[xzIndex];
@@ -793,25 +793,25 @@ public class OpacityIndex implements IOpacityIndex {
 
 	@Override
 	public int hashCode() {
-		if (this.m_needsHash) {
-			this.m_hash = computeHash();
-			this.m_needsHash = false;
+		if (this.needsHash) {
+			this.hash = computeHash();
+			this.needsHash = false;
 		}
-		return m_hash;
+		return hash;
 	}
 
 	private int computeHash() {
 		final int MyFavoritePrime = 37;
 		int hash = 1;
-		for (int i = 0; i < this.m_segments.length; i++) {
+		for (int i = 0; i < this.segments.length; i++) {
 			hash *= MyFavoritePrime;
 			hash += this.ymin[i];
 			hash *= MyFavoritePrime;
 			hash += this.ymax[i];
-			if (this.m_segments[i] == null) {
+			if (this.segments[i] == null) {
 				hash *= MyFavoritePrime;
 			} else {
-				for (int n : this.m_segments[i]) {
+				for (int n : this.segments[i]) {
 					hash *= MyFavoritePrime;
 					hash += n;
 				}
@@ -865,7 +865,7 @@ public class OpacityIndex implements IOpacityIndex {
 	}
 
 	public void readData(DataInputStream in) throws IOException {
-		for (int i = 0; i < this.m_segments.length; i++) {
+		for (int i = 0; i < this.segments.length; i++) {
 			this.ymin[i] = in.readInt();
 			this.ymax[i] = in.readInt();
 			int[] segments = new int[in.readUnsignedShort()];
@@ -875,15 +875,15 @@ public class OpacityIndex implements IOpacityIndex {
 			for (int j = 0; j < segments.length; j++) {
 				segments[j] = in.readInt();
 			}
-			this.m_segments[i] = segments;
+			this.segments[i] = segments;
 		}
 	}
 
 	public void writeData(DataOutputStream out)	throws IOException {
-		for (int i = 0; i < this.m_segments.length; i++) {
+		for (int i = 0; i < this.segments.length; i++) {
 			out.writeInt(this.ymin[i]);
 			out.writeInt(ymax[i]);
-			int[] segments = this.m_segments[i];
+			int[] segments = this.segments[i];
 			if (segments == null || segments.length == 0) {
 				out.writeShort(0);
 			} else {
@@ -909,8 +909,8 @@ public class OpacityIndex implements IOpacityIndex {
 		buf.append(this.ymax[i]);
 		buf.append("], segments(p,o)=");
 
-		if (this.m_segments[i] != null) {
-			for (int packed : this.m_segments[i]) {
+		if (this.segments[i] != null) {
+			for (int packed : this.segments[i]) {
 				int pos = unpackPosition(packed);
 				int opacity = unpackOpacity(packed);
 				buf.append("(");
