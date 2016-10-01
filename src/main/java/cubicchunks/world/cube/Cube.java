@@ -61,6 +61,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Cube {
 
+	public static final int SIZE = 16;
+
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 
 	private ICubicWorld world;

@@ -26,58 +26,59 @@ package cubicchunks.world;
 public interface IOpacityIndex {
 
 	/**
-	 * Returns true if opacity at given position != 0, or false if it is 0
+	 * Returns true if the opacity at the given position != 0 or false otherwise.
 	 *
-	 * @param localX local block X position (0..15).
-	 * @param blockY block Y position (any integer from CubicChunks mod height range).
-	 * @param localZ local block Z position (0..15)
+	 * @param localX local block x-coordinate (0..15)
+	 * @param blockY global block y-coordinate
+	 * @param localZ local block z-coordinate (0..15)
 	 *
-	 * @return True is opacity != 0
+	 * @return true if the opacity at the given position != 0
 	 */
 	boolean isOpaque(int localX, int blockY, int localZ);
 
 	/**
-	 * Set opacity at given position.
+	 * Sets the opacity at the given position to the given value.
 	 *
-	 * @param localX local block X position (0..15).
-	 * @param blockY block Y position (any integer from CubicChunks mod height range).
-	 * @param localZ local block Z position (0..15)
+	 * @param localX local block x-coordinate (0..15)
+	 * @param blockY global block y-coordinate
+	 * @param localZ local block z-coordinate (0..15)
 	 * @param opacity new opacity (0..255)
 	 */
 	void onOpacityChange(int localX, int blockY, int localZ, int opacity);
 
 	/**
-	 * Returns Y position of the top non-transparent block.
+	 * Returns the y-coordinate of the highest non-transparent block in the specified block-column.
 	 *
-	 * @param localX local block X position (0..15).
-	 * @param localZ local block Z position (0..15)
+	 * @param localX local block x-coordinate (0..15)
+	 * @param localZ local block z-coordinate (0..15)
 	 *
-	 * @return Y position of the top non-transparent block, or null if one doesn't exist
+	 * @return y-coordinate of the highest non-transparent block, or null if none exists
 	 */
 	Integer getTopBlockY(int localX, int localZ);
 
 	/**
-	 * Returns Y position of the top non-transparent block that is below given blockY.
+	 * Returns the y-coordinate of the highest non-transparent block that is below the given blockY.
 	 *
-	 * @param localX local block X position (0..15).
-	 * @param localZ local block Z position (0..15)
+	 * @param localX local block x-coordinate (0..15)
+	 * @param localZ local block z-coordinate (0..15)
 	 *
-	 * @return Y position of the top non-transparent block below blockY, or null if one doesn't exist.
+	 * @return y-coordinate of the highest non-transparent block below blockY, or null if none exists
 	 */
 	Integer getTopBlockYBelow(int localX, int localZ, int blockY);
 
 	/**
-	 * Returns Y position of the bottom non-transparent block.
+	 * Returns y-coordinate n of the lowest non-transparent block.
 	 *
-	 * @param localX local block X position (0..15).
-	 * @param localZ local block Z position (0..15)
+	 * @param localX local block x-coordinate (0..15)
+	 * @param localZ local block z-coordinate(0..15)
 	 *
-	 * @return Y position of the bottom non-transparent block, or null if one doesn't exist
+	 * @return y-coordinate of the lowest non-transparent block, or null if none exists
 	 */
 	Integer getBottomBlockY(int localX, int localZ);
 
 	/**
-	 * Returns the lowest value that could be returned by getTopBlockY (for any localX and localZ values).
+	 * Out of the highest non-opaque blocks from all block columns in the column, returns the y-coordinate of the lowest
+	 * block.
 	 */
 	int getLowestTopBlockY();
 
