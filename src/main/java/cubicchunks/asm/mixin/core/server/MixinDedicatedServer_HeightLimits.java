@@ -23,7 +23,6 @@
  */
 package cubicchunks.asm.mixin.core.server;
 
-import cubicchunks.ICubicWorldType;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.world.WorldType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,6 +32,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import cubicchunks.world.type.ICubicWorldType;
 
 import java.net.InetAddress;
 

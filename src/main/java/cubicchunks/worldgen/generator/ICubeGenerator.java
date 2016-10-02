@@ -21,12 +21,11 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.provider;
+package cubicchunks.worldgen.generator;
 
 import java.util.List;
 
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.cube.CubePrimer;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;

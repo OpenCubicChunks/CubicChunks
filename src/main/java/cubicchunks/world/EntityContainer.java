@@ -169,8 +169,7 @@ public class EntityContainer {
 
 		for (int i = 0; i < nbtEntities.tagCount(); i++) {
 			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
-			Entity entity = readEntity(nbtEntity, world, listener);
-
+			readEntity(nbtEntity, world, listener);
 		}
 	}
 

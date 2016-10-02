@@ -25,7 +25,6 @@ package cubicchunks.server;
 
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ServerCubeCache;
 import net.minecraft.world.chunk.Chunk;
 
 import java.util.Collection;

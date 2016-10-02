@@ -21,57 +21,37 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.world.type;
 
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.provider.IColumnGenerator;
-import cubicchunks.world.provider.ICubeGenerator;
+import cubicchunks.worldgen.generator.IColumnGenerator;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
-public class CustomCubicChunksWorldType extends WorldType implements ICubicWorldType {
 
-	public CustomCubicChunksWorldType() {
-		super("CustomCubic");
+public class VanillaCubicChunksWorldType extends WorldType implements ICubicWorldType {
+
+	public VanillaCubicChunksWorldType() {
+		super("VanillaCubic");
 	}
 
 	public static void create() {
-		new CustomCubicChunksWorldType();
+		new VanillaCubicChunksWorldType();
 	}
 
 	@Override
 	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
-		// TODO Auto-generated method stub
-		return null;
+		return null; // no ICubicWorldProvider's that are going to need this
 	}
 
 	@Override
 	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
-		// TODO Auto-generated method stub
-		return null;
+		return null; // no ICubicWorldProvider's that are going to need this
 	}
 
 	@Override
 	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-		return provider; // TODO: Custom Nether? Custom End????
+		return provider; // no need to swap out providers
 	}
-
-	//TODO: Custom Cubic generator
-	/*
-	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
-		CubeProcessor terrain = new CustomTerrainProcessor(world);
-		CubeProcessor features = new CustomFeatureProcessor();
-		CubeProcessor population = new CustomPopulationProcessor(world);
-		return new ICubicChunkGenerator() {
-			@Override public void generateTerrain(Cube cube) {
-				terrain.calculate(cube);
-				features.calculate(cube);
-				cube.initSkyLight();
-			}
-
-			@Override public void populateCube(Cube cube) {
-				population.calculate(cube);
-			}
-		};
-	}*/
 }

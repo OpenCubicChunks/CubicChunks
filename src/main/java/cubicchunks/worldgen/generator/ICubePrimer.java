@@ -21,52 +21,45 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.provider;
+package cubicchunks.worldgen.generator;
 
-import java.util.Collections;
-import java.util.List;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome.SpawnListEntry;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.EmptyChunk;
-import net.minecraft.world.chunk.IChunkGenerator;
+public interface ICubePrimer {
 
-public class DummyChunkGenerator implements IChunkGenerator {
-
-	private World world;
+	static final IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
 	
-	public DummyChunkGenerator(World world){
-		this.world = world;
-	}
+	/**
+	 * Gets a block state at the given location
+	 * 
+	 * @param x cube relative x
+	 * @param y cube relative y
+	 * @param z cube relative z
+	 * @return the block state
+	 */
+	IBlockState getBlockState(int x, int y, int z);
 	
-	@Override
-	public Chunk provideChunk(int x, int z) {
-		return new EmptyChunk(world, x, z);
-	}
-
-	@Override
-	public void populate(int x, int z) {}
-
-	@Override
-	public boolean generateStructures(Chunk chunkIn, int x, int z) {
-		return false;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
-		return Collections.EMPTY_LIST;
-	}
-
-	@Override
-	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position) {
-		return null;
-	}
-
-	@Override
-	public void recreateStructures(Chunk chunkIn, int x, int z) {}
-
+	/**
+	 * Sets a block state at the given location
+	 * 
+	 * @param x cube relative x
+	 * @param y cube relative x
+	 * @param z cube relative x
+	 * @param state the block state
+	 */
+	void setBlockState(int x, int y, int z, IBlockState state);
+	
+	/**
+	 * Counting down from the highest block in the cube, find the first non-air
+	 * block for the given location.<br>
+	 * <br>
+	 * NOTE: This will return -1 if there where no blocks under that location!<br>
+	 * WARNING: It does not know if there are blocks over this cube!<br>
+	 * 
+	 * @param x cube relative x
+	 * @param z cube relative x
+	 * @return the height of the top non-air block at x, z or -1 if there was no block found
+	 */
+	int findGroundHeight(int x, int z);
 }

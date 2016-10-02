@@ -21,10 +21,9 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.provider;
+package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.VanillaCubicChunksWorldType;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
@@ -32,6 +31,10 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.ICubeCache;
+import cubicchunks.world.type.VanillaCubicChunksWorldType;
+import cubicchunks.worldgen.generator.IColumnGenerator;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -46,9 +49,9 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import static cubicchunks.world.provider.ServerCubeCache.LoadType.FORCE_LOAD;
-import static cubicchunks.world.provider.ServerCubeCache.LoadType.LOAD_ONLY;
-import static cubicchunks.world.provider.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
+import static cubicchunks.server.ServerCubeCache.LoadType.FORCE_LOAD;
+import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_ONLY;
+import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 import java.io.IOException;
 import java.util.ArrayDeque;

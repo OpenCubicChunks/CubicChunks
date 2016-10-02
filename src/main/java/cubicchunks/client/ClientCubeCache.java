@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.provider;
+package cubicchunks.client;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +35,7 @@ import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.ICubeCache;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;

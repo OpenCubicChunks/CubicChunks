@@ -33,6 +33,7 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;

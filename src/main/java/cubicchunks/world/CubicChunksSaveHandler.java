@@ -34,7 +34,7 @@ import net.minecraft.world.storage.WorldInfo;
 
 import javax.annotation.Nonnull;
 
-import cubicchunks.world.provider.ServerCubeCache;
+import cubicchunks.server.ServerCubeCache;
 
 import java.io.File;
 

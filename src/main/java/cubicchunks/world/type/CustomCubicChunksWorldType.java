@@ -21,29 +21,22 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.debug;
+package cubicchunks.world.type;
 
-import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.type.ICubicWorldType;
 import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
-public class DebugWorldType extends WorldType implements ICubicWorldType {
+public class CustomCubicChunksWorldType extends WorldType implements ICubicWorldType {
 
-	public DebugWorldType() {
-		super("DebugCubic");
-	}
-
-	@Override
-	public boolean getCanBeCreated() {
-		return CubicChunks.DEBUG_ENABLED;
+	public CustomCubicChunksWorldType() {
+		super("CustomCubic");
 	}
 
 	public static void create() {
-		new DebugWorldType();
+		new CustomCubicChunksWorldType();
 	}
 
 	@Override
@@ -60,58 +53,25 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
 
 	@Override
 	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-		return provider;
+		return provider; // TODO: Custom Nether? Custom End????
 	}
 
-	//TODO: Debug Cubic generator
+	//TODO: Custom Cubic generator
 	/*
 	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
-		//TODO: move first light processor directly into cube?
+		CubeProcessor terrain = new CustomTerrainProcessor(world);
+		CubeProcessor features = new CustomFeatureProcessor();
+		CubeProcessor population = new CustomPopulationProcessor(world);
 		return new ICubicChunkGenerator() {
-			Perlin perlin = new Perlin();
-			{
-				perlin.setFrequency(0.180);
-				perlin.setOctaveCount(1);
-				perlin.setSeed((int) world.getSeed());
-			}
-			
-			//TODO: find out what this was/should have been for (it was never used)
-			//CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
-
 			@Override public void generateTerrain(Cube cube) {
-				if(cube.getY() > 30) {
-					cube.initSkyLight();
-					return;
-				}
-				if(cube.getX() == 100 && cube.getZ() == 100) {
-					cube.initSkyLight();
-					return;//hole in the world
-				}
-				CubeCoords cubePos = cube.getCoords();
-				for(BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
-					double currDensity = perlin.getValue(pos.getX(), pos.getY()*0.5, pos.getZ());
-					double aboveDensity = perlin.getValue(pos.getX(), (pos.getY()+1)*0.5, pos.getZ());
-					if(cube.getY() >= 16) {
-						currDensity -= (pos.getY() - 16*16)/100;
-						aboveDensity -= (pos.getY() + 1 - 16*16)/100;
-					}
-					if(currDensity > 0.5) {
-						if(currDensity > 0.5 && aboveDensity <= 0.5) {
-							cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
-						} else if(currDensity > aboveDensity && currDensity < 0.7) {
-							cube.setBlockForGeneration(pos, Blocks.DIRT.getDefaultState());
-						} else {
-							cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
-						}
-					}
-				}
+				terrain.calculate(cube);
+				features.calculate(cube);
 				cube.initSkyLight();
 			}
 
 			@Override public void populateCube(Cube cube) {
-				//populator.calculate(cube);
+				population.calculate(cube);
 			}
 		};
-	}
-	*/
+	}*/
 }

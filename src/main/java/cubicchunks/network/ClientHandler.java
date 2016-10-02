@@ -24,6 +24,7 @@
 package cubicchunks.network;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.client.ClientCubeCache;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.ClientOpacityIndex;
@@ -31,7 +32,6 @@ import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ClientCubeCache;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;

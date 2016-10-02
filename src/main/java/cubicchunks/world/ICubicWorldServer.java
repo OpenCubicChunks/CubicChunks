@@ -25,7 +25,7 @@ package cubicchunks.world;
 
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.PlayerCubeMap;
-import cubicchunks.world.provider.ServerCubeCache;
+import cubicchunks.server.ServerCubeCache;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;

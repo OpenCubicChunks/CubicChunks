@@ -25,6 +25,7 @@ package cubicchunks;
 
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.type.ICubicWorldType;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.event.world.WorldEvent;

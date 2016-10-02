@@ -25,7 +25,6 @@ package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
-import cubicchunks.ICubicWorldType;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
@@ -33,6 +32,7 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.provider.ICubeCache;
+import cubicchunks.world.type.ICubicWorldType;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;

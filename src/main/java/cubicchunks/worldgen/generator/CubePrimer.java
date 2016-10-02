@@ -1,4 +1,4 @@
-package cubicchunks.world.cube;
+package cubicchunks.worldgen.generator;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;

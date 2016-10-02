@@ -21,32 +21,52 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator;
 
-import cubicchunks.util.AddressTools;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.provider.IColumnGenerator;
-import cubicchunks.world.provider.ICubeGenerator;
-import net.minecraft.world.WorldProvider;
+import java.util.Collections;
+import java.util.List;
 
-public interface ICubicWorldType {
-	/**
-	 * Returns Y position of the bottom block in the world
-	 */
-	default int getMinimumPossibleHeight() {
-		return AddressTools.MIN_BLOCK_Y;
-	}
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome.SpawnListEntry;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.EmptyChunk;
+import net.minecraft.world.chunk.IChunkGenerator;
 
-	/**
-	 * Returns Y position of block above the top block in the world,
-	 */
-	default int getMaximumPossibleHeight() {
-		return AddressTools.MAX_BLOCK_Y + 1;
-	}
+public class DummyChunkGenerator implements IChunkGenerator {
 
-	ICubeGenerator createCubeGenerator(ICubicWorldServer world);
+	private World world;
 	
-	IColumnGenerator createColumnGenerator(ICubicWorldServer world);
+	public DummyChunkGenerator(World world){
+		this.world = world;
+	}
+	
+	@Override
+	public Chunk provideChunk(int x, int z) {
+		return new EmptyChunk(world, x, z);
+	}
 
-	WorldProvider getReplacedProviderFor(WorldProvider provider);
+	@Override
+	public void populate(int x, int z) {}
+
+	@Override
+	public boolean generateStructures(Chunk chunkIn, int x, int z) {
+		return false;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
+		return Collections.EMPTY_LIST;
+	}
+
+	@Override
+	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position) {
+		return null;
+	}
+
+	@Override
+	public void recreateStructures(Chunk chunkIn, int x, int z) {}
+
 }

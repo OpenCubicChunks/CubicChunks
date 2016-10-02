@@ -23,10 +23,10 @@
  */
 package cubicchunks.proxy;
 
-import cubicchunks.ICubicWorldType;
 import cubicchunks.client.ClientEventHandler;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ReflectionUtil;
+import cubicchunks.world.type.ICubicWorldType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;

@@ -23,11 +23,13 @@
  */
 package cubicchunks.world.provider;
 
-import cubicchunks.ICubicWorldType;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.provider.DummyChunkGenerator;
 import cubicchunks.world.provider.ICubicWorldProvider;
+import cubicchunks.world.type.ICubicWorldType;
+import cubicchunks.worldgen.generator.DummyChunkGenerator;
+import cubicchunks.worldgen.generator.IColumnGenerator;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldProvider;

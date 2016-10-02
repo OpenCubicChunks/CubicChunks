@@ -31,7 +31,6 @@ import cubicchunks.network.PacketUnloadCube;
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ServerCubeCache;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import net.minecraft.block.state.IBlockState;
@@ -48,13 +47,13 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 
+import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_ONLY;
+import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 import static cubicchunks.util.AddressTools.getAddress;
 import static cubicchunks.util.AddressTools.getX;
 import static cubicchunks.util.AddressTools.getY;
 import static cubicchunks.util.AddressTools.getZ;
 import static cubicchunks.util.Coords.localToBlock;
-import static cubicchunks.world.provider.ServerCubeCache.LoadType.LOAD_ONLY;
-import static cubicchunks.world.provider.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 public class PlayerCubeMapEntry {
 

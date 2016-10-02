@@ -21,37 +21,32 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.world.type;
 
+import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.provider.IColumnGenerator;
-import cubicchunks.world.provider.ICubeGenerator;
+import cubicchunks.worldgen.generator.IColumnGenerator;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldType;
 
-
-public class VanillaCubicChunksWorldType extends WorldType implements ICubicWorldType {
-
-	public VanillaCubicChunksWorldType() {
-		super("VanillaCubic");
+public interface ICubicWorldType {
+	/**
+	 * Returns Y position of the bottom block in the world
+	 */
+	default int getMinimumPossibleHeight() {
+		return AddressTools.MIN_BLOCK_Y;
 	}
 
-	public static void create() {
-		new VanillaCubicChunksWorldType();
+	/**
+	 * Returns Y position of block above the top block in the world,
+	 */
+	default int getMaximumPossibleHeight() {
+		return AddressTools.MAX_BLOCK_Y + 1;
 	}
 
-	@Override
-	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
-		return null; // no ICubicWorldProvider's that are going to need this
-	}
+	ICubeGenerator createCubeGenerator(ICubicWorldServer world);
+	
+	IColumnGenerator createColumnGenerator(ICubicWorldServer world);
 
-	@Override
-	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
-		return null; // no ICubicWorldProvider's that are going to need this
-	}
-
-	@Override
-	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-		return provider; // no need to swap out providers
-	}
+	WorldProvider getReplacedProviderFor(WorldProvider provider);
 }
