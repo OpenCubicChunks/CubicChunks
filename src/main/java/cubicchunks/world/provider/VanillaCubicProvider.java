@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.provider.CubicWorldProvider;
+import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;

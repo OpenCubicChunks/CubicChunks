@@ -1,4 +1,4 @@
-package cubicchunks.world.provider;
+package cubicchunks.worldgen.generator.vanilla;
 
 import java.util.List;
 
@@ -7,6 +7,8 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.cube.CubePrimer;
+import cubicchunks.world.provider.IColumnGenerator;
+import cubicchunks.world.provider.ICubeGenerator;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
