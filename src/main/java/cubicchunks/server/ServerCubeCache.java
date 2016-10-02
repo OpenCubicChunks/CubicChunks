@@ -356,29 +356,15 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 			if (cube != null) {
 				callback.accept(cube);
 			} else {
-				AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, column, cubeY,
-						result -> {
-							try {
-								callback.accept(postprocessLoadedCube(cubeX, cubeY, cubeZ, true, result.cube, column));
-							} catch (ReportedException ex) {
-								// Async never fails
-								callback.accept(null);
-							}
-						});
+				AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, column, this, cubeY,
+						result -> callback.accept(postprocessLoadedCube(cubeX, cubeY, cubeZ, true, result, column)));
 			}
 
 			return;
 		}
 
-		AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, cubeX, cubeY, cubeZ,
-				result -> {
-					try {
-						callback.accept(postprocessLoadedCube(cubeX, cubeY, cubeZ, true, result.cube, result.column));
-					} catch (ReportedException ex) {
-						// Async never fails
-						callback.accept(null);
-					}
-				});
+		AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, this, cubeX, cubeY, cubeZ,
+				result -> callback.accept(postprocessLoadedCube(cubeX, cubeY, cubeZ, true, result, null)));
 	}
 
 	/**
@@ -417,7 +403,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 		// Try loading the cube.
 		if (cube == null) {
 			worldServer.getProfiler().startSection("cubeIOLoad");
-			cube = AsyncWorldIOExecutor.syncCubeLoad(worldObj, cubeIO, cubeY, column);
+			cube = AsyncWorldIOExecutor.syncCubeLoad(worldObj, cubeIO, cubeY, column, this);
 			worldServer.getProfiler().endSection();
 		}
 

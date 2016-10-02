@@ -2,6 +2,7 @@ package cubicchunks.server.chunkio.async;
 
 import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
+import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
@@ -51,51 +52,23 @@ public class AsyncWorldIOExecutor {
 	 *
 	 * @param world The world in which the cube lies
 	 * @param loader The file loader for cubes
-	 * @param x cube x position
-	 * @param y cube y position
-	 * @param z cube z position
-	 *
-	 * @return The loaded cube
-	 */
-	@Nullable
-	public static Cube syncCubeLoad(World world, CubeIO loader, int x, int y, int z) {
-		QueuedCube key = new QueuedCube(x, y, z, world);
-		AsyncCubeIOProvider task = cubeTasks.remove(key); // Remove task because we will call the sync callbacks directly
-		if (task != null) {
-			runTask(task);
-		} else {
-			task = new AsyncCubeIOProvider(key, loader);
-			task.run();
-		}
-		task.runSynchronousPart();
-		return task.get().cube;
-	}
-
-
-	/**
-	 * Load a cube, directly. This function is preferrable if the column is already available, since it skips a disk
-	 * read for the column data.
-	 * @param world The world in which the cube lies
-	 * @param loader The file loader for cubes
 	 * @param y cube y position
 	 * @param column The column of the cube
 	 *
-	 * @return The loaded cube
+	 * @return The loaded cube, or null if either not present or the load failed
 	 */
 	@Nullable
-	public static Cube syncCubeLoad(World world, CubeIO loader, int y, Column column) {
+	public static Cube syncCubeLoad(World world, CubeIO loader, int y, Column column, ServerCubeCache cache) {
 		QueuedCube key = new QueuedCube(column.getX(), y, column.getZ(), world);
 		AsyncCubeIOProvider task = cubeTasks.remove(key); // Remove task because we will call the sync callbacks directly
 		if (task != null) {
-			task.setColumn(column);
 			runTask(task);
 		} else {
-			task = new AsyncCubeIOProvider(key, loader);
-			task.setColumn(column);
+			task = new AsyncCubeIOProvider(key, column, cache, loader);
 			task.run();
 		}
 		task.runSynchronousPart();
-		return task.get().cube;
+		return task.get();
 	}
 
 	/**
@@ -145,26 +118,19 @@ public class AsyncWorldIOExecutor {
 	// Sponge: Runnable -> Consumer<Cube>
 
 	/**
-	 * Queue a cube load, running the specified callback when the load has finished
-	 *
+	 * Queue a cube load, running the specified callback when the load has finished. This may cause a two tick delay
+	 * if the column has to be loaded, too! If you need it faster, consider sync loading either column or both
+	 * cube and column.
 	 * @param world The world of the cube
 	 * @param loader The file loader for this world
+	 * @param cache The server cube cache
 	 * @param x cube x position
 	 * @param y cube y position
 	 * @param z cube z position
 	 * @param runnable The callback
 	 */
-	public static void queueCubeLoad(World world, CubeIO loader, int x, int y, int z, Consumer<AsyncCubeIOProvider.LoadResult> runnable) {
-		QueuedCube key = new QueuedCube(x, y, z, world);
-		AsyncCubeIOProvider task = cubeTasks.get(key);
-		if (task == null) {
-			task = new AsyncCubeIOProvider(key, loader);
-			task.addCallback(runnable); // Add before calling execute for thread safety
-			cubeTasks.put(key, task);
-			pool.execute(task);
-		} else {
-			task.addCallback(runnable);
-		}
+	public static void queueCubeLoad(World world, CubeIO loader, ServerCubeCache cache, int x, int y, int z, Consumer<Cube> runnable) {
+		cache.asyncLoadColumn(x, z, column -> queueCubeLoad(world, loader, column, cache, y, runnable));
 	}
 
 	/**
@@ -174,20 +140,19 @@ public class AsyncWorldIOExecutor {
 	 * @param world The world of the cube
 	 * @param loader The file loader for this world
 	 * @param column The column in which the cube should be placed.
+	 * @param cache The server cube cache
 	 * @param y cube y position within the column
 	 * @param runnable The callback
 	 */
-	public static void queueCubeLoad(World world, CubeIO loader, Column column, int y, Consumer<AsyncCubeIOProvider.LoadResult> runnable) {
+	public static void queueCubeLoad(World world, CubeIO loader, Column column, ServerCubeCache cache, int y, Consumer<Cube> runnable) {
 		QueuedCube key = new QueuedCube(column.getX(), y, column.getZ(), world);
 		AsyncCubeIOProvider task = cubeTasks.get(key);
 		if (task == null) {
-			task = new AsyncCubeIOProvider(key, loader);
-			task.setColumn(column);
+			task = new AsyncCubeIOProvider(key, column, cache, loader);
 			task.addCallback(runnable); // Add before calling execute for thread safety
 			cubeTasks.put(key, task);
 			pool.execute(task);
 		} else {
-			task.setColumn(column);
 			task.addCallback(runnable);
 		}
 	}
@@ -223,7 +188,7 @@ public class AsyncWorldIOExecutor {
 	 * @param z cube z position
 	 * @param runnable The runnable that should be dropped
 	 */
-	public static void dropQueuedCubeLoad(World world, int x, int y, int z, Consumer<AsyncCubeIOProvider.LoadResult> runnable) {
+	public static void dropQueuedCubeLoad(World world, int x, int y, int z, Consumer<Cube> runnable) {
 		QueuedCube key = new QueuedCube(x, y, z, world);
 		AsyncCubeIOProvider task = cubeTasks.get(key);
 		if (task == null) {

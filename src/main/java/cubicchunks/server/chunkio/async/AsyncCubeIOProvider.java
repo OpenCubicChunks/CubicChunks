@@ -1,64 +1,48 @@
 package cubicchunks.server.chunkio.async;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**
  * Async loading of cubes
  */
-public class AsyncCubeIOProvider extends AsyncIOProvider<AsyncCubeIOProvider.LoadResult> {
+class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 	private final QueuedCube cubeInfo;
 	private final CubeIO loader;
+	private ServerCubeCache chunkCache;
 
 	private Column column;
-	private LoadResult result;
+	private Cube cube;
 
-	AsyncCubeIOProvider(QueuedCube cube, CubeIO loader) {
+	AsyncCubeIOProvider(@Nonnull QueuedCube cube, @Nonnull Column column, @Nonnull ServerCubeCache cache, @Nonnull CubeIO loader) {
 		this.cubeInfo = cube;
-		this.loader = loader;
-	}
-
-	/**
-	 * If the column is already loaded, it can be set here to skip a disk load
-	 *
-	 * @param column The column
-	 */
-	synchronized void setColumn(Column column) {
-		if (this.column != null) {
-			CubicChunks.LOGGER.warn("Trying to set column for async cube load, but column already present - possible race");
-			return;
-		}
 		this.column = column;
+		this.chunkCache = cache;
+		this.loader = loader;
 	}
 
 	@Override
 	public synchronized void run() // async stuff
 	{
 		try {
-			if (column != null) {
-				column = this.loader.loadColumn(this.cubeInfo.x, this.cubeInfo.z);
-			}
-			if (column == null) {
-				this.result = new LoadResult(LoadResult.Type.COLUMN_LOAD_FAILED, null, null);
-				return;
+			// Make sure we don't load a cube from disk that has already been synchronously loaded
+			cube = chunkCache.getCube(cubeInfo.x, cubeInfo.y, cubeInfo.z);
+
+			if (cube == null) {
+				cube = this.loader.loadCubeAndAddToColumn(column, this.cubeInfo.y);
 			}
 
-			Cube cube = this.loader.loadCubeAndAddToColumn(column, this.cubeInfo.y);
 			if (cube == null) {
 				CubicChunks.LOGGER.error("Async cube load failed (Cube does not exist in {} @ ({}, {}, {})",
 						this.cubeInfo.world, this.cubeInfo.x, this.cubeInfo.y, this.cubeInfo.z);
-				this.result = new LoadResult(LoadResult.Type.CUBE_LOAD_FAILED, null, column);
-				return;
+
 			}
-
-			this.result = new LoadResult(LoadResult.Type.OK, cube, column);
-
 		} catch (IOException e) {
 			CubicChunks.LOGGER.error("Could not load cube in {} @ ({}, {}, {})", this.cubeInfo.world, this.cubeInfo.x, this.cubeInfo.y, this.cubeInfo.z, e);
 		} finally {
@@ -91,21 +75,7 @@ public class AsyncCubeIOProvider extends AsyncIOProvider<AsyncCubeIOProvider.Loa
 	}
 
 	@Override
-	public LoadResult get() {
-		return result;
-	}
-
-	public static class LoadResult {
-		enum Type {OK, CUBE_LOAD_FAILED, COLUMN_LOAD_FAILED}
-
-		@Nonnull public final Type type;
-		@Nullable public final Cube cube;
-		@Nullable public final Column column;
-
-		LoadResult(@Nonnull Type type, @Nullable Cube cube, @Nullable Column column) {
-			this.type = type;
-			this.cube = cube;
-			this.column = column;
-		}
+	public Cube get() {
+		return cube;
 	}
 }
