@@ -60,7 +60,6 @@ class IONbtWriter {
 		writeBaseColumn(column, nbt);
 		writeBiomes(column, nbt);
 		writeOpacityIndex(column, nbt);
-		writeEntities(column, nbt);
 		return nbt;
 	}
 
@@ -94,10 +93,6 @@ class IONbtWriter {
 
 	private static void writeOpacityIndex(Column column, NBTTagCompound nbt) {// light index
 		nbt.setByteArray("OpacityIndex", ((OpacityIndex) column.getOpacityIndex()).getData());
-	}
-
-	private static void writeEntities(Column column, NBTTagCompound nbt) {// entities
-		column.getEntityContainer().writeToNbt(nbt, "Entities");
 	}
 
 	private static void writeBaseCube(Cube cube, NBTTagCompound cubeNbt) {

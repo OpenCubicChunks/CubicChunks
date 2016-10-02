@@ -23,17 +23,15 @@
  */
 package cubicchunks.network;
 
-import com.google.common.base.Throwables;
 import cubicchunks.CubicChunks;
 import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.AddressTools;
 import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.provider.ClientCubeCache;
-import cubicchunks.world.provider.IColumnProvider;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
@@ -45,8 +43,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
-
 import static cubicchunks.util.AddressTools.getX;
 import static cubicchunks.util.AddressTools.getY;
 import static cubicchunks.util.AddressTools.getZ;
@@ -73,8 +69,9 @@ public class ClientHandler implements INetHandler {
 			taskQueue.addScheduledTask(() -> handle(packet));
 			return;
 		}
+
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		IColumnProvider cubeCache = worldClient.getCubeCache();
+		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
 		long cubeAddress = packet.getCubeAddress();
 
@@ -88,17 +85,18 @@ public class ClientHandler implements INetHandler {
 			CubicChunks.LOGGER.error("Out of order cube received! No column for cube at ({}, {}, {}) exists!", cubeX, cubeY, cubeZ);
 			return;
 		}
+
 		Cube cube;
 		if(packet.getType() == PacketCube.Type.NEW_CUBE) {
-			cube = column.getOrCreateCube(cubeY, false);
+			cube = cubeCache.loadCube(column, cubeY);
 		} else {
 			cube = column.getCube(cubeY);
-			assert cube != null;
 			if (cube instanceof BlankCube) {
 				CubicChunks.LOGGER.error("Ignored cube update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
 				return;
 			}
 		}
+		
 		byte[] data = packet.getData();
 		ByteBuf buf = WorldEncoder.createByteBufForRead(data);
 		WorldEncoder.decodeCube(new PacketBuffer(buf), cube);
@@ -123,6 +121,7 @@ public class ClientHandler implements INetHandler {
 			taskQueue.addScheduledTask(() -> handle(packet));
 			return;
 		}
+
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
 		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
@@ -135,11 +134,8 @@ public class ClientHandler implements INetHandler {
 
 		byte[] data = packet.getData();
 		ByteBuf buf = WorldEncoder.createByteBufForRead(data);
-		try {
-			WorldEncoder.decodeColumn(new PacketBuffer(buf), column);
-		} catch (IOException e) {
-			throw Throwables.propagate(e);
-		}
+
+		WorldEncoder.decodeColumn(new PacketBuffer(buf), column);
 	}
 
 	public void handle(final PacketUnloadCube packet) {
@@ -151,10 +147,10 @@ public class ClientHandler implements INetHandler {
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
 		ClientCubeCache cubeCache = worldClient.getCubeCache();
-		Cube cube = cubeCache.getCube(new CubeCoords(packet.getCubeAddress()));
-		if(cube != null) {
-			cubeCache.unloadCube(cube);
-		}
+
+		cubeCache.unloadCube(AddressTools.getX(packet.getCubeAddress()), 
+							 AddressTools.getY(packet.getCubeAddress()),
+							 AddressTools.getZ(packet.getCubeAddress()));
 	}
 
 	public void handle(final PacketUnloadColumn packet) {

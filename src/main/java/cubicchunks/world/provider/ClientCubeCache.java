@@ -83,22 +83,27 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	//========Cube stuff=========
 	//===========================
 	
-	@Override
-	public void unloadCube(Cube cube) {
-		cubemap.remove(cube.getCoords());
-		cube.getColumn().removeCube(cube.getY());
+	/**
+	 * This is like ChunkProviderClient.loadChunk()
+	 * It is used when the server sends a new Cube to this client,
+	 * and the network handler wants us to create a new Cube.
+	 * 
+	 * @return a newly created and cached cube
+	 */
+	public Cube loadCube(Column column, int cubeY) {
+		Cube cube = new Cube(column, cubeY); // auto added to column
+		this.cubemap.put(new CubeCoords(column.getX(), cubeY, column.getZ()), cube);
+		
+		return cube;
 	}
-
-	@Override
-	public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
-		// cubes always exist on the client
-		return true;
-	}
-
-	@Override
-	public boolean cubeExists(CubeCoords coords) {
-		// cubes always exist on the client
-		return true;
+	
+	/**
+	 * This is like ChunkProviderClient.unloadChunk()
+	 * It is used when the server tells the client to unload a Cube.
+	 */
+	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
+		cubemap.remove(new CubeCoords(cubeX, cubeY, cubeZ));
+		getLoadedChunk(cubeX, cubeZ).removeCube(cubeY);
 	}
 
 	@Override
@@ -106,12 +111,23 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		return getCube(new CubeCoords(cubeX, cubeY, cubeZ));
 	}
 
+	@Override
 	public Cube getCube(CubeCoords coords) {
 		Cube cube = cubemap.get(coords);
 		if(cube == null){
 			cube = blankCube;
 		}
 		return cube;
+	}
+
+	@Override
+	public Cube getLoadedCube(int cubeX, int cubeY, int cubeZ) {
+		return getLoadedCube(new CubeCoords(cubeX, cubeY, cubeZ));
+	}
+
+	@Override
+	public Cube getLoadedCube(CubeCoords coords) {
+		return cubemap.get(coords);
 	}
 
 	@Override

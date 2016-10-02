@@ -34,7 +34,7 @@ class SkyLightCubeDiffuseProcessor extends QueueProcessor<Long> {
 	private ICubicWorld world;
 
 	SkyLightCubeDiffuseProcessor(ICubicWorld world, String name, int batchSize) {
-		super(name, world.getColumnProvider(), batchSize);
+		super(name, world.getCubeCache(), batchSize);
 		this.world = world;
 	}
 

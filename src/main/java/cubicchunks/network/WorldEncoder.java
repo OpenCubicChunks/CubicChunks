@@ -32,12 +32,9 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-import java.io.IOException;
-
-
 public class WorldEncoder {
 
-	public static void encodeCube(PacketBuffer out, Cube cube) throws IOException {
+	public static void encodeCube(PacketBuffer out, Cube cube) {
 		// 1. emptiness
 		out.writeBoolean(cube.isEmpty());
 
@@ -63,12 +60,12 @@ public class WorldEncoder {
 		}
 	}
 
-	public static void encodeColumn(PacketBuffer out, Column column) throws IOException {
+	public static void encodeColumn(PacketBuffer out, Column column) {
 		// 1. biomes
 		out.writeBytes(column.getBiomeArray());
 	}
 
-	public static void decodeColumn(PacketBuffer in, Column column) throws IOException {
+	public static void decodeColumn(PacketBuffer in, Column column) {
 		// 1. biomes
 		in.readBytes(column.getBiomeArray());
 	}
@@ -93,7 +90,7 @@ public class WorldEncoder {
 				in.readBytes(storage.getSkylightArray().getData());
 			}
 
-			// 5. heightmaps
+			// 5. heightmaps TODO: NO NO NO! Don't send this with Cubes!
 			byte[] heightmaps = new byte[256*2*4];
 			in.readBytes(heightmaps);
 			ClientOpacityIndex coi = ((ClientOpacityIndex) cube.getColumn().getOpacityIndex());

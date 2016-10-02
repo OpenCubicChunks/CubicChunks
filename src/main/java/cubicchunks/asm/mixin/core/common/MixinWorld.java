@@ -24,12 +24,8 @@
 package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.CubicChunks;
-<<<<<<< HEAD
 import cubicchunks.IConfigUpdateListener;
-import cubicchunks.ICubicChunksWorldType;
-=======
 import cubicchunks.ICubicWorldType;
->>>>>>> 43d09f7... Still working on the generators
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
@@ -108,7 +104,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		this.minHeight = config.getWorldHeightLowerBound();
 		this.maxHeight = config.getWorldHeightUpperBound();
 
-		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
+		ICubicWorldType type = (ICubicWorldType) this.getWorldType();
 		if(this.minHeight < type.getMinimumPossibleHeight()) {
 			this.minHeight = type.getMinimumPossibleHeight();
 		}

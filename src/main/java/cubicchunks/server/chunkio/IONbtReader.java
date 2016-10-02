@@ -52,7 +52,6 @@ public class IONbtReader {
 		}
 		readBiomes(nbt, column);
 		readOpacityIndex(nbt, column);
-		readEntities(world, x, z, nbt, column);
 		return column;
 	}
 
@@ -72,7 +71,7 @@ public class IONbtReader {
 		}
 
 		// create the column
-		Column column = new Column(world, x, z);
+		Column column = new Column(world.getCubeCache() ,world, x, z);
 
 		// read the rest of the column properties
 		column.setInhabitedTime(nbt.getLong("InhabitedTime"));
@@ -85,15 +84,6 @@ public class IONbtReader {
 
 	private static void readOpacityIndex(NBTTagCompound nbt, Column column) {// biomes
 		((OpacityIndex) column.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
-	}
-
-	private static void readEntities(ICubicWorld world, int x, int z, NBTTagCompound nbt, Column column) {// entities
-		column.getEntityContainer().readFromNbt(nbt, "Entities", world, entity -> {
-			entity.addedToChunk = true;
-			entity.chunkCoordX = x;
-			entity.chunkCoordY = Coords.getCubeYForEntity(entity);
-			entity.chunkCoordZ = z;
-		});
 	}
 
 	@Nullable
@@ -136,7 +126,7 @@ public class IONbtReader {
 
 
 		// build the cube
-		final Cube cube = column.getOrCreateCube(cubeY, false);
+		final Cube cube = new Cube(column, cubeY);
 
 		// set the worldgen stage
 		cube.setPopulated(nbt.getBoolean("populated"));
