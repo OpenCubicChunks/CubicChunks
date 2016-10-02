@@ -53,7 +53,7 @@ public class CustomPopulationProcessor implements CubeProcessor {
 
 	@Override
 	public void calculate(Cube cube) {
-		Biome biome = cube.getWorld().getBiome(Coords.getCubeCenter(cube));
+		Biome biome = cube.getCubicWorld().getBiome(Coords.getCubeCenter(cube));
 
 		//For surface generators we should actually use special RNG with seed 
 		//that depends only in world seed and cube X/Z

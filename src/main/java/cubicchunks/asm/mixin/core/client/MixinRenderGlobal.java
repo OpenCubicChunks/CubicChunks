@@ -26,7 +26,6 @@ package cubicchunks.asm.mixin.core.client;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
@@ -118,19 +117,13 @@ public class MixinRenderGlobal {
 	@Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = CHUNK_GET_ENTITY_LISTS), require = 1)
 	public ClassInheritanceMultiMap<Entity>[] getEntityList(Chunk chunk) {
 		if (position == null) {
-			return chunk.getEntityLists();
+			return chunk.getEntityLists(); //TODO: is this right?
 		}
-		Column column = (Column) chunk;
-		int cubeY = Coords.blockToCube(position.getY());
 
-		Cube cube = column.getCube(cubeY);
-		if (cube == null) {
-			return new ClassInheritanceMultiMap[]{
-					column.getEntityContainer().getEntitySet()
-			};
-		}
 		return new ClassInheritanceMultiMap[]{
-				cube.getEntityContainer().getEntitySet()
+				((Column)chunk)
+				.getCube(Coords.blockToCube(position.getY()))
+				.getEntityContainer().getEntitySet()
 		};
 	}
 

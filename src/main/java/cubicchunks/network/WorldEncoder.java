@@ -50,7 +50,7 @@ public class WorldEncoder {
 			// 3. block light
 			out.writeBytes(storage.getBlocklightArray().getData());
 
-			if (!cube.getWorld().getProvider().getHasNoSky()) {
+			if (!cube.getCubicWorld().getProvider().getHasNoSky()) {
 				// 4. sky light
 				out.writeBytes(storage.getSkylightArray().getData());
 			}
@@ -88,7 +88,7 @@ public class WorldEncoder {
 			// 3. block light
 			in.readBytes(storage.getBlocklightArray().getData());
 
-			if (!cube.getWorld().getProvider().getHasNoSky()) {
+			if (!cube.getCubicWorld().getProvider().getHasNoSky()) {
 				// 4. sky light
 				in.readBytes(storage.getSkylightArray().getData());
 			}
@@ -114,7 +114,7 @@ public class WorldEncoder {
 			ExtendedBlockStorage storage = cube.getStorage();
 			size += storage.getData().getSerializedSize();
 			size += storage.getBlocklightArray().getData().length;
-			if (!cube.getWorld().getProvider().getHasNoSky()) {
+			if (!cube.getCubicWorld().getProvider().getHasNoSky()) {
 				size += storage.getSkylightArray().getData().length;
 			}
 			//heightmaps

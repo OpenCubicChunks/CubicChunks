@@ -66,7 +66,7 @@ import java.util.Queue;
  * (there may be some entities that are not in any Cube yet).
  * * dropChunk method is not supported. Columns are unloaded automatically when the last cube is unloaded
  */
-public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, IColumnProvider {
+public class ServerCubeCache extends ChunkProviderServer implements ICubeCache {
 
 	private static final Logger log = CubicChunks.LOGGER;
 
@@ -81,8 +81,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		//TODO: Replace add ChunkGenerator argument and use chunk generator object for generating terrain?
 		//ChunkGenerator has to exist for mob spawning to work
 		super((WorldServer) worldServer,
-				worldServer.getSaveHandler().getChunkLoader(worldServer.getProvider()),
-				new CompatChunkProvider(cubeGen, columnGen));
+				worldServer.getSaveHandler().getChunkLoader(worldServer.getProvider()), // forge uses this in
+				null); // safe to null out IChunkGenerator
 
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer);
@@ -224,7 +224,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			Cube cube = column.getCube(coords.getCubeY());
 			//unload the cube if we are unloading the column
 			if (cube != null && (cube.unloaded || column.unloaded)) {
-				cube.onUnload();
+				cube.onUnload(); //TODO: remove this
 				column.removeCube(coords.getCubeY());
 				this.cubeIO.saveCube(cube);
 			}
@@ -363,7 +363,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		column.setTerrainPopulated(true);
 
 		// Init the cube.
-		cube.onLoad();
+		cube.onLoad(); //TODO: remove this
 	}
 
 	public void loadCube(CubeCoords coords, LoadType loadType) {

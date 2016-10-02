@@ -37,7 +37,7 @@ public class CustomFeatureProcessor implements CubeProcessor {
 
 	@Override
 	public void calculate(Cube cube) {
-		ICubicWorld world = cube.getWorld();
+		ICubicWorld world = cube.getCubicWorld();
 		// generate world features
 		if (!cube.isEmpty()) {
 			this.caveGenerator.generate(world, cube);

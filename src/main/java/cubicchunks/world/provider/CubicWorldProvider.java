@@ -21,14 +21,20 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.world.provider;
 
-import net.minecraft.world.WorldProviderSurface;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.provider.DummyChunkGenerator;
+import cubicchunks.world.provider.ICubicWorldProvider;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.chunk.IChunkGenerator;
 
 /**
  * CubicChunks WorldProvider for Overworld.
  */
-public class CubicWorldProviderSurface extends WorldProviderSurface {
+public abstract class CubicWorldProvider extends WorldProvider implements ICubicWorldProvider{
 	@Override
 	public int getHeight() {
 		return ((ICubicWorld) this.worldObj).getMaxHeight();
@@ -37,5 +43,31 @@ public class CubicWorldProviderSurface extends WorldProviderSurface {
 	@Override
 	public int getActualHeight() {
 		return hasNoSky ? 128 : getHeight();
+	}
+
+	@Override
+	@Deprecated
+	public IChunkGenerator createChunkGenerator() {
+		return new DummyChunkGenerator(this.worldObj);
+	}
+	
+	@Override
+	@Deprecated
+	public boolean canDropChunk(int x, int z) {
+		return true;
+	}
+
+	@Override
+	public boolean canCoordinateBeSpawn(int x, int z) {
+		//TODO: DONT USE WORLD.getGroundAboveSeaLevel()
+		BlockPos blockpos = new BlockPos(x, 0, z);
+		return this.worldObj.getBiome(blockpos).ignorePlayerSpawnSuitability() ? true
+				: this.worldObj.getGroundAboveSeaLevel(blockpos).getBlock() == Blocks.GRASS;
+	}
+
+	@Override
+	public BlockPos getRandomizedSpawnPoint() {
+		//TODO: DONT USE World.getTopSolidOrLiquidBlock()
+		return super.getRandomizedSpawnPoint();
 	}
 }

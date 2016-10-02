@@ -112,6 +112,7 @@ public class Cube {
 		this(column, cubeY);
 
 		int miny = Coords.cubeToMinBlock(cubeY);
+		IOpacityIndex opindex = column.getOpacityIndex();
 
 		for (int x = 0; x < 16; ++x) {
 			for (int z = 0; z < 16; ++z) {
@@ -126,7 +127,7 @@ public class Cube {
 						storage.set(x, y, z, newstate);
 						
 						if(newstate.getLightOpacity() != 0){
-							column.getOpacityIndex().onOpacityChange(x, miny + x, z, newstate.getLightOpacity());
+							opindex.onOpacityChange(x, miny + x, z, newstate.getLightOpacity());
 						}
 					}
 				}
@@ -397,8 +398,8 @@ public class Cube {
 
 	public void addTileEntity(TileEntity tileEntity) {
 		this.addTileEntity(tileEntity.getPos(), tileEntity);
-		if (this.isCubeLoaded) {
-			this.getWorld().addTileEntity(tileEntity);
+		if (this.isCubeLoaded) { //TODO: test to see if this is needed
+			this.getCubicWorld().addTileEntity(tileEntity);
 		}
 	}
 
@@ -427,7 +428,7 @@ public class Cube {
 
 	public void removeTileEntity(BlockPos pos) {
 		//it doesn't make sense to me to check if cube is loaded, but vanilla does it
-		if (this.isCubeLoaded) {
+		if (this.isCubeLoaded) { //TODO: test and see if this is needed
 			TileEntity tileEntity = this.tileEntityMap.remove(pos);
 			if (tileEntity != null) {
 				tileEntity.invalidate();
@@ -495,7 +496,7 @@ public class Cube {
 		return new BlockPos(x, y, z);
 	}
 
-	public ICubicWorld getWorld() {
+	public ICubicWorld getCubicWorld() {
 		return this.world;
 	}
 
@@ -535,45 +536,6 @@ public class Cube {
 	
 	private void newStorage(){
 		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), !world.getProvider().getHasNoSky());
-	}
-
-	//TODO: remove or make private
-	public IBlockState setBlockForGeneration(BlockPos blockOrLocalPos, IBlockState newBlockState) {
-		IBlockState oldBlockState = getBlockState(blockOrLocalPos);
-
-		// did anything actually change?
-		if (newBlockState == oldBlockState) {
-			return null;
-		}
-
-		int localX = Coords.blockToLocal(blockOrLocalPos.getX());
-		int localY = Coords.blockToLocal(blockOrLocalPos.getY());
-		int localZ = Coords.blockToLocal(blockOrLocalPos.getZ());
-
-		// set the block
-		this.storage.set(localX, localY, localZ, newBlockState);
-
-		// did the block change work correctly?
-		if (this.storage.get(localX, localY, localZ) != newBlockState) {
-			return null;
-		}
-		this.isModified = true;
-
-		//update the column light index
-		int blockY = Coords.localToBlock(this.coords.getCubeY(), localY);
-
-		IOpacityIndex index = this.column.getOpacityIndex();
-		int opacity = newBlockState.getLightOpacity((World) world, this.coords.localToBlock(localX, localY, localZ));
-		index.onOpacityChange(localX, blockY, localZ, opacity);
-		return oldBlockState;
-	}
-
-	public boolean hasBlocks() {
-		if (isEmpty()) {
-			return false;
-		}
-
-		return !this.storage.isEmpty();
 	}
 
 	public Map<BlockPos, TileEntity> getTileEntityMap() {
@@ -642,6 +604,10 @@ public class Cube {
 		this.isPopulated = populated;
 	}
 
+	public boolean isPopulated() {
+		return isPopulated;
+	}
+
 	public void setInitialLightingDone(boolean initialLightingDone) {
 		this.isInitialLightingDone = initialLightingDone;
 	}
@@ -650,15 +616,11 @@ public class Cube {
 		return isInitialLightingDone;
 	}
 
-	public boolean isPopulated() {
-		return isPopulated;
-	}
-
 	/**
 	 * Lights up all blocks that will definitely be lit. It's faster than using world.checkLightFor on everything.
 	 */
 	public void initSkyLight() {
-		((ICubicWorldServer)this.getWorld()).getFirstLightProcessor().initializeSkylight(this);
+		((ICubicWorldServer)this.getCubicWorld()).getFirstLightProcessor().initializeSkylight(this);
 	}
 
 	public static class LightUpdateData {

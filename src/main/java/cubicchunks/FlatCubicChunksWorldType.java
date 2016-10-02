@@ -24,9 +24,8 @@
 package cubicchunks;
 
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubicChunkGenerator;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import cubicchunks.world.provider.IColumnGenerator;
+import cubicchunks.world.provider.ICubeGenerator;
 
 public class FlatCubicChunksWorldType extends BaseCubicWorldType {
 
@@ -38,6 +37,20 @@ public class FlatCubicChunksWorldType extends BaseCubicWorldType {
 		new FlatCubicChunksWorldType();
 	}
 
+	@Override
+	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	//TODO: Flat Cubic generator
+	/*
 	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
 		FlatTerrainProcessor gen =  new FlatTerrainProcessor();
 		return new ICubicChunkGenerator() {
@@ -51,4 +64,5 @@ public class FlatCubicChunksWorldType extends BaseCubicWorldType {
 			}
 		};
 	}
+	*/
 }

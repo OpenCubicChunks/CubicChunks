@@ -23,6 +23,9 @@
  */
 package cubicchunks.world.provider;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.annotation.Nullable;
 
 import cubicchunks.util.CubeCoords;
@@ -30,6 +33,7 @@ import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
@@ -39,14 +43,15 @@ import net.minecraft.world.World;
 public class ClientCubeCache extends ChunkProviderClient implements ICubeCache, IColumnProvider {
 
 	private ICubicWorldClient world;
-	//private Cube blankCube;
+	private Cube blankCube;
+	private Map<CubeCoords, Cube> cubemap = new HashMap<>();
 
 	public ClientCubeCache(ICubicWorldClient world) {
 		super((World) world);
 
 		this.world = world;
-		ReflectionUtil.setFieldValueSrg(this, "field_73238_a", new BlankColumn(world, 0, 0));
-		//this.blankCube = new BlankCube(world, (Column)blankChunk);
+		ReflectionUtil.setFieldValueSrg(this, "field_73238_a", new BlankColumn(this, world, 0, 0));
+		this.blankCube = new BlankCube((Column)blankChunk);
 	}
 	
 	@Override
@@ -63,7 +68,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache, 
 
 	@Override
 	public Column loadChunk(int cubeX, int cubeZ) {
-		Column column = new Column(this.world, cubeX, cubeZ);         // make a new one
+		Column column = new Column(this, this.world, cubeX, cubeZ);   // make a new one
 		this.chunkMapping.put(ChunkPos.asLong(cubeX, cubeZ), column); // add it to the cache
 
 		// fire a forge event... make mods happy :)
@@ -80,6 +85,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache, 
 	
 	@Override
 	public void unloadCube(Cube cube) {
+		cubemap.remove(cube.getCoords());
 		cube.getColumn().removeCube(cube.getY());
 	}
 
@@ -91,16 +97,21 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache, 
 
 	@Override
 	public boolean cubeExists(CubeCoords coords) {
-		return this.cubeExists(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+		// cubes always exist on the client
+		return true;
 	}
 
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
-		return provideChunk(cubeX, cubeZ).getCube(cubeY);
+		return getCube(new CubeCoords(cubeX, cubeY, cubeZ));
 	}
 
 	public Cube getCube(CubeCoords coords) {
-		return this.getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+		Cube cube = cubemap.get(coords);
+		if(cube == null){
+			cube = blankCube;
+		}
+		return cube;
 	}
 
 	@Override

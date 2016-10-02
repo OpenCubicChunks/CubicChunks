@@ -23,13 +23,9 @@
  */
 package cubicchunks;
 
-import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubicChunkGenerator;
-import cubicchunks.worldgen.generator.custom.CustomFeatureProcessor;
-import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
-import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
+import cubicchunks.world.provider.IColumnGenerator;
+import cubicchunks.world.provider.ICubeGenerator;
 
 public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 
@@ -41,6 +37,20 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 		new CustomCubicChunksWorldType();
 	}
 
+	@Override
+	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	//TODO: Custom Cubic generator
+	/*
 	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
 		CubeProcessor terrain = new CustomTerrainProcessor(world);
 		CubeProcessor features = new CustomFeatureProcessor();
@@ -56,5 +66,5 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 				population.calculate(cube);
 			}
 		};
-	}
+	}*/
 }

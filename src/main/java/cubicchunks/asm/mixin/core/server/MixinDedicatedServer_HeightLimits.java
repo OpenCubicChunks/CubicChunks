@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.server;
 
-import cubicchunks.ICubicChunksWorldType;
+import cubicchunks.ICubicWorldType;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.world.WorldType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -62,8 +62,8 @@ public class MixinDedicatedServer_HeightLimits {
 	 */
 	@ModifyConstant(method = "startServer", constant = @Constant(intValue = 256), require = 2)
 	private int getDefaultBuildHeight(int oldValue) {
-		if (worldtype instanceof ICubicChunksWorldType) {
-			return ((ICubicChunksWorldType) worldtype).getMaximumPossibleHeight();
+		if (worldtype instanceof ICubicWorldType) {
+			return ((ICubicWorldType) worldtype).getMaximumPossibleHeight();
 		}
 		return oldValue;
 	}

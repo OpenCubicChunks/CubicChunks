@@ -24,14 +24,10 @@
 package cubicchunks.world.column;
 
 import com.google.common.base.Predicate;
-import cubicchunks.CubicChunks;
 import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.MathUtil;
 import cubicchunks.world.ClientOpacityIndex;
-import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.OpacityIndex;
@@ -44,7 +40,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -56,20 +51,16 @@ import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Column extends Chunk {
 
@@ -88,9 +79,9 @@ public class Column extends Chunk {
 		init();
 	}
 
-	public Column(ICubicWorld world, int cubeX, int cubeZ, Biome[] biomes) {
+	public Column(ICubeCache provider, ICubicWorld world, int cubeX, int cubeZ, Biome[] biomes) {
 		// NOTE: this constructor is called by the column worldgen
-		this(world, cubeX, cubeZ);
+		this(provider, world, cubeX, cubeZ);
 
 		byte[] biomeArray = super.getBiomeArray();
 		// save the biome data
@@ -474,7 +465,7 @@ public class Column extends Chunk {
 		for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 			Cube cube = getCube(cubeY); // yes, load/generate a chunk if there is none... 
 			                            // even if its not loaded there is still technical something there
-			if (cube.hasBlocks()) {
+			if (!cube.isEmpty()) {
 				return false;
 			}
 		}

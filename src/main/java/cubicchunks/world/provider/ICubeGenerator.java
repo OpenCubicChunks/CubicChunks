@@ -25,17 +25,12 @@ package cubicchunks.world.provider;
 
 import java.util.List;
 
-import cubicchunks.util.CubeCoords;
-import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.cube.CubePrimer;
-import javafx.scene.shape.Box;
 import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.Chunk;
 
 public interface ICubeGenerator {
 	
@@ -83,6 +78,7 @@ public interface ICubeGenerator {
 	 * do not use a populator.
 	 * @return an array of 2 Vec3i's defining a bounding box in cube coords
 	 */
+	//TODO: change the return type to something better
 	Vec3i[] getPopRequirment(Cube cube);
 	
 	/**

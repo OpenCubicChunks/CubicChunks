@@ -209,7 +209,7 @@ public class PlayerCubeMapEntry {
 			return;
 		}
 
-		ICubicWorld world = this.cube.getWorld();
+		ICubicWorld world = this.cube.getCubicWorld();
 
 		if (this.dirtyBlocks.size() >= ForgeModContainer.clumpingThreshold) {
 			// send whole cube

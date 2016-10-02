@@ -23,14 +23,9 @@
  */
 package cubicchunks;
 
-import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubicChunkGenerator;
-import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
-import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.ChunkProviderOverworld;
+import cubicchunks.world.provider.IColumnGenerator;
+import cubicchunks.world.provider.ICubeGenerator;
 
 
 public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
@@ -39,23 +34,21 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 		super("VanillaCubic");
 	}
 
-	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
-		final ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
-		final CubeProcessor terrainProcessor = new VanillaTerrainProcessor(world, vanillaGen);
-		final CubeProcessor populationProcessor = new VanillaPopulationProcessor(vanillaGen);
-		return new ICubicChunkGenerator() {
-			@Override public void generateTerrain(Cube cube) {
-				terrainProcessor.calculate(cube);
-				cube.initSkyLight();
-			}
-
-			@Override public void populateCube(Cube cube) {
-				populationProcessor.calculate(cube);
-			}
-		};
-	}
-
 	public static void create() {
 		new VanillaCubicChunksWorldType();
+	}
+
+	// left off... where to cubic providers come form?
+
+	@Override
+	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

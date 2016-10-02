@@ -21,35 +21,21 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen;
+package cubicchunks.world.provider;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.column.Column;
-import net.minecraft.world.biome.Biome;
+public interface ICubicWorldProvider {
 
-public class ColumnGenerator {
+	/**
+	 * Creates a new Column generator
+	 * 
+	 * @return a new Cube generator
+	 */
+	public IColumnGenerator createColumnGenerator();
 
-	private ICubicWorldServer m_worldServer;
-	private Biome[] m_biomes;
-
-	public ColumnGenerator(ICubicWorldServer worldServer) {
-		this.m_worldServer = worldServer;
-	}
-
-	public Column generateColumn(int cubeX, int cubeZ) {
-		// generate biome info. This is a hackjob.
-		this.m_biomes = this.m_worldServer.getProvider().getBiomeProvider().getBiomes(
-				this.m_biomes,
-				Coords.cubeToMinBlock(cubeX),
-				Coords.cubeToMinBlock(cubeZ),
-				16,
-				16
-		);
-
-		// TODO: generate temperature map
-		// TODO: generate rainfall map
-
-		return new Column(this.m_worldServer, cubeX, cubeZ, this.m_biomes);
-	}
+	/**
+	 * Creates a new Cube generator
+	 * 
+	 * @return a new Cube generator
+	 */
+	public ICubeGenerator createCubeGenerator();
 }

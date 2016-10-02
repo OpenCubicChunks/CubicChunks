@@ -26,7 +26,6 @@ package cubicchunks.world;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.IColumnProvider;
 import cubicchunks.world.provider.ICubeCache;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -87,11 +86,6 @@ public interface ICubicWorld {
 	 * if this is not a CubicChunks world.
 	 */
 	ICubeCache getCubeCache();
-	
-	/**
-	 * Returns the IColumnProvider. This is a more strict version of IChunkProvider
-	 */
-	IColumnProvider getColumnProvider();
 
 	/**
 	 * Returns the {@link LightingManager} for this world, or throws {@link NotCubicChunksWorldException}

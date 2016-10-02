@@ -360,7 +360,7 @@ public class CustomTerrainGenerator {
 	}
 
 	private Biome[] getBiomeMap(final Cube cube) {
-		return cube.getWorld().getProvider().getBiomeProvider().getBiomesForGeneration(this.biomes,
+		return cube.getCubicWorld().getProvider().getBiomeProvider().getBiomesForGeneration(this.biomes,
 				cube.getX()*4 - this.maxSmoothRadius, cube.getZ()*4 - this.maxSmoothRadius,
 				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
 	}

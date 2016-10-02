@@ -26,7 +26,7 @@ package cubicchunks.world.provider;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 
-//TODO: make this estend ICubeProvider (I mean... it provides Cubes right?)
+@Deprecated // Use ICubeGenerator and IColumnGenerator
 public interface ICubicChunkGenerator {
 
 	/**

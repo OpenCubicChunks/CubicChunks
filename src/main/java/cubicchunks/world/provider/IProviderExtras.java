@@ -21,35 +21,22 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen;
+package cubicchunks.world.provider;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.column.Column;
-import net.minecraft.world.biome.Biome;
+import java.util.function.Consumer;
 
-public class ColumnGenerator {
+import cubicchunks.util.CubeCoords;
+import cubicchunks.world.cube.Cube;
 
-	private ICubicWorldServer m_worldServer;
-	private Biome[] m_biomes;
+public interface IProviderExtras {
 
-	public ColumnGenerator(ICubicWorldServer worldServer) {
-		this.m_worldServer = worldServer;
-	}
+	void getColumn(int columnX, int columnZ, Requirment load, Consumer<Cube> callback);
 
-	public Column generateColumn(int cubeX, int cubeZ) {
-		// generate biome info. This is a hackjob.
-		this.m_biomes = this.m_worldServer.getProvider().getBiomeProvider().getBiomes(
-				this.m_biomes,
-				Coords.cubeToMinBlock(cubeX),
-				Coords.cubeToMinBlock(cubeZ),
-				16,
-				16
-		);
+	void getCube(CubeCoords pos, Requirment load, Consumer<Cube> callback);
+	
+	void waitOn(Consumer<Cube> callback);
 
-		// TODO: generate temperature map
-		// TODO: generate rainfall map
-
-		return new Column(this.m_worldServer, cubeX, cubeZ, this.m_biomes);
+	public enum Requirment {
+		CACHE, LOAD, GENERATE, POPULATE, LIGHT
 	}
 }

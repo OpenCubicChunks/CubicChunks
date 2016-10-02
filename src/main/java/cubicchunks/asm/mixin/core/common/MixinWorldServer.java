@@ -24,7 +24,7 @@
 package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.ICubicChunksWorldType;
+import cubicchunks.ICubicWorldType;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.ChunkGc;
@@ -33,15 +33,16 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.provider.ICubicChunkGenerator;
+import cubicchunks.world.provider.ICubicWorldProvider;
 import cubicchunks.world.provider.ServerCubeCache;
-import cubicchunks.worldgen.ColumnGenerator;
+import cubicchunks.world.provider.VanillaCubicProvider;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.ChunkProviderServer;
 
 import static cubicchunks.world.provider.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
@@ -63,8 +64,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	@Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
 	@Shadow public boolean disableLevelSaving;
 
-	private ICubicChunkGenerator cubeGenerator;
-	private ColumnGenerator columnGenerator;
 	private ChunkGc chunkGc;
 	private FirstLightProcessor firstLightProcessor;
 
@@ -78,12 +77,17 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.isCubicWorld = true;
 
 		this.entitySpawner = new CubeWorldEntitySpawner();
-		this.chunkProvider = new ServerCubeCache(this);
-		this.lightingManager = new LightingManager(this);
+		
+		if(!(this.provider instanceof ICubicWorldProvider)){ // if the provider is vanilla, wrap it
+			this.provider = new VanillaCubicProvider(this, provider,
+					((ChunkProviderServer)this.chunkProvider).chunkGenerator); // give it the old generator so it does not need to allocate a new one
+		}
 
-		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
-		this.cubeGenerator = type.createCubeGenerator(this);
-		this.columnGenerator = type.createColumnGenerator(this);
+		this.chunkProvider = new ServerCubeCache(this, 
+				((ICubicWorldProvider)this.provider).createCubeGenerator(),
+				((ICubicWorldProvider)this.provider).createColumnGenerator());
+		
+		this.lightingManager = new LightingManager(this);
 
 		this.thePlayerManager = new PlayerCubeMap(this);
 		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
@@ -124,14 +128,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 	@Override public ServerCubeCache getCubeCache() {
 		return (ServerCubeCache) this.chunkProvider;
-	}
-
-	@Override public ICubicChunkGenerator getCubeGenerator() {
-		return this.cubeGenerator;
-	}
-
-	@Override public ColumnGenerator getColumnGenerator() {
-		return this.columnGenerator;
 	}
 
 	@Override public FirstLightProcessor getFirstLightProcessor() {

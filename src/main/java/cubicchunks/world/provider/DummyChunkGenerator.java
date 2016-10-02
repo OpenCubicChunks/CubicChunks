@@ -21,30 +21,52 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.world.provider;
 
-import cubicchunks.util.AddressTools;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.provider.ICubicChunkGenerator;
-import cubicchunks.worldgen.ColumnGenerator;
+import java.util.Collections;
+import java.util.List;
 
-public interface ICubicChunksWorldType {
-	/**
-	 * Returns Y position of the bottom block in the world
-	 */
-	default int getMinimumPossibleHeight() {
-		return AddressTools.MIN_BLOCK_Y;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome.SpawnListEntry;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.EmptyChunk;
+import net.minecraft.world.chunk.IChunkGenerator;
+
+public class DummyChunkGenerator implements IChunkGenerator {
+
+	private World world;
+	
+	public DummyChunkGenerator(World world){
+		this.world = world;
+	}
+	
+	@Override
+	public Chunk provideChunk(int x, int z) {
+		return new EmptyChunk(world, x, z);
 	}
 
-	/**
-	 * Returns Y position of block above the top block in the world,
-	 */
-	default int getMaximumPossibleHeight() {
-		return AddressTools.MAX_BLOCK_Y + 1;
+	@Override
+	public void populate(int x, int z) {}
+
+	@Override
+	public boolean generateStructures(Chunk chunkIn, int x, int z) {
+		return false;
 	}
 
-	ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world);
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
+		return Collections.EMPTY_LIST;
+	}
 
-	//TODO: change return type to IChunkProvider
-	ColumnGenerator createColumnGenerator(ICubicWorldServer world);
+	@Override
+	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position) {
+		return null;
+	}
+
+	@Override
+	public void recreateStructures(Chunk chunkIn, int x, int z) {}
+
 }

@@ -34,10 +34,11 @@ public class CommonEventHandler {
 
 	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load evt) {
-		if (!(evt.getWorld().getWorldType() instanceof ICubicChunksWorldType) ||
-				evt.getWorld().provider.getDimension() != 0) {
+		if (!(evt.getWorld().getWorldType() instanceof ICubicWorldType)/* ||
+				evt.getWorld().provider.getDimension() != 0*/) {
 			return;
 		}
+
 		CubicChunks.LOGGER.info("Initializing world " + evt.getWorld() + " with type " + evt.getWorld().getWorldType());
 		ICubicWorld world = (ICubicWorld) evt.getWorld();
 		world.initCubicWorld();

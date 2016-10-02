@@ -28,10 +28,7 @@ import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
 import cubicchunks.util.AddressTools;
-import cubicchunks.util.ReflectionUtil;
-import cubicchunks.world.CubicWorldProviderSurface;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.world.DimensionType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
@@ -75,7 +72,7 @@ public class CubicChunks {
 		//for vanilla world this world provider will work the same way as vanilla world provider
 
 		//set "clazz" field
-		ReflectionUtil.setFieldValueSrg(DimensionType.OVERWORLD, "field_186077_g", CubicWorldProviderSurface.class);
+		//ReflectionUtil.setFieldValueSrg(DimensionType.OVERWORLD, "field_186077_g", CubicWorldProviderSurface.class);
 
 		this.config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
 		MinecraftForge.EVENT_BUS.register(this); // Register our config reload hook

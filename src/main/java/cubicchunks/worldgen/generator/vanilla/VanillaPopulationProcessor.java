@@ -55,7 +55,7 @@ public class VanillaPopulationProcessor implements CubeProcessor {
 			if(column.getCube(y) == null || column.getCube(y).unloaded) {
 				//doing that here should avoid population of the same chunk while loading/generating needed cubes
 				//this shouldn't really generate anything, but it may happen when world save is incomplete
-				((ServerCubeCache)cube.getWorld().getCubeCache()).loadCube(new CubeCoords(cube.getX(), y, cube.getZ()), ServerCubeCache.LoadType.LOAD_OR_GENERATE);
+				((ServerCubeCache)cube.getCubicWorld().getCubeCache()).loadCube(new CubeCoords(cube.getX(), y, cube.getZ()), ServerCubeCache.LoadType.LOAD_OR_GENERATE);
 			}
 		}
 		try {

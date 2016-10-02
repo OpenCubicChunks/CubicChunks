@@ -29,6 +29,8 @@ import cubicchunks.CubicChunks;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.IColumnGenerator;
+import cubicchunks.world.provider.ICubeGenerator;
 import cubicchunks.world.provider.ICubicChunkGenerator;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -48,6 +50,20 @@ public class DebugWorldType extends BaseCubicWorldType {
 		new DebugWorldType();
 	}
 
+	@Override
+	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	//TODO: Debug Cubic generator
+	/*
 	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
 		//TODO: move first light processor directly into cube?
 		return new ICubicChunkGenerator() {
@@ -96,4 +112,5 @@ public class DebugWorldType extends BaseCubicWorldType {
 			}
 		};
 	}
+	*/
 }

@@ -21,17 +21,29 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.provider;
+package cubicchunks;
 
-import javax.annotation.Nullable;
+import cubicchunks.util.AddressTools;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.provider.IColumnGenerator;
+import cubicchunks.world.provider.ICubeGenerator;
 
-import cubicchunks.world.column.Column;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.IChunkProvider;
+public interface ICubicWorldType {
+	/**
+	 * Returns Y position of the bottom block in the world
+	 */
+	default int getMinimumPossibleHeight() {
+		return AddressTools.MIN_BLOCK_Y;
+	}
 
-public interface IColumnProvider extends IChunkProvider {
-	@Nullable
-    Column getLoadedChunk(int x, int z); // more strictly define the return type
+	/**
+	 * Returns Y position of block above the top block in the world,
+	 */
+	default int getMaximumPossibleHeight() {
+		return AddressTools.MAX_BLOCK_Y + 1;
+	}
 
-    Column provideChunk(int x, int z);   // more strictly define the return type
+	ICubeGenerator createCubeGenerator(ICubicWorldServer world);
+	
+	IColumnGenerator createColumnGenerator(ICubicWorldServer world);
 }
