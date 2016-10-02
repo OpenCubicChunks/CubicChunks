@@ -25,6 +25,8 @@ package cubicchunks;
 
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -41,6 +43,13 @@ public class CommonEventHandler {
 
 		CubicChunks.LOGGER.info("Initializing world " + evt.getWorld() + " with type " + evt.getWorld().getWorldType());
 		ICubicWorld world = (ICubicWorld) evt.getWorld();
+
+		WorldType type = evt.getWorld().getWorldType();
+		if(type instanceof ICubicWorldType){
+			WorldProvider provider = ((ICubicWorldType)type).getReplacedProviderFor(world.getProvider());
+			world.hotSetProvider(provider);
+		}
+
 		world.initCubicWorld();
 		if(!world.isRemote()) {
 			((ICubicWorldServer)world).generateWorld();

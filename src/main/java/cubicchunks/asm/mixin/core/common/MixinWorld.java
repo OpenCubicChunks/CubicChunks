@@ -267,6 +267,13 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	@Override public WorldProvider getProvider() {
 		return this.provider;
 	}
+	
+	/**
+	 * Warning: Keep out of reach of noobs.
+	 */
+	@Override public void hotSetProvider(WorldProvider provider) {
+		this.provider = provider;
+	}
 
 	@Override public Random getRand() {
 		return this.rand;

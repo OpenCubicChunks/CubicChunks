@@ -137,21 +137,6 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 		return wp.getAverageGroundLevel();
 	}
 
-	/**
-	 * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
-	 * <p>
-	 * In EntityRenderer.updateFogColor entity Y position is multiplied by
-	 * value returned by this method.
-	 * <p>
-	 * If this method returns any real number - then the void fog factor can be <= 0.
-	 * But if this method returns NaN - the result is always NaN. And Minecraft enables void fog only of the value is < 1.
-	 * And since any comparison with NaN returns false - void fog is effectively disabled.
-	 */
-	@SideOnly(Side.CLIENT)
-	public double getVoidFogYFactor() {
-		return Double.NaN;
-	}
-
 	@SideOnly(Side.CLIENT)
 	public boolean doesXZShowFog(int x, int z) {
 		return wp.doesXZShowFog(x, z);

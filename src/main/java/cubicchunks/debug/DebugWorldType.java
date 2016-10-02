@@ -23,19 +23,15 @@
  */
 package cubicchunks.debug;
 
-import com.flowpowered.noise.module.source.Perlin;
-import cubicchunks.BaseCubicWorldType;
 import cubicchunks.CubicChunks;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.ICubicWorldType;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.cube.Cube;
 import cubicchunks.world.provider.IColumnGenerator;
 import cubicchunks.world.provider.ICubeGenerator;
-import cubicchunks.world.provider.ICubicChunkGenerator;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 
-public class DebugWorldType extends BaseCubicWorldType {
+public class DebugWorldType extends WorldType implements ICubicWorldType {
 
 	public DebugWorldType() {
 		super("DebugCubic");
@@ -60,6 +56,11 @@ public class DebugWorldType extends BaseCubicWorldType {
 	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+		return provider;
 	}
 
 	//TODO: Debug Cubic generator

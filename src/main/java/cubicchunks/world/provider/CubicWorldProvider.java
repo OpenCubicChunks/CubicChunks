@@ -23,7 +23,9 @@
  */
 package cubicchunks.world.provider;
 
+import cubicchunks.ICubicWorldType;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.provider.DummyChunkGenerator;
 import cubicchunks.world.provider.ICubicWorldProvider;
 import net.minecraft.init.Blocks;
@@ -45,12 +47,45 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		return hasNoSky ? 128 : getHeight();
 	}
 
+	/**
+	 * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
+	 * <p>
+	 * In EntityRenderer.updateFogColor entity Y position is multiplied by
+	 * value returned by this method.
+	 * <p>
+	 * If this method returns any real number - then the void fog factor can be <= 0.
+	 * But if this method returns NaN - the result is always NaN. And Minecraft enables void fog only of the value is < 1.
+	 * And since any comparison with NaN returns false - void fog is effectively disabled.
+	 */
+	@Override
+	public double getVoidFogYFactor(){
+		return Double.NaN;
+	}
+
 	@Override
 	@Deprecated
 	public IChunkGenerator createChunkGenerator() {
 		return new DummyChunkGenerator(this.worldObj);
 	}
-	
+
+	@Override
+	public ICubeGenerator createCubeGenerator() {
+		// We need to assume that its an ICubicWorldType...
+		// There is really nothing else we can do as a non-overworld porvider
+		// that works with a vanilla world type would have overriden this method.
+		return ((ICubicWorldType)this.worldObj.getWorldInfo().getTerrainType())
+				.createCubeGenerator((ICubicWorldServer)this.worldObj);
+	}
+
+	@Override
+	public IColumnGenerator createColumnGenerator() {
+		// We need to assume that its an ICubicWorldType...
+		// There is really nothing else we can do as a non-overworld porvider
+		// that works with a vanilla world type would have overriden this method.
+		return ((ICubicWorldType)this.worldObj.getWorldInfo().getTerrainType())
+				.createColumnGenerator((ICubicWorldServer)this.worldObj);
+	}
+
 	@Override
 	@Deprecated
 	public boolean canDropChunk(int x, int z) {

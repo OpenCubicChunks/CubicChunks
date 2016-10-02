@@ -40,7 +40,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
 //TODO: break off ICubeCache
-public class ClientCubeCache extends ChunkProviderClient implements ICubeCache, IColumnProvider {
+public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 	private ICubicWorldClient world;
 	private Cube blankCube;

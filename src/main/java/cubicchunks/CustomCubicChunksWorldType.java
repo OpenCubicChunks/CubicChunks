@@ -26,8 +26,10 @@ package cubicchunks;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.provider.IColumnGenerator;
 import cubicchunks.world.provider.ICubeGenerator;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 
-public class CustomCubicChunksWorldType extends BaseCubicWorldType {
+public class CustomCubicChunksWorldType extends WorldType implements ICubicWorldType {
 
 	public CustomCubicChunksWorldType() {
 		super("CustomCubic");
@@ -47,6 +49,11 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+		return provider; // TODO: Custom Nether? Custom End????
 	}
 
 	//TODO: Custom Cubic generator

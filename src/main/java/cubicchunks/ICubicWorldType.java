@@ -27,6 +27,7 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.provider.IColumnGenerator;
 import cubicchunks.world.provider.ICubeGenerator;
+import net.minecraft.world.WorldProvider;
 
 public interface ICubicWorldType {
 	/**
@@ -46,4 +47,6 @@ public interface ICubicWorldType {
 	ICubeGenerator createCubeGenerator(ICubicWorldServer world);
 	
 	IColumnGenerator createColumnGenerator(ICubicWorldServer world);
+
+	WorldProvider getReplacedProviderFor(WorldProvider provider);
 }

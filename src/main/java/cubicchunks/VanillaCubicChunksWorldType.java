@@ -26,9 +26,11 @@ package cubicchunks;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.provider.IColumnGenerator;
 import cubicchunks.world.provider.ICubeGenerator;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 
 
-public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
+public class VanillaCubicChunksWorldType extends WorldType implements ICubicWorldType {
 
 	public VanillaCubicChunksWorldType() {
 		super("VanillaCubic");
@@ -38,17 +40,18 @@ public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
 		new VanillaCubicChunksWorldType();
 	}
 
-	// left off... where to cubic providers come form?
-
 	@Override
 	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
-		// TODO Auto-generated method stub
-		return null;
+		return null; // no ICubicWorldProvider's that are going to need this
 	}
 
 	@Override
 	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
-		// TODO Auto-generated method stub
-		return null;
+		return null; // no ICubicWorldProvider's that are going to need this
+	}
+
+	@Override
+	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+		return provider; // no need to swap out providers
 	}
 }
