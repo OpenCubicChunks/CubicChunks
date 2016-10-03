@@ -672,7 +672,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		int cubeX = getX(address);
 		int cubeY = getY(address);
 		int cubeZ = getZ(address);
-		return cubeCache.cubeExists(cubeX, cubeY, cubeZ);
+		return cubeCache.getLoadedCube(cubeX, cubeY, cubeZ) != null;
 	}
 
 	public ICubicWorldServer getWorld() {

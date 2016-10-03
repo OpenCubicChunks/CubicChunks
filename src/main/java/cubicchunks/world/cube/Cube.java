@@ -75,6 +75,7 @@ public class Cube {
 
     private boolean isModified = false;
     private boolean isPopulated = false;
+    private boolean isFullyPopulated = false;
 	private boolean isInitialLightingDone = false;
 
 	private ICubicWorld world;
@@ -99,12 +100,10 @@ public class Cube {
 		this.world = column.getCubicWorld();
 		this.column = column;
 		this.coords = new CubeCoords(column.getX(), cubeY, column.getZ());
-		
+
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new HashMap<>();
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
-		
-		column.addCube(this);
 	}
 	
 	@SuppressWarnings("deprecation") // when a block is generated, does it really have any extra
@@ -115,10 +114,10 @@ public class Cube {
 		int miny = Coords.cubeToMinBlock(cubeY);
 		IOpacityIndex opindex = column.getOpacityIndex();
 
-		for (int x = 0; x < 16; ++x) {
-			for (int z = 0; z < 16; ++z) {
+		for (int x = 0; x < 16;x++) {
+			for (int z = 0; z < 16;z++) {
 
-				for (int y = 0; y < 16; ++y) {
+				for (int y = 15; y >= 0;y--) {
 					IBlockState newstate = primer.getBlockState(x, y, z);
 
 					if (newstate.getMaterial() != Material.AIR) {
@@ -142,6 +141,11 @@ public class Cube {
 
 	public IBlockState getBlockState(BlockPos pos) {
 		return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
+	}
+
+	// forward to Column, as we don't know how to do skylight and stuff
+	public IBlockState setBlockState(BlockPos pos, IBlockState newstate){
+		return column.setBlockState(pos, newstate);
 	}
 
 	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
@@ -598,6 +602,7 @@ public class Cube {
 
 	public void setClientCube() {
 		this.isPopulated = true;
+		this.isFullyPopulated = true;
 		this.isInitialLightingDone = true;
 	}
 
@@ -605,8 +610,23 @@ public class Cube {
 		this.isPopulated = populated;
 	}
 
+	public void setFullyPopulated(boolean populated) {
+		this.isFullyPopulated = populated;
+	}
+
+	/**
+	 * @return weather or not the populator has been run for this Cube or not
+	 */
 	public boolean isPopulated() {
 		return isPopulated;
+	}
+
+	/**
+	 * @return weather this Cube is fully populated or not...
+	 *         aka when even Cubes whos population effects this Cube are populated!
+	 */
+	public boolean isFullyPopulated(){
+		return this.isFullyPopulated;
 	}
 
 	public void setInitialLightingDone(boolean initialLightingDone) {

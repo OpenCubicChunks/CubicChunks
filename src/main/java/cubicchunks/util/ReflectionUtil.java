@@ -106,20 +106,21 @@ public class ReflectionUtil {
 		}
 	}
 
-	private static final Field getFieldFromSrg(Class<?> owner, String srgName) {
-		Field[] allFields = owner.getDeclaredFields();
-		Field foundField = null;
-		String name = Mappings.getNameFromSrg(srgName);
+    private static final Field getFieldFromSrg(Class<?> owner, String srgName) {
+        String name = Mappings.getNameFromSrg(srgName);
 
-		for (Field field : allFields) {
-			if (name.equals(field.getName())) {
-				foundField = field;
-				break;
-			}
-		}
-		foundField.setAccessible(true);
-		return foundField;
-	}
+        Field foundField = findFieldByName(owner, name);
+        foundField.setAccessible(true);
+        return foundField;
+    }
+
+    private static Field findFieldByName(Class<?> owner, String name) {
+        try {
+            return owner.getDeclaredField(name);
+        } catch (NoSuchFieldException e) {
+            return findFieldByName(owner.getSuperclass(), name);
+        }
+    }
 
 	private static final void removeFinalModifier(Field f) {
 		f.setAccessible(true);

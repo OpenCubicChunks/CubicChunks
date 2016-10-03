@@ -25,6 +25,8 @@ package cubicchunks.worldgen.generator;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
@@ -93,13 +95,22 @@ public interface ICubeGenerator {
 	
 	/**
 	 * Gets a list of entitys that can spawn at pos...
-	 * Used for things like skeletons and blazes spawning in nether forts.<br>
-	 * <br>
-	 * Note: {@link IColumnGenerator#getPossibleCreatures()} will take priority over this
+	 * Used for things like skeletons and blazes spawning in nether forts.
 	 * 
 	 * @param creatureType the creature type that we are interested in getting
 	 * @param pos the block position where we need to see what entitys can spawn at
 	 * @return a list of mobs that can spawn (example: nether forts return, EntityBlaze, EntityPigZombie, EntitySkeleton, EntityMagmaCube)
 	 */
 	List<Biome.SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos);
+
+	/**
+	 * Gets the closest structure with {@code name}.
+	 * This is used when an eye of ender is trying to find a stronghold.
+	 * 
+	 * @param name the name of the structure
+	 * @param pos find the structure closest to this BlockPos
+	 * @return
+	 */
+	@Nullable
+	public BlockPos getClosestStructure(String name, BlockPos pos);
 }

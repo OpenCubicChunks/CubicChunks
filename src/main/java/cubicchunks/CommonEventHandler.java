@@ -37,8 +37,7 @@ public class CommonEventHandler {
 
 	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load evt) {
-		if (!(evt.getWorld().getWorldType() instanceof ICubicWorldType)/* ||
-				evt.getWorld().provider.getDimension() != 0*/) {
+		if (!(evt.getWorld().getWorldType() instanceof ICubicWorldType)) {
 			return;
 		}
 

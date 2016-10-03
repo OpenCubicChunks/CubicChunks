@@ -26,6 +26,7 @@ package cubicchunks.world.column;
 import com.google.common.base.Predicate;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.Coords;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.util.MathUtil;
 import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.ICubicWorld;
@@ -33,10 +34,8 @@ import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.provider.ICubeCache;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.init.Blocks;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
@@ -166,89 +165,31 @@ public class Column extends Chunk {
 	//forward to cube
 	@Override
 	public IBlockState getBlockState(BlockPos pos) {
-		Cube cube = this.getCube(pos);
-		IBlockState block = Blocks.AIR.getDefaultState();
-		if (cube != null) { //TODO: if getCube() never returns null, delete lots of this code
-			block = cube.getBlockState(pos);
-		}
-		return block;
+		return this.getCube(pos).getBlockState(pos);
 	}
 
 	//forward to cube
 	@Override
 	public IBlockState getBlockState(final int blockX, final int blockY, final int blockZ) {
-		Cube cube = this.getCube(Coords.blockToLocal(blockY));
-		IBlockState block = Blocks.AIR.getDefaultState();
-		if (cube != null) { //TODO: if getCube() never returns null, delete lots of this code
-			block = cube.getBlockState(blockX, blockY, blockZ);
-		}
-		return block;
+		return this.getCube(Coords.blockToLocal(blockY)).getBlockState(blockX, blockY, blockZ);
 	}
 
-	//TODO: This method looks a lot like Cube.setBlockState() should it just forward?
 	@Override
-	public IBlockState setBlockState(BlockPos pos, @Nonnull IBlockState newBlockState) {
-		// is there a chunk for this block?
-		int cubeY = Coords.blockToCube(pos.getY());
-		// did anything change?
-		IBlockState oldBlockState = this.getBlockState(pos);
-		if (oldBlockState == newBlockState) {
-			// nothing changed
-			return null;
+	public IBlockState setBlockState(BlockPos pos, @Nonnull IBlockState newstate) {
+		Cube cube = getCube(Coords.blockToCube(pos.getY()));
+		IBlockState oldstate = cube.getBlockState(pos);
+
+		// get the old opacity for use when updating the heightmap
+		int oldOpacity = oldstate.getLightOpacity(this.getWorld(), pos);
+
+		oldstate = cube.setBlockStateDirect(pos, newstate); // forward to cube
+		if(oldstate == null){
+			return oldstate;
 		}
 
-		int oldOpacity = oldBlockState.getLightOpacity(this.getWorld(), pos);
+		this.doOnBlockSetLightUpdates(pos, newstate, oldOpacity);
 
-		Block oldBlock = oldBlockState.getBlock();
-		Block newBlock = newBlockState.getBlock();
-
-		Cube cube = getCube(cubeY);
-
-		cube.setBlockStateDirect(pos, newBlockState);
-
-		//if(oldBlock != newBlock) {
-		{
-			if (!this.getWorld().isRemote) {
-				if (oldBlock != newBlock) {
-					oldBlock.breakBlock(this.getWorld(), pos, oldBlockState);
-				}
-				TileEntity te = this.getTileEntity(pos, EnumCreateEntityType.CHECK);
-				if (te != null && te.shouldRefresh(this.getWorld(), pos, oldBlockState, newBlockState)) {
-					this.getWorld().removeTileEntity(pos);
-				}
-			} else if (oldBlock.hasTileEntity(oldBlockState)) {
-				TileEntity te = this.getTileEntity(pos, EnumCreateEntityType.CHECK);
-				if (te != null && te.shouldRefresh(this.getWorld(), pos, oldBlockState, newBlockState)) {
-					this.getWorld().removeTileEntity(pos);
-				}
-			}
-		}
-
-		if (cube.getBlockState(pos).getBlock() != newBlock) {
-			return null;
-		}
-
-		this.doOnBlockSetLightUpdates(pos, newBlockState, oldOpacity);
-
-		if (!this.getWorld().isRemote && oldBlock != newBlock) {
-			newBlock.onBlockAdded(this.getWorld(), pos, newBlockState);
-		}
-
-		if (newBlock.hasTileEntity(newBlockState)) {
-			TileEntity te = this.getTileEntity(pos, EnumCreateEntityType.CHECK);
-
-			if (te == null) {
-				te = newBlock.createTileEntity(this.getWorld(), newBlockState);
-				this.getWorld().setTileEntity(pos, te);
-			}
-
-			if (te != null) {
-				te.updateContainingBlockInfo();
-			}
-		}
-
-		this.setModified(true);
-		return oldBlockState;
+		return oldstate;
 	}
 
 	//TODO: This looks ugly idk

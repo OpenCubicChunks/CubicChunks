@@ -14,6 +14,7 @@ import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldProviderHell;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
@@ -125,7 +126,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGen
 			//generate 16 cubes at once! (also helps get the heightmap ready for population)
 			/*if(!optimizationHack){
 				optimizationHack = true;
-				for(int y = 0; y < 16; y++) {
+				for(int y = 15; y >= 0; y--) {
 					world.getCubeFromCubeCoords(cubeX, y, cubeZ);
 				}
 				optimizationHack = false;
@@ -151,10 +152,19 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGen
 	@Override
 	public void populate(Cube cube) {
 		if(cube.getY() >= 0 && cube.getY() <= 15){
-			for(int y = 0; y < 16; y++) {
+			for(int x = 0;x < 2;x++){
+				for(int z = 0;z < 2;z++){
+					for(int y = 15; y >= 0;y--) {
+						// Vanilla populators break the rules! They need to find the ground!
+						world.getCubeFromCubeCoords(cube.getX() + x, y, cube.getZ() + z);
+					}
+				}
+			}
+			for(int y = 15; y >= 0;y--) {
 				// normal populators would not do this... but we are populating more than one cube!
 				world.getCubeFromCubeCoords(cube.getX(), y, cube.getZ()).setPopulated(true);
 			}
+			//TODO: RE-ENABLE
 			vanilla.populate(cube.getX(), cube.getZ()); // ez! >:D
 		}
 	}
@@ -176,6 +186,11 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGen
 	@Override
 	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
 		return vanilla.getPossibleCreatures(creatureType, pos);
+	}
+
+	@Override
+	public BlockPos getClosestStructure(String name, BlockPos pos) {
+		return vanilla.getStrongholdGen((World)world, name, pos);
 	}
 
 }

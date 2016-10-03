@@ -30,10 +30,12 @@ import cubicchunks.server.ChunkGc;
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.provider.ICubicWorldProvider;
+import cubicchunks.world.provider.IProviderExtras;
 import cubicchunks.world.provider.VanillaCubicProvider;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
@@ -42,8 +44,6 @@ import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.ChunkProviderServer;
-
-import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
@@ -109,7 +109,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		for (int cubeX = spawnCubeX - spawnDistance; cubeX <= spawnCubeX + spawnDistance; cubeX++) {
 			for (int cubeZ = spawnCubeZ - spawnDistance; cubeZ <= spawnCubeZ + spawnDistance; cubeZ++) {
 				for (int cubeY = spawnCubeY + spawnDistance; cubeY >= spawnCubeY - spawnDistance; cubeY--) {
-					serverCubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_OR_GENERATE);
+					serverCubeCache.getCube(new CubeCoords(cubeZ, cubeY, cubeZ), IProviderExtras.Requirement.LIGHT);
 					//TODO: progress reporting
 				}
 			}

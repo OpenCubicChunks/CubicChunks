@@ -93,6 +93,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	 */
 	public Cube loadCube(Column column, int cubeY) {
 		Cube cube = new Cube(column, cubeY); // auto added to column
+		column.addCube(cube);
 		this.cubemap.put(new CubeCoords(column.getX(), cubeY, column.getZ()), cube);
 		
 		return cube;

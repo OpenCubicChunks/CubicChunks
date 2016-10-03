@@ -23,20 +23,38 @@
  */
 package cubicchunks.world.provider;
 
-import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 import cubicchunks.util.CubeCoords;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
 public interface IProviderExtras {
 
-	void getColumn(int columnX, int columnZ, Requirment load, Consumer<Cube> callback);
+	/**
+	 * Gets a Column immediately
+	 * 
+	 * @param columnX the Column's X coordinate
+	 * @param columnZ the Column's Z coordinate
+	 * @param req what the requirments are before you get the Column
+	 * @return the Column or null if no Column could be found or created
+	 */
+	@Nullable
+	Column getColumn(int columnX, int columnZ, Requirement req);
 
-	void getCube(CubeCoords pos, Requirment load, Consumer<Cube> callback);
+	/**
+	 * Gets a Cube immediately
+	 * 
+	 * @param pos the Cube's location
+	 * @param req what the requirments are before you get the Cube
+	 * @return the Cube or null if no Cube could be found or created
+	 */
+	@Nullable
+	Cube getCube(CubeCoords pos, Requirement req);
 	
-	void waitOn(Consumer<Cube> callback);
+	//void waitOn(Consumer<Cube> callback);
 
-	public enum Requirment {
+	public enum Requirement {
 		CACHE, LOAD, GENERATE, POPULATE, LIGHT
 	}
 }

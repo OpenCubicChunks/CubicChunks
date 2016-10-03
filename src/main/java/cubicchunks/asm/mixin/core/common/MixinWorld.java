@@ -79,7 +79,7 @@ import static cubicchunks.util.Coords.blockToLocal;
 public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Shadow protected IChunkProvider chunkProvider;
-	@Shadow @Final public WorldProvider provider;
+	@Shadow @Final @Mutable public WorldProvider provider;
 	@Shadow @Final public Random rand;
 	@Shadow @Final public boolean isRemote;
 	@Shadow @Final public Profiler theProfiler;

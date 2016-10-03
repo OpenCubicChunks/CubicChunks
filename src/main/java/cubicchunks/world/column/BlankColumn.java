@@ -45,7 +45,7 @@ public class BlankColumn extends Column {
 
 	public BlankColumn(ICubeCache provider, ICubicWorld world, int cubeX, int cubeZ) {
 		super(provider, world, cubeX, cubeZ);
-		this.blankCube = new BlankCube(this);
+		blankCube = new BlankCube(this);
 	}
 
 	// column overrides
