@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class ClientOpacityIndex implements IOpacityIndex {
+
 	private static final int NONE = Integer.MIN_VALUE;
 	private final Column chunk;
 	private int[] hmap;
@@ -56,6 +57,12 @@ public class ClientOpacityIndex implements IOpacityIndex {
 	@Override
 	public boolean isOpaque(int localX, int blockY, int localZ) {
 		return false;
+	}
+
+	@Override
+	public boolean isOccluded(int localX, int blockY, int localZ) {
+		Integer topY = this.getTopBlockY(localX, localZ);
+		return topY != null && blockY <= topY;
 	}
 
 	@Override
