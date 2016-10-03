@@ -26,6 +26,7 @@ package cubicchunks.server;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
 import cubicchunks.CubicChunks;
+import cubicchunks.IConfigUpdateListener;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.visibility.CubeSelector;
@@ -73,7 +74,7 @@ import static net.minecraft.util.math.MathHelper.floor_double;
  * <p>
  * This class manages loading and unloading cubes for players.
  */
-public class PlayerCubeMap extends PlayerChunkMap {
+public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListener {
 
 	private static final Predicate<EntityPlayerMP> NOT_SPECTATOR = player -> player != null && !player.isSpectator();
 	private static final Predicate<EntityPlayerMP> CAN_GENERATE_CHUNKS = player -> player != null &&
@@ -128,6 +129,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 
 	private int horizontalViewDistance;
 	private int verticalViewDistance;
+	private volatile int updatedVerticalViewDistance;
 
 	/**
 	 * This is used only to force update of all CubeWatchers every 8000 ticks
@@ -139,10 +141,21 @@ public class PlayerCubeMap extends PlayerChunkMap {
 
 	private ServerCubeCache cubeCache;
 
+	private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.DEFAULT_MAX_GENERATED_CUBES_PER_TICK;
+
 	public PlayerCubeMap(ICubicWorldServer worldServer) {
 		super((WorldServer) worldServer);
 		this.cubeCache = (ServerCubeCache) getWorldServer().getChunkProvider();
-		this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(), CubicChunks.Config.getVerticalCubeLoadDistance());
+		this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(), CubicChunks.Config.DEFAULT_VERTICAL_CUBE_LOAD_DISTANCE);
+		CubicChunks.addConfigChangeListener(this);
+	}
+
+	@Override
+	public void onConfigUpdate(CubicChunks.Config config) {
+		if(config.getVerticalCubeLoadDistance() != this.verticalViewDistance) {
+			this.updatedVerticalViewDistance = config.getVerticalCubeLoadDistance();
+		}
+		this.maxGeneratedCubesPerTick = config.getMaxGeneratedCubesPerTick();
 	}
 
 	/**
@@ -187,6 +200,9 @@ public class PlayerCubeMap extends PlayerChunkMap {
 	 */
 	@Override
 	public void tick() {
+		if(this.updatedVerticalViewDistance != this.verticalViewDistance) {
+			this.setPlayerViewDistance(getWorld().getMinecraftServer().getPlayerList().getViewDistance(), this.updatedVerticalViewDistance);
+		}
 		getWorld().getProfiler().startSection("playerCubeMapTick");
 		long currentTime = this.getWorldServer().getTotalWorldTime();
 
@@ -232,7 +248,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 		getWorld().getProfiler().endStartSection("generate");
 		if (!this.toGenerate.isEmpty()) {
 			long stopTime = System.nanoTime() + 50000000L;
-			int chunksToGenerate = CubicChunks.Config.getMaxGeneratedCubesPerTick();
+			int chunksToGenerate = maxGeneratedCubesPerTick;
 			Iterator<PlayerCubeMapEntry> iterator = this.toGenerate.iterator();
 
 			while (iterator.hasNext() && chunksToGenerate >= 0 && System.nanoTime() < stopTime) {

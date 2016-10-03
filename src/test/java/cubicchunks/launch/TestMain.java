@@ -21,38 +21,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.launch;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldServer;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
+public final class TestMain {
+	private TestMain() {}
 
-public class CommonEventHandler {
-
-	@SubscribeEvent
-	public void onWorldLoad(WorldEvent.Load evt) {
-		if (!(evt.getWorld().getWorldType() instanceof ICubicChunksWorldType) ||
-				evt.getWorld().provider.getDimension() != 0) {
-			return;
-		}
-		CubicChunks.LOGGER.info("Initializing world " + evt.getWorld() + " with type " + evt.getWorld().getWorldType());
-		ICubicWorld world = (ICubicWorld) evt.getWorld();
-		world.initCubicWorld();
-		if(!world.isRemote()) {
-			((ICubicWorldServer)world).generateWorld();
-		}
+	public static void main(String[] args) {
+		//do nothing
 	}
-
-	@SubscribeEvent
-	public void onWorldServerTick(TickEvent.WorldTickEvent evt) {
-		ICubicWorldServer world = (ICubicWorldServer) evt.world;
-		//Forge (at least version 11.14.3.1521) doesn't call this event for client world.
-		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
-			world.tickCubicWorld();
-		}
-	}
-
 }
