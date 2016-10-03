@@ -24,6 +24,7 @@
 package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.IConfigUpdateListener;
 import cubicchunks.ICubicChunksWorldType;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
@@ -76,7 +77,7 @@ import static cubicchunks.util.Coords.blockToLocal;
  */
 @Mixin(World.class)
 @Implements(@Interface(iface = ICubicWorld.class, prefix = "world$"))
-public abstract class MixinWorld implements ICubicWorld {
+public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Shadow protected IChunkProvider chunkProvider;
 	@Shadow @Final public WorldProvider provider;
@@ -92,16 +93,23 @@ public abstract class MixinWorld implements ICubicWorld {
 
 	@Override public void initCubicWorld() {
 		// Set the world height boundaries to their highest and lowest values respectively
-		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
-		this.maxHeight = type.getMaximumPossibleHeight();
-		this.minHeight = type.getMinimumPossibleHeight();
+		this.maxHeight = CubicChunks.Config.DEFAULT_MAX_WORLD_HEIGHT;
+		this.minHeight = CubicChunks.Config.DEFAULT_MIN_WORLD_HEIGHT;
+		//don't want to make world implement IConfigChangeListener
+		CubicChunks.addConfigChangeListener(this);
+	}
+	//from ConfigChangeListener
+	@Override public void onConfigUpdate(CubicChunks.Config config) {
+		//TODO: Check if the world has been already initialized?
+		this.minHeight = config.getWorldHeightLowerBound();
+		this.maxHeight = config.getWorldHeightUpperBound();
 
-		// If the configuration file contains valid boundaries, use them instead of the defaults
-		if (CubicChunks.Config.getWorldHeightLowerBound() >= type.getMinimumPossibleHeight()) {
-			this.minHeight = CubicChunks.Config.getWorldHeightLowerBound();
+		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
+		if(this.minHeight < type.getMinimumPossibleHeight()) {
+			this.minHeight = type.getMinimumPossibleHeight();
 		}
-		if (CubicChunks.Config.getWorldHeightUpperBound() <= this.maxHeight) {
-			this.maxHeight = CubicChunks.Config.getWorldHeightUpperBound();
+		if(this.maxHeight > type.getMaximumPossibleHeight()) {
+			this.maxHeight = type.getMaximumPossibleHeight();
 		}
 	}
 

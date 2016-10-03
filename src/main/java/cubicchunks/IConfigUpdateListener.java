@@ -21,44 +21,8 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.testutil;
+package cubicchunks;
 
-import cubicchunks.CubicChunks;
-import net.minecraft.init.Bootstrap;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerList;
-import org.apache.logging.log4j.LogManager;
-
-import java.util.Hashtable;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-
-//A few hacks to make tests possible
-public class MinecraftEnvironment {
-	private static boolean isInit = false;
-	/**
-	 * Does whatever is needed to initialize minecraft and mod environment
-	 */
-	public static void init() {
-		if(isInit) {
-			return;
-		}
-		isInit = true;
-		Bootstrap.register();
-		CubicChunks.LOGGER = LogManager.getLogger();
-	}
-
-	/**
-	 * Creates a fake server
-	 */
-	public static MinecraftServer createFakeServer() {
-		PlayerList playerList = mock(PlayerList.class);
-		MinecraftServer server = mock(MinecraftServer.class);
-		when(server.getPlayerList()).thenReturn(playerList);
-
-		server.worldTickTimes =new Hashtable<>();
-		return server;
-	}
+public interface IConfigUpdateListener {
+	void onConfigUpdate(CubicChunks.Config config);
 }

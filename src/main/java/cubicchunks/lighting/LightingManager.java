@@ -26,16 +26,19 @@ package cubicchunks.lighting;
 import com.carrotsearch.hppc.IntSet;
 import com.carrotsearch.hppc.cursors.IntCursor;
 import cubicchunks.CubicChunks;
+import cubicchunks.IConfigUpdateListener;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
-public class LightingManager {
+public class LightingManager implements IConfigUpdateListener {
 
 	private SkyLightCubeDiffuseProcessor skylightCubeDiffuseProcessor;
+	private int lighingTickBudget = CubicChunks.Config.DEFAULT_LIGHTING_TICK_BUDGET;
 
 	public LightingManager(ICubicWorld world) {
+		CubicChunks.addConfigChangeListener(this);
 		this.skylightCubeDiffuseProcessor = new SkyLightCubeDiffuseProcessor(world, "Sky Light Diffuse", 5);
 	}
 
@@ -63,7 +66,7 @@ public class LightingManager {
 
 	public void tick() {
 		long timeStart = System.currentTimeMillis();
-		long timeStop = timeStart + CubicChunks.Config.getLightingTickBudget();
+		long timeStop = timeStart + this.lighingTickBudget;
 
 		this.skylightCubeDiffuseProcessor.processQueueUntil(timeStop);
 	}
@@ -72,6 +75,10 @@ public class LightingManager {
 		Cube.LightUpdateData data = cube.getLightUpdateData();
 		data.queueLightUpdate(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ), minY, maxY);
 		skylightCubeDiffuseProcessor.add(cube.getAddress());
+	}
+
+	@Override public void onConfigUpdate(CubicChunks.Config config) {
+		this.lighingTickBudget = config.getLightingTickBudget();
 	}
 
 	public enum UpdateType {
