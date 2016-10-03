@@ -87,130 +87,6 @@ public class FirstLightProcessor {
 
 
 	/**
-	 * Determines if the block at the given position requires a skylight update.
-	 *
-	 * @param access a FastCubeBlockAccess providing access to the block
-	 * @param pos the block's global position
-	 * @return true if the specified block needs a skylight update, false otherwise
-	 */
-	private static boolean needsSkylightUpdate(FastCubeBlockAccess access, MutableBlockPos pos) {
-
-		// Opaque blocks don't need update. Nothing can emit skylight, and skylight can't get into them nor out of them.
-		if (access.getBlockLightOpacity(pos) >= 15) {
-			return false;
-		}
-
-		// This is the logic that world.checkLightFor uses to determine if it should continue updating.
-		// This is done here to avoid isAreaLoaded call (a lot of them quickly add up to a lot of time).
-		// It first calculates the expected skylight value of this block and then it checks the neighbors' saved values,
-		// if the saved value matches the expected value, it will be updated.
-		int computedLight = access.computeLightValue(pos);
-		for (EnumFacing facing : EnumFacing.values()) {
-			pos.move(facing);
-			int currentLight = access.getLightFor(EnumSkyBlock.SKY, pos);
-			int currentOpacity = Math.max(1, access.getBlockLightOpacity(pos));
-			pos.move(facing.getOpposite());
-
-			if (computedLight == currentLight - currentOpacity) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Determines if light in the given cube can be updated.
-	 *
-	 * @param cube the cube whose light is supposed to be updated
-	 * @return true if light in the given cube can be updated, false otherwise
-	 */
-	private static boolean canUpdateCube(Cube cube) {
-		BlockPos cubeCenter = Coords.getCubeCenter(cube);
-		return cube.getWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> true);
-	}
-
-	/**
-	 * Returns the y-coordinate of the highest occluding block in the specified block column. If there exists no such
-	 * block {@link #DEFAULT_OCCLUSION_HEIGHT} will be returned instead.
-	 *
-	 * @param column the column containing the block column
-	 * @param localX the block column's local x-coordinate
-	 * @param localZ the block column's local z-coordinate
-	 * @return the y-coordinate of the highest occluding block in the specified block column or
-	 *         {@link #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
-	 */
-	private static int getOcclusionHeight(Column column, int localX, int localZ) {
-		Integer val = column.getOpacityIndex().getTopBlockY(localX, localZ);
-		return val == null ? DEFAULT_OCCLUSION_HEIGHT : val;
-	}
-
-	/**
-	 * Returns the y-coordinate of the highest occluding block in the specified block column, that is underneath the
-	 * cube at the given y-coordinate. If there exists no such block {@link #DEFAULT_OCCLUSION_HEIGHT} will be returned
-	 * instead.
-	 *
-	 * @param column the column containing the block column
-	 * @param blockX the block column's global x-coordinate
-	 * @param blockZ the block column's global z-coordinate
-	 * @param cubeY the y-coordinate of the cube underneath which the highest occluding block is to be found
-	 * @return the y-coordinate of the highest occluding block underneath the given cube in the specified block column
-	 *         or {@link #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
-	 */
-	private static int getOcclusionHeightBelowCubeY(Column column, int blockX, int blockZ, int cubeY) {
-		IOpacityIndex index = column.getOpacityIndex();
-		Integer val = index.getTopBlockYBelow(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ), Coords.cubeToMinBlock(cubeY));
-		return val == null ? Integer.MIN_VALUE/2 : val;
-	}
-
-	/**
-	 * Determines which vertical section of the specified block column in the given cube requires a lighting update
-	 * based on the current occlusion in the cube's column.
-	 *
-	 * @param cube the cube inside of which the skylight is to be updated
-	 * @param localX the local x-coordinate of the block column
-	 * @param localZ the local z-coordinate of the block column
-	 * @return a pair containing the minimum and the maximum y-coordinate to be updated in the given cube
-	 */
-	private static ImmutablePair<Integer, Integer> getMinMaxLightUpdateY(Cube cube, int localX, int localZ) {
-
-		Column column = cube.getColumn();
-		int heightMax = getOcclusionHeight(column, localX, localZ);//==Y of the top block
-
-		// If the given cube is above the highest occluding block in the column, everything is fully lit.
-		int cubeY = cube.getY();
-		if (Coords.blockToCube(heightMax) < cubeY) {
-			return null;
-		}
-
-		int blockX = Coords.cubeToMinBlock(cube.getX()) + localX;
-		int blockZ = Coords.cubeToMinBlock(cube.getZ()) + localZ;
-
-		// If the given cube lies underneath the occluding block, it must be updated from the top down.
-		if (cubeY < Coords.blockToCube(heightMax)) {
-
-			// Determine the y-coordinate of the highest block (and its cube) occluding blocks inside of the given cube
-			// or further down.
-			int topBlockYInThisCubeOrBelow = getOcclusionHeightBelowCubeY(column, blockX, blockZ, cube.getY() + 1);
-			int topBlockCubeYInThisCubeOrBelow = Coords.blockToCube(topBlockYInThisCubeOrBelow);
-
-			// If the given cube contains the occluding block, the update can be limited down to that block.
-			if(topBlockCubeYInThisCubeOrBelow == cubeY) {
-				int heightBelowCube = getOcclusionHeightBelowCubeY(column, blockX, blockZ, cube.getY()) + 1;
-				return new ImmutablePair<>(heightBelowCube,  Coords.cubeToMaxBlock(cubeY));
-			}
-			// Otherwise, the whole height of the cube must be updated.
-			else {
-				return new ImmutablePair<>(Coords.cubeToMinBlock(cubeY), Coords.cubeToMaxBlock(cubeY));
-			}
-		}
-
-		// ... otherwise, the update must start at the occluding block.
-		int heightBelowCube = getOcclusionHeightBelowCubeY(column, blockX, blockZ, cubeY);
-		return new ImmutablePair<>(heightBelowCube, heightMax);
-	}
-
-
-	/**
 	 * Creates a new FirstLightProcessor for the given world.
 	 *
 	 * @param world the world for which the FirstLightProcessor will be used
@@ -353,4 +229,127 @@ public class FirstLightProcessor {
 		return true;
 	}
 
+
+	/**
+	 * Determines if the block at the given position requires a skylight update.
+	 *
+	 * @param access a FastCubeBlockAccess providing access to the block
+	 * @param pos the block's global position
+	 * @return true if the specified block needs a skylight update, false otherwise
+	 */
+	private static boolean needsSkylightUpdate(FastCubeBlockAccess access, MutableBlockPos pos) {
+
+		// Opaque blocks don't need update. Nothing can emit skylight, and skylight can't get into them nor out of them.
+		if (access.getBlockLightOpacity(pos) >= 15) {
+			return false;
+		}
+
+		// This is the logic that world.checkLightFor uses to determine if it should continue updating.
+		// This is done here to avoid isAreaLoaded call (a lot of them quickly add up to a lot of time).
+		// It first calculates the expected skylight value of this block and then it checks the neighbors' saved values,
+		// if the saved value matches the expected value, it will be updated.
+		int computedLight = access.computeLightValue(pos);
+		for (EnumFacing facing : EnumFacing.values()) {
+			pos.move(facing);
+			int currentLight = access.getLightFor(EnumSkyBlock.SKY, pos);
+			int currentOpacity = Math.max(1, access.getBlockLightOpacity(pos));
+			pos.move(facing.getOpposite());
+
+			if (computedLight == currentLight - currentOpacity) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Determines if light in the given cube can be updated.
+	 *
+	 * @param cube the cube whose light is supposed to be updated
+	 * @return true if light in the given cube can be updated, false otherwise
+	 */
+	private static boolean canUpdateCube(Cube cube) {
+		BlockPos cubeCenter = Coords.getCubeCenter(cube);
+		return cube.getWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> true);
+	}
+
+	/**
+	 * Returns the y-coordinate of the highest occluding block in the specified block column. If there exists no such
+	 * block {@link #DEFAULT_OCCLUSION_HEIGHT} will be returned instead.
+	 *
+	 * @param column the column containing the block column
+	 * @param localX the block column's local x-coordinate
+	 * @param localZ the block column's local z-coordinate
+	 * @return the y-coordinate of the highest occluding block in the specified block column or
+	 *         {@link #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
+	 */
+	private static int getOcclusionHeight(Column column, int localX, int localZ) {
+		Integer val = column.getOpacityIndex().getTopBlockY(localX, localZ);
+		return val == null ? DEFAULT_OCCLUSION_HEIGHT : val;
+	}
+
+	/**
+	 * Returns the y-coordinate of the highest occluding block in the specified block column, that is underneath the
+	 * cube at the given y-coordinate. If there exists no such block {@link #DEFAULT_OCCLUSION_HEIGHT} will be returned
+	 * instead.
+	 *
+	 * @param column the column containing the block column
+	 * @param blockX the block column's global x-coordinate
+	 * @param blockZ the block column's global z-coordinate
+	 * @param cubeY the y-coordinate of the cube underneath which the highest occluding block is to be found
+	 * @return the y-coordinate of the highest occluding block underneath the given cube in the specified block column
+	 *         or {@link #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
+	 */
+	private static int getOcclusionHeightBelowCubeY(Column column, int blockX, int blockZ, int cubeY) {
+		IOpacityIndex index = column.getOpacityIndex();
+		Integer val = index.getTopBlockYBelow(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ), Coords.cubeToMinBlock(cubeY));
+		return val == null ? Integer.MIN_VALUE/2 : val;
+	}
+
+	/**
+	 * Determines which vertical section of the specified block column in the given cube requires a lighting update
+	 * based on the current occlusion in the cube's column.
+	 *
+	 * @param cube the cube inside of which the skylight is to be updated
+	 * @param localX the local x-coordinate of the block column
+	 * @param localZ the local z-coordinate of the block column
+	 * @return a pair containing the minimum and the maximum y-coordinate to be updated in the given cube
+	 */
+	private static ImmutablePair<Integer, Integer> getMinMaxLightUpdateY(Cube cube, int localX, int localZ) {
+
+		Column column = cube.getColumn();
+		int heightMax = getOcclusionHeight(column, localX, localZ);//==Y of the top block
+
+		// If the given cube is above the highest occluding block in the column, everything is fully lit.
+		int cubeY = cube.getY();
+		if (Coords.blockToCube(heightMax) < cubeY) {
+			return null;
+		}
+
+		int blockX = Coords.cubeToMinBlock(cube.getX()) + localX;
+		int blockZ = Coords.cubeToMinBlock(cube.getZ()) + localZ;
+
+		// If the given cube lies underneath the occluding block, it must be updated from the top down.
+		if (cubeY < Coords.blockToCube(heightMax)) {
+
+			// Determine the y-coordinate of the highest block (and its cube) occluding blocks inside of the given cube
+			// or further down.
+			int topBlockYInThisCubeOrBelow = getOcclusionHeightBelowCubeY(column, blockX, blockZ, cube.getY() + 1);
+			int topBlockCubeYInThisCubeOrBelow = Coords.blockToCube(topBlockYInThisCubeOrBelow);
+
+			// If the given cube contains the occluding block, the update can be limited down to that block.
+			if(topBlockCubeYInThisCubeOrBelow == cubeY) {
+				int heightBelowCube = getOcclusionHeightBelowCubeY(column, blockX, blockZ, cube.getY()) + 1;
+				return new ImmutablePair<>(heightBelowCube,  Coords.cubeToMaxBlock(cubeY));
+			}
+			// Otherwise, the whole height of the cube must be updated.
+			else {
+				return new ImmutablePair<>(Coords.cubeToMinBlock(cubeY), Coords.cubeToMaxBlock(cubeY));
+			}
+		}
+
+		// ... otherwise, the update must start at the occluding block.
+		int heightBelowCube = getOcclusionHeightBelowCubeY(column, blockX, blockZ, cubeY);
+		return new ImmutablePair<>(heightBelowCube, heightMax);
+	}
 }
