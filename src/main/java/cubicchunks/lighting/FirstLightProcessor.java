@@ -30,6 +30,9 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenCustomHashMap;
+import it.unimi.dsi.fastutil.ints.IntHash;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -64,6 +67,19 @@ public class FirstLightProcessor {
 
 	private static final int DEFAULT_OCCLUSION_HEIGHT = Integer.MIN_VALUE / 2;
 
+	private static final IntHash.Strategy CUBE_Y_HASH = new IntHash.Strategy() {
+
+		@Override
+		public int hashCode(int e) {
+			return e;
+		}
+
+		@Override
+		public boolean equals(int a, int b) {
+			return a == b;
+		}
+	};
+
 
 	private final MutableBlockPos mutablePos = new MutableBlockPos();
 
@@ -77,7 +93,7 @@ public class FirstLightProcessor {
 	 * @param pos the block's global position
 	 * @return true if the specified block needs a skylight update, false otherwise
 	 */
-	private static boolean needsSkylightUpdate(FastCubeBlockAccess access, BlockPos.MutableBlockPos pos) {
+	private static boolean needsSkylightUpdate(FastCubeBlockAccess access, MutableBlockPos pos) {
 
 		// Opaque blocks don't need update. Nothing can emit skylight, and skylight can't get into them nor out of them.
 		if (access.getBlockLightOpacity(pos) >= 15) {
@@ -258,6 +274,8 @@ public class FirstLightProcessor {
 			}
 		}
 
+		Int2ObjectMap<FastCubeBlockAccess> blockAccessMap = new Int2ObjectOpenCustomHashMap<>(10, 0.75f, CUBE_Y_HASH);
+
 		Column column = cube.getColumn();
 		for (int blockX = minBlockX; blockX <= maxBlockX; blockX++) {
 			for (int blockZ = minBlockZ; blockZ <= maxBlockZ; blockZ++) {
@@ -287,7 +305,7 @@ public class FirstLightProcessor {
 					}
 
 					// Update the block column in this cube.
-					if (!diffuseSkylightInBlockColumn(otherCube, this.mutablePos, minBlockY, maxBlockY)) {
+					if (!diffuseSkylightInBlockColumn(otherCube, this.mutablePos, minBlockY, maxBlockY, blockAccessMap)) {
 						throw new IllegalStateException("Check light failed at " + this.mutablePos + "!");
 					}
 				}
@@ -305,7 +323,7 @@ public class FirstLightProcessor {
 	 * @param maxBlockY the upper bound of the section to be updated
 	 * @return true if the update was successful, false otherwise
 	 */
-	private boolean diffuseSkylightInBlockColumn(Cube cube, MutableBlockPos pos, int minBlockY, int maxBlockY) {
+	private boolean diffuseSkylightInBlockColumn(Cube cube, MutableBlockPos pos, int minBlockY, int maxBlockY, Int2ObjectMap<FastCubeBlockAccess> blockAccessMap) {
 		ICubicWorld world = cube.getWorld();
 
 		int cubeMinBlockY = Coords.cubeToMinBlock(cube.getY());
@@ -314,7 +332,11 @@ public class FirstLightProcessor {
 		int blockYMax = Math.min(cubeMaxBlockY, maxBlockY);
 		int blockYMin = Math.max(cubeMinBlockY, minBlockY);
 
-		FastCubeBlockAccess blockAccess = new FastCubeBlockAccess(this.cache, cube, UPDATE_BUFFER_RADIUS);
+		FastCubeBlockAccess blockAccess = blockAccessMap.get(cube.getY());
+		if (blockAccess == null) {
+			blockAccess = new FastCubeBlockAccess(this.cache, cube, UPDATE_BUFFER_RADIUS);
+			blockAccessMap.put(cube.getY(), blockAccess);
+		}
 
 		for (int blockY = blockYMax; blockY >= blockYMin; --blockY) {
 
