@@ -36,6 +36,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkWatchEvent;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.util.List;
 
@@ -53,7 +54,6 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 	public PlayerCubeMapColumnEntry(PlayerCubeMap playerCubeMap, int cubeX, int cubeZ) {
 		super(playerCubeMap, cubeX, cubeZ);
 		this.playerCubeMap = playerCubeMap;
-		assert this.getColumn() != null;
 	}
 
 	public ChunkPos getPos() {
@@ -74,10 +74,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 		this.getPlayers().add(player);
 
 		//always sent to players, no need to check it
-		PacketDispatcher.sendTo(new PacketColumn(this.getColumn()), player);
-		playerCubeMap.getWorldServer()
-				.getEntityTracker()
-				.sendLeashedEntitiesInChunk(player, this.getColumn());
+
 		//TODO: ChunkWatchEvent.Watch: is it implemented correctly? at the moment I'm writing it Forge doesn't have this implemented, I think it should be here:
 		MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(this.getPos(), player));
 	}
@@ -124,7 +121,18 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 	@Override
 	//actually sendToPlayers
 	public boolean sentToPlayers() {
+		if (getColumn() == null) {
+			return false;
+		}
+
 		try {
+			PacketColumn message = new PacketColumn(this.getColumn());
+			for (EntityPlayerMP player: this.getPlayers()) {
+				PacketDispatcher.sendTo(message, player);
+				playerCubeMap.getWorldServer()
+						.getEntityTracker()
+						.sendLeashedEntitiesInChunk(player, this.getColumn());
+			}
 			this.setSentToPlayers.invoke(this, true);
 		} catch (Throwable throwable) {
 			throw new RuntimeException(throwable);
@@ -157,6 +165,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 		return false;
 	}
 
+	@Nullable
 	public Column getColumn() {
 		return (Column) this.getChunk();
 	}
