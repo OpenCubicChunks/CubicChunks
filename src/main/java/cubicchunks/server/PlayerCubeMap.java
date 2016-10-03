@@ -129,6 +129,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 	private int horizontalViewDistance;
 	private int verticalViewDistance;
+	private volatile int updatedVerticalViewDistance;
 
 	/**
 	 * This is used only to force update of all CubeWatchers every 8000 ticks
@@ -140,7 +141,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 	private ServerCubeCache cubeCache;
 
-	private int maxGeneratedCubesPerTick = CubicChunks.Config.DEFAULT_MAX_GENERATED_CUBES_PER_TICK;
+	private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.DEFAULT_MAX_GENERATED_CUBES_PER_TICK;
 
 	public PlayerCubeMap(ICubicWorldServer worldServer) {
 		super((WorldServer) worldServer);
@@ -149,8 +150,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		CubicChunks.addConfigChangeListener(this);
 	}
 
+	@Override
 	public void onConfigUpdate(CubicChunks.Config config) {
-		this.setPlayerViewDistance(getWorld().getMinecraftServer().getPlayerList().getViewDistance(), config.getVerticalCubeLoadDistance());
+		if(config.getVerticalCubeLoadDistance() != this.verticalViewDistance) {
+			this.updatedVerticalViewDistance = config.getVerticalCubeLoadDistance();
+		}
 		this.maxGeneratedCubesPerTick = config.getMaxGeneratedCubesPerTick();
 	}
 
@@ -196,6 +200,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 */
 	@Override
 	public void tick() {
+		if(this.updatedVerticalViewDistance != this.verticalViewDistance) {
+			this.setPlayerViewDistance(getWorld().getMinecraftServer().getPlayerList().getViewDistance(), this.updatedVerticalViewDistance);
+		}
 		getWorld().getProfiler().startSection("playerCubeMapTick");
 		long currentTime = this.getWorldServer().getTotalWorldTime();
 

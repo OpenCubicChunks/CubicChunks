@@ -101,6 +101,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	//from ConfigChangeListener
 	@Override public void onConfigUpdate(CubicChunks.Config config) {
 		//TODO: Check if the world has been already initialized?
+		//these should not be updated while in-world
 		this.minHeight = config.getWorldHeightLowerBound();
 		this.maxHeight = config.getWorldHeightUpperBound();
 

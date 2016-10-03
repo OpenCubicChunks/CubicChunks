@@ -47,6 +47,8 @@ import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collections;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 @Mod(modid = CubicChunks.MODID, name = "CubicChunks", version = "@@VERSION@@}", guiFactory = "cubicchunks.client.GuiFactory")
@@ -64,10 +66,7 @@ public class CubicChunks {
 	@SidedProxy(clientSide = "cubicchunks.proxy.ClientProxy", serverSide = "cubicchunks.proxy.ServerProxy")
 	public static CommonProxy proxy;
 
-	/**
-	 * This is actually used as a WeakHashSet
-	 */
-	private static WeakHashMap<IConfigUpdateListener, Object> configChangeListeners = new WeakHashMap<>();
+	private static Set<IConfigUpdateListener> configChangeListeners = Collections.newSetFromMap(new WeakHashMap<>());
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
@@ -108,14 +107,14 @@ public class CubicChunks {
 	public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
 		if(eventArgs.getModID().equals(CubicChunks.MODID)) {
 			config.syncConfig();
-			for(IConfigUpdateListener l : configChangeListeners.keySet()) {
+			for(IConfigUpdateListener l : configChangeListeners) {
 				l.onConfigUpdate(config);
 			}
 		}
 	}
 
 	public static void addConfigChangeListener(IConfigUpdateListener listener) {
-		configChangeListeners.put(listener, null);
+		configChangeListeners.add(listener);
 		//notify if the config is already there
 		if(config != null) {
 			listener.onConfigUpdate(config);
@@ -159,9 +158,9 @@ public class CubicChunks {
 			if (configuration.hasChanged()) configuration.save();
 		}
 
-		public class GUI extends GuiConfig {
+		public static class GUI extends GuiConfig {
 			public GUI(GuiScreen parent) {
-				super(parent, new ConfigElement(configuration.getCategory(Configuration.CATEGORY_GENERAL)).getChildElements(), "CubicChunks", false, false, GuiConfig.getAbridgedConfigPath(configuration.toString()));
+				super(parent, new ConfigElement(config.configuration.getCategory(Configuration.CATEGORY_GENERAL)).getChildElements(), MODID, false, false, GuiConfig.getAbridgedConfigPath(config.configuration.toString()));
 			}
 		}
 

@@ -35,7 +35,7 @@ import cubicchunks.world.cube.Cube;
 public class LightingManager implements IConfigUpdateListener {
 
 	private SkyLightCubeDiffuseProcessor skylightCubeDiffuseProcessor;
-	private int lighingTickBudget = CubicChunks.Config.DEFAULT_LIGHTING_TICK_BUDGET;
+	private volatile int lighingTickBudget = CubicChunks.Config.DEFAULT_LIGHTING_TICK_BUDGET;
 
 	public LightingManager(ICubicWorld world) {
 		CubicChunks.addConfigChangeListener(this);
