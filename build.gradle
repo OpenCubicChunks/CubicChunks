@@ -122,6 +122,7 @@ jar {
 // Project repositories
 repositories {
 	mavenCentral()
+	jcenter()
 	maven
 	{
 		name 'sonatype'
@@ -135,6 +136,8 @@ dependencies {
 		exclude module: 'guava'
 	}
 	testCompile 'junit:junit:4.11'
+	testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
+	testCompile 'org.mockito:mockito-core:2.1.0-RC.2'
 
 	compile('org.spongepowered:mixin:0.5.11-SNAPSHOT') {
 		exclude module: 'launchwrapper'

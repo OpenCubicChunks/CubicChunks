@@ -24,9 +24,11 @@
 package cubicchunks;
 
 import com.google.common.collect.Lists;
+import cubicchunks.launch.LaunchWrapperTestRunner;
 import cubicchunks.util.Bits;
 import cubicchunks.world.OpacityIndex;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -35,7 +37,7 @@ import java.util.List;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-
+@RunWith(LaunchWrapperTestRunner.class)
 public class TestOpacityIndex {
 
 	private static Field YminField;
