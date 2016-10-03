@@ -127,7 +127,7 @@ public class Cube {
 						storage.set(x, y, z, newstate);
 						
 						if(newstate.getLightOpacity() != 0){
-							opindex.onOpacityChange(x, miny + x, z, newstate.getLightOpacity());
+							opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
 						}
 					}
 				}

@@ -23,6 +23,7 @@
  */
 package cubicchunks.network;
 
+import cubicchunks.util.Coords;
 import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
@@ -78,7 +79,10 @@ public class WorldEncoder {
 		boolean isEmpty = in.readBoolean();
 
 		if (!isEmpty) {
-			ExtendedBlockStorage storage = cube.getStorage();
+			ExtendedBlockStorage storage = new ExtendedBlockStorage(
+					Coords.cubeToMinBlock(cube.getY()),
+					!cube.getCubicWorld().getProvider().getHasNoSky());
+			cube.setStorage(storage);
 
 			storage.getData().read(in);
 

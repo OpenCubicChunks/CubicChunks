@@ -222,7 +222,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
 			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {
-					Cube cube = this.getCubeCache().getCube(cubeX, cubeY, cubeZ);
+					Cube cube = this.getCubeCache().getLoadedCube(cubeX, cubeY, cubeZ);
 					if (cube == null || (cubeAllowed != null && !cubeAllowed.test(cube))) {
 						return false;
 					}
@@ -254,7 +254,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Override public int getEffectiveHeight(int blockX, int blockZ) {
 		return this.chunkProvider.provideChunk(blockToCube(blockX), blockToCube(blockZ))
-				.getHeightValue(blockToLocal(blockX), blockToLocal(blockX));
+				.getHeightValue(blockToLocal(blockX), blockToLocal(blockZ));
 	}
 
 

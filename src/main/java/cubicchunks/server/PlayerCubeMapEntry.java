@@ -134,13 +134,12 @@ public class PlayerCubeMapEntry {
 
 		playerCubeMap.getWorld().getProfiler().startSection("getCube");
 		if (canGenerate) {
-			this.cubeCache.getCube(new CubeCoords(cubeX, cubeY, cubeZ), IProviderExtras.Requirement.LIGHT);
+			this.cube = this.cubeCache.getCube(new CubeCoords(cubeX, cubeY, cubeZ), IProviderExtras.Requirement.LIGHT);
 		} else {
-			this.cubeCache.getCube(new CubeCoords(cubeX, cubeY, cubeZ), IProviderExtras.Requirement.LOAD);
+			this.cube = this.cubeCache.getCube(new CubeCoords(cubeX, cubeY, cubeZ), IProviderExtras.Requirement.LOAD);
 		}
 		playerCubeMap.getWorld().getProfiler().endSection();
-		this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ);
-		playerCubeMap.getWorld().getProfiler().endSection();
+
 		return this.cube != null;
 	}
 

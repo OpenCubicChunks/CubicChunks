@@ -25,7 +25,6 @@ package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.CubeIO;
-import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
@@ -229,11 +228,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 				cube.onUnload();
 				cube.getColumn().removeCube(coords.getCubeY());
 				cubemap.remove(cube.getCoords());
-				
-				if(cube.getColumn().getLoadedCubes().contains(cube) || cubemap.containsKey(cube.getCoords())){
-					System.out.println("error2");
-				}
-				
+
 				this.cubeIO.saveCube(cube);
 			}
 		}
@@ -297,6 +292,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	@Override
 	@Nullable
 	public Cube getCube(CubeCoords coords, Requirement req){
+		if(coords.getMinBlockY() < worldServer.getMinHeight()){
+			throw new IllegalStateException("Why are you getting a Cube so low? got: " + coords);
+		}
+
 		Cube cube = getLoadedCube(coords);
 		if(req == Requirement.CACHE || 
 				(cube != null && req.compareTo(Requirement.GENERATE) <= 0)){

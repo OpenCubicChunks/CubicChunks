@@ -219,9 +219,9 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 		wp.setWeatherRenderer(renderer);
 	}
 
-	public BlockPos getRandomizedSpawnPoint() {
-		return wp.getRandomizedSpawnPoint();
-	}
+	//public BlockPos getRandomizedSpawnPoint() {
+	//	return wp.getRandomizedSpawnPoint();
+	//}
 
 	public boolean shouldMapSpin(String entity, double x, double y, double z) {
 		return wp.shouldMapSpin(entity, x, y, z);

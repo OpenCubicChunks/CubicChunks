@@ -97,7 +97,7 @@ public class IONbtReader {
 		Cube cube = readBaseCube(column, cubeX, cubeY, cubeZ, nbt, world);
 		readBlocks(nbt, world, cube);
 		readEntities(nbt, world, cube);
-		readTileEntities(column, nbt, world);
+		readTileEntities(nbt, world, cube);
 		readScheduledBlockTicks(nbt, world);
 		readLightingInfo(cube, nbt, world);
 
@@ -139,7 +139,7 @@ public class IONbtReader {
 	private static void readBlocks(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {
 		boolean isEmpty = !nbt.hasKey("Blocks");// is this an empty cube?
 		if (!isEmpty) {
-			ExtendedBlockStorage ebs = new ExtendedBlockStorage(cube.getY(), !cube.getCubicWorld().getProvider().getHasNoSky());
+			ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), !cube.getCubicWorld().getProvider().getHasNoSky());
             
 			byte[] abyte = nbt.getByteArray("Blocks");
             NibbleArray data = new NibbleArray(nbt.getByteArray("Data"));
@@ -177,7 +177,7 @@ public class IONbtReader {
 		});
 	}
 
-	private static void readTileEntities(Column column, NBTTagCompound nbt, ICubicWorldServer world) {// tile entities
+	private static void readTileEntities(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {// tile entities
 		NBTTagList nbtTileEntities = nbt.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
 		if (nbtTileEntities == null) {
 			return;
@@ -187,7 +187,7 @@ public class IONbtReader {
 			//TileEntity.create
 			TileEntity blockEntity = TileEntity.create((World) world, nbtTileEntity);
 			if (blockEntity != null) {
-				column.addTileEntity(blockEntity);
+				cube.addTileEntity(blockEntity);
 			}
 		}
 	}

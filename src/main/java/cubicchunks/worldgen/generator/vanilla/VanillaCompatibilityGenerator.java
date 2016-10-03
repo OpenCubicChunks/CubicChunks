@@ -9,9 +9,11 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import net.minecraft.block.BlockColored;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
@@ -108,7 +110,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGen
 	public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
 		CubePrimer primer = new CubePrimer();
 		
-		if(cubeY >= 0){
+		if(cubeY < 0){
 			for(int x = 0;x < Coords.CUBE_MAX_X;x++){
 				for(int y = 0;y < Coords.CUBE_MAX_Y;y++){
 					for(int z = 0;z < Coords.CUBE_MAX_Z;z++){
@@ -116,7 +118,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGen
 					}
 				}
 			}
-		}else if(cubeY <= 15){
+		}else if(cubeY > 15){
 			// over block?
 		}else{
 			if(lastChunk.xPosition != cubeX || lastChunk.zPosition != cubeZ){
@@ -164,7 +166,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGen
 				// normal populators would not do this... but we are populating more than one cube!
 				world.getCubeFromCubeCoords(cube.getX(), y, cube.getZ()).setPopulated(true);
 			}
-			//TODO: RE-ENABLE
+
 			vanilla.populate(cube.getX(), cube.getZ()); // ez! >:D
 		}
 	}

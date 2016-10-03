@@ -30,9 +30,14 @@ import cubicchunks.world.type.ICubicWorldType;
 import cubicchunks.worldgen.generator.DummyChunkGenerator;
 import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.GameType;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkGenerator;
 
 /**
@@ -41,7 +46,7 @@ import net.minecraft.world.chunk.IChunkGenerator;
 public abstract class CubicWorldProvider extends WorldProvider implements ICubicWorldProvider{
 	@Override
 	public int getHeight() {
-		return ((ICubicWorld) this.worldObj).getMaxHeight();
+		return getCubicWorld().getMaxHeight();
 	}
 
 	@Override
@@ -75,7 +80,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		// We need to assume that its an ICubicWorldType...
 		// There is really nothing else we can do as a non-overworld porvider
 		// that works with a vanilla world type would have overriden this method.
-		return ((ICubicWorldType)this.worldObj.getWorldInfo().getTerrainType())
+		return ((ICubicWorldType)this.worldObj.getWorldType())
 				.createCubeGenerator((ICubicWorldServer)this.worldObj);
 	}
 
@@ -84,7 +89,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		// We need to assume that its an ICubicWorldType...
 		// There is really nothing else we can do as a non-overworld porvider
 		// that works with a vanilla world type would have overriden this method.
-		return ((ICubicWorldType)this.worldObj.getWorldInfo().getTerrainType())
+		return ((ICubicWorldType)this.worldObj.getWorldType())
 				.createColumnGenerator((ICubicWorldServer)this.worldObj);
 	}
 
@@ -104,7 +109,48 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 
 	@Override
 	public BlockPos getRandomizedSpawnPoint() {
-		//TODO: DONT USE World.getTopSolidOrLiquidBlock()
-		return super.getRandomizedSpawnPoint();
+		//TODO: uses getTopSolidOrLiquidBlock() ... not good
+		BlockPos ret = this.worldObj.getSpawnPoint();
+
+        boolean isAdventure = worldObj.getWorldInfo().getGameType() == GameType.ADVENTURE;
+        int spawnFuzz = this.worldObj instanceof WorldServer ? worldObj.getWorldType().getSpawnFuzz((WorldServer)this.worldObj, this.worldObj.getMinecraftServer()) : 1;
+        int border = MathHelper.floor_double(worldObj.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
+        if (border < spawnFuzz) spawnFuzz = border;
+
+        if (!getHasNoSky() && !isAdventure && spawnFuzz != 0)
+        {
+            if (spawnFuzz < 2) spawnFuzz = 2;
+            int spawnFuzzHalf = spawnFuzz / 2;
+            ret = getTSOLBFixed(ret.add(worldObj.rand.nextInt(spawnFuzzHalf) - spawnFuzz, 0, worldObj.rand.nextInt(spawnFuzzHalf) - spawnFuzz));
+        }
+
+        return ret;
+	}
+	
+	private BlockPos getTSOLBFixed(BlockPos pos)
+    {
+        Chunk chunk = worldObj.getChunkFromBlockCoords(pos);
+        BlockPos blockpos;
+        BlockPos blockpos1;
+        
+        int startY = chunk.getHeight(pos);
+        startY = startY < getCubicWorld().getMinHeight() ? 80 : startY;
+
+        for (blockpos = new BlockPos(pos.getX(), startY, pos.getZ()); blockpos.getY() >= 0; blockpos = blockpos1)
+        {
+            blockpos1 = blockpos.down();
+            IBlockState state = chunk.getBlockState(blockpos1);
+
+            if (state.getMaterial().blocksMovement() && !state.getBlock().isLeaves(state, worldObj, blockpos1) && !state.getBlock().isFoliage(worldObj, blockpos1))
+            {
+                break;
+            }
+        }
+
+        return blockpos;
+    }
+	
+	public ICubicWorld getCubicWorld(){
+		return (ICubicWorld)worldObj;
 	}
 }
