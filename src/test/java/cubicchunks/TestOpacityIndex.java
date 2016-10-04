@@ -24,9 +24,11 @@
 package cubicchunks;
 
 import com.google.common.collect.Lists;
+import cubicchunks.launch.LaunchWrapperTestRunner;
 import cubicchunks.util.Bits;
 import cubicchunks.world.OpacityIndex;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -35,7 +37,7 @@ import java.util.List;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-
+@RunWith(LaunchWrapperTestRunner.class)
 public class TestOpacityIndex {
 
 	private static Field YminField;
@@ -44,11 +46,11 @@ public class TestOpacityIndex {
 
 	static {
 		try {
-			YminField = OpacityIndex.class.getDeclaredField("m_ymin");
+			YminField = OpacityIndex.class.getDeclaredField("ymin");
 			YminField.setAccessible(true);
-			YmaxField = OpacityIndex.class.getDeclaredField("m_ymax");
+			YmaxField = OpacityIndex.class.getDeclaredField("ymax");
 			YmaxField.setAccessible(true);
-			SegmentsField = OpacityIndex.class.getDeclaredField("m_segments");
+			SegmentsField = OpacityIndex.class.getDeclaredField("segments");
 			SegmentsField.setAccessible(true);
 		} catch (NoSuchFieldException | SecurityException ex) {
 			throw new Error(ex);

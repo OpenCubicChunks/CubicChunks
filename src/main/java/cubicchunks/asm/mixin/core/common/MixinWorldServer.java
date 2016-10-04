@@ -93,8 +93,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.saveHandler = new CubicChunksSaveHandler(this, this.getSaveHandler());
 
 		this.firstLightProcessor = new FirstLightProcessor(this);
-
-		this.generateWorld();
 	}
 
 	@Override public void generateWorld() {

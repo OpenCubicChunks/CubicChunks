@@ -57,7 +57,7 @@ public class ChunkGc {
 	private void chunkGc() {
 		for (Chunk chunk : cubeCache.getLoadedChunks()) {
 			Column column = (Column) chunk;
-			Collection<Cube> cubes = column.getAllCubes();
+			Collection<Cube> cubes = column.getLoadedCubes();
 			cubes.stream().filter(c -> !cubeMap.contains(c.getCoords())).forEach(cubeCache::unloadCube);
 			if(!cubeMap.contains(column.getX(), column.getZ())) {
 				cubeCache.unloadColumn(column);

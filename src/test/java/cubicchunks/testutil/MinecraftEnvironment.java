@@ -21,38 +21,44 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.testutil;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldServer;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
+import cubicchunks.CubicChunks;
+import net.minecraft.init.Bootstrap;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.PlayerList;
+import org.apache.logging.log4j.LogManager;
 
-public class CommonEventHandler {
+import java.util.Hashtable;
 
-	@SubscribeEvent
-	public void onWorldLoad(WorldEvent.Load evt) {
-		if (!(evt.getWorld().getWorldType() instanceof ICubicChunksWorldType) ||
-				evt.getWorld().provider.getDimension() != 0) {
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+
+//A few hacks to make tests possible
+public class MinecraftEnvironment {
+	private static boolean isInit = false;
+	/**
+	 * Does whatever is needed to initialize minecraft and mod environment
+	 */
+	public static void init() {
+		if(isInit) {
 			return;
 		}
-		CubicChunks.LOGGER.info("Initializing world " + evt.getWorld() + " with type " + evt.getWorld().getWorldType());
-		ICubicWorld world = (ICubicWorld) evt.getWorld();
-		world.initCubicWorld();
-		if(!world.isRemote()) {
-			((ICubicWorldServer)world).generateWorld();
-		}
+		isInit = true;
+		Bootstrap.register();
+		CubicChunks.LOGGER = LogManager.getLogger();
 	}
 
-	@SubscribeEvent
-	public void onWorldServerTick(TickEvent.WorldTickEvent evt) {
-		ICubicWorldServer world = (ICubicWorldServer) evt.world;
-		//Forge (at least version 11.14.3.1521) doesn't call this event for client world.
-		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
-			world.tickCubicWorld();
-		}
-	}
+	/**
+	 * Creates a fake server
+	 */
+	public static MinecraftServer createFakeServer() {
+		PlayerList playerList = mock(PlayerList.class);
+		MinecraftServer server = mock(MinecraftServer.class);
+		when(server.getPlayerList()).thenReturn(playerList);
 
+		server.worldTickTimes =new Hashtable<>();
+		return server;
+	}
 }

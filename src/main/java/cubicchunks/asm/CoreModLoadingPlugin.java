@@ -35,9 +35,7 @@ import java.util.Map;
 public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
 
 	public CoreModLoadingPlugin() {
-		MixinBootstrap.init();
-		Mixins.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
-		Mixins.addConfiguration("cubicchunks.mixins.core.json");
+		initMixin();
 	}
 
 	@Override
@@ -61,5 +59,11 @@ public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
 	@Override
 	public String getAccessTransformerClass() {
 		return null;
+	}
+
+	public static void initMixin() {
+		MixinBootstrap.init();
+		Mixins.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
+		Mixins.addConfiguration("cubicchunks.mixins.core.json");
 	}
 }

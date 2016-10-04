@@ -61,6 +61,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Cube {
 
+	public static final int SIZE = 16;
+
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 
 	//used to track if the cube should be unloaded or not, done instead of removing cube from
@@ -92,6 +94,7 @@ public class Cube {
 		this.coords = new CubeCoords(x, y, z);
 		this.isModified = isModified;
 
+		// TODO: let storage be null in an empty chunk (just like vanilla's Chunk does)
 		this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(y), !world.getProvider().getHasNoSky());
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new HashMap<>();
