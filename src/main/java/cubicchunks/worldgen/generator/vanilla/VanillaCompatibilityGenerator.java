@@ -166,8 +166,39 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGen
 				// normal populators would not do this... but we are populating more than one cube!
 				world.getCubeFromCubeCoords(cube.getX(), y, cube.getZ()).setPopulated(true);
 			}
+			
+			boolean flag = false;
+			for(int x = Coords.cubeToMinBlock(cube.getX()) + 31;x >= Coords.cubeToMinBlock(cube.getX());x--){
+				for(int z = Coords.cubeToMinBlock(cube.getZ()) + 31;z >= Coords.cubeToMinBlock(cube.getZ());z--){
+					if(world.getEffectiveHeight(x, z) < 0){
+						flag = true;
+					}
+				}
+			}
 
-			vanilla.populate(cube.getX(), cube.getZ()); // ez! >:D
+			if(flag){
+				System.err.println("HEIGHT MAP INCONSISTANCY IN VANILLA at: " + Coords.cubeToMinBlock(cube.getX()) + ", " + Coords.cubeToMinBlock(cube.getZ()));
+				for(int x = Coords.cubeToMinBlock(cube.getX()) + 31;x >= Coords.cubeToMinBlock(cube.getX());x--){
+					for(int z = Coords.cubeToMinBlock(cube.getZ()) + 31;z >= Coords.cubeToMinBlock(cube.getZ());z--){
+						if(world.getEffectiveHeight(x, z) >= 0){
+							world.setBlockState(new BlockPos(x, world.getEffectiveHeight(x, z), z),
+									Blocks.GLASS.getDefaultState(), 2);
+						}else{
+							int y = 140;
+							for(;y > 0;y--){
+								if(world.getBlockState(new BlockPos(x, y, z)).getBlock() != Blocks.AIR){
+									y++;
+									break;
+								}
+							}
+							world.setBlockState(new BlockPos(x, world.getEffectiveHeight(x, z), z),
+									Blocks.WOOL.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.RED), 2);
+						}
+					}
+				}
+			}else{
+				vanilla.populate(cube.getX(), cube.getZ()); // ez! >:D
+			}
 		}
 	}
 

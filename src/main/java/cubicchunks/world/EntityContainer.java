@@ -39,10 +39,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+//TODO: Have xcube review this class... I dont trust it
 public class EntityContainer {
 
 	private ClassInheritanceMultiMap<Entity> entities;
-	private boolean hasActiveEntities;
+	private boolean hasActiveEntities; //TODO: hasActiveEntitys is like an isModifyed right?
 	private long lastSaveTime;
 
 	public EntityContainer() {

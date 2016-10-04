@@ -26,7 +26,6 @@ package cubicchunks.world.column;
 import com.google.common.base.Predicate;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.Coords;
-import cubicchunks.util.CubeCoords;
 import cubicchunks.util.MathUtil;
 import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.ICubicWorld;
@@ -44,7 +43,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -76,19 +74,6 @@ public class Column extends Chunk {
 		this.provider = provider;
 		this.world = world;
 		init();
-	}
-
-	public Column(ICubeCache provider, ICubicWorld world, int cubeX, int cubeZ, Biome[] biomes) {
-		// NOTE: this constructor is called by the column worldgen
-		this(provider, world, cubeX, cubeZ);
-
-		byte[] biomeArray = super.getBiomeArray();
-		// save the biome data
-		for (int i = 0; i < biomes.length; i++) {
-			biomeArray[i] = (byte) Biome.getIdForBiome(biomes[i]);
-		}
-
-		super.setModified(true);
 	}
 
 	//=================================================
@@ -206,6 +191,8 @@ public class Column extends Chunk {
 		// did the top non-transparent block change?
 		int oldSkylightY = getHeightValue(localX, localZ);
 		this.opacityIndex.onOpacityChange(localX, pos.getY(), localZ, newOpacity);
+		setModified(true);
+
 		int newSkylightY = oldSkylightY;
 		if (!getWorld().isRemote) {
 			newSkylightY = getHeightValue(localX, localZ);

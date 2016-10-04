@@ -127,12 +127,14 @@ public class Cube {
 						storage.set(x, y, z, newstate);
 						
 						if(newstate.getLightOpacity() != 0){
+							column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe OpacityIndex needs its own isModified
 							opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
 						}
 					}
 				}
 			}
 		}
+		isModified = true;
 	}
 
 	//======================================
@@ -281,8 +283,6 @@ public class Cube {
 			default:
 				return lightType.defaultLightValue;
 		}
-		
-		
 	}
 
 	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {
@@ -608,10 +608,12 @@ public class Cube {
 
 	public void setPopulated(boolean populated) {
 		this.isPopulated = populated;
+		this.isModified = true;
 	}
 
 	public void setFullyPopulated(boolean populated) {
 		this.isFullyPopulated = populated;
+		this.isModified = true;
 	}
 
 	/**
@@ -631,6 +633,7 @@ public class Cube {
 
 	public void setInitialLightingDone(boolean initialLightingDone) {
 		this.isInitialLightingDone = initialLightingDone;
+		this.isModified = true;
 	}
 
 	public boolean isInitialLightingDone() {
