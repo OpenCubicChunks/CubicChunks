@@ -207,7 +207,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	}
 
 	@Override
-	public boolean testForCubes(CubeCoords start, CubeCoords end, @Nullable Predicate<Cube> cubeAllowed) {
+	public boolean testForCubes(CubeCoords start, CubeCoords end, Predicate<Cube> cubeAllowed) {
 		if (wgenFullRelight) {
 			return true;
 		}
@@ -223,7 +223,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {
 					Cube cube = this.getCubeCache().getLoadedCube(cubeX, cubeY, cubeZ);
-					if (cube == null || (cubeAllowed != null && !cubeAllowed.test(cube))) {
+					if (!cubeAllowed.test(cube)) {
 						return false;
 					}
 				}

@@ -254,10 +254,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			while (iterator.hasNext() && chunksToGenerate >= 0 && System.nanoTime() < stopTime) {
 				PlayerCubeMapEntry watcher = iterator.next();
 				long address = watcher.getCubeAddress();
+
 				getWorld().getProfiler()
 						.startSection("chunk[" + getX(address) + "," + getY(address) + "," + getZ(address) + "]");
-				if (watcher.getCube() == null) {
-					boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
+				boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
+				if (watcher.getCube() == null || (canGenerate && !watcher.getCube().isFullyPopulated())) {
 					getWorld().getProfiler().startSection("generate");
 					boolean success = watcher.providePlayerCube(canGenerate);
 					getWorld().getProfiler().endSection();
@@ -327,11 +328,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			// make a new watcher
 			cubeWatcher = new PlayerCubeMapEntry(this, cubeX, cubeY, cubeZ);
 			this.cubeWatchers.put(cubeAddress, cubeWatcher);
-			if (cubeWatcher.getCube() == null) {
-				this.toGenerate.add(cubeWatcher);
-			}
 			if (!cubeWatcher.isSentToPlayers()) {
 				this.toSendToClient.add(cubeWatcher);
+			}
+			if (cubeWatcher.getCube() == null ||  
+					!cubeWatcher.getCube().isFullyPopulated() || 
+					!cubeWatcher.getCube().isInitialLightingDone()) {
+				this.toGenerate.add(cubeWatcher);
 			}
 		}
 		return cubeWatcher;

@@ -125,9 +125,6 @@ public class PlayerCubeMapEntry {
 	}
 
 	public boolean providePlayerCube(boolean canGenerate) {
-		if (this.cube != null) {
-			return true;
-		}
 		int cubeX = getX(cubeAddress);
 		int cubeY = getY(cubeAddress);
 		int cubeZ = getZ(cubeAddress);

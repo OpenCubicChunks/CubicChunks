@@ -374,6 +374,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		}
 		
 		//And Requirement said "Let there be LIGHT" and there was... no light because TODO: populate light
+		cube.setInitialLightingDone(true);
 		
 		return cube;
 	}

@@ -282,7 +282,7 @@ public class FirstLightProcessor {
 	 */
 	private static boolean canUpdateCube(Cube cube) {
 		BlockPos cubeCenter = getCubeCenter(cube);
-		return cube.getCubicWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> c == null);
+		return cube.getCubicWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> c != null);
 	}
 
 	/**

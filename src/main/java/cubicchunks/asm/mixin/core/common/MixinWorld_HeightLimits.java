@@ -169,11 +169,13 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 		if (!this.isCubicWorld()) {
 			return;
 		}
-		boolean ret = this.testForCubes(
-				xStart, yStart, zStart,
-				xEnd, yEnd, zEnd,
-				cube -> (allowEmpty || !(cube instanceof BlankCube))
-		);
+
+		boolean ret = (this.isRemote() && allowEmpty) || // on the client all cubes count as loaded if allowEmpty
+				this.testForCubes(
+						xStart, yStart, zStart,
+						xEnd, yEnd, zEnd,
+						cube -> cube != null);
+
 		cbi.cancel();
 		cbi.setReturnValue(ret);
 	}

@@ -30,8 +30,11 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
 public interface ICubeCache {
+	
+	@Nullable
 	Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
 
+	@Nullable
 	Cube getLoadedCube(CubeCoords coords);
 
 	Cube getCube(int cubeX, int cubeY, int cubeZ);

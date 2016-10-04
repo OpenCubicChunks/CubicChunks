@@ -115,9 +115,9 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 	@Override
 	public Cube getCube(CubeCoords coords) {
-		Cube cube = cubemap.get(coords);
+		Cube cube = getLoadedCube(coords);
 		if(cube == null){
-			cube = blankCube;
+			return blankCube;
 		}
 		return cube;
 	}
