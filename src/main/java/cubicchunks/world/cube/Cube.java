@@ -192,6 +192,22 @@ public class Cube {
 		}
 	}
 
+	public void setSkylight(int localX, int localY, int localZ, int value) {
+		this.isModified = true;
+
+		if (!this.world.getProvider().getHasNoSky()) {
+			this.storage.setExtSkylightValue(localX, localY, localZ, value);
+		}
+	}
+
+	public int getSkylight(int localX, int localY, int localZ) {
+		if (this.world.getProvider().getHasNoSky()) {
+			return 0;
+		}
+		return this.storage.getExtSkylightValue(localX, localY, localZ);
+	}
+
+
 	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
 		// get sky light
 		int skyLight = getLightFor(EnumSkyBlock.SKY, pos);
@@ -341,9 +357,8 @@ public class Cube {
 			return;
 		}
 		//client cubes (setClientCube) are always fully generated, isInitialLightingDone is never false
-		if(((ICubicWorldServer)this.world).getFirstLightProcessor().diffuseSkylight(this)) {
-			this.isInitialLightingDone = true;
-		}
+		((ICubicWorldServer)this.world).getFirstLightProcessor().diffuseSkylight(this);
+		this.isInitialLightingDone = true;
 	}
 
 	//=================================
@@ -519,7 +534,7 @@ public class Cube {
 	 * Lights up all blocks that will definitely be lit. It's faster than using world.checkLightFor on everything.
 	 */
 	public void initSkyLight() {
-		((ICubicWorldServer)this.getWorld()).getFirstLightProcessor().earlySkylightMap(this);
+		((ICubicWorldServer)this.getWorld()).getFirstLightProcessor().initializeSkylight(this);
 	}
 
 	public static class LightUpdateData {
