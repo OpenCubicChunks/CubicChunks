@@ -9,6 +9,7 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
@@ -34,8 +35,6 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGen
 
 	private Chunk lastChunk;
 	private boolean optimizationHack;
-
-	private Biome[] biomes;
 
 	private boolean stripBadrock;
 	private IBlockState badrock = Blocks.BEDROCK.getDefaultState();
@@ -81,22 +80,21 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGen
 		}
 	}
 
+	private Biome[] biomes;
 	@Override
-	public Column generateColumn(Column column) {
+	public void generateColumn(Column column) {
 		
 		this.biomes = this.world.getBiomeProvider()
 				.getBiomes(this.biomes, 
 						Coords.cubeToMinBlock(column.getX()),
 						Coords.cubeToMinBlock(column.getZ()),
-						16, 16);
+						Coords.CUBE_MAX_X, Coords.CUBE_MAX_Z);
 		
 		byte[] abyte = column.getBiomeArray();
         for (int i = 0; i < abyte.length; ++i)
         {
             abyte[i] = (byte)Biome.getIdForBiome(this.biomes[i]);
         }
-		
-		return column;
 	}
 
 	@Override
@@ -105,7 +103,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGen
 	}
 
 	@Override
-	public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+	public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
 		CubePrimer primer = new CubePrimer();
 		
 		if(cubeY < 0){

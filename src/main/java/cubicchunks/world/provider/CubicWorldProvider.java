@@ -23,7 +23,6 @@
  */
 package cubicchunks.world.provider;
 
-import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.provider.ICubicWorldProvider;
 import cubicchunks.world.type.ICubicWorldType;
@@ -81,7 +80,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		// There is really nothing else we can do as a non-overworld porvider
 		// that works with a vanilla world type would have overriden this method.
 		return ((ICubicWorldType)this.worldObj.getWorldType())
-				.createCubeGenerator((ICubicWorldServer)this.worldObj);
+				.createCubeGenerator(getCubicWorld());
 	}
 
 	@Override
@@ -90,7 +89,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		// There is really nothing else we can do as a non-overworld porvider
 		// that works with a vanilla world type would have overriden this method.
 		return ((ICubicWorldType)this.worldObj.getWorldType())
-				.createColumnGenerator((ICubicWorldServer)this.worldObj);
+				.createColumnGenerator(getCubicWorld());
 	}
 
 	@Override
@@ -150,7 +149,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
         return blockpos;
     }
 	
-	public ICubicWorld getCubicWorld(){
-		return (ICubicWorld)worldObj;
+	public ICubicWorldServer getCubicWorld(){
+		return (ICubicWorldServer)worldObj;
 	}
 }

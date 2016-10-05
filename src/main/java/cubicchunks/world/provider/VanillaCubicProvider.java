@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.provider.CubicWorldProvider;
+import cubicchunks.world.type.ICubicWorldType;
 import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
@@ -46,15 +47,18 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class VanillaCubicProvider extends CubicWorldProvider {
 
 	private WorldProvider wp;
-	private IChunkGenerator reuseGen;
-	
+
 	private VanillaCompatibilityGenerator compatGen;
 
 	public VanillaCubicProvider(ICubicWorld world, WorldProvider provider, IChunkGenerator reUse) {
 		this.wp = provider;
-		this.reuseGen = reUse;
-
 		this.worldObj = (World) world;
+
+		if(!(worldObj.getWorldType() instanceof ICubicWorldType)){
+			compatGen = new VanillaCompatibilityGenerator(
+							reUse == null ? wp.createChunkGenerator() : reUse,
+							world);
+		}
 	}
 
 	public VanillaCubicProvider(ICubicWorld world, WorldProvider provider) {
@@ -63,32 +67,23 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 
 	@Override
 	public IColumnGenerator createColumnGenerator() {
-		if (reuseGen == null) {
-			reuseGen = wp.createChunkGenerator();
-		}
-		if(compatGen == null){
-			compatGen = new VanillaCompatibilityGenerator(reuseGen, (ICubicWorld)worldObj);
+		if (compatGen == null) {
+			return ((ICubicWorldType)worldObj.getWorldType()).createColumnGenerator(getCubicWorld());
 		}
 		return compatGen;
 	}
 
 	@Override
 	public ICubeGenerator createCubeGenerator() {
-		if (reuseGen == null) {
-			reuseGen = wp.createChunkGenerator();
-		}
-		if(compatGen == null){
-			compatGen = new VanillaCompatibilityGenerator(reuseGen, (ICubicWorld)worldObj);
+		if (compatGen == null) {
+			return ((ICubicWorldType)worldObj.getWorldType()).createCubeGenerator(getCubicWorld());
 		}
 		return compatGen;
 	}
 
 	@SuppressWarnings("deprecation")
 	public IChunkGenerator createChunkGenerator() {
-		if (reuseGen == null) {
-			reuseGen = wp.createChunkGenerator();
-		}
-		return reuseGen;
+		return wp.createChunkGenerator(); // Just in case a mod wants it (I cant think of why any would need to do this)
 	}
 
 	public boolean canCoordinateBeSpawn(int x, int z) {

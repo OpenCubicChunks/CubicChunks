@@ -402,7 +402,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			return null;
 		}
 		
-		column = columnGen.generateColumn(new Column(this, worldServer, columnX, columnZ));
+		column = new Column(this, worldServer, columnX, columnZ);
+		columnGen.generateColumn(column);
 		
 		id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), column);
 		column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just generated

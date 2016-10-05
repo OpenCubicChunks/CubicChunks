@@ -23,43 +23,112 @@
  */
 package cubicchunks.worldgen.generator.flat;
 
-import cubicchunks.util.processor.CubeProcessor;
+import java.util.List;
+
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.CubePrimer;
+import cubicchunks.worldgen.generator.IColumnGenerator;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.ICubePrimer;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biome.SpawnListEntry;
 
-public class FlatTerrainProcessor implements CubeProcessor {
+public class FlatTerrainProcessor implements ICubeGenerator, IColumnGenerator {
 
-	@Override public void calculate(Cube cube) {
-		if (cube.getY() >= 0) {
-			return;
+	private ICubicWorld world;
+	
+	public FlatTerrainProcessor(ICubicWorld world){
+		this.world = world;
+	}
+	private Biome[] biomes;
+	@Override
+	public void generateColumn(Column column) {
+		
+		this.biomes = this.world.getBiomeProvider()
+				.getBiomes(this.biomes, 
+						Coords.cubeToMinBlock(column.getX()),
+						Coords.cubeToMinBlock(column.getZ()),
+						Coords.CUBE_MAX_X, Coords.CUBE_MAX_Z);
+		
+		byte[] abyte = column.getBiomeArray();
+        for (int i = 0; i < abyte.length; ++i)
+        {
+            abyte[i] = (byte)Biome.getIdForBiome(this.biomes[i]);
+        }
+	}
+
+	@Override
+	public void recreateStructures(Column column) {}
+
+	@Override
+	public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+		ICubePrimer primer = new CubePrimer();
+		
+		if (cubeY >= 0) {
+			return primer;
 		}
-		if (cube.getY() == -1) {
-			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		if (cubeY == -1) {
 			for (int x = 0; x < 16; x++) {
 				for (int z = 0; z < 16; z++) {
-					pos.setPos(x, 15, z);
-					cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
+					primer.setBlockState(x, 15, z, Blocks.GRASS.getDefaultState());
 					for (int y = 14; y >= 10; y--) {
-						pos.setPos(x, y, z);
-						cube.setBlockForGeneration(pos, Blocks.DIRT.getDefaultState());
+						primer.setBlockState(x, y, z, Blocks.DIRT.getDefaultState());
 					}
 					for (int y = 9; y >= 0; y--) {
-						pos.setPos(x, y, z);
-						cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
+						primer.setBlockState(x, y, z, Blocks.STONE.getDefaultState());
 					}
 				}
 			}
-			return;
+			return primer;
 		}
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		
 		for (int x = 0; x < 16; x++) {
 			for (int z = 0; z < 16; z++) {
 				for (int y = 0; y < 16; y++) {
-					pos.setPos(x, y, z);
-					cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
+					primer.setBlockState(x, y, z, Blocks.STONE.getDefaultState());
 				}
 			}
 		}
+		
+		return primer;
+	}
+
+	@Override
+	public void populate(Cube cube) {
+		if(cube.containsBlockPos(new BlockPos(700, 100, 200))){
+			for(int i = 0;i < 100;i++){
+				EntityWither wither = new EntityWither((World)world);
+				wither.setPositionAndRotation(700.0, 100.0, 200.0, 0.0f, 0.0f);
+				world.spawnEntityInWorld(wither);
+			}
+		}
+	}
+
+	@Override
+	public Vec3i[] getPopRequirment(Cube cube) {
+		return NO_POPULTOR_REQUIRMENT;
+	}
+
+	@Override
+	public void recreateStructures(Cube cube) {}
+
+	@Override
+	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
+		Biome biome = this.world.getBiome(pos);
+        return biome.getSpawnableList(creatureType);
+	}
+
+	@Override
+	public BlockPos getClosestStructure(String name, BlockPos pos) {
+		return name.equals("Stronghold") ? new BlockPos(700, 100, 200) : null;
 	}
 }

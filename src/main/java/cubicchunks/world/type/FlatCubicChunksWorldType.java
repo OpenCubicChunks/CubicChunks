@@ -26,6 +26,7 @@ package cubicchunks.world.type;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
@@ -41,35 +42,16 @@ public class FlatCubicChunksWorldType extends WorldType implements ICubicWorldTy
 
 	@Override
 	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
-		// TODO Auto-generated method stub
-		return null;
+		return new FlatTerrainProcessor(world);
 	}
 
 	@Override
 	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
-		// TODO Auto-generated method stub
-		return null;
+		return new FlatTerrainProcessor(world);
 	}
 
 	@Override
 	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
 		return provider;
 	}
-
-	//TODO: Flat Cubic generator
-	/*
-	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
-		FlatTerrainProcessor gen =  new FlatTerrainProcessor();
-		return new ICubicChunkGenerator() {
-			@Override public void generateTerrain(Cube cube) {
-				gen.calculate(cube);
-				cube.initSkyLight();
-			}
-
-			@Override public void populateCube(Cube cube) {
-				//no-op
-			}
-		};
-	}
-	*/
 }

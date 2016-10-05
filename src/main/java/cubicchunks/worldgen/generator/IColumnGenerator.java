@@ -33,9 +33,8 @@ public interface IColumnGenerator {
 	 * (can pre-add Cubes but this is not recommended)
 	 * 
 	 * @param column the column that needs new biomes and other data
-	 * @return the column with biome's and other data added
 	 */
-	Column generateColumn(Column column);
+	void generateColumn(Column column);
 	
 	/**
 	 * Called to reload structures that apply to {@code cube}.

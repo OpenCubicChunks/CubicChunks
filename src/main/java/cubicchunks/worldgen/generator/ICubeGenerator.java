@@ -40,15 +40,20 @@ public interface ICubeGenerator {
 					new Vec3i(0, 0, 0)
 			};
 	
+	static final Vec3i[] NO_POPULTOR_REQUIRMENT = new Vec3i[]{
+					new Vec3i(0, 0, 0),
+					new Vec3i(0, 0, 0)
+			};
+	
 	/**
 	 * Generates a new cube
 	 * 
 	 * @param cubeX the cube's X coordinate
 	 * @param cubeY the cube's Y coordinate
 	 * @param cubeZ the cube's Z coordinate
-	 * @return A new CubePrimer
+	 * @return An ICubePrimer with the generated blocks
 	 */
-	CubePrimer generateCube(int cubeX, int cubeY, int cubeZ);
+	ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ);
 	
 	/**
 	 * Populates a Cube with trees, ores, and other
