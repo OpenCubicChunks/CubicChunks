@@ -25,6 +25,7 @@ package cubicchunks.worldgen.generator.custom;
 
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.builder.BasicBuilder;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import net.minecraft.block.state.IBlockState;
@@ -124,14 +125,14 @@ public class CustomTerrainGenerator {
 		this.builderHeight.build();
 	}
 
-	public void generate(final Cube cube) {
+	public void generate(final ICubePrimer cube) {
 		generateNoiseArrays(cube);
 		generateTerrainArray(cube);
 
 		generateTerrain(cube, this.rawDensity);
 	}
 
-	private void generateTerrain(Cube cube, double[][][] input) {
+	private void generateTerrain(ICubePrimer cube, double[][][] input) {
 		int xSteps = X_SECTION_SIZE - 1;
 		int ySteps = Y_SECTION_SIZE - 1;
 		int zSteps = Z_SECTION_SIZE - 1;

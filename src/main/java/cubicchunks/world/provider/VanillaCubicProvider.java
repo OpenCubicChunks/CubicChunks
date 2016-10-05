@@ -25,6 +25,7 @@ package cubicchunks.world.provider;
 
 import javax.annotation.Nullable;
 
+import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.provider.CubicWorldProvider;
 import cubicchunks.world.type.ICubicWorldType;
@@ -37,6 +38,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.border.WorldBorder;
@@ -46,18 +48,60 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class VanillaCubicProvider extends CubicWorldProvider {
 
+	private static final WorldType HEURISTIC_WORLDTYPE = new WorldType("no-op"){
+		@Override public IChunkGenerator getChunkGenerator(World world, String options){
+			return null; // now thats something we can detect >:D
+		}
+	};
+
 	private WorldProvider wp;
 
-	private VanillaCompatibilityGenerator compatGen;
+	private ICubeGenerator   cubeGen;
+	private IColumnGenerator columnGen;
 
-	public VanillaCubicProvider(ICubicWorld world, WorldProvider provider, IChunkGenerator reUse) {
+	public VanillaCubicProvider(ICubicWorld world, WorldProvider provider, @Nullable IChunkGenerator reUse) {
 		this.wp = provider;
 		this.worldObj = (World) world;
 
-		if(!(worldObj.getWorldType() instanceof ICubicWorldType)){
-			compatGen = new VanillaCompatibilityGenerator(
+		boolean flag = false;
+
+		if(worldObj.getWorldType() instanceof ICubicWorldType){ // Who do we trust!??!?! D:
+
+			// nasty hack heuristic to see if provider asks its WorldType for a chunk generator
+			ReflectionUtil.setFieldValueSrg(wp, "field_76577_b", HEURISTIC_WORLDTYPE);
+			
+			IChunkGenerator pro_or_null = wp.createChunkGenerator();
+			
+			// clean up
+			ReflectionUtil.setFieldValueSrg(provider, "field_76577_b", worldObj.getWorldType()); 
+
+			if(pro_or_null != null){ // It will be null if it tries to get one form WorldType
+
+				// It was from a vanilla WorldProvider... use it
+				VanillaCompatibilityGenerator gen = new VanillaCompatibilityGenerator(
+							reUse == null ? pro_or_null : reUse,
+							world);
+				cubeGen = gen;
+				columnGen = gen;
+			}else{
+				
+				// It was from WorldType, try to use cubic generator
+				cubeGen   = ((ICubicWorldType)worldObj.getWorldType()).createCubeGenerator(getCubicWorld());
+				columnGen = ((ICubicWorldType)worldObj.getWorldType()).createColumnGenerator(getCubicWorld());
+				if(cubeGen == null || columnGen == null){
+					flag = true;
+				}
+			}
+		}else{
+			flag = true;
+		}
+
+		if(flag){
+			VanillaCompatibilityGenerator gen = new VanillaCompatibilityGenerator(
 							reUse == null ? wp.createChunkGenerator() : reUse,
 							world);
+			cubeGen = gen;
+			columnGen = gen;
 		}
 	}
 
@@ -67,150 +111,144 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 
 	@Override
 	public IColumnGenerator createColumnGenerator() {
-		if (compatGen == null) {
-			return ((ICubicWorldType)worldObj.getWorldType()).createColumnGenerator(getCubicWorld());
-		}
-		return compatGen;
+		return columnGen;
 	}
 
 	@Override
 	public ICubeGenerator createCubeGenerator() {
-		if (compatGen == null) {
-			return ((ICubicWorldType)worldObj.getWorldType()).createCubeGenerator(getCubicWorld());
-		}
-		return compatGen;
+		return cubeGen;
 	}
 
 	@SuppressWarnings("deprecation")
-	public IChunkGenerator createChunkGenerator() {
+	@Override public IChunkGenerator createChunkGenerator() {
 		return wp.createChunkGenerator(); // Just in case a mod wants it (I cant think of why any would need to do this)
 	}
 
-	public boolean canCoordinateBeSpawn(int x, int z) {
+	@Override public boolean canCoordinateBeSpawn(int x, int z) {
 		return wp.canCoordinateBeSpawn(x, z);
 	}
 
-	public float calculateCelestialAngle(long worldTime, float partialTicks) {
+	@Override public float calculateCelestialAngle(long worldTime, float partialTicks) {
 		return wp.calculateCelestialAngle(worldTime, partialTicks);
 	}
 
-	public int getMoonPhase(long worldTime) {
+	@Override public int getMoonPhase(long worldTime) {
 		return wp.getMoonPhase(worldTime);
 	}
 
-	public boolean isSurfaceWorld() {
+	@Override public boolean isSurfaceWorld() {
 		return wp.isSurfaceWorld();
 	}
 
 	@Nullable
 	@SideOnly(Side.CLIENT)
-	public float[] calcSunriseSunsetColors(float celestialAngle, float partialTicks) {
+	@Override public float[] calcSunriseSunsetColors(float celestialAngle, float partialTicks) {
 		return wp.calcSunriseSunsetColors(celestialAngle, partialTicks);
 	}
 
 	@SideOnly(Side.CLIENT)
-	public Vec3d getFogColor(float p_76562_1_, float p_76562_2_) {
+	@Override public Vec3d getFogColor(float p_76562_1_, float p_76562_2_) {
 		return wp.getFogColor(p_76562_1_, p_76562_2_);
 	}
 
-	public boolean canRespawnHere() {
+	@Override public boolean canRespawnHere() {
 		return wp.canRespawnHere();
 	}
 
 	@SideOnly(Side.CLIENT)
-	public float getCloudHeight() {
+	@Override public float getCloudHeight() {
 		return wp.getCloudHeight();
 	}
 
 	@SideOnly(Side.CLIENT)
-	public boolean isSkyColored() {
+	@Override public boolean isSkyColored() {
 		return wp.isSkyColored();
 	}
 
-	public BlockPos getSpawnCoordinate() {
+	@Override public BlockPos getSpawnCoordinate() {
 		return wp.getSpawnCoordinate();
 	}
 
-	public int getAverageGroundLevel() {
+	@Override public int getAverageGroundLevel() {
 		return wp.getAverageGroundLevel();
 	}
 
 	@SideOnly(Side.CLIENT)
-	public boolean doesXZShowFog(int x, int z) {
+	@Override public boolean doesXZShowFog(int x, int z) {
 		return wp.doesXZShowFog(x, z);
 	}
 
-	public BiomeProvider getBiomeProvider() {
+	@Override public BiomeProvider getBiomeProvider() {
 		return wp.getBiomeProvider();
 	}
 
-	public boolean doesWaterVaporize() {
+	@Override public boolean doesWaterVaporize() {
 		return wp.doesWaterVaporize();
 	}
 
-	public boolean getHasNoSky() {
+	@Override public boolean getHasNoSky() {
 		return wp.getHasNoSky();
 	}
 
-	public float[] getLightBrightnessTable() {
+	@Override public float[] getLightBrightnessTable() {
 		return wp.getLightBrightnessTable();
 	}
 
-	public WorldBorder createWorldBorder() {
+	@Override public WorldBorder createWorldBorder() {
 		return wp.createWorldBorder();
 	}
 
-	public void setDimension(int dim) {
+	@Override public void setDimension(int dim) {
 		wp.setDimension(dim);
 	}
 
-	public int getDimension() {
+	@Override public int getDimension() {
 		return wp.getDimension();
 	}
 
-	public String getSaveFolder() {
+	@Override public String getSaveFolder() {
 		return wp.getSaveFolder();
 	}
 
-	public String getWelcomeMessage() {
+	@Override public String getWelcomeMessage() {
 		return wp.getWelcomeMessage();
 	}
 
-	public String getDepartMessage() {
+	@Override public String getDepartMessage() {
 		return wp.getDepartMessage();
 	}
 
-	public double getMovementFactor() {
+	@Override public double getMovementFactor() {
 		return wp.getMovementFactor();
 	}
 
 	@SideOnly(Side.CLIENT)
-	public net.minecraftforge.client.IRenderHandler getSkyRenderer() {
+	@Override public net.minecraftforge.client.IRenderHandler getSkyRenderer() {
 		return wp.getSkyRenderer();
 	}
 
 	@SideOnly(Side.CLIENT)
-	public void setSkyRenderer(net.minecraftforge.client.IRenderHandler skyRenderer) {
+	@Override public void setSkyRenderer(net.minecraftforge.client.IRenderHandler skyRenderer) {
 		wp.setSkyRenderer(skyRenderer);
 	}
 
 	@SideOnly(Side.CLIENT)
-	public net.minecraftforge.client.IRenderHandler getCloudRenderer() {
+	@Override public net.minecraftforge.client.IRenderHandler getCloudRenderer() {
 		return wp.getCloudRenderer();
 	}
 
 	@SideOnly(Side.CLIENT)
-	public void setCloudRenderer(net.minecraftforge.client.IRenderHandler renderer) {
+	@Override public void setCloudRenderer(net.minecraftforge.client.IRenderHandler renderer) {
 		setCloudRenderer(renderer);
 	}
 
 	@SideOnly(Side.CLIENT)
-	public net.minecraftforge.client.IRenderHandler getWeatherRenderer() {
+	@Override public net.minecraftforge.client.IRenderHandler getWeatherRenderer() {
 		return wp.getWeatherRenderer();
 	}
 
 	@SideOnly(Side.CLIENT)
-	public void setWeatherRenderer(net.minecraftforge.client.IRenderHandler renderer) {
+	@Override public void setWeatherRenderer(net.minecraftforge.client.IRenderHandler renderer) {
 		wp.setWeatherRenderer(renderer);
 	}
 
@@ -218,140 +256,140 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 	//	return wp.getRandomizedSpawnPoint();
 	//}
 
-	public boolean shouldMapSpin(String entity, double x, double y, double z) {
+	@Override public boolean shouldMapSpin(String entity, double x, double y, double z) {
 		return wp.shouldMapSpin(entity, x, y, z);
 	}
 
-	public int getRespawnDimension(net.minecraft.entity.player.EntityPlayerMP player) {
+	@Override public int getRespawnDimension(net.minecraft.entity.player.EntityPlayerMP player) {
 		return wp.getRespawnDimension(player);
 	}
 
-	public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities() {
+	@Override public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities() {
 		return wp.initCapabilities();
 	}
 
-	public Biome getBiomeForCoords(BlockPos pos) {
+	@Override public Biome getBiomeForCoords(BlockPos pos) {
 		return wp.getBiomeForCoords(pos);
 	}
 
-	public boolean isDaytime() {
+	@Override public boolean isDaytime() {
 		return wp.isDaytime();
 	}
 
-	public float getSunBrightnessFactor(float par1) {
+	@Override public float getSunBrightnessFactor(float par1) {
 		return wp.getSunBrightnessFactor(par1);
 	}
 
-	public float getCurrentMoonPhaseFactor() {
+	@Override public float getCurrentMoonPhaseFactor() {
 		return wp.getCurrentMoonPhaseFactor();
 	}
 
 	@SideOnly(Side.CLIENT)
-	public Vec3d getSkyColor(net.minecraft.entity.Entity cameraEntity, float partialTicks) {
+	@Override public Vec3d getSkyColor(net.minecraft.entity.Entity cameraEntity, float partialTicks) {
 		return wp.getSkyColor(cameraEntity, partialTicks);
 	}
 
 	@SideOnly(Side.CLIENT)
-	public Vec3d getCloudColor(float partialTicks) {
+	@Override public Vec3d getCloudColor(float partialTicks) {
 		return wp.getCloudColor(partialTicks);
 	}
 
 	@SideOnly(Side.CLIENT)
-	public float getSunBrightness(float par1) {
+	@Override public float getSunBrightness(float par1) {
 		return wp.getSunBrightness(par1);
 	}
 
 	@SideOnly(Side.CLIENT)
-	public float getStarBrightness(float par1) {
+	@Override public float getStarBrightness(float par1) {
 		return wp.getStarBrightness(par1);
 	}
 
-	public void setAllowedSpawnTypes(boolean allowHostile, boolean allowPeaceful) {
+	@Override public void setAllowedSpawnTypes(boolean allowHostile, boolean allowPeaceful) {
 		wp.setAllowedSpawnTypes(allowHostile, allowPeaceful);
 	}
 
-	public void calculateInitialWeather() {
+	@Override public void calculateInitialWeather() {
 		wp.calculateInitialWeather();
 	}
 
-	public void updateWeather() {
+	@Override public void updateWeather() {
 		wp.updateWeather();
 	}
 
-	public boolean canBlockFreeze(BlockPos pos, boolean byWater) {
+	@Override public boolean canBlockFreeze(BlockPos pos, boolean byWater) {
 		return wp.canBlockFreeze(pos, byWater);
 	}
 
-	public boolean canSnowAt(BlockPos pos, boolean checkLight) {
+	@Override public boolean canSnowAt(BlockPos pos, boolean checkLight) {
 		return wp.canSnowAt(pos, checkLight);
 	}
 
-	public void setWorldTime(long time) {
+	@Override public void setWorldTime(long time) {
 		wp.setWorldTime(time);
 	}
 
-	public long getSeed() {
+	@Override public long getSeed() {
 		return wp.getSeed();
 	}
 
-	public long getWorldTime() {
+	@Override public long getWorldTime() {
 		return wp.getWorldTime();
 	}
 
-	public BlockPos getSpawnPoint() {
+	@Override public BlockPos getSpawnPoint() {
 		return wp.getSpawnPoint();
 	}
 
-	public void setSpawnPoint(BlockPos pos) {
+	@Override public void setSpawnPoint(BlockPos pos) {
 		wp.setSpawnPoint(pos);
 	}
 
-	public boolean canMineBlock(net.minecraft.entity.player.EntityPlayer player, BlockPos pos) {
+	@Override public boolean canMineBlock(net.minecraft.entity.player.EntityPlayer player, BlockPos pos) {
 		return wp.canMineBlock(player, pos);
 	}
 
-	public boolean isBlockHighHumidity(BlockPos pos) {
+	@Override public boolean isBlockHighHumidity(BlockPos pos) {
 		return wp.isBlockHighHumidity(pos);
 	}
 
-	public double getHorizon() {
+	@Override public double getHorizon() {
 		return wp.getHorizon();
 	}
 
-	public void resetRainAndThunder() {
+	@Override public void resetRainAndThunder() {
 		wp.resetRainAndThunder();
 	}
 
-	public boolean canDoLightning(net.minecraft.world.chunk.Chunk chunk) {
+	@Override public boolean canDoLightning(net.minecraft.world.chunk.Chunk chunk) {
 		return wp.canDoLightning(chunk);
 	}
 
-	public boolean canDoRainSnowIce(net.minecraft.world.chunk.Chunk chunk) {
+	@Override public boolean canDoRainSnowIce(net.minecraft.world.chunk.Chunk chunk) {
 		return wp.canDoRainSnowIce(chunk);
 	}
 
-	public void onPlayerAdded(EntityPlayerMP player) {
+	@Override public void onPlayerAdded(EntityPlayerMP player) {
 		wp.onPlayerAdded(player);
 	}
 
-	public void onPlayerRemoved(EntityPlayerMP player) {
+	@Override public void onPlayerRemoved(EntityPlayerMP player) {
 		wp.onPlayerRemoved(player);
 	}
 
-	public DimensionType getDimensionType(){
+	@Override public DimensionType getDimensionType(){
 		return wp.getDimensionType();
 	}
 
-	public void onWorldSave() {
+	@Override public void onWorldSave() {
 		wp.onWorldSave();
 	}
 
-	public void onWorldUpdateEntities() {
+	@Override public void onWorldUpdateEntities() {
 		wp.onWorldUpdateEntities();
 	}
 
 	@SuppressWarnings("deprecation")
-	public boolean canDropChunk(int x, int z) {
+	@Override public boolean canDropChunk(int x, int z) {
 		return wp.canDropChunk(x, z);
 	}
 }
