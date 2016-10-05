@@ -171,6 +171,12 @@ public class OpacityIndex implements IOpacityIndex {
 	}
 
 	@Override
+	public boolean isOccluded(int localX, int blockY, int localZ) {
+		Integer topY = this.getTopBlockY(localX, localZ);
+		return topY != null && blockY <= topY;
+	}
+
+	@Override
 	public Integer getTopBlockY(int localX, int localZ) {
 		int i = getIndex(localX, localZ);
 		int pos = this.ymax[i];
