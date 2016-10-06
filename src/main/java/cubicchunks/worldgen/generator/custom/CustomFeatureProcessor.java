@@ -23,25 +23,21 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.structures.CubicCaveGenerator;
 import cubicchunks.worldgen.generator.custom.structures.CubicRavineGenerator;
 import cubicchunks.worldgen.generator.custom.structures.CubicStructureGenerator;
 
-public class CustomFeatureProcessor implements CubeProcessor {
+public class CustomFeatureProcessor {
 	//TODO: Implement more features
 	private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
 	private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
 
-	@Override
-	public void calculate(Cube cube) {
-		ICubicWorld world = cube.getCubicWorld();
+	public void generate(ICubicWorld world, ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
+		
 		// generate world features
-		if (!cube.isEmpty()) {
-			this.caveGenerator.generate(world, cube);
-			this.ravineGenerator.generate(world, cube);
-		}
+		this.caveGenerator.generate(world, cube, cubeX, cubeY, cubeZ);
+		this.ravineGenerator.generate(world, cube, cubeX, cubeY, cubeZ);
 	}
 }

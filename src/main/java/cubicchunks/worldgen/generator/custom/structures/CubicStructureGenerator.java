@@ -42,6 +42,8 @@ public abstract class CubicStructureGenerator {
 
 	public void generate(ICubicWorld world, ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
 
+		//TODO: maybe skip some of this stuff if the cube is empty? (would need to use hints)
+
 		int radius = this.range;
 		this.m_world = world;
 		this.rand.setSeed(world.getSeed());

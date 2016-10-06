@@ -7,7 +7,6 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubePrimer;
-import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.state.IBlockState;
@@ -23,7 +22,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-public class VanillaCompatibilityGenerator implements ICubeGenerator, IColumnGenerator {
+public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
 	private static final Vec3i[] NO_POPULATION = new Vec3i[]{
 			new Vec3i(0, 0, 0),

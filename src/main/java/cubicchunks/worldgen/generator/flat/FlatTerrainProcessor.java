@@ -30,7 +30,6 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubePrimer;
-import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.entity.EnumCreatureType;
@@ -42,13 +41,14 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
 
-public class FlatTerrainProcessor implements ICubeGenerator, IColumnGenerator {
+public class FlatTerrainProcessor implements ICubeGenerator {
 
 	private ICubicWorld world;
 	
 	public FlatTerrainProcessor(ICubicWorld world){
 		this.world = world;
 	}
+
 	private Biome[] biomes;
 	@Override
 	public void generateColumn(Column column) {

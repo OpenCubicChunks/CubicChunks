@@ -25,7 +25,6 @@ package cubicchunks.world.type;
 
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.world.WorldProvider;
 
@@ -45,8 +44,6 @@ public interface ICubicWorldType {
 	}
 
 	ICubeGenerator createCubeGenerator(ICubicWorldServer world);
-	
-	IColumnGenerator createColumnGenerator(ICubicWorldServer world);
 
 	WorldProvider getReplacedProviderFor(WorldProvider provider);
 }

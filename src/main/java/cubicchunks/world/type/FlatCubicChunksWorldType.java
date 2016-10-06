@@ -24,7 +24,6 @@
 package cubicchunks.world.type;
 
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 import net.minecraft.world.WorldProvider;
@@ -42,11 +41,6 @@ public class FlatCubicChunksWorldType extends WorldType implements ICubicWorldTy
 
 	@Override
 	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
-		return new FlatTerrainProcessor(world);
-	}
-
-	@Override
-	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
 		return new FlatTerrainProcessor(world);
 	}
 

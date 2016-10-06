@@ -24,7 +24,6 @@
 package cubicchunks.world.type;
 
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
@@ -41,12 +40,6 @@ public class CustomCubicChunksWorldType extends WorldType implements ICubicWorld
 
 	@Override
 	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public IColumnGenerator createColumnGenerator(ICubicWorldServer world) {
 		// TODO Auto-generated method stub
 		return null;
 	}

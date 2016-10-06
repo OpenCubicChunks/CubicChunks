@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
@@ -44,7 +45,7 @@ public interface ICubeGenerator {
 					new Vec3i(0, 0, 0),
 					new Vec3i(0, 0, 0)
 			};
-	
+
 	/**
 	 * Generates a new cube
 	 * 
@@ -54,7 +55,15 @@ public interface ICubeGenerator {
 	 * @return An ICubePrimer with the generated blocks
 	 */
 	ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ);
-	
+
+	/**
+	 * Adds biome's and optionally other stuff to a Column
+	 * (can pre-add Cubes but this is not recommended)
+	 * 
+	 * @param column the column that needs new biomes and other data
+	 */
+	void generateColumn(Column column);
+
 	/**
 	 * Populates a Cube with trees, ores, and other
 	 * multi-block structures that can cross cube boundaries.
@@ -92,12 +101,23 @@ public interface ICubeGenerator {
 	 * Mostly used to get ready for calls to {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))}
 	 * <br>
 	 * Note: if your generator works better on a 2D system you can do your 2D
-	 * loading in {@link IColumnGenerator#recreateStructures(Column)}
+	 * loading in {@link ICubeGenerator#recreateStructures(Column)}
 	 * 
 	 * @param cube The cube that is being loaded
 	 */
 	void recreateStructures(Cube cube);
-	
+
+	/**
+	 * Called to reload structures that apply to {@code cube}.
+	 * Mostly used to get ready for calls to {@link IColumnGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))}
+	 * <br>
+	 * Note: if your generator works better on a 3D system you can do your 3D
+	 * loading in {@link ICubeGenerator#recreateStructures(Cube)}
+	 * 
+	 * @param cube The cube that is being loaded
+	 */
+	void recreateStructures(Column column);
+
 	/**
 	 * Gets a list of entitys that can spawn at pos...
 	 * Used for things like skeletons and blazes spawning in nether forts.

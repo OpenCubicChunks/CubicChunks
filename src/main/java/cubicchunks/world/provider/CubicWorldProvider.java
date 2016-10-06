@@ -27,7 +27,6 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.provider.ICubicWorldProvider;
 import cubicchunks.world.type.ICubicWorldType;
 import cubicchunks.worldgen.generator.DummyChunkGenerator;
-import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -81,15 +80,6 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		// that works with a vanilla world type would have overriden this method.
 		return ((ICubicWorldType)this.worldObj.getWorldType())
 				.createCubeGenerator(getCubicWorld());
-	}
-
-	@Override
-	public IColumnGenerator createColumnGenerator() {
-		// We need to assume that its an ICubicWorldType...
-		// There is really nothing else we can do as a non-overworld porvider
-		// that works with a vanilla world type would have overriden this method.
-		return ((ICubicWorldType)this.worldObj.getWorldType())
-				.createColumnGenerator(getCubicWorld());
 	}
 
 	@Override

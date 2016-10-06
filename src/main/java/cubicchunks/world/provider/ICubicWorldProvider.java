@@ -23,17 +23,9 @@
  */
 package cubicchunks.world.provider;
 
-import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 
 public interface ICubicWorldProvider {
-
-	/**
-	 * Creates a new Column generator
-	 * 
-	 * @return a new Cube generator
-	 */
-	public IColumnGenerator createColumnGenerator();
 
 	/**
 	 * Creates a new Cube generator

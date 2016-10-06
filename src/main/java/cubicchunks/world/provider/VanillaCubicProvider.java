@@ -29,7 +29,6 @@ import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.provider.CubicWorldProvider;
 import cubicchunks.world.type.ICubicWorldType;
-import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -56,8 +55,7 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 
 	private WorldProvider wp;
 
-	private ICubeGenerator   cubeGen;
-	private IColumnGenerator columnGen;
+	private ICubeGenerator cubeGen;
 
 	public VanillaCubicProvider(ICubicWorld world, WorldProvider provider, @Nullable IChunkGenerator reUse) {
 		this.wp = provider;
@@ -78,17 +76,14 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 			if(pro_or_null != null){ // It will be null if it tries to get one form WorldType
 
 				// It was from a vanilla WorldProvider... use it
-				VanillaCompatibilityGenerator gen = new VanillaCompatibilityGenerator(
+				cubeGen = new VanillaCompatibilityGenerator(
 							reUse == null ? pro_or_null : reUse,
 							world);
-				cubeGen = gen;
-				columnGen = gen;
 			}else{
 				
 				// It was from WorldType, try to use cubic generator
 				cubeGen   = ((ICubicWorldType)worldObj.getWorldType()).createCubeGenerator(getCubicWorld());
-				columnGen = ((ICubicWorldType)worldObj.getWorldType()).createColumnGenerator(getCubicWorld());
-				if(cubeGen == null || columnGen == null){
+				if(cubeGen == null){
 					flag = true;
 				}
 			}
@@ -97,21 +92,14 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 		}
 
 		if(flag){
-			VanillaCompatibilityGenerator gen = new VanillaCompatibilityGenerator(
+			cubeGen = new VanillaCompatibilityGenerator(
 							reUse == null ? wp.createChunkGenerator() : reUse,
 							world);
-			cubeGen = gen;
-			columnGen = gen;
 		}
 	}
 
 	public VanillaCubicProvider(ICubicWorld world, WorldProvider provider) {
 		this(world, provider, null);
-	}
-
-	@Override
-	public IColumnGenerator createColumnGenerator() {
-		return columnGen;
 	}
 
 	@Override

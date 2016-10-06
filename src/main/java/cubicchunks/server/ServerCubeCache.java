@@ -32,7 +32,6 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.provider.ICubeCache;
 import cubicchunks.world.provider.IProviderExtras;
-import cubicchunks.worldgen.generator.IColumnGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.entity.EnumCreatureType;
@@ -80,15 +79,13 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	private Map<CubeCoords, Cube> cubemap = new HashMap<>();
 
 	private ICubeGenerator   cubeGen;
-	private IColumnGenerator columnGen;
 
-	public ServerCubeCache(ICubicWorldServer worldServer, ICubeGenerator cubeGen, IColumnGenerator columnGen) {
+	public ServerCubeCache(ICubicWorldServer worldServer, ICubeGenerator cubeGen) {
 		super((WorldServer) worldServer,
 				worldServer.getSaveHandler().getChunkLoader(worldServer.getProvider()), // forge uses this in
 				null); // safe to null out IChunkGenerator
 
 		this.cubeGen   = cubeGen;
-		this.columnGen = columnGen;
 
 		this.worldServer = worldServer;
 		this.cubeIO = new CubeIO(worldServer);
@@ -403,7 +400,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		}
 		
 		column = new Column(this, worldServer, columnX, columnZ);
-		columnGen.generateColumn(column);
+		cubeGen.generateColumn(column);
 		
 		id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), column);
 		column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just generated

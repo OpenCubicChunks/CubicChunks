@@ -24,7 +24,6 @@
 package cubicchunks.worldgen.generator.custom;
 
 import cubicchunks.util.Coords;
-import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
@@ -35,7 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class CustomPopulationProcessor implements CubeProcessor {
+public class CustomPopulationProcessor {
 
 	private Map<Biome, BiomeFeatures> biomeFeaturesMap;
 
@@ -51,8 +50,7 @@ public class CustomPopulationProcessor implements CubeProcessor {
 		}
 	}
 
-	@Override
-	public void calculate(Cube cube) {
+	public void populate(Cube cube) {
 		Biome biome = cube.getCubicWorld().getBiome(Coords.getCubeCenter(cube));
 
 		//For surface generators we should actually use special RNG with seed 
