@@ -23,51 +23,22 @@
  */
 package cubicchunks.worldgen.generator.flat;
 
-import java.util.List;
-
-import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
-import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
-import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.Biome.SpawnListEntry;
 
-public class FlatTerrainProcessor implements ICubeGenerator {
+public class FlatTerrainProcessor extends BasicCubeGenerator {
 
-	private ICubicWorld world;
-	
 	public FlatTerrainProcessor(ICubicWorld world){
-		this.world = world;
+		super(world);
 	}
-
-	private Biome[] biomes;
-	@Override
-	public void generateColumn(Column column) {
-		
-		this.biomes = this.world.getBiomeProvider()
-				.getBiomes(this.biomes, 
-						Coords.cubeToMinBlock(column.getX()),
-						Coords.cubeToMinBlock(column.getZ()),
-						Coords.CUBE_MAX_X, Coords.CUBE_MAX_Z);
-		
-		byte[] abyte = column.getBiomeArray();
-        for (int i = 0; i < abyte.length; ++i)
-        {
-            abyte[i] = (byte)Biome.getIdForBiome(this.biomes[i]);
-        }
-	}
-
-	@Override
-	public void recreateStructures(Column column) {}
 
 	@Override
 	public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
@@ -105,7 +76,7 @@ public class FlatTerrainProcessor implements ICubeGenerator {
 	@Override
 	public void populate(Cube cube) {
 		if(cube.containsBlockPos(new BlockPos(700, 100, 200))){
-			for(int i = 0;i < 100;i++){
+			for(int i = 0;i < 60;i++){
 				EntityWither wither = new EntityWither((World)world);
 				wither.setPositionAndRotation(700.0, 100.0, 200.0, 0.0f, 0.0f);
 				world.spawnEntityInWorld(wither);
@@ -119,16 +90,7 @@ public class FlatTerrainProcessor implements ICubeGenerator {
 	}
 
 	@Override
-	public void recreateStructures(Cube cube) {}
-
-	@Override
-	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
-		Biome biome = this.world.getBiome(pos);
-        return biome.getSpawnableList(creatureType);
-	}
-
-	@Override
 	public BlockPos getClosestStructure(String name, BlockPos pos) {
-		return name.equals("Stronghold") ? new BlockPos(700, 100, 200) : null;
+		return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null; // eyes of ender are the new F3 for finding the origin :P
 	}
 }

@@ -44,6 +44,7 @@ import net.minecraft.world.biome.Biome.SpawnListEntry;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
@@ -143,7 +144,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 				lastChunk = vanilla.provideChunk(cubeX, cubeZ);
 			}
 			
-			//generate 16 cubes at once! (also helps get the heightmap ready for population)
+			//generate 16 cubes at once!
 			if(!optimizationHack){
 				optimizationHack = true;
 				for(int y = 15; y >= 0; y--) {
@@ -189,6 +190,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 			}
 
 			vanilla.populate(cube.getX(), cube.getZ()); // ez! >:D
+			GameRegistry.generateWorld(cube.getX(), cube.getZ(), (World)world, vanilla, ((World)world).getChunkProvider());
 		}
 	}
 

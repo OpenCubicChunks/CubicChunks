@@ -197,12 +197,8 @@ public class CustomTerrainGenerator {
 								double yGrad = (xy1z - xy0z)/ySteps;
 								double zGrad = (xyz1 - xyz0)/zSteps;
 
-								int bx = localToBlock(cubeX, xRel);
-								int by = localToBlock(cubeY, yRel);
-								int bz = localToBlock(cubeZ, zRel);
-
-								IBlockState state = getBlockStateFor(by, xyz, xGrad, yGrad, zGrad);
-								cube.setBlockState(bx, by, bz, state);
+								IBlockState state = getBlockStateFor(localToBlock(cubeY, yRel), xyz, xGrad, yGrad, zGrad);
+								cube.setBlockState(xRel, yRel, zRel, state);
 							}
 						}
 					}
