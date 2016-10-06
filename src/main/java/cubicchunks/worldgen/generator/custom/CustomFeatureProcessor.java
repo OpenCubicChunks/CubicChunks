@@ -35,7 +35,7 @@ public class CustomFeatureProcessor {
 	private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
 
 	public void generate(ICubicWorld world, ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
-		
+
 		// generate world features
 		this.caveGenerator.generate(world, cube, cubeX, cubeY, cubeZ);
 		this.ravineGenerator.generate(world, cube, cubeX, cubeY, cubeZ);

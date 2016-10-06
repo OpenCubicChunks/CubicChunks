@@ -51,7 +51,7 @@ public interface IProviderExtras {
 	 */
 	@Nullable
 	Cube getCube(CubeCoords pos, Requirement req);
-	
+
 	//void waitOn(Consumer<Cube> callback);
 
 	public enum Requirement {

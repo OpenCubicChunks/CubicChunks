@@ -43,7 +43,7 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
 	@Override
 	public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
 		ICubePrimer primer = new CubePrimer();
-		
+
 		if (cubeY >= 0) {
 			return primer;
 		}
@@ -61,7 +61,7 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
 			}
 			return primer;
 		}
-		
+
 		for (int x = 0; x < 16; x++) {
 			for (int z = 0; z < 16; z++) {
 				for (int y = 0; y < 16; y++) {
@@ -69,7 +69,7 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
 				}
 			}
 		}
-		
+
 		return primer;
 	}
 

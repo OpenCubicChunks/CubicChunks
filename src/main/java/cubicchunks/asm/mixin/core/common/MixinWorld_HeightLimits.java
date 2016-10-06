@@ -25,7 +25,6 @@ package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.BlankCube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;

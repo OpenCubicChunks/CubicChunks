@@ -131,7 +131,7 @@ public class IONbtReader {
 		// set the worldgen stage
 		cube.setPopulated(nbt.getBoolean("populated"));
 		cube.setFullyPopulated(nbt.getBoolean("fullyPopulated"));
-		
+
 		cube.setInitialLightingDone(nbt.getBoolean("initLightDone"));
 		return cube;
 	}

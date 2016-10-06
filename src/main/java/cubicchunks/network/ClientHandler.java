@@ -96,7 +96,7 @@ public class ClientHandler implements INetHandler {
 				return;
 			}
 		}
-		
+
 		byte[] data = packet.getData();
 		ByteBuf buf = WorldEncoder.createByteBufForRead(data);
 		WorldEncoder.decodeCube(new PacketBuffer(buf), cube);

@@ -59,7 +59,7 @@ public class BlankColumn extends Column {
 	public Cube removeCube(int cubeY) {
 		return blankCube;
 	}
-	
+
 	public void addCube(Cube cube) {
 		throw new UnsupportedOperationException("Server must have sent Cubes before Columns");
 	}

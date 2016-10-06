@@ -53,7 +53,6 @@ repositories {
 }
 
 ext {
-	
 
 	//used for license header
 	projectName = 'Cubic Chunks Mod'

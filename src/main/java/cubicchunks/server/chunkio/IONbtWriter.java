@@ -106,7 +106,7 @@ class IONbtWriter {
 		// save the worldgen stage and the target stage
 		cubeNbt.setBoolean("populated", cube.isPopulated());
 		cubeNbt.setBoolean("fullyPopulated", cube.isFullyPopulated());
-		
+
 		cubeNbt.setBoolean("initLightDone", cube.isInitialLightingDone());
 	}
 
@@ -115,7 +115,7 @@ class IONbtWriter {
 		if(ebs == null){
 			return; // no data to save anyway
 		}
-		
+
         byte[] abyte = new byte[4096];
         NibbleArray data = new NibbleArray();
         NibbleArray add = ebs.getData().getDataForNBT(abyte, data);

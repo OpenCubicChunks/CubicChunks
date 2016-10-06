@@ -30,7 +30,7 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
 public interface ICubeCache {
-	
+
 	@Nullable
 	Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
 
@@ -40,7 +40,7 @@ public interface ICubeCache {
 	Cube getCube(int cubeX, int cubeY, int cubeZ);
 
 	Cube getCube(CubeCoords coords);
-	
+
 	@Nullable
     Column getLoadedChunk(int x, int z); // more strictly define the return type
 

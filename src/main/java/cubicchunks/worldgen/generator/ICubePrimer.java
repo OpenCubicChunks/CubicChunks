@@ -29,7 +29,7 @@ import net.minecraft.init.Blocks;
 public interface ICubePrimer {
 
 	static final IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
-	
+
 	/**
 	 * Gets a block state at the given location
 	 * 
@@ -39,7 +39,7 @@ public interface ICubePrimer {
 	 * @return the block state
 	 */
 	IBlockState getBlockState(int x, int y, int z);
-	
+
 	/**
 	 * Sets a block state at the given location
 	 * 
@@ -49,7 +49,7 @@ public interface ICubePrimer {
 	 * @param state the block state
 	 */
 	void setBlockState(int x, int y, int z, IBlockState state);
-	
+
 	/**
 	 * Counting down from the highest block in the cube, find the first non-air
 	 * block for the given location.<br>

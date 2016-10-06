@@ -172,7 +172,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 					Chunk column = watcher.getChunk();
 
 					// TODO: test Cubes, not Column
-					
+
 					if (column == null) {
 						continue;
 					}

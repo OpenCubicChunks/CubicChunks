@@ -63,14 +63,14 @@ public class Column extends Chunk {
 
 	private CubeMap cubeMap;
 	private IOpacityIndex opacityIndex;
-	
+
 	private ICubeCache provider;
 	private ICubicWorld world;
 
 	public Column(ICubeCache provider, ICubicWorld world, int x, int z) {
 		// NOTE: this constructor is called by the chunk loader
 		super((World) world, x, z);
-		
+
 		this.provider = provider;
 		this.world = world;
 		init();
@@ -114,11 +114,11 @@ public class Column extends Chunk {
 		// we don't actually know where the surface is yet, because maybe it hasn't been generated
 		// but we do know that the surface has to be at least at sea level,
 		// so let's go with that for now and hope for the best
-		
+
 		// old solution
 		// return this.getWorld().provider.getAverageGroundLevel();
-		
-		int blockY = Coords.VARY_LOW;
+
+		int blockY = Coords.VERY_LOW;
 		for (int localX = 0; localX < Coords.CUBE_SIZE; localX++) {
 			for (int localZ = 0; localZ < Coords.CUBE_SIZE; localZ++) {
 				int y = this.opacityIndex.getTopBlockY(localX, localZ);
@@ -277,7 +277,7 @@ public class Column extends Chunk {
 		int height = this.getHeightValue(
 				Coords.blockToLocal(pos.getX()),
 				Coords.blockToLocal(pos.getZ()));
-		
+
 		return pos.getY() >= height;
 	}
 
@@ -564,12 +564,12 @@ public class Column extends Chunk {
 	public void markSaved() {
 		this.setModified(false);
 	}
-	
+
 	@Override
 	public int getLowestHeight() {
 		return opacityIndex.getLowestTopBlockY();
 	}
-	
+
 	public ICubicWorld getCubicWorld() {
 		return world;
 	}

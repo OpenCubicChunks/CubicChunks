@@ -38,7 +38,7 @@ class CubeMap implements Iterable<Cube> {
 
 	private final TreeMap<Integer, Cube> cubeMap = new TreeMap<>();
 	private final Int2ObjectMap<Cube> map = new Int2ObjectOpenHashMap<>();
-	
+
 	//TODO: Don't force Cube's to have an ExtendedBlockStorage (empty Cube's eat memory)
 	private final ExtendedBlockStorageSet set = new ExtendedBlockStorageSet();
 

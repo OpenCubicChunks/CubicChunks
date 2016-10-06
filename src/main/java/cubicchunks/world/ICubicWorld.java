@@ -147,7 +147,7 @@ public interface ICubicWorld {
 
 	//field accessors
 	WorldProvider getProvider();
-	
+
 	void hotSetProvider(WorldProvider provider);
 
 	Random getRand();

@@ -321,11 +321,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 				column.addCube(cube);
 				cubemap.put(coords, cube); // cache the Cube
 				cube.onLoad();             // init the Cube
-				
+
 				if(!column.getLoadedCubes().contains(cube) || !cubemap.containsKey(coords)){
 					System.out.println("error");
 				}
-				
+
 				if(req.compareTo(Requirement.GENERATE) <= 0){
 					return cube;
 				}
@@ -342,12 +342,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			column.addCube(cube);
 			cubemap.put(coords, cube); // cache the Cube
 			cube.onLoad();             // init the Cube
-			
+
 			if(req.compareTo(Requirement.GENERATE) <= 0){
 				return cube;
 			}
 		}
-		
+
 		// forced full population of this Cube!
 		if(!cube.isFullyPopulated()){
 			Vec3i[] bounds = cubeGen.getPopRequirment(cube);
@@ -369,10 +369,22 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		if(req == Requirement.POPULATE){
 			return cube;
 		}
-		
-		//And Requirement said "Let there be LIGHT" and there was... no light because TODO: populate light
-		cube.setInitialLightingDone(true);
-		
+
+		//TODO: Direct skylight might have changed and even Cubes that have there
+		//      initial light done, there might be work to do for a cube that just loaded
+		if(!cube.isInitialLightingDone()){
+			for(int x = -2;x <= 2;x++){
+				for(int y = -2;y <= 2;y++){
+					for(int z = -2;z <= 2;z++){
+						if(x != 0 || y != 0 || z != 0){
+							getCube(coords.add(x, y, z)); // FirstLightProcessor is too soft and fluffy that it can't even ask for Cubes correctly!
+						}
+					}
+				}
+			}
+			this.worldServer.getFirstLightProcessor().diffuseSkylight(cube);
+		}
+
 		return cube;
 	}
 
@@ -398,10 +410,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		}else if(req == Requirement.LOAD){
 			return null;
 		}
-		
+
 		column = new Column(this, worldServer, columnX, columnZ);
 		cubeGen.generateColumn(column);
-		
+
 		id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), column);
 		column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just generated
 		column.onChunkLoad();

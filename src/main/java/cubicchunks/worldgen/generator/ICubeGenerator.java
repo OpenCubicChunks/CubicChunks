@@ -35,12 +35,12 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.biome.Biome;
 
 public interface ICubeGenerator {
-	
+
 	static final Vec3i[] RECOMENDED_POPULATOR_REQUIRMENT = new Vec3i[]{
 					new Vec3i(-1, -2, -1), // give an extra 16 blocks virtical buffer for things like jungle trees
 					new Vec3i(0, 0, 0)
 			};
-	
+
 	static final Vec3i[] NO_POPULTOR_REQUIRMENT = new Vec3i[]{
 					new Vec3i(0, 0, 0),
 					new Vec3i(0, 0, 0)
@@ -79,7 +79,7 @@ public interface ICubeGenerator {
 	 * @param cube the cube to populate
 	 */
 	void populate(Cube cube);
-	
+
 	/**
 	 * Gets a bounding box defining a range of Cube's whos population contributes to {@cube cube}
 	 * having complete population.<br>
@@ -95,7 +95,7 @@ public interface ICubeGenerator {
 	 */
 	//TODO: change the return type to something better
 	Vec3i[] getPopRequirment(Cube cube);
-	
+
 	/**
 	 * Called to reload structures that apply to {@code cube}.
 	 * Mostly used to get ready for calls to {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))}

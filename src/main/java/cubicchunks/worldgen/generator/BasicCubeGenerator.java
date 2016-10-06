@@ -39,7 +39,7 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
 	private Biome[] columnBiomes;
 
 	protected ICubicWorld world;
-	
+
 	public BasicCubeGenerator(ICubicWorld world){
 		this.world = world;
 	}
@@ -51,7 +51,7 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
 						Coords.cubeToMinBlock(column.getX()),
 						Coords.cubeToMinBlock(column.getZ()),
 						Coords.CUBE_MAX_X, Coords.CUBE_MAX_Z);
-		
+
 		byte[] abyte = column.getBiomeArray();
         for (int i = 0; i < abyte.length; ++i)
         {

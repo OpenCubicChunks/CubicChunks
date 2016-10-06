@@ -106,7 +106,7 @@ public class FastCubeBlockAccess {
 		if (pos.getY() > height) {
 			return 15;
 		}
-		
+
 		IBlockState iblockstate = cube.getBlockState(pos);
 		int lightSubtract = iblockstate.getLightOpacity((IBlockAccess) world, pos);
 

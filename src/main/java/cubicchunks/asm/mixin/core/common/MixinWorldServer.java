@@ -76,7 +76,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.isCubicWorld = true;
 
 		this.entitySpawner = new CubeWorldEntitySpawner();
-		
+
 		if(!(this.provider instanceof ICubicWorldProvider)){ // if the provider is vanilla, wrap it
 			this.provider = new VanillaCubicProvider(this, provider,
 					((ChunkProviderServer)this.chunkProvider).chunkGenerator); // give it the old generator so it does not need to allocate a new one
@@ -84,7 +84,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		this.chunkProvider = new ServerCubeCache(this, 
 				((ICubicWorldProvider)this.provider).createCubeGenerator());
-		
+
 		this.lightingManager = new LightingManager(this);
 
 		this.thePlayerManager = new PlayerCubeMap(this);

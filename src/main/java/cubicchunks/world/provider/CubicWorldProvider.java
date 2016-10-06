@@ -115,7 +115,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 
         return ret;
 	}
-	
+
 	private BlockPos getTSOLBFixed(BlockPos pos)
     {
         Chunk chunk = worldObj.getChunkFromBlockCoords(pos);
@@ -138,7 +138,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 
         return blockpos;
     }
-	
+
 	public ICubicWorldServer getCubicWorld(){
 		return (ICubicWorldServer)worldObj;
 	}

@@ -61,8 +61,8 @@ public class TestOpacityIndex {
 	@Test
 	public void getWithAllTransparent() {
 		OpacityIndex index = new OpacityIndex();
-		assertEquals(Coords.VARY_LOW, index.getBottomBlockY(0, 0));
-		assertEquals(Coords.VARY_LOW, index.getTopBlockY(0, 0));
+		assertEquals(Coords.VERY_LOW, index.getBottomBlockY(0, 0));
+		assertEquals(Coords.VERY_LOW, index.getTopBlockY(0, 0));
 		assertEquals(false, index.isOpaque(0, -100, 0));
 		assertEquals(false, index.isOpaque(0, -10, 0));
 		assertEquals(false, index.isOpaque(0, 0, 0));
@@ -119,8 +119,8 @@ public class TestOpacityIndex {
 	public void setSingleTransparentFromSingleOpaque() {
 		OpacityIndex index = makeIndex(10, 10);
 		index.onOpacityChange(0, 10, 0, 0);
-		assertEquals(Coords.VARY_LOW, index.getBottomBlockY(0, 0));
-		assertEquals(Coords.VARY_LOW, index.getTopBlockY(0, 0));
+		assertEquals(Coords.VERY_LOW, index.getBottomBlockY(0, 0));
+		assertEquals(Coords.VERY_LOW, index.getTopBlockY(0, 0));
 		assertEquals(null, getSegments(index));
 	}
 
@@ -378,8 +378,8 @@ public class TestOpacityIndex {
 		assertEquals(false, index.isOpaque(0, 1, 0));
 		assertEquals(false, index.isOpaque(0, 2, 0));
 		assertEquals(false, index.isOpaque(0, 3, 0));
-		assertEquals(Coords.VARY_LOW, index.getTopBlockY(0, 0));
-		assertEquals(Coords.VARY_LOW, index.getBottomBlockY(0, 0));
+		assertEquals(Coords.VERY_LOW, index.getTopBlockY(0, 0));
+		assertEquals(Coords.VERY_LOW, index.getBottomBlockY(0, 0));
 	}
 
 	@Test
@@ -625,8 +625,8 @@ public class TestOpacityIndex {
 		assertEquals(false, index.isOpaque(0, 3, 0));
 		assertEquals(false, index.isOpaque(0, 4, 0));
 		assertEquals(false, index.isOpaque(0, 5, 0));
-		assertEquals(Coords.VARY_LOW, index.getTopBlockY(0, 0));
-		assertEquals(Coords.VARY_LOW, index.getBottomBlockY(0, 0));
+		assertEquals(Coords.VERY_LOW, index.getTopBlockY(0, 0));
+		assertEquals(Coords.VERY_LOW, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 0, 0, 0);
 
@@ -637,8 +637,8 @@ public class TestOpacityIndex {
 		assertEquals(false, index.isOpaque(0, 3, 0));
 		assertEquals(false, index.isOpaque(0, 4, 0));
 		assertEquals(false, index.isOpaque(0, 5, 0));
-		assertEquals(Coords.VARY_LOW, index.getTopBlockY(0, 0));
-		assertEquals(Coords.VARY_LOW, index.getBottomBlockY(0, 0));
+		assertEquals(Coords.VERY_LOW, index.getTopBlockY(0, 0));
+		assertEquals(Coords.VERY_LOW, index.getBottomBlockY(0, 0));
 	}
 
 	@Test
@@ -769,7 +769,7 @@ public class TestOpacityIndex {
 					return i;
 				}
 			}
-			return Coords.VARY_LOW;
+			return Coords.VERY_LOW;
 		}
 
 		public int getMaxY() {
@@ -778,7 +778,7 @@ public class TestOpacityIndex {
 					return i;
 				}
 			}
-			return Coords.VARY_LOW;
+			return Coords.VERY_LOW;
 		}
 
 		public int getMaxYBelow(int y) {
@@ -787,7 +787,7 @@ public class TestOpacityIndex {
 					return i;
 				}
 			}
-			return Coords.VARY_LOW;
+			return Coords.VERY_LOW;
 		}
 	}
 }

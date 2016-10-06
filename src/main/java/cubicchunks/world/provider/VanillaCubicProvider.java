@@ -67,9 +67,9 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 
 			// nasty hack heuristic to see if provider asks its WorldType for a chunk generator
 			ReflectionUtil.setFieldValueSrg(wp, "field_76577_b", HEURISTIC_WORLDTYPE);
-			
+
 			IChunkGenerator pro_or_null = wp.createChunkGenerator();
-			
+
 			// clean up
 			ReflectionUtil.setFieldValueSrg(provider, "field_76577_b", worldObj.getWorldType()); 
 
@@ -80,7 +80,7 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 							reUse == null ? pro_or_null : reUse,
 							world);
 			}else{
-				
+
 				// It was from WorldType, try to use cubic generator
 				cubeGen   = ((ICubicWorldType)worldObj.getWorldType()).createCubeGenerator(getCubicWorld());
 				if(cubeGen == null){

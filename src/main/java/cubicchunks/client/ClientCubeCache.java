@@ -54,14 +54,14 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		ReflectionUtil.setFieldValueSrg(this, "field_73238_a", new BlankColumn(this, world, 0, 0));
 		this.blankCube = new BlankCube((Column)blankChunk);
 	}
-	
+
 	@Override
 	@Nullable
     public Column getLoadedChunk(int x, int z)
     {
         return (Column)super.getLoadedChunk(x, z);
     }
-	
+
 	@Override
 	public Column provideChunk(int x, int z){
 		return (Column)super.provideChunk(x, z);
@@ -74,16 +74,15 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 		// fire a forge event... make mods happy :)
 		net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(column));
-		
+
 		column.setChunkLoaded(true);
 		return column;
 	}
 
-	
 	//===========================
 	//========Cube stuff=========
 	//===========================
-	
+
 	/**
 	 * This is like ChunkProviderClient.loadChunk()
 	 * It is used when the server sends a new Cube to this client,
@@ -95,10 +94,10 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 		Cube cube = new Cube(column, cubeY); // auto added to column
 		column.addCube(cube);
 		this.cubemap.put(new CubeCoords(column.getX(), cubeY, column.getZ()), cube);
-		
+
 		return cube;
 	}
-	
+
 	/**
 	 * This is like ChunkProviderClient.unloadChunk()
 	 * It is used when the server tells the client to unload a Cube.

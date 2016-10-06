@@ -62,7 +62,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -263,7 +262,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	@Override public WorldProvider getProvider() {
 		return this.provider;
 	}
-	
+
 	/**
 	 * Warning: Keep out of reach of noobs.
 	 */

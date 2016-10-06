@@ -306,7 +306,7 @@ public class CustomTerrainGenerator {
 	 * @see cubicchunks.worldgen.generator.ITerrainGenerator#generateTerrainArray(cubicchunks.world.cube.Cube)
 	 */
 	private void generateTerrainArray(final ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
-		this.biomes = getBiomeMap(cubeX, cubeY);
+		this.biomes = getBiomeMap(cubeX, cubeZ);
 
 		fillHeightArray(cubeX, cubeZ);
 		for (int x = 0; x < X_SECTIONS; x++) {

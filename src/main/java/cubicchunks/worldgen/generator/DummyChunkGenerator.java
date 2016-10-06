@@ -37,11 +37,11 @@ import net.minecraft.world.chunk.IChunkGenerator;
 public class DummyChunkGenerator implements IChunkGenerator {
 
 	private World world;
-	
+
 	public DummyChunkGenerator(World world){
 		this.world = world;
 	}
-	
+
 	@Override
 	public Chunk provideChunk(int x, int z) {
 		return new EmptyChunk(world, x, z);

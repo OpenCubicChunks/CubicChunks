@@ -61,10 +61,10 @@ public class CustomCubicChunksWorldType extends WorldType implements ICubicWorld
 			@Override
 			public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
 				ICubePrimer primer = new CubePrimer();
-				
+
 				terrain.calculate(primer, cubeX, cubeY, cubeZ);
 				features.generate(world, primer, cubeX, cubeY, cubeZ);
-				
+
 				return primer;
 			}
 			@Override

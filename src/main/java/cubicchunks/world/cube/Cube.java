@@ -80,10 +80,10 @@ public class Cube {
 
 	private ICubicWorld world;
 	private Column      column;
-	
+
 	private CubeCoords coords;
 	private ExtendedBlockStorage storage;
-	
+
 	private EntityContainer entities;
 	private Map<BlockPos, TileEntity> tileEntityMap;
 
@@ -105,7 +105,7 @@ public class Cube {
 		this.tileEntityMap = new HashMap<>();
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
 	}
-	
+
 	@SuppressWarnings("deprecation") // when a block is generated, does it really have any extra
 	                                 // information it could give us about its opacity by knowing its location?
 	public Cube(Column column, int cubeY, ICubePrimer primer) {
@@ -125,7 +125,7 @@ public class Cube {
 							newStorage();
 						}
 						storage.set(x, y, z, newstate);
-						
+
 						if(newstate.getLightOpacity() != 0){
 							column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe OpacityIndex needs its own isModified
 							opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
@@ -158,7 +158,7 @@ public class Cube {
 			return storage.get(Coords.blockToLocal(blockX),
 			                   Coords.blockToLocal(blockY),
 			                   Coords.blockToLocal(blockZ));
-			
+
 		} catch (Throwable t) {
 			CrashReport report = CrashReport.makeCrashReport(t, "Getting block state");
 			CrashReportCategory category = report.makeCategory("Block being got");
@@ -184,20 +184,20 @@ public class Cube {
 		int localX = Coords.blockToLocal(pos.getX());
 		int localY = Coords.blockToLocal(pos.getY());
 		int localZ = Coords.blockToLocal(pos.getZ());
-		
+
 		IBlockState oldstate = getBlockState(pos);
-		
+
 		if(oldstate == newstate){
 			return null; // nothing changed
 		}
-		
+
 		Block oldblock = oldstate.getBlock();
 		Block newblock = newstate.getBlock();
 
 		if(storage == null){
 			newStorage();
 		}
-		
+
 		storage.set(localX, localY, localZ, newstate); // set the block state!
 
 		// deal with Block.breakBlock() and TileEntity's
@@ -218,7 +218,7 @@ public class Cube {
 				this.world.removeTileEntity(pos);
 			}
 		}
-		
+
 		if(storage.get(localX, localY, localZ).getBlock() != newblock){ // A TileEntity changed the bock on us!!!
 			return null; // something changed... but its out of our control
 			             // (aka another Cube.setBlockState() call handled it)
@@ -229,10 +229,10 @@ public class Cube {
 		if (!this.world.isRemote()
 				&& oldblock != newblock
 				&& (!((World)this.world).captureBlockSnapshots || newblock.hasTileEntity(newstate))) {
-			
+
 			newblock.onBlockAdded((World)this.world, pos, newstate);
 		}
-		
+
 		if (newblock.hasTileEntity(newstate))
         {
             TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
@@ -248,7 +248,7 @@ public class Cube {
                 te.updateContainingBlockInfo();
             }
         }
-		
+
 		this.isModified = true; // a block state changes, so we will need saving
 		return oldstate;
 	}
@@ -454,7 +454,7 @@ public class Cube {
 		if (!this.isInitialLightingDone && this.isPopulated) {
 			this.tryDoFirstLight(); //TODO: Vary icky light population code! REMOVE IT!
 		}
-		
+
 		while (!this.tileEntityPosQueue.isEmpty()) {
 			BlockPos blockpos = this.tileEntityPosQueue.poll();
 
@@ -524,7 +524,7 @@ public class Cube {
 	public CubeCoords getCoords() {
 		return this.coords;
 	}
-	
+
 	public boolean containsBlockPos(BlockPos blockPos) {
 		return this.coords.getCubeX() == Coords.blockToCube(blockPos.getX())
 				&& this.coords.getCubeY() == Coords.blockToCube(blockPos.getY())
@@ -534,11 +534,11 @@ public class Cube {
 	public ExtendedBlockStorage getStorage() {
 		return this.storage;
 	}
-	
+
 	public ExtendedBlockStorage setStorage(ExtendedBlockStorage ebs) {
 		return this.storage = ebs;
 	}
-	
+
 	private void newStorage(){
 		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), !world.getProvider().getHasNoSky());
 	}

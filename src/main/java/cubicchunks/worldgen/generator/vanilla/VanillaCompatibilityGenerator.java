@@ -48,11 +48,6 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
-	private static final Vec3i[] NO_POPULATION = new Vec3i[]{
-			new Vec3i(0, 0, 0),
-			new Vec3i(0, 0, 0)
-	};
-
 	private IChunkGenerator vanilla;
 	private ICubicWorld world;
 
@@ -66,7 +61,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 	public VanillaCompatibilityGenerator(IChunkGenerator vanilla, ICubicWorld world) {
 		this.vanilla = vanilla;
 		this.world = world;
-		
+
 		// heuristics TODO: add a config that overrides this
 		lastChunk = vanilla.provideChunk(0, 0); // lets scan the chunk at 0, 0
 
@@ -77,7 +72,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 			for(int at = 0;at < 16 * 16;at++){
 				IBlockState state = lastChunk.getBlockState(at | 0x0F, 0, at >> 4);
 				if(state != laststate){
-					
+
 					int count = 1;
 					for(int i = at + 1;i < 16 * 16;i++){
 						if(lastChunk.getBlockState(i | 0x0F, 0, i >> 4) == state){
@@ -106,13 +101,13 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 	private Biome[] biomes;
 	@Override
 	public void generateColumn(Column column) {
-		
+
 		this.biomes = this.world.getBiomeProvider()
 				.getBiomes(this.biomes, 
 						Coords.cubeToMinBlock(column.getX()),
 						Coords.cubeToMinBlock(column.getZ()),
 						Coords.CUBE_MAX_X, Coords.CUBE_MAX_Z);
-		
+
 		byte[] abyte = column.getBiomeArray();
         for (int i = 0; i < abyte.length; ++i)
         {
@@ -128,7 +123,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 	@Override
 	public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
 		CubePrimer primer = new CubePrimer();
-		
+
 		if(cubeY < 0){
 			for(int x = 0;x < Coords.CUBE_MAX_X;x++){
 				for(int y = 0;y < Coords.CUBE_MAX_Y;y++){
@@ -143,7 +138,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 			if(lastChunk.xPosition != cubeX || lastChunk.zPosition != cubeZ){
 				lastChunk = vanilla.provideChunk(cubeX, cubeZ);
 			}
-			
+
 			//generate 16 cubes at once!
 			if(!optimizationHack){
 				optimizationHack = true;
@@ -202,7 +197,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 					new Vec3i( 0, 15 -cube.getY(),  0)
 			};
 		}
-		return NO_POPULATION;
+		return NO_POPULTOR_REQUIRMENT;
 	}
 
 	@Override
