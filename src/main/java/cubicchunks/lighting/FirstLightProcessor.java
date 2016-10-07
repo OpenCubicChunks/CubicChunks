@@ -110,8 +110,8 @@ public class FirstLightProcessor {
 
 		int cubeMinY = cubeToMinBlock(cube.getY());
 
-		for (int localX = 0; localX < Cube.SIZE - 1; ++localX) {
-			for (int localZ = 0; localZ < Cube.SIZE - 1; ++localZ) {
+		for (int localX = 0; localX < Cube.SIZE; ++localX) {
+			for (int localZ = 0; localZ < Cube.SIZE; ++localZ) {
 				for (int localY = Cube.SIZE - 1; localY >= 0; --localY) {
 
 					if (opacityIndex.isOccluded(localX, cubeMinY + localY, localZ)) {

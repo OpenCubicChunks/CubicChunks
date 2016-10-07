@@ -312,9 +312,11 @@ public class Cube {
 	}
 
 	public void setSkylight(int localX, int localY, int localZ, int value) {
-		this.isModified = true;
-
 		if (!this.world.getProvider().getHasNoSky()) {
+			if(storage == null){
+				newStorage();
+			}
+			this.isModified = true;
 			this.storage.setExtSkylightValue(localX, localY, localZ, value);
 		}
 	}
@@ -322,6 +324,9 @@ public class Cube {
 	public int getSkylight(int localX, int localY, int localZ) {
 		if (this.world.getProvider().getHasNoSky()) {
 			return 0;
+		}
+		if(storage == null){
+			return EnumSkyBlock.SKY.defaultLightValue;
 		}
 		return this.storage.getExtSkylightValue(localX, localY, localZ);
 	}

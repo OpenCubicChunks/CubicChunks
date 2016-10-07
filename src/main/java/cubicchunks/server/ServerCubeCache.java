@@ -322,10 +322,6 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 				cubemap.put(coords, cube); // cache the Cube
 				cube.onLoad();             // init the Cube
 
-				if(!column.getLoadedCubes().contains(cube) || !cubemap.containsKey(coords)){
-					System.out.println("error");
-				}
-
 				if(req.compareTo(Requirement.GENERATE) <= 0){
 					return cube;
 				}
@@ -341,6 +337,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 
 			column.addCube(cube);
 			cubemap.put(coords, cube); // cache the Cube
+			this.worldServer.getFirstLightProcessor().initializeSkylight(cube); // init sky light, (does not require any other cubes, just OpacityIndex)
 			cube.onLoad();             // init the Cube
 
 			if(req.compareTo(Requirement.GENERATE) <= 0){
