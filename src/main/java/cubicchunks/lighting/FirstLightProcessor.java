@@ -106,6 +106,10 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void initializeSkylight(Cube cube) {
+		if(cube.getCubicWorld().getProvider().getHasNoSky()){
+			return;
+		}
+		
 		IOpacityIndex opacityIndex = cube.getColumn().getOpacityIndex();
 
 		int cubeMinY = cubeToMinBlock(cube.getY());
@@ -130,6 +134,10 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void diffuseSkylight(Cube cube) {
+		if(cube.getCubicWorld().getProvider().getHasNoSky()){
+			cube.setInitialLightingDone(true);
+			return;
+		}
 		ICubicWorld world = cube.getCubicWorld();
 
 		// Cache min/max Y, generating them may be expensive
@@ -199,6 +207,7 @@ public class FirstLightProcessor {
 				}
 			}
 		}
+		cube.setInitialLightingDone(true);
 	}
 
 	/**
