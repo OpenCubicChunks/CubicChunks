@@ -27,24 +27,24 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import cubicchunks.util.Box;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.biome.Biome;
 
 public interface ICubeGenerator {
 
-	static final Vec3i[] RECOMENDED_POPULATOR_REQUIRMENT = new Vec3i[]{
-					new Vec3i(-1, -2, -1), // give an extra 16 blocks virtical buffer for things like jungle trees
-					new Vec3i(0, 0, 0)
-			};
+	static final Box RECOMMENDED_POPULATOR_REQUIREMENT = new Box(
+				-1, -2, -1, // give an extra 16 blocks virtical buffer for things like jungle trees
+				 0,  0,  0
+			);
 
-	static final Vec3i[] NO_POPULTOR_REQUIRMENT = new Vec3i[]{
-					new Vec3i(0, 0, 0),
-					new Vec3i(0, 0, 0)
-			};
+	static final Box NO_POPULATOR_REQUIREMENT = new Box(
+				0, 0, 0,
+				0, 0, 0
+			);
 
 	/**
 	 * Generates a new cube
@@ -68,7 +68,7 @@ public interface ICubeGenerator {
 	 * Populates a Cube with trees, ores, and other
 	 * multi-block structures that can cross cube boundaries.
 	 * Population should* be done with the restriction that it may not
-	 * effect cubes who's call to {@link IChunkGenerator#getPopRequirement(Cube)}
+	 * effect cubes who's call to {@link IChunkGenerator#getPopulationRequirement(Cube)}
 	 * would not include {@code cube} as an effect.<br> 
 	 * <br>
 	 * *Note: Unlike vanilla this method will NEVER cause recursive generation,
@@ -91,10 +91,9 @@ public interface ICubeGenerator {
 	 * This allows a generator to have a much more dynamic populator,
 	 * note however that large ranges are not recommended. If you need to generate a large structure like a nether fort,
 	 * do not use a populator.
-	 * @return an array of 2 Vec3i's defining a bounding box in cube coords
+	 * @return A box in cube coords
 	 */
-	//TODO: change the return type to something better
-	Vec3i[] getPopRequirment(Cube cube);
+	Box getPopulationRequirement(Cube cube);
 
 	/**
 	 * Called to reload structures that apply to {@code cube}.

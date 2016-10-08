@@ -28,11 +28,11 @@ import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.Coords;
 import cubicchunks.util.MathUtil;
 import cubicchunks.world.ClientOpacityIndex;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubeCache;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.PacketBuffer;
@@ -103,7 +103,7 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	@Deprecated //TODO: stop this method form being used by vanila (any algorithms in vanila that use it are be broken any way)
+	@Deprecated //TODO: stop this method form being used by vanilla (any algorithms in vanilla that use it are be broken any way)
 	// don't use this! It's only here because vanilla needs it
 	public int getTopFilledSegment() {
 		//NOTE: this method actually returns block Y coords
@@ -168,7 +168,7 @@ public class Column extends Chunk {
 		int oldOpacity = oldstate.getLightOpacity(this.getWorld(), pos);
 
 		oldstate = cube.setBlockStateDirect(pos, newstate); // forward to cube
-		if(oldstate == null){
+		if(oldstate == null) {
 			return oldstate;
 		}
 
@@ -328,7 +328,7 @@ public class Column extends Chunk {
 		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - World.MAX_ENTITY_RADIUS));
 		int maxCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.maxY + World.MAX_ENTITY_RADIUS));
 
-		for (int cubeY = minCubeY;cubeY < maxCubeY + 1;cubeY++) {
+		for (int cubeY = minCubeY;cubeY <= maxCubeY;cubeY++) {
 			Cube cube = getCube(cubeY);
 			cube.getEntitiesWithinAABBForEntity(exclude, queryBox, out, predicate);
 		}

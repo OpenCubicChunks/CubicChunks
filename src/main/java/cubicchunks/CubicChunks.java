@@ -72,13 +72,8 @@ public class CubicChunks {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
 		LOGGER = e.getModLog();
-		//Set custom WorldProvider for Overworld
-		//for vanilla world this world provider will work the same way as vanilla world provider
 
-		//set "clazz" field
-		//ReflectionUtil.setFieldValueSrg(DimensionType.OVERWORLD, "field_186077_g", CubicWorldProviderSurface.class);
-
-		this.config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
+		config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
 		MinecraftForge.EVENT_BUS.register(this); // Register our config reload hook
 
 		if(DEBUG_ENABLED) {

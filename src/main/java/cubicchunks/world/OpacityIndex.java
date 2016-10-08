@@ -270,7 +270,7 @@ public class OpacityIndex implements IOpacityIndex {
 					this.heightMapLowest = this.ymax[i];
 				}
 			}
-			if(this.heightMapLowest == Coords.VERY_LOW){
+			if(this.heightMapLowest == Coords.VERY_LOW) {
 				this.heightMapLowest--; // just so its no longer == to Coords.VARY_LOW
 			}
 		}

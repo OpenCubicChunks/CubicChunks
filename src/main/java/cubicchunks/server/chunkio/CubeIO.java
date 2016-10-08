@@ -195,7 +195,7 @@ public class CubeIO implements IThreadedFileIO {
 		Cube cube = IONbtReader.readCube(column, column.getX(), cubeY, column.getZ(), nbt);
 		world.getProfiler().endSection();
 		return cube;
-}
+	}
 
 	public void saveColumn(Column column) {
 		// NOTE: this function blocks the world thread

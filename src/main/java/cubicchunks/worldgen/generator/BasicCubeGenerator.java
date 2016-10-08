@@ -40,7 +40,7 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
 
 	protected ICubicWorld world;
 
-	public BasicCubeGenerator(ICubicWorld world){
+	public BasicCubeGenerator(ICubicWorld world) {
 		this.world = world;
 	}
 
@@ -53,10 +53,9 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
 						Coords.CUBE_MAX_X, Coords.CUBE_MAX_Z);
 
 		byte[] abyte = column.getBiomeArray();
-        for (int i = 0; i < abyte.length; ++i)
-        {
-            abyte[i] = (byte)Biome.getIdForBiome(this.columnBiomes[i]);
-        }
+		for (int i = 0; i < abyte.length; ++i) {
+			abyte[i] = (byte)Biome.getIdForBiome(this.columnBiomes[i]);
+		}
 	}
 
 	@Override

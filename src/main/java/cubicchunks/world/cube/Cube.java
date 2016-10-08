@@ -73,13 +73,13 @@ public class Cube {
 	//unloadQueue each time something loads it
 	public  boolean unloaded;
 
-    private boolean isModified = false;
-    private boolean isPopulated = false;
-    private boolean isFullyPopulated = false;
+	private boolean isModified = false;
+	private boolean isPopulated = false;
+	private boolean isFullyPopulated = false;
 	private boolean isInitialLightingDone = false;
 
 	private ICubicWorld world;
-	private Column      column;
+	private Column column;
 
 	private CubeCoords coords;
 	private ExtendedBlockStorage storage;
@@ -121,12 +121,12 @@ public class Cube {
 					IBlockState newstate = primer.getBlockState(x, y, z);
 
 					if (newstate.getMaterial() != Material.AIR) {
-						if(storage == null){
+						if(storage == null) {
 							newStorage();
 						}
 						storage.set(x, y, z, newstate);
 
-						if(newstate.getLightOpacity() != 0){
+						if(newstate.getLightOpacity() != 0) {
 							column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe OpacityIndex needs its own isModified
 							opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
 						}
@@ -146,13 +146,13 @@ public class Cube {
 	}
 
 	// forward to Column, as we don't know how to do skylight and stuff
-	public IBlockState setBlockState(BlockPos pos, IBlockState newstate){
+	public IBlockState setBlockState(BlockPos pos, IBlockState newstate) {
 		return column.setBlockState(pos, newstate);
 	}
 
 	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
 		try {
-			if(storage == null){
+			if(storage == null) {
 				return Blocks.AIR.getDefaultState();
 			}
 			return storage.get(Coords.blockToLocal(blockX),
@@ -187,14 +187,14 @@ public class Cube {
 
 		IBlockState oldstate = getBlockState(pos);
 
-		if(oldstate == newstate){
+		if(oldstate == newstate) {
 			return null; // nothing changed
 		}
 
 		Block oldblock = oldstate.getBlock();
 		Block newblock = newstate.getBlock();
 
-		if(storage == null){
+		if(storage == null) {
 			newStorage();
 		}
 
@@ -219,7 +219,7 @@ public class Cube {
 			}
 		}
 
-		if(storage.get(localX, localY, localZ).getBlock() != newblock){ // A TileEntity changed the bock on us!!!
+		if(storage.get(localX, localY, localZ).getBlock() != newblock) { // A TileEntity changed the bock on us!!!
 			return null; // something changed... but its out of our control
 			             // (aka another Cube.setBlockState() call handled it)
 			             // so return as if 'nothing changed'
@@ -233,21 +233,20 @@ public class Cube {
 			newblock.onBlockAdded((World)this.world, pos, newstate);
 		}
 
-		if (newblock.hasTileEntity(newstate))
-        {
-            TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
+		if (newblock.hasTileEntity(newstate)) {
+			TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
 
-            if (te == null)
-            {
-                te = newblock.createTileEntity((World)this.world, newstate);
-                this.world.setTileEntity(pos, te);
-            }
+			if (te == null)
+			{
+				te = newblock.createTileEntity((World)this.world, newstate);
+				this.world.setTileEntity(pos, te);
+			}
 
-            if (te != null)
-            {
-                te.updateContainingBlockInfo();
-            }
-        }
+			if (te != null)
+			{
+				te.updateContainingBlockInfo();
+			}
+		}
 
 		this.isModified = true; // a block state changes, so we will need saving
 		return oldstate;
@@ -271,12 +270,12 @@ public class Cube {
 				if (this.world.getProvider().getHasNoSky()) {
 					return 0;
 				}
-				if(storage == null){
+				if(storage == null) {
 					return lightType.defaultLightValue;
 				}
 				return this.storage.getExtSkylightValue(localX, localY, localZ);
 			case BLOCK:
-				if(storage == null){
+				if(storage == null) {
 					return lightType.defaultLightValue;
 				}
 				return this.storage.getExtBlocklightValue(localX, localY, localZ);
@@ -295,7 +294,7 @@ public class Cube {
 		switch (lightType) {
 			case SKY:
 				if (!this.world.getProvider().getHasNoSky()) {
-					if(storage == null){
+					if(storage == null) {
 						newStorage();
 					}
 					this.storage.setExtSkylightValue(x, y, z, light);
@@ -303,7 +302,7 @@ public class Cube {
 				break;
 
 			case BLOCK:
-				if(storage == null){
+				if(storage == null) {
 					newStorage();
 				}
 				this.storage.setExtBlocklightValue(x, y, z, light);
@@ -313,7 +312,7 @@ public class Cube {
 
 	public void setSkylight(int localX, int localY, int localZ, int value) {
 		if (!this.world.getProvider().getHasNoSky()) {
-			if(storage == null){
+			if(storage == null) {
 				newStorage();
 			}
 			this.isModified = true;
@@ -325,7 +324,7 @@ public class Cube {
 		if (this.world.getProvider().getHasNoSky()) {
 			return 0;
 		}
-		if(storage == null){
+		if(storage == null) {
 			return EnumSkyBlock.SKY.defaultLightValue;
 		}
 		return this.storage.getExtSkylightValue(localX, localY, localZ);
@@ -409,7 +408,7 @@ public class Cube {
 	public void addTileEntity(TileEntity tileEntity) {
 		this.addTileEntity(tileEntity.getPos(), tileEntity);
 		if (this.isCubeLoaded) { //TODO: test to see if this is needed
-			this.getCubicWorld().addTileEntity(tileEntity);
+			this.getWorld().addTileEntity(tileEntity);
 		}
 	}
 
@@ -457,7 +456,7 @@ public class Cube {
 
 	public void tickCube(boolean tryToTickFaster) {
 		if (!this.isInitialLightingDone && this.isPopulated) {
-			this.tryDoFirstLight(); //TODO: Vary icky light population code! REMOVE IT!
+			this.tryDoFirstLight(); //TODO: Very icky light population code! REMOVE IT!
 		}
 
 		while (!this.tileEntityPosQueue.isEmpty()) {
@@ -506,7 +505,7 @@ public class Cube {
 		return new BlockPos(x, y, z);
 	}
 
-	public ICubicWorld getCubicWorld() {
+	public ICubicWorld getWorld() {
 		return this.world;
 	}
 
@@ -544,7 +543,7 @@ public class Cube {
 		return this.storage = ebs;
 	}
 
-	private void newStorage(){
+	private void newStorage() {
 		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), !world.getProvider().getHasNoSky());
 	}
 
@@ -632,7 +631,7 @@ public class Cube {
 	 * @return weather this Cube is fully populated or not...
 	 *         aka when even Cubes whos population effects this Cube are populated!
 	 */
-	public boolean isFullyPopulated(){
+	public boolean isFullyPopulated() {
 		return this.isFullyPopulated;
 	}
 
@@ -649,7 +648,7 @@ public class Cube {
 	 * Lights up all blocks that will definitely be lit. It's faster than using world.checkLightFor on everything.
 	 */
 	public void initSkyLight() {
-		((ICubicWorldServer)this.getCubicWorld()).getFirstLightProcessor().initializeSkylight(this);
+		((ICubicWorldServer)this.getWorld()).getFirstLightProcessor().initializeSkylight(this);
 	}
 
 	public static class LightUpdateData {

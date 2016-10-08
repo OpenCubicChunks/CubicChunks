@@ -23,6 +23,7 @@
  */
 package cubicchunks.world.type;
 
+import cubicchunks.util.Box;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
@@ -32,7 +33,6 @@ import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.CustomFeatureProcessor;
 import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
@@ -52,8 +52,8 @@ public class CustomCubicChunksWorldType extends WorldType implements ICubicWorld
 	}
 
 	@Override public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
-		CustomTerrainProcessor    terrain    = new CustomTerrainProcessor(world);
-		CustomFeatureProcessor    features   = new CustomFeatureProcessor();
+		CustomTerrainProcessor terrain = new CustomTerrainProcessor(world);
+		CustomFeatureProcessor features = new CustomFeatureProcessor();
 		CustomPopulationProcessor population = new CustomPopulationProcessor(world);
 
 		//TODO: this is mostly a hack to get the old system working
@@ -73,8 +73,8 @@ public class CustomCubicChunksWorldType extends WorldType implements ICubicWorld
 			}
 
 			@Override
-			public Vec3i[] getPopRequirment(Cube cube) {
-				return RECOMENDED_POPULATOR_REQUIRMENT;
+			public Box getPopulationRequirement(Cube cube) {
+				return RECOMMENDED_POPULATOR_REQUIREMENT;
 			}
 		};
 	}

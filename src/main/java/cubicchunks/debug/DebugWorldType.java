@@ -26,6 +26,7 @@ package cubicchunks.debug;
 import com.flowpowered.noise.module.source.Perlin;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.util.Box;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
@@ -36,7 +37,6 @@ import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
@@ -108,8 +108,8 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
 			}
 
 			@Override
-			public Vec3i[] getPopRequirment(Cube cube) {
-				return NO_POPULTOR_REQUIRMENT;
+			public Box getPopulationRequirement(Cube cube) {
+				return NO_POPULATOR_REQUIREMENT;
 			}
 		};
 	}

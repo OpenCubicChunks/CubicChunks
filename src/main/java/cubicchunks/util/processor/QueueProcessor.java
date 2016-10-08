@@ -25,7 +25,7 @@ package cubicchunks.util.processor;
 
 import com.google.common.collect.Sets;
 import cubicchunks.util.ArrayBatchedQueue;
-import cubicchunks.world.provider.ICubeCache;
+import cubicchunks.world.ICubeCache;
 
 import java.util.Set;
 

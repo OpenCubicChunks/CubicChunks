@@ -27,17 +27,16 @@ import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubeCache;
-import cubicchunks.world.provider.IProviderExtras;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
@@ -76,6 +75,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	private Queue<CubeCoords> cubesToUnload;
 	private Queue<ChunkPos> columnsToUnload;
 
+	// TODO: Use a better hash map!
 	private Map<CubeCoords, Cube> cubemap = new HashMap<>();
 
 	private ICubeGenerator   cubeGen;
@@ -83,7 +83,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	public ServerCubeCache(ICubicWorldServer worldServer, ICubeGenerator cubeGen) {
 		super((WorldServer) worldServer,
 				worldServer.getSaveHandler().getChunkLoader(worldServer.getProvider()), // forge uses this in
-				null); // safe to null out IChunkGenerator
+				null); // safe to null out IChunkGenerator (Note: lets hope mods don't touch it, ik its public)
 
 		this.cubeGen   = cubeGen;
 
@@ -102,7 +102,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	@Override
 	public void unloadAllChunks() {
 		// unload all the cubes in the columns
-		for(Cube cube : cubemap.values()){
+		for(Cube cube : cubemap.values()) {
 			cubesToUnload.add(cube.getCoords());
 		}
 	}
@@ -280,7 +280,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	@Override
 	public Cube getLoadedCube(CubeCoords coords) {
 		Cube cube = cubemap.get(coords);
-		if(cube != null){
+		if(cube != null) {
 			cube.unloaded = false;
 		}
 		return cube;
@@ -288,24 +288,21 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 
 	@Override
 	@Nullable
-	public Cube getCube(CubeCoords coords, Requirement req){
-		if(coords.getMinBlockY() < worldServer.getMinHeight()){
-			throw new IllegalStateException("Why are you getting a Cube so low? got: " + coords);
-		}
+	public Cube getCube(CubeCoords coords, Requirement req) {
 
 		Cube cube = getLoadedCube(coords);
 		if(req == Requirement.CACHE || 
-				(cube != null && req.compareTo(Requirement.GENERATE) <= 0)){
+				(cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
 			return cube;
 		}
 
 		// try to get the Column
 		Column column = getColumn(coords.getCubeX(), coords.getCubeZ(), req);
-		if(column == null){
+		if(column == null) {
 			return cube; // Column did not reach req, so Cube also does not
 		}
 
-		if(cube == null){
+		if(cube == null) {
 			// try to load the Cube
 			try {
 				worldServer.getProfiler().startSection("cubeIOLoad");
@@ -317,20 +314,20 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 				worldServer.getProfiler().endSection();
 			}
 
-			if(cube != null){
+			if(cube != null) {
 				column.addCube(cube);
 				cubemap.put(coords, cube); // cache the Cube
 				cube.onLoad();             // init the Cube
 
-				if(req.compareTo(Requirement.GENERATE) <= 0){
+				if(req.compareTo(Requirement.GENERATE) <= 0) {
 					return cube;
 				}
-			}else if(req == Requirement.LOAD){
+			}else if(req == Requirement.LOAD) {
 				return null;
 			}
 		}
 
-		if(cube == null){
+		if(cube == null) {
 			// generate the Cube
 			ICubePrimer primer = cubeGen.generateCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 			cube = new Cube(column, coords.getCubeY(), primer);
@@ -340,40 +337,35 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			this.worldServer.getFirstLightProcessor().initializeSkylight(cube); // init sky light, (does not require any other cubes, just OpacityIndex)
 			cube.onLoad();             // init the Cube
 
-			if(req.compareTo(Requirement.GENERATE) <= 0){
+			if(req.compareTo(Requirement.GENERATE) <= 0) {
 				return cube;
 			}
 		}
 
 		// forced full population of this Cube!
-		if(!cube.isFullyPopulated()){
-			Vec3i[] bounds = cubeGen.getPopRequirment(cube);
-			for(int x = bounds[0].getX();x <= bounds[1].getX();x++){
-				for(int y = bounds[0].getY();y <= bounds[1].getY();y++){
-					for(int z = bounds[0].getZ();z <= bounds[1].getZ();z++){
-						Cube popcube = getCube(new CubeCoords(x + coords.getCubeX(),
-															  y + coords.getCubeY(),
-															  z + coords.getCubeZ()));
-						if(!popcube.isPopulated()){
-							cubeGen.populate(popcube);
-							popcube.setPopulated(true);
-						}
-					}
+		if(!cube.isFullyPopulated()) {
+			cubeGen.getPopulationRequirement(cube).forEachPoint((x, y, z) -> {
+				Cube popcube = getCube(new CubeCoords(x + coords.getCubeX(),
+													  y + coords.getCubeY(),
+													  z + coords.getCubeZ()));
+				if(!popcube.isPopulated()) {
+					cubeGen.populate(popcube);
+					popcube.setPopulated(true);
 				}
-			}
+			});
 			cube.setFullyPopulated(true);
 		}
-		if(req == Requirement.POPULATE){
+		if(req == Requirement.POPULATE) {
 			return cube;
 		}
 
 		//TODO: Direct skylight might have changed and even Cubes that have there
 		//      initial light done, there might be work to do for a cube that just loaded
-		if(!cube.isInitialLightingDone()){
-			for(int x = -2;x <= 2;x++){
-				for(int y = -2;y <= 2;y++){
-					for(int z = -2;z <= 2;z++){
-						if(x != 0 || y != 0 || z != 0){
+		if(!cube.isInitialLightingDone()) {
+			for(int x = -2;x <= 2;x++) {
+				for(int y = -2;y <= 2;y++) {
+					for(int z = -2;z <= 2;z++) {
+						if(x != 0 || y != 0 || z != 0) {
 							getCube(coords.add(x, y, z)); // FirstLightProcessor is too soft and fluffy that it can't even ask for Cubes correctly!
 						}
 					}
@@ -387,9 +379,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 
 	@Override
 	@Nullable
-	public Column getColumn(int columnX, int columnZ, Requirement req){
+	public Column getColumn(int columnX, int columnZ, Requirement req) {
 		Column column = getLoadedChunk(columnX, columnZ);
-		if(column != null || req == Requirement.CACHE){
+		if(column != null || req == Requirement.CACHE) {
 			return column;
 		}
 
@@ -399,12 +391,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			log.error("Unable to load column ({},{})", columnX, columnZ, ex);
 			return null;
 		}
-		if(column != null){
+		if(column != null) {
 			id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), column);
 			column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just loaded
 			column.onChunkLoad();
 			return column;
-		}else if(req == Requirement.LOAD){
+		}else if(req == Requirement.LOAD) {
 			return null;
 		}
 

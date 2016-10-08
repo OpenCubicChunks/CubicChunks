@@ -31,15 +31,14 @@ import cubicchunks.network.PacketUnloadCube;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.IProviderExtras;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.ForgeModContainer;
@@ -205,7 +204,7 @@ public class PlayerCubeMapEntry {
 			return;
 		}
 
-		ICubicWorld world = this.cube.getCubicWorld();
+		ICubicWorld world = this.cube.getWorld();
 
 		if (this.dirtyBlocks.size() >= ForgeModContainer.clumpingThreshold) {
 			// send whole cube
@@ -230,7 +229,7 @@ public class PlayerCubeMapEntry {
 		if (blockEntity == null) {
 			return;
 		}
-		SPacketUpdateTileEntity packet = blockEntity.getUpdatePacket();
+		Packet packet = blockEntity.getUpdatePacket();
 		if (packet == null) {
 			return;
 		}

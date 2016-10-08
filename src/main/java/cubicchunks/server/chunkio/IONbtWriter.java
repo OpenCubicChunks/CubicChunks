@@ -112,28 +112,26 @@ class IONbtWriter {
 
 	private static void writeBlocks(Cube cube, NBTTagCompound cubeNbt) {
 		ExtendedBlockStorage ebs = cube.getStorage();
-		if(ebs == null){
+		if(ebs == null) {
 			return; // no data to save anyway
 		}
 
-        byte[] abyte = new byte[4096];
-        NibbleArray data = new NibbleArray();
-        NibbleArray add = ebs.getData().getDataForNBT(abyte, data);
-        
-        cubeNbt.setByteArray("Blocks", abyte);
-        cubeNbt.setByteArray("Data", data.getData());
+		byte[] abyte = new byte[Cube.SIZE*Cube.SIZE*Cube.SIZE];
+		NibbleArray data = new NibbleArray();
+		NibbleArray add = ebs.getData().getDataForNBT(abyte, data);
 
-        if (add != null)
-        {
-        	cubeNbt.setByteArray("Add", add.getData());
-        }
+		cubeNbt.setByteArray("Blocks", abyte);
+		cubeNbt.setByteArray("Data", data.getData());
 
-        cubeNbt.setByteArray("BlockLight", ebs.getBlocklightArray().getData());
+		if (add != null) {
+			cubeNbt.setByteArray("Add", add.getData());
+		}
 
-        if (!cube.getCubicWorld().getProvider().getHasNoSky())
-        {
-        	cubeNbt.setByteArray("SkyLight", ebs.getSkylightArray().getData());
-        }
+		cubeNbt.setByteArray("BlockLight", ebs.getBlocklightArray().getData());
+
+		if (!cube.getWorld().getProvider().getHasNoSky()) {
+			cubeNbt.setByteArray("SkyLight", ebs.getSkylightArray().getData());
+		}
 	}
 
 	private static void writeEntities(Cube cube, NBTTagCompound cubeNbt) {// entities
@@ -166,7 +164,7 @@ class IONbtWriter {
 	private static void writeScheduledTicks(Cube cube, NBTTagCompound cubeNbt) {// scheduled block ticks
 		Iterable<NextTickListEntry> scheduledTicks = getScheduledTicks(cube);
 		if (scheduledTicks != null) {
-			long time = cube.getCubicWorld().getTotalWorldTime();
+			long time = cube.getWorld().getTotalWorldTime();
 
 			NBTTagList nbtTicks = new NBTTagList();
 			cubeNbt.setTag("TileTicks", nbtTicks);
@@ -196,10 +194,10 @@ class IONbtWriter {
 		ArrayList<NextTickListEntry> out = new ArrayList<>();
 
 		// make sure this is a server
-		if (!(cube.getCubicWorld() instanceof WorldServer)) {
+		if (!(cube.getWorld() instanceof WorldServer)) {
 			throw new Error("Column is not on the server!");
 		}
-		WorldServer worldServer = (WorldServer) cube.getCubicWorld();
+		WorldServer worldServer = (WorldServer) cube.getWorld();
 
 		// copy the ticks for this cube
 		copyScheduledTicks(out, getPendingTickListEntriesHashSet(worldServer), cube);

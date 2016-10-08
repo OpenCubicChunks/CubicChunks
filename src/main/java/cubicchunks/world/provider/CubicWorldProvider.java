@@ -63,7 +63,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 	 * And since any comparison with NaN returns false - void fog is effectively disabled.
 	 */
 	@Override
-	public double getVoidFogYFactor(){
+	public double getVoidFogYFactor() {
 		return Double.NaN;
 	}
 
@@ -101,45 +101,42 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		//TODO: uses getTopSolidOrLiquidBlock() ... not good
 		BlockPos ret = this.worldObj.getSpawnPoint();
 
-        boolean isAdventure = worldObj.getWorldInfo().getGameType() == GameType.ADVENTURE;
-        int spawnFuzz = this.worldObj instanceof WorldServer ? worldObj.getWorldType().getSpawnFuzz((WorldServer)this.worldObj, this.worldObj.getMinecraftServer()) : 1;
-        int border = MathHelper.floor_double(worldObj.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
-        if (border < spawnFuzz) spawnFuzz = border;
+		boolean isAdventure = worldObj.getWorldInfo().getGameType() == GameType.ADVENTURE;
+		int spawnFuzz = this.worldObj instanceof WorldServer ? worldObj.getWorldType().getSpawnFuzz((WorldServer)this.worldObj, this.worldObj.getMinecraftServer()) : 1;
+		int border = MathHelper.floor_double(worldObj.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
+		if (border < spawnFuzz) spawnFuzz = border;
 
-        if (!getHasNoSky() && !isAdventure && spawnFuzz != 0)
-        {
-            if (spawnFuzz < 2) spawnFuzz = 2;
-            int spawnFuzzHalf = spawnFuzz / 2;
-            ret = getTSOLBFixed(ret.add(worldObj.rand.nextInt(spawnFuzzHalf) - spawnFuzz, 0, worldObj.rand.nextInt(spawnFuzzHalf) - spawnFuzz));
-        }
+		if (!getHasNoSky() && !isAdventure && spawnFuzz != 0) {
+			if (spawnFuzz < 2) spawnFuzz = 2;
+			int spawnFuzzHalf = spawnFuzz / 2;
+			ret = getTSOLBFixed(ret.add(worldObj.rand.nextInt(spawnFuzzHalf) - spawnFuzz, 0, worldObj.rand.nextInt(spawnFuzzHalf) - spawnFuzz));
+		}
 
-        return ret;
+		return ret;
 	}
 
-	private BlockPos getTSOLBFixed(BlockPos pos)
-    {
-        Chunk chunk = worldObj.getChunkFromBlockCoords(pos);
-        BlockPos blockpos;
-        BlockPos blockpos1;
-        
-        int startY = chunk.getHeight(pos);
-        startY = startY < getCubicWorld().getMinHeight() ? 80 : startY;
+	private BlockPos getTSOLBFixed(BlockPos pos) {
+		Chunk chunk = worldObj.getChunkFromBlockCoords(pos);
+		BlockPos blockpos;
+		BlockPos blockpos1;
 
-        for (blockpos = new BlockPos(pos.getX(), startY, pos.getZ()); blockpos.getY() >= 0; blockpos = blockpos1)
-        {
-            blockpos1 = blockpos.down();
-            IBlockState state = chunk.getBlockState(blockpos1);
+		int startY = chunk.getHeight(pos);
+		startY = startY < getCubicWorld().getMinHeight() ? 80 : startY;
 
-            if (state.getMaterial().blocksMovement() && !state.getBlock().isLeaves(state, worldObj, blockpos1) && !state.getBlock().isFoliage(worldObj, blockpos1))
-            {
-                break;
-            }
-        }
+		for (blockpos = new BlockPos(pos.getX(), startY, pos.getZ()); blockpos.getY() >= 0; blockpos = blockpos1)
+		{
+			blockpos1 = blockpos.down();
+			IBlockState state = chunk.getBlockState(blockpos1);
 
-        return blockpos;
-    }
+			if (state.getMaterial().blocksMovement() && !state.getBlock().isLeaves(state, worldObj, blockpos1) && !state.getBlock().isFoliage(worldObj, blockpos1)) {
+				break;
+			}
+		}
 
-	public ICubicWorldServer getCubicWorld(){
+		return blockpos;
+	}
+
+	public ICubicWorldServer getCubicWorld() {
 		return (ICubicWorldServer)worldObj;
 	}
 }

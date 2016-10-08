@@ -24,11 +24,11 @@
 package cubicchunks.lighting;
 
 import cubicchunks.util.FastCubeBlockAccess;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubeCache;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenCustomHashMap;
 import it.unimi.dsi.fastutil.ints.IntHash;
@@ -106,7 +106,7 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void initializeSkylight(Cube cube) {
-		if(cube.getCubicWorld().getProvider().getHasNoSky()){
+		if(cube.getWorld().getProvider().getHasNoSky()) {
 			return;
 		}
 		
@@ -134,11 +134,11 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void diffuseSkylight(Cube cube) {
-		if(cube.getCubicWorld().getProvider().getHasNoSky()){
+		if(cube.getWorld().getProvider().getHasNoSky()) {
 			cube.setInitialLightingDone(true);
 			return;
 		}
-		ICubicWorld world = cube.getCubicWorld();
+		ICubicWorld world = cube.getWorld();
 
 		// Cache min/max Y, generating them may be expensive
 		int[][] minBlockYArr = new int[16][16];
@@ -221,7 +221,7 @@ public class FirstLightProcessor {
 	 * @return true if the update was successful, false otherwise
 	 */
 	private boolean diffuseSkylightInBlockColumn(Cube cube, MutableBlockPos pos, int minBlockY, int maxBlockY, Int2ObjectMap<FastCubeBlockAccess> blockAccessMap) {
-		ICubicWorld world = cube.getCubicWorld();
+		ICubicWorld world = cube.getWorld();
 
 		int cubeMinBlockY = cubeToMinBlock(cube.getY());
 		int cubeMaxBlockY = cubeToMaxBlock(cube.getY());
@@ -291,7 +291,7 @@ public class FirstLightProcessor {
 	 */
 	private static boolean canUpdateCube(Cube cube) {
 		BlockPos cubeCenter = getCubeCenter(cube);
-		return cube.getCubicWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> c != null);
+		return cube.getWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> c != null);
 	}
 
 	/**

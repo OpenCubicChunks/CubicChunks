@@ -23,10 +23,10 @@
  */
 package cubicchunks.world.column;
 
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubeCache;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -61,7 +61,6 @@ public class BlankColumn extends Column {
 	}
 
 	public void addCube(Cube cube) {
-		throw new UnsupportedOperationException("Server must have sent Cubes before Columns");
 	}
 
 	@Override

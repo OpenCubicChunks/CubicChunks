@@ -21,28 +21,34 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.provider;
+package cubicchunks.util;
 
-import javax.annotation.Nullable;
+public class Box {
 
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
+	private final int x1, y1, z1;
+	private final int x2, y2, z2;
 
-public interface ICubeCache {
+	public Box(int x1, int y1, int z1, int x2, int y2, int z2) {
+		this.x1 = x1;
+		this.y1 = y1;
+		this.z1 = z1;
+		this.x2 = x2;
+		this.y2 = y2;
+		this.z2 = z2;
+	}
 
-	@Nullable
-	Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
+	public void forEachPoint(XYZFunction function) {
+		for(int x = x1;x <= x2;x++){
+			for(int y = y1;y <= y2;y++){
+				for(int z = z1;z <= z2;z++){
+					function.apply(x, y, z);
+				}
+			}
+		}
+	}
 
-	@Nullable
-	Cube getLoadedCube(CubeCoords coords);
-
-	Cube getCube(int cubeX, int cubeY, int cubeZ);
-
-	Cube getCube(CubeCoords coords);
-
-	@Nullable
-    Column getLoadedChunk(int x, int z); // more strictly define the return type
-
-    Column provideChunk(int x, int z);   // more strictly define the return type
+	@FunctionalInterface
+	public static interface XYZFunction {
+		void apply(int x, int y, int z);
+	}
 }

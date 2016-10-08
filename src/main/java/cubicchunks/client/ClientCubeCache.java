@@ -30,12 +30,12 @@ import javax.annotation.Nullable;
 
 import cubicchunks.util.CubeCoords;
 import cubicchunks.util.ReflectionUtil;
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubeCache;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -57,13 +57,12 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 	@Override
 	@Nullable
-    public Column getLoadedChunk(int x, int z)
-    {
-        return (Column)super.getLoadedChunk(x, z);
-    }
+	public Column getLoadedChunk(int x, int z) {
+		return (Column)super.getLoadedChunk(x, z);
+	}
 
 	@Override
-	public Column provideChunk(int x, int z){
+	public Column provideChunk(int x, int z) {
 		return (Column)super.provideChunk(x, z);
 	}
 
@@ -115,7 +114,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	@Override
 	public Cube getCube(CubeCoords coords) {
 		Cube cube = getLoadedCube(coords);
-		if(cube == null){
+		if(cube == null) {
 			return blankCube;
 		}
 		return cube;

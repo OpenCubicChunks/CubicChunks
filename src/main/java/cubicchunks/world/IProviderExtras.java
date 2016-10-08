@@ -21,52 +21,43 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator;
+package cubicchunks.world;
 
-import java.util.Collections;
-import java.util.List;
+import javax.annotation.Nullable;
 
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome.SpawnListEntry;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.EmptyChunk;
-import net.minecraft.world.chunk.IChunkGenerator;
+import cubicchunks.util.CubeCoords;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
-public class DummyChunkGenerator implements IChunkGenerator {
+public interface IProviderExtras {
 
-	private World world;
+	/**
+	 * Gets a Column immediately
+	 * 
+	 * @param columnX the Column's X coordinate
+	 * @param columnZ the Column's Z coordinate
+	 * @param req what the requirments are before you get the Column
+	 * @return the Column or null if no Column could be found or created
+	 */
+	@Nullable
+	Column getColumn(int columnX, int columnZ, Requirement req);
 
-	public DummyChunkGenerator(World world) {
-		this.world = world;
+	/**
+	 * Gets a Cube immediately
+	 * 
+	 * @param pos the Cube's location
+	 * @param req what the requirments are before you get the Cube
+	 * @return the Cube or null if no Cube could be found or created
+	 */
+	@Nullable
+	Cube getCube(CubeCoords pos, Requirement req);
+
+	//void waitOn(Consumer<Cube> callback);
+
+	/**
+	 * The level of work required to be done on a Cube/Column before it is ready
+	 */
+	public enum Requirement {
+		CACHE, LOAD, GENERATE, POPULATE, LIGHT
 	}
-
-	@Override
-	public Chunk provideChunk(int x, int z) {
-		return new EmptyChunk(world, x, z);
-	}
-
-	@Override
-	public void populate(int x, int z) {}
-
-	@Override
-	public boolean generateStructures(Chunk chunkIn, int x, int z) {
-		return false;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
-		return Collections.EMPTY_LIST;
-	}
-
-	@Override
-	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position) {
-		return null;
-	}
-
-	@Override
-	public void recreateStructures(Chunk chunkIn, int x, int z) {}
-
 }

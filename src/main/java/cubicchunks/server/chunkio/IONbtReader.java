@@ -139,23 +139,22 @@ public class IONbtReader {
 	private static void readBlocks(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {
 		boolean isEmpty = !nbt.hasKey("Blocks");// is this an empty cube?
 		if (!isEmpty) {
-			ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), !cube.getCubicWorld().getProvider().getHasNoSky());
-            
+			ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), !cube.getWorld().getProvider().getHasNoSky());
+
 			byte[] abyte = nbt.getByteArray("Blocks");
-            NibbleArray data = new NibbleArray(nbt.getByteArray("Data"));
-            NibbleArray add = nbt.hasKey("Add", 7) ? new NibbleArray(nbt.getByteArray("Add")) : null;
-            
-            ebs.getData().setDataFromNBT(abyte, data, add);
-            
-            ebs.setBlocklightArray(new NibbleArray(nbt.getByteArray("BlockLight")));
+			NibbleArray data = new NibbleArray(nbt.getByteArray("Data"));
+			NibbleArray add = nbt.hasKey("Add", 7) ? new NibbleArray(nbt.getByteArray("Add")) : null;
 
-            if (!world.getProvider().getHasNoSky())
-            {
-                ebs.setSkylightArray(new NibbleArray(nbt.getByteArray("SkyLight")));
-            }
+			ebs.getData().setDataFromNBT(abyte, data, add);
 
-            ebs.removeInvalidBlocks();
-            cube.setStorage(ebs);
+			ebs.setBlocklightArray(new NibbleArray(nbt.getByteArray("BlockLight")));
+
+			if (!world.getProvider().getHasNoSky()) {
+				ebs.setSkylightArray(new NibbleArray(nbt.getByteArray("SkyLight")));
+			}
+
+			ebs.removeInvalidBlocks();
+			cube.setStorage(ebs);
 		}
 	}
 
@@ -254,7 +253,7 @@ public class IONbtReader {
 
 				int localX = i & 0xF;
 				int localZ = i >> 4;
-				cube.getCubicWorld().getLightingManager().columnSkylightUpdate(
+				cube.getWorld().getLightingManager().columnSkylightUpdate(
 						LightingManager.UpdateType.QUEUED, cube.getColumn(),
 						localX,
 						minUpdateY, maxUpdateY,

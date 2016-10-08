@@ -23,20 +23,18 @@
  */
 package cubicchunks.worldgen.generator.flat;
 
+import cubicchunks.util.Box;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubePrimer;
-import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.World;
 
 public class FlatTerrainProcessor extends BasicCubeGenerator {
 
-	public FlatTerrainProcessor(ICubicWorld world){
+	public FlatTerrainProcessor(ICubicWorld world) {
 		super(world);
 	}
 
@@ -75,18 +73,11 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
 
 	@Override
 	public void populate(Cube cube) {
-		if(cube.containsBlockPos(new BlockPos(700, 100, 200))){
-			for(int i = 0;i < 60;i++){
-				EntityWither wither = new EntityWither((World)world);
-				wither.setPositionAndRotation(700.0, 100.0, 200.0, 0.0f, 0.0f);
-				world.spawnEntityInWorld(wither);
-			}
-		}
 	}
 
 	@Override
-	public Vec3i[] getPopRequirment(Cube cube) {
-		return NO_POPULTOR_REQUIRMENT;
+	public Box getPopulationRequirement(Cube cube) {
+		return NO_POPULATOR_REQUIREMENT;
 	}
 
 	@Override

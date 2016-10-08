@@ -23,6 +23,7 @@
  */
 package cubicchunks;
 
+import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.type.ICubicWorldType;
@@ -45,9 +46,9 @@ public class CommonEventHandler {
 		ICubicWorld world = (ICubicWorld) evt.getWorld();
 
 		WorldType type = evt.getWorld().getWorldType();
-		if(type instanceof ICubicWorldType){
+		if(type instanceof ICubicWorldType) {
 			WorldProvider provider = ((ICubicWorldType)type).getReplacedProviderFor(world.getProvider());
-			world.hotSetProvider(provider);
+			ReflectionUtil.setFieldValueSrg(world, "field_73011_w", provider);
 		}
 
 		world.initCubicWorld();

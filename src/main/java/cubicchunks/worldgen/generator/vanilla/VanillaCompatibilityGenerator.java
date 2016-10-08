@@ -25,6 +25,7 @@ package cubicchunks.worldgen.generator.vanilla;
 
 import java.util.List;
 
+import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
@@ -36,7 +37,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProviderHell;
 import net.minecraft.world.biome.Biome;
@@ -69,17 +69,17 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 		int         topcount = 0;
 		{   // find the type of block that is most common on the bottom layer
 			IBlockState laststate = null;
-			for(int at = 0;at < 16 * 16;at++){
+			for(int at = 0;at < 16 * 16;at++) {
 				IBlockState state = lastChunk.getBlockState(at | 0x0F, 0, at >> 4);
-				if(state != laststate){
+				if(state != laststate) {
 
 					int count = 1;
-					for(int i = at + 1;i < 16 * 16;i++){
-						if(lastChunk.getBlockState(i | 0x0F, 0, i >> 4) == state){
+					for(int i = at + 1;i < 16 * 16;i++) {
+						if(lastChunk.getBlockState(i | 0x0F, 0, i >> 4) == state) {
 							count++;
 						}
 					}
-					if(count > topcount){
+					if(count > topcount) {
 						topcount = count;
 						topstate = state;
 					}
@@ -88,7 +88,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 			}
 		}
 
-		if(topstate.getBlock() != Blocks.BEDROCK){
+		if(topstate.getBlock() != Blocks.BEDROCK) {
 			underBlock = topstate;
 		}else{
 			stripBadrock = true;
@@ -109,10 +109,9 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 						Coords.CUBE_MAX_X, Coords.CUBE_MAX_Z);
 
 		byte[] abyte = column.getBiomeArray();
-        for (int i = 0; i < abyte.length; ++i)
-        {
-            abyte[i] = (byte)Biome.getIdForBiome(this.biomes[i]);
-        }
+		for (int i = 0; i < abyte.length; ++i) {
+			abyte[i] = (byte)Biome.getIdForBiome(this.biomes[i]);
+		}
 	}
 
 	@Override
@@ -124,26 +123,26 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 	public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
 		CubePrimer primer = new CubePrimer();
 
-		if(cubeY < 0){
-			for(int x = 0;x < Coords.CUBE_MAX_X;x++){
-				for(int y = 0;y < Coords.CUBE_MAX_Y;y++){
-					for(int z = 0;z < Coords.CUBE_MAX_Z;z++){
+		if(cubeY < 0) {
+			for(int x = 0;x < Coords.CUBE_MAX_X;x++) {
+				for(int y = 0;y < Coords.CUBE_MAX_Y;y++) {
+					for(int z = 0;z < Coords.CUBE_MAX_Z;z++) {
 						primer.setBlockState(x, y, z, underBlock);
 					}
 				}
 			}
-		}else if(cubeY > 15){
+		}else if(cubeY > 15) {
 			// over block?
 		}else{
-			if(lastChunk.xPosition != cubeX || lastChunk.zPosition != cubeZ){
+			if(lastChunk.xPosition != cubeX || lastChunk.zPosition != cubeZ) {
 				lastChunk = vanilla.provideChunk(cubeX, cubeZ);
 			}
 
 			//generate 16 cubes at once!
-			if(!optimizationHack){
+			if(!optimizationHack) {
 				optimizationHack = true;
 				for(int y = 15; y >= 0; y--) {
-					if(y == cubeY){
+					if(y == cubeY) {
 						continue;
 					}
 					world.getCubeFromCubeCoords(cubeX, y, cubeZ);
@@ -152,10 +151,10 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 			}
 
 			ExtendedBlockStorage storage = lastChunk.getBlockStorageArray()[cubeY];
-			if(storage != null && !storage.isEmpty()){
-				for(int x = 0;x < Coords.CUBE_MAX_X;x++){
-					for(int y = 0;y < Coords.CUBE_MAX_Y;y++){
-						for(int z = 0;z < Coords.CUBE_MAX_Z;z++){
+			if(storage != null && !storage.isEmpty()) {
+				for(int x = 0;x < Coords.CUBE_MAX_X;x++) {
+					for(int y = 0;y < Coords.CUBE_MAX_Y;y++) {
+						for(int z = 0;z < Coords.CUBE_MAX_Z;z++) {
 							IBlockState state = storage.get(x, y, z);
 							primer.setBlockState(x, y, z, 
 									stripBadrock && state == badrock ? underBlock : state);
@@ -170,9 +169,9 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
 	@Override
 	public void populate(Cube cube) {
-		if(cube.getY() >= 0 && cube.getY() <= 15){
-			for(int x = 0;x < 2;x++){
-				for(int z = 0;z < 2;z++){
+		if(cube.getY() >= 0 && cube.getY() <= 15) {
+			for(int x = 0;x < 2;x++) {
+				for(int z = 0;z < 2;z++) {
 					for(int y = 15; y >= 0;y--) {
 						// Vanilla populators break the rules! They need to find the ground!
 						world.getCubeFromCubeCoords(cube.getX() + x, y, cube.getZ() + z);
@@ -190,14 +189,14 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 	}
 
 	@Override
-	public Vec3i[] getPopRequirment(Cube cube) {
-		if(cube.getY() >= 0 && cube.getY() <= 15){
-			return new Vec3i[]{
-					new Vec3i(-1,  0 -cube.getY(), -1),
-					new Vec3i( 0, 15 -cube.getY(),  0)
-			};
+	public Box getPopulationRequirement(Cube cube) {
+		if(cube.getY() >= 0 && cube.getY() <= 15) {
+			return new Box(
+					-1,  0 - cube.getY(), -1,
+					 0, 15 - cube.getY(),  0
+			);
 		}
-		return NO_POPULTOR_REQUIRMENT;
+		return NO_POPULATOR_REQUIREMENT;
 	}
 
 	@Override

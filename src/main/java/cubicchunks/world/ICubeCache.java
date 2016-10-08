@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.provider;
+package cubicchunks.world;
 
 import javax.annotation.Nullable;
 
@@ -29,32 +29,20 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
-public interface IProviderExtras {
+public interface ICubeCache {
 
-	/**
-	 * Gets a Column immediately
-	 * 
-	 * @param columnX the Column's X coordinate
-	 * @param columnZ the Column's Z coordinate
-	 * @param req what the requirments are before you get the Column
-	 * @return the Column or null if no Column could be found or created
-	 */
 	@Nullable
-	Column getColumn(int columnX, int columnZ, Requirement req);
+	Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
 
-	/**
-	 * Gets a Cube immediately
-	 * 
-	 * @param pos the Cube's location
-	 * @param req what the requirments are before you get the Cube
-	 * @return the Cube or null if no Cube could be found or created
-	 */
 	@Nullable
-	Cube getCube(CubeCoords pos, Requirement req);
+	Cube getLoadedCube(CubeCoords coords);
 
-	//void waitOn(Consumer<Cube> callback);
+	Cube getCube(int cubeX, int cubeY, int cubeZ);
 
-	public enum Requirement {
-		CACHE, LOAD, GENERATE, POPULATE, LIGHT
-	}
+	Cube getCube(CubeCoords coords);
+
+	@Nullable
+	Column getLoadedChunk(int x, int z); // more strictly define the return type
+
+	Column provideChunk(int x, int z);   // more strictly define the return type
 }

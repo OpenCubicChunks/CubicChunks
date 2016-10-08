@@ -23,10 +23,10 @@
  */
 package cubicchunks.util;
 
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubeCache;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -47,7 +47,7 @@ public class FastCubeBlockAccess {
 
 	public FastCubeBlockAccess(ICubeCache cache, Cube cube, int radius) {
 		int n = radius*2 + 1;
-		this.world = cube.getCubicWorld();
+		this.world = cube.getWorld();
 		this.cache = new Cube[n][n][n];
 		this.originX = cube.getX() - radius;
 		this.originY = cube.getY() - radius;
@@ -55,13 +55,11 @@ public class FastCubeBlockAccess {
 
 		for (int relativeCubeX = -radius; relativeCubeX <= radius; relativeCubeX++) {
 			for (int relativeCubeZ = -radius; relativeCubeZ <= radius; relativeCubeZ++) {
-				Column column = cache.provideChunk(
-						originX + relativeCubeX + radius,
-						originZ + relativeCubeZ + radius);
-
 				for (int relativeCubeY = -radius; relativeCubeY <= radius; relativeCubeY++) {
 					this.cache[relativeCubeX + radius][relativeCubeY + radius][relativeCubeZ + radius] = 
-							column.getCube(originY + relativeCubeY + radius);
+						cache.getLoadedCube(originX + relativeCubeX + radius,
+											originY + relativeCubeY + radius,
+											originZ + relativeCubeZ + radius);
 				}
 			}
 		}
