@@ -28,10 +28,10 @@ import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
 import cubicchunks.util.AddressTools;
-import cubicchunks.util.ReflectionUtil;
-import cubicchunks.world.CubicWorldProviderSurface;
+import cubicchunks.world.type.CustomCubicChunksWorldType;
+import cubicchunks.world.type.FlatCubicChunksWorldType;
+import cubicchunks.world.type.VanillaCubicChunksWorldType;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.world.DimensionType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
@@ -45,6 +45,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
@@ -71,13 +72,8 @@ public class CubicChunks {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
 		LOGGER = e.getModLog();
-		//Set custom WorldProvider for Overworld
-		//for vanilla world this world provider will work the same way as vanilla world provider
 
-		//set "clazz" field
-		ReflectionUtil.setFieldValueSrg(DimensionType.OVERWORLD, "field_186077_g", CubicWorldProviderSurface.class);
-
-		this.config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
+		config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
 		MinecraftForge.EVENT_BUS.register(this); // Register our config reload hook
 
 		if(DEBUG_ENABLED) {

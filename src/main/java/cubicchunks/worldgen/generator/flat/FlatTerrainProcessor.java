@@ -23,43 +23,65 @@
  */
 package cubicchunks.worldgen.generator.flat;
 
-import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.util.Box;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.BasicCubeGenerator;
+import cubicchunks.worldgen.generator.CubePrimer;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 
-public class FlatTerrainProcessor implements CubeProcessor {
+public class FlatTerrainProcessor extends BasicCubeGenerator {
 
-	@Override public void calculate(Cube cube) {
-		if (cube.getY() >= 0) {
-			return;
+	public FlatTerrainProcessor(ICubicWorld world) {
+		super(world);
+	}
+
+	@Override
+	public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+		ICubePrimer primer = new CubePrimer();
+
+		if (cubeY >= 0) {
+			return primer;
 		}
-		if (cube.getY() == -1) {
-			BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		if (cubeY == -1) {
 			for (int x = 0; x < 16; x++) {
 				for (int z = 0; z < 16; z++) {
-					pos.setPos(x, 15, z);
-					cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
+					primer.setBlockState(x, 15, z, Blocks.GRASS.getDefaultState());
 					for (int y = 14; y >= 10; y--) {
-						pos.setPos(x, y, z);
-						cube.setBlockForGeneration(pos, Blocks.DIRT.getDefaultState());
+						primer.setBlockState(x, y, z, Blocks.DIRT.getDefaultState());
 					}
 					for (int y = 9; y >= 0; y--) {
-						pos.setPos(x, y, z);
-						cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
+						primer.setBlockState(x, y, z, Blocks.STONE.getDefaultState());
 					}
 				}
 			}
-			return;
+			return primer;
 		}
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+
 		for (int x = 0; x < 16; x++) {
 			for (int z = 0; z < 16; z++) {
 				for (int y = 0; y < 16; y++) {
-					pos.setPos(x, y, z);
-					cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
+					primer.setBlockState(x, y, z, Blocks.STONE.getDefaultState());
 				}
 			}
 		}
+
+		return primer;
+	}
+
+	@Override
+	public void populate(Cube cube) {
+	}
+
+	@Override
+	public Box getPopulationRequirement(Cube cube) {
+		return NO_POPULATOR_REQUIREMENT;
+	}
+
+	@Override
+	public BlockPos getClosestStructure(String name, BlockPos pos) {
+		return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null; // eyes of ender are the new F3 for finding the origin :P
 	}
 }

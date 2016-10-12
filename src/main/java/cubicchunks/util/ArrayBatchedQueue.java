@@ -28,6 +28,7 @@ import java.util.Iterator;
 
 public class ArrayBatchedQueue<T> extends ArrayDequeHashSet<T> {
 
+	@SuppressWarnings("unused")
 	private static final long serialVersionUID = 542092146475009002L;
 
 	public void getBatch(Collection<T> out, int size) {

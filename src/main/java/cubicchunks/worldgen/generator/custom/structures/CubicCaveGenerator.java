@@ -24,10 +24,9 @@
 package cubicchunks.worldgen.generator.custom.structures;
 
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.Random;
@@ -39,7 +38,7 @@ import java.util.Random;
 public class CubicCaveGenerator extends CubicStructureGenerator {
 
 	@Override
-	protected void generate(ICubicWorld world, Cube cube, int x, int y, int z, int xOrigin, int yOrigin, int zOrigin) {
+	protected void generate(ICubicWorld world, ICubePrimer cube, int x, int y, int z, int xOrigin, int yOrigin, int zOrigin) {
 		if (this.rand.nextInt(16) != 0) {
 			return;
 		}
@@ -78,7 +77,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	/**
 	 * Generates a larger initial cave node than usual. Called 25% of the time.
 	 */
-	protected void generateLargeNode(Cube cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y,
+	protected void generateLargeNode(ICubePrimer cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y,
 	                                 double z) {
 		this.generateNode(cube, seed, xOrigin, yOrigin, zOrigin, x, y, z, 1.0F + this.rand.nextFloat()*6.0F, 0.0F,
 				0.0F, -1, -1, 0.5D);
@@ -88,7 +87,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	 * Generates a node in the current cave system recursion tree.
 	 */
 	@Override
-	protected void generateNode(Cube cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y,
+	protected void generateNode(ICubePrimer cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y,
 	                            double z, float size_base, float curve, float angle, int numTry, int tries, double yModSinMultiplier) {
 		Random rand = new Random(seed);
 		double xOCenter = xOrigin*16D + 8D;
@@ -211,8 +210,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 								for (int y1 = yDist2 - 1; y1 >= yDist1; --y1) {
 									double distY = calculateDistance(yOrigin, y1, y, yModSin);
 
-									BlockPos pos = new BlockPos(x1, y1, z1);
-									Block block = cube.getBlockState(pos).getBlock();
+									Block block = cube.getBlockState(x1, y1, z1).getBlock();
 
 									if (block != Blocks.STONE && block != Blocks.DIRT && block != Blocks.GRASS) {
 										continue;
@@ -223,12 +221,12 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 									if (distY > -0.7D && distX*distX + distY*distY + distZ*distZ < 1.0D) {
 										// No lava generation, infinite depth. Lava will be generated differently (or
 										// not generated)
-										cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
+										cube.setBlockState(x1, y1, z1, Blocks.AIR.getDefaultState());
 									}
 
 									if (grass && block == Blocks.DIRT) {
-										cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
-										cube.setBlockForGeneration(pos.up(), Blocks.AIR.getDefaultState());
+										cube.setBlockState(x1, y1, z1, Blocks.GRASS.getDefaultState());
+										cube.setBlockState(x1, y1 + 1, z1, Blocks.AIR.getDefaultState());
 									}
 								}
 							}

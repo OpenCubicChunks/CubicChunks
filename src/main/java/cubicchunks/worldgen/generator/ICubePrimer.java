@@ -21,34 +21,45 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator;
 
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.ColumnGenerator;
-import net.minecraft.world.WorldType;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 
-public abstract class BaseCubicWorldType extends WorldType implements ICubicChunksWorldType {
+public interface ICubePrimer {
 
-	public BaseCubicWorldType(String name) {
-		super(name);
-	}
+	static final IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
 
 	/**
-	 * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
-	 * <p>
-	 * In EntityRenderer.updateFogColor entity Y position is multiplied by
-	 * value returned by this method.
-	 * <p>
-	 * If this method returns any real number - then the void fog factor can be <= 0.
-	 * But if this method returns NaN - the result is always NaN. And Minecraft enables void fog only of the value is < 1.
-	 * And since any comparison with NaN returns false - void fog is effectively disabled.
+	 * Gets a block state at the given location
+	 * 
+	 * @param x cube relative x
+	 * @param y cube relative y
+	 * @param z cube relative z
+	 * @return the block state
 	 */
-	@Override
-	public double voidFadeMagnitude() {
-		return Double.NaN;
-	}
+	IBlockState getBlockState(int x, int y, int z);
 
-	@Override public ColumnGenerator createColumnGenerator(ICubicWorldServer world) {
-		return new ColumnGenerator(world);
-	}
+	/**
+	 * Sets a block state at the given location
+	 * 
+	 * @param x cube relative x
+	 * @param y cube relative x
+	 * @param z cube relative x
+	 * @param state the block state
+	 */
+	void setBlockState(int x, int y, int z, IBlockState state);
+
+	/**
+	 * Counting down from the highest block in the cube, find the first non-air
+	 * block for the given location.<br>
+	 * <br>
+	 * NOTE: This will return -1 if there where no blocks under that location!<br>
+	 * WARNING: It does not know if there are blocks over this cube!<br>
+	 * 
+	 * @param x cube relative x
+	 * @param z cube relative x
+	 * @return the height of the top non-air block at x, z or -1 if there was no block found
+	 */
+	int findGroundHeight(int x, int z);
 }

@@ -26,8 +26,6 @@ package cubicchunks.world;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.server.ServerCubeCache;
-import cubicchunks.worldgen.ColumnGenerator;
-import cubicchunks.worldgen.ICubicChunkGenerator;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -35,10 +33,6 @@ import net.minecraft.world.biome.Biome;
 public interface ICubicWorldServer extends ICubicWorld {
 
 	void generateWorld();
-
-	ICubicChunkGenerator getCubeGenerator();
-
-	ColumnGenerator getColumnGenerator();
 
 	ServerCubeCache getCubeCache();
 

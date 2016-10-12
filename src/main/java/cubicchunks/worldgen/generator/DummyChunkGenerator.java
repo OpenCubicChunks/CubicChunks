@@ -21,28 +21,52 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.worldgen.generator;
 
-import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
 
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome.SpawnListEntry;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.EmptyChunk;
+import net.minecraft.world.chunk.IChunkGenerator;
 
-public interface ICubeCache {
+public class DummyChunkGenerator implements IChunkGenerator {
 
-	@Nullable
-	Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
+	private World world;
 
-	@Nullable
-	Cube getLoadedCube(CubeCoords coords);
+	public DummyChunkGenerator(World world) {
+		this.world = world;
+	}
 
-	Cube getCube(int cubeX, int cubeY, int cubeZ);
+	@Override
+	public Chunk provideChunk(int x, int z) {
+		return new EmptyChunk(world, x, z);
+	}
 
-	Cube getCube(CubeCoords coords);
+	@Override
+	public void populate(int x, int z) {}
 
-	@Nullable
-	Column getLoadedChunk(int x, int z); // more strictly define the return type
+	@Override
+	public boolean generateStructures(Chunk chunkIn, int x, int z) {
+		return false;
+	}
 
-	Column provideChunk(int x, int z);   // more strictly define the return type
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
+		return Collections.EMPTY_LIST;
+	}
+
+	@Override
+	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position) {
+		return null;
+	}
+
+	@Override
+	public void recreateStructures(Chunk chunkIn, int x, int z) {}
+
 }

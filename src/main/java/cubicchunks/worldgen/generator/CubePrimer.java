@@ -21,29 +21,41 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator;
 
-import cubicchunks.util.AddressTools;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.ColumnGenerator;
-import cubicchunks.worldgen.ICubicChunkGenerator;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 
-public interface ICubicChunksWorldType {
-	/**
-	 * Returns Y position of the bottom block in the world
-	 */
-	default int getMinimumPossibleHeight() {
-		return AddressTools.MIN_BLOCK_Y;
+@SuppressWarnings("deprecation") // Block.BLOCK_STATE_IDS
+public class CubePrimer implements ICubePrimer{
+	private static final IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
+	private final char[] data = new char[4096];
+
+	public IBlockState getBlockState(int x, int y, int z) {
+		IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[getBlockIndex(x, y, z)]);
+		return iblockstate == null ? DEFAULT_STATE : iblockstate;
 	}
 
-	/**
-	 * Returns Y position of block above the top block in the world,
-	 */
-	default int getMaximumPossibleHeight() {
-		return AddressTools.MAX_BLOCK_Y + 1;
+	public void setBlockState(int x, int y, int z, IBlockState state) {
+		this.data[getBlockIndex(x, y, z)] = (char) Block.BLOCK_STATE_IDS.get(state);
 	}
 
-	ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world);
+	private static int getBlockIndex(int x, int y, int z) {
+		return x << 8 | z << 4 | y;
+	}
 
-	ColumnGenerator createColumnGenerator(ICubicWorldServer world);
+	public int findGroundHeight(int x, int z) {
+		int i = (x << 8 | z << 4) + 15;
+
+		for (int j = 15; j >= 0; --j) {
+			IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[i + j]);
+
+			if (iblockstate != null && iblockstate != DEFAULT_STATE) {
+				return j;
+			}
+		}
+
+		return -1; // no non-air block found
+	}
 }

@@ -23,6 +23,7 @@
  */
 package cubicchunks.world.column;
 
+import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
@@ -42,21 +43,24 @@ public class BlankColumn extends Column {
 
 	private final Cube blankCube;
 
-	public BlankColumn(ICubicWorld world, int cubeX, int cubeZ) {
-		super(world, cubeX, cubeZ);
-		this.blankCube = new BlankCube(world, this);
+	public BlankColumn(ICubeCache provider, ICubicWorld world, int cubeX, int cubeZ) {
+		super(provider, world, cubeX, cubeZ);
+		blankCube = new BlankCube(this);
 	}
 
 	// column overrides
 
 	@Override
-	public Cube getOrCreateCube(int cubeY, boolean isModified) {
+	public Cube getCube(int cubeY) {
 		return blankCube;
 	}
 
 	@Override
 	public Cube removeCube(int cubeY) {
 		return blankCube;
+	}
+
+	public void addCube(Cube cube) {
 	}
 
 	@Override
@@ -76,11 +80,13 @@ public class BlankColumn extends Column {
 	}
 
 	@Override
+	@Deprecated
 	public int getTopFilledSegment() {
 		return 0;
 	}
 
 	@Override
+	@Deprecated
 	public void generateSkylightMap() {
 	}
 
@@ -101,14 +107,7 @@ public class BlankColumn extends Column {
 
 	@Override
 	public int getLightFor(final EnumSkyBlock lightType, final BlockPos pos) {
-		switch (lightType) {
-			case SKY:
-				return 15;
-			case BLOCK:
-				return 0;
-			default:
-				return 0;
-		}
+		return lightType.defaultLightValue;
 	}
 
 	@Override
@@ -190,6 +189,7 @@ public class BlankColumn extends Column {
 	}
 
 	@Override
+	@Deprecated
 	public boolean isPopulated() {
 		return true;
 	}
@@ -203,10 +203,12 @@ public class BlankColumn extends Column {
 	}
 
 	@Override
+	@Deprecated
 	public void resetRelightChecks() {
 	}
 
 	@Override
+	@Deprecated
 	public void enqueueRelightChecks() {
 	}
 
@@ -224,6 +226,7 @@ public class BlankColumn extends Column {
 	}
 
 	@Override
+	@Deprecated
 	public boolean isTerrainPopulated() {
 		return true;
 	}
@@ -233,6 +236,7 @@ public class BlankColumn extends Column {
 	}
 
 	@Override
+	@Deprecated
 	public boolean isLightPopulated() {
 		return true;
 	}
@@ -267,11 +271,13 @@ public class BlankColumn extends Column {
 	public void setInhabitedTime(final long a1) {
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Collection<Cube> getLoadedCubes() {
 		return Collections.EMPTY_SET;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Iterable<Cube> getLoadedCubes(int startY, int endY) {
 		return Collections.EMPTY_SET;

@@ -21,34 +21,16 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.world.provider;
 
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.ICubicChunkGenerator;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 
-public class FlatCubicChunksWorldType extends BaseCubicWorldType {
+public interface ICubicWorldProvider {
 
-	public FlatCubicChunksWorldType() {
-		super("FlatCubic");
-	}
-
-	public static void create() {
-		new FlatCubicChunksWorldType();
-	}
-
-	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
-		FlatTerrainProcessor gen =  new FlatTerrainProcessor();
-		return new ICubicChunkGenerator() {
-			@Override public void generateTerrain(Cube cube) {
-				gen.calculate(cube);
-				cube.initSkyLight();
-			}
-
-			@Override public void populateCube(Cube cube) {
-				//no-op
-			}
-		};
-	}
+	/**
+	 * Creates a new Cube generator
+	 * 
+	 * @return a new Cube generator
+	 */
+	public ICubeGenerator createCubeGenerator();
 }

@@ -21,17 +21,22 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.world.type;
 
-import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.util.Box;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.ICubicChunkGenerator;
+import cubicchunks.worldgen.generator.BasicCubeGenerator;
+import cubicchunks.worldgen.generator.CubePrimer;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.CustomFeatureProcessor;
 import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 
-public class CustomCubicChunksWorldType extends BaseCubicWorldType {
+public class CustomCubicChunksWorldType extends WorldType implements ICubicWorldType {
 
 	public CustomCubicChunksWorldType() {
 		super("CustomCubic");
@@ -41,19 +46,35 @@ public class CustomCubicChunksWorldType extends BaseCubicWorldType {
 		new CustomCubicChunksWorldType();
 	}
 
-	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
-		CubeProcessor terrain = new CustomTerrainProcessor(world);
-		CubeProcessor features = new CustomFeatureProcessor();
-		CubeProcessor population = new CustomPopulationProcessor(world);
-		return new ICubicChunkGenerator() {
-			@Override public void generateTerrain(Cube cube) {
-				terrain.calculate(cube);
-				features.calculate(cube);
-				cube.initSkyLight();
+	@Override
+	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+		return provider; // TODO: Custom Nether? Custom End????
+	}
+
+	@Override public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
+		CustomTerrainProcessor terrain = new CustomTerrainProcessor(world);
+		CustomFeatureProcessor features = new CustomFeatureProcessor();
+		CustomPopulationProcessor population = new CustomPopulationProcessor(world);
+
+		//TODO: this is mostly a hack to get the old system working
+		return new BasicCubeGenerator(world) {
+			@Override
+			public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+				ICubePrimer primer = new CubePrimer();
+
+				terrain.calculate(primer, cubeX, cubeY, cubeZ);
+				features.generate(world, primer, cubeX, cubeY, cubeZ);
+
+				return primer;
+			}
+			@Override
+			public void populate(Cube cube) {
+				population.populate(cube);
 			}
 
-			@Override public void populateCube(Cube cube) {
-				population.calculate(cube);
+			@Override
+			public Box getPopulationRequirement(Cube cube) {
+				return RECOMMENDED_POPULATOR_REQUIREMENT;
 			}
 		};
 	}

@@ -21,10 +21,31 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util.processor;
+package cubicchunks.world.type;
 
-import cubicchunks.world.cube.Cube;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 
-public interface CubeProcessor {
-	void calculate(Cube cube);
+public class FlatCubicChunksWorldType extends WorldType implements ICubicWorldType {
+
+	public FlatCubicChunksWorldType() {
+		super("FlatCubic");
+	}
+
+	public static void create() {
+		new FlatCubicChunksWorldType();
+	}
+
+	@Override
+	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
+		return new FlatTerrainProcessor(world);
+	}
+
+	@Override
+	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+		return provider;
+	}
 }

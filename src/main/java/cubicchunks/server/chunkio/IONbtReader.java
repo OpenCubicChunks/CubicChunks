@@ -26,7 +26,6 @@ package cubicchunks.server.chunkio;
 import cubicchunks.CubicChunks;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.OpacityIndex;
@@ -53,7 +52,6 @@ public class IONbtReader {
 		}
 		readBiomes(nbt, column);
 		readOpacityIndex(nbt, column);
-		readEntities(world, x, z, nbt, column);
 		return column;
 	}
 
@@ -73,12 +71,10 @@ public class IONbtReader {
 		}
 
 		// create the column
-		Column column = new Column(world, x, z);
+		Column column = new Column(world.getCubeCache() ,world, x, z);
 
 		// read the rest of the column properties
 		column.setInhabitedTime(nbt.getLong("InhabitedTime"));
-		column.setCompatBaseTerrainDone(nbt.getBoolean("VanillaCubicTerrain"));
-		column.setCompatPopulationDone(nbt.getBoolean("VanillaCubicPopulated"));
 		return column;
 	}
 
@@ -88,15 +84,6 @@ public class IONbtReader {
 
 	private static void readOpacityIndex(NBTTagCompound nbt, Column column) {// biomes
 		((OpacityIndex) column.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
-	}
-
-	private static void readEntities(ICubicWorld world, int x, int z, NBTTagCompound nbt, Column column) {// entities
-		column.getEntityContainer().readFromNbt(nbt, "Entities", world, entity -> {
-			entity.addedToChunk = true;
-			entity.chunkCoordX = x;
-			entity.chunkCoordY = Coords.getCubeYForEntity(entity);
-			entity.chunkCoordZ = z;
-		});
 	}
 
 	@Nullable
@@ -110,7 +97,7 @@ public class IONbtReader {
 		Cube cube = readBaseCube(column, cubeX, cubeY, cubeZ, nbt, world);
 		readBlocks(nbt, world, cube);
 		readEntities(nbt, world, cube);
-		readTileEntities(column, nbt, world);
+		readTileEntities(nbt, world, cube);
 		readScheduledBlockTicks(nbt, world);
 		readLightingInfo(cube, nbt, world);
 
@@ -139,34 +126,35 @@ public class IONbtReader {
 
 
 		// build the cube
-		final Cube cube = column.getOrCreateCube(cubeY, false);
+		final Cube cube = new Cube(column, cubeY);
 
 		// set the worldgen stage
 		cube.setPopulated(nbt.getBoolean("populated"));
+		cube.setFullyPopulated(nbt.getBoolean("fullyPopulated"));
+
 		cube.setInitialLightingDone(nbt.getBoolean("initLightDone"));
 		return cube;
 	}
 
-	private static void readBlocks(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {// is this an empty cube?
-		boolean isEmpty = !nbt.hasKey("Blocks");
+	private static void readBlocks(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {
+		boolean isEmpty = !nbt.hasKey("Blocks");// is this an empty cube?
 		if (!isEmpty) {
-			ExtendedBlockStorage storage = cube.getStorage();
+			ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), !cube.getWorld().getProvider().getHasNoSky());
 
-			// block ids and metadata (ie block states)
-			byte[] blockIdLsbs = nbt.getByteArray("Blocks");
-			NibbleArray blockIdMsbs = null;
-			if (nbt.hasKey("Add")) {
-				blockIdMsbs = new NibbleArray(nbt.getByteArray("Add"));
-			}
-			NibbleArray blockMetadata = new NibbleArray(nbt.getByteArray("Data"));
-			ChunkSectionHelper.setBlockStates(storage, blockIdLsbs, blockIdMsbs, blockMetadata);
+			byte[] abyte = nbt.getByteArray("Blocks");
+			NibbleArray data = new NibbleArray(nbt.getByteArray("Data"));
+			NibbleArray add = nbt.hasKey("Add", 7) ? new NibbleArray(nbt.getByteArray("Add")) : null;
 
-			// lights
-			storage.setBlocklightArray(new NibbleArray(nbt.getByteArray("BlockLight")));
+			ebs.getData().setDataFromNBT(abyte, data, add);
+
+			ebs.setBlocklightArray(new NibbleArray(nbt.getByteArray("BlockLight")));
+
 			if (!world.getProvider().getHasNoSky()) {
-				storage.setSkylightArray(new NibbleArray(nbt.getByteArray("SkyLight")));
+				ebs.setSkylightArray(new NibbleArray(nbt.getByteArray("SkyLight")));
 			}
-			storage.removeInvalidBlocks();
+
+			ebs.removeInvalidBlocks();
+			cube.setStorage(ebs);
 		}
 	}
 
@@ -188,7 +176,7 @@ public class IONbtReader {
 		});
 	}
 
-	private static void readTileEntities(Column column, NBTTagCompound nbt, ICubicWorldServer world) {// tile entities
+	private static void readTileEntities(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {// tile entities
 		NBTTagList nbtTileEntities = nbt.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
 		if (nbtTileEntities == null) {
 			return;
@@ -198,7 +186,7 @@ public class IONbtReader {
 			//TileEntity.create
 			TileEntity blockEntity = TileEntity.create((World) world, nbtTileEntity);
 			if (blockEntity != null) {
-				column.addTileEntity(blockEntity);
+				cube.addTileEntity(blockEntity);
 			}
 		}
 	}

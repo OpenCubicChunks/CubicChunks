@@ -25,15 +25,14 @@ package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
-import cubicchunks.ICubicChunksWorldType;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.NotCubicChunksWorldException;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.type.ICubicWorldType;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -63,7 +62,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -80,7 +78,7 @@ import static cubicchunks.util.Coords.blockToLocal;
 public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Shadow protected IChunkProvider chunkProvider;
-	@Shadow @Final public WorldProvider provider;
+	@Shadow @Final @Mutable public WorldProvider provider;
 	@Shadow @Final public Random rand;
 	@Shadow @Final public boolean isRemote;
 	@Shadow @Final public Profiler theProfiler;
@@ -105,7 +103,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		this.minHeight = config.getWorldHeightLowerBound();
 		this.maxHeight = config.getWorldHeightUpperBound();
 
-		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
+		ICubicWorldType type = (ICubicWorldType) this.getWorldType();
 		if(this.minHeight < type.getMinimumPossibleHeight()) {
 			this.minHeight = type.getMinimumPossibleHeight();
 		}
@@ -208,7 +206,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	}
 
 	@Override
-	public boolean testForCubes(CubeCoords start, CubeCoords end, @Nullable Predicate<Cube> cubeAllowed) {
+	public boolean testForCubes(CubeCoords start, CubeCoords end, Predicate<Cube> cubeAllowed) {
 		if (wgenFullRelight) {
 			return true;
 		}
@@ -223,8 +221,8 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
 			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 				for (int cubeZ = minCubeZ; cubeZ <= maxCubeZ; cubeZ++) {
-					Cube cube = this.getCubeCache().getCube(cubeX, cubeY, cubeZ);
-					if (cube == null || (cubeAllowed != null && !cubeAllowed.test(cube))) {
+					Cube cube = this.getCubeCache().getLoadedCube(cubeX, cubeY, cubeZ);
+					if (!cubeAllowed.test(cube)) {
 						return false;
 					}
 				}
@@ -254,15 +252,8 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	}
 
 	@Override public int getEffectiveHeight(int blockX, int blockZ) {
-		Column column = this.getCubeCache().getColumn(blockToCube(blockX), blockToCube(blockZ));
-		if(column == null) {
-			return this.getMinHeight();
-		}
-		Integer height = column.getHeightmapAt(blockToLocal(blockX), blockToLocal(blockZ));
-		if (height == null) {
-			return this.getMinHeight();
-		}
-		return height;
+		return this.chunkProvider.provideChunk(blockToCube(blockX), blockToCube(blockZ))
+				.getHeightValue(blockToLocal(blockX), blockToLocal(blockZ));
 	}
 
 

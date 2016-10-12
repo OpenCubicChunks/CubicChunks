@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 public class TestAddressTools {
-	
+
 	@Test
 	public void testY() {
 		assertEquals(-524288, AddressTools.MIN_CUBE_Y);
@@ -50,7 +50,7 @@ public class TestAddressTools {
 			assertEquals(i, AddressTools.getX(AddressTools.getAddress(i, 0, 0)));
 		}
 	}
-	
+
 	@Test
 	public void testZ() {
 		assertEquals(-2097152, AddressTools.MIN_CUBE_Z);
@@ -59,7 +59,7 @@ public class TestAddressTools {
 			assertEquals(i, AddressTools.getZ(AddressTools.getAddress(0, 0, i)));
 		}
 	}
-	
+
 	@Test
 	public void testAddresses() {
 		for (int x = -32; x <= 32; x++) {
@@ -73,7 +73,7 @@ public class TestAddressTools {
 			}
 		}
 	}
-	
+
 	@Test
 	public void testCollisions() {
 		HashSet<Long> addresses = new HashSet<Long>();

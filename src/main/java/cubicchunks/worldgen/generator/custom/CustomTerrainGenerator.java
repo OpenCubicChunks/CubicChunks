@@ -23,13 +23,13 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.world.cube.Cube;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.builder.BasicBuilder;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
@@ -50,6 +50,7 @@ import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTION_SIZ
 public class CustomTerrainGenerator {
 	private static final int OCTAVES = 16;
 
+	private final ICubicWorld world;
 	private Biome[] biomes;
 
 	private final long seed;
@@ -81,7 +82,7 @@ public class CustomTerrainGenerator {
 
 	private final boolean needsScaling = true;
 
-	public CustomTerrainGenerator(final long seed) {
+	public CustomTerrainGenerator(ICubicWorld world, final long seed) {
 
 		this.seed = seed;
 		this.rand = new Random(seed);
@@ -89,7 +90,7 @@ public class CustomTerrainGenerator {
 		this.maxSmoothRadius = 2*(int) (MAX_ELEV/64);
 		this.maxSmoothDiameter = this.maxSmoothRadius*2 + 1;
 
-		this.biomes = null;
+		this.world = world;
 
 		this.noiseArrayHigh = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 		this.noiseArrayLow = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
@@ -124,19 +125,17 @@ public class CustomTerrainGenerator {
 		this.builderHeight.build();
 	}
 
-	public void generate(final Cube cube) {
-		generateNoiseArrays(cube);
-		generateTerrainArray(cube);
+	public void generate(final ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
+		generateNoiseArrays(cubeX, cubeY, cubeZ);
+		generateTerrainArray(cube, cubeX, cubeY, cubeZ);
 
-		generateTerrain(cube, this.rawDensity);
+		generateTerrain(cube, this.rawDensity, cubeX, cubeY, cubeZ);
 	}
 
-	private void generateTerrain(Cube cube, double[][][] input) {
+	private void generateTerrain(ICubePrimer cube, double[][][] input, int cubeX, int cubeY, int cubeZ) {
 		int xSteps = X_SECTION_SIZE - 1;
 		int ySteps = Y_SECTION_SIZE - 1;
 		int zSteps = Z_SECTION_SIZE - 1;
-
-		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
 		// use the noise to generate the generator
 		for (int noiseX = 0; noiseX < X_SECTIONS - 1; noiseX++) {
@@ -198,13 +197,8 @@ public class CustomTerrainGenerator {
 								double yGrad = (xy1z - xy0z)/ySteps;
 								double zGrad = (xyz1 - xyz0)/zSteps;
 
-								pos.setPos(
-										localToBlock(cube.getX(), xRel),
-										localToBlock(cube.getY(), yRel),
-										localToBlock(cube.getZ(), zRel)
-								);
-								IBlockState state = getBlockStateFor(pos, xyz, xGrad, yGrad, zGrad);
-								cube.setBlockForGeneration(pos, state);
+								IBlockState state = getBlockStateFor(localToBlock(cubeY, yRel), xyz, xGrad, yGrad, zGrad);
+								cube.setBlockState(xRel, yRel, zRel, state);
 							}
 						}
 					}
@@ -213,7 +207,7 @@ public class CustomTerrainGenerator {
 		}
 	}
 
-	private IBlockState getBlockStateFor(BlockPos pos, double density, double xGrad, double yGrad, double zGrad) {
+	private IBlockState getBlockStateFor(int height, double density, double xGrad, double yGrad, double zGrad) {
 		final double dirtDepth = 4;
 		IBlockState state = Blocks.AIR.getDefaultState();
 		if(density > 0) {
@@ -225,7 +219,7 @@ public class CustomTerrainGenerator {
 			} else if(yGrad < 0 && density < dirtDepth) {
 				state = Blocks.DIRT.getDefaultState();
 			}
-		} else if(pos.getY() < 64) {
+		} else if(height < 64) {
 			state = Blocks.WATER.getDefaultState();
 		}
 		return state;
@@ -285,10 +279,10 @@ public class CustomTerrainGenerator {
 	 * (non-Javadoc)
 	 * @see cubicchunks.worldgen.generator.ITerrainGenerator#generateNoiseArrays(cubicchunks.world.cube.Cube)
 	 */
-	private void generateNoiseArrays(final Cube cube) {
-		int cubeXMin = cube.getX()*(X_SECTIONS - 1);
-		int cubeYMin = cube.getY()*(Y_SECTIONS - 1);
-		int cubeZMin = cube.getZ()*(Z_SECTIONS - 1);
+	private void generateNoiseArrays(int cubeX, int cubeY, int cubeZ) {
+		int cubeXMin = cubeX *(X_SECTIONS - 1);
+		int cubeYMin = cubeY *(Y_SECTIONS - 1);
+		int cubeZMin = cubeZ *(Z_SECTIONS - 1);
 
 		for (int x = 0; x < X_SECTIONS; x++) {
 			int xPos = cubeXMin + x;
@@ -311,10 +305,10 @@ public class CustomTerrainGenerator {
 	 * (non-Javadoc)
 	 * @see cubicchunks.worldgen.generator.ITerrainGenerator#generateTerrainArray(cubicchunks.world.cube.Cube)
 	 */
-	private void generateTerrainArray(final Cube cube) {
-		this.biomes = getBiomeMap(cube);
+	private void generateTerrainArray(final ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
+		this.biomes = getBiomeMap(cubeX, cubeZ);
 
-		fillHeightArray(cube);
+		fillHeightArray(cubeX, cubeZ);
 		for (int x = 0; x < X_SECTIONS; x++) {
 			for (int z = 0; z < Z_SECTIONS; z++) {
 				// TODO: Remove addHeight?
@@ -332,7 +326,7 @@ public class CustomTerrainGenerator {
 					double heightModifier = this.biomeHeight;
 					double volatilityModifier = this.biomeVolatility;
 
-					final double yAbs = (cube.getY()*16.0 + y*8.0)/MAX_ELEV;
+					final double yAbs = (cubeY*16.0 + y*8.0)/MAX_ELEV;
 					if (yAbs < heightModifier) {
 						// generator below average biome geight is more flat
 						volatilityModifier /= 4.0;
@@ -359,9 +353,9 @@ public class CustomTerrainGenerator {
 		}
 	}
 
-	private Biome[] getBiomeMap(final Cube cube) {
-		return cube.getWorld().getProvider().getBiomeProvider().getBiomesForGeneration(this.biomes,
-				cube.getX()*4 - this.maxSmoothRadius, cube.getZ()*4 - this.maxSmoothRadius,
+	private Biome[] getBiomeMap(int cubeX, int cubeZ) {
+		return world.getProvider().getBiomeProvider().getBiomesForGeneration(this.biomes,
+				cubeX*4 - this.maxSmoothRadius, cubeZ*4 - this.maxSmoothRadius,
 				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
 	}
 
@@ -445,9 +439,9 @@ public class CustomTerrainGenerator {
 				/(biomeHeight + 2.0F);
 	}
 
-	private void fillHeightArray(final Cube cube) {
-		int cubeXMin = cube.getX()*(X_SECTION_SIZE - 1);
-		int cubeZMin = cube.getZ()*(Z_SECTION_SIZE - 1);
+	private void fillHeightArray(int cubeX, int cubeZ) {
+		int cubeXMin = cubeX *(X_SECTION_SIZE - 1);
+		int cubeZMin = cubeZ *(Z_SECTION_SIZE - 1);
 
 		for (int x = 0; x < X_SECTIONS; x++) {
 			int xPos = cubeXMin + x;

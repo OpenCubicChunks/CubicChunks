@@ -24,17 +24,23 @@
 package cubicchunks.debug;
 
 import com.flowpowered.noise.module.source.Perlin;
-import cubicchunks.BaseCubicWorldType;
+
 import cubicchunks.CubicChunks;
+import cubicchunks.util.Box;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.ICubicChunkGenerator;
-import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
+import cubicchunks.world.type.ICubicWorldType;
+import cubicchunks.worldgen.generator.BasicCubeGenerator;
+import cubicchunks.worldgen.generator.CubePrimer;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 
-public class DebugWorldType extends BaseCubicWorldType {
+public class DebugWorldType extends WorldType implements ICubicWorldType {
 
 	public DebugWorldType() {
 		super("DebugCubic");
@@ -49,9 +55,14 @@ public class DebugWorldType extends BaseCubicWorldType {
 		new DebugWorldType();
 	}
 
-	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
+	@Override
+	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+		return provider;
+	}
+
+	@Override public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
 		//TODO: move first light processor directly into cube?
-		return new ICubicChunkGenerator() {
+		return new BasicCubeGenerator(world) {
 			Perlin perlin = new Perlin();
 			{
 				perlin.setFrequency(0.180);
@@ -59,40 +70,46 @@ public class DebugWorldType extends BaseCubicWorldType {
 				perlin.setSeed((int) world.getSeed());
 			}
 
-			CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
+			//TODO: find out what this was/should have been for (it was never used)
+			//CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
 
-			@Override public void generateTerrain(Cube cube) {
-				if(cube.getY() > 30) {
-					cube.initSkyLight();
-					return;
+			@Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+				ICubePrimer primer = new CubePrimer();
+
+				if(cubeY > 30) {
+					return primer;
 				}
-				if(cube.getX() == 100 && cube.getZ() == 100) {
-					cube.initSkyLight();
-					return;//hole in the world
+				if(cubeX == 100 && cubeZ == 100) {
+					return primer; //hole in the world
 				}
-				CubeCoords cubePos = cube.getCoords();
+				CubeCoords cubePos = new CubeCoords(cubeX, cubeY, cubeZ);
 				for(BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
 					double currDensity = perlin.getValue(pos.getX(), pos.getY()*0.5, pos.getZ());
 					double aboveDensity = perlin.getValue(pos.getX(), (pos.getY()+1)*0.5, pos.getZ());
-					if(cube.getY() >= 16) {
+					if(cubeY >= 16) {
 						currDensity -= (pos.getY() - 16*16)/100;
 						aboveDensity -= (pos.getY() + 1 - 16*16)/100;
 					}
 					if(currDensity > 0.5) {
 						if(currDensity > 0.5 && aboveDensity <= 0.5) {
-							cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
+							primer.setBlockState(pos.getX(), pos.getY(), pos.getZ(), Blocks.GRASS.getDefaultState());
 						} else if(currDensity > aboveDensity && currDensity < 0.7) {
-							cube.setBlockForGeneration(pos, Blocks.DIRT.getDefaultState());
+							primer.setBlockState(pos.getX(), pos.getY(), pos.getZ(), Blocks.DIRT.getDefaultState());
 						} else {
-							cube.setBlockForGeneration(pos, Blocks.STONE.getDefaultState());
+							primer.setBlockState(pos.getX(), pos.getY(), pos.getZ(), Blocks.STONE.getDefaultState());
 						}
 					}
 				}
-				cube.initSkyLight();
+				return primer;
 			}
 
-			@Override public void populateCube(Cube cube) {
+			@Override public void populate(Cube cube) {
 				//populator.calculate(cube);
+			}
+
+			@Override
+			public Box getPopulationRequirement(Cube cube) {
+				return NO_POPULATOR_REQUIREMENT;
 			}
 		};
 	}

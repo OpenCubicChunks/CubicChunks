@@ -26,6 +26,7 @@ package cubicchunks;
 import cubicchunks.launch.LaunchWrapperTestRunner;
 import cubicchunks.testutil.MinecraftEnvironment;
 import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.type.FlatCubicChunksWorldType;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.datafix.DataFixer;
