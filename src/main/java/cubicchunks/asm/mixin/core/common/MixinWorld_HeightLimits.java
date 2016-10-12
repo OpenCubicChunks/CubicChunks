@@ -25,7 +25,6 @@ package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.BlankCube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -165,15 +164,17 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 	 */
 	@Group(name = "isLoaded", max = 1)
 	@Inject(method = WORLD_IS_AREA_LOADED, at = @At(value = "HEAD"), cancellable = true, require = 1)
-	private void isAreaLoadedInject(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd, boolean allowEmpty, CallbackInfoReturnable cbi) {
+	private void isAreaLoadedInject(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd, boolean allowEmpty, CallbackInfoReturnable<Boolean> cbi) {
 		if (!this.isCubicWorld()) {
 			return;
 		}
-		boolean ret = this.testForCubes(
-				xStart, yStart, zStart,
-				xEnd, yEnd, zEnd,
-				cube -> (allowEmpty || !(cube instanceof BlankCube))
-		);
+
+		boolean ret = (this.isRemote() && allowEmpty) || // on the client all cubes count as loaded if allowEmpty
+				this.testForCubes(
+						xStart, yStart, zStart,
+						xEnd, yEnd, zEnd,
+						cube -> cube != null);
+
 		cbi.cancel();
 		cbi.setReturnValue(ret);
 	}

@@ -23,7 +23,6 @@
  */
 package cubicchunks.lighting;
 
-import cubicchunks.util.Coords;
 import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
@@ -33,6 +32,7 @@ import cubicchunks.world.cube.Cube;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenCustomHashMap;
 import it.unimi.dsi.fastutil.ints.IntHash;
+
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -61,7 +61,6 @@ import static cubicchunks.util.Coords.getCubeCenter;
  */
 //TODO: make it also update blocklight
 public class FirstLightProcessor {
-
 	private static final int LIGHT_UPDATE_RADIUS = 17;
 
 	private static final int CUBE_RADIUS = Cube.SIZE / 2;
@@ -69,8 +68,6 @@ public class FirstLightProcessor {
 	private static final int UPDATE_BUFFER_RADIUS = 1;
 
 	private static final int UPDATE_RADIUS = LIGHT_UPDATE_RADIUS + CUBE_RADIUS + UPDATE_BUFFER_RADIUS;
-
-	private static final int DEFAULT_OCCLUSION_HEIGHT = Integer.MIN_VALUE / 2;
 
 	private static final IntHash.Strategy CUBE_Y_HASH = new IntHash.Strategy() {
 
@@ -109,12 +106,16 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void initializeSkylight(Cube cube) {
+		if(cube.getWorld().getProvider().getHasNoSky()) {
+			return;
+		}
+		
 		IOpacityIndex opacityIndex = cube.getColumn().getOpacityIndex();
 
 		int cubeMinY = cubeToMinBlock(cube.getY());
 
-		for (int localX = 0; localX < Cube.SIZE - 1; ++localX) {
-			for (int localZ = 0; localZ < Cube.SIZE - 1; ++localZ) {
+		for (int localX = 0; localX < Cube.SIZE; ++localX) {
+			for (int localZ = 0; localZ < Cube.SIZE; ++localZ) {
 				for (int localY = Cube.SIZE - 1; localY >= 0; --localY) {
 
 					if (opacityIndex.isOccluded(localX, cubeMinY + localY, localZ)) {
@@ -133,6 +134,10 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void diffuseSkylight(Cube cube) {
+		if(cube.getWorld().getProvider().getHasNoSky()) {
+			cube.setInitialLightingDone(true);
+			return;
+		}
 		ICubicWorld world = cube.getWorld();
 
 		// Cache min/max Y, generating them may be expensive
@@ -202,6 +207,7 @@ public class FirstLightProcessor {
 				}
 			}
 		}
+		cube.setInitialLightingDone(true);
 	}
 
 	/**
@@ -285,7 +291,7 @@ public class FirstLightProcessor {
 	 */
 	private static boolean canUpdateCube(Cube cube) {
 		BlockPos cubeCenter = getCubeCenter(cube);
-		return cube.getWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> true);
+		return cube.getWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> c != null);
 	}
 
 	/**
@@ -319,8 +325,7 @@ public class FirstLightProcessor {
 	 *         {@link #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
 	 */
 	private static int getOcclusionHeight(Column column, int localX, int localZ) {
-		Integer val = column.getOpacityIndex().getTopBlockY(localX, localZ);
-		return val == null ? DEFAULT_OCCLUSION_HEIGHT : val;
+		return column.getOpacityIndex().getTopBlockY(localX, localZ);
 	}
 
 	/**
@@ -337,8 +342,7 @@ public class FirstLightProcessor {
 	 */
 	private static int getOcclusionHeightBelowCubeY(Column column, int blockX, int blockZ, int cubeY) {
 		IOpacityIndex index = column.getOpacityIndex();
-		Integer val = index.getTopBlockYBelow(blockToLocal(blockX), blockToLocal(blockZ), cubeToMinBlock(cubeY));
-		return val == null ? Integer.MIN_VALUE/2 : val;
+		return index.getTopBlockYBelow(blockToLocal(blockX), blockToLocal(blockZ), cubeToMinBlock(cubeY));
 	}
 
 	/**

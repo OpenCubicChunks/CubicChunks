@@ -38,7 +38,7 @@ class CubeMap implements Iterable<Cube> {
 
 	private final TreeMap<Integer, Cube> cubeMap = new TreeMap<>();
 	private final Int2ObjectMap<Cube> map = new Int2ObjectOpenHashMap<>();
-	
+
 	//TODO: Don't force Cube's to have an ExtendedBlockStorage (empty Cube's eat memory)
 	private final ExtendedBlockStorageSet set = new ExtendedBlockStorageSet();
 
@@ -71,9 +71,8 @@ class CubeMap implements Iterable<Cube> {
 	Iterable<Cube> cubes(int startY, int endY) {
 		if(startY > endY) {
 			return this.cubeMap.subMap(endY, true, startY, true).descendingMap().values();
-		} else {
-			return this.cubeMap.subMap(startY, true, endY, true).values();
 		}
+		return this.cubeMap.subMap(startY, true, endY, true).values();
 	}
 
 	private boolean contains(int cubeY) {

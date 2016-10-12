@@ -23,19 +23,17 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.util.processor.CubeProcessor;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.ICubePrimer;
 
-public final class CustomTerrainProcessor implements CubeProcessor {
+public final class CustomTerrainProcessor {
 	private final CustomTerrainGenerator terrainGenerator;
 
 	public CustomTerrainProcessor(ICubicWorldServer world) {
-		this.terrainGenerator = new CustomTerrainGenerator(world.getSeed());
+		this.terrainGenerator = new CustomTerrainGenerator(world, world.getSeed());
 	}
 
-	@Override
-	public void calculate(final Cube cube) {
-		this.terrainGenerator.generate(cube);
+	public void calculate(final ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
+		this.terrainGenerator.generate(cube, cubeX, cubeY, cubeZ);
 	}
 }

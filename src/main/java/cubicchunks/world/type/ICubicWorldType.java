@@ -21,41 +21,29 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.world.type;
 
-import cubicchunks.util.processor.CubeProcessor;
+import cubicchunks.util.AddressTools;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.ICubicChunkGenerator;
-import cubicchunks.worldgen.generator.vanilla.VanillaPopulationProcessor;
-import cubicchunks.worldgen.generator.vanilla.VanillaTerrainProcessor;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.ChunkProviderOverworld;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import net.minecraft.world.WorldProvider;
 
-
-public class VanillaCubicChunksWorldType extends BaseCubicWorldType {
-
-	public VanillaCubicChunksWorldType() {
-		super("VanillaCubic");
+public interface ICubicWorldType {
+	/**
+	 * Returns Y position of the bottom block in the world
+	 */
+	default int getMinimumPossibleHeight() {
+		return AddressTools.MIN_BLOCK_Y;
 	}
 
-	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
-		final ChunkProviderOverworld vanillaGen = new ChunkProviderOverworld((World) world, world.getSeed(), true, "");
-		final CubeProcessor terrainProcessor = new VanillaTerrainProcessor(world, vanillaGen);
-		final CubeProcessor populationProcessor = new VanillaPopulationProcessor(vanillaGen);
-		return new ICubicChunkGenerator() {
-			@Override public void generateTerrain(Cube cube) {
-				terrainProcessor.calculate(cube);
-				cube.initSkyLight();
-			}
-
-			@Override public void populateCube(Cube cube) {
-				populationProcessor.calculate(cube);
-			}
-		};
+	/**
+	 * Returns Y position of block above the top block in the world,
+	 */
+	default int getMaximumPossibleHeight() {
+		return AddressTools.MAX_BLOCK_Y + 1;
 	}
 
-	public static void create() {
-		new VanillaCubicChunksWorldType();
-	}
+	ICubeGenerator createCubeGenerator(ICubicWorldServer world);
+
+	WorldProvider getReplacedProviderFor(WorldProvider provider);
 }

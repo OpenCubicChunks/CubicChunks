@@ -21,10 +21,45 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util.processor;
+package cubicchunks.worldgen.generator;
 
-import cubicchunks.world.cube.Cube;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 
-public interface CubeProcessor {
-	void calculate(Cube cube);
+public interface ICubePrimer {
+
+	static final IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
+
+	/**
+	 * Gets a block state at the given location
+	 * 
+	 * @param x cube relative x
+	 * @param y cube relative y
+	 * @param z cube relative z
+	 * @return the block state
+	 */
+	IBlockState getBlockState(int x, int y, int z);
+
+	/**
+	 * Sets a block state at the given location
+	 * 
+	 * @param x cube relative x
+	 * @param y cube relative x
+	 * @param z cube relative x
+	 * @param state the block state
+	 */
+	void setBlockState(int x, int y, int z, IBlockState state);
+
+	/**
+	 * Counting down from the highest block in the cube, find the first non-air
+	 * block for the given location.<br>
+	 * <br>
+	 * NOTE: This will return -1 if there where no blocks under that location!<br>
+	 * WARNING: It does not know if there are blocks over this cube!<br>
+	 * 
+	 * @param x cube relative x
+	 * @param z cube relative x
+	 * @return the height of the top non-air block at x, z or -1 if there was no block found
+	 */
+	int findGroundHeight(int x, int z);
 }

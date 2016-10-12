@@ -130,7 +130,8 @@ public class AsyncWorldIOExecutor {
 	 * @param runnable The callback
 	 */
 	public static void queueCubeLoad(World world, CubeIO loader, ServerCubeCache cache, int x, int y, int z, Consumer<Cube> runnable) {
-		cache.asyncLoadColumn(x, z, column -> queueCubeLoad(world, loader, column, cache, y, runnable));
+		// TODO
+		// cache.asyncLoadColumn(x, z, column -> queueCubeLoad(world, loader, column, cache, y, runnable));
 	}
 
 	/**

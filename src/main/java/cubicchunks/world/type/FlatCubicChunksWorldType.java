@@ -21,21 +21,31 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.world.type;
 
-import net.minecraft.world.WorldProviderSurface;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 
-/**
- * CubicChunks WorldProvider for Overworld.
- */
-public class CubicWorldProviderSurface extends WorldProviderSurface {
-	@Override
-	public int getHeight() {
-		return ((ICubicWorld) this.worldObj).getMaxHeight();
+public class FlatCubicChunksWorldType extends WorldType implements ICubicWorldType {
+
+	public FlatCubicChunksWorldType() {
+		super("FlatCubic");
+	}
+
+	public static void create() {
+		new FlatCubicChunksWorldType();
 	}
 
 	@Override
-	public int getActualHeight() {
-		return hasNoSky ? 128 : getHeight();
+	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
+		return new FlatTerrainProcessor(world);
+	}
+
+	@Override
+	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+		return provider;
 	}
 }

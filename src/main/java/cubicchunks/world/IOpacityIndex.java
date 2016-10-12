@@ -62,9 +62,9 @@ public interface IOpacityIndex {
 	 * @param localX local block x-coordinate (0..15)
 	 * @param localZ local block z-coordinate (0..15)
 	 *
-	 * @return y-coordinate of the highest non-transparent block, or null if none exists
+	 * @return Y position of the top non-transparent block, or very low (far below the min world height) if one doesn't exist
 	 */
-	Integer getTopBlockY(int localX, int localZ);
+	int getTopBlockY(int localX, int localZ);
 
 	/**
 	 * Returns the y-coordinate of the highest non-transparent block that is below the given blockY.
@@ -72,9 +72,9 @@ public interface IOpacityIndex {
 	 * @param localX local block x-coordinate (0..15)
 	 * @param localZ local block z-coordinate (0..15)
 	 *
-	 * @return y-coordinate of the highest non-transparent block below blockY, or null if none exists
+	 * @return Y position of the top non-transparent block below blockY, or very low (far below the min world height) if one doesn't exist
 	 */
-	Integer getTopBlockYBelow(int localX, int localZ, int blockY);
+	int getTopBlockYBelow(int localX, int localZ, int blockY);
 
 	/**
 	 * Returns y-coordinate n of the lowest non-transparent block.
@@ -82,9 +82,9 @@ public interface IOpacityIndex {
 	 * @param localX local block x-coordinate (0..15)
 	 * @param localZ local block z-coordinate(0..15)
 	 *
-	 * @return y-coordinate of the lowest non-transparent block, or null if none exists
+	 * @return Y position of the bottom non-transparent block, or very low (far below the min world height) if one doesn't exist
 	 */
-	Integer getBottomBlockY(int localX, int localZ);
+	int getBottomBlockY(int localX, int localZ);
 
 	/**
 	 * Out of the highest non-opaque blocks from all block columns in the column, returns the y-coordinate of the lowest

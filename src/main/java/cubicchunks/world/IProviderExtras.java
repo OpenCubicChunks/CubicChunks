@@ -21,29 +21,43 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.world;
 
-import cubicchunks.util.AddressTools;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.ColumnGenerator;
-import cubicchunks.worldgen.ICubicChunkGenerator;
+import cubicchunks.util.CubeCoords;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
-public interface ICubicChunksWorldType {
-	/**
-	 * Returns Y position of the bottom block in the world
-	 */
-	default int getMinimumPossibleHeight() {
-		return AddressTools.MIN_BLOCK_Y;
-	}
+import javax.annotation.Nullable;
+
+public interface IProviderExtras {
 
 	/**
-	 * Returns Y position of block above the top block in the world,
+	 * Gets a Column immediately
+	 * 
+	 * @param columnX the Column's X coordinate
+	 * @param columnZ the Column's Z coordinate
+	 * @param req what the requirments are before you get the Column
+	 * @return the Column or null if no Column could be found or created
 	 */
-	default int getMaximumPossibleHeight() {
-		return AddressTools.MAX_BLOCK_Y + 1;
+	@Nullable
+	Column getColumn(int columnX, int columnZ, Requirement req);
+
+	/**
+	 * Gets a Cube immediately
+	 * 
+	 * @param pos the Cube's location
+	 * @param req what the requirments are before you get the Cube
+	 * @return the Cube or null if no Cube could be found or created
+	 */
+	@Nullable
+	Cube getCube(CubeCoords pos, Requirement req);
+
+	//void waitOn(Consumer<Cube> callback);
+
+	/**
+	 * The level of work required to be done on a Cube/Column before it is ready
+	 */
+	public enum Requirement {
+		CACHE, LOAD, GENERATE, POPULATE, LIGHT
 	}
-
-	ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world);
-
-	ColumnGenerator createColumnGenerator(ICubicWorldServer world);
 }

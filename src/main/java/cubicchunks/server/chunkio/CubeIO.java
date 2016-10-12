@@ -204,7 +204,7 @@ public class CubeIO implements IThreadedFileIO {
 		// with concurrent access to world data structures
 
 		// add the column to the save queue
-		this.columnsToSave.put(column.getChunkCoordIntPair(), new SaveEntry(column.getAddress(), IONbtWriter.write(column)));
+		this.columnsToSave.put(column.getChunkCoordIntPair(), new SaveEntry(AddressTools.getAddress(column.getX(), column.getZ()), IONbtWriter.write(column)));
 		column.markSaved();
 
 		// signal the IO thread to process the save queue

@@ -66,9 +66,8 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
 			// the only reason to check side here is to use our more aptly named handling methods
 			// client side proxy will return the client side EntityPlayer
 			return handleClientMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
-		} else {
-			// server side proxy will return the server side EntityPlayer
-			return handleServerMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
 		}
+		// server side proxy will return the server side EntityPlayer
+		return handleServerMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
 	}
 }

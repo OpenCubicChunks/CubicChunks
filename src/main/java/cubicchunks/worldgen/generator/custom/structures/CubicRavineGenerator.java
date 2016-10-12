@@ -24,10 +24,9 @@
 package cubicchunks.worldgen.generator.custom.structures;
 
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.Random;
@@ -38,7 +37,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 	private float[] array1 = new float[1024];
 
 	@Override
-	protected void generate(ICubicWorld world, Cube cube, int cubeX, int cubeY, int cubeZ, int xOrigin, int yOrigin,
+	protected void generate(ICubicWorld world, ICubePrimer cube, int cubeX, int cubeY, int cubeZ, int xOrigin, int yOrigin,
 	                        int zOrigin) {
 		if (rand.nextInt(16) != 0) {
 			return;
@@ -60,7 +59,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 	}
 
 	@Override
-	protected void generateNode(Cube cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y,
+	protected void generateNode(ICubePrimer cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y,
 	                            double z, float size_base, float curve, float angle, int numTry, int tries, double yModSinMultiplier) {
 		Random rand = new Random(seed);
 		double xOCenter = xOrigin*16 + 8;
@@ -175,8 +174,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 										continue;
 									}
 
-									BlockPos pos = new BlockPos(x1, y1, z1);
-									Block block = cube.getBlockState(pos).getBlock();
+									Block block = cube.getBlockState(x1, y1, z1).getBlock();
 
 									if (block != Blocks.STONE && block != Blocks.DIRT && block != Blocks.GRASS) {
 										continue;
@@ -187,14 +185,14 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 									if (y1 + yOrigin*16 < /* 10 */0) {
 										// BUG: crash when it's lava
 										// cube.setBlockForGeneration(pos, Blocks.FLOWING_LAVA.getDefaultState());
-										cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
+										cube.setBlockState(x1, y1, z1, Blocks.AIR.getDefaultState());
 									} else {
-										cube.setBlockForGeneration(pos, Blocks.AIR.getDefaultState());
+										cube.setBlockState(x1, y1, z1, Blocks.AIR.getDefaultState());
 									}
 
 									if (grass && block == Blocks.DIRT) {
-										cube.setBlockForGeneration(pos, Blocks.GRASS.getDefaultState());
-										cube.setBlockForGeneration(pos.up(), Blocks.AIR.getDefaultState());
+										cube.setBlockState(x1, y1, z1, Blocks.GRASS.getDefaultState());
+										cube.setBlockState(x1, y1 + 1, z1, Blocks.AIR.getDefaultState());
 									}
 								}
 							}

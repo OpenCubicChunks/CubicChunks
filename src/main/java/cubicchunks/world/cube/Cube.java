@@ -33,7 +33,9 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IOpacityIndex;
 import cubicchunks.world.column.Column;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -59,6 +61,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javax.annotation.Nullable;
+
 public class Cube {
 
 	public static final int SIZE = 16;
@@ -67,18 +71,22 @@ public class Cube {
 
 	//used to track if the cube should be unloaded or not, done instead of removing cube from
 	//unloadQueue each time something loads it
-	public boolean unloaded;
+	public  boolean unloaded;
+
+	private boolean isModified = false;
+	private boolean isPopulated = false;
+	private boolean isFullyPopulated = false;
+	private boolean isInitialLightingDone = false;
 
 	private ICubicWorld world;
 	private Column column;
+
 	private CubeCoords coords;
-	private boolean isModified;
-	private final ExtendedBlockStorage storage;
+	private ExtendedBlockStorage storage;
+
 	private EntityContainer entities;
 	private Map<BlockPos, TileEntity> tileEntityMap;
-	
-	private boolean isPopulated = false;
-	private boolean isInitialLightingDone = false;
+
 	/**
 	 * "queue containing the BlockPos of tile entities queued for creation"
 	 */
@@ -88,17 +96,45 @@ public class Cube {
 
 	private boolean isCubeLoaded;
 
-	public Cube(ICubicWorld world, Column column, int x, int y, int z, boolean isModified) {
-		this.world = world;
+	public Cube(Column column, int cubeY) {
+		this.world = column.getCubicWorld();
 		this.column = column;
-		this.coords = new CubeCoords(x, y, z);
-		this.isModified = isModified;
+		this.coords = new CubeCoords(column.getX(), cubeY, column.getZ());
 
-		// TODO: let storage be null in an empty chunk (just like vanilla's Chunk does)
-		this.storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(y), !world.getProvider().getHasNoSky());
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new HashMap<>();
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
+	}
+
+	@SuppressWarnings("deprecation") // when a block is generated, does it really have any extra
+	                                 // information it could give us about its opacity by knowing its location?
+	public Cube(Column column, int cubeY, ICubePrimer primer) {
+		this(column, cubeY);
+
+		int miny = Coords.cubeToMinBlock(cubeY);
+		IOpacityIndex opindex = column.getOpacityIndex();
+
+		for (int x = 0; x < 16;x++) {
+			for (int z = 0; z < 16;z++) {
+
+				for (int y = 15; y >= 0;y--) {
+					IBlockState newstate = primer.getBlockState(x, y, z);
+
+					if (newstate.getMaterial() != Material.AIR) {
+						if(storage == null) {
+							newStorage();
+						}
+						storage.set(x, y, z, newstate);
+
+						if(newstate.getLightOpacity() != 0) {
+							column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe OpacityIndex needs its own isModified
+							opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
+						}
+					}
+				}
+			}
+		}
+		isModified = true;
 	}
 
 	//======================================
@@ -109,15 +145,20 @@ public class Cube {
 		return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
 	}
 
+	// forward to Column, as we don't know how to do skylight and stuff
+	public IBlockState setBlockState(BlockPos pos, IBlockState newstate) {
+		return column.setBlockState(pos, newstate);
+	}
+
 	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
 		try {
-			if (this.isEmpty()) {
+			if(storage == null) {
 				return Blocks.AIR.getDefaultState();
 			}
-			int localX = Coords.blockToLocal(blockX);
-			int localY = Coords.blockToLocal(blockY);
-			int localZ = Coords.blockToLocal(blockZ);
-			return this.getStorage().get(localX, localY, localZ);
+			return storage.get(Coords.blockToLocal(blockX),
+			                   Coords.blockToLocal(blockY),
+			                   Coords.blockToLocal(blockZ));
+
 		} catch (Throwable t) {
 			CrashReport report = CrashReport.makeCrashReport(t, "Getting block state");
 			CrashReportCategory category = report.makeCategory("Block being got");
@@ -131,19 +172,84 @@ public class Cube {
 		}
 	}
 
-	public void setBlockStateDirect(BlockPos pos, IBlockState newBlockState) {
-		if (this.isEmpty() && newBlockState.getBlock() == Blocks.AIR) {
-			return;
-		}
-		this.isModified = true;
-
+	/**
+	 * Sets a block state in this cube, lighting not included
+	 * 
+	 * @param pos the location of the block
+	 * @param newstate the new block state
+	 * @return The old block state, or null if there was no change
+	 */
+	@Nullable
+	public IBlockState setBlockStateDirect(BlockPos pos, IBlockState newstate) {
 		int localX = Coords.blockToLocal(pos.getX());
 		int localY = Coords.blockToLocal(pos.getY());
 		int localZ = Coords.blockToLocal(pos.getZ());
-		this.getStorage().set(localX, localY, localZ, newBlockState);
-		if(this.isEmpty() && this.getY() <= 4) {
-			int i = 0;
+
+		IBlockState oldstate = getBlockState(pos);
+
+		if(oldstate == newstate) {
+			return null; // nothing changed
 		}
+
+		Block oldblock = oldstate.getBlock();
+		Block newblock = newstate.getBlock();
+
+		if(storage == null) {
+			newStorage();
+		}
+
+		storage.set(localX, localY, localZ, newstate); // set the block state!
+
+		// deal with Block.breakBlock() and TileEntity's
+		if (!this.world.isRemote()) {
+			if (newblock != oldblock) { //Only fire block breaks when the block changes.
+				oldblock.breakBlock((World) this.world, pos, oldstate);
+			}
+
+			TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
+
+			if (te != null && te.shouldRefresh((World) this.world, pos, oldstate, newstate)) {
+				this.world.removeTileEntity(pos);
+			}
+		} else if (oldblock.hasTileEntity(oldstate)) {
+			TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
+
+			if (te != null && te.shouldRefresh((World) this.world, pos, oldstate, newstate)) {
+				this.world.removeTileEntity(pos);
+			}
+		}
+
+		if(storage.get(localX, localY, localZ).getBlock() != newblock) { // A TileEntity changed the bock on us!!!
+			return null; // something changed... but its out of our control
+			             // (aka another Cube.setBlockState() call handled it)
+			             // so return as if 'nothing changed'
+		}
+
+		// If capturing blocks, only run block physics for TE's. Non-TE's are handled in ForgeHooks.onPlaceItemIntoWorld
+		if (!this.world.isRemote()
+				&& oldblock != newblock
+				&& (!((World)this.world).captureBlockSnapshots || newblock.hasTileEntity(newstate))) {
+
+			newblock.onBlockAdded((World)this.world, pos, newstate);
+		}
+
+		if (newblock.hasTileEntity(newstate)) {
+			TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
+
+			if (te == null)
+			{
+				te = newblock.createTileEntity((World)this.world, newstate);
+				this.world.setTileEntity(pos, te);
+			}
+
+			if (te != null)
+			{
+				te.updateContainingBlockInfo();
+			}
+		}
+
+		this.isModified = true; // a block state changes, so we will need saving
+		return oldstate;
 	}
 
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
@@ -164,8 +270,14 @@ public class Cube {
 				if (this.world.getProvider().getHasNoSky()) {
 					return 0;
 				}
+				if(storage == null) {
+					return lightType.defaultLightValue;
+				}
 				return this.storage.getExtSkylightValue(localX, localY, localZ);
 			case BLOCK:
+				if(storage == null) {
+					return lightType.defaultLightValue;
+				}
 				return this.storage.getExtBlocklightValue(localX, localY, localZ);
 			default:
 				return lightType.defaultLightValue;
@@ -182,20 +294,28 @@ public class Cube {
 		switch (lightType) {
 			case SKY:
 				if (!this.world.getProvider().getHasNoSky()) {
+					if(storage == null) {
+						newStorage();
+					}
 					this.storage.setExtSkylightValue(x, y, z, light);
 				}
 				break;
 
 			case BLOCK:
+				if(storage == null) {
+					newStorage();
+				}
 				this.storage.setExtBlocklightValue(x, y, z, light);
 				break;
 		}
 	}
 
 	public void setSkylight(int localX, int localY, int localZ, int value) {
-		this.isModified = true;
-
 		if (!this.world.getProvider().getHasNoSky()) {
+			if(storage == null) {
+				newStorage();
+			}
+			this.isModified = true;
 			this.storage.setExtSkylightValue(localX, localY, localZ, value);
 		}
 	}
@@ -203,6 +323,9 @@ public class Cube {
 	public int getSkylight(int localX, int localY, int localZ) {
 		if (this.world.getProvider().getHasNoSky()) {
 			return 0;
+		}
+		if(storage == null) {
+			return EnumSkyBlock.SKY.defaultLightValue;
 		}
 		return this.storage.getExtSkylightValue(localX, localY, localZ);
 	}
@@ -284,7 +407,7 @@ public class Cube {
 
 	public void addTileEntity(TileEntity tileEntity) {
 		this.addTileEntity(tileEntity.getPos(), tileEntity);
-		if (this.isCubeLoaded) {
+		if (this.isCubeLoaded) { //TODO: test to see if this is needed
 			this.getWorld().addTileEntity(tileEntity);
 		}
 	}
@@ -314,7 +437,7 @@ public class Cube {
 
 	public void removeTileEntity(BlockPos pos) {
 		//it doesn't make sense to me to check if cube is loaded, but vanilla does it
-		if (this.isCubeLoaded) {
+		if (this.isCubeLoaded) { //TODO: test and see if this is needed
 			TileEntity tileEntity = this.tileEntityMap.remove(pos);
 			if (tileEntity != null) {
 				tileEntity.invalidate();
@@ -333,8 +456,9 @@ public class Cube {
 
 	public void tickCube(boolean tryToTickFaster) {
 		if (!this.isInitialLightingDone && this.isPopulated) {
-			this.tryDoFirstLight();
+			this.tryDoFirstLight(); //TODO: Very icky light population code! REMOVE IT!
 		}
+
 		while (!this.tileEntityPosQueue.isEmpty()) {
 			BlockPos blockpos = this.tileEntityPosQueue.poll();
 
@@ -350,6 +474,7 @@ public class Cube {
 		}
 	}
 
+	//TODO: Vary icky light population code! REMOVE IT!
 	private void tryDoFirstLight() {
 		BlockPos pos = this.getCoords().getMinBlockPos();
 		final int radius = 17;
@@ -366,7 +491,7 @@ public class Cube {
 	//=================================
 
 	public boolean isEmpty() {
-		return this.storage.isEmpty();
+		return storage == null || this.storage.isEmpty();
 	}
 
 	public long getAddress() {
@@ -403,7 +528,7 @@ public class Cube {
 	public CubeCoords getCoords() {
 		return this.coords;
 	}
-	
+
 	public boolean containsBlockPos(BlockPos blockPos) {
 		return this.coords.getCubeX() == Coords.blockToCube(blockPos.getX())
 				&& this.coords.getCubeY() == Coords.blockToCube(blockPos.getY())
@@ -414,42 +539,12 @@ public class Cube {
 		return this.storage;
 	}
 
-	public IBlockState setBlockForGeneration(BlockPos blockOrLocalPos, IBlockState newBlockState) {
-		IBlockState oldBlockState = getBlockState(blockOrLocalPos);
-
-		// did anything actually change?
-		if (newBlockState == oldBlockState) {
-			return null;
-		}
-
-		int localX = Coords.blockToLocal(blockOrLocalPos.getX());
-		int localY = Coords.blockToLocal(blockOrLocalPos.getY());
-		int localZ = Coords.blockToLocal(blockOrLocalPos.getZ());
-
-		// set the block
-		this.storage.set(localX, localY, localZ, newBlockState);
-
-		// did the block change work correctly?
-		if (this.storage.get(localX, localY, localZ) != newBlockState) {
-			return null;
-		}
-		this.isModified = true;
-
-		//update the column light index
-		int blockY = Coords.localToBlock(this.coords.getCubeY(), localY);
-
-		IOpacityIndex index = this.column.getOpacityIndex();
-		int opacity = newBlockState.getLightOpacity((World) world, this.coords.localToBlock(localX, localY, localZ));
-		index.onOpacityChange(localX, blockY, localZ, opacity);
-		return oldBlockState;
+	public ExtendedBlockStorage setStorage(ExtendedBlockStorage ebs) {
+		return this.storage = ebs;
 	}
 
-	public boolean hasBlocks() {
-		if (isEmpty()) {
-			return false;
-		}
-
-		return !this.storage.isEmpty();
+	private void newStorage() {
+		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), !world.getProvider().getHasNoSky());
 	}
 
 	public Map<BlockPos, TileEntity> getTileEntityMap() {
@@ -511,23 +606,42 @@ public class Cube {
 
 	public void setClientCube() {
 		this.isPopulated = true;
+		this.isFullyPopulated = true;
 		this.isInitialLightingDone = true;
 	}
 
 	public void setPopulated(boolean populated) {
 		this.isPopulated = populated;
+		this.isModified = true;
+	}
+
+	public void setFullyPopulated(boolean populated) {
+		this.isFullyPopulated = populated;
+		this.isModified = true;
+	}
+
+	/**
+	 * @return weather or not the populator has been run for this Cube or not
+	 */
+	public boolean isPopulated() {
+		return isPopulated;
+	}
+
+	/**
+	 * @return weather this Cube is fully populated or not...
+	 *         aka when even Cubes whos population effects this Cube are populated!
+	 */
+	public boolean isFullyPopulated() {
+		return this.isFullyPopulated;
 	}
 
 	public void setInitialLightingDone(boolean initialLightingDone) {
 		this.isInitialLightingDone = initialLightingDone;
+		this.isModified = true;
 	}
 
 	public boolean isInitialLightingDone() {
 		return isInitialLightingDone;
-	}
-
-	public boolean isPopulated() {
-		return isPopulated;
 	}
 
 	/**

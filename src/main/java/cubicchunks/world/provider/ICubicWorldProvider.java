@@ -21,34 +21,16 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.world.provider;
 
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.ColumnGenerator;
-import net.minecraft.world.WorldType;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 
-public abstract class BaseCubicWorldType extends WorldType implements ICubicChunksWorldType {
-
-	public BaseCubicWorldType(String name) {
-		super(name);
-	}
+public interface ICubicWorldProvider {
 
 	/**
-	 * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
-	 * <p>
-	 * In EntityRenderer.updateFogColor entity Y position is multiplied by
-	 * value returned by this method.
-	 * <p>
-	 * If this method returns any real number - then the void fog factor can be <= 0.
-	 * But if this method returns NaN - the result is always NaN. And Minecraft enables void fog only of the value is < 1.
-	 * And since any comparison with NaN returns false - void fog is effectively disabled.
+	 * Creates a new Cube generator
+	 * 
+	 * @return a new Cube generator
 	 */
-	@Override
-	public double voidFadeMagnitude() {
-		return Double.NaN;
-	}
-
-	@Override public ColumnGenerator createColumnGenerator(ICubicWorldServer world) {
-		return new ColumnGenerator(world);
-	}
+	public ICubeGenerator createCubeGenerator();
 }

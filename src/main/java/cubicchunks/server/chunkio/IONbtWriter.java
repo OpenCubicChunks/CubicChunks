@@ -25,7 +25,6 @@ package cubicchunks.server.chunkio;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ChunkSectionHelper;
 import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
@@ -37,6 +36,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.io.ByteArrayOutputStream;
@@ -60,7 +60,6 @@ class IONbtWriter {
 		writeBaseColumn(column, nbt);
 		writeBiomes(column, nbt);
 		writeOpacityIndex(column, nbt);
-		writeEntities(column, nbt);
 		return nbt;
 	}
 
@@ -86,9 +85,6 @@ class IONbtWriter {
 		// column properties
 		nbt.setByte("v", (byte) 1);
 		nbt.setLong("InhabitedTime", column.getInhabitedTime());
-
-		nbt.setBoolean("VanillaCubicTerrain", column.isCompatBaseTerrainDone());
-		nbt.setBoolean("VanillaCubicPopulated", column.isCompatPopulationDone());
 	}
 
 	private static void writeBiomes(Column column, NBTTagCompound nbt) {// biomes
@@ -97,10 +93,6 @@ class IONbtWriter {
 
 	private static void writeOpacityIndex(Column column, NBTTagCompound nbt) {// light index
 		nbt.setByteArray("OpacityIndex", ((OpacityIndex) column.getOpacityIndex()).getData());
-	}
-
-	private static void writeEntities(Column column, NBTTagCompound nbt) {// entities
-		column.getEntityContainer().writeToNbt(nbt, "Entities");
 	}
 
 	private static void writeBaseCube(Cube cube, NBTTagCompound cubeNbt) {
@@ -113,33 +105,32 @@ class IONbtWriter {
 
 		// save the worldgen stage and the target stage
 		cubeNbt.setBoolean("populated", cube.isPopulated());
+		cubeNbt.setBoolean("fullyPopulated", cube.isFullyPopulated());
+
 		cubeNbt.setBoolean("initLightDone", cube.isInitialLightingDone());
 	}
 
 	private static void writeBlocks(Cube cube, NBTTagCompound cubeNbt) {
-
-		if (cube.isEmpty()) {
-			return;
-		}
-		ExtendedBlockStorage storage = cube.getStorage();
-		byte[] idLsb = new byte[4096];
-		byte[] idMsb = new byte[2048];
-		byte[] meta = new byte[2048];
-		int flags = ChunkSectionHelper.getBlockDataArray(storage, idLsb, idMsb, meta);
-		cubeNbt.setByteArray("Blocks", idLsb);
-
-		if ((flags & ChunkSectionHelper.HAS_MSB) != 0) {
-			cubeNbt.setByteArray("Add", idMsb);
+		ExtendedBlockStorage ebs = cube.getStorage();
+		if(ebs == null) {
+			return; // no data to save anyway
 		}
 
-		// metadata
-		if ((flags & ChunkSectionHelper.HAS_META) != 0) {
-			cubeNbt.setByteArray("Data", meta);
+		byte[] abyte = new byte[Cube.SIZE*Cube.SIZE*Cube.SIZE];
+		NibbleArray data = new NibbleArray();
+		NibbleArray add = ebs.getData().getDataForNBT(abyte, data);
+
+		cubeNbt.setByteArray("Blocks", abyte);
+		cubeNbt.setByteArray("Data", data.getData());
+
+		if (add != null) {
+			cubeNbt.setByteArray("Add", add.getData());
 		}
-		// light
-		cubeNbt.setByteArray("BlockLight", storage.getBlocklightArray().getData());
-		if (storage.getSkylightArray() != null) {
-			cubeNbt.setByteArray("SkyLight", storage.getSkylightArray().getData());
+
+		cubeNbt.setByteArray("BlockLight", ebs.getBlocklightArray().getData());
+
+		if (!cube.getWorld().getProvider().getHasNoSky()) {
+			cubeNbt.setByteArray("SkyLight", ebs.getSkylightArray().getData());
 		}
 	}
 

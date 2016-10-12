@@ -21,34 +21,41 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.worldgen.generator;
 
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.ICubicChunkGenerator;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 
-public class FlatCubicChunksWorldType extends BaseCubicWorldType {
+@SuppressWarnings("deprecation") // Block.BLOCK_STATE_IDS
+public class CubePrimer implements ICubePrimer{
+	private static final IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
+	private final char[] data = new char[4096];
 
-	public FlatCubicChunksWorldType() {
-		super("FlatCubic");
+	public IBlockState getBlockState(int x, int y, int z) {
+		IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[getBlockIndex(x, y, z)]);
+		return iblockstate == null ? DEFAULT_STATE : iblockstate;
 	}
 
-	public static void create() {
-		new FlatCubicChunksWorldType();
+	public void setBlockState(int x, int y, int z, IBlockState state) {
+		this.data[getBlockIndex(x, y, z)] = (char) Block.BLOCK_STATE_IDS.get(state);
 	}
 
-	@Override public ICubicChunkGenerator createCubeGenerator(ICubicWorldServer world) {
-		FlatTerrainProcessor gen =  new FlatTerrainProcessor();
-		return new ICubicChunkGenerator() {
-			@Override public void generateTerrain(Cube cube) {
-				gen.calculate(cube);
-				cube.initSkyLight();
-			}
+	private static int getBlockIndex(int x, int y, int z) {
+		return x << 8 | z << 4 | y;
+	}
 
-			@Override public void populateCube(Cube cube) {
-				//no-op
+	public int findGroundHeight(int x, int z) {
+		int i = (x << 8 | z << 4) + 15;
+
+		for (int j = 15; j >= 0; --j) {
+			IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[i + j]);
+
+			if (iblockstate != null && iblockstate != DEFAULT_STATE) {
+				return j;
 			}
-		};
+		}
+
+		return -1; // no non-air block found
 	}
 }

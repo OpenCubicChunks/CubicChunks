@@ -21,35 +21,56 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen;
+package cubicchunks.worldgen.generator;
+
+import java.util.List;
 
 import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biome.SpawnListEntry;
 
-public class ColumnGenerator {
+public abstract class BasicCubeGenerator implements ICubeGenerator {
 
-	private ICubicWorldServer m_worldServer;
-	private Biome[] m_biomes;
+	private Biome[] columnBiomes;
 
-	public ColumnGenerator(ICubicWorldServer worldServer) {
-		this.m_worldServer = worldServer;
+	protected ICubicWorld world;
+
+	public BasicCubeGenerator(ICubicWorld world) {
+		this.world = world;
 	}
 
-	public Column generateColumn(int cubeX, int cubeZ) {
-		// generate biome info. This is a hackjob.
-		this.m_biomes = this.m_worldServer.getProvider().getBiomeProvider().getBiomes(
-				this.m_biomes,
-				Coords.cubeToMinBlock(cubeX),
-				Coords.cubeToMinBlock(cubeZ),
-				16,
-				16
-		);
+	@Override
+	public void generateColumn(Column column) {
+		this.columnBiomes = this.world.getBiomeProvider()
+				.getBiomes(this.columnBiomes, 
+						Coords.cubeToMinBlock(column.getX()),
+						Coords.cubeToMinBlock(column.getZ()),
+						Coords.CUBE_MAX_X, Coords.CUBE_MAX_Z);
 
-		// UNDONE: generate temperature map
-		// UNDONE: generate rainfall map
+		byte[] abyte = column.getBiomeArray();
+		for (int i = 0; i < abyte.length; ++i) {
+			abyte[i] = (byte)Biome.getIdForBiome(this.columnBiomes[i]);
+		}
+	}
 
-		return new Column(this.m_worldServer, cubeX, cubeZ, this.m_biomes);
+	@Override
+	public void recreateStructures(Cube cube) {}
+
+	@Override
+	public void recreateStructures(Column column) {}
+
+	@Override
+	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos pos) {
+		return world.getBiome(pos).getSpawnableList(type);
+	}
+
+	@Override
+	public BlockPos getClosestStructure(String name, BlockPos pos) {
+		return null;
 	}
 }

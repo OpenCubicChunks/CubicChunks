@@ -23,7 +23,6 @@
  */
 package cubicchunks.util;
 
-import cubicchunks.server.ServerCubeCache;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
@@ -34,7 +33,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-
 import static cubicchunks.util.Coords.blockToLocal;
 
 /**
@@ -56,24 +54,12 @@ public class FastCubeBlockAccess {
 		this.originZ = cube.getZ() - radius;
 
 		for (int relativeCubeX = -radius; relativeCubeX <= radius; relativeCubeX++) {
-			for (int relativeCubeY = -radius; relativeCubeY <= radius; relativeCubeY++) {
-				for (int relativeCubeZ = -radius; relativeCubeZ <= radius; relativeCubeZ++) {
-					Cube currentCube = cache.getCube(
-							originX + relativeCubeX + radius,
-							originY + relativeCubeY + radius,
-							originZ + relativeCubeZ + radius
-					);
-					if (currentCube == null) {
-						String cubes = ((ServerCubeCache) cache).dumpLoadedCubes();
-
-						String addInfo = String.format("Getting cube at [%d, %d, %d] returned null, blocks near center cube loaded",
-								originX + relativeCubeX + radius,
-								originY + relativeCubeY + radius,
-								originZ + relativeCubeZ + radius
-						);
-						throw new NullPointerException(addInfo + cubes);
-					}
-					this.cache[relativeCubeX + radius][relativeCubeY + radius][relativeCubeZ + radius] = currentCube;
+			for (int relativeCubeZ = -radius; relativeCubeZ <= radius; relativeCubeZ++) {
+				for (int relativeCubeY = -radius; relativeCubeY <= radius; relativeCubeY++) {
+					this.cache[relativeCubeX + radius][relativeCubeY + radius][relativeCubeZ + radius] = 
+						cache.getLoadedCube(originX + relativeCubeX + radius,
+											originY + relativeCubeY + radius,
+											originZ + relativeCubeZ + radius);
 				}
 			}
 		}
@@ -114,38 +100,37 @@ public class FastCubeBlockAccess {
 	public int computeLightValue(BlockPos pos) {
 		Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
 		Column column = cube.getColumn();
-		Integer heightObj = column.getHeightmapAt(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
-		int height = heightObj == null ? AddressTools.MIN_BLOCK_Y - 1 : heightObj.intValue();
+		int height = column.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
 		if (pos.getY() > height) {
 			return 15;
-		} else {
-			IBlockState iblockstate = cube.getBlockState(pos);
-			int lightSubtract = iblockstate.getLightOpacity((IBlockAccess) world, pos);
-
-			if (lightSubtract < 1) {
-				lightSubtract = 1;
-			}
-
-			if (lightSubtract >= 15) {
-				return 0;
-			}
-			BlockPos.PooledMutableBlockPos currentPos = BlockPos.PooledMutableBlockPos.retain();
-			int maxValue = 0;
-			for (EnumFacing enumfacing : EnumFacing.values()) {
-				currentPos.setPos(pos).move(enumfacing);
-				int currentValue = this.getLightFor(EnumSkyBlock.SKY,currentPos) - lightSubtract;
-
-				if (currentValue > maxValue) {
-					maxValue = currentValue;
-				}
-
-				if (maxValue >= 14) {
-					return maxValue;
-				}
-			}
-
-			currentPos.release();
-			return maxValue;
 		}
+
+		IBlockState iblockstate = cube.getBlockState(pos);
+		int lightSubtract = iblockstate.getLightOpacity((IBlockAccess) world, pos);
+
+		if (lightSubtract < 1) {
+			lightSubtract = 1;
+		}
+
+		if (lightSubtract >= 15) {
+			return 0;
+		}
+		BlockPos.PooledMutableBlockPos currentPos = BlockPos.PooledMutableBlockPos.retain();
+		int maxValue = 0;
+		for (EnumFacing enumfacing : EnumFacing.values()) {
+			currentPos.setPos(pos).move(enumfacing);
+			int currentValue = this.getLightFor(EnumSkyBlock.SKY,currentPos) - lightSubtract;
+
+			if (currentValue > maxValue) {
+				maxValue = currentValue;
+			}
+
+			if (maxValue >= 14) {
+				return maxValue;
+			}
+		}
+
+		currentPos.release();
+		return maxValue;
 	}
 }

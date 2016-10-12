@@ -24,9 +24,8 @@
 package cubicchunks.worldgen.generator.custom.structures;
 
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.Block;
-import net.minecraft.util.math.BlockPos;
 
 import java.util.Random;
 
@@ -41,10 +40,9 @@ public abstract class CubicStructureGenerator {
 	/** This world object. */
 	protected ICubicWorld m_world;
 
-	public void generate(ICubicWorld world, Cube cube) {
-		int xOrigin = cube.getX();
-		int yOrigin = cube.getY();
-		int zOrigin = cube.getZ();
+	public void generate(ICubicWorld world, ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
+
+		//TODO: maybe skip some of this stuff if the cube is empty? (would need to use hints)
 
 		int radius = this.range;
 		this.m_world = world;
@@ -53,31 +51,31 @@ public abstract class CubicStructureGenerator {
 		long randY = this.rand.nextLong();
 		long randZ = this.rand.nextLong();
 
-		for (int x = xOrigin - radius; x <= xOrigin + radius; ++x) {
-			for (int y = yOrigin - radius; y <= yOrigin + radius; ++y) {
-				for (int z = zOrigin - radius; z <= zOrigin + radius; ++z) {
+		for (int x = cubeX - radius; x <= cubeX + radius; ++x) {
+			for (int y = cubeY - radius; y <= cubeY + radius; ++y) {
+				for (int z = cubeZ - radius; z <= cubeZ + radius; ++z) {
 					long randX_mul = x*randX;
 					long randY_mul = y*randY;
 					long randZ_mul = z*randZ;
 					this.rand.setSeed(randX_mul ^ randY_mul ^ randZ_mul ^ world.getSeed());
-					this.generate(world, cube, x, y, z, xOrigin, yOrigin, zOrigin);
+					this.generate(world, cube, x, y, z, cubeX, cubeY, cubeZ);
 				}
 			}
 
 		}
 	}
 
-	protected abstract void generate(ICubicWorld world, Cube cube, int x, int y, int z, int xOrig, int yOrig, int zOrig);
+	protected abstract void generate(ICubicWorld world, ICubePrimer cube, int x, int y, int z, int xOrig, int yOrig, int zOrig);
 
-	protected abstract void generateNode(Cube cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y, double z, float size_base, float curve, float angle, int numTry, int tries, double yModSinMultiplier);
+	protected abstract void generateNode(ICubePrimer cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y, double z, float size_base, float curve, float angle, int numTry, int tries, double yModSinMultiplier);
 
-	protected boolean scanForLiquid(Cube cube, int xDist1, int xDist2, int yDist1, int yDist2, int zDist1,
+	protected boolean scanForLiquid(ICubePrimer cube, int xDist1, int xDist2, int yDist1, int yDist2, int zDist1,
 	                                int zDist2, Block stationaryLiquid, Block flowingLiquid) {
 		boolean result = false;
 		for (int x1 = xDist1; !result && x1 < xDist2; ++x1) {
 			for (int z1 = zDist1; !result && z1 < zDist2; ++z1) {
 				for (int y1 = yDist2; !result && y1 >= yDist1; --y1) {
-					Block block = cube.getBlockState(new BlockPos(x1, y1, z1)).getBlock();
+					Block block = cube.getBlockState(x1, y1, z1).getBlock();
 
 					if (y1 < 0 || y1 >= 16) {
 						continue;

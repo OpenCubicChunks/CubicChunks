@@ -23,7 +23,6 @@
  */
 package cubicchunks.network;
 
-import com.google.common.base.Throwables;
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.column.Column;
 import io.netty.buffer.ByteBuf;
@@ -31,8 +30,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-
-import java.io.IOException;
 
 public class PacketColumn implements IMessage {
 	private long cubeAddress;
@@ -44,11 +41,8 @@ public class PacketColumn implements IMessage {
 		this.cubeAddress = AddressTools.getAddress(column.getX(), column.getZ());
 		this.data = new byte[WorldEncoder.getEncodedSize(column)];
 		PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
-		try {
-			WorldEncoder.encodeColumn(out, column);
-		} catch (IOException e) {
-			throw Throwables.propagate(e);
-		}
+
+		WorldEncoder.encodeColumn(out, column);
 	}
 
 	@Override

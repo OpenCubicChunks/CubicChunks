@@ -24,7 +24,6 @@
 package cubicchunks.world.cube;
 
 import com.google.common.base.Predicate;
-import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -44,8 +43,8 @@ import java.util.List;
  */
 public class BlankCube extends Cube {
 
-	public BlankCube(ICubicWorld world, Column column) {
-		super(world, column, 0, 0, 0, false);
+	public BlankCube(Column column) {
+		super(column, 0);
 	}
 
 	@Override
@@ -79,16 +78,8 @@ public class BlankCube extends Cube {
 	}
 
 	@Override
-	public void setBlockStateDirect(BlockPos pos, IBlockState newBlockState) {}
-
-	@Override
-	public IBlockState setBlockForGeneration(BlockPos blockOrLocalPos, IBlockState newBlockState) {
-		throw new UnsupportedOperationException("Eighter someone used BlankCube on server or someone generates generator on client.");
-	}
-
-	@Override
-	public boolean hasBlocks() {
-		return false;
+	public IBlockState setBlockStateDirect(BlockPos pos, IBlockState newstate) {
+		return null;
 	}
 
 	@Override
@@ -133,14 +124,12 @@ public class BlankCube extends Cube {
 
 	@Override
 	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
-		//TODO: BlankCube.getLightSubtracted - is it correct?
 		return 15 - skyLightDampeningTerm;
 	}
 
 	@Override
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
-		//TODO: BlankCube.getLightFor - maybe return 0?
-		return 15;
+		return lightType.defaultLightValue;
 	}
 
 	@Override

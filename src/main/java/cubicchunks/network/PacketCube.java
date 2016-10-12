@@ -23,7 +23,6 @@
  */
 package cubicchunks.network;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
@@ -35,7 +34,6 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -53,11 +51,9 @@ public class PacketCube implements IMessage {
 		this.cubeAddress = cube.getAddress();
 		this.data = new byte[WorldEncoder.getEncodedSize(cube)];
 		PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
-		try {
-			WorldEncoder.encodeCube(out, cube);
-		} catch (IOException e) {
-			throw Throwables.propagate(e);
-		}
+
+		WorldEncoder.encodeCube(out, cube);
+
 		Collection<TileEntity> tileEntities = cube.getTileEntityMap().values();
 		this.tileEntityTags = new ArrayList<>(tileEntities.size());
 		for(TileEntity te : tileEntities) {

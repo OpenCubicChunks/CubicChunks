@@ -93,6 +93,7 @@ public class ReflectionUtil {
 	 * <p>
 	 * Warning: Slow.
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> T getFieldValueSrg(Object from, String srgName) {
 		String name = Mappings.getNameFromSrg(srgName);
 		Class<?> cl = from.getClass();
@@ -106,18 +107,19 @@ public class ReflectionUtil {
 	}
 
 	private static final Field getFieldFromSrg(Class<?> owner, String srgName) {
-		Field[] allFields = owner.getDeclaredFields();
-		Field foundField = null;
 		String name = Mappings.getNameFromSrg(srgName);
 
-		for (Field field : allFields) {
-			if (name.equals(field.getName())) {
-				foundField = field;
-				break;
-			}
-		}
+		Field foundField = findFieldByName(owner, name);
 		foundField.setAccessible(true);
 		return foundField;
+	}
+
+	private static Field findFieldByName(Class<?> owner, String name) {
+		try {
+			return owner.getDeclaredField(name);
+		} catch (NoSuchFieldException e) {
+			return findFieldByName(owner.getSuperclass(), name);
+		}
 	}
 
 	private static final void removeFinalModifier(Field f) {

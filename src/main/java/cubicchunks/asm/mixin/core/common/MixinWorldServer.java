@@ -24,24 +24,27 @@
 package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.ICubicChunksWorldType;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.worldgen.ColumnGenerator;
-import cubicchunks.worldgen.ICubicChunkGenerator;
+import cubicchunks.world.IProviderExtras;
+import cubicchunks.world.provider.ICubicWorldProvider;
+import cubicchunks.world.provider.VanillaCubicProvider;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.ChunkProviderServer;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -49,8 +52,6 @@ import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
-
-import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 
 /**
  * Implementation of {@link ICubicWorldServer} interface.
@@ -62,8 +63,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	@Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
 	@Shadow public boolean disableLevelSaving;
 
-	private ICubicChunkGenerator cubeGenerator;
-	private ColumnGenerator columnGenerator;
 	private ChunkGc chunkGc;
 	private FirstLightProcessor firstLightProcessor;
 
@@ -79,13 +78,16 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.isCubicWorld = true;
 
 		this.entitySpawner = new CubeWorldEntitySpawner();
-		ServerCubeCache chunkProvider = new ServerCubeCache(this);
-		this.chunkProvider = chunkProvider;
-		this.lightingManager = new LightingManager(this);
 
-		ICubicChunksWorldType type = (ICubicChunksWorldType) this.getWorldType();
-		this.cubeGenerator = type.createCubeGenerator(this);
-		this.columnGenerator = type.createColumnGenerator(this);
+		if(!(this.provider instanceof ICubicWorldProvider)) { // if the provider is vanilla, wrap it
+			this.provider = new VanillaCubicProvider(this, provider,
+					((ChunkProviderServer)this.chunkProvider).chunkGenerator); // give it the old generator so it does not need to allocate a new one
+		}
+
+		this.chunkProvider = new ServerCubeCache(this, 
+				((ICubicWorldProvider)this.provider).createCubeGenerator());
+
+		this.lightingManager = new LightingManager(this);
 
 		this.thePlayerManager = new PlayerCubeMap(this);
 		this.chunkGc = new ChunkGc(getCubeCache(), getPlayerCubeMap());
@@ -108,9 +110,12 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		for (int cubeX = spawnCubeX - spawnDistance; cubeX <= spawnCubeX + spawnDistance; cubeX++) {
 			for (int cubeZ = spawnCubeZ - spawnDistance; cubeZ <= spawnCubeZ + spawnDistance; cubeZ++) {
 				// Preload column
-				serverCubeCache.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE);
+				// serverCubeCache.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE); TODO reimplement server cube cache
 				for (int cubeY = spawnCubeY + spawnDistance; cubeY >= spawnCubeY - spawnDistance; cubeY--) {
-					serverCubeCache.asyncLoadCube(cubeX, cubeY, cubeZ, col -> {});
+
+					// TODO reimplement server cube cache
+					// serverCubeCache.asyncLoadCube(cubeX, cubeY, cubeZ, col -> {});
+					serverCubeCache.getCube(new CubeCoords(cubeZ, cubeY, cubeZ), IProviderExtras.Requirement.LIGHT);
 					//TODO: progress reporting
 				}
 			}
@@ -128,14 +133,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 	@Override public ServerCubeCache getCubeCache() {
 		return (ServerCubeCache) this.chunkProvider;
-	}
-
-	@Override public ICubicChunkGenerator getCubeGenerator() {
-		return this.cubeGenerator;
-	}
-
-	@Override public ColumnGenerator getColumnGenerator() {
-		return this.columnGenerator;
 	}
 
 	@Override public FirstLightProcessor getFirstLightProcessor() {

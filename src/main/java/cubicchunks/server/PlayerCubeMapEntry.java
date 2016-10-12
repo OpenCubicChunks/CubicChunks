@@ -30,7 +30,9 @@ import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadCube;
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -46,8 +48,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_ONLY;
-import static cubicchunks.server.ServerCubeCache.LoadType.LOAD_OR_GENERATE;
 import static cubicchunks.util.AddressTools.getAddress;
 import static cubicchunks.util.AddressTools.getX;
 import static cubicchunks.util.AddressTools.getY;
@@ -68,8 +68,9 @@ public class PlayerCubeMapEntry {
 	public PlayerCubeMapEntry(PlayerCubeMap playerCubeMap, int cubeX, int cubeY, int cubeZ) {
 		this.playerCubeMap = playerCubeMap;
 		this.cubeCache = playerCubeMap.getWorld().getCubeCache();
-		this.cubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_ONLY);//TODO: async loading
-		this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ);
+		this.cube = this.cubeCache.getCube(
+				new CubeCoords(cubeX, cubeY, cubeZ),
+				IProviderExtras.Requirement.LOAD);//TODO: async loading
 		this.players = new TIntObjectHashMap<>();
 		this.previousWorldTime = 0;
 		this.dirtyBlocks = new TreeSet<>();
@@ -123,22 +124,18 @@ public class PlayerCubeMapEntry {
 	}
 
 	public boolean providePlayerCube(boolean canGenerate) {
-		if (this.cube != null) {
-			return true;
-		}
 		int cubeX = getX(cubeAddress);
 		int cubeY = getY(cubeAddress);
 		int cubeZ = getZ(cubeAddress);
 
-		playerCubeMap.getWorld().getProfiler().startSection("loadCube");
+		playerCubeMap.getWorld().getProfiler().startSection("getCube");
 		if (canGenerate) {
-			this.cubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_OR_GENERATE);
+			this.cube = this.cubeCache.getCube(new CubeCoords(cubeX, cubeY, cubeZ), IProviderExtras.Requirement.LIGHT);
 		} else {
-			this.cubeCache.loadCube(cubeX, cubeY, cubeZ, LOAD_ONLY);
+			this.cube = this.cubeCache.getCube(new CubeCoords(cubeX, cubeY, cubeZ), IProviderExtras.Requirement.LOAD);
 		}
-		playerCubeMap.getWorld().getProfiler().endStartSection("getCube");
-		this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ);
 		playerCubeMap.getWorld().getProfiler().endSection();
+
 		return this.cube != null;
 	}
 
@@ -284,7 +281,7 @@ public class PlayerCubeMapEntry {
 		return playerCubeMap.getWorldServer().getWorldTime();
 	}
 
-	private void sendPacketToAllPlayers(Packet packet) {
+	private void sendPacketToAllPlayers(Packet<?> packet) {
 		for (WatcherPlayerEntry entry : this.players.valueCollection()) {
 			entry.player.connection.sendPacket(packet);
 		}
