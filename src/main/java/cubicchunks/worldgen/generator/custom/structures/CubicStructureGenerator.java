@@ -23,12 +23,18 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
-import net.minecraft.block.Block;
 
 import java.util.Random;
 
+/**
+ * Basic structure generator for Cubic Chunks.
+ * <p>
+ * The basic idea is to loop over all cubes within some radius (max structure size)
+ * and figure out which parts of structures starting there intersect currently generated cube.
+ */
 public abstract class CubicStructureGenerator {
 
 	/** The number of Chunks to gen-check in any given direction. */
@@ -38,62 +44,59 @@ public abstract class CubicStructureGenerator {
 	protected Random rand = new Random();
 
 	/** This world object. */
-	protected ICubicWorld m_world;
+	protected ICubicWorld world;
 
-	public void generate(ICubicWorld world, ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
+	/**
+	 * Generates structures in given cube.
+	 *
+	 * @param world the world that the structure is generated in
+	 * @param cube the block buffer to be filled with blocks (Cube)
+	 * @param cubePos position of the cube to generate structures in
+	 */
+	public void generate(ICubicWorld world, ICubePrimer cube, CubeCoords cubePos) {
 
 		//TODO: maybe skip some of this stuff if the cube is empty? (would need to use hints)
 
 		int radius = this.range;
-		this.m_world = world;
+		this.world = world;
 		this.rand.setSeed(world.getSeed());
+		//used to randomize contribution of each coordinate to the cube seed
+		//without these swapping x/y/z coordinates would result in the same seed
+		//so structures would generate symmetrically
 		long randX = this.rand.nextLong();
 		long randY = this.rand.nextLong();
 		long randZ = this.rand.nextLong();
 
-		for (int x = cubeX - radius; x <= cubeX + radius; ++x) {
-			for (int y = cubeY - radius; y <= cubeY + radius; ++y) {
-				for (int z = cubeZ - radius; z <= cubeZ + radius; ++z) {
-					long randX_mul = x*randX;
-					long randY_mul = y*randY;
-					long randZ_mul = z*randZ;
+		int cubeX = cubePos.getCubeX();
+		int cubeY = cubePos.getCubeY();
+		int cubeZ = cubePos.getCubeZ();
+
+		//x/y/zOrigin is location of the structure "center", and cubeX/Y/Z is the currently generated cube
+		for (int xOrigin = cubeX - radius; xOrigin <= cubeX + radius; ++xOrigin) {
+			for (int yOrigin = cubeY - radius; yOrigin <= cubeY + radius; ++yOrigin) {
+				for (int zOrigin = cubeZ - radius; zOrigin <= cubeZ + radius; ++zOrigin) {
+					long randX_mul = xOrigin*randX;
+					long randY_mul = yOrigin*randY;
+					long randZ_mul = zOrigin*randZ;
 					this.rand.setSeed(randX_mul ^ randY_mul ^ randZ_mul ^ world.getSeed());
-					this.generate(world, cube, x, y, z, cubeX, cubeY, cubeZ);
+					this.generate(world, cube, xOrigin, yOrigin, zOrigin, cubePos);
 				}
 			}
 
 		}
 	}
 
-	protected abstract void generate(ICubicWorld world, ICubePrimer cube, int x, int y, int z, int xOrig, int yOrig, int zOrig);
-
-	protected abstract void generateNode(ICubePrimer cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y, double z, float size_base, float curve, float angle, int numTry, int tries, double yModSinMultiplier);
-
-	protected boolean scanForLiquid(ICubePrimer cube, int xDist1, int xDist2, int yDist1, int yDist2, int zDist1,
-	                                int zDist2, Block stationaryLiquid, Block flowingLiquid) {
-		boolean result = false;
-		for (int x1 = xDist1; !result && x1 < xDist2; ++x1) {
-			for (int z1 = zDist1; !result && z1 < zDist2; ++z1) {
-				for (int y1 = yDist2; !result && y1 >= yDist1; --y1) {
-					Block block = cube.getBlockState(x1, y1, z1).getBlock();
-
-					if (y1 < 0 || y1 >= 16) {
-						continue;
-					}
-					if (block == stationaryLiquid || block == flowingLiquid) {
-						result = true;
-					}
-
-					if (y1 != yDist1 - 1 && x1 != xDist1 && x1 != xDist2 - 1 && z1 != zDist1 && z1 != zDist2 - 1) {
-						y1 = yDist1;
-					}
-				}
-			}
-		}
-		return result;
-	}
-
-	protected double calculateDistance(int origin, int x1, double x, double modSin) {
-		return (x1 + origin*16 + 0.5D - x)/modSin;
-	}
+	/**
+	 * Generates blocks in a given cube for a structure that starts at given origin position.
+	 *
+	 * @param world the world the structure is generated in
+	 * @param cube the block buffer to be filled with blocks (Cube)
+	 * @param structureX x coordinate of the starting position of currently generated structure
+	 * @param structureY y coordinate of the starting position of currently generated structure
+	 * @param structureZ z coordinate of the starting position of currently generated structure
+	 * @param generatedCubePos position of the cube to fill with blocks
+	 */
+	protected abstract void generate(ICubicWorld world, ICubePrimer cube,
+	                                 int structureX, int structureY, int structureZ,
+	                                 CubeCoords generatedCubePos);
 }

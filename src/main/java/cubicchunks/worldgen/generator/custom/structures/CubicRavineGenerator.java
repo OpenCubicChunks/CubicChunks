@@ -23,202 +23,308 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
+import cubicchunks.util.Coords;
+import cubicchunks.util.CubeCoords;
+import cubicchunks.util.StructureGenUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
-import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 import java.util.Random;
+import java.util.function.Predicate;
+
+import static cubicchunks.util.Coords.cubeToMinBlock;
+import static cubicchunks.util.Coords.localToBlock;
+import static net.minecraft.util.math.MathHelper.cos;
+import static net.minecraft.util.math.MathHelper.floor_double;
+import static net.minecraft.util.math.MathHelper.sin;
 
 public class CubicRavineGenerator extends CubicStructureGenerator {
 
-	// I'm not sure what it is
-	private float[] array1 = new float[1024];
+	private static final int RAVINE_RARITY = 50*16;
+
+	private static final int MAX_CUBE_Y = 4;
+
+	private static final double VERT_SIZE_FACTOR = 3.0;
+
+	/**
+	 * Value added to the size of the cave (radius)
+	 */
+	private static final double RAVINE_SIZE_ADD = 1.5D;
+
+	private static final double MIN_RAND_SIZE_FACTOR = 0.75;
+	private static final double MAX_RAND_SIZE_FACTOR = 1.00;
+
+	/**
+	 * After each step the Y direction component will be multiplied by this value
+	 */
+	private static final double FLATTEN_FACTOR = 0.7;
+
+	/**
+	 * Each step ravine direction angles will be changed by this fraction
+	 * of values that specify how direction changes
+	 */
+	private static final double DIRECTION_CHANGE_FACTOR = 0.05;
+
+	/**
+	 * This fraction of the previous value that controls horizontal direction changes will be used in next step
+	 */
+	private static final double PREV_HORIZ_DIRECTION_CHANGE_WEIGHT = 0.5;
+
+	/**
+	 * This fraction of the previous value that controls vertical direction changes will be used in next step
+	 */
+	private static final double PREV_VERT_DIRECTION_CHANGE_WEIGHT = 0.8;
+
+	/**
+	 * Maximum value by which horizontal cave direction randomly changes each step, lower values are much more likely.
+	 */
+	private static final double MAX_ADD_DIRECTION_CHANGE_HORIZ = 4.0;
+
+	/**
+	 * Maximum value by which vertical cave direction randomly changes each step, lower values are much more likely.
+	 */
+	private static final double MAX_ADD_DIRECTION_CHANGE_VERT = 2.0;
+
+	/**
+	 * 1 in this amount of steps will actually carve any blocks,
+	 */
+	private static final int CARVE_STEP_RARITY = 4;
+
+	/**
+	 * Controls which blocks can be replaced by cave
+	 */
+	private static final Predicate<IBlockState> isBlockReplaceable = (state ->
+			state.getBlock() == Blocks.STONE || state.getBlock() == Blocks.DIRT || state.getBlock() == Blocks.GRASS);
+
+	/**
+	 * Contains values of ravine widths at each height.
+	 * <p>
+	 * For cubic chunks the height value used wraps around.
+	 */
+	private float[] widthDecreaseFactors = new float[1024];
 
 	@Override
-	protected void generate(ICubicWorld world, ICubePrimer cube, int cubeX, int cubeY, int cubeZ, int xOrigin, int yOrigin,
-	                        int zOrigin) {
-		if (rand.nextInt(16) != 0) {
+	protected void generate(ICubicWorld world, ICubePrimer cube, int structureX, int structureY, int structureZ,
+	                        CubeCoords generatedCubePos) {
+		if (rand.nextInt(RAVINE_RARITY) != 0 || structureY > MAX_CUBE_Y) {
 			return;
 		}
-		if (cubeY <= 4 && rand.nextInt(50) == 0) {
-			double x = cubeX*16 + rand.nextInt(16);
-			double y = cubeY*16 + rand.nextInt(16);
-			double z = cubeZ*16 + rand.nextInt(16);
-			byte numGen = 1;
+		double startX = localToBlock(structureX, rand.nextInt(Coords.CUBE_SIZE));
+		double startY = localToBlock(structureY, rand.nextInt(Coords.CUBE_SIZE));
+		double startZ = localToBlock(structureZ, rand.nextInt(Coords.CUBE_SIZE));
 
-			for (int i = 0; i < numGen; ++i) {
-				float curve = rand.nextFloat()*(float) Math.PI*2.0F;
-				float angle = (rand.nextFloat() - 0.5F)*2.0F/8.0F;
-				float f = (rand.nextFloat()*2.0F + rand.nextFloat())*2.0F;
-				this.generateNode(cube, rand.nextLong(), xOrigin, yOrigin, zOrigin, x, y, z, f, curve, angle, 0, 0,
-						3.0D);
-			}
-		}
+		float vertDirectionAngle = rand.nextFloat()*(float) Math.PI*2.0F;
+		float horizDirectionAngle = (rand.nextFloat() - 0.5F)*2.0F/8.0F;
+		float baseRavineSize = (rand.nextFloat()*2.0F + rand.nextFloat())*2.0F;
+
+		int startWalkedDistance = 0;
+		int maxWalkedDistance = 0;//choose value automatically
+
+		this.generateNode(cube, rand.nextLong(), generatedCubePos, startX, startY, startZ,
+				baseRavineSize, vertDirectionAngle, horizDirectionAngle,
+				startWalkedDistance, maxWalkedDistance, VERT_SIZE_FACTOR);
 	}
 
-	@Override
-	protected void generateNode(ICubePrimer cube, long seed, int xOrigin, int yOrigin, int zOrigin, double x, double y,
-	                            double z, float size_base, float curve, float angle, int numTry, int tries, double yModSinMultiplier) {
+	protected void generateNode(ICubePrimer cube, long seed, CubeCoords generatedCubePos,
+	                            double ravineX, double ravineY, double ravineZ,
+	                            float baseRavineSize, float horizDirAngle, float vertDirAngle,
+	                            int startWalkedDistance, int maxWalkedDistance, double vertRavineSizeMod) {
 		Random rand = new Random(seed);
-		double xOCenter = xOrigin*16 + 8;
-		double yOCenter = yOrigin*16 + 8;
-		double zOCenter = zOrigin*16 + 8;
-		float f3 = 0.0F;
-		float f4 = 0.0F;
 
-		if (tries <= 0) {
-			int radius = range*16 - 16;
-			tries = radius - rand.nextInt(radius/4);
+		//store by how much the horizontal and vertical(?) direction angles will change each step
+		float horizDirChange = 0.0F;
+		float vertDirChange = 0.0F;
+
+		if (maxWalkedDistance <= 0) {
+			int maxBlockRadius = cubeToMinBlock(this.range - 1);
+			maxWalkedDistance = maxBlockRadius - rand.nextInt(maxBlockRadius/4);
 		}
 
-		boolean kAltered = false;
+		//always false for ravine generator
+		boolean finalStep = false;
 
-		if (numTry == -1) {
-			numTry = tries/2;
-			kAltered = true;
+		int walkedDistance;
+		if (startWalkedDistance == -1) {
+			//UNUSED: generate a ravine equivalent of cave room
+			//start at half distance towards the end = max size
+			walkedDistance = maxWalkedDistance/2;
+			finalStep = true;
+		} else {
+			walkedDistance = startWalkedDistance;
 		}
 
-		this.array1 = populateArray(rand);
+		this.widthDecreaseFactors = generateRavineWidthFactors(rand);
 
-		for (; numTry < tries; ++numTry) {
-			double modSin = 1.5D + MathHelper.sin(numTry*(float) Math.PI/tries)*size_base*1.0F;
-			double yModSin = modSin*yModSinMultiplier;
+		for (; walkedDistance < maxWalkedDistance; ++walkedDistance) {
+			float fractionWalked = walkedDistance/(float) maxWalkedDistance;
+			//horizontal and vertical size of the ravine
+			//size starts small and increases, then decreases as ravine goes further
+			double ravineSizeHoriz = RAVINE_SIZE_ADD + sin(fractionWalked*(float) Math.PI)*baseRavineSize;
+			double ravineSizeVert = ravineSizeHoriz*vertRavineSizeMod;
+			ravineSizeHoriz *= rand.nextFloat()*(MAX_RAND_SIZE_FACTOR - MIN_RAND_SIZE_FACTOR) + MIN_RAND_SIZE_FACTOR;
+			ravineSizeVert *= rand.nextFloat()*(MAX_RAND_SIZE_FACTOR - MIN_RAND_SIZE_FACTOR) + MIN_RAND_SIZE_FACTOR;
 
-			float cosAngle = MathHelper.cos(angle);
-			float sinAngle = MathHelper.sin(angle);
+			//Walk forward a single step:
 
-			modSin *= rand.nextFloat()*0.25D + 0.75D;// * value between 0.75
-			// and 1
-			yModSin *= rand.nextFloat()*0.25D + 0.75D;
+			//from sin(alpha)=y/r and cos(alpha)=x/r ==> x = r*cos(alpha) and y = r*sin(alpha)
+			//always moves by one block in some direction
 
-			x += MathHelper.cos(curve)*cosAngle;
-			y += sinAngle;
-			z += MathHelper.sin(curve)*cosAngle;
+			//here x is xzDirectionSize, y is yDirection
+			float xzDirectionFactor = cos(vertDirAngle);
+			float yDirectionFactor = sin(vertDirAngle);
 
-			angle *= 0.7F;
+			ravineX += cos(horizDirAngle)*xzDirectionFactor;
+			ravineY += yDirectionFactor;
+			ravineZ += sin(horizDirAngle)*xzDirectionFactor;
 
-			angle += f4*0.05F;
-			curve += f3*0.05F;
-			f4 *= 0.8F;
-			f3 *= 0.5F;
-			f4 += (rand.nextFloat() - rand.nextFloat())*rand.nextFloat()*2.0F;
-			f3 += (rand.nextFloat() - rand.nextFloat())*rand.nextFloat()*4.0F;
+			vertDirAngle *= FLATTEN_FACTOR;
 
-			if (kAltered || rand.nextInt(4) != 0) {
-				double xDist = x - xOCenter;
-				// double yDist = y - yOCenter;
-				double zDist = z - zOCenter;
-				double triesLeft = tries - numTry;
-				double fDist = size_base + 2.0F + 16.0F;
+			//change the direction
+			vertDirAngle += vertDirChange*DIRECTION_CHANGE_FACTOR;
+			horizDirAngle += horizDirChange*DIRECTION_CHANGE_FACTOR;
+			//update direction change angles
+			vertDirChange *= PREV_VERT_DIRECTION_CHANGE_WEIGHT;
+			horizDirChange *= PREV_HORIZ_DIRECTION_CHANGE_WEIGHT;
+			vertDirChange += (rand.nextFloat() - rand.nextFloat())*rand.nextFloat()*MAX_ADD_DIRECTION_CHANGE_VERT;
+			horizDirChange += (rand.nextFloat() - rand.nextFloat())*rand.nextFloat()*MAX_ADD_DIRECTION_CHANGE_HORIZ;
 
-				if (xDist*xDist + zDist*zDist - triesLeft*triesLeft > fDist*fDist) {
-					return;
+			if (rand.nextInt(CARVE_STEP_RARITY) == 0 && !finalStep) {
+				continue;
+			}
+
+			double xDist = ravineX - generatedCubePos.getXCenter();
+			double zDist = ravineZ - generatedCubePos.getZCenter();
+			double maxStepsDist = maxWalkedDistance - walkedDistance;
+
+			double maxDistToCube = baseRavineSize + RAVINE_SIZE_ADD + Coords.CUBE_SIZE;
+			//can this cube be reached at all?
+			//if even after going max distance allowed by remaining steps, it's still too far - stop
+			//NOTE: don't check yDist, this is optimization and with Y scale stretched as much as with ravines
+			//the check would be useless
+			//TODO: does it make any performance difference?
+			if (xDist*xDist + zDist*zDist - maxStepsDist*maxStepsDist > maxDistToCube*maxDistToCube) {
+				return;
+			}
+
+			tryCarveBlocks(cube, generatedCubePos,
+					ravineX, ravineY, ravineZ,
+					ravineSizeHoriz, ravineSizeVert);
+
+			if (finalStep) {
+				return;
+			}
+		}
+	}
+
+	private void tryCarveBlocks(ICubePrimer cube, CubeCoords generatedCubePos,
+	                            double ravineX, double ravineY, double ravineZ,
+	                            double ravineSizeHoriz, double ravineSizeVert) {
+		double genCubeCenterX = generatedCubePos.getXCenter();
+		double genCubeCenterY = generatedCubePos.getYCenter();
+		double genCubeCenterZ = generatedCubePos.getZCenter();
+		if (ravineX < genCubeCenterX - Coords.CUBE_SIZE - ravineSizeHoriz*2.0D ||
+				ravineY < genCubeCenterY - Coords.CUBE_SIZE - ravineSizeVert*2.0D ||
+				ravineZ < genCubeCenterZ - Coords.CUBE_SIZE - ravineSizeHoriz*2.0D ||
+				ravineX > genCubeCenterX + Coords.CUBE_SIZE + ravineSizeHoriz*2.0D ||
+				ravineY > genCubeCenterY + Coords.CUBE_SIZE + ravineSizeVert*2.0D ||
+				ravineZ > genCubeCenterZ + Coords.CUBE_SIZE + ravineSizeHoriz*2.0D) {
+			return;
+		}
+		int minLocalX = floor_double(ravineX - ravineSizeHoriz) - generatedCubePos.getMinBlockX() - 1;
+		int maxLocalX = floor_double(ravineX + ravineSizeHoriz) - generatedCubePos.getMinBlockX() + 1;
+		int minLocalY = floor_double(ravineY - ravineSizeVert) - generatedCubePos.getMinBlockY() - 1;
+		int maxLocalY = floor_double(ravineY + ravineSizeVert) - generatedCubePos.getMinBlockY() + 1;
+		int minLocalZ = floor_double(ravineZ - ravineSizeHoriz) - generatedCubePos.getMinBlockZ() - 1;
+		int maxLocalZ = floor_double(ravineZ + ravineSizeHoriz) - generatedCubePos.getMinBlockZ() + 1;
+
+		//skip is if everything is outside of that cube
+		if (maxLocalX <= 0 || minLocalX >= Coords.CUBE_SIZE ||
+				maxLocalY <= 0 || minLocalY >= Coords.CUBE_SIZE ||
+				maxLocalZ <= 0 || minLocalZ >= Coords.CUBE_SIZE) {
+			return;
+		}
+		StructureBoundingBox boundingBox = new StructureBoundingBox(minLocalX, minLocalY, minLocalZ, maxLocalX, maxLocalY, maxLocalZ);
+
+		StructureGenUtil.clampBoundingBoxToLocalCube(boundingBox);
+
+		boolean hitLiquid = StructureGenUtil.scanWallsForBlock(cube, boundingBox,
+				(b) -> b.getBlock() == Blocks.WATER || b.getBlock() == Blocks.FLOWING_WATER);
+
+		if (!hitLiquid) {
+			carveBlocks(cube, generatedCubePos, ravineX, ravineY, ravineZ, ravineSizeHoriz, ravineSizeVert, boundingBox);
+		}
+	}
+
+	private void carveBlocks(ICubePrimer cube, CubeCoords generatedCubePos,
+	                         double ravineX, double ravineY, double ravineZ,
+	                         double ravineSizeHoriz, double ravineSizeVert, StructureBoundingBox boundingBox) {
+		int generatedCubeX = generatedCubePos.getCubeX();
+		int generatedCubeY = generatedCubePos.getCubeY();
+		int generatedCubeZ = generatedCubePos.getCubeZ();
+
+		int minX = boundingBox.minX;
+		int maxX = boundingBox.maxX;
+		int minY = boundingBox.minY;
+		int maxY = boundingBox.maxY;
+		int minZ = boundingBox.minZ;
+		int maxZ = boundingBox.maxZ;
+
+		for (int localX = minX; localX < maxX; ++localX) {
+			double distX = StructureGenUtil.normalizedDistance(generatedCubeX, localX, ravineX, ravineSizeHoriz);
+
+			for (int localZ = minZ; localZ < maxZ; ++localZ) {
+				double distZ = StructureGenUtil.normalizedDistance(generatedCubeZ, localZ, ravineZ, ravineSizeHoriz);
+
+				if (distX*distX + distZ*distZ >= 1.0D) {
+					continue;
 				}
+				for (int localY = minY; localY < maxY; ++localY) {
+					double distY = StructureGenUtil.normalizedDistance(generatedCubeY, localY, ravineY, ravineSizeVert);
 
-				if (x >= xOCenter - 16.0D - modSin*2.0D && y >= yOCenter - 16.0D - yModSin*2.0D
-						&& z >= zOCenter - 16.0D - modSin*2.0D && x <= xOCenter + 16.0D + modSin*2.0D
-						&& y <= yOCenter + 16.0D + yModSin*2.0D && z <= zOCenter + 16.0D + modSin*2.0D) {
-					int xDist1 = MathHelper.floor_double(x - modSin) - xOrigin*16 - 1;
-					int xDist2 = MathHelper.floor_double(x + modSin) - xOrigin*16 + 1;
-					int yDist1 = MathHelper.floor_double(y - yModSin) - yOrigin*16 - 1;
-					int yDist2 = MathHelper.floor_double(y + yModSin) - yOrigin*16 + 1;
-					int zDist1 = MathHelper.floor_double(z - modSin) - zOrigin*16 - 1;
-					int zDist2 = MathHelper.floor_double(z + modSin) - zOrigin*16 + 1;
-
-					if (xDist1 < 0) {
-						xDist1 = 0;
+					//distY*distY/6.0D is a hack
+					//it should make the ravine way more stretched in the Y dimension, but because of previous checks
+					//most of these blocks beyond the not-stretched height range are never carved out
+					//the result is that instead the ravine isn't very small at the bottom,
+					//but ends with actual floor instead
+					double widthDecreaseFactor = this.widthDecreaseFactors[(localY + generatedCubeY*16) & 0xFF];
+					if ((distX*distX + distZ*distZ)*widthDecreaseFactor + distY*distY/6.0D >= 1.0D) {
+						continue;
 					}
 
-					if (xDist2 > 16) {
-						xDist2 = 16;
+					if (!isBlockReplaceable.test(cube.getBlockState(localX, localY, localZ))) {
+						continue;
 					}
-
-					if (yDist1 < 0)// 1
-					{
-						yDist1 = 0;// 1
-					}
-
-					if (yDist2 > 16)// 120
-					{
-						yDist2 = 16;// 120
-					}
-
-					if (zDist1 < 0) {
-						zDist1 = 0;
-					}
-
-					if (zDist2 > 16) {
-						zDist2 = 16;
-					}
-
-					boolean hitLiquid = scanForLiquid(cube, xDist1, xDist2, yDist1, yDist2, zDist1, zDist2, Blocks.WATER, Blocks.FLOWING_WATER);
-
-					if (!hitLiquid) {
-						for (int x1 = xDist1; x1 < xDist2; ++x1) {
-							double distX = calculateDistance(xOrigin, x1, x, modSin);
-
-							for (int z1 = zDist1; z1 < zDist2; ++z1) {
-								double distZ = calculateDistance(zOrigin, z1, z, modSin);
-								boolean grass = false;
-
-								if (distX*distX + distZ*distZ >= 1.0D) {
-									continue;
-								}
-								for (int y1 = yDist2 - 1; y1 >= yDist1; --y1) {
-									double distY = calculateDistance(yOrigin, y1, y, yModSin);
-
-									if ((distX*distX + distZ*distZ)*this.array1[(y1 + yOrigin*16) & 0xFF] + distY
-											*distY/6.0D >= 1.0D) {
-										continue;
-									}
-
-									Block block = cube.getBlockState(x1, y1, z1).getBlock();
-
-									if (block != Blocks.STONE && block != Blocks.DIRT && block != Blocks.GRASS) {
-										continue;
-									} else if (block == Blocks.GRASS) {
-										grass = true;
-									}
-									// used to place lava at the bottom of ravines if it was deep enough
-									if (y1 + yOrigin*16 < /* 10 */0) {
-										// BUG: crash when it's lava
-										// cube.setBlockForGeneration(pos, Blocks.FLOWING_LAVA.getDefaultState());
-										cube.setBlockState(x1, y1, z1, Blocks.AIR.getDefaultState());
-									} else {
-										cube.setBlockState(x1, y1, z1, Blocks.AIR.getDefaultState());
-									}
-
-									if (grass && block == Blocks.DIRT) {
-										cube.setBlockState(x1, y1, z1, Blocks.GRASS.getDefaultState());
-										cube.setBlockState(x1, y1 + 1, z1, Blocks.AIR.getDefaultState());
-									}
-								}
-							}
-						}
-					}
-
-					if (kAltered) {
-						break;
+					//vanilla places lava at the bottom of ravines if it below some block Y coordinate
+					//this is actually tricky to do right with cubic chunks - the absolute minimum depth is too deep
+					//so instead of placing ave below some absolute depth - let it vary between different ravines
+					//this will also have the side effect that lava won't be placed perfectly flat there :(
+					if (distY < -0.8) {
+						cube.setBlockState(localX, localY, localZ, Blocks.FLOWING_LAVA.getDefaultState());
+					} else {
+						cube.setBlockState(localX, localY, localZ, Blocks.AIR.getDefaultState());
 					}
 				}
 			}
 		}
 	}
 
-	private float[] populateArray(Random rand) {
-		float[] result = new float[1024];
+	private float[] generateRavineWidthFactors(Random rand) {
+		float[] values = new float[1024];
 		float value = 1.0F;
 
 		for (int i = 0; i < 256; ++i) {
+			//~33% probability that the value will change at that height
 			if (i == 0 || rand.nextInt(3) == 0) {
-				value = 1.0F + rand.nextFloat()*rand.nextFloat();// * 1.0F; // 1.X, lower = higher probability
+				//value = 1.xxx, lower = higher probability -> Wider parts are more common.
+				value = 1.0F + rand.nextFloat()*rand.nextFloat();
 			}
 
-			result[i] = value*value;
+			values[i] = value*value;
 		}
 
-		return result;
+		return values;
 	}
 }
