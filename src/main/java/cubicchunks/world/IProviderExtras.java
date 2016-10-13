@@ -25,7 +25,6 @@ package cubicchunks.world;
 
 import javax.annotation.Nullable;
 
-import cubicchunks.util.CubeCoords;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
@@ -44,13 +43,15 @@ public interface IProviderExtras {
 
 	/**
 	 * Gets a Cube immediately
-	 * 
-	 * @param pos the Cube's location
+	 *
+	 * @param cubeX the cube's x coordinate
+	 * @param cubeY the cube's y coordinate
+	 * @param cubeZ the cube's z coordinate
 	 * @param req what the requirments are before you get the Cube
 	 * @return the Cube or null if no Cube could be found or created
 	 */
 	@Nullable
-	Cube getCube(CubeCoords pos, Requirement req);
+	Cube getCube(int cubeX, int cubeY, int cubeZ, Requirement req);
 
 	//void waitOn(Consumer<Cube> callback);
 

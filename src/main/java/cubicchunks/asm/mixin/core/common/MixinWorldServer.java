@@ -108,7 +108,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		for (int cubeX = spawnCubeX - spawnDistance; cubeX <= spawnCubeX + spawnDistance; cubeX++) {
 			for (int cubeZ = spawnCubeZ - spawnDistance; cubeZ <= spawnCubeZ + spawnDistance; cubeZ++) {
 				for (int cubeY = spawnCubeY + spawnDistance; cubeY >= spawnCubeY - spawnDistance; cubeY--) {
-					serverCubeCache.getCube(new CubeCoords(cubeZ, cubeY, cubeZ), IProviderExtras.Requirement.LIGHT);
+					serverCubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT);
 					//TODO: progress reporting
 				}
 			}

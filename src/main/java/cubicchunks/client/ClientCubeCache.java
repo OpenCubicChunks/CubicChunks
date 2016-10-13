@@ -23,12 +23,8 @@
  */
 package cubicchunks.client;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
 import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubeHashMap;
 import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldClient;
@@ -40,30 +36,32 @@ import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
+import javax.annotation.Nullable;
+
 //TODO: break off ICubeCache
 public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 	private ICubicWorldClient world;
 	private Cube blankCube;
-	private Map<CubeCoords, Cube> cubemap = new HashMap<>();
+	private CubeHashMap cubemap = new CubeHashMap(0.7f, 13);
 
 	public ClientCubeCache(ICubicWorldClient world) {
 		super((World) world);
 
 		this.world = world;
 		ReflectionUtil.setFieldValueSrg(this, "field_73238_a", new BlankColumn(this, world, 0, 0));
-		this.blankCube = new BlankCube((Column)blankChunk);
+		this.blankCube = new BlankCube((Column) blankChunk);
 	}
 
 	@Override
 	@Nullable
 	public Column getLoadedChunk(int x, int z) {
-		return (Column)super.getLoadedChunk(x, z);
+		return (Column) super.getLoadedChunk(x, z);
 	}
 
 	@Override
 	public Column provideChunk(int x, int z) {
-		return (Column)super.provideChunk(x, z);
+		return (Column) super.provideChunk(x, z);
 	}
 
 	@Override
@@ -86,13 +84,13 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	 * This is like ChunkProviderClient.loadChunk()
 	 * It is used when the server sends a new Cube to this client,
 	 * and the network handler wants us to create a new Cube.
-	 * 
+	 *
 	 * @return a newly created and cached cube
 	 */
 	public Cube loadCube(Column column, int cubeY) {
 		Cube cube = new Cube(column, cubeY); // auto added to column
 		column.addCube(cube);
-		this.cubemap.put(new CubeCoords(column.getX(), cubeY, column.getZ()), cube);
+		this.cubemap.put(cube);
 
 		return cube;
 	}
@@ -102,36 +100,43 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	 * It is used when the server tells the client to unload a Cube.
 	 */
 	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
-		cubemap.remove(new CubeCoords(cubeX, cubeY, cubeZ));
-		getLoadedChunk(cubeX, cubeZ).removeCube(cubeY);
+		cubemap.remove(cubeX, cubeY, cubeZ);
+		Column column = getLoadedChunk(cubeX, cubeZ);
+		if (column != null) {
+			column.removeCube(cubeY);
+		}
 	}
 
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
-		return getCube(new CubeCoords(cubeX, cubeY, cubeZ));
-	}
-
-	@Override
-	public Cube getCube(CubeCoords coords) {
-		Cube cube = getLoadedCube(coords);
-		if(cube == null) {
+		Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
+		if (cube == null) {
 			return blankCube;
 		}
 		return cube;
 	}
 
 	@Override
+	public Cube getCube(CubeCoords coords) {
+		return getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+	}
+
+	@Override
 	public Cube getLoadedCube(int cubeX, int cubeY, int cubeZ) {
-		return getLoadedCube(new CubeCoords(cubeX, cubeY, cubeZ));
+		return cubemap.get(cubeX, cubeY, cubeZ);
 	}
 
 	@Override
 	public Cube getLoadedCube(CubeCoords coords) {
-		return cubemap.get(coords);
+		return getLoadedCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
 	@Override
 	public String makeString() {
-		return "MultiplayerChunkCache: " + this.chunkMapping.values().stream().map(c->((Column)c).getLoadedCubes().size()).reduce((a,b)->a+b).orElse(-1) + "/" + this.chunkMapping.size();
+		return "MultiplayerChunkCache: " + this.chunkMapping.values()
+				.stream()
+				.map(c -> ((Column) c).getLoadedCubes().size())
+				.reduce((a, b) -> a + b)
+				.orElse(-1) + "/" + this.chunkMapping.size();
 	}
 }

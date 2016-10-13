@@ -69,7 +69,7 @@ public class PlayerCubeMapEntry {
 		this.playerCubeMap = playerCubeMap;
 		this.cubeCache = playerCubeMap.getWorld().getCubeCache();
 		this.cube = this.cubeCache.getCube(
-				new CubeCoords(cubeX, cubeY, cubeZ),
+				cubeX, cubeY, cubeZ,
 				IProviderExtras.Requirement.LOAD);//TODO: async loading
 		this.players = new TIntObjectHashMap<>();
 		this.previousWorldTime = 0;
@@ -130,9 +130,9 @@ public class PlayerCubeMapEntry {
 
 		playerCubeMap.getWorld().getProfiler().startSection("getCube");
 		if (canGenerate) {
-			this.cube = this.cubeCache.getCube(new CubeCoords(cubeX, cubeY, cubeZ), IProviderExtras.Requirement.LIGHT);
+			this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT);
 		} else {
-			this.cube = this.cubeCache.getCube(new CubeCoords(cubeX, cubeY, cubeZ), IProviderExtras.Requirement.LOAD);
+			this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LOAD);
 		}
 		playerCubeMap.getWorld().getProfiler().endSection();
 
