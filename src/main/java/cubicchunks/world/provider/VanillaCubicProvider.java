@@ -61,41 +61,42 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 
 		boolean useProvider = false;
 
-		if(!worldObj.isRemote)
-		if(worldObj.getWorldType() instanceof ICubicWorldType) { // Who do we trust!??!?! D:
+		if(!worldObj.isRemote) {
+			if (worldObj.getWorldType() instanceof ICubicWorldType) { // Who do we trust!??!?! D:
 
-			// nasty hack heuristic to see if provider asks its WorldType for a chunk generator
-			//ReflectionUtil.setFieldValueSrg(wp, "field_76577_b", HEURISTIC_WORLDTYPE);
-			provider.terrainType = HEURISTIC_WORLDTYPE;
+				// nasty hack heuristic to see if provider asks its WorldType for a chunk generator
+				//ReflectionUtil.setFieldValueSrg(wp, "field_76577_b", HEURISTIC_WORLDTYPE);
+				provider.terrainType = HEURISTIC_WORLDTYPE;
 
-			IChunkGenerator pro_or_null = provider.createChunkGenerator();
+				IChunkGenerator pro_or_null = provider.createChunkGenerator();
 
-			// clean up
-			//ReflectionUtil.setFieldValueSrg(provider, "field_76577_b", worldObj.getWorldType());
-			provider.terrainType = worldObj.getWorldType();
+				// clean up
+				//ReflectionUtil.setFieldValueSrg(provider, "field_76577_b", worldObj.getWorldType());
+				provider.terrainType = worldObj.getWorldType();
 
-			if(pro_or_null != null) { // It will be null if it tries to get one form WorldType
+				if (pro_or_null != null) { // It will be null if it tries to get one form WorldType
 
-				// It was from a vanilla WorldProvider... use it
-				cubeGen = new VanillaCompatibilityGenerator(
+					// It was from a vanilla WorldProvider... use it
+					cubeGen = new VanillaCompatibilityGenerator(
 							reUse == null ? pro_or_null : reUse,
 							world);
-			}else{
+				} else {
 
-				// It was from WorldType, try to use cubic generator
-				cubeGen   = ((ICubicWorldType)worldObj.getWorldType()).createCubeGenerator(getCubicWorld());
-				if(cubeGen == null) {
-					useProvider = true;
+					// It was from WorldType, try to use cubic generator
+					cubeGen = ((ICubicWorldType) worldObj.getWorldType()).createCubeGenerator(getCubicWorld());
+					if (cubeGen == null) {
+						useProvider = true;
+					}
 				}
+			} else {
+				useProvider = true;
 			}
-		}else{
-			useProvider = true;
-		}
 
-		if(useProvider) {
-			cubeGen = new VanillaCompatibilityGenerator(
-							reUse == null ? provider.createChunkGenerator() : reUse,
-							world);
+			if (useProvider) {
+				cubeGen = new VanillaCompatibilityGenerator(
+						reUse == null ? provider.createChunkGenerator() : reUse,
+						world);
+			}
 		}
 	}
 

@@ -29,7 +29,6 @@ import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadCube;
 import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.cube.Cube;
