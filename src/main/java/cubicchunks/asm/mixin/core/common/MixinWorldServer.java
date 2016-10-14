@@ -30,20 +30,17 @@ import cubicchunks.server.ChunkGc;
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.util.Coords;
-import cubicchunks.util.CubeCoords;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicChunksSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.provider.ICubicWorldProvider;
-import cubicchunks.world.provider.VanillaCubicProvider;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.ChunkProviderServer;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
@@ -79,11 +76,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		this.entitySpawner = new CubeWorldEntitySpawner();
 
-		if(!(this.provider instanceof ICubicWorldProvider)) { // if the provider is vanilla, wrap it
-			this.provider = new VanillaCubicProvider(this, provider,
-					((ChunkProviderServer)this.chunkProvider).chunkGenerator); // give it the old generator so it does not need to allocate a new one
-		}
-
 		this.chunkProvider = new ServerCubeCache(this, 
 				((ICubicWorldProvider)this.provider).createCubeGenerator());
 
@@ -112,10 +104,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 				// Preload column
 				// serverCubeCache.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE); TODO reimplement server cube cache
 				for (int cubeY = spawnCubeY + spawnDistance; cubeY >= spawnCubeY - spawnDistance; cubeY--) {
-
 					// TODO reimplement server cube cache
 					// serverCubeCache.asyncLoadCube(cubeX, cubeY, cubeZ, col -> {});
-					serverCubeCache.getCube(new CubeCoords(cubeZ, cubeY, cubeZ), IProviderExtras.Requirement.LIGHT);
+					serverCubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT);
 					//TODO: progress reporting
 				}
 			}

@@ -41,7 +41,7 @@ TODO: figure out how to automatically remove log4j2.xml for release
         </Routing>
     </Appenders>
     <Loggers>
-        <!--<Logger level="info" name="com.mojang" additivity="false">
+        <Logger level="info" name="com.mojang" additivity="false">
             <AppenderRef ref="SysOut" level="ALL" />
             <AppenderRef ref="File" />
             <AppenderRef ref="ServerGuiConsole" level="INFO" />
@@ -53,7 +53,7 @@ TODO: figure out how to automatically remove log4j2.xml for release
             <AppenderRef ref="SysOut" level="ALL" />
             <AppenderRef ref="File" />
             <AppenderRef ref="ServerGuiConsole" level="ALL" />
-        </Logger>-->
+        </Logger>
         <Root level="all">
             <AppenderRef ref="FmlSysOut" />
             <AppenderRef ref="ServerGuiConsole" level="INFO" />

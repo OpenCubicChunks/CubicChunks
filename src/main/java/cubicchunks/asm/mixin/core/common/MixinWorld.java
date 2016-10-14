@@ -32,6 +32,8 @@ import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.ICubicWorldProvider;
+import cubicchunks.world.provider.VanillaCubicProvider;
 import cubicchunks.world.type.ICubicWorldType;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -95,6 +97,10 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		this.minHeight = CubicChunks.Config.DEFAULT_MIN_WORLD_HEIGHT;
 		//don't want to make world implement IConfigChangeListener
 		CubicChunks.addConfigChangeListener(this);
+
+		if(!(this.provider instanceof ICubicWorldProvider)) { // if the provider is vanilla, wrap it
+			this.provider = new VanillaCubicProvider(this, provider, null);
+		}
 	}
 	//from ConfigChangeListener
 	@Override public void onConfigUpdate(CubicChunks.Config config) {

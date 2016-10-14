@@ -23,6 +23,7 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.structures.CubicCaveGenerator;
@@ -34,10 +35,10 @@ public class CustomFeatureProcessor {
 	private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
 	private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
 
-	public void generate(ICubicWorld world, ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
+	public void generate(ICubicWorld world, ICubePrimer cube, CubeCoords cubePos) {
 
 		// generate world features
-		this.caveGenerator.generate(world, cube, cubeX, cubeY, cubeZ);
-		this.ravineGenerator.generate(world, cube, cubeX, cubeY, cubeZ);
+		this.caveGenerator.generate(world, cube, cubePos);
+		this.ravineGenerator.generate(world, cube, cubePos);
 	}
 }

@@ -27,6 +27,7 @@ import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubeHashMap;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IProviderExtras;
@@ -49,10 +50,8 @@ import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 
 /**
@@ -76,7 +75,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	private Queue<ChunkPos> columnsToUnload;
 
 	// TODO: Use a better hash map!
-	private Map<CubeCoords, Cube> cubemap = new HashMap<>();
+	private CubeHashMap cubemap = new CubeHashMap(0.7f, 13);
 
 	private ICubeGenerator   cubeGen;
 
@@ -102,7 +101,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	@Override
 	public void unloadAllChunks() {
 		// unload all the cubes in the columns
-		for(Cube cube : cubemap.values()) {
+		for(Cube cube : cubemap) {
 			cubesToUnload.add(cube.getCoords());
 		}
 	}
@@ -219,12 +218,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			iter.remove();
 			++processed;
 
-			Cube cube = cubemap.get(coords);
+			Cube cube = cubemap.get(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 
 			if (cube != null && cube.unloaded) {
 				cube.onUnload();
 				cube.getColumn().removeCube(coords.getCubeY());
-				cubemap.remove(cube.getCoords());
+				cubemap.remove(cube.getX(), cube.getY(), cube.getZ());
 
 				this.cubeIO.saveCube(cube);
 			}
@@ -264,22 +263,17 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 
 	@Override
 	public Cube getCube(int cubeX, int cubeY, int cubeZ) {
-		return getCube(new CubeCoords(cubeX, cubeY, cubeZ));
+		return getCube(cubeX, cubeY, cubeZ, Requirement.GENERATE);
 	}
 
 	@Override
 	public Cube getCube(CubeCoords coords) {
-		return getCube(coords, Requirement.GENERATE);
+		return getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
 	@Override
 	public Cube getLoadedCube(int cubeX, int cubeY, int cubeZ) {
-		return getLoadedCube(new CubeCoords(cubeX, cubeY, cubeZ));
-	}
-
-	@Override
-	public Cube getLoadedCube(CubeCoords coords) {
-		Cube cube = cubemap.get(coords);
+		Cube cube = cubemap.get(cubeX, cubeY, cubeZ);
 		if(cube != null) {
 			cube.unloaded = false;
 		}
@@ -287,17 +281,22 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	}
 
 	@Override
-	@Nullable
-	public Cube getCube(CubeCoords coords, Requirement req) {
+	public Cube getLoadedCube(CubeCoords coords) {
+		return getLoadedCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+	}
 
-		Cube cube = getLoadedCube(coords);
+	@Override
+	@Nullable
+	public Cube getCube(int cubeX, int cubeY, int cubeZ, Requirement req) {
+
+		Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
 		if(req == Requirement.CACHE ||
 				(cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
 			return cube;
 		}
 
 		// try to get the Column
-		Column column = getColumn(coords.getCubeX(), coords.getCubeZ(), req);
+		Column column = getColumn(cubeX, cubeZ, req);
 		if(column == null) {
 			return cube; // Column did not reach req, so Cube also does not
 		}
@@ -306,9 +305,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			// try to load the Cube
 			try {
 				worldServer.getProfiler().startSection("cubeIOLoad");
-				cube = this.cubeIO.loadCubeAndAddToColumn(column, coords.getCubeY());
+				cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeY);
 			} catch (IOException ex) {
-				log.error("Unable to load cube {}", coords, ex);
+				log.error("Unable to load cube {}, {}, {}", cubeX, cubeY, cubeZ, ex);
 				return null;
 			} finally {
 				worldServer.getProfiler().endSection();
@@ -316,7 +315,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 
 			if(cube != null) {
 				column.addCube(cube);
-				cubemap.put(coords, cube); // cache the Cube
+				cubemap.put(cube); // cache the Cube
 				cube.onLoad();             // init the Cube
 
 				if(req.compareTo(Requirement.GENERATE) <= 0) {
@@ -329,13 +328,13 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 
 		if(cube == null) {
 			// generate the Cube
-			ICubePrimer primer = cubeGen.generateCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
-			cube = new Cube(column, coords.getCubeY(), primer);
+			ICubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
+			cube = new Cube(column, cubeY, primer);
 
 			column.addCube(cube);
-			cubemap.put(coords, cube); // cache the Cube
+			cubemap.put(cube); // cache the Cube
 			this.worldServer.getFirstLightProcessor().initializeSkylight(cube); // init sky light, (does not require any other cubes, just OpacityIndex)
-			cube.onLoad();             // init the Cube
+			cube.onLoad(); // init the Cube
 
 			if(req.compareTo(Requirement.GENERATE) <= 0) {
 				return cube;
@@ -345,9 +344,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		// forced full population of this Cube!
 		if(!cube.isFullyPopulated()) {
 			cubeGen.getPopulationRequirement(cube).forEachPoint((x, y, z) -> {
-				Cube popcube = getCube(new CubeCoords(x + coords.getCubeX(),
-						y + coords.getCubeY(),
-						z + coords.getCubeZ()));
+				Cube popcube = getCube(x + cubeX, y + cubeY, z + cubeZ);
 				if(!popcube.isPopulated()) {
 					cubeGen.populate(popcube);
 					popcube.setPopulated(true);
@@ -363,10 +360,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		//      initial light done, there might be work to do for a cube that just loaded
 		if(!cube.isInitialLightingDone()) {
 			for(int x = -2;x <= 2;x++) {
-				for(int y = -2;y <= 2;y++) {
-					for(int z = -2;z <= 2;z++) {
+				for(int z = -2;z <= 2;z++) {
+					for(int y = 2;y >= -2;y--) {
 						if(x != 0 || y != 0 || z != 0) {
-							getCube(coords.add(x, y, z)); // FirstLightProcessor is too soft and fluffy that it can't even ask for Cubes correctly!
+							// FirstLightProcessor is so soft and fluffy that it can't even ask for Cubes correctly!
+							getCube(x + cubeX, y + cubeY, z + cubeZ);
 						}
 					}
 				}

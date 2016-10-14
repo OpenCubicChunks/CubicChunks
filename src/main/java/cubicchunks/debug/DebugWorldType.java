@@ -27,6 +27,7 @@ import com.flowpowered.noise.module.source.Perlin;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
+import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
@@ -92,11 +93,11 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
 					}
 					if(currDensity > 0.5) {
 						if(currDensity > 0.5 && aboveDensity <= 0.5) {
-							primer.setBlockState(pos.getX(), pos.getY(), pos.getZ(), Blocks.GRASS.getDefaultState());
+							primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()), Blocks.GRASS.getDefaultState());
 						} else if(currDensity > aboveDensity && currDensity < 0.7) {
-							primer.setBlockState(pos.getX(), pos.getY(), pos.getZ(), Blocks.DIRT.getDefaultState());
+							primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()), Blocks.DIRT.getDefaultState());
 						} else {
-							primer.setBlockState(pos.getX(), pos.getY(), pos.getZ(), Blocks.STONE.getDefaultState());
+							primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()), Blocks.STONE.getDefaultState());
 						}
 					}
 				}
