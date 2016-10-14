@@ -43,9 +43,9 @@ public interface ICubePrimer {
 	/**
 	 * Sets a block state at the given location
 	 * 
-	 * @param x cube relative x
-	 * @param y cube relative x
-	 * @param z cube relative x
+	 * @param x cube local x
+	 * @param y cube local y
+	 * @param z cube local z
 	 * @param state the block state
 	 */
 	void setBlockState(int x, int y, int z, IBlockState state);
