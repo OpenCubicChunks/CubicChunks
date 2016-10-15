@@ -92,8 +92,8 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 	public boolean canCoordinateBeSpawn(int x, int z) {
 		//TODO: DONT USE WORLD.getGroundAboveSeaLevel()
 		BlockPos blockpos = new BlockPos(x, 0, z);
-		return this.worldObj.getBiome(blockpos).ignorePlayerSpawnSuitability() ? true
-				: this.worldObj.getGroundAboveSeaLevel(blockpos).getBlock() == Blocks.GRASS;
+		return this.worldObj.getBiome(blockpos).ignorePlayerSpawnSuitability() ||
+				this.worldObj.getGroundAboveSeaLevel(blockpos).getBlock() == Blocks.GRASS;
 	}
 
 	@Override

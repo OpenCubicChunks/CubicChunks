@@ -28,7 +28,7 @@ import net.minecraft.init.Blocks;
 
 public interface ICubePrimer {
 
-	static final IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
+	IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
 
 	/**
 	 * Gets a block state at the given location

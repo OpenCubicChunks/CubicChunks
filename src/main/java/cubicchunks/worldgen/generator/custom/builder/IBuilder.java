@@ -23,13 +23,13 @@
  */
 package cubicchunks.worldgen.generator.custom.builder;
 
-public abstract interface IBuilder {
+public interface IBuilder {
 
-	public void setSeed(int seed);
+	void setSeed(int seed);
 
-	public void setSeaLevel(double seaLevel);
+	void setSeaLevel(double seaLevel);
 
-	public void build() throws IllegalArgumentException;
+	void build() throws IllegalArgumentException;
 
-	public double getValue(double x, double y, double z);
+	double getValue(double x, double y, double z);
 }

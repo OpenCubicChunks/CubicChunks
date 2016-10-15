@@ -52,6 +52,8 @@ public class IONbtReader {
 		}
 		readBiomes(nbt, column);
 		readOpacityIndex(nbt, column);
+
+		column.setModified(false); // its exactly the same as on disk so its not modified
 		return column;
 	}
 
@@ -101,6 +103,7 @@ public class IONbtReader {
 		readScheduledBlockTicks(nbt, world);
 		readLightingInfo(cube, nbt, world);
 
+		cube.markSaved(); // its exactly the same as on disk so its not modified
 		return cube;
 	}
 

@@ -99,7 +99,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		CubicChunks.addConfigChangeListener(this);
 
 		if(!(this.provider instanceof ICubicWorldProvider)) { // if the provider is vanilla, wrap it
-			this.provider = new VanillaCubicProvider(this, provider, null);
+			this.provider = new VanillaCubicProvider(this, provider);
 		}
 	}
 	//from ConfigChangeListener

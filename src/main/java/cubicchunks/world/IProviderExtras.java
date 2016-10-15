@@ -58,7 +58,7 @@ public interface IProviderExtras {
 	/**
 	 * The level of work required to be done on a Cube/Column before it is ready
 	 */
-	public enum Requirement {
+	enum Requirement {
 		CACHE, LOAD, GENERATE, POPULATE, LIGHT
 	}
 }

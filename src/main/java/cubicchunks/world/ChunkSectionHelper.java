@@ -28,8 +28,8 @@ import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 public class ChunkSectionHelper {
-	public static final int HAS_MSB = 1 << 0;
-	public static final int HAS_META = 1 << 1;
+	private static final int HAS_MSB = 1 << 0;
+	private static final int HAS_META = 1 << 1;
 
 	public static int getBlockDataArray(ExtendedBlockStorage storage, byte[] idLSB, byte[] idMSB, byte[] metadata) {
 		NibbleArray metadataNibble = new NibbleArray();
