@@ -32,5 +32,5 @@ public interface ICubicWorldProvider {
 	 * 
 	 * @return a new Cube generator
 	 */
-	public ICubeGenerator createCubeGenerator();
+	ICubeGenerator createCubeGenerator();
 }

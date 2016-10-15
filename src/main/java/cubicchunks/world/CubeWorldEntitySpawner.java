@@ -216,13 +216,13 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 		return totalSpawned;
 	}
 
-	private static final <T> ArrayList<T> getShuffledCopy(Collection<T> collection) {
+	private static <T> ArrayList<T> getShuffledCopy(Collection<T> collection) {
 		ArrayList<T> list = new ArrayList<>(collection);
 		Collections.shuffle(list);
 		return list;
 	}
 
-	private static final boolean shouldSpawnType(EnumCreatureType type, boolean hostile, boolean peaceful, boolean spawnOnSetTickRate) {
+	private static boolean shouldSpawnType(EnumCreatureType type, boolean hostile, boolean peaceful, boolean spawnOnSetTickRate) {
 		return !((type.getPeacefulCreature() && !peaceful) ||
 				(!type.getPeacefulCreature() && !hostile) ||
 				(type.getAnimal() && !spawnOnSetTickRate));
