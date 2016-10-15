@@ -420,6 +420,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 */
 	private PlayerCubeMapColumnEntry getOrCreateColumnWatcher(long columnAddress) {
 		PlayerCubeMapColumnEntry columnWatcher = this.columnWatchers.get(columnAddress);
+		CubicChunks.LOGGER.debug("Creating column watcher for " + columnAddress + " / x=" + getX(columnAddress) + ", z=" + getZ(columnAddress));
 		if (columnWatcher == null) {
 			int cubeX = getX(columnAddress);
 			int cubeZ = getZ(columnAddress);
@@ -428,7 +429,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			if (columnWatcher.getColumn() == null) {
 				this.columnsToGenerate.add(columnWatcher);
 			}
-			if (!columnWatcher.sentToPlayers()) {
+			if (!columnWatcher.isSentToPlayers()) {
 				this.columnsToSendToClients.add(columnWatcher);
 			}
 		}
