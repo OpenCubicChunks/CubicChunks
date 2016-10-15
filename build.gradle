@@ -173,6 +173,7 @@ license {
 	ext.project = projectName
 	ext.year = inceptionYear
 	exclude "**/*.info"
+	exclude "**/package-info.java"
 	exclude "**/*.json"
 	exclude "**/*.xml"
 	exclude "assets/*"

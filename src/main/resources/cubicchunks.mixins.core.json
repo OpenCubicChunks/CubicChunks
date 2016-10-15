@@ -11,6 +11,9 @@
     "core.common.MixinChunkCache_HeightLimits",
     "core.common.MixinEntity_DeathFix",
 
+    "fixes.common.MixinEntityMinecart_KillFix",
+    "fixes.common.MixinEntityFallingBlock_HeightLimits",
+
     "noncritical.common.command.MixinCommandTeleport",
     "noncritical.common.command.MixinCommandTP",
     "noncritical.common.command.MixinCommandBase",

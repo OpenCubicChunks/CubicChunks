@@ -31,6 +31,7 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.chunk.Chunk;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -55,7 +56,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
 	@Shadow private int skylightSubtracted;
 
-	@Shadow public WorldProvider provider;
+	@Shadow @Final public WorldProvider provider;
 
 	@Shadow public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
 
