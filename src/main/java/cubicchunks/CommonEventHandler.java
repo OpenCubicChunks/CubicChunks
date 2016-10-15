@@ -30,13 +30,13 @@ import cubicchunks.world.type.ICubicWorldType;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 public class CommonEventHandler {
 
-	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load evt) {
 		if (!(evt.getWorld().getWorldType() instanceof ICubicWorldType)) {
 			return;
@@ -52,9 +52,6 @@ public class CommonEventHandler {
 		}
 
 		world.initCubicWorld();
-		if(!world.isRemote()) {
-			((ICubicWorldServer)world).generateWorld();
-		}
 	}
 
 	@SubscribeEvent

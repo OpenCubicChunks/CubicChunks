@@ -71,9 +71,6 @@ public class Cube implements XYZAddressable {
 
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 
-	//used to track if the cube should be unloaded or not, done instead of removing cube from
-	//unloadQueue each time something loads it
-	public  boolean unloaded;
 	private TicketList tickets; // tickets prevent this Cube from being unloaded
 
 	private boolean isModified = false;

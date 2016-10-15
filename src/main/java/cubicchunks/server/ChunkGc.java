@@ -37,13 +37,11 @@ public class ChunkGc {
 	private static final int GC_INTERVAL = 20*10;
 
 	private final ServerCubeCache cubeCache;
-	private final PlayerCubeMap cubeMap;
 
 	private int tick = 0;
 
-	public ChunkGc(ServerCubeCache cubeCache, PlayerCubeMap cubeMap) {
+	public ChunkGc(ServerCubeCache cubeCache) {
 		this.cubeCache = cubeCache;
-		this.cubeMap = cubeMap;
 	}
 
 	public void tick() {
@@ -55,13 +53,6 @@ public class ChunkGc {
 	}
 
 	private void chunkGc() {
-		for (Chunk chunk : cubeCache.getLoadedChunks()) {
-			Column column = (Column) chunk;
-			Collection<Cube> cubes = column.getLoadedCubes();
-			cubes.stream().filter(c -> !cubeMap.contains(c.getCoords())).forEach(cubeCache::unloadCube);
-			if(!cubeMap.contains(column.getX(), column.getZ())) {
-				cubeCache.unloadColumn(column);
-			}
-		}
+		cubeCache.takeOutGarbage();
 	}
 }
