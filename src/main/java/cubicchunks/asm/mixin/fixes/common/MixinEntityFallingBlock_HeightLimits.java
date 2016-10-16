@@ -21,45 +21,34 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator;
+package cubicchunks.asm.mixin.fixes.common;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
+import cubicchunks.asm.MixinUtils;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityFallingBlock;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-public interface ICubePrimer {
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
-	IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
+@Mixin(EntityFallingBlock.class)
+public abstract class MixinEntityFallingBlock_HeightLimits extends Entity {
 
-	/**
-	 * Gets a block state at the given location
-	 * 
-	 * @param x cube relative x
-	 * @param y cube relative y
-	 * @param z cube relative z
-	 * @return the block state
-	 */
-	IBlockState getBlockState(int x, int y, int z);
-
-	/**
-	 * Sets a block state at the given location
-	 * 
-	 * @param x cube local x
-	 * @param y cube local y
-	 * @param z cube local z
-	 * @param state the block state
-	 */
-	void setBlockState(int x, int y, int z, IBlockState state);
+	//to make javac happy
+	public MixinEntityFallingBlock_HeightLimits(World worldIn) {
+		super(worldIn);
+	}
 
 	/**
-	 * Counting down from the highest block in the cube, find the first non-air
-	 * block for the given location.<br>
-	 * <br>
-	 * NOTE: This will return -1 if there where no blocks under that location!<br>
-	 * WARNING: It does not know if there are blocks over this cube!<br>
-	 * 
-	 * @param x cube relative x
-	 * @param z cube relative x
-	 * @return the height of the top non-air block at x, z or -1 if there was no block found
+	 * Fixes the following code:
+	 * <p>
+	 * else if (this.fallTime > 100 && !this.worldObj.isRemote && (blockpos1.getY() < 1 || blockpos1.getY() > 256) || this.fallTime > 600)
 	 */
-	int findGroundHeight(int x, int z);
+	@Redirect(method = "onUpdate", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
+	private int checkHeightYReplace(BlockPos pos) {
+		return MixinUtils.getReplacementY(worldObj, pos);
+	}
 }

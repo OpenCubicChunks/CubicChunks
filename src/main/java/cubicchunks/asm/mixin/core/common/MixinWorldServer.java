@@ -41,7 +41,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
-
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -76,7 +75,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		this.entitySpawner = new CubeWorldEntitySpawner();
 
-		this.chunkProvider = new ServerCubeCache(this, 
+		this.chunkProvider = new ServerCubeCache(this,
 				((ICubicWorldProvider)this.provider).createCubeGenerator());
 
 		this.lightingManager = new LightingManager(this);
@@ -99,6 +98,12 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
 		int spawnCubeY = Coords.blockToCube(spawnPoint.getY());
 		int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
+
+		long lastTime = System.currentTimeMillis();
+		final int progressReportInterval = 1000;//ms
+		int totalToGenerate = (spawnDistance*2 + 1)*(spawnDistance*2 + 1)*(spawnDistance*2 + 1);
+		int generated = 0;
+
 		for (int cubeX = spawnCubeX - spawnDistance; cubeX <= spawnCubeX + spawnDistance; cubeX++) {
 			for (int cubeZ = spawnCubeZ - spawnDistance; cubeZ <= spawnCubeZ + spawnDistance; cubeZ++) {
 				// Preload column
@@ -107,7 +112,11 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 					// TODO reimplement server cube cache
 					// serverCubeCache.asyncLoadCube(cubeX, cubeY, cubeZ, col -> {});
 					serverCubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT);
-					//TODO: progress reporting
+					generated++;
+					if (System.currentTimeMillis() >= lastTime + progressReportInterval) {
+						lastTime = System.currentTimeMillis();
+						CubicChunks.LOGGER.info("Preparing spawn area: {}%", generated*100/totalToGenerate);
+					}
 				}
 			}
 		}

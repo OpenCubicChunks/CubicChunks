@@ -55,7 +55,7 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 
 	private ICubeGenerator cubeGen;
 
-	public VanillaCubicProvider(ICubicWorld world, WorldProvider provider, @Nullable IChunkGenerator reUse) {
+	public VanillaCubicProvider(ICubicWorld world, WorldProvider provider) {
 		this.provider = provider;
 		this.worldObj = (World) world;
 
@@ -77,9 +77,7 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 				if (pro_or_null != null) { // It will be null if it tries to get one form WorldType
 
 					// It was from a vanilla WorldProvider... use it
-					cubeGen = new VanillaCompatibilityGenerator(
-							reUse == null ? pro_or_null : reUse,
-							world);
+					cubeGen = new VanillaCompatibilityGenerator(pro_or_null, world);
 				} else {
 
 					// It was from WorldType, try to use cubic generator
@@ -93,15 +91,9 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 			}
 
 			if (useProvider) {
-				cubeGen = new VanillaCompatibilityGenerator(
-						reUse == null ? provider.createChunkGenerator() : reUse,
-						world);
+				cubeGen = new VanillaCompatibilityGenerator(provider.createChunkGenerator(), world);
 			}
 		}
-	}
-
-	public VanillaCubicProvider(ICubicWorld world, WorldProvider provider) {
-		this(world, provider, null);
 	}
 
 	@Override

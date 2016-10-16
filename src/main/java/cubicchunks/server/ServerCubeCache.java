@@ -205,8 +205,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 
 				column.onChunkUnload();
 				this.id2ChunkMap.remove(address);
-				this.cubeIO.saveColumn(column);
 				unloaded++;
+
+				if(column.needsSaving(true)){
+					this.cubeIO.saveColumn(column);
+				}
 			}
 		}
 	}
@@ -227,7 +230,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 				cube.getColumn().removeCube(coords.getCubeY());
 				cubemap.remove(cube.getX(), cube.getY(), cube.getZ());
 
-				this.cubeIO.saveCube(cube);
+				if(cube.needsSaving()) {
+					this.cubeIO.saveCube(cube);
+				}
 			}
 		}
 	}

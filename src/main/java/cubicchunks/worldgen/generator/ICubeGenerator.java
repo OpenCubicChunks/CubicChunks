@@ -36,12 +36,12 @@ import net.minecraft.world.biome.Biome;
 
 public interface ICubeGenerator {
 
-	static final Box RECOMMENDED_POPULATOR_REQUIREMENT = new Box(
+	Box RECOMMENDED_POPULATOR_REQUIREMENT = new Box(
 				-1, -2, -1, // give an extra 16 blocks virtical buffer for things like jungle trees
 				 0,  0,  0
 			);
 
-	static final Box NO_POPULATOR_REQUIREMENT = new Box(
+	Box NO_POPULATOR_REQUIREMENT = new Box(
 				0, 0, 0,
 				0, 0, 0
 			);
@@ -135,6 +135,5 @@ public interface ICubeGenerator {
 	 * @param pos find the structure closest to this BlockPos
 	 * @return
 	 */
-	@Nullable
-	public BlockPos getClosestStructure(String name, BlockPos pos);
+	@Nullable BlockPos getClosestStructure(String name, BlockPos pos);
 }

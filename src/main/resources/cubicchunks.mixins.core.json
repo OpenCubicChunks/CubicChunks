@@ -12,6 +12,9 @@
     "core.common.MixinEntity_DeathFix",
     "core.server.MixinMinecraftServer_AsyncCubeIO",
 
+    "fixes.common.MixinEntityMinecart_KillFix",
+    "fixes.common.MixinEntityFallingBlock_HeightLimits",
+
     "noncritical.common.command.MixinCommandTeleport",
     "noncritical.common.command.MixinCommandTP",
     "noncritical.common.command.MixinCommandBase",

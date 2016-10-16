@@ -48,7 +48,7 @@ public class Box {
 	}
 
 	@FunctionalInterface
-	public static interface XYZFunction {
+	public interface XYZFunction {
 		void apply(int x, int y, int z);
 	}
 }

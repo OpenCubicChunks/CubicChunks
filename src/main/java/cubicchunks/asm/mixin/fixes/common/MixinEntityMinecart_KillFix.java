@@ -21,45 +21,28 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator;
+package cubicchunks.asm.mixin.fixes.common;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
+import cubicchunks.world.ICubicWorld;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityMinecart;
+import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-public interface ICubePrimer {
+@Mixin(EntityMinecart.class)
+public abstract class MixinEntityMinecart_KillFix extends Entity {
 
-	IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
-
-	/**
-	 * Gets a block state at the given location
-	 * 
-	 * @param x cube relative x
-	 * @param y cube relative y
-	 * @param z cube relative z
-	 * @return the block state
-	 */
-	IBlockState getBlockState(int x, int y, int z);
+	public MixinEntityMinecart_KillFix(World worldIn) {
+		super(worldIn);
+	}
 
 	/**
-	 * Sets a block state at the given location
-	 * 
-	 * @param x cube local x
-	 * @param y cube local y
-	 * @param z cube local z
-	 * @param state the block state
+	 * Replace -64 constant, to avoid killing minecarts below y=-64
 	 */
-	void setBlockState(int x, int y, int z, IBlockState state);
-
-	/**
-	 * Counting down from the highest block in the cube, find the first non-air
-	 * block for the given location.<br>
-	 * <br>
-	 * NOTE: This will return -1 if there where no blocks under that location!<br>
-	 * WARNING: It does not know if there are blocks over this cube!<br>
-	 * 
-	 * @param x cube relative x
-	 * @param z cube relative x
-	 * @return the height of the top non-air block at x, z or -1 if there was no block found
-	 */
-	int findGroundHeight(int x, int z);
+	@ModifyConstant(method = "onUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
+	private double getDeathY(double originalY) {
+		return ((ICubicWorld) worldObj).getMinHeight() + originalY;
+	}
 }
