@@ -33,6 +33,7 @@ import cubicchunks.util.CubeCoords;
 import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.column.Column;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -177,30 +178,15 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * This method exists only because vanilla needs it. It shouldn't be used anywhere else.
 	 */
 	@Override
-	@Deprecated // BUG: no vertical filtering! TODO: do filtering and return a sort of 'ColumnView'
+	@Deprecated // Warning: Hacks! For vanilla use only! (WorldServer.updateBlocks())
 	public Iterator<Chunk> getChunkIterator() {
-		final Iterator<PlayerCubeMapColumnEntry> iterator = this.columnWatchers.valueCollection().iterator();
+		// GIVE TICKET SYSTEM FULL CONTROL
+		Iterator<Chunk> chunkIt = this.cubeCache.getLoadedChunks().iterator();
 		return new AbstractIterator<Chunk>() {
-			protected Chunk computeNext() {
-				while (iterator.hasNext()) {
-					PlayerCubeMapColumnEntry watcher = iterator.next();
-					Chunk column = watcher.getChunk();
-
-					// TODO: test Cubes, not Column
-
-					if (column == null) {
-						continue;
-					}
-					//columns that don't have light calculated or haven't been ticked
-					//have higher priority
-					if (!column.isLightPopulated() && column.isTerrainPopulated()) { 
-						return column;
-					}
-					if (!column.isChunkTicked()) {
-						return column;
-					}
-					//is there any non-spectator player within 128 blocks distance?
-					if (watcher.hasPlayerMatchingInRange(128.0D, NOT_SPECTATOR)) {
+			@Override protected Chunk computeNext() {
+				while (chunkIt.hasNext()){
+					Column column = (Column)chunkIt.next();
+					if(column.shouldTick()){ // shouldTick is true when there Cubes with tickets the request to be ticked
 						return column;
 					}
 				}

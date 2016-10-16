@@ -37,6 +37,7 @@ import net.minecraftforge.fml.relauncher.Side;
 
 public class CommonEventHandler {
 
+	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load evt) {
 		if (!(evt.getWorld().getWorldType() instanceof ICubicWorldType)) {
 			return;

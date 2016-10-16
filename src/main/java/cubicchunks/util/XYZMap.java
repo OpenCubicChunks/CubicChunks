@@ -328,34 +328,45 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	// Interface: Iterable<T> ------------------------------------------------------------------------------------------
 
 	public Iterator<T> iterator() {
-
-		int start;
-		for (start = 0; start < this.buckets.length; start++) {
-			if (this.buckets[start] != null) {
-				break;
-			}
-		}
-
-		final int f = start; // hacks just so I could use an anonymous class :P
-
 		return new Iterator<T>() {
-			int at = f;
+			int at = -1;
+			int next = -1;
 
 			@Override
 			public boolean hasNext() {
-				return at < buckets.length;
+				if(next > at){
+					return true;
+				}
+				for (next++; next < buckets.length; next++) {
+					if (buckets[next] != null) {
+						return true;
+					}
+				}
+				return false;
 			}
 
 			@Override
 			@SuppressWarnings("unchecked")
 			public T next() {
-				T ret = (T) buckets[at];
-				for (at++; at < buckets.length; at++) {
-					if (buckets[at] != null) {
-						break;
+				if(next > at){
+					at = next;
+					return (T)buckets[at];
+				}
+				for (next++; next < buckets.length; next++) {
+					if (buckets[next] != null) {
+						at = next;
+						return (T)buckets[at];
 					}
 				}
-				return ret;
+				return null;
+			}
+
+			//TODO: WARNING: risk of iterating over the same item more than once if this is used
+			//               do to items wrapping back around form the front of the buckets array
+			@Override
+			public void remove(){
+				collapseBucket(at);
+				next = at = at - 1; // There could be a new item in the removed bucket
 			}
 		};
 	}

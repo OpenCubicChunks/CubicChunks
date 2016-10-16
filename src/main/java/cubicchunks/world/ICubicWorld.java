@@ -131,6 +131,7 @@ public interface ICubicWorld {
 	 */
 	boolean testForCubes(CubeCoords start, CubeCoords end, @Nullable Predicate<Cube> test);
 
+	// TODO: this method is just plain stupid (remove it)
 	@Nullable Cube getCubeForAddress(long address);
 
 	@Nullable Cube getCubeFromCubeCoords(int cubeX, int cubeY, int cubeZ);
@@ -139,7 +140,7 @@ public interface ICubicWorld {
 
 	int getEffectiveHeight(int blockX, int blockZ);
 
-	//this is a hack
+	//this is a hack TODO: remove!
 	void setGeneratingWorld(boolean generating);
 
 	//vanilla part

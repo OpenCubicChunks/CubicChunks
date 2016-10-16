@@ -23,17 +23,7 @@
  */
 package cubicchunks.util.ticket;
 
-import cubicchunks.world.cube.Cube;
-
 public interface ITicket {
-
-	/**
-	 * Called when a cube with this ticket is forcibly unloaded.
-	 * This may happen when the server shuts down.
-	 *
-	 * @param cube the cube being unloaded
-	 */
-	void forceUnload(Cube cube);
 
 	/**
 	 * Weather or not a cube with this ticket should tick.

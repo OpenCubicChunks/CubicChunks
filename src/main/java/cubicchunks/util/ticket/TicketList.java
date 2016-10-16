@@ -23,8 +23,6 @@
  */
 package cubicchunks.util.ticket;
 
-import cubicchunks.world.cube.Cube;
-
 import java.util.Comparator;
 import java.util.LinkedList;
 
@@ -45,31 +43,44 @@ public class TicketList {
 		super();
 	}
 
+	/**
+	 * Removes a ticket form this list
+	 *
+	 * @param ticket the ticket to remove
+	 */
 	public void remove(ITicket ticket){
 		list.remove(ticket);
 	}
 
+	/**
+	 * Add a ticket to this list
+	 *
+	 * @param ticket the ticket to add
+	 */
 	public void add(ITicket ticket){
 		list.add(ticket);
 		list.sort(ORDER);
 	}
 
+	/**
+	 * @param ticket the ticket we want to see if is in this list
+	 * @return Does this ticket list contain {@Code ticket}
+	 */
 	public boolean contains(ITicket ticket){
 		return list.contains(ticket);
 	}
 
+	/**
+	 * @return Should the world be ticking the Cube corresponding to this ticket list
+	 */
 	public boolean shouldTick(){
-		ITicket first = list.getFirst(); // Note: things are sorted
-		return first != null && first.shouldTick();
+		return list.size() > 0 && list.getFirst().shouldTick(); // Note: things are sorted
 	}
 
+	/**
+	 * @return Weather or not this ticket list permits unloading
+	 */
 	public boolean canUnload(){
 		return list.isEmpty();
-	}
-
-	public void forceUnload(Cube cube){
-		list.forEach((ticket) -> {
-			ticket.forceUnload(cube);
-		});
 	}
 }

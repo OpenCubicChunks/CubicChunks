@@ -181,7 +181,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		return cubeGen.getClosestStructure(name, pos);
 	}
 
-	// getLoadedChunkCount() in ChunkProviderServer is fine - MC: 1.10.2 Forge: 12.18.1.209
+	// getLoadedChunkCount() in ChunkProviderServer is fine - CHECKED: 1.10.2-12.18.1.2092
 
 	@Override
 	public boolean chunkExists(int cubeX, int cubeZ) {

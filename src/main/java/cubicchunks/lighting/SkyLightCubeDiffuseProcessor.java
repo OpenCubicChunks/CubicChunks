@@ -61,7 +61,7 @@ class SkyLightCubeDiffuseProcessor extends QueueProcessor<Long> {
 		if (empty(column)) {
 			return;
 		}
-		if (column.getCube(cubeY) == null) {
+		if (column.getLoadedCube(cubeY) == null) {
 			return;
 		}
 

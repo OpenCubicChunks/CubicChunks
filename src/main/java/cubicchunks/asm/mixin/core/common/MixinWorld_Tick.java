@@ -67,18 +67,10 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 		if (!this.isCubicWorld()) {
 			return isAreaLoaded(startBlockX, oldStartBlockY, startBlockZ, endBlockX, oldEndBlockY, endBlockZ, allowEmpty);
 		}
-		//startBlockX == entityPosX - checkRadius <==> checkRadius == entityPosX - startBlockX
-		int checkRadius = updateEntity_entityPosX - startBlockX;
-		//calculate Y range
-		int startBlockY = updateEntity_entityPosY - checkRadius;
-		int endBlockY = updateEntity_entityPosY + checkRadius;
-		//if entity is in "invalid area" (outside of the world) we need to keep ticking it.
-		//otherwise entities would no longer be updated after falling out of the world
-		BlockPos entityPos = new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ);
-		if (!isValid(entityPos)) {
-			return true;
-		}
-		return isAreaLoaded(startBlockX, startBlockY, startBlockZ, endBlockX, endBlockY, endBlockZ, allowEmpty);
+		return this.isRemote() ||
+				this.getCubeFromBlockCoords(
+						new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ))
+						.getTickets().shouldTick();
 	}
 
 	/**

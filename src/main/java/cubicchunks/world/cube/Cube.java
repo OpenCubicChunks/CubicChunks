@@ -568,6 +568,14 @@ public class Cube implements XYZAddressable {
 		// tell the world to forget about entities
 		this.world.unloadEntities(this.entities.getEntities());
 
+		for(Entity entity : this.entities.getEntities()){
+			//CHECKED: 1.10.2-12.18.1.2092
+			entity.addedToChunk = false; // World tries to remove entities from Cubes
+										 // if (addedToCube || Column is loaded)
+										 // so we need to set addedToChunk to false as a hack!
+										 // else World would reload this Cube!
+		}
+
 		// tell the world to forget about tile entities
 		for (TileEntity blockEntity : this.tileEntityMap.values()) {
 			this.world.removeTileEntity(blockEntity.getPos());
