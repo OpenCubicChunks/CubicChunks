@@ -15,7 +15,6 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Column> {
 	private final QueuedColumn colInfo;
 
 	AsyncColumnIOProvider(QueuedColumn colInfo, CubeIO loader) {
-		CubicChunks.LOGGER.debug("Load request: Column at " + colInfo.x + ", " + colInfo.z);
 		this.loader = loader;
 		this.colInfo = colInfo;
 	}
@@ -46,7 +45,6 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Column> {
 			}
 
 			this.finished = true;
-			CubicChunks.LOGGER.debug("Load finished: Column at " + colInfo.x + ", " + colInfo.z);
 			this.notifyAll();
 		}
 	}

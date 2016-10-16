@@ -263,26 +263,21 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		}
 
 		getWorld().getProfiler().endStartSection("generate");
-		CubicChunks.LOGGER.debug(this.columnsToGenerate.size() + " columns, " + this.cubesToGenerate.size() + " cubes remain to be generated");
 		if (!this.columnsToGenerate.isEmpty()) {
 			getWorld().getProfiler().startSection("columns");
 			Iterator<PlayerCubeMapColumnEntry> iter = this.columnsToGenerate.iterator();
 			while (iter.hasNext()) {
 				PlayerCubeMapColumnEntry next = iter.next();
-				CubicChunks.LOGGER.debug("col[" + next.getPos().chunkXPos + "," + next.getPos().chunkZPos + "]");
-				CubicChunks.LOGGER.debug("\tcol state: " + next.getColumn());
 
 				getWorld().getProfiler().startSection("column[" + next.getPos().chunkXPos + "," + next.getPos().chunkZPos + "]");
 				boolean success = next.getColumn() != null;
 				if (!success) {
 					boolean canGenerate = next.hasPlayerMatching(CAN_GENERATE_CHUNKS);
-					CubicChunks.LOGGER.debug("\tcan generate: " + canGenerate);
 					getWorld().getProfiler().startSection("generate");
 					success = next.providePlayerChunk(canGenerate);
 					getWorld().getProfiler().endSection(); // generate
 				}
 
-				CubicChunks.LOGGER.debug("\tsuccess: " + success);
 				if (success) {
 					iter.remove();
 
@@ -334,7 +329,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			getWorld().getProfiler().endSection(); // chunks
 		}
 		getWorld().getProfiler().endStartSection("send");
-		CubicChunks.LOGGER.debug(this.columnsToSendToClients.size() + " columns, " + this.cubesToSendToClients.size() + " cubes remain to be sent");
 		if (!this.columnsToSendToClients.isEmpty()) {
 			getWorld().getProfiler().startSection("columns");
 			Iterator<PlayerCubeMapColumnEntry> iter = this.columnsToSendToClients.iterator();
@@ -420,7 +414,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 */
 	private PlayerCubeMapColumnEntry getOrCreateColumnWatcher(long columnAddress) {
 		PlayerCubeMapColumnEntry columnWatcher = this.columnWatchers.get(columnAddress);
-		CubicChunks.LOGGER.debug("Creating column watcher for " + columnAddress + " / x=" + getX(columnAddress) + ", z=" + getZ(columnAddress));
 		if (columnWatcher == null) {
 			int cubeX = getX(columnAddress);
 			int cubeZ = getZ(columnAddress);
