@@ -25,6 +25,7 @@ package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.CubeIO;
+import cubicchunks.server.chunkio.async.AsyncWorldIOExecutor;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.util.CubeHashMap;
@@ -47,12 +48,11 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
-import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
+import java.util.function.Consumer;
 
 /**
  * This is CubicChunks equivalent of ChunkProviderServer, it loads and unloads Cubes and Columns.
@@ -131,12 +131,14 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	@Override
 	@Nullable
 	public Column loadChunk(int columnX, int columnZ, Runnable runnable) {
-		Column column = this.getColumn(columnX, columnZ, /*Requirement.LOAD*/Requirement.LIGHT);
-		if (runnable == null) {                          // TODO: Set this to LOAD when PlayerCubeMap works
-			return column;
+		// TODO: Set this to LOAD when PlayerCubeMap works
+		if (runnable == null) {
+			return getColumn(columnX, columnZ, /*Requirement.LOAD*/Requirement.LIGHT);
 		}
-		runnable.run();
-		return column;
+
+		// TODO here too
+		asyncGetColumn(columnX, columnZ, Requirement.LIGHT, col -> runnable.run());
+		return null;
 	}
 
 	/**
@@ -285,9 +287,44 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		return getLoadedCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
+	/**
+	 * Load a cube, asynchronously. The work done to retrieve the column is specified by the
+	 * {@link Requirement} <code>req</code>
+	 *
+	 * @param cubeX Cube x position
+	 * @param cubeY Cube y position
+	 * @param cubeZ Cube z position
+	 * @param req Work done to retrieve the column
+	 * @param callback Callback to be called when the load finishes. Note that <code>null</code> can be passed to
+	 * the callback if the work specified by <code>req</code> is not sufficient to provide a cube
+	 *
+	 * @see #getCube(int, int, int, Requirement) for the synchronous equivalent to this method
+	 */
+	public void asyncGetCube(int cubeX, int cubeY, int cubeZ, @Nonnull Requirement req, @Nonnull Consumer<Cube> callback) {
+		Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
+		if (req == Requirement.CACHE || (cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
+			callback.accept(cube);
+			return;
+		}
+
+		if (cube == null) {
+			asyncGetColumn(cubeX, cubeZ, req, col -> {
+				if (col == null) {
+					callback.accept(null);
+					return;
+				}
+				AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, col, this, cubeY, loaded -> {
+					onCubeLoaded(loaded, col);
+					loaded = postProcessCube(cubeX, cubeY, cubeZ, loaded, col, req);
+					callback.accept(loaded);
+				});
+			});
+		}
+	}
+
 	@Override
 	@Nullable
-	public Cube getCube(int cubeX, int cubeY, int cubeZ, Requirement req) {
+	public Cube getCube(int cubeX, int cubeY, int cubeZ, @Nonnull Requirement req) {
 
 		Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
 		if(req == Requirement.CACHE ||
@@ -302,78 +339,158 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		}
 
 		if(cube == null) {
-			// try to load the Cube
-			try {
-				worldServer.getProfiler().startSection("cubeIOLoad");
-				cube = this.cubeIO.loadCubeAndAddToColumn(column, cubeY);
-			} catch (IOException ex) {
-				log.error("Unable to load cube {}, {}, {}", cubeX, cubeY, cubeZ, ex);
-				return null;
-			} finally {
-				worldServer.getProfiler().endSection();
-			}
-
-			if(cube != null) {
-				column.addCube(cube);
-				cubemap.put(cube); // cache the Cube
-				cube.onLoad();             // init the Cube
-
-				if(req.compareTo(Requirement.GENERATE) <= 0) {
-					return cube;
-				}
-			}else if(req == Requirement.LOAD) {
-				return null;
-			}
+			cube = AsyncWorldIOExecutor.syncCubeLoad(worldObj, cubeIO, cubeY, column, this);
+			onCubeLoaded(cube, column);
 		}
+
+		return postProcessCube(cubeX, cubeY, cubeZ, cube, column, req);
+	}
+
+	/**
+	 * After successfully loading a cube, add it to it's column and the lookup table
+	 *
+	 * @param cube The cube that was loaded
+	 * @param column The column of the cube
+	 */
+	private void onCubeLoaded(@Nullable Cube cube, @Nonnull Column column) {
+		if(cube != null) {
+			column.addCube(cube);
+			cubemap.put(cube); // cache the Cube
+			cube.onLoad();             // init the Cube
+		}
+	}
+
+	/**
+	 * Process a recently loaded cube as per the specified effort level.
+	 *
+	 * @param cubeX Cube x position
+	 * @param cubeY Cube y position
+	 * @param cubeZ Cube z positon
+	 * @param cube The loaded cube, if loaded, else <code>null</code>
+	 * @param column The column of the cube
+	 * @param req Work done on the cube
+	 *
+	 * @return The processed cube, or <code>null</code> if the effort level is not sufficient to provide a cube
+	 */
+	@Nullable
+	private Cube postProcessCube(int cubeX, int cubeY, int cubeZ, @Nullable Cube cube, @Nonnull Column column, @Nonnull Requirement req) {
+		// Fast path - Nothing to do here
+		if (req == Requirement.LOAD) return cube;
+		if (req == Requirement.GENERATE && cube != null) return cube;
 
 		if(cube == null) {
 			// generate the Cube
-			ICubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
-			cube = new Cube(column, cubeY, primer);
-
-			column.addCube(cube);
-			cubemap.put(cube); // cache the Cube
-			this.worldServer.getFirstLightProcessor().initializeSkylight(cube); // init sky light, (does not require any other cubes, just OpacityIndex)
-			cube.onLoad(); // init the Cube
-
-			if(req.compareTo(Requirement.GENERATE) <= 0) {
+			cube = generateCube(cubeX, cubeY, cubeZ, column);
+			if(req == Requirement.GENERATE) {
 				return cube;
 			}
 		}
 
-		// forced full population of this Cube!
 		if(!cube.isFullyPopulated()) {
-			cubeGen.getPopulationRequirement(cube).forEachPoint((x, y, z) -> {
-				Cube popcube = getCube(x + cubeX, y + cubeY, z + cubeZ);
-				if(!popcube.isPopulated()) {
-					cubeGen.populate(popcube);
-					popcube.setPopulated(true);
-				}
-			});
-			cube.setFullyPopulated(true);
-		}
-		if(req == Requirement.POPULATE) {
-			return cube;
+			// forced full population of this cube
+			populateCube(cube);
+			if (req == Requirement.POPULATE) {
+				return cube;
+			}
 		}
 
 		//TODO: Direct skylight might have changed and even Cubes that have there
 		//      initial light done, there might be work to do for a cube that just loaded
 		if(!cube.isInitialLightingDone()) {
-			for(int x = -2;x <= 2;x++) {
-				for(int z = -2;z <= 2;z++) {
-					for(int y = 2;y >= -2;y--) {
-						if(x != 0 || y != 0 || z != 0) {
-							// FirstLightProcessor is so soft and fluffy that it can't even ask for Cubes correctly!
-							getCube(x + cubeX, y + cubeY, z + cubeZ);
-						}
-					}
-				}
-			}
-			this.worldServer.getFirstLightProcessor().diffuseSkylight(cube);
+			initializeCubeSkylight(cube);
 		}
 
 		return cube;
 	}
+
+
+	/**
+	 * Generate a cube at the specified position
+	 *
+	 * @param cubeX Cube x position
+	 * @param cubeY Cube y position
+	 * @param cubeZ Cube z position
+	 * @param column Column of the cube
+	 *
+	 * @return The generated cube
+	 */
+	@Nonnull
+	private Cube generateCube(int cubeX, int cubeY, int cubeZ, @Nonnull Column column) {
+		ICubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
+		Cube cube = new Cube(column, cubeY, primer);
+
+		this.worldServer.getFirstLightProcessor().initializeSkylight(cube); // init sky light, (does not require any other cubes, just OpacityIndex)
+		onCubeLoaded(cube, column);
+		return cube;
+	}
+
+	/**
+	 * Populate a cube at the specified position, generating surrounding cubes as necessary
+	 *
+	 * @param cube The cube to populate
+	 */
+	private void populateCube(@Nonnull Cube cube) {
+		int cubeX = cube.getX();
+		int cubeY = cube.getY();
+		int cubeZ = cube.getZ();
+
+		cubeGen.getPopulationRequirement(cube).forEachPoint((x, y, z) -> {
+			Cube popcube = getCube(x + cubeX, y + cubeY, z + cubeZ);
+			if(!popcube.isPopulated()) {
+				cubeGen.populate(popcube);
+				popcube.setPopulated(true);
+			}
+		});
+		cube.setFullyPopulated(true);
+	}
+
+	/**
+	 * Initialize skylight for the cube at the specified position, generating surrounding cubes as needed.
+	 *
+	 * @param cube The cube to light up
+	 */
+	private void initializeCubeSkylight(@Nonnull Cube cube) {
+		int cubeX = cube.getX();
+		int cubeY = cube.getY();
+		int cubeZ = cube.getZ();
+
+		for(int x = -2; x <= 2; x++) {
+			for(int z = -2;z <= 2;z++) {
+				for(int y = 2;y >= -2;y--) {
+					if(x != 0 || y != 0 || z != 0) {
+						getCube(x +  cubeX, y + cubeY, z + cubeZ);
+					}
+				}
+			}
+		}
+		this.worldServer.getFirstLightProcessor().diffuseSkylight(cube);
+	}
+
+
+	/**
+	 * Retrieve a column, asynchronously. The work done to retrieve the column is specified by the
+	 * {@link Requirement} <code>req</code>
+	 * @param columnX Column x position
+	 * @param columnZ Column z position
+	 * @param req Work done to retrieve the column
+	 * @param callback Callback to be called when the column has finished loading. Note that the returned column
+	 * is not guaranteed to be non-null
+	 *
+	 * @see ServerCubeCache#getColumn(int, int, Requirement) for the synchronous variant of this method
+	 */
+	public void asyncGetColumn(int columnX, int columnZ, Requirement req, Consumer<Column> callback) {
+		Column column = getLoadedChunk(columnX, columnZ);
+		if (column != null || req == Requirement.CACHE) {
+			callback.accept(column);
+			return;
+		}
+
+		AsyncWorldIOExecutor.queueColumnLoad(worldObj, cubeIO, columnX, columnZ, col -> {
+			col = postProcessColumn(columnX, columnZ, col, req);
+			callback.accept(col);
+		});
+	}
+
 
 	@Override
 	@Nullable
@@ -383,12 +500,22 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			return column;
 		}
 
-		try {
-			column = this.cubeIO.loadColumn(columnX, columnZ);
-		} catch (IOException ex) {
-			log.error("Unable to load column ({},{})", columnX, columnZ, ex);
-			return null;
-		}
+		column = AsyncWorldIOExecutor.syncColumnLoad(worldObj, cubeIO, columnX, columnZ);
+		column = postProcessColumn(columnX, columnZ, column, req);
+
+		return column;
+	}
+
+	/**
+	 * After loading a column, do work on it, where the work required is specified by <code>req</code>
+	 * @param columnX X position of the column
+	 * @param columnZ Z position of the column
+	 * @param column The loaded column, or <code>null</code> if the column couldn't be loaded
+	 * @param req The amount of work to be done on the cube
+	 * @return The postprocessed column, or <code>null</code>
+	 */
+	@Nullable
+	private Column postProcessColumn(int columnX, int columnZ, Column column, Requirement req) {
 		if(column != null) {
 			id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), column);
 			column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just loaded

@@ -32,7 +32,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 	{
 		try {
 			// Make sure we don't load a cube from disk that has already been synchronously loaded
-			cube = chunkCache.getCube(cubeInfo.x, cubeInfo.y, cubeInfo.z);
+			cube = chunkCache.getLoadedCube(cubeInfo.x, cubeInfo.y, cubeInfo.z);
 
 			if (cube == null) {
 				cube = this.loader.loadCubeAndAddToColumn(column, this.cubeInfo.y);

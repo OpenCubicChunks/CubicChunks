@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.chunkio.CubeIO;
+import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.server.MinecraftServer;
@@ -130,8 +131,13 @@ public class AsyncWorldIOExecutor {
 	 * @param runnable The callback
 	 */
 	public static void queueCubeLoad(World world, CubeIO loader, ServerCubeCache cache, int x, int y, int z, Consumer<Cube> runnable) {
-		// TODO
-		// cache.asyncLoadColumn(x, z, column -> queueCubeLoad(world, loader, column, cache, y, runnable));
+		cache.asyncGetColumn(x, z, IProviderExtras.Requirement.LOAD, column -> {
+			if (column == null) {
+				runnable.accept(null);
+				return;
+			}
+			queueCubeLoad(world, loader, column, cache, y, runnable);
+		});
 	}
 
 	/**
