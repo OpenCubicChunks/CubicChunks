@@ -176,6 +176,7 @@ license {
 	exclude "**/*.json"
 	exclude "**/*.xml"
 	exclude "assets/*"
+	exclude "cubicchunks/server/chunkio/async/*" // Taken from forge
 	header file('HEADER.txt')
 	ignoreFailures false
 	strictCheck true
