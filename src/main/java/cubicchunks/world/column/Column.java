@@ -118,7 +118,7 @@ public class Column extends Chunk {
 		// old solution
 		// return this.getWorld().provider.getAverageGroundLevel();
 
-		int blockY = Coords.VERY_LOW;
+		int blockY = Coords.NO_HEIGHT;
 		for (int localX = 0; localX < Coords.CUBE_SIZE; localX++) {
 			for (int localZ = 0; localZ < Coords.CUBE_SIZE; localZ++) {
 				int y = this.opacityIndex.getTopBlockY(localX, localZ);

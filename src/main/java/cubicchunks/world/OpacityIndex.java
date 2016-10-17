@@ -75,11 +75,11 @@ public class OpacityIndex implements IOpacityIndex {
 
 		// init to empty
 		for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
-			this.ymin[i] = Coords.VERY_LOW;
-			this.ymax[i] = Coords.VERY_LOW;
+			this.ymin[i] = Coords.NO_HEIGHT;
+			this.ymax[i] = Coords.NO_HEIGHT;
 		}
 
-		this.heightMapLowest = Coords.VERY_LOW;
+		this.heightMapLowest = Coords.NO_HEIGHT;
 		this.hash = 0;
 		this.needsHash = true;
 	}
@@ -162,7 +162,7 @@ public class OpacityIndex implements IOpacityIndex {
 			this.setOpacityWithSegments(xzIndex, blockY, isOpaque);
 		}
 
-		this.heightMapLowest = Coords.VERY_LOW;
+		this.heightMapLowest = Coords.NO_HEIGHT;
 		this.needsHash = true;
 	}
 
@@ -187,7 +187,7 @@ public class OpacityIndex implements IOpacityIndex {
 
 		// below or at the minimum height, thus there are no blocks below
 		if (blockY <= this.ymin[i]) {
-			return Coords.VERY_LOW;
+			return Coords.NO_HEIGHT;
 		}
 
 		// There are no opacity changes, everything is opaque from ymin to ymax. blockY is between ymin and ymax, thus
@@ -263,15 +263,15 @@ public class OpacityIndex implements IOpacityIndex {
 
 	@Override
 	public int getLowestTopBlockY() {
-		if (this.heightMapLowest == Coords.VERY_LOW) {
+		if (this.heightMapLowest == Coords.NO_HEIGHT) {
 			this.heightMapLowest = Integer.MAX_VALUE;
 			for (int i = 0; i < this.ymax.length; i++) {
 				if (this.ymax[i] < this.heightMapLowest) {
 					this.heightMapLowest = this.ymax[i];
 				}
 			}
-			if(this.heightMapLowest == Coords.VERY_LOW) {
-				this.heightMapLowest--; // just so its no longer == to Coords.VARY_LOW
+			if(this.heightMapLowest == Coords.NO_HEIGHT) {
+				this.heightMapLowest--; // don't recalculate this on every call
 			}
 		}
 		return this.heightMapLowest;
@@ -291,7 +291,7 @@ public class OpacityIndex implements IOpacityIndex {
 	private void setNoSegmentsOpaque(int xzIndex, int blockY) {
 
 		// something from nothing?
-		if (this.ymin[xzIndex] == Coords.VERY_LOW && this.ymax[xzIndex] == Coords.VERY_LOW) {
+		if (this.ymin[xzIndex] == Coords.NO_HEIGHT && this.ymax[xzIndex] == Coords.NO_HEIGHT) {
 			this.ymin[xzIndex] = blockY;
 			this.ymax[xzIndex] = blockY;
 			return;
@@ -379,18 +379,18 @@ public class OpacityIndex implements IOpacityIndex {
 
 	private void setNoSegmentsTransparent(int xzIndex, int blockY) {
 		// nothing into nothing?
-		if (this.ymin[xzIndex] == Coords.VERY_LOW && this.ymax[xzIndex] == Coords.VERY_LOW) {
+		if (this.ymin[xzIndex] == Coords.NO_HEIGHT && this.ymax[xzIndex] == Coords.NO_HEIGHT) {
 			return;
 		}
-		assert !(this.ymin[xzIndex] == Coords.VERY_LOW || this.ymax[xzIndex] == Coords.VERY_LOW) : "Only one of ymin and ymax is NONE! This is not possible";
+		assert !(this.ymin[xzIndex] == Coords.NO_HEIGHT || this.ymax[xzIndex] == Coords.NO_HEIGHT) : "Only one of ymin and ymax is NONE! This is not possible";
 
 		// only one block left?
 		if (this.ymax[xzIndex] == this.ymin[xzIndex]) {
 
 			// something into nothing?
 			if (blockY == this.ymin[xzIndex]) {
-				this.ymin[xzIndex] = Coords.VERY_LOW;
-				this.ymax[xzIndex] = Coords.VERY_LOW;
+				this.ymin[xzIndex] = Coords.NO_HEIGHT;
+				this.ymax[xzIndex] = Coords.NO_HEIGHT;
 			}
 
 			// if setting to transparent somewhere else - nothing changes
