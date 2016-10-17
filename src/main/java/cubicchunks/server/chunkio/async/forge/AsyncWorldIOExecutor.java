@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cubicchunks.server.chunkio.async;
+package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
@@ -31,6 +31,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;
@@ -292,8 +293,10 @@ public class AsyncWorldIOExecutor {
 		pool.setCorePoolSize(Math.max(BASE_THREADS, players/PLAYERS_PER_THREAD));
 	}
 
-	public static void registerResizeListener() {
+	public static void registerListeners() {
 		MinecraftForge.EVENT_BUS.register(new Object() {
+
+			// Resize thread pool based on player count
 			@SubscribeEvent
 			public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent evt) {
 				MinecraftServer server = evt.player.getServer();
@@ -304,6 +307,12 @@ public class AsyncWorldIOExecutor {
 			public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent evt) {
 				MinecraftServer server = evt.player.getServer();
 				if (server != null) adjustPoolSize(server.getCurrentPlayerCount());
+			}
+
+			// Sync completion of loading
+			@SubscribeEvent
+			public void onWorldTick(TickEvent.WorldTickEvent evt) {
+				tick();
 			}
 		});
 	}

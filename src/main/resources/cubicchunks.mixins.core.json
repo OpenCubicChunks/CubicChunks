@@ -10,7 +10,6 @@
     "core.common.MixinWorld_HeightLimits",
     "core.common.MixinChunkCache_HeightLimits",
     "core.common.MixinEntity_DeathFix",
-    "core.server.MixinMinecraftServer_AsyncCubeIO",
 
     "fixes.common.MixinEntityMinecart_KillFix",
     "fixes.common.MixinEntityFallingBlock_HeightLimits",

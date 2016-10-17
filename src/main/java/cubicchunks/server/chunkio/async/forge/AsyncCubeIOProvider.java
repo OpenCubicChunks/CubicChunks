@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package cubicchunks.server.chunkio.async;
+package cubicchunks.server.chunkio.async.forge;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.server.ServerCubeCache;

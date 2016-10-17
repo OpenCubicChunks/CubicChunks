@@ -25,7 +25,7 @@ package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.CubeIO;
-import cubicchunks.server.chunkio.async.AsyncWorldIOExecutor;
+import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.util.CubeHashMap;
@@ -320,7 +320,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 				}
 				AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, col, this, cubeY, loaded -> {
 					onCubeLoaded(loaded, col);
-					loaded = postProcessCube(cubeX, cubeY, cubeZ, loaded, col, req);
+					loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
 					callback.accept(loaded);
 				});
 			});
@@ -348,7 +348,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			onCubeLoaded(cube, column);
 		}
 
-		return postProcessCube(cubeX, cubeY, cubeZ, cube, column, req);
+		return postCubeLoadAttempt(cubeX, cubeY, cubeZ, cube, column, req);
 	}
 
 	/**
@@ -378,7 +378,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	 * @return The processed cube, or <code>null</code> if the effort level is not sufficient to provide a cube
 	 */
 	@Nullable
-	private Cube postProcessCube(int cubeX, int cubeY, int cubeZ, @Nullable Cube cube, @Nonnull Column column, @Nonnull Requirement req) {
+	private Cube postCubeLoadAttempt(int cubeX, int cubeY, int cubeZ, @Nullable Cube cube, @Nonnull Column column, @Nonnull Requirement req) {
 		// Fast path - Nothing to do here
 		if (req == Requirement.LOAD) return cube;
 		if (req == Requirement.GENERATE && cube != null) return cube;
@@ -402,7 +402,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		//TODO: Direct skylight might have changed and even Cubes that have there
 		//      initial light done, there might be work to do for a cube that just loaded
 		if(!cube.isInitialLightingDone()) {
-			initializeCubeSkylight(cube);
+			calculateDiffuseSkylight(cube);
 		}
 
 		return cube;
@@ -454,7 +454,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	 *
 	 * @param cube The cube to light up
 	 */
-	private void initializeCubeSkylight(@Nonnull Cube cube) {
+	private void calculateDiffuseSkylight(@Nonnull Cube cube) {
 		int cubeX = cube.getX();
 		int cubeY = cube.getY();
 		int cubeZ = cube.getZ();

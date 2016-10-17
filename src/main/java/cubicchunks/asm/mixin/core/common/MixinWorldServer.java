@@ -65,9 +65,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	//vanilla method shadows
 	@Shadow public abstract Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
 
-	@Shadow
-	public abstract boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
-
+	@Shadow public abstract boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
 	//vanilla methods end
 	@Override public void initCubicWorld() {
 		super.initCubicWorld();
@@ -106,11 +104,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		for (int cubeX = spawnCubeX - spawnDistance; cubeX <= spawnCubeX + spawnDistance; cubeX++) {
 			for (int cubeZ = spawnCubeZ - spawnDistance; cubeZ <= spawnCubeZ + spawnDistance; cubeZ++) {
-				// Preload column
-				// serverCubeCache.loadColumn(cubeX, cubeZ, LOAD_OR_GENERATE); TODO reimplement server cube cache
 				for (int cubeY = spawnCubeY + spawnDistance; cubeY >= spawnCubeY - spawnDistance; cubeY--) {
-					// TODO reimplement server cube cache
-					// serverCubeCache.asyncLoadCube(cubeX, cubeY, cubeZ, col -> {});
 					serverCubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT);
 					generated++;
 					if (System.currentTimeMillis() >= lastTime + progressReportInterval) {
@@ -154,8 +148,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		return this.getSpawnListEntryForTypeAt(type, pos);
 	}
 
-	@Intrinsic
-	public boolean world$canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos) {
+	@Intrinsic public boolean world$canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos) {
 		return this.canCreatureTypeSpawnHere(type, entry, pos);
 	}
 }

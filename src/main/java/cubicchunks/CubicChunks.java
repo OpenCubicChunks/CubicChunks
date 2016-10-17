@@ -27,7 +27,7 @@ import cubicchunks.debug.DebugTools;
 import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
-import cubicchunks.server.chunkio.async.AsyncWorldIOExecutor;
+import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.AddressTools;
 import cubicchunks.world.type.CustomCubicChunksWorldType;
 import cubicchunks.world.type.FlatCubicChunksWorldType;
@@ -76,7 +76,7 @@ public class CubicChunks {
 
 		config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
 		MinecraftForge.EVENT_BUS.register(this); // Register our config reload hook
-		AsyncWorldIOExecutor.registerResizeListener();
+		AsyncWorldIOExecutor.registerListeners();
 
 		if(DEBUG_ENABLED) {
 			DebugTools.init();
