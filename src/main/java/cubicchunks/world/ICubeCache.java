@@ -41,6 +41,12 @@ public interface ICubeCache {
 
 	Cube getCube(CubeCoords coords);
 
+	/**
+	 * Retrieve a column, if it exists and is loaded
+	 * @param x The x position of the column
+	 * @param z The z position of the column
+	 * @return The column, if loaded. Null, otherwise.
+	 */
 	@Nullable
 	Column getLoadedChunk(int x, int z); // more strictly define the return type
 

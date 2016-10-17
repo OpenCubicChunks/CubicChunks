@@ -23,6 +23,7 @@
  */
 package cubicchunks.server;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
 import cubicchunks.CubicChunks;
@@ -54,7 +55,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import static cubicchunks.util.AddressTools.cubeToColumn;
 import static cubicchunks.util.AddressTools.getAddress;
@@ -114,10 +114,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * Contains all CubeWatchers that need to be sent to clients,
 	 * but these cubes are not fully loaded/generated yet.
 	 * <p>
-	 * Note that this is not the same as toGenerate list.
+	 * Note that this is not the same as cubesToGenerate list.
 	 * Cube can be loaded while not being fully generated yet (not in the last GeneratorStageRegistry stage).
 	 */
-	private final List<PlayerCubeMapEntry> toSendToClient = new ArrayList<>();
+	private final List<PlayerCubeMapEntry> cubesToSendToClients = new ArrayList<>();
 
 	/**
 	 * Contains all CubeWatchers that still need to be loaded/generated.
@@ -125,7 +125,22 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * Technically it can generate it, using the world's IGeneratorPipeline,
 	 * but spectator players can't generate chunks if spectatorsGenerateChunks gamerule is set.
 	 */
-	private final List<PlayerCubeMapEntry> toGenerate = new ArrayList<>();
+	private final List<PlayerCubeMapEntry> cubesToGenerate = new ArrayList<>();
+
+	/**
+	 * Contains all ColumnWatchers that need to be sent to clients,
+	 * but these cubes are not fully loaded/generated yet.
+	 * <p>
+	 * Note that this is not the same as columnsToGenerate list.
+	 * Columns can be loaded while not being fully generated yet
+	 */
+	private final List<PlayerCubeMapColumnEntry> columnsToSendToClients = new ArrayList<>();
+
+	/**
+	 * Contains all ColumnWatchers that still need to be loaded/generated.
+	 * ColumnWatcher constructor attempts to load column from disk, but it won't generate it.
+	 */
+	private final List<PlayerCubeMapColumnEntry> columnsToGenerate = new ArrayList<>();
 
 	private int horizontalViewDistance;
 	private int verticalViewDistance;
@@ -185,7 +200,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 						return column;
 					}
 					//is there any non-spectator player within 128 blocks distance?
-					if (watcher.hasPlayerMatchingInRange(128.0D, NOT_SPECTATOR::test)) {
+					if (watcher.hasPlayerMatchingInRange(128.0D, NOT_SPECTATOR)) {
 						return column;
 					}
 				}
@@ -228,28 +243,60 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		//sort toLoadPending if needed, but at most every 4 ticks
 		if (this.toGenerateNeedSort && currentTime%4L == 0L) {
 			this.toGenerateNeedSort = false;
-			Collections.sort(this.toGenerate, (watcher1, watcher2) ->
+			Collections.sort(this.cubesToGenerate, (watcher1, watcher2) ->
 					ComparisonChain.start().compare(
 							watcher1.getClosestPlayerDistance(),
 							watcher2.getClosestPlayerDistance()
 					).result());
+			// We don't sort columns because we generate all columns
 		}
 		getWorld().getProfiler().endStartSection("sortToSend");
-		//sort toSendToClient every other 4 ticks
+		//sort cubesToSendToClients every other 4 ticks
 		if (this.toSendToClientNeedSort && currentTime%4L == 2L) {
 			this.toSendToClientNeedSort = false;
-			Collections.sort(this.toSendToClient, (watcher1, watcher2) ->
+			Collections.sort(this.cubesToSendToClients, (watcher1, watcher2) ->
 					ComparisonChain.start().compare(
 							watcher1.getClosestPlayerDistance(),
 							watcher2.getClosestPlayerDistance()
 					).result());
+			// We don't sort columns because we send all columns
 		}
 
 		getWorld().getProfiler().endStartSection("generate");
-		if (!this.toGenerate.isEmpty()) {
+		if (!this.columnsToGenerate.isEmpty()) {
+			getWorld().getProfiler().startSection("columns");
+			Iterator<PlayerCubeMapColumnEntry> iter = this.columnsToGenerate.iterator();
+			while (iter.hasNext()) {
+				PlayerCubeMapColumnEntry next = iter.next();
+
+				getWorld().getProfiler().startSection("column[" + next.getPos().chunkXPos + "," + next.getPos().chunkZPos + "]");
+				boolean success = next.getColumn() != null;
+				if (!success) {
+					boolean canGenerate = next.hasPlayerMatching(CAN_GENERATE_CHUNKS);
+					getWorld().getProfiler().startSection("generate");
+					success = next.providePlayerChunk(canGenerate);
+					getWorld().getProfiler().endSection(); // generate
+				}
+
+				if (success) {
+					iter.remove();
+
+					if (next.sentToPlayers()) {
+						this.columnsToSendToClients.remove(next);
+					}
+				}
+
+				getWorld().getProfiler().endSection(); // column[x,z]
+			}
+
+			getWorld().getProfiler().endSection(); // columns
+		}
+		if (!this.cubesToGenerate.isEmpty()) {
+			getWorld().getProfiler().startSection("cubes");
+
 			long stopTime = System.nanoTime() + 50000000L;
 			int chunksToGenerate = maxGeneratedCubesPerTick;
-			Iterator<PlayerCubeMapEntry> iterator = this.toGenerate.iterator();
+			Iterator<PlayerCubeMapEntry> iterator = this.cubesToGenerate.iterator();
 
 			while (iterator.hasNext() && chunksToGenerate >= 0 && System.nanoTime() < stopTime) {
 				PlayerCubeMapEntry watcher = iterator.next();
@@ -257,28 +304,47 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 				getWorld().getProfiler()
 						.startSection("chunk[" + getX(address) + "," + getY(address) + "," + getZ(address) + "]");
-				boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
-				if (watcher.getCube() == null || (canGenerate && !watcher.getCube().isFullyPopulated())) {
+
+				boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated();
+				if (!success) {
+					boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
 					getWorld().getProfiler().startSection("generate");
-					boolean success = watcher.providePlayerCube(canGenerate);
+					success = watcher.providePlayerCube(canGenerate);
 					getWorld().getProfiler().endSection();
-					if (success) {
-						iterator.remove();
-
-						if (watcher.sendToPlayers()) {
-							this.toSendToClient.remove(watcher);
-						}
-
-						--chunksToGenerate;
-					}
 				}
+
+				if (success) {
+					iterator.remove();
+
+					if (watcher.sendToPlayers()) {
+						this.cubesToSendToClients.remove(watcher);
+					}
+
+					--chunksToGenerate;
+				}
+
 				getWorld().getProfiler().endSection();//chunk[x, y, z]
 			}
+
+			getWorld().getProfiler().endSection(); // chunks
 		}
 		getWorld().getProfiler().endStartSection("send");
-		if (!this.toSendToClient.isEmpty()) {
+		if (!this.columnsToSendToClients.isEmpty()) {
+			getWorld().getProfiler().startSection("columns");
+			Iterator<PlayerCubeMapColumnEntry> iter = this.columnsToSendToClients.iterator();
+
+			while (iter.hasNext()) {
+				PlayerCubeMapColumnEntry next = iter.next();
+				if (next.sentToPlayers()) {
+					iter.remove();
+				}
+			}
+			getWorld().getProfiler().endSection(); // columns
+		}
+		if (!this.cubesToSendToClients.isEmpty()) {
+			getWorld().getProfiler().startSection("cubes");
 			int toSend = 81*8;//sending cubes, so send 8x more at once
-			Iterator<PlayerCubeMapEntry> it = this.toSendToClient.iterator();
+			Iterator<PlayerCubeMapEntry> it = this.cubesToSendToClients.iterator();
 
 			while (it.hasNext() && toSend >= 0) {
 				PlayerCubeMapEntry playerInstance = it.next();
@@ -288,6 +354,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 					--toSend;
 				}
 			}
+			getWorld().getProfiler().endSection(); // cubes
 		}
 
 		getWorld().getProfiler().endStartSection("unload");
@@ -316,7 +383,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	/**
 	 * Returns existing CubeWatcher or creates new one if it doesn't exist.
 	 * Attempts to load the cube and send it to client.
-	 * If it can't load it or send it to client - adds it to toGenerate/toSendToClient
+	 * If it can't load it or send it to client - adds it to cubesToGenerate/cubesToSendToClients
 	 */
 	private PlayerCubeMapEntry getOrCreateCubeWatcher(long cubeAddress) {
 		PlayerCubeMapEntry cubeWatcher = this.cubeWatchers.get(cubeAddress);
@@ -328,13 +395,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			// make a new watcher
 			cubeWatcher = new PlayerCubeMapEntry(this, cubeX, cubeY, cubeZ);
 			this.cubeWatchers.put(cubeAddress, cubeWatcher);
+
 			if (!cubeWatcher.isSentToPlayers()) {
-				this.toSendToClient.add(cubeWatcher);
+				this.cubesToSendToClients.add(cubeWatcher);
 			}
 			if (cubeWatcher.getCube() == null ||  
 					!cubeWatcher.getCube().isFullyPopulated() || 
 					!cubeWatcher.getCube().isInitialLightingDone()) {
-				this.toGenerate.add(cubeWatcher);
+				this.cubesToGenerate.add(cubeWatcher);
 			}
 		}
 		return cubeWatcher;
@@ -345,15 +413,20 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * Always creates the Column.
 	 */
 	private PlayerCubeMapColumnEntry getOrCreateColumnWatcher(long columnAddress) {
-		PlayerCubeMapColumnEntry playerCubeMapColumnEntry = this.columnWatchers.get(columnAddress);
-		if (playerCubeMapColumnEntry == null) {
+		PlayerCubeMapColumnEntry columnWatcher = this.columnWatchers.get(columnAddress);
+		if (columnWatcher == null) {
 			int cubeX = getX(columnAddress);
 			int cubeZ = getZ(columnAddress);
-			playerCubeMapColumnEntry = new PlayerCubeMapColumnEntry(this, cubeX, cubeZ);
-			playerCubeMapColumnEntry.sentToPlayers();
-			this.columnWatchers.put(columnAddress, playerCubeMapColumnEntry);
+			columnWatcher = new PlayerCubeMapColumnEntry(this, cubeX, cubeZ);
+			this.columnWatchers.put(columnAddress, columnWatcher);
+			if (columnWatcher.getColumn() == null) {
+				this.columnsToGenerate.add(columnWatcher);
+			}
+			if (!columnWatcher.isSentToPlayers()) {
+				this.columnsToSendToClients.add(columnWatcher);
+			}
 		}
-		return playerCubeMapColumnEntry;
+		return columnWatcher;
 	}
 
 	@Override
@@ -643,8 +716,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		cubeWatcher.updateInhabitedTime();
 		this.cubeWatchers.remove(address);
 		this.cubeWatchersToUpdate.remove(cubeWatcher);
-		this.toGenerate.remove(cubeWatcher);
-		this.toSendToClient.remove(cubeWatcher);
+		this.cubesToGenerate.remove(cubeWatcher);
+		this.cubesToSendToClients.remove(cubeWatcher);
 		//don't unload, ChunkGc unloads chunks
 	}
 

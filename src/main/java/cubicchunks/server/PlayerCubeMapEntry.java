@@ -23,6 +23,7 @@
  */
 package cubicchunks.server;
 
+import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.network.PacketCube;
 import cubicchunks.network.PacketCubeBlockChange;
@@ -45,7 +46,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.function.Predicate;
 
 import static cubicchunks.util.AddressTools.getAddress;
 import static cubicchunks.util.AddressTools.getX;
@@ -195,7 +195,7 @@ public class PlayerCubeMapEntry {
 	}
 
 	public void update() {
-		if(!this.sentToPlayers) {
+		if (!this.sentToPlayers) {
 			return;
 		}
 		// are there any updates?
@@ -241,7 +241,7 @@ public class PlayerCubeMapEntry {
 
 	public boolean hasPlayerMatching(Predicate<EntityPlayerMP> predicate) {
 		//if any of them is true - stop and return false, then negate the result to get true
-		return !this.players.forEachValue(value -> !predicate.test(value.player));
+		return !this.players.forEachValue(value -> !predicate.apply(value.player));
 	}
 
 	public boolean hasPlayers() {
