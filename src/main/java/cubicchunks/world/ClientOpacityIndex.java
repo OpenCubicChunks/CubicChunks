@@ -39,15 +39,15 @@ public class ClientOpacityIndex implements IOpacityIndex {
 	private final Column chunk;
 	private int[] hmap;
 	private int[] bottomBlocks;
-	private int heightMapLowest = Coords.VERY_LOW;
+	private int heightMapLowest = Coords.NO_HEIGHT;
 
 	public ClientOpacityIndex(Column column) {
 		this.chunk = column;
 		this.hmap = new int[256];
 		this.bottomBlocks = new int[256];
 
-		Arrays.fill(hmap, Coords.VERY_LOW);
-		Arrays.fill(bottomBlocks, Coords.VERY_LOW);
+		Arrays.fill(hmap, Coords.NO_HEIGHT);
+		Arrays.fill(bottomBlocks, Coords.NO_HEIGHT);
 	}
 
 	public int getOpacity(int localX, int blockY, int localZ) {
@@ -83,7 +83,7 @@ public class ClientOpacityIndex implements IOpacityIndex {
 
 	@Override
 	public int getLowestTopBlockY() {
-		if (heightMapLowest == Coords.VERY_LOW) {
+		if (heightMapLowest == Coords.NO_HEIGHT) {
 			heightMapLowest = Integer.MAX_VALUE;
 			for (int i = 0; i < hmap.length; i++) {
 				if (hmap[i] < heightMapLowest) {

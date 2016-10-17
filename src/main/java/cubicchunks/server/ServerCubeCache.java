@@ -307,7 +307,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	 */
 	public void asyncGetCube(int cubeX, int cubeY, int cubeZ, @Nonnull Requirement req, @Nonnull Consumer<Cube> callback) {
 		Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
-		if (req == Requirement.CACHE || (cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
+		if (req == Requirement.LOAD_CACHED || (cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
 			callback.accept(cube);
 			return;
 		}
@@ -332,7 +332,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	public Cube getCube(int cubeX, int cubeY, int cubeZ, @Nonnull Requirement req) {
 
 		Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
-		if(req == Requirement.CACHE ||
+		if(req == Requirement.LOAD_CACHED ||
 				(cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
 			return cube;
 		}
@@ -485,7 +485,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	 */
 	public void asyncGetColumn(int columnX, int columnZ, Requirement req, Consumer<Column> callback) {
 		Column column = getLoadedChunk(columnX, columnZ);
-		if (column != null || req == Requirement.CACHE) {
+		if (column != null || req == Requirement.LOAD_CACHED) {
 			callback.accept(column);
 			return;
 		}
@@ -501,7 +501,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	@Nullable
 	public Column getColumn(int columnX, int columnZ, Requirement req) {
 		Column column = getLoadedChunk(columnX, columnZ);
-		if(column != null || req == Requirement.CACHE) {
+		if(column != null || req == Requirement.LOAD_CACHED) {
 			return column;
 		}
 
