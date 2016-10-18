@@ -55,10 +55,6 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Column> {
 		synchronized (this) {
 			try {
 				this.column = this.loader.loadColumn(this.colInfo.x, this.colInfo.z);
-				if (column == null) {
-					CubicChunks.LOGGER.error("Async column load failed (Column does not exist in {} @ ({}, {})",
-							this.colInfo.world, this.colInfo.x, this.colInfo.z);
-				}
 			} catch (IOException e) {
 				CubicChunks.LOGGER.error("Could not load column in {} @ ({}, {})", this.colInfo.world, this.colInfo.x, this.colInfo.z, e);
 			}
