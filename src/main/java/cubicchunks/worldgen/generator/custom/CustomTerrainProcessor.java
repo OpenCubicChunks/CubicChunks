@@ -26,6 +26,7 @@ package cubicchunks.worldgen.generator.custom;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
+// TODO remove me - generator pipeline leftover
 public final class CustomTerrainProcessor {
 	private final CustomTerrainGenerator terrainGenerator;
 

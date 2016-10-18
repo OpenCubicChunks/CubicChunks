@@ -46,7 +46,11 @@ import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Y_SECTION_SIZ
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTIONS;
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTION_SIZE;
 
+/**
+ * A terrain generator that supports infinite(*) worlds
+ */
 public class CustomTerrainGenerator {
+	// Number of octaves for the noise function
 	private static final int OCTAVES = 16;
 
 	private final ICubicWorld world;
@@ -124,6 +128,14 @@ public class CustomTerrainGenerator {
 		this.builderHeight.build();
 	}
 
+	/**
+	 * Generate the cube as the specified location
+	 *
+	 * @param cube cube primer to use
+	 * @param cubeX cube x location
+	 * @param cubeY cube y location
+	 * @param cubeZ cube z location
+	 */
 	public void generate(final ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
 		generateNoiseArrays(cubeX, cubeY, cubeZ);
 		generateTerrainArray(cube, cubeX, cubeY, cubeZ);
@@ -131,6 +143,15 @@ public class CustomTerrainGenerator {
 		generateTerrain(cube, this.rawDensity, cubeX, cubeY, cubeZ);
 	}
 
+	/**
+	 * Generate terrain at the specified location
+	 *
+	 * @param cube cube primer to use
+	 * @param input generated noise to use
+	 * @param cubeX cube x position
+	 * @param cubeY cube y position
+	 * @param cubeZ cube z position
+	 */
 	private void generateTerrain(ICubePrimer cube, double[][][] input, int cubeX, int cubeY, int cubeZ) {
 		int xSteps = X_SECTION_SIZE - 1;
 		int ySteps = Y_SECTION_SIZE - 1;
@@ -206,6 +227,16 @@ public class CustomTerrainGenerator {
 		}
 	}
 
+	/**
+	 * Retrieve the blockstate appropriate for the specified noise parameters
+	 *
+	 * @param height Height of the block being generated
+	 * @param density Generated density at the specified location. A density > 0 typically indicates a solid block
+	 * @param xGrad Gradient of density in x direction
+	 * @param yGrad Gradient of density in y direction
+	 * @param zGrad Gradient of density in z direction
+	 * @return The block state
+	 */
 	private IBlockState getBlockStateFor(int height, double density, double xGrad, double yGrad, double zGrad) {
 		final double dirtDepth = 4;
 		IBlockState state = Blocks.AIR.getDefaultState();
@@ -214,11 +245,12 @@ public class CustomTerrainGenerator {
 			//if the block above would be empty:
 			if (density + yGrad <= 0) {
 				state = Blocks.GRASS.getDefaultState();
-				//if density decreases as we go down && density < dirtDepth
+				//if density decreases as we go up && density < dirtDepth
 			} else if (yGrad < 0 && density < dirtDepth) {
 				state = Blocks.DIRT.getDefaultState();
 			}
 		} else if (height < 64) {
+			// TODO replace check with GlobalGeneratorConfig.SEA_LEVEL
 			state = Blocks.WATER.getDefaultState();
 		}
 		return state;
@@ -352,6 +384,12 @@ public class CustomTerrainGenerator {
 		}
 	}
 
+	/**
+	 * Retrieve biomes at the specified column location
+	 * @param cubeX column x
+	 * @param cubeZ column z
+	 * @return biomes in that column
+	 */
 	private Biome[] getBiomeMap(int cubeX, int cubeZ) {
 		return world.getProvider().getBiomeProvider().getBiomesForGeneration(this.biomes,
 			cubeX*4 - this.maxSmoothRadius, cubeZ*4 - this.maxSmoothRadius,

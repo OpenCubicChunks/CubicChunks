@@ -31,18 +31,18 @@ public interface ICubePrimer {
 	IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
 
 	/**
-	 * Gets a block state at the given location
+	 * Get the block state at the given location
 	 *
-	 * @param x cube relative x
-	 * @param y cube relative y
-	 * @param z cube relative z
+	 * @param x cube local x
+	 * @param y cube local y
+	 * @param z cube local z
 	 *
 	 * @return the block state
 	 */
 	IBlockState getBlockState(int x, int y, int z);
 
 	/**
-	 * Sets a block state at the given location
+	 * Set the block state at the given location
 	 *
 	 * @param x cube local x
 	 * @param y cube local y
@@ -55,13 +55,12 @@ public interface ICubePrimer {
 	 * Counting down from the highest block in the cube, find the first non-air
 	 * block for the given location.<br>
 	 * <br>
-	 * NOTE: This will return -1 if there where no blocks under that location!<br>
-	 * WARNING: It does not know if there are blocks over this cube!<br>
-	 *
+	 * NOTE: This will return -1 if there were no blocks under this location<br>
+	 * WARNING: Does not check for blocks above this cube<br>
+	 * 
 	 * @param x cube relative x
 	 * @param z cube relative x
-	 *
-	 * @return the height of the top non-air block at x, z or -1 if there was no block found
+	 * @return the height of the top non-air block at given x, z or -1 if no block was found
 	 */
 	int findGroundHeight(int x, int z);
 }

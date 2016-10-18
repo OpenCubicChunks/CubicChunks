@@ -34,6 +34,9 @@ import net.minecraft.world.chunk.IChunkGenerator;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * A chunk generator that only creates empty chunks
+ */
 public class DummyChunkGenerator implements IChunkGenerator {
 
 	private World world;

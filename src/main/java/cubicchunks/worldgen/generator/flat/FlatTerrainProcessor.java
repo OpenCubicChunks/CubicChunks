@@ -33,6 +33,9 @@ import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
+/**
+ * A cube generator that generates a flat surface of grass, dirt and stone.
+ */
 public class FlatTerrainProcessor extends BasicCubeGenerator {
 
 	public FlatTerrainProcessor(ICubicWorld world) {
