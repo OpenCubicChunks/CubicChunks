@@ -28,6 +28,7 @@ import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
+import cubicchunks.util.XYZAddressable;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
@@ -63,7 +64,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.annotation.Nullable;
 
-public class Cube {
+public class Cube implements XYZAddressable {
 
 	public static final int SIZE = 16;
 
