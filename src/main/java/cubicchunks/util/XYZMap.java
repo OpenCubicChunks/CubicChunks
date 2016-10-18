@@ -76,8 +76,6 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 */
 	public XYZMap(float loadFactor, int capacity) {
 
-		// TODO: Replace power with size
-
 		if (loadFactor > 1.0) {
 			throw new IllegalArgumentException("You really dont want to be using a " + loadFactor + " load loadFactor with this hash table!");
 		}
@@ -88,7 +86,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 		while (tCapacity < capacity) {
 			tCapacity <<= 1;
 		}
-		this.buckets = new Cube[tCapacity];
+		this.buckets = new XYZAddressable[tCapacity];
 
 		this.refreshFields();
 	}
