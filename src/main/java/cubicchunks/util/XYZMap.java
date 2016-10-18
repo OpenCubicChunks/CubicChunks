@@ -23,8 +23,6 @@
  */
 package cubicchunks.util;
 
-import cubicchunks.world.cube.Cube;
-
 import java.util.Iterator;
 
 /**
@@ -256,7 +254,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 		XYZAddressable[] oldBuckets = this.buckets;
 
 		// double the size!
-		this.buckets = new Cube[this.buckets.length*2];
+		this.buckets = new XYZAddressable[this.buckets.length*2];
 		this.refreshFields();
 
 		// Move the old entries to the new array.
