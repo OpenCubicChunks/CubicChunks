@@ -28,6 +28,7 @@ import cubicchunks.world.cube.Cube;
 import net.minecraft.world.chunk.Chunk;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Chunk Garbage Collector, automatically unloads unused chunks.
@@ -53,6 +54,18 @@ public class ChunkGc {
 	}
 
 	private void chunkGc() {
-		cubeCache.takeOutGarbage();
+		Iterator<Cube> cubeIt = cubeCache.cubesIterator();
+		while(cubeIt.hasNext()) {
+			if(cubeCache.tryUnloadCube(cubeIt.next())) {
+				cubeIt.remove();
+			}
+		}
+
+		Iterator<Column> columnIt = cubeCache.columnsIterator();
+		while(columnIt.hasNext()) {
+			if(cubeCache.tryUnloadColumn(columnIt.next())) {
+				columnIt.remove();
+			}
+		}
 	}
 }

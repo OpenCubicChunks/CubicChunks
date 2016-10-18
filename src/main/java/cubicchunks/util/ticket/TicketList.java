@@ -23,64 +23,65 @@
  */
 package cubicchunks.util.ticket;
 
-import java.util.Comparator;
 import java.util.LinkedList;
 
 public class TicketList {
 
-	private static final Comparator<ITicket> ORDER = (one, two) -> {
-		if(one.shouldTick() && !two.shouldTick()){
-			return -1;
-		}else if(!one.shouldTick() && two.shouldTick()){
-			return 1;
-		}
-		return 0;
-	};
-
-	private LinkedList<ITicket> list = new LinkedList<>();
-
-	public TicketList(){
-		super();
-	}
+	private boolean tick = false;
+	private LinkedList<ITicket> tickets = new LinkedList<>();
 
 	/**
-	 * Removes a ticket form this list
+	 * Removes a ticket form this tickets
 	 *
 	 * @param ticket the ticket to remove
 	 */
 	public void remove(ITicket ticket){
-		list.remove(ticket);
+		tickets.remove(ticket);
+		scanShouldTick();
 	}
 
 	/**
-	 * Add a ticket to this list
+	 * Add a ticket to this tickets
 	 *
 	 * @param ticket the ticket to add
 	 */
 	public void add(ITicket ticket){
-		list.add(ticket);
-		list.sort(ORDER);
+		if(tickets.contains(ticket)){
+			return; // we already have that ticket
+		}
+		tickets.add(ticket);
+		tick |= ticket.shouldTick(); // no need to scan the whole list when adding
 	}
 
 	/**
-	 * @param ticket the ticket we want to see if is in this list
-	 * @return Does this ticket list contain {@Code ticket}
+	 * @param ticket the ticket we want to see if is in this tickets
+	 * @return Does this ticket tickets contain {@Code ticket}
 	 */
 	public boolean contains(ITicket ticket){
-		return list.contains(ticket);
+		return tickets.contains(ticket);
 	}
 
 	/**
-	 * @return Should the world be ticking the Cube corresponding to this ticket list
+	 * @return Should the world be ticking the Cube corresponding to this ticket tickets
 	 */
 	public boolean shouldTick(){
-		return list.size() > 0 && list.getFirst().shouldTick(); // Note: things are sorted
+		return tick;
 	}
 
 	/**
-	 * @return Weather or not this ticket list permits unloading
+	 * @return Weather or not this ticket tickets permits unloading
 	 */
 	public boolean canUnload(){
-		return list.isEmpty();
+		return tickets.isEmpty();
+	}
+
+	private void scanShouldTick(){
+		for(ITicket ticket : tickets){
+			if(ticket.shouldTick()){
+				tick = true;
+				return;
+			}
+		}
+		tick = false;
 	}
 }

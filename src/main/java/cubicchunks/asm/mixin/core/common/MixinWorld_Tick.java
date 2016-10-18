@@ -67,10 +67,12 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 		if (!this.isCubicWorld()) {
 			return isAreaLoaded(startBlockX, oldStartBlockY, startBlockZ, endBlockX, oldEndBlockY, endBlockZ, allowEmpty);
 		}
+
+		BlockPos entityPos = new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ);
+
 		return this.isRemote() ||
-				this.getCubeFromBlockCoords(
-						new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ))
-						.getTickets().shouldTick();
+			  !this.isValid(entityPos) || // if an entity is below the world we want it to keep ticking
+			   this.getCubeFromBlockCoords(entityPos).getTickets().shouldTick();
 	}
 
 	/**

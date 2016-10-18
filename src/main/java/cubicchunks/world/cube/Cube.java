@@ -571,9 +571,9 @@ public class Cube implements XYZAddressable {
 		for(Entity entity : this.entities.getEntities()){
 			//CHECKED: 1.10.2-12.18.1.2092
 			entity.addedToChunk = false; // World tries to remove entities from Cubes
-										 // if (addedToCube || Column is loaded)
-										 // so we need to set addedToChunk to false as a hack!
-										 // else World would reload this Cube!
+			                             // if (addedToCube || Column is loaded)
+			                             // so we need to set addedToChunk to false as a hack!
+			                             // else World would reload this Cube!
 		}
 
 		// tell the world to forget about tile entities

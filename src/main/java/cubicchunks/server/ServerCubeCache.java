@@ -489,39 +489,32 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		this.cubeIO.flush();
 	}
 
-	void takeOutGarbage(){
-
-		Iterator<Cube> cubeIt = cubeMap.iterator();
-		while(cubeIt.hasNext()) {
-			if(tryUnloadCube(cubeIt.next())) {
-				cubeIt.remove();
-			}
-		}
-
-		Iterator<Chunk> columnIt = id2ChunkMap.values().iterator();
-		while(columnIt.hasNext()) {
-			if(tryUnloadColumn((Column)columnIt.next())) {
-				columnIt.remove();
-			}
-		}
+	Iterator<Cube> cubesIterator(){
+		return cubeMap.iterator();
 	}
 
-	private boolean tryUnloadCube(Cube cube) {
+	@SuppressWarnings("unchecked")
+	Iterator<Column> columnsIterator(){
+		return (Iterator<Column>) (Object) id2ChunkMap.values().iterator();
+	}
+
+	boolean tryUnloadCube(Cube cube) {
 		if(!cube.getTickets().canUnload()){
 			return false; // There are tickets
 		}
 
 		// unload the Cube!
 		cube.onUnload();
-		cube.getColumn().removeCube(cube.getY());
 
 		if(cube.needsSaving()) { // save the Cube, if it needs saving
 			this.cubeIO.saveCube(cube);
 		}
+
+		cube.getColumn().removeCube(cube.getY());
 		return true;
 	}
 
-	private boolean tryUnloadColumn(Column column) {
+	boolean tryUnloadColumn(Column column) {
 		if(column.hasLoadedCubes()){
 			return false; // It has loaded Cubes in it
 			              // (Cubes are to Columns, as tickets are to Cubes... in a way)

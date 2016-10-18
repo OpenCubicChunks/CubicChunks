@@ -135,9 +135,6 @@ public class PlayerCubeMapEntry implements ITicket{
 		int cubeZ = getZ(cubeAddress);
 
 		playerCubeMap.getWorld().getProfiler().startSection("getCube");
-		if(cube != null){
-			this.cube.getTickets().remove(this); // just in case there is a cube already loaded
-		}
 		if (canGenerate) {
 			this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT);
 		} else {
