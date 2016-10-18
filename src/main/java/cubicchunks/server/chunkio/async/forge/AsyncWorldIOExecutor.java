@@ -79,13 +79,13 @@ public class AsyncWorldIOExecutor {
 	 * @return The loaded cube, or null if either not present or the load failed
 	 */
 	@Nullable
-	public static Cube syncCubeLoad(World world, CubeIO loader, int y, Column column, ServerCubeCache cache) {
+	public static Cube syncCubeLoad(World world, CubeIO loader, int y, Column column) {
 		QueuedCube key = new QueuedCube(column.getX(), y, column.getZ(), world);
 		AsyncCubeIOProvider task = cubeTasks.remove(key); // Remove task because we will call the sync callbacks directly
 		if (task != null) {
 			runTask(task);
 		} else {
-			task = new AsyncCubeIOProvider(key, column, cache, loader);
+			task = new AsyncCubeIOProvider(key, column, loader);
 			task.run();
 		}
 		task.runSynchronousPart();
@@ -156,7 +156,7 @@ public class AsyncWorldIOExecutor {
 				runnable.accept(null);
 				return;
 			}
-			queueCubeLoad(world, loader, column, cache, y, runnable);
+			queueCubeLoad(world, loader, column, y, runnable);
 		});
 	}
 
@@ -167,15 +167,14 @@ public class AsyncWorldIOExecutor {
 	 * @param world The world of the cube
 	 * @param loader The file loader for this world
 	 * @param column The column in which the cube should be placed.
-	 * @param cache The server cube cache
 	 * @param y cube y position within the column
 	 * @param runnable The callback
 	 */
-	public static void queueCubeLoad(World world, CubeIO loader, Column column, ServerCubeCache cache, int y, Consumer<Cube> runnable) {
+	public static void queueCubeLoad(World world, CubeIO loader, Column column, int y, Consumer<Cube> runnable) {
 		QueuedCube key = new QueuedCube(column.getX(), y, column.getZ(), world);
 		AsyncCubeIOProvider task = cubeTasks.get(key);
 		if (task == null) {
-			task = new AsyncCubeIOProvider(key, column, cache, loader);
+			task = new AsyncCubeIOProvider(key, column, loader);
 			task.addCallback(runnable); // Add before calling execute for thread safety
 			cubeTasks.put(key, task);
 			pool.execute(task);

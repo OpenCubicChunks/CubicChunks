@@ -318,7 +318,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 					callback.accept(null);
 					return;
 				}
-				AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, col, this, cubeY, loaded -> {
+				AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, col, cubeY, loaded -> {
 					onCubeLoaded(loaded, col);
 					loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
 					callback.accept(loaded);
@@ -344,7 +344,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		}
 
 		if(cube == null) {
-			cube = AsyncWorldIOExecutor.syncCubeLoad(worldObj, cubeIO, cubeY, column, this);
+			cube = AsyncWorldIOExecutor.syncCubeLoad(worldObj, cubeIO, cubeY, column);
 			onCubeLoaded(cube, column);
 		}
 
