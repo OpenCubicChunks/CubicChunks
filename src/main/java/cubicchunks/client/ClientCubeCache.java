@@ -24,7 +24,7 @@
 package cubicchunks.client;
 
 import cubicchunks.util.CubeCoords;
-import cubicchunks.util.CubeHashMap;
+import cubicchunks.util.XYZMap;
 import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubeCache;
 import cubicchunks.world.ICubicWorldClient;
@@ -43,7 +43,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 	private ICubicWorldClient world;
 	private Cube blankCube;
-	private CubeHashMap cubemap = new CubeHashMap(0.7f, 13);
+	private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
 
 	public ClientCubeCache(ICubicWorldClient world) {
 		super((World) world);
@@ -90,7 +90,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	public Cube loadCube(Column column, int cubeY) {
 		Cube cube = new Cube(column, cubeY); // auto added to column
 		column.addCube(cube);
-		this.cubemap.put(cube);
+		this.cubeMap.put(cube);
 
 		return cube;
 	}
@@ -100,7 +100,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	 * It is used when the server tells the client to unload a Cube.
 	 */
 	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
-		cubemap.remove(cubeX, cubeY, cubeZ);
+		cubeMap.remove(cubeX, cubeY, cubeZ);
 		Column column = getLoadedChunk(cubeX, cubeZ);
 		if (column != null) {
 			column.removeCube(cubeY);
@@ -123,7 +123,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 
 	@Override
 	public Cube getLoadedCube(int cubeX, int cubeY, int cubeZ) {
-		return cubemap.get(cubeX, cubeY, cubeZ);
+		return cubeMap.get(cubeX, cubeY, cubeZ);
 	}
 
 	@Override
