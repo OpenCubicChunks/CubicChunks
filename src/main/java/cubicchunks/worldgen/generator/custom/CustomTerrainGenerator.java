@@ -24,6 +24,7 @@
 package cubicchunks.worldgen.generator.custom;
 
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.builder.BasicBuilder;
@@ -34,9 +35,6 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
-import static cubicchunks.util.Coords.CUBE_MAX_X;
-import static cubicchunks.util.Coords.CUBE_MAX_Y;
-import static cubicchunks.util.Coords.CUBE_MAX_Z;
 import static cubicchunks.util.Coords.localToBlock;
 import static cubicchunks.util.MathUtil.lerp;
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.MAX_ELEV;
@@ -97,7 +95,7 @@ public class CustomTerrainGenerator {
 		this.noiseArrayAlpha = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
 
 		this.rawDensity = new double[X_SECTIONS][Y_SECTIONS][Z_SECTIONS];
-		this.expandedDensity = new double[CUBE_MAX_X][CUBE_MAX_Y][CUBE_MAX_Z];
+		this.expandedDensity = new double[Cube.SIZE][Cube.SIZE][Cube.SIZE];
 
 		this.builderHigh = createHighBuilder();
 		this.builderLow = createLowBuilder();

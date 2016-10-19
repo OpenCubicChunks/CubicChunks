@@ -78,7 +78,7 @@ public class StructureGenUtil {
 	}
 
 	/**
-	 * Modifies boundingBox so that max coordinates are less than or equal to {@link Coords#CUBE_SIZE}
+	 * Modifies boundingBox so that max coordinates are less than or equal to {@link cubicchunks.world.cube.Cube#SIZE}
 	 * and min coords are greater than or equal to 0
 	 */
 	public static void clampBoundingBoxToLocalCube(StructureBoundingBox boundingBox) {
