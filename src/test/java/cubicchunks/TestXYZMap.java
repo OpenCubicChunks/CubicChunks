@@ -25,6 +25,8 @@ package cubicchunks;
 
 import cubicchunks.util.XYZAddressable;
 import cubicchunks.util.XYZMap;
+import cubicchunks.util.XZAddressable;
+import cubicchunks.util.XZMap;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -38,6 +40,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class TestXYZMap {
 	@Test
@@ -95,6 +98,38 @@ public class TestXYZMap {
 				for(int z = -20; z < 20; z++) {
 					if(x != 0 || y != 0 || z != 0) {
 						assertNull(map.get(x, y, z));
+					}
+				}
+			}
+		}
+	}
+
+	@Test
+	public void testContains() {
+		XYZMap<XYZAddressable> map = new XYZMap<>(0.75f, 10);
+		TestXYZMap.Addressable[] values = new TestXYZMap.Addressable[500];
+
+		Random rand = new Random(42);
+		for (int i = 0; i < values.length; ++i) {
+			values[i] = new TestXYZMap.Addressable(rand.nextInt(), rand.nextInt(), rand.nextInt(), String.valueOf(i));
+			map.put(values[i]);
+
+			for (int j = 0; j <= i; ++j) {
+				assertTrue(map.contains(values[i].getX(), values[i].getY(), values[i].getZ()));
+			}
+		}
+	}
+
+	@Test
+	public void testContainsNot() {
+		XYZAddressable value = new TestXYZMap.Addressable(0, 0, 0, "1");
+		XYZMap<XYZAddressable> map = new XYZMap<>(0.75f, 10);
+		map.put(value);
+		for(int x = -20; x < 20; x++) {
+			for(int y = -20; y < 20; y++) {
+				for(int z = -20; z < 20; z++) {
+					if (x != 0 || y != 0 || z != 0) {
+						assertTrue(!map.contains(x, y, z));
 					}
 				}
 			}
