@@ -23,6 +23,7 @@
  */
 package cubicchunks;
 
+import com.sun.jndi.cosnaming.IiopUrl;
 import cubicchunks.util.XYZAddressable;
 import cubicchunks.util.XYZMap;
 import cubicchunks.util.XZAddressable;
@@ -40,6 +41,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class TestXZMap {
 	@Test
@@ -96,6 +98,36 @@ public class TestXZMap {
 			for(int z = -20; z < 20; z++) {
 				if(x != 0 || z != 0) {
 					assertNull(map.get(x, z));
+				}
+			}
+		}
+	}
+
+	@Test
+	public void testContains() {
+		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
+		Addressable[] values = new Addressable[500];
+
+		Random rand = new Random(42);
+		for (int i = 0; i < values.length; ++i) {
+			values[i] = new Addressable(rand.nextInt(), rand.nextInt(), String.valueOf(i));
+			map.put(values[i]);
+
+			for (int j = 0; j <= i; ++j) {
+				assertTrue(map.contains(values[i].getX(), values[i].getZ()));
+			}
+		}
+	}
+
+	@Test
+	public void testContainsNot() {
+		XZAddressable value = new Addressable(0, 0, "1");
+		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
+		map.put(value);
+		for(int x = -20; x < 20; x++) {
+			for(int z = -20; z < 20; z++) {
+				if(x != 0 || z != 0) {
+					assertTrue(!map.contains(x, z));
 				}
 			}
 		}

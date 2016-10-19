@@ -189,7 +189,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * @param x the x-coordinate
 	 * @param y the y-coordinate
 	 * @param z the z-coordinate
-	 * @return the entry associated with the specified coordinates or null if no such value exists
+	 * @return the entry associated with the specified coordinates or null if no such entry exists
 	 */
 	@SuppressWarnings("unchecked")
 	public T remove(int x, int y, int z) {
@@ -214,6 +214,17 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
 		// nothing was removed
 		return null;
+	}
+
+	/**
+	 * Removes and returns the given value from this map. More specifically, removes the entry whose xyz-coordinates
+	 * equal the given value's coordinates.
+	 *
+	 * @param value the value to be removed
+	 * @return the entry associated with the given value's coordinates or null if no such entry exists
+	 */
+	public T remove(T value) {
+		return this.remove(value.getX(), value.getY(), value.getZ());
 	}
 
 	/**
@@ -245,6 +256,44 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 		return null;
 	}
 
+	/**
+	 * Returns true if there exists an entry associated with the given xyz-coordinates in this map.
+	 *
+	 * @param x the x-coordinate
+	 * @param y the z-coordinate
+	 * @param z the y-coordinate
+	 * @return true if there exists an entry associated with the given coordinates in this map
+	 */
+	public boolean contains(int x, int y, int z) {
+
+		int index = getIndex(x, y, z);
+
+		XYZAddressable bucket = this.buckets[index];
+		while (bucket != null) {
+
+			// If the correct bucket was found, return true.
+			if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
+				return true;
+			}
+
+			index = getNextIndex(index);
+			bucket = this.buckets[index];
+		}
+
+		// nothing was found
+		return false;
+	}
+
+	/**
+	 * Returns true if the given value is contained within this map. More specifically, returns true if there exists
+	 * an entry in this map whose xyz-coordinates equal the given value's coordinates.
+	 *
+	 * @param value the value
+	 * @return true if the given value is contained within this map
+	 */
+	public boolean contains(T value) {
+		return this.contains(value.getX(), value.getY(), value.getZ());
+	}
 
 	/**
 	 * Doubles the size of the backing array and redistributes all contained values accordingly.

@@ -211,6 +211,17 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	}
 
 	/**
+	 * Removes and returns the given value from this map. More specifically, removes the entry whose xz-coordinates
+	 * equal the given value's coordinates.
+	 *
+	 * @param value the value to be removed
+	 * @return the entry associated with the given value's coordinates or null if no such entry exists
+	 */
+	public T remove(T value) {
+		return this.remove(value.getX(), value.getZ());
+	}
+
+	/**
 	 * Returns the value associated with the given coordinates or null if no such value exists.
 	 *
 	 * @param x the x-coordinate
@@ -238,6 +249,43 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 		return null;
 	}
 
+	/**
+	 * Returns true if there exists an entry associated with the given xz-coordinates in this map.
+	 *
+	 * @param x the x-coordinate
+	 * @param z the y-coordinate
+	 * @return true if there exists an entry associated with the given coordinates in this map
+	 */
+	public boolean contains(int x, int z) {
+
+		int index = getIndex(x, z);
+
+		XZAddressable bucket = this.buckets[index];
+		while (bucket != null) {
+
+			// If the correct bucket was found, return true.
+			if (bucket.getX() == x && bucket.getZ() == z) {
+				return true;
+			}
+
+			index = getNextIndex(index);
+			bucket = this.buckets[index];
+		}
+
+		// nothing was found
+		return false;
+	}
+
+	/**
+	 * Returns true if the given value is contained within this map. More specifically, returns true if there exists
+	 * an entry in this map whose xz-coordinates equal the given value's coordinates.
+	 *
+	 * @param value the value
+	 * @return true if the given value is contained within this map
+	 */
+	public boolean contains(T value) {
+		return this.contains(value.getX(), value.getZ());
+	}
 
 	/**
 	 * Doubles the size of the backing array and redistributes all contained values accordingly.
