@@ -142,11 +142,11 @@ public class TestXYZMap {
 		}
 
 		@Override public int getY() {
-			return x;
+			return y;
 		}
 
 		@Override public int getZ() {
-			return x;
+			return z;
 		}
 
 		@Override public boolean equals(Object o) {
