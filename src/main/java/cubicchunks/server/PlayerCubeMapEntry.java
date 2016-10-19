@@ -32,6 +32,7 @@ import cubicchunks.network.PacketUnloadCube;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
+import cubicchunks.util.XYZAddressable;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.cube.Cube;
@@ -54,7 +55,7 @@ import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PlayerCubeMapEntry {
+public class PlayerCubeMapEntry implements XYZAddressable {
 
 	private final Consumer<Cube> consumer = (c) -> {
 		this.cube = c;
@@ -320,5 +321,17 @@ public class PlayerCubeMapEntry {
 
 	public CubeCoords getCubePos() {
 		return cubePos;
+	}
+
+	@Override public int getX() {
+		return this.cubePos.getCubeX();
+	}
+
+	@Override public int getY() {
+		return this.cubePos.getCubeY();
+	}
+
+	@Override public int getZ() {
+		return this.cubePos.getCubeZ();
 	}
 }

@@ -30,6 +30,7 @@ import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadColumn;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.CubeCoords;
+import cubicchunks.util.XZAddressable;
 import cubicchunks.world.column.Column;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -48,7 +49,7 @@ import static cubicchunks.util.ReflectionUtil.getFieldSetterHandle;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
+public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry implements XZAddressable {
 
 	private PlayerCubeMap playerCubeMap;
 	private static MethodHandle getPlayers = getFieldGetterHandle(PlayerChunkMapEntry.class, "field_187283_c");
@@ -193,5 +194,13 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 		} catch (Throwable throwable) {
 			throw new RuntimeException(throwable);
 		}
+	}
+
+	@Override public int getX() {
+		return this.getPos().chunkXPos;
+	}
+
+	@Override public int getZ() {
+		return this.getPos().chunkZPos;
 	}
 }
