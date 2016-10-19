@@ -26,7 +26,7 @@ package cubicchunks.network;
 import cubicchunks.CubicChunks;
 import cubicchunks.client.ClientCubeCache;
 import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.ClientOpacityIndex;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.Column;
@@ -40,12 +40,10 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IThreadListener;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.Nonnull;
-import static cubicchunks.util.AddressTools.getX;
-import static cubicchunks.util.AddressTools.getY;
-import static cubicchunks.util.AddressTools.getZ;
 
 public class ClientHandler implements INetHandler {
 
@@ -73,26 +71,22 @@ public class ClientHandler implements INetHandler {
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
 		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
-		long cubeAddress = packet.getCubeAddress();
+		CubeCoords cubePos = packet.getCubePos();
 
-		int cubeX = getX(cubeAddress);
-		int cubeY = getY(cubeAddress);
-		int cubeZ = getZ(cubeAddress);
-
-		Column column = cubeCache.provideChunk(cubeX, cubeZ);
+		Column column = cubeCache.provideChunk(cubePos.getCubeX(), cubePos.getCubeZ());
 		//isEmpty actually checks if the column is a BlankColumn
 		if (column.isEmpty()) {
-			CubicChunks.LOGGER.error("Out of order cube received! No column for cube at ({}, {}, {}) exists!", cubeX, cubeY, cubeZ);
+			CubicChunks.LOGGER.error("Out of order cube received! No column for cube at {} exists!", cubePos);
 			return;
 		}
 
 		Cube cube;
 		if(packet.getType() == PacketCube.Type.NEW_CUBE) {
-			cube = cubeCache.loadCube(column, cubeY);
+			cube = cubeCache.loadCube(column, cubePos.getCubeY());
 		} else {
-			cube = column.getCube(cubeY);
+			cube = column.getCube(cubePos.getCubeY());
 			if (cube instanceof BlankCube) {
-				CubicChunks.LOGGER.error("Ignored cube update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
+				CubicChunks.LOGGER.error("Ignored cube update to blank cube {}", cubePos);
 				return;
 			}
 		}
@@ -125,12 +119,9 @@ public class ClientHandler implements INetHandler {
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
 		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
-		long cubeAddress = packet.getCubeAddress();
+		ChunkPos chunkPos = packet.getChunkPos();
 
-		int cubeX = getX(cubeAddress);
-		int cubeZ = getZ(cubeAddress);
-
-		Column column = cubeCache.loadChunk(cubeX, cubeZ);
+		Column column = cubeCache.loadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
 
 		byte[] data = packet.getData();
 		ByteBuf buf = WorldEncoder.createByteBufForRead(data);
@@ -148,9 +139,7 @@ public class ClientHandler implements INetHandler {
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
 		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
-		cubeCache.unloadCube(AddressTools.getX(packet.getCubeAddress()), 
-							 AddressTools.getY(packet.getCubeAddress()),
-							 AddressTools.getZ(packet.getCubeAddress()));
+		cubeCache.unloadCube(packet.getCubePos());
 	}
 
 	public void handle(final PacketUnloadColumn packet) {
@@ -163,11 +152,8 @@ public class ClientHandler implements INetHandler {
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
 		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
-		long cubeAddress = packet.getCubeAddress();
-		cubeCache.unloadChunk(
-				getX(cubeAddress),
-				getZ(cubeAddress)
-		);
+		ChunkPos chunkPos = packet.getColumnPos();
+		cubeCache.unloadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
 	}
 
 	public void handle(final PacketCubeBlockChange packet) {
@@ -181,12 +167,9 @@ public class ClientHandler implements INetHandler {
 		ClientCubeCache cubeCache = worldClient.getCubeCache();
 
 		// get the cube
-		int cubeX = getX(packet.cubeAddress);
-		int cubeY = getY(packet.cubeAddress);
-		int cubeZ = getZ(packet.cubeAddress);
-		Cube cube = cubeCache.getCube(cubeX, cubeY, cubeZ);
+		Cube cube = cubeCache.getCube(packet.cubePos);
 		if (cube instanceof BlankCube) {
-			CubicChunks.LOGGER.error("Ignored block update to blank cube ({},{},{})", cubeX, cubeY, cubeZ);
+			CubicChunks.LOGGER.error("Ignored block update to blank cube {}", packet.cubePos);
 			return;
 		}
 

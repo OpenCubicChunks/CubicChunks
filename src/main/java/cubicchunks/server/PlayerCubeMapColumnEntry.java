@@ -28,39 +28,48 @@ import cubicchunks.CubicChunks;
 import cubicchunks.network.PacketColumn;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadColumn;
+import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.column.Column;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkWatchEvent;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.invoke.MethodHandle;
 import java.util.List;
 
-import static cubicchunks.util.AddressTools.getAddress;
 import static cubicchunks.util.ReflectionUtil.getFieldGetterHandle;
 import static cubicchunks.util.ReflectionUtil.getFieldSetterHandle;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 
 	private PlayerCubeMap playerCubeMap;
-	private MethodHandle getPlayers = getFieldGetterHandle(PlayerChunkMapEntry.class, "field_187283_c");
-	private MethodHandle setLastUpdateInhabitedTime = getFieldSetterHandle(PlayerChunkMapEntry.class, "field_187289_i");
-	private MethodHandle setSentToPlayers = getFieldSetterHandle(PlayerChunkMapEntry.class, "field_187290_j");
+	private static MethodHandle getPlayers = getFieldGetterHandle(PlayerChunkMapEntry.class, "field_187283_c");
+	private static MethodHandle setLastUpdateInhabitedTime = getFieldSetterHandle(PlayerChunkMapEntry.class, "field_187289_i");
+	private static MethodHandle setSentToPlayers = getFieldSetterHandle(PlayerChunkMapEntry.class, "field_187290_j");
+	private static MethodHandle isLoading = getFieldGetterHandle(PlayerChunkMapEntry.class, "loading");//forge field, no srg name
+	private static MethodHandle getLoadedRunnable = getFieldGetterHandle(PlayerChunkMapEntry.class, "loadedRunnable");//forge field, no srg name
+	private final Runnable loadedRunnable;
 
-	public PlayerCubeMapColumnEntry(PlayerCubeMap playerCubeMap, int cubeX, int cubeZ) {
-		super(playerCubeMap, cubeX, cubeZ);
+	public PlayerCubeMapColumnEntry(PlayerCubeMap playerCubeMap, ChunkPos pos) {
+		super(playerCubeMap, pos.chunkXPos, pos.chunkZPos);
 		this.playerCubeMap = playerCubeMap;
+		try {
+			this.loadedRunnable = (Runnable) getLoadedRunnable.invoke(this);
+		} catch (Throwable throwable) {
+			throw new RuntimeException(throwable);
+		}
 	}
 
-	public ChunkPos getPos() {
-		return super.getPos();
-	}
-
-	public void addPlayer(@Nonnull EntityPlayerMP player) {
+	// CHECKED: 1.10.2-12.18.1.2092
+	public void addPlayer(EntityPlayerMP player) {
 		if (this.getPlayers().contains(player)) {
 			CubicChunks.LOGGER.debug("Failed to add player. {} already is in chunk {}, {}", player,
 					this.getPos().chunkXPos,
@@ -75,20 +84,31 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 
 		//always sent to players, no need to check it
 
-		//TODO: ChunkWatchEvent.Watch: is it implemented correctly? at the moment I'm writing it Forge doesn't have this implemented, I think it should be here:
-		MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(this.getPos(), player));
+		if(this.isSentToPlayers()) {
+			//this.sendNearbySpecialEntities - done by cube entry
+			MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(this.getPos(), player));
+		}
 	}
 
-	public void removePlayer(@Nonnull EntityPlayerMP player) {
+	// CHECKED: 1.10.2-12.18.1.2092//TODO: remove it, the only different line is sending packet
+	public void removePlayer(EntityPlayerMP player) {
 		if (!this.getPlayers().contains(player)) {
 			return;
 		}
-		//columns for ColumnWatchers are always loaded with CubicChunks
-		assert this.getColumn() != null : "Column not loaded!";
+		if (this.getColumn() == null) {
+			this.getPlayers().remove(player);
+			if (this.getPlayers().isEmpty()) {
+				if (isLoading()) {
+					AsyncWorldIOExecutor.dropQueuedColumnLoad(
+							playerCubeMap.getWorld(), getPos().chunkXPos, getPos().chunkZPos, (c) -> loadedRunnable.run());
+				}
+				this.playerCubeMap.removeEntry(this);
+			}
+			return;
+		}
 
 		if (this.isSentToPlayers()) {
-			long cubeAddress = getAddress(this.getColumn().xPosition, this.getColumn().zPosition);
-			PacketDispatcher.sendTo(new PacketUnloadColumn(cubeAddress), player);
+			PacketDispatcher.sendTo(new PacketUnloadColumn(getPos()), player);
 		}
 
 		this.getPlayers().remove(player);
@@ -118,6 +138,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 
 	//providePlayerChunk - ok
 
+	// CHECKED: 1.10.2-12.18.1.2092
 	@Override
 	//actually sendToPlayers
 	public boolean sentToPlayers() {
@@ -142,7 +163,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 
 	@Override
 	@Deprecated
-	public void sendNearbySpecialEntities(@Nonnull EntityPlayerMP player) {
+	public void sendNearbySpecialEntities(EntityPlayerMP player) {
 		//done by cube watcher
 	}
 
@@ -151,22 +172,26 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry {
 	@Override
 	@Deprecated
 	public void blockChanged(int x, int y, int z) {
-		//TODO: call CubeWatcher equivalent
+		this.playerCubeMap.getCubeWatcher(CubeCoords.fromBlockCoords(x, y, z)).blockChanged(x, y, z);
 	}
 
 	@Override
 	public void update() {
-
+		//no-op, handles by cube entries
 	}
 
 	//containsPlayer, hasPlayerMatching, hasPlayerMatchingInRange, isAddedToChunkUpdateQueue, getChunk, getClosestPlayerDistance - ok
 
-	public boolean hasPlayers() {
-		return false;
-	}
-
 	@Nullable
 	public Column getColumn() {
 		return (Column) this.getChunk();
+	}
+
+	private boolean isLoading() {
+		try {
+			return (boolean) isLoading.invoke(this);
+		} catch (Throwable throwable) {
+			throw new RuntimeException(throwable);
+		}
 	}
 }

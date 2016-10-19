@@ -23,11 +23,11 @@ import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
 import cubicchunks.server.ServerCubeCache;
 import cubicchunks.server.chunkio.CubeIO;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
@@ -45,7 +45,6 @@ import java.util.function.Consumer;
 /**
  * Brazenly copied from Forge and Sponge and reimplemented to suit our needs: Load cubes and columns outside the main
  * thread, then synchronize at the start of the next tick
- * TODO licensing foo - Forge uses GPL, Sponge uses MIT, so we should be fine with MIT, too
  */
 public class AsyncWorldIOExecutor {
 
@@ -79,7 +78,7 @@ public class AsyncWorldIOExecutor {
 	 * @return The loaded cube, or null if either not present or the load failed
 	 */
 	@Nullable
-	public static Cube syncCubeLoad(World world, CubeIO loader, int y, Column column) {
+	public static Cube syncCubeLoad(ICubicWorld world, CubeIO loader, int y, Column column) {
 		QueuedCube key = new QueuedCube(column.getX(), y, column.getZ(), world);
 		AsyncCubeIOProvider task = cubeTasks.remove(key); // Remove task because we will call the sync callbacks directly
 		if (task != null) {
@@ -102,7 +101,7 @@ public class AsyncWorldIOExecutor {
 	 *
 	 * @return The loaded column
 	 */
-	public static Column syncColumnLoad(World world, CubeIO loader, int x, int z) {
+	public static Column syncColumnLoad(ICubicWorld world, CubeIO loader, int x, int z) {
 		QueuedColumn key = new QueuedColumn(x, z, world);
 		AsyncColumnIOProvider task = columnTasks.remove(key); // Remove task because we will call the sync callbacks directly
 		if (task != null) {
@@ -150,7 +149,7 @@ public class AsyncWorldIOExecutor {
 	 * @param z cube z position
 	 * @param runnable The callback
 	 */
-	public static void queueCubeLoad(World world, CubeIO loader, ServerCubeCache cache, int x, int y, int z, Consumer<Cube> runnable) {
+	public static void queueCubeLoad(ICubicWorld world, CubeIO loader, ServerCubeCache cache, int x, int y, int z, Consumer<Cube> runnable) {
 		cache.asyncGetColumn(x, z, IProviderExtras.Requirement.LOAD, column -> {
 			if (column == null) {
 				runnable.accept(null);
@@ -170,7 +169,7 @@ public class AsyncWorldIOExecutor {
 	 * @param y cube y position within the column
 	 * @param runnable The callback
 	 */
-	public static void queueCubeLoad(World world, CubeIO loader, Column column, int y, Consumer<Cube> runnable) {
+	public static void queueCubeLoad(ICubicWorld world, CubeIO loader, Column column, int y, Consumer<Cube> runnable) {
 		QueuedCube key = new QueuedCube(column.getX(), y, column.getZ(), world);
 		AsyncCubeIOProvider task = cubeTasks.get(key);
 		if (task == null) {
@@ -192,7 +191,7 @@ public class AsyncWorldIOExecutor {
 	 * @param z column z position
 	 * @param runnable The callback
 	 */
-	public static void queueColumnLoad(World world, CubeIO loader, int x, int z, Consumer<Column> runnable) {
+	public static void queueColumnLoad(ICubicWorld world, CubeIO loader, int x, int z, Consumer<Column> runnable) {
 		QueuedColumn key = new QueuedColumn(x, z, world);
 		AsyncColumnIOProvider task = columnTasks.get(key);
 		if (task == null) {
@@ -214,7 +213,7 @@ public class AsyncWorldIOExecutor {
 	 * @param z cube z position
 	 * @param runnable The runnable that should be dropped
 	 */
-	public static void dropQueuedCubeLoad(World world, int x, int y, int z, Consumer<Cube> runnable) {
+	public static void dropQueuedCubeLoad(ICubicWorld world, int x, int y, int z, Consumer<Cube> runnable) {
 		QueuedCube key = new QueuedCube(x, y, z, world);
 		AsyncCubeIOProvider task = cubeTasks.get(key);
 		if (task == null) {
@@ -239,7 +238,7 @@ public class AsyncWorldIOExecutor {
 	 * @param z column z postion
 	 * @param runnable The runnable that should be dropped
 	 */
-	public static void dropQueuedColumnLoad(World world, int x, int z, Consumer<Column> runnable) {
+	public static void dropQueuedColumnLoad(ICubicWorld world, int x, int z, Consumer<Column> runnable) {
 		QueuedColumn key = new QueuedColumn(x, z, world);
 		AsyncColumnIOProvider task = columnTasks.get(key);
 		if (task == null) {

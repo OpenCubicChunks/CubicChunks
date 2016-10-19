@@ -24,6 +24,7 @@
 package cubicchunks.network;
 
 import com.google.common.collect.Iterables;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
@@ -41,14 +42,14 @@ import java.util.List;
 public class PacketCube implements IMessage {
 
 	private Type type;
-	private long cubeAddress;
+	private CubeCoords cubePos;
 	private byte[] data;
 	private List<NBTTagCompound> tileEntityTags;
 
 	public PacketCube() {}
 
 	public PacketCube(Cube cube, Type type) {
-		this.cubeAddress = cube.getAddress();
+		this.cubePos = cube.getCoords();
 		this.data = new byte[WorldEncoder.getEncodedSize(cube)];
 		PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
 
@@ -64,7 +65,7 @@ public class PacketCube implements IMessage {
 
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		this.cubeAddress = buf.readLong();
+		this.cubePos = new CubeCoords(buf.readInt(), buf.readInt(), buf.readInt());
 		this.type = Type.values()[buf.readByte()];
 		this.data = new byte[buf.readInt()];
 		buf.readBytes(this.data);
@@ -77,7 +78,9 @@ public class PacketCube implements IMessage {
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		buf.writeLong(this.cubeAddress);
+		buf.writeInt(cubePos.getCubeX());
+		buf.writeInt(cubePos.getCubeY());
+		buf.writeInt(cubePos.getCubeZ());
 		buf.writeByte(this.type.ordinal());
 		buf.writeInt(this.data.length);
 		buf.writeBytes(this.data);
@@ -87,8 +90,8 @@ public class PacketCube implements IMessage {
 		}
 	}
 
-	public long getCubeAddress() {
-		return cubeAddress;
+	public CubeCoords getCubePos() {
+		return cubePos;
 	}
 
 	public byte[] getData() {

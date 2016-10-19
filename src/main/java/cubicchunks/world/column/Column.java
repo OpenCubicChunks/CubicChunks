@@ -35,6 +35,7 @@ import cubicchunks.world.OpacityIndex;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
@@ -258,6 +259,9 @@ public class Column extends Chunk {
 	//forward to cube
 	@Override
 	public void addEntity(Entity entity) {
+		if(entity instanceof EntityPlayerMP) {
+			int i = 0;
+		}
 		getCube(Coords.getCubeYForEntity(entity)).addEntity(entity);
 	}
 

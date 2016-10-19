@@ -27,7 +27,9 @@ import com.carrotsearch.hppc.IntHashSet;
 import com.carrotsearch.hppc.IntSet;
 import com.carrotsearch.hppc.cursors.IntCursor;
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubeCoords;
 import cubicchunks.world.cube.Cube;
+import gnu.trove.TShortCollection;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -36,31 +38,30 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import java.util.Collection;
+import static net.minecraftforge.fml.common.network.ByteBufUtils.readVarInt;
 
 public class PacketCubeBlockChange implements IMessage {
 
 	public int[] heightValues;
-	public long cubeAddress;
-	public int[] localAddresses;
+	public CubeCoords cubePos;
+	public short[] localAddresses;
 	public IBlockState[] blockStates;
 
 	public PacketCubeBlockChange() {}
 
-	public PacketCubeBlockChange(Cube cube, Collection<Integer> localAddresses) {
-		this.cubeAddress = cube.getAddress();
-		this.localAddresses = new int[localAddresses.size()];
+	public PacketCubeBlockChange(Cube cube, TShortCollection localAddresses) {
+		this.cubePos = cube.getCoords();
+		this.localAddresses = localAddresses.toArray();
 		this.blockStates = new IBlockState[localAddresses.size()];
-		int i = 0;
+		int i = localAddresses.size() - 1;
 		IntSet xzAddresses = new IntHashSet();
-		for (int localAddress : localAddresses) {
-			this.localAddresses[i] = localAddress;
+		for (; i >= 0; i--) {
+			int localAddress = this.localAddresses[i];
 			int x = AddressTools.getLocalX(localAddress);
 			int y = AddressTools.getLocalY(localAddress);
 			int z = AddressTools.getLocalZ(localAddress);
 			this.blockStates[i] = cube.getBlockState(x, y, z);
 			xzAddresses.add(x | z << 4);
-			i++;
 		}
 		this.heightValues = new int[xzAddresses.size()];
 		i = 0;
@@ -75,14 +76,14 @@ public class PacketCubeBlockChange implements IMessage {
 	@SuppressWarnings("deprecation") // Forge thinks we are trying to register a block or something :P
 	@Override
 	public void fromBytes(ByteBuf in) {
-		this.cubeAddress = in.readLong();
+		this.cubePos = new CubeCoords(in.readInt(), in.readInt(), in.readInt());
 		short numBlocks = in.readShort();
-		localAddresses = new int[numBlocks];
+		localAddresses = new short[numBlocks];
 		blockStates = new IBlockState[numBlocks];
 
 		for (int i = 0; i < numBlocks; i++) {
-			localAddresses[i] = in.readInt();
-			blockStates[i] = Block.BLOCK_STATE_IDS.getByValue(ByteBufUtils.readVarInt(in, 4));
+			localAddresses[i] = in.readShort();
+			blockStates[i] = Block.BLOCK_STATE_IDS.getByValue(readVarInt(in, 4));
 		}
 		int numHmapChanges = in.readUnsignedByte();
 		heightValues = new int[numHmapChanges];
@@ -94,10 +95,12 @@ public class PacketCubeBlockChange implements IMessage {
 	@SuppressWarnings("deprecation")
 	@Override
 	public void toBytes(ByteBuf out) {
-		out.writeLong(cubeAddress);
+		out.writeInt(cubePos.getCubeX());
+		out.writeInt(cubePos.getCubeY());
+		out.writeInt(cubePos.getCubeZ());
 		out.writeShort(localAddresses.length);
 		for (int i = 0; i < localAddresses.length; i++) {
-			out.writeInt(localAddresses[i]);
+			out.writeShort(localAddresses[i]);
 			ByteBufUtils.writeVarInt(out, Block.BLOCK_STATE_IDS.get(blockStates[i]), 4);
 		}
 		out.writeByte(heightValues.length);

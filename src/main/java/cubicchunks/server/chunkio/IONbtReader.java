@@ -173,9 +173,6 @@ public class IONbtReader {
 			}
 
 			entity.addedToChunk = true;
-			entity.chunkCoordX = cube.getX();
-			entity.chunkCoordY = cube.getY();
-			entity.chunkCoordZ = cube.getZ();
 		});
 	}
 
