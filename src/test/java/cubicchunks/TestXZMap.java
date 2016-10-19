@@ -23,9 +23,6 @@
  */
 package cubicchunks;
 
-import com.sun.jndi.cosnaming.IiopUrl;
-import cubicchunks.util.XYZAddressable;
-import cubicchunks.util.XYZMap;
 import cubicchunks.util.XZAddressable;
 import cubicchunks.util.XZMap;
 import org.junit.Test;

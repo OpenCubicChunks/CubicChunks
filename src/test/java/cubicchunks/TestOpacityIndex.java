@@ -24,12 +24,12 @@
 package cubicchunks;
 
 import com.google.common.collect.Lists;
-import cubicchunks.launch.LaunchWrapperTestRunner;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.world.OpacityIndex;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.spongepowered.test.launch.LaunchWrapperTestRunner;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
