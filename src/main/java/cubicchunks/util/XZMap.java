@@ -26,12 +26,12 @@ package cubicchunks.util;
 import java.util.Iterator;
 
 /**
- * Hash table implementation for objects in a 3-dimensional cartesian coordinate system.
- * @see XYZAddressable
+ * Hash table implementation for objects in a 2-dimensional cartesian coordinate system.
+ * @see XZAddressable
  *
  * @param <T> class of the objects to be contained in this map
  */
-public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
+public class XZMap<T extends XZAddressable> implements Iterable<T> {
 
 	/**
 	 * A larger prime number used as seed for hash calculation.
@@ -42,7 +42,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	/**
 	 * backing array containing all elements of this map
 	 */
-	private XYZAddressable[] buckets;
+	private XZAddressable[] buckets;
 
 	/**
 	 * the current number of elements in this map
@@ -66,13 +66,13 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
 
 	/**
-	 * Creates a new XYZMap with the given load factor and initial capacity. The map will automatically grow if
+	 * Creates a new XZMap with the given load factor and initial capacity. The map will automatically grow if
 	 * the specified load is surpassed.
 	 *
 	 * @param loadFactor the load factor
 	 * @param capacity the initial capacity
 	 */
-	public XYZMap(float loadFactor, int capacity) {
+	public XZMap(float loadFactor, int capacity) {
 
 		if (loadFactor > 1.0) {
 			throw new IllegalArgumentException("You really dont want to be using a " + loadFactor + " load loadFactor with this hash table!");
@@ -84,7 +84,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 		while (tCapacity < capacity) {
 			tCapacity <<= 1;
 		}
-		this.buckets = new XYZAddressable[tCapacity];
+		this.buckets = new XZAddressable[tCapacity];
 
 		this.refreshFields();
 	}
@@ -104,15 +104,12 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * Computes a 32b hash based on the given coordinates.
 	 *
 	 * @param x the x-coordinate
-	 * @param y the y-coordinate
 	 * @param z the z-coordinate
 	 * @return a 32b hash based on the given coordinates
 	 */
-	private static int hash(int x, int y, int z){
+	private static int hash(int x, int z){
 		int hash = HASH_SEED;
 		hash += x;
-		hash *= HASH_SEED;
-		hash += y;
 		hash *= HASH_SEED;
 		hash += z;
 		hash *= HASH_SEED;
@@ -123,12 +120,11 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * Computes the desired bucket's index for the given coordinates, based on the map's current capacity.
 	 *
 	 * @param x the x-coordinate
-	 * @param y the y-coordinate
 	 * @param z the z-coordinate
 	 * @return the desired bucket's index for the given coordinates
 	 */
-	private int getIndex(int x, int y, int z) {
-		return hash(x, y, z) & this.mask;
+	private int getIndex(int x, int z) {
+		return hash(x, z) & this.mask;
 	}
 
 	/**
@@ -143,7 +139,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
 
 	/**
-	 * Associates the given value with its xyz-coordinates. If the map previously contained a mapping for these
+	 * Associates the given value with its xz-coordinates. If the map previously contained a mapping for these
 	 * coordinates, the old value is replaced.
 	 *
 	 * @param value value to be associated with its coordinates
@@ -153,16 +149,15 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	public T put(T value) {
 
 		int x = value.getX();
-		int y = value.getY();
 		int z = value.getZ();
-		int index = getIndex(x, y, z);
+		int index = getIndex(x, z);
 
 		// find the closest empty space or the element to be replaced
-		XYZAddressable bucket = this.buckets[index];
+		XZAddressable bucket = this.buckets[index];
 		while (bucket != null) {
 
 			// If there exists an element at the given element's position, overwrite it.
-			if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
+			if (bucket.getX() == x && bucket.getZ() == z) {
 				this.buckets[index] = value;
 				return (T) bucket;
 			}
@@ -187,22 +182,21 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * Removes and returns the entry associated with the given coordinates.
 	 *
 	 * @param x the x-coordinate
-	 * @param y the y-coordinate
 	 * @param z the z-coordinate
 	 * @return the entry associated with the specified coordinates or null if no such value exists
 	 */
 	@SuppressWarnings("unchecked")
-	public T remove(int x, int y, int z) {
+	public T remove(int x, int z) {
 
-		int index = getIndex(x, y, z);
+		int index = getIndex(x, z);
 
 		// Search for the element. Only the buckets from the element's supposed index up to the next free slot must
 		// be checked.
-		XYZAddressable bucket = this.buckets[index];
+		XZAddressable bucket = this.buckets[index];
 		while (bucket != null) {
 
 			// If the correct bucket was found, remove it.
-			if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
+			if (bucket.getX() == x && bucket.getZ() == z) {
 				--this.size;
 				this.collapseBucket(index);
 				return (T) bucket;
@@ -220,20 +214,19 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * Returns the value associated with the given coordinates or null if no such value exists.
 	 *
 	 * @param x the x-coordinate
-	 * @param y the y-coordinate
 	 * @param z the z-coordinate
 	 * @return the entry associated with the specified coordinates or null if no such value exists
 	 */
 	@SuppressWarnings("unchecked")
-	public T get(int x, int y, int z) {
+	public T get(int x, int z) {
 
-		int index = getIndex(x, y, z);
+		int index = getIndex(x, z);
 
-		XYZAddressable bucket = this.buckets[index];
+		XZAddressable bucket = this.buckets[index];
 		while (bucket != null) {
 
 			// If the correct bucket was found, return it.
-			if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
+			if (bucket.getX() == x && bucket.getZ() == z) {
 				return (T) bucket;
 			}
 
@@ -251,14 +244,14 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 */
 	private void grow() {
 
-		XYZAddressable[] oldBuckets = this.buckets;
+		XZAddressable[] oldBuckets = this.buckets;
 
 		// double the size!
-		this.buckets = new XYZAddressable[this.buckets.length*2];
+		this.buckets = new XZAddressable[this.buckets.length*2];
 		this.refreshFields();
 
 		// Move the old entries to the new array.
-		for (XYZAddressable oldBucket : oldBuckets) {
+		for (XZAddressable oldBucket : oldBuckets) {
 
 			// Skip empty buckets.
 			if (oldBucket == null) {
@@ -266,8 +259,8 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 			}
 
 			// Get the desired index of the old bucket and insert it into the first available slot.
-			int index = getIndex(oldBucket.getX(), oldBucket.getY(), oldBucket.getZ());
-			XYZAddressable bucket = this.buckets[index];
+			int index = getIndex(oldBucket.getX(), oldBucket.getZ());
+			XZAddressable bucket = this.buckets[index];
 			while (bucket != null) {
 				bucket = this.buckets[index = getNextIndex(index)];
 			}
@@ -287,7 +280,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 			currentIndex = getNextIndex(currentIndex);
 
 			// If there exists no element at the given index, there is nothing to fill the hole with.
-			XYZAddressable bucket = this.buckets[currentIndex];
+			XZAddressable bucket = this.buckets[currentIndex];
 			if (bucket == null) {
 				this.buckets[hole] = null;
 				return;
@@ -295,7 +288,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
 			// If the hole lies to the left of the currentIndex and to the right of the targetIndex, move the current
 			// element. These if conditions are necessary due to the bucket array wrapping around.
-			int targetIndex = getIndex(bucket.getX(), bucket.getY(), bucket.getZ());
+			int targetIndex = getIndex(bucket.getX(),bucket.getZ());
 
 			// normal
 			if (hole < currentIndex) {
