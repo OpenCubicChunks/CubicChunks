@@ -32,8 +32,6 @@ import net.minecraft.world.biome.Biome;
 
 public interface ICubicWorldServer extends ICubicWorld {
 
-	void generateWorld();
-
 	ServerCubeCache getCubeCache();
 
 	PlayerCubeMap getPlayerCubeMap();

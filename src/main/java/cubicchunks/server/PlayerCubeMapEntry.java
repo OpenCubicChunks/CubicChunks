@@ -30,6 +30,7 @@ import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadCube;
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.ticket.ITicket;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.cube.Cube;
@@ -53,7 +54,7 @@ import static cubicchunks.util.AddressTools.getY;
 import static cubicchunks.util.AddressTools.getZ;
 import static cubicchunks.util.Coords.localToBlock;
 
-public class PlayerCubeMapEntry {
+public class PlayerCubeMapEntry implements ITicket{
 
 	private final ServerCubeCache cubeCache;
 	private PlayerCubeMap playerCubeMap;
@@ -67,9 +68,14 @@ public class PlayerCubeMapEntry {
 	public PlayerCubeMapEntry(PlayerCubeMap playerCubeMap, int cubeX, int cubeY, int cubeZ) {
 		this.playerCubeMap = playerCubeMap;
 		this.cubeCache = playerCubeMap.getWorld().getCubeCache();
+
 		this.cube = this.cubeCache.getCube(
 				cubeX, cubeY, cubeZ,
 				IProviderExtras.Requirement.LOAD);//TODO: async loading
+		if(this.cube != null){
+			this.cube.getTickets().add(this);
+		}
+
 		this.players = new TIntObjectHashMap<>();
 		this.previousWorldTime = 0;
 		this.dirtyBlocks = new TreeSet<>();
@@ -118,6 +124,7 @@ public class PlayerCubeMapEntry {
 
 			if (this.players.isEmpty()) {
 				playerCubeMap.removeEntry(this);
+				cube.getTickets().remove(this); // remove the ticket, so this Cube can unload
 			}
 		}
 	}
@@ -132,6 +139,9 @@ public class PlayerCubeMapEntry {
 			this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT);
 		} else {
 			this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LOAD);
+		}
+		if(this.cube != null){
+			this.cube.getTickets().add(this);
 		}
 		playerCubeMap.getWorld().getProfiler().endSection();
 
@@ -294,5 +304,9 @@ public class PlayerCubeMapEntry {
 
 	public long getCubeAddress() {
 		return cubeAddress;
+	}
+
+	@Override public boolean shouldTick(){
+		return true; // Cubes that players can see should tick
 	}
 }

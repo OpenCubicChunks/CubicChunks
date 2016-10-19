@@ -29,6 +29,7 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.util.XYZAddressable;
+import cubicchunks.util.ticket.TicketList;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
@@ -69,9 +70,7 @@ public class Cube implements XYZAddressable {
 
 	private static final Logger LOGGER = CubicChunks.LOGGER;
 
-	//used to track if the cube should be unloaded or not, done instead of removing cube from
-	//unloadQueue each time something loads it
-	public  boolean unloaded;
+	private TicketList tickets; // tickets prevent this Cube from being unloaded
 
 	private boolean isModified = false;
 	private boolean isPopulated = false;
@@ -82,8 +81,8 @@ public class Cube implements XYZAddressable {
 	private Column column;
 
 	private CubeCoords coords;
-	private ExtendedBlockStorage storage;
 
+	private ExtendedBlockStorage storage;
 	private EntityContainer entities;
 	private Map<BlockPos, TileEntity> tileEntityMap;
 
@@ -100,6 +99,8 @@ public class Cube implements XYZAddressable {
 		this.world = column.getCubicWorld();
 		this.column = column;
 		this.coords = new CubeCoords(column.getX(), cubeY, column.getZ());
+
+		this.tickets = new TicketList();
 
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new HashMap<>();
@@ -162,12 +163,8 @@ public class Cube implements XYZAddressable {
 		} catch (Throwable t) {
 			CrashReport report = CrashReport.makeCrashReport(t, "Getting block state");
 			CrashReportCategory category = report.makeCategory("Block being got");
-			category.setDetail("Location", new ICrashReportDetail<String>() {
-				@Override
-				public String call() throws Exception {
-					return CrashReportCategory.getCoordinateInfo(blockX, blockY, blockZ);
-				}
-			});
+			category.setDetail("Location", () ->
+					CrashReportCategory.getCoordinateInfo(blockX, blockY, blockZ));
 			throw new ReportedException(report);
 		}
 	}
@@ -570,6 +567,14 @@ public class Cube implements XYZAddressable {
 		// tell the world to forget about entities
 		this.world.unloadEntities(this.entities.getEntities());
 
+		for(Entity entity : this.entities.getEntities()){
+			//CHECKED: 1.10.2-12.18.1.2092
+			entity.addedToChunk = false; // World tries to remove entities from Cubes
+			                             // if (addedToCube || Column is loaded)
+			                             // so we need to set addedToChunk to false as a hack!
+			                             // else World would reload this Cube!
+		}
+
 		// tell the world to forget about tile entities
 		for (TileEntity blockEntity : this.tileEntityMap.values()) {
 			this.world.removeTileEntity(blockEntity.getPos());
@@ -583,6 +588,10 @@ public class Cube implements XYZAddressable {
 	public void markSaved() {
 		this.entities.markSaved(this.world.getTotalWorldTime());
 		this.isModified = false;
+	}
+
+	public TicketList getTickets(){
+		return tickets;
 	}
 
 	public void markForRenderUpdate() {
@@ -642,13 +651,6 @@ public class Cube implements XYZAddressable {
 
 	public boolean isInitialLightingDone() {
 		return isInitialLightingDone;
-	}
-
-	/**
-	 * Lights up all blocks that will definitely be lit. It's faster than using world.checkLightFor on everything.
-	 */
-	public void initSkyLight() {
-		((ICubicWorldServer)this.getWorld()).getFirstLightProcessor().initializeSkylight(this);
 	}
 
 	public static class LightUpdateData {

@@ -44,7 +44,7 @@ class SkyLightCubeDiffuseCalculator {
 	}
 
 	static boolean calculate(Column column, int localX, int localZ, int cubeY, int minYLocal, int maxYLocal) {
-		if (column instanceof BlankColumn || column.getCube(cubeY) == null) {
+		if (column instanceof BlankColumn || column.getLoadedCube(cubeY) == null) {
 			return true;
 		}
 		// update this block and its xz neighbors
