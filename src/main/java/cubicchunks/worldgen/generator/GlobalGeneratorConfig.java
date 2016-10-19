@@ -23,7 +23,7 @@
  */
 package cubicchunks.worldgen.generator;
 
-import cubicchunks.util.Coords;
+import cubicchunks.world.cube.Cube;
 
 public class GlobalGeneratorConfig {
 	public static final int SEA_LEVEL = 64;
@@ -34,7 +34,7 @@ public class GlobalGeneratorConfig {
 	public static final int Y_SECTION_SIZE = 8 + 1;
 	public static final int Z_SECTION_SIZE = 4 + 1;
 
-	public static final int X_SECTIONS = Coords.CUBE_MAX_X/(X_SECTION_SIZE - 1) + 1;
-	public static final int Y_SECTIONS = Coords.CUBE_MAX_Y/(Y_SECTION_SIZE - 1) + 1;
-	public static final int Z_SECTIONS = Coords.CUBE_MAX_Z/(Z_SECTION_SIZE - 1) + 1;
+	public static final int X_SECTIONS = Cube.SIZE/(X_SECTION_SIZE - 1) + 1;
+	public static final int Y_SECTIONS = Cube.SIZE/(Y_SECTION_SIZE - 1) + 1;
+	public static final int Z_SECTIONS = Cube.SIZE/(Z_SECTION_SIZE - 1) + 1;
 }

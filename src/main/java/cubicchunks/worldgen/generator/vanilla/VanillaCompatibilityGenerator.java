@@ -106,7 +106,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 				.getBiomes(this.biomes, 
 						Coords.cubeToMinBlock(column.getX()),
 						Coords.cubeToMinBlock(column.getZ()),
-						Coords.CUBE_MAX_X, Coords.CUBE_MAX_Z);
+						Cube.SIZE, Cube.SIZE);
 
 		byte[] abyte = column.getBiomeArray();
 		for (int i = 0; i < abyte.length; ++i) {
@@ -124,9 +124,9 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 		CubePrimer primer = new CubePrimer();
 
 		if(cubeY < 0) {
-			for(int x = 0;x < Coords.CUBE_MAX_X;x++) {
-				for(int y = 0;y < Coords.CUBE_MAX_Y;y++) {
-					for(int z = 0;z < Coords.CUBE_MAX_Z;z++) {
+			for(int x = 0; x < Cube.SIZE; x++) {
+				for(int y = 0; y < Cube.SIZE; y++) {
+					for(int z = 0; z < Cube.SIZE; z++) {
 						primer.setBlockState(x, y, z, underBlock);
 					}
 				}
@@ -152,9 +152,9 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
 			ExtendedBlockStorage storage = lastChunk.getBlockStorageArray()[cubeY];
 			if(storage != null && !storage.isEmpty()) {
-				for(int x = 0;x < Coords.CUBE_MAX_X;x++) {
-					for(int y = 0;y < Coords.CUBE_MAX_Y;y++) {
-						for(int z = 0;z < Coords.CUBE_MAX_Z;z++) {
+				for(int x = 0; x < Cube.SIZE; x++) {
+					for(int y = 0; y < Cube.SIZE; y++) {
+						for(int z = 0; z < Cube.SIZE; z++) {
 							IBlockState state = storage.get(x, y, z);
 							primer.setBlockState(x, y, z, 
 									stripBadrock && state == badrock ? underBlock : state);

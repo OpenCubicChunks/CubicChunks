@@ -23,10 +23,10 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
-import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.util.StructureGenUtil;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -112,9 +112,9 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 		if (rand.nextInt(RAVINE_RARITY) != 0 || structureY > MAX_CUBE_Y) {
 			return;
 		}
-		double startX = localToBlock(structureX, rand.nextInt(Coords.CUBE_SIZE));
-		double startY = localToBlock(structureY, rand.nextInt(Coords.CUBE_SIZE));
-		double startZ = localToBlock(structureZ, rand.nextInt(Coords.CUBE_SIZE));
+		double startX = localToBlock(structureX, rand.nextInt(Cube.SIZE));
+		double startY = localToBlock(structureY, rand.nextInt(Cube.SIZE));
+		double startZ = localToBlock(structureZ, rand.nextInt(Cube.SIZE));
 
 		float vertDirectionAngle = rand.nextFloat()*(float) Math.PI*2.0F;
 		float horizDirectionAngle = (rand.nextFloat() - 0.5F)*2.0F/8.0F;
@@ -199,7 +199,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 			double zDist = ravineZ - generatedCubePos.getZCenter();
 			double maxStepsDist = maxWalkedDistance - walkedDistance;
 
-			double maxDistToCube = baseRavineSize + RAVINE_SIZE_ADD + Coords.CUBE_SIZE;
+			double maxDistToCube = baseRavineSize + RAVINE_SIZE_ADD + Cube.SIZE;
 			//can this cube be reached at all?
 			//if even after going max distance allowed by remaining steps, it's still too far - stop
 			//NOTE: don't check yDist, this is optimization and with Y scale stretched as much as with ravines
@@ -225,12 +225,12 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 		double genCubeCenterX = generatedCubePos.getXCenter();
 		double genCubeCenterY = generatedCubePos.getYCenter();
 		double genCubeCenterZ = generatedCubePos.getZCenter();
-		if (ravineX < genCubeCenterX - Coords.CUBE_SIZE - ravineSizeHoriz*2.0D ||
-				ravineY < genCubeCenterY - Coords.CUBE_SIZE - ravineSizeVert*2.0D ||
-				ravineZ < genCubeCenterZ - Coords.CUBE_SIZE - ravineSizeHoriz*2.0D ||
-				ravineX > genCubeCenterX + Coords.CUBE_SIZE + ravineSizeHoriz*2.0D ||
-				ravineY > genCubeCenterY + Coords.CUBE_SIZE + ravineSizeVert*2.0D ||
-				ravineZ > genCubeCenterZ + Coords.CUBE_SIZE + ravineSizeHoriz*2.0D) {
+		if (ravineX < genCubeCenterX - Cube.SIZE - ravineSizeHoriz*2.0D ||
+				ravineY < genCubeCenterY - Cube.SIZE - ravineSizeVert*2.0D ||
+				ravineZ < genCubeCenterZ - Cube.SIZE - ravineSizeHoriz*2.0D ||
+				ravineX > genCubeCenterX + Cube.SIZE + ravineSizeHoriz*2.0D ||
+				ravineY > genCubeCenterY + Cube.SIZE + ravineSizeVert*2.0D ||
+				ravineZ > genCubeCenterZ + Cube.SIZE + ravineSizeHoriz*2.0D) {
 			return;
 		}
 		int minLocalX = floor_double(ravineX - ravineSizeHoriz) - generatedCubePos.getMinBlockX() - 1;
@@ -241,9 +241,9 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 		int maxLocalZ = floor_double(ravineZ + ravineSizeHoriz) - generatedCubePos.getMinBlockZ() + 1;
 
 		//skip is if everything is outside of that cube
-		if (maxLocalX <= 0 || minLocalX >= Coords.CUBE_SIZE ||
-				maxLocalY <= 0 || minLocalY >= Coords.CUBE_SIZE ||
-				maxLocalZ <= 0 || minLocalZ >= Coords.CUBE_SIZE) {
+		if (maxLocalX <= 0 || minLocalX >= Cube.SIZE ||
+				maxLocalY <= 0 || minLocalY >= Cube.SIZE ||
+				maxLocalZ <= 0 || minLocalZ >= Cube.SIZE) {
 			return;
 		}
 		StructureBoundingBox boundingBox = new StructureBoundingBox(minLocalX, minLocalY, minLocalZ, maxLocalX, maxLocalY, maxLocalZ);
