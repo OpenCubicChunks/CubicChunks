@@ -33,6 +33,7 @@ import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.util.XYZAddressable;
+import cubicchunks.util.ticket.ITicket;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.cube.Cube;
@@ -55,11 +56,13 @@ import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PlayerCubeMapEntry implements XYZAddressable {
-
+public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 	private final Consumer<Cube> consumer = (c) -> {
 		this.cube = c;
 		this.loading = false;
+		if(this.cube != null) {
+			this.cube.getTickets().add(this);
+		}
 	};
 	private final ServerCubeCache cubeCache;
 	private PlayerCubeMap playerCubeMap;
@@ -115,6 +118,7 @@ public class PlayerCubeMapEntry implements XYZAddressable {
 							c -> this.cube = c);
 				}
 				playerCubeMap.removeEntry(this);
+				cube.getTickets().remove(this); // remove the ticket, so this Cube can unload
 			}
 			return;
 		}
@@ -149,6 +153,9 @@ public class PlayerCubeMapEntry implements XYZAddressable {
 			this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT);
 		} else {
 			this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LOAD);
+		}
+		if(this.cube != null){
+			this.cube.getTickets().add(this);
 		}
 		playerCubeMap.getWorld().getProfiler().endSection();
 
@@ -333,5 +340,9 @@ public class PlayerCubeMapEntry implements XYZAddressable {
 
 	@Override public int getZ() {
 		return this.cubePos.getCubeZ();
+	}
+
+	@Override public boolean shouldTick(){
+		return true; // Cubes that players can see should tick
 	}
 }

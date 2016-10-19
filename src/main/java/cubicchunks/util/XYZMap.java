@@ -189,7 +189,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * @param x the x-coordinate
 	 * @param y the y-coordinate
 	 * @param z the z-coordinate
-	 * @return the entry associated with the specified coordinates or null if no such value exists
+	 * @return the entry associated with the specified coordinates or null if no such entry exists
 	 */
 	@SuppressWarnings("unchecked")
 	public T remove(int x, int y, int z) {
@@ -214,6 +214,17 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
 		// nothing was removed
 		return null;
+	}
+
+	/**
+	 * Removes and returns the given value from this map. More specifically, removes the entry whose xyz-coordinates
+	 * equal the given value's coordinates.
+	 *
+	 * @param value the value to be removed
+	 * @return the entry associated with the given value's coordinates or null if no such entry exists
+	 */
+	public T remove(T value) {
+		return this.remove(value.getX(), value.getY(), value.getZ());
 	}
 
 	/**
@@ -245,6 +256,44 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 		return null;
 	}
 
+	/**
+	 * Returns true if there exists an entry associated with the given xyz-coordinates in this map.
+	 *
+	 * @param x the x-coordinate
+	 * @param y the z-coordinate
+	 * @param z the y-coordinate
+	 * @return true if there exists an entry associated with the given coordinates in this map
+	 */
+	public boolean contains(int x, int y, int z) {
+
+		int index = getIndex(x, y, z);
+
+		XYZAddressable bucket = this.buckets[index];
+		while (bucket != null) {
+
+			// If the correct bucket was found, return true.
+			if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
+				return true;
+			}
+
+			index = getNextIndex(index);
+			bucket = this.buckets[index];
+		}
+
+		// nothing was found
+		return false;
+	}
+
+	/**
+	 * Returns true if the given value is contained within this map. More specifically, returns true if there exists
+	 * an entry in this map whose xyz-coordinates equal the given value's coordinates.
+	 *
+	 * @param value the value
+	 * @return true if the given value is contained within this map
+	 */
+	public boolean contains(T value) {
+		return this.contains(value.getX(), value.getY(), value.getZ());
+	}
 
 	/**
 	 * Doubles the size of the backing array and redistributes all contained values accordingly.
@@ -328,34 +377,45 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	// Interface: Iterable<T> ------------------------------------------------------------------------------------------
 
 	public Iterator<T> iterator() {
-
-		int start;
-		for (start = 0; start < this.buckets.length; start++) {
-			if (this.buckets[start] != null) {
-				break;
-			}
-		}
-
-		final int f = start; // hacks just so I could use an anonymous class :P
-
 		return new Iterator<T>() {
-			int at = f;
+			int at = -1;
+			int next = -1;
 
 			@Override
 			public boolean hasNext() {
-				return at < buckets.length;
+				if(next > at){
+					return true;
+				}
+				for (next++; next < buckets.length; next++) {
+					if (buckets[next] != null) {
+						return true;
+					}
+				}
+				return false;
 			}
 
 			@Override
 			@SuppressWarnings("unchecked")
 			public T next() {
-				T ret = (T) buckets[at];
-				for (at++; at < buckets.length; at++) {
-					if (buckets[at] != null) {
-						break;
+				if(next > at){
+					at = next;
+					return (T)buckets[at];
+				}
+				for (next++; next < buckets.length; next++) {
+					if (buckets[next] != null) {
+						at = next;
+						return (T)buckets[at];
 					}
 				}
-				return ret;
+				return null;
+			}
+
+			//TODO: WARNING: risk of iterating over the same item more than once if this is used
+			//               do to items wrapping back around form the front of the buckets array
+			@Override
+			public void remove(){
+				collapseBucket(at);
+				next = at = at - 1; // There could be a new item in the removed bucket
 			}
 		};
 	}

@@ -23,10 +23,10 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
-import cubicchunks.util.Coords;
 import cubicchunks.util.CubeCoords;
 import cubicchunks.util.StructureGenUtil;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -35,7 +35,6 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 import java.util.Random;
 import java.util.function.Predicate;
 
-import static cubicchunks.util.Coords.CUBE_SIZE;
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
 import static cubicchunks.util.StructureGenUtil.normalizedDistance;
@@ -160,9 +159,9 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 		int nodes = this.rand.nextInt(this.rand.nextInt(this.rand.nextInt(MAX_INIT_NODES + 1) + 1) + 1);
 
 		for (int node = 0; node < nodes; ++node) {
-			double branchStartX = localToBlock(cubeXOrigin, this.rand.nextInt(CUBE_SIZE));
-			double branchStartY = localToBlock(cubeYOrigin, this.rand.nextInt(CUBE_SIZE));
-			double branchStartZ = localToBlock(cubeZOrigin, this.rand.nextInt(CUBE_SIZE));
+			double branchStartX = localToBlock(cubeXOrigin, this.rand.nextInt(Cube.SIZE));
+			double branchStartY = localToBlock(cubeYOrigin, this.rand.nextInt(Cube.SIZE));
+			double branchStartZ = localToBlock(cubeZOrigin, this.rand.nextInt(Cube.SIZE));
 			int subBranches = 1;
 
 			if (this.rand.nextInt(LARGE_NODE_RARITY) == 0) {
@@ -321,7 +320,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 			double zDist = caveZ - generatedCubePos.getZCenter();
 			double maxStepsDist = maxWalkedDistance - walkedDistance;
 			//CHANGE: multiply max(1, vertCaveSizeMod)
-			double maxDistToCube = baseCaveSize*max(1, vertCaveSizeMod) + CAVE_SIZE_ADD + Coords.CUBE_SIZE;
+			double maxDistToCube = baseCaveSize*max(1, vertCaveSizeMod) + CAVE_SIZE_ADD + Cube.SIZE;
 
 			//can this cube be reached at all?
 			//if even after going max distance allowed by remaining steps, it's still too far - stop
@@ -349,12 +348,12 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 
 		//Can current step position affect currently modified cube?
 		//TODO: is multiply by 2 needed?
-		if (caveX < genCubeCenterX - Coords.CUBE_SIZE - caveSizeHoriz*2.0D ||
-				caveY < genCubeCenterY - Coords.CUBE_SIZE - caveSizeVert*2.0D ||
-				caveZ < genCubeCenterZ - Coords.CUBE_SIZE - caveSizeHoriz*2.0D ||
-				caveX > genCubeCenterX + Coords.CUBE_SIZE + caveSizeHoriz*2.0D ||
-				caveY > genCubeCenterY + Coords.CUBE_SIZE + caveSizeVert*2.0D ||
-				caveZ > genCubeCenterZ + Coords.CUBE_SIZE + caveSizeHoriz*2.0D) {
+		if (caveX < genCubeCenterX - Cube.SIZE - caveSizeHoriz*2.0D ||
+				caveY < genCubeCenterY - Cube.SIZE - caveSizeVert*2.0D ||
+				caveZ < genCubeCenterZ - Cube.SIZE - caveSizeHoriz*2.0D ||
+				caveX > genCubeCenterX + Cube.SIZE + caveSizeHoriz*2.0D ||
+				caveY > genCubeCenterY + Cube.SIZE + caveSizeVert*2.0D ||
+				caveZ > genCubeCenterZ + Cube.SIZE + caveSizeHoriz*2.0D) {
 			return;
 		}
 		int minLocalX = floor_double(caveX - caveSizeHoriz) - generatedCubePos.getMinBlockX() - 1;
@@ -365,9 +364,9 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 		int maxLocalZ = floor_double(caveZ + caveSizeHoriz) - generatedCubePos.getMinBlockZ() + 1;
 
 		//skip is if everything is outside of that cube
-		if (maxLocalX <= 0 || minLocalX >= Coords.CUBE_SIZE ||
-				maxLocalY <= 0 || minLocalY >= Coords.CUBE_SIZE ||
-				maxLocalZ <= 0 || minLocalZ >= Coords.CUBE_SIZE) {
+		if (maxLocalX <= 0 || minLocalX >= Cube.SIZE ||
+				maxLocalY <= 0 || minLocalY >= Cube.SIZE ||
+				maxLocalZ <= 0 || minLocalZ >= Cube.SIZE) {
 			return;
 		}
 		StructureBoundingBox boundingBox = new StructureBoundingBox(minLocalX, minLocalY, minLocalZ, maxLocalX, maxLocalY, maxLocalZ);

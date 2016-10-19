@@ -92,7 +92,7 @@ class SkyLightUpdateCubeSelector {
 				//so cube that contains it needs update
 				cubesToDiffuse.add(cube.getY());
 				//light can propagate to cube below too
-				if ((cube = column.getCube(maxCubeY - 1)) != null) {
+				if ((cube = column.getLoadedCube(maxCubeY - 1)) != null) {
 					cubesToDiffuse.add(cube.getY());
 				}
 			} else if (cubeY == maxCubeY - 1) {

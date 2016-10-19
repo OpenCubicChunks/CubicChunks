@@ -23,6 +23,7 @@
  */
 package cubicchunks.util;
 
+import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -31,12 +32,6 @@ import net.minecraft.util.math.ChunkPos;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static cubicchunks.util.Coords.CUBE_MAX_X;
-import static cubicchunks.util.Coords.CUBE_MAX_Y;
-import static cubicchunks.util.Coords.CUBE_MAX_Z;
-import static cubicchunks.util.Coords.HALF_CUBE_MAX_X;
-import static cubicchunks.util.Coords.HALF_CUBE_MAX_Y;
-import static cubicchunks.util.Coords.HALF_CUBE_MAX_Z;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.getCubeXForEntity;
 import static cubicchunks.util.Coords.getCubeYForEntity;
@@ -149,7 +144,7 @@ public class CubeCoords {
 	 * @return The x center of the cube.
 	 */
 	public int getXCenter() {
-		return cubeX*CUBE_MAX_X + HALF_CUBE_MAX_X;
+		return cubeX*Cube.SIZE + Cube.SIZE/2;
 	}
 
 	/**
@@ -158,7 +153,7 @@ public class CubeCoords {
 	 * @return The y center of the cube.
 	 */
 	public int getYCenter() {
-		return cubeY*CUBE_MAX_Y + HALF_CUBE_MAX_Y;
+		return cubeY*Cube.SIZE + Cube.SIZE/2;
 	}
 
 	/**
@@ -167,7 +162,7 @@ public class CubeCoords {
 	 * @return The z center of the cube.
 	 */
 	public int getZCenter() {
-		return cubeZ*CUBE_MAX_Z + HALF_CUBE_MAX_Z;
+		return cubeZ*Cube.SIZE + Cube.SIZE/2;
 	}
 
 	public int getMinBlockX() {

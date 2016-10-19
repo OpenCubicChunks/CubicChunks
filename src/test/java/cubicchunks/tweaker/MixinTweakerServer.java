@@ -21,12 +21,19 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.launch;
+package cubicchunks.tweaker;
 
-public final class TestMain {
-	private TestMain() {}
+import cubicchunks.asm.CoreModLoadingPlugin;
+import net.minecraft.launchwrapper.LaunchClassLoader;
+import org.spongepowered.asm.mixin.MixinEnvironment;
+import org.spongepowered.test.launch.AbstractTestTweaker;
 
-	public static void main(String[] args) {
-		//do nothing
+public class MixinTweakerServer extends AbstractTestTweaker {
+	@Override
+	public void injectIntoClassLoader(LaunchClassLoader loader) {
+		super.injectIntoClassLoader(loader);
+		registerAccessTransformer("META-INF/cubicchunks_at.cfg");
+		CoreModLoadingPlugin.initMixin();
+		MixinEnvironment.getDefaultEnvironment().setSide(MixinEnvironment.Side.SERVER);
 	}
 }

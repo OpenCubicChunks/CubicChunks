@@ -21,49 +21,16 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.server;
+package cubicchunks.util.ticket;
 
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
+public interface ITicket {
 
-import java.util.Iterator;
-
-/**
- * Chunk Garbage Collector, automatically unloads unused chunks.
- */
-public class ChunkGc {
-	// GC every 10 seconds by default
-	private static final int GC_INTERVAL = 20*10;
-
-	private final ServerCubeCache cubeCache;
-
-	private int tick = 0;
-
-	public ChunkGc(ServerCubeCache cubeCache) {
-		this.cubeCache = cubeCache;
-	}
-
-	public void tick() {
-		tick++;
-		if (tick > GC_INTERVAL) {
-			tick = 0;
-			chunkGc();
-		}
-	}
-
-	private void chunkGc() {
-		Iterator<Cube> cubeIt = cubeCache.cubesIterator();
-		while(cubeIt.hasNext()) {
-			if(cubeCache.tryUnloadCube(cubeIt.next())) {
-				cubeIt.remove();
-			}
-		}
-
-		Iterator<Column> columnIt = cubeCache.columnsIterator();
-		while(columnIt.hasNext()) {
-			if(cubeCache.tryUnloadColumn(columnIt.next())) {
-				columnIt.remove();
-			}
-		}
-	}
+	/**
+	 * Weather or not a cube with this ticket should tick.
+	 * (should blocks update, entities move around, and furnaces cook?)
+	 *
+	 * @param cube the cube that could be ticked
+	 * @return should cubes with this ticket tick
+	 */
+	boolean shouldTick();
 }

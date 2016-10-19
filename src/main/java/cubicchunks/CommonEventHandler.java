@@ -23,6 +23,7 @@
  */
 package cubicchunks;
 
+import cubicchunks.server.SpawnCubes;
 import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
@@ -30,6 +31,7 @@ import cubicchunks.world.type.ICubicWorldType;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -52,8 +54,9 @@ public class CommonEventHandler {
 		}
 
 		world.initCubicWorld();
+
 		if(!world.isRemote()) {
-			((ICubicWorldServer)world).generateWorld();
+			SpawnCubes.update(world);
 		}
 	}
 
@@ -63,6 +66,11 @@ public class CommonEventHandler {
 		//Forge (at least version 11.14.3.1521) doesn't call this event for client world.
 		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
 			world.tickCubicWorld();
+
+			if(!world.isRemote()) {
+				// There is no event for when the spawn location changes, so check every tick for now
+				SpawnCubes.update(world);
+			}
 		}
 	}
 

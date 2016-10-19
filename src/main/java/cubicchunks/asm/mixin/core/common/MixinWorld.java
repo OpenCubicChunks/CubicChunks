@@ -213,7 +213,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Override
 	public boolean testForCubes(CubeCoords start, CubeCoords end, Predicate<Cube> cubeAllowed) {
-		if (wgenFullRelight) {
+		if (wgenFullRelight) { //TODO: remove this hack!
 			return true;
 		}
 		// convert block bounds to chunk bounds
@@ -237,6 +237,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		return true;
 	}
 
+	// TODO: this method is just plain stupid (remove it)
 	@Override public Cube getCubeForAddress(long address) {
 		int x = AddressTools.getX(address);
 		int y = AddressTools.getY(address);
@@ -253,6 +254,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		return this.getCubeFromCubeCoords(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()));
 	}
 
+	// TODO: remove this hack
 	@Override public void setGeneratingWorld(boolean generating) {
 		this.wgenFullRelight = generating;
 	}

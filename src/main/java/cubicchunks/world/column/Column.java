@@ -120,8 +120,8 @@ public class Column extends Chunk {
 		// return this.getWorld().provider.getAverageGroundLevel();
 
 		int blockY = Coords.NO_HEIGHT;
-		for (int localX = 0; localX < Coords.CUBE_SIZE; localX++) {
-			for (int localZ = 0; localZ < Coords.CUBE_SIZE; localZ++) {
+		for (int localX = 0; localX < Cube.SIZE; localX++) {
+			for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
 				int y = this.opacityIndex.getTopBlockY(localX, localZ);
 				if (y > blockY) {
 					blockY = y;
@@ -132,9 +132,9 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	@Deprecated // Vanila can safely use this for block ticking, but just try to avoid it!
+	@Deprecated // Vanilla can safely use this for block ticking, but just try to avoid it!
 	public ExtendedBlockStorage[] getBlockStorageArray() {
-		return cubeMap.getStorageArrays();
+		return cubeMap.getStoragesToTick();
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -490,6 +490,15 @@ public class Column extends Chunk {
 		return true; //TODO: stub, replace with new UnsupportedOperationException();
 	}
 
+	public boolean shouldTick(){
+		for(Cube cube : cubeMap){
+			if(cube.getTickets().shouldTick()){
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public void removeInvalidTileEntity(@Nonnull BlockPos pos) {
 		throw new UnsupportedOperationException("Not implemented because not used");
@@ -534,8 +543,13 @@ public class Column extends Chunk {
 	}
 
 	public Collection<Cube> getLoadedCubes() {
-		return Collections.unmodifiableCollection(this.cubeMap.all());
+		return this.cubeMap.all();
 	}
+
+
+	// =========================================
+	// =======Mini CubeCache like methods=======
+	// =========================================
 
 	/**
 	 * Returns ordered Iterable of cubes. If startY < endY - order is bottom to top.
@@ -543,6 +557,10 @@ public class Column extends Chunk {
 	 */
 	public Iterable<Cube> getLoadedCubes(int startY, int endY) {
 		return this.cubeMap.cubes(startY, endY);
+	}
+
+	public Cube getLoadedCube(int cubeY){
+		return provider.getLoadedCube(getX(), cubeY, getZ());
 	}
 
 	public Cube getCube(int cubeY) {
@@ -554,7 +572,7 @@ public class Column extends Chunk {
 	}
 
 	public void addCube(Cube cube) {
-		this.cubeMap.put(cube.getY(), cube);
+		this.cubeMap.put(cube);
 	}
 
 	public Cube removeCube(int cubeY) {
@@ -564,6 +582,9 @@ public class Column extends Chunk {
 	public boolean hasLoadedCubes() {
 		return !this.cubeMap.isEmpty();
 	}
+
+	// ======= end cube cache like methods =======
+	// ===========================================
 
 	public void markSaved() {
 		this.setModified(false);
