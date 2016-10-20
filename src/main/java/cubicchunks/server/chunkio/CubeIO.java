@@ -181,7 +181,6 @@ public class CubeIO implements IThreadedFileIO {
 			// does the database have the cube?
 			byte[] data = this.cubes.get(address);
 			if (data == null) {
-				world.getProfiler().endSection();
 				return null;
 			}
 			nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(data));

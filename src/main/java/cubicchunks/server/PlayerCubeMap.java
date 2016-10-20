@@ -285,7 +285,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 				getWorld().getProfiler().startSection("chunk=" + pos);
 
-				boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated();
+				boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated() && watcher.getCube().isInitialLightingDone();
 				if (!success) {
 					boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
 					getWorld().getProfiler().startSection("generate");

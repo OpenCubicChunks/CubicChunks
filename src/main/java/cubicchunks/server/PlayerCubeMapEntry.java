@@ -104,7 +104,7 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 
 	// CHECKED: 1.10.2-12.18.1.2092
 	public void removePlayer(EntityPlayerMP player) {
-		if (!this.players.containsValue(player)) {
+		if (!this.players.containsKey(player.getEntityId())) {
 			return;
 		}
 		// If we haven't loaded yet don't load the chunk just so we can clean it up
@@ -141,7 +141,7 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 		if(loading) {
 			return false;
 		}
-		if(this.cube != null) {
+		if(this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone()))) {
 			return true;
 		}
 		int cubeX = cubePos.getCubeX();
@@ -176,7 +176,7 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 		}
 		PlayerCubeMapColumnEntry columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
 		//can't send cubes before columns
-		if(columnEntry == null || columnEntry.getColumn() == null) {
+		if(columnEntry == null || !columnEntry.isSentToPlayers()) {
 			return false;
 		}
 		this.dirtyBlocks.clear();
