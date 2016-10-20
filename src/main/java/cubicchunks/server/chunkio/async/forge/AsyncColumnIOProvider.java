@@ -44,9 +44,6 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Column> {
 			//MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Load(column, this.nbt)); // Don't call ChunkDataEvent.Load async
 			column.setLastSaveTime(this.colInfo.world.getTotalWorldTime());
 		}
-
-		// We run the callback even if nothing was loaded, to notify waiting processes that the load failed
-		runCallbacks();
 	}
 
 	@Override Column get() {

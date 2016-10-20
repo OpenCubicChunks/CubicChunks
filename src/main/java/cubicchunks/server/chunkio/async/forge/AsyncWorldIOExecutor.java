@@ -72,22 +72,27 @@ public class AsyncWorldIOExecutor {
 	 *
 	 * @param world The world in which the cube lies
 	 * @param loader The file loader for cubes
-	 * @param y cube y position
-	 * @param column The column of the cube
+	 * @param cache the cube cache used to load cubes and columns
+	 * @param cubeX X coordinate of the cube to load
+	 * @param cubeY Y coordinate of the cube to load
+	 * @param cubeZ Z coordinate of the cube to load
 	 *
 	 * @return The loaded cube, or null if either not present or the load failed
 	 */
 	@Nullable
-	public static Cube syncCubeLoad(ICubicWorld world, CubeIO loader, int y, Column column) {
-		QueuedCube key = new QueuedCube(column.getX(), y, column.getZ(), world);
+	public static Cube syncCubeLoad(ICubicWorld world, CubeIO loader, ServerCubeCache cache, int cubeX, int cubeY, int cubeZ) {
+		Column column = cache.loadChunk(cubeX, cubeZ);
+		QueuedCube key = new QueuedCube(cubeX, cubeY, cubeZ, world);
 		AsyncCubeIOProvider task = cubeTasks.remove(key); // Remove task because we will call the sync callbacks directly
 		if (task != null) {
 			runTask(task);
 		} else {
-			task = new AsyncCubeIOProvider(key, column, loader);
+			task = new AsyncCubeIOProvider(key, loader);
+			task.setColumn(column);
 			task.run();
+			task.runSynchronousPart();
 		}
-		task.runSynchronousPart();
+		task.runCallbacks();
 		return task.get();
 	}
 
@@ -109,8 +114,9 @@ public class AsyncWorldIOExecutor {
 		} else {
 			task = new AsyncColumnIOProvider(key, loader);
 			task.run();
+			task.runSynchronousPart();
 		}
-		task.runSynchronousPart();
+		task.runCallbacks();
 		return task.get();
 	}
 
@@ -150,36 +156,33 @@ public class AsyncWorldIOExecutor {
 	 * @param runnable The callback
 	 */
 	public static void queueCubeLoad(ICubicWorld world, CubeIO loader, ServerCubeCache cache, int x, int y, int z, Consumer<Cube> runnable) {
-		cache.asyncGetColumn(x, z, IProviderExtras.Requirement.LOAD, column -> {
-			if (column == null) {
-				runnable.accept(null);
-				return;
-			}
-			queueCubeLoad(world, loader, column, y, runnable);
-		});
-	}
 
-	/**
-	 * Queue a cube load, running the specified callback when the load has finished. This method expects the target
-	 * column to be already loaded, and skips a disk read for the column.
-	 *
-	 * @param world The world of the cube
-	 * @param loader The file loader for this world
-	 * @param column The column in which the cube should be placed.
-	 * @param y cube y position within the column
-	 * @param runnable The callback
-	 */
-	public static void queueCubeLoad(ICubicWorld world, CubeIO loader, Column column, int y, Consumer<Cube> runnable) {
-		QueuedCube key = new QueuedCube(column.getX(), y, column.getZ(), world);
+		QueuedCube key = new QueuedCube(x, y, z, world);
 		AsyncCubeIOProvider task = cubeTasks.get(key);
+
 		if (task == null) {
-			task = new AsyncCubeIOProvider(key, column, loader);
+			task = new AsyncCubeIOProvider(key, loader);
 			task.addCallback(runnable); // Add before calling execute for thread safety
 			cubeTasks.put(key, task);
 			pool.execute(task);
 		} else {
 			task.addCallback(runnable);
 		}
+
+		Column loadedColumn;
+		if((loadedColumn = cache.getLoadedChunk(x, z)) == null) {
+			AsyncCubeIOProvider finalTask = task;//because java compiler says "no"
+			cache.asyncGetColumn(x, z, IProviderExtras.Requirement.LIGHT, (column) -> {
+				if(column == null) {
+					runnable.accept(null);
+				}
+				finalTask.setColumn(column);
+			});
+		} else {
+			//it's already there, tell the task to use it
+			task.setColumn(loadedColumn);
+		}
+
 	}
 
 	/**
@@ -248,11 +251,12 @@ public class AsyncWorldIOExecutor {
 
 		task.removeCallback(runnable);
 
-		// TODO this is not threadsafe
 		if (!task.hasCallbacks()) {
 			columnTasks.remove(key);
 			pool.remove(task);
 		}
+
+		//TODO: remove all queued cube tasks for that column
 	}
 
 	/**
@@ -263,8 +267,10 @@ public class AsyncWorldIOExecutor {
 		while (cubeItr.hasNext()) {
 			AsyncCubeIOProvider task = cubeItr.next();
 			if (task.isFinished()) {
-				if (task.hasCallbacks())
-					task.runSynchronousPart();
+				if (task.hasCallbacks()) {
+					task.runCallbacks();
+				}
+				task.runSynchronousPart();
 
 				cubeItr.remove();
 			}
@@ -274,8 +280,10 @@ public class AsyncWorldIOExecutor {
 		while (columnIter.hasNext()) {
 			AsyncColumnIOProvider task = columnIter.next();
 			if (task.isFinished()) {
-				if (task.hasCallbacks())
-					task.runSynchronousPart();
+				if (task.hasCallbacks()) {
+					task.runCallbacks();
+				}
+				task.runSynchronousPart();
 
 				columnIter.remove();
 			}

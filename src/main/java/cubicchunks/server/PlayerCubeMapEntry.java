@@ -118,7 +118,6 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 							c -> this.cube = c);
 				}
 				playerCubeMap.removeEntry(this);
-				cube.getTickets().remove(this); // remove the ticket, so this Cube can unload
 			}
 			return;
 		}

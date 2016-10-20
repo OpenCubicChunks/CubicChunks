@@ -233,16 +233,11 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		}
 
 		if (cube == null) {
-			asyncGetColumn(cubeX, cubeZ, req, col -> {
-				if (col == null) {
-					callback.accept(null);
-					return;
-				}
-				AsyncWorldIOExecutor.queueCubeLoad(worldServer, cubeIO, col, cubeY, loaded -> {
-					onCubeLoaded(loaded, col);
-					loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
-					callback.accept(loaded);
-				});
+			AsyncWorldIOExecutor.queueCubeLoad(worldServer, cubeIO, this, cubeX, cubeY, cubeZ, loaded -> {
+				Column col = getLoadedChunk(cubeX, cubeZ);
+				onCubeLoaded(loaded, col);
+				loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
+				callback.accept(loaded);
 			});
 		}
 	}
@@ -264,7 +259,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		}
 
 		if(cube == null) {
-			cube = AsyncWorldIOExecutor.syncCubeLoad(worldServer, cubeIO, cubeY, column);
+			cube = AsyncWorldIOExecutor.syncCubeLoad(worldServer, cubeIO, this, cubeX, cubeY, cubeZ);
 			onCubeLoaded(cube, column);
 		}
 
@@ -346,7 +341,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		ICubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
 		Cube cube = new Cube(column, cubeY, primer);
 
-		this.worldServer.getFirstLightProcessor().initializeSkylight(cube); // init sky light, (does not require any other cubes, just OpacityIndex)
+		this.worldServer.getFirstLightProcessor()
+				.initializeSkylight(cube); // init sky light, (does not require any other cubes, just OpacityIndex)
 		onCubeLoaded(cube, column);
 		return cube;
 	}
@@ -491,12 +487,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		this.cubeIO.flush();
 	}
 
-	Iterator<Cube> cubesIterator(){
+	Iterator<Cube> cubesIterator() {
 		return cubeMap.iterator();
 	}
 
 	@SuppressWarnings("unchecked")
-	Iterator<Column> columnsIterator(){
+	Iterator<Column> columnsIterator() {
 		return (Iterator<Column>) (Object) id2ChunkMap.values().iterator();
 	}
 

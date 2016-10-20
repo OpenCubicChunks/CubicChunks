@@ -375,6 +375,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			cubeWatcher = new PlayerCubeMapEntry(this, cubePos);
 			this.cubeWatchers.put(cubeWatcher);
 
+
 			if (cubeWatcher.getCube() == null ||  
 					!cubeWatcher.getCube().isFullyPopulated() || 
 					!cubeWatcher.getCube().isInitialLightingDone()) {
@@ -510,24 +511,30 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		getWorld().getProfiler().endStartSection("createColumns");
 		//order is important, columns first
 		columnsToLoad.forEach(pos -> {
-			this.getOrCreateColumnWatcher(pos).addPlayer(entry.playerEntity);
+			PlayerCubeMapColumnEntry columnWatcher = this.getOrCreateColumnWatcher(pos);
+			assert columnWatcher.getPos().equals(pos);
+			columnWatcher.addPlayer(entry.playerEntity);
 		});
 		getWorld().getProfiler().endStartSection("createCubes");
 		cubesToLoad.forEach(pos -> {
-			this.getOrCreateCubeWatcher(pos).addPlayer(entry.playerEntity);
+			PlayerCubeMapEntry cubeWatcher = this.getOrCreateCubeWatcher(pos);
+			assert cubeWatcher.getCubePos().equals(pos);
+			cubeWatcher.addPlayer(entry.playerEntity);
 		});
 		getWorld().getProfiler().endStartSection("removeCubes");
 		cubesToRemove.forEach(pos -> {
 			PlayerCubeMapEntry cubeWatcher = this.getCubeWatcher(pos);
 			if (cubeWatcher != null) {
+				assert cubeWatcher.getCubePos().equals(pos);
 				cubeWatcher.removePlayer(entry.playerEntity);
 			}
 		});
 		getWorld().getProfiler().endStartSection("removeColumns");
 		columnsToRemove.forEach(pos -> {
-			PlayerCubeMapColumnEntry playerCubeMapColumnEntry = this.getColumnWatcher(pos);
-			if (playerCubeMapColumnEntry != null) {
-				playerCubeMapColumnEntry.removePlayer(entry.playerEntity);
+			PlayerCubeMapColumnEntry columnWatcher = this.getColumnWatcher(pos);
+			if (columnWatcher != null) {
+				assert columnWatcher.getPos().equals(pos);
+				columnWatcher.removePlayer(entry.playerEntity);
 			}
 		});
 		getWorld().getProfiler().endSection();//removeColumns
@@ -653,6 +660,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		this.cubeWatchersToUpdate.remove(cubeWatcher);
 		this.cubesToGenerate.remove(cubeWatcher);
 		this.cubesToSendToClients.remove(cubeWatcher);
+		if(cubeWatcher.getCube() != null) {
+			cubeWatcher.getCube().getTickets().remove(cubeWatcher); // remove the ticket, so this Cube can unload
+		}
 		//don't unload, ChunkGc unloads chunks
 	}
 
