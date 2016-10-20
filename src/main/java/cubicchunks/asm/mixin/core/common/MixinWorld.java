@@ -95,12 +95,13 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		// Set the world height boundaries to their highest and lowest values respectively
 		this.maxHeight = CubicChunks.Config.DEFAULT_MAX_WORLD_HEIGHT;
 		this.minHeight = CubicChunks.Config.DEFAULT_MIN_WORLD_HEIGHT;
-		//don't want to make world implement IConfigChangeListener
-		CubicChunks.addConfigChangeListener(this);
 
 		if(!(this.provider instanceof ICubicWorldProvider)) { // if the provider is vanilla, wrap it
 			this.provider = new VanillaCubicProvider(this, provider);
 		}
+
+		//don't want to make world implement IConfigChangeListener
+		CubicChunks.addConfigChangeListener(this);
 	}
 	//from ConfigChangeListener
 	@Override public void onConfigUpdate(CubicChunks.Config config) {
@@ -109,12 +110,12 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		this.minHeight = config.getWorldHeightLowerBound();
 		this.maxHeight = config.getWorldHeightUpperBound();
 
-		ICubicWorldType type = (ICubicWorldType) this.getWorldType();
-		if(this.minHeight < type.getMinimumPossibleHeight()) {
-			this.minHeight = type.getMinimumPossibleHeight();
+		ICubicWorldProvider provider = (ICubicWorldProvider) this.getProvider();
+		if(this.minHeight < provider.getMinimumPossibleHeight()) {
+			this.minHeight = provider.getMinimumPossibleHeight();
 		}
-		if(this.maxHeight > type.getMaximumPossibleHeight()) {
-			this.maxHeight = type.getMaximumPossibleHeight();
+		if(this.maxHeight > provider.getMaximumPossibleHeight()) {
+			this.maxHeight = provider.getMaximumPossibleHeight();
 		}
 	}
 
