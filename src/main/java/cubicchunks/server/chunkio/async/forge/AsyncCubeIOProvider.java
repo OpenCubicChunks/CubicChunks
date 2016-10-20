@@ -35,7 +35,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 	private final CubeIO loader;
 
 	private Column column;
-	private Cube cube;
+	private CubeIO.PartialCubeData cubeData;
 
 	AsyncCubeIOProvider(@Nonnull QueuedCube cube, @Nonnull Column column, @Nonnull CubeIO loader) {
 		this.cubeInfo = cube;
@@ -46,7 +46,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 	@Override
 	public synchronized void run() {
 		try {
-			cube = this.loader.loadCubeAndAddToColumn(column, this.cubeInfo.y);
+			cubeData = this.loader.loadCubeAsyncPart(column, this.cubeInfo.y);
 		} catch (IOException e) {
 			CubicChunks.LOGGER.error("Could not load cube in {} @ ({}, {}, {})", this.cubeInfo.world, this.cubeInfo.x, this.cubeInfo.y, this.cubeInfo.z, e);
 		} finally {
@@ -59,6 +59,9 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 	@Override
 	public void runSynchronousPart() {
 
+		if(cubeData != null) {
+			this.loader.loadCubeSyncPart(cubeData);
+		}
 		// TBD:
 		// this.provider.cubeGenerator.recreateStructures(this.cube, this.cubeInfo.x, this.cubeInfo.z);
 
@@ -67,6 +70,6 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 
 	@Override
 	public Cube get() {
-		return cube;
+		return cubeData == null ? null : cubeData.getCube();
 	}
 }

@@ -40,6 +40,8 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Column> {
 
 	@Override void runSynchronousPart() {
 		if (column != null) {
+			//TODO: ChunkDataEvent.Load and Save
+			//MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Load(column, this.nbt)); // Don't call ChunkDataEvent.Load async
 			column.setLastSaveTime(this.colInfo.world.getTotalWorldTime());
 		}
 
