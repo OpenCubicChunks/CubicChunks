@@ -23,27 +23,13 @@
  */
 package cubicchunks.world.type;
 
-import cubicchunks.util.AddressTools;
-import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.world.WorldProvider;
 
 public interface ICubicWorldType {
-	/**
-	 * Returns Y position of the bottom block in the world
-	 */
-	default int getMinimumPossibleHeight() {
-		return AddressTools.MIN_BLOCK_Y;
-	}
 
-	/**
-	 * Returns Y position of block above the top block in the world,
-	 */
-	default int getMaximumPossibleHeight() {
-		return AddressTools.MAX_BLOCK_Y + 1;
-	}
-
-	ICubeGenerator createCubeGenerator(ICubicWorldServer world);
+	ICubeGenerator createCubeGenerator(ICubicWorld world);
 
 	WorldProvider getReplacedProviderFor(WorldProvider provider);
 }

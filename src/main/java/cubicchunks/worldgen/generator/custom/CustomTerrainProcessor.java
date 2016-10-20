@@ -23,13 +23,13 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
 public final class CustomTerrainProcessor {
 	private final CustomTerrainGenerator terrainGenerator;
 
-	public CustomTerrainProcessor(ICubicWorldServer world) {
+	public CustomTerrainProcessor(ICubicWorld world) {
 		this.terrainGenerator = new CustomTerrainGenerator(world, world.getSeed());
 	}
 

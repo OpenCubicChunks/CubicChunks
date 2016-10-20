@@ -25,7 +25,7 @@ package cubicchunks.world.type;
 
 import cubicchunks.util.Box;
 import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
@@ -52,7 +52,7 @@ public class CustomCubicChunksWorldType extends WorldType implements ICubicWorld
 		return provider; // TODO: Custom Nether? Custom End????
 	}
 
-	@Override public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
+	@Override public ICubeGenerator createCubeGenerator(ICubicWorld world) {
 		CustomTerrainProcessor terrain = new CustomTerrainProcessor(world);
 		CustomFeatureProcessor features = new CustomFeatureProcessor();
 		CustomPopulationProcessor population = new CustomPopulationProcessor(world);

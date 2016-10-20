@@ -23,7 +23,7 @@
  */
 package cubicchunks.world.type;
 
-import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
@@ -40,7 +40,7 @@ public class VanillaCubicChunksWorldType extends WorldType implements ICubicWorl
 	}
 
 	@Override
-	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
+	public ICubeGenerator createCubeGenerator(ICubicWorld world) {
 		return null; // no ICubicWorldProvider's that are going to need this
 	}
 

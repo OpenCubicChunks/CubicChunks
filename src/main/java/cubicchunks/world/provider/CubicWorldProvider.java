@@ -23,8 +23,7 @@
  */
 package cubicchunks.world.provider;
 
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.provider.ICubicWorldProvider;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.type.ICubicWorldType;
 import cubicchunks.worldgen.generator.DummyChunkGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
@@ -78,7 +77,10 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		// We need to assume that its an ICubicWorldType...
 		// There is really nothing else we can do as a non-overworld porvider
 		// that works with a vanilla world type would have overriden this method.
-		return ((ICubicWorldType)this.worldObj.getWorldType())
+		if(!(this.worldObj.getWorldType() instanceof ICubicWorldType)){
+			throw new IllegalStateException("Cubic world provider does not override createCubeGenerator() and the world type is not ICubicWorldType!");
+		}
+		return ((ICubicWorldType) this.worldObj.getWorldType())
 				.createCubeGenerator(getCubicWorld());
 	}
 
@@ -136,7 +138,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		return blockpos;
 	}
 
-	public ICubicWorldServer getCubicWorld() {
-		return (ICubicWorldServer)worldObj;
+	public ICubicWorld getCubicWorld() {
+		return (ICubicWorld)worldObj;
 	}
 }
