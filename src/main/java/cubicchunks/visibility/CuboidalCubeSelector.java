@@ -33,9 +33,9 @@ public class CuboidalCubeSelector extends CubeSelector {
 
 	@Override
 	public void forAllVisibleFrom(CubePos cubePos, int horizontalViewDistance, int verticalViewDistance, Consumer<CubePos> consumer) {
-		int cubeX = cubePos.getCubeX();
-		int cubeY = cubePos.getCubeY();
-		int cubeZ = cubePos.getCubeZ();
+		int cubeX = cubePos.getX();
+		int cubeY = cubePos.getY();
+		int cubeZ = cubePos.getZ();
 		for (int x = cubeX - horizontalViewDistance; x <= cubeX + horizontalViewDistance; x++) {
 			for (int y = cubeY - verticalViewDistance; y <= cubeY + verticalViewDistance; y++) {
 				for (int z = cubeZ - horizontalViewDistance; z <= cubeZ + horizontalViewDistance; z++) {
@@ -50,12 +50,12 @@ public class CuboidalCubeSelector extends CubeSelector {
 	                        int horizontalViewDistance, int verticalViewDistance,
 	                        Set<CubePos> cubesToRemove, Set<CubePos> cubesToLoad,
 	                        Set<ChunkPos> columnsToRemove, Set<ChunkPos> columnsToLoad) {
-		int oldX = oldPos.getCubeX();
-		int oldY = oldPos.getCubeY();
-		int oldZ = oldPos.getCubeZ();
-		int newX = newPos.getCubeX();
-		int newY = newPos.getCubeY();
-		int newZ = newPos.getCubeZ();
+		int oldX = oldPos.getX();
+		int oldY = oldPos.getY();
+		int oldZ = oldPos.getZ();
+		int newX = newPos.getX();
+		int newY = newPos.getY();
+		int newZ = newPos.getZ();
 		int dx = newX - oldX;
 		int dy = newY - oldY;
 		int dz = newZ - oldZ;
@@ -96,9 +96,9 @@ public class CuboidalCubeSelector extends CubeSelector {
 	                                                  int oldHorizontalViewDistance, int newHorizontalViewDistance,
 	                                                  int oldVerticalViewDistance, int newVerticalViewDistance,
 	                                                  Set<CubePos> cubesToUnload, Set<ChunkPos> columnsToUnload) {
-		int playerCubeX = playerPos.getCubeX();
-		int playerCubeY = playerPos.getCubeY();
-		int playerCubeZ = playerPos.getCubeZ();
+		int playerCubeX = playerPos.getX();
+		int playerCubeY = playerPos.getY();
+		int playerCubeZ = playerPos.getZ();
 
 		for (int cubeX = playerCubeX - oldHorizontalViewDistance; cubeX <= playerCubeX + oldHorizontalViewDistance; cubeX++) {
 			for (int cubeZ = playerCubeZ - oldHorizontalViewDistance; cubeZ <= playerCubeZ + oldHorizontalViewDistance; cubeZ++) {

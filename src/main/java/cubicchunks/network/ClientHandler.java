@@ -73,7 +73,7 @@ public class ClientHandler implements INetHandler {
 
 		CubePos cubePos = packet.getCubePos();
 
-		Column column = cubeCache.provideChunk(cubePos.getCubeX(), cubePos.getCubeZ());
+		Column column = cubeCache.provideColumn(cubePos.getX(), cubePos.getZ());
 		//isEmpty actually checks if the column is a BlankColumn
 		if (column.isEmpty()) {
 			CubicChunks.LOGGER.error("Out of order cube received! No column for cube at {} exists!", cubePos);
@@ -82,9 +82,9 @@ public class ClientHandler implements INetHandler {
 
 		Cube cube;
 		if(packet.getType() == PacketCube.Type.NEW_CUBE) {
-			cube = cubeCache.loadCube(column, cubePos.getCubeY());
+			cube = cubeCache.loadCube(column, cubePos.getY());
 		} else {
-			cube = column.getCube(cubePos.getCubeY());
+			cube = column.getCube(cubePos.getY());
 			if (cube instanceof BlankCube) {
 				CubicChunks.LOGGER.error("Ignored cube update to blank cube {}", cubePos);
 				return;

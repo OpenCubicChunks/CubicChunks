@@ -261,9 +261,9 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 	private void carveBlocks(ICubePrimer cube, CubePos generatedCubePos,
 	                         double ravineX, double ravineY, double ravineZ,
 	                         double ravineSizeHoriz, double ravineSizeVert, StructureBoundingBox boundingBox) {
-		int generatedCubeX = generatedCubePos.getCubeX();
-		int generatedCubeY = generatedCubePos.getCubeY();
-		int generatedCubeZ = generatedCubePos.getCubeZ();
+		int generatedCubeX = generatedCubePos.getX();
+		int generatedCubeY = generatedCubePos.getY();
+		int generatedCubeZ = generatedCubePos.getZ();
 
 		int minX = boundingBox.minX;
 		int maxX = boundingBox.maxX;

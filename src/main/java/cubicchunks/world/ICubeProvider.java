@@ -48,7 +48,7 @@ public interface ICubeProvider {
 	 * @return The column, if loaded. Null, otherwise.
 	 */
 	@Nullable
-	Column getLoadedChunk(int x, int z); // more strictly define the return type
+	Column getLoadedColumn(int x, int z); // more strictly define the return type
 
-	Column provideChunk(int x, int z);   // more strictly define the return type
+	Column provideColumn(int x, int z);   // more strictly define the return type
 }

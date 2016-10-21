@@ -217,12 +217,12 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 			return true;
 		}
 		// convert block bounds to chunk bounds
-		int minCubeX = start.getCubeX();
-		int minCubeY = start.getCubeY();
-		int minCubeZ = start.getCubeZ();
-		int maxCubeX = end.getCubeX();
-		int maxCubeY = end.getCubeY();
-		int maxCubeZ = end.getCubeZ();
+		int minCubeX = start.getX();
+		int minCubeY = start.getY();
+		int minCubeZ = start.getZ();
+		int maxCubeX = end.getX();
+		int maxCubeY = end.getY();
+		int maxCubeZ = end.getZ();
 
 		for (int cubeX = minCubeX; cubeX <= maxCubeX; cubeX++) {
 			for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {

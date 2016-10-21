@@ -116,7 +116,7 @@ public class Column extends Chunk {
 		// so let's go with that for now and hope for the best
 
 		// old solution
-		// return this.getWorld().provider.getAverageGroundLevel();
+		// return this.getCubicWorld().provider.getAverageGroundLevel();
 
 		int blockY = Coords.NO_HEIGHT;
 		for (int localX = 0; localX < Cube.SIZE; localX++) {

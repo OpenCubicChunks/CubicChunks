@@ -45,9 +45,9 @@ public class PacketUnloadCube implements IMessage {
 
 	@Override
 	public void toBytes(ByteBuf out) {
-		out.writeInt(cubePos.getCubeX());
-		out.writeInt(cubePos.getCubeY());
-		out.writeInt(cubePos.getCubeZ());
+		out.writeInt(cubePos.getX());
+		out.writeInt(cubePos.getY());
+		out.writeInt(cubePos.getZ());
 	}
 
 	public CubePos getCubePos() {

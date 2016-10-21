@@ -73,7 +73,7 @@ public class CubePos {
 	 *
 	 * @return The x position.
 	 */
-	public int getCubeX() {
+	public int getX() {
 		return this.cubeX;
 	}
 
@@ -82,7 +82,7 @@ public class CubePos {
 	 *
 	 * @return The y position.
 	 */
-	public int getCubeY() {
+	public int getY() {
 		return this.cubeY;
 	}
 
@@ -91,7 +91,7 @@ public class CubePos {
 	 *
 	 * @return The z position.
 	 */
-	public int getCubeZ() {
+	public int getZ() {
 		return this.cubeZ;
 	}
 
@@ -210,11 +210,11 @@ public class CubePos {
 	}
 
 	public CubePos add(int dx, int dy, int dz) {
-		return new CubePos(getCubeX() + dx, getCubeY() + dy, getCubeZ() + dz);
+		return new CubePos(getX() + dx, getY() + dy, getZ() + dz);
 	}
 
 	public ChunkPos chunkPos() {
-		return new ChunkPos(getCubeX(), getCubeZ());
+		return new ChunkPos(getX(), getZ());
 	}
 
 	public int distSquared(CubePos coords) {

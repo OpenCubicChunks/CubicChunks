@@ -171,7 +171,7 @@ public class AsyncWorldIOExecutor {
 		}
 
 		Column loadedColumn;
-		if((loadedColumn = cache.getLoadedChunk(x, z)) == null) {
+		if((loadedColumn = cache.getLoadedColumn(x, z)) == null) {
 			cache.asyncGetColumn(x, z, IProviderExtras.Requirement.LIGHT, task::setColumn);
 		} else {
 			//it's already there, tell the task to use it

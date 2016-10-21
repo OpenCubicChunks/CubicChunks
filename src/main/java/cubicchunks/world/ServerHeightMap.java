@@ -110,46 +110,6 @@ public class ServerHeightMap implements IHeightMap {
 	// Interface: IHeightMap ----------------------------------------------------------------------------------------
 
 	@Override
-	public boolean isOpaque(int localX, int blockY, int localZ) {
-
-		// Are we out of range?
-		int i = getIndex(localX, localZ);
-		if (blockY > this.ymax[i] || blockY < this.ymin[i]) {
-			return false;
-		}
-
-		// Are there segments for this block column?
-		int[] segments = this.segments[i];
-		if (segments == null) {
-			// this column is black or white
-			// there are no shades of grey =P
-			return true;
-		}
-
-		// scan the shades of grey with binary search
-		int mini = 0;
-		int maxi = getLastSegmentIndex(segments);
-		while (mini <= maxi) {
-			int midi = (mini + maxi) >>> 1;
-			int midPos = unpackPosition(segments[midi]);
-
-			if (midPos < blockY) {
-				mini = midi + 1;
-			} else if (midPos > blockY) {
-				maxi = midi - 1;
-			} else {
-				// hit a segment start exactly
-				return unpackOpacity(segments[midi]) != 0;
-			}
-		}
-
-		// didn't hit a segment start, mini is the correct answer + 1
-		assert (mini > 0) : String.format("can't find %d in %s", blockY, dump(localX, localZ));
-
-		return unpackOpacity(segments[mini - 1]) != 0;
-	}
-
-	@Override
 	public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
 
 		int xzIndex = getIndex(localX, localZ);

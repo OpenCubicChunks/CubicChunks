@@ -106,7 +106,7 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void initializeSkylight(Cube cube) {
-		if(cube.getWorld().getProvider().getHasNoSky()) {
+		if(cube.getCubicWorld().getProvider().getHasNoSky()) {
 			return;
 		}
 		
@@ -134,11 +134,11 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void diffuseSkylight(Cube cube) {
-		if(cube.getWorld().getProvider().getHasNoSky()) {
+		if(cube.getCubicWorld().getProvider().getHasNoSky()) {
 			cube.setInitialLightingDone(true);
 			return;
 		}
-		ICubicWorld world = cube.getWorld();
+		ICubicWorld world = cube.getCubicWorld();
 
 		// Cache min/max Y, generating them may be expensive
 		int[][] minBlockYArr = new int[16][16];
@@ -221,7 +221,7 @@ public class FirstLightProcessor {
 	 * @return true if the update was successful, false otherwise
 	 */
 	private boolean diffuseSkylightInBlockColumn(Cube cube, MutableBlockPos pos, int minBlockY, int maxBlockY, Int2ObjectMap<FastCubeBlockAccess> blockAccessMap) {
-		ICubicWorld world = cube.getWorld();
+		ICubicWorld world = cube.getCubicWorld();
 
 		int cubeMinBlockY = cubeToMinBlock(cube.getY());
 		int cubeMaxBlockY = cubeToMaxBlock(cube.getY());
@@ -291,7 +291,7 @@ public class FirstLightProcessor {
 	 */
 	private static boolean canUpdateCube(Cube cube) {
 		BlockPos cubeCenter = getCubeCenter(cube);
-		return cube.getWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> c != null);
+		return cube.getCubicWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> c != null);
 	}
 
 	/**

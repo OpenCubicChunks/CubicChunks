@@ -79,7 +79,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		this.playerCubeMap = playerCubeMap;
 		this.cubeCache = playerCubeMap.getWorld().getCubeCache();
 		this.cubeCache.asyncGetCube(
-				cubePos.getCubeX(), cubePos.getCubeY(), cubePos.getCubeZ(),
+				cubePos.getX(), cubePos.getY(), cubePos.getZ(),
 				IProviderExtras.Requirement.LOAD,
 				consumer);
 		this.cubePos = cubePos;
@@ -114,7 +114,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 			if (this.players.isEmpty()) {
 				if(loading) {
 					AsyncWorldIOExecutor.dropQueuedCubeLoad(this.playerCubeMap.getWorld(),
-							cubePos.getCubeX(), cubePos.getCubeY(), cubePos.getCubeZ(),
+							cubePos.getX(), cubePos.getY(), cubePos.getZ(),
 							c -> this.cube = c);
 				}
 				playerCubeMap.removeEntry(this);
@@ -143,9 +143,9 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		if(this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone()))) {
 			return true;
 		}
-		int cubeX = cubePos.getCubeX();
-		int cubeY = cubePos.getCubeY();
-		int cubeZ = cubePos.getCubeZ();
+		int cubeX = cubePos.getX();
+		int cubeY = cubePos.getY();
+		int cubeZ = cubePos.getZ();
 
 		playerCubeMap.getWorld().getProfiler().startSection("getCube");
 		if (canGenerate) {
@@ -239,7 +239,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 			return;
 		}
 
-		ICubicWorld world = this.cube.getWorld();
+		ICubicWorld world = this.cube.getCubicWorld();
 
 		if (this.dirtyBlocks.size() >= ForgeModContainer.clumpingThreshold) {
 			// send whole cube
@@ -330,15 +330,15 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 	}
 
 	@Override public int getX() {
-		return this.cubePos.getCubeX();
+		return this.cubePos.getX();
 	}
 
 	@Override public int getY() {
-		return this.cubePos.getCubeY();
+		return this.cubePos.getY();
 	}
 
 	@Override public int getZ() {
-		return this.cubePos.getCubeZ();
+		return this.cubePos.getZ();
 	}
 
 	@Override public boolean shouldTick(){

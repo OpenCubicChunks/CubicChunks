@@ -95,9 +95,9 @@ public class PacketCubeBlockChange implements IMessage {
 	@SuppressWarnings("deprecation")
 	@Override
 	public void toBytes(ByteBuf out) {
-		out.writeInt(cubePos.getCubeX());
-		out.writeInt(cubePos.getCubeY());
-		out.writeInt(cubePos.getCubeZ());
+		out.writeInt(cubePos.getX());
+		out.writeInt(cubePos.getY());
+		out.writeInt(cubePos.getZ());
 		out.writeShort(localAddresses.length);
 		for (int i = 0; i < localAddresses.length; i++) {
 			out.writeShort(localAddresses[i]);

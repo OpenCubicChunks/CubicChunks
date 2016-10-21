@@ -26,17 +26,6 @@ package cubicchunks.world;
 public interface IHeightMap {
 
 	/**
-	 * Returns true if the opacity at the given position != 0 or false otherwise.
-	 *
-	 * @param localX local block x-coordinate (0..15)
-	 * @param blockY global block y-coordinate
-	 * @param localZ local block z-coordinate (0..15)
-	 *
-	 * @return true if the opacity at the given position != 0
-	 */
-	boolean isOpaque(int localX, int blockY, int localZ);
-
-	/**
 	 * Sets the opacity at the given position to the given value.
 	 *
 	 * @param localX local block x-coordinate (0..15)

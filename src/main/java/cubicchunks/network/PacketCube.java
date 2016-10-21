@@ -78,9 +78,9 @@ public class PacketCube implements IMessage {
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		buf.writeInt(cubePos.getCubeX());
-		buf.writeInt(cubePos.getCubeY());
-		buf.writeInt(cubePos.getCubeZ());
+		buf.writeInt(cubePos.getX());
+		buf.writeInt(cubePos.getY());
+		buf.writeInt(cubePos.getZ());
 		buf.writeByte(this.type.ordinal());
 		buf.writeInt(this.data.length);
 		buf.writeBytes(this.data);

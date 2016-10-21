@@ -55,13 +55,23 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 
 	@Override
 	@Nullable
-	public Column getLoadedChunk(int x, int z) {
-		return (Column) super.getLoadedChunk(x, z);
+	public Column getLoadedColumn(int x, int z) {
+		return getLoadedChunk(x, z);
+	}
+
+	@Override
+	public Column provideColumn(int x, int z) {
+		return provideChunk(x, z);
 	}
 
 	@Override
 	public Column provideChunk(int x, int z) {
 		return (Column) super.provideChunk(x, z);
+	}
+
+	@Override
+	public Column getLoadedChunk(int x, int z) {
+		return (Column) super.getLoadedChunk(x, z);
 	}
 
 	@Override
@@ -100,10 +110,10 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 	 * It is used when the server tells the client to unload a Cube.
 	 */
 	public void unloadCube(CubePos pos) {
-		cubeMap.remove(pos.getCubeX(), pos.getCubeY(), pos.getCubeZ());
-		Column column = getLoadedChunk(pos.getCubeX(), pos.getCubeZ());
+		cubeMap.remove(pos.getX(), pos.getY(), pos.getZ());
+		Column column = getLoadedColumn(pos.getX(), pos.getZ());
 		if (column != null) {
-			column.removeCube(pos.getCubeY());
+			column.removeCube(pos.getY());
 		}
 	}
 
@@ -118,7 +128,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 
 	@Override
 	public Cube getCube(CubePos coords) {
-		return getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+		return getCube(coords.getX(), coords.getY(), coords.getZ());
 	}
 
 	@Override
@@ -128,7 +138,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 
 	@Override
 	public Cube getLoadedCube(CubePos coords) {
-		return getLoadedCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+		return getLoadedCube(coords.getX(), coords.getY(), coords.getZ());
 	}
 
 	@Override

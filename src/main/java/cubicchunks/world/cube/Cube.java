@@ -354,9 +354,9 @@ public class Cube implements XYZAddressable {
 		int cubeX = Coords.getCubeXForEntity(entity);
 		int cubeY = Coords.getCubeYForEntity(entity);
 		int cubeZ = Coords.getCubeZForEntity(entity);
-		if (cubeX != this.coords.getCubeX() || cubeY != this.coords.getCubeY() || cubeZ != this.coords.getCubeZ()) {
+		if (cubeX != this.coords.getX() || cubeY != this.coords.getY() || cubeZ != this.coords.getZ()) {
 			LOGGER.warn(String.format("Wrong entity (%s) location. Entity thinks it's in (%d,%d,%d) but actua location is (%d,%d,%d)!",
-					entity.getClass().getName(), cubeX, cubeY, cubeZ, this.coords.getCubeX(), this.coords.getCubeY(), this.coords.getCubeZ()));
+					entity.getClass().getName(), cubeX, cubeY, cubeZ, this.coords.getX(), this.coords.getY(), this.coords.getZ()));
 			entity.setDead();
 		}
 
@@ -366,9 +366,9 @@ public class Cube implements XYZAddressable {
 
 		// tell the entity it's in this cube
 		entity.addedToChunk = true;
-		entity.chunkCoordX = this.coords.getCubeX();
-		entity.chunkCoordY = this.coords.getCubeY();
-		entity.chunkCoordZ = this.coords.getCubeZ();
+		entity.chunkCoordX = this.coords.getX();
+		entity.chunkCoordY = this.coords.getY();
+		entity.chunkCoordZ = this.coords.getZ();
 
 		this.entities.addEntity(entity);
 		this.isModified = true;
@@ -404,7 +404,7 @@ public class Cube implements XYZAddressable {
 	public void addTileEntity(TileEntity tileEntity) {
 		this.addTileEntity(tileEntity.getPos(), tileEntity);
 		if (this.isCubeLoaded) { //TODO: test to see if this is needed
-			this.getWorld().addTileEntity(tileEntity);
+			this.getCubicWorld().addTileEntity(tileEntity);
 		}
 	}
 
@@ -491,17 +491,17 @@ public class Cube implements XYZAddressable {
 	}
 
 	public long getAddress() {
-		return AddressTools.getAddress(this.coords.getCubeX(), this.coords.getCubeY(), this.coords.getCubeZ());
+		return AddressTools.getAddress(this.coords.getX(), this.coords.getY(), this.coords.getZ());
 	}
 
 	public BlockPos localAddressToBlockPos(int localAddress) {
-		int x = Coords.localToBlock(this.coords.getCubeX(), AddressTools.getLocalX(localAddress));
-		int y = Coords.localToBlock(this.coords.getCubeY(), AddressTools.getLocalY(localAddress));
-		int z = Coords.localToBlock(this.coords.getCubeZ(), AddressTools.getLocalZ(localAddress));
+		int x = Coords.localToBlock(this.coords.getX(), AddressTools.getLocalX(localAddress));
+		int y = Coords.localToBlock(this.coords.getY(), AddressTools.getLocalY(localAddress));
+		int z = Coords.localToBlock(this.coords.getZ(), AddressTools.getLocalZ(localAddress));
 		return new BlockPos(x, y, z);
 	}
 
-	public ICubicWorld getWorld() {
+	public ICubicWorld getCubicWorld() {
 		return this.world;
 	}
 
@@ -510,15 +510,15 @@ public class Cube implements XYZAddressable {
 	}
 
 	public int getX() {
-		return this.coords.getCubeX();
+		return this.coords.getX();
 	}
 
 	public int getY() {
-		return this.coords.getCubeY();
+		return this.coords.getY();
 	}
 
 	public int getZ() {
-		return this.coords.getCubeZ();
+		return this.coords.getZ();
 	}
 
 	public CubePos getCoords() {
@@ -526,9 +526,9 @@ public class Cube implements XYZAddressable {
 	}
 
 	public boolean containsBlockPos(BlockPos blockPos) {
-		return this.coords.getCubeX() == Coords.blockToCube(blockPos.getX())
-				&& this.coords.getCubeY() == Coords.blockToCube(blockPos.getY())
-				&& this.coords.getCubeZ() == Coords.blockToCube(blockPos.getZ());
+		return this.coords.getX() == Coords.blockToCube(blockPos.getX())
+				&& this.coords.getY() == Coords.blockToCube(blockPos.getY())
+				&& this.coords.getZ() == Coords.blockToCube(blockPos.getZ());
 	}
 
 	public ExtendedBlockStorage getStorage() {
@@ -595,8 +595,8 @@ public class Cube implements XYZAddressable {
 
 	public void markForRenderUpdate() {
 		this.world.markBlockRangeForRenderUpdate(
-				Coords.cubeToMinBlock(this.coords.getCubeX()), Coords.cubeToMinBlock(this.coords.getCubeY()), Coords.cubeToMinBlock(this.coords.getCubeZ()),
-				Coords.cubeToMaxBlock(this.coords.getCubeX()), Coords.cubeToMaxBlock(this.coords.getCubeY()), Coords.cubeToMaxBlock(this.coords.getCubeZ())
+				Coords.cubeToMinBlock(this.coords.getX()), Coords.cubeToMinBlock(this.coords.getY()), Coords.cubeToMinBlock(this.coords.getZ()),
+				Coords.cubeToMaxBlock(this.coords.getX()), Coords.cubeToMaxBlock(this.coords.getY()), Coords.cubeToMaxBlock(this.coords.getZ())
 		);
 	}
 

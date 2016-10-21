@@ -56,11 +56,6 @@ public class ClientHeightMap implements IHeightMap {
 	}
 
 	@Override
-	public boolean isOpaque(int localX, int blockY, int localZ) {
-		return false;
-	}
-
-	@Override
 	public boolean isOccluded(int localX, int blockY, int localZ) {
 		Integer topY = this.getTopBlockY(localX, localZ);
 		return topY != null && blockY <= topY;

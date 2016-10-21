@@ -146,7 +146,7 @@ public class IONbtReader {
 	private static void readBlocks(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {
 		boolean isEmpty = !nbt.hasKey("Blocks");// is this an empty cube?
 		if (!isEmpty) {
-			ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), !cube.getWorld().getProvider().getHasNoSky());
+			ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), !cube.getCubicWorld().getProvider().getHasNoSky());
 
 			byte[] abyte = nbt.getByteArray("Blocks");
 			NibbleArray data = new NibbleArray(nbt.getByteArray("Data"));
@@ -257,7 +257,7 @@ public class IONbtReader {
 
 				int localX = i & 0xF;
 				int localZ = i >> 4;
-				cube.getWorld().getLightingManager().columnSkylightUpdate(
+				cube.getCubicWorld().getLightingManager().columnSkylightUpdate(
 						LightingManager.UpdateType.QUEUED, cube.getColumn(),
 						localX,
 						minUpdateY, maxUpdateY,

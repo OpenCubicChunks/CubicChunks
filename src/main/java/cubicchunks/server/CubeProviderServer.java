@@ -101,8 +101,14 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	 */
 	@Override
 	@Nullable
-	public Column getLoadedChunk(int columnX, int columnZ) {
+	public Column getLoadedColumn(int columnX, int columnZ) {
 		return (Column) this.id2ChunkMap.get(ChunkPos.asLong(columnX, columnZ));
+	}
+
+	@Override
+	@Nullable
+	public Column getLoadedChunk(int columnX, int columnZ) {
+		return getLoadedColumn(columnX, columnZ);
 	}
 
 	/**
@@ -136,8 +142,13 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	 * Loads from disk if possible, otherwise generates new Column.
 	 */
 	@Override
-	public Column provideChunk(int cubeX, int cubeZ) {
+	public Column provideColumn(int cubeX, int cubeZ) {
 		return getColumn(cubeX, cubeZ, Requirement.GENERATE);
+	}
+
+	@Override
+	public Column provideChunk(int cubeX, int cubeZ) {
+		return provideColumn(cubeX, cubeZ);
 	}
 
 	@Override
@@ -199,7 +210,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
 	@Override
 	public Cube getCube(CubePos coords) {
-		return getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+		return getCube(coords.getX(), coords.getY(), coords.getZ());
 	}
 
 	@Override
@@ -209,7 +220,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
 	@Override
 	public Cube getLoadedCube(CubePos coords) {
-		return getLoadedCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
+		return getLoadedCube(coords.getX(), coords.getY(), coords.getZ());
 	}
 
 	/**
@@ -234,7 +245,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
 		if (cube == null) {
 			AsyncWorldIOExecutor.queueCubeLoad(worldServer, cubeIO, this, cubeX, cubeY, cubeZ, loaded -> {
-				Column col = getLoadedChunk(cubeX, cubeZ);
+				Column col = getLoadedColumn(cubeX, cubeZ);
 				if(col != null) {
 					onCubeLoaded(loaded, col);
 				}
@@ -408,7 +419,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	 * @see CubeProviderServer#getColumn(int, int, Requirement) for the synchronous variant of this method
 	 */
 	public void asyncGetColumn(int columnX, int columnZ, Requirement req, Consumer<Column> callback) {
-		Column column = getLoadedChunk(columnX, columnZ);
+		Column column = getLoadedColumn(columnX, columnZ);
 		if (column != null || req == Requirement.LOAD_CACHED) {
 			callback.accept(column);
 			return;
@@ -424,7 +435,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	@Override
 	@Nullable
 	public Column getColumn(int columnX, int columnZ, Requirement req) {
-		Column column = getLoadedChunk(columnX, columnZ);
+		Column column = getLoadedColumn(columnX, columnZ);
 		if(column != null || req == Requirement.LOAD_CACHED) {
 			return column;
 		}

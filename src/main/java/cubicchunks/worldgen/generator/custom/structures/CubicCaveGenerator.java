@@ -387,9 +387,9 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	                         double caveSizeHoriz, double caveSizeVert,
 	                         StructureBoundingBox boundingBox) {
 
-		int generatedCubeX = generatedCubePos.getCubeX();
-		int generatedCubeY = generatedCubePos.getCubeY();
-		int generatedCubeZ = generatedCubePos.getCubeZ();
+		int generatedCubeX = generatedCubePos.getX();
+		int generatedCubeY = generatedCubePos.getY();
+		int generatedCubeZ = generatedCubePos.getZ();
 
 		int minX = boundingBox.minX;
 		int maxX = boundingBox.maxX;

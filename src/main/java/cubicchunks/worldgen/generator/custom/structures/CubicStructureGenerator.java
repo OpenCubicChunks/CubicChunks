@@ -67,9 +67,9 @@ public abstract class CubicStructureGenerator {
 		long randY = this.rand.nextLong();
 		long randZ = this.rand.nextLong();
 
-		int cubeX = cubePos.getCubeX();
-		int cubeY = cubePos.getCubeY();
-		int cubeZ = cubePos.getCubeZ();
+		int cubeX = cubePos.getX();
+		int cubeY = cubePos.getY();
+		int cubeZ = cubePos.getZ();
 
 		//x/y/zOrigin is location of the structure "center", and cubeX/Y/Z is the currently generated cube
 		for (int xOrigin = cubeX - radius; xOrigin <= cubeX + radius; ++xOrigin) {
