@@ -27,7 +27,7 @@ import com.carrotsearch.hppc.IntHashSet;
 import com.carrotsearch.hppc.IntSet;
 import com.carrotsearch.hppc.cursors.IntCursor;
 import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.TShortCollection;
 import io.netty.buffer.ByteBuf;
@@ -43,7 +43,7 @@ import static net.minecraftforge.fml.common.network.ByteBufUtils.readVarInt;
 public class PacketCubeBlockChange implements IMessage {
 
 	public int[] heightValues;
-	public CubeCoords cubePos;
+	public CubePos cubePos;
 	public short[] localAddresses;
 	public IBlockState[] blockStates;
 
@@ -76,7 +76,7 @@ public class PacketCubeBlockChange implements IMessage {
 	@SuppressWarnings("deprecation") // Forge thinks we are trying to register a block or something :P
 	@Override
 	public void fromBytes(ByteBuf in) {
-		this.cubePos = new CubeCoords(in.readInt(), in.readInt(), in.readInt());
+		this.cubePos = new CubePos(in.readInt(), in.readInt(), in.readInt());
 		short numBlocks = in.readShort();
 		localAddresses = new short[numBlocks];
 		blockStates = new IBlockState[numBlocks];

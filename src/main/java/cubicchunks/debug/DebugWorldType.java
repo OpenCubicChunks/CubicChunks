@@ -28,7 +28,7 @@ import com.flowpowered.noise.module.source.Perlin;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.type.ICubicWorldType;
@@ -83,7 +83,7 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
 				if(cubeX == 100 && cubeZ == 100) {
 					return primer; //hole in the world
 				}
-				CubeCoords cubePos = new CubeCoords(cubeX, cubeY, cubeZ);
+				CubePos cubePos = new CubePos(cubeX, cubeY, cubeZ);
 				for(BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
 					double currDensity = perlin.getValue(pos.getX(), pos.getY()*0.5, pos.getZ());
 					double aboveDensity = perlin.getValue(pos.getX(), (pos.getY()+1)*0.5, pos.getZ());

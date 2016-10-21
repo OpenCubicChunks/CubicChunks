@@ -23,10 +23,10 @@
  */
 package cubicchunks.client;
 
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
 import cubicchunks.util.ReflectionUtil;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
@@ -38,14 +38,14 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-//TODO: break off ICubeCache
-public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
+//TODO: break off ICubeProvider
+public class CubeProviderClient extends ChunkProviderClient implements ICubeProvider {
 
 	private ICubicWorldClient world;
 	private Cube blankCube;
 	private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
 
-	public ClientCubeCache(ICubicWorldClient world) {
+	public CubeProviderClient(ICubicWorldClient world) {
 		super((World) world);
 
 		this.world = world;
@@ -99,7 +99,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	 * This is like ChunkProviderClient.unloadChunk()
 	 * It is used when the server tells the client to unload a Cube.
 	 */
-	public void unloadCube(CubeCoords pos) {
+	public void unloadCube(CubePos pos) {
 		cubeMap.remove(pos.getCubeX(), pos.getCubeY(), pos.getCubeZ());
 		Column column = getLoadedChunk(pos.getCubeX(), pos.getCubeZ());
 		if (column != null) {
@@ -117,7 +117,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	}
 
 	@Override
-	public Cube getCube(CubeCoords coords) {
+	public Cube getCube(CubePos coords) {
 		return getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
@@ -127,7 +127,7 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	}
 
 	@Override
-	public Cube getLoadedCube(CubeCoords coords) {
+	public Cube getLoadedCube(CubePos coords) {
 		return getLoadedCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 

@@ -50,19 +50,19 @@ import static cubicchunks.util.Coords.getCubeZForEntity;
  * <p>
  * This class also contains some helper methods to switch from/to block coordinates.
  */
-public class CubeCoords {
+public class CubePos {
 
 	private final int cubeX;
 	private final int cubeY;
 	private final int cubeZ;
 
-	public CubeCoords(int cubeX, int cubeY, int cubeZ) {
+	public CubePos(int cubeX, int cubeY, int cubeZ) {
 		this.cubeX = cubeX;
 		this.cubeY = cubeY;
 		this.cubeZ = cubeZ;
 	}
 
-	public CubeCoords(long address) {
+	public CubePos(long address) {
 		this.cubeX = AddressTools.getX(address);
 		this.cubeY = AddressTools.getY(address);
 		this.cubeZ = AddressTools.getZ(address);
@@ -102,7 +102,7 @@ public class CubeCoords {
 	 */
 	@Override
 	public String toString() {
-		return String.format("CubeCoords(%d, %d, %d)", cubeX, cubeY, cubeZ);
+		return String.format("CubePos(%d, %d, %d)", cubeX, cubeY, cubeZ);
 	}
 
 	/**
@@ -112,8 +112,8 @@ public class CubeCoords {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof CubeCoords) {
-			CubeCoords otherCoords = (CubeCoords) obj;
+		if (obj instanceof CubePos) {
+			CubePos otherCoords = (CubePos) obj;
 			return otherCoords.cubeX == cubeX && otherCoords.cubeY == cubeY && otherCoords.cubeZ == cubeZ;
 		}
 		return false;
@@ -131,7 +131,7 @@ public class CubeCoords {
 	/**
 	 * Returns a specification compliant hashCode for this object.
 	 *
-	 * @return A 32bit hashCode for this instance of CubeCoords.
+	 * @return A 32bit hashCode for this instance of CubePos.
 	 */
 	@Override
 	public int hashCode() {
@@ -205,30 +205,30 @@ public class CubeCoords {
 		return new BlockPos(getMinBlockX() + localX, getMinBlockY() + localY, getMinBlockZ() + localZ);
 	}
 
-	public CubeCoords sub(int dx, int dy, int dz) {
+	public CubePos sub(int dx, int dy, int dz) {
 		return this.add(-dx, -dy, -dz);
 	}
 
-	public CubeCoords add(int dx, int dy, int dz) {
-		return new CubeCoords(getCubeX() + dx, getCubeY() + dy, getCubeZ() + dz);
+	public CubePos add(int dx, int dy, int dz) {
+		return new CubePos(getCubeX() + dx, getCubeY() + dy, getCubeZ() + dz);
 	}
 
 	public ChunkPos chunkPos() {
 		return new ChunkPos(getCubeX(), getCubeZ());
 	}
 
-	public int distSquared(CubeCoords coords) {
+	public int distSquared(CubePos coords) {
 		int dx = coords.cubeX - this.cubeX;
 		int dy = coords.cubeY - this.cubeY;
 		int dz = coords.cubeZ - this.cubeZ;
 		return dx*dx + dy*dy + dz*dz;
 	}
 
-	public void forEachWithinRange(int range, Consumer<CubeCoords> action) {
+	public void forEachWithinRange(int range, Consumer<CubePos> action) {
 		for (int x = this.cubeX - range; x < this.cubeX + range; x++) {
 			for (int y = this.cubeY - range; y < this.cubeY + range; y++) {
 				for (int z = this.cubeZ - range; z < this.cubeZ + range; z++) {
-					action.accept(new CubeCoords(x, y, z));
+					action.accept(new CubePos(x, y, z));
 				}
 			}
 		}
@@ -257,15 +257,15 @@ public class CubeCoords {
 		}
 	}
 
-	public static CubeCoords fromBlockCoords(int blockX, int blockY, int blockZ) {
-		return new CubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
+	public static CubePos fromBlockCoords(int blockX, int blockY, int blockZ) {
+		return new CubePos(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
 	}
 
-	public static CubeCoords fromEntity(Entity entity) {
-		return new CubeCoords(getCubeXForEntity(entity), getCubeYForEntity(entity), getCubeZForEntity(entity));
+	public static CubePos fromEntity(Entity entity) {
+		return new CubePos(getCubeXForEntity(entity), getCubeYForEntity(entity), getCubeZForEntity(entity));
 	}
 
-	public static CubeCoords fromBlockCoords(BlockPos pos) {
-		return CubeCoords.fromBlockCoords(pos.getX(), pos.getY(), pos.getZ());
+	public static CubePos fromBlockCoords(BlockPos pos) {
+		return CubePos.fromBlockCoords(pos.getX(), pos.getY(), pos.getZ());
 	}
 }

@@ -34,14 +34,14 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class ClientOpacityIndex implements IOpacityIndex {
+public class ClientHeightMap implements IHeightMap {
 
 	private final Column chunk;
 	private int[] hmap;
 	private int[] bottomBlocks;
 	private int heightMapLowest = Coords.NO_HEIGHT;
 
-	public ClientOpacityIndex(Column column) {
+	public ClientHeightMap(Column column) {
 		this.chunk = column;
 		this.hmap = new int[256];
 		this.bottomBlocks = new int[256];

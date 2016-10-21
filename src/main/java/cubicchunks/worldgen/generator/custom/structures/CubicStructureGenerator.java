@@ -23,7 +23,7 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
@@ -53,7 +53,7 @@ public abstract class CubicStructureGenerator {
 	 * @param cube the block buffer to be filled with blocks (Cube)
 	 * @param cubePos position of the cube to generate structures in
 	 */
-	public void generate(ICubicWorld world, ICubePrimer cube, CubeCoords cubePos) {
+	public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
 
 		//TODO: maybe skip some of this stuff if the cube is empty? (would need to use hints)
 
@@ -98,5 +98,5 @@ public abstract class CubicStructureGenerator {
 	 */
 	protected abstract void generate(ICubicWorld world, ICubePrimer cube,
 	                                 int structureX, int structureY, int structureZ,
-	                                 CubeCoords generatedCubePos);
+	                                 CubePos generatedCubePos);
 }

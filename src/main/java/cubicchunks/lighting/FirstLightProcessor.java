@@ -24,9 +24,9 @@
 package cubicchunks.lighting;
 
 import cubicchunks.util.FastCubeBlockAccess;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.IOpacityIndex;
+import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -85,7 +85,7 @@ public class FirstLightProcessor {
 
 	private final MutableBlockPos mutablePos = new MutableBlockPos();
 
-	private final ICubeCache cache;
+	private final ICubeProvider cache;
 
 
 	/**
@@ -110,7 +110,7 @@ public class FirstLightProcessor {
 			return;
 		}
 		
-		IOpacityIndex opacityIndex = cube.getColumn().getOpacityIndex();
+		IHeightMap opacityIndex = cube.getColumn().getOpacityIndex();
 
 		int cubeMinY = cubeToMinBlock(cube.getY());
 
@@ -341,7 +341,7 @@ public class FirstLightProcessor {
 	 *         or {@link #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
 	 */
 	private static int getOcclusionHeightBelowCubeY(Column column, int blockX, int blockZ, int cubeY) {
-		IOpacityIndex index = column.getOpacityIndex();
+		IHeightMap index = column.getOpacityIndex();
 		return index.getTopBlockYBelow(blockToLocal(blockX), blockToLocal(blockZ), cubeToMinBlock(cubeY));
 	}
 

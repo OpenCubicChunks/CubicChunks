@@ -27,11 +27,11 @@ import com.google.common.base.Predicate;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.Coords;
 import cubicchunks.util.MathUtil;
-import cubicchunks.world.ClientOpacityIndex;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ClientHeightMap;
+import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.IOpacityIndex;
-import cubicchunks.world.OpacityIndex;
+import cubicchunks.world.IHeightMap;
+import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -56,19 +56,18 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 public class Column extends Chunk {
 
 	private CubeMap cubeMap;
-	private IOpacityIndex opacityIndex;
+	private IHeightMap opacityIndex;
 
-	private ICubeCache provider;
+	private ICubeProvider provider;
 	private ICubicWorld world;
 
-	public Column(ICubeCache provider, ICubicWorld world, int x, int z) {
+	public Column(ICubeProvider provider, ICubicWorld world, int x, int z) {
 		// NOTE: this constructor is called by the chunk loader
 		super((World) world, x, z);
 
@@ -222,7 +221,7 @@ public class Column extends Chunk {
 				newSkylightY = oldSkylightActual;
 			}
 			//update the heightmap. If out update it not accurate - it will be corrected when server sends block update
-			((ClientOpacityIndex) opacityIndex).setHeight(localX, localZ, newSkylightY);
+			((ClientHeightMap) opacityIndex).setHeight(localX, localZ, newSkylightY);
 		}
 
 		int minY = MathUtil.minInteger(oldSkylightY, newSkylightY);
@@ -512,9 +511,9 @@ public class Column extends Chunk {
 		this.cubeMap = new CubeMap();
 		//clientside we don't really need that much data. we actually only need top and bottom block Y positions
 		if (this.getWorld().isRemote) {
-			this.opacityIndex = new ClientOpacityIndex(this);
+			this.opacityIndex = new ClientHeightMap(this);
 		} else {
-			this.opacityIndex = new OpacityIndex();
+			this.opacityIndex = new ServerHeightMap();
 		}
 
 		// make sure no one's using data structures that have been replaced
@@ -538,7 +537,7 @@ public class Column extends Chunk {
 		return this.zPosition;
 	}
 
-	public IOpacityIndex getOpacityIndex() {
+	public IHeightMap getOpacityIndex() {
 		return this.opacityIndex;
 	}
 

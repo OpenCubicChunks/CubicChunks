@@ -24,7 +24,7 @@
 package cubicchunks.world.type;
 
 import cubicchunks.util.Box;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
@@ -37,14 +37,14 @@ import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
-public class CustomCubicChunksWorldType extends WorldType implements ICubicWorldType {
+public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
 
-	public CustomCubicChunksWorldType() {
+	public CustomCubicWorldType() {
 		super("CustomCubic");
 	}
 
 	public static void create() {
-		new CustomCubicChunksWorldType();
+		new CustomCubicWorldType();
 	}
 
 	@Override
@@ -64,7 +64,7 @@ public class CustomCubicChunksWorldType extends WorldType implements ICubicWorld
 				ICubePrimer primer = new CubePrimer();
 
 				terrain.calculate(primer, cubeX, cubeY, cubeZ);
-				features.generate(world, primer, new CubeCoords(cubeX, cubeY, cubeZ));
+				features.generate(world, primer, new CubePos(cubeX, cubeY, cubeZ));
 
 				return primer;
 			}

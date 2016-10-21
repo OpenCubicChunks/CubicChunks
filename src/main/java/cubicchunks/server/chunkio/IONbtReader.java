@@ -28,7 +28,7 @@ import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.OpacityIndex;
+import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
@@ -85,7 +85,7 @@ public class IONbtReader {
 	}
 
 	private static void readOpacityIndex(NBTTagCompound nbt, Column column) {// biomes
-		((OpacityIndex) column.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
+		((ServerHeightMap) column.getOpacityIndex()).readData(nbt.getByteArray("ServerHeightMap"));
 	}
 
 	@Nullable

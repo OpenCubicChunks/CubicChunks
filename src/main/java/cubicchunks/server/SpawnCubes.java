@@ -26,7 +26,7 @@ package cubicchunks.server;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
 import cubicchunks.util.ticket.ITicket;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
 import net.minecraft.nbt.NBTTagCompound;
@@ -78,7 +78,7 @@ public class SpawnCubes {
 				return; // no spawn chunks OR nothing to remove
 			}
 
-			ICubeCache serverCubeCache = world.getCubeCache();
+			ICubeProvider serverCubeCache = world.getCubeCache();
 
 			int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
 			int spawnCubeY = Coords.blockToCube(spawnPoint.getY());

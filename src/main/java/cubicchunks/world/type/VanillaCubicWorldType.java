@@ -25,27 +25,27 @@ package cubicchunks.world.type;
 
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
-public class FlatCubicChunksWorldType extends WorldType implements ICubicWorldType {
 
-	public FlatCubicChunksWorldType() {
-		super("FlatCubic");
+public class VanillaCubicWorldType extends WorldType implements ICubicWorldType {
+
+	public VanillaCubicWorldType() {
+		super("VanillaCubic");
 	}
 
 	public static void create() {
-		new FlatCubicChunksWorldType();
+		new VanillaCubicWorldType();
 	}
 
 	@Override
 	public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
-		return new FlatTerrainProcessor(world);
+		return null; // no ICubicWorldProvider's that are going to need this
 	}
 
 	@Override
 	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-		return provider;
+		return provider; // no need to swap out providers
 	}
 }

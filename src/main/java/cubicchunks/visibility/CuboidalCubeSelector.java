@@ -23,7 +23,7 @@
  */
 package cubicchunks.visibility;
 
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Set;
@@ -32,23 +32,23 @@ import java.util.function.Consumer;
 public class CuboidalCubeSelector extends CubeSelector {
 
 	@Override
-	public void forAllVisibleFrom(CubeCoords cubePos, int horizontalViewDistance, int verticalViewDistance, Consumer<CubeCoords> consumer) {
+	public void forAllVisibleFrom(CubePos cubePos, int horizontalViewDistance, int verticalViewDistance, Consumer<CubePos> consumer) {
 		int cubeX = cubePos.getCubeX();
 		int cubeY = cubePos.getCubeY();
 		int cubeZ = cubePos.getCubeZ();
 		for (int x = cubeX - horizontalViewDistance; x <= cubeX + horizontalViewDistance; x++) {
 			for (int y = cubeY - verticalViewDistance; y <= cubeY + verticalViewDistance; y++) {
 				for (int z = cubeZ - horizontalViewDistance; z <= cubeZ + horizontalViewDistance; z++) {
-					consumer.accept(new CubeCoords(x, y, z));
+					consumer.accept(new CubePos(x, y, z));
 				}
 			}
 		}
 	}
 
 	@Override
-	public void findChanged(CubeCoords oldPos, CubeCoords newPos,
+	public void findChanged(CubePos oldPos, CubePos newPos,
 	                        int horizontalViewDistance, int verticalViewDistance,
-	                        Set<CubeCoords> cubesToRemove, Set<CubeCoords> cubesToLoad,
+	                        Set<CubePos> cubesToRemove, Set<CubePos> cubesToLoad,
 	                        Set<ChunkPos> columnsToRemove, Set<ChunkPos> columnsToLoad) {
 		int oldX = oldPos.getCubeX();
 		int oldY = oldPos.getCubeY();
@@ -77,11 +77,11 @@ public class CuboidalCubeSelector extends CubeSelector {
 					//now handle cubes, the same way
 					if (!this.isPointWithinCubeVolume(oldX, oldY, oldZ, currentX, currentY, currentZ,
 							horizontalViewDistance, verticalViewDistance)) {
-						cubesToLoad.add(new CubeCoords(currentX, currentY, currentZ));
+						cubesToLoad.add(new CubePos(currentX, currentY, currentZ));
 					}
 					if (!this.isPointWithinCubeVolume(newX, newY, newZ, currentX - dx, currentY - dy, currentZ - dz,
 							horizontalViewDistance, verticalViewDistance)) {
-						cubesToRemove.add(new CubeCoords(currentX - dx, currentY - dy, currentZ - dz));
+						cubesToRemove.add(new CubePos(currentX - dx, currentY - dy, currentZ - dz));
 					}
 				}
 			}
@@ -92,10 +92,10 @@ public class CuboidalCubeSelector extends CubeSelector {
 	}
 
 	@Override
-	public void findAllUnloadedOnViewDistanceDecrease(CubeCoords playerPos,
+	public void findAllUnloadedOnViewDistanceDecrease(CubePos playerPos,
 	                                                  int oldHorizontalViewDistance, int newHorizontalViewDistance,
 	                                                  int oldVerticalViewDistance, int newVerticalViewDistance,
-	                                                  Set<CubeCoords> cubesToUnload, Set<ChunkPos> columnsToUnload) {
+	                                                  Set<CubePos> cubesToUnload, Set<ChunkPos> columnsToUnload) {
 		int playerCubeX = playerPos.getCubeX();
 		int playerCubeY = playerPos.getCubeY();
 		int playerCubeZ = playerPos.getCubeZ();
@@ -107,7 +107,7 @@ public class CuboidalCubeSelector extends CubeSelector {
 				}
 				for (int cubeY = playerCubeY - oldVerticalViewDistance; cubeY <= playerCubeY + oldVerticalViewDistance; cubeY++) {
 					if (!isPointWithinCubeVolume(playerCubeX, playerCubeY, playerCubeZ, cubeX, cubeY, cubeZ, newHorizontalViewDistance, newVerticalViewDistance)) {
-						cubesToUnload.add(new CubeCoords(cubeX, cubeY, cubeZ));
+						cubesToUnload.add(new CubePos(cubeX, cubeY, cubeZ));
 					}
 				}
 			}

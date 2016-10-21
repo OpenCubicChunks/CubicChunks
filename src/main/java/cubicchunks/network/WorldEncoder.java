@@ -24,8 +24,8 @@
 package cubicchunks.network;
 
 import cubicchunks.util.Coords;
-import cubicchunks.world.ClientOpacityIndex;
-import cubicchunks.world.OpacityIndex;
+import cubicchunks.world.ClientHeightMap;
+import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
@@ -55,7 +55,7 @@ public class WorldEncoder {
 
 			// 5. heightmap and bottom-block-y. Each non-empty cube has a chance to update this data.
 			// trying to keep track of when it changes would be complex, so send it wil all cubes
-			byte[] heightmaps = ((OpacityIndex) cube.getColumn().getOpacityIndex()).getDataForClient();
+			byte[] heightmaps = ((ServerHeightMap) cube.getColumn().getOpacityIndex()).getDataForClient();
 			assert heightmaps.length == 256*2*4;
 			out.writeBytes(heightmaps);
 		}
@@ -97,7 +97,7 @@ public class WorldEncoder {
 			// 5. heightmaps TODO: NO NO NO! Don't send this with Cubes!
 			byte[] heightmaps = new byte[256*2*4];
 			in.readBytes(heightmaps);
-			ClientOpacityIndex coi = ((ClientOpacityIndex) cube.getColumn().getOpacityIndex());
+			ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
 			coi.setData(heightmaps);
 			//cube.initialClientSkylight();
 			storage.removeInvalidBlocks();

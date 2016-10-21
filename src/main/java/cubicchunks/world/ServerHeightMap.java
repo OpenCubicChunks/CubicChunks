@@ -34,7 +34,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class OpacityIndex implements IOpacityIndex {
+public class ServerHeightMap implements IHeightMap {
 
 	/**
 	 * Special value to indicate the absence of a segment in the segments arrays.
@@ -67,7 +67,7 @@ public class OpacityIndex implements IOpacityIndex {
 	private boolean needsHash;
 
 
-	public OpacityIndex() {
+	public ServerHeightMap() {
 		this.ymin = new int[Cube.SIZE * Cube.SIZE];
 		this.ymax = new int[Cube.SIZE * Cube.SIZE];
 
@@ -107,7 +107,7 @@ public class OpacityIndex implements IOpacityIndex {
 	}
 
 
-	// Interface: IOpacityIndex ----------------------------------------------------------------------------------------
+	// Interface: IHeightMap ----------------------------------------------------------------------------------------
 
 	@Override
 	public boolean isOpaque(int localX, int blockY, int localZ) {

@@ -26,8 +26,8 @@ package cubicchunks.debug.item;
 import cubicchunks.debug.ItemRegistered;
 import cubicchunks.network.PacketCube;
 import cubicchunks.network.PacketDispatcher;
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -55,8 +55,8 @@ public class RelightSkyBlockItem extends ItemRegistered {
 		BlockPos placePos = pos.offset(faceHit);
 		if(world.checkLightFor(EnumSkyBlock.SKY, placePos)) {
 			playerIn.addChatMessage(new TextComponentString("Successfully updated lighting at " + placePos));
-			CubeCoords cubePos = CubeCoords.fromBlockCoords(placePos);
-			ICubeCache cubeCache = world.getCubeCache();
+			CubePos cubePos = CubePos.fromBlockCoords(placePos);
+			ICubeProvider cubeCache = world.getCubeCache();
 			//re-send them to player
 			cubePos.forEachWithinRange(1,
 					(p)-> PacketDispatcher.sendTo(new PacketCube(cubeCache.getCube(p), PacketCube.Type.UPDATE), (EntityPlayerMP) playerIn));

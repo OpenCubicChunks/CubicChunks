@@ -23,7 +23,7 @@
  */
 package cubicchunks.util;
 
-import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
@@ -45,7 +45,7 @@ public class FastCubeBlockAccess {
 	private final int originX, originY, originZ;
 	private final ICubicWorld world;
 
-	public FastCubeBlockAccess(ICubeCache cache, Cube cube, int radius) {
+	public FastCubeBlockAccess(ICubeProvider cache, Cube cube, int radius) {
 		int n = radius*2 + 1;
 		this.world = cube.getWorld();
 		this.cache = new Cube[n][n][n];

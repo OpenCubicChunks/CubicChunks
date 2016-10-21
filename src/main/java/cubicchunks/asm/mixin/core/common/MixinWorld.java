@@ -27,8 +27,8 @@ import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
@@ -197,11 +197,11 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		this.lightingManager.tick();
 	}
 
-	@Override public ICubeCache getCubeCache() {
+	@Override public ICubeProvider getCubeCache() {
 		if (!this.isCubicWorld()) {
 			throw new NotCubicChunksWorldException();
 		}
-		return (ICubeCache) this.chunkProvider;
+		return (ICubeProvider) this.chunkProvider;
 	}
 
 	@Override public LightingManager getLightingManager() {
@@ -212,7 +212,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	}
 
 	@Override
-	public boolean testForCubes(CubeCoords start, CubeCoords end, Predicate<Cube> cubeAllowed) {
+	public boolean testForCubes(CubePos start, CubePos end, Predicate<Cube> cubeAllowed) {
 		if (wgenFullRelight) { //TODO: remove this hack!
 			return true;
 		}

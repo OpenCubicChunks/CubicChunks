@@ -23,17 +23,14 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.CubicChunks;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.ChunkGc;
+import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
-import cubicchunks.server.ServerCubeCache;
-import cubicchunks.util.Coords;
 import cubicchunks.world.CubeWorldEntitySpawner;
-import cubicchunks.world.CubicChunksSaveHandler;
+import cubicchunks.world.CubicSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.provider.ICubicWorldProvider;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
@@ -73,7 +70,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 		this.entitySpawner = new CubeWorldEntitySpawner();
 
-		this.chunkProvider = new ServerCubeCache(this,
+		this.chunkProvider = new CubeProviderServer(this,
 				((ICubicWorldProvider)this.provider).createCubeGenerator());
 
 		this.lightingManager = new LightingManager(this);
@@ -81,7 +78,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.thePlayerManager = new PlayerCubeMap(this);
 		this.chunkGc = new ChunkGc(getCubeCache());
 
-		this.saveHandler = new CubicChunksSaveHandler(this, this.getSaveHandler());
+		this.saveHandler = new CubicSaveHandler(this, this.getSaveHandler());
 
 		this.firstLightProcessor = new FirstLightProcessor(this);
 	}
@@ -91,8 +88,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.chunkGc.tick();
 	}
 
-	@Override public ServerCubeCache getCubeCache() {
-		return (ServerCubeCache) this.chunkProvider;
+	@Override public CubeProviderServer getCubeCache() {
+		return (CubeProviderServer) this.chunkProvider;
 	}
 
 	@Override public FirstLightProcessor getFirstLightProcessor() {

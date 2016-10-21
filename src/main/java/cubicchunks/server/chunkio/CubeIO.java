@@ -25,7 +25,7 @@ package cubicchunks.server.chunkio;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
@@ -96,7 +96,7 @@ public class CubeIO implements IThreadedFileIO {
 	private ConcurrentMap<Long, byte[]> columns;
 	private ConcurrentMap<Long, byte[]> cubes;
 	private ConcurrentMap<ChunkPos, SaveEntry> columnsToSave;
-	private ConcurrentMap<CubeCoords, SaveEntry> cubesToSave;
+	private ConcurrentMap<CubePos, SaveEntry> cubesToSave;
 
 	private final Thread theShutdownHook;
 
@@ -175,7 +175,7 @@ public class CubeIO implements IThreadedFileIO {
 
 		NBTTagCompound nbt;
 		SaveEntry saveEntry;
-		if((saveEntry = this.cubesToSave.get(new CubeCoords(address)))!= null) {
+		if((saveEntry = this.cubesToSave.get(new CubePos(address)))!= null) {
 			nbt = saveEntry.nbt;
 		} else {
 			// does the database have the cube?

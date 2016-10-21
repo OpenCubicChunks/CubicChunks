@@ -35,11 +35,11 @@ public class ChunkGc {
 	// GC every 10 seconds by default
 	private static final int GC_INTERVAL = 20*10;
 
-	private final ServerCubeCache cubeCache;
+	private final CubeProviderServer cubeCache;
 
 	private int tick = 0;
 
-	public ChunkGc(ServerCubeCache cubeCache) {
+	public ChunkGc(CubeProviderServer cubeCache) {
 		this.cubeCache = cubeCache;
 	}
 

@@ -26,9 +26,9 @@ package cubicchunks.server;
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
-import cubicchunks.world.ICubeCache;
+import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.column.Column;
@@ -61,7 +61,7 @@ import java.util.function.Consumer;
  * (there may be some entities that are not in any Cube yet).
  * * dropChunk method is not supported. Columns are unloaded automatically when the last cube is unloaded
  */
-public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, IProviderExtras{
+public class CubeProviderServer extends ChunkProviderServer implements ICubeProvider, IProviderExtras{
 
 	private static final Logger log = CubicChunks.LOGGER;
 
@@ -73,7 +73,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 
 	private ICubeGenerator   cubeGen;
 
-	public ServerCubeCache(ICubicWorldServer worldServer, ICubeGenerator cubeGen) {
+	public CubeProviderServer(ICubicWorldServer worldServer, ICubeGenerator cubeGen) {
 		super((WorldServer) worldServer,
 				worldServer.getSaveHandler().getChunkLoader(worldServer.getProvider()), // forge uses this in
 				null); // safe to null out IChunkGenerator (Note: lets hope mods don't touch it, ik its public)
@@ -167,7 +167,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 
 	@Override
 	public String makeString() {
-		return "ServerCubeCache: " + this.id2ChunkMap.size() + " columns, "
+		return "CubeProviderServer: " + this.id2ChunkMap.size() + " columns, "
 				+ this.cubeMap.getSize() + " cubes";
 	}
 
@@ -198,7 +198,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	}
 
 	@Override
-	public Cube getCube(CubeCoords coords) {
+	public Cube getCube(CubePos coords) {
 		return getCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
@@ -208,7 +208,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	}
 
 	@Override
-	public Cube getLoadedCube(CubeCoords coords) {
+	public Cube getLoadedCube(CubePos coords) {
 		return getLoadedCube(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ());
 	}
 
@@ -348,7 +348,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		Cube cube = new Cube(column, cubeY, primer);
 
 		this.worldServer.getFirstLightProcessor()
-				.initializeSkylight(cube); // init sky light, (does not require any other cubes, just OpacityIndex)
+				.initializeSkylight(cube); // init sky light, (does not require any other cubes, just ServerHeightMap)
 		onCubeLoaded(cube, column);
 		return cube;
 	}
@@ -405,7 +405,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	 * @param callback Callback to be called when the column has finished loading. Note that the returned column
 	 * is not guaranteed to be non-null
 	 *
-	 * @see ServerCubeCache#getColumn(int, int, Requirement) for the synchronous variant of this method
+	 * @see CubeProviderServer#getColumn(int, int, Requirement) for the synchronous variant of this method
 	 */
 	public void asyncGetColumn(int columnX, int columnZ, Requirement req, Consumer<Column> callback) {
 		Column column = getLoadedChunk(columnX, columnZ);

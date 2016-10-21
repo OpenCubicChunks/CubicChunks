@@ -31,7 +31,7 @@ import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadCube;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZAddressable;
 import cubicchunks.util.ticket.ITicket;
 import cubicchunks.world.ICubicWorld;
@@ -56,7 +56,7 @@ import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
+public class CubeWatcher implements XYZAddressable, ITicket {
 	private final Consumer<Cube> consumer = (c) -> {
 		this.cube = c;
 		this.loading = false;
@@ -64,18 +64,18 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 			this.cube.getTickets().add(this);
 		}
 	};
-	private final ServerCubeCache cubeCache;
+	private final CubeProviderServer cubeCache;
 	private PlayerCubeMap playerCubeMap;
 	private Cube cube;
 	private final TIntObjectMap<WatcherPlayerEntry> players = new TIntObjectHashMap<>();
 	private final TShortList dirtyBlocks = new TShortArrayList(64);
-	private final CubeCoords cubePos;
+	private final CubePos cubePos;
 	private long previousWorldTime = 0;
 	private boolean sentToPlayers = false;
 	private boolean loading = true;
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public PlayerCubeMapEntry(PlayerCubeMap playerCubeMap, CubeCoords cubePos) {
+	public CubeWatcher(PlayerCubeMap playerCubeMap, CubePos cubePos) {
 		this.playerCubeMap = playerCubeMap;
 		this.cubeCache = playerCubeMap.getWorld().getCubeCache();
 		this.cubeCache.asyncGetCube(
@@ -173,7 +173,7 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 		if (this.cube == null || !this.cube.isPopulated() || !this.cube.isInitialLightingDone()) {
 			return false;
 		}
-		PlayerCubeMapColumnEntry columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
+		ColumnWatcher columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
 		//can't send cubes before columns
 		if(columnEntry == null || !columnEntry.isSentToPlayers()) {
 			return false;
@@ -281,7 +281,7 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 		return !this.players.forEachValue(value -> !predicate.apply(value.player));
 	}
 
-	public double getDistanceSq(CubeCoords cubePos, Entity entity) {
+	public double getDistanceSq(CubePos cubePos, Entity entity) {
 		double blockX = cubePos.getXCenter();
 		double blockY = cubePos.getYCenter();
 		double blockZ = cubePos.getZCenter();
@@ -325,7 +325,7 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 		}
 	}
 
-	public CubeCoords getCubePos() {
+	public CubePos getCubePos() {
 		return cubePos;
 	}
 

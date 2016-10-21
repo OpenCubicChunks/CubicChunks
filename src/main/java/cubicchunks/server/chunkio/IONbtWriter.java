@@ -25,7 +25,7 @@ package cubicchunks.server.chunkio;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
-import cubicchunks.world.OpacityIndex;
+import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
@@ -92,7 +92,7 @@ class IONbtWriter {
 	}
 
 	private static void writeOpacityIndex(Column column, NBTTagCompound nbt) {// light index
-		nbt.setByteArray("OpacityIndex", ((OpacityIndex) column.getOpacityIndex()).getData());
+		nbt.setByteArray("ServerHeightMap", ((ServerHeightMap) column.getOpacityIndex()).getData());
 	}
 
 	private static void writeBaseCube(Cube cube, NBTTagCompound cubeNbt) {

@@ -21,7 +21,7 @@ package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.collect.Maps;
 import cubicchunks.CubicChunks;
-import cubicchunks.server.ServerCubeCache;
+import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
@@ -80,7 +80,7 @@ public class AsyncWorldIOExecutor {
 	 * @return The loaded cube, or null if either not present or the load failed
 	 */
 	@Nullable
-	public static Cube syncCubeLoad(ICubicWorld world, CubeIO loader, ServerCubeCache cache, int cubeX, int cubeY, int cubeZ) {
+	public static Cube syncCubeLoad(ICubicWorld world, CubeIO loader, CubeProviderServer cache, int cubeX, int cubeY, int cubeZ) {
 		Column column = cache.loadChunk(cubeX, cubeZ);
 		QueuedCube key = new QueuedCube(cubeX, cubeY, cubeZ, world);
 		AsyncCubeIOProvider task = cubeTasks.remove(key); // Remove task because we will call the sync callbacks directly
@@ -156,7 +156,7 @@ public class AsyncWorldIOExecutor {
 	 * @param z cube z position
 	 * @param runnable The callback
 	 */
-	public static void queueCubeLoad(ICubicWorld world, CubeIO loader, ServerCubeCache cache, int x, int y, int z, Consumer<Cube> runnable) {
+	public static void queueCubeLoad(ICubicWorld world, CubeIO loader, CubeProviderServer cache, int x, int y, int z, Consumer<Cube> runnable) {
 
 		QueuedCube key = new QueuedCube(x, y, z, world);
 		AsyncCubeIOProvider task = cubeTasks.get(key);

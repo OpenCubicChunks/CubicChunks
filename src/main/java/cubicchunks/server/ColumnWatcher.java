@@ -29,7 +29,7 @@ import cubicchunks.network.PacketColumn;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadColumn;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.util.XZAddressable;
 import cubicchunks.world.column.Column;
 import mcp.MethodsReturnNonnullByDefault;
@@ -49,7 +49,7 @@ import static cubicchunks.util.ReflectionUtil.getFieldSetterHandle;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry implements XZAddressable {
+public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
 	private PlayerCubeMap playerCubeMap;
 	private static MethodHandle getPlayers = getFieldGetterHandle(PlayerChunkMapEntry.class, "field_187283_c");
@@ -59,7 +59,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry implements XZA
 	private static MethodHandle getLoadedRunnable = getFieldGetterHandle(PlayerChunkMapEntry.class, "loadedRunnable");//forge field, no srg name
 	private final Runnable loadedRunnable;
 
-	public PlayerCubeMapColumnEntry(PlayerCubeMap playerCubeMap, ChunkPos pos) {
+	public ColumnWatcher(PlayerCubeMap playerCubeMap, ChunkPos pos) {
 		super(playerCubeMap, pos.chunkXPos, pos.chunkZPos);
 		this.playerCubeMap = playerCubeMap;
 		try {
@@ -173,7 +173,7 @@ public class PlayerCubeMapColumnEntry extends PlayerChunkMapEntry implements XZA
 	@Override
 	@Deprecated
 	public void blockChanged(int x, int y, int z) {
-		this.playerCubeMap.getCubeWatcher(CubeCoords.fromBlockCoords(x, y, z)).blockChanged(x, y, z);
+		this.playerCubeMap.getCubeWatcher(CubePos.fromBlockCoords(x, y, z)).blockChanged(x, y, z);
 	}
 
 	@Override

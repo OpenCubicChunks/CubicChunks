@@ -10,7 +10,7 @@ This MinecraftForge mod extends Minecraft height and depth to 8388608 in both di
 
 To run this mod from your IDE you need to add at least the following JVM options:
 ```
--Dfml.coreMods.load=cubicchunks.asm.CoreModLoadingPlugin -Dmixin.env.compatLevel=JAVA_8
+-Dfml.coreMods.load=cubicchunks.asm.CubicChunksCoreMod -Dmixin.env.compatLevel=JAVA_8
 ```
 
 Some other useful options:

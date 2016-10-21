@@ -24,10 +24,10 @@
 package cubicchunks.network;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.client.ClientCubeCache;
+import cubicchunks.client.CubeProviderClient;
 import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ClientOpacityIndex;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
@@ -69,9 +69,9 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
-		CubeCoords cubePos = packet.getCubePos();
+		CubePos cubePos = packet.getCubePos();
 
 		Column column = cubeCache.provideChunk(cubePos.getCubeX(), cubePos.getCubeZ());
 		//isEmpty actually checks if the column is a BlankColumn
@@ -117,7 +117,7 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		ChunkPos chunkPos = packet.getChunkPos();
 
@@ -137,7 +137,7 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		cubeCache.unloadCube(packet.getCubePos());
 	}
@@ -150,7 +150,7 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		ChunkPos chunkPos = packet.getColumnPos();
 		cubeCache.unloadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
@@ -164,7 +164,7 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		// get the cube
 		Cube cube = cubeCache.getCube(packet.cubePos);
@@ -173,7 +173,7 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		ClientOpacityIndex index = (ClientOpacityIndex) cube.getColumn().getOpacityIndex();
+		ClientHeightMap index = (ClientHeightMap) cube.getColumn().getOpacityIndex();
 		LightingManager lm = worldClient.getLightingManager();
 		for (int hmapUpdate : packet.heightValues) {
 			int x = hmapUpdate & 0xF;

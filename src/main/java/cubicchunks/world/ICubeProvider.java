@@ -21,49 +21,34 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm;
+package cubicchunks.world;
 
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.mixin.Mixins;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
-import java.util.Map;
+import javax.annotation.Nullable;
 
-@IFMLLoadingPlugin.MCVersion(value = "1.10.2")
-@IFMLLoadingPlugin.SortingIndex(value = 5000)
-@IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
-public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
+public interface ICubeProvider {
 
-	public CoreModLoadingPlugin() {
-		initMixin();
-	}
+	@Nullable
+	Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
 
-	@Override
-	public String[] getASMTransformerClass() {
-		return new String[]{};
-	}
+	@Nullable
+	Cube getLoadedCube(CubePos coords);
 
-	@Override
-	public String getModContainerClass() {
-		return null;
-	}
+	Cube getCube(int cubeX, int cubeY, int cubeZ);
 
-	@Override
-	public String getSetupClass() {
-		return null;
-	}
+	Cube getCube(CubePos coords);
 
-	@Override
-	public void injectData(Map<String, Object> data) { }
+	/**
+	 * Retrieve a column, if it exists and is loaded
+	 * @param x The x position of the column
+	 * @param z The z position of the column
+	 * @return The column, if loaded. Null, otherwise.
+	 */
+	@Nullable
+	Column getLoadedChunk(int x, int z); // more strictly define the return type
 
-	@Override
-	public String getAccessTransformerClass() {
-		return null;
-	}
-
-	public static void initMixin() {
-		MixinBootstrap.init();
-		Mixins.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
-		Mixins.addConfiguration("cubicchunks.mixins.core.json");
-	}
+	Column provideChunk(int x, int z);   // more strictly define the return type
 }

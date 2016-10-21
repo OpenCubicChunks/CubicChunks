@@ -25,7 +25,7 @@ package cubicchunks;
 
 import cubicchunks.testutil.MinecraftEnvironment;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.type.FlatCubicChunksWorldType;
+import cubicchunks.world.type.FlatCubicWorldType;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.datafix.DataFixer;
@@ -69,7 +69,7 @@ public class TestWorldServerMixin {
 
 		ISaveHandler mockSaveHandler =
 				new AnvilSaveHandler(folder.newFolder("save"), "world", false, new DataFixer(512));
-		WorldType cubicChunksType = new FlatCubicChunksWorldType();
+		WorldType cubicChunksType = new FlatCubicWorldType();
 		WorldSettings settings = new WorldSettings(0, GameType.SURVIVAL, false, false, cubicChunksType);
 		WorldInfo worldInfo = new WorldInfo(settings, "test");
 		this.world = (ICubicWorldServer) new WorldServer(server, mockSaveHandler, worldInfo, 0, new Profiler());

@@ -24,15 +24,15 @@
 package cubicchunks.world;
 
 import cubicchunks.lighting.FirstLightProcessor;
+import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
-import cubicchunks.server.ServerCubeCache;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 
 public interface ICubicWorldServer extends ICubicWorld {
 
-	ServerCubeCache getCubeCache();
+	CubeProviderServer getCubeCache();
 
 	PlayerCubeMap getPlayerCubeMap();
 

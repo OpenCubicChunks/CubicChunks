@@ -27,13 +27,13 @@ import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZAddressable;
 import cubicchunks.util.ticket.TicketList;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.IOpacityIndex;
+import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.Block;
@@ -79,7 +79,7 @@ public class Cube implements XYZAddressable {
 	private ICubicWorld world;
 	private Column column;
 
-	private CubeCoords coords;
+	private CubePos coords;
 
 	private ExtendedBlockStorage storage;
 	private EntityContainer entities;
@@ -97,7 +97,7 @@ public class Cube implements XYZAddressable {
 	public Cube(Column column, int cubeY) {
 		this.world = column.getCubicWorld();
 		this.column = column;
-		this.coords = new CubeCoords(column.getX(), cubeY, column.getZ());
+		this.coords = new CubePos(column.getX(), cubeY, column.getZ());
 
 		this.tickets = new TicketList();
 
@@ -112,7 +112,7 @@ public class Cube implements XYZAddressable {
 		this(column, cubeY);
 
 		int miny = Coords.cubeToMinBlock(cubeY);
-		IOpacityIndex opindex = column.getOpacityIndex();
+		IHeightMap opindex = column.getOpacityIndex();
 
 		for (int x = 0; x < 16;x++) {
 			for (int z = 0; z < 16;z++) {
@@ -127,7 +127,7 @@ public class Cube implements XYZAddressable {
 						storage.set(x, y, z, newstate);
 
 						if(newstate.getLightOpacity() != 0) {
-							column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe OpacityIndex needs its own isModified
+							column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe ServerHeightMap needs its own isModified
 							opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
 						}
 					}
@@ -521,7 +521,7 @@ public class Cube implements XYZAddressable {
 		return this.coords.getCubeZ();
 	}
 
-	public CubeCoords getCoords() {
+	public CubePos getCoords() {
 		return this.coords;
 	}
 

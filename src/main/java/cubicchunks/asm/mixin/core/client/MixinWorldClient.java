@@ -24,7 +24,7 @@
 package cubicchunks.asm.mixin.core.client;
 
 import cubicchunks.asm.mixin.core.common.MixinWorld;
-import cubicchunks.client.ClientCubeCache;
+import cubicchunks.client.CubeProviderClient;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.world.ICubicWorldClient;
 import net.minecraft.block.state.IBlockState;
@@ -48,14 +48,14 @@ public abstract class MixinWorldClient extends MixinWorld implements ICubicWorld
 	@Override public void initCubicWorld() {
 		super.initCubicWorld();
 		this.isCubicWorld = true;
-		ClientCubeCache clientCubeCache = new ClientCubeCache(this);
-		this.chunkProvider = clientCubeCache;
-		this.clientChunkProvider = clientCubeCache;
+		CubeProviderClient cubeProviderClient = new CubeProviderClient(this);
+		this.chunkProvider = cubeProviderClient;
+		this.clientChunkProvider = cubeProviderClient;
 		this.lightingManager = new LightingManager(this);
 	}
 
-	@Override public ClientCubeCache getCubeCache() {
-		return (ClientCubeCache) this.clientChunkProvider;
+	@Override public CubeProviderClient getCubeCache() {
+		return (CubeProviderClient) this.clientChunkProvider;
 	}
 
 	@Intrinsic public boolean world$invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState) {

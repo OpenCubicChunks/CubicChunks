@@ -24,7 +24,7 @@
 package cubicchunks.network;
 
 import com.google.common.collect.Iterables;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
@@ -42,7 +42,7 @@ import java.util.List;
 public class PacketCube implements IMessage {
 
 	private Type type;
-	private CubeCoords cubePos;
+	private CubePos cubePos;
 	private byte[] data;
 	private List<NBTTagCompound> tileEntityTags;
 
@@ -65,7 +65,7 @@ public class PacketCube implements IMessage {
 
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		this.cubePos = new CubeCoords(buf.readInt(), buf.readInt(), buf.readInt());
+		this.cubePos = new CubePos(buf.readInt(), buf.readInt(), buf.readInt());
 		this.type = Type.values()[buf.readByte()];
 		this.data = new byte[buf.readInt()];
 		buf.readBytes(this.data);
@@ -90,7 +90,7 @@ public class PacketCube implements IMessage {
 		}
 	}
 
-	public CubeCoords getCubePos() {
+	public CubePos getCubePos() {
 		return cubePos;
 	}
 

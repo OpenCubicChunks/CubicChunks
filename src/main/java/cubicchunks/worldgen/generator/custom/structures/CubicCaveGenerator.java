@@ -23,7 +23,7 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.util.StructureGenUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
@@ -151,7 +151,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 
 	@Override
 	protected void generate(ICubicWorld world, ICubePrimer cube,
-	                        int cubeXOrigin, int cubeYOrigin, int cubeZOrigin, CubeCoords generatedCubePos) {
+	                        int cubeXOrigin, int cubeYOrigin, int cubeZOrigin, CubePos generatedCubePos) {
 		if (this.rand.nextInt(CAVE_RARITY) != 0) {
 			return;
 		}
@@ -194,7 +194,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	/**
 	 * Generates a flattened cave "room", usually more caves split off it
 	 */
-	protected void generateLargeNode(ICubePrimer cube, long seed, CubeCoords generatedCubePos,
+	protected void generateLargeNode(ICubePrimer cube, long seed, CubePos generatedCubePos,
 	                                 double x, double y, double z) {
 		float baseHorizSize = 1.0F + this.rand.nextFloat()*6.0F;
 		float horizDirAngle = 0;
@@ -227,7 +227,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	 * > 1 result in vertically stretched caves
 	 */
 	protected void generateNode(ICubePrimer cube, long seed,
-	                            CubeCoords generatedCubePos,
+	                            CubePos generatedCubePos,
 	                            double caveX, double caveY, double caveZ,
 	                            float baseCaveSize, float horizDirAngle, float vertDirAngle,
 	                            int startWalkedDistance, int maxWalkedDistance, double vertCaveSizeMod) {
@@ -339,7 +339,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	}
 
 	//returns true if cave generation should be continued
-	private void tryCarveBlocks(ICubePrimer cube, CubeCoords generatedCubePos,
+	private void tryCarveBlocks(ICubePrimer cube, CubePos generatedCubePos,
 	                            double caveX, double caveY, double caveZ,
 	                            double caveSizeHoriz, double caveSizeVert) {
 		double genCubeCenterX = generatedCubePos.getXCenter();
@@ -382,7 +382,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	}
 
 	private void carveBlocks(ICubePrimer cube,
-	                         CubeCoords generatedCubePos,
+	                         CubePos generatedCubePos,
 	                         double caveX, double caveY, double caveZ,
 	                         double caveSizeHoriz, double caveSizeVert,
 	                         StructureBoundingBox boundingBox) {

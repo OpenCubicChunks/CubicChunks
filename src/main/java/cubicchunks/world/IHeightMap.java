@@ -23,7 +23,7 @@
  */
 package cubicchunks.world;
 
-public interface IOpacityIndex {
+public interface IHeightMap {
 
 	/**
 	 * Returns true if the opacity at the given position != 0 or false otherwise.

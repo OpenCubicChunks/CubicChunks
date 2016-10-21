@@ -23,12 +23,12 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.client.ClientCubeCache;
+import cubicchunks.client.CubeProviderClient;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 
 public interface ICubicWorldClient extends ICubicWorld {
-	ClientCubeCache getCubeCache();
+	CubeProviderClient getCubeCache();
 
 	boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
 }

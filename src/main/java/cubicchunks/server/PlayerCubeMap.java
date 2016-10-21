@@ -28,7 +28,7 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
 import cubicchunks.util.XZMap;
 import cubicchunks.visibility.CubeSelector;
@@ -73,7 +73,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	/**
 	 * Comparator that specifies order in which cubes will be generated and sent to clients
 	 */
-	private static final Comparator<PlayerCubeMapEntry> CUBE_ORDER = (watcher1, watcher2) ->
+	private static final Comparator<CubeWatcher> CUBE_ORDER = (watcher1, watcher2) ->
 			ComparisonChain.start().compare(
 					watcher1.getClosestPlayerDistance(),
 					watcher2.getClosestPlayerDistance()
@@ -82,7 +82,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	/**
 	 * Comparator that specifies order in which columns will be generated and sent to clients
 	 */
-	private static final Comparator<PlayerCubeMapColumnEntry> COLUMN_ORDER = (watcher1, watcher2) ->
+	private static final Comparator<ColumnWatcher> COLUMN_ORDER = (watcher1, watcher2) ->
 			ComparisonChain.start().compare(
 					watcher1.getClosestPlayerDistance(),
 					watcher2.getClosestPlayerDistance()
@@ -103,7 +103,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * Mapping of Cube positions to CubeWatchers (Cube equivalent of PlayerManager.PlayerInstance).
 	 * Contains cube positions of all cubes loaded by players.
 	 */
-	private final XYZMap<PlayerCubeMapEntry> cubeWatchers = new XYZMap<>(0.7f, 25*25*25);
+	private final XYZMap<CubeWatcher> cubeWatchers = new XYZMap<>(0.7f, 25*25*25);
 
 	/**
 	 * Mapping of Column positions to ColumnWatchers.
@@ -111,12 +111,12 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * Exists for compatibility with vanilla and to send ColumnLoad/Unload packets to clients.
 	 * Columns cannot be managed by client because they have separate data, like heightmap and biome array.
 	 */
-	private final XZMap<PlayerCubeMapColumnEntry> columnWatchers = new XZMap<>(0.7f, 25*25);
+	private final XZMap<ColumnWatcher> columnWatchers = new XZMap<>(0.7f, 25*25);
 
 	/**
 	 * All cubeWatchers that have pending block updates to send.
 	 */
-	private final Set<PlayerCubeMapEntry> cubeWatchersToUpdate = new HashSet<>();
+	private final Set<CubeWatcher> cubeWatchersToUpdate = new HashSet<>();
 
 	/**
 	 * Contains all CubeWatchers that need to be sent to clients,
@@ -125,7 +125,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * Note that this is not the same as cubesToGenerate list.
 	 * Cube can be loaded while not being fully generated yet (not in the last GeneratorStageRegistry stage).
 	 */
-	private final List<PlayerCubeMapEntry> cubesToSendToClients = new ArrayList<>();
+	private final List<CubeWatcher> cubesToSendToClients = new ArrayList<>();
 
 	/**
 	 * Contains all CubeWatchers that still need to be loaded/generated.
@@ -133,7 +133,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * Technically it can generate it, using the world's IGeneratorPipeline,
 	 * but spectator players can't generate chunks if spectatorsGenerateChunks gamerule is set.
 	 */
-	private final List<PlayerCubeMapEntry> cubesToGenerate = new ArrayList<>();
+	private final List<CubeWatcher> cubesToGenerate = new ArrayList<>();
 
 	/**
 	 * Contains all ColumnWatchers that need to be sent to clients,
@@ -142,13 +142,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * Note that this is not the same as columnsToGenerate list.
 	 * Columns can be loaded while not being fully generated yet
 	 */
-	private final List<PlayerCubeMapColumnEntry> columnsToSendToClients = new ArrayList<>();
+	private final List<ColumnWatcher> columnsToSendToClients = new ArrayList<>();
 
 	/**
 	 * Contains all ColumnWatchers that still need to be loaded/generated.
 	 * ColumnWatcher constructor attempts to load column from disk, but it won't generate it.
 	 */
-	private final List<PlayerCubeMapColumnEntry> columnsToGenerate = new ArrayList<>();
+	private final List<ColumnWatcher> columnsToGenerate = new ArrayList<>();
 
 	private int horizontalViewDistance;
 	private int verticalViewDistance;
@@ -162,7 +162,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	private boolean toGenerateNeedSort = true;
 	private boolean toSendToClientNeedSort = true;
 
-	private ServerCubeCache cubeCache;
+	private CubeProviderServer cubeCache;
 
 	private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.DEFAULT_MAX_GENERATED_CUBES_PER_TICK;
 
@@ -221,7 +221,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		if (currentTime - this.previousWorldTime > 8000L) {
 			this.previousWorldTime = currentTime;
 
-			for (PlayerCubeMapEntry playerInstance : this.cubeWatchers) {
+			for (CubeWatcher playerInstance : this.cubeWatchers) {
 				playerInstance.update();
 				playerInstance.updateInhabitedTime();
 			}
@@ -229,7 +229,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 
 		//process instances to update
-		for (PlayerCubeMapEntry playerInstance : this.cubeWatchersToUpdate) {
+		for (CubeWatcher playerInstance : this.cubeWatchersToUpdate) {
 			playerInstance.update();
 		}
 		this.cubeWatchersToUpdate.clear();
@@ -252,9 +252,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		getWorld().getProfiler().endStartSection("generate");
 		if (!this.columnsToGenerate.isEmpty()) {
 			getWorld().getProfiler().startSection("columns");
-			Iterator<PlayerCubeMapColumnEntry> iter = this.columnsToGenerate.iterator();
+			Iterator<ColumnWatcher> iter = this.columnsToGenerate.iterator();
 			while (iter.hasNext()) {
-				PlayerCubeMapColumnEntry entry = iter.next();
+				ColumnWatcher entry = iter.next();
 
 				getWorld().getProfiler().startSection("column[" + entry.getPos().chunkXPos + "," + entry.getPos().chunkZPos + "]");
 				boolean success = entry.getColumn() != null;
@@ -283,11 +283,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 			long stopTime = System.nanoTime() + 50000000L;
 			int chunksToGenerate = maxGeneratedCubesPerTick;
-			Iterator<PlayerCubeMapEntry> iterator = this.cubesToGenerate.iterator();
+			Iterator<CubeWatcher> iterator = this.cubesToGenerate.iterator();
 
 			while (iterator.hasNext() && chunksToGenerate >= 0 && System.nanoTime() < stopTime) {
-				PlayerCubeMapEntry watcher = iterator.next();
-				CubeCoords pos = watcher.getCubePos();
+				CubeWatcher watcher = iterator.next();
+				CubePos pos = watcher.getCubePos();
 
 				getWorld().getProfiler().startSection("chunk=" + pos);
 
@@ -317,10 +317,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		getWorld().getProfiler().endStartSection("send");
 		if (!this.columnsToSendToClients.isEmpty()) {
 			getWorld().getProfiler().startSection("columns");
-			Iterator<PlayerCubeMapColumnEntry> iter = this.columnsToSendToClients.iterator();
+			Iterator<ColumnWatcher> iter = this.columnsToSendToClients.iterator();
 
 			while (iter.hasNext()) {
-				PlayerCubeMapColumnEntry next = iter.next();
+				ColumnWatcher next = iter.next();
 				if (next.sentToPlayers()) {
 					iter.remove();
 				}
@@ -330,10 +330,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		if (!this.cubesToSendToClients.isEmpty()) {
 			getWorld().getProfiler().startSection("cubes");
 			int toSend = 81*8;//sending cubes, so send 8x more at once
-			Iterator<PlayerCubeMapEntry> it = this.cubesToSendToClients.iterator();
+			Iterator<CubeWatcher> it = this.cubesToSendToClients.iterator();
 
 			while (it.hasNext() && toSend >= 0) {
-				PlayerCubeMapEntry playerInstance = it.next();
+				CubeWatcher playerInstance = it.next();
 
 				if (playerInstance.sendToPlayers()) {
 					it.remove();
@@ -373,12 +373,12 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * Attempts to load the cube and send it to client.
 	 * If it can't load it or send it to client - adds it to cubesToGenerate/cubesToSendToClients
 	 */
-	private PlayerCubeMapEntry getOrCreateCubeWatcher(CubeCoords cubePos) {
-		PlayerCubeMapEntry cubeWatcher = this.cubeWatchers.get(cubePos.getCubeX(), cubePos.getCubeY(), cubePos.getCubeZ());
+	private CubeWatcher getOrCreateCubeWatcher(CubePos cubePos) {
+		CubeWatcher cubeWatcher = this.cubeWatchers.get(cubePos.getCubeX(), cubePos.getCubeY(), cubePos.getCubeZ());
 
 		if (cubeWatcher == null) {
 			// make a new watcher
-			cubeWatcher = new PlayerCubeMapEntry(this, cubePos);
+			cubeWatcher = new CubeWatcher(this, cubePos);
 			this.cubeWatchers.put(cubeWatcher);
 
 
@@ -395,13 +395,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	}
 
 	/**
-	 * Returns existing PlayerCubeMapColumnEntry or creates new one if it doesn't exist.
+	 * Returns existing ColumnWatcher or creates new one if it doesn't exist.
 	 * Always creates the Column.
 	 */
-	private PlayerCubeMapColumnEntry getOrCreateColumnWatcher(ChunkPos chunkPos) {
-		PlayerCubeMapColumnEntry columnWatcher = this.columnWatchers.get(chunkPos.chunkXPos, chunkPos.chunkZPos);
+	private ColumnWatcher getOrCreateColumnWatcher(ChunkPos chunkPos) {
+		ColumnWatcher columnWatcher = this.columnWatchers.get(chunkPos.chunkXPos, chunkPos.chunkZPos);
 		if (columnWatcher == null) {
-			columnWatcher = new PlayerCubeMapColumnEntry(this, chunkPos);
+			columnWatcher = new ColumnWatcher(this, chunkPos);
 			this.columnWatchers.put(columnWatcher);
 			if (columnWatcher.getColumn() == null) {
 				this.columnsToGenerate.add(columnWatcher);
@@ -416,7 +416,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	// CHECKED: 1.10.2-12.18.1.2092
 	@Override
 	public void markBlockForUpdate(BlockPos pos) {
-		PlayerCubeMapEntry cubeWatcher = this.getCubeWatcher(CubeCoords.fromBlockCoords(pos));
+		CubeWatcher cubeWatcher = this.getCubeWatcher(CubePos.fromBlockCoords(pos));
 
 		if (cubeWatcher != null) {
 			int localX = blockToLocal(pos.getX());
@@ -432,17 +432,17 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		PlayerWrapper playerWrapper = new PlayerWrapper(player);
 		playerWrapper.updateManagedPos();
 
-		CubeCoords playerCubePos = CubeCoords.fromEntity(player);
+		CubePos playerCubePos = CubePos.fromEntity(player);
 
 		this.cubeSelector.forAllVisibleFrom(playerCubePos, horizontalViewDistance, verticalViewDistance, (currentPos) -> {
 			//create cubeWatcher and chunkWatcher
 			//order is important
-			PlayerCubeMapColumnEntry chunkWatcher = getOrCreateColumnWatcher(currentPos.chunkPos());
+			ColumnWatcher chunkWatcher = getOrCreateColumnWatcher(currentPos.chunkPos());
 			//and add the player to them
 			if (!chunkWatcher.containsPlayer(player)) {
 				chunkWatcher.addPlayer(player);
 			}
-			PlayerCubeMapEntry cubeWatcher = getOrCreateCubeWatcher(currentPos);
+			CubeWatcher cubeWatcher = getOrCreateCubeWatcher(currentPos);
 
 			assert !cubeWatcher.containsPlayer(player);
 			cubeWatcher.addPlayer(player);
@@ -456,12 +456,12 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	public void removePlayer(EntityPlayerMP player) {
 		PlayerWrapper playerWrapper = this.players.get(player.getEntityId());
 
-		CubeCoords playerCubePos = CubeCoords.fromEntity(playerWrapper.playerEntity);
+		CubePos playerCubePos = CubePos.fromEntity(playerWrapper.playerEntity);
 
 		this.cubeSelector.forAllVisibleFrom(playerCubePos, horizontalViewDistance, verticalViewDistance, (cubePos) -> {
 
 			// get the watcher
-			PlayerCubeMapEntry watcher = getCubeWatcher(cubePos);
+			CubeWatcher watcher = getCubeWatcher(cubePos);
 			if (watcher == null) {
 				return;//continue
 			}
@@ -470,13 +470,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			watcher.removePlayer(player);
 
 			// remove column watchers if needed
-			PlayerCubeMapColumnEntry playerCubeMapColumnEntry = getColumnWatcher(cubePos.chunkPos());
-			if (playerCubeMapColumnEntry == null) {
+			ColumnWatcher columnWatcher = getColumnWatcher(cubePos.chunkPos());
+			if (columnWatcher == null) {
 				return;
 			}
 
-			if (playerCubeMapColumnEntry.containsPlayer(player)) {
-				playerCubeMapColumnEntry.removePlayer(player);
+			if (columnWatcher.containsPlayer(player)) {
+				columnWatcher.removePlayer(player);
 			}
 		});
 		this.players.remove(player.getEntityId());
@@ -498,15 +498,15 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			return;
 		}
 
-		this.updatePlayer(playerWrapper, playerWrapper.getManagedCubePos(), CubeCoords.fromEntity(player));
+		this.updatePlayer(playerWrapper, playerWrapper.getManagedCubePos(), CubePos.fromEntity(player));
 		playerWrapper.updateManagedPos();
 		this.setNeedSort();
 	}
 
-	private void updatePlayer(PlayerWrapper entry, CubeCoords oldPos, CubeCoords newPos) {
+	private void updatePlayer(PlayerWrapper entry, CubePos oldPos, CubePos newPos) {
 		getWorld().getProfiler().startSection("updateMovedPlayer");
-		Set<CubeCoords> cubesToRemove = new HashSet<>();
-		Set<CubeCoords> cubesToLoad = new HashSet<>();
+		Set<CubePos> cubesToRemove = new HashSet<>();
+		Set<CubePos> cubesToLoad = new HashSet<>();
 		Set<ChunkPos> columnsToRemove = new HashSet<>();
 		Set<ChunkPos> columnsToLoad = new HashSet<>();
 
@@ -517,19 +517,19 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		getWorld().getProfiler().endStartSection("createColumns");
 		//order is important, columns first
 		columnsToLoad.forEach(pos -> {
-			PlayerCubeMapColumnEntry columnWatcher = this.getOrCreateColumnWatcher(pos);
+			ColumnWatcher columnWatcher = this.getOrCreateColumnWatcher(pos);
 			assert columnWatcher.getPos().equals(pos);
 			columnWatcher.addPlayer(entry.playerEntity);
 		});
 		getWorld().getProfiler().endStartSection("createCubes");
 		cubesToLoad.forEach(pos -> {
-			PlayerCubeMapEntry cubeWatcher = this.getOrCreateCubeWatcher(pos);
+			CubeWatcher cubeWatcher = this.getOrCreateCubeWatcher(pos);
 			assert cubeWatcher.getCubePos().equals(pos);
 			cubeWatcher.addPlayer(entry.playerEntity);
 		});
 		getWorld().getProfiler().endStartSection("removeCubes");
 		cubesToRemove.forEach(pos -> {
-			PlayerCubeMapEntry cubeWatcher = this.getCubeWatcher(pos);
+			CubeWatcher cubeWatcher = this.getCubeWatcher(pos);
 			if (cubeWatcher != null) {
 				assert cubeWatcher.getCubePos().equals(pos);
 				cubeWatcher.removePlayer(entry.playerEntity);
@@ -537,7 +537,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		});
 		getWorld().getProfiler().endStartSection("removeColumns");
 		columnsToRemove.forEach(pos -> {
-			PlayerCubeMapColumnEntry columnWatcher = this.getColumnWatcher(pos);
+			ColumnWatcher columnWatcher = this.getColumnWatcher(pos);
 			if (columnWatcher != null) {
 				assert columnWatcher.getPos().equals(pos);
 				columnWatcher.removePlayer(entry.playerEntity);
@@ -550,10 +550,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	// CHECKED: 1.10.2-12.18.1.2092
 	@Override
 	public boolean isPlayerWatchingChunk(@Nonnull EntityPlayerMP player, int cubeX, int cubeZ) {
-		PlayerCubeMapColumnEntry playerCubeMapColumnEntry = this.getColumnWatcher(new ChunkPos(cubeX, cubeZ));
-		return playerCubeMapColumnEntry != null &&
-				playerCubeMapColumnEntry.containsPlayer(player) &&
-				playerCubeMapColumnEntry.isSentToPlayers();
+		ColumnWatcher columnWatcher = this.getColumnWatcher(new ChunkPos(cubeX, cubeZ));
+		return columnWatcher != null &&
+				columnWatcher.containsPlayer(player) &&
+				columnWatcher.isSentToPlayers();
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
@@ -591,17 +591,17 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		for (PlayerWrapper playerWrapper : this.players.valueCollection()) {
 
 			EntityPlayerMP player = playerWrapper.playerEntity;
-			CubeCoords playerPos = playerWrapper.getManagedCubePos();
+			CubePos playerPos = playerWrapper.getManagedCubePos();
 
 			if (newHorizontalViewDistance > oldHorizontalViewDistance || newVerticalViewDistance > oldVerticalViewDistance) {
 				//if newRadius is bigger, we only need to load new cubes
 				this.cubeSelector.forAllVisibleFrom(playerPos, newHorizontalViewDistance, newVerticalViewDistance, pos -> {
 					//order is important
-					PlayerCubeMapColumnEntry playerCubeMapColumnEntry = this.getOrCreateColumnWatcher(pos.chunkPos());
-					if (!playerCubeMapColumnEntry.containsPlayer(player)) {
-						playerCubeMapColumnEntry.addPlayer(player);
+					ColumnWatcher columnWatcher = this.getOrCreateColumnWatcher(pos.chunkPos());
+					if (!columnWatcher.containsPlayer(player)) {
+						columnWatcher.addPlayer(player);
 					}
-					PlayerCubeMapEntry cubeWatcher = this.getOrCreateCubeWatcher(pos);
+					CubeWatcher cubeWatcher = this.getOrCreateCubeWatcher(pos);
 					if (!cubeWatcher.containsPlayer(player)) {
 						cubeWatcher.addPlayer(player);
 					}
@@ -609,14 +609,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			// either both got smaller or only one of them changed
 			} else {
 				//if it got smaller...
-				Set<CubeCoords> cubesToUnload = new HashSet<>();
+				Set<CubePos> cubesToUnload = new HashSet<>();
 				Set<ChunkPos> columnsToUnload = new HashSet<>();
 				this.cubeSelector.findAllUnloadedOnViewDistanceDecrease(playerPos,
 						oldHorizontalViewDistance, newHorizontalViewDistance,
 						oldVerticalViewDistance, newVerticalViewDistance, cubesToUnload, columnsToUnload);
 
 				cubesToUnload.forEach(pos -> {
-					PlayerCubeMapEntry cubeWatcher = this.getCubeWatcher(pos);
+					CubeWatcher cubeWatcher = this.getCubeWatcher(pos);
 					if (cubeWatcher != null && cubeWatcher.containsPlayer(player)) {
 						cubeWatcher.removePlayer(player);
 					} else {
@@ -624,9 +624,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 					}
 				});
 				columnsToUnload.forEach(pos -> {
-					PlayerCubeMapColumnEntry playerCubeMapColumnEntry = this.getColumnWatcher(pos);
-					if (playerCubeMapColumnEntry != null && playerCubeMapColumnEntry.containsPlayer(player)) {
-						playerCubeMapColumnEntry.removePlayer(player);
+					ColumnWatcher columnWatcher = this.getColumnWatcher(pos);
+					if (columnWatcher != null && columnWatcher.containsPlayer(player)) {
+						columnWatcher.removePlayer(player);
 					} else {
 						CubicChunks.LOGGER.warn("cubeWatcher null or doesn't contain player on render distance change");
 					}
@@ -654,13 +654,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		throw new UnsupportedOperationException();
 	}
 
-	void addToUpdateEntry(PlayerCubeMapEntry cubeWatcher) {
+	void addToUpdateEntry(CubeWatcher cubeWatcher) {
 		this.cubeWatchersToUpdate.add(cubeWatcher);
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	void removeEntry(PlayerCubeMapEntry cubeWatcher) {
-		CubeCoords cubePos = cubeWatcher.getCubePos();
+	void removeEntry(CubeWatcher cubeWatcher) {
+		CubePos cubePos = cubeWatcher.getCubePos();
 		cubeWatcher.updateInhabitedTime();
 		this.cubeWatchers.remove(cubePos.getCubeX(), cubePos.getCubeY(), cubePos.getCubeZ());
 		this.cubeWatchersToUpdate.remove(cubeWatcher);
@@ -673,7 +673,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public void removeEntry(PlayerCubeMapColumnEntry entry) {
+	public void removeEntry(ColumnWatcher entry) {
 		ChunkPos pos = entry.getPos();
 		entry.updateChunkInhabitedTime();
 		this.columnWatchers.remove(pos.chunkXPos, pos.chunkZPos);
@@ -681,11 +681,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		this.columnsToSendToClients.remove(pos);
 	}
 
-	public PlayerCubeMapEntry getCubeWatcher(CubeCoords pos) {
+	public CubeWatcher getCubeWatcher(CubePos pos) {
 		return this.cubeWatchers.get(pos.getCubeX(), pos.getCubeY(), pos.getCubeZ());
 	}
 
-	public PlayerCubeMapColumnEntry getColumnWatcher(ChunkPos pos) {
+	public ColumnWatcher getColumnWatcher(ChunkPos pos) {
 		return this.columnWatchers.get(pos.chunkXPos, pos.chunkZPos);
 	}
 
@@ -693,7 +693,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		return (ICubicWorldServer) this.getWorldServer();
 	}
 
-	public boolean contains(CubeCoords coords) {
+	public boolean contains(CubePos coords) {
 		return this.cubeWatchers.get(coords.getCubeX(), coords.getCubeY(), coords.getCubeZ()) != null;
 	}
 
@@ -724,8 +724,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		}
 
 
-		public CubeCoords getManagedCubePos() {
-			return new CubeCoords(getManagedCubePosX(), getManagedCubePosY(), getManagedCubePosZ());
+		public CubePos getManagedCubePos() {
+			return new CubePos(getManagedCubePosX(), getManagedCubePosY(), getManagedCubePosZ());
 		}
 
 		public boolean cubePosChanged() {

@@ -24,7 +24,7 @@
 package cubicchunks.world;
 
 import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -81,10 +81,10 @@ public interface ICubicWorld {
 	int getMaxHeight();
 
 	/**
-	 * Returns the {@link ICubeCache} for this world, or throws {@link NotCubicChunksWorldException}
+	 * Returns the {@link ICubeProvider} for this world, or throws {@link NotCubicChunksWorldException}
 	 * if this is not a CubicChunks world.
 	 */
-	ICubeCache getCubeCache();
+	ICubeProvider getCubeCache();
 
 	/**
 	 * Returns the {@link LightingManager} for this world, or throws {@link NotCubicChunksWorldException}
@@ -111,8 +111,8 @@ public interface ICubicWorld {
 	 */
 	default boolean testForCubes(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, @Nullable Predicate<Cube> test) {
 		return testForCubes(
-				CubeCoords.fromBlockCoords(minBlockX, minBlockY, minBlockZ),
-				CubeCoords.fromBlockCoords(maxBlockX, maxBlockY, maxBlockZ),
+				CubePos.fromBlockCoords(minBlockX, minBlockY, minBlockZ),
+				CubePos.fromBlockCoords(maxBlockX, maxBlockY, maxBlockZ),
 				test
 		);
 	}
@@ -129,7 +129,7 @@ public interface ICubicWorld {
 	 * Returns true iff the given Predicate evaluates to true for given cube and neighbors.
 	 * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
 	 */
-	boolean testForCubes(CubeCoords start, CubeCoords end, @Nullable Predicate<Cube> test);
+	boolean testForCubes(CubePos start, CubePos end, @Nullable Predicate<Cube> test);
 
 	// TODO: this method is just plain stupid (remove it)
 	@Nullable Cube getCubeForAddress(long address);

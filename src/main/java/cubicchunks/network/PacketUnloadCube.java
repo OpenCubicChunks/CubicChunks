@@ -23,24 +23,24 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketUnloadCube implements IMessage {
-	private CubeCoords cubePos;
+	private CubePos cubePos;
 
 	public PacketUnloadCube() {}
 
-	public PacketUnloadCube(CubeCoords cubePos) {
+	public PacketUnloadCube(CubePos cubePos) {
 		this.cubePos = cubePos;
 	}
 
 	@Override
 	public void fromBytes(ByteBuf in) {
-		this.cubePos = new CubeCoords(in.readInt(), in.readInt(), in.readInt());
+		this.cubePos = new CubePos(in.readInt(), in.readInt(), in.readInt());
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class PacketUnloadCube implements IMessage {
 		out.writeInt(cubePos.getCubeZ());
 	}
 
-	public CubeCoords getCubePos() {
+	public CubePos getCubePos() {
 		return cubePos;
 	}
 

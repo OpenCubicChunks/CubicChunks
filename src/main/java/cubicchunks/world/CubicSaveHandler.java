@@ -23,7 +23,7 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.server.ServerCubeCache;
+import cubicchunks.server.CubeProviderServer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.WorldProvider;
@@ -36,11 +36,11 @@ import net.minecraft.world.storage.WorldInfo;
 import javax.annotation.Nonnull;
 import java.io.File;
 
-public class CubicChunksSaveHandler implements ISaveHandler {
+public class CubicSaveHandler implements ISaveHandler {
 	private ICubicWorldServer world;
 	private final ISaveHandler originalHandler;
 
-	public CubicChunksSaveHandler(ICubicWorldServer world, ISaveHandler originalHandler) {
+	public CubicSaveHandler(ICubicWorldServer world, ISaveHandler originalHandler) {
 		this.world = world;
 		this.originalHandler = originalHandler;
 	}
@@ -71,7 +71,7 @@ public class CubicChunksSaveHandler implements ISaveHandler {
 
 	@Override public void flush() {
 		originalHandler.flush();
-		ServerCubeCache cache = world.getCubeCache();
+		CubeProviderServer cache = world.getCubeCache();
 		cache.flush();
 	}
 

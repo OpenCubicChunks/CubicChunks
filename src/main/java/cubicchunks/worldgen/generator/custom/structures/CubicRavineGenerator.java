@@ -23,7 +23,7 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
-import cubicchunks.util.CubeCoords;
+import cubicchunks.util.CubePos;
 import cubicchunks.util.StructureGenUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
@@ -108,7 +108,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 
 	@Override
 	protected void generate(ICubicWorld world, ICubePrimer cube, int structureX, int structureY, int structureZ,
-	                        CubeCoords generatedCubePos) {
+	                        CubePos generatedCubePos) {
 		if (rand.nextInt(RAVINE_RARITY) != 0 || structureY > MAX_CUBE_Y) {
 			return;
 		}
@@ -128,7 +128,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 				startWalkedDistance, maxWalkedDistance, VERT_SIZE_FACTOR);
 	}
 
-	protected void generateNode(ICubePrimer cube, long seed, CubeCoords generatedCubePos,
+	protected void generateNode(ICubePrimer cube, long seed, CubePos generatedCubePos,
 	                            double ravineX, double ravineY, double ravineZ,
 	                            float baseRavineSize, float horizDirAngle, float vertDirAngle,
 	                            int startWalkedDistance, int maxWalkedDistance, double vertRavineSizeMod) {
@@ -219,7 +219,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 		}
 	}
 
-	private void tryCarveBlocks(ICubePrimer cube, CubeCoords generatedCubePos,
+	private void tryCarveBlocks(ICubePrimer cube, CubePos generatedCubePos,
 	                            double ravineX, double ravineY, double ravineZ,
 	                            double ravineSizeHoriz, double ravineSizeVert) {
 		double genCubeCenterX = generatedCubePos.getXCenter();
@@ -258,7 +258,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 		}
 	}
 
-	private void carveBlocks(ICubePrimer cube, CubeCoords generatedCubePos,
+	private void carveBlocks(ICubePrimer cube, CubePos generatedCubePos,
 	                         double ravineX, double ravineY, double ravineZ,
 	                         double ravineSizeHoriz, double ravineSizeVert, StructureBoundingBox boundingBox) {
 		int generatedCubeX = generatedCubePos.getCubeX();

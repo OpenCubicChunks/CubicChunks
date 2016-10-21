@@ -26,7 +26,7 @@ package cubicchunks;
 import com.google.common.collect.Lists;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
-import cubicchunks.world.OpacityIndex;
+import cubicchunks.world.ServerHeightMap;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.spongepowered.test.launch.LaunchWrapperTestRunner;
@@ -47,11 +47,11 @@ public class TestOpacityIndex {
 
 	static {
 		try {
-			YminField = OpacityIndex.class.getDeclaredField("ymin");
+			YminField = ServerHeightMap.class.getDeclaredField("ymin");
 			YminField.setAccessible(true);
-			YmaxField = OpacityIndex.class.getDeclaredField("ymax");
+			YmaxField = ServerHeightMap.class.getDeclaredField("ymax");
 			YmaxField.setAccessible(true);
-			SegmentsField = OpacityIndex.class.getDeclaredField("segments");
+			SegmentsField = ServerHeightMap.class.getDeclaredField("segments");
 			SegmentsField.setAccessible(true);
 		} catch (NoSuchFieldException | SecurityException ex) {
 			throw new Error(ex);
@@ -60,7 +60,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void getWithAllTransparent() {
-		OpacityIndex index = new OpacityIndex();
+		ServerHeightMap index = new ServerHeightMap();
 		assertEquals(Coords.NO_HEIGHT, index.getBottomBlockY(0, 0));
 		assertEquals(Coords.NO_HEIGHT, index.getTopBlockY(0, 0));
 		assertEquals(false, index.isOpaque(0, -100, 0));
@@ -72,7 +72,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void getWithoutDataSingleBlock() {
-		OpacityIndex index = makeIndex(10, 10);
+		ServerHeightMap index = makeIndex(10, 10);
 		assertEquals(10, index.getBottomBlockY(0, 0));
 		assertEquals(10, index.getTopBlockY(0, 0));
 		assertEquals(false, index.isOpaque(0, 9, 0));
@@ -82,7 +82,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void getWithoutDataMultipleBlocks() {
-		OpacityIndex index = makeIndex(8, 10);
+		ServerHeightMap index = makeIndex(8, 10);
 		assertEquals(8, index.getBottomBlockY(0, 0));
 		assertEquals(10, index.getTopBlockY(0, 0));
 		assertEquals(false, index.isOpaque(0, 7, 0));
@@ -94,7 +94,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void getWith1Data() {
-		OpacityIndex index = makeIndex(8, 10,
+		ServerHeightMap index = makeIndex(8, 10,
 				8, 1
 		);
 		assertEquals(8, index.getBottomBlockY(0, 0));
@@ -108,7 +108,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setSingleOpaqueFromEmpty() {
-		OpacityIndex index = new OpacityIndex();
+		ServerHeightMap index = new ServerHeightMap();
 		index.onOpacityChange(0, 10, 0, 255);
 		assertEquals(10, index.getBottomBlockY(0, 0));
 		assertEquals(10, index.getTopBlockY(0, 0));
@@ -117,7 +117,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setSingleTransparentFromSingleOpaque() {
-		OpacityIndex index = makeIndex(10, 10);
+		ServerHeightMap index = makeIndex(10, 10);
 		index.onOpacityChange(0, 10, 0, 0);
 		assertEquals(Coords.NO_HEIGHT, index.getBottomBlockY(0, 0));
 		assertEquals(Coords.NO_HEIGHT, index.getTopBlockY(0, 0));
@@ -126,7 +126,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setExpandSingleOpaque() {
-		OpacityIndex index = makeIndex(10, 10);
+		ServerHeightMap index = makeIndex(10, 10);
 
 		index.onOpacityChange(0, 11, 0, 255);
 		assertEquals(10, index.getBottomBlockY(0, 0));
@@ -141,7 +141,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setShrinkOpaque() {
-		OpacityIndex index = makeIndex(9, 11);
+		ServerHeightMap index = makeIndex(9, 11);
 
 		index.onOpacityChange(0, 9, 0, 0);
 		assertEquals(10, index.getBottomBlockY(0, 0));
@@ -156,7 +156,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setDisjointOpaqueAboveOpaue() {
-		OpacityIndex index = makeIndex(9, 11);
+		ServerHeightMap index = makeIndex(9, 11);
 
 		index.onOpacityChange(0, 16, 0, 255);
 		assertEquals(9, index.getBottomBlockY(0, 0));
@@ -170,7 +170,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setDisjointOpaqueBelowOpaue() {
-		OpacityIndex index = makeIndex(9, 11);
+		ServerHeightMap index = makeIndex(9, 11);
 
 		index.onOpacityChange(0, 4, 0, 255);
 		assertEquals(4, index.getBottomBlockY(0, 0));
@@ -184,7 +184,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setDisjointOpaqueAboveOpaques() {
-		OpacityIndex index = makeIndex(9, 16,
+		ServerHeightMap index = makeIndex(9, 16,
 				9, 1,
 				12, 0,
 				16, 1
@@ -204,7 +204,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setDisjointOpaqueBelowOpaques() {
-		OpacityIndex index = makeIndex(9, 16,
+		ServerHeightMap index = makeIndex(9, 16,
 				9, 1,
 				12, 0,
 				16, 1
@@ -224,7 +224,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void extendTopOpaqueUp() {
-		OpacityIndex index = makeIndex(9, 16,
+		ServerHeightMap index = makeIndex(9, 16,
 				9, 1,
 				12, 0,
 				16, 1
@@ -242,7 +242,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void extendBottomOpaqueDown() {
-		OpacityIndex index = makeIndex(9, 16,
+		ServerHeightMap index = makeIndex(9, 16,
 				9, 1,
 				12, 0,
 				16, 1
@@ -260,7 +260,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setBisectOpaue() {
-		OpacityIndex index = makeIndex(9, 11);
+		ServerHeightMap index = makeIndex(9, 11);
 
 		index.onOpacityChange(0, 10, 0, 0);
 		assertEquals(9, index.getBottomBlockY(0, 0));
@@ -274,7 +274,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setDataStartSameAsBottomRoomBeforeTop() {
-		OpacityIndex index = makeIndex(4, 7,
+		ServerHeightMap index = makeIndex(4, 7,
 				4, 1
 		);
 
@@ -288,7 +288,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setDataNotStartSameAsNextRoomAfter() {
-		OpacityIndex index = makeIndex(2, 7,
+		ServerHeightMap index = makeIndex(2, 7,
 				2, 1
 		);
 
@@ -304,7 +304,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setDataNotStartSameAsTopNoRoomAfter() {
-		OpacityIndex index = makeIndex(2, 4,
+		ServerHeightMap index = makeIndex(2, 4,
 				2, 1
 		);
 
@@ -318,7 +318,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setDataAfterTopSameAsPrevious() {
-		OpacityIndex index = makeIndex(2, 4,
+		ServerHeightMap index = makeIndex(2, 4,
 				2, 1
 		);
 
@@ -332,7 +332,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void setTransparentInOpaqueAndClear() {
-		OpacityIndex index = new OpacityIndex();
+		ServerHeightMap index = new ServerHeightMap();
 
 		// place blocks
 		index.onOpacityChange(0, 0, 0, 255);
@@ -386,7 +386,7 @@ public class TestOpacityIndex {
 	public void checkFloatingIsland() {
 
 		// make an index with a surface
-		OpacityIndex index = makeIndex(100, 102);
+		ServerHeightMap index = makeIndex(100, 102);
 
 		// start setting blocks in the sky
 		index.onOpacityChange(0, 200, 0, 255);
@@ -423,7 +423,7 @@ public class TestOpacityIndex {
 	//test 21011120
 	@Test
 	public void testMergeSegmentsIntoNoSegmentsAndRemoveTop_generated() {
-		OpacityIndex index = new OpacityIndex();
+		ServerHeightMap index = new ServerHeightMap();
 		index.onOpacityChange(0, 2, 0, 1);
 
 		assertEquals(false, index.isOpaque(0, -1, 0));
@@ -467,7 +467,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void test41210140110000() {
-		OpacityIndex index = new OpacityIndex();
+		ServerHeightMap index = new ServerHeightMap();
 		index.onOpacityChange(0, 4, 0, 1);
 
 		assertEquals(false, index.isOpaque(0, -1, 0));
@@ -555,7 +555,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void testSetAndClear_generated() {
-		OpacityIndex index = new OpacityIndex();
+		ServerHeightMap index = new ServerHeightMap();
 		index.onOpacityChange(0, 4, 0, 1);
 
 		assertEquals(false, index.isOpaque(0, -1, 0));
@@ -643,7 +643,7 @@ public class TestOpacityIndex {
 
 	@Test
 	public void test31110000hmaplim_generated() {
-		OpacityIndex index = new OpacityIndex();
+		ServerHeightMap index = new ServerHeightMap();
 		index.onOpacityChange(0, 3, 0, 1);
 		index.onOpacityChange(0, 1, 0, 1);
 
@@ -657,7 +657,7 @@ public class TestOpacityIndex {
 		int[] yPosOpacityEncoded = new int[numBlocks];
 
 		while (true) {
-			OpacityIndex index = new OpacityIndex();
+			ServerHeightMap index = new ServerHeightMap();
 			ArrayOpacityIndexImpl test = new ArrayOpacityIndexImpl();
 
 			StringBuilder msg = new StringBuilder();
@@ -673,7 +673,7 @@ public class TestOpacityIndex {
 				}
 				//store-read-store test
 				byte[] b = index.getData();
-				OpacityIndex newIndex = new OpacityIndex();
+				ServerHeightMap newIndex = new ServerHeightMap();
 				newIndex.readData(b);
 				assertArrayEquals("Got different data after creating index based on read data\n" + message + "\n", b, newIndex.getData());
 			} catch (Throwable t) {
@@ -704,8 +704,8 @@ public class TestOpacityIndex {
 		}
 	}
 
-	private OpacityIndex makeIndex(int ymin, int ymax, int... segments) {
-		OpacityIndex index = new OpacityIndex();
+	private ServerHeightMap makeIndex(int ymin, int ymax, int... segments) {
+		ServerHeightMap index = new ServerHeightMap();
 
 		// pack the segments
 		int[] packedSegments = null;
@@ -720,7 +720,7 @@ public class TestOpacityIndex {
 		return index;
 	}
 
-	private void set(OpacityIndex index, int ymin, int ymax, int[] segments) {
+	private void set(ServerHeightMap index, int ymin, int ymax, int[] segments) {
 		try {
 			YminField.set(index, new int[]{ymin});
 			YmaxField.set(index, new int[]{ymax});
@@ -730,7 +730,7 @@ public class TestOpacityIndex {
 		}
 	}
 
-	private List<Integer> getSegments(OpacityIndex index) {
+	private List<Integer> getSegments(ServerHeightMap index) {
 		try {
 			int[] packedSegments = ((int[][]) SegmentsField.get(index))[0];
 			if (packedSegments == null) {

@@ -29,9 +29,9 @@ import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.AddressTools;
-import cubicchunks.world.type.CustomCubicChunksWorldType;
-import cubicchunks.world.type.FlatCubicChunksWorldType;
-import cubicchunks.world.type.VanillaCubicChunksWorldType;
+import cubicchunks.world.type.CustomCubicWorldType;
+import cubicchunks.world.type.FlatCubicWorldType;
+import cubicchunks.world.type.VanillaCubicWorldType;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
@@ -87,9 +87,9 @@ public class CubicChunks {
 	public void init(FMLInitializationEvent event) {
 		proxy.registerEvents();
 
-		VanillaCubicChunksWorldType.create();
-		FlatCubicChunksWorldType.create();
-		CustomCubicChunksWorldType.create();
+		VanillaCubicWorldType.create();
+		FlatCubicWorldType.create();
+		CustomCubicWorldType.create();
 		DebugWorldType.create();
 		LOGGER.debug("Registered world types");
 
