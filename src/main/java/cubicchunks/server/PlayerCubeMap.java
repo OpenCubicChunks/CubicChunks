@@ -70,12 +70,18 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	private static final Predicate<EntityPlayerMP> CAN_GENERATE_CHUNKS = player -> player != null &&
 			(!player.isSpectator() || player.getServerWorld().getGameRules().getBoolean("spectatorsGenerateChunks"));
 
+	/**
+	 * Comparator that specifies order in which cubes will be generated and sent to clients
+	 */
 	private static final Comparator<PlayerCubeMapEntry> CUBE_ORDER = (watcher1, watcher2) ->
 			ComparisonChain.start().compare(
 					watcher1.getClosestPlayerDistance(),
 					watcher2.getClosestPlayerDistance()
 			).result();
 
+	/**
+	 * Comparator that specifies order in which columns will be generated and sent to clients
+	 */
 	private static final Comparator<PlayerCubeMapColumnEntry> COLUMN_ORDER = (watcher1, watcher2) ->
 			ComparisonChain.start().compare(
 					watcher1.getClosestPlayerDistance(),

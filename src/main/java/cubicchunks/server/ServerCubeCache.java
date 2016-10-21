@@ -235,7 +235,9 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		if (cube == null) {
 			AsyncWorldIOExecutor.queueCubeLoad(worldServer, cubeIO, this, cubeX, cubeY, cubeZ, loaded -> {
 				Column col = getLoadedChunk(cubeX, cubeZ);
-				onCubeLoaded(loaded, col);
+				if(col != null) {
+					onCubeLoaded(loaded, col);
+				}
 				loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
 				callback.accept(loaded);
 			});
@@ -275,6 +277,10 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	private void onCubeLoaded(@Nullable Cube cube, @Nonnull Column column) {
 		if(cube != null) {
 			cubeMap.put(cube); // cache the Cube
+			//synchronous loading may cause it to be called twice when async loading has been already queued
+			//because AsyncWorldIOExecutor only executes one task for one cube and because only saving a cube
+			//can modify one that is being loaded, it's impossible to end up with 2 versions of the same cube
+			//This is only to prevents multiple callbacks for the same queued load from adding the same cube twice.
 			if(!column.getLoadedCubes().contains(cube)) {
 				column.addCube(cube);
 				cube.onLoad(); // init the Cube

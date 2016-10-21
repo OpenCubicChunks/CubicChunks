@@ -90,9 +90,8 @@ public class AsyncWorldIOExecutor {
 			task = new AsyncCubeIOProvider(key, loader);
 			task.setColumn(column);
 			task.run();
-			task.runSynchronousPart();
 		}
-		task.runCallbacks();
+		task.runSynchronousPart();
 		return task.get();
 	}
 
@@ -114,12 +113,14 @@ public class AsyncWorldIOExecutor {
 		} else {
 			task = new AsyncColumnIOProvider(key, loader);
 			task.run();
-			task.runSynchronousPart();
 		}
-		task.runCallbacks();
+		task.runSynchronousPart();
 		return task.get();
 	}
 
+	/**
+	 * Runs the async part in current thread or blocks until already running async part is finished
+	 */
 	private static void runTask(AsyncIOProvider task) {
 		if (!pool.remove(task)) // If it wasn't in the pool, and run hasn't isFinished, then wait for the async thread.
 		{
@@ -171,13 +172,7 @@ public class AsyncWorldIOExecutor {
 
 		Column loadedColumn;
 		if((loadedColumn = cache.getLoadedChunk(x, z)) == null) {
-			AsyncCubeIOProvider finalTask = task;//because java compiler says "no"
-			cache.asyncGetColumn(x, z, IProviderExtras.Requirement.LIGHT, (column) -> {
-				if(column == null) {
-					runnable.accept(null);
-				}
-				finalTask.setColumn(column);
-			});
+			cache.asyncGetColumn(x, z, IProviderExtras.Requirement.LIGHT, task::setColumn);
 		} else {
 			//it's already there, tell the task to use it
 			task.setColumn(loadedColumn);
@@ -267,9 +262,6 @@ public class AsyncWorldIOExecutor {
 		while (cubeItr.hasNext()) {
 			AsyncCubeIOProvider task = cubeItr.next();
 			if (task.isFinished()) {
-				if (task.hasCallbacks()) {
-					task.runCallbacks();
-				}
 				task.runSynchronousPart();
 
 				cubeItr.remove();
@@ -280,9 +272,6 @@ public class AsyncWorldIOExecutor {
 		while (columnIter.hasNext()) {
 			AsyncColumnIOProvider task = columnIter.next();
 			if (task.isFinished()) {
-				if (task.hasCallbacks()) {
-					task.runCallbacks();
-				}
 				task.runSynchronousPart();
 
 				columnIter.remove();
