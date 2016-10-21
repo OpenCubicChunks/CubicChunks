@@ -169,7 +169,7 @@ public class CubeIO implements IThreadedFileIO {
 		return IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
 	}
 
-	public Cube loadCubeAndAddToColumn(Column column, int cubeY) throws IOException {
+	public PartialCubeData loadCubeAsyncPart(Column column, int cubeY) throws IOException {
 		// TODO address is due for refactor
 		long address = AddressTools.getAddress(column.getX(), cubeY, column.getZ());
 
@@ -179,22 +179,20 @@ public class CubeIO implements IThreadedFileIO {
 			nbt = saveEntry.nbt;
 		} else {
 			// does the database have the cube?
-			world.getProfiler().startSection("getBytes");
 			byte[] data = this.cubes.get(address);
 			if (data == null) {
-				world.getProfiler().endSection();
 				return null;
 			}
-			world.getProfiler().endStartSection("readCompressed");
 			nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(data));
-			world.getProfiler().endSection();
 		}
 
-		// restore the cube
-		world.getProfiler().startSection("nbt2cube");
-		Cube cube = IONbtReader.readCube(column, column.getX(), cubeY, column.getZ(), nbt);
-		world.getProfiler().endSection();
-		return cube;
+		// restore the cube - async part
+		Cube cube = IONbtReader.readCubeAsyncPart(column, column.getX(), cubeY, column.getZ(), nbt);
+		return new PartialCubeData(cube, nbt);
+	}
+
+	public void loadCubeSyncPart(PartialCubeData info) {
+		IONbtReader.readCubeSyncPart(info.cube, world, info.nbt);
 	}
 
 	public void saveColumn(Column column) {
@@ -319,6 +317,23 @@ public class CubeIO implements IThreadedFileIO {
 			t.printStackTrace();
 		} else {
 			LOGGER.error(message, t);
+		}
+	}
+
+	/**
+	 * Stores partially read cube, before sync read but after async read
+	 */
+	public static class PartialCubeData {
+		final NBTTagCompound nbt;
+		final Cube cube;
+
+		PartialCubeData(Cube cube, NBTTagCompound nbt) {
+			this.cube = cube;
+			this.nbt = nbt;
+		}
+
+		public Cube getCube() {
+			return cube;
 		}
 	}
 }

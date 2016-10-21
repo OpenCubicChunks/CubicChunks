@@ -89,7 +89,7 @@ public class IONbtReader {
 	}
 
 	@Nullable
-	static Cube readCube(Column column, final int cubeX, final int cubeY, final int cubeZ, NBTTagCompound nbt) {
+	static Cube readCubeAsyncPart(Column column, final int cubeX, final int cubeY, final int cubeZ, NBTTagCompound nbt) {
 		if (column.getX() != cubeX || column.getZ() != cubeZ) {
 			throw new IllegalArgumentException(String.format("Invalid column (%d, %d) for cube at (%d, %d, %d)",
 					column.getX(), column.getZ(), cubeX, cubeY, cubeZ));
@@ -98,13 +98,17 @@ public class IONbtReader {
 
 		Cube cube = readBaseCube(column, cubeX, cubeY, cubeZ, nbt, world);
 		readBlocks(nbt, world, cube);
+
+		return cube;
+	}
+
+	static void readCubeSyncPart(Cube cube, ICubicWorldServer world, NBTTagCompound nbt) {
 		readEntities(nbt, world, cube);
 		readTileEntities(nbt, world, cube);
 		readScheduledBlockTicks(nbt, world);
 		readLightingInfo(cube, nbt, world);
 
 		cube.markSaved(); // its exactly the same as on disk so its not modified
-		return cube;
 	}
 
 	@Nullable
@@ -173,9 +177,6 @@ public class IONbtReader {
 			}
 
 			entity.addedToChunk = true;
-			entity.chunkCoordX = cube.getX();
-			entity.chunkCoordY = cube.getY();
-			entity.chunkCoordZ = cube.getZ();
 		});
 	}
 

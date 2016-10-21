@@ -23,32 +23,35 @@
  */
 package cubicchunks.network;
 
+import cubicchunks.util.CubeCoords;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketUnloadCube implements IMessage {
-	private long cubeAddress;
+	private CubeCoords cubePos;
 
 	public PacketUnloadCube() {}
 
-	public PacketUnloadCube(long cubeAddress) {
-		this.cubeAddress = cubeAddress;
+	public PacketUnloadCube(CubeCoords cubePos) {
+		this.cubePos = cubePos;
 	}
 
 	@Override
 	public void fromBytes(ByteBuf in) {
-		this.cubeAddress = in.readLong();
+		this.cubePos = new CubeCoords(in.readInt(), in.readInt(), in.readInt());
 	}
 
 	@Override
 	public void toBytes(ByteBuf out) {
-		out.writeLong(cubeAddress);
+		out.writeInt(cubePos.getCubeX());
+		out.writeInt(cubePos.getCubeY());
+		out.writeInt(cubePos.getCubeZ());
 	}
 
-	public long getCubeAddress() {
-		return cubeAddress;
+	public CubeCoords getCubePos() {
+		return cubePos;
 	}
 
 	public static class Handler extends AbstractClientMessageHandler<PacketUnloadCube> {

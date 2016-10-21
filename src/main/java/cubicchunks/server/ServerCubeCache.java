@@ -233,16 +233,13 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		}
 
 		if (cube == null) {
-			asyncGetColumn(cubeX, cubeZ, req, col -> {
-				if (col == null) {
-					callback.accept(null);
-					return;
-				}
-				AsyncWorldIOExecutor.queueCubeLoad(worldObj, cubeIO, col, cubeY, loaded -> {
+			AsyncWorldIOExecutor.queueCubeLoad(worldServer, cubeIO, this, cubeX, cubeY, cubeZ, loaded -> {
+				Column col = getLoadedChunk(cubeX, cubeZ);
+				if(col != null) {
 					onCubeLoaded(loaded, col);
-					loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
-					callback.accept(loaded);
-				});
+				}
+				loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
+				callback.accept(loaded);
 			});
 		}
 	}
@@ -264,7 +261,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		}
 
 		if(cube == null) {
-			cube = AsyncWorldIOExecutor.syncCubeLoad(worldObj, cubeIO, cubeY, column);
+			cube = AsyncWorldIOExecutor.syncCubeLoad(worldServer, cubeIO, this, cubeX, cubeY, cubeZ);
 			onCubeLoaded(cube, column);
 		}
 
@@ -279,9 +276,15 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 	 */
 	private void onCubeLoaded(@Nullable Cube cube, @Nonnull Column column) {
 		if(cube != null) {
-			column.addCube(cube);
 			cubeMap.put(cube); // cache the Cube
-			cube.onLoad();             // init the Cube
+			//synchronous loading may cause it to be called twice when async loading has been already queued
+			//because AsyncWorldIOExecutor only executes one task for one cube and because only saving a cube
+			//can modify one that is being loaded, it's impossible to end up with 2 versions of the same cube
+			//This is only to prevents multiple callbacks for the same queued load from adding the same cube twice.
+			if(!column.getLoadedCubes().contains(cube)) {
+				column.addCube(cube);
+				cube.onLoad(); // init the Cube
+			}
 		}
 	}
 
@@ -344,7 +347,8 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		ICubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
 		Cube cube = new Cube(column, cubeY, primer);
 
-		this.worldServer.getFirstLightProcessor().initializeSkylight(cube); // init sky light, (does not require any other cubes, just OpacityIndex)
+		this.worldServer.getFirstLightProcessor()
+				.initializeSkylight(cube); // init sky light, (does not require any other cubes, just OpacityIndex)
 		onCubeLoaded(cube, column);
 		return cube;
 	}
@@ -410,7 +414,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			return;
 		}
 
-		AsyncWorldIOExecutor.queueColumnLoad(worldObj, cubeIO, columnX, columnZ, col -> {
+		AsyncWorldIOExecutor.queueColumnLoad(worldServer, cubeIO, columnX, columnZ, col -> {
 			col = postProcessColumn(columnX, columnZ, col, req);
 			callback.accept(col);
 		});
@@ -425,7 +429,7 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 			return column;
 		}
 
-		column = AsyncWorldIOExecutor.syncColumnLoad(worldObj, cubeIO, columnX, columnZ);
+		column = AsyncWorldIOExecutor.syncColumnLoad(worldServer, cubeIO, columnX, columnZ);
 		column = postProcessColumn(columnX, columnZ, column, req);
 
 		return column;
@@ -489,12 +493,12 @@ public class ServerCubeCache extends ChunkProviderServer implements ICubeCache, 
 		this.cubeIO.flush();
 	}
 
-	Iterator<Cube> cubesIterator(){
+	Iterator<Cube> cubesIterator() {
 		return cubeMap.iterator();
 	}
 
 	@SuppressWarnings("unchecked")
-	Iterator<Column> columnsIterator(){
+	Iterator<Column> columnsIterator() {
 		return (Iterator<Column>) (Object) id2ChunkMap.values().iterator();
 	}
 

@@ -99,11 +99,11 @@ public class ClientCubeCache extends ChunkProviderClient implements ICubeCache {
 	 * This is like ChunkProviderClient.unloadChunk()
 	 * It is used when the server tells the client to unload a Cube.
 	 */
-	public void unloadCube(int cubeX, int cubeY, int cubeZ) {
-		cubeMap.remove(cubeX, cubeY, cubeZ);
-		Column column = getLoadedChunk(cubeX, cubeZ);
+	public void unloadCube(CubeCoords pos) {
+		cubeMap.remove(pos.getCubeX(), pos.getCubeY(), pos.getCubeZ());
+		Column column = getLoadedChunk(pos.getCubeX(), pos.getCubeZ());
 		if (column != null) {
-			column.removeCube(cubeY);
+			column.removeCube(pos.getCubeY());
 		}
 	}
 

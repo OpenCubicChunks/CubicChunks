@@ -23,14 +23,18 @@
  */
 package cubicchunks.visibility;
 
-import gnu.trove.set.TLongSet;
+import cubicchunks.util.CubeCoords;
+import net.minecraft.util.math.ChunkPos;
 
+import java.util.Set;
 import java.util.function.Consumer;
 
 public abstract class CubeSelector {
-	public abstract void forAllVisibleFrom(long cubeAddress, int horizontalViewDistance, int verticalViewDistance, Consumer<Long> consumer);
+	public abstract void forAllVisibleFrom(CubeCoords cubePos, int horizontalViewDistance, int verticalViewDistance, Consumer<CubeCoords> consumer);
 
-	public abstract void findChanged(long oldAddress, long newAddress, int horizontalViewDistance, int verticalViewDistance, TLongSet cubesToRemove, TLongSet cubesToLoad, TLongSet columnsToRemove, TLongSet columnsToLoad);
+	public abstract void findChanged(CubeCoords oldAddress, CubeCoords newAddress, int horizontalViewDistance, int verticalViewDistance,
+	                                 Set<CubeCoords> cubesToRemove, Set<CubeCoords> cubesToLoad, Set<ChunkPos> columnsToRemove, Set<ChunkPos> columnsToLoad);
 
-	public abstract void findAllUnloadedOnViewDistanceDecrease(long playerAddress, int oldHorizontalViewDistance, int newHorizontalViewDistance, int oldVerticalViewDistance, int newVerticalViewDistance, TLongSet cubesToUnload, TLongSet columnsToUnload);
+	public abstract void findAllUnloadedOnViewDistanceDecrease(CubeCoords playerAddress, int oldHorizontalViewDistance, int newHorizontalViewDistance,
+	                                                           int oldVerticalViewDistance, int newVerticalViewDistance, Set<CubeCoords> cubesToUnload, Set<ChunkPos> columnsToUnload);
 }

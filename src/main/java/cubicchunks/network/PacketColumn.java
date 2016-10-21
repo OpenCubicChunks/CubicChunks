@@ -23,22 +23,22 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.util.AddressTools;
 import cubicchunks.world.column.Column;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketColumn implements IMessage {
-	private long cubeAddress;
+	private ChunkPos chunkPos;
 	private byte[] data;
 
 	public PacketColumn() {}
 
 	public PacketColumn(Column column) {
-		this.cubeAddress = AddressTools.getAddress(column.getX(), column.getZ());
+		this.chunkPos = column.getChunkCoordIntPair();
 		this.data = new byte[WorldEncoder.getEncodedSize(column)];
 		PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
 
@@ -47,20 +47,21 @@ public class PacketColumn implements IMessage {
 
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		this.cubeAddress = buf.readLong();
+		this.chunkPos = new ChunkPos(buf.readInt(), buf.readInt());
 		this.data = new byte[buf.readInt()];
 		buf.readBytes(this.data);
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		buf.writeLong(this.cubeAddress);
+		buf.writeInt(chunkPos.chunkXPos);
+		buf.writeInt(chunkPos.chunkZPos);
 		buf.writeInt(this.data.length);
 		buf.writeBytes(this.data);
 	}
 
-	public long getCubeAddress() {
-		return cubeAddress;
+	public ChunkPos getChunkPos() {
+		return chunkPos;
 	}
 
 	public byte[] getData() {

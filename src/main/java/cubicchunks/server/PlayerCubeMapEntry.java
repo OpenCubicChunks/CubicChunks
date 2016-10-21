@@ -29,13 +29,19 @@ import cubicchunks.network.PacketCube;
 import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadCube;
+import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubeCoords;
+import cubicchunks.util.XYZAddressable;
 import cubicchunks.util.ticket.ITicket;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.cube.Cube;
+import gnu.trove.list.TShortList;
+import gnu.trove.list.array.TShortArrayList;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -45,48 +51,44 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
-import java.util.SortedSet;
-import java.util.TreeSet;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.Consumer;
 
-import static cubicchunks.util.AddressTools.getAddress;
-import static cubicchunks.util.AddressTools.getX;
-import static cubicchunks.util.AddressTools.getY;
-import static cubicchunks.util.AddressTools.getZ;
-import static cubicchunks.util.Coords.localToBlock;
-
-public class PlayerCubeMapEntry implements ITicket{
-
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
+	private final Consumer<Cube> consumer = (c) -> {
+		this.cube = c;
+		this.loading = false;
+		if(this.cube != null) {
+			this.cube.getTickets().add(this);
+		}
+	};
 	private final ServerCubeCache cubeCache;
 	private PlayerCubeMap playerCubeMap;
 	private Cube cube;
-	private TIntObjectMap<WatcherPlayerEntry> players;
-	private SortedSet<Integer> dirtyBlocks;
-	private long cubeAddress;
-	private long previousWorldTime;
-	private boolean sentToPlayers;
+	private final TIntObjectMap<WatcherPlayerEntry> players = new TIntObjectHashMap<>();
+	private final TShortList dirtyBlocks = new TShortArrayList(64);
+	private final CubeCoords cubePos;
+	private long previousWorldTime = 0;
+	private boolean sentToPlayers = false;
+	private boolean loading = true;
 
-	public PlayerCubeMapEntry(PlayerCubeMap playerCubeMap, int cubeX, int cubeY, int cubeZ) {
+	// CHECKED: 1.10.2-12.18.1.2092
+	public PlayerCubeMapEntry(PlayerCubeMap playerCubeMap, CubeCoords cubePos) {
 		this.playerCubeMap = playerCubeMap;
 		this.cubeCache = playerCubeMap.getWorld().getCubeCache();
-
-		this.cube = this.cubeCache.getCube(
-				cubeX, cubeY, cubeZ,
-				IProviderExtras.Requirement.LOAD);//TODO: async loading
-		if(this.cube != null){
-			this.cube.getTickets().add(this);
-		}
-
-		this.players = new TIntObjectHashMap<>();
-		this.previousWorldTime = 0;
-		this.dirtyBlocks = new TreeSet<>();
-		this.sentToPlayers = false;
-		this.cubeAddress = getAddress(cubeX, cubeY, cubeZ);
+		this.cubeCache.asyncGetCube(
+				cubePos.getCubeX(), cubePos.getCubeY(), cubePos.getCubeZ(),
+				IProviderExtras.Requirement.LOAD,
+				consumer);
+		this.cubePos = cubePos;
 	}
 
+	// CHECKED: 1.10.2-12.18.1.2092
 	public void addPlayer(EntityPlayerMP player) {
 		if (this.players.containsKey(player.getEntityId())) {
-			CubicChunks.LOGGER.debug("Failed to add player. {} already is in cube at address {}", player,
-					String.format("0x%016x", cubeAddress));
+			CubicChunks.LOGGER.debug("Failed to add player. {} already is in cube at {}", player, cubePos);
 			return;
 		}
 		if (this.players.isEmpty()) {
@@ -96,43 +98,54 @@ public class PlayerCubeMapEntry implements ITicket{
 
 		if (this.sentToPlayers) {
 			this.sendToPlayer(player);
+			//TODO: cube watch event?
 		}
 	}
 
+	// CHECKED: 1.10.2-12.18.1.2092
 	public void removePlayer(EntityPlayerMP player) {
-		if (this.players.containsKey(player.getEntityId())) {
-			// If we haven't loaded yet don't load the chunk just so we can clean it up
-			if (this.cube == null) {
-				this.players.remove(player.getEntityId());
-
-				if (this.players.isEmpty()) {
-					//TODO: Implement threaded chunk loading
-					//TODO: Port dropQueuedChunk it to cubic chunks?
-					//net.minecraftforge.common.chunkio.ChunkIOExecutor.dropQueuedChunkLoad(PlayerManager.this.getWorldServer(), this.pos.chunkXPos, this.pos.chunkZPos, this.loadedRunnable);
-					playerCubeMap.removeEntry(this);
-				}
-				return;
-			}
-
-			if (this.sentToPlayers) {
-				PacketDispatcher.sendTo(new PacketUnloadCube(this.cubeAddress), player);
-			}
-
+		if (!this.players.containsKey(player.getEntityId())) {
+			return;
+		}
+		// If we haven't loaded yet don't load the chunk just so we can clean it up
+		if (this.cube == null) {
 			this.players.remove(player.getEntityId());
-			//TODO: Cube unwatch event
-			//net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkWatchEvent.UnWatch(this.pos, player));
 
 			if (this.players.isEmpty()) {
+				if(loading) {
+					AsyncWorldIOExecutor.dropQueuedCubeLoad(this.playerCubeMap.getWorld(),
+							cubePos.getCubeX(), cubePos.getCubeY(), cubePos.getCubeZ(),
+							c -> this.cube = c);
+				}
 				playerCubeMap.removeEntry(this);
-				cube.getTickets().remove(this); // remove the ticket, so this Cube can unload
 			}
+			return;
+		}
+
+		if (this.sentToPlayers) {
+			PacketDispatcher.sendTo(new PacketUnloadCube(this.cubePos), player);
+		}
+
+		this.players.remove(player.getEntityId());
+		//TODO: Cube unwatch event
+		//net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkWatchEvent.UnWatch(this.pos, player));
+
+		if (this.players.isEmpty()) {
+			playerCubeMap.removeEntry(this);
 		}
 	}
 
+	// CHECKED: 1.10.2-12.18.1.2092
 	public boolean providePlayerCube(boolean canGenerate) {
-		int cubeX = getX(cubeAddress);
-		int cubeY = getY(cubeAddress);
-		int cubeZ = getZ(cubeAddress);
+		if(loading) {
+			return false;
+		}
+		if(this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone()))) {
+			return true;
+		}
+		int cubeX = cubePos.getCubeX();
+		int cubeY = cubePos.getCubeY();
+		int cubeZ = cubePos.getCubeZ();
 
 		playerCubeMap.getWorld().getProfiler().startSection("getCube");
 		if (canGenerate) {
@@ -152,6 +165,7 @@ public class PlayerCubeMapEntry implements ITicket{
 		return sentToPlayers;
 	}
 
+	// CHECKED: 1.10.2-12.18.1.2092
 	public boolean sendToPlayers() {
 		if (this.sentToPlayers) {
 			return true;
@@ -159,17 +173,25 @@ public class PlayerCubeMapEntry implements ITicket{
 		if (this.cube == null || !this.cube.isPopulated() || !this.cube.isInitialLightingDone()) {
 			return false;
 		}
+		PlayerCubeMapColumnEntry columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
+		//can't send cubes before columns
+		if(columnEntry == null || !columnEntry.isSentToPlayers()) {
+			return false;
+		}
 		this.dirtyBlocks.clear();
 		//set to true before adding to queue so that sendToPlayer can actually add it
 		this.sentToPlayers = true;
 
-		for (WatcherPlayerEntry entry : this.players.valueCollection()) {
-			sendToPlayer(entry.player);
+		for (WatcherPlayerEntry playerEntry : this.players.valueCollection()) {
+			//don't send entities here, Column sends them.
+			//TODO: send entities per cube? Sending all entities from column may be bad on multiplayer
+			sendToPlayer(playerEntry.player);
 		}
 
 		return true;
 	}
 
+	// CHECKED: 1.10.2-12.18.1.2092
 	public void sendToPlayer(EntityPlayerMP player) {
 		if (!this.sentToPlayers) {
 			return;
@@ -177,6 +199,7 @@ public class PlayerCubeMapEntry implements ITicket{
 		PacketDispatcher.sendTo(new PacketCube(this.cube, PacketCube.Type.NEW_CUBE), player);
 	}
 
+	// CHECKED: 1.10.2-12.18.1.2092
 	public void updateInhabitedTime() {
 		final long now = getWorldTime();
 		if (this.cube == null) {
@@ -191,7 +214,8 @@ public class PlayerCubeMapEntry implements ITicket{
 		this.previousWorldTime = now;
 	}
 
-	public void setDirtyBlock(int localX, int localY, int localZ) {
+	// CHECKED: 1.10.2-12.18.1.2092
+	public void blockChanged(int localX, int localY, int localZ) {
 		//if we are adding the first one, add it to update list
 		if (this.dirtyBlocks.isEmpty()) {
 			playerCubeMap.addToUpdateEntry(this);
@@ -204,10 +228,12 @@ public class PlayerCubeMapEntry implements ITicket{
 		this.dirtyBlocks.add(AddressTools.getLocalAddress(localX, localY, localZ));
 	}
 
+	// CHECKED: 1.10.2-12.18.1.2092
 	public void update() {
 		if (!this.sentToPlayers) {
 			return;
 		}
+		assert cube != null;
 		// are there any updates?
 		if (this.dirtyBlocks.isEmpty()) {
 			return;
@@ -222,14 +248,15 @@ public class PlayerCubeMapEntry implements ITicket{
 			// send all the dirty blocks
 			sendPacketToAllPlayers(new PacketCubeBlockChange(this.cube, this.dirtyBlocks));
 			// send the block entites on those blocks too
-			for (int localAddress : this.dirtyBlocks) {
+			this.dirtyBlocks.forEach(localAddress -> {
 				BlockPos pos = cube.localAddressToBlockPos(localAddress);
 
 				IBlockState state = this.cube.getBlockState(pos);
 				if (state.getBlock().hasTileEntity(state)) {
 					sendBlockEntityToAllPlayers(world.getTileEntity(pos));
 				}
-			}
+				return true;
+			});
 		}
 		this.dirtyBlocks.clear();
 	}
@@ -254,14 +281,10 @@ public class PlayerCubeMapEntry implements ITicket{
 		return !this.players.forEachValue(value -> !predicate.apply(value.player));
 	}
 
-	public boolean hasPlayers() {
-		return !this.players.isEmpty();
-	}
-
-	public double getDistanceSq(long cubeAddress, Entity entity) {
-		double blockX = localToBlock(getX(cubeAddress), 8);
-		double blockY = localToBlock(getY(cubeAddress), 8);
-		double blockZ = localToBlock(getZ(cubeAddress), 8);
+	public double getDistanceSq(CubeCoords cubePos, Entity entity) {
+		double blockX = cubePos.getXCenter();
+		double blockY = cubePos.getYCenter();
+		double blockZ = cubePos.getZCenter();
 		double dx = blockX - entity.posX;
 		double dy = blockY - entity.posY;
 		double dz = blockZ - entity.posZ;
@@ -276,7 +299,7 @@ public class PlayerCubeMapEntry implements ITicket{
 		double min = Double.MAX_VALUE;
 
 		for (WatcherPlayerEntry entry : this.players.valueCollection()) {
-			double dist = getDistanceSq(cubeAddress, entry.player);
+			double dist = getDistanceSq(cubePos, entry.player);
 
 			if (dist < min) {
 				min = dist;
@@ -302,8 +325,20 @@ public class PlayerCubeMapEntry implements ITicket{
 		}
 	}
 
-	public long getCubeAddress() {
-		return cubeAddress;
+	public CubeCoords getCubePos() {
+		return cubePos;
+	}
+
+	@Override public int getX() {
+		return this.cubePos.getCubeX();
+	}
+
+	@Override public int getY() {
+		return this.cubePos.getCubeY();
+	}
+
+	@Override public int getZ() {
+		return this.cubePos.getCubeZ();
 	}
 
 	@Override public boolean shouldTick(){

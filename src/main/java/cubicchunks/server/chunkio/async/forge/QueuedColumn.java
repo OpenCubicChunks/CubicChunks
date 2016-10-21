@@ -20,14 +20,14 @@
 package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.base.Objects;
-import net.minecraft.world.World;
+import cubicchunks.world.ICubicWorld;
 
 class QueuedColumn {
 	final int x;
 	final int z;
-	final World world;
+	final ICubicWorld world;
 
-	QueuedColumn(int x, int z, World world) {
+	QueuedColumn(int x, int z, ICubicWorld world) {
 		this.x = x;
 		this.z = z;
 		this.world = world;

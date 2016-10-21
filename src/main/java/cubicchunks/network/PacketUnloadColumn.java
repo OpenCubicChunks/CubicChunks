@@ -25,31 +25,33 @@ package cubicchunks.network;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketUnloadColumn implements IMessage {
 
-	public long cubeAddress;
+	public ChunkPos chunkPos;
 
 	public PacketUnloadColumn() {}
 
-	public PacketUnloadColumn(long cubeAddress) {
-		this.cubeAddress = cubeAddress;
+	public PacketUnloadColumn(ChunkPos chunkPos) {
+		this.chunkPos = chunkPos;
 	}
 
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		this.cubeAddress = buf.readLong();
+		this.chunkPos = new ChunkPos(buf.readInt(), buf.readInt());
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		buf.writeLong(this.cubeAddress);
+		buf.writeInt(chunkPos.chunkXPos);
+		buf.writeInt(chunkPos.chunkZPos);
 	}
 
-	public long getCubeAddress() {
-		return cubeAddress;
+	public ChunkPos getColumnPos() {
+		return chunkPos;
 	}
 
 	public static class Handler extends AbstractClientMessageHandler<PacketUnloadColumn> {
