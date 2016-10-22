@@ -61,7 +61,7 @@ public class RelightSkyBlockItem extends ItemRegistered {
 			ICubeProvider cubeCache = world.getCubeCache();
 			//re-send them to player
 			cubePos.forEachWithinRange(1,
-				(p) -> PacketDispatcher.sendTo(new PacketCube(cubeCache.getCube(p), PacketCube.Type.UPDATE), (EntityPlayerMP) playerIn));
+				(p) -> PacketDispatcher.sendTo(new PacketCube(cubeCache.getCube(p)), (EntityPlayerMP) playerIn));
 		} else {
 			playerIn.addChatMessage(new TextComponentString("Updating light at at " + placePos + " failed."));
 		}

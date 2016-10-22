@@ -82,14 +82,10 @@ public class ClientHandler implements INetHandler {
 		}
 
 		Cube cube;
-		if (packet.getType() == PacketCube.Type.NEW_CUBE) {
-			cube = cubeCache.loadCube(column, cubePos.getY());
+		if (cubeCache.getLoadedCube(cubePos) == null) {
+			cube = cubeCache.loadCube(column, cubePos.getY()); // new cube
 		} else {
-			cube = column.getCube(cubePos.getY());
-			if (cube instanceof BlankCube) {
-				CubicChunks.LOGGER.error("Ignored cube update to blank cube {}", cubePos);
-				return;
-			}
+			cube = column.getCube(cubePos.getY()); // cube update
 		}
 
 		byte[] data = packet.getData();

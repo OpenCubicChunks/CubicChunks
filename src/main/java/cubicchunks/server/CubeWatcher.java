@@ -200,7 +200,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		if (!this.sentToPlayers) {
 			return;
 		}
-		PacketDispatcher.sendTo(new PacketCube(this.cube, PacketCube.Type.NEW_CUBE), player);
+		PacketDispatcher.sendTo(new PacketCube(this.cube), player);
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
@@ -247,7 +247,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
 		if (this.dirtyBlocks.size() >= ForgeModContainer.clumpingThreshold) {
 			// send whole cube
-			sendPacketToAllPlayers(new PacketCube(cube, PacketCube.Type.UPDATE));
+			sendPacketToAllPlayers(new PacketCube(cube));
 		} else {
 			// send all the dirty blocks
 			sendPacketToAllPlayers(new PacketCubeBlockChange(this.cube, this.dirtyBlocks));
