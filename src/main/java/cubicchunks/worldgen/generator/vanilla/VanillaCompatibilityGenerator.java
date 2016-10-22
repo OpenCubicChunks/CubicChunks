@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
@@ -57,6 +58,10 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 	private boolean optimizationHack;
 
 	private IBlockState extensionBlockBottom = Blocks.STONE.getDefaultState();
+	private IBlockState extensionBlockTop = Blocks.AIR.getDefaultState();
+
+	private final int worldHeightBlocks;
+	private final int worldHeightCubes;
 
 	public VanillaCompatibilityGenerator(IChunkGenerator vanilla, ICubicWorld world) {
 		this.vanilla = vanilla;
@@ -65,28 +70,53 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 		// heuristics TODO: add a config that overrides this
 		lastChunk = vanilla.provideChunk(0, 0); // lets scan the chunk at 0, 0
 
-		Map<IBlockState, Integer> blockHistogram = new HashMap<>();
+		worldHeightBlocks = world.getActualHeight();
+		worldHeightCubes = worldHeightBlocks / Cube.SIZE;
+		Map<IBlockState, Integer> blockHistogramBottom = new HashMap<>();
+		Map<IBlockState, Integer> blockHistogramTop = new HashMap<>();
 
-		// We scan three layers, because the bottom-most layer is usually fully bedrock
-		for (int y = 0; y < 3; y++) {
-			for (int x = 0; x < Cube.SIZE; x++) {
-				for (int z = 0; z < Cube.SIZE; z++) {
-					IBlockState blockState = lastChunk.getBlockState(x, 0, z);
+		for (int x = 0; x < Cube.SIZE; x++) {
+			for (int z = 0; z < Cube.SIZE; z++) {
+				// Scan three layers top / bottom each to guard against bedrock walls
+				for (int y = 0; y < 3; y++) {
+					IBlockState blockState = lastChunk.getBlockState(x, y, z);
 					if (blockState.getBlock() == Blocks.BEDROCK) continue; // Never use bedrock for world extension
 
-					int count = blockHistogram.getOrDefault(blockState, 0);
-					blockHistogram.put(blockState, count + 1);
+					int count = blockHistogramBottom.getOrDefault(blockState, 0);
+					blockHistogramBottom.put(blockState, count + 1);
+				}
+
+				for (int y = worldHeightBlocks - 1; y > worldHeightBlocks- 4; y--) {
+					IBlockState blockState = lastChunk.getBlockState(x, y, z);
+					if (blockState.getBlock() == Blocks.BEDROCK) continue; // Never use bedrock for world extension
+
+					int count = blockHistogramTop.getOrDefault(blockState, 0);
+					blockHistogramTop.put(blockState, count + 1);
 				}
 			}
 		}
 
+		CubicChunks.LOGGER.debug("Block histograms: \nTop: " + blockHistogramTop + "\nBottom: " + blockHistogramBottom);
+
 		int topcount = 0;
-		for (Map.Entry<IBlockState, Integer> entry : blockHistogram.entrySet()) {
+		for (Map.Entry<IBlockState, Integer> entry : blockHistogramBottom.entrySet()) {
 			if (entry.getValue() > topcount) {
 				extensionBlockBottom = entry.getKey();
 				topcount = entry.getValue();
 			}
 		}
+		CubicChunks.LOGGER.info("Detected filler block " + extensionBlockBottom.getBlock().getUnlocalizedName() + " " +
+			"from layers [0, 2]");
+
+		topcount = 0;
+		for (Map.Entry<IBlockState, Integer> entry : blockHistogramTop.entrySet()) {
+			if (entry.getValue() > topcount) {
+				extensionBlockTop = entry.getKey();
+				topcount = entry.getValue();
+			}
+		}
+		CubicChunks.LOGGER.info("Detected filler block " + extensionBlockTop.getBlock().getUnlocalizedName() + " from" +
+			" layers [" + (worldHeightBlocks - 3) + ", " + (worldHeightBlocks - 1) + "]");
 	}
 
 	private Biome[] biomes;
@@ -123,17 +153,23 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 					}
 				}
 			}
-		} else if (cubeY > 15) {
-			// over block?
+		} else if (cubeY >= worldHeightCubes) {
+			for (int x = 0; x < Cube.SIZE; x++) {
+				for (int y = 0; y < Cube.SIZE; y++) {
+					for (int z = 0; z < Cube.SIZE; z++) {
+						primer.setBlockState(x, y, z, extensionBlockTop);
+					}
+				}
+			}
 		} else {
 			if (lastChunk.xPosition != cubeX || lastChunk.zPosition != cubeZ) {
 				lastChunk = vanilla.provideChunk(cubeX, cubeZ);
 			}
 
-			//generate 16 cubes at once!
+			//generate 16 cubes at once
 			if (!optimizationHack) {
 				optimizationHack = true;
-				for (int y = 15; y >= 0; y--) {
+				for (int y = worldHeightCubes - 1; y >= 0; y--) {
 					if (y == cubeY) {
 						continue;
 					}
@@ -148,8 +184,15 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 					for (int y = 0; y < Cube.SIZE; y++) {
 						for (int z = 0; z < Cube.SIZE; z++) {
 							IBlockState state = storage.get(x, y, z);
-							primer.setBlockState(x, y, z,
-								state == Blocks.BEDROCK.getDefaultState() ? extensionBlockBottom : state);
+							if (state == Blocks.BEDROCK.getDefaultState()) {
+								if (y < Cube.SIZE / 2) {
+									primer.setBlockState(x, y, z, extensionBlockBottom);
+								} else {
+									primer.setBlockState(x, y, z, extensionBlockTop);
+								}
+							} else {
+								primer.setBlockState(x, y, z, state);
+							}
 						}
 					}
 				}
@@ -161,16 +204,16 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
 	@Override
 	public void populate(Cube cube) {
-		if (cube.getY() >= 0 && cube.getY() <= 15) {
+		if (cube.getY() >= 0 && cube.getY() < worldHeightCubes) {
 			for (int x = 0; x < 2; x++) {
 				for (int z = 0; z < 2; z++) {
-					for (int y = 15; y >= 0; y--) {
+					for (int y = worldHeightCubes - 1; y >= 0; y--) {
 						// Vanilla populators break the rules! They need to find the ground!
 						world.getCubeFromCubeCoords(cube.getX() + x, y, cube.getZ() + z);
 					}
 				}
 			}
-			for (int y = 15; y >= 0; y--) {
+			for (int y = worldHeightCubes - 1; y >= 0; y--) {
 				// normal populators would not do this... but we are populating more than one cube!
 				world.getCubeFromCubeCoords(cube.getX(), y, cube.getZ()).setPopulated(true);
 			}
@@ -182,10 +225,10 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
 	@Override
 	public Box getPopulationRequirement(Cube cube) {
-		if (cube.getY() >= 0 && cube.getY() <= 15) {
+		if (cube.getY() >= 0 && cube.getY() < worldHeightCubes) {
 			return new Box(
 				-1, 0 - cube.getY(), -1,
-				0, 15 - cube.getY(), 0
+				0, worldHeightCubes - cube.getY() - 1, 0
 			);
 		}
 		return NO_POPULATOR_REQUIREMENT;
