@@ -133,6 +133,13 @@ public interface ICubicWorld {
 	 */
 	boolean testForCubes(CubePos start, CubePos end, @Nullable Predicate<Cube> test);
 
+	/**
+	 * Return the actual world height for this world. Typically this is 256 for worlds with a sky, and 128 for worlds
+	 * without.
+	 * @return The actual world height
+	 */
+	int getActualHeight();
+
 	// TODO: this method is just plain stupid (remove it)
 	@Nullable Cube getCubeForAddress(long address);
 

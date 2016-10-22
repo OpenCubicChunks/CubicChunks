@@ -53,9 +53,9 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
 				Coords.cubeToMinBlock(column.getZ()),
 				Cube.SIZE, Cube.SIZE);
 
-		byte[] abyte = column.getBiomeArray();
-		for (int i = 0; i < abyte.length; ++i) {
-			abyte[i] = (byte) Biome.getIdForBiome(this.columnBiomes[i]);
+		byte[] columnBiomeArray = column.getBiomeArray();
+		for (int i = 0; i < columnBiomeArray.length; ++i) {
+			columnBiomeArray[i] = (byte) Biome.getIdForBiome(this.columnBiomes[i]);
 		}
 	}
 

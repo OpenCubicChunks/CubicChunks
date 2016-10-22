@@ -184,6 +184,8 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Shadow public abstract boolean isAreaLoaded(BlockPos start, BlockPos end);
 
+	@Shadow public abstract int getActualHeight();
+
 	@Override public boolean isCubicWorld() {
 		return this.isCubicWorld;
 	}
@@ -410,5 +412,9 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Intrinsic public boolean world$isAreaLoaded(BlockPos start, BlockPos end) {
 		return this.isAreaLoaded(start, end);
+	}
+
+	@Intrinsic public int world$getActualHeight() {
+		return this.getActualHeight();
 	}
 }
