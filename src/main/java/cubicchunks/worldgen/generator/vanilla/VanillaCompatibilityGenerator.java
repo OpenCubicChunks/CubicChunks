@@ -36,7 +36,9 @@ import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
@@ -66,26 +68,22 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 		// heuristics TODO: add a config that overrides this
 		lastChunk = vanilla.provideChunk(0, 0); // lets scan the chunk at 0, 0
 
-		IBlockState topstate = null;
-		int topcount = 0;
-		{   // find the type of block that is most common on the bottom layer
-			IBlockState laststate = null;
-			for (int at = 0; at < 16*16; at++) {
-				IBlockState state = lastChunk.getBlockState(at | 0x0F, 0, at >> 4);
-				if (state != laststate) {
+		Map<IBlockState, Integer> blockHistogram = new HashMap<>();
 
-					int count = 1;
-					for (int i = at + 1; i < 16*16; i++) {
-						if (lastChunk.getBlockState(i | 0x0F, 0, i >> 4) == state) {
-							count++;
-						}
-					}
-					if (count > topcount) {
-						topcount = count;
-						topstate = state;
-					}
-				}
-				laststate = state;
+		for (int x = 0; x < Cube.SIZE; x++) {
+			for (int z = 0; z < Cube.SIZE; z++) {
+				IBlockState blockState = lastChunk.getBlockState(x, 0, z);
+				int count = blockHistogram.getOrDefault(blockState, 0);
+				blockHistogram.put(blockState, count + 1);
+			}
+		}
+
+		IBlockState topstate = ICubePrimer.DEFAULT_STATE;
+		int topcount = 0;
+		for (Map.Entry<IBlockState, Integer> entry: blockHistogram.entrySet()) {
+			if (entry.getValue() > topcount) {
+				topstate = entry.getKey();
+				topcount = entry.getValue();
 			}
 		}
 
