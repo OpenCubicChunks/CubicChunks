@@ -67,7 +67,7 @@ public interface IProviderExtras {
 		/**
 		 * Only retrieve the cube/column if it is already cached
 		 */
-		LOAD_CACHED,
+		GET_CACHED,
 		/**
 		 * Load the cube/column from disk, if necessary
 		 */
