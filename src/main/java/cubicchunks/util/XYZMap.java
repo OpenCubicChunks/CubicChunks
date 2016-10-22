@@ -209,7 +209,6 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
 			// If the correct bucket was found, remove it.
 			if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
-				--this.size;
 				this.collapseBucket(index);
 				return (T) bucket;
 			}
@@ -340,6 +339,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * @param hole the index of the bucket to be collapsed
 	 */
 	private void collapseBucket(int hole) {
+		this.size--;
 
 		int currentIndex = hole;
 		while (true) {
