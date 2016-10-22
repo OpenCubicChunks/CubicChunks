@@ -23,10 +23,6 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -46,12 +42,18 @@ import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -63,8 +65,8 @@ public interface ICubicWorld {
 	void tickCubicWorld();
 
 	/**
-	 * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks are loaded.
-	 * Cannot be used more than once.
+	 * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
+	 * are loaded. Cannot be used more than once.
 	 */
 	void initCubicWorld();
 
@@ -81,10 +83,10 @@ public interface ICubicWorld {
 	int getMaxHeight();
 
 	/**
-	 * Returns the {@link ICubeCache} for this world, or throws {@link NotCubicChunksWorldException}
+	 * Returns the {@link ICubeProvider} for this world, or throws {@link NotCubicChunksWorldException}
 	 * if this is not a CubicChunks world.
 	 */
-	ICubeCache getCubeCache();
+	ICubeProvider getCubeCache();
 
 	/**
 	 * Returns the {@link LightingManager} for this world, or throws {@link NotCubicChunksWorldException}
@@ -93,27 +95,27 @@ public interface ICubicWorld {
 	LightingManager getLightingManager();
 
 	/**
-	 * Returns true iff the given Predicate evaluates to true for all cubes for block positions within blockRadius from centerPos.
-	 * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
+	 * Returns true iff the given Predicate evaluates to true for all cubes for block positions within blockRadius from
+	 * centerPos. Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
 	 */
 	default boolean testForCubes(BlockPos centerPos, int blockRadius, @Nullable Predicate<Cube> test) {
 		return testForCubes(
-				centerPos.getX() - blockRadius, centerPos.getY() - blockRadius, centerPos.getZ() - blockRadius,
-				centerPos.getX() + blockRadius, centerPos.getY() + blockRadius, centerPos.getZ() + blockRadius,
-				test
+			centerPos.getX() - blockRadius, centerPos.getY() - blockRadius, centerPos.getZ() - blockRadius,
+			centerPos.getX() + blockRadius, centerPos.getY() + blockRadius, centerPos.getZ() + blockRadius,
+			test
 		);
 	}
 
 	/**
-	 * Returns true iff the given Predicate evaluates to true for all cubes for block positions
-	 * between BlockPos(minBlockX, minBlockY, minBlockZ) and BlockPos(maxBlockX, maxBlockY, maxBlockZ) (including the specified positions).
-	 * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
+	 * Returns true iff the given Predicate evaluates to true for all cubes for block positions between
+	 * BlockPos(minBlockX, minBlockY, minBlockZ) and BlockPos(maxBlockX, maxBlockY, maxBlockZ) (including the specified
+	 * positions). Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
 	 */
 	default boolean testForCubes(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, @Nullable Predicate<Cube> test) {
 		return testForCubes(
-				CubeCoords.fromBlockCoords(minBlockX, minBlockY, minBlockZ),
-				CubeCoords.fromBlockCoords(maxBlockX, maxBlockY, maxBlockZ),
-				test
+			CubePos.fromBlockCoords(minBlockX, minBlockY, minBlockZ),
+			CubePos.fromBlockCoords(maxBlockX, maxBlockY, maxBlockZ),
+			test
 		);
 	}
 
@@ -129,7 +131,7 @@ public interface ICubicWorld {
 	 * Returns true iff the given Predicate evaluates to true for given cube and neighbors.
 	 * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
 	 */
-	boolean testForCubes(CubeCoords start, CubeCoords end, @Nullable Predicate<Cube> test);
+	boolean testForCubes(CubePos start, CubePos end, @Nullable Predicate<Cube> test);
 
 	// TODO: this method is just plain stupid (remove it)
 	@Nullable Cube getCubeForAddress(long address);

@@ -23,14 +23,6 @@
  */
 package cubicchunks.server.chunkio;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.OpacityIndex;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -42,6 +34,15 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nullable;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.ServerHeightMap;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
 public class IONbtReader {
 	@Nullable
@@ -73,7 +74,7 @@ public class IONbtReader {
 		}
 
 		// create the column
-		Column column = new Column(world.getCubeCache() ,world, x, z);
+		Column column = new Column(world.getCubeCache(), world, x, z);
 
 		// read the rest of the column properties
 		column.setInhabitedTime(nbt.getLong("InhabitedTime"));
@@ -85,14 +86,14 @@ public class IONbtReader {
 	}
 
 	private static void readOpacityIndex(NBTTagCompound nbt, Column column) {// biomes
-		((OpacityIndex) column.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
+		((ServerHeightMap) column.getOpacityIndex()).readData(nbt.getByteArray("ServerHeightMap"));
 	}
 
 	@Nullable
 	static Cube readCubeAsyncPart(Column column, final int cubeX, final int cubeY, final int cubeZ, NBTTagCompound nbt) {
 		if (column.getX() != cubeX || column.getZ() != cubeZ) {
 			throw new IllegalArgumentException(String.format("Invalid column (%d, %d) for cube at (%d, %d, %d)",
-					column.getX(), column.getZ(), cubeX, cubeY, cubeZ));
+				column.getX(), column.getZ(), cubeX, cubeY, cubeZ));
 		}
 		ICubicWorldServer world = (ICubicWorldServer) column.getWorld();
 
@@ -129,7 +130,7 @@ public class IONbtReader {
 
 		// check against column
 		assert cubeX == column.xPosition && cubeZ == column.zPosition :
-				String.format("Cube is corrupted! Cube (%d,%d,%d) does not match column (%d,%d).", cubeX, cubeY, cubeZ, column.xPosition, column.zPosition);
+			String.format("Cube is corrupted! Cube (%d,%d,%d) does not match column (%d,%d).", cubeX, cubeY, cubeZ, column.xPosition, column.zPosition);
 
 
 		// build the cube
@@ -146,7 +147,7 @@ public class IONbtReader {
 	private static void readBlocks(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {
 		boolean isEmpty = !nbt.hasKey("Blocks");// is this an empty cube?
 		if (!isEmpty) {
-			ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), !cube.getWorld().getProvider().getHasNoSky());
+			ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), !cube.getCubicWorld().getProvider().getHasNoSky());
 
 			byte[] abyte = nbt.getByteArray("Blocks");
 			NibbleArray data = new NibbleArray(nbt.getByteArray("Data"));
@@ -173,7 +174,7 @@ public class IONbtReader {
 			int entityCubeZ = Coords.getCubeZForEntity(entity);
 			if (entityCubeX != cube.getX() || entityCubeY != cube.getY() || entityCubeZ != cube.getZ()) {
 				CubicChunks.LOGGER.warn(String.format("Loaded entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)!", entity.getClass()
-						.getName(), entityCubeX, entityCubeY, entityCubeZ, cube.getX(), cube.getY(), cube.getZ()));
+					.getName(), entityCubeX, entityCubeY, entityCubeZ, cube.getX(), cube.getY(), cube.getZ()));
 			}
 
 			entity.addedToChunk = true;
@@ -209,14 +210,14 @@ public class IONbtReader {
 				block = Block.getBlockById(nbtScheduledTick.getInteger("i"));
 			}
 			world.scheduleBlockUpdate(
-					new BlockPos(
-							nbtScheduledTick.getInteger("x"),
-							nbtScheduledTick.getInteger("y"),
-							nbtScheduledTick.getInteger("z")
-					),
-					block,
-					nbtScheduledTick.getInteger("t"),
-					nbtScheduledTick.getInteger("p")
+				new BlockPos(
+					nbtScheduledTick.getInteger("x"),
+					nbtScheduledTick.getInteger("y"),
+					nbtScheduledTick.getInteger("z")
+				),
+				block,
+				nbtScheduledTick.getInteger("t"),
+				nbtScheduledTick.getInteger("p")
 			);
 		}
 	}
@@ -240,28 +241,28 @@ public class IONbtReader {
 			int maxUpdateY = Math.max(currentY, lastY);
 
 			boolean needLightUpdate = minUpdateY != maxUpdateY &&
-					//if max update Y is below minY - nothing to update
-					!(maxUpdateY < minBlockY) &&
-					//if min update Y is above maxY - nothing to update
-					!(minUpdateY > maxBlockY);
+				//if max update Y is below minY - nothing to update
+				!(maxUpdateY < minBlockY) &&
+				//if min update Y is above maxY - nothing to update
+				!(minUpdateY > maxBlockY);
 			if (needLightUpdate) {
 
 				//clamp min/max update Y to be within current cube bounds
-				if(minUpdateY < minBlockY) {
+				if (minUpdateY < minBlockY) {
 					minUpdateY = minBlockY;
 				}
-				if(maxUpdateY > maxBlockY) {
+				if (maxUpdateY > maxBlockY) {
 					maxUpdateY = maxBlockY;
 				}
 				assert minUpdateY <= maxUpdateY : "minUpdateY > maxUpdateY: " + minUpdateY + ">" + maxUpdateY;
 
 				int localX = i & 0xF;
 				int localZ = i >> 4;
-				cube.getWorld().getLightingManager().columnSkylightUpdate(
-						LightingManager.UpdateType.QUEUED, cube.getColumn(),
-						localX,
-						minUpdateY, maxUpdateY,
-						localZ
+				cube.getCubicWorld().getLightingManager().columnSkylightUpdate(
+					LightingManager.UpdateType.QUEUED, cube.getColumn(),
+					localX,
+					minUpdateY, maxUpdateY,
+					localZ
 				);
 			}
 		}

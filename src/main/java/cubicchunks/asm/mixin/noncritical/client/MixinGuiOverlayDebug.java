@@ -23,15 +23,17 @@
  */
 package cubicchunks.asm.mixin.noncritical.client;
 
-import cubicchunks.asm.MixinUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiOverlayDebug;
 import net.minecraft.util.math.BlockPos;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+
+import cubicchunks.asm.MixinUtils;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.GUI_OVERLAY_DEBUG_CALL;
@@ -39,6 +41,7 @@ import static cubicchunks.asm.JvmNames.GUI_OVERLAY_DEBUG_CALL;
 /**
  * Goal of this mixin is to remove the "Outside of world..." message on the debug overlay for cubic world types.
  * We redirect the call to BlockPos.getY() for the bounds check in GuiOverlayDebug.call only
+ *
  * @author Malte Schütze
  */
 @Mixin(GuiOverlayDebug.class)
@@ -53,6 +56,7 @@ public class MixinGuiOverlayDebug {
 		return MixinUtils.getReplacementY(mc.theWorld, pos);
 
 	}
+
 	// This is call 6 (idx 5)
 	@Redirect(method = GUI_OVERLAY_DEBUG_CALL, at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 5))
 	private int blockPosGetYBoundsCheck2(BlockPos pos) {

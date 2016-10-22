@@ -23,9 +23,9 @@
  */
 package cubicchunks.asm.mixin.noncritical.client;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.world.World;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,6 +34,8 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import cubicchunks.world.ICubicWorld;
 
 /**
  * Modify vertical render distance so that it's cube.
@@ -47,7 +49,7 @@ public class MixinViewFrustum_VertViewDistance {
 	@Inject(method = "setCountChunksXYZ", at = @At(value = "HEAD"))
 	private void onSetCountChunks(int renderDistance, CallbackInfo cbi) {
 		if (((ICubicWorld) world).isCubicWorld()) {
-			this.renderDistance = renderDistance * 2 + 1;
+			this.renderDistance = renderDistance*2 + 1;
 		} else {
 			this.renderDistance = 16;
 		}

@@ -23,8 +23,6 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.server.PlayerCubeMapEntry;
-import cubicchunks.util.CubeCoords;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
@@ -47,12 +45,15 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import cubicchunks.server.CubeWatcher;
+import cubicchunks.util.CubePos;
+
 public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 	private static final int CUBES_PER_CHUNK = 16;
 	private static final int MOB_COUNT_DIV = (int) Math.pow(17.0D, 2.0D)*CUBES_PER_CHUNK;
 	private static final int SPAWN_RADIUS = 8;
 
-	private Set<CubeCoords> cubesForSpawn = new HashSet<>();
+	private Set<CubePos> cubesForSpawn = new HashSet<>();
 
 	@Override
 	public int findChunksForSpawning(WorldServer worldOrig, boolean hostileEnable, boolean peacefulEnable, boolean spawnOnSetTickRate) {
@@ -75,28 +76,28 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 			if (worldEntityCount > maxEntityCount) {
 				continue;
 			}
-			ArrayList<CubeCoords> shuffled = getShuffledCopy(this.cubesForSpawn);
+			ArrayList<CubePos> shuffled = getShuffledCopy(this.cubesForSpawn);
 			totalSpawnCount += spawnCreatureTypeInAllChunks(mobType, world, shuffled);
 		}
 		return totalSpawnCount;
 	}
 
-	private int addEligibleChunks(ICubicWorldServer world, Set<CubeCoords> possibleChunks) {
+	private int addEligibleChunks(ICubicWorldServer world, Set<CubePos> possibleChunks) {
 		int chunkCount = 0;
 
 		for (EntityPlayer player : world.getPlayerEntities()) {
 			if (player.isSpectator()) {
 				continue;
 			}
-			CubeCoords center = CubeCoords.fromEntity(player);
+			CubePos center = CubePos.fromEntity(player);
 
 			for (int cubeXRel = -SPAWN_RADIUS; cubeXRel <= SPAWN_RADIUS; ++cubeXRel) {
 				for (int cubeYRel = -SPAWN_RADIUS; cubeYRel <= SPAWN_RADIUS; ++cubeYRel) {
 					for (int cubeZRel = -SPAWN_RADIUS; cubeZRel <= SPAWN_RADIUS; ++cubeZRel) {
 						boolean isEdge = cubeXRel == -SPAWN_RADIUS || cubeXRel == SPAWN_RADIUS ||
-								cubeYRel == -SPAWN_RADIUS || cubeYRel == SPAWN_RADIUS ||
-								cubeZRel == -SPAWN_RADIUS || cubeZRel == SPAWN_RADIUS;
-						CubeCoords chunkPos = center.add(cubeXRel, cubeYRel, cubeZRel);
+							cubeYRel == -SPAWN_RADIUS || cubeYRel == SPAWN_RADIUS ||
+							cubeZRel == -SPAWN_RADIUS || cubeZRel == SPAWN_RADIUS;
+						CubePos chunkPos = center.add(cubeXRel, cubeYRel, cubeZRel);
 
 						if (possibleChunks.contains(chunkPos)) {
 							continue;
@@ -106,7 +107,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 						if (isEdge || !world.getWorldBorder().contains(chunkPos.chunkPos())) {
 							continue;
 						}
-						PlayerCubeMapEntry chunkInfo = world.getPlayerCubeMap().getCubeWatcher(chunkPos);
+						CubeWatcher chunkInfo = world.getPlayerCubeMap().getCubeWatcher(chunkPos);
 
 						if (chunkInfo != null && chunkInfo.isSentToPlayers()) {
 							possibleChunks.add(chunkPos);
@@ -118,16 +119,16 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 		return chunkCount;
 	}
 
-	private int spawnCreatureTypeInAllChunks(EnumCreatureType mobType, ICubicWorldServer world, ArrayList<CubeCoords> chunkList) {
+	private int spawnCreatureTypeInAllChunks(EnumCreatureType mobType, ICubicWorldServer world, ArrayList<CubePos> chunkList) {
 		BlockPos spawnPoint = world.getSpawnPoint();
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 
 		int totalSpawned = 0;
 
 		nextChunk:
-		for (CubeCoords currentChunkPos : chunkList) {
+		for (CubePos currentChunkPos : chunkList) {
 			BlockPos blockpos = getRandomChunkPosition(world, currentChunkPos);
-			if(blockpos == null) {
+			if (blockpos == null) {
 				continue nextChunk;
 			}
 			IBlockState block = world.getBlockState(blockpos);
@@ -160,7 +161,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 					float entityZ = (float) entityBlockZ + 0.5F;
 
 					if (world.isAnyPlayerWithinRangeAt(entityX, entityY, entityZ, 24.0D) ||
-							spawnPoint.distanceSq(entityX, entityY, entityZ) < 576.0D) {
+						spawnPoint.distanceSq(entityX, entityY, entityZ) < 576.0D) {
 						continue;
 					}
 					if (biomeMobs == null) {
@@ -172,15 +173,15 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 					}
 
 					if (!world.canCreatureTypeSpawnHere(mobType, biomeMobs, blockPos) ||
-							!canCreatureTypeSpawnAtLocation(EntitySpawnPlacementRegistry
-									.getPlacementForEntity(biomeMobs.entityClass), (World) world, blockPos)) {
+						!canCreatureTypeSpawnAtLocation(EntitySpawnPlacementRegistry
+							.getPlacementForEntity(biomeMobs.entityClass), (World) world, blockPos)) {
 						continue;
 					}
 					EntityLiving toSpawn;
 
 					try {
 						toSpawn = biomeMobs.entityClass.getConstructor(new Class[]{
-								World.class
+							World.class
 						}).newInstance(world);
 					} catch (Exception exception) {
 						exception.printStackTrace();
@@ -192,8 +193,8 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 
 					Event.Result canSpawn = ForgeEventFactory.canEntitySpawn(toSpawn, (World) world, entityX, entityY, entityZ);
 					if (canSpawn == Event.Result.ALLOW ||
-							(canSpawn == Event.Result.DEFAULT && toSpawn.getCanSpawnHere() &&
-									toSpawn.isNotColliding())) {
+						(canSpawn == Event.Result.DEFAULT && toSpawn.getCanSpawnHere() &&
+							toSpawn.isNotColliding())) {
 						if (!ForgeEventFactory.doSpecialSpawn(toSpawn, (World) world, entityX, entityY, entityZ))
 							entityData = toSpawn.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(toSpawn)), entityData);
 
@@ -224,16 +225,16 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 
 	private static boolean shouldSpawnType(EnumCreatureType type, boolean hostile, boolean peaceful, boolean spawnOnSetTickRate) {
 		return !((type.getPeacefulCreature() && !peaceful) ||
-				(!type.getPeacefulCreature() && !hostile) ||
-				(type.getAnimal() && !spawnOnSetTickRate));
+			(!type.getPeacefulCreature() && !hostile) ||
+			(type.getAnimal() && !spawnOnSetTickRate));
 	}
 
-	protected static BlockPos getRandomChunkPosition(ICubicWorldServer world, CubeCoords pos) {
+	protected static BlockPos getRandomChunkPosition(ICubicWorldServer world, CubePos pos) {
 		int blockX = pos.getMinBlockX() + world.getRand().nextInt(16);
 		int blockZ = pos.getMinBlockZ() + world.getRand().nextInt(16);
 
 		int height = world.getEffectiveHeight(blockX, blockZ);
-		if(pos.getMinBlockY() > height) {
+		if (pos.getMinBlockY() > height) {
 			return null;
 		}
 		int blockY = pos.getMinBlockY() + world.getRand().nextInt(16);

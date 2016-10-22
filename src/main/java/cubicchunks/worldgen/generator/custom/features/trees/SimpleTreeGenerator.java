@@ -23,7 +23,6 @@
  */
 package cubicchunks.worldgen.generator.custom.features.trees;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -32,6 +31,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
+
+import cubicchunks.world.ICubicWorld;
 
 public class SimpleTreeGenerator extends TreeGenerator {
 

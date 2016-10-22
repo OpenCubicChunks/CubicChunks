@@ -24,7 +24,7 @@
 package cubicchunks.world.column;
 
 import com.google.common.collect.Lists;
-import cubicchunks.world.cube.Cube;
+
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.util.ArrayList;
@@ -34,10 +34,12 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import cubicchunks.world.cube.Cube;
+
 class CubeMap implements Iterable<Cube> {
 
 	private static final Comparator<Cube> ORDER = (one, two) ->
-			one.getY() - two.getY();
+		one.getY() - two.getY();
 
 	private final List<Cube> cubes = new ArrayList<>();
 
@@ -61,7 +63,7 @@ class CubeMap implements Iterable<Cube> {
 
 	Iterable<Cube> cubes(int startY, int endY) {
 		boolean reverse = false;
-		if(startY > endY){
+		if (startY > endY) {
 			int i = startY;
 			startY = endY;
 			endY = i;
@@ -71,9 +73,9 @@ class CubeMap implements Iterable<Cube> {
 		int bottom = binarySearch(startY);
 		int top = binarySearch(endY + 1); // subList()'s second arg is exclusive so we need to add 1
 
-		if(bottom < cubes.size() && top <= cubes.size()){
+		if (bottom < cubes.size() && top <= cubes.size()) {
 			return reverse ? Lists.reverse(cubes.subList(bottom, top)) : cubes.subList(bottom, top);
-		}else{
+		} else {
 			return Collections.emptyList();
 		}
 	}
@@ -99,9 +101,9 @@ class CubeMap implements Iterable<Cube> {
 	 * @return An array of EBS's form Cubes that need ticking... kind of a hack but vanilla needs it
 	 */
 	ExtendedBlockStorage[] getStoragesToTick() {
-		if(!isToTickValid()) {
+		if (!isToTickValid()) {
 			int count = 0;
-			for(Cube cube : cubes) {
+			for (Cube cube : cubes) {
 				if (cube.getStorage() != null && cube.getTickets().shouldTick()) {
 					count++;
 				}
@@ -109,7 +111,7 @@ class CubeMap implements Iterable<Cube> {
 
 			toBlockTick = new ExtendedBlockStorage[count];
 			count = 0;
-			for(Cube cube : cubes) {
+			for (Cube cube : cubes) {
 				if (cube.getStorage() != null && cube.getTickets().shouldTick()) {
 					toBlockTick[count++] = cube.getStorage();
 				}
@@ -119,14 +121,14 @@ class CubeMap implements Iterable<Cube> {
 		return toBlockTick;
 	}
 
-	private boolean isToTickValid(){
+	private boolean isToTickValid() {
 		int index = 0;
-		for(Cube cube : cubes) {
-			if(cube.getStorage() != null && cube.getTickets().shouldTick()) {
-				if(index >= toBlockTick.length) {
+		for (Cube cube : cubes) {
+			if (cube.getStorage() != null && cube.getTickets().shouldTick()) {
+				if (index >= toBlockTick.length) {
 					return false;
 				}
-				if(toBlockTick[index++] != cube.getStorage()) {
+				if (toBlockTick[index++] != cube.getStorage()) {
 					return false;
 				}
 			}
@@ -139,15 +141,15 @@ class CubeMap implements Iterable<Cube> {
 		int end = cubes.size() - 1;
 		int mid = 0;
 
-		while(start <= end) {
+		while (start <= end) {
 			mid = start + end >>> 1;
 
 			int at = cubes.get(mid).getY();
-			if(at < cubeY) { // we are below the target;
+			if (at < cubeY) { // we are below the target;
 				start = mid + 1;
-			}else if(at > cubeY) {
+			} else if (at > cubeY) {
 				end = mid - 1; // we are above the target
-			}else{
+			} else {
 				return mid;// found target!
 			}
 		}

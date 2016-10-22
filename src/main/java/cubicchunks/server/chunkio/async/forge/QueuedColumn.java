@@ -20,6 +20,7 @@
 package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.base.Objects;
+
 import cubicchunks.world.ICubicWorld;
 
 class QueuedColumn {
@@ -35,7 +36,7 @@ class QueuedColumn {
 
 	@Override
 	public int hashCode() {
-		return (x * 31 + z * 29) ^ world.hashCode();
+		return (x*31 + z*29) ^ world.hashCode();
 	}
 
 	@Override
@@ -51,9 +52,9 @@ class QueuedColumn {
 	@Override
 	public String toString() {
 		return Objects.toStringHelper(this)
-				.addValue(this.world)
-				.add("x", this.x)
-				.add("z", this.z)
-				.toString();
+			.addValue(this.world)
+			.add("x", this.x)
+			.add("z", this.z)
+			.toString();
 	}
 }

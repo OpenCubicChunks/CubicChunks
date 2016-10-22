@@ -23,11 +23,12 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
+
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 
 public class MultiFeatureGenerator extends FeatureGenerator {
 	private final FeatureGenerator gen;

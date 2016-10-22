@@ -23,11 +23,12 @@
  */
 package cubicchunks.util;
 
-import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 import java.util.function.Predicate;
+
+import cubicchunks.worldgen.generator.ICubePrimer;
 
 public class StructureGenUtil {
 	public static boolean scanWallsForBlock(ICubePrimer cube,
@@ -43,7 +44,7 @@ public class StructureGenUtil {
 		for (int x = minX; x < maxX; ++x) {
 			for (int y = minY; y < maxY; ++y) {
 				if (predicate.test(cube.getBlockState(x, y, minZ)) ||
-						predicate.test(cube.getBlockState(x, y, maxZ - 1))) {
+					predicate.test(cube.getBlockState(x, y, maxZ - 1))) {
 					return true;
 				}
 			}
@@ -53,7 +54,7 @@ public class StructureGenUtil {
 		for (int x = minX; x < maxX; ++x) {
 			for (int z = minZ; z < maxZ; ++z) {
 				if (predicate.test(cube.getBlockState(x, minY, z)) ||
-						predicate.test(cube.getBlockState(x, maxY - 1, z))) {
+					predicate.test(cube.getBlockState(x, maxY - 1, z))) {
 					return true;
 				}
 			}
@@ -63,7 +64,7 @@ public class StructureGenUtil {
 		for (int y = minY; y < maxY; ++y) {
 			for (int z = minZ; z < maxZ; ++z) {
 				if (predicate.test(cube.getBlockState(minX, y, z)) ||
-						predicate.test(cube.getBlockState(maxX - 1, y, z))) {
+					predicate.test(cube.getBlockState(maxX - 1, y, z))) {
 					return true;
 				}
 			}

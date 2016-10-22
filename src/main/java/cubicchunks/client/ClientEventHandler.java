@@ -23,11 +23,12 @@
  */
 package cubicchunks.client;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+
+import cubicchunks.world.ICubicWorld;
 
 public class ClientEventHandler {
 

@@ -21,34 +21,32 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.world.type;
 
-import javax.annotation.Nullable;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 
-public interface ICubeCache {
 
-	@Nullable
-	Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
+public class VanillaCubicWorldType extends WorldType implements ICubicWorldType {
 
-	@Nullable
-	Cube getLoadedCube(CubeCoords coords);
+	public VanillaCubicWorldType() {
+		super("VanillaCubic");
+	}
 
-	Cube getCube(int cubeX, int cubeY, int cubeZ);
+	public static void create() {
+		new VanillaCubicWorldType();
+	}
 
-	Cube getCube(CubeCoords coords);
+	@Override
+	public ICubeGenerator createCubeGenerator(ICubicWorld world) {
+		return null; // no ICubicWorldProvider's that are going to need this
+	}
 
-	/**
-	 * Retrieve a column, if it exists and is loaded
-	 * @param x The x position of the column
-	 * @param z The z position of the column
-	 * @return The column, if loaded. Null, otherwise.
-	 */
-	@Nullable
-	Column getLoadedChunk(int x, int z); // more strictly define the return type
-
-	Column provideChunk(int x, int z);   // more strictly define the return type
+	@Override
+	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+		return provider; // no need to swap out providers
+	}
 }

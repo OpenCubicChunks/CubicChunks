@@ -23,14 +23,15 @@
  */
 package cubicchunks.worldgen.generator.flat;
 
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
+
 import cubicchunks.util.Box;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubePrimer;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
 
 public class FlatTerrainProcessor extends BasicCubeGenerator {
 

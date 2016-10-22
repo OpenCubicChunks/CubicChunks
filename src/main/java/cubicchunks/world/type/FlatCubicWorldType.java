@@ -21,49 +21,32 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm;
+package cubicchunks.world.type;
 
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.mixin.Mixins;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 
-import java.util.Map;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 
-@IFMLLoadingPlugin.MCVersion(value = "1.10.2")
-@IFMLLoadingPlugin.SortingIndex(value = 5000)
-@IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
-public class CoreModLoadingPlugin implements IFMLLoadingPlugin {
+public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
 
-	public CoreModLoadingPlugin() {
-		initMixin();
+	public FlatCubicWorldType() {
+		super("FlatCubic");
+	}
+
+	public static void create() {
+		new FlatCubicWorldType();
 	}
 
 	@Override
-	public String[] getASMTransformerClass() {
-		return new String[]{};
+	public ICubeGenerator createCubeGenerator(ICubicWorld world) {
+		return new FlatTerrainProcessor(world);
 	}
 
 	@Override
-	public String getModContainerClass() {
-		return null;
-	}
-
-	@Override
-	public String getSetupClass() {
-		return null;
-	}
-
-	@Override
-	public void injectData(Map<String, Object> data) { }
-
-	@Override
-	public String getAccessTransformerClass() {
-		return null;
-	}
-
-	public static void initMixin() {
-		MixinBootstrap.init();
-		Mixins.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
-		Mixins.addConfiguration("cubicchunks.mixins.core.json");
+	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+		return provider;
 	}
 }

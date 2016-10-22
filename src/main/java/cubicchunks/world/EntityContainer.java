@@ -24,7 +24,7 @@
 package cubicchunks.world;
 
 import com.google.common.base.Predicate;
-import cubicchunks.CubicChunks;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -38,6 +38,8 @@ import net.minecraftforge.common.util.Constants;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+import cubicchunks.CubicChunks;
 
 //TODO: Have xcube review this class... I dont trust it
 public class EntityContainer {
@@ -67,8 +69,8 @@ public class EntityContainer {
 
 	private boolean canAddEntityExcluded(Entity toAdd, Entity excluded, AxisAlignedBB queryBox, Predicate<? super Entity> predicate) {
 		return toAdd != excluded &&
-				toAdd.getEntityBoundingBox().intersectsWith(queryBox) &&
-				(predicate == null || predicate.apply(toAdd));
+			toAdd.getEntityBoundingBox().intersectsWith(queryBox) &&
+			(predicate == null || predicate.apply(toAdd));
 	}
 
 	public void getEntitiesWithinAABBForEntity(Entity excluded, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
@@ -92,7 +94,7 @@ public class EntityContainer {
 	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
 		for (T entity : this.entities.getByClass(entityType)) {
 			if (entity.getEntityBoundingBox().intersectsWith(queryBox) &&
-					(predicate == null || predicate.apply(entity))) {
+				(predicate == null || predicate.apply(entity))) {
 				out.add(entity);
 			}
 		}

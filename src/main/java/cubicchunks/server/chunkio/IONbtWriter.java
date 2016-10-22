@@ -23,11 +23,6 @@
  */
 package cubicchunks.server.chunkio;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.util.Coords;
-import cubicchunks.world.OpacityIndex;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -44,6 +39,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.util.Coords;
+import cubicchunks.world.ServerHeightMap;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesHashSet;
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesThisTick;
@@ -92,7 +93,7 @@ class IONbtWriter {
 	}
 
 	private static void writeOpacityIndex(Column column, NBTTagCompound nbt) {// light index
-		nbt.setByteArray("OpacityIndex", ((OpacityIndex) column.getOpacityIndex()).getData());
+		nbt.setByteArray("ServerHeightMap", ((ServerHeightMap) column.getOpacityIndex()).getData());
 	}
 
 	private static void writeBaseCube(Cube cube, NBTTagCompound cubeNbt) {
@@ -112,7 +113,7 @@ class IONbtWriter {
 
 	private static void writeBlocks(Cube cube, NBTTagCompound cubeNbt) {
 		ExtendedBlockStorage ebs = cube.getStorage();
-		if(ebs == null) {
+		if (ebs == null) {
 			return; // no data to save anyway
 		}
 
@@ -129,7 +130,7 @@ class IONbtWriter {
 
 		cubeNbt.setByteArray("BlockLight", ebs.getBlocklightArray().getData());
 
-		if (!cube.getWorld().getProvider().getHasNoSky()) {
+		if (!cube.getCubicWorld().getProvider().getHasNoSky()) {
 			cubeNbt.setByteArray("SkyLight", ebs.getSkylightArray().getData());
 		}
 	}
@@ -142,10 +143,10 @@ class IONbtWriter {
 			int cubeZ = Coords.getCubeZForEntity(entity);
 			if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
 				CubicChunks.LOGGER.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
-						entity.getClass().getName(),
-						cubeX, cubeY, cubeZ,
-						cube.getX(), cube.getY(), cube.getZ(),
-						entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
+					entity.getClass().getName(),
+					cubeX, cubeY, cubeZ,
+					cube.getX(), cube.getY(), cube.getZ(),
+					entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
 				));
 			}
 		});
@@ -164,7 +165,7 @@ class IONbtWriter {
 	private static void writeScheduledTicks(Cube cube, NBTTagCompound cubeNbt) {// scheduled block ticks
 		Iterable<NextTickListEntry> scheduledTicks = getScheduledTicks(cube);
 		if (scheduledTicks != null) {
-			long time = cube.getWorld().getTotalWorldTime();
+			long time = cube.getCubicWorld().getTotalWorldTime();
 
 			NBTTagList nbtTicks = new NBTTagList();
 			cubeNbt.setTag("TileTicks", nbtTicks);
@@ -194,10 +195,10 @@ class IONbtWriter {
 		ArrayList<NextTickListEntry> out = new ArrayList<>();
 
 		// make sure this is a server
-		if (!(cube.getWorld() instanceof WorldServer)) {
+		if (!(cube.getCubicWorld() instanceof WorldServer)) {
 			throw new Error("Column is not on the server!");
 		}
-		WorldServer worldServer = (WorldServer) cube.getWorld();
+		WorldServer worldServer = (WorldServer) cube.getCubicWorld();
 
 		// copy the ticks for this cube
 		copyScheduledTicks(out, getPendingTickListEntriesHashSet(worldServer), cube);

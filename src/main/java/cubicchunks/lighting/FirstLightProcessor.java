@@ -23,12 +23,6 @@
  */
 package cubicchunks.lighting;
 
-import cubicchunks.util.FastCubeBlockAccess;
-import cubicchunks.world.ICubeCache;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.IOpacityIndex;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenCustomHashMap;
 import it.unimi.dsi.fastutil.ints.IntHash;
@@ -36,24 +30,29 @@ import it.unimi.dsi.fastutil.ints.IntHash;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-import static net.minecraft.util.math.BlockPos.MutableBlockPos;
+import cubicchunks.util.FastCubeBlockAccess;
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IHeightMap;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
+
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
-import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.cubeToMaxBlock;
+import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.getCubeCenter;
+import static net.minecraft.util.math.BlockPos.MutableBlockPos;
 
 /**
- *
- * Notes on world.checkLightFor():
- * Decreasing light value:
- * Light is recalculated starting from 0 ONLY for blocks where rawLightValue
- * is equal to savedLightValue (ie. updating skylight source that is not there anymore). Otherwise existing light values are assumed to be correct.
- * Generates and updates cube initial lighting, and propagates light changes
- * caused by generating cube downwards.
+ * Notes on world.checkLightFor(): Decreasing light value: Light is recalculated starting from 0 ONLY for blocks where
+ * rawLightValue is equal to savedLightValue (ie. updating skylight source that is not there anymore). Otherwise
+ * existing light values are assumed to be correct. Generates and updates cube initial lighting, and propagates light
+ * changes caused by generating cube downwards.
  * <p>
  * Used only when changes are caused by pre-populator terrain generation.
  * <p>
@@ -63,7 +62,7 @@ import static cubicchunks.util.Coords.getCubeCenter;
 public class FirstLightProcessor {
 	private static final int LIGHT_UPDATE_RADIUS = 17;
 
-	private static final int CUBE_RADIUS = Cube.SIZE / 2;
+	private static final int CUBE_RADIUS = Cube.SIZE/2;
 
 	private static final int UPDATE_BUFFER_RADIUS = 1;
 
@@ -85,7 +84,7 @@ public class FirstLightProcessor {
 
 	private final MutableBlockPos mutablePos = new MutableBlockPos();
 
-	private final ICubeCache cache;
+	private final ICubeProvider cache;
 
 
 	/**
@@ -106,11 +105,11 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void initializeSkylight(Cube cube) {
-		if(cube.getWorld().getProvider().getHasNoSky()) {
+		if (cube.getCubicWorld().getProvider().getHasNoSky()) {
 			return;
 		}
-		
-		IOpacityIndex opacityIndex = cube.getColumn().getOpacityIndex();
+
+		IHeightMap opacityIndex = cube.getColumn().getOpacityIndex();
 
 		int cubeMinY = cubeToMinBlock(cube.getY());
 
@@ -134,11 +133,11 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void diffuseSkylight(Cube cube) {
-		if(cube.getWorld().getProvider().getHasNoSky()) {
+		if (cube.getCubicWorld().getProvider().getHasNoSky()) {
 			cube.setInitialLightingDone(true);
 			return;
 		}
-		ICubicWorld world = cube.getWorld();
+		ICubicWorld world = cube.getCubicWorld();
 
 		// Cache min/max Y, generating them may be expensive
 		int[][] minBlockYArr = new int[16][16];
@@ -191,7 +190,7 @@ public class FirstLightProcessor {
 					}
 
 					// Skip this cube if an update is not possible.
-					if(!canUpdateCube(otherCube)) {
+					if (!canUpdateCube(otherCube)) {
 						int minScheduledY = Math.max(cubeToMinBlock(cubeY), minBlockY);
 						int maxScheduledY = Math.min(cubeToMaxBlock(cubeY), maxBlockY);
 
@@ -218,10 +217,11 @@ public class FirstLightProcessor {
 	 * @param pos the xz-position of the block column to be updated
 	 * @param minBlockY the lower bound of the section to be updated
 	 * @param maxBlockY the upper bound of the section to be updated
+	 *
 	 * @return true if the update was successful, false otherwise
 	 */
 	private boolean diffuseSkylightInBlockColumn(Cube cube, MutableBlockPos pos, int minBlockY, int maxBlockY, Int2ObjectMap<FastCubeBlockAccess> blockAccessMap) {
-		ICubicWorld world = cube.getWorld();
+		ICubicWorld world = cube.getCubicWorld();
 
 		int cubeMinBlockY = cubeToMinBlock(cube.getY());
 		int cubeMaxBlockY = cubeToMaxBlock(cube.getY());
@@ -256,6 +256,7 @@ public class FirstLightProcessor {
 	 *
 	 * @param access a FastCubeBlockAccess providing access to the block
 	 * @param pos the block's global position
+	 *
 	 * @return true if the specified block needs a skylight update, false otherwise
 	 */
 	private static boolean needsSkylightUpdate(FastCubeBlockAccess access, MutableBlockPos pos) {
@@ -287,11 +288,12 @@ public class FirstLightProcessor {
 	 * Determines if light in the given cube can be updated.
 	 *
 	 * @param cube the cube whose light is supposed to be updated
+	 *
 	 * @return true if light in the given cube can be updated, false otherwise
 	 */
 	private static boolean canUpdateCube(Cube cube) {
 		BlockPos cubeCenter = getCubeCenter(cube);
-		return cube.getWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> c != null);
+		return cube.getCubicWorld().testForCubes(cubeCenter, UPDATE_RADIUS, c -> c != null);
 	}
 
 	/**
@@ -301,6 +303,7 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose light is supposed to be updated
 	 * @param pos the xz-position of the block column being updated
 	 * @param topBlockY the y-coordinate of the highest block in the block column
+	 *
 	 * @return true if updating the skylight of the specified block column is no longer required, false otherwise
 	 */
 	private static boolean canStopUpdating(Cube cube, MutableBlockPos pos, int topBlockY) {
@@ -321,8 +324,9 @@ public class FirstLightProcessor {
 	 * @param column the column containing the block column
 	 * @param localX the block column's local x-coordinate
 	 * @param localZ the block column's local z-coordinate
-	 * @return the y-coordinate of the highest occluding block in the specified block column or
-	 *         {@link #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
+	 *
+	 * @return the y-coordinate of the highest occluding block in the specified block column or {@link
+	 * #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
 	 */
 	private static int getOcclusionHeight(Column column, int localX, int localZ) {
 		return column.getOpacityIndex().getTopBlockY(localX, localZ);
@@ -337,11 +341,12 @@ public class FirstLightProcessor {
 	 * @param blockX the block column's global x-coordinate
 	 * @param blockZ the block column's global z-coordinate
 	 * @param cubeY the y-coordinate of the cube underneath which the highest occluding block is to be found
+	 *
 	 * @return the y-coordinate of the highest occluding block underneath the given cube in the specified block column
-	 *         or {@link #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
+	 * or {@link #DEFAULT_OCCLUSION_HEIGHT} if no such block exists
 	 */
 	private static int getOcclusionHeightBelowCubeY(Column column, int blockX, int blockZ, int cubeY) {
-		IOpacityIndex index = column.getOpacityIndex();
+		IHeightMap index = column.getOpacityIndex();
 		return index.getTopBlockYBelow(blockToLocal(blockX), blockToLocal(blockZ), cubeToMinBlock(cubeY));
 	}
 
@@ -352,6 +357,7 @@ public class FirstLightProcessor {
 	 * @param cube the cube inside of which the skylight is to be updated
 	 * @param localX the local x-coordinate of the block column
 	 * @param localZ the local z-coordinate of the block column
+	 *
 	 * @return a pair containing the minimum and the maximum y-coordinate to be updated in the given cube
 	 */
 	private static ImmutablePair<Integer, Integer> getMinMaxLightUpdateY(Cube cube, int localX, int localZ) {
@@ -377,9 +383,9 @@ public class FirstLightProcessor {
 			int topBlockCubeYInThisCubeOrBelow = blockToCube(topBlockYInThisCubeOrBelow);
 
 			// If the given cube contains the occluding block, the update can be limited down to that block.
-			if(topBlockCubeYInThisCubeOrBelow == cubeY) {
+			if (topBlockCubeYInThisCubeOrBelow == cubeY) {
 				int heightBelowCube = getOcclusionHeightBelowCubeY(column, blockX, blockZ, cube.getY()) + 1;
-				return new ImmutablePair<>(heightBelowCube,  cubeToMaxBlock(cubeY));
+				return new ImmutablePair<>(heightBelowCube, cubeToMaxBlock(cubeY));
 			}
 			// Otherwise, the whole height of the cube must be updated.
 			else {

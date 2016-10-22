@@ -23,10 +23,10 @@
  */
 package cubicchunks.server;
 
+import java.util.Iterator;
+
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-
-import java.util.Iterator;
 
 /**
  * Chunk Garbage Collector, automatically unloads unused chunks.
@@ -35,11 +35,11 @@ public class ChunkGc {
 	// GC every 10 seconds by default
 	private static final int GC_INTERVAL = 20*10;
 
-	private final ServerCubeCache cubeCache;
+	private final CubeProviderServer cubeCache;
 
 	private int tick = 0;
 
-	public ChunkGc(ServerCubeCache cubeCache) {
+	public ChunkGc(CubeProviderServer cubeCache) {
 		this.cubeCache = cubeCache;
 	}
 
@@ -53,15 +53,15 @@ public class ChunkGc {
 
 	private void chunkGc() {
 		Iterator<Cube> cubeIt = cubeCache.cubesIterator();
-		while(cubeIt.hasNext()) {
-			if(cubeCache.tryUnloadCube(cubeIt.next())) {
+		while (cubeIt.hasNext()) {
+			if (cubeCache.tryUnloadCube(cubeIt.next())) {
 				cubeIt.remove();
 			}
 		}
 
 		Iterator<Column> columnIt = cubeCache.columnsIterator();
-		while(columnIt.hasNext()) {
-			if(cubeCache.tryUnloadColumn(columnIt.next())) {
+		while (columnIt.hasNext()) {
+			if (cubeCache.tryUnloadColumn(columnIt.next())) {
 				columnIt.remove();
 			}
 		}

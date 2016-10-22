@@ -23,9 +23,10 @@
  */
 package cubicchunks.world.type;
 
+import net.minecraft.world.WorldProvider;
+
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
-import net.minecraft.world.WorldProvider;
 
 public interface ICubicWorldType {
 

@@ -44,7 +44,7 @@ public interface ICubicWorldProvider {
 
 	/**
 	 * Creates a new Cube generator
-	 * 
+	 *
 	 * @return a new Cube generator
 	 */
 	ICubeGenerator createCubeGenerator();

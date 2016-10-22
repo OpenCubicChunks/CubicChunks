@@ -23,14 +23,16 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
-import cubicchunks.asm.MixinUtils;
 import net.minecraft.command.CommandCompare;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+
+import cubicchunks.asm.MixinUtils;
 
 import static cubicchunks.asm.JvmNames.STRUCTURE_BOUNDING_BOX;
 

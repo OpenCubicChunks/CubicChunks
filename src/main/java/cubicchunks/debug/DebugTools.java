@@ -23,10 +23,11 @@
  */
 package cubicchunks.debug;
 
-import cubicchunks.debug.item.RelightSkyBlockItem;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.SidedProxy;
+
+import cubicchunks.debug.item.RelightSkyBlockItem;
 
 public class DebugTools {
 

@@ -23,10 +23,6 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.util.Bits;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.util.Coords;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -34,7 +30,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class OpacityIndex implements IOpacityIndex {
+import cubicchunks.util.Bits;
+import cubicchunks.util.Coords;
+import cubicchunks.world.cube.Cube;
+
+public class ServerHeightMap implements IHeightMap {
 
 	/**
 	 * Special value to indicate the absence of a segment in the segments arrays.
@@ -67,14 +67,14 @@ public class OpacityIndex implements IOpacityIndex {
 	private boolean needsHash;
 
 
-	public OpacityIndex() {
-		this.ymin = new int[Cube.SIZE * Cube.SIZE];
-		this.ymax = new int[Cube.SIZE * Cube.SIZE];
+	public ServerHeightMap() {
+		this.ymin = new int[Cube.SIZE*Cube.SIZE];
+		this.ymax = new int[Cube.SIZE*Cube.SIZE];
 
-		this.segments = new int[Cube.SIZE * Cube.SIZE][];
+		this.segments = new int[Cube.SIZE*Cube.SIZE][];
 
 		// init to empty
-		for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
+		for (int i = 0; i < Cube.SIZE*Cube.SIZE; i++) {
 			this.ymin[i] = Coords.NO_HEIGHT;
 			this.ymax[i] = Coords.NO_HEIGHT;
 		}
@@ -107,47 +107,7 @@ public class OpacityIndex implements IOpacityIndex {
 	}
 
 
-	// Interface: IOpacityIndex ----------------------------------------------------------------------------------------
-
-	@Override
-	public boolean isOpaque(int localX, int blockY, int localZ) {
-
-		// Are we out of range?
-		int i = getIndex(localX, localZ);
-		if (blockY > this.ymax[i] || blockY < this.ymin[i]) {
-			return false;
-		}
-
-		// Are there segments for this block column?
-		int[] segments = this.segments[i];
-		if (segments == null) {
-			// this column is black or white
-			// there are no shades of grey =P
-			return true;
-		}
-
-		// scan the shades of grey with binary search
-		int mini = 0;
-		int maxi = getLastSegmentIndex(segments);
-		while (mini <= maxi) {
-			int midi = (mini + maxi) >>> 1;
-			int midPos = unpackPosition(segments[midi]);
-
-			if (midPos < blockY) {
-				mini = midi + 1;
-			} else if (midPos > blockY) {
-				maxi = midi - 1;
-			} else {
-				// hit a segment start exactly
-				return unpackOpacity(segments[midi]) != 0;
-			}
-		}
-
-		// didn't hit a segment start, mini is the correct answer + 1
-		assert (mini > 0) : String.format("can't find %d in %s", blockY, dump(localX, localZ));
-
-		return unpackOpacity(segments[mini - 1]) != 0;
-	}
+	// Interface: IHeightMap ----------------------------------------------------------------------------------------
 
 	@Override
 	public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
@@ -270,7 +230,7 @@ public class OpacityIndex implements IOpacityIndex {
 					this.heightMapLowest = this.ymax[i];
 				}
 			}
-			if(this.heightMapLowest == Coords.NO_HEIGHT) {
+			if (this.heightMapLowest == Coords.NO_HEIGHT) {
 				this.heightMapLowest--; // don't recalculate this on every call
 			}
 		}
@@ -334,9 +294,9 @@ public class OpacityIndex implements IOpacityIndex {
 			  ^ going up from there
 			 */
 			this.segments[xzIndex] = new int[]{
-					packSegment(this.ymin[xzIndex], 1),
-					packSegment(this.ymax[xzIndex] + 1, 0),
-					packSegment(blockY, 1)
+				packSegment(this.ymin[xzIndex], 1),
+				packSegment(this.ymax[xzIndex] + 1, 0),
+				packSegment(blockY, 1)
 			};
 			this.ymax[xzIndex] = blockY;
 			return;
@@ -365,9 +325,9 @@ public class OpacityIndex implements IOpacityIndex {
 			  ^ going up from there
 			 */
 			this.segments[xzIndex] = new int[]{
-					packSegment(blockY, 1),
-					packSegment(blockY + 1, 0),
-					packSegment(this.ymin[xzIndex], 1)
+				packSegment(blockY, 1),
+				packSegment(blockY + 1, 0),
+				packSegment(this.ymin[xzIndex], 1)
 			};
 			this.ymin[xzIndex] = blockY;
 			return;
@@ -413,7 +373,7 @@ public class OpacityIndex implements IOpacityIndex {
 
 		// we must be bisecting the range, need to make segments
 		assert (blockY > this.ymin[xzIndex] && blockY <
-				this.ymax[xzIndex]) : String.format("blockY outside of ymin/ymax range: %d -> [%d,%d]", blockY, this.ymin[xzIndex], this.ymax[xzIndex]);
+			this.ymax[xzIndex]) : String.format("blockY outside of ymin/ymax range: %d -> [%d,%d]", blockY, this.ymin[xzIndex], this.ymax[xzIndex]);
 		/*
 		 Example:
 		 ---
@@ -433,9 +393,9 @@ public class OpacityIndex implements IOpacityIndex {
 		  ^ going up
 		*/
 		this.segments[xzIndex] = new int[]{
-				packSegment(this.ymin[xzIndex], 1),
-				packSegment(blockY, 0),
-				packSegment(blockY + 1, 1)
+			packSegment(this.ymin[xzIndex], 1),
+			packSegment(blockY, 0),
+			packSegment(blockY + 1, 1)
 		};
 	}
 
@@ -873,7 +833,7 @@ public class OpacityIndex implements IOpacityIndex {
 		}
 	}
 
-	public void writeData(DataOutputStream out)	throws IOException {
+	public void writeData(DataOutputStream out) throws IOException {
 		for (int i = 0; i < this.segments.length; i++) {
 			out.writeInt(this.ymin[i]);
 			out.writeInt(ymax[i]);

@@ -23,9 +23,6 @@
  */
 package cubicchunks;
 
-import cubicchunks.testutil.MinecraftEnvironment;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.type.FlatCubicChunksWorldType;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.datafix.DataFixer;
@@ -36,6 +33,7 @@ import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.storage.AnvilSaveHandler;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,6 +42,10 @@ import org.junit.runner.RunWith;
 import org.spongepowered.test.launch.LaunchWrapperTestRunner;
 
 import java.io.IOException;
+
+import cubicchunks.testutil.MinecraftEnvironment;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.type.FlatCubicWorldType;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -68,8 +70,8 @@ public class TestWorldServerMixin {
 		MinecraftServer server = MinecraftEnvironment.createFakeServer();
 
 		ISaveHandler mockSaveHandler =
-				new AnvilSaveHandler(folder.newFolder("save"), "world", false, new DataFixer(512));
-		WorldType cubicChunksType = new FlatCubicChunksWorldType();
+			new AnvilSaveHandler(folder.newFolder("save"), "world", false, new DataFixer(512));
+		WorldType cubicChunksType = new FlatCubicWorldType();
 		WorldSettings settings = new WorldSettings(0, GameType.SURVIVAL, false, false, cubicChunksType);
 		WorldInfo worldInfo = new WorldInfo(settings, "test");
 		this.world = (ICubicWorldServer) new WorldServer(server, mockSaveHandler, worldInfo, 0, new Profiler());

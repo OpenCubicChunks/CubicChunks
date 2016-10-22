@@ -23,13 +23,14 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.CubicChunks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import cubicchunks.CubicChunks;
 
 /**
  * Abstract implementation od IMessageHandler that makes EntityPlayer available.

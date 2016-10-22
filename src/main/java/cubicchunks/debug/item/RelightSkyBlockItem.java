@@ -23,12 +23,6 @@
  */
 package cubicchunks.debug.item;
 
-import cubicchunks.debug.ItemRegistered;
-import cubicchunks.network.PacketCube;
-import cubicchunks.network.PacketDispatcher;
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ICubeCache;
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -40,26 +34,34 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 
+import cubicchunks.debug.ItemRegistered;
+import cubicchunks.network.PacketCube;
+import cubicchunks.network.PacketDispatcher;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorld;
+
 public class RelightSkyBlockItem extends ItemRegistered {
 
 	public RelightSkyBlockItem(String name) {
 		super(name);
 	}
 
-	@Override public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing faceHit, float hitX, float hitY, float hitZ) {
+	@Override
+	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing faceHit, float hitX, float hitY, float hitZ) {
 		ICubicWorld world = (ICubicWorld) worldIn;
-		if(!world.isCubicWorld() || world.isRemote()) {
+		if (!world.isCubicWorld() || world.isRemote()) {
 			return EnumActionResult.PASS;
 		}
 		//serverside
 		BlockPos placePos = pos.offset(faceHit);
-		if(world.checkLightFor(EnumSkyBlock.SKY, placePos)) {
+		if (world.checkLightFor(EnumSkyBlock.SKY, placePos)) {
 			playerIn.addChatMessage(new TextComponentString("Successfully updated lighting at " + placePos));
-			CubeCoords cubePos = CubeCoords.fromBlockCoords(placePos);
-			ICubeCache cubeCache = world.getCubeCache();
+			CubePos cubePos = CubePos.fromBlockCoords(placePos);
+			ICubeProvider cubeCache = world.getCubeCache();
 			//re-send them to player
 			cubePos.forEachWithinRange(1,
-					(p)-> PacketDispatcher.sendTo(new PacketCube(cubeCache.getCube(p), PacketCube.Type.UPDATE), (EntityPlayerMP) playerIn));
+				(p) -> PacketDispatcher.sendTo(new PacketCube(cubeCache.getCube(p), PacketCube.Type.UPDATE), (EntityPlayerMP) playerIn));
 		} else {
 			playerIn.addChatMessage(new TextComponentString("Updating light at at " + placePos + " failed."));
 		}

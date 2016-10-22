@@ -27,9 +27,10 @@ import java.util.Iterator;
 
 /**
  * Hash table implementation for objects in a 3-dimensional cartesian coordinate system.
- * @see XYZAddressable
  *
  * @param <T> class of the objects to be contained in this map
+ *
+ * @see XYZAddressable
  */
 public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
@@ -106,9 +107,10 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * @param x the x-coordinate
 	 * @param y the y-coordinate
 	 * @param z the z-coordinate
+	 *
 	 * @return a 32b hash based on the given coordinates
 	 */
-	private static int hash(int x, int y, int z){
+	private static int hash(int x, int y, int z) {
 		int hash = HASH_SEED;
 		hash += x;
 		hash *= HASH_SEED;
@@ -125,6 +127,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * @param x the x-coordinate
 	 * @param y the y-coordinate
 	 * @param z the z-coordinate
+	 *
 	 * @return the desired bucket's index for the given coordinates
 	 */
 	private int getIndex(int x, int y, int z) {
@@ -135,6 +138,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * Computes the next index to the right of the given index, wrapping around if necessary.
 	 *
 	 * @param index the previous index
+	 *
 	 * @return the next index
 	 */
 	private int getNextIndex(int index) {
@@ -147,6 +151,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * coordinates, the old value is replaced.
 	 *
 	 * @param value value to be associated with its coordinates
+	 *
 	 * @return the previous value associated with the given value's coordinates or null if no such value exists
 	 */
 	@SuppressWarnings("unchecked")
@@ -189,6 +194,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * @param x the x-coordinate
 	 * @param y the y-coordinate
 	 * @param z the z-coordinate
+	 *
 	 * @return the entry associated with the specified coordinates or null if no such entry exists
 	 */
 	@SuppressWarnings("unchecked")
@@ -221,6 +227,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * equal the given value's coordinates.
 	 *
 	 * @param value the value to be removed
+	 *
 	 * @return the entry associated with the given value's coordinates or null if no such entry exists
 	 */
 	public T remove(T value) {
@@ -233,6 +240,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * @param x the x-coordinate
 	 * @param y the y-coordinate
 	 * @param z the z-coordinate
+	 *
 	 * @return the entry associated with the specified coordinates or null if no such value exists
 	 */
 	@SuppressWarnings("unchecked")
@@ -262,6 +270,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * @param x the x-coordinate
 	 * @param y the z-coordinate
 	 * @param z the y-coordinate
+	 *
 	 * @return true if there exists an entry associated with the given coordinates in this map
 	 */
 	public boolean contains(int x, int y, int z) {
@@ -289,6 +298,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * an entry in this map whose xyz-coordinates equal the given value's coordinates.
 	 *
 	 * @param value the value
+	 *
 	 * @return true if the given value is contained within this map
 	 */
 	public boolean contains(T value) {
@@ -369,7 +379,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 */
 	private void refreshFields() {
 		// we need that 1 extra space, make shore it will be there
-		this.loadThreshold = Math.min(this.buckets.length - 1, (int) (this.buckets.length * this.loadFactor));
+		this.loadThreshold = Math.min(this.buckets.length - 1, (int) (this.buckets.length*this.loadFactor));
 		this.mask = this.buckets.length - 1;
 	}
 
@@ -383,7 +393,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
 			@Override
 			public boolean hasNext() {
-				if(next > at){
+				if (next > at) {
 					return true;
 				}
 				for (next++; next < buckets.length; next++) {
@@ -397,14 +407,14 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 			@Override
 			@SuppressWarnings("unchecked")
 			public T next() {
-				if(next > at){
+				if (next > at) {
 					at = next;
-					return (T)buckets[at];
+					return (T) buckets[at];
 				}
 				for (next++; next < buckets.length; next++) {
 					if (buckets[next] != null) {
 						at = next;
-						return (T)buckets[at];
+						return (T) buckets[at];
 					}
 				}
 				return null;
@@ -413,7 +423,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 			//TODO: WARNING: risk of iterating over the same item more than once if this is used
 			//               do to items wrapping back around form the front of the buckets array
 			@Override
-			public void remove(){
+			public void remove() {
 				collapseBucket(at);
 				next = at = at - 1; // There could be a new item in the removed bucket
 			}

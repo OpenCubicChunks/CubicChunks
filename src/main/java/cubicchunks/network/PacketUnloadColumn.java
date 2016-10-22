@@ -23,17 +23,19 @@
  */
 package cubicchunks.network;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import io.netty.buffer.ByteBuf;
+
 public class PacketUnloadColumn implements IMessage {
 
 	public ChunkPos chunkPos;
 
-	public PacketUnloadColumn() {}
+	public PacketUnloadColumn() {
+	}
 
 	public PacketUnloadColumn(ChunkPos chunkPos) {
 		this.chunkPos = chunkPos;

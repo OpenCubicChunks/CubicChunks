@@ -23,13 +23,15 @@
  */
 package cubicchunks.testutil;
 
-import cubicchunks.CubicChunks;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
+
 import org.apache.logging.log4j.LogManager;
 
 import java.util.Hashtable;
+
+import cubicchunks.CubicChunks;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -38,11 +40,12 @@ import static org.mockito.Mockito.when;
 //A few hacks to make tests possible
 public class MinecraftEnvironment {
 	private static boolean isInit = false;
+
 	/**
 	 * Does whatever is needed to initialize minecraft and mod environment
 	 */
 	public static void init() {
-		if(isInit) {
+		if (isInit) {
 			return;
 		}
 		isInit = true;
@@ -58,7 +61,7 @@ public class MinecraftEnvironment {
 		MinecraftServer server = mock(MinecraftServer.class);
 		when(server.getPlayerList()).thenReturn(playerList);
 
-		server.worldTickTimes =new Hashtable<>();
+		server.worldTickTimes = new Hashtable<>();
 		return server;
 	}
 }

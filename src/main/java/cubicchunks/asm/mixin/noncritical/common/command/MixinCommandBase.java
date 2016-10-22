@@ -23,9 +23,9 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -33,6 +33,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.ref.WeakReference;
+
+import cubicchunks.world.ICubicWorld;
 
 import static cubicchunks.asm.JvmNames.COMMAND_BASE_PARSE_DOUBLE;
 
@@ -52,7 +54,7 @@ public class MixinCommandBase {
 	           at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
 	           index = 2)
 	private static int getMinY(int original) {
-		if(commandWorld == null) {
+		if (commandWorld == null) {
 			return original;
 		}
 		ICubicWorld world = commandWorld.get();

@@ -23,16 +23,17 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
-import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 import net.minecraft.world.biome.Biome;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
+import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 
 public class CustomPopulationProcessor {
 
@@ -51,7 +52,7 @@ public class CustomPopulationProcessor {
 	}
 
 	public void populate(Cube cube) {
-		Biome biome = cube.getWorld().getBiome(Coords.getCubeCenter(cube));
+		Biome biome = cube.getCubicWorld().getBiome(Coords.getCubeCenter(cube));
 
 		//For surface generators we should actually use special RNG with seed 
 		//that depends only in world seed and cube X/Z

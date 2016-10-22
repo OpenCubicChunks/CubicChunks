@@ -27,9 +27,10 @@ import java.util.Iterator;
 
 /**
  * Hash table implementation for objects in a 2-dimensional cartesian coordinate system.
- * @see XZAddressable
  *
  * @param <T> class of the objects to be contained in this map
+ *
+ * @see XZAddressable
  */
 public class XZMap<T extends XZAddressable> implements Iterable<T> {
 
@@ -105,9 +106,10 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 *
 	 * @param x the x-coordinate
 	 * @param z the z-coordinate
+	 *
 	 * @return a 32b hash based on the given coordinates
 	 */
-	private static int hash(int x, int z){
+	private static int hash(int x, int z) {
 		int hash = HASH_SEED;
 		hash += x;
 		hash *= HASH_SEED;
@@ -121,6 +123,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 *
 	 * @param x the x-coordinate
 	 * @param z the z-coordinate
+	 *
 	 * @return the desired bucket's index for the given coordinates
 	 */
 	private int getIndex(int x, int z) {
@@ -131,6 +134,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 * Computes the next index to the right of the given index, wrapping around if necessary.
 	 *
 	 * @param index the previous index
+	 *
 	 * @return the next index
 	 */
 	private int getNextIndex(int index) {
@@ -143,6 +147,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 * coordinates, the old value is replaced.
 	 *
 	 * @param value value to be associated with its coordinates
+	 *
 	 * @return the previous value associated with the given value's coordinates or null if no such value exists
 	 */
 	@SuppressWarnings("unchecked")
@@ -183,6 +188,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 *
 	 * @param x the x-coordinate
 	 * @param z the z-coordinate
+	 *
 	 * @return the entry associated with the specified coordinates or null if no such value exists
 	 */
 	@SuppressWarnings("unchecked")
@@ -215,6 +221,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 * equal the given value's coordinates.
 	 *
 	 * @param value the value to be removed
+	 *
 	 * @return the entry associated with the given value's coordinates or null if no such entry exists
 	 */
 	public T remove(T value) {
@@ -226,6 +233,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 *
 	 * @param x the x-coordinate
 	 * @param z the z-coordinate
+	 *
 	 * @return the entry associated with the specified coordinates or null if no such value exists
 	 */
 	@SuppressWarnings("unchecked")
@@ -254,6 +262,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 *
 	 * @param x the x-coordinate
 	 * @param z the y-coordinate
+	 *
 	 * @return true if there exists an entry associated with the given coordinates in this map
 	 */
 	public boolean contains(int x, int z) {
@@ -281,6 +290,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 * an entry in this map whose xz-coordinates equal the given value's coordinates.
 	 *
 	 * @param value the value
+	 *
 	 * @return true if the given value is contained within this map
 	 */
 	public boolean contains(T value) {
@@ -336,7 +346,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 
 			// If the hole lies to the left of the currentIndex and to the right of the targetIndex, move the current
 			// element. These if conditions are necessary due to the bucket array wrapping around.
-			int targetIndex = getIndex(bucket.getX(),bucket.getZ());
+			int targetIndex = getIndex(bucket.getX(), bucket.getZ());
 
 			// normal
 			if (hole < currentIndex) {
@@ -361,7 +371,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 */
 	private void refreshFields() {
 		// we need that 1 extra space, make shore it will be there
-		this.loadThreshold = Math.min(this.buckets.length - 1, (int) (this.buckets.length * this.loadFactor));
+		this.loadThreshold = Math.min(this.buckets.length - 1, (int) (this.buckets.length*this.loadFactor));
 		this.mask = this.buckets.length - 1;
 	}
 

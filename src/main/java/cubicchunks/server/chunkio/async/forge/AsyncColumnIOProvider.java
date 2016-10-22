@@ -19,11 +19,11 @@
 
 package cubicchunks.server.chunkio.async.forge;
 
+import java.io.IOException;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.world.column.Column;
-
-import java.io.IOException;
 
 /**
  * Async loading of columns. Roughly equivalent to Forge's ChunkIOProvider

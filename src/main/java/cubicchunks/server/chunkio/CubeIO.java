@@ -23,18 +23,13 @@
  */
 package cubicchunks.server.chunkio;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.storage.IThreadedFileIO;
 import net.minecraft.world.storage.ThreadedFileIOBase;
+
 import org.apache.logging.log4j.Logger;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -46,6 +41,13 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
 import static cubicchunks.util.AddressTools.getX;
 import static cubicchunks.util.AddressTools.getY;
@@ -79,11 +81,11 @@ public class CubeIO implements IThreadedFileIO {
 		file.getParentFile().mkdirs();
 
 		DB db = DBMaker.
-				fileDB(file).
-				fileMmapEnable().
-				allocateStartSize(5*MB).
-				allocateIncrement(1*MB).
-				make();
+			fileDB(file).
+			fileMmapEnable().
+			allocateStartSize(5*MB).
+			allocateIncrement(1*MB).
+			make();
 		return db;
 		// NOTE: could set different cache settings
 		// the default is a hash map cache with 32768 entries
@@ -96,7 +98,7 @@ public class CubeIO implements IThreadedFileIO {
 	private ConcurrentMap<Long, byte[]> columns;
 	private ConcurrentMap<Long, byte[]> cubes;
 	private ConcurrentMap<ChunkPos, SaveEntry> columnsToSave;
-	private ConcurrentMap<CubeCoords, SaveEntry> cubesToSave;
+	private ConcurrentMap<CubePos, SaveEntry> cubesToSave;
 
 	private final Thread theShutdownHook;
 
@@ -150,7 +152,7 @@ public class CubeIO implements IThreadedFileIO {
 	public Column loadColumn(int chunkX, int chunkZ) throws IOException {
 		NBTTagCompound nbt;
 		SaveEntry saveEntry;
-		if((saveEntry = columnsToSave.get(new ChunkPos(chunkX, chunkZ))) != null) {
+		if ((saveEntry = columnsToSave.get(new ChunkPos(chunkX, chunkZ))) != null) {
 			nbt = saveEntry.nbt;
 		} else {
 			// does the database have the column?
@@ -175,7 +177,7 @@ public class CubeIO implements IThreadedFileIO {
 
 		NBTTagCompound nbt;
 		SaveEntry saveEntry;
-		if((saveEntry = this.cubesToSave.get(new CubeCoords(address)))!= null) {
+		if ((saveEntry = this.cubesToSave.get(new CubePos(address))) != null) {
 			nbt = saveEntry.nbt;
 		} else {
 			// does the database have the cube?
@@ -285,8 +287,8 @@ public class CubeIO implements IThreadedFileIO {
 
 			long diff = System.currentTimeMillis() - start;
 			LOGGER.debug("Wrote {} columns ({} remaining) ({}k) and {} cubes ({} remaining) ({}k) in {} ms",
-					numColumnsSaved, numColumnsRemaining, numColumnBytesSaved/1024,
-					numCubesSaved, numCubesRemaining, numCubeBytesSaved/1024, diff
+				numColumnsSaved, numColumnsRemaining, numColumnBytesSaved/1024,
+				numCubesSaved, numCubesRemaining, numCubeBytesSaved/1024, diff
 			);
 
 			return hasMoreColumns || hasMoreCubes;

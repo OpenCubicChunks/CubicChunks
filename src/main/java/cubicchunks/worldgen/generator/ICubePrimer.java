@@ -32,17 +32,18 @@ public interface ICubePrimer {
 
 	/**
 	 * Gets a block state at the given location
-	 * 
+	 *
 	 * @param x cube relative x
 	 * @param y cube relative y
 	 * @param z cube relative z
+	 *
 	 * @return the block state
 	 */
 	IBlockState getBlockState(int x, int y, int z);
 
 	/**
 	 * Sets a block state at the given location
-	 * 
+	 *
 	 * @param x cube local x
 	 * @param y cube local y
 	 * @param z cube local z
@@ -56,9 +57,10 @@ public interface ICubePrimer {
 	 * <br>
 	 * NOTE: This will return -1 if there where no blocks under that location!<br>
 	 * WARNING: It does not know if there are blocks over this cube!<br>
-	 * 
+	 *
 	 * @param x cube relative x
 	 * @param z cube relative x
+	 *
 	 * @return the height of the top non-air block at x, z or -1 if there was no block found
 	 */
 	int findGroundHeight(int x, int z);

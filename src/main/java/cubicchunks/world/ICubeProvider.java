@@ -21,31 +21,36 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.type;
+package cubicchunks.world;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubeGenerator;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldType;
+import javax.annotation.Nullable;
 
-public class FlatCubicChunksWorldType extends WorldType implements ICubicWorldType {
+import cubicchunks.util.CubePos;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
-	public FlatCubicChunksWorldType() {
-		super("FlatCubic");
-	}
+public interface ICubeProvider {
 
-	public static void create() {
-		new FlatCubicChunksWorldType();
-	}
+	@Nullable
+	Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
 
-	@Override
-	public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-		return new FlatTerrainProcessor(world);
-	}
+	@Nullable
+	Cube getLoadedCube(CubePos coords);
 
-	@Override
-	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-		return provider;
-	}
+	Cube getCube(int cubeX, int cubeY, int cubeZ);
+
+	Cube getCube(CubePos coords);
+
+	/**
+	 * Retrieve a column, if it exists and is loaded
+	 *
+	 * @param x The x position of the column
+	 * @param z The z position of the column
+	 *
+	 * @return The column, if loaded. Null, otherwise.
+	 */
+	@Nullable
+	Column getLoadedColumn(int x, int z); // more strictly define the return type
+
+	Column provideColumn(int x, int z);   // more strictly define the return type
 }

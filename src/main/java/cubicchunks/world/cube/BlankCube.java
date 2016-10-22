@@ -24,7 +24,7 @@
 package cubicchunks.world.cube;
 
 import com.google.common.base.Predicate;
-import cubicchunks.world.column.Column;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -36,6 +36,8 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.util.List;
+
+import cubicchunks.world.column.Column;
 
 /**
  * Cube implementation used clientside used when cube is not loaded.
@@ -83,7 +85,8 @@ public class BlankCube extends Cube {
 	}
 
 	@Override
-	public void addEntity(Entity entity) {}
+	public void addEntity(Entity entity) {
+	}
 
 	@Override
 	public boolean removeEntity(Entity entity) {
@@ -91,10 +94,12 @@ public class BlankCube extends Cube {
 	}
 
 	@Override
-	public void getEntitiesWithinAABBForEntity(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {}
+	public void getEntitiesWithinAABBForEntity(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
+	}
 
 	@Override
-	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {}
+	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
+	}
 
 	@Override
 	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
@@ -102,16 +107,20 @@ public class BlankCube extends Cube {
 	}
 
 	@Override
-	public void addTileEntity(BlockPos pos, TileEntity blockEntity) {}
+	public void addTileEntity(BlockPos pos, TileEntity blockEntity) {
+	}
 
 	@Override
-	public void removeTileEntity(BlockPos pos) {}
+	public void removeTileEntity(BlockPos pos) {
+	}
 
 	@Override
-	public void onLoad() {}
+	public void onLoad() {
+	}
 
 	@Override
-	public void onUnload() {}
+	public void onUnload() {
+	}
 
 	@Override
 	public boolean needsSaving() {
@@ -133,8 +142,10 @@ public class BlankCube extends Cube {
 	}
 
 	@Override
-	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {}
+	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {
+	}
 
 	@Override
-	public void markForRenderUpdate() {}
+	public void markForRenderUpdate() {
+	}
 }

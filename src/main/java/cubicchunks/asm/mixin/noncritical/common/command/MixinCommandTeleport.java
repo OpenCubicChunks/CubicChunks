@@ -23,11 +23,11 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.command.EntityNotFoundException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.server.CommandTeleport;
 import net.minecraft.server.MinecraftServer;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -36,6 +36,8 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.ref.WeakReference;
+
+import cubicchunks.world.ICubicWorld;
 
 import static cubicchunks.asm.JvmNames.COMMAND_TELEPORT_GET_ENTITY;
 import static net.minecraft.command.CommandBase.getEntity;
@@ -56,7 +58,7 @@ public class MixinCommandTeleport {
 
 	@ModifyConstant(method = "execute", constant = @Constant(intValue = -4096))
 	private int getMinY(int original) {
-		if(commandWorld == null) {
+		if (commandWorld == null) {
 			return original;
 		}
 		ICubicWorld world = commandWorld.get();
@@ -68,7 +70,7 @@ public class MixinCommandTeleport {
 
 	@ModifyConstant(method = "execute", constant = @Constant(intValue = 4096), expect = 2)
 	private int getMaxY(int original) {
-		if(commandWorld == null) {
+		if (commandWorld == null) {
 			return original;
 		}
 		ICubicWorld world = commandWorld.get();

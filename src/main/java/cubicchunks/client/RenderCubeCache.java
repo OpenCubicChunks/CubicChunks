@@ -23,9 +23,6 @@
  */
 package cubicchunks.client;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
@@ -39,6 +36,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
+
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 
 public class RenderCubeCache extends ChunkCache {
 	protected int cubeY;
@@ -59,7 +60,7 @@ public class RenderCubeCache extends ChunkCache {
 			for (int currentCubeY = cubeY; currentCubeY <= cubeYEnd; currentCubeY++) {
 				for (int currentCubeZ = chunkZ; currentCubeZ <= cubeZEnd; currentCubeZ++) {
 					cubeArrays[currentCubeX - chunkX][currentCubeY - cubeY][currentCubeZ -
-							chunkZ] = world.getCubeFromCubeCoords(currentCubeX, currentCubeY, currentCubeZ);
+						chunkZ] = world.getCubeFromCubeCoords(currentCubeX, currentCubeY, currentCubeZ);
 				}
 			}
 		}
@@ -83,8 +84,8 @@ public class RenderCubeCache extends ChunkCache {
 		int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
 		int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
 		if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
-				arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
-				arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
+			arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
+			arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
 			return null;
 		}
 		if (this.cubeArrays[arrayX][arrayY][arrayZ] == null) {
@@ -103,8 +104,8 @@ public class RenderCubeCache extends ChunkCache {
 		int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
 
 		if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
-				arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
-				arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
+			arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
+			arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
 			return Blocks.AIR.getDefaultState();
 		}
 		Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
@@ -140,8 +141,8 @@ public class RenderCubeCache extends ChunkCache {
 		int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
 		int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
 		if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
-				arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
-				arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
+			arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
+			arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
 			return type.defaultLightValue;
 		}
 		Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
@@ -160,8 +161,8 @@ public class RenderCubeCache extends ChunkCache {
 		int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
 		int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
 		if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
-				arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
-				arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
+			arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
+			arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
 			return type.defaultLightValue;
 		}
 		Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
@@ -181,8 +182,8 @@ public class RenderCubeCache extends ChunkCache {
 		int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
 		int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
 		if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
-				arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
-				arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
+			arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
+			arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
 			return defaultValue;
 		}
 		Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];

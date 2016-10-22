@@ -23,16 +23,6 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.client.ClientCubeCache;
-import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.ClientOpacityIndex;
-import cubicchunks.world.ICubicWorldClient;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.BlankCube;
-import cubicchunks.world.cube.Cube;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.INetHandler;
@@ -44,6 +34,17 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.Nonnull;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.client.CubeProviderClient;
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.ClientHeightMap;
+import cubicchunks.world.ICubicWorldClient;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.BlankCube;
+import cubicchunks.world.cube.Cube;
+import io.netty.buffer.ByteBuf;
 
 public class ClientHandler implements INetHandler {
 
@@ -69,11 +70,11 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
-		CubeCoords cubePos = packet.getCubePos();
+		CubePos cubePos = packet.getCubePos();
 
-		Column column = cubeCache.provideChunk(cubePos.getCubeX(), cubePos.getCubeZ());
+		Column column = cubeCache.provideColumn(cubePos.getX(), cubePos.getZ());
 		//isEmpty actually checks if the column is a BlankColumn
 		if (column.isEmpty()) {
 			CubicChunks.LOGGER.error("Out of order cube received! No column for cube at {} exists!", cubePos);
@@ -81,10 +82,10 @@ public class ClientHandler implements INetHandler {
 		}
 
 		Cube cube;
-		if(packet.getType() == PacketCube.Type.NEW_CUBE) {
-			cube = cubeCache.loadCube(column, cubePos.getCubeY());
+		if (packet.getType() == PacketCube.Type.NEW_CUBE) {
+			cube = cubeCache.loadCube(column, cubePos.getY());
 		} else {
-			cube = column.getCube(cubePos.getCubeY());
+			cube = column.getCube(cubePos.getY());
 			if (cube instanceof BlankCube) {
 				CubicChunks.LOGGER.error("Ignored cube update to blank cube {}", cubePos);
 				return;
@@ -117,7 +118,7 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		ChunkPos chunkPos = packet.getChunkPos();
 
@@ -137,7 +138,7 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		cubeCache.unloadCube(packet.getCubePos());
 	}
@@ -150,7 +151,7 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		ChunkPos chunkPos = packet.getColumnPos();
 		cubeCache.unloadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
@@ -164,7 +165,7 @@ public class ClientHandler implements INetHandler {
 		}
 
 		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
-		ClientCubeCache cubeCache = worldClient.getCubeCache();
+		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		// get the cube
 		Cube cube = cubeCache.getCube(packet.cubePos);
@@ -173,7 +174,7 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		ClientOpacityIndex index = (ClientOpacityIndex) cube.getColumn().getOpacityIndex();
+		ClientHeightMap index = (ClientHeightMap) cube.getColumn().getOpacityIndex();
 		LightingManager lm = worldClient.getLightingManager();
 		for (int hmapUpdate : packet.heightValues) {
 			int x = hmapUpdate & 0xF;

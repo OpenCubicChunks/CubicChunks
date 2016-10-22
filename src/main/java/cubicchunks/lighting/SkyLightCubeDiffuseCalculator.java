@@ -23,12 +23,13 @@
  */
 package cubicchunks.lighting;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.column.BlankColumn;
-import cubicchunks.world.column.Column;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+
+import cubicchunks.util.Coords;
+import cubicchunks.world.column.BlankColumn;
+import cubicchunks.world.column.Column;
 
 class SkyLightCubeDiffuseCalculator {
 

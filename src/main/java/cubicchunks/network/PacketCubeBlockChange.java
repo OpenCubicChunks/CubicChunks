@@ -26,11 +26,9 @@ package cubicchunks.network;
 import com.carrotsearch.hppc.IntHashSet;
 import com.carrotsearch.hppc.IntSet;
 import com.carrotsearch.hppc.cursors.IntCursor;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubeCoords;
-import cubicchunks.world.cube.Cube;
+
 import gnu.trove.TShortCollection;
-import io.netty.buffer.ByteBuf;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -38,16 +36,22 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.cube.Cube;
+import io.netty.buffer.ByteBuf;
+
 import static net.minecraftforge.fml.common.network.ByteBufUtils.readVarInt;
 
 public class PacketCubeBlockChange implements IMessage {
 
 	public int[] heightValues;
-	public CubeCoords cubePos;
+	public CubePos cubePos;
 	public short[] localAddresses;
 	public IBlockState[] blockStates;
 
-	public PacketCubeBlockChange() {}
+	public PacketCubeBlockChange() {
+	}
 
 	public PacketCubeBlockChange(Cube cube, TShortCollection localAddresses) {
 		this.cubePos = cube.getCoords();
@@ -76,7 +80,7 @@ public class PacketCubeBlockChange implements IMessage {
 	@SuppressWarnings("deprecation") // Forge thinks we are trying to register a block or something :P
 	@Override
 	public void fromBytes(ByteBuf in) {
-		this.cubePos = new CubeCoords(in.readInt(), in.readInt(), in.readInt());
+		this.cubePos = new CubePos(in.readInt(), in.readInt(), in.readInt());
 		short numBlocks = in.readShort();
 		localAddresses = new short[numBlocks];
 		blockStates = new IBlockState[numBlocks];
@@ -95,9 +99,9 @@ public class PacketCubeBlockChange implements IMessage {
 	@SuppressWarnings("deprecation")
 	@Override
 	public void toBytes(ByteBuf out) {
-		out.writeInt(cubePos.getCubeX());
-		out.writeInt(cubePos.getCubeY());
-		out.writeInt(cubePos.getCubeZ());
+		out.writeInt(cubePos.getX());
+		out.writeInt(cubePos.getY());
+		out.writeInt(cubePos.getZ());
 		out.writeShort(localAddresses.length);
 		for (int i = 0; i < localAddresses.length; i++) {
 			out.writeShort(localAddresses[i]);

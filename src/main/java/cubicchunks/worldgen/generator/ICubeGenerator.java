@@ -23,6 +23,10 @@
  */
 package cubicchunks.worldgen.generator;
 
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.biome.Biome;
+
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -30,28 +34,26 @@ import javax.annotation.Nullable;
 import cubicchunks.util.Box;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
 
 public interface ICubeGenerator {
 
 	Box RECOMMENDED_POPULATOR_REQUIREMENT = new Box(
-				-1, -2, -1, // give an extra 16 blocks virtical buffer for things like jungle trees
-				 0,  0,  0
-			);
+		-1, -2, -1, // give an extra 16 blocks virtical buffer for things like jungle trees
+		0, 0, 0
+	);
 
 	Box NO_POPULATOR_REQUIREMENT = new Box(
-				0, 0, 0,
-				0, 0, 0
-			);
+		0, 0, 0,
+		0, 0, 0
+	);
 
 	/**
 	 * Generates a new cube
-	 * 
+	 *
 	 * @param cubeX the cube's X coordinate
 	 * @param cubeY the cube's Y coordinate
 	 * @param cubeZ the cube's Z coordinate
+	 *
 	 * @return An ICubePrimer with the generated blocks
 	 */
 	ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ);
@@ -59,7 +61,7 @@ public interface ICubeGenerator {
 	/**
 	 * Adds biome's and optionally other stuff to a Column
 	 * (can pre-add Cubes but this is not recommended)
-	 * 
+	 *
 	 * @param column the column that needs new biomes and other data
 	 */
 	void generateColumn(Column column);
@@ -69,13 +71,13 @@ public interface ICubeGenerator {
 	 * multi-block structures that can cross cube boundaries.
 	 * Population should* be done with the restriction that it may not
 	 * effect cubes who's call to {@link IChunkGenerator#getPopulationRequirement(Cube)}
-	 * would not include {@code cube} as an effect.<br> 
+	 * would not include {@code cube} as an effect.<br>
 	 * <br>
 	 * *Note: Unlike vanilla this method will NEVER cause recursive generation,
 	 * thus the area that it populates is not as strict, but you still try not to
 	 * go over it as the player might see something
 	 * generate in a chunk they have already been sent
-	 * 
+	 *
 	 * @param cube the cube to populate
 	 */
 	void populate(Cube cube);
@@ -91,6 +93,7 @@ public interface ICubeGenerator {
 	 * This allows a generator to have a much more dynamic populator,
 	 * note however that large ranges are not recommended. If you need to generate a large structure like a nether fort,
 	 * do not use a populator.
+	 *
 	 * @return A box in cube coords
 	 */
 	Box getPopulationRequirement(Cube cube);
@@ -101,7 +104,7 @@ public interface ICubeGenerator {
 	 * <br>
 	 * Note: if your generator works better on a 2D system you can do your 2D
 	 * loading in {@link ICubeGenerator#recreateStructures(Column)}
-	 * 
+	 *
 	 * @param cube The cube that is being loaded
 	 */
 	void recreateStructures(Cube cube);
@@ -112,7 +115,7 @@ public interface ICubeGenerator {
 	 * <br>
 	 * Note: if your generator works better on a 3D system you can do your 3D
 	 * loading in {@link ICubeGenerator#recreateStructures(Cube)}
-	 * 
+	 *
 	 * @param cube The cube that is being loaded
 	 */
 	void recreateStructures(Column column);
@@ -120,20 +123,21 @@ public interface ICubeGenerator {
 	/**
 	 * Gets a list of entitys that can spawn at pos...
 	 * Used for things like skeletons and blazes spawning in nether forts.
-	 * 
+	 *
 	 * @param creatureType the creature type that we are interested in getting
 	 * @param pos the block position where we need to see what entitys can spawn at
-	 * @return a list of mobs that can spawn (example: nether forts return, EntityBlaze, EntityPigZombie, EntitySkeleton, EntityMagmaCube)
+	 *
+	 * @return a list of mobs that can spawn (example: nether forts return, EntityBlaze, EntityPigZombie,
+	 * EntitySkeleton, EntityMagmaCube)
 	 */
 	List<Biome.SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos pos);
 
 	/**
 	 * Gets the closest structure with {@code name}.
 	 * This is used when an eye of ender is trying to find a stronghold.
-	 * 
+	 *
 	 * @param name the name of the structure
 	 * @param pos find the structure closest to this BlockPos
-	 * @return
 	 */
 	@Nullable BlockPos getClosestStructure(String name, BlockPos pos);
 }

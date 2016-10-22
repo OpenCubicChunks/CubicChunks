@@ -23,7 +23,6 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -32,6 +31,8 @@ import net.minecraft.world.biome.Biome;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import cubicchunks.world.ICubicWorld;
 
 public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 	private final IBlockState block;

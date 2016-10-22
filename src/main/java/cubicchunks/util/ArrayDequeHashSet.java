@@ -23,13 +23,14 @@
  */
 package cubicchunks.util;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
 
 public class ArrayDequeHashSet<E> implements Deque<E>, Set<E> {
 	private Set<E> set = new HashSet<>();

@@ -23,10 +23,6 @@
  */
 package cubicchunks.world.column;
 
-import cubicchunks.world.ICubeCache;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.BlankCube;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -39,11 +35,16 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import java.util.Collection;
 import java.util.Collections;
 
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.BlankCube;
+import cubicchunks.world.cube.Cube;
+
 public class BlankColumn extends Column {
 
 	private final Cube blankCube;
 
-	public BlankColumn(ICubeCache provider, ICubicWorld world, int cubeX, int cubeZ) {
+	public BlankColumn(ICubeProvider provider, ICubicWorld world, int cubeX, int cubeZ) {
 		super(provider, world, cubeX, cubeZ);
 		blankCube = new BlankCube(this);
 	}

@@ -25,6 +25,7 @@ package cubicchunks.lighting;
 
 import com.carrotsearch.hppc.IntSet;
 import com.carrotsearch.hppc.cursors.IntCursor;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
 import cubicchunks.util.Coords;

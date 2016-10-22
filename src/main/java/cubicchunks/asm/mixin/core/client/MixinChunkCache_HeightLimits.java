@@ -23,14 +23,16 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.asm.MixinUtils;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.World;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+
+import cubicchunks.asm.MixinUtils;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
@@ -55,6 +57,6 @@ public abstract class MixinChunkCache_HeightLimits {
 	 */
 	@Redirect(method = "getLightForExt", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
 	private int getLightForExtGetYReplace(BlockPos pos) {
-		return  MixinUtils.getReplacementY(worldObj, pos);
+		return MixinUtils.getReplacementY(worldObj, pos);
 	}
 }

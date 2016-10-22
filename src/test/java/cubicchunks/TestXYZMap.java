@@ -23,17 +23,17 @@
  */
 package cubicchunks;
 
-import cubicchunks.util.XYZAddressable;
-import cubicchunks.util.XYZMap;
-import cubicchunks.util.XZAddressable;
-import cubicchunks.util.XZMap;
 import org.junit.Test;
 
-import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
+
+import cubicchunks.util.XYZAddressable;
+import cubicchunks.util.XYZMap;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
@@ -83,7 +83,7 @@ public class TestXYZMap {
 			for (int j = 0; j <= i; j++) {
 				Addressable exp = values[j];
 				assertEquals(
-						"added=" + values[i] + ", wrongValue=" + exp, exp, map.get(exp.getX(), exp.getY(), exp.getZ()));
+					"added=" + values[i] + ", wrongValue=" + exp, exp, map.get(exp.getX(), exp.getY(), exp.getZ()));
 			}
 		}
 	}
@@ -93,10 +93,10 @@ public class TestXYZMap {
 		XYZAddressable value = new Addressable(0, 0, 0, "1");
 		XYZMap<XYZAddressable> map = new XYZMap<>(0.75f, 10);
 		map.put(value);
-		for(int x = -20; x < 20; x++) {
-			for(int y = -20; y < 20; y++) {
-				for(int z = -20; z < 20; z++) {
-					if(x != 0 || y != 0 || z != 0) {
+		for (int x = -20; x < 20; x++) {
+			for (int y = -20; y < 20; y++) {
+				for (int z = -20; z < 20; z++) {
+					if (x != 0 || y != 0 || z != 0) {
 						assertNull(map.get(x, y, z));
 					}
 				}
@@ -125,9 +125,9 @@ public class TestXYZMap {
 		XYZAddressable value = new TestXYZMap.Addressable(0, 0, 0, "1");
 		XYZMap<XYZAddressable> map = new XYZMap<>(0.75f, 10);
 		map.put(value);
-		for(int x = -20; x < 20; x++) {
-			for(int y = -20; y < 20; y++) {
-				for(int z = -20; z < 20; z++) {
+		for (int x = -20; x < 20; x++) {
+			for (int y = -20; y < 20; y++) {
+				for (int z = -20; z < 20; z++) {
 					if (x != 0 || y != 0 || z != 0) {
 						assertTrue(!map.contains(x, y, z));
 					}
@@ -142,13 +142,13 @@ public class TestXYZMap {
 		Set<XYZAddressable> allElements = new HashSet<>();
 		Random rand = new Random(42);
 		int maxPut = 500;
-		for(int i = 0; i < maxPut; i++) {
+		for (int i = 0; i < maxPut; i++) {
 			Addressable newElement = new Addressable(rand.nextInt(), rand.nextInt(), rand.nextInt(), String.valueOf(i));
 			map.put(newElement);
 			allElements.add(newElement);
 		}
 		Iterator<XYZAddressable> it = map.iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			XYZAddressable element = it.next();
 			assertThat(allElements, hasItem(element));
 			allElements.remove(element);

@@ -23,16 +23,17 @@
  */
 package cubicchunks.worldgen.generator;
 
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biome.SpawnListEntry;
+
 import java.util.List;
 
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.Biome.SpawnListEntry;
 
 public abstract class BasicCubeGenerator implements ICubeGenerator {
 
@@ -47,22 +48,24 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
 	@Override
 	public void generateColumn(Column column) {
 		this.columnBiomes = this.world.getBiomeProvider()
-				.getBiomes(this.columnBiomes, 
-						Coords.cubeToMinBlock(column.getX()),
-						Coords.cubeToMinBlock(column.getZ()),
-						Cube.SIZE, Cube.SIZE);
+			.getBiomes(this.columnBiomes,
+				Coords.cubeToMinBlock(column.getX()),
+				Coords.cubeToMinBlock(column.getZ()),
+				Cube.SIZE, Cube.SIZE);
 
 		byte[] abyte = column.getBiomeArray();
 		for (int i = 0; i < abyte.length; ++i) {
-			abyte[i] = (byte)Biome.getIdForBiome(this.columnBiomes[i]);
+			abyte[i] = (byte) Biome.getIdForBiome(this.columnBiomes[i]);
 		}
 	}
 
 	@Override
-	public void recreateStructures(Cube cube) {}
+	public void recreateStructures(Cube cube) {
+	}
 
 	@Override
-	public void recreateStructures(Column column) {}
+	public void recreateStructures(Column column) {
+	}
 
 	@Override
 	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos pos) {

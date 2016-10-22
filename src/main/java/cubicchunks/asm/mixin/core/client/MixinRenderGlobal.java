@@ -23,9 +23,6 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
@@ -36,6 +33,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.Chunk;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -48,6 +46,10 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Iterator;
 import java.util.List;
+
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.Column;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.CHUNK_GET_ENTITY_LISTS;
@@ -121,7 +123,7 @@ public class MixinRenderGlobal {
 		}
 
 		return new ClassInheritanceMultiMap[]{
-				((Column)chunk)
+			((Column) chunk)
 				.getCube(Coords.blockToCube(position.getY()))
 				.getEntityContainer().getEntitySet()
 		};
@@ -131,15 +133,15 @@ public class MixinRenderGlobal {
 	 * Overwrite getRenderChunk(For)Offset to support extended height.
 	 *
 	 * @author Barteks2x
-	 * @reason Remove hardcoded height checks, it's a simple method and doing it differently would be problematic and confusing
-	 * (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
+	 * @reason Remove hardcoded height checks, it's a simple method and doing it differently would be problematic and
+	 * confusing (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
 	 */
 	@Overwrite
 	private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
 		BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
 		return MathHelper.abs_int(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks*16 ? null :
-				MathHelper.abs_int(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks*16 ? null :
-						MathHelper.abs_int(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks*16 ? null :
-								this.viewFrustum.getRenderChunk(blockpos);
+			MathHelper.abs_int(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks*16 ? null :
+				MathHelper.abs_int(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks*16 ? null :
+					this.viewFrustum.getRenderChunk(blockpos);
 	}
 }

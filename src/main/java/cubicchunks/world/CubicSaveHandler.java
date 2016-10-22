@@ -23,7 +23,6 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.server.ServerCubeCache;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.WorldProvider;
@@ -33,14 +32,17 @@ import net.minecraft.world.storage.IPlayerFileData;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 
-public class CubicChunksSaveHandler implements ISaveHandler {
+import javax.annotation.Nonnull;
+
+import cubicchunks.server.CubeProviderServer;
+
+public class CubicSaveHandler implements ISaveHandler {
 	private ICubicWorldServer world;
 	private final ISaveHandler originalHandler;
 
-	public CubicChunksSaveHandler(ICubicWorldServer world, ISaveHandler originalHandler) {
+	public CubicSaveHandler(ICubicWorldServer world, ISaveHandler originalHandler) {
 		this.world = world;
 		this.originalHandler = originalHandler;
 	}
@@ -57,7 +59,8 @@ public class CubicChunksSaveHandler implements ISaveHandler {
 		return originalHandler.getChunkLoader(provider);
 	}
 
-	@Override public void saveWorldInfoWithPlayer(@Nonnull WorldInfo worldInformation, @Nonnull NBTTagCompound tagCompound) {
+	@Override
+	public void saveWorldInfoWithPlayer(@Nonnull WorldInfo worldInformation, @Nonnull NBTTagCompound tagCompound) {
 		originalHandler.saveWorldInfoWithPlayer(worldInformation, tagCompound);
 	}
 
@@ -71,7 +74,7 @@ public class CubicChunksSaveHandler implements ISaveHandler {
 
 	@Override public void flush() {
 		originalHandler.flush();
-		ServerCubeCache cache = world.getCubeCache();
+		CubeProviderServer cache = world.getCubeCache();
 		cache.flush();
 	}
 

@@ -23,14 +23,16 @@
  */
 package cubicchunks.asm.mixin.fixes.common;
 
-import cubicchunks.asm.MixinUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+
+import cubicchunks.asm.MixinUtils;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
@@ -45,7 +47,8 @@ public abstract class MixinEntityFallingBlock_HeightLimits extends Entity {
 	/**
 	 * Fixes the following code:
 	 * <p>
-	 * else if (this.fallTime > 100 && !this.worldObj.isRemote && (blockpos1.getY() < 1 || blockpos1.getY() > 256) || this.fallTime > 600)
+	 * else if (this.fallTime > 100 && !this.worldObj.isRemote && (blockpos1.getY() < 1 || blockpos1.getY() > 256) ||
+	 * this.fallTime > 600)
 	 */
 	@Redirect(method = "onUpdate", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
 	private int checkHeightYReplace(BlockPos pos) {

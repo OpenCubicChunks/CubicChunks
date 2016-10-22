@@ -25,8 +25,6 @@ package cubicchunks.world;
 
 import com.google.common.base.Throwables;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.column.Column;
 import net.minecraft.block.state.IBlockState;
 
 import java.io.ByteArrayInputStream;
@@ -34,14 +32,17 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class ClientOpacityIndex implements IOpacityIndex {
+import cubicchunks.util.Coords;
+import cubicchunks.world.column.Column;
+
+public class ClientHeightMap implements IHeightMap {
 
 	private final Column chunk;
 	private int[] hmap;
 	private int[] bottomBlocks;
 	private int heightMapLowest = Coords.NO_HEIGHT;
 
-	public ClientOpacityIndex(Column column) {
+	public ClientHeightMap(Column column) {
 		this.chunk = column;
 		this.hmap = new int[256];
 		this.bottomBlocks = new int[256];
@@ -53,11 +54,6 @@ public class ClientOpacityIndex implements IOpacityIndex {
 	public int getOpacity(int localX, int blockY, int localZ) {
 		IBlockState state = chunk.getBlockState(localX, blockY, localZ);
 		return state.getLightOpacity();
-	}
-
-	@Override
-	public boolean isOpaque(int localX, int blockY, int localZ) {
-		return false;
 	}
 
 	@Override

@@ -23,7 +23,6 @@
  */
 package cubicchunks.util;
 
-import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -31,6 +30,8 @@ import net.minecraft.util.math.ChunkPos;
 
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import cubicchunks.world.cube.Cube;
 
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.getCubeXForEntity;
@@ -40,29 +41,32 @@ import static cubicchunks.util.Coords.getCubeZForEntity;
 /**
  * Position of a cube.
  * <p>
- * Tall Worlds uses a column coordinate system (which is really just a cube coordinate system without the y-coordinate), a cube coordinate system, and two block coordinate systems, a cube-relative system, and a world absolute system.
+ * Tall Worlds uses a column coordinate system (which is really just a cube coordinate system without the y-coordinate),
+ * a cube coordinate system, and two block coordinate systems, a cube-relative system, and a world absolute system.
  * <p>
- * It is important that the systems are kept separate. This class should be used whenever a cube coordinate is passed along, so that it is clear that cube coordinates are being used, and not block coordinates.
+ * It is important that the systems are kept separate. This class should be used whenever a cube coordinate is passed
+ * along, so that it is clear that cube coordinates are being used, and not block coordinates.
  * <p>
- * Additionally, I (Nick) like to use xRel, yRel, and zRel for the relative position of a block inside of a cube. In world space, I (Nick) refer to the coordinates as xAbs, yAbs, and zAbs.
+ * Additionally, I (Nick) like to use xRel, yRel, and zRel for the relative position of a block inside of a cube. In
+ * world space, I (Nick) refer to the coordinates as xAbs, yAbs, and zAbs.
  * <p>
  * See {@link AddressTools} for details of hashing the cube coordinates for keys and storage.
  * <p>
  * This class also contains some helper methods to switch from/to block coordinates.
  */
-public class CubeCoords {
+public class CubePos {
 
 	private final int cubeX;
 	private final int cubeY;
 	private final int cubeZ;
 
-	public CubeCoords(int cubeX, int cubeY, int cubeZ) {
+	public CubePos(int cubeX, int cubeY, int cubeZ) {
 		this.cubeX = cubeX;
 		this.cubeY = cubeY;
 		this.cubeZ = cubeZ;
 	}
 
-	public CubeCoords(long address) {
+	public CubePos(long address) {
 		this.cubeX = AddressTools.getX(address);
 		this.cubeY = AddressTools.getY(address);
 		this.cubeZ = AddressTools.getZ(address);
@@ -73,7 +77,7 @@ public class CubeCoords {
 	 *
 	 * @return The x position.
 	 */
-	public int getCubeX() {
+	public int getX() {
 		return this.cubeX;
 	}
 
@@ -82,7 +86,7 @@ public class CubeCoords {
 	 *
 	 * @return The y position.
 	 */
-	public int getCubeY() {
+	public int getY() {
 		return this.cubeY;
 	}
 
@@ -91,7 +95,7 @@ public class CubeCoords {
 	 *
 	 * @return The z position.
 	 */
-	public int getCubeZ() {
+	public int getZ() {
 		return this.cubeZ;
 	}
 
@@ -102,18 +106,19 @@ public class CubeCoords {
 	 */
 	@Override
 	public String toString() {
-		return String.format("CubeCoords(%d, %d, %d)", cubeX, cubeY, cubeZ);
+		return String.format("CubePos(%d, %d, %d)", cubeX, cubeY, cubeZ);
 	}
 
 	/**
 	 * Compares the CubeCoordinate against the given object.
 	 *
-	 * @return True if the cube matches the given object, but false if it doesn't match, or is null, or not a CubeCoordinate object.
+	 * @return True if the cube matches the given object, but false if it doesn't match, or is null, or not a
+	 * CubeCoordinate object.
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof CubeCoords) {
-			CubeCoords otherCoords = (CubeCoords) obj;
+		if (obj instanceof CubePos) {
+			CubePos otherCoords = (CubePos) obj;
 			return otherCoords.cubeX == cubeX && otherCoords.cubeY == cubeY && otherCoords.cubeZ == cubeZ;
 		}
 		return false;
@@ -131,7 +136,7 @@ public class CubeCoords {
 	/**
 	 * Returns a specification compliant hashCode for this object.
 	 *
-	 * @return A 32bit hashCode for this instance of CubeCoords.
+	 * @return A 32bit hashCode for this instance of CubePos.
 	 */
 	@Override
 	public int hashCode() {
@@ -205,30 +210,30 @@ public class CubeCoords {
 		return new BlockPos(getMinBlockX() + localX, getMinBlockY() + localY, getMinBlockZ() + localZ);
 	}
 
-	public CubeCoords sub(int dx, int dy, int dz) {
+	public CubePos sub(int dx, int dy, int dz) {
 		return this.add(-dx, -dy, -dz);
 	}
 
-	public CubeCoords add(int dx, int dy, int dz) {
-		return new CubeCoords(getCubeX() + dx, getCubeY() + dy, getCubeZ() + dz);
+	public CubePos add(int dx, int dy, int dz) {
+		return new CubePos(getX() + dx, getY() + dy, getZ() + dz);
 	}
 
 	public ChunkPos chunkPos() {
-		return new ChunkPos(getCubeX(), getCubeZ());
+		return new ChunkPos(getX(), getZ());
 	}
 
-	public int distSquared(CubeCoords coords) {
+	public int distSquared(CubePos coords) {
 		int dx = coords.cubeX - this.cubeX;
 		int dy = coords.cubeY - this.cubeY;
 		int dz = coords.cubeZ - this.cubeZ;
 		return dx*dx + dy*dy + dz*dz;
 	}
 
-	public void forEachWithinRange(int range, Consumer<CubeCoords> action) {
+	public void forEachWithinRange(int range, Consumer<CubePos> action) {
 		for (int x = this.cubeX - range; x < this.cubeX + range; x++) {
 			for (int y = this.cubeY - range; y < this.cubeY + range; y++) {
 				for (int z = this.cubeZ - range; z < this.cubeZ + range; z++) {
-					action.accept(new CubeCoords(x, y, z));
+					action.accept(new CubePos(x, y, z));
 				}
 			}
 		}
@@ -249,7 +254,7 @@ public class CubeCoords {
 				for (int y = 15; y >= 0; y--) {
 					boolean cont = func.test(blockPos);
 					blockPos.move(EnumFacing.DOWN);
-					if(!cont) {
+					if (!cont) {
 						break;
 					}
 				}
@@ -257,15 +262,15 @@ public class CubeCoords {
 		}
 	}
 
-	public static CubeCoords fromBlockCoords(int blockX, int blockY, int blockZ) {
-		return new CubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
+	public static CubePos fromBlockCoords(int blockX, int blockY, int blockZ) {
+		return new CubePos(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
 	}
 
-	public static CubeCoords fromEntity(Entity entity) {
-		return new CubeCoords(getCubeXForEntity(entity), getCubeYForEntity(entity), getCubeZForEntity(entity));
+	public static CubePos fromEntity(Entity entity) {
+		return new CubePos(getCubeXForEntity(entity), getCubeYForEntity(entity), getCubeZForEntity(entity));
 	}
 
-	public static CubeCoords fromBlockCoords(BlockPos pos) {
-		return CubeCoords.fromBlockCoords(pos.getX(), pos.getY(), pos.getZ());
+	public static CubePos fromBlockCoords(BlockPos pos) {
+		return CubePos.fromBlockCoords(pos.getX(), pos.getY(), pos.getZ());
 	}
 }

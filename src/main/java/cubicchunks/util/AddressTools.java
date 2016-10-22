@@ -66,13 +66,13 @@ public class AddressTools {
 
 	public static long getAddress(int x, int y, int z) {
 		return Bits.packSignedToLong(y, Y_BITS, Y_BIT_OFFSET)
-				| Bits.packSignedToLong(x, X_BITS, X_BIT_OFFSET)
-				| Bits.packSignedToLong(z, Z_BITS, Z_BIT_OFFSET);
+			| Bits.packSignedToLong(x, X_BITS, X_BIT_OFFSET)
+			| Bits.packSignedToLong(z, Z_BITS, Z_BIT_OFFSET);
 	}
 
 	public static long getAddress(int x, int z) {
 		return Bits.packSignedToLong(x, X_BITS, X_BIT_OFFSET)
-				| Bits.packSignedToLong(z, Z_BITS, Z_BIT_OFFSET);
+			| Bits.packSignedToLong(z, Z_BITS, Z_BIT_OFFSET);
 	}
 
 	public static int getY(long address) {
@@ -89,8 +89,8 @@ public class AddressTools {
 
 	public static short getLocalAddress(int localX, int localY, int localZ) {
 		return (short) (Bits.packUnsignedToInt(localX, 4, 0)
-						| Bits.packUnsignedToInt(localY, 4, 4)
-						| Bits.packUnsignedToInt(localZ, 4, 8));
+			| Bits.packUnsignedToInt(localY, 4, 4)
+			| Bits.packUnsignedToInt(localZ, 4, 8));
 	}
 
 	public static int getLocalX(int localAddress) {

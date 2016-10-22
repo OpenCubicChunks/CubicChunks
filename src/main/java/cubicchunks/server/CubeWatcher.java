@@ -24,24 +24,12 @@
 package cubicchunks.server;
 
 import com.google.common.base.Predicate;
-import cubicchunks.CubicChunks;
-import cubicchunks.network.PacketCube;
-import cubicchunks.network.PacketCubeBlockChange;
-import cubicchunks.network.PacketDispatcher;
-import cubicchunks.network.PacketUnloadCube;
-import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubeCoords;
-import cubicchunks.util.XYZAddressable;
-import cubicchunks.util.ticket.ITicket;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.IProviderExtras;
-import cubicchunks.world.cube.Cube;
+
 import gnu.trove.list.TShortList;
 import gnu.trove.list.array.TShortArrayList;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import mcp.MethodsReturnNonnullByDefault;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -51,37 +39,53 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.network.PacketCube;
+import cubicchunks.network.PacketCubeBlockChange;
+import cubicchunks.network.PacketDispatcher;
+import cubicchunks.network.PacketUnloadCube;
+import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubePos;
+import cubicchunks.util.XYZAddressable;
+import cubicchunks.util.ticket.ITicket;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IProviderExtras;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
+public class CubeWatcher implements XYZAddressable, ITicket {
 	private final Consumer<Cube> consumer = (c) -> {
 		this.cube = c;
 		this.loading = false;
-		if(this.cube != null) {
+		if (this.cube != null) {
 			this.cube.getTickets().add(this);
 		}
 	};
-	private final ServerCubeCache cubeCache;
+	private final CubeProviderServer cubeCache;
 	private PlayerCubeMap playerCubeMap;
 	private Cube cube;
 	private final TIntObjectMap<WatcherPlayerEntry> players = new TIntObjectHashMap<>();
 	private final TShortList dirtyBlocks = new TShortArrayList(64);
-	private final CubeCoords cubePos;
+	private final CubePos cubePos;
 	private long previousWorldTime = 0;
 	private boolean sentToPlayers = false;
 	private boolean loading = true;
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public PlayerCubeMapEntry(PlayerCubeMap playerCubeMap, CubeCoords cubePos) {
+	public CubeWatcher(PlayerCubeMap playerCubeMap, CubePos cubePos) {
 		this.playerCubeMap = playerCubeMap;
 		this.cubeCache = playerCubeMap.getWorld().getCubeCache();
 		this.cubeCache.asyncGetCube(
-				cubePos.getCubeX(), cubePos.getCubeY(), cubePos.getCubeZ(),
-				IProviderExtras.Requirement.LOAD,
-				consumer);
+			cubePos.getX(), cubePos.getY(), cubePos.getZ(),
+			IProviderExtras.Requirement.LOAD,
+			consumer);
 		this.cubePos = cubePos;
 	}
 
@@ -112,10 +116,10 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 			this.players.remove(player.getEntityId());
 
 			if (this.players.isEmpty()) {
-				if(loading) {
+				if (loading) {
 					AsyncWorldIOExecutor.dropQueuedCubeLoad(this.playerCubeMap.getWorld(),
-							cubePos.getCubeX(), cubePos.getCubeY(), cubePos.getCubeZ(),
-							c -> this.cube = c);
+						cubePos.getX(), cubePos.getY(), cubePos.getZ(),
+						c -> this.cube = c);
 				}
 				playerCubeMap.removeEntry(this);
 			}
@@ -137,15 +141,15 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 
 	// CHECKED: 1.10.2-12.18.1.2092
 	public boolean providePlayerCube(boolean canGenerate) {
-		if(loading) {
+		if (loading) {
 			return false;
 		}
-		if(this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone()))) {
+		if (this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone()))) {
 			return true;
 		}
-		int cubeX = cubePos.getCubeX();
-		int cubeY = cubePos.getCubeY();
-		int cubeZ = cubePos.getCubeZ();
+		int cubeX = cubePos.getX();
+		int cubeY = cubePos.getY();
+		int cubeZ = cubePos.getZ();
 
 		playerCubeMap.getWorld().getProfiler().startSection("getCube");
 		if (canGenerate) {
@@ -153,7 +157,7 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 		} else {
 			this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LOAD);
 		}
-		if(this.cube != null){
+		if (this.cube != null) {
 			this.cube.getTickets().add(this);
 		}
 		playerCubeMap.getWorld().getProfiler().endSection();
@@ -173,9 +177,9 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 		if (this.cube == null || !this.cube.isPopulated() || !this.cube.isInitialLightingDone()) {
 			return false;
 		}
-		PlayerCubeMapColumnEntry columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
+		ColumnWatcher columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
 		//can't send cubes before columns
-		if(columnEntry == null || !columnEntry.isSentToPlayers()) {
+		if (columnEntry == null || !columnEntry.isSentToPlayers()) {
 			return false;
 		}
 		this.dirtyBlocks.clear();
@@ -239,7 +243,7 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 			return;
 		}
 
-		ICubicWorld world = this.cube.getWorld();
+		ICubicWorld world = this.cube.getCubicWorld();
 
 		if (this.dirtyBlocks.size() >= ForgeModContainer.clumpingThreshold) {
 			// send whole cube
@@ -281,7 +285,7 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 		return !this.players.forEachValue(value -> !predicate.apply(value.player));
 	}
 
-	public double getDistanceSq(CubeCoords cubePos, Entity entity) {
+	public double getDistanceSq(CubePos cubePos, Entity entity) {
 		double blockX = cubePos.getXCenter();
 		double blockY = cubePos.getYCenter();
 		double blockZ = cubePos.getZCenter();
@@ -325,23 +329,23 @@ public class PlayerCubeMapEntry implements XYZAddressable, ITicket {
 		}
 	}
 
-	public CubeCoords getCubePos() {
+	public CubePos getCubePos() {
 		return cubePos;
 	}
 
 	@Override public int getX() {
-		return this.cubePos.getCubeX();
+		return this.cubePos.getX();
 	}
 
 	@Override public int getY() {
-		return this.cubePos.getCubeY();
+		return this.cubePos.getY();
 	}
 
 	@Override public int getZ() {
-		return this.cubePos.getCubeZ();
+		return this.cubePos.getZ();
 	}
 
-	@Override public boolean shouldTick(){
+	@Override public boolean shouldTick() {
 		return true; // Cubes that players can see should tick
 	}
 }

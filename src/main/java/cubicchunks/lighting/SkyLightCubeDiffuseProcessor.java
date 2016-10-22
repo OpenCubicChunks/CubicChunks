@@ -57,7 +57,7 @@ class SkyLightCubeDiffuseProcessor extends QueueProcessor<Long> {
 
 		Cube.LightUpdateData data = cube.getLightUpdateData();
 
-		Column column = cache.provideChunk(columnX, columnZ);
+		Column column = cache.provideColumn(columnX, columnZ);
 		if (empty(column)) {
 			return;
 		}

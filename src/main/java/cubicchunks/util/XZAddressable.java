@@ -25,6 +25,7 @@ package cubicchunks.util;
 
 /**
  * Classes implementing this interface represent objects in a 2-dimensional cartesian coordinate system.
+ *
  * @see XZMap
  */
 public interface XZAddressable {

@@ -23,7 +23,6 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
@@ -31,6 +30,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -38,6 +38,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import cubicchunks.world.ICubicWorld;
 
 /**
  * Replace updateChunkPositions and getRenderChunk with cubic chunks versions
@@ -52,7 +54,9 @@ public class MixinViewFrustum_RenderHeightFix {
 	@Shadow private int countChunksY;
 	@Shadow private int countChunksZ;
 
-	@Shadow private int getBaseCoordinate(int arg1, int arg2, int arg3) { throw new Error();}
+	@Shadow private int getBaseCoordinate(int arg1, int arg2, int arg3) {
+		throw new Error();
+	}
 
 	@Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
 	private void updateChunkPositionsInject(double viewEntityX, double viewEntityZ, CallbackInfo cbi) {

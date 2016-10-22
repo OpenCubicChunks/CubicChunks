@@ -23,17 +23,19 @@
  */
 package cubicchunks.tweaker;
 
-import cubicchunks.asm.CoreModLoadingPlugin;
 import net.minecraft.launchwrapper.LaunchClassLoader;
+
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.test.launch.AbstractTestTweaker;
+
+import cubicchunks.asm.CubicChunksCoreMod;
 
 public class MixinTweakerServer extends AbstractTestTweaker {
 	@Override
 	public void injectIntoClassLoader(LaunchClassLoader loader) {
 		super.injectIntoClassLoader(loader);
 		registerAccessTransformer("META-INF/cubicchunks_at.cfg");
-		CoreModLoadingPlugin.initMixin();
+		CubicChunksCoreMod.initMixin();
 		MixinEnvironment.getDefaultEnvironment().setSide(MixinEnvironment.Side.SERVER);
 	}
 }

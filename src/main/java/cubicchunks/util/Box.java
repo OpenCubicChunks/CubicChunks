@@ -38,9 +38,9 @@ public class Box {
 	}
 
 	public void forEachPoint(XYZFunction function) {
-		for(int x = x1;x <= x2;x++){
-			for(int y = y1;y <= y2;y++){
-				for(int z = z1;z <= z2;z++){
+		for (int x = x1; x <= x2; x++) {
+			for (int y = y1; y <= y2; y++) {
+				for (int z = z1; z <= z2; z++) {
 					function.apply(x, y, z);
 				}
 			}
