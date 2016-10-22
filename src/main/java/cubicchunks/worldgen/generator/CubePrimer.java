@@ -41,10 +41,6 @@ public class CubePrimer implements ICubePrimer {
 		this.data[getBlockIndex(x, y, z)] = (char) Block.BLOCK_STATE_IDS.get(state);
 	}
 
-	private static int getBlockIndex(int x, int y, int z) {
-		return x << 8 | z << 4 | y;
-	}
-
 	public int findGroundHeight(int x, int z) {
 		int i = (x << 8 | z << 4) + 15;
 
@@ -57,5 +53,9 @@ public class CubePrimer implements ICubePrimer {
 		}
 
 		return -1; // no non-air block found
+	}
+
+	private static int getBlockIndex(int x, int y, int z) {
+		return x << 8 | z << 4 | y;
 	}
 }
