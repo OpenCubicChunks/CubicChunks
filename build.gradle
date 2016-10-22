@@ -194,7 +194,7 @@ license {
 jar {
 	manifest {
 		attributes 'FMLAT': 'cubicchunks_at.cfg'
-		attributes 'FMLCorePlugin': 'cubicchunks.asm.CoreModLoadingPlugin'
+		attributes 'FMLCorePlugin': 'cubicchunks.asm.CubicChunksCoreMod'
 		attributes 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
 		attributes 'TweakOrder': '0'
 		attributes 'ForceLoadAsMod': 'true'
