@@ -339,7 +339,10 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 * @param hole the index of the bucket to be collapsed
 	 */
 	private void collapseBucket(int hole) {
-		this.size--;
+
+		// This method must not be called on empty buckets.
+		assert this.buckets[hole] != null;
+		--this.size;
 
 		int currentIndex = hole;
 		while (true) {
