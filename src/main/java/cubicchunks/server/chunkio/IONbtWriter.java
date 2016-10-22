@@ -93,7 +93,7 @@ class IONbtWriter {
 	}
 
 	private static void writeOpacityIndex(Column column, NBTTagCompound nbt) {// light index
-		nbt.setByteArray("ServerHeightMap", ((ServerHeightMap) column.getOpacityIndex()).getData());
+		nbt.setByteArray("OpacityIndex", ((ServerHeightMap) column.getOpacityIndex()).getData());
 	}
 
 	private static void writeBaseCube(Cube cube, NBTTagCompound cubeNbt) {

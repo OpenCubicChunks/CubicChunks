@@ -86,7 +86,7 @@ public class IONbtReader {
 	}
 
 	private static void readOpacityIndex(NBTTagCompound nbt, Column column) {// biomes
-		((ServerHeightMap) column.getOpacityIndex()).readData(nbt.getByteArray("ServerHeightMap"));
+		((ServerHeightMap) column.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
 	}
 
 	@Nullable
