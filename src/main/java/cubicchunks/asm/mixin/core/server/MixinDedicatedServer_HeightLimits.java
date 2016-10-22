@@ -23,11 +23,13 @@
  */
 package cubicchunks.asm.mixin.core.server;
 
-import cubicchunks.util.AddressTools;
 import net.minecraft.server.dedicated.DedicatedServer;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+
+import cubicchunks.util.AddressTools;
 
 /**
  * Fix height limits in {@code DedicatedServer}

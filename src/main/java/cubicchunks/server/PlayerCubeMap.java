@@ -26,17 +26,10 @@ package cubicchunks.server;
 import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
-import cubicchunks.CubicChunks;
-import cubicchunks.IConfigUpdateListener;
-import cubicchunks.util.CubePos;
-import cubicchunks.util.XYZMap;
-import cubicchunks.util.XZMap;
-import cubicchunks.visibility.CubeSelector;
-import cubicchunks.visibility.CuboidalCubeSelector;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.column.Column;
+
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.server.management.PlayerChunkMapEntry;
@@ -46,7 +39,6 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -54,6 +46,18 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.IConfigUpdateListener;
+import cubicchunks.util.CubePos;
+import cubicchunks.util.XYZMap;
+import cubicchunks.util.XZMap;
+import cubicchunks.visibility.CubeSelector;
+import cubicchunks.visibility.CuboidalCubeSelector;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.column.Column;
 
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
@@ -68,25 +72,25 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 	private static final Predicate<EntityPlayerMP> NOT_SPECTATOR = player -> player != null && !player.isSpectator();
 	private static final Predicate<EntityPlayerMP> CAN_GENERATE_CHUNKS = player -> player != null &&
-			(!player.isSpectator() || player.getServerWorld().getGameRules().getBoolean("spectatorsGenerateChunks"));
+		(!player.isSpectator() || player.getServerWorld().getGameRules().getBoolean("spectatorsGenerateChunks"));
 
 	/**
 	 * Comparator that specifies order in which cubes will be generated and sent to clients
 	 */
 	private static final Comparator<CubeWatcher> CUBE_ORDER = (watcher1, watcher2) ->
-			ComparisonChain.start().compare(
-					watcher1.getClosestPlayerDistance(),
-					watcher2.getClosestPlayerDistance()
-			).result();
+		ComparisonChain.start().compare(
+			watcher1.getClosestPlayerDistance(),
+			watcher2.getClosestPlayerDistance()
+		).result();
 
 	/**
 	 * Comparator that specifies order in which columns will be generated and sent to clients
 	 */
 	private static final Comparator<ColumnWatcher> COLUMN_ORDER = (watcher1, watcher2) ->
-			ComparisonChain.start().compare(
-					watcher1.getClosestPlayerDistance(),
-					watcher2.getClosestPlayerDistance()
-			).result();
+		ComparisonChain.start().compare(
+			watcher1.getClosestPlayerDistance(),
+			watcher2.getClosestPlayerDistance()
+		).result();
 
 	/**
 	 * Cube selector is used to find which cube positions need to be loaded/unloaded
@@ -175,7 +179,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 	@Override
 	public void onConfigUpdate(CubicChunks.Config config) {
-		if(config.getVerticalCubeLoadDistance() != this.verticalViewDistance) {
+		if (config.getVerticalCubeLoadDistance() != this.verticalViewDistance) {
 			this.updatedVerticalViewDistance = config.getVerticalCubeLoadDistance();
 		}
 		this.maxGeneratedCubesPerTick = config.getMaxGeneratedCubesPerTick();
@@ -192,9 +196,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		Iterator<Chunk> chunkIt = this.cubeCache.getLoadedChunks().iterator();
 		return new AbstractIterator<Chunk>() {
 			@Override protected Chunk computeNext() {
-				while (chunkIt.hasNext()){
-					Column column = (Column)chunkIt.next();
-					if(column.shouldTick()){ // shouldTick is true when there Cubes with tickets the request to be ticked
+				while (chunkIt.hasNext()) {
+					Column column = (Column) chunkIt.next();
+					if (column.shouldTick()) { // shouldTick is true when there Cubes with tickets the request to be ticked
 						return column;
 					}
 				}
@@ -210,7 +214,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	// CHECKED: 1.10.2-12.18.1.2092
 	@Override
 	public void tick() {
-		if(this.updatedVerticalViewDistance != this.verticalViewDistance) {
+		if (this.updatedVerticalViewDistance != this.verticalViewDistance) {
 			this.setPlayerViewDistance(getWorld().getMinecraftServer().getPlayerList().getViewDistance(), this.updatedVerticalViewDistance);
 		}
 		getWorld().getProfiler().startSection("playerCubeMapTick");
@@ -382,9 +386,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			this.cubeWatchers.put(cubeWatcher);
 
 
-			if (cubeWatcher.getCube() == null ||  
-					!cubeWatcher.getCube().isFullyPopulated() || 
-					!cubeWatcher.getCube().isInitialLightingDone()) {
+			if (cubeWatcher.getCube() == null ||
+				!cubeWatcher.getCube().isFullyPopulated() ||
+				!cubeWatcher.getCube().isInitialLightingDone()) {
 				this.cubesToGenerate.add(cubeWatcher);
 			}
 			if (!cubeWatcher.isSentToPlayers()) {
@@ -494,7 +498,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		PlayerWrapper playerWrapper = this.players.get(player.getEntityId());
 
 		// did the player move into new cube?
-		if(!playerWrapper.cubePosChanged()) {
+		if (!playerWrapper.cubePosChanged()) {
 			return;
 		}
 
@@ -552,8 +556,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	public boolean isPlayerWatchingChunk(@Nonnull EntityPlayerMP player, int cubeX, int cubeZ) {
 		ColumnWatcher columnWatcher = this.getColumnWatcher(new ChunkPos(cubeX, cubeZ));
 		return columnWatcher != null &&
-				columnWatcher.containsPlayer(player) &&
-				columnWatcher.isSentToPlayers();
+			columnWatcher.containsPlayer(player) &&
+			columnWatcher.isSentToPlayers();
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
@@ -581,7 +585,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 		// Somehow the view distances went in opposite directions
 		if ((newHorizontalViewDistance < oldHorizontalViewDistance && newVerticalViewDistance > oldVerticalViewDistance) ||
-				(newHorizontalViewDistance > oldHorizontalViewDistance && newVerticalViewDistance < oldVerticalViewDistance)) {
+			(newHorizontalViewDistance > oldHorizontalViewDistance && newVerticalViewDistance < oldVerticalViewDistance)) {
 			// Adjust the values separately to avoid imploding
 			setPlayerViewDistance(newHorizontalViewDistance, oldVerticalViewDistance);
 			setPlayerViewDistance(newHorizontalViewDistance, newVerticalViewDistance);
@@ -606,14 +610,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 						cubeWatcher.addPlayer(player);
 					}
 				});
-			// either both got smaller or only one of them changed
+				// either both got smaller or only one of them changed
 			} else {
 				//if it got smaller...
 				Set<CubePos> cubesToUnload = new HashSet<>();
 				Set<ChunkPos> columnsToUnload = new HashSet<>();
 				this.cubeSelector.findAllUnloadedOnViewDistanceDecrease(playerPos,
-						oldHorizontalViewDistance, newHorizontalViewDistance,
-						oldVerticalViewDistance, newVerticalViewDistance, cubesToUnload, columnsToUnload);
+					oldHorizontalViewDistance, newHorizontalViewDistance,
+					oldVerticalViewDistance, newVerticalViewDistance, cubesToUnload, columnsToUnload);
 
 				cubesToUnload.forEach(pos -> {
 					CubeWatcher cubeWatcher = this.getCubeWatcher(pos);
@@ -666,7 +670,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		this.cubeWatchersToUpdate.remove(cubeWatcher);
 		this.cubesToGenerate.remove(cubeWatcher);
 		this.cubesToSendToClients.remove(cubeWatcher);
-		if(cubeWatcher.getCube() != null) {
+		if (cubeWatcher.getCube() != null) {
 			cubeWatcher.getCube().getTickets().remove(cubeWatcher); // remove the ticket, so this Cube can unload
 		}
 		//don't unload, ChunkGc unloads chunks

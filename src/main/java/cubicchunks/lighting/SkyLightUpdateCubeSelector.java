@@ -25,12 +25,14 @@ package cubicchunks.lighting;
 
 import com.carrotsearch.hppc.IntHashSet;
 import com.carrotsearch.hppc.IntSet;
-import cubicchunks.util.Coords;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
+
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+
+import cubicchunks.util.Coords;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
 class SkyLightUpdateCubeSelector {
 
@@ -45,7 +47,8 @@ class SkyLightUpdateCubeSelector {
 	 * @param localX in-column X position
 	 * @param localZ in-column Z position
 	 * @param minBlockY minimum light update Y. Integer.MIN_VALUE for no lower limit.
-	 * @param maxBlockY position from which updating should be started. Integer.MAX_VALUE tu update from top of the world.
+	 * @param maxBlockY position from which updating should be started. Integer.MAX_VALUE tu update from top of the
+	 * world.
 	 *
 	 * @return set of affected cube Y positions
 	 */
@@ -60,9 +63,9 @@ class SkyLightUpdateCubeSelector {
 		}
 
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(
-				Coords.localToBlock(column.xPosition, localX),
-				maxBlockY - 1,
-				Coords.localToBlock(column.zPosition, localZ)
+			Coords.localToBlock(column.xPosition, localX),
+			maxBlockY - 1,
+			Coords.localToBlock(column.zPosition, localZ)
 		);
 
 		int newMaxBlockY = column.getHeightValue(localX, localZ);

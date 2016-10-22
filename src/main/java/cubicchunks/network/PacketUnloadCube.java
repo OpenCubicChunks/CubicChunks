@@ -23,16 +23,18 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.util.CubePos;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import cubicchunks.util.CubePos;
+import io.netty.buffer.ByteBuf;
+
 public class PacketUnloadCube implements IMessage {
 	private CubePos cubePos;
 
-	public PacketUnloadCube() {}
+	public PacketUnloadCube() {
+	}
 
 	public PacketUnloadCube(CubePos cubePos) {
 		this.cubePos = cubePos;

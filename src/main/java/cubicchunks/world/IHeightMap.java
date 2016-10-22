@@ -41,6 +41,7 @@ public interface IHeightMap {
 	 * @param localX local block x-coordinate (0..15)
 	 * @param blockY global block y-coordinate
 	 * @param localZ local block z-coordinate (0..15)
+	 *
 	 * @return true if there exists a known non-opaque block above the given y-coordinate
 	 */
 	boolean isOccluded(int localX, int blockY, int localZ);
@@ -51,7 +52,8 @@ public interface IHeightMap {
 	 * @param localX local block x-coordinate (0..15)
 	 * @param localZ local block z-coordinate (0..15)
 	 *
-	 * @return Y position of the top non-transparent block, or very low (far below the min world height) if one doesn't exist
+	 * @return Y position of the top non-transparent block, or very low (far below the min world height) if one doesn't
+	 * exist
 	 */
 	int getTopBlockY(int localX, int localZ);
 
@@ -61,7 +63,8 @@ public interface IHeightMap {
 	 * @param localX local block x-coordinate (0..15)
 	 * @param localZ local block z-coordinate (0..15)
 	 *
-	 * @return Y position of the top non-transparent block below blockY, or very low (far below the min world height) if one doesn't exist
+	 * @return Y position of the top non-transparent block below blockY, or very low (far below the min world height) if
+	 * one doesn't exist
 	 */
 	int getTopBlockYBelow(int localX, int localZ, int blockY);
 
@@ -71,7 +74,8 @@ public interface IHeightMap {
 	 * @param localX local block x-coordinate (0..15)
 	 * @param localZ local block z-coordinate(0..15)
 	 *
-	 * @return Y position of the bottom non-transparent block, or very low (far below the min world height) if one doesn't exist
+	 * @return Y position of the bottom non-transparent block, or very low (far below the min world height) if one
+	 * doesn't exist
 	 */
 	int getBottomBlockY(int localX, int localZ);
 

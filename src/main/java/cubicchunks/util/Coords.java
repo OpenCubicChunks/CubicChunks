@@ -23,14 +23,15 @@
  */
 package cubicchunks.util;
 
-import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
+import cubicchunks.world.cube.Cube;
+
 public class Coords {
 
-	public static final int NO_HEIGHT = Integer.MIN_VALUE / 2;
+	public static final int NO_HEIGHT = Integer.MIN_VALUE/2;
 
 	public static int blockToLocal(int val) {
 		return val & 0xf;
@@ -67,9 +68,9 @@ public class Coords {
 
 	public static BlockPos getCubeCenter(Cube cube) {
 		return new BlockPos(
-				cubeToMinBlock(cube.getX()) + 8,
-				cubeToMinBlock(cube.getY()) + 8,
-				cubeToMinBlock(cube.getZ()) + 8
+			cubeToMinBlock(cube.getX()) + 8,
+			cubeToMinBlock(cube.getY()) + 8,
+			cubeToMinBlock(cube.getZ()) + 8
 		);
 	}
 

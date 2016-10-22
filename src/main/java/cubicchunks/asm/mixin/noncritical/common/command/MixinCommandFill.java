@@ -23,12 +23,11 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
-import cubicchunks.asm.MixinUtils;
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.command.CommandFill;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -36,6 +35,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.ref.WeakReference;
+
+import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
@@ -51,11 +53,11 @@ public class MixinCommandFill {
 
 	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6), constraints = "")
 	private int getBlockPosYRedirectMin(BlockPos pos) {
-		if(commandWorld == null) {
+		if (commandWorld == null) {
 			return pos.getY();
 		}
 		ICubicWorld world = commandWorld.get();
-		if(world == null) {
+		if (world == null) {
 			return pos.getY();
 		}
 		return MixinUtils.getReplacementY(world, pos);
@@ -63,11 +65,11 @@ public class MixinCommandFill {
 
 	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 7))
 	private int getBlockPosYRedirectMax(BlockPos pos) {
-		if(commandWorld == null) {
+		if (commandWorld == null) {
 			return pos.getY();
 		}
 		ICubicWorld world = commandWorld.get();
-		if(world == null) {
+		if (world == null) {
 			return pos.getY();
 		}
 		return MixinUtils.getReplacementY(world, pos);

@@ -23,15 +23,17 @@
  */
 package cubicchunks;
 
-import cubicchunks.util.XZAddressable;
-import cubicchunks.util.XZMap;
 import org.junit.Test;
 
-import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
+
+import cubicchunks.util.XZAddressable;
+import cubicchunks.util.XZMap;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
@@ -81,7 +83,7 @@ public class TestXZMap {
 			for (int j = 0; j <= i; j++) {
 				Addressable exp = values[j];
 				assertEquals(
-						"added=" + values[i] + ", wrongValue=" + exp, exp, map.get(exp.getX(), exp.getZ()));
+					"added=" + values[i] + ", wrongValue=" + exp, exp, map.get(exp.getX(), exp.getZ()));
 			}
 		}
 	}
@@ -91,9 +93,9 @@ public class TestXZMap {
 		XZAddressable value = new Addressable(0, 0, "1");
 		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
 		map.put(value);
-		for(int x = -20; x < 20; x++) {
-			for(int z = -20; z < 20; z++) {
-				if(x != 0 || z != 0) {
+		for (int x = -20; x < 20; x++) {
+			for (int z = -20; z < 20; z++) {
+				if (x != 0 || z != 0) {
 					assertNull(map.get(x, z));
 				}
 			}
@@ -121,9 +123,9 @@ public class TestXZMap {
 		XZAddressable value = new Addressable(0, 0, "1");
 		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
 		map.put(value);
-		for(int x = -20; x < 20; x++) {
-			for(int z = -20; z < 20; z++) {
-				if(x != 0 || z != 0) {
+		for (int x = -20; x < 20; x++) {
+			for (int z = -20; z < 20; z++) {
+				if (x != 0 || z != 0) {
 					assertTrue(!map.contains(x, z));
 				}
 			}
@@ -136,13 +138,13 @@ public class TestXZMap {
 		Set<XZAddressable> allElements = new HashSet<>();
 		Random rand = new Random(42);
 		int maxPut = 500;
-		for(int i = 0; i < maxPut; i++) {
+		for (int i = 0; i < maxPut; i++) {
 			Addressable newElement = new Addressable(rand.nextInt(), rand.nextInt(), String.valueOf(i));
 			map.put(newElement);
 			allElements.add(newElement);
 		}
 		Iterator<XZAddressable> it = map.iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			XZAddressable element = it.next();
 			assertThat(allElements, hasItem(element));
 			allElements.remove(element);

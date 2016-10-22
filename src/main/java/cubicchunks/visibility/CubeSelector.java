@@ -23,11 +23,12 @@
  */
 package cubicchunks.visibility;
 
-import cubicchunks.util.CubePos;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Set;
 import java.util.function.Consumer;
+
+import cubicchunks.util.CubePos;
 
 public abstract class CubeSelector {
 	public abstract void forAllVisibleFrom(CubePos cubePos, int horizontalViewDistance, int verticalViewDistance, Consumer<CubePos> consumer);

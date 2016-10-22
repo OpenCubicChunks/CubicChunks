@@ -23,17 +23,18 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
-import cubicchunks.util.CubePos;
-import cubicchunks.util.StructureGenUtil;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 import java.util.Random;
 import java.util.function.Predicate;
+
+import cubicchunks.util.CubePos;
+import cubicchunks.util.StructureGenUtil;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.ICubePrimer;
 
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
@@ -97,7 +98,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 	 * Controls which blocks can be replaced by cave
 	 */
 	private static final Predicate<IBlockState> isBlockReplaceable = (state ->
-			state.getBlock() == Blocks.STONE || state.getBlock() == Blocks.DIRT || state.getBlock() == Blocks.GRASS);
+		state.getBlock() == Blocks.STONE || state.getBlock() == Blocks.DIRT || state.getBlock() == Blocks.GRASS);
 
 	/**
 	 * Contains values of ravine widths at each height.
@@ -124,8 +125,8 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 		int maxWalkedDistance = 0;//choose value automatically
 
 		this.generateNode(cube, rand.nextLong(), generatedCubePos, startX, startY, startZ,
-				baseRavineSize, vertDirectionAngle, horizDirectionAngle,
-				startWalkedDistance, maxWalkedDistance, VERT_SIZE_FACTOR);
+			baseRavineSize, vertDirectionAngle, horizDirectionAngle,
+			startWalkedDistance, maxWalkedDistance, VERT_SIZE_FACTOR);
 	}
 
 	protected void generateNode(ICubePrimer cube, long seed, CubePos generatedCubePos,
@@ -210,8 +211,8 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 			}
 
 			tryCarveBlocks(cube, generatedCubePos,
-					ravineX, ravineY, ravineZ,
-					ravineSizeHoriz, ravineSizeVert);
+				ravineX, ravineY, ravineZ,
+				ravineSizeHoriz, ravineSizeVert);
 
 			if (finalStep) {
 				return;
@@ -226,11 +227,11 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 		double genCubeCenterY = generatedCubePos.getYCenter();
 		double genCubeCenterZ = generatedCubePos.getZCenter();
 		if (ravineX < genCubeCenterX - Cube.SIZE - ravineSizeHoriz*2.0D ||
-				ravineY < genCubeCenterY - Cube.SIZE - ravineSizeVert*2.0D ||
-				ravineZ < genCubeCenterZ - Cube.SIZE - ravineSizeHoriz*2.0D ||
-				ravineX > genCubeCenterX + Cube.SIZE + ravineSizeHoriz*2.0D ||
-				ravineY > genCubeCenterY + Cube.SIZE + ravineSizeVert*2.0D ||
-				ravineZ > genCubeCenterZ + Cube.SIZE + ravineSizeHoriz*2.0D) {
+			ravineY < genCubeCenterY - Cube.SIZE - ravineSizeVert*2.0D ||
+			ravineZ < genCubeCenterZ - Cube.SIZE - ravineSizeHoriz*2.0D ||
+			ravineX > genCubeCenterX + Cube.SIZE + ravineSizeHoriz*2.0D ||
+			ravineY > genCubeCenterY + Cube.SIZE + ravineSizeVert*2.0D ||
+			ravineZ > genCubeCenterZ + Cube.SIZE + ravineSizeHoriz*2.0D) {
 			return;
 		}
 		int minLocalX = floor_double(ravineX - ravineSizeHoriz) - generatedCubePos.getMinBlockX() - 1;
@@ -242,8 +243,8 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 
 		//skip is if everything is outside of that cube
 		if (maxLocalX <= 0 || minLocalX >= Cube.SIZE ||
-				maxLocalY <= 0 || minLocalY >= Cube.SIZE ||
-				maxLocalZ <= 0 || minLocalZ >= Cube.SIZE) {
+			maxLocalY <= 0 || minLocalY >= Cube.SIZE ||
+			maxLocalZ <= 0 || minLocalZ >= Cube.SIZE) {
 			return;
 		}
 		StructureBoundingBox boundingBox = new StructureBoundingBox(minLocalX, minLocalY, minLocalZ, maxLocalX, maxLocalY, maxLocalZ);
@@ -251,7 +252,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 		StructureGenUtil.clampBoundingBoxToLocalCube(boundingBox);
 
 		boolean hitLiquid = StructureGenUtil.scanWallsForBlock(cube, boundingBox,
-				(b) -> b.getBlock() == Blocks.WATER || b.getBlock() == Blocks.FLOWING_WATER);
+			(b) -> b.getBlock() == Blocks.WATER || b.getBlock() == Blocks.FLOWING_WATER);
 
 		if (!hitLiquid) {
 			carveBlocks(cube, generatedCubePos, ravineX, ravineY, ravineZ, ravineSizeHoriz, ravineSizeVert, boundingBox);

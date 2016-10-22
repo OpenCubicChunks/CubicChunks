@@ -28,7 +28,6 @@
 
 package cubicchunks.worldgen.generator.custom.features.trees;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -37,6 +36,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
+
+import cubicchunks.world.ICubicWorld;
 
 public class BigTreeGenerator extends TreeGenerator {
 
@@ -174,7 +175,7 @@ public class BigTreeGenerator extends TreeGenerator {
 			ai1[byte1] = ai[byte1] + j1;
 			for (int l1 = -i1; l1 <= i1; ) {
 				double d = Math.sqrt(Math.pow(Math.abs(j1) + 0.5D, 2D)
-						+ Math.pow(Math.abs(l1) + 0.5D, 2D));
+					+ Math.pow(Math.abs(l1) + 0.5D, 2D));
 				if (d > f) {
 					l1++;
 				} else {

@@ -25,14 +25,15 @@ package cubicchunks.world;
 
 import com.google.common.base.Throwables;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.column.Column;
 import net.minecraft.block.state.IBlockState;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+
+import cubicchunks.util.Coords;
+import cubicchunks.world.column.Column;
 
 public class ClientHeightMap implements IHeightMap {
 

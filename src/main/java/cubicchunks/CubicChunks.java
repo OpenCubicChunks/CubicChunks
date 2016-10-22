@@ -23,15 +23,6 @@
  */
 package cubicchunks;
 
-import cubicchunks.debug.DebugTools;
-import cubicchunks.debug.DebugWorldType;
-import cubicchunks.network.PacketDispatcher;
-import cubicchunks.proxy.CommonProxy;
-import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
-import cubicchunks.util.AddressTools;
-import cubicchunks.world.type.CustomCubicWorldType;
-import cubicchunks.world.type.FlatCubicWorldType;
-import cubicchunks.world.type.VanillaCubicWorldType;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
@@ -53,7 +44,20 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-@Mod(modid = CubicChunks.MODID, name = "CubicChunks", version = "@@VERSION@@}", guiFactory = "cubicchunks.client.GuiFactory")
+import cubicchunks.debug.DebugTools;
+import cubicchunks.debug.DebugWorldType;
+import cubicchunks.network.PacketDispatcher;
+import cubicchunks.proxy.CommonProxy;
+import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
+import cubicchunks.util.AddressTools;
+import cubicchunks.world.type.CustomCubicWorldType;
+import cubicchunks.world.type.FlatCubicWorldType;
+import cubicchunks.world.type.VanillaCubicWorldType;
+
+@Mod(modid = CubicChunks.MODID,
+     name = "CubicChunks",
+     version = "@@VERSION@@}",
+     guiFactory = "cubicchunks.client.GuiFactory")
 public class CubicChunks {
 
 	public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
@@ -78,7 +82,7 @@ public class CubicChunks {
 		MinecraftForge.EVENT_BUS.register(this); // Register our config reload hook
 		AsyncWorldIOExecutor.registerListeners();
 
-		if(DEBUG_ENABLED) {
+		if (DEBUG_ENABLED) {
 			DebugTools.init();
 		}
 	}
@@ -103,9 +107,9 @@ public class CubicChunks {
 
 	@SubscribeEvent
 	public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
-		if(eventArgs.getModID().equals(CubicChunks.MODID)) {
+		if (eventArgs.getModID().equals(CubicChunks.MODID)) {
 			config.syncConfig();
-			for(IConfigUpdateListener l : configChangeListeners) {
+			for (IConfigUpdateListener l : configChangeListeners) {
 				l.onConfigUpdate(config);
 			}
 		}
@@ -114,7 +118,7 @@ public class CubicChunks {
 	public static void addConfigChangeListener(IConfigUpdateListener listener) {
 		configChangeListeners.add(listener);
 		//notify if the config is already there
-		if(config != null) {
+		if (config != null) {
 			listener.onConfigUpdate(config);
 		}
 	}
@@ -143,15 +147,15 @@ public class CubicChunks {
 
 		void syncConfig() {
 			maxGeneratedCubesPerTick = configuration.getInt("maxGeneratedCubesPerTick", Configuration.CATEGORY_GENERAL,
-					DEFAULT_MAX_GENERATED_CUBES_PER_TICK, 1, Integer.MAX_VALUE, "The number of cubic chunks to generate per tick.");
+				DEFAULT_MAX_GENERATED_CUBES_PER_TICK, 1, Integer.MAX_VALUE, "The number of cubic chunks to generate per tick.");
 			lightingTickBudget = configuration.getInt("lightingTickBudget", Configuration.CATEGORY_GENERAL,
-					DEFAULT_LIGHTING_TICK_BUDGET, 1, Integer.MAX_VALUE, "The maximum amount of time in milliseconds per tick to spend performing lighting calculations.");
+				DEFAULT_LIGHTING_TICK_BUDGET, 1, Integer.MAX_VALUE, "The maximum amount of time in milliseconds per tick to spend performing lighting calculations.");
 			verticalCubeLoadDistance = configuration.getInt("verticalCubeLoadDistance", Configuration.CATEGORY_GENERAL,
-					DEFAULT_VERTICAL_CUBE_LOAD_DISTANCE, 2, 32, "Similar to Minecraft's view distance, only for vertical chunks.");
+				DEFAULT_VERTICAL_CUBE_LOAD_DISTANCE, 2, 32, "Similar to Minecraft's view distance, only for vertical chunks.");
 			worldHeightLowerBound = configuration.getInt("worldHeightLowerBound", Configuration.CATEGORY_GENERAL,
-					DEFAULT_MIN_WORLD_HEIGHT, AddressTools.MIN_BLOCK_Y, 0, "The lower boundary on the world. Blocks will not generate or load below this point.");
+				DEFAULT_MIN_WORLD_HEIGHT, AddressTools.MIN_BLOCK_Y, 0, "The lower boundary on the world. Blocks will not generate or load below this point.");
 			worldHeightUpperBound = configuration.getInt("worldHeightUpperBound", Configuration.CATEGORY_GENERAL,
-					DEFAULT_MAX_WORLD_HEIGHT, 256, AddressTools.MAX_BLOCK_Y, "The upper boundary on the world. Blocks will not generate or load above this point.");
+				DEFAULT_MAX_WORLD_HEIGHT, 256, AddressTools.MAX_BLOCK_Y, "The upper boundary on the world. Blocks will not generate or load above this point.");
 
 			if (configuration.hasChanged()) configuration.save();
 		}

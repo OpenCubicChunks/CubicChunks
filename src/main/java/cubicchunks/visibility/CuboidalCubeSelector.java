@@ -23,11 +23,12 @@
  */
 package cubicchunks.visibility;
 
-import cubicchunks.util.CubePos;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Set;
 import java.util.function.Consumer;
+
+import cubicchunks.util.CubePos;
 
 public class CuboidalCubeSelector extends CubeSelector {
 
@@ -76,11 +77,11 @@ public class CuboidalCubeSelector extends CubeSelector {
 				for (int currentY = newY - verticalViewDistance; currentY <= newY + verticalViewDistance; ++currentY) {
 					//now handle cubes, the same way
 					if (!this.isPointWithinCubeVolume(oldX, oldY, oldZ, currentX, currentY, currentZ,
-							horizontalViewDistance, verticalViewDistance)) {
+						horizontalViewDistance, verticalViewDistance)) {
 						cubesToLoad.add(new CubePos(currentX, currentY, currentZ));
 					}
 					if (!this.isPointWithinCubeVolume(newX, newY, newZ, currentX - dx, currentY - dy, currentZ - dz,
-							horizontalViewDistance, verticalViewDistance)) {
+						horizontalViewDistance, verticalViewDistance)) {
 						cubesToRemove.add(new CubePos(currentX - dx, currentY - dy, currentZ - dz));
 					}
 				}
@@ -119,7 +120,7 @@ public class CuboidalCubeSelector extends CubeSelector {
 		int dy = cubeY - pointY;
 		int dz = cubeZ - pointZ;
 		return dx >= -horizontal && dx <= horizontal
-				&& dy >= -vertical && dy <= vertical
-				&& dz >= -horizontal && dz <= horizontal;
+			&& dy >= -vertical && dy <= vertical
+			&& dz >= -horizontal && dz <= horizontal;
 	}
 }

@@ -30,6 +30,7 @@ public interface ITicket {
 	 * (should blocks update, entities move around, and furnaces cook?)
 	 *
 	 * @param cube the cube that could be ticked
+	 *
 	 * @return should cubes with this ticket tick
 	 */
 	boolean shouldTick();

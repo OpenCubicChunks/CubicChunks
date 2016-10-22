@@ -23,12 +23,13 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.CubeProviderServer;
-import cubicchunks.server.PlayerCubeMap;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+
+import cubicchunks.lighting.FirstLightProcessor;
+import cubicchunks.server.CubeProviderServer;
+import cubicchunks.server.PlayerCubeMap;
 
 public interface ICubicWorldServer extends ICubicWorld {
 

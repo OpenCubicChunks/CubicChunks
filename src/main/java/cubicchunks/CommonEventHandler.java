@@ -23,18 +23,18 @@
  */
 package cubicchunks;
 
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.Side;
+
 import cubicchunks.server.SpawnCubes;
 import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.type.ICubicWorldType;
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldType;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
 
 public class CommonEventHandler {
 
@@ -48,14 +48,14 @@ public class CommonEventHandler {
 		ICubicWorld world = (ICubicWorld) evt.getWorld();
 
 		WorldType type = evt.getWorld().getWorldType();
-		if(type instanceof ICubicWorldType) {
-			WorldProvider provider = ((ICubicWorldType)type).getReplacedProviderFor(world.getProvider());
+		if (type instanceof ICubicWorldType) {
+			WorldProvider provider = ((ICubicWorldType) type).getReplacedProviderFor(world.getProvider());
 			ReflectionUtil.setFieldValueSrg(world, "field_73011_w", provider);
 		}
 
 		world.initCubicWorld();
 
-		if(!world.isRemote()) {
+		if (!world.isRemote()) {
 			SpawnCubes.update(world);
 		}
 	}
@@ -67,7 +67,7 @@ public class CommonEventHandler {
 		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
 			world.tickCubicWorld();
 
-			if(!world.isRemote()) {
+			if (!world.isRemote()) {
 				// There is no event for when the spawn location changes, so check every tick for now
 				SpawnCubes.update(world);
 			}

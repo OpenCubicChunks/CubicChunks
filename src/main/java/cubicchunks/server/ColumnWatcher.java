@@ -24,6 +24,19 @@
 package cubicchunks.server;
 
 import com.google.common.base.Throwables;
+
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.management.PlayerChunkMapEntry;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.ChunkWatchEvent;
+
+import java.lang.invoke.MethodHandle;
+import java.util.List;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.network.PacketColumn;
 import cubicchunks.network.PacketDispatcher;
@@ -33,16 +46,6 @@ import cubicchunks.util.CubePos;
 import cubicchunks.util.XZAddressable;
 import cubicchunks.world.column.Column;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.management.PlayerChunkMapEntry;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.ChunkWatchEvent;
-
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
-import java.lang.invoke.MethodHandle;
-import java.util.List;
 
 import static cubicchunks.util.ReflectionUtil.getFieldGetterHandle;
 import static cubicchunks.util.ReflectionUtil.getFieldSetterHandle;
@@ -73,8 +76,8 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
 	public void addPlayer(EntityPlayerMP player) {
 		if (this.getPlayers().contains(player)) {
 			CubicChunks.LOGGER.debug("Failed to add player. {} already is in chunk {}, {}", player,
-					this.getPos().chunkXPos,
-					this.getPos().chunkZPos);
+				this.getPos().chunkXPos,
+				this.getPos().chunkZPos);
 			return;
 		}
 		if (this.getPlayers().isEmpty()) {
@@ -85,7 +88,7 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
 
 		//always sent to players, no need to check it
 
-		if(this.isSentToPlayers()) {
+		if (this.isSentToPlayers()) {
 			//this.sendNearbySpecialEntities - done by cube entry
 			MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(this.getPos(), player));
 		}
@@ -101,7 +104,7 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
 			if (this.getPlayers().isEmpty()) {
 				if (isLoading()) {
 					AsyncWorldIOExecutor.dropQueuedColumnLoad(
-							playerCubeMap.getWorld(), getPos().chunkXPos, getPos().chunkZPos, (c) -> loadedRunnable.run());
+						playerCubeMap.getWorld(), getPos().chunkXPos, getPos().chunkZPos, (c) -> loadedRunnable.run());
 				}
 				this.playerCubeMap.removeEntry(this);
 			}
@@ -149,11 +152,11 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
 
 		try {
 			PacketColumn message = new PacketColumn(this.getColumn());
-			for (EntityPlayerMP player: this.getPlayers()) {
+			for (EntityPlayerMP player : this.getPlayers()) {
 				PacketDispatcher.sendTo(message, player);
 				playerCubeMap.getWorldServer()
-						.getEntityTracker()
-						.sendLeashedEntitiesInChunk(player, this.getColumn());
+					.getEntityTracker()
+					.sendLeashedEntitiesInChunk(player, this.getColumn());
 			}
 			this.setSentToPlayers.invoke(this, true);
 		} catch (Throwable throwable) {

@@ -23,6 +23,9 @@
  */
 package cubicchunks.world.type;
 
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
+
 import cubicchunks.util.Box;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
@@ -34,8 +37,6 @@ import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.CustomFeatureProcessor;
 import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldType;
 
 public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
 
@@ -68,6 +69,7 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
 
 				return primer;
 			}
+
 			@Override
 			public void populate(Cube cube) {
 				population.populate(cube);

@@ -32,6 +32,6 @@ public class DebugClientProxy extends DebugProxy {
 	@Override public void initItems() {
 		super.initItems();
 		ModelLoader.setCustomModelResourceLocation(itemRelightSkyBlock, 0,
-				new ModelResourceLocation(itemRelightSkyBlock.getRegistryName(), "inventory"));
+			new ModelResourceLocation(itemRelightSkyBlock.getRegistryName(), "inventory"));
 	}
 }

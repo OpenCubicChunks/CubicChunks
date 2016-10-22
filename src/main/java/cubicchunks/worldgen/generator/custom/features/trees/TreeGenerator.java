@@ -23,23 +23,24 @@
  */
 package cubicchunks.worldgen.generator.custom.features.trees;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.features.SurfaceFeatureGenerator;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.custom.features.SurfaceFeatureGenerator;
+
 public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 
 	static final Block[] REPLACEABLE_OPEN_BLOCKS = {
-			Blocks.AIR, Blocks.SAPLING, Blocks.FLOWING_WATER, Blocks.WATER, Blocks.FLOWING_LAVA,
-			Blocks.LAVA, Blocks.LOG, Blocks.LOG2, Blocks.LEAVES, Blocks.LEAVES2
+		Blocks.AIR, Blocks.SAPLING, Blocks.FLOWING_WATER, Blocks.WATER, Blocks.FLOWING_LAVA,
+		Blocks.LAVA, Blocks.LOG, Blocks.LOG2, Blocks.LEAVES, Blocks.LEAVES2
 	};
 
 	static final Block[] REPLACEABLE_SOLID_BLOCKS = {
-			Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL
+		Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL
 	};
 
 	protected static boolean canReplaceBlockDefault(final Block blockToCheck) {
@@ -63,7 +64,7 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 
 	protected static boolean canReplaceWithWood(final Block blockToCheck) {
 		return blockToCheck == Blocks.GRASS || blockToCheck == Blocks.DIRT || blockToCheck == Blocks.LOG
-				|| blockToCheck == Blocks.LOG2 || blockToCheck == Blocks.SAPLING || blockToCheck == Blocks.VINE;
+			|| blockToCheck == Blocks.LOG2 || blockToCheck == Blocks.SAPLING || blockToCheck == Blocks.VINE;
 	}
 
 	protected final IBlockState woodBlock;

@@ -23,8 +23,9 @@
  */
 package cubicchunks.debug;
 
-import cubicchunks.CubicChunks;
 import net.minecraft.item.Item;
+
+import cubicchunks.CubicChunks;
 
 public class ItemRegistered extends Item {
 	public ItemRegistered(String name) {

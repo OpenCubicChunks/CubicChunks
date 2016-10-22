@@ -23,11 +23,11 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
+import java.util.Random;
+
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
-
-import java.util.Random;
 
 /**
  * Basic structure generator for Cubic Chunks.

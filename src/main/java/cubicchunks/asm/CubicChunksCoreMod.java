@@ -24,6 +24,7 @@
 package cubicchunks.asm;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.Mixins;
 
@@ -54,7 +55,8 @@ public class CubicChunksCoreMod implements IFMLLoadingPlugin {
 	}
 
 	@Override
-	public void injectData(Map<String, Object> data) { }
+	public void injectData(Map<String, Object> data) {
+	}
 
 	@Override
 	public String getAccessTransformerClass() {

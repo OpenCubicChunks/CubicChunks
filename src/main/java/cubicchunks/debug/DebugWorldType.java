@@ -24,6 +24,12 @@
 package cubicchunks.debug;
 
 import com.flowpowered.noise.module.source.Perlin;
+
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
@@ -35,10 +41,6 @@ import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldType;
 
 public class DebugWorldType extends WorldType implements ICubicWorldType {
 
@@ -64,6 +66,7 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
 		//TODO: move first light processor directly into cube?
 		return new BasicCubeGenerator(world) {
 			Perlin perlin = new Perlin();
+
 			{
 				perlin.setFrequency(0.180);
 				perlin.setOctaveCount(1);
@@ -76,24 +79,24 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
 			@Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
 				ICubePrimer primer = new CubePrimer();
 
-				if(cubeY > 30) {
+				if (cubeY > 30) {
 					return primer;
 				}
-				if(cubeX == 100 && cubeZ == 100) {
+				if (cubeX == 100 && cubeZ == 100) {
 					return primer; //hole in the world
 				}
 				CubePos cubePos = new CubePos(cubeX, cubeY, cubeZ);
-				for(BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
+				for (BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
 					double currDensity = perlin.getValue(pos.getX(), pos.getY()*0.5, pos.getZ());
-					double aboveDensity = perlin.getValue(pos.getX(), (pos.getY()+1)*0.5, pos.getZ());
-					if(cubeY >= 16) {
+					double aboveDensity = perlin.getValue(pos.getX(), (pos.getY() + 1)*0.5, pos.getZ());
+					if (cubeY >= 16) {
 						currDensity -= (pos.getY() - 16*16)/100;
 						aboveDensity -= (pos.getY() + 1 - 16*16)/100;
 					}
-					if(currDensity > 0.5) {
-						if(currDensity > 0.5 && aboveDensity <= 0.5) {
+					if (currDensity > 0.5) {
+						if (currDensity > 0.5 && aboveDensity <= 0.5) {
 							primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()), Blocks.GRASS.getDefaultState());
-						} else if(currDensity > aboveDensity && currDensity < 0.7) {
+						} else if (currDensity > aboveDensity && currDensity < 0.7) {
 							primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()), Blocks.DIRT.getDefaultState());
 						} else {
 							primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()), Blocks.STONE.getDefaultState());

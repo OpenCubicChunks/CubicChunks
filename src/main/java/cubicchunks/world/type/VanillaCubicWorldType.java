@@ -23,10 +23,11 @@
  */
 package cubicchunks.world.type;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
+
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 
 
 public class VanillaCubicWorldType extends WorldType implements ICubicWorldType {

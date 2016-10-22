@@ -24,7 +24,8 @@
 package cubicchunks.asm;
 
 public class JvmNames {
-	private JvmNames() {}
+	private JvmNames() {
+	}
 
 	// @formatter:off
 	// We sort variables alphabetically here to make finding pre-existing constants easier

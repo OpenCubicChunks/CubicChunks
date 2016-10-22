@@ -1,16 +1,20 @@
 [
-{
-  "modid": "cubicchunks",
-  "name": "CubicChunks",
-  "description": "Extends Minecraft height by changing chunk size to 16x16x16 blocks.",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
-  "url": "",
-  "updateUrl": "",
-  "authorList": ["Barteks2x", "Cuchaz", "Razaekel"],
-  "credits": "Robinton for creating the first Cubic Chunks mod and allowing me to see his code when I was working on my esarly 1.6.* implementation. MineCrak - for helping me with eraly 1.6.* CubicChunks. Calacbolg - for the CubicChunks suggestion that inspired me to start working on CubicChunks mod and then TWM. Cuchaz & Razaekel - for making TWM open source.",
-  "logoFile": "",
-  "screenshots": [],
-  "dependencies": []
-}
+  {
+    "modid": "cubicchunks",
+    "name": "CubicChunks",
+    "description": "Extends Minecraft height by changing chunk size to 16x16x16 blocks.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      "Barteks2x",
+      "Cuchaz",
+      "Razaekel"
+    ],
+    "credits": "Robinton for creating the first Cubic Chunks mod and allowing me to see his code when I was working on my esarly 1.6.* implementation. MineCrak - for helping me with eraly 1.6.* CubicChunks. Calacbolg - for the CubicChunks suggestion that inspired me to start working on CubicChunks mod and then TWM. Cuchaz & Razaekel - for making TWM open source.",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
 ]

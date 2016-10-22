@@ -20,20 +20,13 @@
 package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.collect.Maps;
-import cubicchunks.CubicChunks;
-import cubicchunks.server.CubeProviderServer;
-import cubicchunks.server.chunkio.CubeIO;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.IProviderExtras;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
+
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -41,6 +34,16 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+
+import javax.annotation.Nullable;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.server.CubeProviderServer;
+import cubicchunks.server.chunkio.CubeIO;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IProviderExtras;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
 /**
  * Brazenly copied from Forge and Sponge and reimplemented to suit our needs: Load cubes and columns outside the main
@@ -56,15 +59,15 @@ public class AsyncWorldIOExecutor {
 
 	private static final AtomicInteger threadCounter = new AtomicInteger();
 	private static final ThreadPoolExecutor pool = new ThreadPoolExecutor(BASE_THREADS, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-			new LinkedBlockingQueue<>(),
+		new LinkedBlockingQueue<>(),
 
-			// Sponge start: Use lambda
-			r -> {
-				Thread thread = new Thread(r, "Cube I/O Thread #" + threadCounter.incrementAndGet());
-				thread.setDaemon(true);
-				return thread;
-			}
-			// Sponge end
+		// Sponge start: Use lambda
+		r -> {
+			Thread thread = new Thread(r, "Cube I/O Thread #" + threadCounter.incrementAndGet());
+			thread.setDaemon(true);
+			return thread;
+		}
+		// Sponge end
 	);
 
 	/**
@@ -148,6 +151,7 @@ public class AsyncWorldIOExecutor {
 	 * Queue a cube load, running the specified callback when the load has finished. This may cause a two tick delay
 	 * if the column has to be loaded, too! If you need it faster, consider sync loading either column or both
 	 * cube and column.
+	 *
 	 * @param world The world of the cube
 	 * @param loader The file loader for this world
 	 * @param cache The server cube cache
@@ -171,7 +175,7 @@ public class AsyncWorldIOExecutor {
 		}
 
 		Column loadedColumn;
-		if((loadedColumn = cache.getLoadedColumn(x, z)) == null) {
+		if ((loadedColumn = cache.getLoadedColumn(x, z)) == null) {
 			cache.asyncGetColumn(x, z, IProviderExtras.Requirement.LIGHT, task::setColumn);
 		} else {
 			//it's already there, tell the task to use it

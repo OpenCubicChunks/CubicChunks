@@ -23,11 +23,12 @@
  */
 package cubicchunks.proxy;
 
-import cubicchunks.CommonEventHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+
+import cubicchunks.CommonEventHandler;
 
 public abstract class CommonProxy {
 	/**

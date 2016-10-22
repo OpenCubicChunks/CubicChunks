@@ -23,16 +23,16 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.util.Bits;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.util.Coords;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+
+import cubicchunks.util.Bits;
+import cubicchunks.util.Coords;
+import cubicchunks.world.cube.Cube;
 
 public class ServerHeightMap implements IHeightMap {
 
@@ -68,13 +68,13 @@ public class ServerHeightMap implements IHeightMap {
 
 
 	public ServerHeightMap() {
-		this.ymin = new int[Cube.SIZE * Cube.SIZE];
-		this.ymax = new int[Cube.SIZE * Cube.SIZE];
+		this.ymin = new int[Cube.SIZE*Cube.SIZE];
+		this.ymax = new int[Cube.SIZE*Cube.SIZE];
 
-		this.segments = new int[Cube.SIZE * Cube.SIZE][];
+		this.segments = new int[Cube.SIZE*Cube.SIZE][];
 
 		// init to empty
-		for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
+		for (int i = 0; i < Cube.SIZE*Cube.SIZE; i++) {
 			this.ymin[i] = Coords.NO_HEIGHT;
 			this.ymax[i] = Coords.NO_HEIGHT;
 		}
@@ -230,7 +230,7 @@ public class ServerHeightMap implements IHeightMap {
 					this.heightMapLowest = this.ymax[i];
 				}
 			}
-			if(this.heightMapLowest == Coords.NO_HEIGHT) {
+			if (this.heightMapLowest == Coords.NO_HEIGHT) {
 				this.heightMapLowest--; // don't recalculate this on every call
 			}
 		}
@@ -294,9 +294,9 @@ public class ServerHeightMap implements IHeightMap {
 			  ^ going up from there
 			 */
 			this.segments[xzIndex] = new int[]{
-					packSegment(this.ymin[xzIndex], 1),
-					packSegment(this.ymax[xzIndex] + 1, 0),
-					packSegment(blockY, 1)
+				packSegment(this.ymin[xzIndex], 1),
+				packSegment(this.ymax[xzIndex] + 1, 0),
+				packSegment(blockY, 1)
 			};
 			this.ymax[xzIndex] = blockY;
 			return;
@@ -325,9 +325,9 @@ public class ServerHeightMap implements IHeightMap {
 			  ^ going up from there
 			 */
 			this.segments[xzIndex] = new int[]{
-					packSegment(blockY, 1),
-					packSegment(blockY + 1, 0),
-					packSegment(this.ymin[xzIndex], 1)
+				packSegment(blockY, 1),
+				packSegment(blockY + 1, 0),
+				packSegment(this.ymin[xzIndex], 1)
 			};
 			this.ymin[xzIndex] = blockY;
 			return;
@@ -373,7 +373,7 @@ public class ServerHeightMap implements IHeightMap {
 
 		// we must be bisecting the range, need to make segments
 		assert (blockY > this.ymin[xzIndex] && blockY <
-				this.ymax[xzIndex]) : String.format("blockY outside of ymin/ymax range: %d -> [%d,%d]", blockY, this.ymin[xzIndex], this.ymax[xzIndex]);
+			this.ymax[xzIndex]) : String.format("blockY outside of ymin/ymax range: %d -> [%d,%d]", blockY, this.ymin[xzIndex], this.ymax[xzIndex]);
 		/*
 		 Example:
 		 ---
@@ -393,9 +393,9 @@ public class ServerHeightMap implements IHeightMap {
 		  ^ going up
 		*/
 		this.segments[xzIndex] = new int[]{
-				packSegment(this.ymin[xzIndex], 1),
-				packSegment(blockY, 0),
-				packSegment(blockY + 1, 1)
+			packSegment(this.ymin[xzIndex], 1),
+			packSegment(blockY, 0),
+			packSegment(blockY + 1, 1)
 		};
 	}
 
@@ -833,7 +833,7 @@ public class ServerHeightMap implements IHeightMap {
 		}
 	}
 
-	public void writeData(DataOutputStream out)	throws IOException {
+	public void writeData(DataOutputStream out) throws IOException {
 		for (int i = 0; i < this.segments.length; i++) {
 			out.writeInt(this.ymin[i]);
 			out.writeInt(ymax[i]);

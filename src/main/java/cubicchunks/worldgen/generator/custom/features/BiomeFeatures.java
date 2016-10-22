@@ -23,22 +23,23 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
-import cubicchunks.util.WorldProviderAccess;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.features.trees.BigTreeGenerator;
-import cubicchunks.worldgen.generator.custom.features.trees.SimpleTreeGenerator;
-import cubicchunks.worldgen.generator.custom.features.trees.TreeGenerator;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone;
 import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.world.biome.BiomeDecorator;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeDecorator;
 import net.minecraft.world.gen.ChunkProviderSettings;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
+import cubicchunks.util.WorldProviderAccess;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.custom.features.trees.BigTreeGenerator;
+import cubicchunks.worldgen.generator.custom.features.trees.SimpleTreeGenerator;
+import cubicchunks.worldgen.generator.custom.features.trees.TreeGenerator;
 
 public class BiomeFeatures {
 	private final ICubicWorld world;
@@ -51,13 +52,13 @@ public class BiomeFeatures {
 		BiomeDecorator decorator = biome.theBiomeDecorator;
 
 		ChunkProviderSettings config = ChunkProviderSettings.Factory.jsonToFactory(
-				WorldProviderAccess.getGeneratorSettings(world.getProvider())).build();
+			WorldProviderAccess.getGeneratorSettings(world.getProvider())).build();
 
 		//clay worldgen
 		this.addMultiGen(SurfaceBlockReplacer.builder().
-				world(world).height(1).radius(2).block(Blocks.CLAY).
-				addAllowedAboveSurface(Blocks.WATER).
-				addReplacable(Blocks.SAND).addReplacable(Blocks.DIRT).build(), decorator.clayPerChunk);
+			world(world).height(1).radius(2).block(Blocks.CLAY).
+			addAllowedAboveSurface(Blocks.WATER).
+			addReplacable(Blocks.SAND).addReplacable(Blocks.DIRT).build(), decorator.clayPerChunk);
 
 		//sand and gravel beach generators
 //		this.addMultiGen(SurfaceBlockReplacer.builder().
@@ -82,9 +83,9 @@ public class BiomeFeatures {
 		//TODO: fix it to actually generate big trees
 		//TODO: use vanilla big tree generator
 		VariantFeatureGenerator randomTreeGen = VariantFeatureGenerator.builder()
-				.nextVariant(smallTreeGen, 1.0)
-				.nextVariant(bigTreeGen, 0.1)
-				.build();
+			.nextVariant(smallTreeGen, 1.0)
+			.nextVariant(bigTreeGen, 0.1)
+			.build();
 
 		addMultiGen(randomTreeGen, decorator.treesPerChunk);
 	}
@@ -104,13 +105,13 @@ public class BiomeFeatures {
 		//stone variants
 		IBlockState stone = Blocks.STONE.getDefaultState();
 		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE),
-				cfg.andesiteMinHeight, cfg.andesiteMaxHeight, cfg.andesiteSize, cfg.andesiteCount);
+			cfg.andesiteMinHeight, cfg.andesiteMaxHeight, cfg.andesiteSize, cfg.andesiteCount);
 
 		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE),
-				cfg.dioriteMinHeight, cfg.dioriteMaxHeight, cfg.dioriteSize, cfg.dioriteCount);
+			cfg.dioriteMinHeight, cfg.dioriteMaxHeight, cfg.dioriteSize, cfg.dioriteCount);
 
 		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE),
-				cfg.graniteMinHeight, cfg.graniteMaxHeight, cfg.graniteSize, cfg.graniteCount);
+			cfg.graniteMinHeight, cfg.graniteMaxHeight, cfg.graniteSize, cfg.graniteCount);
 
 		//other
 		addMineral(Blocks.DIRT, cfg.dirtMinHeight, cfg.dirtMaxHeight, cfg.dirtSize, cfg.dirtCount);
@@ -119,11 +120,11 @@ public class BiomeFeatures {
 
 	protected final void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk) {
 		addMultiGen(new MineralGenerator(world,
-				state,
-				getMinHeight(vanillaMinHeight),
-				getMaxHeight(vanillaMaxHeight),
-				size,
-				getProbability(vanillaMinHeight, vanillaMaxHeight)), countPerChunk);
+			state,
+			getMinHeight(vanillaMinHeight),
+			getMaxHeight(vanillaMaxHeight),
+			size,
+			getProbability(vanillaMinHeight, vanillaMaxHeight)), countPerChunk);
 	}
 
 	protected final void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk) {

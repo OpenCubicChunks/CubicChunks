@@ -23,10 +23,12 @@
  */
 package cubicchunks.tweaker;
 
-import cubicchunks.asm.CubicChunksCoreMod;
 import net.minecraft.launchwrapper.LaunchClassLoader;
+
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.test.launch.AbstractTestTweaker;
+
+import cubicchunks.asm.CubicChunksCoreMod;
 
 public class MixinTweakerServer extends AbstractTestTweaker {
 	@Override

@@ -23,14 +23,16 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.asm.MixinUtils;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.World;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+
+import cubicchunks.asm.MixinUtils;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.CHUNK_CACHE_GET_BLOCK_STATE;

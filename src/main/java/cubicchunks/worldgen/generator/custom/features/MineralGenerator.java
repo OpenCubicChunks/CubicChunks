@@ -23,9 +23,6 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -33,6 +30,10 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.WorldGenMinable;
 
 import java.util.Random;
+
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
 
 public class MineralGenerator extends FeatureGenerator {
 	private final double minY;

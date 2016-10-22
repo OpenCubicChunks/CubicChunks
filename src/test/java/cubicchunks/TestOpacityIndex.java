@@ -24,9 +24,7 @@
 package cubicchunks;
 
 import com.google.common.collect.Lists;
-import cubicchunks.util.Bits;
-import cubicchunks.util.Coords;
-import cubicchunks.world.ServerHeightMap;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.spongepowered.test.launch.LaunchWrapperTestRunner;
@@ -34,6 +32,10 @@ import org.spongepowered.test.launch.LaunchWrapperTestRunner;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
+
+import cubicchunks.util.Bits;
+import cubicchunks.util.Coords;
+import cubicchunks.world.ServerHeightMap;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -82,7 +84,7 @@ public class TestOpacityIndex {
 	@Test
 	public void getWith1Data() {
 		ServerHeightMap index = makeIndex(8, 10,
-				8, 1
+			8, 1
 		);
 		assertEquals(8, index.getBottomBlockY(0, 0));
 		assertEquals(10, index.getTopBlockY(0, 0));
@@ -144,9 +146,9 @@ public class TestOpacityIndex {
 		assertEquals(9, index.getBottomBlockY(0, 0));
 		assertEquals(16, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				9, 1,
-				12, 0,
-				16, 1
+			9, 1,
+			12, 0,
+			16, 1
 		), getSegments(index));
 	}
 
@@ -158,85 +160,85 @@ public class TestOpacityIndex {
 		assertEquals(4, index.getBottomBlockY(0, 0));
 		assertEquals(11, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				4, 1,
-				5, 0,
-				9, 1
+			4, 1,
+			5, 0,
+			9, 1
 		), getSegments(index));
 	}
 
 	@Test
 	public void setDisjointOpaqueAboveOpaques() {
 		ServerHeightMap index = makeIndex(9, 16,
-				9, 1,
-				12, 0,
-				16, 1
+			9, 1,
+			12, 0,
+			16, 1
 		);
 
 		index.onOpacityChange(0, 20, 0, 255);
 		assertEquals(9, index.getBottomBlockY(0, 0));
 		assertEquals(20, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				9, 1,
-				12, 0,
-				16, 1,
-				17, 0,
-				20, 1
+			9, 1,
+			12, 0,
+			16, 1,
+			17, 0,
+			20, 1
 		), getSegments(index));
 	}
 
 	@Test
 	public void setDisjointOpaqueBelowOpaques() {
 		ServerHeightMap index = makeIndex(9, 16,
-				9, 1,
-				12, 0,
-				16, 1
+			9, 1,
+			12, 0,
+			16, 1
 		);
 
 		index.onOpacityChange(0, 3, 0, 255);
 		assertEquals(3, index.getBottomBlockY(0, 0));
 		assertEquals(16, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				3, 1,
-				4, 0,
-				9, 1,
-				12, 0,
-				16, 1
+			3, 1,
+			4, 0,
+			9, 1,
+			12, 0,
+			16, 1
 		), getSegments(index));
 	}
 
 	@Test
 	public void extendTopOpaqueUp() {
 		ServerHeightMap index = makeIndex(9, 16,
-				9, 1,
-				12, 0,
-				16, 1
+			9, 1,
+			12, 0,
+			16, 1
 		);
 
 		index.onOpacityChange(0, 17, 0, 255);
 		assertEquals(9, index.getBottomBlockY(0, 0));
 		assertEquals(17, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				9, 1,
-				12, 0,
-				16, 1
+			9, 1,
+			12, 0,
+			16, 1
 		), getSegments(index));
 	}
 
 	@Test
 	public void extendBottomOpaqueDown() {
 		ServerHeightMap index = makeIndex(9, 16,
-				9, 1,
-				12, 0,
-				16, 1
+			9, 1,
+			12, 0,
+			16, 1
 		);
 
 		index.onOpacityChange(0, 8, 0, 255);
 		assertEquals(8, index.getBottomBlockY(0, 0));
 		assertEquals(16, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				8, 1,
-				12, 0,
-				16, 1
+			8, 1,
+			12, 0,
+			16, 1
 		), getSegments(index));
 	}
 
@@ -248,67 +250,67 @@ public class TestOpacityIndex {
 		assertEquals(9, index.getBottomBlockY(0, 0));
 		assertEquals(11, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				9, 1,
-				10, 0,
-				11, 1
+			9, 1,
+			10, 0,
+			11, 1
 		), getSegments(index));
 	}
 
 	@Test
 	public void setDataStartSameAsBottomRoomBeforeTop() {
 		ServerHeightMap index = makeIndex(4, 7,
-				4, 1
+			4, 1
 		);
 
 		index.onOpacityChange(0, 4, 0, 0);
 		assertEquals(5, index.getBottomBlockY(0, 0));
 		assertEquals(7, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				5, 1
+			5, 1
 		), getSegments(index));
 	}
 
 	@Test
 	public void setDataNotStartSameAsNextRoomAfter() {
 		ServerHeightMap index = makeIndex(2, 7,
-				2, 1
+			2, 1
 		);
 
 		index.onOpacityChange(0, 4, 0, 0);
 		assertEquals(2, index.getBottomBlockY(0, 0));
 		assertEquals(7, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				2, 1,
-				4, 0,
-				5, 1
+			2, 1,
+			4, 0,
+			5, 1
 		), getSegments(index));
 	}
 
 	@Test
 	public void setDataNotStartSameAsTopNoRoomAfter() {
 		ServerHeightMap index = makeIndex(2, 4,
-				2, 1
+			2, 1
 		);
 
 		index.onOpacityChange(0, 4, 0, 0);
 		assertEquals(2, index.getBottomBlockY(0, 0));
 		assertEquals(3, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				2, 1
+			2, 1
 		), getSegments(index));
 	}
 
 	@Test
 	public void setDataAfterTopSameAsPrevious() {
 		ServerHeightMap index = makeIndex(2, 4,
-				2, 1
+			2, 1
 		);
 
 		index.onOpacityChange(0, 4, 0, 0);
 		assertEquals(2, index.getBottomBlockY(0, 0));
 		assertEquals(3, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
-				2, 1
+			2, 1
 		), getSegments(index));
 	}
 
@@ -478,6 +480,7 @@ public class TestOpacityIndex {
 		int height = index.getTopBlockYBelow(0, 0, 3);
 		assertEquals(1, height);
 	}
+
 	@Test
 	public void allCombinationsTest() {
 		//tested with value up to 6 (takes a lot of time)
@@ -490,14 +493,14 @@ public class TestOpacityIndex {
 
 			StringBuilder msg = new StringBuilder();
 			for (int encoded : yPosOpacityEncoded) {
-				msg.append("i[").append(encoded / 2).append("]=").append(encoded % 2).append(", ");
+				msg.append("i[").append(encoded/2).append("]=").append(encoded%2).append(", ");
 			}
 			String message = msg.toString();
 			try {
 				for (int i = 0; i < yPosOpacityEncoded.length; i++) {
-					int opacity = yPosOpacityEncoded[i] % 2;
-					index.onOpacityChange(0, yPosOpacityEncoded[i] / 2, 0, opacity);
-					test.set(yPosOpacityEncoded[i] / 2, opacity);
+					int opacity = yPosOpacityEncoded[i]%2;
+					index.onOpacityChange(0, yPosOpacityEncoded[i]/2, 0, opacity);
+					test.set(yPosOpacityEncoded[i]/2, opacity);
 				}
 				//store-read-store test
 				byte[] b = index.getData();
@@ -508,22 +511,22 @@ public class TestOpacityIndex {
 				System.out.println(message + "exception");
 				throw t;
 			}
-			for(int i = 0; i < maxHeight; i++) {
-				assertEquals(message + ", maxHBelow(" + i + ")", (Integer)test.getMaxYBelow(i), (Integer)index.getTopBlockYBelow(0, 0, i));
+			for (int i = 0; i < maxHeight; i++) {
+				assertEquals(message + ", maxHBelow(" + i + ")", (Integer) test.getMaxYBelow(i), (Integer) index.getTopBlockYBelow(0, 0, i));
 			}
 
-			assertEquals(message + "minY", (Integer)test.getMinY(), (Integer)index.getBottomBlockY(0, 0));
-			assertEquals(message + "maxY", (Integer)test.getMaxY(), (Integer)index.getTopBlockY(0, 0));
+			assertEquals(message + "minY", (Integer) test.getMinY(), (Integer) index.getBottomBlockY(0, 0));
+			assertEquals(message + "maxY", (Integer) test.getMaxY(), (Integer) index.getTopBlockY(0, 0));
 
 
 			yPosOpacityEncoded[0]++;
 			for (int i = 0; i < numBlocks - 1; i++) {
-				if (yPosOpacityEncoded[i] == maxHeight * 2) {
+				if (yPosOpacityEncoded[i] == maxHeight*2) {
 					yPosOpacityEncoded[i] = 0;
 					yPosOpacityEncoded[i + 1]++;
 				}
 			}
-			if (yPosOpacityEncoded[numBlocks - 1] == maxHeight * 2) {
+			if (yPosOpacityEncoded[numBlocks - 1] == maxHeight*2) {
 				break;
 			}
 		}
@@ -535,9 +538,9 @@ public class TestOpacityIndex {
 		// pack the segments
 		int[] packedSegments = null;
 		if (segments.length > 0) {
-			packedSegments = new int[segments.length / 2];
-			for (int i = 0; i < segments.length / 2; i++) {
-				packedSegments[i] = Bits.packSignedToInt(segments[i * 2 + 0], 24, 0) | Bits.packUnsignedToInt(segments[i * 2 + 1], 8, 24);
+			packedSegments = new int[segments.length/2];
+			for (int i = 0; i < segments.length/2; i++) {
+				packedSegments[i] = Bits.packSignedToInt(segments[i*2 + 0], 24, 0) | Bits.packUnsignedToInt(segments[i*2 + 1], 8, 24);
 			}
 		}
 
@@ -603,8 +606,8 @@ public class TestOpacityIndex {
 		}
 
 		public int getMaxYBelow(int y) {
-			for(int i = y - 1; i >= 0; i--) {
-				if(arr[i] != 0) {
+			for (int i = y - 1; i >= 0; i--) {
+				if (arr[i] != 0) {
 					return i;
 				}
 			}

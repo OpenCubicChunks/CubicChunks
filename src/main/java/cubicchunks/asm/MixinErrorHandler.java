@@ -24,6 +24,7 @@
 package cubicchunks.asm;
 
 import net.minecraftforge.fml.common.FMLCommonHandler;
+
 import org.spongepowered.asm.mixin.extensibility.IMixinConfig;
 import org.spongepowered.asm.mixin.extensibility.IMixinErrorHandler;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;

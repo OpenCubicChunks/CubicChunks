@@ -23,16 +23,17 @@
  */
 package cubicchunks.proxy;
 
-import cubicchunks.client.ClientEventHandler;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.ReflectionUtil;
-import cubicchunks.world.type.ICubicWorldType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+
+import cubicchunks.client.ClientEventHandler;
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.ReflectionUtil;
+import cubicchunks.world.type.ICubicWorldType;
 
 public class ClientProxy extends CommonProxy {
 	@Override public EntityPlayer getPlayerEntity(MessageContext ctx) {
@@ -42,8 +43,8 @@ public class ClientProxy extends CommonProxy {
 
 		// Solution is to double-check side before returning the player:
 		return (ctx.side.isClient() ?
-				Minecraft.getMinecraft().thePlayer :
-				ctx.getServerHandler().playerEntity);
+			Minecraft.getMinecraft().thePlayer :
+			ctx.getServerHandler().playerEntity);
 	}
 
 	@Override public void registerEvents() {

@@ -23,19 +23,21 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.world.column.Column;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import cubicchunks.world.column.Column;
+import io.netty.buffer.ByteBuf;
+
 public class PacketColumn implements IMessage {
 	private ChunkPos chunkPos;
 	private byte[] data;
 
-	public PacketColumn() {}
+	public PacketColumn() {
+	}
 
 	public PacketColumn(Column column) {
 		this.chunkPos = column.getChunkCoordIntPair();

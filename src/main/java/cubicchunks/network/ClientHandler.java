@@ -23,16 +23,6 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.client.CubeProviderClient;
-import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.CubePos;
-import cubicchunks.world.ClientHeightMap;
-import cubicchunks.world.ICubicWorldClient;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.BlankCube;
-import cubicchunks.world.cube.Cube;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.INetHandler;
@@ -44,6 +34,17 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.Nonnull;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.client.CubeProviderClient;
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.ClientHeightMap;
+import cubicchunks.world.ICubicWorldClient;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.BlankCube;
+import cubicchunks.world.cube.Cube;
+import io.netty.buffer.ByteBuf;
 
 public class ClientHandler implements INetHandler {
 
@@ -81,7 +82,7 @@ public class ClientHandler implements INetHandler {
 		}
 
 		Cube cube;
-		if(packet.getType() == PacketCube.Type.NEW_CUBE) {
+		if (packet.getType() == PacketCube.Type.NEW_CUBE) {
 			cube = cubeCache.loadCube(column, cubePos.getY());
 		} else {
 			cube = column.getCube(cubePos.getY());

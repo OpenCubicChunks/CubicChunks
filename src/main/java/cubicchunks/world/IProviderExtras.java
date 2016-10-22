@@ -23,10 +23,10 @@
  */
 package cubicchunks.world;
 
+import javax.annotation.Nullable;
+
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-
-import javax.annotation.Nullable;
 
 
 public interface IProviderExtras {

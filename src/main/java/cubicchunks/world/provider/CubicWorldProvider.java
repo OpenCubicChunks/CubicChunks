@@ -23,10 +23,6 @@
  */
 package cubicchunks.world.provider;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.type.ICubicWorldType;
-import cubicchunks.worldgen.generator.DummyChunkGenerator;
-import cubicchunks.worldgen.generator.ICubeGenerator;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -37,10 +33,15 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkGenerator;
 
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.type.ICubicWorldType;
+import cubicchunks.worldgen.generator.DummyChunkGenerator;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+
 /**
  * CubicChunks WorldProvider for Overworld.
  */
-public abstract class CubicWorldProvider extends WorldProvider implements ICubicWorldProvider{
+public abstract class CubicWorldProvider extends WorldProvider implements ICubicWorldProvider {
 	@Override
 	public int getHeight() {
 		return getCubicWorld().getMaxHeight();
@@ -54,12 +55,11 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 	/**
 	 * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
 	 * <p>
-	 * In EntityRenderer.updateFogColor entity Y position is multiplied by
-	 * value returned by this method.
+	 * In EntityRenderer.updateFogColor entity Y position is multiplied by value returned by this method.
 	 * <p>
-	 * If this method returns any real number - then the void fog factor can be <= 0.
-	 * But if this method returns NaN - the result is always NaN. And Minecraft enables void fog only of the value is < 1.
-	 * And since any comparison with NaN returns false - void fog is effectively disabled.
+	 * If this method returns any real number - then the void fog factor can be <= 0. But if this method returns NaN -
+	 * the result is always NaN. And Minecraft enables void fog only of the value is < 1. And since any comparison with
+	 * NaN returns false - void fog is effectively disabled.
 	 */
 	@Override
 	public double getVoidFogYFactor() {
@@ -77,11 +77,11 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		// We need to assume that its an ICubicWorldType...
 		// There is really nothing else we can do as a non-overworld porvider
 		// that works with a vanilla world type would have overriden this method.
-		if(!(this.worldObj.getWorldType() instanceof ICubicWorldType)){
+		if (!(this.worldObj.getWorldType() instanceof ICubicWorldType)) {
 			throw new IllegalStateException("Cubic world provider does not override createCubeGenerator() and the world type is not ICubicWorldType!");
 		}
 		return ((ICubicWorldType) this.worldObj.getWorldType())
-				.createCubeGenerator(getCubicWorld());
+			.createCubeGenerator(getCubicWorld());
 	}
 
 	@Override
@@ -95,7 +95,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		//TODO: DONT USE WORLD.getGroundAboveSeaLevel()
 		BlockPos blockpos = new BlockPos(x, 0, z);
 		return this.worldObj.getBiome(blockpos).ignorePlayerSpawnSuitability() ||
-				this.worldObj.getGroundAboveSeaLevel(blockpos).getBlock() == Blocks.GRASS;
+			this.worldObj.getGroundAboveSeaLevel(blockpos).getBlock() == Blocks.GRASS;
 	}
 
 	@Override
@@ -104,13 +104,13 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		BlockPos ret = this.worldObj.getSpawnPoint();
 
 		boolean isAdventure = worldObj.getWorldInfo().getGameType() == GameType.ADVENTURE;
-		int spawnFuzz = this.worldObj instanceof WorldServer ? worldObj.getWorldType().getSpawnFuzz((WorldServer)this.worldObj, this.worldObj.getMinecraftServer()) : 1;
+		int spawnFuzz = this.worldObj instanceof WorldServer ? worldObj.getWorldType().getSpawnFuzz((WorldServer) this.worldObj, this.worldObj.getMinecraftServer()) : 1;
 		int border = MathHelper.floor_double(worldObj.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
 		if (border < spawnFuzz) spawnFuzz = border;
 
 		if (!getHasNoSky() && !isAdventure && spawnFuzz != 0) {
 			if (spawnFuzz < 2) spawnFuzz = 2;
-			int spawnFuzzHalf = spawnFuzz / 2;
+			int spawnFuzzHalf = spawnFuzz/2;
 			ret = getTSOLBFixed(ret.add(worldObj.rand.nextInt(spawnFuzzHalf) - spawnFuzz, 0, worldObj.rand.nextInt(spawnFuzzHalf) - spawnFuzz));
 		}
 
@@ -125,8 +125,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		int startY = chunk.getHeight(pos);
 		startY = startY < getCubicWorld().getMinHeight() ? 80 : startY;
 
-		for (blockpos = new BlockPos(pos.getX(), startY, pos.getZ()); blockpos.getY() >= 0; blockpos = blockpos1)
-		{
+		for (blockpos = new BlockPos(pos.getX(), startY, pos.getZ()); blockpos.getY() >= 0; blockpos = blockpos1) {
 			blockpos1 = blockpos.down();
 			IBlockState state = chunk.getBlockState(blockpos1);
 
@@ -139,6 +138,6 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 	}
 
 	public ICubicWorld getCubicWorld() {
-		return (ICubicWorld)worldObj;
+		return (ICubicWorld) worldObj;
 	}
 }

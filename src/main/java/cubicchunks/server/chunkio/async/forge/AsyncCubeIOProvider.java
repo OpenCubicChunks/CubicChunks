@@ -19,15 +19,16 @@
 
 package cubicchunks.server.chunkio.async.forge;
 
+import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
+import javax.annotation.Nonnull;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Async loading of cubes
@@ -64,7 +65,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 	@Override
 	public void runSynchronousPart() {
 
-		if(cubeData != null) {
+		if (cubeData != null) {
 			this.loader.loadCubeSyncPart(cubeData);
 		}
 		// TBD:

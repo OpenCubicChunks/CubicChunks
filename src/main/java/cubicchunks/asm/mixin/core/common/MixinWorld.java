@@ -23,18 +23,6 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.IConfigUpdateListener;
-import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubeProvider;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.NotCubicChunksWorldException;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubicWorldProvider;
-import cubicchunks.world.provider.VanillaCubicProvider;
-import cubicchunks.world.type.ICubicWorldType;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -56,6 +44,7 @@ import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -68,6 +57,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.IConfigUpdateListener;
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.NotCubicChunksWorldException;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.world.provider.ICubicWorldProvider;
+import cubicchunks.world.provider.VanillaCubicProvider;
 
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
@@ -96,13 +97,14 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		this.maxHeight = CubicChunks.Config.DEFAULT_MAX_WORLD_HEIGHT;
 		this.minHeight = CubicChunks.Config.DEFAULT_MIN_WORLD_HEIGHT;
 
-		if(!(this.provider instanceof ICubicWorldProvider)) { // if the provider is vanilla, wrap it
+		if (!(this.provider instanceof ICubicWorldProvider)) { // if the provider is vanilla, wrap it
 			this.provider = new VanillaCubicProvider(this, provider);
 		}
 
 		//don't want to make world implement IConfigChangeListener
 		CubicChunks.addConfigChangeListener(this);
 	}
+
 	//from ConfigChangeListener
 	@Override public void onConfigUpdate(CubicChunks.Config config) {
 		//TODO: Check if the world has been already initialized?
@@ -111,10 +113,10 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		this.maxHeight = config.getWorldHeightUpperBound();
 
 		ICubicWorldProvider provider = (ICubicWorldProvider) this.getProvider();
-		if(this.minHeight < provider.getMinimumPossibleHeight()) {
+		if (this.minHeight < provider.getMinimumPossibleHeight()) {
 			this.minHeight = provider.getMinimumPossibleHeight();
 		}
-		if(this.maxHeight > provider.getMaximumPossibleHeight()) {
+		if (this.maxHeight > provider.getMaximumPossibleHeight()) {
 			this.maxHeight = provider.getMaximumPossibleHeight();
 		}
 	}
@@ -262,7 +264,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Override public int getEffectiveHeight(int blockX, int blockZ) {
 		return this.chunkProvider.provideChunk(blockToCube(blockX), blockToCube(blockZ))
-				.getHeightValue(blockToLocal(blockX), blockToLocal(blockZ));
+			.getHeightValue(blockToLocal(blockX), blockToLocal(blockZ));
 	}
 
 

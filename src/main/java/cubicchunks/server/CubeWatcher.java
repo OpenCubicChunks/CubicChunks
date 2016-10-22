@@ -24,6 +24,25 @@
 package cubicchunks.server;
 
 import com.google.common.base.Predicate;
+
+import gnu.trove.list.TShortList;
+import gnu.trove.list.array.TShortArrayList;
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
+
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.Packet;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.ForgeModContainer;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+
+import java.util.function.Consumer;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.network.PacketCube;
 import cubicchunks.network.PacketCubeBlockChange;
@@ -37,22 +56,7 @@ import cubicchunks.util.ticket.ITicket;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.cube.Cube;
-import gnu.trove.list.TShortList;
-import gnu.trove.list.array.TShortArrayList;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.Packet;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.common.ForgeModContainer;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.function.Consumer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -60,7 +64,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 	private final Consumer<Cube> consumer = (c) -> {
 		this.cube = c;
 		this.loading = false;
-		if(this.cube != null) {
+		if (this.cube != null) {
 			this.cube.getTickets().add(this);
 		}
 	};
@@ -79,9 +83,9 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		this.playerCubeMap = playerCubeMap;
 		this.cubeCache = playerCubeMap.getWorld().getCubeCache();
 		this.cubeCache.asyncGetCube(
-				cubePos.getX(), cubePos.getY(), cubePos.getZ(),
-				IProviderExtras.Requirement.LOAD,
-				consumer);
+			cubePos.getX(), cubePos.getY(), cubePos.getZ(),
+			IProviderExtras.Requirement.LOAD,
+			consumer);
 		this.cubePos = cubePos;
 	}
 
@@ -112,10 +116,10 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 			this.players.remove(player.getEntityId());
 
 			if (this.players.isEmpty()) {
-				if(loading) {
+				if (loading) {
 					AsyncWorldIOExecutor.dropQueuedCubeLoad(this.playerCubeMap.getWorld(),
-							cubePos.getX(), cubePos.getY(), cubePos.getZ(),
-							c -> this.cube = c);
+						cubePos.getX(), cubePos.getY(), cubePos.getZ(),
+						c -> this.cube = c);
 				}
 				playerCubeMap.removeEntry(this);
 			}
@@ -137,10 +141,10 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
 	// CHECKED: 1.10.2-12.18.1.2092
 	public boolean providePlayerCube(boolean canGenerate) {
-		if(loading) {
+		if (loading) {
 			return false;
 		}
-		if(this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone()))) {
+		if (this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone()))) {
 			return true;
 		}
 		int cubeX = cubePos.getX();
@@ -153,7 +157,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		} else {
 			this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LOAD);
 		}
-		if(this.cube != null){
+		if (this.cube != null) {
 			this.cube.getTickets().add(this);
 		}
 		playerCubeMap.getWorld().getProfiler().endSection();
@@ -175,7 +179,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		}
 		ColumnWatcher columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
 		//can't send cubes before columns
-		if(columnEntry == null || !columnEntry.isSentToPlayers()) {
+		if (columnEntry == null || !columnEntry.isSentToPlayers()) {
 			return false;
 		}
 		this.dirtyBlocks.clear();
@@ -341,7 +345,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		return this.cubePos.getZ();
 	}
 
-	@Override public boolean shouldTick(){
+	@Override public boolean shouldTick() {
 		return true; // Cubes that players can see should tick
 	}
 }

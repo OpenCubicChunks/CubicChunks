@@ -24,15 +24,7 @@
 package cubicchunks.world.column;
 
 import com.google.common.base.Predicate;
-import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.Coords;
-import cubicchunks.util.MathUtil;
-import cubicchunks.world.ClientHeightMap;
-import cubicchunks.world.ICubeProvider;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.IHeightMap;
-import cubicchunks.world.ServerHeightMap;
-import cubicchunks.world.cube.Cube;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -53,11 +45,22 @@ import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
+
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.Coords;
+import cubicchunks.util.MathUtil;
+import cubicchunks.world.ClientHeightMap;
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IHeightMap;
+import cubicchunks.world.ServerHeightMap;
+import cubicchunks.world.cube.Cube;
 
 public class Column extends Chunk {
 
@@ -87,8 +90,8 @@ public class Column extends Chunk {
 	@Override
 	public int getHeight(BlockPos pos) {
 		return this.getHeightValue(
-				Coords.blockToLocal(pos.getX()),
-				Coords.blockToLocal(pos.getZ()));
+			Coords.blockToLocal(pos.getX()),
+			Coords.blockToLocal(pos.getZ()));
 	}
 
 	/**
@@ -103,7 +106,8 @@ public class Column extends Chunk {
 	}
 
 	@Override
-	@Deprecated //TODO: stop this method form being used by vanilla (any algorithms in vanilla that use it are be broken any way)
+	@Deprecated
+	//TODO: stop this method form being used by vanilla (any algorithms in vanilla that use it are be broken any way)
 	// don't use this! It's only here because vanilla needs it
 	public int getTopFilledSegment() {
 		//NOTE: this method actually returns block Y coords
@@ -168,7 +172,7 @@ public class Column extends Chunk {
 		int oldOpacity = oldstate.getLightOpacity(this.getWorld(), pos);
 
 		oldstate = cube.setBlockStateDirect(pos, newstate); // forward to cube
-		if(oldstate == null) {
+		if (oldstate == null) {
 			return oldstate;
 		}
 
@@ -212,7 +216,7 @@ public class Column extends Chunk {
 				//so only scan 64 blocks down. If we updated more - we would need to wait for renderer updates anyway
 				int newTop = oldSkylightActual - 1;
 				while (getBlockLightOpacity(new BlockPos(localX, newTop, localZ)) == 0 &&
-						newTop > oldSkylightActual - 65) {
+					newTop > oldSkylightActual - 65) {
 					newTop--;
 				}
 				newSkylightY = newTop;
@@ -258,7 +262,7 @@ public class Column extends Chunk {
 	//forward to cube
 	@Override
 	public void addEntity(Entity entity) {
-		if(entity instanceof EntityPlayerMP) {
+		if (entity instanceof EntityPlayerMP) {
 			int i = 0;
 		}
 		getCube(Coords.getCubeYForEntity(entity)).addEntity(entity);
@@ -278,8 +282,8 @@ public class Column extends Chunk {
 	@Override
 	public boolean canSeeSky(BlockPos pos) {
 		int height = this.getHeightValue(
-				Coords.blockToLocal(pos.getX()),
-				Coords.blockToLocal(pos.getZ()));
+			Coords.blockToLocal(pos.getX()),
+			Coords.blockToLocal(pos.getZ()));
 
 		return pos.getY() >= height;
 	}
@@ -331,7 +335,7 @@ public class Column extends Chunk {
 		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - World.MAX_ENTITY_RADIUS));
 		int maxCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.maxY + World.MAX_ENTITY_RADIUS));
 
-		for (int cubeY = minCubeY;cubeY <= maxCubeY;cubeY++) {
+		for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 			Cube cube = getCube(cubeY);
 			cube.getEntitiesWithinAABBForEntity(exclude, queryBox, out, predicate);
 		}
@@ -345,7 +349,7 @@ public class Column extends Chunk {
 		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - World.MAX_ENTITY_RADIUS));
 		int maxCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.maxY + World.MAX_ENTITY_RADIUS));
 
-		for (int cubeY = minCubeY;cubeY < maxCubeY + 1;cubeY++) {
+		for (int cubeY = minCubeY; cubeY < maxCubeY + 1; cubeY++) {
 			Cube cube = getCube(cubeY);
 			cube.getEntitiesOfTypeWithinAAAB(entityType, queryBox, out, predicate);
 		}
@@ -379,7 +383,7 @@ public class Column extends Chunk {
 
 	@Override
 	@Deprecated
-	public boolean isPopulated() {  
+	public boolean isPopulated() {
 		return true; //stub... its broken and only used in World.markAndNotifyBlock()
 	}
 
@@ -395,7 +399,7 @@ public class Column extends Chunk {
 		int maxCubeY = Coords.blockToCube(maxBlockY);
 		for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 			Cube cube = getCube(cubeY); // yes, load/generate a chunk if there is none... 
-			                            // even if its not loaded there is still technical something there
+			// even if its not loaded there is still technical something there
 			if (!cube.isEmpty()) {
 				return false;
 			}
@@ -447,7 +451,7 @@ public class Column extends Chunk {
 
 	@Override
 	@Deprecated // TODO: only used by IONbtReader and IONbtWriter ... and those are super broken
-	            //       add throw new UnsupportedOperationException();
+	//       add throw new UnsupportedOperationException();
 	public int[] getHeightMap() {
 		return this.opacityIndex.getHeightmap();
 	}
@@ -472,7 +476,7 @@ public class Column extends Chunk {
 
 	@Override
 	@Deprecated //TODO: only used in PlayerCubeMap.getChunkIterator() (see todo's in that)
-	            //      add throw new UnsupportedOperationException();
+	//      add throw new UnsupportedOperationException();
 	public boolean isTerrainPopulated() {
 		//with cubic chunks the whole column is never fully generated,
 		//this method is currently used to determine list of chunks to be ticked
@@ -489,9 +493,9 @@ public class Column extends Chunk {
 		return true; //TODO: stub, replace with new UnsupportedOperationException();
 	}
 
-	public boolean shouldTick(){
-		for(Cube cube : cubeMap){
-			if(cube.getTickets().shouldTick()){
+	public boolean shouldTick() {
+		for (Cube cube : cubeMap) {
+			if (cube.getTickets().shouldTick()) {
 				return true;
 			}
 		}
@@ -558,7 +562,7 @@ public class Column extends Chunk {
 		return this.cubeMap.cubes(startY, endY);
 	}
 
-	public Cube getLoadedCube(int cubeY){
+	public Cube getLoadedCube(int cubeY) {
 		return provider.getLoadedCube(getX(), cubeY, getZ());
 	}
 

@@ -23,11 +23,6 @@
  */
 package cubicchunks.server.chunkio;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.util.Coords;
-import cubicchunks.world.ServerHeightMap;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -44,6 +39,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.util.Coords;
+import cubicchunks.world.ServerHeightMap;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesHashSet;
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesThisTick;
@@ -112,7 +113,7 @@ class IONbtWriter {
 
 	private static void writeBlocks(Cube cube, NBTTagCompound cubeNbt) {
 		ExtendedBlockStorage ebs = cube.getStorage();
-		if(ebs == null) {
+		if (ebs == null) {
 			return; // no data to save anyway
 		}
 
@@ -142,10 +143,10 @@ class IONbtWriter {
 			int cubeZ = Coords.getCubeZForEntity(entity);
 			if (cubeX != cube.getX() || cubeY != cube.getY() || cubeZ != cube.getZ()) {
 				CubicChunks.LOGGER.warn(String.format("Saved entity %s in cube (%d,%d,%d) to cube (%d,%d,%d)! Entity thinks its in (%d,%d,%d)",
-						entity.getClass().getName(),
-						cubeX, cubeY, cubeZ,
-						cube.getX(), cube.getY(), cube.getZ(),
-						entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
+					entity.getClass().getName(),
+					cubeX, cubeY, cubeZ,
+					cube.getX(), cube.getY(), cube.getZ(),
+					entity.chunkCoordX, entity.chunkCoordY, entity.chunkCoordZ
 				));
 			}
 		});

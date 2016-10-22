@@ -23,16 +23,17 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
-import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 import net.minecraft.world.biome.Biome;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
+import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 
 public class CustomPopulationProcessor {
 

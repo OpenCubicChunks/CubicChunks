@@ -23,16 +23,18 @@
  */
 package cubicchunks.util;
 
-import cubicchunks.world.ICubeProvider;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
+
 import static cubicchunks.util.Coords.blockToLocal;
 
 /**
@@ -56,10 +58,10 @@ public class FastCubeBlockAccess {
 		for (int relativeCubeX = -radius; relativeCubeX <= radius; relativeCubeX++) {
 			for (int relativeCubeZ = -radius; relativeCubeZ <= radius; relativeCubeZ++) {
 				for (int relativeCubeY = -radius; relativeCubeY <= radius; relativeCubeY++) {
-					this.cache[relativeCubeX + radius][relativeCubeY + radius][relativeCubeZ + radius] = 
+					this.cache[relativeCubeX + radius][relativeCubeY + radius][relativeCubeZ + radius] =
 						cache.getLoadedCube(originX + relativeCubeX + radius,
-											originY + relativeCubeY + radius,
-											originZ + relativeCubeZ + radius);
+							originY + relativeCubeY + radius,
+							originZ + relativeCubeZ + radius);
 				}
 			}
 		}
@@ -119,7 +121,7 @@ public class FastCubeBlockAccess {
 		int maxValue = 0;
 		for (EnumFacing enumfacing : EnumFacing.values()) {
 			currentPos.setPos(pos).move(enumfacing);
-			int currentValue = this.getLightFor(EnumSkyBlock.SKY,currentPos) - lightSubtract;
+			int currentValue = this.getLightFor(EnumSkyBlock.SKY, currentPos) - lightSubtract;
 
 			if (currentValue > maxValue) {
 				maxValue = currentValue;

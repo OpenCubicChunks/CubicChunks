@@ -24,10 +24,11 @@
 package cubicchunks.util.processor;
 
 import com.google.common.collect.Sets;
-import cubicchunks.util.ArrayBatchedQueue;
-import cubicchunks.world.ICubeProvider;
 
 import java.util.Set;
+
+import cubicchunks.util.ArrayBatchedQueue;
+import cubicchunks.world.ICubeProvider;
 
 public abstract class QueueProcessor<T> {
 

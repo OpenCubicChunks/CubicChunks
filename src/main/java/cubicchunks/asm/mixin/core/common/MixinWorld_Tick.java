@@ -23,11 +23,11 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,6 +36,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import cubicchunks.world.ICubicWorld;
 
 import static cubicchunks.asm.JvmNames.WORLD_GET_PERSISTENT_CHUNKS;
 import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
@@ -50,14 +52,17 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 	private int updateEntity_entityPosX;
 	private int updateEntity_entityPosZ;
 
-	@Shadow private boolean isValid(BlockPos pos) { throw new Error();}
+	@Shadow private boolean isValid(BlockPos pos) {
+		throw new Error();
+	}
 
 	@Shadow public abstract boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty);
 
 	/**
 	 * Redirect {@code isAreaLoaded} here, to use Y coordinate of the entity.
 	 * <p>
-	 * Vanilla uses a constant Y because blocks below y=0 and above y=256 are never loaded, which means that entities would be getting stuck there.
+	 * Vanilla uses a constant Y because blocks below y=0 and above y=256 are never loaded, which means that entities
+	 * would be getting stuck there.
 	 */
 	@Group(name = "updateEntity", max = 2, min = 2)
 	@Redirect(method = "updateEntityWithOptionalForce",
@@ -71,8 +76,8 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 		BlockPos entityPos = new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ);
 
 		return this.isRemote() ||
-			  !this.isValid(entityPos) || // if an entity is below the world we want it to keep ticking
-			   this.getCubeFromBlockCoords(entityPos).getTickets().shouldTick();
+			!this.isValid(entityPos) || // if an entity is below the world we want it to keep ticking
+			this.getCubeFromBlockCoords(entityPos).getTickets().shouldTick();
 	}
 
 	/**

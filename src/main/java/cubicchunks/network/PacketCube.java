@@ -24,9 +24,7 @@
 package cubicchunks.network;
 
 import com.google.common.collect.Iterables;
-import cubicchunks.util.CubePos;
-import cubicchunks.world.cube.Cube;
-import io.netty.buffer.ByteBuf;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -39,6 +37,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import cubicchunks.util.CubePos;
+import cubicchunks.world.cube.Cube;
+import io.netty.buffer.ByteBuf;
+
 public class PacketCube implements IMessage {
 
 	private Type type;
@@ -46,7 +48,8 @@ public class PacketCube implements IMessage {
 	private byte[] data;
 	private List<NBTTagCompound> tileEntityTags;
 
-	public PacketCube() {}
+	public PacketCube() {
+	}
 
 	public PacketCube(Cube cube, Type type) {
 		this.cubePos = cube.getCoords();
@@ -57,7 +60,7 @@ public class PacketCube implements IMessage {
 
 		Collection<TileEntity> tileEntities = cube.getTileEntityMap().values();
 		this.tileEntityTags = new ArrayList<>(tileEntities.size());
-		for(TileEntity te : tileEntities) {
+		for (TileEntity te : tileEntities) {
 			this.tileEntityTags.add(te.getUpdateTag());
 		}
 		this.type = type;
@@ -71,7 +74,7 @@ public class PacketCube implements IMessage {
 		buf.readBytes(this.data);
 		int numTiles = buf.readInt();
 		this.tileEntityTags = new ArrayList<>(numTiles);
-		for(int i = 0; i < numTiles; i++) {
+		for (int i = 0; i < numTiles; i++) {
 			this.tileEntityTags.add(ByteBufUtils.readTag(buf));
 		}
 	}
@@ -85,7 +88,7 @@ public class PacketCube implements IMessage {
 		buf.writeInt(this.data.length);
 		buf.writeBytes(this.data);
 		buf.writeInt(this.tileEntityTags.size());
-		for(NBTTagCompound tag : this.tileEntityTags) {
+		for (NBTTagCompound tag : this.tileEntityTags) {
 			ByteBufUtils.writeTag(buf, tag);
 		}
 	}

@@ -35,7 +35,7 @@ public class TicketList {
 	 *
 	 * @param ticket the ticket to remove
 	 */
-	public void remove(ITicket ticket){
+	public void remove(ITicket ticket) {
 		tickets.remove(ticket);
 		scanShouldTick();
 	}
@@ -45,8 +45,8 @@ public class TicketList {
 	 *
 	 * @param ticket the ticket to add
 	 */
-	public void add(ITicket ticket){
-		if(tickets.contains(ticket)){
+	public void add(ITicket ticket) {
+		if (tickets.contains(ticket)) {
 			return; // we already have that ticket
 		}
 		tickets.add(ticket);
@@ -55,29 +55,30 @@ public class TicketList {
 
 	/**
 	 * @param ticket the ticket we want to see if is in this tickets
+	 *
 	 * @return Does this ticket tickets contain {@Code ticket}
 	 */
-	public boolean contains(ITicket ticket){
+	public boolean contains(ITicket ticket) {
 		return tickets.contains(ticket);
 	}
 
 	/**
 	 * @return Should the world be ticking the Cube corresponding to this ticket tickets
 	 */
-	public boolean shouldTick(){
+	public boolean shouldTick() {
 		return tick;
 	}
 
 	/**
 	 * @return Weather or not this ticket tickets permits unloading
 	 */
-	public boolean canUnload(){
+	public boolean canUnload() {
 		return tickets.isEmpty();
 	}
 
-	private void scanShouldTick(){
-		for(ITicket ticket : tickets){
-			if(ticket.shouldTick()){
+	private void scanShouldTick() {
+		for (ITicket ticket : tickets) {
+			if (ticket.shouldTick()) {
 				tick = true;
 				return;
 			}

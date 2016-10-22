@@ -23,24 +23,24 @@
  */
 package cubicchunks.asm;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import cubicchunks.world.ICubicWorld;
+
 public class MixinUtils {
 	/**
-	 * This method should be used as a replacement of {@link BlockPos#getY()}
-	 * when modifying vanilla height check.
+	 * This method should be used as a replacement of {@link BlockPos#getY()} when modifying vanilla height check.
 	 * <p>
-	 * Most of the time modifying it using {@link org.spongepowered.asm.mixin.injection.ModifyConstant}
-	 * is not possible because 0 can't be replaced when used in comparison (JVM has separate instruction for it).
+	 * Most of the time modifying it using {@link org.spongepowered.asm.mixin.injection.ModifyConstant} is not possible
+	 * because 0 can't be replaced when used in comparison (JVM has separate instruction for it).
 	 * <p>
-	 * So instead of trying to fix these height checks, it's eaier to modify value returned by BlockPos#getY()
-	 * to fit within the vanilla height range when the check should be successful, and be outside of that range otherwise.
+	 * So instead of trying to fix these height checks, it's eaier to modify value returned by BlockPos#getY() to fit
+	 * within the vanilla height range when the check should be successful, and be outside of that range otherwise.
 	 * <p>
-	 * This hack has some limitations - it can't be used in methods where BlockPos#getY() is used
-	 * for anything other than a height check since the retuned value would be completely wrong.
-	 * Fortunately most vanilla methods with hardcoded height checks don't use BlockPos#getY() for anything else.
+	 * This hack has some limitations - it can't be used in methods where BlockPos#getY() is used for anything other
+	 * than a height check since the retuned value would be completely wrong. Fortunately most vanilla methods with
+	 * hardcoded height checks don't use BlockPos#getY() for anything else.
 	 */
 	public static int getReplacementY(ICubicWorld world, BlockPos pos) {
 		return getReplacementY(world, pos.getY());

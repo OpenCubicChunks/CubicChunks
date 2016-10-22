@@ -23,14 +23,13 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.asm.MixinUtils;
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.chunk.Chunk;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -42,6 +41,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_FOR;
@@ -77,14 +79,13 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
 	/**
 	 * @author Barteks2x
-	 * @reason Replace {@link World#getLight(BlockPos)} with method that works outside of 0..255 height range.
-	 * It would be possible to fix it using @Redirect and @ModifyConstant but this way is much cleaner,
-	 * especially for simple method.
-	 * A @{@link ModifyConstant} wouldn't work because it can't replace comparison to 0.
-	 * This is because there is a special instruction to compare something to 0, so the constant is never used.
+	 * @reason Replace {@link World#getLight(BlockPos)} with method that works outside of 0..255 height range. It would
+	 * be possible to fix it using @Redirect and @ModifyConstant but this way is much cleaner, especially for simple
+	 * method. A @{@link ModifyConstant} wouldn't work because it can't replace comparison to 0. This is because there
+	 * is a special instruction to compare something to 0, so the constant is never used.
 	 * <p>
-	 * Note: The getLight method is used in parts of game logic and entity rendering code.
-	 * Doesn't directly affect block rendering.
+	 * Note: The getLight method is used in parts of game logic and entity rendering code. Doesn't directly affect block
+	 * rendering.
 	 */
 	@Overwrite
 	public int getLight(BlockPos pos) {
@@ -171,10 +172,10 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 		}
 
 		boolean ret = (this.isRemote() && allowEmpty) || // on the client all cubes count as loaded if allowEmpty
-				this.testForCubes(
-						xStart, yStart, zStart,
-						xEnd, yEnd, zEnd,
-						cube -> cube != null);
+			this.testForCubes(
+				xStart, yStart, zStart,
+				xEnd, yEnd, zEnd,
+				cube -> cube != null);
 
 		cbi.cancel();
 		cbi.setReturnValue(ret);

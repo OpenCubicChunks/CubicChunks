@@ -23,11 +23,11 @@
  */
 package cubicchunks.world;
 
+import javax.annotation.Nullable;
+
 import cubicchunks.util.CubePos;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
-
-import javax.annotation.Nullable;
 
 public interface ICubeProvider {
 
@@ -43,8 +43,10 @@ public interface ICubeProvider {
 
 	/**
 	 * Retrieve a column, if it exists and is loaded
+	 *
 	 * @param x The x position of the column
 	 * @param z The z position of the column
+	 *
 	 * @return The column, if loaded. Null, otherwise.
 	 */
 	@Nullable

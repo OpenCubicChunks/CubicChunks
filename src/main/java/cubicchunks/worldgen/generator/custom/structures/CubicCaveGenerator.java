@@ -23,17 +23,18 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
-import cubicchunks.util.CubePos;
-import cubicchunks.util.StructureGenUtil;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.ICubePrimer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 import java.util.Random;
 import java.util.function.Predicate;
+
+import cubicchunks.util.CubePos;
+import cubicchunks.util.StructureGenUtil;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.ICubePrimer;
 
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
@@ -146,7 +147,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	 * Controls which blocks can be replaced by cave
 	 */
 	private static final Predicate<IBlockState> isBlockReplaceable = (state ->
-			state.getBlock() == Blocks.STONE || state.getBlock() == Blocks.DIRT || state.getBlock() == Blocks.GRASS);
+		state.getBlock() == Blocks.STONE || state.getBlock() == Blocks.DIRT || state.getBlock() == Blocks.GRASS);
 
 
 	@Override
@@ -166,7 +167,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 
 			if (this.rand.nextInt(LARGE_NODE_RARITY) == 0) {
 				this.generateLargeNode(cube, this.rand.nextLong(), generatedCubePos,
-						branchStartX, branchStartY, branchStartZ);
+					branchStartX, branchStartY, branchStartZ);
 				subBranches += this.rand.nextInt(LARGE_NODE_MAX_BRANCHES);
 			}
 
@@ -184,9 +185,9 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 				double vertCaveSizeMod = 1.0;
 
 				this.generateNode(cube, this.rand.nextLong(), generatedCubePos,
-						branchStartX, branchStartY, branchStartZ,
-						baseHorizSize, horizDirAngle, vertDirAngle,
-						startWalkedDistance, maxWalkedDistance, vertCaveSizeMod);
+					branchStartX, branchStartY, branchStartZ,
+					baseHorizSize, horizDirAngle, vertDirAngle,
+					startWalkedDistance, maxWalkedDistance, vertCaveSizeMod);
 			}
 		}
 	}
@@ -204,8 +205,8 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 		int maxWalkedDistance = -1;
 		double vertCaveSizeMod = 0.5;
 		this.generateNode(cube, seed, generatedCubePos, x, y, z,
-				baseHorizSize, horizDirAngle, vertDirAngle,
-				startWalkedDistance, maxWalkedDistance, vertCaveSizeMod);
+			baseHorizSize, horizDirAngle, vertDirAngle,
+			startWalkedDistance, maxWalkedDistance, vertCaveSizeMod);
 	}
 
 	/**
@@ -220,11 +221,11 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	 * @param baseCaveSize initial value for cave size, size decreases as cave goes further
 	 * @param horizDirAngle horizontal direction angle
 	 * @param vertCaveSizeMod vertical direction angle
-	 * @param startWalkedDistance the amount of steps the cave already went forwards,
-	 * used in recursive step. -1 means that there will be only one step
+	 * @param startWalkedDistance the amount of steps the cave already went forwards, used in recursive step. -1 means
+	 * that there will be only one step
 	 * @param maxWalkedDistance maximum distance the cave can go forwards, <= 0 to use default
-	 * @param vertDirAngle changes vertical size of the cave, values < 1 result in flattened caves,
-	 * > 1 result in vertically stretched caves
+	 * @param vertDirAngle changes vertical size of the cave, values < 1 result in flattened caves, > 1 result in
+	 * vertically stretched caves
 	 */
 	protected void generateNode(ICubePrimer cube, long seed,
 	                            CubePos generatedCubePos,
@@ -297,16 +298,16 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 			//can split only if it's not final branch and the cave is still big enough (>1 block radius)
 			if (!finalStep && walkedDistance == splitPoint && baseCaveSize > 1.0F) {
 				this.generateNode(cube, rand.nextLong(),
-						generatedCubePos, caveX, caveY, caveZ,
-						rand.nextFloat()*0.5F + 0.5F,//base cave size
-						horizDirAngle - ((float) Math.PI/2F),//horiz. angle - subtract 90 degrees
-						vertDirAngle/3.0F, walkedDistance, maxWalkedDistance,
-						1.0D);
+					generatedCubePos, caveX, caveY, caveZ,
+					rand.nextFloat()*0.5F + 0.5F,//base cave size
+					horizDirAngle - ((float) Math.PI/2F),//horiz. angle - subtract 90 degrees
+					vertDirAngle/3.0F, walkedDistance, maxWalkedDistance,
+					1.0D);
 				this.generateNode(cube, rand.nextLong(), generatedCubePos, caveX, caveY, caveZ,
-						rand.nextFloat()*0.5F + 0.5F,//base cave size
-						horizDirAngle + ((float) Math.PI/2F),//horiz. angle - add 90 degrees
-						vertDirAngle/3.0F, walkedDistance, maxWalkedDistance,
-						1.0D);
+					rand.nextFloat()*0.5F + 0.5F,//base cave size
+					horizDirAngle + ((float) Math.PI/2F),//horiz. angle - add 90 degrees
+					vertDirAngle/3.0F, walkedDistance, maxWalkedDistance,
+					1.0D);
 				return;
 			}
 
@@ -330,8 +331,8 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 			}
 
 			tryCarveBlocks(cube, generatedCubePos,
-					caveX, caveY, caveZ,
-					caveSizeHoriz, caveSizeVert);
+				caveX, caveY, caveZ,
+				caveSizeHoriz, caveSizeVert);
 			if (finalStep) {
 				return;
 			}
@@ -349,11 +350,11 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 		//Can current step position affect currently modified cube?
 		//TODO: is multiply by 2 needed?
 		if (caveX < genCubeCenterX - Cube.SIZE - caveSizeHoriz*2.0D ||
-				caveY < genCubeCenterY - Cube.SIZE - caveSizeVert*2.0D ||
-				caveZ < genCubeCenterZ - Cube.SIZE - caveSizeHoriz*2.0D ||
-				caveX > genCubeCenterX + Cube.SIZE + caveSizeHoriz*2.0D ||
-				caveY > genCubeCenterY + Cube.SIZE + caveSizeVert*2.0D ||
-				caveZ > genCubeCenterZ + Cube.SIZE + caveSizeHoriz*2.0D) {
+			caveY < genCubeCenterY - Cube.SIZE - caveSizeVert*2.0D ||
+			caveZ < genCubeCenterZ - Cube.SIZE - caveSizeHoriz*2.0D ||
+			caveX > genCubeCenterX + Cube.SIZE + caveSizeHoriz*2.0D ||
+			caveY > genCubeCenterY + Cube.SIZE + caveSizeVert*2.0D ||
+			caveZ > genCubeCenterZ + Cube.SIZE + caveSizeHoriz*2.0D) {
 			return;
 		}
 		int minLocalX = floor_double(caveX - caveSizeHoriz) - generatedCubePos.getMinBlockX() - 1;
@@ -365,8 +366,8 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 
 		//skip is if everything is outside of that cube
 		if (maxLocalX <= 0 || minLocalX >= Cube.SIZE ||
-				maxLocalY <= 0 || minLocalY >= Cube.SIZE ||
-				maxLocalZ <= 0 || minLocalZ >= Cube.SIZE) {
+			maxLocalY <= 0 || minLocalY >= Cube.SIZE ||
+			maxLocalZ <= 0 || minLocalZ >= Cube.SIZE) {
 			return;
 		}
 		StructureBoundingBox boundingBox = new StructureBoundingBox(minLocalX, minLocalY, minLocalZ, maxLocalX, maxLocalY, maxLocalZ);
@@ -374,7 +375,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 		StructureGenUtil.clampBoundingBoxToLocalCube(boundingBox);
 
 		boolean hitLiquid = scanWallsForBlock(cube, boundingBox,
-				(b) -> b.getBlock() == Blocks.LAVA || b.getBlock() == Blocks.FLOWING_LAVA);
+			(b) -> b.getBlock() == Blocks.LAVA || b.getBlock() == Blocks.FLOWING_LAVA);
 
 		if (!hitLiquid) {
 			carveBlocks(cube, generatedCubePos, caveX, caveY, caveZ, caveSizeHoriz, caveSizeVert, boundingBox);

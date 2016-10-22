@@ -23,12 +23,12 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
-import cubicchunks.world.ICubicWorld;
 import net.minecraft.command.CommandTP;
 import net.minecraft.command.EntityNotFoundException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.server.MinecraftServer;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -37,6 +37,8 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.ref.WeakReference;
+
+import cubicchunks.world.ICubicWorld;
 
 import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER;
 import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_ENTITY;
@@ -73,7 +75,7 @@ public class MixinCommandTP {
 			return orig;
 		}
 		ICubicWorld world = commandWorld.get();
-		if(world == null) {
+		if (world == null) {
 			return orig;
 		}
 		return world.getMinHeight() + orig;
@@ -85,7 +87,7 @@ public class MixinCommandTP {
 			return orig;
 		}
 		ICubicWorld world = commandWorld.get();
-		if(world == null) {
+		if (world == null) {
 			return orig;
 		}
 		return world.getMaxHeight() + orig - 256;

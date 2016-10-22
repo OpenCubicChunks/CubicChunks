@@ -28,7 +28,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 
 @SuppressWarnings("deprecation") // Block.BLOCK_STATE_IDS
-public class CubePrimer implements ICubePrimer{
+public class CubePrimer implements ICubePrimer {
 	private static final IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
 	private final char[] data = new char[4096];
 

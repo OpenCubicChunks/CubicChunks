@@ -23,10 +23,6 @@
  */
 package cubicchunks.world.provider;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.type.ICubicWorldType;
-import cubicchunks.worldgen.generator.ICubeGenerator;
-import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -42,6 +38,11 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
+
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.type.ICubicWorldType;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 
 public class VanillaCubicProvider extends CubicWorldProvider {
 
@@ -61,7 +62,7 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 
 		boolean useProvider = false;
 
-		if(!worldObj.isRemote) {
+		if (!worldObj.isRemote) {
 			if (worldObj.getWorldType() instanceof ICubicWorldType) { // Who do we trust!??!?! D:
 
 				// nasty hack heuristic to see if provider asks its WorldType for a chunk generator

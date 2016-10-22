@@ -24,18 +24,7 @@
 package cubicchunks.world.cube;
 
 import com.google.common.base.Predicate;
-import cubicchunks.CubicChunks;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.Coords;
-import cubicchunks.util.CubePos;
-import cubicchunks.util.XYZAddressable;
-import cubicchunks.util.ticket.TicketList;
-import cubicchunks.world.EntityContainer;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.IHeightMap;
-import cubicchunks.world.column.Column;
-import cubicchunks.worldgen.generator.ICubePrimer;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -54,14 +43,29 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
+
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import javax.annotation.Nullable;
+
+import cubicchunks.CubicChunks;
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.Coords;
+import cubicchunks.util.CubePos;
+import cubicchunks.util.XYZAddressable;
+import cubicchunks.util.ticket.TicketList;
+import cubicchunks.world.EntityContainer;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.IHeightMap;
+import cubicchunks.world.column.Column;
+import cubicchunks.worldgen.generator.ICubePrimer;
 
 public class Cube implements XYZAddressable {
 
@@ -107,26 +111,26 @@ public class Cube implements XYZAddressable {
 	}
 
 	@SuppressWarnings("deprecation") // when a block is generated, does it really have any extra
-	                                 // information it could give us about its opacity by knowing its location?
+	// information it could give us about its opacity by knowing its location?
 	public Cube(Column column, int cubeY, ICubePrimer primer) {
 		this(column, cubeY);
 
 		int miny = Coords.cubeToMinBlock(cubeY);
 		IHeightMap opindex = column.getOpacityIndex();
 
-		for (int x = 0; x < 16;x++) {
-			for (int z = 0; z < 16;z++) {
+		for (int x = 0; x < 16; x++) {
+			for (int z = 0; z < 16; z++) {
 
-				for (int y = 15; y >= 0;y--) {
+				for (int y = 15; y >= 0; y--) {
 					IBlockState newstate = primer.getBlockState(x, y, z);
 
 					if (newstate.getMaterial() != Material.AIR) {
-						if(storage == null) {
+						if (storage == null) {
 							newStorage();
 						}
 						storage.set(x, y, z, newstate);
 
-						if(newstate.getLightOpacity() != 0) {
+						if (newstate.getLightOpacity() != 0) {
 							column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe ServerHeightMap needs its own isModified
 							opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
 						}
@@ -152,27 +156,28 @@ public class Cube implements XYZAddressable {
 
 	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
 		try {
-			if(storage == null) {
+			if (storage == null) {
 				return Blocks.AIR.getDefaultState();
 			}
 			return storage.get(Coords.blockToLocal(blockX),
-			                   Coords.blockToLocal(blockY),
-			                   Coords.blockToLocal(blockZ));
+				Coords.blockToLocal(blockY),
+				Coords.blockToLocal(blockZ));
 
 		} catch (Throwable t) {
 			CrashReport report = CrashReport.makeCrashReport(t, "Getting block state");
 			CrashReportCategory category = report.makeCategory("Block being got");
 			category.setDetail("Location", () ->
-					CrashReportCategory.getCoordinateInfo(blockX, blockY, blockZ));
+				CrashReportCategory.getCoordinateInfo(blockX, blockY, blockZ));
 			throw new ReportedException(report);
 		}
 	}
 
 	/**
 	 * Sets a block state in this cube, lighting not included
-	 * 
+	 *
 	 * @param pos the location of the block
 	 * @param newstate the new block state
+	 *
 	 * @return The old block state, or null if there was no change
 	 */
 	@Nullable
@@ -183,14 +188,14 @@ public class Cube implements XYZAddressable {
 
 		IBlockState oldstate = getBlockState(pos);
 
-		if(oldstate == newstate) {
+		if (oldstate == newstate) {
 			return null; // nothing changed
 		}
 
 		Block oldblock = oldstate.getBlock();
 		Block newblock = newstate.getBlock();
 
-		if(storage == null) {
+		if (storage == null) {
 			newStorage();
 		}
 
@@ -215,31 +220,29 @@ public class Cube implements XYZAddressable {
 			}
 		}
 
-		if(storage.get(localX, localY, localZ).getBlock() != newblock) { // A TileEntity changed the bock on us!!!
+		if (storage.get(localX, localY, localZ).getBlock() != newblock) { // A TileEntity changed the bock on us!!!
 			return null; // something changed... but its out of our control
-			             // (aka another Cube.setBlockState() call handled it)
-			             // so return as if 'nothing changed'
+			// (aka another Cube.setBlockState() call handled it)
+			// so return as if 'nothing changed'
 		}
 
 		// If capturing blocks, only run block physics for TE's. Non-TE's are handled in ForgeHooks.onPlaceItemIntoWorld
 		if (!this.world.isRemote()
-				&& oldblock != newblock
-				&& (!((World)this.world).captureBlockSnapshots || newblock.hasTileEntity(newstate))) {
+			&& oldblock != newblock
+			&& (!((World) this.world).captureBlockSnapshots || newblock.hasTileEntity(newstate))) {
 
-			newblock.onBlockAdded((World)this.world, pos, newstate);
+			newblock.onBlockAdded((World) this.world, pos, newstate);
 		}
 
 		if (newblock.hasTileEntity(newstate)) {
 			TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
 
-			if (te == null)
-			{
-				te = newblock.createTileEntity((World)this.world, newstate);
+			if (te == null) {
+				te = newblock.createTileEntity((World) this.world, newstate);
 				this.world.setTileEntity(pos, te);
 			}
 
-			if (te != null)
-			{
+			if (te != null) {
 				te.updateContainingBlockInfo();
 			}
 		}
@@ -266,12 +269,12 @@ public class Cube implements XYZAddressable {
 				if (this.world.getProvider().getHasNoSky()) {
 					return 0;
 				}
-				if(storage == null) {
+				if (storage == null) {
 					return lightType.defaultLightValue;
 				}
 				return this.storage.getExtSkylightValue(localX, localY, localZ);
 			case BLOCK:
-				if(storage == null) {
+				if (storage == null) {
 					return lightType.defaultLightValue;
 				}
 				return this.storage.getExtBlocklightValue(localX, localY, localZ);
@@ -290,7 +293,7 @@ public class Cube implements XYZAddressable {
 		switch (lightType) {
 			case SKY:
 				if (!this.world.getProvider().getHasNoSky()) {
-					if(storage == null) {
+					if (storage == null) {
 						newStorage();
 					}
 					this.storage.setExtSkylightValue(x, y, z, light);
@@ -298,7 +301,7 @@ public class Cube implements XYZAddressable {
 				break;
 
 			case BLOCK:
-				if(storage == null) {
+				if (storage == null) {
 					newStorage();
 				}
 				this.storage.setExtBlocklightValue(x, y, z, light);
@@ -308,7 +311,7 @@ public class Cube implements XYZAddressable {
 
 	public void setSkylight(int localX, int localY, int localZ, int value) {
 		if (!this.world.getProvider().getHasNoSky()) {
-			if(storage == null) {
+			if (storage == null) {
 				newStorage();
 			}
 			this.isModified = true;
@@ -320,7 +323,7 @@ public class Cube implements XYZAddressable {
 		if (this.world.getProvider().getHasNoSky()) {
 			return 0;
 		}
-		if(storage == null) {
+		if (storage == null) {
 			return EnumSkyBlock.SKY.defaultLightValue;
 		}
 		return this.storage.getExtSkylightValue(localX, localY, localZ);
@@ -356,13 +359,13 @@ public class Cube implements XYZAddressable {
 		int cubeZ = Coords.getCubeZForEntity(entity);
 		if (cubeX != this.coords.getX() || cubeY != this.coords.getY() || cubeZ != this.coords.getZ()) {
 			LOGGER.warn(String.format("Wrong entity (%s) location. Entity thinks it's in (%d,%d,%d) but actua location is (%d,%d,%d)!",
-					entity.getClass().getName(), cubeX, cubeY, cubeZ, this.coords.getX(), this.coords.getY(), this.coords.getZ()));
+				entity.getClass().getName(), cubeX, cubeY, cubeZ, this.coords.getX(), this.coords.getY(), this.coords.getZ()));
 			entity.setDead();
 		}
 
 		//post the event, we can't send cube position here :(
 		MinecraftForge.EVENT_BUS.post(new EntityEvent.EnteringChunk(
-				entity, this.getX(), this.getZ(), entity.chunkCoordX, entity.chunkCoordZ));
+			entity, this.getX(), this.getZ(), entity.chunkCoordX, entity.chunkCoordZ));
 
 		// tell the entity it's in this cube
 		entity.addedToChunk = true;
@@ -462,7 +465,7 @@ public class Cube implements XYZAddressable {
 			Block block = state.getBlock();
 
 			if (this.getTileEntity(blockpos, Chunk.EnumCreateEntityType.CHECK) == null &&
-					block.hasTileEntity(state)) {
+				block.hasTileEntity(state)) {
 				TileEntity tileentity = this.createTileEntity(blockpos);
 				this.world.setTileEntity(blockpos, tileentity);
 				this.world.markBlockRangeForRenderUpdate(blockpos, blockpos);
@@ -474,11 +477,11 @@ public class Cube implements XYZAddressable {
 	private void tryDoFirstLight() {
 		BlockPos pos = this.getCoords().getMinBlockPos();
 		final int radius = 17;
-		if(!world.isAreaLoaded(pos.add(-radius, -radius, -radius), pos.add(15+radius, 15+radius, 15+radius))) {
+		if (!world.isAreaLoaded(pos.add(-radius, -radius, -radius), pos.add(15 + radius, 15 + radius, 15 + radius))) {
 			return;
 		}
 		//client cubes (setClientCube) are always fully generated, isInitialLightingDone is never false
-		((ICubicWorldServer)this.world).getFirstLightProcessor().diffuseSkylight(this);
+		((ICubicWorldServer) this.world).getFirstLightProcessor().diffuseSkylight(this);
 		this.isInitialLightingDone = true;
 	}
 
@@ -527,8 +530,8 @@ public class Cube implements XYZAddressable {
 
 	public boolean containsBlockPos(BlockPos blockPos) {
 		return this.coords.getX() == Coords.blockToCube(blockPos.getX())
-				&& this.coords.getY() == Coords.blockToCube(blockPos.getY())
-				&& this.coords.getZ() == Coords.blockToCube(blockPos.getZ());
+			&& this.coords.getY() == Coords.blockToCube(blockPos.getY())
+			&& this.coords.getZ() == Coords.blockToCube(blockPos.getZ());
 	}
 
 	public ExtendedBlockStorage getStorage() {
@@ -566,12 +569,12 @@ public class Cube implements XYZAddressable {
 		// tell the world to forget about entities
 		this.world.unloadEntities(this.entities.getEntities());
 
-		for(Entity entity : this.entities.getEntities()){
+		for (Entity entity : this.entities.getEntities()) {
 			//CHECKED: 1.10.2-12.18.1.2092
 			entity.addedToChunk = false; // World tries to remove entities from Cubes
-			                             // if (addedToCube || Column is loaded)
-			                             // so we need to set addedToChunk to false as a hack!
-			                             // else World would reload this Cube!
+			// if (addedToCube || Column is loaded)
+			// so we need to set addedToChunk to false as a hack!
+			// else World would reload this Cube!
 		}
 
 		// tell the world to forget about tile entities
@@ -589,14 +592,14 @@ public class Cube implements XYZAddressable {
 		this.isModified = false;
 	}
 
-	public TicketList getTickets(){
+	public TicketList getTickets() {
 		return tickets;
 	}
 
 	public void markForRenderUpdate() {
 		this.world.markBlockRangeForRenderUpdate(
-				Coords.cubeToMinBlock(this.coords.getX()), Coords.cubeToMinBlock(this.coords.getY()), Coords.cubeToMinBlock(this.coords.getZ()),
-				Coords.cubeToMaxBlock(this.coords.getX()), Coords.cubeToMaxBlock(this.coords.getY()), Coords.cubeToMaxBlock(this.coords.getZ())
+			Coords.cubeToMinBlock(this.coords.getX()), Coords.cubeToMinBlock(this.coords.getY()), Coords.cubeToMinBlock(this.coords.getZ()),
+			Coords.cubeToMaxBlock(this.coords.getX()), Coords.cubeToMaxBlock(this.coords.getY()), Coords.cubeToMaxBlock(this.coords.getZ())
 		);
 	}
 
@@ -636,8 +639,8 @@ public class Cube implements XYZAddressable {
 	}
 
 	/**
-	 * @return weather this Cube is fully populated or not...
-	 *         aka when even Cubes whos population effects this Cube are populated!
+	 * @return weather this Cube is fully populated or not... aka when even Cubes whos population effects this Cube are
+	 * populated!
 	 */
 	public boolean isFullyPopulated() {
 		return this.isFullyPopulated;

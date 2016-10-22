@@ -23,9 +23,6 @@
  */
 package cubicchunks.worldgen.generator;
 
-import java.util.Collections;
-import java.util.List;
-
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -33,6 +30,9 @@ import net.minecraft.world.biome.Biome.SpawnListEntry;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.chunk.IChunkGenerator;
+
+import java.util.Collections;
+import java.util.List;
 
 public class DummyChunkGenerator implements IChunkGenerator {
 
@@ -48,7 +48,8 @@ public class DummyChunkGenerator implements IChunkGenerator {
 	}
 
 	@Override
-	public void populate(int x, int z) {}
+	public void populate(int x, int z) {
+	}
 
 	@Override
 	public boolean generateStructures(Chunk chunkIn, int x, int z) {
@@ -67,6 +68,7 @@ public class DummyChunkGenerator implements IChunkGenerator {
 	}
 
 	@Override
-	public void recreateStructures(Chunk chunkIn, int x, int z) {}
+	public void recreateStructures(Chunk chunkIn, int x, int z) {
+	}
 
 }

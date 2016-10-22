@@ -23,19 +23,21 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.asm.mixin.core.common.MixinWorld;
-import cubicchunks.client.CubeProviderClient;
-import cubicchunks.lighting.LightingManager;
-import cubicchunks.world.ICubicWorldClient;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.util.math.BlockPos;
+
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+
+import cubicchunks.asm.mixin.core.common.MixinWorld;
+import cubicchunks.client.CubeProviderClient;
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.world.ICubicWorldClient;
 
 @Mixin(WorldClient.class)
 @Implements(@Interface(iface = ICubicWorldClient.class, prefix = "world$"))

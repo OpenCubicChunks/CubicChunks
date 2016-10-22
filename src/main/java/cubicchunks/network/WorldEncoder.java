@@ -23,6 +23,9 @@
  */
 package cubicchunks.network;
 
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+
 import cubicchunks.util.Coords;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ServerHeightMap;
@@ -30,8 +33,6 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 public class WorldEncoder {
 
@@ -80,8 +81,8 @@ public class WorldEncoder {
 
 		if (!isEmpty) {
 			ExtendedBlockStorage storage = new ExtendedBlockStorage(
-					Coords.cubeToMinBlock(cube.getY()),
-					!cube.getCubicWorld().getProvider().getHasNoSky());
+				Coords.cubeToMinBlock(cube.getY()),
+				!cube.getCubicWorld().getProvider().getHasNoSky());
 			cube.setStorage(storage);
 
 			storage.getData().read(in);

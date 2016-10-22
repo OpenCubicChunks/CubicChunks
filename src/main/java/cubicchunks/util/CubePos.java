@@ -23,7 +23,6 @@
  */
 package cubicchunks.util;
 
-import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -31,6 +30,8 @@ import net.minecraft.util.math.ChunkPos;
 
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import cubicchunks.world.cube.Cube;
 
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.getCubeXForEntity;
@@ -40,11 +41,14 @@ import static cubicchunks.util.Coords.getCubeZForEntity;
 /**
  * Position of a cube.
  * <p>
- * Tall Worlds uses a column coordinate system (which is really just a cube coordinate system without the y-coordinate), a cube coordinate system, and two block coordinate systems, a cube-relative system, and a world absolute system.
+ * Tall Worlds uses a column coordinate system (which is really just a cube coordinate system without the y-coordinate),
+ * a cube coordinate system, and two block coordinate systems, a cube-relative system, and a world absolute system.
  * <p>
- * It is important that the systems are kept separate. This class should be used whenever a cube coordinate is passed along, so that it is clear that cube coordinates are being used, and not block coordinates.
+ * It is important that the systems are kept separate. This class should be used whenever a cube coordinate is passed
+ * along, so that it is clear that cube coordinates are being used, and not block coordinates.
  * <p>
- * Additionally, I (Nick) like to use xRel, yRel, and zRel for the relative position of a block inside of a cube. In world space, I (Nick) refer to the coordinates as xAbs, yAbs, and zAbs.
+ * Additionally, I (Nick) like to use xRel, yRel, and zRel for the relative position of a block inside of a cube. In
+ * world space, I (Nick) refer to the coordinates as xAbs, yAbs, and zAbs.
  * <p>
  * See {@link AddressTools} for details of hashing the cube coordinates for keys and storage.
  * <p>
@@ -108,7 +112,8 @@ public class CubePos {
 	/**
 	 * Compares the CubeCoordinate against the given object.
 	 *
-	 * @return True if the cube matches the given object, but false if it doesn't match, or is null, or not a CubeCoordinate object.
+	 * @return True if the cube matches the given object, but false if it doesn't match, or is null, or not a
+	 * CubeCoordinate object.
 	 */
 	@Override
 	public boolean equals(Object obj) {
@@ -249,7 +254,7 @@ public class CubePos {
 				for (int y = 15; y >= 0; y--) {
 					boolean cont = func.test(blockPos);
 					blockPos.move(EnumFacing.DOWN);
-					if(!cont) {
+					if (!cont) {
 						break;
 					}
 				}

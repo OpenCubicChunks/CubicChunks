@@ -23,17 +23,18 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.world.biome.Biome;
+
+import java.util.Random;
+
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.builder.BasicBuilder;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.world.biome.Biome;
-
-import java.util.Random;
 
 import static cubicchunks.util.Coords.localToBlock;
 import static cubicchunks.util.MathUtil.lerp;
@@ -109,7 +110,7 @@ public class CustomTerrainGenerator {
 			for (int z = -this.maxSmoothRadius; z <= this.maxSmoothRadius; z++) {
 				final double f1 = 10.0F/Math.sqrt(x*x + z*z + 0.2F);
 				this.nearBiomeWeightArray[x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
-						*this.maxSmoothDiameter] = f1;
+					*this.maxSmoothDiameter] = f1;
 			}
 		}
 
@@ -208,16 +209,16 @@ public class CustomTerrainGenerator {
 	private IBlockState getBlockStateFor(int height, double density, double xGrad, double yGrad, double zGrad) {
 		final double dirtDepth = 4;
 		IBlockState state = Blocks.AIR.getDefaultState();
-		if(density > 0) {
+		if (density > 0) {
 			state = Blocks.STONE.getDefaultState();
 			//if the block above would be empty:
-			if(density + yGrad <= 0) {
+			if (density + yGrad <= 0) {
 				state = Blocks.GRASS.getDefaultState();
 				//if density decreases as we go down && density < dirtDepth
-			} else if(yGrad < 0 && density < dirtDepth) {
+			} else if (yGrad < 0 && density < dirtDepth) {
 				state = Blocks.DIRT.getDefaultState();
 			}
-		} else if(height < 64) {
+		} else if (height < 64) {
 			state = Blocks.WATER.getDefaultState();
 		}
 		return state;
@@ -278,9 +279,9 @@ public class CustomTerrainGenerator {
 	 * @see cubicchunks.worldgen.generator.ITerrainGenerator#generateNoiseArrays(cubicchunks.world.cube.Cube)
 	 */
 	private void generateNoiseArrays(int cubeX, int cubeY, int cubeZ) {
-		int cubeXMin = cubeX *(X_SECTIONS - 1);
-		int cubeYMin = cubeY *(Y_SECTIONS - 1);
-		int cubeZMin = cubeZ *(Z_SECTIONS - 1);
+		int cubeXMin = cubeX*(X_SECTIONS - 1);
+		int cubeYMin = cubeY*(Y_SECTIONS - 1);
+		int cubeZMin = cubeZ*(Z_SECTIONS - 1);
 
 		for (int x = 0; x < X_SECTIONS; x++) {
 			int xPos = cubeXMin + x;
@@ -345,7 +346,7 @@ public class CustomTerrainGenerator {
 						// final double a = ( yAbs - ( maxYSections - 4 ) ) / 3.0F;
 						// output = output * ( 1.0D - a ) - 10.0D * a;
 					}
-					this.rawDensity[x][y][z] = output*GlobalGeneratorConfig.MAX_ELEV + 64 - yAbs * MAX_ELEV;
+					this.rawDensity[x][y][z] = output*GlobalGeneratorConfig.MAX_ELEV + 64 - yAbs*MAX_ELEV;
 				}
 			}
 		}
@@ -353,8 +354,8 @@ public class CustomTerrainGenerator {
 
 	private Biome[] getBiomeMap(int cubeX, int cubeZ) {
 		return world.getProvider().getBiomeProvider().getBiomesForGeneration(this.biomes,
-				cubeX*4 - this.maxSmoothRadius, cubeZ*4 - this.maxSmoothRadius,
-				X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
+			cubeX*4 - this.maxSmoothRadius, cubeZ*4 - this.maxSmoothRadius,
+			X_SECTION_SIZE + this.maxSmoothDiameter, Z_SECTION_SIZE + this.maxSmoothDiameter);
 	}
 
 	/**
@@ -423,23 +424,23 @@ public class CustomTerrainGenerator {
 
 	private Biome getCenterBiome(final int x, final int z) {
 		return this.biomes[x + this.maxSmoothRadius + (z + this.maxSmoothRadius)
-				*(X_SECTION_SIZE + this.maxSmoothDiameter)];
+			*(X_SECTION_SIZE + this.maxSmoothDiameter)];
 	}
 
 	private Biome getOffsetBiome(final int x, final int z, int nextX, int nextZ) {
 		return this.biomes[x + nextX + this.maxSmoothRadius + (z + nextZ + this.maxSmoothRadius)
-				*(X_SECTION_SIZE + this.maxSmoothDiameter)];
+			*(X_SECTION_SIZE + this.maxSmoothDiameter)];
 	}
 
 	private double calcBiomeWeight(int nextX, int nextZ, float biomeHeight) {
 		return this.nearBiomeWeightArray[nextX + this.maxSmoothRadius + (nextZ + this.maxSmoothRadius)
-				*this.maxSmoothDiameter]
-				/(biomeHeight + 2.0F);
+			*this.maxSmoothDiameter]
+			/(biomeHeight + 2.0F);
 	}
 
 	private void fillHeightArray(int cubeX, int cubeZ) {
-		int cubeXMin = cubeX *(X_SECTION_SIZE - 1);
-		int cubeZMin = cubeZ *(Z_SECTION_SIZE - 1);
+		int cubeXMin = cubeX*(X_SECTION_SIZE - 1);
+		int cubeZMin = cubeZ*(Z_SECTION_SIZE - 1);
 
 		for (int x = 0; x < X_SECTIONS; x++) {
 			int xPos = cubeXMin + x;

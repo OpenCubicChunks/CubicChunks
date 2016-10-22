@@ -23,20 +23,21 @@
  */
 package cubicchunks.client;
 
+import net.minecraft.client.multiplayer.ChunkProviderClient;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
+
 import cubicchunks.util.CubePos;
-import cubicchunks.util.XYZMap;
 import cubicchunks.util.ReflectionUtil;
+import cubicchunks.util.XYZMap;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
-import net.minecraft.client.multiplayer.ChunkProviderClient;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
 
 //TODO: break off ICubeProvider
 public class CubeProviderClient extends ChunkProviderClient implements ICubeProvider {
@@ -144,9 +145,9 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 	@Override
 	public String makeString() {
 		return "MultiplayerChunkCache: " + this.chunkMapping.values()
-				.stream()
-				.map(c -> ((Column) c).getLoadedCubes().size())
-				.reduce((a, b) -> a + b)
-				.orElse(-1) + "/" + this.chunkMapping.size();
+			.stream()
+			.map(c -> ((Column) c).getLoadedCubes().size())
+			.reduce((a, b) -> a + b)
+			.orElse(-1) + "/" + this.chunkMapping.size();
 	}
 }
