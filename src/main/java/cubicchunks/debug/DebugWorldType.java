@@ -24,12 +24,11 @@
 package cubicchunks.debug;
 
 import com.flowpowered.noise.module.source.Perlin;
-
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.type.ICubicWorldType;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
@@ -61,7 +60,7 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
 		return provider;
 	}
 
-	@Override public ICubeGenerator createCubeGenerator(ICubicWorldServer world) {
+	@Override public ICubeGenerator createCubeGenerator(ICubicWorld world) {
 		//TODO: move first light processor directly into cube?
 		return new BasicCubeGenerator(world) {
 			Perlin perlin = new Perlin();
