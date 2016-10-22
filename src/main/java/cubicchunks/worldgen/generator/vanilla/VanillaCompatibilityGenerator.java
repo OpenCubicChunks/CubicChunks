@@ -28,7 +28,6 @@ import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldProviderHell;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
 import net.minecraft.world.chunk.Chunk;
@@ -57,9 +56,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 	private Chunk lastChunk;
 	private boolean optimizationHack;
 
-	private boolean stripBadrock;
-	private IBlockState badrock = Blocks.BEDROCK.getDefaultState();
-	private IBlockState underBlock = Blocks.STONE.getDefaultState();
+	private IBlockState extensionBlockBottom = Blocks.STONE.getDefaultState();
 
 	public VanillaCompatibilityGenerator(IChunkGenerator vanilla, ICubicWorld world) {
 		this.vanilla = vanilla;
@@ -70,30 +67,25 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
 		Map<IBlockState, Integer> blockHistogram = new HashMap<>();
 
-		for (int x = 0; x < Cube.SIZE; x++) {
-			for (int z = 0; z < Cube.SIZE; z++) {
-				IBlockState blockState = lastChunk.getBlockState(x, 0, z);
-				int count = blockHistogram.getOrDefault(blockState, 0);
-				blockHistogram.put(blockState, count + 1);
+		// We scan three layers, because the bottom-most layer is usually fully bedrock
+		for (int y = 0; y < 3; y++) {
+			for (int x = 0; x < Cube.SIZE; x++) {
+				for (int z = 0; z < Cube.SIZE; z++) {
+					IBlockState blockState = lastChunk.getBlockState(x, 0, z);
+					if (blockState.getBlock() == Blocks.BEDROCK) continue; // Never use bedrock for world extension
+
+					int count = blockHistogram.getOrDefault(blockState, 0);
+					blockHistogram.put(blockState, count + 1);
+				}
 			}
 		}
 
-		IBlockState topstate = ICubePrimer.DEFAULT_STATE;
 		int topcount = 0;
-		for (Map.Entry<IBlockState, Integer> entry: blockHistogram.entrySet()) {
+		for (Map.Entry<IBlockState, Integer> entry : blockHistogram.entrySet()) {
 			if (entry.getValue() > topcount) {
-				topstate = entry.getKey();
+				extensionBlockBottom = entry.getKey();
 				topcount = entry.getValue();
 			}
-		}
-
-		if (topstate.getBlock() != Blocks.BEDROCK) {
-			underBlock = topstate;
-		} else {
-			stripBadrock = true;
-			underBlock = world.getProvider() instanceof WorldProviderHell
-				? Blocks.NETHERRACK.getDefaultState()
-				: Blocks.STONE.getDefaultState(); //TODO: maybe scan for stone type?
 		}
 	}
 
@@ -127,7 +119,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 			for (int x = 0; x < Cube.SIZE; x++) {
 				for (int y = 0; y < Cube.SIZE; y++) {
 					for (int z = 0; z < Cube.SIZE; z++) {
-						primer.setBlockState(x, y, z, underBlock);
+						primer.setBlockState(x, y, z, extensionBlockBottom);
 					}
 				}
 			}
@@ -157,7 +149,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 						for (int z = 0; z < Cube.SIZE; z++) {
 							IBlockState state = storage.get(x, y, z);
 							primer.setBlockState(x, y, z,
-								stripBadrock && state == badrock ? underBlock : state);
+								state == Blocks.BEDROCK.getDefaultState() ? extensionBlockBottom : state);
 						}
 					}
 				}
