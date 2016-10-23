@@ -34,8 +34,13 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import cubicchunks.world.cube.Cube;
 
+/**
+ * Stores cubes for columns
+ */
 class CubeMap implements Iterable<Cube> {
 
 	private static final Comparator<Cube> ORDER = (one, two) ->
@@ -45,22 +50,41 @@ class CubeMap implements Iterable<Cube> {
 
 	private ExtendedBlockStorage[] toBlockTick = new ExtendedBlockStorage[0];
 
+	/**
+	 * Remove the target cube from the storage
+	 *
+	 * @param cubeY cube y position
+	 *
+	 * @return the removed cube if it existed, otherwise <code>null</code>
+	 */
 	Cube remove(int cubeY) {
 		int index = binarySearch(cubeY);
 		return index < cubes.size() && cubes.get(index).getY() == cubeY ? cubes.remove(index) : null;
 	}
 
-	void put(Cube cube) {
-		if (cube == null) {
-			throw new NullPointerException();
-		}
+	/**
+	 * Add a cube to the storage
+	 *
+	 * @param cube the cube to add
+	 */
+	void put(@Nonnull Cube cube) {
 		if (this.contains(cube.getY())) {
 			throw new IllegalArgumentException("Cube at " + cube.getY() + " already exists!");
 		}
 		cubes.add(cube);
 		cubes.sort(ORDER); // kind of expensive... but puts don't happen much (wish there was a SortedArrayList)
+		// TODO use binary search instead
 	}
 
+	/**
+	 * Iterate over all cubes between <code>startY</code> and <code>endY</code> in this storage in order. If
+	 * <code>startY < endY</code>, order is bottom to top, otherwise order is top to bottom.
+	 *
+	 * @param startY initial cube y position
+	 * @param endY last cube y position
+	 *
+	 * @return an iterator over the cubes
+	 */
 	Iterable<Cube> cubes(int startY, int endY) {
 		boolean reverse = false;
 		if (startY > endY) {
@@ -80,25 +104,47 @@ class CubeMap implements Iterable<Cube> {
 		}
 	}
 
+	/**
+	 * Check if the target cube is stored here
+	 *
+	 * @param cubeY the target cube
+	 *
+	 * @return <code>true</code> if the cube is contained here, <code>false</code> otherwise
+	 */
 	private boolean contains(int cubeY) {
 		int index = binarySearch(cubeY);
 		return index < cubes.size() && cubes.get(index).getY() == cubeY;
 	}
 
+	/**
+	 * Iterate over all cubes in this storage
+	 *
+	 * @return the iterator
+	 */
 	@Override public Iterator<Cube> iterator() {
 		return cubes.iterator();
 	}
 
+	/**
+	 * Retrieve a collection of all cubes within this storage. The collection is non-modifiable
+	 *
+	 * @return the collection
+	 */
 	public Collection<Cube> all() {
 		return Collections.unmodifiableCollection(cubes);
 	}
 
+	/**
+	 * Check if this storage is empty
+	 *
+	 * @return <code>true</code> if there are no cubes in this storage, <code>false</code> otherwise
+	 */
 	public boolean isEmpty() {
 		return cubes.isEmpty();
 	}
 
 	/**
-	 * @return An array of EBS's form Cubes that need ticking... kind of a hack but vanilla needs it
+	 * @return An array of EBSs from cubes that need ticking
 	 */
 	ExtendedBlockStorage[] getStoragesToTick() {
 		if (!isToTickValid()) {
@@ -136,6 +182,14 @@ class CubeMap implements Iterable<Cube> {
 		return index == toBlockTick.length; // did we check everything there was in toBlockTick?
 	}
 
+	/**
+	 * Binary search for the index of the specified cube. If the cube is not present, returns the index at which it
+	 * should be inserted.
+	 *
+	 * @param cubeY cube y position
+	 *
+	 * @return the target index
+	 */
 	private int binarySearch(int cubeY) {
 		int start = 0;
 		int end = cubes.size() - 1;
