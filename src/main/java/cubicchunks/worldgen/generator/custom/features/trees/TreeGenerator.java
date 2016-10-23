@@ -42,6 +42,23 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 	static final Block[] REPLACEABLE_SOLID_BLOCKS = {
 		Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL
 	};
+	protected final IBlockState woodBlock;
+	protected final IBlockState leafBlock;
+
+	public TreeGenerator(final ICubicWorld world, final IBlockState woodBlock, final IBlockState leafBlock) {
+		super(world);
+		this.woodBlock = woodBlock;
+		this.leafBlock = leafBlock;
+	}
+
+	protected boolean tryToPlaceDirtUnderTree(final ICubicWorld world, final BlockPos blockPos) {
+		if (world.getBlockState(blockPos).getBlock() != Blocks.DIRT) {
+			return this.setBlockOnly(blockPos, Blocks.DIRT.getDefaultState());
+		} else {
+			// it's already dirt, so just say it was placed successfully
+			return true;
+		}
+	}
 
 	protected static boolean canReplaceBlockDefault(final Block blockToCheck) {
 		return canReplace(blockToCheck, REPLACEABLE_OPEN_BLOCKS) || canReplace(blockToCheck, REPLACEABLE_SOLID_BLOCKS);
@@ -65,23 +82,5 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 	protected static boolean canReplaceWithWood(final Block blockToCheck) {
 		return blockToCheck == Blocks.GRASS || blockToCheck == Blocks.DIRT || blockToCheck == Blocks.LOG
 			|| blockToCheck == Blocks.LOG2 || blockToCheck == Blocks.SAPLING || blockToCheck == Blocks.VINE;
-	}
-
-	protected final IBlockState woodBlock;
-	protected final IBlockState leafBlock;
-
-	public TreeGenerator(final ICubicWorld world, final IBlockState woodBlock, final IBlockState leafBlock) {
-		super(world);
-		this.woodBlock = woodBlock;
-		this.leafBlock = leafBlock;
-	}
-
-	protected boolean tryToPlaceDirtUnderTree(final ICubicWorld world, final BlockPos blockPos) {
-		if (world.getBlockState(blockPos).getBlock() != Blocks.DIRT) {
-			return this.setBlockOnly(blockPos, Blocks.DIRT.getDefaultState());
-		} else {
-			// it's already dirt, so just say it was placed successfully
-			return true;
-		}
 	}
 }

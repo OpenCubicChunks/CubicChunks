@@ -25,8 +25,7 @@ package cubicchunks;
 
 public interface IConfigUpdateListener {
 	/**
-	 * Called when config value is changed.
-	 * This method may be called from any thread.
+	 * Called when config value is changed. This method may be called from any thread.
 	 */
 	void onConfigUpdate(CubicChunks.Config config);
 }

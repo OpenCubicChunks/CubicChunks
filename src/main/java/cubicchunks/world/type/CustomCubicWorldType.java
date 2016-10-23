@@ -53,7 +53,8 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
 		return provider; // TODO: Custom Nether? Custom End????
 	}
 
-	@Override public ICubeGenerator createCubeGenerator(ICubicWorld world) {
+	@Override
+	public ICubeGenerator createCubeGenerator(ICubicWorld world) {
 		CustomTerrainProcessor terrain = new CustomTerrainProcessor(world);
 		CustomFeatureProcessor features = new CustomFeatureProcessor();
 		CustomPopulationProcessor population = new CustomPopulationProcessor(world);

@@ -38,7 +38,7 @@ import cubicchunks.world.cube.Cube;
 public interface ICubeGenerator {
 
 	Box RECOMMENDED_POPULATOR_REQUIREMENT = new Box(
-		-1, -2, -1, // give an extra 16 blocks virtical buffer for things like jungle trees
+		-1, -2, -1, // give an extra 16 blocks vertical buffer for things like jungle trees
 		0, 0, 0
 	);
 
@@ -48,7 +48,7 @@ public interface ICubeGenerator {
 	);
 
 	/**
-	 * Generates a new cube
+	 * Generate a new cube
 	 *
 	 * @param cubeX the cube's X coordinate
 	 * @param cubeY the cube's Y coordinate
@@ -59,85 +59,118 @@ public interface ICubeGenerator {
 	ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ);
 
 	/**
-	 * Adds biome's and optionally other stuff to a Column
-	 * (can pre-add Cubes but this is not recommended)
+	 * Generate column-global information such as biome data
 	 *
-	 * @param column the column that needs new biomes and other data
+	 * @param column the target column
 	 */
 	void generateColumn(Column column);
 
 	/**
-	 * Populates a Cube with trees, ores, and other
-	 * multi-block structures that can cross cube boundaries.
-	 * Population should* be done with the restriction that it may not
-	 * effect cubes who's call to {@link IChunkGenerator#getPopulationRequirement(Cube)}
-	 * would not include {@code cube} as an effect.<br>
-	 * <br>
-	 * *Note: Unlike vanilla this method will NEVER cause recursive generation,
-	 * thus the area that it populates is not as strict, but you still try not to
-	 * go over it as the player might see something
-	 * generate in a chunk they have already been sent
+	 * Populate a cube with multi-block structures that can cross cube boundaries such as trees and ore veins.
+	 * Population should* be done with the restriction that it may not affect cubes whose call to {@link
+	 * ICubeGenerator#getPopulationRequirement(Cube)} would does include {@code cube}.<br> <br> *Note: Unlike vanilla
+	 * this method will NEVER cause recursive generation, thus the area that it populates is not as strict. Generation
+	 * should still be restricted as the player might see something generate in a chunk they have already been sent
 	 *
 	 * @param cube the cube to populate
 	 */
 	void populate(Cube cube);
 
 	/**
-	 * Gets a bounding box defining a range of Cube's whos population contributes to {@cube cube}
-	 * having complete population.<br>
-	 * example: a call to {@link ICubeGenerator#populate(Cube)}
-	 * populates an 16x16x16 area centered in a 2x2x2 area of Cubes
-	 * no matter what Cube is being populated. This method would return {(-1,-1,-1), (0, 0, 0)}
-	 * indicating that populate calls to all the Cubes in that area contribute to cube.<br>
-	 * <br>
-	 * This allows a generator to have a much more dynamic populator,
-	 * note however that large ranges are not recommended. If you need to generate a large structure like a nether fort,
-	 * do not use a populator.
+	 * Get the bounding box defining a range of cubes whose population contributes to {@code cube} being fully
+	 * populated.<br> Consider the following example: A call to some implementation of {@link
+	 * ICubeGenerator#populate(Cube)} populates a 16x16x16 block area in a 2x2x2 area of cubes around the center.
+	 * <pre>
+	 * +----------+----------+  . .  The chunk provided as a parameter
+	 * |          | . . . . .|  . .  to this method (getPopulationRequirement).
+	 * |          | . . . . .|
+	 * |     #####|#####. . .|  x x  The chunk provided as a parameter
+	 * |     #####|#####. . .|  x x  to populate()
+	 * +----------+----------+
+	 * | x x #####|#####     |  ###  The area being populated by 'x'
+	 * | x x #####|#####     |  ###
+	 * | x x x x x|          |
+	 * | x x x x x|          |
+	 * +----------+----------+
 	 *
-	 * @return A box in cube coords
+	 * +----------+----------+  . .  The chunk provided as a parameter
+	 * |          | . . . . .|  . .  to this method (getPopulationRequirement).
+	 * |          | . . . . .|
+	 * |          | . . #####|  x x  The chunk provided as a parameter
+	 * |          | . . #####|  x x  to populate()
+	 * +----------+----------+
+	 * |          | x x #####|  ###  The area being populated by 'x'
+	 * |          | x x #####|  ###
+	 * |          | x x x x x|
+	 * |          | x x x x x|
+	 * +----------+----------+
+	 *
+	 * +----------+----------+  . .  The chunk provided as a parameter
+	 * | x x #####|#####. . .|  . .  to this method (getPopulationRequirement).
+	 * | x x #####|#####. . .|
+	 * | x x x x x| . . . . .|  x x  The chunk provided as a parameter
+	 * | x x x x x| . . . . .|  x x  to populate()
+	 * +----------+----------+
+	 * |          |          |  ###  The area being populated by 'x'
+	 * |          |          |  ###
+	 * |          |          |
+	 * |          |          |
+	 * +----------+----------+
+	 *
+	 * Shown: The area enclosed by the population requirement of the target cube
+	 *
+	 * </pre>
+	 * This method would return <code>{(-1,-1,-1), (0, 0, 0)}</code>, indicating that populate calls to all cubes in
+	 * that area write to this cube.<br> <br>
+	 * <p>
+	 * Note: Large ranges are not recommended. If you need to generate a large structure like a nether fort, do not use
+	 * a populator.
+	 *
+	 * @param cube The target cube
+	 *
+	 * @return The bounding box of all cubes potentially writing to {@code cube}
 	 */
 	Box getPopulationRequirement(Cube cube);
 
 	/**
-	 * Called to reload structures that apply to {@code cube}.
-	 * Mostly used to get ready for calls to {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))}
-	 * <br>
-	 * Note: if your generator works better on a 2D system you can do your 2D
-	 * loading in {@link ICubeGenerator#recreateStructures(Column)}
+	 * Called to reload structures that apply to {@code cube}. Mostly used to prepare calls to {@link
+	 * ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))} <br>
 	 *
-	 * @param cube The cube that is being loaded
+	 * @param cube The cube being loaded
+	 *
+	 * @see ICubeGenerator#recreateStructures(Column) for the 2D-equivalent of this method
 	 */
 	void recreateStructures(Cube cube);
 
 	/**
-	 * Called to reload structures that apply to {@code cube}.
-	 * Mostly used to get ready for calls to {@link IColumnGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))}
-	 * <br>
-	 * Note: if your generator works better on a 3D system you can do your 3D
-	 * loading in {@link ICubeGenerator#recreateStructures(Cube)}
+	 * Called to reload structures that apply to {@code column}. Mostly used to prepare calls to {@link
+	 * ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))} <br>
 	 *
-	 * @param cube The cube that is being loaded
+	 * @param column The column being loaded
+	 *
+	 * @see ICubeGenerator#recreateStructures(Cube) for the 3D-equivalent of this method
 	 */
 	void recreateStructures(Column column);
 
 	/**
-	 * Gets a list of entitys that can spawn at pos...
-	 * Used for things like skeletons and blazes spawning in nether forts.
+	 * Retrieve a list of creature classes eligible for spawning at the specified location.
 	 *
-	 * @param creatureType the creature type that we are interested in getting
-	 * @param pos the block position where we need to see what entitys can spawn at
+	 * @param type the creature type that we are interested in spawning
+	 * @param pos the position we want to spawn creatures at
 	 *
-	 * @return a list of mobs that can spawn (example: nether forts return, EntityBlaze, EntityPigZombie,
-	 * EntitySkeleton, EntityMagmaCube)
+	 * @return a list of creature classes that can spawn here. Example: Calling this method inside a nether fortress
+	 * returns EntityBlaze, EntityPigZombie, EntitySkeleton, and EntityMagmaCube
 	 */
 	List<Biome.SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos pos);
 
 	/**
-	 * Gets the closest structure with {@code name}.
-	 * This is used when an eye of ender is trying to find a stronghold.
+	 * Gets the closest structure with name {@code name}. This is primarily used when an eye of ender is trying to find
+	 * a stronghold.
 	 *
 	 * @param name the name of the structure
-	 * @param pos find the structure closest to this BlockPos
+	 * @param pos find the structure closest to this position
+	 *
+	 * @return the position of the structure, or <code>null</code> if none could be found
 	 */
 	@Nullable BlockPos getClosestStructure(String name, BlockPos pos);
 }

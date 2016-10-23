@@ -99,9 +99,9 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 	}
 
 	public static class Builder {
-		private IBlockState block;
 		private final List<Block> replacable;
 		private final List<Block> allowedAboveSurface;
+		private IBlockState block;
 		private int radius;
 		private int height;
 		private ICubicWorld world;

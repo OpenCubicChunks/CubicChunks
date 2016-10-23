@@ -71,8 +71,8 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	private static final int LARGE_NODE_RARITY = 4;
 
 	/**
-	 * The maximum amount of additional branches after generating large node.
-	 * Random value between 0 and LARGE_NODE_MAX_BRANCHES is chosen.
+	 * The maximum amount of additional branches after generating large node. Random value between 0 and
+	 * LARGE_NODE_MAX_BRANCHES is chosen.
 	 */
 	private static final int LARGE_NODE_MAX_BRANCHES = 4;
 
@@ -87,14 +87,12 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	private static final double CAVE_SIZE_ADD = 1.5D;
 
 	/**
-	 * In 1 of STEEP_STEP_RARITY steps, cave will be flattened using
-	 * STEEPER_FLATTEN_FACTOR instead of FLATTEN_FACTOR
+	 * In 1 of STEEP_STEP_RARITY steps, cave will be flattened using STEEPER_FLATTEN_FACTOR instead of FLATTEN_FACTOR
 	 */
 	private static final int STEEP_STEP_RARITY = 6;
 
 	/**
-	 * After each step the Y direction component will be multiplied by this value,
-	 * unless steeper cave is allowed
+	 * After each step the Y direction component will be multiplied by this value, unless steeper cave is allowed
 	 */
 	private static final double FLATTEN_FACTOR = 0.7;
 
@@ -104,8 +102,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	private static final double STEEPER_FLATTEN_FACTOR = 0.92;
 
 	/**
-	 * Each step cave direction angles will be changed by this fraction
-	 * of values that specify how direction changes
+	 * Each step cave direction angles will be changed by this fraction of values that specify how direction changes
 	 */
 	private static final double DIRECTION_CHANGE_FACTOR = 0.1;
 
@@ -137,9 +134,8 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	/**
 	 * Relative "height" if depth floor
 	 * <p>
-	 * -1 results in round cave without flat floor
-	 * 1 will completely fill the cave
-	 * 0 will result in lower half of the cave to be filled with stone
+	 * -1 results in round cave without flat floor 1 will completely fill the cave 0 will result in lower half of the
+	 * cave to be filled with stone
 	 */
 	private static final double CAVE_FLOOR_DEPTH = -0.7;
 
