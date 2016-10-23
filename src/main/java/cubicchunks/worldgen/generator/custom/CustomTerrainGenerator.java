@@ -54,36 +54,25 @@ public class CustomTerrainGenerator {
 	private static final int OCTAVES = 16;
 
 	private final ICubicWorld world;
-	private Biome[] biomes;
-
 	private final long seed;
 	private final Random rand;
-
 	private final double[][][] noiseArrayHigh;
 	private final double[][][] noiseArrayLow;
 	private final double[][][] noiseArrayAlpha;
-
 	private final double[][][] rawDensity;
-
 	private final double[][][] expandedDensity;
-
 	private final IBuilder builderHigh;
 	private final IBuilder builderLow;
 	private final IBuilder builderAlpha;
-
-	private double biomeVolatility;
-	private double biomeHeight;
-
 	private final int maxSmoothRadius;
 	private final int maxSmoothDiameter;
-
 	private final double[][] noiseArrayHeight;
-
 	private final double[] nearBiomeWeightArray;
-
 	private final BasicBuilder builderHeight;
-
 	private final boolean needsScaling = true;
+	private Biome[] biomes;
+	private double biomeVolatility;
+	private double biomeHeight;
 
 	public CustomTerrainGenerator(ICubicWorld world, final long seed) {
 
@@ -235,6 +224,7 @@ public class CustomTerrainGenerator {
 	 * @param xGrad Gradient of density in x direction
 	 * @param yGrad Gradient of density in y direction
 	 * @param zGrad Gradient of density in z direction
+	 *
 	 * @return The block state
 	 */
 	private IBlockState getBlockStateFor(int height, double density, double xGrad, double yGrad, double zGrad) {
@@ -386,8 +376,10 @@ public class CustomTerrainGenerator {
 
 	/**
 	 * Retrieve biomes at the specified column location
+	 *
 	 * @param cubeX column x
 	 * @param cubeZ column z
+	 *
 	 * @return biomes in that column
 	 */
 	private Biome[] getBiomeMap(int cubeX, int cubeZ) {

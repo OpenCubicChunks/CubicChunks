@@ -56,9 +56,10 @@ import cubicchunks.worldgen.generator.ICubePrimer;
  */
 public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
+	private final int worldHeightBlocks;
+	private final int worldHeightCubes;
 	private IChunkGenerator vanilla;
 	private ICubicWorld world;
-
 	/**
 	 * Last chunk that was generated from the vanilla world gen
 	 */
@@ -67,9 +68,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 	 * We generate all the chunks in the vanilla range at once. This variable prevents infinite recursion
 	 */
 	private boolean optimizationHack;
-
 	private Biome[] biomes;
-
 	/**
 	 * Detected block for filling cubes below the world
 	 */
@@ -78,9 +77,6 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 	 * Detected block for filling cubes above the world
 	 */
 	private IBlockState extensionBlockTop = Blocks.AIR.getDefaultState();
-
-	private final int worldHeightBlocks;
-	private final int worldHeightCubes;
 
 	/**
 	 * Create a new VanillaCompatibilityGenerator

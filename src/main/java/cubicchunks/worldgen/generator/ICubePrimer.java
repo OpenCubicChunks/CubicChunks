@@ -52,14 +52,13 @@ public interface ICubePrimer {
 	void setBlockState(int x, int y, int z, IBlockState state);
 
 	/**
-	 * Counting down from the highest block in the cube, find the first non-air
-	 * block for the given location.<br>
-	 * <br>
-	 * NOTE: This will return -1 if there were no blocks under this location<br>
-	 * WARNING: Does not check for blocks above this cube<br>
-	 * 
+	 * Counting down from the highest block in the cube, find the first non-air block for the given location.<br> <br>
+	 * NOTE: This will return -1 if there were no blocks under this location<br> WARNING: Does not check for blocks
+	 * above this cube<br>
+	 *
 	 * @param x cube relative x
 	 * @param z cube relative x
+	 *
 	 * @return the height of the top non-air block at given x, z or -1 if no block was found
 	 */
 	int findGroundHeight(int x, int z);

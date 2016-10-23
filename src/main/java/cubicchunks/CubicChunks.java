@@ -61,17 +61,13 @@ import cubicchunks.world.type.VanillaCubicWorldType;
 public class CubicChunks {
 
 	public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
-	public static Logger LOGGER;
-
 	public static final String MODID = "cubicchunks";
-	private static Config config;
-
+	public static Logger LOGGER;
 	@Instance(value = MODID)
 	public static CubicChunks instance;
-
 	@SidedProxy(clientSide = "cubicchunks.proxy.ClientProxy", serverSide = "cubicchunks.proxy.ServerProxy")
 	public static CommonProxy proxy;
-
+	private static Config config;
 	private static Set<IConfigUpdateListener> configChangeListeners = Collections.newSetFromMap(new WeakHashMap<>());
 
 	@EventHandler
@@ -160,12 +156,6 @@ public class CubicChunks {
 			if (configuration.hasChanged()) configuration.save();
 		}
 
-		public static class GUI extends GuiConfig {
-			public GUI(GuiScreen parent) {
-				super(parent, new ConfigElement(config.configuration.getCategory(Configuration.CATEGORY_GENERAL)).getChildElements(), MODID, false, false, GuiConfig.getAbridgedConfigPath(config.configuration.toString()));
-			}
-		}
-
 		public int getMaxGeneratedCubesPerTick() {
 			return maxGeneratedCubesPerTick;
 		}
@@ -184,6 +174,12 @@ public class CubicChunks {
 
 		public int getWorldHeightUpperBound() {
 			return worldHeightUpperBound;
+		}
+
+		public static class GUI extends GuiConfig {
+			public GUI(GuiScreen parent) {
+				super(parent, new ConfigElement(config.configuration.getCategory(Configuration.CATEGORY_GENERAL)).getChildElements(), MODID, false, false, GuiConfig.getAbridgedConfigPath(config.configuration.toString()));
+			}
 		}
 	}
 }

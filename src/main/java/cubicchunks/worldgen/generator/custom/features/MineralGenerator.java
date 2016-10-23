@@ -45,11 +45,7 @@ public class MineralGenerator extends FeatureGenerator {
 	/**
 	 * Creates new OreGenerator with given min/max height, vein size and number of generation attempts.
 	 * <p>
-	 * minY and maxY:
-	 * <ul>
-	 * <li>-1 - seaLevel-maxTerrainHeight
-	 * <li>0 - sea level.
-	 * <li>1 - seaLevel+maxTerrainHeight
+	 * minY and maxY: <ul> <li>-1 - seaLevel-maxTerrainHeight <li>0 - sea level. <li>1 - seaLevel+maxTerrainHeight
 	 * </ul>
 	 *
 	 * @param minY Minimum generation height

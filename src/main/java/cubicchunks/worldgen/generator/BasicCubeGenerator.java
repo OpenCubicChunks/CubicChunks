@@ -37,14 +37,13 @@ import cubicchunks.world.cube.Cube;
 
 /**
  * A partial implementation of {@link ICubeGenerator} that handles biome assignment.
- *
+ * <p>
  * Structure recreation and lookup are not supported by default.
  */
 public abstract class BasicCubeGenerator implements ICubeGenerator {
 
-	private Biome[] columnBiomes;
-
 	protected ICubicWorld world;
+	private Biome[] columnBiomes;
 
 	public BasicCubeGenerator(ICubicWorld world) {
 		this.world = world;

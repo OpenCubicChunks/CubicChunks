@@ -23,17 +23,17 @@
  */
 package cubicchunks.worldgen.generator;
 
-import cubicchunks.util.Box;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
-
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
-import java.util.List;
+import cubicchunks.util.Box;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
 
 public interface ICubeGenerator {
 
