@@ -67,37 +67,82 @@ import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
+/**
+ * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
+ * with a side length of {@link Cube#SIZE}, aligned to multiples of that length and stored within columns.
+ */
 public class Cube implements XYZAddressable {
 
+	/**
+	 * Side length of a cube
+	 */
 	public static final int SIZE = 16;
 
+	// TODO replace me with a static import
 	private static final Logger LOGGER = CubicChunks.LOGGER;
-
-	private TicketList tickets; // tickets prevent this Cube from being unloaded
-
-	private boolean isModified = false;
-	private boolean isPopulated = false;
-	private boolean isFullyPopulated = false;
-	private boolean isInitialLightingDone = false;
-
-	private ICubicWorld world;
-	private Column column;
-
-	private CubePos coords;
-
-	private ExtendedBlockStorage storage;
-	private EntityContainer entities;
-	private Map<BlockPos, TileEntity> tileEntityMap;
-
+	private final LightUpdateData lightUpdateData = new LightUpdateData(this);
 	/**
-	 * "queue containing the BlockPos of tile entities queued for creation"
+	 * Tickets keep this chunk loaded and ticking. See the docs of {@link TicketList} and {@link
+	 * cubicchunks.util.ticket.ITicket} for additional information.
+	 */
+	private TicketList tickets; // tickets prevent this Cube from being unloaded
+	/**
+	 * Has anything within the cube changed since it was loaded from disk?
+	 */
+	private boolean isModified = false;
+	/**
+	 * Has the cube generator's populate() method been called for this cube?
+	 */
+	private boolean isPopulated = false;
+	/**
+	 * Has the cube generator's populate() method been called for every cube potentially writing to this cube during
+	 * population?
+	 */
+	private boolean isFullyPopulated = false;
+	/**
+	 * Has the initial light map been calculated?
+	 */
+	private boolean isInitialLightingDone = false;
+	/**
+	 * The world of this cube
+	 */
+	private ICubicWorld world;
+	/**
+	 * The column of this cube
+	 */
+	private Column column;
+	/**
+	 * The position of this cube, in cube space
+	 */
+	private CubePos coords;
+	/**
+	 * Blocks in this cube
+	 */
+	private ExtendedBlockStorage storage;
+	/**
+	 * Entities in this cube
+	 */
+	private EntityContainer entities;
+	/**
+	 * The position of tile entities in this cube, and their corresponding tile entity
+	 */
+	private Map<BlockPos, TileEntity> tileEntityMap;
+	/**
+	 * The positions of tile entities queued for creation
 	 */
 	private ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
-
-	private final LightUpdateData lightUpdateData = new LightUpdateData(this);
-
+	/**
+	 * Is this cube loaded and not queued for unload
+	 */
 	private boolean isCubeLoaded;
 
+	/**
+	 * Create a new cube in the specified column at the specified location. The newly created cube will only contain air
+	 * blocks.
+	 *
+	 * @param column column of this cube
+	 * @param cubeY cube y position
+	 */
 	public Cube(Column column, int cubeY) {
 		this.world = column.getCubicWorld();
 		this.column = column;
@@ -110,6 +155,13 @@ public class Cube implements XYZAddressable {
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
 	}
 
+	/**
+	 * Create a new cube at the specified location by copying blocks from a cube primer.
+	 *
+	 * @param column column of this cube
+	 * @param cubeY cube y position
+	 * @param primer primer containing the blocks for this cube
+	 */
 	@SuppressWarnings("deprecation") // when a block is generated, does it really have any extra
 	// information it could give us about its opacity by knowing its location?
 	public Cube(Column column, int cubeY, ICubePrimer primer) {
@@ -145,15 +197,45 @@ public class Cube implements XYZAddressable {
 	//========Chunk vanilla methods=========
 	//======================================
 
+	/**
+	 * Retrieve the block state at the specified location
+	 *
+	 * @param pos target location
+	 *
+	 * @return The block state
+	 *
+	 * @see Cube#getBlockState(int, int, int)
+	 */
 	public IBlockState getBlockState(BlockPos pos) {
 		return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
 	}
 
+	/**
+	 * Set the block state at the specified location
+	 *
+	 * @param pos target location
+	 * @param newstate target state of the block at that position
+	 *
+	 * @return The the old state of the block at the position, or null if there was no change
+	 *
+	 * @see Column#setBlockState(BlockPos, IBlockState)
+	 */
 	// forward to Column, as we don't know how to do skylight and stuff
 	public IBlockState setBlockState(BlockPos pos, IBlockState newstate) {
 		return column.setBlockState(pos, newstate);
 	}
 
+	/**
+	 * Retrieve the block state at the specified location
+	 *
+	 * @param blockX block x position
+	 * @param blockY block y position
+	 * @param blockZ block z position
+	 *
+	 * @return The block state
+	 *
+	 * @see Cube#getBlockState(BlockPos)
+	 */
 	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
 		try {
 			if (storage == null) {
@@ -182,6 +264,7 @@ public class Cube implements XYZAddressable {
 	 */
 	@Nullable
 	public IBlockState setBlockStateDirect(BlockPos pos, IBlockState newstate) {
+		// TODO this method could probably be split up
 		int localX = Coords.blockToLocal(pos.getX());
 		int localY = Coords.blockToLocal(pos.getY());
 		int localZ = Coords.blockToLocal(pos.getZ());
@@ -251,6 +334,14 @@ public class Cube implements XYZAddressable {
 		return oldstate;
 	}
 
+	/**
+	 * Retrieve the raw light level at the specified location
+	 *
+	 * @param lightType The type of light (sky or block light)
+	 * @param pos The position at which light should be checked
+	 *
+	 * @return the light level
+	 */
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
 		//it may not look like this but it's actually the same logic as in vanilla
 		if (this.isEmpty()) {
@@ -283,6 +374,13 @@ public class Cube implements XYZAddressable {
 		}
 	}
 
+	/**
+	 * Set the raw light level at the specified location
+	 *
+	 * @param lightType The type of light (sky or block light)
+	 * @param pos The position at which light should be updated
+	 * @param light the light level
+	 */
 	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {
 		this.isModified = true;
 
@@ -291,7 +389,9 @@ public class Cube implements XYZAddressable {
 		int z = Coords.blockToLocal(pos.getZ());
 
 		switch (lightType) {
+			// TODO missing calls to setModified?
 			case SKY:
+				// TODO we have setSkylight, maybe use that?
 				if (!this.world.getProvider().getHasNoSky()) {
 					if (storage == null) {
 						newStorage();
@@ -309,6 +409,14 @@ public class Cube implements XYZAddressable {
 		}
 	}
 
+	/**
+	 * Set sky light level at this location. Has no effect if the world has no sky.
+	 *
+	 * @param localX block x position in local block coordinates
+	 * @param localY block y position in local block coordinates
+	 * @param localZ block z position in local block coordinates
+	 * @param value the new light level
+	 */
 	public void setSkylight(int localX, int localY, int localZ, int value) {
 		if (!this.world.getProvider().getHasNoSky()) {
 			if (storage == null) {
@@ -319,6 +427,15 @@ public class Cube implements XYZAddressable {
 		}
 	}
 
+	/**
+	 * Retrieve sky light levels at this location. Always returns 0 for worlds with no sky.
+	 *
+	 * @param localX block x position in local block coordinates
+	 * @param localY block y position in local block coordinates
+	 * @param localZ block z position in local block coordinates
+	 *
+	 * @return sky light levels at this location.
+	 */
 	public int getSkylight(int localX, int localY, int localZ) {
 		if (this.world.getProvider().getHasNoSky()) {
 			return 0;
@@ -329,7 +446,15 @@ public class Cube implements XYZAddressable {
 		return this.storage.getExtSkylightValue(localX, localY, localZ);
 	}
 
-
+	/**
+	 * Retrieve actual light level at the specified location. This is the brightest of all types of light affecting this
+	 * block
+	 *
+	 * @param pos the target position
+	 * @param skyLightDampeningTerm skylight falloff factor
+	 *
+	 * @return actual light level at this location
+	 */
 	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
 		// get sky light
 		int skyLight = getLightFor(EnumSkyBlock.SKY, pos);
@@ -342,6 +467,15 @@ public class Cube implements XYZAddressable {
 		return Math.max(blockLight, skyLight);
 	}
 
+	/**
+	 * Create a tile entity at the given position if the block is able to hold one
+	 *
+	 * @param pos position where the tile entity should be placed
+	 *
+	 * @return the created tile entity, or <code>null</code> if the block at that position does not provide tile
+	 * entities
+	 */
+	@Nullable
 	private TileEntity createTileEntity(BlockPos pos) {
 		IBlockState blockState = getBlockState(pos);
 		Block block = blockState.getBlock();
@@ -352,6 +486,11 @@ public class Cube implements XYZAddressable {
 		return null;
 	}
 
+	/**
+	 * Add an entity to this cube
+	 *
+	 * @param entity entity to add
+	 */
 	public void addEntity(Entity entity) {
 		// make sure the entity is in this cube
 		int cubeX = Coords.getCubeXForEntity(entity);
@@ -377,6 +516,11 @@ public class Cube implements XYZAddressable {
 		this.isModified = true;
 	}
 
+	/**
+	 * Remove an entity from this cube
+	 *
+	 * @param entity The entity to remove
+	 */
 	public boolean removeEntity(Entity entity) {
 		boolean wasRemoved = this.entities.remove(entity);
 		if (wasRemoved) {
@@ -385,6 +529,15 @@ public class Cube implements XYZAddressable {
 		return wasRemoved;
 	}
 
+	/**
+	 * Retrieve the tile entity at the specified location
+	 *
+	 * @param pos target location
+	 * @param createType how fast the tile entity is needed
+	 *
+	 * @return the tile entity at the specified location, or <code>null</code> if there is no entity and
+	 * <code>createType</code> was not {@link net.minecraft.world.chunk.Chunk.EnumCreateEntityType#IMMEDIATE}
+	 */
 	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType createType) {
 		TileEntity blockEntity = this.tileEntityMap.get(pos);
 		if (blockEntity != null && blockEntity.isInvalid()) {
@@ -404,6 +557,11 @@ public class Cube implements XYZAddressable {
 		return blockEntity;
 	}
 
+	/**
+	 * Add a tile entity to this cube
+	 *
+	 * @param tileEntity The tile entity to add
+	 */
 	public void addTileEntity(TileEntity tileEntity) {
 		this.addTileEntity(tileEntity.getPos(), tileEntity);
 		if (this.isCubeLoaded) { //TODO: test to see if this is needed
@@ -411,6 +569,12 @@ public class Cube implements XYZAddressable {
 		}
 	}
 
+	/**
+	 * Add a tile entity to this cube at the specified location
+	 *
+	 * @param pos The target location
+	 * @param tileEntity The tile entity to add
+	 */
 	public void addTileEntity(BlockPos pos, TileEntity tileEntity) {
 		// update the tile entity
 		tileEntity.setWorldObj((World) this.world);
@@ -434,6 +598,11 @@ public class Cube implements XYZAddressable {
 		}
 	}
 
+	/**
+	 * Remove the tile entity at the specified location
+	 *
+	 * @param pos target location
+	 */
 	public void removeTileEntity(BlockPos pos) {
 		//it doesn't make sense to me to check if cube is loaded, but vanilla does it
 		if (this.isCubeLoaded) { //TODO: test and see if this is needed
@@ -445,14 +614,38 @@ public class Cube implements XYZAddressable {
 		}
 	}
 
+	/**
+	 * Retrieve all matching entities within a specific area of the world that are also in this cube
+	 *
+	 * @param excluded don't include this entity in the results
+	 * @param queryBox section of the world being checked
+	 * @param out list to which found entities should be added
+	 * @param predicate filter to match entities against
+	 */
 	public void getEntitiesWithinAABBForEntity(Entity excluded, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
 		this.entities.getEntitiesWithinAABBForEntity(excluded, queryBox, out, predicate);
 	}
 
+	/**
+	 * Retrieve all matching entities of the specified type within a specific area of the world that are also in this
+	 * world
+	 *
+	 * @param entityType the type of entity to retrieve
+	 * @param queryBox section of the world being checked
+	 * @param out list to which found entities should be added
+	 * @param predicate filter to match entities against
+	 * @param <T> type parameter for the class of entities being searched for
+	 */
 	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
 		this.entities.getEntitiesOfTypeWithinAAAB(entityType, queryBox, out, predicate);
 	}
 
+
+	/**
+	 * Tick this cube
+	 *
+	 * @param tryToTickFaster Whether costly calculations should be skipped in order to catch up with ticks
+	 */
 	public void tickCube(boolean tryToTickFaster) {
 		if (!this.isInitialLightingDone && this.isPopulated) {
 			this.tryDoFirstLight(); //TODO: Very icky light population code! REMOVE IT!
@@ -473,10 +666,14 @@ public class Cube implements XYZAddressable {
 		}
 	}
 
-	//TODO: Vary icky light population code! REMOVE IT!
+	/**
+	 * Calculate diffuse skylight in this cube if surrounding cubes are loaded
+	 */
+	//TODO: Redo light population code
 	private void tryDoFirstLight() {
 		BlockPos pos = this.getCoords().getMinBlockPos();
 		final int radius = 17;
+		// TODO replace hardcoded constant with reference to Cube#SIZE
 		if (!world.isAreaLoaded(pos.add(-radius, -radius, -radius), pos.add(15 + radius, 15 + radius, 15 + radius))) {
 			return;
 		}
@@ -489,14 +686,33 @@ public class Cube implements XYZAddressable {
 	//=========Other methods===========
 	//=================================
 
+	/**
+	 * Check if there are any non-air blocks in this cube
+	 *
+	 * @return <code>true</code> if this cube contains only air blocks, <code>false</code> otherwise
+	 */
 	public boolean isEmpty() {
 		return storage == null || this.storage.isEmpty();
 	}
 
+	/**
+	 * Return the long-encoded address of this cube's coordinates
+	 *
+	 * @return the cube's address
+	 *
+	 * @see AddressTools#getAddress(int, int, int)
+	 */
 	public long getAddress() {
 		return AddressTools.getAddress(this.coords.getX(), this.coords.getY(), this.coords.getZ());
 	}
 
+	/**
+	 * Convert an integer-encoded address to a local block to a global block position
+	 *
+	 * @param localAddress the address of the block
+	 *
+	 * @return the block position
+	 */
 	public BlockPos localAddressToBlockPos(int localAddress) {
 		int x = Coords.localToBlock(this.coords.getX(), AddressTools.getLocalX(localAddress));
 		int y = Coords.localToBlock(this.coords.getY(), AddressTools.getLocalY(localAddress));
@@ -504,30 +720,61 @@ public class Cube implements XYZAddressable {
 		return new BlockPos(x, y, z);
 	}
 
+	/**
+	 * @return this cube's world
+	 */
 	public ICubicWorld getCubicWorld() {
 		return this.world;
 	}
 
+	/**
+	 * @return this cube's column
+	 */
 	public Column getColumn() {
 		return this.column;
 	}
 
+	/**
+	 * Retrieve this cube's x coordinate in cube space
+	 *
+	 * @return cube x position
+	 */
 	public int getX() {
 		return this.coords.getX();
 	}
 
+	/**
+	 * Retrieve this cube's y coordinate in cube space
+	 *
+	 * @return cube y position
+	 */
 	public int getY() {
 		return this.coords.getY();
 	}
 
+	/**
+	 * Retrieve this cube's z coordinate in cube space
+	 *
+	 * @return cube z position
+	 */
 	public int getZ() {
 		return this.coords.getZ();
 	}
 
+	/**
+	 * @return this cube's position
+	 */
 	public CubePos getCoords() {
 		return this.coords;
 	}
 
+	/**
+	 * Check whether a given global block position is contained in this cube
+	 *
+	 * @param blockPos the position of the block
+	 *
+	 * @return <code>true</code> if the position is within this cube, <code>false</code> otherwise
+	 */
 	public boolean containsBlockPos(BlockPos blockPos) {
 		return this.coords.getX() == Coords.blockToCube(blockPos.getX())
 			&& this.coords.getY() == Coords.blockToCube(blockPos.getY())
@@ -546,14 +793,27 @@ public class Cube implements XYZAddressable {
 		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), !world.getProvider().getHasNoSky());
 	}
 
+	/**
+	 * Retrieve a map of positions to their respective tile entities
+	 *
+	 * @return a map containing all tile entities in this cube
+	 */
 	public Map<BlockPos, TileEntity> getTileEntityMap() {
 		return this.tileEntityMap;
 	}
 
+	/**
+	 * Retrieve a list of entities in this cube
+	 *
+	 * @return the entities' container
+	 */
 	public EntityContainer getEntityContainer() {
 		return this.entities;
 	}
 
+	/**
+	 * Finish the cube loading process
+	 */
 	public void onLoad() {
 		// tell the world about tile entities
 		this.world.addTileEntities(this.tileEntityMap.values());
@@ -561,6 +821,9 @@ public class Cube implements XYZAddressable {
 		this.isCubeLoaded = true;
 	}
 
+	/**
+	 * Mark this cube as no longer part of this world
+	 */
 	public void onUnload() {
 		//first mark as unloaded so that entity list and tile entity map isn't modified while iterating
 		//and it also preserves all entities/time entities so they can be saved
@@ -583,15 +846,28 @@ public class Cube implements XYZAddressable {
 		}
 	}
 
+	/**
+	 * Check if any modifications happened to this cube since it was loaded from disk
+	 *
+	 * @return <code>true</code> if this cube should be written back to disk
+	 */
 	public boolean needsSaving() {
 		return this.entities.needsSaving(true, this.world.getTotalWorldTime(), this.isModified);
 	}
 
+	/**
+	 * Mark this cube as saved to disk
+	 */
 	public void markSaved() {
 		this.entities.markSaved(this.world.getTotalWorldTime());
 		this.isModified = false;
 	}
 
+	/**
+	 * Retrieve a list of tickets currently holding this cube loaded
+	 *
+	 * @return the list of tickets
+	 */
 	public TicketList getTickets() {
 		return tickets;
 	}
@@ -603,6 +879,12 @@ public class Cube implements XYZAddressable {
 		);
 	}
 
+	/**
+	 * Return a seed for random number generation. This seed is persistent across server restarts and returns the same
+	 * value on every call for any given cube in any given world.
+	 *
+	 * @return this cube's random seed
+	 */
 	public long cubeRandomSeed() {
 		long hash = 3;
 		hash = 41*hash + this.world.getSeed();
@@ -615,44 +897,77 @@ public class Cube implements XYZAddressable {
 		return this.lightUpdateData;
 	}
 
+	/**
+	 * Mark this cube as a client side cube. Less work is done in this case, as we expect to receive updates from the
+	 * server
+	 */
 	public void setClientCube() {
 		this.isPopulated = true;
 		this.isFullyPopulated = true;
 		this.isInitialLightingDone = true;
 	}
 
-	public void setPopulated(boolean populated) {
-		this.isPopulated = populated;
-		this.isModified = true;
-	}
-
-	public void setFullyPopulated(boolean populated) {
-		this.isFullyPopulated = populated;
-		this.isModified = true;
-	}
-
 	/**
-	 * @return weather or not the populator has been run for this Cube or not
+	 * Check whether this cube was populated, i.e. if this cube was passed as argument to {@link
+	 * cubicchunks.worldgen.generator.ICubeGenerator#populate(Cube)}. Check there for more information regarding
+	 * population.
+	 *
+	 * @return <code>true</code> if this cube has been populated, <code>false</code> otherwise
 	 */
 	public boolean isPopulated() {
 		return isPopulated;
 	}
 
 	/**
-	 * @return weather this Cube is fully populated or not... aka when even Cubes whos population effects this Cube are
-	 * populated!
+	 * Mark this cube as populated. This means that this cube was passed as argument to {@link
+	 * cubicchunks.worldgen.generator.ICubeGenerator#populate(Cube)}. Check there for more information regarding
+	 * population.
+	 *
+	 * @param populated whether this cube was populated
+	 */
+	public void setPopulated(boolean populated) {
+		this.isPopulated = populated;
+		this.isModified = true;
+	}
+
+	/**
+	 * Check whether this cube was fully populated, i.e. if any cube potentially writing to this cube was passed as an
+	 * argument to {@link cubicchunks.worldgen.generator.ICubeGenerator#populate(Cube)}. Check there for more
+	 * information regarding population
+	 *
+	 * @return <code>true</code> if this cube has been populated, <code>false</code> otherwise
 	 */
 	public boolean isFullyPopulated() {
 		return this.isFullyPopulated;
 	}
 
-	public void setInitialLightingDone(boolean initialLightingDone) {
-		this.isInitialLightingDone = initialLightingDone;
+	/**
+	 * Mark this cube as fully populated. This means that any cube potentially writing to this cube was passed as an
+	 * argument to {@link cubicchunks.worldgen.generator.ICubeGenerator#populate(Cube)}. Check there for more
+	 * information regarding population
+	 *
+	 * @param populated whether this cube was fully populated
+	 */
+	public void setFullyPopulated(boolean populated) {
+		this.isFullyPopulated = populated;
 		this.isModified = true;
 	}
 
+	/**
+	 * Check whether this cube's initial diffuse skylight has been calculated
+	 *
+	 * @return <code>true</code> if it has been calculated, <code>false</code> otherwise
+	 */
 	public boolean isInitialLightingDone() {
 		return isInitialLightingDone;
+	}
+
+	/**
+	 * Notify this cube that it's initial diffuse skylight has been calculated
+	 */
+	public void setInitialLightingDone(boolean initialLightingDone) {
+		this.isInitialLightingDone = initialLightingDone;
+		this.isModified = true;
 	}
 
 	public static class LightUpdateData {

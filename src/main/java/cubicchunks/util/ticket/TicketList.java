@@ -77,6 +77,7 @@ public class TicketList {
 	}
 
 	private void scanShouldTick() {
+		// TODO we can replace this with a constant-time op
 		for (ITicket ticket : tickets) {
 			if (ticket.shouldTick()) {
 				tick = true;
