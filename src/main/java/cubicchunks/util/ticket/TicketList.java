@@ -23,67 +23,59 @@
  */
 package cubicchunks.util.ticket;
 
-import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TicketList {
 
 	private boolean tick = false;
-	private LinkedList<ITicket> tickets = new LinkedList<>();
+	private int tickRefs = 0;
+	private Set<ITicket> tickets = new HashSet<>();
 
 	/**
-	 * Removes a ticket form this tickets
+	 * Removes a ticket form these tickets if present
 	 *
 	 * @param ticket the ticket to remove
 	 */
 	public void remove(ITicket ticket) {
-		tickets.remove(ticket);
-		scanShouldTick();
+		if (tickets.remove(ticket) && ticket.shouldTick()) {
+			tickRefs--;
+		}
 	}
 
 	/**
-	 * Add a ticket to this tickets
+	 * Add a ticket to these tickets if not already present
 	 *
 	 * @param ticket the ticket to add
 	 */
 	public void add(ITicket ticket) {
-		if (tickets.contains(ticket)) {
-			return; // we already have that ticket
+		if (tickets.add(ticket) && ticket.shouldTick()) {
+			tickRefs++;
 		}
-		tickets.add(ticket);
-		tick |= ticket.shouldTick(); // no need to scan the whole list when adding
 	}
 
 	/**
-	 * @param ticket the ticket we want to see if is in this tickets
+	 * @param ticket the ticket we want to see if is in these tickets
 	 *
-	 * @return Does this ticket tickets contain {@Code ticket}
+	 * @return <code>true</code> if this list contained {@code ticket}, <code>false</code> otherwise
 	 */
 	public boolean contains(ITicket ticket) {
 		return tickets.contains(ticket);
 	}
 
 	/**
-	 * @return Should the world be ticking the Cube corresponding to this ticket tickets
+	 * Check if there are any tickets specifying that they want this cube to be ticked
+	 * @return <code>true</code> if this cube can be ticked, false otherwise
 	 */
 	public boolean shouldTick() {
-		return tick;
+		return tickRefs > 0;
 	}
 
 	/**
-	 * @return Weather or not this ticket tickets permits unloading
+	 * Check if there are any tickets preventing this cube from being unloaded
+	 * @return <code>true</code> if this cube can be unloaded, <code>false</code> otherwise
 	 */
 	public boolean canUnload() {
 		return tickets.isEmpty();
-	}
-
-	private void scanShouldTick() {
-		// TODO we can replace this with a constant-time op
-		for (ITicket ticket : tickets) {
-			if (ticket.shouldTick()) {
-				tick = true;
-				return;
-			}
-		}
-		tick = false;
 	}
 }
