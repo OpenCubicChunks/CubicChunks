@@ -239,8 +239,7 @@ public class CustomTerrainGenerator {
 			} else if (yGrad < 0 && density < dirtDepth) {
 				state = Blocks.DIRT.getDefaultState();
 			}
-		} else if (height < 64) {
-			// TODO replace check with GlobalGeneratorConfig.SEA_LEVEL
+		} else if (height < GlobalGeneratorConfig.SEA_LEVEL) {
 			state = Blocks.WATER.getDefaultState();
 		}
 		return state;
