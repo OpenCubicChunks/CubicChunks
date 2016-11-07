@@ -54,7 +54,6 @@ import javax.annotation.Nonnull;
 
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.Coords;
-import cubicchunks.util.MathUtil;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
@@ -70,12 +69,15 @@ public class Column extends Chunk {
 	private ICubeProvider provider;
 	private ICubicWorld world;
 
+	private LightingManager lightManager;
+
 	public Column(ICubeProvider provider, ICubicWorld world, int x, int z) {
 		// NOTE: this constructor is called by the chunk loader
 		super((World) world, x, z);
 
 		this.provider = provider;
 		this.world = world;
+		this.lightManager = world.getLightingManager();
 		init();
 	}
 
@@ -176,69 +178,9 @@ public class Column extends Chunk {
 			return oldstate;
 		}
 
-		this.doOnBlockSetLightUpdates(pos, newstate, oldOpacity);
+		this.lightManager.doOnBlockSetLightUpdates(this, pos, newstate, oldOpacity);
 
 		return oldstate;
-	}
-
-	//TODO: This looks ugly idk
-	private void doOnBlockSetLightUpdates(BlockPos pos, IBlockState newBlockState, int oldOpacity) {
-		int newOpacity = newBlockState.getLightOpacity(this.getWorld(), pos);
-		if (oldOpacity == newOpacity || (oldOpacity >= 15 && newOpacity >= 15)) {
-			//nothing to update, this will frequently happen in ore generation
-			return;
-		}
-
-		int localX = Coords.blockToLocal(pos.getX());
-		int localZ = Coords.blockToLocal(pos.getZ());
-
-		// did the top non-transparent block change?
-		int oldSkylightY = getHeightValue(localX, localZ);
-		this.opacityIndex.onOpacityChange(localX, pos.getY(), localZ, newOpacity);
-		setModified(true);
-
-		int newSkylightY = oldSkylightY;
-		if (!getWorld().isRemote) {
-			newSkylightY = getHeightValue(localX, localZ);
-			//if oldSkylightY == null and newOpacity == 0 then we didn't change anything
-		} else if (!(oldSkylightY < world.getMinHeight() && newOpacity == 0)) {
-			int oldSkylightActual = oldSkylightY - 1;
-			//to avoid unnecessary delay when breaking blocks we need to hack it clientside
-			if ((pos.getY() > oldSkylightActual - 1) && newOpacity != 0) {
-				//we added block, so we can be sure it's correct. Server update will be ignored
-				newSkylightY = pos.getY() + 1;
-			} else if (newOpacity == 0 && pos.getY() == oldSkylightY - 1) {
-				//we changed block to something transparent. Heightmap can change only if we break top block
-
-				//we don't know by how much we changed heightmap, and we could have changed it by any value
-				//but for client code any value higher than render distance means the same
-				//we need to update it enough not to be unresponsive, and then wait for information from server
-				//so only scan 64 blocks down. If we updated more - we would need to wait for renderer updates anyway
-				int newTop = oldSkylightActual - 1;
-				while (getBlockLightOpacity(new BlockPos(localX, newTop, localZ)) == 0 &&
-					newTop > oldSkylightActual - 65) {
-					newTop--;
-				}
-				newSkylightY = newTop;
-			} else {
-				// no change
-				newSkylightY = oldSkylightActual;
-			}
-			//update the heightmap. If out update it not accurate - it will be corrected when server sends block update
-			((ClientHeightMap) opacityIndex).setHeight(localX, localZ, newSkylightY);
-		}
-
-		int minY = MathUtil.minInteger(oldSkylightY, newSkylightY);
-		int maxY = MathUtil.maxInteger(oldSkylightY, newSkylightY);
-		if (minY > maxY) {
-			int t = minY;
-			minY = maxY;
-			maxY = t;
-		}
-
-		LightingManager lightManager = this.world.getLightingManager();
-		lightManager.columnSkylightUpdate(LightingManager.UpdateType.IMMEDIATE, this, localX, minY, maxY, localZ);
-
 	}
 
 	//forward to cube

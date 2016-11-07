@@ -101,6 +101,8 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 			this.provider = new VanillaCubicProvider(this, provider);
 		}
 
+		this.lightingManager = new LightingManager(this);
+
 		//don't want to make world implement IConfigChangeListener
 		CubicChunks.addConfigChangeListener(this);
 	}
@@ -194,10 +196,6 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Override public int getMaxHeight() {
 		return this.maxHeight;
-	}
-
-	@Override public void tickCubicWorld() {
-		this.lightingManager.tick();
 	}
 
 	@Override public ICubeProvider getCubeCache() {

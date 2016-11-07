@@ -38,11 +38,13 @@ import java.util.Collection;
 import java.util.List;
 
 import cubicchunks.util.CubePos;
+import cubicchunks.world.IHeightMap;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 
 public class PacketCube implements IMessage {
 
+	private int[] heightMap;
 	private Type type;
 	private CubePos cubePos;
 	private byte[] data;
@@ -64,6 +66,13 @@ public class PacketCube implements IMessage {
 			this.tileEntityTags.add(te.getUpdateTag());
 		}
 		this.type = type;
+		this.heightMap = new int[Cube.SIZE*Cube.SIZE];
+		IHeightMap heightmap = cube.getColumn().getOpacityIndex();
+		for (int localX = 0; localX < Cube.SIZE; localX++) {
+			for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
+				this.heightMap[index(localX, localZ)] = heightmap.getTopBlockY(localX, localZ);
+			}
+		}
 	}
 
 	@Override
@@ -76,6 +85,10 @@ public class PacketCube implements IMessage {
 		this.tileEntityTags = new ArrayList<>(numTiles);
 		for (int i = 0; i < numTiles; i++) {
 			this.tileEntityTags.add(ByteBufUtils.readTag(buf));
+		}
+		this.heightMap = new int[Cube.SIZE*Cube.SIZE];
+		for (int i = 0; i < Cube.SIZE*Cube.SIZE; i++) {
+			heightMap[i] = buf.readInt();
 		}
 	}
 
@@ -90,6 +103,9 @@ public class PacketCube implements IMessage {
 		buf.writeInt(this.tileEntityTags.size());
 		for (NBTTagCompound tag : this.tileEntityTags) {
 			ByteBufUtils.writeTag(buf, tag);
+		}
+		for (int i = 0; i < Cube.SIZE*Cube.SIZE; i++) {
+			buf.writeInt(heightMap[i]);
 		}
 	}
 
@@ -109,12 +125,20 @@ public class PacketCube implements IMessage {
 		return type;
 	}
 
+	public int height(int localX, int localZ) {
+		return heightMap[index(localX, localZ)];
+	}
+
 	public static class Handler extends AbstractClientMessageHandler<PacketCube> {
 		@Override
 		public IMessage handleClientMessage(EntityPlayer player, PacketCube message, MessageContext ctx) {
 			ClientHandler.getInstance().handle(message);
 			return null;
 		}
+	}
+
+	private static int index(int x, int z) {
+		return x << 4 | z;
 	}
 
 	public enum Type {

@@ -41,6 +41,7 @@ import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorldClient;
+import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
@@ -106,6 +107,18 @@ public class ClientHandler implements INetHandler {
 
 			if (tileEntity != null) {
 				tileEntity.handleUpdateTag(tag);
+			}
+		}
+
+		IHeightMap heightMap = column.getOpacityIndex();
+		LightingManager lightManager = worldClient.getLightingManager();
+		for (int localX = 0; localX < Cube.SIZE; localX++) {
+			for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
+				int oldHeight = heightMap.getTopBlockY(localX, localZ);
+				int newHeight = packet.height(localX, localZ);
+				if (oldHeight != newHeight) {
+					lightManager.onHeightMapUpdate(column, localX, localZ, oldHeight, newHeight);
+				}
 			}
 		}
 	}
@@ -185,9 +198,7 @@ public class ClientHandler implements INetHandler {
 			int oldHeight = index.getTopBlockY(x, z);
 			index.setHeight(x, z, height);
 
-			int minY = Math.min(oldHeight, height);
-			int maxY = Math.max(oldHeight, height);
-			lm.columnSkylightUpdate(LightingManager.UpdateType.QUEUED, cube.getColumn(), x, minY, maxY, z);
+			lm.onHeightMapUpdate(cube.getColumn(), x, z, oldHeight, height);
 		}
 		// apply the update
 		for (int i = 0; i < packet.localAddresses.length; i++) {

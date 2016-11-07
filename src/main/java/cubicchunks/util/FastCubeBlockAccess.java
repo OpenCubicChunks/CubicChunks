@@ -100,13 +100,10 @@ public class FastCubeBlockAccess {
 	 * Faster version of world.getRawLight that works for skylight
 	 */
 	public int computeLightValue(BlockPos pos) {
-		Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
-		Column column = cube.getColumn();
-		int height = column.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
-		if (pos.getY() > height) {
+		if (canSeeSky(pos)) {
 			return 15;
 		}
-
+		Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
 		IBlockState iblockstate = cube.getBlockState(pos);
 		int lightSubtract = iblockstate.getLightOpacity((IBlockAccess) world, pos);
 
@@ -134,5 +131,45 @@ public class FastCubeBlockAccess {
 
 		currentPos.release();
 		return maxValue;
+	}
+
+	public boolean canSeeSky(BlockPos pos) {
+		Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
+		Column column = cube.getColumn();
+		int height = column.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
+		return height > pos.getY();
+	}
+
+	public int getEmittedLight(BlockPos pos, EnumSkyBlock type) {
+		switch (type) {
+			case BLOCK:
+				return getBlockState(pos).getLightValue((IBlockAccess) world, pos);
+			case SKY:
+				return canSeeSky(pos) ? 15 : 0;
+			default:
+				throw new AssertionError();
+		}
+	}
+
+	public int getLightFromNeighbors(EnumSkyBlock type, BlockPos pos) {
+		//TODO: use MutableBlockPos?
+		int max = 0;
+		for (EnumFacing direction : EnumFacing.values()) {
+			int light = getLightFor(type, pos.offset(direction));
+			if (light > max) {
+				max = light;
+			}
+		}
+		return max - getBlockLightOpacity(pos);
+	}
+
+	public static FastCubeBlockAccess forBlockRegion(ICubeProvider prov, BlockPos startPos, BlockPos endPos) {
+		BlockPos midPos = Coords.midPos(startPos, endPos);
+		Cube center = prov.getLoadedCube(CubePos.fromBlockCoords(midPos));
+		int dx = Math.abs(startPos.getX() - endPos.getX());
+		int dy = Math.abs(startPos.getY() - endPos.getY());
+		int dz = Math.abs(startPos.getZ() - endPos.getZ());
+		int r = MathUtil.max(dx, dy, dz);
+		return new FastCubeBlockAccess(prov, center, r);
 	}
 }
