@@ -44,8 +44,6 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
 
-import org.apache.logging.log4j.Logger;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +52,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.annotation.Nullable;
 
-import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
@@ -67,6 +64,8 @@ import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
+import static cubicchunks.CubicChunks.LOGGER;
+
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
  * with a side length of {@link Cube#SIZE}, aligned to multiples of that length and stored within columns.
@@ -78,8 +77,6 @@ public class Cube implements XYZAddressable {
 	 */
 	public static final int SIZE = 16;
 
-	// TODO replace me with a static import
-	private static final Logger LOGGER = CubicChunks.LOGGER;
 	private final LightUpdateData lightUpdateData = new LightUpdateData(this);
 	/**
 	 * Tickets keep this chunk loaded and ticking. See the docs of {@link TicketList} and {@link
@@ -357,13 +354,7 @@ public class Cube implements XYZAddressable {
 
 		switch (lightType) {
 			case SKY:
-				if (this.world.getProvider().getHasNoSky()) {
-					return 0;
-				}
-				if (storage == null) {
-					return lightType.defaultLightValue;
-				}
-				return this.storage.getExtSkylightValue(localX, localY, localZ);
+				return getSkylight(localX, localY, localZ);
 			case BLOCK:
 				if (storage == null) {
 					return lightType.defaultLightValue;
@@ -389,15 +380,8 @@ public class Cube implements XYZAddressable {
 		int z = Coords.blockToLocal(pos.getZ());
 
 		switch (lightType) {
-			// TODO missing calls to setModified?
 			case SKY:
-				// TODO we have setSkylight, maybe use that?
-				if (!this.world.getProvider().getHasNoSky()) {
-					if (storage == null) {
-						newStorage();
-					}
-					this.storage.setExtSkylightValue(x, y, z, light);
-				}
+				setSkylight(x, y, z, light);
 				break;
 
 			case BLOCK:

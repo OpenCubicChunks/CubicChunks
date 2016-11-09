@@ -30,7 +30,6 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -43,15 +42,12 @@ import cubicchunks.world.cube.Cube;
  */
 class CubeMap implements Iterable<Cube> {
 
-	private static final Comparator<Cube> ORDER = (one, two) ->
-		one.getY() - two.getY();
-
 	private final List<Cube> cubes = new ArrayList<>();
 
 	private ExtendedBlockStorage[] toBlockTick = new ExtendedBlockStorage[0];
 
 	/**
-	 * Remove the target cube from the storage
+	 * Removes the cube at {@code cubeY}
 	 *
 	 * @param cubeY cube y position
 	 *
@@ -63,17 +59,16 @@ class CubeMap implements Iterable<Cube> {
 	}
 
 	/**
-	 * Add a cube to the storage
+	 * Adds a cube
 	 *
 	 * @param cube the cube to add
 	 */
 	void put(@Nonnull Cube cube) {
-		if (this.contains(cube.getY())) {
+		int searchIndex = binarySearch(cube.getY());
+		if (this.contains(cube.getY(), searchIndex)) {
 			throw new IllegalArgumentException("Cube at " + cube.getY() + " already exists!");
 		}
-		cubes.add(cube);
-		cubes.sort(ORDER); // kind of expensive... but puts don't happen much (wish there was a SortedArrayList)
-		// TODO use binary search instead
+		cubes.add(searchIndex, cube);
 	}
 
 	/**
@@ -107,13 +102,13 @@ class CubeMap implements Iterable<Cube> {
 	/**
 	 * Check if the target cube is stored here
 	 *
-	 * @param cubeY the target cube
+	 * @param cubeY the y coordinate of the cube
+	 * @param searchIndex the index to search at (got form {@link #binarySearch(int)})
 	 *
 	 * @return <code>true</code> if the cube is contained here, <code>false</code> otherwise
 	 */
-	private boolean contains(int cubeY) {
-		int index = binarySearch(cubeY);
-		return index < cubes.size() && cubes.get(index).getY() == cubeY;
+	private boolean contains(int cubeY, int searchIndex) {
+		return searchIndex < cubes.size() && cubes.get(searchIndex).getY() == cubeY;
 	}
 
 	/**
@@ -208,6 +203,6 @@ class CubeMap implements Iterable<Cube> {
 			}
 		}
 
-		return mid; // not found :(
+		return start; // not found :(
 	}
 }
