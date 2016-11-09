@@ -68,13 +68,12 @@ class CubeMap implements Iterable<Cube> {
 	 * @param cube the cube to add
 	 */
 	void put(@Nonnull Cube cube) {
-		// TODO trade memory for runtime? We could have an IntHashset storing added cube ids for faster contains()
-		// checks
 		if (this.contains(cube.getY())) {
 			throw new IllegalArgumentException("Cube at " + cube.getY() + " already exists!");
 		}
-		int index = binarySearch(cube.getY());
-		cubes.add(index, cube);
+		cubes.add(cube);
+		cubes.sort(ORDER); // kind of expensive... but puts don't happen much (wish there was a SortedArrayList)
+		// TODO use binary search instead
 	}
 
 	/**
