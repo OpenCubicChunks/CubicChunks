@@ -44,6 +44,8 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
 
+import org.apache.logging.log4j.Logger;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +54,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.annotation.Nullable;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
@@ -64,8 +67,6 @@ import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
-import static cubicchunks.CubicChunks.LOGGER;
-
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
  * with a side length of {@link Cube#SIZE}, aligned to multiples of that length and stored within columns.
@@ -77,6 +78,8 @@ public class Cube implements XYZAddressable {
 	 */
 	public static final int SIZE = 16;
 
+	// TODO replace me with a static import
+	private static final Logger LOGGER = CubicChunks.LOGGER;
 	private final LightUpdateData lightUpdateData = new LightUpdateData(this);
 	/**
 	 * Tickets keep this chunk loaded and ticking. See the docs of {@link TicketList} and {@link
@@ -281,16 +284,27 @@ public class Cube implements XYZAddressable {
 
 		storage.set(localX, localY, localZ, newstate); // set the block state!
 
-		// deal with Block.breakBlock()
-		if (!this.world.isRemote() && newblock != oldblock) {
-			//Only fire block breaks when the block changes.
-			oldblock.breakBlock((World) this.world, pos, oldstate);
+		// deal with Block.breakBlock() and TileEntity's
+		if (!this.world.isRemote()) {
+			if (newblock != oldblock) { //Only fire block breaks when the block changes.
+				oldblock.breakBlock((World) this.world, pos, oldstate);
+			}
+
+			TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
+
+			if (te != null && te.shouldRefresh((World) this.world, pos, oldstate, newstate)) {
+				this.world.removeTileEntity(pos);
+			}
+		} else if (oldblock.hasTileEntity(oldstate)) {
+			TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
+
+			if (te != null && te.shouldRefresh((World) this.world, pos, oldstate, newstate)) {
+				this.world.removeTileEntity(pos);
+			}
 		}
 
-		removeTileEntityOnBlockChange(pos, newstate, oldstate);
-
-		if (storage.get(localX, localY, localZ).getBlock() != newblock) {
-			return null; // something changed... but its out of our control (maybe a TileEntity changed the block?)
+		if (storage.get(localX, localY, localZ).getBlock() != newblock) { // A TileEntity changed the bock on us!!!
+			return null; // something changed... but its out of our control
 			// (aka another Cube.setBlockState() call handled it)
 			// so return as if 'nothing changed'
 		}
@@ -304,49 +318,20 @@ public class Cube implements XYZAddressable {
 		}
 
 		if (newblock.hasTileEntity(newstate)) {
-			updateTileEntityOnBlockChange(pos, newblock, newstate);
+			TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
+
+			if (te == null) {
+				te = newblock.createTileEntity((World) this.world, newstate);
+				this.world.setTileEntity(pos, te);
+			}
+
+			if (te != null) {
+				te.updateContainingBlockInfo();
+			}
 		}
 
 		this.isModified = true; // a block state changes, so we will need saving
 		return oldstate;
-	}
-
-	/**
-	 * If the block at the given position changed, check if the new block at that position expects to hold a tile
-	 * entity. If it does, create it if needed and update it to notify it of the change.
-	 *
-	 * @param pos position of the block
-	 * @param block the new block at that position
-	 * @param blockState the new state of that block
-	 */
-	private void updateTileEntityOnBlockChange(BlockPos pos, Block block, IBlockState blockState) {
-		TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
-
-		if (te == null) {
-			te = block.createTileEntity((World) this.world, blockState);
-			this.world.setTileEntity(pos, te);
-		}
-
-		// Warning incorrect - Block.createTileEntity is @Nullable
-		if (te != null) {
-			te.updateContainingBlockInfo();
-		}
-	}
-
-	/**
-	 * If the block at the given position changed, check if there is a tile entity at that position that needs to be
-	 * removed.
-	 *
-	 * @param pos position of the block
-	 * @param newstate new state of the block at that position
-	 * @param oldstate old state of the block at that position
-	 */
-	private void removeTileEntityOnBlockChange(BlockPos pos, IBlockState newstate, IBlockState oldstate) {
-		TileEntity te = this.getTileEntity(pos, Chunk.EnumCreateEntityType.CHECK);
-
-		if (te != null && te.shouldRefresh((World) this.world, pos, oldstate, newstate)) {
-			this.world.removeTileEntity(pos);
-		}
 	}
 
 	/**
@@ -372,7 +357,13 @@ public class Cube implements XYZAddressable {
 
 		switch (lightType) {
 			case SKY:
-				return getSkylight(localX, localY, localZ);
+				if (this.world.getProvider().getHasNoSky()) {
+					return 0;
+				}
+				if (storage == null) {
+					return lightType.defaultLightValue;
+				}
+				return this.storage.getExtSkylightValue(localX, localY, localZ);
 			case BLOCK:
 				if (storage == null) {
 					return lightType.defaultLightValue;
@@ -398,8 +389,15 @@ public class Cube implements XYZAddressable {
 		int z = Coords.blockToLocal(pos.getZ());
 
 		switch (lightType) {
+			// TODO missing calls to setModified?
 			case SKY:
-				setSkylight(x, y, z, light);
+				// TODO we have setSkylight, maybe use that?
+				if (!this.world.getProvider().getHasNoSky()) {
+					if (storage == null) {
+						newStorage();
+					}
+					this.storage.setExtSkylightValue(x, y, z, light);
+				}
 				break;
 
 			case BLOCK:
@@ -644,13 +642,13 @@ public class Cube implements XYZAddressable {
 
 
 	/**
-	 * Tick this cube, creating diffuse light maps and processing queued tile entities as needed
+	 * Tick this cube
 	 *
 	 * @param tryToTickFaster Whether costly calculations should be skipped in order to catch up with ticks
 	 */
 	public void tickCube(boolean tryToTickFaster) {
 		if (!this.isInitialLightingDone && this.isPopulated) {
-			this.tryDoFirstLight();
+			this.tryDoFirstLight(); //TODO: Very icky light population code! REMOVE IT!
 		}
 
 		while (!this.tileEntityPosQueue.isEmpty()) {
@@ -675,10 +673,8 @@ public class Cube implements XYZAddressable {
 	private void tryDoFirstLight() {
 		BlockPos pos = this.getCoords().getMinBlockPos();
 		final int radius = 17;
-		final int offsetLow = -radius;
-		final int offsetHigh = Cube.SIZE + radius - 1;
-
-		if (!world.isAreaLoaded(pos.add(offsetLow, offsetLow, offsetLow), pos.add(offsetHigh, offsetHigh, offsetHigh))) {
+		// TODO replace hardcoded constant with reference to Cube#SIZE
+		if (!world.isAreaLoaded(pos.add(-radius, -radius, -radius), pos.add(15 + radius, 15 + radius, 15 + radius))) {
 			return;
 		}
 		//client cubes (setClientCube) are always fully generated, isInitialLightingDone is never false
