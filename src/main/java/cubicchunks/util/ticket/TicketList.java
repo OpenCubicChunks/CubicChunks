@@ -23,25 +23,28 @@
  */
 package cubicchunks.util.ticket;
 
-import java.util.LinkedList;
+import com.google.common.collect.Lists;
+
+import java.util.List;
 
 public class TicketList {
 
-	private boolean tick = false;
-	private LinkedList<ITicket> tickets = new LinkedList<>();
+	private int tickRefs = 0;
+	private List<ITicket> tickets = Lists.newArrayListWithCapacity(1);
 
 	/**
-	 * Removes a ticket form this tickets
+	 * Removes a ticket form this ticket list if present
 	 *
 	 * @param ticket the ticket to remove
 	 */
 	public void remove(ITicket ticket) {
-		tickets.remove(ticket);
-		scanShouldTick();
+		if (tickets.remove(ticket) && ticket.shouldTick()) {
+			tickRefs--;
+		}
 	}
 
 	/**
-	 * Add a ticket to this tickets
+	 * Add a ticket to this ticket list if not already present
 	 *
 	 * @param ticket the ticket to add
 	 */
@@ -50,40 +53,29 @@ public class TicketList {
 			return; // we already have that ticket
 		}
 		tickets.add(ticket);
-		tick |= ticket.shouldTick(); // no need to scan the whole list when adding
+		tickRefs += ticket.shouldTick() ? 1 : 0; // keep track of the number of tickets that want to tick
 	}
 
 	/**
-	 * @param ticket the ticket we want to see if is in this tickets
+	 * @param ticket the ticket to check for
 	 *
-	 * @return Does this ticket tickets contain {@Code ticket}
+	 * @return {@code true} if this list contains {@code ticket}, {@code false} otherwise
 	 */
 	public boolean contains(ITicket ticket) {
 		return tickets.contains(ticket);
 	}
 
 	/**
-	 * @return Should the world be ticking the Cube corresponding to this ticket tickets
+	 * @return Should the world be ticking the Cube corresponding to this ticket list
 	 */
 	public boolean shouldTick() {
-		return tick;
+		return tickRefs > 0;
 	}
 
 	/**
-	 * @return Weather or not this ticket tickets permits unloading
+	 * @return {@code true} if this cube can be unloaded, {@code false} otherwise
 	 */
 	public boolean canUnload() {
 		return tickets.isEmpty();
-	}
-
-	private void scanShouldTick() {
-		// TODO we can replace this with a constant-time op
-		for (ITicket ticket : tickets) {
-			if (ticket.shouldTick()) {
-				tick = true;
-				return;
-			}
-		}
-		tick = false;
 	}
 }
