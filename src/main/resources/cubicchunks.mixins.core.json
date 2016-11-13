@@ -27,6 +27,7 @@
     "core.client.MixinChunkCache_HeightLimits",
     "core.client.MixinViewFrustum_RenderHeightFix",
     "noncritical.client.MixinViewFrustum_VertViewDistance",
+    "noncritical.client.MixinEntityRenderer",
     "noncritical.client.MixinRenderChunk",
     "noncritical.client.MixinGuiOverlayDebug"
   ],
