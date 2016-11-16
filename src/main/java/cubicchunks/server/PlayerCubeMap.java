@@ -61,7 +61,7 @@ import cubicchunks.world.column.Column;
 
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
-import static net.minecraft.util.math.MathHelper.clamp_int;
+import static net.minecraft.util.math.MathHelper.clamp;
 
 /**
  * A cubic chunks implementation of Player Manager.
@@ -272,7 +272,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 				if (success) {
 					iter.remove();
 
-					if (entry.sentToPlayers()) {
+					if (entry.sendToPlayers()) {
 						this.columnsToSendToClients.remove(entry);
 					}
 				}
@@ -325,7 +325,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 			while (iter.hasNext()) {
 				ColumnWatcher next = iter.next();
-				if (next.sentToPlayers()) {
+				if (next.sendToPlayers()) {
 					iter.remove();
 				}
 			}
@@ -489,7 +489,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 	// CHECKED: 1.10.2-12.18.1.2092
 	@Override
-	public void updateMountedMovingPlayer(EntityPlayerMP player) {
+	public void updateMovingPlayer(EntityPlayerMP player) {
 		// the player moved
 		// if the player moved into a new chunk, update which chunks the player needs to know about
 		// then update the list of chunks that need to be sent to the client
@@ -574,8 +574,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		if (this.players == null) {
 			return;
 		}
-		newHorizontalViewDistance = clamp_int(newHorizontalViewDistance, 3, 32);
-		newVerticalViewDistance = clamp_int(newVerticalViewDistance, 3, 32);
+		newHorizontalViewDistance = clamp(newHorizontalViewDistance, 3, 32);
+		newVerticalViewDistance = clamp(newVerticalViewDistance, 3, 32);
 
 		if (newHorizontalViewDistance == this.horizontalViewDistance && newVerticalViewDistance == this.verticalViewDistance) {
 			return;

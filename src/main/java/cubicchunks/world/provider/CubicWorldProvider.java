@@ -105,7 +105,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 
 		boolean isAdventure = worldObj.getWorldInfo().getGameType() == GameType.ADVENTURE;
 		int spawnFuzz = this.worldObj instanceof WorldServer ? worldObj.getWorldType().getSpawnFuzz((WorldServer) this.worldObj, this.worldObj.getMinecraftServer()) : 1;
-		int border = MathHelper.floor_double(worldObj.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
+		int border = MathHelper.floor(worldObj.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
 		if (border < spawnFuzz) spawnFuzz = border;
 
 		if (!getHasNoSky() && !isAdventure && spawnFuzz != 0) {

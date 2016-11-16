@@ -45,6 +45,6 @@ public abstract class MixinEntityMinecart_KillFix extends Entity {
 	 */
 	@ModifyConstant(method = "onUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
 	private double getDeathY(double originalY) {
-		return ((ICubicWorld) worldObj).getMinHeight() + originalY;
+		return ((ICubicWorld) world).getMinHeight() + originalY;
 	}
 }

@@ -123,8 +123,8 @@ public class BigTreeGenerator extends TreeGenerator {
 					// if(d1 < -5D) d1 = -5D;
 					// branch angle (around trunk)
 					double d2 = rand.nextFloat()*2D*3.1415899999999999D;
-					int k1 = MathHelper.floor_double(d1*Math.sin(d2) + basePos[0] + d);
-					int l1 = MathHelper.floor_double(d1*Math.cos(d2) + basePos[2] + d);
+					int k1 = MathHelper.floor(d1*Math.sin(d2) + basePos[0] + d);
+					int l1 = MathHelper.floor(d1*Math.cos(d2) + basePos[2] + d);
 					int ai1[] = {k1, j, l1};
 					int ai2[] = {k1, j + leafDistanceLimit, l1};
 					if (checkBlockLine(ai1, ai2) != -1) {
@@ -286,9 +286,9 @@ public class BigTreeGenerator extends TreeGenerator {
 		int ai3[] = {0, 0, 0};
 		int k = 0;
 		for (int l = ai2[j] + byte3; k != l; k += byte3) {
-			ai3[j] = MathHelper.floor_double(ai[j] + k + 0.5D);
-			ai3[byte1] = MathHelper.floor_double(ai[byte1] + k*d + 0.5D);
-			ai3[byte2] = MathHelper.floor_double(ai[byte2] + k*d1 + 0.5D);
+			ai3[j] = MathHelper.floor(ai[j] + k + 0.5D);
+			ai3[byte1] = MathHelper.floor(ai[byte1] + k*d + 0.5D);
+			ai3[byte2] = MathHelper.floor(ai[byte2] + k*d1 + 0.5D);
 			this.setBlockOnly(new BlockPos(ai3[0], ai3[1], ai3[2]), this.woodBlock);
 			// worldObj.setBlock(ai3[0], ai3[1], ai3[2], i);
 		}
@@ -904,8 +904,8 @@ public class BigTreeGenerator extends TreeGenerator {
 				break;
 			}
 			ai3[i] = ai[i] + j;
-			ai3[byte1] = MathHelper.floor_double(ai[byte1] + j*d);
-			ai3[byte2] = MathHelper.floor_double(ai[byte2] + j*d1);
+			ai3[byte1] = MathHelper.floor(ai[byte1] + j*d);
+			ai3[byte2] = MathHelper.floor(ai[byte2] + j*d1);
 			Block l = this.getBlockState(new BlockPos(ai3[0], ai3[1], ai3[2])).getBlock();
 			if (l != Blocks.AIR && l != Blocks.LEAVES && l != Blocks.LOG) {
 				break;

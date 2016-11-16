@@ -979,8 +979,8 @@ public class Cube implements XYZAddressable {
 			minY -= Coords.cubeToMinBlock(cube.getY());
 			maxY -= Coords.cubeToMinBlock(cube.getY());
 
-			minY = MathHelper.clamp_int(minY, 0, 15);
-			maxY = MathHelper.clamp_int(maxY, 0, 15);
+			minY = MathHelper.clamp(minY, 0, 15);
+			maxY = MathHelper.clamp(maxY, 0, 15);
 
 			int index = index(localX, localZ);
 			short v = minMaxHeights[localX << 4 | localZ];

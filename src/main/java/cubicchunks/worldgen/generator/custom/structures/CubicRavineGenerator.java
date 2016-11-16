@@ -39,7 +39,7 @@ import cubicchunks.worldgen.generator.ICubePrimer;
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
 import static net.minecraft.util.math.MathHelper.cos;
-import static net.minecraft.util.math.MathHelper.floor_double;
+import static net.minecraft.util.math.MathHelper.floor;
 import static net.minecraft.util.math.MathHelper.sin;
 
 public class CubicRavineGenerator extends CubicStructureGenerator {
@@ -233,12 +233,12 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 			ravineZ > genCubeCenterZ + Cube.SIZE + ravineSizeHoriz*2.0D) {
 			return;
 		}
-		int minLocalX = floor_double(ravineX - ravineSizeHoriz) - generatedCubePos.getMinBlockX() - 1;
-		int maxLocalX = floor_double(ravineX + ravineSizeHoriz) - generatedCubePos.getMinBlockX() + 1;
-		int minLocalY = floor_double(ravineY - ravineSizeVert) - generatedCubePos.getMinBlockY() - 1;
-		int maxLocalY = floor_double(ravineY + ravineSizeVert) - generatedCubePos.getMinBlockY() + 1;
-		int minLocalZ = floor_double(ravineZ - ravineSizeHoriz) - generatedCubePos.getMinBlockZ() - 1;
-		int maxLocalZ = floor_double(ravineZ + ravineSizeHoriz) - generatedCubePos.getMinBlockZ() + 1;
+		int minLocalX = floor(ravineX - ravineSizeHoriz) - generatedCubePos.getMinBlockX() - 1;
+		int maxLocalX = floor(ravineX + ravineSizeHoriz) - generatedCubePos.getMinBlockX() + 1;
+		int minLocalY = floor(ravineY - ravineSizeVert) - generatedCubePos.getMinBlockY() - 1;
+		int maxLocalY = floor(ravineY + ravineSizeVert) - generatedCubePos.getMinBlockY() + 1;
+		int minLocalZ = floor(ravineZ - ravineSizeHoriz) - generatedCubePos.getMinBlockZ() - 1;
+		int maxLocalZ = floor(ravineZ + ravineSizeHoriz) - generatedCubePos.getMinBlockZ() + 1;
 
 		//skip is if everything is outside of that cube
 		if (maxLocalX <= 0 || minLocalX >= Cube.SIZE ||

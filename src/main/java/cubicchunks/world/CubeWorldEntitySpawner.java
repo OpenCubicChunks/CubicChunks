@@ -149,7 +149,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 				int searchRadius = 6;
 				Biome.SpawnListEntry biomeMobs = null;
 				IEntityLivingData entityData = null;
-				int numSpawnAttempts = MathHelper.ceiling_double_int(Math.random()*4.0D);
+				int numSpawnAttempts = MathHelper.ceil(Math.random()*4.0D);
 
 				Random rand = world.getRand();
 				for (int spawnAttempt = 0; spawnAttempt < numSpawnAttempts; ++spawnAttempt) {

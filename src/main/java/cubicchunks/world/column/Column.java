@@ -474,8 +474,8 @@ public class Column extends Chunk {
 	public void getEntitiesWithinAABBForEntity(Entity exclude, AxisAlignedBB queryBox, @Nonnull List<Entity> out, Predicate<? super Entity> predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
-		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - World.MAX_ENTITY_RADIUS));
-		int maxCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.maxY + World.MAX_ENTITY_RADIUS));
+		int minCubeY = Coords.blockToCube(MathHelper.floor(queryBox.minY - World.MAX_ENTITY_RADIUS));
+		int maxCubeY = Coords.blockToCube(MathHelper.floor(queryBox.maxY + World.MAX_ENTITY_RADIUS));
 
 		for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 			Cube cube = getCube(cubeY);
@@ -496,8 +496,8 @@ public class Column extends Chunk {
 	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(@Nonnull Class<? extends T> entityType, AxisAlignedBB queryBox, @Nonnull List<T> out, Predicate<? super T> predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
-		int minCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.minY - World.MAX_ENTITY_RADIUS));
-		int maxCubeY = Coords.blockToCube(MathHelper.floor_double(queryBox.maxY + World.MAX_ENTITY_RADIUS));
+		int minCubeY = Coords.blockToCube(MathHelper.floor(queryBox.minY - World.MAX_ENTITY_RADIUS));
+		int maxCubeY = Coords.blockToCube(MathHelper.floor(queryBox.maxY + World.MAX_ENTITY_RADIUS));
 
 		for (int cubeY = minCubeY; cubeY < maxCubeY + 1; cubeY++) {
 			Cube cube = getCube(cubeY);

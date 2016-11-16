@@ -42,7 +42,7 @@ import static cubicchunks.util.StructureGenUtil.normalizedDistance;
 import static cubicchunks.util.StructureGenUtil.scanWallsForBlock;
 import static java.lang.Math.max;
 import static net.minecraft.util.math.MathHelper.cos;
-import static net.minecraft.util.math.MathHelper.floor_double;
+import static net.minecraft.util.math.MathHelper.floor;
 import static net.minecraft.util.math.MathHelper.sin;
 
 /*
@@ -353,12 +353,12 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 			caveZ > genCubeCenterZ + Cube.SIZE + caveSizeHoriz*2.0D) {
 			return;
 		}
-		int minLocalX = floor_double(caveX - caveSizeHoriz) - generatedCubePos.getMinBlockX() - 1;
-		int maxLocalX = floor_double(caveX + caveSizeHoriz) - generatedCubePos.getMinBlockX() + 1;
-		int minLocalY = floor_double(caveY - caveSizeVert) - generatedCubePos.getMinBlockY() - 1;
-		int maxLocalY = floor_double(caveY + caveSizeVert) - generatedCubePos.getMinBlockY() + 1;
-		int minLocalZ = floor_double(caveZ - caveSizeHoriz) - generatedCubePos.getMinBlockZ() - 1;
-		int maxLocalZ = floor_double(caveZ + caveSizeHoriz) - generatedCubePos.getMinBlockZ() + 1;
+		int minLocalX = floor(caveX - caveSizeHoriz) - generatedCubePos.getMinBlockX() - 1;
+		int maxLocalX = floor(caveX + caveSizeHoriz) - generatedCubePos.getMinBlockX() + 1;
+		int minLocalY = floor(caveY - caveSizeVert) - generatedCubePos.getMinBlockY() - 1;
+		int maxLocalY = floor(caveY + caveSizeVert) - generatedCubePos.getMinBlockY() + 1;
+		int minLocalZ = floor(caveZ - caveSizeHoriz) - generatedCubePos.getMinBlockZ() - 1;
+		int maxLocalZ = floor(caveZ + caveSizeHoriz) - generatedCubePos.getMinBlockZ() + 1;
 
 		//skip is if everything is outside of that cube
 		if (maxLocalX <= 0 || minLocalX >= Cube.SIZE ||
