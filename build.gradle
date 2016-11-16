@@ -77,7 +77,20 @@ minecraft {
 
 	replace "@@VERSION@@", project.version
 	replaceIn "cubicchunks/CubicChunks.java"
-
+	String[] args = [
+		"-Dfml.coreMods.load=cubicchunks.asm.CubicChunksCoreMod",//the core mod class, needed for mixins
+		"-Dmixin.env.compatLevel=JAVA_8",//needed to use java 8 when using mixins
+		"-Dmixin.debug.verbose=true",//verbose mixin output for easier debugging of mixins
+		"-Dmixin.debug.export=true",//export classes from mixin to runDirectory/.mixin.out
+		"-Dcubicchunks.debug=true",//various debug options of cubic chunks mod. Adds items that are not normally there!
+		"-XX:-OmitStackTraceInFastThrow",//without this sometimes you end up with exception with empty stacktrace
+		"-Dmixin.checks.interfaces=true",//check if all interface methods are overriden in mixin
+		"-Dfml.noGrab=false",//change to disable Minecraft taking control over mouse
+	]
+	for(String s : args) {
+		clientJvmArgs += s
+		serverJvmArgs += s
+	}
 }
 
 shadowJar {
