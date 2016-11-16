@@ -24,12 +24,12 @@
 package cubicchunks.util;
 
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
+import cubicchunks.lighting.ILightBlockAccess;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
@@ -42,7 +42,7 @@ import static cubicchunks.util.Coords.blockToLocal;
  * <p>
  * Does not allow to set blocks, only get blocks, their opacity and get/set light values.
  */
-public class FastCubeBlockAccess {
+public class FastCubeBlockAccess implements ILightBlockAccess {
 	private final Cube[][][] cache;
 	private final int originX, originY, originZ;
 	private final ICubicWorld world;
@@ -76,71 +76,34 @@ public class FastCubeBlockAccess {
 		return cube;
 	}
 
-	public IBlockState getBlockState(BlockPos pos) {
+	private IBlockState getBlockState(BlockPos pos) {
 		return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
 	}
 
-	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
+	private IBlockState getBlockState(int blockX, int blockY, int blockZ) {
 		return this.getCube(blockX, blockY, blockZ).getBlockState(blockX, blockY, blockZ);
 	}
 
-	public int getBlockLightOpacity(BlockPos pos) {
+	@Override public int getBlockLightOpacity(BlockPos pos) {
 		return this.getBlockState(pos.getX(), pos.getY(), pos.getZ()).getLightOpacity((World) world, pos);
 	}
 
-	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
+	@Override public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
 		return this.getCube(pos.getX(), pos.getY(), pos.getZ()).getLightFor(lightType, pos);
 	}
 
-	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
+	@Override public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
 		this.getCube(pos.getX(), pos.getY(), pos.getZ()).setLightFor(lightType, pos, val);
 	}
 
-	/**
-	 * Faster version of world.getRawLight that works for skylight
-	 */
-	public int computeLightValue(BlockPos pos) {
-		if (canSeeSky(pos)) {
-			return 15;
-		}
-		Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
-		IBlockState iblockstate = cube.getBlockState(pos);
-		int lightSubtract = iblockstate.getLightOpacity((IBlockAccess) world, pos);
-
-		if (lightSubtract < 1) {
-			lightSubtract = 1;
-		}
-
-		if (lightSubtract >= 15) {
-			return 0;
-		}
-		BlockPos.PooledMutableBlockPos currentPos = BlockPos.PooledMutableBlockPos.retain();
-		int maxValue = 0;
-		for (EnumFacing enumfacing : EnumFacing.values()) {
-			currentPos.setPos(pos).move(enumfacing);
-			int currentValue = this.getLightFor(EnumSkyBlock.SKY, currentPos) - lightSubtract;
-
-			if (currentValue > maxValue) {
-				maxValue = currentValue;
-			}
-
-			if (maxValue >= 14) {
-				return maxValue;
-			}
-		}
-
-		currentPos.release();
-		return maxValue;
-	}
-
-	public boolean canSeeSky(BlockPos pos) {
+	@Override public boolean canSeeSky(BlockPos pos) {
 		Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
 		Column column = cube.getColumn();
 		int height = column.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
-		return height > pos.getY();
+		return height <= pos.getY();
 	}
 
-	public int getEmittedLight(BlockPos pos, EnumSkyBlock type) {
+	@Override public int getEmittedLight(BlockPos pos, EnumSkyBlock type) {
 		switch (type) {
 			case BLOCK:
 				return getBlockState(pos).getLightValue((IBlockAccess) world, pos);
@@ -151,19 +114,8 @@ public class FastCubeBlockAccess {
 		}
 	}
 
-	public int getLightFromNeighbors(EnumSkyBlock type, BlockPos pos) {
-		//TODO: use MutableBlockPos?
-		int max = 0;
-		for (EnumFacing direction : EnumFacing.values()) {
-			int light = getLightFor(type, pos.offset(direction));
-			if (light > max) {
-				max = light;
-			}
-		}
-		return max - getBlockLightOpacity(pos);
-	}
-
-	public static FastCubeBlockAccess forBlockRegion(ICubeProvider prov, BlockPos startPos, BlockPos endPos) {
+	public static ILightBlockAccess forBlockRegion(ICubeProvider prov, BlockPos startPos, BlockPos endPos) {
+		//TODO: fix it
 		BlockPos midPos = Coords.midPos(startPos, endPos);
 		Cube center = prov.getLoadedCube(CubePos.fromBlockCoords(midPos));
 		int dx = Math.abs(startPos.getX() - endPos.getX());

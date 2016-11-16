@@ -254,7 +254,7 @@ public class Cube implements XYZAddressable {
 
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
 		//it may not look like this but it's actually the same logic as in vanilla
-		if (this.isEmpty()) {
+		if (this.storage == null) {
 			if (this.column.canSeeSky(pos)) {
 				return lightType.defaultLightValue;
 			}

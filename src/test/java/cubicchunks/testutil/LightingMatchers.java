@@ -23,40 +23,28 @@
  */
 package cubicchunks.testutil;
 
-import net.minecraft.init.Bootstrap;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.gen.structure.StructureBoundingBox;
 
-import java.util.Hashtable;
+import org.hamcrest.Matcher;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import cubicchunks.lighting.ILightBlockAccess;
 
+public class LightingMatchers {
 
-//A few hacks to make tests possible
-public class MinecraftEnvironment {
-	private static boolean isInit = false;
-
-	/**
-	 * Does whatever is needed to initialize minecraft and mod environment
-	 */
-	public static void init() {
-		if (isInit) {
-			return;
-		}
-		isInit = true;
-		Bootstrap.register();
+	public static Matcher<ILightBlockAccess> hasCorrectLight(StructureBoundingBox range) {
+		return new LightMatcher(range);
 	}
 
-	/**
-	 * Creates a fake server
-	 */
-	public static MinecraftServer createFakeServer() {
-		PlayerList playerList = mock(PlayerList.class);
-		MinecraftServer server = mock(MinecraftServer.class);
-		when(server.getPlayerList()).thenReturn(playerList);
+	public static StructureBoundingBox range(BlockPos start, BlockPos end) {
+		return new StructureBoundingBox(start, end);
+	}
 
-		server.worldTickTimes = new Hashtable<>();
-		return server;
+	public static StructureBoundingBox range(int radius) {
+		return range(pos(-radius, -radius, -radius), pos(radius, radius, radius));
+	}
+
+	public static BlockPos pos(int x, int y, int z) {
+		return new BlockPos(x, y, z);
 	}
 }
