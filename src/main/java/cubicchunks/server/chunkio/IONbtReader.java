@@ -177,7 +177,13 @@ public class IONbtReader {
 					.getName(), entityCubeX, entityCubeY, entityCubeZ, cube.getX(), cube.getY(), cube.getZ()));
 			}
 
+			// The entity needs to know what Cube it is in, this is normally done in Cube.addEntity()
+			// but Cube.addEntity() is not used when loading entities
+			// (unlike vanilla which uses Chunk.addEntity() even when loading entities)
 			entity.addedToChunk = true;
+			entity.chunkCoordX = cube.getX();
+			entity.chunkCoordY = cube.getY();
+			entity.chunkCoordZ = cube.getZ();
 		});
 	}
 

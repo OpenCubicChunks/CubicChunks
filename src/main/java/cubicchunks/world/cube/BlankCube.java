@@ -40,8 +40,8 @@ import java.util.List;
 import cubicchunks.world.column.Column;
 
 /**
- * Cube implementation used clientside used when cube is not loaded.
- * It does nothing. Contains only Blocks.AIR.
+ * A blank cube, containing no blocks. Any operation on this cube will have no effect. Trying to retrieve blocks will
+ * always return {@link Blocks#AIR}
  */
 public class BlankCube extends Cube {
 
