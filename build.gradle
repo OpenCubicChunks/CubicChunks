@@ -72,7 +72,7 @@ minecraft {
 	// stable_#            stables are built at the discretion of the MCP team.
 	// Use non-default mappings at your own risk. they may not always work.
 	// simply re-run your setup task after changing the mappings to update your workspace.
-	mappings = "snapshot_20161116"
+	mappings = "snapshot_20161117"
 	// makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
 	replace "@@VERSION@@", project.version
@@ -165,7 +165,6 @@ dependencies {
 
 	compile group: 'com.carrotsearch', name: 'hppc', version: '0.7.1'
 }
-
 processResources
 {
     // this will ensure that this task is redone when the versions change.
@@ -225,8 +224,18 @@ idea {
 //format: MCVERSION-MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)
 //rcX and betaX are not implemented yet
 private String getModVersion(String describe, String branch) {
+	if(branch.startsWith("MC_")) {
+		String branchMcVersion = branch.substring("MC_".length());
+		if(!branchMcVersion.equals(mcVersion)) {
+			logger.warn("Branch version different than project MC version! MC version: " +
+					mcVersion + ", branch: " + branch + ", branch version: " + branchMcVersion);
+		}
+	}
 	String branchSuffix = "";
-	if(!branch.equalsIgnoreCase("master")) {
+	//branches "master" and "MC_something" are not appended to version sreing, everything else is
+	//only builds from "master" and "MC_version" branches will actually use the correct versioning
+	//but it allows to distinguish between builds from different branches even if version number is the same
+	if(!branch.equalsIgnoreCase("master") && !branch.startsWith("MC_")) {
 		//remove invalid filename characters
 		branchSuffix = "-" + branch.replaceAll("[^a-zA-Z0-9.-]", "_");
 	}

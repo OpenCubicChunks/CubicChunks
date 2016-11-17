@@ -131,7 +131,7 @@ public class BlankColumn extends Column {
 	//getBroghtestLight. It actually returns light value... 
 	@Override
 	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
-		if (!this.getWorld().provider.getHasNoSky() && skyLightDampeningTerm < EnumSkyBlock.SKY.defaultLightValue) {
+		if (!this.getWorld().provider.hasNoSky() && skyLightDampeningTerm < EnumSkyBlock.SKY.defaultLightValue) {
 			return EnumSkyBlock.SKY.defaultLightValue - skyLightDampeningTerm;
 		}
 		return 0;

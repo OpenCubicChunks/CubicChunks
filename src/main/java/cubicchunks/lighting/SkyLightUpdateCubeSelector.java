@@ -58,7 +58,7 @@ class SkyLightUpdateCubeSelector {
 
 		IntSet cubesToDiffuse = new IntHashSet();
 
-		if (world.provider.getHasNoSky()) {
+		if (world.provider.hasNoSky()) {
 			return cubesToDiffuse;
 		}
 

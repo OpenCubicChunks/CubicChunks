@@ -649,7 +649,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	}
 
 	@Override
-	public void addEntry(@Nonnull PlayerChunkMapEntry entry) {
+	public void entryChanged(@Nonnull PlayerChunkMapEntry entry) {
 		throw new UnsupportedOperationException();
 	}
 

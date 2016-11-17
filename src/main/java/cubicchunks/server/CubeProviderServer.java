@@ -55,6 +55,8 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
+import cubicchunks.world.IProviderExtras.Requirement;
+
 /**
  * This is CubicChunks equivalent of ChunkProviderServer, it loads and unloads Cubes and Columns.
  * <p>
@@ -173,7 +175,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	}
 
 	@Override
-	public boolean unloadQueuedChunks() {
+	public boolean tick() {
 		// NOTE: the return value is completely ignored
 		// NO-OP, This is called by WorldServer's tick() method every tick
 		return false;

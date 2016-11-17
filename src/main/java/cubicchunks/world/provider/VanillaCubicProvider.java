@@ -56,14 +56,14 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 
 	private ICubeGenerator cubeGen;
 
-	public VanillaCubicProvider(ICubicWorld world, WorldProvider provider) {
+	public VanillaCubicProvider(ICubicWorld worldIn, WorldProvider provider) {
 		this.provider = provider;
-		this.worldObj = (World) world;
+		this.world = (World) worldIn;
 
 		boolean useProvider = false;
 
-		if (!worldObj.isRemote) {
-			if (worldObj.getWorldType() instanceof ICubicWorldType) { // Who do we trust!??!?! D:
+		if (!world.isRemote) {
+			if (world.getWorldType() instanceof ICubicWorldType) { // Who do we trust!??!?! D:
 
 				// nasty hack heuristic to see if provider asks its WorldType for a chunk generator
 				//ReflectionUtil.setFieldValueSrg(wp, "field_76577_b", HEURISTIC_WORLDTYPE);
@@ -73,16 +73,16 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 
 				// clean up
 				//ReflectionUtil.setFieldValueSrg(provider, "field_76577_b", worldObj.getWorldType());
-				provider.terrainType = worldObj.getWorldType();
+				provider.terrainType = world.getWorldType();
 
 				if (pro_or_null != null) { // It will be null if it tries to get one form WorldType
 
 					// It was from a vanilla WorldProvider... use it
-					cubeGen = new VanillaCompatibilityGenerator(pro_or_null, world);
+					cubeGen = new VanillaCompatibilityGenerator(pro_or_null, worldIn);
 				} else {
 
 					// It was from WorldType, try to use cubic generator
-					cubeGen = ((ICubicWorldType) worldObj.getWorldType()).createCubeGenerator(getCubicWorld());
+					cubeGen = ((ICubicWorldType) world.getWorldType()).createCubeGenerator(getCubicWorld());
 					if (cubeGen == null) {
 						useProvider = true;
 					}
@@ -92,7 +92,7 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 			}
 
 			if (useProvider) {
-				cubeGen = new VanillaCompatibilityGenerator(provider.createChunkGenerator(), world);
+				cubeGen = new VanillaCompatibilityGenerator(provider.createChunkGenerator(), worldIn);
 			}
 		}
 	}
@@ -169,8 +169,8 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 		return provider.doesWaterVaporize();
 	}
 
-	@Override public boolean getHasNoSky() {
-		return provider.getHasNoSky();
+	@Override public boolean hasNoSky() {
+		return provider.hasNoSky();
 	}
 
 	@Override public float[] getLightBrightnessTable() {

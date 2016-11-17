@@ -69,7 +69,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 	@Override
 	@Deprecated
 	public IChunkGenerator createChunkGenerator() {
-		return new DummyChunkGenerator(this.worldObj);
+		return new DummyChunkGenerator(this.world);
 	}
 
 	@Override
@@ -77,10 +77,10 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		// We need to assume that its an ICubicWorldType...
 		// There is really nothing else we can do as a non-overworld porvider
 		// that works with a vanilla world type would have overriden this method.
-		if (!(this.worldObj.getWorldType() instanceof ICubicWorldType)) {
+		if (!(this.world.getWorldType() instanceof ICubicWorldType)) {
 			throw new IllegalStateException("Cubic world provider does not override createCubeGenerator() and the world type is not ICubicWorldType!");
 		}
-		return ((ICubicWorldType) this.worldObj.getWorldType())
+		return ((ICubicWorldType) this.world.getWorldType())
 			.createCubeGenerator(getCubicWorld());
 	}
 
@@ -94,31 +94,31 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 	public boolean canCoordinateBeSpawn(int x, int z) {
 		//TODO: DONT USE WORLD.getGroundAboveSeaLevel()
 		BlockPos blockpos = new BlockPos(x, 0, z);
-		return this.worldObj.getBiome(blockpos).ignorePlayerSpawnSuitability() ||
-			this.worldObj.getGroundAboveSeaLevel(blockpos).getBlock() == Blocks.GRASS;
+		return this.world.getBiome(blockpos).ignorePlayerSpawnSuitability() ||
+			this.world.getGroundAboveSeaLevel(blockpos).getBlock() == Blocks.GRASS;
 	}
 
 	@Override
 	public BlockPos getRandomizedSpawnPoint() {
 		//TODO: uses getTopSolidOrLiquidBlock() ... not good
-		BlockPos ret = this.worldObj.getSpawnPoint();
+		BlockPos ret = this.world.getSpawnPoint();
 
-		boolean isAdventure = worldObj.getWorldInfo().getGameType() == GameType.ADVENTURE;
-		int spawnFuzz = this.worldObj instanceof WorldServer ? worldObj.getWorldType().getSpawnFuzz((WorldServer) this.worldObj, this.worldObj.getMinecraftServer()) : 1;
-		int border = MathHelper.floor(worldObj.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
+		boolean isAdventure = world.getWorldInfo().getGameType() == GameType.ADVENTURE;
+		int spawnFuzz = this.world instanceof WorldServer ? world.getWorldType().getSpawnFuzz((WorldServer) this.world, this.world.getMinecraftServer()) : 1;
+		int border = MathHelper.floor(world.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
 		if (border < spawnFuzz) spawnFuzz = border;
 
-		if (!getHasNoSky() && !isAdventure && spawnFuzz != 0) {
+		if (!hasNoSky() && !isAdventure && spawnFuzz != 0) {
 			if (spawnFuzz < 2) spawnFuzz = 2;
 			int spawnFuzzHalf = spawnFuzz/2;
-			ret = getTSOLBFixed(ret.add(worldObj.rand.nextInt(spawnFuzzHalf) - spawnFuzz, 0, worldObj.rand.nextInt(spawnFuzzHalf) - spawnFuzz));
+			ret = getTSOLBFixed(ret.add(world.rand.nextInt(spawnFuzzHalf) - spawnFuzz, 0, world.rand.nextInt(spawnFuzzHalf) - spawnFuzz));
 		}
 
 		return ret;
 	}
 
 	private BlockPos getTSOLBFixed(BlockPos pos) {
-		Chunk chunk = worldObj.getChunkFromBlockCoords(pos);
+		Chunk chunk = world.getChunkFromBlockCoords(pos);
 		BlockPos blockpos;
 		BlockPos blockpos1;
 
@@ -129,7 +129,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 			blockpos1 = blockpos.down();
 			IBlockState state = chunk.getBlockState(blockpos1);
 
-			if (state.getMaterial().blocksMovement() && !state.getBlock().isLeaves(state, worldObj, blockpos1) && !state.getBlock().isFoliage(worldObj, blockpos1)) {
+			if (state.getMaterial().blocksMovement() && !state.getBlock().isLeaves(state, world, blockpos1) && !state.getBlock().isFoliage(world, blockpos1)) {
 				break;
 			}
 		}
@@ -138,6 +138,6 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 	}
 
 	public ICubicWorld getCubicWorld() {
-		return (ICubicWorld) worldObj;
+		return (ICubicWorld) world;
 	}
 }

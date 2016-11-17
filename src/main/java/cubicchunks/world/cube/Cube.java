@@ -402,7 +402,7 @@ public class Cube implements XYZAddressable {
 	 * @param value the new light level
 	 */
 	public void setSkylight(int localX, int localY, int localZ, int value) {
-		if (!this.world.getProvider().getHasNoSky()) {
+		if (!this.world.getProvider().hasNoSky()) {
 			if (storage == null) {
 				newStorage();
 			}
@@ -421,7 +421,7 @@ public class Cube implements XYZAddressable {
 	 * @return sky light levels at this location.
 	 */
 	public int getSkylight(int localX, int localY, int localZ) {
-		if (this.world.getProvider().getHasNoSky()) {
+		if (this.world.getProvider().hasNoSky()) {
 			return 0;
 		}
 		if (storage == null) {
@@ -561,7 +561,7 @@ public class Cube implements XYZAddressable {
 	 */
 	public void addTileEntity(BlockPos pos, TileEntity tileEntity) {
 		// update the tile entity
-		tileEntity.setWorldObj((World) this.world);
+		tileEntity.setWorld((World) this.world);
 		tileEntity.setPos(pos);
 
 		IBlockState blockState = this.getBlockState(pos);
@@ -774,7 +774,7 @@ public class Cube implements XYZAddressable {
 	}
 
 	private void newStorage() {
-		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), !world.getProvider().getHasNoSky());
+		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), !world.getProvider().hasNoSky());
 	}
 
 	/**

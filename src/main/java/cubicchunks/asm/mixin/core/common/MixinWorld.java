@@ -180,7 +180,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Shadow public abstract DifficultyInstance getDifficultyForLocation(BlockPos pos);
 
-	@Shadow public abstract boolean spawnEntityInWorld(Entity entity);
+	@Shadow public abstract boolean spawnEntity(Entity entity);
 
 	@Shadow public abstract boolean isAreaLoaded(BlockPos start, BlockPos end);
 

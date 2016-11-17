@@ -45,7 +45,7 @@ import static cubicchunks.asm.JvmNames.CHUNK_CACHE_GET_BLOCK_STATE;
  */
 @Mixin(ChunkCache.class)
 public class MixinChunkCache_HeightLimits {
-	@Shadow protected World worldObj;
+	@Shadow protected World world;
 
 	/**
 	 * Redirect to modify vanilla height check.
@@ -54,6 +54,6 @@ public class MixinChunkCache_HeightLimits {
 	 */
 	@Redirect(method = CHUNK_CACHE_GET_BLOCK_STATE, at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
 	private int blockPosGetYRedirect(BlockPos pos) {
-		return MixinUtils.getReplacementY(worldObj, pos);
+		return MixinUtils.getReplacementY(world, pos);
 	}
 }
