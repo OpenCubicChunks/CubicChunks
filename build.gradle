@@ -64,7 +64,7 @@ archivesBaseName = "CubicChunks"
 version = getModVersionAndWriteToFile()
 
 minecraft {
-	version = "1.10.2-12.18.1.2092"
+	version = "1.10.2-12.18.2.2139"
 	runDir = "run"
 
 	// the mappings can be changed at any time, and must be in the following format.
