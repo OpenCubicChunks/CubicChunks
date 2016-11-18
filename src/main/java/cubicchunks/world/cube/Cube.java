@@ -65,12 +65,14 @@ import cubicchunks.world.column.Column;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
 import static cubicchunks.CubicChunks.LOGGER;
+import static net.minecraft.world.chunk.Chunk.NULL_BLOCK_STORAGE;
 
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
  * with a side length of {@link Cube#SIZE}, aligned to multiples of that length and stored within columns.
  */
 public class Cube implements XYZAddressable {
+	private static final ExtendedBlockStorage NULL_STORAGE = null;
 
 	/**
 	 * Side length of a cube
@@ -150,6 +152,8 @@ public class Cube implements XYZAddressable {
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new HashMap<>();
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
+
+		this.storage = NULL_STORAGE;
 	}
 
 	/**
@@ -174,7 +178,7 @@ public class Cube implements XYZAddressable {
 					IBlockState newstate = primer.getBlockState(x, y, z);
 
 					if (newstate.getMaterial() != Material.AIR) {
-						if (storage == null) {
+						if (storage == NULL_STORAGE) {
 							newStorage();
 						}
 						storage.set(x, y, z, newstate);
@@ -232,10 +236,13 @@ public class Cube implements XYZAddressable {
 	 * @return The block state
 	 *
 	 * @see Cube#getBlockState(BlockPos)
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
+		// ignore debug world type, it can't be cubic chunks type
 		try {
-			if (storage == null) {
+			if (storage == NULL_STORAGE) {
 				return Blocks.AIR.getDefaultState();
 			}
 			return storage.get(Coords.blockToLocal(blockX),
@@ -258,6 +265,8 @@ public class Cube implements XYZAddressable {
 	 * @param newstate the new block state
 	 *
 	 * @return The old block state, or null if there was no change
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	@Nullable
 	public IBlockState setBlockStateDirect(BlockPos pos, IBlockState newstate) {
@@ -275,7 +284,10 @@ public class Cube implements XYZAddressable {
 		Block oldblock = oldstate.getBlock();
 		Block newblock = newstate.getBlock();
 
-		if (storage == null) {
+		if (storage == NULL_STORAGE) {
+			if (newblock == Blocks.AIR) {
+				return null;
+			}
 			newStorage();
 		}
 
@@ -338,10 +350,13 @@ public class Cube implements XYZAddressable {
 	 * @param pos The position at which light should be checked
 	 *
 	 * @return the light level
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
-		//it may not look like this but it's actually the same logic as in vanilla
-		if (this.isEmpty()) {
+		// it may not look like this but it's actually the same logic as in vanilla
+		// seriously, it is the same
+		if (storage == NULL_BLOCK_STORAGE) {
 			if (this.column.canSeeSky(pos)) {
 				return lightType.defaultLightValue;
 			}
@@ -354,11 +369,11 @@ public class Cube implements XYZAddressable {
 
 		switch (lightType) {
 			case SKY:
-				return getSkylight(localX, localY, localZ);
-			case BLOCK:
-				if (storage == null) {
-					return lightType.defaultLightValue;
+				if (!this.world.getProvider().func_191066_m()) {
+					return 0;
 				}
+				return this.storage.getExtSkylightValue(localX, localY, localZ);
+			case BLOCK:
 				return this.storage.getExtBlocklightValue(localX, localY, localZ);
 			default:
 				return lightType.defaultLightValue;
@@ -371,63 +386,30 @@ public class Cube implements XYZAddressable {
 	 * @param lightType The type of light (sky or block light)
 	 * @param pos The position at which light should be updated
 	 * @param light the light level
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {
 		this.isModified = true;
 
-		int x = Coords.blockToLocal(pos.getX());
-		int y = Coords.blockToLocal(pos.getY());
-		int z = Coords.blockToLocal(pos.getZ());
+		int localX = Coords.blockToLocal(pos.getX());
+		int localY = Coords.blockToLocal(pos.getY());
+		int localZ = Coords.blockToLocal(pos.getZ());
+
+		if (storage == NULL_STORAGE) {
+			newStorage();
+		}
 
 		switch (lightType) {
 			case SKY:
-				setSkylight(x, y, z, light);
-				break;
-
-			case BLOCK:
-				if (storage == null) {
-					newStorage();
+				if (world.getProvider().func_191066_m()) {
+					this.storage.setExtSkylightValue(localX, localY, localZ, light);
 				}
-				this.storage.setExtBlocklightValue(x, y, z, light);
+				break;
+			case BLOCK:
+				this.storage.setExtBlocklightValue(localX, localY, localZ, light);
 				break;
 		}
-	}
-
-	/**
-	 * Set sky light level at this location. Has no effect if the world has no sky.
-	 *
-	 * @param localX block x position in local block coordinates
-	 * @param localY block y position in local block coordinates
-	 * @param localZ block z position in local block coordinates
-	 * @param value the new light level
-	 */
-	public void setSkylight(int localX, int localY, int localZ, int value) {
-		if (!this.world.getProvider().hasNoSky()) {
-			if (storage == null) {
-				newStorage();
-			}
-			this.isModified = true;
-			this.storage.setExtSkylightValue(localX, localY, localZ, value);
-		}
-	}
-
-	/**
-	 * Retrieve sky light levels at this location. Always returns 0 for worlds with no sky.
-	 *
-	 * @param localX block x position in local block coordinates
-	 * @param localY block y position in local block coordinates
-	 * @param localZ block z position in local block coordinates
-	 *
-	 * @return sky light levels at this location.
-	 */
-	public int getSkylight(int localX, int localY, int localZ) {
-		if (this.world.getProvider().hasNoSky()) {
-			return 0;
-		}
-		if (storage == null) {
-			return EnumSkyBlock.SKY.defaultLightValue;
-		}
-		return this.storage.getExtSkylightValue(localX, localY, localZ);
 	}
 
 	/**
@@ -438,6 +420,8 @@ public class Cube implements XYZAddressable {
 	 * @param skyLightDampeningTerm skylight falloff factor
 	 *
 	 * @return actual light level at this location
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
 		// get sky light
@@ -474,6 +458,8 @@ public class Cube implements XYZAddressable {
 	 * Add an entity to this cube
 	 *
 	 * @param entity entity to add
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	public void addEntity(Entity entity) {
 		// make sure the entity is in this cube
@@ -504,6 +490,8 @@ public class Cube implements XYZAddressable {
 	 * Remove an entity from this cube
 	 *
 	 * @param entity The entity to remove
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	public boolean removeEntity(Entity entity) {
 		boolean wasRemoved = this.entities.remove(entity);
@@ -521,6 +509,8 @@ public class Cube implements XYZAddressable {
 	 *
 	 * @return the tile entity at the specified location, or <code>null</code> if there is no entity and
 	 * <code>createType</code> was not {@link net.minecraft.world.chunk.Chunk.EnumCreateEntityType#IMMEDIATE}
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType createType) {
 		TileEntity blockEntity = this.tileEntityMap.get(pos);
@@ -545,10 +535,14 @@ public class Cube implements XYZAddressable {
 	 * Add a tile entity to this cube
 	 *
 	 * @param tileEntity The tile entity to add
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	public void addTileEntity(TileEntity tileEntity) {
 		this.addTileEntity(tileEntity.getPos(), tileEntity);
-		if (this.isCubeLoaded) { //TODO: test to see if this is needed
+		// This is needed because NBTReader uses this method to add TileEntities
+		// they shouldn't be added to world until the cube is fully loaded
+		if (this.isCubeLoaded) {
 			this.getCubicWorld().addTileEntity(tileEntity);
 		}
 	}
@@ -558,10 +552,13 @@ public class Cube implements XYZAddressable {
 	 *
 	 * @param pos The target location
 	 * @param tileEntity The tile entity to add
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	public void addTileEntity(BlockPos pos, TileEntity tileEntity) {
 		// update the tile entity
-		tileEntity.setWorld((World) this.world);
+		if (tileEntity.getWorld() != this.world) //Forge: don't call unless it's changed, could screw up bad mods.
+			tileEntity.setWorld((World) this.world);
 		tileEntity.setPos(pos);
 
 		IBlockState blockState = this.getBlockState(pos);
@@ -577,8 +574,8 @@ public class Cube implements XYZAddressable {
 			// install the new tile entity
 			tileEntity.validate();
 			this.tileEntityMap.put(pos, tileEntity);
-			this.isModified = true;
 			tileEntity.onLoad();
+			//not need to set isModified, this should be handled by World
 		}
 	}
 
@@ -586,14 +583,16 @@ public class Cube implements XYZAddressable {
 	 * Remove the tile entity at the specified location
 	 *
 	 * @param pos target location
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	public void removeTileEntity(BlockPos pos) {
-		//it doesn't make sense to me to check if cube is loaded, but vanilla does it
-		if (this.isCubeLoaded) { //TODO: test and see if this is needed
+		// this check prevents tile entities being removed from cubes when calling onUnload
+		// this way they can still be saved after Cube is unloaded
+		if (this.isCubeLoaded) {
 			TileEntity tileEntity = this.tileEntityMap.remove(pos);
 			if (tileEntity != null) {
 				tileEntity.invalidate();
-				this.isModified = true;
 			}
 		}
 	}
@@ -774,7 +773,7 @@ public class Cube implements XYZAddressable {
 	}
 
 	private void newStorage() {
-		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), !world.getProvider().hasNoSky());
+		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), world.getProvider().func_191066_m());
 	}
 
 	/**

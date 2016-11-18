@@ -89,6 +89,8 @@ public class Column extends Chunk {
 	/**
 	 * Return Y position of the block directly above the top non-transparent block, or {@link Coords#NO_HEIGHT} + 1 if
 	 * there are no non-transparent blocks
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	@Override
 	public int getHeight(BlockPos pos) {
@@ -100,6 +102,8 @@ public class Column extends Chunk {
 	/**
 	 * Return Y position of the block directly above the top non-transparent block, or {@link Coords#NO_HEIGHT} + 1 if
 	 * there are no non-transparent blocks
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	@Override
 	public int getHeightValue(int localX, int localZ) {
@@ -110,20 +114,11 @@ public class Column extends Chunk {
 
 	@Override
 	@Deprecated
-	//TODO: stop this method form being used by vanilla (any algorithms in vanilla that use it are be broken any way)
+	// TODO: stop this method form being used by vanilla (any algorithms in vanilla that use it are be broken any way)
 	// don't use this! It's only here because vanilla needs it
+	// CHECKED: 1.11-13.19.0.2148
 	public int getTopFilledSegment() {
 		//NOTE: this method actually returns block Y coords
-
-		// PANIC!
-		// this column doesn't have any blocks in it that aren't air!
-		// but we can't return null here because vanilla code expects there to be a surface down there somewhere
-		// we don't actually know where the surface is yet, because maybe it hasn't been generated
-		// but we do know that the surface has to be at least at sea level,
-		// so let's go with that for now and hope for the best
-
-		// old solution
-		// return this.getCubicWorld().provider.getAverageGroundLevel();
 
 		int blockY = Coords.NO_HEIGHT;
 		for (int localX = 0; localX < Cube.SIZE; localX++) {
@@ -134,11 +129,22 @@ public class Column extends Chunk {
 				}
 			}
 		}
+		if (blockY < getCubicWorld().getMinHeight()) {
+			// PANIC!
+			// this column doesn't have any blocks in it that aren't air!
+			// but we can't return null here because vanilla code expects there to be a surface down there somewhere
+			// we don't actually know where the surface is yet, because maybe it hasn't been generated
+			// but we do know that the surface has to be at least at sea level,
+			// so let's go with that for now and hope for the best
+
+			return Coords.cubeToMinBlock(Coords.blockToCube(this.getCubicWorld().getProvider().getAverageGroundLevel()));
+		}
 		return Coords.cubeToMinBlock(Coords.blockToCube(blockY)); // return the lowest block in the Cube (kinda weird I know)
 	}
 
 	@Override
 	@Deprecated // Vanilla can safely use this for block ticking, but just try to avoid it!
+	// CHECKED: 1.11-13.19.0.2148
 	public ExtendedBlockStorage[] getBlockStorageArray() {
 		return cubeMap.getStoragesToTick();
 	}
@@ -154,6 +160,12 @@ public class Column extends Chunk {
 		throw new UnsupportedOperationException("Functionality of this method is replaced with LightingManager");
 	}
 
+	// CHECKED: 1.11-13.19.0.2148
+	// this is here so that it's not hidden when updating
+	public int getBlockLightOpacity(BlockPos pos) {
+		return super.getBlockLightOpacity(pos);
+	}
+
 
 	/**
 	 * Retrieve the block state at the specified location
@@ -164,11 +176,12 @@ public class Column extends Chunk {
 	 *
 	 * @see Column#getBlockState(int, int, int)
 	 * @see Cube#getBlockState(BlockPos)
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148 - super calls the x/y/z version
 	 */
 	@Override
 	public IBlockState getBlockState(BlockPos pos) {
-		//forward to cube
-		return this.getCube(pos).getBlockState(pos);
+		return super.getBlockState(pos);
 	}
 
 	/**
@@ -186,7 +199,7 @@ public class Column extends Chunk {
 	@Override
 	public IBlockState getBlockState(final int blockX, final int blockY, final int blockZ) {
 		//forward to cube
-		return this.getCube(Coords.blockToLocal(blockY)).getBlockState(blockX, blockY, blockZ);
+		return this.getCube(Coords.blockToCube(blockY)).getBlockState(blockX, blockY, blockZ);
 	}
 
 	/**
@@ -196,13 +209,16 @@ public class Column extends Chunk {
 	 * @param newstate target state of the block at that position
 	 *
 	 * @return The the old state of the block at the position, or null if there was no change
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
-	@Override
-	public IBlockState setBlockState(BlockPos pos, @Nonnull IBlockState newstate) {
+	@Nullable @Override public IBlockState setBlockState(BlockPos pos, @Nonnull IBlockState newstate) {
+		// TODO: Move all setBlockState logic to Cube
 		Cube cube = getCube(Coords.blockToCube(pos.getY()));
 		IBlockState oldstate = cube.getBlockState(pos);
 
-		// get the old opacity for use when updating the heightmap
+		// get the old opacity for use when updating the heightmap,
+		// this has to be done before setBlockState so that the old TileEntity is still there
 		int oldOpacity = oldstate.getLightOpacity(this.getWorld(), pos);
 
 		oldstate = cube.setBlockStateDirect(pos, newstate); // forward to cube
@@ -210,7 +226,8 @@ public class Column extends Chunk {
 			// Nothing changed
 			return null;
 		}
-
+		// vanilla does light updates before handling TileEntities and calling onBlockOadded
+		// doing it differently shouldn't cause issues
 		this.doOnBlockSetLightUpdates(pos, newstate, oldOpacity);
 
 		return oldstate;
@@ -376,7 +393,10 @@ public class Column extends Chunk {
 	 *
 	 * @param pos target location
 	 *
-	 * @return <code>true</code> if there is no block between this block and the sky, <code>false</code> otherwise
+	 * @return <code>true</code> if there is no block between this block and the sky (including this block),
+	 * <code>false</code> otherwise
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	@Override
 	public boolean canSeeSky(BlockPos pos) {
@@ -469,6 +489,8 @@ public class Column extends Chunk {
 	 * @param queryBox section of the world being checked
 	 * @param out list to which found entities should be added
 	 * @param predicate filter to match entities against
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	@Override
 	public void getEntitiesWithinAABBForEntity(Entity exclude, AxisAlignedBB queryBox, @Nonnull List<Entity> out, Predicate<? super Entity> predicate) {
@@ -491,6 +513,8 @@ public class Column extends Chunk {
 	 * @param out list to which found entities should be added
 	 * @param predicate filter to match entities against
 	 * @param <T> type parameter for the class of entities being searched for
+	 * <p>
+	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	@Override
 	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(@Nonnull Class<? extends T> entityType, AxisAlignedBB queryBox, @Nonnull List<T> out, Predicate<? super T> predicate) {
@@ -574,6 +598,7 @@ public class Column extends Chunk {
 	@Override
 	// used for by ChunkCache, and that is used for rendering to see
 	// if there are any blocks, or is there just air
+	// CHECKED: 1.11-13.19.0.2148
 	public boolean getAreLevelsEmpty(int minBlockY, int maxBlockY) {
 		int minCubeY = Coords.blockToCube(minBlockY);
 		int maxCubeY = Coords.blockToCube(maxBlockY);

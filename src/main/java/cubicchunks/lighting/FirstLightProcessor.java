@@ -115,6 +115,8 @@ public class FirstLightProcessor {
 
 		int cubeMinY = cubeToMinBlock(cube.getY());
 
+		BlockPos startPos = cube.getCoords().getMinBlockPos();
+
 		for (int localX = 0; localX < Cube.SIZE; ++localX) {
 			for (int localZ = 0; localZ < Cube.SIZE; ++localZ) {
 				for (int localY = Cube.SIZE - 1; localY >= 0; --localY) {
@@ -123,7 +125,7 @@ public class FirstLightProcessor {
 						break;
 					}
 
-					cube.setSkylight(localX, localY, localZ, 15);
+					cube.setLightFor(EnumSkyBlock.SKY, startPos.add(localX, localY, localZ), 15);
 				}
 			}
 		}

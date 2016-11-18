@@ -200,7 +200,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 
 						if (toSpawn.isNotColliding()) {
 							++currentPackSize;
-							world.spawnEntityInWorld(toSpawn);
+							world.spawnEntity(toSpawn);
 						} else {
 							toSpawn.setDead();
 						}

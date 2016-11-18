@@ -73,6 +73,7 @@ public class EntityContainer {
 			(predicate == null || predicate.apply(toAdd));
 	}
 
+	// CHECKED: 1.11-13.19.0.2148
 	public void getEntitiesWithinAABBForEntity(Entity excluded, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
 		for (Entity entity : this.entities) {
 
@@ -91,6 +92,7 @@ public class EntityContainer {
 		}
 	}
 
+	// CHECKED: 1.11-13.19.0.2148
 	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
 		for (T entity : this.entities.getByClass(entityType)) {
 			if (entity.getEntityBoundingBox().intersectsWith(queryBox) &&
