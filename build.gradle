@@ -64,7 +64,7 @@ archivesBaseName = "CubicChunks"
 version = getModVersionAndWriteToFile()
 
 minecraft {
-	version = "1.11-13.19.0.2148"
+	version = project.forgeVersion
 	runDir = "run"
 
 	// the mappings can be changed at any time, and must be in the following format.
@@ -169,14 +169,14 @@ processResources
 {
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "mcversion", getMcVersion()
 
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
 
         // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+        expand 'version':project.version, 'mcversion':getMcVersion()
     }
 
     // copy everything else, thats not the mcmod.info
@@ -220,15 +220,21 @@ idea {
 		downloadSources = true
 	}
 }
+private String getMcVersion() {
+	if(project.minecraft.version == null) {
+		return forgeVersion.split("-")[0];
+	}
+	return project.minecraft.version;
+}
 //returns version string according to this: http://mcforge.readthedocs.org/en/latest/conventions/versioning/
 //format: MCVERSION-MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)
 //rcX and betaX are not implemented yet
 private String getModVersion(String describe, String branch) {
 	if(branch.startsWith("MC_")) {
 		String branchMcVersion = branch.substring("MC_".length());
-		if(!branchMcVersion.equals(mcVersion)) {
+		if(!branchMcVersion.equals(getMcVersion())) {
 			logger.warn("Branch version different than project MC version! MC version: " +
-					mcVersion + ", branch: " + branch + ", branch version: " + branchMcVersion);
+					getMcVersion() + ", branch: " + branch + ", branch version: " + branchMcVersion);
 		}
 	}
 	String branchSuffix = "";
@@ -240,11 +246,11 @@ private String getModVersion(String describe, String branch) {
 		branchSuffix = "-" + branch.replaceAll("[^a-zA-Z0-9.-]", "_");
 	}
 	final String baseVersionRegex = "v[0-9]+\\.[0-9]+";
-	final String unknownVersion = String.format("%s-UNKNOWN_VERSION%s%s", mcVersion, versionSuffix, branchSuffix);
+	final String unknownVersion = String.format("%s-UNKNOWN_VERSION%s%s", getMcVersion(), versionSuffix, branchSuffix);
 	if (!describe.contains('-')) {
 		//is it the "vX.Y" format?
 		if (describe.matches(baseVersionRegex)) {
-			return String.format("%s-%s.0.0%s%s", mcVersion, describe, versionSuffix, branchSuffix);
+			return String.format("%s-%s.0.0%s%s", getMcVersion(), describe, versionSuffix, branchSuffix);
 		}
 		logger.error("Git describe information: \"" + describe + "\" in unknown/incorrect format");
 		return unknownVersion;
@@ -259,7 +265,7 @@ private String getModVersion(String describe, String branch) {
 		logger.error("Git describe information: \"" + describe + "\" in unknown/incorrect format");
 		return unknownVersion;
 	}
-	String mcVersion = mcVersion;
+	String mcVersion = getMcVersion();
 	String modAndApiVersion = parts[0].substring(1);
 	//next we have commit-since-tag
 	int commitSinceTag;

@@ -56,7 +56,7 @@ import cubicchunks.world.type.VanillaCubicWorldType;
 
 @Mod(modid = CubicChunks.MODID,
      name = "CubicChunks",
-     version = "@@VERSION@@}",
+     version = "@@VERSION@@",
      guiFactory = "cubicchunks.client.GuiFactory")
 public class CubicChunks {
 

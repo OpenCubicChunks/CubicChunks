@@ -23,6 +23,7 @@
  */
 package cubicchunks.asm;
 
+import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
 import org.spongepowered.asm.launch.MixinBootstrap;
@@ -30,7 +31,8 @@ import org.spongepowered.asm.mixin.Mixins;
 
 import java.util.Map;
 
-@IFMLLoadingPlugin.MCVersion(value = "1.11")
+// the mcVersion value is inlined at compile time, so this MC version check may still fail
+@IFMLLoadingPlugin.MCVersion(value = ForgeVersion.mcVersion)
 @IFMLLoadingPlugin.SortingIndex(value = 5000)
 @IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
 public class CubicChunksCoreMod implements IFMLLoadingPlugin {
