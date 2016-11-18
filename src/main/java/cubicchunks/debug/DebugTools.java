@@ -25,7 +25,10 @@ package cubicchunks.debug;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import cubicchunks.debug.item.RelightSkyBlockItem;
 
@@ -37,8 +40,8 @@ public class DebugTools {
 	public static final Item itemRelightSkyBlock = new RelightSkyBlockItem("relight_sky_block");
 
 	public static final CreativeTabs CUBIC_CHUNKS_DEBUG_TAB = new CreativeTabs("cubic_chunks_debug_tab") {
-		@Override public Item getTabIconItem() {
-			return itemRelightSkyBlock;
+		@SideOnly(Side.CLIENT) @Override public ItemStack getTabIconItem() {
+			return itemRelightSkyBlock.func_190903_i();
 		}
 	};
 

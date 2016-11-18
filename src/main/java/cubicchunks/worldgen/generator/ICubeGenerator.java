@@ -169,8 +169,9 @@ public interface ICubeGenerator {
 	 *
 	 * @param name the name of the structure
 	 * @param pos find the structure closest to this position
+	 * @param flag TODO: figure out what it's for
 	 *
 	 * @return the position of the structure, or <code>null</code> if none could be found
 	 */
-	@Nullable BlockPos getClosestStructure(String name, BlockPos pos);
+	@Nullable BlockPos getClosestStructure(String name, BlockPos pos, boolean flag);
 }

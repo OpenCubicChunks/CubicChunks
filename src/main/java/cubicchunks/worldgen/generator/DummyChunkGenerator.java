@@ -66,7 +66,7 @@ public class DummyChunkGenerator implements IChunkGenerator {
 	}
 
 	@Override
-	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position) {
+	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position, boolean flag) {
 		return null;
 	}
 

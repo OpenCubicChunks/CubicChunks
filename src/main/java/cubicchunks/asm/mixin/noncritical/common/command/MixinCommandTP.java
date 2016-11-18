@@ -23,8 +23,8 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
+import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandTP;
-import net.minecraft.command.EntityNotFoundException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.server.MinecraftServer;
@@ -54,7 +54,7 @@ public class MixinCommandTP {
 	private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
 		try {
 			commandWorld = new WeakReference<>((ICubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
-		} catch (EntityNotFoundException e) {
+		} catch (CommandException e) {
 			commandWorld = null;
 		}
 	}

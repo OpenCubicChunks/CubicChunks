@@ -55,8 +55,6 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
-import cubicchunks.world.IProviderExtras.Requirement;
-
 /**
  * This is CubicChunks equivalent of ChunkProviderServer, it loads and unloads Cubes and Columns.
  * <p>
@@ -192,9 +190,10 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 		return cubeGen.getPossibleCreatures(type, pos);
 	}
 
+	@Override
 	@Nullable
-	public BlockPos getStrongholdGen(@Nonnull World worldIn, @Nonnull String name, @Nonnull BlockPos pos) {
-		return cubeGen.getClosestStructure(name, pos);
+	public BlockPos getStrongholdGen(@Nonnull World worldIn, @Nonnull String name, @Nonnull BlockPos pos, boolean flag) {
+		return cubeGen.getClosestStructure(name, pos, flag);
 	}
 
 	// getLoadedChunkCount() in ChunkProviderServer is fine - CHECKED: 1.10.2-12.18.1.2092
