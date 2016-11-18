@@ -97,6 +97,32 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 		}
 	}
 
+	@Override public int getHeight() {
+		return super.getHeight();
+	}
+
+	@Override public double getVoidFogYFactor() {
+		return super.getVoidFogYFactor();
+	}
+
+	@Override public int getActualHeight() {
+		return super.getActualHeight();
+	}
+
+	@Override protected void createBiomeProvider() {
+		// TODO: implement VanillaCubicProvider.createBiomeProvider
+		//provider.createBiomeProvider();
+	}
+
+	@Override protected void generateLightBrightnessTable() {
+		// TODO: implement VanillaCubicProvider.generateLightBrightnessTable
+		//provider.generateLightBrightnessTable();
+	}
+
+	@Override public boolean func_191066_m() {
+		return provider.func_191066_m();
+	}
+
 	@Override
 	public ICubeGenerator createCubeGenerator() {
 		return cubeGen;
@@ -235,9 +261,9 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 		provider.setWeatherRenderer(renderer);
 	}
 
-	//public BlockPos getRandomizedSpawnPoint() {
-	//	return wp.getRandomizedSpawnPoint();
-	//}
+	@Override public BlockPos getRandomizedSpawnPoint() {
+		return provider.getRandomizedSpawnPoint();
+	}
 
 	@Override public boolean shouldMapSpin(String entity, double x, double y, double z) {
 		return provider.shouldMapSpin(entity, x, y, z);
