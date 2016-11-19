@@ -177,6 +177,75 @@ public class TestLightUpdateQueue {
 		q.end();
 	}
 
+	@Test public void testResetMultipleEntries() {
+		BlockPos origin = new BlockPos(3252, 543624, 352);
+		BlockPos expectedPos = origin.add(1, 2, 3);
+		int expectedValue = 42;
+
+		LightUpdateQueue q = new LightUpdateQueue();
+		q.begin(origin);
+		{
+			q.put(expectedPos, expectedValue);
+			q.put(expectedPos, expectedValue);
+			assertTrue(q.next());
+			assertEquals(expectedPos, q.getPos());
+			assertEquals(expectedValue, q.getValue());
+
+			q.resetIndex();
+
+			q.put(expectedPos, expectedValue);
+
+			assertTrue(q.next());
+			assertEquals(expectedPos, q.getPos());
+			assertEquals(expectedValue, q.getValue());
+
+			assertTrue(q.next());
+			assertEquals(expectedPos, q.getPos());
+			assertEquals(expectedValue, q.getValue());
+
+			assertTrue(q.next());
+			assertEquals(expectedPos, q.getPos());
+			assertEquals(expectedValue, q.getValue());
+
+			assertFalse(q.next());
+		}
+		q.end();
+	}
+
+	@Test public void testResetFlag() {
+		BlockPos origin = new BlockPos(3252, 543624, 352);
+		BlockPos expectedPos = origin.add(1, 2, 3);
+		int expectedValue = 42;
+
+		LightUpdateQueue q = new LightUpdateQueue();
+		q.begin(origin);
+		{
+			q.put(expectedPos, expectedValue);
+			assertTrue(q.next());
+			assertEquals(expectedPos, q.getPos());
+			assertEquals(expectedValue, q.getValue());
+
+			assertFalse(q.next());
+
+			q.resetIndex();
+
+			q.put(expectedPos, expectedValue);
+
+			assertTrue(q.next());
+			assertEquals(expectedPos, q.getPos());
+			assertEquals(expectedValue, q.getValue());
+			assertEquals(true, q.isBeforeReset());
+
+			assertTrue(q.next());
+			assertEquals(expectedPos, q.getPos());
+			assertEquals(expectedValue, q.getValue());
+			assertEquals(false, q.isBeforeReset());
+
+			assertFalse(q.next());
+		}
+		q.end();
+	}
+
 	@Test public void testManyEntriesEqualAmount() {
 		final int amount = 100000;
 		//this will cause integer overflow, it's fine

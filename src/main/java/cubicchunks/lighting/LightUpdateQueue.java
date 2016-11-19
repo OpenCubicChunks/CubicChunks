@@ -66,6 +66,21 @@ class LightUpdateQueue {
 	 * Index of the next entry to write to in current queue array
 	 */
 	private int nextWriteIndex;
+	/**
+	 * Absolute index of the previously read entry from current queue array
+	 * (doesn't reset after next segment)
+	 */
+	private int absoluteIndexRead;
+	/**
+	 * Absolute index of the previously read entry from current queue array
+	 * (doesn't reset after next segment)
+	 */
+	private int absoluteIndexWrite;
+	/**
+	 * Write index at which last reset occurred
+	 */
+	private int lastWrittenAbsoluteIndexBeforeReset;
+
 	private int centerX;
 	private int centerY;
 	private int centerZ;
@@ -75,6 +90,7 @@ class LightUpdateQueue {
 	private int readX;
 	private int readY;
 	private int readZ;
+	private boolean isBeforeReset;
 
 	void begin(BlockPos pos) {
 		begin(pos.getX(), pos.getY(), pos.getZ());
@@ -86,6 +102,8 @@ class LightUpdateQueue {
 		}
 		this.currentWriteQueue = start;
 		this.nextWriteIndex = 0;
+		this.absoluteIndexWrite = 0;
+		resetIndex();
 		this.centerX = centerX;
 		this.centerY = centerY;
 		this.centerZ = centerZ;
@@ -97,6 +115,8 @@ class LightUpdateQueue {
 	void resetIndex() {
 		this.currentReadQueue = start;
 		this.currentReadIndex = -1;//start at -1 so that next read is at 0
+		this.lastWrittenAbsoluteIndexBeforeReset = this.absoluteIndexWrite - 1;
+		this.absoluteIndexRead = -1;
 	}
 
 	void put(BlockPos pos, int value) {
@@ -129,6 +149,7 @@ class LightUpdateQueue {
 	private void putPacked(int packedValue) {
 		currentWriteQueue.data[nextWriteIndex] = packedValue;
 		nextWriteIndex++;
+		absoluteIndexWrite++;
 		//switch to next queue array?
 		if (nextWriteIndex >= QUEUE_PART_SIZE) {
 			nextWriteIndex = 0;
@@ -160,6 +181,10 @@ class LightUpdateQueue {
 		return new BlockPos(readX, readY, readZ);
 	}
 
+	boolean isBeforeReset() {
+		return isBeforeReset;
+	}
+
 	/**
 	 * This should be called before reading set of values using getNext*
 	 *
@@ -167,6 +192,7 @@ class LightUpdateQueue {
 	 */
 	public boolean next() {
 		currentReadIndex++;
+		absoluteIndexRead++;
 		if (currentReadIndex >= QUEUE_PART_SIZE) {
 			if (currentReadQueue.next == null) {
 				return false;
@@ -183,6 +209,7 @@ class LightUpdateQueue {
 		readY = centerY + Bits.unpackSigned(packed, POS_BITS, POS_Y_OFFSET);
 		readZ = centerZ + Bits.unpackSigned(packed, POS_BITS, POS_Z_OFFSET);
 		readValue = Bits.unpackUnsigned(packed, VALUE_BITS, VALUE_OFFSET);
+		isBeforeReset = absoluteIndexRead <= lastWrittenAbsoluteIndexBeforeReset;
 		return true;
 	}
 
