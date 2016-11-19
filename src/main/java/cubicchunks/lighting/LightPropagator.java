@@ -68,7 +68,7 @@ public class LightPropagator {
 				int emitted = blocks.getEmittedLight(pos, type);
 				if (blocks.getLightFor(type, pos) > emitted) {
 					//add the emitted value even if it's not used here - it will be used when relighting that area
-					internalRelightQueue.put(pos, emitted);
+					internalRelightQueue.put(pos, emitted, 0);
 				}
 			});
 			// follow decreasing light values until it stops decreasing,
@@ -95,7 +95,7 @@ public class LightPropagator {
 					for (EnumFacing direction : EnumFacing.values()) {
 						BlockPos offset = pos.offset(direction);
 						//add the emitted value even if it's not used here - it will be used when relighting that area
-						internalRelightQueue.put(offset, blocks.getEmittedLight(offset, type));
+						internalRelightQueue.put(offset, blocks.getEmittedLight(offset, type), 0);
 					}
 				}
 			}
@@ -107,7 +107,7 @@ public class LightPropagator {
 				int emitted = blocks.getEmittedLight(pos, type);
 				// blocks where light decreased are already added (previous run over the queue)
 				if (emitted > blocks.getLightFor(type, pos)) {
-					internalRelightQueue.put(pos, emitted);
+					internalRelightQueue.put(pos, emitted, 0);
 				}
 			});
 			// spread out light values
@@ -123,7 +123,7 @@ public class LightPropagator {
 				setLightCallback.accept(pos);
 				for (EnumFacing direction : EnumFacing.values()) {
 					BlockPos nextPos = pos.offset(direction);
-					internalRelightQueue.put(nextPos, getExpectedLight(blocks, type, nextPos));
+					internalRelightQueue.put(nextPos, getExpectedLight(blocks, type, nextPos), 0);
 				}
 			}
 		} catch (Throwable t) {

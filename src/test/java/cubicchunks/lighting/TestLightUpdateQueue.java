@@ -36,13 +36,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class TestLightUpdateQueue {
-	@Test public void testBeginEndNoError() {
-		//success if no error
-		LightUpdateQueue q = new LightUpdateQueue();
-		q.begin(new BlockPos(0, 0, 0));
-		q.end();
-	}
-
 	@Test public void testMultipleBeginEndNoError() {
 		//success if no error
 		LightUpdateQueue q = new LightUpdateQueue();
@@ -63,13 +56,6 @@ public class TestLightUpdateQueue {
 		q.begin(new BlockPos(0, 0, 0));
 	}
 
-	@Test public void testNoNextWhenStarting() {
-		LightUpdateQueue q = new LightUpdateQueue();
-		q.begin(new BlockPos(0, 0, 0));
-		assertFalse(q.next());
-		q.end();
-	}
-
 	@Test public void testNoNextWhenStartingMultipleAttempts() {
 		LightUpdateQueue q = new LightUpdateQueue();
 		for (int i = 0; i < 10; i++) {
@@ -79,133 +65,70 @@ public class TestLightUpdateQueue {
 		}
 	}
 
-	@Test public void testHasNextAfterPut() {
-		LightUpdateQueue q = new LightUpdateQueue();
-		q.begin(new BlockPos(0, 0, 0));
-		q.put(0, 0, 0, 0);
-		assertTrue("No next after put()", q.next());
-		q.end();
-	}
-
-	@Test public void testHasNextAfterPutMultipleAttempts() {
-		LightUpdateQueue q = new LightUpdateQueue();
-		for (int i = 0; i < 10; i++) {
-			q.begin(new BlockPos(0, 0, 0));
-			q.put(0, 0, 0, 0);
-			assertTrue("No next after put()", q.next());
-			q.end();
-		}
-	}
-
-	@Test public void testGetEqualToPut() {
-		BlockPos expectedPos = new BlockPos(1, 2, 3);
-		int expectedValue = 42;
-
-		LightUpdateQueue q = new LightUpdateQueue();
-		q.begin(new BlockPos(0, 0, 0));
-		{
-			q.put(expectedPos, expectedValue);
-			q.next();
-			BlockPos foundPos = q.getPos();
-			int foundValue = q.getValue();
-			assertEquals("Position after next() is different than position in put()", expectedPos, foundPos);
-			assertEquals("Value after next() is different than value in put()", expectedValue, foundValue);
-		}
-		q.end();
-	}
-
 	@Test public void testGetEqualToPutChangedOrigin() {
 		BlockPos origin = new BlockPos(41325, -43224, 32432);
 		BlockPos expectedPos = origin.add(1, 2, 3);
-		int expectedValue = 42;
+		int expectedValue = 10;
+		int expectedDistance = 5;
 
-		LightUpdateQueue q = new LightUpdateQueue();
-		q.begin(origin);
-		{
-			q.put(expectedPos, expectedValue);
-			q.next();
-			BlockPos foundPos = q.getPos();
-			int foundValue = q.getValue();
-			assertEquals("Position after next() is different than position in put()", expectedPos, foundPos);
-			assertEquals("Value after next() is different than value in put()", expectedValue, foundValue);
-		}
-		q.end();
+		doTestPutEqual(origin, expectedPos, expectedValue, expectedDistance);
 	}
 
 	@Test public void testGetEqualToPutMinMaxIntOrigin() {
 		//this will cause integer overflow, it's fine
 		BlockPos origin = new BlockPos(Integer.MIN_VALUE, Integer.MAX_VALUE, 0);
 		BlockPos expectedPos = origin.add(1, 2, 3);
-		int expectedValue = 42;
+		int expectedValue = 10;
+		int expectedDistance = 5;
 
+		doTestPutEqual(origin, expectedPos, expectedValue, expectedDistance);
+	}
+
+	private void doTestPutEqual(BlockPos origin, BlockPos expectedPos, int expectedValue, int expectedDistance) {
 		LightUpdateQueue q = new LightUpdateQueue();
 		q.begin(origin);
 		{
-			q.put(expectedPos, expectedValue);
-			q.next();
-			BlockPos foundPos = q.getPos();
-			int foundValue = q.getValue();
-			assertEquals("Position after next() is different than position in put()", expectedPos, foundPos);
-			assertEquals("Value after next() is different than value in put()", expectedValue, foundValue);
+			putNextCheckEqual(expectedPos, expectedValue, expectedDistance, q);
 		}
 		q.end();
+	}
+
+	private void putNextCheckEqual(BlockPos expectedPos, int expectedValue, int expectedDistance, LightUpdateQueue q) {
+		q.put(expectedPos, expectedValue, expectedDistance);
+		checkNextEqual(expectedPos, expectedValue, expectedDistance, q);
+	}
+
+	private void checkNextEqual(BlockPos expectedPos, int expectedValue, int expectedDistance, LightUpdateQueue q) {
+		q.next();
+		BlockPos foundPos = q.getPos();
+		int foundValue = q.getValue();
+		int foundDistance = q.getDistance();
+		assertEquals("Position after next() is different than position in put()", expectedPos, foundPos);
+		assertEquals("Value after next() is different than value in put()", expectedValue, foundValue);
+		assertEquals("Distance after next() is different than distance in put()", expectedDistance, foundDistance);
 	}
 
 	@Test public void testResetSingleEntry() {
 		BlockPos origin = new BlockPos(3252, 543624, 352);
 		BlockPos expectedPos = origin.add(1, 2, 3);
-		int expectedValue = 42;
+		int expectedValue = 10;
 
 		LightUpdateQueue q = new LightUpdateQueue();
 		q.begin(origin);
 		{
-			q.put(expectedPos, expectedValue);
-			assertTrue(q.next());
-			assertEquals(expectedPos, q.getPos());
-			assertEquals(expectedValue, q.getValue());
+			putNextCheckEqual(expectedPos, expectedValue, expectedValue, q);
+			putNextCheckEqual(expectedPos, expectedValue, expectedValue, q);
+			putNextCheckEqual(expectedPos, expectedValue, expectedValue, q);
 
 			assertFalse(q.next());
 
 			q.resetIndex();
 
-			assertTrue(q.next());
-			assertEquals(expectedPos, q.getPos());
-			assertEquals(expectedValue, q.getValue());
-
-			assertFalse(q.next());
-		}
-		q.end();
-	}
-
-	@Test public void testResetMultipleEntries() {
-		BlockPos origin = new BlockPos(3252, 543624, 352);
-		BlockPos expectedPos = origin.add(1, 2, 3);
-		int expectedValue = 42;
-
-		LightUpdateQueue q = new LightUpdateQueue();
-		q.begin(origin);
-		{
-			q.put(expectedPos, expectedValue);
-			q.put(expectedPos, expectedValue);
-			assertTrue(q.next());
-			assertEquals(expectedPos, q.getPos());
-			assertEquals(expectedValue, q.getValue());
-
-			q.resetIndex();
-
-			q.put(expectedPos, expectedValue);
-
-			assertTrue(q.next());
-			assertEquals(expectedPos, q.getPos());
-			assertEquals(expectedValue, q.getValue());
-
-			assertTrue(q.next());
-			assertEquals(expectedPos, q.getPos());
-			assertEquals(expectedValue, q.getValue());
-
-			assertTrue(q.next());
-			assertEquals(expectedPos, q.getPos());
-			assertEquals(expectedValue, q.getValue());
+			q.put(expectedPos, expectedValue - 1, expectedValue - 1);
+			checkNextEqual(expectedPos, expectedValue, expectedValue, q);
+			checkNextEqual(expectedPos, expectedValue, expectedValue, q);
+			checkNextEqual(expectedPos, expectedValue, expectedValue, q);
+			checkNextEqual(expectedPos, expectedValue - 1, expectedValue - 1, q);
 
 			assertFalse(q.next());
 		}
@@ -215,90 +138,37 @@ public class TestLightUpdateQueue {
 	@Test public void testResetFlag() {
 		BlockPos origin = new BlockPos(3252, 543624, 352);
 		BlockPos expectedPos = origin.add(1, 2, 3);
-		int expectedValue = 42;
+		int expectedValue = 10;
 
 		LightUpdateQueue q = new LightUpdateQueue();
 		q.begin(origin);
 		{
-			q.put(expectedPos, expectedValue);
-			assertTrue(q.next());
-			assertEquals(expectedPos, q.getPos());
-			assertEquals(expectedValue, q.getValue());
+			putNextCheckEqual(expectedPos, expectedValue, expectedValue, q);
+			putNextCheckEqual(expectedPos, expectedValue, expectedValue, q);
+			putNextCheckEqual(expectedPos, expectedValue, expectedValue, q);
 
 			assertFalse(q.next());
 
 			q.resetIndex();
 
-			q.put(expectedPos, expectedValue);
+			q.put(expectedPos, expectedValue, expectedValue);
 
-			assertTrue(q.next());
-			assertEquals(expectedPos, q.getPos());
-			assertEquals(expectedValue, q.getValue());
-			assertEquals(true, q.isBeforeReset());
+			checkNextEqual(expectedPos, expectedValue, expectedValue, q);
+			assertTrue(q.isBeforeReset());
 
-			assertTrue(q.next());
-			assertEquals(expectedPos, q.getPos());
-			assertEquals(expectedValue, q.getValue());
-			assertEquals(false, q.isBeforeReset());
+			checkNextEqual(expectedPos, expectedValue, expectedValue, q);
+			assertTrue(q.isBeforeReset());
+
+			checkNextEqual(expectedPos, expectedValue, expectedValue, q);
+			assertTrue(q.isBeforeReset());
+
+			checkNextEqual(expectedPos, expectedValue, expectedValue, q);
+			assertFalse(q.isBeforeReset());
 
 			assertFalse(q.next());
 		}
 		q.end();
 	}
-
-	@Test public void testManyEntriesEqualAmount() {
-		final int amount = 100000;
-		//this will cause integer overflow, it's fine
-		BlockPos origin = new BlockPos(Integer.MIN_VALUE, Integer.MAX_VALUE, 0);
-		BlockPos expectedPos = origin.add(1, 2, 3);
-		int expectedValue = 42;
-
-		LightUpdateQueue q = new LightUpdateQueue();
-		testManyEntriesEqualAmount_do(amount, origin, expectedPos, expectedValue, q);
-	}
-
-
-	@Test public void testManyEntriesEqualAmountMultiple() {
-		final int amount = 100000;
-		//this will cause integer overflow, it's fine
-		BlockPos origin = new BlockPos(Integer.MIN_VALUE, Integer.MAX_VALUE, 0);
-		BlockPos expectedPos = origin.add(1, 2, 3);
-		int expectedValue = 42;
-
-		LightUpdateQueue q = new LightUpdateQueue();
-		for (int i = 0; i < 10; i++) {
-			testManyEntriesEqualAmount_do(amount, origin, expectedPos, expectedValue, q);
-		}
-	}
-
-	private void testManyEntriesEqualAmount_do(int amount, BlockPos origin, BlockPos expectedPos, int expectedValue, LightUpdateQueue q) {
-		q.begin(origin);
-		{
-			for (int i = 0; i < amount; i++) {
-				q.put(expectedPos, expectedValue);
-			}
-			for (int i = 0; i < amount; i++) {
-				assertTrue("Queue has less elements that added", q.next());
-			}
-			assertFalse("Queue has more elements than added", q.next());
-		}
-		q.end();
-	}
-
-	@Test public void testManyEntriesEqualValues() {
-		final int amount = 100000;
-
-		Random rand = new Random(42);
-
-		Queue<BlockPos> expectedCoordsQueue = new ArrayDeque<>();
-		Queue<Integer> expectedValueQueue = new ArrayDeque<>();
-
-		BlockPos origin = new BlockPos(432534, 2352, -4325);
-
-		LightUpdateQueue q = new LightUpdateQueue();
-		testManyEntriesEqualValue_do(amount, rand, expectedCoordsQueue, expectedValueQueue, origin, q);
-	}
-
 
 	@Test public void testManyEntriesEqualValuesMultiple() {
 		final int amount = 100000;
@@ -307,99 +177,35 @@ public class TestLightUpdateQueue {
 
 		Queue<BlockPos> expectedCoordsQueue = new ArrayDeque<>();
 		Queue<Integer> expectedValueQueue = new ArrayDeque<>();
+		Queue<Integer> expectedDistanceQueue = new ArrayDeque<>();
 
 		BlockPos origin = new BlockPos(432534, 2352, -4325);
 
 		LightUpdateQueue q = new LightUpdateQueue();
 		for (int i = 0; i < 10; i++) {
-			testManyEntriesEqualValue_do(amount, rand, expectedCoordsQueue, expectedValueQueue, origin, q);
+			testManyEntriesEqualValue_do(amount, rand, expectedCoordsQueue, expectedValueQueue, expectedDistanceQueue, origin, q);
 		}
 	}
 
-	private void testManyEntriesEqualValue_do(int amount, Random rand, Queue<BlockPos> expectedCoordsQueue, Queue<Integer> expectedValueQueue, BlockPos origin, LightUpdateQueue q) {
+	private void testManyEntriesEqualValue_do(int amount, Random rand,
+	                                          Queue<BlockPos> expectedCoordsQueue, Queue<Integer> expectedValueQueue,
+	                                          Queue<Integer> expectedDistanceQueue, BlockPos origin, LightUpdateQueue q) {
 		q.begin(origin);
 		{
 			for (int i = 0; i < amount; i++) {
 				BlockPos pos = randPos(rand).add(origin);
 				int value = randValue(rand);
-				q.put(pos, value);
+				int dist = randValue(rand);
+				q.put(pos, value, dist);
 				expectedCoordsQueue.add(pos);
 				expectedValueQueue.add(value);
+				expectedDistanceQueue.add(dist);
 			}
 			for (int i = 0; i < amount; i++) {
 				q.next();
 				assertEquals(expectedCoordsQueue.remove(), q.getPos());
 				assertEquals(expectedValueQueue.remove(), Integer.valueOf(q.getValue()));
-			}
-			assertFalse("Queue has more elements than added", q.next());
-		}
-		q.end();
-	}
-
-	@Test public void testAddRemoveInterleaved() {
-		BlockPos origin = new BlockPos(-214324, 8545634, -324674);
-
-		BlockPos pos1 = new BlockPos(0, 1, 2).add(origin);
-		BlockPos pos2 = new BlockPos(3, 4, 5).add(origin);
-		BlockPos pos3 = new BlockPos(6, 7, 8).add(origin);
-		BlockPos pos4 = new BlockPos(9, 10, 11).add(origin);
-
-		int value1 = 1, value2 = 2, value3 = 3, value4 = 4;
-
-		//success if no error
-		LightUpdateQueue q = new LightUpdateQueue();
-		q.begin(origin);
-		{
-			q.put(pos1, value1);
-			q.next();
-			assertEquals(pos1, q.getPos());
-			assertEquals(value1, q.getValue());
-
-			q.put(pos2, value2);
-			q.put(pos3, value3);
-
-			q.next();
-			assertEquals(pos2, q.getPos());
-			assertEquals(value2, q.getValue());
-
-			q.put(pos4, value4);
-
-			q.next();
-			assertEquals(pos3, q.getPos());
-			assertEquals(value3, q.getValue());
-
-			q.next();
-			assertEquals(pos4, q.getPos());
-			assertEquals(value4, q.getValue());
-		}
-		assertFalse(q.next());
-		q.end();
-	}
-
-	@Test public void testManyEntriesEqualValuesInterleavedGetAdd() {
-		final int amount = 100000;
-
-		Random rand = new Random(42);
-
-		Queue<BlockPos> expectedCoordsQueue = new ArrayDeque<>();
-		Queue<Integer> expectedValueQueue = new ArrayDeque<>();
-
-		BlockPos origin = new BlockPos(432534, 2352, -4325);
-
-		//success if no error
-		LightUpdateQueue q = new LightUpdateQueue();
-		q.begin(origin);
-		{
-			for (int i = 0; i < amount; i++) {
-				BlockPos pos = randPos(rand).add(origin);
-				int value = randValue(rand);
-				q.put(pos, value);
-				expectedCoordsQueue.add(pos);
-				expectedValueQueue.add(value);
-
-				q.next();
-				assertEquals(expectedCoordsQueue.remove(), q.getPos());
-				assertEquals(expectedValueQueue.remove(), Integer.valueOf(q.getValue()));
+				assertEquals(expectedDistanceQueue.remove(), Integer.valueOf(q.getDistance()));
 			}
 			assertFalse("Queue has more elements than added", q.next());
 		}

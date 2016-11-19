@@ -34,14 +34,17 @@ class LightUpdateQueue {
 	 */
 	private static final boolean DEBUG = true;
 
+	// there is some redundant arithmetic, but it's there so the pattern is easily visible
 	private static final int QUEUE_PART_SIZE = 64*1024;
 	private static final int POS_BITS = 8;
 	private static final int POS_X_OFFSET = POS_BITS*0;
 	private static final int POS_Y_OFFSET = POS_BITS*1;
 	private static final int POS_Z_OFFSET = POS_BITS*2;
 
-	private static final int VALUE_BITS = 8;
-	private static final int VALUE_OFFSET = POS_BITS*3;
+	private static final int VALUE_BITS = 4;
+	private static final int DISTANCE_BITS = 4;
+	private static final int VALUE_OFFSET = POS_BITS*3 + VALUE_BITS*0;
+	private static final int DISTANCE_OFFSET = POS_BITS*3 + VALUE_BITS*1 + DISTANCE_BITS*0;
 	//note: position is signed
 	/**
 	 * Minimum allowed block position relative to center position
@@ -54,6 +57,8 @@ class LightUpdateQueue {
 	//note: value is unsigned
 	static final int MIN_VALUE = 0;
 	static final int MAX_VALUE = Bits.getMaxUnsigned(VALUE_BITS);
+	static final int MIN_DISTANCE = 0;
+	static final int MAX_DISTANCE = Bits.getMaxUnsigned(DISTANCE_BITS);
 
 	private ArrayQueueSegment start = new ArrayQueueSegment(QUEUE_PART_SIZE);
 	private ArrayQueueSegment currentReadQueue;
@@ -87,6 +92,7 @@ class LightUpdateQueue {
 
 	//the read data:
 	private int readValue;
+	private int readDistance;
 	private int readX;
 	private int readY;
 	private int readZ;
@@ -119,11 +125,11 @@ class LightUpdateQueue {
 		this.absoluteIndexRead = -1;
 	}
 
-	void put(BlockPos pos, int value) {
-		put(pos.getX(), pos.getY(), pos.getZ(), value);
+	void put(BlockPos pos, int value, int distance) {
+		put(pos.getX(), pos.getY(), pos.getZ(), value, distance);
 	}
 
-	void put(int x, int y, int z, int value) {
+	void put(int x, int y, int z, int value, int distance) {
 		x -= this.centerX;
 		y -= this.centerY;
 		z -= this.centerZ;
@@ -142,7 +148,8 @@ class LightUpdateQueue {
 		int packed = Bits.packSignedToInt(x, POS_BITS, POS_X_OFFSET) |
 			Bits.packSignedToInt(y, POS_BITS, POS_Y_OFFSET) |
 			Bits.packSignedToInt(z, POS_BITS, POS_Z_OFFSET) |
-			Bits.packSignedToInt(value, VALUE_BITS, VALUE_OFFSET);
+			Bits.packSignedToInt(value, VALUE_BITS, VALUE_OFFSET) |
+			Bits.packSignedToInt(distance, DISTANCE_BITS, DISTANCE_OFFSET);
 		this.putPacked(packed);
 	}
 
@@ -163,6 +170,10 @@ class LightUpdateQueue {
 
 	int getValue() {
 		return readValue;
+	}
+
+	int getDistance() {
+		return readDistance;
 	}
 
 	int getX() {
@@ -209,6 +220,7 @@ class LightUpdateQueue {
 		readY = centerY + Bits.unpackSigned(packed, POS_BITS, POS_Y_OFFSET);
 		readZ = centerZ + Bits.unpackSigned(packed, POS_BITS, POS_Z_OFFSET);
 		readValue = Bits.unpackUnsigned(packed, VALUE_BITS, VALUE_OFFSET);
+		readDistance = Bits.unpackUnsigned(packed, DISTANCE_BITS, DISTANCE_OFFSET);
 		isBeforeReset = absoluteIndexRead <= lastWrittenAbsoluteIndexBeforeReset;
 		return true;
 	}
