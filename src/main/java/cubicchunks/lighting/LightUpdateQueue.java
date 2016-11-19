@@ -30,7 +30,7 @@ import cubicchunks.util.Bits;
 
 class LightUpdateQueue {
 	/**
-	 * Enables additional error checks
+	 * Enables additional error checks. Can be disable if performance becomes an issue.
 	 */
 	private static final boolean DEBUG = true;
 
@@ -46,20 +46,20 @@ class LightUpdateQueue {
 	/**
 	 * Minimum allowed block position relative to center position
 	 */
-	public static final int MIN_POS = Bits.getMinSigned(POS_BITS);
+	static final int MIN_POS = Bits.getMinSigned(POS_BITS);
 	/**
 	 * Maximum allowed block position relative to center position
 	 */
-	public static final int MAX_POS = Bits.getMaxSigned(POS_BITS);
+	static final int MAX_POS = Bits.getMaxSigned(POS_BITS);
 	//note: value is unsigned
-	public static final int MIN_VALUE = 0;
-	public static final int MAX_VALUE = Bits.getMaxUnsigned(VALUE_BITS);
+	static final int MIN_VALUE = 0;
+	static final int MAX_VALUE = Bits.getMaxUnsigned(VALUE_BITS);
 
 	private ArrayQueueSegment start = new ArrayQueueSegment(QUEUE_PART_SIZE);
 	private ArrayQueueSegment currentReadQueue;
 	private ArrayQueueSegment currentWriteQueue;
 	/**
-	 * Index of the next previously read entry from current queue array
+	 * Index of the previously read entry from current queue array
 	 */
 	private int currentReadIndex;
 	/**
@@ -76,15 +76,14 @@ class LightUpdateQueue {
 	private int readY;
 	private int readZ;
 
-	public void begin(BlockPos pos) {
+	void begin(BlockPos pos) {
 		begin(pos.getX(), pos.getY(), pos.getZ());
 	}
 
-	public void begin(int centerX, int centerY, int centerZ) {
+	void begin(int centerX, int centerY, int centerZ) {
 		if (currentReadQueue != null) {
 			throw new IllegalStateException("Called begin() in unclean state! Did you forget to call end()?");
 		}
-		resetIndex();
 		this.currentWriteQueue = start;
 		this.nextWriteIndex = 0;
 		this.centerX = centerX;
@@ -95,16 +94,16 @@ class LightUpdateQueue {
 	/**
 	 * Resets queue index. All previously processed entries since last begin() call will appear again.
 	 */
-	public void resetIndex() {
+	void resetIndex() {
 		this.currentReadQueue = start;
 		this.currentReadIndex = -1;//start at -1 so that next read is at 0
 	}
 
-	public void put(BlockPos pos, int value) {
+	void put(BlockPos pos, int value) {
 		put(pos.getX(), pos.getY(), pos.getZ(), value);
 	}
 
-	public void put(int x, int y, int z, int value) {
+	void put(int x, int y, int z, int value) {
 		x -= this.centerX;
 		y -= this.centerY;
 		z -= this.centerZ;
@@ -141,23 +140,23 @@ class LightUpdateQueue {
 		}
 	}
 
-	public int getValue() {
+	int getValue() {
 		return readValue;
 	}
 
-	public int getX() {
+	int getX() {
 		return readX;
 	}
 
-	public int getY() {
+	int getY() {
 		return readY;
 	}
 
-	public int getZ() {
+	int getZ() {
 		return readZ;
 	}
 
-	public BlockPos getPos() {
+	BlockPos getPos() {
 		return new BlockPos(readX, readY, readZ);
 	}
 
@@ -187,7 +186,7 @@ class LightUpdateQueue {
 		return true;
 	}
 
-	public void end() {
+	void end() {
 		if (currentReadQueue == null) {
 			throw new IllegalStateException("Called end() without corresponding begin()!");
 		}
@@ -204,7 +203,7 @@ class LightUpdateQueue {
 		private int[] data;
 		private ArrayQueueSegment next;
 
-		public ArrayQueueSegment(int initSize) {
+		ArrayQueueSegment(int initSize) {
 			data = new int[initSize];
 		}
 	}
