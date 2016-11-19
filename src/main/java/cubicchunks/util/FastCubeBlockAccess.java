@@ -24,11 +24,20 @@
 package cubicchunks.util;
 
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.crash.CrashReport;
+import net.minecraft.crash.CrashReportCategory;
+import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.fml.common.SidedProxy;
 
+import cubicchunks.client.CubeProviderClient;
+import cubicchunks.server.CubeProviderServer;
+import cubicchunks.util.Coords;
+import cubicchunks.util.CubePos;
 import cubicchunks.lighting.ILightBlockAccess;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
@@ -43,25 +52,55 @@ import static cubicchunks.util.Coords.blockToLocal;
  * Does not allow to set blocks, only get blocks, their opacity and get/set light values.
  */
 public class FastCubeBlockAccess implements ILightBlockAccess {
+	@SidedProxy private static GetLoadedChunksProxy getLoadedChunksProxy;
 	private final Cube[][][] cache;
 	private final int originX, originY, originZ;
 	private final ICubicWorld world;
 
 	public FastCubeBlockAccess(ICubeProvider cache, Cube cube, int radius) {
-		int n = radius*2 + 1;
-		this.world = cube.getCubicWorld();
-		this.cache = new Cube[n][n][n];
-		this.originX = cube.getX() - radius;
-		this.originY = cube.getY() - radius;
-		this.originZ = cube.getZ() - radius;
+		this(cube.getCubicWorld(), cache,
+			cube.getCoords().sub(radius, radius, radius), cube.getCoords().add(radius, radius, radius));
+	}
 
-		for (int relativeCubeX = -radius; relativeCubeX <= radius; relativeCubeX++) {
-			for (int relativeCubeZ = -radius; relativeCubeZ <= radius; relativeCubeZ++) {
-				for (int relativeCubeY = -radius; relativeCubeY <= radius; relativeCubeY++) {
-					this.cache[relativeCubeX + radius][relativeCubeY + radius][relativeCubeZ + radius] =
-						cache.getLoadedCube(originX + relativeCubeX + radius,
-							originY + relativeCubeY + radius,
-							originZ + relativeCubeZ + radius);
+	private FastCubeBlockAccess(ICubicWorld world, ICubeProvider prov, CubePos start, CubePos end) {
+		int dx = Math.abs(end.getX() - start.getX()) + 1;
+		int dy = Math.abs(end.getY() - start.getY()) + 1;
+		int dz = Math.abs(end.getZ() - start.getZ()) + 1;
+
+		this.world = world;
+		this.cache = new Cube[dx][dy][dz];
+		this.originX = Math.min(start.getX(), end.getX());
+		this.originY = Math.min(start.getY(), end.getY());
+		this.originZ = Math.min(start.getZ(), end.getZ());
+
+		for (int relativeCubeX = 0; relativeCubeX < dx; relativeCubeX++) {
+			for (int relativeCubeZ = 0; relativeCubeZ < dz; relativeCubeZ++) {
+				for (int relativeCubeY = 0; relativeCubeY < dy; relativeCubeY++) {
+					this.cache[relativeCubeX][relativeCubeY][relativeCubeZ] =
+						prov.getLoadedCube(originX + relativeCubeX, originY + relativeCubeY, originZ + relativeCubeZ);
+					if (this.cache[relativeCubeX][relativeCubeY][relativeCubeZ] == null) {
+						CrashReport report = CrashReport.makeCrashReport(
+							new IllegalStateException("Cube not loaded"), "Creating cube cache");
+						CrashReportCategory category = report.makeCategory("ILightBlockAccess");
+
+						CubePos pos = new CubePos(originX + relativeCubeX, originY + relativeCubeY, originZ + relativeCubeZ);
+						category.setDetail("Getting cube", pos::toString);
+						if (prov instanceof CubeProviderServer || prov instanceof CubeProviderClient) {
+							Iterable<Chunk> chunks = getLoadedChunksProxy.getLoadedChunks(prov);
+							int i = 0;
+							for (Chunk chunk : chunks) {
+								Column column = (Column) chunk;
+								category.setDetail("Column" + i, () ->
+									column.getLoadedCubes().stream().map(
+										c -> c.getCoords().toString()
+									).reduce((a, b) -> a + ", " + b).orElse(null)
+								);
+							}
+						}
+
+						ReportedException ex = new ReportedException(report);
+						throw ex;
+					}
 				}
 			}
 		}
@@ -118,10 +157,29 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
 		//TODO: fix it
 		BlockPos midPos = Coords.midPos(startPos, endPos);
 		Cube center = prov.getLoadedCube(CubePos.fromBlockCoords(midPos));
-		int dx = Math.abs(startPos.getX() - endPos.getX());
-		int dy = Math.abs(startPos.getY() - endPos.getY());
-		int dz = Math.abs(startPos.getZ() - endPos.getZ());
-		int r = MathUtil.max(dx, dy, dz);
-		return new FastCubeBlockAccess(prov, center, r);
+		return new FastCubeBlockAccess(center.getCubicWorld(), prov,
+			CubePos.fromBlockCoords(startPos), CubePos.fromBlockCoords(endPos));
+	}
+
+	private interface GetLoadedChunksProxy {
+		Iterable<Chunk> getLoadedChunks(ICubeProvider prov);
+	}
+
+	public static final class ServerProxy implements GetLoadedChunksProxy {
+		public ServerProxy() {
+		}
+
+		@Override public Iterable<Chunk> getLoadedChunks(ICubeProvider prov) {
+			return ((CubeProviderServer) prov).getLoadedChunks();
+		}
+	}
+
+	public static final class ClientProxy implements GetLoadedChunksProxy {
+		public ClientProxy() {
+		}
+
+		@Override public Iterable<Chunk> getLoadedChunks(ICubeProvider prov) {
+			return ((CubeProviderClient) prov).getLoadedChunks();
+		}
 	}
 }

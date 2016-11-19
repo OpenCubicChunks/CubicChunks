@@ -32,6 +32,8 @@ import net.minecraft.world.EnumSkyBlock;
 
 import java.util.function.Consumer;
 
+import static cubicchunks.lighting.LightUpdateQueue.MAX_DISTANCE;
+import static cubicchunks.lighting.LightUpdateQueue.MIN_DISTANCE;
 import static net.minecraft.crash.CrashReportCategory.getCoordinateInfo;
 
 /**
@@ -47,8 +49,12 @@ public class LightPropagator {
 	 * light. If the light source is less bright than the current light value - the method will redo light spreading for
 	 * these blocks.
 	 * <p>
+	 * If updating lighting starting at these positions would never end, the algorithm will stop after walking {@link
+	 * LightUpdateQueue#MAX_DISTANCE} blocks
+	 * <p>
 	 * All coords to update must be between {@code centerPos.getX/Y/Z + }{@link LightUpdateQueue#MIN_POS} and {@code
-	 * centerPos.getX/Y/Z + }{@link LightUpdateQueue#MAX_POS} of centerPos (inclusive)
+	 * centerPos.getX/Y/Z + }{@link LightUpdateQueue#MAX_POS} of centerPos (inclusive) with {@code
+	 * LightUpdateQueue#MAX_DISTANCE + 1} buffer radius.
 	 * <p>
 	 * WARNING: You probably shouldn't use this method directly and use {@link LightingManager#relightMultiBlock(BlockPos,
 	 * BlockPos, EnumSkyBlock)} instead
@@ -68,13 +74,14 @@ public class LightPropagator {
 				int emitted = blocks.getEmittedLight(pos, type);
 				if (blocks.getLightFor(type, pos) > emitted) {
 					//add the emitted value even if it's not used here - it will be used when relighting that area
-					internalRelightQueue.put(pos, emitted, 0);
+					internalRelightQueue.put(pos, emitted, MAX_DISTANCE);
 				}
 			});
 			// follow decreasing light values until it stops decreasing,
 			// setting each encountered value to 0 for easy spreading
 			while (internalRelightQueue.next()) {
 				BlockPos pos = internalRelightQueue.getPos();
+				int distance = internalRelightQueue.getDistance();
 
 				int currentValue = blocks.getLightFor(type, pos);
 				// note: min value is 0
@@ -89,13 +96,17 @@ public class LightPropagator {
 					// set it to 0 and add neighbors to the queue
 					blocks.setLightFor(type, pos, 0);
 					setLightCallback.accept(pos);
+					// if no distance left - stop spreading, so that it won't run into problems when updating too much
+					if (distance <= LightUpdateQueue.MIN_DISTANCE) {
+						continue;
+					}
 					// add all neighbors even those already checked - the check above will fail for them
 					// because currentValue-1 == -1 (already checked are set to 0)
 					// and min. possible lightFromNeighbors is 0
 					for (EnumFacing direction : EnumFacing.values()) {
 						BlockPos offset = pos.offset(direction);
 						//add the emitted value even if it's not used here - it will be used when relighting that area
-						internalRelightQueue.put(offset, blocks.getEmittedLight(offset, type), 0);
+						internalRelightQueue.put(offset, blocks.getEmittedLight(offset, type), distance - 1);
 					}
 				}
 			}
@@ -107,7 +118,7 @@ public class LightPropagator {
 				int emitted = blocks.getEmittedLight(pos, type);
 				// blocks where light decreased are already added (previous run over the queue)
 				if (emitted > blocks.getLightFor(type, pos)) {
-					internalRelightQueue.put(pos, emitted, 0);
+					internalRelightQueue.put(pos, emitted, MAX_DISTANCE);
 				}
 			});
 			// spread out light values
@@ -118,12 +129,17 @@ public class LightPropagator {
 					// nothing to set, can't spread further
 					continue;
 				}
+				int distance = internalRelightQueue.isBeforeReset() ? MAX_DISTANCE : internalRelightQueue.getDistance();
 				// set this and add neighbors to the queue
 				blocks.setLightFor(type, pos, value);
 				setLightCallback.accept(pos);
+				// if no distance left - stop spreading, so that it won't run into problems when updating too much
+				if (distance <= MIN_DISTANCE) {
+					continue;
+				}
 				for (EnumFacing direction : EnumFacing.values()) {
 					BlockPos nextPos = pos.offset(direction);
-					internalRelightQueue.put(nextPos, getExpectedLight(blocks, type, nextPos), 0);
+					internalRelightQueue.put(nextPos, getExpectedLight(blocks, type, nextPos), distance - 1);
 				}
 			}
 		} catch (Throwable t) {

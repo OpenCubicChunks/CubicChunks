@@ -26,6 +26,7 @@ package cubicchunks.client;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.Nullable;
 
@@ -140,6 +141,10 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 	@Override
 	public Cube getLoadedCube(CubePos coords) {
 		return getLoadedCube(coords.getX(), coords.getY(), coords.getZ());
+	}
+
+	public Iterable<Chunk> getLoadedChunks() {
+		return this.chunkMapping.values();
 	}
 
 	@Override

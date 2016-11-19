@@ -32,11 +32,13 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 
 import cubicchunks.util.Coords;
+import cubicchunks.util.CubePos;
 import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 
 import static cubicchunks.util.Coords.blockToCube;
@@ -198,7 +200,9 @@ public class LightingManager {
 		BlockPos midPos = Coords.midPos(startPos, endPos);
 		BlockPos minLoad = startPos.add(-LOAD_RADIUS, -LOAD_RADIUS, -LOAD_RADIUS);
 		BlockPos maxLoad = endPos.add(LOAD_RADIUS, LOAD_RADIUS, LOAD_RADIUS);
-		if (!world.isAreaLoaded(minLoad, maxLoad)) {
+
+		if (!world.testForCubes(CubePos.fromBlockCoords(minLoad), CubePos.fromBlockCoords(maxLoad),
+			c -> c != null && !(c instanceof BlankCube))) {
 			return false;
 		}
 		ILightBlockAccess blocks = FastCubeBlockAccess.forBlockRegion(world.getCubeCache(), minLoad, maxLoad);

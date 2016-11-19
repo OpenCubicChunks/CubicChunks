@@ -511,6 +511,24 @@ public class TestLightPropagator {
 		verify(access, size);
 	}
 
+	@Test
+	public void testSetBlockAboveSurfaceAndRelightColumn() {
+		int size = 20;
+		TestLightBlockAccessImpl access = lightAccess(size).
+			withOpaque(posRange(pos(-30, -1, -30), pos(30, -1, 30))).
+			currentHeightsForInitSkyLight().
+			make();
+		BlockPos center = pos(0, 0, 0);
+		BlockPos testBottom = pos(0, 0, 0);
+		BlockPos testTop = pos(0, 1, 0);
+
+		LightPropagator propagator = new LightPropagator();
+
+		access.setOpacity(testTop, 255);
+		propagator.propagateLight(center, BlockPos.getAllInBox(testBottom, testTop), access, EnumSkyBlock.SKY, p -> {});
+
+		verify(access, size);
+	}
 
 	@Test
 	public void testSetBlockOnSurface() {
@@ -547,7 +565,7 @@ public class TestLightPropagator {
 		assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate));
 	}
 
-	@Test//(timeout = 15000)
+	@Test(timeout = 15000)
 	public void testUnlightSolidBlockInHugeLitArea() {
 		int size = 200;
 		TestLightBlockAccessImpl access = lightAccess(size, 20, size, 20).
@@ -562,8 +580,14 @@ public class TestLightPropagator {
 		LightPropagator propagator = new LightPropagator();
 
 		propagator.propagateLight(center, BlockPos.getAllInBox(toUpdate, toUpdate), access, EnumSkyBlock.SKY, p -> {});
-		//success if no crash and at least that one block got updated
+		// success if no crash and at least that one block and neighbors got updated
 		assertEquals(0, access.getLightFor(EnumSkyBlock.SKY, toUpdate));
+		assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate.up()));
+		assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate.east()));
+		assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate.west()));
+		assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate.north()));
+		assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate.south()));
+		assertEquals(14, access.getLightFor(EnumSkyBlock.SKY, toUpdate.down()));
 	}
 
 	@Test(timeout = 3000)
