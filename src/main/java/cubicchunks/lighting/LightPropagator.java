@@ -97,7 +97,7 @@ public class LightPropagator {
 					blocks.setLightFor(type, pos, 0);
 					setLightCallback.accept(pos);
 					// if no distance left - stop spreading, so that it won't run into problems when updating too much
-					if (distance <= LightUpdateQueue.MIN_DISTANCE) {
+					if (distance <= MIN_DISTANCE) {
 						continue;
 					}
 					// add all neighbors even those already checked - the check above will fail for them
@@ -119,27 +119,34 @@ public class LightPropagator {
 				// blocks where light decreased are already added (previous run over the queue)
 				if (emitted > blocks.getLightFor(type, pos)) {
 					internalRelightQueue.put(pos, emitted, MAX_DISTANCE);
+					// do it here so that the loop below only needs to check if the light from this block can go into
+					// any neighbor. This simplifies logic for decreasing light value. Current code wouldn't work when
+					// decreasing sunlight below a block, because sunlight couldn't spread "into" any block made dark
+					// by light un-spreading code above
+					blocks.setLightFor(type, pos, emitted);
+					setLightCallback.accept(pos);
 				}
 			});
 			// spread out light values
 			while (internalRelightQueue.next()) {
 				BlockPos pos = internalRelightQueue.getPos();
-				int value = internalRelightQueue.getValue();
-				if (value <= blocks.getLightFor(type, pos)) {
-					// nothing to set, can't spread further
-					continue;
-				}
 				int distance = internalRelightQueue.isBeforeReset() ? MAX_DISTANCE : internalRelightQueue.getDistance();
-				// set this and add neighbors to the queue
-				blocks.setLightFor(type, pos, value);
-				setLightCallback.accept(pos);
-				// if no distance left - stop spreading, so that it won't run into problems when updating too much
-				if (distance <= MIN_DISTANCE) {
-					continue;
-				}
+
 				for (EnumFacing direction : EnumFacing.values()) {
 					BlockPos nextPos = pos.offset(direction);
-					internalRelightQueue.put(nextPos, getExpectedLight(blocks, type, nextPos), distance - 1);
+					int newLight = getExpectedLight(blocks, type, nextPos);
+					if (newLight <= blocks.getLightFor(type, nextPos)) {
+						// can't go further, the next block already has the same or higher light value
+						continue;
+					}
+					blocks.setLightFor(type, nextPos, newLight);
+					setLightCallback.accept(nextPos);
+
+					// if no distance left - stop spreading, so that it won't run into problems when updating too much
+					if (distance - 1 <= MIN_DISTANCE) {
+						continue;
+					}
+					internalRelightQueue.put(nextPos, newLight, distance - 1);
 				}
 			}
 		} catch (Throwable t) {

@@ -152,6 +152,13 @@ public class TestLightPropagator {
 		verifyEqual(center.add(-2, -2, -2), access, EnumSkyBlock.BLOCK, new int[/*x*/][/*y*/][/*z*/]{
 			{
 				{0, 0, 0, 0, 0},
+				{0, 0, 0, 0, 0},
+				{0, 0, 1, 0, 0},
+				{0, 0, 0, 0, 0},
+				{0, 0, 0, 0, 0}
+			},
+			{
+				{0, 0, 0, 0, 0},
 				{0, 0, 1, 0, 0},
 				{0, 1, 2, 1, 0},
 				{0, 0, 1, 0, 0},
@@ -640,7 +647,7 @@ public class TestLightPropagator {
 	 * </pre>
 	 */
 	private void verifyEqual(BlockPos start, ILightBlockAccess access, EnumSkyBlock type, int[/*max-y*/][/*z*/][/*x*/] data) {
-		BlockPos end = start.add(data.length - 1, data[0].length - 1, data[0][0].length - 1);
+		BlockPos end = start.add(data[0][0].length - 1, data.length - 1, data[0].length - 1);
 		BlockPos.getAllInBox(start, end).forEach(p -> {
 			Vec3i diff = p.subtract(start);
 			//subtract from length so that as we go down we decrease y (go down)

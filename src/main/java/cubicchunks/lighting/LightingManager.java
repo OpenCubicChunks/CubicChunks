@@ -195,8 +195,10 @@ public class LightingManager {
 	 * changed.
 	 */
 	public boolean relightMultiBlock(BlockPos startPos, BlockPos endPos, EnumSkyBlock type) {
-		//TODO: optimize if needed
-		final int LOAD_RADIUS = 17;
+		// TODO: optimize if needed
+
+		// TODO: Figure out why it crashes with value 17
+		final int LOAD_RADIUS = 31;
 		BlockPos midPos = Coords.midPos(startPos, endPos);
 		BlockPos minLoad = startPos.add(-LOAD_RADIUS, -LOAD_RADIUS, -LOAD_RADIUS);
 		BlockPos maxLoad = endPos.add(LOAD_RADIUS, LOAD_RADIUS, LOAD_RADIUS);
