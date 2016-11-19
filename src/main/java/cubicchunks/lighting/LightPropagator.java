@@ -23,11 +23,16 @@
  */
 package cubicchunks.lighting;
 
+import net.minecraft.crash.CrashReport;
+import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 
 import java.util.function.Consumer;
+
+import static net.minecraft.crash.CrashReportCategory.getCoordinateInfo;
 
 /**
  * Handles propagating light changes from blocks.
@@ -121,6 +126,16 @@ public class LightPropagator {
 					internalRelightQueue.put(nextPos, getExpectedLight(blocks, type, nextPos));
 				}
 			}
+		} catch (Throwable t) {
+			CrashReport report = CrashReport.makeCrashReport(t, "Updating skylight");
+			CrashReportCategory category = report.makeCategory("Skylight update");
+			category.setDetail("CenterLocation", () -> getCoordinateInfo(centerPos));
+			int i = 0;
+			for (BlockPos pos : coords) {
+				category.setDetail("UpdateLocation" + i, () -> getCoordinateInfo(pos));
+				i++;
+			}
+			throw new ReportedException(report);
 		} finally {
 			internalRelightQueue.end();
 		}

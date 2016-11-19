@@ -26,6 +26,7 @@ package cubicchunks.lighting;
 import com.google.common.collect.Lists;
 
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.EnumSkyBlock;
@@ -581,7 +582,7 @@ public class TestLightPropagator {
 		try {
 			propagator.propagateLight(center.add(500, 500, 500), BlockPos.getAllInBox(toUpdate, toUpdate), access, EnumSkyBlock.SKY, p -> {});
 			fail();
-		} catch (IndexOutOfBoundsException ex) {
+		} catch (ReportedException ex) {
 			//expected
 		}
 		propagator.propagateLight(center, BlockPos.getAllInBox(toUpdate, toUpdate), access, EnumSkyBlock.SKY, p -> {});
