@@ -36,13 +36,13 @@ import cubicchunks.world.ICubicWorld;
 @Mixin(Entity.class)
 public class MixinEntity_DeathFix {
 
-	@Shadow public World worldObj;
+	@Shadow public World world;
 
 	/**
 	 * Replace -64 constant, to avoid killing entities below y=-64
 	 */
 	@ModifyConstant(method = "onEntityUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
 	private double getDeathY(double originalY) {
-		return ((ICubicWorld) worldObj).getMinHeight() + originalY;
+		return ((ICubicWorld) world).getMinHeight() + originalY;
 	}
 }

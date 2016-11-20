@@ -144,8 +144,7 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
 
 	// CHECKED: 1.10.2-12.18.1.2092
 	@Override
-	//actually sendToPlayers
-	public boolean sentToPlayers() {
+	public boolean sendToPlayers() {
 		if (getColumn() == null) {
 			return false;
 		}

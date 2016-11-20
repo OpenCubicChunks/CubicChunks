@@ -45,7 +45,6 @@ import io.netty.buffer.ByteBuf;
 public class PacketCube implements IMessage {
 
 	private int[] heightMap;
-	private Type type;
 	private CubePos cubePos;
 	private byte[] data;
 	private List<NBTTagCompound> tileEntityTags;
@@ -53,7 +52,7 @@ public class PacketCube implements IMessage {
 	public PacketCube() {
 	}
 
-	public PacketCube(Cube cube, Type type) {
+	public PacketCube(Cube cube) {
 		this.cubePos = cube.getCoords();
 		this.data = new byte[WorldEncoder.getEncodedSize(cube)];
 		PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
@@ -65,7 +64,6 @@ public class PacketCube implements IMessage {
 		for (TileEntity te : tileEntities) {
 			this.tileEntityTags.add(te.getUpdateTag());
 		}
-		this.type = type;
 		this.heightMap = new int[Cube.SIZE*Cube.SIZE];
 		IHeightMap heightmap = cube.getColumn().getOpacityIndex();
 		for (int localX = 0; localX < Cube.SIZE; localX++) {
@@ -78,7 +76,6 @@ public class PacketCube implements IMessage {
 	@Override
 	public void fromBytes(ByteBuf buf) {
 		this.cubePos = new CubePos(buf.readInt(), buf.readInt(), buf.readInt());
-		this.type = Type.values()[buf.readByte()];
 		this.data = new byte[buf.readInt()];
 		buf.readBytes(this.data);
 		int numTiles = buf.readInt();
@@ -97,7 +94,6 @@ public class PacketCube implements IMessage {
 		buf.writeInt(cubePos.getX());
 		buf.writeInt(cubePos.getY());
 		buf.writeInt(cubePos.getZ());
-		buf.writeByte(this.type.ordinal());
 		buf.writeInt(this.data.length);
 		buf.writeBytes(this.data);
 		buf.writeInt(this.tileEntityTags.size());
@@ -121,10 +117,6 @@ public class PacketCube implements IMessage {
 		return Iterables.unmodifiableIterable(this.tileEntityTags);
 	}
 
-	public Type getType() {
-		return type;
-	}
-
 	public int height(int localX, int localZ) {
 		return heightMap[index(localX, localZ)];
 	}
@@ -139,9 +131,5 @@ public class PacketCube implements IMessage {
 
 	private static int index(int x, int z) {
 		return x << 4 | z;
-	}
-
-	public enum Type {
-		NEW_CUBE, UPDATE
 	}
 }

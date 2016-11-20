@@ -32,8 +32,8 @@ import cubicchunks.worldgen.generator.ICubePrimer;
 /**
  * Basic structure generator for Cubic Chunks.
  * <p>
- * The basic idea is to loop over all cubes within some radius (max structure size)
- * and figure out which parts of structures starting there intersect currently generated cube.
+ * The basic idea is to loop over all cubes within some radius (max structure size) and figure out which parts of
+ * structures starting there intersect currently generated cube.
  */
 public abstract class CubicStructureGenerator {
 

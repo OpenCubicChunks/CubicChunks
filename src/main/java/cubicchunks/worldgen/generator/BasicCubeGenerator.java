@@ -35,11 +35,15 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
+/**
+ * A partial implementation of {@link ICubeGenerator} that handles biome assignment.
+ * <p>
+ * Structure recreation and lookup are not supported by default.
+ */
 public abstract class BasicCubeGenerator implements ICubeGenerator {
 
-	private Biome[] columnBiomes;
-
 	protected ICubicWorld world;
+	private Biome[] columnBiomes;
 
 	public BasicCubeGenerator(ICubicWorld world) {
 		this.world = world;
@@ -53,9 +57,10 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
 				Coords.cubeToMinBlock(column.getZ()),
 				Cube.SIZE, Cube.SIZE);
 
-		byte[] abyte = column.getBiomeArray();
-		for (int i = 0; i < abyte.length; ++i) {
-			abyte[i] = (byte) Biome.getIdForBiome(this.columnBiomes[i]);
+		// Copy ids to column internal biome array
+		byte[] columnBiomeArray = column.getBiomeArray();
+		for (int i = 0; i < columnBiomeArray.length; ++i) {
+			columnBiomeArray[i] = (byte) Biome.getIdForBiome(this.columnBiomes[i]);
 		}
 	}
 
@@ -73,7 +78,7 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
 	}
 
 	@Override
-	public BlockPos getClosestStructure(String name, BlockPos pos) {
+	public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
 		return null;
 	}
 }

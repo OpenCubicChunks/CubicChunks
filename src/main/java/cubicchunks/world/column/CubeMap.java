@@ -30,37 +30,56 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import cubicchunks.world.cube.Cube;
 
+/**
+ * Stores cubes for columns
+ */
 class CubeMap implements Iterable<Cube> {
-
-	private static final Comparator<Cube> ORDER = (one, two) ->
-		one.getY() - two.getY();
 
 	private final List<Cube> cubes = new ArrayList<>();
 
 	private ExtendedBlockStorage[] toBlockTick = new ExtendedBlockStorage[0];
 
+	/**
+	 * Removes the cube at {@code cubeY}
+	 *
+	 * @param cubeY cube y position
+	 *
+	 * @return the removed cube if it existed, otherwise <code>null</code>
+	 */
 	Cube remove(int cubeY) {
 		int index = binarySearch(cubeY);
 		return index < cubes.size() && cubes.get(index).getY() == cubeY ? cubes.remove(index) : null;
 	}
 
-	void put(Cube cube) {
-		if (cube == null) {
-			throw new NullPointerException();
-		}
-		if (this.contains(cube.getY())) {
+	/**
+	 * Adds a cube
+	 *
+	 * @param cube the cube to add
+	 */
+	void put(@Nonnull Cube cube) {
+		int searchIndex = binarySearch(cube.getY());
+		if (this.contains(cube.getY(), searchIndex)) {
 			throw new IllegalArgumentException("Cube at " + cube.getY() + " already exists!");
 		}
-		cubes.add(cube);
-		cubes.sort(ORDER); // kind of expensive... but puts don't happen much (wish there was a SortedArrayList)
+		cubes.add(searchIndex, cube);
 	}
 
+	/**
+	 * Iterate over all cubes between <code>startY</code> and <code>endY</code> in this storage in order. If
+	 * <code>startY < endY</code>, order is bottom to top, otherwise order is top to bottom.
+	 *
+	 * @param startY initial cube y position
+	 * @param endY last cube y position
+	 *
+	 * @return an iterator over the cubes
+	 */
 	Iterable<Cube> cubes(int startY, int endY) {
 		boolean reverse = false;
 		if (startY > endY) {
@@ -80,25 +99,47 @@ class CubeMap implements Iterable<Cube> {
 		}
 	}
 
-	private boolean contains(int cubeY) {
-		int index = binarySearch(cubeY);
-		return index < cubes.size() && cubes.get(index).getY() == cubeY;
+	/**
+	 * Check if the target cube is stored here
+	 *
+	 * @param cubeY the y coordinate of the cube
+	 * @param searchIndex the index to search at (got form {@link #binarySearch(int)})
+	 *
+	 * @return <code>true</code> if the cube is contained here, <code>false</code> otherwise
+	 */
+	private boolean contains(int cubeY, int searchIndex) {
+		return searchIndex < cubes.size() && cubes.get(searchIndex).getY() == cubeY;
 	}
 
+	/**
+	 * Iterate over all cubes in this storage
+	 *
+	 * @return the iterator
+	 */
 	@Override public Iterator<Cube> iterator() {
 		return cubes.iterator();
 	}
 
+	/**
+	 * Retrieve a collection of all cubes within this storage. The collection is non-modifiable
+	 *
+	 * @return the collection
+	 */
 	public Collection<Cube> all() {
 		return Collections.unmodifiableCollection(cubes);
 	}
 
+	/**
+	 * Check if this storage is empty
+	 *
+	 * @return <code>true</code> if there are no cubes in this storage, <code>false</code> otherwise
+	 */
 	public boolean isEmpty() {
 		return cubes.isEmpty();
 	}
 
 	/**
-	 * @return An array of EBS's form Cubes that need ticking... kind of a hack but vanilla needs it
+	 * @return An array of EBSs from cubes that need ticking
 	 */
 	ExtendedBlockStorage[] getStoragesToTick() {
 		if (!isToTickValid()) {
@@ -136,6 +177,14 @@ class CubeMap implements Iterable<Cube> {
 		return index == toBlockTick.length; // did we check everything there was in toBlockTick?
 	}
 
+	/**
+	 * Binary search for the index of the specified cube. If the cube is not present, returns the index at which it
+	 * should be inserted.
+	 *
+	 * @param cubeY cube y position
+	 *
+	 * @return the target index
+	 */
 	private int binarySearch(int cubeY) {
 		int start = 0;
 		int end = cubes.size() - 1;
@@ -154,6 +203,6 @@ class CubeMap implements Iterable<Cube> {
 			}
 		}
 
-		return mid; // not found :(
+		return start; // not found :(
 	}
 }

@@ -117,7 +117,7 @@ public class RenderCubeCache extends ChunkCache {
 	}
 
 	private int getLightForExt(EnumSkyBlock type, BlockPos pos) {
-		if (type == EnumSkyBlock.SKY && this.worldObj.provider.getHasNoSky()) {
+		if (type == EnumSkyBlock.SKY && this.world.getProvider().hasNoSky()) {
 			return 0;
 		}
 		if (pos.getY() < world.getMinHeight() && pos.getY() >= world.getMaxHeight()) {

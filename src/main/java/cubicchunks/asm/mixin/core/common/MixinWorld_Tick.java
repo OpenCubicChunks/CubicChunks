@@ -56,7 +56,10 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 		throw new Error();
 	}
 
-	@Shadow public abstract boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty);
+	//TODO: handle private isAreaLoaded correctly
+	@Shadow private boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty) {
+		throw new Error();
+	}
 
 	/**
 	 * Redirect {@code isAreaLoaded} here, to use Y coordinate of the entity.
@@ -89,8 +92,8 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 	        locals = LocalCapture.CAPTURE_FAILHARD,
 	        require = 1)
 	public void onIsAreaLoadedForUpdateEntityWithOptionalForce(Entity entity, boolean force, CallbackInfo ci, int i, int j) {
-		updateEntity_entityPosY = MathHelper.floor_double(entity.posY);
-		updateEntity_entityPosX = MathHelper.floor_double(entity.posX);
-		updateEntity_entityPosZ = MathHelper.floor_double(entity.posZ);
+		updateEntity_entityPosY = MathHelper.floor(entity.posY);
+		updateEntity_entityPosX = MathHelper.floor(entity.posX);
+		updateEntity_entityPosZ = MathHelper.floor(entity.posZ);
 	}
 }

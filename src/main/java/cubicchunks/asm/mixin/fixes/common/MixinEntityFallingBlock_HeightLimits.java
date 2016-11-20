@@ -52,6 +52,6 @@ public abstract class MixinEntityFallingBlock_HeightLimits extends Entity {
 	 */
 	@Redirect(method = "onUpdate", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
 	private int checkHeightYReplace(BlockPos pos) {
-		return MixinUtils.getReplacementY(worldObj, pos);
+		return MixinUtils.getReplacementY(world, pos);
 	}
 }

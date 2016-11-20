@@ -40,7 +40,7 @@ public class MixinDedicatedServer_HeightLimits {
 	/**
 	 * Replace the default build height (256).
 	 */
-	@ModifyConstant(method = "startServer", constant = @Constant(intValue = 256), require = 2)
+	@ModifyConstant(method = "init", constant = @Constant(intValue = 256), require = 2)
 	private int getDefaultBuildHeight(int oldValue) {
 		return AddressTools.MAX_BLOCK_Y + 1;
 	}

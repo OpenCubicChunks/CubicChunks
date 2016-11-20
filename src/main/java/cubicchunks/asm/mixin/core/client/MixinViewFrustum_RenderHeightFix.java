@@ -69,9 +69,9 @@ public class MixinViewFrustum_RenderHeightFix {
 		double z = view.posZ;
 
 		// treat the y dimension the same as all the rest
-		int viewX = MathHelper.floor_double(x) - 8;
-		int viewY = MathHelper.floor_double(y) - 8;
-		int viewZ = MathHelper.floor_double(z) - 8;
+		int viewX = MathHelper.floor(x) - 8;
+		int viewY = MathHelper.floor(y) - 8;
+		int viewZ = MathHelper.floor(z) - 8;
 
 		int xSizeInBlocks = this.countChunksX*16;
 		int ySizeInBlocks = this.countChunksY*16;
@@ -108,9 +108,9 @@ public class MixinViewFrustum_RenderHeightFix {
 			return;
 		}
 		// treat the y dimension the same as all the rest
-		int x = MathHelper.bucketInt(pos.getX(), 16);
-		int y = MathHelper.bucketInt(pos.getY(), 16);
-		int z = MathHelper.bucketInt(pos.getZ(), 16);
+		int x = MathHelper.intFloorDiv(pos.getX(), 16);
+		int y = MathHelper.intFloorDiv(pos.getY(), 16);
+		int z = MathHelper.intFloorDiv(pos.getZ(), 16);
 		x %= this.countChunksX;
 		if (x < 0) {
 			x += this.countChunksX;

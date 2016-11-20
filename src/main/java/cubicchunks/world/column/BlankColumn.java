@@ -40,10 +40,22 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 
+/**
+ * A blank column, containing no cubes. Any operation on this column will have no effect. Trying to retrieve blocks will
+ * always return {@link Blocks#AIR}
+ */
 public class BlankColumn extends Column {
 
 	private final Cube blankCube;
 
+	/**
+	 * Create a new blank column
+	 *
+	 * @param provider cube provider for this column
+	 * @param world world in which this column is
+	 * @param cubeX column x position
+	 * @param cubeZ column z position
+	 */
 	public BlankColumn(ICubeProvider provider, ICubicWorld world, int cubeX, int cubeZ) {
 		super(provider, world, cubeX, cubeZ);
 		blankCube = new BlankCube(this);
@@ -61,6 +73,7 @@ public class BlankColumn extends Column {
 		return blankCube;
 	}
 
+	@Override
 	public void addCube(Cube cube) {
 	}
 
@@ -118,7 +131,7 @@ public class BlankColumn extends Column {
 	//getBroghtestLight. It actually returns light value... 
 	@Override
 	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
-		if (!this.getWorld().provider.getHasNoSky() && skyLightDampeningTerm < EnumSkyBlock.SKY.defaultLightValue) {
+		if (!this.getWorld().provider.hasNoSky() && skyLightDampeningTerm < EnumSkyBlock.SKY.defaultLightValue) {
 			return EnumSkyBlock.SKY.defaultLightValue - skyLightDampeningTerm;
 		}
 		return 0;

@@ -70,7 +70,7 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
 		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		CubePos cubePos = packet.getCubePos();
@@ -83,14 +83,10 @@ public class ClientHandler implements INetHandler {
 		}
 
 		Cube cube;
-		if (packet.getType() == PacketCube.Type.NEW_CUBE) {
-			cube = cubeCache.loadCube(column, cubePos.getY());
+		if (cubeCache.getLoadedCube(cubePos) == null) {
+			cube = cubeCache.loadCube(column, cubePos.getY()); // new cube
 		} else {
-			cube = column.getCube(cubePos.getY());
-			if (cube instanceof BlankCube) {
-				CubicChunks.LOGGER.error("Ignored cube update to blank cube {}", cubePos);
-				return;
-			}
+			cube = column.getCube(cubePos.getY()); // cube update
 		}
 
 		byte[] data = packet.getData();
@@ -130,7 +126,7 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
 		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		ChunkPos chunkPos = packet.getChunkPos();
@@ -150,7 +146,7 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
 		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		cubeCache.unloadCube(packet.getCubePos());
@@ -163,7 +159,7 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
 		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		ChunkPos chunkPos = packet.getColumnPos();
@@ -177,7 +173,7 @@ public class ClientHandler implements INetHandler {
 			return;
 		}
 
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().theWorld;
+		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
 		CubeProviderClient cubeCache = worldClient.getCubeCache();
 
 		// get the cube

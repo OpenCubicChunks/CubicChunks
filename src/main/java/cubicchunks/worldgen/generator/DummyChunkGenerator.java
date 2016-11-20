@@ -34,6 +34,9 @@ import net.minecraft.world.chunk.IChunkGenerator;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * A chunk generator that only creates empty chunks
+ */
 public class DummyChunkGenerator implements IChunkGenerator {
 
 	private World world;
@@ -63,7 +66,7 @@ public class DummyChunkGenerator implements IChunkGenerator {
 	}
 
 	@Override
-	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position) {
+	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position, boolean flag) {
 		return null;
 	}
 

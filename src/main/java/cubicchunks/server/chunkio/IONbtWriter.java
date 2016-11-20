@@ -130,7 +130,7 @@ class IONbtWriter {
 
 		cubeNbt.setByteArray("BlockLight", ebs.getBlocklightArray().getData());
 
-		if (!cube.getCubicWorld().getProvider().getHasNoSky()) {
+		if (!cube.getCubicWorld().getProvider().hasNoSky()) {
 			cubeNbt.setByteArray("SkyLight", ebs.getSkylightArray().getData());
 		}
 	}

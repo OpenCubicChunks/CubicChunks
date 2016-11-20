@@ -139,9 +139,9 @@ public class MixinRenderGlobal {
 	@Overwrite
 	private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
 		BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
-		return MathHelper.abs_int(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks*16 ? null :
-			MathHelper.abs_int(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks*16 ? null :
-				MathHelper.abs_int(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks*16 ? null :
+		return MathHelper.abs(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks*16 ? null :
+			MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks*16 ? null :
+				MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks*16 ? null :
 					this.viewFrustum.getRenderChunk(blockpos);
 	}
 }

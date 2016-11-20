@@ -49,7 +49,7 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
 	}
 
 	@Override
-	public boolean getCanBeCreated() {
+	public boolean canBeCreated() {
 		return CubicChunks.DEBUG_ENABLED;
 	}
 

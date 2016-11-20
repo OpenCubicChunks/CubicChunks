@@ -48,6 +48,8 @@ import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.getCubeCenter;
 import static net.minecraft.util.math.BlockPos.MutableBlockPos;
 
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
+
 /**
  * Notes on world.checkLightFor(): Decreasing light value: Light is recalculated starting from 0 ONLY for blocks where
  * rawLightValue is equal to savedLightValue (ie. updating skylight source that is not there anymore). Otherwise
@@ -105,13 +107,15 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void initializeSkylight(Cube cube) {
-		if (cube.getCubicWorld().getProvider().getHasNoSky()) {
+		if (cube.getCubicWorld().getProvider().hasNoSky()) {
 			return;
 		}
 
 		IHeightMap opacityIndex = cube.getColumn().getOpacityIndex();
 
 		int cubeMinY = cubeToMinBlock(cube.getY());
+
+		BlockPos startPos = cube.getCoords().getMinBlockPos();
 
 		for (int localX = 0; localX < Cube.SIZE; ++localX) {
 			for (int localZ = 0; localZ < Cube.SIZE; ++localZ) {
@@ -121,7 +125,7 @@ public class FirstLightProcessor {
 						break;
 					}
 
-					cube.setSkylight(localX, localY, localZ, 15);
+					cube.setLightFor(EnumSkyBlock.SKY, startPos.add(localX, localY, localZ), 15);
 				}
 			}
 		}
@@ -133,7 +137,7 @@ public class FirstLightProcessor {
 	 * @param cube the cube whose skylight is to be initialized
 	 */
 	public void diffuseSkylight(Cube cube) {
-		if (cube.getCubicWorld().getProvider().getHasNoSky()) {
+		if (cube.getCubicWorld().getProvider().hasNoSky()) {
 			cube.setInitialLightingDone(true);
 			return;
 		}

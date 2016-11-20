@@ -33,6 +33,9 @@ import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubePrimer;
 
+/**
+ * A cube generator that generates a flat surface of grass, dirt and stone.
+ */
 public class FlatTerrainProcessor extends BasicCubeGenerator {
 
 	public FlatTerrainProcessor(ICubicWorld world) {
@@ -82,7 +85,7 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
 	}
 
 	@Override
-	public BlockPos getClosestStructure(String name, BlockPos pos) {
+	public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
 		return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null; // eyes of ender are the new F3 for finding the origin :P
 	}
 }

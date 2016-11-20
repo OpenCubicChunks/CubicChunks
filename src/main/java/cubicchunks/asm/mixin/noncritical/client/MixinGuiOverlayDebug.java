@@ -53,13 +53,13 @@ public class MixinGuiOverlayDebug {
 	// This is call 5 (idx 4)
 	@Redirect(method = GUI_OVERLAY_DEBUG_CALL, at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 4))
 	private int blockPosGetYBoundsCheck1(BlockPos pos) {
-		return MixinUtils.getReplacementY(mc.theWorld, pos);
+		return MixinUtils.getReplacementY(mc.world, pos);
 
 	}
 
 	// This is call 6 (idx 5)
 	@Redirect(method = GUI_OVERLAY_DEBUG_CALL, at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 5))
 	private int blockPosGetYBoundsCheck2(BlockPos pos) {
-		return MixinUtils.getReplacementY(mc.theWorld, pos);
+		return MixinUtils.getReplacementY(mc.world, pos);
 	}
 }

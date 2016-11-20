@@ -11,7 +11,7 @@ before_install:
   # workaround to get "git describe" working
   - git fetch --unshallow --tags
   - git describe
-install: ./gradlew setupCIWorkspace
+#setupCIWorkspace not needed. At least that's what abrar said.
 script: ./gradlew build
 
 notifications:

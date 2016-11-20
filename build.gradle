@@ -64,7 +64,7 @@ archivesBaseName = "CubicChunks"
 version = getModVersionAndWriteToFile()
 
 minecraft {
-	version = "1.10.2-12.18.1.2092"
+	version = project.forgeVersion
 	runDir = "run"
 
 	// the mappings can be changed at any time, and must be in the following format.
@@ -72,12 +72,25 @@ minecraft {
 	// stable_#            stables are built at the discretion of the MCP team.
 	// Use non-default mappings at your own risk. they may not always work.
 	// simply re-run your setup task after changing the mappings to update your workspace.
-	mappings = "snapshot_20160918"
+	mappings = "stable_29"
 	// makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
 	replace "@@VERSION@@", project.version
 	replaceIn "cubicchunks/CubicChunks.java"
-
+	String[] args = [
+		"-Dfml.coreMods.load=cubicchunks.asm.CubicChunksCoreMod",//the core mod class, needed for mixins
+		"-Dmixin.env.compatLevel=JAVA_8",//needed to use java 8 when using mixins
+		"-Dmixin.debug.verbose=true",//verbose mixin output for easier debugging of mixins
+		"-Dmixin.debug.export=true",//export classes from mixin to runDirectory/.mixin.out
+		"-Dcubicchunks.debug=true",//various debug options of cubic chunks mod. Adds items that are not normally there!
+		"-XX:-OmitStackTraceInFastThrow",//without this sometimes you end up with exception with empty stacktrace
+		"-Dmixin.checks.interfaces=true",//check if all interface methods are overriden in mixin
+		"-Dfml.noGrab=false",//change to disable Minecraft taking control over mouse
+	]
+	for(String s : args) {
+		clientJvmArgs += s
+		serverJvmArgs += s
+	}
 }
 
 shadowJar {
@@ -140,6 +153,7 @@ dependencies {
 	}
 	testCompile 'junit:junit:4.11'
 	testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
+	testCompile 'it.ozimov:java7-hamcrest-matchers:0.7.0'
 	testCompile 'org.mockito:mockito-core:2.1.0-RC.2'
 	testCompile 'org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT'
 
@@ -151,19 +165,18 @@ dependencies {
 
 	compile group: 'com.carrotsearch', name: 'hppc', version: '0.7.1'
 }
-
 processResources
 {
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "mcversion", getMcVersion()
 
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
 
         // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+        expand 'version':project.version, 'mcversion':getMcVersion()
     }
 
     // copy everything else, thats not the mcmod.info
@@ -194,7 +207,7 @@ license {
 jar {
 	manifest {
 		attributes 'FMLAT': 'cubicchunks_at.cfg'
-		attributes 'FMLCorePlugin': 'cubicchunks.asm.CoreModLoadingPlugin'
+		attributes 'FMLCorePlugin': 'cubicchunks.asm.CubicChunksCoreMod'
 		attributes 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
 		attributes 'TweakOrder': '0'
 		attributes 'ForceLoadAsMod': 'true'
@@ -207,21 +220,37 @@ idea {
 		downloadSources = true
 	}
 }
+private String getMcVersion() {
+	if(project.minecraft.version == null) {
+		return forgeVersion.split("-")[0];
+	}
+	return project.minecraft.version;
+}
 //returns version string according to this: http://mcforge.readthedocs.org/en/latest/conventions/versioning/
 //format: MCVERSION-MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)
 //rcX and betaX are not implemented yet
 private String getModVersion(String describe, String branch) {
+	if(branch.startsWith("MC_")) {
+		String branchMcVersion = branch.substring("MC_".length());
+		if(!branchMcVersion.equals(getMcVersion())) {
+			logger.warn("Branch version different than project MC version! MC version: " +
+					getMcVersion() + ", branch: " + branch + ", branch version: " + branchMcVersion);
+		}
+	}
 	String branchSuffix = "";
-	if(!branch.equalsIgnoreCase("master")) {
+	//branches "master" and "MC_something" are not appended to version sreing, everything else is
+	//only builds from "master" and "MC_version" branches will actually use the correct versioning
+	//but it allows to distinguish between builds from different branches even if version number is the same
+	if(!branch.equalsIgnoreCase("master") && !branch.startsWith("MC_")) {
 		//remove invalid filename characters
 		branchSuffix = "-" + branch.replaceAll("[^a-zA-Z0-9.-]", "_");
 	}
 	final String baseVersionRegex = "v[0-9]+\\.[0-9]+";
-	final String unknownVersion = String.format("%s-UNKNOWN_VERSION%s%s", mcVersion, versionSuffix, branchSuffix);
+	final String unknownVersion = String.format("%s-UNKNOWN_VERSION%s%s", getMcVersion(), versionSuffix, branchSuffix);
 	if (!describe.contains('-')) {
 		//is it the "vX.Y" format?
 		if (describe.matches(baseVersionRegex)) {
-			return String.format("%s-%s.0.0%s%s", mcVersion, describe, versionSuffix, branchSuffix);
+			return String.format("%s-%s.0.0%s%s", getMcVersion(), describe, versionSuffix, branchSuffix);
 		}
 		logger.error("Git describe information: \"" + describe + "\" in unknown/incorrect format");
 		return unknownVersion;
@@ -236,7 +265,7 @@ private String getModVersion(String describe, String branch) {
 		logger.error("Git describe information: \"" + describe + "\" in unknown/incorrect format");
 		return unknownVersion;
 	}
-	String mcVersion = mcVersion;
+	String mcVersion = getMcVersion();
 	String modAndApiVersion = parts[0].substring(1);
 	//next we have commit-since-tag
 	int commitSinceTag;

@@ -183,9 +183,11 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Shadow public abstract DifficultyInstance getDifficultyForLocation(BlockPos pos);
 
-	@Shadow public abstract boolean spawnEntityInWorld(Entity entity);
+	@Shadow public abstract boolean spawnEntity(Entity entity);
 
 	@Shadow public abstract boolean isAreaLoaded(BlockPos start, BlockPos end);
+
+	@Shadow public abstract int getActualHeight();
 
 	@Shadow public abstract void notifyLightSet(BlockPos pos);
 
@@ -405,12 +407,16 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		return this.getDifficultyForLocation(pos);
 	}
 
-	@Intrinsic public boolean world$spawnEntityInWorld(Entity entity) {
-		return this.spawnEntityInWorld(entity);
+	@Intrinsic public boolean world$spawnEntity(Entity entity) {
+		return this.spawnEntity(entity);
 	}
 
 	@Intrinsic public boolean world$isAreaLoaded(BlockPos start, BlockPos end) {
 		return this.isAreaLoaded(start, end);
+	}
+
+	@Intrinsic public int world$getActualHeight() {
+		return this.getActualHeight();
 	}
 
 	@Intrinsic public void world$notifyLightSet(BlockPos pos) {

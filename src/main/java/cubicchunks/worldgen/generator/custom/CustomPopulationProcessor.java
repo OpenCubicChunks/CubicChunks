@@ -35,6 +35,7 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
 import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 
+// TODO leftover from generator pipeline
 public class CustomPopulationProcessor {
 
 	private Map<Biome, BiomeFeatures> biomeFeaturesMap;

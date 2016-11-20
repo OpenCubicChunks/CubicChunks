@@ -43,7 +43,7 @@ public class ClientProxy extends CommonProxy {
 
 		// Solution is to double-check side before returning the player:
 		return (ctx.side.isClient() ?
-			Minecraft.getMinecraft().thePlayer :
+			Minecraft.getMinecraft().player :
 			ctx.getServerHandler().playerEntity);
 	}
 

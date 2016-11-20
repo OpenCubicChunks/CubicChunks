@@ -85,8 +85,8 @@ public class LightingManager {
 		int minCubeY = cube.getCoords().getMinBlockY();
 		int maxCubeY = cube.getCoords().getMaxBlockY();
 
-		int minInCubeY = MathHelper.clamp_int(minY, minCubeY, maxCubeY);
-		int maxInCubeY = MathHelper.clamp_int(maxY, minCubeY, maxCubeY);
+		int minInCubeY = MathHelper.clamp(minY, minCubeY, maxCubeY);
+		int maxInCubeY = MathHelper.clamp(maxY, minCubeY, maxCubeY);
 
 		if (minInCubeY > maxInCubeY) {
 			return true;

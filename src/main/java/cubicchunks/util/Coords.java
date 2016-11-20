@@ -59,16 +59,16 @@ public class Coords {
 	}
 
 	public static int getCubeXForEntity(Entity entity) {
-		return blockToCube(MathHelper.floor_double(entity.posX));
+		return blockToCube(MathHelper.floor(entity.posX));
 	}
 
 	public static int getCubeZForEntity(Entity entity) {
-		return blockToCube(MathHelper.floor_double(entity.posZ));
+		return blockToCube(MathHelper.floor(entity.posZ));
 	}
 
 	public static int getCubeYForEntity(Entity entity) {
 		// the entity is in the cube it's inside, not the cube it's standing on
-		return blockToCube(MathHelper.floor_double(entity.posY));
+		return blockToCube(MathHelper.floor(entity.posY));
 	}
 
 	public static BlockPos getCubeCenter(Cube cube) {
@@ -80,6 +80,6 @@ public class Coords {
 	}
 
 	public static int blockToCube(double blockPos) {
-		return blockToCube(MathHelper.floor_double(blockPos));
+		return blockToCube(MathHelper.floor(blockPos));
 	}
 }

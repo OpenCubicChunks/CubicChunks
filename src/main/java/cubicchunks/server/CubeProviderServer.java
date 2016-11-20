@@ -173,7 +173,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	}
 
 	@Override
-	public boolean unloadQueuedChunks() {
+	public boolean tick() {
 		// NOTE: the return value is completely ignored
 		// NO-OP, This is called by WorldServer's tick() method every tick
 		return false;
@@ -190,9 +190,10 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 		return cubeGen.getPossibleCreatures(type, pos);
 	}
 
+	@Override
 	@Nullable
-	public BlockPos getStrongholdGen(@Nonnull World worldIn, @Nonnull String name, @Nonnull BlockPos pos) {
-		return cubeGen.getClosestStructure(name, pos);
+	public BlockPos getStrongholdGen(@Nonnull World worldIn, @Nonnull String name, @Nonnull BlockPos pos, boolean flag) {
+		return cubeGen.getClosestStructure(name, pos, flag);
 	}
 
 	// getLoadedChunkCount() in ChunkProviderServer is fine - CHECKED: 1.10.2-12.18.1.2092
@@ -241,7 +242,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	 */
 	public void asyncGetCube(int cubeX, int cubeY, int cubeZ, @Nonnull Requirement req, @Nonnull Consumer<Cube> callback) {
 		Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
-		if (req == Requirement.LOAD_CACHED || (cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
+		if (req == Requirement.GET_CACHED || (cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
 			callback.accept(cube);
 			return;
 		}
@@ -263,7 +264,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	public Cube getCube(int cubeX, int cubeY, int cubeZ, @Nonnull Requirement req) {
 
 		Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
-		if (req == Requirement.LOAD_CACHED ||
+		if (req == Requirement.GET_CACHED ||
 			(cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
 			return cube;
 		}
@@ -424,7 +425,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	 */
 	public void asyncGetColumn(int columnX, int columnZ, Requirement req, Consumer<Column> callback) {
 		Column column = getLoadedColumn(columnX, columnZ);
-		if (column != null || req == Requirement.LOAD_CACHED) {
+		if (column != null || req == Requirement.GET_CACHED) {
 			callback.accept(column);
 			return;
 		}
@@ -440,7 +441,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	@Nullable
 	public Column getColumn(int columnX, int columnZ, Requirement req) {
 		Column column = getLoadedColumn(columnX, columnZ);
-		if (column != null || req == Requirement.LOAD_CACHED) {
+		if (column != null || req == Requirement.GET_CACHED) {
 			return column;
 		}
 

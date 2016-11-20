@@ -53,7 +53,7 @@ import cubicchunks.world.provider.ICubicWorldProvider;
 @Mixin(WorldServer.class)
 @Implements(@Interface(iface = ICubicWorldServer.class, prefix = "world$"))
 public abstract class MixinWorldServer extends MixinWorld implements ICubicWorldServer {
-	@Shadow @Mutable @Final private PlayerChunkMap thePlayerManager;
+	@Shadow @Mutable @Final private PlayerChunkMap playerChunkMap;
 	@Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
 	@Shadow public boolean disableLevelSaving;
 
@@ -76,7 +76,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.chunkProvider = new CubeProviderServer(this,
 			((ICubicWorldProvider) this.provider).createCubeGenerator());
 
-		this.thePlayerManager = new PlayerCubeMap(this);
+		this.playerChunkMap = new PlayerCubeMap(this);
 		this.chunkGc = new ChunkGc(getCubeCache());
 
 		this.saveHandler = new CubicSaveHandler(this, this.getSaveHandler());
@@ -102,7 +102,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	}
 
 	@Override public PlayerCubeMap getPlayerCubeMap() {
-		return (PlayerCubeMap) this.thePlayerManager;
+		return (PlayerCubeMap) this.playerChunkMap;
 	}
 
 	//vanilla methods
