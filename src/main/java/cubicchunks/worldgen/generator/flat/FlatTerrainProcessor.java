@@ -23,10 +23,12 @@
  */
 package cubicchunks.worldgen.generator.flat;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 
 import cubicchunks.util.Box;
+import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
@@ -67,7 +69,11 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
 		for (int x = 0; x < 16; x++) {
 			for (int z = 0; z < 16; z++) {
 				for (int y = 0; y < 16; y++) {
-					primer.setBlockState(x, y, z, Blocks.STONE.getDefaultState());
+					IBlockState state = Blocks.STONE.getDefaultState();
+					if (Coords.localToBlock(cubeY, y) == world.getMinHeight()) {
+						state = Blocks.BEDROCK.getDefaultState();
+					}
+					primer.setBlockState(x, y, z, state);
 				}
 			}
 		}

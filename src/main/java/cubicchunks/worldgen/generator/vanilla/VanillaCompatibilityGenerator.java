@@ -38,6 +38,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
@@ -48,6 +49,7 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.WorldGenUtils;
 
 /**
  * A cube generator that tries to mirror vanilla world generation. Cubes in the normal world range will be copied from a
@@ -165,11 +167,19 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 		CubePrimer primer = new CubePrimer();
 
 		if (cubeY < 0) {
+			Random rand = new Random(world.getSeed());
+			rand.setSeed(rand.nextInt() ^ cubeX);
+			rand.setSeed(rand.nextInt() ^ cubeZ);
 			// Fill with bottom block
 			for (int x = 0; x < Cube.SIZE; x++) {
 				for (int y = 0; y < Cube.SIZE; y++) {
 					for (int z = 0; z < Cube.SIZE; z++) {
-						primer.setBlockState(x, y, z, extensionBlockBottom);
+						IBlockState state = extensionBlockBottom;
+						if (state.getBlock() != Blocks.AIR) {
+							int blockY = Coords.localToBlock(cubeY, y);
+							state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 5);
+						}
+						primer.setBlockState(x, y, z, state);
 					}
 				}
 			}

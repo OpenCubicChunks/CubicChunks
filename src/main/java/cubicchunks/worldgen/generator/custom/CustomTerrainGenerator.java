@@ -34,6 +34,7 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.WorldGenUtils;
 import cubicchunks.worldgen.generator.custom.builder.BasicBuilder;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 
@@ -217,6 +218,7 @@ public class CustomTerrainGenerator {
 								Biome biome = biomesBlockScale[zRel << 4 | xRel];
 								int blockY = localToBlock(cubeY, yRel);
 								IBlockState state = getBlockStateFor(biome, blockY, xyz, xGrad, yGrad, zGrad);
+								state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 5);
 								cube.setBlockState(xRel, yRel, zRel, state);
 							}
 						}
