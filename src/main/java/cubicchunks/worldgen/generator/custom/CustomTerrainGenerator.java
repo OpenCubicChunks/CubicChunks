@@ -228,18 +228,23 @@ public class CustomTerrainGenerator {
 	 * @return The block state
 	 */
 	private IBlockState getBlockStateFor(int height, double density, double xGrad, double yGrad, double zGrad) {
+		final int seaLevel = 64;
 		final double dirtDepth = 4;
 		IBlockState state = Blocks.AIR.getDefaultState();
 		if (density > 0) {
 			state = Blocks.STONE.getDefaultState();
 			//if the block above would be empty:
 			if (density + yGrad <= 0) {
-				state = Blocks.GRASS.getDefaultState();
+				if(height < seaLevel - 1) {
+					state = Blocks.DIRT.getDefaultState();
+				} else {
+					state = Blocks.GRASS.getDefaultState();
+				}
 				//if density decreases as we go up && density < dirtDepth
 			} else if (yGrad < 0 && density < dirtDepth) {
 				state = Blocks.DIRT.getDefaultState();
 			}
-		} else if (height < 64) {
+		} else if (height < seaLevel) {
 			// TODO replace check with GlobalGeneratorConfig.SEA_LEVEL
 			state = Blocks.WATER.getDefaultState();
 		}
