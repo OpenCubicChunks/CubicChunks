@@ -37,7 +37,6 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.border.WorldBorder;
@@ -123,73 +122,6 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 			this.maxHeight = provider.getMaximumPossibleHeight();
 		}
 	}
-
-	@Shadow public abstract WorldType getWorldType();
-
-	@Shadow public abstract void loadEntities(Collection<Entity> entities);
-
-	@Shadow public abstract void addTileEntities(Collection<TileEntity> values);
-
-	@Shadow public abstract void unloadEntities(Collection<Entity> entities);
-
-	@Shadow public abstract void removeTileEntity(BlockPos pos);
-
-	@Shadow public abstract long getTotalWorldTime();
-
-	@Shadow public abstract void setTileEntity(BlockPos blockpos, TileEntity tileentity);
-
-	@Shadow public abstract void markBlockRangeForRenderUpdate(BlockPos blockpos, BlockPos blockpos1);
-
-	@Shadow public abstract boolean addTileEntity(TileEntity tileEntity);
-
-	@Shadow
-	public abstract void markBlockRangeForRenderUpdate(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ);
-
-	@Shadow public abstract long getSeed();
-
-	@Shadow public abstract boolean checkLightFor(EnumSkyBlock sky, BlockPos pos);
-
-	@Shadow public abstract ISaveHandler getSaveHandler();
-
-	@Shadow public abstract MinecraftServer getMinecraftServer();
-
-	@Shadow public abstract void addBlockEvent(BlockPos blockPos, Block i, int t, int p);
-
-	@Shadow public abstract void scheduleBlockUpdate(BlockPos blockPos, Block i, int t, int p);
-
-	@Shadow public abstract GameRules getGameRules();
-
-	@Shadow public abstract WorldInfo getWorldInfo();
-
-	@Shadow public abstract TileEntity getTileEntity(BlockPos pos);
-
-	@Shadow public abstract boolean setBlockState(BlockPos blockPos, IBlockState blockState, int i);
-
-	@Shadow public abstract IBlockState getBlockState(BlockPos pos);
-
-	@Shadow public abstract boolean isAirBlock(BlockPos randomPos);
-
-	@Shadow public abstract Biome getBiome(BlockPos cubeCenter);
-
-	@Shadow public abstract BiomeProvider getBiomeProvider();
-
-	@Shadow public abstract BlockPos getSpawnPoint();
-
-	@Shadow public abstract WorldBorder getWorldBorder();
-
-	@Shadow(remap = false) public abstract int countEntities(EnumCreatureType type, boolean flag);
-
-	@Shadow public abstract boolean isAnyPlayerWithinRangeAt(double f, double i3, double f1, double v);
-
-	@Shadow public abstract DifficultyInstance getDifficultyForLocation(BlockPos pos);
-
-	@Shadow public abstract boolean spawnEntity(Entity entity);
-
-	@Shadow public abstract boolean isAreaLoaded(BlockPos start, BlockPos end);
-
-	@Shadow public abstract int getActualHeight();
-
-	@Shadow public abstract void notifyLightSet(BlockPos pos);
 
 	@Override public boolean isCubicWorld() {
 		return this.isCubicWorld;
@@ -292,134 +224,232 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	@Override public Profiler getProfiler() {
 		return this.theProfiler;
 	}
+
 	//vanilla methods
+	//==============================================
+	@Shadow public abstract void loadEntities(Collection<Entity> entities);
 
 	@Intrinsic public void world$loadEntities(Collection<Entity> entities) {
 		this.loadEntities(entities);
 	}
 
+	//==============================================
+	@Shadow public abstract void addTileEntities(Collection<TileEntity> values);
+
 	@Intrinsic public void world$addTileEntities(Collection<TileEntity> values) {
 		this.addTileEntities(values);
 	}
+
+	//==============================================
+	@Shadow public abstract void unloadEntities(Collection<Entity> entities);
 
 	@Intrinsic public void world$unloadEntities(Collection<Entity> entities) {
 		this.unloadEntities(entities);
 	}
 
+	//==============================================
+	@Shadow public abstract void removeTileEntity(BlockPos pos);
+
 	@Intrinsic public void world$removeTileEntity(BlockPos pos) {
 		this.removeTileEntity(pos);
 	}
 
+	//==============================================
+	@Shadow public abstract long getTotalWorldTime();
+
 	@Intrinsic public long world$getTotalWorldTime() {
 		return this.getTotalWorldTime();
 	}
+	//==============================================
+
+	@Shadow public abstract void setTileEntity(BlockPos blockpos, TileEntity tileentity);
 
 	@Intrinsic public void world$setTileEntity(BlockPos blockpos, TileEntity tileentity) {
 		this.setTileEntity(blockpos, tileentity);
 	}
+	//==============================================
+
+	@Shadow public abstract void markBlockRangeForRenderUpdate(BlockPos blockpos, BlockPos blockpos1);
 
 	@Intrinsic public void world$markBlockRangeForRenderUpdate(BlockPos blockpos, BlockPos blockpos1) {
 		this.markBlockRangeForRenderUpdate(blockpos, blockpos1);
 	}
+	//==============================================
+
+	@Shadow public abstract boolean addTileEntity(TileEntity tileEntity);
 
 	@Intrinsic public boolean world$addTileEntity(TileEntity tileEntity) {
 		return this.addTileEntity(tileEntity);
 	}
+	//==============================================
+
+	@Shadow
+	public abstract void markBlockRangeForRenderUpdate(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ);
 
 	@Intrinsic
 	public void world$markBlockRangeForRenderUpdate(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ) {
 		this.markBlockRangeForRenderUpdate(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
 	}
+	//==============================================
+
+	@Shadow public abstract long getSeed();
 
 	@Intrinsic public long world$getSeed() {
 		return this.getSeed();
 	}
+	//==============================================
+
+	@Shadow public abstract boolean checkLightFor(EnumSkyBlock sky, BlockPos pos);
 
 	@Intrinsic public boolean world$checkLightFor(EnumSkyBlock type, BlockPos pos) {
 		return this.checkLightFor(type, pos);
 	}
+	//==============================================
+
+	@Shadow public abstract ISaveHandler getSaveHandler();
 
 	@Intrinsic public ISaveHandler world$getSaveHandler() {
 		return this.getSaveHandler();
 	}
+	//==============================================
+
+	@Shadow public abstract MinecraftServer getMinecraftServer();
 
 	@Intrinsic public MinecraftServer world$getMinecraftServer() {
 		return this.getMinecraftServer();
 	}
+	//==============================================
+
+	@Shadow public abstract void addBlockEvent(BlockPos blockPos, Block i, int t, int p);
 
 	@Intrinsic public void world$addBlockEvent(BlockPos blockPos, Block i, int t, int p) {
 		this.addBlockEvent(blockPos, i, t, p);
 	}
+	//==============================================
+
+	@Shadow public abstract void scheduleBlockUpdate(BlockPos blockPos, Block i, int t, int p);
 
 	@Intrinsic public void world$scheduleBlockUpdate(BlockPos blockPos, Block i, int t, int p) {
 		this.scheduleBlockUpdate(blockPos, i, t, p);
 	}
+	//==============================================
+
+	@Shadow public abstract GameRules getGameRules();
 
 	@Intrinsic public GameRules world$getGameRules() {
 		return this.getGameRules();
 	}
+	//==============================================
+
+	@Shadow public abstract WorldInfo getWorldInfo();
 
 	@Intrinsic public WorldInfo world$getWorldInfo() {
 		return this.getWorldInfo();
 	}
+	//==============================================
+
+	@Shadow public abstract TileEntity getTileEntity(BlockPos pos);
 
 	@Intrinsic public TileEntity world$getTileEntity(BlockPos pos) {
 		return this.getTileEntity(pos);
 	}
+	//==============================================
+
+	@Shadow public abstract boolean setBlockState(BlockPos blockPos, IBlockState blockState, int i);
 
 	@Intrinsic public boolean world$setBlockState(BlockPos blockPos, IBlockState blockState, int i) {
 		return this.setBlockState(blockPos, blockState, i);
 	}
+	//==============================================
+
+	@Shadow public abstract IBlockState getBlockState(BlockPos pos);
 
 	@Intrinsic public IBlockState world$getBlockState(BlockPos pos) {
 		return this.getBlockState(pos);
 	}
+	//==============================================
+
+	@Shadow public abstract boolean isAirBlock(BlockPos randomPos);
 
 	@Intrinsic public boolean world$isAirBlock(BlockPos pos) {
 		return this.isAirBlock(pos);
 	}
+	//==============================================
+
+	@Shadow public abstract Biome getBiome(BlockPos cubeCenter);
 
 	@Intrinsic public Biome world$getBiome(BlockPos pos) {
 		return this.getBiome(pos);
 	}
+	//==============================================
+
+	@Shadow public abstract BiomeProvider getBiomeProvider();
 
 	@Intrinsic public BiomeProvider world$getBiomeProvider() {
 		return this.getBiomeProvider();
 	}
+	//==============================================
+
+	@Shadow public abstract BlockPos getSpawnPoint();
 
 	@Intrinsic public BlockPos world$getSpawnPoint() {
 		return this.getSpawnPoint();
 	}
+	//==============================================
+
+	@Shadow public abstract WorldBorder getWorldBorder();
 
 	@Intrinsic public WorldBorder world$getWorldBorder() {
 		return this.getWorldBorder();
 	}
+	//==============================================
+
+	@Shadow(remap = false) public abstract int countEntities(EnumCreatureType type, boolean flag);
 
 	@Intrinsic public int world$countEntities(EnumCreatureType type, boolean flag) {
 		return this.countEntities(type, flag);
 	}
+	//==============================================
+
+	@Shadow public abstract boolean isAnyPlayerWithinRangeAt(double f, double i3, double f1, double v);
 
 	@Intrinsic public boolean world$isAnyPlayerWithinRangeAt(double f, double i3, double f1, double v) {
 		return this.isAnyPlayerWithinRangeAt(f, i3, f1, v);
 	}
+	//==============================================
+
+	@Shadow public abstract DifficultyInstance getDifficultyForLocation(BlockPos pos);
 
 	@Intrinsic public DifficultyInstance world$getDifficultyForLocation(BlockPos pos) {
 		return this.getDifficultyForLocation(pos);
 	}
+	//==============================================
+
+	@Shadow public abstract boolean spawnEntity(Entity entity);
 
 	@Intrinsic public boolean world$spawnEntity(Entity entity) {
 		return this.spawnEntity(entity);
 	}
+	//==============================================
+
+	@Shadow public abstract boolean isAreaLoaded(BlockPos start, BlockPos end);
 
 	@Intrinsic public boolean world$isAreaLoaded(BlockPos start, BlockPos end) {
 		return this.isAreaLoaded(start, end);
 	}
+	//==============================================
+
+	@Shadow public abstract int getActualHeight();
 
 	@Intrinsic public int world$getActualHeight() {
 		return this.getActualHeight();
 	}
+	//==============================================
+
+	@Shadow public abstract void notifyLightSet(BlockPos pos);
 
 	@Intrinsic public void world$notifyLightSet(BlockPos pos) {
 		this.notifyLightSet(pos);
 	}
+	//==============================================
 }

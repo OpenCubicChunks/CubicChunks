@@ -60,13 +60,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	private ChunkGc chunkGc;
 	private FirstLightProcessor firstLightProcessor;
 
-	//vanilla method shadows
-	@Shadow public abstract Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
-
-	@Shadow
-	public abstract boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
-
-	//vanilla methods end
 	@Override public void initCubicWorld() {
 		super.initCubicWorld();
 		this.isCubicWorld = true;
@@ -106,13 +99,20 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	}
 
 	//vanilla methods
+	//==============================================
+	@Shadow public abstract Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
 
 	@Intrinsic public Biome.SpawnListEntry world$getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos) {
 		return this.getSpawnListEntryForTypeAt(type, pos);
 	}
 
+	//==============================================
+	@Shadow
+	public abstract boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
+
 	@Intrinsic
 	public boolean world$canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos) {
 		return this.canCreatureTypeSpawnHere(type, entry, pos);
 	}
+	//==============================================
 }
