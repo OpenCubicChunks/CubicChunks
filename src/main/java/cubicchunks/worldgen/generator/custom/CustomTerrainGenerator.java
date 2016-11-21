@@ -29,6 +29,7 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
+import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
@@ -71,6 +72,7 @@ public class CustomTerrainGenerator {
 	private final BasicBuilder builderHeight;
 	private final boolean needsScaling = true;
 	private Biome[] biomes;
+	private Biome[] biomesBlockScale;
 	private double biomeVolatility;
 	private double biomeHeight;
 
@@ -142,6 +144,12 @@ public class CustomTerrainGenerator {
 	 * @param cubeZ cube z position
 	 */
 	private void generateTerrain(ICubePrimer cube, double[][][] input, int cubeX, int cubeY, int cubeZ) {
+		this.biomesBlockScale = this.world.getBiomeProvider()
+			.getBiomes(this.biomesBlockScale,
+				Coords.cubeToMinBlock(cubeX),
+				Coords.cubeToMinBlock(cubeZ),
+				Cube.SIZE, Cube.SIZE);
+
 		int xSteps = X_SECTION_SIZE - 1;
 		int ySteps = Y_SECTION_SIZE - 1;
 		int zSteps = Z_SECTION_SIZE - 1;
@@ -206,7 +214,9 @@ public class CustomTerrainGenerator {
 								double yGrad = (xy1z - xy0z)/ySteps;
 								double zGrad = (xyz1 - xyz0)/zSteps;
 
-								IBlockState state = getBlockStateFor(localToBlock(cubeY, yRel), xyz, xGrad, yGrad, zGrad);
+								Biome biome = biomesBlockScale[zRel << 4 | xRel];
+								int blockY = localToBlock(cubeY, yRel);
+								IBlockState state = getBlockStateFor(biome, blockY, xyz, xGrad, yGrad, zGrad);
 								cube.setBlockState(xRel, yRel, zRel, state);
 							}
 						}
@@ -227,7 +237,7 @@ public class CustomTerrainGenerator {
 	 *
 	 * @return The block state
 	 */
-	private IBlockState getBlockStateFor(int height, double density, double xGrad, double yGrad, double zGrad) {
+	private IBlockState getBlockStateFor(Biome biome, int height, double density, double xGrad, double yGrad, double zGrad) {
 		final int seaLevel = 64;
 		final double dirtDepth = 4;
 		IBlockState state = Blocks.AIR.getDefaultState();
@@ -235,14 +245,14 @@ public class CustomTerrainGenerator {
 			state = Blocks.STONE.getDefaultState();
 			//if the block above would be empty:
 			if (density + yGrad <= 0) {
-				if(height < seaLevel - 1) {
-					state = Blocks.DIRT.getDefaultState();
+				if (height < seaLevel - 1) {
+					state = biome.fillerBlock;
 				} else {
-					state = Blocks.GRASS.getDefaultState();
+					state = biome.topBlock;
 				}
 				//if density decreases as we go up && density < dirtDepth
 			} else if (yGrad < 0 && density < dirtDepth) {
-				state = Blocks.DIRT.getDefaultState();
+				state = biome.fillerBlock;
 			}
 		} else if (height < seaLevel) {
 			// TODO replace check with GlobalGeneratorConfig.SEA_LEVEL
