@@ -1,3 +1,4 @@
+
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecraftforge.gradle.user.ReobfMappingType
@@ -11,6 +12,9 @@ import org.ajoberstar.grgit.operation.DescribeOp
 import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.Task
+import org.gradle.api.internal.HasConvention
+import org.gradle.api.plugins.BasePluginConvention
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.tasks.Jar
@@ -21,6 +25,8 @@ import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.script.lang.kotlin.*
 import org.spongepowered.asm.gradle.plugins.MixinExtension
 import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
+import kotlin.apply
+import kotlin.reflect.KFunction1
 
 // Gradle repositories and dependencies
 buildscript {
@@ -55,9 +61,10 @@ apply {
     plugin<LicensePlugin>()
 }
 
-// why I can't use val forgeVersion here?
-// It's null in configure<ForgeExtension>. Does it run before it's initialized?
-extra["forgeVersion"] = "1.11-13.19.0.2148"
+//it can't be named forgeVersion because ForgeExtension has property named forgeVersion
+val theForgeVersion = properties["forgeVersion"] as String
+val licenseYear = properties["licenseYear"] as String
+val projectName = properties["projectName"] as String
 
 val sourceSets = the<JavaPluginConvention>().sourceSets
 val mainSourceSet = sourceSets.getByName("main")
@@ -67,7 +74,6 @@ defaultTasks = listOf("licenseFormat", "build")
 
 version = getModVersionAndWriteToFile()
 group = "cubichunks"
-project.setProperty("archivesBaseName", "CubicChunks")
 
 configure<IdeaModel> {
     module.apply {
@@ -75,6 +81,10 @@ configure<IdeaModel> {
     }
     module.isDownloadJavadoc = true
     module.isDownloadSources = true
+}
+
+configure<BasePluginConvention> {
+    archivesBaseName = "CubicChunks"
 }
 
 configure<JavaPluginConvention> {
@@ -87,7 +97,7 @@ configure<MixinExtension> {
 }
 
 configure<ForgeExtension> {
-    version = extra["forgeVersion"] as String
+    version = theForgeVersion
     runDir = "run"
     mappings = "stable_29"
 
@@ -110,11 +120,9 @@ configure<ForgeExtension> {
 }
 
 configure<LicenseExtension> {
-    // TODO: extras don't seem to work for license plugin, fix it
-    val projectName = "Cubic Chunks Mod"
-    val licenseYear = "2015"
-    extra["project"] = projectName
-    extra["year"] = licenseYear
+    val ext = (this as HasConvention).convention.extraProperties
+    ext["project"] = projectName
+    ext["year"] = licenseYear
     exclude("**/*.info")
     exclude("**/package-info.java")
     exclude("**/*.json")
@@ -132,7 +140,7 @@ configure<NamedDomainObjectContainer<ReobfTaskFactory.ReobfTaskWrapper>> {
         mappingType = ReobfMappingType.SEARGE
     }
 }
-tasks.getByName("build").apply {
+get<Task>("build")() {
     dependsOn("reobfShadowJar")
 }
 
@@ -167,8 +175,8 @@ dependencies {
     compile("com.carrotsearch:hppc:0.7.1")
 }
 
-val jar = tasks.getByName("jar") as Jar
-jar.apply {
+val jar = get<Jar>("jar")
+jar {
     exclude("LICENSE.txt")
     manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
     manifest.attributes["FMLCorePlugin"] = "cubicchunks.asm.CubicChunksCoreMod"
@@ -177,8 +185,8 @@ jar.apply {
     manifest.attributes["ForceLoadAsMod"] = "true"
 }
 
-val shadowJar = tasks.getByName("shadowJar") as ShadowJar
-shadowJar.apply {
+val shadowJar = get<ShadowJar>("shadowJar")
+shadowJar {
     //MapDB stuff
     relocate("org.mapdb", "cubicchunks.org.mappdb")
     relocate("kotlin", "cubicchunks.org.mappdb.com.google")
@@ -206,13 +214,13 @@ shadowJar.apply {
     classifier = ""
 }
 
-val test = tasks.getByName("test") as Test
-test.apply {
+val test = get<Test>("test")
+test {
     systemProperty("org.spongepowered.test.launch.tweaker", "cubicchunks.tweaker.MixinTweakerServer")
 }
 
-val processResources = tasks.getByName("processResources") as ProcessResources
-processResources.apply {
+val processResources = get<ProcessResources>("processResources")
+processResources {
     // this will ensure that this task is redone when the versions change.
     inputs.property("version", project.version)
     inputs.property("mcversion", minecraft.version)
@@ -233,7 +241,7 @@ processResources.apply {
 
 fun getMcVersion(): String {
     if (minecraft.version == null) {
-        return (extra["forgeVersion"] as String).split("-")[0]
+        return theForgeVersion.split("-")[0]
     }
     return minecraft.version
 }
@@ -306,4 +314,9 @@ fun getModVersionAndWriteToFile(): String {
     val file = file("VERSION")
     file.writeText("VERSION=" + version)
     return version
+}
+
+fun <T : Task> get(name: String): KFunction1<(T.() -> Unit), T> {
+    @Suppress("UNCHECKED_CAST")
+    return (tasks.getByName(name) as T)::apply
 }
