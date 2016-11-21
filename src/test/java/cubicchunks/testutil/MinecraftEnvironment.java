@@ -27,11 +27,7 @@ import net.minecraft.init.Bootstrap;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
 
-import org.apache.logging.log4j.LogManager;
-
 import java.util.Hashtable;
-
-import cubicchunks.CubicChunks;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -50,7 +46,6 @@ public class MinecraftEnvironment {
 		}
 		isInit = true;
 		Bootstrap.register();
-		CubicChunks.LOGGER = LogManager.getLogger();
 	}
 
 	/**

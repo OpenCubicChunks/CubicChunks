@@ -39,7 +39,6 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
@@ -77,8 +76,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.chunkProvider = new CubeProviderServer(this,
 			((ICubicWorldProvider) this.provider).createCubeGenerator());
 
-		this.lightingManager = new LightingManager(this);
-
 		this.playerChunkMap = new PlayerCubeMap(this);
 		this.chunkGc = new ChunkGc(getCubeCache());
 
@@ -88,7 +85,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	}
 
 	@Override public void tickCubicWorld() {
-		this.lightingManager.tick();
 		this.chunkGc.tick();
 	}
 

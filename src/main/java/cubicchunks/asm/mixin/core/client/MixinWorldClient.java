@@ -36,7 +36,6 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import cubicchunks.asm.mixin.core.common.MixinWorld;
 import cubicchunks.client.CubeProviderClient;
-import cubicchunks.lighting.LightingManager;
 import cubicchunks.world.ICubicWorldClient;
 
 @Mixin(WorldClient.class)
@@ -53,7 +52,9 @@ public abstract class MixinWorldClient extends MixinWorld implements ICubicWorld
 		CubeProviderClient cubeProviderClient = new CubeProviderClient(this);
 		this.chunkProvider = cubeProviderClient;
 		this.clientChunkProvider = cubeProviderClient;
-		this.lightingManager = new LightingManager(this);
+	}
+
+	@Override public void tickCubicWorld() {
 	}
 
 	@Override public CubeProviderClient getCubeCache() {

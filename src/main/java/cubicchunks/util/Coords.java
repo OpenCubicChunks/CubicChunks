@@ -33,6 +33,11 @@ public class Coords {
 
 	public static final int NO_HEIGHT = Integer.MIN_VALUE/2;
 
+	public static BlockPos midPos(BlockPos p1, BlockPos p2) {
+		//bitshift instead of / - round always down
+		return new BlockPos((p1.getX() + p2.getX()) >> 1, (p1.getY() + p2.getY()) >> 1, (p1.getZ() + p2.getZ()) >> 1);
+	}
+
 	public static int blockToLocal(int val) {
 		return val & 0xf;
 	}

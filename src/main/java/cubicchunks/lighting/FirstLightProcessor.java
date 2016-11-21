@@ -195,11 +195,8 @@ public class FirstLightProcessor {
 
 					// Skip this cube if an update is not possible.
 					if (!canUpdateCube(otherCube)) {
-						int minScheduledY = Math.max(cubeToMinBlock(cubeY), minBlockY);
-						int maxScheduledY = Math.min(cubeToMaxBlock(cubeY), maxBlockY);
-
 						// Queue the update to be processed once the cube is ready for it.
-						world.getLightingManager().queueDiffuseUpdate(otherCube, this.mutablePos.getX(), this.mutablePos.getZ(), minScheduledY, maxScheduledY);
+						world.getLightingManager().markCubeBlockColumnForUpdate(otherCube, this.mutablePos.getX(), this.mutablePos.getZ());
 						continue;
 					}
 

@@ -97,6 +97,9 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		this.maxHeight = CubicChunks.Config.DEFAULT_MAX_WORLD_HEIGHT;
 		this.minHeight = CubicChunks.Config.DEFAULT_MIN_WORLD_HEIGHT;
 
+		//has to be created early so that creating BlankCube won't crash
+		this.lightingManager = new LightingManager(this);
+
 		if (!(this.provider instanceof ICubicWorldProvider)) { // if the provider is vanilla, wrap it
 			this.provider = new VanillaCubicProvider(this, provider);
 		}
@@ -186,6 +189,8 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Shadow public abstract int getActualHeight();
 
+	@Shadow public abstract void notifyLightSet(BlockPos pos);
+
 	@Override public boolean isCubicWorld() {
 		return this.isCubicWorld;
 	}
@@ -196,10 +201,6 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Override public int getMaxHeight() {
 		return this.maxHeight;
-	}
-
-	@Override public void tickCubicWorld() {
-		this.lightingManager.tick();
 	}
 
 	@Override public ICubeProvider getCubeCache() {
@@ -416,5 +417,9 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Intrinsic public int world$getActualHeight() {
 		return this.getActualHeight();
+	}
+
+	@Intrinsic public void world$notifyLightSet(BlockPos pos) {
+		this.notifyLightSet(pos);
 	}
 }

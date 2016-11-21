@@ -226,4 +226,6 @@ public interface ICubicWorld {
 	boolean spawnEntity(Entity entityliving);
 
 	boolean isAreaLoaded(BlockPos startPos, BlockPos endPos);
+
+	void notifyLightSet(BlockPos pos);
 }

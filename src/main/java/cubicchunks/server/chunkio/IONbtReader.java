@@ -44,6 +44,8 @@ import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
+import static cubicchunks.util.Coords.localToBlock;
+
 public class IONbtReader {
 	@Nullable
 	static Column readColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {
@@ -238,6 +240,7 @@ public class IONbtReader {
 		// but it will be fixed by lighting update in other cube anyway
 		int minBlockY = Coords.cubeToMinBlock(cube.getY());
 		int maxBlockY = Coords.cubeToMaxBlock(cube.getY());
+		LightingManager lightManager = world.getLightingManager();
 		for (int i = 0; i < currentHeightMap.length; i++) {
 			int currentY = currentHeightMap[i];
 			int lastY = lastHeightMap[i];
@@ -264,12 +267,8 @@ public class IONbtReader {
 
 				int localX = i & 0xF;
 				int localZ = i >> 4;
-				cube.getCubicWorld().getLightingManager().columnSkylightUpdate(
-					LightingManager.UpdateType.QUEUED, cube.getColumn(),
-					localX,
-					minUpdateY, maxUpdateY,
-					localZ
-				);
+				lightManager.markCubeBlockColumnForUpdate(cube,
+					localToBlock(cube.getX(), localX), localToBlock(cube.getZ(), localZ));
 			}
 		}
 	}

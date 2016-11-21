@@ -21,28 +21,30 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.testutil;
 
-import java.util.Collection;
-import java.util.Iterator;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.gen.structure.StructureBoundingBox;
 
-public class ArrayBatchedQueue<T> extends ArrayDequeHashSet<T> {
+import org.hamcrest.Matcher;
 
-	@SuppressWarnings("unused")
-	private static final long serialVersionUID = 542092146475009002L;
+import cubicchunks.lighting.ILightBlockAccess;
 
-	public void getBatch(Collection<T> out, int size) {
-		Iterator<T> it = iterator();
-		for (int i = 0; it.hasNext() && i < size; i++) {
-			T v = it.next();
-			assert v != null;
-			out.add(v);
-			it.remove();
-		}
+public class LightingMatchers {
+
+	public static Matcher<ILightBlockAccess> hasCorrectLight(StructureBoundingBox range) {
+		return new LightMatcher(range);
 	}
 
-	public void getAll(Collection<T> out) {
-		out.addAll(this);
-		this.clear();
+	public static StructureBoundingBox range(BlockPos start, BlockPos end) {
+		return new StructureBoundingBox(start, end);
+	}
+
+	public static StructureBoundingBox range(int radius) {
+		return range(pos(-radius, -radius, -radius), pos(radius, radius, radius));
+	}
+
+	public static BlockPos pos(int x, int y, int z) {
+		return new BlockPos(x, y, z);
 	}
 }

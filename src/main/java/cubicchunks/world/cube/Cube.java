@@ -36,13 +36,14 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
+
+import org.apache.logging.log4j.Logger;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -52,6 +53,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.annotation.Nullable;
 
+import cubicchunks.CubicChunks;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
@@ -79,7 +82,6 @@ public class Cube implements XYZAddressable {
 	 */
 	public static final int SIZE = 16;
 
-	private final LightUpdateData lightUpdateData = new LightUpdateData(this);
 	/**
 	 * Tickets keep this chunk loaded and ticking. See the docs of {@link TicketList} and {@link
 	 * cubicchunks.util.ticket.ITicket} for additional information.
@@ -130,6 +132,9 @@ public class Cube implements XYZAddressable {
 	 * The positions of tile entities queued for creation
 	 */
 	private ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
+
+	private final LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo;
+
 	/**
 	 * Is this cube loaded and not queued for unload
 	 */
@@ -152,6 +157,8 @@ public class Cube implements XYZAddressable {
 		this.entities = new EntityContainer();
 		this.tileEntityMap = new HashMap<>();
 		this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
+
+		this.cubeLightUpdateInfo = world.getLightingManager().createCubeLightUpdateInfo(this);
 
 		this.storage = NULL_STORAGE;
 	}
@@ -633,6 +640,9 @@ public class Cube implements XYZAddressable {
 		if (!this.isInitialLightingDone && this.isPopulated) {
 			this.tryDoFirstLight(); //TODO: Very icky light population code! REMOVE IT!
 		}
+		if (!tryToTickFaster) {
+			this.cubeLightUpdateInfo.tick();
+		}
 
 		while (!this.tileEntityPosQueue.isEmpty()) {
 			BlockPos blockpos = this.tileEntityPosQueue.poll();
@@ -876,8 +886,8 @@ public class Cube implements XYZAddressable {
 		return 41*hash + getZ();
 	}
 
-	public LightUpdateData getLightUpdateData() {
-		return this.lightUpdateData;
+	public LightingManager.CubeLightUpdateInfo getCubeLightUpdateInfo() {
+		return this.cubeLightUpdateInfo;
 	}
 
 	/**
@@ -952,93 +962,4 @@ public class Cube implements XYZAddressable {
 		this.isInitialLightingDone = initialLightingDone;
 		this.isModified = true;
 	}
-
-	public static class LightUpdateData {
-		private final Cube cube;
-		private final short[] minMaxHeights = new short[256];
-		//TODO: nullify minMaxHeights if toUpdateCounter is 0
-		private int toUpdateCounter = 0;
-
-		public LightUpdateData(Cube cube) {
-			this.cube = cube;
-			Arrays.fill(minMaxHeights, (short) 0xFFFF);
-		}
-
-		public void queueLightUpdate(int localX, int localZ, int minY, int maxY) {
-			if (localX < 0 || localX > 15) {
-				throw new IndexOutOfBoundsException("LocalX must be between 0 and 15, but was " + localX);
-			}
-			if (localZ < 0 || localZ > 15) {
-				throw new IndexOutOfBoundsException("LocalZ must be between 0 and 15, but was " + localZ);
-			}
-			if (minY > maxY) {
-				throw new IllegalArgumentException("minY > maxY (" + minY + " > " + maxY + ")");
-			}
-
-			minY -= Coords.cubeToMinBlock(cube.getY());
-			maxY -= Coords.cubeToMinBlock(cube.getY());
-
-			minY = MathHelper.clamp(minY, 0, 15);
-			maxY = MathHelper.clamp(maxY, 0, 15);
-
-			int index = index(localX, localZ);
-			short v = minMaxHeights[localX << 4 | localZ];
-			if (v == -1) {
-				toUpdateCounter++;
-				assert toUpdateCounter >= 0 && toUpdateCounter <= 256;
-			}
-			int min = unpackMin(v);
-			int max = unpackMax(v);
-
-			if (minY < min) {
-				min = minY;
-			}
-			if (maxY > max) {
-				max = maxY;
-			}
-
-			v = pack(min, max);
-			assert v >= 0 && v < 256;
-			this.minMaxHeights[index] = v;
-		}
-
-		public int getMin(int localX, int localZ) {
-			return unpackMin(minMaxHeights[index(localX, localZ)]);
-		}
-
-		public int getMax(int localX, int localZ) {
-			return unpackMax(minMaxHeights[index(localX, localZ)]);
-		}
-
-		public void remove(int localX, int localZ) {
-			int index = index(localX, localZ);
-			if (minMaxHeights[index] != -1) {
-				toUpdateCounter--;
-			}
-			minMaxHeights[index] = -1;
-		}
-
-		private short pack(int min, int max) {
-			return (short) (min << 4 | max);
-		}
-
-		private int unpackMin(short val) {
-			if (val == -1) {
-				return 16;
-			}
-			return val >> 4;
-		}
-
-		private int unpackMax(short val) {
-			if (val == -1) {
-				return -1;
-			}
-			return val & 0xf;
-		}
-
-		private int index(int x, int z) {
-			return x << 4 | z;
-		}
-	}
-
 }
