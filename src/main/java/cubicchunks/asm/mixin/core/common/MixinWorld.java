@@ -202,6 +202,11 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 			.getHeightValue(blockToLocal(blockX), blockToLocal(blockZ));
 	}
 
+	// suppress mixin warning when running with -Dmixin.checks.interfaces=true
+	@Override public void tickCubicWorld() {
+		// pretend this method doesn't exist
+		throw new NoSuchMethodError("World.tickCubicWorld: Classes extending World need to implement tickCubicWorld in CubicChunks");
+	}
 
 	//vanilla field accessors
 
