@@ -63,12 +63,26 @@ public class AsyncWorldIOExecutor {
 	private static final Map<QueuedColumn, AsyncColumnIOProvider> columnTasks = Maps.newConcurrentMap();
 
 	private static final AtomicInteger threadCounter = new AtomicInteger();
-	private static final ThreadPoolExecutor pool = new ThreadPoolExecutor(BASE_THREADS, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+	private static final ThreadPoolExecutor cubeThreadPool = new ThreadPoolExecutor(BASE_THREADS, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 		new LinkedBlockingQueue<>(),
 
 		// Sponge start: Use lambda
 		r -> {
 			Thread thread = new Thread(r, "Cube I/O Thread #" + threadCounter.incrementAndGet());
+			thread.setDaemon(true);
+			return thread;
+		}
+		// Sponge end
+	);
+
+	// use separate thread pool for cubes and columns to avoid situation where only cube tasks are being executed
+	// all waiting for their columns
+	private static final ThreadPoolExecutor columnThreadPool = new ThreadPoolExecutor(BASE_THREADS, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+		new LinkedBlockingQueue<>(),
+
+		// Sponge start: Use lambda
+		r -> {
+			Thread thread = new Thread(r, "Column I/O Thread #" + threadCounter.incrementAndGet());
 			thread.setDaemon(true);
 			return thread;
 		}
@@ -129,8 +143,24 @@ public class AsyncWorldIOExecutor {
 	/**
 	 * Runs the async part in current thread or blocks until already running async part is finished
 	 */
-	private static void runTask(AsyncIOProvider task) {
-		if (!pool.remove(task)) // If it wasn't in the pool, and run hasn't isFinished, then wait for the async thread.
+	private static void runTask(AsyncCubeIOProvider task) {
+		runTask(cubeThreadPool, task);
+	}
+
+	/**
+	 * Runs the async part in current thread or blocks until already running async part is finished
+	 */
+	private static void runTask(AsyncColumnIOProvider task) {
+		runTask(columnThreadPool, task);
+	}
+
+	/**
+	 * Runs the async part in current thread or blocks until already running async part is finished.
+	 *
+	 * Uses the given ThreadPoolExecutor.
+	 */
+	private static void runTask(ThreadPoolExecutor executor, AsyncIOProvider task) {
+		if (!executor.remove(task)) // If it wasn't in the pool, and run hasn't isFinished, then wait for the async thread.
 		{
 			synchronized (task) // Warn incorrect - task shared via map
 			{
@@ -174,7 +204,7 @@ public class AsyncWorldIOExecutor {
 			task = new AsyncCubeIOProvider(key, loader);
 			task.addCallback(runnable); // Add before calling execute for thread safety
 			cubeTasks.put(key, task);
-			pool.execute(task);
+			cubeThreadPool.execute(task);
 		} else {
 			task.addCallback(runnable);
 		}
@@ -205,7 +235,7 @@ public class AsyncWorldIOExecutor {
 			task = new AsyncColumnIOProvider(key, loader);
 			task.addCallback(runnable); // Add before calling execute for thread safety
 			columnTasks.put(key, task);
-			pool.execute(task);
+			columnThreadPool.execute(task);
 		} else {
 			task.addCallback(runnable);
 		}
@@ -233,7 +263,7 @@ public class AsyncWorldIOExecutor {
 		// TODO this is not threadsafe
 		if (!task.hasCallbacks()) {
 			cubeTasks.remove(key);
-			pool.remove(task);
+			cubeThreadPool.remove(task);
 		}
 	}
 
@@ -257,7 +287,7 @@ public class AsyncWorldIOExecutor {
 
 		if (!task.hasCallbacks()) {
 			columnTasks.remove(key);
-			pool.remove(task);
+			columnThreadPool.remove(task);
 		}
 
 		//TODO: remove all queued cube tasks for that column
@@ -294,7 +324,7 @@ public class AsyncWorldIOExecutor {
 	 * @param players New player count
 	 */
 	private static void adjustPoolSize(int players) {
-		pool.setCorePoolSize(Math.max(BASE_THREADS, players/PLAYERS_PER_THREAD));
+		cubeThreadPool.setCorePoolSize(Math.max(BASE_THREADS, players/PLAYERS_PER_THREAD));
 	}
 
 	public static void registerListeners() {
