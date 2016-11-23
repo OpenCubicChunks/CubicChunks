@@ -453,6 +453,13 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	 */
 	@Nullable
 	private Column postProcessColumn(int columnX, int columnZ, @Nullable Column column, Requirement req) {
+		Column loaded = getLoadedColumn(columnX, columnZ);
+		if (column != null && loaded != null) {
+			if (loaded != column) {
+				throw new IllegalStateException("Duplicate column at " + columnX + ", " + columnZ + "!");
+			}
+			return loaded;
+		}
 		if (column != null) {
 			id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), column);
 			column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just loaded
