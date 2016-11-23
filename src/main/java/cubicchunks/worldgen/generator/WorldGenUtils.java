@@ -37,7 +37,7 @@ import mcp.MethodsReturnNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class WorldGenUtils {
 	public static IBlockState getRandomBedrockReplacement(ICubicWorld world, Random rand, IBlockState state, int blockY, int medrockLevels) {
-		int heightAboveBottom = world.getMinHeight() + blockY;
+		int heightAboveBottom = blockY - world.getMinHeight();
 		if (heightAboveBottom < 5) {
 			int bedrockChance = Math.max(1, heightAboveBottom + 1);
 			if (rand.nextInt(bedrockChance) == 0) {
