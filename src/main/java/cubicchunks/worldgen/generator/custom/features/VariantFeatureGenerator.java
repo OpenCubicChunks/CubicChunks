@@ -81,7 +81,7 @@ public class VariantFeatureGenerator extends FeatureGenerator {
 		@Nullable private ICubicWorld world;
 
 		private Builder() {
-			this.generators = new ArrayList<FeatureGenerator>(2);
+			this.generators = new ArrayList<>(2);
 			this.probabilities = new DoubleArrayList(2);
 		}
 

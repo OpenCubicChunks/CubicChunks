@@ -51,8 +51,8 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 	private SurfaceBlockReplacer(Builder builder) {
 		super(builder.world);
 		this.block = builder.block;
-		this.replacable = new ArrayList<Block>(builder.replacable);
-		this.allowedAboveSurface = new ArrayList<Block>(builder.allowedAboveSurface);
+		this.replacable = new ArrayList<>(builder.replacable);
+		this.allowedAboveSurface = new ArrayList<>(builder.allowedAboveSurface);
 		this.radius = builder.radius;
 		this.height = builder.height;
 	}
@@ -114,8 +114,8 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 		@Nullable private ICubicWorld world;
 
 		private Builder() {
-			this.replacable = new ArrayList<Block>(2);
-			this.allowedAboveSurface = new ArrayList<Block>(2);
+			this.replacable = new ArrayList<>(2);
+			this.allowedAboveSurface = new ArrayList<>(2);
 		}
 
 		@Nonnull public Builder setBlock(@Nonnull IBlockState block) {

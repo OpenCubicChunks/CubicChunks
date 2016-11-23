@@ -246,8 +246,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 				Column col = getLoadedColumn(cubeX, cubeZ);
 				if (col != null) {
 					onCubeLoaded(loaded, col);
+					loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
 				}
-				loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
 				callback.accept(loaded);
 			});
 		}

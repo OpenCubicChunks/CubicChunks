@@ -459,7 +459,7 @@ public class Column extends Chunk {
 
 		for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 			Cube cube = getCube(cubeY);
-			cube.getEntitiesWithinAABBForEntity(exclude, queryBox, out, predicate::apply);
+			cube.getEntitiesWithinAABBForEntity(exclude, queryBox, out, predicate);
 		}
 	}
 
@@ -483,7 +483,7 @@ public class Column extends Chunk {
 
 		for (int cubeY = minCubeY; cubeY < maxCubeY + 1; cubeY++) {
 			Cube cube = getCube(cubeY);
-			cube.getEntitiesOfTypeWithinAAAB(entityType, queryBox, out, predicate::apply);
+			cube.getEntitiesOfTypeWithinAAAB(entityType, queryBox, out, predicate);
 		}
 	}
 

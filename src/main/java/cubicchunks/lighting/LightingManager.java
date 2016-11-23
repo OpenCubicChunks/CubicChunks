@@ -181,11 +181,9 @@ public class LightingManager {
 	public void onHeightMapUpdate(Column column, int localX, int localZ, int oldHeight, int newHeight) {
 		int minCubeY = blockToCube(Math.min(oldHeight, newHeight));
 		int maxCubeY = blockToCube(Math.max(oldHeight, newHeight));
-		for (Cube cube : column.getLoadedCubes()) {
-			if (cube.getY() >= minCubeY && cube.getY() <= maxCubeY) {
-				markCubeBlockColumnForUpdate(cube, localX, localZ);
-			}
-		}
+		column.getLoadedCubes().stream().filter(cube -> cube.getY() >= minCubeY && cube.getY() <= maxCubeY).forEach(cube -> {
+			markCubeBlockColumnForUpdate(cube, localX, localZ);
+		});
 	}
 
 	/**

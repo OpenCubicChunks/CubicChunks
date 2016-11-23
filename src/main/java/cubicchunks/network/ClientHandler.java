@@ -201,8 +201,6 @@ public class ClientHandler implements INetHandler {
 			BlockPos pos = cube.localAddressToBlockPos(packet.localAddresses[i]);
 			worldClient.invalidateRegionAndSetBlock(pos, packet.blockStates[i]);
 		}
-		for (TileEntity blockEntity : cube.getTileEntityMap().values()) {
-			blockEntity.updateContainingBlockInfo();
-		}
+		cube.getTileEntityMap().values().forEach(TileEntity::updateContainingBlockInfo);
 	}
 }

@@ -238,9 +238,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 
 		//process instances to update
-		for (CubeWatcher playerInstance : this.cubeWatchersToUpdate) {
-			playerInstance.update();
-		}
+		this.cubeWatchersToUpdate.forEach(CubeWatcher::update);
 		this.cubeWatchersToUpdate.clear();
 
 		getWorld().getProfiler().endStartSection("sortToGenerate");

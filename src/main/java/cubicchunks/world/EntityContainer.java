@@ -23,6 +23,8 @@
  */
 package cubicchunks.world;
 
+import com.google.common.base.Predicate;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -36,7 +38,6 @@ import net.minecraftforge.common.util.Constants;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -76,7 +77,7 @@ public class EntityContainer {
 	private boolean canAddEntityExcluded(Entity toAdd, @Nullable Entity excluded, AxisAlignedBB queryBox, @Nullable Predicate<? super Entity> predicate) {
 		return toAdd != excluded &&
 			toAdd.getEntityBoundingBox().intersectsWith(queryBox) &&
-			(predicate == null || predicate.test(toAdd));
+			(predicate == null || predicate.apply(toAdd));
 	}
 
 	// CHECKED: 1.11-13.19.0.2148
@@ -102,7 +103,7 @@ public class EntityContainer {
 	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, @Nullable Predicate<? super T> predicate) {
 		for (T entity : this.entities.getByClass(entityType)) {
 			if (entity.getEntityBoundingBox().intersectsWith(queryBox) &&
-				(predicate == null || predicate.test(entity))) {
+				(predicate == null || predicate.apply(entity))) {
 				out.add(entity);
 			}
 		}

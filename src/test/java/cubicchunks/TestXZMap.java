@@ -26,7 +26,6 @@ package cubicchunks;
 import org.junit.Test;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
@@ -147,9 +146,7 @@ public class TestXZMap {
 			map.put(newElement);
 			allElements.add(newElement);
 		}
-		Iterator<XZAddressable> it = map.iterator();
-		while (it.hasNext()) {
-			XZAddressable element = it.next();
+		for (XZAddressable element : map) {
 			assertThat(allElements, hasItem(element));
 			allElements.remove(element);
 		}

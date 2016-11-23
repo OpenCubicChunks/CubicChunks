@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -211,10 +212,6 @@ class IONbtWriter {
 	}
 
 	private static void copyScheduledTicks(ArrayList<NextTickListEntry> out, Collection<NextTickListEntry> scheduledTicks, Cube cube) {
-		for (NextTickListEntry scheduledTick : scheduledTicks) {
-			if (cube.containsBlockPos(scheduledTick.position)) {
-				out.add(scheduledTick);
-			}
-		}
+		out.addAll(scheduledTicks.stream().filter(scheduledTick -> cube.containsBlockPos(scheduledTick.position)).collect(Collectors.toList()));
 	}
 }

@@ -112,7 +112,7 @@ public class ReflectionUtil {
 		}
 	}
 
-	private static final Field getFieldFromSrg(Class<?> owner, String srgName) {
+	private static Field getFieldFromSrg(Class<?> owner, String srgName) {
 		String name = Mappings.getNameFromSrg(srgName);
 
 		Field foundField = findFieldByName(owner, name);
@@ -128,7 +128,7 @@ public class ReflectionUtil {
 		}
 	}
 
-	private static final void removeFinalModifier(Field f) {
+	private static void removeFinalModifier(Field f) {
 		f.setAccessible(true);
 		int mod = f.getModifiers();
 		mod = mod & ~Modifier.FINAL;

@@ -36,6 +36,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -67,9 +68,7 @@ public class PacketCube implements IMessage {
 
 		Collection<TileEntity> tileEntities = cube.getTileEntityMap().values();
 		this.tileEntityTags = new ArrayList<>(tileEntities.size());
-		for (TileEntity te : tileEntities) {
-			this.tileEntityTags.add(te.getUpdateTag());
-		}
+		this.tileEntityTags.addAll(tileEntities.stream().map(TileEntity::getUpdateTag).collect(Collectors.toList()));
 		this.heightMap = new int[Cube.SIZE*Cube.SIZE];
 		IHeightMap heightmap = cube.getColumn().getOpacityIndex();
 		for (int localX = 0; localX < Cube.SIZE; localX++) {

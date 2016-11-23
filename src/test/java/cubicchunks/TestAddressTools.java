@@ -82,7 +82,7 @@ public class TestAddressTools {
 
 	@Test
 	public void testCollisions() {
-		HashSet<Long> addresses = new HashSet<Long>();
+		HashSet<Long> addresses = new HashSet<>();
 		for (int x = -32; x <= 32; x++) {
 			for (int y = -32; y <= 32; y++) {
 				for (int z = -32; z <= 32; z++) {

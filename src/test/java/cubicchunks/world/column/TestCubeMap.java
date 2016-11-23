@@ -126,9 +126,7 @@ public class TestCubeMap {
 	private void checkRange(CubeMap cubeMap, int lowerBound, int upperBound) {
 		Iterable<Cube> range = cubeMap.cubes(lowerBound, upperBound);
 		Set<Cube> rangeSet = new HashSet<>();
-		range.forEach(cube -> {
-			rangeSet.add(cube);
-		});
+		range.forEach(rangeSet::add);
 
 		assertThat(range, hasDistinctElements());
 
