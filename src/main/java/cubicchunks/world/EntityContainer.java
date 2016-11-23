@@ -44,6 +44,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.util.ClassInheritanceMultiMapFactory;
 import mcp.MethodsReturnNonnullByDefault;
 
 //TODO: Have xcube review this class... I dont trust it
@@ -56,7 +57,7 @@ public class EntityContainer {
 	private long lastSaveTime;
 
 	public EntityContainer() {
-		this.entities = new ClassInheritanceMultiMap<>(Entity.class);
+		this.entities = ClassInheritanceMultiMapFactory.create(Entity.class);
 		this.hasActiveEntities = false;
 		this.lastSaveTime = 0;
 	}
