@@ -36,19 +36,25 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static net.minecraftforge.fml.common.network.ByteBufUtils.readVarInt;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketCubeBlockChange implements IMessage {
 
-	public int[] heightValues;
-	public CubePos cubePos;
-	public short[] localAddresses;
-	public IBlockState[] blockStates;
+	int[] heightValues;
+	CubePos cubePos;
+	short[] localAddresses;
+	IBlockState[] blockStates;
 
 	public PacketCubeBlockChange() {
 	}
@@ -115,7 +121,7 @@ public class PacketCubeBlockChange implements IMessage {
 
 	public static class Handler extends AbstractClientMessageHandler<PacketCubeBlockChange> {
 
-		@Override
+		@Nullable @Override
 		public IMessage handleClientMessage(EntityPlayer player, PacketCubeBlockChange message, MessageContext ctx) {
 			ClientHandler.getInstance().handle(message);
 			return null;

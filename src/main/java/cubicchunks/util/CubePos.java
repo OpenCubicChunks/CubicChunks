@@ -31,7 +31,11 @@ import net.minecraft.util.math.ChunkPos;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.getCubeXForEntity;
@@ -54,6 +58,8 @@ import static cubicchunks.util.Coords.getCubeZForEntity;
  * <p>
  * This class also contains some helper methods to switch from/to block coordinates.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CubePos {
 
 	private final int cubeX;
@@ -116,7 +122,13 @@ public class CubePos {
 	 * CubeCoordinate object.
 	 */
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		if (obj == this) {
+			return true;
+		}
 		if (obj instanceof CubePos) {
 			CubePos otherCoords = (CubePos) obj;
 			return otherCoords.cubeX == cubeX && otherCoords.cubeY == cubeY && otherCoords.cubeZ == cubeZ;
@@ -129,7 +141,7 @@ public class CubePos {
 	 *
 	 * @return 64bit encoding of these coordinates.
 	 */
-	public long getAddress() {
+	private long getAddress() {
 		return AddressTools.getAddress(cubeX, cubeY, cubeZ);
 	}
 

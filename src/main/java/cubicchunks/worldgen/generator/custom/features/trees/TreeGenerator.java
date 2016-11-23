@@ -29,9 +29,15 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.custom.features.SurfaceFeatureGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 
 	static final Block[] REPLACEABLE_OPEN_BLOCKS = {
@@ -42,8 +48,8 @@ public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 	static final Block[] REPLACEABLE_SOLID_BLOCKS = {
 		Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL
 	};
-	protected final IBlockState woodBlock;
-	protected final IBlockState leafBlock;
+	@Nonnull protected final IBlockState woodBlock;
+	@Nonnull protected final IBlockState leafBlock;
 
 	public TreeGenerator(final ICubicWorld world, final IBlockState woodBlock, final IBlockState leafBlock) {
 		super(world);

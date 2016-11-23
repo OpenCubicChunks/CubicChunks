@@ -25,9 +25,16 @@ package cubicchunks.lighting;
 
 import net.minecraft.util.math.BlockPos;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Bits;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 class LightUpdateQueue {
 	/**
 	 * Enables additional error checks. Can be disable if performance becomes an issue.
@@ -60,9 +67,9 @@ class LightUpdateQueue {
 	static final int MIN_DISTANCE = 0;
 	static final int MAX_DISTANCE = Bits.getMaxUnsigned(DISTANCE_BITS);
 
-	private ArrayQueueSegment start = new ArrayQueueSegment(QUEUE_PART_SIZE);
-	private ArrayQueueSegment currentReadQueue;
-	private ArrayQueueSegment currentWriteQueue;
+	@Nonnull private final ArrayQueueSegment start = new ArrayQueueSegment(QUEUE_PART_SIZE);
+	@Nullable private ArrayQueueSegment currentReadQueue;
+	@Nullable private ArrayQueueSegment currentWriteQueue;
 	/**
 	 * Index of the previously read entry from current queue array
 	 */
@@ -240,7 +247,7 @@ class LightUpdateQueue {
 
 	private static class ArrayQueueSegment {
 		private int[] data;
-		private ArrayQueueSegment next;
+		@Nullable private ArrayQueueSegment next;
 
 		ArrayQueueSegment(int initSize) {
 			data = new int[initSize];

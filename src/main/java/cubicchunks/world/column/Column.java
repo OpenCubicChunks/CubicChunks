@@ -51,6 +51,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.Coords;
@@ -60,19 +61,22 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IHeightMap;
 import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * A quasi-chunk, representing an infinitely tall section of the world.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class Column extends Chunk {
 
-	private CubeMap cubeMap;
-	private IHeightMap opacityIndex;
+	@Nonnull private final CubeMap cubeMap;
+	@Nonnull private final IHeightMap opacityIndex;
 
-	private ICubeProvider provider;
-	private ICubicWorld world;
+	@Nonnull private final ICubeProvider provider;
+	@Nonnull private final ICubicWorld world;
 
-	private LightingManager lightManager;
+	@Nonnull private final LightingManager lightManager;
 
 	public Column(ICubeProvider provider, ICubicWorld world, int x, int z) {
 		// NOTE: this constructor is called by the chunk loader
@@ -81,7 +85,26 @@ public class Column extends Chunk {
 		this.provider = provider;
 		this.world = world;
 		this.lightManager = world.getLightingManager();
-		init();
+
+		this.cubeMap = new CubeMap();
+		//clientside we don't really need that much data. we actually only need top and bottom block Y positions
+		if (this.getWorld().isRemote) {
+			this.opacityIndex = new ClientHeightMap(this);
+		} else {
+			this.opacityIndex = new ServerHeightMap();
+		}
+
+		// make sure no one's using data structures that have been replaced
+		// also saves memory
+		/*
+		 * TODO: setting these vars to null would save memory, also... make sure we're actually
+		 * not using them
+		 */
+		// this.chunkSections = null;
+		// this.heightMap = null;
+		// this.skylightUpdateMap = null;
+
+		Arrays.fill(super.getBiomeArray(), (byte) -1);
 	}
 
 	//=================================================
@@ -214,7 +237,7 @@ public class Column extends Chunk {
 	 * <p>
 	 * CHECKED: 1.11-13.19.0.2148
 	 */
-	@Nullable @Override public IBlockState setBlockState(BlockPos pos, @Nonnull IBlockState newstate) {
+	@Nullable @Override public IBlockState setBlockState(BlockPos pos, IBlockState newstate) {
 		// TODO: Move all setBlockState logic to Cube
 		Cube cube = getCube(Coords.blockToCube(pos.getY()));
 		IBlockState oldstate = cube.getBlockState(pos);
@@ -246,7 +269,7 @@ public class Column extends Chunk {
 	 * @see Cube#getLightFor(EnumSkyBlock, BlockPos)
 	 */
 	@Override
-	public int getLightFor(@Nonnull EnumSkyBlock type, BlockPos pos) {
+	public int getLightFor(EnumSkyBlock type, BlockPos pos) {
 		//forward to cube
 		return getCube(pos).getLightFor(type, pos);
 	}
@@ -318,7 +341,7 @@ public class Column extends Chunk {
 	 * @see Cube#removeEntity(Entity)
 	 */
 	@Override
-	public void removeEntityAtIndex(@Nonnull Entity entity, int cubeY) {
+	public void removeEntityAtIndex(Entity entity, int cubeY) {
 		//forward to cube
 		getCube(cubeY).removeEntity(entity);
 	}
@@ -353,8 +376,8 @@ public class Column extends Chunk {
 	 *
 	 * @see Cube#getTileEntity(BlockPos, EnumCreateEntityType)
 	 */
-	@Override
-	public TileEntity getTileEntity(@Nonnull BlockPos pos, Chunk.EnumCreateEntityType createType) {
+	@Nullable @Override
+	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType createType) {
 		//forward to cube
 		return getCube(pos).getTileEntity(pos, createType);
 	}
@@ -381,7 +404,7 @@ public class Column extends Chunk {
 	 * @see Cube#addTileEntity(BlockPos, TileEntity)
 	 */
 	@Override
-	public void addTileEntity(@Nonnull BlockPos pos, TileEntity blockEntity) {
+	public void addTileEntity(BlockPos pos, TileEntity blockEntity) {
 		// pass off to the cube
 		getCube(pos).addTileEntity(pos, blockEntity);
 	}
@@ -392,7 +415,7 @@ public class Column extends Chunk {
 	 * @param pos target location
 	 */
 	@Override
-	public void removeTileEntity(@Nonnull BlockPos pos) {
+	public void removeTileEntity(BlockPos pos) {
 		//forward to cube
 		this.getCube(pos).removeTileEntity(pos);
 	}
@@ -428,7 +451,7 @@ public class Column extends Chunk {
 	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	@Override
-	public void getEntitiesWithinAABBForEntity(Entity exclude, AxisAlignedBB queryBox, @Nonnull List<Entity> out, Predicate<? super Entity> predicate) {
+	public void getEntitiesWithinAABBForEntity(@Nullable Entity exclude, AxisAlignedBB queryBox, List<Entity> out, @Nullable Predicate<? super Entity> predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
 		int minCubeY = Coords.blockToCube(MathHelper.floor(queryBox.minY - World.MAX_ENTITY_RADIUS));
@@ -436,7 +459,7 @@ public class Column extends Chunk {
 
 		for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
 			Cube cube = getCube(cubeY);
-			cube.getEntitiesWithinAABBForEntity(exclude, queryBox, out, predicate);
+			cube.getEntitiesWithinAABBForEntity(exclude, queryBox, out, predicate::apply);
 		}
 	}
 
@@ -452,7 +475,7 @@ public class Column extends Chunk {
 	 * CHECKED: 1.11-13.19.0.2148
 	 */
 	@Override
-	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(@Nonnull Class<? extends T> entityType, AxisAlignedBB queryBox, @Nonnull List<T> out, Predicate<? super T> predicate) {
+	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, @Nullable Predicate<? super T> predicate) {
 
 		// get a y-range that 2 blocks wider than the box for safety
 		int minCubeY = Coords.blockToCube(MathHelper.floor(queryBox.minY - World.MAX_ENTITY_RADIUS));
@@ -460,7 +483,7 @@ public class Column extends Chunk {
 
 		for (int cubeY = minCubeY; cubeY < maxCubeY + 1; cubeY++) {
 			Cube cube = getCube(cubeY);
-			cube.getEntitiesOfTypeWithinAAAB(entityType, queryBox, out, predicate);
+			cube.getEntitiesOfTypeWithinAAAB(entityType, queryBox, out, predicate::apply);
 		}
 	}
 
@@ -483,7 +506,7 @@ public class Column extends Chunk {
 
 	@Override
 	@Deprecated
-	public void populateChunk(IChunkProvider chunkProvider, @Nonnull IChunkGenerator chunkGenerator) {
+	public void populateChunk(IChunkProvider chunkProvider, IChunkGenerator chunkGenerator) {
 		throw new UnsupportedOperationException("This method is incompatible with CubicChunks");
 	}
 
@@ -556,7 +579,7 @@ public class Column extends Chunk {
 	@Override
 	@Deprecated
 	@SideOnly(Side.CLIENT)
-	public void fillChunk(@Nonnull PacketBuffer buf, int p_186033_2_, boolean p_186033_3_) {
+	public void fillChunk(PacketBuffer buf, int p_186033_2_, boolean p_186033_3_) {
 		throw new UnsupportedOperationException("This method is incompatible with Cubic Chunks");
 	}
 
@@ -662,35 +685,13 @@ public class Column extends Chunk {
 
 	@Override
 	@Deprecated
-	public void removeInvalidTileEntity(@Nonnull BlockPos pos) {
+	public void removeInvalidTileEntity(BlockPos pos) {
 		throw new UnsupportedOperationException("Not implemented because not used");
 	}
 
 	//===========================================
 	//===========CubicChunks methods=============
 	//===========================================
-
-	private void init() {
-		this.cubeMap = new CubeMap();
-		//clientside we don't really need that much data. we actually only need top and bottom block Y positions
-		if (this.getWorld().isRemote) {
-			this.opacityIndex = new ClientHeightMap(this);
-		} else {
-			this.opacityIndex = new ServerHeightMap();
-		}
-
-		// make sure no one's using data structures that have been replaced
-		// also saves memory
-		/*
-		 * TODO: setting these vars to null would save memory, also... make sure we're actually
-		 * not using them
-		 */
-		// this.chunkSections = null;
-		// this.heightMap = null;
-		// this.skylightUpdateMap = null;
-
-		Arrays.fill(super.getBiomeArray(), (byte) -1);
-	}
 
 	/**
 	 * @return x position of this column
@@ -790,7 +791,7 @@ public class Column extends Chunk {
 	 *
 	 * @return the removed cube if it existed, otherwise <code>null</code>
 	 */
-	public Cube removeCube(int cubeY) {
+	@Nullable public Cube removeCube(int cubeY) {
 		return this.cubeMap.remove(cubeY);
 	}
 

@@ -40,15 +40,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesHashSet;
 import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesThisTick;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 class IONbtWriter {
 	static byte[] writeNbtBytes(NBTTagCompound nbt) throws IOException {
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
@@ -164,22 +169,20 @@ class IONbtWriter {
 
 	private static void writeScheduledTicks(Cube cube, NBTTagCompound cubeNbt) {// scheduled block ticks
 		Iterable<NextTickListEntry> scheduledTicks = getScheduledTicks(cube);
-		if (scheduledTicks != null) {
-			long time = cube.getCubicWorld().getTotalWorldTime();
+		long time = cube.getCubicWorld().getTotalWorldTime();
 
-			NBTTagList nbtTicks = new NBTTagList();
-			cubeNbt.setTag("TileTicks", nbtTicks);
-			for (NextTickListEntry scheduledTick : scheduledTicks) {
-				NBTTagCompound nbtScheduledTick = new NBTTagCompound();
-				ResourceLocation resourcelocation = Block.REGISTRY.getNameForObject(scheduledTick.getBlock());
-				nbtScheduledTick.setString("i", resourcelocation.toString());
-				nbtScheduledTick.setInteger("x", scheduledTick.position.getX());
-				nbtScheduledTick.setInteger("y", scheduledTick.position.getY());
-				nbtScheduledTick.setInteger("z", scheduledTick.position.getZ());
-				nbtScheduledTick.setInteger("t", (int) (scheduledTick.scheduledTime - time));
-				nbtScheduledTick.setInteger("p", scheduledTick.priority);
-				nbtTicks.appendTag(nbtScheduledTick);
-			}
+		NBTTagList nbtTicks = new NBTTagList();
+		cubeNbt.setTag("TileTicks", nbtTicks);
+		for (NextTickListEntry scheduledTick : scheduledTicks) {
+			NBTTagCompound nbtScheduledTick = new NBTTagCompound();
+			ResourceLocation resourcelocation = Block.REGISTRY.getNameForObject(scheduledTick.getBlock());
+			nbtScheduledTick.setString("i", resourcelocation.toString());
+			nbtScheduledTick.setInteger("x", scheduledTick.position.getX());
+			nbtScheduledTick.setInteger("y", scheduledTick.position.getY());
+			nbtScheduledTick.setInteger("z", scheduledTick.position.getZ());
+			nbtScheduledTick.setInteger("t", (int) (scheduledTick.scheduledTime - time));
+			nbtScheduledTick.setInteger("p", scheduledTick.priority);
+			nbtTicks.appendTag(nbtScheduledTick);
 		}
 	}
 

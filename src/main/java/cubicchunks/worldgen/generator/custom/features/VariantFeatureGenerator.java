@@ -32,13 +32,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class VariantFeatureGenerator extends FeatureGenerator {
 
-	private final FeatureGenerator[] generators;
-	private final double[] probabilities;
+	@Nonnull private final FeatureGenerator[] generators;
+	@Nonnull private final double[] probabilities;
 
 	private VariantFeatureGenerator(ICubicWorld world, List<FeatureGenerator> generators, DoubleList probabilities) {
 		super(world);
@@ -69,28 +76,28 @@ public class VariantFeatureGenerator extends FeatureGenerator {
 	public static class Builder {
 
 		// use lists because order is important
-		private final List<FeatureGenerator> generators;
-		private final DoubleArrayList probabilities;
-		private ICubicWorld world;
+		@Nonnull private final List<FeatureGenerator> generators;
+		@Nonnull private final DoubleArrayList probabilities;
+		@Nullable private ICubicWorld world;
 
 		private Builder() {
 			this.generators = new ArrayList<FeatureGenerator>(2);
 			this.probabilities = new DoubleArrayList(2);
 		}
 
-		public Builder world(ICubicWorld world) {
+		@Nonnull public Builder world(ICubicWorld world) {
 			this.world = world;
 			return this;
 		}
 
-		public Builder nextVariant(FeatureGenerator gen, double probability) {
+		@Nonnull public Builder nextVariant(FeatureGenerator gen, double probability) {
 			this.generators.add(gen);
 			this.probabilities.add(probability);
 			assert this.generators.size() == this.probabilities.size();
 			return this;
 		}
 
-		public VariantFeatureGenerator build() {
+		@Nonnull public VariantFeatureGenerator build() {
 			return new VariantFeatureGenerator(this.world, this.generators, this.probabilities);
 		}
 	}

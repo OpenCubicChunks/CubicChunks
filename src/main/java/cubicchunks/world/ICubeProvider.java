@@ -24,11 +24,15 @@
 package cubicchunks.world;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.util.CubePos;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public interface ICubeProvider {
 
 	@Nullable

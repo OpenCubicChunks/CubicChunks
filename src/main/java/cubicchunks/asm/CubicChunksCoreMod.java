@@ -31,6 +31,13 @@ import org.spongepowered.asm.mixin.Mixins;
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 // the mcVersion value is inlined at compile time, so this MC version check may still fail
 @IFMLLoadingPlugin.MCVersion(value = ForgeVersion.mcVersion)
 @IFMLLoadingPlugin.SortingIndex(value = 5000)
@@ -46,12 +53,12 @@ public class CubicChunksCoreMod implements IFMLLoadingPlugin {
 		return new String[]{};
 	}
 
-	@Override
+	@Nullable @Override
 	public String getModContainerClass() {
 		return null;
 	}
 
-	@Override
+	@Nullable @Override
 	public String getSetupClass() {
 		return null;
 	}
@@ -60,7 +67,7 @@ public class CubicChunksCoreMod implements IFMLLoadingPlugin {
 	public void injectData(Map<String, Object> data) {
 	}
 
-	@Override
+	@Nullable @Override
 	public String getAccessTransformerClass() {
 		return null;
 	}

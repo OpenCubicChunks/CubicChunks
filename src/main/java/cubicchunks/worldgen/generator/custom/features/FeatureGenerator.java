@@ -29,9 +29,14 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class FeatureGenerator {
 	protected final ICubicWorld world;
 

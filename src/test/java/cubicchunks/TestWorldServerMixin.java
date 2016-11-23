@@ -43,9 +43,13 @@ import org.spongepowered.test.launch.LaunchWrapperTestRunner;
 
 import java.io.IOException;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.testutil.MinecraftEnvironment;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.type.FlatCubicWorldType;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -54,10 +58,12 @@ import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @RunWith(LaunchWrapperTestRunner.class)
 public class TestWorldServerMixin {
 
-	@Rule
+	@Nonnull @Rule
 	public TemporaryFolder folder = new TemporaryFolder();
 
 	private ICubicWorldServer world;

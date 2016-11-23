@@ -26,20 +26,29 @@ package cubicchunks.worldgen.generator;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 
-@SuppressWarnings("deprecation") // Block.BLOCK_STATE_IDS
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CubePrimer implements ICubePrimer {
 
 	private final char[] data = new char[4096];
 
 	@Override
 	public IBlockState getBlockState(int x, int y, int z) {
+		@SuppressWarnings("deprecation")
 		IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[getBlockIndex(x, y, z)]);
 		return iblockstate == null ? DEFAULT_STATE : iblockstate;
 	}
 
 	@Override
-	public void setBlockState(int x, int y, int z, IBlockState state) {
-		this.data[getBlockIndex(x, y, z)] = (char) Block.BLOCK_STATE_IDS.get(state);
+	public void setBlockState(int x, int y, int z, @Nonnull IBlockState state) {
+		@SuppressWarnings("deprecation")
+		char value = (char) Block.BLOCK_STATE_IDS.get(state);
+		this.data[getBlockIndex(x, y, z)] = value;
 	}
 
 	@Override
@@ -47,6 +56,7 @@ public class CubePrimer implements ICubePrimer {
 		int i = (x << 8 | z << 4) + 15;
 
 		for (int j = 15; j >= 0; --j) {
+			@SuppressWarnings("deprecation")
 			IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[i + j]);
 
 			if (iblockstate != null && iblockstate != DEFAULT_STATE) {

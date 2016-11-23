@@ -42,8 +42,12 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_FOR;
@@ -53,6 +57,8 @@ import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
 /**
  * Contains fixes for hardcoded height checks and other height-related issues.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(World.class)
 public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
@@ -166,7 +172,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 	 */
 	@Group(name = "isLoaded", max = 1)
 	@Inject(method = WORLD_IS_AREA_LOADED, at = @At(value = "HEAD"), cancellable = true, require = 1)
-	private void isAreaLoadedInject(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd, boolean allowEmpty, CallbackInfoReturnable<Boolean> cbi) {
+	private void isAreaLoadedInject(int xStart, int yStart, int zStart, int xEnd, int yEnd, int zEnd, boolean allowEmpty, @Nonnull CallbackInfoReturnable<Boolean> cbi) {
 		if (!this.isCubicWorld()) {
 			return;
 		}

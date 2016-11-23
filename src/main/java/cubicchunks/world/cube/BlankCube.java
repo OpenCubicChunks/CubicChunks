@@ -23,8 +23,6 @@
  */
 package cubicchunks.world.cube;
 
-import com.google.common.base.Predicate;
-
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -36,13 +34,20 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.util.List;
+import java.util.function.Predicate;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.world.column.Column;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * A blank cube, containing no blocks. Any operation on this cube will have no effect. Trying to retrieve blocks will
  * always return {@link Blocks#AIR}
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BlankCube extends Cube {
 
 	public BlankCube(Column column) {
@@ -64,7 +69,7 @@ public class BlankCube extends Cube {
 		return false;
 	}
 
-	@Override
+	@Nullable @Override
 	public ExtendedBlockStorage getStorage() {
 		return null;
 	}
@@ -94,14 +99,14 @@ public class BlankCube extends Cube {
 	}
 
 	@Override
-	public void getEntitiesWithinAABBForEntity(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
+	public void getEntitiesWithinAABBForEntity(@Nullable Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
 	}
 
 	@Override
 	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
 	}
 
-	@Override
+	@Nullable @Override
 	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
 		return null;
 	}

@@ -41,6 +41,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.function.Consumer;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.CubicChunks;
@@ -61,25 +63,25 @@ import mcp.MethodsReturnNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CubeWatcher implements XYZAddressable, ITicket {
-	private final Consumer<Cube> consumer = (c) -> {
+	@Nonnull private final Consumer<Cube> consumer = (c) -> {
 		this.cube = c;
 		this.loading = false;
 		if (this.cube != null) {
 			this.cube.getTickets().add(this);
 		}
 	};
-	private final CubeProviderServer cubeCache;
-	private PlayerCubeMap playerCubeMap;
-	private Cube cube;
-	private final TIntObjectMap<WatcherPlayerEntry> players = new TIntObjectHashMap<>();
-	private final TShortList dirtyBlocks = new TShortArrayList(64);
-	private final CubePos cubePos;
+	@Nonnull private final CubeProviderServer cubeCache;
+	@Nonnull private PlayerCubeMap playerCubeMap;
+	@Nullable private Cube cube;
+	@Nonnull private final TIntObjectMap<WatcherPlayerEntry> players = new TIntObjectHashMap<>();
+	@Nonnull private final TShortList dirtyBlocks = new TShortArrayList(64);
+	@Nonnull private final CubePos cubePos;
 	private long previousWorldTime = 0;
 	private boolean sentToPlayers = false;
 	private boolean loading = true;
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public CubeWatcher(PlayerCubeMap playerCubeMap, CubePos cubePos) {
+	CubeWatcher(PlayerCubeMap playerCubeMap, CubePos cubePos) {
 		this.playerCubeMap = playerCubeMap;
 		this.cubeCache = playerCubeMap.getWorld().getCubeCache();
 		this.cubeCache.asyncGetCube(
@@ -90,7 +92,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public void addPlayer(EntityPlayerMP player) {
+	void addPlayer(EntityPlayerMP player) {
 		if (this.players.containsKey(player.getEntityId())) {
 			CubicChunks.LOGGER.debug("Failed to add player. {} already is in cube at {}", player, cubePos);
 			return;
@@ -107,7 +109,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public void removePlayer(EntityPlayerMP player) {
+	void removePlayer(EntityPlayerMP player) {
 		if (!this.players.containsKey(player.getEntityId())) {
 			return;
 		}
@@ -140,7 +142,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public boolean providePlayerCube(boolean canGenerate) {
+	boolean providePlayerCube(boolean canGenerate) {
 		if (loading) {
 			return false;
 		}
@@ -170,7 +172,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public boolean sendToPlayers() {
+	boolean sendToPlayers() {
 		if (this.sentToPlayers) {
 			return true;
 		}
@@ -196,7 +198,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public void sendToPlayer(EntityPlayerMP player) {
+	private void sendToPlayer(EntityPlayerMP player) {
 		if (!this.sentToPlayers) {
 			return;
 		}
@@ -204,7 +206,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public void updateInhabitedTime() {
+	void updateInhabitedTime() {
 		final long now = getWorldTime();
 		if (this.cube == null) {
 			this.previousWorldTime = now;
@@ -219,7 +221,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public void blockChanged(int localX, int localY, int localZ) {
+	void blockChanged(int localX, int localY, int localZ) {
 		//if we are adding the first one, add it to update list
 		if (this.dirtyBlocks.isEmpty()) {
 			playerCubeMap.addToUpdateEntry(this);
@@ -233,7 +235,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-	public void update() {
+	void update() {
 		if (!this.sentToPlayers) {
 			return;
 		}
@@ -265,7 +267,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		this.dirtyBlocks.clear();
 	}
 
-	private void sendBlockEntityToAllPlayers(TileEntity blockEntity) {
+	private void sendBlockEntityToAllPlayers(@Nullable TileEntity blockEntity) {
 		if (blockEntity == null) {
 			return;
 		}
@@ -276,16 +278,16 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		sendPacketToAllPlayers(packet);
 	}
 
-	public boolean containsPlayer(EntityPlayerMP player) {
+	boolean containsPlayer(EntityPlayerMP player) {
 		return this.players.containsKey(player.getEntityId());
 	}
 
-	public boolean hasPlayerMatching(Predicate<EntityPlayerMP> predicate) {
+	boolean hasPlayerMatching(Predicate<EntityPlayerMP> predicate) {
 		//if any of them is true - stop and return false, then negate the result to get true
 		return !this.players.forEachValue(value -> !predicate.apply(value.player));
 	}
 
-	public double getDistanceSq(CubePos cubePos, Entity entity) {
+	private double getDistanceSq(CubePos cubePos, Entity entity) {
 		double blockX = cubePos.getXCenter();
 		double blockY = cubePos.getYCenter();
 		double blockZ = cubePos.getZCenter();
@@ -295,11 +297,11 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		return dx*dx + dy*dy + dz*dz;
 	}
 
-	public Cube getCube() {
+	@Nullable Cube getCube() {
 		return this.cube;
 	}
 
-	public double getClosestPlayerDistance() {
+	double getClosestPlayerDistance() {
 		double min = Double.MAX_VALUE;
 
 		for (WatcherPlayerEntry entry : this.players.valueCollection()) {
@@ -329,7 +331,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		}
 	}
 
-	public CubePos getCubePos() {
+	CubePos getCubePos() {
 		return cubePos;
 	}
 

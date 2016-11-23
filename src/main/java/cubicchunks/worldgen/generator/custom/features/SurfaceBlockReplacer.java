@@ -32,12 +32,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
-	private final IBlockState block;
-	private final List<Block> replacable;
-	private final List<Block> allowedAboveSurface;
+	@Nonnull private final IBlockState block;
+	@Nonnull private final List<Block> replacable;
+	@Nonnull private final List<Block> allowedAboveSurface;
 	private final int radius;
 	private final int height;
 
@@ -99,54 +106,54 @@ public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
 	}
 
 	public static class Builder {
-		private final List<Block> replacable;
-		private final List<Block> allowedAboveSurface;
-		private IBlockState block;
+		@Nonnull private final List<Block> replacable;
+		@Nonnull private final List<Block> allowedAboveSurface;
+		@Nullable private IBlockState block;
 		private int radius;
 		private int height;
-		private ICubicWorld world;
+		@Nullable private ICubicWorld world;
 
 		private Builder() {
 			this.replacable = new ArrayList<Block>(2);
 			this.allowedAboveSurface = new ArrayList<Block>(2);
 		}
 
-		public Builder setBlock(IBlockState block) {
+		@Nonnull public Builder setBlock(@Nonnull IBlockState block) {
 			this.block = block;
 			return this;
 		}
 
-		public Builder block(Block block) {
+		@Nonnull public Builder block(@Nonnull Block block) {
 			this.block = block.getDefaultState();
 			return this;
 		}
 
-		public Builder radius(int radius) {
+		@Nonnull public Builder radius(int radius) {
 			this.radius = radius;
 			return this;
 		}
 
-		public Builder height(int height) {
+		@Nonnull public Builder height(int height) {
 			this.height = height;
 			return this;
 		}
 
-		public Builder addReplacable(Block block) {
+		@Nonnull public Builder addReplacable(@Nonnull Block block) {
 			this.replacable.add(block);
 			return this;
 		}
 
-		public Builder addAllowedAboveSurface(Block block) {
+		@Nonnull public Builder addAllowedAboveSurface(@Nonnull Block block) {
 			this.allowedAboveSurface.add(block);
 			return this;
 		}
 
-		public Builder world(ICubicWorld world) {
+		@Nonnull public Builder world(@Nonnull ICubicWorld world) {
 			this.world = world;
 			return this;
 		}
 
-		public SurfaceBlockReplacer build() {
+		@Nonnull public SurfaceBlockReplacer build() {
 			return new SurfaceBlockReplacer(this);
 		}
 	}

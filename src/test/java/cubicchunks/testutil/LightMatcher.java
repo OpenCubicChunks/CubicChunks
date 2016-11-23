@@ -32,17 +32,23 @@ import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 import java.util.stream.StreamSupport;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.lighting.ILightBlockAccess;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.MathUtil.max;
 import static net.minecraft.world.EnumSkyBlock.BLOCK;
 import static net.minecraft.world.EnumSkyBlock.SKY;
 
-public class LightMatcher extends TypeSafeDiagnosingMatcher<ILightBlockAccess> {
-	private final BlockPos start;
-	private final BlockPos end;
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+class LightMatcher extends TypeSafeDiagnosingMatcher<ILightBlockAccess> {
+	@Nonnull private final BlockPos start;
+	@Nonnull private final BlockPos end;
 
-	public LightMatcher(StructureBoundingBox box) {
+	LightMatcher(StructureBoundingBox box) {
 		this.start = new BlockPos(box.minX, box.minY, box.minZ);
 		this.end = new BlockPos(box.maxX, box.maxY, box.maxZ);
 	}

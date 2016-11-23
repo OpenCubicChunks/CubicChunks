@@ -29,13 +29,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
 import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 
 // TODO leftover from generator pipeline
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CustomPopulationProcessor {
 
 	private Map<Biome, BiomeFeatures> biomeFeaturesMap;

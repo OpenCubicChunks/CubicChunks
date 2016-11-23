@@ -33,13 +33,18 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ServerHeightMap;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 @RunWith(LaunchWrapperTestRunner.class)
 public class TestOpacityIndex {
 

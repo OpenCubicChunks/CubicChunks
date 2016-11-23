@@ -23,11 +23,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Interface for grouping asynchronous world IO access together, synchronized to the start of the next tick
  * after loading finishes
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 abstract class AsyncIOProvider<T> implements Runnable {
 	private final ConcurrentLinkedQueue<Consumer<T>> callbacks = new ConcurrentLinkedQueue<>();
 	volatile boolean finished = false;

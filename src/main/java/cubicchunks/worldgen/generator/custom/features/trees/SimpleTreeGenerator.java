@@ -32,8 +32,13 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SimpleTreeGenerator extends TreeGenerator {
 
 	private static final int MIN_TRUNK_HEIGHT = 4;

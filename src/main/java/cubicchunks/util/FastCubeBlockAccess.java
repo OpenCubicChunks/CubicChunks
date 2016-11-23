@@ -34,15 +34,17 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.common.SidedProxy;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.client.CubeProviderClient;
-import cubicchunks.server.CubeProviderServer;
-import cubicchunks.util.Coords;
-import cubicchunks.util.CubePos;
 import cubicchunks.lighting.ILightBlockAccess;
+import cubicchunks.server.CubeProviderServer;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.blockToLocal;
 
@@ -51,11 +53,13 @@ import static cubicchunks.util.Coords.blockToLocal;
  * <p>
  * Does not allow to set blocks, only get blocks, their opacity and get/set light values.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class FastCubeBlockAccess implements ILightBlockAccess {
 	@SidedProxy private static GetLoadedChunksProxy getLoadedChunksProxy;
-	private final Cube[][][] cache;
+	@Nonnull private final Cube[][][] cache;
 	private final int originX, originY, originZ;
-	private final ICubicWorld world;
+	@Nonnull private final ICubicWorld world;
 
 	public FastCubeBlockAccess(ICubeProvider cache, Cube cube, int radius) {
 		this(cube.getCubicWorld(), cache,
@@ -98,8 +102,7 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
 							}
 						}
 
-						ReportedException ex = new ReportedException(report);
-						throw ex;
+						throw new ReportedException(report);
 					}
 				}
 			}
@@ -111,8 +114,7 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
 		int cubeY = Coords.blockToCube(blockY);
 		int cubeZ = Coords.blockToCube(blockZ);
 
-		Cube cube = this.cache[cubeX - originX][cubeY - originY][cubeZ - originZ];
-		return cube;
+		return this.cache[cubeX - originX][cubeY - originY][cubeZ - originZ];
 	}
 
 	private IBlockState getBlockState(BlockPos pos) {
@@ -156,7 +158,7 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
 	public static ILightBlockAccess forBlockRegion(ICubeProvider prov, BlockPos startPos, BlockPos endPos) {
 		//TODO: fix it
 		BlockPos midPos = Coords.midPos(startPos, endPos);
-		Cube center = prov.getLoadedCube(CubePos.fromBlockCoords(midPos));
+		Cube center = prov.getCube(CubePos.fromBlockCoords(midPos));
 		return new FastCubeBlockAccess(center.getCubicWorld(), prov,
 			CubePos.fromBlockCoords(startPos), CubePos.fromBlockCoords(endPos));
 	}

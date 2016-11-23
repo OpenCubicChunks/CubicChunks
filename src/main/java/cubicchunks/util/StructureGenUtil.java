@@ -28,8 +28,13 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 import java.util.function.Predicate;
 
-import cubicchunks.worldgen.generator.ICubePrimer;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.worldgen.generator.ICubePrimer;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class StructureGenUtil {
 	public static boolean scanWallsForBlock(ICubePrimer cube,
 	                                        StructureBoundingBox boundingBox,

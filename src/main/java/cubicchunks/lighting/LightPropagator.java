@@ -32,6 +32,11 @@ import net.minecraft.world.EnumSkyBlock;
 
 import java.util.function.Consumer;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
 import static cubicchunks.lighting.LightUpdateQueue.MAX_DISTANCE;
 import static cubicchunks.lighting.LightUpdateQueue.MIN_DISTANCE;
 import static net.minecraft.crash.CrashReportCategory.getCoordinateInfo;
@@ -39,8 +44,10 @@ import static net.minecraft.crash.CrashReportCategory.getCoordinateInfo;
 /**
  * Handles propagating light changes from blocks.
  */
-public class LightPropagator {
-	private LightUpdateQueue internalRelightQueue = new LightUpdateQueue();
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+class LightPropagator {
+	@Nonnull private LightUpdateQueue internalRelightQueue = new LightUpdateQueue();
 
 	/**
 	 * Updates light at all BlockPos in given iterable.
@@ -65,7 +72,7 @@ public class LightPropagator {
 	 * @param type light type to update
 	 * @param setLightCallback this will be called for each position where light value is changed
 	 */
-	public void propagateLight(BlockPos centerPos, Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type, Consumer<BlockPos> setLightCallback) {
+	void propagateLight(BlockPos centerPos, Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type, Consumer<BlockPos> setLightCallback) {
 
 		internalRelightQueue.begin(centerPos);
 		try {

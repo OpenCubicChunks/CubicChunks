@@ -25,6 +25,11 @@ package cubicchunks.util;
 
 import java.util.Iterator;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
 /**
  * Hash table implementation for objects in a 2-dimensional cartesian coordinate system.
  *
@@ -32,6 +37,8 @@ import java.util.Iterator;
  *
  * @see XZAddressable
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class XZMap<T extends XZAddressable> implements Iterable<T> {
 
 	/**
@@ -150,7 +157,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 *
 	 * @return the previous value associated with the given value's coordinates or null if no such value exists
 	 */
-	@SuppressWarnings("unchecked")
+	@Nullable @SuppressWarnings("unchecked")
 	public T put(T value) {
 
 		int x = value.getX();
@@ -191,7 +198,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 *
 	 * @return the entry associated with the specified coordinates or null if no such value exists
 	 */
-	@SuppressWarnings("unchecked")
+	@Nullable @SuppressWarnings("unchecked")
 	public T remove(int x, int z) {
 
 		int index = getIndex(x, z);
@@ -223,7 +230,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 *
 	 * @return the entry associated with the given value's coordinates or null if no such entry exists
 	 */
-	public T remove(T value) {
+	@Nullable public T remove(T value) {
 		return this.remove(value.getX(), value.getZ());
 	}
 
@@ -235,7 +242,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 	 *
 	 * @return the entry associated with the specified coordinates or null if no such value exists
 	 */
-	@SuppressWarnings("unchecked")
+	@Nullable @SuppressWarnings("unchecked")
 	public T get(int x, int z) {
 
 		int index = getIndex(x, z);
@@ -399,7 +406,7 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
 				return false;
 			}
 
-			@Override
+			@Nullable @Override
 			@SuppressWarnings("unchecked")
 			public T next() {
 				if (next > at) {

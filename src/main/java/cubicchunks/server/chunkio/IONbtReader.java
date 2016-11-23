@@ -34,6 +34,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.lighting.LightingManager;
@@ -43,9 +44,12 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.localToBlock;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class IONbtReader {
 	@Nullable
 	static Column readColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {
@@ -100,6 +104,9 @@ public class IONbtReader {
 		ICubicWorldServer world = (ICubicWorldServer) column.getWorld();
 
 		Cube cube = readBaseCube(column, cubeX, cubeY, cubeZ, nbt, world);
+		if (cube == null) {
+			return null;
+		}
 		readBlocks(nbt, world, cube);
 
 		return cube;
@@ -191,9 +198,6 @@ public class IONbtReader {
 
 	private static void readTileEntities(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {// tile entities
 		NBTTagList nbtTileEntities = nbt.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
-		if (nbtTileEntities == null) {
-			return;
-		}
 		for (int i = 0; i < nbtTileEntities.tagCount(); i++) {
 			NBTTagCompound nbtTileEntity = nbtTileEntities.getCompoundTagAt(i);
 			//TileEntity.create
@@ -206,9 +210,6 @@ public class IONbtReader {
 
 	private static void readScheduledBlockTicks(NBTTagCompound nbt, ICubicWorldServer world) {
 		NBTTagList nbtScheduledTicks = nbt.getTagList("TileTicks", 10);
-		if (nbtScheduledTicks == null) {
-			return;
-		}
 		for (int i = 0; i < nbtScheduledTicks.tagCount(); i++) {
 			NBTTagCompound nbtScheduledTick = nbtScheduledTicks.getCompoundTagAt(i);
 			Block block;
@@ -216,6 +217,9 @@ public class IONbtReader {
 				block = Block.getBlockFromName(nbtScheduledTick.getString("i"));
 			} else {
 				block = Block.getBlockById(nbtScheduledTick.getInteger("i"));
+			}
+			if (block == null) {
+				continue;
 			}
 			world.scheduleBlockUpdate(
 				new BlockPos(

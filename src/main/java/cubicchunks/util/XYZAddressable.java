@@ -28,6 +28,7 @@ package cubicchunks.util;
  *
  * @see XYZMap
  */
+
 public interface XYZAddressable {
 
 	int getX();

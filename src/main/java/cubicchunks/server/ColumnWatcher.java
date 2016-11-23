@@ -34,6 +34,7 @@ import net.minecraftforge.event.world.ChunkWatchEvent;
 import java.lang.invoke.MethodHandle;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -52,17 +53,17 @@ import static cubicchunks.util.ReflectionUtil.getFieldSetterHandle;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
+class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
-	private PlayerCubeMap playerCubeMap;
+	@Nonnull private PlayerCubeMap playerCubeMap;
 	private static MethodHandle getPlayers = getFieldGetterHandle(PlayerChunkMapEntry.class, "field_187283_c");
 	private static MethodHandle setLastUpdateInhabitedTime = getFieldSetterHandle(PlayerChunkMapEntry.class, "field_187289_i");
 	private static MethodHandle setSentToPlayers = getFieldSetterHandle(PlayerChunkMapEntry.class, "field_187290_j");
 	private static MethodHandle isLoading = getFieldGetterHandle(PlayerChunkMapEntry.class, "loading");//forge field, no srg name
 	private static MethodHandle getLoadedRunnable = getFieldGetterHandle(PlayerChunkMapEntry.class, "loadedRunnable");//forge field, no srg name
-	private final Runnable loadedRunnable;
+	@Nonnull private final Runnable loadedRunnable;
 
-	public ColumnWatcher(PlayerCubeMap playerCubeMap, ChunkPos pos) {
+	ColumnWatcher(PlayerCubeMap playerCubeMap, ChunkPos pos) {
 		super(playerCubeMap, pos.chunkXPos, pos.chunkZPos);
 		this.playerCubeMap = playerCubeMap;
 		try {
@@ -157,7 +158,7 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
 					.getEntityTracker()
 					.sendLeashedEntitiesInChunk(player, this.getColumn());
 			}
-			this.setSentToPlayers.invoke(this, true);
+			setSentToPlayers.invoke(this, true);
 		} catch (Throwable throwable) {
 			throw new RuntimeException(throwable);
 		}
@@ -175,7 +176,10 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
 	@Override
 	@Deprecated
 	public void blockChanged(int x, int y, int z) {
-		this.playerCubeMap.getCubeWatcher(CubePos.fromBlockCoords(x, y, z)).blockChanged(x, y, z);
+		CubeWatcher watcher = playerCubeMap.getCubeWatcher(CubePos.fromBlockCoords(x, y, z));
+		if(watcher != null) {
+			watcher.blockChanged(x, y, z);
+		}
 	}
 
 	@Override

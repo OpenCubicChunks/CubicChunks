@@ -37,12 +37,17 @@ import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS;
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(World.class)
 public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 

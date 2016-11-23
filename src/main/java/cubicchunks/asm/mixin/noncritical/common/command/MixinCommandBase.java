@@ -34,14 +34,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.ref.WeakReference;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.COMMAND_BASE_PARSE_DOUBLE;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(CommandBase.class)
 public class MixinCommandBase {
 	//I hope there are no threads involved...
-	private static WeakReference<ICubicWorld> commandWorld;
+	@Nonnull private static WeakReference<ICubicWorld> commandWorld = new WeakReference<>(null);
 
 	//get command sender, can't fail (inject at HEAD)
 	@Inject(method = "parseBlockPos", at = @At(value = "HEAD"))
@@ -54,9 +60,6 @@ public class MixinCommandBase {
 	           at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
 	           index = 2)
 	private static int getMinY(int original) {
-		if (commandWorld == null) {
-			return original;
-		}
 		ICubicWorld world = commandWorld.get();
 		if (world == null) {
 			return original;

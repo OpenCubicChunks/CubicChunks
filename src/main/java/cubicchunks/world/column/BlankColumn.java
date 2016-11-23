@@ -35,18 +35,24 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * A blank column, containing no cubes. Any operation on this column will have no effect. Trying to retrieve blocks will
  * always return {@link Blocks#AIR}
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BlankColumn extends Column {
 
-	private final Cube blankCube;
+	@Nonnull private final Cube blankCube;
 
 	/**
 	 * Create a new blank column

@@ -31,15 +31,21 @@ import net.minecraft.world.gen.feature.WorldGenMinable;
 
 import java.util.Random;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class MineralGenerator extends FeatureGenerator {
 	private final double minY;
 	private final double maxY;
 
-	private final WorldGenMinable vanillaGen;
+	@Nonnull private final WorldGenMinable vanillaGen;
 	private final double probability;
 
 	/**

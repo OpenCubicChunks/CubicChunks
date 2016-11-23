@@ -30,16 +30,23 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import cubicchunks.debug.item.RelightSkyBlockItem;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.debug.item.RelightSkyBlockItem;
+import mcp.MethodsReturnNonnullByDefault;
+
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class DebugTools {
 
+	@SuppressWarnings("NullableProblems") @Nonnull
 	@SidedProxy(serverSide = "cubicchunks.debug.DebugProxy", clientSide = "cubicchunks.debug.DebugClientProxy")
 	private static DebugProxy proxy;
 
-	public static final Item itemRelightSkyBlock = new RelightSkyBlockItem("relight_sky_block");
+	static final Item itemRelightSkyBlock = new RelightSkyBlockItem("relight_sky_block");
 
-	public static final CreativeTabs CUBIC_CHUNKS_DEBUG_TAB = new CreativeTabs("cubic_chunks_debug_tab") {
+	static final CreativeTabs CUBIC_CHUNKS_DEBUG_TAB = new CreativeTabs("cubic_chunks_debug_tab") {
 		@SideOnly(Side.CLIENT) @Override public ItemStack getTabIconItem() {
 			return itemRelightSkyBlock.func_190903_i();
 		}

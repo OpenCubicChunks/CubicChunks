@@ -23,6 +23,12 @@
  */
 package cubicchunks.util;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class Box {
 
 	private final int x1, y1, z1;

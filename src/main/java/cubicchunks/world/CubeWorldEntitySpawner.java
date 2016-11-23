@@ -45,15 +45,21 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.server.CubeWatcher;
 import cubicchunks.util.CubePos;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 	private static final int CUBES_PER_CHUNK = 16;
 	private static final int MOB_COUNT_DIV = (int) Math.pow(17.0D, 2.0D)*CUBES_PER_CHUNK;
 	private static final int SPAWN_RADIUS = 8;
 
-	private Set<CubePos> cubesForSpawn = new HashSet<>();
+	@Nonnull private Set<CubePos> cubesForSpawn = new HashSet<>();
 
 	@Override
 	public int findChunksForSpawning(WorldServer worldOrig, boolean hostileEnable, boolean peacefulEnable, boolean spawnOnSetTickRate) {
@@ -129,7 +135,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 		for (CubePos currentChunkPos : chunkList) {
 			BlockPos blockpos = getRandomChunkPosition(world, currentChunkPos);
 			if (blockpos == null) {
-				continue nextChunk;
+				continue;
 			}
 			IBlockState block = world.getBlockState(blockpos);
 
@@ -229,7 +235,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 			(type.getAnimal() && !spawnOnSetTickRate));
 	}
 
-	protected static BlockPos getRandomChunkPosition(ICubicWorldServer world, CubePos pos) {
+	private static BlockPos getRandomChunkPosition(ICubicWorldServer world, CubePos pos) {
 		int blockX = pos.getMinBlockX() + world.getRand().nextInt(16);
 		int blockZ = pos.getMinBlockZ() + world.getRand().nextInt(16);
 

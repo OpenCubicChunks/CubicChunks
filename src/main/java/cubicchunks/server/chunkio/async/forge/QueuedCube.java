@@ -21,16 +21,23 @@ package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.base.Objects;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Taking from Sponge, with modifications
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 class QueuedCube {
 	final int x;
 	final int y;
 	final int z;
-	final ICubicWorld world;
+	@Nonnull final ICubicWorld world;
 
 	QueuedCube(int x, int y, int z, ICubicWorld world) {
 		this.x = x;
@@ -45,7 +52,13 @@ class QueuedCube {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
+		if (object == null) {
+			return false;
+		}
+		if (object == this) {
+			return true;
+		}
 		if (object instanceof QueuedCube) {
 			QueuedCube other = (QueuedCube) object;
 			return x == other.x && y == other.y && z == other.z && world == other.world;

@@ -28,8 +28,13 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 import org.hamcrest.Matcher;
 
-import cubicchunks.lighting.ILightBlockAccess;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.lighting.ILightBlockAccess;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class LightingMatchers {
 
 	public static Matcher<ILightBlockAccess> hasCorrectLight(StructureBoundingBox range) {

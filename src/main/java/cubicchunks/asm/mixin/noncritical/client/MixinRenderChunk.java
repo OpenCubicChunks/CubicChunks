@@ -34,9 +34,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.client.RenderCubeCache;
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(RenderChunk.class)
 public class MixinRenderChunk {
 	@Shadow private World world;

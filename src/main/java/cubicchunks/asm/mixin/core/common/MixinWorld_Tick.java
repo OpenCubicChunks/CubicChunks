@@ -37,7 +37,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.WORLD_GET_PERSISTENT_CHUNKS;
 import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
@@ -45,6 +48,8 @@ import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
 /**
  * World class mixins related to block and entity ticking.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(World.class)
 public abstract class MixinWorld_Tick implements ICubicWorld {
 

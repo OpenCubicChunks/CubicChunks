@@ -25,9 +25,13 @@ package cubicchunks.worldgen.generator.custom.structures;
 
 import java.util.Random;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Basic structure generator for Cubic Chunks.
@@ -35,13 +39,15 @@ import cubicchunks.worldgen.generator.ICubePrimer;
  * The basic idea is to loop over all cubes within some radius (max structure size) and figure out which parts of
  * structures starting there intersect currently generated cube.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class CubicStructureGenerator {
 
 	/** The number of Chunks to gen-check in any given direction. */
 	protected int range = 8;
 
 	/** The RNG used by the MapGen classes. */
-	protected Random rand = new Random();
+	@Nonnull protected Random rand = new Random();
 
 	/** This world object. */
 	protected ICubicWorld world;

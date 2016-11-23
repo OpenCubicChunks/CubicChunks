@@ -29,11 +29,17 @@ import net.minecraft.server.management.PlayerList;
 
 import java.util.Hashtable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
 //A few hacks to make tests possible
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class MinecraftEnvironment {
 	private static boolean isInit = false;
 

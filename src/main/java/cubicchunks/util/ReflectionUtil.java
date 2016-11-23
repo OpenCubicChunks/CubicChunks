@@ -31,6 +31,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ReflectionUtil {
 	public static MethodHandle getFieldGetterHandle(Class<?> owner, String srgName) {
 		String name = Mappings.getNameFromSrg(srgName);

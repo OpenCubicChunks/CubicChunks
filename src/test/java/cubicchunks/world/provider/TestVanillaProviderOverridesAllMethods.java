@@ -34,10 +34,16 @@ import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TestVanillaProviderOverridesAllMethods {
 	@Test public void test() {
 		Set<Method> implemented = Sets.newHashSet(VanillaCubicProvider.class.getDeclaredMethods());

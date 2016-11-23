@@ -26,13 +26,18 @@ package cubicchunks.world.type;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 
-
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class VanillaCubicWorldType extends WorldType implements ICubicWorldType {
 
-	public VanillaCubicWorldType() {
+	private VanillaCubicWorldType() {
 		super("VanillaCubic");
 	}
 
@@ -40,7 +45,7 @@ public class VanillaCubicWorldType extends WorldType implements ICubicWorldType 
 		new VanillaCubicWorldType();
 	}
 
-	@Override
+	@Nullable @Override
 	public ICubeGenerator createCubeGenerator(ICubicWorld world) {
 		return null; // no ICubicWorldProvider's that are going to need this
 	}

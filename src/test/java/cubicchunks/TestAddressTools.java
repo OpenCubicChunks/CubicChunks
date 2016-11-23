@@ -27,11 +27,16 @@ import org.junit.Test;
 
 import java.util.HashSet;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.AddressTools;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TestAddressTools {
 
 	@Test

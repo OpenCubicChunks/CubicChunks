@@ -26,8 +26,13 @@ package cubicchunks.asm;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class MixinUtils {
 	/**
 	 * This method should be used as a replacement of {@link BlockPos#getY()} when modifying vanilla height check.

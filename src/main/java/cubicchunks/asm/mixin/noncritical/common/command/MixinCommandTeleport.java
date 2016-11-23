@@ -37,14 +37,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.ref.WeakReference;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.COMMAND_TELEPORT_GET_ENTITY;
 import static net.minecraft.command.CommandBase.getEntity;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(CommandTeleport.class)
 public class MixinCommandTeleport {
-	private WeakReference<ICubicWorld> commandWorld;
+	@Nullable private WeakReference<ICubicWorld> commandWorld;
 
 	@Inject(method = "execute",
 	        at = @At(value = "INVOKE", target = COMMAND_TELEPORT_GET_ENTITY, ordinal = 0))

@@ -38,16 +38,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.ref.WeakReference;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER;
 import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_ENTITY;
 import static net.minecraft.command.CommandBase.getCommandSenderAsPlayer;
 import static net.minecraft.command.CommandBase.getEntity;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(CommandTP.class)
 public class MixinCommandTP {
-	private WeakReference<ICubicWorld> commandWorld;
+	@Nullable private WeakReference<ICubicWorld> commandWorld;
 
 	@Inject(method = "execute",
 	        at = @At(value = "INVOKE", target = COMMAND_TP_GET_ENTITY, ordinal = 0))

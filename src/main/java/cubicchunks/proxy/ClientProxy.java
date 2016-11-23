@@ -30,11 +30,16 @@ import net.minecraft.world.WorldSettings;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.client.ClientEventHandler;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.type.ICubicWorldType;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class ClientProxy extends CommonProxy {
 	@Override public EntityPlayer getPlayerEntity(MessageContext ctx) {
 		// Note that if you simply return 'Minecraft.getMinecraft().thePlayer',

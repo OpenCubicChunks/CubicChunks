@@ -23,8 +23,6 @@
  */
 package cubicchunks.world;
 
-import com.google.common.base.Predicate;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -38,13 +36,21 @@ import net.minecraftforge.common.util.Constants;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.CubicChunks;
+import mcp.MethodsReturnNonnullByDefault;
 
 //TODO: Have xcube review this class... I dont trust it
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EntityContainer {
 
-	private ClassInheritanceMultiMap<Entity> entities;
+	@Nonnull private ClassInheritanceMultiMap<Entity> entities;
 	private boolean hasActiveEntities; //TODO: hasActiveEntitys is like an isModifyed right?
 	private long lastSaveTime;
 
@@ -67,14 +73,14 @@ public class EntityContainer {
 		return this.entities.remove(entity);
 	}
 
-	private boolean canAddEntityExcluded(Entity toAdd, Entity excluded, AxisAlignedBB queryBox, Predicate<? super Entity> predicate) {
+	private boolean canAddEntityExcluded(Entity toAdd, @Nullable Entity excluded, AxisAlignedBB queryBox, @Nullable Predicate<? super Entity> predicate) {
 		return toAdd != excluded &&
 			toAdd.getEntityBoundingBox().intersectsWith(queryBox) &&
-			(predicate == null || predicate.apply(toAdd));
+			(predicate == null || predicate.test(toAdd));
 	}
 
 	// CHECKED: 1.11-13.19.0.2148
-	public void getEntitiesWithinAABBForEntity(Entity excluded, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
+	public void getEntitiesWithinAABBForEntity(@Nullable Entity excluded, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
 		for (Entity entity : this.entities) {
 
 			// handle entity exclusion
@@ -93,10 +99,10 @@ public class EntityContainer {
 	}
 
 	// CHECKED: 1.11-13.19.0.2148
-	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
+	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, @Nullable Predicate<? super T> predicate) {
 		for (T entity : this.entities.getByClass(entityType)) {
 			if (entity.getEntityBoundingBox().intersectsWith(queryBox) &&
-				(predicate == null || predicate.apply(entity))) {
+				(predicate == null || predicate.test(entity))) {
 				out.add(entity);
 			}
 		}
@@ -147,7 +153,7 @@ public class EntityContainer {
 		writeToNbt(nbt, name, null);
 	}
 
-	public void writeToNbt(NBTTagCompound nbt, String name, IEntityActionListener listener) {
+	public void writeToNbt(NBTTagCompound nbt, String name, @Nullable IEntityActionListener listener) {
 		this.hasActiveEntities = false;
 		NBTTagList nbtEntities = new NBTTagList();
 		nbt.setTag(name, nbtEntities);
@@ -168,9 +174,6 @@ public class EntityContainer {
 	//listener is passed from CubeIO to set chunk position
 	public void readFromNbt(NBTTagCompound nbt, String name, ICubicWorld world, IEntityActionListener listener) {
 		NBTTagList nbtEntities = nbt.getTagList(name, 10);
-		if (nbtEntities == null) {
-			return;
-		}
 
 		for (int i = 0; i < nbtEntities.tagCount(); i++) {
 			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
@@ -178,7 +181,7 @@ public class EntityContainer {
 		}
 	}
 
-	private Entity readEntity(NBTTagCompound nbtEntity, ICubicWorld world, IEntityActionListener listener) {
+	private Entity readEntity(NBTTagCompound nbtEntity, ICubicWorld world, @Nullable IEntityActionListener listener) {
 
 		// create the entity
 		Entity entity = EntityList.createEntityFromNBT(nbtEntity, (World) world);

@@ -30,11 +30,15 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 import java.util.Random;
 import java.util.function.Predicate;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.CubePos;
 import cubicchunks.util.StructureGenUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
@@ -49,6 +53,8 @@ import static net.minecraft.util.math.MathHelper.sin;
  * Modified Minecraft cave generation code. Based on Robinton's cave generation implementation.
  */
 //TODO: Fix code duplication beterrn cave and cave generators
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CubicCaveGenerator extends CubicStructureGenerator {
 
 	//=============================================
@@ -191,8 +197,8 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	/**
 	 * Generates a flattened cave "room", usually more caves split off it
 	 */
-	protected void generateLargeNode(ICubePrimer cube, long seed, CubePos generatedCubePos,
-	                                 double x, double y, double z) {
+	private void generateLargeNode(ICubePrimer cube, long seed, CubePos generatedCubePos,
+	                               double x, double y, double z) {
 		float baseHorizSize = 1.0F + this.rand.nextFloat()*6.0F;
 		float horizDirAngle = 0;
 		float vertDirAngle = 0;
@@ -223,11 +229,11 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	 * @param vertDirAngle changes vertical size of the cave, values < 1 result in flattened caves, > 1 result in
 	 * vertically stretched caves
 	 */
-	protected void generateNode(ICubePrimer cube, long seed,
-	                            CubePos generatedCubePos,
-	                            double caveX, double caveY, double caveZ,
-	                            float baseCaveSize, float horizDirAngle, float vertDirAngle,
-	                            int startWalkedDistance, int maxWalkedDistance, double vertCaveSizeMod) {
+	private void generateNode(ICubePrimer cube, long seed,
+	                          CubePos generatedCubePos,
+	                          double caveX, double caveY, double caveZ,
+	                          float baseCaveSize, float horizDirAngle, float vertDirAngle,
+	                          int startWalkedDistance, int maxWalkedDistance, double vertCaveSizeMod) {
 		Random rand = new Random(seed);
 
 		//store by how much the horizontal and vertical direction angles will change each step
@@ -336,7 +342,7 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 	}
 
 	//returns true if cave generation should be continued
-	private void tryCarveBlocks(ICubePrimer cube, CubePos generatedCubePos,
+	private void tryCarveBlocks(@Nonnull ICubePrimer cube, @Nonnull CubePos generatedCubePos,
 	                            double caveX, double caveY, double caveZ,
 	                            double caveSizeHoriz, double caveSizeVert) {
 		double genCubeCenterX = generatedCubePos.getXCenter();

@@ -29,29 +29,35 @@ import com.flowpowered.noise.module.modifier.ScaleBias;
 import com.flowpowered.noise.module.modifier.ScalePoint;
 import com.flowpowered.noise.module.source.Perlin;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
 @SuppressWarnings("unused")
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BasicBuilder implements IBuilder {
-	protected Module finalModule;
+	private Module finalModule;
 
 	// Planet seed. Change this to generate a different planet.
-	int SEED = 0;
+	private int SEED = 0;
 
 	// Maximum elevation, in meters. This value is approximate.
-	double MAX_ELEV = 8192.0;
+	private double MAX_ELEV = 8192.0;
 
 	// Specifies the sea level. This value must be between -1.0
 	// (minimum elevation) and +1.0 (maximum planet elevation.)
-	double SEA_LEVEL = 0.0;
+	private double SEA_LEVEL = 0.0;
 
-	int NUM_OCTAVES = 10;
+	private int NUM_OCTAVES = 10;
 
-	double SCALE_X = 1;
-	double SCALE_Y = 1;
-	double SCALE_Z = 1;
+	private double SCALE_X = 1;
+	private double SCALE_Y = 1;
+	private double SCALE_Z = 1;
 
-	double persistance = 0.5;
-	double clampMin = -Double.MAX_VALUE, clampMax = Double.MAX_VALUE;
-	double lacunarity = 2;
+	private double persistance = 0.5;
+	private double clampMin = -Double.MAX_VALUE, clampMax = Double.MAX_VALUE;
+	private double lacunarity = 2;
 	private double scaleOctaves;
 
 	@Override

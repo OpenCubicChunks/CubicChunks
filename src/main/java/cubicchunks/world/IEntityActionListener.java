@@ -25,6 +25,12 @@ package cubicchunks.world;
 
 import net.minecraft.entity.Entity;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public interface IEntityActionListener {
 	void onEntity(Entity entity);
 }

@@ -25,8 +25,13 @@ package cubicchunks.debug;
 
 import net.minecraft.item.Item;
 
-import cubicchunks.CubicChunks;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.CubicChunks;
+import mcp.MethodsReturnNonnullByDefault;
+
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class ItemRegistered extends Item {
 	public ItemRegistered(String name) {
 		setRegistryName(name);

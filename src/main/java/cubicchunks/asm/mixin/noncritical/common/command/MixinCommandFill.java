@@ -36,14 +36,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.ref.WeakReference;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(CommandFill.class)
 public class MixinCommandFill {
-	private WeakReference<ICubicWorld> commandWorld;
+	@Nullable private WeakReference<ICubicWorld> commandWorld;
 
 	//get command sender, can't fail (inject at HEAD
 	@Inject(method = "execute", at = @At(value = "HEAD"), require = 1)
@@ -51,7 +57,7 @@ public class MixinCommandFill {
 		commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
 	}
 
-	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6), constraints = "")
+	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6))
 	private int getBlockPosYRedirectMin(BlockPos pos) {
 		if (commandWorld == null) {
 			return pos.getY();

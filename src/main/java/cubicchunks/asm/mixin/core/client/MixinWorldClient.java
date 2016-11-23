@@ -34,10 +34,15 @@ import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.asm.mixin.core.common.MixinWorld;
 import cubicchunks.client.CubeProviderClient;
 import cubicchunks.world.ICubicWorldClient;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(WorldClient.class)
 @Implements(@Interface(iface = ICubicWorldClient.class, prefix = "world$"))
 public abstract class MixinWorldClient extends MixinWorld implements ICubicWorldClient {

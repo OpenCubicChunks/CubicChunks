@@ -34,17 +34,22 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Stores cubes for columns
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 class CubeMap implements Iterable<Cube> {
 
-	private final List<Cube> cubes = new ArrayList<>();
+	@Nonnull private final List<Cube> cubes = new ArrayList<>();
 
-	private ExtendedBlockStorage[] toBlockTick = new ExtendedBlockStorage[0];
+	@Nonnull private ExtendedBlockStorage[] toBlockTick = new ExtendedBlockStorage[0];
 
 	/**
 	 * Removes the cube at {@code cubeY}
@@ -53,7 +58,7 @@ class CubeMap implements Iterable<Cube> {
 	 *
 	 * @return the removed cube if it existed, otherwise <code>null</code>
 	 */
-	Cube remove(int cubeY) {
+	@Nullable Cube remove(int cubeY) {
 		int index = binarySearch(cubeY);
 		return index < cubes.size() && cubes.get(index).getY() == cubeY ? cubes.remove(index) : null;
 	}
@@ -63,7 +68,7 @@ class CubeMap implements Iterable<Cube> {
 	 *
 	 * @param cube the cube to add
 	 */
-	void put(@Nonnull Cube cube) {
+	void put(Cube cube) {
 		int searchIndex = binarySearch(cube.getY());
 		if (this.contains(cube.getY(), searchIndex)) {
 			throw new IllegalArgumentException("Cube at " + cube.getY() + " already exists!");
@@ -125,7 +130,7 @@ class CubeMap implements Iterable<Cube> {
 	 *
 	 * @return the collection
 	 */
-	public Collection<Cube> all() {
+	 public Collection<Cube> all() {
 		return Collections.unmodifiableCollection(cubes);
 	}
 
@@ -188,7 +193,7 @@ class CubeMap implements Iterable<Cube> {
 	private int binarySearch(int cubeY) {
 		int start = 0;
 		int end = cubes.size() - 1;
-		int mid = 0;
+		int mid;
 
 		while (start <= end) {
 			mid = start + end >>> 1;

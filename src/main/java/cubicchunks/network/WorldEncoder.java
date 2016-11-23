@@ -26,6 +26,8 @@ package cubicchunks.network;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Coords;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ServerHeightMap;
@@ -33,10 +35,13 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import mcp.MethodsReturnNonnullByDefault;
 
-public class WorldEncoder {
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+class WorldEncoder {
 
-	public static void encodeCube(PacketBuffer out, Cube cube) {
+	static void encodeCube(PacketBuffer out, Cube cube) {
 		// 1. emptiness
 		out.writeBoolean(cube.isEmpty());
 
@@ -62,17 +67,17 @@ public class WorldEncoder {
 		}
 	}
 
-	public static void encodeColumn(PacketBuffer out, Column column) {
+	static void encodeColumn(PacketBuffer out, Column column) {
 		// 1. biomes
 		out.writeBytes(column.getBiomeArray());
 	}
 
-	public static void decodeColumn(PacketBuffer in, Column column) {
+	static void decodeColumn(PacketBuffer in, Column column) {
 		// 1. biomes
 		in.readBytes(column.getBiomeArray());
 	}
 
-	public static void decodeCube(PacketBuffer in, Cube cube) {
+	static void decodeCube(PacketBuffer in, Cube cube) {
 		// if the cube came from the server, it must be live
 		cube.setClientCube();
 
@@ -105,11 +110,11 @@ public class WorldEncoder {
 		}
 	}
 
-	public static int getEncodedSize(Column column) {
+	static int getEncodedSize(Column column) {
 		return column.getBiomeArray().length;
 	}
 
-	public static int getEncodedSize(Cube cube) {
+	static int getEncodedSize(Cube cube) {
 		int size = 0;
 		size++;//isEmpty
 		if (!cube.isEmpty()) {
@@ -125,13 +130,13 @@ public class WorldEncoder {
 		return size;
 	}
 
-	public static ByteBuf createByteBufForWrite(byte[] data) {
+	static ByteBuf createByteBufForWrite(byte[] data) {
 		ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
 		bytebuf.writerIndex(0);
 		return bytebuf;
 	}
 
-	public static ByteBuf createByteBufForRead(byte[] data) {
+	static ByteBuf createByteBufForRead(byte[] data) {
 		ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
 		bytebuf.readerIndex(0);
 		return bytebuf;

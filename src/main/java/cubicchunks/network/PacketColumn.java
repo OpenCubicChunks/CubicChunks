@@ -29,9 +29,15 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.column.Column;
 import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketColumn implements IMessage {
 	private ChunkPos chunkPos;
 	private byte[] data;
@@ -62,16 +68,16 @@ public class PacketColumn implements IMessage {
 		buf.writeBytes(this.data);
 	}
 
-	public ChunkPos getChunkPos() {
+	ChunkPos getChunkPos() {
 		return chunkPos;
 	}
 
-	public byte[] getData() {
+	byte[] getData() {
 		return data;
 	}
 
 	public static class Handler extends AbstractClientMessageHandler<PacketColumn> {
-		@Override
+		@Nullable @Override
 		public IMessage handleClientMessage(EntityPlayer player, PacketColumn message, MessageContext ctx) {
 			ClientHandler.getInstance().handle(message);
 			return null;

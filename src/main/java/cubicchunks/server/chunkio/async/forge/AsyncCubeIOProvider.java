@@ -24,23 +24,28 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.CubeIO;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Async loading of cubes
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
-	private final QueuedCube cubeInfo;
-	private final CubeIO loader;
+	@Nonnull private final QueuedCube cubeInfo;
+	@Nonnull private final CubeIO loader;
 
-	private CompletableFuture<Column> futureColumn = new CompletableFuture<>();
-	private CubeIO.PartialCubeData cubeData;
+	@Nonnull private CompletableFuture<Column> futureColumn = new CompletableFuture<>();
+	@Nullable private CubeIO.PartialCubeData cubeData;
 
-	AsyncCubeIOProvider(@Nonnull QueuedCube cube, @Nonnull CubeIO loader) {
+	AsyncCubeIOProvider(QueuedCube cube, CubeIO loader) {
 		this.cubeInfo = cube;
 		this.loader = loader;
 	}
@@ -74,12 +79,12 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 		this.runCallbacks();
 	}
 
-	@Override
+	@Nullable @Override
 	public Cube get() {
 		return cubeData == null ? null : cubeData.getCube();
 	}
 
-	public void setColumn(Column column) {
+	public void setColumn(@Nullable Column column) {
 		this.futureColumn.complete(column);
 	}
 }

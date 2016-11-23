@@ -33,13 +33,18 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.debug.ItemRegistered;
 import cubicchunks.network.PacketCube;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class RelightSkyBlockItem extends ItemRegistered {
 
 	public RelightSkyBlockItem(String name) {

@@ -35,7 +35,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.server.CubeProviderServer;
@@ -44,11 +46,14 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Brazenly copied from Forge and Sponge and reimplemented to suit our needs: Load cubes and columns outside the main
  * thread, then synchronize at the start of the next tick
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class AsyncWorldIOExecutor {
 
 	private static final int BASE_THREADS = 1;
@@ -108,7 +113,7 @@ public class AsyncWorldIOExecutor {
 	 *
 	 * @return The loaded column
 	 */
-	public static Column syncColumnLoad(ICubicWorld world, CubeIO loader, int x, int z) {
+	@Nullable public static Column syncColumnLoad(ICubicWorld world, CubeIO loader, int x, int z) {
 		QueuedColumn key = new QueuedColumn(x, z, world);
 		AsyncColumnIOProvider task = columnTasks.remove(key); // Remove task because we will call the sync callbacks directly
 		if (task != null) {
@@ -297,13 +302,13 @@ public class AsyncWorldIOExecutor {
 
 			// Resize thread pool based on player count
 			@SubscribeEvent
-			public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent evt) {
+			public void onPlayerLoggedIn(@Nonnull PlayerEvent.PlayerLoggedInEvent evt) {
 				MinecraftServer server = evt.player.getServer();
 				if (server != null) adjustPoolSize(server.getCurrentPlayerCount());
 			}
 
 			@SubscribeEvent
-			public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent evt) {
+			public void onPlayerLoggedOut(@Nonnull PlayerEvent.PlayerLoggedOutEvent evt) {
 				MinecraftServer server = evt.player.getServer();
 				if (server != null) adjustPoolSize(server.getCurrentPlayerCount());
 			}

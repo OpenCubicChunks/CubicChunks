@@ -33,7 +33,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.asm.MixinUtils;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.GUI_OVERLAY_DEBUG_CALL;
@@ -44,6 +48,8 @@ import static cubicchunks.asm.JvmNames.GUI_OVERLAY_DEBUG_CALL;
  *
  * @author Malte Schütze
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(GuiOverlayDebug.class)
 public class MixinGuiOverlayDebug {
 	@Shadow @Final private Minecraft mc;

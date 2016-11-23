@@ -23,6 +23,12 @@
  */
 package cubicchunks;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public interface IConfigUpdateListener {
 	/**
 	 * Called when config value is changed. This method may be called from any thread.

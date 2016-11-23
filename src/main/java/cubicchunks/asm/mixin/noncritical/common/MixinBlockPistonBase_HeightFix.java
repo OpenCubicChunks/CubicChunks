@@ -34,10 +34,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.asm.MixinUtils;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(BlockPistonBase.class)
 public class MixinBlockPistonBase_HeightFix {
 	@Group(min = 4, max = 4)

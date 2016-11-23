@@ -28,8 +28,13 @@ import net.minecraft.launchwrapper.LaunchClassLoader;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.test.launch.AbstractTestTweaker;
 
-import cubicchunks.asm.CubicChunksCoreMod;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.asm.CubicChunksCoreMod;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class MixinTweakerServer extends AbstractTestTweaker {
 	@Override
 	public void injectIntoClassLoader(LaunchClassLoader loader) {

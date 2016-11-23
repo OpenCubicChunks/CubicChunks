@@ -31,10 +31,16 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.Random;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TestLightUpdateQueue {
 	@Test public void testMultipleBeginEndNoError() {
 		//success if no error

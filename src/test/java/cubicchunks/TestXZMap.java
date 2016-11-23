@@ -30,10 +30,12 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.util.XZAddressable;
 import cubicchunks.util.XZMap;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
@@ -42,6 +44,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TestXZMap {
 	@Test
 	public void testSimpleGetEqual() {
@@ -161,7 +165,7 @@ public class TestXZMap {
 		private final int z;
 		private Object id;
 
-		public Addressable(int x, int z, @Nonnull Object id) {
+		public Addressable(int x, int z, Object id) {
 			this.x = x;
 			this.z = z;
 			this.id = id;
@@ -175,7 +179,7 @@ public class TestXZMap {
 			return z;
 		}
 
-		@Override public boolean equals(Object o) {
+		@Override public boolean equals(@Nullable Object o) {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 

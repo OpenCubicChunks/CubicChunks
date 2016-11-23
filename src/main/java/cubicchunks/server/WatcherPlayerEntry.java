@@ -25,11 +25,18 @@ package cubicchunks.server;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 class WatcherPlayerEntry {
 
-	EntityPlayerMP player;
+	@Nonnull EntityPlayerMP player;
 
-	public WatcherPlayerEntry(EntityPlayerMP player) {
+	WatcherPlayerEntry(EntityPlayerMP player) {
 		this.player = player;
 	}
 }

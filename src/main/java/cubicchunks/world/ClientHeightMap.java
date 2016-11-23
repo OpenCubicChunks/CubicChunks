@@ -32,14 +32,20 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Coords;
 import cubicchunks.world.column.Column;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ClientHeightMap implements IHeightMap {
 
-	private final Column chunk;
-	private int[] hmap;
-	private int[] bottomBlocks;
+	@Nonnull private final Column chunk;
+	@Nonnull private int[] hmap;
+	@Nonnull private int[] bottomBlocks;
 	private int heightMapLowest = Coords.NO_HEIGHT;
 
 	public ClientHeightMap(Column column) {
@@ -103,7 +109,7 @@ public class ClientHeightMap implements IHeightMap {
 		bottomBlocks[getIndex(localX, localZ)] = height;
 	}
 
-	public void setData(byte[] data) {
+	public void setData(@Nonnull byte[] data) {
 		try {
 			ByteArrayInputStream buf = new ByteArrayInputStream(data);
 			DataInputStream in = new DataInputStream(buf);

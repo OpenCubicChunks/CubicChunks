@@ -42,17 +42,24 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.AddressTools.getX;
 import static cubicchunks.util.AddressTools.getY;
 import static cubicchunks.util.AddressTools.getZ;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class CubeIO implements IThreadedFileIO {
 
 	private static final long kB = 1024;
@@ -64,7 +71,7 @@ public class CubeIO implements IThreadedFileIO {
 		private long address;
 		private NBTTagCompound nbt;
 
-		public SaveEntry(long address, NBTTagCompound nbt) {
+		SaveEntry(long address, NBTTagCompound nbt) {
 			this.address = address;
 			this.nbt = nbt;
 		}
@@ -80,27 +87,26 @@ public class CubeIO implements IThreadedFileIO {
 
 		file.getParentFile().mkdirs();
 
-		DB db = DBMaker.
+		return DBMaker.
 			fileDB(file).
 			fileMmapEnable().
 			allocateStartSize(5*MB).
 			allocateIncrement(1*MB).
 			make();
-		return db;
 		// NOTE: could set different cache settings
 		// the default is a hash map cache with 32768 entries
 		// see: http://www.mapdb.org/features.html
 	}
 
-	private ICubicWorldServer world;
+	@Nonnull private ICubicWorldServer world;
 
-	private final DB db;
-	private ConcurrentMap<Long, byte[]> columns;
-	private ConcurrentMap<Long, byte[]> cubes;
-	private ConcurrentMap<ChunkPos, SaveEntry> columnsToSave;
-	private ConcurrentMap<CubePos, SaveEntry> cubesToSave;
+	@Nonnull private final DB db;
+	@Nonnull private ConcurrentMap<Long, byte[]> columns;
+	@Nonnull private ConcurrentMap<Long, byte[]> cubes;
+	@Nonnull private ConcurrentMap<ChunkPos, SaveEntry> columnsToSave;
+	@Nonnull private ConcurrentMap<CubePos, SaveEntry> cubesToSave;
 
-	private final Thread theShutdownHook;
+	@Nonnull private final Thread theShutdownHook;
 
 	public CubeIO(ICubicWorldServer world) {
 		this.world = world;
@@ -149,7 +155,7 @@ public class CubeIO implements IThreadedFileIO {
 		}
 	}
 
-	public Column loadColumn(int chunkX, int chunkZ) throws IOException {
+	@Nullable public Column loadColumn(int chunkX, int chunkZ) throws IOException {
 		NBTTagCompound nbt;
 		SaveEntry saveEntry;
 		if ((saveEntry = columnsToSave.get(new ChunkPos(chunkX, chunkZ))) != null) {
@@ -171,7 +177,7 @@ public class CubeIO implements IThreadedFileIO {
 		return IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
 	}
 
-	public PartialCubeData loadCubeAsyncPart(Column column, int cubeY) throws IOException {
+	@Nullable public PartialCubeData loadCubeAsyncPart(Column column, int cubeY) throws IOException {
 		// TODO address is due for refactor
 		long address = AddressTools.getAddress(column.getX(), cubeY, column.getZ());
 
@@ -190,6 +196,9 @@ public class CubeIO implements IThreadedFileIO {
 
 		// restore the cube - async part
 		Cube cube = IONbtReader.readCubeAsyncPart(column, column.getX(), cubeY, column.getZ(), nbt);
+		if (cube == null) {
+			return null;
+		}
 		return new PartialCubeData(cube, nbt);
 	}
 
@@ -230,10 +239,10 @@ public class CubeIO implements IThreadedFileIO {
 			final int CubesBatchSize = 250;
 
 			int numColumnsSaved = 0;
-			int numColumnsRemaining = 0;
+			int numColumnsRemaining;
 			int numColumnBytesSaved = 0;
 			int numCubesSaved = 0;
-			int numCubesRemaining = 0;
+			int numCubesRemaining;
 			int numCubeBytesSaved = 0;
 			long start = System.currentTimeMillis();
 

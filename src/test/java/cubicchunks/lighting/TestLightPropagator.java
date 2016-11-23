@@ -35,7 +35,10 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.testutil.TestLightBlockAccessImpl;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.testutil.LightingMatchers.hasCorrectLight;
 import static cubicchunks.testutil.LightingMatchers.range;
@@ -43,6 +46,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TestLightPropagator {
 	// TODO: test callbacks
 
@@ -646,7 +651,7 @@ public class TestLightPropagator {
 	 * }
 	 * </pre>
 	 */
-	private void verifyEqual(BlockPos start, ILightBlockAccess access, EnumSkyBlock type, int[/*max-y*/][/*z*/][/*x*/] data) {
+	private void verifyEqual( BlockPos start,  ILightBlockAccess access, EnumSkyBlock type,  int[/*max-y*/][/*z*/][/*x*/] data) {
 		BlockPos end = start.add(data[0][0].length - 1, data.length - 1, data[0].length - 1);
 		BlockPos.getAllInBox(start, end).forEach(p -> {
 			Vec3i diff = p.subtract(start);
@@ -663,21 +668,21 @@ public class TestLightPropagator {
 		assertThat(lightAccess, hasCorrectLight(range(radius)));
 	}
 
-	private static LightBlockAccessBuilder lightAccess(int size) {
+	 private static LightBlockAccessBuilder lightAccess(int size) {
 		return new LightBlockAccessBuilder(size);
 	}
 
 
-	private LightBlockAccessBuilder lightAccess(int size, int lightXSize, int lightYSize, int lightZSize) {
+	 private LightBlockAccessBuilder lightAccess(int size, int lightXSize, int lightYSize, int lightZSize) {
 		return new LightBlockAccessBuilder(size, lightXSize, lightYSize, lightZSize);
 	}
 
 
-	private static BlockPos pos(int x, int y, int z) {
+	 private static BlockPos pos(int x, int y, int z) {
 		return new BlockPos(x, y, z);
 	}
 
-	private static BlockPos[] posRange(BlockPos start, BlockPos end) {
+	private static BlockPos[] posRange( BlockPos start,  BlockPos end) {
 		ArrayList<BlockPos> p = Lists.newArrayList(BlockPos.getAllInBox(start, end));
 		return p.toArray(new BlockPos[p.size()]);
 	}
@@ -701,28 +706,28 @@ public class TestLightPropagator {
 			this.lightZSize = lightZSize;
 		}
 
-		LightBlockAccessBuilder withFullBlockLight(BlockPos... pos) {
+		 LightBlockAccessBuilder withFullBlockLight( BlockPos... pos) {
 			for (BlockPos p : pos) {
 				access.setBlockLightSource(p, 15);
 			}
 			return this;
 		}
 
-		LightBlockAccessBuilder withOpaque(BlockPos... pos) {
+		 LightBlockAccessBuilder withOpaque( BlockPos... pos) {
 			for (BlockPos p : pos) {
 				access.setOpacity(p, 255);
 			}
 			return this;
 		}
 
-		LightBlockAccessBuilder withTransparent(BlockPos... pos) {
+		 LightBlockAccessBuilder withTransparent( BlockPos... pos) {
 			for (BlockPos p : pos) {
 				access.setOpacity(p, 0);
 			}
 			return this;
 		}
 
-		LightBlockAccessBuilder currentHeightsForInitSkyLight() {
+		 LightBlockAccessBuilder currentHeightsForInitSkyLight() {
 			BlockPos.getAllInBox(pos(-lightXSize, -lightYSize, -lightZSize), pos(lightXSize, lightYSize, lightZSize)).forEach(pos ->
 				access.setLightFor(EnumSkyBlock.SKY, pos, access.getEmittedLight(pos, EnumSkyBlock.SKY)));
 			return this;

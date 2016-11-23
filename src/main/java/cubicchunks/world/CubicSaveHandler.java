@@ -34,10 +34,13 @@ import net.minecraft.world.storage.WorldInfo;
 
 import java.io.File;
 
-import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.server.CubeProviderServer;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CubicSaveHandler implements ISaveHandler {
 	private ICubicWorldServer world;
 	private final ISaveHandler originalHandler;
@@ -55,16 +58,16 @@ public class CubicSaveHandler implements ISaveHandler {
 		originalHandler.checkSessionLock();
 	}
 
-	@Override public IChunkLoader getChunkLoader(@Nonnull WorldProvider provider) {
+	@Override public IChunkLoader getChunkLoader(WorldProvider provider) {
 		return originalHandler.getChunkLoader(provider);
 	}
 
 	@Override
-	public void saveWorldInfoWithPlayer(@Nonnull WorldInfo worldInformation, @Nonnull NBTTagCompound tagCompound) {
+	public void saveWorldInfoWithPlayer(WorldInfo worldInformation, NBTTagCompound tagCompound) {
 		originalHandler.saveWorldInfoWithPlayer(worldInformation, tagCompound);
 	}
 
-	@Override public void saveWorldInfo(@Nonnull WorldInfo worldInformation) {
+	@Override public void saveWorldInfo(WorldInfo worldInformation) {
 		originalHandler.saveWorldInfo(worldInformation);
 	}
 
@@ -82,7 +85,7 @@ public class CubicSaveHandler implements ISaveHandler {
 		return originalHandler.getWorldDirectory();
 	}
 
-	@Override public File getMapFileFromName(@Nonnull String mapName) {
+	@Override public File getMapFileFromName(String mapName) {
 		return originalHandler.getMapFileFromName(mapName);
 	}
 

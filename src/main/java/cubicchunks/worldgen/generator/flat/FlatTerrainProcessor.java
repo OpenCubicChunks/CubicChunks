@@ -27,6 +27,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
@@ -34,10 +36,13 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * A cube generator that generates a flat surface of grass, dirt and stone.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class FlatTerrainProcessor extends BasicCubeGenerator {
 
 	public FlatTerrainProcessor(ICubicWorld world) {

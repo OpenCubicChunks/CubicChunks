@@ -29,14 +29,20 @@ import net.minecraft.world.EnumSkyBlock;
 import java.util.HashMap;
 import java.util.Map;
 
-import cubicchunks.lighting.ILightBlockAccess;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.lighting.ILightBlockAccess;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TestLightBlockAccessImpl implements ILightBlockAccess {
 	private final int size;
-	private final Map<BlockPos, Integer> emittedLightBlock = new HashMap<>();
-	private final Map<BlockPos, Integer> lightValuesSky = new HashMap<>();
-	private final Map<BlockPos, Integer> lightValuesBlock = new HashMap<>();
-	private final Map<BlockPos, Integer> opacities = new HashMap<>();
+	@Nonnull private final Map<BlockPos, Integer> emittedLightBlock = new HashMap<>();
+	@Nonnull private final Map<BlockPos, Integer> lightValuesSky = new HashMap<>();
+	@Nonnull private final Map<BlockPos, Integer> lightValuesBlock = new HashMap<>();
+	@Nonnull private final Map<BlockPos, Integer> opacities = new HashMap<>();
 
 	public TestLightBlockAccessImpl(int size) {
 		this.size = size;

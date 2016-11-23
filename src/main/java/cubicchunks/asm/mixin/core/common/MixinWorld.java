@@ -57,6 +57,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
 import cubicchunks.lighting.LightingManager;
@@ -68,6 +71,7 @@ import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.provider.ICubicWorldProvider;
 import cubicchunks.world.provider.VanillaCubicProvider;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
@@ -75,6 +79,8 @@ import static cubicchunks.util.Coords.blockToLocal;
 /**
  * Contains implementation of {@link ICubicWorld} interface.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(World.class)
 @Implements(@Interface(iface = ICubicWorld.class, prefix = "world$"))
 public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
@@ -86,9 +92,9 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	@Shadow @Final public Profiler theProfiler;
 	@Shadow @Final @Mutable protected ISaveHandler saveHandler;
 
-	protected LightingManager lightingManager;
+	@Nullable private LightingManager lightingManager;
 	protected boolean isCubicWorld;
-	protected int minHeight = 0, maxHeight = 256;
+	private int minHeight = 0, maxHeight = 256;
 	private boolean wgenFullRelight;
 
 	@Override public void initCubicWorld() {
@@ -146,6 +152,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		if (!this.isCubicWorld()) {
 			throw new NotCubicChunksWorldException();
 		}
+		assert this.lightingManager != null;
 		return this.lightingManager;
 	}
 
@@ -267,9 +274,9 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	}
 	//==============================================
 
-	@Shadow public abstract void setTileEntity(BlockPos blockpos, TileEntity tileentity);
+	@Shadow public abstract void setTileEntity(BlockPos blockpos, @Nullable TileEntity tileentity);
 
-	@Intrinsic public void world$setTileEntity(BlockPos blockpos, TileEntity tileentity) {
+	@Intrinsic public void world$setTileEntity(BlockPos blockpos, @Nullable TileEntity tileentity) {
 		this.setTileEntity(blockpos, tileentity);
 	}
 	//==============================================
@@ -353,9 +360,9 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	}
 	//==============================================
 
-	@Shadow public abstract TileEntity getTileEntity(BlockPos pos);
+	@Nullable @Shadow public abstract TileEntity getTileEntity(BlockPos pos);
 
-	@Intrinsic public TileEntity world$getTileEntity(BlockPos pos) {
+	@Nullable @Intrinsic public TileEntity world$getTileEntity(BlockPos pos) {
 		return this.getTileEntity(pos);
 	}
 	//==============================================

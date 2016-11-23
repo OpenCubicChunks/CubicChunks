@@ -28,8 +28,13 @@ import net.minecraft.init.Blocks;
 
 import java.util.Random;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class WorldGenUtils {
 	public static IBlockState getRandomBedrockReplacement(ICubicWorld world, Random rand, IBlockState state, int blockY, int medrockLevels) {
 		int heightAboveBottom = world.getMinHeight() + blockY;

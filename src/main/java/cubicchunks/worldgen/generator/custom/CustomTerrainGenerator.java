@@ -29,6 +29,9 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
@@ -37,6 +40,7 @@ import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.WorldGenUtils;
 import cubicchunks.worldgen.generator.custom.builder.BasicBuilder;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.localToBlock;
 import static cubicchunks.util.MathUtil.lerp;
@@ -51,26 +55,28 @@ import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTION_SIZ
 /**
  * A terrain generator that supports infinite(*) worlds
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CustomTerrainGenerator {
 	// Number of octaves for the noise function
 	private static final int OCTAVES = 16;
 
-	private final ICubicWorld world;
+	@Nonnull private final ICubicWorld world;
 	private final long seed;
-	private final Random rand;
-	private final double[][][] noiseArrayHigh;
-	private final double[][][] noiseArrayLow;
-	private final double[][][] noiseArrayAlpha;
-	private final double[][][] rawDensity;
-	private final double[][][] expandedDensity;
-	private final IBuilder builderHigh;
-	private final IBuilder builderLow;
-	private final IBuilder builderAlpha;
+	@Nonnull private final Random rand;
+	@Nonnull private final double[][][] noiseArrayHigh;
+	@Nonnull private final double[][][] noiseArrayLow;
+	@Nonnull private final double[][][] noiseArrayAlpha;
+	@Nonnull private final double[][][] rawDensity;
+	@Nonnull private final double[][][] expandedDensity;
+	@Nonnull private final IBuilder builderHigh;
+	@Nonnull private final IBuilder builderLow;
+	@Nonnull private final IBuilder builderAlpha;
 	private final int maxSmoothRadius;
 	private final int maxSmoothDiameter;
-	private final double[][] noiseArrayHeight;
-	private final double[] nearBiomeWeightArray;
-	private final BasicBuilder builderHeight;
+	@Nonnull private final double[][] noiseArrayHeight;
+	@Nonnull private final double[] nearBiomeWeightArray;
+	@Nonnull private final BasicBuilder builderHeight;
 	private final boolean needsScaling = true;
 	private Biome[] biomes;
 	private Biome[] biomesBlockScale;
@@ -144,7 +150,7 @@ public class CustomTerrainGenerator {
 	 * @param cubeY cube y position
 	 * @param cubeZ cube z position
 	 */
-	private void generateTerrain(ICubePrimer cube, double[][][] input, int cubeX, int cubeY, int cubeZ) {
+	private void generateTerrain(@Nonnull ICubePrimer cube, double[][][] input, int cubeX, int cubeY, int cubeZ) {
 		this.biomesBlockScale = this.world.getBiomeProvider()
 			.getBiomes(this.biomesBlockScale,
 				Coords.cubeToMinBlock(cubeX),
@@ -379,12 +385,12 @@ public class CustomTerrainGenerator {
 					output += heightModifier;
 
 					// Since in TWM we don't have height limit we could skip it but PLATEAU biomes need it
-					int maxYSections = (int) Math.round(MAX_ELEV/Y_SECTION_SIZE);
-					if (yAbs*MAX_ELEV > maxYSections - 4) {
+					//int maxYSections = (int) Math.round(MAX_ELEV/Y_SECTION_SIZE);
+					//if (yAbs*MAX_ELEV > maxYSections - 4) {
 						// TODO: Convert Y cutoff to work correctly with noise between -1 and 1
 						// final double a = ( yAbs - ( maxYSections - 4 ) ) / 3.0F;
 						// output = output * ( 1.0D - a ) - 10.0D * a;
-					}
+					//}
 					this.rawDensity[x][y][z] = output*GlobalGeneratorConfig.MAX_ELEV + 64 - yAbs*MAX_ELEV;
 				}
 			}

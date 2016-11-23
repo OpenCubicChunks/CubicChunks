@@ -31,6 +31,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.FastCubeBlockAccess;
@@ -40,6 +43,7 @@ import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.cubeToMaxBlock;
@@ -47,11 +51,13 @@ import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
 
 //TODO: extract interfaces when it's done
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class LightingManager {
 
 	private static final int MAX_CLIENT_LIGHT_SCAN_DEPTH = 64;
-	private ICubicWorld world;
-	private LightPropagator lightPropagator = new LightPropagator();
+	@Nonnull private ICubicWorld world;
+	@Nonnull private LightPropagator lightPropagator = new LightPropagator();
 
 	public LightingManager(ICubicWorld world) {
 		this.world = world;
@@ -70,14 +76,14 @@ public class LightingManager {
 				for (IntCursor cubeY : toDiffuse) {
 					boolean success = updateDiffuseLight(column.getCube(cubeY.value), localX, localZ, minY, maxY);
 					if (!success) {
-						markCubeBlockColumnForUpdate(column.getLoadedCube(cubeY.value), blockX, blockZ);
+						markCubeBlockColumnForUpdate(column.getCube(cubeY.value), blockX, blockZ);
 					}
 				}
 				break;
 			case QUEUED:
 				toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
 				for (IntCursor cubeY : toDiffuse) {
-					markCubeBlockColumnForUpdate(column.getLoadedCube(cubeY.value), blockX, blockZ);
+					markCubeBlockColumnForUpdate(column.getCube(cubeY.value), blockX, blockZ);
 				}
 				break;
 		}
@@ -96,9 +102,8 @@ public class LightingManager {
 		int blockX = localToBlock(cube.getX(), localX);
 		int blockZ = localToBlock(cube.getZ(), localZ);
 
-		boolean success = this.relightMultiBlock(
+		return this.relightMultiBlock(
 			new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY);
-		return success;
 	}
 
 	public void doOnBlockSetLightUpdates(Column column, BlockPos changePos, IBlockState newBlockState, int oldOpacity) {
@@ -194,7 +199,7 @@ public class LightingManager {
 	 * @return true if update was successful, false if it failed. If the method returns false, no light values are
 	 * changed.
 	 */
-	public boolean relightMultiBlock(BlockPos startPos, BlockPos endPos, EnumSkyBlock type) {
+	boolean relightMultiBlock(BlockPos startPos, BlockPos endPos, EnumSkyBlock type) {
 		// TODO: optimize if needed
 
 		// TODO: Figure out why it crashes with value 17
@@ -212,7 +217,7 @@ public class LightingManager {
 		return true;
 	}
 
-	public enum UpdateType {
+	private enum UpdateType {
 		IMMEDIATE, QUEUED
 	}
 
@@ -222,11 +227,11 @@ public class LightingManager {
 		private final boolean[] toUpdateColumns = new boolean[Cube.SIZE*Cube.SIZE];
 		private boolean hasUpdates;
 
-		public CubeLightUpdateInfo(Cube cube) {
+		CubeLightUpdateInfo(Cube cube) {
 			this.cube = cube;
 		}
 
-		public void markBlockColumnForUpdate(int localX, int localZ) {
+		void markBlockColumnForUpdate(int localX, int localZ) {
 			toUpdateColumns[index(localX, localZ)] = true;
 			hasUpdates = true;
 		}

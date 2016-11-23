@@ -23,6 +23,12 @@
  */
 package cubicchunks.worldgen.generator.custom.builder;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public interface IBuilder {
 
 	void setSeed(int seed);

@@ -30,6 +30,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
@@ -41,10 +44,13 @@ import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class DebugWorldType extends WorldType implements ICubicWorldType {
 
-	public DebugWorldType() {
+	private DebugWorldType() {
 		super("DebugCubic");
 	}
 
@@ -65,7 +71,7 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
 	@Override public ICubeGenerator createCubeGenerator(ICubicWorld world) {
 		//TODO: move first light processor directly into cube?
 		return new BasicCubeGenerator(world) {
-			Perlin perlin = new Perlin();
+			@Nonnull Perlin perlin = new Perlin();
 
 			{
 				perlin.setFrequency(0.180);

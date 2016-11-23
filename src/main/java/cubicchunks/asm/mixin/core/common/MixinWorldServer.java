@@ -38,6 +38,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.CubeProviderServer;
@@ -45,11 +48,15 @@ import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.provider.ICubicWorldProvider;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Implementation of {@link ICubicWorldServer} interface.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(WorldServer.class)
 @Implements(@Interface(iface = ICubicWorldServer.class, prefix = "world$"))
 public abstract class MixinWorldServer extends MixinWorld implements ICubicWorldServer {
@@ -57,8 +64,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	@Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
 	@Shadow public boolean disableLevelSaving;
 
-	private ChunkGc chunkGc;
-	private FirstLightProcessor firstLightProcessor;
+	@Nullable private ChunkGc chunkGc;
+	@Nullable private FirstLightProcessor firstLightProcessor;
 
 	@Override public void initCubicWorld() {
 		super.initCubicWorld();
@@ -78,14 +85,25 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	}
 
 	@Override public void tickCubicWorld() {
+		if (!this.isCubicWorld()) {
+			throw new NotCubicChunksWorldException();
+		}
+		assert chunkGc != null;
 		this.chunkGc.tick();
 	}
 
 	@Override public CubeProviderServer getCubeCache() {
+		if (!this.isCubicWorld()) {
+			throw new NotCubicChunksWorldException();
+		}
 		return (CubeProviderServer) this.chunkProvider;
 	}
 
 	@Override public FirstLightProcessor getFirstLightProcessor() {
+		if (!this.isCubicWorld()) {
+			throw new NotCubicChunksWorldException();
+		}
+		assert this.firstLightProcessor != null;
 		return this.firstLightProcessor;
 	}
 	//vanilla field accessors
@@ -95,14 +113,19 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	}
 
 	@Override public PlayerCubeMap getPlayerCubeMap() {
+		if (!this.isCubicWorld()) {
+			throw new NotCubicChunksWorldException();
+		}
 		return (PlayerCubeMap) this.playerChunkMap;
 	}
 
 	//vanilla methods
 	//==============================================
-	@Shadow public abstract Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
+	@Nullable @Shadow
+	public abstract Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
 
-	@Intrinsic public Biome.SpawnListEntry world$getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos) {
+	@Nullable @Intrinsic
+	public Biome.SpawnListEntry world$getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos) {
 		return this.getSpawnListEntryForTypeAt(type, pos);
 	}
 

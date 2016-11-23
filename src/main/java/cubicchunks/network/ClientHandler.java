@@ -33,7 +33,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.ITextComponent;
 
-import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.client.CubeProviderClient;
@@ -46,20 +46,20 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class ClientHandler implements INetHandler {
 
-	private static ClientHandler m_instance;
+	private static final ClientHandler m_instance = new ClientHandler();
 
 	public static ClientHandler getInstance() {
-		if (m_instance == null) {
-			m_instance = new ClientHandler();
-		}
 		return m_instance;
 	}
 
 	@Override
-	public void onDisconnect(@Nonnull ITextComponent chat) {
+	public void onDisconnect(ITextComponent chat) {
 		// nothing to do
 	}
 

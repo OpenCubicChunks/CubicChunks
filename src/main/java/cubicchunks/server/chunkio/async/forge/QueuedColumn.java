@@ -21,12 +21,19 @@ package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.base.Objects;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 class QueuedColumn {
 	final int x;
 	final int z;
-	final ICubicWorld world;
+	@Nonnull final ICubicWorld world;
 
 	QueuedColumn(int x, int z, ICubicWorld world) {
 		this.x = x;
@@ -40,7 +47,13 @@ class QueuedColumn {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
+		if (object == null) {
+			return false;
+		}
+		if (object == this) {
+			return true;
+		}
 		if (object instanceof QueuedColumn) {
 			QueuedColumn other = (QueuedColumn) object;
 			return x == other.x && z == other.z && world == other.world;

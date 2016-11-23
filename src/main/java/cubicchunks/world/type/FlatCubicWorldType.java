@@ -26,13 +26,18 @@ package cubicchunks.world.type;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
 
-	public FlatCubicWorldType() {
+	public FlatCubicWorldType() {//todo: make it private, used in test
 		super("FlatCubic");
 	}
 

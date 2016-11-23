@@ -35,16 +35,21 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class RenderCubeCache extends ChunkCache {
 	protected int cubeY;
-	protected Cube[][][] cubeArrays;
-	private ICubicWorld world;
+	@Nonnull private final Cube[][][] cubeArrays;
+	@Nonnull private final ICubicWorld world;
 
 	public RenderCubeCache(ICubicWorld world, BlockPos from, BlockPos to, int subtract) {
 		super((World) world, from, to, subtract);

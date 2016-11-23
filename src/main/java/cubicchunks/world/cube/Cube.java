@@ -23,8 +23,6 @@
  */
 package cubicchunks.world.cube;
 
-import com.google.common.base.Predicate;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -43,17 +41,16 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
 
-import org.apache.logging.log4j.Logger;
-
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Predicate;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.CubicChunks;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
@@ -66,16 +63,18 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.CubicChunks.LOGGER;
-import static net.minecraft.world.chunk.Chunk.NULL_BLOCK_STORAGE;
 
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
  * with a side length of {@link Cube#SIZE}, aligned to multiples of that length and stored within columns.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class Cube implements XYZAddressable {
-	private static final ExtendedBlockStorage NULL_STORAGE = null;
+	@Nullable private static final ExtendedBlockStorage NULL_STORAGE = null;
 
 	/**
 	 * Side length of a cube
@@ -86,7 +85,7 @@ public class Cube implements XYZAddressable {
 	 * Tickets keep this chunk loaded and ticking. See the docs of {@link TicketList} and {@link
 	 * cubicchunks.util.ticket.ITicket} for additional information.
 	 */
-	private TicketList tickets; // tickets prevent this Cube from being unloaded
+	@Nonnull private final TicketList tickets; // tickets prevent this Cube from being unloaded
 	/**
 	 * Has anything within the cube changed since it was loaded from disk?
 	 */
@@ -107,33 +106,33 @@ public class Cube implements XYZAddressable {
 	/**
 	 * The world of this cube
 	 */
-	private ICubicWorld world;
+	@Nonnull private final ICubicWorld world;
 	/**
 	 * The column of this cube
 	 */
-	private Column column;
+	@Nonnull private final Column column;
 	/**
 	 * The position of this cube, in cube space
 	 */
-	private CubePos coords;
+	@Nonnull private final CubePos coords;
 	/**
 	 * Blocks in this cube
 	 */
-	private ExtendedBlockStorage storage;
+	@Nullable private ExtendedBlockStorage storage;
 	/**
 	 * Entities in this cube
 	 */
-	private EntityContainer entities;
+	@Nonnull private final EntityContainer entities;
 	/**
 	 * The position of tile entities in this cube, and their corresponding tile entity
 	 */
-	private Map<BlockPos, TileEntity> tileEntityMap;
+	@Nonnull private final Map<BlockPos, TileEntity> tileEntityMap;
 	/**
 	 * The positions of tile entities queued for creation
 	 */
-	private ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
+	@Nonnull private final ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
 
-	private final LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo;
+	@Nonnull private final LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo;
 
 	/**
 	 * Is this cube loaded and not queued for unload
@@ -229,7 +228,7 @@ public class Cube implements XYZAddressable {
 	 * @see Column#setBlockState(BlockPos, IBlockState)
 	 */
 	// forward to Column, as we don't know how to do skylight and stuff
-	public IBlockState setBlockState(BlockPos pos, IBlockState newstate) {
+	@Nullable public IBlockState setBlockState(BlockPos pos, IBlockState newstate) {
 		return column.setBlockState(pos, newstate);
 	}
 
@@ -363,7 +362,7 @@ public class Cube implements XYZAddressable {
 	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
 		// it may not look like this but it's actually the same logic as in vanilla
 		// seriously, it is the same
-		if (storage == NULL_BLOCK_STORAGE) {
+		if (storage == NULL_STORAGE) {
 			if (this.column.canSeeSky(pos)) {
 				return lightType.defaultLightValue;
 			}
@@ -430,7 +429,7 @@ public class Cube implements XYZAddressable {
 	 * <p>
 	 * CHECKED: 1.11-13.19.0.2148
 	 */
-	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
+	public int getLightSubtracted(@Nonnull BlockPos pos, int skyLightDampeningTerm) {
 		// get sky light
 		int skyLight = getLightFor(EnumSkyBlock.SKY, pos);
 		skyLight -= skyLightDampeningTerm;
@@ -519,7 +518,7 @@ public class Cube implements XYZAddressable {
 	 * <p>
 	 * CHECKED: 1.11-13.19.0.2148
 	 */
-	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType createType) {
+	@Nullable public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType createType) {
 		TileEntity blockEntity = this.tileEntityMap.get(pos);
 		if (blockEntity != null && blockEntity.isInvalid()) {
 			this.tileEntityMap.remove(pos);
@@ -612,7 +611,7 @@ public class Cube implements XYZAddressable {
 	 * @param out list to which found entities should be added
 	 * @param predicate filter to match entities against
 	 */
-	public void getEntitiesWithinAABBForEntity(Entity excluded, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
+	public void getEntitiesWithinAABBForEntity(@Nullable Entity excluded, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
 		this.entities.getEntitiesWithinAABBForEntity(excluded, queryBox, out, predicate);
 	}
 
@@ -774,7 +773,7 @@ public class Cube implements XYZAddressable {
 			&& this.coords.getZ() == Coords.blockToCube(blockPos.getZ());
 	}
 
-	public ExtendedBlockStorage getStorage() {
+	@Nullable public ExtendedBlockStorage getStorage() {
 		return this.storage;
 	}
 

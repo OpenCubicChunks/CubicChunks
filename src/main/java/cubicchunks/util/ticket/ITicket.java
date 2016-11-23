@@ -23,13 +23,17 @@
  */
 package cubicchunks.util.ticket;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public interface ITicket {
 
 	/**
 	 * Weather or not a cube with this ticket should tick.
 	 * (should blocks update, entities move around, and furnaces cook?)
-	 *
-	 * @param cube the cube that could be ticked
 	 *
 	 * @return should cubes with this ticket tick
 	 */

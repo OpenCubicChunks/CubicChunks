@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
@@ -58,6 +60,7 @@ import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.Column;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
@@ -68,6 +71,8 @@ import static net.minecraft.util.math.MathHelper.clamp;
  * <p>
  * This class manages loading and unloading cubes for players.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListener {
 
 	private static final Predicate<EntityPlayerMP> NOT_SPECTATOR = player -> player != null && !player.isSpectator();
@@ -166,7 +171,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	private boolean toGenerateNeedSort = true;
 	private boolean toSendToClientNeedSort = true;
 
-	private CubeProviderServer cubeCache;
+	@Nonnull private final CubeProviderServer cubeCache;
 
 	private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.DEFAULT_MAX_GENERATED_CUBES_PER_TICK;
 
@@ -377,7 +382,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	 * Attempts to load the cube and send it to client.
 	 * If it can't load it or send it to client - adds it to cubesToGenerate/cubesToSendToClients
 	 */
-	private CubeWatcher getOrCreateCubeWatcher(CubePos cubePos) {
+	private CubeWatcher getOrCreateCubeWatcher(@Nonnull CubePos cubePos) {
 		CubeWatcher cubeWatcher = this.cubeWatchers.get(cubePos.getX(), cubePos.getY(), cubePos.getZ());
 
 		if (cubeWatcher == null) {
@@ -553,7 +558,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
 	// CHECKED: 1.10.2-12.18.1.2092
 	@Override
-	public boolean isPlayerWatchingChunk(@Nonnull EntityPlayerMP player, int cubeX, int cubeZ) {
+	public boolean isPlayerWatchingChunk(EntityPlayerMP player, int cubeX, int cubeZ) {
 		ColumnWatcher columnWatcher = this.getColumnWatcher(new ChunkPos(cubeX, cubeZ));
 		return columnWatcher != null &&
 			columnWatcher.containsPlayer(player) &&
@@ -649,7 +654,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 	}
 
 	@Override
-	public void entryChanged(@Nonnull PlayerChunkMapEntry entry) {
+	public void entryChanged(PlayerChunkMapEntry entry) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -681,19 +686,19 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		ChunkPos pos = entry.getPos();
 		entry.updateChunkInhabitedTime();
 		this.columnWatchers.remove(pos.chunkXPos, pos.chunkZPos);
-		this.columnsToGenerate.remove(pos);
-		this.columnsToSendToClients.remove(pos);
+		this.columnsToGenerate.remove(entry);
+		this.columnsToSendToClients.remove(entry);
 	}
 
-	public CubeWatcher getCubeWatcher(CubePos pos) {
+	@Nullable public CubeWatcher getCubeWatcher(CubePos pos) {
 		return this.cubeWatchers.get(pos.getX(), pos.getY(), pos.getZ());
 	}
 
-	public ColumnWatcher getColumnWatcher(ChunkPos pos) {
+	@Nullable public ColumnWatcher getColumnWatcher(ChunkPos pos) {
 		return this.columnWatchers.get(pos.chunkXPos, pos.chunkZPos);
 	}
 
-	public ICubicWorldServer getWorld() {
+	@Nonnull public ICubicWorldServer getWorld() {
 		return (ICubicWorldServer) this.getWorldServer();
 	}
 
@@ -728,11 +733,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		}
 
 
-		public CubePos getManagedCubePos() {
+		CubePos getManagedCubePos() {
 			return new CubePos(getManagedCubePosX(), getManagedCubePosY(), getManagedCubePosZ());
 		}
 
-		public boolean cubePosChanged() {
+		boolean cubePosChanged() {
 			// did the player move far enough to matter?
 			double blockDX = blockToCube(playerEntity.posX) - this.getManagedCubePosX();
 			double blockDY = blockToCube(playerEntity.posY) - this.getManagedCubePosY();

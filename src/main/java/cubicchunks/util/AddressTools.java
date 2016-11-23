@@ -23,8 +23,14 @@
  */
 package cubicchunks.util;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
 // TODO: remove this... packing x, y, z into a long is just stupid.
 //       Mojang did it with x, z and it was stupid than also!
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class AddressTools {
 	// Anvil format details:
 	// within a region file, each chunk coord gets 5 bits

@@ -47,9 +47,13 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.CHUNK_GET_ENTITY_LISTS;
@@ -61,10 +65,12 @@ import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
  * <p>
  * Allows to render cubes outside of 0..256 height range.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(RenderGlobal.class)
 public class MixinRenderGlobal {
 
-	private BlockPos position;
+	@Nullable private BlockPos position;
 
 	@Shadow private int renderDistanceChunks;
 
@@ -79,8 +85,8 @@ public class MixinRenderGlobal {
 	        at = @At(value = "INVOKE", target = WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS),
 	        locals = LocalCapture.CAPTURE_FAILHARD,
 	        require = 1)
-	public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks, CallbackInfo ci,
-	                          int pass, double d0, double d1, double d2,
+	public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
+	                          CallbackInfo ci, int pass, double d0, double d1, double d2,
 	                          Entity entity, double d3, double d4, double d5,
 	                          List<Entity> list, List<Entity> list1, List<Entity> list2,
 	                          BlockPos.PooledMutableBlockPos pos, Iterator<RenderGlobal.ContainerLocalRenderInformation> var21,
@@ -136,6 +142,7 @@ public class MixinRenderGlobal {
 	 * @reason Remove hardcoded height checks, it's a simple method and doing it differently would be problematic and
 	 * confusing (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
 	 */
+	@Nullable
 	@Overwrite
 	private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
 		BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);

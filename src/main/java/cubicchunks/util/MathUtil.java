@@ -25,6 +25,13 @@ package cubicchunks.util;
 
 import java.util.Random;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class MathUtil {
 
 	public static double lerp(final double a, final double min, final double max) {
@@ -35,14 +42,14 @@ public class MathUtil {
 		return rand.nextInt(end - start + 1) + start;
 	}
 
-	public static int minInteger(Integer a, Integer b) {
+	public static int minInteger(@Nullable Integer a, @Nullable Integer b) {
 		if (a == null || b == null) {
 			return Integer.MIN_VALUE;
 		}
 		return Math.min(a, b);
 	}
 
-	public static int maxInteger(Integer a, Integer b) {
+	public static int maxInteger(@Nullable Integer a, @Nullable Integer b) {
 		if (a == null && b == null) {
 			return Integer.MIN_VALUE;
 		}

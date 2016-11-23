@@ -30,10 +30,15 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
 	public SurfaceFeatureGenerator(ICubicWorld world) {

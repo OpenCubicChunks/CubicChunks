@@ -33,14 +33,20 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkGenerator;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.type.ICubicWorldType;
 import cubicchunks.worldgen.generator.DummyChunkGenerator;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * CubicChunks WorldProvider for Overworld.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class CubicWorldProvider extends WorldProvider implements ICubicWorldProvider {
 	@Override
 	public int getHeight() {
@@ -72,7 +78,7 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		return new DummyChunkGenerator(this.world);
 	}
 
-	@Override
+	@Nullable @Override
 	public ICubeGenerator createCubeGenerator() {
 		// We need to assume that its an ICubicWorldType...
 		// There is really nothing else we can do as a non-overworld porvider
@@ -104,7 +110,12 @@ public abstract class CubicWorldProvider extends WorldProvider implements ICubic
 		BlockPos ret = this.world.getSpawnPoint();
 
 		boolean isAdventure = world.getWorldInfo().getGameType() == GameType.ADVENTURE;
-		int spawnFuzz = this.world instanceof WorldServer ? world.getWorldType().getSpawnFuzz((WorldServer) this.world, this.world.getMinecraftServer()) : 1;
+		int spawnFuzz;
+		if (this.world instanceof WorldServer) {
+			spawnFuzz = world.getWorldType().getSpawnFuzz((WorldServer) this.world, this.world.getMinecraftServer());
+		} else {
+			spawnFuzz = 1;
+		}
 		int border = MathHelper.floor(world.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
 		if (border < spawnFuzz) spawnFuzz = border;
 

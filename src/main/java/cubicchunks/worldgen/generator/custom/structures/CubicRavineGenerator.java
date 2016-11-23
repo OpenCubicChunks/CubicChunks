@@ -30,11 +30,15 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 import java.util.Random;
 import java.util.function.Predicate;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.CubePos;
 import cubicchunks.util.StructureGenUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
@@ -42,6 +46,8 @@ import static net.minecraft.util.math.MathHelper.cos;
 import static net.minecraft.util.math.MathHelper.floor;
 import static net.minecraft.util.math.MathHelper.sin;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CubicRavineGenerator extends CubicStructureGenerator {
 
 	private static final int RAVINE_RARITY = 50*16;
@@ -96,7 +102,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 	/**
 	 * Controls which blocks can be replaced by cave
 	 */
-	private static final Predicate<IBlockState> isBlockReplaceable = (state ->
+	@Nonnull private static final Predicate<IBlockState> isBlockReplaceable = (state ->
 		state.getBlock() == Blocks.STONE || state.getBlock() == Blocks.DIRT || state.getBlock() == Blocks.GRASS);
 
 	/**
@@ -104,7 +110,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 	 * <p>
 	 * For cubic chunks the height value used wraps around.
 	 */
-	private float[] widthDecreaseFactors = new float[1024];
+	@Nonnull private float[] widthDecreaseFactors = new float[1024];
 
 	@Override
 	protected void generate(ICubicWorld world, ICubePrimer cube, int structureX, int structureY, int structureZ,
@@ -128,10 +134,10 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 			startWalkedDistance, maxWalkedDistance, VERT_SIZE_FACTOR);
 	}
 
-	protected void generateNode(ICubePrimer cube, long seed, CubePos generatedCubePos,
-	                            double ravineX, double ravineY, double ravineZ,
-	                            float baseRavineSize, float horizDirAngle, float vertDirAngle,
-	                            int startWalkedDistance, int maxWalkedDistance, double vertRavineSizeMod) {
+	private void generateNode(ICubePrimer cube, long seed, CubePos generatedCubePos,
+	                          double ravineX, double ravineY, double ravineZ,
+	                          float baseRavineSize, float horizDirAngle, float vertDirAngle,
+	                          int startWalkedDistance, int maxWalkedDistance, double vertRavineSizeMod) {
 		Random rand = new Random(seed);
 
 		//store by how much the horizontal and vertical(?) direction angles will change each step

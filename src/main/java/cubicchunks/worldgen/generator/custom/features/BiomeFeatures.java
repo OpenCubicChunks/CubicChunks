@@ -35,16 +35,22 @@ import net.minecraft.world.gen.ChunkProviderSettings;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.WorldProviderAccess;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.custom.features.trees.BigTreeGenerator;
 import cubicchunks.worldgen.generator.custom.features.trees.SimpleTreeGenerator;
 import cubicchunks.worldgen.generator.custom.features.trees.TreeGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BiomeFeatures {
-	private final ICubicWorld world;
+	@Nonnull private final ICubicWorld world;
 
-	private final Collection<FeatureGenerator> generators;
+	@Nonnull private final Collection<FeatureGenerator> generators;
 
 	public BiomeFeatures(ICubicWorld world, Biome biome) {
 		this.world = world;

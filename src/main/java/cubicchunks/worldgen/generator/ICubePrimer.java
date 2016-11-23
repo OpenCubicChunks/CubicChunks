@@ -26,6 +26,12 @@ package cubicchunks.worldgen.generator;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public interface ICubePrimer {
 
 	IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();

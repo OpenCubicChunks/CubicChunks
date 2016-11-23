@@ -31,6 +31,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class Mappings {
 	private static boolean IS_DEV;
 	//since srg field and method names are guarranted not to collide -  we can store them in one map

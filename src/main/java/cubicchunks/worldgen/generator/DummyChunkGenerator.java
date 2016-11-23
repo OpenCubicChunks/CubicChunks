@@ -34,9 +34,15 @@ import net.minecraft.world.chunk.IChunkGenerator;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
 /**
  * A chunk generator that only creates empty chunks
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class DummyChunkGenerator implements IChunkGenerator {
 
 	private World world;

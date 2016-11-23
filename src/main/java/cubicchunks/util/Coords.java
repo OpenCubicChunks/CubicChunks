@@ -27,8 +27,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
-import cubicchunks.world.cube.Cube;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class Coords {
 
 	public static final int NO_HEIGHT = Integer.MIN_VALUE/2;

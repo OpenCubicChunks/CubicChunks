@@ -28,8 +28,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import cubicchunks.CommonEventHandler;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.CommonEventHandler;
+import mcp.MethodsReturnNonnullByDefault;
+
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public abstract class CommonProxy {
 	/**
 	 * Returns a side-appropriate EntityPlayer for use during message handling

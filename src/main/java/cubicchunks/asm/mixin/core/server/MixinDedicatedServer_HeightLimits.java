@@ -29,11 +29,16 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.AddressTools;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Fix height limits in {@code DedicatedServer}
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(DedicatedServer.class)
 public class MixinDedicatedServer_HeightLimits {
 

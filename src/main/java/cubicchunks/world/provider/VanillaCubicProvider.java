@@ -37,13 +37,18 @@ import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.type.ICubicWorldType;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class VanillaCubicProvider extends CubicWorldProvider {
 
 	private static final WorldType HEURISTIC_WORLDTYPE = new WorldType("no-op") {
@@ -187,7 +192,7 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 		return provider.doesXZShowFog(x, z);
 	}
 
-	@Override public BiomeProvider getBiomeProvider() {
+	@Nonnull @Override public BiomeProvider getBiomeProvider() {
 		return provider.getBiomeProvider();
 	}
 
@@ -248,7 +253,7 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 
 	@SideOnly(Side.CLIENT)
 	@Override public void setCloudRenderer(net.minecraftforge.client.IRenderHandler renderer) {
-		setCloudRenderer(renderer);
+		provider.setCloudRenderer(renderer);
 	}
 
 	@SideOnly(Side.CLIENT)

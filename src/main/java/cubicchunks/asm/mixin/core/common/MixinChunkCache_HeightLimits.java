@@ -32,7 +32,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.asm.MixinUtils;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.CHUNK_CACHE_GET_BLOCK_STATE;
@@ -43,6 +46,8 @@ import static cubicchunks.asm.JvmNames.CHUNK_CACHE_GET_BLOCK_STATE;
  * ChunkCache is used by some AI code and (as subclass of ChunkCache) - block rendering code.
  * getBlockState is used only in AI code.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(ChunkCache.class)
 public class MixinChunkCache_HeightLimits {
 	@Shadow protected World world;

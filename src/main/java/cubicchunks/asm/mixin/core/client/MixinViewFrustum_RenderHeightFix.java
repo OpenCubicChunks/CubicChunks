@@ -39,17 +39,22 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Replace updateChunkPositions and getRenderChunk with cubic chunks versions
  * that support extended world height.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(ViewFrustum.class)
 public class MixinViewFrustum_RenderHeightFix {
 
 	@Shadow @Final public World world;
-	@Shadow private RenderChunk[] renderChunks;
+	@SuppressWarnings("MismatchedReadAndWriteOfArray") @Shadow private RenderChunk[] renderChunks;
 	@Shadow private int countChunksX;
 	@Shadow private int countChunksY;
 	@Shadow private int countChunksZ;

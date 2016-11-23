@@ -23,16 +23,24 @@
  */
 package cubicchunks.network;
 
+import com.google.common.base.Preconditions;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import io.netty.buffer.ByteBuf;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
+
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketUnloadColumn implements IMessage {
 
-	public ChunkPos chunkPos;
+	private ChunkPos chunkPos;
 
 	public PacketUnloadColumn() {
 	}
@@ -52,13 +60,13 @@ public class PacketUnloadColumn implements IMessage {
 		buf.writeInt(chunkPos.chunkZPos);
 	}
 
-	public ChunkPos getColumnPos() {
-		return chunkPos;
+	ChunkPos getColumnPos() {
+		return Preconditions.checkNotNull(chunkPos);
 	}
 
 	public static class Handler extends AbstractClientMessageHandler<PacketUnloadColumn> {
 
-		@Override
+		@Nullable @Override
 		public IMessage handleClientMessage(EntityPlayer player, PacketUnloadColumn message, MessageContext ctx) {
 			ClientHandler.getInstance().handle(message);
 			return null;

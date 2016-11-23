@@ -30,10 +30,16 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ServerHeightMap implements IHeightMap {
 
 	/**
@@ -44,21 +50,21 @@ public class ServerHeightMap implements IHeightMap {
 	private static final int NONE_SEGMENT = packSegment(0x7fffff, 0);
 
 	/**
-	 * Array containing the y-coordinates of the lowest segment in each block column. The value {@link #NONE} is used if
-	 * a given block column does not contain any segments.
+	 * Array containing the y-coordinates of the lowest segment in each block column. The value {@link Coords#NO_HEIGHT}
+	 * is used if a given block column does not contain any segments.
 	 */
-	private final int[] ymin;
+	@Nonnull private final int[] ymin;
 
 	/**
-	 * Array containing the y-coordinate of the highest segment in each block column. The value {@link #NONE} is used if
-	 * a given block column does not contain any segments.
+	 * Array containing the y-coordinate of the highest segment in each block column. The value {@link Coords#NO_HEIGHT}
+	 * is used if a given block column does not contain any segments.
 	 */
-	private final int[] ymax;
+	@Nonnull private final int[] ymax;
 
 	/**
 	 * Array containing an array of segments for each x/z position in a column.
 	 */
-	private final int[][] segments;
+	@Nonnull private final int[][] segments;
 
 	private int heightMapLowest;
 
@@ -216,7 +222,7 @@ public class ServerHeightMap implements IHeightMap {
 		return this.ymin[getIndex(localX, localZ)];
 	}
 
-	@Override
+	@Nonnull @Override
 	public int[] getHeightmap() {
 		return Arrays.copyOf(this.ymax, this.ymax.length);
 	}
@@ -614,7 +620,6 @@ public class ServerHeightMap implements IHeightMap {
 		if (segmentIndexWithBlockY == 0) {
 			assert unpackOpacity(segments[segmentIndexWithBlockY]) == 1 : "The top segment is transparent!";
 			//same logic as for top segment applies
-			int segmentAbove = segments[1];
 			this.ymin[xzIndex] = unpackPosition(segments[2]);
 			if (lastSegmentIndex == 2) {
 				this.segments[xzIndex] = null;
@@ -648,7 +653,6 @@ public class ServerHeightMap implements IHeightMap {
 		//remove them entirely and rely only on min/maxY
 		if (lastSegmentIndex == 2) {
 			this.segments[xzIndex] = null;
-			return;
 		}
 	}
 
@@ -705,7 +709,7 @@ public class ServerHeightMap implements IHeightMap {
 		if (this.segments[xzIndex].length >= lastIndex + expandSize) {
 			//shift all segments up
 			System.arraycopy(this.segments[xzIndex], theIndex, this.segments[xzIndex], theIndex + expandSize, lastIndex + 1 - theIndex);
-			System.arraycopy(newSegments, 0, this.segments[xzIndex], theIndex + 0, expandSize);
+			System.arraycopy(newSegments, 0, this.segments[xzIndex], theIndex, expandSize);
 		} else {
 			//need to expand the array
 			int[] newSegmentArr = new int[(lastIndex + 1) + expandSize];
@@ -818,7 +822,7 @@ public class ServerHeightMap implements IHeightMap {
 		}
 	}
 
-	public void readData(DataInputStream in) throws IOException {
+	private void readData(DataInputStream in) throws IOException {
 		for (int i = 0; i < this.segments.length; i++) {
 			this.ymin[i] = in.readInt();
 			this.ymax[i] = in.readInt();
@@ -833,7 +837,7 @@ public class ServerHeightMap implements IHeightMap {
 		}
 	}
 
-	public void writeData(DataOutputStream out) throws IOException {
+	private void writeData(DataOutputStream out) throws IOException {
 		for (int i = 0; i < this.segments.length; i++) {
 			out.writeInt(this.ymin[i]);
 			out.writeInt(ymax[i]);

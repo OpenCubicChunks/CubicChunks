@@ -32,11 +32,17 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TallGrassGenerator extends SurfaceFeatureGenerator {
 
-	private final IBlockState block;
+	@Nonnull private final IBlockState block;
 
 	public TallGrassGenerator(final ICubicWorld world, final BlockTallGrass.EnumType tallGrassType) {
 		super(world);

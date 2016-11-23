@@ -29,10 +29,16 @@ import net.minecraft.world.WorldProvider;
 
 import java.lang.invoke.MethodHandle;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class WorldProviderAccess {
 	private static final MethodHandle wp_generatorSettings = ReflectionUtil.getFieldGetterHandle(WorldProvider.class, "field_82913_c");
 
-	public static final String getGeneratorSettings(WorldProvider wp) {
+	public static String getGeneratorSettings(WorldProvider wp) {
 		try {
 			return (String) wp_generatorSettings.invoke(wp);
 		} catch (Throwable throwable) {

@@ -37,11 +37,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.CubePos;
 import cubicchunks.world.IHeightMap;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketCube implements IMessage {
 
 	private int[] heightMap;
@@ -105,24 +111,24 @@ public class PacketCube implements IMessage {
 		}
 	}
 
-	public CubePos getCubePos() {
+	CubePos getCubePos() {
 		return cubePos;
 	}
 
-	public byte[] getData() {
+	byte[] getData() {
 		return data;
 	}
 
-	public Iterable<NBTTagCompound> getTileEntityTags() {
+	Iterable<NBTTagCompound> getTileEntityTags() {
 		return Iterables.unmodifiableIterable(this.tileEntityTags);
 	}
 
-	public int height(int localX, int localZ) {
+	int height(int localX, int localZ) {
 		return heightMap[index(localX, localZ)];
 	}
 
 	public static class Handler extends AbstractClientMessageHandler<PacketCube> {
-		@Override
+		@Nullable @Override
 		public IMessage handleClientMessage(EntityPlayer player, PacketCube message, MessageContext ctx) {
 			ClientHandler.getInstance().handle(message);
 			return null;

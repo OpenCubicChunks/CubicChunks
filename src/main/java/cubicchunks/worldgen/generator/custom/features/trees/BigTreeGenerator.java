@@ -37,17 +37,24 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BigTreeGenerator extends TreeGenerator {
 
 	static final byte COORD_PAIRS[] = {2, 0, 0, 1, 2, 1};
 
-	protected final Random rand;
+	@Nonnull protected final Random rand;
 	protected int rootRand;
 	protected int rootAlt;
 	protected int tapRootRand;
-	int basePos[] = {0, 0, 0};
+	@Nonnull int basePos[] = {0, 0, 0};
 	int heightLimit;
 	int height;
 	double heightAttenuation;
@@ -56,7 +63,7 @@ public class BigTreeGenerator extends TreeGenerator {
 	int trunkSize;
 	int heightLimitLimit;
 	int leafDistanceLimit;
-	int[][] leafNodes;
+	@Nullable int[][] leafNodes;
 	int type;
 	private int heightmin;
 	private int heightmax;

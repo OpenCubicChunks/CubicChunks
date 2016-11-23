@@ -27,10 +27,17 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TicketList {
 
 	private int tickRefs = 0;
-	private List<ITicket> tickets = Lists.newArrayListWithCapacity(1);
+	@Nonnull private List<ITicket> tickets = Lists.newArrayListWithCapacity(1);
 
 	/**
 	 * Removes a ticket form this ticket list if present

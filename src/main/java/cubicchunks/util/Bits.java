@@ -23,6 +23,12 @@
  */
 package cubicchunks.util;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class Bits {
 
 	public static long packUnsignedToLong(int unsigned, int size, int offset) {

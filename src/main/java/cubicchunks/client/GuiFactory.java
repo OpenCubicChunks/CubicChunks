@@ -29,11 +29,14 @@ import net.minecraftforge.fml.client.IModGuiFactory;
 
 import java.util.Set;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
+import mcp.MethodsReturnNonnullByDefault;
 
-import net.minecraftforge.fml.client.IModGuiFactory.RuntimeOptionCategoryElement;
-import net.minecraftforge.fml.client.IModGuiFactory.RuntimeOptionGuiHandler;
-
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class GuiFactory implements IModGuiFactory {
 	@Override public void initialize(Minecraft minecraftInstance) {
 
@@ -43,11 +46,11 @@ public class GuiFactory implements IModGuiFactory {
 		return CubicChunks.Config.GUI.class;
 	}
 
-	@Override public Set<RuntimeOptionCategoryElement> runtimeGuiCategories() {
+	@Nullable @Override public Set<RuntimeOptionCategoryElement> runtimeGuiCategories() {
 		return null;
 	}
 
-	@Override
+	@Nullable @Override
 	public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element) {
 		return null;
 	}

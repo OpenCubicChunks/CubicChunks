@@ -23,6 +23,12 @@
  */
 package cubicchunks.world;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class NotCubicChunksWorldException extends RuntimeException {
 	public NotCubicChunksWorldException() {
 		super();

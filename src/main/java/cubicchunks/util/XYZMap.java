@@ -25,6 +25,12 @@ package cubicchunks.util;
 
 import java.util.Iterator;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
 /**
  * Hash table implementation for objects in a 3-dimensional cartesian coordinate system.
  *
@@ -32,6 +38,8 @@ import java.util.Iterator;
  *
  * @see XYZAddressable
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
 	/**
@@ -43,7 +51,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	/**
 	 * backing array containing all elements of this map
 	 */
-	private XYZAddressable[] buckets;
+	@Nonnull private XYZAddressable[] buckets;
 
 	/**
 	 * the current number of elements in this map
@@ -154,7 +162,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 *
 	 * @return the previous value associated with the given value's coordinates or null if no such value exists
 	 */
-	@SuppressWarnings("unchecked")
+	@Nullable @SuppressWarnings("unchecked")
 	public T put(T value) {
 
 		int x = value.getX();
@@ -197,7 +205,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 *
 	 * @return the entry associated with the specified coordinates or null if no such entry exists
 	 */
-	@SuppressWarnings("unchecked")
+	@Nullable @SuppressWarnings("unchecked")
 	public T remove(int x, int y, int z) {
 
 		int index = getIndex(x, y, z);
@@ -229,7 +237,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 *
 	 * @return the entry associated with the given value's coordinates or null if no such entry exists
 	 */
-	public T remove(T value) {
+	@Nullable public T remove(T value) {
 		return this.remove(value.getX(), value.getY(), value.getZ());
 	}
 
@@ -242,7 +250,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 	 *
 	 * @return the entry associated with the specified coordinates or null if no such value exists
 	 */
-	@SuppressWarnings("unchecked")
+	@Nullable @SuppressWarnings("unchecked")
 	public T get(int x, int y, int z) {
 
 		int index = getIndex(x, y, z);
@@ -407,7 +415,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 				return false;
 			}
 
-			@Override
+			@Nullable @Override
 			@SuppressWarnings("unchecked")
 			public T next() {
 				if (next > at) {

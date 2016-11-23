@@ -30,19 +30,25 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Abstract implementation od IMessageHandler that makes EntityPlayer available.
  * It also has separate methods for handling messages serverside and clientside.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public abstract class AbstractMessageHandler<T extends IMessage> implements IMessageHandler<T, IMessage> {
 	/**
 	 * Handle a message received on the client side
 	 *
 	 * @return a message to send back to the Server, or null if no reply is necessary
 	 */
-	@SideOnly(Side.CLIENT)
+	@Nullable @SideOnly(Side.CLIENT)
 	public abstract IMessage handleClientMessage(EntityPlayer player, T message, MessageContext ctx);
 
 	/**
@@ -50,6 +56,7 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
 	 *
 	 * @return a message to send back to the Client, or null if no reply is necessary
 	 */
+	@Nullable
 	public abstract IMessage handleServerMessage(EntityPlayer player, T message, MessageContext ctx);
 
 	/*
@@ -58,7 +65,7 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
 	* remember or check on which side it was registered and the player is immediately
 	* available without a lengthy syntax.
 	*/
-	@Override
+	@Nullable @Override
 	public IMessage onMessage(T message, MessageContext ctx) {
 		// due to compile-time issues, FML will crash if you try to use Minecraft.getMinecraft() here,
 		// even when you restrict this code to the client side and before the code is ever accessed;

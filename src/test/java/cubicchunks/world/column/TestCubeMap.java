@@ -29,7 +29,10 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 import static it.ozimov.cirneco.hamcrest.java7.collect.IsIterableWithDistinctElements.hasDistinctElements;
 import static org.hamcrest.Matchers.greaterThan;
@@ -42,6 +45,8 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TestCubeMap {
 
 	@Test

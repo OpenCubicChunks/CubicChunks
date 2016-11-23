@@ -98,7 +98,7 @@ public interface ICubicWorld {
 	 * Returns true iff the given Predicate evaluates to true for all cubes for block positions within blockRadius from
 	 * centerPos. Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
 	 */
-	default boolean testForCubes(BlockPos centerPos, int blockRadius, @Nullable Predicate<Cube> test) {
+	default boolean testForCubes(BlockPos centerPos, int blockRadius, Predicate<Cube> test) {
 		return testForCubes(
 			centerPos.getX() - blockRadius, centerPos.getY() - blockRadius, centerPos.getZ() - blockRadius,
 			centerPos.getX() + blockRadius, centerPos.getY() + blockRadius, centerPos.getZ() + blockRadius,
@@ -111,7 +111,7 @@ public interface ICubicWorld {
 	 * BlockPos(minBlockX, minBlockY, minBlockZ) and BlockPos(maxBlockX, maxBlockY, maxBlockZ) (including the specified
 	 * positions). Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
 	 */
-	default boolean testForCubes(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, @Nullable Predicate<Cube> test) {
+	default boolean testForCubes(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, Predicate<Cube> test) {
 		return testForCubes(
 			CubePos.fromBlockCoords(minBlockX, minBlockY, minBlockZ),
 			CubePos.fromBlockCoords(maxBlockX, maxBlockY, maxBlockZ),
@@ -123,7 +123,7 @@ public interface ICubicWorld {
 	 * Returns true iff the given Predicate evaluates to true for given cube and neighbors.
 	 * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
 	 */
-	default boolean testForCubeAndNeighbor(Cube cube, @Nullable Predicate<Cube> test) {
+	default boolean testForCubeAndNeighbor(Cube cube, Predicate<Cube> test) {
 		return testForCubes(cube.getCoords().sub(1, 1, 1), cube.getCoords().add(1, 1, 1), test);
 	}
 
@@ -131,7 +131,7 @@ public interface ICubicWorld {
 	 * Returns true iff the given Predicate evaluates to true for given cube and neighbors.
 	 * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
 	 */
-	boolean testForCubes(CubePos start, CubePos end, @Nullable Predicate<Cube> test);
+	boolean testForCubes(CubePos start, CubePos end, Predicate<Cube> test);
 
 	/**
 	 * Return the actual world height for this world. Typically this is 256 for worlds with a sky, and 128 for worlds
@@ -141,11 +141,11 @@ public interface ICubicWorld {
 	int getActualHeight();
 
 	// TODO: this method is just plain stupid (remove it)
-	@Nullable Cube getCubeForAddress(long address);
+	Cube getCubeForAddress(long address);
 
-	@Nullable Cube getCubeFromCubeCoords(int cubeX, int cubeY, int cubeZ);
+	Cube getCubeFromCubeCoords(int cubeX, int cubeY, int cubeZ);
 
-	@Nullable Cube getCubeFromBlockCoords(BlockPos pos);
+	Cube getCubeFromBlockCoords(BlockPos pos);
 
 	int getEffectiveHeight(int blockX, int blockZ);
 
@@ -177,7 +177,7 @@ public interface ICubicWorld {
 
 	long getTotalWorldTime();
 
-	void setTileEntity(BlockPos blockpos, TileEntity tileentity);
+	void setTileEntity(BlockPos blockpos, @Nullable TileEntity tileentity);
 
 	void markBlockRangeForRenderUpdate(BlockPos blockpos, BlockPos blockpos1);
 

@@ -23,13 +23,21 @@
  */
 package cubicchunks.network;
 
+import com.google.common.base.Preconditions;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.CubePos;
 import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketUnloadCube implements IMessage {
 	private CubePos cubePos;
 
@@ -52,12 +60,12 @@ public class PacketUnloadCube implements IMessage {
 		out.writeInt(cubePos.getZ());
 	}
 
-	public CubePos getCubePos() {
-		return cubePos;
+	CubePos getCubePos() {
+		return Preconditions.checkNotNull(cubePos);
 	}
 
 	public static class Handler extends AbstractClientMessageHandler<PacketUnloadCube> {
-		@Override
+		@Nullable @Override
 		public IMessage handleClientMessage(EntityPlayer player, PacketUnloadCube message, MessageContext ctx) {
 			ClientHandler.getInstance().handle(message);
 			return null;

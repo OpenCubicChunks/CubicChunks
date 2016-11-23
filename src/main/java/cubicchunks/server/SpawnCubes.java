@@ -29,13 +29,18 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldSavedData;
 import net.minecraft.world.storage.MapStorage;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
 import cubicchunks.util.ticket.ITicket;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.IProviderExtras;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class SpawnCubes {
 
 	private static final int DEFAULT_SPAWN_RADIUS = 12; // highest render distance is 32
@@ -50,7 +55,7 @@ public class SpawnCubes {
 
 		private static final String STORAGE = CubicChunks.MODID + "_spawncubes";
 
-		private BlockPos spawnPoint = null;
+		@Nullable private BlockPos spawnPoint = null;
 		private int radius = DEFAULT_SPAWN_RADIUS;
 
 		public SpawnArea() {
@@ -99,7 +104,7 @@ public class SpawnCubes {
 				return; // no spawn cubes
 			}
 
-			IProviderExtras serverCubeCache = (IProviderExtras) world.getCubeCache();
+			ICubeProvider serverCubeCache = world.getCubeCache();
 
 			// load the cubes around the spawn point
 			CubicChunks.LOGGER.info("Loading cubes for spawn...");
@@ -116,7 +121,7 @@ public class SpawnCubes {
 			for (int cubeX = spawnCubeX - radius; cubeX <= spawnCubeX + radius; cubeX++) {
 				for (int cubeZ = spawnCubeZ - radius; cubeZ <= spawnCubeZ + radius; cubeZ++) {
 					for (int cubeY = spawnCubeY + radius; cubeY >= spawnCubeY - radius; cubeY--) {
-						serverCubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT).getTickets().add(this);
+						serverCubeCache.getCube(cubeX, cubeY, cubeZ).getTickets().add(this);
 						generated++;
 						if (System.currentTimeMillis() >= lastTime + progressReportInterval) {
 							lastTime = System.currentTimeMillis();

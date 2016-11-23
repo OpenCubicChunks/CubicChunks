@@ -23,9 +23,15 @@
  */
 package cubicchunks.world.provider;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.AddressTools;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public interface ICubicWorldProvider {
 
 	/**
@@ -47,5 +53,5 @@ public interface ICubicWorldProvider {
 	 *
 	 * @return a new Cube generator
 	 */
-	ICubeGenerator createCubeGenerator();
+	@Nullable ICubeGenerator createCubeGenerator();
 }

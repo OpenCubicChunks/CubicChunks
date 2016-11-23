@@ -28,7 +28,9 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.util.CubePos;
 import cubicchunks.util.ReflectionUtil;
@@ -39,13 +41,16 @@ import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 //TODO: break off ICubeProvider
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class CubeProviderClient extends ChunkProviderClient implements ICubeProvider {
 
-	private ICubicWorldClient world;
-	private Cube blankCube;
-	private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
+	@Nonnull private ICubicWorldClient world;
+	@Nonnull private Cube blankCube;
+	@Nonnull private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
 
 	public CubeProviderClient(ICubicWorldClient world) {
 		super((World) world);
@@ -55,8 +60,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 		this.blankCube = new BlankCube((Column) blankChunk);
 	}
 
-	@Override
-	@Nullable
+	@Nullable @Override
 	public Column getLoadedColumn(int x, int z) {
 		return getLoadedChunk(x, z);
 	}
@@ -71,7 +75,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 		return (Column) super.provideChunk(x, z);
 	}
 
-	@Override
+	@Nullable @Override
 	public Column getLoadedChunk(int x, int z) {
 		return (Column) super.getLoadedChunk(x, z);
 	}
@@ -133,12 +137,12 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 		return getCube(coords.getX(), coords.getY(), coords.getZ());
 	}
 
-	@Override
+	@Nullable @Override
 	public Cube getLoadedCube(int cubeX, int cubeY, int cubeZ) {
 		return cubeMap.get(cubeX, cubeY, cubeZ);
 	}
 
-	@Override
+	@Nullable @Override
 	public Cube getLoadedCube(CubePos coords) {
 		return getLoadedCube(coords.getX(), coords.getY(), coords.getZ());
 	}

@@ -40,6 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
@@ -50,22 +53,25 @@ import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.WorldGenUtils;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * A cube generator that tries to mirror vanilla world generation. Cubes in the normal world range will be copied from a
  * vanilla chunk generator, cubes above and below that will be filled with the most common block in the
  * topmost/bottommost layers.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
 	private final int worldHeightBlocks;
 	private final int worldHeightCubes;
-	private IChunkGenerator vanilla;
-	private ICubicWorld world;
+	@Nonnull private IChunkGenerator vanilla;
+	@Nonnull private ICubicWorld world;
 	/**
 	 * Last chunk that was generated from the vanilla world gen
 	 */
-	private Chunk lastChunk;
+	@Nonnull private Chunk lastChunk;
 	/**
 	 * We generate all the chunks in the vanilla range at once. This variable prevents infinite recursion
 	 */
@@ -74,11 +80,11 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 	/**
 	 * Detected block for filling cubes below the world
 	 */
-	private IBlockState extensionBlockBottom = Blocks.STONE.getDefaultState();
+	@Nonnull private IBlockState extensionBlockBottom = Blocks.STONE.getDefaultState();
 	/**
 	 * Detected block for filling cubes above the world
 	 */
-	private IBlockState extensionBlockTop = Blocks.AIR.getDefaultState();
+	@Nonnull private IBlockState extensionBlockTop = Blocks.AIR.getDefaultState();
 
 	/**
 	 * Create a new VanillaCompatibilityGenerator
