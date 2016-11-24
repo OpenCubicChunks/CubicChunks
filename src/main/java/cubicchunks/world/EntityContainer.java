@@ -38,6 +38,7 @@ import net.minecraftforge.common.util.Constants;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -151,11 +152,7 @@ public class EntityContainer {
 		this.lastSaveTime = time;
 	}
 
-	public void writeToNbt(NBTTagCompound nbt, String name) {
-		writeToNbt(nbt, name, null);
-	}
-
-	public void writeToNbt(NBTTagCompound nbt, String name, @Nullable IEntityActionListener listener) {
+	public void writeToNbt(NBTTagCompound nbt, String name, Consumer<Entity> listener) {
 		this.hasActiveEntities = false;
 		NBTTagList nbtEntities = new NBTTagList();
 		nbt.setTag(name, nbtEntities);
@@ -166,15 +163,13 @@ public class EntityContainer {
 				this.hasActiveEntities = true;
 				nbtEntities.appendTag(nbtEntity);
 
-				if (listener != null) {
-					listener.onEntity(entity);
-				}
+				listener.accept(entity);
 			}
 		}
 	}
 
 	//listener is passed from CubeIO to set chunk position
-	public void readFromNbt(NBTTagCompound nbt, String name, ICubicWorld world, IEntityActionListener listener) {
+	public void readFromNbt(NBTTagCompound nbt, String name, ICubicWorld world, Consumer<Entity> listener) {
 		NBTTagList nbtEntities = nbt.getTagList(name, 10);
 
 		for (int i = 0; i < nbtEntities.tagCount(); i++) {
@@ -183,7 +178,7 @@ public class EntityContainer {
 		}
 	}
 
-	private Entity readEntity(NBTTagCompound nbtEntity, ICubicWorld world, @Nullable IEntityActionListener listener) {
+	private Entity readEntity(NBTTagCompound nbtEntity, ICubicWorld world, Consumer<Entity> listener) {
 
 		// create the entity
 		Entity entity = EntityList.createEntityFromNBT(nbtEntity, (World) world);
@@ -196,9 +191,7 @@ public class EntityContainer {
 		}
 		addEntity(entity);
 
-		if (listener != null) {
-			listener.onEntity(entity);
-		}
+		listener.accept(entity);
 		// deal with riding
 		if (nbtEntity.hasKey("Passengers", Constants.NBT.TAG_LIST)) {
 

@@ -25,8 +25,6 @@ package cubicchunks.world;
 
 import com.google.common.base.Throwables;
 
-import net.minecraft.block.state.IBlockState;
-
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -43,23 +41,13 @@ import mcp.MethodsReturnNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class ClientHeightMap implements IHeightMap {
 
-	@Nonnull private final Column chunk;
 	@Nonnull private int[] hmap;
-	@Nonnull private int[] bottomBlocks;
 	private int heightMapLowest = Coords.NO_HEIGHT;
 
 	public ClientHeightMap(Column column) {
-		this.chunk = column;
 		this.hmap = new int[256];
-		this.bottomBlocks = new int[256];
 
 		Arrays.fill(hmap, Coords.NO_HEIGHT);
-		Arrays.fill(bottomBlocks, Coords.NO_HEIGHT);
-	}
-
-	public int getOpacity(int localX, int blockY, int localZ) {
-		IBlockState state = chunk.getBlockState(localX, blockY, localZ);
-		return state.getLightOpacity();
 	}
 
 	@Override
@@ -76,11 +64,6 @@ public class ClientHeightMap implements IHeightMap {
 	@Override
 	public int getTopBlockY(int localX, int localZ) {
 		return hmap[getIndex(localX, localZ)];
-	}
-
-	@Override
-	public int getBottomBlockY(int localX, int localZ) {
-		return bottomBlocks[getIndex(localX, localZ)];
 	}
 
 	@Override
@@ -105,18 +88,11 @@ public class ClientHeightMap implements IHeightMap {
 		hmap[getIndex(localX, localZ)] = height;
 	}
 
-	public void setBottomBlockY(int localX, int localZ, int height) {
-		bottomBlocks[getIndex(localX, localZ)] = height;
-	}
-
 	public void setData(@Nonnull byte[] data) {
 		try {
 			ByteArrayInputStream buf = new ByteArrayInputStream(data);
 			DataInputStream in = new DataInputStream(buf);
 
-			for (int i = 0; i < 256; i++) {
-				bottomBlocks[i] = in.readInt();
-			}
 			for (int i = 0; i < 256; i++) {
 				hmap[i] = in.readInt();
 			}
@@ -134,13 +110,4 @@ public class ClientHeightMap implements IHeightMap {
 	private static int getIndex(int localX, int localZ) {
 		return (localZ << 4) | localX;
 	}
-
-	private static int unpackX(int index) {
-		return index & 0xF;
-	}
-
-	private static int unpackZ(int index) {
-		return (index >> 4) & 0xF;
-	}
-
 }

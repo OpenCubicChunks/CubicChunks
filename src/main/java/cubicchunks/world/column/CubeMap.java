@@ -130,7 +130,7 @@ class CubeMap implements Iterable<Cube> {
 	 *
 	 * @return the collection
 	 */
-	 public Collection<Cube> all() {
+	public Collection<Cube> all() {
 		return Collections.unmodifiableCollection(cubes);
 	}
 

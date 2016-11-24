@@ -387,9 +387,9 @@ public class CustomTerrainGenerator {
 					// Since in TWM we don't have height limit we could skip it but PLATEAU biomes need it
 					//int maxYSections = (int) Math.round(MAX_ELEV/Y_SECTION_SIZE);
 					//if (yAbs*MAX_ELEV > maxYSections - 4) {
-						// TODO: Convert Y cutoff to work correctly with noise between -1 and 1
-						// final double a = ( yAbs - ( maxYSections - 4 ) ) / 3.0F;
-						// output = output * ( 1.0D - a ) - 10.0D * a;
+					// TODO: Convert Y cutoff to work correctly with noise between -1 and 1
+					// final double a = ( yAbs - ( maxYSections - 4 ) ) / 3.0F;
+					// output = output * ( 1.0D - a ) - 10.0D * a;
 					//}
 					this.rawDensity[x][y][z] = output*GlobalGeneratorConfig.MAX_ELEV + 64 - yAbs*MAX_ELEV;
 				}

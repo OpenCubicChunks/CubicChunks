@@ -68,21 +68,18 @@ public class TestOpacityIndex {
 	@Test
 	public void getWithAllTransparent() {
 		ServerHeightMap index = new ServerHeightMap();
-		assertEquals(Coords.NO_HEIGHT, index.getBottomBlockY(0, 0));
 		assertEquals(Coords.NO_HEIGHT, index.getTopBlockY(0, 0));
 	}
 
 	@Test
 	public void getWithoutDataSingleBlock() {
 		ServerHeightMap index = makeIndex(10, 10);
-		assertEquals(10, index.getBottomBlockY(0, 0));
 		assertEquals(10, index.getTopBlockY(0, 0));
 	}
 
 	@Test
 	public void getWithoutDataMultipleBlocks() {
 		ServerHeightMap index = makeIndex(8, 10);
-		assertEquals(8, index.getBottomBlockY(0, 0));
 		assertEquals(10, index.getTopBlockY(0, 0));
 	}
 
@@ -91,7 +88,6 @@ public class TestOpacityIndex {
 		ServerHeightMap index = makeIndex(8, 10,
 			8, 1
 		);
-		assertEquals(8, index.getBottomBlockY(0, 0));
 		assertEquals(10, index.getTopBlockY(0, 0));
 	}
 
@@ -99,7 +95,6 @@ public class TestOpacityIndex {
 	public void setSingleOpaqueFromEmpty() {
 		ServerHeightMap index = new ServerHeightMap();
 		index.onOpacityChange(0, 10, 0, 255);
-		assertEquals(10, index.getBottomBlockY(0, 0));
 		assertEquals(10, index.getTopBlockY(0, 0));
 		assertEquals(null, getSegments(index));
 	}
@@ -108,7 +103,6 @@ public class TestOpacityIndex {
 	public void setSingleTransparentFromSingleOpaque() {
 		ServerHeightMap index = makeIndex(10, 10);
 		index.onOpacityChange(0, 10, 0, 0);
-		assertEquals(Coords.NO_HEIGHT, index.getBottomBlockY(0, 0));
 		assertEquals(Coords.NO_HEIGHT, index.getTopBlockY(0, 0));
 		assertEquals(null, getSegments(index));
 	}
@@ -118,12 +112,10 @@ public class TestOpacityIndex {
 		ServerHeightMap index = makeIndex(10, 10);
 
 		index.onOpacityChange(0, 11, 0, 255);
-		assertEquals(10, index.getBottomBlockY(0, 0));
 		assertEquals(11, index.getTopBlockY(0, 0));
 		assertEquals(null, getSegments(index));
 
 		index.onOpacityChange(0, 9, 0, 255);
-		assertEquals(9, index.getBottomBlockY(0, 0));
 		assertEquals(11, index.getTopBlockY(0, 0));
 		assertEquals(null, getSegments(index));
 	}
@@ -133,12 +125,10 @@ public class TestOpacityIndex {
 		ServerHeightMap index = makeIndex(9, 11);
 
 		index.onOpacityChange(0, 9, 0, 0);
-		assertEquals(10, index.getBottomBlockY(0, 0));
 		assertEquals(11, index.getTopBlockY(0, 0));
 		assertEquals(null, getSegments(index));
 
 		index.onOpacityChange(0, 11, 0, 0);
-		assertEquals(10, index.getBottomBlockY(0, 0));
 		assertEquals(10, index.getTopBlockY(0, 0));
 		assertEquals(null, getSegments(index));
 	}
@@ -148,7 +138,6 @@ public class TestOpacityIndex {
 		ServerHeightMap index = makeIndex(9, 11);
 
 		index.onOpacityChange(0, 16, 0, 255);
-		assertEquals(9, index.getBottomBlockY(0, 0));
 		assertEquals(16, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			9, 1,
@@ -162,7 +151,6 @@ public class TestOpacityIndex {
 		ServerHeightMap index = makeIndex(9, 11);
 
 		index.onOpacityChange(0, 4, 0, 255);
-		assertEquals(4, index.getBottomBlockY(0, 0));
 		assertEquals(11, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			4, 1,
@@ -180,7 +168,6 @@ public class TestOpacityIndex {
 		);
 
 		index.onOpacityChange(0, 20, 0, 255);
-		assertEquals(9, index.getBottomBlockY(0, 0));
 		assertEquals(20, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			9, 1,
@@ -200,7 +187,6 @@ public class TestOpacityIndex {
 		);
 
 		index.onOpacityChange(0, 3, 0, 255);
-		assertEquals(3, index.getBottomBlockY(0, 0));
 		assertEquals(16, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			3, 1,
@@ -220,7 +206,6 @@ public class TestOpacityIndex {
 		);
 
 		index.onOpacityChange(0, 17, 0, 255);
-		assertEquals(9, index.getBottomBlockY(0, 0));
 		assertEquals(17, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			9, 1,
@@ -238,7 +223,6 @@ public class TestOpacityIndex {
 		);
 
 		index.onOpacityChange(0, 8, 0, 255);
-		assertEquals(8, index.getBottomBlockY(0, 0));
 		assertEquals(16, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			8, 1,
@@ -252,7 +236,6 @@ public class TestOpacityIndex {
 		ServerHeightMap index = makeIndex(9, 11);
 
 		index.onOpacityChange(0, 10, 0, 0);
-		assertEquals(9, index.getBottomBlockY(0, 0));
 		assertEquals(11, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			9, 1,
@@ -268,7 +251,6 @@ public class TestOpacityIndex {
 		);
 
 		index.onOpacityChange(0, 4, 0, 0);
-		assertEquals(5, index.getBottomBlockY(0, 0));
 		assertEquals(7, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			5, 1
@@ -282,7 +264,6 @@ public class TestOpacityIndex {
 		);
 
 		index.onOpacityChange(0, 4, 0, 0);
-		assertEquals(2, index.getBottomBlockY(0, 0));
 		assertEquals(7, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			2, 1,
@@ -298,7 +279,6 @@ public class TestOpacityIndex {
 		);
 
 		index.onOpacityChange(0, 4, 0, 0);
-		assertEquals(2, index.getBottomBlockY(0, 0));
 		assertEquals(3, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			2, 1
@@ -312,7 +292,6 @@ public class TestOpacityIndex {
 		);
 
 		index.onOpacityChange(0, 4, 0, 0);
-		assertEquals(2, index.getBottomBlockY(0, 0));
 		assertEquals(3, index.getTopBlockY(0, 0));
 		assertEquals(Arrays.asList(
 			2, 1
@@ -329,25 +308,21 @@ public class TestOpacityIndex {
 		index.onOpacityChange(0, 2, 0, 255);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 
 		// remove the middle one
 		index.onOpacityChange(0, 1, 0, 0);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 
 		// remove the bottom one
 		index.onOpacityChange(0, 0, 0, 0);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(2, index.getBottomBlockY(0, 0));
 
 		// remove the top one
 		index.onOpacityChange(0, 2, 0, 0);
 
 		assertEquals(Coords.NO_HEIGHT, index.getTopBlockY(0, 0));
-		assertEquals(Coords.NO_HEIGHT, index.getBottomBlockY(0, 0));
 	}
 
 	@Test
@@ -360,17 +335,14 @@ public class TestOpacityIndex {
 		index.onOpacityChange(0, 200, 0, 255);
 
 		assertEquals(200, index.getTopBlockY(0, 0));
-		assertEquals(100, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 201, 0, 255);
 
 		assertEquals(201, index.getTopBlockY(0, 0));
-		assertEquals(100, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 202, 0, 255);
 
 		assertEquals(202, index.getTopBlockY(0, 0));
-		assertEquals(100, index.getBottomBlockY(0, 0));
 	}
 
 	//test 21011120
@@ -380,22 +352,18 @@ public class TestOpacityIndex {
 		index.onOpacityChange(0, 2, 0, 1);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(2, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 0, 0, 1);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 1, 0, 1);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 2, 0, 0);
 
 		assertEquals(1, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 	}
 
 	@Test
@@ -404,37 +372,30 @@ public class TestOpacityIndex {
 		index.onOpacityChange(0, 4, 0, 1);
 
 		assertEquals(4, index.getTopBlockY(0, 0));
-		assertEquals(4, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 2, 0, 1);
 
 		assertEquals(4, index.getTopBlockY(0, 0));
-		assertEquals(2, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 0, 0, 1);
 
 		assertEquals(4, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 4, 0, 0);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 1, 0, 1);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 0, 0, 0);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(1, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 0, 0, 0);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(1, index.getBottomBlockY(0, 0));
 	}
 
 	@Test
@@ -443,37 +404,30 @@ public class TestOpacityIndex {
 		index.onOpacityChange(0, 4, 0, 1);
 
 		assertEquals(4, index.getTopBlockY(0, 0));
-		assertEquals(4, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 2, 0, 1);
 
 		assertEquals(4, index.getTopBlockY(0, 0));
-		assertEquals(2, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 0, 0, 1);
 
 		assertEquals(4, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 4, 0, 0);
 
 		assertEquals(2, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 2, 0, 0);
 
 		assertEquals(0, index.getTopBlockY(0, 0));
-		assertEquals(0, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 0, 0, 0);
 
 		assertEquals(Coords.NO_HEIGHT, index.getTopBlockY(0, 0));
-		assertEquals(Coords.NO_HEIGHT, index.getBottomBlockY(0, 0));
 
 		index.onOpacityChange(0, 0, 0, 0);
 
 		assertEquals(Coords.NO_HEIGHT, index.getTopBlockY(0, 0));
-		assertEquals(Coords.NO_HEIGHT, index.getBottomBlockY(0, 0));
 	}
 
 	@Test
@@ -520,7 +474,6 @@ public class TestOpacityIndex {
 				assertEquals(message + ", maxHBelow(" + i + ")", (Integer) test.getMaxYBelow(i), (Integer) index.getTopBlockYBelow(0, 0, i));
 			}
 
-			assertEquals(message + "minY", (Integer) test.getMinY(), (Integer) index.getBottomBlockY(0, 0));
 			assertEquals(message + "maxY", (Integer) test.getMaxY(), (Integer) index.getTopBlockY(0, 0));
 
 
@@ -590,15 +543,6 @@ public class TestOpacityIndex {
 
 		private void set(int y, int val) {
 			arr[y] = val;
-		}
-
-		public int getMinY() {
-			for (int i = 0; i < arr.length; i++) {
-				if (arr[i] != 0) {
-					return i;
-				}
-			}
-			return Coords.NO_HEIGHT;
 		}
 
 		public int getMaxY() {

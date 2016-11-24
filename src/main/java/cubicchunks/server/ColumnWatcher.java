@@ -177,7 +177,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 	@Deprecated
 	public void blockChanged(int x, int y, int z) {
 		CubeWatcher watcher = playerCubeMap.getCubeWatcher(CubePos.fromBlockCoords(x, y, z));
-		if(watcher != null) {
+		if (watcher != null) {
 			watcher.blockChanged(x, y, z);
 		}
 	}

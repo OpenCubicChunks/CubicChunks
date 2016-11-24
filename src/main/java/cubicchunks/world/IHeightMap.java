@@ -75,17 +75,6 @@ public interface IHeightMap {
 	int getTopBlockYBelow(int localX, int localZ, int blockY);
 
 	/**
-	 * Returns y-coordinate n of the lowest non-transparent block.
-	 *
-	 * @param localX local block x-coordinate (0..15)
-	 * @param localZ local block z-coordinate(0..15)
-	 *
-	 * @return Y position of the bottom non-transparent block, or very low (far below the min world height) if one
-	 * doesn't exist
-	 */
-	int getBottomBlockY(int localX, int localZ);
-
-	/**
 	 * Out of the highest non-opaque blocks from all block columns in the column, returns the y-coordinate of the lowest
 	 * block.
 	 */

@@ -50,7 +50,7 @@ public class GuiFactory implements IModGuiFactory {
 		return null;
 	}
 
-	@Nullable @Override
+	@Nullable @Deprecated @Override
 	public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element) {
 		return null;
 	}

@@ -63,7 +63,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
 import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
@@ -95,7 +94,6 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	@Nullable private LightingManager lightingManager;
 	protected boolean isCubicWorld;
 	private int minHeight = 0, maxHeight = 256;
-	private boolean wgenFullRelight;
 
 	@Override public void initCubicWorld() {
 		// Set the world height boundaries to their highest and lowest values respectively
@@ -158,9 +156,6 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
 	@Override
 	public boolean testForCubes(CubePos start, CubePos end, Predicate<Cube> cubeAllowed) {
-		if (wgenFullRelight) { //TODO: remove this hack!
-			return true;
-		}
 		// convert block bounds to chunk bounds
 		int minCubeX = start.getX();
 		int minCubeY = start.getY();
@@ -182,26 +177,12 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 		return true;
 	}
 
-	// TODO: this method is just plain stupid (remove it)
-	@Override public Cube getCubeForAddress(long address) {
-		int x = AddressTools.getX(address);
-		int y = AddressTools.getY(address);
-		int z = AddressTools.getZ(address);
-
-		return this.getCubeCache().getCube(x, y, z);
-	}
-
 	@Override public Cube getCubeFromCubeCoords(int cubeX, int cubeY, int cubeZ) {
 		return this.getCubeCache().getCube(cubeX, cubeY, cubeZ);
 	}
 
 	@Override public Cube getCubeFromBlockCoords(BlockPos pos) {
 		return this.getCubeFromCubeCoords(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()));
-	}
-
-	// TODO: remove this hack
-	@Override public void setGeneratingWorld(boolean generating) {
-		this.wgenFullRelight = generating;
 	}
 
 	@Override public int getEffectiveHeight(int blockX, int blockZ) {

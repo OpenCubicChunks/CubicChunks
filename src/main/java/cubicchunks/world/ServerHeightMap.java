@@ -217,11 +217,6 @@ public class ServerHeightMap implements IHeightMap {
 		return belowYSegmentHeight - 1;
 	}
 
-	@Override
-	public int getBottomBlockY(int localX, int localZ) {
-		return this.ymin[getIndex(localX, localZ)];
-	}
-
 	@Nonnull @Override
 	public int[] getHeightmap() {
 		return Arrays.copyOf(this.ymax, this.ymax.length);

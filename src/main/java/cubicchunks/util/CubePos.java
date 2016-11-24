@@ -24,12 +24,10 @@
 package cubicchunks.util;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -246,29 +244,6 @@ public class CubePos {
 			for (int y = this.cubeY - range; y < this.cubeY + range; y++) {
 				for (int z = this.cubeZ - range; z < this.cubeZ + range; z++) {
 					action.accept(new CubePos(x, y, z));
-				}
-			}
-		}
-	}
-
-	/**
-	 * For each x/z coordinate pair in this cube position - goes top-down and calls func for each BlockPos.
-	 * Once func returns false - processing of next block column begins.
-	 */
-	public void forEachBlockPosMutableTopDown(Predicate<BlockPos> func) {
-		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
-		int baseX = getMinBlockX();
-		int baseZ = getMinBlockZ();
-		int blockYMax = getMaxBlockY();
-		for (int x = 0; x < 16; x++) {
-			for (int z = 0; z < 16; z++) {
-				blockPos.setPos(baseX + x, blockYMax, baseZ + z);
-				for (int y = 15; y >= 0; y--) {
-					boolean cont = func.test(blockPos);
-					blockPos.move(EnumFacing.DOWN);
-					if (!cont) {
-						break;
-					}
 				}
 			}
 		}

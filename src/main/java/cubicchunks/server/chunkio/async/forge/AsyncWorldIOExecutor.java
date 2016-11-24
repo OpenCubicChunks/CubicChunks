@@ -156,7 +156,7 @@ public class AsyncWorldIOExecutor {
 
 	/**
 	 * Runs the async part in current thread or blocks until already running async part is finished.
-	 *
+	 * <p>
 	 * Uses the given ThreadPoolExecutor.
 	 */
 	private static void runTask(ThreadPoolExecutor executor, AsyncIOProvider task) {

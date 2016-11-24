@@ -123,34 +123,21 @@ public interface ICubicWorld {
 	 * Returns true iff the given Predicate evaluates to true for given cube and neighbors.
 	 * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
 	 */
-	default boolean testForCubeAndNeighbor(Cube cube, Predicate<Cube> test) {
-		return testForCubes(cube.getCoords().sub(1, 1, 1), cube.getCoords().add(1, 1, 1), test);
-	}
-
-	/**
-	 * Returns true iff the given Predicate evaluates to true for given cube and neighbors.
-	 * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
-	 */
 	boolean testForCubes(CubePos start, CubePos end, Predicate<Cube> test);
 
 	/**
 	 * Return the actual world height for this world. Typically this is 256 for worlds with a sky, and 128 for worlds
 	 * without.
+	 *
 	 * @return The actual world height
 	 */
 	int getActualHeight();
-
-	// TODO: this method is just plain stupid (remove it)
-	Cube getCubeForAddress(long address);
 
 	Cube getCubeFromCubeCoords(int cubeX, int cubeY, int cubeZ);
 
 	Cube getCubeFromBlockCoords(BlockPos pos);
 
 	int getEffectiveHeight(int blockX, int blockZ);
-
-	//this is a hack TODO: remove!
-	void setGeneratingWorld(boolean generating);
 
 	//vanilla part
 
