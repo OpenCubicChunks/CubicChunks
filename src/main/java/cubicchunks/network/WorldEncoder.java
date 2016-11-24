@@ -62,7 +62,7 @@ class WorldEncoder {
 			// 5. heightmap and bottom-block-y. Each non-empty cube has a chance to update this data.
 			// trying to keep track of when it changes would be complex, so send it wil all cubes
 			byte[] heightmaps = ((ServerHeightMap) cube.getColumn().getOpacityIndex()).getDataForClient();
-			assert heightmaps.length == 256*2*4;
+			assert heightmaps.length == 256*4;
 			out.writeBytes(heightmaps);
 		}
 	}
@@ -101,7 +101,7 @@ class WorldEncoder {
 			}
 
 			// 5. heightmaps TODO: NO NO NO! Don't send this with Cubes!
-			byte[] heightmaps = new byte[256*2*4];
+			byte[] heightmaps = new byte[256*4];
 			in.readBytes(heightmaps);
 			ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
 			coi.setData(heightmaps);

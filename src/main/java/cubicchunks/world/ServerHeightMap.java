@@ -792,9 +792,6 @@ public class ServerHeightMap implements IHeightMap {
 			ByteArrayOutputStream buf = new ByteArrayOutputStream();
 			DataOutputStream out = new DataOutputStream(buf);
 
-			for (int v : this.ymin) {
-				out.writeInt(v);
-			}
 			for (int v : this.ymax) {
 				out.writeInt(v);
 			}
