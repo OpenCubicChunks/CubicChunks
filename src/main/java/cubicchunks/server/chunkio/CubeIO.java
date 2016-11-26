@@ -106,29 +106,10 @@ public class CubeIO implements IThreadedFileIO {
 	@Nonnull private ConcurrentMap<ChunkPos, SaveEntry> columnsToSave;
 	@Nonnull private ConcurrentMap<CubePos, SaveEntry> cubesToSave;
 
-	@Nonnull private final Thread theShutdownHook;
-
 	public CubeIO(ICubicWorldServer world) {
 		this.world = world;
 
 		this.db = initializeDBConnection(this.world.getSaveHandler().getWorldDirectory(), this.world.getProvider());
-		//we can't use closeOnJvmShutdown() because Minecraft saves all unsaved things on shutdown
-		//so the DB will be closed while we are still saving.
-		//also we need to save the thread into field because in client environment we need to remove the shutdown hook
-		Runtime.getRuntime().addShutdownHook(theShutdownHook = new Thread() {
-			public void run() {
-				try {
-					ThreadedFileIOBase.getThreadedIOInstance().waitForFinish();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} finally {
-					if (!CubeIO.this.db.isClosed()) {
-						CubeIO.this.db.close();
-					}
-				}
-
-			}
-		});
 		this.columns = this.db.hashMap("columns", Serializer.LONG_PACKED, Serializer.BYTE_ARRAY).createOrOpen();
 		this.cubes = this.db.hashMap("chunks", Serializer.LONG, Serializer.BYTE_ARRAY).createOrOpen();
 
@@ -138,11 +119,6 @@ public class CubeIO implements IThreadedFileIO {
 	}
 
 	public void flush() {
-		if (!Runtime.getRuntime().removeShutdownHook(theShutdownHook)) {
-			err("WARNING!!!");
-			err("Shutdown hook removing failed!");
-			err("This may cause memory leak and/or crash");
-		}
 		if (columnsToSave.size() != 0 || cubesToSave.size() != 0) {
 			err("Attempt to flush() CubeIO when there are remaining cubes to save! Saving remaining cubes to avoid corruption");
 			while (this.writeNextIO()) ;
