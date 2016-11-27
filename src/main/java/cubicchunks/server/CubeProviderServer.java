@@ -454,8 +454,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 	@Nullable
 	private Column postProcessColumn(int columnX, int columnZ, @Nullable Column column, Requirement req) {
 		Column loaded = getLoadedColumn(columnX, columnZ);
-		if (column != null && loaded != null) {
-			if (loaded != column) {
+		if (loaded != null) {
+			if (column != null && loaded != column) {
 				throw new IllegalStateException("Duplicate column at " + columnX + ", " + columnZ + "!");
 			}
 			return loaded;
