@@ -24,6 +24,7 @@
 package cubicchunks.worldgen.generator.custom.builder;
 
 import com.flowpowered.noise.module.Module;
+import com.flowpowered.noise.module.modifier.ScaleBias;
 import com.flowpowered.noise.module.modifier.ScalePoint;
 import com.flowpowered.noise.module.source.Perlin;
 
@@ -44,18 +45,23 @@ public class NoiseSource implements IBuilder {
 	}
 
 	public static class PerlinBuilder {
-		private Perlin perlin = new Perlin();
-		private ScalePoint scaled = new ScalePoint();
+		private boolean normalized = false;
+		private double minNorm, maxNorm;
+		private double fx;
+		private double fy;
+		private double fz;
+		private long seed;
+		private int octaves;
 
 		public PerlinBuilder seed(long seed) {
-			perlin.setSeed((int) ((seed & 0xFFFFFFFF) ^ (seed >>> 32)));
+			this.seed = seed;
 			return this;
 		}
 
 		public PerlinBuilder frequency(double fx, double fy, double fz) {
-			scaled.setXScale(fx);
-			scaled.setYScale(fy);
-			scaled.setZScale(fz);
+			this.fx = fx;
+			this.fy = fy;
+			this.fz = fz;
 			return this;
 		}
 
@@ -63,14 +69,50 @@ public class NoiseSource implements IBuilder {
 			return frequency(f, f, f);
 		}
 
-		public PerlinBuilder octaves(int count) {
-			perlin.setOctaveCount(count);
+		public PerlinBuilder octaves(int octaves) {
+			this.octaves = octaves;
+			return this;
+		}
+
+		public PerlinBuilder normalizeTo(double min, double max) {
+			this.minNorm = min;
+			this.maxNorm = max;
+			normalized = true;
 			return this;
 		}
 
 		public NoiseSource create() {
-			scaled.setSourceModule(0, perlin);
-			return new NoiseSource(scaled);
+			Module mod;
+			Perlin perlin = new Perlin();
+			perlin.setSeed((int) ((seed & 0xFFFFFFFF) ^ (seed >>> 32)));
+			perlin.setOctaveCount(octaves);
+			mod = perlin;
+			if (normalized) {
+				// Max perlin noise value with N octaves and persistance p is
+				// 1 + 1/p + 1/(p^2) + ... + 1/(p^(N-1))
+				// It's equal to (1 - p^N) / (1 - p)
+				// Divide result by it, multiply by 2 and subtract 1
+				// to make sure that result is between -1 and 1 and that the mean value is at 0
+				final double persistance = 0.5;
+				ScaleBias scaleBias = new ScaleBias();
+				scaleBias.setScale(2*(1 - persistance)/(1 - Math.pow(persistance, octaves)));
+				scaleBias.setBias(-1);
+				scaleBias.setSourceModule(0, mod);
+				mod = scaleBias;
+
+				scaleBias = new ScaleBias();
+				scaleBias.setScale((maxNorm - minNorm)/2);
+				scaleBias.setBias((maxNorm + minNorm)/2);
+				scaleBias.setSourceModule(0, mod);
+				mod = scaleBias;
+			}
+			ScalePoint scaled = new ScalePoint();
+			scaled.setXScale(fx);
+			scaled.setYScale(fy);
+			scaled.setZScale(fz);
+			scaled.setSourceModule(0, mod);
+			mod = scaled;
+			return new NoiseSource(mod);
 		}
 	}
 }

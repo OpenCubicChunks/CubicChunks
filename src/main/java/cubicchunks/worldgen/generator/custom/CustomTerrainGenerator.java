@@ -60,31 +60,39 @@ public class CustomTerrainGenerator {
 
 	public CustomTerrainGenerator(ICubicWorld world, final long seed) {
 		final int selectorOctaves = 8;
+		final double selectorFreq = 8.55515/Math.pow(2, selectorOctaves);
 		Random rnd = new Random(seed);
 		IBuilder selector = NoiseSource.perlin().
 			seed(rnd.nextLong()).
-			frequency(8.55515/Math.pow(2, selectorOctaves)/(MAX_ELEV/64.0)).
+			frequency(selectorFreq, selectorFreq*2, selectorFreq).
 			octaves(selectorOctaves).
-			create();
+			normalizeTo(-1, 1).
+			create().
+			mul(25.6).add(0.5).clamp(0, 1);
 
 		IBuilder low = NoiseSource.perlin().
 			seed(rnd.nextLong()).
-			frequency(684.412D/Math.pow(2, OCTAVES)/(MAX_ELEV/64.0)).
+			frequency(684.412D/Math.pow(2, OCTAVES)).
 			octaves(OCTAVES).
-			create();
+			normalizeTo(-1, 1).
+			create().
+			mul(2).clamp(-1, 1);
 
 		IBuilder high = NoiseSource.perlin().
 			seed(rnd.nextLong()).
-			frequency(684.412D/Math.pow(2, OCTAVES)/(MAX_ELEV/64.0)).
+			frequency(684.412D/Math.pow(2, OCTAVES)).
 			octaves(OCTAVES).
-			create();
+			normalizeTo(-1, 1).
+			create().
+			mul(2).clamp(-1, 1);
 
 		int heightmapOctaves = 10;
-		double heightmapFreq = 200.0/Math.pow(2, heightmapOctaves)/(MAX_ELEV/64);
+		double heightmapFreq = 200.0/Math.pow(2, heightmapOctaves);
 		IBuilder randomHeight2d = NoiseSource.perlin().
 			seed(rnd.nextLong()).
 			frequency(heightmapFreq, 0, heightmapFreq).
 			octaves(heightmapOctaves).
+			normalizeTo(-1, 1).
 			create().
 			mulIf(NEGATIVE, -0.3).
 			mul(3).sub(2).
@@ -94,7 +102,7 @@ public class CustomTerrainGenerator {
 			mul(0.2*17/64.0);
 
 		this.biomeSource = new BiomeHeightVolatilitySource(
-			world.getBiomeProvider(), 2*(int) (MAX_ELEV/64), X_SECTION_SIZE, Z_SECTION_SIZE);
+			world.getBiomeProvider(), 2, X_SECTION_SIZE, Z_SECTION_SIZE);
 
 		IBuilder height = biomeSource::getHeight;
 		IBuilder volatility = biomeSource::getVolatility;
