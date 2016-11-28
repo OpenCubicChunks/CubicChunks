@@ -50,7 +50,8 @@ public class JvmNames {
 		STRING = "Ljava/lang/String;",
 		STRUCTURE_BOUNDING_BOX = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;",
 		WORLD = "Lnet/minecraft/world/World;",
-		WORLD_CLIENT = "Lnet/minecraft/client/multiplayer/WorldClient;";
+		WORLD_CLIENT = "Lnet/minecraft/client/multiplayer/WorldClient;",
+		SYSTEM = "Ljava/lang/System;";
 
 	// Sorted as above
 	public static final String
@@ -67,6 +68,7 @@ public class JvmNames {
 		WORLD_GET_LIGHT_FOR = WORLD + "getLightFor(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
 		WORLD_GET_LIGHT_WITH_FLAG = WORLD + "getLight(" + BLOCK_POS + "Z)I",
 		WORLD_GET_PERSISTENT_CHUNKS = WORLD + "getPersistentChunks()" + IMMUTABLE_SET_MULTIMAP,
-		WORLD_IS_AREA_LOADED = WORLD + "isAreaLoaded(IIIIIIZ)Z";
+		WORLD_IS_AREA_LOADED = WORLD + "isAreaLoaded(IIIIIIZ)Z",
+		SYSTEM_NANOTIME = SYSTEM + "nanoTime()J";
 	// @formatter:on
 }
