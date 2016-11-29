@@ -28,6 +28,12 @@ import com.flowpowered.noise.module.modifier.ScaleBias;
 import com.flowpowered.noise.module.modifier.ScalePoint;
 import com.flowpowered.noise.module.source.Perlin;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class NoiseSource implements IBuilder {
 
 	private Module module;

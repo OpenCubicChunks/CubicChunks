@@ -29,10 +29,16 @@ import net.minecraft.util.math.Vec3i;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
 import static cubicchunks.util.MathUtil.lerp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
 	// TODO: explain how it works
 	private final int minX;

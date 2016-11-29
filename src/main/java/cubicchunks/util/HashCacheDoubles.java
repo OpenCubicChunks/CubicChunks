@@ -26,6 +26,12 @@ package cubicchunks.util;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class HashCacheDoubles<K> {
 	private final double[] cache;
 	private final K[] keys;

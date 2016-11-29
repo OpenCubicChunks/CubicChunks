@@ -27,8 +27,13 @@ import net.minecraft.util.ClassInheritanceMultiMap;
 
 import java.util.ConcurrentModificationException;
 
-import cubicchunks.CubicChunks;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.CubicChunks;
+import mcp.MethodsReturnNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ClassInheritanceMultiMapFactory {
 	/**
 	 * Creates new ClassInheritanceMultiMap without possibility of ConcurrentModificationException

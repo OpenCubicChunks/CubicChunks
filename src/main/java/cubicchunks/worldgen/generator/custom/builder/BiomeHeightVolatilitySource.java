@@ -28,11 +28,16 @@ import net.minecraft.world.biome.BiomeProvider;
 
 import java.util.Arrays;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.util.Coords;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
 // a small hack to get biome generation working with the new system
 // todo: make it not hacky
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BiomeHeightVolatilitySource {
 	private static final double INVALID = Double.MAX_VALUE;
 	private final double[] nearBiomeWeightArray;

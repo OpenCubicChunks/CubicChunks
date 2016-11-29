@@ -28,13 +28,18 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Date;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import cubicchunks.CubicChunks;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Class for debug tracing
  * <p>
  * Instead of using normal logging, it creates special file.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class Dbg {
 	private static final PrintWriter pw;
 
