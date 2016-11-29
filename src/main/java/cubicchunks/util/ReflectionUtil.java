@@ -30,6 +30,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.function.Consumer;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -109,6 +110,16 @@ public class ReflectionUtil {
 			return (T) fld.get(from);
 		} catch (NoSuchFieldException | IllegalAccessException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	public static void forEachField(Class<?> inClass, Consumer<Field> cons) {
+		if (inClass.getSuperclass() != null) {
+			forEachField(inClass.getSuperclass(), cons);
+		}
+		for (Field field : inClass.getDeclaredFields()) {
+			removeFinalModifier(field);
+			cons.accept(field);
 		}
 	}
 

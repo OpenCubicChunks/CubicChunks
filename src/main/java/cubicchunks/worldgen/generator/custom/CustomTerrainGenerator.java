@@ -28,6 +28,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.ChunkProviderSettings;
 
 import java.util.Random;
 import java.util.function.ToIntFunction;
@@ -43,11 +44,10 @@ import cubicchunks.worldgen.generator.custom.builder.NoiseSource;
 import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.blockToLocal;
-import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.MAX_ELEV;
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.X_SECTION_SIZE;
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTION_SIZE;
 import static cubicchunks.worldgen.generator.custom.builder.IBuilder.NEGATIVE;
-import static cubicchunks.worldgen.generator.custom.builder.IBuilder.NOT_NEGATIVE;
+import static cubicchunks.worldgen.generator.custom.builder.IBuilder.POSITIVE;
 
 /**
  * A terrain generator that supports infinite(*) worlds
@@ -60,66 +60,71 @@ public class CustomTerrainGenerator {
 	private static final ToIntFunction<Vec3i> HASH_2D = (v) -> v.getX() + v.getZ()*5;
 	private static final ToIntFunction<Vec3i> HASH_3D = (v) -> v.getX() + v.getZ()*5 + v.getY()*25;
 	// Number of octaves for the noise function
-	private static final int OCTAVES = 16;
-	private final IBuilder terrainBuilder;
+	private IBuilder terrainBuilder;
 	private final BiomeHeightVolatilitySource biomeSource;
 
 	public CustomTerrainGenerator(ICubicWorld world, final long seed) {
-		final int selectorOctaves = 8;
-		final double selectorFreq = 8.55515/Math.pow(2, selectorOctaves);
+		this.biomeSource = new BiomeHeightVolatilitySource(world.getBiomeProvider(), 2, X_SECTION_SIZE, Z_SECTION_SIZE);
+		initGenerator(seed);
+	}
+
+	private void initGenerator(long seed) {
 		Random rnd = new Random(seed);
-		IBuilder selector = NoiseSource.perlin().
-			seed(rnd.nextLong()).
-			frequency(selectorFreq, selectorFreq*2, selectorFreq).
-			octaves(selectorOctaves).
-			normalizeTo(-1, 1).
-			create().
-			mul(25.6).add(0.5).clamp(0, 1);
 
-		IBuilder low = NoiseSource.perlin().
-			seed(rnd.nextLong()).
-			frequency(684.412D/Math.pow(2, OCTAVES)).
-			octaves(OCTAVES).
-			normalizeTo(-1, 1).
-			create().
-			mul(2).clamp(-1, 1);
+		ChunkProviderSettings.Factory factoryVanilla = new ChunkProviderSettings.Factory();
+		factoryVanilla.setDefaults();
+		ChunkProviderSettings confVanilla = factoryVanilla.build();
 
-		IBuilder high = NoiseSource.perlin().
-			seed(rnd.nextLong()).
-			frequency(684.412D/Math.pow(2, OCTAVES)).
-			octaves(OCTAVES).
-			normalizeTo(-1, 1).
-			create().
-			mul(2).clamp(-1, 1);
+		CustomGeneratorSettings conf = CustomGeneratorSettings.fromVanilla(confVanilla);
 
-		int heightmapOctaves = 10;
-		double heightmapFreq = 200.0/Math.pow(2, heightmapOctaves);
-		IBuilder randomHeight2d = NoiseSource.perlin().
-			seed(rnd.nextLong()).
-			frequency(heightmapFreq, 0, heightmapFreq).
-			octaves(heightmapOctaves).
-			normalizeTo(-1, 1).
-			create().
-			mulIf(NEGATIVE, -0.3).
-			mul(3).sub(2).
-			clamp(-2, 1).
-			divIf(NEGATIVE, 2*2*1.4).
-			divIf(NOT_NEGATIVE, 8).
-			mul(0.2*17/64.0).
-			cached2d(CACHE_SIZE_2D, HASH_2D);
+		IBuilder selector = NoiseSource.perlin()
+			.seed(rnd.nextLong())
+			.normalizeTo(-1, 1)
+			.frequency(conf.selectorNoiseFrequencyX, conf.selectorNoiseFrequencyY, conf.selectorNoiseFrequencyZ)
+			.octaves(conf.selectorNoiseOctaves)
+			.create()
+			.mul(conf.selectorNoiseFactor).add(conf.selectorNoiseOffset).clamp(0, 1);
 
-		this.biomeSource = new BiomeHeightVolatilitySource(
-			world.getBiomeProvider(), 2, X_SECTION_SIZE, Z_SECTION_SIZE);
+		IBuilder low = NoiseSource.perlin()
+			.seed(rnd.nextLong())
+			.normalizeTo(-1, 1)
+			.frequency(conf.lowNoiseFrequencyX, conf.lowNoiseFrequencyY, conf.lowNoiseFrequencyZ)
+			.octaves(conf.lowNoiseOctaves)
+			.create()
+			.mul(conf.lowNoiseFactor).add(conf.lowNoiseOffset);
 
-		IBuilder height = biomeSource::getHeight;
-		IBuilder volatility = biomeSource::getVolatility;
+		IBuilder high = NoiseSource.perlin()
+			.seed(rnd.nextLong())
+			.normalizeTo(-1, 1)
+			.frequency(conf.highNoiseFrequencyX, conf.highNoiseFrequencyY, conf.highNoiseFrequencyZ)
+			.octaves(conf.highNoiseOctaves)
+			.create()
+			.mul(conf.highNoiseFactor).add(conf.highNoiseOffset);
 
-		this.terrainBuilder = selector.
-			lerp(low, high).
-			mul(volatility.div((x, y, z) -> (y*8/MAX_ELEV < height.get(x, y, z)) ? 4 : 1)).
-			add(height).add(randomHeight2d).
-			mul(MAX_ELEV).add(64).sub((x, y, z) -> y*8).
-			cached(CACHE_SIZE_3D, HASH_3D);
+		IBuilder randomHeight2d = NoiseSource.perlin()
+			.seed(rnd.nextLong())
+			.normalizeTo(-1, 1)
+			.frequency(conf.depthNoiseFrequencyX, 0, conf.depthNoiseFrequencyZ)
+			.octaves(conf.depthNoiseOctaves)
+			.create()
+			.mul(conf.depthNoiseFactor).add(conf.depthNoiseOffset)
+			.mulIf(NEGATIVE, -0.3).mul(3).sub(2).clamp(-2, 1)
+			.divIf(NEGATIVE, 2*2*1.4).divIf(POSITIVE, 8)
+			.mul(0.2*17/64.0)
+			.cached2d(CACHE_SIZE_2D, HASH_2D);
+
+		IBuilder height = ((IBuilder) biomeSource::getHeight)
+			.mul(conf.heightFactor)
+			.add(conf.heightOffset);
+
+		IBuilder volatility = ((IBuilder) biomeSource::getVolatility)
+			.mul(conf.heightVariationFactor)
+			.add(conf.heightVariationOffset);
+
+		this.terrainBuilder = selector
+			.lerp(low, high)//.mul(volatility).add(height).add(randomHeight2d)
+			.add(1).sub((x, y, z) -> y/8.0)//.add(0*4)
+			.cached(CACHE_SIZE_3D, HASH_3D);
 	}
 
 	/**
@@ -136,7 +141,7 @@ public class CustomTerrainGenerator {
 		BlockPos end = cubePos.getMaxBlockPos();
 		biomeSource.setChunk(cubeX, cubeZ);
 		terrainBuilder.scaledIterator(start, end, new Vec3i(4, 8, 4)).
-			forEachRemaining(e->
+			forEachRemaining(e ->
 				cubePrimer.setBlockState(
 					blockToLocal(e.getX()),
 					blockToLocal(e.getY()),

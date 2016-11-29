@@ -32,6 +32,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.util.Coords;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.custom.ConversionUtils;
 import mcp.MethodsReturnNonnullByDefault;
 
 // a small hack to get biome generation working with the new system
@@ -156,15 +157,8 @@ public class BiomeHeightVolatilitySource {
 
 		// Convert from vanilla height/volatility format
 		// to something easier to predict
-		smoothVolatility = smoothVolatility*0.9 + 0.1;
-		this.cachedVolatility[x][z] = smoothVolatility*4.0/3.0;
-
-		// divide everything by 64, then it will be multpllied by maxElev
-		// vanilla sea level: 63.75 / 64.00
-
-		// sea level 0.75/64 of height above sea level (63.75 = 63+0.75)
-		this.cachedHeight[x][z] = 0.75/64.0;
-		this.cachedHeight[x][z] += smoothHeight*17.0/64.0;
+		this.cachedVolatility[x][z] = ConversionUtils.biomeHeightVariationVanilla((float) smoothVolatility);
+		this.cachedHeight[x][z] += ConversionUtils.biomeHeightVanilla((float) smoothHeight);
 	}
 
 
