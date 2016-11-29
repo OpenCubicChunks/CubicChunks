@@ -21,44 +21,43 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom;
+package cubicchunks.util;
 
-import net.minecraft.block.state.IBlockState;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntFunction;
 
-import cubicchunks.worldgen.generator.ICubePrimer;
+public class HashCacheDoubles<K> {
+	private final double[] cache;
+	private final K[] keys;
+	private final ToIntFunction<K> hashFunction;
+	private final ToDoubleFunction<K> source;
 
-import static cubicchunks.util.Coords.blockToLocal;
-
-class BlockStateInstance {
-	private final IBlockState state;
-	private final int x;
-	private final int y;
-	private final int z;
-
-	BlockStateInstance(IBlockState state, int x, int y, int z) {
-		this.state = state;
-		this.x = x;
-		this.y = y;
-		this.z = z;
+	@SuppressWarnings("uncecked")
+	private HashCacheDoubles(int size, ToIntFunction<K> hashCode, ToDoubleFunction<K> source) {
+		this.cache = new double[size];
+		this.keys =  (K[]) new Object[size];
+		this.hashFunction = hashCode;
+		this.source = source;
 	}
 
-	public IBlockState getState() {
-		return state;
+	public double get(K key) {
+		int index = index(hashFunction.applyAsInt(key));
+		if (!key.equals(keys[index])) {
+			keys[index] = key;
+			cache[index] = source.applyAsDouble(key);
+		}
+		return cache[index];
 	}
 
-	public int getX() {
-		return x;
+	private int index(int hash) {
+		return Math.floorMod(hash, cache.length);
 	}
 
-	public int getY() {
-		return y;
+	public static <K> HashCacheDoubles<K> create(int size, ToDoubleFunction<K> source) {
+		return create(size, k->k.hashCode(), source);
 	}
 
-	public int getZ() {
-		return z;
-	}
-
-	public void setBlock(ICubePrimer primer) {
-		primer.setBlockState(blockToLocal(x), blockToLocal(y), blockToLocal(z), state);
+	public static <K> HashCacheDoubles<K> create(int size, ToIntFunction<K> hashCode, ToDoubleFunction<K> source) {
+		return new HashCacheDoubles<K>(size, hashCode, source);
 	}
 }

@@ -30,6 +30,7 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
+import java.util.function.ToIntFunction;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -41,6 +42,7 @@ import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import cubicchunks.worldgen.generator.custom.builder.NoiseSource;
 import mcp.MethodsReturnNonnullByDefault;
 
+import static cubicchunks.util.Coords.blockToLocal;
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.MAX_ELEV;
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.X_SECTION_SIZE;
 import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTION_SIZE;
@@ -53,6 +55,10 @@ import static cubicchunks.worldgen.generator.custom.builder.IBuilder.NOT_NEGATIV
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CustomTerrainGenerator {
+	private static final int CACHE_SIZE_2D = 16*16;
+	private static final int CACHE_SIZE_3D = 16*16*16;
+	private static final ToIntFunction<Vec3i> HASH_2D = (v) -> v.getX() + v.getZ()*5;
+	private static final ToIntFunction<Vec3i> HASH_3D = (v) -> v.getX() + v.getZ()*5 + v.getY()*25;
 	// Number of octaves for the noise function
 	private static final int OCTAVES = 16;
 	private final IBuilder terrainBuilder;
@@ -99,7 +105,8 @@ public class CustomTerrainGenerator {
 			clamp(-2, 1).
 			divIf(NEGATIVE, 2*2*1.4).
 			divIf(NOT_NEGATIVE, 8).
-			mul(0.2*17/64.0);
+			mul(0.2*17/64.0).
+			cached2d(CACHE_SIZE_2D, HASH_2D);
 
 		this.biomeSource = new BiomeHeightVolatilitySource(
 			world.getBiomeProvider(), 2, X_SECTION_SIZE, Z_SECTION_SIZE);
@@ -111,7 +118,8 @@ public class CustomTerrainGenerator {
 			lerp(low, high).
 			mul(volatility.div((x, y, z) -> (y*8/MAX_ELEV < height.get(x, y, z)) ? 4 : 1)).
 			add(height).add(randomHeight2d).
-			mul(MAX_ELEV).add(64).sub((x, y, z) -> y*8);
+			mul(MAX_ELEV).add(64).sub((x, y, z) -> y*8).
+			cached(CACHE_SIZE_3D, HASH_3D);
 	}
 
 	/**
@@ -127,7 +135,14 @@ public class CustomTerrainGenerator {
 		BlockPos start = cubePos.getMinBlockPos();
 		BlockPos end = cubePos.getMaxBlockPos();
 		biomeSource.setChunk(cubeX, cubeZ);
-		terrainBuilder.scaledStream(start, end, new Vec3i(4, 8, 4)).map(this::getBlock).forEach(b -> b.setBlock(cubePrimer));
+		terrainBuilder.scaledIterator(start, end, new Vec3i(4, 8, 4)).
+			forEachRemaining(e->
+				cubePrimer.setBlockState(
+					blockToLocal(e.getX()),
+					blockToLocal(e.getY()),
+					blockToLocal(e.getZ()),
+					getBlock(e))
+			);
 	}
 
 	/**
@@ -135,7 +150,7 @@ public class CustomTerrainGenerator {
 	 *
 	 * @return The block state
 	 */
-	private BlockStateInstance getBlock(IBuilder.IExtendedEntry entry) {
+	private IBlockState getBlock(IBuilder.IExtendedEntry entry) {
 		int x = entry.getX();
 		int y = entry.getY();
 		int z = entry.getZ();
@@ -163,7 +178,7 @@ public class CustomTerrainGenerator {
 			// TODO replace check with GlobalGeneratorConfig.SEA_LEVEL
 			state = Blocks.WATER.getDefaultState();
 		}
-		return new BlockStateInstance(state, x, y, z);
+		return state;
 	}
 
 }

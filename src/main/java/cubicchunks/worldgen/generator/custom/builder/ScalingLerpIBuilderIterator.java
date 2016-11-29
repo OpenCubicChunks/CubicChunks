@@ -23,16 +23,17 @@
  */
 package cubicchunks.worldgen.generator.custom.builder;
 
-import com.google.common.collect.AbstractIterator;
-
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3i;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import static cubicchunks.util.MathUtil.lerp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-class ScalingLerpIBuilderIterator extends AbstractIterator<IBuilder.IExtendedEntry> {
+class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
 	// TODO: explain how it works
 	private final int minX;
 	private final int minY;
@@ -108,13 +109,12 @@ class ScalingLerpIBuilderIterator extends AbstractIterator<IBuilder.IExtendedEnt
 		nextRelZ = 0;
 	}
 
-	@Override public IBuilder.IExtendedEntry computeNext() {
-		// if out of bounds...
-		if (nextGridX > maxGridX) {
-			endOfData();
-			return null;
-		}
+	@Override public boolean hasNext() {
+		return nextGridX <= maxGridX;
+	}
 
+	@Override public IBuilder.IExtendedEntry next() throws NoSuchElementException {
+		checkHasNext();
 		if (nextRelZ == 0) {
 			if (nextRelY == 0) {
 				if (nextRelX == 0) {
@@ -152,6 +152,12 @@ class ScalingLerpIBuilderIterator extends AbstractIterator<IBuilder.IExtendedEnt
 
 		incrementPos();
 		return entry;
+	}
+
+	private void checkHasNext() {
+		if (!hasNext()) {
+			throw new NoSuchElementException();
+		}
 	}
 
 	private void onResetX() {

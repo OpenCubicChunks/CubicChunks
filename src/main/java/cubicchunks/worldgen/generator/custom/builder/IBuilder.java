@@ -35,11 +35,13 @@ import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.DoublePredicate;
+import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.util.HashCacheDoubles;
 import cubicchunks.util.MathUtil;
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -206,16 +208,26 @@ public interface IBuilder {
 		return (x, y, z) -> MathUtil.lerp(this.get(x, y, z), low.get(x, y, z), high.get(x, y, z));
 	}
 
-	default Stream<IExtendedEntry> scaledStream(Vec3i start, Vec3i end, Vec3i scale) {
-		int dx = Math.abs(start.getX() - end.getX()) + 1,
-			dy = Math.abs(start.getY() - end.getY()) + 1,
-			dz = Math.abs(start.getZ() - end.getZ()) + 1;
+	default IBuilder cached(int cacheSize, ToIntFunction<Vec3i> hash) {
+		HashCacheDoubles<Vec3i> cache = HashCacheDoubles.create(cacheSize, hash,
+			v -> this.get(v.getX(), v.getY(), v.getZ()));
+		return (x, y, z) -> cache.get(new Vec3i(x, y, z));
+	}
 
-		Spliterator<IExtendedEntry> spliterator = Spliterators.spliterator(
-			new ScalingLerpIBuilderIterator(IBuilder.this, start, end, scale),
-			dx*dy*dz, Spliterator.SIZED);
+	/**
+	 * Returns IBuilder that caches values based on x and z coordinates, ignoring Y coordinate.
+	 * <p>
+	 * This should NEVER be used if the IBuilder is intended to generate values that depend on Y coordinate
+	 */
+	default IBuilder cached2d(int cacheSize, ToIntFunction<Vec3i> hash) {
+		HashCacheDoubles<Vec3i> cache = HashCacheDoubles.create(cacheSize,
+			hash,
+			v -> this.get(v.getX(), v.getY(), v.getZ()));
+		return (x, y, z) -> cache.get(new Vec3i(x, 0, z));
+	}
 
-		return StreamSupport.stream(spliterator, false);
+	default Iterator<IExtendedEntry> scaledIterator(Vec3i start, Vec3i end, Vec3i scale) {
+		return new ScalingLerpIBuilderIterator(IBuilder.this, start, end, scale);
 	}
 
 	interface IEntry {
