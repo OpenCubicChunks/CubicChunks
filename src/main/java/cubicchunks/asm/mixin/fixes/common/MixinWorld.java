@@ -37,6 +37,7 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
 import static cubicchunks.asm.JvmNames.CHUNK_IS_POPULATED;
+
 /**
  * Currently only fixes markAndNotifyBlock checking if chunk is populated instead of checking cubes.
  */
@@ -49,7 +50,7 @@ public class MixinWorld {
 	public boolean markNotifyBlock_CubeCheck(Chunk _this,
 	                                         BlockPos pos, Chunk chunk, IBlockState oldstate,
 	                                         IBlockState newState, int flags) {
-		if(!(chunk instanceof Column)) {
+		if (!(chunk instanceof Column)) {
 			// vanilla compatibility
 			return chunk.isPopulated();
 		}

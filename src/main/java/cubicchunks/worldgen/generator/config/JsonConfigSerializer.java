@@ -83,7 +83,7 @@ public class JsonConfigSerializer<T> implements JsonDeserializer<JsonConfigIniti
 	@Override
 	public JsonElement serialize(JsonConfigInitializer<T> factory, Type type, JsonSerializationContext ctx) {
 		JsonObject json = new JsonObject();
-		factory.forEachValue((name, f)-> {
+		factory.forEachValue((name, f) -> {
 			json.addProperty(name, factory.getNumber(name));
 		});
 		return json;

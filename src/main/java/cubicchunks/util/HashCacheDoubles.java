@@ -41,7 +41,7 @@ public class HashCacheDoubles<K> {
 	@SuppressWarnings("uncecked")
 	private HashCacheDoubles(int size, ToIntFunction<K> hashCode, ToDoubleFunction<K> source) {
 		this.cache = new double[size];
-		this.keys =  (K[]) new Object[size];
+		this.keys = (K[]) new Object[size];
 		this.hashFunction = hashCode;
 		this.source = source;
 	}
@@ -60,7 +60,7 @@ public class HashCacheDoubles<K> {
 	}
 
 	public static <K> HashCacheDoubles<K> create(int size, ToDoubleFunction<K> source) {
-		return create(size, k->k.hashCode(), source);
+		return create(size, k -> k.hashCode(), source);
 	}
 
 	public static <K> HashCacheDoubles<K> create(int size, ToIntFunction<K> hashCode, ToDoubleFunction<K> source) {

@@ -52,13 +52,13 @@ public class TestCubeMap {
 	@Test
 	public void addCubesInOrder() {
 		CubeMap testedCubeMap = new CubeMap();
-		for (int y = -30;y < 30;y++) {
+		for (int y = -30; y < 30; y++) {
 			testedCubeMap.put(createCube(y));
 		}
 
 		checkCubeMap(testedCubeMap, 60);
 
-		for (int y = -30;y < 30;y++) {
+		for (int y = -30; y < 30; y++) {
 			try {
 				testedCubeMap.put(createCube(y));
 				fail("Was able to add a Cube to the CubeMap at the same y coordinate as another Cube");
@@ -71,13 +71,13 @@ public class TestCubeMap {
 	@Test
 	public void addCubesInReverse() {
 		CubeMap testedCubeMap = new CubeMap();
-		for (int y = 29;y >= -30;y--) {
+		for (int y = 29; y >= -30; y--) {
 			testedCubeMap.put(createCube(y));
 		}
 
 		checkCubeMap(testedCubeMap, 60);
 
-		for (int y = -30;y < 30;y++) {
+		for (int y = -30; y < 30; y++) {
 			try {
 				testedCubeMap.put(createCube(y));
 				fail("Was able to add a Cube to the CubeMap at the same y coordinate as another Cube");
@@ -90,7 +90,7 @@ public class TestCubeMap {
 	@Test
 	public void findRangeOfCubes() {
 		CubeMap testedCubeMap = new CubeMap();
-		for (int y = -30;y < 30;y++) {
+		for (int y = -30; y < 30; y++) {
 			testedCubeMap.put(createCube(y));
 		}
 
@@ -106,8 +106,8 @@ public class TestCubeMap {
 
 		Random rang = new Random(12345);
 		testedCubeMap = new CubeMap();
-		for (int y = -40;y < 40;y++) {
-			if(rang.nextBoolean()) {
+		for (int y = -40; y < 40; y++) {
+			if (rang.nextBoolean()) {
 				testedCubeMap.put(createCube(y));
 			}
 		}
@@ -141,7 +141,7 @@ public class TestCubeMap {
 
 		// check the order
 		int alwaysLower = Integer.MIN_VALUE;
-		for(Cube cube : range) {
+		for (Cube cube : range) {
 			assertThat(cube.getY(), is(greaterThan(alwaysLower)));
 			alwaysLower = cube.getY();
 		}

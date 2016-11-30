@@ -55,7 +55,7 @@ public class TestHashCacheDoubles {
 			for (int j = 0; j < 100; j++) {
 				int randSmall = rand.nextInt(20);
 
-				int key = randBig+randSmall;
+				int key = randBig + randSmall;
 				assertEqualsExact(source.applyAsDouble(key), cache.get(key));
 			}
 		}
