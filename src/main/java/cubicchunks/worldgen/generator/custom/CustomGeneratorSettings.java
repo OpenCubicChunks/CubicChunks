@@ -40,10 +40,10 @@ import static cubicchunks.worldgen.generator.custom.ConversionUtils.frequencyFro
 
 @JsonConfig
 public class CustomGeneratorSettings {
-	@Value(floatValue = 1) public float heightVariationFactor;
+	@Value(floatValue = 64) public float heightVariationFactor;
 	@Value(floatValue = 0) public float heightVariationOffset;
-	@Value(floatValue = 1) public float heightFactor;
-	@Value(floatValue = 0) public float heightOffset;
+	@Value(floatValue = 64) public float heightFactor;// height scale
+	@Value(floatValue = 64) public float heightOffset;// sea level
 
 	@Value(floatValue = VANILLA_DEPTH_NOISE_FACTOR) public float depthNoiseFactor;
 	@Value(floatValue = 0) public float depthNoiseOffset;
