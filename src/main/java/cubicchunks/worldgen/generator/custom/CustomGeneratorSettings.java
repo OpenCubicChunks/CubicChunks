@@ -25,10 +25,6 @@ package cubicchunks.worldgen.generator.custom;
 
 import net.minecraft.world.gen.ChunkProviderSettings;
 
-import cubicchunks.worldgen.generator.config.JsonConfig;
-import cubicchunks.worldgen.generator.config.JsonConfigInitializer;
-import cubicchunks.worldgen.generator.config.Value;
-
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_DEPTH_NOISE_FACTOR;
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_DEPTH_NOISE_FREQUENCY;
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_LOWHIGH_NOISE_FREQUENCY;
@@ -38,45 +34,45 @@ import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_SELE
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_SELECTOR_NOISE_OFFSET;
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.frequencyFromVanilla;
 
-@JsonConfig
 public class CustomGeneratorSettings {
-	@Value(floatValue = 64) public float heightVariationFactor;
-	@Value(floatValue = 0) public float heightVariationOffset;
-	@Value(floatValue = 64) public float heightFactor;// height scale
-	@Value(floatValue = 64) public float heightOffset;// sea level
+	public float heightVariationFactor = 64;
+	public float heightVariationOffset = 0;
+	public float heightFactor = 64;// height scale
+	public float heightOffset = 64;// sea level
 
-	@Value(floatValue = VANILLA_DEPTH_NOISE_FACTOR) public float depthNoiseFactor;
-	@Value(floatValue = 0) public float depthNoiseOffset;
-	@Value(floatValue = VANILLA_DEPTH_NOISE_FREQUENCY) public float depthNoiseFrequencyX;
-	@Value(floatValue = VANILLA_DEPTH_NOISE_FREQUENCY) public float depthNoiseFrequencyZ;
-	@Value(intValue = 16) public int depthNoiseOctaves;
+	public float depthNoiseFactor = VANILLA_DEPTH_NOISE_FACTOR;
+	public float depthNoiseOffset = 0;
+	public float depthNoiseFrequencyX = VANILLA_DEPTH_NOISE_FREQUENCY;
+	public float depthNoiseFrequencyZ = VANILLA_DEPTH_NOISE_FREQUENCY;
+	public int depthNoiseOctaves = 16;
 
-	@Value(floatValue = VANILLA_SELECTOR_NOISE_FACTOR) public float selectorNoiseFactor;
-	@Value(floatValue = VANILLA_SELECTOR_NOISE_OFFSET) public float selectorNoiseOffset;
-	@Value(floatValue = VANILLA_SELECTOR_NOISE_FREQUENCY_XZ) public float selectorNoiseFrequencyX;
-	@Value(floatValue = VANILLA_SELECTOR_NOISE_FREQUENCY_Y) public float selectorNoiseFrequencyY;
-	@Value(floatValue = VANILLA_SELECTOR_NOISE_FREQUENCY_XZ) public float selectorNoiseFrequencyZ;
-	@Value(intValue = 8) public int selectorNoiseOctaves;
+	public float selectorNoiseFactor = VANILLA_SELECTOR_NOISE_FACTOR;
+	public float selectorNoiseOffset = VANILLA_SELECTOR_NOISE_OFFSET;
+	public float selectorNoiseFrequencyX = VANILLA_SELECTOR_NOISE_FREQUENCY_XZ;
+	public float selectorNoiseFrequencyY = VANILLA_SELECTOR_NOISE_FREQUENCY_Y;
+	public float selectorNoiseFrequencyZ = VANILLA_SELECTOR_NOISE_FREQUENCY_XZ;
+	public int selectorNoiseOctaves = 8;
 
-	@Value(floatValue = 1) public float lowNoiseFactor;
-	@Value(floatValue = 0) public float lowNoiseOffset;
-	@Value(floatValue = VANILLA_LOWHIGH_NOISE_FREQUENCY) public float lowNoiseFrequencyX;
-	@Value(floatValue = VANILLA_LOWHIGH_NOISE_FREQUENCY) public float lowNoiseFrequencyY;
-	@Value(floatValue = VANILLA_LOWHIGH_NOISE_FREQUENCY) public float lowNoiseFrequencyZ;
-	@Value(intValue = 16) public int lowNoiseOctaves;
+	public float lowNoiseFactor = 1;
+	public float lowNoiseOffset = 0;
+	public float lowNoiseFrequencyX = VANILLA_LOWHIGH_NOISE_FREQUENCY;
+	public float lowNoiseFrequencyY = VANILLA_LOWHIGH_NOISE_FREQUENCY;
+	public float lowNoiseFrequencyZ = VANILLA_LOWHIGH_NOISE_FREQUENCY;
+	public int lowNoiseOctaves = 16;
 
-	@Value(floatValue = 1) public float highNoiseFactor;
-	@Value(floatValue = 0) public float highNoiseOffset;
-	@Value(floatValue = VANILLA_LOWHIGH_NOISE_FREQUENCY) public float highNoiseFrequencyX;
-	@Value(floatValue = VANILLA_LOWHIGH_NOISE_FREQUENCY) public float highNoiseFrequencyY;
-	@Value(floatValue = VANILLA_LOWHIGH_NOISE_FREQUENCY) public float highNoiseFrequencyZ;
-	@Value(intValue = 16) public int highNoiseOctaves;
+	public float highNoiseFactor = 1;
+	public float highNoiseOffset = 0;
+	public float highNoiseFrequencyX = VANILLA_LOWHIGH_NOISE_FREQUENCY;
+	public float highNoiseFrequencyY = VANILLA_LOWHIGH_NOISE_FREQUENCY;
+	public float highNoiseFrequencyZ = VANILLA_LOWHIGH_NOISE_FREQUENCY;
+	public int highNoiseOctaves = 16;
 
 	public CustomGeneratorSettings() {
+
 	}
 
 	public static CustomGeneratorSettings defaults() {
-		return new JsonConfigInitializer<>(CustomGeneratorSettings.class).defaults().build();
+		return new CustomGeneratorSettings();
 	}
 
 	public static CustomGeneratorSettings fromVanilla(ChunkProviderSettings settings) {
