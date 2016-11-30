@@ -32,12 +32,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3i;
 
 import java.util.Iterator;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.function.DoublePredicate;
 import java.util.function.ToIntFunction;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -56,18 +52,6 @@ public interface IBuilder {
 	DoublePredicate NOT_POSITIVE = x -> x <= 0;
 
 	double get(int x, int y, int z);
-
-	default Stream<IEntry> stream(Vec3i start, Vec3i end) {
-		return StreamSupport.stream(spliterator(start, end), false);
-	}
-
-	default Spliterator<IEntry> spliterator(Vec3i start, Vec3i end) {
-		int dx = Math.abs(start.getX() - end.getX()) + 1,
-			dy = Math.abs(start.getY() - end.getY()) + 1,
-			dz = Math.abs(start.getZ() - end.getZ()) + 1;
-
-		return Spliterators.spliterator(iterator(start, end), dx*dy*dz, Spliterator.SIZED);
-	}
 
 	default Iterator<IEntry> iterator(Vec3i start, Vec3i end) {
 
