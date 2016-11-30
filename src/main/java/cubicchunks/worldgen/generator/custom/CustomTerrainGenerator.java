@@ -44,8 +44,6 @@ import cubicchunks.worldgen.generator.custom.builder.NoiseSource;
 import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.Coords.blockToLocal;
-import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.X_SECTION_SIZE;
-import static cubicchunks.worldgen.generator.GlobalGeneratorConfig.Z_SECTION_SIZE;
 import static cubicchunks.worldgen.generator.custom.builder.IBuilder.NEGATIVE;
 import static cubicchunks.worldgen.generator.custom.builder.IBuilder.POSITIVE;
 
@@ -64,7 +62,7 @@ public class CustomTerrainGenerator {
 	private final BiomeHeightVolatilitySource biomeSource;
 
 	public CustomTerrainGenerator(ICubicWorld world, final long seed) {
-		this.biomeSource = new BiomeHeightVolatilitySource(world.getBiomeProvider(), 2, X_SECTION_SIZE, Z_SECTION_SIZE);
+		this.biomeSource = new BiomeHeightVolatilitySource(world.getBiomeProvider(), 2);
 		initGenerator(seed);
 	}
 
@@ -139,7 +137,6 @@ public class CustomTerrainGenerator {
 		CubePos cubePos = new CubePos(cubeX, cubeY, cubeZ);
 		BlockPos start = cubePos.getMinBlockPos();
 		BlockPos end = cubePos.getMaxBlockPos();
-		biomeSource.setChunk(cubeX, cubeZ);
 		terrainBuilder.scaledIterator(start, end, new Vec3i(4, 8, 4)).
 			forEachRemaining(e ->
 				cubePrimer.setBlockState(

@@ -37,8 +37,8 @@ import java.util.function.ToIntFunction;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.util.HashCacheDoubles;
 import cubicchunks.util.MathUtil;
+import cubicchunks.util.cache.HashCacheDoubles;
 import mcp.MethodsReturnNonnullByDefault;
 
 @FunctionalInterface

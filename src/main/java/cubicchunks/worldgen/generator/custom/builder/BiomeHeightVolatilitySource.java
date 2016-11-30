@@ -23,14 +23,17 @@
  */
 package cubicchunks.worldgen.generator.custom.builder;
 
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 
-import java.util.Arrays;
+import java.util.function.ToIntFunction;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.util.Coords;
+import cubicchunks.util.cache.HashCache;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
 import mcp.MethodsReturnNonnullByDefault;
@@ -40,31 +43,34 @@ import mcp.MethodsReturnNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BiomeHeightVolatilitySource {
-	private static final double INVALID = Double.MAX_VALUE;
+	private static final int SECTION_SIZE = 4;
+
+	private static final int CHUNKS_CACHE_RADIUS = 5;
+	private static final int CHUNKS_CACHE_SIZE = CHUNKS_CACHE_RADIUS*CHUNKS_CACHE_RADIUS;
+
+	private static final int SECTIONS_CACHE_RADIUS = 32;
+	private static final int SECTIONS_CACHE_SIZE = SECTIONS_CACHE_RADIUS*SECTIONS_CACHE_RADIUS;
+
+	private static final ToIntFunction<ChunkPos> HASH_CHUNKS = v -> v.chunkXPos*CHUNKS_CACHE_RADIUS + v.chunkZPos;
+	private static final ToIntFunction<Vec3i> HASH_SECTIONS = v -> v.getX()*SECTIONS_CACHE_RADIUS + v.getZ();
+
 	private final double[] nearBiomeWeightArray;
 
 	private BiomeProvider biomeGen;
 	private final int smoothRadius;
 	private final int smoothDiameter;
-	private final int xSection;
-	private final int zSection;
 
-	private Biome[] biomesToInterpolate;
-	private Biome[] biomesBlockScale;
+	/** Mapping from chunk position to 4x4 sections 4x4 blocks each */
+	private final HashCache<ChunkPos, Biome[]> biomeCacheSectionsChunk;
+	/** Mapping from chunk positions to Cache with sections of 16x16 blocks (chunk) */
+	private final HashCache<ChunkPos, Biome[]> biomeCacheBlocks;
 
-	private double[][] cachedVolatility;
-	private double[][] cachedHeight;
-	private int chunkX;
-	private int chunkZ;
+	private final HashCache<Vec3i, BiomeTerrainData> biomeDataCache;
 
-
-	public BiomeHeightVolatilitySource(BiomeProvider biomeGen, int smoothRadius, int xSection, int zSection) {
+	public BiomeHeightVolatilitySource(BiomeProvider biomeGen, int smoothRadius) {
 		this.biomeGen = biomeGen;
 		this.smoothRadius = smoothRadius;
 		this.smoothDiameter = smoothRadius*2 + 1;
-		this.xSection = xSection;
-		this.zSection = zSection;
-		this.biomesToInterpolate = null;
 
 		this.nearBiomeWeightArray = new double[this.smoothDiameter*this.smoothDiameter];
 
@@ -75,66 +81,25 @@ public class BiomeHeightVolatilitySource {
 			}
 		}
 
-		cachedVolatility = new double[xSection][zSection];
-		cachedHeight = new double[xSection][zSection];
+		this.biomeCacheSectionsChunk = HashCache.create(CHUNKS_CACHE_SIZE, HASH_CHUNKS, this::generateBiomeSections);
+		this.biomeCacheBlocks = HashCache.create(CHUNKS_CACHE_SIZE, HASH_CHUNKS, this::generateBiomes);
+		this.biomeDataCache = HashCache.create(SECTIONS_CACHE_SIZE, HASH_SECTIONS, this::generateBiomeTerrainData);
 	}
 
-	public void setChunk(int chunkX, int chunkZ) {
-		this.chunkX = chunkX;
-		this.chunkZ = chunkZ;
-		biomesToInterpolate = biomeGen.getBiomesForGeneration(this.biomesToInterpolate,
-			chunkX*(xSection - 1) - this.smoothRadius,
-			chunkZ*(zSection - 1) - this.smoothRadius,
-			xSection + smoothDiameter, zSection + smoothDiameter);
-
-		biomesBlockScale = biomeGen.getBiomes(
-			this.biomesBlockScale,
-			Coords.cubeToMinBlock(chunkX),
-			Coords.cubeToMinBlock(chunkZ),
-			Cube.SIZE, Cube.SIZE);
-
-		for (double[] d : cachedHeight)
-			Arrays.fill(d, INVALID);
-		for (double[] d : cachedVolatility)
-			Arrays.fill(d, INVALID);
-	}
-
-	public double getHeight(int x, int y, int z) {
-		return get(x, z, cachedHeight);
-	}
-
-	public double getVolatility(int x, int y, int z) {
-		return get(x, z, cachedVolatility);
-	}
-
-	public Biome getBiome(int blockX, int blockY, int blockZ) {
-		return biomesBlockScale[Coords.blockToLocal(blockZ) << 4 | Coords.blockToLocal(blockX)];
-	}
-
-	private double get(int x, int z, double[][] array) {
-		int localX = x - chunkX*(xSection - 1);
-		int localZ = z - chunkZ*(zSection - 1);
-		if (array[localX][localZ] != INVALID) {
-			return array[localX][localZ];
-		}
-		updateCached(localX, localZ);
-
-		return array[localX][localZ];
-	}
-
-	private void updateCached(int x, int z) {
+	private BiomeTerrainData generateBiomeTerrainData(Vec3i pos) {
 
 		// Calculate weighted average of nearby biomes height and volatility
 		double smoothVolatility = 0.0F;
 		double smoothHeight = 0.0F;
 
 		double biomeWeightSum = 0.0F;
-		final Biome centerBiomeConfig = getCenterBiome(x, z);
+		final Biome centerBiomeConfig = getBiomeForSection(pos.getX(), pos.getZ());
 		final int lookRadius = this.smoothRadius;
 
 		for (int nextX = -lookRadius; nextX <= lookRadius; nextX++) {
 			for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++) {
-				final Biome biome = getOffsetBiome(x, z, nextX, nextZ);
+				final Biome biome = getBiomeForSection(pos.getX() + nextX, pos.getZ() + nextZ);
+
 				final double biomeHeight = biome.getBaseHeight();
 				final double biomeVolatility = biome.getHeightVariation();
 
@@ -155,22 +120,55 @@ public class BiomeHeightVolatilitySource {
 		smoothVolatility /= biomeWeightSum;
 		smoothHeight /= biomeWeightSum;
 
+		BiomeTerrainData data = new BiomeTerrainData();
 		// Convert from vanilla height/volatility format
 		// to something easier to predict
-		this.cachedVolatility[x][z] = ConversionUtils.biomeHeightVariationVanilla((float) smoothVolatility);
-		this.cachedHeight[x][z] += ConversionUtils.biomeHeightVanilla((float) smoothHeight);
+		data.heightVariation = ConversionUtils.biomeHeightVariationVanilla((float) smoothVolatility);
+		data.height += ConversionUtils.biomeHeightVanilla((float) smoothHeight);
+		return data;
 	}
 
-
-	private Biome getCenterBiome(final int x, final int z) {
-		return this.biomesToInterpolate[x + this.smoothRadius + (z + this.smoothRadius)*(xSection + this.smoothDiameter)];
+	private Biome[] generateBiomes(ChunkPos pos) {
+		return biomeGen.getBiomes(null,
+			Coords.cubeToMinBlock(pos.chunkXPos),
+			Coords.cubeToMinBlock(pos.chunkZPos),
+			Cube.SIZE, Cube.SIZE);
 	}
 
-	private Biome getOffsetBiome(final int x, final int z, int nextX, int nextZ) {
-		return this.biomesToInterpolate[x + nextX + this.smoothRadius + (z + nextZ + this.smoothRadius)*(xSection + this.smoothDiameter)];
+	private Biome[] generateBiomeSections(ChunkPos pos) {
+		return biomeGen.getBiomesForGeneration(null,
+			pos.chunkXPos*SECTION_SIZE, pos.chunkZPos*SECTION_SIZE,
+			SECTION_SIZE, SECTION_SIZE);
+	}
+
+	public double getHeight(int x, int y, int z) {
+		return biomeDataCache.get(new Vec3i(x, 0, z)).height;
+	}
+
+	public double getVolatility(int x, int y, int z) {
+		return biomeDataCache.get(new Vec3i(x, 0, z)).heightVariation;
+	}
+
+	public Biome getBiome(int blockX, int blockY, int blockZ) {
+		ChunkPos pos = new ChunkPos(Coords.blockToCube(blockX), Coords.blockToCube(blockZ));
+		return biomeCacheBlocks.get(pos)[Coords.blockToLocal(blockZ) << 4 | Coords.blockToLocal(blockX)];
+	}
+
+	private Biome getBiomeForSection(int x, int z) {
+		int localX = Math.floorMod(x, 4);
+		int localZ = Math.floorMod(z, 4);
+
+		int chunkX = Math.floorDiv(x, 4);
+		int chunkZ = Math.floorDiv(z, 4);
+
+		return biomeCacheSectionsChunk.get(new ChunkPos(chunkX, chunkZ))[localX + localZ*4];
 	}
 
 	private double calcBiomeWeight(int nextX, int nextZ, double biomeHeight) {
 		return this.nearBiomeWeightArray[nextX + this.smoothRadius + (nextZ + this.smoothRadius)*this.smoothDiameter]/(biomeHeight + 2.0F);
+	}
+
+	private static final class BiomeTerrainData {
+		double height, heightVariation;
 	}
 }
