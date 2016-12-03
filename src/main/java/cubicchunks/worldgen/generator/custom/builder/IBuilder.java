@@ -23,15 +23,11 @@
  */
 package cubicchunks.worldgen.generator.custom.builder;
 
-import com.google.common.collect.AbstractIterator;
-
 import gnu.trove.function.TDoubleFunction;
 
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3i;
 
-import java.util.Iterator;
 import java.util.function.DoublePredicate;
 import java.util.function.ToIntFunction;
 
@@ -52,22 +48,6 @@ public interface IBuilder {
 	DoublePredicate NOT_POSITIVE = x -> x <= 0;
 
 	double get(int x, int y, int z);
-
-	default Iterator<IEntry> iterator(Vec3i start, Vec3i end) {
-
-		return new AbstractIterator<IEntry>() {
-			Iterator<BlockPos> posIt = BlockPos.getAllInBox(new BlockPos(start), new BlockPos(end)).iterator();
-
-			@Override protected IEntry computeNext() {
-				BlockPos p = posIt.hasNext() ? posIt.next() : null;
-				if (p == null) {
-					endOfData();
-					return null;
-				}
-				return new ImmutbleEntry(p.getX(), p.getY(), p.getZ(), get(p.getX(), p.getY(), p.getZ()));
-			}
-		};
-	}
 
 	default IBuilder add(IBuilder builder) {
 		return (x, y, z) -> this.get(x, y, z) + builder.get(x, y, z);
@@ -210,83 +190,146 @@ public interface IBuilder {
 		return (x, y, z) -> cache.get(new Vec3i(x, 0, z));
 	}
 
-	default Iterator<IExtendedEntry> scaledIterator(Vec3i start, Vec3i end, Vec3i scale) {
-		return new ScalingLerpIBuilderIterator(IBuilder.this, start, end, scale);
+	default void forEachScaled(Vec3i startUnscaled, Vec3i endUnscaled, Vec3i scale, NoiseConsumer consumer) {
+
+		if (scale.getZ() != scale.getX()) {
+			throw new UnsupportedOperationException("X and Z scale must be the same!");
+		}
+		final double/*[]*/[][] gradX = new double/*[scale.getX()]*/[scale.getY()][scale.getZ()];
+		final double[]/*[]*/[] gradY = new double[scale.getX()]/*[scale.getY()]*/[scale.getZ()];
+		final double[][]/*[]*/ gradZ = new double[scale.getX()][scale.getY()]/*[scale.getZ()]*/;
+		final double[][][] vals = new double[scale.getX()][scale.getY()][scale.getZ()];
+
+		int xScale = scale.getX();
+		int yScale = scale.getY();
+		int zScale = scale.getZ();
+
+		double stepX = 1.0/xScale;
+		double stepY = 1.0/yScale;
+		double stepZ = 1.0/zScale;
+
+		int minX = startUnscaled.getX();
+		int minY = startUnscaled.getY();
+		int minZ = startUnscaled.getZ();
+		int maxX = endUnscaled.getX();
+		int maxY = endUnscaled.getY();
+		int maxZ = endUnscaled.getZ();
+		for (int sectionX = minX; sectionX < maxX; ++sectionX) {
+			int x = sectionX*xScale;
+			for (int sectionZ = minZ; sectionZ < maxZ; ++sectionZ) {
+				int z = sectionZ*zScale;
+				for (int sectionY = minY; sectionY < maxY; ++sectionY) {
+					int y = sectionY*yScale;
+
+					final double v000 = this.get(x + xScale*0, y + yScale*0, z + zScale*0);
+					final double v001 = this.get(x + xScale*0, y + yScale*0, z + zScale*1);
+					final double v010 = this.get(x + xScale*0, y + yScale*1, z + zScale*0);
+					final double v011 = this.get(x + xScale*0, y + yScale*1, z + zScale*1);
+					final double v100 = this.get(x + xScale*1, y + yScale*0, z + zScale*0);
+					final double v101 = this.get(x + xScale*1, y + yScale*0, z + zScale*1);
+					final double v110 = this.get(x + xScale*1, y + yScale*1, z + zScale*0);
+					final double v111 = this.get(x + xScale*1, y + yScale*1, z + zScale*1);
+
+					double v0y0 = v000;
+					double v0y1 = v001;
+					double v1y0 = v100;
+					double v1y1 = v101;
+					final double d_dy__0y0 = (v010 - v000)*stepY;
+					final double d_dy__0y1 = (v011 - v001)*stepY;
+					final double d_dy__1y0 = (v110 - v100)*stepY;
+					final double d_dy__1y1 = (v111 - v101)*stepY;
+
+					for (int yRel = 0; yRel < yScale; ++yRel) {
+						double vxy0 = v0y0;
+						double vxy1 = v0y1;
+						final double d_dx__xy0 = (v1y0 - v0y0)*stepX;
+						final double d_dx__xy1 = (v1y1 - v0y1)*stepX;
+
+						// gradients start
+						double v0yz = v0y0;
+						double v1yz = v1y0;
+
+						final double d_dz__0yz = (v0y1 - v0y0)*stepX;
+						final double d_dz__1yz = (v1y1 - v1y0)*stepX;
+						// gradients end
+
+						for (int xRel = 0; xRel < xScale; ++xRel) {
+							final double d_dz__xyz = (vxy1 - vxy0)*stepZ;
+							double vxyz = vxy0;
+
+							// gradients start
+							final double d_dx__xyz = (v1yz - v0yz)*stepZ;
+							gradX[yRel][xRel] = d_dx__xyz; // for this one x and z are swapped
+							gradZ[xRel][yRel] = d_dz__xyz;
+							// gradients end
+							for (int zRel = 0; zRel < zScale; ++zRel) {
+								// to get gradients working, consumer usage moved to later
+								vals[xRel][yRel][zRel] = vxyz;
+								vxyz += d_dz__xyz;
+							}
+
+							vxy0 += d_dx__xy0;
+							vxy1 += d_dx__xy1;
+							// gradients start
+							v0yz += d_dz__0yz;
+							v1yz += d_dz__1yz;
+							// gradients end
+						}
+
+						v0y0 += d_dy__0y0;
+						v0y1 += d_dy__0y1;
+						v1y0 += d_dy__1y0;
+						v1y1 += d_dy__1y1;
+
+					}
+					// gradients start
+					double v00z = v000;
+					double v01z = v010;
+					double v10z = v100;
+					double v11z = v110;
+
+					final double d_dz__00z = (v001 - v000)*stepZ;
+					final double d_dz__01z = (v011 - v010)*stepZ;
+					final double d_dz__10z = (v101 - v100)*stepZ;
+					final double d_dz__11z = (v111 - v110)*stepZ;
+
+					for (int zRel = 0; zRel < zScale; ++zRel) {
+
+						double vx0z = v00z;
+						double vx1z = v01z;
+
+						final double d_dx__x0z = (v10z - v00z)*stepX;
+						final double d_dx__x1z = (v11z - v01z)*stepX;
+
+						for (int xRel = 0; xRel < xScale; ++xRel) {
+
+							double d_dy__xyz = (vx1z - vx0z)*stepY;
+
+							gradY[xRel][zRel] = d_dy__xyz;
+
+							vx0z += d_dx__x0z;
+							vx1z += d_dx__x1z;
+						}
+						v00z += d_dz__00z;
+						v01z += d_dz__01z;
+						v10z += d_dz__10z;
+						v11z += d_dz__11z;
+					}
+
+					for (int xRel = 0; xRel < xScale; ++xRel) {
+						for (int zRel = 0; zRel < zScale; ++zRel) {
+							for (int yRel = 0; yRel < yScale; ++yRel) {
+								double vxyz = vals[xRel][yRel][zRel];
+								double d_dx__xyz = gradX[yRel][zRel];
+								double d_dy__xyz = gradY[xRel][zRel];
+								double d_dz__xyz = gradZ[xRel][yRel];
+								consumer.accept(x + xRel, y + yRel, z + zRel, d_dx__xyz, d_dy__xyz, d_dz__xyz, vxyz);
+							}
+						}
+					}
+					// gradients end
+				}
+			}
+		}
 	}
-
-	interface IEntry {
-		int getX();
-
-		int getY();
-
-		int getZ();
-
-		double getValue();
-	}
-
-	interface IExtendedEntry extends IEntry {
-		double getXGradient();
-
-		double getYGradient();
-
-		double getZGradient();
-	}
-
-	class ImmutbleEntry implements IEntry {
-
-		private final int x;
-		private final int y;
-		private final int z;
-		private final double value;
-
-		public ImmutbleEntry(int x, int y, int z, double value) {
-			this.x = x;
-			this.y = y;
-			this.z = z;
-			this.value = value;
-		}
-
-		@Override public int getX() {
-			return x;
-		}
-
-		@Override public int getY() {
-			return y;
-		}
-
-		@Override public int getZ() {
-			return z;
-		}
-
-		@Override public double getValue() {
-			return value;
-		}
-	}
-
-	class ImmutbleExtendedEntry extends ImmutbleEntry implements IExtendedEntry {
-
-		private final double gradX;
-		private final double gradY;
-		private final double gradZ;
-
-		public ImmutbleExtendedEntry(int x, int y, int z, double value, double gradX, double gradY, double gradZ) {
-			super(x, y, z, value);
-			this.gradX = gradX;
-			this.gradY = gradY;
-			this.gradZ = gradZ;
-		}
-
-		@Override public double getXGradient() {
-			return gradX;
-		}
-
-		@Override public double getYGradient() {
-			return gradY;
-		}
-
-		@Override public double getZGradient() {
-			return gradZ;
-		}
-	}
-
 }

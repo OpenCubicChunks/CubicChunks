@@ -29,16 +29,20 @@ package cubicchunks.worldgen.generator.custom;
 public class ConversionUtils {
 
 	// uh... don't try to check it. It will take forever. It's correct. At least in MC 1.11.
+	// --> /8 because we are using world coords instead of unscaled coords
+	private static final float YSCALE = 8;
+	private static final float XZSCALE = 4;
 
-	public static final float VANILLA_DEPTH_NOISE_FACTOR = 1024f/125.0f;
+	public static final float VANILLA_DEPTH_NOISE_FACTOR = 1024f/125.0f/YSCALE;
 	public static final float VANILLA_SELECTOR_NOISE_FACTOR = 12.75f;
 	public static final float VANILLA_SELECTOR_NOISE_OFFSET = 0.5f;
 
-	public static final float VANILLA_DEPTH_NOISE_FREQUENCY = 200f/(2 << 15);
-	public static final float VANILLA_SELECTOR_NOISE_FREQUENCY_XZ = (684.412f/80.0f)/(2 << 7);
-	public static final float VANILLA_SELECTOR_NOISE_FREQUENCY_Y = (684.412f/160.0f)/(2 << 7);
+	public static final float VANILLA_DEPTH_NOISE_FREQUENCY = 200f/(2 << 15)/XZSCALE;
+	public static final float VANILLA_SELECTOR_NOISE_FREQUENCY_XZ = (684.412f/80.0f)/(2 << 7)/XZSCALE;
+	public static final float VANILLA_SELECTOR_NOISE_FREQUENCY_Y = (684.412f/160.0f)/(2 << 7)/YSCALE;
 
-	public static final float VANILLA_LOWHIGH_NOISE_FREQUENCY = (684.412f)/(2 << 15);
+	public static final float VANILLA_LOWHIGH_NOISE_FREQUENCY_XZ = (684.412f)/(2 << 15)/XZSCALE;
+	public static final float VANILLA_LOWHIGH_NOISE_FREQUENCY_Y = (684.412f)/(2 << 15)/YSCALE;
 
 	public static float biomeHeightVariationVanilla(float heightVariation) {
 		return 2.4f*heightVariation + 4.0f/15.0f;

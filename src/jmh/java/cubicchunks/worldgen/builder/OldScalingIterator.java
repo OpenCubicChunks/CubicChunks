@@ -21,9 +21,8 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.builder;
+package cubicchunks.worldgen.builder;
 
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3i;
 
 import java.util.Iterator;
@@ -31,6 +30,7 @@ import java.util.NoSuchElementException;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import mcp.MethodsReturnNonnullByDefault;
 
 import static cubicchunks.util.MathUtil.lerp;
@@ -39,8 +39,11 @@ import static java.lang.Math.min;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
+public class OldScalingIterator implements Iterator<OldScalingIterator.IExtendedEntry> {
 	// TODO: explain how it works
+
+	private final MutableExtendedEntry entry = new MutableExtendedEntry();
+
 	private final int minX;
 	private final int minY;
 	private final int minZ;
@@ -82,7 +85,7 @@ class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
 	private double dxy0, dxy1;
 	private double dxyz;
 
-	ScalingLerpIBuilderIterator(IBuilder builder, Vec3i start, Vec3i end, Vec3i scale) {
+	OldScalingIterator(IBuilder builder, Vec3i start, Vec3i end, Vec3i scale) {
 		this.builder = builder;
 		this.scaleX = scale.getX();
 		this.scaleY = scale.getY();
@@ -95,12 +98,12 @@ class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
 		maxY = max(start.getY(), end.getY());
 		maxZ = max(start.getZ(), end.getZ());
 
-		minGridX = MathHelper.intFloorDiv(minX, scaleX);
-		minGridY = MathHelper.intFloorDiv(minY, scaleY);
-		minGridZ = MathHelper.intFloorDiv(minZ, scaleZ);
-		maxGridX = MathHelper.intFloorDiv(maxX, scaleX);
-		maxGridY = MathHelper.intFloorDiv(maxY, scaleY);
-		maxGridZ = MathHelper.intFloorDiv(maxZ, scaleZ);
+		minGridX = Math.floorDiv(minX, scaleX);
+		minGridY = Math.floorDiv(minY, scaleY);
+		minGridZ = Math.floorDiv(minZ, scaleZ);
+		maxGridX = Math.floorDiv(maxX, scaleX);
+		maxGridY = Math.floorDiv(maxY, scaleY);
+		maxGridZ = Math.floorDiv(maxZ, scaleZ);
 
 		nextGridX = minGridX;
 		nextGridY = minGridY;
@@ -119,8 +122,15 @@ class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
 		return nextGridX <= maxGridX;
 	}
 
-	@Override public IBuilder.IExtendedEntry next() throws NoSuchElementException {
+	@Override public IExtendedEntry next() throws NoSuchElementException {
 		checkHasNext();
+		updateCoordsAndDensity();
+		setEntryData();
+		incrementPos();
+		return entry;
+	}
+
+	private void updateCoordsAndDensity() {
 		if (nextRelZ == 0) {
 			if (nextRelY == 0) {
 				if (nextRelX == 0) {
@@ -131,7 +141,9 @@ class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
 			onResetZ();
 		}
 		vxyz += dxyz;
+	}
 
+	private void setEntryData() {
 		//values needed to calculate gradient vector
 		double v00z = lerp(nextRelZ*zStep, v000, v001);
 		double v01z = lerp(nextRelZ*zStep, v010, v011);
@@ -149,15 +161,13 @@ class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
 		double yGrad = (vx1z - vx0z)*yStep;
 		double zGrad = (vxy1 - vxy0)*zStep;
 
-		IBuilder.IExtendedEntry entry = new IBuilder.ImmutbleExtendedEntry(
-			global(nextGridX, scaleX, nextRelX),
-			global(nextGridY, scaleY, nextRelY),
-			global(nextGridZ, scaleZ, nextRelZ),
-			vxyz, xGrad, yGrad, zGrad
-		);
-
-		incrementPos();
-		return entry;
+		entry.setX(global(nextGridX, scaleX, nextRelX));
+		entry.setY(global(nextGridY, scaleY, nextRelY));
+		entry.setZ(global(nextGridZ, scaleZ, nextRelZ));
+		entry.setValue(vxyz);
+		entry.setGradX(xGrad);
+		entry.setGradY(yGrad);
+		entry.setGradZ(zGrad);
 	}
 
 	private void checkHasNext() {
@@ -168,7 +178,6 @@ class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
 
 	private void onResetX() {
 		nextRelX = boundClampRelPosMin(nextGridX, scaleX, minX);
-
 		// get corners
 		v000 = builder.get(nextGridX, nextGridY, nextGridZ);
 		v001 = builder.get(nextGridX, nextGridY, nextGridZ + 1);
@@ -208,7 +217,6 @@ class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
 
 	private void onResetZ() {
 		nextRelZ = boundClampRelPosMin(nextGridZ, scaleZ, minZ);
-
 		dxyz = (vxy1 - vxy0)*zStep;
 
 		vxyz = vxy0 + dxyz*nextRelZ - dxyz;
@@ -256,4 +264,123 @@ class ScalingLerpIBuilderIterator implements Iterator<IBuilder.IExtendedEntry> {
 	private static int global(int gridPos, int scale, int relPos) {
 		return gridPos*scale + relPos;
 	}
+
+
+	interface IEntry {
+		int getX();
+
+		int getY();
+
+		int getZ();
+
+		double getValue();
+	}
+
+	interface IExtendedEntry extends IEntry {
+		double getXGradient();
+
+		double getYGradient();
+
+		double getZGradient();
+	}
+
+	public static class ImmutbleEntry implements IEntry {
+
+		private final int x;
+		private final int y;
+		private final int z;
+		private final double value;
+
+		public ImmutbleEntry(int x, int y, int z, double value) {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+			this.value = value;
+		}
+
+		@Override public int getX() {
+			return x;
+		}
+
+		@Override public int getY() {
+			return y;
+		}
+
+		@Override public int getZ() {
+			return z;
+		}
+
+		@Override public double getValue() {
+			return value;
+		}
+	}
+
+
+	public static class MutableExtendedEntry implements IExtendedEntry {
+
+		private int x;
+		private int y;
+		private int z;
+		private double value;
+		private double gradX;
+		private double gradY;
+		private double gradZ;
+
+		@Override public double getXGradient() {
+			return gradX;
+		}
+
+		@Override public double getYGradient() {
+			return gradY;
+		}
+
+		@Override public double getZGradient() {
+			return gradZ;
+		}
+
+		@Override public int getX() {
+			return this.x;
+		}
+
+		@Override public int getY() {
+			return this.y;
+		}
+
+		@Override public int getZ() {
+			return this.z;
+		}
+
+		@Override public double getValue() {
+			return this.value;
+		}
+
+		public void setX(int x) {
+			this.x = x;
+		}
+
+		public void setY(int y) {
+			this.y = y;
+		}
+
+		public void setZ(int z) {
+			this.z = z;
+		}
+
+		public void setValue(double value) {
+			this.value = value;
+		}
+
+		public void setGradX(double gradX) {
+			this.gradX = gradX;
+		}
+
+		public void setGradY(double gradY) {
+			this.gradY = gradY;
+		}
+
+		public void setGradZ(double gradZ) {
+			this.gradZ = gradZ;
+		}
+	}
+
 }

@@ -30,12 +30,14 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.ChunkProviderSettings;
 
+import org.lwjgl.input.Keyboard;
+
 import java.util.Random;
 import java.util.function.ToIntFunction;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.util.CubePos;
+import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.builder.BiomeHeightVolatilitySource;
@@ -60,6 +62,7 @@ public class CustomTerrainGenerator {
 	// Number of octaves for the noise function
 	private IBuilder terrainBuilder;
 	private final BiomeHeightVolatilitySource biomeSource;
+	private CustomGeneratorSettings conf;
 
 	public CustomTerrainGenerator(ICubicWorld world, final long seed) {
 		this.biomeSource = new BiomeHeightVolatilitySource(world.getBiomeProvider(), 2);
@@ -73,7 +76,7 @@ public class CustomTerrainGenerator {
 		factoryVanilla.setDefaults();
 		ChunkProviderSettings confVanilla = factoryVanilla.build();
 
-		CustomGeneratorSettings conf = CustomGeneratorSettings.fromVanilla(confVanilla);
+		conf = CustomGeneratorSettings.fromVanilla(confVanilla);
 
 		IBuilder selector = NoiseSource.perlin()
 			.seed(rnd.nextLong())
@@ -115,13 +118,15 @@ public class CustomTerrainGenerator {
 			.mul(conf.heightFactor)
 			.add(conf.heightOffset);
 
+		double specialVariationFactor = conf.specialHeightVariationFactorBelowAverageY;
 		IBuilder volatility = ((IBuilder) biomeSource::getVolatility)
+			.mul((x, y, z) -> height.get(x, y, z) > y ? specialVariationFactor : 1)
 			.mul(conf.heightVariationFactor)
 			.add(conf.heightVariationOffset);
 
 		this.terrainBuilder = selector
 			.lerp(low, high).mul(volatility).add(height).add(randomHeight2d)
-			.sub((x, y, z) -> y*8.0)
+			.sub((x, y, z) -> y)
 			.cached(CACHE_SIZE_3D, HASH_3D);
 	}
 
@@ -134,17 +139,22 @@ public class CustomTerrainGenerator {
 	 * @param cubeZ cube z location
 	 */
 	public void generate(final ICubePrimer cubePrimer, int cubeX, int cubeY, int cubeZ) {
-		CubePos cubePos = new CubePos(cubeX, cubeY, cubeZ);
-		BlockPos start = cubePos.getMinBlockPos();
-		BlockPos end = cubePos.getMaxBlockPos();
-		terrainBuilder.scaledIterator(start, end, new Vec3i(4, 8, 4)).
-			forEachRemaining(e ->
+		// when debugging is enabled, allow reloading generator settings after pressing L
+		// no need to restart after applying changes.
+		// Seed it changed to some constant because world isn't easily accessible here
+		if (CubicChunks.DEBUG_ENABLED && Keyboard.isKeyDown(Keyboard.KEY_L)) {
+			initGenerator(42);
+		}
+
+		BlockPos start = new BlockPos(cubeX*4, cubeY*2, cubeZ*4);
+		BlockPos end = start.add(4, 2, 4);
+		terrainBuilder.forEachScaled(start, end, new Vec3i(4, 8, 4),
+			(x, y, z, dx, dy, dz, v) ->
 				cubePrimer.setBlockState(
-					blockToLocal(e.getX()),
-					blockToLocal(e.getY()),
-					blockToLocal(e.getZ()),
-					getBlock(e))
-			);
+					blockToLocal(x), blockToLocal(y), blockToLocal(z),
+					getBlock(x, y, z, dx, dy, dz, v))
+		);
+
 	}
 
 	/**
@@ -152,31 +162,26 @@ public class CustomTerrainGenerator {
 	 *
 	 * @return The block state
 	 */
-	private IBlockState getBlock(IBuilder.IExtendedEntry entry) {
-		int x = entry.getX();
-		int y = entry.getY();
-		int z = entry.getZ();
-		double density = entry.getValue();
-		double yGrad = entry.getYGradient();
+	private IBlockState getBlock(int x, int y, int z, double dx, double dy, double dz, double density) {
 		Biome biome = biomeSource.getBiome(x, y, z);
 
-		final int seaLevel = 64;
+		double dir = dy + 0.25*Math.sqrt(dx*dx + dz*dz);
 		final double dirtDepth = 4;
 		IBlockState state = Blocks.AIR.getDefaultState();
 		if (density > 0) {
 			state = Blocks.STONE.getDefaultState();
 			//if the block above would be empty:
-			if (density + yGrad <= 0) {
-				if (y < seaLevel - 1) {
+			if (density + dy <= 0) {
+				if (y < conf.waterLevel - 1) {
 					state = biome.fillerBlock;
 				} else {
 					state = biome.topBlock;
 				}
 				//if density decreases as we go up && density < dirtDepth
-			} else if (yGrad < 0 && density < dirtDepth) {
+			} else if (dir < 0 && density < dirtDepth) {
 				state = biome.fillerBlock;
 			}
-		} else if (y < seaLevel) {
+		} else if (y < conf.waterLevel) {
 			// TODO replace check with GlobalGeneratorConfig.SEA_LEVEL
 			state = Blocks.WATER.getDefaultState();
 		}

@@ -1,6 +1,7 @@
-
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import me.champeau.gradle.JMHPlugin
+import me.champeau.gradle.JMHPluginExtension
 import net.minecraftforge.gradle.user.ReobfMappingType
 import net.minecraftforge.gradle.user.ReobfTaskFactory
 import net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension
@@ -49,6 +50,7 @@ buildscript {
         classpath("org.spongepowered:mixingradle:0.4-SNAPSHOT")
         classpath("com.github.jengelman.gradle.plugins:shadow:1.2.3")
         classpath("gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.13.1")
+        classpath("me.champeau.gradle:jmh-gradle-plugin:0.3.1")
     }
 }
 
@@ -59,6 +61,7 @@ apply {
     plugin<ShadowPlugin>()
     plugin<MixinGradlePlugin>()
     plugin<LicensePlugin>()
+    plugin<JMHPlugin>()
 }
 
 //it can't be named forgeVersion because ForgeExtension has property named forgeVersion
@@ -72,7 +75,7 @@ val minecraft = the<ForgeExtension>()
 
 defaultTasks = listOf("licenseFormat", "build")
 
-version = getModVersionAndWriteToFile()
+version = getModVersion()
 group = "cubichunks"
 
 configure<IdeaModel> {
@@ -112,7 +115,8 @@ configure<ForgeExtension> {
             "-Dcubicchunks.debug=true", //various debug options of cubic chunks mod. Adds items that are not normally there!
             "-XX:-OmitStackTraceInFastThrow", //without this sometimes you end up with exception with empty stacktrace
             "-Dmixin.checks.interfaces=true", //check if all interface methods are overriden in mixin
-            "-Dfml.noGrab=false"//change to disable Minecraft taking control over mouse
+            "-Dfml.noGrab=false", //change to disable Minecraft taking control over mouse
+            "-ea" //enable assertions
     )
 
     clientJvmArgs.addAll(args)
@@ -144,6 +148,23 @@ get<Task>("build")() {
     dependsOn("reobfShadowJar")
 }
 
+configure<JMHPluginExtension> {
+    iterations = 10
+    benchmarkMode = listOf("thrpt")
+    batchSize = 16
+    timeOnIteration = "1000ms"
+    fork = 1
+    threads = 1
+    timeUnit = "ms"
+    verbosity = "NORMAL"
+    warmup = "1000ms"
+    warmupBatchSize = 16
+    warmupForks = 1
+    warmupIterations = 10
+    profilers = listOf("perfasm")
+    jmhVersion = "1.17.1"
+}
+
 repositories {
     mavenCentral()
     jcenter()
@@ -156,6 +177,8 @@ repositories {
 }
 
 dependencies {
+    val jmh = configurations.getByName("jmh")
+
     compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
     compile("org.mapdb:mapdb:3.0.0-RC2") {
         exclude(mapOf("module" to "guava"))
@@ -173,7 +196,14 @@ dependencies {
     }
 
     compile("com.carrotsearch:hppc:0.7.1")
+
+    jmh("org.openjdk.jmh:jmh-generator-annprocess:1.17.1")
 }
+
+configurations.getByName("jmh").extendsFrom(configurations.compile)
+configurations.getByName("jmh").extendsFrom(configurations.getByName("forgeGradleMc"))
+configurations.getByName("jmh").extendsFrom(configurations.getByName("forgeGradleMcDeps"))
+configurations.testCompile.extendsFrom(configurations.getByName("forgeGradleGradleStart"))
 
 val jar = get<Jar>("jar")
 jar {
@@ -246,10 +276,26 @@ fun getMcVersion(): String {
     return minecraft.version
 }
 
+task("writeModVersion") {
+    dependsOn("build")
+    file("VERSION").writeText("VERSION=" + version)
+}
 //returns version string according to this: http://mcforge.readthedocs.org/en/latest/conventions/versioning/
 //format: MCVERSION-MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)
 //rcX and betaX are not implemented yet
-fun getModVersion(describe: String, branch: String): String {
+fun getModVersion(): String {
+    try {
+        val git = Grgit.open()
+        val describe = DescribeOp(git.repository).call()
+        val branch = git.branch.current.name
+        return getModVersion_do(describe, branch);
+    } catch(ex: RepositoryNotFoundException) {
+        logger.error("Git repository not found! Version will be incorrect!")
+        return getModVersion_do("v9999.9999-9999-gffffff", "localbuild")
+    }
+}
+
+fun getModVersion_do(describe: String, branch: String) : String {
     if (branch.startsWith("MC_")) {
         val branchMcVersion = branch.substring("MC_".length)
         if (branchMcVersion != getMcVersion()) {
@@ -297,22 +343,6 @@ fun getModVersion(describe: String, branch: String): String {
     val patch = if (minorFreeze < 0) 0 else (commitSinceTag - minorFreeze)
 
     val version = String.format("%s-%s.%d.%d%s%s", mcVersion, modAndApiVersion, minor, patch, versionSuffix, branchSuffix)
-    return version
-}
-
-fun getModVersionAndWriteToFile(): String {
-    val git: Grgit
-    try {
-        git = Grgit.open()
-    } catch(ex: RepositoryNotFoundException) {
-        logger.error("Git repository not found! Version will be incorrect!")
-        return getModVersion("", "master")
-    }
-    val describe = DescribeOp(git.repository).call()
-    val branch = git.branch.current.name
-    val version = getModVersion(describe, branch)
-    val file = file("VERSION")
-    file.writeText("VERSION=" + version)
     return version
 }
 

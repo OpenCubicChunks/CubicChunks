@@ -142,11 +142,11 @@ public class BiomeHeightVolatilitySource {
 	}
 
 	public double getHeight(int x, int y, int z) {
-		return biomeDataCache.get(new Vec3i(x, 0, z)).height;
+		return biomeDataCache.get(new Vec3i(x/4.0, 0, z/4.0)).height;
 	}
 
 	public double getVolatility(int x, int y, int z) {
-		return biomeDataCache.get(new Vec3i(x, 0, z)).heightVariation;
+		return biomeDataCache.get(new Vec3i(x/4.0, 0, z/4.0)).heightVariation;
 	}
 
 	public Biome getBiome(int blockX, int blockY, int blockZ) {

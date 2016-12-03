@@ -27,7 +27,8 @@ import net.minecraft.world.gen.ChunkProviderSettings;
 
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_DEPTH_NOISE_FACTOR;
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_DEPTH_NOISE_FREQUENCY;
-import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_LOWHIGH_NOISE_FREQUENCY;
+import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_LOWHIGH_NOISE_FREQUENCY_XZ;
+import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_LOWHIGH_NOISE_FREQUENCY_Y;
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_SELECTOR_NOISE_FACTOR;
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_SELECTOR_NOISE_FREQUENCY_XZ;
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_SELECTOR_NOISE_FREQUENCY_Y;
@@ -35,7 +36,12 @@ import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_SELE
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.frequencyFromVanilla;
 
 public class CustomGeneratorSettings {
+	/**
+	 * Terrain shape
+	 */
+
 	public float heightVariationFactor = 64;
+	public float specialHeightVariationFactorBelowAverageY = 0.25f;
 	public float heightVariationOffset = 0;
 	public float heightFactor = 64;// height scale
 	public float heightOffset = 64;// sea level
@@ -55,17 +61,25 @@ public class CustomGeneratorSettings {
 
 	public float lowNoiseFactor = 1;
 	public float lowNoiseOffset = 0;
-	public float lowNoiseFrequencyX = VANILLA_LOWHIGH_NOISE_FREQUENCY;
-	public float lowNoiseFrequencyY = VANILLA_LOWHIGH_NOISE_FREQUENCY;
-	public float lowNoiseFrequencyZ = VANILLA_LOWHIGH_NOISE_FREQUENCY;
+	public float lowNoiseFrequencyX = VANILLA_LOWHIGH_NOISE_FREQUENCY_XZ;
+	public float lowNoiseFrequencyY = VANILLA_LOWHIGH_NOISE_FREQUENCY_Y;
+	public float lowNoiseFrequencyZ = VANILLA_LOWHIGH_NOISE_FREQUENCY_XZ;
 	public int lowNoiseOctaves = 16;
 
 	public float highNoiseFactor = 1;
 	public float highNoiseOffset = 0;
-	public float highNoiseFrequencyX = VANILLA_LOWHIGH_NOISE_FREQUENCY;
-	public float highNoiseFrequencyY = VANILLA_LOWHIGH_NOISE_FREQUENCY;
-	public float highNoiseFrequencyZ = VANILLA_LOWHIGH_NOISE_FREQUENCY;
+	public float highNoiseFrequencyX = VANILLA_LOWHIGH_NOISE_FREQUENCY_XZ;
+	public float highNoiseFrequencyY = VANILLA_LOWHIGH_NOISE_FREQUENCY_Y;
+	public float highNoiseFrequencyZ = VANILLA_LOWHIGH_NOISE_FREQUENCY_XZ;
 	public int highNoiseOctaves = 16;
+
+	// TODO: public boolean negativeHeightVariationInvertsTerrain = true;
+
+	/**
+	 * Block placement, pre-populator
+	 */
+
+	public int waterLevel = 63; // note: this is not named seaLevel to avoid confusion
 
 	public CustomGeneratorSettings() {
 
