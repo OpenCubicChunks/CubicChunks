@@ -27,7 +27,7 @@ import com.google.common.collect.Lists;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.spongepowered.test.launch.LaunchWrapperTestRunner;
+import org.spongepowered.lwts.runner.LaunchWrapperTestRunner;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

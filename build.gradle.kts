@@ -246,7 +246,7 @@ shadowJar {
 
 val test = get<Test>("test")
 test {
-    systemProperty("org.spongepowered.test.launch.tweaker", "cubicchunks.tweaker.MixinTweakerServer")
+    systemProperty("lwts.tweaker", "cubicchunks.tweaker.MixinTweakerServer")
 }
 
 val processResources = get<ProcessResources>("processResources")

@@ -26,7 +26,7 @@ package cubicchunks.tweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import org.spongepowered.asm.mixin.MixinEnvironment;
-import org.spongepowered.test.launch.AbstractTestTweaker;
+import org.spongepowered.lwts.AbstractTestTweaker;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

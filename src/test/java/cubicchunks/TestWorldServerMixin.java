@@ -39,7 +39,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.spongepowered.test.launch.LaunchWrapperTestRunner;
+import org.spongepowered.lwts.runner.LaunchWrapperTestRunner;
 
 import java.io.IOException;
 
