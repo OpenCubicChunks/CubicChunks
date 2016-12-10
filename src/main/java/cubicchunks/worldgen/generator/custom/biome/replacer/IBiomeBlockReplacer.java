@@ -21,7 +21,9 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.builder;
+package cubicchunks.worldgen.generator.custom.biome.replacer;
+
+import net.minecraft.block.state.IBlockState;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -29,16 +31,24 @@ import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@FunctionalInterface
-public interface NoiseConsumer {
+public interface IBiomeBlockReplacer {
 	/**
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param z the z coordinate
-	 * @param gradX approximate derivative over X coordinate
-	 * @param gradY approximate derivative over Y coordinate
-	 * @param gradZ approximate derivative over Z coordinate
-	 * @param value the noise value
+	 * Replaces the given block with another block based on given location, density gradient and density value. Biome
+	 * block replacers can be chained (output if one replacer used as input to another replacer)
+	 * <p>
+	 * The common interpretation of density value: If it's greater than 0, there is block at that position. Density is
+	 * scaled in such way that it approximately represents how many blocks below the surface this position is.
+	 * <p>
+	 * Gradient values approximate how the value will change after going 1 block in x/y/z direction.
+	 *
+	 * @param previousBlock the block that was there before using this replacer
+	 * @param x the block X coordinate
+	 * @param y the block Y coordinate
+	 * @param z the block Z coordinate
+	 * @param dx the X component of density gradient
+	 * @param dy the Y component of density gradient
+	 * @param dz the Z component of density gradient
+	 * @param density the density value
 	 */
-	void accept(int x, int y, int z, double gradX, double gradY, double gradZ, double value);
+	IBlockState getReplacedBlock(IBlockState previousBlock, int x, int y, int z, double dx, double dy, double dz, double density);
 }

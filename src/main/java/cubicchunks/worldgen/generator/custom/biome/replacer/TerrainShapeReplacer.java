@@ -21,7 +21,10 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.builder;
+package cubicchunks.worldgen.generator.custom.biome.replacer;
+
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -29,16 +32,16 @@ import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@FunctionalInterface
-public interface NoiseConsumer {
+public class TerrainShapeReplacer implements IBiomeBlockReplacer {
+
 	/**
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param z the z coordinate
-	 * @param gradX approximate derivative over X coordinate
-	 * @param gradY approximate derivative over Y coordinate
-	 * @param gradZ approximate derivative over Z coordinate
-	 * @param value the noise value
+	 * Replaces any block with greater than 0 density with stone
 	 */
-	void accept(int x, int y, int z, double gradX, double gradY, double gradZ, double value);
+	@Override
+	public IBlockState getReplacedBlock(IBlockState previousBlock, int x, int y, int z, double dx, double dy, double dz, double density) {
+		if (density > 0) {
+			return Blocks.STONE.getDefaultState();
+		}
+		return previousBlock;
+	}
 }

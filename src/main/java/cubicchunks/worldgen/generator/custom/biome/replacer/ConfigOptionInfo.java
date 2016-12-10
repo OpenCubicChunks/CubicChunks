@@ -21,7 +21,9 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.builder;
+package cubicchunks.worldgen.generator.custom.biome.replacer;
+
+import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -29,16 +31,32 @@ import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@FunctionalInterface
-public interface NoiseConsumer {
-	/**
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param z the z coordinate
-	 * @param gradX approximate derivative over X coordinate
-	 * @param gradY approximate derivative over Y coordinate
-	 * @param gradZ approximate derivative over Z coordinate
-	 * @param value the noise value
-	 */
-	void accept(int x, int y, int z, double gradX, double gradY, double gradZ, double value);
+public class ConfigOptionInfo {
+
+	private final ResourceLocation location;
+	private final Object defaultValue;
+	private final String unlocalizedDescription;
+
+	public ConfigOptionInfo(ResourceLocation location, Object defaultValue, String unlocalizedDescription) {
+
+		this.location = location;
+		this.defaultValue = defaultValue;
+		this.unlocalizedDescription = unlocalizedDescription;
+	}
+
+	public ConfigOptionInfo(ResourceLocation location, Object defaultValue) {
+		this(location, defaultValue, null);// TODO: unlocalized descriptions
+	}
+
+	public ResourceLocation getLocation() {
+		return location;
+	}
+
+	public Object getDefaultValue() {
+		return defaultValue;
+	}
+
+	public String getUnlocalizedDescription() {
+		return unlocalizedDescription;
+	}
 }
