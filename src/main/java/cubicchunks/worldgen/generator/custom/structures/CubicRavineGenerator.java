@@ -50,7 +50,12 @@ import static net.minecraft.util.math.MathHelper.sin;
 @MethodsReturnNonnullByDefault
 public class CubicRavineGenerator extends CubicStructureGenerator {
 
-	private static final int RAVINE_RARITY = 50*16;
+	/**
+	 * Vanilla value: 50
+	 * <p>
+	 * Multiply by 16 and divide by 8: 16 cubes in vanilla chunks, only one in 8 cubes has structures generated
+	 */
+	private static final int RAVINE_RARITY = 50*16/(2*2*2);
 
 	private static final int MAX_CUBE_Y = 4;
 
