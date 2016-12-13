@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiomeType;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 
 /**
@@ -43,14 +43,14 @@ import mcp.MethodsReturnNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface IBiomeBlockReplacerProvider {
-	IBiomeBlockReplacer create(ICubicWorld world, CubicBiomeType biome, BiomeBlockReplacerConfig conf);
+	IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf);
 
 	Set<ConfigOptionInfo> getPossibleConfigOptions();
 
 	static IBiomeBlockReplacerProvider of(Supplier<IBiomeBlockReplacer> supplier) {
 		return new IBiomeBlockReplacerProvider() {
 			@Override
-			public IBiomeBlockReplacer create(ICubicWorld world, CubicBiomeType biome, BiomeBlockReplacerConfig conf) {
+			public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
 				return supplier.get();
 			}
 
@@ -63,7 +63,7 @@ public interface IBiomeBlockReplacerProvider {
 	static IBiomeBlockReplacerProvider of(IBiomeBlockReplacer replacer) {
 		return new IBiomeBlockReplacerProvider() {
 			@Override
-			public IBiomeBlockReplacer create(ICubicWorld world, CubicBiomeType biome, BiomeBlockReplacerConfig conf) {
+			public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
 				return replacer;
 			}
 

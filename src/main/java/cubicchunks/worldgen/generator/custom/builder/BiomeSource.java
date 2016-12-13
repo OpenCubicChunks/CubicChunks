@@ -43,7 +43,7 @@ import cubicchunks.util.cache.HashCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiomeType;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
 import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacerProvider;
@@ -73,9 +73,9 @@ public class BiomeSource {
 	private final int smoothDiameter;
 
 	/** Mapping from chunk position to 4x4 sections 4x4 blocks each */
-	private final HashCache<ChunkPos, CubicBiomeType[]> biomeCacheSectionsChunk;
+	private final HashCache<ChunkPos, CubicBiome[]> biomeCacheSectionsChunk;
 	/** Mapping from chunk positions to Cache with sections of 16x16 blocks (chunk) */
-	private final HashCache<ChunkPos, CubicBiomeType[]> biomeCacheBlocks;
+	private final HashCache<ChunkPos, CubicBiome[]> biomeCacheBlocks;
 	/** Mapping from chunk positions to Cache with sections of 16x16 blocks (chunk) */
 	private final HashCache<ChunkPos, List<IBiomeBlockReplacer>[]> biomeBlockReplacerCache;
 
@@ -101,7 +101,7 @@ public class BiomeSource {
 		this.biomeBlockReplacerCache = HashCache.create(CHUNKS_CACHE_SIZE, HASH_CHUNKS, this::generateReplacers);
 
 		for (Biome biome : ForgeRegistries.BIOMES) {
-			CubicBiomeType cubicBiome = CubicBiomeType.getCubic(biome);
+			CubicBiome cubicBiome = CubicBiome.getCubic(biome);
 			Iterable<IBiomeBlockReplacerProvider> providers = cubicBiome.getReplacerProviders();
 			List<IBiomeBlockReplacer> replacers = new ArrayList<>();
 			for (IBiomeBlockReplacerProvider prov : providers) {
@@ -113,7 +113,7 @@ public class BiomeSource {
 	}
 
 	private List<IBiomeBlockReplacer>[] generateReplacers(ChunkPos pos) {
-		CubicBiomeType[] biomes = biomeCacheBlocks.get(pos);
+		CubicBiome[] biomes = biomeCacheBlocks.get(pos);
 		return this.mapToReplacers(biomes);
 	}
 
@@ -159,28 +159,28 @@ public class BiomeSource {
 		return data;
 	}
 
-	private CubicBiomeType[] generateBiomes(ChunkPos pos) {
+	private CubicBiome[] generateBiomes(ChunkPos pos) {
 		return mapToCubic(biomeGen.getBiomes(null,
 			Coords.cubeToMinBlock(pos.chunkXPos),
 			Coords.cubeToMinBlock(pos.chunkZPos),
 			Cube.SIZE, Cube.SIZE));
 	}
 
-	private CubicBiomeType[] generateBiomeSections(ChunkPos pos) {
+	private CubicBiome[] generateBiomeSections(ChunkPos pos) {
 		return mapToCubic(biomeGen.getBiomesForGeneration(null,
 			pos.chunkXPos*SECTION_SIZE, pos.chunkZPos*SECTION_SIZE,
 			SECTION_SIZE, SECTION_SIZE));
 	}
 
-	private CubicBiomeType[] mapToCubic(Biome[] vanillaBiomes) {
-		CubicBiomeType[] cubicBiomeTypes = new CubicBiomeType[vanillaBiomes.length];
+	private CubicBiome[] mapToCubic(Biome[] vanillaBiomes) {
+		CubicBiome[] cubicBiomes = new CubicBiome[vanillaBiomes.length];
 		for (int i = 0; i < vanillaBiomes.length; i++) {
-			cubicBiomeTypes[i] = CubicBiomeType.getCubic(vanillaBiomes[i]);
+			cubicBiomes[i] = CubicBiome.getCubic(vanillaBiomes[i]);
 		}
-		return cubicBiomeTypes;
+		return cubicBiomes;
 	}
 
-	private List<IBiomeBlockReplacer>[] mapToReplacers(CubicBiomeType[] cubicBiomes) {
+	private List<IBiomeBlockReplacer>[] mapToReplacers(CubicBiome[] cubicBiomes) {
 		List<IBiomeBlockReplacer>[] replacers = new List[cubicBiomes.length];
 		for (int i = 0; i < cubicBiomes.length; i++) {
 			replacers[i] = biomeBlockReplacers.get(cubicBiomes[i].getBiome());
@@ -196,7 +196,7 @@ public class BiomeSource {
 		return biomeDataCache.get(new Vec3i(x/4.0, 0, z/4.0)).heightVariation;
 	}
 
-	public CubicBiomeType getBiome(int blockX, int blockY, int blockZ) {
+	public CubicBiome getBiome(int blockX, int blockY, int blockZ) {
 		ChunkPos pos = new ChunkPos(Coords.blockToCube(blockX), Coords.blockToCube(blockZ));
 		return biomeCacheBlocks.get(pos)[Coords.blockToLocal(blockZ) << 4 | Coords.blockToLocal(blockX)];
 	}
@@ -206,7 +206,7 @@ public class BiomeSource {
 		return biomeBlockReplacerCache.get(pos)[Coords.blockToLocal(blockZ) << 4 | Coords.blockToLocal(blockX)];
 	}
 
-	private CubicBiomeType getBiomeForSection(int x, int z) {
+	private CubicBiome getBiomeForSection(int x, int z) {
 		int localX = Math.floorMod(x, 4);
 		int localZ = Math.floorMod(z, 4);
 

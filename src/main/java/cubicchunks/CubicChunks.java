@@ -61,7 +61,7 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.world.type.CustomCubicWorldType;
 import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiomeType;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -85,16 +85,16 @@ public class CubicChunks {
 	private static Set<IConfigUpdateListener> configChangeListeners = Collections.newSetFromMap(new WeakHashMap<>());
 
 	public CubicChunks() {
-		CubicBiomeType.init();
+		CubicBiome.init();
 	}
 
 	@SubscribeEvent
-	public static void registerCubicBiomes(RegistryEvent<CubicBiomeType> event) {
+	public static void registerCubicBiomes(RegistryEvent<CubicBiome> event) {
 		// Vanilla biomes are initialized during bootstrap which happens before registration events
 		// so it should be safe to use them here
 
 		// TODO: add all biomes
-		CubicBiomeType.createForBiome(Biomes.PLAINS).defaults().register();
+		CubicBiome.createForBiome(Biomes.PLAINS).defaults().register();
 	}
 
 	@EventHandler
@@ -125,7 +125,7 @@ public class CubicChunks {
 
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent event) {
-		CubicBiomeType.postInit();
+		CubicBiome.postInit();
 	}
 
 	@EventHandler

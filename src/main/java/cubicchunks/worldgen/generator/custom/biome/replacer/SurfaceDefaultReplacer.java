@@ -36,7 +36,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiomeType;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -85,14 +85,14 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
 		return new IBiomeBlockReplacerProvider() {
 			private final ResourceLocation HORIZONTAL_GRADIENT_WEIGHT = CubicChunks.location("horizontal_gradient_weight");
 			private final ResourceLocation FILLER_DEPTH_MULTIPLIER = CubicChunks.location("filler_depth_multiplier");
-			private final ResourceLocation OCEAN_HEIGHT = CubicChunks.location("ocean_height");
+			private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("ocean_level");
 
 			@Override
-			public IBiomeBlockReplacer create(ICubicWorld world, CubicBiomeType cubicBiomeType, BiomeBlockReplacerConfig conf) {
+			public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome cubicBiome, BiomeBlockReplacerConfig conf) {
 				double gradWeight = conf.getDouble(HORIZONTAL_GRADIENT_WEIGHT);
 				double depthMult = conf.getDouble(FILLER_DEPTH_MULTIPLIER);
-				double oceanY = conf.getInt(OCEAN_HEIGHT);
-				Biome biome = cubicBiomeType.getBiome();
+				double oceanY = conf.getInt(OCEAN_LEVEL);
+				Biome biome = cubicBiome.getBiome();
 				return new SurfaceDefaultReplacer(biome.topBlock, biome.fillerBlock, gradWeight, depthMult, oceanY);
 			}
 

@@ -30,7 +30,7 @@ import java.util.Map;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.worldgen.generator.custom.biome.CubicBiomeType;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 
 /**
@@ -139,7 +139,7 @@ public class BiomeBlockReplacerConfig {
 	}
 
 	public void fillDefaults() {
-		CubicBiomeType.REGISTRY.forEach(biome ->
+		CubicBiome.REGISTRY.forEach(biome ->
 			biome.getReplacerProviders().forEach(prov ->
 				prov.getPossibleConfigOptions().forEach(confOpt ->
 					set(confOpt.getLocation(), confOpt.getDefaultValue()))

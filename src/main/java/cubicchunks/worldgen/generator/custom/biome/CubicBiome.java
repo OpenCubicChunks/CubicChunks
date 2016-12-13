@@ -51,14 +51,14 @@ import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CubicBiomeType extends IForgeRegistryEntry.Impl<CubicBiomeType> {
+public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
 
-	public static final IForgeRegistry<CubicBiomeType> REGISTRY = new RegistryBuilder<CubicBiomeType>()
-		.setType(CubicBiomeType.class)
+	public static final IForgeRegistry<CubicBiome> REGISTRY = new RegistryBuilder<CubicBiome>()
+		.setType(CubicBiome.class)
 		.setIDRange(0, 255)
 		.setName(new ResourceLocation(CubicChunks.MODID, "cubic_biome_registry"))
 		.create();
-	private static final Map<Biome, CubicBiomeType> biomeMapping = new IdentityHashMap<>();
+	private static final Map<Biome, CubicBiome> biomeMapping = new IdentityHashMap<>();
 	private static boolean isPostInit = false;
 
 	private final Biome originalBiome;
@@ -85,9 +85,9 @@ public final class CubicBiomeType extends IForgeRegistryEntry.Impl<CubicBiomeTyp
 
 		boolean anyUnregistered = false;
 		// make sure that all registered cubic biomes are for biomes that are actually registered
-		for (CubicBiomeType cubicBiomeType : CubicBiomeType.REGISTRY) {
-			Biome biome = cubicBiomeType.getBiome();
-			biomeMapping.put(biome, cubicBiomeType);
+		for (CubicBiome cubicBiome : CubicBiome.REGISTRY) {
+			Biome biome = cubicBiome.getBiome();
+			biomeMapping.put(biome, cubicBiome);
 			if (!ForgeRegistries.BIOMES.containsValue(biome)) {
 				anyUnregistered = true;
 				CubicChunks.LOGGER.error(
@@ -103,7 +103,7 @@ public final class CubicBiomeType extends IForgeRegistryEntry.Impl<CubicBiomeTyp
 			if (!biomeMapping.containsKey(biome)) {
 				CubicChunks.LOGGER.warn("Biome {} not registered as cubic chunks biome, will use default unregistered biome instead", biome.getRegistryName());
 
-				CubicBiomeType newBiome = CubicBiomeType
+				CubicBiome newBiome = CubicBiome
 					.createForBiome(biome)
 					.defaults()
 					.setRegistryName(CubicChunks.location("unregistered_" + biome.getRegistryName().getResourcePath()))
@@ -113,7 +113,7 @@ public final class CubicBiomeType extends IForgeRegistryEntry.Impl<CubicBiomeTyp
 		}
 	}
 
-	private CubicBiomeType(Builder builder) {
+	private CubicBiome(Builder builder) {
 		this.originalBiome = builder.biome;
 		this.blockReplacers.addAll(builder.blockReplacers);
 		this.decorators.addAll(builder.biomeDecorators);
@@ -135,7 +135,7 @@ public final class CubicBiomeType extends IForgeRegistryEntry.Impl<CubicBiomeTyp
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		CubicBiomeType that = (CubicBiomeType) o;
+		CubicBiome that = (CubicBiome) o;
 
 		return originalBiome != null ? originalBiome.equals(that.originalBiome) : that.originalBiome == null;
 
@@ -145,7 +145,7 @@ public final class CubicBiomeType extends IForgeRegistryEntry.Impl<CubicBiomeTyp
 		return originalBiome != null ? originalBiome.hashCode() : 0;
 	}
 
-	public static CubicBiomeType getCubic(Biome vanillaBiome) {
+	public static CubicBiome getCubic(Biome vanillaBiome) {
 		return biomeMapping.get(vanillaBiome);
 	}
 
@@ -161,7 +161,7 @@ public final class CubicBiomeType extends IForgeRegistryEntry.Impl<CubicBiomeTyp
 		return SurfaceDefaultReplacer.provider();
 	}
 
-	public static CubicBiomeType.Builder createForBiome(Biome biome) {
+	public static CubicBiome.Builder createForBiome(Biome biome) {
 		return new Builder(biome);
 	}
 
@@ -211,15 +211,15 @@ public final class CubicBiomeType extends IForgeRegistryEntry.Impl<CubicBiomeTyp
 			return this.setRegistryName(new ResourceLocation(modid, resourcePath));
 		}
 
-		public CubicBiomeType create() {
+		public CubicBiome create() {
 			if (this.registryName == null) {
 				this.registryName = biome.getRegistryName();
 			}
-			return new CubicBiomeType(this);
+			return new CubicBiome(this);
 		}
 
-		public CubicBiomeType register() {
-			CubicBiomeType biome = create();
+		public CubicBiome register() {
+			CubicBiome biome = create();
 			GameRegistry.register(biome);
 			return biome;
 		}

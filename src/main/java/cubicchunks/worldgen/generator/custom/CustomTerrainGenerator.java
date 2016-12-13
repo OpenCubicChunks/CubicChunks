@@ -40,7 +40,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiomeType;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
 import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacer;
 import cubicchunks.worldgen.generator.custom.builder.BiomeSource;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
@@ -166,7 +166,7 @@ public class CustomTerrainGenerator {
 	 * @return The block state
 	 */
 	private IBlockState getBlock(int x, int y, int z, double dx, double dy, double dz, double density) {
-		CubicBiomeType biome = biomeSource.getBiome(x, y, z);
+		CubicBiome biome = biomeSource.getBiome(x, y, z);
 		List<IBiomeBlockReplacer> replacers = biomeSource.getReplacers(x, y, z);
 		IBlockState block = Blocks.AIR.getDefaultState();
 		for (IBiomeBlockReplacer r : replacers) {

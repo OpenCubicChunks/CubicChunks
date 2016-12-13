@@ -91,7 +91,7 @@ public class CustomGeneratorSettings {
 	public BiomeBlockReplacerConfig createBiomeBlockReplacerConfig() {
 		BiomeBlockReplacerConfig conf = new BiomeBlockReplacerConfig();
 		conf.fillDefaults();
-		conf.set(CubicChunks.MODID, "ocean_height", this.waterLevel);
+		conf.set(CubicChunks.MODID, "ocean_level", this.waterLevel);
 		return conf;
 	}
 
