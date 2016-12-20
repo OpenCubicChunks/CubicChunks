@@ -177,8 +177,6 @@ repositories {
 }
 
 dependencies {
-    val jmh = configurations.getByName("jmh")
-
     compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
     compile("org.mapdb:mapdb:3.0.0-RC2") {
         exclude(mapOf("module" to "guava"))
@@ -196,8 +194,6 @@ dependencies {
     }
 
     compile("com.carrotsearch:hppc:0.7.1")
-
-    jmh("org.openjdk.jmh:jmh-generator-annprocess:1.17.1")
 }
 
 configurations.getByName("jmh").extendsFrom(configurations.compile)
