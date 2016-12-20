@@ -24,15 +24,19 @@
 package cubicchunks;
 
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.init.Biomes;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.config.GuiConfig;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -57,6 +61,7 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.world.type.CustomCubicWorldType;
 import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -65,6 +70,7 @@ import mcp.MethodsReturnNonnullByDefault;
      name = "CubicChunks",
      version = "@@VERSION@@",
      guiFactory = "cubicchunks.client.GuiFactory")
+@Mod.EventBusSubscriber
 public class CubicChunks {
 
 	public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
@@ -77,6 +83,19 @@ public class CubicChunks {
 	@Nullable private static Config config;
 	@Nonnull
 	private static Set<IConfigUpdateListener> configChangeListeners = Collections.newSetFromMap(new WeakHashMap<>());
+
+	public CubicChunks() {
+		CubicBiome.init();
+	}
+
+	@SubscribeEvent
+	public static void registerCubicBiomes(RegistryEvent<CubicBiome> event) {
+		// Vanilla biomes are initialized during bootstrap which happens before registration events
+		// so it should be safe to use them here
+
+		// TODO: add all biomes
+		CubicBiome.createForBiome(Biomes.PLAINS).defaults().register();
+	}
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
@@ -105,6 +124,11 @@ public class CubicChunks {
 	}
 
 	@EventHandler
+	public void postInit(FMLPostInitializationEvent event) {
+		CubicBiome.postInit();
+	}
+
+	@EventHandler
 	public void onServerAboutToStart(FMLServerAboutToStartEvent event) {
 		proxy.setBuildLimit(event.getServer());
 	}
@@ -117,6 +141,10 @@ public class CubicChunks {
 				l.onConfigUpdate(config);
 			}
 		}
+	}
+
+	public static ResourceLocation location(String location) {
+		return new ResourceLocation(MODID, location);
 	}
 
 	public static void addConfigChangeListener(IConfigUpdateListener listener) {

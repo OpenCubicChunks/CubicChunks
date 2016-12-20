@@ -27,11 +27,11 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.ChunkProviderSettings;
 
 import org.lwjgl.input.Keyboard;
 
+import java.util.List;
 import java.util.Random;
 import java.util.function.ToIntFunction;
 
@@ -40,7 +40,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
-import cubicchunks.worldgen.generator.custom.builder.BiomeHeightVolatilitySource;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
+import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacer;
+import cubicchunks.worldgen.generator.custom.builder.BiomeSource;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import cubicchunks.worldgen.generator.custom.builder.NoiseSource;
 import mcp.MethodsReturnNonnullByDefault;
@@ -61,22 +63,23 @@ public class CustomTerrainGenerator {
 	private static final ToIntFunction<Vec3i> HASH_3D = (v) -> v.getX() + v.getZ()*5 + v.getY()*25;
 	// Number of octaves for the noise function
 	private IBuilder terrainBuilder;
-	private final BiomeHeightVolatilitySource biomeSource;
-	private CustomGeneratorSettings conf;
+	private final BiomeSource biomeSource;
+	private final CustomGeneratorSettings conf;
 
 	public CustomTerrainGenerator(ICubicWorld world, final long seed) {
-		this.biomeSource = new BiomeHeightVolatilitySource(world.getBiomeProvider(), 2);
-		initGenerator(seed);
-	}
-
-	private void initGenerator(long seed) {
-		Random rnd = new Random(seed);
 
 		ChunkProviderSettings.Factory factoryVanilla = new ChunkProviderSettings.Factory();
 		factoryVanilla.setDefaults();
 		ChunkProviderSettings confVanilla = factoryVanilla.build();
 
 		conf = CustomGeneratorSettings.fromVanilla(confVanilla);
+
+		this.biomeSource = new BiomeSource(world, conf.createBiomeBlockReplacerConfig(), world.getBiomeProvider(), 2);
+		initGenerator(seed);
+	}
+
+	private void initGenerator(long seed) {
+		Random rnd = new Random(seed);
 
 		IBuilder selector = NoiseSource.perlin()
 			.seed(rnd.nextLong())
@@ -163,29 +166,13 @@ public class CustomTerrainGenerator {
 	 * @return The block state
 	 */
 	private IBlockState getBlock(int x, int y, int z, double dx, double dy, double dz, double density) {
-		Biome biome = biomeSource.getBiome(x, y, z);
-
-		double dir = dy + 0.25*Math.sqrt(dx*dx + dz*dz);
-		final double dirtDepth = 4;
-		IBlockState state = Blocks.AIR.getDefaultState();
-		if (density > 0) {
-			state = Blocks.STONE.getDefaultState();
-			//if the block above would be empty:
-			if (density + dy <= 0) {
-				if (y < conf.waterLevel - 1) {
-					state = biome.fillerBlock;
-				} else {
-					state = biome.topBlock;
-				}
-				//if density decreases as we go up && density < dirtDepth
-			} else if (dir < 0 && density < dirtDepth) {
-				state = biome.fillerBlock;
-			}
-		} else if (y < conf.waterLevel) {
-			// TODO replace check with GlobalGeneratorConfig.SEA_LEVEL
-			state = Blocks.WATER.getDefaultState();
+		CubicBiome biome = biomeSource.getBiome(x, y, z);
+		List<IBiomeBlockReplacer> replacers = biomeSource.getReplacers(x, y, z);
+		IBlockState block = Blocks.AIR.getDefaultState();
+		for (IBiomeBlockReplacer r : replacers) {
+			block = r.getReplacedBlock(block, x, y, z, dx, dy, dz, density);
 		}
-		return state;
+		return block;
 	}
 
 }

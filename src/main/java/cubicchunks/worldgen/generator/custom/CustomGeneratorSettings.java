@@ -25,6 +25,9 @@ package cubicchunks.worldgen.generator.custom;
 
 import net.minecraft.world.gen.ChunkProviderSettings;
 
+import cubicchunks.CubicChunks;
+import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
+
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_DEPTH_NOISE_FACTOR;
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_DEPTH_NOISE_FREQUENCY;
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_LOWHIGH_NOISE_FREQUENCY_XZ;
@@ -83,6 +86,13 @@ public class CustomGeneratorSettings {
 
 	public CustomGeneratorSettings() {
 
+	}
+
+	public BiomeBlockReplacerConfig createBiomeBlockReplacerConfig() {
+		BiomeBlockReplacerConfig conf = new BiomeBlockReplacerConfig();
+		conf.fillDefaults();
+		conf.set(CubicChunks.MODID, "ocean_level", this.waterLevel);
+		return conf;
 	}
 
 	public static CustomGeneratorSettings defaults() {

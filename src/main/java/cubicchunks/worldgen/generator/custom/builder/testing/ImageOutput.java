@@ -30,13 +30,17 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.imageio.ImageIO;
 
 import cubicchunks.worldgen.generator.custom.builder.NoiseSource;
+import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Writes noise generator output to images to confirm that it works correctly
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ImageOutput {
 
 	public static void main(String... args) throws IOException {

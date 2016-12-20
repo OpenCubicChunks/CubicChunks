@@ -27,22 +27,33 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.ToIntFunction;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.util.Coords;
 import cubicchunks.util.cache.HashCache;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
+import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
+import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacer;
+import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacerProvider;
 import mcp.MethodsReturnNonnullByDefault;
 
 // a small hack to get biome generation working with the new system
 // todo: make it not hacky
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class BiomeHeightVolatilitySource {
+public class BiomeSource {
 	private static final int SECTION_SIZE = 4;
 
 	private static final int CHUNKS_CACHE_RADIUS = 5;
@@ -54,6 +65,7 @@ public class BiomeHeightVolatilitySource {
 	private static final ToIntFunction<ChunkPos> HASH_CHUNKS = v -> v.chunkXPos*CHUNKS_CACHE_RADIUS + v.chunkZPos;
 	private static final ToIntFunction<Vec3i> HASH_SECTIONS = v -> v.getX()*SECTIONS_CACHE_RADIUS + v.getZ();
 
+	private final Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
 	private final double[] nearBiomeWeightArray;
 
 	private BiomeProvider biomeGen;
@@ -61,13 +73,15 @@ public class BiomeHeightVolatilitySource {
 	private final int smoothDiameter;
 
 	/** Mapping from chunk position to 4x4 sections 4x4 blocks each */
-	private final HashCache<ChunkPos, Biome[]> biomeCacheSectionsChunk;
+	private final HashCache<ChunkPos, CubicBiome[]> biomeCacheSectionsChunk;
 	/** Mapping from chunk positions to Cache with sections of 16x16 blocks (chunk) */
-	private final HashCache<ChunkPos, Biome[]> biomeCacheBlocks;
+	private final HashCache<ChunkPos, CubicBiome[]> biomeCacheBlocks;
+	/** Mapping from chunk positions to Cache with sections of 16x16 blocks (chunk) */
+	private final HashCache<ChunkPos, List<IBiomeBlockReplacer>[]> biomeBlockReplacerCache;
 
 	private final HashCache<Vec3i, BiomeTerrainData> biomeDataCache;
 
-	public BiomeHeightVolatilitySource(BiomeProvider biomeGen, int smoothRadius) {
+	public BiomeSource(ICubicWorld world, BiomeBlockReplacerConfig conf, BiomeProvider biomeGen, int smoothRadius) {
 		this.biomeGen = biomeGen;
 		this.smoothRadius = smoothRadius;
 		this.smoothDiameter = smoothRadius*2 + 1;
@@ -84,6 +98,23 @@ public class BiomeHeightVolatilitySource {
 		this.biomeCacheSectionsChunk = HashCache.create(CHUNKS_CACHE_SIZE, HASH_CHUNKS, this::generateBiomeSections);
 		this.biomeCacheBlocks = HashCache.create(CHUNKS_CACHE_SIZE, HASH_CHUNKS, this::generateBiomes);
 		this.biomeDataCache = HashCache.create(SECTIONS_CACHE_SIZE, HASH_SECTIONS, this::generateBiomeTerrainData);
+		this.biomeBlockReplacerCache = HashCache.create(CHUNKS_CACHE_SIZE, HASH_CHUNKS, this::generateReplacers);
+
+		for (Biome biome : ForgeRegistries.BIOMES) {
+			CubicBiome cubicBiome = CubicBiome.getCubic(biome);
+			Iterable<IBiomeBlockReplacerProvider> providers = cubicBiome.getReplacerProviders();
+			List<IBiomeBlockReplacer> replacers = new ArrayList<>();
+			for (IBiomeBlockReplacerProvider prov : providers) {
+				replacers.add(prov.create(world, cubicBiome, conf));
+			}
+
+			biomeBlockReplacers.put(biome, Collections.unmodifiableList(replacers));
+		}
+	}
+
+	private List<IBiomeBlockReplacer>[] generateReplacers(ChunkPos pos) {
+		CubicBiome[] biomes = biomeCacheBlocks.get(pos);
+		return this.mapToReplacers(biomes);
 	}
 
 	private BiomeTerrainData generateBiomeTerrainData(Vec3i pos) {
@@ -93,12 +124,12 @@ public class BiomeHeightVolatilitySource {
 		double smoothHeight = 0.0F;
 
 		double biomeWeightSum = 0.0F;
-		final Biome centerBiomeConfig = getBiomeForSection(pos.getX(), pos.getZ());
+		final Biome centerBiomeConfig = getBiomeForSection(pos.getX(), pos.getZ()).getBiome();
 		final int lookRadius = this.smoothRadius;
 
 		for (int nextX = -lookRadius; nextX <= lookRadius; nextX++) {
 			for (int nextZ = -lookRadius; nextZ <= lookRadius; nextZ++) {
-				final Biome biome = getBiomeForSection(pos.getX() + nextX, pos.getZ() + nextZ);
+				final Biome biome = getBiomeForSection(pos.getX() + nextX, pos.getZ() + nextZ).getBiome();
 
 				final double biomeHeight = biome.getBaseHeight();
 				final double biomeVolatility = biome.getHeightVariation();
@@ -128,17 +159,33 @@ public class BiomeHeightVolatilitySource {
 		return data;
 	}
 
-	private Biome[] generateBiomes(ChunkPos pos) {
-		return biomeGen.getBiomes(null,
+	private CubicBiome[] generateBiomes(ChunkPos pos) {
+		return mapToCubic(biomeGen.getBiomes(null,
 			Coords.cubeToMinBlock(pos.chunkXPos),
 			Coords.cubeToMinBlock(pos.chunkZPos),
-			Cube.SIZE, Cube.SIZE);
+			Cube.SIZE, Cube.SIZE));
 	}
 
-	private Biome[] generateBiomeSections(ChunkPos pos) {
-		return biomeGen.getBiomesForGeneration(null,
+	private CubicBiome[] generateBiomeSections(ChunkPos pos) {
+		return mapToCubic(biomeGen.getBiomesForGeneration(null,
 			pos.chunkXPos*SECTION_SIZE, pos.chunkZPos*SECTION_SIZE,
-			SECTION_SIZE, SECTION_SIZE);
+			SECTION_SIZE, SECTION_SIZE));
+	}
+
+	private CubicBiome[] mapToCubic(Biome[] vanillaBiomes) {
+		CubicBiome[] cubicBiomes = new CubicBiome[vanillaBiomes.length];
+		for (int i = 0; i < vanillaBiomes.length; i++) {
+			cubicBiomes[i] = CubicBiome.getCubic(vanillaBiomes[i]);
+		}
+		return cubicBiomes;
+	}
+
+	private List<IBiomeBlockReplacer>[] mapToReplacers(CubicBiome[] cubicBiomes) {
+		List<IBiomeBlockReplacer>[] replacers = new List[cubicBiomes.length];
+		for (int i = 0; i < cubicBiomes.length; i++) {
+			replacers[i] = biomeBlockReplacers.get(cubicBiomes[i].getBiome());
+		}
+		return replacers;
 	}
 
 	public double getHeight(int x, int y, int z) {
@@ -149,12 +196,17 @@ public class BiomeHeightVolatilitySource {
 		return biomeDataCache.get(new Vec3i(x/4.0, 0, z/4.0)).heightVariation;
 	}
 
-	public Biome getBiome(int blockX, int blockY, int blockZ) {
+	public CubicBiome getBiome(int blockX, int blockY, int blockZ) {
 		ChunkPos pos = new ChunkPos(Coords.blockToCube(blockX), Coords.blockToCube(blockZ));
 		return biomeCacheBlocks.get(pos)[Coords.blockToLocal(blockZ) << 4 | Coords.blockToLocal(blockX)];
 	}
 
-	private Biome getBiomeForSection(int x, int z) {
+	public List<IBiomeBlockReplacer> getReplacers(int blockX, int blockY, int blockZ) {
+		ChunkPos pos = new ChunkPos(Coords.blockToCube(blockX), Coords.blockToCube(blockZ));
+		return biomeBlockReplacerCache.get(pos)[Coords.blockToLocal(blockZ) << 4 | Coords.blockToLocal(blockX)];
+	}
+
+	private CubicBiome getBiomeForSection(int x, int z) {
 		int localX = Math.floorMod(x, 4);
 		int localZ = Math.floorMod(z, 4);
 
