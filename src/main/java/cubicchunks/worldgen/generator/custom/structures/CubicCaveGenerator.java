@@ -63,8 +63,11 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
 
 	/**
 	 * 1 in CAVE_RARITY attempts will result in generating any caves at all
+	 * <p>
+	 * Vanilla value: 7 Multiply by 16 and divide by 8: there are 16 cubes in a vanilla chunk, but only one cube per 8
+	 * has caves generated
 	 */
-	private static final int CAVE_RARITY = 16*7;
+	private static final int CAVE_RARITY = 16*7/(2*2*2);
 
 	/**
 	 * Maximum amount of starting nodes
