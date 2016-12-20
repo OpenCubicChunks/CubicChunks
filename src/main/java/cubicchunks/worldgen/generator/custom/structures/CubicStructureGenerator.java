@@ -63,28 +63,33 @@ public abstract class CubicStructureGenerator {
 
 		//TODO: maybe skip some of this stuff if the cube is empty? (would need to use hints)
 
-		int radius = this.range;
 		this.world = world;
 		this.rand.setSeed(world.getSeed());
 		//used to randomize contribution of each coordinate to the cube seed
 		//without these swapping x/y/z coordinates would result in the same seed
 		//so structures would generate symmetrically
-		long randX = this.rand.nextLong();
-		long randY = this.rand.nextLong();
-		long randZ = this.rand.nextLong();
+		long randXMul = this.rand.nextLong();
+		long randYMul = this.rand.nextLong();
+		long randZMul = this.rand.nextLong();
 
-		int cubeX = cubePos.getX();
-		int cubeY = cubePos.getY();
-		int cubeZ = cubePos.getZ();
+		// as an optimization, this structure looks for structures only in every second coordinate on each axis
+		// ensure all origin points are always odd (could also be even, that would be & ~1),
+		// this way positions used as origin position are consistent across chunks
+		// increase scan radius by 1 because `|1` introduces offset to even X/Y/Z coords
+		int radius = this.range + 1;
+		int cubeXOriginBase = cubePos.getX() | 1;
+		int cubeYOriginBase = cubePos.getY() | 1;
+		int cubeZOriginBase = cubePos.getZ() | 1;
 
+		long randSeed = world.getSeed();
 		//x/y/zOrigin is location of the structure "center", and cubeX/Y/Z is the currently generated cube
-		for (int xOrigin = cubeX - radius; xOrigin <= cubeX + radius; ++xOrigin) {
-			for (int yOrigin = cubeY - radius; yOrigin <= cubeY + radius; ++yOrigin) {
-				for (int zOrigin = cubeZ - radius; zOrigin <= cubeZ + radius; ++zOrigin) {
-					long randX_mul = xOrigin*randX;
-					long randY_mul = yOrigin*randY;
-					long randZ_mul = zOrigin*randZ;
-					this.rand.setSeed(randX_mul ^ randY_mul ^ randZ_mul ^ world.getSeed());
+		for (int xOrigin = cubeXOriginBase - radius; xOrigin <= cubeXOriginBase + radius; xOrigin += 2) {
+			long randX = xOrigin*randXMul ^ randSeed;
+			for (int yOrigin = cubeYOriginBase - radius; yOrigin <= cubeYOriginBase + radius; yOrigin += 2) {
+				long randY = yOrigin*randYMul ^ randX;
+				for (int zOrigin = cubeZOriginBase - radius; zOrigin <= cubeZOriginBase + radius; zOrigin += 2) {
+					long randZ = zOrigin*randZMul ^ randY;
+					this.rand.setSeed(randZ);
 					this.generate(world, cube, xOrigin, yOrigin, zOrigin, cubePos);
 				}
 			}

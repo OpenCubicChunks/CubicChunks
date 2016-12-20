@@ -50,9 +50,28 @@ import static net.minecraft.util.math.MathHelper.sin;
 @MethodsReturnNonnullByDefault
 public class CubicRavineGenerator extends CubicStructureGenerator {
 
-	private static final int RAVINE_RARITY = 50*16;
+	/**
+	 * Vanilla value: 50
+	 * <p>
+	 * Multiply by 16 and divide by 8: 16 cubes in vanilla chunks, only one in 8 cubes has structures generated
+	 */
+	private static final int RAVINE_RARITY = 50*16/(2*2*2);
 
-	private static final int MAX_CUBE_Y = 4;
+	private static final int MAX_CUBE_Y = 2;
+
+	/**
+	 * Add this value to lava height (Y below which lava exists)
+	 * <p>
+	 * Positive value to increase amount of lava, negative to decrease.
+	 */
+	private static final double LAVA_HEIGHT_OFFSET = -10;
+
+	/**
+	 * Add Y value multiplied by this to lava height
+	 * <p>
+	 * Negative value will generate more lava in ravines that are deeper
+	 */
+	private static final double LAVA_HEIGHT_Y_FACTOR = -0.1;
 
 	private static final double VERT_SIZE_FACTOR = 3.0;
 
@@ -100,6 +119,12 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 	private static final int CARVE_STEP_RARITY = 4;
 
 	/**
+	 * Higher values will make width difference between top/bottom and center smaller
+	 * lower values will make top and bottom of the ravine smaller. Values less than one will shrink size of the ravine
+	 */
+	private static final double STRETCH_Y_FACTOR = 6.0;
+
+	/**
 	 * Controls which blocks can be replaced by cave
 	 */
 	@Nonnull private static final Predicate<IBlockState> isBlockReplaceable = (state ->
@@ -129,15 +154,20 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 		int startWalkedDistance = 0;
 		int maxWalkedDistance = 0;//choose value automatically
 
+		int lavaHeight = (int) (startY -
+			(baseRavineSize + RAVINE_SIZE_ADD)*VERT_SIZE_FACTOR +
+			LAVA_HEIGHT_OFFSET + startY*LAVA_HEIGHT_Y_FACTOR);
+
 		this.generateNode(cube, rand.nextLong(), generatedCubePos, startX, startY, startZ,
 			baseRavineSize, vertDirectionAngle, horizDirectionAngle,
-			startWalkedDistance, maxWalkedDistance, VERT_SIZE_FACTOR);
+			startWalkedDistance, maxWalkedDistance, VERT_SIZE_FACTOR, lavaHeight);
 	}
 
 	private void generateNode(ICubePrimer cube, long seed, CubePos generatedCubePos,
 	                          double ravineX, double ravineY, double ravineZ,
 	                          float baseRavineSize, float horizDirAngle, float vertDirAngle,
-	                          int startWalkedDistance, int maxWalkedDistance, double vertRavineSizeMod) {
+	                          int startWalkedDistance, int maxWalkedDistance, double vertRavineSizeMod,
+	                          int lavaHeight) {
 		Random rand = new Random(seed);
 
 		//store by how much the horizontal and vertical(?) direction angles will change each step
@@ -217,7 +247,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 
 			tryCarveBlocks(cube, generatedCubePos,
 				ravineX, ravineY, ravineZ,
-				ravineSizeHoriz, ravineSizeVert);
+				ravineSizeHoriz, ravineSizeVert, lavaHeight);
 
 			if (finalStep) {
 				return;
@@ -227,7 +257,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 
 	private void tryCarveBlocks(ICubePrimer cube, CubePos generatedCubePos,
 	                            double ravineX, double ravineY, double ravineZ,
-	                            double ravineSizeHoriz, double ravineSizeVert) {
+	                            double ravineSizeHoriz, double ravineSizeVert, int lavaHeight) {
 		double genCubeCenterX = generatedCubePos.getXCenter();
 		double genCubeCenterY = generatedCubePos.getYCenter();
 		double genCubeCenterZ = generatedCubePos.getZCenter();
@@ -260,13 +290,15 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 			(b) -> b.getBlock() == Blocks.WATER || b.getBlock() == Blocks.FLOWING_WATER);
 
 		if (!hitLiquid) {
-			carveBlocks(cube, generatedCubePos, ravineX, ravineY, ravineZ, ravineSizeHoriz, ravineSizeVert, boundingBox);
+			carveBlocks(cube, generatedCubePos, ravineX, ravineY, ravineZ,
+				ravineSizeHoriz, ravineSizeVert, boundingBox, lavaHeight);
 		}
 	}
 
 	private void carveBlocks(ICubePrimer cube, CubePos generatedCubePos,
 	                         double ravineX, double ravineY, double ravineZ,
-	                         double ravineSizeHoriz, double ravineSizeVert, StructureBoundingBox boundingBox) {
+	                         double ravineSizeHoriz, double ravineSizeVert, StructureBoundingBox boundingBox,
+	                         int lavaHeight) {
 		int generatedCubeX = generatedCubePos.getX();
 		int generatedCubeY = generatedCubePos.getY();
 		int generatedCubeZ = generatedCubePos.getZ();
@@ -290,24 +322,20 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
 				for (int localY = minY; localY < maxY; ++localY) {
 					double distY = StructureGenUtil.normalizedDistance(generatedCubeY, localY, ravineY, ravineSizeVert);
 
-					//distY*distY/6.0D is a hack
+					//distY*distY/STRETCH_Y_FACTOR is a hack
 					//it should make the ravine way more stretched in the Y dimension, but because of previous checks
 					//most of these blocks beyond the not-stretched height range are never carved out
 					//the result is that instead the ravine isn't very small at the bottom,
 					//but ends with actual floor instead
 					double widthDecreaseFactor = this.widthDecreaseFactors[(localY + generatedCubeY*16) & 0xFF];
-					if ((distX*distX + distZ*distZ)*widthDecreaseFactor + distY*distY/6.0D >= 1.0D) {
+					if ((distX*distX + distZ*distZ)*widthDecreaseFactor + distY*distY/STRETCH_Y_FACTOR >= 1.0D) {
 						continue;
 					}
 
 					if (!isBlockReplaceable.test(cube.getBlockState(localX, localY, localZ))) {
 						continue;
 					}
-					//vanilla places lava at the bottom of ravines if it below some block Y coordinate
-					//this is actually tricky to do right with cubic chunks - the absolute minimum depth is too deep
-					//so instead of placing ave below some absolute depth - let it vary between different ravines
-					//this will also have the side effect that lava won't be placed perfectly flat there :(
-					if (distY < -0.8) {
+					if (localToBlock(generatedCubeY, localY) < lavaHeight) {
 						cube.setBlockState(localX, localY, localZ, Blocks.FLOWING_LAVA.getDefaultState());
 					} else {
 						cube.setBlockState(localX, localY, localZ, Blocks.AIR.getDefaultState());
