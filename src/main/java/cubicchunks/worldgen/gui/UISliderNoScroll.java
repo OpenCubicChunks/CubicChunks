@@ -21,38 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.debug;
+package cubicchunks.worldgen.gui;
 
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import com.google.common.base.Converter;
 
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
+import net.malisis.core.client.gui.MalisisGui;
+import net.malisis.core.client.gui.component.control.IControlComponent;
+import net.malisis.core.client.gui.component.interaction.UISlider;
 
-import cubicchunks.debug.item.RelightSkyBlockItem;
-import mcp.MethodsReturnNonnullByDefault;
+public class UISliderNoScroll<T> extends UISlider<T> {
+	public UISliderNoScroll(MalisisGui gui, int width, Converter<Float, T> converter, String text) {
+		super(gui, width, converter, text);
+	}
 
-@MethodsReturnNonnullByDefault
-@ParametersAreNonnullByDefault
-public class DebugTools {
-
-	@SuppressWarnings("NullableProblems") @Nonnull
-	@SidedProxy(serverSide = "cubicchunks.debug.DebugProxy", clientSide = "cubicchunks.debug.DebugClientProxy")
-	private static DebugProxy proxy;
-
-	static final Item itemRelightSkyBlock = new RelightSkyBlockItem("relight_sky_block");
-
-	static final CreativeTabs CUBIC_CHUNKS_DEBUG_TAB = new CreativeTabs("cubic_chunks_debug_tab") {
-		@SideOnly(Side.CLIENT) @Override public ItemStack getTabIconItem() {
-			return itemRelightSkyBlock.getDefaultInstance();
+	@Override
+	public boolean onScrollWheel(int x, int y, int delta) {
+		if (parent != null && !(this instanceof IControlComponent)) {
+			return parent.onScrollWheel(x, y, delta);
 		}
-	};
-
-	public static void init() {
-		proxy.initItems();
+		return false;
 	}
 }

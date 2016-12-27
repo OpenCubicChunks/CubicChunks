@@ -114,8 +114,8 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 		return super.getActualHeight();
 	}
 
-	@Override protected void createBiomeProvider() {
-		// TODO: implement VanillaCubicProvider.createBiomeProvider
+	@Override protected void init() {
+		// TODO: implement VanillaCubicProvider.init
 		//provider.createBiomeProvider();
 	}
 
@@ -124,8 +124,8 @@ public class VanillaCubicProvider extends CubicWorldProvider {
 		//provider.generateLightBrightnessTable();
 	}
 
-	@Override public boolean func_191066_m() {
-		return provider.func_191066_m();
+	@Override public boolean hasSkyLight() {
+		return provider.hasSkyLight();
 	}
 
 	@Override

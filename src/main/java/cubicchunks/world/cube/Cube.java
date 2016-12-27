@@ -376,7 +376,7 @@ public class Cube implements XYZAddressable {
 
 		switch (lightType) {
 			case SKY:
-				if (!this.world.getProvider().func_191066_m()) {
+				if (!this.world.getProvider().hasSkyLight()) {
 					return 0;
 				}
 				return this.storage.getExtSkylightValue(localX, localY, localZ);
@@ -409,7 +409,7 @@ public class Cube implements XYZAddressable {
 
 		switch (lightType) {
 			case SKY:
-				if (world.getProvider().func_191066_m()) {
+				if (world.getProvider().hasSkyLight()) {
 					this.storage.setExtSkylightValue(localX, localY, localZ, light);
 				}
 				break;
@@ -783,7 +783,7 @@ public class Cube implements XYZAddressable {
 	}
 
 	private void newStorage() {
-		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), world.getProvider().func_191066_m());
+		storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), world.getProvider().hasSkyLight());
 	}
 
 	/**

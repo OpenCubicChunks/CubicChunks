@@ -3,3 +3,49 @@ generator.FlatCubic=Flat Cubic
 generator.CustomCubic=Custom Cubic
 
 itemGroup.cubic_chunks_debug_tab=Cubic Chunks debug items
+
+cubicchunks.gui.customcubic.previous_page=Previous
+cubicchunks.gui.customcubic.next_page=Next
+
+cubicchunks.gui.customcubic.height_variation_group=Height variation:
+cubicchunks.gui.customcubic.height_variation_factor_slider=Factor
+cubicchunks.gui.customcubic.height_variation_offset_slider=Offset
+cubicchunks.gui.customcubic.height_variation_special_factor_slider=Special
+
+cubicchunks.gui.customcubic.water_group=Water:
+cubicchunks.gui.customcubic.water_level=Level
+
+cubicchunks.gui.customcubic.height_group=Height:
+cubicchunks.gui.customcubic.height_factor=Factor
+cubicchunks.gui.customcubic.height_offset=Offset
+
+cubicchunks.gui.customcubic.depth_noise_group=Depth noise:
+cubicchunks.gui.customcubic.depth_noise_factor=Factor
+cubicchunks.gui.customcubic.depth_noise_offset=Offset
+cubicchunks.gui.customcubic.depth_noise_frequency_x=Freq. X
+cubicchunks.gui.customcubic.depth_noise_frequency_z=Freq. Z
+cubicchunks.gui.customcubic.depth_noise_octaves=Octaves
+
+cubicchunks.gui.customcubic.selector_noise_group=Selector noise:
+cubicchunks.gui.customcubic.selector_noise_factor=Factor
+cubicchunks.gui.customcubic.selector_noise_offset=Offset
+cubicchunks.gui.customcubic.selector_noise_frequency_x=Freq. X
+cubicchunks.gui.customcubic.selector_noise_frequency_y=Freq. Y
+cubicchunks.gui.customcubic.selector_noise_frequency_z=Freq. Z
+cubicchunks.gui.customcubic.selector_noise_octaves=Octaves
+
+cubicchunks.gui.customcubic.low_noise_group=Low noise:
+cubicchunks.gui.customcubic.low_noise_factor=Factor
+cubicchunks.gui.customcubic.low_noise_offset=Offset
+cubicchunks.gui.customcubic.low_noise_frequency_x=Freq. X
+cubicchunks.gui.customcubic.low_noise_frequency_y=Freq. Y
+cubicchunks.gui.customcubic.low_noise_frequency_z=Freq. Z
+cubicchunks.gui.customcubic.low_noise_octaves=Octaves
+
+cubicchunks.gui.customcubic.high_noise_group=High noise:
+cubicchunks.gui.customcubic.high_noise_factor=Factor
+cubicchunks.gui.customcubic.high_noise_offset=Offset
+cubicchunks.gui.customcubic.high_noise_frequency_x=Freq. X
+cubicchunks.gui.customcubic.high_noise_frequency_y=Freq. Y
+cubicchunks.gui.customcubic.high_noise_frequency_z=Freq. Z
+cubicchunks.gui.customcubic.high_noise_octaves=Octaves

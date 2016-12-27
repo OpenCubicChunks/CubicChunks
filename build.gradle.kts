@@ -102,7 +102,9 @@ configure<MixinExtension> {
 configure<ForgeExtension> {
     version = theForgeVersion
     runDir = "run"
-    mappings = "stable_29"
+    mappings = "snapshot_20161209"
+
+    isUseDepAts = true
 
     replace("@@VERSION@@", project.version)
     replaceIn("cubicchunks/CubicChunks.java")
@@ -194,6 +196,8 @@ dependencies {
     }
 
     compile("com.carrotsearch:hppc:0.7.1")
+
+    compile("net.malisis:malisiscore:1.11-5.0.0-SNAPSHOT:dev")
 }
 
 configurations.getByName("jmh").extendsFrom(configurations.compile)

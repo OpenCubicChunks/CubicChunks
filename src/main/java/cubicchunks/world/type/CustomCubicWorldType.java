@@ -23,8 +23,12 @@
  */
 package cubicchunks.world.type;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -39,6 +43,7 @@ import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.CustomFeatureProcessor;
 import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
+import cubicchunks.worldgen.gui.CustomCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -86,5 +91,14 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
 				return RECOMMENDED_POPULATOR_REQUIREMENT;
 			}
 		};
+	}
+
+	public boolean isCustomizable() {
+		return true;
+	}
+
+	@SideOnly(Side.CLIENT)
+	public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
+		new CustomCubicGui(guiCreateWorld).display();
 	}
 }

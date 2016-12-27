@@ -602,7 +602,7 @@ public class TestLightPropagator {
 		assertEquals(14, access.getLightFor(EnumSkyBlock.SKY, toUpdate.down()));
 	}
 
-	@Test(timeout = 3000)
+	@Test(timeout = 10000)
 	public void testWorksAfterCrash() {
 		int size = 20;
 		TestLightBlockAccessImpl access = lightAccess(size).

@@ -35,6 +35,15 @@ public class MathUtil {
 		return min + a*(max - min);
 	}
 
+	// reverse linear interpolation - unlerp(lerp(a, min, max), min, max) == a
+	public static double unlerp(final double v, final double min, final double max) {
+		return (v - min)/(max - min);
+	}
+
+	public static float lerp(final float a, final float min, final float max) {
+		return min + a*(max - min);
+	}
+
 	public static int min(int a, int b) {
 		return Math.min(a, b);
 	}
