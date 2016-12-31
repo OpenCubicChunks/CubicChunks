@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui;
+package cubicchunks.worldgen.gui.component;
 
 import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.GuiRenderer;
@@ -29,7 +29,6 @@ import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.control.UIScrollBar;
-import net.malisis.core.client.gui.component.control.UISlimScrollbar;
 
 import java.util.HashMap;
 import java.util.HashSet;

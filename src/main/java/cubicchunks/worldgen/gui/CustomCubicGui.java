@@ -48,11 +48,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.util.MathUtil;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.gui.component.UIColoredPanel;
+import cubicchunks.worldgen.gui.component.UIGridContainer;
+import cubicchunks.worldgen.gui.component.UIPagedTabGroup;
+import cubicchunks.worldgen.gui.component.UIRangeSlider;
+import cubicchunks.worldgen.gui.component.UISliderNoScroll;
+import cubicchunks.worldgen.gui.converter.ConverterWithInfinity;
+import cubicchunks.worldgen.gui.converter.ExponentialConverter;
+import cubicchunks.worldgen.gui.converter.RoundingConverter;
 import mcp.MethodsReturnNonnullByDefault;
 
-import static cubicchunks.worldgen.gui.UIGridContainer.WIDTH_1_COL;
-import static cubicchunks.worldgen.gui.UIGridContainer.WIDTH_2_COL;
-import static cubicchunks.worldgen.gui.UIGridContainer.WIDTH_3_COL;
+import static cubicchunks.worldgen.gui.component.UIGridContainer.WIDTH_1_COL;
+import static cubicchunks.worldgen.gui.component.UIGridContainer.WIDTH_2_COL;
+import static cubicchunks.worldgen.gui.component.UIGridContainer.WIDTH_3_COL;
 import static java.lang.Math.round;
 
 @ParametersAreNonnullByDefault

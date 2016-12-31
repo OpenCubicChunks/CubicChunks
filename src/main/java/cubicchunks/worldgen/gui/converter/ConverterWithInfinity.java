@@ -21,24 +21,37 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui;
+package cubicchunks.worldgen.gui.converter;
 
 import com.google.common.base.Converter;
 
-import net.malisis.core.client.gui.MalisisGui;
-import net.malisis.core.client.gui.component.control.IControlComponent;
-import net.malisis.core.client.gui.component.interaction.UISlider;
+public class ConverterWithInfinity extends Converter<Float, Float> {
 
-public class UISliderNoScroll<T> extends UISlider<T> {
-	public UISliderNoScroll(MalisisGui gui, int width, Converter<Float, T> converter, String text) {
-		super(gui, width, converter, text);
+	private final Converter<Float, Float> reverse;
+	private final Converter<Float, Float> conv;
+
+	public ConverterWithInfinity(Converter<Float, Float> conv) {
+		this.conv = conv;
+		this.reverse = conv.reverse();
 	}
 
-	@Override
-	public boolean onScrollWheel(int x, int y, int delta) {
-		if (parent != null && !(this instanceof IControlComponent)) {
-			return parent.onScrollWheel(x, y, delta);
+	@Override protected Float doForward(Float v) {
+		if (v <= 0) {
+			return Float.NEGATIVE_INFINITY;
 		}
-		return false;
+		if (v >= 1) {
+			return Float.POSITIVE_INFINITY;
+		}
+		return conv.convert(v);
+	}
+
+	@Override protected Float doBackward(Float v) {
+		if (v == Float.NEGATIVE_INFINITY) {
+			return 0.0f;
+		}
+		if (v == Float.POSITIVE_INFINITY) {
+			return 1.0f;
+		}
+		return reverse.convert(v);
 	}
 }

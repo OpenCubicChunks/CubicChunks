@@ -21,13 +21,9 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui;
+package cubicchunks.worldgen.gui.converter;
 
 import com.google.common.base.Converter;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.DoubleUnaryOperator;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

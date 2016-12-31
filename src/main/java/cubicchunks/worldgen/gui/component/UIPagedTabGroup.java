@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui;
+package cubicchunks.worldgen.gui.component;
 
 import com.google.common.eventbus.Subscribe;
 
