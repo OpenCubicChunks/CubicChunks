@@ -51,9 +51,10 @@ import java.util.function.BiFunction;
 
 import cubicchunks.util.CooldownTimer;
 import cubicchunks.util.MathUtil;
+import cubicchunks.worldgen.gui.ExtraGui;
 
 @SideOnly(Side.CLIENT)
-public class UIRangeSlider<T> extends UIComponent<UIRangeSlider<T>> implements IGuiText<UIRangeSlider<T>> {
+public class UIRangeSlider<T> extends UIComponent<UIRangeSlider<T>> implements IGuiText<UIRangeSlider<T>>, IDragTickable {
 	private static final int FOCUSED_COLOR = 0xFFFFC0;
 	private static final int HOVERED_COLOR = 0xFFFF90;
 
@@ -78,9 +79,7 @@ public class UIRangeSlider<T> extends UIComponent<UIRangeSlider<T>> implements I
 
 	private float scrollStep = 0.01f;
 
-	private boolean beforeClickHovered = false;
-
-	public UIRangeSlider(MalisisGui gui, int width, Converter<Float, T> converter, BiFunction<T, T, String> toString) {
+	public UIRangeSlider(ExtraGui gui, int width, Converter<Float, T> converter, BiFunction<T, T, String> toString) {
 		super(gui);
 		this.toString = toString;
 
@@ -95,16 +94,12 @@ public class UIRangeSlider<T> extends UIComponent<UIRangeSlider<T>> implements I
 
 		this.sliderShape = new SimpleGuiShape();
 		this.rectangle = new SimpleGuiShape();
+
+		gui.registerDragTickable(this);
 	}
 
-	@Override public void draw(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
-		super.draw(renderer, mouseX, mouseY, partialTick);
-
-		if ((this.isFocused() && beforeClickHovered) && Mouse.isButtonDown(MouseButton.LEFT.getCode())) {
-			sliderPair.moveHovered(mouseX, mouseX);// it shouldn't be mouseX, mouseY
-		} else {
-			beforeClickHovered = isHovered();
-		}
+	@Override public void onDragTick(int mouseX, int mouseY, float partialTick) {
+		sliderPair.moveHovered(mouseX, mouseX); // should be mouseX twice
 	}
 
 	@Override public void drawBackground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {

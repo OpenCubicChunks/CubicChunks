@@ -48,6 +48,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.util.MathUtil;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.gui.component.IDragTickable;
 import cubicchunks.worldgen.gui.component.UIColoredPanel;
 import cubicchunks.worldgen.gui.component.UIGridContainer;
 import cubicchunks.worldgen.gui.component.UIPagedTabGroup;
@@ -65,7 +66,7 @@ import static java.lang.Math.round;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CustomCubicGui extends MalisisGui {
+public class CustomCubicGui extends ExtraGui {
 
 	private final GuiCreateWorld parent;
 	private UIContainer<?> tabs;

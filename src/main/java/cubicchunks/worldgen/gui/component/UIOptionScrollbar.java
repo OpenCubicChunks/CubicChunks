@@ -37,7 +37,13 @@ import net.malisis.core.renderer.animation.Animation;
 import net.malisis.core.renderer.animation.transformation.AlphaTransform;
 import net.malisis.core.util.MouseButton;
 
-public class UIOptionScrollbar extends UIScrollBar {
+import java.util.concurrent.TimeUnit;
+
+import cubicchunks.util.CooldownTimer;
+import cubicchunks.worldgen.gui.ExtraGui;
+
+public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
+	private final CooldownTimer timer = new CooldownTimer(1000/30, TimeUnit.MILLISECONDS);
 	/** Background color of the scroll. */
 	protected int backgroundColor = 0;
 	/** Scroll color **/
@@ -49,9 +55,11 @@ public class UIOptionScrollbar extends UIScrollBar {
 	private int lastHeight = Integer.MIN_VALUE;
 	private int lastWidth = Integer.MIN_VALUE;
 
-	public <T extends UIComponent<T> & IScrollable> UIOptionScrollbar(MalisisGui gui, T parent, Type type) {
+	public <T extends UIComponent<T> & IScrollable> UIOptionScrollbar(ExtraGui gui, T parent, Type type) {
 		super(gui, parent, type);
 		setScrollSize(6, 15);
+
+		gui.registerDragTickable(this);
 	}
 
 	public void setFade(boolean fade) {
@@ -210,7 +218,7 @@ public class UIOptionScrollbar extends UIScrollBar {
 	private void scrollByStepClick(int x, int y) {
 		int pos = relativeScrollPos(x, y);
 		int posCenter = (int) (getLength()*getOffset());
-		int mult = pos < posCenter ? -1 : 1;
+		float mult = 0.5f*(pos < posCenter ? -1 : 1);
 		scrollBy(((IScrollable) parent).getScrollStep()*mult);
 	}
 
@@ -225,12 +233,18 @@ public class UIOptionScrollbar extends UIScrollBar {
 		}
 		if (isFocused()) {
 			if (!isOnScroll(lastX, lastY)) {
-				scrollByStepClick(x, y);
+				timer.tryDo(() -> scrollByStepClick(x, y));
 				return true;
 			}
 			onScrollBy(x - lastX, y - lastY);
 		}
 		return true;
+	}
+
+	@Override public void onDragTick(int mouseX, int mouseY, float partialTick) {
+		if (isFocused() && !isOnScroll(mouseX, mouseY)) {
+			timer.tryDo(() -> scrollByStepClick(mouseX, mouseY));
+		}
 	}
 
 	protected void onScrollBy(int x, int y) {

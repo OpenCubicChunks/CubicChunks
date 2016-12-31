@@ -37,6 +37,7 @@ import java.util.Set;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.worldgen.gui.ExtraGui;
 import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -63,7 +64,7 @@ public class UIGridContainer extends UIContainer<UIGridContainer> {
 	 *
 	 * @param gui the gui
 	 */
-	public UIGridContainer(MalisisGui gui) {
+	public UIGridContainer(ExtraGui gui) {
 		super(gui);
 	}
 
@@ -73,7 +74,7 @@ public class UIGridContainer extends UIContainer<UIGridContainer> {
 	 * @param gui the gui
 	 * @param title the title
 	 */
-	public UIGridContainer(MalisisGui gui, String title) {
+	public UIGridContainer(ExtraGui gui, String title) {
 		super(gui, title);
 	}
 
@@ -84,7 +85,7 @@ public class UIGridContainer extends UIContainer<UIGridContainer> {
 	 * @param width the width
 	 * @param height the height
 	 */
-	public UIGridContainer(MalisisGui gui, int width, int height) {
+	public UIGridContainer(ExtraGui gui, int width, int height) {
 		super(gui, width, height);
 	}
 
@@ -96,7 +97,7 @@ public class UIGridContainer extends UIContainer<UIGridContainer> {
 	 * @param width the width
 	 * @param height the height
 	 */
-	public UIGridContainer(MalisisGui gui, String title, int width, int height) {
+	public UIGridContainer(ExtraGui gui, String title, int width, int height) {
 		super(gui, title, width, height);
 	}
 
@@ -153,7 +154,7 @@ public class UIGridContainer extends UIContainer<UIGridContainer> {
 		}
 		this.totalRows = maxRow + 1;
 
-		this.scrollbar = new UIOptionScrollbar(getGui(), this, UIScrollBar.Type.VERTICAL);
+		this.scrollbar = new UIOptionScrollbar((ExtraGui) getGui(), this, UIScrollBar.Type.VERTICAL);
 		this.scrollbar.setPosition(6, 0, Anchor.RIGHT);
 		this.scrollbar.setVisible(true);
 		return this;
