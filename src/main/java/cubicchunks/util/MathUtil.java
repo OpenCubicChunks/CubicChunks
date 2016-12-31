@@ -40,6 +40,10 @@ public class MathUtil {
 		return (v - min)/(max - min);
 	}
 
+	public static float unlerp(final float v, final float min, final float max) {
+		return (v - min)/(max - min);
+	}
+
 	public static float lerp(final float a, final float min, final float max) {
 		return min + a*(max - min);
 	}
@@ -80,6 +84,19 @@ public class MathUtil {
 		int max = a[0];
 		for (int i = 1; i < a.length; i++) {
 			if (a[i] > max) max = a[i];
+		}
+		return max;
+	}
+
+	public static float maxIgnoreNan(float... a) {
+		float max = a[0];
+		for (int i = 1; i < a.length; i++) {
+			if (max != max || a[i] > max) {
+				max = a[i];
+			}
+		}
+		if (max != max) {
+			throw new IllegalArgumentException("All values are NaN");
 		}
 		return max;
 	}

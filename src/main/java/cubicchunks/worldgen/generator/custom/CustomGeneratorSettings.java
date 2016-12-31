@@ -25,6 +25,8 @@ package cubicchunks.worldgen.generator.custom;
 
 import net.minecraft.world.gen.ChunkProviderSettings;
 
+import java.util.Set;
+
 import cubicchunks.CubicChunks;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
 
@@ -39,6 +41,115 @@ import static cubicchunks.worldgen.generator.custom.ConversionUtils.VANILLA_SELE
 import static cubicchunks.worldgen.generator.custom.ConversionUtils.frequencyFromVanilla;
 
 public class CustomGeneratorSettings {
+	/**
+	 * Note: many of these values are unused yet
+	 */
+
+	/**
+	 * Vanilla standard options
+	 * <p>
+	 * Page 1
+	 */
+	public int waterLevel = 63;
+	public boolean caves = true;
+
+	public boolean strongholds = true;
+	public boolean villages = true;
+
+	public boolean mineshafts = true;
+	public boolean temples = true;
+
+	public boolean oceanMonuments = true;
+	public boolean woodlandMansions = true;
+
+	public boolean ravines = true;
+	public boolean dungeons = true;
+
+	public int dungeonCount = 7;
+	public boolean waterLakes = true;
+
+	public int waterLakeRarity = 4;
+	public boolean lavaLakes = true;
+
+	public int lavaLakeRarity = 80;
+	public boolean lavaOceans = false;
+
+	public int biome = -1;
+	public int biomeSize = 4;
+	public int riverSize = 4;
+
+	/**
+	 * Vanilla standard options
+	 * <p>
+	 * Page 2
+	 */
+
+	public int dirtSpawnSize = 33;
+	public int dirtSpawnTries = 10;
+	public float dirtSpawnProbability = 1.0f;
+	public float dirtSpawnMinHeight = Float.NEGATIVE_INFINITY;
+	public float dirtSpawnMaxHeight = Float.POSITIVE_INFINITY;
+
+	public int gravelSpawnSize = 33;
+	public int gravelSpawnTries = 8;
+	public float gravelSpawnProbability = 1.0f;
+	public float gravelSpawnMinHeight = Float.NEGATIVE_INFINITY;
+	public float gravelSpawnMaxHeight = Float.POSITIVE_INFINITY;
+
+	public int graniteSpawnSize = 33;
+	public int graniteSpawnTries = 10;
+	public float graniteSpawnProbability = 80f/256f;
+	public float graniteSpawnMinHeight = Float.NEGATIVE_INFINITY;
+	public float graniteSpawnMaxHeight = (80f - 64f)/64f;
+
+	public int dioriteSpawnSize = 33;
+	public int dioriteSpawnTries = 10;
+	public float dioriteSpawnProbability = 80f/256f;
+	public float dioriteSpawnMinHeight = Float.NEGATIVE_INFINITY;
+	public float dioriteSpawnMaxHeight = (80f - 64f)/64f;
+
+	public int andesiteSpawnSize = 33;
+	public int andesiteSpawnTries = 10;
+	public float andesiteSpawnProbability = 80f/256f;
+	public float andesiteSpawnMinHeight = Float.NEGATIVE_INFINITY;
+	public float andesiteSpawnMaxHeight = (80f - 64f)/64f;
+
+	public int coalOreSpawnSize = 17;
+	public int coalOreSpawnTries = 20;
+	public float coalOreSpawnProbability = 0.5f;
+	public float coalOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
+	public float coalOreSpawnMaxHeight = 1;
+
+	public int ironOreSpawnSize = 9;
+	public int ironOreSpawnTries = 20;
+	public float ironOreSpawnProbability = 1.0f;
+	public float ironOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
+	public float ironOreSpawnMaxHeight = Float.POSITIVE_INFINITY;
+
+	public int goldOreSpawnSize = 9;
+	public int goldOreSpawnTries = 2;
+	public float goldOreSpawnProbability = 1f/8f;
+	public float goldOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
+	public float goldOreSpawnMaxHeight = -0.5f;
+
+	public int redstoneOreSpawnSize = 8;
+	public int redstoneOreSpawnTries = 8;
+	public float redstoneOreSpawnProbability = 1f/16f;
+	public float redstoneOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
+	public float redstoneOreSpawnMaxHeight = -0.75f;
+
+	public int diamondOreSpawnSize = 8;
+	public int diamondOreSpawnTries = 1;
+	public float diamondOreSpawnProbability = 1f/16f;
+	public float diamondOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
+	public float diamondOreSpawnMaxHeight = -0.75f;
+
+	public int lapisLazuliSpawnSize = 7;
+	public int lapisLazuliSpawnTries = 1;
+	public float lapisLazuliSpawnProbability = 0.5f;
+	public float lapisLazuliSpawnCenter = 0.25f;
+	public float lapisLazuliSpawnSpread = 0.25f;
+
 	/**
 	 * Terrain shape
 	 */
@@ -77,12 +188,6 @@ public class CustomGeneratorSettings {
 	public int highNoiseOctaves = 16;
 
 	// TODO: public boolean negativeHeightVariationInvertsTerrain = true;
-
-	/**
-	 * Block placement, pre-populator
-	 */
-
-	public int waterLevel = 63; // note: this is not named seaLevel to avoid confusion
 
 	public CustomGeneratorSettings() {
 

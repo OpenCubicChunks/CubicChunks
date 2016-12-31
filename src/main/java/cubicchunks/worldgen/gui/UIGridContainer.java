@@ -43,6 +43,10 @@ import mcp.MethodsReturnNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class UIGridContainer extends UIContainer<UIGridContainer> {
+	public static final int WIDTH_1_COL = 6;
+	public static final int WIDTH_2_COL = 3;
+	public static final int WIDTH_3_COL = 2;
+
 	private final Set<ComponentEntry> entries = new HashSet<>();
 	private int insetUp;
 	private int insetDown;
@@ -188,6 +192,8 @@ public class UIGridContainer extends UIContainer<UIGridContainer> {
 			if (entries == null) {
 				continue;
 			}
+			int currentRowHeight = noInsetRowHeights[rowNumber];
+			int ySpaceForComponent = currentRowHeight - insetDown - insetUp;
 			for (ComponentEntry entry : entries) {
 				if (entry == null) {
 					continue;
@@ -198,7 +204,7 @@ public class UIGridContainer extends UIContainer<UIGridContainer> {
 				double noInsetPosY = currentY;
 
 				double posX = noInsetPosX + insetLeft;
-				double posY = noInsetPosY + insetUp;
+				double posY = noInsetPosY + insetUp + (ySpaceForComponent - comp.getHeight())/2;
 
 				double sizeX = noInsetSizeX*entry.cellsX - insetLeft - insetRight;
 				int sizeY = comp.getRawHeight();
@@ -206,7 +212,7 @@ public class UIGridContainer extends UIContainer<UIGridContainer> {
 				comp.setPosition((int) posX, (int) posY);
 				comp.setSize((int) sizeX, sizeY);
 			}
-			currentY += noInsetRowHeights[rowNumber];
+			currentY += currentRowHeight;
 		}
 	}
 

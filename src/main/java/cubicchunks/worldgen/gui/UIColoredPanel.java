@@ -30,7 +30,10 @@ import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.element.GuiShape;
 import net.malisis.core.client.gui.element.SimpleGuiShape;
 import net.malisis.core.renderer.animation.transformation.ITransformable;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
+@SideOnly(Side.CLIENT)
 public class UIColoredPanel extends UIContainer<UIColoredPanel> implements ITransformable.Color, ITransformable.Alpha {
 	private final GuiShape lineShape;
 	private int color;

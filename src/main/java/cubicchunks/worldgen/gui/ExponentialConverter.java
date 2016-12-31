@@ -51,12 +51,10 @@ public class ExponentialConverter extends Converter<Float, Float> {
 	private final float maxExpPos;
 	private final float minExpNeg;
 	private final float maxExpNeg;
-	private final Set<SnapDataEntry> snapData;
 	private final float baseValue;
 	private final double zeroPos;
 	private final double positiveExpStart;
 	private final double negativeExpStart;
-	private final DoubleUnaryOperator snapRadius;
 	private final double minLinearPosVal;
 	private final double minLinearNegVal;
 
@@ -77,8 +75,6 @@ public class ExponentialConverter extends Converter<Float, Float> {
 		this.minExpPos = builder.minExpPos;
 		this.maxExpPos = builder.maxExpPos;
 		this.baseValue = builder.baseVal;
-		this.snapData = builder.snapData;
-		this.snapRadius = builder.snapRadius;
 
 		// find zeroX, minPosX, maxNegX
 		// to solve:
@@ -153,7 +149,7 @@ public class ExponentialConverter extends Converter<Float, Float> {
 		} else if (hasNegativePart && !hasPositivePart) {
 			z = 1;
 		} else if (!hasNegativePart || !hasPositivePart) {
-			throw new IllegalArgumentException("Slider must have at least either positive or negative part");
+			throw new IllegalArgumentException("Converter must have at least either positive or negative part");
 		}
 		double p = (-1 + c*z*lb - d*z*lb)/(-1 + c*lb - d*lb);
 		double n = ((f - g)*z*lb)/(-1 + f*lb - g*lb);
@@ -166,52 +162,12 @@ public class ExponentialConverter extends Converter<Float, Float> {
 		this.minLinearNegVal = hasNegativePart ? -pow(baseValue, minExpNeg) : Double.NEGATIVE_INFINITY;
 	}
 
-	@Override protected Float doForward(Float slideVal) {
-		double max = -Double.MAX_VALUE;
-		double best = 0;
-
-		final double rawValue = doForwardsRaw(slideVal);
-
-		int startExponent = getMaxExp();
-		for (SnapDataEntry e : snapData) {
-			for (int trySnapDivExp = startExponent; ; trySnapDivExp--) {
-				double snapVal = getSnapValue(rawValue, trySnapDivExp, e);
-				double snapSliderVal = doBackwardDouble(snapVal);
-				double snapDistance = abs(slideVal - snapSliderVal);
-				if (Double.isNaN(snapVal) || Double.isInfinite(snapVal) || snapDistance < getSnapRadius(getDivisor(trySnapDivExp, e))) {
-					double v = getDivisor(trySnapDivExp, e);
-					if (v > max) {
-						max = v;
-						best = snapVal;
-					}
-					break;
-				}
-			}
-		}
-		return (float) best;
+	@Override
+	protected Float doForward(Float slideVal) {
+		return (float) doForwardsDouble(slideVal);
 	}
 
-	private double getDivisor(int trySnapDivExp, SnapDataEntry e) {
-		return pow(e.baseVal, trySnapDivExp)*e.multiplier;
-	}
-
-	private double getSnapValue(double rawValue, int exp, SnapDataEntry e) {
-		double divisor = getDivisor(exp, e);
-		if (divisor == 0) {
-			return Double.NaN;
-		}
-		return round(rawValue/divisor)*divisor;
-	}
-
-	private double getSnapRadius(double at) {
-		return this.snapRadius.applyAsDouble(at);
-	}
-
-	private int getMaxExp() {
-		return ceil(max(maxExpNeg, maxExpPos));
-	}
-
-	private double doForwardsRaw(double x) {
+	private double doForwardsDouble(double x) {
 		// for x below negative start - negative exponential
 		// for x between negMaxX and posMinX - linear
 		// for x above posMinX - positive exponential
@@ -344,8 +300,6 @@ public class ExponentialConverter extends Converter<Float, Float> {
 		private float minExpNeg = Float.NaN;
 		private float maxExpNeg = Float.NaN;
 		private float baseVal;
-		public Set<SnapDataEntry> snapData = new HashSet<>();
-		private DoubleUnaryOperator snapRadius;
 
 		public Builder setHasZero(boolean hasZero) {
 			this.hasZero = hasZero;
@@ -369,49 +323,8 @@ public class ExponentialConverter extends Converter<Float, Float> {
 			return this;
 		}
 
-		public Builder setSnapRadiusFunction(DoubleUnaryOperator op) {
-			this.snapRadius = op;
-			return this;
-		}
-
-		public Builder addBaseValueWithMultiplier(float baseVal, float multiplier) {
-			this.snapData.add(new SnapDataEntry(baseVal, multiplier));
-			return this;
-		}
-
 		public ExponentialConverter build() {
-			this.snapData.add(new SnapDataEntry(baseVal, 1));
 			return new ExponentialConverter(this);
-		}
-	}
-
-	private static final class SnapDataEntry {
-		private final double baseVal, multiplier;
-
-		private SnapDataEntry(double baseVal, double multiplier) {
-			this.baseVal = baseVal;
-			this.multiplier = multiplier;
-		}
-
-		@Override public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-
-			SnapDataEntry that = (SnapDataEntry) o;
-
-			if (Double.compare(that.baseVal, baseVal) != 0) return false;
-			return Double.compare(that.multiplier, multiplier) == 0;
-
-		}
-
-		@Override public int hashCode() {
-			int result;
-			long temp;
-			temp = Double.doubleToLongBits(baseVal);
-			result = (int) (temp ^ (temp >>> 32));
-			temp = Double.doubleToLongBits(multiplier);
-			result = 31*result + (int) (temp ^ (temp >>> 32));
-			return result;
 		}
 	}
 }

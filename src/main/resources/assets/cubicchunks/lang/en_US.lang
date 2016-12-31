@@ -7,13 +7,59 @@ itemGroup.cubic_chunks_debug_tab=Cubic Chunks debug items
 cubicchunks.gui.customcubic.previous_page=Previous
 cubicchunks.gui.customcubic.next_page=Next
 
+#################################
+###   basic terrain settings  ###
+#################################
+
+cubicchunks.gui.customcubic.water_level=Water Level
+cubicchunks.gui.customcubic.caves=Caves
+cubicchunks.gui.customcubic.strongholds=Strongholds
+cubicchunks.gui.customcubic.villages=Villages
+cubicchunks.gui.customcubic.mineshafts=Mineshafts
+cubicchunks.gui.customcubic.temples=Temples
+cubicchunks.gui.customcubic.oceanMonuments=Ocean Monuments
+cubicchunks.gui.customcubic.woodlandMansions=Woodland Mansions
+cubicchunks.gui.customcubic.ravines=Ravines
+cubicchunks.gui.customcubic.dungeons=Dungeons
+cubicchunks.gui.customcubic.dungeonCount=Dungeon Count
+cubicchunks.gui.customcubic.waterLakes=Water Lakes
+cubicchunks.gui.customcubic.waterLakeRarity=Water Lake Rarity
+cubicchunks.gui.customcubic.lavaLakes=Lava Lakes
+cubicchunks.gui.customcubic.lavaLakeRarity=Lava Lake Rarity
+cubicchunks.gui.customcubic.lavaOceans=Lava Oceans
+cubicchunks.gui.customcubic.biome=Biome
+cubicchunks.gui.customcubic.biomeSize=Biome Size
+cubicchunks.gui.customcubic.riverSize=River Size
+
+#################################
+###  ore generation settings  ###
+#################################
+
+cubicchunks.gui.customcubic.dirt_group=Dirt:
+cubicchunks.gui.customcubic.gravel_group=Gravel:
+cubicchunks.gui.customcubic.granite_group=Granite:
+cubicchunks.gui.customcubic.diorite_group=Diorite:
+cubicchunks.gui.customcubic.andesite_group=Andesite:
+cubicchunks.gui.customcubic.coal_ore_group=Coal Ore:
+cubicchunks.gui.customcubic.iron_ore_group=Iron Ore:
+cubicchunks.gui.customcubic.gold_ore_group=Gold Ore:
+cubicchunks.gui.customcubic.redstone_ore_group=Redstone Ore:
+cubicchunks.gui.customcubic.diamond_ore_group=Diamond Ore:
+cubicchunks.gui.customcubic.lapis_lazuli_ore_group=Lapis Lazuli Ore:
+
+cubicchunks.gui.customcubic.spawn_size=Spawn Size:
+cubicchunks.gui.customcubic.spawn_tries=Spawn Tries:
+cubicchunks.gui.customcubic.spawn_probability=Probability:
+cubicchunks.gui.customcubic.spawn_range=Height %.2f%%%% to %.2f%%%%
+
+#################################
+### advanced terrain settings ###
+#################################
+
 cubicchunks.gui.customcubic.height_variation_group=Height variation:
 cubicchunks.gui.customcubic.height_variation_factor_slider=Factor
 cubicchunks.gui.customcubic.height_variation_offset_slider=Offset
 cubicchunks.gui.customcubic.height_variation_special_factor_slider=Special
-
-cubicchunks.gui.customcubic.water_group=Water:
-cubicchunks.gui.customcubic.water_level=Level
 
 cubicchunks.gui.customcubic.height_group=Height:
 cubicchunks.gui.customcubic.height_factor=Factor
