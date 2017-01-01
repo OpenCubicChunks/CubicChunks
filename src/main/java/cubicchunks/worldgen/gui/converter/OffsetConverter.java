@@ -25,33 +25,19 @@ package cubicchunks.worldgen.gui.converter;
 
 import com.google.common.base.Converter;
 
-public class ConverterWithInfinity extends Converter<Float, Float> {
+public class OffsetConverter extends Converter<Float, Float> {
 
-	private final float negative;
-	private final float positive;
+	private float offset;
 
-	public ConverterWithInfinity(float negative, float positive) {
-		this.negative = negative;
-		this.positive = positive;
+	public OffsetConverter(float offset) {
+		this.offset = offset;
 	}
 
-	@Override protected Float doForward(Float v) {
-		if (v <= negative) {
-			return Float.NEGATIVE_INFINITY;
-		}
-		if (v >= positive) {
-			return Float.POSITIVE_INFINITY;
-		}
-		return v;
+	@Override protected Float doForward(Float x) {
+		return x + offset;
 	}
 
-	@Override protected Float doBackward(Float v) {
-		if (v == Float.NEGATIVE_INFINITY) {
-			return negative;
-		}
-		if (v == Float.POSITIVE_INFINITY) {
-			return positive;
-		}
-		return v;
+	@Override protected Float doBackward(Float x) {
+		return x - offset;
 	}
 }

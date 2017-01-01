@@ -37,13 +37,18 @@ import net.malisis.core.renderer.animation.Animation;
 import net.malisis.core.renderer.animation.transformation.AlphaTransform;
 import net.malisis.core.util.MouseButton;
 
+import org.lwjgl.input.Mouse;
+
 import java.util.concurrent.TimeUnit;
 
 import cubicchunks.util.CooldownTimer;
 import cubicchunks.worldgen.gui.ExtraGui;
 
 public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
-	private final CooldownTimer timer = new CooldownTimer(1000/30, TimeUnit.MILLISECONDS);
+	private final CooldownTimer timer = new CooldownTimer(1000/20, TimeUnit.MILLISECONDS);
+
+	private boolean isScrollHovered = false;
+
 	/** Background color of the scroll. */
 	protected int backgroundColor = 0;
 	/** Scroll color **/
@@ -197,25 +202,45 @@ public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
 	}
 
 	@Override
+	public boolean onMouseMove(int lastX, int lastY, int x, int y) {
+		this.updateHoverState(x, y);
+		return true;
+	}
+
+	@Override
 	public boolean onButtonPress(int x, int y, MouseButton button) {
 		if (button != MouseButton.LEFT)
-			return onButtonPress(x, y, button);
+			return true;
 
-		if (isOnScroll(x, y)) {
+		if (isOnScroll()) {
 			return true;
 		}
 		scrollByStepClick(x, y);
 		return true;
 	}
 
-	private boolean isOnScroll(int x, int y) {
+	private void updateHoverState(int x, int y) {
+		if (Mouse.isButtonDown(MouseButton.LEFT.getCode())) {
+			return;
+		}
+		this.isScrollHovered = isScrollHoveredAt(x, y);
+	}
+
+	private boolean isScrollHoveredAt(int x, int y) {
 		int pos = relativeScrollPos(x, y);
 		int posStart = (int) ((getLength() - scrollHeight)*getOffset());
 		int posEnd = posStart + scrollHeight;
 		return pos >= posStart && pos < posEnd;
 	}
 
+	private boolean isOnScroll() {
+		return this.isScrollHovered;
+	}
+
 	private void scrollByStepClick(int x, int y) {
+		if (isScrollHoveredAt(x, y)) {
+			return;
+		}
 		int pos = relativeScrollPos(x, y);
 		int posCenter = (int) (getLength()*getOffset());
 		float mult = 0.5f*(pos < posCenter ? -1 : 1);
@@ -232,7 +257,7 @@ public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
 			return super.onDrag(lastX, lastY, x, y, button);
 		}
 		if (isFocused()) {
-			if (!isOnScroll(lastX, lastY)) {
+			if (!isOnScroll()) {
 				timer.tryDo(() -> scrollByStepClick(x, y));
 				return true;
 			}
@@ -242,7 +267,7 @@ public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
 	}
 
 	@Override public void onDragTick(int mouseX, int mouseY, float partialTick) {
-		if (isFocused() && !isOnScroll(mouseX, mouseY)) {
+		if (isFocused() && !isOnScroll()) {
 			timer.tryDo(() -> scrollByStepClick(mouseX, mouseY));
 		}
 	}

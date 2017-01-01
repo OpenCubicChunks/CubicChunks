@@ -40,10 +40,8 @@ public class RoundingConverter extends Converter<Float, Float> {
 	private final DoubleUnaryOperator radius;
 	private final Set<RoundingEntry> roundingData;
 	private final float maxExp;
-	private Converter<Float, Float> conv;
 
-	public RoundingConverter(Builder builder) {
-		this.conv = builder.conv;
+	RoundingConverter(Converters.RoundingBuilder builder) {
 		this.radius = builder.snapRadius;
 		this.roundingData = builder.roundingData;
 		this.maxExp = builder.maxExp;
@@ -53,7 +51,7 @@ public class RoundingConverter extends Converter<Float, Float> {
 		double max = -Double.MAX_VALUE;
 		double best = 0;
 
-		final double rawValue = conv.convert(slideVal);
+		final double rawValue = slideVal;
 
 		int startExponent = MathHelper.ceil(maxExp);
 		for (RoundingEntry e : roundingData) {
@@ -92,53 +90,13 @@ public class RoundingConverter extends Converter<Float, Float> {
 
 
 	@Override protected Float doBackward(Float value) {
-		return conv.reverse().convert(value);
+		return value;
 	}
 
-
-	public static RoundingConverter.Builder builder() {
-		return new RoundingConverter.Builder();
-	}
-
-	public static class Builder {
-		private float maxExp = Float.NaN;
-		public Set<RoundingEntry> roundingData = new HashSet<>();
-		private DoubleUnaryOperator snapRadius;
-		private Converter<Float, Float> conv;
-
-
-		public RoundingConverter.Builder setMaxExp(float max) {
-			maxExp = max;
-			return this;
-		}
-
-		public RoundingConverter.Builder setRoundingRadiusFunction(DoubleUnaryOperator op) {
-			Preconditions.checkNotNull(op);
-			this.snapRadius = op;
-			return this;
-		}
-
-		public RoundingConverter.Builder addBaseValueWithMultiplier(float baseVal, float multiplier) {
-			this.roundingData.add(new RoundingEntry(baseVal, multiplier));
-			return this;
-		}
-
-		public RoundingConverter.Builder setBaseConverter(Converter<Float, Float> conv) {
-			Preconditions.checkNotNull(conv);
-			this.conv = conv;
-			return this;
-		}
-
-		public RoundingConverter build() {
-			return new RoundingConverter(this);
-		}
-	}
-
-
-	private static final class RoundingEntry {
+	static final class RoundingEntry {
 		private final double baseVal, multiplier;
 
-		private RoundingEntry(double baseVal, double multiplier) {
+		RoundingEntry(double baseVal, double multiplier) {
 			this.baseVal = baseVal;
 			this.multiplier = multiplier;
 		}

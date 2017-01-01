@@ -36,25 +36,29 @@ import net.malisis.core.client.gui.component.interaction.UICheckBox;
 import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.client.gui.component.interaction.UISlider;
 import net.malisis.core.client.gui.event.component.SpaceChangeEvent;
+import net.malisis.core.renderer.font.FontOptions;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleUnaryOperator;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.util.MathUtil;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
-import cubicchunks.worldgen.gui.component.IDragTickable;
 import cubicchunks.worldgen.gui.component.UIColoredPanel;
 import cubicchunks.worldgen.gui.component.UIGridContainer;
-import cubicchunks.worldgen.gui.component.UIPagedTabGroup;
+import cubicchunks.worldgen.gui.component.UIMultilineLabel;
+import cubicchunks.worldgen.gui.component.UITabbedContainer;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
 import cubicchunks.worldgen.gui.component.UISliderNoScroll;
 import cubicchunks.worldgen.gui.converter.ConverterWithInfinity;
+import cubicchunks.worldgen.gui.converter.Converters;
 import cubicchunks.worldgen.gui.converter.ExponentialConverter;
 import cubicchunks.worldgen.gui.converter.RoundingConverter;
 import mcp.MethodsReturnNonnullByDefault;
@@ -68,8 +72,14 @@ import static java.lang.Math.round;
 @MethodsReturnNonnullByDefault
 public class CustomCubicGui extends ExtraGui {
 
+	private static final int VERTICAL_PADDING = 30;
+	private static final int HORIZONTAL_PADDING = 25;
+	private static final int VERTICAL_INSETS = 2;
+	private static final int HORIZONTAL_INSETS = 4;
+	private static final int PREV_NEXT_WIDTH = 60;
+
 	private final GuiCreateWorld parent;
-	private UIContainer<?> tabs;
+	private UITabbedContainer tabs;
 
 	public CustomCubicGui(GuiCreateWorld parent) {
 		super();
@@ -83,29 +93,38 @@ public class CustomCubicGui extends ExtraGui {
 	@Override
 	public void construct() {
 		tabs = makeTabContainer();
-		tabs.add(inPanel(createBasicSettingsTab()));
-		tabs.add(inPanel(createOreSettingsTab()));
-		tabs.add(inPanel(createAdvancedTerrainShapeTab()));
+		tabs.addTab(inPanel(createBasicSettingsTab()), vanillaText("basic_tab_title"));
+		tabs.addTab(inPanel(createOreSettingsTab()), vanillaText("ores_tab_title"));
+		tabs.addTab(inPanel(createAdvancedTerrainShapeTab()), vanillaText("advanced_tab_title"));
 		addToScreen(tabs);
 	}
 
 	private UIContainer<?> inPanel(UIComponent<?> comp) {
-
 		UIColoredPanel panel = new UIColoredPanel(this);
-		panel.setSize(UIComponent.INHERITED, UIComponent.INHERITED - 60);
-		panel.setPosition(0, 30);
+		panel.setSize(UIComponent.INHERITED, UIComponent.INHERITED - VERTICAL_PADDING*2);
+		panel.setPosition(0, VERTICAL_PADDING);
 		panel.add(comp);
 		return panel;
 	}
 
-	private UIContainer<?> makeTabContainer() {
+	private UITabbedContainer makeTabContainer() {
 
+		final int buttonY = VERTICAL_PADDING/2 - 10;
 		UIButton prev = new UIButton(this, malisisText("previous_page"))
-			.setPosition(32, 8, Anchor.LEFT).setSize(50, 20);
+			.setPosition(HORIZONTAL_PADDING + HORIZONTAL_INSETS, buttonY, Anchor.LEFT).setSize(PREV_NEXT_WIDTH, 20);
 		UIButton next = new UIButton(this, malisisText("next_page"))
-			.setPosition(-32, 8, Anchor.RIGHT).setSize(50, 20);
+			.setPosition(-(HORIZONTAL_PADDING + HORIZONTAL_INSETS), buttonY, Anchor.RIGHT).setSize(PREV_NEXT_WIDTH, 20);
 
-		return new UIPagedTabGroup(this, prev, next);
+		UIMultilineLabel label = new UIMultilineLabel(this)
+			.setPosition(0, 2)
+			.setAnchor(Anchor.CENTER)
+			.setTextAnchor(Anchor.CENTER)
+			.setFontOptions(FontOptions.builder().color(0xFFFFFF).shadow().build());
+
+		UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
+		tabGroup.add(label);
+
+		return tabGroup;
 	}
 
 	private UIContainer<?> createBasicSettingsTab() {
@@ -113,10 +132,10 @@ public class CustomCubicGui extends ExtraGui {
 		CustomGeneratorSettings settings = CustomGeneratorSettings.defaults();
 
 		UIGridContainer layout = new UIGridContainer(this);
-		layout.setPadding(25, 0);
+		layout.setPadding(HORIZONTAL_PADDING, 0);
 		layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
 			.setColumns(6)
-			.setInsets(2, 2, 4, 4)
+			.setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
 
 			.add(makeCheckbox(malisisText("caves"), settings.caves),
 				WIDTH_2_COL*0, 0, WIDTH_2_COL, 1)
@@ -181,10 +200,10 @@ public class CustomCubicGui extends ExtraGui {
 
 		int y = -1;
 		UIGridContainer layout = new UIGridContainer(this);
-		layout.setPadding(25, 0);
+		layout.setPadding(HORIZONTAL_PADDING, 0);
 		layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
 			.setColumns(6)
-			.setInsets(2, 2, 4, 4)
+			.setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
 
 			.add(label(malisisText("dirt_group"), 20),
 				WIDTH_1_COL*0, ++y, WIDTH_1_COL, 1)
@@ -318,12 +337,12 @@ public class CustomCubicGui extends ExtraGui {
 
 		String FREQ_FMT = ": %.7f";
 		UIGridContainer layout = new UIGridContainer(this);
-		layout.setPadding(25, 0);
+		layout.setPadding(HORIZONTAL_PADDING, 0);
 		layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
 			.setColumns(6)
-			.setInsets(2, 2, 4, 4)
+			.setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
 			// height variation
-			.add(new UILabel(this, malisisText("height_variation_group")),
+			.add(label(malisisText("height_variation_group"), 20),
 				WIDTH_1_COL*0, 0, WIDTH_1_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("height_variation_factor_slider", ": %.2f"),
@@ -339,7 +358,7 @@ public class CustomCubicGui extends ExtraGui {
 				WIDTH_3_COL*2, 1, WIDTH_3_COL, 1)
 
 			// height
-			.add(new UILabel(this, malisisText("height_group")),
+			.add(label(malisisText("height_group"), 20),
 				WIDTH_1_COL*0, 2, WIDTH_1_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("height_factor", ": %.2f"),
@@ -351,15 +370,15 @@ public class CustomCubicGui extends ExtraGui {
 				WIDTH_2_COL*1, 3, WIDTH_2_COL, 1)
 
 			// depth noise
-			.add(new UILabel(this, malisisText("depth_noise_group")),
+			.add(label(malisisText("depth_noise_group"), 20),
 				WIDTH_1_COL*0, 6, WIDTH_1_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("depth_noise_frequency_x", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.depthNoiseFrequencyX),
+				Float.NaN, Float.NaN, -8, 0, settings.depthNoiseFrequencyX),
 				WIDTH_2_COL*0, 7, WIDTH_2_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("depth_noise_frequency_z", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.depthNoiseFrequencyZ),
+				Float.NaN, Float.NaN, -8, 0, settings.depthNoiseFrequencyZ),
 				WIDTH_2_COL*1, 7, WIDTH_2_COL, 1)
 
 			.add(makeIntSlider(
@@ -377,19 +396,19 @@ public class CustomCubicGui extends ExtraGui {
 				WIDTH_3_COL*2, 8, WIDTH_3_COL, 1)
 
 			// selector noise
-			.add(new UILabel(this, malisisText("selector_noise_group")),
+			.add(label(malisisText("selector_noise_group"), 20),
 				WIDTH_1_COL*0, 9, WIDTH_1_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("selector_noise_frequency_x", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.selectorNoiseFrequencyX),
+				Float.NaN, Float.NaN, -8, 0, settings.selectorNoiseFrequencyX),
 				WIDTH_3_COL*0, 10, WIDTH_3_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("selector_noise_frequency_y", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.selectorNoiseFrequencyY),
+				Float.NaN, Float.NaN, -8, 0, settings.selectorNoiseFrequencyY),
 				WIDTH_3_COL*1, 10, WIDTH_3_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("selector_noise_frequency_z", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.selectorNoiseFrequencyZ),
+				Float.NaN, Float.NaN, -8, 0, settings.selectorNoiseFrequencyZ),
 				WIDTH_3_COL*2, 10, WIDTH_3_COL, 1)
 
 			.add(makeIntSlider(
@@ -407,19 +426,19 @@ public class CustomCubicGui extends ExtraGui {
 
 
 			// low noise
-			.add(new UILabel(this, malisisText("low_noise_group")),
+			.add(label(malisisText("low_noise_group"), 20),
 				WIDTH_1_COL*0, 12, WIDTH_1_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("low_noise_frequency_x", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.lowNoiseFrequencyX),
+				Float.NaN, Float.NaN, -8, 0, settings.lowNoiseFrequencyX),
 				WIDTH_3_COL*0, 13, WIDTH_3_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("low_noise_frequency_y", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.lowNoiseFrequencyY),
+				Float.NaN, Float.NaN, -8, 0, settings.lowNoiseFrequencyY),
 				WIDTH_3_COL*1, 13, WIDTH_3_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("low_noise_frequency_z", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.lowNoiseFrequencyZ),
+				Float.NaN, Float.NaN, -8, 0, settings.lowNoiseFrequencyZ),
 				WIDTH_3_COL*2, 13, WIDTH_3_COL, 1)
 
 			.add(makeIntSlider(
@@ -436,19 +455,19 @@ public class CustomCubicGui extends ExtraGui {
 				WIDTH_3_COL*2, 14, WIDTH_3_COL, 1)
 
 			// high noise
-			.add(new UILabel(this, malisisText("high_noise_group")),
+			.add(label(malisisText("high_noise_group"), 20),
 				WIDTH_1_COL*0, 15, WIDTH_1_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("high_noise_frequency_x", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.highNoiseFrequencyX),
+				Float.NaN, Float.NaN, -8, 0, settings.highNoiseFrequencyX),
 				WIDTH_3_COL*0, 16, WIDTH_3_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("high_noise_frequency_y", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.highNoiseFrequencyY),
+				Float.NaN, Float.NaN, -8, 0, settings.highNoiseFrequencyY),
 				WIDTH_3_COL*1, 16, WIDTH_3_COL, 1)
 			.add(makeExponentialSlider(
 				malisisText("high_noise_frequency_z", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 1, settings.highNoiseFrequencyZ),
+				Float.NaN, Float.NaN, -8, 0, settings.highNoiseFrequencyZ),
 				WIDTH_3_COL*2, 16, WIDTH_3_COL, 1)
 
 			.add(makeIntSlider(
@@ -470,28 +489,18 @@ public class CustomCubicGui extends ExtraGui {
 
 	private UIComponent<?> makeExponentialSlider(String name, float minNeg, float maxNeg, float minPos, float maxPos, float defaultVal) {
 
-		ExponentialConverter expConv = ExponentialConverter
-			.builder()
-			.setBaseValue(2)
-			.setHasZero(true)
-			.setNegativeExponentRange(minNeg, maxNeg)
-			.setPositiveExponentRange(minPos, maxPos)
+		UISlider<Float>[] wrappedSlider = new UISlider[1];
+		DoubleUnaryOperator roundRadiusFunc = d -> 1.0/(wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth())*0.5;
+
+		float defMult = defaultVal == 0 ? 1 : defaultVal;
+		float maxExp = MathUtil.maxIgnoreNan(maxNeg, maxPos);
+
+		Converter<Float, Float> conv = Converters.builder()
+			.exponential().withZero().withBaseValue(2).withNegativeExponentRange(minNeg, maxNeg).withPositiveExponentRange(minPos, maxPos)
+			.rounding().withBase(2, 1).withBase(10, 1).withBase(2, defMult).withBase(10, defMult).withMaxExp(maxExp).withRoundingRadius(roundRadiusFunc)
 			.build();
 
-		// a little hack to be able to access slider from within lambda used to construct slider
-		UISlider<Float>[] wrappedSlider = new UISlider[1];
-		RoundingConverter.Builder convBuilder = RoundingConverter.builder()
-			.setRoundingRadiusFunction(d -> 1.0/(wrappedSlider[0] == null ? 1.0/1000 : wrappedSlider[0].getWidth())*0.5)
-			.setBaseConverter(expConv)
-			.setMaxExp(MathUtil.maxIgnoreNan(maxNeg, maxPos))
-			.addBaseValueWithMultiplier(2, 1)
-			.addBaseValueWithMultiplier(10, 1);
-		if (defaultVal != 0) {
-			convBuilder.addBaseValueWithMultiplier(2, defaultVal);
-		}
-
-		UISlider<Float> slider = new UISliderNoScroll<>(this, this.width - 32, convBuilder.build(), name)
-			.setValue(defaultVal);
+		UISlider<Float> slider = new UISliderNoScroll<>(this, this.width - 32, conv, name).setValue(defaultVal);
 		wrappedSlider[0] = slider;
 		return slider;
 	}
@@ -524,22 +533,25 @@ public class CustomCubicGui extends ExtraGui {
 
 	public UIComponent<?> makeCheckbox(String name, boolean defaultValue) {
 		UICheckBox cb = new UICheckBox(this, name)
-			.setChecked(defaultValue);
+			.setChecked(defaultValue)
+			.setFontOptions(FontOptions.builder().color(0xFFFFFF).shadow().build());
 		return cb;
 	}
 
 	private UIComponent<?> makeRangeSlider(String name, float min, float max, float defaultMin, float defaultMax) {
 		UIRangeSlider<Float>[] wrappedSlider = new UIRangeSlider[1];
+		DoubleUnaryOperator roundRadiusFunc = d -> 1.0/(wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth())*0.5;
+		float maxExp = MathHelper.ceil(Math.log(Math.max(1, max))/Math.log(2));
+
+		Converter<Float, Float> conv = Converters.builder()
+			.linearScale(min, max)
+			.rounding().withBase(2, 1).withBase(10, 1).withMaxExp(maxExp).withRoundingRadius(roundRadiusFunc)
+			.withInfinity().negativeAt(min).positiveAt(max)
+			.build();
+
 		UIRangeSlider<Float> slider = new UIRangeSlider<Float>(
 			this, 100,
-			new ConverterWithInfinity(
-				RoundingConverter.builder().setBaseConverter(Converter.from(
-					v -> MathUtil.lerp(v, min, max),
-					v -> MathUtil.unlerp(v, min, max)
-				)).addBaseValueWithMultiplier(2, 1).addBaseValueWithMultiplier(10, 1).setMaxExp(2)
-					.setRoundingRadiusFunction(d -> 1.0/(wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth())*0.5)
-					.build()
-			),
+			conv,
 			(a, b) -> I18n.format(name, a*100, b*100))
 			.setRange(defaultMin, defaultMax);
 		wrappedSlider[0] = slider;
@@ -567,7 +579,10 @@ public class CustomCubicGui extends ExtraGui {
 	}
 
 	private UIComponent<?> label(String text, int height) {
-		return wrappedCentered(new UILabel(this, text)).setSize(0, height);
+		return wrappedCentered(
+			new UILabel(this, text)
+				.setFontOptions(FontOptions.builder().color(0xFFFFFF).shadow().build())
+		).setSize(0, height);
 	}
 
 	private UIContainer<?> wrappedCentered(UIComponent<?> comp) {

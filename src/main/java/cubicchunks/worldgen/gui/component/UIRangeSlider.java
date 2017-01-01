@@ -38,6 +38,7 @@ import net.malisis.core.renderer.font.MalisisFont;
 import net.malisis.core.renderer.icon.GuiIcon;
 import net.malisis.core.renderer.icon.provider.GuiIconProvider;
 import net.malisis.core.util.MouseButton;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -136,7 +137,7 @@ public class UIRangeSlider<T> extends UIComponent<UIRangeSlider<T>> implements I
 			renderer.drawShape(rectangle, rp);
 		}
 		renderer.next();
-		GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_ZERO);
+		GlStateManager.tryBlendFuncSeparate(GL11.GL_DST_COLOR, GL11.GL_ZERO, GL11.GL_ONE, GL11.GL_ZERO);
 		if (this.isHovered()) {
 			rp.usePerVertexColor.set(true);
 			if (sliderPair.isMaxFocused() && sliderPair.isMinFocused()) {
@@ -160,7 +161,7 @@ public class UIRangeSlider<T> extends UIComponent<UIRangeSlider<T>> implements I
 		}
 		renderer.next();
 		renderer.enableTextures();
-		GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
 	}
 
 	private void drawRectangle(GuiRenderer renderer, int width, int height, int posX, int posY, int colorLeft, int colorRight) {
@@ -310,7 +311,7 @@ public class UIRangeSlider<T> extends UIComponent<UIRangeSlider<T>> implements I
 	}
 
 	private static class SliderPair<T> {
-		private final CooldownTimer moveStepCooldown = new CooldownTimer(1000/30, TimeUnit.MILLISECONDS);
+		private final CooldownTimer moveStepCooldown = new CooldownTimer(1000/20, TimeUnit.MILLISECONDS);
 		private final UIRangeSlider<T> uiSlider;
 		private final Converter<Float, T> converter;
 

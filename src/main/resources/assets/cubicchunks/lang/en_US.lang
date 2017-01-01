@@ -7,6 +7,10 @@ itemGroup.cubic_chunks_debug_tab=Cubic Chunks debug items
 cubicchunks.gui.customcubic.previous_page=Previous
 cubicchunks.gui.customcubic.next_page=Next
 
+cubicchunks.gui.customcubic.basic_tab_title=Customize World Settings%nPage 1 of 3%nBasic Settings
+cubicchunks.gui.customcubic.ores_tab_title=Customize World Settings%nPage 2 of 3%nOre Settings
+cubicchunks.gui.customcubic.advanced_tab_title=Customize World Settings%nPage 3 of 3%nAdvanced Settings
+
 #################################
 ###   basic terrain settings  ###
 #################################

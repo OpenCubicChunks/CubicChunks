@@ -54,7 +54,7 @@ public class ExponentialConverter extends Converter<Float, Float> {
 	private final double minLinearPosVal;
 	private final double minLinearNegVal;
 
-	private ExponentialConverter(Builder builder) {
+	ExponentialConverter(Converters.ExponentialBuilder builder) {
 		boolean hasPositivePart = !Float.isNaN(builder.minExpPos) && !Double.isNaN(builder.maxExpPos);
 		boolean hasNegativePart = !Float.isNaN(builder.minExpNeg) && !Double.isNaN(builder.maxExpNeg);
 		if (!hasPositivePart) {
@@ -159,8 +159,8 @@ public class ExponentialConverter extends Converter<Float, Float> {
 	}
 
 	@Override
-	protected Float doForward(Float slideVal) {
-		return (float) doForwardsDouble(slideVal);
+	protected Float doForward(Float x) {
+		return (float) doForwardsDouble(x);
 	}
 
 	private double doForwardsDouble(double x) {
@@ -216,8 +216,8 @@ public class ExponentialConverter extends Converter<Float, Float> {
 	}
 
 
-	@Override protected Float doBackward(Float aFloat) {
-		return (float) doBackwardDouble(aFloat);
+	@Override protected Float doBackward(Float x) {
+		return (float) doBackwardDouble(x);
 	}
 
 	private double doBackwardDouble(double value) {
@@ -281,46 +281,6 @@ public class ExponentialConverter extends Converter<Float, Float> {
 			x = 1 - x;
 			x = lerp(x, negMinX, negMaxX);
 			return x;
-		}
-	}
-
-	public static Builder builder() {
-		return new Builder();
-	}
-
-	public static class Builder {
-		private boolean hasZero = false;
-		private float minExpPos = Float.NaN;
-		private float maxExpPos = Float.NaN;
-
-		private float minExpNeg = Float.NaN;
-		private float maxExpNeg = Float.NaN;
-		private float baseVal;
-
-		public Builder setHasZero(boolean hasZero) {
-			this.hasZero = hasZero;
-			return this;
-		}
-
-		public Builder setPositiveExponentRange(float min, float max) {
-			minExpPos = min;
-			maxExpPos = max;
-			return this;
-		}
-
-		public Builder setNegativeExponentRange(float min, float max) {
-			minExpNeg = min;
-			maxExpNeg = max;
-			return this;
-		}
-
-		public Builder setBaseValue(float baseVal) {
-			this.baseVal = baseVal;
-			return this;
-		}
-
-		public ExponentialConverter build() {
-			return new ExponentialConverter(this);
 		}
 	}
 }
