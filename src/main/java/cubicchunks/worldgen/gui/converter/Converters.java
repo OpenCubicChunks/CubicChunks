@@ -47,8 +47,8 @@ public class Converters {
 			return new InfinityBuilder(self());
 		}
 
-		public Builder inverse() {
-			return composeWithSelf(new InverseConverter());
+		public InverseBuilder inverse() {
+			return new InverseBuilder(self());
 		}
 
 		public Builder reverse() {
@@ -65,6 +65,10 @@ public class Converters {
 
 		public Builder linearScale(float min, float max) {
 			return scale(max - min).offset(min);
+		}
+
+		public Builder pow(float power) {
+			return composeWithSelf(new PowerConverter(power));
 		}
 
 		public RoundingBuilder rounding() {
@@ -89,7 +93,7 @@ public class Converters {
 			return this;
 		}
 
-		protected final Builder composeWithSelf(Converter<Float, Float> conv) {
+		private final Builder composeWithSelf(Converter<Float, Float> conv) {
 			Builder self = self();
 			self.currentConverter = compose(conv, self.currentConverter);
 			return self;
@@ -180,6 +184,32 @@ public class Converters {
 		}
 	}
 
+	public static class InverseBuilder extends Builder {
+		private Builder baseSelf;
+
+		private float mult = 1;
+
+		public InverseBuilder(Builder baseSelf) {
+			this.baseSelf = baseSelf;
+		}
+
+		public InverseBuilder withMultiplier(float mult) {
+			InverseBuilder self = inverseSelf();
+			self.mult = mult;
+			return self;
+		}
+
+		protected InverseBuilder inverseSelf() {
+			return this;
+		}
+
+		@Override
+		protected Builder self() {
+			baseSelf.currentConverter = compose(new InverseConverter(this.mult), baseSelf.currentConverter);
+			return baseSelf;
+		}
+	}
+
 	public static class RoundingBuilder extends Builder {
 		private Builder baseSelf;
 
@@ -216,7 +246,9 @@ public class Converters {
 
 		@Override
 		protected Builder self() {
-			baseSelf.currentConverter = compose(new RoundingConverter(this), baseSelf.currentConverter);
+			RoundingConverter rb = new RoundingConverter(this);
+			rb.setReverse(baseSelf.currentConverter.reverse());
+			baseSelf.currentConverter = compose(rb, baseSelf.currentConverter);
 			return baseSelf;
 		}
 	}

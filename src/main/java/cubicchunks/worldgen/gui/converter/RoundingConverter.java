@@ -40,6 +40,7 @@ public class RoundingConverter extends Converter<Float, Float> {
 	private final DoubleUnaryOperator radius;
 	private final Set<RoundingEntry> roundingData;
 	private final float maxExp;
+	private Converter<Float, Float> reverse;
 
 	RoundingConverter(Converters.RoundingBuilder builder) {
 		this.radius = builder.snapRadius;
@@ -47,19 +48,26 @@ public class RoundingConverter extends Converter<Float, Float> {
 		this.maxExp = builder.maxExp;
 	}
 
-	@Override protected Float doForward(Float slideVal) {
+	void setReverse(Converter<Float, Float> reverse) {
+		this.reverse = reverse;
+	}
+
+	@Override protected Float doForward(Float input) {
 		double max = -Double.MAX_VALUE;
 		double best = 0;
 
-		final double rawValue = slideVal;
+		final double slideValue = reverse.convert(input);
 
 		int startExponent = MathHelper.ceil(maxExp);
 		for (RoundingEntry e : roundingData) {
 			for (int trySnapDivExp = startExponent; ; trySnapDivExp--) {
-				double roundValue = getRoundValue(rawValue, trySnapDivExp, e);
-				double roundedSlideValue = doBackward((float) roundValue);
-				double roundDistance = abs(slideVal - roundedSlideValue);
-				if (Double.isNaN(roundValue) || Double.isInfinite(roundValue) || roundDistance < getRadius(getDivisor(trySnapDivExp, e))) {
+				double roundValue = getRoundValue(input, trySnapDivExp, e);
+				double roundedSlideValue = reverse.convert((float) roundValue);
+				double roundDistance = abs(slideValue - roundedSlideValue);
+				if (Double.isNaN(roundValue) || Double.isInfinite(roundValue)) {
+					return (float) slideValue;
+				}
+				if (roundDistance < getRadius(getDivisor(trySnapDivExp, e))) {
 					double v = getDivisor(trySnapDivExp, e);
 					if (v > max) {
 						max = v;

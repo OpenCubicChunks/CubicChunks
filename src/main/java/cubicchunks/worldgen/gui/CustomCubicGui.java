@@ -333,9 +333,11 @@ public class CustomCubicGui extends ExtraGui {
 
 	private UIContainer<?> createAdvancedTerrainShapeTab() {
 
+		final float MAX_NOISE_FREQ_POWER = -4;
+
 		CustomGeneratorSettings settings = CustomGeneratorSettings.defaults();
 
-		String FREQ_FMT = ": %.7f";
+		String PERIOD_FMT = " %.2f";
 		UIGridContainer layout = new UIGridContainer(this);
 		layout.setPadding(HORIZONTAL_PADDING, 0);
 		layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
@@ -372,13 +374,13 @@ public class CustomCubicGui extends ExtraGui {
 			// depth noise
 			.add(label(malisisText("depth_noise_group"), 20),
 				WIDTH_1_COL*0, 6, WIDTH_1_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("depth_noise_frequency_x", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.depthNoiseFrequencyX),
+			.add(makeInvertedExponentialSlider(
+				malisisText("depth_noise_period_x", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.depthNoiseFrequencyX),
 				WIDTH_2_COL*0, 7, WIDTH_2_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("depth_noise_frequency_z", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.depthNoiseFrequencyZ),
+			.add(makeInvertedExponentialSlider(
+				malisisText("depth_noise_period_z", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.depthNoiseFrequencyZ),
 				WIDTH_2_COL*1, 7, WIDTH_2_COL, 1)
 
 			.add(makeIntSlider(
@@ -398,17 +400,17 @@ public class CustomCubicGui extends ExtraGui {
 			// selector noise
 			.add(label(malisisText("selector_noise_group"), 20),
 				WIDTH_1_COL*0, 9, WIDTH_1_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("selector_noise_frequency_x", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.selectorNoiseFrequencyX),
+			.add(makeInvertedExponentialSlider(
+				malisisText("selector_noise_period_x", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.selectorNoiseFrequencyX),
 				WIDTH_3_COL*0, 10, WIDTH_3_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("selector_noise_frequency_y", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.selectorNoiseFrequencyY),
+			.add(makeInvertedExponentialSlider(
+				malisisText("selector_noise_period_y", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.selectorNoiseFrequencyY),
 				WIDTH_3_COL*1, 10, WIDTH_3_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("selector_noise_frequency_z", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.selectorNoiseFrequencyZ),
+			.add(makeInvertedExponentialSlider(
+				malisisText("selector_noise_period_z", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.selectorNoiseFrequencyZ),
 				WIDTH_3_COL*2, 10, WIDTH_3_COL, 1)
 
 			.add(makeIntSlider(
@@ -428,17 +430,17 @@ public class CustomCubicGui extends ExtraGui {
 			// low noise
 			.add(label(malisisText("low_noise_group"), 20),
 				WIDTH_1_COL*0, 12, WIDTH_1_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("low_noise_frequency_x", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.lowNoiseFrequencyX),
+			.add(makeInvertedExponentialSlider(
+				malisisText("low_noise_period_x", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.lowNoiseFrequencyX),
 				WIDTH_3_COL*0, 13, WIDTH_3_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("low_noise_frequency_y", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.lowNoiseFrequencyY),
+			.add(makeInvertedExponentialSlider(
+				malisisText("low_noise_period_y", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.lowNoiseFrequencyY),
 				WIDTH_3_COL*1, 13, WIDTH_3_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("low_noise_frequency_z", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.lowNoiseFrequencyZ),
+			.add(makeInvertedExponentialSlider(
+				malisisText("low_noise_period_z", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.lowNoiseFrequencyZ),
 				WIDTH_3_COL*2, 13, WIDTH_3_COL, 1)
 
 			.add(makeIntSlider(
@@ -457,17 +459,17 @@ public class CustomCubicGui extends ExtraGui {
 			// high noise
 			.add(label(malisisText("high_noise_group"), 20),
 				WIDTH_1_COL*0, 15, WIDTH_1_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("high_noise_frequency_x", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.highNoiseFrequencyX),
+			.add(makeInvertedExponentialSlider(
+				malisisText("high_noise_period_x", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.highNoiseFrequencyX),
 				WIDTH_3_COL*0, 16, WIDTH_3_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("high_noise_frequency_y", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.highNoiseFrequencyY),
+			.add(makeInvertedExponentialSlider(
+				malisisText("high_noise_period_y", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.highNoiseFrequencyY),
 				WIDTH_3_COL*1, 16, WIDTH_3_COL, 1)
-			.add(makeExponentialSlider(
-				malisisText("high_noise_frequency_z", FREQ_FMT),
-				Float.NaN, Float.NaN, -8, 0, settings.highNoiseFrequencyZ),
+			.add(makeInvertedExponentialSlider(
+				malisisText("high_noise_period_z", PERIOD_FMT),
+				Float.NaN, Float.NaN, -8, MAX_NOISE_FREQ_POWER, 1.0f/settings.highNoiseFrequencyZ),
 				WIDTH_3_COL*2, 16, WIDTH_3_COL, 1)
 
 			.add(makeIntSlider(
@@ -493,11 +495,30 @@ public class CustomCubicGui extends ExtraGui {
 		DoubleUnaryOperator roundRadiusFunc = d -> 1.0/(wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth())*0.5;
 
 		float defMult = defaultVal == 0 ? 1 : defaultVal;
-		float maxExp = MathUtil.maxIgnoreNan(maxNeg, maxPos);
 
 		Converter<Float, Float> conv = Converters.builder()
 			.exponential().withZero().withBaseValue(2).withNegativeExponentRange(minNeg, maxNeg).withPositiveExponentRange(minPos, maxPos)
-			.rounding().withBase(2, 1).withBase(10, 1).withBase(2, defMult).withBase(10, defMult).withMaxExp(maxExp).withRoundingRadius(roundRadiusFunc)
+			.rounding().withBase(2, 1).withBase(10, 1).withBase(2, defMult).withBase(10, defMult).withMaxExp(128).withRoundingRadius(roundRadiusFunc)
+			.build();
+
+		UISlider<Float> slider = new UISliderNoScroll<>(this, this.width - 32, conv, name).setValue(defaultVal);
+		wrappedSlider[0] = slider;
+		return slider;
+	}
+
+	private UIComponent<?> makeInvertedExponentialSlider(String name, float minNeg, float maxNeg, float minPos, float maxPos, float defaultVal) {
+
+		UISlider<Float>[] wrappedSlider = new UISlider[1];
+		DoubleUnaryOperator roundRadiusFunc = d -> 1.0/(wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth())*0.5;
+
+		float defMult = defaultVal == 0 ? 1 : defaultVal;
+
+		Converter<Float, Float> conv = Converters.builder()
+			.reverse()
+			.pow(2)
+			.exponential().withZero().withBaseValue(2).withNegativeExponentRange(minNeg, maxNeg).withPositiveExponentRange(minPos, maxPos)
+			.inverse()
+			.rounding().withBase(2, 1).withBase(10, 1).withBase(2, defMult).withBase(10, defMult).withMaxExp(128).withRoundingRadius(roundRadiusFunc)
 			.build();
 
 		UISlider<Float> slider = new UISliderNoScroll<>(this, this.width - 32, conv, name).setValue(defaultVal);

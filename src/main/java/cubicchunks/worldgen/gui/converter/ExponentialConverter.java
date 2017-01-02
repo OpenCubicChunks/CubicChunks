@@ -221,6 +221,9 @@ public class ExponentialConverter extends Converter<Float, Float> {
 	}
 
 	private double doBackwardDouble(double value) {
+		if (value != value) {
+			return value;
+		}
 		// linear part for positive
 		if (value >= 0 && value <= minLinearPosVal) {
 			/*
