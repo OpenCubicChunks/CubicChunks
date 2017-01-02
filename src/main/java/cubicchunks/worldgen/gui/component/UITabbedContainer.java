@@ -70,7 +70,6 @@ public class UITabbedContainer extends UIContainer<UITabbedContainer> {
 				updateTab(currentTab - 1);
 			}
 		});
-		add(previous, next);
 		this.onTitleUpdate = onTitleUpdate;
 	}
 

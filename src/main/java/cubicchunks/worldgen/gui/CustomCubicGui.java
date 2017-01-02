@@ -50,6 +50,7 @@ import java.util.function.DoubleUnaryOperator;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.gui.component.UIBorderLayout;
 import cubicchunks.worldgen.gui.component.UIColoredPanel;
 import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
 import cubicchunks.worldgen.gui.component.UIVerticalTableLayout.GridLocation;
@@ -106,21 +107,23 @@ public class CustomCubicGui extends ExtraGui {
 	}
 
 	private UITabbedContainer makeTabContainer() {
-
-		final int buttonY = VERTICAL_PADDING/2 - 10;
-		UIButton prev = new UIButton(this, malisisText("previous_page"))
-			.setPosition(HORIZONTAL_PADDING + HORIZONTAL_INSETS, buttonY, Anchor.LEFT).setSize(PREV_NEXT_WIDTH, 20);
-		UIButton next = new UIButton(this, malisisText("next_page"))
-			.setPosition(-(HORIZONTAL_PADDING + HORIZONTAL_INSETS), buttonY, Anchor.RIGHT).setSize(PREV_NEXT_WIDTH, 20);
+		UIButton prev = new UIButton(this, malisisText("previous_page")).setSize(PREV_NEXT_WIDTH, 20);
+		UIButton next = new UIButton(this, malisisText("next_page")).setSize(PREV_NEXT_WIDTH, 20);
 
 		UIMultilineLabel label = new UIMultilineLabel(this)
-			.setPosition(0, 2)
-			.setAnchor(Anchor.CENTER)
 			.setTextAnchor(Anchor.CENTER)
 			.setFontOptions(FontOptions.builder().color(0xFFFFFF).shadow().build());
 
+		UIBorderLayout layout = new UIBorderLayout(this)
+			.setSize(UIComponent.INHERITED - HORIZONTAL_PADDING*2 - HORIZONTAL_INSETS*2, VERTICAL_PADDING)
+			.setPosition(HORIZONTAL_PADDING + HORIZONTAL_INSETS, 0)
+			.add(prev, UIBorderLayout.Border.LEFT)
+			.add(next, UIBorderLayout.Border.RIGHT)
+			.add(label, UIBorderLayout.Border.CENTER)
+			.init();
+
 		UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
-		tabGroup.add(label);
+		tabGroup.add(layout);
 
 		return tabGroup;
 	}
