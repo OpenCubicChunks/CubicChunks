@@ -154,9 +154,9 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 			PacketColumn message = new PacketColumn(this.getColumn());
 			for (EntityPlayerMP player : this.getPlayers()) {
 				PacketDispatcher.sendTo(message, player);
-				playerCubeMap.getWorldServer()
+/*				playerCubeMap.getWorldServer()
 					.getEntityTracker()
-					.sendLeashedEntitiesInChunk(player, this.getColumn());
+					.sendLeashedEntitiesInChunk(player, this.getColumn());*/
 			}
 			setSentToPlayers.invoke(this, true);
 		} catch (Throwable throwable) {

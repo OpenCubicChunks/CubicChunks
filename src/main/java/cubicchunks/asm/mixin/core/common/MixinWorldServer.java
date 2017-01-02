@@ -23,6 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
+import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.BlockPos;
@@ -50,6 +51,7 @@ import cubicchunks.world.CubicSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.provider.ICubicWorldProvider;
+import cubichunks.entity.ICubicEntityTracker;
 import mcp.MethodsReturnNonnullByDefault;
 
 /**
@@ -92,6 +94,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.chunkGc.tick();
 	}
 
+	@Override public ICubicEntityTracker getCubicEntityTracker() {
+		return (ICubicEntityTracker)this.world$getEntityTracker();
+	}
+	
 	@Override public CubeProviderServer getCubeCache() {
 		if (!this.isCubicWorld()) {
 			throw new NotCubicChunksWorldException();
@@ -136,6 +142,14 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 	@Intrinsic
 	public boolean world$canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos) {
 		return this.canCreatureTypeSpawnHere(type, entry, pos);
+	}
+	//==============================================
+	@Shadow
+	public abstract EntityTracker getEntityTracker();
+
+	@Intrinsic
+	public EntityTracker world$getEntityTracker() {
+		return this.getEntityTracker();
 	}
 	//==============================================
 }
