@@ -180,9 +180,9 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
 	// CHECKED: 1.10.2-12.18.1.2092
 	boolean sendToPlayers() {
-		if (this.sentToPlayers) {
+/*		if (this.sentToPlayers) {
 			return true;
-		}
+		}*/
 		if (this.cube == null || !this.cube.isPopulated() || !this.cube.isInitialLightingDone()) {
 			return false;
 		}
