@@ -17,5 +17,3 @@ public net.minecraft.client.renderer.RenderGlobal$ContainerLocalRenderInformatio
 public net.minecraft.client.renderer.RenderGlobal$ContainerLocalRenderInformation field_178036_a #renderChunk
 
 public net.minecraft.world.WorldProvider field_76577_b # terrainType - used in VanillaCubicProvider
-
-public net.minecraft.entity.EntityTracker field_72793_b # entries - to send updates via cubes.
