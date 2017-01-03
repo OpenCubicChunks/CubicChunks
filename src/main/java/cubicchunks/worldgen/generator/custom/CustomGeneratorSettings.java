@@ -23,6 +23,9 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import net.minecraft.world.gen.ChunkProviderSettings;
 
 import java.util.Set;
@@ -198,6 +201,19 @@ public class CustomGeneratorSettings {
 		conf.fillDefaults();
 		conf.set(CubicChunks.MODID, "ocean_level", this.waterLevel);
 		return conf;
+	}
+
+	public String toJson() {
+		Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
+		return gson.toJson(this);
+	}
+
+	public static CustomGeneratorSettings fromJson(String json) {
+		if (json.isEmpty()) {
+			return defaults();
+		}
+		Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
+		return gson.fromJson(json, CustomGeneratorSettings.class);
 	}
 
 	public static CustomGeneratorSettings defaults() {

@@ -68,11 +68,8 @@ public class CustomTerrainGenerator {
 
 	public CustomTerrainGenerator(ICubicWorld world, final long seed) {
 
-		ChunkProviderSettings.Factory factoryVanilla = new ChunkProviderSettings.Factory();
-		factoryVanilla.setDefaults();
-		ChunkProviderSettings confVanilla = factoryVanilla.build();
-
-		conf = CustomGeneratorSettings.fromVanilla(confVanilla);
+		String json = world.getWorldInfo().getGeneratorOptions();
+		conf = CustomGeneratorSettings.fromJson(json);
 
 		this.biomeSource = new BiomeSource(world, conf.createBiomeBlockReplacerConfig(), world.getBiomeProvider(), 2);
 		initGenerator(seed);

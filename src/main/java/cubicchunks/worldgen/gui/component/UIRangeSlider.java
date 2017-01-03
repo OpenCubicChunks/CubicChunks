@@ -262,6 +262,14 @@ public class UIRangeSlider<T> extends UIComponent<UIRangeSlider<T>> implements I
 		return this;
 	}
 
+	public T getMinValue() {
+		return sliderPair.getMinValue();
+	}
+
+	public T getMaxValue() {
+		return sliderPair.getMaxValue();
+	}
+
 	/**
 	 * Fired when a {@link UIComponent} gets it's value changed.
 	 *
