@@ -49,11 +49,11 @@ public class CustomPopulationProcessor {
 		this.biomeFeaturesMap = new HashMap<>();
 
 		// for now use global for all biomes
-		for (Biome biome : Biome.REGISTRY) {
+		for (Object biome : Biome.REGISTRY) {
 			if (biome == null) {
 				continue;
 			}
-			this.biomeFeaturesMap.put(biome, new BiomeFeatures(world, biome));
+			this.biomeFeaturesMap.put((Biome) biome, new BiomeFeatures(world, (Biome) biome));
 		}
 	}
 

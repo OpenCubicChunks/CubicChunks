@@ -33,6 +33,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
+import cubichunks.entity.ICubicEntityTracker;
 import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -52,4 +53,6 @@ public interface ICubicWorldServer extends ICubicWorld {
 	@Nullable Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
 
 	boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
+
+	ICubicEntityTracker getCubicEntityTracker();
 }
