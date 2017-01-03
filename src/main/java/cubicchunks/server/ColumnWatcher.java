@@ -90,6 +90,11 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 		//always sent to players, no need to check it
 
 		if (this.isSentToPlayers()) {
+			PacketColumn message = new PacketColumn(this.getColumn());
+			PacketDispatcher.sendTo(message, player);
+			playerCubeMap.getWorldServer()
+				.getEntityTracker()
+				.sendLeashedEntitiesInChunk(player, this.getColumn());
 			//this.sendNearbySpecialEntities - done by cube entry
 			MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(this.getPos(), player));
 		}
@@ -146,6 +151,9 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 	// CHECKED: 1.10.2-12.18.1.2092
 	@Override
 	public boolean sendToPlayers() {
+		if (this.isSentToPlayers()) {
+			return true;
+		}
 		if (getColumn() == null) {
 			return false;
 		}
