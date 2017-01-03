@@ -23,6 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
+import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.BlockPos;
@@ -41,6 +42,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.entity.CubicEntityTracker;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.CubeProviderServer;
@@ -62,6 +64,7 @@ import mcp.MethodsReturnNonnullByDefault;
 public abstract class MixinWorldServer extends MixinWorld implements ICubicWorldServer {
 	@Shadow @Mutable @Final private PlayerChunkMap playerChunkMap;
 	@Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
+	@Shadow @Mutable @Final private EntityTracker theEntityTracker;
 	@Shadow public boolean disableLevelSaving;
 
 	@Nullable private ChunkGc chunkGc;
@@ -82,6 +85,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		this.saveHandler = new CubicSaveHandler(this, this.getSaveHandler());
 
 		this.firstLightProcessor = new FirstLightProcessor(this);
+		this.theEntityTracker = new CubicEntityTracker(this);
 	}
 
 	@Override public void tickCubicWorld() {
@@ -90,6 +94,14 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 		}
 		assert chunkGc != null;
 		this.chunkGc.tick();
+	}
+	
+	@Override public CubicEntityTracker getCubicEntityTracker() {
+		if (!this.isCubicWorld()) {
+			throw new NotCubicChunksWorldException();
+		}
+		assert this.theEntityTracker instanceof CubicEntityTracker;
+		return (CubicEntityTracker) this.theEntityTracker;
 	}
 
 	@Override public CubeProviderServer getCubeCache() {

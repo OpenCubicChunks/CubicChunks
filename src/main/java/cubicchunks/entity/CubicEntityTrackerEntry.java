@@ -21,38 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.entity;
 
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityTrackerEntry;
+import net.minecraft.entity.player.EntityPlayerMP;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
+public class CubicEntityTrackerEntry extends EntityTrackerEntry{
 
-import cubicchunks.entity.CubicEntityTracker;
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.CubeProviderServer;
-import cubicchunks.server.PlayerCubeMap;
-import mcp.MethodsReturnNonnullByDefault;
-
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ICubicWorldServer extends ICubicWorld {
-
-	CubeProviderServer getCubeCache();
-
-	PlayerCubeMap getPlayerCubeMap();
-
-	FirstLightProcessor getFirstLightProcessor();
-
-	//field accessors
-	boolean getDisableLevelSaving();
-
-	//vanilla methods
-	@Nullable Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
-
-	boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
-
-	CubicEntityTracker getCubicEntityTracker();
+	public CubicEntityTrackerEntry(Entity entityIn, int rangeIn, int maxRangeIn, int updateFrequencyIn,
+			boolean sendVelocityUpdatesIn) {
+		super(entityIn, rangeIn, maxRangeIn, updateFrequencyIn, sendVelocityUpdatesIn);
+	}
+	
+	@Override
+    public boolean isVisibleTo(EntityPlayerMP playerMP)
+    {
+        double d0 = playerMP.posX - (double)this.encodedPosX / 4096.0D;
+        double d1 = playerMP.posZ - (double)this.encodedPosZ / 4096.0D;
+        double d2 = playerMP.posY - (double)this.encodedPosY / 4096.0D;
+        int i = Math.min(this.range, this.maxRange);
+        return d0 >= (double)(-i) && d0 <= (double)i && d1 >= (double)(-i) && d1 <= (double)i && d2 >= (double)(-i) && d2 <= (double)i && this.trackedEntity.isSpectatedByPlayer(playerMP);
+    }
 }
