@@ -249,8 +249,6 @@ public class CubeWatcher implements XYZAddressable, ITicket {
             }
         }
 	}
-
-	
 	
 	// CHECKED: 1.10.2-12.18.1.2092
 	private void sendToPlayer(EntityPlayerMP player) {
