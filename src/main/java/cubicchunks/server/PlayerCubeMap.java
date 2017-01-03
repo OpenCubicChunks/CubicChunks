@@ -387,18 +387,21 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			// make a new watcher
 			cubeWatcher = new CubeWatcher(this, cubePos);
 			this.cubeWatchers.put(cubeWatcher);
+		}
+		return cubeWatcher;
+	}
 
-
-			if (cubeWatcher.getCube() == null ||
+	private void queueCubeWatcherToGenerateAndSend(CubeWatcher cubeWatcher)
+	{
+		if (cubeWatcher.getCube() == null ||
 				!cubeWatcher.getCube().isFullyPopulated() ||
 				!cubeWatcher.getCube().isInitialLightingDone()) {
 				this.cubesToGenerate.add(cubeWatcher);
 			}
-			if (!cubeWatcher.isSentToPlayers()) {
+//			if (!cubeWatcher.isSentToPlayers()) 
+			{
 				this.cubesToSendToClients.add(cubeWatcher);
 			}
-		}
-		return cubeWatcher;
 	}
 
 	/**
@@ -410,14 +413,19 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 		if (columnWatcher == null) {
 			columnWatcher = new ColumnWatcher(this, chunkPos);
 			this.columnWatchers.put(columnWatcher);
-			if (columnWatcher.getColumn() == null) {
-				this.columnsToGenerate.add(columnWatcher);
-			}
-			if (!columnWatcher.isSentToPlayers()) {
-				this.columnsToSendToClients.add(columnWatcher);
-			}
 		}
 		return columnWatcher;
+	}
+	
+	private void queueColumnWatcherToGenerateAndSend(ColumnWatcher columnWatcher)
+	{
+		if (columnWatcher.getColumn() == null) {
+			this.columnsToGenerate.add(columnWatcher);
+		}
+//		if (!columnWatcher.isSentToPlayers()) 
+		{
+			this.columnsToSendToClients.add(columnWatcher);
+		}
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
@@ -449,10 +457,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			if (!chunkWatcher.containsPlayer(player)) {
 				chunkWatcher.addPlayer(player);
 			}
+			this.queueColumnWatcherToGenerateAndSend(chunkWatcher);
+			
 			CubeWatcher cubeWatcher = getOrCreateCubeWatcher(currentPos);
 
 			assert !cubeWatcher.containsPlayer(player);
 			cubeWatcher.addPlayer(player);
+			this.queueCubeWatcherToGenerateAndSend(cubeWatcher);
 		});
 		this.players.put(player.getEntityId(), playerWrapper);
 		this.setNeedSort();
@@ -527,12 +538,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 			ColumnWatcher columnWatcher = this.getOrCreateColumnWatcher(pos);
 			assert columnWatcher.getPos().equals(pos);
 			columnWatcher.addPlayer(entry.playerEntity);
+			queueColumnWatcherToGenerateAndSend(columnWatcher);
 		});
 		getWorld().getProfiler().endStartSection("createCubes");
 		cubesToLoad.forEach(pos -> {
 			CubeWatcher cubeWatcher = this.getOrCreateCubeWatcher(pos);
 			assert cubeWatcher.getCubePos().equals(pos);
 			cubeWatcher.addPlayer(entry.playerEntity);
+			this.queueCubeWatcherToGenerateAndSend(cubeWatcher);
 		});
 		getWorld().getProfiler().endStartSection("removeCubes");
 		cubesToRemove.forEach(pos -> {
@@ -612,6 +625,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 					if (!cubeWatcher.containsPlayer(player)) {
 						cubeWatcher.addPlayer(player);
 					}
+					this.queueCubeWatcherToGenerateAndSend(cubeWatcher);
 				});
 				// either both got smaller or only one of them changed
 			} else {

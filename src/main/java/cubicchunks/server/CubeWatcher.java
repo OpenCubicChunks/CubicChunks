@@ -24,6 +24,7 @@
 package cubicchunks.server;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 
 import gnu.trove.list.TShortList;
 import gnu.trove.list.array.TShortArrayList;
@@ -32,13 +33,19 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityTracker;
+import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.SPacketEntityAttach;
+import net.minecraft.network.play.server.SPacketSetPassengers;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -173,9 +180,9 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
 	// CHECKED: 1.10.2-12.18.1.2092
 	boolean sendToPlayers() {
-		if (this.sentToPlayers) {
+/*		if (this.sentToPlayers) {
 			return true;
-		}
+		}*/
 		if (this.cube == null || !this.cube.isPopulated() || !this.cube.isInitialLightingDone()) {
 			return false;
 		}
@@ -189,14 +196,60 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		this.sentToPlayers = true;
 
 		for (WatcherPlayerEntry playerEntry : this.players.valueCollection()) {
-			//don't send entities here, Column sends them.
-			//TODO: send entities per cube? Sending all entities from column may be bad on multiplayer
+			//Sending entities per cube.
+			this.sendLeashedEntitiesInCube(playerCubeMap.getWorldServer()
+					.getEntityTracker(), playerEntry.player, cube);
 			sendToPlayer(playerEntry.player);
 		}
 
 		return true;
 	}
+	
+	private void sendLeashedEntitiesInCube(EntityTracker entityTracker, EntityPlayerMP player, Cube cubeIn)
+	{
+        List<Entity> list = Lists.<Entity>newArrayList();
+        List<Entity> list1 = Lists.<Entity>newArrayList();
 
+        for (EntityTrackerEntry entitytrackerentry : entityTracker.entries)
+        {
+            Entity entity = entitytrackerentry.getTrackedEntity();
+
+            if (entity != player && 
+            		entity.chunkCoordX == cubeIn.getX() && 
+            		entity.chunkCoordZ == cubeIn.getZ() &&
+            		entity.chunkCoordY == cubeIn.getY())
+            {
+                entitytrackerentry.updatePlayerEntity(player);
+
+                if (entity instanceof EntityLiving && ((EntityLiving)entity).getLeashedToEntity() != null)
+                {
+                    list.add(entity);
+                }
+
+                if (!entity.getPassengers().isEmpty())
+                {
+                    list1.add(entity);
+                }
+            }
+        }
+
+        if (!list.isEmpty())
+        {
+            for (Entity entity1 : list)
+            {
+                player.connection.sendPacket(new SPacketEntityAttach(entity1, ((EntityLiving)entity1).getLeashedToEntity()));
+            }
+        }
+
+        if (!list1.isEmpty())
+        {
+            for (Entity entity2 : list1)
+            {
+                player.connection.sendPacket(new SPacketSetPassengers(entity2));
+            }
+        }
+	}
+	
 	// CHECKED: 1.10.2-12.18.1.2092
 	private void sendToPlayer(EntityPlayerMP player) {
 		if (!this.sentToPlayers) {

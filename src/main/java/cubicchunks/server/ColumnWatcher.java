@@ -86,7 +86,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 		}
 
 		this.getPlayers().add(player);
-
+		System.out.println("Adding player. A number of players now " +this.getPlayers().size());
 		//always sent to players, no need to check it
 
 		if (this.isSentToPlayers()) {
@@ -125,7 +125,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 		}
 	}
 
-	private List<EntityPlayerMP> getPlayers() {
+	public List<EntityPlayerMP> getPlayers() {
 		try {
 			return (List<EntityPlayerMP>) getPlayers.invoke(this);
 		} catch (Throwable throwable) {
@@ -151,13 +151,14 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 		}
 
 		try {
+			int i=0;
 			PacketColumn message = new PacketColumn(this.getColumn());
 			for (EntityPlayerMP player : this.getPlayers()) {
 				PacketDispatcher.sendTo(message, player);
-				playerCubeMap.getWorldServer()
-					.getEntityTracker()
-					.sendLeashedEntitiesInChunk(player, this.getColumn());
+				i++;
+				System.out.println("Packet was sent to player #"+i+" (random order) Playes size:" +this.getPlayers().size());
 			}
+
 			setSentToPlayers.invoke(this, true);
 		} catch (Throwable throwable) {
 			throw new RuntimeException(throwable);
