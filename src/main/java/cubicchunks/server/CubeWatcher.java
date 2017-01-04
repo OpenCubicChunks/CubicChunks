@@ -104,6 +104,9 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
 		if (this.sentToPlayers) {
 			this.sendToPlayer(player);
+            playerCubeMap.getWorld()
+            	.getCubicEntityTracker()
+            	.sendLeashedEntitiesInCube(player, this.getCube());
 			//TODO: cube watch event?
 		}
 	}
@@ -189,8 +192,10 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 		this.sentToPlayers = true;
 
 		for (WatcherPlayerEntry playerEntry : this.players.valueCollection()) {
-			//don't send entities here, Column sends them.
-			//TODO: send entities per cube? Sending all entities from column may be bad on multiplayer
+			//Sending entities per cube.
+			this.playerCubeMap.getWorld()
+					.getCubicEntityTracker()
+					.sendLeashedEntitiesInCube(playerEntry.player, cube);
 			sendToPlayer(playerEntry.player);
 		}
 

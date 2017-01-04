@@ -51,6 +51,7 @@ classes/
 ########
 *.bak
 *.hprof
+*~
 
 # Libraries #
 #############
