@@ -23,11 +23,15 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+
+import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.command.CommandFill;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -39,45 +43,40 @@ import java.lang.ref.WeakReference;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.asm.MixinUtils;
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(CommandFill.class)
 public class MixinCommandFill {
-	@Nullable private WeakReference<ICubicWorld> commandWorld;
 
-	//get command sender, can't fail (inject at HEAD
-	@Inject(method = "execute", at = @At(value = "HEAD"), require = 1)
-	private void getWorldFromExecute(MinecraftServer server, ICommandSender sender, String[] args, CallbackInfo cbi) {
-		commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
-	}
+    @Nullable private WeakReference<ICubicWorld> commandWorld;
 
-	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6))
-	private int getBlockPosYRedirectMin(BlockPos pos) {
-		if (commandWorld == null) {
-			return pos.getY();
-		}
-		ICubicWorld world = commandWorld.get();
-		if (world == null) {
-			return pos.getY();
-		}
-		return MixinUtils.getReplacementY(world, pos);
-	}
+    //get command sender, can't fail (inject at HEAD
+    @Inject(method = "execute", at = @At(value = "HEAD"), require = 1)
+    private void getWorldFromExecute(MinecraftServer server, ICommandSender sender, String[] args, CallbackInfo cbi) {
+        commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
+    }
 
-	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 7))
-	private int getBlockPosYRedirectMax(BlockPos pos) {
-		if (commandWorld == null) {
-			return pos.getY();
-		}
-		ICubicWorld world = commandWorld.get();
-		if (world == null) {
-			return pos.getY();
-		}
-		return MixinUtils.getReplacementY(world, pos);
-	}
+    @Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6))
+    private int getBlockPosYRedirectMin(BlockPos pos) {
+        if (commandWorld == null) {
+            return pos.getY();
+        }
+        ICubicWorld world = commandWorld.get();
+        if (world == null) {
+            return pos.getY();
+        }
+        return MixinUtils.getReplacementY(world, pos);
+    }
+
+    @Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 7))
+    private int getBlockPosYRedirectMax(BlockPos pos) {
+        if (commandWorld == null) {
+            return pos.getY();
+        }
+        ICubicWorld world = commandWorld.get();
+        if (world == null) {
+            return pos.getY();
+        }
+        return MixinUtils.getReplacementY(world, pos);
+    }
 }

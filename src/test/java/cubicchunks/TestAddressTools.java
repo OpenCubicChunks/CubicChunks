@@ -23,74 +23,73 @@
  */
 package cubicchunks;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import cubicchunks.util.AddressTools;
+import mcp.MethodsReturnNonnullByDefault;
 import org.junit.Test;
 
 import java.util.HashSet;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.util.AddressTools;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TestAddressTools {
 
-	@Test
-	public void testY() {
-		assertEquals(-524288, AddressTools.MIN_CUBE_Y);
-		assertEquals(524287, AddressTools.MAX_CUBE_Y);
-		for (int i = AddressTools.MIN_CUBE_Y; i <= AddressTools.MAX_CUBE_Y; i++) {
-			assertEquals(i, AddressTools.getY(AddressTools.getAddress(0, i, 0)));
-		}
-	}
+    @Test
+    public void testY() {
+        assertEquals(-524288, AddressTools.MIN_CUBE_Y);
+        assertEquals(524287, AddressTools.MAX_CUBE_Y);
+        for (int i = AddressTools.MIN_CUBE_Y; i <= AddressTools.MAX_CUBE_Y; i++) {
+            assertEquals(i, AddressTools.getY(AddressTools.getAddress(0, i, 0)));
+        }
+    }
 
-	@Test
-	public void testX() {
-		assertEquals(-2097152, AddressTools.MIN_CUBE_X);
-		assertEquals(2097151, AddressTools.MAX_CUBE_X);
-		for (int i = AddressTools.MIN_CUBE_X; i <= AddressTools.MAX_CUBE_X; i++) {
-			assertEquals(i, AddressTools.getX(AddressTools.getAddress(i, 0, 0)));
-		}
-	}
+    @Test
+    public void testX() {
+        assertEquals(-2097152, AddressTools.MIN_CUBE_X);
+        assertEquals(2097151, AddressTools.MAX_CUBE_X);
+        for (int i = AddressTools.MIN_CUBE_X; i <= AddressTools.MAX_CUBE_X; i++) {
+            assertEquals(i, AddressTools.getX(AddressTools.getAddress(i, 0, 0)));
+        }
+    }
 
-	@Test
-	public void testZ() {
-		assertEquals(-2097152, AddressTools.MIN_CUBE_Z);
-		assertEquals(2097151, AddressTools.MAX_CUBE_Z);
-		for (int i = AddressTools.MIN_CUBE_Z; i <= AddressTools.MAX_CUBE_Z; i++) {
-			assertEquals(i, AddressTools.getZ(AddressTools.getAddress(0, 0, i)));
-		}
-	}
+    @Test
+    public void testZ() {
+        assertEquals(-2097152, AddressTools.MIN_CUBE_Z);
+        assertEquals(2097151, AddressTools.MAX_CUBE_Z);
+        for (int i = AddressTools.MIN_CUBE_Z; i <= AddressTools.MAX_CUBE_Z; i++) {
+            assertEquals(i, AddressTools.getZ(AddressTools.getAddress(0, 0, i)));
+        }
+    }
 
-	@Test
-	public void testAddresses() {
-		for (int x = -32; x <= 32; x++) {
-			for (int y = -32; y <= 32; y++) {
-				for (int z = -32; z <= 32; z++) {
-					long address = AddressTools.getAddress(x, y, z);
-					assertEquals(x, AddressTools.getX(address));
-					assertEquals(y, AddressTools.getY(address));
-					assertEquals(z, AddressTools.getZ(address));
-				}
-			}
-		}
-	}
+    @Test
+    public void testAddresses() {
+        for (int x = -32; x <= 32; x++) {
+            for (int y = -32; y <= 32; y++) {
+                for (int z = -32; z <= 32; z++) {
+                    long address = AddressTools.getAddress(x, y, z);
+                    assertEquals(x, AddressTools.getX(address));
+                    assertEquals(y, AddressTools.getY(address));
+                    assertEquals(z, AddressTools.getZ(address));
+                }
+            }
+        }
+    }
 
-	@Test
-	public void testCollisions() {
-		HashSet<Long> addresses = new HashSet<>();
-		for (int x = -32; x <= 32; x++) {
-			for (int y = -32; y <= 32; y++) {
-				for (int z = -32; z <= 32; z++) {
-					long address = AddressTools.getAddress(x, y, z);
-					assertFalse(addresses.contains(address));
-					addresses.add(address);
-				}
-			}
-		}
-	}
+    @Test
+    public void testCollisions() {
+        HashSet<Long> addresses = new HashSet<>();
+        for (int x = -32; x <= 32; x++) {
+            for (int y = -32; y <= 32; y++) {
+                for (int z = -32; z <= 32; z++) {
+                    long address = AddressTools.getAddress(x, y, z);
+                    assertFalse(addresses.contains(address));
+                    addresses.add(address);
+                }
+            }
+        }
+    }
 }

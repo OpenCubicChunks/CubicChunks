@@ -23,22 +23,23 @@
  */
 package cubicchunks.worldgen.generator.custom.builder;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import mcp.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @FunctionalInterface
 public interface NoiseConsumer {
-	/**
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param z the z coordinate
-	 * @param gradX approximate derivative over X coordinate
-	 * @param gradY approximate derivative over Y coordinate
-	 * @param gradZ approximate derivative over Z coordinate
-	 * @param value the noise value
-	 */
-	void accept(int x, int y, int z, double gradX, double gradY, double gradZ, double value);
+
+    /**
+     * @param x the x coordinate
+     * @param y the y coordinate
+     * @param z the z coordinate
+     * @param gradX approximate derivative over X coordinate
+     * @param gradY approximate derivative over Y coordinate
+     * @param gradZ approximate derivative over Z coordinate
+     * @param value the noise value
+     */
+    void accept(int x, int y, int z, double gradX, double gradY, double gradZ, double value);
 }

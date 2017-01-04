@@ -23,35 +23,35 @@
  */
 package cubicchunks.world.provider;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import cubicchunks.util.AddressTools;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface ICubicWorldProvider {
 
-	/**
-	 * Returns Y position of the bottom block in the world
-	 */
-	default int getMinimumPossibleHeight() {
-		return AddressTools.MIN_BLOCK_Y;
-	}
+    /**
+     * Returns Y position of the bottom block in the world
+     */
+    default int getMinimumPossibleHeight() {
+        return AddressTools.MIN_BLOCK_Y;
+    }
 
-	/**
-	 * Returns Y position of block above the top block in the world,
-	 */
-	default int getMaximumPossibleHeight() {
-		return AddressTools.MAX_BLOCK_Y + 1;
-	}
+    /**
+     * Returns Y position of block above the top block in the world,
+     */
+    default int getMaximumPossibleHeight() {
+        return AddressTools.MAX_BLOCK_Y + 1;
+    }
 
-	/**
-	 * Creates a new Cube generator
-	 *
-	 * @return a new Cube generator
-	 */
-	@Nullable ICubeGenerator createCubeGenerator();
+    /**
+     * Creates a new Cube generator
+     *
+     * @return a new Cube generator
+     */
+    @Nullable ICubeGenerator createCubeGenerator();
 }

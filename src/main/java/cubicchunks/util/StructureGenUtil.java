@@ -23,6 +23,8 @@
  */
 package cubicchunks.util;
 
+import cubicchunks.worldgen.generator.ICubePrimer;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 
@@ -30,81 +32,79 @@ import java.util.function.Predicate;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.worldgen.generator.ICubePrimer;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class StructureGenUtil {
-	public static boolean scanWallsForBlock(ICubePrimer cube,
-	                                        StructureBoundingBox boundingBox,
-	                                        Predicate<IBlockState> predicate) {
-		int minX = boundingBox.minX;
-		int minY = boundingBox.minY;
-		int minZ = boundingBox.minZ;
-		int maxX = boundingBox.maxX;
-		int maxY = boundingBox.maxY;
-		int maxZ = boundingBox.maxZ;
-		// xy planes
-		for (int x = minX; x < maxX; ++x) {
-			for (int y = minY; y < maxY; ++y) {
-				if (predicate.test(cube.getBlockState(x, y, minZ)) ||
-					predicate.test(cube.getBlockState(x, y, maxZ - 1))) {
-					return true;
-				}
-			}
-		}
 
-		// xz planes
-		for (int x = minX; x < maxX; ++x) {
-			for (int z = minZ; z < maxZ; ++z) {
-				if (predicate.test(cube.getBlockState(x, minY, z)) ||
-					predicate.test(cube.getBlockState(x, maxY - 1, z))) {
-					return true;
-				}
-			}
-		}
+    public static boolean scanWallsForBlock(ICubePrimer cube,
+            StructureBoundingBox boundingBox,
+            Predicate<IBlockState> predicate) {
+        int minX = boundingBox.minX;
+        int minY = boundingBox.minY;
+        int minZ = boundingBox.minZ;
+        int maxX = boundingBox.maxX;
+        int maxY = boundingBox.maxY;
+        int maxZ = boundingBox.maxZ;
+        // xy planes
+        for (int x = minX; x < maxX; ++x) {
+            for (int y = minY; y < maxY; ++y) {
+                if (predicate.test(cube.getBlockState(x, y, minZ)) ||
+                        predicate.test(cube.getBlockState(x, y, maxZ - 1))) {
+                    return true;
+                }
+            }
+        }
 
-		// yz planes
-		for (int y = minY; y < maxY; ++y) {
-			for (int z = minZ; z < maxZ; ++z) {
-				if (predicate.test(cube.getBlockState(minX, y, z)) ||
-					predicate.test(cube.getBlockState(maxX - 1, y, z))) {
-					return true;
-				}
-			}
-		}
+        // xz planes
+        for (int x = minX; x < maxX; ++x) {
+            for (int z = minZ; z < maxZ; ++z) {
+                if (predicate.test(cube.getBlockState(x, minY, z)) ||
+                        predicate.test(cube.getBlockState(x, maxY - 1, z))) {
+                    return true;
+                }
+            }
+        }
 
-		return false;
-	}
+        // yz planes
+        for (int y = minY; y < maxY; ++y) {
+            for (int z = minZ; z < maxZ; ++z) {
+                if (predicate.test(cube.getBlockState(minX, y, z)) ||
+                        predicate.test(cube.getBlockState(maxX - 1, y, z))) {
+                    return true;
+                }
+            }
+        }
 
-	//Note: it can return negative value. it's not a real distance
-	public static double normalizedDistance(int cubeOriginCoord, int localCoord, double structureCoord, double scale) {
-		return (Coords.localToBlock(cubeOriginCoord, localCoord) + 0.5D - structureCoord)/scale;
-	}
+        return false;
+    }
 
-	/**
-	 * Modifies boundingBox so that max coordinates are less than or equal to {@link cubicchunks.world.cube.Cube#SIZE}
-	 * and min coords are greater than or equal to 0
-	 */
-	public static void clampBoundingBoxToLocalCube(StructureBoundingBox boundingBox) {
-		if (boundingBox.minX < 0) {
-			boundingBox.minX = 0;
-		}
-		if (boundingBox.maxX > 16) {
-			boundingBox.maxX = 16;
-		}
-		if (boundingBox.minY < 0) {
-			boundingBox.minY = 0;
-		}
-		if (boundingBox.maxY > 16) {
-			boundingBox.maxY = 16;
-		}
-		if (boundingBox.minZ < 0) {
-			boundingBox.minZ = 0;
-		}
-		if (boundingBox.maxZ > 16) {
-			boundingBox.maxZ = 16;
-		}
-	}
+    //Note: it can return negative value. it's not a real distance
+    public static double normalizedDistance(int cubeOriginCoord, int localCoord, double structureCoord, double scale) {
+        return (Coords.localToBlock(cubeOriginCoord, localCoord) + 0.5D - structureCoord) / scale;
+    }
+
+    /**
+     * Modifies boundingBox so that max coordinates are less than or equal to {@link cubicchunks.world.cube.Cube#SIZE}
+     * and min coords are greater than or equal to 0
+     */
+    public static void clampBoundingBoxToLocalCube(StructureBoundingBox boundingBox) {
+        if (boundingBox.minX < 0) {
+            boundingBox.minX = 0;
+        }
+        if (boundingBox.maxX > 16) {
+            boundingBox.maxX = 16;
+        }
+        if (boundingBox.minY < 0) {
+            boundingBox.minY = 0;
+        }
+        if (boundingBox.maxY > 16) {
+            boundingBox.maxY = 16;
+        }
+        if (boundingBox.minZ < 0) {
+            boundingBox.minZ = 0;
+        }
+        if (boundingBox.maxZ > 16) {
+            boundingBox.maxZ = 16;
+        }
+    }
 }

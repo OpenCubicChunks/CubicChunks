@@ -26,25 +26,26 @@ package cubicchunks.worldgen.gui;
 import net.minecraft.world.biome.Biome;
 
 public class BiomeOption {
-	public static final BiomeOption ALL = new BiomeOption(null);
-	private final String visibleName;
-	private Biome biome;
 
-	public BiomeOption(Biome biome) {
-		this.biome = biome;
-		if (ALL != null && biome != null) { //hack to make ALL possible to initialize
-			this.visibleName = biome.getBiomeName();
-		} else {
-			visibleName = "All";
-		}
-	}
+    public static final BiomeOption ALL = new BiomeOption(null);
+    private final String visibleName;
+    private Biome biome;
 
-	public Biome getBiome() {
-		return biome;
-	}
+    public BiomeOption(Biome biome) {
+        this.biome = biome;
+        if (ALL != null && biome != null) { //hack to make ALL possible to initialize
+            this.visibleName = biome.getBiomeName();
+        } else {
+            visibleName = "All";
+        }
+    }
 
-	@Override
-	public String toString() {
-		return visibleName;
-	}
+    public Biome getBiome() {
+        return biome;
+    }
+
+    @Override
+    public String toString() {
+        return visibleName;
+    }
 }

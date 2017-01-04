@@ -24,7 +24,8 @@
 package cubicchunks.network;
 
 import com.google.common.base.Preconditions;
-
+import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -33,43 +34,40 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import io.netty.buffer.ByteBuf;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class PacketUnloadColumn implements IMessage {
 
-	private ChunkPos chunkPos;
+    private ChunkPos chunkPos;
 
-	public PacketUnloadColumn() {
-	}
+    public PacketUnloadColumn() {
+    }
 
-	public PacketUnloadColumn(ChunkPos chunkPos) {
-		this.chunkPos = chunkPos;
-	}
+    public PacketUnloadColumn(ChunkPos chunkPos) {
+        this.chunkPos = chunkPos;
+    }
 
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		this.chunkPos = new ChunkPos(buf.readInt(), buf.readInt());
-	}
+    @Override
+    public void fromBytes(ByteBuf buf) {
+        this.chunkPos = new ChunkPos(buf.readInt(), buf.readInt());
+    }
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		buf.writeInt(chunkPos.chunkXPos);
-		buf.writeInt(chunkPos.chunkZPos);
-	}
+    @Override
+    public void toBytes(ByteBuf buf) {
+        buf.writeInt(chunkPos.chunkXPos);
+        buf.writeInt(chunkPos.chunkZPos);
+    }
 
-	ChunkPos getColumnPos() {
-		return Preconditions.checkNotNull(chunkPos);
-	}
+    ChunkPos getColumnPos() {
+        return Preconditions.checkNotNull(chunkPos);
+    }
 
-	public static class Handler extends AbstractClientMessageHandler<PacketUnloadColumn> {
+    public static class Handler extends AbstractClientMessageHandler<PacketUnloadColumn> {
 
-		@Nullable @Override
-		public IMessage handleClientMessage(EntityPlayer player, PacketUnloadColumn message, MessageContext ctx) {
-			ClientHandler.getInstance().handle(message);
-			return null;
-		}
-	}
+        @Nullable @Override
+        public IMessage handleClientMessage(EntityPlayer player, PacketUnloadColumn message, MessageContext ctx) {
+            ClientHandler.getInstance().handle(message);
+            return null;
+        }
+    }
 }

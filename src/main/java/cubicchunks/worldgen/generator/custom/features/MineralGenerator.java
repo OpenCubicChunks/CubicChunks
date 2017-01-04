@@ -23,6 +23,10 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -34,53 +38,49 @@ import java.util.Random;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class MineralGenerator extends FeatureGenerator {
-	private final double minY;
-	private final double maxY;
 
-	@Nonnull private final WorldGenMinable vanillaGen;
-	private final double probability;
+    private final double minY;
+    private final double maxY;
 
-	/**
-	 * Creates new OreGenerator with given min/max height, vein size and number of generation attempts.
-	 * <p>
-	 * minY and maxY: <ul> <li>-1 - seaLevel-maxTerrainHeight <li>0 - sea level. <li>1 - seaLevel+maxTerrainHeight
-	 * </ul>
-	 *
-	 * @param minY Minimum generation height
-	 * @param maxY Maximum generation height
-	 * @param size Maximum vein size
-	 */
-	public MineralGenerator(final ICubicWorld world, final IBlockState state, final double minY, final double maxY,
-	                        final int size, final double probability) {
-		super(world);
-		// use vanilla worldgen. This class odesn't have height limits
-		this.vanillaGen = new WorldGenMinable(state, size);
-		this.minY = minY;
-		this.maxY = maxY;
-		this.probability = probability;
-	}
+    @Nonnull private final WorldGenMinable vanillaGen;
+    private final double probability;
 
-	@Override
-	public void generate(final Random rand, final Cube cube, final Biome biome) {
-		BlockPos cubeStart = cube.getCoords().getMinBlockPos();
+    /**
+     * Creates new OreGenerator with given min/max height, vein size and number of generation attempts.
+     * <p>
+     * minY and maxY: <ul> <li>-1 - seaLevel-maxTerrainHeight <li>0 - sea level. <li>1 - seaLevel+maxTerrainHeight
+     * </ul>
+     *
+     * @param minY Minimum generation height
+     * @param maxY Maximum generation height
+     * @param size Maximum vein size
+     */
+    public MineralGenerator(final ICubicWorld world, final IBlockState state, final double minY, final double maxY,
+            final int size, final double probability) {
+        super(world);
+        // use vanilla worldgen. This class odesn't have height limits
+        this.vanillaGen = new WorldGenMinable(state, size);
+        this.minY = minY;
+        this.maxY = maxY;
+        this.probability = probability;
+    }
 
-		double maxBlockY = this.maxY*GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
-		double minBlockY = this.minY*GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
+    @Override
+    public void generate(final Random rand, final Cube cube, final Biome biome) {
+        BlockPos cubeStart = cube.getCoords().getMinBlockPos();
 
-		if (rand.nextDouble() > this.probability) {
-			return;
-		}
-		BlockPos currentPos = cubeStart.add(rand.nextInt(16), rand.nextInt(16), rand.nextInt(16));
-		if (currentPos.getY() <= maxBlockY && currentPos.getY() >= minBlockY) {
-			this.vanillaGen.generate((World) this.world, rand, currentPos);
-		}
-	}
+        double maxBlockY = this.maxY * GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
+        double minBlockY = this.minY * GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
+
+        if (rand.nextDouble() > this.probability) {
+            return;
+        }
+        BlockPos currentPos = cubeStart.add(rand.nextInt(16), rand.nextInt(16), rand.nextInt(16));
+        if (currentPos.getY() <= maxBlockY && currentPos.getY() >= minBlockY) {
+            this.vanillaGen.generate((World) this.world, rand, currentPos);
+        }
+    }
 }

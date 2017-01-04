@@ -23,10 +23,7 @@
  */
 package cubicchunks.entity;
 
-import java.util.List;
-
 import com.google.common.collect.Lists;
-
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.crash.CrashReport;
@@ -42,81 +39,82 @@ import net.minecraft.network.play.server.SPacketSetPassengers;
 import net.minecraft.util.ReportedException;
 import net.minecraft.world.WorldServer;
 
+import java.util.List;
+
 public class CubicEntityTracker extends EntityTracker {
 
-	public CubicEntityTracker(ICubicWorldServer worldServer) {
-		super((WorldServer)worldServer);
-	}
-	
-	public void sendLeashedEntitiesInCube(EntityPlayerMP player, Cube cubeIn) {
-		List<Entity> list = Lists.<Entity>newArrayList();
-		List<Entity> list1 = Lists.<Entity>newArrayList();
+    public CubicEntityTracker(ICubicWorldServer worldServer) {
+        super((WorldServer) worldServer);
+    }
 
-		for (EntityTrackerEntry entitytrackerentry : this.entries) {
-			
-			Entity entity = entitytrackerentry.getTrackedEntity();
-			if (entity != player && 
-					entity.chunkCoordX == cubeIn.getX() && 
-					entity.chunkCoordZ == cubeIn.getZ() &&
-					entity.chunkCoordY == cubeIn.getY()) {
-				
-				entitytrackerentry.updatePlayerEntity(player);
-				if (entity instanceof EntityLiving && ((EntityLiving)entity).getLeashedToEntity() != null) {
-					list.add(entity);
-				}
+    public void sendLeashedEntitiesInCube(EntityPlayerMP player, Cube cubeIn) {
+        List<Entity> list = Lists.<Entity>newArrayList();
+        List<Entity> list1 = Lists.<Entity>newArrayList();
 
-				if (!entity.getPassengers().isEmpty()) {
-					list1.add(entity);
-				}
-			}
-		}
+        for (EntityTrackerEntry entitytrackerentry : this.entries) {
 
-		if (!list.isEmpty()) {
-			for (Entity entity1 : list) {
-				player.connection.sendPacket(new SPacketEntityAttach(entity1, ((EntityLiving)entity1).getLeashedToEntity()));
-			}
-		}
+            Entity entity = entitytrackerentry.getTrackedEntity();
+            if (entity != player &&
+                    entity.chunkCoordX == cubeIn.getX() &&
+                    entity.chunkCoordZ == cubeIn.getZ() &&
+                    entity.chunkCoordY == cubeIn.getY()) {
 
-		if (!list1.isEmpty()) {
-			for (Entity entity2 : list1) {
-				player.connection.sendPacket(new SPacketSetPassengers(entity2));
-			}
-		}
-	}
-	
-	@Override
-	public void track(Entity entityIn, int trackingRange, final int updateFrequency, boolean sendVelocityUpdates)
-	{
-		try {
-			if (this.trackedEntityHashTable.containsItem(entityIn.getEntityId())) {
-				throw new IllegalStateException("Entity is already tracked!");
-			}
-			EntityTrackerEntry entitytrackerentry = new CubicEntityTrackerEntry(entityIn, trackingRange, this.maxTrackingDistanceThreshold, updateFrequency, sendVelocityUpdates);
-			this.entries.add(entitytrackerentry);
-			this.trackedEntityHashTable.addKey(entityIn.getEntityId(), entitytrackerentry);
-			entitytrackerentry.updatePlayerEntities(this.world.playerEntities);
-        	}
-		catch (Throwable throwable) {
-			CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Adding entity to track");
-			CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity To Track");
-			crashreportcategory.addCrashSection("Tracking range", trackingRange + " blocks");
-			crashreportcategory.setDetail("Update interval", new ICrashReportDetail<String>() {
-				public String call() throws Exception {
- 					String s = "Once per " + updateFrequency + " ticks";
-					if (updateFrequency == Integer.MAX_VALUE) {
-			                        s = "Maximum (" + s + ")";
-					}
-					return s;
-				}
-			});
-			entityIn.addEntityCrashInfo(crashreportcategory);
-			((EntityTrackerEntry)this.trackedEntityHashTable.lookup(entityIn.getEntityId())).getTrackedEntity().addEntityCrashInfo(crashreport.makeCategory("Entity That Is Already Tracked"));
-			try {
-				throw new ReportedException(crashreport);
-			}
-			catch (ReportedException reportedexception) {
-				LOGGER.error((String)"\"Silently\" catching entity tracking error.", (Throwable)reportedexception);
-			}
-		}
-	}
+                entitytrackerentry.updatePlayerEntity(player);
+                if (entity instanceof EntityLiving && ((EntityLiving) entity).getLeashedToEntity() != null) {
+                    list.add(entity);
+                }
+
+                if (!entity.getPassengers().isEmpty()) {
+                    list1.add(entity);
+                }
+            }
+        }
+
+        if (!list.isEmpty()) {
+            for (Entity entity1 : list) {
+                player.connection.sendPacket(new SPacketEntityAttach(entity1, ((EntityLiving) entity1).getLeashedToEntity()));
+            }
+        }
+
+        if (!list1.isEmpty()) {
+            for (Entity entity2 : list1) {
+                player.connection.sendPacket(new SPacketSetPassengers(entity2));
+            }
+        }
+    }
+
+    @Override
+    public void track(Entity entityIn, int trackingRange, final int updateFrequency, boolean sendVelocityUpdates) {
+        try {
+            if (this.trackedEntityHashTable.containsItem(entityIn.getEntityId())) {
+                throw new IllegalStateException("Entity is already tracked!");
+            }
+            EntityTrackerEntry entitytrackerentry =
+                    new CubicEntityTrackerEntry(entityIn, trackingRange, this.maxTrackingDistanceThreshold, updateFrequency, sendVelocityUpdates);
+            this.entries.add(entitytrackerentry);
+            this.trackedEntityHashTable.addKey(entityIn.getEntityId(), entitytrackerentry);
+            entitytrackerentry.updatePlayerEntities(this.world.playerEntities);
+        } catch (Throwable throwable) {
+            CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Adding entity to track");
+            CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity To Track");
+            crashreportcategory.addCrashSection("Tracking range", trackingRange + " blocks");
+            crashreportcategory.setDetail("Update interval", new ICrashReportDetail<String>() {
+                public String call() throws Exception {
+                    String s = "Once per " + updateFrequency + " ticks";
+                    if (updateFrequency == Integer.MAX_VALUE) {
+                        s = "Maximum (" + s + ")";
+                    }
+                    return s;
+                }
+            });
+            entityIn.addEntityCrashInfo(crashreportcategory);
+            ((EntityTrackerEntry) this.trackedEntityHashTable.lookup(entityIn.getEntityId())).getTrackedEntity()
+                    .addEntityCrashInfo(crashreport.makeCategory("Entity That Is Already Tracked"));
+            try {
+                throw new ReportedException(crashreport);
+            } catch (ReportedException reportedexception) {
+                LOGGER.error((String) "\"Silently\" catching entity tracking error.", (Throwable) reportedexception);
+            }
+        }
+    }
 }

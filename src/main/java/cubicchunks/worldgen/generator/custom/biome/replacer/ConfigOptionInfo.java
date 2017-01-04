@@ -23,40 +23,39 @@
  */
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ConfigOptionInfo {
 
-	private final ResourceLocation location;
-	private final Object defaultValue;
-	private final String unlocalizedDescription;
+    private final ResourceLocation location;
+    private final Object defaultValue;
+    private final String unlocalizedDescription;
 
-	public ConfigOptionInfo(ResourceLocation location, Object defaultValue, String unlocalizedDescription) {
+    public ConfigOptionInfo(ResourceLocation location, Object defaultValue, String unlocalizedDescription) {
 
-		this.location = location;
-		this.defaultValue = defaultValue;
-		this.unlocalizedDescription = unlocalizedDescription;
-	}
+        this.location = location;
+        this.defaultValue = defaultValue;
+        this.unlocalizedDescription = unlocalizedDescription;
+    }
 
-	public ConfigOptionInfo(ResourceLocation location, Object defaultValue) {
-		this(location, defaultValue, null);// TODO: unlocalized descriptions
-	}
+    public ConfigOptionInfo(ResourceLocation location, Object defaultValue) {
+        this(location, defaultValue, null);// TODO: unlocalized descriptions
+    }
 
-	public ResourceLocation getLocation() {
-		return location;
-	}
+    public ResourceLocation getLocation() {
+        return location;
+    }
 
-	public Object getDefaultValue() {
-		return defaultValue;
-	}
+    public Object getDefaultValue() {
+        return defaultValue;
+    }
 
-	public String getUnlocalizedDescription() {
-		return unlocalizedDescription;
-	}
+    public String getUnlocalizedDescription() {
+        return unlocalizedDescription;
+    }
 }

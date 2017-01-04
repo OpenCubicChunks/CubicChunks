@@ -24,7 +24,7 @@
 package cubicchunks.worldgen.gui.component;
 
 import com.google.common.eventbus.Subscribe;
-
+import mcp.MethodsReturnNonnullByDefault;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
@@ -37,88 +37,87 @@ import java.util.function.Consumer;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class UITabbedContainer extends UIContainer<UITabbedContainer> {
 
-	private final UIButton previous;
-	private final UIButton next;
-	private final List<Tab> tabs = new ArrayList<>();
-	private final Consumer<String> onTitleUpdate;
-	private int currentTab = -1;
+    private final UIButton previous;
+    private final UIButton next;
+    private final List<Tab> tabs = new ArrayList<>();
+    private final Consumer<String> onTitleUpdate;
+    private int currentTab = -1;
 
-	/**
-	 * Default constructor, creates the components list.
-	 *
-	 * @param gui the gui
-	 */
-	public UITabbedContainer(MalisisGui gui, UIButton previous, UIButton next, Consumer<String> onTitleUpdate) {
-		super(gui);
-		this.previous = previous;
-		this.next = next;
-		next.register(new Object() {
-			@Subscribe
-			public void onClick(UIButton.ClickEvent evt) {
-				updateTab(currentTab + 1);
-			}
-		});
-		previous.register(new Object() {
-			@Subscribe
-			public void onClick(UIButton.ClickEvent evt) {
-				updateTab(currentTab - 1);
-			}
-		});
-		this.onTitleUpdate = onTitleUpdate;
-	}
+    /**
+     * Default constructor, creates the components list.
+     *
+     * @param gui the gui
+     */
+    public UITabbedContainer(MalisisGui gui, UIButton previous, UIButton next, Consumer<String> onTitleUpdate) {
+        super(gui);
+        this.previous = previous;
+        this.next = next;
+        next.register(new Object() {
+            @Subscribe
+            public void onClick(UIButton.ClickEvent evt) {
+                updateTab(currentTab + 1);
+            }
+        });
+        previous.register(new Object() {
+            @Subscribe
+            public void onClick(UIButton.ClickEvent evt) {
+                updateTab(currentTab - 1);
+            }
+        });
+        this.onTitleUpdate = onTitleUpdate;
+    }
 
-	private void updateTab(int i) {
-		int previousTab = currentTab;
-		currentTab = i;
-		if (tabs.size() != 0) {
-			currentTab = MathHelper.clamp(currentTab, 0, tabs.size() - 1);
-		} else {
-			currentTab = -1;
-		}
-		if (currentTab == -1) {
-			previous.setDisabled(false);
-			next.setDisabled(false);
-		} else {
-			previous.setDisabled(currentTab <= 0);
-			next.setDisabled(currentTab >= tabs.size() - 1);
-		}
-		if (previousTab != -1) {
-			// remove the previous tab
-			remove(tabs.get(previousTab).getComponent());
-		}
-		if (currentTab != -1) {
-			add(tabs.get(currentTab).getComponent());
-			onTitleUpdate.accept(tabs.get(currentTab).getTitle());
-		}
+    private void updateTab(int i) {
+        int previousTab = currentTab;
+        currentTab = i;
+        if (tabs.size() != 0) {
+            currentTab = MathHelper.clamp(currentTab, 0, tabs.size() - 1);
+        } else {
+            currentTab = -1;
+        }
+        if (currentTab == -1) {
+            previous.setDisabled(false);
+            next.setDisabled(false);
+        } else {
+            previous.setDisabled(currentTab <= 0);
+            next.setDisabled(currentTab >= tabs.size() - 1);
+        }
+        if (previousTab != -1) {
+            // remove the previous tab
+            remove(tabs.get(previousTab).getComponent());
+        }
+        if (currentTab != -1) {
+            add(tabs.get(currentTab).getComponent());
+            onTitleUpdate.accept(tabs.get(currentTab).getTitle());
+        }
 
-	}
+    }
 
-	public void addTab(UIComponent<?> tab, String title) {
-		tabs.add(new Tab(tab, title));
-		updateTab(currentTab == -1 ? 0 : currentTab);
-	}
+    public void addTab(UIComponent<?> tab, String title) {
+        tabs.add(new Tab(tab, title));
+        updateTab(currentTab == -1 ? 0 : currentTab);
+    }
 
-	private static final class Tab {
-		private final UIComponent<?> component;
-		private final String title;
+    private static final class Tab {
 
-		private Tab(UIComponent<?> component, String title) {
-			this.component = component;
-			this.title = title;
-		}
+        private final UIComponent<?> component;
+        private final String title;
 
-		public UIComponent<?> getComponent() {
-			return component;
-		}
+        private Tab(UIComponent<?> component, String title) {
+            this.component = component;
+            this.title = title;
+        }
 
-		public String getTitle() {
-			return title;
-		}
-	}
+        public UIComponent<?> getComponent() {
+            return component;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+    }
 }

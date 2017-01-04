@@ -23,17 +23,6 @@
  */
 package cubicchunks.world.column;
 
-import org.junit.Test;
-
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-
-import cubicchunks.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
-
 import static it.ozimov.cirneco.hamcrest.java7.collect.IsIterableWithDistinctElements.hasDistinctElements;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
@@ -45,122 +34,132 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
+import org.junit.Test;
+
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TestCubeMap {
 
-	@Test
-	public void addCubesInOrder() {
-		CubeMap testedCubeMap = new CubeMap();
-		for (int y = -30; y < 30; y++) {
-			testedCubeMap.put(createCube(y));
-		}
+    @Test
+    public void addCubesInOrder() {
+        CubeMap testedCubeMap = new CubeMap();
+        for (int y = -30; y < 30; y++) {
+            testedCubeMap.put(createCube(y));
+        }
 
-		checkCubeMap(testedCubeMap, 60);
+        checkCubeMap(testedCubeMap, 60);
 
-		for (int y = -30; y < 30; y++) {
-			try {
-				testedCubeMap.put(createCube(y));
-				fail("Was able to add a Cube to the CubeMap at the same y coordinate as another Cube");
-			} catch (IllegalArgumentException e) {
-				// this should always happen
-			}
-		}
-	}
+        for (int y = -30; y < 30; y++) {
+            try {
+                testedCubeMap.put(createCube(y));
+                fail("Was able to add a Cube to the CubeMap at the same y coordinate as another Cube");
+            } catch (IllegalArgumentException e) {
+                // this should always happen
+            }
+        }
+    }
 
-	@Test
-	public void addCubesInReverse() {
-		CubeMap testedCubeMap = new CubeMap();
-		for (int y = 29; y >= -30; y--) {
-			testedCubeMap.put(createCube(y));
-		}
+    @Test
+    public void addCubesInReverse() {
+        CubeMap testedCubeMap = new CubeMap();
+        for (int y = 29; y >= -30; y--) {
+            testedCubeMap.put(createCube(y));
+        }
 
-		checkCubeMap(testedCubeMap, 60);
+        checkCubeMap(testedCubeMap, 60);
 
-		for (int y = -30; y < 30; y++) {
-			try {
-				testedCubeMap.put(createCube(y));
-				fail("Was able to add a Cube to the CubeMap at the same y coordinate as another Cube");
-			} catch (IllegalArgumentException e) {
-				// this should always happen
-			}
-		}
-	}
+        for (int y = -30; y < 30; y++) {
+            try {
+                testedCubeMap.put(createCube(y));
+                fail("Was able to add a Cube to the CubeMap at the same y coordinate as another Cube");
+            } catch (IllegalArgumentException e) {
+                // this should always happen
+            }
+        }
+    }
 
-	@Test
-	public void findRangeOfCubes() {
-		CubeMap testedCubeMap = new CubeMap();
-		for (int y = -30; y < 30; y++) {
-			testedCubeMap.put(createCube(y));
-		}
+    @Test
+    public void findRangeOfCubes() {
+        CubeMap testedCubeMap = new CubeMap();
+        for (int y = -30; y < 30; y++) {
+            testedCubeMap.put(createCube(y));
+        }
 
-		checkRange(testedCubeMap, 3, 3);
+        checkRange(testedCubeMap, 3, 3);
 
-		checkRange(testedCubeMap, -5, 5);
-		checkRange(testedCubeMap, -5, 500);
-		checkRange(testedCubeMap, -500, 5);
-		checkRange(testedCubeMap, -500, 500);
+        checkRange(testedCubeMap, -5, 5);
+        checkRange(testedCubeMap, -5, 500);
+        checkRange(testedCubeMap, -500, 5);
+        checkRange(testedCubeMap, -500, 500);
 
-		checkRange(testedCubeMap, 500, 500);
-		checkRange(testedCubeMap, -500, -500);
+        checkRange(testedCubeMap, 500, 500);
+        checkRange(testedCubeMap, -500, -500);
 
-		Random rang = new Random(12345);
-		testedCubeMap = new CubeMap();
-		for (int y = -40; y < 40; y++) {
-			if (rang.nextBoolean()) {
-				testedCubeMap.put(createCube(y));
-			}
-		}
+        Random rang = new Random(12345);
+        testedCubeMap = new CubeMap();
+        for (int y = -40; y < 40; y++) {
+            if (rang.nextBoolean()) {
+                testedCubeMap.put(createCube(y));
+            }
+        }
 
-		checkRange(testedCubeMap, 3, 3);
+        checkRange(testedCubeMap, 3, 3);
 
-		checkRange(testedCubeMap, -5, 5);
-		checkRange(testedCubeMap, -5, 500);
-		checkRange(testedCubeMap, -500, 5);
-		checkRange(testedCubeMap, -500, 500);
+        checkRange(testedCubeMap, -5, 5);
+        checkRange(testedCubeMap, -5, 500);
+        checkRange(testedCubeMap, -500, 5);
+        checkRange(testedCubeMap, -500, 500);
 
-		checkRange(testedCubeMap, 500, 500);
-		checkRange(testedCubeMap, -500, -500);
-	}
+        checkRange(testedCubeMap, 500, 500);
+        checkRange(testedCubeMap, -500, -500);
+    }
 
-	private void checkRange(CubeMap cubeMap, int lowerBound, int upperBound) {
-		Iterable<Cube> range = cubeMap.cubes(lowerBound, upperBound);
-		Set<Cube> rangeSet = new HashSet<>();
-		range.forEach(rangeSet::add);
+    private void checkRange(CubeMap cubeMap, int lowerBound, int upperBound) {
+        Iterable<Cube> range = cubeMap.cubes(lowerBound, upperBound);
+        Set<Cube> rangeSet = new HashSet<>();
+        range.forEach(rangeSet::add);
 
-		assertThat(range, hasDistinctElements());
+        assertThat(range, hasDistinctElements());
 
-		// validate contents
-		cubeMap.all().forEach(cube -> {
-			if (cube.getY() >= lowerBound && cube.getY() <= upperBound) {
-				assertThat(rangeSet, hasItem(cube));
-			} else {
-				assertThat(rangeSet, not(hasItem(cube)));
-			}
-		});
+        // validate contents
+        cubeMap.all().forEach(cube -> {
+            if (cube.getY() >= lowerBound && cube.getY() <= upperBound) {
+                assertThat(rangeSet, hasItem(cube));
+            } else {
+                assertThat(rangeSet, not(hasItem(cube)));
+            }
+        });
 
-		// check the order
-		int alwaysLower = Integer.MIN_VALUE;
-		for (Cube cube : range) {
-			assertThat(cube.getY(), is(greaterThan(alwaysLower)));
-			alwaysLower = cube.getY();
-		}
-	}
+        // check the order
+        int alwaysLower = Integer.MIN_VALUE;
+        for (Cube cube : range) {
+            assertThat(cube.getY(), is(greaterThan(alwaysLower)));
+            alwaysLower = cube.getY();
+        }
+    }
 
-	private void checkCubeMap(CubeMap cubeMap, int size) {
-		assertEquals(size, cubeMap.all().size());
+    private void checkCubeMap(CubeMap cubeMap, int size) {
+        assertEquals(size, cubeMap.all().size());
 
-		// check order (should be lowest y to highest y)
-		int alwaysLower = Integer.MIN_VALUE;
-		for (Cube cube : cubeMap.all()) {
-			assertThat(cube.getY(), is(greaterThan(alwaysLower)));
-			alwaysLower = cube.getY();
-		}
-	}
+        // check order (should be lowest y to highest y)
+        int alwaysLower = Integer.MIN_VALUE;
+        for (Cube cube : cubeMap.all()) {
+            assertThat(cube.getY(), is(greaterThan(alwaysLower)));
+            alwaysLower = cube.getY();
+        }
+    }
 
-	private Cube createCube(int cubeY) {
-		Cube cube = mock(Cube.class);
-		when(cube.getY()).thenReturn(cubeY);
-		return cube;
-	}
+    private Cube createCube(int cubeY) {
+        Cube cube = mock(Cube.class);
+        when(cube.getY()).thenReturn(cubeY);
+        return cube;
+    }
 }

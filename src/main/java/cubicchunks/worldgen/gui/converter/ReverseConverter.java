@@ -27,11 +27,11 @@ import com.google.common.base.Converter;
 
 public class ReverseConverter extends Converter<Float, Float> {
 
-	@Override protected Float doForward(Float x) {
-		return 1.0f - x;
-	}
+    @Override protected Float doForward(Float x) {
+        return 1.0f - x;
+    }
 
-	@Override protected Float doBackward(Float x) {
-		return 1.0f - x;
-	}
+    @Override protected Float doBackward(Float x) {
+        return 1.0f - x;
+    }
 }

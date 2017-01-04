@@ -23,11 +23,15 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
+import static cubicchunks.asm.JvmNames.WORLD_GET_PERSISTENT_CHUNKS;
+import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
+
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,12 +43,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static cubicchunks.asm.JvmNames.WORLD_GET_PERSISTENT_CHUNKS;
-import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
-
 /**
  * World class mixins related to block and entity ticking.
  */
@@ -53,52 +51,53 @@ import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
 @Mixin(World.class)
 public abstract class MixinWorld_Tick implements ICubicWorld {
 
-	private int updateEntity_entityPosY;
-	private int updateEntity_entityPosX;
-	private int updateEntity_entityPosZ;
+    private int updateEntity_entityPosY;
+    private int updateEntity_entityPosX;
+    private int updateEntity_entityPosZ;
 
-	@Shadow private boolean isValid(BlockPos pos) {
-		throw new Error();
-	}
+    @Shadow private boolean isValid(BlockPos pos) {
+        throw new Error();
+    }
 
-	//TODO: handle private isAreaLoaded correctly
-	@Shadow private boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty) {
-		throw new Error();
-	}
+    //TODO: handle private isAreaLoaded correctly
+    @Shadow private boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty) {
+        throw new Error();
+    }
 
-	/**
-	 * Redirect {@code isAreaLoaded} here, to use Y coordinate of the entity.
-	 * <p>
-	 * Vanilla uses a constant Y because blocks below y=0 and above y=256 are never loaded, which means that entities
-	 * would be getting stuck there.
-	 */
-	@Group(name = "updateEntity", max = 2, min = 2)
-	@Redirect(method = "updateEntityWithOptionalForce",
-	          at = @At(value = "INVOKE", target = WORLD_IS_AREA_LOADED),
-	          require = 1)
-	private boolean canUpdateEntity(World _this, int startBlockX, int oldStartBlockY, int startBlockZ, int endBlockX, int oldEndBlockY, int endBlockZ, boolean allowEmpty) {
-		if (!this.isCubicWorld()) {
-			return isAreaLoaded(startBlockX, oldStartBlockY, startBlockZ, endBlockX, oldEndBlockY, endBlockZ, allowEmpty);
-		}
+    /**
+     * Redirect {@code isAreaLoaded} here, to use Y coordinate of the entity.
+     * <p>
+     * Vanilla uses a constant Y because blocks below y=0 and above y=256 are never loaded, which means that entities
+     * would be getting stuck there.
+     */
+    @Group(name = "updateEntity", max = 2, min = 2)
+    @Redirect(method = "updateEntityWithOptionalForce",
+            at = @At(value = "INVOKE", target = WORLD_IS_AREA_LOADED),
+            require = 1)
+    private boolean canUpdateEntity(World _this, int startBlockX, int oldStartBlockY, int startBlockZ, int endBlockX, int oldEndBlockY, int endBlockZ,
+            boolean allowEmpty) {
+        if (!this.isCubicWorld()) {
+            return isAreaLoaded(startBlockX, oldStartBlockY, startBlockZ, endBlockX, oldEndBlockY, endBlockZ, allowEmpty);
+        }
 
-		BlockPos entityPos = new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ);
+        BlockPos entityPos = new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ);
 
-		return this.isRemote() ||
-			!this.isValid(entityPos) || // if an entity is below the world we want it to keep ticking
-			this.getCubeFromBlockCoords(entityPos).getTickets().shouldTick();
-	}
+        return this.isRemote() ||
+                !this.isValid(entityPos) || // if an entity is below the world we want it to keep ticking
+                this.getCubeFromBlockCoords(entityPos).getTickets().shouldTick();
+    }
 
-	/**
-	 * Allows to get Y position of the updated entity.
-	 */
-	@Group(name = "updateEntity")
-	@Inject(method = "updateEntityWithOptionalForce",
-	        at = @At(value = "INVOKE", target = WORLD_GET_PERSISTENT_CHUNKS, remap = false),
-	        locals = LocalCapture.CAPTURE_FAILHARD,
-	        require = 1)
-	public void onIsAreaLoadedForUpdateEntityWithOptionalForce(Entity entity, boolean force, CallbackInfo ci, int i, int j) {
-		updateEntity_entityPosY = MathHelper.floor(entity.posY);
-		updateEntity_entityPosX = MathHelper.floor(entity.posX);
-		updateEntity_entityPosZ = MathHelper.floor(entity.posZ);
-	}
+    /**
+     * Allows to get Y position of the updated entity.
+     */
+    @Group(name = "updateEntity")
+    @Inject(method = "updateEntityWithOptionalForce",
+            at = @At(value = "INVOKE", target = WORLD_GET_PERSISTENT_CHUNKS, remap = false),
+            locals = LocalCapture.CAPTURE_FAILHARD,
+            require = 1)
+    public void onIsAreaLoadedForUpdateEntityWithOptionalForce(Entity entity, boolean force, CallbackInfo ci, int i, int j) {
+        updateEntity_entityPosY = MathHelper.floor(entity.posY);
+        updateEntity_entityPosX = MathHelper.floor(entity.posX);
+        updateEntity_entityPosZ = MathHelper.floor(entity.posZ);
+    }
 }

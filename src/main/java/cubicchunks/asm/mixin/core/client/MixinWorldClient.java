@@ -23,11 +23,14 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
+import cubicchunks.asm.mixin.core.common.MixinWorld;
+import cubicchunks.client.CubeProviderClient;
+import cubicchunks.world.ICubicWorldClient;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.util.math.BlockPos;
-
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Intrinsic;
@@ -36,37 +39,32 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.asm.mixin.core.common.MixinWorld;
-import cubicchunks.client.CubeProviderClient;
-import cubicchunks.world.ICubicWorldClient;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(WorldClient.class)
 @Implements(@Interface(iface = ICubicWorldClient.class, prefix = "world$"))
 public abstract class MixinWorldClient extends MixinWorld implements ICubicWorldClient {
 
-	@Shadow private ChunkProviderClient clientChunkProvider;
+    @Shadow private ChunkProviderClient clientChunkProvider;
 
-	@Shadow public abstract boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
+    @Shadow public abstract boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
 
-	@Override public void initCubicWorld() {
-		super.initCubicWorld();
-		this.isCubicWorld = true;
-		CubeProviderClient cubeProviderClient = new CubeProviderClient(this);
-		this.chunkProvider = cubeProviderClient;
-		this.clientChunkProvider = cubeProviderClient;
-	}
+    @Override public void initCubicWorld() {
+        super.initCubicWorld();
+        this.isCubicWorld = true;
+        CubeProviderClient cubeProviderClient = new CubeProviderClient(this);
+        this.chunkProvider = cubeProviderClient;
+        this.clientChunkProvider = cubeProviderClient;
+    }
 
-	@Override public void tickCubicWorld() {
-	}
+    @Override public void tickCubicWorld() {
+    }
 
-	@Override public CubeProviderClient getCubeCache() {
-		return (CubeProviderClient) this.clientChunkProvider;
-	}
+    @Override public CubeProviderClient getCubeCache() {
+        return (CubeProviderClient) this.clientChunkProvider;
+    }
 
-	@Intrinsic public boolean world$invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState) {
-		return this.invalidateRegionAndSetBlock(pos, blockState);
-	}
+    @Intrinsic public boolean world$invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState) {
+        return this.invalidateRegionAndSetBlock(pos, blockState);
+    }
 }

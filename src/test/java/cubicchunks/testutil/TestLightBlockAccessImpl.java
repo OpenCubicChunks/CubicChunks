@@ -23,6 +23,8 @@
  */
 package cubicchunks.testutil;
 
+import cubicchunks.lighting.ILightBlockAccess;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 
@@ -32,69 +34,67 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.lighting.ILightBlockAccess;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TestLightBlockAccessImpl implements ILightBlockAccess {
-	private final int size;
-	@Nonnull private final Map<BlockPos, Integer> emittedLightBlock = new HashMap<>();
-	@Nonnull private final Map<BlockPos, Integer> lightValuesSky = new HashMap<>();
-	@Nonnull private final Map<BlockPos, Integer> lightValuesBlock = new HashMap<>();
-	@Nonnull private final Map<BlockPos, Integer> opacities = new HashMap<>();
 
-	public TestLightBlockAccessImpl(int size) {
-		this.size = size;
-	}
+    private final int size;
+    @Nonnull private final Map<BlockPos, Integer> emittedLightBlock = new HashMap<>();
+    @Nonnull private final Map<BlockPos, Integer> lightValuesSky = new HashMap<>();
+    @Nonnull private final Map<BlockPos, Integer> lightValuesBlock = new HashMap<>();
+    @Nonnull private final Map<BlockPos, Integer> opacities = new HashMap<>();
 
-	@Override public int getBlockLightOpacity(BlockPos pos) {
-		Integer opacity = opacities.get(pos);
-		return opacity == null ? 0 : opacity;
-	}
+    public TestLightBlockAccessImpl(int size) {
+        this.size = size;
+    }
 
-	@Override public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
-		Integer light;
-		if (lightType == EnumSkyBlock.BLOCK) {
-			light = lightValuesBlock.get(pos);
-		} else {
-			light = lightValuesSky.get(pos);
-		}
-		return light == null ? 0 : light;
-	}
+    @Override public int getBlockLightOpacity(BlockPos pos) {
+        Integer opacity = opacities.get(pos);
+        return opacity == null ? 0 : opacity;
+    }
 
-	@Override public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
-		if (lightType == EnumSkyBlock.BLOCK) {
-			lightValuesBlock.put(pos, val);
-		} else {
-			lightValuesSky.put(pos, val);
-		}
-	}
+    @Override public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
+        Integer light;
+        if (lightType == EnumSkyBlock.BLOCK) {
+            light = lightValuesBlock.get(pos);
+        } else {
+            light = lightValuesSky.get(pos);
+        }
+        return light == null ? 0 : light;
+    }
 
-	@Override public boolean canSeeSky(BlockPos pos) {
-		for (BlockPos p = new BlockPos(pos.getX(), size, pos.getZ()); p.getY() >= -size; p = p.down()) {
-			if (getBlockLightOpacity(p) > 0) {
-				return pos.getY() > p.getY();
-			}
-		}
-		return true;
-	}
+    @Override public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
+        if (lightType == EnumSkyBlock.BLOCK) {
+            lightValuesBlock.put(pos, val);
+        } else {
+            lightValuesSky.put(pos, val);
+        }
+    }
 
-	@Override public int getEmittedLight(BlockPos pos, EnumSkyBlock type) {
-		Integer ret;
-		if (type == EnumSkyBlock.BLOCK) {
-			ret = this.emittedLightBlock.get(pos);
-		} else {
-			ret = canSeeSky(pos) ? 15 : 0;
-		}
-		return ret == null ? 0 : ret;
-	}
+    @Override public boolean canSeeSky(BlockPos pos) {
+        for (BlockPos p = new BlockPos(pos.getX(), size, pos.getZ()); p.getY() >= -size; p = p.down()) {
+            if (getBlockLightOpacity(p) > 0) {
+                return pos.getY() > p.getY();
+            }
+        }
+        return true;
+    }
 
-	public void setBlockLightSource(BlockPos pos, int value) {
-		this.emittedLightBlock.put(pos, value);
-	}
+    @Override public int getEmittedLight(BlockPos pos, EnumSkyBlock type) {
+        Integer ret;
+        if (type == EnumSkyBlock.BLOCK) {
+            ret = this.emittedLightBlock.get(pos);
+        } else {
+            ret = canSeeSky(pos) ? 15 : 0;
+        }
+        return ret == null ? 0 : ret;
+    }
 
-	public void setOpacity(BlockPos pos, int opacity) {
-		this.opacities.put(pos, opacity);
-	}
+    public void setBlockLightSource(BlockPos pos, int value) {
+        this.emittedLightBlock.put(pos, value);
+    }
+
+    public void setOpacity(BlockPos pos, int opacity) {
+        this.opacities.put(pos, opacity);
+    }
 }

@@ -23,33 +23,31 @@
  */
 package cubicchunks.testutil;
 
+import cubicchunks.lighting.ILightBlockAccess;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
-
 import org.hamcrest.Matcher;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import cubicchunks.lighting.ILightBlockAccess;
-import mcp.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class LightingMatchers {
 
-	public static Matcher<ILightBlockAccess> hasCorrectLight(StructureBoundingBox range) {
-		return new LightMatcher(range);
-	}
+    public static Matcher<ILightBlockAccess> hasCorrectLight(StructureBoundingBox range) {
+        return new LightMatcher(range);
+    }
 
-	public static StructureBoundingBox range(BlockPos start, BlockPos end) {
-		return new StructureBoundingBox(start, end);
-	}
+    public static StructureBoundingBox range(BlockPos start, BlockPos end) {
+        return new StructureBoundingBox(start, end);
+    }
 
-	public static StructureBoundingBox range(int radius) {
-		return range(pos(-radius, -radius, -radius), pos(radius, radius, radius));
-	}
+    public static StructureBoundingBox range(int radius) {
+        return range(pos(-radius, -radius, -radius), pos(radius, radius, radius));
+    }
 
-	public static BlockPos pos(int x, int y, int z) {
-		return new BlockPos(x, y, z);
-	}
+    public static BlockPos pos(int x, int y, int z) {
+        return new BlockPos(x, y, z);
+    }
 }

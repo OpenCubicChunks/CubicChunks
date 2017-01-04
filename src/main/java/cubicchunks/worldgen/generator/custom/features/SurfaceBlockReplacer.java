@@ -23,6 +23,8 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -36,125 +38,124 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SurfaceBlockReplacer extends SurfaceFeatureGenerator {
-	@Nonnull private final IBlockState block;
-	@Nonnull private final List<Block> replacable;
-	@Nonnull private final List<Block> allowedAboveSurface;
-	private final int radius;
-	private final int height;
 
-	private SurfaceBlockReplacer(Builder builder) {
-		super(builder.world);
-		this.block = builder.block;
-		this.replacable = new ArrayList<>(builder.replacable);
-		this.allowedAboveSurface = new ArrayList<>(builder.allowedAboveSurface);
-		this.radius = builder.radius;
-		this.height = builder.height;
-	}
+    @Nonnull private final IBlockState block;
+    @Nonnull private final List<Block> replacable;
+    @Nonnull private final List<Block> allowedAboveSurface;
+    private final int radius;
+    private final int height;
 
-	@Override
-	public void generateAt(Random rand, BlockPos pos, Biome biome) {
-		double radiusSq = this.radius*this.radius;
-		for (int x = -this.radius; x <= this.radius; x++) {
-			for (int y = -this.height; y <= this.height; y++) {
-				for (int z = -this.radius; z <= this.radius; z++) {
-					if (x*x + z*z > radiusSq) {
-						continue;
-					}
-					BlockPos currentPos = pos.add(x, y, z);
-					Block currrentBlock = getBlockState(currentPos).getBlock();
-					if (this.canReplace(currrentBlock)) {
-						this.setBlockOnly(currentPos, this.block);
-					}
-				}
-			}
-		}
-	}
+    private SurfaceBlockReplacer(Builder builder) {
+        super(builder.world);
+        this.block = builder.block;
+        this.replacable = new ArrayList<>(builder.replacable);
+        this.allowedAboveSurface = new ArrayList<>(builder.allowedAboveSurface);
+        this.radius = builder.radius;
+        this.height = builder.height;
+    }
 
-	@Override
-	protected boolean isSurfaceAt(BlockPos pos) {
-		IBlockState stateBelow = getBlockState(pos.down());
-		Block below = stateBelow.getBlock();
-		if (!below.isOpaqueCube(stateBelow)) {
-			return false;
-		}
-		Block blockAboveSurface = getBlockState(pos).getBlock();
-		for (Block b : this.allowedAboveSurface) {
-			if (blockAboveSurface == b) {
-				return true;
-			}
-		}
-		return false;
-	}
+    @Override
+    public void generateAt(Random rand, BlockPos pos, Biome biome) {
+        double radiusSq = this.radius * this.radius;
+        for (int x = -this.radius; x <= this.radius; x++) {
+            for (int y = -this.height; y <= this.height; y++) {
+                for (int z = -this.radius; z <= this.radius; z++) {
+                    if (x * x + z * z > radiusSq) {
+                        continue;
+                    }
+                    BlockPos currentPos = pos.add(x, y, z);
+                    Block currrentBlock = getBlockState(currentPos).getBlock();
+                    if (this.canReplace(currrentBlock)) {
+                        this.setBlockOnly(currentPos, this.block);
+                    }
+                }
+            }
+        }
+    }
 
-	private boolean canReplace(Block block) {
-		for (Block b : this.replacable) {
-			if (block == b) {
-				return true;
-			}
-		}
-		return false;
-	}
+    @Override
+    protected boolean isSurfaceAt(BlockPos pos) {
+        IBlockState stateBelow = getBlockState(pos.down());
+        Block below = stateBelow.getBlock();
+        if (!below.isOpaqueCube(stateBelow)) {
+            return false;
+        }
+        Block blockAboveSurface = getBlockState(pos).getBlock();
+        for (Block b : this.allowedAboveSurface) {
+            if (blockAboveSurface == b) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    private boolean canReplace(Block block) {
+        for (Block b : this.replacable) {
+            if (block == b) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public static class Builder {
-		@Nonnull private final List<Block> replacable;
-		@Nonnull private final List<Block> allowedAboveSurface;
-		@Nullable private IBlockState block;
-		private int radius;
-		private int height;
-		@Nullable private ICubicWorld world;
+    public static Builder builder() {
+        return new Builder();
+    }
 
-		private Builder() {
-			this.replacable = new ArrayList<>(2);
-			this.allowedAboveSurface = new ArrayList<>(2);
-		}
+    public static class Builder {
 
-		@Nonnull public Builder setBlock(@Nonnull IBlockState block) {
-			this.block = block;
-			return this;
-		}
+        @Nonnull private final List<Block> replacable;
+        @Nonnull private final List<Block> allowedAboveSurface;
+        @Nullable private IBlockState block;
+        private int radius;
+        private int height;
+        @Nullable private ICubicWorld world;
 
-		@Nonnull public Builder block(@Nonnull Block block) {
-			this.block = block.getDefaultState();
-			return this;
-		}
+        private Builder() {
+            this.replacable = new ArrayList<>(2);
+            this.allowedAboveSurface = new ArrayList<>(2);
+        }
 
-		@Nonnull public Builder radius(int radius) {
-			this.radius = radius;
-			return this;
-		}
+        @Nonnull public Builder setBlock(@Nonnull IBlockState block) {
+            this.block = block;
+            return this;
+        }
 
-		@Nonnull public Builder height(int height) {
-			this.height = height;
-			return this;
-		}
+        @Nonnull public Builder block(@Nonnull Block block) {
+            this.block = block.getDefaultState();
+            return this;
+        }
 
-		@Nonnull public Builder addReplacable(@Nonnull Block block) {
-			this.replacable.add(block);
-			return this;
-		}
+        @Nonnull public Builder radius(int radius) {
+            this.radius = radius;
+            return this;
+        }
 
-		@Nonnull public Builder addAllowedAboveSurface(@Nonnull Block block) {
-			this.allowedAboveSurface.add(block);
-			return this;
-		}
+        @Nonnull public Builder height(int height) {
+            this.height = height;
+            return this;
+        }
 
-		@Nonnull public Builder world(@Nonnull ICubicWorld world) {
-			this.world = world;
-			return this;
-		}
+        @Nonnull public Builder addReplacable(@Nonnull Block block) {
+            this.replacable.add(block);
+            return this;
+        }
 
-		@Nonnull public SurfaceBlockReplacer build() {
-			return new SurfaceBlockReplacer(this);
-		}
-	}
+        @Nonnull public Builder addAllowedAboveSurface(@Nonnull Block block) {
+            this.allowedAboveSurface.add(block);
+            return this;
+        }
+
+        @Nonnull public Builder world(@Nonnull ICubicWorld world) {
+            this.world = world;
+            return this;
+        }
+
+        @Nonnull public SurfaceBlockReplacer build() {
+            return new SurfaceBlockReplacer(this);
+        }
+    }
 }

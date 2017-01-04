@@ -23,18 +23,6 @@
  */
 package cubicchunks.network;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.INetHandler;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IThreadListener;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.text.ITextComponent;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import cubicchunks.CubicChunks;
 import cubicchunks.client.CubeProviderClient;
 import cubicchunks.lighting.LightingManager;
@@ -47,160 +35,171 @@ import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.INetHandler;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IThreadListener;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.text.ITextComponent;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class ClientHandler implements INetHandler {
 
-	private static final ClientHandler m_instance = new ClientHandler();
+    private static final ClientHandler m_instance = new ClientHandler();
 
-	public static ClientHandler getInstance() {
-		return m_instance;
-	}
+    public static ClientHandler getInstance() {
+        return m_instance;
+    }
 
-	@Override
-	public void onDisconnect(ITextComponent chat) {
-		// nothing to do
-	}
+    @Override
+    public void onDisconnect(ITextComponent chat) {
+        // nothing to do
+    }
 
-	public void handle(PacketCube packet) {
-		IThreadListener taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isCallingFromMinecraftThread()) {
-			taskQueue.addScheduledTask(() -> handle(packet));
-			return;
-		}
+    public void handle(PacketCube packet) {
+        IThreadListener taskQueue = Minecraft.getMinecraft();
+        if (!taskQueue.isCallingFromMinecraftThread()) {
+            taskQueue.addScheduledTask(() -> handle(packet));
+            return;
+        }
 
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
-		CubeProviderClient cubeCache = worldClient.getCubeCache();
+        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
+        CubeProviderClient cubeCache = worldClient.getCubeCache();
 
-		CubePos cubePos = packet.getCubePos();
+        CubePos cubePos = packet.getCubePos();
 
-		Column column = cubeCache.provideColumn(cubePos.getX(), cubePos.getZ());
-		//isEmpty actually checks if the column is a BlankColumn
-		if (column.isEmpty()) {
-			CubicChunks.LOGGER.error("Out of order cube received! No column for cube at {} exists!", cubePos);
-			return;
-		}
+        Column column = cubeCache.provideColumn(cubePos.getX(), cubePos.getZ());
+        //isEmpty actually checks if the column is a BlankColumn
+        if (column.isEmpty()) {
+            CubicChunks.LOGGER.error("Out of order cube received! No column for cube at {} exists!", cubePos);
+            return;
+        }
 
-		Cube cube;
-		if (cubeCache.getLoadedCube(cubePos) == null) {
-			cube = cubeCache.loadCube(column, cubePos.getY()); // new cube
-		} else {
-			cube = column.getCube(cubePos.getY()); // cube update
-		}
+        Cube cube;
+        if (cubeCache.getLoadedCube(cubePos) == null) {
+            cube = cubeCache.loadCube(column, cubePos.getY()); // new cube
+        } else {
+            cube = column.getCube(cubePos.getY()); // cube update
+        }
 
-		byte[] data = packet.getData();
-		ByteBuf buf = WorldEncoder.createByteBufForRead(data);
-		WorldEncoder.decodeCube(new PacketBuffer(buf), cube);
-		cube.markForRenderUpdate();
+        byte[] data = packet.getData();
+        ByteBuf buf = WorldEncoder.createByteBufForRead(data);
+        WorldEncoder.decodeCube(new PacketBuffer(buf), cube);
+        cube.markForRenderUpdate();
 
-		for (NBTTagCompound tag : packet.getTileEntityTags()) {
-			int blockX = tag.getInteger("x");
-			int blockY = tag.getInteger("y");
-			int blockZ = tag.getInteger("z");
-			BlockPos pos = new BlockPos(blockX, blockY, blockZ);
-			TileEntity tileEntity = worldClient.getTileEntity(pos);
+        for (NBTTagCompound tag : packet.getTileEntityTags()) {
+            int blockX = tag.getInteger("x");
+            int blockY = tag.getInteger("y");
+            int blockZ = tag.getInteger("z");
+            BlockPos pos = new BlockPos(blockX, blockY, blockZ);
+            TileEntity tileEntity = worldClient.getTileEntity(pos);
 
-			if (tileEntity != null) {
-				tileEntity.handleUpdateTag(tag);
-			}
-		}
+            if (tileEntity != null) {
+                tileEntity.handleUpdateTag(tag);
+            }
+        }
 
-		IHeightMap heightMap = column.getOpacityIndex();
-		LightingManager lightManager = worldClient.getLightingManager();
-		for (int localX = 0; localX < Cube.SIZE; localX++) {
-			for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
-				int oldHeight = heightMap.getTopBlockY(localX, localZ);
-				int newHeight = packet.height(localX, localZ);
-				if (oldHeight != newHeight) {
-					lightManager.onHeightMapUpdate(column, localX, localZ, oldHeight, newHeight);
-				}
-			}
-		}
-	}
+        IHeightMap heightMap = column.getOpacityIndex();
+        LightingManager lightManager = worldClient.getLightingManager();
+        for (int localX = 0; localX < Cube.SIZE; localX++) {
+            for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
+                int oldHeight = heightMap.getTopBlockY(localX, localZ);
+                int newHeight = packet.height(localX, localZ);
+                if (oldHeight != newHeight) {
+                    lightManager.onHeightMapUpdate(column, localX, localZ, oldHeight, newHeight);
+                }
+            }
+        }
+    }
 
-	public void handle(PacketColumn packet) {
-		IThreadListener taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isCallingFromMinecraftThread()) {
-			taskQueue.addScheduledTask(() -> handle(packet));
-			return;
-		}
+    public void handle(PacketColumn packet) {
+        IThreadListener taskQueue = Minecraft.getMinecraft();
+        if (!taskQueue.isCallingFromMinecraftThread()) {
+            taskQueue.addScheduledTask(() -> handle(packet));
+            return;
+        }
 
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
-		CubeProviderClient cubeCache = worldClient.getCubeCache();
+        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
+        CubeProviderClient cubeCache = worldClient.getCubeCache();
 
-		ChunkPos chunkPos = packet.getChunkPos();
+        ChunkPos chunkPos = packet.getChunkPos();
 
-		Column column = cubeCache.loadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
+        Column column = cubeCache.loadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
 
-		byte[] data = packet.getData();
-		ByteBuf buf = WorldEncoder.createByteBufForRead(data);
+        byte[] data = packet.getData();
+        ByteBuf buf = WorldEncoder.createByteBufForRead(data);
 
-		WorldEncoder.decodeColumn(new PacketBuffer(buf), column);
-	}
+        WorldEncoder.decodeColumn(new PacketBuffer(buf), column);
+    }
 
-	public void handle(final PacketUnloadCube packet) {
-		IThreadListener taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isCallingFromMinecraftThread()) {
-			taskQueue.addScheduledTask(() -> handle(packet));
-			return;
-		}
+    public void handle(final PacketUnloadCube packet) {
+        IThreadListener taskQueue = Minecraft.getMinecraft();
+        if (!taskQueue.isCallingFromMinecraftThread()) {
+            taskQueue.addScheduledTask(() -> handle(packet));
+            return;
+        }
 
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
-		CubeProviderClient cubeCache = worldClient.getCubeCache();
+        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
+        CubeProviderClient cubeCache = worldClient.getCubeCache();
 
-		cubeCache.unloadCube(packet.getCubePos());
-	}
+        cubeCache.unloadCube(packet.getCubePos());
+    }
 
-	public void handle(final PacketUnloadColumn packet) {
-		IThreadListener taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isCallingFromMinecraftThread()) {
-			taskQueue.addScheduledTask(() -> handle(packet));
-			return;
-		}
+    public void handle(final PacketUnloadColumn packet) {
+        IThreadListener taskQueue = Minecraft.getMinecraft();
+        if (!taskQueue.isCallingFromMinecraftThread()) {
+            taskQueue.addScheduledTask(() -> handle(packet));
+            return;
+        }
 
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
-		CubeProviderClient cubeCache = worldClient.getCubeCache();
+        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
+        CubeProviderClient cubeCache = worldClient.getCubeCache();
 
-		ChunkPos chunkPos = packet.getColumnPos();
-		cubeCache.unloadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
-	}
+        ChunkPos chunkPos = packet.getColumnPos();
+        cubeCache.unloadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
+    }
 
-	public void handle(final PacketCubeBlockChange packet) {
-		IThreadListener taskQueue = Minecraft.getMinecraft();
-		if (!taskQueue.isCallingFromMinecraftThread()) {
-			taskQueue.addScheduledTask(() -> handle(packet));
-			return;
-		}
+    public void handle(final PacketCubeBlockChange packet) {
+        IThreadListener taskQueue = Minecraft.getMinecraft();
+        if (!taskQueue.isCallingFromMinecraftThread()) {
+            taskQueue.addScheduledTask(() -> handle(packet));
+            return;
+        }
 
-		ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
-		CubeProviderClient cubeCache = worldClient.getCubeCache();
+        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
+        CubeProviderClient cubeCache = worldClient.getCubeCache();
 
-		// get the cube
-		Cube cube = cubeCache.getCube(packet.cubePos);
-		if (cube instanceof BlankCube) {
-			CubicChunks.LOGGER.error("Ignored block update to blank cube {}", packet.cubePos);
-			return;
-		}
+        // get the cube
+        Cube cube = cubeCache.getCube(packet.cubePos);
+        if (cube instanceof BlankCube) {
+            CubicChunks.LOGGER.error("Ignored block update to blank cube {}", packet.cubePos);
+            return;
+        }
 
-		ClientHeightMap index = (ClientHeightMap) cube.getColumn().getOpacityIndex();
-		LightingManager lm = worldClient.getLightingManager();
-		for (int hmapUpdate : packet.heightValues) {
-			int x = hmapUpdate & 0xF;
-			int z = (hmapUpdate >> 4) & 0xF;
-			//height is signed, so don't use unsigned shift
-			int height = hmapUpdate >> 8;
+        ClientHeightMap index = (ClientHeightMap) cube.getColumn().getOpacityIndex();
+        LightingManager lm = worldClient.getLightingManager();
+        for (int hmapUpdate : packet.heightValues) {
+            int x = hmapUpdate & 0xF;
+            int z = (hmapUpdate >> 4) & 0xF;
+            //height is signed, so don't use unsigned shift
+            int height = hmapUpdate >> 8;
 
-			int oldHeight = index.getTopBlockY(x, z);
-			index.setHeight(x, z, height);
+            int oldHeight = index.getTopBlockY(x, z);
+            index.setHeight(x, z, height);
 
-			lm.onHeightMapUpdate(cube.getColumn(), x, z, oldHeight, height);
-		}
-		// apply the update
-		for (int i = 0; i < packet.localAddresses.length; i++) {
-			BlockPos pos = cube.localAddressToBlockPos(packet.localAddresses[i]);
-			worldClient.invalidateRegionAndSetBlock(pos, packet.blockStates[i]);
-		}
-		cube.getTileEntityMap().values().forEach(TileEntity::updateContainingBlockInfo);
-	}
+            lm.onHeightMapUpdate(cube.getColumn(), x, z, oldHeight, height);
+        }
+        // apply the update
+        for (int i = 0; i < packet.localAddresses.length; i++) {
+            BlockPos pos = cube.localAddressToBlockPos(packet.localAddresses[i]);
+            worldClient.invalidateRegionAndSetBlock(pos, packet.blockStates[i]);
+        }
+        cube.getTileEntityMap().values().forEach(TileEntity::updateContainingBlockInfo);
+    }
 }

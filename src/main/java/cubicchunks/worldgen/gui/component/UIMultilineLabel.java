@@ -26,7 +26,6 @@ package cubicchunks.worldgen.gui.component;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.decoration.UILabel;
-import net.malisis.core.renderer.animation.transformation.ITransformable;
 import net.malisis.core.renderer.font.FontOptions;
 import net.minecraft.client.resources.I18n;
 
@@ -34,94 +33,95 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UIMultilineLabel extends UIContainer<UIMultilineLabel> {
-	private String text = "";
-	private final List<UILabel> labels = new ArrayList<>();
-	private int labelAnchor;
-	private FontOptions fontOptions = FontOptions.builder().color(0x444444).build();
 
-	public UIMultilineLabel(MalisisGui gui, String text) {
-		super(gui);
-		this.setText(text);
-	}
+    private String text = "";
+    private final List<UILabel> labels = new ArrayList<>();
+    private int labelAnchor;
+    private FontOptions fontOptions = FontOptions.builder().color(0x444444).build();
 
-	public UIMultilineLabel(MalisisGui gui) {
-		this(gui, "");
-	}
+    public UIMultilineLabel(MalisisGui gui, String text) {
+        super(gui);
+        this.setText(text);
+    }
 
-	public UIMultilineLabel setText(String text) {
-		this.text = I18n.format(text).replaceAll("\r\n", "\n");
-		updateSizeAndLabels();
-		return this;
-	}
+    public UIMultilineLabel(MalisisGui gui) {
+        this(gui, "");
+    }
 
-	public UIMultilineLabel setTextAnchor(int anchor) {
-		for (UILabel label : labels) {
-			label.setAnchor(anchor);
-		}
-		this.labelAnchor = anchor;
-		return this;
-	}
+    public UIMultilineLabel setText(String text) {
+        this.text = I18n.format(text).replaceAll("\r\n", "\n");
+        updateSizeAndLabels();
+        return this;
+    }
 
-	private void updateSizeAndLabels() {
-		removeAll();
+    public UIMultilineLabel setTextAnchor(int anchor) {
+        for (UILabel label : labels) {
+            label.setAnchor(anchor);
+        }
+        this.labelAnchor = anchor;
+        return this;
+    }
 
-		final String[] lines = getLines();
-		adjustLabelAmount(lines.length);
-		updateLabelsText(lines);
-		updateContainerSize();
+    private void updateSizeAndLabels() {
+        removeAll();
 
-		labels.forEach(this::add);
-	}
+        final String[] lines = getLines();
+        adjustLabelAmount(lines.length);
+        updateLabelsText(lines);
+        updateContainerSize();
 
-	private String[] getLines() {
-		final String[] lines;
-		if (!this.text.contains("\n")) {
-			lines = new String[]{text};
-		} else {
-			lines = this.text.split("\n");
-		}
-		return lines;
-	}
+        labels.forEach(this::add);
+    }
 
-	private void updateLabelsText(String[] lines) {
-		for (int i = 0; i < lines.length; i++) {
-			labels.get(i).setText(lines[i].trim());
-		}
-	}
+    private String[] getLines() {
+        final String[] lines;
+        if (!this.text.contains("\n")) {
+            lines = new String[]{text};
+        } else {
+            lines = this.text.split("\n");
+        }
+        return lines;
+    }
 
-	private void adjustLabelAmount(int newAmount) {
-		if (labels.size() == newAmount) {
-			return;
-		}
-		List<UILabel> temp = new ArrayList<>();
+    private void updateLabelsText(String[] lines) {
+        for (int i = 0; i < lines.length; i++) {
+            labels.get(i).setText(lines[i].trim());
+        }
+    }
 
-		int numFromOld = Math.min(labels.size(), newAmount);
-		for (int i = 0; i < numFromOld; i++) {
-			temp.add(labels.get(i));
-		}
-		labels.clear();
-		for (int i = numFromOld; i < newAmount; i++) {
-			temp.add(new UILabel(getGui()).setAnchor(labelAnchor).setFontOptions(fontOptions));
-		}
-		labels.addAll(temp);
-	}
+    private void adjustLabelAmount(int newAmount) {
+        if (labels.size() == newAmount) {
+            return;
+        }
+        List<UILabel> temp = new ArrayList<>();
 
-	private void updateContainerSize() {
-		int totalHeight = 0;
-		int maxWidth = 0;
-		for (UILabel label : labels) {
-			label.setPosition(0, totalHeight);
-			totalHeight += label.getHeight();
-			if (label.getWidth() > maxWidth) {
-				maxWidth = label.getWidth();
-			}
-		}
-		this.setSize(maxWidth, totalHeight);
-	}
+        int numFromOld = Math.min(labels.size(), newAmount);
+        for (int i = 0; i < numFromOld; i++) {
+            temp.add(labels.get(i));
+        }
+        labels.clear();
+        for (int i = numFromOld; i < newAmount; i++) {
+            temp.add(new UILabel(getGui()).setAnchor(labelAnchor).setFontOptions(fontOptions));
+        }
+        labels.addAll(temp);
+    }
 
-	public UIMultilineLabel setFontOptions(FontOptions options) {
-		fontOptions = options;
-		labels.forEach(l -> l.setFontOptions(options));
-		return this;
-	}
+    private void updateContainerSize() {
+        int totalHeight = 0;
+        int maxWidth = 0;
+        for (UILabel label : labels) {
+            label.setPosition(0, totalHeight);
+            totalHeight += label.getHeight();
+            if (label.getWidth() > maxWidth) {
+                maxWidth = label.getWidth();
+            }
+        }
+        this.setSize(maxWidth, totalHeight);
+    }
+
+    public UIMultilineLabel setFontOptions(FontOptions options) {
+        fontOptions = options;
+        labels.forEach(l -> l.setFontOptions(options));
+        return this;
+    }
 }

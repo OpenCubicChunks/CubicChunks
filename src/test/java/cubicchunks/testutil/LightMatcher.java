@@ -23,10 +23,15 @@
  */
 package cubicchunks.testutil;
 
+import static cubicchunks.util.MathUtil.max;
+import static net.minecraft.world.EnumSkyBlock.BLOCK;
+import static net.minecraft.world.EnumSkyBlock.SKY;
+
+import cubicchunks.lighting.ILightBlockAccess;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
-
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
@@ -35,73 +40,67 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.lighting.ILightBlockAccess;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static cubicchunks.util.MathUtil.max;
-import static net.minecraft.world.EnumSkyBlock.BLOCK;
-import static net.minecraft.world.EnumSkyBlock.SKY;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 class LightMatcher extends TypeSafeDiagnosingMatcher<ILightBlockAccess> {
-	@Nonnull private final BlockPos start;
-	@Nonnull private final BlockPos end;
 
-	LightMatcher(StructureBoundingBox box) {
-		this.start = new BlockPos(box.minX, box.minY, box.minZ);
-		this.end = new BlockPos(box.maxX, box.maxY, box.maxZ);
-	}
+    @Nonnull private final BlockPos start;
+    @Nonnull private final BlockPos end;
 
-	/**
-	 * Subclasses should implement this. The item will already have been checked
-	 * for the specific type and will never be null.
-	 */
-	@Override protected boolean matchesSafely(ILightBlockAccess access, Description mismatchDescription) {
-		return StreamSupport.stream(BlockPos.getAllInBox(start, end).spliterator(), false).allMatch(pos -> {
-			if (access.getLightFor(SKY, pos) != getExpected(access, pos, SKY)) {
-				addMismatchDescription(mismatchDescription, access, pos, SKY);
-				return false;
-			}
-			if (access.getLightFor(BLOCK, pos) != getExpected(access, pos, BLOCK)) {
-				addMismatchDescription(mismatchDescription, access, pos, BLOCK);
-				return false;
-			}
-			return true;
-		});
-	}
+    LightMatcher(StructureBoundingBox box) {
+        this.start = new BlockPos(box.minX, box.minY, box.minZ);
+        this.end = new BlockPos(box.maxX, box.maxY, box.maxZ);
+    }
 
-	private void addMismatchDescription(Description desc, ILightBlockAccess access, BlockPos pos, EnumSkyBlock type) {
-		desc.appendText("light value for type " + type + " at " + pos + " didn't match expected value ").
-			appendValue(getExpected(access, pos, type)).appendText(", found ").appendValue(access.getLightFor(type, pos)).
-			appendText(" with neighbors" +
-				" D=" + access.getLightFor(type, pos.down()) +
-				" U=" + access.getLightFor(type, pos.up()) +
-				" W=" + access.getLightFor(type, pos.west()) +
-				" E=" + access.getLightFor(type, pos.east()) +
-				" N=" + access.getLightFor(type, pos.north()) +
-				" S=" + access.getLightFor(type, pos.south()) +
-				" emitted=" + access.getEmittedLight(pos, type) +
-				" opacity=" + access.getBlockLightOpacity(pos));
-	}
+    /**
+     * Subclasses should implement this. The item will already have been checked
+     * for the specific type and will never be null.
+     */
+    @Override protected boolean matchesSafely(ILightBlockAccess access, Description mismatchDescription) {
+        return StreamSupport.stream(BlockPos.getAllInBox(start, end).spliterator(), false).allMatch(pos -> {
+            if (access.getLightFor(SKY, pos) != getExpected(access, pos, SKY)) {
+                addMismatchDescription(mismatchDescription, access, pos, SKY);
+                return false;
+            }
+            if (access.getLightFor(BLOCK, pos) != getExpected(access, pos, BLOCK)) {
+                addMismatchDescription(mismatchDescription, access, pos, BLOCK);
+                return false;
+            }
+            return true;
+        });
+    }
 
-	private int getExpected(ILightBlockAccess access, BlockPos pos, EnumSkyBlock type) {
-		return max(access.getEmittedLight(pos, type), access.getLightFromNeighbors(type, pos));
-	}
+    private void addMismatchDescription(Description desc, ILightBlockAccess access, BlockPos pos, EnumSkyBlock type) {
+        desc.appendText("light value for type " + type + " at " + pos + " didn't match expected value ").
+                appendValue(getExpected(access, pos, type)).appendText(", found ").appendValue(access.getLightFor(type, pos)).
+                appendText(" with neighbors" +
+                        " D=" + access.getLightFor(type, pos.down()) +
+                        " U=" + access.getLightFor(type, pos.up()) +
+                        " W=" + access.getLightFor(type, pos.west()) +
+                        " E=" + access.getLightFor(type, pos.east()) +
+                        " N=" + access.getLightFor(type, pos.north()) +
+                        " S=" + access.getLightFor(type, pos.south()) +
+                        " emitted=" + access.getEmittedLight(pos, type) +
+                        " opacity=" + access.getBlockLightOpacity(pos));
+    }
 
-	/**
-	 * Generates a description of the object.  The description may be part of a
-	 * a description of a larger object of which this is just a component, so it
-	 * should be worded appropriately.
-	 *
-	 * @param description The description to be built or appended to.
-	 */
-	@Override public void describeTo(Description description) {
-		description.
-			appendText("for each BlockPos between ").
-			appendValue(start).
-			appendText(" and ").
-			appendValue(end).
-			appendText(" lightValue == max(emittedLight, maxNeighborLightValue - max(1, opacity))");
-	}
+    private int getExpected(ILightBlockAccess access, BlockPos pos, EnumSkyBlock type) {
+        return max(access.getEmittedLight(pos, type), access.getLightFromNeighbors(type, pos));
+    }
+
+    /**
+     * Generates a description of the object.  The description may be part of a
+     * a description of a larger object of which this is just a component, so it
+     * should be worded appropriately.
+     *
+     * @param description The description to be built or appended to.
+     */
+    @Override public void describeTo(Description description) {
+        description.
+                appendText("for each BlockPos between ").
+                appendValue(start).
+                appendText(" and ").
+                appendValue(end).
+                appendText(" lightValue == max(emittedLight, maxNeighborLightValue - max(1, opacity))");
+    }
 }

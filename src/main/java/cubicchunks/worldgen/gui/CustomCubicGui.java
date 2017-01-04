@@ -23,10 +23,16 @@
  */
 package cubicchunks.worldgen.gui;
 
-import com.google.common.eventbus.Subscribe;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
+import com.google.common.eventbus.Subscribe;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.gui.component.UIBorderLayout;
+import cubicchunks.worldgen.gui.component.UIColoredPanel;
+import cubicchunks.worldgen.gui.component.UIMultilineLabel;
+import cubicchunks.worldgen.gui.component.UITabbedContainer;
+import mcp.MethodsReturnNonnullByDefault;
 import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
@@ -37,119 +43,104 @@ import net.minecraft.client.gui.GuiCreateWorld;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
-import cubicchunks.worldgen.gui.component.UIBorderLayout;
-import cubicchunks.worldgen.gui.component.UIColoredPanel;
-import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
-import cubicchunks.worldgen.gui.component.UIVerticalTableLayout.GridLocation;
-import cubicchunks.worldgen.gui.component.UIMultilineLabel;
-import cubicchunks.worldgen.gui.component.UITabbedContainer;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.label;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeIntSlider;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
-import static java.lang.Math.round;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CustomCubicGui extends ExtraGui {
 
-	public static final int WIDTH_1_COL = 6;
-	public static final int WIDTH_2_COL = 3;
-	public static final int WIDTH_3_COL = 2;
+    public static final int WIDTH_1_COL = 6;
+    public static final int WIDTH_2_COL = 3;
+    public static final int WIDTH_3_COL = 2;
 
-	static final int VERTICAL_PADDING = 30;
-	static final int HORIZONTAL_PADDING = 25;
-	static final int VERTICAL_INSETS = 2;
-	static final int HORIZONTAL_INSETS = 4;
-	static final int BTN_WIDTH = 60;
+    static final int VERTICAL_PADDING = 30;
+    static final int HORIZONTAL_PADDING = 25;
+    static final int VERTICAL_INSETS = 2;
+    static final int HORIZONTAL_INSETS = 4;
+    static final int BTN_WIDTH = 60;
 
-	private final GuiCreateWorld parent;
-	private UITabbedContainer tabs;
+    private final GuiCreateWorld parent;
+    private UITabbedContainer tabs;
 
-	private BasicSettingsTab basicSettings;
-	private OreSettingsTab oreSettings;
-	private AdvancedTerrainShapeTab advancedterrainShapeSettings;
+    private BasicSettingsTab basicSettings;
+    private OreSettingsTab oreSettings;
+    private AdvancedTerrainShapeTab advancedterrainShapeSettings;
 
-	public CustomCubicGui(GuiCreateWorld parent) {
-		super();
-		this.parent = parent;
-	}
+    public CustomCubicGui(GuiCreateWorld parent) {
+        super();
+        this.parent = parent;
+    }
 
-	/**
-	 * Called before display() if this {@link MalisisGui} is not constructed yet.<br>
-	 * Called when Ctrl+R is pressed to rebuild the GUI.
-	 */
-	@Override
-	public void construct() {
-		CustomGeneratorSettings conf = CustomGeneratorSettings.fromJson(parent.chunkProviderSettingsJson);
-		this.basicSettings = new BasicSettingsTab(this, conf);
-		this.oreSettings = new OreSettingsTab(this, conf);
-		this.advancedterrainShapeSettings = new AdvancedTerrainShapeTab(this, conf);
+    /**
+     * Called before display() if this {@link MalisisGui} is not constructed yet.<br>
+     * Called when Ctrl+R is pressed to rebuild the GUI.
+     */
+    @Override
+    public void construct() {
+        CustomGeneratorSettings conf = CustomGeneratorSettings.fromJson(parent.chunkProviderSettingsJson);
+        this.basicSettings = new BasicSettingsTab(this, conf);
+        this.oreSettings = new OreSettingsTab(this, conf);
+        this.advancedterrainShapeSettings = new AdvancedTerrainShapeTab(this, conf);
 
-		tabs = makeTabContainer();
-		tabs.addTab(inPanel(basicSettings.getContainer()), vanillaText("basic_tab_title"));
-		tabs.addTab(inPanel(oreSettings.getContainer()), vanillaText("ores_tab_title"));
-		tabs.addTab(inPanel(advancedterrainShapeSettings.getContainer()), vanillaText("advanced_tab_title"));
-		addToScreen(tabs);
-	}
+        tabs = makeTabContainer();
+        tabs.addTab(inPanel(basicSettings.getContainer()), vanillaText("basic_tab_title"));
+        tabs.addTab(inPanel(oreSettings.getContainer()), vanillaText("ores_tab_title"));
+        tabs.addTab(inPanel(advancedterrainShapeSettings.getContainer()), vanillaText("advanced_tab_title"));
+        addToScreen(tabs);
+    }
 
-	private UIContainer<?> inPanel(UIComponent<?> comp) {
-		UIColoredPanel panel = new UIColoredPanel(this);
-		panel.setSize(UIComponent.INHERITED, UIComponent.INHERITED - VERTICAL_PADDING*2);
-		panel.setPosition(0, VERTICAL_PADDING);
-		panel.add(comp);
-		return panel;
-	}
+    private UIContainer<?> inPanel(UIComponent<?> comp) {
+        UIColoredPanel panel = new UIColoredPanel(this);
+        panel.setSize(UIComponent.INHERITED, UIComponent.INHERITED - VERTICAL_PADDING * 2);
+        panel.setPosition(0, VERTICAL_PADDING);
+        panel.add(comp);
+        return panel;
+    }
 
-	private UITabbedContainer makeTabContainer() {
-		final int xSize = UIComponent.INHERITED - HORIZONTAL_PADDING*2 - HORIZONTAL_INSETS*2;
-		final int ySize = VERTICAL_PADDING;
-		final int xPos = HORIZONTAL_PADDING + HORIZONTAL_INSETS;
-		UIButton prev = new UIButton(this, malisisText("previous_page")).setSize(BTN_WIDTH, 20);
-		UIButton next = new UIButton(this, malisisText("next_page")).setSize(BTN_WIDTH, 20);
+    private UITabbedContainer makeTabContainer() {
+        final int xSize = UIComponent.INHERITED - HORIZONTAL_PADDING * 2 - HORIZONTAL_INSETS * 2;
+        final int ySize = VERTICAL_PADDING;
+        final int xPos = HORIZONTAL_PADDING + HORIZONTAL_INSETS;
+        UIButton prev = new UIButton(this, malisisText("previous_page")).setSize(BTN_WIDTH, 20);
+        UIButton next = new UIButton(this, malisisText("next_page")).setSize(BTN_WIDTH, 20);
 
-		UIMultilineLabel label = new UIMultilineLabel(this)
-			.setTextAnchor(Anchor.CENTER)
-			.setFontOptions(FontOptions.builder().color(0xFFFFFF).shadow().build());
+        UIMultilineLabel label = new UIMultilineLabel(this)
+                .setTextAnchor(Anchor.CENTER)
+                .setFontOptions(FontOptions.builder().color(0xFFFFFF).shadow().build());
 
-		UIBorderLayout upperLayout = new UIBorderLayout(this)
-			.setSize(xSize, ySize)
-			.setPosition(xPos, 0)
-			.add(prev, UIBorderLayout.Border.LEFT)
-			.add(next, UIBorderLayout.Border.RIGHT)
-			.add(label, UIBorderLayout.Border.CENTER)
-			.init();
+        UIBorderLayout upperLayout = new UIBorderLayout(this)
+                .setSize(xSize, ySize)
+                .setPosition(xPos, 0)
+                .add(prev, UIBorderLayout.Border.LEFT)
+                .add(next, UIBorderLayout.Border.RIGHT)
+                .add(label, UIBorderLayout.Border.CENTER)
+                .init();
 
-		UIButton done = new UIButton(this, malisisText("done")).setSize(BTN_WIDTH, 20);
+        UIButton done = new UIButton(this, malisisText("done")).setSize(BTN_WIDTH, 20);
 
-		done.register(new Object() {
-			@Subscribe
-			public void onClick(UIButton.ClickEvent evt) {
-				CustomCubicGui.this.done();
-			}
-		});
+        done.register(new Object() {
+            @Subscribe
+            public void onClick(UIButton.ClickEvent evt) {
+                CustomCubicGui.this.done();
+            }
+        });
 
-		UIBorderLayout lowerLayout = new UIBorderLayout(this)
-			.setSize(xSize, ySize)
-			.setAnchor(Anchor.BOTTOM).setPosition(xPos, 0)
-			.add(done, UIBorderLayout.Border.CENTER)
-			.init();
+        UIBorderLayout lowerLayout = new UIBorderLayout(this)
+                .setSize(xSize, ySize)
+                .setAnchor(Anchor.BOTTOM).setPosition(xPos, 0)
+                .add(done, UIBorderLayout.Border.CENTER)
+                .init();
 
-		UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
-		tabGroup.add(upperLayout, lowerLayout);
+        UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
+        tabGroup.add(upperLayout, lowerLayout);
 
-		return tabGroup;
-	}
+        return tabGroup;
+    }
 
-	private void done() {
-		CustomGeneratorSettings conf = CustomGeneratorSettings.defaults();
-		this.basicSettings.writeConfig(conf);
-		this.oreSettings.writeConfig(conf);
-		this.advancedterrainShapeSettings.writeConfig(conf);
-		parent.chunkProviderSettingsJson = conf.toJson();
-		this.mc.displayGuiScreen(parent);
-	}
+    private void done() {
+        CustomGeneratorSettings conf = CustomGeneratorSettings.defaults();
+        this.basicSettings.writeConfig(conf);
+        this.oreSettings.writeConfig(conf);
+        this.advancedterrainShapeSettings.writeConfig(conf);
+        parent.chunkProviderSettingsJson = conf.toJson();
+        this.mc.displayGuiScreen(parent);
+    }
 }

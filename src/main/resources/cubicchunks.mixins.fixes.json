@@ -1,15 +1,15 @@
 {
-  "required": true,
-  "package": "cubicchunks.asm.mixin.fixes",
-  "refmap": "cubicchunks.mixins.refmap.json",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "common.MixinEntityMinecart_KillFix",
-    "common.MixinEntityFallingBlock_HeightLimits",
-    "common.MixinWorld"
-  ],
-  "client": [
-  ],
-  "server": [
-  ]
+    "required": true,
+    "package": "cubicchunks.asm.mixin.fixes",
+    "refmap": "cubicchunks.mixins.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": [
+        "common.MixinEntityMinecart_KillFix",
+        "common.MixinEntityFallingBlock_HeightLimits",
+        "common.MixinWorld"
+    ],
+    "client": [
+    ],
+    "server": [
+    ]
 }

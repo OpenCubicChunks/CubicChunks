@@ -23,32 +23,32 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class MultiFeatureGenerator extends FeatureGenerator {
-	private final FeatureGenerator gen;
-	private final int attempts;
 
-	public MultiFeatureGenerator(ICubicWorld world, FeatureGenerator gen, int attempts) {
-		super(world);
-		this.gen = gen;
-		this.attempts = attempts;
-	}
+    private final FeatureGenerator gen;
+    private final int attempts;
 
-	@Override
-	public void generate(Random rand, Cube cube, Biome biome) {
-		for (int i = 0; i < this.attempts; i++) {
-			this.gen.generate(rand, cube, biome);
-		}
-	}
+    public MultiFeatureGenerator(ICubicWorld world, FeatureGenerator gen, int attempts) {
+        super(world);
+        this.gen = gen;
+        this.attempts = attempts;
+    }
+
+    @Override
+    public void generate(Random rand, Cube cube, Biome biome) {
+        for (int i = 0; i < this.attempts; i++) {
+            this.gen.generate(rand, cube, biome);
+        }
+    }
 }

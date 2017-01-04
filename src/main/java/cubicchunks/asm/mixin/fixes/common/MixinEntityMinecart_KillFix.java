@@ -23,33 +23,31 @@
  */
 package cubicchunks.asm.mixin.fixes.common;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.world.World;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(EntityMinecart.class)
 public abstract class MixinEntityMinecart_KillFix extends Entity {
 
-	public MixinEntityMinecart_KillFix(World worldIn) {
-		super(worldIn);
-	}
+    public MixinEntityMinecart_KillFix(World worldIn) {
+        super(worldIn);
+    }
 
-	/**
-	 * Replace -64 constant, to avoid killing minecarts below y=-64
-	 */
-	@ModifyConstant(method = "onUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
-	private double getDeathY(double originalY) {
-		return ((ICubicWorld) world).getMinHeight() + originalY;
-	}
+    /**
+     * Replace -64 constant, to avoid killing minecarts below y=-64
+     */
+    @ModifyConstant(method = "onUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
+    private double getDeathY(double originalY) {
+        return ((ICubicWorld) world).getMinHeight() + originalY;
+    }
 }

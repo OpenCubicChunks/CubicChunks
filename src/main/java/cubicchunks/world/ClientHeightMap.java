@@ -24,6 +24,9 @@
 package cubicchunks.world;
 
 import com.google.common.base.Throwables;
+import cubicchunks.util.Coords;
+import cubicchunks.world.column.Column;
+import mcp.MethodsReturnNonnullByDefault;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -33,81 +36,77 @@ import java.util.Arrays;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.column.Column;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ClientHeightMap implements IHeightMap {
 
-	@Nonnull private int[] hmap;
-	private int heightMapLowest = Coords.NO_HEIGHT;
+    @Nonnull private int[] hmap;
+    private int heightMapLowest = Coords.NO_HEIGHT;
 
-	public ClientHeightMap(Column column) {
-		this.hmap = new int[256];
+    public ClientHeightMap(Column column) {
+        this.hmap = new int[256];
 
-		Arrays.fill(hmap, Coords.NO_HEIGHT);
-	}
+        Arrays.fill(hmap, Coords.NO_HEIGHT);
+    }
 
-	@Override
-	public boolean isOccluded(int localX, int blockY, int localZ) {
-		int topY = this.getTopBlockY(localX, localZ);
-		return blockY <= topY;
-	}
+    @Override
+    public boolean isOccluded(int localX, int blockY, int localZ) {
+        int topY = this.getTopBlockY(localX, localZ);
+        return blockY <= topY;
+    }
 
-	@Override
-	public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
-		//do nothing, we return values based on real blocks
-	}
+    @Override
+    public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
+        //do nothing, we return values based on real blocks
+    }
 
-	@Override
-	public int getTopBlockY(int localX, int localZ) {
-		return hmap[getIndex(localX, localZ)];
-	}
+    @Override
+    public int getTopBlockY(int localX, int localZ) {
+        return hmap[getIndex(localX, localZ)];
+    }
 
-	@Override
-	public int getLowestTopBlockY() {
-		if (heightMapLowest == Coords.NO_HEIGHT) {
-			heightMapLowest = Integer.MAX_VALUE;
-			for (int i = 0; i < hmap.length; i++) {
-				if (hmap[i] < heightMapLowest) {
-					heightMapLowest = hmap[i];
-				}
-			}
-		}
-		return heightMapLowest;
-	}
+    @Override
+    public int getLowestTopBlockY() {
+        if (heightMapLowest == Coords.NO_HEIGHT) {
+            heightMapLowest = Integer.MAX_VALUE;
+            for (int i = 0; i < hmap.length; i++) {
+                if (hmap[i] < heightMapLowest) {
+                    heightMapLowest = hmap[i];
+                }
+            }
+        }
+        return heightMapLowest;
+    }
 
-	@Override
-	public int getTopBlockYBelow(int localX, int localZ, int blockY) {
-		throw new UnsupportedOperationException("Not implemented");
-	}
+    @Override
+    public int getTopBlockYBelow(int localX, int localZ, int blockY) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
 
-	public void setHeight(int localX, int localZ, int height) {
-		hmap[getIndex(localX, localZ)] = height;
-	}
+    public void setHeight(int localX, int localZ, int height) {
+        hmap[getIndex(localX, localZ)] = height;
+    }
 
-	public void setData(@Nonnull byte[] data) {
-		try {
-			ByteArrayInputStream buf = new ByteArrayInputStream(data);
-			DataInputStream in = new DataInputStream(buf);
+    public void setData(@Nonnull byte[] data) {
+        try {
+            ByteArrayInputStream buf = new ByteArrayInputStream(data);
+            DataInputStream in = new DataInputStream(buf);
 
-			for (int i = 0; i < 256; i++) {
-				hmap[i] = in.readInt();
-			}
+            for (int i = 0; i < 256; i++) {
+                hmap[i] = in.readInt();
+            }
 
-			in.close();
-		} catch (IOException e) {
-			throw Throwables.propagate(e);
-		}
-	}
+            in.close();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 
-	public int[] getHeightmap() {
-		return this.hmap;
-	}
+    public int[] getHeightmap() {
+        return this.hmap;
+    }
 
-	private static int getIndex(int localX, int localZ) {
-		return (localZ << 4) | localX;
-	}
+    private static int getIndex(int localX, int localZ) {
+        return (localZ << 4) | localX;
+    }
 }

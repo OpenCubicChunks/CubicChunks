@@ -23,12 +23,6 @@
  */
 package cubicchunks.worldgen.generator.flat;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
@@ -37,6 +31,11 @@ import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * A cube generator that generates a flat surface of grass, dirt and stone.
@@ -45,58 +44,58 @@ import mcp.MethodsReturnNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class FlatTerrainProcessor extends BasicCubeGenerator {
 
-	public FlatTerrainProcessor(ICubicWorld world) {
-		super(world);
-	}
+    public FlatTerrainProcessor(ICubicWorld world) {
+        super(world);
+    }
 
-	@Override
-	public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-		ICubePrimer primer = new CubePrimer();
+    @Override
+    public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+        ICubePrimer primer = new CubePrimer();
 
-		if (cubeY >= 0) {
-			return primer;
-		}
-		if (cubeY == -1) {
-			for (int x = 0; x < 16; x++) {
-				for (int z = 0; z < 16; z++) {
-					primer.setBlockState(x, 15, z, Blocks.GRASS.getDefaultState());
-					for (int y = 14; y >= 10; y--) {
-						primer.setBlockState(x, y, z, Blocks.DIRT.getDefaultState());
-					}
-					for (int y = 9; y >= 0; y--) {
-						primer.setBlockState(x, y, z, Blocks.STONE.getDefaultState());
-					}
-				}
-			}
-			return primer;
-		}
+        if (cubeY >= 0) {
+            return primer;
+        }
+        if (cubeY == -1) {
+            for (int x = 0; x < 16; x++) {
+                for (int z = 0; z < 16; z++) {
+                    primer.setBlockState(x, 15, z, Blocks.GRASS.getDefaultState());
+                    for (int y = 14; y >= 10; y--) {
+                        primer.setBlockState(x, y, z, Blocks.DIRT.getDefaultState());
+                    }
+                    for (int y = 9; y >= 0; y--) {
+                        primer.setBlockState(x, y, z, Blocks.STONE.getDefaultState());
+                    }
+                }
+            }
+            return primer;
+        }
 
-		for (int x = 0; x < 16; x++) {
-			for (int z = 0; z < 16; z++) {
-				for (int y = 0; y < 16; y++) {
-					IBlockState state = Blocks.STONE.getDefaultState();
-					if (Coords.localToBlock(cubeY, y) == world.getMinHeight()) {
-						state = Blocks.BEDROCK.getDefaultState();
-					}
-					primer.setBlockState(x, y, z, state);
-				}
-			}
-		}
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                for (int y = 0; y < 16; y++) {
+                    IBlockState state = Blocks.STONE.getDefaultState();
+                    if (Coords.localToBlock(cubeY, y) == world.getMinHeight()) {
+                        state = Blocks.BEDROCK.getDefaultState();
+                    }
+                    primer.setBlockState(x, y, z, state);
+                }
+            }
+        }
 
-		return primer;
-	}
+        return primer;
+    }
 
-	@Override
-	public void populate(Cube cube) {
-	}
+    @Override
+    public void populate(Cube cube) {
+    }
 
-	@Override
-	public Box getPopulationRequirement(Cube cube) {
-		return NO_POPULATOR_REQUIREMENT;
-	}
+    @Override
+    public Box getPopulationRequirement(Cube cube) {
+        return NO_POPULATOR_REQUIREMENT;
+    }
 
-	@Override
-	public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
-		return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null; // eyes of ender are the new F3 for finding the origin :P
-	}
+    @Override
+    public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
+        return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null; // eyes of ender are the new F3 for finding the origin :P
+    }
 }

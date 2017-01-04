@@ -23,30 +23,29 @@
  */
 package cubicchunks.asm;
 
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-
 import org.spongepowered.asm.mixin.extensibility.IMixinConfig;
 import org.spongepowered.asm.mixin.extensibility.IMixinErrorHandler;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class MixinErrorHandler implements IMixinErrorHandler {
-	@Override
-	public ErrorAction onPrepareError(IMixinConfig config, Throwable th, IMixinInfo mixin, ErrorAction action) {
-		th.printStackTrace();
-		FMLCommonHandler.instance().exitJava(-1, true);
-		return ErrorAction.ERROR;
-	}
 
-	@Override
-	public ErrorAction onApplyError(String targetClassName, Throwable th, IMixinInfo mixin, ErrorAction action) {
-		th.printStackTrace();
-		FMLCommonHandler.instance().exitJava(-1, true);
-		return ErrorAction.ERROR;
-	}
+    @Override
+    public ErrorAction onPrepareError(IMixinConfig config, Throwable th, IMixinInfo mixin, ErrorAction action) {
+        th.printStackTrace();
+        FMLCommonHandler.instance().exitJava(-1, true);
+        return ErrorAction.ERROR;
+    }
+
+    @Override
+    public ErrorAction onApplyError(String targetClassName, Throwable th, IMixinInfo mixin, ErrorAction action) {
+        th.printStackTrace();
+        FMLCommonHandler.instance().exitJava(-1, true);
+        return ErrorAction.ERROR;
+    }
 }

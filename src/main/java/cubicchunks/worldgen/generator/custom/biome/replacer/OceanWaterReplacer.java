@@ -24,7 +24,10 @@
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
 import com.google.common.collect.Sets;
-
+import cubicchunks.CubicChunks;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -34,50 +37,46 @@ import java.util.Set;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class OceanWaterReplacer implements IBiomeBlockReplacer {
-	private final IBlockState oceanBlock;
-	private final int oceanLevel;
 
-	public OceanWaterReplacer(IBlockState oceanBlock, int oceanLevel) {
-		this.oceanBlock = oceanBlock;
-		this.oceanLevel = oceanLevel;
-	}
+    private final IBlockState oceanBlock;
+    private final int oceanLevel;
 
-	/**
-	 * Replaces air blocks below configurable sea level with configurable block (usually water)
-	 */
-	@Override
-	public IBlockState getReplacedBlock(IBlockState previousBlock, int x, int y, int z, double dx, double dy, double dz, double density) {
-		if (previousBlock.getBlock() == Blocks.AIR && y < oceanLevel) {
-			return oceanBlock;
-		}
-		return previousBlock;
-	}
+    public OceanWaterReplacer(IBlockState oceanBlock, int oceanLevel) {
+        this.oceanBlock = oceanBlock;
+        this.oceanLevel = oceanLevel;
+    }
 
-	public static IBiomeBlockReplacerProvider provider() {
-		return new IBiomeBlockReplacerProvider() {
-			private final ResourceLocation OCEAN_BLOCK = CubicChunks.location("ocean_block");
-			private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("ocean_level");
+    /**
+     * Replaces air blocks below configurable sea level with configurable block (usually water)
+     */
+    @Override
+    public IBlockState getReplacedBlock(IBlockState previousBlock, int x, int y, int z, double dx, double dy, double dz, double density) {
+        if (previousBlock.getBlock() == Blocks.AIR && y < oceanLevel) {
+            return oceanBlock;
+        }
+        return previousBlock;
+    }
 
-			@Override public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
-				IBlockState oceanBlock = Block.getBlockFromName(conf.getString(OCEAN_BLOCK)).getDefaultState();
-				int oceanHeight = conf.getInt(OCEAN_LEVEL);
-				return new OceanWaterReplacer(oceanBlock, oceanHeight);
-			}
+    public static IBiomeBlockReplacerProvider provider() {
+        return new IBiomeBlockReplacerProvider() {
+            private final ResourceLocation OCEAN_BLOCK = CubicChunks.location("ocean_block");
+            private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("ocean_level");
 
-			@Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
-				return Sets.newHashSet(
-					new ConfigOptionInfo(OCEAN_BLOCK, Blocks.WATER.getRegistryName().toString()),
-					new ConfigOptionInfo(OCEAN_LEVEL, 63)
-				);
-			}
-		};
-	}
+            @Override public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
+                IBlockState oceanBlock = Block.getBlockFromName(conf.getString(OCEAN_BLOCK)).getDefaultState();
+                int oceanHeight = conf.getInt(OCEAN_LEVEL);
+                return new OceanWaterReplacer(oceanBlock, oceanHeight);
+            }
+
+            @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
+                return Sets.newHashSet(
+                        new ConfigOptionInfo(OCEAN_BLOCK, Blocks.WATER.getRegistryName().toString()),
+                        new ConfigOptionInfo(OCEAN_LEVEL, 63)
+                );
+            }
+        };
+    }
 }

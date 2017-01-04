@@ -24,7 +24,7 @@
 package cubicchunks.util;
 
 import com.google.common.base.Throwables;
-
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
 
@@ -34,27 +34,26 @@ import java.util.List;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class WorldServerAccess {
-	private static final MethodHandle ws_pendingTickListEntriesHashSet = ReflectionUtil.getFieldGetterHandle(WorldServer.class, "field_73064_N");
-	private static final MethodHandle ws_pendingTickListEntriesThisTick = ReflectionUtil.getFieldGetterHandle(WorldServer.class, "field_94579_S");
 
-	public static List<NextTickListEntry> getPendingTickListEntriesThisTick(WorldServer ws) {
-		try {
-			return (List<NextTickListEntry>) ws_pendingTickListEntriesThisTick.invoke(ws);
-		} catch (Throwable throwable) {
-			throw Throwables.propagate(throwable);
-		}
-	}
+    private static final MethodHandle ws_pendingTickListEntriesHashSet = ReflectionUtil.getFieldGetterHandle(WorldServer.class, "field_73064_N");
+    private static final MethodHandle ws_pendingTickListEntriesThisTick = ReflectionUtil.getFieldGetterHandle(WorldServer.class, "field_94579_S");
 
-	public static HashSet<NextTickListEntry> getPendingTickListEntriesHashSet(WorldServer ws) {
-		try {
-			return (HashSet<NextTickListEntry>) ws_pendingTickListEntriesHashSet.invoke(ws);
-		} catch (Throwable throwable) {
-			throw Throwables.propagate(throwable);
-		}
-	}
+    public static List<NextTickListEntry> getPendingTickListEntriesThisTick(WorldServer ws) {
+        try {
+            return (List<NextTickListEntry>) ws_pendingTickListEntriesThisTick.invoke(ws);
+        } catch (Throwable throwable) {
+            throw Throwables.propagate(throwable);
+        }
+    }
+
+    public static HashSet<NextTickListEntry> getPendingTickListEntriesHashSet(WorldServer ws) {
+        try {
+            return (HashSet<NextTickListEntry>) ws_pendingTickListEntriesHashSet.invoke(ws);
+        } catch (Throwable throwable) {
+            throw Throwables.propagate(throwable);
+        }
+    }
 }

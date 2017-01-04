@@ -23,6 +23,8 @@
  */
 package cubicchunks.client;
 
+import cubicchunks.CubicChunks;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.fml.client.IModGuiFactory;
@@ -32,26 +34,24 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.CubicChunks;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class GuiFactory implements IModGuiFactory {
-	@Override public void initialize(Minecraft minecraftInstance) {
 
-	}
+    @Override public void initialize(Minecraft minecraftInstance) {
 
-	@Override public Class<? extends GuiScreen> mainConfigGuiClass() {
-		return CubicChunks.Config.GUI.class;
-	}
+    }
 
-	@Nullable @Override public Set<RuntimeOptionCategoryElement> runtimeGuiCategories() {
-		return null;
-	}
+    @Override public Class<? extends GuiScreen> mainConfigGuiClass() {
+        return CubicChunks.Config.GUI.class;
+    }
 
-	@Nullable @Deprecated @Override
-	public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element) {
-		return null;
-	}
+    @Nullable @Override public Set<RuntimeOptionCategoryElement> runtimeGuiCategories() {
+        return null;
+    }
+
+    @Nullable @Deprecated @Override
+    public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element) {
+        return null;
+    }
 }

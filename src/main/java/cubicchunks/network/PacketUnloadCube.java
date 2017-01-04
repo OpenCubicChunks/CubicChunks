@@ -24,7 +24,9 @@
 package cubicchunks.network;
 
 import com.google.common.base.Preconditions;
-
+import cubicchunks.util.CubePos;
+import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -32,43 +34,41 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.util.CubePos;
-import io.netty.buffer.ByteBuf;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class PacketUnloadCube implements IMessage {
-	private CubePos cubePos;
 
-	public PacketUnloadCube() {
-	}
+    private CubePos cubePos;
 
-	public PacketUnloadCube(CubePos cubePos) {
-		this.cubePos = cubePos;
-	}
+    public PacketUnloadCube() {
+    }
 
-	@Override
-	public void fromBytes(ByteBuf in) {
-		this.cubePos = new CubePos(in.readInt(), in.readInt(), in.readInt());
-	}
+    public PacketUnloadCube(CubePos cubePos) {
+        this.cubePos = cubePos;
+    }
 
-	@Override
-	public void toBytes(ByteBuf out) {
-		out.writeInt(cubePos.getX());
-		out.writeInt(cubePos.getY());
-		out.writeInt(cubePos.getZ());
-	}
+    @Override
+    public void fromBytes(ByteBuf in) {
+        this.cubePos = new CubePos(in.readInt(), in.readInt(), in.readInt());
+    }
 
-	CubePos getCubePos() {
-		return Preconditions.checkNotNull(cubePos);
-	}
+    @Override
+    public void toBytes(ByteBuf out) {
+        out.writeInt(cubePos.getX());
+        out.writeInt(cubePos.getY());
+        out.writeInt(cubePos.getZ());
+    }
 
-	public static class Handler extends AbstractClientMessageHandler<PacketUnloadCube> {
-		@Nullable @Override
-		public IMessage handleClientMessage(EntityPlayer player, PacketUnloadCube message, MessageContext ctx) {
-			ClientHandler.getInstance().handle(message);
-			return null;
-		}
-	}
+    CubePos getCubePos() {
+        return Preconditions.checkNotNull(cubePos);
+    }
+
+    public static class Handler extends AbstractClientMessageHandler<PacketUnloadCube> {
+
+        @Nullable @Override
+        public IMessage handleClientMessage(EntityPlayer player, PacketUnloadCube message, MessageContext ctx) {
+            ClientHandler.getInstance().handle(message);
+            return null;
+        }
+    }
 }

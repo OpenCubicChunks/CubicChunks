@@ -31,10 +31,10 @@ package cubicchunks.util;
 
 public interface XYZAddressable {
 
-	int getX();
+    int getX();
 
-	int getY();
+    int getY();
 
-	int getZ();
+    int getZ();
 
 }

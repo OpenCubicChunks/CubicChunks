@@ -23,18 +23,18 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.client.CubeProviderClient;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.client.CubeProviderClient;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface ICubicWorldClient extends ICubicWorld {
-	CubeProviderClient getCubeCache();
 
-	boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
+    CubeProviderClient getCubeCache();
+
+    boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
 }

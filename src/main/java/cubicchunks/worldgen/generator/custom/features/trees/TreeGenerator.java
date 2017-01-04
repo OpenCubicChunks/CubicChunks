@@ -23,6 +23,9 @@
  */
 package cubicchunks.worldgen.generator.custom.features.trees;
 
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.custom.features.SurfaceFeatureGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -32,61 +35,57 @@ import net.minecraft.util.math.BlockPos;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.features.SurfaceFeatureGenerator;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class TreeGenerator extends SurfaceFeatureGenerator {
 
-	static final Block[] REPLACEABLE_OPEN_BLOCKS = {
-		Blocks.AIR, Blocks.SAPLING, Blocks.FLOWING_WATER, Blocks.WATER, Blocks.FLOWING_LAVA,
-		Blocks.LAVA, Blocks.LOG, Blocks.LOG2, Blocks.LEAVES, Blocks.LEAVES2
-	};
+    static final Block[] REPLACEABLE_OPEN_BLOCKS = {
+            Blocks.AIR, Blocks.SAPLING, Blocks.FLOWING_WATER, Blocks.WATER, Blocks.FLOWING_LAVA,
+            Blocks.LAVA, Blocks.LOG, Blocks.LOG2, Blocks.LEAVES, Blocks.LEAVES2
+    };
 
-	static final Block[] REPLACEABLE_SOLID_BLOCKS = {
-		Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL
-	};
-	@Nonnull protected final IBlockState woodBlock;
-	@Nonnull protected final IBlockState leafBlock;
+    static final Block[] REPLACEABLE_SOLID_BLOCKS = {
+            Blocks.GRASS, Blocks.DIRT, Blocks.SAND, Blocks.GRAVEL
+    };
+    @Nonnull protected final IBlockState woodBlock;
+    @Nonnull protected final IBlockState leafBlock;
 
-	public TreeGenerator(final ICubicWorld world, final IBlockState woodBlock, final IBlockState leafBlock) {
-		super(world);
-		this.woodBlock = woodBlock;
-		this.leafBlock = leafBlock;
-	}
+    public TreeGenerator(final ICubicWorld world, final IBlockState woodBlock, final IBlockState leafBlock) {
+        super(world);
+        this.woodBlock = woodBlock;
+        this.leafBlock = leafBlock;
+    }
 
-	protected boolean tryToPlaceDirtUnderTree(final ICubicWorld world, final BlockPos blockPos) {
-		if (world.getBlockState(blockPos).getBlock() != Blocks.DIRT) {
-			return this.setBlockOnly(blockPos, Blocks.DIRT.getDefaultState());
-		} else {
-			// it's already dirt, so just say it was placed successfully
-			return true;
-		}
-	}
+    protected boolean tryToPlaceDirtUnderTree(final ICubicWorld world, final BlockPos blockPos) {
+        if (world.getBlockState(blockPos).getBlock() != Blocks.DIRT) {
+            return this.setBlockOnly(blockPos, Blocks.DIRT.getDefaultState());
+        } else {
+            // it's already dirt, so just say it was placed successfully
+            return true;
+        }
+    }
 
-	protected static boolean canReplaceBlockDefault(final Block blockToCheck) {
-		return canReplace(blockToCheck, REPLACEABLE_OPEN_BLOCKS) || canReplace(blockToCheck, REPLACEABLE_SOLID_BLOCKS);
-	}
+    protected static boolean canReplaceBlockDefault(final Block blockToCheck) {
+        return canReplace(blockToCheck, REPLACEABLE_OPEN_BLOCKS) || canReplace(blockToCheck, REPLACEABLE_SOLID_BLOCKS);
+    }
 
-	protected static boolean canReplace(final Block blockToCheck, final Block[] allowedBlocks) {
-		for (Block block : allowedBlocks) {
-			if (blockToCheck == block) {
-				return true;
-			}
-		}
-		return false;
-	}
+    protected static boolean canReplace(final Block blockToCheck, final Block[] allowedBlocks) {
+        for (Block block : allowedBlocks) {
+            if (blockToCheck == block) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	protected static boolean canReplaceWithLeaves(final Block blockToCheck) {
-		//TODO: fix canReplaceWithLeaves
-		final Material blockMaterial = blockToCheck.getMaterial(blockToCheck.getDefaultState());
-		return blockMaterial == Material.AIR || blockMaterial == Material.LEAVES;
-	}
+    protected static boolean canReplaceWithLeaves(final Block blockToCheck) {
+        //TODO: fix canReplaceWithLeaves
+        final Material blockMaterial = blockToCheck.getMaterial(blockToCheck.getDefaultState());
+        return blockMaterial == Material.AIR || blockMaterial == Material.LEAVES;
+    }
 
-	protected static boolean canReplaceWithWood(final Block blockToCheck) {
-		return blockToCheck == Blocks.GRASS || blockToCheck == Blocks.DIRT || blockToCheck == Blocks.LOG
-			|| blockToCheck == Blocks.LOG2 || blockToCheck == Blocks.SAPLING || blockToCheck == Blocks.VINE;
-	}
+    protected static boolean canReplaceWithWood(final Block blockToCheck) {
+        return blockToCheck == Blocks.GRASS || blockToCheck == Blocks.DIRT || blockToCheck == Blocks.LOG
+                || blockToCheck == Blocks.LOG2 || blockToCheck == Blocks.SAPLING || blockToCheck == Blocks.VINE;
+    }
 }

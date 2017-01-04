@@ -23,6 +23,16 @@
  */
 package cubicchunks.util;
 
+import static cubicchunks.util.Coords.blockToLocal;
+
+import cubicchunks.client.CubeProviderClient;
+import cubicchunks.lighting.ILightBlockAccess;
+import cubicchunks.server.CubeProviderServer;
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -37,17 +47,6 @@ import net.minecraftforge.fml.common.SidedProxy;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.client.CubeProviderClient;
-import cubicchunks.lighting.ILightBlockAccess;
-import cubicchunks.server.CubeProviderServer;
-import cubicchunks.world.ICubeProvider;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static cubicchunks.util.Coords.blockToLocal;
-
 /**
  * Simple class that allows to quickly access blocks near specified cube without the overhead of getting these cubes.
  * <p>
@@ -56,132 +55,136 @@ import static cubicchunks.util.Coords.blockToLocal;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FastCubeBlockAccess implements ILightBlockAccess {
-	@SidedProxy private static GetLoadedChunksProxy getLoadedChunksProxy;
-	@Nonnull private final Cube[][][] cache;
-	private final int originX, originY, originZ;
-	@Nonnull private final ICubicWorld world;
 
-	public FastCubeBlockAccess(ICubeProvider cache, Cube cube, int radius) {
-		this(cube.getCubicWorld(), cache,
-			cube.getCoords().sub(radius, radius, radius), cube.getCoords().add(radius, radius, radius));
-	}
+    @SidedProxy private static GetLoadedChunksProxy getLoadedChunksProxy;
+    @Nonnull private final Cube[][][] cache;
+    private final int originX, originY, originZ;
+    @Nonnull private final ICubicWorld world;
 
-	private FastCubeBlockAccess(ICubicWorld world, ICubeProvider prov, CubePos start, CubePos end) {
-		int dx = Math.abs(end.getX() - start.getX()) + 1;
-		int dy = Math.abs(end.getY() - start.getY()) + 1;
-		int dz = Math.abs(end.getZ() - start.getZ()) + 1;
+    public FastCubeBlockAccess(ICubeProvider cache, Cube cube, int radius) {
+        this(cube.getCubicWorld(), cache,
+                cube.getCoords().sub(radius, radius, radius), cube.getCoords().add(radius, radius, radius));
+    }
 
-		this.world = world;
-		this.cache = new Cube[dx][dy][dz];
-		this.originX = Math.min(start.getX(), end.getX());
-		this.originY = Math.min(start.getY(), end.getY());
-		this.originZ = Math.min(start.getZ(), end.getZ());
+    private FastCubeBlockAccess(ICubicWorld world, ICubeProvider prov, CubePos start, CubePos end) {
+        int dx = Math.abs(end.getX() - start.getX()) + 1;
+        int dy = Math.abs(end.getY() - start.getY()) + 1;
+        int dz = Math.abs(end.getZ() - start.getZ()) + 1;
 
-		for (int relativeCubeX = 0; relativeCubeX < dx; relativeCubeX++) {
-			for (int relativeCubeZ = 0; relativeCubeZ < dz; relativeCubeZ++) {
-				for (int relativeCubeY = 0; relativeCubeY < dy; relativeCubeY++) {
-					this.cache[relativeCubeX][relativeCubeY][relativeCubeZ] =
-						prov.getLoadedCube(originX + relativeCubeX, originY + relativeCubeY, originZ + relativeCubeZ);
-					if (this.cache[relativeCubeX][relativeCubeY][relativeCubeZ] == null) {
-						CrashReport report = CrashReport.makeCrashReport(
-							new IllegalStateException("Cube not loaded"), "Creating cube cache");
-						CrashReportCategory category = report.makeCategory("ILightBlockAccess");
+        this.world = world;
+        this.cache = new Cube[dx][dy][dz];
+        this.originX = Math.min(start.getX(), end.getX());
+        this.originY = Math.min(start.getY(), end.getY());
+        this.originZ = Math.min(start.getZ(), end.getZ());
 
-						CubePos pos = new CubePos(originX + relativeCubeX, originY + relativeCubeY, originZ + relativeCubeZ);
-						category.setDetail("Getting cube", pos::toString);
-						if (prov instanceof CubeProviderServer || prov instanceof CubeProviderClient) {
-							Iterable<Chunk> chunks = getLoadedChunksProxy.getLoadedChunks(prov);
-							int i = 0;
-							for (Chunk chunk : chunks) {
-								Column column = (Column) chunk;
-								category.setDetail("Column" + i, () ->
-									column.getLoadedCubes().stream().map(
-										c -> c.getCoords().toString()
-									).reduce((a, b) -> a + ", " + b).orElse(null)
-								);
-							}
-						}
+        for (int relativeCubeX = 0; relativeCubeX < dx; relativeCubeX++) {
+            for (int relativeCubeZ = 0; relativeCubeZ < dz; relativeCubeZ++) {
+                for (int relativeCubeY = 0; relativeCubeY < dy; relativeCubeY++) {
+                    this.cache[relativeCubeX][relativeCubeY][relativeCubeZ] =
+                            prov.getLoadedCube(originX + relativeCubeX, originY + relativeCubeY, originZ + relativeCubeZ);
+                    if (this.cache[relativeCubeX][relativeCubeY][relativeCubeZ] == null) {
+                        CrashReport report = CrashReport.makeCrashReport(
+                                new IllegalStateException("Cube not loaded"), "Creating cube cache");
+                        CrashReportCategory category = report.makeCategory("ILightBlockAccess");
 
-						throw new ReportedException(report);
-					}
-				}
-			}
-		}
-	}
+                        CubePos pos = new CubePos(originX + relativeCubeX, originY + relativeCubeY, originZ + relativeCubeZ);
+                        category.setDetail("Getting cube", pos::toString);
+                        if (prov instanceof CubeProviderServer || prov instanceof CubeProviderClient) {
+                            Iterable<Chunk> chunks = getLoadedChunksProxy.getLoadedChunks(prov);
+                            int i = 0;
+                            for (Chunk chunk : chunks) {
+                                Column column = (Column) chunk;
+                                category.setDetail("Column" + i, () ->
+                                        column.getLoadedCubes().stream().map(
+                                                c -> c.getCoords().toString()
+                                        ).reduce((a, b) -> a + ", " + b).orElse(null)
+                                );
+                            }
+                        }
 
-	private Cube getCube(int blockX, int blockY, int blockZ) {
-		int cubeX = Coords.blockToCube(blockX);
-		int cubeY = Coords.blockToCube(blockY);
-		int cubeZ = Coords.blockToCube(blockZ);
+                        throw new ReportedException(report);
+                    }
+                }
+            }
+        }
+    }
 
-		return this.cache[cubeX - originX][cubeY - originY][cubeZ - originZ];
-	}
+    private Cube getCube(int blockX, int blockY, int blockZ) {
+        int cubeX = Coords.blockToCube(blockX);
+        int cubeY = Coords.blockToCube(blockY);
+        int cubeZ = Coords.blockToCube(blockZ);
 
-	private IBlockState getBlockState(BlockPos pos) {
-		return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
-	}
+        return this.cache[cubeX - originX][cubeY - originY][cubeZ - originZ];
+    }
 
-	private IBlockState getBlockState(int blockX, int blockY, int blockZ) {
-		return this.getCube(blockX, blockY, blockZ).getBlockState(blockX, blockY, blockZ);
-	}
+    private IBlockState getBlockState(BlockPos pos) {
+        return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
+    }
 
-	@Override public int getBlockLightOpacity(BlockPos pos) {
-		return this.getBlockState(pos.getX(), pos.getY(), pos.getZ()).getLightOpacity((World) world, pos);
-	}
+    private IBlockState getBlockState(int blockX, int blockY, int blockZ) {
+        return this.getCube(blockX, blockY, blockZ).getBlockState(blockX, blockY, blockZ);
+    }
 
-	@Override public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
-		return this.getCube(pos.getX(), pos.getY(), pos.getZ()).getLightFor(lightType, pos);
-	}
+    @Override public int getBlockLightOpacity(BlockPos pos) {
+        return this.getBlockState(pos.getX(), pos.getY(), pos.getZ()).getLightOpacity((World) world, pos);
+    }
 
-	@Override public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
-		this.getCube(pos.getX(), pos.getY(), pos.getZ()).setLightFor(lightType, pos, val);
-	}
+    @Override public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
+        return this.getCube(pos.getX(), pos.getY(), pos.getZ()).getLightFor(lightType, pos);
+    }
 
-	@Override public boolean canSeeSky(BlockPos pos) {
-		Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
-		Column column = cube.getColumn();
-		int height = column.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
-		return height <= pos.getY();
-	}
+    @Override public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
+        this.getCube(pos.getX(), pos.getY(), pos.getZ()).setLightFor(lightType, pos, val);
+    }
 
-	@Override public int getEmittedLight(BlockPos pos, EnumSkyBlock type) {
-		switch (type) {
-			case BLOCK:
-				return getBlockState(pos).getLightValue((IBlockAccess) world, pos);
-			case SKY:
-				return canSeeSky(pos) ? 15 : 0;
-			default:
-				throw new AssertionError();
-		}
-	}
+    @Override public boolean canSeeSky(BlockPos pos) {
+        Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
+        Column column = cube.getColumn();
+        int height = column.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
+        return height <= pos.getY();
+    }
 
-	public static ILightBlockAccess forBlockRegion(ICubeProvider prov, BlockPos startPos, BlockPos endPos) {
-		//TODO: fix it
-		BlockPos midPos = Coords.midPos(startPos, endPos);
-		Cube center = prov.getCube(CubePos.fromBlockCoords(midPos));
-		return new FastCubeBlockAccess(center.getCubicWorld(), prov,
-			CubePos.fromBlockCoords(startPos), CubePos.fromBlockCoords(endPos));
-	}
+    @Override public int getEmittedLight(BlockPos pos, EnumSkyBlock type) {
+        switch (type) {
+            case BLOCK:
+                return getBlockState(pos).getLightValue((IBlockAccess) world, pos);
+            case SKY:
+                return canSeeSky(pos) ? 15 : 0;
+            default:
+                throw new AssertionError();
+        }
+    }
 
-	private interface GetLoadedChunksProxy {
-		Iterable<Chunk> getLoadedChunks(ICubeProvider prov);
-	}
+    public static ILightBlockAccess forBlockRegion(ICubeProvider prov, BlockPos startPos, BlockPos endPos) {
+        //TODO: fix it
+        BlockPos midPos = Coords.midPos(startPos, endPos);
+        Cube center = prov.getCube(CubePos.fromBlockCoords(midPos));
+        return new FastCubeBlockAccess(center.getCubicWorld(), prov,
+                CubePos.fromBlockCoords(startPos), CubePos.fromBlockCoords(endPos));
+    }
 
-	public static final class ServerProxy implements GetLoadedChunksProxy {
-		public ServerProxy() {
-		}
+    private interface GetLoadedChunksProxy {
 
-		@Override public Iterable<Chunk> getLoadedChunks(ICubeProvider prov) {
-			return ((CubeProviderServer) prov).getLoadedChunks();
-		}
-	}
+        Iterable<Chunk> getLoadedChunks(ICubeProvider prov);
+    }
 
-	public static final class ClientProxy implements GetLoadedChunksProxy {
-		public ClientProxy() {
-		}
+    public static final class ServerProxy implements GetLoadedChunksProxy {
 
-		@Override public Iterable<Chunk> getLoadedChunks(ICubeProvider prov) {
-			return ((CubeProviderClient) prov).getLoadedChunks();
-		}
-	}
+        public ServerProxy() {
+        }
+
+        @Override public Iterable<Chunk> getLoadedChunks(ICubeProvider prov) {
+            return ((CubeProviderServer) prov).getLoadedChunks();
+        }
+    }
+
+    public static final class ClientProxy implements GetLoadedChunksProxy {
+
+        public ClientProxy() {
+        }
+
+        @Override public Iterable<Chunk> getLoadedChunks(ICubeProvider prov) {
+            return ((CubeProviderClient) prov).getLoadedChunks();
+        }
+    }
 }

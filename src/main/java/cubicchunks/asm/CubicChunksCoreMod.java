@@ -23,9 +23,9 @@
  */
 package cubicchunks.asm;
 
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.Mixins;
 
@@ -33,8 +33,6 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import mcp.MethodsReturnNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -44,39 +42,39 @@ import mcp.MethodsReturnNonnullByDefault;
 @IFMLLoadingPlugin.TransformerExclusions(value = "cubicchunks.asm.")
 public class CubicChunksCoreMod implements IFMLLoadingPlugin {
 
-	public CubicChunksCoreMod() {
-		initMixin();
-	}
+    public CubicChunksCoreMod() {
+        initMixin();
+    }
 
-	@Override
-	public String[] getASMTransformerClass() {
-		return new String[]{};
-	}
+    @Override
+    public String[] getASMTransformerClass() {
+        return new String[]{};
+    }
 
-	@Nullable @Override
-	public String getModContainerClass() {
-		return null;
-	}
+    @Nullable @Override
+    public String getModContainerClass() {
+        return null;
+    }
 
-	@Nullable @Override
-	public String getSetupClass() {
-		return null;
-	}
+    @Nullable @Override
+    public String getSetupClass() {
+        return null;
+    }
 
-	@Override
-	public void injectData(Map<String, Object> data) {
-	}
+    @Override
+    public void injectData(Map<String, Object> data) {
+    }
 
-	@Nullable @Override
-	public String getAccessTransformerClass() {
-		return null;
-	}
+    @Nullable @Override
+    public String getAccessTransformerClass() {
+        return null;
+    }
 
-	public static void initMixin() {
-		MixinBootstrap.init();
-		Mixins.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
-		Mixins.addConfiguration("cubicchunks.mixins.core.json");
-		Mixins.addConfiguration("cubicchunks.mixins.fixes.json");
-		Mixins.addConfiguration("cubicchunks.mixins.noncritical.json");
-	}
+    public static void initMixin() {
+        MixinBootstrap.init();
+        Mixins.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
+        Mixins.addConfiguration("cubicchunks.mixins.core.json");
+        Mixins.addConfiguration("cubicchunks.mixins.fixes.json");
+        Mixins.addConfiguration("cubicchunks.mixins.noncritical.json");
+    }
 }

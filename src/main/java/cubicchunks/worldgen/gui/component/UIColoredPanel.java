@@ -35,76 +35,77 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public class UIColoredPanel extends UIContainer<UIColoredPanel> implements ITransformable.Color, ITransformable.Alpha {
-	private final GuiShape lineShape;
-	private int color;
-	private int bgAlpha;
 
-	public UIColoredPanel(MalisisGui gui) {
-		super(gui);
-		this.shape = new SimpleGuiShape();
-		this.lineShape = new SimpleGuiShape();
-		setBackgroundAlpha(128);
-		setColor(0);
-	}
+    private final GuiShape lineShape;
+    private int color;
+    private int bgAlpha;
 
-	@Override
-	public ClipArea getClipArea() {
-		return new ClipArea(this);
-	}
+    public UIColoredPanel(MalisisGui gui) {
+        super(gui);
+        this.shape = new SimpleGuiShape();
+        this.lineShape = new SimpleGuiShape();
+        setBackgroundAlpha(128);
+        setColor(0);
+    }
 
-	@Override
-	public void drawBackground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
-		rp.useTexture.set(false);
+    @Override
+    public ClipArea getClipArea() {
+        return new ClipArea(this);
+    }
 
-		renderer.disableTextures();
+    @Override
+    public void drawBackground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
+        rp.useTexture.set(false);
 
-		rp.alpha.set(bgAlpha);
-		rp.colorMultiplier.set(color);
-		renderer.drawShape(shape, rp);
+        renderer.disableTextures();
 
-		renderer.next();
-		renderer.enableTextures();
-	}
+        rp.alpha.set(bgAlpha);
+        rp.colorMultiplier.set(color);
+        renderer.drawShape(shape, rp);
 
-	@Override
-	public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
-		super.drawForeground(renderer, mouseX, mouseY, partialTick);
+        renderer.next();
+        renderer.enableTextures();
+    }
 
-		renderer.currentComponent = this;
-		renderer.disableTextures();
-		{
-			rp.useTexture.set(false);
-			rp.usePerVertexAlpha.set(true);
-			rp.colorMultiplier.set(color);
+    @Override
+    public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
+        super.drawForeground(renderer, mouseX, mouseY, partialTick);
 
-			lineShape.resetState();
-			lineShape.setSize(getWidth(), 4);
-			lineShape.getVertexes("Bottom").forEach(v -> v.setAlpha(0x00));
+        renderer.currentComponent = this;
+        renderer.disableTextures();
+        {
+            rp.useTexture.set(false);
+            rp.usePerVertexAlpha.set(true);
+            rp.colorMultiplier.set(color);
 
-			renderer.drawShape(lineShape, rp);
-		}
-		{
-			rp.useTexture.set(false);
-			rp.usePerVertexAlpha.set(true);
-			rp.colorMultiplier.set(color);
+            lineShape.resetState();
+            lineShape.setSize(getWidth(), 4);
+            lineShape.getVertexes("Bottom").forEach(v -> v.setAlpha(0x00));
 
-			lineShape.resetState();
-			lineShape.setSize(getWidth(), 4);
-			lineShape.setPosition(0, getHeight() - 4);
-			lineShape.getVertexes("Top").forEach(v -> v.setAlpha(0x00));
+            renderer.drawShape(lineShape, rp);
+        }
+        {
+            rp.useTexture.set(false);
+            rp.usePerVertexAlpha.set(true);
+            rp.colorMultiplier.set(color);
 
-			renderer.drawShape(lineShape, rp);
-		}
-		renderer.next();
-		renderer.enableTextures();
-	}
+            lineShape.resetState();
+            lineShape.setSize(getWidth(), 4);
+            lineShape.setPosition(0, getHeight() - 4);
+            lineShape.getVertexes("Top").forEach(v -> v.setAlpha(0x00));
 
-	@Override
-	public void setColor(int color) {
-		this.color = color;
-	}
+            renderer.drawShape(lineShape, rp);
+        }
+        renderer.next();
+        renderer.enableTextures();
+    }
 
-	public void setBackgroundAlpha(int alpha) {
-		this.bgAlpha = alpha;
-	}
+    @Override
+    public void setColor(int color) {
+        this.color = color;
+    }
+
+    public void setBackgroundAlpha(int alpha) {
+        this.bgAlpha = alpha;
+    }
 }

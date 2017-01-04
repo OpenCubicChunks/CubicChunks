@@ -23,6 +23,10 @@
  */
 package cubicchunks.client;
 
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
@@ -39,163 +43,159 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class RenderCubeCache extends ChunkCache {
-	protected int cubeY;
-	@Nonnull private final Cube[][][] cubeArrays;
-	@Nonnull private final ICubicWorld world;
 
-	public RenderCubeCache(ICubicWorld world, BlockPos from, BlockPos to, int subtract) {
-		super((World) world, from, to, subtract);
-		this.world = world;
-		this.cubeY = Coords.blockToCube(from.getY() - subtract);
-		int cubeXEnd = Coords.blockToCube(to.getX() + subtract);
-		int cubeYEnd = Coords.blockToCube(to.getY() + subtract);
-		int cubeZEnd = Coords.blockToCube(to.getZ() + subtract);
+    protected int cubeY;
+    @Nonnull private final Cube[][][] cubeArrays;
+    @Nonnull private final ICubicWorld world;
 
-		cubeArrays = new Cube[cubeXEnd - this.chunkX + 1][cubeYEnd - this.cubeY + 1][cubeZEnd - this.chunkZ + 1];
+    public RenderCubeCache(ICubicWorld world, BlockPos from, BlockPos to, int subtract) {
+        super((World) world, from, to, subtract);
+        this.world = world;
+        this.cubeY = Coords.blockToCube(from.getY() - subtract);
+        int cubeXEnd = Coords.blockToCube(to.getX() + subtract);
+        int cubeYEnd = Coords.blockToCube(to.getY() + subtract);
+        int cubeZEnd = Coords.blockToCube(to.getZ() + subtract);
 
-		for (int currentCubeX = chunkX; currentCubeX <= cubeXEnd; currentCubeX++) {
-			for (int currentCubeY = cubeY; currentCubeY <= cubeYEnd; currentCubeY++) {
-				for (int currentCubeZ = chunkZ; currentCubeZ <= cubeZEnd; currentCubeZ++) {
-					cubeArrays[currentCubeX - chunkX][currentCubeY - cubeY][currentCubeZ -
-						chunkZ] = world.getCubeFromCubeCoords(currentCubeX, currentCubeY, currentCubeZ);
-				}
-			}
-		}
-	}
+        cubeArrays = new Cube[cubeXEnd - this.chunkX + 1][cubeYEnd - this.cubeY + 1][cubeZEnd - this.chunkZ + 1];
 
-	@SideOnly(Side.CLIENT)
-	public int getCombinedLight(BlockPos pos, int lightValue) {
-		int blockLight = this.getLightForExt(EnumSkyBlock.SKY, pos);
-		int skyLight = this.getLightForExt(EnumSkyBlock.BLOCK, pos);
+        for (int currentCubeX = chunkX; currentCubeX <= cubeXEnd; currentCubeX++) {
+            for (int currentCubeY = cubeY; currentCubeY <= cubeYEnd; currentCubeY++) {
+                for (int currentCubeZ = chunkZ; currentCubeZ <= cubeZEnd; currentCubeZ++) {
+                    cubeArrays[currentCubeX - chunkX][currentCubeY - cubeY][currentCubeZ -
+                            chunkZ] = world.getCubeFromCubeCoords(currentCubeX, currentCubeY, currentCubeZ);
+                }
+            }
+        }
+    }
 
-		if (skyLight < lightValue) {
-			skyLight = lightValue;
-		}
+    @SideOnly(Side.CLIENT)
+    public int getCombinedLight(BlockPos pos, int lightValue) {
+        int blockLight = this.getLightForExt(EnumSkyBlock.SKY, pos);
+        int skyLight = this.getLightForExt(EnumSkyBlock.BLOCK, pos);
 
-		return blockLight << 20 | skyLight << 4;
-	}
+        if (skyLight < lightValue) {
+            skyLight = lightValue;
+        }
 
-	@Override
-	@Nullable public TileEntity getTileEntity(BlockPos pos) {
-		int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
-		int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
-		int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
-		if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
-			arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
-			arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
-			return null;
-		}
-		if (this.cubeArrays[arrayX][arrayY][arrayZ] == null) {
-			return null;
-		}
-		return this.cubeArrays[arrayX][arrayY][arrayZ].getTileEntity(pos, Chunk.EnumCreateEntityType.IMMEDIATE);
-	}
+        return blockLight << 20 | skyLight << 4;
+    }
 
-	@Override
-	public IBlockState getBlockState(BlockPos pos) {
-		if (pos.getY() < world.getMinHeight() | pos.getY() >= world.getMaxHeight()) {
-			return Blocks.AIR.getDefaultState();
-		}
-		int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
-		int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
-		int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
+    @Override
+    @Nullable public TileEntity getTileEntity(BlockPos pos) {
+        int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
+        int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
+        int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
+        if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
+                arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
+                arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
+            return null;
+        }
+        if (this.cubeArrays[arrayX][arrayY][arrayZ] == null) {
+            return null;
+        }
+        return this.cubeArrays[arrayX][arrayY][arrayZ].getTileEntity(pos, Chunk.EnumCreateEntityType.IMMEDIATE);
+    }
 
-		if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
-			arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
-			arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
-			return Blocks.AIR.getDefaultState();
-		}
-		Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
+    @Override
+    public IBlockState getBlockState(BlockPos pos) {
+        if (pos.getY() < world.getMinHeight() | pos.getY() >= world.getMaxHeight()) {
+            return Blocks.AIR.getDefaultState();
+        }
+        int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
+        int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
+        int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
 
-		if (cube != null) {
-			return cube.getBlockState(pos);
-		}
-		return Blocks.AIR.getDefaultState();
-	}
+        if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
+                arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
+                arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
+            return Blocks.AIR.getDefaultState();
+        }
+        Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
 
-	private int getLightForExt(EnumSkyBlock type, BlockPos pos) {
-		if (type == EnumSkyBlock.SKY && this.world.getProvider().hasNoSky()) {
-			return 0;
-		}
-		if (pos.getY() < world.getMinHeight() && pos.getY() >= world.getMaxHeight()) {
-			return type.defaultLightValue;
-		}
-		if (this.getBlockState(pos).useNeighborBrightness()) {
-			int max = 0;
+        if (cube != null) {
+            return cube.getBlockState(pos);
+        }
+        return Blocks.AIR.getDefaultState();
+    }
 
-			for (EnumFacing enumfacing : EnumFacing.values()) {
-				int current = this.getLightFor(type, pos.offset(enumfacing));
-				if (current > max) {
-					max = current;
-				}
-				if (max >= 15) {
-					return max;
-				}
-			}
-			return max;
-		}
-		int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
-		int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
-		int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
-		if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
-			arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
-			arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
-			return type.defaultLightValue;
-		}
-		Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
-		if (cube == null) {
-			return type.defaultLightValue;
-		}
-		return cube.getLightFor(type, pos);
-	}
+    private int getLightForExt(EnumSkyBlock type, BlockPos pos) {
+        if (type == EnumSkyBlock.SKY && this.world.getProvider().hasNoSky()) {
+            return 0;
+        }
+        if (pos.getY() < world.getMinHeight() && pos.getY() >= world.getMaxHeight()) {
+            return type.defaultLightValue;
+        }
+        if (this.getBlockState(pos).useNeighborBrightness()) {
+            int max = 0;
 
-	@Override
-	public int getLightFor(EnumSkyBlock type, BlockPos pos) {
-		if (pos.getY() < world.getMinHeight() && pos.getY() >= world.getMaxHeight()) {
-			return type.defaultLightValue;
-		}
-		int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
-		int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
-		int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
-		if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
-			arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
-			arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
-			return type.defaultLightValue;
-		}
-		Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
-		if (cube == null) {
-			return type.defaultLightValue;
-		}
-		return cube.getLightFor(type, pos);
-	}
+            for (EnumFacing enumfacing : EnumFacing.values()) {
+                int current = this.getLightFor(type, pos.offset(enumfacing));
+                if (current > max) {
+                    max = current;
+                }
+                if (max >= 15) {
+                    return max;
+                }
+            }
+            return max;
+        }
+        int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
+        int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
+        int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
+        if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
+                arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
+                arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
+            return type.defaultLightValue;
+        }
+        Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
+        if (cube == null) {
+            return type.defaultLightValue;
+        }
+        return cube.getLightFor(type, pos);
+    }
 
-	@Override
-	public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean defaultValue) {
-		//TODO: remove this comment when the bug is fixed in forge: CubicChunks: fix forge bug #3026
-		if (pos.getY() < world.getMinHeight() || pos.getY() >= world.getMaxHeight()) {
-			return defaultValue;
-		}
-		int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
-		int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
-		int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
-		if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
-			arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
-			arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
-			return defaultValue;
-		}
-		Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
-		if (cube == null) {
-			return defaultValue;
-		}
-		IBlockState state = getBlockState(pos);
-		return state.getBlock().isSideSolid(state, this, pos, side);
-	}
+    @Override
+    public int getLightFor(EnumSkyBlock type, BlockPos pos) {
+        if (pos.getY() < world.getMinHeight() && pos.getY() >= world.getMaxHeight()) {
+            return type.defaultLightValue;
+        }
+        int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
+        int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
+        int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
+        if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
+                arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
+                arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
+            return type.defaultLightValue;
+        }
+        Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
+        if (cube == null) {
+            return type.defaultLightValue;
+        }
+        return cube.getLightFor(type, pos);
+    }
+
+    @Override
+    public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean defaultValue) {
+        //TODO: remove this comment when the bug is fixed in forge: CubicChunks: fix forge bug #3026
+        if (pos.getY() < world.getMinHeight() || pos.getY() >= world.getMaxHeight()) {
+            return defaultValue;
+        }
+        int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
+        int arrayY = Coords.blockToCube(pos.getY()) - this.cubeY;
+        int arrayZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
+        if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
+                arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
+                arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
+            return defaultValue;
+        }
+        Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
+        if (cube == null) {
+            return defaultValue;
+        }
+        IBlockState state = getBlockState(pos);
+        return state.getBlock().isSideSolid(state, this, pos, side);
+    }
 }

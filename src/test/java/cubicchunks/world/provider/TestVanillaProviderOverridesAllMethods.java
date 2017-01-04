@@ -23,10 +23,13 @@
  */
 package cubicchunks.world.provider;
 
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+
 import com.google.common.collect.Sets;
-
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.WorldProvider;
-
 import org.junit.Test;
 
 import java.lang.reflect.Method;
@@ -36,56 +39,51 @@ import java.util.Set;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TestVanillaProviderOverridesAllMethods {
-	@Test public void test() {
-		Set<Method> implemented = Sets.newHashSet(VanillaCubicProvider.class.getDeclaredMethods());
-		Set<Method> toImplement = Sets.newHashSet(WorldProvider.class.getDeclaredMethods());
 
-		Set<Method> unimplemented = new HashSet<>();
-		scanning:
-		for (Method toCheck : toImplement) {
-			if (!isOverridable(toCheck)) {
-				continue;
-			}
-			for (Method toCompare : implemented) {
-				if (areEqual(toCheck, toCompare)) {
-					continue scanning;
-				}
-			}
-			unimplemented.add(toCheck);
-		}
-		assertThat(unimplemented, is(empty()));
-	}
+    @Test public void test() {
+        Set<Method> implemented = Sets.newHashSet(VanillaCubicProvider.class.getDeclaredMethods());
+        Set<Method> toImplement = Sets.newHashSet(WorldProvider.class.getDeclaredMethods());
 
-	private boolean areEqual(Method toCheck, Method toCompare) {
-		if (!toCheck.getName().equals(toCompare.getName())) {
-			return false;
-		}
-		Class<?>[] args1 = toCheck.getParameterTypes();
-		Class<?>[] args2 = toCompare.getParameterTypes();
-		if (args1.length != args2.length) {
-			return false;
-		}
-		for (int i = 0; i < args1.length; i++) {
-			if (args1[i] != args2[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
+        Set<Method> unimplemented = new HashSet<>();
+        scanning:
+        for (Method toCheck : toImplement) {
+            if (!isOverridable(toCheck)) {
+                continue;
+            }
+            for (Method toCompare : implemented) {
+                if (areEqual(toCheck, toCompare)) {
+                    continue scanning;
+                }
+            }
+            unimplemented.add(toCheck);
+        }
+        assertThat(unimplemented, is(empty()));
+    }
 
-	private boolean isOverridable(Method toCheck) {
-		int mod = toCheck.getModifiers();
-		return !Modifier.isFinal(mod) &&
-			!Modifier.isStatic(mod) &&
-			!Modifier.isPrivate(mod);
-	}
+    private boolean areEqual(Method toCheck, Method toCompare) {
+        if (!toCheck.getName().equals(toCompare.getName())) {
+            return false;
+        }
+        Class<?>[] args1 = toCheck.getParameterTypes();
+        Class<?>[] args2 = toCompare.getParameterTypes();
+        if (args1.length != args2.length) {
+            return false;
+        }
+        for (int i = 0; i < args1.length; i++) {
+            if (args1[i] != args2[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isOverridable(Method toCheck) {
+        int mod = toCheck.getModifiers();
+        return !Modifier.isFinal(mod) &&
+                !Modifier.isStatic(mod) &&
+                !Modifier.isPrivate(mod);
+    }
 }

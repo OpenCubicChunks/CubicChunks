@@ -23,24 +23,25 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
+
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 // TODO remove me - generator pipeline leftover
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CustomTerrainProcessor {
-	@Nonnull private final CustomTerrainGenerator terrainGenerator;
 
-	public CustomTerrainProcessor(ICubicWorld world) {
-		this.terrainGenerator = new CustomTerrainGenerator(world, world.getSeed());
-	}
+    @Nonnull private final CustomTerrainGenerator terrainGenerator;
 
-	public void calculate(final ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
-		this.terrainGenerator.generate(cube, cubeX, cubeY, cubeZ);
-	}
+    public CustomTerrainProcessor(ICubicWorld world) {
+        this.terrainGenerator = new CustomTerrainGenerator(world, world.getSeed());
+    }
+
+    public void calculate(final ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
+        this.terrainGenerator.generate(cube, cubeX, cubeY, cubeZ);
+    }
 }

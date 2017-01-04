@@ -23,111 +23,116 @@
  */
 package cubicchunks.worldgen.gui.converter;
 
-import com.google.common.base.Converter;
-import com.google.common.base.Preconditions;
-
-import net.minecraft.util.math.MathHelper;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.DoubleUnaryOperator;
-
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import com.google.common.base.Converter;
+import net.minecraft.util.math.MathHelper;
+
+import java.util.Set;
+import java.util.function.DoubleUnaryOperator;
+
 public class RoundingConverter extends Converter<Float, Float> {
-	private final DoubleUnaryOperator radius;
-	private final Set<RoundingEntry> roundingData;
-	private final float maxExp;
-	private Converter<Float, Float> reverse;
 
-	RoundingConverter(Converters.RoundingBuilder builder) {
-		this.radius = builder.snapRadius;
-		this.roundingData = builder.roundingData;
-		this.maxExp = builder.maxExp;
-	}
+    private final DoubleUnaryOperator radius;
+    private final Set<RoundingEntry> roundingData;
+    private final float maxExp;
+    private Converter<Float, Float> reverse;
 
-	void setReverse(Converter<Float, Float> reverse) {
-		this.reverse = reverse;
-	}
+    RoundingConverter(Converters.RoundingBuilder builder) {
+        this.radius = builder.snapRadius;
+        this.roundingData = builder.roundingData;
+        this.maxExp = builder.maxExp;
+    }
 
-	@Override protected Float doForward(Float input) {
-		double max = -Double.MAX_VALUE;
-		double best = 0;
+    void setReverse(Converter<Float, Float> reverse) {
+        this.reverse = reverse;
+    }
 
-		final double slideValue = reverse.convert(input);
+    @Override protected Float doForward(Float input) {
+        double max = -Double.MAX_VALUE;
+        double best = 0;
 
-		int startExponent = MathHelper.ceil(maxExp);
-		for (RoundingEntry e : roundingData) {
-			for (int trySnapDivExp = startExponent; ; trySnapDivExp--) {
-				double roundValue = getRoundValue(input, trySnapDivExp, e);
-				double roundedSlideValue = reverse.convert((float) roundValue);
-				double roundDistance = abs(slideValue - roundedSlideValue);
-				if (Double.isNaN(roundValue) || Double.isInfinite(roundValue)) {
-					return (float) slideValue;
-				}
-				if (roundDistance < getRadius(getDivisor(trySnapDivExp, e))) {
-					double v = getDivisor(trySnapDivExp, e);
-					if (v > max) {
-						max = v;
-						best = roundValue;
-					}
-					break;
-				}
-			}
-		}
-		return (float) best;
-	}
+        final double slideValue = reverse.convert(input);
 
-	private double getDivisor(int trySnapDivExp, RoundingEntry e) {
-		return pow(e.baseVal, trySnapDivExp)*e.multiplier;
-	}
+        int startExponent = MathHelper.ceil(maxExp);
+        for (RoundingEntry e : roundingData) {
+            for (int trySnapDivExp = startExponent; ; trySnapDivExp--) {
+                double roundValue = getRoundValue(input, trySnapDivExp, e);
+                double roundedSlideValue = reverse.convert((float) roundValue);
+                double roundDistance = abs(slideValue - roundedSlideValue);
+                if (Double.isNaN(roundValue) || Double.isInfinite(roundValue)) {
+                    return (float) slideValue;
+                }
+                if (roundDistance < getRadius(getDivisor(trySnapDivExp, e))) {
+                    double v = getDivisor(trySnapDivExp, e);
+                    if (v > max) {
+                        max = v;
+                        best = roundValue;
+                    }
+                    break;
+                }
+            }
+        }
+        return (float) best;
+    }
 
-	private double getRoundValue(double rawValue, int exp, RoundingEntry e) {
-		double divisor = getDivisor(exp, e);
-		if (divisor == 0) {
-			return Double.NaN;
-		}
-		return round(rawValue/divisor)*divisor;
-	}
+    private double getDivisor(int trySnapDivExp, RoundingEntry e) {
+        return pow(e.baseVal, trySnapDivExp) * e.multiplier;
+    }
 
-	private double getRadius(double at) {
-		return this.radius.applyAsDouble(at);
-	}
+    private double getRoundValue(double rawValue, int exp, RoundingEntry e) {
+        double divisor = getDivisor(exp, e);
+        if (divisor == 0) {
+            return Double.NaN;
+        }
+        return round(rawValue / divisor) * divisor;
+    }
+
+    private double getRadius(double at) {
+        return this.radius.applyAsDouble(at);
+    }
 
 
-	@Override protected Float doBackward(Float value) {
-		return value;
-	}
+    @Override protected Float doBackward(Float value) {
+        return value;
+    }
 
-	static final class RoundingEntry {
-		private final double baseVal, multiplier;
+    static final class RoundingEntry {
 
-		RoundingEntry(double baseVal, double multiplier) {
-			this.baseVal = baseVal;
-			this.multiplier = multiplier;
-		}
+        private final double baseVal, multiplier;
 
-		@Override public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+        RoundingEntry(double baseVal, double multiplier) {
+            this.baseVal = baseVal;
+            this.multiplier = multiplier;
+        }
 
-			RoundingEntry that = (RoundingEntry) o;
+        @Override public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
-			if (Double.compare(that.baseVal, baseVal) != 0) return false;
-			return Double.compare(that.multiplier, multiplier) == 0;
+            RoundingEntry that = (RoundingEntry) o;
 
-		}
+            if (Double.compare(that.baseVal, baseVal) != 0) {
+                return false;
+            }
+            return Double.compare(that.multiplier, multiplier) == 0;
 
-		@Override public int hashCode() {
-			int result;
-			long temp;
-			temp = Double.doubleToLongBits(baseVal);
-			result = (int) (temp ^ (temp >>> 32));
-			temp = Double.doubleToLongBits(multiplier);
-			result = 31*result + (int) (temp ^ (temp >>> 32));
-			return result;
-		}
-	}
+        }
+
+        @Override public int hashCode() {
+            int result;
+            long temp;
+            temp = Double.doubleToLongBits(baseVal);
+            result = (int) (temp ^ (temp >>> 32));
+            temp = Double.doubleToLongBits(multiplier);
+            result = 31 * result + (int) (temp ^ (temp >>> 32));
+            return result;
+        }
+    }
 }

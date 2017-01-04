@@ -23,6 +23,16 @@
  */
 package cubicchunks;
 
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItem;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import cubicchunks.util.XZAddressable;
+import cubicchunks.util.XZMap;
+import mcp.MethodsReturnNonnullByDefault;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -32,162 +42,156 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.util.XZAddressable;
-import cubicchunks.util.XZMap;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TestXZMap {
-	@Test
-	public void testSimpleGetEqual() {
-		XZAddressable value = new Addressable(0, 0, "1");
-		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
-		map.put(value);
-		assertEquals(value, map.get(0, 0));
-	}
 
-	@Test
-	public void testGetEqualRandomPositions() {
-		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
-		//set seed so that tests are predictable
-		Random rand = new Random(42);
-		int maxPuts = 500;
-		Addressable[] values = new Addressable[maxPuts];
-		testPutRandom(map, rand, maxPuts, values);
-	}
+    @Test
+    public void testSimpleGetEqual() {
+        XZAddressable value = new Addressable(0, 0, "1");
+        XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
+        map.put(value);
+        assertEquals(value, map.get(0, 0));
+    }
 
-	@Test
-	public void testGetEqualRandomPositionsReplace() {
-		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
-		//set seed so that tests are predictable
-		Random rand = new Random(42);
-		int maxPuts = 500;
-		Addressable[] values = new Addressable[maxPuts];
-		testPutRandom(map, rand, maxPuts, values);
-		rand = new Random(42);
-		//test that replacing works
-		testPutRandom(map, rand, maxPuts, values);
-		assertEquals(maxPuts, map.getSize());
-	}
+    @Test
+    public void testGetEqualRandomPositions() {
+        XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
+        //set seed so that tests are predictable
+        Random rand = new Random(42);
+        int maxPuts = 500;
+        Addressable[] values = new Addressable[maxPuts];
+        testPutRandom(map, rand, maxPuts, values);
+    }
 
-	private void testPutRandom(XZMap<XZAddressable> map, Random rand, int maxPuts, Addressable[] values) {
-		for (int i = 0; i < maxPuts; i++) {
-			values[i] = new Addressable(rand.nextInt(), rand.nextInt(), String.valueOf(i));
-			map.put(values[i]);
-			//test all previous values
-			for (int j = 0; j <= i; j++) {
-				Addressable exp = values[j];
-				assertEquals(
-					"added=" + values[i] + ", wrongValue=" + exp, exp, map.get(exp.getX(), exp.getZ()));
-			}
-		}
-	}
+    @Test
+    public void testGetEqualRandomPositionsReplace() {
+        XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
+        //set seed so that tests are predictable
+        Random rand = new Random(42);
+        int maxPuts = 500;
+        Addressable[] values = new Addressable[maxPuts];
+        testPutRandom(map, rand, maxPuts, values);
+        rand = new Random(42);
+        //test that replacing works
+        testPutRandom(map, rand, maxPuts, values);
+        assertEquals(maxPuts, map.getSize());
+    }
 
-	@Test
-	public void testGetUnique() {
-		XZAddressable value = new Addressable(0, 0, "1");
-		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
-		map.put(value);
-		for (int x = -20; x < 20; x++) {
-			for (int z = -20; z < 20; z++) {
-				if (x != 0 || z != 0) {
-					assertNull(map.get(x, z));
-				}
-			}
-		}
-	}
+    private void testPutRandom(XZMap<XZAddressable> map, Random rand, int maxPuts, Addressable[] values) {
+        for (int i = 0; i < maxPuts; i++) {
+            values[i] = new Addressable(rand.nextInt(), rand.nextInt(), String.valueOf(i));
+            map.put(values[i]);
+            //test all previous values
+            for (int j = 0; j <= i; j++) {
+                Addressable exp = values[j];
+                assertEquals(
+                        "added=" + values[i] + ", wrongValue=" + exp, exp, map.get(exp.getX(), exp.getZ()));
+            }
+        }
+    }
 
-	@Test
-	public void testContains() {
-		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
-		Addressable[] values = new Addressable[500];
+    @Test
+    public void testGetUnique() {
+        XZAddressable value = new Addressable(0, 0, "1");
+        XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
+        map.put(value);
+        for (int x = -20; x < 20; x++) {
+            for (int z = -20; z < 20; z++) {
+                if (x != 0 || z != 0) {
+                    assertNull(map.get(x, z));
+                }
+            }
+        }
+    }
 
-		Random rand = new Random(42);
-		for (int i = 0; i < values.length; ++i) {
-			values[i] = new Addressable(rand.nextInt(), rand.nextInt(), String.valueOf(i));
-			map.put(values[i]);
+    @Test
+    public void testContains() {
+        XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
+        Addressable[] values = new Addressable[500];
 
-			for (int j = 0; j <= i; ++j) {
-				assertTrue(map.contains(values[i].getX(), values[i].getZ()));
-			}
-		}
-	}
+        Random rand = new Random(42);
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = new Addressable(rand.nextInt(), rand.nextInt(), String.valueOf(i));
+            map.put(values[i]);
 
-	@Test
-	public void testContainsNot() {
-		XZAddressable value = new Addressable(0, 0, "1");
-		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
-		map.put(value);
-		for (int x = -20; x < 20; x++) {
-			for (int z = -20; z < 20; z++) {
-				if (x != 0 || z != 0) {
-					assertTrue(!map.contains(x, z));
-				}
-			}
-		}
-	}
+            for (int j = 0; j <= i; ++j) {
+                assertTrue(map.contains(values[i].getX(), values[i].getZ()));
+            }
+        }
+    }
 
-	@Test
-	public void testIterator() {
-		XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
-		Set<XZAddressable> allElements = new HashSet<>();
-		Random rand = new Random(42);
-		int maxPut = 500;
-		for (int i = 0; i < maxPut; i++) {
-			Addressable newElement = new Addressable(rand.nextInt(), rand.nextInt(), String.valueOf(i));
-			map.put(newElement);
-			allElements.add(newElement);
-		}
-		for (XZAddressable element : map) {
-			assertThat(allElements, hasItem(element));
-			allElements.remove(element);
-		}
-		assertThat(allElements, empty());
-	}
+    @Test
+    public void testContainsNot() {
+        XZAddressable value = new Addressable(0, 0, "1");
+        XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
+        map.put(value);
+        for (int x = -20; x < 20; x++) {
+            for (int z = -20; z < 20; z++) {
+                if (x != 0 || z != 0) {
+                    assertTrue(!map.contains(x, z));
+                }
+            }
+        }
+    }
 
-	/**
-	 * Simple implementation of Addressable for testing, equal only if id of them is equal
-	 */
-	private static class Addressable implements XZAddressable {
+    @Test
+    public void testIterator() {
+        XZMap<XZAddressable> map = new XZMap<>(0.75f, 10);
+        Set<XZAddressable> allElements = new HashSet<>();
+        Random rand = new Random(42);
+        int maxPut = 500;
+        for (int i = 0; i < maxPut; i++) {
+            Addressable newElement = new Addressable(rand.nextInt(), rand.nextInt(), String.valueOf(i));
+            map.put(newElement);
+            allElements.add(newElement);
+        }
+        for (XZAddressable element : map) {
+            assertThat(allElements, hasItem(element));
+            allElements.remove(element);
+        }
+        assertThat(allElements, empty());
+    }
 
-		private final int x;
-		private final int z;
-		private Object id;
+    /**
+     * Simple implementation of Addressable for testing, equal only if id of them is equal
+     */
+    private static class Addressable implements XZAddressable {
 
-		public Addressable(int x, int z, Object id) {
-			this.x = x;
-			this.z = z;
-			this.id = id;
-		}
+        private final int x;
+        private final int z;
+        private Object id;
 
-		@Override public int getX() {
-			return x;
-		}
+        public Addressable(int x, int z, Object id) {
+            this.x = x;
+            this.z = z;
+            this.id = id;
+        }
 
-		@Override public int getZ() {
-			return z;
-		}
+        @Override public int getX() {
+            return x;
+        }
 
-		@Override public boolean equals(@Nullable Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+        @Override public int getZ() {
+            return z;
+        }
 
-			Addressable that = (Addressable) o;
+        @Override public boolean equals(@Nullable Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
-			return this.id.equals(that.id);
+            Addressable that = (Addressable) o;
 
-		}
+            return this.id.equals(that.id);
 
-		@Override public int hashCode() {
-			return id.hashCode();
-		}
-	}
+        }
+
+        @Override public int hashCode() {
+            return id.hashCode();
+        }
+    }
 }

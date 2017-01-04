@@ -23,234 +23,235 @@
  */
 package cubicchunks.lighting;
 
+import cubicchunks.CubicChunks;
+import cubicchunks.util.Bits;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.util.Bits;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 class LightUpdateQueue {
-	/**
-	 * Enables additional error checks. Can be disable if performance becomes an issue.
-	 */
-	private static final boolean DEBUG = true;
 
-	// there is some redundant arithmetic, but it's there so the pattern is easily visible
-	private static final int QUEUE_PART_SIZE = 64*1024;
-	private static final int POS_BITS = 8;
-	private static final int POS_X_OFFSET = POS_BITS*0;
-	private static final int POS_Y_OFFSET = POS_BITS*1;
-	private static final int POS_Z_OFFSET = POS_BITS*2;
+    /**
+     * Enables additional error checks. Can be disable if performance becomes an issue.
+     */
+    private static final boolean DEBUG = true;
 
-	private static final int VALUE_BITS = 4;
-	private static final int DISTANCE_BITS = 4;
-	private static final int VALUE_OFFSET = POS_BITS*3 + VALUE_BITS*0;
-	private static final int DISTANCE_OFFSET = POS_BITS*3 + VALUE_BITS*1 + DISTANCE_BITS*0;
-	//note: position is signed
-	/**
-	 * Minimum allowed block position relative to center position
-	 */
-	static final int MIN_POS = Bits.getMinSigned(POS_BITS);
-	/**
-	 * Maximum allowed block position relative to center position
-	 */
-	static final int MAX_POS = Bits.getMaxSigned(POS_BITS);
-	//note: value is unsigned
-	static final int MIN_VALUE = 0;
-	static final int MAX_VALUE = Bits.getMaxUnsigned(VALUE_BITS);
-	static final int MIN_DISTANCE = 0;
-	static final int MAX_DISTANCE = Bits.getMaxUnsigned(DISTANCE_BITS);
+    // there is some redundant arithmetic, but it's there so the pattern is easily visible
+    private static final int QUEUE_PART_SIZE = 64 * 1024;
+    private static final int POS_BITS = 8;
+    private static final int POS_X_OFFSET = POS_BITS * 0;
+    private static final int POS_Y_OFFSET = POS_BITS * 1;
+    private static final int POS_Z_OFFSET = POS_BITS * 2;
 
-	@Nonnull private final ArrayQueueSegment start = new ArrayQueueSegment(QUEUE_PART_SIZE);
-	@Nullable private ArrayQueueSegment currentReadQueue;
-	@Nullable private ArrayQueueSegment currentWriteQueue;
-	/**
-	 * Index of the previously read entry from current queue array
-	 */
-	private int currentReadIndex;
-	/**
-	 * Index of the next entry to write to in current queue array
-	 */
-	private int nextWriteIndex;
-	/**
-	 * Absolute index of the previously read entry from current queue array
-	 * (doesn't reset after next segment)
-	 */
-	private int absoluteIndexRead;
-	/**
-	 * Absolute index of the previously read entry from current queue array
-	 * (doesn't reset after next segment)
-	 */
-	private int absoluteIndexWrite;
-	/**
-	 * Write index at which last reset occurred
-	 */
-	private int lastWrittenAbsoluteIndexBeforeReset;
+    private static final int VALUE_BITS = 4;
+    private static final int DISTANCE_BITS = 4;
+    private static final int VALUE_OFFSET = POS_BITS * 3 + VALUE_BITS * 0;
+    private static final int DISTANCE_OFFSET = POS_BITS * 3 + VALUE_BITS * 1 + DISTANCE_BITS * 0;
+    //note: position is signed
+    /**
+     * Minimum allowed block position relative to center position
+     */
+    static final int MIN_POS = Bits.getMinSigned(POS_BITS);
+    /**
+     * Maximum allowed block position relative to center position
+     */
+    static final int MAX_POS = Bits.getMaxSigned(POS_BITS);
+    //note: value is unsigned
+    static final int MIN_VALUE = 0;
+    static final int MAX_VALUE = Bits.getMaxUnsigned(VALUE_BITS);
+    static final int MIN_DISTANCE = 0;
+    static final int MAX_DISTANCE = Bits.getMaxUnsigned(DISTANCE_BITS);
 
-	private int centerX;
-	private int centerY;
-	private int centerZ;
+    @Nonnull private final ArrayQueueSegment start = new ArrayQueueSegment(QUEUE_PART_SIZE);
+    @Nullable private ArrayQueueSegment currentReadQueue;
+    @Nullable private ArrayQueueSegment currentWriteQueue;
+    /**
+     * Index of the previously read entry from current queue array
+     */
+    private int currentReadIndex;
+    /**
+     * Index of the next entry to write to in current queue array
+     */
+    private int nextWriteIndex;
+    /**
+     * Absolute index of the previously read entry from current queue array
+     * (doesn't reset after next segment)
+     */
+    private int absoluteIndexRead;
+    /**
+     * Absolute index of the previously read entry from current queue array
+     * (doesn't reset after next segment)
+     */
+    private int absoluteIndexWrite;
+    /**
+     * Write index at which last reset occurred
+     */
+    private int lastWrittenAbsoluteIndexBeforeReset;
 
-	//the read data:
-	private int readValue;
-	private int readDistance;
-	private int readX;
-	private int readY;
-	private int readZ;
-	private boolean isBeforeReset;
+    private int centerX;
+    private int centerY;
+    private int centerZ;
 
-	void begin(BlockPos pos) {
-		begin(pos.getX(), pos.getY(), pos.getZ());
-	}
+    //the read data:
+    private int readValue;
+    private int readDistance;
+    private int readX;
+    private int readY;
+    private int readZ;
+    private boolean isBeforeReset;
 
-	void begin(int centerX, int centerY, int centerZ) {
-		if (currentReadQueue != null) {
-			throw new IllegalStateException("Called begin() in unclean state! Did you forget to call end()?");
-		}
-		this.currentWriteQueue = start;
-		this.nextWriteIndex = 0;
-		this.absoluteIndexWrite = 0;
-		resetIndex();
-		this.centerX = centerX;
-		this.centerY = centerY;
-		this.centerZ = centerZ;
-	}
+    void begin(BlockPos pos) {
+        begin(pos.getX(), pos.getY(), pos.getZ());
+    }
 
-	/**
-	 * Resets queue index. All previously processed entries since last begin() call will appear again.
-	 */
-	void resetIndex() {
-		this.currentReadQueue = start;
-		this.currentReadIndex = -1;//start at -1 so that next read is at 0
-		this.lastWrittenAbsoluteIndexBeforeReset = this.absoluteIndexWrite - 1;
-		this.absoluteIndexRead = -1;
-	}
+    void begin(int centerX, int centerY, int centerZ) {
+        if (currentReadQueue != null) {
+            throw new IllegalStateException("Called begin() in unclean state! Did you forget to call end()?");
+        }
+        this.currentWriteQueue = start;
+        this.nextWriteIndex = 0;
+        this.absoluteIndexWrite = 0;
+        resetIndex();
+        this.centerX = centerX;
+        this.centerY = centerY;
+        this.centerZ = centerZ;
+    }
 
-	void put(BlockPos pos, int value, int distance) {
-		put(pos.getX(), pos.getY(), pos.getZ(), value, distance);
-	}
+    /**
+     * Resets queue index. All previously processed entries since last begin() call will appear again.
+     */
+    void resetIndex() {
+        this.currentReadQueue = start;
+        this.currentReadIndex = -1;//start at -1 so that next read is at 0
+        this.lastWrittenAbsoluteIndexBeforeReset = this.absoluteIndexWrite - 1;
+        this.absoluteIndexRead = -1;
+    }
 
-	void put(int x, int y, int z, int value, int distance) {
-		x -= this.centerX;
-		y -= this.centerY;
-		z -= this.centerZ;
-		if (DEBUG) {
-			if (x < MIN_POS || x > MAX_POS || y < MIN_POS || y > MAX_POS || z < MIN_POS || z > MAX_POS) {
-				throw new IndexOutOfBoundsException("Position is out of bounds: (" +
-					(x + centerX) + ", " + (y + centerY) + ", " + (z + centerZ) + "), minPos is: (" +
-					(centerX + MIN_POS) + ", " + (centerY + MIN_POS) + ", " + (centerZ + MIN_POS) + "), maxPos is: (" +
-					(centerX + MAX_POS) + ", " + (centerY + MAX_POS) + ", " + (centerZ + MAX_POS) + ")");
-			}
-			if (value < MIN_VALUE || value > MAX_VALUE) {
-				throw new RuntimeException("Value is out of bounds: " + value +
-					", minValue is: " + MIN_VALUE + ", maxValue is: " + MAX_VALUE);
-			}
-		}
-		int packed = Bits.packSignedToInt(x, POS_BITS, POS_X_OFFSET) |
-			Bits.packSignedToInt(y, POS_BITS, POS_Y_OFFSET) |
-			Bits.packSignedToInt(z, POS_BITS, POS_Z_OFFSET) |
-			Bits.packSignedToInt(value, VALUE_BITS, VALUE_OFFSET) |
-			Bits.packSignedToInt(distance, DISTANCE_BITS, DISTANCE_OFFSET);
-		this.putPacked(packed);
-	}
+    void put(BlockPos pos, int value, int distance) {
+        put(pos.getX(), pos.getY(), pos.getZ(), value, distance);
+    }
 
-	private void putPacked(int packedValue) {
-		currentWriteQueue.data[nextWriteIndex] = packedValue;
-		nextWriteIndex++;
-		absoluteIndexWrite++;
-		//switch to next queue array?
-		if (nextWriteIndex >= QUEUE_PART_SIZE) {
-			nextWriteIndex = 0;
-			if (currentWriteQueue.next == null) {
-				currentWriteQueue.next = new ArrayQueueSegment(QUEUE_PART_SIZE);
-			}
-			currentWriteQueue = currentWriteQueue.next;
-			CubicChunks.LOGGER.debug("Adding LightUpdateQueue segment to " + this);
-		}
-	}
+    void put(int x, int y, int z, int value, int distance) {
+        x -= this.centerX;
+        y -= this.centerY;
+        z -= this.centerZ;
+        if (DEBUG) {
+            if (x < MIN_POS || x > MAX_POS || y < MIN_POS || y > MAX_POS || z < MIN_POS || z > MAX_POS) {
+                throw new IndexOutOfBoundsException("Position is out of bounds: (" +
+                        (x + centerX) + ", " + (y + centerY) + ", " + (z + centerZ) + "), minPos is: (" +
+                        (centerX + MIN_POS) + ", " + (centerY + MIN_POS) + ", " + (centerZ + MIN_POS) + "), maxPos is: (" +
+                        (centerX + MAX_POS) + ", " + (centerY + MAX_POS) + ", " + (centerZ + MAX_POS) + ")");
+            }
+            if (value < MIN_VALUE || value > MAX_VALUE) {
+                throw new RuntimeException("Value is out of bounds: " + value +
+                        ", minValue is: " + MIN_VALUE + ", maxValue is: " + MAX_VALUE);
+            }
+        }
+        int packed = Bits.packSignedToInt(x, POS_BITS, POS_X_OFFSET) |
+                Bits.packSignedToInt(y, POS_BITS, POS_Y_OFFSET) |
+                Bits.packSignedToInt(z, POS_BITS, POS_Z_OFFSET) |
+                Bits.packSignedToInt(value, VALUE_BITS, VALUE_OFFSET) |
+                Bits.packSignedToInt(distance, DISTANCE_BITS, DISTANCE_OFFSET);
+        this.putPacked(packed);
+    }
 
-	int getValue() {
-		return readValue;
-	}
+    private void putPacked(int packedValue) {
+        currentWriteQueue.data[nextWriteIndex] = packedValue;
+        nextWriteIndex++;
+        absoluteIndexWrite++;
+        //switch to next queue array?
+        if (nextWriteIndex >= QUEUE_PART_SIZE) {
+            nextWriteIndex = 0;
+            if (currentWriteQueue.next == null) {
+                currentWriteQueue.next = new ArrayQueueSegment(QUEUE_PART_SIZE);
+            }
+            currentWriteQueue = currentWriteQueue.next;
+            CubicChunks.LOGGER.debug("Adding LightUpdateQueue segment to " + this);
+        }
+    }
 
-	int getDistance() {
-		return readDistance;
-	}
+    int getValue() {
+        return readValue;
+    }
 
-	int getX() {
-		return readX;
-	}
+    int getDistance() {
+        return readDistance;
+    }
 
-	int getY() {
-		return readY;
-	}
+    int getX() {
+        return readX;
+    }
 
-	int getZ() {
-		return readZ;
-	}
+    int getY() {
+        return readY;
+    }
 
-	BlockPos getPos() {
-		return new BlockPos(readX, readY, readZ);
-	}
+    int getZ() {
+        return readZ;
+    }
 
-	boolean isBeforeReset() {
-		return isBeforeReset;
-	}
+    BlockPos getPos() {
+        return new BlockPos(readX, readY, readZ);
+    }
 
-	/**
-	 * This should be called before reading set of values using getNext*
-	 *
-	 * @return true if there is next value, false otherwise
-	 */
-	public boolean next() {
-		currentReadIndex++;
-		absoluteIndexRead++;
-		if (currentReadIndex >= QUEUE_PART_SIZE) {
-			if (currentReadQueue.next == null) {
-				return false;
-			}
-			currentReadQueue = currentReadQueue.next;
-			currentReadIndex = 0;
-		}
-		if (currentReadQueue == currentWriteQueue && currentReadIndex >= nextWriteIndex) {
-			return false;
-		}
-		int packed = currentReadQueue.data[currentReadIndex];
+    boolean isBeforeReset() {
+        return isBeforeReset;
+    }
 
-		readX = centerX + Bits.unpackSigned(packed, POS_BITS, POS_X_OFFSET);
-		readY = centerY + Bits.unpackSigned(packed, POS_BITS, POS_Y_OFFSET);
-		readZ = centerZ + Bits.unpackSigned(packed, POS_BITS, POS_Z_OFFSET);
-		readValue = Bits.unpackUnsigned(packed, VALUE_BITS, VALUE_OFFSET);
-		readDistance = Bits.unpackUnsigned(packed, DISTANCE_BITS, DISTANCE_OFFSET);
-		isBeforeReset = absoluteIndexRead <= lastWrittenAbsoluteIndexBeforeReset;
-		return true;
-	}
+    /**
+     * This should be called before reading set of values using getNext*
+     *
+     * @return true if there is next value, false otherwise
+     */
+    public boolean next() {
+        currentReadIndex++;
+        absoluteIndexRead++;
+        if (currentReadIndex >= QUEUE_PART_SIZE) {
+            if (currentReadQueue.next == null) {
+                return false;
+            }
+            currentReadQueue = currentReadQueue.next;
+            currentReadIndex = 0;
+        }
+        if (currentReadQueue == currentWriteQueue && currentReadIndex >= nextWriteIndex) {
+            return false;
+        }
+        int packed = currentReadQueue.data[currentReadIndex];
 
-	void end() {
-		if (currentReadQueue == null) {
-			throw new IllegalStateException("Called end() without corresponding begin()!");
-		}
-		this.currentReadQueue = null;
-		this.currentWriteQueue = null;
-		this.currentReadIndex = 0;
-		this.nextWriteIndex = 0;
-		this.centerX = Integer.MAX_VALUE;
-		this.centerY = Integer.MAX_VALUE;
-		this.centerZ = Integer.MAX_VALUE;
-	}
+        readX = centerX + Bits.unpackSigned(packed, POS_BITS, POS_X_OFFSET);
+        readY = centerY + Bits.unpackSigned(packed, POS_BITS, POS_Y_OFFSET);
+        readZ = centerZ + Bits.unpackSigned(packed, POS_BITS, POS_Z_OFFSET);
+        readValue = Bits.unpackUnsigned(packed, VALUE_BITS, VALUE_OFFSET);
+        readDistance = Bits.unpackUnsigned(packed, DISTANCE_BITS, DISTANCE_OFFSET);
+        isBeforeReset = absoluteIndexRead <= lastWrittenAbsoluteIndexBeforeReset;
+        return true;
+    }
 
-	private static class ArrayQueueSegment {
-		private int[] data;
-		@Nullable private ArrayQueueSegment next;
+    void end() {
+        if (currentReadQueue == null) {
+            throw new IllegalStateException("Called end() without corresponding begin()!");
+        }
+        this.currentReadQueue = null;
+        this.currentWriteQueue = null;
+        this.currentReadIndex = 0;
+        this.nextWriteIndex = 0;
+        this.centerX = Integer.MAX_VALUE;
+        this.centerY = Integer.MAX_VALUE;
+        this.centerZ = Integer.MAX_VALUE;
+    }
 
-		ArrayQueueSegment(int initSize) {
-			data = new int[initSize];
-		}
-	}
+    private static class ArrayQueueSegment {
+
+        private int[] data;
+        @Nullable private ArrayQueueSegment next;
+
+        ArrayQueueSegment(int initSize) {
+            data = new int[initSize];
+        }
+    }
 }

@@ -23,11 +23,6 @@
  */
 package cubicchunks.network;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import cubicchunks.util.Coords;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ServerHeightMap;
@@ -36,109 +31,113 @@ import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 class WorldEncoder {
 
-	static void encodeCube(PacketBuffer out, Cube cube) {
-		// 1. emptiness
-		out.writeBoolean(cube.isEmpty());
+    static void encodeCube(PacketBuffer out, Cube cube) {
+        // 1. emptiness
+        out.writeBoolean(cube.isEmpty());
 
-		if (!cube.isEmpty()) {
-			ExtendedBlockStorage storage = cube.getStorage();
+        if (!cube.isEmpty()) {
+            ExtendedBlockStorage storage = cube.getStorage();
 
-			// 2. block IDs and metadata
-			storage.getData().write(out);
+            // 2. block IDs and metadata
+            storage.getData().write(out);
 
-			// 3. block light
-			out.writeBytes(storage.getBlocklightArray().getData());
+            // 3. block light
+            out.writeBytes(storage.getBlocklightArray().getData());
 
-			if (!cube.getCubicWorld().getProvider().hasNoSky()) {
-				// 4. sky light
-				out.writeBytes(storage.getSkylightArray().getData());
-			}
+            if (!cube.getCubicWorld().getProvider().hasNoSky()) {
+                // 4. sky light
+                out.writeBytes(storage.getSkylightArray().getData());
+            }
 
-			// 5. heightmap and bottom-block-y. Each non-empty cube has a chance to update this data.
-			// trying to keep track of when it changes would be complex, so send it wil all cubes
-			byte[] heightmaps = ((ServerHeightMap) cube.getColumn().getOpacityIndex()).getDataForClient();
-			assert heightmaps.length == 256*4;
-			out.writeBytes(heightmaps);
-		}
-	}
+            // 5. heightmap and bottom-block-y. Each non-empty cube has a chance to update this data.
+            // trying to keep track of when it changes would be complex, so send it wil all cubes
+            byte[] heightmaps = ((ServerHeightMap) cube.getColumn().getOpacityIndex()).getDataForClient();
+            assert heightmaps.length == 256 * 4;
+            out.writeBytes(heightmaps);
+        }
+    }
 
-	static void encodeColumn(PacketBuffer out, Column column) {
-		// 1. biomes
-		out.writeBytes(column.getBiomeArray());
-	}
+    static void encodeColumn(PacketBuffer out, Column column) {
+        // 1. biomes
+        out.writeBytes(column.getBiomeArray());
+    }
 
-	static void decodeColumn(PacketBuffer in, Column column) {
-		// 1. biomes
-		in.readBytes(column.getBiomeArray());
-	}
+    static void decodeColumn(PacketBuffer in, Column column) {
+        // 1. biomes
+        in.readBytes(column.getBiomeArray());
+    }
 
-	static void decodeCube(PacketBuffer in, Cube cube) {
-		// if the cube came from the server, it must be live
-		cube.setClientCube();
+    static void decodeCube(PacketBuffer in, Cube cube) {
+        // if the cube came from the server, it must be live
+        cube.setClientCube();
 
-		// 1. emptiness
-		boolean isEmpty = in.readBoolean();
+        // 1. emptiness
+        boolean isEmpty = in.readBoolean();
 
-		if (!isEmpty) {
-			ExtendedBlockStorage storage = new ExtendedBlockStorage(
-				Coords.cubeToMinBlock(cube.getY()),
-				!cube.getCubicWorld().getProvider().hasNoSky());
-			cube.setStorage(storage);
+        if (!isEmpty) {
+            ExtendedBlockStorage storage = new ExtendedBlockStorage(
+                    Coords.cubeToMinBlock(cube.getY()),
+                    !cube.getCubicWorld().getProvider().hasNoSky());
+            cube.setStorage(storage);
 
-			storage.getData().read(in);
+            storage.getData().read(in);
 
-			// 3. block light
-			in.readBytes(storage.getBlocklightArray().getData());
+            // 3. block light
+            in.readBytes(storage.getBlocklightArray().getData());
 
-			if (!cube.getCubicWorld().getProvider().hasNoSky()) {
-				// 4. sky light
-				in.readBytes(storage.getSkylightArray().getData());
-			}
+            if (!cube.getCubicWorld().getProvider().hasNoSky()) {
+                // 4. sky light
+                in.readBytes(storage.getSkylightArray().getData());
+            }
 
-			// 5. heightmaps TODO: NO NO NO! Don't send this with Cubes!
-			byte[] heightmaps = new byte[256*4];
-			in.readBytes(heightmaps);
-			ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
-			coi.setData(heightmaps);
-			//cube.initialClientSkylight();
-			storage.removeInvalidBlocks();
-		}
-	}
+            // 5. heightmaps TODO: NO NO NO! Don't send this with Cubes!
+            byte[] heightmaps = new byte[256 * 4];
+            in.readBytes(heightmaps);
+            ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
+            coi.setData(heightmaps);
+            //cube.initialClientSkylight();
+            storage.removeInvalidBlocks();
+        }
+    }
 
-	static int getEncodedSize(Column column) {
-		return column.getBiomeArray().length;
-	}
+    static int getEncodedSize(Column column) {
+        return column.getBiomeArray().length;
+    }
 
-	static int getEncodedSize(Cube cube) {
-		int size = 0;
-		size++;//isEmpty
-		if (!cube.isEmpty()) {
-			ExtendedBlockStorage storage = cube.getStorage();
-			size += storage.getData().getSerializedSize();
-			size += storage.getBlocklightArray().getData().length;
-			if (!cube.getCubicWorld().getProvider().hasNoSky()) {
-				size += storage.getSkylightArray().getData().length;
-			}
-			//heightmaps
-			size += 256*2*4;
-		}
-		return size;
-	}
+    static int getEncodedSize(Cube cube) {
+        int size = 0;
+        size++;//isEmpty
+        if (!cube.isEmpty()) {
+            ExtendedBlockStorage storage = cube.getStorage();
+            size += storage.getData().getSerializedSize();
+            size += storage.getBlocklightArray().getData().length;
+            if (!cube.getCubicWorld().getProvider().hasNoSky()) {
+                size += storage.getSkylightArray().getData().length;
+            }
+            //heightmaps
+            size += 256 * 2 * 4;
+        }
+        return size;
+    }
 
-	static ByteBuf createByteBufForWrite(byte[] data) {
-		ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
-		bytebuf.writerIndex(0);
-		return bytebuf;
-	}
+    static ByteBuf createByteBufForWrite(byte[] data) {
+        ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
+        bytebuf.writerIndex(0);
+        return bytebuf;
+    }
 
-	static ByteBuf createByteBufForRead(byte[] data) {
-		ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
-		bytebuf.readerIndex(0);
-		return bytebuf;
-	}
+    static ByteBuf createByteBufForRead(byte[] data) {
+        ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
+        bytebuf.readerIndex(0);
+        return bytebuf;
+    }
 }

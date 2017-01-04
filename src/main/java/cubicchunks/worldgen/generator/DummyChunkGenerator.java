@@ -23,6 +23,7 @@
  */
 package cubicchunks.worldgen.generator;
 
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -36,8 +37,6 @@ import java.util.List;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
 /**
  * A chunk generator that only creates empty chunks
  */
@@ -45,39 +44,39 @@ import mcp.MethodsReturnNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class DummyChunkGenerator implements IChunkGenerator {
 
-	private World world;
+    private World world;
 
-	public DummyChunkGenerator(World world) {
-		this.world = world;
-	}
+    public DummyChunkGenerator(World world) {
+        this.world = world;
+    }
 
-	@Override
-	public Chunk provideChunk(int x, int z) {
-		return new EmptyChunk(world, x, z);
-	}
+    @Override
+    public Chunk provideChunk(int x, int z) {
+        return new EmptyChunk(world, x, z);
+    }
 
-	@Override
-	public void populate(int x, int z) {
-	}
+    @Override
+    public void populate(int x, int z) {
+    }
 
-	@Override
-	public boolean generateStructures(Chunk chunkIn, int x, int z) {
-		return false;
-	}
+    @Override
+    public boolean generateStructures(Chunk chunkIn, int x, int z) {
+        return false;
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
-		return Collections.EMPTY_LIST;
-	}
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType creatureType, BlockPos pos) {
+        return Collections.EMPTY_LIST;
+    }
 
-	@Override
-	public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position, boolean flag) {
-		return null;
-	}
+    @Override
+    public BlockPos getStrongholdGen(World worldIn, String structureName, BlockPos position, boolean flag) {
+        return null;
+    }
 
-	@Override
-	public void recreateStructures(Chunk chunkIn, int x, int z) {
-	}
+    @Override
+    public void recreateStructures(Chunk chunkIn, int x, int z) {
+    }
 
 }

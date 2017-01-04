@@ -23,6 +23,10 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -32,59 +36,54 @@ import java.util.Random;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class SurfaceFeatureGenerator extends FeatureGenerator {
 
-	public SurfaceFeatureGenerator(ICubicWorld world) {
-		super(world);
-	}
+    public SurfaceFeatureGenerator(ICubicWorld world) {
+        super(world);
+    }
 
-	@Override
-	public void generate(Random rand, Cube cube, Biome biome) {
-		BlockPos cubeCenter = Coords.getCubeCenter(cube);
+    @Override
+    public void generate(Random rand, Cube cube, Biome biome) {
+        BlockPos cubeCenter = Coords.getCubeCenter(cube);
 
-		int x = cubeCenter.getX() + rand.nextInt(16);
-		int z = cubeCenter.getZ() + rand.nextInt(16);
+        int x = cubeCenter.getX() + rand.nextInt(16);
+        int z = cubeCenter.getZ() + rand.nextInt(16);
 
-		int y = cubeCenter.getY() + 16;
-		int minY = cubeCenter.getY();
+        int y = cubeCenter.getY() + 16;
+        int minY = cubeCenter.getY();
 
-		BlockPos pos = new BlockPos(x, y, z);
+        BlockPos pos = new BlockPos(x, y, z);
 
-		boolean foundSurface = false;
-		while (pos.getY() >= minY) {
-			if (isSurfaceAt(pos)) {
-				foundSurface = true;
-				break;
-			}
-			pos = pos.down();
-		}
-		// next attempt. We didn't find place to generate it
-		if (foundSurface) {
-			this.generateAt(rand, pos, biome);
-		}
-	}
+        boolean foundSurface = false;
+        while (pos.getY() >= minY) {
+            if (isSurfaceAt(pos)) {
+                foundSurface = true;
+                break;
+            }
+            pos = pos.down();
+        }
+        // next attempt. We didn't find place to generate it
+        if (foundSurface) {
+            this.generateAt(rand, pos, biome);
+        }
+    }
 
-	protected boolean isSurfaceAt(BlockPos pos) {
-		//we don't really know if it's the top block.
-		//assume it's surface if there is solid block with air above it
-		IBlockState stateBelow = getBlockState(pos.down());
-		IBlockState state = getBlockState(pos);
+    protected boolean isSurfaceAt(BlockPos pos) {
+        //we don't really know if it's the top block.
+        //assume it's surface if there is solid block with air above it
+        IBlockState stateBelow = getBlockState(pos.down());
+        IBlockState state = getBlockState(pos);
 
-		return stateBelow.isOpaqueCube() && state.getBlock().isAir(state, (World) world, pos);
-	}
+        return stateBelow.isOpaqueCube() && state.getBlock().isAir(state, (World) world, pos);
+    }
 
-	/**
-	 * Generates feature at given position.
-	 *
-	 * @param rand RNG to use
-	 * @param pos position of air block with solid block below it
-	 */
-	public abstract void generateAt(Random rand, BlockPos pos, Biome biome);
+    /**
+     * Generates feature at given position.
+     *
+     * @param rand RNG to use
+     * @param pos position of air block with solid block below it
+     */
+    public abstract void generateAt(Random rand, BlockPos pos, Biome biome);
 }

@@ -23,15 +23,15 @@
  */
 package cubicchunks.debug;
 
+import cubicchunks.CubicChunks;
+import mcp.MethodsReturnNonnullByDefault;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Date;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import cubicchunks.CubicChunks;
-import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Class for debug tracing
@@ -41,38 +41,39 @@ import mcp.MethodsReturnNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class Dbg {
-	private static final PrintWriter pw;
 
-	static {
-		if (!CubicChunks.DEBUG_ENABLED) {
-			pw = null;
-		} else {
-			PrintWriter p;
-			try {
-				p = new PrintWriter(new File("DEBUG_" + new Date()));
-			} catch (FileNotFoundException e) {
-				throw new RuntimeException(e);
-			}
-			pw = p;
-			Runtime.getRuntime().addShutdownHook(new Thread(pw::close));
-		}
-	}
+    private static final PrintWriter pw;
 
-	public static void p(String format, Object... objs) {
-		if (!CubicChunks.DEBUG_ENABLED) {
-			return;
-		}
-		pw.printf(format, objs);
-	}
+    static {
+        if (!CubicChunks.DEBUG_ENABLED) {
+            pw = null;
+        } else {
+            PrintWriter p;
+            try {
+                p = new PrintWriter(new File("DEBUG_" + new Date()));
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+            pw = p;
+            Runtime.getRuntime().addShutdownHook(new Thread(pw::close));
+        }
+    }
 
-	public static void l(String format, Object... objs) {
-		if (!CubicChunks.DEBUG_ENABLED) {
-			return;
-		}
-		p("[%s] ", Thread.currentThread().getName());
-		p(format, objs);
-		pw.println();
-	}
+    public static void p(String format, Object... objs) {
+        if (!CubicChunks.DEBUG_ENABLED) {
+            return;
+        }
+        pw.printf(format, objs);
+    }
+
+    public static void l(String format, Object... objs) {
+        if (!CubicChunks.DEBUG_ENABLED) {
+            return;
+        }
+        p("[%s] ", Thread.currentThread().getName());
+        p(format, objs);
+        pw.println();
+    }
 
 
 }

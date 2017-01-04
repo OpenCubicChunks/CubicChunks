@@ -23,6 +23,8 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -35,33 +37,30 @@ import java.util.Random;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TallGrassGenerator extends SurfaceFeatureGenerator {
 
-	@Nonnull private final IBlockState block;
+    @Nonnull private final IBlockState block;
 
-	public TallGrassGenerator(final ICubicWorld world, final BlockTallGrass.EnumType tallGrassType) {
-		super(world);
+    public TallGrassGenerator(final ICubicWorld world, final BlockTallGrass.EnumType tallGrassType) {
+        super(world);
 
-		this.block = Blocks.TALLGRASS.getDefaultState().withProperty(BlockTallGrass.TYPE, tallGrassType);
-	}
+        this.block = Blocks.TALLGRASS.getDefaultState().withProperty(BlockTallGrass.TYPE, tallGrassType);
+    }
 
-	@Override
-	public void generateAt(final Random rand, final BlockPos pos, final Biome biome) {
-		BlockPos currentPos = pos;
+    @Override
+    public void generateAt(final Random rand, final BlockPos pos, final Biome biome) {
+        BlockPos currentPos = pos;
 
-		for (int i = 0; i < 128; ++i) {
-			BlockPos randomPos = currentPos.add(rand.nextInt(8) - rand.nextInt(8),
-				rand.nextInt(4) - rand.nextInt(4),
-				rand.nextInt(8) - rand.nextInt(8));
+        for (int i = 0; i < 128; ++i) {
+            BlockPos randomPos = currentPos.add(rand.nextInt(8) - rand.nextInt(8),
+                    rand.nextInt(4) - rand.nextInt(4),
+                    rand.nextInt(8) - rand.nextInt(8));
 
-			if (world.isAirBlock(randomPos) && Blocks.TALLGRASS.canBlockStay((World) world, randomPos, block)) {
-				this.setBlockOnly(randomPos, block);
-			}
-		}
-	}
+            if (world.isAirBlock(randomPos) && Blocks.TALLGRASS.canBlockStay((World) world, randomPos, block)) {
+                this.setBlockOnly(randomPos, block);
+            }
+        }
+    }
 }

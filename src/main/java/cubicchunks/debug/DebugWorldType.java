@@ -24,15 +24,6 @@
 package cubicchunks.debug;
 
 import com.flowpowered.noise.module.source.Perlin;
-
-import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldType;
-
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
@@ -45,81 +36,91 @@ import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
+
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class DebugWorldType extends WorldType implements ICubicWorldType {
 
-	private DebugWorldType() {
-		super("DebugCubic");
-	}
+    private DebugWorldType() {
+        super("DebugCubic");
+    }
 
-	@Override
-	public boolean canBeCreated() {
-		return CubicChunks.DEBUG_ENABLED;
-	}
+    @Override
+    public boolean canBeCreated() {
+        return CubicChunks.DEBUG_ENABLED;
+    }
 
-	public static void create() {
-		new DebugWorldType();
-	}
+    public static void create() {
+        new DebugWorldType();
+    }
 
-	@Override
-	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-		return provider;
-	}
+    @Override
+    public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+        return provider;
+    }
 
-	@Override public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-		//TODO: move first light processor directly into cube?
-		return new BasicCubeGenerator(world) {
-			@Nonnull Perlin perlin = new Perlin();
+    @Override public ICubeGenerator createCubeGenerator(ICubicWorld world) {
+        //TODO: move first light processor directly into cube?
+        return new BasicCubeGenerator(world) {
+            @Nonnull Perlin perlin = new Perlin();
 
-			{
-				perlin.setFrequency(0.180);
-				perlin.setOctaveCount(1);
-				perlin.setSeed((int) world.getSeed());
-			}
+            {
+                perlin.setFrequency(0.180);
+                perlin.setOctaveCount(1);
+                perlin.setSeed((int) world.getSeed());
+            }
 
-			//TODO: find out what this was/should have been for (it was never used)
-			//CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
+            //TODO: find out what this was/should have been for (it was never used)
+            //CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
 
-			@Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-				ICubePrimer primer = new CubePrimer();
+            @Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+                ICubePrimer primer = new CubePrimer();
 
-				if (cubeY > 30) {
-					return primer;
-				}
-				if (cubeX == 100 && cubeZ == 100) {
-					return primer; //hole in the world
-				}
-				CubePos cubePos = new CubePos(cubeX, cubeY, cubeZ);
-				for (BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
-					double currDensity = perlin.getValue(pos.getX(), pos.getY()*0.5, pos.getZ());
-					double aboveDensity = perlin.getValue(pos.getX(), (pos.getY() + 1)*0.5, pos.getZ());
-					if (cubeY >= 16) {
-						currDensity -= (pos.getY() - 16*16)/100;
-						aboveDensity -= (pos.getY() + 1 - 16*16)/100;
-					}
-					if (currDensity > 0.5) {
-						if (currDensity > 0.5 && aboveDensity <= 0.5) {
-							primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()), Blocks.GRASS.getDefaultState());
-						} else if (currDensity > aboveDensity && currDensity < 0.7) {
-							primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()), Blocks.DIRT.getDefaultState());
-						} else {
-							primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()), Blocks.STONE.getDefaultState());
-						}
-					}
-				}
-				return primer;
-			}
+                if (cubeY > 30) {
+                    return primer;
+                }
+                if (cubeX == 100 && cubeZ == 100) {
+                    return primer; //hole in the world
+                }
+                CubePos cubePos = new CubePos(cubeX, cubeY, cubeZ);
+                for (BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
+                    double currDensity = perlin.getValue(pos.getX(), pos.getY() * 0.5, pos.getZ());
+                    double aboveDensity = perlin.getValue(pos.getX(), (pos.getY() + 1) * 0.5, pos.getZ());
+                    if (cubeY >= 16) {
+                        currDensity -= (pos.getY() - 16 * 16) / 100;
+                        aboveDensity -= (pos.getY() + 1 - 16 * 16) / 100;
+                    }
+                    if (currDensity > 0.5) {
+                        if (currDensity > 0.5 && aboveDensity <= 0.5) {
+                            primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()),
+                                    Blocks.GRASS.getDefaultState());
+                        } else if (currDensity > aboveDensity && currDensity < 0.7) {
+                            primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()),
+                                    Blocks.DIRT.getDefaultState());
+                        } else {
+                            primer.setBlockState(Coords.blockToLocal(pos.getX()), Coords.blockToLocal(pos.getY()), Coords.blockToLocal(pos.getZ()),
+                                    Blocks.STONE.getDefaultState());
+                        }
+                    }
+                }
+                return primer;
+            }
 
-			@Override public void populate(Cube cube) {
-				//populator.calculate(cube);
-			}
+            @Override public void populate(Cube cube) {
+                //populator.calculate(cube);
+            }
 
-			@Override
-			public Box getPopulationRequirement(Cube cube) {
-				return NO_POPULATOR_REQUIREMENT;
-			}
-		};
-	}
+            @Override
+            public Box getPopulationRequirement(Cube cube) {
+                return NO_POPULATOR_REQUIREMENT;
+            }
+        };
+    }
 }

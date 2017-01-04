@@ -23,10 +23,14 @@
  */
 package cubicchunks.asm.mixin.noncritical.client;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+import static cubicchunks.asm.JvmNames.GUI_OVERLAY_DEBUG_CALL;
+
+import cubicchunks.asm.MixinUtils;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiOverlayDebug;
 import net.minecraft.util.math.BlockPos;
-
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,12 +38,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import cubicchunks.asm.MixinUtils;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-import static cubicchunks.asm.JvmNames.GUI_OVERLAY_DEBUG_CALL;
 
 /**
  * Goal of this mixin is to remove the "Outside of world..." message on the debug overlay for cubic world types.
@@ -51,20 +49,21 @@ import static cubicchunks.asm.JvmNames.GUI_OVERLAY_DEBUG_CALL;
 @ParametersAreNonnullByDefault
 @Mixin(GuiOverlayDebug.class)
 public class MixinGuiOverlayDebug {
-	@Shadow @Final private Minecraft mc;
 
-	// As of Minecraft 1.10.2 / Forge 12.18.1.2092, the bounds checks are call 5 and 6 to getY()
+    @Shadow @Final private Minecraft mc;
 
-	// This is call 5 (idx 4)
-	@Redirect(method = GUI_OVERLAY_DEBUG_CALL, at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 4))
-	private int blockPosGetYBoundsCheck1(BlockPos pos) {
-		return MixinUtils.getReplacementY(mc.world, pos);
+    // As of Minecraft 1.10.2 / Forge 12.18.1.2092, the bounds checks are call 5 and 6 to getY()
 
-	}
+    // This is call 5 (idx 4)
+    @Redirect(method = GUI_OVERLAY_DEBUG_CALL, at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 4))
+    private int blockPosGetYBoundsCheck1(BlockPos pos) {
+        return MixinUtils.getReplacementY(mc.world, pos);
 
-	// This is call 6 (idx 5)
-	@Redirect(method = GUI_OVERLAY_DEBUG_CALL, at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 5))
-	private int blockPosGetYBoundsCheck2(BlockPos pos) {
-		return MixinUtils.getReplacementY(mc.world, pos);
-	}
+    }
+
+    // This is call 6 (idx 5)
+    @Redirect(method = GUI_OVERLAY_DEBUG_CALL, at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 5))
+    private int blockPosGetYBoundsCheck2(BlockPos pos) {
+        return MixinUtils.getReplacementY(mc.world, pos);
+    }
 }

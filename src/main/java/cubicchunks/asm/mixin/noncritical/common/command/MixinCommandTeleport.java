@@ -23,11 +23,15 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
+import static cubicchunks.asm.JvmNames.COMMAND_TELEPORT_GET_ENTITY;
+import static net.minecraft.command.CommandBase.getEntity;
+
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.server.CommandTeleport;
 import net.minecraft.server.MinecraftServer;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -40,49 +44,44 @@ import java.lang.ref.WeakReference;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static cubicchunks.asm.JvmNames.COMMAND_TELEPORT_GET_ENTITY;
-import static net.minecraft.command.CommandBase.getEntity;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(CommandTeleport.class)
 public class MixinCommandTeleport {
-	@Nullable private WeakReference<ICubicWorld> commandWorld;
 
-	@Inject(method = "execute",
-	        at = @At(value = "INVOKE", target = COMMAND_TELEPORT_GET_ENTITY, ordinal = 0))
-	private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
-		try {
-			commandWorld = new WeakReference<>((ICubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
-		} catch (CommandException e) {
-			commandWorld = null;
-		}
-	}
+    @Nullable private WeakReference<ICubicWorld> commandWorld;
 
-	@ModifyConstant(method = "execute", constant = @Constant(intValue = -4096))
-	private int getMinY(int original) {
-		if (commandWorld == null) {
-			return original;
-		}
-		ICubicWorld world = commandWorld.get();
-		if (world == null) {
-			return original;
-		}
-		return world.getMinHeight() + original;
-	}
+    @Inject(method = "execute",
+            at = @At(value = "INVOKE", target = COMMAND_TELEPORT_GET_ENTITY, ordinal = 0))
+    private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
+        try {
+            commandWorld = new WeakReference<>((ICubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
+        } catch (CommandException e) {
+            commandWorld = null;
+        }
+    }
 
-	@ModifyConstant(method = "execute", constant = @Constant(intValue = 4096), expect = 2)
-	private int getMaxY(int original) {
-		if (commandWorld == null) {
-			return original;
-		}
-		ICubicWorld world = commandWorld.get();
-		if (world == null) {
-			return original;
-		}
-		return world.getMaxHeight() + original;
-	}
+    @ModifyConstant(method = "execute", constant = @Constant(intValue = -4096))
+    private int getMinY(int original) {
+        if (commandWorld == null) {
+            return original;
+        }
+        ICubicWorld world = commandWorld.get();
+        if (world == null) {
+            return original;
+        }
+        return world.getMinHeight() + original;
+    }
+
+    @ModifyConstant(method = "execute", constant = @Constant(intValue = 4096), expect = 2)
+    private int getMaxY(int original) {
+        if (commandWorld == null) {
+            return original;
+        }
+        ICubicWorld world = commandWorld.get();
+        if (world == null) {
+            return original;
+        }
+        return world.getMaxHeight() + original;
+    }
 }

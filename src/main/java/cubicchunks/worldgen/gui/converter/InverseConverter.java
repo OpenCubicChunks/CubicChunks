@@ -27,17 +27,17 @@ import com.google.common.base.Converter;
 
 public class InverseConverter extends Converter<Float, Float> {
 
-	private float mult;
+    private float mult;
 
-	public InverseConverter(float mult) {
-		this.mult = mult;
-	}
+    public InverseConverter(float mult) {
+        this.mult = mult;
+    }
 
-	@Override protected Float doForward(Float x) {
-		return mult/x;
-	}
+    @Override protected Float doForward(Float x) {
+        return mult / x;
+    }
 
-	@Override protected Float doBackward(Float x) {
-		return mult/x;
-	}
+    @Override protected Float doBackward(Float x) {
+        return mult / x;
+    }
 }

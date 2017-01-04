@@ -23,16 +23,14 @@
  */
 package cubicchunks.asm.mixin.core.server;
 
+import cubicchunks.util.AddressTools;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.server.dedicated.DedicatedServer;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import cubicchunks.util.AddressTools;
-import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Fix height limits in {@code DedicatedServer}
@@ -42,11 +40,11 @@ import mcp.MethodsReturnNonnullByDefault;
 @Mixin(DedicatedServer.class)
 public class MixinDedicatedServer_HeightLimits {
 
-	/**
-	 * Replace the default build height (256).
-	 */
-	@ModifyConstant(method = "init", constant = @Constant(intValue = 256), require = 2)
-	private int getDefaultBuildHeight(int oldValue) {
-		return AddressTools.MAX_BLOCK_Y + 1;
-	}
+    /**
+     * Replace the default build height (256).
+     */
+    @ModifyConstant(method = "init", constant = @Constant(intValue = 256), require = 2)
+    private int getDefaultBuildHeight(int oldValue) {
+        return AddressTools.MAX_BLOCK_Y + 1;
+    }
 }

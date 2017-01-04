@@ -27,17 +27,17 @@ import com.google.common.base.Converter;
 
 public class ScaleConverter extends Converter<Float, Float> {
 
-	private float scale;
+    private float scale;
 
-	public ScaleConverter(float scale) {
-		this.scale = scale;
-	}
+    public ScaleConverter(float scale) {
+        this.scale = scale;
+    }
 
-	@Override protected Float doForward(Float x) {
-		return x*scale;
-	}
+    @Override protected Float doForward(Float x) {
+        return x * scale;
+    }
 
-	@Override protected Float doBackward(Float x) {
-		return x/scale;
-	}
+    @Override protected Float doBackward(Float x) {
+        return x / scale;
+    }
 }

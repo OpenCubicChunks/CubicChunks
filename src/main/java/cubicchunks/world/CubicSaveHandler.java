@@ -23,6 +23,8 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.server.CubeProviderServer;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.WorldProvider;
@@ -36,60 +38,58 @@ import java.io.File;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.server.CubeProviderServer;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CubicSaveHandler implements ISaveHandler {
-	private ICubicWorldServer world;
-	private final ISaveHandler originalHandler;
 
-	public CubicSaveHandler(ICubicWorldServer world, ISaveHandler originalHandler) {
-		this.world = world;
-		this.originalHandler = originalHandler;
-	}
+    private ICubicWorldServer world;
+    private final ISaveHandler originalHandler;
 
-	@Override public WorldInfo loadWorldInfo() {
-		return originalHandler.loadWorldInfo();
-	}
+    public CubicSaveHandler(ICubicWorldServer world, ISaveHandler originalHandler) {
+        this.world = world;
+        this.originalHandler = originalHandler;
+    }
 
-	@Override public void checkSessionLock() throws MinecraftException {
-		originalHandler.checkSessionLock();
-	}
+    @Override public WorldInfo loadWorldInfo() {
+        return originalHandler.loadWorldInfo();
+    }
 
-	@Override public IChunkLoader getChunkLoader(WorldProvider provider) {
-		return originalHandler.getChunkLoader(provider);
-	}
+    @Override public void checkSessionLock() throws MinecraftException {
+        originalHandler.checkSessionLock();
+    }
 
-	@Override
-	public void saveWorldInfoWithPlayer(WorldInfo worldInformation, NBTTagCompound tagCompound) {
-		originalHandler.saveWorldInfoWithPlayer(worldInformation, tagCompound);
-	}
+    @Override public IChunkLoader getChunkLoader(WorldProvider provider) {
+        return originalHandler.getChunkLoader(provider);
+    }
 
-	@Override public void saveWorldInfo(WorldInfo worldInformation) {
-		originalHandler.saveWorldInfo(worldInformation);
-	}
+    @Override
+    public void saveWorldInfoWithPlayer(WorldInfo worldInformation, NBTTagCompound tagCompound) {
+        originalHandler.saveWorldInfoWithPlayer(worldInformation, tagCompound);
+    }
 
-	@Override public IPlayerFileData getPlayerNBTManager() {
-		return originalHandler.getPlayerNBTManager();
-	}
+    @Override public void saveWorldInfo(WorldInfo worldInformation) {
+        originalHandler.saveWorldInfo(worldInformation);
+    }
 
-	@Override public void flush() {
-		originalHandler.flush();
-		CubeProviderServer cache = world.getCubeCache();
-		cache.flush();
-	}
+    @Override public IPlayerFileData getPlayerNBTManager() {
+        return originalHandler.getPlayerNBTManager();
+    }
 
-	@Override public File getWorldDirectory() {
-		return originalHandler.getWorldDirectory();
-	}
+    @Override public void flush() {
+        originalHandler.flush();
+        CubeProviderServer cache = world.getCubeCache();
+        cache.flush();
+    }
 
-	@Override public File getMapFileFromName(String mapName) {
-		return originalHandler.getMapFileFromName(mapName);
-	}
+    @Override public File getWorldDirectory() {
+        return originalHandler.getWorldDirectory();
+    }
 
-	@Override public TemplateManager getStructureTemplateManager() {
-		return originalHandler.getStructureTemplateManager();
-	}
+    @Override public File getMapFileFromName(String mapName) {
+        return originalHandler.getMapFileFromName(mapName);
+    }
+
+    @Override public TemplateManager getStructureTemplateManager() {
+        return originalHandler.getStructureTemplateManager();
+    }
 }

@@ -23,6 +23,12 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.util.WorldProviderAccess;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.custom.features.trees.BigTreeGenerator;
+import cubicchunks.worldgen.generator.custom.features.trees.SimpleTreeGenerator;
+import cubicchunks.worldgen.generator.custom.features.trees.TreeGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone;
 import net.minecraft.block.BlockTallGrass;
@@ -38,134 +44,128 @@ import java.util.Collection;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.util.WorldProviderAccess;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.features.trees.BigTreeGenerator;
-import cubicchunks.worldgen.generator.custom.features.trees.SimpleTreeGenerator;
-import cubicchunks.worldgen.generator.custom.features.trees.TreeGenerator;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class BiomeFeatures {
-	@Nonnull private final ICubicWorld world;
 
-	@Nonnull private final Collection<FeatureGenerator> generators;
+    @Nonnull private final ICubicWorld world;
 
-	public BiomeFeatures(ICubicWorld world, Biome biome) {
-		this.world = world;
-		this.generators = new ArrayList<>(20);
-		BiomeDecorator decorator = biome.theBiomeDecorator;
+    @Nonnull private final Collection<FeatureGenerator> generators;
 
-		ChunkProviderSettings config = ChunkProviderSettings.Factory.jsonToFactory(
-			WorldProviderAccess.getGeneratorSettings(world.getProvider())).build();
+    public BiomeFeatures(ICubicWorld world, Biome biome) {
+        this.world = world;
+        this.generators = new ArrayList<>(20);
+        BiomeDecorator decorator = biome.theBiomeDecorator;
 
-		//clay worldgen
-		this.addMultiGen(SurfaceBlockReplacer.builder().
-			world(world).height(1).radius(2).block(Blocks.CLAY).
-			addAllowedAboveSurface(Blocks.WATER).
-			addReplacable(Blocks.SAND).addReplacable(Blocks.DIRT).build(), decorator.clayPerChunk);
+        ChunkProviderSettings config = ChunkProviderSettings.Factory.jsonToFactory(
+                WorldProviderAccess.getGeneratorSettings(world.getProvider())).build();
 
-		//sand and gravel beach generators
-//		this.addMultiGen(SurfaceBlockReplacer.builder().
-//						world(world).height(1).radius(7).block(SAND).
-//						addAllowedAboveSurface(WATER).
-//						addReplacable(DIRT).addReplacable(GRASS).build(), decorator.sandBeachesPerChunk);
-//		this.addMultiGen(SurfaceBlockReplacer.builder().
-//						world(world).height(1).radius(6).block(GRAVEL).
-//						addAllowedAboveSurface(WATER).
-//						addReplacable(DIRT).addReplacable(GRASS).build(), decorator.gravelBeachesPerChunk);
-		this.addTreeGenerators(decorator);
-		addMultiGen(new TallGrassGenerator(world, BlockTallGrass.EnumType.GRASS), decorator.grassPerChunk);
-		this.addOreGenerators(config);
-	}
+        //clay worldgen
+        this.addMultiGen(SurfaceBlockReplacer.builder().
+                world(world).height(1).radius(2).block(Blocks.CLAY).
+                addAllowedAboveSurface(Blocks.WATER).
+                addReplacable(Blocks.SAND).addReplacable(Blocks.DIRT).build(), decorator.clayPerChunk);
 
-	protected final void addTreeGenerators(BiomeDecorator decorator) {
-		//Other classes may override this method to provide other tree generators
-		TreeGenerator smallTreeGen = new SimpleTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
-		BigTreeGenerator bigTreeGen = new BigTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
-		bigTreeGen.setHeightRange(28, 32);
+        //sand and gravel beach generators
+        //        this.addMultiGen(SurfaceBlockReplacer.builder().
+        //                        world(world).height(1).radius(7).block(SAND).
+        //                        addAllowedAboveSurface(WATER).
+        //                        addReplacable(DIRT).addReplacable(GRASS).build(), decorator.sandBeachesPerChunk);
+        //        this.addMultiGen(SurfaceBlockReplacer.builder().
+        //                        world(world).height(1).radius(6).block(GRAVEL).
+        //                        addAllowedAboveSurface(WATER).
+        //                        addReplacable(DIRT).addReplacable(GRASS).build(), decorator.gravelBeachesPerChunk);
+        this.addTreeGenerators(decorator);
+        addMultiGen(new TallGrassGenerator(world, BlockTallGrass.EnumType.GRASS), decorator.grassPerChunk);
+        this.addOreGenerators(config);
+    }
 
-		//TODO: fix it to actually generate big trees
-		//TODO: use vanilla big tree generator
-		VariantFeatureGenerator randomTreeGen = VariantFeatureGenerator.builder()
-			.nextVariant(smallTreeGen, 1.0)
-			.nextVariant(bigTreeGen, 0.1)
-			.build();
+    protected final void addTreeGenerators(BiomeDecorator decorator) {
+        //Other classes may override this method to provide other tree generators
+        TreeGenerator smallTreeGen = new SimpleTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
+        BigTreeGenerator bigTreeGen = new BigTreeGenerator(world, Blocks.LOG.getDefaultState(), Blocks.LEAVES.getDefaultState());
+        bigTreeGen.setHeightRange(28, 32);
 
-		addMultiGen(randomTreeGen, decorator.treesPerChunk);
-	}
+        //TODO: fix it to actually generate big trees
+        //TODO: use vanilla big tree generator
+        VariantFeatureGenerator randomTreeGen = VariantFeatureGenerator.builder()
+                .nextVariant(smallTreeGen, 1.0)
+                .nextVariant(bigTreeGen, 0.1)
+                .build();
 
-	protected final void addOreGenerators(ChunkProviderSettings cfg) {
-		// it automatically scales with world height.
-		// if min height is 0 - it assumes that there is no lower limit
-		// if max height is 128 or 256 - it assumes there is no upper limit
+        addMultiGen(randomTreeGen, decorator.treesPerChunk);
+    }
 
-		//ores
-		addMineral(Blocks.COAL_ORE, cfg.coalMinHeight, cfg.coalMaxHeight, cfg.coalSize, cfg.coalCount);
-		addMineral(Blocks.IRON_ORE, cfg.ironMinHeight, cfg.ironMaxHeight, cfg.ironSize, cfg.ironCount);
-		addMineral(Blocks.GOLD_ORE, cfg.goldMinHeight, cfg.goldMaxHeight, cfg.goldSize, cfg.goldCount);
-		addMineral(Blocks.REDSTONE_ORE, cfg.redstoneMinHeight, cfg.redstoneMaxHeight, cfg.redstoneSize, cfg.redstoneCount);
-		addMineral(Blocks.DIAMOND_ORE, cfg.diamondMinHeight, cfg.diamondMaxHeight, cfg.diamondSize, cfg.diamondCount);
+    protected final void addOreGenerators(ChunkProviderSettings cfg) {
+        // it automatically scales with world height.
+        // if min height is 0 - it assumes that there is no lower limit
+        // if max height is 128 or 256 - it assumes there is no upper limit
 
-		//stone variants
-		IBlockState stone = Blocks.STONE.getDefaultState();
-		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE),
-			cfg.andesiteMinHeight, cfg.andesiteMaxHeight, cfg.andesiteSize, cfg.andesiteCount);
+        //ores
+        addMineral(Blocks.COAL_ORE, cfg.coalMinHeight, cfg.coalMaxHeight, cfg.coalSize, cfg.coalCount);
+        addMineral(Blocks.IRON_ORE, cfg.ironMinHeight, cfg.ironMaxHeight, cfg.ironSize, cfg.ironCount);
+        addMineral(Blocks.GOLD_ORE, cfg.goldMinHeight, cfg.goldMaxHeight, cfg.goldSize, cfg.goldCount);
+        addMineral(Blocks.REDSTONE_ORE, cfg.redstoneMinHeight, cfg.redstoneMaxHeight, cfg.redstoneSize, cfg.redstoneCount);
+        addMineral(Blocks.DIAMOND_ORE, cfg.diamondMinHeight, cfg.diamondMaxHeight, cfg.diamondSize, cfg.diamondCount);
 
-		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE),
-			cfg.dioriteMinHeight, cfg.dioriteMaxHeight, cfg.dioriteSize, cfg.dioriteCount);
+        //stone variants
+        IBlockState stone = Blocks.STONE.getDefaultState();
+        addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE),
+                cfg.andesiteMinHeight, cfg.andesiteMaxHeight, cfg.andesiteSize, cfg.andesiteCount);
 
-		addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE),
-			cfg.graniteMinHeight, cfg.graniteMaxHeight, cfg.graniteSize, cfg.graniteCount);
+        addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE),
+                cfg.dioriteMinHeight, cfg.dioriteMaxHeight, cfg.dioriteSize, cfg.dioriteCount);
 
-		//other
-		addMineral(Blocks.DIRT, cfg.dirtMinHeight, cfg.dirtMaxHeight, cfg.dirtSize, cfg.dirtCount);
-//		addMineral(GRAVEL, cfg.gravelMinHeight, cfg.gravelMaxHeight, cfg.gravelSize, cfg.gravelCount);
-	}
+        addMineral(stone.withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE),
+                cfg.graniteMinHeight, cfg.graniteMaxHeight, cfg.graniteSize, cfg.graniteCount);
 
-	protected final void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk) {
-		addMultiGen(new MineralGenerator(world,
-			state,
-			getMinHeight(vanillaMinHeight),
-			getMaxHeight(vanillaMaxHeight),
-			size,
-			getProbability(vanillaMinHeight, vanillaMaxHeight)), countPerChunk);
-	}
+        //other
+        addMineral(Blocks.DIRT, cfg.dirtMinHeight, cfg.dirtMaxHeight, cfg.dirtSize, cfg.dirtCount);
+        //        addMineral(GRAVEL, cfg.gravelMinHeight, cfg.gravelMaxHeight, cfg.gravelSize, cfg.gravelCount);
+    }
 
-	protected final void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk) {
-		this.addMineral(block.getDefaultState(), vanillaMinHeight, vanillaMaxHeight, size, countPerChunk);
-	}
+    protected final void addMineral(IBlockState state, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk) {
+        addMultiGen(new MineralGenerator(world,
+                state,
+                getMinHeight(vanillaMinHeight),
+                getMaxHeight(vanillaMaxHeight),
+                size,
+                getProbability(vanillaMinHeight, vanillaMaxHeight)), countPerChunk);
+    }
 
-	protected final void addGen(FeatureGenerator gen) {
-		this.generators.add(gen);
-	}
+    protected final void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk) {
+        this.addMineral(block.getDefaultState(), vanillaMinHeight, vanillaMaxHeight, size, countPerChunk);
+    }
 
-	protected final void addMultiGen(FeatureGenerator gen, int attempts) {
-		this.generators.add(new MultiFeatureGenerator(this.world, gen, attempts));
-	}
+    protected final void addGen(FeatureGenerator gen) {
+        this.generators.add(gen);
+    }
 
-	public Collection<FeatureGenerator> getBiomeFeatureGenerators() {
-		return generators;
-	}
+    protected final void addMultiGen(FeatureGenerator gen, int attempts) {
+        this.generators.add(new MultiFeatureGenerator(this.world, gen, attempts));
+    }
 
-	private static double getMinHeight(int vanillaHeight) {
-		if (vanillaHeight == 0) {
-			// extend down to infinity
-			return -Double.MAX_VALUE;
-		}
-		return (vanillaHeight - 64.0)/64.0;
-	}
+    public Collection<FeatureGenerator> getBiomeFeatureGenerators() {
+        return generators;
+    }
 
-	private static double getMaxHeight(int vanillaHeight) {
-		if (vanillaHeight == 128 || vanillaHeight == 256) {
-			// extend up to infinity
-			return Double.MAX_VALUE;
-		}
-		return (vanillaHeight - 64.0)/64.0;
-	}
+    private static double getMinHeight(int vanillaHeight) {
+        if (vanillaHeight == 0) {
+            // extend down to infinity
+            return -Double.MAX_VALUE;
+        }
+        return (vanillaHeight - 64.0) / 64.0;
+    }
 
-	private static double getProbability(int minY, int maxY) {
-		return 16.0/(maxY - minY);
-	}
+    private static double getMaxHeight(int vanillaHeight) {
+        if (vanillaHeight == 128 || vanillaHeight == 256) {
+            // extend up to infinity
+            return Double.MAX_VALUE;
+        }
+        return (vanillaHeight - 64.0) / 64.0;
+    }
+
+    private static double getProbability(int minY, int maxY) {
+        return 16.0 / (maxY - minY);
+    }
 }

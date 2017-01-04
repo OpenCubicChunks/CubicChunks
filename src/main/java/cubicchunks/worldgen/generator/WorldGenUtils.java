@@ -23,6 +23,8 @@
  */
 package cubicchunks.worldgen.generator;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 
@@ -30,20 +32,18 @@ import java.util.Random;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class WorldGenUtils {
-	public static IBlockState getRandomBedrockReplacement(ICubicWorld world, Random rand, IBlockState state, int blockY, int medrockLevels) {
-		int heightAboveBottom = blockY - world.getMinHeight();
-		if (heightAboveBottom < 5) {
-			int bedrockChance = Math.max(1, heightAboveBottom + 1);
-			if (rand.nextInt(bedrockChance) == 0) {
-				return Blocks.BEDROCK.getDefaultState();
-			}
-		}
-		return state;
-	}
+
+    public static IBlockState getRandomBedrockReplacement(ICubicWorld world, Random rand, IBlockState state, int blockY, int medrockLevels) {
+        int heightAboveBottom = blockY - world.getMinHeight();
+        if (heightAboveBottom < 5) {
+            int bedrockChance = Math.max(1, heightAboveBottom + 1);
+            if (rand.nextInt(bedrockChance) == 0) {
+                return Blocks.BEDROCK.getDefaultState();
+            }
+        }
+        return state;
+    }
 }

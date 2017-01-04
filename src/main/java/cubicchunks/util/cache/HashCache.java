@@ -23,47 +23,48 @@
  */
 package cubicchunks.util.cache;
 
+import mcp.MethodsReturnNonnullByDefault;
+
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class HashCache<K, V> {
-	private final V[] cache;
-	private final K[] keys;
-	private final ToIntFunction<K> hashFunction;
-	private final Function<K, V> source;
 
-	@SuppressWarnings("uncecked")
-	private HashCache(int size, ToIntFunction<K> hashCode, Function<K, V> source) {
-		this.cache = (V[]) new Object[size];
-		this.keys = (K[]) new Object[size];
-		this.hashFunction = hashCode;
-		this.source = source;
-	}
+    private final V[] cache;
+    private final K[] keys;
+    private final ToIntFunction<K> hashFunction;
+    private final Function<K, V> source;
 
-	public V get(K key) {
-		int index = index(hashFunction.applyAsInt(key));
-		if (!key.equals(keys[index])) {
-			keys[index] = key;
-			cache[index] = source.apply(key);
-		}
-		return cache[index];
-	}
+    @SuppressWarnings("uncecked")
+    private HashCache(int size, ToIntFunction<K> hashCode, Function<K, V> source) {
+        this.cache = (V[]) new Object[size];
+        this.keys = (K[]) new Object[size];
+        this.hashFunction = hashCode;
+        this.source = source;
+    }
 
-	private int index(int hash) {
-		return Math.floorMod(hash, cache.length);
-	}
+    public V get(K key) {
+        int index = index(hashFunction.applyAsInt(key));
+        if (!key.equals(keys[index])) {
+            keys[index] = key;
+            cache[index] = source.apply(key);
+        }
+        return cache[index];
+    }
 
-	public static <K, V> HashCache<K, V> create(int size, Function<K, V> source) {
-		return create(size, k -> k.hashCode(), source);
-	}
+    private int index(int hash) {
+        return Math.floorMod(hash, cache.length);
+    }
 
-	public static <K, V> HashCache<K, V> create(int size, ToIntFunction<K> hashCode, Function<K, V> source) {
-		return new HashCache<>(size, hashCode, source);
-	}
+    public static <K, V> HashCache<K, V> create(int size, Function<K, V> source) {
+        return create(size, k -> k.hashCode(), source);
+    }
+
+    public static <K, V> HashCache<K, V> create(int size, ToIntFunction<K> hashCode, Function<K, V> source) {
+        return new HashCache<>(size, hashCode, source);
+    }
 }

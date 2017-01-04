@@ -1,24 +1,24 @@
 {
-  "required": true,
-  "package": "cubicchunks.asm.mixin.core",
-  "refmap": "cubicchunks.mixins.refmap.json",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "common.MixinWorld_Tick",
-    "common.MixinWorld",
-    "common.MixinWorldServer",
-    "common.MixinWorld_HeightLimits",
-    "common.MixinChunkCache_HeightLimits",
-    "common.MixinEntity_DeathFix"
-  ],
-  "client": [
-    "client.MixinWorld_HeightLimits",
-    "client.MixinWorldClient",
-    "client.MixinRenderGlobal",
-    "client.MixinChunkCache_HeightLimits",
-    "client.MixinViewFrustum_RenderHeightFix"
-  ],
-  "server": [
-    "server.MixinDedicatedServer_HeightLimits"
-  ]
+    "required": true,
+    "package": "cubicchunks.asm.mixin.core",
+    "refmap": "cubicchunks.mixins.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": [
+        "common.MixinWorld_Tick",
+        "common.MixinWorld",
+        "common.MixinWorldServer",
+        "common.MixinWorld_HeightLimits",
+        "common.MixinChunkCache_HeightLimits",
+        "common.MixinEntity_DeathFix"
+    ],
+    "client": [
+        "client.MixinWorld_HeightLimits",
+        "client.MixinWorldClient",
+        "client.MixinRenderGlobal",
+        "client.MixinChunkCache_HeightLimits",
+        "client.MixinViewFrustum_RenderHeightFix"
+    ],
+    "server": [
+        "server.MixinDedicatedServer_HeightLimits"
+    ]
 }

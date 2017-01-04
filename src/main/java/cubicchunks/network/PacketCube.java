@@ -24,7 +24,11 @@
 package cubicchunks.network;
 
 import com.google.common.collect.Iterables;
-
+import cubicchunks.util.CubePos;
+import cubicchunks.world.IHeightMap;
+import cubicchunks.world.cube.Cube;
+import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -41,100 +45,95 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.util.CubePos;
-import cubicchunks.world.IHeightMap;
-import cubicchunks.world.cube.Cube;
-import io.netty.buffer.ByteBuf;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class PacketCube implements IMessage {
 
-	private int[] heightMap;
-	private CubePos cubePos;
-	private byte[] data;
-	private List<NBTTagCompound> tileEntityTags;
+    private int[] heightMap;
+    private CubePos cubePos;
+    private byte[] data;
+    private List<NBTTagCompound> tileEntityTags;
 
-	public PacketCube() {
-	}
+    public PacketCube() {
+    }
 
-	public PacketCube(Cube cube) {
-		this.cubePos = cube.getCoords();
-		this.data = new byte[WorldEncoder.getEncodedSize(cube)];
-		PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
+    public PacketCube(Cube cube) {
+        this.cubePos = cube.getCoords();
+        this.data = new byte[WorldEncoder.getEncodedSize(cube)];
+        PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
 
-		WorldEncoder.encodeCube(out, cube);
+        WorldEncoder.encodeCube(out, cube);
 
-		Collection<TileEntity> tileEntities = cube.getTileEntityMap().values();
-		this.tileEntityTags = new ArrayList<>(tileEntities.size());
-		this.tileEntityTags.addAll(tileEntities.stream().map(TileEntity::getUpdateTag).collect(Collectors.toList()));
-		this.heightMap = new int[Cube.SIZE*Cube.SIZE];
-		IHeightMap heightmap = cube.getColumn().getOpacityIndex();
-		for (int localX = 0; localX < Cube.SIZE; localX++) {
-			for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
-				this.heightMap[index(localX, localZ)] = heightmap.getTopBlockY(localX, localZ);
-			}
-		}
-	}
+        Collection<TileEntity> tileEntities = cube.getTileEntityMap().values();
+        this.tileEntityTags = new ArrayList<>(tileEntities.size());
+        this.tileEntityTags.addAll(tileEntities.stream().map(TileEntity::getUpdateTag).collect(Collectors.toList()));
+        this.heightMap = new int[Cube.SIZE * Cube.SIZE];
+        IHeightMap heightmap = cube.getColumn().getOpacityIndex();
+        for (int localX = 0; localX < Cube.SIZE; localX++) {
+            for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
+                this.heightMap[index(localX, localZ)] = heightmap.getTopBlockY(localX, localZ);
+            }
+        }
+    }
 
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		this.cubePos = new CubePos(buf.readInt(), buf.readInt(), buf.readInt());
-		this.data = new byte[buf.readInt()];
-		buf.readBytes(this.data);
-		int numTiles = buf.readInt();
-		this.tileEntityTags = new ArrayList<>(numTiles);
-		for (int i = 0; i < numTiles; i++) {
-			this.tileEntityTags.add(ByteBufUtils.readTag(buf));
-		}
-		this.heightMap = new int[Cube.SIZE*Cube.SIZE];
-		for (int i = 0; i < Cube.SIZE*Cube.SIZE; i++) {
-			heightMap[i] = buf.readInt();
-		}
-	}
+    @Override
+    public void fromBytes(ByteBuf buf) {
+        this.cubePos = new CubePos(buf.readInt(), buf.readInt(), buf.readInt());
+        this.data = new byte[buf.readInt()];
+        buf.readBytes(this.data);
+        int numTiles = buf.readInt();
+        this.tileEntityTags = new ArrayList<>(numTiles);
+        for (int i = 0; i < numTiles; i++) {
+            this.tileEntityTags.add(ByteBufUtils.readTag(buf));
+        }
+        this.heightMap = new int[Cube.SIZE * Cube.SIZE];
+        for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
+            heightMap[i] = buf.readInt();
+        }
+    }
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		buf.writeInt(cubePos.getX());
-		buf.writeInt(cubePos.getY());
-		buf.writeInt(cubePos.getZ());
-		buf.writeInt(this.data.length);
-		buf.writeBytes(this.data);
-		buf.writeInt(this.tileEntityTags.size());
-		for (NBTTagCompound tag : this.tileEntityTags) {
-			ByteBufUtils.writeTag(buf, tag);
-		}
-		for (int i = 0; i < Cube.SIZE*Cube.SIZE; i++) {
-			buf.writeInt(heightMap[i]);
-		}
-	}
+    @Override
+    public void toBytes(ByteBuf buf) {
+        buf.writeInt(cubePos.getX());
+        buf.writeInt(cubePos.getY());
+        buf.writeInt(cubePos.getZ());
+        buf.writeInt(this.data.length);
+        buf.writeBytes(this.data);
+        buf.writeInt(this.tileEntityTags.size());
+        for (NBTTagCompound tag : this.tileEntityTags) {
+            ByteBufUtils.writeTag(buf, tag);
+        }
+        for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
+            buf.writeInt(heightMap[i]);
+        }
+    }
 
-	CubePos getCubePos() {
-		return cubePos;
-	}
+    CubePos getCubePos() {
+        return cubePos;
+    }
 
-	byte[] getData() {
-		return data;
-	}
+    byte[] getData() {
+        return data;
+    }
 
-	Iterable<NBTTagCompound> getTileEntityTags() {
-		return Iterables.unmodifiableIterable(this.tileEntityTags);
-	}
+    Iterable<NBTTagCompound> getTileEntityTags() {
+        return Iterables.unmodifiableIterable(this.tileEntityTags);
+    }
 
-	int height(int localX, int localZ) {
-		return heightMap[index(localX, localZ)];
-	}
+    int height(int localX, int localZ) {
+        return heightMap[index(localX, localZ)];
+    }
 
-	public static class Handler extends AbstractClientMessageHandler<PacketCube> {
-		@Nullable @Override
-		public IMessage handleClientMessage(EntityPlayer player, PacketCube message, MessageContext ctx) {
-			ClientHandler.getInstance().handle(message);
-			return null;
-		}
-	}
+    public static class Handler extends AbstractClientMessageHandler<PacketCube> {
 
-	private static int index(int x, int z) {
-		return x << 4 | z;
-	}
+        @Nullable @Override
+        public IMessage handleClientMessage(EntityPlayer player, PacketCube message, MessageContext ctx) {
+            ClientHandler.getInstance().handle(message);
+            return null;
+        }
+    }
+
+    private static int index(int x, int z) {
+        return x << 4 | z;
+    }
 }

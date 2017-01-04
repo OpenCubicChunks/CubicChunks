@@ -26,19 +26,20 @@ package cubicchunks.worldgen.gui.converter;
 import com.google.common.base.Converter;
 
 public class PowerConverter extends Converter<Float, Float> {
-	private final double power;
-	private final double reversePower;
 
-	public PowerConverter(double power) {
-		this.power = power;
-		this.reversePower = 1.0/power;
-	}
+    private final double power;
+    private final double reversePower;
 
-	@Override protected Float doForward(Float x) {
-		return (float) Math.pow(x, power);
-	}
+    public PowerConverter(double power) {
+        this.power = power;
+        this.reversePower = 1.0 / power;
+    }
 
-	@Override protected Float doBackward(Float x) {
-		return (float) Math.pow(x, reversePower);
-	}
+    @Override protected Float doForward(Float x) {
+        return (float) Math.pow(x, power);
+    }
+
+    @Override protected Float doBackward(Float x) {
+        return (float) Math.pow(x, reversePower);
+    }
 }

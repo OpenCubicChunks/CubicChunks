@@ -24,5 +24,5 @@
 package cubicchunks.worldgen.generator.custom.features.decorator;
 
 public interface ICubicBiomeDecorator {
-	// TODO: ICubicBiomeDecorator: stub
+    // TODO: ICubicBiomeDecorator: stub
 }

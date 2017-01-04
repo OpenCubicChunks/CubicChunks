@@ -27,26 +27,26 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayerMP;
 
-public class CubicEntityTrackerEntry extends EntityTrackerEntry{
+public class CubicEntityTrackerEntry extends EntityTrackerEntry {
 
-	public CubicEntityTrackerEntry(Entity entityIn, int rangeIn, int maxRangeIn, int updateFrequencyIn,
-			boolean sendVelocityUpdatesIn) {
-		super(entityIn, rangeIn, maxRangeIn, updateFrequencyIn, sendVelocityUpdatesIn);
-	}
-	
-	@Override
-	public boolean isVisibleTo(EntityPlayerMP playerMP) {
-		double d0 = playerMP.posX - (double)this.encodedPosX / 4096.0D;
-		double d1 = playerMP.posZ - (double)this.encodedPosZ / 4096.0D;
-		double d2 = playerMP.posY - (double)this.encodedPosY / 4096.0D;
-		int i = Math.min(this.range, this.maxRange);
-		
-		return d0 >= (double)(-i) && 
-			d0 <= (double)i && 
-			d1 >= (double)(-i) && 
-			d1 <= (double)i && 
-			d2 >= (double)(-i) && 
-			d2 <= (double)i && 
-			this.trackedEntity.isSpectatedByPlayer(playerMP);
-	}
+    public CubicEntityTrackerEntry(Entity entityIn, int rangeIn, int maxRangeIn, int updateFrequencyIn,
+            boolean sendVelocityUpdatesIn) {
+        super(entityIn, rangeIn, maxRangeIn, updateFrequencyIn, sendVelocityUpdatesIn);
+    }
+
+    @Override
+    public boolean isVisibleTo(EntityPlayerMP playerMP) {
+        double d0 = playerMP.posX - (double) this.encodedPosX / 4096.0D;
+        double d1 = playerMP.posZ - (double) this.encodedPosZ / 4096.0D;
+        double d2 = playerMP.posY - (double) this.encodedPosY / 4096.0D;
+        int i = Math.min(this.range, this.maxRange);
+
+        return d0 >= (double) (-i) &&
+                d0 <= (double) i &&
+                d1 >= (double) (-i) &&
+                d1 <= (double) i &&
+                d2 >= (double) (-i) &&
+                d2 <= (double) i &&
+                this.trackedEntity.isSpectatedByPlayer(playerMP);
+    }
 }

@@ -23,6 +23,12 @@
  */
 package cubicchunks;
 
+import cubicchunks.server.SpawnCubes;
+import cubicchunks.util.ReflectionUtil;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.type.ICubicWorldType;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.event.world.WorldEvent;
@@ -32,51 +38,44 @@ import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.server.SpawnCubes;
-import cubicchunks.util.ReflectionUtil;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.type.ICubicWorldType;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CommonEventHandler {
 
-	@SubscribeEvent
-	public void onWorldLoad(WorldEvent.Load evt) {
-		if (!(evt.getWorld().getWorldType() instanceof ICubicWorldType)) {
-			return;
-		}
+    @SubscribeEvent
+    public void onWorldLoad(WorldEvent.Load evt) {
+        if (!(evt.getWorld().getWorldType() instanceof ICubicWorldType)) {
+            return;
+        }
 
-		CubicChunks.LOGGER.info("Initializing world " + evt.getWorld() + " with type " + evt.getWorld().getWorldType());
-		ICubicWorld world = (ICubicWorld) evt.getWorld();
+        CubicChunks.LOGGER.info("Initializing world " + evt.getWorld() + " with type " + evt.getWorld().getWorldType());
+        ICubicWorld world = (ICubicWorld) evt.getWorld();
 
-		WorldType type = evt.getWorld().getWorldType();
-		if (type instanceof ICubicWorldType) {
-			WorldProvider provider = ((ICubicWorldType) type).getReplacedProviderFor(world.getProvider());
-			ReflectionUtil.setFieldValueSrg(world, "field_73011_w", provider);
-		}
+        WorldType type = evt.getWorld().getWorldType();
+        if (type instanceof ICubicWorldType) {
+            WorldProvider provider = ((ICubicWorldType) type).getReplacedProviderFor(world.getProvider());
+            ReflectionUtil.setFieldValueSrg(world, "field_73011_w", provider);
+        }
 
-		world.initCubicWorld();
+        world.initCubicWorld();
 
-		if (!world.isRemote()) {
-			SpawnCubes.update(world);
-		}
-	}
+        if (!world.isRemote()) {
+            SpawnCubes.update(world);
+        }
+    }
 
-	@SubscribeEvent
-	public void onWorldServerTick(TickEvent.WorldTickEvent evt) {
-		ICubicWorldServer world = (ICubicWorldServer) evt.world;
-		//Forge (at least version 11.14.3.1521) doesn't call this event for client world.
-		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
-			world.tickCubicWorld();
+    @SubscribeEvent
+    public void onWorldServerTick(TickEvent.WorldTickEvent evt) {
+        ICubicWorldServer world = (ICubicWorldServer) evt.world;
+        //Forge (at least version 11.14.3.1521) doesn't call this event for client world.
+        if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
+            world.tickCubicWorld();
 
-			if (!world.isRemote()) {
-				// There is no event for when the spawn location changes, so check every tick for now
-				SpawnCubes.update(world);
-			}
-		}
-	}
+            if (!world.isRemote()) {
+                // There is no event for when the spawn location changes, so check every tick for now
+                SpawnCubes.update(world);
+            }
+        }
+    }
 
 }

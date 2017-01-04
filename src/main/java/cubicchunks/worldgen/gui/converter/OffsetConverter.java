@@ -27,17 +27,17 @@ import com.google.common.base.Converter;
 
 public class OffsetConverter extends Converter<Float, Float> {
 
-	private float offset;
+    private float offset;
 
-	public OffsetConverter(float offset) {
-		this.offset = offset;
-	}
+    public OffsetConverter(float offset) {
+        this.offset = offset;
+    }
 
-	@Override protected Float doForward(Float x) {
-		return x + offset;
-	}
+    @Override protected Float doForward(Float x) {
+        return x + offset;
+    }
 
-	@Override protected Float doBackward(Float x) {
-		return x - offset;
-	}
+    @Override protected Float doBackward(Float x) {
+        return x - offset;
+    }
 }

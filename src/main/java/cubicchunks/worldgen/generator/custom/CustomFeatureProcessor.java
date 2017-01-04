@@ -23,9 +23,6 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
@@ -34,18 +31,22 @@ import cubicchunks.worldgen.generator.custom.structures.CubicRavineGenerator;
 import cubicchunks.worldgen.generator.custom.structures.CubicStructureGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 // TODO leftover from generator pipeline
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CustomFeatureProcessor {
-	//TODO: Implement more features
-	@Nonnull private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
-	@Nonnull private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
 
-	public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
+    //TODO: Implement more features
+    @Nonnull private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
+    @Nonnull private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
 
-		// generate world features
-		this.caveGenerator.generate(world, cube, cubePos);
-		this.ravineGenerator.generate(world, cube, cubePos);
-	}
+    public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
+
+        // generate world features
+        this.caveGenerator.generate(world, cube, cubePos);
+        this.ravineGenerator.generate(world, cube, cubePos);
+    }
 }

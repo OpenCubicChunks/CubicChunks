@@ -23,9 +23,12 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
+import static cubicchunks.asm.JvmNames.COMMAND_BASE_PARSE_DOUBLE;
+
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -37,45 +40,41 @@ import java.lang.ref.WeakReference;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static cubicchunks.asm.JvmNames.COMMAND_BASE_PARSE_DOUBLE;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(CommandBase.class)
 public class MixinCommandBase {
-	//I hope there are no threads involved...
-	@Nonnull private static WeakReference<ICubicWorld> commandWorld = new WeakReference<>(null);
 
-	//get command sender, can't fail (inject at HEAD)
-	@Inject(method = "parseBlockPos", at = @At(value = "HEAD"))
-	private static void parseBlockPosPre(ICommandSender sender, String[] args, int startIndex, boolean centerBlock, CallbackInfoReturnable<?> cbi) {
-		commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
-	}
+    //I hope there are no threads involved...
+    @Nonnull private static WeakReference<ICubicWorld> commandWorld = new WeakReference<>(null);
 
-	//modify parseDouble min argument
-	@ModifyArg(method = "parseBlockPos",
-	           at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
-	           index = 2)
-	private static int getMinY(int original) {
-		ICubicWorld world = commandWorld.get();
-		if (world == null) {
-			return original;
-		}
-		return world.getMinHeight();
-	}
+    //get command sender, can't fail (inject at HEAD)
+    @Inject(method = "parseBlockPos", at = @At(value = "HEAD"))
+    private static void parseBlockPosPre(ICommandSender sender, String[] args, int startIndex, boolean centerBlock, CallbackInfoReturnable<?> cbi) {
+        commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
+    }
 
-	//modify parseDouble max argument
-	@ModifyArg(method = "parseBlockPos",
-	           at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
-	           index = 3)
-	private static int getMaxY(int original) {
-		ICubicWorld world = commandWorld.get();
-		if (world == null) {
-			return original;
-		}
-		return world.getMaxHeight();
-	}
+    //modify parseDouble min argument
+    @ModifyArg(method = "parseBlockPos",
+            at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
+            index = 2)
+    private static int getMinY(int original) {
+        ICubicWorld world = commandWorld.get();
+        if (world == null) {
+            return original;
+        }
+        return world.getMinHeight();
+    }
+
+    //modify parseDouble max argument
+    @ModifyArg(method = "parseBlockPos",
+            at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
+            index = 3)
+    private static int getMaxY(int original) {
+        ICubicWorld world = commandWorld.get();
+        if (world == null) {
+            return original;
+        }
+        return world.getMaxHeight();
+    }
 }

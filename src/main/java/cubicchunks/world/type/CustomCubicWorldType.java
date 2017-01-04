@@ -23,15 +23,6 @@
  */
 package cubicchunks.world.type;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiCreateWorld;
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldType;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import cubicchunks.util.Box;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
@@ -45,60 +36,68 @@ import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
 import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
 import cubicchunks.worldgen.gui.CustomCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiCreateWorld;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
 
-	private CustomCubicWorldType() {
-		super("CustomCubic");
-	}
+    private CustomCubicWorldType() {
+        super("CustomCubic");
+    }
 
-	public static void create() {
-		new CustomCubicWorldType();
-	}
+    public static void create() {
+        new CustomCubicWorldType();
+    }
 
-	@Override
-	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-		return provider; // TODO: Custom Nether? Custom End????
-	}
+    @Override
+    public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+        return provider; // TODO: Custom Nether? Custom End????
+    }
 
-	@Override
-	public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-		CustomTerrainProcessor terrain = new CustomTerrainProcessor(world);
-		CustomFeatureProcessor features = new CustomFeatureProcessor();
-		CustomPopulationProcessor population = new CustomPopulationProcessor(world);
+    @Override
+    public ICubeGenerator createCubeGenerator(ICubicWorld world) {
+        CustomTerrainProcessor terrain = new CustomTerrainProcessor(world);
+        CustomFeatureProcessor features = new CustomFeatureProcessor();
+        CustomPopulationProcessor population = new CustomPopulationProcessor(world);
 
-		//TODO: this is mostly a hack to get the old system working
-		return new BasicCubeGenerator(world) {
-			@Override
-			public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-				ICubePrimer primer = new CubePrimer();
+        //TODO: this is mostly a hack to get the old system working
+        return new BasicCubeGenerator(world) {
+            @Override
+            public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+                ICubePrimer primer = new CubePrimer();
 
-				terrain.calculate(primer, cubeX, cubeY, cubeZ);
-				features.generate(world, primer, new CubePos(cubeX, cubeY, cubeZ));
+                terrain.calculate(primer, cubeX, cubeY, cubeZ);
+                features.generate(world, primer, new CubePos(cubeX, cubeY, cubeZ));
 
-				return primer;
-			}
+                return primer;
+            }
 
-			@Override
-			public void populate(Cube cube) {
-				population.populate(cube);
-			}
+            @Override
+            public void populate(Cube cube) {
+                population.populate(cube);
+            }
 
-			@Override
-			public Box getPopulationRequirement(Cube cube) {
-				return RECOMMENDED_POPULATOR_REQUIREMENT;
-			}
-		};
-	}
+            @Override
+            public Box getPopulationRequirement(Cube cube) {
+                return RECOMMENDED_POPULATOR_REQUIREMENT;
+            }
+        };
+    }
 
-	public boolean isCustomizable() {
-		return true;
-	}
+    public boolean isCustomizable() {
+        return true;
+    }
 
-	@SideOnly(Side.CLIENT)
-	public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
-		new CustomCubicGui(guiCreateWorld).display();
-	}
+    @SideOnly(Side.CLIENT)
+    public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
+        new CustomCubicGui(guiCreateWorld).display();
+    }
 }

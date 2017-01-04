@@ -23,14 +23,14 @@
  */
 package cubicchunks.server;
 
+import cubicchunks.world.column.Column;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
+
 import java.util.Iterator;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Chunk Garbage Collector, automatically unloads unused chunks.
@@ -38,38 +38,39 @@ import mcp.MethodsReturnNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class ChunkGc {
-	// GC every 10 seconds by default
-	private static final int GC_INTERVAL = 20*10;
 
-	@Nonnull private final CubeProviderServer cubeCache;
+    // GC every 10 seconds by default
+    private static final int GC_INTERVAL = 20 * 10;
 
-	private int tick = 0;
+    @Nonnull private final CubeProviderServer cubeCache;
 
-	public ChunkGc(CubeProviderServer cubeCache) {
-		this.cubeCache = cubeCache;
-	}
+    private int tick = 0;
 
-	public void tick() {
-		tick++;
-		if (tick > GC_INTERVAL) {
-			tick = 0;
-			chunkGc();
-		}
-	}
+    public ChunkGc(CubeProviderServer cubeCache) {
+        this.cubeCache = cubeCache;
+    }
 
-	private void chunkGc() {
-		Iterator<Cube> cubeIt = cubeCache.cubesIterator();
-		while (cubeIt.hasNext()) {
-			if (cubeCache.tryUnloadCube(cubeIt.next())) {
-				cubeIt.remove();
-			}
-		}
+    public void tick() {
+        tick++;
+        if (tick > GC_INTERVAL) {
+            tick = 0;
+            chunkGc();
+        }
+    }
 
-		Iterator<Column> columnIt = cubeCache.columnsIterator();
-		while (columnIt.hasNext()) {
-			if (cubeCache.tryUnloadColumn(columnIt.next())) {
-				columnIt.remove();
-			}
-		}
-	}
+    private void chunkGc() {
+        Iterator<Cube> cubeIt = cubeCache.cubesIterator();
+        while (cubeIt.hasNext()) {
+            if (cubeCache.tryUnloadCube(cubeIt.next())) {
+                cubeIt.remove();
+            }
+        }
+
+        Iterator<Column> columnIt = cubeCache.columnsIterator();
+        while (columnIt.hasNext()) {
+            if (cubeCache.tryUnloadColumn(columnIt.next())) {
+                columnIt.remove();
+            }
+        }
+    }
 }

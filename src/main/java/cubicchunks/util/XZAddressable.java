@@ -30,8 +30,8 @@ package cubicchunks.util;
  */
 public interface XZAddressable {
 
-	int getX();
+    int getX();
 
-	int getZ();
+    int getZ();
 
 }

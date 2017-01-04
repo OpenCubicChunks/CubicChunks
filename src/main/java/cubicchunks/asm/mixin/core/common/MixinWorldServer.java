@@ -23,25 +23,6 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import net.minecraft.entity.EntityTracker;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.server.management.PlayerChunkMap;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.WorldEntitySpawner;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.biome.Biome;
-
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Interface;
-import org.spongepowered.asm.mixin.Intrinsic;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Shadow;
-
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import cubicchunks.entity.CubicEntityTracker;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ChunkGc;
@@ -53,6 +34,23 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.provider.ICubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.entity.EntityTracker;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.server.management.PlayerChunkMap;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldEntitySpawner;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.Biome;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
+import org.spongepowered.asm.mixin.Intrinsic;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Shadow;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Implementation of {@link ICubicWorldServer} interface.
@@ -62,92 +60,93 @@ import mcp.MethodsReturnNonnullByDefault;
 @Mixin(WorldServer.class)
 @Implements(@Interface(iface = ICubicWorldServer.class, prefix = "world$"))
 public abstract class MixinWorldServer extends MixinWorld implements ICubicWorldServer {
-	@Shadow @Mutable @Final private PlayerChunkMap playerChunkMap;
-	@Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
-	@Shadow @Mutable @Final private EntityTracker theEntityTracker;
-	@Shadow public boolean disableLevelSaving;
 
-	@Nullable private ChunkGc chunkGc;
-	@Nullable private FirstLightProcessor firstLightProcessor;
+    @Shadow @Mutable @Final private PlayerChunkMap playerChunkMap;
+    @Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
+    @Shadow @Mutable @Final private EntityTracker theEntityTracker;
+    @Shadow public boolean disableLevelSaving;
 
-	@Override public void initCubicWorld() {
-		super.initCubicWorld();
-		this.isCubicWorld = true;
+    @Nullable private ChunkGc chunkGc;
+    @Nullable private FirstLightProcessor firstLightProcessor;
 
-		this.entitySpawner = new CubeWorldEntitySpawner();
+    @Override public void initCubicWorld() {
+        super.initCubicWorld();
+        this.isCubicWorld = true;
 
-		this.chunkProvider = new CubeProviderServer(this,
-			((ICubicWorldProvider) this.provider).createCubeGenerator());
+        this.entitySpawner = new CubeWorldEntitySpawner();
 
-		this.playerChunkMap = new PlayerCubeMap(this);
-		this.chunkGc = new ChunkGc(getCubeCache());
+        this.chunkProvider = new CubeProviderServer(this,
+                ((ICubicWorldProvider) this.provider).createCubeGenerator());
 
-		this.saveHandler = new CubicSaveHandler(this, this.getSaveHandler());
+        this.playerChunkMap = new PlayerCubeMap(this);
+        this.chunkGc = new ChunkGc(getCubeCache());
 
-		this.firstLightProcessor = new FirstLightProcessor(this);
-		this.theEntityTracker = new CubicEntityTracker(this);
-	}
+        this.saveHandler = new CubicSaveHandler(this, this.getSaveHandler());
 
-	@Override public void tickCubicWorld() {
-		if (!this.isCubicWorld()) {
-			throw new NotCubicChunksWorldException();
-		}
-		assert chunkGc != null;
-		this.chunkGc.tick();
-	}
-	
-	@Override public CubicEntityTracker getCubicEntityTracker() {
-		if (!this.isCubicWorld()) {
-			throw new NotCubicChunksWorldException();
-		}
-		assert this.theEntityTracker instanceof CubicEntityTracker;
-		return (CubicEntityTracker) this.theEntityTracker;
-	}
+        this.firstLightProcessor = new FirstLightProcessor(this);
+        this.theEntityTracker = new CubicEntityTracker(this);
+    }
 
-	@Override public CubeProviderServer getCubeCache() {
-		if (!this.isCubicWorld()) {
-			throw new NotCubicChunksWorldException();
-		}
-		return (CubeProviderServer) this.chunkProvider;
-	}
+    @Override public void tickCubicWorld() {
+        if (!this.isCubicWorld()) {
+            throw new NotCubicChunksWorldException();
+        }
+        assert chunkGc != null;
+        this.chunkGc.tick();
+    }
 
-	@Override public FirstLightProcessor getFirstLightProcessor() {
-		if (!this.isCubicWorld()) {
-			throw new NotCubicChunksWorldException();
-		}
-		assert this.firstLightProcessor != null;
-		return this.firstLightProcessor;
-	}
-	//vanilla field accessors
+    @Override public CubicEntityTracker getCubicEntityTracker() {
+        if (!this.isCubicWorld()) {
+            throw new NotCubicChunksWorldException();
+        }
+        assert this.theEntityTracker instanceof CubicEntityTracker;
+        return (CubicEntityTracker) this.theEntityTracker;
+    }
 
-	@Override public boolean getDisableLevelSaving() {
-		return this.disableLevelSaving;
-	}
+    @Override public CubeProviderServer getCubeCache() {
+        if (!this.isCubicWorld()) {
+            throw new NotCubicChunksWorldException();
+        }
+        return (CubeProviderServer) this.chunkProvider;
+    }
 
-	@Override public PlayerCubeMap getPlayerCubeMap() {
-		if (!this.isCubicWorld()) {
-			throw new NotCubicChunksWorldException();
-		}
-		return (PlayerCubeMap) this.playerChunkMap;
-	}
+    @Override public FirstLightProcessor getFirstLightProcessor() {
+        if (!this.isCubicWorld()) {
+            throw new NotCubicChunksWorldException();
+        }
+        assert this.firstLightProcessor != null;
+        return this.firstLightProcessor;
+    }
+    //vanilla field accessors
 
-	//vanilla methods
-	//==============================================
-	@Nullable @Shadow
-	public abstract Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
+    @Override public boolean getDisableLevelSaving() {
+        return this.disableLevelSaving;
+    }
 
-	@Nullable @Intrinsic
-	public Biome.SpawnListEntry world$getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos) {
-		return this.getSpawnListEntryForTypeAt(type, pos);
-	}
+    @Override public PlayerCubeMap getPlayerCubeMap() {
+        if (!this.isCubicWorld()) {
+            throw new NotCubicChunksWorldException();
+        }
+        return (PlayerCubeMap) this.playerChunkMap;
+    }
 
-	//==============================================
-	@Shadow
-	public abstract boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
+    //vanilla methods
+    //==============================================
+    @Nullable @Shadow
+    public abstract Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
 
-	@Intrinsic
-	public boolean world$canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos) {
-		return this.canCreatureTypeSpawnHere(type, entry, pos);
-	}
-	//==============================================
+    @Nullable @Intrinsic
+    public Biome.SpawnListEntry world$getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos) {
+        return this.getSpawnListEntryForTypeAt(type, pos);
+    }
+
+    //==============================================
+    @Shadow
+    public abstract boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
+
+    @Intrinsic
+    public boolean world$canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos) {
+        return this.canCreatureTypeSpawnHere(type, entry, pos);
+    }
+    //==============================================
 }

@@ -20,54 +20,54 @@
 package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.base.Objects;
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 class QueuedColumn {
-	final int x;
-	final int z;
-	@Nonnull final ICubicWorld world;
 
-	QueuedColumn(int x, int z, ICubicWorld world) {
-		this.x = x;
-		this.z = z;
-		this.world = world;
-	}
+    final int x;
+    final int z;
+    @Nonnull final ICubicWorld world;
 
-	@Override
-	public int hashCode() {
-		return (x*31 + z*29) ^ world.hashCode();
-	}
+    QueuedColumn(int x, int z, ICubicWorld world) {
+        this.x = x;
+        this.z = z;
+        this.world = world;
+    }
 
-	@Override
-	public boolean equals(@Nullable Object object) {
-		if (object == null) {
-			return false;
-		}
-		if (object == this) {
-			return true;
-		}
-		if (object instanceof QueuedColumn) {
-			QueuedColumn other = (QueuedColumn) object;
-			return x == other.x && z == other.z && world == other.world;
-		}
+    @Override
+    public int hashCode() {
+        return (x * 31 + z * 29) ^ world.hashCode();
+    }
 
-		return false;
-	}
+    @Override
+    public boolean equals(@Nullable Object object) {
+        if (object == null) {
+            return false;
+        }
+        if (object == this) {
+            return true;
+        }
+        if (object instanceof QueuedColumn) {
+            QueuedColumn other = (QueuedColumn) object;
+            return x == other.x && z == other.z && world == other.world;
+        }
 
-	@Override
-	public String toString() {
-		return Objects.toStringHelper(this)
-			.addValue(this.world)
-			.add("x", this.x)
-			.add("z", this.z)
-			.toString();
-	}
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .addValue(this.world)
+                .add("x", this.x)
+                .add("z", this.z)
+                .toString();
+    }
 }

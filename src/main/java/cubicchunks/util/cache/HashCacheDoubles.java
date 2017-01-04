@@ -23,47 +23,48 @@
  */
 package cubicchunks.util.cache;
 
+import mcp.MethodsReturnNonnullByDefault;
+
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class HashCacheDoubles<K> {
-	private final double[] cache;
-	private final K[] keys;
-	private final ToIntFunction<K> hashFunction;
-	private final ToDoubleFunction<K> source;
 
-	@SuppressWarnings("uncecked")
-	private HashCacheDoubles(int size, ToIntFunction<K> hashCode, ToDoubleFunction<K> source) {
-		this.cache = new double[size];
-		this.keys = (K[]) new Object[size];
-		this.hashFunction = hashCode;
-		this.source = source;
-	}
+    private final double[] cache;
+    private final K[] keys;
+    private final ToIntFunction<K> hashFunction;
+    private final ToDoubleFunction<K> source;
 
-	public double get(K key) {
-		int index = index(hashFunction.applyAsInt(key));
-		if (!key.equals(keys[index])) {
-			keys[index] = key;
-			cache[index] = source.applyAsDouble(key);
-		}
-		return cache[index];
-	}
+    @SuppressWarnings("uncecked")
+    private HashCacheDoubles(int size, ToIntFunction<K> hashCode, ToDoubleFunction<K> source) {
+        this.cache = new double[size];
+        this.keys = (K[]) new Object[size];
+        this.hashFunction = hashCode;
+        this.source = source;
+    }
 
-	private int index(int hash) {
-		return Math.floorMod(hash, cache.length);
-	}
+    public double get(K key) {
+        int index = index(hashFunction.applyAsInt(key));
+        if (!key.equals(keys[index])) {
+            keys[index] = key;
+            cache[index] = source.applyAsDouble(key);
+        }
+        return cache[index];
+    }
 
-	public static <K> HashCacheDoubles<K> create(int size, ToDoubleFunction<K> source) {
-		return create(size, k -> k.hashCode(), source);
-	}
+    private int index(int hash) {
+        return Math.floorMod(hash, cache.length);
+    }
 
-	public static <K> HashCacheDoubles<K> create(int size, ToIntFunction<K> hashCode, ToDoubleFunction<K> source) {
-		return new HashCacheDoubles<K>(size, hashCode, source);
-	}
+    public static <K> HashCacheDoubles<K> create(int size, ToDoubleFunction<K> source) {
+        return create(size, k -> k.hashCode(), source);
+    }
+
+    public static <K> HashCacheDoubles<K> create(int size, ToIntFunction<K> hashCode, ToDoubleFunction<K> source) {
+        return new HashCacheDoubles<K>(size, hashCode, source);
+    }
 }

@@ -23,72 +23,72 @@
  */
 package cubicchunks.lighting;
 
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public interface ILightBlockAccess {
-	int getBlockLightOpacity(BlockPos pos);
 
-	int getLightFor(EnumSkyBlock lightType, BlockPos pos);
+    int getBlockLightOpacity(BlockPos pos);
 
-	void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val);
+    int getLightFor(EnumSkyBlock lightType, BlockPos pos);
 
-	/**
-	 * Faster version of world.getRawLight that works for skylight
-	 */
-	default int computeLightValue(BlockPos pos) {
-		if (canSeeSky(pos)) {
-			return 15;
-		}
-		int lightSubtract = getBlockLightOpacity(pos);
+    void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val);
 
-		if (lightSubtract < 1) {
-			lightSubtract = 1;
-		}
+    /**
+     * Faster version of world.getRawLight that works for skylight
+     */
+    default int computeLightValue(BlockPos pos) {
+        if (canSeeSky(pos)) {
+            return 15;
+        }
+        int lightSubtract = getBlockLightOpacity(pos);
 
-		if (lightSubtract >= 15) {
-			return 0;
-		}
-		BlockPos.PooledMutableBlockPos currentPos = BlockPos.PooledMutableBlockPos.retain();
-		int maxValue = 0;
-		for (EnumFacing enumfacing : EnumFacing.values()) {
-			currentPos.setPos(pos).move(enumfacing);
-			int currentValue = this.getLightFor(EnumSkyBlock.SKY, currentPos) - lightSubtract;
+        if (lightSubtract < 1) {
+            lightSubtract = 1;
+        }
 
-			if (currentValue > maxValue) {
-				maxValue = currentValue;
-			}
+        if (lightSubtract >= 15) {
+            return 0;
+        }
+        BlockPos.PooledMutableBlockPos currentPos = BlockPos.PooledMutableBlockPos.retain();
+        int maxValue = 0;
+        for (EnumFacing enumfacing : EnumFacing.values()) {
+            currentPos.setPos(pos).move(enumfacing);
+            int currentValue = this.getLightFor(EnumSkyBlock.SKY, currentPos) - lightSubtract;
 
-			if (maxValue >= 14) {
-				return maxValue;
-			}
-		}
+            if (currentValue > maxValue) {
+                maxValue = currentValue;
+            }
 
-		currentPos.release();
-		return maxValue;
-	}
+            if (maxValue >= 14) {
+                return maxValue;
+            }
+        }
 
-	boolean canSeeSky(BlockPos pos);
+        currentPos.release();
+        return maxValue;
+    }
 
-	int getEmittedLight(BlockPos pos, EnumSkyBlock type);
+    boolean canSeeSky(BlockPos pos);
 
-	default int getLightFromNeighbors(EnumSkyBlock type, BlockPos pos) {
-		//TODO: use MutableBlockPos?
-		int max = 0;
-		for (EnumFacing direction : EnumFacing.values()) {
-			int light = getLightFor(type, pos.offset(direction));
-			if (light > max) {
-				max = light;
-			}
-		}
-		int decrease = Math.max(1, getBlockLightOpacity(pos));
-		return Math.max(0, max - decrease);
-	}
+    int getEmittedLight(BlockPos pos, EnumSkyBlock type);
+
+    default int getLightFromNeighbors(EnumSkyBlock type, BlockPos pos) {
+        //TODO: use MutableBlockPos?
+        int max = 0;
+        for (EnumFacing direction : EnumFacing.values()) {
+            int light = getLightFor(type, pos.offset(direction));
+            if (light > max) {
+                max = light;
+            }
+        }
+        int decrease = Math.max(1, getBlockLightOpacity(pos));
+        return Math.max(0, max - decrease);
+    }
 }

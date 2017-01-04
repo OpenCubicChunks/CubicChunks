@@ -23,35 +23,34 @@
  */
 package cubicchunks.world.type;
 
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubeGenerator;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class VanillaCubicWorldType extends WorldType implements ICubicWorldType {
 
-	private VanillaCubicWorldType() {
-		super("VanillaCubic");
-	}
+    private VanillaCubicWorldType() {
+        super("VanillaCubic");
+    }
 
-	public static void create() {
-		new VanillaCubicWorldType();
-	}
+    public static void create() {
+        new VanillaCubicWorldType();
+    }
 
-	@Nullable @Override
-	public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-		return null; // no ICubicWorldProvider's that are going to need this
-	}
+    @Nullable @Override
+    public ICubeGenerator createCubeGenerator(ICubicWorld world) {
+        return null; // no ICubicWorldProvider's that are going to need this
+    }
 
-	@Override
-	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-		return provider; // no need to swap out providers
-	}
+    @Override
+    public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+        return provider; // no need to swap out providers
+    }
 }

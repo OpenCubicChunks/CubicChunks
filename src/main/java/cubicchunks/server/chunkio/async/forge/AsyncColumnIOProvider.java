@@ -19,16 +19,16 @@
 
 package cubicchunks.server.chunkio.async.forge;
 
+import cubicchunks.CubicChunks;
+import cubicchunks.server.chunkio.CubeIO;
+import cubicchunks.world.column.Column;
+import mcp.MethodsReturnNonnullByDefault;
+
 import java.io.IOException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import cubicchunks.CubicChunks;
-import cubicchunks.server.chunkio.CubeIO;
-import cubicchunks.world.column.Column;
-import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Async loading of columns. Roughly equivalent to Forge's ChunkIOProvider
@@ -36,38 +36,39 @@ import mcp.MethodsReturnNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 class AsyncColumnIOProvider extends AsyncIOProvider<Column> {
-	@Nonnull private final CubeIO loader;
-	@Nullable private Column column; // The target
-	@Nonnull private final QueuedColumn colInfo;
 
-	AsyncColumnIOProvider(QueuedColumn colInfo, CubeIO loader) {
-		this.loader = loader;
-		this.colInfo = colInfo;
-	}
+    @Nonnull private final CubeIO loader;
+    @Nullable private Column column; // The target
+    @Nonnull private final QueuedColumn colInfo;
 
-	@Override void runSynchronousPart() {
-		if (column != null) {
-			//TODO: ChunkDataEvent.Load and Save
-			//MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Load(column, this.nbt)); // Don't call ChunkDataEvent.Load async
-			column.setLastSaveTime(this.colInfo.world.getTotalWorldTime());
-		}
-		runCallbacks();
-	}
+    AsyncColumnIOProvider(QueuedColumn colInfo, CubeIO loader) {
+        this.loader = loader;
+        this.colInfo = colInfo;
+    }
 
-	@Nullable @Override Column get() {
-		return column;
-	}
+    @Override void runSynchronousPart() {
+        if (column != null) {
+            //TODO: ChunkDataEvent.Load and Save
+            //MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Load(column, this.nbt)); // Don't call ChunkDataEvent.Load async
+            column.setLastSaveTime(this.colInfo.world.getTotalWorldTime());
+        }
+        runCallbacks();
+    }
 
-	@Override public void run() {
-		synchronized (this) {
-			try {
-				this.column = this.loader.loadColumn(this.colInfo.x, this.colInfo.z);
-			} catch (IOException e) {
-				CubicChunks.LOGGER.error("Could not load column in {} @ ({}, {})", this.colInfo.world, this.colInfo.x, this.colInfo.z, e);
-			}
+    @Nullable @Override Column get() {
+        return column;
+    }
 
-			this.finished = true;
-			this.notifyAll();
-		}
-	}
+    @Override public void run() {
+        synchronized (this) {
+            try {
+                this.column = this.loader.loadColumn(this.colInfo.x, this.colInfo.z);
+            } catch (IOException e) {
+                CubicChunks.LOGGER.error("Could not load column in {} @ ({}, {})", this.colInfo.world, this.colInfo.x, this.colInfo.z, e);
+            }
+
+            this.finished = true;
+            this.notifyAll();
+        }
+    }
 }

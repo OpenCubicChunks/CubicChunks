@@ -23,6 +23,10 @@
  */
 package cubicchunks.testutil;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
@@ -31,38 +35,34 @@ import java.util.Hashtable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 
 //A few hacks to make tests possible
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class MinecraftEnvironment {
-	private static boolean isInit = false;
 
-	/**
-	 * Does whatever is needed to initialize minecraft and mod environment
-	 */
-	public static void init() {
-		if (isInit) {
-			return;
-		}
-		isInit = true;
-		Bootstrap.register();
-	}
+    private static boolean isInit = false;
 
-	/**
-	 * Creates a fake server
-	 */
-	public static MinecraftServer createFakeServer() {
-		PlayerList playerList = mock(PlayerList.class);
-		MinecraftServer server = mock(MinecraftServer.class);
-		when(server.getPlayerList()).thenReturn(playerList);
+    /**
+     * Does whatever is needed to initialize minecraft and mod environment
+     */
+    public static void init() {
+        if (isInit) {
+            return;
+        }
+        isInit = true;
+        Bootstrap.register();
+    }
 
-		server.worldTickTimes = new Hashtable<>();
-		return server;
-	}
+    /**
+     * Creates a fake server
+     */
+    public static MinecraftServer createFakeServer() {
+        PlayerList playerList = mock(PlayerList.class);
+        MinecraftServer server = mock(MinecraftServer.class);
+        when(server.getPlayerList()).thenReturn(playerList);
+
+        server.worldTickTimes = new Hashtable<>();
+        return server;
+    }
 }

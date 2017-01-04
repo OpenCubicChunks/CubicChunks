@@ -24,5 +24,8 @@
 package cubicchunks.worldgen.gui.component;
 
 public interface IDragTickable {
-	void onDragTick(int mouseX, int mouseY, float partialTick);;
+
+    void onDragTick(int mouseX, int mouseY, float partialTick);
+
+    ;
 }

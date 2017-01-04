@@ -24,7 +24,8 @@
 package cubicchunks.world.cube;
 
 import com.google.common.base.Predicate;
-
+import cubicchunks.world.column.Column;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
@@ -40,9 +41,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.column.Column;
-import mcp.MethodsReturnNonnullByDefault;
-
 /**
  * A blank cube, containing no blocks. Any operation on this cube will have no effect. Trying to retrieve blocks will
  * always return {@link Blocks#AIR}
@@ -51,107 +49,109 @@ import mcp.MethodsReturnNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class BlankCube extends Cube {
 
-	public BlankCube(Column column) {
-		super(column, 0);
-	}
+    public BlankCube(Column column) {
+        super(column, 0);
+    }
 
-	@Override
-	public boolean isEmpty() {
-		return true;
-	}
+    @Override
+    public boolean isEmpty() {
+        return true;
+    }
 
-	@Override
-	public long getAddress() {
-		return 0;
-	}
+    @Override
+    public long getAddress() {
+        return 0;
+    }
 
-	@Override
-	public boolean containsBlockPos(BlockPos blockPos) {
-		return false;
-	}
+    @Override
+    public boolean containsBlockPos(BlockPos blockPos) {
+        return false;
+    }
 
-	@Nullable @Override
-	public ExtendedBlockStorage getStorage() {
-		return null;
-	}
+    @Nullable @Override
+    public ExtendedBlockStorage getStorage() {
+        return null;
+    }
 
-	@Override
-	public IBlockState getBlockState(BlockPos pos) {
-		return Blocks.AIR.getDefaultState();
-	}
+    @Override
+    public IBlockState getBlockState(BlockPos pos) {
+        return Blocks.AIR.getDefaultState();
+    }
 
-	@Override
-	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
-		return Blocks.AIR.getDefaultState();
-	}
+    @Override
+    public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
+        return Blocks.AIR.getDefaultState();
+    }
 
-	@Override
-	public IBlockState setBlockStateDirect(BlockPos pos, IBlockState newstate) {
-		return null;
-	}
+    @Override
+    public IBlockState setBlockStateDirect(BlockPos pos, IBlockState newstate) {
+        return null;
+    }
 
-	@Override
-	public void addEntity(Entity entity) {
-	}
+    @Override
+    public void addEntity(Entity entity) {
+    }
 
-	@Override
-	public boolean removeEntity(Entity entity) {
-		return false;
-	}
+    @Override
+    public boolean removeEntity(Entity entity) {
+        return false;
+    }
 
-	@Override
-	public void getEntitiesWithinAABBForEntity(@Nullable Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
-	}
+    @Override
+    public void getEntitiesWithinAABBForEntity(@Nullable Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out,
+            Predicate<? super Entity> predicate) {
+    }
 
-	@Override
-	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
-	}
+    @Override
+    public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out,
+            Predicate<? super T> predicate) {
+    }
 
-	@Nullable @Override
-	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
-		return null;
-	}
+    @Nullable @Override
+    public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
+        return null;
+    }
 
-	@Override
-	public void addTileEntity(BlockPos pos, TileEntity blockEntity) {
-	}
+    @Override
+    public void addTileEntity(BlockPos pos, TileEntity blockEntity) {
+    }
 
-	@Override
-	public void removeTileEntity(BlockPos pos) {
-	}
+    @Override
+    public void removeTileEntity(BlockPos pos) {
+    }
 
-	@Override
-	public void onLoad() {
-	}
+    @Override
+    public void onLoad() {
+    }
 
-	@Override
-	public void onUnload() {
-	}
+    @Override
+    public void onUnload() {
+    }
 
-	@Override
-	public boolean needsSaving() {
-		return false;
-	}
+    @Override
+    public boolean needsSaving() {
+        return false;
+    }
 
-	@Override
-	public void markSaved() {
-	}
+    @Override
+    public void markSaved() {
+    }
 
-	@Override
-	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
-		return 15 - skyLightDampeningTerm;
-	}
+    @Override
+    public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
+        return 15 - skyLightDampeningTerm;
+    }
 
-	@Override
-	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
-		return lightType.defaultLightValue;
-	}
+    @Override
+    public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
+        return lightType.defaultLightValue;
+    }
 
-	@Override
-	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {
-	}
+    @Override
+    public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {
+    }
 
-	@Override
-	public void markForRenderUpdate() {
-	}
+    @Override
+    public void markForRenderUpdate() {
+    }
 }

@@ -23,49 +23,48 @@
  */
 package cubicchunks.worldgen.generator;
 
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface ICubePrimer {
 
-	IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
+    IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
 
-	/**
-	 * Get the block state at the given location
-	 *
-	 * @param x cube local x
-	 * @param y cube local y
-	 * @param z cube local z
-	 *
-	 * @return the block state
-	 */
-	IBlockState getBlockState(int x, int y, int z);
+    /**
+     * Get the block state at the given location
+     *
+     * @param x cube local x
+     * @param y cube local y
+     * @param z cube local z
+     *
+     * @return the block state
+     */
+    IBlockState getBlockState(int x, int y, int z);
 
-	/**
-	 * Set the block state at the given location
-	 *
-	 * @param x cube local x
-	 * @param y cube local y
-	 * @param z cube local z
-	 * @param state the block state
-	 */
-	void setBlockState(int x, int y, int z, IBlockState state);
+    /**
+     * Set the block state at the given location
+     *
+     * @param x cube local x
+     * @param y cube local y
+     * @param z cube local z
+     * @param state the block state
+     */
+    void setBlockState(int x, int y, int z, IBlockState state);
 
-	/**
-	 * Counting down from the highest block in the cube, find the first non-air block for the given location.<br> <br>
-	 * NOTE: This will return -1 if there were no blocks under this location<br> WARNING: Does not check for blocks
-	 * above this cube<br>
-	 *
-	 * @param x cube relative x
-	 * @param z cube relative x
-	 *
-	 * @return the height of the top non-air block at given x, z or -1 if no block was found
-	 */
-	int findGroundHeight(int x, int z);
+    /**
+     * Counting down from the highest block in the cube, find the first non-air block for the given location.<br> <br>
+     * NOTE: This will return -1 if there were no blocks under this location<br> WARNING: Does not check for blocks
+     * above this cube<br>
+     *
+     * @param x cube relative x
+     * @param z cube relative x
+     *
+     * @return the height of the top non-air block at given x, z or -1 if no block was found
+     */
+    int findGroundHeight(int x, int z);
 }

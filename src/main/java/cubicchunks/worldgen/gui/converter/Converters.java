@@ -32,231 +32,236 @@ import java.util.function.DoubleUnaryOperator;
 
 public class Converters {
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	public static class Builder {
-		protected Converter<Float, Float> currentConverter = Converter.identity();
+    public static class Builder {
 
-		public ExponentialBuilder exponential() {
-			return new ExponentialBuilder(self());
-		}
+        protected Converter<Float, Float> currentConverter = Converter.identity();
 
-		public InfinityBuilder withInfinity() {
-			return new InfinityBuilder(self());
-		}
+        public ExponentialBuilder exponential() {
+            return new ExponentialBuilder(self());
+        }
 
-		public InverseBuilder inverse() {
-			return new InverseBuilder(self());
-		}
+        public InfinityBuilder withInfinity() {
+            return new InfinityBuilder(self());
+        }
 
-		public Builder reverse() {
-			return composeWithSelf(new ReverseConverter());
-		}
+        public InverseBuilder inverse() {
+            return new InverseBuilder(self());
+        }
 
-		public Builder scale(float scale) {
-			return composeWithSelf(new ScaleConverter(scale));
-		}
+        public Builder reverse() {
+            return composeWithSelf(new ReverseConverter());
+        }
 
-		public Builder offset(float offset) {
-			return composeWithSelf(new OffsetConverter(offset));
-		}
+        public Builder scale(float scale) {
+            return composeWithSelf(new ScaleConverter(scale));
+        }
 
-		public Builder linearScale(float min, float max) {
-			return scale(max - min).offset(min);
-		}
+        public Builder offset(float offset) {
+            return composeWithSelf(new OffsetConverter(offset));
+        }
 
-		public Builder pow(float power) {
-			return composeWithSelf(new PowerConverter(power));
-		}
+        public Builder linearScale(float min, float max) {
+            return scale(max - min).offset(min);
+        }
 
-		public RoundingBuilder rounding() {
-			return new RoundingBuilder(self());
-		}
+        public Builder pow(float power) {
+            return composeWithSelf(new PowerConverter(power));
+        }
 
-		public Converter<Float, Float> build() {
-			return self().currentConverter;
-		}
+        public RoundingBuilder rounding() {
+            return new RoundingBuilder(self());
+        }
 
-		/**
-		 * This special method allows to do something like this:
-		 * <p>
-		 * builder().someConverter().setSomethingInSomeConverter(a).otherConverter().yetAnotherConverter().build();
-		 * <p>
-		 * someConverter() returns SomeConverterBuilder, which extends the normal Builder. When otherConverter is
-		 * called, which won't be implemented in SomeConverterBuilder and the implementation in Builder calls self()
-		 * instead of accessing this(). self() in SomeConverterBuilder can then finish any work in progress building and
-		 * return the Builder it wrapped.
-		 */
-		protected Builder self() {
-			return this;
-		}
+        public Converter<Float, Float> build() {
+            return self().currentConverter;
+        }
 
-		private final Builder composeWithSelf(Converter<Float, Float> conv) {
-			Builder self = self();
-			self.currentConverter = compose(conv, self.currentConverter);
-			return self;
-		}
-	}
+        /**
+         * This special method allows to do something like this:
+         * <p>
+         * builder().someConverter().setSomethingInSomeConverter(a).otherConverter().yetAnotherConverter().build();
+         * <p>
+         * someConverter() returns SomeConverterBuilder, which extends the normal Builder. When otherConverter is
+         * called, which won't be implemented in SomeConverterBuilder and the implementation in Builder calls self()
+         * instead of accessing this(). self() in SomeConverterBuilder can then finish any work in progress building and
+         * return the Builder it wrapped.
+         */
+        protected Builder self() {
+            return this;
+        }
 
-	public static class ExponentialBuilder extends Builder {
-		private Builder baseSelf;
+        private final Builder composeWithSelf(Converter<Float, Float> conv) {
+            Builder self = self();
+            self.currentConverter = compose(conv, self.currentConverter);
+            return self;
+        }
+    }
 
-		boolean hasZero = false;
-		float minExpPos = Float.NaN;
-		float maxExpPos = Float.NaN;
+    public static class ExponentialBuilder extends Builder {
 
-		float minExpNeg = Float.NaN;
-		float maxExpNeg = Float.NaN;
-		float baseVal;
+        private Builder baseSelf;
 
-		public ExponentialBuilder(Builder baseSelf) {
-			this.baseSelf = baseSelf;
-		}
+        boolean hasZero = false;
+        float minExpPos = Float.NaN;
+        float maxExpPos = Float.NaN;
 
-		public ExponentialBuilder withZero() {
-			ExponentialBuilder self = exponentialSelf();
-			self.hasZero = true;
-			return self;
-		}
+        float minExpNeg = Float.NaN;
+        float maxExpNeg = Float.NaN;
+        float baseVal;
 
-		public ExponentialBuilder withPositiveExponentRange(float min, float max) {
-			ExponentialBuilder self = exponentialSelf();
-			self.minExpPos = min;
-			self.maxExpPos = max;
-			return self;
-		}
+        public ExponentialBuilder(Builder baseSelf) {
+            this.baseSelf = baseSelf;
+        }
 
-		public ExponentialBuilder withNegativeExponentRange(float min, float max) {
-			ExponentialBuilder self = exponentialSelf();
-			self.minExpNeg = min;
-			self.maxExpNeg = max;
-			return self;
-		}
+        public ExponentialBuilder withZero() {
+            ExponentialBuilder self = exponentialSelf();
+            self.hasZero = true;
+            return self;
+        }
 
-		public ExponentialBuilder withBaseValue(float baseVal) {
-			ExponentialBuilder self = exponentialSelf();
-			self.baseVal = baseVal;
-			return self;
-		}
+        public ExponentialBuilder withPositiveExponentRange(float min, float max) {
+            ExponentialBuilder self = exponentialSelf();
+            self.minExpPos = min;
+            self.maxExpPos = max;
+            return self;
+        }
 
-		protected ExponentialBuilder exponentialSelf() {
-			return this;
-		}
+        public ExponentialBuilder withNegativeExponentRange(float min, float max) {
+            ExponentialBuilder self = exponentialSelf();
+            self.minExpNeg = min;
+            self.maxExpNeg = max;
+            return self;
+        }
 
-		@Override
-		protected Builder self() {
-			baseSelf.currentConverter = compose(new ExponentialConverter(this), baseSelf.currentConverter);
-			return baseSelf;
-		}
-	}
+        public ExponentialBuilder withBaseValue(float baseVal) {
+            ExponentialBuilder self = exponentialSelf();
+            self.baseVal = baseVal;
+            return self;
+        }
 
-	public static class InfinityBuilder extends Builder {
-		private Builder baseSelf;
+        protected ExponentialBuilder exponentialSelf() {
+            return this;
+        }
 
-		private float negInf = 0, posInf = 1;
+        @Override
+        protected Builder self() {
+            baseSelf.currentConverter = compose(new ExponentialConverter(this), baseSelf.currentConverter);
+            return baseSelf;
+        }
+    }
 
-		public InfinityBuilder(Builder baseSelf) {
-			this.baseSelf = baseSelf;
-		}
+    public static class InfinityBuilder extends Builder {
 
-		public InfinityBuilder negativeAt(float negInf) {
-			InfinityBuilder self = infinitySelf();
-			self.negInf = negInf;
-			return self;
-		}
+        private Builder baseSelf;
 
-		public InfinityBuilder positiveAt(float posInf) {
-			InfinityBuilder self = infinitySelf();
-			self.posInf = posInf;
-			return self;
-		}
+        private float negInf = 0, posInf = 1;
 
-		protected InfinityBuilder infinitySelf() {
-			return this;
-		}
+        public InfinityBuilder(Builder baseSelf) {
+            this.baseSelf = baseSelf;
+        }
 
-		@Override
-		protected Builder self() {
-			baseSelf.currentConverter = compose(new ConverterWithInfinity(negInf, posInf), baseSelf.currentConverter);
-			return baseSelf;
-		}
-	}
+        public InfinityBuilder negativeAt(float negInf) {
+            InfinityBuilder self = infinitySelf();
+            self.negInf = negInf;
+            return self;
+        }
 
-	public static class InverseBuilder extends Builder {
-		private Builder baseSelf;
+        public InfinityBuilder positiveAt(float posInf) {
+            InfinityBuilder self = infinitySelf();
+            self.posInf = posInf;
+            return self;
+        }
 
-		private float mult = 1;
+        protected InfinityBuilder infinitySelf() {
+            return this;
+        }
 
-		public InverseBuilder(Builder baseSelf) {
-			this.baseSelf = baseSelf;
-		}
+        @Override
+        protected Builder self() {
+            baseSelf.currentConverter = compose(new ConverterWithInfinity(negInf, posInf), baseSelf.currentConverter);
+            return baseSelf;
+        }
+    }
 
-		public InverseBuilder withMultiplier(float mult) {
-			InverseBuilder self = inverseSelf();
-			self.mult = mult;
-			return self;
-		}
+    public static class InverseBuilder extends Builder {
 
-		protected InverseBuilder inverseSelf() {
-			return this;
-		}
+        private Builder baseSelf;
 
-		@Override
-		protected Builder self() {
-			baseSelf.currentConverter = compose(new InverseConverter(this.mult), baseSelf.currentConverter);
-			return baseSelf;
-		}
-	}
+        private float mult = 1;
 
-	public static class RoundingBuilder extends Builder {
-		private Builder baseSelf;
+        public InverseBuilder(Builder baseSelf) {
+            this.baseSelf = baseSelf;
+        }
 
-		float maxExp = Float.NaN;
-		Set<RoundingConverter.RoundingEntry> roundingData = new HashSet<>();
-		DoubleUnaryOperator snapRadius;
+        public InverseBuilder withMultiplier(float mult) {
+            InverseBuilder self = inverseSelf();
+            self.mult = mult;
+            return self;
+        }
 
-		public RoundingBuilder(Builder baseSelf) {
-			this.baseSelf = baseSelf;
-		}
+        protected InverseBuilder inverseSelf() {
+            return this;
+        }
 
-		public RoundingBuilder withMaxExp(float max) {
-			RoundingBuilder self = roundingSelf();
-			self.maxExp = max;
-			return self;
-		}
+        @Override
+        protected Builder self() {
+            baseSelf.currentConverter = compose(new InverseConverter(this.mult), baseSelf.currentConverter);
+            return baseSelf;
+        }
+    }
 
-		public RoundingBuilder withRoundingRadius(DoubleUnaryOperator op) {
-			Preconditions.checkNotNull(op);
-			RoundingBuilder self = roundingSelf();
-			self.snapRadius = op;
-			return self;
-		}
+    public static class RoundingBuilder extends Builder {
 
-		public RoundingBuilder withBase(float baseVal, float multiplier) {
-			RoundingBuilder self = roundingSelf();
-			self.roundingData.add(new RoundingConverter.RoundingEntry(baseVal, multiplier));
-			return self;
-		}
+        private Builder baseSelf;
 
-		protected RoundingBuilder roundingSelf() {
-			return this;
-		}
+        float maxExp = Float.NaN;
+        Set<RoundingConverter.RoundingEntry> roundingData = new HashSet<>();
+        DoubleUnaryOperator snapRadius;
 
-		@Override
-		protected Builder self() {
-			RoundingConverter rb = new RoundingConverter(this);
-			rb.setReverse(baseSelf.currentConverter.reverse());
-			baseSelf.currentConverter = compose(rb, baseSelf.currentConverter);
-			return baseSelf;
-		}
-	}
+        public RoundingBuilder(Builder baseSelf) {
+            this.baseSelf = baseSelf;
+        }
 
-	public static <IN, X, OUT> Converter<IN, OUT> compose(Converter<X, OUT> f, Converter<IN, X> g) {
-		return Converter.from(
-			x -> f.convert(g.convert(x)),
-			x -> g.reverse().convert(f.reverse().convert(x))
-		);
-	}
+        public RoundingBuilder withMaxExp(float max) {
+            RoundingBuilder self = roundingSelf();
+            self.maxExp = max;
+            return self;
+        }
+
+        public RoundingBuilder withRoundingRadius(DoubleUnaryOperator op) {
+            Preconditions.checkNotNull(op);
+            RoundingBuilder self = roundingSelf();
+            self.snapRadius = op;
+            return self;
+        }
+
+        public RoundingBuilder withBase(float baseVal, float multiplier) {
+            RoundingBuilder self = roundingSelf();
+            self.roundingData.add(new RoundingConverter.RoundingEntry(baseVal, multiplier));
+            return self;
+        }
+
+        protected RoundingBuilder roundingSelf() {
+            return this;
+        }
+
+        @Override
+        protected Builder self() {
+            RoundingConverter rb = new RoundingConverter(this);
+            rb.setReverse(baseSelf.currentConverter.reverse());
+            baseSelf.currentConverter = compose(rb, baseSelf.currentConverter);
+            return baseSelf;
+        }
+    }
+
+    public static <IN, X, OUT> Converter<IN, OUT> compose(Converter<X, OUT> f, Converter<IN, X> g) {
+        return Converter.from(
+                x -> f.convert(g.convert(x)),
+                x -> g.reverse().convert(f.reverse().convert(x))
+        );
+    }
 }

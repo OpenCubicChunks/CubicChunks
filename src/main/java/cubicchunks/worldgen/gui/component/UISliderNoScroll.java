@@ -24,21 +24,21 @@
 package cubicchunks.worldgen.gui.component;
 
 import com.google.common.base.Converter;
-
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.control.IControlComponent;
 import net.malisis.core.client.gui.component.interaction.UISlider;
 
 public class UISliderNoScroll<T> extends UISlider<T> {
-	public UISliderNoScroll(MalisisGui gui, int width, Converter<Float, T> converter, String text) {
-		super(gui, width, converter, text);
-	}
 
-	@Override
-	public boolean onScrollWheel(int x, int y, int delta) {
-		if (parent != null && !(this instanceof IControlComponent)) {
-			return parent.onScrollWheel(x, y, delta);
-		}
-		return false;
-	}
+    public UISliderNoScroll(MalisisGui gui, int width, Converter<Float, T> converter, String text) {
+        super(gui, width, converter, text);
+    }
+
+    @Override
+    public boolean onScrollWheel(int x, int y, int delta) {
+        if (parent != null && !(this instanceof IControlComponent)) {
+            return parent.onScrollWheel(x, y, delta);
+        }
+        return false;
+    }
 }

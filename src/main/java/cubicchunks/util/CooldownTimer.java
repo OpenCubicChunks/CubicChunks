@@ -26,23 +26,24 @@ package cubicchunks.util;
 import java.util.concurrent.TimeUnit;
 
 public class CooldownTimer {
-	private final long cooldownNanos;
-	private long lastDoneNanos;
 
-	public CooldownTimer(long time, TimeUnit unit) {
-		this.cooldownNanos = unit.toNanos(time);
-		this.skipNextCooldown();
-	}
+    private final long cooldownNanos;
+    private long lastDoneNanos;
 
-	public void tryDo(Runnable r) {
-		long time = System.nanoTime();
-		if (time - lastDoneNanos > cooldownNanos) {
-			r.run();
-			lastDoneNanos = time;
-		}
-	}
+    public CooldownTimer(long time, TimeUnit unit) {
+        this.cooldownNanos = unit.toNanos(time);
+        this.skipNextCooldown();
+    }
 
-	public void skipNextCooldown() {
-		lastDoneNanos = System.nanoTime() - (cooldownNanos + 1);
-	}
+    public void tryDo(Runnable r) {
+        long time = System.nanoTime();
+        if (time - lastDoneNanos > cooldownNanos) {
+            r.run();
+            lastDoneNanos = time;
+        }
+    }
+
+    public void skipNextCooldown() {
+        lastDoneNanos = System.nanoTime() - (cooldownNanos + 1);
+    }
 }

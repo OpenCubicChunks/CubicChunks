@@ -23,6 +23,13 @@
  */
 package cubicchunks.debug.item;
 
+import cubicchunks.debug.ItemRegistered;
+import cubicchunks.network.PacketCube;
+import cubicchunks.network.PacketDispatcher;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.EnumActionResult;
@@ -35,41 +42,34 @@ import net.minecraft.world.World;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.debug.ItemRegistered;
-import cubicchunks.network.PacketCube;
-import cubicchunks.network.PacketDispatcher;
-import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubeProvider;
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class RelightSkyBlockItem extends ItemRegistered {
 
-	public RelightSkyBlockItem(String name) {
-		super(name);
-	}
+    public RelightSkyBlockItem(String name) {
+        super(name);
+    }
 
-	@Override
-	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing faceHit, float hitX, float hitY, float hitZ) {
-		ICubicWorld world = (ICubicWorld) worldIn;
-		if (!world.isCubicWorld() || world.isRemote()) {
-			return EnumActionResult.PASS;
-		}
-		//serverside
-		BlockPos placePos = pos.offset(faceHit);
-		if (world.checkLightFor(EnumSkyBlock.SKY, placePos)) {
-			playerIn.sendMessage(new TextComponentString("Successfully updated lighting at " + placePos));
-			CubePos cubePos = CubePos.fromBlockCoords(placePos);
-			ICubeProvider cubeCache = world.getCubeCache();
-			//re-send them to player
-			cubePos.forEachWithinRange(1,
-				(p) -> PacketDispatcher.sendTo(new PacketCube(cubeCache.getCube(p)), (EntityPlayerMP) playerIn));
-		} else {
-			playerIn.sendMessage(new TextComponentString("Updating light at at " + placePos + " failed."));
-		}
+    @Override
+    public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing faceHit, float hitX, float hitY,
+            float hitZ) {
+        ICubicWorld world = (ICubicWorld) worldIn;
+        if (!world.isCubicWorld() || world.isRemote()) {
+            return EnumActionResult.PASS;
+        }
+        //serverside
+        BlockPos placePos = pos.offset(faceHit);
+        if (world.checkLightFor(EnumSkyBlock.SKY, placePos)) {
+            playerIn.sendMessage(new TextComponentString("Successfully updated lighting at " + placePos));
+            CubePos cubePos = CubePos.fromBlockCoords(placePos);
+            ICubeProvider cubeCache = world.getCubeCache();
+            //re-send them to player
+            cubePos.forEachWithinRange(1,
+                    (p) -> PacketDispatcher.sendTo(new PacketCube(cubeCache.getCube(p)), (EntityPlayerMP) playerIn));
+        } else {
+            playerIn.sendMessage(new TextComponentString("Updating light at at " + placePos + " failed."));
+        }
 
-		return EnumActionResult.PASS;
-	}
+        return EnumActionResult.PASS;
+    }
 }

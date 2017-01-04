@@ -23,19 +23,9 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.gen.ChunkProviderSettings;
-
-import org.lwjgl.input.Keyboard;
-
-import java.util.List;
-import java.util.Random;
-import java.util.function.ToIntFunction;
-
-import javax.annotation.ParametersAreNonnullByDefault;
+import static cubicchunks.util.Coords.blockToLocal;
+import static cubicchunks.worldgen.generator.custom.builder.IBuilder.NEGATIVE;
+import static cubicchunks.worldgen.generator.custom.builder.IBuilder.POSITIVE;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
@@ -46,10 +36,17 @@ import cubicchunks.worldgen.generator.custom.builder.BiomeSource;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import cubicchunks.worldgen.generator.custom.builder.NoiseSource;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
+import org.lwjgl.input.Keyboard;
 
-import static cubicchunks.util.Coords.blockToLocal;
-import static cubicchunks.worldgen.generator.custom.builder.IBuilder.NEGATIVE;
-import static cubicchunks.worldgen.generator.custom.builder.IBuilder.POSITIVE;
+import java.util.List;
+import java.util.Random;
+import java.util.function.ToIntFunction;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * A terrain generator that supports infinite(*) worlds
@@ -57,119 +54,120 @@ import static cubicchunks.worldgen.generator.custom.builder.IBuilder.POSITIVE;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CustomTerrainGenerator {
-	private static final int CACHE_SIZE_2D = 16*16;
-	private static final int CACHE_SIZE_3D = 16*16*16;
-	private static final ToIntFunction<Vec3i> HASH_2D = (v) -> v.getX() + v.getZ()*5;
-	private static final ToIntFunction<Vec3i> HASH_3D = (v) -> v.getX() + v.getZ()*5 + v.getY()*25;
-	// Number of octaves for the noise function
-	private IBuilder terrainBuilder;
-	private final BiomeSource biomeSource;
-	private final CustomGeneratorSettings conf;
 
-	public CustomTerrainGenerator(ICubicWorld world, final long seed) {
+    private static final int CACHE_SIZE_2D = 16 * 16;
+    private static final int CACHE_SIZE_3D = 16 * 16 * 16;
+    private static final ToIntFunction<Vec3i> HASH_2D = (v) -> v.getX() + v.getZ() * 5;
+    private static final ToIntFunction<Vec3i> HASH_3D = (v) -> v.getX() + v.getZ() * 5 + v.getY() * 25;
+    // Number of octaves for the noise function
+    private IBuilder terrainBuilder;
+    private final BiomeSource biomeSource;
+    private final CustomGeneratorSettings conf;
 
-		String json = world.getWorldInfo().getGeneratorOptions();
-		conf = CustomGeneratorSettings.fromJson(json);
+    public CustomTerrainGenerator(ICubicWorld world, final long seed) {
 
-		this.biomeSource = new BiomeSource(world, conf.createBiomeBlockReplacerConfig(), world.getBiomeProvider(), 2);
-		initGenerator(seed);
-	}
+        String json = world.getWorldInfo().getGeneratorOptions();
+        conf = CustomGeneratorSettings.fromJson(json);
 
-	private void initGenerator(long seed) {
-		Random rnd = new Random(seed);
+        this.biomeSource = new BiomeSource(world, conf.createBiomeBlockReplacerConfig(), world.getBiomeProvider(), 2);
+        initGenerator(seed);
+    }
 
-		IBuilder selector = NoiseSource.perlin()
-			.seed(rnd.nextLong())
-			.normalizeTo(-1, 1)
-			.frequency(conf.selectorNoiseFrequencyX, conf.selectorNoiseFrequencyY, conf.selectorNoiseFrequencyZ)
-			.octaves(conf.selectorNoiseOctaves)
-			.create()
-			.mul(conf.selectorNoiseFactor).add(conf.selectorNoiseOffset).clamp(0, 1);
+    private void initGenerator(long seed) {
+        Random rnd = new Random(seed);
 
-		IBuilder low = NoiseSource.perlin()
-			.seed(rnd.nextLong())
-			.normalizeTo(-1, 1)
-			.frequency(conf.lowNoiseFrequencyX, conf.lowNoiseFrequencyY, conf.lowNoiseFrequencyZ)
-			.octaves(conf.lowNoiseOctaves)
-			.create()
-			.mul(conf.lowNoiseFactor).add(conf.lowNoiseOffset);
+        IBuilder selector = NoiseSource.perlin()
+                .seed(rnd.nextLong())
+                .normalizeTo(-1, 1)
+                .frequency(conf.selectorNoiseFrequencyX, conf.selectorNoiseFrequencyY, conf.selectorNoiseFrequencyZ)
+                .octaves(conf.selectorNoiseOctaves)
+                .create()
+                .mul(conf.selectorNoiseFactor).add(conf.selectorNoiseOffset).clamp(0, 1);
 
-		IBuilder high = NoiseSource.perlin()
-			.seed(rnd.nextLong())
-			.normalizeTo(-1, 1)
-			.frequency(conf.highNoiseFrequencyX, conf.highNoiseFrequencyY, conf.highNoiseFrequencyZ)
-			.octaves(conf.highNoiseOctaves)
-			.create()
-			.mul(conf.highNoiseFactor).add(conf.highNoiseOffset);
+        IBuilder low = NoiseSource.perlin()
+                .seed(rnd.nextLong())
+                .normalizeTo(-1, 1)
+                .frequency(conf.lowNoiseFrequencyX, conf.lowNoiseFrequencyY, conf.lowNoiseFrequencyZ)
+                .octaves(conf.lowNoiseOctaves)
+                .create()
+                .mul(conf.lowNoiseFactor).add(conf.lowNoiseOffset);
 
-		IBuilder randomHeight2d = NoiseSource.perlin()
-			.seed(rnd.nextLong())
-			.normalizeTo(-1, 1)
-			.frequency(conf.depthNoiseFrequencyX, 0, conf.depthNoiseFrequencyZ)
-			.octaves(conf.depthNoiseOctaves)
-			.create()
-			.mul(conf.depthNoiseFactor).add(conf.depthNoiseOffset)
-			.mulIf(NEGATIVE, -0.3).mul(3).sub(2).clamp(-2, 1)
-			.divIf(NEGATIVE, 2*2*1.4).divIf(POSITIVE, 8)
-			.mul(0.2*17/64.0)
-			.cached2d(CACHE_SIZE_2D, HASH_2D);
+        IBuilder high = NoiseSource.perlin()
+                .seed(rnd.nextLong())
+                .normalizeTo(-1, 1)
+                .frequency(conf.highNoiseFrequencyX, conf.highNoiseFrequencyY, conf.highNoiseFrequencyZ)
+                .octaves(conf.highNoiseOctaves)
+                .create()
+                .mul(conf.highNoiseFactor).add(conf.highNoiseOffset);
 
-		IBuilder height = ((IBuilder) biomeSource::getHeight)
-			.mul(conf.heightFactor)
-			.add(conf.heightOffset);
+        IBuilder randomHeight2d = NoiseSource.perlin()
+                .seed(rnd.nextLong())
+                .normalizeTo(-1, 1)
+                .frequency(conf.depthNoiseFrequencyX, 0, conf.depthNoiseFrequencyZ)
+                .octaves(conf.depthNoiseOctaves)
+                .create()
+                .mul(conf.depthNoiseFactor).add(conf.depthNoiseOffset)
+                .mulIf(NEGATIVE, -0.3).mul(3).sub(2).clamp(-2, 1)
+                .divIf(NEGATIVE, 2 * 2 * 1.4).divIf(POSITIVE, 8)
+                .mul(0.2 * 17 / 64.0)
+                .cached2d(CACHE_SIZE_2D, HASH_2D);
 
-		double specialVariationFactor = conf.specialHeightVariationFactorBelowAverageY;
-		IBuilder volatility = ((IBuilder) biomeSource::getVolatility)
-			.mul((x, y, z) -> height.get(x, y, z) > y ? specialVariationFactor : 1)
-			.mul(conf.heightVariationFactor)
-			.add(conf.heightVariationOffset);
+        IBuilder height = ((IBuilder) biomeSource::getHeight)
+                .mul(conf.heightFactor)
+                .add(conf.heightOffset);
 
-		this.terrainBuilder = selector
-			.lerp(low, high).mul(volatility).add(height).add(randomHeight2d)
-			.sub((x, y, z) -> y)
-			.cached(CACHE_SIZE_3D, HASH_3D);
-	}
+        double specialVariationFactor = conf.specialHeightVariationFactorBelowAverageY;
+        IBuilder volatility = ((IBuilder) biomeSource::getVolatility)
+                .mul((x, y, z) -> height.get(x, y, z) > y ? specialVariationFactor : 1)
+                .mul(conf.heightVariationFactor)
+                .add(conf.heightVariationOffset);
 
-	/**
-	 * Generate the cube as the specified location
-	 *
-	 * @param cubePrimer cube primer to use
-	 * @param cubeX cube x location
-	 * @param cubeY cube y location
-	 * @param cubeZ cube z location
-	 */
-	public void generate(final ICubePrimer cubePrimer, int cubeX, int cubeY, int cubeZ) {
-		// when debugging is enabled, allow reloading generator settings after pressing L
-		// no need to restart after applying changes.
-		// Seed it changed to some constant because world isn't easily accessible here
-		if (CubicChunks.DEBUG_ENABLED && Keyboard.isKeyDown(Keyboard.KEY_L)) {
-			initGenerator(42);
-		}
+        this.terrainBuilder = selector
+                .lerp(low, high).mul(volatility).add(height).add(randomHeight2d)
+                .sub((x, y, z) -> y)
+                .cached(CACHE_SIZE_3D, HASH_3D);
+    }
 
-		BlockPos start = new BlockPos(cubeX*4, cubeY*2, cubeZ*4);
-		BlockPos end = start.add(4, 2, 4);
-		terrainBuilder.forEachScaled(start, end, new Vec3i(4, 8, 4),
-			(x, y, z, dx, dy, dz, v) ->
-				cubePrimer.setBlockState(
-					blockToLocal(x), blockToLocal(y), blockToLocal(z),
-					getBlock(x, y, z, dx, dy, dz, v))
-		);
+    /**
+     * Generate the cube as the specified location
+     *
+     * @param cubePrimer cube primer to use
+     * @param cubeX cube x location
+     * @param cubeY cube y location
+     * @param cubeZ cube z location
+     */
+    public void generate(final ICubePrimer cubePrimer, int cubeX, int cubeY, int cubeZ) {
+        // when debugging is enabled, allow reloading generator settings after pressing L
+        // no need to restart after applying changes.
+        // Seed it changed to some constant because world isn't easily accessible here
+        if (CubicChunks.DEBUG_ENABLED && Keyboard.isKeyDown(Keyboard.KEY_L)) {
+            initGenerator(42);
+        }
 
-	}
+        BlockPos start = new BlockPos(cubeX * 4, cubeY * 2, cubeZ * 4);
+        BlockPos end = start.add(4, 2, 4);
+        terrainBuilder.forEachScaled(start, end, new Vec3i(4, 8, 4),
+                (x, y, z, dx, dy, dz, v) ->
+                        cubePrimer.setBlockState(
+                                blockToLocal(x), blockToLocal(y), blockToLocal(z),
+                                getBlock(x, y, z, dx, dy, dz, v))
+        );
 
-	/**
-	 * Retrieve the blockstate appropriate for the specified builder entry
-	 *
-	 * @return The block state
-	 */
-	private IBlockState getBlock(int x, int y, int z, double dx, double dy, double dz, double density) {
-		CubicBiome biome = biomeSource.getBiome(x, y, z);
-		List<IBiomeBlockReplacer> replacers = biomeSource.getReplacers(x, y, z);
-		IBlockState block = Blocks.AIR.getDefaultState();
-		for (IBiomeBlockReplacer r : replacers) {
-			block = r.getReplacedBlock(block, x, y, z, dx, dy, dz, density);
-		}
-		return block;
-	}
+    }
+
+    /**
+     * Retrieve the blockstate appropriate for the specified builder entry
+     *
+     * @return The block state
+     */
+    private IBlockState getBlock(int x, int y, int z, double dx, double dy, double dz, double density) {
+        CubicBiome biome = biomeSource.getBiome(x, y, z);
+        List<IBiomeBlockReplacer> replacers = biomeSource.getReplacers(x, y, z);
+        IBlockState block = Blocks.AIR.getDefaultState();
+        for (IBiomeBlockReplacer r : replacers) {
+            block = r.getReplacedBlock(block, x, y, z, dx, dy, dz, density);
+        }
+        return block;
+    }
 
 }

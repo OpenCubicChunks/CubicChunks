@@ -23,6 +23,9 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -31,34 +34,31 @@ import java.util.Random;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public abstract class FeatureGenerator {
-	protected final ICubicWorld world;
 
-	public FeatureGenerator(final ICubicWorld world) {
-		this.world = world;
-	}
+    protected final ICubicWorld world;
 
-	public abstract void generate(final Random rand, final Cube cube, final Biome biome);
+    public FeatureGenerator(final ICubicWorld world) {
+        this.world = world;
+    }
 
-	protected boolean setBlockOnly(final BlockPos blockPos, final IBlockState blockState) {
-		return this.world.setBlockState(blockPos, blockState, 2);
-	}
+    public abstract void generate(final Random rand, final Cube cube, final Biome biome);
 
-	protected boolean setBlockAndUpdateNeighbors(final BlockPos pos, final IBlockState state) {
-		return this.world.setBlockState(pos, state, 3);
-	}
+    protected boolean setBlockOnly(final BlockPos blockPos, final IBlockState blockState) {
+        return this.world.setBlockState(blockPos, blockState, 2);
+    }
 
-	protected IBlockState getBlockState(final BlockPos pos) {
-		return this.world.getBlockState(pos);
-	}
+    protected boolean setBlockAndUpdateNeighbors(final BlockPos pos, final IBlockState state) {
+        return this.world.setBlockState(pos, state, 3);
+    }
 
-	protected static int getMinCubeY(final int y) {
-		return (y >> 4) << 4;
-	}
+    protected IBlockState getBlockState(final BlockPos pos) {
+        return this.world.getBlockState(pos);
+    }
+
+    protected static int getMinCubeY(final int y) {
+        return (y >> 4) << 4;
+    }
 }

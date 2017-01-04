@@ -23,25 +23,24 @@
  */
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TerrainShapeReplacer implements IBiomeBlockReplacer {
 
-	/**
-	 * Replaces any block with greater than 0 density with stone
-	 */
-	@Override
-	public IBlockState getReplacedBlock(IBlockState previousBlock, int x, int y, int z, double dx, double dy, double dz, double density) {
-		if (density > 0) {
-			return Blocks.STONE.getDefaultState();
-		}
-		return previousBlock;
-	}
+    /**
+     * Replaces any block with greater than 0 density with stone
+     */
+    @Override
+    public IBlockState getReplacedBlock(IBlockState previousBlock, int x, int y, int z, double dx, double dy, double dz, double density) {
+        if (density > 0) {
+            return Blocks.STONE.getDefaultState();
+        }
+        return previousBlock;
+    }
 }

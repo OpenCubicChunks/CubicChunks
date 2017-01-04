@@ -23,10 +23,13 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+
+import cubicchunks.asm.MixinUtils;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.World;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,34 +37,30 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.asm.MixinUtils;
-import mcp.MethodsReturnNonnullByDefault;
-
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(ChunkCache.class)
 public abstract class MixinChunkCache_HeightLimits {
-	@Shadow protected World world;
 
-	/**
-	 * Redirect to modify vanilla height check.
-	 *
-	 * @see MixinUtils#getReplacementY(cubicchunks.world.ICubicWorld, BlockPos)
-	 */
-	@Redirect(method = "getLightFor", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
-	private int getLightForGetYReplace(BlockPos pos) {
-		return MixinUtils.getReplacementY(world, pos);
-	}
+    @Shadow protected World world;
 
-	/**
-	 * Redirect to modify vanilla height check.
-	 *
-	 * @see MixinUtils#getReplacementY(cubicchunks.world.ICubicWorld, BlockPos)
-	 */
-	@Redirect(method = "getLightForExt", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
-	private int getLightForExtGetYReplace(BlockPos pos) {
-		return MixinUtils.getReplacementY(world, pos);
-	}
+    /**
+     * Redirect to modify vanilla height check.
+     *
+     * @see MixinUtils#getReplacementY(cubicchunks.world.ICubicWorld, BlockPos)
+     */
+    @Redirect(method = "getLightFor", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
+    private int getLightForGetYReplace(BlockPos pos) {
+        return MixinUtils.getReplacementY(world, pos);
+    }
+
+    /**
+     * Redirect to modify vanilla height check.
+     *
+     * @see MixinUtils#getReplacementY(cubicchunks.world.ICubicWorld, BlockPos)
+     */
+    @Redirect(method = "getLightForExt", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
+    private int getLightForExtGetYReplace(BlockPos pos) {
+        return MixinUtils.getReplacementY(world, pos);
+    }
 }

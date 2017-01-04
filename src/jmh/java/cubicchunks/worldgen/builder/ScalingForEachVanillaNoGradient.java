@@ -23,79 +23,80 @@
  */
 package cubicchunks.worldgen.builder;
 
+import mcp.MethodsReturnNonnullByDefault;
+
 import java.util.function.Consumer;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import mcp.MethodsReturnNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ScalingForEachVanillaNoGradient {
-	private final double[] heightMap;
-	private final OldScalingIterator.MutableExtendedEntry entry;
 
-	public ScalingForEachVanillaNoGradient() {
-		this.heightMap = new double[75];
-		this.entry = new OldScalingIterator.MutableExtendedEntry();
-	}
+    private final double[] heightMap;
+    private final OldScalingIterator.MutableExtendedEntry entry;
 
-	public void forEach(Consumer<OldScalingIterator.IExtendedEntry> consumer) {
-		for (int sectionX = 0; sectionX < 4; ++sectionX) {
-			int xSectionPart = sectionX*4;
-			int i0__ = sectionX*5;
-			int i1__ = (sectionX + 1)*5;
+    public ScalingForEachVanillaNoGradient() {
+        this.heightMap = new double[75];
+        this.entry = new OldScalingIterator.MutableExtendedEntry();
+    }
 
-			for (int sectionZ = 0; sectionZ < 4; ++sectionZ) {
-				int zSectionPart = sectionZ*4;
-				int i0_0 = (i0__ + sectionZ)*3;
-				int i0_1 = (i0__ + sectionZ + 1)*3;
-				int i1_0 = (i1__ + sectionZ)*3;
-				int i1_1 = (i1__ + sectionZ + 1)*3;
+    public void forEach(Consumer<OldScalingIterator.IExtendedEntry> consumer) {
+        for (int sectionX = 0; sectionX < 4; ++sectionX) {
+            int xSectionPart = sectionX * 4;
+            int i0__ = sectionX * 5;
+            int i1__ = (sectionX + 1) * 5;
 
-				for (int sectionY = 0; sectionY < 2; ++sectionY) {
-					int ySectionPart = sectionY*8;
-					double v0y0 = this.heightMap[i0_0 + sectionY];
-					double v0y1 = this.heightMap[i0_1 + sectionY];
-					double v1y0 = this.heightMap[i1_0 + sectionY];
-					double v1y1 = this.heightMap[i1_1 + sectionY];
-					double d0y0 = (this.heightMap[i0_0 + sectionY + 1] - v0y0)*0.125D;
-					double d0y1 = (this.heightMap[i0_1 + sectionY + 1] - v0y1)*0.125D;
-					double d1y0 = (this.heightMap[i1_0 + sectionY + 1] - v1y0)*0.125D;
-					double d1y1 = (this.heightMap[i1_1 + sectionY + 1] - v1y1)*0.125D;
+            for (int sectionZ = 0; sectionZ < 4; ++sectionZ) {
+                int zSectionPart = sectionZ * 4;
+                int i0_0 = (i0__ + sectionZ) * 3;
+                int i0_1 = (i0__ + sectionZ + 1) * 3;
+                int i1_0 = (i1__ + sectionZ) * 3;
+                int i1_1 = (i1__ + sectionZ + 1) * 3;
 
-					for (int yRel = 0; yRel < 8; ++yRel) {
-						int yCoord = ySectionPart + yRel;
-						double vxy0 = v0y0;
-						double vxy1 = v0y1;
-						double dxy0 = (v1y0 - v0y0)*0.25D;
-						double dxy1 = (v1y1 - v0y1)*0.25D;
+                for (int sectionY = 0; sectionY < 2; ++sectionY) {
+                    int ySectionPart = sectionY * 8;
+                    double v0y0 = this.heightMap[i0_0 + sectionY];
+                    double v0y1 = this.heightMap[i0_1 + sectionY];
+                    double v1y0 = this.heightMap[i1_0 + sectionY];
+                    double v1y1 = this.heightMap[i1_1 + sectionY];
+                    double d0y0 = (this.heightMap[i0_0 + sectionY + 1] - v0y0) * 0.125D;
+                    double d0y1 = (this.heightMap[i0_1 + sectionY + 1] - v0y1) * 0.125D;
+                    double d1y0 = (this.heightMap[i1_0 + sectionY + 1] - v1y0) * 0.125D;
+                    double d1y1 = (this.heightMap[i1_1 + sectionY + 1] - v1y1) * 0.125D;
 
-						for (int xRel = 0; xRel < 4; ++xRel) {
-							int xCoord = xSectionPart + xRel;
-							double dxyz = (vxy1 - vxy0)*0.25D;
-							double vxyz = vxy0 - dxyz;
+                    for (int yRel = 0; yRel < 8; ++yRel) {
+                        int yCoord = ySectionPart + yRel;
+                        double vxy0 = v0y0;
+                        double vxy1 = v0y1;
+                        double dxy0 = (v1y0 - v0y0) * 0.25D;
+                        double dxy1 = (v1y1 - v0y1) * 0.25D;
 
-							for (int zRel = 0; zRel < 4; ++zRel) {
-								int zCoord = zSectionPart + zRel;
-								entry.setX(xCoord);
-								entry.setY(yCoord);
-								entry.setZ(zCoord);
-								entry.setValue(vxyz);
-								consumer.accept(entry);
-							}
+                        for (int xRel = 0; xRel < 4; ++xRel) {
+                            int xCoord = xSectionPart + xRel;
+                            double dxyz = (vxy1 - vxy0) * 0.25D;
+                            double vxyz = vxy0 - dxyz;
 
-							vxy0 += dxy0;
-							vxy1 += dxy1;
-						}
+                            for (int zRel = 0; zRel < 4; ++zRel) {
+                                int zCoord = zSectionPart + zRel;
+                                entry.setX(xCoord);
+                                entry.setY(yCoord);
+                                entry.setZ(zCoord);
+                                entry.setValue(vxyz);
+                                consumer.accept(entry);
+                            }
 
-						v0y0 += d0y0;
-						v0y1 += d0y1;
-						v1y0 += d1y0;
-						v1y1 += d1y1;
-					}
-				}
-			}
-		}
-	}
+                            vxy0 += dxy0;
+                            vxy1 += dxy1;
+                        }
+
+                        v0y0 += d0y0;
+                        v0y1 += d0y1;
+                        v1y0 += d1y0;
+                        v1y1 += d1y1;
+                    }
+                }
+            }
+        }
+    }
 }

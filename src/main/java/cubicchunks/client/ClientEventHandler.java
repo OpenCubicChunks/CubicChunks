@@ -23,6 +23,8 @@
  */
 package cubicchunks.client;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -30,22 +32,19 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class ClientEventHandler {
 
-	@SubscribeEvent
-	public void onWorldClientTickEvent(TickEvent.ClientTickEvent evt) {
-		ICubicWorld world = (ICubicWorld) FMLClientHandler.instance().getWorldClient();
-		//does the world exist? Is the game paused?
-		if (world == null || Minecraft.getMinecraft().isGamePaused()) {
-			return;
-		}
-		if (evt.phase == TickEvent.Phase.END && world.isCubicWorld()) {
-			world.tickCubicWorld();
-		}
-	}
+    @SubscribeEvent
+    public void onWorldClientTickEvent(TickEvent.ClientTickEvent evt) {
+        ICubicWorld world = (ICubicWorld) FMLClientHandler.instance().getWorldClient();
+        //does the world exist? Is the game paused?
+        if (world == null || Minecraft.getMinecraft().isGamePaused()) {
+            return;
+        }
+        if (evt.phase == TickEvent.Phase.END && world.isCubicWorld()) {
+            world.tickCubicWorld();
+        }
+    }
 }

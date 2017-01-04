@@ -24,15 +24,14 @@
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
 import com.google.common.collect.Sets;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
+import mcp.MethodsReturnNonnullByDefault;
 
 import java.util.Set;
 import java.util.function.Supplier;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
-import mcp.MethodsReturnNonnullByDefault;
 
 /**
  * Creates new IBiomeBlockReplacer based on supplied configuration,
@@ -43,33 +42,34 @@ import mcp.MethodsReturnNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface IBiomeBlockReplacerProvider {
-	IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf);
 
-	Set<ConfigOptionInfo> getPossibleConfigOptions();
+    IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf);
 
-	static IBiomeBlockReplacerProvider of(Supplier<IBiomeBlockReplacer> supplier) {
-		return new IBiomeBlockReplacerProvider() {
-			@Override
-			public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
-				return supplier.get();
-			}
+    Set<ConfigOptionInfo> getPossibleConfigOptions();
 
-			@Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
-				return Sets.newHashSet();
-			}
-		};
-	}
+    static IBiomeBlockReplacerProvider of(Supplier<IBiomeBlockReplacer> supplier) {
+        return new IBiomeBlockReplacerProvider() {
+            @Override
+            public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
+                return supplier.get();
+            }
 
-	static IBiomeBlockReplacerProvider of(IBiomeBlockReplacer replacer) {
-		return new IBiomeBlockReplacerProvider() {
-			@Override
-			public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
-				return replacer;
-			}
+            @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
+                return Sets.newHashSet();
+            }
+        };
+    }
 
-			@Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
-				return Sets.newHashSet();
-			}
-		};
-	}
+    static IBiomeBlockReplacerProvider of(IBiomeBlockReplacer replacer) {
+        return new IBiomeBlockReplacerProvider() {
+            @Override
+            public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
+                return replacer;
+            }
+
+            @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
+                return Sets.newHashSet();
+            }
+        };
+    }
 }

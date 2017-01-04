@@ -23,19 +23,19 @@
  */
 package cubicchunks.util.ticket;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import mcp.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface ITicket {
 
-	/**
-	 * Weather or not a cube with this ticket should tick.
-	 * (should blocks update, entities move around, and furnaces cook?)
-	 *
-	 * @return should cubes with this ticket tick
-	 */
-	boolean shouldTick();
+    /**
+     * Weather or not a cube with this ticket should tick.
+     * (should blocks update, entities move around, and furnaces cook?)
+     *
+     * @return should cubes with this ticket tick
+     */
+    boolean shouldTick();
 }
