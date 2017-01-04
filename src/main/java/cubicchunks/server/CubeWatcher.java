@@ -104,6 +104,9 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
 		if (this.sentToPlayers) {
 			this.sendToPlayer(player);
+            playerCubeMap.getWorld()
+            	.getCubicEntityTracker()
+            	.sendLeashedEntitiesInCube(player, this.getCube());
 			//TODO: cube watch event?
 		}
 	}
