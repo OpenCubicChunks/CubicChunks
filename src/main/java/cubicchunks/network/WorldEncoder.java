@@ -43,7 +43,7 @@ class WorldEncoder {
     static void encodeCube(PacketBuffer out, Cube cube) {
         // 1. emptiness
         out.writeBoolean(cube.isEmpty());
-        out.writeBoolean(cube.getStorage()!=null);
+        out.writeBoolean(cube.getStorage() != null);
 
         if (!cube.isEmpty()) {
             ExtendedBlockStorage storage = cube.getStorage();
@@ -51,8 +51,8 @@ class WorldEncoder {
             // 2. block IDs and metadata
             storage.getData().write(out);
         }
-        
-        if(cube.getStorage()!=null) {
+
+        if (cube.getStorage() != null) {
             ExtendedBlockStorage storage = cube.getStorage();
             // 3. block light
             out.writeBytes(storage.getBlocklightArray().getData());
@@ -61,12 +61,14 @@ class WorldEncoder {
                 // 4. sky light
                 out.writeBytes(storage.getSkylightArray().getData());
             }
-        	
+
         }
 
         if (!cube.isEmpty()) {
-            // 5. heightmap and bottom-block-y. Each non-empty cube has a chance to update this data.
-            // trying to keep track of when it changes would be complex, so send it wil all cubes
+            // 5. heightmap and bottom-block-y. Each non-empty cube has a chance
+            // to update this data.
+            // trying to keep track of when it changes would be complex, so send
+            // it wil all cubes
             byte[] heightmaps = ((ServerHeightMap) cube.getColumn().getOpacityIndex()).getDataForClient();
             assert heightmaps.length == 256 * 4;
             out.writeBytes(heightmaps);
@@ -90,17 +92,15 @@ class WorldEncoder {
         // 1. emptiness
         boolean isEmpty = in.readBoolean();
         boolean hasStorage = in.readBoolean();
-        ExtendedBlockStorage storage = new ExtendedBlockStorage(
-                Coords.cubeToMinBlock(cube.getY()),
+        ExtendedBlockStorage storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()),
                 !cube.getCubicWorld().getProvider().hasNoSky());
         cube.setStorage(storage);
-        
+
         if (!isEmpty) {
             storage.getData().read(in);
         }
-        
-        if(hasStorage)
-        {
+
+        if (hasStorage) {
             // 3. block light
             in.readBytes(storage.getBlocklightArray().getData());
 
@@ -108,16 +108,16 @@ class WorldEncoder {
                 // 4. sky light
                 in.readBytes(storage.getSkylightArray().getData());
             }
-        	
+
         }
-        
+
         if (!isEmpty) {
             // 5. heightmaps TODO: NO NO NO! Don't send this with Cubes!
             byte[] heightmaps = new byte[256 * 4];
             in.readBytes(heightmaps);
             ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
             coi.setData(heightmaps);
-            //cube.initialClientSkylight();
+            // cube.initialClientSkylight();
             storage.removeInvalidBlocks();
         }
     }
@@ -128,24 +128,23 @@ class WorldEncoder {
 
     static int getEncodedSize(Cube cube) {
         int size = 0;
-        size++;//isEmpty
-        size++;//hasStorage
+        size++;// isEmpty
+        size++;// hasStorage
         if (!cube.isEmpty()) {
             ExtendedBlockStorage storage = cube.getStorage();
             size += storage.getData().getSerializedSize();
         }
-        
-        if(cube.getStorage()!=null)
-        {
+
+        if (cube.getStorage() != null) {
             ExtendedBlockStorage storage = cube.getStorage();
             size += storage.getBlocklightArray().getData().length;
             if (!cube.getCubicWorld().getProvider().hasNoSky()) {
                 size += storage.getSkylightArray().getData().length;
             }
         }
-        
+
         if (!cube.isEmpty()) {
-            //heightmaps
+            // heightmaps
             size += 256 * 2 * 4;
         }
         return size;

@@ -42,16 +42,19 @@ import mcp.MethodsReturnNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class GetLightValueItem extends ItemRegistered {
 
-	public GetLightValueItem(String name) {
-		super(name);
-	}
+    public GetLightValueItem(String name) {
+        super(name);
+    }
 
-	@Override
-	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing faceHit, float hitX, float hitY, float hitZ) {
-		ICubicWorld world = (ICubicWorld) worldIn;
-		BlockPos placePos = pos.offset(faceHit);
-		playerIn.sendMessage(new TextComponentString("Total light level at " + placePos + " is " + worldIn.getLight(placePos)+" \n Side is "+(world.isRemote()?"client":"server")));
-		playerIn.sendMessage(new TextComponentString("Sky light level at " + placePos + " is " + worldIn.getLightFor(EnumSkyBlock.SKY, placePos)+" \n Side is "+(world.isRemote()?"client":"server")));
-		return EnumActionResult.PASS;
-	}
+    @Override
+    public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing faceHit, float hitX, float hitY,
+            float hitZ) {
+        ICubicWorld world = (ICubicWorld) worldIn;
+        BlockPos placePos = pos.offset(faceHit);
+        playerIn.sendMessage(new TextComponentString("Total light level at " + placePos + " is " + worldIn.getLight(placePos) + " \n Side is "
+                + (world.isRemote() ? "client" : "server")));
+        playerIn.sendMessage(new TextComponentString("Sky light level at " + placePos + " is " + worldIn.getLightFor(EnumSkyBlock.SKY, placePos)
+                + " \n Side is " + (world.isRemote() ? "client" : "server")));
+        return EnumActionResult.PASS;
+    }
 }
