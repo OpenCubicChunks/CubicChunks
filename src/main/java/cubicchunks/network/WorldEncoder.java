@@ -92,9 +92,14 @@ class WorldEncoder {
         // 1. emptiness
         boolean isEmpty = in.readBoolean();
         boolean hasStorage = in.readBoolean();
-        ExtendedBlockStorage storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()),
-                !cube.getCubicWorld().getProvider().hasNoSky());
-        cube.setStorage(storage);
+
+        ExtendedBlockStorage storage = null;
+
+        if (hasStorage) {
+            storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()),
+                    !cube.getCubicWorld().getProvider().hasNoSky());
+            cube.setStorage(storage);
+        }
 
         if (!isEmpty) {
             storage.getData().read(in);
