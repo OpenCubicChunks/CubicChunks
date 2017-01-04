@@ -788,9 +788,6 @@ public class Cube implements XYZAddressable {
 
     private void newStorage() {
         storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), world.getProvider().hasSkyLight());
-        if (world.getProvider().hasSkyLight()) {
-        	Arrays.fill(storage.getSkylightArray().getData(),(byte)255);
-        }
     }
 
     /**
