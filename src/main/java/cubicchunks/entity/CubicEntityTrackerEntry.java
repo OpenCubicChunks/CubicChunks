@@ -35,12 +35,18 @@ public class CubicEntityTrackerEntry extends EntityTrackerEntry{
 	}
 	
 	@Override
-    public boolean isVisibleTo(EntityPlayerMP playerMP)
-    {
-        double d0 = playerMP.posX - (double)this.encodedPosX / 4096.0D;
-        double d1 = playerMP.posZ - (double)this.encodedPosZ / 4096.0D;
-        double d2 = playerMP.posY - (double)this.encodedPosY / 4096.0D;
-        int i = Math.min(this.range, this.maxRange);
-        return d0 >= (double)(-i) && d0 <= (double)i && d1 >= (double)(-i) && d1 <= (double)i && d2 >= (double)(-i) && d2 <= (double)i && this.trackedEntity.isSpectatedByPlayer(playerMP);
-    }
+	public boolean isVisibleTo(EntityPlayerMP playerMP) {
+		double d0 = playerMP.posX - (double)this.encodedPosX / 4096.0D;
+		double d1 = playerMP.posZ - (double)this.encodedPosZ / 4096.0D;
+		double d2 = playerMP.posY - (double)this.encodedPosY / 4096.0D;
+		int i = Math.min(this.range, this.maxRange);
+		
+		return d0 >= (double)(-i) && 
+			d0 <= (double)i && 
+			d1 >= (double)(-i) && 
+			d1 <= (double)i && 
+			d2 >= (double)(-i) && 
+			d2 <= (double)i && 
+			this.trackedEntity.isSpectatedByPlayer(playerMP);
+	}
 }
