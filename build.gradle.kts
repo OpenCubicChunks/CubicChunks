@@ -197,6 +197,8 @@ dependencies {
 
     compile("com.carrotsearch:hppc:0.7.1")
 
+    compile(project("RegionLib"))
+
     compileOnly("net.malisis:malisiscore:1.11-5.0.0-SNAPSHOT:dev")
 }
 

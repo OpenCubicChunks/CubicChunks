@@ -392,7 +392,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
                     !cubeWatcher.getCube().isInitialLightingDone()) {
                 this.cubesToGenerate.add(cubeWatcher);
             }
-            if (!cubeWatcher.isSentToPlayers()) {
+            // this ends up being called early enough that client renderers aren't initialized yet and positions are wrong
+            if (!cubeWatcher.sendToPlayers()) {
                 this.cubesToSendToClients.add(cubeWatcher);
             }
         }
@@ -411,7 +412,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
             if (columnWatcher.getColumn() == null) {
                 this.columnsToGenerate.add(columnWatcher);
             }
-            if (!columnWatcher.isSentToPlayers()) {
+            if (!columnWatcher.sendToPlayers()) {
                 this.columnsToSendToClients.add(columnWatcher);
             }
         }

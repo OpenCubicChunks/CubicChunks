@@ -23,7 +23,10 @@
  */
 package cubicchunks.server;
 
-import cubicchunks.server.chunkio.CubeIO;
+import cubicchunks.CubicChunks;
+import cubicchunks.server.chunkio.ICubeIO;
+import cubicchunks.server.chunkio.MapDBCubeIO;
+import cubicchunks.server.chunkio.RegionCubeIO;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
@@ -44,6 +47,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
@@ -67,7 +72,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CubeProviderServer extends ChunkProviderServer implements ICubeProvider, IProviderExtras {
 
     @Nonnull private ICubicWorldServer worldServer;
-    @Nonnull private CubeIO cubeIO;
+    @Nonnull private ICubeIO cubeIO;
 
     // TODO: Use a better hash map!
     @Nonnull private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
@@ -82,7 +87,11 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         this.cubeGen = cubeGen;
 
         this.worldServer = worldServer;
-        this.cubeIO = new CubeIO(worldServer);
+        try {
+            this.cubeIO = CubicChunks.USE_MAPDB ? new MapDBCubeIO(worldServer) : new RegionCubeIO(worldServer);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     @Override
@@ -507,7 +516,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         return sb.toString();
     }
 
-    public void flush() {
+    public void flush() throws IOException {
         this.cubeIO.flush();
     }
 

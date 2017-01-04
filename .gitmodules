@@ -1,0 +1,3 @@
+[submodule "RegionLib"]
+	path = RegionLib
+	url = https://github.com/Barteks2x/RegionLib

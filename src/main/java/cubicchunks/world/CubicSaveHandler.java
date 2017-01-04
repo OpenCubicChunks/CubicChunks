@@ -23,6 +23,7 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.server.CubeProviderServer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
@@ -35,6 +36,8 @@ import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -78,7 +81,12 @@ public class CubicSaveHandler implements ISaveHandler {
     @Override public void flush() {
         originalHandler.flush();
         CubeProviderServer cache = world.getCubeCache();
-        cache.flush();
+        try {
+            cache.flush();
+        } catch (IOException e) {
+            // ignore because that's what vanilla does
+            CubicChunks.LOGGER.error(e);
+        }
     }
 
     @Override public File getWorldDirectory() {

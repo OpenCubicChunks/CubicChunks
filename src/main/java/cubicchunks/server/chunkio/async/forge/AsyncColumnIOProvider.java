@@ -20,7 +20,7 @@
 package cubicchunks.server.chunkio.async.forge;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.server.chunkio.CubeIO;
+import cubicchunks.server.chunkio.ICubeIO;
 import cubicchunks.world.column.Column;
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -37,11 +37,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 class AsyncColumnIOProvider extends AsyncIOProvider<Column> {
 
-    @Nonnull private final CubeIO loader;
+    @Nonnull private final ICubeIO loader;
     @Nullable private Column column; // The target
     @Nonnull private final QueuedColumn colInfo;
 
-    AsyncColumnIOProvider(QueuedColumn colInfo, CubeIO loader) {
+    AsyncColumnIOProvider(QueuedColumn colInfo, ICubeIO loader) {
         this.loader = loader;
         this.colInfo = colInfo;
     }

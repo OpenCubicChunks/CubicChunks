@@ -38,7 +38,6 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldProvider;
-import net.minecraft.world.storage.IThreadedFileIO;
 import net.minecraft.world.storage.ThreadedFileIOBase;
 import org.apache.logging.log4j.Logger;
 import org.mapdb.DB;
@@ -58,7 +57,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class CubeIO implements IThreadedFileIO {
+public class MapDBCubeIO implements ICubeIO {
 
     private static final long kB = 1024;
     private static final long MB = kB * 1024;
@@ -104,7 +103,7 @@ public class CubeIO implements IThreadedFileIO {
     @Nonnull private ConcurrentMap<ChunkPos, SaveEntry> columnsToSave;
     @Nonnull private ConcurrentMap<CubePos, SaveEntry> cubesToSave;
 
-    public CubeIO(ICubicWorldServer world) {
+    public MapDBCubeIO(ICubicWorldServer world) {
         this.world = world;
 
         this.db = initializeDBConnection(this.world.getSaveHandler().getWorldDirectory(), this.world.getProvider());
@@ -116,7 +115,7 @@ public class CubeIO implements IThreadedFileIO {
         this.cubesToSave = new ConcurrentHashMap<>();
     }
 
-    public void flush() {
+    @Override public void flush() {
         if (columnsToSave.size() != 0 || cubesToSave.size() != 0) {
             err("Attempt to flush() CubeIO when there are remaining cubes to save! Saving remaining cubes to avoid corruption");
             while (this.writeNextIO()) {
@@ -131,7 +130,7 @@ public class CubeIO implements IThreadedFileIO {
         }
     }
 
-    @Nullable public Column loadColumn(int chunkX, int chunkZ) throws IOException {
+    @Override @Nullable public Column loadColumn(int chunkX, int chunkZ) throws IOException {
         NBTTagCompound nbt;
         SaveEntry saveEntry;
         if ((saveEntry = columnsToSave.get(new ChunkPos(chunkX, chunkZ))) != null) {
@@ -153,7 +152,7 @@ public class CubeIO implements IThreadedFileIO {
         return IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
     }
 
-    @Nullable public PartialCubeData loadCubeAsyncPart(Column column, int cubeY) throws IOException {
+    @Override @Nullable public PartialCubeData loadCubeAsyncPart(Column column, int cubeY) throws IOException {
         // TODO address is due for refactor
         long address = AddressTools.getAddress(column.getX(), cubeY, column.getZ());
 
@@ -178,11 +177,11 @@ public class CubeIO implements IThreadedFileIO {
         return new PartialCubeData(cube, nbt);
     }
 
-    public void loadCubeSyncPart(PartialCubeData info) {
+    @Override public void loadCubeSyncPart(PartialCubeData info) {
         IONbtReader.readCubeSyncPart(info.cube, world, info.nbt);
     }
 
-    public void saveColumn(Column column) {
+    @Override public void saveColumn(Column column) {
         // NOTE: this function blocks the world thread
         // make it as fast as possible by offloading processing to the IO thread
         // except we have to write the NBT in this thread to avoid problems
@@ -197,7 +196,7 @@ public class CubeIO implements IThreadedFileIO {
         ThreadedFileIOBase.getThreadedIOInstance().queueIO(this);
     }
 
-    public void saveCube(Cube cube) {
+    @Override public void saveCube(Cube cube) {
         // NOTE: this function blocks the world thread, so make it fast
 
         this.cubesToSave.put(cube.getCoords(), new SaveEntry(cube.getAddress(), IONbtWriter.write(cube)));
@@ -305,24 +304,6 @@ public class CubeIO implements IThreadedFileIO {
             t.printStackTrace();
         } else {
             LOGGER.error(message, t);
-        }
-    }
-
-    /**
-     * Stores partially read cube, before sync read but after async read
-     */
-    public static class PartialCubeData {
-
-        final NBTTagCompound nbt;
-        final Cube cube;
-
-        PartialCubeData(Cube cube, NBTTagCompound nbt) {
-            this.cube = cube;
-            this.nbt = nbt;
-        }
-
-        public Cube getCube() {
-            return cube;
         }
     }
 }
