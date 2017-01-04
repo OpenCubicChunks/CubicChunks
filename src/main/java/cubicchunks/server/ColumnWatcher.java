@@ -74,28 +74,28 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 	}
 
 	// CHECKED: 1.10.2-12.18.1.2092
-    public void addPlayer(EntityPlayerMP player) {
-        if (this.getPlayers().contains(player)) {
-            CubicChunks.LOGGER.debug("Failed to add player. {} already is in chunk {}, {}", player,
-                this.getPos().chunkXPos,
-                this.getPos().chunkZPos);
-            return;
-        }
-        if (this.getPlayers().isEmpty()) {
-            this.setLastUpdateInhabitedTime(playerCubeMap.getWorldServer().getTotalWorldTime());
-        }
+	public void addPlayer(EntityPlayerMP player) {
+		if (this.getPlayers().contains(player)) {
+			CubicChunks.LOGGER.debug("Failed to add player. {} already is in chunk {}, {}", player,
+				this.getPos().chunkXPos,
+				this.getPos().chunkZPos);
+			return;
+		}
+		if (this.getPlayers().isEmpty()) {
+			this.setLastUpdateInhabitedTime(playerCubeMap.getWorldServer().getTotalWorldTime());
+		}
 
-        this.getPlayers().add(player);
+		this.getPlayers().add(player);
 
-        //always sent to players, no need to check it
+		//always sent to players, no need to check it
 
-        if (this.isSentToPlayers()) {
-            PacketColumn message = new PacketColumn(this.getColumn());
-            PacketDispatcher.sendTo(message, player);
-            //this.sendNearbySpecialEntities - done by cube entry
-            MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(this.getPos(), player));
-        }
-    }
+		if (this.isSentToPlayers()) {
+			PacketColumn message = new PacketColumn(this.getColumn());
+			PacketDispatcher.sendTo(message, player);
+			//this.sendNearbySpecialEntities - done by cube entry
+			MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(this.getPos(), player));
+		}
+	}
 
 	// CHECKED: 1.10.2-12.18.1.2092//TODO: remove it, the only different line is sending packet
 	public void removePlayer(EntityPlayerMP player) {
@@ -148,6 +148,9 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 	// CHECKED: 1.10.2-12.18.1.2092
 	@Override
 	public boolean sendToPlayers() {
+		if (this.isSentToPlayers()) {
+			return true;
+		}
 		if (getColumn() == null) {
 			return false;
 		}
