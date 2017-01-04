@@ -781,7 +781,7 @@ public class Cube implements XYZAddressable {
         return this.storage;
     }
 
-    public ExtendedBlockStorage setStorage(ExtendedBlockStorage ebs) {
+    @Nullable public ExtendedBlockStorage setStorage(@Nullable ExtendedBlockStorage ebs) {
         return this.storage = ebs;
     }
 
