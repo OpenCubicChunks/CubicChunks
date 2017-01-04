@@ -57,6 +57,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -787,6 +788,9 @@ public class Cube implements XYZAddressable {
 
     private void newStorage() {
         storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), world.getProvider().hasSkyLight());
+        if (world.getProvider().hasSkyLight()) {
+        	Arrays.fill(storage.getSkylightArray().getData(),(byte)255);
+        }
     }
 
     /**
