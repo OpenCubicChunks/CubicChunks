@@ -32,6 +32,7 @@ public class JvmNames {
     // We sort variables alphabetically here to make finding pre-existing constants easier
     // If you add a new one, please follow this sorting instead of adding them at the end
     public static final String
+        BLOCK_FALLING = "Lnet/minecraft/block/BlockFalling;",
         BLOCK_POS = "Lnet/minecraft/util/math/BlockPos;",
         CHUNK = "Lnet/minecraft/world/chunk/Chunk;",
         CHUNK_CACHE = "Lnet/minecraft/world/ChunkCache;",
@@ -40,6 +41,7 @@ public class JvmNames {
         COMMAND_TELEPORT = "Lnet/minecraft/command/server/CommandTeleport;",
         COMMAND_TP = "Lnet/minecraft/command/CommandTP;",
         ENTITY = "Lnet/minecraft/entity/Entity;",
+        ENTITY_FALLING_BLOCK = "Lnet/minecraft/entity/item/EntityFallingBlock;",
         ENTITY_PLAYER_MP = "Lnet/minecraft/entity/player/EntityPlayerMP;",
         ENUM_SKY_BLOCK = "Lnet/minecraft/world/EnumSkyBlock;",
         GUI_OVERLAY_DEBUG = "Lnet/minecraft/client/gui/GuiOverlayDebug;",
@@ -54,6 +56,7 @@ public class JvmNames {
 
     // Sorted as above
     public static final String
+        BLOCK_FALLING_CAN_FALL_THROUGH = BLOCK_FALLING + "canFallThrough("+IBLOCK_STATE+")Z",
         BLOCK_POS_GETY = BLOCK_POS + "getY()I",
         CHUNK_CACHE_GET_BLOCK_STATE = CHUNK_CACHE + "getBlockState(" + BLOCK_POS + ")" + IBLOCK_STATE,
         CHUNK_GET_ENTITY_LISTS = CHUNK + "getEntityLists()[" + CLASS_INHERITANCE_MULTI_MAP,
@@ -62,11 +65,13 @@ public class JvmNames {
         COMMAND_TELEPORT_GET_ENTITY = COMMAND_TELEPORT + "getEntity(" + MINECRAFT_SERVER + ICOMMAND_SENDER + STRING + ")" + ENTITY,
         COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER = COMMAND_TP + "getCommandSenderAsPlayer(" + ICOMMAND_SENDER + ")" + ENTITY_PLAYER_MP,
         COMMAND_TP_GET_ENTITY = COMMAND_TP + "getEntity(" + MINECRAFT_SERVER + ICOMMAND_SENDER + STRING + ")" + ENTITY,
+        ENTITY_FALLING_BLOCK_CONSTRUCT = ENTITY_FALLING_BLOCK+"<init>("+WORLD+"DDD"+IBLOCK_STATE+")V",
         GUI_OVERLAY_DEBUG_CALL = GUI_OVERLAY_DEBUG + "call()Ljava/util/List;",
         WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS = WORLD_CLIENT + "getChunkFromBlockCoords(" + BLOCK_POS + ")" + CHUNK,
         WORLD_GET_LIGHT_FOR = WORLD + "getLightFor(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
         WORLD_GET_LIGHT_WITH_FLAG = WORLD + "getLight(" + BLOCK_POS + "Z)I",
         WORLD_GET_PERSISTENT_CHUNKS = WORLD + "getPersistentChunks()" + IMMUTABLE_SET_MULTIMAP,
+        WORLD_IS_AIR_BLOCK = WORLD + "isAirBlock(" + BLOCK_POS + ")Z",
         WORLD_IS_AREA_LOADED = WORLD + "isAreaLoaded(IIIIIIZ)Z";
     // @formatter:on
 }
