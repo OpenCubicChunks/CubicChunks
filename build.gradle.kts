@@ -189,7 +189,7 @@ dependencies {
     testCompile("org.mockito:mockito-core:2.1.0-RC.2")
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    compile("org.spongepowered:mixin:0.5.11-SNAPSHOT") {
+    compile("org.spongepowered:mixin:0.6.4-SNAPSHOT") {
         exclude(mapOf("module" to "launchwrapper"))
         exclude(mapOf("module" to "guava"))
         exclude(mapOf("module" to "gson"))
@@ -234,7 +234,7 @@ shadowJar {
     relocate("com.flowpowered", "cubicchunks.com.flowpowered")
     /*
      Mixin shouldn"t be relocated. Mixin dependencies:
-     org.spongepowered:mixin:0.5.5-SNAPSHOT
+     org.spongepowered:mixin:0.6.4-SNAPSHOT
      +--- org.slf4j:slf4j-api:1.7.7
      +--- commons-codec:commons-codec:1.9
      +--- org.ow2.asm:asm-commons:5.0.3

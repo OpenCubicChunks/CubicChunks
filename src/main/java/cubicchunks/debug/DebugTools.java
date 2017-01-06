@@ -23,6 +23,7 @@
  */
 package cubicchunks.debug;
 
+import cubicchunks.debug.item.GetLightValueItem;
 import cubicchunks.debug.item.RelightSkyBlockItem;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.creativetab.CreativeTabs;
@@ -44,6 +45,7 @@ public class DebugTools {
     private static DebugProxy proxy;
 
     static final Item itemRelightSkyBlock = new RelightSkyBlockItem("relight_sky_block");
+    static final Item itemGetLightValue = new GetLightValueItem("get_light_value");
 
     static final CreativeTabs CUBIC_CHUNKS_DEBUG_TAB = new CreativeTabs("cubic_chunks_debug_tab") {
         @SideOnly(Side.CLIENT) @Override public ItemStack getTabIconItem() {

@@ -5,6 +5,7 @@
     "compatibilityLevel": "JAVA_8",
     "mixins": [
         "common.MixinEntityMinecart_KillFix",
+        "common.MixinBlockFalling_HeightLimits",
         "common.MixinEntityFallingBlock_HeightLimits",
         "common.MixinWorld"
     ],
@@ -13,3 +14,4 @@
     "server": [
     ]
 }
+
