@@ -34,9 +34,11 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.datafix.FixTypes;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.storage.ThreadedFileIOBase;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
@@ -61,11 +63,11 @@ public class RegionCubeIO implements ICubeIO {
     @Nonnull private SaveCubeColumns save;
     @Nonnull private ConcurrentMap<ChunkPos, SaveEntry<EntryLocation2D>> columnsToSave;
     @Nonnull private ConcurrentMap<CubePos, SaveEntry<EntryLocation3D>> cubesToSave;
-
+    
     public RegionCubeIO(ICubicWorldServer world) throws IOException {
         this.world = world;
         WorldProvider prov = world.getProvider();
-
+        
         Path path = this.world.getSaveHandler().getWorldDirectory().toPath();
         if (prov.getSaveFolder() != null) {
             path = path.resolve(prov.getSaveFolder());
@@ -104,7 +106,7 @@ public class RegionCubeIO implements ICubeIO {
             if (!buf.isPresent()) {
                 return null;
             }
-            nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array()));
+            nbt = FMLCommonHandler.instance().getDataFixer().process(FixTypes.CHUNK, CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array())));
         }
         return IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
     }
@@ -112,7 +114,7 @@ public class RegionCubeIO implements ICubeIO {
     @Override @Nullable public ICubeIO.PartialCubeData loadCubeAsyncPart(Column column, int cubeY) throws IOException {
 
         NBTTagCompound nbt;
-        SaveEntry saveEntry;
+        SaveEntry<EntryLocation3D> saveEntry;
         if ((saveEntry = this.cubesToSave.get(new CubePos(column.getX(), cubeY, column.getZ()))) != null) {
             nbt = saveEntry.nbt;
         } else {
@@ -121,7 +123,7 @@ public class RegionCubeIO implements ICubeIO {
             if (!buf.isPresent()) {
                 return null;
             }
-            nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array()));
+            nbt = FMLCommonHandler.instance().getDataFixer().process(FixTypes.CHUNK, CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array())));
         }
 
         // restore the cube - async part

@@ -42,6 +42,9 @@ import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.ChunkDataEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -55,7 +58,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 class IONbtWriter {
-
+    
     static byte[] writeNbtBytes(NBTTagCompound nbt) throws IOException {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         CompressedStreamTools.writeCompressed(nbt, buf);
@@ -63,25 +66,31 @@ class IONbtWriter {
     }
 
     static NBTTagCompound write(Column column) {
-        NBTTagCompound nbt = new NBTTagCompound();
-        writeBaseColumn(column, nbt);
-        writeBiomes(column, nbt);
-        writeOpacityIndex(column, nbt);
-        return nbt;
+        NBTTagCompound columnNbt = new NBTTagCompound();
+        NBTTagCompound level = new NBTTagCompound();
+        columnNbt.setTag("Level", level);
+        columnNbt.setInteger("DataVersion", FMLCommonHandler.instance().getDataFixer().version);
+        FMLCommonHandler.instance().getDataFixer().writeVersionData(columnNbt);
+        writeBaseColumn(column, level);
+        writeBiomes(column, level);
+        writeOpacityIndex(column, level);
+        MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Save(column, columnNbt));
+        return columnNbt;
     }
 
     static NBTTagCompound write(final Cube cube) {
         NBTTagCompound cubeNbt = new NBTTagCompound();
-
-        writeBaseCube(cube, cubeNbt);
-
-        writeBlocks(cube, cubeNbt);
-        writeEntities(cube, cubeNbt);
-        writeTileEntities(cube, cubeNbt);
-        writeScheduledTicks(cube, cubeNbt);
-
-        writeLightingInfo(cube, cubeNbt);
-
+        //Added to preserve compatibility with vanilla NBT chunk format.
+        NBTTagCompound level = new NBTTagCompound();
+        cubeNbt.setTag("Level", level);
+        cubeNbt.setInteger("DataVersion", FMLCommonHandler.instance().getDataFixer().version);
+        FMLCommonHandler.instance().getDataFixer().writeVersionData(cubeNbt);
+        writeBaseCube(cube, level);
+        writeBlocks(cube, level);
+        writeEntities(cube, level);
+        writeTileEntities(cube, level);
+        writeScheduledTicks(cube, level);
+        writeLightingInfo(cube, level);
         return cubeNbt;
     }
 
@@ -122,22 +131,25 @@ class IONbtWriter {
         if (ebs == null) {
             return; // no data to save anyway
         }
-
+        NBTTagList sectionList = new NBTTagList();
+        NBTTagCompound section = new NBTTagCompound();
+        sectionList.appendTag(section);
+        cubeNbt.setTag("Sections", sectionList);
         byte[] abyte = new byte[Cube.SIZE * Cube.SIZE * Cube.SIZE];
         NibbleArray data = new NibbleArray();
         NibbleArray add = ebs.getData().getDataForNBT(abyte, data);
 
-        cubeNbt.setByteArray("Blocks", abyte);
-        cubeNbt.setByteArray("Data", data.getData());
+        section.setByteArray("Blocks", abyte);
+        section.setByteArray("Data", data.getData());
 
         if (add != null) {
-            cubeNbt.setByteArray("Add", add.getData());
+            section.setByteArray("Add", add.getData());
         }
 
-        cubeNbt.setByteArray("BlockLight", ebs.getBlocklightArray().getData());
+        section.setByteArray("BlockLight", ebs.getBlocklightArray().getData());
 
         if (!cube.getCubicWorld().getProvider().hasNoSky()) {
-            cubeNbt.setByteArray("SkyLight", ebs.getSkylightArray().getData());
+            section.setByteArray("SkyLight", ebs.getSkylightArray().getData());
         }
     }
 
