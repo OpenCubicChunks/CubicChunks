@@ -53,12 +53,13 @@ public class IONbtReader {
 
     @Nullable
     static Column readColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {
-        Column column = readBaseColumn(world, x, z, nbt);
+        NBTTagCompound level = nbt.getCompoundTag("Level");
+        Column column = readBaseColumn(world, x, z, level);
         if (column == null) {
             return null;
         }
-        readBiomes(nbt, column);
-        readOpacityIndex(nbt, column);
+        readBiomes(level, column);
+        readOpacityIndex(level, column);
 
         column.setModified(false); // its exactly the same as on disk so its not modified
         return column;
@@ -103,21 +104,22 @@ public class IONbtReader {
                     column.getX(), column.getZ(), cubeX, cubeY, cubeZ));
         }
         ICubicWorldServer world = (ICubicWorldServer) column.getWorld();
-
-        Cube cube = readBaseCube(column, cubeX, cubeY, cubeZ, nbt, world);
+        NBTTagCompound level = nbt.getCompoundTag("Level");
+        Cube cube = readBaseCube(column, cubeX, cubeY, cubeZ, level, world);
         if (cube == null) {
             return null;
         }
-        readBlocks(nbt, world, cube);
+        readBlocks(level, world, cube);
 
         return cube;
     }
 
     static void readCubeSyncPart(Cube cube, ICubicWorldServer world, NBTTagCompound nbt) {
-        readEntities(nbt, world, cube);
-        readTileEntities(nbt, world, cube);
-        readScheduledBlockTicks(nbt, world);
-        readLightingInfo(cube, nbt, world);
+        NBTTagCompound level = nbt.getCompoundTag("Level");
+        readEntities(level, world, cube);
+        readTileEntities(level, world, cube);
+        readScheduledBlockTicks(level, world);
+        readLightingInfo(cube, level, world);
 
         cube.markSaved(); // its exactly the same as on disk so its not modified
     }
@@ -159,8 +161,11 @@ public class IONbtReader {
     }
 
     private static void readBlocks(NBTTagCompound nbt, ICubicWorldServer world, Cube cube) {
-        boolean isEmpty = !nbt.hasKey("Blocks");// is this an empty cube?
+        boolean isEmpty = !nbt.hasKey("Sections");// is this an empty cube?
         if (!isEmpty) {
+            NBTTagList sectionList = nbt.getTagList("Sections", 10);
+            nbt = sectionList.getCompoundTagAt(0);
+            
             ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), !cube.getCubicWorld().getProvider().hasNoSky());
 
             byte[] abyte = nbt.getByteArray("Blocks");
