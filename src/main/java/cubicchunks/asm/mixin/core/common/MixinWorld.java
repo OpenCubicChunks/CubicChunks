@@ -63,6 +63,7 @@ import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Collection;
@@ -214,6 +215,21 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
     @Override public Profiler getProfiler() {
         return this.theProfiler;
+    }
+    
+    /**
+     * @author Foghrye4
+     * @reason Original {@link World#markChunkDirty(BlockPos, TileEntity)} 
+     * called by TileEntities whenever they need to force Chunk to save 
+     * valuable info they changed.
+     * Because now we store TileEntities in Cubes instead of Chunks, it will
+     * be quite reasonable to force Cubes to save themselves.
+     */
+    @Overwrite
+    public void markChunkDirty(BlockPos pos, TileEntity unusedTileEntity) {
+        if (this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)) != null) {
+            this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)).markDirty();
+        }
     }
 
     //vanilla methods

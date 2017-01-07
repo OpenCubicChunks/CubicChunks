@@ -858,7 +858,14 @@ public class Cube implements XYZAddressable {
         this.entities.markSaved(this.world.getTotalWorldTime());
         this.isModified = false;
     }
-
+    
+    /**
+     * Mark this cube as one, who need to be saved to disk
+     */
+    public void markDirty() {
+        this.isModified = true;
+    }
+    
     /**
      * Retrieve a list of tickets currently holding this cube loaded
      *
