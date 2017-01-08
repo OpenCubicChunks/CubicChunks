@@ -161,11 +161,13 @@ public class CubicChunks {
         public static final int DEFAULT_VERTICAL_CUBE_LOAD_DISTANCE = 8;
         public static final int DEFAULT_MIN_WORLD_HEIGHT = -4096;
         public static final int DEFAULT_MAX_WORLD_HEIGHT = 4096;
+        public static final int DEFAULT_CHUNK_GC_INTERVAL = 20 * 10;
         private int maxGeneratedCubesPerTick;
         private int lightingTickBudget;
         private int verticalCubeLoadDistance;
         private int worldHeightLowerBound;
         private int worldHeightUpperBound;
+        private int chunkGCInterval;
         private Configuration configuration;
 
         private Config(Configuration configuration) {
@@ -191,7 +193,10 @@ public class CubicChunks {
             worldHeightUpperBound = configuration.getInt("worldHeightUpperBound", Configuration.CATEGORY_GENERAL,
                     DEFAULT_MAX_WORLD_HEIGHT, 256, AddressTools.MAX_BLOCK_Y,
                     "The upper boundary on the world. Blocks will not generate or load above this point.");
-
+            chunkGCInterval = configuration.getInt("chunkGCInterval", Configuration.CATEGORY_GENERAL,
+                    DEFAULT_CHUNK_GC_INTERVAL, 1, Integer.MAX_VALUE,
+                    "Chunk garbage collector update interval. A more lower it is - a more CPU load it will generate. "
+                    + "A more high it is - a more memory will be used to store cubes between launches.");
             if (configuration.hasChanged()) {
                 configuration.save();
             }
@@ -215,6 +220,10 @@ public class CubicChunks {
 
         public int getWorldHeightUpperBound() {
             return worldHeightUpperBound;
+        }
+        
+        public int getChunkGCInterval() {
+            return chunkGCInterval;
         }
 
         public static class GUI extends GuiConfig {
