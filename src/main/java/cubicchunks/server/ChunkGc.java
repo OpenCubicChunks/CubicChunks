@@ -23,6 +23,9 @@
  */
 package cubicchunks.server;
 
+import cubicchunks.CubicChunks;
+import cubicchunks.CubicChunks.Config;
+import cubicchunks.IConfigUpdateListener;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -37,22 +40,21 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class ChunkGc {
-
-    // GC every 10 seconds by default
-    private static final int GC_INTERVAL = 20 * 10;
+public class ChunkGc implements IConfigUpdateListener {
 
     @Nonnull private final CubeProviderServer cubeCache;
 
     private int tick = 0;
+    private volatile int updateInterval = 20 * 10;
 
     public ChunkGc(CubeProviderServer cubeCache) {
         this.cubeCache = cubeCache;
+        CubicChunks.addConfigChangeListener(this);
     }
 
     public void tick() {
         tick++;
-        if (tick > GC_INTERVAL) {
+        if (tick > updateInterval) {
             tick = 0;
             chunkGc();
         }
@@ -72,5 +74,10 @@ public class ChunkGc {
                 columnIt.remove();
             }
         }
+    }
+
+    @Override
+    public void onConfigUpdate(Config config) {
+        this.updateInterval = config.getChunkGCInterval();
     }
 }
