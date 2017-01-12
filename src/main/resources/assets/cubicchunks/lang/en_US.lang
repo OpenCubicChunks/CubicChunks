@@ -17,6 +17,12 @@ cubicchunks.gui.customcubic.ores_tab_title=Customize World Settings%nPage 2 of 3
 cubicchunks.gui.customcubic.advanced_tab_title=Customize World Settings%nPage 3 of 3%nAdvanced Settings
 
 #################################
+###        options            ###
+#################################
+
+cubicchunks.gui.verticalCubeLoadDistance=Vertical Distance: %d cubes
+
+#################################
 ###   basic terrain settings  ###
 #################################
 

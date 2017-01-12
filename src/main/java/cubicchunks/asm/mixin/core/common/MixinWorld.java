@@ -102,9 +102,8 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
     @Override public void initCubicWorld() {
         // Set the world height boundaries to their highest and lowest values respectively
-        this.maxHeight = CubicChunks.Config.DEFAULT_MAX_WORLD_HEIGHT;
-        this.minHeight = CubicChunks.Config.DEFAULT_MIN_WORLD_HEIGHT;
-
+        this.maxHeight = CubicChunks.Config.Options.WORLD_HEIGHT_UPPER_BOUND.getValue();
+        this.minHeight = CubicChunks.Config.Options.WORLD_HEIGHT_LOWER_BOUND.getValue();
         //has to be created early so that creating BlankCube won't crash
         this.lightingManager = new LightingManager(this);
 
