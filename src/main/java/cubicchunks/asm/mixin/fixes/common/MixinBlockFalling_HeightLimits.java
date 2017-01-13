@@ -79,7 +79,7 @@ public abstract class MixinBlockFalling_HeightLimits extends Block {
     
     @Redirect(method = "checkFallable", at = @At(value = "INVOKE", target = BLOCK_FALLING_CAN_FALL_THROUGH), require = 2)
     private boolean checkCanFallThrough(IBlockState blockState, World worldIn, BlockPos pos) {
-        if(((ICubicWorld)worldIn).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos.down()))!=null) {
+        if(!((ICubicWorld)worldIn).isCubicWorld() || ((ICubicWorld)worldIn).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos.down()))!=null) {
             return BlockFalling.canFallThrough(blockState);
         }
         return false;
@@ -87,7 +87,7 @@ public abstract class MixinBlockFalling_HeightLimits extends Block {
     
     @Redirect(method = "checkFallable", at = @At(value = "INVOKE", target = WORLD_IS_AIR_BLOCK), require = 2)
     private boolean checkIsAirBlock(World worldIn, BlockPos pos) {
-        if(((ICubicWorld)worldIn).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos))!=null) {
+        if(!((ICubicWorld)worldIn).isCubicWorld() || ((ICubicWorld)worldIn).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos))!=null) {
             return worldIn.isAirBlock(pos);
         }
         return false;
