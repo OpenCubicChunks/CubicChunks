@@ -54,9 +54,12 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.border.WorldBorder;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.fml.common.eventhandler.Cancelable;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -65,6 +68,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Collection;
 import java.util.List;
@@ -219,16 +225,20 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
     
     /**
      * @author Foghrye4
-     * @reason Original {@link World#markChunkDirty(BlockPos, TileEntity)} 
-     * called by TileEntities whenever they need to force Chunk to save 
-     * valuable info they changed.
-     * Because now we store TileEntities in Cubes instead of Chunks, it will
-     * be quite reasonable to force Cubes to save themselves.
+     * @reason Original {@link World#markChunkDirty(BlockPos, TileEntity)}
+     *         called by TileEntities whenever they need to force Chunk to save
+     *         valuable info they changed. Because now we store TileEntities in
+     *         Cubes instead of Chunks, it will be quite reasonable to force
+     *         Cubes to save themselves.
      */
-    @Overwrite
-    public void markChunkDirty(BlockPos pos, TileEntity unusedTileEntity) {
-        if (this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)) != null) {
-            this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)).markDirty();
+    @Inject(method = "markChunkDirty", at = @At("HEAD"), cancellable = true)
+    public void onMarkChunkDirty(BlockPos pos, TileEntity unusedTileEntity, CallbackInfo ci) {
+        if (this.isCubicWorld()) {
+            Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos));
+            if (cube != null) {
+                cube.markDirty();
+            }
+            ci.cancel();
         }
     }
 
