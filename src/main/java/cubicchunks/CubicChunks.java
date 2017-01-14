@@ -156,18 +156,66 @@ public class CubicChunks {
 
     public static class Config {
 
-        public static final int DEFAULT_MAX_GENERATED_CUBES_PER_TICK = 49 * 16;
-        public static final int DEFAULT_LIGHTING_TICK_BUDGET = 10;
-        public static final int DEFAULT_VERTICAL_CUBE_LOAD_DISTANCE = 8;
-        public static final int DEFAULT_MIN_WORLD_HEIGHT = -4096;
-        public static final int DEFAULT_MAX_WORLD_HEIGHT = 4096;
-        public static final int DEFAULT_CHUNK_GC_INTERVAL = 20 * 10;
-        private int maxGeneratedCubesPerTick;
-        private int lightingTickBudget;
-        private int verticalCubeLoadDistance;
-        private int worldHeightLowerBound;
-        private int worldHeightUpperBound;
-        private int chunkGCInterval;
+        public static enum Options {
+            MAX_GENERATED_CUBES_PER_TICK(1, Integer.MAX_VALUE, 49 * 16, "The number of cubic chunks to generate per tick."),
+            LIGHTING_TICK_BUDGET(1, Integer.MAX_VALUE, 10,
+                    "The maximum amount of time in milliseconds per tick to spend performing lighting calculations."),
+            VERTICAL_CUBE_LOAD_DISTANCE(2, 32, 8, "Similar to Minecraft's view distance, only for vertical chunks."),
+            WORLD_HEIGHT_LOWER_BOUND(AddressTools.MIN_BLOCK_Y, 0, -4096,
+                    "The lower boundary on the world. Blocks will not generate or load below this point."),
+            WORLD_HEIGHT_UPPER_BOUND(256, AddressTools.MAX_BLOCK_Y, 4096,
+                    "The upper boundary on the world. Blocks will not generate or load above this point."),
+            CHUNK_G_C_INTERVAL(1, Integer.MAX_VALUE, 20 * 10,
+                    "Chunk garbage collector update interval. A more lower it is - a more CPU load it will generate. "
+                            + "A more high it is - a more memory will be used to store cubes between launches.");
+
+            private final int minValue;
+            private final int maxValue;
+            private final int defaultValue;
+            private final String description;
+            private int value;
+
+            private Options(int minValue1, int maxValue1, int defaultValue1, String description1) {
+                minValue = minValue1;
+                maxValue = maxValue1;
+                defaultValue = defaultValue1;
+                description = description1;
+                value = defaultValue;
+            }
+
+            public float getNormalValue() {
+                return (float) (value - minValue) / (maxValue - minValue);
+            }
+
+            public void setValueFromNormal(float sliderValue) {
+                value = minValue + (int) ((maxValue - minValue) * sliderValue);
+                config.configuration.get(Configuration.CATEGORY_GENERAL, this.getNicelyFormattedName(), value).set(value);
+                config.configuration.save();
+                for (IConfigUpdateListener l : configChangeListeners) {
+                    l.onConfigUpdate(config);
+                }
+            }
+
+            public int getValue() {
+                return value;
+            }
+
+            public String getNicelyFormattedName() {
+                StringBuffer out = new StringBuffer();
+                char char_ = '_';
+                char prevchar = 0;
+                for (char c : this.name().toCharArray()) {
+                    if (c != char_ && prevchar != char_) {
+                        out.append(String.valueOf(c).toLowerCase());
+                    } else if (c != char_) {
+                        out.append(String.valueOf(c));
+                    }
+                    prevchar = c;
+                }
+                return out.toString();
+            }
+        }
+
         private Configuration configuration;
 
         private Config(Configuration configuration) {
@@ -180,50 +228,37 @@ public class CubicChunks {
         }
 
         void syncConfig() {
-            maxGeneratedCubesPerTick = configuration.getInt("maxGeneratedCubesPerTick", Configuration.CATEGORY_GENERAL,
-                    DEFAULT_MAX_GENERATED_CUBES_PER_TICK, 1, Integer.MAX_VALUE, "The number of cubic chunks to generate per tick.");
-            lightingTickBudget = configuration.getInt("lightingTickBudget", Configuration.CATEGORY_GENERAL,
-                    DEFAULT_LIGHTING_TICK_BUDGET, 1, Integer.MAX_VALUE,
-                    "The maximum amount of time in milliseconds per tick to spend performing lighting calculations.");
-            verticalCubeLoadDistance = configuration.getInt("verticalCubeLoadDistance", Configuration.CATEGORY_GENERAL,
-                    DEFAULT_VERTICAL_CUBE_LOAD_DISTANCE, 2, 32, "Similar to Minecraft's view distance, only for vertical chunks.");
-            worldHeightLowerBound = configuration.getInt("worldHeightLowerBound", Configuration.CATEGORY_GENERAL,
-                    DEFAULT_MIN_WORLD_HEIGHT, AddressTools.MIN_BLOCK_Y, 0,
-                    "The lower boundary on the world. Blocks will not generate or load below this point.");
-            worldHeightUpperBound = configuration.getInt("worldHeightUpperBound", Configuration.CATEGORY_GENERAL,
-                    DEFAULT_MAX_WORLD_HEIGHT, 256, AddressTools.MAX_BLOCK_Y,
-                    "The upper boundary on the world. Blocks will not generate or load above this point.");
-            chunkGCInterval = configuration.getInt("chunkGCInterval", Configuration.CATEGORY_GENERAL,
-                    DEFAULT_CHUNK_GC_INTERVAL, 1, Integer.MAX_VALUE,
-                    "Chunk garbage collector update interval. A more lower it is - a more CPU load it will generate. "
-                    + "A more high it is - a more memory will be used to store cubes between launches.");
+            for (Options configOption : Options.values()) {
+                configOption.value = configuration.getInt(configOption.getNicelyFormattedName(), Configuration.CATEGORY_GENERAL,
+                        configOption.defaultValue, configOption.minValue, configOption.maxValue, configOption.description);
+            }
             if (configuration.hasChanged()) {
                 configuration.save();
             }
         }
 
         public int getMaxGeneratedCubesPerTick() {
-            return maxGeneratedCubesPerTick;
+            return Options.MAX_GENERATED_CUBES_PER_TICK.value;
         }
 
         public int getLightingTickBudget() {
-            return lightingTickBudget;
+            return Options.LIGHTING_TICK_BUDGET.value;
         }
 
         public int getVerticalCubeLoadDistance() {
-            return verticalCubeLoadDistance;
+            return Options.VERTICAL_CUBE_LOAD_DISTANCE.value;
         }
 
         public int getWorldHeightLowerBound() {
-            return worldHeightLowerBound;
+            return Options.WORLD_HEIGHT_LOWER_BOUND.value;
         }
 
         public int getWorldHeightUpperBound() {
-            return worldHeightUpperBound;
+            return Options.WORLD_HEIGHT_UPPER_BOUND.value;
         }
-        
+
         public int getChunkGCInterval() {
-            return chunkGCInterval;
+            return Options.CHUNK_G_C_INTERVAL.value;
         }
 
         public static class GUI extends GuiConfig {
