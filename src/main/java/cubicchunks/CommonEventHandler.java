@@ -23,16 +23,22 @@
  */
 package cubicchunks;
 
+import cubicchunks.network.PacketDispatcher;
+import cubicchunks.network.PacketWorldHeightBounds;
 import cubicchunks.server.SpawnCubes;
 import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.WorldSavedDataHeightBounds;
 import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -56,10 +62,23 @@ public class CommonEventHandler {
             WorldProvider provider = ((ICubicWorldType) type).getReplacedProviderFor(world.getProvider());
             ReflectionUtil.setFieldValueSrg(world, "field_73011_w", provider);
         }
-
-        world.initCubicWorld();
-
+        int minHeight = 0;
+        int maxHeight = 255;
+        WorldSavedDataHeightBounds heightBounds = null;
         if (!world.isRemote()) {
+            heightBounds =
+                    (WorldSavedDataHeightBounds) evt.getWorld().getMapStorage().getOrLoadData(WorldSavedDataHeightBounds.class, "heightBounds");
+            if (heightBounds == null) {
+                heightBounds = new WorldSavedDataHeightBounds("heightBounds");
+            }
+            minHeight = heightBounds.minHeight;
+            maxHeight = heightBounds.maxHeight;
+        }
+        world.initCubicWorld(minHeight, maxHeight);
+        if (!world.isRemote()) {
+            heightBounds.markDirty();
+            evt.getWorld().getMapStorage().setData("heightBounds", heightBounds);
+            evt.getWorld().getMapStorage().saveAllData();
             SpawnCubes.update(world);
         }
     }
@@ -77,5 +96,18 @@ public class CommonEventHandler {
             }
         }
     }
-
+    
+    @SubscribeEvent
+    public void onPlayerJoinWorld(PlayerLoggedInEvent evt) {
+        if (evt.player instanceof EntityPlayerMP && ((ICubicWorld) evt.player.world).isCubicWorld()) {
+            PacketDispatcher.sendTo(new PacketWorldHeightBounds(evt.player.world), (EntityPlayerMP) evt.player);
+        }
+    }
+    
+    @SubscribeEvent
+    public void onPlayerJoinWorld(PlayerChangedDimensionEvent evt) {
+        if (evt.player instanceof EntityPlayerMP && ((ICubicWorld) evt.player.world).isCubicWorld()) {
+            PacketDispatcher.sendTo(new PacketWorldHeightBounds(evt.player.world), (EntityPlayerMP) evt.player);
+        }
+    }
 }
