@@ -93,20 +93,20 @@ public class TestWorldServerMixin {
 
     @Test
     public void testInitCubicWorldIsCubic() {
-        this.world.initCubicWorld();
+        this.world.initCubicWorld(-4096,4096);
         assertTrue(this.world.isCubicWorld());
     }
 
     @Test
     public void testCubicWorldMinHeight() {
-        this.world.initCubicWorld();
+        this.world.initCubicWorld(-4096,4096);
         assertThat(this.world.getMinHeight(), is(lessThan(0)));
     }
 
     @Test
     public void testCubicWorldMaxHeight() {
         //System.err.println(((ICubicChunksWorldType)world.getWorldInfo().getTerrainType()).getMinimumPossibleHeight());
-        this.world.initCubicWorld();
+        this.world.initCubicWorld(-4096,4096);
         assertThat(this.world.getMaxHeight(), is(greaterThan(256)));
     }
 }

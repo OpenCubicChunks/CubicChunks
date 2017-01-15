@@ -69,10 +69,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     @Nullable private ChunkGc chunkGc;
     @Nullable private FirstLightProcessor firstLightProcessor;
 
-    @Override public void initCubicWorld() {
-        super.initCubicWorld();
+    @Override public void initCubicWorld(int minHeight, int maxHeight) {
+        super.initCubicWorld(minHeight, maxHeight);
         this.isCubicWorld = true;
-
         this.entitySpawner = new CubeWorldEntitySpawner();
 
         this.chunkProvider = new CubeProviderServer(this,
