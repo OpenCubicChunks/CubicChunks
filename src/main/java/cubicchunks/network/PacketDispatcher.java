@@ -64,6 +64,8 @@ public class PacketDispatcher {
         registerMessage(PacketUnloadCube.Handler.class, PacketUnloadCube.class);
 
         registerMessage(PacketCubeBlockChange.Handler.class, PacketCubeBlockChange.class);
+
+        registerMessage(PacketWorldHeightBounds.Handler.class, PacketWorldHeightBounds.class);
     }
 
     /**
