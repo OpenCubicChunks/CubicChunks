@@ -49,8 +49,8 @@ public abstract class MixinWorldClient extends MixinWorld implements ICubicWorld
 
     @Shadow public abstract boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
 
-    @Override public void initCubicWorld() {
-        super.initCubicWorld();
+    @Override public void initCubicWorld(int minHeight, int maxHeight) {
+        super.initCubicWorld(minHeight, maxHeight);
         this.isCubicWorld = true;
         CubeProviderClient cubeProviderClient = new CubeProviderClient(this);
         this.chunkProvider = cubeProviderClient;
@@ -62,6 +62,11 @@ public abstract class MixinWorldClient extends MixinWorld implements ICubicWorld
 
     @Override public CubeProviderClient getCubeCache() {
         return (CubeProviderClient) this.clientChunkProvider;
+    }
+    
+    @Override public void setHeightBounds(int minHeight1, int maxHeight1) {
+        this.minHeight = minHeight1;
+        this.maxHeight = maxHeight1;
     }
 
     @Intrinsic public boolean world$invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState) {

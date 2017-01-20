@@ -36,6 +36,7 @@ import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.INetHandler;
 import net.minecraft.network.PacketBuffer;
@@ -52,7 +53,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class ClientHandler implements INetHandler {
 
     private static final ClientHandler m_instance = new ClientHandler();
-
+    
     public static ClientHandler getInstance() {
         return m_instance;
     }
@@ -201,5 +202,14 @@ public class ClientHandler implements INetHandler {
             worldClient.invalidateRegionAndSetBlock(pos, packet.blockStates[i]);
         }
         cube.getTileEntityMap().values().forEach(TileEntity::updateContainingBlockInfo);
+    }
+
+    public void handle(final PacketWorldHeightBounds message) {
+        if (Minecraft.getMinecraft().getConnection() != null) {
+            WorldClient world = Minecraft.getMinecraft().getConnection().clientWorldController;
+            if (((ICubicWorldClient) world).isCubicWorld()) {
+                ((ICubicWorldClient) world).setHeightBounds(message.getMinHeight(), message.getMaxHeight());
+            }
+        }
     }
 }

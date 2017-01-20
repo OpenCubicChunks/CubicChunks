@@ -66,8 +66,10 @@ public interface ICubicWorld {
     /**
      * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
      * are loaded. Cannot be used more than once.
+     * @param maxHeight 
+     * @param minHeight 
      */
-    void initCubicWorld();
+    void initCubicWorld(int minHeight, int maxHeight);
 
     boolean isCubicWorld();
 
