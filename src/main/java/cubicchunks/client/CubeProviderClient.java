@@ -104,6 +104,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
      */
     public Cube loadCube(Column column, int cubeY) {
         Cube cube = new Cube(column, cubeY); // auto added to column
+        cube.setCubeLoaded();
         column.addCube(cube);
         this.cubeMap.put(cube);
 
