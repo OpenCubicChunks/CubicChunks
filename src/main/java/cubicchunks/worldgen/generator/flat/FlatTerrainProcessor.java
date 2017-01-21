@@ -28,12 +28,16 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
+import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+
+import java.util.Random;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -87,6 +91,7 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
 
     @Override
     public void populate(Cube cube) {
+        CubeGeneratorsRegistry.generateWorld(new Random(cube.cubeRandomSeed()), cube.getCoords().getMinBlockPos(), (World) world);
     }
 
     @Override

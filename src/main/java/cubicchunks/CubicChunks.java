@@ -32,6 +32,7 @@ import cubicchunks.util.AddressTools;
 import cubicchunks.world.type.CustomCubicWorldType;
 import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
+import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiScreen;
@@ -110,7 +111,7 @@ public class CubicChunks {
     }
 
     @EventHandler
-    public void init(FMLInitializationEvent event) {
+    public void init(FMLInitializationEvent event) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
         proxy.registerEvents();
 
         VanillaCubicWorldType.create();
@@ -120,6 +121,7 @@ public class CubicChunks {
         LOGGER.debug("Registered world types");
 
         PacketDispatcher.registerPackets();
+        CubeGeneratorsRegistry.computeSortedGeneratorList();
     }
 
     @EventHandler
