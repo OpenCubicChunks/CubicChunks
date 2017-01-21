@@ -26,9 +26,11 @@ package cubicchunks.worldgen.generator.custom;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
 import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
 import java.util.HashMap;
@@ -43,10 +45,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CustomPopulationProcessor {
 
     private Map<Biome, BiomeFeatures> biomeFeaturesMap;
+    private ICubicWorld world;
 
     public CustomPopulationProcessor(ICubicWorld world) {
         this.biomeFeaturesMap = new HashMap<>();
-
+        this.world = world;
         // for now use global for all biomes
         for (Biome biome : Biome.REGISTRY) {
             if (biome == null) {
@@ -68,5 +71,6 @@ public class CustomPopulationProcessor {
         for (FeatureGenerator gen : features.getBiomeFeatureGenerators()) {
             gen.generate(rand, cube, biome);
         }
+        CubeGeneratorsRegistry.generateWorld(rand, cube.getCoords().getMinBlockPos(), (World) world);
     }
 }
