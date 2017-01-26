@@ -45,12 +45,12 @@ buildscript {
         }
     }
     dependencies {
-        classpath("net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT")
         classpath("org.ajoberstar:grgit:1.4.+")
         classpath("org.spongepowered:mixingradle:0.4-SNAPSHOT")
         classpath("com.github.jengelman.gradle.plugins:shadow:1.2.3")
         classpath("gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.13.1")
         classpath("me.champeau.gradle:jmh-gradle-plugin:0.3.1")
+        classpath("net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT")
     }
 }
 
@@ -117,8 +117,8 @@ configure<ForgeExtension> {
             "-Dcubicchunks.debug=true", //various debug options of cubic chunks mod. Adds items that are not normally there!
             "-XX:-OmitStackTraceInFastThrow", //without this sometimes you end up with exception with empty stacktrace
             "-Dmixin.checks.interfaces=true", //check if all interface methods are overriden in mixin
-            "-Dfml.noGrab=false", //change to disable Minecraft taking control over mouse
-            "-ea" //enable assertions
+            "-Dfml.noGrab=false" //change to disable Minecraft taking control over mouse
+            //"-ea" //enable assertions
     )
 
     clientJvmArgs.addAll(args)
@@ -199,7 +199,7 @@ dependencies {
 
     compile(project("RegionLib"))
 
-    compileOnly("net.malisis:malisiscore:1.11-5.0.0-SNAPSHOT:dev")
+    compile("net.malisis:malisiscore:1.11-5.0.0-SNAPSHOT:dev")
 }
 
 configurations.getByName("jmh").extendsFrom(configurations.compile)
@@ -243,6 +243,7 @@ shadowJar {
      +--- commons-io:commons-io:2.4
      \--- com.googlecode.jarjar:jarjar:1.1
      */
+    exclude("net.malisis")
     classifier = ""
 }
 
