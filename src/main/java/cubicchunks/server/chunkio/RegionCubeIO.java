@@ -238,7 +238,7 @@ public class RegionCubeIO implements ICubeIO {
         }
     }
 
-    private static class SaveEntry<T extends IKey<?, ?>> {
+    private static class SaveEntry<T extends IKey<?>> {
 
         private final T pos;
         private final NBTTagCompound nbt;
