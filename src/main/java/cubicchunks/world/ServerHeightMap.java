@@ -92,15 +92,15 @@ public class ServerHeightMap implements IHeightMap {
 
 
     private static int packSegment(int pos, int opacity) {
-        return Bits.packUnsignedToInt(opacity, 8, 24) | Bits.packSignedToInt(pos, 24, 0);
+        return Bits.packUnsignedToInt(opacity, 1, 31) | Bits.packSignedToInt(pos, 31, 0);
     }
 
     private static int unpackOpacity(int packed) {
-        return Bits.unpackUnsigned(packed, 8, 24);
+        return Bits.unpackUnsigned(packed, 1, 24);
     }
 
     private static int unpackPosition(int packed) {
-        return Bits.unpackSigned(packed, 24, 0);
+        return Bits.unpackSigned(packed, 31, 0);
     }
 
     private static int getLastSegmentIndex(int[] segments) {
