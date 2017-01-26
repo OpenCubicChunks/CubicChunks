@@ -24,10 +24,14 @@
 package cubicchunks.asm;
 
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import java.util.function.Predicate;
+
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
@@ -67,5 +71,30 @@ public class MixinUtils {
             return y;
         }
         return 64;
+    }
+
+    public static boolean canTickPosition(World world, BlockPos pos) {
+        return canTickPosition((ICubicWorld) world, pos);
+    }
+
+    public static boolean canTickPosition(World world, BlockPos pos, Predicate<Cube> canTickCube) {
+        return canTickPosition((ICubicWorld) world, pos, canTickCube);
+    }
+
+    public static boolean canTickPosition(ICubicWorld world, BlockPos pos) {
+        return canTickPosition(world, pos, null);
+    }
+
+    public static boolean canTickPosition(ICubicWorld world, BlockPos pos, @Nullable Predicate<Cube> canTickCube) {
+        if (!world.isValid(pos)) {
+            return true; // can tick everything outside of limits
+        }
+        if (!world.isBlockLoaded(pos)) {
+            return false;
+        }
+        if (canTickCube == null) {
+            return true;
+        }
+        return canTickCube.test(world.getCubeFromBlockCoords(pos));
     }
 }

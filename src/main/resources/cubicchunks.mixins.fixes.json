@@ -7,11 +7,19 @@
         "common.MixinEntityMinecart_KillFix",
         "common.MixinBlockFalling_HeightLimits",
         "common.MixinEntityFallingBlock_HeightLimits",
-        "common.MixinWorld"
+        "common.MixinWorld",
+        "common.MixinRandomPositionGenerator",
+        "common.MixinPathNavigateGround",
+        "common.isblockloaded.MixinEntity",
+        "common.isblockloaded.MixinEntityLivingBase"
     ],
     "client": [
+        "client.MixinEntityPlayerSP"
     ],
     "server": [
-    ]
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
 }
 

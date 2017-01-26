@@ -26,6 +26,7 @@ package cubicchunks.asm.mixin.core.common;
 import static cubicchunks.asm.JvmNames.WORLD_GET_PERSISTENT_CHUNKS;
 import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
 
+import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
@@ -55,10 +56,6 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
     private int updateEntity_entityPosX;
     private int updateEntity_entityPosZ;
 
-    @Shadow private boolean isValid(BlockPos pos) {
-        throw new Error();
-    }
-
     //TODO: handle private isAreaLoaded correctly
     @Shadow private boolean isAreaLoaded(int x1, int y1, int z1, int x2, int y2, int z2, boolean allowEmpty) {
         throw new Error();
@@ -72,8 +69,8 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
      */
     @Group(name = "updateEntity", max = 2, min = 2)
     @Redirect(method = "updateEntityWithOptionalForce",
-            at = @At(value = "INVOKE", target = WORLD_IS_AREA_LOADED),
-            require = 1)
+              at = @At(value = "INVOKE", target = WORLD_IS_AREA_LOADED),
+              require = 1)
     private boolean canUpdateEntity(World _this, int startBlockX, int oldStartBlockY, int startBlockZ, int endBlockX, int oldEndBlockY, int endBlockZ,
             boolean allowEmpty) {
         if (!this.isCubicWorld()) {
@@ -83,8 +80,7 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
         BlockPos entityPos = new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ);
 
         return this.isRemote() ||
-                !this.isValid(entityPos) || // if an entity is below the world we want it to keep ticking
-                this.getCubeFromBlockCoords(entityPos).getTickets().shouldTick();
+                MixinUtils.canTickPosition(this, entityPos, cube -> cube.getTickets().shouldTick());
     }
 
     /**

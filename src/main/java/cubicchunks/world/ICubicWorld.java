@@ -66,8 +66,8 @@ public interface ICubicWorld {
     /**
      * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
      * are loaded. Cannot be used more than once.
-     * @param maxHeight 
-     * @param minHeight 
+     * @param maxHeight
+     * @param minHeight
      */
     void initCubicWorld(int minHeight, int maxHeight);
 
@@ -140,6 +140,10 @@ public interface ICubicWorld {
 
     int getEffectiveHeight(int blockX, int blockZ);
 
+    boolean isBlockColumnLoaded(BlockPos pos);
+
+    boolean isBlockColumnLoaded(BlockPos pos, boolean allowEmpty);
+
     //vanilla part
 
     //field accessors
@@ -155,6 +159,13 @@ public interface ICubicWorld {
     Profiler getProfiler();
 
     //methods
+
+    boolean isValid(BlockPos pos);
+
+    boolean isBlockLoaded(BlockPos pos);
+
+    boolean isBlockLoaded(BlockPos pos, boolean allowEmpty);
+
     void loadEntities(Collection<Entity> entities);
 
     void addTileEntities(Collection<TileEntity> values);

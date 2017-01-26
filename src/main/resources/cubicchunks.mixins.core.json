@@ -20,5 +20,8 @@
     ],
     "server": [
         "server.MixinDedicatedServer_HeightLimits"
-    ]
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
 }

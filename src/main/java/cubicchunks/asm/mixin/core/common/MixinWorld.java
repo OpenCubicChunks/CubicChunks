@@ -54,23 +54,19 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
-import net.minecraftforge.fml.common.eventhandler.Cancelable;
-
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Collection;
 import java.util.List;
@@ -95,6 +91,8 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
     @Shadow @Final public boolean isRemote;
     @Shadow @Final public Profiler theProfiler;
     @Shadow @Final @Mutable protected ISaveHandler saveHandler;
+
+    @Shadow protected abstract boolean isChunkLoaded(int i, int i1, boolean allowEmpty);
 
     @Nullable private LightingManager lightingManager;
     protected boolean isCubicWorld;
@@ -221,7 +219,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
     @Override public Profiler getProfiler() {
         return this.theProfiler;
     }
-    
+
     /**
      * @author Foghrye4
      * @reason Original {@link World#markChunkDirty(BlockPos, TileEntity)}
@@ -241,7 +239,37 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
         }
     }
 
+    @Override public boolean isBlockColumnLoaded(BlockPos pos) {
+        return isBlockColumnLoaded(pos, true);
+    }
+
+    @Override public boolean isBlockColumnLoaded(BlockPos pos, boolean allowEmpty) {
+        return this.isChunkLoaded(pos.getX() >> 4, pos.getZ() >> 4, allowEmpty);
+    }
+
     //vanilla methods
+
+    //==============================================
+    @Shadow public abstract boolean isValid(BlockPos pos);
+
+    @Intrinsic public boolean world$isValid(BlockPos pos) {
+        return this.isValid(pos);
+    }
+
+    //==============================================
+    @Shadow public abstract boolean isBlockLoaded(BlockPos pos);
+
+    @Intrinsic public boolean world$isBlockLoaded(BlockPos pos) {
+        return this.isBlockLoaded(pos);
+    }
+
+    //==============================================
+    @Shadow public abstract boolean isBlockLoaded(BlockPos pos, boolean allowEmpty);
+
+    @Intrinsic public boolean world$isBlockLoaded(BlockPos pos, boolean allowEmpty) {
+        return this.isBlockLoaded(pos, allowEmpty);
+    }
+
     //==============================================
     @Shadow public abstract void loadEntities(Collection<Entity> entities);
 

@@ -49,6 +49,8 @@ public class JvmNames {
         ICOMMAND_SENDER = "Lnet/minecraft/command/ICommandSender;",
         IMMUTABLE_SET_MULTIMAP = "Lcom/google/common/collect/ImmutableSetMultimap;",
         MINECRAFT_SERVER = "Lnet/minecraft/server/MinecraftServer;",
+        MUTABLE_BLOCK_POS = "Lnet/minecraft/util/math/BlockPos$MutableBlockPos;",
+        POOLED_MUTABLE_BLOCK_POS = "Lnet/minecraft/util/math/BlockPos$PooledMutableBlockPos;",
         STRING = "Ljava/lang/String;",
         STRUCTURE_BOUNDING_BOX = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;",
         WORLD = "Lnet/minecraft/world/World;",
@@ -67,11 +69,16 @@ public class JvmNames {
         COMMAND_TP_GET_ENTITY = COMMAND_TP + "getEntity(" + MINECRAFT_SERVER + ICOMMAND_SENDER + STRING + ")" + ENTITY,
         ENTITY_FALLING_BLOCK_CONSTRUCT = ENTITY_FALLING_BLOCK+"<init>("+WORLD+"DDD"+IBLOCK_STATE+")V",
         GUI_OVERLAY_DEBUG_CALL = GUI_OVERLAY_DEBUG + "call()Ljava/util/List;",
+        MUTABLE_BLOCK_POS_CONSTRUCT = MUTABLE_BLOCK_POS + "<init>(III)V",
+        POOLED_MUTABLE_BLOCK_POS_SET_POS_D = POOLED_MUTABLE_BLOCK_POS + "setPos(DDD)" + POOLED_MUTABLE_BLOCK_POS,
         WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS = WORLD_CLIENT + "getChunkFromBlockCoords(" + BLOCK_POS + ")" + CHUNK,
         WORLD_GET_LIGHT_FOR = WORLD + "getLightFor(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
         WORLD_GET_LIGHT_WITH_FLAG = WORLD + "getLight(" + BLOCK_POS + "Z)I",
         WORLD_GET_PERSISTENT_CHUNKS = WORLD + "getPersistentChunks()" + IMMUTABLE_SET_MULTIMAP,
         WORLD_IS_AIR_BLOCK = WORLD + "isAirBlock(" + BLOCK_POS + ")Z",
-        WORLD_IS_AREA_LOADED = WORLD + "isAreaLoaded(IIIIIIZ)Z";
+        WORLD_IS_AREA_LOADED = WORLD + "isAreaLoaded(IIIIIIZ)Z",
+        WORLD_IS_BLOCK_LOADED = WORLD + "isBlockLoaded(" + BLOCK_POS + ")Z",
+        WORLD_IS_BLOCK_LOADED_Z = WORLD + "isBlockLoaded(" + BLOCK_POS + "Z)Z";
+
     // @formatter:on
 }

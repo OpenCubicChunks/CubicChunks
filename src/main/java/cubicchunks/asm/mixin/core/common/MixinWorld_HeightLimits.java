@@ -27,9 +27,13 @@ import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_FOR;
 import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_WITH_FLAG;
 import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
+import static cubicchunks.asm.JvmNames.WORLD_IS_BLOCK_LOADED_Z;
+import static cubicchunks.util.Coords.blockToCube;
 
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.BlankCube;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -186,5 +190,22 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
         cbi.setReturnValue(ret);
     }
 
-    //TODO: modify isBlockLoaded to check for cubes. It currently breaks some parts of Minecraft because it's used with constant Y position.
+    // NOTE: This may break some things
+
+    /**
+     * @author Barteks2x
+     * @reason CubicChunks needs to check if cube is loaded instead of chunk
+     */
+    @Inject(method = WORLD_IS_BLOCK_LOADED_Z, cancellable = true, at = @At(value = "HEAD"))
+    public void isBlockLoaded(BlockPos pos, boolean allowEmpty, CallbackInfoReturnable<Boolean> cbi) {
+        if (!isCubicWorld()) {
+            return;
+        }
+        Cube cube = this.getCubeCache().getLoadedCube(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()));
+        if (allowEmpty) {
+            cbi.setReturnValue(cube != null);
+        } else {
+            cbi.setReturnValue(cube != null && !(cube instanceof BlankCube));
+        }
+    }
 }

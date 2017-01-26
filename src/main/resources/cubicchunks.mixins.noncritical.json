@@ -18,5 +18,8 @@
         "client.MixinGuiOverlayDebug"
     ],
     "server": [
-    ]
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
 }

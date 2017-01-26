@@ -48,6 +48,7 @@ import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@SuppressWarnings("MethodCallSideOnly")
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class ClientHandler implements INetHandler {
