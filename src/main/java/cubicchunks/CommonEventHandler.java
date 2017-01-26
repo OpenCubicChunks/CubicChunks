@@ -33,13 +33,13 @@ import cubicchunks.world.WorldSavedDataHeightBounds;
 import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -49,16 +49,16 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CommonEventHandler {
 
-    @SubscribeEvent
-    public void onWorldLoad(WorldEvent.Load evt) {
-        if (!(evt.getWorld().getWorldType() instanceof ICubicWorldType)) {
+    @SubscribeEvent // this event is fired early enough to replace world with cubic chunks without any issues
+    public void onWorldAttachCapabilities(AttachCapabilitiesEvent<World> evt) {
+        if (!(evt.getObject().getWorldType() instanceof ICubicWorldType)) {
             return;
         }
 
-        CubicChunks.LOGGER.info("Initializing world " + evt.getWorld() + " with type " + evt.getWorld().getWorldType());
-        ICubicWorld world = (ICubicWorld) evt.getWorld();
+        CubicChunks.LOGGER.info("Initializing world " + evt.getObject() + " with type " + evt.getObject().getWorldType());
+        ICubicWorld world = (ICubicWorld) evt.getObject();
 
-        WorldType type = evt.getWorld().getWorldType();
+        WorldType type = evt.getObject().getWorldType();
         if (type instanceof ICubicWorldType) {
             WorldProvider provider = ((ICubicWorldType) type).getReplacedProviderFor(world.getProvider());
             ReflectionUtil.setFieldValueSrg(world, "field_73011_w", provider);
@@ -68,7 +68,7 @@ public class CommonEventHandler {
         WorldSavedDataHeightBounds heightBounds = null;
         if (!world.isRemote()) {
             heightBounds =
-                    (WorldSavedDataHeightBounds) evt.getWorld().getMapStorage().getOrLoadData(WorldSavedDataHeightBounds.class, "heightBounds");
+                    (WorldSavedDataHeightBounds) evt.getObject().getMapStorage().getOrLoadData(WorldSavedDataHeightBounds.class, "heightBounds");
             if (heightBounds == null) {
                 heightBounds = new WorldSavedDataHeightBounds("heightBounds");
             }
@@ -78,8 +78,19 @@ public class CommonEventHandler {
         world.initCubicWorld(minHeight, maxHeight);
         if (!world.isRemote()) {
             heightBounds.markDirty();
-            evt.getWorld().getMapStorage().setData("heightBounds", heightBounds);
-            evt.getWorld().getMapStorage().saveAllData();
+            evt.getObject().getMapStorage().setData("heightBounds", heightBounds);
+            evt.getObject().getMapStorage().saveAllData();
+        }
+    }
+
+    @SubscribeEvent
+    public void onWorldLoad(WorldEvent.Load evt) {
+        if (!(evt.getWorld().getWorldType() instanceof ICubicWorldType)) {
+            return;
+        }
+        ICubicWorld world = (ICubicWorld) evt.getWorld();
+
+        if (!world.isRemote()) {
             SpawnCubes.update(world);
         }
     }
@@ -97,7 +108,7 @@ public class CommonEventHandler {
             }
         }
     }
-    
+
     @SubscribeEvent
     public void onPlayerJoinWorld(EntityJoinWorldEvent evt) {
         if (evt.getEntity() instanceof EntityPlayerMP && ((ICubicWorld) evt.getWorld()).isCubicWorld()) {

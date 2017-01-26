@@ -66,9 +66,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mod(modid = CubicChunks.MODID,
-        name = "CubicChunks",
-        version = "@@VERSION@@",
-        guiFactory = "cubicchunks.client.GuiFactory")
+     name = "CubicChunks",
+     version = "@@VERSION@@",
+     guiFactory = "cubicchunks.client.GuiFactory")
 @Mod.EventBusSubscriber
 public class CubicChunks {
 
