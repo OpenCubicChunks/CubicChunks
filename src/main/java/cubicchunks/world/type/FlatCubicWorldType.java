@@ -26,9 +26,14 @@ package cubicchunks.world.type;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import cubicchunks.worldgen.gui.FlatCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -52,5 +57,14 @@ public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
     @Override
     public WorldProvider getReplacedProviderFor(WorldProvider provider) {
         return provider;
+    }
+
+    public boolean isCustomizable() {
+        return true;
+    }
+
+    @SideOnly(Side.CLIENT)
+    public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
+        new FlatCubicGui(guiCreateWorld).display();
     }
 }
