@@ -73,7 +73,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CubicChunks {
 
     public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
-    public static final boolean USE_MAPDB = System.getProperty("cubicchunks.forceMapDB", "false").equalsIgnoreCase("true");
     public static final String MODID = "cubicchunks";
     @Nonnull
     public static Logger LOGGER = LogManager.getLogger("EarlyCubicChunks");//use some logger even before it's set. useful for unit tests

@@ -180,9 +180,6 @@ repositories {
 
 dependencies {
     compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
-    compile("org.mapdb:mapdb:3.0.0-RC2") {
-        exclude(mapOf("module" to "guava"))
-    }
     testCompile("junit:junit:4.11")
     testCompile("org.hamcrest:hamcrest-junit:2.0.0.0")
     testCompile("it.ozimov:java7-hamcrest-matchers:0.7.0")
@@ -219,18 +216,6 @@ jar {
 
 val shadowJar = get<ShadowJar>("shadowJar")
 shadowJar {
-    //MapDB stuff
-    relocate("org.mapdb", "cubicchunks.org.mappdb")
-    relocate("kotlin", "cubicchunks.org.mappdb.com.google")
-    relocate("net.jcip", "cubicchunks.org.mappdb.net.jcip")
-    relocate("org.eclipse.collections", "cubicchunks.org.mappdb.org.eclipse.collections")
-    relocate("net.jpountz", "cubicchunks.org.mappdb.net.jpountz")
-
-    //MapDB natives. Will it work?
-    relocate("win32", "cubicchunks.org.mappdb.win32")
-    relocate("linux", "cubicchunks.org.mappdb.linux")
-    relocate("darwin", "cubicchunks.org.mappdb.darwin")
-
     relocate("com.flowpowered", "cubicchunks.com.flowpowered")
     /*
      Mixin shouldn"t be relocated. Mixin dependencies:

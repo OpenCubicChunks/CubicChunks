@@ -25,7 +25,6 @@ package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.ICubeIO;
-import cubicchunks.server.chunkio.MapDBCubeIO;
 import cubicchunks.server.chunkio.RegionCubeIO;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.CubePos;
@@ -88,7 +87,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
         this.worldServer = worldServer;
         try {
-            this.cubeIO = CubicChunks.USE_MAPDB ? new MapDBCubeIO(worldServer) : new RegionCubeIO(worldServer);
+            this.cubeIO = new RegionCubeIO(worldServer);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
