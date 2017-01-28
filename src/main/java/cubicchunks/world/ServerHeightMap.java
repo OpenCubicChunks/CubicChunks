@@ -96,7 +96,7 @@ public class ServerHeightMap implements IHeightMap {
     }
 
     private static int unpackOpacity(int packed) {
-        return Bits.unpackUnsigned(packed, 1, 24);
+        return Bits.unpackUnsigned(packed, 1, 31);
     }
 
     private static int unpackPosition(int packed) {

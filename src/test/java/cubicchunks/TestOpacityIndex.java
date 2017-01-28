@@ -496,7 +496,7 @@ public class TestOpacityIndex {
         if (segments.length > 0) {
             packedSegments = new int[segments.length / 2];
             for (int i = 0; i < segments.length / 2; i++) {
-                packedSegments[i] = Bits.packSignedToInt(segments[i * 2 + 0], 24, 0) | Bits.packUnsignedToInt(segments[i * 2 + 1], 8, 24);
+                packedSegments[i] = Bits.packSignedToInt(segments[i * 2 + 0], 31, 0) | Bits.packUnsignedToInt(segments[i * 2 + 1], 1, 31);
             }
         }
 
@@ -526,8 +526,8 @@ public class TestOpacityIndex {
             // unpack the segments
             List<Integer> segments = Lists.newArrayList();
             for (int i = 0; i < packedSegments.length && packedSegments[i] != NoneSegment; i++) {
-                segments.add(Bits.unpackSigned(packedSegments[i], 24, 0));
-                segments.add(Bits.unpackUnsigned(packedSegments[i], 8, 24));
+                segments.add(Bits.unpackSigned(packedSegments[i], 31, 0));
+                segments.add(Bits.unpackUnsigned(packedSegments[i], 1, 31));
             }
             return segments;
 
