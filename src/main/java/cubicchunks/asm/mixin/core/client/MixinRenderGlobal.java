@@ -29,7 +29,7 @@ import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
 
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -127,7 +127,7 @@ public class MixinRenderGlobal {
         }
 
         return new ClassInheritanceMultiMap[]{
-                ((Column) chunk)
+                ((IColumn) chunk)
                         .getCube(Coords.blockToCube(position.getY()))
                         .getEntityContainer().getEntitySet()
         };

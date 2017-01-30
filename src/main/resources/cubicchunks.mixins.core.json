@@ -3,7 +3,7 @@
     "package": "cubicchunks.asm.mixin.core",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
-    "minVersion": "0.6",
+    "minVersion": "0.6.7",
     "mixins": [
         "common.MixinWorld_Tick",
         "common.MixinWorld",

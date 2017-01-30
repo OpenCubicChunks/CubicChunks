@@ -26,6 +26,7 @@ package cubicchunks.worldgen.generator;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
@@ -55,7 +56,7 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void generateColumn(Column column) {
+    public void generateColumn(IColumn column) {
         this.columnBiomes = this.world.getBiomeProvider()
                 .getBiomes(this.columnBiomes,
                         Coords.cubeToMinBlock(column.getX()),

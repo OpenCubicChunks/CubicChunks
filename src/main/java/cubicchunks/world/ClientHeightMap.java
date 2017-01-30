@@ -25,7 +25,7 @@ package cubicchunks.world;
 
 import com.google.common.base.Throwables;
 import cubicchunks.util.Coords;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import mcp.MethodsReturnNonnullByDefault;
 
 import java.io.ByteArrayInputStream;
@@ -43,7 +43,7 @@ public class ClientHeightMap implements IHeightMap {
     @Nonnull private int[] hmap;
     private int heightMapLowest = Coords.NO_HEIGHT;
 
-    public ClientHeightMap(Column column) {
+    public ClientHeightMap(IColumn IColumn) {
         this.hmap = new int[256];
 
         Arrays.fill(hmap, Coords.NO_HEIGHT);

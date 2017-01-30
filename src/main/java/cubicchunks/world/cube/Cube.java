@@ -37,6 +37,7 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -110,7 +111,7 @@ public class Cube implements XYZAddressable {
     /**
      * The column of this cube
      */
-    @Nonnull private final Column column;
+    @Nonnull private final IColumn column;
     /**
      * The position of this cube, in cube space
      */
@@ -146,7 +147,7 @@ public class Cube implements XYZAddressable {
      * @param column column of this cube
      * @param cubeY cube y position
      */
-    public Cube(Column column, int cubeY) {
+    public Cube(IColumn column, int cubeY) {
         this.world = column.getCubicWorld();
         this.column = column;
         this.coords = new CubePos(column.getX(), cubeY, column.getZ());
@@ -171,7 +172,7 @@ public class Cube implements XYZAddressable {
      */
     @SuppressWarnings("deprecation") // when a block is generated, does it really have any extra
     // information it could give us about its opacity by knowing its location?
-    public Cube(Column column, int cubeY, ICubePrimer primer) {
+    public Cube(IColumn column, int cubeY, ICubePrimer primer) {
         this(column, cubeY);
 
         int miny = Coords.cubeToMinBlock(cubeY);
@@ -726,7 +727,7 @@ public class Cube implements XYZAddressable {
     /**
      * @return this cube's column
      */
-    public Column getColumn() {
+    public IColumn getColumn() {
         return this.column;
     }
 

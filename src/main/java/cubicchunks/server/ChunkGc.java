@@ -26,7 +26,7 @@ package cubicchunks.server;
 import cubicchunks.CubicChunks;
 import cubicchunks.CubicChunks.Config;
 import cubicchunks.IConfigUpdateListener;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -68,7 +68,7 @@ public class ChunkGc implements IConfigUpdateListener {
             }
         }
 
-        Iterator<Column> columnIt = cubeCache.columnsIterator();
+        Iterator<IColumn> columnIt = cubeCache.columnsIterator();
         while (columnIt.hasNext()) {
             if (cubeCache.tryUnloadColumn(columnIt.next())) {
                 columnIt.remove();

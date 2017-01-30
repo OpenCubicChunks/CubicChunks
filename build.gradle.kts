@@ -210,7 +210,7 @@ dependencies {
     testCompile("org.mockito:mockito-core:2.1.0-RC.2")
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    compile("org.spongepowered:mixin:0.6.4-SNAPSHOT") {
+    compile("org.spongepowered:mixin:0.6.7-SNAPSHOT") {
         isTransitive = false
     }
 

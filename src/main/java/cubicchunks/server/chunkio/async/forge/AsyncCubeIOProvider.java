@@ -21,7 +21,7 @@ package cubicchunks.server.chunkio.async.forge;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.ICubeIO;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -43,7 +43,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
     @Nonnull private final QueuedCube cubeInfo;
     @Nonnull private final ICubeIO loader;
 
-    @Nonnull private CompletableFuture<Column> futureColumn = new CompletableFuture<>();
+    @Nonnull private CompletableFuture<IColumn> futureColumn = new CompletableFuture<>();
     @Nullable private ICubeIO.PartialCubeData cubeData;
 
     AsyncCubeIOProvider(QueuedCube cube, ICubeIO loader) {
@@ -86,7 +86,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
         return cubeData == null ? null : cubeData.getCube();
     }
 
-    public void setColumn(@Nullable Column column) {
-        this.futureColumn.complete(column);
+    public void setColumn(@Nullable IColumn IColumn) {
+        this.futureColumn.complete(IColumn);
     }
 }

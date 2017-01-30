@@ -30,7 +30,7 @@ import cubicchunks.lighting.ILightBlockAccess;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -93,9 +93,9 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
                             Iterable<Chunk> chunks = getLoadedChunksProxy.getLoadedChunks(prov);
                             int i = 0;
                             for (Chunk chunk : chunks) {
-                                Column column = (Column) chunk;
+                                IColumn IColumn = (IColumn) chunk;
                                 category.setDetail("Column" + i, () ->
-                                        column.getLoadedCubes().stream().map(
+                                        IColumn.getLoadedCubes().stream().map(
                                                 c -> c.getCoords().toString()
                                         ).reduce((a, b) -> a + ", " + b).orElse(null)
                                 );
@@ -139,8 +139,8 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
 
     @Override public boolean canSeeSky(BlockPos pos) {
         Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
-        Column column = cube.getColumn();
-        int height = column.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
+        IColumn IColumn = cube.getColumn();
+        int height = IColumn.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
         return height <= pos.getY();
     }
 

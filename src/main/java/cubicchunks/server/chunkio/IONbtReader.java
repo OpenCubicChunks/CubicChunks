@@ -32,6 +32,7 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -93,17 +94,17 @@ public class IONbtReader {
         column.setBiomeArray(nbt.getByteArray("Biomes"));
     }
 
-    private static void readOpacityIndex(NBTTagCompound nbt, Column column) {// biomes
-        ((ServerHeightMap) column.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
+    private static void readOpacityIndex(NBTTagCompound nbt, IColumn IColumn) {// biomes
+        ((ServerHeightMap) IColumn.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
     }
 
     @Nullable
-    static Cube readCubeAsyncPart(Column column, final int cubeX, final int cubeY, final int cubeZ, NBTTagCompound nbt) {
+    static Cube readCubeAsyncPart(IColumn column, final int cubeX, final int cubeY, final int cubeZ, NBTTagCompound nbt) {
         if (column.getX() != cubeX || column.getZ() != cubeZ) {
             throw new IllegalArgumentException(String.format("Invalid column (%d, %d) for cube at (%d, %d, %d)",
                     column.getX(), column.getZ(), cubeX, cubeY, cubeZ));
         }
-        ICubicWorldServer world = (ICubicWorldServer) column.getWorld();
+        ICubicWorldServer world = (ICubicWorldServer) column.getCubicWorld();
         NBTTagCompound level = nbt.getCompoundTag("Level");
         Cube cube = readBaseCube(column, cubeX, cubeY, cubeZ, level, world);
         if (cube == null) {
@@ -125,7 +126,7 @@ public class IONbtReader {
     }
 
     @Nullable
-    private static Cube readBaseCube(Column column, int cubeX, int cubeY, int cubeZ, NBTTagCompound nbt,
+    private static Cube readBaseCube(IColumn column, int cubeX, int cubeY, int cubeZ, NBTTagCompound nbt,
             ICubicWorldServer world) {// check the version number
         byte version = nbt.getByte("v");
         if (version != 1) {
@@ -144,9 +145,9 @@ public class IONbtReader {
         }
 
         // check against column
-        assert cubeX == column.xPosition && cubeZ == column.zPosition :
-                String.format("Cube is corrupted! Cube (%d,%d,%d) does not match column (%d,%d).", cubeX, cubeY, cubeZ, column.xPosition,
-                        column.zPosition);
+        assert cubeX == column.getX() && cubeZ == column.getZ() :
+                String.format("Cube is corrupted! Cube (%d,%d,%d) does not match column (%d,%d).", cubeX, cubeY, cubeZ, column.getZ(),
+                        column.getZ());
 
 
         // build the cube

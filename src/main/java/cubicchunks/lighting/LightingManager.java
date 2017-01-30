@@ -35,12 +35,11 @@ import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.TIntSet;
-import it.unimi.dsi.fastutil.ints.IntIterator;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -181,10 +180,10 @@ public class LightingManager {
         return oldOpacity != newOpacity && (oldOpacity < 15 || newOpacity < 15);
     }
 
-    public void onHeightMapUpdate(Column column, int localX, int localZ, int oldHeight, int newHeight) {
+    public void onHeightMapUpdate(IColumn IColumn, int localX, int localZ, int oldHeight, int newHeight) {
         int minCubeY = blockToCube(Math.min(oldHeight, newHeight));
         int maxCubeY = blockToCube(Math.max(oldHeight, newHeight));
-        column.getLoadedCubes().stream().filter(cube -> cube.getY() >= minCubeY && cube.getY() <= maxCubeY).forEach(cube -> {
+        IColumn.getLoadedCubes().stream().filter(cube -> cube.getY() >= minCubeY && cube.getY() <= maxCubeY).forEach(cube -> {
             markCubeBlockColumnForUpdate(cube, localX, localZ);
         });
     }

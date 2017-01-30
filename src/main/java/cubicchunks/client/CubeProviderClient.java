@@ -30,6 +30,7 @@ import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.BlankColumn;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -117,9 +118,9 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
      */
     public void unloadCube(CubePos pos) {
         cubeMap.remove(pos.getX(), pos.getY(), pos.getZ());
-        Column column = getLoadedColumn(pos.getX(), pos.getZ());
-        if (column != null) {
-            column.removeCube(pos.getY());
+        IColumn IColumn = getLoadedColumn(pos.getX(), pos.getZ());
+        if (IColumn != null) {
+            IColumn.removeCube(pos.getY());
         }
     }
 
@@ -155,7 +156,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
     public String makeString() {
         return "MultiplayerChunkCache: " + this.chunkMapping.values()
                 .stream()
-                .map(c -> ((Column) c).getLoadedCubes().size())
+                .map(c -> ((IColumn) c).getLoadedCubes().size())
                 .reduce((a, b) -> a + b)
                 .orElse(-1) + "/" + this.chunkMapping.size();
     }

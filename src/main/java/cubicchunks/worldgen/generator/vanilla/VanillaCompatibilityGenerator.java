@@ -28,6 +28,7 @@ import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
@@ -152,7 +153,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void generateColumn(Column column) {
+    public void generateColumn(IColumn column) {
 
         this.biomes = this.world.getBiomeProvider()
                 .getBiomes(this.biomes,

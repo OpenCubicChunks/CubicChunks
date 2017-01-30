@@ -40,6 +40,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
@@ -66,7 +67,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class Column extends Chunk {
+public class Column extends Chunk implements IColumn {
 
     @Nonnull private final CubeMap cubeMap;
     @Nonnull private final IHeightMap opacityIndex;
@@ -109,12 +110,6 @@ public class Column extends Chunk {
     //===============VANILLA METHODS===================
     //=================================================
 
-    /**
-     * Return Y position of the block directly above the top non-transparent block, or {@link Coords#NO_HEIGHT} + 1 if
-     * there are no non-transparent blocks
-     * <p>
-     * CHECKED: 1.11-13.19.0.2148
-     */
     @Override
     public int getHeight(BlockPos pos) {
         return this.getHeightValue(
@@ -122,12 +117,6 @@ public class Column extends Chunk {
                 Coords.blockToLocal(pos.getZ()));
     }
 
-    /**
-     * Return Y position of the block directly above the top non-transparent block, or {@link Coords#NO_HEIGHT} + 1 if
-     * there are no non-transparent blocks
-     * <p>
-     * CHECKED: 1.11-13.19.0.2148
-     */
     @Override
     public int getHeightValue(int localX, int localZ) {
         // NOTE: the "height value" here is the height of the transparent block
@@ -185,56 +174,22 @@ public class Column extends Chunk {
 
     // CHECKED: 1.11-13.19.0.2148
     // this is here so that it's not hidden when updating
-    public int getBlockLightOpacity(BlockPos pos) {
+    @Override public int getBlockLightOpacity(BlockPos pos) {
         return super.getBlockLightOpacity(pos);
     }
 
 
-    /**
-     * Retrieve the block state at the specified location
-     *
-     * @param pos target location
-     *
-     * @return The block state
-     *
-     * @see Column#getBlockState(int, int, int)
-     * @see Cube#getBlockState(BlockPos)
-     * <p>
-     * CHECKED: 1.11-13.19.0.2148 - super calls the x/y/z version
-     */
     @Override
     public IBlockState getBlockState(BlockPos pos) {
         return super.getBlockState(pos);
     }
 
-    /**
-     * Retrieve the block state at the specified location
-     *
-     * @param blockX block x position
-     * @param blockY block y position
-     * @param blockZ block z position
-     *
-     * @return The block state
-     *
-     * @see Column#getBlockState(BlockPos)
-     * @see Cube#getBlockState(int, int, int)
-     */
     @Override
     public IBlockState getBlockState(final int blockX, final int blockY, final int blockZ) {
         //forward to cube
         return this.getCube(Coords.blockToCube(blockY)).getBlockState(blockX, blockY, blockZ);
     }
 
-    /**
-     * Set the block state at the specified location
-     *
-     * @param pos target location
-     * @param newstate target state of the block at that position
-     *
-     * @return The the old state of the block at the position, or null if there was no change
-     * <p>
-     * CHECKED: 1.11-13.19.0.2148
-     */
     @Nullable @Override public IBlockState setBlockState(BlockPos pos, IBlockState newstate) {
         // TODO: Move all setBlockState logic to Cube
         Cube cube = getCube(Coords.blockToCube(pos.getY()));
@@ -256,104 +211,41 @@ public class Column extends Chunk {
         return oldstate;
     }
 
-    /**
-     * Retrieve the raw light level at the specified location
-     *
-     * @param type The type of light (sky or block light)
-     * @param pos The position at which light should be checked
-     *
-     * @return the light level
-     *
-     * @see Cube#getLightFor(EnumSkyBlock, BlockPos)
-     */
     @Override
     public int getLightFor(EnumSkyBlock type, BlockPos pos) {
         //forward to cube
         return getCube(pos).getLightFor(type, pos);
     }
 
-    /**
-     * Set the raw light level at the specified location
-     *
-     * @param type The type of light (sky or block light)
-     * @param pos The position at which light should be updated
-     * @param value the light level
-     *
-     * @see Cube#setLightFor(EnumSkyBlock, BlockPos, int)
-     */
     @Override
     public void setLightFor(EnumSkyBlock type, BlockPos pos, int value) {
         //forward to cube
         getCube(pos).setLightFor(type, pos, value);
     }
 
-    /**
-     * Retrieve actual light level at the specified location. This is the brightest of all types of light affecting this
-     * block
-     *
-     * @param pos the target position
-     * @param amount skylight falloff factor
-     *
-     * @return actual light level at this location
-     *
-     * @see Cube#getLightSubtracted(BlockPos, int)
-     */
     @Override
     public int getLightSubtracted(BlockPos pos, int amount) {
         //forward to cube
         return getCube(pos).getLightSubtracted(pos, amount);
     }
 
-    /**
-     * Add an entity to this column
-     *
-     * @param entity entity to add
-     *
-     * @see Cube#addEntity(Entity)
-     */
     @Override
     public void addEntity(Entity entity) {
         //forward to cube
         getCube(Coords.getCubeYForEntity(entity)).addEntity(entity);
     }
 
-    /**
-     * Remove an entity from this column
-     *
-     * @param entityIn The entity to remove
-     *
-     * @see Column#removeEntityAtIndex(Entity, int)
-     * @see Cube#removeEntity(Entity)
-     */
     @Override
     public void removeEntity(Entity entityIn) {
         this.removeEntityAtIndex(entityIn, entityIn.chunkCoordY);
     }
 
-    /**
-     * Remove an entity from the cube at the specified location
-     *
-     * @param entity The entity to remove
-     * @param cubeY cube y location
-     *
-     * @see Cube#removeEntity(Entity)
-     */
     @Override
     public void removeEntityAtIndex(Entity entity, int cubeY) {
         //forward to cube
         getCube(cubeY).removeEntity(entity);
     }
 
-    /**
-     * Check whether the block at the specified location has a clear line of view towards the sky
-     *
-     * @param pos target location
-     *
-     * @return <code>true</code> if there is no block between this block and the sky (including this block),
-     * <code>false</code> otherwise
-     * <p>
-     * CHECKED: 1.11-13.19.0.2148
-     */
     @Override
     public boolean canSeeSky(BlockPos pos) {
         int height = this.getHeightValue(
@@ -363,73 +255,36 @@ public class Column extends Chunk {
         return pos.getY() >= height;
     }
 
-    /**
-     * Retrieve the tile entity at the specified location
-     *
-     * @param pos target location
-     * @param createType how fast the tile entity is needed
-     *
-     * @return the tile entity at the specified location, or <code>null</code> if there is no entity and
-     * <code>createType</code> was not {@link net.minecraft.world.chunk.Chunk.EnumCreateEntityType#IMMEDIATE}
-     *
-     * @see Cube#getTileEntity(BlockPos, EnumCreateEntityType)
-     */
     @Nullable @Override
     public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType createType) {
         //forward to cube
         return getCube(pos).getTileEntity(pos, createType);
     }
 
-    /**
-     * Add a tile entity to this column
-     *
-     * @param tileEntity The tile entity to add
-     *
-     * @see Cube#addTileEntity(TileEntity)
-     */
     @Override
     public void addTileEntity(TileEntity tileEntity) {
         // pass off to the cube
         getCube(tileEntity.getPos()).addTileEntity(tileEntity);
     }
 
-    /**
-     * Add a tile entity to this column at the specified location
-     *
-     * @param pos The target location
-     * @param blockEntity The tile entity to add
-     *
-     * @see Cube#addTileEntity(BlockPos, TileEntity)
-     */
     @Override
     public void addTileEntity(BlockPos pos, TileEntity blockEntity) {
         // pass off to the cube
         getCube(pos).addTileEntity(pos, blockEntity);
     }
 
-    /**
-     * Remove the tile entity at the specified location
-     *
-     * @param pos target location
-     */
     @Override
     public void removeTileEntity(BlockPos pos) {
         //forward to cube
         this.getCube(pos).removeTileEntity(pos);
     }
 
-    /**
-     * Called when this column is finished loading
-     */
     @Override
     public void onChunkLoad() {
         this.isChunkLoaded = true;
         MinecraftForge.EVENT_BUS.post(new ChunkEvent.Load(this));
     }
 
-    /**
-     * Called when this column is being unloaded
-     */
     @Override
     public void onChunkUnload() {
         this.isChunkLoaded = false;
@@ -438,16 +293,6 @@ public class Column extends Chunk {
 
     //setChunkModified() goes here, it's unchanged
 
-    /**
-     * Retrieve all matching entities within a specific area of the world
-     *
-     * @param exclude don't include this entity in the results
-     * @param queryBox section of the world being checked
-     * @param out list to which found entities should be added
-     * @param predicate filter to match entities against
-     * <p>
-     * CHECKED: 1.11-13.19.0.2148
-     */
     @Override
     public void getEntitiesWithinAABBForEntity(@Nullable Entity exclude, AxisAlignedBB queryBox, List<Entity> out,
             @Nullable Predicate<? super Entity> predicate) {
@@ -462,17 +307,6 @@ public class Column extends Chunk {
         }
     }
 
-    /**
-     * Retrieve all matching entities of the specified type within a specific area of the world
-     *
-     * @param entityType the type of entity to retrieve
-     * @param queryBox section of the world being checked
-     * @param out list to which found entities should be added
-     * @param predicate filter to match entities against
-     * @param <T> type parameter for the class of entities being searched for
-     * <p>
-     * CHECKED: 1.11-13.19.0.2148
-     */
     @Override
     public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out,
             @Nullable Predicate<? super T> predicate) {
@@ -487,14 +321,6 @@ public class Column extends Chunk {
         }
     }
 
-    /**
-     * Check whether this column needs to be written back to disk for persistence
-     *
-     * @param flag unused
-     *
-     * @return <code>true</code> if there were modifications since the time this column was loaded from disk,
-     * <code>false</code> otherwise
-     */
     @Override
     public boolean needsSaving(boolean flag) {
         return this.isModified;
@@ -510,24 +336,12 @@ public class Column extends Chunk {
         throw new UnsupportedOperationException("This method is incompatible with CubicChunks");
     }
 
-    /**
-     * Retrieve lowest block still affected by rain and snow
-     *
-     * @param pos The target block column to check
-     *
-     * @return The lowest block at the same x and z coordinates that is still hit by rain and snow
-     */
     @Override
     //TODO: Actual precipitation heightmap, currently skylight heightmap is used which triggers an old MC alpha bug
     public BlockPos getPrecipitationHeight(BlockPos pos) {
         return new BlockPos(pos.getX(), this.getHeight(pos), pos.getZ());
     }
 
-    /**
-     * Tick this column
-     *
-     * @param tryToTickFaster Whether costly calculations should be skipped in order to catch up with ticks
-     */
     @Override
     public void onTick(boolean tryToTickFaster) {
         this.chunkTicked = true;
@@ -544,15 +358,6 @@ public class Column extends Chunk {
 
     //getChunkCoordIntPair doesn't need changes
 
-    /**
-     * See if there is any blocks in the specified section of the world. Note that while parameters are block
-     * coordinates, the check is actually aligned to cubes.
-     *
-     * @param minBlockY Lower end of the section being checked
-     * @param maxBlockY Upper end of the section being checked
-     *
-     * @return <code>true</code> if there is only air blocks in the checked cubes, <code>false</code> otherwise
-     */
     @Override
     // used for by ChunkCache, and that is used for rendering to see
     // if there are any blocks, or is there just air
@@ -627,11 +432,6 @@ public class Column extends Chunk {
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * Retrieve a map of all tile entities in this column and their locations
-     *
-     * @return A map, mapping positions to tile entities at that position
-     */
     @Override
     public Map<BlockPos, TileEntity> getTileEntityMap() {
         //TODO: Important: Fix getTileEntityMap. Need to implement special Map that accesses tile entities from cubeMap
@@ -669,12 +469,7 @@ public class Column extends Chunk {
         return true; //TODO: stub, replace with new UnsupportedOperationException();
     }
 
-    /**
-     * Check if this column needs to be ticked
-     *
-     * @return <code>true</code> if any cube in this column needs to be ticked, <code>false</code> otherwise
-     */
-    public boolean shouldTick() {
+    @Override public boolean shouldTick() {
         for (Cube cube : cubeMap) {
             if (cube.getTickets().shouldTick()) {
                 return true;
@@ -693,33 +488,19 @@ public class Column extends Chunk {
     //===========CubicChunks methods=============
     //===========================================
 
-    /**
-     * @return x position of this column
-     */
-    public int getX() {
+    @Override public int getX() {
         return this.xPosition;
     }
 
-    /**
-     * @return z position of this column
-     */
-    public int getZ() {
+    @Override public int getZ() {
         return this.zPosition;
     }
 
-    /**
-     * @return the height map of this column
-     */
-    public IHeightMap getOpacityIndex() {
+    @Override public IHeightMap getOpacityIndex() {
         return this.opacityIndex;
     }
 
-    /**
-     * Retrieve all cubes in this column that are currently loaded
-     *
-     * @return the cubes
-     */
-    public Collection<Cube> getLoadedCubes() {
+    @Override public Collection<Cube> getLoadedCubes() {
         return this.cubeMap.all();
     }
 
@@ -728,39 +509,16 @@ public class Column extends Chunk {
     // =======Mini CubeCache like methods=======
     // =========================================
 
-    /**
-     * Iterate over all loaded cubes in this column in order. If <code>startY < endY</code>, order is bottom to top,
-     * otherwise order is top to bottom.
-     *
-     * @param startY initial cube y position
-     * @param endY last cube y position
-     *
-     * @return an iterator over all loaded cubes between <code>startY</code> and <code>endY</code>
-     */
-    public Iterable<Cube> getLoadedCubes(int startY, int endY) {
+    @Override public Iterable<Cube> getLoadedCubes(int startY, int endY) {
         return this.cubeMap.cubes(startY, endY);
     }
 
-    /**
-     * Retrieve the cube at the specified location if it is loaded.
-     *
-     * @param cubeY cube y position
-     *
-     * @return the cube at that position, or <code>null</code> if it is not loaded
-     */
-    @Nullable
+    @Override @Nullable
     public Cube getLoadedCube(int cubeY) {
         return provider.getLoadedCube(getX(), cubeY, getZ());
     }
 
-    /**
-     * Retrieve the cube at the specified location
-     *
-     * @param cubeY cube y position
-     *
-     * @return the cube at that position
-     */
-    public Cube getCube(int cubeY) {
+    @Override public Cube getCube(int cubeY) {
         return provider.getCube(getX(), cubeY, getZ());
     }
 
@@ -775,61 +533,42 @@ public class Column extends Chunk {
         return getCube(Coords.blockToCube(pos.getY()));
     }
 
-    /**
-     * Add a cube to this column
-     *
-     * @param cube the cube being added
-     */
-    public void addCube(Cube cube) {
+    @Override public void addCube(Cube cube) {
         this.cubeMap.put(cube);
     }
 
-    /**
-     * Remove the cube at the specified height
-     *
-     * @param cubeY cube y position
-     *
-     * @return the removed cube if it existed, otherwise <code>null</code>
-     */
-    @Nullable public Cube removeCube(int cubeY) {
+    @Override @Nullable public Cube removeCube(int cubeY) {
         return this.cubeMap.remove(cubeY);
     }
 
-    /**
-     * Check if there are any loaded cube in this column
-     *
-     * @return <code>true</code> if there is at least on loaded cube in this column, <code>false</code> otherwise
-     */
-    public boolean hasLoadedCubes() {
+    @Override public boolean hasLoadedCubes() {
         return !this.cubeMap.isEmpty();
     }
 
     // ======= end cube cache like methods =======
     // ===========================================
 
-    /**
-     * Notify this column that it has been saved
-     */
-    public void markSaved() {
+    @Override public void markSaved() {
         this.setModified(false);
     }
 
-    /**
-     * Among all top blocks in this column, return the height of the lowest one
-     *
-     * @return the height of the lowest top block
-     */
     @Override
     public int getLowestHeight() {
         return opacityIndex.getLowestTopBlockY();
     }
 
-    /**
-     * Retrieve the world to which this column belongs
-     *
-     * @return the world
-     */
-    public ICubicWorld getCubicWorld() {
+    @Override public ICubicWorld getCubicWorld() {
         return world;
+    }
+
+    @Override public void markUnloaded(boolean unloaded) {
+        this.unloaded = unloaded;
+    }
+
+    /**
+     * Returns the column position
+     */
+    @Override public ChunkPos getPos() {
+        return getChunkCoordIntPair();
     }
 }
