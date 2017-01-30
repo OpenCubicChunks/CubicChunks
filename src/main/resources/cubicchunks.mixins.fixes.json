@@ -3,6 +3,7 @@
     "package": "cubicchunks.asm.mixin.fixes",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.6",
     "mixins": [
         "common.MixinEntityMinecart_KillFix",
         "common.MixinBlockFalling_HeightLimits",
