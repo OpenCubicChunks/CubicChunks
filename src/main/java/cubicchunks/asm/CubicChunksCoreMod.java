@@ -98,7 +98,6 @@ public class CubicChunksCoreMod implements IFMLLoadingPlugin {
 
     public static void initMixin() {
         MixinBootstrap.init();
-        Mixins.registerErrorHandlerClass("cubicchunks.asm.MixinErrorHandler");
         Mixins.addConfiguration("cubicchunks.mixins.core.json");
         Mixins.addConfiguration("cubicchunks.mixins.fixes.json");
         Mixins.addConfiguration("cubicchunks.mixins.noncritical.json");
