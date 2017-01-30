@@ -23,7 +23,6 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
-import com.carrotsearch.hppc.DoubleArrayList;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -44,7 +43,7 @@ public class VariantFeatureGenerator extends FeatureGenerator {
     @Nonnull private final FeatureGenerator[] generators;
     @Nonnull private final double[] probabilities;
 
-    private VariantFeatureGenerator(ICubicWorld world, List<FeatureGenerator> generators, DoubleArrayList probabilities) {
+    private VariantFeatureGenerator(ICubicWorld world, List<FeatureGenerator> generators, List<Double> probabilities) {
         super(world);
         assert generators.size() == probabilities.size();
         int size = generators.size();
@@ -74,12 +73,12 @@ public class VariantFeatureGenerator extends FeatureGenerator {
 
         // use lists because order is important
         @Nonnull private final List<FeatureGenerator> generators;
-        @Nonnull private final DoubleArrayList probabilities;
+        @Nonnull private final List<Double> probabilities;
         @Nullable private ICubicWorld world;
 
         private Builder() {
             this.generators = new ArrayList<>(2);
-            this.probabilities = new DoubleArrayList(2);
+            this.probabilities = new ArrayList<>(2);
         }
 
         @Nonnull public Builder world(ICubicWorld world) {

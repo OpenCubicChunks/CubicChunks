@@ -23,11 +23,13 @@
  */
 package cubicchunks.lighting;
 
-import com.carrotsearch.hppc.IntHashSet;
-import com.carrotsearch.hppc.IntSet;
 import cubicchunks.util.Coords;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -55,11 +57,11 @@ class SkyLightUpdateCubeSelector {
      *
      * @return set of affected cube Y positions
      */
-    static IntSet getCubesY(Column column, int localX, int localZ, int minBlockY, int maxBlockY) {
+    static TIntSet getCubesY(Column column, int localX, int localZ, int minBlockY, int maxBlockY) {
         // NOTE: maxBlockY is always the air block above the top block that was added or removed
         World world = column.getWorld();
 
-        IntSet cubesToDiffuse = new IntHashSet();
+        TIntSet cubesToDiffuse = new TIntHashSet();
 
         if (world.provider.hasNoSky()) {
             return cubesToDiffuse;

@@ -9,25 +9,22 @@ import net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
 import nl.javadude.gradle.plugins.license.LicenseExtension
 import nl.javadude.gradle.plugins.license.LicensePlugin
 import org.ajoberstar.grgit.Grgit
+import org.ajoberstar.grgit.exception.GrgitException
 import org.ajoberstar.grgit.operation.DescribeOp
 import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Task
 import org.gradle.api.internal.HasConvention
 import org.gradle.api.plugins.BasePluginConvention
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.tasks.Jar
 import org.gradle.language.jvm.tasks.ProcessResources
-import org.gradle.plugins.ide.eclipse.EclipsePlugin
-import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.script.lang.kotlin.*
 import org.spongepowered.asm.gradle.plugins.MixinExtension
 import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
 import kotlin.apply
-import kotlin.reflect.KFunction1
 
 // Gradle repositories and dependencies
 buildscript {
@@ -54,29 +51,48 @@ buildscript {
     }
 }
 
+plugins {
+    java
+    idea
+    eclipse
+}
+
 apply {
     plugin<ForgePlugin>()
-    plugin<EclipsePlugin>()
-    plugin<IdeaPlugin>()
     plugin<ShadowPlugin>()
     plugin<MixinGradlePlugin>()
     plugin<LicensePlugin>()
     plugin<JMHPlugin>()
 }
 
-//it can't be named forgeVersion because ForgeExtension has property named forgeVersion
-val theForgeVersion = properties["forgeVersion"] as String
-val licenseYear = properties["licenseYear"] as String
-val projectName = properties["projectName"] as String
-
-val sourceSets = the<JavaPluginConvention>().sourceSets
-val mainSourceSet = sourceSets.getByName("main")
-val minecraft = the<ForgeExtension>()
+// tasks
+val build by tasks
+val jar: Jar by tasks
+val shadowJar: ShadowJar by tasks
+val test: Test by tasks
+val processResources: ProcessResources by tasks
 
 defaultTasks = listOf("licenseFormat", "build")
 
+//it can't be named forgeVersion because ForgeExtension has property named forgeVersion
+val theForgeVersion by project
+val theMappingsVersion by project
+val malisisCoreVersion by project
+
+val licenseYear by project
+val projectName by project
+
+val versionSuffix by project
+val versionMinorFreeze by project
+
+val sourceSets = the<JavaPluginConvention>().sourceSets
+val mainSourceSet = sourceSets["main"]
+val minecraft = the<ForgeExtension>()
+
 version = getModVersion()
 group = "cubichunks"
+
+(mainSourceSet as ExtensionAware).extra["refMap"] = "cubicchunks.mixins.refmap.json"
 
 configure<IdeaModel> {
     module.apply {
@@ -91,18 +107,18 @@ configure<BasePluginConvention> {
 }
 
 configure<JavaPluginConvention> {
-    setSourceCompatibility(JavaVersion.VERSION_1_8)
-    setTargetCompatibility(JavaVersion.VERSION_1_8)
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 configure<MixinExtension> {
-    add(mainSourceSet, "cubicchunks.mixins.refmap.json")
+    token("MC_FORGE", extractForgeMinorVersion())
 }
 
 configure<ForgeExtension> {
-    version = theForgeVersion
+    version = theForgeVersion as String
     runDir = "run"
-    mappings = "snapshot_20161209"
+    mappings = theMappingsVersion as String
 
     isUseDepAts = true
 
@@ -146,9 +162,7 @@ configure<NamedDomainObjectContainer<ReobfTaskFactory.ReobfTaskWrapper>> {
         mappingType = ReobfMappingType.SEARGE
     }
 }
-get<Task>("build")() {
-    dependsOn("reobfShadowJar")
-}
+build.dependsOn("reobfShadowJar")
 
 configure<JMHPluginExtension> {
     iterations = 10
@@ -168,6 +182,7 @@ configure<JMHPluginExtension> {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     jcenter()
     maven {
@@ -179,6 +194,15 @@ repositories {
 }
 
 dependencies {
+    // configurations, some of them aren't necessary but added for consistency when specifying "extendsFrom"
+    val provided by configurations
+    val jmh by configurations
+    val forgeGradleMc by configurations
+    val forgeGradleMcDeps by configurations
+    val forgeGradleGradleStart by configurations
+    val compile by configurations
+    val testCompile by configurations
+
     compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
     testCompile("junit:junit:4.11")
     testCompile("org.hamcrest:hamcrest-junit:2.0.0.0")
@@ -187,25 +211,20 @@ dependencies {
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
     compile("org.spongepowered:mixin:0.6.4-SNAPSHOT") {
-        exclude(mapOf("module" to "launchwrapper"))
-        exclude(mapOf("module" to "guava"))
-        exclude(mapOf("module" to "gson"))
+        isTransitive = false
     }
-
-    compile("com.carrotsearch:hppc:0.7.1")
 
     compile(project("RegionLib"))
 
-    compile("net.malisis:malisiscore:1.11-5.0.0-SNAPSHOT:dev")
+    provided("net.malisis:malisiscore:$malisisCoreVersion:dev")
+
+    jmh.extendsFrom(compile)
+    jmh.extendsFrom(forgeGradleMc)
+    jmh.extendsFrom(forgeGradleMcDeps)
+    testCompile.extendsFrom(forgeGradleGradleStart)
 }
 
-configurations.getByName("jmh").extendsFrom(configurations.compile)
-configurations.getByName("jmh").extendsFrom(configurations.getByName("forgeGradleMc"))
-configurations.getByName("jmh").extendsFrom(configurations.getByName("forgeGradleMcDeps"))
-configurations.testCompile.extendsFrom(configurations.getByName("forgeGradleGradleStart"))
-
-val jar = get<Jar>("jar")
-jar {
+jar.apply {
     exclude("LICENSE.txt")
     manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
     manifest.attributes["FMLCorePlugin"] = "cubicchunks.asm.CubicChunksCoreMod"
@@ -214,37 +233,22 @@ jar {
     manifest.attributes["ForceLoadAsMod"] = "true"
 }
 
-val shadowJar = get<ShadowJar>("shadowJar")
-shadowJar {
+shadowJar.apply {
     relocate("com.flowpowered", "cubicchunks.com.flowpowered")
-    /*
-     Mixin shouldn"t be relocated. Mixin dependencies:
-     org.spongepowered:mixin:0.6.4-SNAPSHOT
-     +--- org.slf4j:slf4j-api:1.7.7
-     +--- commons-codec:commons-codec:1.9
-     +--- org.ow2.asm:asm-commons:5.0.3
-     |    \--- org.ow2.asm:asm-tree:5.0.3
-     |         \--- org.ow2.asm:asm:5.0.3
-     +--- commons-io:commons-io:2.4
-     \--- com.googlecode.jarjar:jarjar:1.1
-     */
-    exclude("net.malisis")
     classifier = ""
 }
 
-val test = get<Test>("test")
-test {
+test.apply {
     systemProperty("lwts.tweaker", "cubicchunks.tweaker.MixinTweakerServer")
 }
 
-val processResources = get<ProcessResources>("processResources")
-processResources {
+processResources.apply {
     // this will ensure that this task is redone when the versions change.
     inputs.property("version", project.version)
     inputs.property("mcversion", minecraft.version)
 
     // replace stuff in mcmod.info, nothing else
-    from(sourceSets.getByName("main").resources.srcDirs) {
+    from(mainSourceSet.resources.srcDirs) {
         include("mcmod.info")
 
         // replace version and mcversion
@@ -252,22 +256,23 @@ processResources {
     }
 
     // copy everything else, thats not the mcmod.info
-    from(sourceSets.getByName("main").resources.srcDirs) {
+    from(mainSourceSet.resources.srcDirs) {
         exclude("mcmod.info")
     }
 }
 
+val writeModVersion by tasks.creating {
+    dependsOn("build")
+    file("VERSION").writeText("VERSION=" + version)
+}
+
 fun getMcVersion(): String {
     if (minecraft.version == null) {
-        return theForgeVersion.split("-")[0]
+        return (theForgeVersion as String).split("-")[0]
     }
     return minecraft.version
 }
 
-task("writeModVersion") {
-    dependsOn("build")
-    file("VERSION").writeText("VERSION=" + version)
-}
 //returns version string according to this: http://mcforge.readthedocs.org/en/latest/conventions/versioning/
 //format: MCVERSION-MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)
 //rcX and betaX are not implemented yet
@@ -280,10 +285,13 @@ fun getModVersion(): String {
     } catch(ex: RepositoryNotFoundException) {
         logger.error("Git repository not found! Version will be incorrect!")
         return getModVersion_do("v9999.9999-9999-gffffff", "localbuild")
+    } catch(ex: GrgitException) {
+        logger.error("Error when accessing git repository! Version will be incorrect!", ex)
+        return getModVersion_do("v9999.9999-9999-gffffff", "unknown")
     }
 }
 
-fun getModVersion_do(describe: String, branch: String) : String {
+fun getModVersion_do(describe: String, branch: String): String {
     if (branch.startsWith("MC_")) {
         val branchMcVersion = branch.substring("MC_".length)
         if (branchMcVersion != getMcVersion()) {
@@ -291,9 +299,6 @@ fun getModVersion_do(describe: String, branch: String) : String {
                     getMcVersion() + ", branch: " + branch + ", branch version: " + branchMcVersion)
         }
     }
-
-    val versionSuffix = project.property("versionSuffix") as String
-    val versionMinorFreeze = project.property("versionMinorFreeze") as String
 
     //branches "master" and "MC_something" are not appended to version sreing, everything else is
     //only builds from "master" and "MC_version" branches will actually use the correct versioning
@@ -325,7 +330,7 @@ fun getModVersion_do(describe: String, branch: String) : String {
     //next we have commit-since-tag
     val commitSinceTag = Integer.parseInt(parts[1])
 
-    val minorFreeze = if (versionMinorFreeze.isEmpty()) -1 else Integer.parseInt(versionMinorFreeze)
+    val minorFreeze = if ((versionMinorFreeze as String).isEmpty()) -1 else Integer.parseInt(versionMinorFreeze as String)
 
     val minor = if (minorFreeze < 0) commitSinceTag else minorFreeze
     val patch = if (minorFreeze < 0) 0 else (commitSinceTag - minorFreeze)
@@ -334,7 +339,8 @@ fun getModVersion_do(describe: String, branch: String) : String {
     return version
 }
 
-fun <T : Task> get(name: String): KFunction1<(T.() -> Unit), T> {
-    @Suppress("UNCHECKED_CAST")
-    return (tasks.getByName(name) as T)::apply
+fun extractForgeMinorVersion(): String {
+    // version format: MC_VERSION-MAJOR.MINOR.?.BUILD
+    return (theForgeVersion as String).split(Regex("-")).getOrNull(1)?.split(Regex("\\."))?.getOrNull(1) ?:
+            throw RuntimeException("Invalid forge version format: " + theForgeVersion)
 }

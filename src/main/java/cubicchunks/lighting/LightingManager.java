@@ -28,8 +28,6 @@ import static cubicchunks.util.Coords.cubeToMaxBlock;
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
 
-import com.carrotsearch.hppc.IntSet;
-import com.carrotsearch.hppc.cursors.IntCursor;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.FastCubeBlockAccess;
@@ -39,6 +37,10 @@ import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.set.TIntSet;
+import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -68,22 +70,25 @@ public class LightingManager {
     private void columnSkylightUpdate(UpdateType type, Column column, int localX, int minY, int maxY, int localZ) {
         int blockX = Coords.localToBlock(column.getX(), localX);
         int blockZ = Coords.localToBlock(column.getZ(), localZ);
-        switch (type) {
-            case IMMEDIATE:
-                IntSet toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
-                for (IntCursor cubeY : toDiffuse) {
-                    boolean success = updateDiffuseLight(column.getCube(cubeY.value), localX, localZ, minY, maxY);
-                    if (!success) {
-                        markCubeBlockColumnForUpdate(column.getCube(cubeY.value), blockX, blockZ);
-                    }
+
+        if (type == UpdateType.IMMEDIATE) {
+            TIntSet toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
+            TIntIterator it = toDiffuse.iterator();
+            while (it.hasNext()) {
+                int cubeY = it.next();
+                boolean success = updateDiffuseLight(column.getCube(cubeY), localX, localZ, minY, maxY);
+                if (!success) {
+                    markCubeBlockColumnForUpdate(column.getCube(cubeY), blockX, blockZ);
                 }
-                break;
-            case QUEUED:
-                toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
-                for (IntCursor cubeY : toDiffuse) {
-                    markCubeBlockColumnForUpdate(column.getCube(cubeY.value), blockX, blockZ);
-                }
-                break;
+            }
+        } else {
+            assert type == UpdateType.QUEUED;
+            TIntSet toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
+            TIntIterator it = toDiffuse.iterator();
+            while (it.hasNext()) {
+                int cubeY = it.next();
+                markCubeBlockColumnForUpdate(column.getCube(cubeY), blockX, blockZ);
+            }
         }
     }
 
