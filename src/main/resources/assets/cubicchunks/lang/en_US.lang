@@ -16,11 +16,23 @@ cubicchunks.gui.customcubic.basic_tab_title=Customize World Settings%nPage 1 of 
 cubicchunks.gui.customcubic.ores_tab_title=Customize World Settings%nPage 2 of 3%nOre Settings
 cubicchunks.gui.customcubic.advanced_tab_title=Customize World Settings%nPage 3 of 3%nAdvanced Settings
 
+cubicchunks.gui.customcubic.layers_title=Customize World Settings%nPage 1 of 1%nLayers
+
 #################################
 ###        options            ###
 #################################
 
 cubicchunks.gui.verticalCubeLoadDistance=Vertical Distance: %d cubes
+
+#################################
+###   flat terrain layers     ###
+#################################
+
+cubicchunks.gui.customcubic.select_block=Select block
+cubicchunks.gui.customcubic.add_layer=Add layer ^
+cubicchunks.gui.customcubic.remove_layer=Remove layer
+cubicchunks.gui.customcubic.to_exclusively=To (exclusively):
+cubicchunks.gui.customcubic.from=From:
 
 #################################
 ###   basic terrain settings  ###

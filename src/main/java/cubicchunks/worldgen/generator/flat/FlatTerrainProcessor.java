@@ -33,10 +33,11 @@ import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import java.util.Map.Entry;
+import java.util.NavigableMap;
 import java.util.Random;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -48,44 +49,33 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class FlatTerrainProcessor extends BasicCubeGenerator {
 
+    private final FlatGeneratorSettings conf;
+
     public FlatTerrainProcessor(ICubicWorld world) {
         super(world);
+        String json = world.getWorldInfo().getGeneratorOptions();
+        conf = FlatGeneratorSettings.fromJson(json);
     }
 
     @Override
     public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
         ICubePrimer primer = new CubePrimer();
-
-        if (cubeY >= 0) {
-            return primer;
-        }
-        if (cubeY == -1) {
-            for (int x = 0; x < 16; x++) {
-                for (int z = 0; z < 16; z++) {
-                    primer.setBlockState(x, 15, z, Blocks.GRASS.getDefaultState());
-                    for (int y = 14; y >= 10; y--) {
-                        primer.setBlockState(x, y, z, Blocks.DIRT.getDefaultState());
-                    }
-                    for (int y = 9; y >= 0; y--) {
-                        primer.setBlockState(x, y, z, Blocks.STONE.getDefaultState());
+        int floorY = Coords.cubeToMinBlock(cubeY);
+        int topY = Coords.cubeToMinBlock(cubeY + 1);
+        NavigableMap<Integer, Layer> cubeLayerSubMap = conf.layers.subMap(conf.layers.floorKey(floorY), true, topY, false);
+        for (Entry<Integer, Layer> entry : cubeLayerSubMap.entrySet()) {
+            Layer layer = entry.getValue();
+            int fromY = layer.fromY - floorY;
+            int toY = layer.toY - floorY;
+            IBlockState iBlockState = layer.blockState;
+            for (int y = fromY > 0 ? fromY : 0; y < (toY < 16 ? toY : 16); y++) {
+                for (int x = 0; x < 16; x++) {
+                    for (int z = 0; z < 16; z++) {
+                        primer.setBlockState(x, y, z, iBlockState);
                     }
                 }
             }
-            return primer;
         }
-
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                for (int y = 0; y < 16; y++) {
-                    IBlockState state = Blocks.STONE.getDefaultState();
-                    if (Coords.localToBlock(cubeY, y) == world.getMinHeight()) {
-                        state = Blocks.BEDROCK.getDefaultState();
-                    }
-                    primer.setBlockState(x, y, z, state);
-                }
-            }
-        }
-
         return primer;
     }
 
@@ -101,6 +91,7 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
 
     @Override
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
-        return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null; // eyes of ender are the new F3 for finding the origin :P
+        // eyes of ender are the new F3 for finding the origin :P
+        return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null; 
     }
 }
