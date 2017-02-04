@@ -146,8 +146,6 @@ public interface IColumn {
      * @param amount skylight falloff factor
      *
      * @return actual light level at this location
-     *
-     * @see Cube#getLightSubtracted(BlockPos, int)
      */
     int getLightSubtracted(BlockPos pos, int amount);
 
@@ -155,8 +153,6 @@ public interface IColumn {
      * Add an entity to this column
      *
      * @param entity entity to add
-     *
-     * @see Cube#addEntity(Entity)
      */
     void addEntity(Entity entity);
 
@@ -165,8 +161,7 @@ public interface IColumn {
      *
      * @param entityIn The entity to remove
      *
-     * @see Column#removeEntityAtIndex(Entity, int)
-     * @see Cube#removeEntity(Entity)
+     * @see IColumn#removeEntityAtIndex(Entity, int)
      */
     void removeEntity(Entity entityIn);
 
@@ -175,8 +170,6 @@ public interface IColumn {
      *
      * @param entity The entity to remove
      * @param cubeY cube y location
-     *
-     * @see Cube#removeEntity(Entity)
      */
     void removeEntityAtIndex(Entity entity, int cubeY);
 
@@ -219,8 +212,6 @@ public interface IColumn {
      *
      * @param pos The target location
      * @param blockEntity The tile entity to add
-     *
-     * @see Cube#addTileEntity(BlockPos, TileEntity)
      */
     void addTileEntity(BlockPos pos, TileEntity blockEntity);
 

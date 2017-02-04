@@ -21,7 +21,6 @@ package cubicchunks.server.chunkio.async.forge;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.ICubeIO;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import mcp.MethodsReturnNonnullByDefault;
 

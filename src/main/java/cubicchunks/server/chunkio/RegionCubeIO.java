@@ -30,7 +30,6 @@ import cubicchunks.regionlib.impl.EntryLocation3D;
 import cubicchunks.regionlib.impl.SaveCubeColumns;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.nbt.CompressedStreamTools;

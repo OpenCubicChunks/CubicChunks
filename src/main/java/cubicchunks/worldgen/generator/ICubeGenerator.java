@@ -24,7 +24,6 @@
 package cubicchunks.worldgen.generator;
 
 import cubicchunks.util.Box;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -154,7 +153,7 @@ public interface ICubeGenerator {
      *
      * @see ICubeGenerator#recreateStructures(Cube) for the 3D-equivalent of this method
      */
-    void recreateStructures(Column column);
+    void recreateStructures(IColumn column);
 
     /**
      * Retrieve a list of creature classes eligible for spawning at the specified location.

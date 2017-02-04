@@ -31,7 +31,6 @@ import cubicchunks.util.XYZMap;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IProviderExtras;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubeGenerator;
@@ -110,14 +109,14 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      */
     @Nullable @Override
     public IColumn getLoadedColumn(int columnX, int columnZ) {
-        return (Column) this.id2ChunkMap.get(ChunkPos.asLong(columnX, columnZ));
+        return (IColumn) this.id2ChunkMap.get(ChunkPos.asLong(columnX, columnZ));
     }
 
     @Nullable
     @Override
     @Deprecated
-    public Column getLoadedChunk(int columnX, int columnZ) {
-        return (Column) getLoadedColumn(columnX, columnZ);
+    public Chunk getLoadedChunk(int columnX, int columnZ) {
+        return (Chunk) getLoadedColumn(columnX, columnZ);
     }
 
     /**
@@ -127,7 +126,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Nullable
     @Override
     @Deprecated
-    public Column loadChunk(int columnX, int columnZ) {
+    public Chunk loadChunk(int columnX, int columnZ) {
         return this.loadChunk(columnX, columnZ, null);
     }
 
@@ -137,10 +136,10 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Nullable
     @Override
     @Deprecated
-    public Column loadChunk(int columnX, int columnZ, @Nullable Runnable runnable) {
+    public Chunk loadChunk(int columnX, int columnZ, @Nullable Runnable runnable) {
         // TODO: Set this to LOAD when PlayerCubeMap works
         if (runnable == null) {
-            return (Column) getColumn(columnX, columnZ, /*Requirement.LOAD*/Requirement.LIGHT);
+            return (Chunk) getColumn(columnX, columnZ, /*Requirement.LOAD*/Requirement.LIGHT);
         }
 
         // TODO here too
@@ -159,8 +158,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Override
     @Deprecated
-    public Column provideChunk(int cubeX, int cubeZ) {
-        return (Column) provideColumn(cubeX, cubeZ);
+    public Chunk provideChunk(int cubeX, int cubeZ) {
+        return (Chunk) provideColumn(cubeX, cubeZ);
     }
 
     @Override
@@ -171,7 +170,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             }
         }
         for (Chunk chunk : id2ChunkMap.values()) { // save columns
-            Column column = (Column) chunk;
+            IColumn column = (IColumn) chunk;
             // save the column
             if (column.needsSaving(alwaysTrue)) {
                 this.cubeIO.saveColumn(column);
@@ -372,9 +371,11 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         ICubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
         Cube cube = new Cube(column, cubeY, primer);
 
+        onCubeLoaded(cube, column);
+
         this.worldServer.getFirstLightProcessor()
                 .initializeSkylight(cube); // init sky light, (does not require any other cubes, just ServerHeightMap)
-        onCubeLoaded(cube, column);
+
         return cube;
     }
 
@@ -487,7 +488,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return null;
         }
 
-        column = new Column(this, worldServer, columnX, columnZ);
+        column = (IColumn) new Chunk((World) worldServer, columnX, columnZ);
         cubeGen.generateColumn(column);
 
         id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);

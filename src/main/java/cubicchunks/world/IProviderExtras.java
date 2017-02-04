@@ -23,7 +23,6 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;

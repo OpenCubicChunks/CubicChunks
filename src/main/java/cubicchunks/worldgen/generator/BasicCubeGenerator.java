@@ -25,7 +25,6 @@ package cubicchunks.worldgen.generator;
 
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -75,7 +74,7 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void recreateStructures(Column column) {
+    public void recreateStructures(IColumn column) {
     }
 
     @Override

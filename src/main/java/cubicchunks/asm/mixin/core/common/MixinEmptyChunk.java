@@ -21,40 +21,63 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.util.CubePos;
-import cubicchunks.world.column.IColumn;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.EmptyChunk;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Collections;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface ICubeProvider {
+@Mixin(EmptyChunk.class)
+public abstract class MixinEmptyChunk extends MixinChunk_Column {
 
-    @Nullable
-    Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
+    private Cube blankCube;
 
-    @Nullable
-    Cube getLoadedCube(CubePos coords);
+    @Inject(method = "<init>", at = @At(value = "RETURN"))
+    private void cubicChunkColumn_construct(World worldIn, int x, int z, CallbackInfo cbi) {
+        if (((ICubicWorld) worldIn).isCubicWorld()) {
+            blankCube = new BlankCube(this);
+        }
+    }
 
-    Cube getCube(int cubeX, int cubeY, int cubeZ);
+    @Override
+    public Cube getCube(int cubeY) {
+        return blankCube;
+    }
 
-    Cube getCube(CubePos coords);
+    @Override
+    public Cube removeCube(int cubeY) {
+        return blankCube;
+    }
 
-    /**
-     * Retrieve a column, if it exists and is loaded
-     *
-     * @param x The x position of the column
-     * @param z The z position of the column
-     *
-     * @return The column, if loaded. Null, otherwise.
-     */
-    @Nullable
-    IColumn getLoadedColumn(int x, int z); // more strictly define the return type
+    @Override
+    public void addCube(Cube cube) {
+    }
 
-    IColumn provideColumn(int x, int z);   // more strictly define the return type
+    @Override
+    public void markSaved() {
+    }
+
+    @Override
+    public Collection<Cube> getLoadedCubes() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Iterable<Cube> getLoadedCubes(int startY, int endY) {
+        return Collections.emptySet();
+    }
 }

@@ -25,7 +25,6 @@ import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.chunkio.ICubeIO;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IProviderExtras;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -102,7 +101,7 @@ public class AsyncWorldIOExecutor {
      */
     @Nullable
     public static Cube syncCubeLoad(ICubicWorld world, ICubeIO loader, CubeProviderServer cache, int cubeX, int cubeY, int cubeZ) {
-        IColumn IColumn = cache.loadChunk(cubeX, cubeZ);
+        IColumn IColumn = (IColumn) cache.loadChunk(cubeX, cubeZ);
         QueuedCube key = new QueuedCube(cubeX, cubeY, cubeZ, world);
         AsyncCubeIOProvider task = cubeTasks.remove(key); // Remove task because we will call the sync callbacks directly
         if (task != null) {

@@ -5,6 +5,8 @@
     "compatibilityLevel": "JAVA_8",
     "minVersion": "0.6.7",
     "mixins": [
+        "common.MixinChunk_Column",
+        "common.MixinChunk_Cubes",
         "common.MixinWorld_Tick",
         "common.MixinWorld",
         "common.MixinWorldServer",

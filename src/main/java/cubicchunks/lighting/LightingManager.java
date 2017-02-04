@@ -34,7 +34,6 @@ import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IHeightMap;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
@@ -45,6 +44,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.IBlockAccess;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -66,7 +66,7 @@ public class LightingManager {
         return new CubeLightUpdateInfo(cube);
     }
 
-    private void columnSkylightUpdate(UpdateType type, Column column, int localX, int minY, int maxY, int localZ) {
+    private void columnSkylightUpdate(UpdateType type, IColumn column, int localX, int minY, int maxY, int localZ) {
         int blockX = Coords.localToBlock(column.getX(), localX);
         int blockZ = Coords.localToBlock(column.getZ(), localZ);
 
@@ -108,8 +108,8 @@ public class LightingManager {
                 new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY);
     }
 
-    public void doOnBlockSetLightUpdates(Column column, BlockPos changePos, IBlockState newBlockState, int oldOpacity) {
-        int newOpacity = newBlockState.getLightOpacity(column.getWorld(), changePos);
+    public void doOnBlockSetLightUpdates(IColumn column, BlockPos changePos, IBlockState newBlockState, int oldOpacity) {
+        int newOpacity = newBlockState.getLightOpacity((IBlockAccess) column.getCubicWorld(), changePos);
         if (!needsUpdate(oldOpacity, newOpacity)) {
             //nothing to update, this will frequently happen in ore generation
             return;
@@ -140,8 +140,8 @@ public class LightingManager {
         data.markBlockColumnForUpdate(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ));
     }
 
-    private int findNewTopBlockY(IHeightMap heightMap, BlockPos changePos, Column column, int newOpacity, int localX, int localZ, int oldTopY) {
-        if (!column.getWorld().isRemote) {
+    private int findNewTopBlockY(IHeightMap heightMap, BlockPos changePos, IColumn column, int newOpacity, int localX, int localZ, int oldTopY) {
+        if (!column.getCubicWorld().isRemote()) {
             return heightMap.getTopBlockY(localX, localZ);
         }
         //to avoid unnecessary delay when breaking blocks client needs to figure out new height before

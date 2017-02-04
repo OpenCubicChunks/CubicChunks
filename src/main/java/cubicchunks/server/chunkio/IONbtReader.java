@@ -31,7 +31,6 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.ServerHeightMap;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -41,9 +40,12 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.util.Constants;
+
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -53,9 +55,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class IONbtReader {
 
     @Nullable
-    static Column readColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {
+    static IColumn readColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {
         NBTTagCompound level = nbt.getCompoundTag("Level");
-        Column column = readBaseColumn(world, x, z, level);
+        IColumn column = readBaseColumn(world, x, z, level);
         if (column == null) {
             return null;
         }
@@ -67,7 +69,7 @@ public class IONbtReader {
     }
 
     @Nullable
-    private static Column readBaseColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {// check the version number
+    private static IColumn readBaseColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {// check the version number
         byte version = nbt.getByte("v");
         if (version != 1) {
             throw new IllegalArgumentException(String.format("Column has wrong version: %d", version));
@@ -83,15 +85,15 @@ public class IONbtReader {
         }
 
         // create the column
-        Column column = new Column(world.getCubeCache(), world, x, z);
+        IColumn column = (IColumn) new Chunk((World) world, x, z);
 
         // read the rest of the column properties
         column.setInhabitedTime(nbt.getLong("InhabitedTime"));
         return column;
     }
 
-    private static void readBiomes(NBTTagCompound nbt, Column column) {// biomes
-        column.setBiomeArray(nbt.getByteArray("Biomes"));
+    private static void readBiomes(NBTTagCompound nbt, IColumn column) {// biomes
+        System.arraycopy(nbt.getByteArray("Biomes"), 0, column.getBiomeArray(), 0, 256);
     }
 
     private static void readOpacityIndex(NBTTagCompound nbt, IColumn IColumn) {// biomes

@@ -27,7 +27,6 @@ import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubePrimer;
@@ -168,8 +167,8 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void recreateStructures(Column column) {
-        vanilla.recreateStructures(column, column.getX(), column.getZ());
+    public void recreateStructures(IColumn column) {
+        vanilla.recreateStructures((Chunk) column, column.getX(), column.getZ());
     }
 
     @Override

@@ -26,7 +26,7 @@ package cubicchunks.network;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ServerHeightMap;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -75,12 +75,12 @@ class WorldEncoder {
         }
     }
 
-    static void encodeColumn(PacketBuffer out, Column column) {
+    static void encodeColumn(PacketBuffer out, IColumn column) {
         // 1. biomes
         out.writeBytes(column.getBiomeArray());
     }
 
-    static void decodeColumn(PacketBuffer in, Column column) {
+    static void decodeColumn(PacketBuffer in, IColumn column) {
         // 1. biomes
         in.readBytes(column.getBiomeArray());
     }
@@ -127,7 +127,7 @@ class WorldEncoder {
         }
     }
 
-    static int getEncodedSize(Column column) {
+    static int getEncodedSize(IColumn column) {
         return column.getBiomeArray().length;
     }
 

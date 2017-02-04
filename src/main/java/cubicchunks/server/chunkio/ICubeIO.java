@@ -31,7 +31,6 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
-import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 
 public interface ICubeIO extends IThreadedFileIO {

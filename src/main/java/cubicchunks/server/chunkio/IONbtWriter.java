@@ -29,7 +29,6 @@ import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesThisTi
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ServerHeightMap;
-import cubicchunks.world.column.Column;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;

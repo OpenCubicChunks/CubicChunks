@@ -38,7 +38,7 @@ import cubicchunks.util.XZMap;
 import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import mcp.MethodsReturnNonnullByDefault;
@@ -200,9 +200,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
         return new AbstractIterator<Chunk>() {
             @Override protected Chunk computeNext() {
                 while (chunkIt.hasNext()) {
-                    Column column = (Column) chunkIt.next();
+                    IColumn column = (IColumn) chunkIt.next();
                     if (column.shouldTick()) { // shouldTick is true when there Cubes with tickets the request to be ticked
-                        return column;
+                        return (Chunk) column;
                     }
                 }
                 return this.endOfData();

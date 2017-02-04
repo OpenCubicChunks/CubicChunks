@@ -24,12 +24,11 @@
 package cubicchunks.lighting;
 
 import cubicchunks.util.Coords;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -57,20 +56,20 @@ class SkyLightUpdateCubeSelector {
      *
      * @return set of affected cube Y positions
      */
-    static TIntSet getCubesY(Column column, int localX, int localZ, int minBlockY, int maxBlockY) {
+    static TIntSet getCubesY(IColumn column, int localX, int localZ, int minBlockY, int maxBlockY) {
         // NOTE: maxBlockY is always the air block above the top block that was added or removed
-        World world = column.getWorld();
+        ICubicWorld world = column.getCubicWorld();
 
         TIntSet cubesToDiffuse = new TIntHashSet();
 
-        if (world.provider.hasNoSky()) {
+        if (world.getProvider().hasNoSky()) {
             return cubesToDiffuse;
         }
 
         BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(
-                Coords.localToBlock(column.xPosition, localX),
+                Coords.localToBlock(column.getX(), localX),
                 maxBlockY - 1,
-                Coords.localToBlock(column.zPosition, localZ)
+                Coords.localToBlock(column.getZ(), localZ)
         );
 
         int newMaxBlockY = column.getHeightValue(localX, localZ);
