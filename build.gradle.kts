@@ -282,12 +282,9 @@ fun getModVersion(): String {
         val describe = DescribeOp(git.repository).call()
         val branch = git.branch.current.name
         return getModVersion_do(describe, branch);
-    } catch(ex: RepositoryNotFoundException) {
-        logger.error("Git repository not found! Version will be incorrect!")
-        return getModVersion_do("v9999.9999-9999-gffffff", "localbuild")
-    } catch(ex: GrgitException) {
-        logger.error("Error when accessing git repository! Version will be incorrect!", ex)
-        return getModVersion_do("v9999.9999-9999-gffffff", "unknown")
+    } catch(ex: RuntimeException) {
+        logger.error("Unknown error when accessing git repository! Are you sure the git repository exists?", ex)
+        throw ex
     }
 }
 

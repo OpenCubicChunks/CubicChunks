@@ -25,7 +25,7 @@ This command:
 ```
 should be enough to compile the mod.
 
-The mod uses information from git repository to generate version number. While it should work without git repository (just giving incorrect version information), it's not very well tested. if you encounter any problems - report them [here](https://github.com/Barteks2x/CubicChunks/issues).
+The mod uses information from git repository to generate version number, it won't compile without full git repository. It also won't compile if regionlib submodule doesn't exist.
 
 ###Setting up development environment
 Note: on windows you need to run these commands without `./`
