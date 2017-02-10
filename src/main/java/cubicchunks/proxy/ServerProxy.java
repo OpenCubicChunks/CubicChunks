@@ -35,7 +35,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class ServerProxy extends CommonProxy {
 
     @Override public EntityPlayer getPlayerEntity(MessageContext ctx) {
-        return ctx.getServerHandler().playerEntity;
+        return ctx.getServerHandler().player;
     }
 
     @Override public void setBuildLimit(MinecraftServer server) {

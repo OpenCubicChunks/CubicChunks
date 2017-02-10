@@ -146,7 +146,7 @@ public class RegionCubeIO implements ICubeIO {
 
         // add the column to the save queue
         this.columnsToSave
-                .put(column.getChunkCoordIntPair(), new SaveEntry<>(new EntryLocation2D(column.getX(), column.getZ()), IONbtWriter.write(column)));
+                .put(column.getPos(), new SaveEntry<>(new EntryLocation2D(column.getX(), column.getZ()), IONbtWriter.write(column)));
         column.markSaved();
 
         // signal the IO thread to process the save queue

@@ -46,7 +46,7 @@ public class PacketColumn implements IMessage {
     }
 
     public PacketColumn(Column column) {
-        this.chunkPos = column.getChunkCoordIntPair();
+        this.chunkPos = column.getPos();
         this.data = new byte[WorldEncoder.getEncodedSize(column)];
         PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
 

@@ -83,13 +83,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @Mixin(World.class)
 @Implements(@Interface(iface = ICubicWorld.class, prefix = "world$"))
-public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
+public abstract class MixinWorld implements ICubicWorld {
 
     @Shadow protected IChunkProvider chunkProvider;
     @Shadow @Final @Mutable public WorldProvider provider;
     @Shadow @Final public Random rand;
     @Shadow @Final public boolean isRemote;
-    @Shadow @Final public Profiler theProfiler;
+    @Shadow @Final public Profiler profiler;
     @Shadow @Final @Mutable protected ISaveHandler saveHandler;
 
     @Shadow protected abstract boolean isChunkLoaded(int i, int i1, boolean allowEmpty);
@@ -107,25 +107,6 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 
         if (!(this.provider instanceof ICubicWorldProvider)) { // if the provider is vanilla, wrap it
             this.provider = new VanillaCubicProvider(this, provider);
-        }
-
-        //don't want to make world implement IConfigChangeListener
-        CubicChunks.addConfigChangeListener(this);
-    }
-
-    //from ConfigChangeListener
-    @Override public void onConfigUpdate(CubicChunks.Config config) {
-        //TODO: Check if the world has been already initialized?
-        //these should not be updated while in-world
-        this.minHeight = config.getWorldHeightLowerBound();
-        this.maxHeight = config.getWorldHeightUpperBound();
-
-        ICubicWorldProvider provider = (ICubicWorldProvider) this.getProvider();
-        if (this.minHeight < provider.getMinimumPossibleHeight()) {
-            this.minHeight = provider.getMinimumPossibleHeight();
-        }
-        if (this.maxHeight > provider.getMaximumPossibleHeight()) {
-            this.maxHeight = provider.getMaximumPossibleHeight();
         }
     }
 
@@ -217,7 +198,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
     }
 
     @Override public Profiler getProfiler() {
-        return this.theProfiler;
+        return this.profiler;
     }
 
     /**

@@ -23,6 +23,7 @@
  */
 package cubicchunks.worldgen.gui.component;
 
+import cubicchunks.CubicChunks;
 import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
@@ -140,10 +141,10 @@ public class UIFlatTerrainLayer extends UIContainer<UIFlatTerrainLayer> {
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
-        if (fromY < AddressTools.MIN_BLOCK_Y) {
-            fromY = AddressTools.MIN_BLOCK_Y;
-        } else if (fromY > AddressTools.MAX_BLOCK_Y) {
-            fromY = AddressTools.MAX_BLOCK_Y;
+        if (fromY < CubicChunks.MIN_BLOCK_Y) {
+            fromY = CubicChunks.MIN_BLOCK_Y;
+        } else if (fromY > CubicChunks.MAX_BLOCK_Y) {
+            fromY = CubicChunks.MAX_BLOCK_Y;
         }
         return fromY;
     }
@@ -155,10 +156,10 @@ public class UIFlatTerrainLayer extends UIContainer<UIFlatTerrainLayer> {
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
-        if (toY < AddressTools.MIN_BLOCK_Y) {
-            toY = AddressTools.MIN_BLOCK_Y;
-        } else if (toY > AddressTools.MAX_BLOCK_Y + 1) {
-            toY = AddressTools.MAX_BLOCK_Y + 1;
+        if (toY < CubicChunks.MIN_BLOCK_Y) {
+            toY = CubicChunks.MIN_BLOCK_Y;
+        } else if (toY > CubicChunks.MAX_BLOCK_Y + 1) {
+            toY = CubicChunks.MAX_BLOCK_Y + 1;
         }
         return toY;
     }

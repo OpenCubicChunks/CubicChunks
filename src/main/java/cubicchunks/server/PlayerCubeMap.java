@@ -354,7 +354,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
             WorldProvider worldprovider = this.getWorldServer().provider;
 
             if (!worldprovider.canRespawnHere()) {
-                this.getWorldServer().getChunkProvider().unloadAllChunks();
+                this.getWorldServer().getChunkProvider().queueUnloadAll();
             }
         }
         getWorld().getProfiler().endSection();//unload

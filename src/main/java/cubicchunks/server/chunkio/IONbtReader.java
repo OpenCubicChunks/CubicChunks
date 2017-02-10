@@ -180,7 +180,7 @@ public class IONbtReader {
                 ebs.setSkylightArray(new NibbleArray(nbt.getByteArray("SkyLight")));
             }
 
-            ebs.removeInvalidBlocks();
+            ebs.recalculateRefCounts();
             cube.setStorage(ebs);
         }
     }

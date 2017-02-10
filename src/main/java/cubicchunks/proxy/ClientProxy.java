@@ -23,6 +23,7 @@
  */
 package cubicchunks.proxy;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.client.ClientEventHandler;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.ReflectionUtil;
@@ -49,7 +50,7 @@ public class ClientProxy extends CommonProxy {
         // Solution is to double-check side before returning the player:
         return (ctx.side.isClient() ?
                 Minecraft.getMinecraft().player :
-                ctx.getServerHandler().playerEntity);
+                ctx.getServerHandler().player);
     }
 
     @Override public void registerEvents() {
@@ -60,7 +61,7 @@ public class ClientProxy extends CommonProxy {
     @Override public void setBuildLimit(MinecraftServer server) {
         WorldSettings settings = ReflectionUtil.getFieldValueSrg(server, "field_71350_m");//theWorldSettings
         if (settings.getTerrainType() instanceof ICubicWorldType) {
-            server.setBuildLimit(AddressTools.MAX_CUBE_Y * 16);
+            server.setBuildLimit(CubicChunks.MAX_BLOCK_Y);
         }
     }
 }

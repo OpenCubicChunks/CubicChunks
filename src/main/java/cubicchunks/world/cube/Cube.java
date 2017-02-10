@@ -692,17 +692,6 @@ public class Cube implements XYZAddressable {
     }
 
     /**
-     * Return the long-encoded address of this cube's coordinates
-     *
-     * @return the cube's address
-     *
-     * @see AddressTools#getAddress(int, int, int)
-     */
-    public long getAddress() {
-        return AddressTools.getAddress(this.coords.getX(), this.coords.getY(), this.coords.getZ());
-    }
-
-    /**
      * Convert an integer-encoded address to a local block to a global block position
      *
      * @param localAddress the address of the block

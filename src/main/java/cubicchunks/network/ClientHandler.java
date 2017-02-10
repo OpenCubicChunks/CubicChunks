@@ -206,6 +206,12 @@ public class ClientHandler implements INetHandler {
     }
 
     public void handle(final PacketWorldHeightBounds message) {
+        IThreadListener taskQueue = Minecraft.getMinecraft();
+        if (!taskQueue.isCallingFromMinecraftThread()) {
+            taskQueue.addScheduledTask(() -> handle(message));
+            return;
+        }
+
         if (Minecraft.getMinecraft().getConnection() != null) {
             WorldClient world = Minecraft.getMinecraft().getConnection().clientWorldController;
             if (((ICubicWorldClient) world).isCubicWorld()) {

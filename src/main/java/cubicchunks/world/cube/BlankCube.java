@@ -59,11 +59,6 @@ public class BlankCube extends Cube {
     }
 
     @Override
-    public long getAddress() {
-        return 0;
-    }
-
-    @Override
     public boolean containsBlockPos(BlockPos blockPos) {
         return false;
     }

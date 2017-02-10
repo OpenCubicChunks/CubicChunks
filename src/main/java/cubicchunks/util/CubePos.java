@@ -59,6 +59,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CubePos {
 
+    private static final int Y_BITS = 20;
+    private static final int X_BITS = 22;
+    private static final int Z_BITS = 22;
+
+    private static final int Z_BIT_OFFSET = 0;
+    private static final int X_BIT_OFFSET = Z_BIT_OFFSET + Z_BITS;
+    private static final int Y_BIT_OFFSET = X_BIT_OFFSET + X_BITS;
+
     private final int cubeX;
     private final int cubeY;
     private final int cubeZ;
@@ -67,12 +75,6 @@ public class CubePos {
         this.cubeX = cubeX;
         this.cubeY = cubeY;
         this.cubeZ = cubeZ;
-    }
-
-    public CubePos(long address) {
-        this.cubeX = AddressTools.getX(address);
-        this.cubeY = AddressTools.getY(address);
-        this.cubeZ = AddressTools.getZ(address);
     }
 
     /**
@@ -134,22 +136,15 @@ public class CubePos {
     }
 
     /**
-     * Calculates a 64bit encoding of these coordinates.
-     *
-     * @return 64bit encoding of these coordinates.
-     */
-    private long getAddress() {
-        return AddressTools.getAddress(cubeX, cubeY, cubeZ);
-    }
-
-    /**
      * Returns a specification compliant hashCode for this object.
      *
      * @return A 32bit hashCode for this instance of CubePos.
      */
     @Override
     public int hashCode() {
-        return Long.hashCode(this.getAddress());
+        return Long.hashCode(Bits.packSignedToLong(cubeX, Y_BITS, Y_BIT_OFFSET)
+                | Bits.packSignedToLong(cubeY, X_BITS, X_BIT_OFFSET)
+                | Bits.packSignedToLong(cubeZ, Z_BITS, Z_BIT_OFFSET));
     }
 
     /**

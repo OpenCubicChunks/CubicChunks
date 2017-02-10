@@ -186,7 +186,7 @@ repositories {
     mavenCentral()
     jcenter()
     maven {
-        setUrl("https://oss.sonatype.org/content/groups/public/")
+        setUrl("https://oss.sonatype.org/content/repositories/public/")
     }
     maven {
         setUrl("http://repo.spongepowered.org/maven")
@@ -202,6 +202,7 @@ dependencies {
     val forgeGradleGradleStart by configurations
     val compile by configurations
     val testCompile by configurations
+    val deobfCompile by configurations
 
     compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
     testCompile("junit:junit:4.11")
@@ -216,7 +217,7 @@ dependencies {
 
     compile(project("RegionLib"))
 
-    provided("net.malisis:malisiscore:$malisisCoreVersion:dev")
+    deobfCompile("net.malisis:malisiscore:$malisisCoreVersion")
 
     jmh.extendsFrom(compile)
     jmh.extendsFrom(forgeGradleMc)

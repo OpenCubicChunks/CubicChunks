@@ -95,13 +95,13 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Override
     @Detainted
-    public void unload(Chunk chunk) {
+    public void queueUnload(Chunk chunk) {
         //ignore, ChunkGc unloads cubes
     }
 
     @Override
     @Detainted
-    public void unloadAllChunks() {
+    public void queueUnloadAll() {
         //ignore, ChunkGc unloads cubes
     }
 
@@ -549,7 +549,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return false; // It has loaded Cubes in it
             // (Cubes are to Columns, as tickets are to Cubes... in a way)
         }
-        column.unloaded = true; // flag as unloaded (idk, maybe vanilla uses this somewhere)
+        column.unloadQueued = true; // flag as unloaded (idk, maybe vanilla uses this somewhere)
 
         // unload the Column!
         column.onChunkUnload();
