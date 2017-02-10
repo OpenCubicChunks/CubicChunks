@@ -202,7 +202,7 @@ dependencies {
     val forgeGradleGradleStart by configurations
     val compile by configurations
     val testCompile by configurations
-    val deobfCompile by configurations
+    val deobfProvided by configurations
 
     compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
     testCompile("junit:junit:4.11")
@@ -217,7 +217,7 @@ dependencies {
 
     compile(project("RegionLib"))
 
-    deobfCompile("net.malisis:malisiscore:$malisisCoreVersion")
+    deobfProvided("net.malisis:malisiscore:$malisisCoreVersion")
 
     jmh.extendsFrom(compile)
     jmh.extendsFrom(forgeGradleMc)
