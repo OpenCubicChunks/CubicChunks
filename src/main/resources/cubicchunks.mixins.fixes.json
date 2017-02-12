@@ -6,6 +6,7 @@
     "minVersion": "0.6",
     "mixins": [
         "common.MixinBlockSkull_WitherSpawnLimits",
+        "common.EntityBat_AiHeightLimit",
         "common.MixinEntityMinecart_KillFix",
         "common.MixinBlockFalling_HeightLimits",
         "common.MixinBlockPortal_Size_HeightLimits",
