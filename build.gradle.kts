@@ -63,6 +63,7 @@ apply {
     plugin<MixinGradlePlugin>()
     plugin<LicensePlugin>()
     plugin<JMHPlugin>()
+    from("build.gradle.groovy")
 }
 
 // tasks
@@ -195,14 +196,13 @@ repositories {
 
 dependencies {
     // configurations, some of them aren't necessary but added for consistency when specifying "extendsFrom"
-    val provided by configurations
     val jmh by configurations
     val forgeGradleMc by configurations
     val forgeGradleMcDeps by configurations
     val forgeGradleGradleStart by configurations
     val compile by configurations
     val testCompile by configurations
-    val deobfProvided by configurations
+    val deobfCompile by configurations
 
     compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
     testCompile("junit:junit:4.11")
@@ -217,7 +217,7 @@ dependencies {
 
     compile(project("RegionLib"))
 
-    deobfProvided("net.malisis:malisiscore:$malisisCoreVersion")
+    deobfCompile("net.malisis:malisiscore:$malisisCoreVersion")
 
     jmh.extendsFrom(compile)
     jmh.extendsFrom(forgeGradleMc)
