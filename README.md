@@ -1,4 +1,4 @@
-#Cubic Chunks Minecraft Mod
+# Cubic Chunks Minecraft Mod
 
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/CubicChunks-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -6,7 +6,7 @@
 
 This MinecraftForge mod extends Minecraft height and depth. The only limitation is size of 32-bit integer.
 
-###Cloning the repository
+### Cloning the repository
 Note: you need git installed to do that
 ```
 git clone --recursive https://github.com/Barteks2x/CubicChunks.git
@@ -16,7 +16,7 @@ If you already cloned it without `--recursive` option before reading this, run:
 git submodule update --init --recursive
 ```
 
-###Compiling the mod
+### Compiling the mod
 Note: on windows you need to run these commands without `./`
 
 This command:
@@ -27,10 +27,10 @@ should be enough to compile the mod.
 
 The mod uses information from git repository to generate version number, it won't compile without full git repository. It also won't compile if regionlib submodule doesn't exist.
 
-###Setting up development environment
+### Setting up development environment
 Note: on windows you need to run these commands without `./`
 
-####intellij IDEA
+#### intellij IDEA
 Run:
 ```
 ./gradlew setupDecompWorkspace
@@ -46,7 +46,7 @@ Then refresh gradle project in IDEA.
 For development in Intellij IDEA the [MinecraftDev plugin](https://plugins.jetbrains.com/idea/plugin/8327-minecraft-development) is recommended.
 
 
-####Other IDEs:
+#### Other IDEs:
 
 I don't use any other IDE so I don't know how to do that, but you should be able to find instructions for importing forge mod into your IDE.
 
