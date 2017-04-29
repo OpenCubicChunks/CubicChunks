@@ -19,7 +19,8 @@
         "common.isblockloaded.MixinEntityLivingBase"
     ],
     "client": [
-        "client.MixinEntityPlayerSP"
+        "client.MixinEntityPlayerSP",
+        "common.isblockloaded.MixinEntity"
     ],
     "server": [
     ],

@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.fixes.common.isblockloaded;
+package cubicchunks.asm.mixin.fixes.client.isblockloaded;
 
 import cubicchunks.asm.JvmNames;
 import mcp.MethodsReturnNonnullByDefault;
@@ -39,12 +39,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(Entity.class)
 public abstract class MixinEntity {
 
-    @Shadow public double posY;
+    @Shadow
+    public double posY;
 
     @Shadow public abstract float getEyeHeight();
 
-    @ModifyArg(method = "getBrightness", index = 1, at = @At(target = JvmNames.MUTABLE_BLOCK_POS_CONSTRUCT, value = "INVOKE"))
-    public int getModifiedYPos_getBrightness(int y) {
+    @ModifyArg(method = "getBrightnessForRender", index = 1, at = @At(target = JvmNames.MUTABLE_BLOCK_POS_CONSTRUCT, value = "INVOKE"))
+    public int getModifiedYPos_getBrightnessForRender(int y) {
         return MathHelper.floor(this.posY + this.getEyeHeight());
     }
 }
