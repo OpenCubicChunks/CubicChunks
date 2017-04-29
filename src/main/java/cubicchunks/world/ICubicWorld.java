@@ -57,7 +57,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public interface ICubicWorld {
+public interface ICubicWorld extends IMinMaxHeight {
 
     /**
      * Updates the world
@@ -73,16 +73,6 @@ public interface ICubicWorld {
     void initCubicWorld(int minHeight, int maxHeight);
 
     boolean isCubicWorld();
-
-    /**
-     * Returns Y position of the bottom block in the world
-     */
-    int getMinHeight();
-
-    /**
-     * Returns Y position of block above the top block in the world,
-     */
-    int getMaxHeight();
 
     /**
      * Returns the {@link ICubeProvider} for this world, or throws {@link NotCubicChunksWorldException}

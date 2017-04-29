@@ -21,31 +21,16 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.asm.mixin.core.common;
 
+import cubicchunks.world.IMinMaxHeight;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.IBlockAccess;
+import org.spongepowered.asm.mixin.Mixin;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AddressTools {
-
-    public static short getLocalAddress(int localX, int localY, int localZ) {
-        return (short) (Bits.packUnsignedToInt(localX, 4, 0)
-                | Bits.packUnsignedToInt(localY, 4, 4)
-                | Bits.packUnsignedToInt(localZ, 4, 8));
-    }
-
-    public static int getLocalX(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 0);
-    }
-
-    public static int getLocalY(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 4);
-    }
-
-    public static int getLocalZ(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 8);
-    }
-}
+@Mixin(IBlockAccess.class)
+public interface MixinIBlockAccess_MinMaxHeight extends IMinMaxHeight {}

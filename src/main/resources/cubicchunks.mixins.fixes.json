@@ -5,8 +5,12 @@
     "compatibilityLevel": "JAVA_8",
     "minVersion": "0.6.7",
     "mixins": [
+        "common.MixinBlockSkull_WitherSpawnLimits",
+        "common.EntityBat_AiHeightLimit",
+        "common.MixinWalkNodeProcessor_HeightLimit",
         "common.MixinEntityMinecart_KillFix",
         "common.MixinBlockFalling_HeightLimits",
+        "common.MixinBlockPortal_Size_HeightLimits",
         "common.MixinEntityFallingBlock_HeightLimits",
         "common.MixinWorld",
         "common.MixinRandomPositionGenerator",
@@ -15,7 +19,8 @@
         "common.isblockloaded.MixinEntityLivingBase"
     ],
     "client": [
-        "client.MixinEntityPlayerSP"
+        "client.MixinEntityPlayerSP",
+        "common.isblockloaded.MixinEntity"
     ],
     "server": [
     ],

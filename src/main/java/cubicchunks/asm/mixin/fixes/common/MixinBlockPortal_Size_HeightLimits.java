@@ -21,31 +21,28 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
-
-import mcp.MethodsReturnNonnullByDefault;
+package cubicchunks.asm.mixin.fixes.common;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@ParametersAreNonnullByDefault
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Constant;
+
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.BlockPortal;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+
 @MethodsReturnNonnullByDefault
-public class AddressTools {
+@ParametersAreNonnullByDefault
+@Mixin(BlockPortal.Size.class)
+public abstract class MixinBlockPortal_Size_HeightLimits {
 
-    public static short getLocalAddress(int localX, int localY, int localZ) {
-        return (short) (Bits.packUnsignedToInt(localX, 4, 0)
-                | Bits.packUnsignedToInt(localY, 4, 4)
-                | Bits.packUnsignedToInt(localZ, 4, 8));
-    }
-
-    public static int getLocalX(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 0);
-    }
-
-    public static int getLocalY(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 4);
-    }
-
-    public static int getLocalZ(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 8);
-    }
+	@ModifyConstant(method = "<init>", constant = @Constant(intValue = 0, ordinal = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_ZERO), require = 1)
+	private int portalSizeClassInitReplace0(int posY, World worldIn, BlockPos origin, EnumFacing.Axis axis) {
+		return ((ICubicWorld)worldIn).getMinHeight();
+	}
 }

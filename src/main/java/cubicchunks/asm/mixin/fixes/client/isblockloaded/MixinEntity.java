@@ -21,31 +21,31 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.asm.mixin.fixes.client.isblockloaded;
 
+import cubicchunks.asm.JvmNames;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.MathHelper;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AddressTools {
+@Mixin(Entity.class)
+public abstract class MixinEntity {
 
-    public static short getLocalAddress(int localX, int localY, int localZ) {
-        return (short) (Bits.packUnsignedToInt(localX, 4, 0)
-                | Bits.packUnsignedToInt(localY, 4, 4)
-                | Bits.packUnsignedToInt(localZ, 4, 8));
-    }
+    @Shadow
+    public double posY;
 
-    public static int getLocalX(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 0);
-    }
+    @Shadow public abstract float getEyeHeight();
 
-    public static int getLocalY(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 4);
-    }
-
-    public static int getLocalZ(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 8);
+    @ModifyArg(method = "getBrightnessForRender", index = 1, at = @At(target = JvmNames.MUTABLE_BLOCK_POS_CONSTRUCT, value = "INVOKE"))
+    public int getModifiedYPos_getBrightnessForRender(int y) {
+        return MathHelper.floor(this.posY + this.getEyeHeight());
     }
 }

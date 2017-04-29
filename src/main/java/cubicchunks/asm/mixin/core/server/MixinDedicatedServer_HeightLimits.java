@@ -23,6 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.server;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.server.dedicated.DedicatedServer;
@@ -45,6 +46,6 @@ public class MixinDedicatedServer_HeightLimits {
      */
     @ModifyConstant(method = "init", constant = @Constant(intValue = 256), require = 2)
     private int getDefaultBuildHeight(int oldValue) {
-        return AddressTools.MAX_BLOCK_Y + 1;
+        return CubicChunks.MAX_BLOCK_Y + 1;
     }
 }

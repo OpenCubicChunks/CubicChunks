@@ -21,31 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.worldgen.generator.flat;
 
-import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.state.IBlockState;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+public class Layer implements Comparable<Layer> {
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public class AddressTools {
+    public int fromY;
+    public int toY;
+    public IBlockState blockState;
 
-    public static short getLocalAddress(int localX, int localY, int localZ) {
-        return (short) (Bits.packUnsignedToInt(localX, 4, 0)
-                | Bits.packUnsignedToInt(localY, 4, 4)
-                | Bits.packUnsignedToInt(localZ, 4, 8));
+    public Layer(int fromY1, int toY1, IBlockState block1) {
+        fromY = fromY1;
+        toY = toY1;
+        blockState = block1;
     }
 
-    public static int getLocalX(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 0);
-    }
-
-    public static int getLocalY(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 4);
-    }
-
-    public static int getLocalZ(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 8);
+    @Override
+    public int compareTo(Layer other) {
+        return this.fromY - other.fromY;
     }
 }

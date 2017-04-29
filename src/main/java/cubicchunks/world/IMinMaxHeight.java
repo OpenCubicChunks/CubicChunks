@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.world;
 
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -29,23 +29,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AddressTools {
-
-    public static short getLocalAddress(int localX, int localY, int localZ) {
-        return (short) (Bits.packUnsignedToInt(localX, 4, 0)
-                | Bits.packUnsignedToInt(localY, 4, 4)
-                | Bits.packUnsignedToInt(localZ, 4, 8));
+public interface IMinMaxHeight {
+    /**
+     * Returns Y position of the bottom block in the world
+     */
+    default int getMinHeight() {
+        return 0;
     }
 
-    public static int getLocalX(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 0);
-    }
-
-    public static int getLocalY(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 4);
-    }
-
-    public static int getLocalZ(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 8);
+    /**
+     * Returns Y position of block above the top block in the world,
+     */
+    default int getMaxHeight() {
+        return 256;
     }
 }

@@ -21,31 +21,30 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util;
+package cubicchunks.asm.mixin.fixes.common;
 
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.entity.passive.EntityAmbientCreature;
+import net.minecraft.entity.passive.EntityBat;
+import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class AddressTools {
+@Mixin(EntityBat.class)
+public class EntityBat_AiHeightLimit extends EntityAmbientCreature {
 
-    public static short getLocalAddress(int localX, int localY, int localZ) {
-        return (short) (Bits.packUnsignedToInt(localX, 4, 0)
-                | Bits.packUnsignedToInt(localY, 4, 4)
-                | Bits.packUnsignedToInt(localZ, 4, 8));
+    public EntityBat_AiHeightLimit(World worldIn) {
+        super(worldIn);
     }
 
-    public static int getLocalX(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 0);
-    }
-
-    public static int getLocalY(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 4);
-    }
-
-    public static int getLocalZ(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 8);
+    @ModifyConstant(method = "updateAITasks", constant = @Constant(intValue = 1, ordinal = 0))
+    private int updateAITasks_getMinSpawnPositionY(int originalY) {
+        return ((ICubicWorld) this.world).getMinHeight() + originalY;
     }
 }

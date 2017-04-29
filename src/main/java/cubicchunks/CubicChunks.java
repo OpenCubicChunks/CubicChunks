@@ -72,8 +72,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mod.EventBusSubscriber
 public class CubicChunks {
 
+    public static final int MIN_BLOCK_Y = Integer.MIN_VALUE >> 1;
+    public static final int MAX_BLOCK_Y = Integer.MAX_VALUE >> 1;
+
     public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
     public static final String MODID = "cubicchunks";
+
     @Nonnull
     public static Logger LOGGER = LogManager.getLogger("EarlyCubicChunks");//use some logger even before it's set. useful for unit tests
 
@@ -162,9 +166,9 @@ public class CubicChunks {
             LIGHTING_TICK_BUDGET(1, Integer.MAX_VALUE, 10,
                     "The maximum amount of time in milliseconds per tick to spend performing lighting calculations."),
             VERTICAL_CUBE_LOAD_DISTANCE(2, 32, 8, "Similar to Minecraft's view distance, only for vertical chunks."),
-            DEFAULT_WORLD_HEIGHT_LOWER_BOUND(AddressTools.MIN_BLOCK_Y, 0, -4096,
+            DEFAULT_WORLD_HEIGHT_LOWER_BOUND(CubicChunks.MIN_BLOCK_Y, 0, CubicChunks.MIN_BLOCK_Y,
                     "The lower boundary on the world. Blocks will not generate or load below this point."),
-            DEFAULT_WORLD_HEIGHT_UPPER_BOUND(256, AddressTools.MAX_BLOCK_Y, 4096,
+            DEFAULT_WORLD_HEIGHT_UPPER_BOUND(256, CubicChunks.MAX_BLOCK_Y, CubicChunks.MAX_BLOCK_Y,
                     "The upper boundary on the world. Blocks will not generate or load above this point."),
             CHUNK_G_C_INTERVAL(1, Integer.MAX_VALUE, 20 * 10,
                     "Chunk garbage collector update interval. A more lower it is - a more CPU load it will generate. "

@@ -123,7 +123,7 @@ class WorldEncoder {
             ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
             coi.setData(heightmaps);
             // cube.initialClientSkylight();
-            storage.removeInvalidBlocks();
+            storage.recalculateRefCounts();
         }
     }
 

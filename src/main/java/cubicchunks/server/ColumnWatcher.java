@@ -167,7 +167,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     @Override
     @Deprecated
-    public void sendNearbySpecialEntities(EntityPlayerMP player) {
+    public void sendToPlayer(EntityPlayerMP player) {
         //done by cube watcher
     }
 

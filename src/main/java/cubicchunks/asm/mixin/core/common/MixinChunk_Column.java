@@ -69,7 +69,7 @@ public abstract class MixinChunk_Column implements IColumn {
 
     @Shadow @Final private World world;
 
-    @Shadow public boolean unloaded;
+    @Shadow public boolean unloadQueued;
 
     @Override public int getZ() {
         return this.zPosition;
@@ -285,7 +285,7 @@ public abstract class MixinChunk_Column implements IColumn {
 
 
     @Override public void markUnloaded(boolean unloaded) {
-        this.unloaded = unloaded;
+        this.unloadQueued = unloaded;
     }
 
 
@@ -371,13 +371,6 @@ public abstract class MixinChunk_Column implements IColumn {
     @Intrinsic public void chunk$setInhabitedTime(long arg1) {
         setInhabitedTime(arg1);
     }
-
-    @Shadow public abstract ChunkPos getChunkCoordIntPair();
-
-    @Override public ChunkPos getPos() {
-        return getChunkCoordIntPair();
-    }
-
 
     @Override public boolean shouldTick() {
         for (Cube cube : cubeMap) {

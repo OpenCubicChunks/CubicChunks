@@ -63,6 +63,7 @@ apply {
     plugin<MixinGradlePlugin>()
     plugin<LicensePlugin>()
     plugin<JMHPlugin>()
+    from("build.gradle.groovy")
 }
 
 // tasks
@@ -186,7 +187,7 @@ repositories {
     mavenCentral()
     jcenter()
     maven {
-        setUrl("https://oss.sonatype.org/content/groups/public/")
+        setUrl("https://oss.sonatype.org/content/repositories/public/")
     }
     maven {
         setUrl("http://repo.spongepowered.org/maven")
@@ -195,13 +196,13 @@ repositories {
 
 dependencies {
     // configurations, some of them aren't necessary but added for consistency when specifying "extendsFrom"
-    val provided by configurations
     val jmh by configurations
     val forgeGradleMc by configurations
     val forgeGradleMcDeps by configurations
     val forgeGradleGradleStart by configurations
     val compile by configurations
     val testCompile by configurations
+    val deobfCompile by configurations
 
     compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
     testCompile("junit:junit:4.11")
@@ -210,13 +211,13 @@ dependencies {
     testCompile("org.mockito:mockito-core:2.1.0-RC.2")
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    compile("org.spongepowered:mixin:0.6.7-SNAPSHOT") {
+    compile("org.spongepowered:mixin:0.6.8-SNAPSHOT") {
         isTransitive = false
     }
 
     compile(project("RegionLib"))
 
-    provided("net.malisis:malisiscore:$malisisCoreVersion:dev")
+    deobfCompile("net.malisis:malisiscore:$malisisCoreVersion")
 
     jmh.extendsFrom(compile)
     jmh.extendsFrom(forgeGradleMc)
@@ -294,12 +295,9 @@ fun getModVersion(): String {
         val describe = DescribeOp(git.repository).call()
         val branch = git.branch.current.name
         return getModVersion_do(describe, branch);
-    } catch(ex: RepositoryNotFoundException) {
-        logger.error("Git repository not found! Version will be incorrect!")
-        return getModVersion_do("v9999.9999-9999-gffffff", "localbuild")
-    } catch(ex: GrgitException) {
-        logger.error("Error when accessing git repository! Version will be incorrect!", ex)
-        return getModVersion_do("v9999.9999-9999-gffffff", "unknown")
+    } catch(ex: RuntimeException) {
+        logger.error("Unknown error when accessing git repository! Are you sure the git repository exists?", ex)
+        throw ex
     }
 }
 

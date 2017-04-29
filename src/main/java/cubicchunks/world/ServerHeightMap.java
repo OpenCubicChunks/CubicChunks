@@ -23,6 +23,7 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.world.cube.Cube;
@@ -117,7 +118,9 @@ public class ServerHeightMap implements IHeightMap {
 
     @Override
     public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
-
+        if (blockY > CubicChunks.MAX_BLOCK_Y || blockY < CubicChunks.MIN_BLOCK_Y) {
+            return;
+        }
         int xzIndex = getIndex(localX, localZ);
 
         // try to stay in no-segments mode as long as we can, this is the simple case
@@ -186,6 +189,9 @@ public class ServerHeightMap implements IHeightMap {
         // The binary search ends on answer + 1, so subtract 1. The result is the index of the segment containing
         // blockY.
         int segmentIndex = mini - 1;
+        if (segmentIndex < 0) {
+            return Coords.NO_HEIGHT;
+        }
         int blockYSegment = segments[segmentIndex];
         int blockYSegmentOpacity = unpackOpacity(blockYSegment);
 
