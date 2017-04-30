@@ -105,6 +105,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
 
     @Shadow @Final private int[] heightMap;
     @Shadow @Final private World world;
+    @Shadow protected boolean isChunkLoaded;
     // WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING FIELDS IN MixinChunk_Column
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
@@ -322,6 +323,19 @@ public abstract class MixinChunk_Cubes implements IColumn {
     }
 
     // ==============================================
+    //            getBlockLightOpacity
+    // ==============================================
+
+    @Redirect(method = "getBlockLightOpacity(III)I", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
+    private boolean getBlockLightOpacity_isChunkLoadedCubeRedirect(Chunk chunk, int x, int y, int z) {
+        if (!isColumn) {
+            return isChunkLoaded;
+        }
+        Cube cube = this.getLoadedCube(blockToCube(y));
+        return cube != null && cube.isCubeLoaded();
+    }
+
+    // ==============================================
     //                 getBlockState
     // ==============================================
 
@@ -494,17 +508,43 @@ public abstract class MixinChunk_Cubes implements IColumn {
     }
 
     // ==============================================
+    //              removeTileEntity
+    // ==============================================
+
+    @Redirect(method = "addTileEntity(Lnet/minecraft/tileentity/TileEntity;)V", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
+    private boolean addTileEntity_isChunkLoadedCubeRedirect(Chunk chunk, TileEntity te) {
+        if (!isColumn) {
+            return isChunkLoaded;
+        }
+        Cube cube = this.getLoadedCube(blockToCube(te.getPos().getY()));
+        return cube != null && cube.isCubeLoaded();
+    }
+
+    // ==============================================
+    //              removeTileEntity
+    // ==============================================
+
+    @Redirect(method = "removeTileEntity", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
+    private boolean removeTileEntity_isChunkLoadedCubeRedirect(Chunk chunk, BlockPos pos) {
+        if (!isColumn) {
+            return isChunkLoaded;
+        }
+        Cube cube = this.getLoadedCube(blockToCube(pos.getY()));
+        return cube != null && cube.isCubeLoaded();
+    }
+
+    // ==============================================
     //        getEntitiesWithinAABBForEntity
     // ==============================================
 
     @ModifyArg(method = "getEntitiesWithinAABBForEntity",
-               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 0)
+               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 1)
     private int getEntAABBFor_CubicChunks_getMinYConst(int origY) {
         return Coords.blockToCube(getCubicWorld().getMinHeight());
     }
 
     @ModifyArg(method = "getEntitiesWithinAABBForEntity",
-               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 1)
+               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 2)
     private int getEntAABBFor_CubicChunks_getMaxYConst(int origY) {
         return Coords.blockToCube(getCubicWorld().getMaxHeight()) - 1;
     }
@@ -522,13 +562,13 @@ public abstract class MixinChunk_Cubes implements IColumn {
     // ==============================================
 
     @ModifyArg(method = "getEntitiesOfTypeWithinAAAB",
-               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 0)
+               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 1)
     private int getEntOfTypeAABB_CubicChunks_getMinYConst(int origY) {
         return Coords.blockToCube(getCubicWorld().getMinHeight());
     }
 
     @ModifyArg(method = "getEntitiesOfTypeWithinAAAB",
-               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 1)
+               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 2)
     private int getEntOfTypeAABB_CubicChunks_getMaxYConst(int origY) {
         return Coords.blockToCube(getCubicWorld().getMaxHeight()) - 1;
     }
@@ -653,13 +693,15 @@ public abstract class MixinChunk_Cubes implements IColumn {
         return this.entityLists;
     }
 
-    //public void removeTileEntity(BlockPos pos) {
-    //    if (this.isChunkLoaded) { // replace this with cube check
-    //        // whatever
-    //    }
-    //}
-    @Redirect(method = "removeTileEntity", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
-    private boolean removeTileEntity_isChunkLoadedCubeRedirect(Chunk chunk, BlockPos pos) {
+    // ==============================================
+    //           removeInvalidTileEntity
+    // ==============================================
+
+    @Redirect(method = "removeInvalidTileEntity", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
+    private boolean removeInvalidTileEntity_isChunkLoadedCubeRedirect(Chunk chunk, BlockPos pos) {
+        if (!isColumn) {
+            return isChunkLoaded;
+        }
         Cube cube = this.getLoadedCube(blockToCube(pos.getY()));
         return cube != null && cube.isCubeLoaded();
     }
