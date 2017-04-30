@@ -20,7 +20,7 @@
     ],
     "client": [
         "client.MixinEntityPlayerSP",
-        "common.isblockloaded.MixinEntity"
+        "client.isblockloaded.MixinEntity"
     ],
     "server": [
     ],

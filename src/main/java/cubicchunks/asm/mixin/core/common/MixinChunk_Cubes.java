@@ -45,6 +45,7 @@ import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -56,6 +57,7 @@ import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.Chunk;
@@ -75,6 +77,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -100,8 +103,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
 
     @Shadow @Final @Mutable private Map<BlockPos, TileEntity> chunkTileEntityMap;
 
-    // @Nonnull private LightingManager lightManager;
-
+    @Shadow @Final private int[] heightMap;
+    @Shadow @Final private World world;
     // WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING FIELDS IN MixinChunk_Column
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
@@ -167,16 +170,15 @@ public abstract class MixinChunk_Cubes implements IColumn {
         this.cubeMap = new CubeMap();
         //clientside we don't really need that much data. we actually only need top and bottom block Y positions
         if (world.isRemote()) {
-            this.opacityIndex = new ClientHeightMap(this);
+            this.opacityIndex = new ClientHeightMap(this, heightMap);
         } else {
-            this.opacityIndex = new ServerHeightMap();
+            this.opacityIndex = new ServerHeightMap(heightMap);
         }
 
         // instead of redirecting access to this map, just make the map do the work
         this.chunkTileEntityMap = new ColumnTileEntityMap(this);
 
         // this.chunkSections = null;
-        // this.heightMap = null;
         // this.skylightUpdateMap = null;
 
         Arrays.fill(getBiomeArray(), (byte) -1);
@@ -238,6 +240,26 @@ public abstract class MixinChunk_Cubes implements IColumn {
         }
     }
 
+    /*
+    Light update code called from this:
+
+    if (addedNewCube) {
+      generateSkylightMap();
+    } else {
+      if (placingOpaque) {
+        if (placingNewTopBlock) {
+          relightBlock(x, y + 1, z);
+        } else if (removingTopBlock) {
+          relightBlock(x, y, z);
+        }
+      }
+      // equivalent to opacityDecreased || (opacityChanged && receivesLight)
+      // which means: propagateSkylight if it lets more light through, or (it receives any light and opacity changed)
+      if (opacityChanged && (opacityDecreased || blockReceivesLight)) {
+        propagateSkylightOcclusion(x, z);
+      }
+    }
+    */
     // ==============================================
     //             generateSkylightMap
     // ==============================================
@@ -268,7 +290,6 @@ public abstract class MixinChunk_Cubes implements IColumn {
     @Inject(method = "recheckGaps", at = @At(value = "HEAD"), cancellable = true)
     private void recheckGaps_CubicChunks_Replace(boolean p_150803_1_, CallbackInfo cbi) {
         if (isColumn) {
-
             cbi.cancel();
         }
     }
@@ -281,10 +302,21 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //                 relightBlock
     // ==============================================
 
+    @Inject(method = "setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;relightBlock(III)V"),
+            locals = LocalCapture.CAPTURE_FAILHARD)
+    private void setBlockState_CubicChunks_relightBlockReplace(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir,
+            int localX, int y, int localZ, int packedXZ, int oldHeightValue, IBlockState oldState, Block newBlock, Block oldBlock,
+            int oldOpacity, ExtendedBlockStorage ebs, boolean createdNewEbsAboveTop, int newOpacity) {
+
+        if (isColumn) {
+            getCubicWorld().getLightingManager().doOnBlockSetLightUpdates(this, localX, oldHeightValue, y, localZ);
+        }
+    }
+
+    // make relightBlock no-op for cubic chunks, handles by injection above
     @Inject(method = "relightBlock", at = @At(value = "HEAD"), cancellable = true)
     private void relightBlock_CubicChunks_Replace(int x, int y, int z, CallbackInfo cbi) {
         if (isColumn) {
-            // TODO: handle relightBlock
             cbi.cancel();
         }
     }
@@ -334,6 +366,12 @@ public abstract class MixinChunk_Cubes implements IColumn {
     // ==============================================
     //                 setBlockState
     // ==============================================
+
+    @Inject(method = "setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;set"
+            + "(IIILnet/minecraft/block/state/IBlockState;)V", shift = At.Shift.AFTER))
+    private void onEBSSet_setBlockState_setOpacity(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir) {
+        opacityIndex.onOpacityChange(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ()), state.getLightOpacity(world, pos));
+    }
 
     @Redirect(method = "setBlockState", at = @At(
             value = "FIELD",

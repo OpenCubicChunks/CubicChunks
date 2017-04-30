@@ -35,6 +35,7 @@ import cubicchunks.util.ticket.TicketList;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
@@ -166,7 +167,7 @@ public class Cube implements XYZAddressable {
         this(column, cubeY);
 
         int miny = Coords.cubeToMinBlock(cubeY);
-        //IHeightMap opindex = column.getOpacityIndex();
+        IHeightMap opindex = column.getOpacityIndex();
 
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
@@ -182,7 +183,7 @@ public class Cube implements XYZAddressable {
 
                         if (newstate.getLightOpacity() != 0) {
                             column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe ServerHeightMap needs its own isModified
-                            //opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
+                            opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
                         }
                     }
                 }

@@ -23,7 +23,10 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.util.Coords;
 import mcp.MethodsReturnNonnullByDefault;
+
+import java.util.Arrays;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -80,5 +83,29 @@ public interface IHeightMap {
      */
     int getLowestTopBlockY();
 
-    int[] getHeightmap();
+    // This class exists only because I don't want to introduce many off-by-one errors when modifying height tracking code to store
+    // height-above-the-top-block instead of height-of-the-top-block (which is done so that the heightmap array can be shared with vanilla)
+    final class HeightMap {
+        private int[] data;
+
+        public HeightMap(int[] heightmap) {
+            this.data = heightmap;
+        }
+
+        public int get(int index) {
+            return data[index] - 1;
+        }
+
+        public void set(int index, int value) {
+            data[index] = value + 1;
+        }
+
+        public void increment(int index) {
+            data[index]++;
+        }
+
+        public void decrement(int index) {
+            data[index]--;
+        }
+    }
 }
