@@ -82,7 +82,7 @@ public interface IColumn {
      *
      * @return The block state
      *
-     * @see Column#getBlockState(int, int, int)
+     * @see IColumn#getBlockState(int, int, int)
      * @see Cube#getBlockState(BlockPos)
      * <p>
      * CHECKED: 1.11-13.19.0.2148 - super calls the x/y/z version
@@ -98,7 +98,7 @@ public interface IColumn {
      *
      * @return The block state
      *
-     * @see Column#getBlockState(BlockPos)
+     * @see IColumn#getBlockState(BlockPos)
      * @see Cube#getBlockState(int, int, int)
      */
     IBlockState getBlockState(int blockX, int blockY, int blockZ);
@@ -423,6 +423,14 @@ public interface IColumn {
      * @return the world
      */
     ICubicWorld getCubicWorld();
+
+    /**
+     * Note: this method is intended for internal use only.
+     *
+     * Make the chunk ready to use this cube for the next block operation.
+     * This cube will be used only if the coordinates match.
+     */
+    void primedCube(Cube cube);
 
     /**
      * Set the unloaded flag.

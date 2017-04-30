@@ -632,4 +632,8 @@ public class Cube implements XYZAddressable {
     public void setCubeLoaded() {
         this.isCubeLoaded = true;
     }
+
+    public boolean isCubeLoaded() {
+        return this.isCubeLoaded;
+    }
 }

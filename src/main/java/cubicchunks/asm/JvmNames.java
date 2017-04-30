@@ -69,6 +69,7 @@ public class JvmNames {
         CHUNK_CONSTRUCT_1 = "<init>(" + WORLD + "II" + ")V",
         CHUNK_ENTITY_LISTS = CHUNK + "entityLists:[" + CLASS_INHERITANCE_MULTI_MAP,
         CHUNK_GET_ENTITY_LISTS = CHUNK + "getEntityLists()[" + CLASS_INHERITANCE_MULTI_MAP,
+        CHUNK_IS_CHUNK_LOADED = CHUNK + "isChunkLoaded:Z", // field
         CHUNK_IS_POPULATED = CHUNK + "isPopulated()Z",
         CHUNK_STORAGE_ARRAYS = CHUNK + "storageArrays:[" + EXTENDED_BLOCK_STORAGE,
         COMMAND_BASE_PARSE_DOUBLE = COMMAND_BASE + "parseDouble(D" + STRING + "IIZ)D",

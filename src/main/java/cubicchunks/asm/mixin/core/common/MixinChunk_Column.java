@@ -24,7 +24,6 @@
 package cubicchunks.asm.mixin.core.common;
 
 import com.google.common.base.Predicate;
-import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.CubeMap;
@@ -36,7 +35,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -53,15 +51,19 @@ import java.util.Map;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+/**
+ * Implements the IColumn interface
+ */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = Chunk.class, priority = 2000)
 @Implements(@Interface(iface = IColumn.class, prefix = "chunk$"))
 public abstract class MixinChunk_Column implements IColumn {
 
-    // WARNING: WHEN YOU RENAME ANY OF THESE 2 FIELDS RENAME CORRESPONDING FIELDS IN MixinChunk_Cubes
+    // WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING FIELDS IN MixinChunk_Cubes
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
+    private Cube primedCube;
 
     @Shadow @Final public int zPosition;
 
@@ -250,11 +252,17 @@ public abstract class MixinChunk_Column implements IColumn {
 
 
     @Override public Cube getLoadedCube(int cubeY) {
+        if (primedCube != null && primedCube.getY() == cubeY) {
+            return primedCube;
+        }
         return getCubicWorld().getCubeCache().getLoadedCube(xPosition, cubeY, zPosition);
     }
 
 
     @Override public Cube getCube(int cubeY) {
+        if (primedCube != null && primedCube.getY() == cubeY) {
+            return primedCube;
+        }
         return getCubicWorld().getCubeCache().getCube(xPosition, cubeY, zPosition);
     }
 
@@ -394,5 +402,10 @@ public abstract class MixinChunk_Column implements IColumn {
 
     @Override public Iterable getLoadedCubes(int startY, int endY) {
         return this.cubeMap.cubes(startY, endY);
+    }
+
+
+    @Override public void primedCube(Cube cube) {
+        this.primedCube = cube;
     }
 }

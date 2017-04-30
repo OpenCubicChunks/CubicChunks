@@ -42,27 +42,21 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
-    private final ICubicWorld world;
-    private CubeMap cubeMap;
-    private final int columnX;
-    private final int columnZ;
+    private final IColumn column;
 
-    public ColumnTileEntityMap(CubeMap cubeMap, ICubicWorld world, int columnX, int columnZ) {
-        this.cubeMap = cubeMap;
-        this.world = world;
-        this.columnX = columnX;
-        this.columnZ = columnZ;
+    public ColumnTileEntityMap(IColumn column) {
+        this.column = column;
     }
 
     @Override public int size() {
-        return cubeMap.all().stream()
+        return column.getLoadedCubes().stream()
                 .map(Cube::getTileEntityMap)
                 .map(Map::size)
                 .reduce((a, b) -> a + b).orElse(0);
     }
 
     @Override public boolean isEmpty() {
-        return cubeMap.all().stream()
+        return column.getLoadedCubes().stream()
                 .map(Cube::getTileEntityMap)
                 .allMatch(Map::isEmpty);
     }
@@ -73,7 +67,7 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
         }
         BlockPos pos = (BlockPos) o;
         int y = Coords.blockToCube(pos.getY());
-        Cube cube = world.getCubeCache().getLoadedCube(columnX, y, columnZ);
+        Cube cube = column.getLoadedCube(y);
         return cube == null ? false : cube.getTileEntityMap().containsKey(o);
     }
 
@@ -83,7 +77,7 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
         }
         BlockPos pos = (BlockPos) o;
         int y = Coords.blockToCube(pos.getY());
-        Cube cube = world.getCubeCache().getLoadedCube(columnX, y, columnZ);
+        Cube cube = column.getLoadedCube(y);
         return cube == null ? false : cube.getTileEntityMap().containsValue(o);
     }
 
@@ -93,13 +87,13 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
         }
         BlockPos pos = (BlockPos) o;
         int y = Coords.blockToCube(pos.getY());
-        Cube cube = world.getCubeCache().getLoadedCube(columnX, y, columnZ);
+        Cube cube = column.getLoadedCube(y);
         return cube == null ? null : cube.getTileEntityMap().get(o);
     }
 
     @Override public TileEntity put(BlockPos blockPos, TileEntity tileEntity) {
         int y = Coords.blockToCube(blockPos.getY());
-        Cube cube = world.getCubeCache().getCube(columnX, y, columnZ);
+        Cube cube = column.getCube(y);
         return cube.getTileEntityMap().put(blockPos, tileEntity);
     }
 
@@ -109,7 +103,7 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
         }
         BlockPos pos = (BlockPos) o;
         int y = Coords.blockToCube(pos.getY());
-        Cube cube = world.getCubeCache().getLoadedCube(columnX, y, columnZ);
+        Cube cube = column.getLoadedCube(y);
         return cube == null ? null : cube.getTileEntityMap().remove(pos);
     }
 
@@ -143,7 +137,7 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
             @Override public Iterator<TileEntity> iterator() {
                 return new Iterator<TileEntity>() {
-                    Iterator<Cube> cubes = ColumnTileEntityMap.this.cubeMap.iterator();
+                    Iterator<Cube> cubes = column.getLoadedCubes().iterator();
                     Iterator<TileEntity> curIt = !cubes.hasNext() ? null : cubes.next().getTileEntityMap().values().iterator();
                     TileEntity nextVal;
 

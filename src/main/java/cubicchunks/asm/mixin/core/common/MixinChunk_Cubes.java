@@ -25,11 +25,15 @@ package cubicchunks.asm.mixin.core.common;
 
 import static cubicchunks.asm.JvmNames.CHUNK_CONSTRUCT_1;
 import static cubicchunks.asm.JvmNames.CHUNK_ENTITY_LISTS;
+import static cubicchunks.asm.JvmNames.CHUNK_IS_CHUNK_LOADED;
 import static cubicchunks.asm.JvmNames.CHUNK_STORAGE_ARRAYS;
 import static cubicchunks.asm.JvmNames.MATH_HELPER_CLAMP_I;
+import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.client.CubeProviderClient;
+import cubicchunks.server.CubeProviderServer;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorld;
@@ -38,6 +42,7 @@ import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.column.ColumnTileEntityMap;
 import cubicchunks.world.column.CubeMap;
 import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -54,6 +59,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraft.world.gen.ChunkProviderDebug;
 import net.minecraftforge.fml.relauncher.Side;
@@ -75,6 +81,9 @@ import java.util.Map;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+/**
+ * Modifies vanilla code in Chunk to use Cubes
+ */
 // TODO: redirect isChunkLoaded where needed
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -93,9 +102,10 @@ public abstract class MixinChunk_Cubes implements IColumn {
 
     // @Nonnull private LightingManager lightManager;
 
-    // WARNING: WHEN YOU RENAME ANY OF THESE 2 FIELDS RENAME CORRESPONDING FIELDS IN MixinChunk_Column
+    // WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING FIELDS IN MixinChunk_Column
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
+    private Cube primedCube; // todo: make it always nonnull using BlankCube
 
     private boolean isColumn = false;
 
@@ -105,6 +115,9 @@ public abstract class MixinChunk_Cubes implements IColumn {
         if (!isColumn) {
             return storageArrays[index];
         }
+        if (primedCube != null && primedCube.getY() == index) {
+            return primedCube.getStorage();
+        }
         return getCubicWorld().getCubeCache().getCube(getX(), index, getZ()).getStorage();
     }
 
@@ -112,12 +125,19 @@ public abstract class MixinChunk_Cubes implements IColumn {
         if (!isColumn) {
             return entityLists[index];
         }
+        if (primedCube != null && primedCube.getY() == index) {
+            return primedCube.getEntityContainer().getEntitySet();
+        }
         return getCubicWorld().getCubeCache().getCube(getX(), index, getZ()).getEntityContainer().getEntitySet();
     }
 
     private void setEBS_CubicChunks(int index, ExtendedBlockStorage ebs) {
         if (!isColumn) {
             storageArrays[index] = ebs;
+            return;
+        }
+        if (primedCube != null && primedCube.getY() == index) {
+            primedCube.setStorage(ebs);
             return;
         }
         Cube loaded = getCubicWorld().getCubeCache().getLoadedCube(getX(), index, getZ());
@@ -153,7 +173,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
         }
 
         // instead of redirecting access to this map, just make the map do the work
-        this.chunkTileEntityMap = new ColumnTileEntityMap(cubeMap, world, getX(), getZ());
+        this.chunkTileEntityMap = new ColumnTileEntityMap(this);
 
         // this.chunkSections = null;
         // this.heightMap = null;
@@ -593,5 +613,16 @@ public abstract class MixinChunk_Cubes implements IColumn {
         // TODO: return array of wrappers, 0-th entry will wrap everything below y=1, the 15-th entry will wrap everything above the top
         // at least if possible
         return this.entityLists;
+    }
+
+    //public void removeTileEntity(BlockPos pos) {
+    //    if (this.isChunkLoaded) { // replace this with cube check
+    //        // whatever
+    //    }
+    //}
+    @Redirect(method = "removeTileEntity", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
+    private boolean removeTileEntity_isChunkLoadedCubeRedirect(Chunk chunk, BlockPos pos) {
+        Cube cube = this.getLoadedCube(blockToCube(pos.getY()));
+        return cube != null && cube.isCubeLoaded();
     }
 }

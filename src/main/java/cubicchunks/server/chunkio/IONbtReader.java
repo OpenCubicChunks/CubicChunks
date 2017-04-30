@@ -118,6 +118,8 @@ public class IONbtReader {
     }
 
     static void readCubeSyncPart(Cube cube, ICubicWorldServer world, NBTTagCompound nbt) {
+        // a hack so that the Column won't try to get cube from CubeCache/CubeProvider.
+        cube.getColumn().primedCube(cube);
         NBTTagCompound level = nbt.getCompoundTag("Level");
         readEntities(level, world, cube);
         readTileEntities(level, world, cube);
