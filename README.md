@@ -24,7 +24,7 @@ This command:
 ```
 ./gradlew build
 ```
-should be enough to compile the mod.
+~~should be enough to compile the mod.~~ Because of [a bug in ForgeGradle](https://github.com/MinecraftForge/ForgeGradle/issues/410) running one of: `./gradlew setupCiWorkspace`, `./gradlew setupDevWorkspace`, `./gradlew setupDecompWorkspace` is required before running `./gradlew build` for the first time, and after some dependency updates. (`setupCiWorkspace` does the minimum required to compile the mod)
 
 The mod uses information from git repository to generate version number, it won't compile without full git repository. It also won't compile if regionlib submodule doesn't exist.
 
