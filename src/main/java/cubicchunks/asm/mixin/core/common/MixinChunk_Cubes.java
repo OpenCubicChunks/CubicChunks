@@ -384,6 +384,9 @@ public abstract class MixinChunk_Cubes implements IColumn {
     @Inject(method = "setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;set"
             + "(IIILnet/minecraft/block/state/IBlockState;)V", shift = At.Shift.AFTER))
     private void onEBSSet_setBlockState_setOpacity(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir) {
+        if (!isColumn) {
+            return;
+        }
         opacityIndex.onOpacityChange(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ()), state.getLightOpacity(world, pos));
     }
 
@@ -500,8 +503,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
             index = Coords.blockToCube(getCubicWorld().getMinHeight());
         }
 
-        if (index >= Coords.blockToCube(getCubicWorld().getMinHeight())) {
-            index = Coords.blockToCube(getCubicWorld().getMinHeight()) - 1;
+        if (index >= Coords.blockToCube(getCubicWorld().getMaxHeight())) {
+            index = Coords.blockToCube(getCubicWorld().getMaxHeight()) - 1;
         }
 
         getEntityList_CubicChunks(index).remove(entityIn);
@@ -604,6 +607,9 @@ public abstract class MixinChunk_Cubes implements IColumn {
     // TODO: check if we are out of time earlier?
     @Inject(method = "onTick", at = @At(value = "RETURN"))
     private void onTick_CubicChunks_TickCubes(boolean tryToTickFaster, CallbackInfo cbi) {
+        if (!isColumn) {
+            return;
+        }
         this.getLoadedCubes().forEach(c -> c.tickCube(tryToTickFaster));
     }
 
