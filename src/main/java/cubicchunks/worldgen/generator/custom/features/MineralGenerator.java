@@ -23,20 +23,28 @@
  */
 package cubicchunks.worldgen.generator.custom.features;
 
+import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.GlobalGeneratorConfig;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.BlockStone;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraft.world.gen.feature.WorldGenMinable;
 
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.google.common.base.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -45,8 +53,11 @@ public class MineralGenerator extends FeatureGenerator {
     private final double minY;
     private final double maxY;
 
-    @Nonnull private final WorldGenMinable vanillaGen;
     private final double probability;
+    private final int numberOfBlocks;
+    private final int seed;
+    private final IBlockState oreBlock;
+    private final Predicate<IBlockState> predicate;
 
     /**
      * Creates new OreGenerator with given min/max height, vein size and number of generation attempts.
@@ -59,10 +70,12 @@ public class MineralGenerator extends FeatureGenerator {
      * @param size Maximum vein size
      */
     public MineralGenerator(final ICubicWorld world, final IBlockState state, final double minY, final double maxY,
-            final int size, final double probability) {
+            final int size, final double probability, final int seedIn) {
         super(world);
-        // use vanilla worldgen. This class odesn't have height limits
-        this.vanillaGen = new WorldGenMinable(state, size);
+        this.seed=seedIn;
+        this.numberOfBlocks=size;
+        this.oreBlock=state;
+        this.predicate=new MineralGenerator.StonePredicate();
         this.minY = minY;
         this.maxY = maxY;
         this.probability = probability;
@@ -71,16 +84,51 @@ public class MineralGenerator extends FeatureGenerator {
     @Override
     public void generate(final Random rand, final Cube cube, final Biome biome) {
         BlockPos cubeStart = cube.getCoords().getMinBlockPos();
-
+        CubePos cpos = cube.getCoords();
         double maxBlockY = this.maxY * GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
         double minBlockY = this.minY * GlobalGeneratorConfig.MAX_ELEV + GlobalGeneratorConfig.SEA_LEVEL;
-
-        if (rand.nextDouble() > this.probability) {
-            return;
-        }
-        BlockPos currentPos = cubeStart.add(rand.nextInt(16), rand.nextInt(16), rand.nextInt(16));
-        if (currentPos.getY() <= maxBlockY && currentPos.getY() >= minBlockY) {
-            this.vanillaGen.generate((World) this.world, rand, currentPos);
+        if (cubeStart.getY() <= maxBlockY && cubeStart.getY() >= minBlockY) {
+        	Set<BlockPos> pointsOfInterest = new HashSet<BlockPos>();
+        	cpos.forEachWithinRange(1, cubePos -> {
+        		rand.setSeed(seed<<16^world.getSeed()<<12^cubePos.getX()<<8^cubePos.getY()<<4^cubePos.getZ());
+                if (rand.nextDouble() > this.probability) {
+                    return;
+                }
+                int x = cubePos.getMinBlockX()+rand.nextInt(16);
+                int y = cubePos.getMinBlockY()+rand.nextInt(16);
+                int z = cubePos.getMinBlockZ()+rand.nextInt(16);
+                pointsOfInterest.add(new BlockPos(x,y,z));
+        	});
+			ExtendedBlockStorage cstorage = cube.getStorage();        	
+			for (int lx = 0; lx < 16; lx++)
+				for (int ly = 0; ly < 16; ly++)
+					for (int lz = 0; lz < 16; lz++) {
+						if(predicate.apply(cstorage.get(lx, ly, lz))) {
+							for (BlockPos pointOfInterest : pointsOfInterest) {
+								int dx = pointOfInterest.getX() - cubeStart.getX() - lx;
+								int dy = pointOfInterest.getY() - cubeStart.getY() - ly;
+								int dz = pointOfInterest.getZ() - cubeStart.getZ() - lz;
+								if (dx * dx + dy * dy + dz * dz < this.numberOfBlocks) {
+									cstorage.set(lx, ly, lz, oreBlock);
+									break;
+								}
+							}
+						}
+					}				
         }
     }
+    
+	static class StonePredicate implements Predicate<IBlockState> {
+		private StonePredicate() {
+		}
+
+		public boolean apply(IBlockState p_apply_1_) {
+			if (p_apply_1_ != null && p_apply_1_.getBlock() == Blocks.STONE) {
+				BlockStone.EnumType blockstone$enumtype = (BlockStone.EnumType) p_apply_1_.getValue(BlockStone.VARIANT);
+				return blockstone$enumtype.isNatural();
+			} else {
+				return false;
+			}
+		}
+	}
 }

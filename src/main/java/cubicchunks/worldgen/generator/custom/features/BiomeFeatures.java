@@ -130,7 +130,8 @@ public class BiomeFeatures {
                 getMinHeight(vanillaMinHeight),
                 getMaxHeight(vanillaMaxHeight),
                 size,
-                getProbability(vanillaMinHeight, vanillaMaxHeight)), countPerChunk);
+                getProbability(vanillaMinHeight, vanillaMaxHeight), 
+                world.getRand().nextInt()), countPerChunk);
     }
 
     protected final void addMineral(Block block, int vanillaMinHeight, int vanillaMaxHeight, int size, int countPerChunk) {
