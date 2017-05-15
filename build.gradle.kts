@@ -79,6 +79,7 @@ defaultTasks = listOf("licenseFormat", "build")
 val theForgeVersion by project
 val theMappingsVersion by project
 val malisisCoreVersion by project
+val malisisCoreMinVersion by project
 
 val licenseYear by project
 val projectName by project
@@ -124,6 +125,9 @@ configure<ForgeExtension> {
     isUseDepAts = true
 
     replace("@@VERSION@@", project.version)
+    replace("/*@@DEPS_PLACEHOLDER@@*/",
+            ",dependencies = \"after:malisiscore@[,$malisisCoreMinVersion)\"")
+    replace("@@MALISIS_VERSION@@", malisisCoreMinVersion)
     replaceIn("cubicchunks/CubicChunks.java")
 
     val args = listOf(

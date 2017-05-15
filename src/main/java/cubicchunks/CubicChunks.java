@@ -68,8 +68,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mod(modid = CubicChunks.MODID,
         name = "CubicChunks",
         version = "@@VERSION@@",
-        guiFactory = "cubicchunks.client.GuiFactory",
-        dependencies = "required-after:malisiscore@[1.11.2-5.0.0,)")
+        guiFactory = "cubicchunks.client.GuiFactory"
+        /*@@DEPS_PLACEHOLDER@@*/)// This will be replaced by gradle with actual dependency list, do not alter it
 @Mod.EventBusSubscriber
 public class CubicChunks {
 
@@ -78,6 +78,7 @@ public class CubicChunks {
 
     public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
     public static final String MODID = "cubicchunks";
+    public static final String MALISIS_VERSION = "@@MALISIS_VERSION@@";
 
     @Nonnull
     public static Logger LOGGER = LogManager.getLogger("EarlyCubicChunks");//use some logger even before it's set. useful for unit tests

@@ -23,15 +23,19 @@
  */
 package cubicchunks.world.type;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import cubicchunks.worldgen.gui.CustomCubicGui;
 import cubicchunks.worldgen.gui.FlatCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
+import net.minecraft.client.gui.GuiErrorScreen;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -65,6 +69,12 @@ public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
 
     @SideOnly(Side.CLIENT)
     public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
-        new FlatCubicGui(guiCreateWorld).display();
+        if (Loader.isModLoaded("malisiscore")) {
+            new FlatCubicGui(guiCreateWorld).display();
+        } else {
+            mc.displayGuiScreen(new GuiErrorScreen("MalisisCore not found!",
+                    "You need to install MalisisCore version at least " + CubicChunks
+                            .MALISIS_VERSION + " to use world customization"));
+        }
     }
 }
