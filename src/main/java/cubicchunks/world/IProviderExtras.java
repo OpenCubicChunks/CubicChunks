@@ -23,7 +23,7 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -44,7 +44,7 @@ public interface IProviderExtras {
      * @return the column, or <code>null</code> if no column could be created with the specified requirement level
      */
     @Nullable
-    Column getColumn(int columnX, int columnZ, Requirement req);
+    IColumn getColumn(int columnX, int columnZ, Requirement req);
 
     /**
      * Retrieve a cube. The work done to retrieve the cube is specified by {@link Requirement} <code>req</code>

@@ -43,7 +43,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-class CubeMap implements Iterable<Cube> {
+public class CubeMap implements Iterable<Cube> {
 
     @Nonnull private final List<Cube> cubes = new ArrayList<>();
 
@@ -56,7 +56,7 @@ class CubeMap implements Iterable<Cube> {
      *
      * @return the removed cube if it existed, otherwise <code>null</code>
      */
-    @Nullable Cube remove(int cubeY) {
+    @Nullable public Cube remove(int cubeY) {
         int index = binarySearch(cubeY);
         return index < cubes.size() && cubes.get(index).getY() == cubeY ? cubes.remove(index) : null;
     }
@@ -66,7 +66,7 @@ class CubeMap implements Iterable<Cube> {
      *
      * @param cube the cube to add
      */
-    void put(Cube cube) {
+    public void put(Cube cube) {
         int searchIndex = binarySearch(cube.getY());
         if (this.contains(cube.getY(), searchIndex)) {
             throw new IllegalArgumentException("Cube at " + cube.getY() + " already exists!");
@@ -83,7 +83,7 @@ class CubeMap implements Iterable<Cube> {
      *
      * @return an iterator over the cubes
      */
-    Iterable<Cube> cubes(int startY, int endY) {
+    public Iterable<Cube> cubes(int startY, int endY) {
         boolean reverse = false;
         if (startY > endY) {
             int i = startY;
@@ -144,7 +144,7 @@ class CubeMap implements Iterable<Cube> {
     /**
      * @return An array of EBSs from cubes that need ticking
      */
-    ExtendedBlockStorage[] getStoragesToTick() {
+    public ExtendedBlockStorage[] getStoragesToTick() {
         if (!isToTickValid()) {
             int count = 0;
             for (Cube cube : cubes) {

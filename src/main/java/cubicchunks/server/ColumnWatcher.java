@@ -34,7 +34,7 @@ import cubicchunks.network.PacketUnloadColumn;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XZAddressable;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMapEntry;
@@ -190,8 +190,8 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
     //containsPlayer, hasPlayerMatching, hasPlayerMatchingInRange, isAddedToChunkUpdateQueue, getChunk, getClosestPlayerDistance - ok
 
     @Nullable
-    public Column getColumn() {
-        return (Column) this.getChunk();
+    public IColumn getColumn() {
+        return (IColumn) this.getChunk();
     }
 
     private boolean isLoading() {

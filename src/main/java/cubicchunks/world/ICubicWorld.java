@@ -40,6 +40,7 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.border.WorldBorder;
@@ -217,4 +218,6 @@ public interface ICubicWorld extends IMinMaxHeight {
     boolean isAreaLoaded(BlockPos startPos, BlockPos endPos);
 
     void notifyLightSet(BlockPos pos);
+
+    WorldType getWorldType();
 }

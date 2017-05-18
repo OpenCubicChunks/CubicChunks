@@ -230,12 +230,24 @@ dependencies {
 }
 
 jar.apply {
+    jarConfig()
+}
+
+task<Jar>("jarDev") {
+    from(mainSourceSet.output)
+    jarConfig()
+    classifier = "dev"
+    tasks["assemble"].dependsOn(this)
+}
+
+fun Jar.jarConfig(): Jar {
     exclude("LICENSE.txt")
     manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
     manifest.attributes["FMLCorePlugin"] = "cubicchunks.asm.CubicChunksCoreMod"
     manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
     manifest.attributes["TweakOrder"] = "0"
     manifest.attributes["ForceLoadAsMod"] = "true"
+    return this
 }
 
 shadowJar.apply {

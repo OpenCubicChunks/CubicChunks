@@ -30,7 +30,7 @@ import cubicchunks.regionlib.impl.EntryLocation3D;
 import cubicchunks.regionlib.impl.SaveCubeColumns;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -95,7 +95,7 @@ public class RegionCubeIO implements ICubeIO {
         //}
     }
 
-    @Override @Nullable public Column loadColumn(int chunkX, int chunkZ) throws IOException {
+    @Override @Nullable public IColumn loadColumn(int chunkX, int chunkZ) throws IOException {
         NBTTagCompound nbt;
         SaveEntry<EntryLocation2D> saveEntry;
         if ((saveEntry = columnsToSave.get(new ChunkPos(chunkX, chunkZ))) != null) {
@@ -111,7 +111,7 @@ public class RegionCubeIO implements ICubeIO {
         return IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
     }
 
-    @Override @Nullable public ICubeIO.PartialCubeData loadCubeAsyncPart(Column column, int cubeY) throws IOException {
+    @Override @Nullable public ICubeIO.PartialCubeData loadCubeAsyncPart(IColumn column, int cubeY) throws IOException {
 
         NBTTagCompound nbt;
         SaveEntry<EntryLocation3D> saveEntry;
@@ -138,7 +138,7 @@ public class RegionCubeIO implements ICubeIO {
         IONbtReader.readCubeSyncPart(info.cube, world, info.nbt);
     }
 
-    @Override public void saveColumn(Column column) {
+    @Override public void saveColumn(IColumn column) {
         // NOTE: this function blocks the world thread
         // make it as fast as possible by offloading processing to the IO thread
         // except we have to write the NBT in this thread to avoid problems

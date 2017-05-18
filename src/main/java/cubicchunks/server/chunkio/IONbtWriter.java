@@ -29,7 +29,7 @@ import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesThisTi
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ServerHeightMap;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -40,6 +40,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
@@ -65,7 +66,7 @@ class IONbtWriter {
         return buf.toByteArray();
     }
 
-    static NBTTagCompound write(Column column) {
+    static NBTTagCompound write(IColumn column) {
         NBTTagCompound columnNbt = new NBTTagCompound();
         NBTTagCompound level = new NBTTagCompound();
         columnNbt.setTag("Level", level);
@@ -74,7 +75,7 @@ class IONbtWriter {
         writeBaseColumn(column, level);
         writeBiomes(column, level);
         writeOpacityIndex(column, level);
-        MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Save(column, columnNbt));
+        MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Save((Chunk) column, columnNbt));
         return columnNbt;
     }
 
@@ -94,21 +95,21 @@ class IONbtWriter {
         return cubeNbt;
     }
 
-    private static void writeBaseColumn(Column column, NBTTagCompound nbt) {// coords
-        nbt.setInteger("x", column.x);
-        nbt.setInteger("z", column.z);
+    private static void writeBaseColumn(IColumn column, NBTTagCompound nbt) {// coords
+        nbt.setInteger("x", column.getX());
+        nbt.setInteger("z", column.getZ());
 
         // column properties
         nbt.setByte("v", (byte) 1);
         nbt.setLong("InhabitedTime", column.getInhabitedTime());
     }
 
-    private static void writeBiomes(Column column, NBTTagCompound nbt) {// biomes
+    private static void writeBiomes(IColumn column, NBTTagCompound nbt) {// biomes
         nbt.setByteArray("Biomes", column.getBiomeArray());
     }
 
-    private static void writeOpacityIndex(Column column, NBTTagCompound nbt) {// light index
-        nbt.setByteArray("OpacityIndex", ((ServerHeightMap) column.getOpacityIndex()).getData());
+    private static void writeOpacityIndex(IColumn IColumn, NBTTagCompound nbt) {// light index
+        nbt.setByteArray("OpacityIndex", ((ServerHeightMap) IColumn.getOpacityIndex()).getData());
     }
 
     private static void writeBaseCube(Cube cube, NBTTagCompound cubeNbt) {

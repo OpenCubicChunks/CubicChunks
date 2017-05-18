@@ -28,8 +28,7 @@ import cubicchunks.util.ReflectionUtil;
 import cubicchunks.util.XYZMap;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorldClient;
-import cubicchunks.world.column.BlankColumn;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -53,35 +52,33 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 
     public CubeProviderClient(ICubicWorldClient world) {
         super((World) world);
-
         this.world = world;
-        ReflectionUtil.setFieldValueSrg(this, "field_73238_a", new BlankColumn(this, world, 0, 0));
-        this.blankCube = new BlankCube((Column) blankChunk);
+        this.blankCube = new BlankCube((IColumn) blankChunk);
     }
 
     @Nullable @Override
-    public Column getLoadedColumn(int x, int z) {
-        return getLoadedChunk(x, z);
+    public IColumn getLoadedColumn(int x, int z) {
+        return (IColumn) getLoadedChunk(x, z);
     }
 
     @Override
-    public Column provideColumn(int x, int z) {
-        return provideChunk(x, z);
+    public IColumn provideColumn(int x, int z) {
+        return (IColumn) provideChunk(x, z);
     }
 
     @Override
-    public Column provideChunk(int x, int z) {
-        return (Column) super.provideChunk(x, z);
+    public Chunk provideChunk(int x, int z) {
+        return super.provideChunk(x, z);
     }
 
     @Nullable @Override
-    public Column getLoadedChunk(int x, int z) {
-        return (Column) super.getLoadedChunk(x, z);
+    public Chunk getLoadedChunk(int x, int z) {
+        return super.getLoadedChunk(x, z);
     }
 
     @Override
-    public Column loadChunk(int cubeX, int cubeZ) {
-        Column column = new Column(this, this.world, cubeX, cubeZ);   // make a new one
+    public Chunk loadChunk(int cubeX, int cubeZ) {
+        Chunk column = new Chunk((World) this.world, cubeX, cubeZ);   // make a new one
         this.chunkMapping.put(ChunkPos.asLong(cubeX, cubeZ), column); // add it to the cache
 
         // fire a forge event... make mods happy :)
@@ -102,7 +99,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
      *
      * @return a newly created and cached cube
      */
-    public Cube loadCube(Column column, int cubeY) {
+    public Cube loadCube(IColumn column, int cubeY) {
         Cube cube = new Cube(column, cubeY); // auto added to column
         cube.setCubeLoaded();
         column.addCube(cube);
@@ -117,9 +114,9 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
      */
     public void unloadCube(CubePos pos) {
         cubeMap.remove(pos.getX(), pos.getY(), pos.getZ());
-        Column column = getLoadedColumn(pos.getX(), pos.getZ());
-        if (column != null) {
-            column.removeCube(pos.getY());
+        IColumn IColumn = getLoadedColumn(pos.getX(), pos.getZ());
+        if (IColumn != null) {
+            IColumn.removeCube(pos.getY());
         }
     }
 
@@ -155,7 +152,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
     public String makeString() {
         return "MultiplayerChunkCache: " + this.chunkMapping.values()
                 .stream()
-                .map(c -> ((Column) c).getLoadedCubes().size())
+                .map(c -> ((IColumn) c).getLoadedCubes().size())
                 .reduce((a, b) -> a + b)
                 .orElse(-1) + "/" + this.chunkMapping.size();
     }

@@ -24,7 +24,7 @@
 package cubicchunks.world;
 
 import cubicchunks.util.CubePos;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -54,7 +54,7 @@ public interface ICubeProvider {
      * @return The column, if loaded. Null, otherwise.
      */
     @Nullable
-    Column getLoadedColumn(int x, int z); // more strictly define the return type
+    IColumn getLoadedColumn(int x, int z); // more strictly define the return type
 
-    Column provideColumn(int x, int z);   // more strictly define the return type
+    IColumn provideColumn(int x, int z);   // more strictly define the return type
 }

@@ -27,7 +27,7 @@ import static cubicchunks.asm.JvmNames.CHUNK_IS_POPULATED;
 
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -64,12 +64,12 @@ public abstract class MixinWorld implements ICubicWorld {
     public boolean markNotifyBlock_CubeCheck(Chunk _this,
             BlockPos pos, Chunk chunk, IBlockState oldstate,
             IBlockState newState, int flags) {
-        if (!(chunk instanceof Column)) {
+        if (!this.isCubicWorld()) {
             // vanilla compatibility
             return chunk.isPopulated();
         }
-        Column column = (Column) chunk;
-        Cube cube = column.getCube(Coords.blockToCube(pos.getY()));
+        IColumn IColumn = (IColumn) chunk;
+        Cube cube = IColumn.getCube(Coords.blockToCube(pos.getY()));
         return cube.isFullyPopulated();
     }
 

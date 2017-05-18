@@ -21,63 +21,63 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.server;
+package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.CubicChunks.Config;
-import cubicchunks.IConfigUpdateListener;
-import cubicchunks.world.column.IColumn;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.EmptyChunk;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Collections;
 
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Chunk Garbage Collector, automatically unloads unused chunks.
- */
-@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class ChunkGc implements IConfigUpdateListener {
+@MethodsReturnNonnullByDefault
+@Mixin(EmptyChunk.class)
+public abstract class MixinEmptyChunk extends MixinChunk_Column {
 
-    @Nonnull private final CubeProviderServer cubeCache;
+    private Cube blankCube;
 
-    private int tick = 0;
-    private volatile int updateInterval = 20 * 10;
-
-    public ChunkGc(CubeProviderServer cubeCache) {
-        this.cubeCache = cubeCache;
-        CubicChunks.addConfigChangeListener(this);
-    }
-
-    public void tick() {
-        tick++;
-        if (tick > updateInterval) {
-            tick = 0;
-            chunkGc();
-        }
-    }
-
-    private void chunkGc() {
-        Iterator<Cube> cubeIt = cubeCache.cubesIterator();
-        while (cubeIt.hasNext()) {
-            if (cubeCache.tryUnloadCube(cubeIt.next())) {
-                cubeIt.remove();
-            }
-        }
-
-        Iterator<IColumn> columnIt = cubeCache.columnsIterator();
-        while (columnIt.hasNext()) {
-            if (cubeCache.tryUnloadColumn(columnIt.next())) {
-                columnIt.remove();
-            }
+    @Inject(method = "<init>", at = @At(value = "RETURN"))
+    private void cubicChunkColumn_construct(World worldIn, int x, int z, CallbackInfo cbi) {
+        if (((ICubicWorld) worldIn).isCubicWorld()) {
+            blankCube = new BlankCube(this);
         }
     }
 
     @Override
-    public void onConfigUpdate(Config config) {
-        this.updateInterval = config.getChunkGCInterval();
+    public Cube getCube(int cubeY) {
+        return blankCube;
+    }
+
+    @Override
+    public Cube removeCube(int cubeY) {
+        return blankCube;
+    }
+
+    @Override
+    public void addCube(Cube cube) {
+    }
+
+    @Override
+    public void markSaved() {
+    }
+
+    @Override
+    public Collection<Cube> getLoadedCubes() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Iterable<Cube> getLoadedCubes(int startY, int endY) {
+        return Collections.emptySet();
     }
 }

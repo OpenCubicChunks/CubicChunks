@@ -23,15 +23,18 @@
  */
 package cubicchunks.world;
 
+import static cubicchunks.lighting.LightingManager.MAX_CLIENT_LIGHT_SCAN_DEPTH;
+
 import com.google.common.base.Throwables;
 import cubicchunks.util.Coords;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.math.BlockPos;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -40,13 +43,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class ClientHeightMap implements IHeightMap {
 
-    @Nonnull private int[] hmap;
+    private final IColumn column;
+    private final HeightMap hmap;
     private int heightMapLowest = Coords.NO_HEIGHT;
 
-    public ClientHeightMap(Column column) {
-        this.hmap = new int[256];
-
-        Arrays.fill(hmap, Coords.NO_HEIGHT);
+    public ClientHeightMap(IColumn column, int[] heightmap) {
+        this.column = column;
+        this.hmap = new HeightMap(heightmap);
     }
 
     @Override
@@ -57,21 +60,53 @@ public class ClientHeightMap implements IHeightMap {
 
     @Override
     public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
-        //do nothing, we return values based on real blocks
+        writeNewTopBlockY(localX, blockY, localZ, opacity, getTopBlockY(localX, localZ));
+    }
+
+    private void writeNewTopBlockY(int localX, int changeY, int localZ, int newOpacity, int oldTopY) {
+        //to avoid unnecessary delay when breaking blocks client needs to figure out new height before
+        //server tells the client what it is
+        //common cases first
+        if (addedTopBlock(changeY, newOpacity, oldTopY)) {
+            //added new block, so it's correct. Server update will be ignored
+            this.setHeight(localX, localZ, changeY);
+            return;
+        }
+        if (!changedTopToTransparent(changeY, newOpacity, oldTopY)) {
+            //if not breaking the top block - no changes
+            return;
+        }
+        assert !(newOpacity == 0 && oldTopY < changeY) : "Changed transparent block into transparent!";
+
+        //changed the top block
+        int newTop = oldTopY - 1;
+        while (column.getBlockLightOpacity(new BlockPos(localX, newTop, localZ)) == 0 && newTop > oldTopY - MAX_CLIENT_LIGHT_SCAN_DEPTH) {
+            newTop--;
+        }
+        //update the heightmap. If this update it not accurate - it will be corrected when server sends block update
+        this.setHeight(localX, localZ, newTop);
+    }
+
+    private boolean changedTopToTransparent(int changeY, int newOpacity, int oldTopY) {
+        return newOpacity == 0 && changeY == oldTopY;
+    }
+
+    private boolean addedTopBlock(int changeY, int newOpacity, int oldTopY) {
+        return (changeY > oldTopY) && newOpacity != 0;
     }
 
     @Override
     public int getTopBlockY(int localX, int localZ) {
-        return hmap[getIndex(localX, localZ)];
+        return hmap.get(getIndex(localX, localZ));
     }
 
     @Override
     public int getLowestTopBlockY() {
         if (heightMapLowest == Coords.NO_HEIGHT) {
             heightMapLowest = Integer.MAX_VALUE;
-            for (int i = 0; i < hmap.length; i++) {
-                if (hmap[i] < heightMapLowest) {
-                    heightMapLowest = hmap[i];
+            for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
+                if (hmap.get(i) < heightMapLowest) {
+                    heightMapLowest = hmap.get(i);
                 }
             }
         }
@@ -84,7 +119,7 @@ public class ClientHeightMap implements IHeightMap {
     }
 
     public void setHeight(int localX, int localZ, int height) {
-        hmap[getIndex(localX, localZ)] = height;
+        hmap.set(getIndex(localX, localZ), height);
     }
 
     public void setData(@Nonnull byte[] data) {
@@ -93,17 +128,13 @@ public class ClientHeightMap implements IHeightMap {
             DataInputStream in = new DataInputStream(buf);
 
             for (int i = 0; i < 256; i++) {
-                hmap[i] = in.readInt();
+                hmap.set(i, in.readInt());
             }
 
             in.close();
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
-    }
-
-    public int[] getHeightmap() {
-        return this.hmap;
     }
 
     private static int getIndex(int localX, int localZ) {

@@ -24,7 +24,7 @@
 package cubicchunks.worldgen.generator;
 
 import cubicchunks.util.Box;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
@@ -66,7 +66,7 @@ public interface ICubeGenerator {
      *
      * @param column the target column
      */
-    void generateColumn(Column column);
+    void generateColumn(IColumn column);
 
     /**
      * Populate a cube with multi-block structures that can cross cube boundaries such as trees and ore veins.
@@ -141,7 +141,7 @@ public interface ICubeGenerator {
      *
      * @param cube The cube being loaded
      *
-     * @see ICubeGenerator#recreateStructures(Column) for the 2D-equivalent of this method
+     * @see ICubeGenerator#recreateStructures(IColumn) for the 2D-equivalent of this method
      */
     void recreateStructures(Cube cube);
 
@@ -153,7 +153,7 @@ public interface ICubeGenerator {
      *
      * @see ICubeGenerator#recreateStructures(Cube) for the 3D-equivalent of this method
      */
-    void recreateStructures(Column column);
+    void recreateStructures(IColumn column);
 
     /**
      * Retrieve a list of creature classes eligible for spawning at the specified location.

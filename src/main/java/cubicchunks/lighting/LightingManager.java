@@ -34,18 +34,17 @@ import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.IHeightMap;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.TIntSet;
-import it.unimi.dsi.fastutil.ints.IntIterator;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.IBlockAccess;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -55,7 +54,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class LightingManager {
 
-    private static final int MAX_CLIENT_LIGHT_SCAN_DEPTH = 64;
+    public static final int MAX_CLIENT_LIGHT_SCAN_DEPTH = 64;
     @Nonnull private ICubicWorld world;
     @Nonnull private LightPropagator lightPropagator = new LightPropagator();
 
@@ -67,7 +66,7 @@ public class LightingManager {
         return new CubeLightUpdateInfo(cube);
     }
 
-    private void columnSkylightUpdate(UpdateType type, Column column, int localX, int minY, int maxY, int localZ) {
+    private void columnSkylightUpdate(UpdateType type, IColumn column, int localX, int minY, int maxY, int localZ) {
         int blockX = Coords.localToBlock(column.getX(), localX);
         int blockZ = Coords.localToBlock(column.getZ(), localZ);
 
@@ -109,30 +108,8 @@ public class LightingManager {
                 new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY);
     }
 
-    public void doOnBlockSetLightUpdates(Column column, BlockPos changePos, IBlockState newBlockState, int oldOpacity) {
-        int newOpacity = newBlockState.getLightOpacity(column.getWorld(), changePos);
-        if (!needsUpdate(oldOpacity, newOpacity)) {
-            //nothing to update, this will frequently happen in ore generation
-            return;
-        }
-
-        int localX = Coords.blockToLocal(changePos.getX());
-        int localZ = Coords.blockToLocal(changePos.getZ());
-
-        IHeightMap heightMap = column.getOpacityIndex();
-
-        // did the top non-transparent block change?
-        int oldTopY = heightMap.getTopBlockY(localX, localZ);
-        heightMap.onOpacityChange(localX, changePos.getY(), localZ, newOpacity);
-        column.setModified(true);
-
-        int newTopY = findNewTopBlockY(heightMap, changePos, column, newOpacity, localX, localZ, oldTopY);
-
-        int minY = Math.min(oldTopY, newTopY);
-        int maxY = Math.max(oldTopY, newTopY);
-        assert minY <= maxY;
-
-        this.columnSkylightUpdate(UpdateType.IMMEDIATE, column, localX, minY, maxY, localZ);
+    public void doOnBlockSetLightUpdates(IColumn column, int localX, int oldHeight, int changeY, int localZ) {
+        this.columnSkylightUpdate(UpdateType.IMMEDIATE, column, localX, Math.min(oldHeight, changeY), Math.max(oldHeight, changeY), localZ);
     }
 
     //TODO: make it private
@@ -141,50 +118,10 @@ public class LightingManager {
         data.markBlockColumnForUpdate(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ));
     }
 
-    private int findNewTopBlockY(IHeightMap heightMap, BlockPos changePos, Column column, int newOpacity, int localX, int localZ, int oldTopY) {
-        if (!column.getWorld().isRemote) {
-            return heightMap.getTopBlockY(localX, localZ);
-        }
-        //to avoid unnecessary delay when breaking blocks client needs to figure out new height before
-        //server tells the client what it is
-        //common cases first
-        if (addedTopBlock(changePos, newOpacity, oldTopY)) {
-            //added new block, so it's correct. Server update will be ignored
-            return changePos.getY();
-        }
-        if (!changedTopToTransparent(changePos, newOpacity, oldTopY)) {
-            //if not breaking the top block - no changes
-            return oldTopY;
-        }
-        assert !(newOpacity == 0 && oldTopY < changePos.getY()) : "Changed transparent block into transparent!";
-
-        //changed the top block
-        int newTop = oldTopY - 1;
-        while (column.getBlockLightOpacity(new BlockPos(localX, newTop, localZ)) == 0 && newTop > oldTopY - MAX_CLIENT_LIGHT_SCAN_DEPTH) {
-            newTop--;
-        }
-        //update the heightmap. If this update it not accurate - it will be corrected when server sends block update
-        ((ClientHeightMap) heightMap).setHeight(localX, localZ, newTop);
-        return newTop;
-    }
-
-    private boolean changedTopToTransparent(BlockPos changePos, int newOpacity, int oldTopY) {
-        return newOpacity == 0 && changePos.getY() == oldTopY;
-    }
-
-    private boolean addedTopBlock(BlockPos pos, int newOpacity, int oldTopY) {
-        return (pos.getY() > oldTopY) && newOpacity != 0;
-    }
-
-    private boolean needsUpdate(int oldOpacity, int newOpacity) {
-        //update is needed only if opacities are different and booth are less than 15
-        return oldOpacity != newOpacity && (oldOpacity < 15 || newOpacity < 15);
-    }
-
-    public void onHeightMapUpdate(Column column, int localX, int localZ, int oldHeight, int newHeight) {
+    public void onHeightMapUpdate(IColumn IColumn, int localX, int localZ, int oldHeight, int newHeight) {
         int minCubeY = blockToCube(Math.min(oldHeight, newHeight));
         int maxCubeY = blockToCube(Math.max(oldHeight, newHeight));
-        column.getLoadedCubes().stream().filter(cube -> cube.getY() >= minCubeY && cube.getY() <= maxCubeY).forEach(cube -> {
+        IColumn.getLoadedCubes().stream().filter(cube -> cube.getY() >= minCubeY && cube.getY() <= maxCubeY).forEach(cube -> {
             markCubeBlockColumnForUpdate(cube, localX, localZ);
         });
     }

@@ -30,7 +30,7 @@ import cubicchunks.util.CubePos;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.IHeightMap;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
@@ -45,6 +45,7 @@ import net.minecraft.util.IThreadListener;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -76,9 +77,10 @@ public class ClientHandler implements INetHandler {
 
         CubePos cubePos = packet.getCubePos();
 
-        Column column = cubeCache.provideColumn(cubePos.getX(), cubePos.getZ());
+        Chunk chunk = (Chunk) cubeCache.provideColumn(cubePos.getX(), cubePos.getZ());
+        IColumn column = (IColumn) chunk;
         //isEmpty actually checks if the column is a BlankColumn
-        if (column.isEmpty()) {
+        if (chunk.isEmpty()) {
             CubicChunks.LOGGER.error("Out of order cube received! No column for cube at {} exists!", cubePos);
             return;
         }
@@ -132,7 +134,7 @@ public class ClientHandler implements INetHandler {
 
         ChunkPos chunkPos = packet.getChunkPos();
 
-        Column column = cubeCache.loadChunk(chunkPos.x, chunkPos.z);
+        IColumn column = (IColumn) cubeCache.loadChunk(chunkPos.x, chunkPos.z);
 
         byte[] data = packet.getData();
         ByteBuf buf = WorldEncoder.createByteBufForRead(data);
