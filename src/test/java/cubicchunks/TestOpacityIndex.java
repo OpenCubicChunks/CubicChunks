@@ -29,6 +29,7 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.Lists;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
+import cubicchunks.world.IHeightMap;
 import cubicchunks.world.ServerHeightMap;
 import mcp.MethodsReturnNonnullByDefault;
 import org.junit.Test;
@@ -506,9 +507,9 @@ public class TestOpacityIndex {
 
     private void set(ServerHeightMap index, int ymin, int ymax, int[] segments) {
         try {
-            YminField.set(index, new int[]{ymin});
-            YmaxField.set(index, new int[]{ymax});
-            SegmentsField.set(index, new int[][]{segments});
+            ((int[]) YminField.get(index))[0] = ymin;
+            ((IHeightMap.HeightMap) YmaxField.get(index)).set(0, ymax);
+            ((int[][]) SegmentsField.get(index))[0] = segments;
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new Error(ex);
         }
