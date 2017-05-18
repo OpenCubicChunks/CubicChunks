@@ -169,9 +169,9 @@ class LightUpdateQueue {
             nextWriteIndex = 0;
             if (currentWriteQueue.next == null) {
                 currentWriteQueue.next = new ArrayQueueSegment(QUEUE_PART_SIZE);
+                CubicChunks.LOGGER.debug("Adding LightUpdateQueue segment to " + this);
             }
             currentWriteQueue = currentWriteQueue.next;
-            CubicChunks.LOGGER.debug("Adding LightUpdateQueue segment to " + this);
         }
     }
 

@@ -13,7 +13,8 @@
         "common.MixinWorldServer",
         "common.MixinWorld_HeightLimits",
         "common.MixinChunkCache_HeightLimits",
-        "common.MixinEntity_DeathFix"
+        "common.MixinEntity_DeathFix",
+        "common.MixinWorldProvider"
     ],
     "client": [
         "client.MixinWorld_HeightLimits",

@@ -26,8 +26,6 @@ package cubicchunks.asm.mixin.core.common;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.IConfigUpdateListener;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubeProvider;
@@ -35,7 +33,6 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.provider.ICubicWorldProvider;
-import cubicchunks.world.provider.VanillaCubicProvider;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -91,6 +88,7 @@ public abstract class MixinWorld implements ICubicWorld {
     @Shadow @Final public boolean isRemote;
     @Shadow @Final public Profiler profiler;
     @Shadow @Final @Mutable protected ISaveHandler saveHandler;
+    @Shadow protected boolean findingSpawnPoint;
 
     @Shadow protected abstract boolean isChunkLoaded(int i, int i1, boolean allowEmpty);
 
@@ -104,10 +102,6 @@ public abstract class MixinWorld implements ICubicWorld {
         this.maxHeight = maxHeight1;
         //has to be created early so that creating BlankCube won't crash
         this.lightingManager = new LightingManager(this);
-
-        if (!(this.provider instanceof ICubicWorldProvider)) { // if the provider is vanilla, wrap it
-            this.provider = new VanillaCubicProvider(this, provider);
-        }
     }
 
     @Override public boolean isCubicWorld() {

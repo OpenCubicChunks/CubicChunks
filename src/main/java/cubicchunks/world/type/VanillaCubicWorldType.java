@@ -25,6 +25,7 @@ package cubicchunks.world.type;
 
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
@@ -46,7 +47,7 @@ public class VanillaCubicWorldType extends WorldType implements ICubicWorldType 
 
     @Nullable @Override
     public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-        return null; // no ICubicWorldProvider's that are going to need this
+        return new VanillaCompatibilityGenerator(world.getProvider().createChunkGenerator(), world);
     }
 
     @Override

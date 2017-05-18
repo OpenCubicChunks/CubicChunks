@@ -109,13 +109,14 @@ public class ClientHandler implements INetHandler {
             }
         }
 
-        IHeightMap heightMap = column.getOpacityIndex();
+        ClientHeightMap heightMap = (ClientHeightMap) column.getOpacityIndex();
         LightingManager lightManager = worldClient.getLightingManager();
         for (int localX = 0; localX < Cube.SIZE; localX++) {
             for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
                 int oldHeight = heightMap.getTopBlockY(localX, localZ);
                 int newHeight = packet.height(localX, localZ);
                 if (oldHeight != newHeight) {
+                    heightMap.setHeight(localX, localZ, newHeight);
                     lightManager.onHeightMapUpdate(column, localX, localZ, oldHeight, newHeight);
                 }
             }

@@ -63,8 +63,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
-    private final int worldHeightBlocks;
-    private final int worldHeightCubes;
+    private boolean isInit = false;
+    private int worldHeightBlocks;
+    private int worldHeightCubes;
     @Nonnull private IChunkGenerator vanilla;
     @Nonnull private ICubicWorld world;
     /**
@@ -94,11 +95,18 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     public VanillaCompatibilityGenerator(IChunkGenerator vanilla, ICubicWorld world) {
         this.vanilla = vanilla;
         this.world = world;
+    }
 
+    // lazy initialization to avoid circular dependencies
+    private void tryInit(IChunkGenerator vanilla, ICubicWorld world) {
+        if (isInit) {
+            return;
+        }
+        isInit = true;
         // heuristics TODO: add a config that overrides this
         lastChunk = vanilla.provideChunk(0, 0); // lets scan the chunk at 0, 0
 
-        worldHeightBlocks = world.getActualHeight();
+        worldHeightBlocks = 128; //TODO: figure something out to not assume 128
         worldHeightCubes = worldHeightBlocks / Cube.SIZE;
         Map<IBlockState, Integer> blockHistogramBottom = new HashMap<>();
         Map<IBlockState, Integer> blockHistogramTop = new HashMap<>();
@@ -173,6 +181,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
     @Override
     public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+        tryInit(vanilla, world);
         CubePrimer primer = new CubePrimer();
 
         if (cubeY < 0) {
@@ -246,6 +255,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
     @Override
     public void populate(Cube cube) {
+        tryInit(vanilla, world);
         // Cubes outside this range are only filled with their respective block
         // No population takes place
         if (cube.getY() >= 0 && cube.getY() < worldHeightCubes) {
