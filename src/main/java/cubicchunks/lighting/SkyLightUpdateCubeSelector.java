@@ -23,6 +23,10 @@
  */
 package cubicchunks.lighting;
 
+import static cubicchunks.util.Coords.cubeToMaxBlock;
+import static cubicchunks.util.Coords.cubeToMinBlock;
+import static cubicchunks.util.Coords.localToBlock;
+
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.IColumn;
@@ -67,9 +71,9 @@ class SkyLightUpdateCubeSelector {
         }
 
         BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(
-                Coords.localToBlock(column.getX(), localX),
+                localToBlock(column.getX(), localX),
                 maxBlockY - 1,
-                Coords.localToBlock(column.getZ(), localZ)
+                localToBlock(column.getZ(), localZ)
         );
 
         int newMaxBlockY = column.getHeightValue(localX, localZ);
@@ -90,7 +94,7 @@ class SkyLightUpdateCubeSelector {
             if (cubeY > maxCubeY) {
                 //if light value at the bottom is already correct - nothing to do here
                 //so update only if incorrect
-                blockPos.setPos(localX, 0, localZ);
+                blockPos.setPos(localToBlock(cube.getX(), localX), cubeToMinBlock(cubeY), localToBlock(cube.getZ(), localZ));
                 if (cube.getLightFor(EnumSkyBlock.SKY, blockPos) != 15) {
                     cubesToDiffuse.add(cube.getY());
                 }
@@ -107,7 +111,7 @@ class SkyLightUpdateCubeSelector {
                 continue;
             } else {
                 assert cubeY < maxCubeY - 1;
-                blockPos.setPos(localX, 15, localZ);
+                blockPos.setPos(localToBlock(cube.getX(), localX), cubeToMaxBlock(cubeY), localToBlock(cube.getZ(), localZ));
                 //if we are below minBlockY or if the top block has correct light value (0) - nothing to do
                 if (minCubeBlockY + 15 < minBlockY || cube.getLightFor(EnumSkyBlock.SKY, blockPos) == 0) {
                     continue;
