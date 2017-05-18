@@ -14,8 +14,9 @@ before_install:
   # workaround to get "git describe" working
   - git fetch --unshallow --tags
   - git describe
+  - ./gradlew setupCiWorkspace
 #setupCIWorkspace is needed because of https://github.com/MinecraftForge/ForgeGradle/issues/410
-script: ./gradlew setupCiWorkspace build
+script: ./gradlew build
 
 notifications:
   email: false
