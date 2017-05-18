@@ -1,0 +1,438 @@
+/*
+ *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
+ *
+ *  Copyright (c) 2015 contributors
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
+package cubicchunks.worldgen.generator.custom.populator;
+
+import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.api.worldgen.populator.ICubicPopulator;
+import cubicchunks.util.CubePos;
+import cubicchunks.util.MathUtil;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.BlockFlower;
+import net.minecraft.block.BlockStone;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeDecorator;
+import net.minecraft.world.gen.feature.WorldGenAbstractTree;
+import net.minecraft.world.gen.feature.WorldGenDeadBush;
+import net.minecraft.world.gen.feature.WorldGenLiquids;
+import net.minecraft.world.gen.feature.WorldGenMinable;
+import net.minecraft.world.gen.feature.WorldGenPumpkin;
+import net.minecraft.world.gen.feature.WorldGenerator;
+
+import java.util.Random;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public final class DefaultBiomeDecorator implements ICubicPopulator {
+
+    private void generateOres(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos) {
+        IBlockState diorite = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE);
+        IBlockState granite = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE);
+        IBlockState andesite = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE);
+
+        // TODO: events?
+        genOreUniform(world, cfg, random, pos, cfg.dirtSpawnTries, cfg.dirtSpawnProbability,
+                new WorldGenMinable(Blocks.DIRT.getDefaultState(), cfg.dirtSpawnSize),
+                cfg.dirtSpawnMinHeight, cfg.dirtSpawnMaxHeight);
+        genOreUniform(world, cfg, random, pos, cfg.gravelSpawnTries, cfg.gravelSpawnProbability,
+                new WorldGenMinable(Blocks.GRAVEL.getDefaultState(), cfg.gravelSpawnSize),
+                cfg.gravelSpawnMinHeight, cfg.gravelSpawnMaxHeight);
+        genOreUniform(world, cfg, random, pos, cfg.dioriteSpawnTries, cfg.dioriteSpawnProbability,
+                new WorldGenMinable(diorite, cfg.dioriteSpawnSize),
+                cfg.dioriteSpawnMinHeight, cfg.dioriteSpawnMaxHeight);
+        genOreUniform(world, cfg, random, pos, cfg.graniteSpawnTries, cfg.graniteSpawnProbability,
+                new WorldGenMinable(granite, cfg.graniteSpawnSize),
+                cfg.graniteSpawnMinHeight, cfg.graniteSpawnMaxHeight);
+        genOreUniform(world, cfg, random, pos, cfg.andesiteSpawnTries, cfg.andesiteSpawnProbability,
+                new WorldGenMinable(andesite, cfg.andesiteSpawnSize),
+                cfg.andesiteSpawnMinHeight, cfg.andesiteSpawnMaxHeight);
+
+        genOreUniform(world, cfg, random, pos, cfg.coalOreSpawnTries, cfg.coalOreSpawnProbability,
+                new WorldGenMinable(Blocks.COAL_ORE.getDefaultState(), cfg.coalOreSpawnSize),
+                cfg.coalOreSpawnMinHeight, cfg.coalOreSpawnMaxHeight);
+        genOreUniform(world, cfg, random, pos, cfg.ironOreSpawnTries, cfg.ironOreSpawnProbability,
+                new WorldGenMinable(Blocks.IRON_ORE.getDefaultState(), cfg.ironOreSpawnSize),
+                cfg.ironOreSpawnMinHeight, cfg.ironOreSpawnMaxHeight);
+        genOreUniform(world, cfg, random, pos, cfg.goldOreSpawnTries, cfg.goldOreSpawnProbability,
+                new WorldGenMinable(Blocks.GOLD_ORE.getDefaultState(), cfg.goldOreSpawnSize),
+                cfg.goldOreSpawnMinHeight, cfg.goldOreSpawnMaxHeight);
+        genOreUniform(world, cfg, random, pos, cfg.redstoneOreSpawnTries, cfg.redstoneOreSpawnProbability,
+                new WorldGenMinable(Blocks.REDSTONE_ORE.getDefaultState(), cfg.redstoneOreSpawnSize),
+                cfg.redstoneOreSpawnMinHeight, cfg.redstoneOreSpawnMaxHeight);
+        genOreUniform(world, cfg, random, pos, cfg.diamondOreSpawnTries, cfg.diamondOreSpawnProbability,
+                new WorldGenMinable(Blocks.DIAMOND_ORE.getDefaultState(), cfg.diamondOreSpawnSize),
+                cfg.diamondOreSpawnMinHeight, cfg.diamondOreSpawnMaxHeight);
+
+        genOreGaussian(world, cfg, random, pos, cfg.lapisLazuliSpawnTries, cfg.lapisLazuliSpawnProbability,
+                new WorldGenMinable(Blocks.LAPIS_ORE.getDefaultState(), cfg.lapisLazuliSpawnSize),
+                cfg.lapisLazuliHeightMean, cfg.lapisLazuliHeightStdDeviation);
+    }
+
+    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+        CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
+
+        // TODO: Biome decoration events?
+        BiomeDecorator dec = biome.getBiome().theBiomeDecorator;
+        generateOres(world, cfg, random, pos);
+        generateOnTop(world, random, pos, dec.sandPatchesPerChunk, dec.sandGen);
+        generateOnTop(world, random, pos, dec.clayPerChunk, dec.clayGen);
+        generateOnTop(world, random, pos, dec.gravelPatchesPerChunk, dec.gravelGen);
+
+        int treeCount = random.nextFloat() < dec.extraTreeChance ? dec.treesPerChunk + 1 : dec.treesPerChunk;
+        for (int i = 0; i < treeCount; ++i) {
+            int xOffset1 = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int zOffset1 = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            WorldGenAbstractTree treeGen = biome.getBiome().getRandomTreeFeature(random);
+            treeGen.setDecorationDefaults();
+            BlockPos top1 = getSurfaceForCube(world, pos, xOffset1, zOffset1, 0, SurfaceType.OPAQUE);
+            if (top1 != null && treeGen.generate((World) world, random, top1)) {
+                treeGen.generateSaplings((World) world, random, top1);
+            }
+        }
+
+        for (int i = 0; i < dec.bigMushroomsPerChunk; ++i) {
+            int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            BlockPos top = getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.OPAQUE);
+            if (top != null) {
+                dec.bigMushroomGen.generate((World) world, random, top);
+            }
+        }
+
+        for (int i = 0; i < dec.flowersPerChunk; ++i) {
+            // vanilla chooses random height between 0 and topBlock+32.
+            // Assuming average height a bit less than the average of sea level and 128,
+            // then it should succeed about one in 5+2=7 times for a give cube
+            // TODO: Flower gen: figure out the probabilities and do it right
+            if (random.nextInt(7) != 0) {
+                continue;
+            }
+            BlockPos blockPos = pos.randomPopulationPos(random);
+            BlockFlower.EnumFlowerType type = biome.getBiome().pickRandomFlower(random, blockPos);
+            BlockFlower flowerBlock = type.getBlockType().getBlock();
+
+            if (flowerBlock.getDefaultState().getMaterial() != Material.AIR) {
+                dec.yellowFlowerGen.setGeneratedBlock(flowerBlock, type);
+                dec.yellowFlowerGen.generate((World) world, random, blockPos);
+            }
+        }
+
+
+        for (int i = 0; i < dec.grassPerChunk; ++i) {
+            // vanilla chooses random height between 0 and topBlock*2.
+            // Then the grass generator goes down to find the top block.
+            // grass underground is quite rare so we can assume it almost never happens
+            // and generate only at the "real" top. And it will happen on average half of the time.
+            if (random.nextBoolean()) {
+                continue;
+            }
+            // because vanilla grass generator goes down looking for a solid block
+            // make sure there actually is one
+            int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            BlockPos blockPos = getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.SOLID);
+            if (blockPos != null) {
+                biome.getBiome().getRandomWorldGenForGrass(random).generate((World) world, random, blockPos);
+            }
+        }
+
+        for (int i = 0; i < dec.deadBushPerChunk; ++i) {
+            // same as above
+            if (random.nextBoolean()) {
+                continue;
+            }
+            int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            BlockPos blockPos = getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.SOLID);
+            if (blockPos != null) {
+                (new WorldGenDeadBush()).generate((World) world, random, blockPos);
+            }
+        }
+
+        for (int i = 0; i < dec.waterlilyPerChunk; ++i) {
+            // same as above
+            if (random.nextBoolean()) {
+                continue;
+            }
+            int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            BlockPos top = getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.OPAQUE);
+            if (top != null) {
+                dec.waterlilyGen.generate((World) world, random, top);
+            }
+        }
+
+        int mushroomCount = Math.max(dec.mushroomsPerChunk + 1, 1);
+        for (int i = 0; i < mushroomCount; ++i) {
+            if (random.nextInt(4) == 0) {
+                int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+                int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+                BlockPos top = getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.OPAQUE);
+                if (top != null) {
+                    dec.mushroomBrownGen.generate((World) world, random, top);
+                }
+            }
+
+            if (random.nextInt(8) == 0) {
+                // vanilla chooses random height between 0 and topBlock*2.
+                // The WorldGenBush (unlike WorldGenDeadBush and grass generator)
+                // won't go down to find the top block. It just attempts to generate at that position.
+                // So assuming vanilla average terrain height is 5*16, it would generate for one attempt in cube
+                // about one in 2*5=10 times
+                if (random.nextInt(10) != 0) {
+                    continue;
+                }
+                int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+                int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+                BlockPos blockPos = getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.OPAQUE);
+                if (blockPos != null) {
+                    dec.mushroomRedGen.generate((World) world, random, blockPos);
+                }
+            }
+        }
+
+        int reedCount = Math.max(dec.reedsPerChunk + 10, 10);
+        for (int i = 0; i < reedCount; ++i) {
+            // same as for red mushrooms above
+            if (random.nextInt(10) != 0) {
+                continue;
+            }
+            int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+
+            BlockPos blockPos = getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.OPAQUE);
+            if (blockPos != null) {
+                dec.reedGen.generate((World) world, random, blockPos);
+            }
+        }
+
+        // *10 - same reason as for red mushrooms
+        if (random.nextInt(32 * 10) == 0) {
+            int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+
+            BlockPos blockPos = getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.OPAQUE);
+            if (blockPos != null) {
+                (new WorldGenPumpkin()).generate((World) world, random, blockPos);
+            }
+        }
+
+
+        for (int i = 0; i < dec.cactiPerChunk; ++i) {
+            // same as for red mushrooms above
+            if (random.nextInt(10) != 0) {
+                continue;
+            }
+            int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+
+            BlockPos blockPos = getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.OPAQUE);
+            if (blockPos != null) {
+                dec.cactusGen.generate((World) world, random, blockPos);
+            }
+        }
+
+
+        if (dec.generateLakes) {
+            for (int i = 0; i < 50; ++i) {
+                int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+                double prob = waterSourceProbabilityForY(cfg, pos.getMinBlockY() + yOffset);
+                if (random.nextDouble() > prob) {
+                    continue;
+                }
+                int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+                int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+                BlockPos blockPos = pos.getMinBlockPos().add(xOffset, yOffset, zOffset);
+                (new WorldGenLiquids(Blocks.FLOWING_WATER)).generate((World) world, random, blockPos);
+            }
+
+
+            for (int i = 0; i < 20; ++i) {
+                int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+                double prob = lavaSourceProbabilityForY(cfg, pos.getMinBlockY() + yOffset);
+                if (random.nextDouble() > prob) {
+                    continue;
+                }
+                int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+                int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+                BlockPos blockPos = pos.getMinBlockPos().add(xOffset, yOffset, zOffset);
+                (new WorldGenLiquids(Blocks.FLOWING_LAVA)).generate((World) world, random, blockPos);
+            }
+
+        }
+
+    }
+
+    private double waterSourceProbabilityForY(CustomGeneratorSettings cfg, int y) {
+        // exact vanilla probability distribution here involves harmonic series,
+        // so no nice formula and no generalization for negative heights
+        // and logarithm based approximation would have infinity somewhere, so alo no ice generalization.
+        // This is the best fit I found with arctan, which nicely extends for any height and seems to relatively nicely fit
+        // found using libreoffice solver, minimizing sum of squares of differences between probabilities
+        // estimated from 10,000,000 samples and function in form (arctan(x*yScale + yOffset) + pi/2)*valueScale
+        // adding pi/2 instead of separate constant so that it never reaches zero or negative values.
+        // Note in case it ever gets changed in vanilla: this was found for this random Y:
+        // random.nextInt(random.nextInt(248) + 8);
+        final double yScale = -0.0242676003062542;
+        final double yOffset = 0.723583275161355;
+        final double valueScale = 0.00599930877922822;
+
+        double normalizedY = (y - cfg.heightOffset) / cfg.heightFactor;
+        double vanillaY = normalizedY * 64 + 64;
+        return (Math.atan(vanillaY * yScale + yOffset) + Math.PI / 2) * valueScale;
+    }
+
+    private double lavaSourceProbabilityForY(CustomGeneratorSettings cfg, int y) {
+        // same as for water
+        // Note in case it ever gets changed in vanilla: this was found for this random Y:
+        // random.nextInt(random.nextInt(random.nextInt(240) + 8) + 8);
+        final double yScale = -0.0703727292987445;
+        final double yOffset = 1.01588640105311;
+        final double valueScale = 0.0127618337650875;
+
+        double normalizedY = (y - cfg.heightOffset) / cfg.heightFactor;
+        double vanillaY = normalizedY * 64 + 64;
+        return (Math.atan(vanillaY * yScale + yOffset) + Math.PI / 2) * valueScale;
+    }
+
+    private void generateOnTop(ICubicWorld world, Random random, CubePos pos, int count, WorldGenerator generator) {
+        for (int i = 0; i < count; ++i) {
+            int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            BlockPos top = getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.SOLID);
+            if (top != null) {
+                generator.generate((World) world, random, top);
+            }
+        }
+    }
+
+    private void genOreUniform(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos,
+            int count, double probability, WorldGenerator generator, double minY, double maxY) {
+        int minBlockY = Math.round((float) (minY * cfg.heightFactor + cfg.heightOffset));
+        int maxBlockY = Math.round((float) (maxY * cfg.heightFactor + cfg.heightOffset));
+        if (pos.getMinBlockY() > maxBlockY || pos.getMaxBlockY() < minBlockY) {
+            return;
+        }
+        for (int i = 0; i < count; ++i) {
+            if (random.nextDouble() > probability) {
+                continue;
+            }
+            int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int blockY = pos.getMinBlockY() + yOffset;
+            if (blockY > maxBlockY || blockY < minBlockY) {
+                continue;
+            }
+            int xOffset = random.nextInt(Cube.SIZE);
+            int zOffset = random.nextInt(Cube.SIZE);
+            generator.generate((World) world, random, new BlockPos(pos.getMinBlockX() + xOffset, blockY, pos.getMinBlockZ() + zOffset));
+        }
+    }
+
+    private void genOreGaussian(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos,
+            int count, double probability, WorldGenerator generator, double mean, double stdDev) {
+        for (int i = 0; i < count; ++i) {
+            if (random.nextDouble() > probability) {
+                continue;
+            }
+            int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
+            int blockY = pos.getMinBlockY() + yOffset;
+            //noinspection SuspiciousNameCombination
+            double prob = MathUtil.gaussianProbabilityDensity(blockY, mean, stdDev);
+            if (random.nextDouble() > prob) {
+                continue;
+            }
+            int xOffset = random.nextInt(Cube.SIZE);
+            int zOffset = random.nextInt(Cube.SIZE);
+            generator.generate((World) world, random, new BlockPos(pos.getMinBlockX() + xOffset, blockY, pos.getMinBlockZ() + zOffset));
+        }
+    }
+    // TODO: make it util method somewhere
+
+    /**
+     * Finds the top block for that population cube with give offset, or null if no suitable place found.
+     * This method starts from the top of population area (or forcedAdditionalCubes*16 blocks above that)
+     * and goes down scanning for solid block. The value is used only if it's within population area.
+     *
+     * Note: forcedAdditionalCubes should be zero unless absolutely necessary.
+     * TODO: make it go up instead of down so it doesn't load unnecessary chunks when forcedAdditionalCubes is nonzero
+     */
+    @Nullable
+    private BlockPos getSurfaceForCube(ICubicWorld world, CubePos pos, int xOffset, int zOffset, int forcedAdditionalCubes, SurfaceType type) {
+        int maxFreeY = pos.getMaxBlockY() + Cube.SIZE / 2;
+        int minFreeY = pos.getMinBlockY() + Cube.SIZE / 2;
+        int startY = pos.above().getMaxBlockY() + forcedAdditionalCubes * Cube.SIZE;
+
+        BlockPos start = new BlockPos(
+                pos.getMinBlockX() + xOffset,
+                startY,
+                pos.getMinBlockZ() + zOffset
+        );
+        return findTopBlock(world, start, minFreeY, maxFreeY, type);
+    }
+
+    @Nullable
+    private BlockPos findTopBlock(ICubicWorld world, BlockPos start, int minTopY, int maxTopY, SurfaceType type) {
+        BlockPos pos = start;
+        IBlockState startState = world.getBlockState(start);
+        if (canBeTopBlock((World) world, pos, startState, type)) {
+            // the top tested block is solid, don't use that one
+            return null;
+        }
+        while (pos.getY() >= minTopY) {
+            BlockPos next = pos.down();
+            IBlockState state = world.getBlockState(next);
+            if (canBeTopBlock((World) world, pos, state, type)) {
+                break;
+            }
+            pos = next;
+        }
+        if (pos.getY() < minTopY || pos.getY() > maxTopY) {
+            return null;
+        }
+        return pos;
+    }
+
+    private boolean canBeTopBlock(World world, BlockPos pos, IBlockState state, SurfaceType type) {
+        if (type == SurfaceType.SOLID) {
+            return state.getMaterial().blocksMovement()
+                    && !state.getBlock().isLeaves(state, world, pos)
+                    && !state.getBlock().isFoliage(world, pos);
+        } else {
+            return state.getLightOpacity(world, pos) != 0;
+        }
+    }
+
+    private enum SurfaceType {
+        SOLID, OPAQUE
+    }
+}

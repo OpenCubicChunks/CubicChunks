@@ -28,12 +28,11 @@ import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
-import cubicchunks.util.AddressTools;
 import cubicchunks.world.type.CustomCubicWorldType;
 import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
+import cubicchunks.api.worldgen.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.init.Biomes;
@@ -99,7 +98,7 @@ public class CubicChunks {
         // so it should be safe to use them here
 
         // TODO: add all biomes
-        CubicBiome.createForBiome(Biomes.PLAINS).defaults().register();
+        CubicBiome.createForBiome(Biomes.PLAINS).defaults().addDefaultDecorators().register();
     }
 
     @EventHandler

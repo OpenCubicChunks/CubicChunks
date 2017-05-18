@@ -28,21 +28,16 @@ import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.decoration.UILabel;
-import net.malisis.core.client.gui.component.decoration.UIImage;
 import net.malisis.core.client.gui.component.decoration.UISeparator;
 import net.malisis.core.client.gui.component.interaction.UIButton;
 import net.malisis.core.client.gui.component.interaction.UITextField;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
 
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 
-import javax.annotation.Nullable;
-
 import com.google.common.eventbus.Subscribe;
 
-import cubicchunks.util.AddressTools;
 import cubicchunks.worldgen.generator.flat.Layer;
 import cubicchunks.worldgen.gui.FlatCubicGui;
 import cubicchunks.worldgen.gui.FlatLayersTab;

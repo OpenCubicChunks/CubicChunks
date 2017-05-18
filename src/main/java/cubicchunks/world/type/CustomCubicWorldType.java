@@ -32,9 +32,9 @@ import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
-import cubicchunks.worldgen.generator.custom.CustomFeatureProcessor;
-import cubicchunks.worldgen.generator.custom.CustomPopulationProcessor;
-import cubicchunks.worldgen.generator.custom.CustomTerrainProcessor;
+import cubicchunks.worldgen.generator.custom.CustomPopulator;
+import cubicchunks.worldgen.generator.custom.CustomStructureGenerator;
+import cubicchunks.worldgen.generator.custom.CustomTerrainGenerator;
 import cubicchunks.worldgen.gui.CustomCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -67,9 +67,9 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
 
     @Override
     public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-        CustomTerrainProcessor terrain = new CustomTerrainProcessor(world);
-        CustomFeatureProcessor features = new CustomFeatureProcessor();
-        CustomPopulationProcessor population = new CustomPopulationProcessor(world);
+        CustomTerrainGenerator terrain = new CustomTerrainGenerator(world, world.getSeed());
+        CustomStructureGenerator features = new CustomStructureGenerator();
+        CustomPopulator population = new CustomPopulator(world);
 
         //TODO: this is mostly a hack to get the old system working
         return new BasicCubeGenerator(world) {
@@ -77,7 +77,7 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
             public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
                 ICubePrimer primer = new CubePrimer();
 
-                terrain.calculate(primer, cubeX, cubeY, cubeZ);
+                terrain.generate(primer, cubeX, cubeY, cubeZ);
                 features.generate(world, primer, new CubePos(cubeX, cubeY, cubeZ));
 
                 return primer;

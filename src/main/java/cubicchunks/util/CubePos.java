@@ -34,6 +34,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 
+import java.util.Random;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
@@ -241,6 +242,21 @@ public class CubePos {
                 }
             }
         }
+    }
+
+    public BlockPos randomPopulationPos(Random rand) {
+        return new BlockPos(
+                rand.nextInt(16) + getXCenter(),
+                rand.nextInt(16) + getYCenter(),
+                rand.nextInt(16) + getZCenter());
+    }
+
+    public CubePos above() {
+        return add(0, 1, 0);
+    }
+
+    public CubePos below() {
+        return add(0, -1, 0);
     }
 
     public static CubePos fromBlockCoords(int blockX, int blockY, int blockZ) {

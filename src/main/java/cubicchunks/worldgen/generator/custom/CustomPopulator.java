@@ -23,54 +23,39 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
+import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.api.worldgen.populator.ICubicPopulator;
 import cubicchunks.util.Coords;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
-import cubicchunks.worldgen.generator.custom.features.BiomeFeatures;
-import cubicchunks.worldgen.generator.custom.features.FeatureGenerator;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-// TODO leftover from generator pipeline
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CustomPopulationProcessor {
-
-    private Map<Biome, BiomeFeatures> biomeFeaturesMap;
+public class CustomPopulator {
     private ICubicWorld world;
 
-    public CustomPopulationProcessor(ICubicWorld world) {
-        this.biomeFeaturesMap = new HashMap<>();
+    public CustomPopulator(ICubicWorld world) {
         this.world = world;
-        // for now use global for all biomes
-        for (Biome biome : Biome.REGISTRY) {
-            if (biome == null) {
-                continue;
-            }
-            this.biomeFeaturesMap.put(biome, new BiomeFeatures(world, biome));
-        }
     }
 
     public void populate(Cube cube) {
-        Biome biome = cube.getCubicWorld().getBiome(Coords.getCubeCenter(cube));
+        CubicBiome biome = CubicBiome.getCubic(cube.getCubicWorld().getBiome(Coords.getCubeCenter(cube)));
 
+        CubePos pos = cube.getCoords();
         //For surface generators we should actually use special RNG with seed
         //that depends only in world seed and cube X/Z
-        //but using this for surface generation doesn't cause any noticable issues
+        //but using this for surface generation doesn't cause any noticeable issues
         Random rand = new Random(cube.cubeRandomSeed());
 
-        BiomeFeatures features = this.biomeFeaturesMap.get(biome);
-        for (FeatureGenerator gen : features.getBiomeFeatureGenerators()) {
-            gen.generate(rand, cube, biome);
-        }
-        CubeGeneratorsRegistry.generateWorld(rand, cube.getCoords().getMinBlockPos(), (World) world);
+        ICubicPopulator decorator = biome.getDecorator();
+        decorator.generate(world, rand, pos, biome);
+        CubeGeneratorsRegistry.generateWorld(world, rand, pos, biome);
     }
 }

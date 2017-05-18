@@ -23,7 +23,7 @@
  */
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
-import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
+import cubicchunks.api.worldgen.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ResourceLocation;
 

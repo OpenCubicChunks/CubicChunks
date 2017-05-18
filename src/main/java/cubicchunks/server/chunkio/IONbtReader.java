@@ -144,9 +144,8 @@ public class IONbtReader {
         }
 
         // check against column
-        assert cubeX == column.xPosition && cubeZ == column.zPosition :
-                String.format("Cube is corrupted! Cube (%d,%d,%d) does not match column (%d,%d).", cubeX, cubeY, cubeZ, column.xPosition,
-                        column.zPosition);
+        assert cubeX == column.x && cubeZ == column.z :
+                String.format("Cube is corrupted! Cube (%d,%d,%d) does not match column (%d,%d).", cubeX, cubeY, cubeZ, column.x, column.z);
 
 
         // build the cube

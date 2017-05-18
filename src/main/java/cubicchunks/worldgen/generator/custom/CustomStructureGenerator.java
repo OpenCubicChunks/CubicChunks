@@ -23,25 +23,30 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
+import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.custom.structures.CubicCaveGenerator;
+import cubicchunks.worldgen.generator.custom.structures.CubicRavineGenerator;
+import cubicchunks.worldgen.generator.custom.structures.CubicStructureGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-// TODO remove me - generator pipeline leftover
+// TODO leftover from generator pipeline
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CustomTerrainProcessor {
+public class CustomStructureGenerator {
 
-    @Nonnull private final CustomTerrainGenerator terrainGenerator;
+    //TODO: Implement more populator
+    @Nonnull private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
+    @Nonnull private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
 
-    public CustomTerrainProcessor(ICubicWorld world) {
-        this.terrainGenerator = new CustomTerrainGenerator(world, world.getSeed());
-    }
+    public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
 
-    public void calculate(final ICubePrimer cube, int cubeX, int cubeY, int cubeZ) {
-        this.terrainGenerator.generate(cube, cubeX, cubeY, cubeZ);
+        // generate world populator
+        this.caveGenerator.generate(world, cube, cubePos);
+        this.ravineGenerator.generate(world, cube, cubePos);
     }
 }

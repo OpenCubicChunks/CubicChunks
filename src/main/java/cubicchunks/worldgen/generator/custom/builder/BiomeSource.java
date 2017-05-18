@@ -28,7 +28,7 @@ import cubicchunks.util.cache.HashCache;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
+import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
 import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacerProvider;
@@ -62,7 +62,7 @@ public class BiomeSource {
     private static final int SECTIONS_CACHE_RADIUS = 32;
     private static final int SECTIONS_CACHE_SIZE = SECTIONS_CACHE_RADIUS * SECTIONS_CACHE_RADIUS;
 
-    private static final ToIntFunction<ChunkPos> HASH_CHUNKS = v -> v.chunkXPos * CHUNKS_CACHE_RADIUS + v.chunkZPos;
+    private static final ToIntFunction<ChunkPos> HASH_CHUNKS = v -> v.x * CHUNKS_CACHE_RADIUS + v.z;
     private static final ToIntFunction<Vec3i> HASH_SECTIONS = v -> v.getX() * SECTIONS_CACHE_RADIUS + v.getZ();
 
     private final Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
@@ -161,14 +161,14 @@ public class BiomeSource {
 
     private CubicBiome[] generateBiomes(ChunkPos pos) {
         return mapToCubic(biomeGen.getBiomes(null,
-                Coords.cubeToMinBlock(pos.chunkXPos),
-                Coords.cubeToMinBlock(pos.chunkZPos),
+                Coords.cubeToMinBlock(pos.x),
+                Coords.cubeToMinBlock(pos.z),
                 Cube.SIZE, Cube.SIZE));
     }
 
     private CubicBiome[] generateBiomeSections(ChunkPos pos) {
         return mapToCubic(biomeGen.getBiomesForGeneration(null,
-                pos.chunkXPos * SECTION_SIZE, pos.chunkZPos * SECTION_SIZE,
+                pos.x * SECTION_SIZE, pos.z * SECTION_SIZE,
                 SECTION_SIZE, SECTION_SIZE));
     }
 

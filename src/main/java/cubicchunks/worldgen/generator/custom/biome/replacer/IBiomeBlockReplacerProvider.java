@@ -25,7 +25,7 @@ package cubicchunks.worldgen.generator.custom.biome.replacer;
 
 import com.google.common.collect.Sets;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
+import cubicchunks.api.worldgen.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 
 import java.util.Set;

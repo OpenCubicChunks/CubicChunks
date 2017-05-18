@@ -78,7 +78,7 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
             }
 
             //TODO: find out what this was/should have been for (it was never used)
-            //CustomPopulationProcessor populator = new CustomPopulationProcessor(world);
+            //CustomPopulator populator = new CustomPopulator(world);
 
             @Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
                 ICubePrimer primer = new CubePrimer();

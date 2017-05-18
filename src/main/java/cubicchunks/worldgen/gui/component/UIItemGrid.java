@@ -24,11 +24,7 @@
 package cubicchunks.worldgen.gui.component;
 
 import cubicchunks.worldgen.gui.ExtraGui;
-import cubicchunks.worldgen.gui.SelectBlockGui;
 import net.malisis.core.client.gui.component.UIComponent;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
 
 public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
 

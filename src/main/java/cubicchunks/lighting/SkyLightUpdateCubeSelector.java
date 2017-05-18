@@ -68,9 +68,9 @@ class SkyLightUpdateCubeSelector {
         }
 
         BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(
-                Coords.localToBlock(column.xPosition, localX),
+                Coords.localToBlock(column.x, localX),
                 maxBlockY - 1,
-                Coords.localToBlock(column.zPosition, localZ)
+                Coords.localToBlock(column.z, localZ)
         );
 
         int newMaxBlockY = column.getHeightValue(localX, localZ);

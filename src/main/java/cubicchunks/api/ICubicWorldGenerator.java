@@ -34,7 +34,10 @@ import net.minecraftforge.fml.common.IWorldGenerator;
  * {@link net.minecraftforge.fml.common.registry.GameRegistry} to launch them
  * single time for each generated cube right after terrain and biome specific
  * generators.
+ *
+ * @deprecated use ICubicPopulator instead. Exists only to keep the one mod that uses it working.
  */
+@Deprecated
 public interface ICubicWorldGenerator extends IWorldGenerator {
 
     /**
@@ -46,5 +49,5 @@ public interface ICubicWorldGenerator extends IWorldGenerator {
      * @param world The minecraft {@link World} we're generating for.
      *
      */
-    public void generate(Random random, BlockPos pos, World world);
+    void generate(Random random, BlockPos pos, World world);
 }

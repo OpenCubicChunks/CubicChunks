@@ -26,7 +26,7 @@ package cubicchunks.worldgen.generator.custom.biome.replacer;
 import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.biome.CubicBiome;
+import cubicchunks.api.worldgen.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;

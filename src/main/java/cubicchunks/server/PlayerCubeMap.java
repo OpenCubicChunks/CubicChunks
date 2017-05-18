@@ -261,7 +261,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
             while (iter.hasNext()) {
                 ColumnWatcher entry = iter.next();
 
-                getWorld().getProfiler().startSection("column[" + entry.getPos().chunkXPos + "," + entry.getPos().chunkZPos + "]");
+                getWorld().getProfiler().startSection("column[" + entry.getPos().x + "," + entry.getPos().z + "]");
                 boolean success = entry.getColumn() != null;
                 if (!success) {
                     boolean canGenerate = entry.hasPlayerMatching(CAN_GENERATE_CHUNKS);
@@ -405,7 +405,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
      * Always creates the Column.
      */
     private ColumnWatcher getOrCreateColumnWatcher(ChunkPos chunkPos) {
-        ColumnWatcher columnWatcher = this.columnWatchers.get(chunkPos.chunkXPos, chunkPos.chunkZPos);
+        ColumnWatcher columnWatcher = this.columnWatchers.get(chunkPos.x, chunkPos.z);
         if (columnWatcher == null) {
             columnWatcher = new ColumnWatcher(this, chunkPos);
             this.columnWatchers.put(columnWatcher);
@@ -683,7 +683,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
     public void removeEntry(ColumnWatcher entry) {
         ChunkPos pos = entry.getPos();
         entry.updateChunkInhabitedTime();
-        this.columnWatchers.remove(pos.chunkXPos, pos.chunkZPos);
+        this.columnWatchers.remove(pos.x, pos.z);
         this.columnsToGenerate.remove(entry);
         this.columnsToSendToClients.remove(entry);
     }
@@ -693,7 +693,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
     }
 
     @Nullable public ColumnWatcher getColumnWatcher(ChunkPos pos) {
-        return this.columnWatchers.get(pos.chunkXPos, pos.chunkZPos);
+        return this.columnWatchers.get(pos.x, pos.z);
     }
 
     @Nonnull public ICubicWorldServer getWorld() {

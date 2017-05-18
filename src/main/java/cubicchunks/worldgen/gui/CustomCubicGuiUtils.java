@@ -51,6 +51,22 @@ import java.util.function.DoubleUnaryOperator;
 
 public class CustomCubicGuiUtils {
 
+    public static UISlider<Float> makeFloatSlider(MalisisGui gui, String name, float min, float max, float defaultVal) {
+
+        UISlider<Float>[] wrappedSlider = new UISlider[1];
+        DoubleUnaryOperator roundRadiusFunc = d -> 1.0 / (wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth()) * 0.5;
+
+        float defMult = defaultVal == 0 ? 1 : defaultVal;
+
+        Converter<Float, Float> conv = Converters.builder()
+                .linearScale(min, max).rounding().withBase(2, 1).withBase(10, 1).withBase(2, defMult).withBase(10, defMult).withMaxExp(128)
+                .withRoundingRadius(roundRadiusFunc)
+                .build();
+
+        UISlider<Float> slider = new UISliderNoScroll<>(gui, 100, conv, name).setValue(defaultVal);
+        wrappedSlider[0] = slider;
+        return slider;
+    }
     public static UISlider<Float> makeExponentialSlider(MalisisGui gui, String name, float minNeg, float maxNeg, float minPos, float maxPos,
             float defaultVal) {
 
@@ -107,7 +123,7 @@ public class CustomCubicGuiUtils {
     }
 
     public static UISlider<Float> makeFloatSlider(MalisisGui gui, String name, float defaultValue) {
-        // the explicit <Integer> needs to be there because otherwise it won't compile on some systems
+        // the explicit <Float> needs to be there because otherwise it won't compile on some systems
         UISlider<Float> slider = new UISliderNoScroll<Float>(
                 gui,
                 100,

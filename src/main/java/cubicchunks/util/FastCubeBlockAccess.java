@@ -88,13 +88,13 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
                         CrashReportCategory category = report.makeCategory("ILightBlockAccess");
 
                         CubePos pos = new CubePos(originX + relativeCubeX, originY + relativeCubeY, originZ + relativeCubeZ);
-                        category.setDetail("Getting cube", pos::toString);
+                        category.addDetail("Getting cube", pos::toString);
                         if (prov instanceof CubeProviderServer || prov instanceof CubeProviderClient) {
                             Iterable<Chunk> chunks = getLoadedChunksProxy.getLoadedChunks(prov);
                             int i = 0;
                             for (Chunk chunk : chunks) {
                                 Column column = (Column) chunk;
-                                category.setDetail("Column" + i, () ->
+                                category.addDetail("Column" + i, () ->
                                         column.getLoadedCubes().stream().map(
                                                 c -> c.getCoords().toString()
                                         ).reduce((a, b) -> a + ", " + b).orElse(null)

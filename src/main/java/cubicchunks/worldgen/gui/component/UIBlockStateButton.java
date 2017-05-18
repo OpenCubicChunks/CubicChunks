@@ -24,7 +24,6 @@
 package cubicchunks.worldgen.gui.component;
 
 import java.util.Map.Entry;
-import java.util.function.Consumer;
 
 import org.lwjgl.opengl.GL11;
 
@@ -32,7 +31,6 @@ import cubicchunks.worldgen.gui.DummyWorld;
 import net.malisis.core.client.gui.GuiRenderer;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
-import net.malisis.core.util.Utils;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;

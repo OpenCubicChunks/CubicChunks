@@ -79,6 +79,8 @@ cubicchunks.gui.customcubic.spawn_tries=Spawn Tries:
 cubicchunks.gui.customcubic.spawn_probability=Probability:
 cubicchunks.gui.customcubic.spawn_range=Height %.2f%%%% to %.2f%%%%
 
+cubicchunks.gui.customcubic.mean_height=Mean Height:
+cubicchunks.gui.customcubic.height_std_dev=Height Std. Deviation:
 #################################
 ### advanced terrain settings ###
 #################################

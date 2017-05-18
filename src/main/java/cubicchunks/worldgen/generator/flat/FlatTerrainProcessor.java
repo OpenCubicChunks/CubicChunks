@@ -23,6 +23,7 @@
  */
 package cubicchunks.worldgen.generator.flat;
 
+import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
@@ -81,7 +82,10 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
 
     @Override
     public void populate(Cube cube) {
-        CubeGeneratorsRegistry.generateWorld(new Random(cube.cubeRandomSeed()), cube.getCoords().getMinBlockPos(), (World) world);
+        CubeGeneratorsRegistry.generateWorld(cube.getCubicWorld(),
+                new Random(cube.cubeRandomSeed()), cube.getCoords(),
+                CubicBiome.getCubic(world.getBiome(cube.getCoords().getCenterBlockPos()))
+        );
     }
 
     @Override

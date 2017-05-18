@@ -23,6 +23,9 @@
  */
 package cubicchunks.util;
 
+import static java.lang.Math.exp;
+import static java.lang.Math.sqrt;
+
 import mcp.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -103,5 +106,10 @@ public class MathUtil {
             throw new IllegalArgumentException("All values are NaN");
         }
         return max;
+    }
+
+    public static double gaussianProbabilityDensity(double x, double mean, double stdDev) {
+        return exp(-(x - mean) * (x - mean) / (2 * stdDev * stdDev)) /
+                (sqrt(2 * Math.PI) * stdDev);
     }
 }

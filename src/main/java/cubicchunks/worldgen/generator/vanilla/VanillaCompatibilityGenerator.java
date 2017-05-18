@@ -203,7 +203,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
             }
         } else {
             // Make vanilla generate a chunk for us to copy
-            if (lastChunk.xPosition != cubeX || lastChunk.zPosition != cubeZ) {
+            if (lastChunk.x != cubeX || lastChunk.z != cubeZ) {
                 lastChunk = vanilla.provideChunk(cubeX, cubeZ);
             }
 

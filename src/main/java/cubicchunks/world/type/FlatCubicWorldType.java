@@ -27,7 +27,6 @@ import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
-import cubicchunks.worldgen.gui.CustomCubicGui;
 import cubicchunks.worldgen.gui.FlatCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;

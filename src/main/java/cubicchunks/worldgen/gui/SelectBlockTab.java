@@ -28,14 +28,11 @@ import cubicchunks.worldgen.gui.component.UIFlatTerrainLayer;
 import static cubicchunks.worldgen.gui.CustomCubicGui.HORIZONTAL_PADDING;
 
 import java.util.Collection;
-import java.util.function.Consumer;
 
 import cubicchunks.worldgen.gui.component.UIBlockStateButton;
 import cubicchunks.worldgen.gui.component.UIItemGrid;
 import net.malisis.core.client.gui.component.UIComponent;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.creativetab.CreativeTabs;
 
 public class SelectBlockTab {
 

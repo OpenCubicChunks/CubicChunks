@@ -258,7 +258,7 @@ public class Cube implements XYZAddressable {
         } catch (Throwable t) {
             CrashReport report = CrashReport.makeCrashReport(t, "Getting block state");
             CrashReportCategory category = report.makeCategory("Block being got");
-            category.setDetail("Location", () ->
+            category.addDetail("Location", () ->
                     CrashReportCategory.getCoordinateInfo(blockX, blockY, blockZ));
             throw new ReportedException(report);
         }

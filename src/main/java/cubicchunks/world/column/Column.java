@@ -557,7 +557,7 @@ public class Column extends Chunk {
     // used for by ChunkCache, and that is used for rendering to see
     // if there are any blocks, or is there just air
     // CHECKED: 1.11-13.19.0.2148
-    public boolean getAreLevelsEmpty(int minBlockY, int maxBlockY) {
+    public boolean isEmptyBetween(int minBlockY, int maxBlockY) {
         int minCubeY = Coords.blockToCube(minBlockY);
         int maxCubeY = Coords.blockToCube(maxBlockY);
         for (int cubeY = minCubeY; cubeY <= maxCubeY; cubeY++) {
@@ -697,14 +697,14 @@ public class Column extends Chunk {
      * @return x position of this column
      */
     public int getX() {
-        return this.xPosition;
+        return this.x;
     }
 
     /**
      * @return z position of this column
      */
     public int getZ() {
-        return this.zPosition;
+        return this.z;
     }
 
     /**

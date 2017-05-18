@@ -27,6 +27,7 @@ import static cubicchunks.worldgen.gui.CustomCubicGui.HORIZONTAL_INSETS;
 import static cubicchunks.worldgen.gui.CustomCubicGui.HORIZONTAL_PADDING;
 import static cubicchunks.worldgen.gui.CustomCubicGui.VERTICAL_INSETS;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_1_COL;
+import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_2_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_3_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.label;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeFloatSlider;
@@ -98,7 +99,8 @@ class OreSettingsTab {
     private final UISlider<Integer> lapisLazuliOreSpawnSize;
     private final UISlider<Integer> lapisLazuliOreSpawnTries;
     private final UISlider<Float> lapisLazuliOreSpawnProbability;
-    private final UIRangeSlider<Float> lapisLazuliOreSpawnRange;
+    private final UISlider<Float> lapisLazuliMeanHeight;
+    private final UISlider<Float> lapisLazuliHeightStdDev;
 
     OreSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
         int y = -1;
@@ -246,11 +248,12 @@ class OreSettingsTab {
                 .add(this.lapisLazuliOreSpawnProbability =
                                 makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.lapisLazuliSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.lapisLazuliOreSpawnRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f,
-                        settings.lapisLazuliSpawnCenter - settings.lapisLazuliSpawnSpread,
-                        settings.lapisLazuliSpawnCenter + settings.lapisLazuliSpawnSpread),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-
+                .add(this.lapisLazuliMeanHeight = makeFloatSlider(gui, malisisText("mean_height", " %.3f"), -2.0f, 2.0f,
+                        settings.lapisLazuliHeightMean),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
+                .add(this.lapisLazuliHeightStdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), -2.0f, 2.0f,
+                        settings.lapisLazuliHeightStdDeviation),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
                 .init();
 
         this.container = layout;
@@ -335,8 +338,8 @@ class OreSettingsTab {
         conf.lapisLazuliSpawnTries = this.lapisLazuliOreSpawnTries.getValue();
         conf.lapisLazuliSpawnProbability = this.lapisLazuliOreSpawnProbability.getValue();
         conf.lapisLazuliSpawnSize = this.lapisLazuliOreSpawnSize.getValue();
-        conf.lapisLazuliSpawnCenter = (this.lapisLazuliOreSpawnRange.getMinValue() + this.lapisLazuliOreSpawnRange.getMaxValue()) / 2;
-        conf.lapisLazuliSpawnSpread = (this.lapisLazuliOreSpawnRange.getMaxValue() - this.lapisLazuliOreSpawnRange.getMinValue()) / 2;
+        conf.lapisLazuliHeightMean = this.lapisLazuliMeanHeight.getValue();
+        conf.lapisLazuliHeightStdDeviation = this.lapisLazuliHeightStdDev.getValue();
 
     }
 }

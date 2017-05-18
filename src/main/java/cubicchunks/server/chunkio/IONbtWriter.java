@@ -95,8 +95,8 @@ class IONbtWriter {
     }
 
     private static void writeBaseColumn(Column column, NBTTagCompound nbt) {// coords
-        nbt.setInteger("x", column.xPosition);
-        nbt.setInteger("z", column.zPosition);
+        nbt.setInteger("x", column.x);
+        nbt.setInteger("z", column.z);
 
         // column properties
         nbt.setByte("v", (byte) 1);

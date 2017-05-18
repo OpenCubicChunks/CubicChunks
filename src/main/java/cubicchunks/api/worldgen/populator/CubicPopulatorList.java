@@ -21,34 +21,44 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.features;
+package cubicchunks.api.worldgen.populator;
 
+import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.world.biome.Biome;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class MultiFeatureGenerator extends FeatureGenerator {
+public final class CubicPopulatorList implements ICubicPopulator {
 
-    private final FeatureGenerator gen;
-    private final int attempts;
+    private List<ICubicPopulator> list;
 
-    public MultiFeatureGenerator(ICubicWorld world, FeatureGenerator gen, int attempts) {
-        super(world);
-        this.gen = gen;
-        this.attempts = attempts;
+    public CubicPopulatorList(List<ICubicPopulator> populators) {
+        this();
+        this.list.addAll(populators);
     }
 
-    @Override
-    public void generate(Random rand, Cube cube, Biome biome) {
-        for (int i = 0; i < this.attempts; i++) {
-            this.gen.generate(rand, cube, biome);
-        }
+    public CubicPopulatorList() {
+        this.list = new ArrayList<>();
+    }
+
+    public void add(ICubicPopulator populator) {
+        this.list.add(populator);
+    }
+
+    public void makeImmutable() {
+        this.list = Collections.unmodifiableList(list);
+    }
+
+    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+        list.forEach(p -> p.generate(world, random, pos, biome));
     }
 }

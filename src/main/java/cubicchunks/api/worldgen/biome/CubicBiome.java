@@ -21,15 +21,17 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.biome;
+package cubicchunks.api.worldgen.biome;
 
 import com.google.common.base.Preconditions;
 import cubicchunks.CubicChunks;
+import cubicchunks.api.worldgen.populator.CubicPopulatorList;
+import cubicchunks.api.worldgen.populator.ICubicPopulator;
 import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacerProvider;
 import cubicchunks.worldgen.generator.custom.biome.replacer.OceanWaterReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.SurfaceDefaultReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.TerrainShapeReplacer;
-import cubicchunks.worldgen.generator.custom.features.decorator.ICubicBiomeDecorator;
+import cubicchunks.worldgen.generator.custom.populator.DefaultBiomeDecorator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
@@ -47,6 +49,7 @@ import java.util.Map;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+//
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
@@ -61,16 +64,17 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
 
     private final Biome originalBiome;
     private final List<IBiomeBlockReplacerProvider> blockReplacers = new ArrayList<>();
-    private final List<ICubicBiomeDecorator> decorators = new ArrayList<>();
+    private ICubicPopulator decorator;
 
     public Iterable<IBiomeBlockReplacerProvider> getReplacerProviders() {
         return Collections.unmodifiableList(blockReplacers);
     }
 
-    public Iterable<ICubicBiomeDecorator> getDecorators() {
-        return Collections.unmodifiableList(decorators);
+    public ICubicPopulator getDecorator() {
+        return decorator;
     }
 
+    // INTERNAL USE ONLY
     public static void init() {
         // nothing here, exists just to call static initializer
     }
@@ -105,6 +109,7 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
                 CubicBiome newBiome = CubicBiome
                         .createForBiome(biome)
                         .defaults()
+                        .addDefaultDecorators()
                         .setRegistryName(CubicChunks.location("unregistered_" + biome.getRegistryName().getResourcePath()))
                         .create();
                 biomeMapping.put(biome, newBiome);
@@ -115,7 +120,7 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
     private CubicBiome(Builder builder) {
         this.originalBiome = builder.biome;
         this.blockReplacers.addAll(builder.blockReplacers);
-        this.decorators.addAll(builder.biomeDecorators);
+        this.decorator = builder.decorators;
         this.setRegistryName(builder.registryName);
     }
 
@@ -172,8 +177,8 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
 
         private final Biome biome;
         private List<IBiomeBlockReplacerProvider> blockReplacers = new ArrayList<>();
-        private List<ICubicBiomeDecorator> biomeDecorators = new ArrayList<>();
         private ResourceLocation registryName;
+        private final CubicPopulatorList decorators = new CubicPopulatorList();
 
         public Builder(Biome biome) {
             this.biome = biome;
@@ -196,13 +201,13 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
             return this;
         }
 
-        public Builder addDecorator(ICubicBiomeDecorator decorator) {
-            this.biomeDecorators.add(decorator);
+        public Builder addDefaultDecorators() {
+            this.addDecorator(new DefaultBiomeDecorator());
             return this;
         }
 
-        public Builder addDefaultDecorators() {
-            // TODO: decorators unimplemented yet
+        public Builder addDecorator(ICubicPopulator decorator) {
+            this.decorators.add(decorator);
             return this;
         }
 

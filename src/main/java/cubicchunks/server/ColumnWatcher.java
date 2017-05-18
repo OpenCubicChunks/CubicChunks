@@ -62,7 +62,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
     @Nonnull private final Runnable loadedRunnable;
 
     ColumnWatcher(PlayerCubeMap playerCubeMap, ChunkPos pos) {
-        super(playerCubeMap, pos.chunkXPos, pos.chunkZPos);
+        super(playerCubeMap, pos.x, pos.z);
         this.playerCubeMap = playerCubeMap;
         try {
             this.loadedRunnable = (Runnable) getLoadedRunnable.invoke(this);
@@ -75,8 +75,8 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
     public void addPlayer(EntityPlayerMP player) {
         if (this.getPlayers().contains(player)) {
             CubicChunks.LOGGER.debug("Failed to add player. {} already is in chunk {}, {}", player,
-                    this.getPos().chunkXPos,
-                    this.getPos().chunkZPos);
+                    this.getPos().x,
+                    this.getPos().z);
             return;
         }
         if (this.getPlayers().isEmpty()) {
@@ -105,7 +105,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
             if (this.getPlayers().isEmpty()) {
                 if (isLoading()) {
                     AsyncWorldIOExecutor.dropQueuedColumnLoad(
-                            playerCubeMap.getWorld(), getPos().chunkXPos, getPos().chunkZPos, (c) -> loadedRunnable.run());
+                            playerCubeMap.getWorld(), getPos().x, getPos().z, (c) -> loadedRunnable.run());
                 }
                 this.playerCubeMap.removeEntry(this);
             }
@@ -203,10 +203,10 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
     }
 
     @Override public int getX() {
-        return this.getPos().chunkXPos;
+        return this.getPos().x;
     }
 
     @Override public int getZ() {
-        return this.getPos().chunkZPos;
+        return this.getPos().z;
     }
 }

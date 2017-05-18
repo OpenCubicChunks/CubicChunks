@@ -36,6 +36,7 @@ import static cubicchunks.worldgen.generator.custom.ConversionUtils.frequencyFro
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import cubicchunks.CubicChunks;
+import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
 import net.minecraft.world.gen.ChunkProviderSettings;
 
@@ -83,71 +84,73 @@ public class CustomGeneratorSettings {
      * Page 2
      */
 
+    // probability: (vanillaChunkHeight/oreGenRangeSize) / amountOfCubesInVanillaChunk
+
     public int dirtSpawnSize = 33;
     public int dirtSpawnTries = 10;
-    public float dirtSpawnProbability = 1.0f;
+    public float dirtSpawnProbability = 1f / (256f / Cube.SIZE);
     public float dirtSpawnMinHeight = Float.NEGATIVE_INFINITY;
     public float dirtSpawnMaxHeight = Float.POSITIVE_INFINITY;
 
     public int gravelSpawnSize = 33;
     public int gravelSpawnTries = 8;
-    public float gravelSpawnProbability = 1.0f;
+    public float gravelSpawnProbability = 1f / (256f / Cube.SIZE);
     public float gravelSpawnMinHeight = Float.NEGATIVE_INFINITY;
     public float gravelSpawnMaxHeight = Float.POSITIVE_INFINITY;
 
     public int graniteSpawnSize = 33;
     public int graniteSpawnTries = 10;
-    public float graniteSpawnProbability = 80f / 256f;
+    public float graniteSpawnProbability = 256f / 80f / (256f / Cube.SIZE);
     public float graniteSpawnMinHeight = Float.NEGATIVE_INFINITY;
     public float graniteSpawnMaxHeight = (80f - 64f) / 64f;
 
     public int dioriteSpawnSize = 33;
     public int dioriteSpawnTries = 10;
-    public float dioriteSpawnProbability = 80f / 256f;
+    public float dioriteSpawnProbability = 256f / 80f / (256f / Cube.SIZE);
     public float dioriteSpawnMinHeight = Float.NEGATIVE_INFINITY;
     public float dioriteSpawnMaxHeight = (80f - 64f) / 64f;
 
     public int andesiteSpawnSize = 33;
     public int andesiteSpawnTries = 10;
-    public float andesiteSpawnProbability = 80f / 256f;
+    public float andesiteSpawnProbability = 256f / 80f / (256f / Cube.SIZE);
     public float andesiteSpawnMinHeight = Float.NEGATIVE_INFINITY;
     public float andesiteSpawnMaxHeight = (80f - 64f) / 64f;
 
     public int coalOreSpawnSize = 17;
     public int coalOreSpawnTries = 20;
-    public float coalOreSpawnProbability = 0.5f;
+    public float coalOreSpawnProbability = 256f / 128f / (256f / Cube.SIZE);
     public float coalOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
     public float coalOreSpawnMaxHeight = 1;
 
     public int ironOreSpawnSize = 9;
     public int ironOreSpawnTries = 20;
-    public float ironOreSpawnProbability = 1.0f;
+    public float ironOreSpawnProbability = 256f / 64f / (256f / Cube.SIZE);
     public float ironOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float ironOreSpawnMaxHeight = Float.POSITIVE_INFINITY;
+    public float ironOreSpawnMaxHeight = 0;
 
     public int goldOreSpawnSize = 9;
     public int goldOreSpawnTries = 2;
-    public float goldOreSpawnProbability = 1f / 8f;
+    public float goldOreSpawnProbability = 256f / 32f / (256f / Cube.SIZE);
     public float goldOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
     public float goldOreSpawnMaxHeight = -0.5f;
 
     public int redstoneOreSpawnSize = 8;
     public int redstoneOreSpawnTries = 8;
-    public float redstoneOreSpawnProbability = 1f / 16f;
+    public float redstoneOreSpawnProbability = 256f / 16f / (256f / Cube.SIZE);
     public float redstoneOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
     public float redstoneOreSpawnMaxHeight = -0.75f;
 
     public int diamondOreSpawnSize = 8;
     public int diamondOreSpawnTries = 1;
-    public float diamondOreSpawnProbability = 1f / 16f;
+    public float diamondOreSpawnProbability = 256f / 16f / (256f / Cube.SIZE);
     public float diamondOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
     public float diamondOreSpawnMaxHeight = -0.75f;
 
     public int lapisLazuliSpawnSize = 7;
     public int lapisLazuliSpawnTries = 1;
-    public float lapisLazuliSpawnProbability = 0.5f;
-    public float lapisLazuliSpawnCenter = 0.25f;
-    public float lapisLazuliSpawnSpread = 0.25f;
+    public float lapisLazuliSpawnProbability = 256f / 32f / (256f / Cube.SIZE);
+    public float lapisLazuliHeightMean = 0.25f; // actually vanilla closest fit is 15/64 and 7/64
+    public float lapisLazuliHeightStdDeviation = 0.125f;
 
     /**
      * Terrain shape

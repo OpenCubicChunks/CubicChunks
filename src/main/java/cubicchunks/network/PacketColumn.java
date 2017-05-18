@@ -62,8 +62,8 @@ public class PacketColumn implements IMessage {
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeInt(chunkPos.chunkXPos);
-        buf.writeInt(chunkPos.chunkZPos);
+        buf.writeInt(chunkPos.x);
+        buf.writeInt(chunkPos.z);
         buf.writeInt(this.data.length);
         buf.writeBytes(this.data);
     }
