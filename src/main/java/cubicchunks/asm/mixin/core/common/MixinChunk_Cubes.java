@@ -31,6 +31,7 @@ import static cubicchunks.asm.JvmNames.MATH_HELPER_CLAMP_I;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
 
+import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ClientHeightMap;
@@ -52,6 +53,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.ReportedException;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -75,8 +77,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -535,48 +539,77 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //        getEntitiesWithinAABBForEntity
     // ==============================================
 
-    @ModifyArg(method = "getEntitiesWithinAABBForEntity",
-               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 1)
-    private int getEntAABBFor_CubicChunks_getMinYConst(int origY) {
-        return Coords.blockToCube(getCubicWorld().getMinHeight());
-    }
+    @Inject(method = "getEntitiesWithinAABBForEntity", at = @At("HEAD"), cancellable = true)
+    public void getEntitiesWithinAABBForEntity_CubicChunks(@Nullable Entity entityIn, AxisAlignedBB aabb,
+            List<Entity> listToFill, Predicate<? super Entity> filter, CallbackInfo cbi) {
+        if (!isColumn) {
+            return;
+        }
+        cbi.cancel();
 
-    @ModifyArg(method = "getEntitiesWithinAABBForEntity",
-               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 2)
-    private int getEntAABBFor_CubicChunks_getMaxYConst(int origY) {
-        return Coords.blockToCube(getCubicWorld().getMaxHeight()) - 1;
-    }
+        int minY = MathHelper.floor((aabb.minY - World.MAX_ENTITY_RADIUS) / 16.0D);
+        int maxY = MathHelper.floor((aabb.maxY + World.MAX_ENTITY_RADIUS) / 16.0D);
+        minY = MathHelper.clamp(minY,
+                blockToCube(getCubicWorld().getMinHeight()),
+                blockToCube(getCubicWorld().getMaxHeight()));
+        maxY = MathHelper.clamp(maxY,
+                blockToCube(getCubicWorld().getMinHeight()),
+                blockToCube(getCubicWorld().getMaxHeight()));
 
-    @Redirect(
-            method = "getEntitiesWithinAABBForEntity",
-            at = @At(value = "FIELD", target = CHUNK_ENTITY_LISTS, args = "array=get")
-    )
-    private ClassInheritanceMultiMap<Entity> getEntAABBFor_CubicChunks_EntityListsGetRedirect(ClassInheritanceMultiMap<Entity>[] array, int index) {
-        return getEntityList_CubicChunks(index);
+        for (Cube cube : cubeMap.cubes(minY, maxY)) {
+            if (cube.getEntityContainer().getEntitySet().isEmpty()) {
+                continue;
+            }
+            for (Entity entity : cube.getEntityContainer().getEntitySet()) {
+                if (!entity.getEntityBoundingBox().intersectsWith(aabb) || entity == entityIn) {
+                    continue;
+                }
+                if (filter == null || filter.apply(entity)) {
+                    listToFill.add(entity);
+                }
+
+                Entity[] parts = entity.getParts();
+
+                if (parts != null) {
+                    for (Entity part : parts) {
+                        if (part != entityIn && part.getEntityBoundingBox().intersectsWith(aabb)
+                                && (filter == null || filter.apply(part))) {
+                            listToFill.add(part);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // ==============================================
     //          getEntitiesOfTypeWithinAAAB
     // ==============================================
 
-    @ModifyArg(method = "getEntitiesOfTypeWithinAAAB",
-               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 1)
-    private int getEntOfTypeAABB_CubicChunks_getMinYConst(int origY) {
-        return Coords.blockToCube(getCubicWorld().getMinHeight());
-    }
+    @Inject(method = "getEntitiesOfTypeWithinAAAB", at = @At("HEAD"), cancellable = true)
+    public <T extends Entity> void getEntitiesOfTypeWithinAAAB_CubicChunks(Class<? extends T> entityClass,
+            AxisAlignedBB aabb, List<T> listToFill, Predicate<? super T> filter, CallbackInfo cbi) {
+        if (!isColumn) {
+            return;
+        }
+        cbi.cancel();
 
-    @ModifyArg(method = "getEntitiesOfTypeWithinAAAB",
-               at = @At(value = "INVOKE", target = MATH_HELPER_CLAMP_I), index = 2)
-    private int getEntOfTypeAABB_CubicChunks_getMaxYConst(int origY) {
-        return Coords.blockToCube(getCubicWorld().getMaxHeight()) - 1;
-    }
+        int minY = MathHelper.floor((aabb.minY - World.MAX_ENTITY_RADIUS) / 16.0D);
+        int maxY = MathHelper.floor((aabb.maxY + World.MAX_ENTITY_RADIUS) / 16.0D);
+        minY = MathHelper.clamp(minY,
+                blockToCube(getCubicWorld().getMinHeight()),
+                blockToCube(getCubicWorld().getMaxHeight()));
+        maxY = MathHelper.clamp(maxY,
+                blockToCube(getCubicWorld().getMinHeight()),
+                blockToCube(getCubicWorld().getMaxHeight()));
 
-    @Redirect(
-            method = "getEntitiesOfTypeWithinAAAB",
-            at = @At(value = "FIELD", target = CHUNK_ENTITY_LISTS, args = "array=get")
-    )
-    private ClassInheritanceMultiMap<Entity> getEntOfTypeAABB_CubicChunks_EntityListsGetRedirect(ClassInheritanceMultiMap<Entity>[] arr, int index) {
-        return getEntityList_CubicChunks(index);
+        for (Cube cube : cubeMap.cubes(minY, maxY)) {
+            for (T t : cube.getEntityContainer().getEntitySet().getByClass(entityClass)) {
+                if (t.getEntityBoundingBox().intersectsWith(aabb) && (filter == null || filter.apply(t))) {
+                    listToFill.add(t);
+                }
+            }
+        }
     }
 
     // public boolean needsSaving(boolean p_76601_1_) - TODO: needsSaving
