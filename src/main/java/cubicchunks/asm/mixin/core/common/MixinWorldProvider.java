@@ -57,7 +57,7 @@ public class MixinWorldProvider implements ICubicWorldProvider {
      * @reason return the real world height instead of hardcoded 256
      * @author Barteks2x
      */
-    @Overwrite
+    // @Overwrite() - overwrite doesn't support unobfuscated methods
     public int getHeight() {
         return cubicWorld().getMaxHeight();
     }
@@ -66,7 +66,7 @@ public class MixinWorldProvider implements ICubicWorldProvider {
      * @reason return the real world height instead of hardcoded 256
      * @author Barteks2x
      */
-    @Overwrite
+    // @Overwrite() - overwrite doesn't support unobfuscated methods
     public int getActualHeight() {
         return hasNoSky ? 128 : getHeight();
     }
@@ -95,7 +95,7 @@ public class MixinWorldProvider implements ICubicWorldProvider {
         }
     }
 
-    @Inject(method = "getRandomizedSpawnPoint", at = @At(value = "HEAD"), cancellable = true)
+    @Inject(method = "getRandomizedSpawnPoint", at = @At(value = "HEAD"), cancellable = true, remap = false)
     private void findRandomizedSpawnPoint(CallbackInfoReturnable<BlockPos> cir) {
         if (cubicWorld().isCubicWorld()) {
             cir.setReturnValue(new SpawnPlaceFinder().getRandomizedSpawnPoint(cubicWorld()));
