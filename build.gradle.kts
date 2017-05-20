@@ -301,7 +301,7 @@ fun getModVersion(): String {
         return getModVersion_do(describe, branch);
     } catch(ex: RuntimeException) {
         logger.error("Unknown error when accessing git repository! Are you sure the git repository exists?", ex)
-        return String.format("%s-%s.%d.%d%s%s", getMcVersion(), "9999", "9999", "9999", "", "NOVERSION")
+        return String.format("%s-%s.%s.%s%s%s", getMcVersion(), "9999", "9999", "9999", "", "NOVERSION")
     }
 }
 
