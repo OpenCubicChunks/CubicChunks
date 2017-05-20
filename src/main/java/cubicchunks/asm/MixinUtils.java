@@ -50,22 +50,30 @@ public class MixinUtils {
      * This hack has some limitations - it can't be used in methods where BlockPos#getY() is used for anything other
      * than a height check since the retuned value would be completely wrong. Fortunately most vanilla methods with
      * hardcoded height checks don't use BlockPos#getY() for anything else.
+     *
+     * @deprecated Mixin now has expandZeroConditions in ModifyConstant
      */
+    @Deprecated
     public static int getReplacementY(ICubicWorld world, BlockPos pos) {
         return getReplacementY(world, pos.getY());
     }
 
     /**
      * Convenience method with World as argument that calls {@link MixinUtils#getReplacementY(ICubicWorld, BlockPos)}
+     *
+     * @deprecated Mixin now has expandZeroConditions in ModifyConstant
      */
+    @Deprecated
     public static int getReplacementY(World world, BlockPos pos) {
         return getReplacementY((ICubicWorld) world, pos);
     }
 
+    @Deprecated
     public static int getReplacementY(World world, int y) {
         return getReplacementY((ICubicWorld) world, y);
     }
 
+    @Deprecated
     public static int getReplacementY(ICubicWorld world, int y) {
         if (y < world.getMinHeight() || y >= world.getMaxHeight()) {
             return y;

@@ -33,6 +33,7 @@ import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.worldgen.generator.custom.populator.PlainsDecorator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.init.Biomes;
@@ -98,7 +99,8 @@ public class CubicChunks {
         // so it should be safe to use them here
 
         // TODO: add all biomes
-        CubicBiome.createForBiome(Biomes.PLAINS).defaults().addDefaultDecorators().register();
+        CubicBiome.createForBiome(Biomes.OCEAN).defaults().addDefaultDecorators().register();
+        CubicBiome.createForBiome(Biomes.PLAINS).defaults().addDecorator(new PlainsDecorator()).addDefaultDecorators().register();
     }
 
     @EventHandler
