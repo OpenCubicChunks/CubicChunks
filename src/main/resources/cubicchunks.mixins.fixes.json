@@ -26,7 +26,20 @@
         "common.worldgen.tree.MixinWorldGenTree_BirchSavanna",
         "common.worldgen.tree.MixinWorldGenTrees",
         "common.worldgen.MixinWorldGenBigMushroom",
-        "common.worldgen.MixinWorldGenDeadBush"
+        "common.worldgen.MixinWorldGenBlockBlob",
+        "common.worldgen.MixinWorldGenBonusChest",
+        "common.worldgen.MixinWorldGenDeadBush",
+        "common.worldgen.MixinWorldGenDesertWells",
+        "common.worldgen.MixinWorldGenDoublePlants",
+        "common.worldgen.MixinWorldGenDungeons",
+        "common.worldgen.MixinWorldGenFlowers",
+        "common.worldgen.MixinWorldGenFossils",
+        "common.worldgen.MixinWorldGenIcePath",
+        "common.worldgen.MixinWorldGenIceSpike",
+        "common.worldgen.MixinWorldGenLakes",
+        "common.worldgen.MixinWorldGenSpikes",
+        "common.worldgen.MixinWorldGenTallGrass",
+        "common.worldgen.MixinWorldGenVines"
     ],
     "client": [
         "client.MixinEntityPlayerSP",

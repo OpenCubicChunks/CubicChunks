@@ -152,6 +152,23 @@ public class CustomGeneratorSettings {
     public float lapisLazuliHeightMean = 0.25f; // actually vanilla closest fit is 15/64 and 7/64
     public float lapisLazuliHeightStdDeviation = 0.125f;
 
+    public int hillsEmeraldOreSpawnTries = 11; // actually there are on average 5.5 attempts per chunk, so multiply prob. by 0.5
+    public float hillsEmeraldOreSpawnProbability = 0.5f * 256f / 28f / (256f / Cube.SIZE);
+    public float hillsEmeraldOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
+    public float hillsEmeraldOreSpawnMaxHeight = -0.5f;
+
+    public int hillsSilverfishStoneSpawnSize = 7;
+    public int hillsSilverfishStoneSpawnTries = 7;
+    public float hillsSilverfishStoneSpawnProbability = 256f / 64f / (256f / Cube.SIZE);
+    public float hillsSilverfishStoneSpawnMinHeight = Float.NEGATIVE_INFINITY;
+    public float hillsSilverfishStoneSpawnMaxHeight = 0;
+
+    public int mesaAddedGoldOreSpawnSize = 20;
+    public int mesaAddedGoldOreSpawnTries = 2;
+    public float mesaAddedGoldOreSpawnProbability = 256f / 32f / (256f / Cube.SIZE);
+    public float mesaAddedGoldOreSpawnMinHeight = -0.5f;
+    public float mesaAddedGoldOreSpawnMaxHeight = 0.25f;
+
     /**
      * Terrain shape
      */
