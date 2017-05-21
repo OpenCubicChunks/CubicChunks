@@ -4,6 +4,7 @@
 
 
 [![Build Status](https://travis-ci.org/OpenCubicChunks/CubicChunks.svg?branch=master)](https://travis-ci.org/OpenCubicChunks/CubicChunks)
+
 This MinecraftForge mod extends Minecraft height and depth. The only limitation is size of 32-bit integer.
 
 ### Cloning the repository
