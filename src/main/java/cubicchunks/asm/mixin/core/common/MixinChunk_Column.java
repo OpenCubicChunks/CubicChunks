@@ -35,6 +35,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -366,6 +367,11 @@ public abstract class MixinChunk_Column implements IColumn {
         return getLowestHeight();
     }
 
+    @Shadow public abstract ChunkPos getPos();
+
+    @Intrinsic public ChunkPos chunk$getPos() {
+        return getPos();
+    }
 
     @Shadow public abstract long getInhabitedTime();
 

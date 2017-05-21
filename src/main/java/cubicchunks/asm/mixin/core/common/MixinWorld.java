@@ -48,6 +48,7 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.border.WorldBorder;
@@ -469,6 +470,13 @@ public abstract class MixinWorld implements ICubicWorld {
 
     @Intrinsic public void world$notifyLightSet(BlockPos pos) {
         this.notifyLightSet(pos);
+    }
+    //==============================================
+
+    @Shadow public abstract WorldType getWorldType();
+
+    @Intrinsic public WorldType world$getWorldType() {
+        return this.getWorldType();
     }
     //==============================================
 }

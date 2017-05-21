@@ -42,6 +42,14 @@ public class GuiFactory implements IModGuiFactory {
 
     }
 
+    @Override public boolean hasConfigGui() {
+        return false;
+    }
+
+    @Override public GuiScreen createConfigGui(GuiScreen parentScreen) {
+        return null;
+    }
+
     @Override public Class<? extends GuiScreen> mainConfigGuiClass() {
         return CubicChunks.Config.GUI.class;
     }
