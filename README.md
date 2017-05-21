@@ -3,8 +3,7 @@
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/CubicChunks-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
-[![Build Status](https://travis-ci.org/Barteks2x/CubicChunks.svg?branch=master)](https://travis-ci.org/Barteks2x/CubicChunks)
-
+[![Build Status](https://travis-ci.org/OpenCubicChunks/CubicChunks.svg?branch=master)](https://travis-ci.org/OpenCubicChunks/CubicChunks)
 This MinecraftForge mod extends Minecraft height and depth. The only limitation is size of 32-bit integer.
 
 ### Cloning the repository
