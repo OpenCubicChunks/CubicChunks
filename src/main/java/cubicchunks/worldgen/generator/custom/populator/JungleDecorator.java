@@ -46,7 +46,7 @@ public class JungleDecorator implements ICubicPopulator {
     @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         // BiomeJungle also uses WorldGenVines but it doesn't really do anything
 
-        // see red mushroom generator in DefaultBiomeDecorator for explanation of that 10
+        // see red mushroom generator in DefaultDecorator for explanation of that 10
         if (random.nextInt(10) == 0) {
             int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
             int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;

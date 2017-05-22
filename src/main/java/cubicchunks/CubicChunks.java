@@ -33,11 +33,38 @@ import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
+import cubicchunks.worldgen.generator.custom.populator.DesertDecorator;
+import cubicchunks.worldgen.generator.custom.populator.ForestDecorator;
+import cubicchunks.worldgen.generator.custom.populator.HillsDecorator;
+import cubicchunks.worldgen.generator.custom.populator.JungleDecorator;
+import cubicchunks.worldgen.generator.custom.populator.MesaDecorator;
 import cubicchunks.worldgen.generator.custom.populator.PlainsDecorator;
+import cubicchunks.worldgen.generator.custom.populator.SavannaDecorator;
+import cubicchunks.worldgen.generator.custom.populator.SnowBiomeDecorator;
+import cubicchunks.worldgen.generator.custom.populator.SwampDecorator;
+import cubicchunks.worldgen.generator.custom.populator.TaigaDecorator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.init.Biomes;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeBeach;
+import net.minecraft.world.biome.BiomeDesert;
+import net.minecraft.world.biome.BiomeForest;
+import net.minecraft.world.biome.BiomeForestMutated;
+import net.minecraft.world.biome.BiomeHills;
+import net.minecraft.world.biome.BiomeJungle;
+import net.minecraft.world.biome.BiomeMesa;
+import net.minecraft.world.biome.BiomeMushroomIsland;
+import net.minecraft.world.biome.BiomeOcean;
+import net.minecraft.world.biome.BiomePlains;
+import net.minecraft.world.biome.BiomeRiver;
+import net.minecraft.world.biome.BiomeSavanna;
+import net.minecraft.world.biome.BiomeSavannaMutated;
+import net.minecraft.world.biome.BiomeSnow;
+import net.minecraft.world.biome.BiomeStoneBeach;
+import net.minecraft.world.biome.BiomeSwamp;
+import net.minecraft.world.biome.BiomeTaiga;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
@@ -52,12 +79,14 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -98,9 +127,35 @@ public class CubicChunks {
         // Vanilla biomes are initialized during bootstrap which happens before registration events
         // so it should be safe to use them here
 
-        // TODO: add all biomes
-        CubicBiome.createForBiome(Biomes.OCEAN).defaults().addDefaultDecorators().register();
-        CubicBiome.createForBiome(Biomes.PLAINS).defaults().addDecorator(new PlainsDecorator()).addDefaultDecorators().register();
+        autoRegister(Biome.class, b -> b.addDefaultDecorators());
+        autoRegister(BiomeBeach.class, b -> b.addDefaultDecorators());
+        autoRegister(BiomeDesert.class, b -> b.addDefaultDecorators().decorator(new DesertDecorator()));
+        autoRegister(BiomeForest.class, b -> b.decorator(new ForestDecorator()).addDefaultDecorators());
+        autoRegister(BiomeForestMutated.class, b -> b.decorator(new ForestDecorator()).addDefaultDecorators());
+        autoRegister(BiomeHills.class, b -> b.addDefaultDecorators().decorator(new HillsDecorator()));
+        autoRegister(BiomeJungle.class, b -> b.addDefaultDecorators().decorator(new JungleDecorator()));
+        autoRegister(BiomeMesa.class, b -> b.decorator(new DefaultDecorator.Ores()).decorator(new MesaDecorator()).decorator(new DefaultDecorator()));
+        autoRegister(BiomeMushroomIsland.class, b -> b.addDefaultDecorators());
+        autoRegister(BiomeOcean.class, b -> b.addDefaultDecorators());
+        autoRegister(BiomePlains.class, b -> b.decorator(new PlainsDecorator()).addDefaultDecorators());
+        autoRegister(BiomeRiver.class, b -> b.addDefaultDecorators());
+        autoRegister(BiomeSavanna.class, b -> b.decorator(new SavannaDecorator()).addDefaultDecorators());
+        autoRegister(BiomeSavannaMutated.class, b -> b.addDefaultDecorators());
+        autoRegister(BiomeSnow.class, b -> b.decorator(new SnowBiomeDecorator()).addDefaultDecorators());
+        autoRegister(BiomeStoneBeach.class, b -> b.addDefaultDecorators());
+        autoRegister(BiomeSwamp.class, b -> b.addDefaultDecorators().decorator(new SwampDecorator()));
+        autoRegister(BiomeTaiga.class, b -> b.decorator(new TaigaDecorator()).addDefaultDecorators());
+
+    }
+
+    private static void autoRegister(Class<? extends Biome> cl, Consumer<CubicBiome.Builder> cons) {
+        ForgeRegistries.BIOMES.getValues().stream()
+                .filter(x -> x.getRegistryName().getResourceDomain().equals("minecraft"))
+                .filter(x -> x.getClass() == cl).forEach(b -> {
+            CubicBiome.Builder builder = CubicBiome.createForBiome(b).defaults();
+            cons.accept(builder);
+            builder.setRegistryName(MODID, b.getRegistryName().getResourcePath()).register();
+        });
     }
 
     @EventHandler

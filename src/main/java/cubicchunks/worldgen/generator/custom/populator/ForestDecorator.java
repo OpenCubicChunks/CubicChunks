@@ -68,7 +68,9 @@ public class ForestDecorator implements ICubicPopulator {
                 int xOffset = xGrid * gridSize + 1 + Cube.SIZE / 2 + random.nextInt(gridSize / 2 + 1);
                 int zOffset = zGrid * gridSize + 1 + Cube.SIZE / 2 + random.nextInt(gridSize / 2 + 1);
                 BlockPos blockpos = PopulatorUtils.getSurfaceForCube(world, pos, xOffset, zOffset, 0, SurfaceType.OPAQUE);
-
+                if (blockpos == null) {
+                    continue;
+                }
                 if (random.nextInt(20) == 0) {
                     new WorldGenBigMushroom().generate((World) world, random, blockpos);
                 } else {
@@ -96,7 +98,7 @@ public class ForestDecorator implements ICubicPopulator {
             }
 
             for (int j = 0; j < 5; ++j) {
-                // see flower generator in DefaultBiomeDecorator
+                // see flower generator in DefaultDecorator
                 if (random.nextInt(7) != 0) {
                     continue;
                 }

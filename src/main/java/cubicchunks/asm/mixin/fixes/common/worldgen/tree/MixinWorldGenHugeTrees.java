@@ -56,7 +56,7 @@ public class MixinWorldGenHugeTrees {
     @ModifyConstant(method = "isSpaceAt", constant = @Constant(
             intValue = 0,
             expandZeroConditions = Constant.Condition.LESS_THAN_ZERO,
-            ordinal = 0))
+            ordinal = 1))
     private int getMinScanHeight(int orig, World worldIn, BlockPos leavesPos, int height) {
         return ((ICubicWorld) worldIn).getMinHeight();
     }

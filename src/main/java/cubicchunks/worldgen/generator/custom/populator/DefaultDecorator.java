@@ -57,7 +57,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class DefaultBiomeDecorator implements ICubicPopulator {
+public final class DefaultDecorator implements ICubicPopulator {
 
     public static class Ores implements ICubicPopulator {
 

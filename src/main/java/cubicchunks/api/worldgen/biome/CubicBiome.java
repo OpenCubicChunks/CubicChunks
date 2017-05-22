@@ -31,7 +31,7 @@ import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacerP
 import cubicchunks.worldgen.generator.custom.biome.replacer.OceanWaterReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.SurfaceDefaultReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.TerrainShapeReplacer;
-import cubicchunks.worldgen.generator.custom.populator.DefaultBiomeDecorator;
+import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
@@ -202,11 +202,12 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
         }
 
         public Builder addDefaultDecorators() {
-            this.addDecorator(new DefaultBiomeDecorator());
+            this.decorator(new DefaultDecorator.Ores());
+            this.decorator(new DefaultDecorator());
             return this;
         }
 
-        public Builder addDecorator(ICubicPopulator decorator) {
+        public Builder decorator(ICubicPopulator decorator) {
             this.decorators.add(decorator);
             return this;
         }

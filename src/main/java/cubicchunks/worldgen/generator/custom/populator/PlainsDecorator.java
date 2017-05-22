@@ -55,7 +55,7 @@ public class PlainsDecorator implements ICubicPopulator {
             Biome.DOUBLE_PLANT_GENERATOR.setPlantType(BlockDoublePlant.EnumPlantType.GRASS);
 
             for (int i = 0; i < 7; ++i) {
-                // see: DefaultBiomeDecorator, flower generator
+                // see: DefaultDecorator, flower generator
                 if (random.nextInt(7) != 0) {
                     continue;
                 }

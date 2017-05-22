@@ -40,11 +40,20 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiErrorScreen;
+import net.minecraft.init.Biomes;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.gen.layer.GenLayer;
+import net.minecraft.world.gen.layer.IntCache;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -63,6 +72,17 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
     @Override
     public WorldProvider getReplacedProviderFor(WorldProvider provider) {
         return provider; // TODO: Custom Nether? Custom End????
+    }
+
+    public BiomeProvider getBiomeProvider(World world) {
+        if ("true".equalsIgnoreCase(System.getProperty("cubicchunks.debug.biomes"))) {
+            return new BiomeProvider() {{
+                this.genBiomes = new GenLayerDebug(4);
+                this.biomeIndexLayer = new GenLayerDebug(4 + 2);
+            }};
+        } else {
+            return super.getBiomeProvider(world);
+        }
     }
 
     @Override
@@ -109,4 +129,46 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
                             .MALISIS_VERSION + " to use world customization"));
         }
     }
+
+    private static class GenLayerDebug extends GenLayer {
+
+        private final ArrayList<Biome> biomes;
+        private int scaleBits;
+
+        public GenLayerDebug(int scaleBits) {
+            super(0);
+            this.scaleBits = scaleBits;
+
+            this.biomes = new ArrayList<>();
+            // use reflection to get all biomes
+            for (Field fld : Biomes.class.getDeclaredFields()) {
+                if (Biome.class.isAssignableFrom(fld.getType())) {
+                    try {
+                        Biome b = (Biome) fld.get(null);
+                        if (b != null) {
+                            this.biomes.add(b);
+                        }
+
+                    } catch (IllegalAccessException e) {
+                        throw new Error(e);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public int[] getInts(int areaX, int areaY, int areaWidth, int areaHeight) {
+            int[] biomes = IntCache.getIntCache(areaWidth * areaHeight);
+            for (int offY = 0; offY < areaHeight; ++offY) {
+                for (int offX = 0; offX < areaWidth; ++offX) {
+                    int index = (offX + areaX) >> scaleBits;
+                    index = Math.floorMod(index, this.biomes.size());
+                    Biome biome = this.biomes.get(index);
+                    biomes[offX + offY * areaWidth] = Biome.getIdForBiome(biome);
+                }
+            }
+            return biomes;
+        }
+    }
+
 }
