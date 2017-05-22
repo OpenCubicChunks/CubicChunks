@@ -37,12 +37,12 @@ public class ConversionUtils {
     public static final float VANILLA_SELECTOR_NOISE_FACTOR = 12.75f;
     public static final float VANILLA_SELECTOR_NOISE_OFFSET = 0.5f;
 
-    public static final float VANILLA_DEPTH_NOISE_FREQUENCY = 200f / (2 << 15) / XZSCALE;
-    public static final float VANILLA_SELECTOR_NOISE_FREQUENCY_XZ = (684.412f / 80.0f) / (2 << 7) / XZSCALE;
-    public static final float VANILLA_SELECTOR_NOISE_FREQUENCY_Y = (684.412f / 160.0f) / (2 << 7) / YSCALE;
+    public static final float VANILLA_DEPTH_NOISE_FREQUENCY = frequencyFromVanilla(200f, 16) / XZSCALE;
+    public static final float VANILLA_SELECTOR_NOISE_FREQUENCY_XZ = frequencyFromVanilla(684.412f / 80.0f, 8) / XZSCALE;
+    public static final float VANILLA_SELECTOR_NOISE_FREQUENCY_Y = frequencyFromVanilla(684.412f / 80.0f, 8) / YSCALE;
 
-    public static final float VANILLA_LOWHIGH_NOISE_FREQUENCY_XZ = (684.412f) / (2 << 15) / XZSCALE;
-    public static final float VANILLA_LOWHIGH_NOISE_FREQUENCY_Y = (684.412f) / (2 << 15) / YSCALE;
+    public static final float VANILLA_LOWHIGH_NOISE_FREQUENCY_XZ = frequencyFromVanilla(684.412f, 16) / XZSCALE;
+    public static final float VANILLA_LOWHIGH_NOISE_FREQUENCY_Y = frequencyFromVanilla(684.412f, 16) / YSCALE;
 
     public static float biomeHeightVariationVanilla(float heightVariation) {
         return 2.4f * heightVariation + 4.0f / 15.0f;
@@ -56,7 +56,12 @@ public class ConversionUtils {
     // for 1 octave: 1*f = f*2^0 = f*2^(octaves-1)
     // for 2 octaves: 2*f = f*2^1 = f*2^(octaves-1)
     // same for 3 and higher
+    // for some reason the multiplier of 2 is needed (verified experimentally)
     public static float frequencyFromVanilla(float freq, int octaves) {
-        return (float) (freq / Math.pow(2, octaves - 1));
+        return 2.f * (freq / (1 << (octaves - 1)));
+    }
+
+    public static float maxValueMultipler(int octaves) {
+        return (1 << octaves) - 1;
     }
 }
