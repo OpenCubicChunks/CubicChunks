@@ -12,10 +12,8 @@
             "Cuchaz",
             "Razaekel"
         ],
-        "credits": "Robinton for creating the first Cubic Chunks mod and allowing me to see his code when I was working on my esarly 1.6.*
-        implementation. MineCrak - for helping me with eraly 1.6.* CubicChunks. Calacbolg - for the CubicChunks suggestion that
-        inspired me to start working on CubicChunks mod and then TWM. Cuchaz & Razaekel - for making TWM open source.",
-        "logoFile": "",
+        "credits": "Based on Cuchaz's TWM mod, initial idea and first implementation by Robinton. Notable contributors: Cyclonit, xcube16, Boreeas, Foghrye4. Special thanks to: MineCrak for help with 1.6.* CubicChunks. Calacbolg - the CubicChunks suggestion inspired me to start working on CubicChunks mod, and made the idea more well known",
+        "logoFile": "/assets/cubicchunks/logo.png",
         "screenshots": [],
         "dependencies": []
     }
