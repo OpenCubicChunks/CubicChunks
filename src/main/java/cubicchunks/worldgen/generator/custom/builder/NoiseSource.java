@@ -94,14 +94,8 @@ public class NoiseSource implements IBuilder {
             perlin.setOctaveCount(octaves);
             mod = perlin;
             if (normalized) {
-                // Max perlin noise value with N octaves and persistance p is
-                // 1 + 1/p + 1/(p^2) + ... + 1/(p^(N-1))
-                // It's equal to (1 - p^N) / (1 - p)
-                // Divide result by it, multiply by 2 and subtract 1
-                // to make sure that result is between -1 and 1 and that the mean value is at 0
-                final double persistance = 0.5;
                 ScaleBias scaleBias = new ScaleBias();
-                scaleBias.setScale(2 * (1 - persistance) / (1 - Math.pow(persistance, octaves)));
+                scaleBias.setScale(2 / perlin.getMaxValue());
                 scaleBias.setBias(-1);
                 scaleBias.setSourceModule(0, mod);
                 mod = scaleBias;
@@ -109,6 +103,12 @@ public class NoiseSource implements IBuilder {
                 scaleBias = new ScaleBias();
                 scaleBias.setScale((maxNorm - minNorm) / 2);
                 scaleBias.setBias((maxNorm + minNorm) / 2);
+                scaleBias.setSourceModule(0, mod);
+                mod = scaleBias;
+            } else {
+                ScaleBias scaleBias = new ScaleBias();
+                scaleBias.setScale(2);
+                scaleBias.setBias(-perlin.getMaxValue());
                 scaleBias.setSourceModule(0, mod);
                 mod = scaleBias;
             }
