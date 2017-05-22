@@ -31,7 +31,11 @@ import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacerP
 import cubicchunks.worldgen.generator.custom.biome.replacer.OceanWaterReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.SurfaceDefaultReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.TerrainShapeReplacer;
+import cubicchunks.worldgen.generator.custom.populator.AnimalsPopulator;
 import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
+import cubicchunks.worldgen.generator.custom.populator.PrePopulator;
+import cubicchunks.worldgen.generator.custom.populator.SnowBiomeDecorator;
+import cubicchunks.worldgen.generator.custom.populator.SurfaceSnowPopulator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
@@ -109,7 +113,7 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
                 CubicBiome newBiome = CubicBiome
                         .createForBiome(biome)
                         .defaults()
-                        .addDefaultDecorators()
+                        .defaultDecorators()
                         .setRegistryName(CubicChunks.location("unregistered_" + biome.getRegistryName().getResourcePath()))
                         .create();
                 biomeMapping.put(biome, newBiome);
@@ -186,7 +190,7 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
 
         public Builder defaults() {
             return addDefaultBlockReplacers()
-                    .addDefaultDecorators();
+                    .defaultDecorators();
         }
 
         public Builder addDefaultBlockReplacers() {
@@ -201,9 +205,16 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
             return this;
         }
 
-        public Builder addDefaultDecorators() {
+        public Builder defaultDecorators() {
+            this.decorator(new PrePopulator());
             this.decorator(new DefaultDecorator.Ores());
             this.decorator(new DefaultDecorator());
+            return this;
+        }
+
+        public Builder defaultPostDecorators() {
+            this.decorator(new AnimalsPopulator());
+            this.decorator(new SurfaceSnowPopulator());
             return this;
         }
 

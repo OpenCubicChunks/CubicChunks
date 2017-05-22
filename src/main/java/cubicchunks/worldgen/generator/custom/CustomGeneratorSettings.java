@@ -71,7 +71,8 @@ public class CustomGeneratorSettings {
     public int waterLakeRarity = 4;
     public boolean lavaLakes = true;
 
-    public int lavaLakeRarity = 80;
+    public int lavaLakeRarity = 8;
+    public int aboveSeaLavaLakeRarity = 13; // approximately 10 * 4/3, all that end up above the surface are at the surface in vanilla
     public boolean lavaOceans = false;
 
     public int biome = -1;

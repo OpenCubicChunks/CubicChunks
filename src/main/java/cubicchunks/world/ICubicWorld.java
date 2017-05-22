@@ -220,4 +220,8 @@ public interface ICubicWorld extends IMinMaxHeight {
     void notifyLightSet(BlockPos pos);
 
     WorldType getWorldType();
+
+    boolean canBlockFreezeWater(BlockPos topBlock);
+
+    boolean canSnowAt(BlockPos aboveTop, boolean flag);
 }

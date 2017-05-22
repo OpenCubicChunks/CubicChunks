@@ -127,24 +127,24 @@ public class CubicChunks {
         // Vanilla biomes are initialized during bootstrap which happens before registration events
         // so it should be safe to use them here
 
-        autoRegister(Biome.class, b -> b.addDefaultDecorators());
-        autoRegister(BiomeBeach.class, b -> b.addDefaultDecorators());
-        autoRegister(BiomeDesert.class, b -> b.addDefaultDecorators().decorator(new DesertDecorator()));
-        autoRegister(BiomeForest.class, b -> b.decorator(new ForestDecorator()).addDefaultDecorators());
-        autoRegister(BiomeForestMutated.class, b -> b.decorator(new ForestDecorator()).addDefaultDecorators());
-        autoRegister(BiomeHills.class, b -> b.addDefaultDecorators().decorator(new HillsDecorator()));
-        autoRegister(BiomeJungle.class, b -> b.addDefaultDecorators().decorator(new JungleDecorator()));
+        autoRegister(Biome.class, b -> b.defaultDecorators());
+        autoRegister(BiomeBeach.class, b -> b.defaultDecorators());
+        autoRegister(BiomeDesert.class, b -> b.defaultDecorators().decorator(new DesertDecorator()));
+        autoRegister(BiomeForest.class, b -> b.decorator(new ForestDecorator()).defaultDecorators());
+        autoRegister(BiomeForestMutated.class, b -> b.decorator(new ForestDecorator()).defaultDecorators());
+        autoRegister(BiomeHills.class, b -> b.defaultDecorators().decorator(new HillsDecorator()));
+        autoRegister(BiomeJungle.class, b -> b.defaultDecorators().decorator(new JungleDecorator()));
         autoRegister(BiomeMesa.class, b -> b.decorator(new DefaultDecorator.Ores()).decorator(new MesaDecorator()).decorator(new DefaultDecorator()));
-        autoRegister(BiomeMushroomIsland.class, b -> b.addDefaultDecorators());
-        autoRegister(BiomeOcean.class, b -> b.addDefaultDecorators());
-        autoRegister(BiomePlains.class, b -> b.decorator(new PlainsDecorator()).addDefaultDecorators());
-        autoRegister(BiomeRiver.class, b -> b.addDefaultDecorators());
-        autoRegister(BiomeSavanna.class, b -> b.decorator(new SavannaDecorator()).addDefaultDecorators());
-        autoRegister(BiomeSavannaMutated.class, b -> b.addDefaultDecorators());
-        autoRegister(BiomeSnow.class, b -> b.decorator(new SnowBiomeDecorator()).addDefaultDecorators());
-        autoRegister(BiomeStoneBeach.class, b -> b.addDefaultDecorators());
-        autoRegister(BiomeSwamp.class, b -> b.addDefaultDecorators().decorator(new SwampDecorator()));
-        autoRegister(BiomeTaiga.class, b -> b.decorator(new TaigaDecorator()).addDefaultDecorators());
+        autoRegister(BiomeMushroomIsland.class, b -> b.defaultDecorators());
+        autoRegister(BiomeOcean.class, b -> b.defaultDecorators());
+        autoRegister(BiomePlains.class, b -> b.decorator(new PlainsDecorator()).defaultDecorators());
+        autoRegister(BiomeRiver.class, b -> b.defaultDecorators());
+        autoRegister(BiomeSavanna.class, b -> b.decorator(new SavannaDecorator()).defaultDecorators());
+        autoRegister(BiomeSavannaMutated.class, b -> b.defaultDecorators());
+        autoRegister(BiomeSnow.class, b -> b.decorator(new SnowBiomeDecorator()).defaultDecorators());
+        autoRegister(BiomeStoneBeach.class, b -> b.defaultDecorators());
+        autoRegister(BiomeSwamp.class, b -> b.defaultDecorators().decorator(new SwampDecorator()));
+        autoRegister(BiomeTaiga.class, b -> b.decorator(new TaigaDecorator()).defaultDecorators());
 
     }
 
@@ -152,9 +152,9 @@ public class CubicChunks {
         ForgeRegistries.BIOMES.getValues().stream()
                 .filter(x -> x.getRegistryName().getResourceDomain().equals("minecraft"))
                 .filter(x -> x.getClass() == cl).forEach(b -> {
-            CubicBiome.Builder builder = CubicBiome.createForBiome(b).defaults();
+            CubicBiome.Builder builder = CubicBiome.createForBiome(b).addDefaultBlockReplacers();
             cons.accept(builder);
-            builder.setRegistryName(MODID, b.getRegistryName().getResourcePath()).register();
+            builder.defaultPostDecorators().setRegistryName(MODID, b.getRegistryName().getResourcePath()).register();
         });
     }
 

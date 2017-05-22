@@ -23,8 +23,11 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.server.CubeWatcher;
 import cubicchunks.util.CubePos;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.custom.populator.PopulatorUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLiving;
@@ -32,6 +35,7 @@ import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.WeightedRandom;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -45,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -246,5 +251,56 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
         }
         int blockY = pos.getMinBlockY() + world.getRand().nextInt(16);
         return new BlockPos(blockX, blockY, blockZ);
+    }
+
+    public static void initialWorldGenSpawn(ICubicWorld world, CubicBiome biome, int blockX, int blockY, int blockZ,
+            int sizeX, int sizeY, int sizeZ, Random random) {
+        List<Biome.SpawnListEntry> spawnList = biome.getBiome().getSpawnableList(EnumCreatureType.CREATURE);
+
+        if (spawnList.isEmpty()) {
+            return;
+        }
+        while (random.nextFloat() < biome.getBiome().getSpawningChance()) {
+            Biome.SpawnListEntry currEntry = WeightedRandom.getRandomItem(world.getRand(), spawnList);
+            int groupCount = MathHelper.getInt(random, currEntry.minGroupCount, currEntry.maxGroupCount);
+            IEntityLivingData data = null;
+            int randX = blockX + random.nextInt(sizeX);
+            int randZ = blockZ + random.nextInt(sizeZ);
+
+            final int initRandX = randX;
+            final int initRandZ = randZ;
+
+            for (int i = 0; i < groupCount; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    do {
+                        randX = initRandX + random.nextInt(5) - random.nextInt(5);
+                        randZ = initRandZ + random.nextInt(5) - random.nextInt(5);
+                    } while (randX < blockX || randX >= blockX + sizeX || randZ < blockZ || randZ >= blockZ + sizeZ);
+
+                    BlockPos pos = PopulatorUtils.findTopBlock(
+                            world, new BlockPos(randX, blockY + sizeY + Cube.SIZE / 2, randZ),
+                            blockY, blockY + sizeY - 1, PopulatorUtils.SurfaceType.SOLID);
+                    if (pos == null) {
+                        continue;
+                    }
+
+                    if (canCreatureTypeSpawnAtLocation(EntityLiving.SpawnPlacementType.ON_GROUND, (World) world, pos)) {
+                        EntityLiving spawnedEntity;
+
+                        try {
+                            spawnedEntity = currEntry.newInstance((World) world);
+                        } catch (Exception exception) {
+                            exception.printStackTrace();
+                            continue;
+                        }
+
+                        spawnedEntity.setLocationAndAngles(randX + 0.5, pos.getY(), randZ + 0.5, random.nextFloat() * 360.0F, 0.0F);
+                        world.spawnEntity(spawnedEntity);
+                        data = spawnedEntity.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(spawnedEntity)), data);
+                        break;
+                    }
+                }
+            }
+        }
     }
 }

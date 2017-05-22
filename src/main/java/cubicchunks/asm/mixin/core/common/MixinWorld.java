@@ -479,4 +479,18 @@ public abstract class MixinWorld implements ICubicWorld {
         return this.getWorldType();
     }
     //==============================================
+
+    @Shadow public abstract boolean canBlockFreezeWater(BlockPos topBlock);
+
+    @Intrinsic public boolean world$canBlockFreezeWater(BlockPos topBlock) {
+        return canBlockFreezeWater(topBlock);
+    }
+    //==============================================
+
+    @Shadow public abstract boolean canSnowAt(BlockPos aboveTop, boolean flag);
+
+    @Intrinsic public boolean world$canSnowAt(BlockPos aboveTop, boolean flag) {
+        return canSnowAt(aboveTop, flag);
+    }
+    //==============================================
 }

@@ -143,12 +143,14 @@ public class PopulatorUtils {
             return state.getMaterial().blocksMovement()
                     && !state.getBlock().isLeaves(state, world, pos)
                     && !state.getBlock().isFoliage(world, pos);
-        } else {
+        } else if (type == SurfaceType.OPAQUE) {
             return state.getLightOpacity(world, pos) != 0;
+        } else {
+            return state.getMaterial().blocksMovement() || state.getMaterial().isLiquid();
         }
     }
 
     public enum SurfaceType {
-        SOLID, OPAQUE
+        SOLID, BLOCKING_MOVEMENT, OPAQUE
     }
 }
