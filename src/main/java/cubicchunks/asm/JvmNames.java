@@ -89,7 +89,8 @@ public class JvmNames {
         WORLD_IS_AIR_BLOCK = WORLD + "isAirBlock(" + BLOCK_POS + ")Z",
         WORLD_IS_AREA_LOADED = WORLD + "isAreaLoaded(IIIIIIZ)Z",
         WORLD_IS_BLOCK_LOADED = WORLD + "isBlockLoaded(" + BLOCK_POS + ")Z",
-        WORLD_IS_BLOCK_LOADED_Z = WORLD + "isBlockLoaded(" + BLOCK_POS + "Z)Z";
+        WORLD_IS_BLOCK_LOADED_Z = WORLD + "isBlockLoaded(" + BLOCK_POS + "Z)Z",
+        WORLD_IS_CHUNK_LOADED = WORLD + "isChunkLoaded(IIZ)Z";
 
     // @formatter:on
 }

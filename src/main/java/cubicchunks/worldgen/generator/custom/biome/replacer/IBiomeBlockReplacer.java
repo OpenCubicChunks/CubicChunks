@@ -32,6 +32,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public interface IBiomeBlockReplacer {
 
+    default void onBlockColumnStart() {
+        // method needed by mesa because of a nasty hack in vanilla
+    }
     /**
      * Replaces the given block with another block based on given location, density gradient and density value. Biome
      * block replacers can be chained (output if one replacer used as input to another replacer)

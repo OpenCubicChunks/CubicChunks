@@ -28,6 +28,7 @@ import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_FOR;
 import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_WITH_FLAG;
 import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
 import static cubicchunks.asm.JvmNames.WORLD_IS_BLOCK_LOADED_Z;
+import static cubicchunks.asm.JvmNames.WORLD_IS_CHUNK_LOADED;
 import static cubicchunks.util.Coords.blockToCube;
 
 import cubicchunks.asm.MixinUtils;
@@ -36,6 +37,7 @@ import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
@@ -51,6 +53,7 @@ import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nonnull;
@@ -73,6 +76,8 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
     @Shadow public abstract IBlockState getBlockState(BlockPos pos);
 
     @Shadow public abstract boolean isBlockLoaded(BlockPos pos);
+
+    @Shadow protected abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty);
 
     /**
      * This @Overwrite allows World to "see" blocks outside of 0..255 height range.
@@ -206,6 +211,16 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
             cbi.setReturnValue(cube != null);
         } else {
             cbi.setReturnValue(cube != null && !(cube instanceof BlankCube));
+        }
+    }
+
+    @Redirect(method = "spawnEntity", at = @At(value = "INVOKE", target = WORLD_IS_CHUNK_LOADED))
+    private boolean spawnEntity_isChunkLoaded(World world, int x, int z, boolean allowEmpty, Entity ent) {
+        assert this == (Object) world;
+        if (isCubicWorld()) {
+            return this.isBlockLoaded(ent.getPosition(), allowEmpty);
+        } else {
+            return this.isChunkLoaded(x, z, allowEmpty);
         }
     }
 }
