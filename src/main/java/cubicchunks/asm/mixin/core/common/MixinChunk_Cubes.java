@@ -61,6 +61,8 @@ import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraft.world.gen.ChunkProviderDebug;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.ChunkEvent.Load;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Final;
@@ -482,7 +484,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             k = Coords.blockToCube(getCubicWorld().getMaxHeight()) - 1;
         }
 
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+        MinecraftForge.EVENT_BUS
                 .post(new net.minecraftforge.event.entity.EntityEvent.EnteringChunk(entityIn, this.x, this.z, entityIn.chunkCoordX,
                         entityIn.chunkCoordZ));
         entityIn.addedToChunk = true;
@@ -510,7 +512,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
     }
 
     // ==============================================
-    //              removeTileEntity
+    //                addTileEntity
     // ==============================================
 
     @Redirect(method = "addTileEntity(Lnet/minecraft/tileentity/TileEntity;)V", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
@@ -533,6 +535,41 @@ public abstract class MixinChunk_Cubes implements IColumn {
         }
         Cube cube = this.getLoadedCube(blockToCube(pos.getY()));
         return cube != null && cube.isCubeLoaded();
+    }
+
+    // ==============================================
+    //                  onChunkLoad
+    // ==============================================
+
+    @Inject(method = "onChunkLoad", at = @At("HEAD"), cancellable = true)
+    public void onChunkLoad_CubicChunks(CallbackInfo cbi) {
+        if (!isColumn) {
+            return;
+        }
+        cbi.cancel();
+        this.isChunkLoaded = true;
+        for (Cube cube : cubeMap) {
+            cube.onLoad();
+        }
+        MinecraftForge.EVENT_BUS.post(new Load((Chunk) (Object) this));
+    }
+
+    // ==============================================
+    //                onChunkUnload
+    // ==============================================
+
+    @Inject(method = "onChunkUnload", at = @At("HEAD"), cancellable = true)
+    public void onChunkUnload_CubicChunks(CallbackInfo cbi) {
+        if (!isColumn) {
+            return;
+        }
+        cbi.cancel();
+        this.isChunkLoaded = false;
+
+        for (Cube cube : cubeMap) {
+            cube.onUnload();
+        }
+        MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload((Chunk) (Object) this));
     }
 
     // ==============================================

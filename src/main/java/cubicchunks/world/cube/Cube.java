@@ -26,6 +26,7 @@ package cubicchunks.world.cube;
 import static cubicchunks.util.Coords.blockToLocal;
 import static cubicchunks.util.Coords.localToBlock;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Coords;
@@ -472,6 +473,10 @@ public class Cube implements XYZAddressable {
      * Finish the cube loading process
      */
     public void onLoad() {
+        if (isCubeLoaded) {
+            CubicChunks.LOGGER.error("Attempting to load already loaded cube at " + this.getCoords());
+            return;
+        }
         // tell the world about tile entities
         this.world.addTileEntities(this.tileEntityMap.values());
         this.world.loadEntities(this.entities.getEntities());
@@ -482,6 +487,10 @@ public class Cube implements XYZAddressable {
      * Mark this cube as no longer part of this world
      */
     public void onUnload() {
+        if (!isCubeLoaded) {
+            CubicChunks.LOGGER.error("Attempting to unload already unloaded cube at " + this.getCoords());
+            return;
+        }
         //first mark as unloaded so that entity list and tile entity map isn't modified while iterating
         //and it also preserves all entities/time entities so they can be saved
         this.isCubeLoaded = false;

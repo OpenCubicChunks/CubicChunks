@@ -23,15 +23,21 @@
  */
 package cubicchunks.world.cube;
 
+import cubicchunks.world.EntityContainer;
 import cubicchunks.world.column.IColumn;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+
+import java.util.Collection;
+import java.util.Collections;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -106,5 +112,19 @@ public class BlankCube extends Cube {
 
     @Override
     public void markForRenderUpdate() {
+    }
+
+    @Override
+    public EntityContainer getEntityContainer() {
+        return new EntityContainer() {
+            @Override
+            public ClassInheritanceMultiMap<Entity> getEntitySet() {
+                Error err = new Error();
+                if (!err.getStackTrace()[1].getClassName().contains("RenderGlobal")) {
+                    err.printStackTrace();
+                }
+                return super.getEntitySet();
+            }
+        };
     }
 }

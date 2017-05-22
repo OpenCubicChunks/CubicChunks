@@ -218,7 +218,27 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
     private boolean spawnEntity_isChunkLoaded(World world, int x, int z, boolean allowEmpty, Entity ent) {
         assert this == (Object) world;
         if (isCubicWorld()) {
-            return this.isBlockLoaded(ent.getPosition(), allowEmpty);
+            return this.isBlockLoaded(new BlockPos(x, ent.posY, z), allowEmpty);
+        } else {
+            return this.isChunkLoaded(x, z, allowEmpty);
+        }
+    }
+
+    @Redirect(method = "updateEntityWithOptionalForce", at = @At(value = "INVOKE", target = WORLD_IS_CHUNK_LOADED, ordinal = 0))
+    private boolean updateEntityWithOptionalForce_isChunkLoaded0(World world, int x, int z, boolean allowEmpty, Entity ent, boolean force) {
+        assert this == (Object) world;
+        if (isCubicWorld()) {
+            return this.isBlockLoaded(new BlockPos(x * Cube.SIZE, ent.chunkCoordY * Cube.SIZE, z * Cube.SIZE), allowEmpty);
+        } else {
+            return this.isChunkLoaded(x, z, allowEmpty);
+        }
+    }
+
+    @Redirect(method = "updateEntityWithOptionalForce", at = @At(value = "INVOKE", target = WORLD_IS_CHUNK_LOADED, ordinal = 1))
+    private boolean updateEntityWithOptionalForce_isChunkLoaded1(World world, int x, int z, boolean allowEmpty, Entity ent, boolean force) {
+        assert this == (Object) world;
+        if (isCubicWorld()) {
+            return this.isBlockLoaded(new BlockPos(x * Cube.SIZE, ent.posY, z * Cube.SIZE), allowEmpty);
         } else {
             return this.isChunkLoaded(x, z, allowEmpty);
         }
