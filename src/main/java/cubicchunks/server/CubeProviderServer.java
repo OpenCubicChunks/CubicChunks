@@ -44,6 +44,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraftforge.common.ForgeChunkManager;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -295,17 +296,17 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      * After successfully loading a cube, add it to it's column and the lookup table
      *
      * @param cube The cube that was loaded
-     * @param IColumn The column of the cube
+     * @param column The column of the cube
      */
-    private void onCubeLoaded(@Nullable Cube cube, IColumn IColumn) {
+    private void onCubeLoaded(@Nullable Cube cube, IColumn column) {
         if (cube != null) {
             cubeMap.put(cube); // cache the Cube
             //synchronous loading may cause it to be called twice when async loading has been already queued
             //because AsyncWorldIOExecutor only executes one task for one cube and because only saving a cube
             //can modify one that is being loaded, it's impossible to end up with 2 versions of the same cube
             //This is only to prevents multiple callbacks for the same queued load from adding the same cube twice.
-            if (!IColumn.getLoadedCubes().contains(cube)) {
-                IColumn.addCube(cube);
+            if (!column.getLoadedCubes().contains(cube)) {
+                column.addCube(cube);
                 cube.onLoad(); // init the Cube
             }
         }
@@ -539,6 +540,9 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     boolean tryUnloadCube(Cube cube) {
+        if (ForgeChunkManager.getPersistentChunksFor(world).containsKey(cube.getColumn().getPos())) {
+            return false; // it will be unloaded later by ChunkGC
+        }
         if (!cube.getTickets().canUnload()) {
             return false; // There are tickets
         }
@@ -555,6 +559,9 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     boolean tryUnloadColumn(IColumn column) {
+        if (ForgeChunkManager.getPersistentChunksFor(world).containsKey(column.getPos())) {
+            return false; // it will be unloaded later by ChunkGC
+        }
         if (column.hasLoadedCubes()) {
             return false; // It has loaded Cubes in it
             // (Cubes are to Columns, as tickets are to Cubes... in a way)
