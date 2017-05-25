@@ -33,6 +33,7 @@ import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.worldgen.generator.custom.ConversionUtils;
 import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
 import cubicchunks.worldgen.generator.custom.populator.DesertDecorator;
 import cubicchunks.worldgen.generator.custom.populator.ForestDecorator;
@@ -161,6 +162,8 @@ public class CubicChunks {
     @EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         LOGGER = e.getModLog();
+
+        ConversionUtils.initFlowNoiseHack();
 
         config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
         MinecraftForge.EVENT_BUS.register(this); // Register our config reload hook

@@ -23,6 +23,11 @@
  */
 package cubicchunks.worldgen.generator.custom;
 
+import com.flowpowered.noise.Utils;
+import net.minecraft.world.gen.NoiseGeneratorImproved;
+
+import java.util.Random;
+
 /**
  * Util class to convert from vanilla configs to cubic chunks config
  */
@@ -56,12 +61,22 @@ public class ConversionUtils {
     // for 1 octave: 1*f = f*2^0 = f*2^(octaves-1)
     // for 2 octaves: 2*f = f*2^1 = f*2^(octaves-1)
     // same for 3 and higher
-    // for some reason the multiplier of 2 is needed (verified experimentally)
     public static float frequencyFromVanilla(float freq, int octaves) {
-        return 2.f * (freq / (1 << (octaves - 1)));
+        return (freq / (1 << (octaves - 1)));
     }
+
 
     public static float maxValueMultipler(int octaves) {
         return (1 << octaves) - 1;
+    }
+
+    public static void initFlowNoiseHack() {
+        Random random = new Random(123456789);
+        for (int i = 0; i < Utils.RANDOM_VECTORS.length / 4; i++) {
+            int j = random.nextInt(NoiseGeneratorImproved.GRAD_X.length);
+            Utils.RANDOM_VECTORS[i*4] = NoiseGeneratorImproved.GRAD_X[j];
+            Utils.RANDOM_VECTORS[i*4 + 1] = NoiseGeneratorImproved.GRAD_X[j];
+            Utils.RANDOM_VECTORS[i*4 + 1] = NoiseGeneratorImproved.GRAD_X[j];
+        }
     }
 }

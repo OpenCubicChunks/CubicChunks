@@ -65,7 +65,7 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
         this.oceanHeight = oceanHeight;
         this.depthNoise = NoiseSource.perlin()
                 .frequency(ConversionUtils.frequencyFromVanilla(0.0625f, 4)).octaves(4).create()
-                .mul(ConversionUtils.maxValueMultipler(4))
+                .mul((1 << 3) - 1) // TODO: do it properly, currently this value is just temporary until I figure out the right one
                 .mul(1.0 / 3.0).add(3)
                 .cached2d(256, v -> v.getX() + v.getZ() * 16);
         this.maxPossibleDepth = 9;
