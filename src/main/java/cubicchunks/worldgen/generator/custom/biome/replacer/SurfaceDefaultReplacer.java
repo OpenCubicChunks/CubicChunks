@@ -23,6 +23,8 @@
  */
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
+import static java.lang.Math.abs;
+
 import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
@@ -52,15 +54,13 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
     private final int maxPossibleDepth;
     private IBlockState topBlock;
     private IBlockState fillerBlock;
-    private final double horizontalGradientCutoffWeight;
     private final double horizontalGradientDepthDecreaseWeight;
     private final double oceanHeight;
 
     public SurfaceDefaultReplacer(IBlockState topBlock, IBlockState fillerBlock,
-            double horizontalGradientCutoffWeight, double horizontalGradientDepthDecreaseWeight, double oceanHeight) {
+            double horizontalGradientDepthDecreaseWeight, double oceanHeight) {
         this.topBlock = topBlock;
         this.fillerBlock = fillerBlock;
-        this.horizontalGradientCutoffWeight = horizontalGradientCutoffWeight;
         this.horizontalGradientDepthDecreaseWeight = horizontalGradientDepthDecreaseWeight;
         this.oceanHeight = oceanHeight;
         this.depthNoise = NoiseSource.perlin()
@@ -77,13 +77,14 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
     @Override
     public IBlockState getReplacedBlock(IBlockState previousBlock, int x, int y, int z, double dx, double dy, double dz, double density) {
         // skip everything below if there is no chance it will actually do something
-        if (density > maxPossibleDepth || density < 0) {
+        if (density > maxPossibleDepth * abs(dy) || density < 0) {
             return previousBlock;
         }
         if (previousBlock.getBlock() == Blocks.AIR) {
             return previousBlock;
         }
         double depth = depthNoise.get(x, 0, z);
+        double densityAdjusted = density / abs(dy);
         if (density + dy <= 0) { // if air above
             if (y < oceanHeight - 7 - depth) { // if we are deep into the ocean
                 return GRAVEL;
@@ -94,8 +95,8 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
             return top(previousBlock, depth);
         } else {
             double xzSize = Math.sqrt(dx * dx + dz * dz);
-            double dyAdjusted = dy + horizontalGradientCutoffWeight * xzSize;
-            if (dyAdjusted < 0 && density < depth + 1 - horizontalGradientDepthDecreaseWeight * xzSize) {
+            double dyAdjusted = dy;
+            if (dyAdjusted < 0 && densityAdjusted < depth + 1 - horizontalGradientDepthDecreaseWeight * xzSize) {
                 return fillerBlock;
             }
 
@@ -116,22 +117,19 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
 
     public static IBiomeBlockReplacerProvider provider() {
         return new IBiomeBlockReplacerProvider() {
-            private final ResourceLocation HORIZONTAL_GRADIENT_WEIGHT = CubicChunks.location("horizontal_gradient_cutoff_weight");
             private final ResourceLocation HORIZONTAL_GRADIENT_DEC = CubicChunks.location("horizontal_gradient_depth_decrease_weight");
             private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("ocean_level");
 
             @Override
             public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome cubicBiome, BiomeBlockReplacerConfig conf) {
-                double gradWeight = conf.getDouble(HORIZONTAL_GRADIENT_WEIGHT);
                 double gradientDec = conf.getDouble(HORIZONTAL_GRADIENT_DEC);
                 double oceanY = conf.getInt(OCEAN_LEVEL);
                 Biome biome = cubicBiome.getBiome();
-                return new SurfaceDefaultReplacer(biome.topBlock, biome.fillerBlock, gradWeight, gradientDec, oceanY);
+                return new SurfaceDefaultReplacer(biome.topBlock, biome.fillerBlock, gradientDec, oceanY);
             }
 
             @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
                 return Sets.newHashSet(
-                        new ConfigOptionInfo(HORIZONTAL_GRADIENT_WEIGHT, -0.2),
                         new ConfigOptionInfo(HORIZONTAL_GRADIENT_DEC, 0.2)
                 );
             }
