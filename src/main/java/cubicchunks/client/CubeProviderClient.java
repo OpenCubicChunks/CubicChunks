@@ -23,6 +23,7 @@
  */
 package cubicchunks.client;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.ReflectionUtil;
 import cubicchunks.util.XYZMap;
@@ -31,11 +32,14 @@ import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+
+import java.util.Iterator;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -86,6 +90,20 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
 
         column.setChunkLoaded(true);
         return column;
+    }
+
+    @Override
+    public boolean tick() {
+        long i = System.currentTimeMillis();
+        for (Cube cube : cubeMap) {
+            cube.tickCube(() -> System.currentTimeMillis() - i > 5L);
+        }
+
+        if (System.currentTimeMillis() - i > 100L) {
+            CubicChunks.LOGGER.info("Warning: Clientside chunk ticking took {} ms", System.currentTimeMillis() - i);
+        }
+
+        return false;
     }
 
     //===========================

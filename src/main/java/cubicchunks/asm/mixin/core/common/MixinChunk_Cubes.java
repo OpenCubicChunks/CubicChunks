@@ -675,7 +675,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
         if (!isColumn) {
             return;
         }
-        this.getLoadedCubes().forEach(c -> c.tickCube(tryToTickFaster));
+        // do nothing, we tick cubes directly
     }
 
     // ==============================================

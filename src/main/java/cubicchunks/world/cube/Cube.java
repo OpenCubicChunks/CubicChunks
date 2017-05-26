@@ -54,6 +54,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.BooleanSupplier;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -125,7 +126,7 @@ public class Cube implements XYZAddressable {
      */
     @Nonnull private final ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
 
-    @Nonnull private final LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo;
+    private final LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo;
 
     /**
      * Is this cube loaded and not queued for unload
@@ -308,12 +309,9 @@ public class Cube implements XYZAddressable {
      *
      * @param tryToTickFaster Whether costly calculations should be skipped in order to catch up with ticks
      */
-    public void tickCube(boolean tryToTickFaster) {
+    public void tickCube(BooleanSupplier tryToTickFaster) {
         if (!this.isInitialLightingDone && this.isPopulated) {
             this.tryDoFirstLight(); //TODO: Very icky light population code! REMOVE IT!
-        }
-        if (!tryToTickFaster) {
-            this.cubeLightUpdateInfo.tick();
         }
 
         while (!this.tileEntityPosQueue.isEmpty()) {
@@ -328,6 +326,10 @@ public class Cube implements XYZAddressable {
                 this.world.setTileEntity(blockpos, tileentity);
                 this.world.markBlockRangeForRenderUpdate(blockpos, blockpos);
             }
+        }
+
+        if (!tryToTickFaster.getAsBoolean() && this.cubeLightUpdateInfo != null) {
+            this.cubeLightUpdateInfo.tick();
         }
     }
 
@@ -566,6 +568,7 @@ public class Cube implements XYZAddressable {
         return 41 * hash + getZ();
     }
 
+    @Nullable
     public LightingManager.CubeLightUpdateInfo getCubeLightUpdateInfo() {
         return this.cubeLightUpdateInfo;
     }

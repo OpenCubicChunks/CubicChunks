@@ -131,7 +131,7 @@ public class AsyncWorldIOExecutor {
         if (task != null) {
             runTask(task);
         } else {
-            task = new AsyncColumnIOProvider(key, loader);
+            task = new AsyncColumnIOProvider(key, loader, ((CubeProviderServer) world.getCubeCache()).getCubeGenerator());
             task.run();
         }
         task.runSynchronousPart();
@@ -230,7 +230,7 @@ public class AsyncWorldIOExecutor {
         QueuedColumn key = new QueuedColumn(x, z, world);
         AsyncColumnIOProvider task = columnTasks.get(key);
         if (task == null) {
-            task = new AsyncColumnIOProvider(key, loader);
+            task = new AsyncColumnIOProvider(key, loader, ((CubeProviderServer) world.getCubeCache()).getCubeGenerator());
             task.addCallback(runnable); // Add before calling execute for thread safety
             columnTasks.put(key, task);
             columnThreadPool.execute(task);

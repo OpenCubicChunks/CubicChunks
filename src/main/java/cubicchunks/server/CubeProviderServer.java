@@ -576,4 +576,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         }
         return true;
     }
+
+    public ICubeGenerator getCubeGenerator() {
+        return cubeGen;
+    }
 }

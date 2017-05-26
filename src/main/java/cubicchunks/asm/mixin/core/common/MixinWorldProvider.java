@@ -29,8 +29,10 @@ import cubicchunks.world.SpawnPlaceFinder;
 import cubicchunks.world.provider.ICubicWorldProvider;
 import cubicchunks.world.type.ICubicWorldType;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.chunk.IChunkGenerator;
@@ -47,11 +49,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(WorldProvider.class)
-public class MixinWorldProvider implements ICubicWorldProvider {
+public abstract class MixinWorldProvider implements ICubicWorldProvider {
 
     @Shadow protected World world;
 
     @Shadow protected boolean hasNoSky;
+
+    @Shadow public abstract int getDimension();
+
+    @Shadow public abstract DimensionType getDimensionType();
+
+    @Shadow public abstract IChunkGenerator createChunkGenerator();
 
     /**
      * @reason return the real world height instead of hardcoded 256
@@ -68,14 +76,18 @@ public class MixinWorldProvider implements ICubicWorldProvider {
      */
     // @Overwrite() - overwrite doesn't support unobfuscated methods
     public int getActualHeight() {
-        return hasNoSky ? 128 : getHeight();
+        // only give the real value for overworld, mods may use it scan height start in their teleporter code
+        return hasNoSky ? 128 : getDimension() == 0 ? getHeight() : 256;
     }
 
     @Nullable @Override public ICubeGenerator createCubeGenerator() {
         if (!cubicWorld().isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
-        return ((ICubicWorldType) cubicWorld().getWorldType()).createCubeGenerator(cubicWorld());
+        if (this.getDimensionType() == DimensionType.OVERWORLD) {
+            return ((ICubicWorldType) cubicWorld().getWorldType()).createCubeGenerator(cubicWorld());
+        }
+        return new VanillaCompatibilityGenerator(this.createChunkGenerator(), cubicWorld());
     }
 
     /**

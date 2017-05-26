@@ -22,7 +22,9 @@ package cubicchunks.server.chunkio.async.forge;
 import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.ICubeIO;
 import cubicchunks.world.column.IColumn;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.chunk.Chunk;
 
 import java.io.IOException;
 
@@ -40,10 +42,12 @@ class AsyncColumnIOProvider extends AsyncIOProvider<IColumn> {
     @Nonnull private final ICubeIO loader;
     @Nullable private IColumn column; // The target
     @Nonnull private final QueuedColumn colInfo;
+    private ICubeGenerator generator;
 
-    AsyncColumnIOProvider(QueuedColumn colInfo, ICubeIO loader) {
+    AsyncColumnIOProvider(QueuedColumn colInfo, ICubeIO loader, ICubeGenerator generator) {
         this.loader = loader;
         this.colInfo = colInfo;
+        this.generator = generator;
     }
 
     @Override void runSynchronousPart() {
@@ -51,6 +55,8 @@ class AsyncColumnIOProvider extends AsyncIOProvider<IColumn> {
             //TODO: ChunkDataEvent.Load and Save
             //MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Load(column, this.nbt)); // Don't call ChunkDataEvent.Load async
             column.setLastSaveTime(this.colInfo.world.getTotalWorldTime());
+            // this actually initializes internal information about that chunk's structures
+            generator.recreateStructures(column);
         }
         runCallbacks();
     }

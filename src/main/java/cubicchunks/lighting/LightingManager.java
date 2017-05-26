@@ -47,6 +47,7 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 //TODO: extract interfaces when it's done
@@ -62,11 +63,18 @@ public class LightingManager {
         this.world = world;
     }
 
+    @Nullable
     public CubeLightUpdateInfo createCubeLightUpdateInfo(Cube cube) {
+        if (!cube.getCubicWorld().getProvider().hasSkyLight()) {
+            return null;
+        }
         return new CubeLightUpdateInfo(cube);
     }
 
     private void columnSkylightUpdate(UpdateType type, IColumn column, int localX, int minY, int maxY, int localZ) {
+        if (!world.getProvider().hasSkyLight()) {
+            return;
+        }
         int blockX = Coords.localToBlock(column.getX(), localX);
         int blockZ = Coords.localToBlock(column.getZ(), localZ);
 
@@ -115,7 +123,9 @@ public class LightingManager {
     //TODO: make it private
     public void markCubeBlockColumnForUpdate(Cube cube, int blockX, int blockZ) {
         CubeLightUpdateInfo data = cube.getCubeLightUpdateInfo();
-        data.markBlockColumnForUpdate(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ));
+        if (data != null) {
+            data.markBlockColumnForUpdate(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ));
+        }
     }
 
     public void onHeightMapUpdate(IColumn IColumn, int localX, int localZ, int oldHeight, int newHeight) {
