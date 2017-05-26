@@ -32,16 +32,22 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.WorldSavedDataHeightBounds;
 import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.multiplayer.ChunkProviderClient;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
+
+import java.util.function.Predicate;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -49,14 +55,22 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CommonEventHandler {
 
+    @SidedProxy
+    private static Predicate<ICubicWorld> doNotTouchWorld;
+
     @SubscribeEvent // this event is fired early enough to replace world with cubic chunks without any issues
     public void onWorldAttachCapabilities(AttachCapabilitiesEvent<World> evt) {
         if (!(evt.getObject().getWorldType() instanceof ICubicWorldType)) {
             return;
         }
-
-        CubicChunks.LOGGER.info("Initializing world " + evt.getObject() + " with type " + evt.getObject().getWorldType());
         ICubicWorld world = (ICubicWorld) evt.getObject();
+        if (!doNotTouchWorld.test(world)) {
+            CubicChunks.LOGGER.info("Skipping world " + evt.getObject() + " with type " + evt.getObject().getWorldType() + " due to potential "
+                    + "compatibility issues");
+            return;
+        }
+        CubicChunks.LOGGER.info("Initializing world " + evt.getObject() + " with type " + evt.getObject().getWorldType());
+
 
         WorldType type = evt.getObject().getWorldType();
         if (type instanceof ICubicWorldType) {
@@ -85,7 +99,7 @@ public class CommonEventHandler {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load evt) {
-        if (!(evt.getWorld().getWorldType() instanceof ICubicWorldType)) {
+        if (!((ICubicWorld) evt.getWorld()).isCubicWorld()) {
             return;
         }
         ICubicWorld world = (ICubicWorld) evt.getWorld();
@@ -113,6 +127,29 @@ public class CommonEventHandler {
     public void onPlayerJoinWorld(EntityJoinWorldEvent evt) {
         if (evt.getEntity() instanceof EntityPlayerMP && ((ICubicWorld) evt.getWorld()).isCubicWorld()) {
             PacketDispatcher.sendTo(new PacketWorldHeightBounds(evt.getWorld()), (EntityPlayerMP) evt.getEntity());
+        }
+    }
+
+    public static class ClientProxy extends ServerProxy {
+
+        // shouldSkipWorld
+        @Override public boolean test(ICubicWorld world) {
+            if (super.test(world)) {
+                return true;
+            }
+            if (((World) world).getChunkProvider().getClass() != ChunkProviderClient.class) {
+                return true;
+            }
+            return super.test(world) && world.getClass() != (Class<?>) WorldClient.class;
+        }
+    }
+
+    // actually common one
+    public static class ServerProxy implements Predicate<ICubicWorld> {
+
+        // shouldSkipWorld
+        @Override public boolean test(ICubicWorld world) {
+            return world.getClass() != (Class<?>) WorldServer.class;
         }
     }
 }
