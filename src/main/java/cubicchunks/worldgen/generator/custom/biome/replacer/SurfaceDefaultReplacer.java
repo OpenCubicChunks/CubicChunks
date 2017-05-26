@@ -101,8 +101,6 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
 
             if (fillerBlock.getBlock() == Blocks.SAND && depth > 1 && y > oceanHeight - depth) {
                 return fillerBlock.getValue(BlockSand.VARIANT) == BlockSand.EnumType.RED_SAND ? RED_SANDSTONE : SANDSTONE;
-            } else if (depth <=1){
-                System.out.println("x=" + x + ", z=" + z);
             }
         }
         return previousBlock;
