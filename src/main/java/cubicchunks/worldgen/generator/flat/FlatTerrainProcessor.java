@@ -62,8 +62,8 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
     public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
         ICubePrimer primer = new CubePrimer();
         int floorY = Coords.cubeToMinBlock(cubeY);
-        int topY = Coords.cubeToMinBlock(cubeY + 1);
-        NavigableMap<Integer, Layer> cubeLayerSubMap = conf.layers.subMap(conf.layers.floorKey(floorY), true, topY, false);
+        int topY = Coords.cubeToMaxBlock(cubeY);
+        NavigableMap<Integer, Layer> cubeLayerSubMap = conf.layers.subMap(floorY, true, topY, true);
         for (Entry<Integer, Layer> entry : cubeLayerSubMap.entrySet()) {
             Layer layer = entry.getValue();
             int fromY = layer.fromY - floorY;
