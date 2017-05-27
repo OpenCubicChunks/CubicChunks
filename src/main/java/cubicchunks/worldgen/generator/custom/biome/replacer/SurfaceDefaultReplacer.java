@@ -50,7 +50,7 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
     protected static final IBlockState RED_SANDSTONE = Blocks.RED_SANDSTONE.getDefaultState();
     protected static final IBlockState SANDSTONE = Blocks.SANDSTONE.getDefaultState();
 
-    private final IBuilder depthNoise;
+    private final IBuilder depthNoise = makeDepthNoise();;
     private final int maxPossibleDepth;
     private IBlockState topBlock;
     private IBlockState fillerBlock;
@@ -63,11 +63,6 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
         this.fillerBlock = fillerBlock;
         this.horizontalGradientDepthDecreaseWeight = horizontalGradientDepthDecreaseWeight;
         this.oceanHeight = oceanHeight;
-        this.depthNoise = NoiseSource.perlin()
-                .frequency(ConversionUtils.frequencyFromVanilla(0.0625f, 4)).octaves(4).create()
-                .mul((1 << 3) - 1) // TODO: do it properly, currently this value is just temporary until I figure out the right one
-                .mul(1.0 / 3.0).add(3)
-                .cached2d(256, v -> v.getX() + v.getZ() * 16);
         this.maxPossibleDepth = 9;
     }
 
@@ -90,13 +85,13 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
                 return GRAVEL;
             }
             if (y < oceanHeight - 1) { // if just below the ocean level
-                return filler(depth);
+                return filler(previousBlock, depth);
             }
-            return top(previousBlock, depth);
+            return top(depth);
         } else {
             double xzSize = Math.sqrt(dx * dx + dz * dz);
             double dyAdjusted = dy;
-            if (dyAdjusted < 0 && densityAdjusted < depth + 1 - horizontalGradientDepthDecreaseWeight * xzSize) {
+            if (dyAdjusted < 0 && densityAdjusted < depth + 1 - horizontalGradientDepthDecreaseWeight * xzSize / dy) {
                 return fillerBlock;
             }
 
@@ -107,32 +102,40 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
         return previousBlock;
     }
 
-    private IBlockState filler(double depth) {
-        return depth > 0 ? fillerBlock : Blocks.AIR.getDefaultState();
+    private IBlockState filler(IBlockState prev, double depth) {
+        return depth > 0 ? fillerBlock : prev;
     }
 
-    private IBlockState top(IBlockState prev, double depth) {
-        return depth > 0 ? topBlock : prev;
+    private IBlockState top(double depth) {
+        return depth > 0 ? topBlock : Blocks.AIR.getDefaultState();
     }
 
     public static IBiomeBlockReplacerProvider provider() {
         return new IBiomeBlockReplacerProvider() {
             private final ResourceLocation HORIZONTAL_GRADIENT_DEC = CubicChunks.location("horizontal_gradient_depth_decrease_weight");
-            private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("ocean_level");
+            private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
 
             @Override
             public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome cubicBiome, BiomeBlockReplacerConfig conf) {
                 double gradientDec = conf.getDouble(HORIZONTAL_GRADIENT_DEC);
-                double oceanY = conf.getInt(OCEAN_LEVEL);
+                double oceanY = conf.getDouble(OCEAN_LEVEL);
                 Biome biome = cubicBiome.getBiome();
                 return new SurfaceDefaultReplacer(biome.topBlock, biome.fillerBlock, gradientDec, oceanY);
             }
 
             @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
                 return Sets.newHashSet(
-                        new ConfigOptionInfo(HORIZONTAL_GRADIENT_DEC, 0.2)
+                        new ConfigOptionInfo(HORIZONTAL_GRADIENT_DEC, 1.0)
                 );
             }
         };
+    }
+
+    public static IBuilder makeDepthNoise() {
+        return NoiseSource.perlin()
+                .frequency(ConversionUtils.frequencyFromVanilla(0.0625f, 4)).octaves(4).create()
+                .mul((1 << 3) - 1) // TODO: do it properly, currently this value is just temporary until I figure out the right one
+                .mul(1.0 / 3.0).add(3)
+                .cached2d(256, v -> v.getX() + v.getZ() * 16);
     }
 }

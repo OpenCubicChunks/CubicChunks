@@ -23,6 +23,10 @@
  */
 package cubicchunks;
 
+import static cubicchunks.api.worldgen.biome.CubicBiome.oceanWaterReplacer;
+import static cubicchunks.api.worldgen.biome.CubicBiome.surfaceDefaultReplacer;
+import static cubicchunks.api.worldgen.biome.CubicBiome.terrainShapeReplacer;
+
 import cubicchunks.debug.DebugTools;
 import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
@@ -34,6 +38,7 @@ import cubicchunks.world.type.VanillaCubicWorldType;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
+import cubicchunks.worldgen.generator.custom.biome.replacer.MesaSurfaceReplacer;
 import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
 import cubicchunks.worldgen.generator.custom.populator.DesertDecorator;
 import cubicchunks.worldgen.generator.custom.populator.ForestDecorator;
@@ -81,6 +86,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.fml.common.registry.IForgeRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -119,7 +125,8 @@ public class CubicChunks {
     @Nonnull
     private static Set<IConfigUpdateListener> configChangeListeners = Collections.newSetFromMap(new WeakHashMap<>());
 
-    public CubicChunks() {
+    @SubscribeEvent
+    public static void registerRegistries(RegistryEvent.NewRegistry evt) {
         CubicBiome.init();
     }
 
@@ -128,24 +135,60 @@ public class CubicChunks {
         // Vanilla biomes are initialized during bootstrap which happens before registration events
         // so it should be safe to use them here
 
-        autoRegister(Biome.class, b -> b.defaultDecorators());
-        autoRegister(BiomeBeach.class, b -> b.defaultDecorators());
-        autoRegister(BiomeDesert.class, b -> b.defaultDecorators().decorator(new DesertDecorator()));
-        autoRegister(BiomeForest.class, b -> b.decorator(new ForestDecorator()).defaultDecorators());
-        autoRegister(BiomeForestMutated.class, b -> b.decorator(new ForestDecorator()).defaultDecorators());
-        autoRegister(BiomeHills.class, b -> b.defaultDecorators().decorator(new HillsDecorator()));
-        autoRegister(BiomeJungle.class, b -> b.defaultDecorators().decorator(new JungleDecorator()));
-        autoRegister(BiomeMesa.class, b -> b.decorator(new DefaultDecorator.Ores()).decorator(new MesaDecorator()).decorator(new DefaultDecorator()));
-        autoRegister(BiomeMushroomIsland.class, b -> b.defaultDecorators());
-        autoRegister(BiomeOcean.class, b -> b.defaultDecorators());
-        autoRegister(BiomePlains.class, b -> b.decorator(new PlainsDecorator()).defaultDecorators());
-        autoRegister(BiomeRiver.class, b -> b.defaultDecorators());
-        autoRegister(BiomeSavanna.class, b -> b.decorator(new SavannaDecorator()).defaultDecorators());
-        autoRegister(BiomeSavannaMutated.class, b -> b.defaultDecorators());
-        autoRegister(BiomeSnow.class, b -> b.decorator(new SnowBiomeDecorator()).defaultDecorators());
-        autoRegister(BiomeStoneBeach.class, b -> b.defaultDecorators());
-        autoRegister(BiomeSwamp.class, b -> b.defaultDecorators().decorator(new SwampDecorator()));
-        autoRegister(BiomeTaiga.class, b -> b.decorator(new TaigaDecorator()).defaultDecorators());
+        autoRegister(Biome.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators());
+        autoRegister(BiomeBeach.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators());
+        autoRegister(BiomeDesert.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators().decorator(new DesertDecorator()));
+        autoRegister(BiomeForest.class, b -> b
+                .addDefaultBlockReplacers()
+                .decorator(new ForestDecorator()).defaultDecorators());
+        autoRegister(BiomeForestMutated.class, b -> b
+                .addDefaultBlockReplacers()
+                .decorator(new ForestDecorator()).defaultDecorators());
+        autoRegister(BiomeHills.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators().decorator(new HillsDecorator()));
+        autoRegister(BiomeJungle.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators().decorator(new JungleDecorator()));
+        autoRegister(BiomeMesa.class, b -> b
+                .addBlockReplacer(terrainShapeReplacer()).addBlockReplacer(MesaSurfaceReplacer.provider()).addBlockReplacer(oceanWaterReplacer())
+                .decorator(new DefaultDecorator.Ores()).decorator(new MesaDecorator()).decorator(new DefaultDecorator()));
+        autoRegister(BiomeMushroomIsland.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators());
+        autoRegister(BiomeOcean.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators());
+        autoRegister(BiomePlains.class, b -> b
+                .addDefaultBlockReplacers()
+                .decorator(new PlainsDecorator()).defaultDecorators());
+        autoRegister(BiomeRiver.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators());
+        autoRegister(BiomeSavanna.class, b -> b
+                .addDefaultBlockReplacers()
+                .decorator(new SavannaDecorator()).defaultDecorators());
+        autoRegister(BiomeSavannaMutated.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators());
+        autoRegister(BiomeSnow.class, b -> b
+                .addDefaultBlockReplacers()
+                .decorator(new SnowBiomeDecorator()).defaultDecorators());
+        autoRegister(BiomeStoneBeach.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators());
+        autoRegister(BiomeSwamp.class, b -> b
+                .addDefaultBlockReplacers()
+                .defaultDecorators().decorator(new SwampDecorator()));
+        autoRegister(BiomeTaiga.class, b -> b
+                .addDefaultBlockReplacers()
+                .decorator(new TaigaDecorator()).defaultDecorators());
 
     }
 
@@ -153,7 +196,7 @@ public class CubicChunks {
         ForgeRegistries.BIOMES.getValues().stream()
                 .filter(x -> x.getRegistryName().getResourceDomain().equals("minecraft"))
                 .filter(x -> x.getClass() == cl).forEach(b -> {
-            CubicBiome.Builder builder = CubicBiome.createForBiome(b).addDefaultBlockReplacers();
+            CubicBiome.Builder builder = CubicBiome.createForBiome(b);
             cons.accept(builder);
             builder.defaultPostDecorators().setRegistryName(MODID, b.getRegistryName().getResourcePath()).register();
         });
@@ -166,7 +209,6 @@ public class CubicChunks {
         ConversionUtils.initFlowNoiseHack();
 
         config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
-        MinecraftForge.EVENT_BUS.register(this); // Register our config reload hook
         AsyncWorldIOExecutor.registerListeners();
 
         if (DEBUG_ENABLED) {
@@ -199,7 +241,7 @@ public class CubicChunks {
     }
 
     @SubscribeEvent
-    public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
+    public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
         if (eventArgs.getModID().equals(CubicChunks.MODID)) {
             config.syncConfig();
             for (IConfigUpdateListener l : configChangeListeners) {

@@ -32,6 +32,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.Set;
 
@@ -63,11 +64,11 @@ public class OceanWaterReplacer implements IBiomeBlockReplacer {
     public static IBiomeBlockReplacerProvider provider() {
         return new IBiomeBlockReplacerProvider() {
             private final ResourceLocation OCEAN_BLOCK = CubicChunks.location("ocean_block");
-            private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("ocean_level");
+            private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
 
             @Override public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
                 IBlockState oceanBlock = Block.getBlockFromName(conf.getString(OCEAN_BLOCK)).getDefaultState();
-                int oceanHeight = conf.getInt(OCEAN_LEVEL);
+                int oceanHeight = (int) Math.round(conf.getDouble(OCEAN_LEVEL));
                 return new OceanWaterReplacer(oceanBlock, oceanHeight);
             }
 

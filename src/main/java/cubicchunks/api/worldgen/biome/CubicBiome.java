@@ -58,11 +58,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
 
-    public static final IForgeRegistry<CubicBiome> REGISTRY = new RegistryBuilder<CubicBiome>()
-            .setType(CubicBiome.class)
-            .setIDRange(0, 255)
-            .setName(new ResourceLocation(CubicChunks.MODID, "cubic_biome_registry"))
-            .create();
+    public static IForgeRegistry<CubicBiome> REGISTRY;
     private static final Map<Biome, CubicBiome> biomeMapping = new IdentityHashMap<>();
     private static boolean isPostInit = false;
 
@@ -80,7 +76,11 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
 
     // INTERNAL USE ONLY
     public static void init() {
-        // nothing here, exists just to call static initializer
+        REGISTRY = new RegistryBuilder<CubicBiome>()
+                .setType(CubicBiome.class)
+                .setIDRange(0, 256)
+                .setName(new ResourceLocation(CubicChunks.MODID, "cubic_biome_registry"))
+                .create();
     }
 
     public static void postInit() {
