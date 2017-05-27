@@ -219,7 +219,7 @@ dependencies {
         isTransitive = false
     }
 
-    compile(project("RegionLib"))
+    compile(project(":RegionLib"))
 
     deobfCompile("net.malisis:malisiscore:$malisisCoreVersion")
 
