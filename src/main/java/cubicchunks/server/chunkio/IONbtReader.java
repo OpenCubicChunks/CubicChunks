@@ -171,7 +171,7 @@ public class IONbtReader {
             NBTTagList sectionList = nbt.getTagList("Sections", 10);
             nbt = sectionList.getCompoundTagAt(0);
             
-            ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), !cube.getCubicWorld().getProvider().hasNoSky());
+            ExtendedBlockStorage ebs = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()), cube.getCubicWorld().getProvider().hasSkyLight());
 
             byte[] abyte = nbt.getByteArray("Blocks");
             NibbleArray data = new NibbleArray(nbt.getByteArray("Data"));
@@ -181,7 +181,7 @@ public class IONbtReader {
 
             ebs.setBlocklightArray(new NibbleArray(nbt.getByteArray("BlockLight")));
 
-            if (!world.getProvider().hasNoSky()) {
+            if (world.getProvider().hasSkyLight()) {
                 ebs.setSkylightArray(new NibbleArray(nbt.getByteArray("SkyLight")));
             }
 

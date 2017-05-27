@@ -109,7 +109,7 @@ public class FirstLightProcessor {
      * @param cube the cube whose skylight is to be initialized
      */
     public void initializeSkylight(Cube cube) {
-        if (cube.getCubicWorld().getProvider().hasNoSky()) {
+        if (!cube.getCubicWorld().getProvider().hasSkyLight()) {
             return;
         }
 
@@ -139,7 +139,7 @@ public class FirstLightProcessor {
      * @param cube the cube whose skylight is to be initialized
      */
     public void diffuseSkylight(Cube cube) {
-        if (cube.getCubicWorld().getProvider().hasNoSky()) {
+        if (!cube.getCubicWorld().getProvider().hasSkyLight()) {
             cube.setInitialLightingDone(true);
             return;
         }
