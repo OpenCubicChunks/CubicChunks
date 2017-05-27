@@ -139,7 +139,7 @@ public class MesaSurfaceReplacer implements IBiomeBlockReplacer {
         if (density + dy <= 0) { // if air above
             return top;
         }
-        if (density / abs(dy) < 16) {
+        if (density < 16) {
             return filler;
         }
         return previousBlock;
