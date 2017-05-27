@@ -66,7 +66,7 @@ class SkyLightUpdateCubeSelector {
 
         TIntSet cubesToDiffuse = new TIntHashSet();
 
-        if (world.getProvider().hasNoSky()) {
+        if (!world.getProvider().hasSkyLight()) {
             return cubesToDiffuse;
         }
 
