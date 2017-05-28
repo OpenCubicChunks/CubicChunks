@@ -58,11 +58,15 @@ public class JvmNames {
         STRING = "Ljava/lang/String;",
         STRUCTURE_BOUNDING_BOX = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;",
         WORLD = "Lnet/minecraft/world/World;",
-        WORLD_CLIENT = "Lnet/minecraft/client/multiplayer/WorldClient;";
+        WORLD_CLIENT = "Lnet/minecraft/client/multiplayer/WorldClient;",
+        WORLD_SERVER = "Lnet/minecraft/world/WorldServer;";
 
     // Sorted as above
     public static final String
         BLOCK_FALLING_CAN_FALL_THROUGH = BLOCK_FALLING + "canFallThrough("+IBLOCK_STATE+")Z",
+        BLOCK_POS_ADD = BLOCK_POS + "add(III)" + BLOCK_POS,
+        BLOCK_POS_CONSTR_ENTITY = "(" + ENTITY + ")" + BLOCK_POS,
+        BLOCK_POS_DOWN = BLOCK_POS + "down()" + BLOCK_POS,
         BLOCK_POS_GETY = BLOCK_POS + "getY()I",
         CHUNK_CACHE_GET_BLOCK_STATE = CHUNK_CACHE + "getBlockState(" + BLOCK_POS + ")" + IBLOCK_STATE,
         CHUNK_CONSTRUCT_1 = "<init>(" + WORLD + "II" + ")V",
@@ -90,7 +94,8 @@ public class JvmNames {
         WORLD_IS_AREA_LOADED = WORLD + "isAreaLoaded(IIIIIIZ)Z",
         WORLD_IS_BLOCK_LOADED = WORLD + "isBlockLoaded(" + BLOCK_POS + ")Z",
         WORLD_IS_BLOCK_LOADED_Z = WORLD + "isBlockLoaded(" + BLOCK_POS + "Z)Z",
-        WORLD_IS_CHUNK_LOADED = WORLD + "isChunkLoaded(IIZ)Z";
+        WORLD_IS_CHUNK_LOADED = WORLD + "isChunkLoaded(IIZ)Z",
+        WORLD_SERVER_GET_ACTUAL_HEIGHT = WORLD_SERVER + "getActualHeight()I";
 
     // @formatter:on
 }
