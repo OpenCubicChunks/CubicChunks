@@ -563,6 +563,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
                 columnWatcher.isSentToPlayers();
     }
 
+    public boolean isPlayerWatchingCube(EntityPlayerMP player, int cubeX, int cubeY, int cubeZ) {
+        CubeWatcher watcher = this.getCubeWatcher(new CubePos(cubeX, cubeY, cubeZ));
+        return watcher != null &&
+                watcher.containsPlayer(player) &&
+                watcher.isSentToPlayers();
+    }
+
     // CHECKED: 1.10.2-12.18.1.2092
     @Override
     @Deprecated

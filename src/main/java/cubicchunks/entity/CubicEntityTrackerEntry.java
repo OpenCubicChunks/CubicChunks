@@ -23,6 +23,8 @@
  */
 package cubicchunks.entity;
 
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -36,17 +38,20 @@ public class CubicEntityTrackerEntry extends EntityTrackerEntry {
 
     @Override
     public boolean isVisibleTo(EntityPlayerMP playerMP) {
-        double d0 = playerMP.posX - (double) this.encodedPosX / 4096.0D;
-        double d1 = playerMP.posZ - (double) this.encodedPosZ / 4096.0D;
-        double d2 = playerMP.posY - (double) this.encodedPosY / 4096.0D;
-        int i = Math.min(this.range, this.maxRange);
+        double dx = playerMP.posX - (double) this.encodedPosX / 4096.0D;
+        double dz = playerMP.posZ - (double) this.encodedPosZ / 4096.0D;
+        double dy = playerMP.posY - (double) this.encodedPosY / 4096.0D;
+        int range = Math.min(this.range, this.maxRange);
 
-        return d0 >= (double) (-i) &&
-                d0 <= (double) i &&
-                d1 >= (double) (-i) &&
-                d1 <= (double) i &&
-                d2 >= (double) (-i) &&
-                d2 <= (double) i &&
+        return dx >= -range && dx <= range &&
+                dz >= -range && dz <= range &&
+                dy >= -range && dy <= range &&
                 this.trackedEntity.isSpectatedByPlayer(playerMP);
+    }
+
+    @Override
+    protected boolean isPlayerWatchingThisChunk(EntityPlayerMP player) {
+        return ((ICubicWorldServer) player.getServerWorld()).getPlayerCubeMap()
+                .isPlayerWatchingCube(player, this.trackedEntity.chunkCoordX, this.trackedEntity.chunkCoordY, this.trackedEntity.chunkCoordZ);
     }
 }
