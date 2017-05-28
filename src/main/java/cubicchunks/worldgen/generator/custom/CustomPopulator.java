@@ -24,6 +24,7 @@
 package cubicchunks.worldgen.generator.custom;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.api.worldgen.populator.CubePopulatorEvent;
 import cubicchunks.api.worldgen.populator.ICubicPopulator;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
@@ -31,6 +32,7 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.util.Random;
 
@@ -39,6 +41,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CustomPopulator {
+
     private ICubicWorld world;
 
     public CustomPopulator(ICubicWorld world) {
@@ -46,16 +49,24 @@ public class CustomPopulator {
     }
 
     public void populate(Cube cube) {
-        CubicBiome biome = CubicBiome.getCubic(cube.getCubicWorld().getBiome(Coords.getCubeCenter(cube)));
+        /**
+         * If event is not canceled we will use default biome decorators and
+         * cube populators from registry.
+         **/
+        if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(world, cube))) {
+            CubicBiome biome = CubicBiome.getCubic(cube.getCubicWorld().getBiome(Coords.getCubeCenter(cube)));
 
-        CubePos pos = cube.getCoords();
-        //For surface generators we should actually use special RNG with seed
-        //that depends only in world seed and cube X/Z
-        //but using this for surface generation doesn't cause any noticeable issues
-        Random rand = new Random(cube.cubeRandomSeed());
+            CubePos pos = cube.getCoords();
+            // For surface generators we should actually use special RNG with
+            // seed
+            // that depends only in world seed and cube X/Z
+            // but using this for surface generation doesn't cause any
+            // noticeable issues
+            Random rand = new Random(cube.cubeRandomSeed());
 
-        ICubicPopulator decorator = biome.getDecorator();
-        decorator.generate(world, rand, pos, biome);
-        CubeGeneratorsRegistry.generateWorld(world, rand, pos, biome);
+            ICubicPopulator decorator = biome.getDecorator();
+            decorator.generate(world, rand, pos, biome);
+            CubeGeneratorsRegistry.generateWorld(world, rand, pos, biome);
+        }
     }
 }
