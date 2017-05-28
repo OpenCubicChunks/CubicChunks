@@ -24,6 +24,7 @@
 package cubicchunks.worldgen.generator.flat;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.api.worldgen.populator.CubePopulatorEvent;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
@@ -36,6 +37,7 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.util.Map.Entry;
 import java.util.NavigableMap;
@@ -80,13 +82,17 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
         return primer;
     }
 
-    @Override
-    public void populate(Cube cube) {
-        CubeGeneratorsRegistry.generateWorld(cube.getCubicWorld(),
-                new Random(cube.cubeRandomSeed()), cube.getCoords(),
-                CubicBiome.getCubic(world.getBiome(cube.getCoords().getCenterBlockPos()))
-        );
-    }
+	@Override
+	public void populate(Cube cube) {
+		/**
+		 * If event is not canceled we will use
+		 * cube populators from registry.
+		 **/
+		if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(world, cube))) {
+			CubeGeneratorsRegistry.generateWorld(cube.getCubicWorld(), new Random(cube.cubeRandomSeed()),
+					cube.getCoords(), CubicBiome.getCubic(world.getBiome(cube.getCoords().getCenterBlockPos())));
+		}
+	}
 
     @Override
     public Box getPopulationRequirement(Cube cube) {

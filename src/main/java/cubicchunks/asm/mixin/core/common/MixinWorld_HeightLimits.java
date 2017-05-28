@@ -32,6 +32,8 @@ import static cubicchunks.asm.JvmNames.WORLD_IS_CHUNK_LOADED;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.cubeToMinBlock;
 
+import java.util.Objects;
+
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.BlankCube;
@@ -191,7 +193,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
                 this.testForCubes(
                         xStart, yStart, zStart,
                         xEnd, yEnd, zEnd,
-                        cube -> cube != null);
+                        Objects::nonNull);
 
         cbi.cancel();
         cbi.setReturnValue(ret);
