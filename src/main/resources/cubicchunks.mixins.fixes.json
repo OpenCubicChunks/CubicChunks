@@ -16,6 +16,7 @@
         "common.MixinRandomPositionGenerator",
         "common.MixinPathNavigateGround",
         "common.MixinTeleporter",
+        "common.MixinTileEntityEndGateway",
         "common.isblockloaded.MixinEntity",
         "common.isblockloaded.MixinEntityLivingBase",
         "common.worldgen.tree.MixinWorldGenCanopyTree",
