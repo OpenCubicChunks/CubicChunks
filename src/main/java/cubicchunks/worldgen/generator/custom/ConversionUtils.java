@@ -75,8 +75,8 @@ public class ConversionUtils {
         for (int i = 0; i < Utils.RANDOM_VECTORS.length / 4; i++) {
             int j = random.nextInt(NoiseGeneratorImproved.GRAD_X.length);
             Utils.RANDOM_VECTORS[i*4] = NoiseGeneratorImproved.GRAD_X[j];
-            Utils.RANDOM_VECTORS[i*4 + 1] = NoiseGeneratorImproved.GRAD_X[j];
-            Utils.RANDOM_VECTORS[i*4 + 1] = NoiseGeneratorImproved.GRAD_X[j];
+            Utils.RANDOM_VECTORS[i*4 + 1] = NoiseGeneratorImproved.GRAD_Y[j];
+            Utils.RANDOM_VECTORS[i*4 + 1] = NoiseGeneratorImproved.GRAD_Z[j];
         }
     }
 }
