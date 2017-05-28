@@ -263,6 +263,10 @@ public class CubePos {
         return new CubePos(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
     }
 
+    public static CubePos fromEntityCoords(double blockX, double blockY, double blockZ) {
+        return new CubePos(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
+    }
+
     public static CubePos fromEntity(Entity entity) {
         return new CubePos(getCubeXForEntity(entity), getCubeYForEntity(entity), getCubeZForEntity(entity));
     }

@@ -32,6 +32,7 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
+import cubicchunks.debug.Dbg;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
 import cubicchunks.util.XZMap;
@@ -461,19 +462,18 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
     @Override
     public void removePlayer(EntityPlayerMP player) {
         PlayerWrapper playerWrapper = this.players.get(player.getEntityId());
-
-        CubePos playerCubePos = CubePos.fromEntity(playerWrapper.playerEntity);
+        // Minecraft does something evil there: this method is called *after* changing the player's position
+        // so we need to use managerPosition there
+        CubePos playerCubePos = CubePos.fromEntityCoords(player.managedPosX, playerWrapper.managedPosY, player.managedPosZ);
 
         this.cubeSelector.forAllVisibleFrom(playerCubePos, horizontalViewDistance, verticalViewDistance, (cubePos) -> {
 
             // get the watcher
             CubeWatcher watcher = getCubeWatcher(cubePos);
-            if (watcher == null) {
-                return;//continue
+            if (watcher != null) {
+                // remove from the watcher, it also removes the watcher if it becomes empty
+                watcher.removePlayer(player);
             }
-
-            // remove from the watcher, it also removes the watcher if it becomes empty
-            watcher.removePlayer(player);
 
             // remove column watchers if needed
             ColumnWatcher columnWatcher = getColumnWatcher(cubePos.chunkPos());
