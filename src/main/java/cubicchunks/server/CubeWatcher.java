@@ -177,7 +177,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         if (this.sentToPlayers) {
             return true;
         }
-        if (this.cube == null || !this.cube.isPopulated() || !this.cube.isInitialLightingDone()) {
+        if (this.cube == null || !this.cube.isFullyPopulated() || !this.cube.isInitialLightingDone()) {
             return false;
         }
         ColumnWatcher columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
