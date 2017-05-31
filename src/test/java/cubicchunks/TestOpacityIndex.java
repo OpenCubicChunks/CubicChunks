@@ -44,7 +44,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@RunWith(LaunchWrapperTestRunner.class)
 public class TestOpacityIndex {
 
     private static Field YminField;
@@ -497,7 +496,7 @@ public class TestOpacityIndex {
         if (segments.length > 0) {
             packedSegments = new int[segments.length / 2];
             for (int i = 0; i < segments.length / 2; i++) {
-                packedSegments[i] = Bits.packSignedToInt(segments[i * 2 + 0], 31, 0) | Bits.packUnsignedToInt(segments[i * 2 + 1], 1, 31);
+                packedSegments[i] = segments[i * 2 + 0];
             }
         }
 
@@ -515,6 +514,10 @@ public class TestOpacityIndex {
         }
     }
 
+    private static int getOpacity(int segmentIndex) {
+        return (segmentIndex + 1) % 2;
+    }
+
     private List<Integer> getSegments(ServerHeightMap index) {
         try {
             int[] packedSegments = ((int[][]) SegmentsField.get(index))[0];
@@ -527,8 +530,8 @@ public class TestOpacityIndex {
             // unpack the segments
             List<Integer> segments = Lists.newArrayList();
             for (int i = 0; i < packedSegments.length && packedSegments[i] != NoneSegment; i++) {
-                segments.add(Bits.unpackSigned(packedSegments[i], 31, 0));
-                segments.add(Bits.unpackUnsigned(packedSegments[i], 1, 31));
+                segments.add(packedSegments[i]);
+                segments.add(getOpacity(i));
             }
             return segments;
 

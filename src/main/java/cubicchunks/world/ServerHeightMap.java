@@ -24,7 +24,6 @@
 package cubicchunks.world;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -34,7 +33,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -46,9 +44,9 @@ public class ServerHeightMap implements IHeightMap {
     /**
      * Special value to indicate the absence of a segment in the segments arrays.
      * Since all integer values might represent a valid segment, an unlikely value to occur has been chosen. It
-     * logically represents a 1-block segment at the very top of the world with opacity zero.
+     * logically represents a 1-block segment at the very top of the world.
      */
-    private static final int NONE_SEGMENT = packSegment(0x7fffff, 0);
+    private static final int NONE_SEGMENT = 0x7fffffff;
 
     /**
      * Array containing the y-coordinates of the lowest segment in each block column. The value {@link Coords#NO_HEIGHT}
@@ -95,16 +93,8 @@ public class ServerHeightMap implements IHeightMap {
     }
 
 
-    private static int packSegment(int pos, int opacity) {
-        return Bits.packUnsignedToInt(opacity, 1, 31) | Bits.packSignedToInt(pos, 31, 0);
-    }
-
-    private static int unpackOpacity(int packed) {
-        return Bits.unpackUnsigned(packed, 1, 31);
-    }
-
-    private static int unpackPosition(int packed) {
-        return Bits.unpackSigned(packed, 31, 0);
+    private static int getOpacity(int segmentIndex) {
+        return (segmentIndex + 1) % 2;
     }
 
     private static int getLastSegmentIndex(int[] segments) {
@@ -116,6 +106,16 @@ public class ServerHeightMap implements IHeightMap {
         throw new Error("Invalid segments state");
     }
 
+    /**
+     * Checks if the number of segments in a given block-column is correct.
+     * The number of segments must always be odd.
+     *
+     * @param xzIndex The block-column's index.
+     * @return True if the number of segments is correct.
+     */
+    private boolean parityCheck(int xzIndex) {
+        return getLastSegmentIndex(segments[xzIndex]) % 2 == 0;
+    }
 
     // Interface: IHeightMap ----------------------------------------------------------------------------------------
 
@@ -174,7 +174,7 @@ public class ServerHeightMap implements IHeightMap {
         int maxi = getLastSegmentIndex(segments);
         while (mini <= maxi) {
             int midi = (mini + maxi) >>> 1;
-            int midPos = unpackPosition(segments[midi]);
+            int midPos = segments[midi];
 
             if (midPos < blockY) {
                 mini = midi + 1;
@@ -196,7 +196,7 @@ public class ServerHeightMap implements IHeightMap {
             return Coords.NO_HEIGHT;
         }
         int blockYSegment = segments[segmentIndex];
-        int blockYSegmentOpacity = unpackOpacity(blockYSegment);
+        int blockYSegmentOpacity = getOpacity(segmentIndex);
 
         // The lowest segment is always opaque. Thus, if blockY is in the lowest segment, the next opaque block is
         // at blockY - 1.
@@ -206,24 +206,22 @@ public class ServerHeightMap implements IHeightMap {
         }
 
         // Otherwise, there exists a segment underneath the segment of blockY.
-        int blockYSegmentHeight = unpackPosition(blockYSegment);
 
         // If the segment of blockY is transparent, the next opaque block is at the top of the segment underneath.
         if (blockYSegmentOpacity == 0) {
-            return blockYSegmentHeight - 1;
+            return blockYSegment - 1;
         }
 
         // The segment of blockY is opaque, thus, if blockY is not at the bottom of its segment, the next opaque block
         // is at blockY - 1.
-        if (blockY != blockYSegmentHeight) {
+        if (blockY != blockYSegment) {
             return blockY - 1;
         }
 
         // If blockY is the lowest block in its segment, the next opaque block is the highest block in the next opaque
         // segment.
         int belowYSegment = segments[segmentIndex - 1];
-        int belowYSegmentHeight = unpackPosition(belowYSegment);
-        return belowYSegmentHeight - 1;
+        return belowYSegment - 1;
     }
     @Override
     public int getLowestTopBlockY() {
@@ -298,9 +296,9 @@ public class ServerHeightMap implements IHeightMap {
               ^ going up from there
              */
             this.segments[xzIndex] = new int[]{
-                    packSegment(this.ymin[xzIndex], 1),
-                    packSegment(this.ymax.get(xzIndex) + 1, 0),
-                    packSegment(blockY, 1)
+                    this.ymin[xzIndex],
+                    this.ymax.get(xzIndex) + 1,
+                    blockY
             };
             this.ymax.set(xzIndex, blockY);
             return;
@@ -329,9 +327,9 @@ public class ServerHeightMap implements IHeightMap {
               ^ going up from there
              */
             this.segments[xzIndex] = new int[]{
-                    packSegment(blockY, 1),
-                    packSegment(blockY + 1, 0),
-                    packSegment(this.ymin[xzIndex], 1)
+                    blockY,
+                    blockY + 1,
+                    this.ymin[xzIndex]
             };
             this.ymin[xzIndex] = blockY;
             return;
@@ -399,9 +397,9 @@ public class ServerHeightMap implements IHeightMap {
           ^ going up
         */
         this.segments[xzIndex] = new int[]{
-                packSegment(this.ymin[xzIndex], 1),
-                packSegment(blockY, 0),
-                packSegment(blockY + 1, 1)
+                this.ymin[xzIndex],
+                blockY,
+                blockY + 1
         };
     }
 
@@ -412,7 +410,7 @@ public class ServerHeightMap implements IHeightMap {
         int maxj = getLastSegmentIndex(segments);
         while (minj <= maxj) {
             int midj = (minj + maxj) >>> 1;
-            int midPos = unpackPosition(segments[midj]);
+            int midPos = segments[midj];
 
             if (midPos < blockY) {
                 minj = midj + 1;
@@ -442,8 +440,6 @@ public class ServerHeightMap implements IHeightMap {
             return;
         }
 
-        int[] segments = this.segments[xzIndex];
-
         boolean extendsBottomSegmentByOne = blockY == this.ymin[xzIndex] - 1;
         if (extendsBottomSegmentByOne) {
             /*
@@ -457,7 +453,6 @@ public class ServerHeightMap implements IHeightMap {
              [ ]
               ^ going up
              */
-            assert unpackOpacity(segments[0]) == 1 : "The bottom segment is transparent!";
             moveSegmentStartDownAndUpdateMinY(xzIndex, 0);
         } else {
             /*
@@ -473,8 +468,8 @@ public class ServerHeightMap implements IHeightMap {
              [ ]
               ^ going up
              */
-            int segment0 = packSegment(blockY, 1);
-            int segment1 = packSegment(blockY + 1, 0);
+            int segment0 = blockY;
+            int segment1 = blockY + 1;
             insertSegmentsBelow(xzIndex, 0, segment0, segment1);
             this.ymin[xzIndex] = blockY;
         }
@@ -501,7 +496,6 @@ public class ServerHeightMap implements IHeightMap {
              [X]
               ^ going up
              */
-            assert unpackOpacity(segments[lastIndex]) == 1 : "The top segment is transparent!";
             this.ymax.set(xzIndex, blockY);
         } else {
             /*
@@ -518,8 +512,8 @@ public class ServerHeightMap implements IHeightMap {
              [X]
               ^ going up
              */
-            int segmentPrevLastPlus1 = packSegment(this.ymax.get(xzIndex) + 1, 0);
-            int segmentPrevLastPlus2 = packSegment(blockY, 1);
+            int segmentPrevLastPlus1 = this.ymax.get(xzIndex) + 1;
+            int segmentPrevLastPlus2 = blockY;
             //insert below the segment above the last segment, so above the last segment
             insertSegmentsBelow(xzIndex, lastIndex + 1, segmentPrevLastPlus1, segmentPrevLastPlus2);
             this.ymax.set(xzIndex, blockY);
@@ -533,11 +527,11 @@ public class ServerHeightMap implements IHeightMap {
         int segmentWithBlockY = segments[segmentIndexWithBlockY];
 
         //does it even change anything?
-        if (unpackOpacity(segmentWithBlockY) == isOpaqueInt) {
+        if (getOpacity(segmentIndexWithBlockY) == isOpaqueInt) {
             return;
         }
 
-        int segmentBottom = unpackPosition(segmentWithBlockY);
+        int segmentBottom = segmentWithBlockY;
         int segmentTop = getSegmentTopBlockY(xzIndex, segmentIndexWithBlockY);
 
         if (segmentTop == segmentBottom) {
@@ -555,7 +549,6 @@ public class ServerHeightMap implements IHeightMap {
         if (blockY == segmentTop) {
             //if it's the top of the top segment - just change ymax
             if (segmentIndexWithBlockY == lastSegment) {
-                assert unpackOpacity(segments[lastSegment]) == 1 : "The top segment is transparent!";
                 this.ymax.decrement(xzIndex);
                 return;
             }
@@ -588,8 +581,8 @@ public class ServerHeightMap implements IHeightMap {
          --- <-- segmentWithBlockY
          [-]
          */
-        int newSegment1 = packSegment(blockY, isOpaqueInt);
-        int newSegment2 = packSegment(blockY + 1, 1 - isOpaqueInt);
+        int newSegment1 = blockY;
+        int newSegment2 = blockY + 1;
         insertSegmentsBelow(xzIndex, segmentIndexWithBlockY + 1, newSegment1, newSegment2);
     }
 
@@ -601,12 +594,11 @@ public class ServerHeightMap implements IHeightMap {
         assert lastSegmentIndex >= 2 : "Less than 3 segments in array!";
         if (segmentIndexWithBlockY == lastSegmentIndex) {
 
-            assert unpackOpacity(segments[segmentIndexWithBlockY]) == 1 : "The top segment is transparent!";
             //the top segment must be opaque, so we set it to transparent
             //and the segment below it is also transparent.
             //set both of them to NONE and decrease maxY
             int segmentBelow = segments[segmentIndexWithBlockY - 1];
-            this.ymax.set(xzIndex, unpackPosition(segmentBelow) - 1);
+            this.ymax.set(xzIndex, segmentBelow - 1);
             if (segmentIndexWithBlockY == 2) {
                 //after removing top 2 segments we will be left with 1 segment
                 //remove them entirely to guarantee at least 3 segments and use min/maxY
@@ -615,12 +607,12 @@ public class ServerHeightMap implements IHeightMap {
             }
             segments[segmentIndexWithBlockY] = NONE_SEGMENT;
             segments[segmentIndexWithBlockY - 1] = NONE_SEGMENT;
+            assert parityCheck(xzIndex) : "The number of segments was wrong!";
             return;
         }
         if (segmentIndexWithBlockY == 0) {
-            assert unpackOpacity(segments[segmentIndexWithBlockY]) == 1 : "The top segment is transparent!";
             //same logic as for top segment applies
-            this.ymin[xzIndex] = unpackPosition(segments[2]);
+            this.ymin[xzIndex] = segments[2];
             if (lastSegmentIndex == 2) {
                 this.segments[xzIndex] = null;
                 return;
@@ -658,12 +650,8 @@ public class ServerHeightMap implements IHeightMap {
 
     private void moveSegmentStartUpAndUpdateMinY(int xzIndex, int segmentIndex) {
 
-        int segment = this.segments[xzIndex][segmentIndex];
-        int pos = unpackPosition(segment);
-        int opacity = unpackOpacity(segment);
-
         // move the segment
-        this.segments[xzIndex][segmentIndex] = packSegment(pos + 1, opacity);
+        this.segments[xzIndex][segmentIndex] = this.segments[xzIndex][segmentIndex] + 1;
 
         // move the bottom if needed
         if (segmentIndex == 0) {
@@ -673,12 +661,8 @@ public class ServerHeightMap implements IHeightMap {
 
     private void moveSegmentStartDownAndUpdateMinY(int xzIndex, int segmentIndex) {
 
-        int segment = this.segments[xzIndex][segmentIndex];
-        int pos = unpackPosition(segment);
-        int opacity = unpackOpacity(segment);
-
         // move the segment
-        this.segments[xzIndex][segmentIndex] = packSegment(pos - 1, opacity);
+        this.segments[xzIndex][segmentIndex] = this.segments[xzIndex][segmentIndex] - 1;
 
         // move the bottom if needed
         if (segmentIndex == 0) {
@@ -695,6 +679,7 @@ public class ServerHeightMap implements IHeightMap {
         System.arraycopy(segments, firstSegmentToRemove + 2, segments, firstSegmentToRemove, jmax - 1 - firstSegmentToRemove);
         segments[jmax] = NONE_SEGMENT;
         segments[jmax - 1] = NONE_SEGMENT;
+        assert parityCheck(xzIndex) : "The number of segments was wrong!";
 
         if (segments[0] == NONE_SEGMENT) {
             this.segments[xzIndex] = null;
@@ -710,6 +695,7 @@ public class ServerHeightMap implements IHeightMap {
             //shift all segments up
             System.arraycopy(this.segments[xzIndex], theIndex, this.segments[xzIndex], theIndex + expandSize, lastIndex + 1 - theIndex);
             System.arraycopy(newSegments, 0, this.segments[xzIndex], theIndex, expandSize);
+            assert parityCheck(xzIndex) : "The number of segments was wrong!";
         } else {
             //need to expand the array
             int[] newSegmentArr = new int[(lastIndex + 1) + expandSize];
@@ -733,6 +719,7 @@ public class ServerHeightMap implements IHeightMap {
                 oldArrIndex++;
             }
             this.segments[xzIndex] = newSegmentArr;
+            assert parityCheck(xzIndex) : "The number of segments was wrong!";
         }
     }
 
@@ -742,7 +729,7 @@ public class ServerHeightMap implements IHeightMap {
         if (segments.length - 1 == segmentIndex || segments[segmentIndex + 1] == NONE_SEGMENT) {
             return this.ymax.get(xzIndex);
         }
-        return unpackPosition(segments[segmentIndex + 1]) - 1;
+        return segments[segmentIndex + 1] - 1;
     }
 
     private static int getIndex(int localX, int localZ) {
@@ -831,6 +818,7 @@ public class ServerHeightMap implements IHeightMap {
                 segments[j] = in.readInt();
             }
             this.segments[i] = segments;
+            assert parityCheck(i) : "The number of segments was wrong!";
         }
     }
 
@@ -865,9 +853,8 @@ public class ServerHeightMap implements IHeightMap {
         buf.append("], segments(p,o)=");
 
         if (this.segments[i] != null) {
-            for (int packed : this.segments[i]) {
-                int pos = unpackPosition(packed);
-                int opacity = unpackOpacity(packed);
+            for (int pos : this.segments[i]) {
+                int opacity = getOpacity(i);
                 buf.append("(");
                 buf.append(pos);
                 buf.append(",");
