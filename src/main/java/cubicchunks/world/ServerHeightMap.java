@@ -106,6 +106,16 @@ public class ServerHeightMap implements IHeightMap {
         throw new Error("Invalid segments state");
     }
 
+    /**
+     * Checks if the number of segments in a given block-column is correct.
+     * The number of segments must always be odd.
+     *
+     * @param xzIndex The block-column's index.
+     * @return True if the number of segments is correct.
+     */
+    private boolean parityCheck(int xzIndex) {
+        return getLastSegmentIndex(segments[xzIndex]) % 2 == 0;
+    }
 
     // Interface: IHeightMap ----------------------------------------------------------------------------------------
 
@@ -597,6 +607,7 @@ public class ServerHeightMap implements IHeightMap {
             }
             segments[segmentIndexWithBlockY] = NONE_SEGMENT;
             segments[segmentIndexWithBlockY - 1] = NONE_SEGMENT;
+            assert parityCheck(xzIndex) : "The number of segments was wrong!";
             return;
         }
         if (segmentIndexWithBlockY == 0) {
@@ -668,6 +679,7 @@ public class ServerHeightMap implements IHeightMap {
         System.arraycopy(segments, firstSegmentToRemove + 2, segments, firstSegmentToRemove, jmax - 1 - firstSegmentToRemove);
         segments[jmax] = NONE_SEGMENT;
         segments[jmax - 1] = NONE_SEGMENT;
+        assert parityCheck(xzIndex) : "The number of segments was wrong!";
 
         if (segments[0] == NONE_SEGMENT) {
             this.segments[xzIndex] = null;
@@ -683,6 +695,7 @@ public class ServerHeightMap implements IHeightMap {
             //shift all segments up
             System.arraycopy(this.segments[xzIndex], theIndex, this.segments[xzIndex], theIndex + expandSize, lastIndex + 1 - theIndex);
             System.arraycopy(newSegments, 0, this.segments[xzIndex], theIndex, expandSize);
+            assert parityCheck(xzIndex) : "The number of segments was wrong!";
         } else {
             //need to expand the array
             int[] newSegmentArr = new int[(lastIndex + 1) + expandSize];
@@ -706,6 +719,7 @@ public class ServerHeightMap implements IHeightMap {
                 oldArrIndex++;
             }
             this.segments[xzIndex] = newSegmentArr;
+            assert parityCheck(xzIndex) : "The number of segments was wrong!";
         }
     }
 
@@ -804,6 +818,7 @@ public class ServerHeightMap implements IHeightMap {
                 segments[j] = in.readInt();
             }
             this.segments[i] = segments;
+            assert parityCheck(i) : "The number of segments was wrong!";
         }
     }
 
