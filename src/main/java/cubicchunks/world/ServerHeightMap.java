@@ -46,7 +46,7 @@ public class ServerHeightMap implements IHeightMap {
      * Since all integer values might represent a valid segment, an unlikely value to occur has been chosen. It
      * logically represents a 1-block segment at the very top of the world.
      */
-    private static final int NONE_SEGMENT = 0xffffffff;
+    private static final int NONE_SEGMENT = 0x7fffffff;
 
     /**
      * Array containing the y-coordinates of the lowest segment in each block column. The value {@link Coords#NO_HEIGHT}
