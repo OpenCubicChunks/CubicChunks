@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -67,28 +68,35 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
         }
         BlockPos pos = (BlockPos) o;
         int y = Coords.blockToCube(pos.getY());
-        Cube cube = column.getLoadedCube(y);
-        return cube == null ? false : cube.getTileEntityMap().containsKey(o);
+        Cube cube = column.getCube(y); // see comment in get() for why getCube instead of getLoadedCube is used
+        return cube.getTileEntityMap().containsKey(o);
     }
 
     @Override public boolean containsValue(Object o) {
         if (!(o instanceof TileEntity)) {
             return false;
         }
-        BlockPos pos = (BlockPos) o;
+        BlockPos pos = ((TileEntity) o).getPos();
         int y = Coords.blockToCube(pos.getY());
         Cube cube = column.getLoadedCube(y);
-        return cube == null ? false : cube.getTileEntityMap().containsValue(o);
+        assert cube != null : "Cube is null but tile entity in it exists!";
+        return cube.getTileEntityMap().containsValue(o);
     }
 
+    @Nullable
     @Override public TileEntity get(Object o) {
         if (!(o instanceof BlockPos)) {
             return null;
         }
         BlockPos pos = (BlockPos) o;
         int y = Coords.blockToCube(pos.getY());
-        Cube cube = column.getLoadedCube(y);
-        return cube == null ? null : cube.getTileEntityMap().get(o);
+        // when something other than CHECK is passed into Chunk.getTileEntity, then if the current TE is null
+        // it will try to create a new one. To do that it will get a block which will load the cube
+        // with the already existing TE. But the "create new TE" code will continue not knowing the TE just got loaded
+        // and will replace the newly loaded one
+        // so load the cube here to avoid problems. Other places use getCube() for consistency
+        Cube cube = column.getCube(y);
+        return cube.getTileEntityMap().get(o);
     }
 
     @Override public TileEntity put(BlockPos blockPos, TileEntity tileEntity) {
