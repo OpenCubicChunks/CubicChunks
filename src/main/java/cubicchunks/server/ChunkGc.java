@@ -30,6 +30,7 @@ import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import javax.annotation.Nonnull;
@@ -57,6 +58,39 @@ public class ChunkGc implements IConfigUpdateListener {
         if (tick > updateInterval) {
             tick = 0;
             chunkGc();
+        }
+        verifyColumnConsistency();
+    }
+
+    private void verifyColumnConsistency() {
+        // currently do that every tick, until I'm sure it doesn't happen
+        Iterator<Cube> cubeIt = cubeCache.cubesIterator();
+        while (cubeIt.hasNext()) {
+            Cube cube = cubeIt.next();
+            IColumn cubeCol = cube.getColumn();
+            IColumn storedCol = cubeCache.getLoadedColumn(cube.getX(), cube.getZ());
+            if (storedCol == null) {
+                throw new RuntimeException("Cube with no stored column!");
+            }
+            if (storedCol != cubeCol) {
+                throw new RuntimeException("CubeColumn and StoredColumn are different!");
+            }
+        }
+
+        Iterator<IColumn> columnIt = cubeCache.columnsIterator();
+        int totalCubes = 0;
+        while (columnIt.hasNext()) {
+            IColumn storedCol = columnIt.next();
+            Collection<Cube> storedColumnCubes = storedCol.getLoadedCubes();
+            for (Cube c : storedColumnCubes) {
+                if (cubeCache.getLoadedCube(c.getCoords()) != c) {
+                    throw new RuntimeException("Cube in column not the same as stored cube!");
+                }
+            }
+            totalCubes += storedColumnCubes.size();
+        }
+        if (totalCubes != cubeCache.getLoadedCubeCount()) {
+            throw new RuntimeException("Counted " + totalCubes + " cubes in columns, but there are total of " + cubeCache.getLoadedCubeCount() + " cubes!");
         }
     }
 

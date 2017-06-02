@@ -20,6 +20,9 @@
 package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.chunkio.ICubeIO;
@@ -36,6 +39,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -87,6 +91,11 @@ public class AsyncWorldIOExecutor {
             // Sponge end
     );
 
+    // this keeps track of which columns need to be kept loaded for which currently being loaded cubes
+    // this allows to avoid a column being unloaded while a cube that uses it is being loaded, which would lead to hard to debug errors
+    private static final Multimap<QueuedColumn, QueuedCube> loadingCubesColumnMap =
+            Multimaps.newMultimap(new ConcurrentHashMap<>(), Sets::newConcurrentHashSet);
+
     /**
      * Load a cube, directly.
      *
@@ -101,14 +110,14 @@ public class AsyncWorldIOExecutor {
      */
     @Nullable
     public static Cube syncCubeLoad(ICubicWorld world, ICubeIO loader, CubeProviderServer cache, int cubeX, int cubeY, int cubeZ) {
-        IColumn IColumn = (IColumn) cache.loadChunk(cubeX, cubeZ);
+        IColumn column = (IColumn) cache.loadChunk(cubeX, cubeZ);
         QueuedCube key = new QueuedCube(cubeX, cubeY, cubeZ, world);
         AsyncCubeIOProvider task = cubeTasks.remove(key); // Remove task because we will call the sync callbacks directly
         if (task != null) {
             runTask(task);
         } else {
             task = new AsyncCubeIOProvider(key, loader);
-            task.setColumn(IColumn);
+            task.setColumn(column);
             task.run();
         }
         task.runSynchronousPart();
@@ -196,11 +205,15 @@ public class AsyncWorldIOExecutor {
     public static void queueCubeLoad(ICubicWorld world, ICubeIO loader, CubeProviderServer cache, int x, int y, int z, Consumer<Cube> runnable) {
 
         QueuedCube key = new QueuedCube(x, y, z, world);
+        QueuedColumn columnKey = new QueuedColumn(x, z, world);
         AsyncCubeIOProvider task = cubeTasks.get(key);
+
+        loadingCubesColumnMap.put(columnKey, key);
 
         if (task == null) {
             task = new AsyncCubeIOProvider(key, loader);
             task.addCallback(runnable); // Add before calling execute for thread safety
+            task.addCallback(c -> loadingCubesColumnMap.remove(columnKey, key));// add only the first time
             cubeTasks.put(key, task);
             cubeThreadPool.execute(task);
         } else {
@@ -323,6 +336,10 @@ public class AsyncWorldIOExecutor {
      */
     private static void adjustPoolSize(int players) {
         cubeThreadPool.setCorePoolSize(Math.max(BASE_THREADS, players / PLAYERS_PER_THREAD));
+    }
+
+    public static boolean canDropColumn(ICubicWorld world, int x, int z) {
+        return !loadingCubesColumnMap.containsKey(new QueuedColumn(x, z, world));
     }
 
     public static void registerListeners() {

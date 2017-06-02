@@ -269,7 +269,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Nullable @Override
     public Cube getCube(int cubeX, int cubeY, int cubeZ, Requirement req) {
-
         Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
         if (req == Requirement.GET_CACHED ||
                 (cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
@@ -326,6 +325,12 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      */
     @Nullable
     private Cube postCubeLoadAttempt(int cubeX, int cubeY, int cubeZ, @Nullable Cube cube, IColumn column, Requirement req) {
+        // when async load+generate request is immediately followed by sync request,  the async one will generate the cube in callback, but it won't
+        // change the async load request result, so the cube here will still be null. Just to make sure, get the cube here
+        // otherwise we may end up generating the same cube twice
+        if (cube == null) {
+            cube = getLoadedCube(cubeX, cubeY, cubeZ);
+        }
         // Fast path - Nothing to do here
         if (req == Requirement.LOAD) {
             return cube;
@@ -333,7 +338,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         if (req == Requirement.GENERATE && cube != null) {
             return cube;
         }
-
         if (cube == null) {
             // generate the Cube
             cube = generateCube(cubeX, cubeY, cubeZ, column);
@@ -554,7 +558,9 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             this.cubeIO.saveCube(cube);
         }
 
-        cube.getColumn().removeCube(cube.getY());
+        if (cube.getColumn().removeCube(cube.getY()) == null) {
+            throw new RuntimeException();
+        }
         return true;
     }
 
@@ -565,6 +571,11 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         if (column.hasLoadedCubes()) {
             return false; // It has loaded Cubes in it
             // (Cubes are to Columns, as tickets are to Cubes... in a way)
+        }
+        // ask async loader if there are currently any cubes being loaded for this column
+        // this should prevent hard to debug issues with columns being unloaded while cubes have reference to them
+        if (!AsyncWorldIOExecutor.canDropColumn(worldServer, column.getX(), column.getZ())) {
+            return false;
         }
         column.markUnloaded(true); // flag as unloaded (idk, maybe vanilla uses this somewhere)
 
@@ -579,5 +590,9 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     public ICubeGenerator getCubeGenerator() {
         return cubeGen;
+    }
+
+    public int getLoadedCubeCount() {
+        return cubeMap.getSize();
     }
 }
