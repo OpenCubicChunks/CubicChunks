@@ -162,7 +162,9 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
                     @Override public BlockPos next() {
                         if (hasNext()) {
-                            return nextVal;
+                            BlockPos next = nextVal;
+                            nextVal = null;
+                            return next;
                         }
                         throw new NoSuchElementException();
                     }
