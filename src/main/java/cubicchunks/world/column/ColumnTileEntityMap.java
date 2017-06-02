@@ -30,17 +30,18 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 
+import java.util.AbstractCollection;
+import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
     private final IColumn column;
@@ -83,7 +84,6 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
         return cube.getTileEntityMap().containsValue(o);
     }
 
-    @Nullable
     @Override public TileEntity get(Object o) {
         if (!(o instanceof BlockPos)) {
             return null;
@@ -124,11 +124,63 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
     }
 
     @Override public Set<BlockPos> keySet() {
-        throw new UnsupportedOperationException();
+        return new AbstractSet<BlockPos>() {
+            @Override public int size() {
+                return ColumnTileEntityMap.this.size();
+            }
+
+            @Override public boolean isEmpty() {
+                return ColumnTileEntityMap.this.isEmpty();
+            }
+
+            @Override public boolean contains(Object o) {
+                return ColumnTileEntityMap.this.containsKey(o);
+            }
+
+            @Nonnull @Override public Iterator<BlockPos> iterator() {
+                return new Iterator<BlockPos>() {
+                    Iterator<Cube> cubes = column.getLoadedCubes().iterator();
+                    Iterator<BlockPos> curIt = !cubes.hasNext() ? null : cubes.next().getTileEntityMap().keySet().iterator();
+                    BlockPos nextVal;
+
+                    @Override public boolean hasNext() {
+                        if (nextVal != null) {
+                            return true;
+                        }
+                        if (curIt == null) {
+                            return false;
+                        }
+                        while (!curIt.hasNext() && cubes.hasNext()) {
+                            curIt = cubes.next().getTileEntityMap().keySet().iterator();
+                        }
+                        if (!curIt.hasNext()) {
+                            return false;
+                        }
+                        nextVal = curIt.next();
+                        return true;
+                    }
+
+                    @Override public BlockPos next() {
+                        if (hasNext()) {
+                            return nextVal;
+                        }
+                        throw new NoSuchElementException();
+                    }
+                };
+            }
+
+            @Override public boolean remove(Object o) {
+                return ColumnTileEntityMap.this.remove(o) != null;
+            }
+
+            @Override public void clear() {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 
     @Override public Collection<TileEntity> values() {
-        return new Collection<TileEntity>() {
+        return new AbstractCollection<TileEntity>() {
 
             @Override public int size() {
                 return ColumnTileEntityMap.this.size();
@@ -168,19 +220,13 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
                     @Override public TileEntity next() {
                         if (hasNext()) {
-                            return nextVal;
+                            TileEntity next = nextVal;
+                            nextVal = null;
+                            return next;
                         }
                         throw new NoSuchElementException();
                     }
                 };
-            }
-
-            @Override public Object[] toArray() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override public <T> T[] toArray(T[] ts) {
-                throw new UnsupportedOperationException();
             }
 
             @Override public boolean add(TileEntity tileEntity) {
@@ -195,22 +241,6 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
                 return ColumnTileEntityMap.this.remove(te.getPos(), te);
             }
 
-            @Override public boolean containsAll(Collection<?> collection) {
-                return collection.stream().allMatch(ColumnTileEntityMap.this::containsValue);
-            }
-
-            @Override public boolean addAll(Collection<? extends TileEntity> collection) {
-                throw new UnsupportedOperationException("not implemented yet");
-            }
-
-            @Override public boolean removeAll(Collection<?> collection) {
-                throw new UnsupportedOperationException("not implemented yet");
-            }
-
-            @Override public boolean retainAll(Collection<?> collection) {
-                throw new UnsupportedOperationException("not implemented yet");
-            }
-
             @Override public void clear() {
                 throw new UnsupportedOperationException();
             }
@@ -218,6 +248,60 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
     }
 
     @Override public Set<Entry<BlockPos, TileEntity>> entrySet() {
-        throw new UnsupportedOperationException();
+        return new AbstractSet<Entry<BlockPos, TileEntity>>() {
+            @Override public int size() {
+                return ColumnTileEntityMap.this.size();
+            }
+
+            @Override public boolean isEmpty() {
+                return ColumnTileEntityMap.this.isEmpty();
+            }
+
+            @Override public boolean contains(Object o) {
+                return ColumnTileEntityMap.this.containsKey(o);
+            }
+
+            @Nonnull @Override public Iterator<Entry<BlockPos, TileEntity>> iterator() {
+                return new Iterator<Entry<BlockPos, TileEntity>>() {
+                    Iterator<Cube> cubes = column.getLoadedCubes().iterator();
+                    Iterator<Entry<BlockPos, TileEntity>> curIt = !cubes.hasNext() ? null : cubes.next().getTileEntityMap().entrySet().iterator();
+                    Entry<BlockPos, TileEntity> nextVal;
+
+                    @Override public boolean hasNext() {
+                        if (nextVal != null) {
+                            return true;
+                        }
+                        if (curIt == null) {
+                            return false;
+                        }
+                        while (!curIt.hasNext() && cubes.hasNext()) {
+                            curIt = cubes.next().getTileEntityMap().entrySet().iterator();
+                        }
+                        if (!curIt.hasNext()) {
+                            return false;
+                        }
+                        nextVal = curIt.next();
+                        return true;
+                    }
+
+                    @Override public Entry<BlockPos, TileEntity> next() {
+                        if (hasNext()) {
+                            Entry<BlockPos, TileEntity> e = nextVal;
+                            nextVal = null;
+                            return e;
+                        }
+                        throw new NoSuchElementException();
+                    }
+                };
+            }
+
+            @Override public boolean remove(Object o) {
+                return ColumnTileEntityMap.this.remove(o) != null;
+            }
+
+            @Override public void clear() {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 }
