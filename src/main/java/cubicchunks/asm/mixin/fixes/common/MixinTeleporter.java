@@ -102,7 +102,7 @@ public class MixinTeleporter {
                     constant = @Constant(
                             intValue = 0,
                             expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO,
-                            ordinal = 5))
+                            ordinal = 9)) // no clue why it has to be 9... I can't count that many zeros before that place
     private int makePortalScanBottomY3(int zero, Entity entity) {
         return MathHelper.floor(entity.posY - 128);
     }
@@ -111,7 +111,7 @@ public class MixinTeleporter {
                     constant = @Constant(
                             intValue = 0,
                             expandZeroConditions = Constant.Condition.GREATER_THAN_ZERO,
-                            ordinal = 5)) // also 5 because different expandZeroConditions
+                            ordinal = 4))
     private int makePortalScanBottomY4(int zero, Entity entity) {
         return MathHelper.floor(entity.posY - 128);
     }
