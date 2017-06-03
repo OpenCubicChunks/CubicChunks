@@ -24,10 +24,8 @@
 package cubicchunks.asm.mixin.core.common;
 
 import static cubicchunks.asm.JvmNames.CHUNK_CONSTRUCT_1;
-import static cubicchunks.asm.JvmNames.CHUNK_ENTITY_LISTS;
 import static cubicchunks.asm.JvmNames.CHUNK_IS_CHUNK_LOADED;
 import static cubicchunks.asm.JvmNames.CHUNK_STORAGE_ARRAYS;
-import static cubicchunks.asm.JvmNames.MATH_HELPER_CLAMP_I;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
 
@@ -72,7 +70,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -107,42 +104,49 @@ public abstract class MixinChunk_Cubes implements IColumn {
     @Shadow @Final private int[] heightMap;
     @Shadow @Final private World world;
     @Shadow protected boolean isChunkLoaded;
+    @Shadow private boolean chunkTicked;
+    @Shadow private boolean isLightPopulated;
     // WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING FIELDS IN MixinChunk_Column
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
-    private Cube primedCube; // todo: make it always nonnull using BlankCube
+    private Cube cachedCube; // todo: make it always nonnull using BlankCube
 
     private boolean isColumn = false;
 
     // TODO: make it go through cube raw access methods
     // TODO: make cube an interface, use the implementation only here
+    @Nullable
     private ExtendedBlockStorage getEBS_CubicChunks(int index) {
         if (!isColumn) {
             return storageArrays[index];
         }
-        if (primedCube != null && primedCube.getY() == index) {
-            return primedCube.getStorage();
+        if (cachedCube != null && cachedCube.getY() == index) {
+            return cachedCube.getStorage();
         }
-        return getCubicWorld().getCubeCache().getCube(getX(), index, getZ()).getStorage();
+        Cube cube = getCubicWorld().getCubeCache().getCube(getX(), index, getZ());
+        cachedCube = cube;
+        return cube.getStorage();
     }
 
+    // getEntityList is unlikely to be called sequentially many times for the same cube, no caching
     private ClassInheritanceMultiMap<Entity> getEntityList_CubicChunks(int index) {
         if (!isColumn) {
             return entityLists[index];
         }
-        if (primedCube != null && primedCube.getY() == index) {
-            return primedCube.getEntityContainer().getEntitySet();
+        if (cachedCube != null && cachedCube.getY() == index) {
+            return cachedCube.getEntityContainer().getEntitySet();
         }
         return getCubicWorld().getCubeCache().getCube(getX(), index, getZ()).getEntityContainer().getEntitySet();
     }
 
+    // setEBS is unlikely to be used extremely frequently, no caching
     private void setEBS_CubicChunks(int index, ExtendedBlockStorage ebs) {
         if (!isColumn) {
             storageArrays[index] = ebs;
             return;
         }
-        if (primedCube != null && primedCube.getY() == index) {
-            primedCube.setStorage(ebs);
+        if (cachedCube != null && cachedCube.getY() == index) {
+            cachedCube.setStorage(ebs);
             return;
         }
         Cube loaded = getCubicWorld().getCubeCache().getLoadedCube(getX(), index, getZ());
@@ -675,6 +679,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
         if (!isColumn) {
             return;
         }
+        this.chunkTicked = true;
+        this.isLightPopulated = true;
         // do nothing, we tick cubes directly
     }
 

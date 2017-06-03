@@ -64,7 +64,7 @@ public abstract class MixinChunk_Column implements IColumn {
     // WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING FIELDS IN MixinChunk_Cubes
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
-    private Cube primedCube;
+    private Cube cachedCube;
 
     @Shadow @Final public int z;
 
@@ -253,16 +253,16 @@ public abstract class MixinChunk_Column implements IColumn {
 
 
     @Override public Cube getLoadedCube(int cubeY) {
-        if (primedCube != null && primedCube.getY() == cubeY) {
-            return primedCube;
+        if (cachedCube != null && cachedCube.getY() == cubeY) {
+            return cachedCube;
         }
         return getCubicWorld().getCubeCache().getLoadedCube(x, cubeY, z);
     }
 
 
     @Override public Cube getCube(int cubeY) {
-        if (primedCube != null && primedCube.getY() == cubeY) {
-            return primedCube;
+        if (cachedCube != null && cachedCube.getY() == cubeY) {
+            return cachedCube;
         }
         return getCubicWorld().getCubeCache().getCube(x, cubeY, z);
     }
@@ -274,7 +274,14 @@ public abstract class MixinChunk_Column implements IColumn {
 
 
     @Override public Cube removeCube(int cubeY) {
+        if (cachedCube != null && cachedCube.getY() == cubeY) {
+            invalidateCachedCube();
+        }
         return this.cubeMap.remove(cubeY);
+    }
+
+    private void invalidateCachedCube() {
+        cachedCube = null;
     }
 
 
@@ -411,7 +418,7 @@ public abstract class MixinChunk_Column implements IColumn {
     }
 
 
-    @Override public void primedCube(Cube cube) {
-        this.primedCube = cube;
+    @Override public void preCacheCube(Cube cube) {
+        this.cachedCube = cube;
     }
 }
