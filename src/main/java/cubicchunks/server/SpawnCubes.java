@@ -28,6 +28,7 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.ticket.ITicket;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IProviderExtras;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
@@ -103,7 +104,7 @@ public class SpawnCubes {
                 return; // no spawn cubes
             }
 
-            ICubeProvider serverCubeCache = world.getCubeCache();
+            CubeProviderServer serverCubeCache = (CubeProviderServer) world.getCubeCache();
 
             // load the cubes around the spawn point
             CubicChunks.LOGGER.info("Loading cubes for spawn...");
@@ -120,7 +121,7 @@ public class SpawnCubes {
             for (int cubeX = spawnCubeX - radius; cubeX <= spawnCubeX + radius; cubeX++) {
                 for (int cubeZ = spawnCubeZ - radius; cubeZ <= spawnCubeZ + radius; cubeZ++) {
                     for (int cubeY = spawnCubeY + radius; cubeY >= spawnCubeY - radius; cubeY--) {
-                        serverCubeCache.getCube(cubeX, cubeY, cubeZ).getTickets().add(this);
+                        serverCubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT).getTickets().add(this);
                         generated++;
                         if (System.currentTimeMillis() >= lastTime + progressReportInterval) {
                             lastTime = System.currentTimeMillis();
