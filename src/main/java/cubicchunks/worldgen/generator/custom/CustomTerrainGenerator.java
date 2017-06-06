@@ -161,11 +161,11 @@ public class CustomTerrainGenerator {
      * @return The block state
      */
     private IBlockState getBlock(int x, int y, int z, double dx, double dy, double dz, double density) {
-        CubicBiome biome = biomeSource.getBiome(x, y, z);
         List<IBiomeBlockReplacer> replacers = biomeSource.getReplacers(x, y, z);
         IBlockState block = Blocks.AIR.getDefaultState();
-        for (IBiomeBlockReplacer r : replacers) {
-            block = r.getReplacedBlock(block, x, y, z, dx, dy, dz, density);
+        int size = replacers.size();
+        for (int i = 0; i < size; i++) {
+            block = replacers.get(i).getReplacedBlock(block, x, y, z, dx, dy, dz, density);
         }
         return block;
     }

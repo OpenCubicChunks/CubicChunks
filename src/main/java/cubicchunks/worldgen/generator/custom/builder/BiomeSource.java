@@ -56,10 +56,10 @@ public class BiomeSource {
 
     private static final int SECTION_SIZE = 4;
 
-    private static final int CHUNKS_CACHE_RADIUS = 5;
+    private static final int CHUNKS_CACHE_RADIUS = 3;
     private static final int CHUNKS_CACHE_SIZE = CHUNKS_CACHE_RADIUS * CHUNKS_CACHE_RADIUS;
 
-    private static final int SECTIONS_CACHE_RADIUS = 32;
+    private static final int SECTIONS_CACHE_RADIUS = 16;
     private static final int SECTIONS_CACHE_SIZE = SECTIONS_CACHE_RADIUS * SECTIONS_CACHE_RADIUS;
 
     private static final ToIntFunction<ChunkPos> HASH_CHUNKS = v -> v.x * CHUNKS_CACHE_RADIUS + v.z;
@@ -108,7 +108,7 @@ public class BiomeSource {
                 replacers.add(prov.create(world, cubicBiome, conf));
             }
 
-            biomeBlockReplacers.put(biome, Collections.unmodifiableList(replacers));
+            biomeBlockReplacers.put(biome, replacers);
         }
     }
 
