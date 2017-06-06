@@ -45,8 +45,6 @@ import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.util.Constants;
 
-import java.util.Arrays;
-
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -119,7 +117,7 @@ public class IONbtReader {
 
     static void readCubeSyncPart(Cube cube, ICubicWorldServer world, NBTTagCompound nbt) {
         // a hack so that the Column won't try to get cube from CubeCache/CubeProvider.
-        cube.getColumn().primedCube(cube);
+        cube.getColumn().preCacheCube(cube);
         NBTTagCompound level = nbt.getCompoundTag("Level");
         readEntities(level, world, cube);
         readTileEntities(level, world, cube);

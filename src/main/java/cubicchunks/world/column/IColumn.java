@@ -430,7 +430,7 @@ public interface IColumn {
      * Make the chunk ready to use this cube for the next block operation.
      * This cube will be used only if the coordinates match.
      */
-    void primedCube(Cube cube);
+    void preCacheCube(Cube cube);
 
     /**
      * Set the unloaded flag.
