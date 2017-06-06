@@ -90,7 +90,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
      * @reason It's very simple method and this seems to be the cleanest way to modify it.
      */
     @Overwrite
-    private boolean isOutsideBuildHeight(BlockPos pos) {
+    public boolean isOutsideBuildHeight(BlockPos pos) {
         return pos.getY() >= getMaxHeight() || pos.getY() < getMinHeight();
     }
 
