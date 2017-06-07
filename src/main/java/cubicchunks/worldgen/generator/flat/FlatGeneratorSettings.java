@@ -36,18 +36,15 @@ public class FlatGeneratorSettings {
 
     public TreeMap<Integer, Layer> layers = new TreeMap<Integer, Layer>();
 
-    private int worldHeightLowerBound = CubicChunks.Config.Options.DEFAULT_WORLD_HEIGHT_LOWER_BOUND.getValue();
-    private int worldHeightUpperBound = CubicChunks.Config.Options.DEFAULT_WORLD_HEIGHT_UPPER_BOUND.getValue();
-
     public FlatGeneratorSettings() {
-        addLayer(worldHeightLowerBound + 1, Blocks.BEDROCK.getDefaultState());
+        addLayer(CubicChunks.MIN_BLOCK_Y + 1, Blocks.BEDROCK.getDefaultState());
         addLayer(-8, Blocks.STONE.getDefaultState());
         addLayer(-1, Blocks.DIRT.getDefaultState());
         addLayer(0, Blocks.GRASS.getDefaultState());
     }
 
     public void addLayer(int toY, IBlockState block) {
-        int fromY = worldHeightLowerBound;
+        int fromY = CubicChunks.MIN_BLOCK_Y;
         if (layers.floorEntry(toY) != null) {
             fromY = layers.floorEntry(toY).getValue().toY;
         }

@@ -24,6 +24,7 @@
 package cubicchunks.world;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.util.AddressTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.WorldSavedData;
 
@@ -33,8 +34,8 @@ public class WorldSavedDataHeightBounds extends WorldSavedData {
 
     public WorldSavedDataHeightBounds(String name) {
         super(name);
-        minHeight = CubicChunks.Config.Options.DEFAULT_WORLD_HEIGHT_LOWER_BOUND.getValue();
-        maxHeight = CubicChunks.Config.Options.DEFAULT_WORLD_HEIGHT_UPPER_BOUND.getValue();
+        minHeight = CubicChunks.MIN_BLOCK_Y;
+        maxHeight = CubicChunks.MAX_BLOCK_Y;
     }
 
     @Override
