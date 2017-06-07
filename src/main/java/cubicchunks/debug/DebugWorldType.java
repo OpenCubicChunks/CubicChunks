@@ -77,9 +77,6 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
                 perlin.setSeed((int) world.getSeed());
             }
 
-            //TODO: find out what this was/should have been for (it was never used)
-            //CustomPopulator populator = new CustomPopulator(world);
-
             @Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
                 ICubePrimer primer = new CubePrimer();
 
