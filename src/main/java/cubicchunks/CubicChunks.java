@@ -39,6 +39,9 @@ import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
 import cubicchunks.worldgen.generator.custom.biome.replacer.MesaSurfaceReplacer;
+import cubicchunks.worldgen.generator.custom.biome.replacer.MutatedSavannaSurfaceReplacer;
+import cubicchunks.worldgen.generator.custom.biome.replacer.SwampWaterWithLilypadReplacer;
+import cubicchunks.worldgen.generator.custom.biome.replacer.TaigaSurfaceReplacer;
 import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
 import cubicchunks.worldgen.generator.custom.populator.DesertDecorator;
 import cubicchunks.worldgen.generator.custom.populator.ForestDecorator;
@@ -175,7 +178,7 @@ public class CubicChunks {
                 .addDefaultBlockReplacers()
                 .decorator(new SavannaDecorator()).defaultDecorators());
         autoRegister(BiomeSavannaMutated.class, b -> b
-                .addDefaultBlockReplacers()
+                .addBlockReplacer(terrainShapeReplacer()).addBlockReplacer(MutatedSavannaSurfaceReplacer.provider()).addBlockReplacer(oceanWaterReplacer())
                 .defaultDecorators());
         autoRegister(BiomeSnow.class, b -> b
                 .addDefaultBlockReplacers()
@@ -184,10 +187,10 @@ public class CubicChunks {
                 .addDefaultBlockReplacers()
                 .defaultDecorators());
         autoRegister(BiomeSwamp.class, b -> b
-                .addDefaultBlockReplacers()
+                .addDefaultBlockReplacers().addBlockReplacer(SwampWaterWithLilypadReplacer.provider())
                 .defaultDecorators().decorator(new SwampDecorator()));
         autoRegister(BiomeTaiga.class, b -> b
-                .addDefaultBlockReplacers()
+                .addBlockReplacer(terrainShapeReplacer()).addBlockReplacer(TaigaSurfaceReplacer.provider()).addBlockReplacer(oceanWaterReplacer())
                 .decorator(new TaigaDecorator()).defaultDecorators());
 
     }

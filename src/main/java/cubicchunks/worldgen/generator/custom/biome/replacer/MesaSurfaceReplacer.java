@@ -23,9 +23,6 @@
  */
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
-import static java.lang.Math.abs;
-
-import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.util.cache.HashCacheDoubles;
@@ -44,13 +41,16 @@ import net.minecraft.world.gen.NoiseGeneratorPerlin;
 
 import java.util.Arrays;
 import java.util.Random;
-import java.util.Set;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class MesaSurfaceReplacer implements IBiomeBlockReplacer {
+
+    private static final ResourceLocation HEIGHT_OFFSET = CubicChunks.location("height_offset");
+    private static final ResourceLocation HEIGHT_SCALE = CubicChunks.location("height_scale");
+    private static final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
 
     private final double heightOffset;
     private final double heightScale;
@@ -180,20 +180,8 @@ public class MesaSurfaceReplacer implements IBiomeBlockReplacer {
     }
 
     public static IBiomeBlockReplacerProvider provider() {
-        return new IBiomeBlockReplacerProvider() {
-
-            private final ResourceLocation HEIGHT_OFFSET = CubicChunks.location("height_offset");
-            private final ResourceLocation HEIGHT_SCALE = CubicChunks.location("height_scale");
-            private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
-
-            @Override public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
-                return new MesaSurfaceReplacer(world, biome, conf.getDouble(HEIGHT_OFFSET), conf.getDouble(HEIGHT_SCALE),
-                        conf.getDouble(OCEAN_LEVEL));
-            }
-
-            @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
-                return Sets.newHashSet();
-            }
-        };
+        return IBiomeBlockReplacerProvider.of((world, biome, conf) ->
+                new MesaSurfaceReplacer(world, biome, conf.getDouble(HEIGHT_OFFSET), conf.getDouble(HEIGHT_SCALE), conf.getDouble(OCEAN_LEVEL))
+        );
     }
 }
