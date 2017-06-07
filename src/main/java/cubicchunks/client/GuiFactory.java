@@ -28,7 +28,9 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.fml.client.IModGuiFactory;
+import net.minecraftforge.fml.client.config.IConfigElement;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -43,11 +45,11 @@ public class GuiFactory implements IModGuiFactory {
     }
 
     @Override public boolean hasConfigGui() {
-        return false;
+        throw new AbstractMethodError("Temporary hack to make config work for now without figuring out how to do it properly");
     }
 
     @Override public GuiScreen createConfigGui(GuiScreen parentScreen) {
-        return null;
+        throw new AbstractMethodError("Temporary hack to make config work for now without figuring out how to do it properly");
     }
 
     @Override public Class<? extends GuiScreen> mainConfigGuiClass() {

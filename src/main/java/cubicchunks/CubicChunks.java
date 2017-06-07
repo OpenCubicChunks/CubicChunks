@@ -266,13 +266,7 @@ public class CubicChunks {
 
         public static enum Options {
             MAX_GENERATED_CUBES_PER_TICK(1, Integer.MAX_VALUE, 49 * 16, "The number of cubic chunks to generate per tick."),
-            LIGHTING_TICK_BUDGET(1, Integer.MAX_VALUE, 10,
-                    "The maximum amount of time in milliseconds per tick to spend performing lighting calculations."),
             VERTICAL_CUBE_LOAD_DISTANCE(2, 32, 8, "Similar to Minecraft's view distance, only for vertical chunks."),
-            DEFAULT_WORLD_HEIGHT_LOWER_BOUND(CubicChunks.MIN_BLOCK_Y, 0, CubicChunks.MIN_BLOCK_Y,
-                    "The lower boundary on the world. Blocks will not generate or load below this point."),
-            DEFAULT_WORLD_HEIGHT_UPPER_BOUND(256, CubicChunks.MAX_BLOCK_Y, CubicChunks.MAX_BLOCK_Y,
-                    "The upper boundary on the world. Blocks will not generate or load above this point."),
             CHUNK_G_C_INTERVAL(1, Integer.MAX_VALUE, 20 * 10,
                     "Chunk garbage collector update interval. A more lower it is - a more CPU load it will generate. "
                             + "A more high it is - a more memory will be used to store cubes between launches.");
@@ -349,20 +343,8 @@ public class CubicChunks {
             return Options.MAX_GENERATED_CUBES_PER_TICK.value;
         }
 
-        public int getLightingTickBudget() {
-            return Options.LIGHTING_TICK_BUDGET.value;
-        }
-
         public int getVerticalCubeLoadDistance() {
             return Options.VERTICAL_CUBE_LOAD_DISTANCE.value;
-        }
-
-        public int getWorldHeightLowerBound() {
-            return Options.DEFAULT_WORLD_HEIGHT_LOWER_BOUND.value;
-        }
-
-        public int getWorldHeightUpperBound() {
-            return Options.DEFAULT_WORLD_HEIGHT_UPPER_BOUND.value;
         }
 
         public int getChunkGCInterval() {
