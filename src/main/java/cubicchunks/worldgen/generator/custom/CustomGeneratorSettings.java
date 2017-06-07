@@ -53,14 +53,14 @@ public class CustomGeneratorSettings {
     public int waterLevel = 63;
     public boolean caves = true;
 
-    public boolean strongholds = true;
-    public boolean villages = true;
+    public boolean strongholds = true; // no strongholds yet
+    public boolean villages = true; // no villages yet
 
-    public boolean mineshafts = true;
-    public boolean temples = true;
+    public boolean mineshafts = true; // no mineshafts yet
+    public boolean temples = true; // no temples yet
 
-    public boolean oceanMonuments = true;
-    public boolean woodlandMansions = true;
+    public boolean oceanMonuments = true; // no ocean monuments yet
+    public boolean woodlandMansions = true; // no woodland mansions yet
 
     public boolean ravines = true;
     public boolean dungeons = true;
@@ -73,7 +73,6 @@ public class CustomGeneratorSettings {
 
     public int lavaLakeRarity = 8;
     public int aboveSeaLavaLakeRarity = 13; // approximately 10 * 4/3, all that end up above the surface are at the surface in vanilla
-    public boolean lavaOceans = false;
 
     public int biome = -1;
     public int biomeSize = 4;

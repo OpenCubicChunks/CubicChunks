@@ -26,6 +26,7 @@ package cubicchunks.world.type;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.generator.custom.CustomTerrainGenerator;
 import cubicchunks.worldgen.gui.CustomCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
@@ -38,6 +39,7 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.gen.ChunkProviderSettings;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.IntCache;
 import net.minecraftforge.fml.common.Loader;
@@ -73,7 +75,13 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
                 this.biomeIndexLayer = new GenLayerDebug(6 + 2);
             }};
         } else {
-            return super.getBiomeProvider(world);
+            CustomGeneratorSettings settings = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
+            // lie to the biome generator about the world type and settings string so that it does what we want
+            ChunkProviderSettings.Factory vanillaSettings = ChunkProviderSettings.Factory.jsonToFactory("");
+            vanillaSettings.biomeSize = settings.biomeSize;
+            vanillaSettings.riverSize = settings.riverSize;
+            vanillaSettings.fixedBiome = settings.biome;
+            return new BiomeProvider(world.getSeed(), WorldType.CUSTOMIZED, vanillaSettings.build().toString());
         }
     }
 

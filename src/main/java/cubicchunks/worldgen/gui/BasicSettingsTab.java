@@ -105,7 +105,7 @@ class BasicSettingsTab {
 
                 .add(this.lavaLakes = makeCheckbox(gui, malisisText("lavaLakes"), settings.lavaLakes),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 5, WIDTH_2_COL))
-                .add(this.lavaOceans = makeCheckbox(gui, malisisText("lavaOceans"), settings.lavaOceans),
+                .add(this.lavaOceans = makeCheckbox(gui, malisisText("lavaOceans"), false).setDisabled(true),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 5, WIDTH_2_COL))
 
 
@@ -151,7 +151,6 @@ class BasicSettingsTab {
         conf.dungeons = dungeons.isChecked();
         conf.waterLakes = waterLakes.isChecked();
         conf.lavaLakes = lavaLakes.isChecked();
-        conf.lavaOceans = lavaOceans.isChecked();
 
         conf.biome = biome.getSelectedValue().getBiome() == null ? -1 : Biome.getIdForBiome(biome.getSelectedValue().getBiome());
 

@@ -73,6 +73,9 @@ cubicchunks.gui.customcubic.gold_ore_group=Gold Ore:
 cubicchunks.gui.customcubic.redstone_ore_group=Redstone Ore:
 cubicchunks.gui.customcubic.diamond_ore_group=Diamond Ore:
 cubicchunks.gui.customcubic.lapis_lazuli_ore_group=Lapis Lazuli Ore:
+cubicchunks.gui.customcubic.hills_emerald_ore_group=Hills Emerald Ore:
+cubicchunks.gui.customcubic.hills_silverfish_stone_group=Hills Silverfish Stone:
+cubicchunks.gui.customcubic.mesa_added_gold_ore_group=Mesa Added Gold Ore:
 
 cubicchunks.gui.customcubic.spawn_size=Spawn Size:
 cubicchunks.gui.customcubic.spawn_tries=Spawn Tries:
