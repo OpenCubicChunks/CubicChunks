@@ -77,8 +77,8 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
     public BiomeProvider getBiomeProvider(World world) {
         if ("true".equalsIgnoreCase(System.getProperty("cubicchunks.debug.biomes"))) {
             return new BiomeProvider() {{
-                this.genBiomes = new GenLayerDebug(4);
-                this.biomeIndexLayer = new GenLayerDebug(4 + 2);
+                this.genBiomes = new GenLayerDebug(6);
+                this.biomeIndexLayer = new GenLayerDebug(6 + 2);
             }};
         } else {
             return super.getBiomeProvider(world);
