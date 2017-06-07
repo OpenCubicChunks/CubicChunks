@@ -24,8 +24,6 @@
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -34,14 +32,13 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.NoiseGeneratorPerlin;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SwampWaterWithLilypadReplacer implements IBiomeBlockReplacer {
+
+    private static final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
 
     private final NoiseGeneratorPerlin noiseGen;
     private final int seaLevel;
@@ -68,17 +65,8 @@ public class SwampWaterWithLilypadReplacer implements IBiomeBlockReplacer {
     }
 
     public static IBiomeBlockReplacerProvider provider() {
-        return new IBiomeBlockReplacerProvider() {
-
-            private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
-
-            @Override public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
-                return new SwampWaterWithLilypadReplacer(Biome.GRASS_COLOR_NOISE, MathHelper.floor(conf.getDouble(OCEAN_LEVEL)));
-            }
-
-            @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
-                return new HashSet<>();
-            }
-        };
+        return IBiomeBlockReplacerProvider.of((world, biome, conf) ->
+                new SwampWaterWithLilypadReplacer(Biome.GRASS_COLOR_NOISE, MathHelper.floor(conf.getDouble(OCEAN_LEVEL)))
+        );
     }
 }

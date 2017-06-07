@@ -23,13 +23,12 @@
  */
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
-import com.google.common.collect.Sets;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 
+import java.util.Collections;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -47,29 +46,26 @@ public interface IBiomeBlockReplacerProvider {
 
     Set<ConfigOptionInfo> getPossibleConfigOptions();
 
-    static IBiomeBlockReplacerProvider of(Supplier<IBiomeBlockReplacer> supplier) {
+    static IBiomeBlockReplacerProvider of(SimpleReplacerProvider supplier) {
         return new IBiomeBlockReplacerProvider() {
             @Override
             public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
-                return supplier.get();
+                return supplier.create(world, biome, conf);
             }
 
             @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
-                return Sets.newHashSet();
+                return Collections.emptySet();
             }
         };
     }
 
     static IBiomeBlockReplacerProvider of(IBiomeBlockReplacer replacer) {
-        return new IBiomeBlockReplacerProvider() {
-            @Override
-            public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
-                return replacer;
-            }
+        return IBiomeBlockReplacerProvider.of((world, biome, conf) -> replacer);
+    }
 
-            @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
-                return Sets.newHashSet();
-            }
-        };
+    @FunctionalInterface
+    interface SimpleReplacerProvider {
+
+        IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf);
     }
 }
