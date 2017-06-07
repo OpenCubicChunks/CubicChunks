@@ -18,6 +18,9 @@ cubicchunks.gui.customcubic.advanced_tab_title=Customize World Settings%nPage 3 
 
 cubicchunks.gui.customcubic.layers_title=Customize World Settings%nPage 1 of 1%nLayers
 
+cubicchunks.gui.customcubic.tooltip.not_yet_implemented=Not yet implemented
+cubicchunks.gui.customcubic.tooltip.replacement_wip=Replacement work in progress
+
 #################################
 ###        options            ###
 #################################
@@ -44,19 +47,19 @@ cubicchunks.gui.customcubic.strongholds=Strongholds
 cubicchunks.gui.customcubic.villages=Villages
 cubicchunks.gui.customcubic.mineshafts=Mineshafts
 cubicchunks.gui.customcubic.temples=Temples
-cubicchunks.gui.customcubic.oceanMonuments=Ocean Monuments
-cubicchunks.gui.customcubic.woodlandMansions=Woodland Mansions
+cubicchunks.gui.customcubic.ocean_monuments=Ocean Monuments
+cubicchunks.gui.customcubic.woodland_mansions=Woodland Mansions
 cubicchunks.gui.customcubic.ravines=Ravines
 cubicchunks.gui.customcubic.dungeons=Dungeons
-cubicchunks.gui.customcubic.dungeonCount=Dungeon Count
-cubicchunks.gui.customcubic.waterLakes=Water Lakes
-cubicchunks.gui.customcubic.waterLakeRarity=Water Lake Rarity
-cubicchunks.gui.customcubic.lavaLakes=Lava Lakes
-cubicchunks.gui.customcubic.lavaLakeRarity=Lava Lake Rarity
-cubicchunks.gui.customcubic.lavaOceans=Lava Oceans
+cubicchunks.gui.customcubic.dungeon_count=Dungeon Count
+cubicchunks.gui.customcubic.water_lakes=Water Lakes
+cubicchunks.gui.customcubic.water_lake_rarity=Water Lake Rarity
+cubicchunks.gui.customcubic.lava_lakes=Lava Lakes
+cubicchunks.gui.customcubic.lava_lake_rarity=Lava Lake Rarity
+cubicchunks.gui.customcubic.lava_oceans=Lava Oceans
 cubicchunks.gui.customcubic.biome=Biome
-cubicchunks.gui.customcubic.biomeSize=Biome Size
-cubicchunks.gui.customcubic.riverSize=River Size
+cubicchunks.gui.customcubic.biome_size=Biome Size
+cubicchunks.gui.customcubic.river_size=River Size
 
 #################################
 ###  ore generation settings  ###

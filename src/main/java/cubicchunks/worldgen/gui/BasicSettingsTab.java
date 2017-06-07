@@ -39,6 +39,7 @@ import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.interaction.UICheckBox;
 import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.client.gui.component.interaction.UISlider;
+import net.malisis.core.renderer.font.FontOptions;
 import net.minecraft.world.biome.Biome;
 
 class BasicSettingsTab {
@@ -72,6 +73,7 @@ class BasicSettingsTab {
 
     BasicSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
 
+        FontOptions warnOptions = FontOptions.builder().color(0xAA0000).build();
         UIVerticalTableLayout layout = new UIVerticalTableLayout(gui, 6);
         layout.setPadding(HORIZONTAL_PADDING, 0);
         layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
@@ -79,48 +81,55 @@ class BasicSettingsTab {
 
                 .add(this.caves = makeCheckbox(gui, malisisText("caves"), settings.caves),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 0, WIDTH_2_COL))
-                .add(this.strongholds = makeCheckbox(gui, malisisText("strongholds"), settings.strongholds),
+                .add(this.strongholds = makeCheckbox(gui, malisisText("strongholds"), settings.strongholds)
+                                .setTooltip(malisisText("tooltip.not_yet_implemented")).setFontOptions(warnOptions),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 0, WIDTH_2_COL))
 
-                .add(this.villages = makeCheckbox(gui, malisisText("villages"), settings.villages),
+                .add(this.villages = makeCheckbox(gui, malisisText("villages"), settings.villages)
+                                .setTooltip(malisisText("tooltip.not_yet_implemented")).setFontOptions(warnOptions),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 1, WIDTH_2_COL))
-                .add(this.mineshafts = makeCheckbox(gui, malisisText("mineshafts"), settings.mineshafts),
+                .add(this.mineshafts = makeCheckbox(gui, malisisText("mineshafts"), settings.mineshafts)
+                                .setTooltip(malisisText("tooltip.not_yet_implemented")).setFontOptions(warnOptions),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 1, WIDTH_2_COL))
 
-                .add(this.temples = makeCheckbox(gui, malisisText("temples"), settings.temples),
+                .add(this.temples = makeCheckbox(gui, malisisText("temples"), settings.temples)
+                                .setTooltip(malisisText("tooltip.not_yet_implemented")).setFontOptions(warnOptions),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 2, WIDTH_2_COL))
                 .add(this.ravines = makeCheckbox(gui, malisisText("ravines"), settings.ravines),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 2, WIDTH_2_COL))
 
-                .add(this.oceanMonuments = makeCheckbox(gui, malisisText("oceanMonuments"), settings.oceanMonuments),
+                .add(this.oceanMonuments = makeCheckbox(gui, malisisText("ocean_monuments"), settings.oceanMonuments)
+                                .setTooltip(malisisText("tooltip.not_yet_implemented")).setFontOptions(warnOptions),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 3, WIDTH_2_COL))
-                .add(this.woodlandMansions = makeCheckbox(gui, malisisText("woodlandMansions"), settings.woodlandMansions),
+                .add(this.woodlandMansions = makeCheckbox(gui, malisisText("woodland_mansions"), settings.woodlandMansions)
+                                .setTooltip(malisisText("tooltip.not_yet_implemented")).setFontOptions(warnOptions),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 3, WIDTH_2_COL))
 
 
                 .add(this.dungeons = makeCheckbox(gui, malisisText("dungeons"), settings.dungeons),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 4, WIDTH_2_COL))
-                .add(this.waterLakes = makeCheckbox(gui, malisisText("waterLakes"), settings.waterLakes),
+                .add(this.waterLakes = makeCheckbox(gui, malisisText("water_lakes"), settings.waterLakes),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 4, WIDTH_2_COL))
 
-                .add(this.lavaLakes = makeCheckbox(gui, malisisText("lavaLakes"), settings.lavaLakes),
+                .add(this.lavaLakes = makeCheckbox(gui, malisisText("lava_lakes"), settings.lavaLakes),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 5, WIDTH_2_COL))
-                .add(this.lavaOceans = makeCheckbox(gui, malisisText("lavaOceans"), false).setDisabled(true),
+                .add(this.lavaOceans = makeCheckbox(gui, malisisText("lava_oceans"), false)
+                                .setTooltip(malisisText("tooltip.replacement_wip")).setFontOptions(warnOptions),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 5, WIDTH_2_COL))
 
 
                 .add(this.biome = makeBiomeList(gui), new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 6, WIDTH_2_COL))
-                .add(this.dungeonCount = makeIntSlider(gui, malisisText("dungeonCount", ": %d"), 1, 100, settings.dungeonCount),
+                .add(this.dungeonCount = makeIntSlider(gui, malisisText("dungeon_count", ": %d"), 1, 100, settings.dungeonCount),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 6, WIDTH_2_COL))
 
-                .add(this.waterLakeRarity = makeIntSlider(gui, malisisText("waterLakeRarity", ": %d"), 1, 100, settings.waterLakeRarity),
+                .add(this.waterLakeRarity = makeIntSlider(gui, malisisText("water_lake_rarity", ": %d"), 1, 100, settings.waterLakeRarity),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 7, WIDTH_2_COL))
-                .add(this.lavaLakeRarity = makeIntSlider(gui, malisisText("lavaLakeRarity", ": %d"), 1, 100, settings.lavaLakeRarity),
+                .add(this.lavaLakeRarity = makeIntSlider(gui, malisisText("lava_lake_rarity", ": %d"), 1, 100, settings.lavaLakeRarity),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 7, WIDTH_2_COL))
 
-                .add(this.biomeSize = makeIntSlider(gui, malisisText("biomeSize", ": %d"), 1, 8, settings.biomeSize),
+                .add(this.biomeSize = makeIntSlider(gui, malisisText("biome_size", ": %d"), 1, 8, settings.biomeSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 8, WIDTH_2_COL))
-                .add(this.riverSize = makeIntSlider(gui, malisisText("riverSize", ": %d"), 1, 5, settings.riverSize),
+                .add(this.riverSize = makeIntSlider(gui, malisisText("river_size", ": %d"), 1, 5, settings.riverSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 8, WIDTH_2_COL))
 
 

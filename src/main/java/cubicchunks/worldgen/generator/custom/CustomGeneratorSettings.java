@@ -53,14 +53,14 @@ public class CustomGeneratorSettings {
     public int waterLevel = 63;
     public boolean caves = true;
 
-    public boolean strongholds = true; // no strongholds yet
-    public boolean villages = true; // no villages yet
+    public boolean strongholds = true; // TODO: no strongholds yet
+    public boolean villages = true; // TODO: no villages yet
 
-    public boolean mineshafts = true; // no mineshafts yet
-    public boolean temples = true; // no temples yet
+    public boolean mineshafts = true; // TODO: no mineshafts yet
+    public boolean temples = true; // TODO: no temples yet
 
-    public boolean oceanMonuments = true; // no ocean monuments yet
-    public boolean woodlandMansions = true; // no woodland mansions yet
+    public boolean oceanMonuments = true; // TODO: no ocean monuments yet
+    public boolean woodlandMansions = true; // TODO: no woodland mansions yet
 
     public boolean ravines = true;
     public boolean dungeons = true;
