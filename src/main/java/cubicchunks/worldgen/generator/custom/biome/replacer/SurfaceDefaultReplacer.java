@@ -50,7 +50,7 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
     protected static final IBlockState RED_SANDSTONE = Blocks.RED_SANDSTONE.getDefaultState();
     protected static final IBlockState SANDSTONE = Blocks.SANDSTONE.getDefaultState();
 
-    private final IBuilder depthNoise = makeDepthNoise();;
+    private final IBuilder depthNoise = makeDepthNoise();
     private final int maxPossibleDepth;
     private IBlockState topBlock;
     private IBlockState fillerBlock;
@@ -100,6 +100,18 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
             }
         }
         return previousBlock;
+    }
+
+    public void setTopBlock(IBlockState topBlock) {
+        this.topBlock = topBlock;
+    }
+
+    public void setFillerBlock(IBlockState fillerBlock) {
+        this.fillerBlock = fillerBlock;
+    }
+
+    public IBuilder getDepthNoise() {
+        return depthNoise;
     }
 
     private IBlockState filler(IBlockState prev, double depth) {
