@@ -47,6 +47,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.DoubleUnaryOperator;
 
 public class CustomCubicGuiUtils {
@@ -141,7 +142,8 @@ public class CustomCubicGuiUtils {
         return cb;
     }
 
-    public static UIRangeSlider<Float> makeRangeSlider(ExtraGui gui, String name, float min, float max, float defaultMin, float defaultMax) {
+    public static UIRangeSlider<Float> makeRangeSlider(ExtraGui gui, BiFunction<Float, Float, String> fmt, float min, float max, float defaultMin,
+            float defaultMax) {
         UIRangeSlider<Float>[] wrappedSlider = new UIRangeSlider[1];
         DoubleUnaryOperator roundRadiusFunc = d -> 1.0 / (wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth()) * 0.5;
         float maxExp = MathHelper.ceil(Math.log(Math.max(1, max)) / Math.log(2));
@@ -152,13 +154,17 @@ public class CustomCubicGuiUtils {
                 .withInfinity().negativeAt(min).positiveAt(max)
                 .build();
 
-        UIRangeSlider<Float> slider = new UIRangeSlider<Float>(
-                gui, 100,
-                conv,
-                (a, b) -> I18n.format(name, a * 100, b * 100))
-                .setRange(defaultMin, defaultMax);
+        UIRangeSlider<Float> slider = new UIRangeSlider<>(gui, 100, conv, fmt).setRange(defaultMin, defaultMax);
         wrappedSlider[0] = slider;
         return slider;
+    }
+
+    public static BiFunction<Float, Float, String> percentageFormat(String name, String floatFmt) {
+        return (a, b) -> I18n.format(vanillaText(name), String.format(floatFmt, a * 100), String.format(floatFmt, b * 100));
+    }
+
+    public static BiFunction<Float, Float, String> floatFormat(String name, String floatFmt) {
+        return (a, b) -> I18n.format(vanillaText(name), String.format(floatFmt, a), String.format(floatFmt, b));
     }
 
     public static UISelect<BiomeOption> makeBiomeList(MalisisGui gui) {

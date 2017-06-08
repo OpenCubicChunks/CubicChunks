@@ -38,6 +38,8 @@ import com.google.gson.GsonBuilder;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
+import cubicchunks.worldgen.gui.component.UIRangeSlider;
+import net.malisis.core.client.gui.component.interaction.UISlider;
 import net.minecraft.world.gen.ChunkProviderSettings;
 
 public class CustomGeneratorSettings {
@@ -207,6 +209,34 @@ public class CustomGeneratorSettings {
     public int highNoiseOctaves = 16;
 
     // TODO: public boolean negativeHeightVariationInvertsTerrain = true;
+
+    /**
+     * Cave generator
+     */
+
+    // basic advanced cave config
+    public int rarityPerChunk = 16 * 7;
+    public int maxInitialNodes = 14;
+    public int largeNodeRarity = 4;
+    public int largeNodeMaxBranches = 4;
+    public int bigCaveRarity = 10;
+    public float caveSizeFactor1 = 2.0f;
+    public float caveSizeFactor2 = 1.0f;
+    public float minBigCaveSizeFactor = 1.0f;
+    public float maxBigCaveSizeFactor = 4.0f;
+    public float caveSizeAdd = 1.5f;
+
+    // more advanced cave config
+    public int alternateFlattenFactorRarity = 6;
+    public float flattenFactor = 0.7f;
+    public float altFlattenFactor = 0.92f;
+    public float directionChangeFactor = 0.1f;
+    public float prevHorizAccelerationWeight = 0.75f;
+    public float prevVertAccelerationWeight = 0.9f;
+    public float maxHorizAccelChange = 4.0f;
+    public float maxVertAccelChange = 2.0f;
+    public int carveStepRarity = 4;
+    public float caveFloorDepth = -0.7f;
 
     public CustomGeneratorSettings() {
 

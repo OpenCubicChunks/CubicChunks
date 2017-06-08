@@ -63,6 +63,7 @@ public class CustomCubicGui extends ExtraGui {
     private BasicSettingsTab basicSettings;
     private OreSettingsTab oreSettings;
     private AdvancedTerrainShapeTab advancedterrainShapeSettings;
+    private StructuresAdvancedTab structureSettings;
 
     public CustomCubicGui(GuiCreateWorld parent) {
         super();
@@ -79,11 +80,13 @@ public class CustomCubicGui extends ExtraGui {
         this.basicSettings = new BasicSettingsTab(this, conf);
         this.oreSettings = new OreSettingsTab(this, conf);
         this.advancedterrainShapeSettings = new AdvancedTerrainShapeTab(this, conf);
+        this.structureSettings = new StructuresAdvancedTab(this, conf);
 
         tabs = makeTabContainer();
         tabs.addTab(inPanel(basicSettings.getContainer()), vanillaText("basic_tab_title"));
         tabs.addTab(inPanel(oreSettings.getContainer()), vanillaText("ores_tab_title"));
         tabs.addTab(inPanel(advancedterrainShapeSettings.getContainer()), vanillaText("advanced_tab_title"));
+        tabs.addTab(inPanel(structureSettings.getContainer()), vanillaText("structures_tab_title"));
         addToScreen(tabs);
     }
 
