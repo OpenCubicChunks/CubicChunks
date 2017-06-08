@@ -451,7 +451,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
             }
             CubeWatcher cubeWatcher = getOrCreateCubeWatcher(currentPos);
 
-            assert !cubeWatcher.containsPlayer(player);
             cubeWatcher.addPlayer(player);
         });
         this.players.put(player.getEntityId(), playerWrapper);
@@ -462,6 +461,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
     @Override
     public void removePlayer(EntityPlayerMP player) {
         PlayerWrapper playerWrapper = this.players.get(player.getEntityId());
+        if (playerWrapper == null) {
+            CubicChunks.bigWarning("PlayerCubeMap#removePlayer got called when there is no player in this world! Things may break!");
+            return;
+        }
         // Minecraft does something evil there: this method is called *after* changing the player's position
         // so we need to use managerPosition there
         CubePos playerCubePos = CubePos.fromEntityCoords(player.managedPosX, playerWrapper.managedPosY, player.managedPosZ);
@@ -499,6 +502,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
         // get the player info
         PlayerWrapper playerWrapper = this.players.get(player.getEntityId());
 
+        if (playerWrapper == null) {
+            CubicChunks.bigWarning("PlayerCubeMap#updateMovingPlayer got called when there is no player in this world! Things may break!");
+            return;
+        }
         // did the player move into new cube?
         if (!playerWrapper.cubePosChanged()) {
             return;
