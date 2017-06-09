@@ -79,7 +79,7 @@ class StructuresAdvancedTab {
                 .add(label(gui, malisisText("cave.settings_group"), 20),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(this.rarityPerChunk = makeIntSlider(gui, malisisText("cave.rarity", " %d"), 1, 1024, settings.rarityPerChunk),
+                .add(this.rarityPerChunk = makeIntSlider(gui, malisisText("cave.rarity", " %d"), 8, 1024, settings.rarityPerChunk),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
                 .add(this.maxInitialNodes = makeIntSlider(gui, malisisText("cave.max_init_nodes", " %d"), 1, 20, settings.maxInitialNodes),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
