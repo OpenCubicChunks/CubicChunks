@@ -58,7 +58,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.minecraft.world.gen.ChunkProviderDebug;
+import net.minecraft.world.gen.ChunkGeneratorDebug;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent.Load;
 import net.minecraftforge.fml.relauncher.Side;
@@ -355,7 +355,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             }
 
             if (y == 70) {
-                iblockstate = ChunkProviderDebug.getBlockStateFor(x, z);
+                iblockstate = ChunkGeneratorDebug.getBlockStateFor(x, z);
             }
 
             return iblockstate == null ? Blocks.AIR.getDefaultState() : iblockstate;

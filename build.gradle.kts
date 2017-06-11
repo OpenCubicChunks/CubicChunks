@@ -2,6 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import me.champeau.gradle.JMHPlugin
 import me.champeau.gradle.JMHPluginExtension
+import net.minecraftforge.gradle.tasks.DeobfuscateJar
 import net.minecraftforge.gradle.user.ReobfMappingType
 import net.minecraftforge.gradle.user.ReobfTaskFactory
 import net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension
@@ -47,7 +48,7 @@ buildscript {
         classpath("com.github.jengelman.gradle.plugins:shadow:1.2.3")
         classpath("gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.13.1")
         classpath("me.champeau.gradle:jmh-gradle-plugin:0.3.1")
-        classpath("net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT")
+        classpath("net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT")
     }
 }
 
@@ -72,6 +73,8 @@ val jar: Jar by tasks
 val shadowJar: ShadowJar by tasks
 val test: Test by tasks
 val processResources: ProcessResources by tasks
+val deobfMcSRG: DeobfuscateJar by tasks
+val deobfMcMCP: DeobfuscateJar by tasks
 
 defaultTasks = listOf("licenseFormat", "build")
 
@@ -167,6 +170,13 @@ configure<NamedDomainObjectContainer<ReobfTaskFactory.ReobfTaskWrapper>> {
         mappingType = ReobfMappingType.SEARGE
     }
 }
+// temporary until malisiscore updates
+deobfMcSRG.apply {
+    isFailOnAtError = false
+}
+deobfMcMCP.apply{
+    isFailOnAtError = false
+}
 build.dependsOn("reobfShadowJar")
 
 configure<JMHPluginExtension> {
@@ -206,7 +216,7 @@ dependencies {
     val forgeGradleGradleStart by configurations
     val compile by configurations
     val testCompile by configurations
-    val deobfCompile by configurations
+    val deobfProvided by configurations
 
     compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
     testCompile("junit:junit:4.11")
@@ -215,19 +225,23 @@ dependencies {
     testCompile("org.mockito:mockito-core:2.1.0-RC.2")
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    compile("org.spongepowered:mixin:0.6.8-SNAPSHOT") {
+    compile("org.spongepowered:mixin:0.6.10-SNAPSHOT") { // 0.6.9 minimum for 1.12 support
         isTransitive = false
     }
 
     compile(project(":RegionLib"))
 
-    deobfCompile("net.malisis:malisiscore:$malisisCoreVersion")
+    // use deobfProvided for now to avoid crash with malisiscore asm, but still have it compiling
+    deobfProvided("net.malisis:malisiscore:$malisisCoreVersion")
 
     jmh.extendsFrom(compile)
     jmh.extendsFrom(forgeGradleMc)
     jmh.extendsFrom(forgeGradleMcDeps)
     testCompile.extendsFrom(forgeGradleGradleStart)
 }
+
+// this is needed because it.ozimov:java7-hamcrest-matchers:0.7.0 depends on guava 19, while MC needs guava 21
+configurations.all { resolutionStrategy { force("com.google.guava:guava:21.0") } }
 
 jar.apply {
     jarConfig()

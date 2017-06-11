@@ -211,6 +211,11 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         return this.id2ChunkMap.get(ChunkPos.asLong(cubeX, cubeZ)) != null;
     }
 
+    @Override // TODO: What it does? implement it
+    public boolean func_193413_a(World p_193413_1_, String p_193413_2_, BlockPos p_193413_3_) {
+        return false;
+    }
+
     //==============================
     //=====CubicChunks methods======
     //==============================

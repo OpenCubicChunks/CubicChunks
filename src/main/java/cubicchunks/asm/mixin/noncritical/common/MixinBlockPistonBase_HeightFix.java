@@ -47,7 +47,7 @@ public class MixinBlockPistonBase_HeightFix {
     @Group(min = 4, max = 4)
     @Redirect(method = "canPush", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), expect = 4)
     private static int getBlockYRedirect(BlockPos pos, IBlockState blockStateIn, World worldIn, BlockPos posArg, EnumFacing facing,
-            boolean destroyBlocks) {
+            boolean destroyBlocks, EnumFacing p_185646_5_) {
         return MixinUtils.getReplacementY(worldIn, pos);
     }
 }

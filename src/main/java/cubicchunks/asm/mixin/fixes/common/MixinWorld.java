@@ -73,7 +73,7 @@ public abstract class MixinWorld implements ICubicWorld {
         return cube.isFullyPopulated();
     }
 
-    @Overwrite(constraints = "MC_FORGE(20)")
+    @Overwrite(constraints = "MC_FORGE(21)") // TODO: make sure it is still correct
     private boolean func_191504_a(@Nullable Entity entity, AxisAlignedBB aabb, boolean flagArg, @Nullable List<AxisAlignedBB> aabbList) {
         int i = MathHelper.floor(aabb.minX) - 1;
         int j = MathHelper.ceil(aabb.maxX) + 1;

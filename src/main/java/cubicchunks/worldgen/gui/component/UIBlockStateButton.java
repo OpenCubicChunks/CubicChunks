@@ -25,6 +25,8 @@ package cubicchunks.worldgen.gui.component;
 
 import java.util.Map.Entry;
 
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.vertex.VertexBuffer;
 import org.lwjgl.opengl.GL11;
 
 import cubicchunks.worldgen.gui.DummyWorld;
@@ -36,7 +38,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
@@ -89,7 +90,7 @@ public class UIBlockStateButton extends UIComponent<UIBlockStateButton> {
     @Override
     public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
         if (iBlockState != null) {
-            VertexBuffer vertexbuffer = Tessellator.getInstance().getBuffer();
+            BufferBuilder vertexbuffer = Tessellator.getInstance().getBuffer();
             Tessellator.getInstance().draw();
             ITextureObject blockTexture = Minecraft.getMinecraft().getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, blockTexture.getGlTextureId());
