@@ -61,7 +61,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Implements(@Interface(iface = IColumn.class, prefix = "chunk$"))
 public abstract class MixinChunk_Column implements IColumn {
 
-    // WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING FIELDS IN MixinChunk_Cubes
+    /*
+     * WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING
+     * FIELDS IN "cubicchunks.asm.mixin.core.common.MixinChunk_Cubes" and
+     * "cubicchunks.asm.mixin.core.client.MixinChunk_Cubes".
+     */
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
     private Cube cachedCube;
