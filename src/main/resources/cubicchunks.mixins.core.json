@@ -21,7 +21,9 @@
         "client.MixinWorldClient",
         "client.MixinRenderGlobal",
         "client.MixinChunkCache_HeightLimits",
-        "client.MixinViewFrustum_RenderHeightFix"
+        "client.MixinChunk_Cubes",
+        "client.MixinViewFrustum_RenderHeightFix",
+        "client.MixinWorldProvider"
     ],
     "server": [
         "server.MixinDedicatedServer_HeightLimits"
