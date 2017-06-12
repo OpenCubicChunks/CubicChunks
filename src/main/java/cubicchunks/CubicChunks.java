@@ -90,6 +90,7 @@ import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.IForgeRegistry;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -263,6 +264,19 @@ public class CubicChunks {
         if (config != null) {
             listener.onConfigUpdate(config);
         }
+    }
+
+    // essentially a copy of FMLLog.bigWarning, with more lines of stacktrace
+    public static void bigWarning(String format, Object... data)
+    {
+        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+        LOGGER.log(Level.WARN, "****************************************");
+        LOGGER.log(Level.WARN, "* "+format, data);
+        for (int i = 2; i < 10 && i < trace.length; i++)
+        {
+            LOGGER.log(Level.WARN, "*  at {}{}", trace[i].toString(), i == 7 ? "..." : "");
+        }
+        LOGGER.log(Level.WARN, "****************************************");
     }
 
     public static class Config {

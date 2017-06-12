@@ -113,18 +113,4 @@ public class BlankCube extends Cube {
     @Override
     public void markForRenderUpdate() {
     }
-
-    @Override
-    public EntityContainer getEntityContainer() {
-        return new EntityContainer() {
-            @Override
-            public ClassInheritanceMultiMap<Entity> getEntitySet() {
-                Error err = new Error();
-                if (!err.getStackTrace()[1].getClassName().contains("RenderGlobal")) {
-                    err.printStackTrace();
-                }
-                return super.getEntitySet();
-            }
-        };
-    }
 }
