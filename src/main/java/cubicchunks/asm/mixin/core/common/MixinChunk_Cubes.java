@@ -106,7 +106,11 @@ public abstract class MixinChunk_Cubes implements IColumn {
     @Shadow protected boolean isChunkLoaded;
     @Shadow private boolean chunkTicked;
     @Shadow private boolean isLightPopulated;
-    // WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING FIELDS IN MixinChunk_Column
+    /*
+     * WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING
+     * FIELDS IN "cubicchunks.asm.mixin.core.client.MixinChunk_Cubes" and
+     * "cubicchunks.asm.mixin.core.common.MixinChunk_Columns".
+     */
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
     private Cube cachedCube; // todo: make it always nonnull using BlankCube
@@ -232,18 +236,6 @@ public abstract class MixinChunk_Cubes implements IColumn {
             return cubeMap.getStoragesToTick();
         }
         return storageArrays;
-    }
-
-    // ==============================================
-    //               generateHeightMap
-    // ==============================================
-
-    // TODO: Move to client-only mixin as this method is side-only
-    @Inject(method = "generateHeightMap", at = @At(value = "HEAD"), cancellable = true)
-    protected void generateHeightMap_CubicChunks_Cancel(CallbackInfo cbi) {
-        if (isColumn) {
-            cbi.cancel();
-        }
     }
 
     /*
@@ -717,31 +709,6 @@ public abstract class MixinChunk_Cubes implements IColumn {
     private void setStorageArrays_CubicChunks_NotSupported(ExtendedBlockStorage[] newStorageArrays, CallbackInfo cbi) {
         if (isColumn) {
             throw new UnsupportedOperationException("setting storage arrays it not supported with cubic chunks");
-        }
-    }
-
-    // ==============================================
-    //                  fillChunk
-    // ==============================================
-
-    @SideOnly(Side.CLIENT)
-    @Inject(method = "fillChunk", at = @At(value = "HEAD"))
-    private void fillChunk_CubicChunks_NotSupported(PacketBuffer buf, int i, boolean flag, CallbackInfo cbi) {
-        if (isColumn) {
-            throw new UnsupportedOperationException("setting storage arrays it not supported with cubic chunks");
-        }
-    }
-
-    // ==============================================
-    //             enqueueRelightChecks
-    // ==============================================
-
-    @SideOnly(Side.CLIENT)
-    @Inject(method = "enqueueRelightChecks", at = @At(value = "HEAD"), cancellable = true)
-    private void enqueueRelightChecks_CubicChunks_NotSupported(CallbackInfo cbi) {
-        if (isColumn) {
-            // todo: enqueueRelightChecks
-            cbi.cancel();
         }
     }
 
