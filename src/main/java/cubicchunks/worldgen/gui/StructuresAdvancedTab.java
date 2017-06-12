@@ -34,7 +34,6 @@ import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeFloatSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeIntSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeRangeSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
@@ -44,11 +43,13 @@ import net.malisis.core.client.gui.component.interaction.UISlider;
 
 class StructuresAdvancedTab {
 
+    // caves
+
     // basic advanced cave config
-    private final UISlider<Integer> rarityPerChunk;
-    private final UISlider<Integer> maxInitialNodes;
-    private final UISlider<Integer> largeNodeRarity;
-    private final UISlider<Integer> largeNodeMaxBranches;
+    private final UISlider<Integer> caveRarityPerChunk;
+    private final UISlider<Integer> caveMaxInitialNodes;
+    private final UISlider<Integer> caveLargeNodeRarity;
+    private final UISlider<Integer> caveLargeNodeMaxBranches;
     private final UISlider<Integer> bigCaveRarity;
     private final UISlider<Float> caveSizeFactor1;
     private final UISlider<Float> caveSizeFactor2;
@@ -56,15 +57,41 @@ class StructuresAdvancedTab {
     private final UISlider<Float> caveSizeAdd;
 
     // more advanced cave config
-    private final UISlider<Integer> alternateFlattenFactorRarity;
-    private final UISlider<Float> flattenFactor;
-    private final UISlider<Float> altFlattenFactor;
-    private final UISlider<Float> directionChangeFactor;
-    private final UISlider<Float> prevHorizAccelerationWeight;
-    private final UISlider<Float> prevVertAccelerationWeight;
-    private final UISlider<Float> maxHorizAccelChange;
-    private final UISlider<Float> maxVertAccelChange;
-    private final UISlider<Integer> carveStepRarity;
+    private final UISlider<Integer> caveAlternateFlattenFactorRarity;
+    private final UISlider<Float> caveFlattenFactor;
+    private final UISlider<Float> caveAltFlattenFactor;
+    private final UISlider<Float> caveDirectionChangeFactor;
+    private final UISlider<Float> cavePrevHorizAccelerationWeight;
+    private final UISlider<Float> cavePrevVertAccelerationWeight;
+    private final UISlider<Float> caveMaxHorizAccelChange;
+    private final UISlider<Float> caveMaxVertAccelChange;
+    private final UISlider<Integer> caveCarveStepRarity;
+    private final UISlider<Float> caveFloorDepth;
+
+    // ravines
+
+    // basic advanced cave config
+    private final UISlider<Integer> ravineRarityPerChunk;
+    private final UISlider<Integer> ravineMaxCubeY;
+    private final UISlider<Integer> caveMaxInitialNodes;
+    private final UISlider<Integer> caveLargeNodeRarity;
+    private final UISlider<Integer> caveLargeNodeMaxBranches;
+    private final UISlider<Integer> bigCaveRarity;
+    private final UISlider<Float> caveSizeFactor1;
+    private final UISlider<Float> caveSizeFactor2;
+    private final UIRangeSlider<Float> bigCaveSizeFactorRange;
+    private final UISlider<Float> caveSizeAdd;
+
+    // more advanced cave config
+    private final UISlider<Integer> caveAlternateFlattenFactorRarity;
+    private final UISlider<Float> caveFlattenFactor;
+    private final UISlider<Float> caveAltFlattenFactor;
+    private final UISlider<Float> caveDirectionChangeFactor;
+    private final UISlider<Float> cavePrevHorizAccelerationWeight;
+    private final UISlider<Float> cavePrevVertAccelerationWeight;
+    private final UISlider<Float> caveMaxHorizAccelChange;
+    private final UISlider<Float> caveMaxVertAccelChange;
+    private final UISlider<Integer> caveCarveStepRarity;
     private final UISlider<Float> caveFloorDepth;
 
     private final UIVerticalTableLayout container;
@@ -79,14 +106,14 @@ class StructuresAdvancedTab {
                 .add(label(gui, malisisText("cave.settings_group"), 20),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(this.rarityPerChunk = makeIntSlider(gui, malisisText("cave.rarity", " %d"), 8, 1024, settings.rarityPerChunk),
+                .add(this.caveRarityPerChunk = makeIntSlider(gui, malisisText("cave.rarity", " %d"), 8, 8192, settings.rarityPerChunk),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.maxInitialNodes = makeIntSlider(gui, malisisText("cave.max_init_nodes", " %d"), 1, 20, settings.maxInitialNodes),
+                .add(this.caveMaxInitialNodes = makeIntSlider(gui, malisisText("cave.max_init_nodes", " %d"), 1, 20, settings.maxInitialNodes),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
 
-                .add(this.largeNodeRarity = makeIntSlider(gui, malisisText("cave.large_node_rarity", " %d"), 1, 50, settings.largeNodeRarity),
+                .add(this.caveLargeNodeRarity = makeIntSlider(gui, malisisText("cave.large_node_rarity", " %d"), 1, 50, settings.largeNodeRarity),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.largeNodeMaxBranches =
+                .add(this.caveLargeNodeMaxBranches =
                                 makeIntSlider(gui, malisisText("cave.large_node_max_branches", " %d"), 1, 15, settings.largeNodeMaxBranches),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
 
@@ -105,36 +132,36 @@ class StructuresAdvancedTab {
                         settings.minBigCaveSizeFactor, settings.maxBigCaveSizeFactor),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(this.alternateFlattenFactorRarity =
+                .add(this.caveAlternateFlattenFactorRarity =
                                 makeIntSlider(gui, malisisText("cave.alt_flatten_rarity", " %d"), 1, 100, settings.alternateFlattenFactorRarity),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.directionChangeFactor =
+                .add(this.caveDirectionChangeFactor =
                                 makeFloatSlider(gui, malisisText("cave.dir_change_factor", " %.2f"), 0, 4, settings.directionChangeFactor),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
 
-                .add(this.flattenFactor = makeFloatSlider(gui, malisisText("cave.flatten_factor", " %.2f"), 0, 1.01f, settings.flattenFactor),
+                .add(this.caveFlattenFactor = makeFloatSlider(gui, malisisText("cave.flatten_factor", " %.2f"), 0, 1.01f, settings.flattenFactor),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.altFlattenFactor =
+                .add(this.caveAltFlattenFactor =
                                 makeFloatSlider(gui, malisisText("cave.alt_flatten_factor", " %.2f"), 0, 1.01f, settings.altFlattenFactor),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
 
-                .add(this.prevHorizAccelerationWeight =
+                .add(this.cavePrevHorizAccelerationWeight =
                                 makeFloatSlider(gui, malisisText("cave.prev_horiz_accel_weight", " %.2f"), 0, 1.01f, settings
                                         .prevHorizAccelerationWeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.prevVertAccelerationWeight =
+                .add(this.cavePrevVertAccelerationWeight =
                                 makeFloatSlider(gui, malisisText("cave.prev_vert_accel_weight", " %.2f"), 0, 1.01f, settings
                                         .prevVertAccelerationWeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
 
-                .add(this.maxHorizAccelChange =
+                .add(this.caveMaxHorizAccelChange =
                                 makeFloatSlider(gui, malisisText("cave.max_horiz_accel_change", " %.2f"), 0, 32, settings.maxHorizAccelChange),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.maxVertAccelChange =
+                .add(this.caveMaxVertAccelChange =
                                 makeFloatSlider(gui, malisisText("cave.max_vert_accel_change", " %.2f"), 0, 32, settings.maxVertAccelChange),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
 
-                .add(this.carveStepRarity = makeIntSlider(gui, malisisText("cave.carve_step_rarity", " %d"), 1, 16, settings.carveStepRarity),
+                .add(this.caveCarveStepRarity = makeIntSlider(gui, malisisText("cave.carve_step_rarity", " %d"), 1, 16, settings.carveStepRarity),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
                 .add(this.caveFloorDepth = makeFloatSlider(gui, malisisText("cave.floor_depth", " %.2f"), -1, 1, settings.caveFloorDepth),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
