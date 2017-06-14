@@ -104,7 +104,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
     /**
      * Each step ravine direction angles will be changed by this fraction of values that specify how direction changes
      */
-    private static final double DIRECTION_CHreANGE_FACTOR = 0.05;
+    private static final double DIRECTION_CHANGE_FACTOR = 0.05;
 
     /**
      * This fraction of the previous value that controls horizontal direction changes will be used in next step

@@ -215,10 +215,10 @@ public class CustomGeneratorSettings {
      */
 
     // basic advanced cave config
-    public int rarityPerChunk = 16 * 7;
-    public int maxInitialNodes = 14;
-    public int largeNodeRarity = 4;
-    public int largeNodeMaxBranches = 4;
+    public int caveRarityPerChunk = 16 * 7;
+    public int caveMaxInitialNodes = 14;
+    public int caveLargeNodeRarity = 4;
+    public int caveLargeNodeMaxBranches = 4;
     public int bigCaveRarity = 10;
     public float caveSizeFactor1 = 2.0f;
     public float caveSizeFactor2 = 1.0f;
@@ -227,16 +227,33 @@ public class CustomGeneratorSettings {
     public float caveSizeAdd = 1.5f;
 
     // more advanced cave config
-    public int alternateFlattenFactorRarity = 6;
-    public float flattenFactor = 0.7f;
-    public float altFlattenFactor = 0.92f;
-    public float directionChangeFactor = 0.1f;
-    public float prevHorizAccelerationWeight = 0.75f;
-    public float prevVertAccelerationWeight = 0.9f;
-    public float maxHorizAccelChange = 4.0f;
-    public float maxVertAccelChange = 2.0f;
-    public int carveStepRarity = 4;
+    public int caveAltFlattenFactorRarity = 6;
+    public float caveFlattenFactor = 0.7f;
+    public float caveAltFlattenFactor = 0.92f;
+    public float caveDirectionChangeFactor = 0.1f;
+    public float cavePrevHorizAccelerationWeight = 0.75f;
+    public float cavePrevVertAccelerationWeight = 0.9f;
+    public float caveMaxHorizAccelChange = 4.0f;
+    public float caveMaxVertAccelChange = 2.0f;
+    public int caveCarveStepRarity = 4;
     public float caveFloorDepth = -0.7f;
+
+    // ravines
+    public int ravineRarityPerChunk;
+    public float ravineMinY;
+    public float ravineMaxY;
+    public float ravineSizeFactor1;
+    public float ravineSizeFactor2;
+    public float ravineSizeAdd;
+    public float ravineDirectionChangeFactor;
+    public float ravineMinRandomSizeFactor;
+    public float ravineMaxRandomSizeFactor;
+    public float ravinePrevHorizAccelerationWeight;
+    public float ravinePrevVertAccelerationWeight;
+    public float ravineMaxHorizAccelChange;
+    public float ravineMaxVertAccelChange;
+    public float ravineStretchYFactor;
+    public int ravineCarveStepRarity;
 
     public CustomGeneratorSettings() {
 

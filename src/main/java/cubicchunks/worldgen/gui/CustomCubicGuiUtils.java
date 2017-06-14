@@ -143,14 +143,17 @@ public class CustomCubicGuiUtils {
     }
 
     public static UIRangeSlider<Float> makeRangeSlider(ExtraGui gui, BiFunction<Float, Float, String> fmt, float min, float max, float defaultMin,
-            float defaultMax) {
+            float defaultMax, float... multVals) {
         UIRangeSlider<Float>[] wrappedSlider = new UIRangeSlider[1];
         DoubleUnaryOperator roundRadiusFunc = d -> 1.0 / (wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth()) * 0.5;
         float maxExp = MathHelper.ceil(Math.log(Math.max(1, max)) / Math.log(2));
 
         Converter<Float, Float> conv = Converters.builder()
                 .linearScale(min, max)
-                .rounding().withBase(2, 1).withBase(10, 1).withMaxExp(maxExp).withRoundingRadius(roundRadiusFunc)
+                .rounding()
+                    .withBase(2, 1).withBase(10, 1)
+                    .withBases(2, multVals).withBases(10, multVals)
+                    .withMaxExp(maxExp).withRoundingRadius(roundRadiusFunc)
                 .withInfinity().negativeAt(min).positiveAt(max)
                 .build();
 
