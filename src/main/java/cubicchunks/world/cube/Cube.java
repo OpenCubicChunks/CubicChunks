@@ -438,9 +438,6 @@ public class Cube implements XYZAddressable {
     }
 
     @Nullable public ExtendedBlockStorage getStorage() {
-        // defensively setModified here
-        // TODO: call setModified from ExtendedBlockStorage method to save less cubes
-        this.isModified = true;
         return this.storage;
     }
 
