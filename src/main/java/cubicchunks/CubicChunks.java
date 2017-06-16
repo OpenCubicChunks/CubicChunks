@@ -281,7 +281,7 @@ public class CubicChunks {
 
     public static class Config {
 
-        public static enum Options {
+        public static enum IntOptions {
             MAX_GENERATED_CUBES_PER_TICK(1, Integer.MAX_VALUE, 49 * 16, "The number of cubic chunks to generate per tick."),
             VERTICAL_CUBE_LOAD_DISTANCE(2, 32, 8, "Similar to Minecraft's view distance, only for vertical chunks."),
             CHUNK_G_C_INTERVAL(1, Integer.MAX_VALUE, 20 * 10,
@@ -294,7 +294,7 @@ public class CubicChunks {
             private final String description;
             private int value;
 
-            private Options(int minValue1, int maxValue1, int defaultValue1, String description1) {
+            private IntOptions(int minValue1, int maxValue1, int defaultValue1, String description1) {
                 minValue = minValue1;
                 maxValue = maxValue1;
                 defaultValue = defaultValue1;
@@ -308,7 +308,7 @@ public class CubicChunks {
 
             public void setValueFromNormal(float sliderValue) {
                 value = minValue + (int) ((maxValue - minValue) * sliderValue);
-                config.configuration.get(Configuration.CATEGORY_GENERAL, this.getNicelyFormattedName(), value).set(value);
+                config.configuration.get(Configuration.CATEGORY_GENERAL, getNicelyFormattedName(this.name()), value).set(value);
                 config.configuration.save();
                 for (IConfigUpdateListener l : configChangeListeners) {
                     l.onConfigUpdate(config);
@@ -318,21 +318,42 @@ public class CubicChunks {
             public int getValue() {
                 return value;
             }
+        }
+        
+        public static enum BoolOptions {
+            USE_VANILLA_CHUNK_WORLD_GENERATORS(false,
+                    "Enabling this option will force " + CubicChunks.MODID
+                            + " to use world generators designed for two dimensional chunks, which are often used for custom ore generators added by mods. To do so "
+                            + CubicChunks.MODID + " will pregenerate cubes in a range of height from 0 to 255.");
 
-            public String getNicelyFormattedName() {
-                StringBuffer out = new StringBuffer();
-                char char_ = '_';
-                char prevchar = 0;
-                for (char c : this.name().toCharArray()) {
-                    if (c != char_ && prevchar != char_) {
-                        out.append(String.valueOf(c).toLowerCase());
-                    } else if (c != char_) {
-                        out.append(String.valueOf(c));
-                    }
-                    prevchar = c;
-                }
-                return out.toString();
+            private final boolean defaultValue;
+            private final String description;
+            private boolean value;
+
+            private BoolOptions(boolean defaultValue1, String description1) {
+                defaultValue = defaultValue1;
+                description = description1;
+                value = defaultValue;
             }
+
+            public boolean getValue() {
+                return value;
+            }
+        }
+        
+        public static String getNicelyFormattedName(String name) {
+            StringBuffer out = new StringBuffer();
+            char char_ = '_';
+            char prevchar = 0;
+            for (char c : name.toCharArray()) {
+                if (c != char_ && prevchar != char_) {
+                    out.append(String.valueOf(c).toLowerCase());
+                } else if (c != char_) {
+                    out.append(String.valueOf(c));
+                }
+                prevchar = c;
+            }
+            return out.toString();
         }
 
         private Configuration configuration;
@@ -347,9 +368,13 @@ public class CubicChunks {
         }
 
         void syncConfig() {
-            for (Options configOption : Options.values()) {
-                configOption.value = configuration.getInt(configOption.getNicelyFormattedName(), Configuration.CATEGORY_GENERAL,
+            for (IntOptions configOption : IntOptions.values()) {
+                configOption.value = configuration.getInt(getNicelyFormattedName(configOption.name()), Configuration.CATEGORY_GENERAL,
                         configOption.defaultValue, configOption.minValue, configOption.maxValue, configOption.description);
+            }
+            for (BoolOptions configOption : BoolOptions.values()) {
+                configOption.value = configuration.getBoolean(getNicelyFormattedName(configOption.name()), Configuration.CATEGORY_GENERAL,
+                        configOption.defaultValue, configOption.description);
             }
             if (configuration.hasChanged()) {
                 configuration.save();
@@ -357,15 +382,15 @@ public class CubicChunks {
         }
 
         public int getMaxGeneratedCubesPerTick() {
-            return Options.MAX_GENERATED_CUBES_PER_TICK.value;
+            return IntOptions.MAX_GENERATED_CUBES_PER_TICK.value;
         }
 
         public int getVerticalCubeLoadDistance() {
-            return Options.VERTICAL_CUBE_LOAD_DISTANCE.value;
+            return IntOptions.VERTICAL_CUBE_LOAD_DISTANCE.value;
         }
 
         public int getChunkGCInterval() {
-            return Options.CHUNK_G_C_INTERVAL.value;
+            return IntOptions.CHUNK_G_C_INTERVAL.value;
         }
 
         public static class GUI extends GuiConfig {

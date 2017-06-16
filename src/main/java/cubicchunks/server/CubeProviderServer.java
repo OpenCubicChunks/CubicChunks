@@ -23,6 +23,7 @@
  */
 package cubicchunks.server;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.ICubeIO;
 import cubicchunks.server.chunkio.RegionCubeIO;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
@@ -35,6 +36,7 @@ import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
@@ -45,6 +47,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -84,7 +87,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 null); // safe to null out IChunkGenerator (Note: lets hope mods don't touch it, ik its public)
 
         this.cubeGen = cubeGen;
-
         this.worldServer = worldServer;
         try {
             this.cubeIO = new RegionCubeIO(worldServer);
@@ -403,6 +405,22 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 popcube.setPopulated(true);
             }
         });
+        
+        if (!(cubeGen instanceof VanillaCompatibilityGenerator) && CubicChunks.Config.BoolOptions.USE_VANILLA_CHUNK_WORLD_GENERATORS.getValue()) {
+            for (int x = 0; x < 2; x++) {
+                for (int z = 0; z < 2; z++) {
+                    for (int y = 15; y >= 0; y--) {
+                        Cube popcube = getCube(x + cubeX, y + cubeY, z + cubeZ);
+                        if (!popcube.isPopulated()) {
+                            cubeGen.populate(popcube);
+                            popcube.setPopulated(true);
+                        }
+                    }
+                }
+            }
+            GameRegistry.generateWorld(cubeX, cubeZ, world, chunkGenerator, this);
+        }
+        
         cube.setFullyPopulated(true);
     }
 

@@ -171,13 +171,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
     @Nonnull private final CubeProviderServer cubeCache;
 
-    private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.Options.MAX_GENERATED_CUBES_PER_TICK.getValue();
+    private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.IntOptions.MAX_GENERATED_CUBES_PER_TICK.getValue();
 
     public PlayerCubeMap(ICubicWorldServer worldServer) {
         super((WorldServer) worldServer);
         this.cubeCache = getWorld().getCubeCache();
         this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(),
-                CubicChunks.Config.Options.VERTICAL_CUBE_LOAD_DISTANCE.getValue());
+                CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE.getValue());
         CubicChunks.addConfigChangeListener(this);
     }
 
