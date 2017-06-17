@@ -135,17 +135,6 @@ public abstract class MixinChunk_Cubes implements IColumn {
         return cube.getStorage();
     }
 
-    // getEntityList is unlikely to be called sequentially many times for the same cube, no caching
-    private ClassInheritanceMultiMap<Entity> getEntityList_CubicChunks(int index) {
-        if (!isColumn) {
-            return entityLists[index];
-        }
-        if (cachedCube != null && cachedCube.getY() == index) {
-            return cachedCube.getEntityContainer().getEntitySet();
-        }
-        return getCubicWorld().getCubeCache().getCube(getX(), index, getZ()).getEntityContainer().getEntitySet();
-    }
-
     // setEBS is unlikely to be used extremely frequently, no caching
     private void setEBS_CubicChunks(int index, ExtendedBlockStorage ebs) {
         if (!isColumn) {
@@ -508,7 +497,14 @@ public abstract class MixinChunk_Cubes implements IColumn {
         entityIn.chunkCoordX = this.x;
         entityIn.chunkCoordY = k;
         entityIn.chunkCoordZ = this.z;
-        getEntityList_CubicChunks(k).add(entityIn);
+        
+        if (!isColumn) {
+            entityLists[k].add(entityIn);
+        } else if (cachedCube != null && cachedCube.getY() == k) {
+            cachedCube.getEntityContainer().addEntity(entityIn);
+        } else {
+            getCubicWorld().getCubeCache().getCube(getX(), k, getZ()).getEntityContainer().addEntity(entityIn);
+        }
     }
 
     // ==============================================
@@ -525,7 +521,13 @@ public abstract class MixinChunk_Cubes implements IColumn {
             index = Coords.blockToCube(getCubicWorld().getMaxHeight()) - 1;
         }
 
-        getEntityList_CubicChunks(index).remove(entityIn);
+        if (!isColumn) {
+            entityLists[index].remove(entityIn);
+        } else if (cachedCube != null && cachedCube.getY() == index) {
+            cachedCube.getEntityContainer().remove(entityIn);
+        } else {
+            getCubicWorld().getCubeCache().getCube(getX(), index, getZ()).getEntityContainer().remove(entityIn);
+        }
     }
 
     // ==============================================
