@@ -14,7 +14,8 @@
         "common.MixinWorld_HeightLimits",
         "common.MixinChunkCache_HeightLimits",
         "common.MixinEntity_DeathFix",
-        "common.MixinWorldProvider"
+        "common.MixinWorldProvider",
+        "common.MixinPlayerList"
     ],
     "client": [
         "client.MixinWorld_HeightLimits",

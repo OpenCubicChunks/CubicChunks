@@ -23,6 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
+import static cubicchunks.asm.JvmNames.CHUNK_IS_MODIFIED;
 import static cubicchunks.asm.JvmNames.CHUNK_CONSTRUCT_1;
 import static cubicchunks.asm.JvmNames.CHUNK_IS_CHUNK_LOADED;
 import static cubicchunks.asm.JvmNames.CHUNK_STORAGE_ARRAYS;
@@ -54,6 +55,7 @@ import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.Chunk;
@@ -106,6 +108,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
     @Shadow protected boolean isChunkLoaded;
     @Shadow private boolean chunkTicked;
     @Shadow private boolean isLightPopulated;
+    @Shadow private boolean isModified;
     /*
      * WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING
      * FIELDS IN "cubicchunks.asm.mixin.core.client.MixinChunk_Cubes" and
@@ -310,7 +313,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             getCubicWorld().getLightingManager().doOnBlockSetLightUpdates(this, localX, oldHeightValue, y, localZ);
         }
     }
-
+    
     // make relightBlock no-op for cubic chunks, handles by injection above
     @Inject(method = "relightBlock", at = @At(value = "HEAD"), cancellable = true)
     private void relightBlock_CubicChunks_Replace(int x, int y, int z, CallbackInfo cbi) {
@@ -404,6 +407,15 @@ public abstract class MixinChunk_Cubes implements IColumn {
     private void setBlockState_CubicChunks_EBSSetRedirect(ExtendedBlockStorage[] array, int index, ExtendedBlockStorage val) {
         setEBS_CubicChunks(index, val);
     }
+    
+    @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = CHUNK_IS_MODIFIED))
+    private void setIsModifiedFromSetBlockState_Field(Chunk chunk, boolean isModifiedIn, BlockPos pos, IBlockState state) {
+        if (isColumn) {
+            getCubicWorld().getCubeFromBlockCoords(pos).markDirty();
+        } else {
+            isModified = isModifiedIn;
+        }
+    }
 
     // ==============================================
     //                 getLightFor
@@ -438,6 +450,15 @@ public abstract class MixinChunk_Cubes implements IColumn {
     ))
     private void setLightFor_CubicChunks_EBSSetRedirect(ExtendedBlockStorage[] array, int index, ExtendedBlockStorage ebs) {
         setEBS_CubicChunks(index, ebs);
+    }
+    
+    @Redirect(method = "setLightFor", at = @At(value = "FIELD", target = CHUNK_IS_MODIFIED))
+    private void setIsModifiedFromSetLightFor_Field(Chunk chunk, boolean isModifiedIn, EnumSkyBlock type, BlockPos pos, int value) {
+        if (isColumn) {
+            getCubicWorld().getCubeFromBlockCoords(pos).markDirty();
+        } else {
+            isModified = isModifiedIn;
+        }
     }
 
     // ==============================================
