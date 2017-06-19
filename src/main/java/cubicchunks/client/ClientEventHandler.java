@@ -24,7 +24,7 @@
 package cubicchunks.client;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.CubicChunks.Config.Options;
+import cubicchunks.CubicChunks.Config.IntOptions;
 import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -64,12 +64,12 @@ public class ClientEventHandler {
         if (currentGui instanceof GuiVideoSettings) {
             GuiVideoSettings gvs = (GuiVideoSettings) currentGui;
             GuiOptionsRowList gowl = (GuiOptionsRowList) gvs.optionsRowList;
-            GuiOptionsRowList.Row row = this.createRow(100, CubicChunks.Config.Options.VERTICAL_CUBE_LOAD_DISTANCE, gvs.width);
+            GuiOptionsRowList.Row row = this.createRow(100, CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE, gvs.width);
             gowl.options.add(1, row);
         }
     }
 
-    private GuiOptionsRowList.Row createRow(int buttonId, CubicChunks.Config.Options option, int width) {
+    private GuiOptionsRowList.Row createRow(int buttonId, CubicChunks.Config.IntOptions option, int width) {
         GuiCustomSlider slider = new GuiCustomSlider(buttonId, width / 2 - 155 + 160, 0, option);
         return new GuiOptionsRowList.Row(slider, null);
     }
@@ -78,9 +78,9 @@ public class ClientEventHandler {
 
         private float sliderValue;
         public boolean dragging;
-        private final Options option;
+        private final IntOptions option;
 
-        public GuiCustomSlider(int buttonId, int x, int y, CubicChunks.Config.Options optionIn) {
+        public GuiCustomSlider(int buttonId, int x, int y, CubicChunks.Config.IntOptions optionIn) {
             super(buttonId, x, y, 150, 20, "");
             this.sliderValue = 1.0F;
             this.option = optionIn;
@@ -134,8 +134,8 @@ public class ClientEventHandler {
             }
         }
 
-        private String createDisplayString(Options option2) {
-            return I18n.format(CubicChunks.MODID + ".gui." + option.getNicelyFormattedName(), option.getValue());
+        private String createDisplayString(IntOptions option2) {
+            return I18n.format(CubicChunks.MODID + ".gui." + CubicChunks.Config.getNicelyFormattedName(option.name()), option.getValue());
         }
 
         /**
