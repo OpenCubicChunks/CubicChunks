@@ -30,19 +30,19 @@ import cubicchunks.worldgen.gui.ExtraGui;
 import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.GuiRenderer;
 import net.malisis.core.client.gui.component.UIComponent;
-import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.control.UIScrollBar;
 
 import java.util.Iterator;
 import java.util.Map;
 
-public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContainer<T> {
+public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIAutoResizableContainer<T> {
 
     private int lastWidth = Integer.MIN_VALUE, lastHeight = Integer.MIN_VALUE;
     private UIOptionScrollbar scrollbar;
 
     private boolean isInit = false;
     private BiMap<UIComponent<?>, LOC> entries = HashBiMap.create();
+    private boolean scheduledLayout;
 
     public UILayout(ExtraGui gui) {
         super(gui);
@@ -70,6 +70,14 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
 
     protected boolean isInit() {
         return this.isInit;
+    }
+
+    protected int getLayoutWidth(UIComponent<?> comp) {
+        return (comp instanceof ISpecialLayoutSize) ? ((ISpecialLayoutSize) comp).getLayoutWidth() : comp.getWidth();
+    }
+
+    protected int getLayoutHeight(UIComponent<?> comp) {
+        return (comp instanceof ISpecialLayoutSize) ? ((ISpecialLayoutSize) comp).getLayoutHeight() : comp.getHeight();
     }
 
     protected void checkNotInitialized() {
@@ -104,14 +112,23 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
         this.scrollbar = new UIOptionScrollbar((ExtraGui) getGui(), (T) this, UIScrollBar.Type.VERTICAL);
         this.scrollbar.setPosition(6, 0, Anchor.RIGHT);
         this.scrollbar.setVisible(true);
-        this.layout();
+        layout();
         return (T) this;
     }
+
+    /**
+     * Checks if the layout is correct. this should be reasonably fast as it's called every frame.
+     * This method can ignore changes to the container size.
+     *
+     * layout() should not rely on this method being called before layout.
+     */
+    protected abstract boolean checkLayoutCorrect();
 
     public T add(UIComponent<?> component, LOC at) {
         this.checkNotInitialized();
         this.entries.put(component, at);
         this.onAdd(component, at);
+        this.onContentUpdate();
         return (T) this;
     }
 
@@ -152,7 +169,7 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
     @Override
     public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
         this.checkInitialized();
-        if (getWidth() != lastWidth || getHeight() != lastHeight) {
+        if (getWidth() != lastWidth || getHeight() != lastHeight || !checkLayoutCorrect()) {
             lastWidth = getWidth();
             lastHeight = getHeight();
             layout();

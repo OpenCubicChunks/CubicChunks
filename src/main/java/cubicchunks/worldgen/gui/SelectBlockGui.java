@@ -123,7 +123,7 @@ public class SelectBlockGui extends ExtraGui {
                 .setAnchor(Anchor.BOTTOM).setPosition(xPos, 0)
                 .init();
 
-        UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
+        UITabbedContainer tabGroup = UITabbedContainer.withPrevNextButton(this, prev, next, label::setText);
         tabGroup.add(upperLayout, lowerLayout);
 
         return tabGroup;

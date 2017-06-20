@@ -26,8 +26,8 @@ package cubicchunks.worldgen.gui;
 import static java.lang.Math.round;
 
 import com.google.common.base.Converter;
-import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
+import cubicchunks.worldgen.gui.component.UISelectLayoutSpecial;
 import cubicchunks.worldgen.gui.component.UISliderNoScroll;
 import cubicchunks.worldgen.gui.converter.Converters;
 import net.malisis.core.client.gui.Anchor;
@@ -38,7 +38,6 @@ import net.malisis.core.client.gui.component.decoration.UILabel;
 import net.malisis.core.client.gui.component.interaction.UICheckBox;
 import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.client.gui.component.interaction.UISlider;
-import net.malisis.core.client.gui.event.component.SpaceChangeEvent;
 import net.malisis.core.renderer.font.FontOptions;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.math.MathHelper;
@@ -178,13 +177,7 @@ public class CustomCubicGuiUtils {
                 biomes.add(new BiomeOption(biome));
             }
         }
-        UISelect<BiomeOption> select = new UISelect<>(gui, 0, biomes);
-        select.register(new Object() {
-            @Subscribe
-            public void onResize(SpaceChangeEvent.SizeChangeEvent evt) {
-                select.setMaxExpandedWidth(evt.getNewWidth());
-            }
-        });
+        UISelect<BiomeOption> select = new UISelectLayoutSpecial<>(gui, 0, biomes);
         select.select(BiomeOption.ALL);
         select.maxDisplayedOptions(8);
         return select;

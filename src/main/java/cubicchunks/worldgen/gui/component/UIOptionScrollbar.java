@@ -37,6 +37,7 @@ import net.malisis.core.client.gui.event.component.StateChangeEvent;
 import net.malisis.core.renderer.animation.Animation;
 import net.malisis.core.renderer.animation.transformation.AlphaTransform;
 import net.malisis.core.util.MouseButton;
+import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
 
 import java.util.concurrent.TimeUnit;
@@ -119,6 +120,18 @@ public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
         }
         return h;
 
+    }
+
+    @Override
+    public boolean onScrollWheel(int x, int y, int delta) {
+        if ((isHorizontal() != GuiScreen.isShiftKeyDown()) && !isHovered()) {
+            return super.onScrollWheel(x, y, delta);
+        }
+        float oldValue = getOffset();
+        scrollBy(-delta * getScrollable().getScrollStep());
+        float newValue = getOffset();
+        // exact equality check intended, check bit pattern to make NaN work
+        return Float.floatToIntBits(oldValue) != Float.floatToIntBits(newValue);
     }
 
     public void setColor(int scrollColor1, int scrollColor2) {

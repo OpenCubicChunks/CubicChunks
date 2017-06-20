@@ -309,4 +309,8 @@ public class CustomGeneratorSettings {
 
         return obj;
     }
+
+    public enum RavineLavaMode {
+        NO_LAVA, CONST_LAVA_Y, LINEAR, ARCTAN
+    }
 }

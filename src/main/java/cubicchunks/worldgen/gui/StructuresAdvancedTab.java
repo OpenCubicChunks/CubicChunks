@@ -36,13 +36,22 @@ import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeRangeSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.percentageFormat;
 
+import com.google.common.collect.Lists;
+import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings.RavineLavaMode;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
+import cubicchunks.worldgen.gui.component.UISelectLayoutSpecial;
+import cubicchunks.worldgen.gui.component.UITabbedContainer;
 import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
-import net.malisis.core.client.gui.GuiRenderer;
-import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
+import net.malisis.core.client.gui.component.decoration.UILabel;
+import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.client.gui.component.interaction.UISlider;
+import net.malisis.core.renderer.font.FontOptions;
+
+import java.lang.reflect.Field;
+import java.util.function.Consumer;
 
 class StructuresAdvancedTab {
 
@@ -77,7 +86,8 @@ class StructuresAdvancedTab {
     private final UIRangeSlider<Float> ravineYRange;
     private final UISlider<Float> ravineSizeFactor1;
     private final UISlider<Float> ravineSizeFactor2;
-    private final RavineGenLavaSection ravineGenLavaSection;
+    private final UISelect<RavineLavaMode> ravineLavaGenSelect;
+    //private final UIComponent<?> ravineGenLavaSection;
     private final UIRangeSlider<Float> ravineYAngleRange;
     private final UISlider<Float> ravineSizeAdd;
     private final UISlider<Float> ravineFlattenFactor;
@@ -182,9 +192,6 @@ class StructuresAdvancedTab {
                 .add(this.ravineSizeFactor2 = makeFloatSlider(gui, malisisText("ravine.size_factor_2", " %.2f"), 0, 32, settings.ravineSizeFactor2),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
 
-                .add(this.ravineGenLavaSection = new RavineGenLavaSection(gui),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-
                 .add(this.ravineYAngleRange = makeRangeSlider(gui, percentageFormat("ravine.y_angle_range", "%.2f"), 0, (float) Math.PI,
                         settings.ravineMinY, settings.ravineMaxY, (float) Math.PI),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
@@ -221,12 +228,25 @@ class StructuresAdvancedTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
 
                 .add(this.ravineStretchYFactor =
-                                makeFloatSlider(gui, malisisText("cave.stretch_y_factor", " %.2f"), -1, 1, settings.ravineStretchYFactor),
+                                makeFloatSlider(gui, malisisText("ravine.stretch_y_factor", " %.2f"), -1, 1, settings.ravineStretchYFactor),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
                 .add(this.ravineCarveStepRarity =
                                 makeIntSlider(gui, malisisText("ravine.carve_step_rarity", " %d"), 1, 16, settings.ravineCarveStepRarity),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
 
+                // lava section
+
+                .add(label(gui, malisisText("ravine.lava_section.group"), 20),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+
+                .add(new UILabel(gui, malisisText("ravine.lava_section.select_mode"))
+                                .setFontOptions(FontOptions.builder().color(0xFFFFFF).shadow().build()),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
+                .add(this.ravineLavaGenSelect = makeRavineGenLavaSection(gui),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
+
+                .add(makeRavineGenLavaSectionTabs(gui),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .init();
         this.container = layout;
     }
@@ -235,19 +255,71 @@ class StructuresAdvancedTab {
         return container;
     }
 
-    private static class RavineGenLavaSection extends UIComponent<RavineGenLavaSection> {
+    private UISelect<RavineLavaMode> makeRavineGenLavaSection(ExtraGui gui) {
+        return new UISelectLayoutSpecial<>(gui, 100, Lists.newArrayList(RavineLavaMode.values()));
+    }
 
-        public RavineGenLavaSection(MalisisGui gui) {
-            super(gui);
-            this.setSize(0, 30);
-        }
+    private UIComponent<?> makeRavineGenLavaSectionTabs(ExtraGui gui) {
 
-        @Override public void drawBackground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
+        UITabbedContainer tabs = new UITabbedContainer(gui);
+        this.ravineLavaGenSelect.register(new Object() {
+            private final Consumer<UISelect<?>> expandedSetFalse;
 
-        }
+            {
+                try {
+                    Field expandedFld = UISelect.class.getDeclaredField("expanded");
+                    expandedFld.setAccessible(true);
+                    expandedSetFalse = select -> {
+                        try {
+                            expandedFld.set(select, false);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    };
+                } catch (NoSuchFieldException e) {
+                    throw new RuntimeException(e);
+                }
+            }
 
-        @Override public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
+            @Subscribe
+            public void onSelect(UISelect.SelectEvent<RavineLavaMode> evt) {
+                /*
+                 * This is an awful hack to workaround a problem with MalisisCore:
+                 *
+                 * Firing this event causes re-layout of the containers, but this is still done
+                 * while the UISelect is expanded, which means that it's going to be higher than when not expanded.
+                 * The layout will take the additional height into account and in the end it will look visually wrong.
+                 *
+                 * Workaround: reflectively set expanded field to false here
+                 */
+                expandedSetFalse.accept(ravineLavaGenSelect);
+                tabs.setTab(evt.getNewValue().ordinal());
+            }
+        });
+        UIComponent<?> noLavaLabel = label(gui, malisisText("ravine.lava_section.no_config"), 20);
 
-        }
+        UISlider<Float> lavaY = makeFloatSlider(gui, malisisText("ravine.lava_section.lava_y"), -200, 200, 0);
+        lavaY.setSize(UIComponent.INHERITED, 20);
+
+        UIRangeSlider<Float> fullyFilledToNoFillRange = makeRangeSlider(gui, percentageFormat("ravine.lava_section.lava_y_fill_range", "%.2f"),
+                -16, 16, Float.NEGATIVE_INFINITY, -2, 0).setSize(UIComponent.INHERITED, 20);
+
+        UIVerticalTableLayout arctanTable = new UIVerticalTableLayout(gui, 1);
+        arctanTable.add(makeRangeSlider(gui, percentageFormat("ravine.lava_section.arctan_fill_range", "%.2f"), 0, 1, 0, 1)
+                .setSize(UIComponent.INHERITED, 20), new UIVerticalTableLayout.GridLocation(0, 0, 1));
+        arctanTable.add(makeFloatSlider(gui, malisisText("ravine.lava_section.arctan_mean_fill_y", " %.2f"), -400, 400, -100)
+                .setSize(UIComponent.INHERITED, 20), new UIVerticalTableLayout.GridLocation(0, 1, 1));
+        arctanTable.add(makeFloatSlider(gui, malisisText("ravine.lava_section.arctan_mean_fill_y_offset", "%.2f"), -400, 400, 0)
+                .setSize(UIComponent.INHERITED, 20), new UIVerticalTableLayout.GridLocation(0, 2, 1));
+        arctanTable.init();
+        arctanTable.setSize(UIComponent.INHERITED, 20).setAutoResize(false, true);
+
+        tabs.addTab(noLavaLabel, malisisText("ravine.lava_section.page.no_lava"));
+        tabs.addTab(lavaY, malisisText("ravine.lava_section.page.lava_y"));
+        tabs.addTab(fullyFilledToNoFillRange, malisisText("ravine.lava_section.page.lava_y_fill_range"));
+        tabs.addTab(arctanTable, malisisText("ravine.lava_section.page.lava_arctan_fill"));
+        tabs.setAutoResize(false, true);
+
+        return tabs;
     }
 }

@@ -24,9 +24,11 @@
 package cubicchunks.worldgen.gui.component;
 
 import com.google.common.base.Converter;
+import net.malisis.core.client.gui.GuiRenderer;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.control.IControlComponent;
 import net.malisis.core.client.gui.component.interaction.UISlider;
+import net.minecraft.util.math.MathHelper;
 
 public class UISliderNoScroll<T> extends UISlider<T> {
 
@@ -41,4 +43,21 @@ public class UISliderNoScroll<T> extends UISlider<T> {
         }
         return false;
     }
+
+    @Override
+    public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
+        int currWidth = this.width;
+        this.width = getWidth();
+        super.drawForeground(renderer, mouseX, mouseY, partialTick);
+        this.width = currWidth;
+    }
+
+    @Override
+    public void slideTo(int x) {
+        int l = getWidth() - SLIDER_WIDTH;
+        int pos = relativeX(x);
+        pos = MathHelper.clamp(pos - SLIDER_WIDTH / 2, 0, l);
+        slideTo((float) pos / l);
+    }
+
 }

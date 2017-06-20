@@ -28,12 +28,19 @@ import net.malisis.core.client.gui.component.UIComponent;
 
 public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
 
-    UIFlatTerrainLayer layer;
+    private final UIFlatTerrainLayer layer;
+    private final int gridSize;
+    private boolean isLayoutDone = false;
     int location = 0;
 
-    public UIItemGrid(ExtraGui guiFor, UIFlatTerrainLayer layerFor) {
+    public UIItemGrid(ExtraGui guiFor, UIFlatTerrainLayer layerFor, int gridSize) {
         super(guiFor);
-        layer = layerFor;
+        this.layer = layerFor;
+        this.gridSize = gridSize;
+    }
+
+    @Override protected boolean checkLayoutCorrect() {
+        return isLayoutDone;
     }
 
     @Override
@@ -45,13 +52,15 @@ public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
         int lastElementPosX = 0;
         int lastElementPosY = 0;
         for (UIComponent<?> component : components) {
-            if (lastElementPosX + component.getWidth() > this.getWidth() - this.getHorizontalPadding() * 2) {
+            if (lastElementPosX + gridSize > this.getWidth() - this.getHorizontalPadding() * 2) {
                 lastElementPosX = 0;
-                lastElementPosY += component.getHeight();
+                lastElementPosY += gridSize;
             }
+            component.setSize(gridSize, gridSize);
             component.setPosition(lastElementPosX, lastElementPosY);
-            lastElementPosX += component.getWidth();
+            lastElementPosX += gridSize;
         }
+        isLayoutDone = true;
     }
 
     @Override

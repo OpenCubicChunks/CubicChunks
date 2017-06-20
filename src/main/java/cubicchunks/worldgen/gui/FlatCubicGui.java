@@ -123,7 +123,7 @@ public class FlatCubicGui extends ExtraGui {
                 .add(done, UIBorderLayout.Border.CENTER)
                 .init();
 
-        UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
+        UITabbedContainer tabGroup = UITabbedContainer.withPrevNextButton(this, prev, next, label::setText);
         tabGroup.add(upperLayout, lowerLayout);
 
         return tabGroup;
