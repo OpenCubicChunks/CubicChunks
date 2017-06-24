@@ -39,6 +39,7 @@ import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -53,6 +54,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Consumer;
 
 import javax.annotation.Detainted;
@@ -80,6 +82,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Nonnull private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
 
     @Nonnull private ICubeGenerator cubeGen;
+    @Nonnull private Profiler profiler;
 
     public CubeProviderServer(ICubicWorldServer worldServer, ICubeGenerator cubeGen) {
         super((WorldServer) worldServer,
@@ -88,6 +91,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
         this.cubeGen = cubeGen;
         this.worldServer = worldServer;
+        this.profiler = ((WorldServer) worldServer).profiler;
         try {
             this.cubeIO = new RegionCubeIO(worldServer);
         } catch (IOException e) {
@@ -186,7 +190,13 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Override
     public boolean tick() {
         // NOTE: the return value is completely ignored
-        // NO-OP, This is called by WorldServer's tick() method every tick
+        profiler.startSection("providerTick("+cubeMap.getSize()+")");
+        long time = this.world.getTotalWorldTime();
+        Random rand = this.world.rand;
+        for (Cube cube : cubeMap) {
+            cube.tickCubeServer(time, this.world, rand);
+        }
+        profiler.endSection();
         return false;
     }
 
