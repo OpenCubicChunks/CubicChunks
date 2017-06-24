@@ -46,19 +46,35 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BooleanSupplier;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import org.apache.logging.log4j.LogManager;
+
+import com.google.common.collect.Sets;
 
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
@@ -69,7 +85,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class Cube implements XYZAddressable {
 
     @Nullable private static final ExtendedBlockStorage NULL_STORAGE = null;
-
+    private final Set<NextTickListEntry> pendingTickListEntriesHashSet = new HashSet<NextTickListEntry>();
+    private final TreeSet<NextTickListEntry> pendingTickListEntriesTreeSet = new TreeSet<NextTickListEntry>();
     /**
      * Side length of a cube
      */
@@ -305,11 +322,12 @@ public class Cube implements XYZAddressable {
     }
 
     /**
-     * Tick this cube
+     * Tick this cube on client side
      *
      * @param tryToTickFaster Whether costly calculations should be skipped in order to catch up with ticks
      */
-    public void tickCube(BooleanSupplier tryToTickFaster) {
+    @SideOnly(value = Side.CLIENT)
+    public void tickCubeClient(BooleanSupplier tryToTickFaster) {
         if (!this.isInitialLightingDone && this.isPopulated) {
             this.tryDoFirstLight(); //TODO: Very icky light population code! REMOVE IT!
         }
@@ -330,6 +348,51 @@ public class Cube implements XYZAddressable {
 
         if (!tryToTickFaster.getAsBoolean() && this.cubeLightUpdateInfo != null) {
             this.cubeLightUpdateInfo.tick();
+        }
+    }
+    
+    /**
+     * Tick this cube on server side. Block tick updates launched here.
+     * @param currentTime - current World time
+     * @param worldIn - World server containing this cube
+     * @param rand - World specific Random
+     */
+    public void tickCubeServer(long currentTime, WorldServer worldIn, Random rand) {
+        if (!isFullyPopulated) {
+            return;
+        }
+        int tickLimit = 1000;
+        Iterator<NextTickListEntry> pti = pendingTickListEntriesTreeSet.iterator();
+        while (pti.hasNext() && --tickLimit!=0) {
+            NextTickListEntry ntle = pti.next();
+            if (ntle.scheduledTime > currentTime)
+                return;
+            IBlockState iblockstate = this.getBlockState(ntle.position);
+            if (iblockstate.getMaterial() != Material.AIR && iblockstate.getBlock() == ntle.getBlock()) {
+                iblockstate.getBlock().updateTick(worldIn, ntle.position, iblockstate, rand);
+            }
+            pti.remove();
+        }
+        
+        pti = pendingTickListEntriesHashSet.iterator();
+        while (pti.hasNext()) {
+            NextTickListEntry ntle = pti.next();
+            pendingTickListEntriesTreeSet.add(ntle);
+            pti.remove();
+        }
+    }
+
+    public void scheduleUpdate(BlockPos pos, Block blockIn, int delay, int priority) {
+        if (pos instanceof BlockPos.MutableBlockPos || pos instanceof BlockPos.PooledMutableBlockPos) {
+            pos = new BlockPos(pos);
+            LogManager.getLogger().warn((String) "Tried to assign a mutable BlockPos to tick data...",
+                    (Throwable) (new Error(pos.getClass().toString())));
+        }
+        if (world.isBlockLoaded(pos)) {
+            NextTickListEntry nextticklistentry = new NextTickListEntry(pos, blockIn);
+            nextticklistentry.setScheduledTime((long) delay + world.getTotalWorldTime());
+            nextticklistentry.setPriority(priority);
+            this.pendingTickListEntriesHashSet.add(nextticklistentry);
         }
     }
 

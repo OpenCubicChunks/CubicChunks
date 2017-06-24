@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Consumer;
 
 import javax.annotation.Detainted;
@@ -187,6 +188,11 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     public boolean tick() {
         // NOTE: the return value is completely ignored
         // NO-OP, This is called by WorldServer's tick() method every tick
+        long time = this.world.getTotalWorldTime();
+        Random rand = this.world.rand;
+        for (Cube cube : cubeMap) {
+            cube.tickCubeServer(time, this.world, rand);
+        }
         return false;
     }
 
