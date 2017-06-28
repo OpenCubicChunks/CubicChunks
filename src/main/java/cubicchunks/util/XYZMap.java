@@ -25,14 +25,17 @@ package cubicchunks.util;
 
 import mcp.MethodsReturnNonnullByDefault;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Hash table implementation for objects in a 3-dimensional cartesian coordinate system.
+ * Hash table implementation for objects in a 3-dimensional cartesian coordinate
+ * system.
  *
  * @param <T> class of the objects to be contained in this map
  *
@@ -47,24 +50,25 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      */
     private static final int HASH_SEED = 1183822147;
 
-
     /**
      * backing array containing all elements of this map
      */
     @Nonnull private XYZAddressable[] buckets;
-
+    @Nonnull private int[] pointers;
     /**
      * the current number of elements in this map
      */
-    private int size;
+    private int size = 0;
 
     /**
-     * the maximum permissible load of the backing array, after reaching it the array will be resized
+     * the maximum permissible load of the backing array, after reaching it the
+     * array will be resized
      */
     private float loadFactor;
 
     /**
-     * the load threshold of the backing array, after reaching it the array will be resized
+     * the load threshold of the backing array, after reaching it the array will
+     * be resized
      */
     private int loadThreshold;
 
@@ -73,10 +77,9 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      */
     private int mask;
 
-
     /**
-     * Creates a new XYZMap with the given load factor and initial capacity. The map will automatically grow if
-     * the specified load is surpassed.
+     * Creates a new XYZMap with the given load factor and initial capacity. The
+     * map will automatically grow if the specified load is surpassed.
      *
      * @param loadFactor the load factor
      * @param capacity the initial capacity
@@ -94,10 +97,10 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
             tCapacity <<= 1;
         }
         this.buckets = new XYZAddressable[tCapacity];
+        this.pointers = new int[tCapacity];
 
         this.refreshFields();
     }
-
 
     /**
      * Returns the number of elements in this map
@@ -107,7 +110,6 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     public int getSize() {
         return this.size;
     }
-
 
     /**
      * Computes a 32b hash based on the given coordinates.
@@ -130,69 +132,65 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     }
 
     /**
-     * Computes the desired bucket's index for the given coordinates, based on the map's current capacity.
+     * Computes the desired pointer index for the given coordinates, based on
+     * the map's current capacity.
      *
      * @param x the x-coordinate
      * @param y the y-coordinate
      * @param z the z-coordinate
      *
-     * @return the desired bucket's index for the given coordinates
+     * @return the desired pointer index for the given coordinates
      */
-    private int getIndex(int x, int y, int z) {
+    private int getPointerIndex(int x, int y, int z) {
         return hash(x, y, z) & this.mask;
     }
 
     /**
-     * Computes the next index to the right of the given index, wrapping around if necessary.
+     * Computes the next index to the right of the given index, wrapping around
+     * if necessary.
      *
      * @param index the previous index
      *
      * @return the next index
      */
-    private int getNextIndex(int index) {
-        return (index + 1) & this.mask;
+    private int getNextPointerIndex(int pointerIndex) {
+        return ++pointerIndex & this.mask;
     }
 
-
     /**
-     * Associates the given value with its xyz-coordinates. If the map previously contained a mapping for these
-     * coordinates, the old value is replaced.
+     * Associates the given value with its xyz-coordinates. If the map
+     * previously contained a mapping for these coordinates, the old value is
+     * replaced.
      *
      * @param value value to be associated with its coordinates
      *
-     * @return the previous value associated with the given value's coordinates or null if no such value exists
+     * @return the previous value associated with the given value's coordinates
+     *         or null if no such value exists
      */
-    @Nullable @SuppressWarnings("unchecked")
+    @Nullable
+    @SuppressWarnings("unchecked")
     public T put(T value) {
-
         int x = value.getX();
         int y = value.getY();
         int z = value.getZ();
-        int index = getIndex(x, y, z);
+        int pointerIndex = this.getPointerIndex(x, y, z);
+        int index = pointers[pointerIndex];
 
-        // find the closest empty space or the element to be replaced
-        XYZAddressable bucket = this.buckets[index];
-        while (bucket != null) {
-
-            // If there exists an element at the given element's position, overwrite it.
+        while (index != 0) {
+            XYZAddressable bucket = this.buckets[index];
             if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
                 this.buckets[index] = value;
                 return (T) bucket;
             }
-
-            index = getNextIndex(index);
-            bucket = this.buckets[index];
+            pointerIndex = this.getNextPointerIndex(pointerIndex);
+            index = pointers[pointerIndex];
         }
-
-        // Insert the element into the empty bucket.
-        this.buckets[index] = value;
+        this.buckets[++size] = value;
+        pointers[pointerIndex] = size;
 
         // If the load threshold has been reached, increase the map's size.
-        ++this.size;
-        if (this.size > this.loadThreshold) {
+        if (this.size > this.loadThreshold)
             grow();
-        }
-
         return null;
     }
 
@@ -203,26 +201,28 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * @param y the y-coordinate
      * @param z the z-coordinate
      *
-     * @return the entry associated with the specified coordinates or null if no such entry exists
+     * @return the entry associated with the specified coordinates or null if no
+     *         such entry exists
      */
-    @Nullable @SuppressWarnings("unchecked")
+    @Nullable
+    @SuppressWarnings("unchecked")
     public T remove(int x, int y, int z) {
 
-        int index = getIndex(x, y, z);
+        int pointerIndex = this.getPointerIndex(x, y, z);
+        int index = pointers[pointerIndex];
 
-        // Search for the element. Only the buckets from the element's supposed index up to the next free slot must
+        // Search for the element. Only the buckets from the element's supposed
+        // index up to the next free slot must
         // be checked.
-        XYZAddressable bucket = this.buckets[index];
-        while (bucket != null) {
-
+        while (index != 0) {
+            XYZAddressable bucket = this.buckets[index];
             // If the correct bucket was found, remove it.
             if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
-                this.collapseBucket(index);
+                this.collapseBucket(pointerIndex, index);
                 return (T) bucket;
             }
-
-            index = getNextIndex(index);
-            bucket = this.buckets[index];
+            pointerIndex = this.getNextPointerIndex(pointerIndex);
+            index = pointers[pointerIndex];
         }
 
         // nothing was removed
@@ -230,41 +230,45 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     }
 
     /**
-     * Removes and returns the given value from this map. More specifically, removes the entry whose xyz-coordinates
-     * equal the given value's coordinates.
+     * Removes and returns the given value from this map. More specifically,
+     * removes the entry whose xyz-coordinates equal the given value's
+     * coordinates.
      *
      * @param value the value to be removed
      *
-     * @return the entry associated with the given value's coordinates or null if no such entry exists
+     * @return the entry associated with the given value's coordinates or null
+     *         if no such entry exists
      */
-    @Nullable public T remove(T value) {
+    @Nullable
+    public T remove(T value) {
         return this.remove(value.getX(), value.getY(), value.getZ());
     }
 
     /**
-     * Returns the value associated with the given coordinates or null if no such value exists.
+     * Returns the value associated with the given coordinates or null if no
+     * such value exists.
      *
      * @param x the x-coordinate
      * @param y the y-coordinate
      * @param z the z-coordinate
      *
-     * @return the entry associated with the specified coordinates or null if no such value exists
+     * @return the entry associated with the specified coordinates or null if no
+     *         such value exists
      */
-    @Nullable @SuppressWarnings("unchecked")
+    @Nullable
+    @SuppressWarnings("unchecked")
     public T get(int x, int y, int z) {
+        int pointerIndex = this.getPointerIndex(x, y, z);
+        int index = pointers[pointerIndex];
 
-        int index = getIndex(x, y, z);
-
-        XYZAddressable bucket = this.buckets[index];
-        while (bucket != null) {
-
+        while (index != 0) {
+            XYZAddressable bucket = this.buckets[index];
             // If the correct bucket was found, return it.
             if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
                 return (T) bucket;
             }
-
-            index = getNextIndex(index);
-            bucket = this.buckets[index];
+            pointerIndex = this.getNextPointerIndex(pointerIndex);
+            index = pointers[pointerIndex];
         }
 
         // nothing was found
@@ -272,28 +276,28 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     }
 
     /**
-     * Returns true if there exists an entry associated with the given xyz-coordinates in this map.
+     * Returns true if there exists an entry associated with the given
+     * xyz-coordinates in this map.
      *
      * @param x the x-coordinate
      * @param y the z-coordinate
      * @param z the y-coordinate
      *
-     * @return true if there exists an entry associated with the given coordinates in this map
+     * @return true if there exists an entry associated with the given
+     *         coordinates in this map
      */
     public boolean contains(int x, int y, int z) {
+        int pointerIndex = this.getPointerIndex(x, y, z);
+        int index = pointers[pointerIndex];
 
-        int index = getIndex(x, y, z);
-
-        XYZAddressable bucket = this.buckets[index];
-        while (bucket != null) {
-
-            // If the correct bucket was found, return true.
+        while (index != 0) {
+            XYZAddressable bucket = this.buckets[index];
+            // If the correct bucket was found, return it.
             if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
                 return true;
             }
-
-            index = getNextIndex(index);
-            bucket = this.buckets[index];
+            pointerIndex = this.getNextPointerIndex(pointerIndex);
+            index = pointers[pointerIndex];
         }
 
         // nothing was found
@@ -301,8 +305,9 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     }
 
     /**
-     * Returns true if the given value is contained within this map. More specifically, returns true if there exists
-     * an entry in this map whose xyz-coordinates equal the given value's coordinates.
+     * Returns true if the given value is contained within this map. More
+     * specifically, returns true if there exists an entry in this map whose
+     * xyz-coordinates equal the given value's coordinates.
      *
      * @param value the value
      *
@@ -313,132 +318,120 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     }
 
     /**
-     * Doubles the size of the backing array and redistributes all contained values accordingly.
+     * Doubles the size of the backing array and redistributes all contained
+     * values accordingly.
      */
     private void grow() {
-
-        XYZAddressable[] oldBuckets = this.buckets;
-
-        // double the size!
-        this.buckets = new XYZAddressable[this.buckets.length * 2];
-        this.refreshFields();
-
-        // Move the old entries to the new array.
-        for (XYZAddressable oldBucket : oldBuckets) {
-
-            // Skip empty buckets.
-            if (oldBucket == null) {
-                continue;
-            }
-
-            // Get the desired index of the old bucket and insert it into the first available slot.
-            int index = getIndex(oldBucket.getX(), oldBucket.getY(), oldBucket.getZ());
-            XYZAddressable bucket = this.buckets[index];
-            while (bucket != null) {
-                bucket = this.buckets[index = getNextIndex(index)];
-            }
-            this.buckets[index] = oldBucket;
+        int newLength = this.buckets.length * 2;
+        this.mask = newLength - 1;
+        XYZAddressable[] newBuckets = new XYZAddressable[newLength];
+        int[] newPointers = new int[newLength];
+        for (int i = 1; i <= size; i++) {
+            XYZAddressable bucket = buckets[i];
+            newBuckets[i] = bucket;
+            int pointerIndex = this.getPointerIndex(bucket.getX(), bucket.getY(), bucket.getZ());
+            while (newPointers[pointerIndex] != 0)
+                pointerIndex = this.getNextPointerIndex(pointerIndex);
+            newPointers[pointerIndex] = i;
         }
+        buckets = newBuckets;
+        pointers = newPointers;
+        loadThreshold = (int) (newLength * this.loadFactor) - 1;
     }
 
     /**
-     * Removes the value contained at the given index by shifting suitable values on its right to the left.
+     * Removes the value contained at the given index by shifting suitable
+     * values on its right to the left.
+     * 
+     * @param index
      *
-     * @param hole the index of the bucket to be collapsed
+     * @param holePointerIndex the index of the ponter to be collapsed
+     * @param holeIndex an index of the bucket to be collapsed
      */
-    private void collapseBucket(int hole) {
+    private void collapseBucket(final int holePointerIndex, final int holeIndex) {
+        final int lastElement = size;
+        final int oldLastPointerIndex = getElementPointerIndex(lastElement);
 
-        // This method must not be called on empty buckets.
-        assert this.buckets[hole] != null;
-        --this.size;
+        List<XYZAddressable> nextPointersBuckets = new ArrayList<XYZAddressable>(10);
+        List<Integer> nextBucketIndexes = new ArrayList<Integer>(10);
 
-        int currentIndex = hole;
-        while (true) {
-            currentIndex = getNextIndex(currentIndex);
+        this.pointers[oldLastPointerIndex] = holeIndex;
+        this.pointers[holePointerIndex] = 0;
 
-            // If there exists no element at the given index, there is nothing to fill the hole with.
-            XYZAddressable bucket = this.buckets[currentIndex];
-            if (bucket == null) {
-                this.buckets[hole] = null;
-                return;
-            }
-
-            // If the hole lies to the left of the currentIndex and to the right of the targetIndex, move the current
-            // element. These if conditions are necessary due to the bucket array wrapping around.
-            int targetIndex = getIndex(bucket.getX(), bucket.getY(), bucket.getZ());
-
-            // normal
-            if (hole < currentIndex) {
-                if (targetIndex <= hole || currentIndex < targetIndex) {
-                    this.buckets[hole] = bucket;
-                    hole = currentIndex;
-                }
-            }
-
-            // wrap around!
-            else {
-                if (hole >= targetIndex && targetIndex > currentIndex) {
-                    this.buckets[hole] = bucket;
-                    hole = currentIndex;
-                }
-            }
+        int pointerIndex = this.getNextPointerIndex(holePointerIndex);
+        int index = pointers[pointerIndex];
+        while (index != 0) {
+            XYZAddressable bucket = this.buckets[index];
+            nextPointersBuckets.add(bucket);
+            nextBucketIndexes.add(index);
+            pointers[pointerIndex] = 0;
+            pointerIndex = this.getNextPointerIndex(pointerIndex);
+            index = pointers[pointerIndex];
         }
+
+        this.buckets[holeIndex] = this.buckets[lastElement];
+        size--;
+
+        for (int i = 0; i < nextPointersBuckets.size(); i++) {
+            XYZAddressable bucket = nextPointersBuckets.get(i);
+            int x = bucket.getX();
+            int y = bucket.getY();
+            int z = bucket.getZ();
+            int newBucketPointerIndex = this.getPointerIndex(x, y, z);
+            int newIndex = pointers[newBucketPointerIndex];
+            while (newIndex != 0) {
+                newBucketPointerIndex = this.getNextPointerIndex(newBucketPointerIndex);
+                newIndex = pointers[newBucketPointerIndex];
+            }
+            pointers[newBucketPointerIndex] = nextBucketIndexes.get(i);
+        }
+
+    }
+
+    private int getElementPointerIndex(int index) {
+        XYZAddressable lastElement = this.buckets[index];
+        int pointerIndex = this.getPointerIndex(lastElement.getX(), lastElement.getY(), lastElement.getZ());
+        while (pointers[pointerIndex] != index) {
+            pointerIndex = this.getNextPointerIndex(pointerIndex);
+        }
+        return pointerIndex;
     }
 
     /**
-     * Updates the load threshold and the index mask based on the backing array's current size.
+     * Updates the load threshold and the index mask based on the backing
+     * array's current size.
      */
     private void refreshFields() {
         // we need that 1 extra space, make shore it will be there
-        this.loadThreshold = Math.min(this.buckets.length - 1, (int) (this.buckets.length * this.loadFactor));
+        this.loadThreshold = (int) (this.buckets.length * this.loadFactor) - 1;
         this.mask = this.buckets.length - 1;
     }
 
-
-    // Interface: Iterable<T> ------------------------------------------------------------------------------------------
+    // Interface: Iterable<T>
+    // ------------------------------------------------------------------------------------------
 
     public Iterator<T> iterator() {
         return new Iterator<T>() {
-            int at = -1;
-            int next = -1;
+
+            int at = 1;
 
             @Override
             public boolean hasNext() {
-                if (next > at) {
-                    return true;
-                }
-                for (next++; next < buckets.length; next++) {
-                    if (buckets[next] != null) {
-                        return true;
-                    }
-                }
-                return false;
+                return at <= size;
             }
 
-            @Nullable @Override
+            @Nullable
+            @Override
             @SuppressWarnings("unchecked")
             public T next() {
-                if (next > at) {
-                    at = next;
-                    return (T) buckets[at];
-                }
-                for (next++; next < buckets.length; next++) {
-                    if (buckets[next] != null) {
-                        at = next;
-                        return (T) buckets[at];
-                    }
-                }
-                return null;
+                return (T) buckets[at++];
             }
 
-            //TODO: WARNING: risk of iterating over the same item more than once if this is used
-            //               do to items wrapping back around form the front of the buckets array
             @Override
             public void remove() {
-                collapseBucket(at);
-                next = at = at - 1; // There could be a new item in the removed bucket
+                int pointerIndex = getElementPointerIndex(--at);
+                collapseBucket(pointerIndex, at);
             }
         };
     }
-
 }

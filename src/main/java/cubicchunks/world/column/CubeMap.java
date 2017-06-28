@@ -69,7 +69,9 @@ public class CubeMap implements Iterable<Cube> {
     public void put(Cube cube) {
         int searchIndex = binarySearch(cube.getY());
         if (this.contains(cube.getY(), searchIndex)) {
-            throw new IllegalArgumentException("Cube at " + cube.getY() + " already exists!");
+            Cube existing = cubes.get(searchIndex);
+            throw new IllegalArgumentException("Cube at " + cube.getY() + " already exists! "+
+                    "Existing "+existing+"  Attempt to add "+cube);
         }
         cubes.add(searchIndex, cube);
     }
