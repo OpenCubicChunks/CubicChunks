@@ -358,12 +358,8 @@ public class Cube implements XYZAddressable {
      * @param rand - World specific Random
      */
     public void tickCubeServer(long currentTime, WorldServer worldIn, Random rand) {
-        if (!isFullyPopulated) {
-            return;
-        }
-        int tickLimit = 1000;
         Iterator<NextTickListEntry> pti = pendingTickListEntriesTreeSet.iterator();
-        while (pti.hasNext() && --tickLimit!=0) {
+        while (pti.hasNext()) {
             NextTickListEntry ntle = pti.next();
             if (ntle.scheduledTime > currentTime)
                 return;
@@ -373,12 +369,26 @@ public class Cube implements XYZAddressable {
             }
             pti.remove();
         }
-        
         pti = pendingTickListEntriesHashSet.iterator();
-        while (pti.hasNext()) {
+        int tickLimit = 32;
+        while (pti.hasNext() && --tickLimit!=0) {
             NextTickListEntry ntle = pti.next();
             pendingTickListEntriesTreeSet.add(ntle);
             pti.remove();
+        }
+    }
+    
+    public void randomTick(int updateLCG, WorldServer worldServer, Random rand) {
+        int j1 = updateLCG >> 2;
+        int localX = j1 & 15;
+        int localY = j1 >> 8 & 15;
+        int localZ = j1 >> 16 & 15;
+        IBlockState iblockstate = this.storage.get(localX, localY, localZ);
+        Block block = iblockstate.getBlock();
+        if (block.getTickRandomly()) {
+            block.randomTick(worldServer,
+                    new BlockPos(this.coords.getMinBlockX() + localX, this.coords.getMinBlockY() + localY, this.coords.getMinBlockZ() + localZ),
+                    iblockstate, rand);
         }
     }
 

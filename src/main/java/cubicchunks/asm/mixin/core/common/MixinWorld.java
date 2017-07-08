@@ -88,6 +88,7 @@ public abstract class MixinWorld implements ICubicWorld {
     @Shadow @Final public Random rand;
     @Shadow @Final public boolean isRemote;
     @Shadow @Final public Profiler profiler;
+    @Shadow protected int updateLCG;
     @Shadow @Final @Mutable protected ISaveHandler saveHandler;
     @Shadow protected boolean findingSpawnPoint;
 
@@ -115,6 +116,12 @@ public abstract class MixinWorld implements ICubicWorld {
 
     @Override public int getMaxHeight() {
         return this.maxHeight;
+    }
+    
+    /** Update LCG value and return updated **/
+    @Override public int updateLCG(){
+        this.updateLCG = this.updateLCG * 3 + 1013904223;
+        return this.updateLCG;
     }
 
     @Override public ICubeProvider getCubeCache() {

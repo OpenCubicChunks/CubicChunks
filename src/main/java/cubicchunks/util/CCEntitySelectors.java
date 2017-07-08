@@ -21,38 +21,18 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
-
-import cubicchunks.entity.CubicEntityTracker;
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.CubeProviderServer;
-import cubicchunks.server.PlayerCubeMap;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
+package cubicchunks.util;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ICubicWorldServer extends ICubicWorld {
+import com.google.common.base.Predicate;
 
-    CubeProviderServer getCubeCache();
+import net.minecraft.entity.EntityLivingBase;
 
-    PlayerCubeMap getPlayerCubeMap();
-
-    FirstLightProcessor getFirstLightProcessor();
-
-    //field accessors
-    boolean getDisableLevelSaving();
-
-    //vanilla methods
-    @Nullable Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
-
-    boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
-
-    CubicEntityTracker getCubicEntityTracker();
-    
+public class CCEntitySelectors {
+    public static Predicate<EntityLivingBase> LIVING_CAN_SEE_SKY = new Predicate<EntityLivingBase>() {
+        public boolean apply(@Nullable EntityLivingBase entity) {
+            return entity != null && entity.isEntityAlive() && entity.getEntityWorld().canSeeSky(entity.getPosition());
+        }
+    };
 }

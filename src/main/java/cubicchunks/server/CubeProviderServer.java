@@ -39,6 +39,7 @@ import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -61,6 +62,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import org.apache.logging.log4j.LogManager;
+
 /**
  * This is CubicChunks equivalent of ChunkProviderServer, it loads and unloads Cubes and Columns.
  * <p>
@@ -81,6 +84,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Nonnull private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
 
     @Nonnull private ICubeGenerator cubeGen;
+    private Profiler profiler;
 
     public CubeProviderServer(ICubicWorldServer worldServer, ICubeGenerator cubeGen) {
         super((WorldServer) worldServer,
@@ -89,6 +93,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
         this.cubeGen = cubeGen;
         this.worldServer = worldServer;
+        this.profiler = ((WorldServer) worldServer).profiler;
         try {
             this.cubeIO = new RegionCubeIO(worldServer);
         } catch (IOException e) {
@@ -186,13 +191,19 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Override
     public boolean tick() {
+        profiler.startSection("providerTick("+cubeMap.getSize()+")");
         // NOTE: the return value is completely ignored
-        // NO-OP, This is called by WorldServer's tick() method every tick
         long time = this.world.getTotalWorldTime();
+        int randomTickSpeed = this.world.getGameRules().getInt("randomTickSpeed");
         Random rand = this.world.rand;
         for (Cube cube : cubeMap) {
-            cube.tickCubeServer(time, this.world, rand);
+            if(cube.isFullyPopulated()){
+                cube.tickCubeServer(time, this.world, rand);
+                while(--randomTickSpeed>0)
+                    cube.randomTick(this.worldServer.updateLCG(), this.world, rand);
+            }
         }
+        profiler.endSection();
         return false;
     }
 
@@ -558,12 +569,12 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         this.cubeIO.flush();
     }
 
-    Iterator<Cube> cubesIterator() {
+    public Iterator<Cube> cubesIterator() {
         return cubeMap.iterator();
     }
 
     @SuppressWarnings("unchecked")
-    Iterator<IColumn> columnsIterator() {
+    public Iterator<IColumn> columnsIterator() {
         return (Iterator<IColumn>) (Object) id2ChunkMap.values().iterator();
     }
 

@@ -59,7 +59,7 @@ public class ChunkGc implements IConfigUpdateListener {
             tick = 0;
             chunkGc();
         }
-        verifyColumnConsistency();
+        //verifyColumnConsistency();
     }
 
     private void verifyColumnConsistency() {
