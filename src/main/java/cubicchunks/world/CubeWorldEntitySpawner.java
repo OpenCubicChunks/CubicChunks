@@ -30,10 +30,12 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.populator.PopulatorUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.passive.IAnimals;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.WeightedRandom;
 import net.minecraft.util.math.BlockPos;
@@ -46,12 +48,8 @@ import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fml.common.eventhandler.Event;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -64,7 +62,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
     private static final int MOB_COUNT_DIV = (int) Math.pow(17.0D, 2.0D) * CUBES_PER_CHUNK;
     private static final int SPAWN_RADIUS = 8;
 
-    @Nonnull private Set<CubePos> cubesForSpawn = new HashSet<>();
+    @Nonnull private List<CubePos> cubesForSpawn = new ArrayList<CubePos>();
 
     @Override
     public int findChunksForSpawning(WorldServer worldOrig, boolean hostileEnable, boolean peacefulEnable, boolean spawnOnSetTickRate) {
@@ -77,25 +75,27 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
         int chunkCount = addEligibleChunks(world, this.cubesForSpawn);
         int totalSpawnCount = 0;
 
+        next_type: 
         for (EnumCreatureType mobType : EnumCreatureType.values()) {
             if (!shouldSpawnType(mobType, hostileEnable, peacefulEnable, spawnOnSetTickRate)) {
                 continue;
             }
-            int worldEntityCount = world.countEntities(mobType, true);
+            int worldEntityCount = 0;
             int maxEntityCount = mobType.getMaxNumberOfCreature() * chunkCount / MOB_COUNT_DIV;
-
-            if (worldEntityCount > maxEntityCount) {
-                continue;
+            Class<? extends IAnimals> mobTypeClass = mobType.getCreatureClass();
+            for (Entity entity : worldOrig.loadedEntityList) {
+                if (entity.getClass().isAssignableFrom(mobTypeClass) && ++worldEntityCount > maxEntityCount)
+                    continue next_type;
             }
-            ArrayList<CubePos> shuffled = getShuffledCopy(this.cubesForSpawn);
-            totalSpawnCount += spawnCreatureTypeInAllChunks(mobType, world, shuffled);
+            totalSpawnCount += spawnCreatureTypeInAllChunks(mobType, world);
         }
         return totalSpawnCount;
     }
 
-    private int addEligibleChunks(ICubicWorldServer world, Set<CubePos> possibleChunks) {
+    private int addEligibleChunks(ICubicWorldServer world, List<CubePos> cubesForSpawn2) {
         int chunkCount = 0;
-
+        Random rand = world.getRand();
+        
         for (EntityPlayer player : world.getPlayerEntities()) {
             if (player.isSpectator()) {
                 continue;
@@ -105,23 +105,13 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
             for (int cubeXRel = -SPAWN_RADIUS; cubeXRel <= SPAWN_RADIUS; ++cubeXRel) {
                 for (int cubeYRel = -SPAWN_RADIUS; cubeYRel <= SPAWN_RADIUS; ++cubeYRel) {
                     for (int cubeZRel = -SPAWN_RADIUS; cubeZRel <= SPAWN_RADIUS; ++cubeZRel) {
-                        boolean isEdge = cubeXRel == -SPAWN_RADIUS || cubeXRel == SPAWN_RADIUS ||
-                                cubeYRel == -SPAWN_RADIUS || cubeYRel == SPAWN_RADIUS ||
-                                cubeZRel == -SPAWN_RADIUS || cubeZRel == SPAWN_RADIUS;
+                        if(cubeXRel*cubeXRel+cubeYRel*cubeYRel+cubeZRel*cubeZRel<=4)
+                            continue;
                         CubePos chunkPos = center.add(cubeXRel, cubeYRel, cubeZRel);
-
-                        if (possibleChunks.contains(chunkPos)) {
-                            continue;
-                        }
-                        ++chunkCount;
-
-                        if (isEdge || !world.getWorldBorder().contains(chunkPos.chunkPos())) {
-                            continue;
-                        }
                         CubeWatcher chunkInfo = world.getPlayerCubeMap().getCubeWatcher(chunkPos);
-
                         if (chunkInfo != null && chunkInfo.isSentToPlayers()) {
-                            possibleChunks.add(chunkPos);
+                            ++chunkCount;
+                            cubesForSpawn2.add(rand.nextInt(cubesForSpawn2.size()+1),chunkPos);
                         }
                     }
                 }
@@ -130,14 +120,14 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
         return chunkCount;
     }
 
-    private int spawnCreatureTypeInAllChunks(EnumCreatureType mobType, ICubicWorldServer world, ArrayList<CubePos> chunkList) {
+    private int spawnCreatureTypeInAllChunks(EnumCreatureType mobType, ICubicWorldServer world) {
         BlockPos spawnPoint = world.getSpawnPoint();
         BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 
         int totalSpawned = 0;
 
         nextChunk:
-        for (CubePos currentChunkPos : chunkList) {
+        for (CubePos currentChunkPos : this.cubesForSpawn) {
             BlockPos blockpos = getRandomChunkPosition(world, currentChunkPos);
             if (blockpos == null) {
                 continue;
@@ -153,86 +143,74 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 
             int currentPackSize = 0;
 
-            for (int k2 = 0; k2 < 3; ++k2) {
-                int entityBlockX = blockX;
-                int entityY = blockY;
-                int entityBlockZ = blockZ;
-                int searchRadius = 6;
-                Biome.SpawnListEntry biomeMobs = null;
-                IEntityLivingData entityData = null;
-                int numSpawnAttempts = MathHelper.ceil(Math.random() * 4.0D);
+            int entityBlockX = blockX;
+            int entityY = blockY;
+            int entityBlockZ = blockZ;
+            int searchRadius = 6;
+            Biome.SpawnListEntry biomeMobs = null;
+            IEntityLivingData entityData = null;
+            Random rand = world.getRand();
+            entityBlockX += rand.nextInt(searchRadius) - rand.nextInt(searchRadius);
+            entityY += rand.nextInt(1) - rand.nextInt(1);
+            entityBlockZ += rand.nextInt(searchRadius) - rand.nextInt(searchRadius);
+            blockPos.setPos(entityBlockX, entityY, entityBlockZ);
+            float entityX = (float) entityBlockX + 0.5F;
+            float entityZ = (float) entityBlockZ + 0.5F;
 
-                Random rand = world.getRand();
-                for (int spawnAttempt = 0; spawnAttempt < numSpawnAttempts; ++spawnAttempt) {
-                    entityBlockX += rand.nextInt(searchRadius) - rand.nextInt(searchRadius);
-                    entityY += rand.nextInt(1) - rand.nextInt(1);
-                    entityBlockZ += rand.nextInt(searchRadius) - rand.nextInt(searchRadius);
-                    blockPos.setPos(entityBlockX, entityY, entityBlockZ);
-                    float entityX = (float) entityBlockX + 0.5F;
-                    float entityZ = (float) entityBlockZ + 0.5F;
+            if (world.isAnyPlayerWithinRangeAt(entityX, entityY, entityZ, 24.0D) ||
+                    spawnPoint.distanceSq(entityX, entityY, entityZ) < 576.0D) {
+                continue;
+            }
+            if (biomeMobs == null) {
+                biomeMobs = world.getSpawnListEntryForTypeAt(mobType, blockPos);
 
-                    if (world.isAnyPlayerWithinRangeAt(entityX, entityY, entityZ, 24.0D) ||
-                            spawnPoint.distanceSq(entityX, entityY, entityZ) < 576.0D) {
-                        continue;
-                    }
-                    if (biomeMobs == null) {
-                        biomeMobs = world.getSpawnListEntryForTypeAt(mobType, blockPos);
-
-                        if (biomeMobs == null) {
-                            break;
-                        }
-                    }
-
-                    if (!world.canCreatureTypeSpawnHere(mobType, biomeMobs, blockPos) ||
-                            !canCreatureTypeSpawnAtLocation(EntitySpawnPlacementRegistry
-                                    .getPlacementForEntity(biomeMobs.entityClass), (World) world, blockPos)) {
-                        continue;
-                    }
-                    EntityLiving toSpawn;
-
-                    try {
-                        toSpawn = biomeMobs.entityClass.getConstructor(new Class[]{
-                                World.class
-                        }).newInstance(world);
-                    } catch (Exception exception) {
-                        exception.printStackTrace();
-                        //TODO: throw when entity creation fails
-                        return totalSpawned;
-                    }
-
-                    toSpawn.setLocationAndAngles(entityX, entityY, entityZ, rand.nextFloat() * 360.0F, 0.0F);
-
-                    Event.Result canSpawn = ForgeEventFactory.canEntitySpawn(toSpawn, (World) world, entityX, entityY, entityZ);
-                    if (canSpawn == Event.Result.ALLOW ||
-                            (canSpawn == Event.Result.DEFAULT && toSpawn.getCanSpawnHere() &&
-                                    toSpawn.isNotColliding())) {
-                        if (!ForgeEventFactory.doSpecialSpawn(toSpawn, (World) world, entityX, entityY, entityZ)) {
-                            entityData = toSpawn.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(toSpawn)), entityData);
-                        }
-
-                        if (toSpawn.isNotColliding()) {
-                            ++currentPackSize;
-                            world.spawnEntity(toSpawn);
-                        } else {
-                            toSpawn.setDead();
-                        }
-
-                        if (blockZ >= ForgeEventFactory.getMaxSpawnPackSize(toSpawn)) {
-                            continue nextChunk;
-                        }
-                    }
-
-                    totalSpawned += currentPackSize;
+                if (biomeMobs == null) {
+                    break;
                 }
             }
+
+            if (!world.canCreatureTypeSpawnHere(mobType, biomeMobs, blockPos) ||
+                    !canCreatureTypeSpawnAtLocation(EntitySpawnPlacementRegistry
+                            .getPlacementForEntity(biomeMobs.entityClass), (World) world, blockPos)) {
+                continue;
+            }
+            EntityLiving toSpawn;
+
+            try {
+                toSpawn = biomeMobs.entityClass.getConstructor(new Class[] {
+                        World.class
+                }).newInstance(world);
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                // TODO: throw when entity creation fails
+                return totalSpawned;
+            }
+
+            toSpawn.setLocationAndAngles(entityX, entityY, entityZ, rand.nextFloat() * 360.0F, 0.0F);
+
+            Event.Result canSpawn = ForgeEventFactory.canEntitySpawn(toSpawn, (World) world, entityX, entityY, entityZ);
+            if (canSpawn == Event.Result.ALLOW ||
+                    (canSpawn == Event.Result.DEFAULT && toSpawn.getCanSpawnHere() &&
+                            toSpawn.isNotColliding())) {
+                if (!ForgeEventFactory.doSpecialSpawn(toSpawn, (World) world, entityX, entityY, entityZ)) {
+                    entityData = toSpawn.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(toSpawn)), entityData);
+                }
+
+                if (toSpawn.isNotColliding()) {
+                    ++currentPackSize;
+                    world.spawnEntity(toSpawn);
+                } else {
+                    toSpawn.setDead();
+                }
+
+                if (currentPackSize >= ForgeEventFactory.getMaxSpawnPackSize(toSpawn)) {
+                    totalSpawned += currentPackSize;
+                    continue nextChunk;
+                }
+            }
+            totalSpawned += currentPackSize;
         }
         return totalSpawned;
-    }
-
-    private static <T> ArrayList<T> getShuffledCopy(Collection<T> collection) {
-        ArrayList<T> list = new ArrayList<>(collection);
-        Collections.shuffle(list);
-        return list;
     }
 
     private static boolean shouldSpawnType(EnumCreatureType type, boolean hostile, boolean peaceful, boolean spawnOnSetTickRate) {

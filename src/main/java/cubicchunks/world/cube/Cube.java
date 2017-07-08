@@ -245,16 +245,16 @@ public class Cube implements XYZAddressable {
     /**
      * Retrieve the block state at the specified location
      *
-     * @param blockX block x position
-     * @param localOrBlockY block or local y position
-     * @param blockZ block z position
+     * @param x block x position
+     * @param y block y position
+     * @param z block z position
      *
      * @return The block state
      *
      * @see Cube#getBlockState(BlockPos)
      */
-    public IBlockState getBlockState(int blockX, int localOrBlockY, int blockZ) {
-        return column.getBlockState(blockX, localToBlock(getY(), blockToLocal(localOrBlockY)), blockZ);
+    public IBlockState getBlockState(int x, int y, int z) {
+        return this.getStorage().get(x&15, y&15, z&15);
     }
 
     /**

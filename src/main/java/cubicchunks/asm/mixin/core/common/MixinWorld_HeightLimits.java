@@ -77,8 +77,6 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
     @Shadow public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
 
-    @Shadow public abstract IBlockState getBlockState(BlockPos pos);
-
     @Shadow public abstract boolean isBlockLoaded(BlockPos pos);
 
     @Shadow protected abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty);

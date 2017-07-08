@@ -42,6 +42,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
@@ -65,7 +66,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -202,7 +205,7 @@ public abstract class MixinWorld implements ICubicWorld {
     @Override public Profiler getProfiler() {
         return this.profiler;
     }
-
+    
     /**
      * @author Foghrye4
      * @reason Original {@link World#markChunkDirty(BlockPos, TileEntity)}
@@ -218,6 +221,115 @@ public abstract class MixinWorld implements ICubicWorld {
             if (cube != null) {
                 cube.markDirty();
             }
+            ci.cancel();
+        }
+    }
+    
+    @Inject(method = "getBlockState", at = @At("HEAD"), cancellable = true)
+    public void getBlockState(BlockPos pos, CallbackInfoReturnable<IBlockState> ci){
+        if (this.isCubicWorld()) {
+            ci.setReturnValue(this.getCubeCache().getCube(CubePos.fromBlockCoords(pos)).getBlockState(pos));
+            ci.cancel();
+        }
+    }
+    
+    @Inject(method = "func_191504_a", at = @At("HEAD"), cancellable = true)
+    private void addBlocksCollisionBoundingBoxesToList(@Nullable Entity entity, AxisAlignedBB aabb, boolean breakOnWorldBorder,
+            @Nullable List<AxisAlignedBB> aabbList, CallbackInfoReturnable<Boolean> ci) {
+        if (this.isCubicWorld()) {
+            double minX = aabb.minX;
+            double minY = aabb.minY;
+            double minZ = aabb.minZ;
+            double maxX = aabb.maxX;
+            double maxY = aabb.maxY;
+            double maxZ = aabb.maxZ;
+            int x1 = (int) minX - 1;
+            int y1 = (int) minY - 1;
+            int z1 = (int) minZ - 1;
+            int x2 = (int) maxX;
+            int y2 = (int) maxY;
+            int z2 = (int) maxZ;
+            BlockPos.PooledMutableBlockPos pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
+            for (int cx = x1 >> 4; cx <= x2 >> 4; cx++)
+                for (int cy = y1 >> 4; cy <= y2 >> 4; cy++)
+                    for (int cz = z1 >> 4; cz <= z2 >> 4; cz++) {
+                        CubePos coords = new CubePos(cx, cy, cz);
+                        int minBlockX = coords.getMinBlockX();
+                        int minBlockY = coords.getMinBlockY();
+                        int minBlockZ = coords.getMinBlockZ();
+                        int maxBlockX = coords.getMaxBlockX();
+                        int maxBlockY = coords.getMaxBlockY();
+                        int maxBlockZ = coords.getMaxBlockZ();
+                        Cube loadedCube = this.getCubeCache().getLoadedCube(coords);
+                        if (loadedCube != null) {
+                            minBlockX = minBlockX > x1 ? minBlockX : x1;
+                            minBlockY = minBlockY > y1 ? minBlockY : y1;
+                            minBlockZ = minBlockZ > z1 ? minBlockZ : z1;
+                            maxBlockX = maxBlockX < x2 ? maxBlockX : x2;
+                            maxBlockY = maxBlockY < y2 ? maxBlockY : y2;
+                            maxBlockZ = maxBlockZ < z2 ? maxBlockZ : z2;
+                            for (int x = minBlockX; x <= maxBlockX; x++)
+                                for (int y = minBlockY; y <= maxBlockY; y++)
+                                    for (int z = minBlockZ; z <= maxBlockZ; z++) {
+                                        pooledmutableblockpos.setPos(x, y, z);
+                                        IBlockState bstate = loadedCube.getStorage().get(x & 15, y & 15, z & 15);
+                                        bstate.addCollisionBoxToList((World) (Object) this, pooledmutableblockpos, aabb, aabbList, entity, false);
+                                        net.minecraftforge.common.MinecraftForge.EVENT_BUS
+                                                .post(new net.minecraftforge.event.world.GetCollisionBoxesEvent((World) (Object) this, null, aabb,
+                                                        aabbList));
+                                    }
+                        } else {
+                            AxisAlignedBB unloadedCubeAABB = new AxisAlignedBB(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
+                            if (unloadedCubeAABB.intersectsWith(aabb))
+                                aabbList.add(unloadedCubeAABB);
+                        }
+                    }
+            pooledmutableblockpos.release();
+            ci.setReturnValue(!aabbList.isEmpty());
+            ci.cancel();
+        }
+    }
+    
+    @Inject(method = "getEntitiesInAABBexcluding", at = @At("HEAD"), cancellable = true)
+    private void onGetEntitiesInAABBexcluding(@Nullable Entity entityIn, AxisAlignedBB aabb,
+            @Nullable com.google.common.base.Predicate<? super Entity> predicate, CallbackInfoReturnable<List<Entity>> ci) {
+        if (this.isCubicWorld()) {
+            List<Entity> list = new ArrayList<Entity>();
+            int x1 = (int)(aabb.minX - World.MAX_ENTITY_RADIUS);
+            int y1 = (int)(aabb.minY - World.MAX_ENTITY_RADIUS);
+            int z1 = (int)(aabb.minZ - World.MAX_ENTITY_RADIUS);
+            int x2 = (int)(aabb.maxX + World.MAX_ENTITY_RADIUS);
+            int y2 = (int)(aabb.maxY + World.MAX_ENTITY_RADIUS);
+            int z2 = (int)(aabb.maxZ + World.MAX_ENTITY_RADIUS);
+            x1>>=4;
+            y1>>=4;
+            z1>>=4;
+            x2>>=4;
+            y2>>=4;
+            z2>>=4;
+            for (int cx = x1; cx <= x2; cx++)
+                for (int cy = y1; cy <= y2; cy++)
+                    for (int cz = z1; cz <= z2; cz++) {
+                        Cube loadedCube = this.getCubeCache().getLoadedCube(cx, cy, cz);
+                        if (loadedCube != null) {
+                            for (Entity entity : loadedCube.getEntityContainer().getEntities()) {
+                                if (entity != entityIn && entity.getEntityBoundingBox().intersectsWith(aabb)) {
+                                    if (predicate == null || predicate.apply(entity)) {
+                                        list.add(entity);
+                                    } else {
+                                        Entity[] parts = entity.getParts();
+                                        if (parts != null)
+                                            for (Entity entityPart : parts) {
+                                                if (entityPart != entityIn && entityPart.getEntityBoundingBox().intersectsWith(aabb)
+                                                        && (predicate == null || predicate.apply(entityPart)))
+                                                    list.add(entity);
+                                            }
+                                    }
+                                }
+                            }
+                        }
+                    }
+            ci.setReturnValue(list);
             ci.cancel();
         }
     }
@@ -389,13 +501,13 @@ public abstract class MixinWorld implements ICubicWorld {
     }
     //==============================================
 
-    @Shadow public abstract IBlockState getBlockState(BlockPos pos);
+    @Shadow public abstract IBlockState getBlockState(BlockPos blockPos);
 
-    @Intrinsic public IBlockState world$getBlockState(BlockPos pos) {
-        return this.getBlockState(pos);
+    @Intrinsic public IBlockState world$getBlockState(BlockPos blockPos) {
+        return this.getBlockState(blockPos);
     }
     //==============================================
-
+    
     @Shadow public abstract boolean isAirBlock(BlockPos randomPos);
 
     @Intrinsic public boolean world$isAirBlock(BlockPos pos) {
