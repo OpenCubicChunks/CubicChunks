@@ -134,6 +134,9 @@ public interface ICubicWorld extends IMinMaxHeight {
     boolean isBlockColumnLoaded(BlockPos pos);
 
     boolean isBlockColumnLoaded(BlockPos pos, boolean allowEmpty);
+    
+    /** Update LCG value and return updated **/
+    int updateLCG();
 
     //vanilla part
 

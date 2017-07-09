@@ -77,8 +77,6 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
     @Shadow public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
 
-    @Shadow public abstract IBlockState getBlockState(BlockPos pos);
-
     @Shadow public abstract boolean isBlockLoaded(BlockPos pos);
 
     @Shadow protected abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty);
@@ -243,34 +241,6 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
         assert this == (Object) world;
         if (isCubicWorld()) {
             return this.isBlockLoaded(new BlockPos(cubeToMinBlock(chunkX), ent.posY, cubeToMinBlock(chunkZ)), allowEmpty);
-        } else {
-            return this.isChunkLoaded(chunkX, chunkZ, allowEmpty);
-        }
-    }
-
-    private int updateEntities_enityChunkBlockY;
-
-    @Inject(method = "updateEntities",
-            at = @At(value = "INVOKE", target = WORLD_IS_CHUNK_LOADED, ordinal = 0),
-            locals = LocalCapture.CAPTURE_FAILHARD,
-            require = 1)
-    private void updateEntities_isChunkLoaded0_getLocals(CallbackInfo cbi, int i, Entity entity, int chunkX, int chunkZ) {
-        updateEntities_enityChunkBlockY = cubeToMinBlock(entity.chunkCoordY);
-    }
-
-    @Inject(method = "updateEntities",
-            at = @At(value = "INVOKE", target = WORLD_IS_CHUNK_LOADED, ordinal = 1),
-            locals = LocalCapture.CAPTURE_FAILHARD,
-            require = 1)
-    private void updateEntities_isChunkLoaded1_getLocals(CallbackInfo cbi, int i, Entity entity, Entity ridingEntity, int chunkX, int chunkZ) {
-        updateEntities_enityChunkBlockY = cubeToMinBlock(entity.chunkCoordY);
-    }
-
-    @Redirect(method = "updateEntities", at = @At(value = "INVOKE", target = WORLD_IS_CHUNK_LOADED, ordinal = 1))
-    private boolean updateEntities_isChunkLoaded(World world, int chunkX, int chunkZ, boolean allowEmpty) {
-        assert this == (Object) world;
-        if (isCubicWorld()) {
-            return this.isBlockLoaded(new BlockPos(cubeToMinBlock(chunkX), updateEntities_enityChunkBlockY, cubeToMinBlock(chunkZ)), allowEmpty);
         } else {
             return this.isChunkLoaded(chunkX, chunkZ, allowEmpty);
         }

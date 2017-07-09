@@ -8,7 +8,6 @@
         "common.MixinChunk_Column",
         "common.MixinChunk_Cubes",
         "common.MixinIBlockAccess_MinMaxHeight",
-        "common.MixinWorld_Tick",
         "common.MixinWorld",
         "common.MixinWorldServer",
         "common.MixinWorld_HeightLimits",

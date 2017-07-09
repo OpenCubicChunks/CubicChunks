@@ -34,8 +34,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.util.CubePos;
@@ -57,6 +59,7 @@ public abstract class MixinBlockFalling_HeightLimits extends Block {
     public MixinBlockFalling_HeightLimits(Material materialIn) {
         super(materialIn);
     }
+    
     // First call - checking if BlockPos of block is > 0 to continue.
     @Redirect(method = "checkFallable", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal=0), require = 1)
     private int checkHeightYReplace0(BlockPos pos1, World worldIn, BlockPos pos) {

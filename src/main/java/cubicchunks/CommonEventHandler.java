@@ -32,6 +32,7 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.WorldSavedDataHeightBounds;
 import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayerMP;
