@@ -407,7 +407,7 @@ public abstract class MixinWorld implements ICubicWorld, IConfigUpdateListener {
 	}
 
 	@Intrinsic public boolean world$spawnEntityInWorld(Entity entity) {
-		return this.spawnEntityInWorld(entity);
+		return this.spawnEntity(entity);
 	}
 
 	@Intrinsic public boolean world$isAreaLoaded(BlockPos start, BlockPos end) {
