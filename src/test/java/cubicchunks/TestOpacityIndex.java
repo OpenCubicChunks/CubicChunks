@@ -27,7 +27,6 @@ import com.google.common.collect.Lists;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.spongepowered.test.launch.LaunchWrapperTestRunner;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -36,6 +35,7 @@ import java.util.List;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ServerHeightMap;
+import org.spongepowered.lwts.runner.LaunchWrapperTestRunner;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

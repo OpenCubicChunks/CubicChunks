@@ -39,13 +39,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.spongepowered.test.launch.LaunchWrapperTestRunner;
 
 import java.io.IOException;
 
 import cubicchunks.testutil.MinecraftEnvironment;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.type.FlatCubicWorldType;
+import org.spongepowered.lwts.runner.LaunchWrapperTestRunner;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;

@@ -56,14 +56,14 @@ public class RelightSkyBlockItem extends ItemRegistered {
 		//serverside
 		BlockPos placePos = pos.offset(faceHit);
 		if (world.checkLightFor(EnumSkyBlock.SKY, placePos)) {
-			playerIn.addChatMessage(new TextComponentString("Successfully updated lighting at " + placePos));
+			playerIn.sendMessage(new TextComponentString("Successfully updated lighting at " + placePos));
 			CubePos cubePos = CubePos.fromBlockCoords(placePos);
 			ICubeProvider cubeCache = world.getCubeCache();
 			//re-send them to player
 			cubePos.forEachWithinRange(1,
 				(p) -> PacketDispatcher.sendTo(new PacketCube(cubeCache.getCube(p)), (EntityPlayerMP) playerIn));
 		} else {
-			playerIn.addChatMessage(new TextComponentString("Updating light at at " + placePos + " failed."));
+			playerIn.sendMessage(new TextComponentString("Updating light at at " + placePos + " failed."));
 		}
 
 		return EnumActionResult.PASS;

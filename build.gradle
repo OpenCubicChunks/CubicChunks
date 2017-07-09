@@ -132,7 +132,7 @@ jar {
 }
 
 test {
-	systemProperty "org.spongepowered.test.launch.tweaker", "cubicchunks.tweaker.MixinTweakerServer"
+	systemProperty "lwts.tweaker", "cubicchunks.tweaker.MixinTweakerServer"
 }
 
 // Project repositories
@@ -155,7 +155,7 @@ dependencies {
 	testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
 	testCompile 'it.ozimov:java7-hamcrest-matchers:0.7.0'
 	testCompile 'org.mockito:mockito-core:2.1.0-RC.2'
-	testCompile 'org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT'
+	testCompile 'org.spongepowered:launchwrappertestsuite:1.0.0'
 
 	compile('org.spongepowered:mixin:0.5.11-SNAPSHOT') {
 		exclude module: 'launchwrapper'
