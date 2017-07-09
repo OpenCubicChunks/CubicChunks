@@ -54,6 +54,8 @@ import java.util.Random;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import org.apache.logging.log4j.LogManager;
+
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CubeWorldEntitySpawner extends WorldEntitySpawner {
@@ -61,6 +63,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
     private static final int CUBES_PER_CHUNK = 16;
     private static final int MOB_COUNT_DIV = (int) Math.pow(17.0D, 2.0D) * CUBES_PER_CHUNK;
     private static final int SPAWN_RADIUS = 8;
+    private int currentPlayer = 0;
 
     @Nonnull private List<CubePos> cubesForSpawn = new ArrayList<CubePos>();
 
@@ -71,8 +74,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
         }
         ICubicWorldServer world = (ICubicWorldServer) worldOrig;
         this.cubesForSpawn.clear();
-
-        int chunkCount = addEligibleChunks(world, this.cubesForSpawn);
+        this.addEligibleChunks(world);
         int totalSpawnCount = 0;
 
         next_type: 
@@ -81,136 +83,124 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
                 continue;
             }
             int worldEntityCount = 0;
-            int maxEntityCount = mobType.getMaxNumberOfCreature() * chunkCount / MOB_COUNT_DIV;
+            int maxEntityCount = mobType.getMaxNumberOfCreature();
             Class<? extends IAnimals> mobTypeClass = mobType.getCreatureClass();
             for (Entity entity : worldOrig.loadedEntityList) {
-                if (entity.getClass().isAssignableFrom(mobTypeClass) && ++worldEntityCount > maxEntityCount)
-                    continue next_type;
+                if (mobTypeClass.isInstance(entity) && ++worldEntityCount > maxEntityCount)
+                        continue next_type;
             }
             totalSpawnCount += spawnCreatureTypeInAllChunks(mobType, world);
         }
         return totalSpawnCount;
     }
 
-    private int addEligibleChunks(ICubicWorldServer world, List<CubePos> cubesForSpawn2) {
-        int chunkCount = 0;
+    private void addEligibleChunks(ICubicWorldServer world) {
         Random rand = world.getRand();
-        
-        for (EntityPlayer player : world.getPlayerEntities()) {
-            if (player.isSpectator()) {
-                continue;
-            }
+        List<EntityPlayer> pList = world.getPlayerEntities();
+        int pAmount = pList.size();
+        if (pAmount == 0)
+            return;
+        if (++currentPlayer >= pAmount) {
+            currentPlayer = 0;
+        }
+        // This function called every tick, it unnecessary to iterate thru all players.
+        EntityPlayer player = pList.get(currentPlayer); 
+        if (!player.isSpectator()) {
             CubePos center = CubePos.fromEntity(player);
-
             for (int cubeXRel = -SPAWN_RADIUS; cubeXRel <= SPAWN_RADIUS; ++cubeXRel) {
                 for (int cubeYRel = -SPAWN_RADIUS; cubeYRel <= SPAWN_RADIUS; ++cubeYRel) {
                     for (int cubeZRel = -SPAWN_RADIUS; cubeZRel <= SPAWN_RADIUS; ++cubeZRel) {
-                        if(cubeXRel*cubeXRel+cubeYRel*cubeYRel+cubeZRel*cubeZRel<=4)
+                        if (cubeXRel * cubeXRel + cubeYRel * cubeYRel + cubeZRel * cubeZRel <= 8)
                             continue;
                         CubePos chunkPos = center.add(cubeXRel, cubeYRel, cubeZRel);
                         CubeWatcher chunkInfo = world.getPlayerCubeMap().getCubeWatcher(chunkPos);
                         if (chunkInfo != null && chunkInfo.isSentToPlayers()) {
-                            ++chunkCount;
-                            cubesForSpawn2.add(rand.nextInt(cubesForSpawn2.size()+1),chunkPos);
+                            cubesForSpawn.add(rand.nextInt(cubesForSpawn.size() + 1), chunkPos);
                         }
                     }
                 }
             }
         }
-        return chunkCount;
     }
 
     private int spawnCreatureTypeInAllChunks(EnumCreatureType mobType, ICubicWorldServer world) {
+
+        int spawnablePointsSize = cubesForSpawn.size();
+        if(spawnablePointsSize == 0)
+            return 0;
         BlockPos spawnPoint = world.getSpawnPoint();
         BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
-
-        int totalSpawned = 0;
-
-        nextChunk:
-        for (CubePos currentChunkPos : this.cubesForSpawn) {
-            BlockPos blockpos = getRandomChunkPosition(world, currentChunkPos);
-            if (blockpos == null) {
-                continue;
-            }
-            IBlockState block = world.getBlockState(blockpos);
-
-            if (block.isNormalCube()) {
-                continue;
-            }
-            int blockX = blockpos.getX();
-            int blockY = blockpos.getY();
-            int blockZ = blockpos.getZ();
-
-            int currentPackSize = 0;
-
-            int entityBlockX = blockX;
-            int entityY = blockY;
-            int entityBlockZ = blockZ;
-            int searchRadius = 6;
-            Biome.SpawnListEntry biomeMobs = null;
-            IEntityLivingData entityData = null;
-            Random rand = world.getRand();
-            entityBlockX += rand.nextInt(searchRadius) - rand.nextInt(searchRadius);
-            entityY += rand.nextInt(1) - rand.nextInt(1);
-            entityBlockZ += rand.nextInt(searchRadius) - rand.nextInt(searchRadius);
-            blockPos.setPos(entityBlockX, entityY, entityBlockZ);
-            float entityX = (float) entityBlockX + 0.5F;
-            float entityZ = (float) entityBlockZ + 0.5F;
-
-            if (world.isAnyPlayerWithinRangeAt(entityX, entityY, entityZ, 24.0D) ||
-                    spawnPoint.distanceSq(entityX, entityY, entityZ) < 576.0D) {
-                continue;
-            }
-            if (biomeMobs == null) {
-                biomeMobs = world.getSpawnListEntryForTypeAt(mobType, blockPos);
-
-                if (biomeMobs == null) {
-                    break;
-                }
-            }
-
-            if (!world.canCreatureTypeSpawnHere(mobType, biomeMobs, blockPos) ||
-                    !canCreatureTypeSpawnAtLocation(EntitySpawnPlacementRegistry
-                            .getPlacementForEntity(biomeMobs.entityClass), (World) world, blockPos)) {
-                continue;
-            }
-            EntityLiving toSpawn;
-
-            try {
-                toSpawn = biomeMobs.entityClass.getConstructor(new Class[] {
-                        World.class
-                }).newInstance(world);
-            } catch (Exception exception) {
-                exception.printStackTrace();
-                // TODO: throw when entity creation fails
-                return totalSpawned;
-            }
-
-            toSpawn.setLocationAndAngles(entityX, entityY, entityZ, rand.nextFloat() * 360.0F, 0.0F);
-
-            Event.Result canSpawn = ForgeEventFactory.canEntitySpawn(toSpawn, (World) world, entityX, entityY, entityZ);
-            if (canSpawn == Event.Result.ALLOW ||
-                    (canSpawn == Event.Result.DEFAULT && toSpawn.getCanSpawnHere() &&
-                            toSpawn.isNotColliding())) {
-                if (!ForgeEventFactory.doSpecialSpawn(toSpawn, (World) world, entityX, entityY, entityZ)) {
-                    entityData = toSpawn.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(toSpawn)), entityData);
-                }
-
-                if (toSpawn.isNotColliding()) {
-                    ++currentPackSize;
-                    world.spawnEntity(toSpawn);
-                } else {
-                    toSpawn.setDead();
-                }
-
-                if (currentPackSize >= ForgeEventFactory.getMaxSpawnPackSize(toSpawn)) {
-                    totalSpawned += currentPackSize;
-                    continue nextChunk;
-                }
-            }
-            totalSpawned += currentPackSize;
+        CubePos currentChunkPos = this.cubesForSpawn.get(world.getRand().nextInt(spawnablePointsSize));
+        BlockPos blockpos = getRandomChunkPosition(world, currentChunkPos);
+        if (blockpos == null) {
+            return 0;
         }
-        return totalSpawned;
+        IBlockState block = world.getBlockState(blockpos);
+
+        if (block.isNormalCube()) {
+            return 0;
+        }
+        int blockX = blockpos.getX();
+        int blockY = blockpos.getY();
+        int blockZ = blockpos.getZ();
+
+        int entityBlockX = blockX;
+        int entityY = blockY;
+        int entityBlockZ = blockZ;
+        int searchRadius = 6;
+        Random rand = world.getRand();
+        entityBlockX += rand.nextInt(searchRadius) - rand.nextInt(searchRadius);
+        entityY += rand.nextInt(1) - rand.nextInt(1);
+        entityBlockZ += rand.nextInt(searchRadius) - rand.nextInt(searchRadius);
+        blockPos.setPos(entityBlockX, entityY, entityBlockZ);
+        float entityX = (float) entityBlockX + 0.5F;
+        float entityZ = (float) entityBlockZ + 0.5F;
+
+        if (world.isAnyPlayerWithinRangeAt(entityX, entityY, entityZ, 24.0D) ||
+                spawnPoint.distanceSq(entityX, entityY, entityZ) < 576.0D) {
+            return 0;
+        }
+        Biome.SpawnListEntry biomeMobs = world.getSpawnListEntryForTypeAt(mobType, blockPos);
+        if (biomeMobs == null)
+            return 0;
+ 
+        if (!world.canCreatureTypeSpawnHere(mobType, biomeMobs, blockPos) ||
+                !canCreatureTypeSpawnAtLocation(EntitySpawnPlacementRegistry
+                        .getPlacementForEntity(biomeMobs.entityClass), (World) world, blockPos)) {
+            return 0;
+        }
+        EntityLiving toSpawn;
+
+        try {
+            toSpawn = biomeMobs.entityClass.getConstructor(new Class[] {
+                    World.class
+            }).newInstance(world);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return 0;
+        }
+
+        toSpawn.setLocationAndAngles(entityX, entityY, entityZ, rand.nextFloat() * 360.0F, 0.0F);
+
+        Event.Result canSpawn = ForgeEventFactory.canEntitySpawn(toSpawn, (World) world, entityX, entityY, entityZ);
+        if (canSpawn == Event.Result.ALLOW ||
+                (canSpawn == Event.Result.DEFAULT && toSpawn.getCanSpawnHere() &&
+                        toSpawn.isNotColliding())) {
+            if (!ForgeEventFactory.doSpecialSpawn(toSpawn, (World) world, entityX, entityY, entityZ)) {
+                toSpawn.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(toSpawn)), null);
+            }
+
+            if (toSpawn.isNotColliding()) {
+                Class<? extends IAnimals> mobTypeClass = mobType.getCreatureClass();
+                if (!mobTypeClass.isInstance(toSpawn))
+                    throw new ClassCastException(toSpawn + " cannot be casted to " + mobTypeClass);
+                world.spawnEntity(toSpawn);
+                return 1;
+            } else {
+                toSpawn.setDead();
+            }
+        }
+        return 0;
     }
 
     private static boolean shouldSpawnType(EnumCreatureType type, boolean hostile, boolean peaceful, boolean spawnOnSetTickRate) {

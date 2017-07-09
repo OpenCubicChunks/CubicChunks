@@ -23,6 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
+import static cubicchunks.asm.JvmNames.WORLD_GET_PERSISTENT_CHUNKS;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
 
@@ -49,6 +50,7 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.GameRules;
@@ -62,6 +64,8 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
+
+import org.apache.logging.log4j.LogManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -73,6 +77,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import com.google.common.collect.Lists;
 
@@ -103,8 +108,14 @@ public abstract class MixinWorld implements ICubicWorld {
     @Shadow protected int updateLCG;
     @Shadow @Final @Mutable protected ISaveHandler saveHandler;
     @Shadow protected boolean findingSpawnPoint;
+    @Shadow private boolean processingLoadedTiles;
+    @Shadow @Final public List<TileEntity> loadedTileEntityList;
+    @Shadow @Final public List<TileEntity> tickableTileEntities;
+    @Shadow @Final private List<TileEntity> addedTileEntityList;
+    @Shadow @Final private List<TileEntity> tileEntitiesToBeRemoved;
     @Shadow @Final public List<Entity> loadedEntityList;
     @Shadow @Final protected List<Entity> unloadedEntityList;
+    @Shadow @Final public List<Entity> weatherEffects;
 
     @Shadow protected abstract boolean isChunkLoaded(int i, int i1, boolean allowEmpty);
 
@@ -349,12 +360,103 @@ public abstract class MixinWorld implements ICubicWorld {
     @Shadow protected abstract void tickPlayers();
     @Shadow public abstract void updateEntity(Entity ent);
     @Shadow public abstract void removeEntity(Entity entityIn);
+    
+    @Inject(method = "updateEntityWithOptionalForce", at = @At(value = "HEAD"), require = 1, cancellable = true)
+    public void onUpdateEntityWithOptionalForce(Entity entityIn, boolean force, CallbackInfo ci) {
+        if(this.isCubicWorld){
+            int cubeX = entityIn.chunkCoordX;
+            int cubeY = entityIn.chunkCoordY;
+            int cubeZ = entityIn.chunkCoordZ;
+            Cube loadedCube = this.getCubeCache().getLoadedCube(cubeX, cubeY, cubeZ);
+            if (entityIn.addedToChunk && loadedCube != null) {
+                ++entityIn.ticksExisted;
+                entityIn.lastTickPosX = entityIn.posX;
+                entityIn.lastTickPosY = entityIn.posY;
+                entityIn.lastTickPosZ = entityIn.posZ;
+                entityIn.prevRotationYaw = entityIn.rotationYaw;
+                entityIn.prevRotationPitch = entityIn.rotationPitch;
+
+                if (entityIn.isRiding()) {
+                    entityIn.updateRidden();
+                } else {
+                    if (!entityIn.updateBlocked) {
+                        entityIn.onUpdate();
+                    }
+                }
+                if (Double.isNaN(entityIn.posX) || Double.isInfinite(entityIn.posX)) {
+                    entityIn.posX = entityIn.lastTickPosX;
+                }
+
+                if (Double.isNaN(entityIn.posY) || Double.isInfinite(entityIn.posY)) {
+                    entityIn.posY = entityIn.lastTickPosY;
+                }
+
+                if (Double.isNaN(entityIn.posZ) || Double.isInfinite(entityIn.posZ)) {
+                    entityIn.posZ = entityIn.lastTickPosZ;
+                }
+
+                if (Double.isNaN((double) entityIn.rotationPitch) || Double.isInfinite((double) entityIn.rotationPitch)) {
+                    entityIn.rotationPitch = entityIn.prevRotationPitch;
+                }
+
+                if (Double.isNaN((double) entityIn.rotationYaw) || Double.isInfinite((double) entityIn.rotationYaw)) {
+                    entityIn.rotationYaw = entityIn.prevRotationYaw;
+                }
+            }
+            int newChunkX = MathHelper.floor(entityIn.posX / 16.0D);
+            int newChunkY = MathHelper.floor(entityIn.posY / 16.0D);
+            int newChunkZ = MathHelper.floor(entityIn.posZ / 16.0D);
+            if (!entityIn.addedToChunk || entityIn.chunkCoordX != newChunkX || entityIn.chunkCoordY != newChunkY || entityIn.chunkCoordZ != newChunkZ)
+            {
+                entityIn.chunkCoordX = newChunkX;
+                entityIn.chunkCoordY = newChunkY;
+                entityIn.chunkCoordZ = newChunkZ;
+                if(entityIn.addedToChunk && loadedCube != null)
+                    loadedCube.getEntityContainer().remove(entityIn);
+                Cube newLoadedCube = this.getCubeCache().getLoadedCube(newChunkX, newChunkY, newChunkZ);
+                if (newLoadedCube != null) {
+                    newLoadedCube.getEntityContainer().addEntity(entityIn);
+                    entityIn.addedToChunk = true;
+                } else {
+                    entityIn.addedToChunk = false;
+                }
+            }
+            ci.cancel();
+        }
+        
+    }
+    
+    @Shadow public abstract void notifyBlockUpdate(BlockPos pos, IBlockState oldState, IBlockState newState, int flags);
+
 
     @Inject(method = "updateEntities", at = @At(value = "HEAD"), require = 1, cancellable = true)
     private void updateEntitiesHandler(CallbackInfo cbi) {
         if(this.isCubicWorld){
             this.profiler.startSection("entities");
             this.profiler.startSection("global");
+            for (int i = 0; i < this.weatherEffects.size(); ++i) {
+                Entity entity = (Entity) this.weatherEffects.get(i);
+                try {
+                    if (entity.updateBlocked)
+                        continue;
+                    ++entity.ticksExisted;
+                    entity.onUpdate();
+                } catch (Throwable throwable2) {
+                    CrashReport crashreport = CrashReport.makeCrashReport(throwable2, "Ticking entity");
+                    CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being ticked");
+                    entity.addEntityCrashInfo(crashreportcategory);
+
+                    if (net.minecraftforge.common.ForgeModContainer.removeErroringEntities) {
+                        net.minecraftforge.fml.common.FMLLog.severe(crashreport.getCompleteReport());
+                        removeEntity(entity);
+                    } else
+                        throw new ReportedException(crashreport);
+                }
+                if (entity.isDead) {
+                    this.weatherEffects.remove(i--);
+                }
+            }
+
             this.profiler.endStartSection("remove");
             this.loadedEntityList.removeAll(this.unloadedEntityList);
             for (int k = 0; k < this.unloadedEntityList.size(); ++k) {
@@ -375,7 +477,7 @@ public abstract class MixinWorld implements ICubicWorld {
 
             this.unloadedEntityList.clear();
             this.tickPlayers();
-            this.profiler.endStartSection("regular");
+            this.profiler.endStartSection("regular("+this.loadedEntityList.size()+")");
 
             for (int i1 = 0; i1 < this.loadedEntityList.size(); ++i1)
             {
@@ -436,19 +538,17 @@ public abstract class MixinWorld implements ICubicWorld {
             }
 
             this.profiler.endStartSection("blockEntities");
-/*            this.processingLoadedTiles = true;
+            this.processingLoadedTiles = true;
             Iterator<TileEntity> iterator = this.tickableTileEntities.iterator();
 
             while (iterator.hasNext())
             {
                 TileEntity tileentity = (TileEntity)iterator.next();
+                BlockPos blockpos = tileentity.getPos();
+                Cube loadedCube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(blockpos));
 
-                if (!tileentity.isInvalid() && tileentity.hasWorld())
+                if (!tileentity.isInvalid() && tileentity.hasWorld() && loadedCube!=null)
                 {
-                    BlockPos blockpos = tileentity.getPos();
-
-                    if (this.isBlockLoaded(blockpos, false) && this.worldBorder.contains(blockpos)) //Forge: Fix TE's getting an extra tick on the client side....
-                    {
                         try
                         {
                             this.profiler.startSection(tileentity.getClass()); // Fix for MC-117087
@@ -469,7 +569,6 @@ public abstract class MixinWorld implements ICubicWorld {
                             else
                             throw new ReportedException(crashreport2);
                         }
-                    }
                 }
 
                 if (tileentity.isInvalid())
@@ -477,10 +576,10 @@ public abstract class MixinWorld implements ICubicWorld {
                     iterator.remove();
                     this.loadedTileEntityList.remove(tileentity);
 
-                    if (this.isBlockLoaded(tileentity.getPos()))
+                    if (loadedCube!=null)
                     {
                         //Forge: Bugfix: If we set the tile entity it immediately sets it in the chunk, so we could be desyned
-                        Chunk chunk = this.getChunkFromBlockCoords(tileentity.getPos());
+                        Chunk chunk = (Chunk) loadedCube.getColumn();
                         if (chunk.getTileEntity(tileentity.getPos(), net.minecraft.world.chunk.Chunk.EnumCreateEntityType.CHECK) == tileentity)
                             chunk.removeTileEntity(tileentity.getPos());
                     }
@@ -515,11 +614,13 @@ public abstract class MixinWorld implements ICubicWorld {
                         {
                             this.addTileEntity(tileentity1);
                         }
+                        BlockPos blockpos = tileentity1.getPos();
+                        Cube loadedCube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(blockpos));
 
-                        if (this.isBlockLoaded(tileentity1.getPos()))
+                        if (loadedCube!=null)
                         {
-                            Chunk chunk = this.getChunkFromBlockCoords(tileentity1.getPos());
-                            IBlockState iblockstate = chunk.getBlockState(tileentity1.getPos());
+                            Chunk chunk = (Chunk) loadedCube.getColumn();
+                            IBlockState iblockstate = loadedCube.getBlockState(tileentity1.getPos());
                             chunk.addTileEntity(tileentity1.getPos(), tileentity1);
                             this.notifyBlockUpdate(tileentity1.getPos(), iblockstate, iblockstate, 3);
                         }
@@ -527,7 +628,7 @@ public abstract class MixinWorld implements ICubicWorld {
                 }
 
                 this.addedTileEntityList.clear();
-            }*/
+            }
 
             this.profiler.endSection();
             this.profiler.endSection();
