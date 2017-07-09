@@ -36,12 +36,17 @@ import cubicchunks.world.provider.ICubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.crash.CrashReport;
+import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ITickable;
+import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DifficultyInstance;
@@ -53,6 +58,7 @@ import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.border.WorldBorder;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
@@ -68,8 +74,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.google.common.collect.Lists;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
@@ -94,6 +103,8 @@ public abstract class MixinWorld implements ICubicWorld {
     @Shadow protected int updateLCG;
     @Shadow @Final @Mutable protected ISaveHandler saveHandler;
     @Shadow protected boolean findingSpawnPoint;
+    @Shadow @Final public List<Entity> loadedEntityList;
+    @Shadow @Final protected List<Entity> unloadedEntityList;
 
     @Shadow protected abstract boolean isChunkLoaded(int i, int i1, boolean allowEmpty);
 
@@ -333,6 +344,199 @@ public abstract class MixinWorld implements ICubicWorld {
             ci.cancel();
         }
     }
+    
+    @Shadow public abstract void onEntityRemoved(Entity entityIn);
+    @Shadow protected abstract void tickPlayers();
+    @Shadow public abstract void updateEntity(Entity ent);
+    @Shadow public abstract void removeEntity(Entity entityIn);
+
+    @Inject(method = "updateEntities", at = @At(value = "HEAD"), require = 1, cancellable = true)
+    private void updateEntitiesHandler(CallbackInfo cbi) {
+        if(this.isCubicWorld){
+            System.out.println("update tick");
+            this.profiler.startSection("entities");
+            this.profiler.startSection("global");
+            this.profiler.endStartSection("remove");
+            this.loadedEntityList.removeAll(this.unloadedEntityList);
+            for (int k = 0; k < this.unloadedEntityList.size(); ++k) {
+                Entity entity1 = (Entity) this.unloadedEntityList.get(k);
+                int cubeX = entity1.chunkCoordX;
+                int cubeY = entity1.chunkCoordY;
+                int cubeZ = entity1.chunkCoordZ;
+                Cube loadedCube = this.getCubeCache().getLoadedCube(cubeX, cubeY, cubeZ);
+                if (entity1.addedToChunk && loadedCube!=null) {
+                    loadedCube.getEntityContainer().remove(entity1);
+                }
+            }
+
+            for (int l = 0; l < this.unloadedEntityList.size(); ++l)
+            {
+                this.onEntityRemoved((Entity)this.unloadedEntityList.get(l));
+            }
+
+            this.unloadedEntityList.clear();
+            this.tickPlayers();
+            this.profiler.endStartSection("regular");
+
+            for (int i1 = 0; i1 < this.loadedEntityList.size(); ++i1)
+            {
+                Entity entity2 = (Entity)this.loadedEntityList.get(i1);
+                Entity entity3 = entity2.getRidingEntity();
+
+                if (entity3 != null)
+                {
+                    if (!entity3.isDead && entity3.isPassenger(entity2))
+                    {
+                        continue;
+                    }
+
+                    entity2.dismountRidingEntity();
+                }
+
+                this.profiler.startSection("tick");
+
+                if (!entity2.isDead && !(entity2 instanceof EntityPlayerMP))
+                {
+                    try
+                    {
+                        this.updateEntity(entity2);
+                    }
+                    catch (Throwable throwable1)
+                    {
+                        CrashReport crashreport1 = CrashReport.makeCrashReport(throwable1, "Ticking entity");
+                        CrashReportCategory crashreportcategory1 = crashreport1.makeCategory("Entity being ticked");
+                        entity2.addEntityCrashInfo(crashreportcategory1);
+                        if (net.minecraftforge.common.ForgeModContainer.removeErroringEntities)
+                        {
+                            net.minecraftforge.fml.common.FMLLog.severe(crashreport1.getCompleteReport());
+                            removeEntity(entity2);
+                        }
+                        else
+                        throw new ReportedException(crashreport1);
+                    }
+                }
+
+                this.profiler.endSection();
+                this.profiler.startSection("remove");
+
+                if (entity2.isDead)
+                {
+                    int cubeX = entity2.chunkCoordX;
+                    int cubeY = entity2.chunkCoordY;
+                    int cubeZ = entity2.chunkCoordZ;
+                    Cube loadedCube = this.getCubeCache().getLoadedCube(cubeX, cubeY, cubeZ);
+                    if (entity2.addedToChunk && loadedCube!=null) {
+                        loadedCube.getEntityContainer().remove(entity2);
+                    }
+
+                    this.loadedEntityList.remove(i1--);
+                    this.onEntityRemoved(entity2);
+                }
+
+                this.profiler.endSection();
+            }
+
+            this.profiler.endStartSection("blockEntities");
+/*            this.processingLoadedTiles = true;
+            Iterator<TileEntity> iterator = this.tickableTileEntities.iterator();
+
+            while (iterator.hasNext())
+            {
+                TileEntity tileentity = (TileEntity)iterator.next();
+
+                if (!tileentity.isInvalid() && tileentity.hasWorld())
+                {
+                    BlockPos blockpos = tileentity.getPos();
+
+                    if (this.isBlockLoaded(blockpos, false) && this.worldBorder.contains(blockpos)) //Forge: Fix TE's getting an extra tick on the client side....
+                    {
+                        try
+                        {
+                            this.profiler.startSection(tileentity.getClass()); // Fix for MC-117087
+                            ((ITickable)tileentity).update();
+                            this.profiler.endSection();
+                        }
+                        catch (Throwable throwable)
+                        {
+                            CrashReport crashreport2 = CrashReport.makeCrashReport(throwable, "Ticking block entity");
+                            CrashReportCategory crashreportcategory2 = crashreport2.makeCategory("Block entity being ticked");
+                            tileentity.addInfoToCrashReport(crashreportcategory2);
+                            if (net.minecraftforge.common.ForgeModContainer.removeErroringTileEntities)
+                            {
+                                net.minecraftforge.fml.common.FMLLog.severe(crashreport2.getCompleteReport());
+                                tileentity.invalidate();
+                                this.removeTileEntity(tileentity.getPos());
+                            }
+                            else
+                            throw new ReportedException(crashreport2);
+                        }
+                    }
+                }
+
+                if (tileentity.isInvalid())
+                {
+                    iterator.remove();
+                    this.loadedTileEntityList.remove(tileentity);
+
+                    if (this.isBlockLoaded(tileentity.getPos()))
+                    {
+                        //Forge: Bugfix: If we set the tile entity it immediately sets it in the chunk, so we could be desyned
+                        Chunk chunk = this.getChunkFromBlockCoords(tileentity.getPos());
+                        if (chunk.getTileEntity(tileentity.getPos(), net.minecraft.world.chunk.Chunk.EnumCreateEntityType.CHECK) == tileentity)
+                            chunk.removeTileEntity(tileentity.getPos());
+                    }
+                }
+            }
+
+            if (!this.tileEntitiesToBeRemoved.isEmpty())
+            {
+                for (Object tile : tileEntitiesToBeRemoved)
+                {
+                   ((TileEntity)tile).onChunkUnload();
+                }
+
+                this.tickableTileEntities.removeAll(this.tileEntitiesToBeRemoved);
+                this.loadedTileEntityList.removeAll(this.tileEntitiesToBeRemoved);
+                this.tileEntitiesToBeRemoved.clear();
+            }
+
+            this.processingLoadedTiles = false;  //FML Move below remove to prevent CMEs
+
+            this.profiler.endStartSection("pendingBlockEntities");
+
+            if (!this.addedTileEntityList.isEmpty())
+            {
+                for (int j1 = 0; j1 < this.addedTileEntityList.size(); ++j1)
+                {
+                    TileEntity tileentity1 = (TileEntity)this.addedTileEntityList.get(j1);
+
+                    if (!tileentity1.isInvalid())
+                    {
+                        if (!this.loadedTileEntityList.contains(tileentity1))
+                        {
+                            this.addTileEntity(tileentity1);
+                        }
+
+                        if (this.isBlockLoaded(tileentity1.getPos()))
+                        {
+                            Chunk chunk = this.getChunkFromBlockCoords(tileentity1.getPos());
+                            IBlockState iblockstate = chunk.getBlockState(tileentity1.getPos());
+                            chunk.addTileEntity(tileentity1.getPos(), tileentity1);
+                            this.notifyBlockUpdate(tileentity1.getPos(), iblockstate, iblockstate, 3);
+                        }
+                    }
+                }
+
+                this.addedTileEntityList.clear();
+            }*/
+
+            this.profiler.endSection();
+            this.profiler.endSection();
+
+            cbi.cancel();
+        }
+    }
+
 
     @Override public boolean isBlockColumnLoaded(BlockPos pos) {
         return isBlockColumnLoaded(pos, true);

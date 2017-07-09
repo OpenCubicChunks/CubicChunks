@@ -32,6 +32,7 @@ import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.WorldSavedDataHeightBounds;
 import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -120,6 +121,7 @@ public class CommonEventHandler {
         ICubicWorldServer world = (ICubicWorldServer) evt.world;
         //Forge (at least version 11.14.3.1521) doesn't call this event for client world.
         if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
+            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
             world.tickCubicWorld();
 
             if (!world.isRemote()) {
