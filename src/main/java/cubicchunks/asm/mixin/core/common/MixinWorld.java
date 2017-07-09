@@ -353,7 +353,6 @@ public abstract class MixinWorld implements ICubicWorld {
     @Inject(method = "updateEntities", at = @At(value = "HEAD"), require = 1, cancellable = true)
     private void updateEntitiesHandler(CallbackInfo cbi) {
         if(this.isCubicWorld){
-            System.out.println("update tick");
             this.profiler.startSection("entities");
             this.profiler.startSection("global");
             this.profiler.endStartSection("remove");

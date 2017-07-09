@@ -121,7 +121,6 @@ public class CommonEventHandler {
         ICubicWorldServer world = (ICubicWorldServer) evt.world;
         //Forge (at least version 11.14.3.1521) doesn't call this event for client world.
         if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
-            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
             world.tickCubicWorld();
 
             if (!world.isRemote()) {
