@@ -24,16 +24,9 @@
 package cubicchunks.world.type;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.util.Box;
-import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.BasicCubeGenerator;
-import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
-import cubicchunks.worldgen.generator.ICubePrimer;
-import cubicchunks.worldgen.generator.custom.CustomPopulator;
-import cubicchunks.worldgen.generator.custom.CustomStructureGenerator;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.generator.custom.CustomTerrainGenerator;
 import cubicchunks.worldgen.gui.CustomCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
@@ -46,6 +39,7 @@ import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.gen.ChunkProviderSettings;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.IntCache;
 import net.minecraftforge.fml.common.Loader;
@@ -81,38 +75,19 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
                 this.biomeIndexLayer = new GenLayerDebug(6 + 2);
             }};
         } else {
-            return super.getBiomeProvider(world);
+            CustomGeneratorSettings settings = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
+            // lie to the biome generator about the world type and settings string so that it does what we want
+            ChunkProviderSettings.Factory vanillaSettings = ChunkProviderSettings.Factory.jsonToFactory("");
+            vanillaSettings.biomeSize = settings.biomeSize;
+            vanillaSettings.riverSize = settings.riverSize;
+            vanillaSettings.fixedBiome = settings.biome;
+            return new BiomeProvider(world.getSeed(), WorldType.CUSTOMIZED, vanillaSettings.build().toString());
         }
     }
 
     @Override
     public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-        CustomTerrainGenerator terrain = new CustomTerrainGenerator(world, world.getSeed());
-        CustomStructureGenerator features = new CustomStructureGenerator();
-        CustomPopulator population = new CustomPopulator(world);
-
-        //TODO: this is mostly a hack to get the old system working
-        return new BasicCubeGenerator(world) {
-            @Override
-            public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-                ICubePrimer primer = new CubePrimer();
-
-                terrain.generate(primer, cubeX, cubeY, cubeZ);
-                features.generate(world, primer, new CubePos(cubeX, cubeY, cubeZ));
-
-                return primer;
-            }
-
-            @Override
-            public void populate(Cube cube) {
-                population.populate(cube);
-            }
-
-            @Override
-            public Box getPopulationRequirement(Cube cube) {
-                return RECOMMENDED_POPULATOR_REQUIREMENT;
-            }
-        };
+        return new CustomTerrainGenerator(world, world.getSeed());
     }
 
     public boolean isCustomizable() {

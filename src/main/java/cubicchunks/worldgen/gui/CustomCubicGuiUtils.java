@@ -26,8 +26,8 @@ package cubicchunks.worldgen.gui;
 import static java.lang.Math.round;
 
 import com.google.common.base.Converter;
-import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
+import cubicchunks.worldgen.gui.component.UISelectLayoutSpecial;
 import cubicchunks.worldgen.gui.component.UISliderNoScroll;
 import cubicchunks.worldgen.gui.converter.Converters;
 import net.malisis.core.client.gui.Anchor;
@@ -38,7 +38,6 @@ import net.malisis.core.client.gui.component.decoration.UILabel;
 import net.malisis.core.client.gui.component.interaction.UICheckBox;
 import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.client.gui.component.interaction.UISlider;
-import net.malisis.core.client.gui.event.component.SpaceChangeEvent;
 import net.malisis.core.renderer.font.FontOptions;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.math.MathHelper;
@@ -47,6 +46,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.DoubleUnaryOperator;
 
 public class CustomCubicGuiUtils {
@@ -141,24 +141,32 @@ public class CustomCubicGuiUtils {
         return cb;
     }
 
-    public static UIRangeSlider<Float> makeRangeSlider(ExtraGui gui, String name, float min, float max, float defaultMin, float defaultMax) {
+    public static UIRangeSlider<Float> makeRangeSlider(ExtraGui gui, BiFunction<Float, Float, String> fmt, float min, float max, float defaultMin,
+            float defaultMax, float... multVals) {
         UIRangeSlider<Float>[] wrappedSlider = new UIRangeSlider[1];
         DoubleUnaryOperator roundRadiusFunc = d -> 1.0 / (wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth()) * 0.5;
         float maxExp = MathHelper.ceil(Math.log(Math.max(1, max)) / Math.log(2));
 
         Converter<Float, Float> conv = Converters.builder()
                 .linearScale(min, max)
-                .rounding().withBase(2, 1).withBase(10, 1).withMaxExp(maxExp).withRoundingRadius(roundRadiusFunc)
+                .rounding()
+                    .withBase(2, 1).withBase(10, 1)
+                    .withBases(2, multVals).withBases(10, multVals)
+                    .withMaxExp(maxExp).withRoundingRadius(roundRadiusFunc)
                 .withInfinity().negativeAt(min).positiveAt(max)
                 .build();
 
-        UIRangeSlider<Float> slider = new UIRangeSlider<Float>(
-                gui, 100,
-                conv,
-                (a, b) -> I18n.format(name, a * 100, b * 100))
-                .setRange(defaultMin, defaultMax);
+        UIRangeSlider<Float> slider = new UIRangeSlider<>(gui, 100, conv, fmt).setRange(defaultMin, defaultMax);
         wrappedSlider[0] = slider;
         return slider;
+    }
+
+    public static BiFunction<Float, Float, String> percentageFormat(String name, String floatFmt) {
+        return (a, b) -> I18n.format(vanillaText(name), String.format(floatFmt, a * 100), String.format(floatFmt, b * 100));
+    }
+
+    public static BiFunction<Float, Float, String> floatFormat(String name, String floatFmt) {
+        return (a, b) -> I18n.format(vanillaText(name), String.format(floatFmt, a), String.format(floatFmt, b));
     }
 
     public static UISelect<BiomeOption> makeBiomeList(MalisisGui gui) {
@@ -169,13 +177,7 @@ public class CustomCubicGuiUtils {
                 biomes.add(new BiomeOption(biome));
             }
         }
-        UISelect<BiomeOption> select = new UISelect<>(gui, 0, biomes);
-        select.register(new Object() {
-            @Subscribe
-            public void onResize(SpaceChangeEvent.SizeChangeEvent evt) {
-                select.setMaxExpandedWidth(evt.getNewWidth());
-            }
-        });
+        UISelect<BiomeOption> select = new UISelectLayoutSpecial<>(gui, 0, biomes);
         select.select(BiomeOption.ALL);
         select.maxDisplayedOptions(8);
         return select;

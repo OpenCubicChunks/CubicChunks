@@ -12,11 +12,15 @@ cubicchunks.gui.customcubic.previous_page=Previous
 cubicchunks.gui.customcubic.next_page=Next
 cubicchunks.gui.customcubic.done=Done
 
-cubicchunks.gui.customcubic.basic_tab_title=Customize World Settings%nPage 1 of 3%nBasic Settings
-cubicchunks.gui.customcubic.ores_tab_title=Customize World Settings%nPage 2 of 3%nOre Settings
-cubicchunks.gui.customcubic.advanced_tab_title=Customize World Settings%nPage 3 of 3%nAdvanced Settings
+cubicchunks.gui.customcubic.basic_tab_title=Customize World Settings%nPage 1 of 4%nBasic Settings
+cubicchunks.gui.customcubic.ores_tab_title=Customize World Settings%nPage 2 of 4%nOre Settings
+cubicchunks.gui.customcubic.advanced_tab_title=Customize World Settings%nPage 3 of 4%nAdvanced Settings
+cubicchunks.gui.customcubic.structures_tab_title=Customize World Settings%nPage 4 of 4%nAdvanced Structure Settings
 
 cubicchunks.gui.customcubic.layers_title=Customize World Settings%nPage 1 of 1%nLayers
+
+cubicchunks.gui.customcubic.tooltip.not_yet_implemented=Not yet implemented
+cubicchunks.gui.customcubic.tooltip.replacement_wip=Replacement work in progress
 
 #################################
 ###        options            ###
@@ -44,19 +48,19 @@ cubicchunks.gui.customcubic.strongholds=Strongholds
 cubicchunks.gui.customcubic.villages=Villages
 cubicchunks.gui.customcubic.mineshafts=Mineshafts
 cubicchunks.gui.customcubic.temples=Temples
-cubicchunks.gui.customcubic.oceanMonuments=Ocean Monuments
-cubicchunks.gui.customcubic.woodlandMansions=Woodland Mansions
+cubicchunks.gui.customcubic.ocean_monuments=Ocean Monuments
+cubicchunks.gui.customcubic.woodland_mansions=Woodland Mansions
 cubicchunks.gui.customcubic.ravines=Ravines
 cubicchunks.gui.customcubic.dungeons=Dungeons
-cubicchunks.gui.customcubic.dungeonCount=Dungeon Count
-cubicchunks.gui.customcubic.waterLakes=Water Lakes
-cubicchunks.gui.customcubic.waterLakeRarity=Water Lake Rarity
-cubicchunks.gui.customcubic.lavaLakes=Lava Lakes
-cubicchunks.gui.customcubic.lavaLakeRarity=Lava Lake Rarity
-cubicchunks.gui.customcubic.lavaOceans=Lava Oceans
+cubicchunks.gui.customcubic.dungeon_count=Dungeon Count
+cubicchunks.gui.customcubic.water_lakes=Water Lakes
+cubicchunks.gui.customcubic.water_lake_rarity=Water Lake Rarity
+cubicchunks.gui.customcubic.lava_lakes=Lava Lakes
+cubicchunks.gui.customcubic.lava_lake_rarity=Lava Lake Rarity
+cubicchunks.gui.customcubic.lava_oceans=Lava Oceans
 cubicchunks.gui.customcubic.biome=Biome
-cubicchunks.gui.customcubic.biomeSize=Biome Size
-cubicchunks.gui.customcubic.riverSize=River Size
+cubicchunks.gui.customcubic.biome_size=Biome Size
+cubicchunks.gui.customcubic.river_size=River Size
 
 #################################
 ###  ore generation settings  ###
@@ -73,11 +77,14 @@ cubicchunks.gui.customcubic.gold_ore_group=Gold Ore:
 cubicchunks.gui.customcubic.redstone_ore_group=Redstone Ore:
 cubicchunks.gui.customcubic.diamond_ore_group=Diamond Ore:
 cubicchunks.gui.customcubic.lapis_lazuli_ore_group=Lapis Lazuli Ore:
+cubicchunks.gui.customcubic.hills_emerald_ore_group=Hills Emerald Ore:
+cubicchunks.gui.customcubic.hills_silverfish_stone_group=Hills Silverfish Stone:
+cubicchunks.gui.customcubic.mesa_added_gold_ore_group=Mesa Added Gold Ore:
 
 cubicchunks.gui.customcubic.spawn_size=Spawn Size:
 cubicchunks.gui.customcubic.spawn_tries=Spawn Tries:
 cubicchunks.gui.customcubic.spawn_probability=Probability:
-cubicchunks.gui.customcubic.spawn_range=Height %.2f%%%% to %.2f%%%%
+cubicchunks.gui.customcubic.spawn_range=Height %s%%%% to %s%%%%
 
 cubicchunks.gui.customcubic.mean_height=Mean Height:
 cubicchunks.gui.customcubic.height_std_dev=Height Std. Deviation:
@@ -124,3 +131,56 @@ cubicchunks.gui.customcubic.high_noise_period_x=Period X:
 cubicchunks.gui.customcubic.high_noise_period_y=Period Y:
 cubicchunks.gui.customcubic.high_noise_period_z=Period Z:
 cubicchunks.gui.customcubic.high_noise_octaves=Octaves
+
+#################################
+###    structure settings     ###
+#################################
+
+cubicchunks.gui.customcubic.cave.settings_group=Cave Settings
+cubicchunks.gui.customcubic.cave.rarity=Rarity:
+cubicchunks.gui.customcubic.cave.max_init_nodes=Max initial nodes:
+cubicchunks.gui.customcubic.cave.large_node_rarity=Big node rarity:
+cubicchunks.gui.customcubic.cave.large_node_max_branches=Big node max branches:
+cubicchunks.gui.customcubic.cave.big_branch_rarity=Big branch rarity:
+cubicchunks.gui.customcubic.cave.branch_radius_factor_1=Radius factor 1:
+cubicchunks.gui.customcubic.cave.branch_radius_factor_2=Radius factor 2:
+cubicchunks.gui.customcubic.cave.branch_radius_add=Branch radius add:
+cubicchunks.gui.customcubic.cave.big_branch_radius_factor_range=Big branch radius factor range: %s to %s
+cubicchunks.gui.customcubic.cave.alt_flatten_rarity=Alt. Y dir. factor rarity:
+cubicchunks.gui.customcubic.cave.dir_change_factor=Dir. change factor:
+cubicchunks.gui.customcubic.cave.flatten_factor=Y dir. factor:
+cubicchunks.gui.customcubic.cave.alt_flatten_factor=Alt. Y dir. factor:
+cubicchunks.gui.customcubic.cave.prev_horiz_accel_weight=Prev. dXZ weight:
+cubicchunks.gui.customcubic.cave.prev_vert_accel_weight=Prev. dY weight:
+cubicchunks.gui.customcubic.cave.max_horiz_accel_change=Max dXZ change:
+cubicchunks.gui.customcubic.cave.max_vert_accel_change=Max dY change:
+cubicchunks.gui.customcubic.cave.carve_step_rarity=Carve step rarity:
+cubicchunks.gui.customcubic.cave.floor_depth=Floor depth:
+
+cubicchunks.gui.customcubic.ravine.settings_group=Ravine Settings
+cubicchunks.gui.customcubic.ravine.rarity=Rarity:
+cubicchunks.gui.customcubic.ravine.y_range=Height range: %s to %s
+cubicchunks.gui.customcubic.ravine.size_factor_1=Size factor 1:
+cubicchunks.gui.customcubic.ravine.size_factor_2=Size factor 2:
+cubicchunks.gui.customcubic.ravine.size_add=Size add:
+cubicchunks.gui.customcubic.ravine.y_angle_range=Y angle range: %s to %s
+cubicchunks.gui.customcubic.ravine.direction_change_factor=Dir. change factor:
+cubicchunks.gui.customcubic.ravine.flatten_factor=Y dir. factor:
+cubicchunks.gui.customcubic.ravine.random_size_factor_range=Random size factor range: %s to %s
+cubicchunks.gui.customcubic.ravine.prev_horiz_accel_weight=Prev. dXZ weight:
+cubicchunks.gui.customcubic.ravine.prev_vert_accel_weight=Prev. dY weight:
+cubicchunks.gui.customcubic.ravine.max_horiz_accel_change=Max dXZ change:
+cubicchunks.gui.customcubic.ravine.max_vert_accel_change=Max dY change:
+cubicchunks.gui.customcubic.ravine.stretch_y_factor=Stretch Y factor:
+cubicchunks.gui.customcubic.ravine.carve_step_rarity=Carve step rarity:
+
+cubicchunks.gui.customcubic.ravine.lava_section.group=Ravine lava:
+cubicchunks.gui.customcubic.ravine.lava_section.select_mode=Lava generation mode:
+
+cubicchunks.gui.customcubic.ravine.lava_section.no_config=(no additional lava configuration)
+cubicchunks.gui.customcubic.ravine.lava_section.lava_y=Lava Y:
+cubicchunks.gui.customcubic.ravine.lava_section.lava_y_fill_range=Lava Y fill range: %s to %s
+
+cubicchunks.gui.customcubic.ravine.lava_section.arctan_fill_range=Fill range: %s to %s:
+cubicchunks.gui.customcubic.ravine.lava_section.arctan_mean_fill_y=Average fill height factor:
+cubicchunks.gui.customcubic.ravine.lava_section.arctan_mean_fill_y_offset=Average fill height offset:

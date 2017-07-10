@@ -245,6 +245,17 @@ public class Converters {
             return self;
         }
 
+        public RoundingBuilder withBases(float base, float[] multiplier) {
+            RoundingBuilder self = roundingSelf();
+            if (multiplier == null) {
+                return self;
+            }
+            for (float val : multiplier) {
+                self.roundingData.add(new RoundingConverter.RoundingEntry(base, val));
+            }
+            return self;
+        }
+
         protected RoundingBuilder roundingSelf() {
             return this;
         }

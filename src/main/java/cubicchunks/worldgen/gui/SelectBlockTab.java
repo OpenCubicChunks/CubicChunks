@@ -43,7 +43,7 @@ public class SelectBlockTab {
     SelectBlockTab(ExtraGui guiFor, UIFlatTerrainLayer layerFor, Collection<IBlockState> blockStates, String clickAction) {
         this.gui = guiFor;
         layer = layerFor;
-        UIItemGrid layout = new UIItemGrid(gui, layerFor);
+        UIItemGrid layout = new UIItemGrid(gui, layerFor, 24);
         layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
         layout.setPadding(HORIZONTAL_PADDING, 0);
         blockStates.forEach(blockState -> {

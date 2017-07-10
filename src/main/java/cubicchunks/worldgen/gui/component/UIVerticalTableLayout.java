@@ -27,6 +27,7 @@ import cubicchunks.worldgen.gui.ExtraGui;
 import mcp.MethodsReturnNonnullByDefault;
 import net.malisis.core.client.gui.component.UIComponent;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +45,7 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
     private int insetLeft;
     private int insetRight;
     private Map<Integer, UIComponent<?>[]> rows = new HashMap<>();
+    private int[] noInsetRowHeights = {};
     private int totalRows;
 
     /**
@@ -123,6 +125,10 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
 
     }
 
+    @Override protected boolean checkLayoutCorrect() {
+        return Arrays.equals(getNoInsetRowHeights(), this.noInsetRowHeights);
+    }
+
     @Override
     protected void layout() {
         this.checkInitialized();
@@ -133,20 +139,7 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
 
         final double noInsetSizeX = width / (float) columns;
 
-        int[] noInsetRowHeights = new int[totalRows];
-
-        for (Map.Entry<Integer, UIComponent<?>[]> rowEntry : rows.entrySet()) {
-            int rowNumber = rowEntry.getKey();
-            UIComponent<?>[] rowArr = rowEntry.getValue();
-
-            int maxHeight = 0;
-            for (UIComponent e : rowArr) {
-                if (e != null) {
-                    maxHeight = Math.max(maxHeight, e.getHeight());
-                }
-            }
-            noInsetRowHeights[rowNumber] = maxHeight + insetUp + insetDown;
-        }
+        noInsetRowHeights = getNoInsetRowHeights();
 
         int currentY = 0;
         for (int rowNumber = 0; rowNumber < totalRows; rowNumber++) {
@@ -167,7 +160,7 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
                 double noInsetPosY = currentY;
 
                 double posX = noInsetPosX + insetLeft;
-                double posY = noInsetPosY + insetUp + (ySpaceForComponent - comp.getHeight()) / 2;
+                double posY = noInsetPosY + insetUp + (ySpaceForComponent - getLayoutHeight(comp)) / 2;
 
                 double sizeX = noInsetSizeX * loc.cellsX - insetLeft - insetRight;
                 int sizeY = comp.getRawHeight();
@@ -177,6 +170,24 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
             }
             currentY += currentRowHeight;
         }
+    }
+
+    private int[] getNoInsetRowHeights() {
+        int[] noInsetRowHeights = new int[totalRows];
+
+        for (Map.Entry<Integer, UIComponent<?>[]> rowEntry : rows.entrySet()) {
+            int rowNumber = rowEntry.getKey();
+            UIComponent<?>[] rowArr = rowEntry.getValue();
+
+            int maxHeight = 0;
+            for (UIComponent e : rowArr) {
+                if (e != null) {
+                    maxHeight = Math.max(maxHeight, getLayoutHeight(e));
+                }
+            }
+            noInsetRowHeights[rowNumber] = maxHeight + insetUp + insetDown;
+        }
+        return noInsetRowHeights;
     }
 
     @Override

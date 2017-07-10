@@ -34,6 +34,7 @@ import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeFloatSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeIntSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeRangeSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.percentageFormat;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
@@ -102,7 +103,22 @@ class OreSettingsTab {
     private final UISlider<Float> lapisLazuliMeanHeight;
     private final UISlider<Float> lapisLazuliHeightStdDev;
 
+    private final UISlider<Integer> hillsEmeraldOreSpawnTries;
+    private final UISlider<Float> hillsEmeraldOreSpawnProbability;
+    private final UIRangeSlider<Float> hillsEmeraldOreSpawnRange;
+
+    private final UISlider<Integer> hillsSilverfishStoneSpawnSize;
+    private final UISlider<Integer> hillsSilverfishStoneSpawnTries;
+    private final UISlider<Float> hillsSilverfishStoneSpawnProbability;
+    private final UIRangeSlider<Float> hillsSilverfishStoneSpawnRange;
+
+    private final UISlider<Integer> mesaAddedGoldOreSpawnSize;
+    private final UISlider<Integer> mesaAddedGoldOreSpawnTries;
+    private final UISlider<Float> mesaAddedGoldOreSpawnProbability;
+    private final UIRangeSlider<Float> mesaAddedGoldOreSpawnRange;
+
     OreSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
+        String rangeFmt = "%.4f";
         int y = -1;
         UIVerticalTableLayout layout = new UIVerticalTableLayout(gui, 6);
         layout.setPadding(HORIZONTAL_PADDING, 0);
@@ -117,9 +133,8 @@ class OreSettingsTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
                 .add(this.dirtSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.dirtSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.dirtSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.dirtSpawnMinHeight, settings
-                                        .dirtSpawnMaxHeight),
+                .add(this.dirtSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                                        settings.dirtSpawnMinHeight, settings.dirtSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
                 .add(label(gui, malisisText("gravel_group"), 20),
@@ -130,9 +145,8 @@ class OreSettingsTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
                 .add(this.gravelSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.gravelSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.gravelSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.gravelSpawnMinHeight, settings
-                                        .gravelSpawnMaxHeight),
+                .add(this.gravelSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                                        settings.gravelSpawnMinHeight, settings.gravelSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
                 .add(label(gui, malisisText("granite_group"), 20),
@@ -143,9 +157,8 @@ class OreSettingsTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
                 .add(this.graniteSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.graniteSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.graniteSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.graniteSpawnMinHeight, settings
-                                        .graniteSpawnMaxHeight),
+                .add(this.graniteSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                                        settings.graniteSpawnMinHeight, settings.graniteSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
                 .add(label(gui, malisisText("diorite_group"), 20),
@@ -156,9 +169,8 @@ class OreSettingsTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
                 .add(this.dioriteSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.dioriteSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.dioriteSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.dioriteSpawnMinHeight, settings
-                                        .dioriteSpawnMaxHeight),
+                .add(this.dioriteSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                                        settings.dioriteSpawnMinHeight, settings.dioriteSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
                 .add(label(gui, malisisText("andesite_group"), 20),
@@ -170,8 +182,8 @@ class OreSettingsTab {
                 .add(this.andesiteSpawnProbability =
                                 makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.andesiteSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.andesiteSpawnRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.andesiteSpawnMinHeight,
-                        settings.andesiteSpawnMaxHeight),
+                .add(this.andesiteSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                        settings.andesiteSpawnMinHeight, settings.andesiteSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
                 .add(label(gui, malisisText("coal_ore_group"), 20),
@@ -182,9 +194,8 @@ class OreSettingsTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
                 .add(this.coalOreSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.coalOreSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.coalOreSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.coalOreSpawnMinHeight, settings
-                                        .coalOreSpawnMaxHeight),
+                .add(this.coalOreSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                                        settings.coalOreSpawnMinHeight, settings.coalOreSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
                 .add(label(gui, malisisText("iron_ore_group"), 20),
@@ -195,9 +206,8 @@ class OreSettingsTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
                 .add(this.ironOreSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.ironOreSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.ironOreSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.ironOreSpawnMinHeight, settings
-                                        .ironOreSpawnMaxHeight),
+                .add(this.ironOreSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                                        settings.ironOreSpawnMinHeight, settings.ironOreSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
                 .add(label(gui, malisisText("gold_ore_group"), 20),
@@ -208,9 +218,8 @@ class OreSettingsTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
                 .add(this.goldOreSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.goldOreSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.goldOreSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.goldOreSpawnMinHeight, settings
-                                        .goldOreSpawnMaxHeight),
+                .add(this.goldOreSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                                        settings.goldOreSpawnMinHeight, settings.goldOreSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
                 .add(label(gui, malisisText("redstone_ore_group"), 20),
@@ -222,8 +231,8 @@ class OreSettingsTab {
                 .add(this.redstoneOreSpawnProbability =
                                 makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.redstoneOreSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.redstoneOreSpawnRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.redstoneOreSpawnMinHeight,
-                        settings.redstoneOreSpawnMaxHeight),
+                .add(this.redstoneOreSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                        settings.redstoneOreSpawnMinHeight, settings.redstoneOreSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
                 .add(label(gui, malisisText("diamond_ore_group"), 20),
@@ -235,8 +244,8 @@ class OreSettingsTab {
                 .add(this.diamondOreSpawnProbability =
                                 makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.diamondOreSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.diamondOreSpawnRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.diamondOreSpawnMinHeight,
-                        settings.diamondOreSpawnMaxHeight),
+                .add(this.diamondOreSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                        settings.diamondOreSpawnMinHeight, settings.diamondOreSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
                 .add(label(gui, malisisText("lapis_lazuli_ore_group"), 20),
@@ -254,6 +263,43 @@ class OreSettingsTab {
                 .add(this.lapisLazuliHeightStdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), -2.0f, 2.0f,
                         settings.lapisLazuliHeightStdDeviation),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
+
+                .add(label(gui, malisisText("hills_emerald_ore_group"), 20),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+                .add(this.hillsEmeraldOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.hillsEmeraldOreSpawnTries),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
+                .add(this.hillsEmeraldOreSpawnProbability =
+                                makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.hillsEmeraldOreSpawnProbability),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
+                .add(this.hillsEmeraldOreSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                        settings.hillsEmeraldOreSpawnMinHeight, settings.hillsEmeraldOreSpawnMaxHeight),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+
+                .add(label(gui, malisisText("hills_silverfish_stone_group"), 20),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+                .add(this.hillsSilverfishStoneSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.hillsSilverfishStoneSpawnSize),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
+                .add(this.hillsSilverfishStoneSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.hillsSilverfishStoneSpawnTries),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
+                .add(this.hillsSilverfishStoneSpawnProbability =
+                                makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.hillsSilverfishStoneSpawnProbability),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
+                .add(this.hillsSilverfishStoneSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                        settings.hillsSilverfishStoneSpawnMinHeight, settings.hillsSilverfishStoneSpawnMaxHeight),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+
+                .add(label(gui, malisisText("mesa_added_gold_ore_group"), 20),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+                .add(this.mesaAddedGoldOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.mesaAddedGoldOreSpawnSize),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
+                .add(this.mesaAddedGoldOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.mesaAddedGoldOreSpawnTries),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
+                .add(this.mesaAddedGoldOreSpawnProbability =
+                                makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.mesaAddedGoldOreSpawnProbability),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
+                .add(this.mesaAddedGoldOreSpawnRange = makeRangeSlider(gui, percentageFormat("spawn_range", rangeFmt), -2.0f, 2.0f,
+                        settings.mesaAddedGoldOreSpawnMinHeight, settings.mesaAddedGoldOreSpawnMaxHeight),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .init();
 
         this.container = layout;
@@ -267,79 +313,84 @@ class OreSettingsTab {
         conf.dirtSpawnSize = this.dirtSpawnSize.getValue();
         conf.dirtSpawnTries = this.dirtSpawnTries.getValue();
         conf.dirtSpawnProbability = this.dirtSpawnProbability.getValue();
-        conf.dirtSpawnSize = this.dirtSpawnSize.getValue();
         conf.dirtSpawnMinHeight = this.dirtSpawnRange.getMinValue();
         conf.dirtSpawnMaxHeight = this.dirtSpawnRange.getMaxValue();
 
         conf.gravelSpawnSize = this.gravelSpawnSize.getValue();
         conf.gravelSpawnTries = this.gravelSpawnTries.getValue();
         conf.gravelSpawnProbability = this.gravelSpawnProbability.getValue();
-        conf.gravelSpawnSize = this.gravelSpawnSize.getValue();
         conf.gravelSpawnMinHeight = this.gravelSpawnRange.getMinValue();
         conf.gravelSpawnMaxHeight = this.gravelSpawnRange.getMaxValue();
 
         conf.graniteSpawnSize = this.graniteSpawnSize.getValue();
         conf.graniteSpawnTries = this.graniteSpawnTries.getValue();
         conf.graniteSpawnProbability = this.graniteSpawnProbability.getValue();
-        conf.graniteSpawnSize = this.graniteSpawnSize.getValue();
         conf.graniteSpawnMinHeight = this.graniteSpawnRange.getMinValue();
         conf.graniteSpawnMaxHeight = this.graniteSpawnRange.getMaxValue();
 
         conf.dioriteSpawnSize = this.dioriteSpawnSize.getValue();
         conf.dioriteSpawnTries = this.dioriteSpawnTries.getValue();
         conf.dioriteSpawnProbability = this.dioriteSpawnProbability.getValue();
-        conf.dioriteSpawnSize = this.dioriteSpawnSize.getValue();
         conf.dioriteSpawnMinHeight = this.dioriteSpawnRange.getMinValue();
         conf.dioriteSpawnMaxHeight = this.dioriteSpawnRange.getMaxValue();
 
         conf.andesiteSpawnSize = this.andesiteSpawnSize.getValue();
         conf.andesiteSpawnTries = this.andesiteSpawnTries.getValue();
         conf.andesiteSpawnProbability = this.andesiteSpawnProbability.getValue();
-        conf.andesiteSpawnSize = this.andesiteSpawnSize.getValue();
         conf.andesiteSpawnMinHeight = this.andesiteSpawnRange.getMinValue();
         conf.andesiteSpawnMaxHeight = this.andesiteSpawnRange.getMaxValue();
 
         conf.coalOreSpawnSize = this.coalOreSpawnSize.getValue();
         conf.coalOreSpawnTries = this.coalOreSpawnTries.getValue();
         conf.coalOreSpawnProbability = this.coalOreSpawnProbability.getValue();
-        conf.coalOreSpawnSize = this.coalOreSpawnSize.getValue();
         conf.coalOreSpawnMinHeight = this.coalOreSpawnRange.getMinValue();
         conf.coalOreSpawnMaxHeight = this.coalOreSpawnRange.getMaxValue();
 
         conf.ironOreSpawnSize = this.ironOreSpawnSize.getValue();
         conf.ironOreSpawnTries = this.ironOreSpawnTries.getValue();
         conf.ironOreSpawnProbability = this.ironOreSpawnProbability.getValue();
-        conf.ironOreSpawnSize = this.ironOreSpawnSize.getValue();
         conf.ironOreSpawnMinHeight = this.ironOreSpawnRange.getMinValue();
         conf.ironOreSpawnMaxHeight = this.ironOreSpawnRange.getMaxValue();
 
         conf.goldOreSpawnSize = this.goldOreSpawnSize.getValue();
         conf.goldOreSpawnTries = this.goldOreSpawnTries.getValue();
         conf.goldOreSpawnProbability = this.goldOreSpawnProbability.getValue();
-        conf.goldOreSpawnSize = this.goldOreSpawnSize.getValue();
         conf.goldOreSpawnMinHeight = this.goldOreSpawnRange.getMinValue();
         conf.goldOreSpawnMaxHeight = this.goldOreSpawnRange.getMaxValue();
 
         conf.redstoneOreSpawnSize = this.redstoneOreSpawnSize.getValue();
         conf.redstoneOreSpawnTries = this.redstoneOreSpawnTries.getValue();
         conf.redstoneOreSpawnProbability = this.redstoneOreSpawnProbability.getValue();
-        conf.redstoneOreSpawnSize = this.redstoneOreSpawnSize.getValue();
         conf.redstoneOreSpawnMinHeight = this.redstoneOreSpawnRange.getMinValue();
         conf.redstoneOreSpawnMaxHeight = this.redstoneOreSpawnRange.getMaxValue();
 
         conf.diamondOreSpawnSize = this.diamondOreSpawnSize.getValue();
         conf.diamondOreSpawnTries = this.diamondOreSpawnTries.getValue();
         conf.diamondOreSpawnProbability = this.diamondOreSpawnProbability.getValue();
-        conf.diamondOreSpawnSize = this.diamondOreSpawnSize.getValue();
         conf.diamondOreSpawnMinHeight = this.diamondOreSpawnRange.getMinValue();
         conf.diamondOreSpawnMaxHeight = this.diamondOreSpawnRange.getMaxValue();
 
         conf.lapisLazuliSpawnSize = this.lapisLazuliOreSpawnSize.getValue();
         conf.lapisLazuliSpawnTries = this.lapisLazuliOreSpawnTries.getValue();
         conf.lapisLazuliSpawnProbability = this.lapisLazuliOreSpawnProbability.getValue();
-        conf.lapisLazuliSpawnSize = this.lapisLazuliOreSpawnSize.getValue();
         conf.lapisLazuliHeightMean = this.lapisLazuliMeanHeight.getValue();
         conf.lapisLazuliHeightStdDeviation = this.lapisLazuliHeightStdDev.getValue();
 
+        conf.hillsEmeraldOreSpawnTries = this.hillsEmeraldOreSpawnTries.getValue();
+        conf.hillsEmeraldOreSpawnProbability = this.hillsEmeraldOreSpawnProbability.getValue();
+        conf.hillsEmeraldOreSpawnMinHeight = this.hillsEmeraldOreSpawnRange.getMinValue();
+        conf.hillsEmeraldOreSpawnMaxHeight = this.hillsEmeraldOreSpawnRange.getMaxValue();
+
+        conf.hillsSilverfishStoneSpawnSize = this.hillsSilverfishStoneSpawnSize.getValue();
+        conf.hillsSilverfishStoneSpawnTries = this.hillsSilverfishStoneSpawnTries.getValue();
+        conf.hillsSilverfishStoneSpawnProbability = this.hillsSilverfishStoneSpawnProbability.getValue();
+        conf.hillsSilverfishStoneSpawnMinHeight = this.hillsSilverfishStoneSpawnRange.getMinValue();
+        conf.hillsSilverfishStoneSpawnMaxHeight = this.hillsSilverfishStoneSpawnRange.getMaxValue();
+
+        conf.mesaAddedGoldOreSpawnSize = this.mesaAddedGoldOreSpawnSize.getValue();
+        conf.mesaAddedGoldOreSpawnTries = this.mesaAddedGoldOreSpawnTries.getValue();
+        conf.mesaAddedGoldOreSpawnProbability = this.mesaAddedGoldOreSpawnProbability.getValue();
+        conf.mesaAddedGoldOreSpawnMinHeight = this.mesaAddedGoldOreSpawnRange.getMinValue();
+        conf.mesaAddedGoldOreSpawnMaxHeight = this.mesaAddedGoldOreSpawnRange.getMaxValue();
     }
 }

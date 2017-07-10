@@ -59,6 +59,18 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
     private static final int MAX_CUBE_Y = 2;
 
     /**
+     * To get cave radius (excluding the added offset) 2 random 0 to 1 values multiplied by some factors are added together.
+     * This is the first factor
+     */
+    private static final float RAVINE_SIZE_FACTOR_1 = 4.0f;
+
+    /**
+     * To get cave radius (excluding the added offset) 2 random 0 to 1 values multiplied by some factors are added together.
+     * This is the second factor
+     */
+    private static final float RAVINE_SIZE_FACTOR_2 = 2.0f;
+
+    /**
      * Add this value to lava height (Y below which lava exists)
      * <p>
      * Positive value to increase amount of lava, negative to decrease.
@@ -71,6 +83,8 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
      * Negative value will generate more lava in ravines that are deeper
      */
     private static final double LAVA_HEIGHT_Y_FACTOR = -0.1;
+
+    private static final float MAX_Y_ANGLE = 1.0f / 8.0f;
 
     private static final double VERT_SIZE_FACTOR = 3.0;
 
@@ -146,9 +160,9 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
         double startY = localToBlock(structureY, rand.nextInt(Cube.SIZE));
         double startZ = localToBlock(structureZ, rand.nextInt(Cube.SIZE));
 
-        float vertDirectionAngle = rand.nextFloat() * (float) Math.PI * 2.0F;
-        float horizDirectionAngle = (rand.nextFloat() - 0.5F) * 2.0F / 8.0F;
-        float baseRavineSize = (rand.nextFloat() * 2.0F + rand.nextFloat()) * 2.0F;
+        float horizDirectionAngle = rand.nextFloat() * (float) Math.PI * 2.0F;
+        float vertDirectionAngle = (rand.nextFloat() - 0.5F) * 2.0F * MAX_Y_ANGLE;
+        float baseRavineSize = rand.nextFloat() * RAVINE_SIZE_FACTOR_1 + rand.nextFloat() * RAVINE_SIZE_FACTOR_2;
 
         int startWalkedDistance = 0;
         int maxWalkedDistance = 0;//choose value automatically
@@ -158,7 +172,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
                 LAVA_HEIGHT_OFFSET + startY * LAVA_HEIGHT_Y_FACTOR);
 
         this.generateNode(cube, rand.nextLong(), generatedCubePos, startX, startY, startZ,
-                baseRavineSize, vertDirectionAngle, horizDirectionAngle,
+                baseRavineSize, horizDirectionAngle, vertDirectionAngle,
                 startWalkedDistance, maxWalkedDistance, VERT_SIZE_FACTOR, lavaHeight);
     }
 

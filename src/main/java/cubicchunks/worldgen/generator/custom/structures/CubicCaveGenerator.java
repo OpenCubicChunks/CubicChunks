@@ -90,14 +90,36 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
     private static final int BIG_CAVE_RARITY = 10;
 
     /**
+     * To get cave radius (excluding the added offset) 2 random 0 to 1 values multiplied by some factors are added together.
+     * This is the first factor
+     */
+    private static final double CAVE_SIZE_FACTOR_1 = 2.0;
+
+    /**
+     * To get cave radius (excluding the added offset) 2 random 0 to 1 values multiplied by some factors are added together.
+     * This is the second factor
+     */
+    private static final double CAVE_SIZE_FACTOR_2 = 1.0;
+
+    /**
+     * If big cave is generated, the radius will be multiplied my random value.this is max possible value
+     */
+    private static final double BIG_CAVE_MIN_SIZE_FACTOR = 1.0;
+
+    /**
+     * If big cave is generated, the radius will be multiplied my random value.this is max possible value
+     */
+    private static final double BIG_CAVE_MAX_SIZE_FACTOR = 4.0;
+
+    /**
      * Value added to the size of the cave (radius)
      */
     private static final double CAVE_SIZE_ADD = 1.5D;
 
     /**
-     * In 1 of STEEP_STEP_RARITY steps, cave will be flattened using STEEPER_FLATTEN_FACTOR instead of FLATTEN_FACTOR
+     * In 1 of ALTERNATE_FLATTEN_FACTOR_RARITY steps, cave will be flattened using ALTERNATE_FLATTEN_FACTOR instead of FLATTEN_FACTOR
      */
-    private static final int STEEP_STEP_RARITY = 6;
+    private static final int ALTERNATE_FLATTEN_FACTOR_RARITY = 6;
 
     /**
      * After each step the Y direction component will be multiplied by this value, unless steeper cave is allowed
@@ -107,32 +129,41 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
     /**
      * If steeper cave is allowed - this value will be used instead of FLATTEN_FACTOR
      */
-    private static final double STEEPER_FLATTEN_FACTOR = 0.92;
+    private static final double ALTERNATE_FLATTEN_FACTOR = 0.92;
 
     /**
-     * Each step cave direction angles will be changed by this fraction of values that specify how direction changes
+     * Specifies how drastically cave will bend ("acceleration factor").
+     *
+     * Each step cave direction angles will be changed by this fraction of values that specify how direction
+     * changes
      */
     private static final double DIRECTION_CHANGE_FACTOR = 0.1;
 
     /**
-     * This fraction of the previous value that controls horizontal direction changes will be used in next step
+     * Weight of the previously used "acceleration", specifies how slowly the direction in which the cave bends changes horizontally.
+     * Value equal to one means the cave will always go in circles horizontally. Zero will make it chaotic.
      */
-    private static final double PREV_HORIZ_DIRECTION_CHANGE_WEIGHT = 0.75;
+    private static final double PREV_HORIZ_ACCEL_WEIGHT = 0.75;
 
     /**
-     * This fraction of the previous value that controls vertical direction changes will be used in next step
+     * Weight of the previously used "acceleration", specifies how slowly the direction in which the cave bends changes vertically.
+     * Value equal to one means the cave will always go in circles vertically. Zero will make it chaotic.
      */
-    private static final double PREV_VERT_DIRECTION_CHANGE_WEIGHT = 0.9;
+    private static final double PREV_VERT_ACCEL_WEIGHT = 0.9;
 
     /**
      * Maximum value by which horizontal cave direction randomly changes each step, lower values are much more likely.
+     *
+     * This has effect inverse of PREV_HORIZ_ACCEL_WEIGHT, more or less.
      */
-    private static final double MAX_ADD_DIRECTION_CHANGE_HORIZ = 4.0;
+    private static final double MAX_ACCEL_CHANGE_HORIZ = 4.0;
 
     /**
      * Maximum value by which vertical cave direction randomly changes each step, lower values are much more likely.
+     *
+     * This has effect inverse of PREV_VERT_ACCEL_WEIGHT, more or less.
      */
-    private static final double MAX_ADD_DIRECTION_CHANGE_VERT = 2.0;
+    private static final double MAX_ACCEL_CHANGE_VERT = 2.0;
 
     /**
      * 1 in this amount of steps will actually carve any blocks,
@@ -178,10 +209,11 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
             for (int branch = 0; branch < subBranches; ++branch) {
                 float horizDirAngle = this.rand.nextFloat() * (float) Math.PI * 2.0F;
                 float vertDirAngle = (this.rand.nextFloat() - 0.5F) * 2.0F / 8.0F;
-                float baseHorizSize = this.rand.nextFloat() * 2.0F + this.rand.nextFloat();
+                float baseHorizSize = (float) (this.rand.nextFloat() * CAVE_SIZE_FACTOR_1 + this.rand.nextFloat() * CAVE_SIZE_FACTOR_2);
 
                 if (this.rand.nextInt(BIG_CAVE_RARITY) == 0) {
-                    baseHorizSize *= this.rand.nextFloat() * this.rand.nextFloat() * 3.0F + 1.0F;
+                    baseHorizSize *= this.rand.nextFloat() * this.rand.nextFloat() *
+                            (BIG_CAVE_MAX_SIZE_FACTOR - BIG_CAVE_MIN_SIZE_FACTOR) + BIG_CAVE_MIN_SIZE_FACTOR;
                 }
 
                 int startWalkedDistance = 0;
@@ -283,8 +315,8 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
             caveY += yDirectionFactor;
             caveZ += sin(horizDirAngle) * xzDirectionFactor;
 
-            if (rand.nextInt(STEEP_STEP_RARITY) == 0) {
-                vertDirAngle *= STEEPER_FLATTEN_FACTOR;
+            if (rand.nextInt(ALTERNATE_FLATTEN_FACTOR_RARITY) == 0) {
+                vertDirAngle *= ALTERNATE_FLATTEN_FACTOR;
             } else {
                 vertDirAngle *= FLATTEN_FACTOR;
             }
@@ -293,10 +325,10 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
             vertDirAngle += vertDirChange * DIRECTION_CHANGE_FACTOR;
             horizDirAngle += horizDirChange * DIRECTION_CHANGE_FACTOR;
             //update direction change angles
-            vertDirChange *= PREV_VERT_DIRECTION_CHANGE_WEIGHT;
-            horizDirChange *= PREV_HORIZ_DIRECTION_CHANGE_WEIGHT;
-            vertDirChange += (rand.nextFloat() - rand.nextFloat()) * rand.nextFloat() * MAX_ADD_DIRECTION_CHANGE_VERT;
-            horizDirChange += (rand.nextFloat() - rand.nextFloat()) * rand.nextFloat() * MAX_ADD_DIRECTION_CHANGE_HORIZ;
+            vertDirChange *= PREV_VERT_ACCEL_WEIGHT;
+            horizDirChange *= PREV_HORIZ_ACCEL_WEIGHT;
+            vertDirChange += (rand.nextFloat() - rand.nextFloat()) * rand.nextFloat() * MAX_ACCEL_CHANGE_VERT;
+            horizDirChange += (rand.nextFloat() - rand.nextFloat()) * rand.nextFloat() * MAX_ACCEL_CHANGE_HORIZ;
 
             //if we reached split point - try to split
             //can split only if it's not final branch and the cave is still big enough (>1 block radius)

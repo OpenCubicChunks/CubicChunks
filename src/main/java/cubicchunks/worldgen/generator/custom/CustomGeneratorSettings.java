@@ -38,6 +38,8 @@ import com.google.gson.GsonBuilder;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
+import cubicchunks.worldgen.gui.component.UIRangeSlider;
+import net.malisis.core.client.gui.component.interaction.UISlider;
 import net.minecraft.world.gen.ChunkProviderSettings;
 
 public class CustomGeneratorSettings {
@@ -53,14 +55,14 @@ public class CustomGeneratorSettings {
     public int waterLevel = 63;
     public boolean caves = true;
 
-    public boolean strongholds = true;
-    public boolean villages = true;
+    public boolean strongholds = true; // TODO: no strongholds yet
+    public boolean villages = true; // TODO: no villages yet
 
-    public boolean mineshafts = true;
-    public boolean temples = true;
+    public boolean mineshafts = true; // TODO: no mineshafts yet
+    public boolean temples = true; // TODO: no temples yet
 
-    public boolean oceanMonuments = true;
-    public boolean woodlandMansions = true;
+    public boolean oceanMonuments = true; // TODO: no ocean monuments yet
+    public boolean woodlandMansions = true; // TODO: no woodland mansions yet
 
     public boolean ravines = true;
     public boolean dungeons = true;
@@ -73,7 +75,6 @@ public class CustomGeneratorSettings {
 
     public int lavaLakeRarity = 8;
     public int aboveSeaLavaLakeRarity = 13; // approximately 10 * 4/3, all that end up above the surface are at the surface in vanilla
-    public boolean lavaOceans = false;
 
     public int biome = -1;
     public int biomeSize = 4;
@@ -209,6 +210,51 @@ public class CustomGeneratorSettings {
 
     // TODO: public boolean negativeHeightVariationInvertsTerrain = true;
 
+    /**
+     * Cave generator
+     */
+
+    // basic advanced cave config
+    public int caveRarityPerChunk = 16 * 7;
+    public int caveMaxInitialNodes = 14;
+    public int caveLargeNodeRarity = 4;
+    public int caveLargeNodeMaxBranches = 4;
+    public int bigCaveRarity = 10;
+    public float caveSizeFactor1 = 2.0f;
+    public float caveSizeFactor2 = 1.0f;
+    public float minBigCaveSizeFactor = 1.0f;
+    public float maxBigCaveSizeFactor = 4.0f;
+    public float caveSizeAdd = 1.5f;
+
+    // more advanced cave config
+    public int caveAltFlattenFactorRarity = 6;
+    public float caveFlattenFactor = 0.7f;
+    public float caveAltFlattenFactor = 0.92f;
+    public float caveDirectionChangeFactor = 0.1f;
+    public float cavePrevHorizAccelerationWeight = 0.75f;
+    public float cavePrevVertAccelerationWeight = 0.9f;
+    public float caveMaxHorizAccelChange = 4.0f;
+    public float caveMaxVertAccelChange = 2.0f;
+    public int caveCarveStepRarity = 4;
+    public float caveFloorDepth = -0.7f;
+
+    // ravines
+    public int ravineRarityPerChunk;
+    public float ravineMinY;
+    public float ravineMaxY;
+    public float ravineSizeFactor1;
+    public float ravineSizeFactor2;
+    public float ravineSizeAdd;
+    public float ravineDirectionChangeFactor;
+    public float ravineMinRandomSizeFactor;
+    public float ravineMaxRandomSizeFactor;
+    public float ravinePrevHorizAccelerationWeight;
+    public float ravinePrevVertAccelerationWeight;
+    public float ravineMaxHorizAccelChange;
+    public float ravineMaxVertAccelChange;
+    public float ravineStretchYFactor;
+    public int ravineCarveStepRarity;
+
     public CustomGeneratorSettings() {
 
     }
@@ -262,5 +308,9 @@ public class CustomGeneratorSettings {
         obj.highNoiseFrequencyZ = frequencyFromVanilla(settings.coordinateScale, 16);
 
         return obj;
+    }
+
+    public enum RavineLavaMode {
+        NO_LAVA, CONST_LAVA_Y, LINEAR, ARCTAN
     }
 }

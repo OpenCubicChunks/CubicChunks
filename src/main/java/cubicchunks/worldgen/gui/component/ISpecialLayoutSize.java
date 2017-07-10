@@ -21,32 +21,20 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom;
+package cubicchunks.worldgen.gui.component;
 
-import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubePrimer;
-import cubicchunks.worldgen.generator.custom.structures.CubicCaveGenerator;
-import cubicchunks.worldgen.generator.custom.structures.CubicRavineGenerator;
-import cubicchunks.worldgen.generator.custom.structures.CubicStructureGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-// TODO leftover from generator pipeline
+/**
+ * Some components (like UISelect) have size visible size that is different than the size
+ * that should be used for layout. This allows to specify special size for layout purposes.
+ */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CustomStructureGenerator {
+public interface ISpecialLayoutSize {
+    int getLayoutWidth();
 
-    //TODO: Implement more populator
-    @Nonnull private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
-    @Nonnull private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
-
-    public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
-
-        // generate world populator
-        this.caveGenerator.generate(world, cube, cubePos);
-        this.ravineGenerator.generate(world, cube, cubePos);
-    }
+    int getLayoutHeight();
 }

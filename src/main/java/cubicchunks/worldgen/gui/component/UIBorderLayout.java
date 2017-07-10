@@ -44,6 +44,11 @@ public class UIBorderLayout extends UILayout<UIBorderLayout, UIBorderLayout.Bord
         return ret;
     }
 
+    @Override protected boolean checkLayoutCorrect() {
+        // layout() is trivial enough that it doesn't make sense to check it
+        return false;
+    }
+
     @Override protected void layout() {
         this.locationToComponentMap().forEach((loc, comp) -> {
             comp.setAnchor(loc.getAnchor());

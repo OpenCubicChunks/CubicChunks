@@ -26,6 +26,7 @@ package cubicchunks.worldgen.gui;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
@@ -36,8 +37,10 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
+import net.malisis.core.client.gui.component.container.UIBackgroundContainer;
 import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.interaction.UIButton;
+import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.renderer.font.FontOptions;
 import net.minecraft.client.gui.GuiCreateWorld;
 
@@ -63,6 +66,7 @@ public class CustomCubicGui extends ExtraGui {
     private BasicSettingsTab basicSettings;
     private OreSettingsTab oreSettings;
     private AdvancedTerrainShapeTab advancedterrainShapeSettings;
+    private StructuresAdvancedTab structureSettings;
 
     public CustomCubicGui(GuiCreateWorld parent) {
         super();
@@ -79,11 +83,13 @@ public class CustomCubicGui extends ExtraGui {
         this.basicSettings = new BasicSettingsTab(this, conf);
         this.oreSettings = new OreSettingsTab(this, conf);
         this.advancedterrainShapeSettings = new AdvancedTerrainShapeTab(this, conf);
+        this.structureSettings = new StructuresAdvancedTab(this, conf);
 
         tabs = makeTabContainer();
         tabs.addTab(inPanel(basicSettings.getContainer()), vanillaText("basic_tab_title"));
         tabs.addTab(inPanel(oreSettings.getContainer()), vanillaText("ores_tab_title"));
         tabs.addTab(inPanel(advancedterrainShapeSettings.getContainer()), vanillaText("advanced_tab_title"));
+        tabs.addTab(inPanel(structureSettings.getContainer()), vanillaText("structures_tab_title"));
         addToScreen(tabs);
     }
 
@@ -129,7 +135,7 @@ public class CustomCubicGui extends ExtraGui {
                 .add(done, UIBorderLayout.Border.CENTER)
                 .init();
 
-        UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
+        UITabbedContainer tabGroup = UITabbedContainer.withPrevNextButton(this, prev, next, label::setText);
         tabGroup.add(upperLayout, lowerLayout);
 
         return tabGroup;
