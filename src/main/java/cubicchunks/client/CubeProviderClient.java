@@ -96,7 +96,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
     public boolean tick() {
         long i = System.currentTimeMillis();
         for (Cube cube : cubeMap) {
-            cube.tickCube(() -> System.currentTimeMillis() - i > 5L);
+            cube.tickCubeClient(() -> System.currentTimeMillis() - i > 5L);
         }
 
         if (System.currentTimeMillis() - i > 100L) {
