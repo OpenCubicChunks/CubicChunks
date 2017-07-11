@@ -27,9 +27,12 @@ import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.CHUNK_GET_ENTITY_LISTS;
 import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
 
+import cubicchunks.util.ClassInheritanceMultiMapFactory;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.BlankCube;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -126,11 +129,12 @@ public class MixinRenderGlobal {
             return chunk.getEntityLists(); //TODO: is this right?
         }
 
-        return new ClassInheritanceMultiMap[]{
-                ((IColumn) chunk)
-                        .getCube(Coords.blockToCube(position.getY()))
-                        .getEntityContainer().getEntitySet()
-        };
+        Cube cube = ((IColumn) chunk).getCube(Coords.blockToCube(position.getY()));
+        if (cube instanceof BlankCube) {
+            return ClassInheritanceMultiMapFactory.EMPTY_ARR;
+        }
+
+        return new ClassInheritanceMultiMap[]{cube.getEntityContainer().getEntitySet()};
     }
 
     /**
