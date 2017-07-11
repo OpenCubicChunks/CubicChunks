@@ -23,9 +23,9 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import static cubicchunks.asm.JvmNames.CHUNK_IS_MODIFIED;
 import static cubicchunks.asm.JvmNames.CHUNK_CONSTRUCT_1;
 import static cubicchunks.asm.JvmNames.CHUNK_IS_CHUNK_LOADED;
+import static cubicchunks.asm.JvmNames.CHUNK_IS_MODIFIED;
 import static cubicchunks.asm.JvmNames.CHUNK_STORAGE_ARRAYS;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
@@ -40,6 +40,7 @@ import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.column.ColumnTileEntityMap;
 import cubicchunks.world.column.CubeMap;
 import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -48,7 +49,6 @@ import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.ReportedException;
@@ -63,8 +63,6 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraft.world.gen.ChunkProviderDebug;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent.Load;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -131,7 +129,9 @@ public abstract class MixinChunk_Cubes implements IColumn {
             return cachedCube.getStorage();
         }
         Cube cube = getCubicWorld().getCubeCache().getCube(getX(), index, getZ());
-        cachedCube = cube;
+        if (!(cachedCube instanceof BlankCube)) {
+            cachedCube = cube;
+        }
         return cube.getStorage();
     }
 
