@@ -84,7 +84,8 @@ import com.google.common.collect.Sets;
 @MethodsReturnNonnullByDefault
 public class Cube implements XYZAddressable {
 
-    @Nullable private static final ExtendedBlockStorage NULL_STORAGE = null;
+    @Nullable protected static final ExtendedBlockStorage NULL_STORAGE = null;
+
     private final Set<NextTickListEntry> pendingTickListEntriesHashSet = new HashSet<NextTickListEntry>();
     private final TreeSet<NextTickListEntry> pendingTickListEntriesTreeSet = new TreeSet<NextTickListEntry>();
     /**
@@ -209,6 +210,24 @@ public class Cube implements XYZAddressable {
             }
         }
         isModified = true;
+    }
+
+
+    /**
+     * Constructor to be used from subclasses to provide all field values
+     */
+    protected Cube(TicketList tickers, ICubicWorld world, IColumn column, CubePos coords, ExtendedBlockStorage storage,
+            EntityContainer entities, Map<BlockPos, TileEntity> tileEntityMap,
+            ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, LightingManager.CubeLightUpdateInfo lightInfo) {
+        this.tickets = tickers;
+        this.world = world;
+        this.column = column;
+        this.coords = coords;
+        this.storage = storage;
+        this.entities = entities;
+        this.tileEntityMap = tileEntityMap;
+        this.tileEntityPosQueue = tileEntityPosQueue;
+        this.cubeLightUpdateInfo = lightInfo;
     }
 
     //======================================
@@ -350,7 +369,7 @@ public class Cube implements XYZAddressable {
             this.cubeLightUpdateInfo.tick();
         }
     }
-    
+
     /**
      * Tick this cube on server side. Block tick updates launched here.
      * @param currentTime - current World time

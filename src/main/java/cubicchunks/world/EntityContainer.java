@@ -51,9 +51,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class EntityContainer {
 
-    @Nonnull private ClassInheritanceMultiMap<Entity> entities;
-    private boolean hasActiveEntities; //TODO: hasActiveEntitys is like an isModifyed right?
-    private long lastSaveTime;
+    @Nonnull protected ClassInheritanceMultiMap<Entity> entities;
+    protected boolean hasActiveEntities; //TODO: hasActiveEntitys is like an isModifyed right?
+    protected long lastSaveTime;
 
     public EntityContainer() {
         this.entities = ClassInheritanceMultiMapFactory.create(Entity.class);

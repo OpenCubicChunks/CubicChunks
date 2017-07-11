@@ -176,7 +176,7 @@ public class LightingManager {
         private final boolean[] toUpdateColumns = new boolean[Cube.SIZE * Cube.SIZE];
         private boolean hasUpdates;
 
-        CubeLightUpdateInfo(Cube cube) {
+        public CubeLightUpdateInfo(Cube cube) {
             this.cube = cube;
         }
 
