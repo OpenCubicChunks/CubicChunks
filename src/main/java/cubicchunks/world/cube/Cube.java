@@ -732,4 +732,9 @@ public class Cube implements XYZAddressable {
     public boolean isCubeLoaded() {
         return this.isCubeLoaded;
     }
+    
+    @Override
+    public String toString(){
+        return "cube"+"{"+getX()+";"+getY()+";"+getZ()+"}";
+    }
 }
