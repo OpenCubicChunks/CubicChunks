@@ -138,8 +138,9 @@ configure<ForgeExtension> {
             "-Dcubicchunks.debug=true", //various debug options of cubic chunks mod. Adds items that are not normally there!
             "-XX:-OmitStackTraceInFastThrow", //without this sometimes you end up with exception with empty stacktrace
             "-Dmixin.checks.interfaces=true", //check if all interface methods are overriden in mixin
-            "-Dfml.noGrab=false" //change to disable Minecraft taking control over mouse
-            //"-ea" //enable assertions
+            "-Dfml.noGrab=false", //change to disable Minecraft taking control over mouse
+            "-ea", //enable assertions
+            "-da:io.netty..." //disable netty assertions because they sometimes fail
     )
 
     clientJvmArgs.addAll(args)
