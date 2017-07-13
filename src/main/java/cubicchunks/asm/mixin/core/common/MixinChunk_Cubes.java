@@ -129,7 +129,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             return cachedCube.getStorage();
         }
         Cube cube = getCubicWorld().getCubeCache().getCube(getX(), index, getZ());
-        if (!(cachedCube instanceof BlankCube)) {
+        if (!(cube instanceof BlankCube)) {
             cachedCube = cube;
         }
         return cube.getStorage();
