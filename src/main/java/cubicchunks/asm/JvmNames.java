@@ -55,6 +55,7 @@ public class JvmNames {
         MINECRAFT_SERVER = "Lnet/minecraft/server/MinecraftServer;",
         MUTABLE_BLOCK_POS = "Lnet/minecraft/util/math/BlockPos$MutableBlockPos;",
         POOLED_MUTABLE_BLOCK_POS = "Lnet/minecraft/util/math/BlockPos$PooledMutableBlockPos;",
+        RENDER_CHUNK = "Lnet/minecraft/client/renderer/chunk/RenderChunk;",
         STRING = "Ljava/lang/String;",
         STRUCTURE_BOUNDING_BOX = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;",
         WORLD = "Lnet/minecraft/world/World;",
@@ -101,5 +102,8 @@ public class JvmNames {
         WORLD_IS_CHUNK_LOADED = WORLD + "isChunkLoaded(IIZ)Z",
         WORLD_SERVER_GET_ACTUAL_HEIGHT = WORLD_SERVER + "getActualHeight()I";
 
+    // optifine methods
+    public static final String
+        OPTIFINE_RENDER_CHUNK_GET_CHUNK = RENDER_CHUNK + "getChunk(" + WORLD + ")" + CHUNK;
     // @formatter:on
 }

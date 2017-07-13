@@ -33,8 +33,8 @@ import net.minecraft.client.gui.GuiOptionsRowList;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiVideoSettings;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -60,12 +60,48 @@ public class ClientEventHandler {
 
     @SubscribeEvent
     public void initGuiEvent(InitGuiEvent.Post event) {
+
         GuiScreen currentGui = event.getGui();
         if (currentGui instanceof GuiVideoSettings) {
             GuiVideoSettings gvs = (GuiVideoSettings) currentGui;
-            GuiOptionsRowList gowl = (GuiOptionsRowList) gvs.optionsRowList;
-            GuiOptionsRowList.Row row = this.createRow(100, CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE, gvs.width);
-            gowl.options.add(1, row);
+            try {
+                GuiOptionsRowList gowl = (GuiOptionsRowList) gvs.optionsRowList;
+                GuiOptionsRowList.Row row = this.createRow(100, CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE, gvs.width);
+                gowl.options.add(1, row);
+            } catch (NoSuchFieldError err) {
+                int idx = 3;
+                int btnSpacing = 20;
+                CubicChunks.LOGGER.error("Couldn't add vertical view distance options, maybe optifine is installed? Attempting optifine-specific "
+                        + "option add", err.toString());
+                gvs.buttonList.add(idx, new GuiCustomSlider(100, gvs.width / 2 - 155 + 160, gvs.height / 6 + btnSpacing * (idx / 2) - 12,
+                        CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE));
+                // reposition all buttons except the last 4 (last 3 and done)
+                for (int i = 0; i < gvs.buttonList.size() - 4; i++) {
+                    GuiButton btn = gvs.buttonList.get(i);
+                    int x = gvs.width / 2 - 155 + i % 2 * 160;
+                    int y = gvs.height / 6 + 21 * (i / 2) - 12;
+                    btn.xPosition = x;
+                    btn.yPosition = y;
+                }
+                // now position the last 3 buttons excluding "done" to be 3-in-a-row
+                for (int i = gvs.buttonList.size() - 4; i < gvs.buttonList.size() - 1; i++) {
+                    GuiButton btn = gvs.buttonList.get(i);
+
+                    int newBtnWidth = 150 * 2 / 3;
+                    int minX = gvs.width / 2 - 155;
+                    int maxX = gvs.width / 2 - 155 + 160 + btn.width;
+
+                    int minXCenter = minX + newBtnWidth / 2;
+                    int maxXCenter = maxX - newBtnWidth / 2;
+
+                    int x = minXCenter + (i % 3) * (maxXCenter - minXCenter) / 2 - newBtnWidth / 2;
+                    int y = gvs.height / 6 + 21 * (gvs.buttonList.size() - 4) / 2 - 12;
+
+                    btn.xPosition = x;
+                    btn.yPosition = y;
+                    btn.width = newBtnWidth;
+                }
+            }
         }
     }
 

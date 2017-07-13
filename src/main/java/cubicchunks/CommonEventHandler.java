@@ -139,17 +139,19 @@ public class CommonEventHandler {
     public static class ClientProxy extends ServerProxy {
 
         @SuppressWarnings("unchecked")
-        private final List<Class<? extends World>> allowedClientWorldClasses = ImmutableList.copyOf(new Class[] {
-                WorldClient.class,
-                WorldServer.class,
-                WorldServerMulti.class
-        });
+        private final List<Class<? extends World>> allowedClientWorldClasses = ImmutableList.<Class<? extends World>>builder()
+                .addAll(allowedServerWorldClasses)
+                .add(
+                        WorldClient.class
+                ).build();
         
         @SuppressWarnings("unchecked")
-        private final List<Class<? extends IChunkProvider>> allowedClientChunkProviderClasses = ImmutableList.copyOf(new Class[] {
-                ChunkProviderClient.class,
-                ChunkProviderServer.class
-        });
+        private final List<Class<? extends IChunkProvider>> allowedClientChunkProviderClasses = ImmutableList.<Class<? extends IChunkProvider>>builder()
+                .addAll(allowedServerChunkProviderClasses)
+                .add(
+                        ChunkProviderClient.class,
+                        ChunkProviderServer.class
+                ).build();
 
         // shouldSkipWorld
         @Override
@@ -163,13 +165,16 @@ public class CommonEventHandler {
     public static class ServerProxy implements Predicate<ICubicWorld> {
 
         @SuppressWarnings("unchecked")
-        private final List<Class<? extends World>> allowedServerWorldClasses = ImmutableList.copyOf(new Class[] {
+        protected final List<Class<? extends World>> allowedServerWorldClasses = ImmutableList.copyOf(new Class[] {
                 WorldServer.class,
-                WorldServerMulti.class
+                WorldServerMulti.class,
+                // non-existing classes will be Objects
+                ReflectionUtil.getClassOrDefault("WorldServerOF", Object.class), // OptiFine's WorldServer, no package
+                ReflectionUtil.getClassOrDefault("WorldServerMultiOF", Object.class) // OptiFine's WorldServerMulti, no package
         });
         
         @SuppressWarnings("unchecked")
-        private final List<Class<? extends IChunkProvider>> allowedServerChunkProviderClasses = ImmutableList.copyOf(new Class[] {
+        protected final List<Class<? extends IChunkProvider>> allowedServerChunkProviderClasses = ImmutableList.copyOf(new Class[] {
                 ChunkProviderServer.class
         });
 
