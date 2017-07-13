@@ -3,7 +3,7 @@
     "package": "cubicchunks.asm.mixin.fixes",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
-    "minVersion": "0.7-dev",
+    "minVersion": "0.6.15-SNAPSHOT",
     "mixins": [
         "common.MixinBlockSkull_WitherSpawnLimits",
         "common.EntityBat_AiHeightLimit",
