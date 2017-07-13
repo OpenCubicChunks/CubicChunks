@@ -3,7 +3,7 @@
     "package": "cubicchunks.asm.mixin.noncritical",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
-    "minVersion": "0.6.7",
+    "minVersion": "0.7-dev",
     "priority": 0,
     "mixins": [
         "common.command.MixinCommandTeleport",
@@ -23,5 +23,8 @@
     ],
     "injectors": {
         "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
     }
 }
