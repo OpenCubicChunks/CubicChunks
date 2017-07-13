@@ -71,11 +71,6 @@ public class BlankCube extends Cube {
         return false;
     }
 
-    @Nullable @Override
-    public ExtendedBlockStorage getStorage() {
-        return null;
-    }
-
     @Override
     public IBlockState getBlockState(BlockPos pos) {
         return Blocks.AIR.getDefaultState();
