@@ -23,6 +23,8 @@
  */
 package cubicchunks.client;
 
+import static cubicchunks.util.Coords.blockToLocal;
+
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
@@ -35,9 +37,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -48,7 +50,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class RenderCubeCache extends ChunkCache {
 
     protected int cubeY;
-    @Nonnull private final Cube[][][] cubeArrays;
+    @Nonnull private final ExtendedBlockStorage[][][] cubeArrays;
+    @Nonnull private final Map<BlockPos, TileEntity>[][][] tileEntities;
+
     @Nonnull private final ICubicWorld world;
 
     public RenderCubeCache(ICubicWorld world, BlockPos from, BlockPos to, int subtract) {
@@ -59,19 +63,36 @@ public class RenderCubeCache extends ChunkCache {
         int cubeYEnd = Coords.blockToCube(to.getY() + subtract);
         int cubeZEnd = Coords.blockToCube(to.getZ() + subtract);
 
-        cubeArrays = new Cube[cubeXEnd - this.chunkX + 1][cubeYEnd - this.cubeY + 1][cubeZEnd - this.chunkZ + 1];
+        cubeArrays = new ExtendedBlockStorage[cubeXEnd - this.chunkX + 1][cubeYEnd - this.cubeY + 1][cubeZEnd - this.chunkZ + 1];
+        // because java is stupid and won't allow generic array creation, and temporary local variable because it won't allow annotation on assignment
+        @SuppressWarnings("unchecked")
+        Map<BlockPos, TileEntity>[][][] tileEntities = new Map[cubeXEnd - this.chunkX + 1][cubeYEnd - this.cubeY + 1][cubeZEnd - this.chunkZ + 1];
+        this.tileEntities = tileEntities;
+
+        ExtendedBlockStorage nullStorage = new ExtendedBlockStorage(0, true);
 
         for (int currentCubeX = chunkX; currentCubeX <= cubeXEnd; currentCubeX++) {
             for (int currentCubeY = cubeY; currentCubeY <= cubeYEnd; currentCubeY++) {
                 for (int currentCubeZ = chunkZ; currentCubeZ <= cubeZEnd; currentCubeZ++) {
-                    cubeArrays[currentCubeX - chunkX][currentCubeY - cubeY][currentCubeZ -
-                            chunkZ] = world.getCubeFromCubeCoords(currentCubeX, currentCubeY, currentCubeZ);
+                    ExtendedBlockStorage ebs;
+                    Map<BlockPos, TileEntity> teMap;
+
+                    Cube cube = world.getCubeFromCubeCoords(currentCubeX, currentCubeY, currentCubeZ);
+                    ebs = cube.getStorage();
+
+                    teMap = cube.getTileEntityMap();
+
+                    if (ebs == null) {
+                        ebs = nullStorage;
+                    }
+                    cubeArrays[currentCubeX - chunkX][currentCubeY - cubeY][currentCubeZ - chunkZ] = ebs;
+                    tileEntities[currentCubeX - chunkX][currentCubeY - cubeY][currentCubeZ - chunkZ] = teMap;
                 }
             }
         }
     }
 
-    @SideOnly(Side.CLIENT)
+    @Override
     public int getCombinedLight(BlockPos pos, int lightValue) {
         int blockLight = this.getLightForExt(EnumSkyBlock.SKY, pos);
         int skyLight = this.getLightForExt(EnumSkyBlock.BLOCK, pos);
@@ -93,10 +114,7 @@ public class RenderCubeCache extends ChunkCache {
                 arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
             return null;
         }
-        if (this.cubeArrays[arrayX][arrayY][arrayZ] == null) {
-            return null;
-        }
-        return this.cubeArrays[arrayX][arrayY][arrayZ].getTileEntity(pos, Chunk.EnumCreateEntityType.IMMEDIATE);
+        return this.tileEntities[arrayX][arrayY][arrayZ].get(pos);
     }
 
     @Override
@@ -113,12 +131,7 @@ public class RenderCubeCache extends ChunkCache {
                 arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
             return Blocks.AIR.getDefaultState();
         }
-        Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
-
-        if (cube != null) {
-            return cube.getBlockState(pos);
-        }
-        return Blocks.AIR.getDefaultState();
+        return this.cubeArrays[arrayX][arrayY][arrayZ].get(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
     }
 
     private int getLightForExt(EnumSkyBlock type, BlockPos pos) {
@@ -150,11 +163,8 @@ public class RenderCubeCache extends ChunkCache {
                 arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
             return type.defaultLightValue;
         }
-        Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
-        if (cube == null) {
-            return type.defaultLightValue;
-        }
-        return cube.getLightFor(type, pos);
+        ExtendedBlockStorage cube = this.cubeArrays[arrayX][arrayY][arrayZ];
+        return getRawLight(cube, type, pos);
     }
 
     @Override
@@ -170,16 +180,20 @@ public class RenderCubeCache extends ChunkCache {
                 arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
             return type.defaultLightValue;
         }
-        Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
-        if (cube == null) {
-            return type.defaultLightValue;
+        ExtendedBlockStorage cube = this.cubeArrays[arrayX][arrayY][arrayZ];
+        return getRawLight(cube, type, pos);
+    }
+
+    private int getRawLight(ExtendedBlockStorage ebs, EnumSkyBlock type, BlockPos pos) {
+        if (type == EnumSkyBlock.BLOCK) {
+            return ebs.getExtBlocklightValue(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
+        } else {
+            return ebs.getExtSkylightValue(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
         }
-        return cube.getLightFor(type, pos);
     }
 
     @Override
     public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean defaultValue) {
-        //TODO: remove this comment when the bug is fixed in forge: CubicChunks: fix forge bug #3026
         if (pos.getY() < world.getMinHeight() || pos.getY() >= world.getMaxHeight()) {
             return defaultValue;
         }
@@ -189,10 +203,6 @@ public class RenderCubeCache extends ChunkCache {
         if (arrayX < 0 || arrayX >= this.cubeArrays.length ||
                 arrayY < 0 || arrayY >= this.cubeArrays[arrayX].length ||
                 arrayZ < 0 || arrayZ >= this.cubeArrays[arrayX][arrayY].length) {
-            return defaultValue;
-        }
-        Cube cube = this.cubeArrays[arrayX][arrayY][arrayZ];
-        if (cube == null) {
             return defaultValue;
         }
         IBlockState state = getBlockState(pos);
