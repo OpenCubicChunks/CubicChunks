@@ -26,7 +26,6 @@ package cubicchunks;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -34,13 +33,12 @@ import static org.junit.Assert.assertTrue;
 import cubicchunks.util.XYZAddressable;
 import cubicchunks.util.XYZMap;
 import mcp.MethodsReturnNonnullByDefault;
-
 import org.junit.Test;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
+
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -120,7 +118,7 @@ public class TestXYZMap {
             map.put(values[i]);
 
             for (int j = 0; j <= i; ++j) {
-                assertTrue(map.contains(values[j].getX(), values[j].getY(), values[j].getZ()));
+                assertTrue(map.contains(values[i].getX(), values[i].getY(), values[i].getZ()));
             }
         }
     }
@@ -140,19 +138,6 @@ public class TestXYZMap {
             }
         }
     }
-    
-    @Test
-    public void testRemove() {
-        XYZMap<XYZAddressable> map = new XYZMap<>(0.75f, 10);
-        //set seed so that tests are predictable
-        Random rand = new Random(42);
-        int maxPuts = 500;
-        Addressable[] values = new Addressable[maxPuts];
-        testPutRandom(map, rand, maxPuts, values);
-        map.remove(values[maxPuts/2]);
-        assertTrue(!map.contains(values[maxPuts/2]));
-    }
-
 
     @Test
     public void testIterator() {
@@ -163,27 +148,15 @@ public class TestXYZMap {
         for (int i = 0; i < maxPut; i++) {
             Addressable newElement = new Addressable(rand.nextInt(), rand.nextInt(), rand.nextInt(), String.valueOf(i));
             map.put(newElement);
-            assertTrue(map.contains(newElement));
             allElements.add(newElement);
         }
         for (XYZAddressable element : map) {
-            assertTrue(map.contains(element));
             assertThat(allElements, hasItem(element));
             allElements.remove(element);
         }
         assertThat(allElements, empty());
-        Iterator<XYZAddressable> it = map.iterator();
-        while(it.hasNext()){
-            XYZAddressable xyza = it.next();
-            assertNotNull(xyza);
-            assertTrue(map.contains(xyza));
-            int sizeBefore = map.getSize();
-            it.remove();
-            assertTrue(!map.contains(xyza));
-            assertEquals(map.getSize(),sizeBefore-1);
-        }
     }
-    
+
     /**
      * Simple implementation of Addressable for testing, equal only if id of them is equal
      */
