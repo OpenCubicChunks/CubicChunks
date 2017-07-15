@@ -44,6 +44,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -273,6 +274,9 @@ public class Cube implements XYZAddressable {
      * @see Cube#getBlockState(BlockPos)
      */
     public IBlockState getBlockState(int blockX, int localOrBlockY, int blockZ) {
+        if (storage == NULL_STORAGE) {
+            return Blocks.AIR.getDefaultState();
+        }
         return storage.get(blockToLocal(blockX), blockToLocal(localOrBlockY), blockToLocal(blockZ));
     }
 
