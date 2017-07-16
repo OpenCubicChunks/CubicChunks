@@ -156,6 +156,32 @@ public class TestXYZMap {
         }
         assertThat(allElements, empty());
     }
+    
+    @Test
+    public void testCollapse() {
+        Random rand = new Random(42);
+        for (int attempt = 0; attempt < 100; attempt++) {
+            XYZMap<XYZAddressable> map = new XYZMap<>(1.0f, 4);
+            Set<XYZAddressable> allElements = new HashSet<>();
+            int maxPut = 250;
+            for (int i = 0; i < maxPut; i++) {
+                Addressable newElement = new Addressable(rand.nextInt(), rand.nextInt(), rand.nextInt(), String.valueOf(i));
+                map.put(newElement);
+                allElements.add(newElement);
+            }
+            int i = maxPut;
+            for (XYZAddressable element : map) {
+                if (i-- == attempt) {
+                    allElements.remove(element);
+                    map.remove(element);
+                    break;
+                }
+            }
+            for (XYZAddressable element : allElements) {
+                assertTrue(map.contains(element));
+            }
+        }
+    }
 
     /**
      * Simple implementation of Addressable for testing, equal only if id of them is equal
