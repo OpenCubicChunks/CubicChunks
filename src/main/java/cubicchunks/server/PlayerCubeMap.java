@@ -32,7 +32,6 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
-import cubicchunks.debug.Dbg;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
 import cubicchunks.util.XZMap;
@@ -71,7 +70,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListener {
+public class PlayerCubeMap extends PlayerChunkMap {
 
     private static final Predicate<EntityPlayerMP> NOT_SPECTATOR = player -> player != null && !player.isSpectator();
     private static final Predicate<EntityPlayerMP> CAN_GENERATE_CHUNKS = player -> player != null &&
@@ -159,7 +158,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
     private int horizontalViewDistance;
     private int verticalViewDistance;
-    private volatile int updatedVerticalViewDistance;
 
     /**
      * This is used only to force update of all CubeWatchers every 8000 ticks
@@ -177,16 +175,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
         super((WorldServer) worldServer);
         this.cubeCache = getWorld().getCubeCache();
         this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(),
-                CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE.getValue());
-        CubicChunks.addConfigChangeListener(this);
-    }
-
-    @Override
-    public void onConfigUpdate(CubicChunks.Config config) {
-        if (config.getVerticalCubeLoadDistance() != this.verticalViewDistance) {
-            this.updatedVerticalViewDistance = config.getVerticalCubeLoadDistance();
-        }
-        this.maxGeneratedCubesPerTick = config.getMaxGeneratedCubesPerTick();
+                ((ICubicPlayerList) worldServer.getMinecraftServer().getPlayerList()).getVerticalViewDistance());
     }
 
     /**
@@ -218,9 +207,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
     // CHECKED: 1.10.2-12.18.1.2092
     @Override
     public void tick() {
-        if (this.updatedVerticalViewDistance != this.verticalViewDistance) {
-            this.setPlayerViewDistance(getWorld().getMinecraftServer().getPlayerList().getViewDistance(), this.updatedVerticalViewDistance);
-        }
         getWorld().getProfiler().startSection("playerCubeMapTick");
         long currentTime = this.getWorldServer().getTotalWorldTime();
 

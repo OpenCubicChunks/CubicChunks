@@ -25,23 +25,32 @@ package cubicchunks.asm.mixin.core.common;
 
 import static cubicchunks.asm.JvmNames.CHUNK_SET_CHUNK_MODIFIED;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-
+import cubicchunks.server.ICubicPlayerList;
+import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(PlayerList.class)
-public abstract class MixinPlayerList {
+public abstract class MixinPlayerList implements ICubicPlayerList {
+
+    @Shadow private int viewDistance;
+
+    @Shadow @Final private MinecraftServer mcServer;
+    protected int verticalViewDistance = -1;
 
     @Redirect(method = "playerLoggedOut", at = @At(value = "INVOKE", target = CHUNK_SET_CHUNK_MODIFIED, ordinal = 0), require = 1)
     private void setChunkModifiedOnPlayerLoggedOut(Chunk chunkIn, EntityPlayerMP playerIn) {
@@ -50,6 +59,28 @@ public abstract class MixinPlayerList {
             ((ICubicWorld) worldserver).getCubeFromCubeCoords(playerIn.chunkCoordX, playerIn.chunkCoordY, playerIn.chunkCoordZ).markDirty();
         } else {
             worldserver.getChunkFromChunkCoords(playerIn.chunkCoordX, playerIn.chunkCoordZ).setChunkModified();
+        }
+    }
+
+    @Override public int getVerticalViewDistance() {
+        return verticalViewDistance < 0 ? viewDistance : verticalViewDistance;
+    }
+
+    @Override public int getRawVerticalViewDistance() {
+        return verticalViewDistance;
+    }
+
+    @Override public void setVerticalViewDistance(int dist) {
+        this.verticalViewDistance = dist;
+
+        if (this.mcServer.worlds != null) {
+            for (WorldServer worldserver : this.mcServer.worlds) {
+                if (worldserver != null && ((ICubicWorld) worldserver).isCubicWorld()) {
+                    ((PlayerCubeMap) worldserver.getPlayerChunkMap()).setPlayerViewDistance(viewDistance, dist);
+                    // TODO: entity tracker vertical view distance
+                    // worldserver.getEntityTracker().setViewDistance(dist);
+                }
+            }
         }
     }
 }

@@ -25,6 +25,7 @@ package cubicchunks.client;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.CubicChunks.Config.IntOptions;
+import cubicchunks.server.ICubicPlayerList;
 import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -37,6 +38,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
@@ -55,6 +57,18 @@ public class ClientEventHandler {
         }
         if (evt.phase == TickEvent.Phase.END && world.isCubicWorld()) {
             world.tickCubicWorld();
+        }
+    }
+
+    @SubscribeEvent
+    public void onServerTick(TickEvent.ServerTickEvent event) {
+        // no need to check side, this is only registered in client proxy
+        ICubicPlayerList playerList = ((ICubicPlayerList)FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList());
+        int prevDist = playerList.getVerticalViewDistance();
+        int newDist = IntOptions.VERTICAL_CUBE_LOAD_DISTANCE.getValue();
+        if (prevDist != newDist) {
+            CubicChunks.LOGGER.info("Changing vertical view distance to {}, from {}", newDist, prevDist);
+            playerList.setVerticalViewDistance(newDist);
         }
     }
 
