@@ -36,15 +36,18 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.fml.common.SidedProxy;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -57,7 +60,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class FastCubeBlockAccess implements ILightBlockAccess {
 
     @SidedProxy private static GetLoadedChunksProxy getLoadedChunksProxy;
-    @Nonnull private final Cube[][][] cache;
+    @Nonnull private final ExtendedBlockStorage[][][] cache;
+    @Nonnull private final Cube[][][] cubes;
     private final int originX, originY, originZ;
     @Nonnull private final ICubicWorld world;
 
@@ -72,7 +76,8 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
         int dz = Math.abs(end.getZ() - start.getZ()) + 1;
 
         this.world = world;
-        this.cache = new Cube[dx][dy][dz];
+        this.cache = new ExtendedBlockStorage[dx][dy][dz];
+        this.cubes = new Cube[dx][dy][dz];
         this.originX = Math.min(start.getX(), end.getX());
         this.originY = Math.min(start.getY(), end.getY());
         this.originZ = Math.min(start.getZ(), end.getZ());
@@ -80,9 +85,10 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
         for (int relativeCubeX = 0; relativeCubeX < dx; relativeCubeX++) {
             for (int relativeCubeZ = 0; relativeCubeZ < dz; relativeCubeZ++) {
                 for (int relativeCubeY = 0; relativeCubeY < dy; relativeCubeY++) {
-                    this.cache[relativeCubeX][relativeCubeY][relativeCubeZ] =
+                    Cube cube =
                             prov.getLoadedCube(originX + relativeCubeX, originY + relativeCubeY, originZ + relativeCubeZ);
-                    if (this.cache[relativeCubeX][relativeCubeY][relativeCubeZ] == null) {
+
+                    if (cube == null) {
                         CrashReport report = CrashReport.makeCrashReport(
                                 new IllegalStateException("Cube not loaded"), "Creating cube cache");
                         CrashReportCategory category = report.makeCategory("ILightBlockAccess");
@@ -104,12 +110,16 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
 
                         throw new ReportedException(report);
                     }
+                    ExtendedBlockStorage storage = cube.getStorage();
+                    this.cache[relativeCubeX][relativeCubeY][relativeCubeZ] = storage;
+                    this.cubes[relativeCubeX][relativeCubeY][relativeCubeZ] = cube;
                 }
             }
         }
     }
 
-    private Cube getCube(int blockX, int blockY, int blockZ) {
+    @Nullable
+    private ExtendedBlockStorage getStorage(int blockX, int blockY, int blockZ) {
         int cubeX = Coords.blockToCube(blockX);
         int cubeY = Coords.blockToCube(blockY);
         int cubeZ = Coords.blockToCube(blockZ);
@@ -117,12 +127,32 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
         return this.cache[cubeX - originX][cubeY - originY][cubeZ - originZ];
     }
 
+    private void setStorage(int blockX, int blockY, int blockZ, @Nullable ExtendedBlockStorage ebs) {
+        int cubeX = Coords.blockToCube(blockX);
+        int cubeY = Coords.blockToCube(blockY);
+        int cubeZ = Coords.blockToCube(blockZ);
+
+        this.cache[cubeX - originX][cubeY - originY][cubeZ - originZ] = ebs;
+    }
+
+    private Cube getCube(int blockX, int blockY, int blockZ) {
+        int cubeX = Coords.blockToCube(blockX);
+        int cubeY = Coords.blockToCube(blockY);
+        int cubeZ = Coords.blockToCube(blockZ);
+
+        return this.cubes[cubeX - originX][cubeY - originY][cubeZ - originZ];
+    }
+
     private IBlockState getBlockState(BlockPos pos) {
         return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
     }
 
     private IBlockState getBlockState(int blockX, int blockY, int blockZ) {
-        return this.getCube(blockX, blockY, blockZ).getBlockState(blockX, blockY, blockZ);
+        ExtendedBlockStorage ebs = this.getStorage(blockX, blockY, blockZ);
+        if (ebs != null) {
+            return ebs.get(blockToLocal(blockX), blockToLocal(blockY), blockToLocal(blockZ));
+        }
+        return Blocks.AIR.getDefaultState();
     }
 
     @Override public int getBlockLightOpacity(BlockPos pos) {
@@ -130,11 +160,38 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
     }
 
     @Override public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
-        return this.getCube(pos.getX(), pos.getY(), pos.getZ()).getLightFor(lightType, pos);
+        ExtendedBlockStorage ebs = this.getStorage(pos.getX(), pos.getY(), pos.getZ());
+        if (ebs != null) {
+            int localX = blockToLocal(pos.getX());
+            int localY = blockToLocal(pos.getY());
+            int localZ = blockToLocal(pos.getZ());
+
+            if (lightType == EnumSkyBlock.SKY) {
+                return ebs.getExtSkylightValue(localX, localY, localZ);
+            } else {
+                return ebs.getExtBlocklightValue(localX, localY, localZ);
+            }
+        }
+        return lightType.defaultLightValue;
     }
 
     @Override public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
-        this.getCube(pos.getX(), pos.getY(), pos.getZ()).setLightFor(lightType, pos, val);
+        ExtendedBlockStorage ebs = this.getStorage(pos.getX(), pos.getY(), pos.getZ());
+        if (ebs != null) {
+            int localX = blockToLocal(pos.getX());
+            int localY = blockToLocal(pos.getY());
+            int localZ = blockToLocal(pos.getZ());
+
+            if (lightType == EnumSkyBlock.SKY) {
+                ebs.setExtSkylightValue(localX, localY, localZ, val);
+            } else {
+                ebs.setExtBlocklightValue(localX, localY, localZ, val);
+            }
+            return;
+        }
+        Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
+        cube.setLightFor(lightType, pos, val);
+        setStorage(pos.getX(), pos.getY(), pos.getZ(), cube.getStorage());
     }
 
     @Override public boolean canSeeSky(BlockPos pos) {
