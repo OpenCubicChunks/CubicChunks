@@ -29,15 +29,19 @@ import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.NotCubicChunksWorldException;
+import cubicchunks.world.cube.Cube;
 import cubicchunks.world.provider.ICubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.Block;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
@@ -137,6 +141,39 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
             throw new NotCubicChunksWorldException();
         }
         return (PlayerCubeMap) this.playerChunkMap;
+    }
+    
+    @Inject(method = "scheduleUpdate", at = @At("HEAD"), cancellable = true, require = 1)
+    public void scheduleUpdateInject(BlockPos pos, Block blockIn, int delay, CallbackInfo ci) {
+        if (this.isCubicWorld()) {
+            Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos));
+            if (cube != null) {
+                cube.scheduleUpdate(pos, blockIn, delay, 0);
+            }
+            ci.cancel();
+        }
+    }
+    
+    @Inject(method = "scheduleBlockUpdate", at = @At("HEAD"), cancellable = true, require = 1)
+    public void scheduleBlockUpdateInject(BlockPos pos, Block blockIn, int delay, int priority, CallbackInfo ci) {
+        if (this.isCubicWorld()) {
+            Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos));
+            if (cube != null) {
+                cube.scheduleUpdate(pos, blockIn, delay, priority);
+            }
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "updateBlockTick", at = @At("HEAD"), cancellable = true, require = 1)
+    public void updateBlockTickInject(BlockPos pos, Block blockIn, int delay, int priority, CallbackInfo ci) {
+        if (this.isCubicWorld()) {
+            Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos));
+            if (cube != null) {
+                cube.scheduleUpdate(pos, blockIn, delay, priority);
+            }
+            ci.cancel();
+        }
     }
 
     //vanilla methods

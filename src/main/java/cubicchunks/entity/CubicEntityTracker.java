@@ -23,7 +23,6 @@
  */
 package cubicchunks.entity;
 
-import com.google.common.collect.Lists;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.crash.CrashReport;
@@ -39,18 +38,14 @@ import net.minecraft.network.play.server.SPacketSetPassengers;
 import net.minecraft.util.ReportedException;
 import net.minecraft.world.WorldServer;
 
-import java.util.List;
-
 public class CubicEntityTracker extends EntityTracker {
 
     public CubicEntityTracker(ICubicWorldServer worldServer) {
         super((WorldServer) worldServer);
     }
 
+    // Previous version of this function contain code which force Minecraft to send all SPacketEntityAttach before any SPacketSetPassengers
     public void sendLeashedEntitiesInCube(EntityPlayerMP player, Cube cubeIn) {
-        List<Entity> list = Lists.<Entity>newArrayList();
-        List<Entity> list1 = Lists.<Entity>newArrayList();
-
         for (EntityTrackerEntry entitytrackerentry : this.entries) {
 
             Entity entity = entitytrackerentry.getTrackedEntity();
@@ -61,24 +56,12 @@ public class CubicEntityTracker extends EntityTracker {
 
                 entitytrackerentry.updatePlayerEntity(player);
                 if (entity instanceof EntityLiving && ((EntityLiving) entity).getLeashedToEntity() != null) {
-                    list.add(entity);
+                    player.connection.sendPacket(new SPacketEntityAttach(entity, ((EntityLiving) entity).getLeashedToEntity()));
                 }
 
                 if (!entity.getPassengers().isEmpty()) {
-                    list1.add(entity);
+                    player.connection.sendPacket(new SPacketSetPassengers(entity));
                 }
-            }
-        }
-
-        if (!list.isEmpty()) {
-            for (Entity entity1 : list) {
-                player.connection.sendPacket(new SPacketEntityAttach(entity1, ((EntityLiving) entity1).getLeashedToEntity()));
-            }
-        }
-
-        if (!list1.isEmpty()) {
-            for (Entity entity2 : list1) {
-                player.connection.sendPacket(new SPacketSetPassengers(entity2));
             }
         }
     }

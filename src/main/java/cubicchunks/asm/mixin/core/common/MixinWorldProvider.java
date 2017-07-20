@@ -89,23 +89,6 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
         return new VanillaCompatibilityGenerator(this.createChunkGenerator(), cubicWorld());
     }
 
-    /**
-     * Return Double.NaN to remove void fog and fix night vision potion below Y=0.
-     * <p>
-     * In EntityRenderer.updateFogColor entity Y position is multiplied by value returned by this method.
-     * <p>
-     * If this method returns any real number - then the void fog factor can be <= 0. But if this method returns NaN -
-     * the result is always NaN. And Minecraft enables void fog only of the value is < 1. And since any comparison with
-     * NaN returns false - void fog is effectively disabled.
-     */
-    @Inject(method = "getVoidFogYFactor", at = @At(value = "HEAD"), cancellable = true)
-    private void getVoidFogYFactor_injectReplace(CallbackInfoReturnable<Double> cir) {
-        if (cubicWorld().isCubicWorld()) {
-            cir.setReturnValue(Double.NaN);
-            cir.cancel();
-        }
-    }
-
     @Inject(method = "getRandomizedSpawnPoint", at = @At(value = "HEAD"), cancellable = true, remap = false)
     private void findRandomizedSpawnPoint(CallbackInfoReturnable<BlockPos> cir) {
         if (cubicWorld().isCubicWorld()) {

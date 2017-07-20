@@ -55,6 +55,7 @@ public class JvmNames {
         MINECRAFT_SERVER = "Lnet/minecraft/server/MinecraftServer;",
         MUTABLE_BLOCK_POS = "Lnet/minecraft/util/math/BlockPos$MutableBlockPos;",
         POOLED_MUTABLE_BLOCK_POS = "Lnet/minecraft/util/math/BlockPos$PooledMutableBlockPos;",
+        RENDER_CHUNK = "Lnet/minecraft/client/renderer/chunk/RenderChunk;",
         STRING = "Ljava/lang/String;",
         STRUCTURE_BOUNDING_BOX = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;",
         WORLD = "Lnet/minecraft/world/World;",
@@ -74,7 +75,9 @@ public class JvmNames {
         CHUNK_GET_ENTITY_LISTS = CHUNK + "getEntityLists()[" + CLASS_INHERITANCE_MULTI_MAP,
         CHUNK_GET_TOP_FILLED_SEGMENT = CHUNK + "getTopFilledSegment()I",
         CHUNK_IS_CHUNK_LOADED = CHUNK + "isChunkLoaded:Z", // field
+        CHUNK_IS_MODIFIED = CHUNK + "isModified:Z", // field
         CHUNK_IS_POPULATED = CHUNK + "isPopulated()Z",
+        CHUNK_SET_CHUNK_MODIFIED = CHUNK + "setChunkModified()V",
         CHUNK_STORAGE_ARRAYS = CHUNK + "storageArrays:[" + EXTENDED_BLOCK_STORAGE,
         COMMAND_BASE_PARSE_DOUBLE = COMMAND_BASE + "parseDouble(D" + STRING + "IIZ)D",
         COMMAND_TELEPORT_GET_ENTITY = COMMAND_TELEPORT + "getEntity(" + MINECRAFT_SERVER + ICOMMAND_SENDER + STRING + ")" + ENTITY,
@@ -99,5 +102,8 @@ public class JvmNames {
         WORLD_IS_CHUNK_LOADED = WORLD + "isChunkLoaded(IIZ)Z",
         WORLD_SERVER_GET_ACTUAL_HEIGHT = WORLD_SERVER + "getActualHeight()I";
 
+    // optifine methods
+    public static final String
+        OPTIFINE_RENDER_CHUNK_GET_CHUNK = RENDER_CHUNK + "getChunk(" + WORLD + ")" + CHUNK;
     // @formatter:on
 }

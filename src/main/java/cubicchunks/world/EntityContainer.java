@@ -51,9 +51,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class EntityContainer {
 
-    @Nonnull private ClassInheritanceMultiMap<Entity> entities;
-    private boolean hasActiveEntities; //TODO: hasActiveEntitys is like an isModifyed right?
-    private long lastSaveTime;
+    @Nonnull protected ClassInheritanceMultiMap<Entity> entities;
+    protected boolean hasActiveEntities; //TODO: hasActiveEntitys is like an isModifyed right?
+    protected long lastSaveTime;
 
     public EntityContainer() {
         this.entities = ClassInheritanceMultiMapFactory.create(Entity.class);
@@ -74,55 +74,8 @@ public class EntityContainer {
         return this.entities.remove(entity);
     }
 
-    private boolean canAddEntityExcluded(Entity toAdd, @Nullable Entity excluded, AxisAlignedBB queryBox,
-            @Nullable Predicate<? super Entity> predicate) {
-        return toAdd != excluded &&
-                toAdd.getEntityBoundingBox().intersectsWith(queryBox) &&
-                (predicate == null || predicate.apply(toAdd));
-    }
-
-    // CHECKED: 1.11-13.19.0.2148
-    public void getEntitiesWithinAABBForEntity(@Nullable Entity excluded, AxisAlignedBB queryBox, List<Entity> out,
-            Predicate<? super Entity> predicate) {
-        for (Entity entity : this.entities) {
-
-            // handle entity exclusion
-            if (canAddEntityExcluded(entity, excluded, queryBox, predicate)) {
-                out.add(entity);
-            }
-            // also check entity parts
-            if (entity.getParts() != null) {
-                for (Entity part : entity.getParts()) {
-                    if (canAddEntityExcluded(part, excluded, queryBox, predicate)) {
-                        out.add(part);
-                    }
-                }
-            }
-        }
-    }
-
-    // CHECKED: 1.11-13.19.0.2148
-    public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out,
-            @Nullable Predicate<? super T> predicate) {
-        for (T entity : this.entities.getByClass(entityType)) {
-            if (entity.getEntityBoundingBox().intersectsWith(queryBox) &&
-                    (predicate == null || predicate.apply(entity))) {
-                out.add(entity);
-            }
-        }
-    }
-
-
     public ClassInheritanceMultiMap<Entity> getEntitySet() {
         return this.entities;
-    }
-
-    public boolean hasActiveEntities() {
-        return this.hasActiveEntities;
-    }
-
-    public void setHasActiveEntities(boolean val) {
-        this.hasActiveEntities = val;
     }
 
     public void clear() {

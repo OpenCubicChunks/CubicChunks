@@ -141,8 +141,9 @@ configure<ForgeExtension> {
             "-Dcubicchunks.debug=true", //various debug options of cubic chunks mod. Adds items that are not normally there!
             "-XX:-OmitStackTraceInFastThrow", //without this sometimes you end up with exception with empty stacktrace
             "-Dmixin.checks.interfaces=true", //check if all interface methods are overriden in mixin
-            "-Dfml.noGrab=false" //change to disable Minecraft taking control over mouse
-            //"-ea" //enable assertions
+            "-Dfml.noGrab=false", //change to disable Minecraft taking control over mouse
+            "-ea", //enable assertions
+            "-da:io.netty..." //disable netty assertions because they sometimes fail
     )
 
     clientJvmArgs.addAll(args)
@@ -225,7 +226,7 @@ dependencies {
     testCompile("org.mockito:mockito-core:2.1.0-RC.2")
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    compile("org.spongepowered:mixin:0.6.10-SNAPSHOT") { // 0.6.9 minimum for 1.12 support
+    compile("org.spongepowered:mixin:0.6.15-SNAPSHOT") {
         isTransitive = false
     }
 

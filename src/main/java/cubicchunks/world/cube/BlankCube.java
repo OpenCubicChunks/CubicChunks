@@ -23,21 +23,22 @@
  */
 package cubicchunks.world.cube;
 
-import cubicchunks.world.EntityContainer;
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.CubePos;
+import cubicchunks.util.ticket.TicketList;
+import cubicchunks.world.BlankEntityContainer;
 import cubicchunks.world.column.IColumn;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -51,7 +52,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class BlankCube extends Cube {
 
     public BlankCube(IColumn column) {
-        super(column, 0);
+        super(new TicketList(), column.getCubicWorld(), column, new CubePos(0, 0, 0),
+                Cube.NULL_STORAGE, new BlankEntityContainer(), new HashMap<>(), new ConcurrentLinkedQueue<>(),
+                new LightingManager.CubeLightUpdateInfo(null) {
+                    @Override
+                    public void tick() {
+                    }
+                });
     }
 
     @Override
@@ -62,11 +69,6 @@ public class BlankCube extends Cube {
     @Override
     public boolean containsBlockPos(BlockPos blockPos) {
         return false;
-    }
-
-    @Nullable @Override
-    public ExtendedBlockStorage getStorage() {
-        return null;
     }
 
     @Override
