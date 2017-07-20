@@ -23,58 +23,65 @@
  */
 package cubicchunks.network;
 
+import cubicchunks.world.column.IColumn;
+import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import cubicchunks.world.column.Column;
-import io.netty.buffer.ByteBuf;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketColumn implements IMessage {
-	private ChunkPos chunkPos;
-	private byte[] data;
 
-	public PacketColumn() {
-	}
+    private ChunkPos chunkPos;
+    private byte[] data;
 
-	public PacketColumn(Column column) {
-		this.chunkPos = column.getChunkCoordIntPair();
-		this.data = new byte[WorldEncoder.getEncodedSize(column)];
-		PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
+    public PacketColumn() {
+    }
 
-		WorldEncoder.encodeColumn(out, column);
-	}
+    public PacketColumn(IColumn column) {
+        this.chunkPos = column.getChunkCoordIntPair();
+        this.data = new byte[WorldEncoder.getEncodedSize(column)];
+        PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
 
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		this.chunkPos = new ChunkPos(buf.readInt(), buf.readInt());
-		this.data = new byte[buf.readInt()];
-		buf.readBytes(this.data);
-	}
+        WorldEncoder.encodeColumn(out, column);
+    }
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		buf.writeInt(chunkPos.chunkXPos);
-		buf.writeInt(chunkPos.chunkZPos);
-		buf.writeInt(this.data.length);
-		buf.writeBytes(this.data);
-	}
+    @Override
+    public void fromBytes(ByteBuf buf) {
+        this.chunkPos = new ChunkPos(buf.readInt(), buf.readInt());
+        this.data = new byte[buf.readInt()];
+        buf.readBytes(this.data);
+    }
 
-	public ChunkPos getChunkPos() {
-		return chunkPos;
-	}
+    @Override
+    public void toBytes(ByteBuf buf) {
+        buf.writeInt(chunkPos.chunkXPos);
+        buf.writeInt(chunkPos.chunkZPos);
+        buf.writeInt(this.data.length);
+        buf.writeBytes(this.data);
+    }
 
-	public byte[] getData() {
-		return data;
-	}
+    ChunkPos getChunkPos() {
+        return chunkPos;
+    }
 
-	public static class Handler extends AbstractClientMessageHandler<PacketColumn> {
-		@Override
-		public IMessage handleClientMessage(EntityPlayer player, PacketColumn message, MessageContext ctx) {
-			ClientHandler.getInstance().handle(message);
-			return null;
-		}
-	}
+    byte[] getData() {
+        return data;
+    }
+
+    public static class Handler extends AbstractClientMessageHandler<PacketColumn> {
+
+        @Nullable @Override
+        public IMessage handleClientMessage(EntityPlayer player, PacketColumn message, MessageContext ctx) {
+            ClientHandler.getInstance().handle(message);
+            return null;
+        }
+    }
 }

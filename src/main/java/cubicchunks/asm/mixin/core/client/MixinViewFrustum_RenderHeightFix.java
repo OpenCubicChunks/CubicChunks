@@ -23,6 +23,8 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
@@ -30,7 +32,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -39,93 +40,95 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Replace updateChunkPositions and getRenderChunk with cubic chunks versions
  * that support extended world height.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(ViewFrustum.class)
 public class MixinViewFrustum_RenderHeightFix {
 
-	@Shadow @Final public World world;
-	@Shadow private RenderChunk[] renderChunks;
-	@Shadow private int countChunksX;
-	@Shadow private int countChunksY;
-	@Shadow private int countChunksZ;
+    @Shadow @Final public World world;
+    @SuppressWarnings("MismatchedReadAndWriteOfArray") @Shadow private RenderChunk[] renderChunks;
+    @Shadow private int countChunksX;
+    @Shadow private int countChunksY;
+    @Shadow private int countChunksZ;
 
-	@Shadow private int getBaseCoordinate(int arg1, int arg2, int arg3) {
-		throw new Error();
-	}
+    @Shadow private int getBaseCoordinate(int arg1, int arg2, int arg3) {
+        throw new Error();
+    }
 
-	@Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
-	private void updateChunkPositionsInject(double viewEntityX, double viewEntityZ, CallbackInfo cbi) {
-		if (!((ICubicWorld) world).isCubicWorld()) {
-			return;
-		}
-		Entity view = Minecraft.getMinecraft().getRenderViewEntity();
-		double x = view.posX;
-		double y = view.posY;
-		double z = view.posZ;
+    @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
+    private void updateChunkPositionsInject(double viewEntityX, double viewEntityZ, CallbackInfo cbi) {
+        if (!((ICubicWorld) world).isCubicWorld()) {
+            return;
+        }
+        Entity view = Minecraft.getMinecraft().getRenderViewEntity();
+        double x = view.posX;
+        double y = view.posY;
+        double z = view.posZ;
 
-		// treat the y dimension the same as all the rest
-		int viewX = MathHelper.floor(x) - 8;
-		int viewY = MathHelper.floor(y) - 8;
-		int viewZ = MathHelper.floor(z) - 8;
+        // treat the y dimension the same as all the rest
+        int viewX = MathHelper.floor(x) - 8;
+        int viewY = MathHelper.floor(y) - 8;
+        int viewZ = MathHelper.floor(z) - 8;
 
-		int xSizeInBlocks = this.countChunksX*16;
-		int ySizeInBlocks = this.countChunksY*16;
-		int zSizeInBlocks = this.countChunksZ*16;
+        int xSizeInBlocks = this.countChunksX * 16;
+        int ySizeInBlocks = this.countChunksY * 16;
+        int zSizeInBlocks = this.countChunksZ * 16;
 
-		for (int xIndex = 0; xIndex < this.countChunksX; xIndex++) {
-			//getRendererBlockCoord
-			int blockX = this.getBaseCoordinate(viewX, xSizeInBlocks, xIndex);
+        for (int xIndex = 0; xIndex < this.countChunksX; xIndex++) {
+            //getRendererBlockCoord
+            int blockX = this.getBaseCoordinate(viewX, xSizeInBlocks, xIndex);
 
-			for (int yIndex = 0; yIndex < this.countChunksY; yIndex++) {
-				int blockY = this.getBaseCoordinate(viewY, ySizeInBlocks, yIndex);
+            for (int yIndex = 0; yIndex < this.countChunksY; yIndex++) {
+                int blockY = this.getBaseCoordinate(viewY, ySizeInBlocks, yIndex);
 
-				for (int zIndex = 0; zIndex < this.countChunksZ; zIndex++) {
-					int blockZ = this.getBaseCoordinate(viewZ, zSizeInBlocks, zIndex);
+                for (int zIndex = 0; zIndex < this.countChunksZ; zIndex++) {
+                    int blockZ = this.getBaseCoordinate(viewZ, zSizeInBlocks, zIndex);
 
-					// get the renderer
-					int rendererIndex = (zIndex*this.countChunksY + yIndex)*this.countChunksX + xIndex;
-					RenderChunk renderer = this.renderChunks[rendererIndex];
+                    // get the renderer
+                    int rendererIndex = (zIndex * this.countChunksY + yIndex) * this.countChunksX + xIndex;
+                    RenderChunk renderer = this.renderChunks[rendererIndex];
 
-					// update the position if needed
-					BlockPos oldPos = renderer.getPosition();
-					if (oldPos.getX() != blockX || oldPos.getY() != blockY || oldPos.getZ() != blockZ) {
-						renderer.setPosition(blockX, blockY, blockZ);
-					}
-				}
-			}
-		}
-		cbi.cancel();
-	}
+                    // update the position if needed
+                    BlockPos oldPos = renderer.getPosition();
+                    if (oldPos.getX() != blockX || oldPos.getY() != blockY || oldPos.getZ() != blockZ) {
+                        renderer.setPosition(blockX, blockY, blockZ);
+                    }
+                }
+            }
+        }
+        cbi.cancel();
+    }
 
-	@Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true, require = 1)
-	private void getRenderChunkInject(BlockPos pos, CallbackInfoReturnable<RenderChunk> cbi) {
-		if (!((ICubicWorld) world).isCubicWorld()) {
-			return;
-		}
-		// treat the y dimension the same as all the rest
-		int x = MathHelper.intFloorDiv(pos.getX(), 16);
-		int y = MathHelper.intFloorDiv(pos.getY(), 16);
-		int z = MathHelper.intFloorDiv(pos.getZ(), 16);
-		x %= this.countChunksX;
-		if (x < 0) {
-			x += this.countChunksX;
-		}
-		y %= this.countChunksY;
-		if (y < 0) {
-			y += this.countChunksY;
-		}
-		z %= this.countChunksZ;
-		if (z < 0) {
-			z += this.countChunksZ;
-		}
-		final int index = (z*this.countChunksY + y)*this.countChunksX + x;
-		RenderChunk renderChunk = this.renderChunks[index];
-		cbi.cancel();
-		cbi.setReturnValue(renderChunk);
-	}
+    @Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true, require = 1)
+    private void getRenderChunkInject(BlockPos pos, CallbackInfoReturnable<RenderChunk> cbi) {
+        if (!((ICubicWorld) world).isCubicWorld()) {
+            return;
+        }
+        // treat the y dimension the same as all the rest
+        int x = MathHelper.intFloorDiv(pos.getX(), 16);
+        int y = MathHelper.intFloorDiv(pos.getY(), 16);
+        int z = MathHelper.intFloorDiv(pos.getZ(), 16);
+        x %= this.countChunksX;
+        if (x < 0) {
+            x += this.countChunksX;
+        }
+        y %= this.countChunksY;
+        if (y < 0) {
+            y += this.countChunksY;
+        }
+        z %= this.countChunksZ;
+        if (z < 0) {
+            z += this.countChunksZ;
+        }
+        final int index = (z * this.countChunksY + y) * this.countChunksX + x;
+        RenderChunk renderChunk = this.renderChunks[index];
+        cbi.cancel();
+        cbi.setReturnValue(renderChunk);
+    }
 }

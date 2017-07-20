@@ -1,0 +1,59 @@
+{
+    "required": true,
+    "package": "cubicchunks.asm.mixin.fixes",
+    "refmap": "cubicchunks.mixins.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.6.15-SNAPSHOT",
+    "mixins": [
+        "common.MixinBlockSkull_WitherSpawnLimits",
+        "common.EntityBat_AiHeightLimit",
+        "common.MixinWalkNodeProcessor_HeightLimit",
+        "common.MixinEntityMinecart_KillFix",
+        "common.MixinBlockFalling_HeightLimits",
+        "common.MixinBlockPortal_Size_HeightLimits",
+        "common.MixinEntityFallingBlock_HeightLimits",
+        "common.MixinWorld",
+        "common.MixinRandomPositionGenerator",
+        "common.MixinPathNavigateGround",
+        "common.MixinTeleporter",
+        "common.MixinTileEntityEndGateway",
+        "common.isblockloaded.MixinEntity",
+        "common.isblockloaded.MixinEntityLivingBase",
+        "common.worldgen.tree.MixinWorldGenCanopyTree",
+        "common.worldgen.tree.MixinWorldGenHugeTrees",
+        "common.worldgen.tree.MixinWorldGenShrub",
+        "common.worldgen.tree.MixinWorldGenSwamp",
+        "common.worldgen.tree.MixinWorldGenTaiga1",
+        "common.worldgen.tree.MixinWorldGenTaiga2",
+        "common.worldgen.tree.MixinWorldGenTree_BirchSavanna",
+        "common.worldgen.tree.MixinWorldGenTrees",
+        "common.worldgen.MixinWorldGenBigMushroom",
+        "common.worldgen.MixinWorldGenBlockBlob",
+        "common.worldgen.MixinWorldGenBonusChest",
+        "common.worldgen.MixinWorldGenDeadBush",
+        "common.worldgen.MixinWorldGenDesertWells",
+        "common.worldgen.MixinWorldGenDoublePlants",
+        "common.worldgen.MixinWorldGenDungeons",
+        "common.worldgen.MixinWorldGenFlowers",
+        "common.worldgen.MixinWorldGenFossils",
+        "common.worldgen.MixinWorldGenIcePath",
+        "common.worldgen.MixinWorldGenIceSpike",
+        "common.worldgen.MixinWorldGenLakes",
+        "common.worldgen.MixinWorldGenSpikes",
+        "common.worldgen.MixinWorldGenTallGrass",
+        "common.worldgen.MixinWorldGenVines"
+    ],
+    "client": [
+        "client.MixinEntityPlayerSP",
+        "client.isblockloaded.MixinEntity"
+    ],
+    "server": [
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
+    }
+}
+

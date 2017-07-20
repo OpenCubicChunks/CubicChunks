@@ -23,16 +23,22 @@
  */
 package cubicchunks.proxy;
 
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class ServerProxy extends CommonProxy {
-	@Override public EntityPlayer getPlayerEntity(MessageContext ctx) {
-		return ctx.getServerHandler().playerEntity;
-	}
+import javax.annotation.ParametersAreNonnullByDefault;
 
-	@Override public void setBuildLimit(MinecraftServer server) {
-		//done by Mixin
-	}
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+public class ServerProxy extends CommonProxy {
+
+    @Override public EntityPlayer getPlayerEntity(MessageContext ctx) {
+        return ctx.getServerHandler().playerEntity;
+    }
+
+    @Override public void setBuildLimit(MinecraftServer server) {
+        //done by Mixin
+    }
 }

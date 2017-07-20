@@ -23,26 +23,33 @@
  */
 package cubicchunks.world;
 
+import mcp.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class NotCubicChunksWorldException extends RuntimeException {
-	public NotCubicChunksWorldException() {
-		super();
-	}
 
-	public NotCubicChunksWorldException(String message) {
-		super(message);
-	}
+    public NotCubicChunksWorldException() {
+        super();
+    }
 
-	public NotCubicChunksWorldException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public NotCubicChunksWorldException(String message) {
+        super(message);
+    }
 
-	public NotCubicChunksWorldException(Throwable cause) {
-		super(cause);
-	}
+    public NotCubicChunksWorldException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	protected NotCubicChunksWorldException(String message, Throwable cause,
-	                                       boolean enableSuppression,
-	                                       boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
+    public NotCubicChunksWorldException(Throwable cause) {
+        super(cause);
+    }
+
+    protected NotCubicChunksWorldException(String message, Throwable cause,
+            boolean enableSuppression,
+            boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

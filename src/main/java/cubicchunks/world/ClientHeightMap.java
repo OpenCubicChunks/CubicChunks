@@ -23,118 +23,121 @@
  */
 package cubicchunks.world;
 
-import com.google.common.base.Throwables;
+import static cubicchunks.lighting.LightingManager.MAX_CLIENT_LIGHT_SCAN_DEPTH;
 
-import net.minecraft.block.state.IBlockState;
+import com.google.common.base.Throwables;
+import cubicchunks.util.Coords;
+import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.math.BlockPos;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.column.Column;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class ClientHeightMap implements IHeightMap {
 
-	private final Column chunk;
-	private int[] hmap;
-	private int[] bottomBlocks;
-	private int heightMapLowest = Coords.NO_HEIGHT;
+    private final IColumn column;
+    private final HeightMap hmap;
+    private int heightMapLowest = Coords.NO_HEIGHT;
 
-	public ClientHeightMap(Column column) {
-		this.chunk = column;
-		this.hmap = new int[256];
-		this.bottomBlocks = new int[256];
+    public ClientHeightMap(IColumn column, int[] heightmap) {
+        this.column = column;
+        this.hmap = new HeightMap(heightmap);
+    }
 
-		Arrays.fill(hmap, Coords.NO_HEIGHT);
-		Arrays.fill(bottomBlocks, Coords.NO_HEIGHT);
-	}
+    @Override
+    public boolean isOccluded(int localX, int blockY, int localZ) {
+        int topY = this.getTopBlockY(localX, localZ);
+        return blockY <= topY;
+    }
 
-	public int getOpacity(int localX, int blockY, int localZ) {
-		IBlockState state = chunk.getBlockState(localX, blockY, localZ);
-		return state.getLightOpacity();
-	}
+    @Override
+    public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
+        writeNewTopBlockY(localX, blockY, localZ, opacity, getTopBlockY(localX, localZ));
+    }
 
-	@Override
-	public boolean isOccluded(int localX, int blockY, int localZ) {
-		Integer topY = this.getTopBlockY(localX, localZ);
-		return topY != null && blockY <= topY;
-	}
+    private void writeNewTopBlockY(int localX, int changeY, int localZ, int newOpacity, int oldTopY) {
+        //to avoid unnecessary delay when breaking blocks client needs to figure out new height before
+        //server tells the client what it is
+        //common cases first
+        if (addedTopBlock(changeY, newOpacity, oldTopY)) {
+            //added new block, so it's correct. Server update will be ignored
+            this.setHeight(localX, localZ, changeY);
+            return;
+        }
+        if (!changedTopToTransparent(changeY, newOpacity, oldTopY)) {
+            //if not breaking the top block - no changes
+            return;
+        }
+        assert !(newOpacity == 0 && oldTopY < changeY) : "Changed transparent block into transparent!";
 
-	@Override
-	public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
-		//do nothing, we return values based on real blocks
-	}
+        //changed the top block
+        int newTop = oldTopY - 1;
+        while (column.getBlockLightOpacity(new BlockPos(localX, newTop, localZ)) == 0 && newTop > oldTopY - MAX_CLIENT_LIGHT_SCAN_DEPTH) {
+            newTop--;
+        }
+        //update the heightmap. If this update it not accurate - it will be corrected when server sends block update
+        this.setHeight(localX, localZ, newTop);
+    }
 
-	@Override
-	public int getTopBlockY(int localX, int localZ) {
-		return hmap[getIndex(localX, localZ)];
-	}
+    private boolean changedTopToTransparent(int changeY, int newOpacity, int oldTopY) {
+        return newOpacity == 0 && changeY == oldTopY;
+    }
 
-	@Override
-	public int getBottomBlockY(int localX, int localZ) {
-		return bottomBlocks[getIndex(localX, localZ)];
-	}
+    private boolean addedTopBlock(int changeY, int newOpacity, int oldTopY) {
+        return (changeY > oldTopY) && newOpacity != 0;
+    }
 
-	@Override
-	public int getLowestTopBlockY() {
-		if (heightMapLowest == Coords.NO_HEIGHT) {
-			heightMapLowest = Integer.MAX_VALUE;
-			for (int i = 0; i < hmap.length; i++) {
-				if (hmap[i] < heightMapLowest) {
-					heightMapLowest = hmap[i];
-				}
-			}
-		}
-		return heightMapLowest;
-	}
+    @Override
+    public int getTopBlockY(int localX, int localZ) {
+        return hmap.get(getIndex(localX, localZ));
+    }
 
-	@Override
-	public int getTopBlockYBelow(int localX, int localZ, int blockY) {
-		throw new UnsupportedOperationException("Not implemented");
-	}
+    @Override
+    public int getLowestTopBlockY() {
+        if (heightMapLowest == Coords.NO_HEIGHT) {
+            heightMapLowest = Integer.MAX_VALUE;
+            for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
+                if (hmap.get(i) < heightMapLowest) {
+                    heightMapLowest = hmap.get(i);
+                }
+            }
+        }
+        return heightMapLowest;
+    }
 
-	public void setHeight(int localX, int localZ, int height) {
-		hmap[getIndex(localX, localZ)] = height;
-	}
+    @Override
+    public int getTopBlockYBelow(int localX, int localZ, int blockY) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
 
-	public void setBottomBlockY(int localX, int localZ, int height) {
-		bottomBlocks[getIndex(localX, localZ)] = height;
-	}
+    public void setHeight(int localX, int localZ, int height) {
+        hmap.set(getIndex(localX, localZ), height);
+    }
 
-	public void setData(byte[] data) {
-		try {
-			ByteArrayInputStream buf = new ByteArrayInputStream(data);
-			DataInputStream in = new DataInputStream(buf);
+    public void setData(@Nonnull byte[] data) {
+        try {
+            ByteArrayInputStream buf = new ByteArrayInputStream(data);
+            DataInputStream in = new DataInputStream(buf);
 
-			for (int i = 0; i < 256; i++) {
-				bottomBlocks[i] = in.readInt();
-			}
-			for (int i = 0; i < 256; i++) {
-				hmap[i] = in.readInt();
-			}
+            for (int i = 0; i < 256; i++) {
+                hmap.set(i, in.readInt());
+            }
 
-			in.close();
-		} catch (IOException e) {
-			throw Throwables.propagate(e);
-		}
-	}
+            in.close();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 
-	public int[] getHeightmap() {
-		return this.hmap;
-	}
-
-	private static int getIndex(int localX, int localZ) {
-		return (localZ << 4) | localX;
-	}
-
-	private static int unpackX(int index) {
-		return index & 0xF;
-	}
-
-	private static int unpackZ(int index) {
-		return (index >> 4) & 0xF;
-	}
-
+    private static int getIndex(int localX, int localZ) {
+        return (localZ << 4) | localX;
+    }
 }

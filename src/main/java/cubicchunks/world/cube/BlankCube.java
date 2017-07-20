@@ -23,129 +23,96 @@
  */
 package cubicchunks.world.cube;
 
-import com.google.common.base.Predicate;
-
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.CubePos;
+import cubicchunks.util.ticket.TicketList;
+import cubicchunks.world.BlankEntityContainer;
+import cubicchunks.world.column.IColumn;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-import cubicchunks.world.column.Column;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * A blank cube, containing no blocks. Any operation on this cube will have no effect. Trying to retrieve blocks will
  * always return {@link Blocks#AIR}
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class BlankCube extends Cube {
 
-	public BlankCube(Column column) {
-		super(column, 0);
-	}
+    public BlankCube(IColumn column) {
+        super(new TicketList(), column.getCubicWorld(), column, new CubePos(0, 0, 0),
+                Cube.NULL_STORAGE, new BlankEntityContainer(), new HashMap<>(), new ConcurrentLinkedQueue<>(),
+                new LightingManager.CubeLightUpdateInfo(null) {
+                    @Override
+                    public void tick() {
+                    }
+                });
+    }
 
-	@Override
-	public boolean isEmpty() {
-		return true;
-	}
+    @Override
+    public boolean isEmpty() {
+        return true;
+    }
 
-	@Override
-	public long getAddress() {
-		return 0;
-	}
+    @Override
+    public boolean containsBlockPos(BlockPos blockPos) {
+        return false;
+    }
 
-	@Override
-	public boolean containsBlockPos(BlockPos blockPos) {
-		return false;
-	}
+    @Override
+    public IBlockState getBlockState(BlockPos pos) {
+        return Blocks.AIR.getDefaultState();
+    }
 
-	@Override
-	public ExtendedBlockStorage getStorage() {
-		return null;
-	}
+    @Override
+    public IBlockState getBlockState(int blockX, int localOrBlockY, int blockZ) {
+        return Blocks.AIR.getDefaultState();
+    }
 
-	@Override
-	public IBlockState getBlockState(BlockPos pos) {
-		return Blocks.AIR.getDefaultState();
-	}
+    @Nullable @Override
+    public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
+        return null;
+    }
 
-	@Override
-	public IBlockState getBlockState(int blockX, int blockY, int blockZ) {
-		return Blocks.AIR.getDefaultState();
-	}
+    @Override
+    public void onLoad() {
+    }
 
-	@Override
-	public IBlockState setBlockStateDirect(BlockPos pos, IBlockState newstate) {
-		return null;
-	}
+    @Override
+    public void onUnload() {
+    }
 
-	@Override
-	public void addEntity(Entity entity) {
-	}
+    @Override
+    public boolean needsSaving() {
+        return false;
+    }
 
-	@Override
-	public boolean removeEntity(Entity entity) {
-		return false;
-	}
+    @Override
+    public void markSaved() {
+    }
 
-	@Override
-	public void getEntitiesWithinAABBForEntity(Entity excludedEntity, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
-	}
+    @Override
+    public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
+        return lightType.defaultLightValue;
+    }
 
-	@Override
-	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
-	}
+    @Override
+    public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {
+    }
 
-	@Override
-	public TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType creationType) {
-		return null;
-	}
-
-	@Override
-	public void addTileEntity(BlockPos pos, TileEntity blockEntity) {
-	}
-
-	@Override
-	public void removeTileEntity(BlockPos pos) {
-	}
-
-	@Override
-	public void onLoad() {
-	}
-
-	@Override
-	public void onUnload() {
-	}
-
-	@Override
-	public boolean needsSaving() {
-		return false;
-	}
-
-	@Override
-	public void markSaved() {
-	}
-
-	@Override
-	public int getLightSubtracted(BlockPos pos, int skyLightDampeningTerm) {
-		return 15 - skyLightDampeningTerm;
-	}
-
-	@Override
-	public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
-		return lightType.defaultLightValue;
-	}
-
-	@Override
-	public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int light) {
-	}
-
-	@Override
-	public void markForRenderUpdate() {
-	}
+    @Override
+    public void markForRenderUpdate() {
+    }
 }

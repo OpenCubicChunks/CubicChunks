@@ -20,47 +20,60 @@
 package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.base.Objects;
-
 import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Taking from Sponge, with modifications
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 class QueuedCube {
-	final int x;
-	final int y;
-	final int z;
-	final ICubicWorld world;
 
-	QueuedCube(int x, int y, int z, ICubicWorld world) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.world = world;
-	}
+    final int x;
+    final int y;
+    final int z;
+    @Nonnull final ICubicWorld world;
 
-	@Override
-	public int hashCode() {
-		return (x*31 + y*23*z*29) ^ world.hashCode();
-	}
+    QueuedCube(int x, int y, int z, ICubicWorld world) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.world = world;
+    }
 
-	@Override
-	public boolean equals(Object object) {
-		if (object instanceof QueuedCube) {
-			QueuedCube other = (QueuedCube) object;
-			return x == other.x && y == other.y && z == other.z && world == other.world;
-		}
+    @Override
+    public int hashCode() {
+        return (x * 31 + y * 23 * z * 29) ^ world.hashCode();
+    }
 
-		return false;
-	}
+    @Override
+    public boolean equals(@Nullable Object object) {
+        if (object == null) {
+            return false;
+        }
+        if (object == this) {
+            return true;
+        }
+        if (object instanceof QueuedCube) {
+            QueuedCube other = (QueuedCube) object;
+            return x == other.x && y == other.y && z == other.z && world == other.world;
+        }
 
-	@Override
-	public String toString() {
-		return Objects.toStringHelper(this)
-			.addValue(this.world)
-			.add("x", this.x)
-			.add("y", this.y)
-			.add("z", this.z)
-			.toString();
-	}
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .addValue(this.world)
+                .add("x", this.x)
+                .add("y", this.y)
+                .add("z", this.z)
+                .toString();
+    }
 }

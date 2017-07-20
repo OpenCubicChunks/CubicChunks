@@ -24,58 +24,64 @@
 package cubicchunks.util.ticket;
 
 import com.google.common.collect.Lists;
+import mcp.MethodsReturnNonnullByDefault;
 
 import java.util.List;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class TicketList {
 
-	private int tickRefs = 0;
-	private List<ITicket> tickets = Lists.newArrayListWithCapacity(1);
+    private int tickRefs = 0;
+    @Nonnull private List<ITicket> tickets = Lists.newArrayListWithCapacity(1);
 
-	/**
-	 * Removes a ticket form this ticket list if present
-	 *
-	 * @param ticket the ticket to remove
-	 */
-	public void remove(ITicket ticket) {
-		if (tickets.remove(ticket) && ticket.shouldTick()) {
-			tickRefs--;
-		}
-	}
+    /**
+     * Removes a ticket form this ticket list if present
+     *
+     * @param ticket the ticket to remove
+     */
+    public void remove(ITicket ticket) {
+        if (tickets.remove(ticket) && ticket.shouldTick()) {
+            tickRefs--;
+        }
+    }
 
-	/**
-	 * Add a ticket to this ticket list if not already present
-	 *
-	 * @param ticket the ticket to add
-	 */
-	public void add(ITicket ticket) {
-		if (tickets.contains(ticket)) {
-			return; // we already have that ticket
-		}
-		tickets.add(ticket);
-		tickRefs += ticket.shouldTick() ? 1 : 0; // keep track of the number of tickets that want to tick
-	}
+    /**
+     * Add a ticket to this ticket list if not already present
+     *
+     * @param ticket the ticket to add
+     */
+    public void add(ITicket ticket) {
+        if (tickets.contains(ticket)) {
+            return; // we already have that ticket
+        }
+        tickets.add(ticket);
+        tickRefs += ticket.shouldTick() ? 1 : 0; // keep track of the number of tickets that want to tick
+    }
 
-	/**
-	 * @param ticket the ticket to check for
-	 *
-	 * @return {@code true} if this list contains {@code ticket}, {@code false} otherwise
-	 */
-	public boolean contains(ITicket ticket) {
-		return tickets.contains(ticket);
-	}
+    /**
+     * @param ticket the ticket to check for
+     *
+     * @return {@code true} if this list contains {@code ticket}, {@code false} otherwise
+     */
+    public boolean contains(ITicket ticket) {
+        return tickets.contains(ticket);
+    }
 
-	/**
-	 * @return Should the world be ticking the Cube corresponding to this ticket list
-	 */
-	public boolean shouldTick() {
-		return tickRefs > 0;
-	}
+    /**
+     * @return Should the world be ticking the Cube corresponding to this ticket list
+     */
+    public boolean shouldTick() {
+        return tickRefs > 0;
+    }
 
-	/**
-	 * @return {@code true} if this cube can be unloaded, {@code false} otherwise
-	 */
-	public boolean canUnload() {
-		return tickets.isEmpty();
-	}
+    /**
+     * @return {@code true} if this cube can be unloaded, {@code false} otherwise
+     */
+    public boolean canUnload() {
+        return tickets.isEmpty();
+    }
 }

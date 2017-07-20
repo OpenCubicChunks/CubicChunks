@@ -23,35 +23,38 @@
  */
 package cubicchunks.asm.mixin.fixes.common;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+
+import cubicchunks.asm.MixinUtils;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import cubicchunks.asm.MixinUtils;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(EntityFallingBlock.class)
 public abstract class MixinEntityFallingBlock_HeightLimits extends Entity {
 
-	//to make javac happy
-	public MixinEntityFallingBlock_HeightLimits(World worldIn) {
-		super(worldIn);
-	}
+    //to make javac happy
+    public MixinEntityFallingBlock_HeightLimits(World worldIn) {
+        super(worldIn);
+    }
 
-	/**
-	 * Fixes the following code:
-	 * <p>
-	 * else if (this.fallTime > 100 && !this.worldObj.isRemote && (blockpos1.getY() < 1 || blockpos1.getY() > 256) ||
-	 * this.fallTime > 600)
-	 */
-	@Redirect(method = "onUpdate", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
-	private int checkHeightYReplace(BlockPos pos) {
-		return MixinUtils.getReplacementY(world, pos);
-	}
+    /**
+     * Fixes the following code:
+     * <p>
+     * else if (this.fallTime > 100 && !this.worldObj.isRemote && (blockpos1.getY() < 1 || blockpos1.getY() > 256) ||
+     * this.fallTime > 600)
+     */
+    @Redirect(method = "onUpdate", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
+    private int checkHeightYReplace(BlockPos pos) {
+        return MixinUtils.getReplacementY(world, pos);
+    }
 }

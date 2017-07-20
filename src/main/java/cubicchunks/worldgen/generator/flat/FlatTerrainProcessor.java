@@ -23,69 +23,85 @@
  */
 package cubicchunks.worldgen.generator.flat;
 
-import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
-
+import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.api.worldgen.populator.CubePopulatorEvent;
 import cubicchunks.util.Box;
+import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
+import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
+
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.Random;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * A cube generator that generates a flat surface of grass, dirt and stone.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class FlatTerrainProcessor extends BasicCubeGenerator {
 
-	public FlatTerrainProcessor(ICubicWorld world) {
-		super(world);
-	}
+    private final FlatGeneratorSettings conf;
 
-	@Override
-	public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-		ICubePrimer primer = new CubePrimer();
+    public FlatTerrainProcessor(ICubicWorld world) {
+        super(world);
+        String json = world.getWorldInfo().getGeneratorOptions();
+        conf = FlatGeneratorSettings.fromJson(json);
+    }
 
-		if (cubeY >= 0) {
-			return primer;
-		}
-		if (cubeY == -1) {
-			for (int x = 0; x < 16; x++) {
-				for (int z = 0; z < 16; z++) {
-					primer.setBlockState(x, 15, z, Blocks.GRASS.getDefaultState());
-					for (int y = 14; y >= 10; y--) {
-						primer.setBlockState(x, y, z, Blocks.DIRT.getDefaultState());
-					}
-					for (int y = 9; y >= 0; y--) {
-						primer.setBlockState(x, y, z, Blocks.STONE.getDefaultState());
-					}
-				}
-			}
-			return primer;
-		}
-
-		for (int x = 0; x < 16; x++) {
-			for (int z = 0; z < 16; z++) {
-				for (int y = 0; y < 16; y++) {
-					primer.setBlockState(x, y, z, Blocks.STONE.getDefaultState());
-				}
-			}
-		}
-
-		return primer;
-	}
+    @Override
+    public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+        ICubePrimer primer = new CubePrimer();
+        int floorY = Coords.cubeToMinBlock(cubeY);
+        int topY = Coords.cubeToMaxBlock(cubeY);
+        NavigableMap<Integer, Layer> cubeLayerSubMap = conf.layers.subMap(floorY, true, topY, true);
+        for (Entry<Integer, Layer> entry : cubeLayerSubMap.entrySet()) {
+            Layer layer = entry.getValue();
+            int fromY = layer.fromY - floorY;
+            int toY = layer.toY - floorY;
+            IBlockState iBlockState = layer.blockState;
+            for (int y = fromY > 0 ? fromY : 0; y < (toY < 16 ? toY : 16); y++) {
+                for (int x = 0; x < 16; x++) {
+                    for (int z = 0; z < 16; z++) {
+                        primer.setBlockState(x, y, z, iBlockState);
+                    }
+                }
+            }
+        }
+        return primer;
+    }
 
 	@Override
 	public void populate(Cube cube) {
+		/**
+		 * If event is not canceled we will use
+		 * cube populators from registry.
+		 **/
+		if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(world, cube))) {
+			CubeGeneratorsRegistry.generateWorld(cube.getCubicWorld(), new Random(cube.cubeRandomSeed()),
+					cube.getCoords(), CubicBiome.getCubic(world.getBiome(cube.getCoords().getCenterBlockPos())));
+		}
 	}
 
-	@Override
-	public Box getPopulationRequirement(Cube cube) {
-		return NO_POPULATOR_REQUIREMENT;
-	}
+    @Override
+    public Box getPopulationRequirement(Cube cube) {
+        return NO_POPULATOR_REQUIREMENT;
+    }
 
-	@Override
-	public BlockPos getClosestStructure(String name, BlockPos pos) {
-		return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null; // eyes of ender are the new F3 for finding the origin :P
-	}
+    @Override
+    public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
+        // eyes of ender are the new F3 for finding the origin :P
+        return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null; 
+    }
 }

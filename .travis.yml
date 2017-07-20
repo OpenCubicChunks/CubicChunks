@@ -2,6 +2,9 @@ sudo: required
 dist: trusty
 
 language: java
+cache:
+  directories:
+  - $HOME/.gradle
 jdk:
   - openjdk8
   - oraclejdk8
@@ -11,7 +14,8 @@ before_install:
   # workaround to get "git describe" working
   - git fetch --unshallow --tags
   - git describe
-#setupCIWorkspace not needed. At least that's what abrar said.
+  - ./gradlew setupCiWorkspace
+#setupCIWorkspace is needed because of https://github.com/MinecraftForge/ForgeGradle/issues/410
 script: ./gradlew build
 
 notifications:

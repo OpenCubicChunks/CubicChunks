@@ -23,66 +23,193 @@
  */
 package cubicchunks.lighting;
 
-import com.carrotsearch.hppc.IntSet;
-import com.carrotsearch.hppc.cursors.IntCursor;
+import static cubicchunks.util.Coords.blockToCube;
+import static cubicchunks.util.Coords.cubeToMaxBlock;
+import static cubicchunks.util.Coords.cubeToMinBlock;
+import static cubicchunks.util.Coords.localToBlock;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.IConfigUpdateListener;
 import cubicchunks.util.Coords;
+import cubicchunks.util.CubePos;
+import cubicchunks.util.FastCubeBlockAccess;
+import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.IHeightMap;
+import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.set.TIntSet;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.IBlockAccess;
 
-public class LightingManager implements IConfigUpdateListener {
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-	private SkyLightCubeDiffuseProcessor skylightCubeDiffuseProcessor;
-	private volatile int lighingTickBudget = CubicChunks.Config.DEFAULT_LIGHTING_TICK_BUDGET;
+//TODO: extract interfaces when it's done
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+public class LightingManager {
 
-	public LightingManager(ICubicWorld world) {
-		CubicChunks.addConfigChangeListener(this);
-		this.skylightCubeDiffuseProcessor = new SkyLightCubeDiffuseProcessor(world, "Sky Light Diffuse", 5);
-	}
+    public static final int MAX_CLIENT_LIGHT_SCAN_DEPTH = 64;
+    @Nonnull private ICubicWorld world;
+    @Nonnull private LightPropagator lightPropagator = new LightPropagator();
 
-	public void columnSkylightUpdate(UpdateType type, Column column, int localX, int minY, int maxY, int localZ) {
-		int blockX = Coords.localToBlock(column.getX(), localX);
-		int blockZ = Coords.localToBlock(column.getZ(), localZ);
-		switch (type) {
-			case IMMEDIATE:
-				IntSet toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
-				for (IntCursor cubeY : toDiffuse) {
-					boolean success = SkyLightCubeDiffuseCalculator.calculate(column, localX, localZ, cubeY.value);
-					if (!success) {
-						queueDiffuseUpdate(column.getCube(cubeY.value), blockX, blockZ, minY, maxY);
-					}
-				}
-				break;
-			case QUEUED:
-				toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
-				for (IntCursor cubeY : toDiffuse) {
-					queueDiffuseUpdate(column.getCube(cubeY.value), blockX, blockZ, minY, maxY);
-				}
-				break;
-		}
-	}
+    public LightingManager(ICubicWorld world) {
+        this.world = world;
+    }
 
-	public void tick() {
-		long timeStart = System.currentTimeMillis();
-		long timeStop = timeStart + this.lighingTickBudget;
+    @Nullable
+    public CubeLightUpdateInfo createCubeLightUpdateInfo(Cube cube) {
+        if (cube.getCubicWorld().getProvider().hasNoSky()) {
+            return null;
+        }
+        return new CubeLightUpdateInfo(cube);
+    }
 
-		this.skylightCubeDiffuseProcessor.processQueueUntil(timeStop);
-	}
+    private void columnSkylightUpdate(UpdateType type, IColumn column, int localX, int minY, int maxY, int localZ) {
+        if (world.getProvider().hasNoSky()) {
+            return;
+        }
+        int blockX = Coords.localToBlock(column.getX(), localX);
+        int blockZ = Coords.localToBlock(column.getZ(), localZ);
 
-	public void queueDiffuseUpdate(Cube cube, int blockX, int blockZ, int minY, int maxY) {
-		Cube.LightUpdateData data = cube.getLightUpdateData();
-		data.queueLightUpdate(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ), minY, maxY);
-		skylightCubeDiffuseProcessor.add(cube.getAddress());
-	}
+        if (type == UpdateType.IMMEDIATE) {
+            TIntSet toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
+            TIntIterator it = toDiffuse.iterator();
+            while (it.hasNext()) {
+                int cubeY = it.next();
+                boolean success = updateDiffuseLight(column.getCube(cubeY), localX, localZ, minY, maxY);
+                if (!success) {
+                    markCubeBlockColumnForUpdate(column.getCube(cubeY), blockX, blockZ);
+                }
+            }
+        } else {
+            assert type == UpdateType.QUEUED;
+            TIntSet toDiffuse = SkyLightUpdateCubeSelector.getCubesY(column, localX, localZ, minY, maxY);
+            TIntIterator it = toDiffuse.iterator();
+            while (it.hasNext()) {
+                int cubeY = it.next();
+                markCubeBlockColumnForUpdate(column.getCube(cubeY), blockX, blockZ);
+            }
+        }
+    }
 
-	@Override public void onConfigUpdate(CubicChunks.Config config) {
-		this.lighingTickBudget = config.getLightingTickBudget();
-	}
+    private boolean updateDiffuseLight(Cube cube, int localX, int localZ, int minY, int maxY) {
+        int minCubeY = cube.getCoords().getMinBlockY();
+        int maxCubeY = cube.getCoords().getMaxBlockY();
 
-	public enum UpdateType {
-		IMMEDIATE, QUEUED
-	}
+        int minInCubeY = MathHelper.clamp(minY, minCubeY, maxCubeY);
+        int maxInCubeY = MathHelper.clamp(maxY, minCubeY, maxCubeY);
+
+        if (minInCubeY > maxInCubeY) {
+            return true;
+        }
+        int blockX = localToBlock(cube.getX(), localX);
+        int blockZ = localToBlock(cube.getZ(), localZ);
+
+        return this.relightMultiBlock(
+                new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY);
+    }
+
+    public void doOnBlockSetLightUpdates(IColumn column, int localX, int oldHeight, int changeY, int localZ) {
+        this.columnSkylightUpdate(UpdateType.IMMEDIATE, column, localX, Math.min(oldHeight, changeY), Math.max(oldHeight, changeY), localZ);
+    }
+
+    //TODO: make it private
+    public void markCubeBlockColumnForUpdate(Cube cube, int blockX, int blockZ) {
+        CubeLightUpdateInfo data = cube.getCubeLightUpdateInfo();
+        if (data != null) {
+            data.markBlockColumnForUpdate(Coords.blockToLocal(blockX), Coords.blockToLocal(blockZ));
+        }
+    }
+
+    public void onHeightMapUpdate(IColumn IColumn, int localX, int localZ, int oldHeight, int newHeight) {
+        int minCubeY = blockToCube(Math.min(oldHeight, newHeight));
+        int maxCubeY = blockToCube(Math.max(oldHeight, newHeight));
+        IColumn.getLoadedCubes().stream().filter(cube -> cube.getY() >= minCubeY && cube.getY() <= maxCubeY).forEach(cube -> {
+            markCubeBlockColumnForUpdate(cube, localX, localZ);
+        });
+    }
+
+    /**
+     * Updates light for given block region.
+     * <p>
+     *
+     * @param startPos the minimum block coordinates (inclusive)
+     * @param endPos the maximum block coordinates (inclusive)
+     * @param type the light type to update
+     *
+     * @return true if update was successful, false if it failed. If the method returns false, no light values are
+     * changed.
+     */
+    boolean relightMultiBlock(BlockPos startPos, BlockPos endPos, EnumSkyBlock type) {
+        // TODO: optimize if needed
+
+        // TODO: Figure out why it crashes with value 17
+        final int LOAD_RADIUS = 31;
+        BlockPos midPos = Coords.midPos(startPos, endPos);
+        BlockPos minLoad = startPos.add(-LOAD_RADIUS, -LOAD_RADIUS, -LOAD_RADIUS);
+        BlockPos maxLoad = endPos.add(LOAD_RADIUS, LOAD_RADIUS, LOAD_RADIUS);
+
+        if (!world.testForCubes(CubePos.fromBlockCoords(minLoad), CubePos.fromBlockCoords(maxLoad),
+                c -> c != null && !(c instanceof BlankCube))) {
+            return false;
+        }
+        ILightBlockAccess blocks = FastCubeBlockAccess.forBlockRegion(world.getCubeCache(), minLoad, maxLoad);
+        this.lightPropagator.propagateLight(midPos, BlockPos.getAllInBox(startPos, endPos), blocks, type, world::notifyLightSet);
+        return true;
+    }
+
+    private enum UpdateType {
+        IMMEDIATE, QUEUED
+    }
+
+    //this will be interface
+    public static class CubeLightUpdateInfo {
+
+        private final Cube cube;
+        private final boolean[] toUpdateColumns = new boolean[Cube.SIZE * Cube.SIZE];
+        private boolean hasUpdates;
+
+        public CubeLightUpdateInfo(Cube cube) {
+            this.cube = cube;
+        }
+
+        void markBlockColumnForUpdate(int localX, int localZ) {
+            toUpdateColumns[index(localX, localZ)] = true;
+            hasUpdates = true;
+        }
+
+        public void tick() {
+            if (!this.hasUpdates) {
+                return;
+            }
+            for (int localX = 0; localX < Cube.SIZE; localX++) {
+                for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
+                    if (!toUpdateColumns[index(localX, localZ)]) {
+                        continue;
+                    }
+                    boolean success = cube.getCubicWorld().getLightingManager().relightMultiBlock(
+                            new BlockPos(localToBlock(cube.getX(), localX), cubeToMinBlock(cube.getY()), localToBlock(cube.getZ(), localZ)),
+                            new BlockPos(localToBlock(cube.getX(), localX), cubeToMaxBlock(cube.getY()), localToBlock(cube.getZ(), localZ)),
+                            EnumSkyBlock.SKY
+                    );
+                    if (!success) {
+                        return;
+                    }
+                    toUpdateColumns[index(localX, localZ)] = false;
+                }
+            }
+            this.hasUpdates = false;
+        }
+
+        private int index(int x, int z) {
+            return x << 4 | z;
+        }
+    }
 }

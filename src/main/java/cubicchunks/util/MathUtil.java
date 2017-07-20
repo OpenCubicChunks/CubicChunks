@@ -23,75 +23,93 @@
  */
 package cubicchunks.util;
 
-import java.util.Random;
+import static java.lang.Math.exp;
+import static java.lang.Math.sqrt;
 
+import mcp.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class MathUtil {
 
-	public static double lerp(final double a, final double min, final double max) {
-		return min + a*(max - min);
-	}
+    public static double lerp(final double a, final double min, final double max) {
+        return min + a * (max - min);
+    }
 
-	public static int randRange(Random rand, int start, int end) {
-		return rand.nextInt(end - start + 1) + start;
-	}
+    // reverse linear interpolation - unlerp(lerp(a, min, max), min, max) == a
+    public static double unlerp(final double v, final double min, final double max) {
+        return (v - min) / (max - min);
+    }
 
-	public static int minInteger(Integer a, Integer b) {
-		if (a == null || b == null) {
-			return Integer.MIN_VALUE;
-		}
-		return Math.min(a, b);
-	}
+    public static float unlerp(final float v, final float min, final float max) {
+        return (v - min) / (max - min);
+    }
 
-	public static int maxInteger(Integer a, Integer b) {
-		if (a == null && b == null) {
-			return Integer.MIN_VALUE;
-		}
-		if (a == null) {
-			return b;
-		}
-		if (b == null) {
-			return a;
-		}
-		return Math.max(a, b);
-	}
+    public static float lerp(final float a, final float min, final float max) {
+        return min + a * (max - min);
+    }
 
-	public static int min(int a, int b) {
-		return Math.min(a, b);
-	}
+    public static int min(int a, int b) {
+        return Math.min(a, b);
+    }
 
-	public static int min(int a, int b, int c) {
-		return Math.min(Math.min(a, b), c);
-	}
+    public static int min(int a, int b, int c) {
+        return Math.min(Math.min(a, b), c);
+    }
 
-	public static int min(int a, int b, int c, int d) {
-		return Math.min(Math.min(a, b), Math.min(c, d));
-	}
+    public static int min(int a, int b, int c, int d) {
+        return Math.min(Math.min(a, b), Math.min(c, d));
+    }
 
-	public static int min(int... a) {
-		int min = a[0];
-		for (int i = 1; i < a.length; i++) {
-			if (a[i] < min) min = a[i];
-		}
-		return min;
-	}
+    public static int min(int... a) {
+        int min = a[0];
+        for (int i = 1; i < a.length; i++) {
+            if (a[i] < min) {
+                min = a[i];
+            }
+        }
+        return min;
+    }
 
-	public static int max(int a, int b) {
-		return Math.max(a, b);
-	}
+    public static int max(int a, int b) {
+        return Math.max(a, b);
+    }
 
-	public static int max(int a, int b, int c) {
-		return Math.max(Math.max(a, b), c);
-	}
+    public static int max(int a, int b, int c) {
+        return Math.max(Math.max(a, b), c);
+    }
 
-	public static int max(int a, int b, int c, int d) {
-		return Math.max(Math.max(a, b), Math.max(c, d));
-	}
+    public static int max(int a, int b, int c, int d) {
+        return Math.max(Math.max(a, b), Math.max(c, d));
+    }
 
-	public static int max(int... a) {
-		int max = a[0];
-		for (int i = 1; i < a.length; i++) {
-			if (a[i] > max) max = a[i];
-		}
-		return max;
-	}
+    public static int max(int... a) {
+        int max = a[0];
+        for (int i = 1; i < a.length; i++) {
+            if (a[i] > max) {
+                max = a[i];
+            }
+        }
+        return max;
+    }
+
+    public static float maxIgnoreNan(float... a) {
+        float max = a[0];
+        for (int i = 1; i < a.length; i++) {
+            if (max != max || a[i] > max) {
+                max = a[i];
+            }
+        }
+        if (max != max) {
+            throw new IllegalArgumentException("All values are NaN");
+        }
+        return max;
+    }
+
+    public static double gaussianProbabilityDensity(double x, double mean, double stdDev) {
+        return exp(-(x - mean) * (x - mean) / (2 * stdDev * stdDev)) /
+                (sqrt(2 * Math.PI) * stdDev);
+    }
 }

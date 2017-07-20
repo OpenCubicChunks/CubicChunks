@@ -28,12 +28,13 @@ package cubicchunks.util;
  *
  * @see XYZMap
  */
+
 public interface XYZAddressable {
 
-	int getX();
+    int getX();
 
-	int getY();
+    int getY();
 
-	int getZ();
+    int getZ();
 
 }

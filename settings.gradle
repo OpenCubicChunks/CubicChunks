@@ -1,2 +1,10 @@
 rootProject.name = "CubicChunks"
 
+include 'RegionLib'
+
+def configureGradleScriptKotlinOn(ProjectDescriptor project) {
+    project.buildFileName = 'build.gradle.kts'
+    project.children.each { configureGradleScriptKotlinOn(it) }
+}
+
+configureGradleScriptKotlinOn rootProject

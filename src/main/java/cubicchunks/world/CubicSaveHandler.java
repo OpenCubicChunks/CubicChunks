@@ -23,6 +23,9 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.CubicChunks;
+import cubicchunks.server.CubeProviderServer;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.WorldProvider;
@@ -33,60 +36,68 @@ import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
-import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.server.CubeProviderServer;
-
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CubicSaveHandler implements ISaveHandler {
-	private ICubicWorldServer world;
-	private final ISaveHandler originalHandler;
 
-	public CubicSaveHandler(ICubicWorldServer world, ISaveHandler originalHandler) {
-		this.world = world;
-		this.originalHandler = originalHandler;
-	}
+    private ICubicWorldServer world;
+    private final ISaveHandler originalHandler;
 
-	@Override public WorldInfo loadWorldInfo() {
-		return originalHandler.loadWorldInfo();
-	}
+    public CubicSaveHandler(ICubicWorldServer world, ISaveHandler originalHandler) {
+        this.world = world;
+        this.originalHandler = originalHandler;
+    }
 
-	@Override public void checkSessionLock() throws MinecraftException {
-		originalHandler.checkSessionLock();
-	}
+    @Override public WorldInfo loadWorldInfo() {
+        return originalHandler.loadWorldInfo();
+    }
 
-	@Override public IChunkLoader getChunkLoader(@Nonnull WorldProvider provider) {
-		return originalHandler.getChunkLoader(provider);
-	}
+    @Override public void checkSessionLock() throws MinecraftException {
+        originalHandler.checkSessionLock();
+    }
 
-	@Override
-	public void saveWorldInfoWithPlayer(@Nonnull WorldInfo worldInformation, @Nonnull NBTTagCompound tagCompound) {
-		originalHandler.saveWorldInfoWithPlayer(worldInformation, tagCompound);
-	}
+    @Override public IChunkLoader getChunkLoader(WorldProvider provider) {
+        return originalHandler.getChunkLoader(provider);
+    }
 
-	@Override public void saveWorldInfo(@Nonnull WorldInfo worldInformation) {
-		originalHandler.saveWorldInfo(worldInformation);
-	}
+    @Override
+    public void saveWorldInfoWithPlayer(WorldInfo worldInformation, NBTTagCompound tagCompound) {
+        originalHandler.saveWorldInfoWithPlayer(worldInformation, tagCompound);
+    }
 
-	@Override public IPlayerFileData getPlayerNBTManager() {
-		return originalHandler.getPlayerNBTManager();
-	}
+    @Override public void saveWorldInfo(WorldInfo worldInformation) {
+        originalHandler.saveWorldInfo(worldInformation);
+    }
 
-	@Override public void flush() {
-		originalHandler.flush();
-		CubeProviderServer cache = world.getCubeCache();
-		cache.flush();
-	}
+    @Override public IPlayerFileData getPlayerNBTManager() {
+        return originalHandler.getPlayerNBTManager();
+    }
 
-	@Override public File getWorldDirectory() {
-		return originalHandler.getWorldDirectory();
-	}
+    @Override public void flush() {
+        originalHandler.flush();
+        CubeProviderServer cache = world.getCubeCache();
+        try {
+            cache.flush();
+        } catch (IOException e) {
+            // ignore because that's what vanilla does
+            CubicChunks.LOGGER.error(e);
+        }
+    }
 
-	@Override public File getMapFileFromName(@Nonnull String mapName) {
-		return originalHandler.getMapFileFromName(mapName);
-	}
+    @Override public File getWorldDirectory() {
+        return originalHandler.getWorldDirectory();
+    }
 
-	@Override public TemplateManager getStructureTemplateManager() {
-		return originalHandler.getStructureTemplateManager();
-	}
+    @Override public File getMapFileFromName(String mapName) {
+        return originalHandler.getMapFileFromName(mapName);
+    }
+
+    @Override public TemplateManager getStructureTemplateManager() {
+        return originalHandler.getStructureTemplateManager();
+    }
 }

@@ -24,19 +24,24 @@
 package cubicchunks.util;
 
 import com.google.common.base.Throwables;
-
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.WorldProvider;
 
 import java.lang.invoke.MethodHandle;
 
-public class WorldProviderAccess {
-	private static final MethodHandle wp_generatorSettings = ReflectionUtil.getFieldGetterHandle(WorldProvider.class, "field_82913_c");
+import javax.annotation.ParametersAreNonnullByDefault;
 
-	public static final String getGeneratorSettings(WorldProvider wp) {
-		try {
-			return (String) wp_generatorSettings.invoke(wp);
-		} catch (Throwable throwable) {
-			throw Throwables.propagate(throwable);
-		}
-	}
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public class WorldProviderAccess {
+
+    private static final MethodHandle wp_generatorSettings = ReflectionUtil.getFieldGetterHandle(WorldProvider.class, "field_82913_c");
+
+    public static String getGeneratorSettings(WorldProvider wp) {
+        try {
+            return (String) wp_generatorSettings.invoke(wp);
+        } catch (Throwable throwable) {
+            throw Throwables.propagate(throwable);
+        }
+    }
 }

@@ -23,34 +23,38 @@
  */
 package cubicchunks.world;
 
-import javax.annotation.Nullable;
-
 import cubicchunks.util.CubePos;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public interface ICubeProvider {
 
-	@Nullable
-	Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
+    @Nullable
+    Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
 
-	@Nullable
-	Cube getLoadedCube(CubePos coords);
+    @Nullable
+    Cube getLoadedCube(CubePos coords);
 
-	Cube getCube(int cubeX, int cubeY, int cubeZ);
+    Cube getCube(int cubeX, int cubeY, int cubeZ);
 
-	Cube getCube(CubePos coords);
+    Cube getCube(CubePos coords);
 
-	/**
-	 * Retrieve a column, if it exists and is loaded
-	 *
-	 * @param x The x position of the column
-	 * @param z The z position of the column
-	 *
-	 * @return The column, if loaded. Null, otherwise.
-	 */
-	@Nullable
-	Column getLoadedColumn(int x, int z); // more strictly define the return type
+    /**
+     * Retrieve a column, if it exists and is loaded
+     *
+     * @param x The x position of the column
+     * @param z The z position of the column
+     *
+     * @return The column, if loaded. Null, otherwise.
+     */
+    @Nullable
+    IColumn getLoadedColumn(int x, int z); // more strictly define the return type
 
-	Column provideColumn(int x, int z);   // more strictly define the return type
+    IColumn provideColumn(int x, int z);   // more strictly define the return type
 }

@@ -23,6 +23,10 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -36,6 +40,7 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.border.WorldBorder;
@@ -50,180 +55,173 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.lighting.LightingManager;
-import cubicchunks.util.CubePos;
-import cubicchunks.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public interface ICubicWorld {
+public interface ICubicWorld extends IMinMaxHeight {
 
-	/**
-	 * Updates the world
-	 */
-	void tickCubicWorld();
+    /**
+     * Updates the world
+     */
+    void tickCubicWorld();
 
-	/**
-	 * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
-	 * are loaded. Cannot be used more than once.
-	 */
-	void initCubicWorld();
+    /**
+     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
+     * are loaded. Cannot be used more than once.
+     * @param maxHeight
+     * @param minHeight
+     */
+    void initCubicWorld(int minHeight, int maxHeight);
 
-	boolean isCubicWorld();
+    boolean isCubicWorld();
 
-	/**
-	 * Returns Y position of the bottom block in the world
-	 */
-	int getMinHeight();
+    /**
+     * Returns the {@link ICubeProvider} for this world, or throws {@link NotCubicChunksWorldException}
+     * if this is not a CubicChunks world.
+     */
+    ICubeProvider getCubeCache();
 
-	/**
-	 * Returns Y position of block above the top block in the world,
-	 */
-	int getMaxHeight();
+    /**
+     * Returns the {@link LightingManager} for this world, or throws {@link NotCubicChunksWorldException}
+     * if this is not a CubicChunks world.
+     */
+    LightingManager getLightingManager();
 
-	/**
-	 * Returns the {@link ICubeProvider} for this world, or throws {@link NotCubicChunksWorldException}
-	 * if this is not a CubicChunks world.
-	 */
-	ICubeProvider getCubeCache();
+    /**
+     * Returns true iff the given Predicate evaluates to true for all cubes for block positions within blockRadius from
+     * centerPos. Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
+     */
+    default boolean testForCubes(BlockPos centerPos, int blockRadius, Predicate<Cube> test) {
+        return testForCubes(
+                centerPos.getX() - blockRadius, centerPos.getY() - blockRadius, centerPos.getZ() - blockRadius,
+                centerPos.getX() + blockRadius, centerPos.getY() + blockRadius, centerPos.getZ() + blockRadius,
+                test
+        );
+    }
 
-	/**
-	 * Returns the {@link LightingManager} for this world, or throws {@link NotCubicChunksWorldException}
-	 * if this is not a CubicChunks world.
-	 */
-	LightingManager getLightingManager();
+    /**
+     * Returns true iff the given Predicate evaluates to true for all cubes for block positions between
+     * BlockPos(minBlockX, minBlockY, minBlockZ) and BlockPos(maxBlockX, maxBlockY, maxBlockZ) (including the specified
+     * positions). Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
+     */
+    default boolean testForCubes(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, Predicate<Cube> test) {
+        return testForCubes(
+                CubePos.fromBlockCoords(minBlockX, minBlockY, minBlockZ),
+                CubePos.fromBlockCoords(maxBlockX, maxBlockY, maxBlockZ),
+                test
+        );
+    }
 
-	/**
-	 * Returns true iff the given Predicate evaluates to true for all cubes for block positions within blockRadius from
-	 * centerPos. Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
-	 */
-	default boolean testForCubes(BlockPos centerPos, int blockRadius, @Nullable Predicate<Cube> test) {
-		return testForCubes(
-			centerPos.getX() - blockRadius, centerPos.getY() - blockRadius, centerPos.getZ() - blockRadius,
-			centerPos.getX() + blockRadius, centerPos.getY() + blockRadius, centerPos.getZ() + blockRadius,
-			test
-		);
-	}
+    /**
+     * Returns true iff the given Predicate evaluates to true for given cube and neighbors.
+     * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
+     */
+    boolean testForCubes(CubePos start, CubePos end, Predicate<Cube> test);
 
-	/**
-	 * Returns true iff the given Predicate evaluates to true for all cubes for block positions between
-	 * BlockPos(minBlockX, minBlockY, minBlockZ) and BlockPos(maxBlockX, maxBlockY, maxBlockZ) (including the specified
-	 * positions). Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
-	 */
-	default boolean testForCubes(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, @Nullable Predicate<Cube> test) {
-		return testForCubes(
-			CubePos.fromBlockCoords(minBlockX, minBlockY, minBlockZ),
-			CubePos.fromBlockCoords(maxBlockX, maxBlockY, maxBlockZ),
-			test
-		);
-	}
+    /**
+     * Return the actual world height for this world. Typically this is 256 for worlds with a sky, and 128 for worlds
+     * without.
+     *
+     * @return The actual world height
+     */
+    int getActualHeight();
 
-	/**
-	 * Returns true iff the given Predicate evaluates to true for given cube and neighbors.
-	 * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
-	 */
-	default boolean testForCubeAndNeighbor(Cube cube, @Nullable Predicate<Cube> test) {
-		return testForCubes(cube.getCoords().sub(1, 1, 1), cube.getCoords().add(1, 1, 1), test);
-	}
+    Cube getCubeFromCubeCoords(int cubeX, int cubeY, int cubeZ);
 
-	/**
-	 * Returns true iff the given Predicate evaluates to true for given cube and neighbors.
-	 * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
-	 */
-	boolean testForCubes(CubePos start, CubePos end, @Nullable Predicate<Cube> test);
+    Cube getCubeFromBlockCoords(BlockPos pos);
 
-	/**
-	 * Return the actual world height for this world. Typically this is 256 for worlds with a sky, and 128 for worlds
-	 * without.
-	 * @return The actual world height
-	 */
-	int getActualHeight();
+    int getEffectiveHeight(int blockX, int blockZ);
 
-	// TODO: this method is just plain stupid (remove it)
-	@Nullable Cube getCubeForAddress(long address);
+    boolean isBlockColumnLoaded(BlockPos pos);
 
-	@Nullable Cube getCubeFromCubeCoords(int cubeX, int cubeY, int cubeZ);
+    boolean isBlockColumnLoaded(BlockPos pos, boolean allowEmpty);
 
-	@Nullable Cube getCubeFromBlockCoords(BlockPos pos);
+    //vanilla part
 
-	int getEffectiveHeight(int blockX, int blockZ);
+    //field accessors
+    WorldProvider getProvider();
 
-	//this is a hack TODO: remove!
-	void setGeneratingWorld(boolean generating);
+    Random getRand();
 
-	//vanilla part
+    List<EntityPlayer> getPlayerEntities();
 
-	//field accessors
-	WorldProvider getProvider();
+    //true if it's clientside
+    boolean isRemote();
 
-	Random getRand();
+    Profiler getProfiler();
 
-	List<EntityPlayer> getPlayerEntities();
+    //methods
 
-	//true if it's clientside
-	boolean isRemote();
+    boolean isValid(BlockPos pos);
 
-	Profiler getProfiler();
+    boolean isBlockLoaded(BlockPos pos);
 
-	//methods
-	void loadEntities(Collection<Entity> entities);
+    boolean isBlockLoaded(BlockPos pos, boolean allowEmpty);
 
-	void addTileEntities(Collection<TileEntity> values);
+    void loadEntities(Collection<Entity> entities);
 
-	void unloadEntities(Collection<Entity> entities);
+    void addTileEntities(Collection<TileEntity> values);
 
-	void removeTileEntity(BlockPos pos);
+    void unloadEntities(Collection<Entity> entities);
 
-	long getTotalWorldTime();
+    void removeTileEntity(BlockPos pos);
 
-	void setTileEntity(BlockPos blockpos, TileEntity tileentity);
+    long getTotalWorldTime();
 
-	void markBlockRangeForRenderUpdate(BlockPos blockpos, BlockPos blockpos1);
+    void setTileEntity(BlockPos blockpos, @Nullable TileEntity tileentity);
 
-	boolean addTileEntity(TileEntity tileEntity);
+    void markBlockRangeForRenderUpdate(BlockPos blockpos, BlockPos blockpos1);
 
-	void markBlockRangeForRenderUpdate(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ);
+    boolean addTileEntity(TileEntity tileEntity);
 
-	long getSeed();
+    void markBlockRangeForRenderUpdate(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ);
 
-	boolean checkLightFor(EnumSkyBlock sky, BlockPos pos);
+    long getSeed();
 
-	ISaveHandler getSaveHandler();
+    boolean checkLightFor(EnumSkyBlock sky, BlockPos pos);
 
-	MinecraftServer getMinecraftServer();
+    ISaveHandler getSaveHandler();
 
-	void addBlockEvent(BlockPos blockPos, Block i, int t, int p);
+    MinecraftServer getMinecraftServer();
 
-	void scheduleBlockUpdate(BlockPos blockPos, Block i, int t, int p);
+    void addBlockEvent(BlockPos blockPos, Block i, int t, int p);
 
-	GameRules getGameRules();
+    void scheduleBlockUpdate(BlockPos blockPos, Block i, int t, int p);
 
-	WorldInfo getWorldInfo();
+    GameRules getGameRules();
 
-	@Nullable TileEntity getTileEntity(BlockPos pos);
+    WorldInfo getWorldInfo();
 
-	boolean setBlockState(BlockPos blockPos, IBlockState blockState, int i);
+    @Nullable TileEntity getTileEntity(BlockPos pos);
 
-	IBlockState getBlockState(BlockPos pos);
+    boolean setBlockState(BlockPos blockPos, IBlockState blockState, int i);
 
-	boolean isAirBlock(BlockPos randomPos);
+    IBlockState getBlockState(BlockPos pos);
 
-	Biome getBiome(BlockPos blockPos);
+    boolean isAirBlock(BlockPos randomPos);
 
-	BiomeProvider getBiomeProvider();
+    Biome getBiome(BlockPos blockPos);
 
-	BlockPos getSpawnPoint();
+    BiomeProvider getBiomeProvider();
 
-	WorldBorder getWorldBorder();
+    BlockPos getSpawnPoint();
 
-	int countEntities(EnumCreatureType type, boolean flag);
+    WorldBorder getWorldBorder();
 
-	boolean isAnyPlayerWithinRangeAt(double f, double i3, double f1, double v);
+    int countEntities(EnumCreatureType type, boolean flag);
 
-	DifficultyInstance getDifficultyForLocation(BlockPos pos);
+    boolean isAnyPlayerWithinRangeAt(double f, double i3, double f1, double v);
 
-	boolean spawnEntityInWorld(Entity entityliving);
+    DifficultyInstance getDifficultyForLocation(BlockPos pos);
 
-	boolean isAreaLoaded(BlockPos startPos, BlockPos endPos);
+    boolean spawnEntity(Entity entityliving);
+
+    boolean isAreaLoaded(BlockPos startPos, BlockPos endPos);
+
+    void notifyLightSet(BlockPos pos);
+
+    WorldType getWorldType();
+
+    boolean canBlockFreezeWater(BlockPos topBlock);
+
+    boolean canSnowAt(BlockPos aboveTop, boolean flag);
 }

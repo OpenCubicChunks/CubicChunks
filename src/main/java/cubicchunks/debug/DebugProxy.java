@@ -23,14 +23,23 @@
  */
 package cubicchunks.debug;
 
-import net.minecraftforge.fml.common.registry.GameRegistry;
-
 import static cubicchunks.debug.DebugTools.CUBIC_CHUNKS_DEBUG_TAB;
 import static cubicchunks.debug.DebugTools.itemRelightSkyBlock;
+import static cubicchunks.debug.DebugTools.itemGetLightValue;
 
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraftforge.fml.common.registry.GameRegistry;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class DebugProxy {
-	public void initItems() {
-		GameRegistry.register(itemRelightSkyBlock);
-		itemRelightSkyBlock.setCreativeTab(CUBIC_CHUNKS_DEBUG_TAB);
-	}
+
+    public void initItems() {
+        GameRegistry.register(itemRelightSkyBlock);
+        itemRelightSkyBlock.setCreativeTab(CUBIC_CHUNKS_DEBUG_TAB);
+        GameRegistry.register(itemGetLightValue);
+        itemGetLightValue.setCreativeTab(CUBIC_CHUNKS_DEBUG_TAB);
+    }
 }

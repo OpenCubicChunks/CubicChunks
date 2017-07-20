@@ -23,11 +23,15 @@
  */
 package cubicchunks.worldgen.generator.custom.structures;
 
-import java.util.Random;
-
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import mcp.MethodsReturnNonnullByDefault;
+
+import java.util.Random;
+
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Basic structure generator for Cubic Chunks.
@@ -35,68 +39,75 @@ import cubicchunks.worldgen.generator.ICubePrimer;
  * The basic idea is to loop over all cubes within some radius (max structure size) and figure out which parts of
  * structures starting there intersect currently generated cube.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class CubicStructureGenerator {
 
-	/** The number of Chunks to gen-check in any given direction. */
-	protected int range = 8;
+    /** The number of Chunks to gen-check in any given direction. */
+    protected int range = 8;
 
-	/** The RNG used by the MapGen classes. */
-	protected Random rand = new Random();
+    /** The RNG used by the MapGen classes. */
+    @Nonnull protected Random rand = new Random();
 
-	/** This world object. */
-	protected ICubicWorld world;
+    /** This world object. */
+    protected ICubicWorld world;
 
-	/**
-	 * Generates structures in given cube.
-	 *
-	 * @param world the world that the structure is generated in
-	 * @param cube the block buffer to be filled with blocks (Cube)
-	 * @param cubePos position of the cube to generate structures in
-	 */
-	public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
+    /**
+     * Generates structures in given cube.
+     *
+     * @param world the world that the structure is generated in
+     * @param cube the block buffer to be filled with blocks (Cube)
+     * @param cubePos position of the cube to generate structures in
+     */
+    public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
 
-		//TODO: maybe skip some of this stuff if the cube is empty? (would need to use hints)
+        //TODO: maybe skip some of this stuff if the cube is empty? (would need to use hints)
 
-		int radius = this.range;
-		this.world = world;
-		this.rand.setSeed(world.getSeed());
-		//used to randomize contribution of each coordinate to the cube seed
-		//without these swapping x/y/z coordinates would result in the same seed
-		//so structures would generate symmetrically
-		long randX = this.rand.nextLong();
-		long randY = this.rand.nextLong();
-		long randZ = this.rand.nextLong();
+        this.world = world;
+        this.rand.setSeed(world.getSeed());
+        //used to randomize contribution of each coordinate to the cube seed
+        //without these swapping x/y/z coordinates would result in the same seed
+        //so structures would generate symmetrically
+        long randXMul = this.rand.nextLong();
+        long randYMul = this.rand.nextLong();
+        long randZMul = this.rand.nextLong();
 
-		int cubeX = cubePos.getX();
-		int cubeY = cubePos.getY();
-		int cubeZ = cubePos.getZ();
+        // as an optimization, this structure looks for structures only in every second coordinate on each axis
+        // ensure all origin points are always odd (could also be even, that would be & ~1),
+        // this way positions used as origin position are consistent across chunks
+        // increase scan radius by 1 because `|1` introduces offset to even X/Y/Z coords
+        int radius = this.range + 1;
+        int cubeXOriginBase = cubePos.getX() | 1;
+        int cubeYOriginBase = cubePos.getY() | 1;
+        int cubeZOriginBase = cubePos.getZ() | 1;
 
-		//x/y/zOrigin is location of the structure "center", and cubeX/Y/Z is the currently generated cube
-		for (int xOrigin = cubeX - radius; xOrigin <= cubeX + radius; ++xOrigin) {
-			for (int yOrigin = cubeY - radius; yOrigin <= cubeY + radius; ++yOrigin) {
-				for (int zOrigin = cubeZ - radius; zOrigin <= cubeZ + radius; ++zOrigin) {
-					long randX_mul = xOrigin*randX;
-					long randY_mul = yOrigin*randY;
-					long randZ_mul = zOrigin*randZ;
-					this.rand.setSeed(randX_mul ^ randY_mul ^ randZ_mul ^ world.getSeed());
-					this.generate(world, cube, xOrigin, yOrigin, zOrigin, cubePos);
-				}
-			}
+        long randSeed = world.getSeed();
+        //x/y/zOrigin is location of the structure "center", and cubeX/Y/Z is the currently generated cube
+        for (int xOrigin = cubeXOriginBase - radius; xOrigin <= cubeXOriginBase + radius; xOrigin += 2) {
+            long randX = xOrigin * randXMul ^ randSeed;
+            for (int yOrigin = cubeYOriginBase - radius; yOrigin <= cubeYOriginBase + radius; yOrigin += 2) {
+                long randY = yOrigin * randYMul ^ randX;
+                for (int zOrigin = cubeZOriginBase - radius; zOrigin <= cubeZOriginBase + radius; zOrigin += 2) {
+                    long randZ = zOrigin * randZMul ^ randY;
+                    this.rand.setSeed(randZ);
+                    this.generate(world, cube, xOrigin, yOrigin, zOrigin, cubePos);
+                }
+            }
 
-		}
-	}
+        }
+    }
 
-	/**
-	 * Generates blocks in a given cube for a structure that starts at given origin position.
-	 *
-	 * @param world the world the structure is generated in
-	 * @param cube the block buffer to be filled with blocks (Cube)
-	 * @param structureX x coordinate of the starting position of currently generated structure
-	 * @param structureY y coordinate of the starting position of currently generated structure
-	 * @param structureZ z coordinate of the starting position of currently generated structure
-	 * @param generatedCubePos position of the cube to fill with blocks
-	 */
-	protected abstract void generate(ICubicWorld world, ICubePrimer cube,
-	                                 int structureX, int structureY, int structureZ,
-	                                 CubePos generatedCubePos);
+    /**
+     * Generates blocks in a given cube for a structure that starts at given origin position.
+     *
+     * @param world the world the structure is generated in
+     * @param cube the block buffer to be filled with blocks (Cube)
+     * @param structureX x coordinate of the starting position of currently generated structure
+     * @param structureY y coordinate of the starting position of currently generated structure
+     * @param structureZ z coordinate of the starting position of currently generated structure
+     * @param generatedCubePos position of the cube to fill with blocks
+     */
+    protected abstract void generate(ICubicWorld world, ICubePrimer cube,
+            int structureX, int structureY, int structureZ,
+            CubePos generatedCubePos);
 }

@@ -23,26 +23,37 @@
  */
 package cubicchunks.debug;
 
+import cubicchunks.debug.item.GetLightValueItem;
+import cubicchunks.debug.item.RelightSkyBlockItem;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
-import cubicchunks.debug.item.RelightSkyBlockItem;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class DebugTools {
 
-	@SidedProxy(serverSide = "cubicchunks.debug.DebugProxy", clientSide = "cubicchunks.debug.DebugClientProxy")
-	private static DebugProxy proxy;
+    @SuppressWarnings("NullableProblems") @Nonnull
+    @SidedProxy(serverSide = "cubicchunks.debug.DebugProxy", clientSide = "cubicchunks.debug.DebugClientProxy")
+    private static DebugProxy proxy;
 
-	public static final Item itemRelightSkyBlock = new RelightSkyBlockItem("relight_sky_block");
+    static final Item itemRelightSkyBlock = new RelightSkyBlockItem("relight_sky_block");
+    static final Item itemGetLightValue = new GetLightValueItem("get_light_value");
 
-	public static final CreativeTabs CUBIC_CHUNKS_DEBUG_TAB = new CreativeTabs("cubic_chunks_debug_tab") {
-		@Override public Item getTabIconItem() {
-			return itemRelightSkyBlock;
-		}
-	};
+    static final CreativeTabs CUBIC_CHUNKS_DEBUG_TAB = new CreativeTabs("cubic_chunks_debug_tab") {
+        @Override public Item getTabIconItem() {
+            return itemRelightSkyBlock;
+        }
+    };
 
-	public static void init() {
-		proxy.initItems();
-	}
+    public static void init() {
+        proxy.initItems();
+    }
 }

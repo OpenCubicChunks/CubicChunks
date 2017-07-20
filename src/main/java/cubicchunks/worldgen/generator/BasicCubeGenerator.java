@@ -23,6 +23,11 @@
  */
 package cubicchunks.worldgen.generator;
 
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -30,55 +35,55 @@ import net.minecraft.world.biome.Biome.SpawnListEntry;
 
 import java.util.List;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * A partial implementation of {@link ICubeGenerator} that handles biome assignment.
  * <p>
  * Structure recreation and lookup are not supported by default.
  */
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public abstract class BasicCubeGenerator implements ICubeGenerator {
 
-	protected ICubicWorld world;
-	private Biome[] columnBiomes;
+    protected ICubicWorld world;
+    private Biome[] columnBiomes;
 
-	public BasicCubeGenerator(ICubicWorld world) {
-		this.world = world;
-	}
+    public BasicCubeGenerator(ICubicWorld world) {
+        this.world = world;
+    }
 
-	@Override
-	public void generateColumn(Column column) {
-		this.columnBiomes = this.world.getBiomeProvider()
-			.getBiomes(this.columnBiomes,
-				Coords.cubeToMinBlock(column.getX()),
-				Coords.cubeToMinBlock(column.getZ()),
-				Cube.SIZE, Cube.SIZE);
+    @Override
+    public void generateColumn(IColumn column) {
+        this.columnBiomes = this.world.getBiomeProvider()
+                .getBiomes(this.columnBiomes,
+                        Coords.cubeToMinBlock(column.getX()),
+                        Coords.cubeToMinBlock(column.getZ()),
+                        Cube.SIZE, Cube.SIZE);
 
-		// Copy ids to column internal biome array
-		byte[] columnBiomeArray = column.getBiomeArray();
-		for (int i = 0; i < columnBiomeArray.length; ++i) {
-			columnBiomeArray[i] = (byte) Biome.getIdForBiome(this.columnBiomes[i]);
-		}
-	}
+        // Copy ids to column internal biome array
+        byte[] columnBiomeArray = column.getBiomeArray();
+        for (int i = 0; i < columnBiomeArray.length; ++i) {
+            columnBiomeArray[i] = (byte) Biome.getIdForBiome(this.columnBiomes[i]);
+        }
+    }
 
-	@Override
-	public void recreateStructures(Cube cube) {
-	}
+    @Override
+    public void recreateStructures(Cube cube) {
+    }
 
-	@Override
-	public void recreateStructures(Column column) {
-	}
+    @Override
+    public void recreateStructures(IColumn column) {
+    }
 
-	@Override
-	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos pos) {
-		return world.getBiome(pos).getSpawnableList(type);
-	}
+    @Override
+    public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos pos) {
+        return world.getBiome(pos).getSpawnableList(type);
+    }
 
-	@Override
-	public BlockPos getClosestStructure(String name, BlockPos pos) {
-		return null;
-	}
+    @Nullable @Override
+    public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
+        return null;
+    }
 }

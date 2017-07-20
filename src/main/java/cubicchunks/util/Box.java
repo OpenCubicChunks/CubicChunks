@@ -23,32 +23,39 @@
  */
 package cubicchunks.util;
 
+import mcp.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class Box {
 
-	private final int x1, y1, z1;
-	private final int x2, y2, z2;
+    private final int x1, y1, z1;
+    private final int x2, y2, z2;
 
-	public Box(int x1, int y1, int z1, int x2, int y2, int z2) {
-		this.x1 = x1;
-		this.y1 = y1;
-		this.z1 = z1;
-		this.x2 = x2;
-		this.y2 = y2;
-		this.z2 = z2;
-	}
+    public Box(int x1, int y1, int z1, int x2, int y2, int z2) {
+        this.x1 = x1;
+        this.y1 = y1;
+        this.z1 = z1;
+        this.x2 = x2;
+        this.y2 = y2;
+        this.z2 = z2;
+    }
 
-	public void forEachPoint(XYZFunction function) {
-		for (int x = x1; x <= x2; x++) {
-			for (int y = y1; y <= y2; y++) {
-				for (int z = z1; z <= z2; z++) {
-					function.apply(x, y, z);
-				}
-			}
-		}
-	}
+    public void forEachPoint(XYZFunction function) {
+        for (int x = x1; x <= x2; x++) {
+            for (int y = y1; y <= y2; y++) {
+                for (int z = z1; z <= z2; z++) {
+                    function.apply(x, y, z);
+                }
+            }
+        }
+    }
 
-	@FunctionalInterface
-	public interface XYZFunction {
-		void apply(int x, int y, int z);
-	}
+    @FunctionalInterface
+    public interface XYZFunction {
+
+        void apply(int x, int y, int z);
+    }
 }

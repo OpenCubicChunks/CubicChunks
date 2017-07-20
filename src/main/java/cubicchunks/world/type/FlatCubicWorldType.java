@@ -23,30 +23,45 @@
  */
 package cubicchunks.world.type;
 
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldType;
-
+import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiCreateWorld;
+import net.minecraft.client.gui.GuiErrorScreen;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldType;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
 
-	public FlatCubicWorldType() {
-		super("FlatCubic");
-	}
+    public FlatCubicWorldType() {//todo: make it private, used in test
+        super("FlatCubic");
+    }
 
-	public static void create() {
-		new FlatCubicWorldType();
-	}
+    public static void create() {
+        new FlatCubicWorldType();
+    }
 
-	@Override
-	public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-		return new FlatTerrainProcessor(world);
-	}
+    @Override
+    public ICubeGenerator createCubeGenerator(ICubicWorld world) {
+        return new FlatTerrainProcessor(world);
+    }
 
-	@Override
-	public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-		return provider;
-	}
+    @Override
+    public WorldProvider getReplacedProviderFor(WorldProvider provider) {
+        return provider;
+    }
+
+    public boolean isCustomizable() {
+        return false;
+    }
 }

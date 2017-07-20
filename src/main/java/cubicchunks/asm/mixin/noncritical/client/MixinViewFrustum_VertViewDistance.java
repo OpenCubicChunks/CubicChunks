@@ -23,9 +23,10 @@
  */
 package cubicchunks.asm.mixin.noncritical.client;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.world.World;
-
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -35,28 +36,31 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Modify vertical render distance so that it's cube.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(ViewFrustum.class)
 public class MixinViewFrustum_VertViewDistance {
-	@Shadow @Final protected World world;
-	private int renderDistance = 16;
 
-	//this one can fail, there is safe default
-	@Inject(method = "setCountChunksXYZ", at = @At(value = "HEAD"))
-	private void onSetCountChunks(int renderDistance, CallbackInfo cbi) {
-		if (((ICubicWorld) world).isCubicWorld()) {
-			this.renderDistance = renderDistance*2 + 1;
-		} else {
-			this.renderDistance = 16;
-		}
-	}
+    @Shadow @Final protected World world;
+    private int renderDistance = 16;
 
-	@ModifyConstant(method = "setCountChunksXYZ", constant = @Constant(intValue = 16))
-	private int getYViewDistance(int oldDistance) {
-		return renderDistance;
-	}
+    //this one can fail, there is safe default
+    @Inject(method = "setCountChunksXYZ", at = @At(value = "HEAD"))
+    private void onSetCountChunks(int renderDistance, CallbackInfo cbi) {
+        if (((ICubicWorld) world).isCubicWorld()) {
+            this.renderDistance = renderDistance * 2 + 1;
+        } else {
+            this.renderDistance = 16;
+        }
+    }
+
+    @ModifyConstant(method = "setCountChunksXYZ", constant = @Constant(intValue = 16))
+    private int getYViewDistance(int oldDistance) {
+        return renderDistance;
+    }
 }

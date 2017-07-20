@@ -23,14 +23,20 @@
  */
 package cubicchunks.world.type;
 
-import net.minecraft.world.WorldProvider;
-
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.WorldProvider;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public interface ICubicWorldType {
 
-	ICubeGenerator createCubeGenerator(ICubicWorld world);
+    // TODO: Make it Nonnull. VanillaCubic uses null
+    @Nullable ICubeGenerator createCubeGenerator(ICubicWorld world);
 
-	WorldProvider getReplacedProviderFor(WorldProvider provider);
+    WorldProvider getReplacedProviderFor(WorldProvider provider);
 }

@@ -23,15 +23,25 @@
  */
 package cubicchunks.debug;
 
+import static cubicchunks.debug.DebugTools.itemRelightSkyBlock;
+import static cubicchunks.debug.DebugTools.itemGetLightValue;
+
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
 
-import static cubicchunks.debug.DebugTools.itemRelightSkyBlock;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class DebugClientProxy extends DebugProxy {
-	@Override public void initItems() {
-		super.initItems();
-		ModelLoader.setCustomModelResourceLocation(itemRelightSkyBlock, 0,
-			new ModelResourceLocation(itemRelightSkyBlock.getRegistryName(), "inventory"));
-	}
+
+    @Override
+    public void initItems() {
+        super.initItems();
+        ModelLoader.setCustomModelResourceLocation(itemRelightSkyBlock, 0,
+                new ModelResourceLocation(itemRelightSkyBlock.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(itemGetLightValue, 0,
+                new ModelResourceLocation(itemGetLightValue.getRegistryName(), "inventory"));
+    }
 }

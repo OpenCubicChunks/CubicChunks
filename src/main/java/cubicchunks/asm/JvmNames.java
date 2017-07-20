@@ -24,49 +24,86 @@
 package cubicchunks.asm;
 
 public class JvmNames {
-	private JvmNames() {
-	}
 
-	// @formatter:off
-	// We sort variables alphabetically here to make finding pre-existing constants easier
-	// If you add a new one, please follow this sorting instead of adding them at the end
-	public static final String
-		BLOCK_POS = "Lnet/minecraft/util/math/BlockPos;",
-		CHUNK = "Lnet/minecraft/world/chunk/Chunk;",
-		CHUNK_CACHE = "Lnet/minecraft/world/ChunkCache;",
-		CLASS_INHERITANCE_MULTI_MAP = "Lnet/minecraft/util/ClassInheritanceMultiMap;",
-		COMMAND_BASE = "Lnet/minecraft/command/CommandBase;",
-		COMMAND_TELEPORT = "Lnet/minecraft/command/server/CommandTeleport;",
-		COMMAND_TP = "Lnet/minecraft/command/CommandTP;",
-		DEDICATED_SERVER = "Lnet/minecraft/server/dedicated/DedicatedServer;",
-		ENTITY = "Lnet/minecraft/entity/Entity;",
-		ENTITY_PLAYER_MP = "Lnet/minecraft/entity/player/EntityPlayerMP;",
-		ENUM_SKY_BLOCK = "Lnet/minecraft/world/EnumSkyBlock;",
-		GUI_OVERLAY_DEBUG = "Lnet/minecraft/client/gui/GuiOverlayDebug;",
-		IBLOCK_STATE = "Lnet/minecraft/block/state/IBlockState;",
-		ICOMMAND_SENDER = "Lnet/minecraft/command/ICommandSender;",
-		IMMUTABLE_SET_MULTIMAP = "Lcom/google/common/collect/ImmutableSetMultimap;",
-		MINECRAFT_SERVER = "Lnet/minecraft/server/MinecraftServer;",
-		STRING = "Ljava/lang/String;",
-		STRUCTURE_BOUNDING_BOX = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;",
-		WORLD = "Lnet/minecraft/world/World;",
-		WORLD_CLIENT = "Lnet/minecraft/client/multiplayer/WorldClient;";
+    private JvmNames() {
+    }
 
-	// Sorted as above
-	public static final String
-		BLOCK_POS_GETY = BLOCK_POS + "getY()I",
-		CHUNK_CACHE_GET_BLOCK_STATE = CHUNK_CACHE + "getBlockState(" + BLOCK_POS + ")" + IBLOCK_STATE,
-		CHUNK_GET_ENTITY_LISTS = CHUNK + "getEntityLists()[" + CLASS_INHERITANCE_MULTI_MAP,
-		COMMAND_BASE_PARSE_DOUBLE = COMMAND_BASE + "parseDouble(D" + STRING + "IIZ)D",
-		COMMAND_TELEPORT_GET_ENTITY = COMMAND_TELEPORT + "getEntity(" + MINECRAFT_SERVER + ICOMMAND_SENDER + STRING + ")" + ENTITY,
-		COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER = COMMAND_TP + "getCommandSenderAsPlayer(" + ICOMMAND_SENDER + ")" + ENTITY_PLAYER_MP,
-		COMMAND_TP_GET_ENTITY = COMMAND_TP + "getEntity(" + MINECRAFT_SERVER + ICOMMAND_SENDER + STRING + ")" + ENTITY,
-		DEDICATED_SERVER_IS_ANNOUNCING_PLAYER_ACHIEVEMENTS = DEDICATED_SERVER + "isAnnouncingPlayerAchievements()Z",
-		GUI_OVERLAY_DEBUG_CALL = GUI_OVERLAY_DEBUG + "call()Ljava/util/List;",
-		WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS = WORLD_CLIENT + "getChunkFromBlockCoords(" + BLOCK_POS + ")" + CHUNK,
-		WORLD_GET_LIGHT_FOR = WORLD + "getLightFor(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
-		WORLD_GET_LIGHT_WITH_FLAG = WORLD + "getLight(" + BLOCK_POS + "Z)I",
-		WORLD_GET_PERSISTENT_CHUNKS = WORLD + "getPersistentChunks()" + IMMUTABLE_SET_MULTIMAP,
-		WORLD_IS_AREA_LOADED = WORLD + "isAreaLoaded(IIIIIIZ)Z";
-	// @formatter:on
+    // @formatter:off
+    // We sort variables alphabetically here to make finding pre-existing constants easier
+    // If you add a new one, please follow this sorting instead of adding them at the end
+    public static final String
+        BLOCK_FALLING = "Lnet/minecraft/block/BlockFalling;",
+        BLOCK_POS = "Lnet/minecraft/util/math/BlockPos;",
+        CHUNK = "Lnet/minecraft/world/chunk/Chunk;",
+        CHUNK_CACHE = "Lnet/minecraft/world/ChunkCache;",
+        CLASS_INHERITANCE_MULTI_MAP = "Lnet/minecraft/util/ClassInheritanceMultiMap;",
+        COMMAND_BASE = "Lnet/minecraft/command/CommandBase;",
+        COMMAND_TELEPORT = "Lnet/minecraft/command/server/CommandTeleport;",
+        COMMAND_TP = "Lnet/minecraft/command/CommandTP;",
+        ENTITY = "Lnet/minecraft/entity/Entity;",
+        ENTITY_FALLING_BLOCK = "Lnet/minecraft/entity/item/EntityFallingBlock;",
+        ENTITY_PLAYER_MP = "Lnet/minecraft/entity/player/EntityPlayerMP;",
+        ENUM_SKY_BLOCK = "Lnet/minecraft/world/EnumSkyBlock;",
+        EXTENDED_BLOCK_STORAGE = "Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;",
+        GUI_OVERLAY_DEBUG = "Lnet/minecraft/client/gui/GuiOverlayDebug;",
+        IBLOCK_ACCESS = "Lnet/minecraft/world/IBlockAccess;",
+        IBLOCK_STATE = "Lnet/minecraft/block/state/IBlockState;",
+        ICOMMAND_SENDER = "Lnet/minecraft/command/ICommandSender;",
+        IMMUTABLE_SET_MULTIMAP = "Lcom/google/common/collect/ImmutableSetMultimap;",
+        MATERIAL = "Lnet/minecraft/block/material/Material;",
+        MATH_HELPER = "Lnet/minecraft/util/math/MathHelper;",
+        MINECRAFT_SERVER = "Lnet/minecraft/server/MinecraftServer;",
+        MUTABLE_BLOCK_POS = "Lnet/minecraft/util/math/BlockPos$MutableBlockPos;",
+        POOLED_MUTABLE_BLOCK_POS = "Lnet/minecraft/util/math/BlockPos$PooledMutableBlockPos;",
+        RENDER_CHUNK = "Lnet/minecraft/client/renderer/chunk/RenderChunk;",
+        STRING = "Ljava/lang/String;",
+        STRUCTURE_BOUNDING_BOX = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;",
+        WORLD = "Lnet/minecraft/world/World;",
+        WORLD_CLIENT = "Lnet/minecraft/client/multiplayer/WorldClient;",
+        WORLD_SERVER = "Lnet/minecraft/world/WorldServer;";
+
+    // Sorted as above
+    public static final String
+        BLOCK_FALLING_CAN_FALL_THROUGH = BLOCK_FALLING + "canFallThrough("+IBLOCK_STATE+")Z",
+        BLOCK_POS_ADD = BLOCK_POS + "add(III)" + BLOCK_POS,
+        BLOCK_POS_CONSTR_ENTITY = "(" + ENTITY + ")" + BLOCK_POS,
+        BLOCK_POS_DOWN = BLOCK_POS + "down()" + BLOCK_POS,
+        BLOCK_POS_GETY = BLOCK_POS + "getY()I",
+        CHUNK_CACHE_GET_BLOCK_STATE = CHUNK_CACHE + "getBlockState(" + BLOCK_POS + ")" + IBLOCK_STATE,
+        CHUNK_CONSTRUCT_1 = "<init>(" + WORLD + "II" + ")V",
+        CHUNK_ENTITY_LISTS = CHUNK + "entityLists:[" + CLASS_INHERITANCE_MULTI_MAP,
+        CHUNK_GET_ENTITY_LISTS = CHUNK + "getEntityLists()[" + CLASS_INHERITANCE_MULTI_MAP,
+        CHUNK_GET_TOP_FILLED_SEGMENT = CHUNK + "getTopFilledSegment()I",
+        CHUNK_IS_CHUNK_LOADED = CHUNK + "isChunkLoaded:Z", // field
+        CHUNK_IS_MODIFIED = CHUNK + "isModified:Z", // field
+        CHUNK_IS_POPULATED = CHUNK + "isPopulated()Z",
+        CHUNK_SET_CHUNK_MODIFIED = CHUNK + "setChunkModified()V",
+        CHUNK_STORAGE_ARRAYS = CHUNK + "storageArrays:[" + EXTENDED_BLOCK_STORAGE,
+        COMMAND_BASE_PARSE_DOUBLE = COMMAND_BASE + "parseDouble(D" + STRING + "IIZ)D",
+        COMMAND_TELEPORT_GET_ENTITY = COMMAND_TELEPORT + "getEntity(" + MINECRAFT_SERVER + ICOMMAND_SENDER + STRING + ")" + ENTITY,
+        COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER = COMMAND_TP + "getCommandSenderAsPlayer(" + ICOMMAND_SENDER + ")" + ENTITY_PLAYER_MP,
+        COMMAND_TP_GET_ENTITY = COMMAND_TP + "getEntity(" + MINECRAFT_SERVER + ICOMMAND_SENDER + STRING + ")" + ENTITY,
+        ENTITY_FALLING_BLOCK_CONSTRUCT = ENTITY_FALLING_BLOCK+"<init>("+WORLD+"DDD"+IBLOCK_STATE+")V",
+        GUI_OVERLAY_DEBUG_CALL = GUI_OVERLAY_DEBUG + "call()Ljava/util/List;",
+        IBLOCK_ACCESS_GET_BLOCK_STATE = IBLOCK_ACCESS + "getBlockState(" + BLOCK_POS + ")" + IBLOCK_STATE,
+        ICOMMAND_SENDER_GET_ENTITY_WORLD = ICOMMAND_SENDER + "getEntityWorld()" + WORLD,
+        MATERIAL_WATER = MATERIAL + "WATER:" + MATERIAL,
+        MATH_HELPER_CLAMP_I = MATH_HELPER + "clamp(III)I",
+        MUTABLE_BLOCK_POS_CONSTRUCT = MUTABLE_BLOCK_POS + "<init>(III)V",
+        POOLED_MUTABLE_BLOCK_POS_SET_POS_D = POOLED_MUTABLE_BLOCK_POS + "setPos(DDD)" + POOLED_MUTABLE_BLOCK_POS,
+        WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS = WORLD_CLIENT + "getChunkFromBlockCoords(" + BLOCK_POS + ")" + CHUNK,
+        WORLD_GET_LIGHT_FOR = WORLD + "getLightFor(" + ENUM_SKY_BLOCK + BLOCK_POS + ")I",
+        WORLD_GET_LIGHT_WITH_FLAG = WORLD + "getLight(" + BLOCK_POS + "Z)I",
+        WORLD_GET_PERSISTENT_CHUNKS = WORLD + "getPersistentChunks()" + IMMUTABLE_SET_MULTIMAP,
+        WORLD_IS_AIR_BLOCK = WORLD + "isAirBlock(" + BLOCK_POS + ")Z",
+        WORLD_IS_AREA_LOADED = WORLD + "isAreaLoaded(IIIIIIZ)Z",
+        WORLD_IS_BLOCK_LOADED = WORLD + "isBlockLoaded(" + BLOCK_POS + ")Z",
+        WORLD_IS_BLOCK_LOADED_Z = WORLD + "isBlockLoaded(" + BLOCK_POS + "Z)Z",
+        WORLD_IS_CHUNK_LOADED = WORLD + "isChunkLoaded(IIZ)Z",
+        WORLD_SERVER_GET_ACTUAL_HEIGHT = WORLD_SERVER + "getActualHeight()I";
+
+    // optifine methods
+    public static final String
+        OPTIFINE_RENDER_CHUNK_GET_CHUNK = RENDER_CHUNK + "getChunk(" + WORLD + ")" + CHUNK;
+    // @formatter:on
 }

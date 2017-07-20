@@ -23,12 +23,18 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
+import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER;
+import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_ENTITY;
+import static net.minecraft.command.CommandBase.getCommandSenderAsPlayer;
+import static net.minecraft.command.CommandBase.getEntity;
+
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandTP;
-import net.minecraft.command.EntityNotFoundException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.server.MinecraftServer;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -38,58 +44,57 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.ref.WeakReference;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER;
-import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_ENTITY;
-import static net.minecraft.command.CommandBase.getCommandSenderAsPlayer;
-import static net.minecraft.command.CommandBase.getEntity;
-
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(CommandTP.class)
 public class MixinCommandTP {
-	private WeakReference<ICubicWorld> commandWorld;
 
-	@Inject(method = "execute",
-	        at = @At(value = "INVOKE", target = COMMAND_TP_GET_ENTITY, ordinal = 0))
-	private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
-		try {
-			commandWorld = new WeakReference<>((ICubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
-		} catch (EntityNotFoundException e) {
-			commandWorld = null;
-		}
-	}
+    @Nullable private WeakReference<ICubicWorld> commandWorld;
 
-	@Inject(method = "execute",
-	        at = @At(value = "INVOKE", target = COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER, ordinal = 0))
-	private void postGetEntityPlayerInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
-		try {
-			commandWorld = new WeakReference<>((ICubicWorld) getCommandSenderAsPlayer(sender).getEntityWorld());
-		} catch (PlayerNotFoundException e) {
-			commandWorld = null;
-		}
-	}
+    @Inject(method = "execute",
+            at = @At(value = "INVOKE", target = COMMAND_TP_GET_ENTITY, ordinal = 0))
+    private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
+        try {
+            commandWorld = new WeakReference<>((ICubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
+        } catch (CommandException e) {
+            commandWorld = null;
+        }
+    }
 
-	@ModifyConstant(method = "execute", constant = @Constant(intValue = -4096))
-	private int getMinY(int orig) {
-		if (commandWorld == null) {
-			return orig;
-		}
-		ICubicWorld world = commandWorld.get();
-		if (world == null) {
-			return orig;
-		}
-		return world.getMinHeight() + orig;
-	}
+    @Inject(method = "execute",
+            at = @At(value = "INVOKE", target = COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER, ordinal = 0))
+    private void postGetEntityPlayerInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
+        try {
+            commandWorld = new WeakReference<>((ICubicWorld) getCommandSenderAsPlayer(sender).getEntityWorld());
+        } catch (PlayerNotFoundException e) {
+            commandWorld = null;
+        }
+    }
 
-	@ModifyConstant(method = "execute", constant = @Constant(intValue = 4096))
-	private int getMaxY(int orig) {
-		if (commandWorld == null) {
-			return orig;
-		}
-		ICubicWorld world = commandWorld.get();
-		if (world == null) {
-			return orig;
-		}
-		return world.getMaxHeight() + orig - 256;
-	}
+    @ModifyConstant(method = "execute", constant = @Constant(intValue = -4096))
+    private int getMinY(int orig) {
+        if (commandWorld == null) {
+            return orig;
+        }
+        ICubicWorld world = commandWorld.get();
+        if (world == null) {
+            return orig;
+        }
+        return world.getMinHeight() + orig;
+    }
+
+    @ModifyConstant(method = "execute", constant = @Constant(intValue = 4096))
+    private int getMaxY(int orig) {
+        if (commandWorld == null) {
+            return orig;
+        }
+        ICubicWorld world = commandWorld.get();
+        if (world == null) {
+            return orig;
+        }
+        return world.getMaxHeight() + orig - 256;
+    }
 }

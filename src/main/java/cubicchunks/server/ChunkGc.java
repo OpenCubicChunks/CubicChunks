@@ -23,47 +23,95 @@
  */
 package cubicchunks.server;
 
+import cubicchunks.CubicChunks;
+import cubicchunks.CubicChunks.Config;
+import cubicchunks.IConfigUpdateListener;
+import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
+
+import java.util.Collection;
 import java.util.Iterator;
 
-import cubicchunks.world.column.Column;
-import cubicchunks.world.cube.Cube;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Chunk Garbage Collector, automatically unloads unused chunks.
  */
-public class ChunkGc {
-	// GC every 10 seconds by default
-	private static final int GC_INTERVAL = 20*10;
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+public class ChunkGc implements IConfigUpdateListener {
 
-	private final CubeProviderServer cubeCache;
+    @Nonnull private final CubeProviderServer cubeCache;
 
-	private int tick = 0;
+    private int tick = 0;
+    private volatile int updateInterval = 20 * 10;
 
-	public ChunkGc(CubeProviderServer cubeCache) {
-		this.cubeCache = cubeCache;
-	}
+    public ChunkGc(CubeProviderServer cubeCache) {
+        this.cubeCache = cubeCache;
+        CubicChunks.addConfigChangeListener(this);
+    }
 
-	public void tick() {
-		tick++;
-		if (tick > GC_INTERVAL) {
-			tick = 0;
-			chunkGc();
-		}
-	}
+    public void tick() {
+        tick++;
+        if (tick > updateInterval) {
+            tick = 0;
+            chunkGc();
+        }
+        verifyColumnConsistency();
+    }
 
-	private void chunkGc() {
-		Iterator<Cube> cubeIt = cubeCache.cubesIterator();
-		while (cubeIt.hasNext()) {
-			if (cubeCache.tryUnloadCube(cubeIt.next())) {
-				cubeIt.remove();
-			}
-		}
+    private void verifyColumnConsistency() {
+        // currently do that every tick, until I'm sure it doesn't happen
+        Iterator<Cube> cubeIt = cubeCache.cubesIterator();
+        while (cubeIt.hasNext()) {
+            Cube cube = cubeIt.next();
+            IColumn cubeCol = cube.getColumn();
+            IColumn storedCol = cubeCache.getLoadedColumn(cube.getX(), cube.getZ());
+            if (storedCol == null) {
+                throw new RuntimeException("Cube with no stored column!");
+            }
+            if (storedCol != cubeCol) {
+                throw new RuntimeException("CubeColumn and StoredColumn are different!");
+            }
+        }
 
-		Iterator<Column> columnIt = cubeCache.columnsIterator();
-		while (columnIt.hasNext()) {
-			if (cubeCache.tryUnloadColumn(columnIt.next())) {
-				columnIt.remove();
-			}
-		}
-	}
+        Iterator<IColumn> columnIt = cubeCache.columnsIterator();
+        int totalCubes = 0;
+        while (columnIt.hasNext()) {
+            IColumn storedCol = columnIt.next();
+            Collection<Cube> storedColumnCubes = storedCol.getLoadedCubes();
+            for (Cube c : storedColumnCubes) {
+                if (cubeCache.getLoadedCube(c.getCoords()) != c) {
+                    throw new RuntimeException("Cube in column not the same as stored cube!");
+                }
+            }
+            totalCubes += storedColumnCubes.size();
+        }
+        if (totalCubes != cubeCache.getLoadedCubeCount()) {
+            throw new RuntimeException("Counted " + totalCubes + " cubes in columns, but there are total of " + cubeCache.getLoadedCubeCount() + " cubes!");
+        }
+    }
+
+    private void chunkGc() {
+        Iterator<Cube> cubeIt = cubeCache.cubesIterator();
+        while (cubeIt.hasNext()) {
+            if (cubeCache.tryUnloadCube(cubeIt.next())) {
+                cubeIt.remove();
+            }
+        }
+
+        Iterator<IColumn> columnIt = cubeCache.columnsIterator();
+        while (columnIt.hasNext()) {
+            if (cubeCache.tryUnloadColumn(columnIt.next())) {
+                columnIt.remove();
+            }
+        }
+    }
+
+    @Override
+    public void onConfigUpdate(Config config) {
+        this.updateInterval = config.getChunkGCInterval();
+    }
 }

@@ -23,13 +23,18 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS;
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+
+import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.chunk.Chunk;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,42 +42,40 @@ import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import cubicchunks.asm.MixinUtils;
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-import static cubicchunks.asm.JvmNames.BLOCK_POS;
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(World.class)
 public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
-	@Shadow public WorldProvider provider;
+    @Shadow public WorldProvider provider;
 
-	@Shadow public abstract boolean isValid(BlockPos pos);
+    @Shadow public abstract boolean isValid(BlockPos pos);
 
-	@Shadow public abstract boolean isBlockLoaded(BlockPos pos);
+    @Shadow public abstract boolean isBlockLoaded(BlockPos pos);
 
-	@Shadow public abstract IBlockState getBlockState(BlockPos pos);
+    @Shadow public abstract IBlockState getBlockState(BlockPos pos);
 
-	@Shadow public abstract int getLightFor(EnumSkyBlock type, BlockPos pos);
+    @Shadow public abstract int getLightFor(EnumSkyBlock type, BlockPos pos);
 
-	@Shadow public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
+    @Shadow public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
 
-	/**
-	 * Redirect BlockPos.getY() here to modify vanilla height check
-	 */
-	@Group(name = "getLightFromNeighborsFor", min = 2, max = 2)
-	@Redirect(method = "getLightFromNeighborsFor", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
-	private int getLightFromNeighborsForBlockPosGetYRedirect(BlockPos pos) {
-		return MixinUtils.getReplacementY(this, pos);
-	}
+    /**
+     * Redirect BlockPos.getY() here to modify vanilla height check
+     */
+    @Group(name = "getLightFromNeighborsFor", min = 2, max = 2)
+    @Redirect(method = "getLightFromNeighborsFor", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
+    private int getLightFromNeighborsForBlockPosGetYRedirect(BlockPos pos) {
+        return MixinUtils.getReplacementY(this, pos);
+    }
 
-	@Group(name = "getLightFromNeighborsFor")
-	@ModifyArg(method = "getLightFromNeighborsFor",
-	           at = @At(value = "INVOKE", target = BLOCK_POS + "<init>(III)V"),
-	           index = 1,
-	           require = 1)
-	private int getLightFromNeighborsForGetMinHeight(int origY) {
-		return this.getMinHeight();
-	}
+    @Group(name = "getLightFromNeighborsFor")
+    @ModifyArg(method = "getLightFromNeighborsFor",
+            at = @At(value = "INVOKE", target = BLOCK_POS + "<init>(III)V"),
+            index = 1,
+            require = 1)
+    private int getLightFromNeighborsForGetMinHeight(int origY) {
+        return this.getMinHeight();
+    }
 }

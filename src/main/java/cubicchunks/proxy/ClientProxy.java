@@ -23,6 +23,12 @@
  */
 package cubicchunks.proxy;
 
+import cubicchunks.CubicChunks;
+import cubicchunks.client.ClientEventHandler;
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.ReflectionUtil;
+import cubicchunks.world.type.ICubicWorldType;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
@@ -30,32 +36,32 @@ import net.minecraft.world.WorldSettings;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import cubicchunks.client.ClientEventHandler;
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.ReflectionUtil;
-import cubicchunks.world.type.ICubicWorldType;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class ClientProxy extends CommonProxy {
-	@Override public EntityPlayer getPlayerEntity(MessageContext ctx) {
-		// Note that if you simply return 'Minecraft.getMinecraft().thePlayer',
-		// your packets will not work because you will be getting a client
-		// player even when you are on the server! Sounds absurd, but it's true.
 
-		// Solution is to double-check side before returning the player:
-		return (ctx.side.isClient() ?
-			Minecraft.getMinecraft().player :
-			ctx.getServerHandler().playerEntity);
-	}
+    @Override public EntityPlayer getPlayerEntity(MessageContext ctx) {
+        // Note that if you simply return 'Minecraft.getMinecraft().thePlayer',
+        // your packets will not work because you will be getting a client
+        // player even when you are on the server! Sounds absurd, but it's true.
 
-	@Override public void registerEvents() {
-		super.registerEvents();
-		MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
-	}
+        // Solution is to double-check side before returning the player:
+        return (ctx.side.isClient() ?
+                Minecraft.getMinecraft().player :
+                ctx.getServerHandler().playerEntity);
+    }
 
-	@Override public void setBuildLimit(MinecraftServer server) {
-		WorldSettings settings = ReflectionUtil.getFieldValueSrg(server, "field_71350_m");//theWorldSettings
-		if (settings.getTerrainType() instanceof ICubicWorldType) {
-			server.setBuildLimit(AddressTools.MAX_CUBE_Y*16);
-		}
-	}
+    @Override public void registerEvents() {
+        super.registerEvents();
+        MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
+    }
+
+    @Override public void setBuildLimit(MinecraftServer server) {
+        WorldSettings settings = ReflectionUtil.getFieldValueSrg(server, "field_71350_m");//theWorldSettings
+        if (settings.getTerrainType() instanceof ICubicWorldType) {
+            server.setBuildLimit(CubicChunks.MAX_BLOCK_Y);
+        }
+    }
 }

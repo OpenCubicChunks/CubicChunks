@@ -23,26 +23,29 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(Entity.class)
 public class MixinEntity_DeathFix {
 
-	@Shadow public World world;
+    @Shadow public World world;
 
-	/**
-	 * Replace -64 constant, to avoid killing entities below y=-64
-	 */
-	@ModifyConstant(method = "onEntityUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
-	private double getDeathY(double originalY) {
-		return ((ICubicWorld) world).getMinHeight() + originalY;
-	}
+    /**
+     * Replace -64 constant, to avoid killing entities below y=-64
+     */
+    @ModifyConstant(method = "onEntityUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
+    private double getDeathY(double originalY) {
+        return ((ICubicWorld) world).getMinHeight() + originalY;
+    }
 }

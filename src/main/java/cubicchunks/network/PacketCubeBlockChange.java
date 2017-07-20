@@ -23,12 +23,17 @@
  */
 package cubicchunks.network;
 
-import com.carrotsearch.hppc.IntHashSet;
-import com.carrotsearch.hppc.IntSet;
-import com.carrotsearch.hppc.cursors.IntCursor;
+import static net.minecraftforge.fml.common.network.ByteBufUtils.readVarInt;
 
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.cube.Cube;
 import gnu.trove.TShortCollection;
-
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
+import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -36,89 +41,89 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import cubicchunks.util.AddressTools;
-import cubicchunks.util.CubePos;
-import cubicchunks.world.cube.Cube;
-import io.netty.buffer.ByteBuf;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-import static net.minecraftforge.fml.common.network.ByteBufUtils.readVarInt;
-
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketCubeBlockChange implements IMessage {
 
-	public int[] heightValues;
-	public CubePos cubePos;
-	public short[] localAddresses;
-	public IBlockState[] blockStates;
+    int[] heightValues;
+    CubePos cubePos;
+    short[] localAddresses;
+    IBlockState[] blockStates;
 
-	public PacketCubeBlockChange() {
-	}
+    public PacketCubeBlockChange() {
+    }
 
-	public PacketCubeBlockChange(Cube cube, TShortCollection localAddresses) {
-		this.cubePos = cube.getCoords();
-		this.localAddresses = localAddresses.toArray();
-		this.blockStates = new IBlockState[localAddresses.size()];
-		int i = localAddresses.size() - 1;
-		IntSet xzAddresses = new IntHashSet();
-		for (; i >= 0; i--) {
-			int localAddress = this.localAddresses[i];
-			int x = AddressTools.getLocalX(localAddress);
-			int y = AddressTools.getLocalY(localAddress);
-			int z = AddressTools.getLocalZ(localAddress);
-			this.blockStates[i] = cube.getBlockState(x, y, z);
-			xzAddresses.add(x | z << 4);
-		}
-		this.heightValues = new int[xzAddresses.size()];
-		i = 0;
-		for (IntCursor v : xzAddresses) {
-			int height = cube.getColumn().getOpacityIndex().getTopBlockY(v.value & 0xF, v.value >> 4);
-			v.value |= height << 8;
-			heightValues[i] = v.value;
-			i++;
-		}
-	}
+    public PacketCubeBlockChange(Cube cube, TShortCollection localAddresses) {
+        this.cubePos = cube.getCoords();
+        this.localAddresses = localAddresses.toArray();
+        this.blockStates = new IBlockState[localAddresses.size()];
+        int i = localAddresses.size() - 1;
+        TIntSet xzAddresses = new TIntHashSet();
+        for (; i >= 0; i--) {
+            int localAddress = this.localAddresses[i];
+            int x = AddressTools.getLocalX(localAddress);
+            int y = AddressTools.getLocalY(localAddress);
+            int z = AddressTools.getLocalZ(localAddress);
+            this.blockStates[i] = cube.getBlockState(x, y, z);
+            xzAddresses.add(x | z << 4);
+        }
+        this.heightValues = new int[xzAddresses.size()];
+        i = 0;
+        TIntIterator it = xzAddresses.iterator();
+        while (it.hasNext()) {
+            int v = it.next();
+            int height = cube.getColumn().getOpacityIndex().getTopBlockY(v & 0xF, v >> 4);
+            v |= height << 8;
+            heightValues[i] = v;
+            i++;
+        }
+    }
 
-	@SuppressWarnings("deprecation") // Forge thinks we are trying to register a block or something :P
-	@Override
-	public void fromBytes(ByteBuf in) {
-		this.cubePos = new CubePos(in.readInt(), in.readInt(), in.readInt());
-		short numBlocks = in.readShort();
-		localAddresses = new short[numBlocks];
-		blockStates = new IBlockState[numBlocks];
+    @SuppressWarnings("deprecation") // Forge thinks we are trying to register a block or something :P
+    @Override
+    public void fromBytes(ByteBuf in) {
+        this.cubePos = new CubePos(in.readInt(), in.readInt(), in.readInt());
+        short numBlocks = in.readShort();
+        localAddresses = new short[numBlocks];
+        blockStates = new IBlockState[numBlocks];
 
-		for (int i = 0; i < numBlocks; i++) {
-			localAddresses[i] = in.readShort();
-			blockStates[i] = Block.BLOCK_STATE_IDS.getByValue(readVarInt(in, 4));
-		}
-		int numHmapChanges = in.readUnsignedByte();
-		heightValues = new int[numHmapChanges];
-		for (int i = 0; i < numHmapChanges; i++) {
-			heightValues[i] = in.readInt();
-		}
-	}
+        for (int i = 0; i < numBlocks; i++) {
+            localAddresses[i] = in.readShort();
+            blockStates[i] = Block.BLOCK_STATE_IDS.getByValue(readVarInt(in, 4));
+        }
+        int numHmapChanges = in.readUnsignedByte();
+        heightValues = new int[numHmapChanges];
+        for (int i = 0; i < numHmapChanges; i++) {
+            heightValues[i] = in.readInt();
+        }
+    }
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public void toBytes(ByteBuf out) {
-		out.writeInt(cubePos.getX());
-		out.writeInt(cubePos.getY());
-		out.writeInt(cubePos.getZ());
-		out.writeShort(localAddresses.length);
-		for (int i = 0; i < localAddresses.length; i++) {
-			out.writeShort(localAddresses[i]);
-			ByteBufUtils.writeVarInt(out, Block.BLOCK_STATE_IDS.get(blockStates[i]), 4);
-		}
-		out.writeByte(heightValues.length);
-		for (int v : heightValues) {
-			out.writeInt(v);
-		}
-	}
+    @SuppressWarnings("deprecation")
+    @Override
+    public void toBytes(ByteBuf out) {
+        out.writeInt(cubePos.getX());
+        out.writeInt(cubePos.getY());
+        out.writeInt(cubePos.getZ());
+        out.writeShort(localAddresses.length);
+        for (int i = 0; i < localAddresses.length; i++) {
+            out.writeShort(localAddresses[i]);
+            ByteBufUtils.writeVarInt(out, Block.BLOCK_STATE_IDS.get(blockStates[i]), 4);
+        }
+        out.writeByte(heightValues.length);
+        for (int v : heightValues) {
+            out.writeInt(v);
+        }
+    }
 
-	public static class Handler extends AbstractClientMessageHandler<PacketCubeBlockChange> {
+    public static class Handler extends AbstractClientMessageHandler<PacketCubeBlockChange> {
 
-		@Override
-		public IMessage handleClientMessage(EntityPlayer player, PacketCubeBlockChange message, MessageContext ctx) {
-			ClientHandler.getInstance().handle(message);
-			return null;
-		}
-	}
+        @Nullable @Override
+        public IMessage handleClientMessage(EntityPlayer player, PacketCubeBlockChange message, MessageContext ctx) {
+            ClientHandler.getInstance().handle(message);
+            return null;
+        }
+    }
 }

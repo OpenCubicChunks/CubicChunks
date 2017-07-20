@@ -30,23 +30,23 @@ import cubicchunks.world.cube.Cube;
  */
 public class GlobalGeneratorConfig {
 
-	/**
-	 * Elevation for sea level
-	 */
-	public static final int SEA_LEVEL = 64;
+    /**
+     * Elevation for sea level
+     */
+    public static final int SEA_LEVEL = 64;
 
-	/**
-	 * Maximum elevation for generated terrain
-	 */
-	public static final double MAX_ELEV = 200;
+    /**
+     * Maximum elevation for generated terrain
+     */
+    public static final double MAX_ELEV = 200;
 
-	// TODO add javadoc here
-	// these are constants. Changing them may cause issues.
-	public static final int X_SECTION_SIZE = 4 + 1;
-	public static final int Y_SECTION_SIZE = 8 + 1;
-	public static final int Z_SECTION_SIZE = 4 + 1;
+    // TODO add javadoc here
+    // these are constants. Changing them may cause issues.
+    public static final int X_SECTION_SIZE = 4 + 1;
+    public static final int Y_SECTION_SIZE = 8 + 1;
+    public static final int Z_SECTION_SIZE = 4 + 1;
 
-	public static final int X_SECTIONS = Cube.SIZE/(X_SECTION_SIZE - 1) + 1;
-	public static final int Y_SECTIONS = Cube.SIZE/(Y_SECTION_SIZE - 1) + 1;
-	public static final int Z_SECTIONS = Cube.SIZE/(Z_SECTION_SIZE - 1) + 1;
+    public static final int X_SECTIONS = Cube.SIZE / (X_SECTION_SIZE - 1) + 1;
+    public static final int Y_SECTIONS = Cube.SIZE / (Y_SECTION_SIZE - 1) + 1;
+    public static final int Z_SECTIONS = Cube.SIZE / (Z_SECTION_SIZE - 1) + 1;
 }

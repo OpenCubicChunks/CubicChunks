@@ -1,36 +1,39 @@
 {
-  "required": true,
-  "package": "cubicchunks.asm.mixin",
-  "refmap": "cubicchunks.mixins.refmap.json",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "core.common.MixinWorld_Tick",
-    "core.common.MixinWorld",
-    "core.common.MixinWorldServer",
-    "core.common.MixinWorld_HeightLimits",
-    "core.common.MixinChunkCache_HeightLimits",
-    "core.common.MixinEntity_DeathFix",
-    "fixes.common.MixinEntityMinecart_KillFix",
-    "fixes.common.MixinEntityFallingBlock_HeightLimits",
-    "noncritical.common.command.MixinCommandTeleport",
-    "noncritical.common.command.MixinCommandTP",
-    "noncritical.common.command.MixinCommandBase",
-    "noncritical.common.command.MixinCommandFill",
-    "noncritical.common.command.MixinCommandClone",
-    "noncritical.common.command.MixinCommandCompare",
-    "noncritical.common.MixinBlockPistonBase_HeightFix"
-  ],
-  "client": [
-    "core.client.MixinWorld_HeightLimits",
-    "core.client.MixinWorldClient",
-    "core.client.MixinRenderGlobal",
-    "core.client.MixinChunkCache_HeightLimits",
-    "core.client.MixinViewFrustum_RenderHeightFix",
-    "noncritical.client.MixinViewFrustum_VertViewDistance",
-    "noncritical.client.MixinRenderChunk",
-    "noncritical.client.MixinGuiOverlayDebug"
-  ],
-  "server": [
-    "core.server.MixinDedicatedServer_HeightLimits"
-  ]
+    "required": true,
+    "package": "cubicchunks.asm.mixin.core",
+    "refmap": "cubicchunks.mixins.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.6.15-SNAPSHOT",
+    "mixins": [
+        "common.MixinChunk_Column",
+        "common.MixinChunk_Cubes",
+        "common.MixinIBlockAccess_MinMaxHeight",
+        "common.MixinWorld_Tick",
+        "common.MixinWorld",
+        "common.MixinWorldServer",
+        "common.MixinWorld_HeightLimits",
+        "common.MixinChunkCache_HeightLimits",
+        "common.MixinEntity_DeathFix",
+        "common.MixinWorldProvider",
+        "common.MixinPlayerList"
+    ],
+    "client": [
+        "client.MixinWorld_HeightLimits",
+        "client.MixinWorldClient",
+        "client.MixinRenderGlobal",
+        "client.MixinChunkCache_HeightLimits",
+        "client.MixinChunk_Cubes",
+        "client.MixinViewFrustum_RenderHeightFix",
+        "client.MixinWorldProvider"
+    ],
+    "server": [
+        "server.MixinDedicatedServer_HeightLimits",
+        "server.MixinDedicatedPlayerList"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
+    }
 }

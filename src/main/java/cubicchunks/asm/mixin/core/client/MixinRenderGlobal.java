@@ -23,6 +23,18 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+import static cubicchunks.asm.JvmNames.CHUNK_GET_ENTITY_LISTS;
+import static cubicchunks.asm.JvmNames.OPTIFINE_RENDER_CHUNK_GET_CHUNK;
+import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
+
+import cubicchunks.util.ClassInheritanceMultiMapFactory;
+import cubicchunks.util.Coords;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.BlankCube;
+import cubicchunks.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
@@ -33,7 +45,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.Chunk;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -47,13 +58,8 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Iterator;
 import java.util.List;
 
-import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.Column;
-
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-import static cubicchunks.asm.JvmNames.CHUNK_GET_ENTITY_LISTS;
-import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Fixes renderEntities crashing when rendering cubes
@@ -61,87 +67,112 @@ import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
  * <p>
  * Allows to render cubes outside of 0..256 height range.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(RenderGlobal.class)
 public class MixinRenderGlobal {
 
-	private BlockPos position;
+    @Nullable private BlockPos position;
 
-	@Shadow private int renderDistanceChunks;
+    @Shadow private int renderDistanceChunks;
 
-	@Shadow private ViewFrustum viewFrustum;
+    @Shadow private ViewFrustum viewFrustum;
 
-	/**
-	 * This allows to get the Y position of rendered entity by injecting itself directly before call to
-	 * chunk.getEntityLists
-	 */
-	@Group(name = "renderEntitiesFix", max = 3)
-	@Inject(method = "renderEntities",
-	        at = @At(value = "INVOKE", target = WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS),
-	        locals = LocalCapture.CAPTURE_FAILHARD,
-	        require = 1)
-	public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks, CallbackInfo ci,
-	                          int pass, double d0, double d1, double d2,
-	                          Entity entity, double d3, double d4, double d5,
-	                          List<Entity> list, List<Entity> list1, List<Entity> list2,
-	                          BlockPos.PooledMutableBlockPos pos, Iterator<RenderGlobal.ContainerLocalRenderInformation> var21,
-	                          RenderGlobal.ContainerLocalRenderInformation info) {
-		ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
-		if (world.isCubicWorld()) {
-			this.position = info.renderChunk.getPosition();
-		} else {
-			this.position = null;
-		}
-	}
+    /**
+     * This allows to get the Y position of rendered entity by injecting itself directly before call to
+     * chunk.getEntityLists
+     */
+    @Group(name = "renderEntitiesFix", min = 3, max = 3)
+    @Inject(method = "renderEntities",
+            at = @At(value = "INVOKE", target = WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS),
+            locals = LocalCapture.CAPTURE_FAILHARD)
+    public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
+            CallbackInfo ci, int pass, double d0, double d1, double d2,
+            Entity entity, double d3, double d4, double d5,
+            List<Entity> list, List<Entity> list1, List<Entity> list2,
+            BlockPos.PooledMutableBlockPos pos, Iterator<RenderGlobal.ContainerLocalRenderInformation> var21,
+            RenderGlobal.ContainerLocalRenderInformation info) {
+        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
+        if (world.isCubicWorld()) {
+            this.position = info.renderChunk.getPosition();
+        } else {
+            this.position = null;
+        }
+    }
 
-	/**
-	 * After chunk.getEntityLists() renderGlobal needs to get correct element of the array.
-	 * The array element number is calculated using renderChunk.getPosition().getY() / 16.
-	 * getY() is redirected to this method to always return 0.
-	 * <p>
-	 * Then chunk.getEntityLists is redirected to a method that returns a 1-element array.
-	 */
-	@Group(name = "renderEntitiesFix")
-	@Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
-	public int getRenderChunkYPos(BlockPos pos) {
-		//position is null when it's not cubic chunks renderer
-		if (this.position != null) {
-			return 0;//must be 0 (or anything between 0 and 15)
-		}
-		return pos.getY();
-	}
+    /**
+     * Optifine-specific version of the above method
+     */
+    @SuppressWarnings("UnresolvedMixinReference")
+    @Group(name = "renderEntitiesFix")
+    @Inject(method = "renderEntities",
+            at = @At(value = "INVOKE", target = OPTIFINE_RENDER_CHUNK_GET_CHUNK),
+            locals = LocalCapture.CAPTURE_FAILHARD)
+    public void onGetPositionOptifine(Entity renderViewEntity, ICamera camera, float partialTicks,
+            CallbackInfo ci, int pass, double d0, double d1, double d2,
+            Entity entity, double d3, double d4, double d5,
+            List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
+            BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos, Iterator iterInfosEntities,
+            RenderGlobal.ContainerLocalRenderInformation info) {
+        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
+        if (world.isCubicWorld()) {
+            this.position = info.renderChunk.getPosition();
+        } else {
+            this.position = null;
+        }
+    }
 
-	/**
-	 * Return a 1-element array for Cubic Chunks world,
-	 * or original chunk.getEntityLists if not cubic chunks world.
-	 */
-	@SuppressWarnings("unchecked")
-	@Group(name = "renderEntitiesFix")
-	@Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = CHUNK_GET_ENTITY_LISTS), require = 1)
-	public ClassInheritanceMultiMap<Entity>[] getEntityList(Chunk chunk) {
-		if (position == null) {
-			return chunk.getEntityLists(); //TODO: is this right?
-		}
+    /**
+     * After chunk.getEntityLists() renderGlobal needs to get correct element of the array.
+     * The array element number is calculated using renderChunk.getPosition().getY() / 16.
+     * getY() is redirected to this method to always return 0.
+     * <p>
+     * Then chunk.getEntityLists is redirected to a method that returns a 1-element array.
+     */
+    @Group(name = "renderEntitiesFix")
+    @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
+    public int getRenderChunkYPos(BlockPos pos) {
+        //position is null when it's not cubic chunks renderer
+        if (this.position != null) {
+            return 0;//must be 0 (or anything between 0 and 15)
+        }
+        return pos.getY();
+    }
 
-		return new ClassInheritanceMultiMap[]{
-			((Column) chunk)
-				.getCube(Coords.blockToCube(position.getY()))
-				.getEntityContainer().getEntitySet()
-		};
-	}
+    /**
+     * Return a 1-element array for Cubic Chunks world,
+     * or original chunk.getEntityLists if not cubic chunks world.
+     */
+    @SuppressWarnings("unchecked")
+    @Group(name = "renderEntitiesFix")
+    @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = CHUNK_GET_ENTITY_LISTS), require = 1)
+    public ClassInheritanceMultiMap<Entity>[] getEntityList(Chunk chunk) {
+        if (position == null) {
+            return chunk.getEntityLists(); //TODO: is this right?
+        }
 
-	/**
-	 * Overwrite getRenderChunk(For)Offset to support extended height.
-	 *
-	 * @author Barteks2x
-	 * @reason Remove hardcoded height checks, it's a simple method and doing it differently would be problematic and
-	 * confusing (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
-	 */
-	@Overwrite
-	private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
-		BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
-		return MathHelper.abs(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks*16 ? null :
-			MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks*16 ? null :
-				MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks*16 ? null :
-					this.viewFrustum.getRenderChunk(blockpos);
-	}
+        Cube cube = ((IColumn) chunk).getCube(Coords.blockToCube(position.getY()));
+        if (cube instanceof BlankCube) {
+            return ClassInheritanceMultiMapFactory.EMPTY_ARR;
+        }
+
+        return new ClassInheritanceMultiMap[]{cube.getEntityContainer().getEntitySet()};
+    }
+
+    /**
+     * Overwrite getRenderChunk(For)Offset to support extended height.
+     *
+     * @author Barteks2x
+     * @reason Remove hardcoded height checks, it's a simple method and doing it differently would be problematic and
+     * confusing (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
+     */
+    @Nullable
+    @Overwrite
+    private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
+        BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
+        return MathHelper.abs(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks * 16 ? null :
+                MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * 16 ? null :
+                        MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * 16 ? null :
+                                this.viewFrustum.getRenderChunk(blockpos);
+    }
 }

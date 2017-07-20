@@ -23,6 +23,8 @@
  */
 package cubicchunks.network;
 
+import cubicchunks.CubicChunks;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -31,86 +33,93 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
-import cubicchunks.CubicChunks;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Wrapper class for SimpleNetworkWrapper.
  */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketDispatcher {
-	// a simple counter will allow us to get rid of 'magic' numbers used during packet registration
-	private static byte packetId = 0;
 
-	/**
-	 * The SimpleNetworkWrapper instance is used both to register and send packets.
-	 * Since I will be adding wrapper methods, this field is private, but you should
-	 * make it public if you plan on using it directly.
-	 */
-	private static final SimpleNetworkWrapper dispatcher = NetworkRegistry.INSTANCE.newSimpleChannel(CubicChunks.MODID);
+    // a simple counter will allow us to get rid of 'magic' numbers used during packet registration
+    private static byte packetId = 0;
 
-	/**
-	 * Registers all packets. Side of a packet is the side on which the packet is handled.
-	 */
-	public static final void registerPackets() {
-		registerMessage(PacketCube.Handler.class, PacketCube.class);
-		registerMessage(PacketColumn.Handler.class, PacketColumn.class);
+    /**
+     * The SimpleNetworkWrapper instance is used both to register and send packets.
+     * Since I will be adding wrapper methods, this field is private, but you should
+     * make it public if you plan on using it directly.
+     */
+    private static final SimpleNetworkWrapper dispatcher = NetworkRegistry.INSTANCE.newSimpleChannel(CubicChunks.MODID);
 
-		registerMessage(PacketUnloadColumn.Handler.class, PacketUnloadColumn.class);
-		registerMessage(PacketUnloadCube.Handler.class, PacketUnloadCube.class);
+    /**
+     * Registers all packets. Side of a packet is the side on which the packet is handled.
+     */
+    public static void registerPackets() {
+        registerMessage(PacketCube.Handler.class, PacketCube.class);
+        registerMessage(PacketColumn.Handler.class, PacketColumn.class);
 
-		registerMessage(PacketCubeBlockChange.Handler.class, PacketCubeBlockChange.class);
-	}
+        registerMessage(PacketUnloadColumn.Handler.class, PacketUnloadColumn.class);
+        registerMessage(PacketUnloadCube.Handler.class, PacketUnloadCube.class);
 
-	/**
-	 * Registers a message and message handler
-	 */
-	private static final <REQ extends IMessage, REPLY extends IMessage> void registerMessage(Class<? extends IMessageHandler<REQ, REPLY>> handlerClass, Class<REQ> messageClass) {
-		Side side = AbstractClientMessageHandler.class.isAssignableFrom(handlerClass) ? Side.CLIENT : Side.SERVER;
-		PacketDispatcher.dispatcher.registerMessage(handlerClass, messageClass, packetId++, side);
-	}
+        registerMessage(PacketCubeBlockChange.Handler.class, PacketCubeBlockChange.class);
 
-	/**
-	 * Send this message to the specified player.
-	 * See {@link SimpleNetworkWrapper#sendTo(IMessage, EntityPlayerMP)}
-	 */
-	public static final void sendTo(IMessage message, EntityPlayerMP player) {
-		PacketDispatcher.dispatcher.sendTo(message, player);
-	}
+        registerMessage(PacketWorldHeightBounds.Handler.class, PacketWorldHeightBounds.class);
+    }
 
-	/**
-	 * Send this message to everyone within a certain range of a point.
-	 * See {@link SimpleNetworkWrapper#sendToAllAround(IMessage, NetworkRegistry.TargetPoint)}
-	 */
-	public static final void sendToAllAround(IMessage message, NetworkRegistry.TargetPoint point) {
-		PacketDispatcher.dispatcher.sendToAllAround(message, point);
-	}
+    /**
+     * Registers a message and message handler
+     */
+    private static <REQ extends IMessage, REPLY extends IMessage> void registerMessage(
+            @Nonnull Class<? extends IMessageHandler<REQ, REPLY>> handlerClass, Class<REQ> messageClass) {
+        Side side = AbstractClientMessageHandler.class.isAssignableFrom(handlerClass) ? Side.CLIENT : Side.SERVER;
+        PacketDispatcher.dispatcher.registerMessage(handlerClass, messageClass, packetId++, side);
+    }
 
-	/**
-	 * Sends a message to everyone within a certain range of the coordinates in the same dimension.
-	 */
-	public static final void sendToAllAround(IMessage message, int dimension, double x, double y, double z, double range) {
-		PacketDispatcher.sendToAllAround(message, new NetworkRegistry.TargetPoint(dimension, x, y, z, range));
-	}
+    /**
+     * Send this message to the specified player.
+     * See {@link SimpleNetworkWrapper#sendTo(IMessage, EntityPlayerMP)}
+     */
+    public static void sendTo(IMessage message, EntityPlayerMP player) {
+        PacketDispatcher.dispatcher.sendTo(message, player);
+    }
 
-	/**
-	 * Sends a message to everyone within a certain range of the player provided.
-	 */
-	public static final void sendToAllAround(IMessage message, EntityPlayer player, double range) {
-		PacketDispatcher.sendToAllAround(message, player.world.provider.getDimension(), player.posX, player.posY, player.posZ, range);
-	}
+    /**
+     * Send this message to everyone within a certain range of a point.
+     * See {@link SimpleNetworkWrapper#sendToAllAround(IMessage, NetworkRegistry.TargetPoint)}
+     */
+    public static void sendToAllAround(IMessage message, NetworkRegistry.TargetPoint point) {
+        PacketDispatcher.dispatcher.sendToAllAround(message, point);
+    }
 
-	/**
-	 * Send this message to everyone within the supplied dimension.
-	 * See {@link SimpleNetworkWrapper#sendToDimension(IMessage, int)}
-	 */
-	public static final void sendToDimension(IMessage message, int dimensionId) {
-		PacketDispatcher.dispatcher.sendToDimension(message, dimensionId);
-	}
+    /**
+     * Sends a message to everyone within a certain range of the coordinates in the same dimension.
+     */
+    public static void sendToAllAround(IMessage message, int dimension, double x, double y, double z, double range) {
+        PacketDispatcher.sendToAllAround(message, new NetworkRegistry.TargetPoint(dimension, x, y, z, range));
+    }
 
-	/**
-	 * Send this message to the server.
-	 * See {@link SimpleNetworkWrapper#sendToServer(IMessage)}
-	 */
-	public static final void sendToServer(IMessage message) {
-		PacketDispatcher.dispatcher.sendToServer(message);
-	}
+    /**
+     * Sends a message to everyone within a certain range of the player provided.
+     */
+    public static void sendToAllAround(IMessage message, EntityPlayer player, double range) {
+        PacketDispatcher.sendToAllAround(message, player.world.provider.getDimension(), player.posX, player.posY, player.posZ, range);
+    }
+
+    /**
+     * Send this message to everyone within the supplied dimension.
+     * See {@link SimpleNetworkWrapper#sendToDimension(IMessage, int)}
+     */
+    public static void sendToDimension(IMessage message, int dimensionId) {
+        PacketDispatcher.dispatcher.sendToDimension(message, dimensionId);
+    }
+
+    /**
+     * Send this message to the server.
+     * See {@link SimpleNetworkWrapper#sendToServer(IMessage)}
+     */
+    public static void sendToServer(IMessage message) {
+        PacketDispatcher.dispatcher.sendToServer(message);
+    }
 }

@@ -23,50 +23,59 @@
  */
 package cubicchunks.worldgen.generator;
 
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 
-@SuppressWarnings("deprecation") // Block.BLOCK_STATE_IDS
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class CubePrimer implements ICubePrimer {
 
-	private final char[] data = new char[4096];
+    private final char[] data = new char[4096];
 
-	@Override
-	public IBlockState getBlockState(int x, int y, int z) {
-		IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[getBlockIndex(x, y, z)]);
-		return iblockstate == null ? DEFAULT_STATE : iblockstate;
-	}
+    @Override
+    public IBlockState getBlockState(int x, int y, int z) {
+        @SuppressWarnings("deprecation")
+        IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[getBlockIndex(x, y, z)]);
+        return iblockstate == null ? DEFAULT_STATE : iblockstate;
+    }
 
-	@Override
-	public void setBlockState(int x, int y, int z, IBlockState state) {
-		this.data[getBlockIndex(x, y, z)] = (char) Block.BLOCK_STATE_IDS.get(state);
-	}
+    @Override
+    public void setBlockState(int x, int y, int z, @Nonnull IBlockState state) {
+        @SuppressWarnings("deprecation")
+        char value = (char) Block.BLOCK_STATE_IDS.get(state);
+        this.data[getBlockIndex(x, y, z)] = value;
+    }
 
-	@Override
-	public int findGroundHeight(int x, int z) {
-		int i = (x << 8 | z << 4) + 15;
+    @Override
+    public int findGroundHeight(int x, int z) {
+        int i = (x << 8 | z << 4) + 15;
 
-		for (int j = 15; j >= 0; --j) {
-			IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[i + j]);
+        for (int j = 15; j >= 0; --j) {
+            @SuppressWarnings("deprecation")
+            IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[i + j]);
 
-			if (iblockstate != null && iblockstate != DEFAULT_STATE) {
-				return j;
-			}
-		}
+            if (iblockstate != null && iblockstate != DEFAULT_STATE) {
+                return j;
+            }
+        }
 
-		return -1; // no non-air block found
-	}
+        return -1; // no non-air block found
+    }
 
-	/**
-	 * Map cube local coordinates to an array index in the range [0, 4095].
-	 *
-	 * @param x cube local x
-	 * @param y cube local y
-	 * @param z cube local z
-	 *
-	 * @return a unique array index for that coordinate
-	 */
-	private static int getBlockIndex(int x, int y, int z) {
-		return x << 8 | z << 4 | y;
-	}
+    /**
+     * Map cube local coordinates to an array index in the range [0, 4095].
+     *
+     * @param x cube local x
+     * @param y cube local y
+     * @param z cube local z
+     *
+     * @return a unique array index for that coordinate
+     */
+    private static int getBlockIndex(int x, int y, int z) {
+        return x << 8 | z << 4 | y;
+    }
 }

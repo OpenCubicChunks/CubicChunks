@@ -24,7 +24,9 @@
 package cubicchunks.world;
 
 import com.google.common.base.Predicate;
-
+import cubicchunks.CubicChunks;
+import cubicchunks.util.ClassInheritanceMultiMapFactory;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -38,173 +40,125 @@ import net.minecraftforge.common.util.Constants;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
-import cubicchunks.CubicChunks;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 //TODO: Have xcube review this class... I dont trust it
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
 public class EntityContainer {
 
-	private ClassInheritanceMultiMap<Entity> entities;
-	private boolean hasActiveEntities; //TODO: hasActiveEntitys is like an isModifyed right?
-	private long lastSaveTime;
+    @Nonnull protected ClassInheritanceMultiMap<Entity> entities;
+    protected boolean hasActiveEntities; //TODO: hasActiveEntitys is like an isModifyed right?
+    protected long lastSaveTime;
 
-	public EntityContainer() {
-		this.entities = new ClassInheritanceMultiMap<>(Entity.class);
-		this.hasActiveEntities = false;
-		this.lastSaveTime = 0;
-	}
+    public EntityContainer() {
+        this.entities = ClassInheritanceMultiMapFactory.create(Entity.class);
+        this.hasActiveEntities = false;
+        this.lastSaveTime = 0;
+    }
 
-	//=======================================
-	//========Methods for Chunk/Cube=========
-	//=======================================
+    //=======================================
+    //========Methods for Chunk/Cube=========
+    //=======================================
 
-	public void addEntity(Entity entity) {
-		this.entities.add(entity);
-		this.hasActiveEntities = true;
-	}
+    public void addEntity(Entity entity) {
+        this.entities.add(entity);
+        this.hasActiveEntities = true;
+    }
 
-	public boolean remove(Entity entity) {
-		return this.entities.remove(entity);
-	}
+    public boolean remove(Entity entity) {
+        return this.entities.remove(entity);
+    }
 
-	private boolean canAddEntityExcluded(Entity toAdd, Entity excluded, AxisAlignedBB queryBox, Predicate<? super Entity> predicate) {
-		return toAdd != excluded &&
-			toAdd.getEntityBoundingBox().intersectsWith(queryBox) &&
-			(predicate == null || predicate.apply(toAdd));
-	}
+    public ClassInheritanceMultiMap<Entity> getEntitySet() {
+        return this.entities;
+    }
 
-	public void getEntitiesWithinAABBForEntity(Entity excluded, AxisAlignedBB queryBox, List<Entity> out, Predicate<? super Entity> predicate) {
-		for (Entity entity : this.entities) {
+    public void clear() {
+        this.entities.clear();
+    }
 
-			// handle entity exclusion
-			if (canAddEntityExcluded(entity, excluded, queryBox, predicate)) {
-				out.add(entity);
-			}
-			// also check entity parts
-			if (entity.getParts() != null) {
-				for (Entity part : entity.getParts()) {
-					if (canAddEntityExcluded(part, excluded, queryBox, predicate)) {
-						out.add(part);
-					}
-				}
-			}
-		}
-	}
+    public Collection<Entity> getEntities() {
+        return Collections.unmodifiableCollection(this.entities);
+    }
 
-	public <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out, Predicate<? super T> predicate) {
-		for (T entity : this.entities.getByClass(entityType)) {
-			if (entity.getEntityBoundingBox().intersectsWith(queryBox) &&
-				(predicate == null || predicate.apply(entity))) {
-				out.add(entity);
-			}
-		}
-	}
+    public int size() {
+        return this.entities.size();
+    }
 
 
-	public ClassInheritanceMultiMap<Entity> getEntitySet() {
-		return this.entities;
-	}
+    public boolean needsSaving(boolean flag, long time, boolean isModified) {
+        if (flag) {
+            if (this.hasActiveEntities && time != lastSaveTime || isModified) {
+                return true;
+            }
+        } else if (this.hasActiveEntities && time >= this.lastSaveTime + 600) {
+            return true;
+        }
+        return isModified;
+    }
 
-	public boolean hasActiveEntities() {
-		return this.hasActiveEntities;
-	}
+    public void markSaved(long time) {
+        this.lastSaveTime = time;
+    }
 
-	public void setHasActiveEntities(boolean val) {
-		this.hasActiveEntities = val;
-	}
+    public void writeToNbt(NBTTagCompound nbt, String name, Consumer<Entity> listener) {
+        this.hasActiveEntities = false;
+        NBTTagList nbtEntities = new NBTTagList();
+        nbt.setTag(name, nbtEntities);
+        for (Entity entity : this.entities) {
 
-	public void clear() {
-		this.entities.clear();
-	}
+            NBTTagCompound nbtEntity = new NBTTagCompound();
+            if (entity.writeToNBTOptional(nbtEntity)) {
+                this.hasActiveEntities = true;
+                nbtEntities.appendTag(nbtEntity);
 
-	public Collection<Entity> getEntities() {
-		return Collections.unmodifiableCollection(this.entities);
-	}
+                listener.accept(entity);
+            }
+        }
+    }
 
-	public int size() {
-		return this.entities.size();
-	}
+    //listener is passed from CubeIO to set chunk position
+    public void readFromNbt(NBTTagCompound nbt, String name, ICubicWorld world, Consumer<Entity> listener) {
+        NBTTagList nbtEntities = nbt.getTagList(name, 10);
 
+        for (int i = 0; i < nbtEntities.tagCount(); i++) {
+            NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
+            readEntity(nbtEntity, world, listener);
+        }
+    }
 
-	public boolean needsSaving(boolean flag, long time, boolean isModified) {
-		if (flag) {
-			if (this.hasActiveEntities && time != lastSaveTime || isModified) {
-				return true;
-			}
-		} else if (this.hasActiveEntities && time >= this.lastSaveTime + 600) {
-			return true;
-		}
-		return isModified;
-	}
+    private Entity readEntity(NBTTagCompound nbtEntity, ICubicWorld world, Consumer<Entity> listener) {
 
-	public void markSaved(long time) {
-		this.lastSaveTime = time;
-	}
+        // create the entity
+        Entity entity = EntityList.createEntityFromNBT(nbtEntity, (World) world);
+        if (entity == null) {
+            return null;
+        }
+        if (entity instanceof EntityPlayerMP) {
+            CubicChunks.LOGGER.error("EntityPlayerMP is serialized in save file! Reading the entity would break world ticking, skipping");
+            return null;
+        }
+        addEntity(entity);
 
-	public void writeToNbt(NBTTagCompound nbt, String name) {
-		writeToNbt(nbt, name, null);
-	}
+        listener.accept(entity);
+        // deal with riding
+        if (nbtEntity.hasKey("Passengers", Constants.NBT.TAG_LIST)) {
 
-	public void writeToNbt(NBTTagCompound nbt, String name, IEntityActionListener listener) {
-		this.hasActiveEntities = false;
-		NBTTagList nbtEntities = new NBTTagList();
-		nbt.setTag(name, nbtEntities);
-		for (Entity entity : this.entities) {
+            NBTTagList nbttaglist = nbtEntity.getTagList("Passengers", 10);
 
-			NBTTagCompound nbtEntity = new NBTTagCompound();
-			if (entity.writeToNBTOptional(nbtEntity)) {
-				this.hasActiveEntities = true;
-				nbtEntities.appendTag(nbtEntity);
+            for (int i = 0; i < nbttaglist.tagCount(); ++i) {
+                Entity entity1 = readEntity(nbttaglist.getCompoundTagAt(i), world, listener);
 
-				if (listener != null) {
-					listener.onEntity(entity);
-				}
-			}
-		}
-	}
-
-	//listener is passed from CubeIO to set chunk position
-	public void readFromNbt(NBTTagCompound nbt, String name, ICubicWorld world, IEntityActionListener listener) {
-		NBTTagList nbtEntities = nbt.getTagList(name, 10);
-		if (nbtEntities == null) {
-			return;
-		}
-
-		for (int i = 0; i < nbtEntities.tagCount(); i++) {
-			NBTTagCompound nbtEntity = nbtEntities.getCompoundTagAt(i);
-			readEntity(nbtEntity, world, listener);
-		}
-	}
-
-	private Entity readEntity(NBTTagCompound nbtEntity, ICubicWorld world, IEntityActionListener listener) {
-
-		// create the entity
-		Entity entity = EntityList.createEntityFromNBT(nbtEntity, (World) world);
-		if (entity == null) {
-			return null;
-		}
-		if (entity instanceof EntityPlayerMP) {
-			CubicChunks.LOGGER.error("EntityPlayerMP is serialized in save file! Reading the entity would break world ticking, skipping");
-			return null;
-		}
-		addEntity(entity);
-
-		if (listener != null) {
-			listener.onEntity(entity);
-		}
-		// deal with riding
-		if (nbtEntity.hasKey("Passengers", Constants.NBT.TAG_LIST)) {
-
-			NBTTagList nbttaglist = nbtEntity.getTagList("Passengers", 10);
-
-			for (int i = 0; i < nbttaglist.tagCount(); ++i) {
-				Entity entity1 = readEntity(nbttaglist.getCompoundTagAt(i), world, listener);
-
-				if (entity1 != null) {
-					entity1.startRiding(entity, true);
-				}
-			}
-		}
-		return entity;
-	}
+                if (entity1 != null) {
+                    entity1.startRiding(entity, true);
+                }
+            }
+        }
+        return entity;
+    }
 }

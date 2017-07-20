@@ -23,55 +23,96 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+import static cubicchunks.asm.JvmNames.ICOMMAND_SENDER_GET_ENTITY_WORLD;
+import static cubicchunks.asm.JvmNames.WORLD_IS_BLOCK_LOADED;
+
+import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.CommandFill;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.lang.ref.WeakReference;
 
-import cubicchunks.asm.MixinUtils;
-import cubicchunks.world.ICubicWorld;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 @Mixin(CommandFill.class)
 public class MixinCommandFill {
-	private WeakReference<ICubicWorld> commandWorld;
 
-	//get command sender, can't fail (inject at HEAD
-	@Inject(method = "execute", at = @At(value = "HEAD"), require = 1)
-	private void getWorldFromExecute(MinecraftServer server, ICommandSender sender, String[] args, CallbackInfo cbi) {
-		commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
-	}
+    @Nullable private WeakReference<ICubicWorld> commandWorld;
 
-	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6), constraints = "")
-	private int getBlockPosYRedirectMin(BlockPos pos) {
-		if (commandWorld == null) {
-			return pos.getY();
-		}
-		ICubicWorld world = commandWorld.get();
-		if (world == null) {
-			return pos.getY();
-		}
-		return MixinUtils.getReplacementY(world, pos);
-	}
+    //get command sender, can't fail (inject at HEAD
+    @Inject(method = "execute", at = @At(value = "HEAD"), require = 1)
+    private void getWorldFromExecute(MinecraftServer server, ICommandSender sender, String[] args, CallbackInfo cbi) {
+        commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
+    }
 
-	@Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 7))
-	private int getBlockPosYRedirectMax(BlockPos pos) {
-		if (commandWorld == null) {
-			return pos.getY();
-		}
-		ICubicWorld world = commandWorld.get();
-		if (world == null) {
-			return pos.getY();
-		}
-		return MixinUtils.getReplacementY(world, pos);
-	}
+    @Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6))
+    private int getBlockPosYRedirectMin(BlockPos pos) {
+        if (commandWorld == null) {
+            return pos.getY();
+        }
+        ICubicWorld world = commandWorld.get();
+        if (world == null) {
+            return pos.getY();
+        }
+        return MixinUtils.getReplacementY(world, pos);
+    }
+
+    @Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 7))
+    private int getBlockPosYRedirectMax(BlockPos pos) {
+        if (commandWorld == null) {
+            return pos.getY();
+        }
+        ICubicWorld world = commandWorld.get();
+        if (world == null) {
+            return pos.getY();
+        }
+        return MixinUtils.getReplacementY(world, pos);
+    }
+
+    // fix that strange vanilla logic for isBlockLoaded
+    private Integer minY, maxY;
+
+    @Inject(method = "execute", at = @At(value = "INVOKE", target = ICOMMAND_SENDER_GET_ENTITY_WORLD), locals = LocalCapture.CAPTURE_FAILSOFT)
+    private void onGetEntityWorld(MinecraftServer server, ICommandSender sender, String[] args, CallbackInfo c,
+            BlockPos blockpos, BlockPos blockpos1, Block block, int i1, IBlockState iblockstate, BlockPos minPos, BlockPos maxPos,
+            int i, BlockPos var21) {
+        minY = minPos.getY();
+        maxY = maxPos.getY();
+    }
+
+    @Redirect(method = "execute", at = @At(value = "INVOKE", target = WORLD_IS_BLOCK_LOADED))
+    private boolean isBlockLoadedCheckForHeightRangeRedirect(World world, BlockPos pos) {
+        if (!((ICubicWorld) world).isCubicWorld()) {
+            return world.isBlockLoaded(pos);
+        }
+        if (minY == null) {
+            assert maxY == null;
+            //if the above injection somehow fails, fall back to something reasonable
+            return ((ICubicWorld) world).isBlockColumnLoaded(pos);
+        }
+        for (int blockY = minY; blockY <= maxY; blockY += 16) {
+            if (!world.isBlockLoaded(new BlockPos(pos.getX(), blockY, pos.getZ()))) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
