@@ -239,6 +239,7 @@ dependencies {
     jmh.extendsFrom(forgeGradleMc)
     jmh.extendsFrom(forgeGradleMcDeps)
     testCompile.extendsFrom(forgeGradleGradleStart)
+    testCompile.extendsFrom(forgeGradleMcDeps)
 }
 
 // this is needed because it.ozimov:java7-hamcrest-matchers:0.7.0 depends on guava 19, while MC needs guava 21
