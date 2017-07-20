@@ -116,15 +116,15 @@ public final class DefaultDecorator implements ICubicPopulator {
 
         // TODO: Biome decoration events?
         BiomeDecorator dec = biome.getBiome().theBiomeDecorator;
-        generateOnTop(world, random, pos, dec.sandPatchesPerChunk, dec.sandGen);
+        generateOnTop(world, random, pos, dec.sandPerChunk2, dec.sandGen);
         generateOnTop(world, random, pos, dec.clayPerChunk, dec.clayGen);
-        generateOnTop(world, random, pos, dec.gravelPatchesPerChunk, dec.gravelGen);
+        generateOnTop(world, random, pos, dec.sandPerChunk, dec.gravelGen);
 
         int treeCount = random.nextFloat() < dec.extraTreeChance ? dec.treesPerChunk + 1 : dec.treesPerChunk;
         for (int i = 0; i < treeCount; ++i) {
             int xOffset1 = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
             int zOffset1 = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
-            WorldGenAbstractTree treeGen = biome.getBiome().getRandomTreeFeature(random);
+            WorldGenAbstractTree treeGen = biome.getBiome().genBigTreeChance(random); // getRandomTreeGen
             treeGen.setDecorationDefaults();
             BlockPos top1 = getSurfaceForCube(world, pos, xOffset1, zOffset1, 0, SurfaceType.OPAQUE);
             if (top1 != null && treeGen.generate((World) world, random, top1)) {

@@ -54,8 +54,8 @@ public class PacketUnloadColumn implements IMessage {
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeInt(chunkPos.x);
-        buf.writeInt(chunkPos.z);
+        buf.writeInt(chunkPos.chunkXPos);
+        buf.writeInt(chunkPos.chunkZPos);
     }
 
     ChunkPos getColumnPos() {

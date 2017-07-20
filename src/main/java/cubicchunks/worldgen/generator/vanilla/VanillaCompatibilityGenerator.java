@@ -212,7 +212,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
             }
         } else {
             // Make vanilla generate a chunk for us to copy
-            if (lastChunk.x != cubeX || lastChunk.z != cubeZ) {
+            if (lastChunk.xPosition != cubeX || lastChunk.zPosition != cubeZ) {
                 lastChunk = vanilla.provideChunk(cubeX, cubeZ);
             }
 
@@ -299,7 +299,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
     @Override
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
-        return vanilla.getStrongholdGen((World) world, name, pos, flag);
+        return vanilla.getStrongholdGen((World) world, name, pos);
     }
 
 }

@@ -32,7 +32,6 @@ import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -89,7 +88,7 @@ public abstract class MixinWorld implements ICubicWorld {
     @Shadow @Final @Mutable public WorldProvider provider;
     @Shadow @Final public Random rand;
     @Shadow @Final public boolean isRemote;
-    @Shadow @Final public Profiler profiler;
+    @Shadow @Final public Profiler theProfiler;
     @Shadow @Final @Mutable protected ISaveHandler saveHandler;
     @Shadow protected boolean findingSpawnPoint;
 
@@ -195,7 +194,7 @@ public abstract class MixinWorld implements ICubicWorld {
     }
 
     @Override public Profiler getProfiler() {
-        return this.profiler;
+        return this.theProfiler;
     }
 
     /**

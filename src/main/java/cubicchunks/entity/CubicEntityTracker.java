@@ -81,7 +81,7 @@ public class CubicEntityTracker extends EntityTracker {
             CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Adding entity to track");
             CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity To Track");
             crashreportcategory.addCrashSection("Tracking range", trackingRange + " blocks");
-            crashreportcategory.addDetail("Update interval", new ICrashReportDetail<String>() {
+            crashreportcategory.setDetail("Update interval", new ICrashReportDetail<String>() {
                 public String call() throws Exception {
                     String s = "Once per " + updateFrequency + " ticks";
                     if (updateFrequency == Integer.MAX_VALUE) {

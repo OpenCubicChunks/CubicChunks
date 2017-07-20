@@ -48,8 +48,8 @@ public class DebugTools {
     static final Item itemGetLightValue = new GetLightValueItem("get_light_value");
 
     static final CreativeTabs CUBIC_CHUNKS_DEBUG_TAB = new CreativeTabs("cubic_chunks_debug_tab") {
-        @SideOnly(Side.CLIENT) @Override public ItemStack getTabIconItem() {
-            return itemRelightSkyBlock.getDefaultInstance();
+        @Override public Item getTabIconItem() {
+            return itemRelightSkyBlock;
         }
     };
 

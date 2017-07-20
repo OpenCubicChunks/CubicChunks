@@ -46,7 +46,7 @@ public class PacketColumn implements IMessage {
     }
 
     public PacketColumn(IColumn column) {
-        this.chunkPos = column.getPos();
+        this.chunkPos = column.getChunkCoordIntPair();
         this.data = new byte[WorldEncoder.getEncodedSize(column)];
         PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
 
@@ -62,8 +62,8 @@ public class PacketColumn implements IMessage {
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeInt(chunkPos.x);
-        buf.writeInt(chunkPos.z);
+        buf.writeInt(chunkPos.chunkXPos);
+        buf.writeInt(chunkPos.chunkZPos);
         buf.writeInt(this.data.length);
         buf.writeBytes(this.data);
     }

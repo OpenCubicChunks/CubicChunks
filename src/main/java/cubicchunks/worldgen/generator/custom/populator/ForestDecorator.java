@@ -74,7 +74,7 @@ public class ForestDecorator implements ICubicPopulator {
                 if (random.nextInt(20) == 0) {
                     new WorldGenBigMushroom().generate((World) world, random, blockpos);
                 } else {
-                    WorldGenAbstractTree generator = biome.getBiome().getRandomTreeFeature(random);
+                    WorldGenAbstractTree generator = biome.getBiome().genBigTreeChance(random); // getRandomTreeGen
                     generator.setDecorationDefaults();
 
                     if (generator.generate((World) world, random, blockpos)) {

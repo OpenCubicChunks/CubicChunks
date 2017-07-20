@@ -36,7 +36,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @Mixin(RandomPositionGenerator.class)
 public class MixinRandomPositionGenerator {
-
+	// TODO: Find where it is in 1.10.2
+    /*
 	@Overwrite
 	private static BlockPos moveAboveSolid(BlockPos pos, EntityCreature entity) {
 		if (!entity.world.getBlockState(pos).getMaterial().isSolid()) {
@@ -54,4 +55,5 @@ public class MixinRandomPositionGenerator {
 
 		return currentPos;
 	}
+	*/
 }

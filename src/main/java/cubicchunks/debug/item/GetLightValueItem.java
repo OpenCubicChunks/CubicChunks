@@ -24,6 +24,7 @@
 package cubicchunks.debug.item;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -47,7 +48,7 @@ public class GetLightValueItem extends ItemRegistered {
     }
 
     @Override
-    public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing faceHit, float hitX, float hitY,
+    public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing faceHit, float hitX, float hitY,
             float hitZ) {
         ICubicWorld world = (ICubicWorld) worldIn;
         BlockPos placePos = pos.offset(faceHit);

@@ -135,7 +135,7 @@ public class ClientHandler implements INetHandler {
 
         ChunkPos chunkPos = packet.getChunkPos();
 
-        IColumn column = (IColumn) cubeCache.loadChunk(chunkPos.x, chunkPos.z);
+        IColumn column = (IColumn) cubeCache.loadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
 
         byte[] data = packet.getData();
         ByteBuf buf = WorldEncoder.createByteBufForRead(data);
@@ -167,7 +167,7 @@ public class ClientHandler implements INetHandler {
         CubeProviderClient cubeCache = worldClient.getCubeCache();
 
         ChunkPos chunkPos = packet.getColumnPos();
-        cubeCache.unloadChunk(chunkPos.x, chunkPos.z);
+        cubeCache.unloadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
     }
 
     public void handle(final PacketCubeBlockChange packet) {

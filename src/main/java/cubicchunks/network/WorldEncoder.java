@@ -57,7 +57,7 @@ class WorldEncoder {
             // 3. block light
             out.writeBytes(storage.getBlocklightArray().getData());
 
-            if (cube.getCubicWorld().getProvider().hasSkyLight()) {
+            if (!cube.getCubicWorld().getProvider().hasNoSky()) {
                 // 4. sky light
                 out.writeBytes(storage.getSkylightArray().getData());
             }
@@ -97,7 +97,7 @@ class WorldEncoder {
 
         if (hasStorage) {
             storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()),
-                    cube.getCubicWorld().getProvider().hasSkyLight());
+                    !cube.getCubicWorld().getProvider().hasNoSky());
             cube.setStorage(storage);
         }
 
@@ -109,7 +109,7 @@ class WorldEncoder {
             // 3. block light
             in.readBytes(storage.getBlocklightArray().getData());
 
-            if (cube.getCubicWorld().getProvider().hasSkyLight()) {
+            if (!cube.getCubicWorld().getProvider().hasNoSky()) {
                 // 4. sky light
                 in.readBytes(storage.getSkylightArray().getData());
             }
@@ -123,7 +123,7 @@ class WorldEncoder {
             ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
             coi.setData(heightmaps);
             // cube.initialClientSkylight();
-            storage.recalculateRefCounts();
+            storage.removeInvalidBlocks(); // recalculateRefCounts
         }
     }
 
@@ -143,7 +143,7 @@ class WorldEncoder {
         if (cube.getStorage() != null) {
             ExtendedBlockStorage storage = cube.getStorage();
             size += storage.getBlocklightArray().getData().length;
-            if (cube.getCubicWorld().getProvider().hasSkyLight()) {
+            if (!cube.getCubicWorld().getProvider().hasNoSky()) {
                 size += storage.getSkylightArray().getData().length;
             }
         }

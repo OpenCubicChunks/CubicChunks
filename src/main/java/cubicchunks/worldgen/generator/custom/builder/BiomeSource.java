@@ -62,7 +62,7 @@ public class BiomeSource {
     private static final int SECTIONS_CACHE_RADIUS = 16;
     private static final int SECTIONS_CACHE_SIZE = SECTIONS_CACHE_RADIUS * SECTIONS_CACHE_RADIUS;
 
-    private static final ToIntFunction<ChunkPos> HASH_CHUNKS = v -> v.x * CHUNKS_CACHE_RADIUS + v.z;
+    private static final ToIntFunction<ChunkPos> HASH_CHUNKS = v -> v.chunkXPos * CHUNKS_CACHE_RADIUS + v.chunkZPos;
     private static final ToIntFunction<Vec3i> HASH_SECTIONS = v -> v.getX() * SECTIONS_CACHE_RADIUS + v.getZ();
 
     private final Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
@@ -161,14 +161,14 @@ public class BiomeSource {
 
     private CubicBiome[] generateBiomes(ChunkPos pos) {
         return mapToCubic(biomeGen.getBiomes(null,
-                Coords.cubeToMinBlock(pos.x),
-                Coords.cubeToMinBlock(pos.z),
+                Coords.cubeToMinBlock(pos.chunkXPos),
+                Coords.cubeToMinBlock(pos.chunkZPos),
                 Cube.SIZE, Cube.SIZE));
     }
 
     private CubicBiome[] generateBiomeSections(ChunkPos pos) {
         return mapToCubic(biomeGen.getBiomesForGeneration(null,
-                pos.x * SECTION_SIZE, pos.z * SECTION_SIZE,
+                pos.chunkXPos * SECTION_SIZE, pos.chunkZPos * SECTION_SIZE,
                 SECTION_SIZE, SECTION_SIZE));
     }
 

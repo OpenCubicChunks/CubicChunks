@@ -44,14 +44,6 @@ public class GuiFactory implements IModGuiFactory {
 
     }
 
-    @Override public boolean hasConfigGui() {
-        throw new AbstractMethodError("Temporary hack to make config work for now without figuring out how to do it properly");
-    }
-
-    @Override public GuiScreen createConfigGui(GuiScreen parentScreen) {
-        throw new AbstractMethodError("Temporary hack to make config work for now without figuring out how to do it properly");
-    }
-
     @Override public Class<? extends GuiScreen> mainConfigGuiClass() {
         return CubicChunks.Config.GUI.class;
     }

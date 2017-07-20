@@ -70,8 +70,8 @@ class IONbtWriter {
         NBTTagCompound columnNbt = new NBTTagCompound();
         NBTTagCompound level = new NBTTagCompound();
         columnNbt.setTag("Level", level);
-        columnNbt.setInteger("DataVersion", FMLCommonHandler.instance().getDataFixer().version);
-        FMLCommonHandler.instance().getDataFixer().writeVersionData(columnNbt);
+        columnNbt.setInteger("DataVersion", FMLCommonHandler.instance().getMinecraftServerInstance().getDataFixer().version);
+        //FMLCommonHandler.instance().getMinecraftServerInstance().getDataFixer().writeVersionData(columnNbt);
         writeBaseColumn(column, level);
         writeBiomes(column, level);
         writeOpacityIndex(column, level);
@@ -84,8 +84,8 @@ class IONbtWriter {
         //Added to preserve compatibility with vanilla NBT chunk format.
         NBTTagCompound level = new NBTTagCompound();
         cubeNbt.setTag("Level", level);
-        cubeNbt.setInteger("DataVersion", FMLCommonHandler.instance().getDataFixer().version);
-        FMLCommonHandler.instance().getDataFixer().writeVersionData(cubeNbt);
+        cubeNbt.setInteger("DataVersion", FMLCommonHandler.instance().getMinecraftServerInstance().getDataFixer().version);
+        //FMLCommonHandler.instance().getDataFixer().writeVersionData(cubeNbt);
         writeBaseCube(cube, level);
         writeBlocks(cube, level);
         writeEntities(cube, level);
@@ -149,7 +149,7 @@ class IONbtWriter {
 
         section.setByteArray("BlockLight", ebs.getBlocklightArray().getData());
 
-        if (cube.getCubicWorld().getProvider().hasSkyLight()) {
+        if (!cube.getCubicWorld().getProvider().hasNoSky()) {
             section.setByteArray("SkyLight", ebs.getSkylightArray().getData());
         }
     }

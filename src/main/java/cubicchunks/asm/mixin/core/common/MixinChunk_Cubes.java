@@ -95,8 +95,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
     @Shadow @Final public static ExtendedBlockStorage NULL_BLOCK_STORAGE;
 
     @Shadow private boolean hasEntities;
-    @Shadow @Final public int x;
-    @Shadow @Final public int z;
+    @Shadow @Final public int xPosition;
+    @Shadow @Final public int zPosition;
     @Shadow @Final private ClassInheritanceMultiMap<Entity>[] entityLists;
 
     @Shadow @Final @Mutable private Map<BlockPos, TileEntity> chunkTileEntityMap;
@@ -312,19 +312,6 @@ public abstract class MixinChunk_Cubes implements IColumn {
     }
 
     // ==============================================
-    //            getBlockLightOpacity
-    // ==============================================
-
-    @Redirect(method = "getBlockLightOpacity(III)I", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
-    private boolean getBlockLightOpacity_isChunkLoadedCubeRedirect(Chunk chunk, int x, int y, int z) {
-        if (!isColumn) {
-            return isChunkLoaded;
-        }
-        Cube cube = this.getLoadedCube(blockToCube(y));
-        return cube != null && cube.isCubeLoaded();
-    }
-
-    // ==============================================
     //                 getBlockState
     // ==============================================
 
@@ -358,7 +345,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             } catch (Throwable throwable) {
                 CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Getting block state");
                 CrashReportCategory crashreportcategory = crashreport.makeCategory("Block being got");
-                crashreportcategory.addDetail("Location", () ->
+                crashreportcategory.setDetail("Location", () ->
                         CrashReportCategory.getCoordinateInfo(x, y, z)
                 );
                 throw new ReportedException(crashreport);
@@ -474,9 +461,9 @@ public abstract class MixinChunk_Cubes implements IColumn {
         int i = MathHelper.floor(entityIn.posX / 16.0D);
         int j = MathHelper.floor(entityIn.posZ / 16.0D);
 
-        if (i != this.x || j != this.z) {
+        if (i != this.xPosition || j != this.zPosition) {
             CubicChunks.LOGGER.warn("Wrong location! ({}, {}) should be ({}, {}), {}", new Object[]{Integer.valueOf(i), Integer.valueOf(j), Integer
-                    .valueOf(this.x), Integer.valueOf(this.z), entityIn});
+                    .valueOf(this.xPosition), Integer.valueOf(this.zPosition), entityIn});
             entityIn.setDead();
         }
 
@@ -491,12 +478,12 @@ public abstract class MixinChunk_Cubes implements IColumn {
         }
 
         MinecraftForge.EVENT_BUS
-                .post(new net.minecraftforge.event.entity.EntityEvent.EnteringChunk(entityIn, this.x, this.z, entityIn.chunkCoordX,
+                .post(new net.minecraftforge.event.entity.EntityEvent.EnteringChunk(entityIn, this.xPosition, this.zPosition, entityIn.chunkCoordX,
                         entityIn.chunkCoordZ));
         entityIn.addedToChunk = true;
-        entityIn.chunkCoordX = this.x;
+        entityIn.chunkCoordX = this.xPosition;
         entityIn.chunkCoordY = k;
-        entityIn.chunkCoordZ = this.z;
+        entityIn.chunkCoordZ = this.zPosition;
         
         if (!isColumn) {
             entityLists[k].add(entityIn);
@@ -700,11 +687,11 @@ public abstract class MixinChunk_Cubes implements IColumn {
     }
 
     // ==============================================
-    //               isEmptyBetween
+    //               getAreLevelsEmpty
     // ==============================================
 
     @Overwrite
-    public boolean isEmptyBetween(int startY, int endY) {
+    public boolean getAreLevelsEmpty(int startY, int endY) {
         if (startY < getCubicWorld().getMinHeight()) {
             startY = getCubicWorld().getMinHeight();
         }

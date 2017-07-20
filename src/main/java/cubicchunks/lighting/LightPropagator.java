@@ -160,10 +160,10 @@ class LightPropagator {
         } catch (Throwable t) {
             CrashReport report = CrashReport.makeCrashReport(t, "Updating skylight");
             CrashReportCategory category = report.makeCategory("Skylight update");
-            category.addDetail("CenterLocation", () -> getCoordinateInfo(centerPos));
+            category.setDetail("CenterLocation", () -> getCoordinateInfo(centerPos));
             int i = 0;
             for (BlockPos pos : coords) {
-                category.addDetail("UpdateLocation" + i, () -> getCoordinateInfo(pos));
+                category.setDetail("UpdateLocation" + i, () -> getCoordinateInfo(pos));
                 i++;
             }
             throw new ReportedException(report);

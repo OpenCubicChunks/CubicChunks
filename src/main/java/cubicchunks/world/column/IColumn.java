@@ -295,7 +295,7 @@ public interface IColumn {
      *
      * @return <code>true</code> if there is only air blocks in the checked cubes, <code>false</code> otherwise
      */
-    boolean isEmptyBetween(int minBlockY, int maxBlockY);
+    boolean getAreLevelsEmpty(int minBlockY, int maxBlockY);
 
     /**
      * Returns internal biome ID array
@@ -445,7 +445,7 @@ public interface IColumn {
     /**
      * Returns the column position
      */
-    ChunkPos getPos();
+    ChunkPos getChunkCoordIntPair();
 
     long getInhabitedTime();
 

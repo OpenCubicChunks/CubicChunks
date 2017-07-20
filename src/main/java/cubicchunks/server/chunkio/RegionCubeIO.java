@@ -106,7 +106,7 @@ public class RegionCubeIO implements ICubeIO {
             if (!buf.isPresent()) {
                 return null;
             }
-            nbt = FMLCommonHandler.instance().getDataFixer().process(FixTypes.CHUNK, CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array())));
+            nbt = FMLCommonHandler.instance().getMinecraftServerInstance().getDataFixer().process(FixTypes.CHUNK, CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array())));
         }
         return IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
     }
@@ -123,7 +123,7 @@ public class RegionCubeIO implements ICubeIO {
             if (!buf.isPresent()) {
                 return null;
             }
-            nbt = FMLCommonHandler.instance().getDataFixer().process(FixTypes.CHUNK, CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array())));
+            nbt = FMLCommonHandler.instance().getMinecraftServerInstance().getDataFixer().process(FixTypes.CHUNK, CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array())));
         }
 
         // restore the cube - async part
@@ -146,7 +146,7 @@ public class RegionCubeIO implements ICubeIO {
 
         // add the column to the save queue
         this.columnsToSave
-                .put(column.getPos(), new SaveEntry<>(new EntryLocation2D(column.getX(), column.getZ()), IONbtWriter.write(column)));
+                .put(column.getChunkCoordIntPair(), new SaveEntry<>(new EntryLocation2D(column.getX(), column.getZ()), IONbtWriter.write(column)));
         column.markSaved();
 
         // signal the IO thread to process the save queue

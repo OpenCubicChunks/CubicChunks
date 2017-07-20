@@ -91,7 +91,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
         this.cubeGen = cubeGen;
         this.worldServer = worldServer;
-        this.profiler = ((WorldServer) worldServer).profiler;
+        this.profiler = ((WorldServer) worldServer).theProfiler;
         try {
             this.cubeIO = new RegionCubeIO(worldServer);
         } catch (IOException e) {
@@ -101,13 +101,13 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Override
     @Detainted
-    public void queueUnload(Chunk chunk) {
+    public void unload(Chunk chunk) {
         //ignore, ChunkGc unloads cubes
     }
 
     @Override
     @Detainted
-    public void queueUnloadAll() {
+    public void unloadAllChunks() {
         //ignore, ChunkGc unloads cubes
     }
 
@@ -212,8 +212,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     @Nullable @Override
-    public BlockPos getStrongholdGen(World worldIn, String name, BlockPos pos, boolean flag) {
-        return cubeGen.getClosestStructure(name, pos, flag);
+    public BlockPos getStrongholdGen(World worldIn, String name, BlockPos pos) {
+        return cubeGen.getClosestStructure(name, pos, true);
     }
 
     // getLoadedChunkCount() in ChunkProviderServer is fine - CHECKED: 1.10.2-12.18.1.2092
@@ -572,7 +572,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     boolean tryUnloadCube(Cube cube) {
-        if (ForgeChunkManager.getPersistentChunksFor(world).containsKey(cube.getColumn().getPos())) {
+        if (ForgeChunkManager.getPersistentChunksFor(world).containsKey(cube.getColumn().getChunkCoordIntPair())) {
             return false; // it will be unloaded later by ChunkGC
         }
         if (!cube.getTickets().canUnload()) {
@@ -593,7 +593,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     boolean tryUnloadColumn(IColumn column) {
-        if (ForgeChunkManager.getPersistentChunksFor(world).containsKey(column.getPos())) {
+        if (ForgeChunkManager.getPersistentChunksFor(world).containsKey(column.getChunkCoordIntPair())) {
             return false; // it will be unloaded later by ChunkGC
         }
         if (column.hasLoadedCubes()) {

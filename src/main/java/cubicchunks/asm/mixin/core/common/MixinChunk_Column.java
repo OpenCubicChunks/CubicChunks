@@ -70,21 +70,21 @@ public abstract class MixinChunk_Column implements IColumn {
     private IHeightMap opacityIndex;
     private Cube cachedCube;
 
-    @Shadow @Final public int z;
+    @Shadow @Final public int zPosition;
 
-    @Shadow @Final public int x;
+    @Shadow @Final public int xPosition;
 
     @Shadow @Final private World world;
 
-    @Shadow public boolean unloadQueued;
+    @Shadow public boolean unloaded;
 
     @Override public int getZ() {
-        return this.z;
+        return this.zPosition;
     }
 
 
     @Override public int getX() {
-        return this.x;
+        return this.xPosition;
     }
 
 
@@ -260,7 +260,7 @@ public abstract class MixinChunk_Column implements IColumn {
         if (cachedCube != null && cachedCube.getY() == cubeY) {
             return cachedCube;
         }
-        return getCubicWorld().getCubeCache().getLoadedCube(x, cubeY, z);
+        return getCubicWorld().getCubeCache().getLoadedCube(xPosition, cubeY, zPosition);
     }
 
 
@@ -268,7 +268,7 @@ public abstract class MixinChunk_Column implements IColumn {
         if (cachedCube != null && cachedCube.getY() == cubeY) {
             return cachedCube;
         }
-        return getCubicWorld().getCubeCache().getCube(x, cubeY, z);
+        return getCubicWorld().getCubeCache().getCube(xPosition, cubeY, zPosition);
     }
 
 
@@ -305,7 +305,7 @@ public abstract class MixinChunk_Column implements IColumn {
 
 
     @Override public void markUnloaded(boolean unloaded) {
-        this.unloadQueued = unloaded;
+        this.unloaded = unloaded;
     }
 
 
@@ -316,10 +316,10 @@ public abstract class MixinChunk_Column implements IColumn {
     }
 
 
-    @Shadow public abstract boolean isEmptyBetween(int arg1, int arg2);
+    @Shadow public abstract boolean getAreLevelsEmpty(int arg1, int arg2);
 
-    @Intrinsic public boolean chunk$isEmptyBetween(int arg1, int arg2) {
-        return isEmptyBetween(arg1, arg2);
+    @Intrinsic public boolean chunk$getAreLevelsEmpty(int arg1, int arg2) {
+        return getAreLevelsEmpty(arg1, arg2);
     }
 
 
@@ -378,10 +378,10 @@ public abstract class MixinChunk_Column implements IColumn {
         return getLowestHeight();
     }
 
-    @Shadow public abstract ChunkPos getPos();
+    @Shadow public abstract ChunkPos getChunkCoordIntPair();
 
-    @Intrinsic public ChunkPos chunk$getPos() {
-        return getPos();
+    @Intrinsic public ChunkPos chunk$getChunkCoordIntPair() {
+        return getChunkCoordIntPair();
     }
 
     @Shadow public abstract long getInhabitedTime();

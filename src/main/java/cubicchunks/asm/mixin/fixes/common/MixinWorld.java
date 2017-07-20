@@ -56,8 +56,6 @@ public abstract class MixinWorld implements ICubicWorld {
 
     @Shadow public abstract WorldBorder getWorldBorder();
 
-    @Shadow public abstract boolean func_191503_g(Entity entity);
-
     // note: markAndNotifyBlock has @Nullable on chunk, this will never be null here,
     // because this isgit lo the chunk on which isPopulated is called
     @Redirect(method = "markAndNotifyBlock", at = @At(value = "INVOKE", target = CHUNK_IS_POPULATED))
@@ -71,69 +69,5 @@ public abstract class MixinWorld implements ICubicWorld {
         IColumn IColumn = (IColumn) chunk;
         Cube cube = IColumn.getCube(Coords.blockToCube(pos.getY()));
         return cube.isFullyPopulated();
-    }
-
-    @Overwrite(constraints = "MC_FORGE(20)")
-    private boolean func_191504_a(@Nullable Entity entity, AxisAlignedBB aabb, boolean flagArg, @Nullable List<AxisAlignedBB> aabbList) {
-        int i = MathHelper.floor(aabb.minX) - 1;
-        int j = MathHelper.ceil(aabb.maxX) + 1;
-        int k = MathHelper.floor(aabb.minY) - 1;
-        int l = MathHelper.ceil(aabb.maxY) + 1;
-        int i1 = MathHelper.floor(aabb.minZ) - 1;
-        int j1 = MathHelper.ceil(aabb.maxZ) + 1;
-        WorldBorder worldborder = this.getWorldBorder();
-        boolean flag = entity != null && entity.isOutsideBorder();
-        boolean flag1 = entity != null && this.func_191503_g(entity);
-        IBlockState iblockstate = Blocks.STONE.getDefaultState();
-        BlockPos.PooledMutableBlockPos pos = BlockPos.PooledMutableBlockPos.retain();
-
-        try {
-            for (int k1 = i; k1 < j; ++k1) {
-                for (int l1 = i1; l1 < j1; ++l1) {
-                    boolean flag2 = k1 == i || k1 == j - 1;
-                    boolean flag3 = l1 == i1 || l1 == j1 - 1;
-
-                    // CubicChunks: change isBlockLoaded to isBlockColumnLoaded
-                    if ((!flag2 || !flag3) && this.isBlockColumnLoaded(pos.setPos(k1, 64, l1))) {
-                        for (int i2 = k; i2 < l; ++i2) {
-                            // CubicChunks: add  && isBlockLoaded(pos.setPos(k1, i2, l1))
-                            if ((!flag2 && !flag3 || i2 != l - 1) && isBlockLoaded(pos.setPos(k1, i2, l1))) {
-                                if (flagArg) {
-                                    if (k1 < -30000000 || k1 >= 30000000 || l1 < -30000000 || l1 >= 30000000) {
-                                        boolean lvt_21_1_ = true;
-                                        return lvt_21_1_;
-                                    }
-                                } else if (entity != null && flag == flag1) {
-                                    entity.setOutsideBorder(!flag1);
-                                }
-
-                                pos.setPos(k1, i2, l1);
-                                IBlockState iblockstate1;
-
-                                if (!flagArg && !worldborder.contains(pos) && flag1) {
-                                    iblockstate1 = iblockstate;
-                                } else {
-                                    iblockstate1 = this.getBlockState(pos);
-                                }
-
-                                iblockstate1
-                                        .addCollisionBoxToList((World) (Object) this, pos, aabb, aabbList, entity, false);
-                                net.minecraftforge.common.MinecraftForge.EVENT_BUS
-                                        .post(new net.minecraftforge.event.world.GetCollisionBoxesEvent((World) (Object) this, null, aabb, aabbList));
-
-                                if (flagArg && !aabbList.isEmpty()) {
-                                    boolean flag5 = true;
-                                    return flag5;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } finally {
-            pos.release();
-        }
-
-        return !aabbList.isEmpty();
     }
 }

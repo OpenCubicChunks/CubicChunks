@@ -65,14 +65,14 @@ public class LightingManager {
 
     @Nullable
     public CubeLightUpdateInfo createCubeLightUpdateInfo(Cube cube) {
-        if (!cube.getCubicWorld().getProvider().hasSkyLight()) {
+        if (cube.getCubicWorld().getProvider().hasNoSky()) {
             return null;
         }
         return new CubeLightUpdateInfo(cube);
     }
 
     private void columnSkylightUpdate(UpdateType type, IColumn column, int localX, int minY, int maxY, int localZ) {
-        if (!world.getProvider().hasSkyLight()) {
+        if (world.getProvider().hasNoSky()) {
             return;
         }
         int blockX = Coords.localToBlock(column.getX(), localX);
