@@ -118,7 +118,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         BiomeDecorator dec = biome.getBiome().theBiomeDecorator;
         generateOnTop(world, random, pos, dec.sandPerChunk2, dec.sandGen);
         generateOnTop(world, random, pos, dec.clayPerChunk, dec.clayGen);
-        generateOnTop(world, random, pos, dec.sandPerChunk, dec.gravelGen);
+        generateOnTop(world, random, pos, dec.sandPerChunk, dec.gravelAsSandGen);
 
         int treeCount = random.nextFloat() < dec.extraTreeChance ? dec.treesPerChunk + 1 : dec.treesPerChunk;
         for (int i = 0; i < treeCount; ++i) {

@@ -35,7 +35,6 @@ import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.CustomPopulator;
 import cubicchunks.worldgen.generator.custom.CustomStructureGenerator;
 import cubicchunks.worldgen.generator.custom.CustomTerrainGenerator;
-import cubicchunks.worldgen.gui.CustomCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
@@ -116,18 +115,7 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
     }
 
     public boolean isCustomizable() {
-        return true;
-    }
-
-    @SideOnly(Side.CLIENT)
-    public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
-        if (Loader.isModLoaded("malisiscore")) {
-            new CustomCubicGui(guiCreateWorld).display();
-        } else {
-            mc.displayGuiScreen(new GuiErrorScreen("MalisisCore not found!",
-                    "You need to install MalisisCore version at least " + CubicChunks
-                            .MALISIS_VERSION + " to use world customization"));
-        }
+        return false;
     }
 
     private static class GenLayerDebug extends GenLayer {

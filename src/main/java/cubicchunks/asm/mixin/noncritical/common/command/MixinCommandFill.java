@@ -92,7 +92,8 @@ public class MixinCommandFill {
 
     @Inject(method = "execute", at = @At(value = "INVOKE", target = ICOMMAND_SENDER_GET_ENTITY_WORLD), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void onGetEntityWorld(MinecraftServer server, ICommandSender sender, String[] args, CallbackInfo c,
-            BlockPos blockpos, BlockPos blockpos1, Block block, IBlockState iblockstate, BlockPos minPos, BlockPos maxPos, int i, BlockPos var21) {
+            BlockPos blockpos, BlockPos blockpos1, Block block, int i1, IBlockState iblockstate, BlockPos minPos, BlockPos maxPos,
+            int i, BlockPos var21) {
         minY = minPos.getY();
         maxY = maxPos.getY();
     }
