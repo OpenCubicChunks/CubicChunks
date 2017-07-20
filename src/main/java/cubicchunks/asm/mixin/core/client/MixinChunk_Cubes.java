@@ -75,7 +75,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //                  fillChunk
     // ==============================================
 
-    @Inject(method = "fillChunk", at = @At(value = "HEAD"))
+    @Inject(method = "read", at = @At(value = "HEAD"))
     private void fillChunk_CubicChunks_NotSupported(PacketBuffer buf, int i, boolean flag, CallbackInfo cbi) {
         if (isColumn) {
             throw new UnsupportedOperationException("setting storage arrays it not supported with cubic chunks");

@@ -69,7 +69,7 @@ public class MixinTileEntityEndGateway {
      */
     @Overwrite
     private static Chunk getChunk(World world, Vec3d pos) {
-        Chunk chunk = world.getChunkFromChunkCoords(MathHelper.floor(pos.xCoord / 16.0D), MathHelper.floor(pos.zCoord / 16.0D));
+        Chunk chunk = world.getChunkFromChunkCoords(MathHelper.floor(pos.x / 16.0D), MathHelper.floor(pos.z / 16.0D));
         if (((IColumn) chunk).getCubicWorld().isCubicWorld()) {
             for (int cubeY = 0; cubeY < 16; cubeY++) {
                 ((IColumn) chunk).getCube(cubeY);// load the cube

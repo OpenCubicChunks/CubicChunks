@@ -41,9 +41,9 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.common.registry.IForgeRegistry;
-import net.minecraftforge.fml.common.registry.IForgeRegistryEntry;
-import net.minecraftforge.fml.common.registry.RegistryBuilder;
+import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
+import net.minecraftforge.registries.RegistryBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -237,12 +237,6 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
                 this.registryName = biome.getRegistryName();
             }
             return new CubicBiome(this);
-        }
-
-        public CubicBiome register() {
-            CubicBiome biome = create();
-            GameRegistry.register(biome);
-            return biome;
         }
     }
 }

@@ -45,7 +45,7 @@ public class PlainsDecorator implements ICubicPopulator {
     @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         double randomValue = Biome.GRASS_COLOR_NOISE.getValue((double) (pos.getX() + 8) / 200.0D, (double) (pos.getZ() + 8) / 200.0D);
 
-        BiomeDecorator dec = biome.getBiome().theBiomeDecorator;
+        BiomeDecorator dec = biome.getBiome().decorator;
         if (randomValue < -0.8D) {
             dec.flowersPerChunk = 15;
             dec.grassPerChunk = 5;

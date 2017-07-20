@@ -52,13 +52,15 @@ public abstract class MixinPlayerList implements ICubicPlayerList {
     @Shadow @Final private MinecraftServer mcServer;
     protected int verticalViewDistance = -1;
 
-    @Redirect(method = "playerLoggedOut", at = @At(value = "INVOKE", target = CHUNK_SET_CHUNK_MODIFIED, ordinal = 0), require = 1)
+    @Redirect(method = "playerLoggedOut",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;markDirty()V", ordinal = 0),
+            require = 1)
     private void setChunkModifiedOnPlayerLoggedOut(Chunk chunkIn, EntityPlayerMP playerIn) {
         WorldServer worldserver = playerIn.getServerWorld();
         if (((ICubicWorld) worldserver).isCubicWorld()) {
             ((ICubicWorld) worldserver).getCubeFromCubeCoords(playerIn.chunkCoordX, playerIn.chunkCoordY, playerIn.chunkCoordZ).markDirty();
         } else {
-            worldserver.getChunkFromChunkCoords(playerIn.chunkCoordX, playerIn.chunkCoordZ).setChunkModified();
+            worldserver.getChunkFromChunkCoords(playerIn.chunkCoordX, playerIn.chunkCoordZ).markDirty();
         }
     }
 

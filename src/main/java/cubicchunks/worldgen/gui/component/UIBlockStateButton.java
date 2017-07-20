@@ -108,7 +108,7 @@ public class UIBlockStateButton extends UIComponent<UIBlockStateButton> {
                 TileEntity te = iBlockState.getBlock().createTileEntity(null, iBlockState);
                 if (te != null) {
                     TileEntitySpecialRenderer<TileEntity> tileentityspecialrenderer =
-                            TileEntityRendererDispatcher.instance.<TileEntity>getSpecialRenderer(te);
+                            TileEntityRendererDispatcher.instance.<TileEntity>getRenderer(te);
                     if (tileentityspecialrenderer != null) {
                         TileEntityItemStackRenderer.instance.renderByItem(new ItemStack(iBlockState.getBlock()));
                     }

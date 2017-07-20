@@ -23,7 +23,6 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.CubicChunks;
 import cubicchunks.entity.CubicEntityTracker;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ChunkGc;
@@ -41,14 +40,10 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeProvider;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -59,9 +54,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.List;
-import java.util.Random;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -77,7 +69,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Shadow @Mutable @Final private PlayerChunkMap playerChunkMap;
     @Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
-    @Shadow @Mutable @Final private EntityTracker theEntityTracker;
+    @Shadow @Mutable @Final private EntityTracker entityTracker;
     @Shadow public boolean disableLevelSaving;
 
     @Nullable private ChunkGc chunkGc;
@@ -97,7 +89,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.saveHandler = new CubicSaveHandler(this, this.getSaveHandler());
 
         this.firstLightProcessor = new FirstLightProcessor(this);
-        this.theEntityTracker = new CubicEntityTracker(this);
+        this.entityTracker = new CubicEntityTracker(this);
     }
 
     @Override public void tickCubicWorld() {
@@ -112,8 +104,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         if (!this.isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
-        assert this.theEntityTracker instanceof CubicEntityTracker;
-        return (CubicEntityTracker) this.theEntityTracker;
+        assert this.entityTracker instanceof CubicEntityTracker;
+        return (CubicEntityTracker) this.entityTracker;
     }
 
     @Override public CubeProviderServer getCubeCache() {

@@ -56,7 +56,7 @@ public abstract class MixinWorld implements ICubicWorld {
 
     @Shadow public abstract WorldBorder getWorldBorder();
 
-    @Shadow public abstract boolean func_191503_g(Entity entity);
+    @Shadow public abstract boolean isInsideWorldBorder(Entity entity);
 
     // note: markAndNotifyBlock has @Nullable on chunk, this will never be null here,
     // because this isgit lo the chunk on which isPopulated is called
@@ -74,7 +74,7 @@ public abstract class MixinWorld implements ICubicWorld {
     }
 
     @Overwrite(constraints = "MC_FORGE(21)") // TODO: make sure it is still correct
-    private boolean func_191504_a(@Nullable Entity entity, AxisAlignedBB aabb, boolean flagArg, @Nullable List<AxisAlignedBB> aabbList) {
+    private boolean getCollisionBoxes(@Nullable Entity entity, AxisAlignedBB aabb, boolean flagArg, @Nullable List<AxisAlignedBB> aabbList) {
         int i = MathHelper.floor(aabb.minX) - 1;
         int j = MathHelper.ceil(aabb.maxX) + 1;
         int k = MathHelper.floor(aabb.minY) - 1;
@@ -83,7 +83,7 @@ public abstract class MixinWorld implements ICubicWorld {
         int j1 = MathHelper.ceil(aabb.maxZ) + 1;
         WorldBorder worldborder = this.getWorldBorder();
         boolean flag = entity != null && entity.isOutsideBorder();
-        boolean flag1 = entity != null && this.func_191503_g(entity);
+        boolean flag1 = entity != null && this.isInsideWorldBorder(entity);
         IBlockState iblockstate = Blocks.STONE.getDefaultState();
         BlockPos.PooledMutableBlockPos pos = BlockPos.PooledMutableBlockPos.retain();
 

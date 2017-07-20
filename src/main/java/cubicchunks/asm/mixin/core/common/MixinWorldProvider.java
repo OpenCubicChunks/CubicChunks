@@ -52,7 +52,7 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
 
     @Shadow protected World world;
 
-    @Shadow protected boolean hasNoSky;
+    @Shadow protected boolean nether;
 
     @Shadow public abstract int getDimension();
 
@@ -76,7 +76,7 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
     // @Overwrite() - overwrite doesn't support unobfuscated methods
     public int getActualHeight() {
         // only give the real value for overworld, mods may use it scan height start in their teleporter code
-        return hasNoSky ? 128 : getDimension() == 0 ? getHeight() : 256;
+        return nether ? 128 : getDimension() == 0 ? getHeight() : 256;
     }
 
     @Nullable @Override public ICubeGenerator createCubeGenerator() {

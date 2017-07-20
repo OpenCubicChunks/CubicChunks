@@ -104,7 +104,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         }
         isInit = true;
         // heuristics TODO: add a config that overrides this
-        lastChunk = vanilla.provideChunk(0, 0); // lets scan the chunk at 0, 0
+        lastChunk = vanilla.generateChunk(0, 0); // lets scan the chunk at 0, 0
 
         worldHeightBlocks = 128; //TODO: figure something out to not assume 128
         worldHeightCubes = worldHeightBlocks / Cube.SIZE;
@@ -213,7 +213,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         } else {
             // Make vanilla generate a chunk for us to copy
             if (lastChunk.x != cubeX || lastChunk.z != cubeZ) {
-                lastChunk = vanilla.provideChunk(cubeX, cubeZ);
+                lastChunk = vanilla.generateChunk(cubeX, cubeZ);
             }
 
             if (!optimizationHack) {
@@ -299,7 +299,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
     @Override
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
-        return vanilla.getStrongholdGen((World) world, name, pos, flag);
+        return vanilla.getNearestStructurePos((World) world, name, pos, flag);
     }
 
 }

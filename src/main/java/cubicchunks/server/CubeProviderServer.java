@@ -212,7 +212,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     @Nullable @Override
-    public BlockPos getStrongholdGen(World worldIn, String name, BlockPos pos, boolean flag) {
+    public BlockPos getNearestStructurePos(World worldIn, String name, BlockPos pos, boolean flag) {
         return cubeGen.getClosestStructure(name, pos, flag);
     }
 
@@ -224,7 +224,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     @Override // TODO: What it does? implement it
-    public boolean func_193413_a(World p_193413_1_, String p_193413_2_, BlockPos p_193413_3_) {
+    public boolean isInsideStructure(World p_193413_1_, String p_193413_2_, BlockPos p_193413_3_) {
         return false;
     }
 
@@ -522,7 +522,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         if (column != null) {
             id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
             column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just loaded
-            column.onChunkLoad();
+            column.onLoad();
             return column;
         } else if (req == Requirement.LOAD) {
             return null;
@@ -533,7 +533,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
         id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
         column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just generated
-        column.onChunkLoad();
+        column.onLoad();
         return column;
     }
 
@@ -613,7 +613,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         column.markUnloaded(true); // flag as unloaded (idk, maybe vanilla uses this somewhere)
 
         // unload the Column!
-        column.onChunkUnload();
+        column.onUnload();
 
         if (column.needsSaving(true)) { // save the Column, if it needs saving
             this.cubeIO.saveColumn(column);

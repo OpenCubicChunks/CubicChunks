@@ -49,7 +49,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(ChunkCache.class)
 public class MixinChunkCache_HeightLimits {
 
-    @Shadow protected World world;
+    @Shadow public World world;
 
     /**
      * Redirect to modify vanilla height check.

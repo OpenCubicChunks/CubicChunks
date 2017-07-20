@@ -115,7 +115,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
 
         // TODO: Biome decoration events?
-        BiomeDecorator dec = biome.getBiome().theBiomeDecorator;
+        BiomeDecorator dec = biome.getBiome().decorator;
         generateOnTop(world, random, pos, dec.sandPatchesPerChunk, dec.sandGen);
         generateOnTop(world, random, pos, dec.clayPerChunk, dec.clayGen);
         generateOnTop(world, random, pos, dec.gravelPatchesPerChunk, dec.gravelGen);
@@ -154,8 +154,8 @@ public final class DefaultDecorator implements ICubicPopulator {
             BlockFlower flowerBlock = type.getBlockType().getBlock();
 
             if (flowerBlock.getDefaultState().getMaterial() != Material.AIR) {
-                dec.yellowFlowerGen.setGeneratedBlock(flowerBlock, type);
-                dec.yellowFlowerGen.generate((World) world, random, blockPos);
+                dec.flowerGen.setGeneratedBlock(flowerBlock, type);
+                dec.flowerGen.generate((World) world, random, blockPos);
             }
         }
 
@@ -275,7 +275,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         }
 
 
-        if (dec.generateLakes) {
+        if (dec.generateFalls) {
             for (int i = 0; i < 50; ++i) {
                 int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
                 double prob = waterSourceProbabilityForY(cfg, pos.getMinBlockY() + yOffset);

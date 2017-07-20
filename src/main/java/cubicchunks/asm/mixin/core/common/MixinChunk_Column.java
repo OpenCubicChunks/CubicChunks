@@ -172,17 +172,17 @@ public abstract class MixinChunk_Column implements IColumn {
     }
 
 
-    @Shadow public abstract void onChunkLoad();
+    @Shadow public abstract void onLoad();
 
-    @Intrinsic public void chunk$onChunkLoad() {
-        onChunkLoad();
+    @Intrinsic public void chunk$onLoad() {
+        onLoad();
     }
 
 
-    @Shadow public abstract void onChunkUnload();
+    @Shadow public abstract void onUnload();
 
-    @Intrinsic public void chunk$onChunkUnload() {
-        onChunkUnload();
+    @Intrinsic public void chunk$onUnload() {
+        onUnload();
     }
 
 
@@ -193,10 +193,10 @@ public abstract class MixinChunk_Column implements IColumn {
     }
 
 
-    @Shadow public abstract void getEntitiesOfTypeWithinAAAB(Class arg1, AxisAlignedBB arg2, List arg3, Predicate arg4);
+    @Shadow public abstract void getEntitiesOfTypeWithinAABB(Class arg1, AxisAlignedBB arg2, List arg3, Predicate arg4);
 
-    @Intrinsic public void chunk$getEntitiesOfTypeWithinAAAB(Class arg1, AxisAlignedBB arg2, List arg3, Predicate arg4) {
-        getEntitiesOfTypeWithinAAAB(arg1, arg2, arg3, arg4);
+    @Intrinsic public void chunk$getEntitiesOfTypeWithinAABB(Class arg1, AxisAlignedBB arg2, List arg3, Predicate arg4) {
+        getEntitiesOfTypeWithinAABB(arg1, arg2, arg3, arg4);
     }
 
 

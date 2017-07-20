@@ -88,7 +88,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
         // fire a forge event... make mods happy :)
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(column));
 
-        column.setChunkLoaded(true);
+        column.markLoaded(true);
         return column;
     }
 
