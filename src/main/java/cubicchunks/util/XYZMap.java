@@ -323,19 +323,20 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      */
     private void grow() {
         int newLength = this.buckets.length * 2;
-        this.mask = newLength - 1;
+        int newMask = newLength - 1;
         XYZAddressable[] newBuckets = new XYZAddressable[newLength];
         int[] newPointers = new int[newLength];
         for (int i = 1; i <= size; i++) {
             XYZAddressable bucket = buckets[i];
             newBuckets[i] = bucket;
-            int pointerIndex = this.getPointerIndex(bucket.getX(), bucket.getY(), bucket.getZ());
+            int pointerIndex = hash(bucket.getX(), bucket.getY(), bucket.getZ()) & newMask;
             while (newPointers[pointerIndex] != 0)
-                pointerIndex = this.getNextPointerIndex(pointerIndex);
+                pointerIndex = ++pointerIndex & newMask;
             newPointers[pointerIndex] = i;
         }
         buckets = newBuckets;
         pointers = newPointers;
+        mask=newMask;
         loadThreshold = (int) (newLength * this.loadFactor) - 2;
     }
 
