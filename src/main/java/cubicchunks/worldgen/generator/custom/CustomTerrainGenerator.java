@@ -123,7 +123,7 @@ public class CustomTerrainGenerator {
                 .add(conf.heightVariationOffset);
 
         this.terrainBuilder = selector
-                .lerp(low, high).mul(volatility).add(height).add(randomHeight2d)
+                .lerp(low, high).add(randomHeight2d).mul(volatility).add(height)
                 .sub((x, y, z) -> y)
                 .cached(CACHE_SIZE_3D, HASH_3D);
     }

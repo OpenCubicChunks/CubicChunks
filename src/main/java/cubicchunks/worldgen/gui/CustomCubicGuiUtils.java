@@ -47,20 +47,24 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.DoubleUnaryOperator;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.DoubleSupplier;
+
+import javax.annotation.Nonnull;
 
 public class CustomCubicGuiUtils {
 
     public static UISlider<Float> makeFloatSlider(MalisisGui gui, String name, float min, float max, float defaultVal) {
 
         UISlider<Float>[] wrappedSlider = new UISlider[1];
-        DoubleUnaryOperator roundRadiusFunc = d -> 1.0 / (wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth()) * 0.5;
+        BiPredicate<Double, Double> isInRoundRadius = getIsInRoundRadiusPredicate(wrappedSlider);
 
         float defMult = defaultVal == 0 ? 1 : defaultVal;
 
         Converter<Float, Float> conv = Converters.builder()
                 .linearScale(min, max).rounding().withBase(2, 1).withBase(10, 1).withBase(2, defMult).withBase(10, defMult).withMaxExp(128)
-                .withRoundingRadius(roundRadiusFunc)
+                .withRoundingRadiusPredicate(isInRoundRadius)
                 .build();
 
         UISlider<Float> slider = new UISliderNoScroll<>(gui, 100, conv, name).setValue(defaultVal);
@@ -71,14 +75,14 @@ public class CustomCubicGuiUtils {
             float defaultVal) {
 
         UISlider<Float>[] wrappedSlider = new UISlider[1];
-        DoubleUnaryOperator roundRadiusFunc = d -> 1.0 / (wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth()) * 0.5;
+        BiPredicate<Double, Double> isInRoundRadius = getIsInRoundRadiusPredicate(wrappedSlider);
 
         float defMult = defaultVal == 0 ? 1 : defaultVal;
 
         Converter<Float, Float> conv = Converters.builder()
                 .exponential().withZero().withBaseValue(2).withNegativeExponentRange(minNeg, maxNeg).withPositiveExponentRange(minPos, maxPos)
                 .rounding().withBase(2, 1).withBase(10, 1).withBase(2, defMult).withBase(10, defMult).withMaxExp(128)
-                .withRoundingRadius(roundRadiusFunc)
+                .withRoundingRadiusPredicate(isInRoundRadius)
                 .build();
 
         UISlider<Float> slider = new UISliderNoScroll<>(gui, 100, conv, name).setValue(defaultVal);
@@ -86,11 +90,30 @@ public class CustomCubicGuiUtils {
         return slider;
     }
 
+    @Nonnull private static BiPredicate<Double, Double> getIsInRoundRadiusPredicate(UISlider<Float>[] floatUISlider) {
+        return getIsInRoundRadiusPredicate(() -> floatUISlider[0] == null ? 1000 : floatUISlider[0].getWidth());
+    }
+
+    @Nonnull private static BiPredicate<Double, Double> getIsInRoundRadiusPredicate(UIRangeSlider<Float>[] floatUISlider) {
+        return getIsInRoundRadiusPredicate(() -> floatUISlider[0] == null ? 1000 : floatUISlider[0].getWidth());
+    }
+
+    @Nonnull private static BiPredicate<Double, Double> getIsInRoundRadiusPredicate(DoubleSupplier width) {
+        return (previousSlide, foundSlide) -> {
+            double w = width.getAsDouble();
+            double rangeCenter = Math.round(previousSlide * w) / w;
+            double minRange = rangeCenter - 0.5 / w;
+            double maxRange = rangeCenter + 0.5 / w;
+
+            return foundSlide >= minRange && foundSlide <= maxRange;
+        };
+    }
+
     public static UISlider<Float> makeInvertedExponentialSlider(MalisisGui gui, String name, float minNeg, float maxNeg, float minPos, float maxPos,
             float defaultVal) {
 
         UISlider<Float>[] wrappedSlider = new UISlider[1];
-        DoubleUnaryOperator roundRadiusFunc = d -> 1.0 / (wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth()) * 0.5;
+        BiPredicate<Double, Double> isInRoundRadius = getIsInRoundRadiusPredicate(wrappedSlider);
 
         float defMult = defaultVal == 0 ? 1 : defaultVal;
 
@@ -100,7 +123,7 @@ public class CustomCubicGuiUtils {
                 .exponential().withZero().withBaseValue(2).withNegativeExponentRange(minNeg, maxNeg).withPositiveExponentRange(minPos, maxPos)
                 .inverse()
                 .rounding().withBase(2, 1).withBase(10, 1).withBase(2, defMult).withBase(10, defMult).withMaxExp(128)
-                .withRoundingRadius(roundRadiusFunc)
+                .withRoundingRadiusPredicate(isInRoundRadius)
                 .build();
 
         UISlider<Float> slider = new UISliderNoScroll<>(gui, 100, conv, name).setValue(defaultVal);
@@ -143,12 +166,12 @@ public class CustomCubicGuiUtils {
 
     public static UIRangeSlider<Float> makeRangeSlider(ExtraGui gui, String name, float min, float max, float defaultMin, float defaultMax) {
         UIRangeSlider<Float>[] wrappedSlider = new UIRangeSlider[1];
-        DoubleUnaryOperator roundRadiusFunc = d -> 1.0 / (wrappedSlider[0] == null ? 1000 : wrappedSlider[0].getWidth()) * 0.5;
+        BiPredicate<Double, Double> isInRoundRadius = getIsInRoundRadiusPredicate(wrappedSlider);
         float maxExp = MathHelper.ceil(Math.log(Math.max(1, max)) / Math.log(2));
 
         Converter<Float, Float> conv = Converters.builder()
                 .linearScale(min, max)
-                .rounding().withBase(2, 1).withBase(10, 1).withMaxExp(maxExp).withRoundingRadius(roundRadiusFunc)
+                .rounding().withBase(2, 1).withBase(10, 1).withMaxExp(maxExp).withRoundingRadiusPredicate(isInRoundRadius)
                 .withInfinity().negativeAt(min).positiveAt(max)
                 .build();
 
