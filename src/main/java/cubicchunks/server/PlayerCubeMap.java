@@ -746,4 +746,14 @@ public class PlayerCubeMap extends PlayerChunkMap {
             return distanceSquared > 0.9;//0.9 instead of 1 because floating-point numbers may be weird
         }
     }
+
+    /**
+     * Return iterator over 'CubeWatchers' of all cubes loaded
+     * by players. Iterator first element defined by seed.
+     * 
+     * @param seed
+     */
+    public Iterator<CubeWatcher> getRandomWrappedCubeWatcherIterator(int seed) {
+        return this.cubeWatchers.randomWrappedIterator(seed);
+    }
 }

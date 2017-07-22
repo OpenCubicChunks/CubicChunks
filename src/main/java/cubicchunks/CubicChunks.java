@@ -323,6 +323,11 @@ public class CubicChunks {
         public static enum BoolOptions {
             // We need USE_FAST_COLLISION_CHECK here because if we save 
             // config within mixin configuration plugin all description lines will be stripped.
+            USE_FAST_ENTITY_SPAWNER(false, 
+                    "Enabling this option allow using fast entity spawner instead of vanilla-alike."
+                            + " Fast entity spawner can reduce server lag."
+                            + " In contrary entity respawn speed will be slightly slower (only one pack per tick)"
+                            + " and amount of spawned mob will depend only from amount of players."),
             USE_FAST_COLLISION_CHECK(true, 
                     "Enabling this option allow using fast collision check."
                             + " Fast collision check can reduce server lag."
@@ -397,6 +402,10 @@ public class CubicChunks {
 
         public int getChunkGCInterval() {
             return IntOptions.CHUNK_G_C_INTERVAL.value;
+        }
+        
+        public boolean useFastEntitySpawner() {
+            return BoolOptions.USE_FAST_ENTITY_SPAWNER.value;
         }
 
         public static class GUI extends GuiConfig {
