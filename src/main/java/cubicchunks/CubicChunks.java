@@ -321,6 +321,12 @@ public class CubicChunks {
         }
         
         public static enum BoolOptions {
+            // We need USE_FAST_COLLISION_CHECK here because if we save 
+            // config within mixin configuration plugin all description lines will be stripped.
+            USE_FAST_COLLISION_CHECK(true, 
+                    "Enabling this option allow using fast collision check."
+                            + " Fast collision check can reduce server lag."
+                            + " You need to restart Minecraft to apply changes."),
             USE_VANILLA_CHUNK_WORLD_GENERATORS(false,
                     "Enabling this option will force " + CubicChunks.MODID
                             + " to use world generators designed for two dimensional chunks, which are often used for custom ore generators added by mods. To do so "
