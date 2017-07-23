@@ -23,17 +23,16 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-
-import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Slice;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -44,23 +43,27 @@ public abstract class MixinChunkCache_HeightLimits {
 
     @Shadow protected World world;
 
-    /**
-     * Redirect to modify vanilla height check.
-     *
-     * @see MixinUtils#getReplacementY(cubicchunks.world.ICubicWorld, BlockPos)
-     */
-    @Redirect(method = "getLightFor", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
-    private int getLightForGetYReplace(BlockPos pos) {
-        return MixinUtils.getReplacementY(world, pos);
+    @ModifyConstant(method = "getLightFor",
+            constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
+    private int getLightFor_getMinHeight(int orig) {
+        return ((ICubicWorld) world).getMinHeight();
     }
 
-    /**
-     * Redirect to modify vanilla height check.
-     *
-     * @see MixinUtils#getReplacementY(cubicchunks.world.ICubicWorld, BlockPos)
-     */
-    @Redirect(method = "getLightForExt", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
-    private int getLightForExtGetYReplace(BlockPos pos) {
-        return MixinUtils.getReplacementY(world, pos);
+    @ModifyConstant(method = "getLightFor", constant = @Constant(intValue = 256))
+    private int getLightFor_getMaxHeight(int orig) {
+        return ((ICubicWorld) world).getMaxHeight();
+    }
+
+    @ModifyConstant(method = "getLightForExt",
+            constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO),
+            slice = @Slice(from = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/util/math/BlockPos;getY()I"))
+    )
+    private int getLightForExt_getMinHeight(int orig) {
+        return ((ICubicWorld) world).getMinHeight();
+    }
+
+    @ModifyConstant(method = "getLightForExt", constant = @Constant(intValue = 256))
+    private int getLightForExt_getMaxHeight(int orig) {
+        return ((ICubicWorld) world).getMaxHeight();
     }
 }

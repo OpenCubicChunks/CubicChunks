@@ -26,6 +26,7 @@ package cubicchunks.asm.mixin.noncritical.common.command;
 import static cubicchunks.asm.JvmNames.STRUCTURE_BOUNDING_BOX;
 
 import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.command.CommandClone;
 import net.minecraft.command.ICommandSender;
@@ -33,7 +34,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Group;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -42,23 +47,27 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(CommandClone.class)
 public class MixinCommandClone {
 
-    @Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "minY:I", ordinal = 0))
-    private int getMinY1(StructureBoundingBox sbb, MinecraftServer server, ICommandSender sender, String[] args) {
-        return MixinUtils.getReplacementY(sender.getEntityWorld(), sbb.minY);
+    @Group(name = "commandFill_getMinY", min = 2, max = 2)
+    @ModifyConstant(
+            method = "execute",
+            constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO),
+            slice = @Slice(
+                    from = @At(value = "FIELD", target = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;minY:I"),
+                    to = @At(value = "INVOKE", target = "Lnet/minecraft/command/ICommandSender;getEntityWorld()Lnet/minecraft/world/World;")
+            ))
+    private int commandFill_getMinY(int orig, MinecraftServer server, ICommandSender sender, String[] args) {
+        return ((ICubicWorld) sender.getEntityWorld()).getMinHeight();
     }
 
-    @Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "minY:I", ordinal = 1))
-    private int getMinY2(StructureBoundingBox sbb, MinecraftServer server, ICommandSender sender, String[] args) {
-        return MixinUtils.getReplacementY(sender.getEntityWorld(), sbb.minY);
-    }
-
-    @Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "maxY:I", ordinal = 0))
-    private int getMaxY1(StructureBoundingBox sbb, MinecraftServer server, ICommandSender sender, String[] args) {
-        return MixinUtils.getReplacementY(sender.getEntityWorld(), sbb.maxY);
-    }
-
-    @Redirect(method = "execute", at = @At(value = "FIELD", target = STRUCTURE_BOUNDING_BOX + "maxY:I", ordinal = 1))
-    private int getMaxY2(StructureBoundingBox sbb, MinecraftServer server, ICommandSender sender, String[] args) {
-        return MixinUtils.getReplacementY(sender.getEntityWorld(), sbb.maxY);
+    @Group(name = "commandFill_getMaxY", min = 2, max = 2)
+    @ModifyConstant(
+            method = "execute",
+            constant = @Constant(intValue = 256),
+            slice = @Slice(
+                    from = @At(value = "FIELD", target = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;minY:I"),
+                    to = @At(value = "INVOKE", target = "Lnet/minecraft/command/ICommandSender;getEntityWorld()Lnet/minecraft/world/World;")
+            ))
+    private int commandFill_getMaxY(int orig, MinecraftServer server, ICommandSender sender, String[] args) {
+        return ((ICubicWorld) sender.getEntityWorld()).getMaxHeight();
     }
 }
