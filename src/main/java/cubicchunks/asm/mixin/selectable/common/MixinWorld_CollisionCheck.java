@@ -77,7 +77,7 @@ public abstract class MixinWorld_CollisionCheck implements ICubicWorld {
                         int maxBlockY = coords.getMaxBlockY();
                         int maxBlockZ = coords.getMaxBlockZ();
                         Cube loadedCube = this.getCubeCache().getLoadedCube(coords);
-                        if (loadedCube != null) {
+                        if (loadedCube != null && loadedCube.getStorage() != null) {
                             minBlockX = minBlockX > x1 ? minBlockX : x1;
                             minBlockY = minBlockY > y1 ? minBlockY : y1;
                             minBlockZ = minBlockZ > z1 ? minBlockZ : z1;
