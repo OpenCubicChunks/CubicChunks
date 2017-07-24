@@ -10,8 +10,7 @@
         "common.command.MixinCommandTP",
         "common.command.MixinCommandBase",
         "common.command.MixinCommandFill",
-        "common.command.MixinCommandClone",
-        "common.command.MixinCommandCompare",
+        "common.command.MixinCommandsHeightLimits",
         "common.MixinBlockPistonBase_HeightFix"
     ],
     "client": [
@@ -21,9 +20,6 @@
     ],
     "server": [
     ],
-    "injectors": {
-        "defaultRequire": 1
-    },
     "overwrites": {
         "conformVisibility": true
     }
