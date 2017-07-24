@@ -32,6 +32,7 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
 import cubicchunks.util.XZMap;
@@ -70,7 +71,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PlayerCubeMap extends PlayerChunkMap {
+public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHeightChangeListener {
 
     private static final Predicate<EntityPlayerMP> NOT_SPECTATOR = player -> player != null && !player.isSpectator();
     private static final Predicate<EntityPlayerMP> CAN_GENERATE_CHUNKS = player -> player != null &&
@@ -125,6 +126,11 @@ public class PlayerCubeMap extends PlayerChunkMap {
     private final Set<CubeWatcher> cubeWatchersToUpdate = new HashSet<>();
 
     /**
+     * All columnWatchers that have pending height updates to send.
+     */
+    private final Set<ColumnWatcher> columnWatchersToUpdate = new HashSet<>();
+
+    /**
      * Contains all CubeWatchers that need to be sent to clients,
      * but these cubes are not fully loaded/generated yet.
      * <p>
@@ -176,6 +182,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
         this.cubeCache = getWorld().getCubeCache();
         this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(),
                 ((ICubicPlayerList) worldServer.getMinecraftServer().getPlayerList()).getVerticalViewDistance());
+        worldServer.getLightingManager().registerHeightChangeListener(this);
     }
 
     /**
@@ -225,6 +232,9 @@ public class PlayerCubeMap extends PlayerChunkMap {
         //process instances to update
         this.cubeWatchersToUpdate.forEach(CubeWatcher::update);
         this.cubeWatchersToUpdate.clear();
+
+        this.columnWatchersToUpdate.forEach(ColumnWatcher::update);
+        this.columnWatchersToUpdate.clear();
 
         getWorld().getProfiler().endStartSection("sortToGenerate");
         //sort toLoadPending if needed, but at most every 4 ticks
@@ -416,6 +426,16 @@ public class PlayerCubeMap extends PlayerChunkMap {
             int localY = blockToLocal(pos.getY());
             int localZ = blockToLocal(pos.getZ());
             cubeWatcher.blockChanged(localX, localY, localZ);
+        }
+    }
+
+    @Override
+    public void heightUpdated(int blockX, int blockZ) {
+        ColumnWatcher columnWatcher = this.columnWatchers.get(blockToCube(blockX), blockToCube(blockZ));
+        if (columnWatcher != null) {
+            int localX = blockToLocal(blockX);
+            int localZ = blockToLocal(blockZ);
+            columnWatcher.heightChanged(localX, localZ);
         }
     }
 
@@ -663,6 +683,10 @@ public class PlayerCubeMap extends PlayerChunkMap {
 
     void addToUpdateEntry(CubeWatcher cubeWatcher) {
         this.cubeWatchersToUpdate.add(cubeWatcher);
+    }
+
+    void addToUpdateEntry(ColumnWatcher columnWatcher) {
+        this.columnWatchersToUpdate.add(columnWatcher);
     }
 
     // CHECKED: 1.10.2-12.18.1.2092

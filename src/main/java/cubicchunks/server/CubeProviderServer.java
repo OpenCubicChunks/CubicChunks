@@ -191,10 +191,10 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     public boolean tick() {
         // NOTE: the return value is completely ignored
         profiler.startSection("providerTick("+cubeMap.getSize()+")");
-        long time = this.world.getTotalWorldTime();
+        long i = System.currentTimeMillis();
         Random rand = this.world.rand;
         for (Cube cube : cubeMap) {
-            cube.tickCubeServer(time, this.world, rand);
+            cube.tickCubeServer(() -> System.currentTimeMillis() - i > 40, rand);
         }
         profiler.endSection();
         return false;
