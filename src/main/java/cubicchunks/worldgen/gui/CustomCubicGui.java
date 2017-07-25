@@ -28,6 +28,7 @@ import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonSyntaxException;
+import com.sun.org.apache.xpath.internal.operations.Number;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.component.NoTranslationFont;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
@@ -164,7 +165,7 @@ public class CustomCubicGui extends ExtraGui {
                                     CustomGeneratorSettings settings = CustomGeneratorSettings.fromJson(text.getText());
                                     CustomCubicGui.this.reinit(settings);
                                     mc.displayGuiScreen(CustomCubicGui.this);
-                                } catch (JsonSyntaxException ex) {
+                                } catch (JsonSyntaxException | NumberFormatException ex) {
                                     done.setFontOptions(FontOptions.builder().color(0x00FF2222).build());
                                 }
                             }
