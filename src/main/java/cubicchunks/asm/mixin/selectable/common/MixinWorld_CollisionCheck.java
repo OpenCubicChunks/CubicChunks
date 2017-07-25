@@ -46,9 +46,6 @@ import net.minecraft.world.World;
 @Mixin(value = World.class, priority = 1001)
 public abstract class MixinWorld_CollisionCheck implements ICubicWorld {
 
-    @Shadow
-    public abstract boolean func_191503_g(Entity entity);
-
     @Inject(method = "func_191504_a", at = @At("HEAD"), cancellable = true)
     private void addBlocksCollisionBoundingBoxesToList(@Nullable Entity entity, AxisAlignedBB aabb, boolean breakOnWorldBorder,
             @Nullable List<AxisAlignedBB> aabbList, CallbackInfoReturnable<Boolean> ci) {
@@ -94,10 +91,6 @@ public abstract class MixinWorld_CollisionCheck implements ICubicWorld {
                                                 .post(new net.minecraftforge.event.world.GetCollisionBoxesEvent((World) (Object) this, null, aabb,
                                                         aabbList));
                                     }
-                        } else {
-                            AxisAlignedBB unloadedCubeAABB = new AxisAlignedBB(minBlockX, minBlockY, minBlockZ, maxBlockX, maxBlockY, maxBlockZ);
-                            if (unloadedCubeAABB.intersectsWith(aabb))
-                                aabbList.add(unloadedCubeAABB);
                         }
                     }
             pooledmutableblockpos.release();
