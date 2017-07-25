@@ -509,7 +509,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         PlayerWrapper playerWrapper = this.players.get(player.getEntityId());
 
         if (playerWrapper == null) {
-            CubicChunks.bigWarning("PlayerCubeMap#updateMovingPlayer got called when there is no player in this world! Things may break!");
+            // vanilla sometimes does it, this is normal
             return;
         }
         // did the player move into new cube?
