@@ -27,17 +27,21 @@ import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
 import com.google.common.eventbus.Subscribe;
+import com.google.gson.JsonSyntaxException;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.gui.component.NoTranslationFont;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
 import cubicchunks.worldgen.gui.component.UIColoredPanel;
 import cubicchunks.worldgen.gui.component.UIMultilineLabel;
 import cubicchunks.worldgen.gui.component.UITabbedContainer;
+import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
 import mcp.MethodsReturnNonnullByDefault;
 import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.interaction.UIButton;
+import net.malisis.core.client.gui.component.interaction.UITextField;
 import net.malisis.core.renderer.font.FontOptions;
 import net.minecraft.client.gui.GuiCreateWorld;
 
@@ -76,6 +80,12 @@ public class CustomCubicGui extends ExtraGui {
     @Override
     public void construct() {
         CustomGeneratorSettings conf = CustomGeneratorSettings.fromJson(parent.chunkProviderSettingsJson);
+        reinit(conf);
+    }
+
+    public void reinit(CustomGeneratorSettings conf) {
+        clearScreen();
+
         this.basicSettings = new BasicSettingsTab(this, conf);
         this.oreSettings = new OreSettingsTab(this, conf);
         this.advancedterrainShapeSettings = new AdvancedTerrainShapeTab(this, conf);
@@ -114,19 +124,73 @@ public class CustomCubicGui extends ExtraGui {
                 .add(label, UIBorderLayout.Border.CENTER)
                 .init();
 
-        UIButton done = new UIButton(this, malisisText("done")).setSize(BTN_WIDTH, 20);
-
+        UIButton done = new UIButton(this, malisisText("done")).setAutoSize(false).setSize(BTN_WIDTH, 20);
         done.register(new Object() {
             @Subscribe
             public void onClick(UIButton.ClickEvent evt) {
                 CustomCubicGui.this.done();
             }
         });
+        done.setPosition(0, 0);
+
+        UIButton sharePreset = new UIButton(this, malisisText("presets")).setAutoSize(false).setSize(BTN_WIDTH, 20);
+        sharePreset.register(new Object() {
+            @Subscribe
+            public void onClick(UIButton.ClickEvent evt) {
+                new ExtraGui() {
+
+                    @Override public void construct() {
+
+                        UIButton done, cancel;
+                        UITextField text;
+                        UIVerticalTableLayout table = new UIVerticalTableLayout(this, 2);
+                        table.setPadding(HORIZONTAL_PADDING, 0);
+                        table.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
+                                .setInsets(5, 5, 10, 10)
+                                .add(text = new UITextField(this, "").setSize(this.width - 20 - HORIZONTAL_PADDING*2, 10),
+                                        new UIVerticalTableLayout.GridLocation(0, 0, 2))
+                                .add(done = new UIButton(this, malisisText("presets.done")).setAutoSize(false).setSize(0, 20),
+                                        new UIVerticalTableLayout.GridLocation(1, 1, 1))
+                                .add(cancel = new UIButton(this, malisisText("presets.cancel")).setAutoSize(false).setSize(0, 20),
+                                        new UIVerticalTableLayout.GridLocation(0, 1, 1))
+                                .init();
+                        text.setFont(NoTranslationFont.DEFAULT);
+                        text.setText(getSettingsJson());
+                        text.getCursorPosition().jumpToEnd();
+                        done.register(new Object() {
+                            @Subscribe
+                            public void onClick(UIButton.ClickEvent evt) {
+                                try {
+                                    CustomGeneratorSettings settings = CustomGeneratorSettings.fromJson(text.getText());
+                                    CustomCubicGui.this.reinit(settings);
+                                    mc.displayGuiScreen(CustomCubicGui.this);
+                                } catch (JsonSyntaxException ex) {
+                                    done.setFontOptions(FontOptions.builder().color(0x00FF2222).build());
+                                }
+                            }
+                        });
+                        cancel.register(new Object() {
+                            @Subscribe
+                            public void onClick(UIButton.ClickEvent evt) {
+                                mc.displayGuiScreen(CustomCubicGui.this);
+                            }
+                        });
+                        addToScreen(inPanel(table));
+                        table.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
+                    }
+                }.display();
+            }
+        });
+        sharePreset.setPosition(BTN_WIDTH + 10, 0);
+
+        UIContainer<?> container = new UIContainer<>(this);
+        container.add(done, sharePreset);
+        container.setSize(BTN_WIDTH * 2 + 10, 20);
 
         UIBorderLayout lowerLayout = new UIBorderLayout(this)
                 .setSize(xSize, ySize)
                 .setAnchor(Anchor.BOTTOM).setPosition(xPos, 0)
-                .add(done, UIBorderLayout.Border.CENTER)
+                .add(container, UIBorderLayout.Border.CENTER)
                 .init();
 
         UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
@@ -136,11 +200,15 @@ public class CustomCubicGui extends ExtraGui {
     }
 
     private void done() {
+        parent.chunkProviderSettingsJson = getSettingsJson();
+        this.mc.displayGuiScreen(parent);
+    }
+
+    String getSettingsJson() {
         CustomGeneratorSettings conf = CustomGeneratorSettings.defaults();
         this.basicSettings.writeConfig(conf);
         this.oreSettings.writeConfig(conf);
         this.advancedterrainShapeSettings.writeConfig(conf);
-        parent.chunkProviderSettingsJson = conf.toJson();
-        this.mc.displayGuiScreen(parent);
+        return conf.toJson();
     }
 }
