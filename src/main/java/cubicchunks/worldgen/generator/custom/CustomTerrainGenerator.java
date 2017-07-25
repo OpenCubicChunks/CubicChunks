@@ -40,6 +40,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.lwjgl.input.Keyboard;
 
 import java.util.List;
@@ -140,7 +141,7 @@ public class CustomTerrainGenerator {
         // when debugging is enabled, allow reloading generator settings after pressing L
         // no need to restart after applying changes.
         // Seed it changed to some constant because world isn't easily accessible here
-        if (CubicChunks.DEBUG_ENABLED && Keyboard.isKeyDown(Keyboard.KEY_L)) {
+        if (CubicChunks.DEBUG_ENABLED && FMLCommonHandler.instance().getSide().isClient() && Keyboard.isKeyDown(Keyboard.KEY_L)) {
             initGenerator(42);
         }
 
