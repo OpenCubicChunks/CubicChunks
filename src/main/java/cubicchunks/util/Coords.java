@@ -86,4 +86,8 @@ public class Coords {
     public static int blockToCube(double blockPos) {
         return blockToCube(MathHelper.floor(blockPos));
     }
+
+    public static int cubeToCenterBlock(int cubeVal) {
+        return localToBlock(cubeVal, Cube.SIZE / 2);
+    }
 }

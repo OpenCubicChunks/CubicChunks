@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.structures;
+package cubicchunks.worldgen.generator.custom.structure;
 
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;

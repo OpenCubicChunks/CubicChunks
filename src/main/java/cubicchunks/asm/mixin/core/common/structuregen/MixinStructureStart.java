@@ -21,32 +21,8 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom;
+package cubicchunks.asm.mixin.core.common.structuregen;
 
-import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubePrimer;
-import cubicchunks.worldgen.generator.custom.structure.CubicCaveGenerator;
-import cubicchunks.worldgen.generator.custom.structure.CubicRavineGenerator;
-import cubicchunks.worldgen.generator.custom.structure.CubicStructureGenerator;
-import mcp.MethodsReturnNonnullByDefault;
+public class MixinStructureStart {
 
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
-
-// TODO leftover from generator pipeline
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public class CustomStructureGenerator {
-
-    //TODO: Implement more structures
-    @Nonnull private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
-    @Nonnull private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
-
-    public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
-
-        // generate world populator
-        this.caveGenerator.generate(world, cube, cubePos);
-        this.ravineGenerator.generate(world, cube, cubePos);
-    }
 }
