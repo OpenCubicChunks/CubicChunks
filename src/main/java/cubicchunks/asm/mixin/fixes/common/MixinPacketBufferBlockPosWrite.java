@@ -34,23 +34,6 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(PacketBuffer.class)
 public abstract class MixinPacketBufferBlockPosWrite {
 
-    // Bit pattern in vanilla
-    // xxxxxxxx xxxxxxxx xxxxxxxx xxYYYYYY   YYYYYYzz zzzzzzzz zzzzzzzz zzzzzzzz
-    // our bit pattern, where F is our new flag:
-    // xxxxxxxx xxxxxxxx xxxxxxxx xxFyyyyy   yyyyyyzz zzzzzzzz zzzzzzzz zzzzzzzz
-
-    // mostly copied from BlockPos
-    private static final int XZ_SIZE = 26;
-    private static final int Y_SIZE_VANILLA = 12;
-    private static final int Y_SIZE_MOD = Y_SIZE_VANILLA - 1;
-
-    private static final int FLAG_SHIFT = XZ_SIZE + Y_SIZE_MOD;
-    private static final int Y_SHIFT = XZ_SIZE;
-    private static final int X_SHIFT = XZ_SIZE + Y_SIZE_VANILLA;
-
-    private static final int MAX_Y = (1 << Y_SIZE_MOD) - 1;
-    private static final int MIN_Y = ~MAX_Y;
-
     @Shadow public abstract long readLong();
 
     @Shadow public abstract ByteBuf writeLong(long p_writeLong_1_);
@@ -66,16 +49,11 @@ public abstract class MixinPacketBufferBlockPosWrite {
     @Overwrite
     public BlockPos readBlockPos() {
         long data = this.readLong();
-        // if custom flag is 1 - there is more data coming
-        if (((data >>> FLAG_SHIFT) & 1) != ((data >>> (FLAG_SHIFT - 1)) & 1)) {
-            int yMSB = Bits.unpackSigned(this.readVarInt(), Integer.SIZE - Y_SIZE_MOD, 0);
-            int x = Bits.unpackSigned(data, XZ_SIZE, X_SHIFT);
-            int z = Bits.unpackSigned(data, XZ_SIZE, 0);
-            int yLSB = Bits.unpackUnsigned(data, Y_SIZE_MOD, Y_SHIFT);
-            int y = yLSB | yMSB << Y_SIZE_MOD;
-            return new BlockPos(x, y, z);
+        BlockPos pos = BlockPos.fromLong(data);
+        if (pos.getY() == -2048) {
+            return new BlockPos(pos.getX(), this.readVarInt(), pos.getZ());
         } else {
-            return BlockPos.fromLong(data);
+            return pos; 
         }
     }
 
@@ -86,13 +64,11 @@ public abstract class MixinPacketBufferBlockPosWrite {
     @Overwrite
     public PacketBuffer writeBlockPos(BlockPos pos) {
         int y = pos.getY();
-        if (y <= MAX_Y && y >= MIN_Y) {
+        if (y <= 2047 && y >= -2047) {
             this.writeLong(pos.toLong());
         } else {
-            int yLSB_flagged = y & ((1 << Y_SIZE_MOD) - 1) | (((~y >> 31) & 1) << Y_SIZE_MOD);
-            int yMSB = y >>> Y_SIZE_MOD;
-            this.writeLong(new BlockPos(pos.getX(), yLSB_flagged, pos.getZ()).toLong());
-            this.writeVarInt(yMSB);
+            this.writeLong(new BlockPos(pos.getX(), -2048, pos.getZ()).toLong());
+            this.writeVarInt(y);
         }
         return (PacketBuffer) (Object) this;
     }
