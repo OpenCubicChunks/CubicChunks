@@ -67,7 +67,7 @@ public abstract class MixinPacketBufferBlockPosWrite {
     public BlockPos readBlockPos() {
         long data = this.readLong();
         // if custom flag is 1 - there is more data coming
-        if (((data >>> FLAG_SHIFT) & 1) != 0) {
+        if (((data >>> FLAG_SHIFT) & 1) != ((data >>> (FLAG_SHIFT - 1)) & 1)) {
             int yMSB = Bits.unpackSigned(this.readVarInt(), Integer.SIZE - Y_SIZE_MOD, 0);
             int x = Bits.unpackSigned(data, XZ_SIZE, X_SHIFT);
             int z = Bits.unpackSigned(data, XZ_SIZE, 0);
@@ -89,7 +89,7 @@ public abstract class MixinPacketBufferBlockPosWrite {
         if (y <= MAX_Y && y >= MIN_Y) {
             this.writeLong(pos.toLong());
         } else {
-            int yLSB_flagged = y & ((1 << Y_SIZE_MOD) - 1) | 1 << Y_SIZE_MOD;
+            int yLSB_flagged = y & ((1 << Y_SIZE_MOD) - 1) | (((~y >> 31) & 1) << Y_SIZE_MOD);
             int yMSB = y >>> Y_SIZE_MOD;
             this.writeLong(new BlockPos(pos.getX(), yLSB_flagged, pos.getZ()).toLong());
             this.writeVarInt(yMSB);
