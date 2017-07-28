@@ -719,6 +719,7 @@ public class Cube implements XYZAddressable {
     }
 
     public boolean hasLightUpdates() {
-        return getCubeLightUpdateInfo().hasUpdates();
+        LightingManager.CubeLightUpdateInfo info = this.getCubeLightUpdateInfo();
+        return info != null && info.hasUpdates();
     }
 }

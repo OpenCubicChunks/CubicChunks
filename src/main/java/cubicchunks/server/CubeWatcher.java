@@ -25,6 +25,7 @@ package cubicchunks.server;
 
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.network.PacketCube;
 import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketDispatcher;
@@ -165,7 +166,11 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         }
         playerCubeMap.getWorld().getProfiler().endStartSection("light");
         if (this.cube != null) {
-            cube.getCubeLightUpdateInfo().tick();
+            LightingManager.CubeLightUpdateInfo info = this.cube.getCubeLightUpdateInfo();
+            if (info != null) {
+                info.tick();
+            }
+            assert !this.cube.hasLightUpdates();
         }
         playerCubeMap.getWorld().getProfiler().endSection();
 
