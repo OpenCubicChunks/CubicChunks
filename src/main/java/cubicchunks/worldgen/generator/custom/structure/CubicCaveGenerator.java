@@ -153,6 +153,10 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
     private static final Predicate<IBlockState> isBlockReplaceable = (state ->
             state.getBlock() == Blocks.STONE || state.getBlock() == Blocks.DIRT || state.getBlock() == Blocks.GRASS);
 
+    public CubicCaveGenerator() {
+        super(2);
+    }
+
 
     @Override
     protected void generate(ICubicWorld world, ICubePrimer cube,

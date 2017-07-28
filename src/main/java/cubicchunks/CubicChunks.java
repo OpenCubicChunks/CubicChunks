@@ -138,7 +138,6 @@ public class CubicChunks {
     public static void registerCubicBiomes(RegistryEvent<CubicBiome> event) {
         // Vanilla biomes are initialized during bootstrap which happens before registration events
         // so it should be safe to use them here
-
         autoRegister(Biome.class, b -> b
                 .addDefaultBlockReplacers()
                 .defaultDecorators());

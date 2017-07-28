@@ -136,6 +136,10 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
      */
     @Nonnull private float[] widthDecreaseFactors = new float[1024];
 
+    public CubicRavineGenerator() {
+        super(2);
+    }
+
     @Override
     protected void generate(ICubicWorld world, ICubePrimer cube, int structureX, int structureY, int structureZ,
             CubePos generatedCubePos) {

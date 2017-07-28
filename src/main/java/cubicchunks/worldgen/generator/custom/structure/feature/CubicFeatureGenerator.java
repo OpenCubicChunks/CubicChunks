@@ -23,11 +23,9 @@
  */
 package cubicchunks.worldgen.generator.custom.structure.feature;
 
-import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.cubeToCenterBlock;
 
 import cubicchunks.util.CubePos;
-import cubicchunks.util.XYZAddressable;
 import cubicchunks.util.XYZMap;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
@@ -40,11 +38,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.MapGenBase;
 import net.minecraft.world.gen.structure.MapGenStructureIO;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraft.world.gen.structure.StructureComponent;
 import net.minecraft.world.gen.structure.StructureStart;
+import net.minecraftforge.common.util.Constants;
 
 import java.util.Random;
 
@@ -62,12 +60,24 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
      * generation, the structure generator can avoid generating structures that intersect ones that have already been
      * placed.
      */
-    protected XYZMap<StructureStartWrapped> structureMap = new XYZMap<>(0.5f, 1024);
+    protected XYZMap<ICubicStructureStart> structureMap = new XYZMap<>(0.5f, 1024);
+
+    /**
+     * @param spacing The minimum spacing. Structures thataren't generated at integer multiple coords of this value will be skipped.
+     */
+    protected CubicFeatureGenerator(int spacing) {
+        super(spacing);
+    }
 
     public abstract String getStructureName();
 
+    @SuppressWarnings("ConstantConditions")
+    @Override public void generate(ICubicWorld world, @Nullable ICubePrimer cube, CubePos cubePos) {
+        super.generate(world, cube, cubePos);
+    }
+
     @Override
-    protected synchronized void generate(ICubicWorld world, ICubePrimer cube, int structureX, int structureY, int structureZ,
+    protected synchronized void generate(ICubicWorld world, @Nullable ICubePrimer cube, int structureX, int structureY, int structureZ,
             CubePos generatedCubePos) {
         this.initializeStructureData((World) world);
 
@@ -75,9 +85,9 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
             this.rand.nextInt();
             try {
                 if (this.canSpawnStructureAtCoords(structureX, structureY, structureZ)) {
-                    StructureStartWrapped start = this.getStructureStart(structureX, structureY, structureZ);
-                    this.structureMap.put(start);
-                    if (start.getStart().isSizeableStructure()) {
+                    StructureStart start = this.getStructureStart(structureX, structureY, structureZ);
+                    this.structureMap.put((ICubicStructureStart) start);
+                    if (start.isSizeableStructure()) {
                         this.setStructureStart(structureX, structureY, structureZ, start);
                     }
                 }
@@ -98,8 +108,8 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
         int centerY = cubeToCenterBlock(cubePos.getY());
         int centerZ = cubeToCenterBlock(cubePos.getZ());
         boolean generated = false;
-        for (StructureStartWrapped wrapped : this.structureMap) {
-            StructureStart structStart = wrapped.getStart();
+        for (ICubicStructureStart cubicStructureStart : this.structureMap) {
+            StructureStart structStart = (StructureStart) cubicStructureStart;
             // TODO: cubic chunks version of isValidForPostProcess and notifyPostProcess (mixin)
             if (structStart.isSizeableStructure() && structStart.isValidForPostProcess(cubePos.chunkPos())
                     && structStart.getBoundingBox().intersectsWith(
@@ -108,7 +118,7 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
                         new StructureBoundingBox(centerX, centerY, centerZ, centerX + 15, centerY + 15, centerZ + 15));
                 structStart.notifyPostProcessAt(cubePos.chunkPos());
                 generated = true;
-                this.setStructureStart(structStart.getChunkPosX(), wrapped.getY(), structStart.getChunkPosZ(), wrapped);
+                this.setStructureStart(structStart.getChunkPosX(), cubicStructureStart.getChunkPosY(), structStart.getChunkPosZ(), structStart);
             }
         }
 
@@ -121,14 +131,14 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
     }
 
     @Nullable
-    protected StructureStartWrapped getStructureAt(BlockPos pos) {
-        for (StructureStartWrapped startWrapped : this.structureMap) {
-            StructureStart start = startWrapped.getStart();
+    protected StructureStart getStructureAt(BlockPos pos) {
+        for (ICubicStructureStart cubicStructureStart : this.structureMap) {
+            StructureStart start = (StructureStart) cubicStructureStart;
 
             if (start.isSizeableStructure() && start.getBoundingBox().isVecInside(pos)) {
                 for (StructureComponent component : start.getComponents()) {
                     if (component.getBoundingBox().isVecInside(pos)) {
-                        return startWrapped;
+                        return start;
                     }
                 }
             }
@@ -138,8 +148,9 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
 
     public boolean isPositionInStructure(World world, BlockPos pos) {
         this.initializeStructureData(world);
-        for (StructureStartWrapped wrapped : this.structureMap) {
-            if (wrapped.getStart().isSizeableStructure() && wrapped.getStart().getBoundingBox().isVecInside(pos)) {
+        for (ICubicStructureStart cubicStart : this.structureMap) {
+            StructureStart start = (StructureStart) cubicStart;
+            if (start.isSizeableStructure() && start.getBoundingBox().isVecInside(pos)) {
                 return true;
             }
         }
@@ -164,14 +175,14 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
             for (String s : nbttagcompound.getKeySet()) {
                 NBTBase nbtbase = nbttagcompound.getTag(s);
 
-                if (nbtbase.getId() == 10) {
+                if (nbtbase.getId() == Constants.NBT.TAG_COMPOUND) {
                     NBTTagCompound tag = (NBTTagCompound) nbtbase;
 
                     if (tag.hasKey("ChunkX") && tag.hasKey("ChunkY") && tag.hasKey("ChunkZ")) {
-                        int cubeY = tag.getInteger("ChunkY");
                         StructureStart structurestart = MapGenStructureIO.getStructureStart(tag, world);
+
                         if (structurestart != null) {
-                            this.structureMap.put(new StructureStartWrapped(structurestart, cubeY));
+                            this.structureMap.put((ICubicStructureStart) structurestart);
                         }
                     }
                 }
@@ -179,46 +190,12 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
         }
     }
 
-    private void setStructureStart(int chunkX, int chunkY, int chunkZ, StructureStartWrapped start) {
-        this.structureData.writeInstance(start.writeStructureComponentsToNBT(chunkX, chunkY, chunkZ), chunkX, chunkY, chunkZ);
+    private void setStructureStart(int chunkX, int chunkY, int chunkZ, StructureStart start) {
+        this.structureData.writeInstance(start.writeStructureComponentsToNBT(chunkX, chunkZ), chunkX, chunkY, chunkZ);
         this.structureData.markDirty();
     }
 
     protected abstract boolean canSpawnStructureAtCoords(int chunkX, int chunkY, int chunkZ);
 
-    protected abstract StructureStartWrapped getStructureStart(int chunkX, int chunkY, int chunkZ);
-
-    public class StructureStartWrapped implements XYZAddressable {
-
-        private final StructureStart start;
-        private final int y;
-
-        public StructureStartWrapped(StructureStart start, int y) {
-
-            this.start = start;
-            this.y = y;
-        }
-
-        @Override public int getX() {
-            return start.getChunkPosX();
-        }
-
-        @Override public int getY() {
-            return y;
-        }
-
-        @Override public int getZ() {
-            return start.getChunkPosZ();
-        }
-
-        public StructureStart getStart() {
-            return start;
-        }
-
-        public NBTTagCompound writeStructureComponentsToNBT(int chunkX, int chunkY, int chunkZ) {
-            NBTTagCompound tag = start.writeStructureComponentsToNBT(chunkX, chunkZ);
-            tag.setInteger("ChunkY", chunkY);
-            return tag;
-        }
-    }
+    protected abstract StructureStart getStructureStart(int chunkX, int chunkY, int chunkZ);
 }

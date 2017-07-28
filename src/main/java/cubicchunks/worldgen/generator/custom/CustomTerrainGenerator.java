@@ -28,18 +28,34 @@ import static cubicchunks.worldgen.generator.custom.builder.IBuilder.NEGATIVE;
 import static cubicchunks.worldgen.generator.custom.builder.IBuilder.POSITIVE;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.api.worldgen.populator.CubePopulatorEvent;
+import cubicchunks.api.worldgen.populator.ICubicPopulator;
+import cubicchunks.util.Box;
+import cubicchunks.util.Coords;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.BasicCubeGenerator;
+import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
+import cubicchunks.worldgen.generator.CubePrimer;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacer;
 import cubicchunks.worldgen.generator.custom.builder.BiomeSource;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import cubicchunks.worldgen.generator.custom.builder.NoiseSource;
+import cubicchunks.worldgen.generator.custom.structure.CubicCaveGenerator;
+import cubicchunks.worldgen.generator.custom.structure.CubicRavineGenerator;
+import cubicchunks.worldgen.generator.custom.structure.CubicStructureGenerator;
+import cubicchunks.worldgen.generator.custom.structure.feature.CubicFeatureGenerator;
+import cubicchunks.worldgen.generator.custom.structure.feature.CubicStrongholdGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.lwjgl.input.Keyboard;
 
@@ -47,6 +63,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.ToIntFunction;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -54,7 +72,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CustomTerrainGenerator {
+public class CustomTerrainGenerator extends BasicCubeGenerator {
 
     private static final int CACHE_SIZE_2D = 16 * 16;
     private static final int CACHE_SIZE_3D = 16 * 16 * 16;
@@ -65,10 +83,18 @@ public class CustomTerrainGenerator {
     private final BiomeSource biomeSource;
     private final CustomGeneratorSettings conf;
 
+    //TODO: Implement more structures
+    @Nonnull private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
+    @Nonnull private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
+    @Nonnull private CubicFeatureGenerator strongholds;
+
     public CustomTerrainGenerator(ICubicWorld world, final long seed) {
+        super(world);
 
         String json = world.getWorldInfo().getGeneratorOptions();
-        conf = CustomGeneratorSettings.fromJson(json);
+        this.conf = CustomGeneratorSettings.fromJson(json);
+
+        this.strongholds = new CubicStrongholdGenerator(conf);
 
         this.biomeSource = new BiomeSource(world, conf.createBiomeBlockReplacerConfig(), world.getBiomeProvider(), 2);
         initGenerator(seed);
@@ -129,6 +155,54 @@ public class CustomTerrainGenerator {
                 .cached(CACHE_SIZE_3D, HASH_3D);
     }
 
+    @Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+        ICubePrimer primer = new CubePrimer();
+        generate(primer, cubeX, cubeY, cubeZ);
+        generateStructures(primer, new CubePos(cubeX, cubeY, cubeZ));
+        return primer;
+    }
+
+    @Override public void populate(Cube cube) {
+        /**
+         * If event is not canceled we will use default biome decorators and
+         * cube populators from registry.
+         **/
+        if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(world, cube))) {
+            CubicBiome biome = CubicBiome.getCubic(cube.getCubicWorld().getBiome(Coords.getCubeCenter(cube)));
+
+            CubePos pos = cube.getCoords();
+            // For surface generators we should actually use special RNG with
+            // seed
+            // that depends only in world seed and cube X/Z
+            // but using this for surface generation doesn't cause any
+            // noticeable issues
+            Random rand = new Random(cube.cubeRandomSeed());
+
+            ICubicPopulator decorator = biome.getDecorator();
+            decorator.generate(world, rand, pos, biome);
+            CubeGeneratorsRegistry.generateWorld(world, rand, pos, biome);
+
+            strongholds.generateStructure((World) world, rand, pos);
+        }
+    }
+
+    @Override public Box getPopulationRequirement(Cube cube) {
+        return RECOMMENDED_POPULATOR_REQUIREMENT;
+    }
+
+    @Override
+    public void recreateStructures(Cube cube) {
+        this.strongholds.generate(world, null, cube.getCoords());
+    }
+
+    @Nullable @Override
+    public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
+        if ("Stronghold".equals(name)) {
+            return strongholds.getClosestStrongholdPos((World) world, pos, true);
+        }
+        return null;
+    }
+
     /**
      * Generate the cube as the specified location
      *
@@ -171,4 +245,16 @@ public class CustomTerrainGenerator {
         return block;
     }
 
+    private void generateStructures(ICubePrimer cube, CubePos cubePos) {
+        // generate world populator
+        if (this.conf.caves) {
+            this.caveGenerator.generate(world, cube, cubePos);
+        }
+        if (this.conf.ravines) {
+            this.ravineGenerator.generate(world, cube, cubePos);
+        }
+        if (this.conf.strongholds) {
+            this.strongholds.generate(world, cube, cubePos);
+        }
+    }
 }

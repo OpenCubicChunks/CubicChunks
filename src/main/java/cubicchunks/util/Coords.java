@@ -50,6 +50,10 @@ public class Coords {
         return val >> 4;
     }
 
+    public static int blockCeilToCube(int val) {
+        return -((-val) >> 4);
+    }
+
     public static int localToBlock(int cubeVal, int localVal) {
         return cubeToMinBlock(cubeVal) + localVal;
     }

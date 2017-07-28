@@ -212,8 +212,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     @Nullable @Override
-    public BlockPos getStrongholdGen(World worldIn, String name, BlockPos pos, boolean flag) {
-        return cubeGen.getClosestStructure(name, pos, flag);
+    public BlockPos getStrongholdGen(World worldIn, String name, BlockPos pos, boolean findUnexplored) {
+        return cubeGen.getClosestStructure(name, pos, findUnexplored);
     }
 
     // getLoadedChunkCount() in ChunkProviderServer is fine - CHECKED: 1.10.2-12.18.1.2092

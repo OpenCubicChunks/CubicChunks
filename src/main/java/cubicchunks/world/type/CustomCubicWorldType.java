@@ -32,8 +32,6 @@ import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
-import cubicchunks.worldgen.generator.custom.CustomPopulator;
-import cubicchunks.worldgen.generator.custom.CustomStructureGenerator;
 import cubicchunks.worldgen.generator.custom.CustomTerrainGenerator;
 import cubicchunks.worldgen.gui.CustomCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
@@ -87,32 +85,7 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
 
     @Override
     public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-        CustomTerrainGenerator terrain = new CustomTerrainGenerator(world, world.getSeed());
-        CustomStructureGenerator features = new CustomStructureGenerator();
-        CustomPopulator population = new CustomPopulator(world);
-
-        //TODO: this is mostly a hack to get the old system working
-        return new BasicCubeGenerator(world) {
-            @Override
-            public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-                ICubePrimer primer = new CubePrimer();
-
-                terrain.generate(primer, cubeX, cubeY, cubeZ);
-                features.generate(world, primer, new CubePos(cubeX, cubeY, cubeZ));
-
-                return primer;
-            }
-
-            @Override
-            public void populate(Cube cube) {
-                population.populate(cube);
-            }
-
-            @Override
-            public Box getPopulationRequirement(Cube cube) {
-                return RECOMMENDED_POPULATOR_REQUIREMENT;
-            }
-        };
+        return new CustomTerrainGenerator(world, world.getSeed());
     }
 
     public boolean isCustomizable() {

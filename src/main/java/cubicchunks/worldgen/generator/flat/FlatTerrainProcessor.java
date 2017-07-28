@@ -107,7 +107,7 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
     }
 
     @Override
-    public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
+    public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
         // eyes of ender are the new F3 for finding the origin :P
         return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null;
     }

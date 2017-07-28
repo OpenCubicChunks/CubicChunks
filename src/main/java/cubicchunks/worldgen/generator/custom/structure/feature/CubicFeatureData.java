@@ -26,6 +26,8 @@ package cubicchunks.worldgen.generator.custom.structure.feature;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.WorldSavedData;
 
+import javax.annotation.Nonnull;
+
 public class CubicFeatureData extends WorldSavedData {
 
     private NBTTagCompound tagCompound = new NBTTagCompound();
@@ -37,11 +39,12 @@ public class CubicFeatureData extends WorldSavedData {
     /**
      * reads in data from the NBTTagCompound into this MapDataBase
      */
+    @Override
     public void readFromNBT(NBTTagCompound nbt) {
         this.tagCompound = nbt.getCompoundTag("Features");
     }
 
-    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+    @Override @Nonnull public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound.setTag("Features", this.tagCompound);
         return compound;
     }
