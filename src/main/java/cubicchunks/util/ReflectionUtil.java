@@ -39,6 +39,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class ReflectionUtil {
 
+    @SuppressWarnings("unchecked")
+    public static <T> Class<? extends T> getClassOrDefault(String name, Class<? extends T> cl) {
+        try {
+            return (Class<T>) Class.forName(name);
+        } catch (ClassNotFoundException ex) {
+            return cl;
+        }
+    }
+
     public static MethodHandle getFieldGetterHandle(Class<?> owner, String srgName) {
         String name = Mappings.getNameFromSrg(srgName);
         Field field = getFieldFromSrg(owner, name);

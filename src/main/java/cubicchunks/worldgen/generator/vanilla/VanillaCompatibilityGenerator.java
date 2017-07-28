@@ -298,8 +298,8 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     }
 
     @Override
-    public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
-        return vanilla.getStrongholdGen((World) world, name, pos, flag);
+    public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
+        return vanilla.getStrongholdGen((World) world, name, pos, findUnexplored);
     }
 
 }

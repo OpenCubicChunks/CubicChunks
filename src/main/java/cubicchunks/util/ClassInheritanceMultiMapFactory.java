@@ -24,7 +24,9 @@
 package cubicchunks.util;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.world.BlankEntityContainer;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.ClassInheritanceMultiMap;
 
 import java.util.ConcurrentModificationException;
@@ -34,6 +36,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ClassInheritanceMultiMapFactory {
+
+    public static final ClassInheritanceMultiMap<Entity>[] EMPTY_ARR = new ClassInheritanceMultiMap[]{new BlankEntityContainer.BlankEntityMap()};
 
     /**
      * Creates new ClassInheritanceMultiMap without possibility of ConcurrentModificationException

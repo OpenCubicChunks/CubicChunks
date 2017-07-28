@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.structures;
+package cubicchunks.worldgen.generator.custom.structure;
 
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
@@ -183,6 +183,10 @@ public class CubicCaveGenerator extends CubicStructureGenerator {
      */
     private static final Predicate<IBlockState> isBlockReplaceable = (state ->
             state.getBlock() == Blocks.STONE || state.getBlock() == Blocks.DIRT || state.getBlock() == Blocks.GRASS);
+
+    public CubicCaveGenerator() {
+        super(2);
+    }
 
 
     @Override

@@ -27,6 +27,7 @@ import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.CustomTerrainGenerator;
 import cubicchunks.worldgen.gui.CustomCubicGui;
 import mcp.MethodsReturnNonnullByDefault;

@@ -24,6 +24,7 @@
 package cubicchunks.util;
 
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -33,19 +34,37 @@ public class AddressTools {
 
     public static short getLocalAddress(int localX, int localY, int localZ) {
         return (short) (Bits.packUnsignedToInt(localX, 4, 0)
-                | Bits.packUnsignedToInt(localY, 4, 4)
-                | Bits.packUnsignedToInt(localZ, 4, 8));
+                | Bits.packUnsignedToInt(localZ, 4, 4)
+                | Bits.packUnsignedToInt(localY, 4, 8));
     }
 
+    public static byte getLocalAddress(int localX, int localZ) {
+        return (byte) (Bits.packUnsignedToInt(localX, 4, 0)
+                | Bits.packUnsignedToInt(localZ, 4, 4));
+    }
+
+    /**
+     * Unpacks localX from packed address. Works for both, x/y/z and x/z version
+     */
     public static int getLocalX(int localAddress) {
         return Bits.unpackUnsigned(localAddress, 4, 0);
     }
 
+    /**
+     * Unpacks localY from packed address.
+     */
     public static int getLocalY(int localAddress) {
+        return Bits.unpackUnsigned(localAddress, 4, 8);
+    }
+
+    /**
+     * Unpacks localZ from packed address. Works for both, x/y/z and x/z version
+     */
+    public static int getLocalZ(int localAddress) {
         return Bits.unpackUnsigned(localAddress, 4, 4);
     }
 
-    public static int getLocalZ(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 8);
+    public static short getLocalAddress(BlockPos pos) {
+        return getLocalAddress(pos.getX(), pos.getY(), pos.getZ());
     }
 }

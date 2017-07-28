@@ -31,20 +31,19 @@ import static cubicchunks.util.Coords.localToBlock;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.FastCubeBlockAccess;
-import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.TIntSet;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.IBlockAccess;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -58,9 +57,17 @@ public class LightingManager {
     public static final int MAX_CLIENT_LIGHT_SCAN_DEPTH = 64;
     @Nonnull private ICubicWorld world;
     @Nonnull private LightPropagator lightPropagator = new LightPropagator();
+    @Nonnull private final List<IHeightChangeListener> heightUpdateListeners = new ArrayList<>();
 
     public LightingManager(ICubicWorld world) {
         this.world = world;
+    }
+
+    /**
+     * Registers height change listener, that receives all height changes after initial lighting is done
+     */
+    public void registerHeightChangeListener(IHeightChangeListener listener) {
+        heightUpdateListeners.add(listener);
     }
 
     @Nullable
@@ -165,6 +172,13 @@ public class LightingManager {
         return true;
     }
 
+    public void sendHeightMapUpdate(BlockPos pos) {
+        int size = heightUpdateListeners.size();
+        for (int i = 0; i < size; i++) {
+            heightUpdateListeners.get(i).heightUpdated(pos.getX(), pos.getZ());
+        }
+    }
+
     private enum UpdateType {
         IMMEDIATE, QUEUED
     }
@@ -176,7 +190,7 @@ public class LightingManager {
         private final boolean[] toUpdateColumns = new boolean[Cube.SIZE * Cube.SIZE];
         private boolean hasUpdates;
 
-        CubeLightUpdateInfo(Cube cube) {
+        public CubeLightUpdateInfo(Cube cube) {
             this.cube = cube;
         }
 
@@ -211,5 +225,23 @@ public class LightingManager {
         private int index(int x, int z) {
             return x << 4 | z;
         }
+
+        public boolean hasUpdates() {
+            return hasUpdates;
+        }
+
+        public void clear() {
+            for (int localX = 0; localX < Cube.SIZE; localX++) {
+                for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
+                    toUpdateColumns[index(localX, localZ)] = false;
+                }
+            }
+            hasUpdates = false;
+        }
+    }
+
+    public interface IHeightChangeListener {
+
+        void heightUpdated(int blockX, int blockZ);
     }
 }

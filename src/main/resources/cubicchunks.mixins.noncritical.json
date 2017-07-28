@@ -3,15 +3,14 @@
     "package": "cubicchunks.asm.mixin.noncritical",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
-    "minVersion": "0.6.7",
+    "minVersion": "0.6.15-SNAPSHOT",
     "priority": 0,
     "mixins": [
         "common.command.MixinCommandTeleport",
         "common.command.MixinCommandTP",
         "common.command.MixinCommandBase",
         "common.command.MixinCommandFill",
-        "common.command.MixinCommandClone",
-        "common.command.MixinCommandCompare",
+        "common.command.MixinCommandsHeightLimits",
         "common.MixinBlockPistonBase_HeightFix"
     ],
     "client": [
@@ -21,7 +20,7 @@
     ],
     "server": [
     ],
-    "injectors": {
-        "defaultRequire": 1
+    "overwrites": {
+        "conformVisibility": true
     }
 }

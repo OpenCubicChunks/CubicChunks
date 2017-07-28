@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.structures;
+package cubicchunks.worldgen.generator.custom.structure;
 
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
@@ -149,6 +149,10 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
      * For cubic chunks the height value used wraps around.
      */
     @Nonnull private float[] widthDecreaseFactors = new float[1024];
+
+    public CubicRavineGenerator() {
+        super(2);
+    }
 
     @Override
     protected void generate(ICubicWorld world, ICubePrimer cube, int structureX, int structureY, int structureZ,

@@ -3,7 +3,7 @@
     "package": "cubicchunks.asm.mixin.fixes",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
-    "minVersion": "0.6.7",
+    "minVersion": "0.6.15-SNAPSHOT",
     "mixins": [
         "common.MixinBlockSkull_WitherSpawnLimits",
         "common.EntityBat_AiHeightLimit",
@@ -17,6 +17,7 @@
         "common.MixinPathNavigateGround",
         "common.MixinTeleporter",
         "common.MixinTileEntityEndGateway",
+        "common.MixinPacketBufferBlockPosWrite",
         "common.isblockloaded.MixinEntity",
         "common.isblockloaded.MixinEntityLivingBase",
         "common.worldgen.tree.MixinWorldGenCanopyTree",
@@ -51,6 +52,9 @@
     ],
     "injectors": {
         "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
     }
 }
 

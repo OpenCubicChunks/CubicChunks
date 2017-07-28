@@ -44,21 +44,38 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BooleanSupplier;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import org.apache.logging.log4j.LogManager;
+
+import com.google.common.collect.Sets;
 
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
@@ -68,8 +85,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class Cube implements XYZAddressable {
 
-    @Nullable private static final ExtendedBlockStorage NULL_STORAGE = null;
+    @Nullable protected static final ExtendedBlockStorage NULL_STORAGE = null;
 
+    private final Set<NextTickListEntry> pendingTickListEntriesHashSet = new HashSet<NextTickListEntry>();
+    private final TreeSet<NextTickListEntry> pendingTickListEntriesTreeSet = new TreeSet<NextTickListEntry>();
     /**
      * Side length of a cube
      */
@@ -194,6 +213,24 @@ public class Cube implements XYZAddressable {
         isModified = true;
     }
 
+
+    /**
+     * Constructor to be used from subclasses to provide all field values
+     */
+    protected Cube(TicketList tickers, ICubicWorld world, IColumn column, CubePos coords, ExtendedBlockStorage storage,
+            EntityContainer entities, Map<BlockPos, TileEntity> tileEntityMap,
+            ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, LightingManager.CubeLightUpdateInfo lightInfo) {
+        this.tickets = tickers;
+        this.world = world;
+        this.column = column;
+        this.coords = coords;
+        this.storage = storage;
+        this.entities = entities;
+        this.tileEntityMap = tileEntityMap;
+        this.tileEntityPosQueue = tileEntityPosQueue;
+        this.cubeLightUpdateInfo = lightInfo;
+    }
+
     //======================================
     //========Chunk vanilla methods=========
     //======================================
@@ -237,7 +274,10 @@ public class Cube implements XYZAddressable {
      * @see Cube#getBlockState(BlockPos)
      */
     public IBlockState getBlockState(int blockX, int localOrBlockY, int blockZ) {
-        return column.getBlockState(blockX, localToBlock(getY(), blockToLocal(localOrBlockY)), blockZ);
+        if (storage == NULL_STORAGE) {
+            return Blocks.AIR.getDefaultState();
+        }
+        return storage.get(blockToLocal(blockX), blockToLocal(localOrBlockY), blockToLocal(blockZ));
     }
 
     /**
@@ -305,15 +345,11 @@ public class Cube implements XYZAddressable {
     }
 
     /**
-     * Tick this cube
+     * Tick this cube on client side
      *
      * @param tryToTickFaster Whether costly calculations should be skipped in order to catch up with ticks
      */
-    public void tickCube(BooleanSupplier tryToTickFaster) {
-        if (!this.isInitialLightingDone && this.isPopulated) {
-            this.tryDoFirstLight(); //TODO: Very icky light population code! REMOVE IT!
-        }
-
+    public void tickCubeCommon(BooleanSupplier tryToTickFaster) {
         while (!this.tileEntityPosQueue.isEmpty()) {
             BlockPos blockpos = this.tileEntityPosQueue.poll();
 
@@ -334,19 +370,50 @@ public class Cube implements XYZAddressable {
     }
 
     /**
-     * Calculate diffuse skylight in this cube if surrounding cubes are loaded
+     * Tick this cube on server side. Block tick updates launched here.
+     * @param tryToTickFaster - returns true when running out of reserved tick time
+     * @param rand - World specific Random
      */
-    //TODO: Redo light population code
-    private void tryDoFirstLight() {
-        BlockPos pos = this.getCoords().getMinBlockPos();
-        final int radius = 17;
-        // TODO replace hardcoded constant with reference to Cube#SIZE
-        if (!world.isAreaLoaded(pos.add(-radius, -radius, -radius), pos.add(15 + radius, 15 + radius, 15 + radius))) {
+    public void tickCubeServer(BooleanSupplier tryToTickFaster, Random rand) {
+        if (!isFullyPopulated) {
             return;
         }
-        //client cubes (setClientCube) are always fully generated, isInitialLightingDone is never false
-        ((ICubicWorldServer) this.world).getFirstLightProcessor().diffuseSkylight(this);
-        this.isInitialLightingDone = true;
+
+        tickCubeCommon(tryToTickFaster);
+
+        Iterator<NextTickListEntry> pti = pendingTickListEntriesTreeSet.iterator();
+        while (pti.hasNext()) {
+            NextTickListEntry ntle = pti.next();
+            if (ntle.scheduledTime > world.getTotalWorldTime())
+                return;
+            BlockPos pos = ntle.position;
+            IBlockState iblockstate = this.storage.get(pos.getX() & 15, pos.getY() & 15, pos.getZ() & 15);
+            if (iblockstate.getMaterial() != Material.AIR && iblockstate.getBlock() == ntle.getBlock()) {
+                iblockstate.getBlock().updateTick((WorldServer) world, ntle.position, iblockstate, rand);
+            }
+            pti.remove();
+        }
+        int tickLimit = 256; // 16x16 per cube per tick will be enough
+        pti = pendingTickListEntriesHashSet.iterator();
+        while (pti.hasNext() && --tickLimit != 0) {
+            NextTickListEntry ntle = pti.next();
+            pendingTickListEntriesTreeSet.add(ntle);
+            pti.remove();
+        }
+    }
+
+    public void scheduleUpdate(BlockPos pos, Block blockIn, int delay, int priority) {
+        if (pos instanceof BlockPos.MutableBlockPos || pos instanceof BlockPos.PooledMutableBlockPos) {
+            pos = new BlockPos(pos);
+            LogManager.getLogger().warn((String) "Tried to assign a mutable BlockPos to tick data...",
+                    (Throwable) (new Error(pos.getClass().toString())));
+        }
+        if (world.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)) != null) {
+            NextTickListEntry nextticklistentry = new NextTickListEntry(pos, blockIn);
+            nextticklistentry.setScheduledTime((long) delay + world.getTotalWorldTime());
+            nextticklistentry.setPriority(priority);
+            this.pendingTickListEntriesHashSet.add(nextticklistentry);
+        }
     }
 
     //=================================
@@ -438,9 +505,6 @@ public class Cube implements XYZAddressable {
     }
 
     @Nullable public ExtendedBlockStorage getStorage() {
-        // defensively setModified here
-        // TODO: call setModified from ExtendedBlockStorage method to save less cubes
-        this.isModified = true;
         return this.storage;
     }
 
@@ -652,5 +716,10 @@ public class Cube implements XYZAddressable {
 
     public boolean isCubeLoaded() {
         return this.isCubeLoaded;
+    }
+
+    public boolean hasLightUpdates() {
+        LightingManager.CubeLightUpdateInfo info = this.getCubeLightUpdateInfo();
+        return info != null && info.hasUpdates();
     }
 }

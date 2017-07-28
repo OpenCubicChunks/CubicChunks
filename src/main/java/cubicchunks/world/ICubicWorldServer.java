@@ -23,6 +23,7 @@
  */
 package cubicchunks.world;
 
+import cubicchunks.IConfigUpdateListener;
 import cubicchunks.entity.CubicEntityTracker;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.CubeProviderServer;
@@ -37,7 +38,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface ICubicWorldServer extends ICubicWorld {
+public interface ICubicWorldServer extends ICubicWorld, IConfigUpdateListener {
 
     CubeProviderServer getCubeCache();
 

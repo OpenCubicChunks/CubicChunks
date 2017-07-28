@@ -28,7 +28,8 @@ import com.google.common.base.Preconditions;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.DoubleUnaryOperator;
+import java.util.function.BiPredicate;
+import java.util.function.DoublePredicate;
 
 public class Converters {
 
@@ -220,7 +221,7 @@ public class Converters {
 
         float maxExp = Float.NaN;
         Set<RoundingConverter.RoundingEntry> roundingData = new HashSet<>();
-        DoubleUnaryOperator snapRadius;
+        BiPredicate<Double, Double> isValueInRadius;
 
         public RoundingBuilder(Builder baseSelf) {
             this.baseSelf = baseSelf;
@@ -232,10 +233,10 @@ public class Converters {
             return self;
         }
 
-        public RoundingBuilder withRoundingRadius(DoubleUnaryOperator op) {
+        public RoundingBuilder withRoundingRadiusPredicate(BiPredicate<Double, Double> op) {
             Preconditions.checkNotNull(op);
             RoundingBuilder self = roundingSelf();
-            self.snapRadius = op;
+            self.isValueInRadius = op;
             return self;
         }
 

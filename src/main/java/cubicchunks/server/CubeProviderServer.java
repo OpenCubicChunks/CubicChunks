@@ -23,6 +23,7 @@
  */
 package cubicchunks.server;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.server.chunkio.ICubeIO;
 import cubicchunks.server.chunkio.RegionCubeIO;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
@@ -35,8 +36,10 @@ import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -45,11 +48,13 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Consumer;
 
 import javax.annotation.Detainted;
@@ -77,6 +82,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Nonnull private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
 
     @Nonnull private ICubeGenerator cubeGen;
+    @Nonnull private Profiler profiler;
 
     public CubeProviderServer(ICubicWorldServer worldServer, ICubeGenerator cubeGen) {
         super((WorldServer) worldServer,
@@ -84,8 +90,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 null); // safe to null out IChunkGenerator (Note: lets hope mods don't touch it, ik its public)
 
         this.cubeGen = cubeGen;
-
         this.worldServer = worldServer;
+        this.profiler = ((WorldServer) worldServer).profiler;
         try {
             this.cubeIO = new RegionCubeIO(worldServer);
         } catch (IOException e) {
@@ -184,7 +190,13 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Override
     public boolean tick() {
         // NOTE: the return value is completely ignored
-        // NO-OP, This is called by WorldServer's tick() method every tick
+        profiler.startSection("providerTick("+cubeMap.getSize()+")");
+        long i = System.currentTimeMillis();
+        Random rand = this.world.rand;
+        for (Cube cube : cubeMap) {
+            cube.tickCubeServer(() -> System.currentTimeMillis() - i > 40, rand);
+        }
+        profiler.endSection();
         return false;
     }
 
@@ -200,8 +212,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     @Nullable @Override
-    public BlockPos getStrongholdGen(World worldIn, String name, BlockPos pos, boolean flag) {
-        return cubeGen.getClosestStructure(name, pos, flag);
+    public BlockPos getStrongholdGen(World worldIn, String name, BlockPos pos, boolean findUnexplored) {
+        return cubeGen.getClosestStructure(name, pos, findUnexplored);
     }
 
     // getLoadedChunkCount() in ChunkProviderServer is fine - CHECKED: 1.10.2-12.18.1.2092
@@ -403,6 +415,22 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 popcube.setPopulated(true);
             }
         });
+        
+        if (!(cubeGen instanceof VanillaCompatibilityGenerator) && CubicChunks.Config.BoolOptions.USE_VANILLA_CHUNK_WORLD_GENERATORS.getValue()) {
+            for (int x = 0; x < 2; x++) {
+                for (int z = 0; z < 2; z++) {
+                    for (int y = 15; y >= 0; y--) {
+                        Cube popcube = getCube(x + cubeX, y + cubeY, z + cubeZ);
+                        if (!popcube.isPopulated()) {
+                            cubeGen.populate(popcube);
+                            popcube.setPopulated(true);
+                        }
+                    }
+                }
+            }
+            GameRegistry.generateWorld(cubeX, cubeZ, world, chunkGenerator, this);
+        }
+        
         cube.setFullyPopulated(true);
     }
 

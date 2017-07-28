@@ -38,7 +38,10 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.WorldServerMulti;
 import net.minecraft.world.WorldType;
+import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -47,9 +50,12 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.google.common.collect.ImmutableList;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -64,7 +70,7 @@ public class CommonEventHandler {
             return;
         }
         ICubicWorld world = (ICubicWorld) evt.getObject();
-        if (!doNotTouchWorld.test(world)) {
+        if (doNotTouchWorld.test(world)) {
             CubicChunks.LOGGER.info("Skipping world " + evt.getObject() + " with type " + evt.getObject().getWorldType() + " due to potential "
                     + "compatibility issues");
             return;
@@ -132,24 +138,51 @@ public class CommonEventHandler {
 
     public static class ClientProxy extends ServerProxy {
 
+        @SuppressWarnings("unchecked")
+        private final List<Class<? extends World>> allowedClientWorldClasses = ImmutableList.<Class<? extends World>>builder()
+                .addAll(allowedServerWorldClasses)
+                .add(
+                        WorldClient.class
+                ).build();
+        
+        @SuppressWarnings("unchecked")
+        private final List<Class<? extends IChunkProvider>> allowedClientChunkProviderClasses = ImmutableList.<Class<? extends IChunkProvider>>builder()
+                .addAll(allowedServerChunkProviderClasses)
+                .add(
+                        ChunkProviderClient.class,
+                        ChunkProviderServer.class
+                ).build();
+
         // shouldSkipWorld
-        @Override public boolean test(ICubicWorld world) {
-            if (super.test(world)) {
-                return true;
-            }
-            if (((World) world).getChunkProvider().getClass() != ChunkProviderClient.class) {
-                return true;
-            }
-            return super.test(world) && world.getClass() != (Class<?>) WorldClient.class;
+        @Override
+        public boolean test(ICubicWorld world) {
+            return !allowedClientWorldClasses.contains(world.getClass())
+                    || !allowedClientChunkProviderClasses.contains(((World) world).getChunkProvider().getClass());
         }
     }
 
     // actually common one
     public static class ServerProxy implements Predicate<ICubicWorld> {
 
+        @SuppressWarnings("unchecked")
+        protected final List<Class<? extends World>> allowedServerWorldClasses = ImmutableList.copyOf(new Class[] {
+                WorldServer.class,
+                WorldServerMulti.class,
+                // non-existing classes will be Objects
+                ReflectionUtil.getClassOrDefault("WorldServerOF", Object.class), // OptiFine's WorldServer, no package
+                ReflectionUtil.getClassOrDefault("WorldServerMultiOF", Object.class) // OptiFine's WorldServerMulti, no package
+        });
+        
+        @SuppressWarnings("unchecked")
+        protected final List<Class<? extends IChunkProvider>> allowedServerChunkProviderClasses = ImmutableList.copyOf(new Class[] {
+                ChunkProviderServer.class
+        });
+
         // shouldSkipWorld
-        @Override public boolean test(ICubicWorld world) {
-            return world.getClass() != (Class<?>) WorldServer.class;
+        @Override
+        public boolean test(ICubicWorld world) {
+            return !allowedServerWorldClasses.contains(world.getClass())
+                    || !allowedServerChunkProviderClasses.contains(((World) world).getChunkProvider().getClass());
         }
     }
 }

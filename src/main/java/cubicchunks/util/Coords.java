@@ -50,6 +50,10 @@ public class Coords {
         return val >> 4;
     }
 
+    public static int blockCeilToCube(int val) {
+        return -((-val) >> 4);
+    }
+
     public static int localToBlock(int cubeVal, int localVal) {
         return cubeToMinBlock(cubeVal) + localVal;
     }
@@ -85,5 +89,9 @@ public class Coords {
 
     public static int blockToCube(double blockPos) {
         return blockToCube(MathHelper.floor(blockPos));
+    }
+
+    public static int cubeToCenterBlock(int cubeVal) {
+        return localToBlock(cubeVal, Cube.SIZE / 2);
     }
 }

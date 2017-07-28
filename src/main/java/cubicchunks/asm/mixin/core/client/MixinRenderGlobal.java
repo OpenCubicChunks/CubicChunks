@@ -25,11 +25,15 @@ package cubicchunks.asm.mixin.core.client;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.CHUNK_GET_ENTITY_LISTS;
+import static cubicchunks.asm.JvmNames.OPTIFINE_RENDER_CHUNK_GET_CHUNK;
 import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
 
+import cubicchunks.util.ClassInheritanceMultiMapFactory;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.BlankCube;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -78,16 +82,37 @@ public class MixinRenderGlobal {
      * This allows to get the Y position of rendered entity by injecting itself directly before call to
      * chunk.getEntityLists
      */
-    @Group(name = "renderEntitiesFix", max = 3)
+    @Group(name = "renderEntitiesFix", min = 3, max = 3)
     @Inject(method = "renderEntities",
             at = @At(value = "INVOKE", target = WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS),
-            locals = LocalCapture.CAPTURE_FAILHARD,
-            require = 1)
+            locals = LocalCapture.CAPTURE_FAILHARD)
     public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
             CallbackInfo ci, int pass, double d0, double d1, double d2,
             Entity entity, double d3, double d4, double d5,
             List<Entity> list, List<Entity> list1, List<Entity> list2,
             BlockPos.PooledMutableBlockPos pos, Iterator<RenderGlobal.ContainerLocalRenderInformation> var21,
+            RenderGlobal.ContainerLocalRenderInformation info) {
+        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
+        if (world.isCubicWorld()) {
+            this.position = info.renderChunk.getPosition();
+        } else {
+            this.position = null;
+        }
+    }
+
+    /**
+     * Optifine-specific version of the above method
+     */
+    @SuppressWarnings("UnresolvedMixinReference")
+    @Group(name = "renderEntitiesFix")
+    @Inject(method = "renderEntities",
+            at = @At(value = "INVOKE", target = OPTIFINE_RENDER_CHUNK_GET_CHUNK),
+            locals = LocalCapture.CAPTURE_FAILHARD)
+    public void onGetPositionOptifine(Entity renderViewEntity, ICamera camera, float partialTicks,
+            CallbackInfo ci, int pass, double d0, double d1, double d2,
+            Entity entity, double d3, double d4, double d5,
+            List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
+            BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos, Iterator iterInfosEntities,
             RenderGlobal.ContainerLocalRenderInformation info) {
         ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
         if (world.isCubicWorld()) {
@@ -126,11 +151,12 @@ public class MixinRenderGlobal {
             return chunk.getEntityLists(); //TODO: is this right?
         }
 
-        return new ClassInheritanceMultiMap[]{
-                ((IColumn) chunk)
-                        .getCube(Coords.blockToCube(position.getY()))
-                        .getEntityContainer().getEntitySet()
-        };
+        Cube cube = ((IColumn) chunk).getCube(Coords.blockToCube(position.getY()));
+        if (cube instanceof BlankCube) {
+            return ClassInheritanceMultiMapFactory.EMPTY_ARR;
+        }
+
+        return new ClassInheritanceMultiMap[]{cube.getEntityContainer().getEntitySet()};
     }
 
     /**

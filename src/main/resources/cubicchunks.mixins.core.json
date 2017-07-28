@@ -3,7 +3,7 @@
     "package": "cubicchunks.asm.mixin.core",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
-    "minVersion": "0.6.7",
+    "minVersion": "0.6.15-SNAPSHOT",
     "mixins": [
         "common.MixinChunk_Column",
         "common.MixinChunk_Cubes",
@@ -14,7 +14,9 @@
         "common.MixinWorld_HeightLimits",
         "common.MixinChunkCache_HeightLimits",
         "common.MixinEntity_DeathFix",
-        "common.MixinWorldProvider"
+        "common.MixinWorldProvider",
+        "common.MixinPlayerList",
+        "common.structuregen.MixinStructureStart"
     ],
     "client": [
         "client.MixinWorld_HeightLimits",
@@ -26,9 +28,13 @@
         "client.MixinWorldProvider"
     ],
     "server": [
-        "server.MixinDedicatedServer_HeightLimits"
+        "server.MixinDedicatedServer_HeightLimits",
+        "server.MixinDedicatedPlayerList"
     ],
     "injectors": {
         "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
     }
 }

@@ -55,8 +55,9 @@ public class CustomGeneratorSettings {
     public int waterLevel = 63;
     public boolean caves = true;
 
-    public boolean strongholds = true; // TODO: no strongholds yet
-    public boolean villages = true; // TODO: no villages yet
+    public boolean strongholds = true;
+    public boolean alternateStrongholdsPositions = false; // TODO: add to gui
+    public boolean villages = true;  // TODO: no villages yet
 
     public boolean mineshafts = true; // TODO: no mineshafts yet
     public boolean temples = true; // TODO: no temples yet
@@ -308,6 +309,22 @@ public class CustomGeneratorSettings {
         obj.highNoiseFrequencyZ = frequencyFromVanilla(settings.coordinateScale, 16);
 
         return obj;
+    }
+
+    public int getMinHeight() {
+        return (int) (this.heightOffset - getMaxHeightOffset());
+    }
+
+    public int getMaxHeight() {
+        return (int) (this.heightOffset + getMaxHeightOffset());
+    }
+
+    public int getAverageHeight() {
+        return (int) this.heightOffset;
+    }
+
+    private int getMaxHeightOffset() {
+        return (int) Math.max(heightFactor, Math.abs(heightVariationFactor) + Math.abs(heightVariationOffset));
     }
 
     public enum RavineLavaMode {

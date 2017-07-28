@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.structures;
+package cubicchunks.worldgen.generator.custom.structure;
 
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
@@ -31,6 +31,7 @@ import mcp.MethodsReturnNonnullByDefault;
 import java.util.Random;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -51,6 +52,16 @@ public abstract class CubicStructureGenerator {
 
     /** This world object. */
     protected ICubicWorld world;
+
+    /** The minimum spacing of structures. */
+    protected final int spacing;
+
+    /**
+     * @param spacing The minimum spacing. Structures thataren't generated at integer multiple coords of this value will be skipped.
+     */
+    protected CubicStructureGenerator(int spacing) {
+        this.spacing = spacing;
+    }
 
     /**
      * Generates structures in given cube.
@@ -82,12 +93,14 @@ public abstract class CubicStructureGenerator {
         int cubeZOriginBase = cubePos.getZ() | 1;
 
         long randSeed = world.getSeed();
+
+        int spacing = this.spacing;
         //x/y/zOrigin is location of the structure "center", and cubeX/Y/Z is the currently generated cube
-        for (int xOrigin = cubeXOriginBase - radius; xOrigin <= cubeXOriginBase + radius; xOrigin += 2) {
+        for (int xOrigin = cubeXOriginBase - radius; xOrigin <= cubeXOriginBase + radius; xOrigin += spacing) {
             long randX = xOrigin * randXMul ^ randSeed;
-            for (int yOrigin = cubeYOriginBase - radius; yOrigin <= cubeYOriginBase + radius; yOrigin += 2) {
+            for (int yOrigin = cubeYOriginBase - radius; yOrigin <= cubeYOriginBase + radius; yOrigin += spacing) {
                 long randY = yOrigin * randYMul ^ randX;
-                for (int zOrigin = cubeZOriginBase - radius; zOrigin <= cubeZOriginBase + radius; zOrigin += 2) {
+                for (int zOrigin = cubeZOriginBase - radius; zOrigin <= cubeZOriginBase + radius; zOrigin += spacing) {
                     long randZ = zOrigin * randZMul ^ randY;
                     this.rand.setSeed(randZ);
                     this.generate(world, cube, xOrigin, yOrigin, zOrigin, cubePos);

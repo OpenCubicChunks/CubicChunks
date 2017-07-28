@@ -78,6 +78,12 @@ public class CubePos {
         this.cubeZ = cubeZ;
     }
 
+    public CubePos(XYZAddressable addressable) {
+        this.cubeX = addressable.getX();
+        this.cubeY = addressable.getY();
+        this.cubeZ = addressable.getZ();
+    }
+
     /**
      * Gets the x position of the cube in the world.
      *

@@ -39,6 +39,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
@@ -65,6 +66,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Collection;
 import java.util.List;
@@ -211,6 +213,17 @@ public abstract class MixinWorld implements ICubicWorld {
             if (cube != null) {
                 cube.markDirty();
             }
+            ci.cancel();
+        }
+    }
+    
+    @Inject(method = "getBlockState", at = @At("HEAD"), cancellable = true)
+    public void getBlockState(BlockPos pos, CallbackInfoReturnable<IBlockState> ci) {
+        if (this.isCubicWorld()) {
+            if (this.isValid(pos))
+                ci.setReturnValue(this.getCubeCache().getCube(CubePos.fromBlockCoords(pos)).getBlockState(pos));
+            else
+                ci.setReturnValue(Blocks.AIR.getDefaultState());
             ci.cancel();
         }
     }

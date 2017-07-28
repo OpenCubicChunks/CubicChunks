@@ -32,7 +32,7 @@ import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
 import cubicchunks.CubicChunks;
 import cubicchunks.IConfigUpdateListener;
-import cubicchunks.debug.Dbg;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
 import cubicchunks.util.XZMap;
@@ -71,7 +71,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListener {
+public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHeightChangeListener {
 
     private static final Predicate<EntityPlayerMP> NOT_SPECTATOR = player -> player != null && !player.isSpectator();
     private static final Predicate<EntityPlayerMP> CAN_GENERATE_CHUNKS = player -> player != null &&
@@ -126,6 +126,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
     private final Set<CubeWatcher> cubeWatchersToUpdate = new HashSet<>();
 
     /**
+     * All columnWatchers that have pending height updates to send.
+     */
+    private final Set<ColumnWatcher> columnWatchersToUpdate = new HashSet<>();
+
+    /**
      * Contains all CubeWatchers that need to be sent to clients,
      * but these cubes are not fully loaded/generated yet.
      * <p>
@@ -159,7 +164,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
     private int horizontalViewDistance;
     private int verticalViewDistance;
-    private volatile int updatedVerticalViewDistance;
 
     /**
      * This is used only to force update of all CubeWatchers every 8000 ticks
@@ -171,22 +175,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
 
     @Nonnull private final CubeProviderServer cubeCache;
 
-    private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.Options.MAX_GENERATED_CUBES_PER_TICK.getValue();
+    private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.IntOptions.MAX_GENERATED_CUBES_PER_TICK.getValue();
 
     public PlayerCubeMap(ICubicWorldServer worldServer) {
         super((WorldServer) worldServer);
         this.cubeCache = getWorld().getCubeCache();
         this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(),
-                CubicChunks.Config.Options.VERTICAL_CUBE_LOAD_DISTANCE.getValue());
-        CubicChunks.addConfigChangeListener(this);
-    }
-
-    @Override
-    public void onConfigUpdate(CubicChunks.Config config) {
-        if (config.getVerticalCubeLoadDistance() != this.verticalViewDistance) {
-            this.updatedVerticalViewDistance = config.getVerticalCubeLoadDistance();
-        }
-        this.maxGeneratedCubesPerTick = config.getMaxGeneratedCubesPerTick();
+                ((ICubicPlayerList) worldServer.getMinecraftServer().getPlayerList()).getVerticalViewDistance());
+        worldServer.getLightingManager().registerHeightChangeListener(this);
     }
 
     /**
@@ -218,9 +214,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
     // CHECKED: 1.10.2-12.18.1.2092
     @Override
     public void tick() {
-        if (this.updatedVerticalViewDistance != this.verticalViewDistance) {
-            this.setPlayerViewDistance(getWorld().getMinecraftServer().getPlayerList().getViewDistance(), this.updatedVerticalViewDistance);
-        }
         getWorld().getProfiler().startSection("playerCubeMapTick");
         long currentTime = this.getWorldServer().getTotalWorldTime();
 
@@ -239,6 +232,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
         //process instances to update
         this.cubeWatchersToUpdate.forEach(CubeWatcher::update);
         this.cubeWatchersToUpdate.clear();
+
+        this.columnWatchersToUpdate.forEach(ColumnWatcher::update);
+        this.columnWatchersToUpdate.clear();
 
         getWorld().getProfiler().endStartSection("sortToGenerate");
         //sort toLoadPending if needed, but at most every 4 ticks
@@ -433,6 +429,16 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
         }
     }
 
+    @Override
+    public void heightUpdated(int blockX, int blockZ) {
+        ColumnWatcher columnWatcher = this.columnWatchers.get(blockToCube(blockX), blockToCube(blockZ));
+        if (columnWatcher != null) {
+            int localX = blockToLocal(blockX);
+            int localZ = blockToLocal(blockZ);
+            columnWatcher.heightChanged(localX, localZ);
+        }
+    }
+
     // CHECKED: 1.10.2-12.18.1.2092
     @Override
     public void addPlayer(EntityPlayerMP player) {
@@ -503,7 +509,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
         PlayerWrapper playerWrapper = this.players.get(player.getEntityId());
 
         if (playerWrapper == null) {
-            CubicChunks.bigWarning("PlayerCubeMap#updateMovingPlayer got called when there is no player in this world! Things may break!");
+            // vanilla sometimes does it, this is normal
             return;
         }
         // did the player move into new cube?
@@ -679,6 +685,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
         this.cubeWatchersToUpdate.add(cubeWatcher);
     }
 
+    void addToUpdateEntry(ColumnWatcher columnWatcher) {
+        this.columnWatchersToUpdate.add(columnWatcher);
+    }
+
     // CHECKED: 1.10.2-12.18.1.2092
     void removeEntry(CubeWatcher cubeWatcher) {
         CubePos cubePos = cubeWatcher.getCubePos();
@@ -759,5 +769,15 @@ public class PlayerCubeMap extends PlayerChunkMap implements IConfigUpdateListen
             double distanceSquared = blockDX * blockDX + blockDY * blockDY + blockDZ * blockDZ;
             return distanceSquared > 0.9;//0.9 instead of 1 because floating-point numbers may be weird
         }
+    }
+
+    /**
+     * Return iterator over 'CubeWatchers' of all cubes loaded
+     * by players. Iterator first element defined by seed.
+     * 
+     * @param seed
+     */
+    public Iterator<CubeWatcher> getRandomWrappedCubeWatcherIterator(int seed) {
+        return this.cubeWatchers.randomWrappedIterator(seed);
     }
 }
