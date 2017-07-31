@@ -28,7 +28,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -41,6 +40,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 @Mixin(value = World.class, priority = 1001)
@@ -56,12 +56,12 @@ public abstract class MixinWorld_CollisionCheck implements ICubicWorld {
             double maxX = aabb.maxX;
             double maxY = aabb.maxY;
             double maxZ = aabb.maxZ;
-            int x1 = (int) minX - 1;
-            int y1 = (int) minY - 1;
-            int z1 = (int) minZ - 1;
-            int x2 = (int) maxX;
-            int y2 = (int) maxY;
-            int z2 = (int) maxZ;
+            int x1 = MathHelper.floor(minX) - 1;
+            int y1 = MathHelper.floor(minY) - 1;
+            int z1 = MathHelper.floor(minZ) - 1;
+            int x2 = MathHelper.ceil(maxX) + 1;
+            int y2 = MathHelper.ceil(maxY) + 1;
+            int z2 = MathHelper.ceil(maxZ) + 1;
             BlockPos.PooledMutableBlockPos pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
             for (int cx = blockToCube(x1); cx <= blockToCube(x2); cx++)
                 for (int cy = blockToCube(y1); cy <= blockToCube(y2); cy++)
