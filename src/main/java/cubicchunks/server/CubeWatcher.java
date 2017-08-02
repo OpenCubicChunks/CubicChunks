@@ -25,6 +25,7 @@ package cubicchunks.server;
 
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.network.PacketCube;
 import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketDispatcher;
@@ -163,6 +164,14 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         if (this.cube != null) {
             this.cube.getTickets().add(this);
         }
+        playerCubeMap.getWorld().getProfiler().endStartSection("light");
+        if (this.cube != null) {
+            LightingManager.CubeLightUpdateInfo info = this.cube.getCubeLightUpdateInfo();
+            if (info != null) {
+                info.tick();
+            }
+            assert !this.cube.hasLightUpdates();
+        }
         playerCubeMap.getWorld().getProfiler().endSection();
 
         return this.cube != null;
@@ -177,7 +186,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         if (this.sentToPlayers) {
             return true;
         }
-        if (this.cube == null || !this.cube.isFullyPopulated() || !this.cube.isInitialLightingDone()) {
+        if (this.cube == null || !this.cube.isFullyPopulated() || !this.cube.isInitialLightingDone() || this.cube.hasLightUpdates()) {
             return false;
         }
         ColumnWatcher columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
@@ -300,7 +309,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         return dx * dx + dy * dy + dz * dz;
     }
 
-    @Nullable Cube getCube() {
+    @Nullable public Cube getCube() {
         return this.cube;
     }
 
@@ -328,7 +337,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         }
     }
 
-    private void sendPacketToAllPlayers(IMessage packet) {
+    public void sendPacketToAllPlayers(IMessage packet) {
         for (WatcherPlayerEntry entry : this.players.valueCollection()) {
             PacketDispatcher.sendTo(packet, entry.player);
         }

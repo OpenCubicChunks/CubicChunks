@@ -33,6 +33,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import cubicchunks.server.CubeWatcher;
+
 /**
  * Hash table implementation for objects in a 3-dimensional cartesian coordinate
  * system.
@@ -323,19 +325,20 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      */
     private void grow() {
         int newLength = this.buckets.length * 2;
-        this.mask = newLength - 1;
+        int newMask = newLength - 1;
         XYZAddressable[] newBuckets = new XYZAddressable[newLength];
         int[] newPointers = new int[newLength];
         for (int i = 1; i <= size; i++) {
             XYZAddressable bucket = buckets[i];
             newBuckets[i] = bucket;
-            int pointerIndex = this.getPointerIndex(bucket.getX(), bucket.getY(), bucket.getZ());
+            int pointerIndex = hash(bucket.getX(), bucket.getY(), bucket.getZ()) & newMask;
             while (newPointers[pointerIndex] != 0)
-                pointerIndex = this.getNextPointerIndex(pointerIndex);
+                pointerIndex = ++pointerIndex & newMask;
             newPointers[pointerIndex] = i;
         }
         buckets = newBuckets;
         pointers = newPointers;
+        mask=newMask;
         loadThreshold = (int) (newLength * this.loadFactor) - 2;
     }
 
@@ -424,6 +427,49 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
             @SuppressWarnings("unchecked")
             public T next() {
                 return (T) buckets[at++];
+            }
+
+            @Override
+            public void remove() {
+                int pointerIndex = getElementPointerIndex(--at);
+                collapseBucket(pointerIndex, at);
+            }
+        };
+    }
+
+    /**
+     * Return iterator over elements started from random position defined by
+     * seed
+     * 
+     * @param seed - define start position.
+     **/
+    public Iterator<T> randomWrappedIterator(int seed) {
+        return new Iterator<T>() {
+
+            // Start point: 1. Shall not be larger that array length
+            // (obviously).
+            // 2. Shall not, in most cases, be larger than allocated buckets
+            // zone (because it must be uniformly random).
+            // 3. Shall not be zero (because zero element always null in this
+            // implementation).
+            boolean start = size > 0;
+            int startFrom = start ? (getNextPointerIndex(seed) % size | 1) : 0;
+            int at = startFrom;
+
+            @Override
+            public boolean hasNext() {
+                // 'at' equal to 'startFrom' allowed until first iteration.
+                return at != startFrom || start;
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public T next() {
+                start = false;
+                T toReturn = (T) buckets[at++];
+                if (at > size)
+                    at = 1;
+                return toReturn;
             }
 
             @Override

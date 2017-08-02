@@ -21,32 +21,18 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom;
+package cubicchunks.worldgen.generator.custom.structure.feature;
 
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubePrimer;
-import cubicchunks.worldgen.generator.custom.structures.CubicCaveGenerator;
-import cubicchunks.worldgen.generator.custom.structures.CubicRavineGenerator;
-import cubicchunks.worldgen.generator.custom.structures.CubicStructureGenerator;
-import mcp.MethodsReturnNonnullByDefault;
+import cubicchunks.util.XYZAddressable;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import net.minecraft.world.World;
 
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
+public interface ICubicStructureStart extends XYZAddressable {
+    int getChunkPosY();
 
-// TODO leftover from generator pipeline
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public class CustomStructureGenerator {
+    // internal use instead of constructor argument
+    void initCubic(World world, CustomGeneratorSettings conf, int cubeY);
 
-    //TODO: Implement more populator
-    @Nonnull private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
-    @Nonnull private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
-
-    public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
-
-        // generate world populator
-        this.caveGenerator.generate(world, cube, cubePos);
-        this.ravineGenerator.generate(world, cube, cubePos);
-    }
+    CubePos getCubePos();
 }

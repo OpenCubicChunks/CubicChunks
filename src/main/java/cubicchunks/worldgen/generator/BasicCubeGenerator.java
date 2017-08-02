@@ -83,7 +83,7 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
     }
 
     @Nullable @Override
-    public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
+    public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
         return null;
     }
 }

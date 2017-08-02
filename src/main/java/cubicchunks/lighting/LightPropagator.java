@@ -45,7 +45,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-class LightPropagator {
+public class LightPropagator {
 
     @Nonnull private LightUpdateQueue internalRelightQueue = new LightUpdateQueue();
 
@@ -72,7 +72,7 @@ class LightPropagator {
      * @param type light type to update
      * @param setLightCallback this will be called for each position where light value is changed
      */
-    void propagateLight(BlockPos centerPos, Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type,
+     public void propagateLight(BlockPos centerPos, Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type,
             Consumer<BlockPos> setLightCallback) {
 
         internalRelightQueue.begin(centerPos);

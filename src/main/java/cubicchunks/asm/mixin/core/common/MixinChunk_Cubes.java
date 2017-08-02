@@ -364,6 +364,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             return;
         }
         opacityIndex.onOpacityChange(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ()), state.getLightOpacity(world, pos));
+        getCubicWorld().getLightingManager().sendHeightMapUpdate(pos);
     }
 
     @Redirect(method = "setBlockState", at = @At(

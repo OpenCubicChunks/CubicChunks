@@ -26,10 +26,11 @@ package cubicchunks.network;
 import cubicchunks.CubicChunks;
 import cubicchunks.client.CubeProviderClient;
 import cubicchunks.lighting.LightingManager;
+import cubicchunks.util.AddressTools;
+import cubicchunks.util.Bits;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorldClient;
-import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
@@ -46,6 +47,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.EmptyChunk;
+import net.minecraft.world.chunk.NibbleArray;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -110,14 +114,12 @@ public class ClientHandler implements INetHandler {
         }
 
         ClientHeightMap heightMap = (ClientHeightMap) column.getOpacityIndex();
-        LightingManager lightManager = worldClient.getLightingManager();
         for (int localX = 0; localX < Cube.SIZE; localX++) {
             for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
                 int oldHeight = heightMap.getTopBlockY(localX, localZ);
                 int newHeight = packet.height(localX, localZ);
                 if (oldHeight != newHeight) {
                     heightMap.setHeight(localX, localZ, newHeight);
-                    lightManager.onHeightMapUpdate(column, localX, localZ, oldHeight, newHeight);
                 }
             }
         }
@@ -188,17 +190,12 @@ public class ClientHandler implements INetHandler {
         }
 
         ClientHeightMap index = (ClientHeightMap) cube.getColumn().getOpacityIndex();
-        LightingManager lm = worldClient.getLightingManager();
         for (int hmapUpdate : packet.heightValues) {
             int x = hmapUpdate & 0xF;
             int z = (hmapUpdate >> 4) & 0xF;
             //height is signed, so don't use unsigned shift
             int height = hmapUpdate >> 8;
-
-            int oldHeight = index.getTopBlockY(x, z);
             index.setHeight(x, z, height);
-
-            lm.onHeightMapUpdate(cube.getColumn(), x, z, oldHeight, height);
         }
         // apply the update
         for (int i = 0; i < packet.localAddresses.length; i++) {
@@ -221,5 +218,78 @@ public class ClientHandler implements INetHandler {
                 ((ICubicWorldClient) world).setHeightBounds(message.getMinHeight(), message.getMaxHeight());
             }
         }
+    }
+
+    public void handle(PacketHeightMapUpdate message) {
+        IThreadListener taskQueue = Minecraft.getMinecraft();
+        if (!taskQueue.isCallingFromMinecraftThread()) {
+            taskQueue.addScheduledTask(() -> handle(message));
+            return;
+        }
+        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
+        CubeProviderClient cubeCache = worldClient.getCubeCache();
+
+        int columnX = message.getColumnPos().chunkXPos;
+        int columnZ = message.getColumnPos().chunkZPos;
+
+        IColumn column = cubeCache.provideColumn(columnX, columnZ);
+        if (column instanceof EmptyChunk) {
+            CubicChunks.LOGGER.error("Ignored block update to blank column {}", message.getColumnPos());
+            return;
+        }
+
+        ClientHeightMap index = (ClientHeightMap) column.getOpacityIndex();
+        LightingManager lm = worldClient.getLightingManager();
+
+        int size = message.getUpdates().size();
+
+        for (int i = 0; i < size; i++) {
+            int packed = message.getUpdates().get(i) & 0xFF;
+            int x = AddressTools.getLocalX(packed);
+            int z = AddressTools.getLocalZ(packed);
+            int height = message.getHeights().get(i);
+
+            int oldHeight = index.getTopBlockY(x, z);
+            index.setHeight(x, z, height);
+            lm.onHeightMapUpdate(column, x, z, oldHeight, height);
+        }
+    }
+
+    public void handle(PacketCubeSkyLightUpdates message) {
+        IThreadListener taskQueue = Minecraft.getMinecraft();
+        if (!taskQueue.isCallingFromMinecraftThread()) {
+            taskQueue.addScheduledTask(() -> handle(message));
+            return;
+        }
+        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
+        CubeProviderClient cubeCache = worldClient.getCubeCache();
+
+        // get the cube
+        Cube cube = cubeCache.getCube(message.getCubePos());
+        if (message.getData() == null) {
+            // this means the EBS was null serverside. So it needs to be null clientside
+            cube.setStorage(Chunk.NULL_BLOCK_STORAGE);
+            return;
+        }
+        ExtendedBlockStorage storage = cube.getStorage();
+        if (cube.getStorage() == null) {
+            cube.setStorage(storage = new ExtendedBlockStorage(cube.getY(), !worldClient.getProvider().hasNoSky()));
+        }
+        assert storage != null;
+        if (message.isFullRelight()) {
+            storage.setSkylightArray(new NibbleArray(message.getData()));
+        } else {
+            for (int i = 0; i < message.updateCount(); i++) {
+                int packed1 = message.getData()[i * 2] & 0xFF;
+                int packed2 = message.getData()[i * 2 + 1] & 0xFF;
+                storage.setExtSkylightValue(Bits.unpackUnsigned(packed1, 4, 0), Bits.unpackUnsigned(packed1, 4, 4),
+                        Bits.unpackUnsigned(packed2, 4, 0), Bits.unpackUnsigned(packed2, 4, 4));
+            }
+        }
+        LightingManager.CubeLightUpdateInfo info = cube.getCubeLightUpdateInfo();
+        if (info != null) {
+            info.clear();
+        }
+        cube.markForRenderUpdate();
     }
 }

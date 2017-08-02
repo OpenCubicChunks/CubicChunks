@@ -65,7 +65,15 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
         ICubePrimer primer = new CubePrimer();
         int floorY = Coords.cubeToMinBlock(cubeY);
         int topY = Coords.cubeToMaxBlock(cubeY);
-        NavigableMap<Integer, Layer> cubeLayerSubMap = conf.layers.subMap(floorY, true, topY, true);
+        int floorKeyI = floorY;
+        int topKeyI = topY;
+        Integer floorKey = conf.layers.floorKey(floorY);
+        if (floorKey != null)
+            floorKeyI = floorKey;
+        Integer ceilingKey = conf.layers.ceilingKey(topY);
+        if (ceilingKey != null)
+            topKeyI = ceilingKey;
+        NavigableMap<Integer, Layer> cubeLayerSubMap = conf.layers.subMap(floorKeyI, true, topKeyI, true);
         for (Entry<Integer, Layer> entry : cubeLayerSubMap.entrySet()) {
             Layer layer = entry.getValue();
             int fromY = layer.fromY - floorY;
@@ -82,17 +90,16 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
         return primer;
     }
 
-	@Override
-	public void populate(Cube cube) {
-		/**
-		 * If event is not canceled we will use
-		 * cube populators from registry.
-		 **/
-		if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(world, cube))) {
-			CubeGeneratorsRegistry.generateWorld(cube.getCubicWorld(), new Random(cube.cubeRandomSeed()),
-					cube.getCoords(), CubicBiome.getCubic(world.getBiome(cube.getCoords().getCenterBlockPos())));
-		}
-	}
+    @Override
+    public void populate(Cube cube) {
+        /**
+         * If event is not canceled we will use cube populators from registry.
+         **/
+        if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(world, cube))) {
+            CubeGeneratorsRegistry.generateWorld(cube.getCubicWorld(), new Random(cube.cubeRandomSeed()),
+                    cube.getCoords(), CubicBiome.getCubic(world.getBiome(cube.getCoords().getCenterBlockPos())));
+        }
+    }
 
     @Override
     public Box getPopulationRequirement(Cube cube) {
@@ -100,8 +107,8 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
     }
 
     @Override
-    public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
+    public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
         // eyes of ender are the new F3 for finding the origin :P
-        return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null; 
+        return name.equals("Stronghold") ? new BlockPos(0, 0, 0) : null;
     }
 }

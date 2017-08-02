@@ -32,6 +32,7 @@ import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicSaveHandler;
+import cubicchunks.world.FastCubeWorldEntitySpawner;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
@@ -98,6 +99,15 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
         this.firstLightProcessor = new FirstLightProcessor(this);
         this.theEntityTracker = new CubicEntityTracker(this);
+        CubicChunks.addConfigChangeListener(this);
+    }
+    
+    @Override
+    public void onConfigUpdate(CubicChunks.Config config){
+        if(config.useFastEntitySpawner() && this.entitySpawner instanceof CubeWorldEntitySpawner)
+            this.entitySpawner = new FastCubeWorldEntitySpawner();
+        else if(!config.useFastEntitySpawner() && this.entitySpawner instanceof FastCubeWorldEntitySpawner)
+            this.entitySpawner = new CubeWorldEntitySpawner();
     }
 
     @Override public void tickCubicWorld() {

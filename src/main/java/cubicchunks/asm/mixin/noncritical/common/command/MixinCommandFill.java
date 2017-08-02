@@ -39,10 +39,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.lang.ref.WeakReference;
@@ -63,28 +65,22 @@ public class MixinCommandFill {
         commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
     }
 
-    @Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 6))
-    private int getBlockPosYRedirectMin(BlockPos pos) {
+    @ModifyConstant(
+            method = "execute",
+            constant = {
+                    @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO, ordinal = 0),
+                    @Constant(intValue = 256, ordinal = 0)
+            },
+            slice = @Slice(from = @At(value = "CONSTANT", args = "stringValue=commands.fill.tooManyBlocks")), require = 2)
+    private int execute_getMinHeight(int original) {
         if (commandWorld == null) {
-            return pos.getY();
+            return original;
         }
         ICubicWorld world = commandWorld.get();
         if (world == null) {
-            return pos.getY();
+            return original;
         }
-        return MixinUtils.getReplacementY(world, pos);
-    }
-
-    @Redirect(method = "execute", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 7))
-    private int getBlockPosYRedirectMax(BlockPos pos) {
-        if (commandWorld == null) {
-            return pos.getY();
-        }
-        ICubicWorld world = commandWorld.get();
-        if (world == null) {
-            return pos.getY();
-        }
-        return MixinUtils.getReplacementY(world, pos);
+        return original == 0 ? world.getMinHeight() : world.getMaxHeight();
     }
 
     // fix that strange vanilla logic for isBlockLoaded
