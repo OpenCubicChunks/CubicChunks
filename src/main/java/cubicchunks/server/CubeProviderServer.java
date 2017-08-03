@@ -24,6 +24,7 @@
 package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.asm.CubicChunksMixinConfig;
 import cubicchunks.server.chunkio.ICubeIO;
 import cubicchunks.server.chunkio.RegionCubeIO;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
@@ -83,6 +84,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Nonnull private ICubeGenerator cubeGen;
     @Nonnull private Profiler profiler;
+    private final boolean doRandomBlockTicksHere;
 
     public CubeProviderServer(ICubicWorldServer worldServer, ICubeGenerator cubeGen) {
         super((WorldServer) worldServer,
@@ -97,6 +99,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+        
+        doRandomBlockTicksHere = CubicChunksMixinConfig.BoolOptions.RANDOM_TICK_IN_CUBE.getValue();
     }
 
     @Override
@@ -192,9 +196,15 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         // NOTE: the return value is completely ignored
         profiler.startSection("providerTick("+cubeMap.getSize()+")");
         long i = System.currentTimeMillis();
+        int randomTickSpeed = this.world.getGameRules().getInt("randomTickSpeed");
         Random rand = this.world.rand;
         for (Cube cube : cubeMap) {
             cube.tickCubeServer(() -> System.currentTimeMillis() - i > 40, rand);
+            if (cube.isEmpty() || !doRandomBlockTicksHere)
+                continue;
+            int randomTickCounter = randomTickSpeed;
+            while (randomTickCounter-- > 0)
+                cube.randomTick(this.world, rand);
         }
         profiler.endSection();
         return false;
