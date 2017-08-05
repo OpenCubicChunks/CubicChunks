@@ -28,7 +28,6 @@ import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonSyntaxException;
-import com.sun.org.apache.xpath.internal.operations.Number;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.component.NoTranslationFont;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;

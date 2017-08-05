@@ -24,6 +24,9 @@
 package cubicchunks.asm;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -36,7 +39,8 @@ import org.spongepowered.asm.lib.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
-import net.minecraftforge.common.config.Configuration;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
 /**
  * This Mixin configuration plugin class launched from cubicchunks.mixin.selectable.json.
@@ -45,7 +49,6 @@ import net.minecraftforge.common.config.Configuration;
  * Therefore two Mixin classes with an injection in a same method and with a same priority will cause Mixin to fail. */
 public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
-    private Configuration configuration;
     @Nonnull
     public static Logger LOGGER = LogManager.getLogger("CubicChunksMixinConfig");
 
@@ -53,14 +56,14 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     public void onLoad(String mixinPackage) {
         File folder = new File(".", "config");
         folder.mkdirs();
-        File configFile = new File(folder, "cubicchunks.cfg");
-        LOGGER.info("Loading configuration file "+configFile.getAbsolutePath());
-        this.configuration = new Configuration(configFile);
-        this.configuration.load();
-        for (BoolOptions configOption : BoolOptions.values()) {
-            configOption.value = configuration.getBoolean(getNicelyFormattedName(configOption.name()), Configuration.CATEGORY_GENERAL,
-                    configOption.defaultValue, configOption.description);
-            LOGGER.info("Loading mixin config option "+configOption.name());
+        File configFile = new File(folder, "cubicchunks_mixin_config.json");
+        LOGGER.info("Loading configuration file " + configFile.getAbsolutePath());
+        try {
+            if (!configFile.exists())
+                this.writeConfigToJson(configFile);
+            this.readConfigFromJson(configFile);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -107,6 +110,12 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 "cubicchunks.asm.mixin.selectable.common.MixinWorld_CollisionCheck",
                 "Enabling this option allow using fast collision check."
                         + " Fast collision check can reduce server lag."
+                        + " You need to restart Minecraft to apply changes."),
+        RANDOM_TICK_IN_CUBE(true, 
+                null,
+                "cubicchunks.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks",
+                "If set to true, random tick wil be launched from cube instance instead of chunk."
+                        + " Cube based random tick may slightly reduce server lag."
                         + " You need to restart Minecraft to apply changes.");
 
         private final boolean defaultValue;
@@ -144,5 +153,41 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         }
         return out.toString();
     }
-
+    
+    private void writeConfigToJson(File configFile) throws IOException {
+        JsonWriter writer = new JsonWriter(new FileWriter(configFile));
+        writer.setIndent(" ");
+        writer.beginArray();
+        for (BoolOptions configOption : BoolOptions.values()) {
+            writer.beginObject();
+            writer.name(configOption.name());
+            writer.value(configOption.value);
+            writer.name("description");
+            writer.value(configOption.description);
+            writer.endObject();
+        }
+        writer.endArray();
+        writer.close();
+    }
+    
+    private void readConfigFromJson(File configFile) throws IOException {
+        JsonReader reader = new JsonReader(new FileReader(configFile));
+        reader.beginArray();
+        while(reader.hasNext()){
+            reader.beginObject();
+            next_object:while(reader.hasNext()){
+                String name = reader.nextName();
+                for(BoolOptions option:BoolOptions.values()){
+                    if(option.name().equals(name)){
+                        option.value = reader.nextBoolean();
+                        continue next_object;
+                    }
+                }
+                reader.skipValue();
+            }
+            reader.endObject();
+        }
+        reader.endArray();
+        reader.close();
+    }
 }
