@@ -600,7 +600,7 @@ public class Cube implements XYZAddressable {
 
         // tell the world to forget about tile entities
         for (TileEntity blockEntity : this.tileEntityMap.values()) {
-            this.world.removeTileEntity(blockEntity.getPos());
+            this.world.markTileEntityForRemoval(blockEntity);
         }
     }
 

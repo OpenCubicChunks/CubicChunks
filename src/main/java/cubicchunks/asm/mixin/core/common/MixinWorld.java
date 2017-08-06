@@ -288,6 +288,13 @@ public abstract class MixinWorld implements ICubicWorld {
     }
 
     //==============================================
+    @Shadow public abstract void markTileEntityForRemoval(TileEntity te);
+
+    @Intrinsic public void world$markTileEntityForRemoval(TileEntity te) {
+        this.markTileEntityForRemoval(te);
+    }
+
+    //==============================================
     @Shadow public abstract long getTotalWorldTime();
 
     @Intrinsic public long world$getTotalWorldTime() {

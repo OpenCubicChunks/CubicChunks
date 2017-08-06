@@ -165,6 +165,8 @@ public interface ICubicWorld extends IMinMaxHeight {
 
     void removeTileEntity(BlockPos pos);
 
+    void markTileEntityForRemoval(TileEntity pos);
+
     long getTotalWorldTime();
 
     void setTileEntity(BlockPos blockpos, @Nullable TileEntity tileentity);
