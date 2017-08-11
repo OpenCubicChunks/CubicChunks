@@ -240,15 +240,15 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         //sort toLoadPending if needed, but at most every 4 ticks
         if (this.toGenerateNeedSort && currentTime % 4L == 0L) {
             this.toGenerateNeedSort = false;
-            Collections.sort(this.cubesToGenerate, CUBE_ORDER);
-            Collections.sort(this.columnsToGenerate, COLUMN_ORDER);
+            this.cubesToGenerate.sort(CUBE_ORDER);
+            this.columnsToGenerate.sort(COLUMN_ORDER);
         }
         getWorld().getProfiler().endStartSection("sortToSend");
         //sort cubesToSendToClients every other 4 ticks
         if (this.toSendToClientNeedSort && currentTime % 4L == 2L) {
             this.toSendToClientNeedSort = false;
-            Collections.sort(this.cubesToSendToClients, CUBE_ORDER);
-            Collections.sort(this.columnsToSendToClients, COLUMN_ORDER);
+            this.cubesToSendToClients.sort(CUBE_ORDER);
+            this.columnsToSendToClients.sort(COLUMN_ORDER);
         }
 
         getWorld().getProfiler().endStartSection("generate");
@@ -319,14 +319,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         getWorld().getProfiler().endStartSection("send");
         if (!this.columnsToSendToClients.isEmpty()) {
             getWorld().getProfiler().startSection("columns");
-            Iterator<ColumnWatcher> iter = this.columnsToSendToClients.iterator();
 
-            while (iter.hasNext()) {
-                ColumnWatcher next = iter.next();
-                if (next.sendToPlayers()) {
-                    iter.remove();
-                }
-            }
+            this.columnsToSendToClients.removeIf(ColumnWatcher::sendToPlayers);
             getWorld().getProfiler().endSection(); // columns
         }
         if (!this.cubesToSendToClients.isEmpty()) {
