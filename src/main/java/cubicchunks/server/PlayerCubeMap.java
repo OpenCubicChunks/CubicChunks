@@ -389,10 +389,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                     !cubeWatcher.getCube().isInitialLightingDone()) {
                 this.cubesToGenerate.add(cubeWatcher);
             }
-            // this ends up being called early enough that client renderers aren't initialized yet and positions are wrong
-            if (!cubeWatcher.sendToPlayers()) {
+            // vanilla has the below check, which causes the cubes to be sent to client too early and sometimes in too big amounts
+            // if they are sent too earlu, client won't have the right player position and renderer positions are wrong
+            // which cause some cubes to not be rendered
+            // DO NOT make it the same as vanilla until it's confirmed that Mojang fixed MC-120079
+            //if (!cubeWatcher.sendToPlayers()) {
                 this.cubesToSendToClients.add(cubeWatcher);
-            }
+            //}
         }
         return cubeWatcher;
     }
