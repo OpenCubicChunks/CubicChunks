@@ -31,6 +31,7 @@ import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import jline.internal.Preconditions;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
@@ -107,14 +108,23 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
     //===========================
 
     /**
-     * This is like ChunkProviderClient.loadChunk()
+     * This is like ChunkProviderClient.loadChunk(), but more useful for our use case
      * It is used when the server sends a new Cube to this client,
      * and the network handler wants us to create a new Cube.
      *
-     * @return a newly created and cached cube
+     * @return a newly created or cached cube
      */
-    public Cube loadCube(IColumn column, int cubeY) {
-        Cube cube = new Cube(column, cubeY); // auto added to column
+    @Nullable
+    public Cube loadCube(CubePos pos) {
+        Cube cube = getLoadedCube(pos);
+        if (cube != null) {
+            return cube;
+        }
+        IColumn column = getLoadedColumn(pos.getX(), pos.getZ());
+        if (column == null) {
+            return null;
+        }
+        cube = new Cube(column, pos.getY()); // auto added to column
         cube.setCubeLoaded();
         column.addCube(cube);
         this.cubeMap.put(cube);

@@ -69,62 +69,6 @@ public class ClientHandler implements INetHandler {
         // nothing to do
     }
 
-    public void handle(PacketCube packet) {
-        IThreadListener taskQueue = Minecraft.getMinecraft();
-        if (!taskQueue.isCallingFromMinecraftThread()) {
-            taskQueue.addScheduledTask(() -> handle(packet));
-            return;
-        }
-
-        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
-        CubeProviderClient cubeCache = worldClient.getCubeCache();
-
-        CubePos cubePos = packet.getCubePos();
-
-        Chunk chunk = (Chunk) cubeCache.provideColumn(cubePos.getX(), cubePos.getZ());
-        IColumn column = (IColumn) chunk;
-        //isEmpty actually checks if the column is a BlankColumn
-        if (chunk.isEmpty()) {
-            CubicChunks.LOGGER.error("Out of order cube received! No column for cube at {} exists!", cubePos);
-            return;
-        }
-
-        Cube cube;
-        if (cubeCache.getLoadedCube(cubePos) == null) {
-            cube = cubeCache.loadCube(column, cubePos.getY()); // new cube
-        } else {
-            cube = column.getCube(cubePos.getY()); // cube update
-        }
-
-        byte[] data = packet.getData();
-        ByteBuf buf = WorldEncoder.createByteBufForRead(data);
-        WorldEncoder.decodeCube(new PacketBuffer(buf), cube);
-        cube.markForRenderUpdate();
-
-        for (NBTTagCompound tag : packet.getTileEntityTags()) {
-            int blockX = tag.getInteger("x");
-            int blockY = tag.getInteger("y");
-            int blockZ = tag.getInteger("z");
-            BlockPos pos = new BlockPos(blockX, blockY, blockZ);
-            TileEntity tileEntity = worldClient.getTileEntity(pos);
-
-            if (tileEntity != null) {
-                tileEntity.handleUpdateTag(tag);
-            }
-        }
-
-        ClientHeightMap heightMap = (ClientHeightMap) column.getOpacityIndex();
-        for (int localX = 0; localX < Cube.SIZE; localX++) {
-            for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
-                int oldHeight = heightMap.getTopBlockY(localX, localZ);
-                int newHeight = packet.height(localX, localZ);
-                if (oldHeight != newHeight) {
-                    heightMap.setHeight(localX, localZ, newHeight);
-                }
-            }
-        }
-    }
-
     public void handle(PacketColumn packet) {
         IThreadListener taskQueue = Minecraft.getMinecraft();
         if (!taskQueue.isCallingFromMinecraftThread()) {

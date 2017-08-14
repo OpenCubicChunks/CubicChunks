@@ -26,7 +26,6 @@ package cubicchunks.server;
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.lighting.LightingManager;
-import cubicchunks.network.PacketCube;
 import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.network.PacketUnloadCube;
@@ -54,7 +53,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.function.Consumer;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -62,19 +60,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CubeWatcher implements XYZAddressable, ITicket {
 
-    @Nonnull private final Consumer<Cube> consumer = (c) -> {
+    private final Consumer<Cube> consumer = (c) -> {
         this.cube = c;
         this.loading = false;
         if (this.cube != null) {
             this.cube.getTickets().add(this);
         }
     };
-    @Nonnull private final CubeProviderServer cubeCache;
-    @Nonnull private PlayerCubeMap playerCubeMap;
+    private final CubeProviderServer cubeCache;
+    private PlayerCubeMap playerCubeMap;
     @Nullable private Cube cube;
-    @Nonnull private final TIntObjectMap<WatcherPlayerEntry> players = new TIntObjectHashMap<>();
-    @Nonnull private final TShortList dirtyBlocks = new TShortArrayList(64);
-    @Nonnull private final CubePos cubePos;
+    private final TIntObjectMap<WatcherPlayerEntry> players = new TIntObjectHashMap<>();
+    private final TShortList dirtyBlocks = new TShortArrayList(64);
+    private final CubePos cubePos;
     private long previousWorldTime = 0;
     private boolean sentToPlayers = false;
     private boolean loading = true;
@@ -214,7 +212,8 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         if (!this.sentToPlayers) {
             return;
         }
-        PacketDispatcher.sendTo(new PacketCube(this.cube), player);
+        assert cube != null;
+        playerCubeMap.scheduleSendCubeToPlayer(cube, player);
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -261,7 +260,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
         if (this.dirtyBlocks.size() >= ForgeModContainer.clumpingThreshold) {
             // send whole cube
-            sendPacketToAllPlayers(new PacketCube(cube));
+            this.players.valueCollection().forEach(entry -> playerCubeMap.scheduleSendCubeToPlayer(cube, entry.player));
         } else {
             // send all the dirty blocks
             sendPacketToAllPlayers(new PacketCubeBlockChange(this.cube, this.dirtyBlocks));

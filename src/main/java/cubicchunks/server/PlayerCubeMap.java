@@ -30,9 +30,12 @@ import static net.minecraft.util.math.MathHelper.clamp;
 import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import cubicchunks.CubicChunks;
-import cubicchunks.IConfigUpdateListener;
 import cubicchunks.lighting.LightingManager;
+import cubicchunks.network.PacketCubes;
+import cubicchunks.network.PacketDispatcher;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
 import cubicchunks.util.XZMap;
@@ -40,6 +43,7 @@ import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.Cube;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import mcp.MethodsReturnNonnullByDefault;
@@ -53,8 +57,8 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -173,8 +177,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     private boolean toGenerateNeedSort = true;
     private boolean toSendToClientNeedSort = true;
 
-    @Nonnull private final CubeProviderServer cubeCache;
+    private final CubeProviderServer cubeCache;
 
+    private final Multimap<EntityPlayerMP, Cube> cubesToSend = Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
     private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.IntOptions.MAX_GENERATED_CUBES_PER_TICK.getValue();
 
     public PlayerCubeMap(ICubicWorldServer worldServer) {
@@ -348,7 +353,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 this.getWorldServer().getChunkProvider().queueUnloadAll();
             }
         }
-        getWorld().getProfiler().endSection();//unload
+        getWorld().getProfiler().endStartSection("sendCubes");//unload
+        for (EntityPlayerMP player : cubesToSend.keySet()) {
+            PacketCubes packet = new PacketCubes(new ArrayList<>(cubesToSend.get(player)));
+            PacketDispatcher.sendTo(packet, player);
+        }
+        cubesToSend.clear();
+        getWorld().getProfiler().endSection();//sendCubes
         getWorld().getProfiler().endSection();//playerCubeMapTick
     }
 
@@ -707,6 +718,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.columnWatchers.remove(pos.x, pos.z);
         this.columnsToGenerate.remove(entry);
         this.columnsToSendToClients.remove(entry);
+    }
+
+    public void scheduleSendCubeToPlayer(Cube cube, EntityPlayerMP player) {
+        cubesToSend.put(player, cube);
     }
 
     @Nullable public CubeWatcher getCubeWatcher(CubePos pos) {
