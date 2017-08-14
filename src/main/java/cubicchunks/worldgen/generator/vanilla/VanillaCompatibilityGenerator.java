@@ -106,7 +106,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         // heuristics TODO: add a config that overrides this
         lastChunk = vanilla.provideChunk(0, 0); // lets scan the chunk at 0, 0
 
-        worldHeightBlocks = 128; //TODO: figure something out to not assume 128
+        worldHeightBlocks = world.getMaxGenerationHeight();
         worldHeightCubes = worldHeightBlocks / Cube.SIZE;
         Map<IBlockState, Integer> blockHistogramBottom = new HashMap<>();
         Map<IBlockState, Integer> blockHistogramTop = new HashMap<>();

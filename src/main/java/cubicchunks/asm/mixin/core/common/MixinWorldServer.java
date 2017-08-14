@@ -30,6 +30,7 @@ import cubicchunks.server.ChunkGc;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.util.CubePos;
+import cubicchunks.util.IntRange;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicSaveHandler;
 import cubicchunks.world.FastCubeWorldEntitySpawner;
@@ -84,8 +85,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     @Nullable private ChunkGc chunkGc;
     @Nullable private FirstLightProcessor firstLightProcessor;
 
-    @Override public void initCubicWorld(int minHeight, int maxHeight) {
-        super.initCubicWorld(minHeight, maxHeight);
+    @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
+        super.initCubicWorld(heightRange, generationRange);
         this.isCubicWorld = true;
         this.entitySpawner = new CubeWorldEntitySpawner();
 

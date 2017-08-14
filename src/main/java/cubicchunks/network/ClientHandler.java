@@ -28,7 +28,6 @@ import cubicchunks.client.CubeProviderClient;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
-import cubicchunks.util.CubePos;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.IColumn;
@@ -38,7 +37,6 @@ import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.INetHandler;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
@@ -147,21 +145,6 @@ public class ClientHandler implements INetHandler {
             worldClient.invalidateRegionAndSetBlock(pos, packet.blockStates[i]);
         }
         cube.getTileEntityMap().values().forEach(TileEntity::updateContainingBlockInfo);
-    }
-
-    public void handle(final PacketWorldHeightBounds message) {
-        IThreadListener taskQueue = Minecraft.getMinecraft();
-        if (!taskQueue.isCallingFromMinecraftThread()) {
-            taskQueue.addScheduledTask(() -> handle(message));
-            return;
-        }
-
-        if (Minecraft.getMinecraft().getConnection() != null) {
-            WorldClient world = Minecraft.getMinecraft().getConnection().clientWorldController;
-            if (((ICubicWorldClient) world).isCubicWorld()) {
-                ((ICubicWorldClient) world).setHeightBounds(message.getMinHeight(), message.getMaxHeight());
-            }
-        }
     }
 
     public void handle(PacketHeightMapUpdate message) {

@@ -26,12 +26,14 @@ package cubicchunks.world.type;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.CubePos;
+import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.generator.custom.CustomTerrainGenerator;
 import cubicchunks.worldgen.gui.CustomCubicGui;
 import mcp.MethodsReturnNonnullByDefault;
@@ -41,6 +43,7 @@ import net.minecraft.client.gui.GuiErrorScreen;
 import net.minecraft.init.Biomes;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
@@ -67,16 +70,17 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
         new CustomCubicWorldType();
     }
 
-    @Override
-    public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-        return provider; // TODO: Custom Nether? Custom End????
+    @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
+        String string = world.getWorldInfo().getGeneratorOptions();
+        CustomGeneratorSettings opts = CustomGeneratorSettings.fromJson(string);
+        return new IntRange(opts.getMinHeight(), opts.getRealMaxHeight());
     }
 
     public BiomeProvider getBiomeProvider(World world) {
         if ("true".equalsIgnoreCase(System.getProperty("cubicchunks.debug.biomes"))) {
             return new BiomeProvider() {{
-                this.genBiomes = new GenLayerDebug(6);
-                this.biomeIndexLayer = new GenLayerDebug(6 + 2);
+                this.genBiomes = new GenLayerDebug(4);
+                this.biomeIndexLayer = new GenLayerDebug(4 + 2);
             }};
         } else {
             return super.getBiomeProvider(world);

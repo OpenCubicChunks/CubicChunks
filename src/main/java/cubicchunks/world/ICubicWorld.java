@@ -64,14 +64,6 @@ public interface ICubicWorld extends IMinMaxHeight {
      */
     void tickCubicWorld();
 
-    /**
-     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
-     * are loaded. Cannot be used more than once.
-     * @param maxHeight
-     * @param minHeight
-     */
-    void initCubicWorld(int minHeight, int maxHeight);
-
     boolean isCubicWorld();
 
     /**
@@ -226,4 +218,8 @@ public interface ICubicWorld extends IMinMaxHeight {
     boolean canBlockFreezeWater(BlockPos topBlock);
 
     boolean canSnowAt(BlockPos aboveTop, boolean flag);
+
+    int getMinGenerationHeight();
+
+    int getMaxGenerationHeight();
 }

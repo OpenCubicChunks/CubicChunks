@@ -28,6 +28,7 @@ import cubicchunks.entity.CubicEntityTracker;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
+import cubicchunks.util.IntRange;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.math.BlockPos;
@@ -39,6 +40,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface ICubicWorldServer extends ICubicWorld, IConfigUpdateListener {
+
+    /**
+     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
+     * are loaded. Cannot be used more than once.
+     * @param heightRange
+     * @param generationRange
+     */
+    void initCubicWorldServer(IntRange heightRange, IntRange generationRange);
 
     CubeProviderServer getCubeCache();
 

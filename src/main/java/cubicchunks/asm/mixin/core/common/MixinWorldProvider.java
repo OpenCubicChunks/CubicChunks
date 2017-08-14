@@ -37,7 +37,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.chunk.IChunkGenerator;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -55,11 +54,13 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
 
     @Shadow protected boolean hasNoSky;
 
-    @Shadow public abstract int getDimension();
-
     @Shadow public abstract DimensionType getDimensionType();
 
     @Shadow public abstract IChunkGenerator createChunkGenerator();
+
+    @Shadow public abstract int getActualHeight();
+
+    private boolean getActualHeightForceOriginalFlag = false;
 
     /**
      * @reason return the real world height instead of hardcoded 256
@@ -70,14 +71,21 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
         return cubicWorld().getMaxHeight();
     }
 
-    /**
-     * @reason return the real world height instead of hardcoded 256
-     * @author Barteks2x
-     */
-    // @Overwrite() - overwrite doesn't support unobfuscated methods
-    public int getActualHeight() {
-        // only give the real value for overworld, mods may use it scan height start in their teleporter code
-        return hasNoSky ? 128 : getDimension() == 0 ? getHeight() : 256;
+    @Inject(method = "getActualHeight", at = @At("HEAD"), cancellable = true, remap = false)
+    public void getActualHeight(CallbackInfoReturnable<Integer> cir) {
+        if (world == null || !((ICubicWorld) world).isCubicWorld() || !(world.getWorldType() instanceof ICubicWorldType)) {
+            return;
+        }
+        cir.setReturnValue(((ICubicWorld)world).getMaxGenerationHeight());
+    }
+
+    @Override public int getOriginalActualHeight() {
+        try {
+            getActualHeightForceOriginalFlag = true;
+            return getActualHeight();
+        } finally {
+            getActualHeightForceOriginalFlag = false;
+        }
     }
 
     @Nullable @Override public ICubeGenerator createCubeGenerator() {
