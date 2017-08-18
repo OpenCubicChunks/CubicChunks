@@ -99,8 +99,10 @@ class OreSettingsTab {
     private final UISlider<Integer> lapisLazuliOreSpawnSize;
     private final UISlider<Integer> lapisLazuliOreSpawnTries;
     private final UISlider<Float> lapisLazuliOreSpawnProbability;
-    private final UISlider<Float> lapisLazuliMeanHeight;
+    private final UISlider<Integer> lapisLazuliMeanHeight;
     private final UISlider<Float> lapisLazuliHeightStdDev;
+    private final UISlider<Integer> lapisLazuliSpacingHeight;
+    private final UISlider<Integer> lapisLazuliLimitHeight;
 
     OreSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
         int y = -1;
@@ -246,13 +248,18 @@ class OreSettingsTab {
                 .add(this.lapisLazuliOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.lapisLazuliSpawnTries),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
                 .add(this.lapisLazuliOreSpawnProbability =
-                                makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.lapisLazuliSpawnProbability),
+                                makeFloatSlider(gui, malisisText("spawn_maxprobability", " %.3f"), settings.lapisLazuliSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.lapisLazuliMeanHeight = makeFloatSlider(gui, malisisText("mean_height", " %.3f"), -2.0f, 2.0f,
+                .add(this.lapisLazuliSpacingHeight = makeIntSlider(gui, malisisText("spacing_height", " %d"), 50, 1000,
+                        settings.lapisLazuliHeightSpacing),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+                .add(this.lapisLazuliLimitHeight = makeIntSlider(gui, malisisText("limit_height", " %d"), -100, 100,
+                        settings.lapisLazuliHeightLimit),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+                .add(this.lapisLazuliMeanHeight = makeIntSlider(gui, malisisText("mean_height", " %d"), -100, 100,
                         settings.lapisLazuliHeightMean),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.lapisLazuliHeightStdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), -2.0f, 2.0f,
-                        settings.lapisLazuliHeightStdDeviation),
+                .add(this.lapisLazuliHeightStdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), 0.5f, 15f, settings.lapisLazuliHeightStdDeviation),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
                 .init();
 
@@ -340,6 +347,8 @@ class OreSettingsTab {
         conf.lapisLazuliSpawnSize = this.lapisLazuliOreSpawnSize.getValue();
         conf.lapisLazuliHeightMean = this.lapisLazuliMeanHeight.getValue();
         conf.lapisLazuliHeightStdDeviation = this.lapisLazuliHeightStdDev.getValue();
+        conf.lapisLazuliHeightSpacing = this.lapisLazuliSpacingHeight.getValue();
+        conf.lapisLazuliHeightLimit = this.lapisLazuliLimitHeight.getValue();
 
     }
 }

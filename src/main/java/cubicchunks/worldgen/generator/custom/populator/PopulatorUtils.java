@@ -75,17 +75,18 @@ public class PopulatorUtils {
         }
     }
 
-    public static void genOreGaussian(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos,
-            int count, double probability, WorldGenerator generator, double mean, double stdDev) {
+    public static void genOreGaussian(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos, int count,
+                                      double probability, WorldGenerator generator, int mean, double stdDev, int spacing, int heightLimit) {
         for (int i = 0; i < count; ++i) {
-            if (random.nextDouble() > probability) {
-                continue;
-            }
             int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
             int blockY = pos.getMinBlockY() + yOffset;
-            //noinspection SuspiciousNameCombination
-            double prob = MathUtil.gaussianProbabilityDensity(blockY, mean, stdDev);
-            if (random.nextDouble() > prob) {
+            //skip all potential spawns above the height limit
+            if(blockY > heightLimit){
+                continue;
+            }
+            double modifier = MathUtil.gaussianProbabilityCyclic(blockY, mean, stdDev, spacing);
+            //Modify base probability with the curve
+            if (random.nextDouble() > (probability * modifier)) {
                 continue;
             }
             int xOffset = random.nextInt(Cube.SIZE);
