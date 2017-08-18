@@ -112,6 +112,7 @@ public class MathUtil {
         return exp(-(x - mean) * (x - mean) / (2 * stdDev * stdDev)) /
                 (sqrt(2 * Math.PI) * stdDev);
     }
+	
     public static double gaussianProbabilityCyclic(int x, int mean, double stdDev, int spacing) {
         /* Modulo works from 0 to limit-1.
            I want it to go from -limit/2 to +limit/2 because the curve is centered on 0 and thus doesn't start there.
