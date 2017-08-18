@@ -20,8 +20,7 @@ git submodule update --init --recursive
 ```
 
 ### Compiling the mod
-Note: on windows command prompt you need to run these commands without `./`
-Note: on windows powershell you need to run these commands with `.\` instead.
+Note: on windows you need to run these commands without `./`
 
 This command:
 ```
