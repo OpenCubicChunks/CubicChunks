@@ -106,3 +106,4 @@ run
 
 .nb-gradle-properties
 VERSION
+updateFork.bat
