@@ -30,15 +30,15 @@ import cubicchunks.util.IntRange;
 import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.WorldSavedDataHeightBounds;
+import cubicchunks.world.ICubicWorldSettings;
+import cubicchunks.world.WorldSavedCubicChunksData;
 import cubicchunks.world.provider.ICubicWorldProvider;
 import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.multiplayer.ChunkProviderClient;
-import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldServerMulti;
 import net.minecraft.world.WorldType;
@@ -47,13 +47,11 @@ import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.List;
-import java.util.function.Predicate;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -62,16 +60,23 @@ import com.google.common.collect.ImmutableList;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CommonEventHandler {
-
     @SubscribeEvent // this event is fired early enough to replace world with cubic chunks without any issues
     public void onWorldAttachCapabilities(AttachCapabilitiesEvent<World> evt) {
         if (evt.getObject().isRemote) {
             return; // we will send packet to the client when it joins, client shouldn't change world types as it wants
         }
-        if (!(evt.getObject().getWorldType() instanceof ICubicWorldType)) {
+        ICubicWorldServer world = (ICubicWorldServer) evt.getObject();
+
+        WorldSavedCubicChunksData savedData =
+                (WorldSavedCubicChunksData) evt.getObject().getMapStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
+        boolean forcedCubicChunks = ((ICubicWorldSettings)world.getWorldInfo()).isCubic();
+        // if it's our world type - always cubic chunks
+        // is stored in WorldSavedData - it's already existing cubic chunks world
+        // if forced cubic chunks - cubic chunks has been enabled by user on this world
+        if (!(evt.getObject().getWorldType() instanceof ICubicWorldType) && savedData == null && !forcedCubicChunks) {
             return;
         }
-        ICubicWorldServer world = (ICubicWorldServer) evt.getObject();
+
         if (shouldSkipWorld((World) world)) {
             CubicChunks.LOGGER.info("Skipping world " + evt.getObject() + " with type " + evt.getObject().getWorldType() + " due to potential "
                     + "compatibility issues");
@@ -84,16 +89,15 @@ public class CommonEventHandler {
         if (type instanceof ICubicWorldType) {
             generationRange = ((ICubicWorldType) type).calculateGenerationHeightRange((WorldServer) world);
         }
-        WorldSavedDataHeightBounds heightBounds =
-                (WorldSavedDataHeightBounds) evt.getObject().getMapStorage().getOrLoadData(WorldSavedDataHeightBounds.class, "heightBounds");
-        if (heightBounds == null) {
-            heightBounds = new WorldSavedDataHeightBounds("heightBounds");
+
+        if (savedData == null) {
+            savedData = new WorldSavedCubicChunksData("cubicChunksData");
         }
-        int minHeight = heightBounds.minHeight;
-        int maxHeight = heightBounds.maxHeight;
+        int minHeight = savedData.minHeight;
+        int maxHeight = savedData.maxHeight;
         world.initCubicWorldServer(new IntRange(minHeight, maxHeight), generationRange);
-        heightBounds.markDirty();
-        evt.getObject().getMapStorage().setData("heightBounds", heightBounds);
+        savedData.markDirty();
+        evt.getObject().getMapStorage().setData("cubicChunksData", savedData);
         evt.getObject().getMapStorage().saveAllData();
     }
 

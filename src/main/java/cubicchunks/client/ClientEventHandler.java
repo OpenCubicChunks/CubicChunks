@@ -23,24 +23,36 @@
  */
 package cubicchunks.client;
 
+import cubicchunks.CommonEventHandler;
 import cubicchunks.CubicChunks;
 import cubicchunks.CubicChunks.Config.IntOptions;
+import cubicchunks.event.CreateNewWorldEvent;
 import cubicchunks.server.ICubicPlayerList;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldSettings;
+import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiOptionsRowList;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiVideoSettings;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.WorldType;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+
+import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -124,6 +136,7 @@ public class ClientEventHandler {
         return new GuiOptionsRowList.Row(slider, null);
     }
 
+
     private class GuiCustomSlider extends GuiButton {
 
         private float sliderValue;
@@ -194,6 +207,82 @@ public class ClientEventHandler {
          */
         public void mouseReleased(int mouseX, int mouseY) {
             this.dragging = false;
+        }
+    }
+
+    @Mod.EventBusSubscriber(modid = CubicChunks.MODID)
+    public static class WorldSelectionCubicChunks {
+
+        private static final int MAP_TYPE_ID = 5;
+        private static final int ALLOW_CHEATS_ID = 6;
+        private static final int CUSTOMIZE_ID = 8;
+
+        private static final int CC_ENABLE_BUTTON_ID = 11;
+
+        @SubscribeEvent
+        public static void guiInit(InitGuiEvent.Post event) {
+            GuiScreen gui = event.getGui();
+            if (isCreateWorldGui(gui)) {
+                List<GuiButton> buttons = event.getButtonList();
+
+                Optional<GuiButton> customizeButton = getButton(buttons, CUSTOMIZE_ID);
+                Optional<GuiButton> allowCheats = getButton(buttons, ALLOW_CHEATS_ID);
+                customizeButton.ifPresent(b -> allowCheats.ifPresent(c -> {
+                    b.yPosition = c.yPosition - 21;
+                    GuiButton mapTypeButton = getButton(buttons, MAP_TYPE_ID).get();
+                    GuiButton enableCC = new GuiButton(CC_ENABLE_BUTTON_ID, c.xPosition, b.yPosition, c.width, c.height, "enable");
+                    enableCC.visible = mapTypeButton.visible;
+                    buttons.add(enableCC);
+                    refreshText((GuiCreateWorld) gui, enableCC);
+                }));
+            }
+        }
+
+        private static void refreshText(GuiCreateWorld gui, GuiButton enableBtn) {
+            enableBtn.displayString = I18n.format("cubicchunks.gui.worldmenu." +
+                    (CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue() ? "cc_enable" : "cc_disable"));
+        }
+
+        @SubscribeEvent
+        public static void actionPerformed(GuiScreenEvent.ActionPerformedEvent.Post event) {
+            GuiScreen gui = event.getGui();
+            GuiButton button = event.getButton();
+            if (isCreateWorldGui(gui)) {
+                switch (button.id) {
+                    case MAP_TYPE_ID: {
+                        GuiButton enableCC = null, mapType = null;
+                        for (GuiButton b : event.getButtonList()) {
+                            if (b.id == CC_ENABLE_BUTTON_ID) {
+                                enableCC = b;
+                            } else if (b.id == MAP_TYPE_ID) {
+                                mapType = b;
+                            }
+                        }
+                        boolean isCubicChunksType = WorldType.WORLD_TYPES[((GuiCreateWorld) gui).selectedIndex] instanceof ICubicWorldType;
+                        if (enableCC != null && mapType != null && !isCubicChunksType) {
+                            enableCC.visible = mapType.visible;
+                        }
+                        break;
+                    }
+                    case CC_ENABLE_BUTTON_ID: {
+                        CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.flip();
+                        refreshText((GuiCreateWorld) gui, button);
+                        break;
+                    }
+                }
+            }
+        }
+
+        @SubscribeEvent public static void onCreateWorldSettings(CreateNewWorldEvent event) {
+            ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue());
+        }
+
+        private static boolean isCreateWorldGui(GuiScreen gui) {
+            return gui instanceof GuiCreateWorld;
+        }
+
+        private static Optional<GuiButton> getButton(List<GuiButton> buttons, int id) {
+            return buttons.stream().filter(b -> b.id == id).findFirst();
         }
     }
 }
