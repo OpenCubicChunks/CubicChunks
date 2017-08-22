@@ -23,32 +23,24 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.util.AddressTools;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.WorldSavedData;
+import net.minecraft.util.ResourceLocation;
 
-public class WorldSavedDataHeightBounds extends WorldSavedData {
+import java.util.Map;
 
-    public int minHeight = 0, maxHeight = 256;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-    public WorldSavedDataHeightBounds(String name) {
-        super(name);
-        minHeight = CubicChunks.MIN_BLOCK_Y;
-        maxHeight = CubicChunks.MAX_BLOCK_Y;
-    }
+/**
+ * Interface for WorldSettings and WorldInfo allowing to store custom data into the world.
+ * The data is will be stored on disk, but will not be sent to client.
+ */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+public interface ICubicWorldSettings {
 
-    @Override
-    public void readFromNBT(NBTTagCompound nbt) {
-        minHeight = nbt.getInteger("minHeight");
-        maxHeight = nbt.getInteger("maxHeight");
-    }
+    boolean isCubic();
 
-    @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        compound.setInteger("minHeight", minHeight);
-        compound.setInteger("maxHeight", maxHeight);
-        return compound;
-    }
-
+    void setCubic(boolean cubic);
 }

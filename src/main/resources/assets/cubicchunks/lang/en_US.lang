@@ -8,6 +8,9 @@ itemGroup.cubic_chunks_debug_tab=Cubic Chunks debug items
 ###        general gui        ###
 #################################
 
+cubicchunks.gui.worldmenu.cc_enable=CubicChunks: Yes
+cubicchunks.gui.worldmenu.cc_disable=CubicChunks: No
+
 cubicchunks.gui.customcubic.previous_page=Previous
 cubicchunks.gui.customcubic.next_page=Next
 cubicchunks.gui.customcubic.done=Done
