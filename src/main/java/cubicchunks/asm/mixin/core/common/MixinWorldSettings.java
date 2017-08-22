@@ -28,7 +28,11 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldSettings;
+import net.minecraft.world.storage.WorldInfo;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +47,11 @@ public class MixinWorldSettings implements ICubicWorldSettings {
 
     private boolean isCubic;
 
+    @Inject(method = "<init>(Lnet/minecraft/world/storage/WorldInfo;)V", at = @At("RETURN"))
+    private void onConstruct(WorldInfo info, CallbackInfo cbi) {
+        this.isCubic = ((ICubicWorldSettings) info).isCubic();
+    }
+    
     @Override public boolean isCubic() {
         return isCubic;
     }
