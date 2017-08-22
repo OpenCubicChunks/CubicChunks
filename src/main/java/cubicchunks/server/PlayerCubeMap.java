@@ -57,6 +57,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -355,8 +356,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         }
         getWorld().getProfiler().endStartSection("sendCubes");//unload
         for (EntityPlayerMP player : cubesToSend.keySet()) {
-            PacketCubes packet = new PacketCubes(new ArrayList<>(cubesToSend.get(player)));
-            PacketDispatcher.sendTo(packet, player);
+            List<Cube> cubes = new ArrayList<>(cubesToSend.get(player));
+            // split into packets of 64 cubes because in 1.10.2 packet splitting is broken
+            for (int i = 0; i < cubes.size(); i += 64) {
+                int max = Math.min(i + 64, cubes.size());
+                PacketCubes packet = new PacketCubes(cubes.subList(i, max));
+                PacketDispatcher.sendTo(packet, player);
+            }
         }
         cubesToSend.clear();
         getWorld().getProfiler().endSection();//sendCubes
