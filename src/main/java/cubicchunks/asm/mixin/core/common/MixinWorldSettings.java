@@ -21,48 +21,33 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.type;
+package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.util.IntRange;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubeGenerator;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
+import cubicchunks.world.ICubicWorldSettings;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiCreateWorld;
-import net.minecraft.client.gui.GuiErrorScreen;
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.WorldType;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.WorldSettings;
+import org.spongepowered.asm.mixin.Mixin;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
+@ParametersAreNonnullByDefault
+@Mixin(WorldSettings.class)
+public class MixinWorldSettings implements ICubicWorldSettings {
 
-    public FlatCubicWorldType() {//todo: make it private, used in test
-        super("FlatCubic");
+    private boolean isCubic;
+
+    @Override public boolean isCubic() {
+        return isCubic;
     }
 
-    public static void create() {
-        new FlatCubicWorldType();
-    }
-
-    @Override
-    public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-        return new FlatTerrainProcessor(world);
-    }
-
-    @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
-        return new IntRange(0, 256); // TODO: Flat generation height range
-    }
-
-    public boolean isCustomizable() {
-        return false;
+    @Override public void setCubic(boolean cubic) {
+        this.isCubic = cubic;
     }
 }

@@ -126,7 +126,7 @@ configure<ForgeExtension> {
 
     replace("@@VERSION@@", project.version)
     replace("/*@@DEPS_PLACEHOLDER@@*/",
-            ",dependencies = \"after:malisiscore@[$malisisCoreMinVersion,)\"")
+            ",dependencies = \"after:forge@[13.20.1.2454,);after:malisiscore@[$malisisCoreMinVersion,)\"")
     replace("@@MALISIS_VERSION@@", malisisCoreMinVersion)
     replaceIn("cubicchunks/CubicChunks.java")
 

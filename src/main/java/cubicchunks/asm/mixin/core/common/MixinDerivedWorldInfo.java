@@ -21,31 +21,21 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.client.CubeProviderClient;
-import cubicchunks.util.IntRange;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.math.BlockPos;
+import cubicchunks.world.ICubicWorldSettings;
+import net.minecraft.world.storage.DerivedWorldInfo;
+import net.minecraft.world.storage.WorldInfo;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+@Mixin(DerivedWorldInfo.class)
+public class MixinDerivedWorldInfo extends MixinWorldInfo {
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ICubicWorldClient extends ICubicWorld {
+    @Shadow @Final private WorldInfo delegate;
 
-    /**
-     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
-     * are loaded. Cannot be used more than once.
-     * @param heightRange
-     * @param generationRange
-     */
-    void initCubicWorldClient(IntRange heightRange, IntRange generationRange);
-
-    CubeProviderClient getCubeCache();
-
-    boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
-
-    void setHeightBounds(int minHeight, int maxHeight);
+    @Override public boolean isCubic() {
+        return ((ICubicWorldSettings) delegate).isCubic();
+    }
 }

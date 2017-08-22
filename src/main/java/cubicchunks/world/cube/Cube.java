@@ -151,7 +151,14 @@ public class Cube implements XYZAddressable {
      * Is this cube loaded and not queued for unload
      */
     private boolean isCubeLoaded;
-
+    
+    /**
+     * Contains the current Linear Congruential Generator seed for block updates. Used with an A value of 3 and a C
+     * value of 0x3c6ef35f, producing a highly planar series of values ill-suited for choosing random blocks in a
+     * 16x16x16 field.
+     */
+    protected int updateLCG = (new Random()).nextInt();
+    
     /**
      * Create a new cube in the specified column at the specified location. The newly created cube will only contain air
      * blocks.
@@ -345,7 +352,7 @@ public class Cube implements XYZAddressable {
     }
 
     /**
-     * Tick this cube on client side
+     * Update light and tile entities of cube
      *
      * @param tryToTickFaster Whether costly calculations should be skipped in order to catch up with ticks
      */
@@ -399,6 +406,25 @@ public class Cube implements XYZAddressable {
             NextTickListEntry ntle = pti.next();
             pendingTickListEntriesTreeSet.add(ntle);
             pti.remove();
+        }
+    }
+    
+    /**
+     * Launch random ticks of a blocks of a cube. Plant growing and other events goes here.
+     * @param worldServer - world where random tick is launched
+     * @param rand - World specific Random
+     */
+    public void randomTick(WorldServer worldServer, Random rand) {
+        this.updateLCG = this.updateLCG * 3 + 1013904223;
+        int j1 = updateLCG >> 2;
+        int localX = j1 & 15;
+        int localY = j1 >> 8 & 15;
+        int localZ = j1 >> 16 & 15;
+        IBlockState iblockstate = this.storage.get(localX, localY, localZ);
+        Block block = iblockstate.getBlock();
+        if (block.getTickRandomly()) {
+            BlockPos pos = new BlockPos(this.coords.getMinBlockX() + localX, this.coords.getMinBlockY() + localY, this.coords.getMinBlockZ() + localZ);
+            block.randomTick(worldServer, pos, iblockstate, rand);
         }
     }
 
@@ -574,7 +600,7 @@ public class Cube implements XYZAddressable {
 
         // tell the world to forget about tile entities
         for (TileEntity blockEntity : this.tileEntityMap.values()) {
-            this.world.removeTileEntity(blockEntity.getPos());
+            this.world.markTileEntityForRemoval(blockEntity);
         }
     }
 

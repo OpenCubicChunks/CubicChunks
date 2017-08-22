@@ -16,7 +16,10 @@
         "common.MixinEntity_DeathFix",
         "common.MixinWorldProvider",
         "common.MixinPlayerList",
-        "common.structuregen.MixinStructureStart"
+        "common.structuregen.MixinStructureStart",
+        "common.MixinWorldInfo",
+        "common.MixinWorldSettings",
+        "common.MixinDerivedWorldInfo"
     ],
     "client": [
         "client.MixinWorld_HeightLimits",
@@ -25,7 +28,8 @@
         "client.MixinChunkCache_HeightLimits",
         "client.MixinChunk_Cubes",
         "client.MixinViewFrustum_RenderHeightFix",
-        "client.MixinWorldProvider"
+        "client.MixinWorldProvider",
+        "client.MixinGuiCreateWorld"
     ],
     "server": [
         "server.MixinDedicatedServer_HeightLimits",

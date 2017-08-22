@@ -327,14 +327,13 @@ public class CubicChunks {
                             + " Fast entity spawner can reduce server lag."
                             + " In contrary entity respawn speed will be slightly slower (only one pack per tick)"
                             + " and amount of spawned mob will depend only from amount of players."),
-            USE_FAST_COLLISION_CHECK(true, 
-                    "Enabling this option allow using fast collision check."
-                            + " Fast collision check can reduce server lag."
-                            + " You need to restart Minecraft to apply changes."),
             USE_VANILLA_CHUNK_WORLD_GENERATORS(false,
                     "Enabling this option will force " + CubicChunks.MODID
                             + " to use world generators designed for two dimensional chunks, which are often used for custom ore generators added by mods. To do so "
-                            + CubicChunks.MODID + " will pregenerate cubes in a range of height from 0 to 255.");
+                            + CubicChunks.MODID + " will pregenerate cubes in a range of height from 0 to 255."),
+            FORCE_CUBIC_CHUNKS(false,
+                    "Enabling this will force creating a cubic chunks world, even if it's not cubic chunks world type. This option is automatically"
+                            + " set in world creation GUI when creating cubic chunks world with non-cubicchunks world type");
 
             private final boolean defaultValue;
             private final String description;
@@ -348,6 +347,10 @@ public class CubicChunks {
 
             public boolean getValue() {
                 return value;
+            }
+
+            public void flip() {
+                this.value = !this.value;
             }
         }
         

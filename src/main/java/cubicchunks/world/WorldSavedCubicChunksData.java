@@ -23,29 +23,32 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.client.CubeProviderClient;
-import cubicchunks.util.IntRange;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.math.BlockPos;
+import cubicchunks.CubicChunks;
+import cubicchunks.util.AddressTools;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.WorldSavedData;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+public class WorldSavedCubicChunksData extends WorldSavedData {
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ICubicWorldClient extends ICubicWorld {
+    public int minHeight = 0, maxHeight = 256;
 
-    /**
-     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
-     * are loaded. Cannot be used more than once.
-     * @param heightRange
-     * @param generationRange
-     */
-    void initCubicWorldClient(IntRange heightRange, IntRange generationRange);
+    public WorldSavedCubicChunksData(String name) {
+        super(name);
+        minHeight = CubicChunks.MIN_BLOCK_Y;
+        maxHeight = CubicChunks.MAX_BLOCK_Y;
+    }
 
-    CubeProviderClient getCubeCache();
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {
+        minHeight = nbt.getInteger("minHeight");
+        maxHeight = nbt.getInteger("maxHeight");
+    }
 
-    boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+        compound.setInteger("minHeight", minHeight);
+        compound.setInteger("maxHeight", maxHeight);
+        return compound;
+    }
 
-    void setHeightBounds(int minHeight, int maxHeight);
 }

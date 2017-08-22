@@ -21,31 +21,14 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.event;
 
-import cubicchunks.client.CubeProviderClient;
-import cubicchunks.util.IntRange;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldSettings;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ICubicWorldClient extends ICubicWorld {
-
-    /**
-     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
-     * are loaded. Cannot be used more than once.
-     * @param heightRange
-     * @param generationRange
-     */
-    void initCubicWorldClient(IntRange heightRange, IntRange generationRange);
-
-    CubeProviderClient getCubeCache();
-
-    boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
-
-    void setHeightBounds(int minHeight, int maxHeight);
+public class CCEventFactory {
+    public static void onWorldSettingsCreate(WorldSettings settings) {
+        MinecraftForge.EVENT_BUS.post(new CreateNewWorldEvent(FMLCommonHandler.instance().getSide(), settings));
+    }
 }

@@ -21,31 +21,30 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.client.CubeProviderClient;
-import cubicchunks.util.IntRange;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.math.BlockPos;
+import cubicchunks.event.CCEventFactory;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiCreateWorld;
+import net.minecraft.world.WorldSettings;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+@Mixin(GuiCreateWorld.class)
+public class MixinGuiCreateWorld {
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ICubicWorldClient extends ICubicWorld {
+    @Inject(method = "actionPerformed",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/WorldSettings;setGeneratorOptions(Ljava/lang/String;)Lnet/minecraft/world/WorldSettings;",
+                    shift = At.Shift.AFTER
+            ),
+            locals = LocalCapture.CAPTURE_FAILHARD)
+    private void onWorldSettingsCreate(GuiButton button, CallbackInfo cbi, long seed, String generatorSettings, WorldSettings worldSettings) {
+        CCEventFactory.onWorldSettingsCreate(worldSettings);
+    }
 
-    /**
-     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
-     * are loaded. Cannot be used more than once.
-     * @param heightRange
-     * @param generationRange
-     */
-    void initCubicWorldClient(IntRange heightRange, IntRange generationRange);
-
-    CubeProviderClient getCubeCache();
-
-    boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
-
-    void setHeightBounds(int minHeight, int maxHeight);
 }

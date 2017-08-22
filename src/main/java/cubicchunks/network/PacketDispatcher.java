@@ -57,7 +57,7 @@ public class PacketDispatcher {
      * Registers all packets. Side of a packet is the side on which the packet is handled.
      */
     public static void registerPackets() {
-        registerMessage(PacketCube.Handler.class, PacketCube.class);
+        registerMessage(PacketCubes.Handler.class, PacketCubes.class);
         registerMessage(PacketColumn.Handler.class, PacketColumn.class);
 
         registerMessage(PacketUnloadColumn.Handler.class, PacketUnloadColumn.class);
@@ -65,7 +65,7 @@ public class PacketDispatcher {
 
         registerMessage(PacketCubeBlockChange.Handler.class, PacketCubeBlockChange.class);
 
-        registerMessage(PacketWorldHeightBounds.Handler.class, PacketWorldHeightBounds.class);
+        registerMessage(PacketCubicWorldData.Handler.class, PacketCubicWorldData.class);
         registerMessage(PacketHeightMapUpdate.Handler.class, PacketHeightMapUpdate.class);
         registerMessage(PacketCubeSkyLightUpdates.Handler.class, PacketCubeSkyLightUpdates.class);
 

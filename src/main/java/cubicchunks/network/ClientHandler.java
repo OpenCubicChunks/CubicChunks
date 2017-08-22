@@ -28,7 +28,6 @@ import cubicchunks.client.CubeProviderClient;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
-import cubicchunks.util.CubePos;
 import cubicchunks.world.ClientHeightMap;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.IColumn;
@@ -38,7 +37,6 @@ import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.INetHandler;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
@@ -67,62 +65,6 @@ public class ClientHandler implements INetHandler {
     @Override
     public void onDisconnect(ITextComponent chat) {
         // nothing to do
-    }
-
-    public void handle(PacketCube packet) {
-        IThreadListener taskQueue = Minecraft.getMinecraft();
-        if (!taskQueue.isCallingFromMinecraftThread()) {
-            taskQueue.addScheduledTask(() -> handle(packet));
-            return;
-        }
-
-        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
-        CubeProviderClient cubeCache = worldClient.getCubeCache();
-
-        CubePos cubePos = packet.getCubePos();
-
-        Chunk chunk = (Chunk) cubeCache.provideColumn(cubePos.getX(), cubePos.getZ());
-        IColumn column = (IColumn) chunk;
-        //isEmpty actually checks if the column is a BlankColumn
-        if (chunk.isEmpty()) {
-            CubicChunks.LOGGER.error("Out of order cube received! No column for cube at {} exists!", cubePos);
-            return;
-        }
-
-        Cube cube;
-        if (cubeCache.getLoadedCube(cubePos) == null) {
-            cube = cubeCache.loadCube(column, cubePos.getY()); // new cube
-        } else {
-            cube = column.getCube(cubePos.getY()); // cube update
-        }
-
-        byte[] data = packet.getData();
-        ByteBuf buf = WorldEncoder.createByteBufForRead(data);
-        WorldEncoder.decodeCube(new PacketBuffer(buf), cube);
-        cube.markForRenderUpdate();
-
-        for (NBTTagCompound tag : packet.getTileEntityTags()) {
-            int blockX = tag.getInteger("x");
-            int blockY = tag.getInteger("y");
-            int blockZ = tag.getInteger("z");
-            BlockPos pos = new BlockPos(blockX, blockY, blockZ);
-            TileEntity tileEntity = worldClient.getTileEntity(pos);
-
-            if (tileEntity != null) {
-                tileEntity.handleUpdateTag(tag);
-            }
-        }
-
-        ClientHeightMap heightMap = (ClientHeightMap) column.getOpacityIndex();
-        for (int localX = 0; localX < Cube.SIZE; localX++) {
-            for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
-                int oldHeight = heightMap.getTopBlockY(localX, localZ);
-                int newHeight = packet.height(localX, localZ);
-                if (oldHeight != newHeight) {
-                    heightMap.setHeight(localX, localZ, newHeight);
-                }
-            }
-        }
     }
 
     public void handle(PacketColumn packet) {
@@ -203,21 +145,6 @@ public class ClientHandler implements INetHandler {
             worldClient.invalidateRegionAndSetBlock(pos, packet.blockStates[i]);
         }
         cube.getTileEntityMap().values().forEach(TileEntity::updateContainingBlockInfo);
-    }
-
-    public void handle(final PacketWorldHeightBounds message) {
-        IThreadListener taskQueue = Minecraft.getMinecraft();
-        if (!taskQueue.isCallingFromMinecraftThread()) {
-            taskQueue.addScheduledTask(() -> handle(message));
-            return;
-        }
-
-        if (Minecraft.getMinecraft().getConnection() != null) {
-            WorldClient world = Minecraft.getMinecraft().getConnection().clientWorldController;
-            if (((ICubicWorldClient) world).isCubicWorld()) {
-                ((ICubicWorldClient) world).setHeightBounds(message.getMinHeight(), message.getMaxHeight());
-            }
-        }
     }
 
     public void handle(PacketHeightMapUpdate message) {

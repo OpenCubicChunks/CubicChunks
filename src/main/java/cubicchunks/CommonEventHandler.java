@@ -24,19 +24,21 @@
 package cubicchunks;
 
 import cubicchunks.network.PacketDispatcher;
-import cubicchunks.network.PacketWorldHeightBounds;
+import cubicchunks.network.PacketCubicWorldData;
 import cubicchunks.server.SpawnCubes;
+import cubicchunks.util.IntRange;
 import cubicchunks.util.ReflectionUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.WorldSavedDataHeightBounds;
+import cubicchunks.world.ICubicWorldSettings;
+import cubicchunks.world.WorldSavedCubicChunksData;
+import cubicchunks.world.provider.ICubicWorldProvider;
 import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.multiplayer.ChunkProviderClient;
-import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldServerMulti;
 import net.minecraft.world.WorldType;
@@ -45,13 +47,11 @@ import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.List;
-import java.util.function.Predicate;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -60,47 +60,45 @@ import com.google.common.collect.ImmutableList;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CommonEventHandler {
-
-    @SidedProxy
-    private static Predicate<ICubicWorld> doNotTouchWorld;
-
     @SubscribeEvent // this event is fired early enough to replace world with cubic chunks without any issues
     public void onWorldAttachCapabilities(AttachCapabilitiesEvent<World> evt) {
-        if (!(evt.getObject().getWorldType() instanceof ICubicWorldType)) {
+        if (evt.getObject().isRemote) {
+            return; // we will send packet to the client when it joins, client shouldn't change world types as it wants
+        }
+        ICubicWorldServer world = (ICubicWorldServer) evt.getObject();
+
+        WorldSavedCubicChunksData savedData =
+                (WorldSavedCubicChunksData) evt.getObject().getMapStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
+        boolean forcedCubicChunks = ((ICubicWorldSettings)world.getWorldInfo()).isCubic();
+        // if it's our world type - always cubic chunks
+        // is stored in WorldSavedData - it's already existing cubic chunks world
+        // if forced cubic chunks - cubic chunks has been enabled by user on this world
+        if (!(evt.getObject().getWorldType() instanceof ICubicWorldType) && savedData == null && !forcedCubicChunks) {
             return;
         }
-        ICubicWorld world = (ICubicWorld) evt.getObject();
-        if (doNotTouchWorld.test(world)) {
+
+        if (shouldSkipWorld((World) world)) {
             CubicChunks.LOGGER.info("Skipping world " + evt.getObject() + " with type " + evt.getObject().getWorldType() + " due to potential "
                     + "compatibility issues");
             return;
         }
         CubicChunks.LOGGER.info("Initializing world " + evt.getObject() + " with type " + evt.getObject().getWorldType());
 
-
+        IntRange generationRange = new IntRange(0, ((ICubicWorldProvider) world.getProvider()).getOriginalActualHeight());
         WorldType type = evt.getObject().getWorldType();
         if (type instanceof ICubicWorldType) {
-            WorldProvider provider = ((ICubicWorldType) type).getReplacedProviderFor(world.getProvider());
-            ReflectionUtil.setFieldValueSrg(world, "field_73011_w", provider);
+            generationRange = ((ICubicWorldType) type).calculateGenerationHeightRange((WorldServer) world);
         }
-        int minHeight = 0;
-        int maxHeight = 255;
-        WorldSavedDataHeightBounds heightBounds = null;
-        if (!world.isRemote()) {
-            heightBounds =
-                    (WorldSavedDataHeightBounds) evt.getObject().getMapStorage().getOrLoadData(WorldSavedDataHeightBounds.class, "heightBounds");
-            if (heightBounds == null) {
-                heightBounds = new WorldSavedDataHeightBounds("heightBounds");
-            }
-            minHeight = heightBounds.minHeight;
-            maxHeight = heightBounds.maxHeight;
+
+        if (savedData == null) {
+            savedData = new WorldSavedCubicChunksData("cubicChunksData");
         }
-        world.initCubicWorld(minHeight, maxHeight);
-        if (!world.isRemote()) {
-            heightBounds.markDirty();
-            evt.getObject().getMapStorage().setData("heightBounds", heightBounds);
-            evt.getObject().getMapStorage().saveAllData();
-        }
+        int minHeight = savedData.minHeight;
+        int maxHeight = savedData.maxHeight;
+        world.initCubicWorldServer(new IntRange(minHeight, maxHeight), generationRange);
+        savedData.markDirty();
+        evt.getObject().getMapStorage().setData("cubicChunksData", savedData);
+        evt.getObject().getMapStorage().saveAllData();
     }
 
     @SubscribeEvent
@@ -132,57 +130,26 @@ public class CommonEventHandler {
     @SubscribeEvent
     public void onPlayerJoinWorld(EntityJoinWorldEvent evt) {
         if (evt.getEntity() instanceof EntityPlayerMP && ((ICubicWorld) evt.getWorld()).isCubicWorld()) {
-            PacketDispatcher.sendTo(new PacketWorldHeightBounds(evt.getWorld()), (EntityPlayerMP) evt.getEntity());
+            PacketDispatcher.sendTo(new PacketCubicWorldData((WorldServer) evt.getWorld()), (EntityPlayerMP) evt.getEntity());
         }
     }
 
-    public static class ClientProxy extends ServerProxy {
+    @SuppressWarnings("unchecked")
+    private final List<Class<? extends World>> allowedServerWorldClasses = ImmutableList.copyOf(new Class[]{
+            WorldServer.class,
+            WorldServerMulti.class,
+            // non-existing classes will be Objects
+            ReflectionUtil.getClassOrDefault("WorldServerOF", Object.class), // OptiFine's WorldServer, no package
+            ReflectionUtil.getClassOrDefault("WorldServerMultiOF", Object.class) // OptiFine's WorldServerMulti, no package
+    });
 
-        @SuppressWarnings("unchecked")
-        private final List<Class<? extends World>> allowedClientWorldClasses = ImmutableList.<Class<? extends World>>builder()
-                .addAll(allowedServerWorldClasses)
-                .add(
-                        WorldClient.class
-                ).build();
-        
-        @SuppressWarnings("unchecked")
-        private final List<Class<? extends IChunkProvider>> allowedClientChunkProviderClasses = ImmutableList.<Class<? extends IChunkProvider>>builder()
-                .addAll(allowedServerChunkProviderClasses)
-                .add(
-                        ChunkProviderClient.class,
-                        ChunkProviderServer.class
-                ).build();
+    @SuppressWarnings("unchecked")
+    private final List<Class<? extends IChunkProvider>> allowedServerChunkProviderClasses = ImmutableList.copyOf(new Class[]{
+            ChunkProviderServer.class
+    });
 
-        // shouldSkipWorld
-        @Override
-        public boolean test(ICubicWorld world) {
-            return !allowedClientWorldClasses.contains(world.getClass())
-                    || !allowedClientChunkProviderClasses.contains(((World) world).getChunkProvider().getClass());
-        }
-    }
-
-    // actually common one
-    public static class ServerProxy implements Predicate<ICubicWorld> {
-
-        @SuppressWarnings("unchecked")
-        protected final List<Class<? extends World>> allowedServerWorldClasses = ImmutableList.copyOf(new Class[] {
-                WorldServer.class,
-                WorldServerMulti.class,
-                // non-existing classes will be Objects
-                ReflectionUtil.getClassOrDefault("WorldServerOF", Object.class), // OptiFine's WorldServer, no package
-                ReflectionUtil.getClassOrDefault("WorldServerMultiOF", Object.class) // OptiFine's WorldServerMulti, no package
-        });
-        
-        @SuppressWarnings("unchecked")
-        protected final List<Class<? extends IChunkProvider>> allowedServerChunkProviderClasses = ImmutableList.copyOf(new Class[] {
-                ChunkProviderServer.class
-        });
-
-        // shouldSkipWorld
-        @Override
-        public boolean test(ICubicWorld world) {
-            return !allowedServerWorldClasses.contains(world.getClass())
-                    || !allowedServerChunkProviderClasses.contains(((World) world).getChunkProvider().getClass());
-        }
+    private boolean shouldSkipWorld(World world) {
+        return !allowedServerWorldClasses.contains(world.getClass())
+                || !allowedServerChunkProviderClasses.contains(world.getChunkProvider().getClass());
     }
 }

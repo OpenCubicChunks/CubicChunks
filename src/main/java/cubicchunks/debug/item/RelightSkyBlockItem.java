@@ -24,11 +24,12 @@
 package cubicchunks.debug.item;
 
 import cubicchunks.debug.ItemRegistered;
-import cubicchunks.network.PacketCube;
+import cubicchunks.network.PacketCubes;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -40,6 +41,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -64,8 +68,9 @@ public class RelightSkyBlockItem extends ItemRegistered {
             CubePos cubePos = CubePos.fromBlockCoords(placePos);
             ICubeProvider cubeCache = world.getCubeCache();
             //re-send them to player
-            cubePos.forEachWithinRange(1,
-                    (p) -> PacketDispatcher.sendTo(new PacketCube(cubeCache.getCube(p)), (EntityPlayerMP) playerIn));
+            List<Cube> cubes = new ArrayList<>();
+            cubePos.forEachWithinRange(1, (p) -> cubes.add(cubeCache.getCube(p)));
+            PacketDispatcher.sendTo(new PacketCubes(cubes), (EntityPlayerMP) playerIn);
         } else {
             playerIn.sendMessage(new TextComponentString("Updating light at at " + placePos + " failed."));
         }

@@ -280,4 +280,9 @@ public class CustomGeneratorSettings {
     private int getMaxHeightOffset() {
         return (int) Math.max(heightFactor, Math.abs(heightVariationFactor) + Math.abs(heightVariationOffset));
     }
+
+    public int getRealMaxHeight() {
+        return (int) (this.heightOffset + heightVariationOffset +
+                Math.max(this.heightFactor * 2 + this.heightVariationFactor, this.heightFactor + this.heightVariationFactor * 2));
+    }
 }

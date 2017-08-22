@@ -21,31 +21,50 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.util;
 
-import cubicchunks.client.CubeProviderClient;
-import cubicchunks.util.IntRange;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.math.BlockPos;
+public class IntRange {
+    private final int min, max;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+    public IntRange(int min, int max) {
+        this.min = min;
+        this.max = max;
+    }
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ICubicWorldClient extends ICubicWorld {
+    public int getMin() {
+        return min;
+    }
 
-    /**
-     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
-     * are loaded. Cannot be used more than once.
-     * @param heightRange
-     * @param generationRange
-     */
-    void initCubicWorldClient(IntRange heightRange, IntRange generationRange);
+    public int getMax() {
+        return max;
+    }
 
-    CubeProviderClient getCubeCache();
+    @Override public String toString() {
+        return "IntRange{" +
+                "min=" + min +
+                ", max=" + max +
+                '}';
+    }
 
-    boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
+    @Override public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-    void setHeightBounds(int minHeight, int maxHeight);
+        IntRange intRange = (IntRange) o;
+
+        if (min != intRange.min) {
+            return false;
+        }
+        return max == intRange.max;
+    }
+
+    @Override public int hashCode() {
+        int result = min;
+        result = 31 * result + max;
+        return result;
+    }
 }

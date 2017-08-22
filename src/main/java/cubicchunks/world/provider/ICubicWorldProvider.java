@@ -39,4 +39,6 @@ public interface ICubicWorldProvider {
      * @return a new Cube generator
      */
     @Nullable ICubeGenerator createCubeGenerator();
+
+    int getOriginalActualHeight();
 }

@@ -121,7 +121,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
      * This getLight method is used in parts of game logic and entity rendering code.
      * Doesn't directly affect block rendering.
      */
-    @Group(name = "getLightHeightOverride", max = 3)
+    @Group(name = "getLightHeightOverride", max = 4)
     @ModifyConstant(
             method = "getLight(Lnet/minecraft/util/math/BlockPos;Z)I",
             constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.LESS_THAN_ZERO),
@@ -140,9 +140,10 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
      * When max height is exceeded vanilla clamps the value to 255 (maxHeight - 1 = actual max allowed block Y).
      */
     @Group(name = "getLightHeightOverride")
-    @ModifyConstant(method = "getLight(Lnet/minecraft/util/math/BlockPos;Z)I", constant = @Constant(intValue = 255), require = 1)
+    @ModifyConstant(method = "getLight(Lnet/minecraft/util/math/BlockPos;Z)I",
+            constant = {@Constant(intValue = 255), @Constant(intValue = 256)}, require = 2)
     private int getLightGetReplacementYTooHigh(int original) {
-        return this.getMaxHeight() - 1;
+        return this.getMaxHeight() + original - 256;
     }
 
     /**

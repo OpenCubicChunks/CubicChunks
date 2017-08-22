@@ -21,48 +21,28 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.type;
+package cubicchunks.event;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.util.IntRange;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubeGenerator;
-import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiCreateWorld;
-import net.minecraft.client.gui.GuiErrorScreen;
-import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldServer;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
-import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+/**
+ * Fired after creating WorldSettings for a newly created world.
+ *
+ * On client: fired in {@link GuiCreateWorld#actionPerformed(GuiButton)} after setting world settings string.
+ * On dedicated server: fired from {@link MinecraftServer#loadAllWorlds(String, String, long, WorldType, String)}
+ */
+public class CreateNewWorldEvent extends Event {
+    public final Side side;
+    public final WorldSettings settings;
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
-
-    public FlatCubicWorldType() {//todo: make it private, used in test
-        super("FlatCubic");
-    }
-
-    public static void create() {
-        new FlatCubicWorldType();
-    }
-
-    @Override
-    public ICubeGenerator createCubeGenerator(ICubicWorld world) {
-        return new FlatTerrainProcessor(world);
-    }
-
-    @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
-        return new IntRange(0, 256); // TODO: Flat generation height range
-    }
-
-    public boolean isCustomizable() {
-        return false;
+    public CreateNewWorldEvent(Side side, WorldSettings settings) {
+        this.side = side;
+        this.settings = settings;
     }
 }
