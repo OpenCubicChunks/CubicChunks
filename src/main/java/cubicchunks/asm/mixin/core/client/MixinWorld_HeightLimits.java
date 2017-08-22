@@ -26,7 +26,6 @@ package cubicchunks.asm.mixin.core.client;
 import static cubicchunks.asm.JvmNames.BLOCK_POS;
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 
-import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -39,9 +38,11 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Slice;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -60,15 +61,27 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
     @Shadow public abstract int getLightFor(EnumSkyBlock type, BlockPos pos);
 
-    @Shadow public abstract Chunk getChunkFromBlockCoords(BlockPos pos);
-
-    /**
-     * Redirect BlockPos.getY() here to modify vanilla height check
-     */
-    @Group(name = "getLightFromNeighborsFor", min = 2, max = 2)
-    @Redirect(method = "getLightFromNeighborsFor", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
-    private int getLightFromNeighborsForBlockPosGetYRedirect(BlockPos pos) {
-        return MixinUtils.getReplacementY(this, pos);
+    // I don't know why but this is what the code is transformed into:
+    /*
+             if (pos.getY() < this.constant$getLightFromNeighborsFor_getMinHeight$zbd000(0)) {
+                int var10002 = pos.getX();
+                int var10003 = this.constant$getLightFromNeighborsFor_getMinHeight$zbd000(0);
+                int var9 = pos.getZ();
+                int var8 = var10003;
+                pos = new BlockPos(var10002, this.modify$getLightFromNeighborsForGetMinHeight$zbd000(var8), var9);
+            }
+    */
+    // it somehow finds 3 places to modify the constant zero when there are only 2 originally
+    @Group(name = "getLightFromNeighborsFor", min = 2, max = 3)
+    @ModifyConstant(
+            method = "getLightFromNeighborsFor",
+            constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.LESS_THAN_ZERO),
+            slice = @Slice(
+                    from = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"),
+                    to = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getZ()I")
+            ))
+    private int getLightFromNeighborsFor_getMinHeight(int zero) {
+        return getMinHeight();
     }
 
     @Group(name = "getLightFromNeighborsFor")

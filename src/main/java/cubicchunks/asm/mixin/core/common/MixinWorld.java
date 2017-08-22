@@ -28,6 +28,7 @@ import static cubicchunks.util.Coords.blockToLocal;
 
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.CubePos;
+import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.NotCubicChunksWorldException;
@@ -98,11 +99,16 @@ public abstract class MixinWorld implements ICubicWorld {
     @Nullable private LightingManager lightingManager;
     protected boolean isCubicWorld;
     protected int minHeight = 0, maxHeight = 256;
+    private int minGenerationHeight = 0, maxGenerationHeight = 256;
 
-    @Override public void initCubicWorld(int minHeight1, int maxHeight1) {
+    protected void initCubicWorld(IntRange heightRange, IntRange generationRange) {
         // Set the world height boundaries to their highest and lowest values respectively
-        this.minHeight = minHeight1;
-        this.maxHeight = maxHeight1;
+        this.minHeight = heightRange.getMin();
+        this.maxHeight = heightRange.getMax();
+
+        this.minGenerationHeight = generationRange.getMin();
+        this.maxGenerationHeight = generationRange.getMax();
+
         //has to be created early so that creating BlankCube won't crash
         this.lightingManager = new LightingManager(this);
     }
@@ -117,6 +123,14 @@ public abstract class MixinWorld implements ICubicWorld {
 
     @Override public int getMaxHeight() {
         return this.maxHeight;
+    }
+
+    @Override public int getMinGenerationHeight() {
+        return this.minGenerationHeight;
+    }
+
+    @Override public int getMaxGenerationHeight() {
+        return this.maxGenerationHeight;
     }
 
     @Override public ICubeProvider getCubeCache() {
@@ -285,6 +299,13 @@ public abstract class MixinWorld implements ICubicWorld {
 
     @Intrinsic public void world$removeTileEntity(BlockPos pos) {
         this.removeTileEntity(pos);
+    }
+
+    //==============================================
+    @Shadow public abstract void markTileEntityForRemoval(TileEntity te);
+
+    @Intrinsic public void world$markTileEntityForRemoval(TileEntity te) {
+        this.markTileEntityForRemoval(te);
     }
 
     //==============================================

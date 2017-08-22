@@ -21,34 +21,47 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.worldgen.generator.custom.structure.feature;
 
-import cubicchunks.CubicChunks;
-import cubicchunks.util.AddressTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.storage.WorldSavedData;
 
-public class WorldSavedDataHeightBounds extends WorldSavedData {
+import javax.annotation.Nonnull;
 
-    public int minHeight = 0, maxHeight = 256;
+public class CubicFeatureData extends WorldSavedData {
 
-    public WorldSavedDataHeightBounds(String name) {
+    private NBTTagCompound tagCompound = new NBTTagCompound();
+
+    public CubicFeatureData(String name) {
         super(name);
-        minHeight = CubicChunks.MIN_BLOCK_Y;
-        maxHeight = CubicChunks.MAX_BLOCK_Y;
     }
 
+    /**
+     * reads in data from the NBTTagCompound into this MapDataBase
+     */
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
-        minHeight = nbt.getInteger("minHeight");
-        maxHeight = nbt.getInteger("maxHeight");
+        this.tagCompound = nbt.getCompoundTag("Features");
     }
 
-    @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        compound.setInteger("minHeight", minHeight);
-        compound.setInteger("maxHeight", maxHeight);
+    @Override @Nonnull public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+        compound.setTag("Features", this.tagCompound);
         return compound;
     }
 
+    /**
+     * Writes the NBT tag of an instance of this structure type to the internal NBT tag, using the chunkcoordinates as
+     * the key
+     */
+    public void writeInstance(NBTTagCompound tagCompoundIn, int chunkX, int chunkY, int chunkZ) {
+        this.tagCompound.setTag(formatChunkCoords(chunkX, chunkY, chunkZ), tagCompoundIn);
+    }
+
+    public static String formatChunkCoords(int chunkX, int chunkY, int chunkZ) {
+        return "[" + chunkX + "," + chunkY + "," + chunkZ + "]";
+    }
+
+    public NBTTagCompound getTagCompound() {
+        return this.tagCompound;
+    }
 }

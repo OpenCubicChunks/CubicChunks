@@ -23,19 +23,9 @@
  */
 package cubicchunks.asm.mixin.fixes.common;
 
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.BLOCK_FALLING_CAN_FALL_THROUGH;
-import static cubicchunks.asm.JvmNames.ENTITY_FALLING_BLOCK_CONSTRUCT;
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.WORLD_IS_AIR_BLOCK;
-import static cubicchunks.asm.JvmNames.WORLD;
-import static cubicchunks.asm.JvmNames.IBLOCK_STATE;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.util.CubePos;
@@ -45,9 +35,17 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockFalling;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Group;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -57,25 +55,39 @@ public abstract class MixinBlockFalling_HeightLimits extends Block {
     public MixinBlockFalling_HeightLimits(Material materialIn) {
         super(materialIn);
     }
+
+    // this would work without slices but adding them in case the code changes in the future
+
     // First call - checking if BlockPos of block is > 0 to continue.
-    @Redirect(method = "checkFallable", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal=0), require = 1)
-    private int checkHeightYReplace0(BlockPos pos1, World worldIn, BlockPos pos) {
-        return MixinUtils.getReplacementY(worldIn, pos1);
+    @Group(name = "checkFallable_getMinY1", min = 1, max = 1)
+    @ModifyConstant(
+            method = "checkFallable",
+            constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO),
+            slice = @Slice(
+                    from = @At(value = "INVOKE",
+                            target = "Lnet/minecraft/block/BlockFalling;canFallThrough(Lnet/minecraft/block/state/IBlockState;)Z"),
+                    to = @At(value = "FIELD", target = "Lnet/minecraft/block/BlockFalling;fallInstantly:Z")
+            ), expect = 1)
+    private int checkFallable_getMinY1(int orig, World worldIn, BlockPos pos) {
+        return ((ICubicWorld) worldIn).getMinHeight();
     }
 
     // Second call - creating entity on block position. Skipped.
     // Third call - if area is not loaded call in cycle to attempt to find spot to land.
-    @Redirect(method = "checkFallable", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal=2), require = 1)
-    private int checkHeightYReplace2(BlockPos pos1, World worldIn, BlockPos pos) {
-        return MixinUtils.getReplacementY(worldIn, pos1);
-    }
-
     // Forth call - check again if founded in previous cycle spot is above 0.
-    @Redirect(method = "checkFallable", at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal=3), require = 1)
-    private int checkHeightYReplace3(BlockPos pos1, World worldIn, BlockPos pos) {
-        return MixinUtils.getReplacementY(worldIn, pos1);
+    @Group(name = "checkFallable_getMinY2", min = 2, max = 2)
+    @ModifyConstant(
+            method = "checkFallable",
+            constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_ZERO),
+            slice = @Slice(
+                    from = @At(value = "INVOKE:LAST",
+                            target = "Lnet/minecraft/block/BlockFalling;canFallThrough(Lnet/minecraft/block/state/IBlockState;)Z"),
+                    to = @At(value = "INVOKE:ONE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;"
+                            + "Lnet/minecraft/block/state/IBlockState;)Z")
+            ))
+    private int checkFallable_getMinY2(int orig, World worldIn, BlockPos pos) {
+        return ((ICubicWorld) worldIn).getMinHeight();
     }
-
     
     @Redirect(method = "checkFallable", at = @At(value = "INVOKE", target = BLOCK_FALLING_CAN_FALL_THROUGH), require = 2)
     private boolean checkCanFallThrough(IBlockState blockState, World worldIn, BlockPos pos) {

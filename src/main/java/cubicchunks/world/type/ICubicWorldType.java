@@ -23,10 +23,12 @@
  */
 package cubicchunks.world.type;
 
+import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldServer;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -38,5 +40,5 @@ public interface ICubicWorldType {
     // TODO: Make it Nonnull. VanillaCubic uses null
     @Nullable ICubeGenerator createCubeGenerator(ICubicWorld world);
 
-    WorldProvider getReplacedProviderFor(WorldProvider provider);
+    IntRange calculateGenerationHeightRange(WorldServer world);
 }

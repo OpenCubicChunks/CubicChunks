@@ -151,7 +151,14 @@ public class Cube implements XYZAddressable {
      * Is this cube loaded and not queued for unload
      */
     private boolean isCubeLoaded;
-
+    
+    /**
+     * Contains the current Linear Congruential Generator seed for block updates. Used with an A value of 3 and a C
+     * value of 0x3c6ef35f, producing a highly planar series of values ill-suited for choosing random blocks in a
+     * 16x16x16 field.
+     */
+    protected int updateLCG = (new Random()).nextInt();
+    
     /**
      * Create a new cube in the specified column at the specified location. The newly created cube will only contain air
      * blocks.
@@ -345,16 +352,11 @@ public class Cube implements XYZAddressable {
     }
 
     /**
-     * Tick this cube on client side
+     * Update light and tile entities of cube
      *
      * @param tryToTickFaster Whether costly calculations should be skipped in order to catch up with ticks
      */
-    @SideOnly(value = Side.CLIENT)
-    public void tickCubeClient(BooleanSupplier tryToTickFaster) {
-        if (!this.isInitialLightingDone && this.isPopulated) {
-            this.tryDoFirstLight(); //TODO: Very icky light population code! REMOVE IT!
-        }
-
+    public void tickCubeCommon(BooleanSupplier tryToTickFaster) {
         while (!this.tileEntityPosQueue.isEmpty()) {
             BlockPos blockpos = this.tileEntityPosQueue.poll();
 
@@ -376,23 +378,25 @@ public class Cube implements XYZAddressable {
 
     /**
      * Tick this cube on server side. Block tick updates launched here.
-     * @param currentTime - current World time
-     * @param worldIn - World server containing this cube
+     * @param tryToTickFaster - returns true when running out of reserved tick time
      * @param rand - World specific Random
      */
-    public void tickCubeServer(long currentTime, WorldServer worldIn, Random rand) {
+    public void tickCubeServer(BooleanSupplier tryToTickFaster, Random rand) {
         if (!isFullyPopulated) {
             return;
         }
+
+        tickCubeCommon(tryToTickFaster);
+
         Iterator<NextTickListEntry> pti = pendingTickListEntriesTreeSet.iterator();
         while (pti.hasNext()) {
             NextTickListEntry ntle = pti.next();
-            if (ntle.scheduledTime > currentTime)
+            if (ntle.scheduledTime > world.getTotalWorldTime())
                 return;
             BlockPos pos = ntle.position;
             IBlockState iblockstate = this.storage.get(pos.getX() & 15, pos.getY() & 15, pos.getZ() & 15);
             if (iblockstate.getMaterial() != Material.AIR && iblockstate.getBlock() == ntle.getBlock()) {
-                iblockstate.getBlock().updateTick(worldIn, ntle.position, iblockstate, rand);
+                iblockstate.getBlock().updateTick((WorldServer) world, ntle.position, iblockstate, rand);
             }
             pti.remove();
         }
@@ -402,6 +406,25 @@ public class Cube implements XYZAddressable {
             NextTickListEntry ntle = pti.next();
             pendingTickListEntriesTreeSet.add(ntle);
             pti.remove();
+        }
+    }
+    
+    /**
+     * Launch random ticks of a blocks of a cube. Plant growing and other events goes here.
+     * @param worldServer - world where random tick is launched
+     * @param rand - World specific Random
+     */
+    public void randomTick(WorldServer worldServer, Random rand) {
+        this.updateLCG = this.updateLCG * 3 + 1013904223;
+        int j1 = updateLCG >> 2;
+        int localX = j1 & 15;
+        int localY = j1 >> 8 & 15;
+        int localZ = j1 >> 16 & 15;
+        IBlockState iblockstate = this.storage.get(localX, localY, localZ);
+        Block block = iblockstate.getBlock();
+        if (block.getTickRandomly()) {
+            BlockPos pos = new BlockPos(this.coords.getMinBlockX() + localX, this.coords.getMinBlockY() + localY, this.coords.getMinBlockZ() + localZ);
+            block.randomTick(worldServer, pos, iblockstate, rand);
         }
     }
 
@@ -417,22 +440,6 @@ public class Cube implements XYZAddressable {
             nextticklistentry.setPriority(priority);
             this.pendingTickListEntriesHashSet.add(nextticklistentry);
         }
-    }
-
-    /**
-     * Calculate diffuse skylight in this cube if surrounding cubes are loaded
-     */
-    //TODO: Redo light population code
-    private void tryDoFirstLight() {
-        BlockPos pos = this.getCoords().getMinBlockPos();
-        final int radius = 17;
-        // TODO replace hardcoded constant with reference to Cube#SIZE
-        if (!world.isAreaLoaded(pos.add(-radius, -radius, -radius), pos.add(15 + radius, 15 + radius, 15 + radius))) {
-            return;
-        }
-        //client cubes (setClientCube) are always fully generated, isInitialLightingDone is never false
-        ((ICubicWorldServer) this.world).getFirstLightProcessor().diffuseSkylight(this);
-        this.isInitialLightingDone = true;
     }
 
     //=================================
@@ -593,7 +600,7 @@ public class Cube implements XYZAddressable {
 
         // tell the world to forget about tile entities
         for (TileEntity blockEntity : this.tileEntityMap.values()) {
-            this.world.removeTileEntity(blockEntity.getPos());
+            this.world.markTileEntityForRemoval(blockEntity);
         }
     }
 
@@ -735,5 +742,10 @@ public class Cube implements XYZAddressable {
 
     public boolean isCubeLoaded() {
         return this.isCubeLoaded;
+    }
+
+    public boolean hasLightUpdates() {
+        LightingManager.CubeLightUpdateInfo info = this.getCubeLightUpdateInfo();
+        return info != null && info.hasUpdates();
     }
 }

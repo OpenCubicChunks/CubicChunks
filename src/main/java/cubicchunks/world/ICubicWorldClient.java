@@ -24,6 +24,7 @@
 package cubicchunks.world;
 
 import cubicchunks.client.CubeProviderClient;
+import cubicchunks.util.IntRange;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -33,6 +34,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public interface ICubicWorldClient extends ICubicWorld {
+
+    /**
+     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
+     * are loaded. Cannot be used more than once.
+     * @param heightRange
+     * @param generationRange
+     */
+    void initCubicWorldClient(IntRange heightRange, IntRange generationRange);
 
     CubeProviderClient getCubeCache();
 

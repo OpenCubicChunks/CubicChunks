@@ -91,15 +91,15 @@ class AdvancedTerrainShapeTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, 0, WIDTH_1_COL))
                 .add(this.heightVariationFactor = makeExponentialSlider(
                         gui, malisisText("height_variation_factor_slider", ": %.2f"),
-                        Float.NaN, Float.NaN, 0, 10, settings.heightVariationFactor),
+                        Float.NaN, Float.NaN, 0, 20, settings.heightVariationFactor),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, 1, WIDTH_3_COL))
                 .add(this.heightVariationSpecialFactor = makeExponentialSlider(
                         gui, malisisText("height_variation_special_factor_slider", ": %.2f"),
-                        Float.NaN, Float.NaN, 0, 10, settings.specialHeightVariationFactorBelowAverageY),
+                        Float.NaN, Float.NaN, 0, 20, settings.specialHeightVariationFactorBelowAverageY),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, 1, WIDTH_3_COL))
                 .add(this.heightVariationOffset = makeExponentialSlider(
                         gui, malisisText("height_variation_offset_slider", ": %.2f"),
-                        0, 10, 0, 10, settings.heightVariationOffset),
+                        0, 20, 0, 20, settings.heightVariationOffset),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, 1, WIDTH_3_COL))
 
                 // height
@@ -107,11 +107,11 @@ class AdvancedTerrainShapeTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, 2, WIDTH_1_COL))
                 .add(this.heightFactor = makeExponentialSlider(
                         gui, malisisText("height_factor", ": %.2f"),
-                        1, 12, 1, 12, settings.heightFactor),
+                        1, 20, 1, 20, settings.heightFactor),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 3, WIDTH_2_COL))
                 .add(this.heightOffset = makeExponentialSlider(
                         gui, malisisText("height_offset", ": %.2f"),
-                        1, 12, 1, 12, settings.heightOffset),
+                        1, 20, 1, 20, settings.heightOffset),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, 3, WIDTH_2_COL))
 
                 // depth noise
@@ -191,7 +191,7 @@ class AdvancedTerrainShapeTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, 14, WIDTH_3_COL))
                 .add(this.lowNoiseFactor = makeExponentialSlider(
                         gui, malisisText("low_noise_factor", ": %.4f"),
-                        Float.NaN, Float.NaN, 0, 10, settings.lowNoiseFactor),
+                        Float.NaN, Float.NaN, -10, 10, settings.lowNoiseFactor),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, 14, WIDTH_3_COL))
                 .add(this.lowNoiseOffset = makeExponentialSlider(
                         gui, malisisText("low_noise_offset", ": %.2f"),
@@ -220,7 +220,7 @@ class AdvancedTerrainShapeTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, 17, WIDTH_3_COL))
                 .add(this.highNoiseFactor = makeExponentialSlider(
                         gui, malisisText("high_noise_factor", ": %.4f"),
-                        Float.NaN, Float.NaN, 0, 10, settings.highNoiseFactor),
+                        Float.NaN, Float.NaN, -10, 10, settings.highNoiseFactor),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, 17, WIDTH_3_COL))
                 .add(this.highNoiseOffset = makeExponentialSlider(
                         gui, malisisText("high_noise_offset", ": %.2f"),

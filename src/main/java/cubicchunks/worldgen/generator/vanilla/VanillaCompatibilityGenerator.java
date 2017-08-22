@@ -106,7 +106,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         // heuristics TODO: add a config that overrides this
         lastChunk = vanilla.generateChunk(0, 0); // lets scan the chunk at 0, 0
 
-        worldHeightBlocks = 128; //TODO: figure something out to not assume 128
+        worldHeightBlocks = world.getMaxGenerationHeight();
         worldHeightCubes = worldHeightBlocks / Cube.SIZE;
         Map<IBlockState, Integer> blockHistogramBottom = new HashMap<>();
         Map<IBlockState, Integer> blockHistogramTop = new HashMap<>();
@@ -298,8 +298,8 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     }
 
     @Override
-    public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
-        return vanilla.getNearestStructurePos((World) world, name, pos, flag);
+    public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
+        return vanilla.getNearestStructurePos((World) world, name, pos, findUnexplored);
     }
 
 }

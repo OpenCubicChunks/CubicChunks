@@ -30,11 +30,15 @@ import com.google.common.base.Throwables;
 import cubicchunks.CubicChunks;
 import cubicchunks.network.PacketColumn;
 import cubicchunks.network.PacketDispatcher;
+import cubicchunks.network.PacketHeightMapUpdate;
 import cubicchunks.network.PacketUnloadColumn;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
+import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XZAddressable;
 import cubicchunks.world.column.IColumn;
+import gnu.trove.list.TByteList;
+import gnu.trove.list.array.TByteArrayList;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMapEntry;
@@ -60,6 +64,8 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
     private static MethodHandle isLoading = getFieldGetterHandle(PlayerChunkMapEntry.class, "loading");//forge field, no srg name
     private static MethodHandle getLoadedRunnable = getFieldGetterHandle(PlayerChunkMapEntry.class, "loadedRunnable");//forge field, no srg name
     @Nonnull private final Runnable loadedRunnable;
+
+    @Nonnull private final TByteList dirtyColumns = new TByteArrayList(64);
 
     ColumnWatcher(PlayerCubeMap playerCubeMap, ChunkPos pos) {
         super(playerCubeMap, pos.x, pos.z);
@@ -184,7 +190,15 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     @Override
     public void update() {
-        //no-op, handles by cube entries
+        if (!this.isSentToPlayers() || this.dirtyColumns.isEmpty()) {
+            return;
+        }
+        IColumn column = getColumn();
+        assert column != null;
+        for (EntityPlayerMP player : this.getPlayers()) {
+            PacketDispatcher.sendTo(new PacketHeightMapUpdate(getPos(), dirtyColumns, column.getOpacityIndex()), player);
+        }
+        this.dirtyColumns.clear();
     }
 
     //containsPlayer, hasPlayerMatching, hasPlayerMatchingInRange, isAddedToChunkUpdateQueue, getChunk, getClosestPlayerDistance - ok
@@ -208,5 +222,15 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     @Override public int getZ() {
         return this.getPos().z;
+    }
+
+    void heightChanged(int localX, int localZ) {
+        if (!isSentToPlayers()) {
+            return;
+        }
+        if (this.dirtyColumns.isEmpty()) {
+            playerCubeMap.addToUpdateEntry(this);
+        }
+        this.dirtyColumns.add(AddressTools.getLocalAddress(localX, localZ));
     }
 }

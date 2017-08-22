@@ -24,6 +24,7 @@
 package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.asm.CubicChunksMixinConfig;
 import cubicchunks.server.chunkio.ICubeIO;
 import cubicchunks.server.chunkio.RegionCubeIO;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
@@ -83,6 +84,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Nonnull private ICubeGenerator cubeGen;
     @Nonnull private Profiler profiler;
+    private final boolean doRandomBlockTicksHere;
 
     public CubeProviderServer(ICubicWorldServer worldServer, ICubeGenerator cubeGen) {
         super((WorldServer) worldServer,
@@ -97,6 +99,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+
+        doRandomBlockTicksHere = CubicChunksMixinConfig.BoolOptions.RANDOM_TICK_IN_CUBE.getValue();
     }
 
     @Override
@@ -191,10 +195,16 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     public boolean tick() {
         // NOTE: the return value is completely ignored
         profiler.startSection("providerTick("+cubeMap.getSize()+")");
-        long time = this.world.getTotalWorldTime();
+        long i = System.currentTimeMillis();
+        int randomTickSpeed = this.world.getGameRules().getInt("randomTickSpeed");
         Random rand = this.world.rand;
         for (Cube cube : cubeMap) {
-            cube.tickCubeServer(time, this.world, rand);
+            cube.tickCubeServer(() -> System.currentTimeMillis() - i > 40, rand);
+            if (cube.isEmpty() || !doRandomBlockTicksHere)
+                continue;
+            int randomTickCounter = randomTickSpeed;
+            while (randomTickCounter-- > 0)
+                cube.randomTick(this.world, rand);
         }
         profiler.endSection();
         return false;
@@ -212,8 +222,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     @Nullable @Override
-    public BlockPos getNearestStructurePos(World worldIn, String name, BlockPos pos, boolean flag) {
-        return cubeGen.getClosestStructure(name, pos, flag);
+    public BlockPos getNearestStructurePos(World worldIn, String name, BlockPos pos, boolean findUnexplored) {
+        return cubeGen.getClosestStructure(name, pos, findUnexplored);
     }
 
     // getLoadedChunkCount() in ChunkProviderServer is fine - CHECKED: 1.10.2-12.18.1.2092

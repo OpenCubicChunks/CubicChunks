@@ -140,7 +140,6 @@ public class CubicChunks {
     public static void registerCubicBiomes(RegistryEvent.Register<CubicBiome> event) {
         // Vanilla biomes are initialized during bootstrap which happens before registration events
         // so it should be safe to use them here
-
         autoRegister(event, Biome.class, b -> b
                 .addDefaultBlockReplacers()
                 .defaultDecorators());
@@ -318,10 +317,20 @@ public class CubicChunks {
         }
         
         public static enum BoolOptions {
+            // We need USE_FAST_COLLISION_CHECK here because if we save
+            // config within mixin configuration plugin all description lines will be stripped.
+            USE_FAST_ENTITY_SPAWNER(false,
+                    "Enabling this option allow using fast entity spawner instead of vanilla-alike."
+                            + " Fast entity spawner can reduce server lag."
+                            + " In contrary entity respawn speed will be slightly slower (only one pack per tick)"
+                            + " and amount of spawned mob will depend only from amount of players."),
             USE_VANILLA_CHUNK_WORLD_GENERATORS(false,
                     "Enabling this option will force " + CubicChunks.MODID
                             + " to use world generators designed for two dimensional chunks, which are often used for custom ore generators added by mods. To do so "
-                            + CubicChunks.MODID + " will pregenerate cubes in a range of height from 0 to 255.");
+                            + CubicChunks.MODID + " will pregenerate cubes in a range of height from 0 to 255."),
+            FORCE_CUBIC_CHUNKS(false,
+                    "Enabling this will force creating a cubic chunks world, even if it's not cubic chunks world type. This option is automatically"
+                            + " set in world creation GUI when creating cubic chunks world with non-cubicchunks world type");
 
             private final boolean defaultValue;
             private final String description;
@@ -335,6 +344,10 @@ public class CubicChunks {
 
             public boolean getValue() {
                 return value;
+            }
+
+            public void flip() {
+                this.value = !this.value;
             }
         }
         
@@ -388,6 +401,10 @@ public class CubicChunks {
 
         public int getChunkGCInterval() {
             return IntOptions.CHUNK_G_C_INTERVAL.value;
+        }
+
+        public boolean useFastEntitySpawner() {
+            return BoolOptions.USE_FAST_ENTITY_SPAWNER.value;
         }
 
         public static class GUI extends GuiConfig {

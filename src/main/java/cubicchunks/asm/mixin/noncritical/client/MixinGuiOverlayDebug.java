@@ -24,9 +24,9 @@
 package cubicchunks.asm.mixin.noncritical.client;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-import static cubicchunks.asm.JvmNames.GUI_OVERLAY_DEBUG_CALL;
 
 import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiOverlayDebug;
@@ -35,7 +35,11 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Group;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -52,18 +56,30 @@ public class MixinGuiOverlayDebug {
 
     @Shadow @Final private Minecraft mc;
 
-    // As of Minecraft 1.10.2 / Forge 12.18.1.2092, the bounds checks are call 5 and 6 to getY()
-
-    // This is call 5 (idx 4)
-    @Redirect(method = GUI_OVERLAY_DEBUG_CALL, at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 4))
-    private int blockPosGetYBoundsCheck1(BlockPos pos) {
-        return MixinUtils.getReplacementY(mc.world, pos);
-
+    @Group(name = "getMinWorldHeight", min = 1, max = 1)
+    @ModifyConstant(
+            method = "call",
+            constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO),
+            slice = @Slice(
+                    from = @At(value = "INVOKE",
+                            target = "Lnet/minecraft/client/multiplayer/WorldClient;isBlockLoaded(Lnet/minecraft/util/math/BlockPos;)Z"),
+                    to = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;isEmpty()Z")
+            ))
+    private int getMinWorldHeight(int orig) {
+        return ((ICubicWorld) mc.world).getMinHeight();
     }
 
-    // This is call 6 (idx 5)
-    @Redirect(method = GUI_OVERLAY_DEBUG_CALL, at = @At(value = "INVOKE", target = BLOCK_POS_GETY, ordinal = 5))
-    private int blockPosGetYBoundsCheck2(BlockPos pos) {
-        return MixinUtils.getReplacementY(mc.world, pos);
+    // slice not exactly necessary here, but this is a long method that could change, so keep the slice
+    @Group(name = "getMaxWorldHeight", min = 1, max = 1)
+    @ModifyConstant(
+            method = "call",
+            constant = @Constant(intValue = 256),
+            slice = @Slice(
+                    from = @At(value = "INVOKE",
+                            target = "Lnet/minecraft/client/multiplayer/WorldClient;isBlockLoaded(Lnet/minecraft/util/math/BlockPos;)Z"),
+                    to = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;isEmpty()Z")
+            ))
+    private int getMaxWorldHeight(int orig) {
+        return ((ICubicWorld) mc.world).getMaxHeight();
     }
 }

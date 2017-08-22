@@ -112,4 +112,8 @@ public class MathUtil {
         return exp(-(x - mean) * (x - mean) / (2 * stdDev * stdDev)) /
                 (sqrt(2 * Math.PI) * stdDev);
     }
+
+    public static boolean rangesIntersect(int min1, int max1, int min2, int max2) {
+        return min1 <= max2 && min2 <= max1;
+    }
 }

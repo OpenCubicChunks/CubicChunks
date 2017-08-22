@@ -25,6 +25,7 @@ package cubicchunks.asm.mixin.core.client;
 
 import cubicchunks.asm.mixin.core.common.MixinWorld;
 import cubicchunks.client.CubeProviderClient;
+import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubicWorldClient;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -49,8 +50,8 @@ public abstract class MixinWorldClient extends MixinWorld implements ICubicWorld
 
     @Shadow public abstract boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
 
-    @Override public void initCubicWorld(int minHeight, int maxHeight) {
-        super.initCubicWorld(minHeight, maxHeight);
+    @Override public void initCubicWorldClient(IntRange heightRange, IntRange generationRange) {
+        super.initCubicWorld(heightRange, generationRange);
         this.isCubicWorld = true;
         CubeProviderClient cubeProviderClient = new CubeProviderClient(this);
         this.chunkProvider = cubeProviderClient;

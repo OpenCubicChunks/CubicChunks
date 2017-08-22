@@ -23,14 +23,17 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.entity.CubicEntityTracker;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.util.CubePos;
+import cubicchunks.util.IntRange;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicSaveHandler;
+import cubicchunks.world.FastCubeWorldEntitySpawner;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
@@ -75,8 +78,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     @Nullable private ChunkGc chunkGc;
     @Nullable private FirstLightProcessor firstLightProcessor;
 
-    @Override public void initCubicWorld(int minHeight, int maxHeight) {
-        super.initCubicWorld(minHeight, maxHeight);
+    @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
+        super.initCubicWorld(heightRange, generationRange);
         this.isCubicWorld = true;
         this.entitySpawner = new CubeWorldEntitySpawner();
 
@@ -90,6 +93,15 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
         this.firstLightProcessor = new FirstLightProcessor(this);
         this.entityTracker = new CubicEntityTracker(this);
+        CubicChunks.addConfigChangeListener(this);
+    }
+
+    @Override
+    public void onConfigUpdate(CubicChunks.Config config){
+        if(config.useFastEntitySpawner() && this.entitySpawner instanceof CubeWorldEntitySpawner)
+            this.entitySpawner = new FastCubeWorldEntitySpawner();
+        else if(!config.useFastEntitySpawner() && this.entitySpawner instanceof FastCubeWorldEntitySpawner)
+            this.entitySpawner = new CubeWorldEntitySpawner();
     }
 
     @Override public void tickCubicWorld() {

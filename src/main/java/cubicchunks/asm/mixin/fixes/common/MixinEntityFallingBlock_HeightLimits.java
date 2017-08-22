@@ -23,17 +23,17 @@
  */
 package cubicchunks.asm.mixin.fixes.common;
 
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-
-import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityFallingBlock;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Group;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Slice;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -53,8 +53,28 @@ public abstract class MixinEntityFallingBlock_HeightLimits extends Entity {
      * else if (this.fallTime > 100 && !this.worldObj.isRemote && (blockpos1.getY() < 1 || blockpos1.getY() > 256) ||
      * this.fallTime > 600)
      */
-    @Redirect(method = "onUpdate", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 2)
-    private int checkHeightYReplace(BlockPos pos) {
-        return MixinUtils.getReplacementY(world, pos);
+    @Group(name = "onUpdateGetMinHeight", min = 1, max = 1)
+    @ModifyConstant(
+            method = "onUpdate",
+            constant = @Constant(intValue = 1),
+            slice = @Slice(
+                    from = @At(value = "CONSTANT:ONE", args = "intValue=100"), // between this.fallTime > 100
+                    to = @At(value = "CONSTANT:FIRST", args = "stringValue=doEntityDrops") // and this.world.getGameRules().getBoolean
+                    // ("doEntityDrops")
+            ))
+    private int onUpdateGetMinHeight(int orig) {
+        return ((ICubicWorld) world).getMinHeight();
+    }
+
+    @Group(name = "onUpdateGetMaxHeight", min = 1, max = 1)
+    @ModifyConstant(
+            method = "onUpdate",
+            constant = @Constant(intValue = 256),
+            slice = @Slice(
+                    from = @At(value = "CONSTANT:ONE", args = "intValue=100"), // between this.fallTime > 100
+                    to = @At(value = "CONSTANT:LAST", args = "stringValue=doEntityDrops") // and this.world.getGameRules().getBoolean("doEntityDrops")
+            ))
+    private int onUpdateGetMaxHeight(int orig) {
+        return ((ICubicWorld) world).getMaxHeight();
     }
 }

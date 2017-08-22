@@ -28,6 +28,7 @@ import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
+import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.world.type.ICubicWorldType;
@@ -39,6 +40,7 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 
 import javax.annotation.Nonnull;
@@ -61,9 +63,8 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
         new DebugWorldType();
     }
 
-    @Override
-    public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-        return provider;
+    @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
+        return new IntRange(0, 256);
     }
 
     @Override public ICubeGenerator createCubeGenerator(ICubicWorld world) {

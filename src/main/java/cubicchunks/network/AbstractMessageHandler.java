@@ -26,6 +26,7 @@ package cubicchunks.network;
 import cubicchunks.CubicChunks;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.ThreadQuickExitException;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -43,6 +44,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public abstract class AbstractMessageHandler<T extends IMessage> implements IMessageHandler<T, IMessage> {
 
+    // TODO: return void
     /**
      * Handle a message received on the client side
      *
@@ -67,15 +69,20 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
     */
     @Nullable @Override
     public IMessage onMessage(T message, MessageContext ctx) {
-        // due to compile-time issues, FML will crash if you try to use Minecraft.getMinecraft() here,
-        // even when you restrict this code to the client side and before the code is ever accessed;
-        // a solution is to use proxy classes to get the player.
-        if (ctx.side.isClient()) {
-            // the only reason to check side here is to use our more aptly named handling methods
-            // client side proxy will return the client side EntityPlayer
-            return handleClientMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
+        try {
+            // due to compile-time issues, FML will crash if you try to use Minecraft.getMinecraft() here,
+            // even when you restrict this code to the client side and before the code is ever accessed;
+            // a solution is to use proxy classes to get the player.
+            if (ctx.side.isClient()) {
+                // the only reason to check side here is to use our more aptly named handling methods
+                // client side proxy will return the client side EntityPlayer
+                return handleClientMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
+            }
+            // server side proxy will return the server side EntityPlayer
+            return handleServerMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
+        } catch (ThreadQuickExitException ex) {
+            // ignore
+            return null;
         }
-        // server side proxy will return the server side EntityPlayer
-        return handleServerMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
     }
 }

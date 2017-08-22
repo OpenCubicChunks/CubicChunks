@@ -24,6 +24,7 @@
 package cubicchunks.world.type;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
@@ -33,6 +34,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiErrorScreen;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.Side;
@@ -57,9 +59,8 @@ public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
         return new FlatTerrainProcessor(world);
     }
 
-    @Override
-    public WorldProvider getReplacedProviderFor(WorldProvider provider) {
-        return provider;
+    @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
+        return new IntRange(0, 256); // TODO: Flat generation height range
     }
 
     public boolean isCustomizable() {

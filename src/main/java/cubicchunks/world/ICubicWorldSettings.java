@@ -21,32 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom;
+package cubicchunks.world;
 
-import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubePrimer;
-import cubicchunks.worldgen.generator.custom.structures.CubicCaveGenerator;
-import cubicchunks.worldgen.generator.custom.structures.CubicRavineGenerator;
-import cubicchunks.worldgen.generator.custom.structures.CubicStructureGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 
-import javax.annotation.Nonnull;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-// TODO leftover from generator pipeline
-@ParametersAreNonnullByDefault
+/**
+ * Interface for WorldSettings and WorldInfo allowing to store custom data into the world.
+ * The data is will be stored on disk, but will not be sent to client.
+ */
 @MethodsReturnNonnullByDefault
-public class CustomStructureGenerator {
+@ParametersAreNonnullByDefault
+public interface ICubicWorldSettings {
 
-    //TODO: Implement more populator
-    @Nonnull private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
-    @Nonnull private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
+    boolean isCubic();
 
-    public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
-
-        // generate world populator
-        this.caveGenerator.generate(world, cube, cubePos);
-        this.ravineGenerator.generate(world, cube, cubePos);
-    }
+    void setCubic(boolean cubic);
 }

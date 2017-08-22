@@ -31,6 +31,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import cubicchunks.testutil.MinecraftEnvironment;
+import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.type.FlatCubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
@@ -97,20 +98,20 @@ public class TestWorldServerMixin {
 
     @Test
     public void testInitCubicWorldIsCubic() {
-        this.world.initCubicWorld(-4096,4096);
+        this.world.initCubicWorldServer(new IntRange(-4096,4096), new IntRange(-4096,4096));
         assertTrue(this.world.isCubicWorld());
     }
 
     @Test
     public void testCubicWorldMinHeight() {
-        this.world.initCubicWorld(-4096,4096);
+        this.world.initCubicWorldServer(new IntRange(-4096,4096), new IntRange(-4096,4096));
         assertThat(this.world.getMinHeight(), is(lessThan(0)));
     }
 
     @Test
     public void testCubicWorldMaxHeight() {
         //System.err.println(((ICubicChunksWorldType)world.getWorldInfo().getTerrainType()).getMinimumPossibleHeight());
-        this.world.initCubicWorld(-4096,4096);
+        this.world.initCubicWorldServer(new IntRange(-4096,4096), new IntRange(-4096,4096));
         assertThat(this.world.getMaxHeight(), is(greaterThan(256)));
     }*/
 }

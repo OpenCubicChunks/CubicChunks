@@ -25,21 +25,18 @@ package cubicchunks.client;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.util.CubePos;
-import cubicchunks.util.ReflectionUtil;
 import cubicchunks.util.XYZMap;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import jline.internal.Preconditions;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-
-import java.util.Iterator;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -96,7 +93,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
     public boolean tick() {
         long i = System.currentTimeMillis();
         for (Cube cube : cubeMap) {
-            cube.tickCubeClient(() -> System.currentTimeMillis() - i > 5L);
+            cube.tickCubeCommon(() -> System.currentTimeMillis() - i > 5L);
         }
 
         if (System.currentTimeMillis() - i > 100L) {
@@ -111,14 +108,23 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
     //===========================
 
     /**
-     * This is like ChunkProviderClient.loadChunk()
+     * This is like ChunkProviderClient.loadChunk(), but more useful for our use case
      * It is used when the server sends a new Cube to this client,
      * and the network handler wants us to create a new Cube.
      *
-     * @return a newly created and cached cube
+     * @return a newly created or cached cube
      */
-    public Cube loadCube(IColumn column, int cubeY) {
-        Cube cube = new Cube(column, cubeY); // auto added to column
+    @Nullable
+    public Cube loadCube(CubePos pos) {
+        Cube cube = getLoadedCube(pos);
+        if (cube != null) {
+            return cube;
+        }
+        IColumn column = getLoadedColumn(pos.getX(), pos.getZ());
+        if (column == null) {
+            return null;
+        }
+        cube = new Cube(column, pos.getY()); // auto added to column
         cube.setCubeLoaded();
         column.addCube(cube);
         this.cubeMap.put(cube);

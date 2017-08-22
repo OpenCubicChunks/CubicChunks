@@ -43,7 +43,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath("org.ajoberstar:grgit:1.4.+")
+        classpath("org.ajoberstar:grgit:2.0.0-milestone.1")
         classpath("org.spongepowered:mixingradle:0.4-SNAPSHOT")
         classpath("com.github.jengelman.gradle.plugins:shadow:1.2.3")
         classpath("gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.13.1")
@@ -129,7 +129,7 @@ configure<ForgeExtension> {
 
     replace("@@VERSION@@", project.version)
     replace("/*@@DEPS_PLACEHOLDER@@*/",
-            ",dependencies = \"after:malisiscore@[$malisisCoreMinVersion,)\"")
+            ",dependencies = \"after:forge@[13.20.1.2454,);after:malisiscore@[$malisisCoreMinVersion,)\"")
     replace("@@MALISIS_VERSION@@", malisisCoreMinVersion)
     replaceIn("cubicchunks/CubicChunks.java")
 
@@ -310,15 +310,35 @@ fun getMcVersion(): String {
 //format: MCVERSION-MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)
 //rcX and betaX are not implemented yet
 fun getModVersion(): String {
-    try {
+    return try {
         val git = Grgit.open()
         val describe = DescribeOp(git.repository).call()
-        val branch = git.branch.current.name
-        return getModVersion_do(describe, branch);
+        val branch = getGitBranch(git)
+        getModVersion_do(describe, branch);
     } catch(ex: RuntimeException) {
         logger.error("Unknown error when accessing git repository! Are you sure the git repository exists?", ex)
-        return String.format("%s-%s.%s.%s%s%s", getMcVersion(), "9999", "9999", "9999", "", "NOVERSION")
+        String.format("%s-%s.%s.%s%s%s", getMcVersion(), "9999", "9999", "9999", "", "NOVERSION")
     }
+}
+
+fun getGitBranch(git: Grgit): String {
+    var branch: String = git.branch.current.name
+    if (branch.equals("HEAD")) {
+        branch = when {
+            System.getenv("TRAVIS_BRANCH")?.isEmpty() == false -> // travis
+                System.getenv("TRAVIS_BRANCH")
+            System.getenv("GIT_BRANCH")?.isEmpty() == false -> // jenkins
+                System.getenv("GIT_BRANCH")
+            System.getenv("BRANCH_NAME")?.isEmpty() == false -> // ??? another jenkins alternative?
+                System.getenv("BRANCH_NAME")
+            else -> throw RuntimeException("Found HEAD branch! This is most likely caused by detached head state! Will assume unknown version!")
+        }
+    }
+
+    if (branch.startsWith("origin/")) {
+        branch = branch.substring("origin/".length)
+    }
+    return branch
 }
 
 fun getModVersion_do(describe: String, branch: String): String {

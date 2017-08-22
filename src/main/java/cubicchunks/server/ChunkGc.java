@@ -43,7 +43,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class ChunkGc implements IConfigUpdateListener {
 
-    @Nonnull private final CubeProviderServer cubeCache;
+    private final CubeProviderServer cubeCache;
 
     private int tick = 0;
     private volatile int updateInterval = 20 * 10;
@@ -59,7 +59,9 @@ public class ChunkGc implements IConfigUpdateListener {
             tick = 0;
             chunkGc();
         }
-        verifyColumnConsistency();
+        if (CubicChunks.DEBUG_ENABLED) {
+            verifyColumnConsistency();
+        }
     }
 
     private void verifyColumnConsistency() {

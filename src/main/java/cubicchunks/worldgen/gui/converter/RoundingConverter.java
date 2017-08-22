@@ -31,17 +31,18 @@ import com.google.common.base.Converter;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.Set;
-import java.util.function.DoubleUnaryOperator;
+import java.util.function.BiPredicate;
+import java.util.function.DoublePredicate;
 
 public class RoundingConverter extends Converter<Float, Float> {
 
-    private final DoubleUnaryOperator radius;
+    private final BiPredicate<Double, Double> isValueInRadius;
     private final Set<RoundingEntry> roundingData;
     private final float maxExp;
     private Converter<Float, Float> reverse;
 
     RoundingConverter(Converters.RoundingBuilder builder) {
-        this.radius = builder.snapRadius;
+        this.isValueInRadius = builder.isValueInRadius;
         this.roundingData = builder.roundingData;
         this.maxExp = builder.maxExp;
     }
@@ -60,12 +61,11 @@ public class RoundingConverter extends Converter<Float, Float> {
         for (RoundingEntry e : roundingData) {
             for (int trySnapDivExp = startExponent; ; trySnapDivExp--) {
                 double roundValue = getRoundValue(input, trySnapDivExp, e);
-                double roundedSlideValue = reverse.convert((float) roundValue);
-                double roundDistance = abs(slideValue - roundedSlideValue);
                 if (Double.isNaN(roundValue) || Double.isInfinite(roundValue)) {
-                    return (float) slideValue;
+                    break;
                 }
-                if (roundDistance < getRadius(getDivisor(trySnapDivExp, e))) {
+                double roundedSlideValue = reverse.convert((float) roundValue);
+                if (isValueInRadius.test(slideValue, roundedSlideValue)) {
                     double v = getDivisor(trySnapDivExp, e);
                     if (v > max) {
                         max = v;
@@ -89,11 +89,6 @@ public class RoundingConverter extends Converter<Float, Float> {
         }
         return round(rawValue / divisor) * divisor;
     }
-
-    private double getRadius(double at) {
-        return this.radius.applyAsDouble(at);
-    }
-
 
     @Override protected Float doBackward(Float value) {
         return value;

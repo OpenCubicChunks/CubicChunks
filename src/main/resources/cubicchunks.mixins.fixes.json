@@ -17,6 +17,7 @@
         "common.MixinPathNavigateGround",
         "common.MixinTeleporter",
         "common.MixinTileEntityEndGateway",
+        "common.MixinPacketBufferBlockPosWrite",
         "common.isblockloaded.MixinEntity",
         "common.isblockloaded.MixinEntityLivingBase",
         "common.worldgen.tree.MixinWorldGenCanopyTree",
