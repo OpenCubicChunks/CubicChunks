@@ -222,7 +222,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     @Nullable @Override
-    public BlockPos getNearestStructurePos(World worldIn, String name, BlockPos pos, boolean findUnexplored) {
+    public BlockPos getStrongholdGen(World worldIn, String name, BlockPos pos, boolean findUnexplored) {
         return cubeGen.getClosestStructure(name, pos, findUnexplored);
     }
 
@@ -231,11 +231,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Override
     public boolean chunkExists(int cubeX, int cubeZ) {
         return this.id2ChunkMap.get(ChunkPos.asLong(cubeX, cubeZ)) != null;
-    }
-
-    @Override // TODO: What it does? implement it
-    public boolean isInsideStructure(World p_193413_1_, String p_193413_2_, BlockPos p_193413_3_) {
-        return false;
     }
 
     //==============================
@@ -532,7 +527,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         if (column != null) {
             id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
             column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just loaded
-            column.onLoad();
+            column.onChunkLoad();
             return column;
         } else if (req == Requirement.LOAD) {
             return null;
@@ -543,7 +538,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
         id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
         column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just generated
-        column.onLoad();
+        column.onChunkLoad();
         return column;
     }
 
@@ -623,7 +618,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         column.markUnloaded(true); // flag as unloaded (idk, maybe vanilla uses this somewhere)
 
         // unload the Column!
-        column.onUnload();
+        column.onChunkUnload();
 
         if (column.needsSaving(true)) { // save the Column, if it needs saving
             this.cubeIO.saveColumn(column);

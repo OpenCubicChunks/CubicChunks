@@ -147,10 +147,10 @@ class IONbtWriter {
             section.setByteArray("Add", add.getData());
         }
 
-        section.setByteArray("BlockLight", ebs.getBlockLight().getData());
+        section.setByteArray("BlockLight", ebs.getBlocklightArray().getData());
 
         if (cube.getCubicWorld().getProvider().hasSkyLight()) {
-            section.setByteArray("SkyLight", ebs.getSkyLight().getData());
+            section.setByteArray("SkyLight", ebs.getSkylightArray().getData());
         }
     }
 

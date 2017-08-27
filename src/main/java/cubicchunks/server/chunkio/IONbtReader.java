@@ -177,10 +177,10 @@ public class IONbtReader {
 
             ebs.getData().setDataFromNBT(abyte, data, add);
 
-            ebs.setBlockLight(new NibbleArray(nbt.getByteArray("BlockLight")));
+            ebs.setBlocklightArray(new NibbleArray(nbt.getByteArray("BlockLight")));
 
             if (world.getProvider().hasSkyLight()) {
-                ebs.setSkyLight(new NibbleArray(nbt.getByteArray("SkyLight")));
+                ebs.setSkylightArray(new NibbleArray(nbt.getByteArray("SkyLight")));
             }
 
             ebs.recalculateRefCounts();

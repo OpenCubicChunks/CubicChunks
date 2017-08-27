@@ -64,14 +64,14 @@ class WorldEncoder {
         // 3. block light
         cubes.forEach(cube -> {
             if (cube.getStorage() != null) {
-                out.writeBytes(cube.getStorage().getBlockLight().getData());
+                out.writeBytes(cube.getStorage().getBlocklightArray().getData());
             }
         });
 
         // 4. sky light
         cubes.forEach(cube -> {
             if (cube.getStorage() != null && cube.getCubicWorld().getProvider().hasSkyLight()) {
-                out.writeBytes(cube.getStorage().getSkyLight().getData());
+                out.writeBytes(cube.getStorage().getSkylightArray().getData());
             }
         });
 
@@ -131,7 +131,7 @@ class WorldEncoder {
         for (int i = 0; i < cubes.size(); i++) {
             if (hasStorage[i]) {
                 //noinspection ConstantConditions
-                byte[] data = cubes.get(i).getStorage().getBlockLight().getData();
+                byte[] data = cubes.get(i).getStorage().getBlocklightArray().getData();
                 in.readBytes(data);
             }
         }
@@ -140,7 +140,7 @@ class WorldEncoder {
         for (int i = 0; i < cubes.size(); i++) {
             if (hasStorage[i] && cubes.get(i).getCubicWorld().getProvider().hasSkyLight()) {
                 //noinspection ConstantConditions
-                byte[] data = cubes.get(i).getStorage().getSkyLight().getData();
+                byte[] data = cubes.get(i).getStorage().getSkylightArray().getData();
                 in.readBytes(data);
             }
         }
@@ -176,9 +176,9 @@ class WorldEncoder {
                 size += cube.getStorage().getData().getSerializedSize();
             }
             if (cube.getStorage() != null) {
-                size += cube.getStorage().getBlockLight().getData().length;
+                size += cube.getStorage().getBlocklightArray().getData().length;
                 if (cube.getCubicWorld().getProvider().hasSkyLight()) {
-                    size += cube.getStorage().getSkyLight().getData().length;
+                    size += cube.getStorage().getSkylightArray().getData().length;
                 }
             }
         }

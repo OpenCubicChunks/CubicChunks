@@ -72,7 +72,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Shadow @Mutable @Final private PlayerChunkMap playerChunkMap;
     @Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
-    @Shadow @Mutable @Final private EntityTracker entityTracker;
+    @Shadow @Mutable @Final private EntityTracker theEntityTracker;
     @Shadow public boolean disableLevelSaving;
 
     @Nullable private ChunkGc chunkGc;
@@ -92,7 +92,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.saveHandler = new CubicSaveHandler(this, this.getSaveHandler());
 
         this.firstLightProcessor = new FirstLightProcessor(this);
-        this.entityTracker = new CubicEntityTracker(this);
+        this.theEntityTracker = new CubicEntityTracker(this);
         CubicChunks.addConfigChangeListener(this);
     }
 
@@ -116,8 +116,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         if (!this.isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
-        assert this.entityTracker instanceof CubicEntityTracker;
-        return (CubicEntityTracker) this.entityTracker;
+        assert this.theEntityTracker instanceof CubicEntityTracker;
+        return (CubicEntityTracker) this.theEntityTracker;
     }
 
     @Override public CubeProviderServer getCubeCache() {

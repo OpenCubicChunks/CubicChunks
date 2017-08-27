@@ -19,7 +19,6 @@
 
 package cubicchunks.server.chunkio.async.forge;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
@@ -70,7 +69,7 @@ class QueuedCube {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
+        return Objects.toStringHelper(this)
                 .addValue(this.world)
                 .add("x", this.x)
                 .add("y", this.y)

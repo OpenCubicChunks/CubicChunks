@@ -38,7 +38,7 @@ import com.google.gson.GsonBuilder;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
-import net.minecraft.world.gen.ChunkGeneratorSettings;
+import net.minecraft.world.gen.ChunkProviderSettings;
 
 public class CustomGeneratorSettings {
     /**
@@ -240,7 +240,7 @@ public class CustomGeneratorSettings {
         return new CustomGeneratorSettings();
     }
 
-    public static CustomGeneratorSettings fromVanilla(ChunkGeneratorSettings settings) {
+    public static CustomGeneratorSettings fromVanilla(ChunkProviderSettings settings) {
         CustomGeneratorSettings obj = defaults();
 
         obj.lowNoiseFactor = 512.0f / settings.lowerLimitScale;

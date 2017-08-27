@@ -49,7 +49,7 @@ public abstract class MixinWorld implements ICubicWorld {
 
     @Shadow public abstract WorldBorder getWorldBorder();
 
-    @Shadow public abstract boolean isInsideWorldBorder(Entity entity);
+    @Shadow public abstract boolean func_191503_g(Entity entity);
 
     // note: markAndNotifyBlock has @Nullable on chunk, this will never be null here,
     // because this isgit lo the chunk on which isPopulated is called

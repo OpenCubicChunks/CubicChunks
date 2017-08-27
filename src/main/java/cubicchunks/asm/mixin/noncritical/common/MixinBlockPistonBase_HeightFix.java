@@ -52,7 +52,7 @@ public class MixinBlockPistonBase_HeightFix {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I")
     )
     private static int getBlockYRedirect(BlockPos pos, IBlockState blockStateIn, World worldIn, BlockPos posArg, EnumFacing facing,
-            boolean destroyBlocks, EnumFacing p_185646_5_) {
+            boolean destroyBlocks) {
         // keep the old way here because mixin intentionally won't support replacing == 0 and != 0 to avoid issues with booleans
 
         ICubicWorld world = (ICubicWorld) worldIn;

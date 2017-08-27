@@ -35,7 +35,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
-import net.minecraft.world.gen.IChunkGenerator;
+import net.minecraft.world.chunk.IChunkGenerator;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -52,7 +52,7 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
 
     @Shadow protected World world;
 
-    @Shadow protected boolean nether;
+    @Shadow protected boolean hasNoSky;
 
     @Shadow public abstract DimensionType getDimensionType();
 

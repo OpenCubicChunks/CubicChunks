@@ -26,7 +26,7 @@ package cubicchunks.world;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.AddressTools;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.world.WorldSavedData;
 
 public class WorldSavedCubicChunksData extends WorldSavedData {
 

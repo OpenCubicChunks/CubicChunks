@@ -50,7 +50,16 @@ public class GuiFactory implements IModGuiFactory {
         return new CubicChunks.Config.GUI(parentScreen);
     }
 
+    @Override public Class<? extends GuiScreen> mainConfigGuiClass() {
+        return null;
+    }
+
     @Nullable @Override public Set<RuntimeOptionCategoryElement> runtimeGuiCategories() {
+        return null;
+    }
+
+    @Nullable @Override
+    public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement runtimeOptionCategoryElement) {
         return null;
     }
 }

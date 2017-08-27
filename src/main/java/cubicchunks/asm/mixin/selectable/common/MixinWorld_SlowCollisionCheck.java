@@ -45,10 +45,10 @@ import net.minecraft.world.border.WorldBorder;
 public abstract class MixinWorld_SlowCollisionCheck implements ICubicWorld {
 
     @Shadow
-    public abstract boolean isInsideWorldBorder(Entity p_191503_1_);
+    public abstract boolean func_191503_g(Entity p_191503_1_);
 
-    @Overwrite(constraints = "MC_FORGE(22)")
-    private boolean getCollisionBoxes(@Nullable Entity entity, AxisAlignedBB aabb, boolean flagArg, @Nullable List<AxisAlignedBB> aabbList) {
+    @Overwrite(constraints = "MC_FORGE(20)", remap = false)
+    private boolean func_191504_a(@Nullable Entity entity, AxisAlignedBB aabb, boolean flagArg, @Nullable List<AxisAlignedBB> aabbList) {
         int i = MathHelper.floor(aabb.minX) - 1;
         int j = MathHelper.ceil(aabb.maxX) + 1;
         int k = MathHelper.floor(aabb.minY) - 1;
@@ -57,7 +57,7 @@ public abstract class MixinWorld_SlowCollisionCheck implements ICubicWorld {
         int j1 = MathHelper.ceil(aabb.maxZ) + 1;
         WorldBorder worldborder = this.getWorldBorder();
         boolean flag = entity != null && entity.isOutsideBorder();
-        boolean flag1 = entity != null && this.isInsideWorldBorder(entity);
+        boolean flag1 = entity != null && this.func_191503_g(entity);
         IBlockState iblockstate = Blocks.STONE.getDefaultState();
         BlockPos.PooledMutableBlockPos pos = BlockPos.PooledMutableBlockPos.retain();
 
