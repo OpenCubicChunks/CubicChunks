@@ -10,9 +10,7 @@ import net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
 import nl.javadude.gradle.plugins.license.LicenseExtension
 import nl.javadude.gradle.plugins.license.LicensePlugin
 import org.ajoberstar.grgit.Grgit
-import org.ajoberstar.grgit.exception.GrgitException
 import org.ajoberstar.grgit.operation.DescribeOp
-import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.internal.HasConvention
@@ -259,7 +257,7 @@ task<Jar>("jarDev") {
 }
 
 fun Jar.jarConfig(): Jar {
-    exclude("LICENSE.txt")
+    exclude("LICENSE.txt", "log4j2.xml")
     manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
     manifest.attributes["FMLCorePlugin"] = "cubicchunks.asm.CubicChunksCoreMod"
     manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
@@ -270,6 +268,7 @@ fun Jar.jarConfig(): Jar {
 
 shadowJar.apply {
     relocate("com.flowpowered", "cubicchunks.com.flowpowered")
+    exclude("log4j2.xml")
     classifier = ""
 }
 
