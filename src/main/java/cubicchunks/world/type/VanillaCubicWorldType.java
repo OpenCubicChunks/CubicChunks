@@ -23,6 +23,7 @@
  */
 package cubicchunks.world.type;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.provider.ICubicWorldProvider;
@@ -46,6 +47,10 @@ public class VanillaCubicWorldType extends WorldType implements ICubicWorldType 
 
     public static void create() {
         new VanillaCubicWorldType();
+    }
+
+    @Override public boolean canBeCreated() {
+        return CubicChunks.DEBUG_ENABLED;
     }
 
     @Nullable @Override

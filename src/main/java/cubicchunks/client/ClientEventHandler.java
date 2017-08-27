@@ -216,6 +216,7 @@ public class ClientEventHandler {
         private static final int MAP_TYPE_ID = 5;
         private static final int ALLOW_CHEATS_ID = 6;
         private static final int CUSTOMIZE_ID = 8;
+        private static final int MORE_WORLD_OPTIONS = 3;
 
         private static final int CC_ENABLE_BUTTON_ID = 11;
 
@@ -223,21 +224,31 @@ public class ClientEventHandler {
         public static void guiInit(InitGuiEvent.Post event) {
             GuiScreen gui = event.getGui();
             if (isCreateWorldGui(gui)) {
-                List<GuiButton> buttons = event.getButtonList();
-
-                Optional<GuiButton> customizeButton = getButton(buttons, CUSTOMIZE_ID);
-                Optional<GuiButton> allowCheats = getButton(buttons, ALLOW_CHEATS_ID);
-                customizeButton.ifPresent(b -> allowCheats.ifPresent(c -> {
-                    b.y = c.y - 21;
-                    GuiButton mapTypeButton = getButton(buttons, MAP_TYPE_ID).get();
-                    GuiButton enableCC = new GuiButton(CC_ENABLE_BUTTON_ID, c.x, b.y, c.width, c.height, "enable");
-                    enableCC.visible = mapTypeButton.visible;
-                    buttons.add(enableCC);
-                    refreshText((GuiCreateWorld) gui, enableCC);
-                }));
+                init((GuiCreateWorld) gui, event.getButtonList());
             }
         }
 
+        private static void init(GuiCreateWorld gui, List<GuiButton> buttons) {
+            if (getButton(buttons, CC_ENABLE_BUTTON_ID).isPresent()) {
+                return;
+            }
+            GuiButton enableCC = new GuiButton(CC_ENABLE_BUTTON_ID, 0, 0, 20, 20, "enable");
+            enableCC.visible = false;
+            buttons.add(enableCC);
+            Optional<GuiButton> customizeButton = getButton(buttons, CUSTOMIZE_ID);
+            Optional<GuiButton> allowCheats = getButton(buttons, ALLOW_CHEATS_ID);
+            customizeButton.ifPresent(b -> allowCheats.ifPresent(c -> {
+                b.y = c.y - 21;
+                GuiButton mapTypeButton = getButton(buttons, MAP_TYPE_ID).get();
+                enableCC.x = c.x;
+                enableCC.y = b.y;
+                enableCC.width = c.width;
+                enableCC.height = c.height;
+                enableCC.visible = mapTypeButton.visible;
+
+                refreshText(gui, enableCC);
+            }));
+        }
         private static void refreshText(GuiCreateWorld gui, GuiButton enableBtn) {
             enableBtn.displayString = I18n.format("cubicchunks.gui.worldmenu." +
                     (CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue() ? "cc_enable" : "cc_disable"));
@@ -249,6 +260,10 @@ public class ClientEventHandler {
             GuiButton button = event.getButton();
             if (isCreateWorldGui(gui)) {
                 switch (button.id) {
+                    case MORE_WORLD_OPTIONS: {
+                        init((GuiCreateWorld) gui, event.getButtonList());
+                        // fall through
+                    }
                     case MAP_TYPE_ID: {
                         GuiButton enableCC = null, mapType = null;
                         for (GuiButton b : event.getButtonList()) {
@@ -258,10 +273,9 @@ public class ClientEventHandler {
                                 mapType = b;
                             }
                         }
+                        assert enableCC != null;
                         boolean isCubicChunksType = WorldType.WORLD_TYPES[((GuiCreateWorld) gui).selectedIndex] instanceof ICubicWorldType;
-                        if (enableCC != null && mapType != null && !isCubicChunksType) {
-                            enableCC.visible = mapType.visible;
-                        }
+                        enableCC.visible = mapType != null && !isCubicChunksType && mapType.visible;
                         break;
                     }
                     case CC_ENABLE_BUTTON_ID: {

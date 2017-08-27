@@ -217,7 +217,7 @@ dependencies {
     val forgeGradleGradleStart by configurations
     val compile by configurations
     val testCompile by configurations
-    val deobfProvided by configurations
+    val deobfCompile by configurations
 
     compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
     testCompile("junit:junit:4.11")
@@ -226,14 +226,16 @@ dependencies {
     testCompile("org.mockito:mockito-core:2.1.0-RC.2")
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    compile("org.spongepowered:mixin:0.6.15-SNAPSHOT") {
+    compile("org.spongepowered:mixin:0.7.2-SNAPSHOT") {
         isTransitive = false
     }
 
     compile(project(":RegionLib"))
 
     // use deobfProvided for now to avoid crash with malisiscore asm, but still have it compiling
-    deobfProvided("net.malisis:malisiscore:$malisisCoreVersion")
+    deobfCompile("net.malisis:malisiscore:$malisisCoreVersion") {
+        isTransitive = false
+    }
 
     jmh.extendsFrom(compile)
     jmh.extendsFrom(forgeGradleMc)
