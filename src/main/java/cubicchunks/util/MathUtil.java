@@ -112,6 +112,26 @@ public class MathUtil {
         return exp(-(x - mean) * (x - mean) / (2 * stdDev * stdDev)) /
                 (sqrt(2 * Math.PI) * stdDev);
     }
+	
+    public static double gaussianProbabilityCyclic(int x, int mean, double stdDev, int spacing) {
+        /* Modulo works from 0 to limit-1.
+           I want it to go from -limit/2 to +limit/2 because the curve is centered on 0 and thus doesn't start there.
+           By moving all values by half of the spacing to the right (the "- halfspace" part in "factor"),
+           I effectively move the middle of the curve from 0 to the middle of the mod range.
+           Due to moving the curve by spacing/2 for the mod (to not cut curve parts), the values are off by half the spacing,
+           so I have to move them back to their original position (the " - halfspace" in "shiftedLoc").
+           In theory that could also be "+ halfspace" but since the curve is periodic it doesn't matter.
+           The "- mean" in "shiftedLoc" moves the center of the 1st curve to the right, so into + range.
+         */
+        //Using vars for better overview.
+        double halfSpace = (double)spacing / 2.0;
+        double shiftedLoc = Math.abs((double)x - halfSpace - (double)mean);
+        double factor = (shiftedLoc % (double)spacing) - halfSpace;
+        double divide = 2.0 * stdDev * stdDev;
+        double exponent = (-1.0 * factor) * factor / divide;
+        double result = exp(exponent);
+        return result;
+    }
 
     public static boolean rangesIntersect(int min1, int max1, int min2, int max2) {
         return min1 <= max2 && min2 <= max1;

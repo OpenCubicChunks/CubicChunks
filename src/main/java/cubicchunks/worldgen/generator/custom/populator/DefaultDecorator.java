@@ -106,7 +106,7 @@ public final class DefaultDecorator implements ICubicPopulator {
 
             genOreGaussian(world, cfg, random, pos, cfg.lapisLazuliSpawnTries, cfg.lapisLazuliSpawnProbability,
                     new WorldGenMinable(Blocks.LAPIS_ORE.getDefaultState(), cfg.lapisLazuliSpawnSize),
-                    cfg.lapisLazuliHeightMean, cfg.lapisLazuliHeightStdDeviation);
+                    cfg.lapisLazuliHeightMean, cfg.lapisLazuliHeightStdDeviation, cfg.lapisLazuliHeightSpacing, cfg.lapisLazuliHeightLimit);
         }
     }
 
