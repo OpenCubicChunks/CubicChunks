@@ -50,6 +50,8 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.List;
 import java.util.Optional;
@@ -85,6 +87,7 @@ public class ClientEventHandler {
     }
 
     @SubscribeEvent
+	@SideOnly(Side.CLIENT)
     public void initGuiEvent(InitGuiEvent.Post event) {
 
         GuiScreen currentGui = event.getGui();
@@ -221,13 +224,14 @@ public class ClientEventHandler {
         private static final int CC_ENABLE_BUTTON_ID = 11;
 
         @SubscribeEvent
+		@SideOnly(Side.CLIENT)
         public static void guiInit(InitGuiEvent.Post event) {
             GuiScreen gui = event.getGui();
             if (isCreateWorldGui(gui)) {
                 init((GuiCreateWorld) gui, event.getButtonList());
             }
         }
-
+		@SideOnly(Side.CLIENT)
         private static void init(GuiCreateWorld gui, List<GuiButton> buttons) {
             if (getButton(buttons, CC_ENABLE_BUTTON_ID).isPresent()) {
                 return;
@@ -249,12 +253,14 @@ public class ClientEventHandler {
                 refreshText(gui, enableCC);
             }));
         }
+		@SideOnly(Side.CLIENT)
         private static void refreshText(GuiCreateWorld gui, GuiButton enableBtn) {
             enableBtn.displayString = I18n.format("cubicchunks.gui.worldmenu." +
                     (CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue() ? "cc_enable" : "cc_disable"));
         }
 
         @SubscribeEvent
+		@SideOnly(Side.CLIENT)
         public static void actionPerformed(GuiScreenEvent.ActionPerformedEvent.Post event) {
             GuiScreen gui = event.getGui();
             GuiButton button = event.getButton();
@@ -286,15 +292,15 @@ public class ClientEventHandler {
                 }
             }
         }
-
+		@SideOnly(Side.CLIENT)
         @SubscribeEvent public static void onCreateWorldSettings(CreateNewWorldEvent event) {
             ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue());
         }
-
+		@SideOnly(Side.CLIENT)
         private static boolean isCreateWorldGui(GuiScreen gui) {
             return gui instanceof GuiCreateWorld;
         }
-
+		@SideOnly(Side.CLIENT)
         private static Optional<GuiButton> getButton(List<GuiButton> buttons, int id) {
             return buttons.stream().filter(b -> b.id == id).findFirst();
         }
