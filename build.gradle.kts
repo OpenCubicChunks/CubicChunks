@@ -2,6 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import me.champeau.gradle.JMHPlugin
 import me.champeau.gradle.JMHPluginExtension
+import net.minecraftforge.gradle.tasks.DeobfuscateJar
 import net.minecraftforge.gradle.user.ReobfMappingType
 import net.minecraftforge.gradle.user.ReobfTaskFactory
 import net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension
@@ -9,9 +10,7 @@ import net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
 import nl.javadude.gradle.plugins.license.LicenseExtension
 import nl.javadude.gradle.plugins.license.LicensePlugin
 import org.ajoberstar.grgit.Grgit
-import org.ajoberstar.grgit.exception.GrgitException
 import org.ajoberstar.grgit.operation.DescribeOp
-import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.internal.HasConvention
@@ -72,6 +71,8 @@ val jar: Jar by tasks
 val shadowJar: ShadowJar by tasks
 val test: Test by tasks
 val processResources: ProcessResources by tasks
+val deobfMcSRG: DeobfuscateJar by tasks
+val deobfMcMCP: DeobfuscateJar by tasks
 
 defaultTasks = listOf("licenseFormat", "build")
 
@@ -168,6 +169,13 @@ configure<NamedDomainObjectContainer<ReobfTaskFactory.ReobfTaskWrapper>> {
         mappingType = ReobfMappingType.SEARGE
     }
 }
+// temporary until malisiscore updates
+deobfMcSRG.apply {
+    isFailOnAtError = false
+}
+deobfMcMCP.apply{
+    isFailOnAtError = false
+}
 build.dependsOn("reobfShadowJar")
 
 configure<JMHPluginExtension> {
@@ -216,18 +224,22 @@ dependencies {
     testCompile("org.mockito:mockito-core:2.1.0-RC.2")
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    compile("org.spongepowered:mixin:0.6.15-SNAPSHOT") {
+    compile("org.spongepowered:mixin:0.7.2-SNAPSHOT") {
         isTransitive = false
     }
 
     compile(project(":RegionLib"))
 
-    deobfCompile("net.malisis:malisiscore:$malisisCoreVersion")
+    // use deobfProvided for now to avoid crash with malisiscore asm, but still have it compiling
+    deobfCompile("net.malisis:malisiscore:$malisisCoreVersion") {
+        isTransitive = false
+    }
 
     jmh.extendsFrom(compile)
     jmh.extendsFrom(forgeGradleMc)
     jmh.extendsFrom(forgeGradleMcDeps)
     testCompile.extendsFrom(forgeGradleGradleStart)
+    testCompile.extendsFrom(forgeGradleMcDeps)
 }
 
 jar.apply {
@@ -242,7 +254,7 @@ task<Jar>("jarDev") {
 }
 
 fun Jar.jarConfig(): Jar {
-    exclude("LICENSE.txt")
+    exclude("LICENSE.txt", "log4j2.xml")
     manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
     manifest.attributes["FMLCorePlugin"] = "cubicchunks.asm.CubicChunksCoreMod"
     manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
@@ -253,6 +265,7 @@ fun Jar.jarConfig(): Jar {
 
 shadowJar.apply {
     relocate("com.flowpowered", "cubicchunks.com.flowpowered")
+    exclude("log4j2.xml")
     classifier = ""
 }
 

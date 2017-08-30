@@ -24,8 +24,6 @@
 package cubicchunks.asm.mixin.core.common;
 
 import static cubicchunks.asm.JvmNames.CHUNK_CONSTRUCT_1;
-import static cubicchunks.asm.JvmNames.CHUNK_IS_CHUNK_LOADED;
-import static cubicchunks.asm.JvmNames.CHUNK_IS_MODIFIED;
 import static cubicchunks.asm.JvmNames.CHUNK_STORAGE_ARRAYS;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
@@ -103,7 +101,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
 
     @Shadow @Final private int[] heightMap;
     @Shadow @Final private World world;
-    @Shadow protected boolean isChunkLoaded;
+    @Shadow private boolean isChunkLoaded;
     @Shadow private boolean chunkTicked;
     @Shadow private boolean isLightPopulated;
     @Shadow private boolean isModified;
@@ -385,7 +383,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
         setEBS_CubicChunks(index, val);
     }
     
-    @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = CHUNK_IS_MODIFIED))
+    @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;isModified:Z"))
     private void setIsModifiedFromSetBlockState_Field(Chunk chunk, boolean isModifiedIn, BlockPos pos, IBlockState state) {
         if (isColumn) {
             getCubicWorld().getCubeFromBlockCoords(pos).markDirty();
@@ -429,7 +427,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
         setEBS_CubicChunks(index, ebs);
     }
     
-    @Redirect(method = "setLightFor", at = @At(value = "FIELD", target = CHUNK_IS_MODIFIED))
+    @Redirect(method = "setLightFor", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;isModified:Z"))
     private void setIsModifiedFromSetLightFor_Field(Chunk chunk, boolean isModifiedIn, EnumSkyBlock type, BlockPos pos, int value) {
         if (isColumn) {
             getCubicWorld().getCubeFromBlockCoords(pos).markDirty();
@@ -522,7 +520,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //                addTileEntity
     // ==============================================
 
-    @Redirect(method = "addTileEntity(Lnet/minecraft/tileentity/TileEntity;)V", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
+    @Redirect(method = "addTileEntity(Lnet/minecraft/tileentity/TileEntity;)V",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;isChunkLoaded:Z"))
     private boolean addTileEntity_isChunkLoadedCubeRedirect(Chunk chunk, TileEntity te) {
         if (!isColumn) {
             return isChunkLoaded;
@@ -535,7 +534,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //              removeTileEntity
     // ==============================================
 
-    @Redirect(method = "removeTileEntity", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
+    @Redirect(method = "removeTileEntity", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;isChunkLoaded:Z"))
     private boolean removeTileEntity_isChunkLoadedCubeRedirect(Chunk chunk, BlockPos pos) {
         if (!isColumn) {
             return isChunkLoaded;
@@ -752,7 +751,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //           removeInvalidTileEntity
     // ==============================================
 
-    @Redirect(method = "removeInvalidTileEntity", at = @At(value = "FIELD", target = CHUNK_IS_CHUNK_LOADED))
+    @Redirect(method = "removeInvalidTileEntity", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;isChunkLoaded:Z"), remap = false)
     private boolean removeInvalidTileEntity_isChunkLoadedCubeRedirect(Chunk chunk, BlockPos pos) {
         if (!isColumn) {
             return isChunkLoaded;

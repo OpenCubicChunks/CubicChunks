@@ -23,37 +23,62 @@
  */
 package cubicchunks.debug;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.debug.item.GetLightValueItem;
 import cubicchunks.debug.item.RelightSkyBlockItem;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.registry.GameRegistry.ObjectHolder;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@SuppressWarnings({"WeakerAccess", "ConstantConditions"})
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
+@Mod.EventBusSubscriber
+@ObjectHolder(CubicChunks.MODID)
 public class DebugTools {
 
-    @SuppressWarnings("NullableProblems") @Nonnull
-    @SidedProxy(serverSide = "cubicchunks.debug.DebugProxy", clientSide = "cubicchunks.debug.DebugClientProxy")
-    private static DebugProxy proxy;
+    public static final Item relight_sky_block = null;
+    public static final Item get_light_value = null;
 
-    static final Item itemRelightSkyBlock = new RelightSkyBlockItem("relight_sky_block");
-    static final Item itemGetLightValue = new GetLightValueItem("get_light_value");
-
-    static final CreativeTabs CUBIC_CHUNKS_DEBUG_TAB = new CreativeTabs("cubic_chunks_debug_tab") {
-        @Override public Item getTabIconItem() {
-            return itemRelightSkyBlock;
+    @SubscribeEvent public static void registerItems(RegistryEvent.Register<Item> event) {
+        if (!CubicChunks.DEBUG_ENABLED) {
+            return;
         }
-    };
+        CreativeTabs tab = new CreativeTabs("cubic_chunks_debug_tab") {
+            @SideOnly(Side.CLIENT) @Override public Item getTabIconItem() {
+                return relight_sky_block;
+            }
+        };
 
-    public static void init() {
-        proxy.initItems();
+        event.getRegistry().registerAll(
+                new RelightSkyBlockItem("relight_sky_block").setCreativeTab(tab),
+                new GetLightValueItem("get_light_value").setCreativeTab(tab)
+        );
+    }
+
+    @Mod.EventBusSubscriber(value = Side.CLIENT)
+    public static class ClientEventHandler {
+
+        @SubscribeEvent public static void onModelRegistry(ModelRegistryEvent event) {
+            if (!CubicChunks.DEBUG_ENABLED) {
+                return;
+            }
+            ModelLoader.setCustomModelResourceLocation(relight_sky_block, 0,
+                    new ModelResourceLocation(relight_sky_block.getRegistryName(), "inventory"));
+            ModelLoader.setCustomModelResourceLocation(get_light_value, 0,
+                    new ModelResourceLocation(get_light_value.getRegistryName(), "inventory"));
+        }
     }
 }

@@ -51,11 +51,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(ViewFrustum.class)
 public class MixinViewFrustum_RenderHeightFix {
 
-    @Shadow @Final public World world;
-    @SuppressWarnings("MismatchedReadAndWriteOfArray") @Shadow private RenderChunk[] renderChunks;
-    @Shadow private int countChunksX;
-    @Shadow private int countChunksY;
-    @Shadow private int countChunksZ;
+    @Shadow @Final protected World world;
+    @SuppressWarnings("MismatchedReadAndWriteOfArray") @Shadow public RenderChunk[] renderChunks;
+    @Shadow protected int countChunksX;
+    @Shadow protected int countChunksY;
+    @Shadow protected int countChunksZ;
 
     @Shadow private int getBaseCoordinate(int arg1, int arg2, int arg3) {
         throw new Error();

@@ -115,7 +115,7 @@ public class BlankEntityContainer extends EntityContainer {
 
         @Override
         public Iterator<Entity> iterator() {
-            return Iterators.emptyIterator();
+            return Collections.emptyIterator();
         }
 
         @Override

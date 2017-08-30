@@ -33,6 +33,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.chunk.Chunk;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -49,7 +51,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(World.class)
 public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
-    @Shadow public WorldProvider provider;
+    @Final @Shadow public WorldProvider provider;
 
     @Shadow public abstract boolean isValid(BlockPos pos);
 

@@ -51,7 +51,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(ChunkCache.class)
 public class MixinChunkCache_HeightLimits {
 
-    @Shadow protected World world;
+    @Shadow public World world;
 
     @ModifyConstant(method = "getBlockState",
             constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO, ordinal = 0))

@@ -28,9 +28,7 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.fml.client.IModGuiFactory;
-import net.minecraftforge.fml.client.config.IConfigElement;
 
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;

@@ -31,6 +31,7 @@ import cubicchunks.util.CubePos;
 import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldSettings;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -92,6 +93,7 @@ public abstract class MixinWorld implements ICubicWorld {
     @Shadow @Final public Profiler theProfiler;
     @Shadow @Final @Mutable protected ISaveHandler saveHandler;
     @Shadow protected boolean findingSpawnPoint;
+    @Shadow protected WorldInfo worldInfo;
 
     @Shadow protected abstract boolean isChunkLoaded(int i, int i1, boolean allowEmpty);
 
@@ -101,6 +103,7 @@ public abstract class MixinWorld implements ICubicWorld {
     private int minGenerationHeight = 0, maxGenerationHeight = 256;
 
     protected void initCubicWorld(IntRange heightRange, IntRange generationRange) {
+        ((ICubicWorldSettings) worldInfo).setCubic(true);
         // Set the world height boundaries to their highest and lowest values respectively
         this.minHeight = heightRange.getMin();
         this.maxHeight = heightRange.getMax();

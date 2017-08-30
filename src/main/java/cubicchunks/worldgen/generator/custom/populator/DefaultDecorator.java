@@ -275,7 +275,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         }
 
 
-        if (dec.generateLakes) {
+        if (dec.generateLakes) { // generateFalls
             for (int i = 0; i < 50; ++i) {
                 int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
                 double prob = waterSourceProbabilityForY(cfg, pos.getMinBlockY() + yOffset);

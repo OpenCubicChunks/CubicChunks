@@ -99,7 +99,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        
+
         doRandomBlockTicksHere = CubicChunksMixinConfig.BoolOptions.RANDOM_TICK_IN_CUBE.getValue();
     }
 

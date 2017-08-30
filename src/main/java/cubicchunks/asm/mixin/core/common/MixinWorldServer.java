@@ -43,14 +43,10 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.server.management.PlayerChunkMap;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.WorldSettings;
-import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeProvider;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -61,9 +57,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.List;
-import java.util.Random;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -102,7 +95,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.theEntityTracker = new CubicEntityTracker(this);
         CubicChunks.addConfigChangeListener(this);
     }
-    
+
     @Override
     public void onConfigUpdate(CubicChunks.Config config){
         if(config.useFastEntitySpawner() && this.entitySpawner instanceof CubeWorldEntitySpawner)
