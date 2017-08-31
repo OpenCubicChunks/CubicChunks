@@ -113,6 +113,31 @@ public class MathUtil {
                 (sqrt(2 * Math.PI) * stdDev);
     }
 
+    /**
+     * Generates a gaussian probability with the curves repeatedly positioned in a set distance to each other's center.
+     * How it works:
+     * Modulo usually works from 0 to limit-1.
+     * Since the curve is located centered on 0, it has to be moved by limit/2 to the right.
+     * This is done by substracting "halfspace" from the factor.
+     * To have the ore still generated in the area it's supposed to, the location inside the modulo gets shifted
+     * by both the mean location of the first curve and back the "halfspace".
+     * @param x Value to be evaluated
+     * @param mean Center of the first curve
+     * @param stdDev Standard deviation
+     * @param spacing Distance between the centers of the curves
+     * @return gaussian probability
+     */
+    public static double bellCurveProbabilityCyclic(int x, int mean, double stdDev, int spacing) {
+        //Using vars for better overview/easier debugging.
+        double halfSpace = (double)spacing / 2.0;
+        double shiftedLoc = (double)x - halfSpace - (double)mean;
+        double factor = Math.abs(shiftedLoc % (double)spacing) - halfSpace;
+        double divisorExp = 2.0 * stdDev * stdDev;
+        double exponent = (-1.0 * factor) * factor / divisorExp;
+        double result = exp(exponent);
+        return result;
+    }
+
     public static boolean rangesIntersect(int min1, int max1, int min2, int max2) {
         return min1 <= max2 && min2 <= max1;
     }
