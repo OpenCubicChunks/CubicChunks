@@ -8,9 +8,6 @@ itemGroup.cubic_chunks_debug_tab=Cubic Chunks debug items
 ###        general gui        ###
 #################################
 
-cubicchunks.gui.worldmenu.cc_enable=CubicChunks: Yes
-cubicchunks.gui.worldmenu.cc_disable=CubicChunks: No
-
 cubicchunks.gui.customcubic.previous_page=Previous
 cubicchunks.gui.customcubic.next_page=Next
 cubicchunks.gui.customcubic.done=Done
@@ -88,10 +85,12 @@ cubicchunks.gui.customcubic.lapis_lazuli_ore_group=Lapis Lazuli Ore:
 cubicchunks.gui.customcubic.spawn_size=Spawn Size:
 cubicchunks.gui.customcubic.spawn_tries=Spawn Tries:
 cubicchunks.gui.customcubic.spawn_probability=Probability:
+cubicchunks.gui.customcubic.spawn_maxprobability=Max. Probability:
 cubicchunks.gui.customcubic.spawn_range=Height %.2f%%%% to %.2f%%%%
 
-cubicchunks.gui.customcubic.mean_height=Mean Height:
+cubicchunks.gui.customcubic.mean_height=Center of first Belt:
 cubicchunks.gui.customcubic.height_std_dev=Height Std. Deviation:
+cubicchunks.gui.customcubic.spacing_height=Height Spacing:
 #################################
 ### advanced terrain settings ###
 #################################

@@ -29,12 +29,7 @@ import static cubicchunks.worldgen.gui.CustomCubicGui.VERTICAL_INSETS;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_1_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_2_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_3_COL;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.label;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeFloatSlider;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeIntSlider;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeRangeSlider;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.*;
 
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
@@ -101,6 +96,8 @@ class OreSettingsTab {
     private final UISlider<Float> lapisLazuliOreSpawnProbability;
     private final UISlider<Float> lapisLazuliMeanHeight;
     private final UISlider<Float> lapisLazuliHeightStdDev;
+    private final UISlider<Float> lapisLazuliSpacingHeight;
+    private final UIRangeSlider<Float> lapisLazuliSpawnRange;
 
     OreSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
         int y = -1;
@@ -246,13 +243,18 @@ class OreSettingsTab {
                 .add(this.lapisLazuliOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.lapisLazuliSpawnTries),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
                 .add(this.lapisLazuliOreSpawnProbability =
-                                makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.lapisLazuliSpawnProbability),
+                                makeFloatSlider(gui, malisisText("spawn_maxprobability", " %.3f"), settings.lapisLazuliSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.lapisLazuliMeanHeight = makeFloatSlider(gui, malisisText("mean_height", " %.3f"), -2.0f, 2.0f,
+                .add(this.lapisLazuliSpacingHeight = makePositiveInfinityFloatSlider(gui, malisisText("spacing_height", " %.3f"), -0.5f, 4.0f,
+                        settings.lapisLazuliHeightSpacing),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+                .add(this.lapisLazuliSpawnRange = makeRangeSlider(gui, vanillaText("spawn_range"), -4.0f, 4.0f, settings.lapisLazuliSpawnMinHeight,
+                        settings.lapisLazuliSpawnMaxHeight),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+                .add(this.lapisLazuliMeanHeight = makeFloatSlider(gui, malisisText("mean_height", " %.3f"), -4.0f, 4.0f,
                         settings.lapisLazuliHeightMean),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.lapisLazuliHeightStdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), -2.0f, 2.0f,
-                        settings.lapisLazuliHeightStdDeviation),
+                .add(this.lapisLazuliHeightStdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), 1f, 10f, settings.lapisLazuliHeightStdDeviation),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
                 .init();
 
@@ -340,6 +342,9 @@ class OreSettingsTab {
         conf.lapisLazuliSpawnSize = this.lapisLazuliOreSpawnSize.getValue();
         conf.lapisLazuliHeightMean = this.lapisLazuliMeanHeight.getValue();
         conf.lapisLazuliHeightStdDeviation = this.lapisLazuliHeightStdDev.getValue();
+        conf.lapisLazuliHeightSpacing = this.lapisLazuliSpacingHeight.getValue();
+        conf.lapisLazuliSpawnMinHeight = this.lapisLazuliSpawnRange.getMinValue();
+        conf.lapisLazuliSpawnMaxHeight = this.lapisLazuliSpawnRange.getMaxValue();
 
     }
 }

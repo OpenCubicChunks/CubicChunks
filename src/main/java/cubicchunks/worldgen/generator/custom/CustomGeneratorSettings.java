@@ -149,10 +149,13 @@ public class CustomGeneratorSettings {
     public float diamondOreSpawnMaxHeight = -0.75f;
 
     public int lapisLazuliSpawnSize = 7;
-    public int lapisLazuliSpawnTries = 1;
-    public float lapisLazuliSpawnProbability = 256f / 32f / (256f / Cube.SIZE);
-    public float lapisLazuliHeightMean = 0.25f; // actually vanilla closest fit is 15/64 and 7/64
-    public float lapisLazuliHeightStdDeviation = 0.125f;
+    public int lapisLazuliSpawnTries = 1; //base value to 3 to avoid extremely rare spawns
+    public float lapisLazuliSpawnProbability = 0.933307775f; //256f / 16f / (256f / Cube.SIZE);
+    public float lapisLazuliHeightMean = -1.0f; // actually vanilla closest fit is 15/64 and 7/64
+    public float lapisLazuliHeightStdDeviation = 7.1882908513f;
+    public float lapisLazuliHeightSpacing = 2.0f; //192
+    public float lapisLazuliSpawnMinHeight = Float.NEGATIVE_INFINITY;
+    public float lapisLazuliSpawnMaxHeight = -0.75f;
 
     public int hillsEmeraldOreSpawnTries = 11; // actually there are on average 5.5 attempts per chunk, so multiply prob. by 0.5
     public float hillsEmeraldOreSpawnProbability = 0.5f * 256f / 28f / (256f / Cube.SIZE);
