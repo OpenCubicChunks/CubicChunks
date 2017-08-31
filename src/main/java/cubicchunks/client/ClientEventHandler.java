@@ -212,7 +212,7 @@ public class ClientEventHandler {
         }
     }
 
-    @Mod.EventBusSubscriber(modid = CubicChunks.MODID,value = { Side.CLIENT })
+    @Mod.EventBusSubscriber(modid = CubicChunks.MODID,value = Side.CLIENT )
     public static class WorldSelectionCubicChunks {
 
         private static final int MAP_TYPE_ID = 5;
