@@ -80,7 +80,7 @@ public class PopulatorUtils {
 
         int minBlockY = Math.round((float) (minY * cfg.heightFactor + cfg.heightOffset));
         int maxBlockY = Math.round((float) (maxY * cfg.heightFactor + cfg.heightOffset));
-        int iSpacing = Math.round((float) (spacing * cfg.heightFactor));
+        int iSpacing = Math.round((float) (spacing * cfg.heightFactor + cfg.heightOffset));
         int iMean = Math.round((float) (mean * cfg.heightFactor + cfg.heightOffset));
         for (int i = 0; i < count; ++i) {
             int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
