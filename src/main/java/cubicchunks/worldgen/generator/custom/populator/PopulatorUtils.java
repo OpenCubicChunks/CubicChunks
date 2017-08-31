@@ -78,11 +78,16 @@ public class PopulatorUtils {
     public static void genOreBellCurve(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos, int count,
                                       double probability, WorldGenerator generator, double mean, double stdDevFactor, double spacing, double minY, double maxY) {
 
-        int minBlockY = Math.round((float) (minY * cfg.heightFactor + cfg.heightOffset));
-        int maxBlockY = Math.round((float) (maxY * cfg.heightFactor + cfg.heightOffset));
-        int iSpacing = Math.round((float) (spacing * cfg.heightFactor + cfg.heightOffset));
-        int iMean = Math.round((float) (mean * cfg.heightFactor + cfg.heightOffset));
-		double scaledStdDev = stdDevFactor * cfg.heightFactor;
+        int factor = (cfg.getMaxHeight() - cfg.getMinHeight()) / 2;
+        int minBlockY = Math.round((float) (minY * factor + cfg.heightOffset));
+        int maxBlockY = Math.round((float) (maxY * factor+ cfg.heightOffset));
+                //temporary fix for slider becoming 0 at minimum position
+        if(spacing == 0.0){
+            spacing = 0.5;
+        }
+        int iSpacing = Math.round((float) (spacing * factor));
+        int iMean = Math.round((float) (mean * factor + cfg.heightOffset));
+		double scaledStdDev = stdDevFactor * factor;
         for (int i = 0; i < count; ++i) {
             int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
             int blockY = pos.getMinBlockY() + yOffset;

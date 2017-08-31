@@ -33,7 +33,7 @@ import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.label;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeFloatSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeIntSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeRangeSlider;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makePositiveInfinityFloatSlider;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makePositiveExponentialSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
@@ -251,7 +251,7 @@ class OreSettingsTab {
                 .add(this.lapisLazuliOreSpawnProbability =
                                 makeFloatSlider(gui, malisisText("spawn_maxprobability", " %.3f"), settings.lapisLazuliSpawnProbability),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.lapisLazuliSpacingHeight = makePositiveInfinityFloatSlider(gui, malisisText("spacing_height", " %.3f"), -0.5f, 4.0f,
+                .add(this.lapisLazuliSpacingHeight = makePositiveExponentialSlider(gui, malisisText("spacing_height", " %.3f"), -1f, 6.0f,
                         settings.lapisLazuliHeightSpacing),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.lapisLazuliSpawnRange = makeRangeSlider(gui, vanillaText("spawn_range"), -4.0f, 4.0f, settings.lapisLazuliSpawnMinHeight,

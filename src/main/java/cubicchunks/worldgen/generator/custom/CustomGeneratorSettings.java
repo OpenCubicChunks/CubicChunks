@@ -153,9 +153,9 @@ public class CustomGeneratorSettings {
     public float lapisLazuliSpawnProbability = 0.933307775f; //resulted by approximating triangular behaviour with bell curve
     public float lapisLazuliHeightMean = -0.75f; // -> first belt at height 16
     public float lapisLazuliHeightStdDeviation = 0.11231704455f; //* 64 ~= 7.1882908513
-    public float lapisLazuliHeightSpacing = 2.0f; //192
+    public float lapisLazuliHeightSpacing = 3.0f; //192
     public float lapisLazuliSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float lapisLazuliSpawnMaxHeight = -0.75f;
+    public float lapisLazuliSpawnMaxHeight = -0.5f;
 
     public int hillsEmeraldOreSpawnTries = 11; // actually there are on average 5.5 attempts per chunk, so multiply prob. by 0.5
     public float hillsEmeraldOreSpawnProbability = 0.5f * 256f / 28f / (256f / Cube.SIZE);
@@ -280,7 +280,7 @@ public class CustomGeneratorSettings {
         return (int) this.heightOffset;
     }
 
-    private int getMaxHeightOffset() {
+    public int getMaxHeightOffset() {
         return (int) Math.max(heightFactor, Math.abs(heightVariationFactor) + Math.abs(heightVariationOffset));
     }
 
