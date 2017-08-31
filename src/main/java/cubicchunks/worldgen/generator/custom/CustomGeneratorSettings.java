@@ -152,7 +152,7 @@ public class CustomGeneratorSettings {
     public int lapisLazuliSpawnTries = 1; //1 try per chunk, just like vanilla
     public float lapisLazuliSpawnProbability = 0.933307775f; //resulted by approximating triangular behaviour with bell curve
     public float lapisLazuliHeightMean = -1.0f; // -> first belt at height 0
-    public float lapisLazuliHeightStdDeviation = 7.1882908513f;
+    public float lapisLazuliHeightStdDeviation = 0.11231704455f; //* 64 ~= 7.1882908513
     public float lapisLazuliHeightSpacing = 2.0f; //192
     public float lapisLazuliSpawnMinHeight = Float.NEGATIVE_INFINITY;
     public float lapisLazuliSpawnMaxHeight = -0.75f;

@@ -93,7 +93,7 @@ cubicchunks.gui.customcubic.spawn_maxprobability=Max. Probability:
 cubicchunks.gui.customcubic.spawn_range=Height %.2f%%%% to %.2f%%%%
 
 cubicchunks.gui.customcubic.mean_height=Center of first Belt:
-cubicchunks.gui.customcubic.height_std_dev=Height Std. Deviation:
+cubicchunks.gui.customcubic.height_std_dev=Height Std. Dev. Factor:
 cubicchunks.gui.customcubic.spacing_height=Height Spacing:
 
 #################################

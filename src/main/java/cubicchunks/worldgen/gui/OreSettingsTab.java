@@ -260,7 +260,7 @@ class OreSettingsTab {
                 .add(this.lapisLazuliMeanHeight = makeFloatSlider(gui, malisisText("mean_height", " %.3f"), -4.0f, 4.0f,
                         settings.lapisLazuliHeightMean),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.lapisLazuliHeightStdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), 1f, 10f, settings.lapisLazuliHeightStdDeviation),
+                .add(this.lapisLazuliHeightStdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), 0f, 1f, settings.lapisLazuliHeightStdDeviation),
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
                 .init();
 

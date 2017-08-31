@@ -76,12 +76,13 @@ public class PopulatorUtils {
     }
 
     public static void genOreBellCurve(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos, int count,
-                                      double probability, WorldGenerator generator, double mean, double stdDev, double spacing, double minY, double maxY) {
+                                      double probability, WorldGenerator generator, double mean, double stdDevFactor, double spacing, double minY, double maxY) {
 
         int minBlockY = Math.round((float) (minY * cfg.heightFactor + cfg.heightOffset));
         int maxBlockY = Math.round((float) (maxY * cfg.heightFactor + cfg.heightOffset));
         int iSpacing = Math.round((float) (spacing * cfg.heightFactor + cfg.heightOffset));
         int iMean = Math.round((float) (mean * cfg.heightFactor + cfg.heightOffset));
+		double scaledStdDev = stdDevFactor * cfg.heightFactor;
         for (int i = 0; i < count; ++i) {
             int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
             int blockY = pos.getMinBlockY() + yOffset;
@@ -89,7 +90,7 @@ public class PopulatorUtils {
             if((blockY > maxBlockY) || (blockY < minBlockY)){
                 continue;
             }
-            double modifier = MathUtil.bellCurveProbabilityCyclic(blockY, iMean, stdDev, iSpacing);
+            double modifier = MathUtil.bellCurveProbabilityCyclic(blockY, iMean, scaledStdDev, iSpacing);
             //Modify base probability with the curve
             if (random.nextDouble() > (probability * modifier)) {
                 continue;
