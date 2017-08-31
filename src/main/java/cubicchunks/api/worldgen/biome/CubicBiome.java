@@ -238,11 +238,5 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
             }
             return new CubicBiome(this);
         }
-
-        public CubicBiome register() {
-            CubicBiome biome = create();
-            GameRegistry.register(biome);
-            return biome;
-        }
     }
 }

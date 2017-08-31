@@ -106,7 +106,6 @@ public class TestWorldServerMixin {
 
     @Test
     public void testCubicWorldMaxHeight() {
-        //System.err.println(((ICubicChunksWorldType)world.getWorldInfo().getTerrainType()).getMinimumPossibleHeight());
         this.world.initCubicWorldServer(new IntRange(-4096,4096), new IntRange(-4096,4096));
         assertThat(this.world.getMaxHeight(), is(greaterThan(256)));
     }

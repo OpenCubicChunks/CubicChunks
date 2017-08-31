@@ -1,5 +1,3 @@
-rootProject.name = "CubicChunks"
-
 include 'RegionLib'
 
 def configureGradleScriptKotlinOn(ProjectDescriptor project) {

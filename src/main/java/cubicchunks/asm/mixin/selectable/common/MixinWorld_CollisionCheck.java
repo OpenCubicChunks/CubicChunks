@@ -46,7 +46,7 @@ import net.minecraft.world.World;
 @Mixin(value = World.class, priority = 1001)
 public abstract class MixinWorld_CollisionCheck implements ICubicWorld {
 
-    @Inject(method = "func_191504_a", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "func_191504_a", at = @At("HEAD"), cancellable = true, remap = false)
     private void addBlocksCollisionBoundingBoxesToList(@Nullable Entity entity, AxisAlignedBB aabb, boolean breakOnWorldBorder,
             @Nullable List<AxisAlignedBB> aabbList, CallbackInfoReturnable<Boolean> ci) {
         if (this.isCubicWorld()) {

@@ -45,9 +45,9 @@ import net.minecraft.world.border.WorldBorder;
 public abstract class MixinWorld_SlowCollisionCheck implements ICubicWorld {
 
     @Shadow
-    public abstract boolean func_191503_g(Entity entity);
-    
-    @Overwrite(constraints = "MC_FORGE(20)")
+    public abstract boolean func_191503_g(Entity p_191503_1_);
+
+    @Overwrite(constraints = "MC_FORGE(20)", remap = false)
     private boolean func_191504_a(@Nullable Entity entity, AxisAlignedBB aabb, boolean flagArg, @Nullable List<AxisAlignedBB> aabbList) {
         int i = MathHelper.floor(aabb.minX) - 1;
         int j = MathHelper.ceil(aabb.maxX) + 1;
