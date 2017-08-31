@@ -71,6 +71,27 @@ public class CustomCubicGuiUtils {
         wrappedSlider[0] = slider;
         return slider;
     }
+
+    public static UISlider<Float> makePositiveExponentialSlider(MalisisGui gui, String name, float minPos, float maxPos,
+                                                        float defaultVal) {
+
+        UISlider<Float>[] wrappedSlider = new UISlider[1];
+        BiPredicate<Double, Double> isInRoundRadius = getIsInRoundRadiusPredicate(wrappedSlider);
+
+        float defMult = defaultVal == 0 ? 1 : defaultVal;
+
+        Converter<Float, Float> conv = Converters.builder()
+                .exponential().withBaseValue(2).withPositiveExponentRange(minPos, maxPos)
+                .rounding().withBase(2, 1).withBase(10, 1).withBase(2, defMult).withBase(10, defMult).withMaxExp(128)
+                .withRoundingRadiusPredicate(isInRoundRadius)
+                .withInfinity().positiveAt((float)Math.pow(2, maxPos)).negativeAt(Float.NaN)
+                .build();
+
+        UISlider<Float> slider = new UISliderNoScroll<>(gui, 100, conv, name).setValue(defaultVal);
+        wrappedSlider[0] = slider;
+        return slider;
+    }
+
     public static UISlider<Float> makeExponentialSlider(MalisisGui gui, String name, float minNeg, float maxNeg, float minPos, float maxPos,
             float defaultVal) {
 

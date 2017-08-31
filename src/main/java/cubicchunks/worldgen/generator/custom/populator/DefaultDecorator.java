@@ -23,7 +23,7 @@
  */
 package cubicchunks.worldgen.generator.custom.populator;
 
-import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreGaussian;
+import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreBellCurve;
 import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreUniform;
 import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.getSurfaceForCube;
 
@@ -104,9 +104,9 @@ public final class DefaultDecorator implements ICubicPopulator {
                     new WorldGenMinable(Blocks.DIAMOND_ORE.getDefaultState(), cfg.diamondOreSpawnSize),
                     cfg.diamondOreSpawnMinHeight, cfg.diamondOreSpawnMaxHeight);
 
-            genOreGaussian(world, cfg, random, pos, cfg.lapisLazuliSpawnTries, cfg.lapisLazuliSpawnProbability,
+            genOreBellCurve(world, cfg, random, pos, cfg.lapisLazuliSpawnTries, cfg.lapisLazuliSpawnProbability,
                     new WorldGenMinable(Blocks.LAPIS_ORE.getDefaultState(), cfg.lapisLazuliSpawnSize),
-                    cfg.lapisLazuliHeightMean, cfg.lapisLazuliHeightStdDeviation);
+                    cfg.lapisLazuliHeightMean, cfg.lapisLazuliHeightStdDeviation, cfg.lapisLazuliHeightSpacing, cfg.lapisLazuliSpawnMinHeight, cfg.lapisLazuliSpawnMaxHeight);
         }
     }
 
