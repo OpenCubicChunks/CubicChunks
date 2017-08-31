@@ -51,6 +51,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import net.minecraftforge.fml.relauncher.Side;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -210,7 +212,7 @@ public class ClientEventHandler {
         }
     }
 
-    @Mod.EventBusSubscriber(modid = CubicChunks.MODID)
+    @Mod.EventBusSubscriber(modid = CubicChunks.MODID,value = Side.CLIENT )
     public static class WorldSelectionCubicChunks {
 
         private static final int MAP_TYPE_ID = 5;
