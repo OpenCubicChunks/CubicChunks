@@ -29,7 +29,13 @@ import static cubicchunks.worldgen.gui.CustomCubicGui.VERTICAL_INSETS;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_1_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_2_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_3_COL;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.*;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.label;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeFloatSlider;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeIntSlider;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeRangeSlider;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makePositiveInfinityFloatSlider;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
