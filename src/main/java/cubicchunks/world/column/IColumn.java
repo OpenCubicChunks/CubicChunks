@@ -225,12 +225,12 @@ public interface IColumn {
     /**
      * Called when this column is finished loading
      */
-    void onLoad();
+    void onChunkLoad();
 
     /**
      * Called when this column is being unloaded
      */
-    void onUnload();
+    void onChunkUnload();
 
     /**
      * Retrieve all matching entities within a specific area of the world
@@ -256,7 +256,7 @@ public interface IColumn {
      * <p>
      * CHECKED: 1.11-13.19.0.2148
      */
-    <T extends Entity> void getEntitiesOfTypeWithinAABB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out,
+    <T extends Entity> void getEntitiesOfTypeWithinAAAB(Class<? extends T> entityType, AxisAlignedBB queryBox, List<T> out,
             @Nullable Predicate<? super T> predicate);
 
     /**

@@ -25,8 +25,7 @@ package cubicchunks.worldgen.gui.component;
 
 import java.util.Map.Entry;
 
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.vertex.VertexBuffer;
+import net.minecraft.client.renderer.VertexBuffer;
 import org.lwjgl.opengl.GL11;
 
 import cubicchunks.worldgen.gui.DummyWorld;
@@ -90,7 +89,7 @@ public class UIBlockStateButton extends UIComponent<UIBlockStateButton> {
     @Override
     public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
         if (iBlockState != null) {
-            BufferBuilder vertexbuffer = Tessellator.getInstance().getBuffer();
+            VertexBuffer vertexbuffer = Tessellator.getInstance().getBuffer();
             Tessellator.getInstance().draw();
             ITextureObject blockTexture = Minecraft.getMinecraft().getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, blockTexture.getGlTextureId());
@@ -108,7 +107,7 @@ public class UIBlockStateButton extends UIComponent<UIBlockStateButton> {
                 TileEntity te = iBlockState.getBlock().createTileEntity(null, iBlockState);
                 if (te != null) {
                     TileEntitySpecialRenderer<TileEntity> tileentityspecialrenderer =
-                            TileEntityRendererDispatcher.instance.<TileEntity>getRenderer(te);
+                            TileEntityRendererDispatcher.instance.<TileEntity>getSpecialRenderer(te);
                     if (tileentityspecialrenderer != null) {
                         TileEntityItemStackRenderer.instance.renderByItem(new ItemStack(iBlockState.getBlock()));
                     }

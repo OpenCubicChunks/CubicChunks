@@ -186,9 +186,9 @@ public class RenderCubeCache extends ChunkCache {
 
     private int getRawLight(ExtendedBlockStorage ebs, EnumSkyBlock type, BlockPos pos) {
         if (type == EnumSkyBlock.BLOCK) {
-            return ebs.getBlockLight(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
+            return ebs.getExtBlocklightValue(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
         } else {
-            return ebs.getSkyLight(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
+            return ebs.getExtSkylightValue(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
         }
     }
 

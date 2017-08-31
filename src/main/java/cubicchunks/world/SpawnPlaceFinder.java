@@ -58,7 +58,7 @@ public class SpawnPlaceFinder {
             spawnFuzz = border;
         }
 
-        if (!world.getProvider().isNether() && !isAdventure && spawnFuzz != 0) {
+        if (!world.getProvider().hasNoSky() && !isAdventure && spawnFuzz != 0) {
             if (spawnFuzz < 2) {
                 spawnFuzz = 2;
             }

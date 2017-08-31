@@ -38,7 +38,7 @@ import com.google.gson.GsonBuilder;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
-import net.minecraft.world.gen.ChunkGeneratorSettings;
+import net.minecraft.world.gen.ChunkProviderSettings;
 
 public class CustomGeneratorSettings {
     /**
@@ -149,10 +149,13 @@ public class CustomGeneratorSettings {
     public float diamondOreSpawnMaxHeight = -0.75f;
 
     public int lapisLazuliSpawnSize = 7;
-    public int lapisLazuliSpawnTries = 1;
-    public float lapisLazuliSpawnProbability = 256f / 32f / (256f / Cube.SIZE);
-    public float lapisLazuliHeightMean = 0.25f; // actually vanilla closest fit is 15/64 and 7/64
-    public float lapisLazuliHeightStdDeviation = 0.125f;
+    public int lapisLazuliSpawnTries = 1; //1 try per chunk, just like vanilla
+    public float lapisLazuliSpawnProbability = 0.933307775f; //resulted by approximating triangular behaviour with bell curve
+    public float lapisLazuliHeightMean = -0.75f; // -> first belt at height 16
+    public float lapisLazuliHeightStdDeviation = 0.11231704455f; //* 64 ~= 7.1882908513
+    public float lapisLazuliHeightSpacing = 3.0f; //192
+    public float lapisLazuliSpawnMinHeight = Float.NEGATIVE_INFINITY;
+    public float lapisLazuliSpawnMaxHeight = -0.5f;
 
     public int hillsEmeraldOreSpawnTries = 11; // actually there are on average 5.5 attempts per chunk, so multiply prob. by 0.5
     public float hillsEmeraldOreSpawnProbability = 0.5f * 256f / 28f / (256f / Cube.SIZE);
@@ -240,7 +243,7 @@ public class CustomGeneratorSettings {
         return new CustomGeneratorSettings();
     }
 
-    public static CustomGeneratorSettings fromVanilla(ChunkGeneratorSettings settings) {
+    public static CustomGeneratorSettings fromVanilla(ChunkProviderSettings settings) {
         CustomGeneratorSettings obj = defaults();
 
         obj.lowNoiseFactor = 512.0f / settings.lowerLimitScale;
@@ -277,7 +280,7 @@ public class CustomGeneratorSettings {
         return (int) this.heightOffset;
     }
 
-    private int getMaxHeightOffset() {
+    public int getMaxHeightOffset() {
         return (int) Math.max(heightFactor, Math.abs(heightVariationFactor) + Math.abs(heightVariationOffset));
     }
 

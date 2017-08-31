@@ -23,7 +23,7 @@
  */
 package cubicchunks.worldgen.generator.custom.populator;
 
-import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreGaussian;
+import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreBellCurve;
 import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreUniform;
 import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.getSurfaceForCube;
 
@@ -104,9 +104,9 @@ public final class DefaultDecorator implements ICubicPopulator {
                     new WorldGenMinable(Blocks.DIAMOND_ORE.getDefaultState(), cfg.diamondOreSpawnSize),
                     cfg.diamondOreSpawnMinHeight, cfg.diamondOreSpawnMaxHeight);
 
-            genOreGaussian(world, cfg, random, pos, cfg.lapisLazuliSpawnTries, cfg.lapisLazuliSpawnProbability,
+            genOreBellCurve(world, cfg, random, pos, cfg.lapisLazuliSpawnTries, cfg.lapisLazuliSpawnProbability,
                     new WorldGenMinable(Blocks.LAPIS_ORE.getDefaultState(), cfg.lapisLazuliSpawnSize),
-                    cfg.lapisLazuliHeightMean, cfg.lapisLazuliHeightStdDeviation);
+                    cfg.lapisLazuliHeightMean, cfg.lapisLazuliHeightStdDeviation, cfg.lapisLazuliHeightSpacing, cfg.lapisLazuliSpawnMinHeight, cfg.lapisLazuliSpawnMaxHeight);
         }
     }
 
@@ -115,7 +115,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
 
         // TODO: Biome decoration events?
-        BiomeDecorator dec = biome.getBiome().decorator;
+        BiomeDecorator dec = biome.getBiome().theBiomeDecorator;
         generateOnTop(world, random, pos, dec.sandPatchesPerChunk, dec.sandGen);
         generateOnTop(world, random, pos, dec.clayPerChunk, dec.clayGen);
         generateOnTop(world, random, pos, dec.gravelPatchesPerChunk, dec.gravelGen);
@@ -154,8 +154,8 @@ public final class DefaultDecorator implements ICubicPopulator {
             BlockFlower flowerBlock = type.getBlockType().getBlock();
 
             if (flowerBlock.getDefaultState().getMaterial() != Material.AIR) {
-                dec.flowerGen.setGeneratedBlock(flowerBlock, type);
-                dec.flowerGen.generate((World) world, random, blockPos);
+                dec.yellowFlowerGen.setGeneratedBlock(flowerBlock, type);
+                dec.yellowFlowerGen.generate((World) world, random, blockPos);
             }
         }
 
@@ -275,7 +275,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         }
 
 
-        if (dec.generateFalls) {
+        if (dec.generateLakes) { // generateFalls
             for (int i = 0; i < 50; ++i) {
                 int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
                 double prob = waterSourceProbabilityForY(cfg, pos.getMinBlockY() + yOffset);

@@ -59,8 +59,7 @@ public abstract class MixinEntityFallingBlock_HeightLimits extends Entity {
             constant = @Constant(intValue = 1),
             slice = @Slice(
                     from = @At(value = "CONSTANT:ONE", args = "intValue=100"), // between this.fallTime > 100
-                    to = @At(value = "CONSTANT:FIRST", args = "stringValue=doEntityDrops") // and this.world.getGameRules().getBoolean
-                    // ("doEntityDrops")
+                    to = @At(value = "CONSTANT:LAST", args = "stringValue=doEntityDrops") // and this.world.getGameRules().getBoolean("doEntityDrops")
             ))
     private int onUpdateGetMinHeight(int orig) {
         return ((ICubicWorld) world).getMinHeight();

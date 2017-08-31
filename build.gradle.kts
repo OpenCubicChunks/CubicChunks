@@ -46,7 +46,7 @@ buildscript {
         classpath("com.github.jengelman.gradle.plugins:shadow:1.2.3")
         classpath("gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.13.1")
         classpath("me.champeau.gradle:jmh-gradle-plugin:0.3.1")
-        classpath("net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT")
+        classpath("net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT")
     }
 }
 
@@ -241,9 +241,6 @@ dependencies {
     testCompile.extendsFrom(forgeGradleGradleStart)
     testCompile.extendsFrom(forgeGradleMcDeps)
 }
-
-// this is needed because it.ozimov:java7-hamcrest-matchers:0.7.0 depends on guava 19, while MC needs guava 21
-configurations.all { resolutionStrategy { force("com.google.guava:guava:21.0") } }
 
 jar.apply {
     jarConfig()

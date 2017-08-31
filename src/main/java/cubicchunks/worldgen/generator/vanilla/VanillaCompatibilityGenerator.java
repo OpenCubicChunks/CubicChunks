@@ -42,8 +42,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.util.HashMap;
@@ -104,7 +104,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         }
         isInit = true;
         // heuristics TODO: add a config that overrides this
-        lastChunk = vanilla.generateChunk(0, 0); // lets scan the chunk at 0, 0
+        lastChunk = vanilla.provideChunk(0, 0); // lets scan the chunk at 0, 0
 
         worldHeightBlocks = world.getMaxGenerationHeight();
         worldHeightCubes = worldHeightBlocks / Cube.SIZE;
@@ -213,7 +213,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         } else {
             // Make vanilla generate a chunk for us to copy
             if (lastChunk.x != cubeX || lastChunk.z != cubeZ) {
-                lastChunk = vanilla.generateChunk(cubeX, cubeZ);
+                lastChunk = vanilla.provideChunk(cubeX, cubeZ);
             }
 
             if (!optimizationHack) {
@@ -299,7 +299,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
     @Override
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
-        return vanilla.getNearestStructurePos((World) world, name, pos, findUnexplored);
+        return vanilla.getStrongholdGen((World) world, name, pos, findUnexplored);
     }
 
 }

@@ -43,7 +43,7 @@ public abstract class MixinEntityLivingBase extends Entity {
         super(worldIn);
     }
 
-    @ModifyArg(method = "travel",
+    @ModifyArg(method = "moveEntityWithHeading",
                index = 1,
                at = @At(target = JvmNames.POOLED_MUTABLE_BLOCK_POS_SET_POS_D, value = "INVOKE", ordinal = 1))
     public double moveEntityWithHeading_getReplacedY(double y) {

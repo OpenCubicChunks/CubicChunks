@@ -81,11 +81,7 @@ public class TestWorldServerMixin {
         WorldInfo worldInfo = new WorldInfo(settings, "test");
         this.world = (ICubicWorldServer) new WorldServer(server, mockSaveHandler, worldInfo, 0, new Profiler());
     }
-    @Test
-    public void t() {
 
-    }
-/*
     @Test
     public void testWorldMinHeightVanillaCompatibility() {
         assertEquals("Invalid min world height for vanilla world", 0, this.world.getMinHeight());
@@ -110,8 +106,7 @@ public class TestWorldServerMixin {
 
     @Test
     public void testCubicWorldMaxHeight() {
-        //System.err.println(((ICubicChunksWorldType)world.getWorldInfo().getTerrainType()).getMinimumPossibleHeight());
         this.world.initCubicWorldServer(new IntRange(-4096,4096), new IntRange(-4096,4096));
         assertThat(this.world.getMaxHeight(), is(greaterThan(256)));
-    }*/
+    }
 }
