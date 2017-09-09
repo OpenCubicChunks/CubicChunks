@@ -33,16 +33,22 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.init.Blocks;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldType;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.Chunk.EnumCreateEntityType;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.fml.common.SidedProxy;
 
@@ -57,12 +63,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class FastCubeBlockAccess implements ILightBlockAccess {
+public class FastCubeBlockAccess implements ILightBlockAccess, IBlockAccess {
 
     @SidedProxy private static GetLoadedChunksProxy getLoadedChunksProxy;
     @Nonnull private final ExtendedBlockStorage[][][] cache;
     @Nonnull private final Cube[][][] cubes;
     private final int originX, originY, originZ;
+    private final int dx, dy, dz;
     @Nonnull private final ICubicWorld world;
 
     public FastCubeBlockAccess(ICubeProvider cache, Cube cube, int radius) {
@@ -70,10 +77,10 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
                 cube.getCoords().sub(radius, radius, radius), cube.getCoords().add(radius, radius, radius));
     }
 
-    private FastCubeBlockAccess(ICubicWorld world, ICubeProvider prov, CubePos start, CubePos end) {
-        int dx = Math.abs(end.getX() - start.getX()) + 1;
-        int dy = Math.abs(end.getY() - start.getY()) + 1;
-        int dz = Math.abs(end.getZ() - start.getZ()) + 1;
+    public FastCubeBlockAccess(ICubicWorld world, ICubeProvider prov, CubePos start, CubePos end) {
+        dx = Math.abs(end.getX() - start.getX()) + 1;
+        dy = Math.abs(end.getY() - start.getY()) + 1;
+        dz = Math.abs(end.getZ() - start.getZ()) + 1;
 
         this.world = world;
         this.cache = new ExtendedBlockStorage[dx][dy][dz];
@@ -120,11 +127,12 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
 
     @Nullable
     private ExtendedBlockStorage getStorage(int blockX, int blockY, int blockZ) {
-        int cubeX = Coords.blockToCube(blockX);
-        int cubeY = Coords.blockToCube(blockY);
-        int cubeZ = Coords.blockToCube(blockZ);
-
-        return this.cache[cubeX - originX][cubeY - originY][cubeZ - originZ];
+        int cubeX = Coords.blockToCube(blockX) - originX;
+        int cubeY = Coords.blockToCube(blockY) - originY;
+        int cubeZ = Coords.blockToCube(blockZ) - originZ;
+		if (cubeX < 0 || cubeY < 0 || cubeZ < 0 || cubeX >= dx || cubeY >= dy || cubeZ >= dz)
+        	return null;
+        return this.cache[cubeX][cubeY][cubeZ];
     }
 
     private void setStorage(int blockX, int blockY, int blockZ, @Nullable ExtendedBlockStorage ebs) {
@@ -143,7 +151,7 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
         return this.cubes[cubeX - originX][cubeY - originY][cubeZ - originZ];
     }
 
-    private IBlockState getBlockState(BlockPos pos) {
+    public IBlockState getBlockState(BlockPos pos) {
         return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
     }
 
@@ -244,4 +252,45 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
             return ((CubeProviderClient) prov).getLoadedChunks();
         }
     }
+
+	@Override
+	public TileEntity getTileEntity(BlockPos pos) {
+		int blockX = pos.getX();
+		int blockY = pos.getY();
+		int blockZ = pos.getZ();
+		return this.getCube(blockX, blockY, blockZ).getTileEntity(pos, EnumCreateEntityType.CHECK);
+	}
+
+	// Unused method.
+	@Override
+	public int getCombinedLight(BlockPos pos, int lightValue) {
+	        return 0;
+    }
+
+	@Override
+	public boolean isAirBlock(BlockPos pos) {
+		if(this.getBlockState(pos).getBlock() == Blocks.AIR)
+			return true;
+		return this.getBlockState(pos).getMaterial() == Material.AIR;
+	}
+
+	@Override
+	public Biome getBiome(BlockPos pos) {
+		return world.getBiome(pos);
+	}
+
+	@Override
+	public int getStrongPower(BlockPos pos, EnumFacing side) {
+		return this.getBlockState(pos).getStrongPower(this, pos, side);
+	}
+
+	@Override
+	public WorldType getWorldType() {
+		return world.getWorldType();
+	}
+
+	@Override
+	public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean _default) {
+		return this.getBlockState(pos).isSideSolid(this, pos, side);
+	}
 }

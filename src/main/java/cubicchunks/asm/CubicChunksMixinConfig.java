@@ -43,10 +43,9 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 /**
- * This Mixin configuration plugin class launched from cubicchunks.mixin.selectable.json.
- * Note, that this plugin is not working in JUnit tests due to missing field of 
- * FMLInjectionData required for MinecraftForge configuration used here.
- * Therefore two Mixin classes with an injection in a same method and with a same priority will cause Mixin to fail. */
+ * This Mixin configuration plugin class launched from
+ * cubicchunks.mixin.selectable.json.
+ */
 public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
     @Nonnull
@@ -116,7 +115,13 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 "cubicchunks.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks",
                 "If set to true, random tick wil be launched from cube instance instead of chunk."
                         + " Cube based random tick may slightly reduce server lag."
-                        + " You need to restart Minecraft to apply changes.");
+                        + " You need to restart Minecraft to apply changes."),
+        ENTITY_PATH_NAVIGATE_LAG_FIX(true, 
+                null,
+                "cubicchunks.asm.mixin.selectable.common.MixinPathNavigate",
+                "If set to true, path finder will work only in loaded cubes area and"
+                		+ " use cube cache ustead of column (chunk) cache."
+                		+ " You need to restart Minecraft to apply changes.");
 
         private final boolean defaultValue;
         // Load this Mixin class only if option is false. Can be null.
