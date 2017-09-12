@@ -23,6 +23,7 @@
  */
 package cubicchunks.util;
 
+import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -91,20 +92,20 @@ public class StructureGenUtil {
         if (boundingBox.minX < 0) {
             boundingBox.minX = 0;
         }
-        if (boundingBox.maxX > 16) {
-            boundingBox.maxX = 16;
+        if (boundingBox.maxX > Cube.SIZE) {
+            boundingBox.maxX = Cube.SIZE;
         }
         if (boundingBox.minY < 0) {
             boundingBox.minY = 0;
         }
-        if (boundingBox.maxY > 16) {
-            boundingBox.maxY = 16;
+        if (boundingBox.maxY > Cube.SIZE) {
+            boundingBox.maxY = Cube.SIZE;
         }
         if (boundingBox.minZ < 0) {
             boundingBox.minZ = 0;
         }
-        if (boundingBox.maxZ > 16) {
-            boundingBox.maxZ = 16;
+        if (boundingBox.maxZ > Cube.SIZE) {
+            boundingBox.maxZ = Cube.SIZE;
         }
     }
 }

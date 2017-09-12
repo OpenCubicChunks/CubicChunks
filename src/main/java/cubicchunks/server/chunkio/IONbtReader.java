@@ -91,7 +91,7 @@ public class IONbtReader {
     }
 
     private static void readBiomes(NBTTagCompound nbt, IColumn column) {// biomes
-        System.arraycopy(nbt.getByteArray("Biomes"), 0, column.getBiomeArray(), 0, 256);
+        System.arraycopy(nbt.getByteArray("Biomes"), 0, column.getBiomeArray(), 0, Cube.SIZE * Cube.SIZE);
     }
 
     private static void readOpacityIndex(NBTTagCompound nbt, IColumn IColumn) {// biomes
