@@ -27,6 +27,7 @@ import static cubicchunks.asm.JvmNames.CHUNK_GET_TOP_FILLED_SEGMENT;
 
 import cubicchunks.asm.JvmNames;
 import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.tileentity.TileEntityEndGateway;
 import net.minecraft.util.math.MathHelper;
@@ -69,7 +70,7 @@ public class MixinTileEntityEndGateway {
      */
     @Overwrite
     private static Chunk getChunk(World world, Vec3d pos) {
-        Chunk chunk = world.getChunkFromChunkCoords(MathHelper.floor(pos.x / 16.0D), MathHelper.floor(pos.z / 16.0D));
+        Chunk chunk = world.getChunkFromChunkCoords(MathHelper.floor(pos.x / Cube.SIZE_D), MathHelper.floor(pos.z / Cube.SIZE_D));
         if (((IColumn) chunk).getCubicWorld().isCubicWorld()) {
             for (int cubeY = 0; cubeY < 16; cubeY++) {
                 ((IColumn) chunk).getCube(cubeY);// load the cube

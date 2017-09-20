@@ -157,8 +157,8 @@ public class FirstLightProcessor {
         ICubicWorld world = cube.getCubicWorld();
 
         // Cache min/max Y, generating them may be expensive
-        int[][] minBlockYArr = new int[16][16];
-        int[][] maxBlockYArr = new int[16][16];
+        int[][] minBlockYArr = new int[Cube.SIZE][Cube.SIZE];
+        int[][] maxBlockYArr = new int[Cube.SIZE][Cube.SIZE];
 
         int minBlockX = cubeToMinBlock(cube.getX());
         int maxBlockX = cubeToMaxBlock(cube.getX());

@@ -347,10 +347,10 @@ public abstract class MixinChunk_Cubes implements IColumn {
             try {
                 //if (y >= 0 && y >> 4 < this.storageArrays.length)
                 {
-                    ExtendedBlockStorage extendedblockstorage = getEBS_CubicChunks(y >> 4);
+                    ExtendedBlockStorage extendedblockstorage = getEBS_CubicChunks(blockToCube(y));
 
                     if (extendedblockstorage != NULL_BLOCK_STORAGE) {
-                        return extendedblockstorage.get(x & 15, y & 15, z & 15);
+                        return extendedblockstorage.get(blockToLocal(x), blockToLocal(y), blockToLocal(z));
                     }
                 }
 
@@ -481,7 +481,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             entityIn.setDead();
         }
 
-        int k = MathHelper.floor(entityIn.posY / 16.0D);
+        int k = MathHelper.floor(entityIn.posY / Cube.SIZE_D);
 
         if (k < Coords.blockToCube(getCubicWorld().getMinHeight())) {
             k = Coords.blockToCube(getCubicWorld().getMinHeight());
@@ -605,8 +605,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
         }
         cbi.cancel();
 
-        int minY = MathHelper.floor((aabb.minY - World.MAX_ENTITY_RADIUS) / 16.0D);
-        int maxY = MathHelper.floor((aabb.maxY + World.MAX_ENTITY_RADIUS) / 16.0D);
+        int minY = MathHelper.floor((aabb.minY - World.MAX_ENTITY_RADIUS) / Cube.SIZE_D);
+        int maxY = MathHelper.floor((aabb.maxY + World.MAX_ENTITY_RADIUS) / Cube.SIZE_D);
         minY = MathHelper.clamp(minY,
                 blockToCube(getCubicWorld().getMinHeight()),
                 blockToCube(getCubicWorld().getMaxHeight()));
@@ -652,8 +652,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
         }
         cbi.cancel();
 
-        int minY = MathHelper.floor((aabb.minY - World.MAX_ENTITY_RADIUS) / 16.0D);
-        int maxY = MathHelper.floor((aabb.maxY + World.MAX_ENTITY_RADIUS) / 16.0D);
+        int minY = MathHelper.floor((aabb.minY - World.MAX_ENTITY_RADIUS) / Cube.SIZE_D);
+        int maxY = MathHelper.floor((aabb.maxY + World.MAX_ENTITY_RADIUS) / Cube.SIZE_D);
         minY = MathHelper.clamp(minY,
                 blockToCube(getCubicWorld().getMinHeight()),
                 blockToCube(getCubicWorld().getMaxHeight()));
@@ -715,8 +715,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
             endY = getCubicWorld().getMaxHeight() - 1;
         }
 
-        for (int i = startY; i <= endY; i += 16) {
-            ExtendedBlockStorage extendedblockstorage = getEBS_CubicChunks(i >> 4);
+        for (int i = startY; i <= endY; i += Cube.SIZE) {
+            ExtendedBlockStorage extendedblockstorage = getEBS_CubicChunks(blockToCube(i));
 
             if (extendedblockstorage != NULL_BLOCK_STORAGE && !extendedblockstorage.isEmpty()) {
                 return false;

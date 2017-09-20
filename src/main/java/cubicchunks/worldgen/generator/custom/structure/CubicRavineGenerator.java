@@ -330,7 +330,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
                     //most of these blocks beyond the not-stretched height range are never carved out
                     //the result is that instead the ravine isn't very small at the bottom,
                     //but ends with actual floor instead
-                    double widthDecreaseFactor = this.widthDecreaseFactors[(localY + generatedCubeY * 16) & 0xFF];
+                    double widthDecreaseFactor = this.widthDecreaseFactors[(localY + generatedCubeY * Cube.SIZE) & 0xFF];
                     if ((distX * distX + distZ * distZ) * widthDecreaseFactor + distY * distY / STRETCH_Y_FACTOR >= 1.0D) {
                         continue;
                     }
@@ -352,7 +352,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
         float[] values = new float[1024];
         float value = 1.0F;
 
-        for (int i = 0; i < 256; ++i) {
+        for (int i = 0; i < Cube.SIZE*Cube.SIZE; ++i) {
             //~33% probability that the value will change at that height
             if (i == 0 || rand.nextInt(3) == 0) {
                 //value = 1.xxx, lower = higher probability -> Wider parts are more common.

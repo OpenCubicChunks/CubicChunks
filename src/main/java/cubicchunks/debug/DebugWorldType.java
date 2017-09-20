@@ -95,8 +95,8 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
                     double currDensity = perlin.getValue(pos.getX(), pos.getY() * 0.5, pos.getZ());
                     double aboveDensity = perlin.getValue(pos.getX(), (pos.getY() + 1) * 0.5, pos.getZ());
                     if (cubeY >= 16) {
-                        currDensity -= (pos.getY() - 16 * 16) / 100;
-                        aboveDensity -= (pos.getY() + 1 - 16 * 16) / 100;
+                        currDensity -= (pos.getY() - Cube.SIZE * Cube.SIZE) / 100;
+                        aboveDensity -= (pos.getY() + 1 - Cube.SIZE * Cube.SIZE) / 100;
                     }
                     if (currDensity > 0.5) {
                         if (currDensity > 0.5 && aboveDensity <= 0.5) {

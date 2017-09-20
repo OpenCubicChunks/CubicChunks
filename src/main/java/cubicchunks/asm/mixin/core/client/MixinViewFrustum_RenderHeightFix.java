@@ -24,6 +24,7 @@
 package cubicchunks.asm.mixin.core.client;
 
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -72,13 +73,13 @@ public class MixinViewFrustum_RenderHeightFix {
         double z = view.posZ;
 
         // treat the y dimension the same as all the rest
-        int viewX = MathHelper.floor(x) - 8;
-        int viewY = MathHelper.floor(y) - 8;
-        int viewZ = MathHelper.floor(z) - 8;
+        int viewX = MathHelper.floor(x) - Cube.SIZE / 2;
+        int viewY = MathHelper.floor(y) - Cube.SIZE / 2;
+        int viewZ = MathHelper.floor(z) - Cube.SIZE / 2;
 
-        int xSizeInBlocks = this.countChunksX * 16;
-        int ySizeInBlocks = this.countChunksY * 16;
-        int zSizeInBlocks = this.countChunksZ * 16;
+        int xSizeInBlocks = this.countChunksX * Cube.SIZE;
+        int ySizeInBlocks = this.countChunksY * Cube.SIZE;
+        int zSizeInBlocks = this.countChunksZ * Cube.SIZE;
 
         for (int xIndex = 0; xIndex < this.countChunksX; xIndex++) {
             //getRendererBlockCoord
@@ -111,9 +112,9 @@ public class MixinViewFrustum_RenderHeightFix {
             return;
         }
         // treat the y dimension the same as all the rest
-        int x = MathHelper.intFloorDiv(pos.getX(), 16);
-        int y = MathHelper.intFloorDiv(pos.getY(), 16);
-        int z = MathHelper.intFloorDiv(pos.getZ(), 16);
+        int x = MathHelper.intFloorDiv(pos.getX(), Cube.SIZE);
+        int y = MathHelper.intFloorDiv(pos.getY(), Cube.SIZE);
+        int z = MathHelper.intFloorDiv(pos.getZ(), Cube.SIZE);
         x %= this.countChunksX;
         if (x < 0) {
             x += this.countChunksX;
