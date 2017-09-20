@@ -118,9 +118,19 @@ public class LightingManager {
         }
         int blockX = localToBlock(cube.getX(), localX);
         int blockZ = localToBlock(cube.getZ(), localZ);
+        
+        CubePos minLoad = cube.getCoords().add(-1, -1, -1);
+        CubePos maxLoad = cube.getCoords().add(1, 1, 1);
+        
+        if (!world.testForCubes(minLoad, maxLoad,
+                c -> c != null && !(c instanceof BlankCube))) {
+            return false;
+        }
 
+        ILightBlockAccess blocks = new FastCubeBlockAccess(world.getCubeCache(), cube, 1);
+        
         return this.relightMultiBlock(
-                new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY);
+                new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY, blocks);
     }
 
     public void doOnBlockSetLightUpdates(IColumn column, int localX, int oldHeight, int changeY, int localZ) {
@@ -154,20 +164,10 @@ public class LightingManager {
      * @return true if update was successful, false if it failed. If the method returns false, no light values are
      * changed.
      */
-    boolean relightMultiBlock(BlockPos startPos, BlockPos endPos, EnumSkyBlock type) {
+    boolean relightMultiBlock(BlockPos startPos, BlockPos endPos, EnumSkyBlock type, ILightBlockAccess blocks) {
         // TODO: optimize if needed
-
         // TODO: Figure out why it crashes with value 17
-        final int LOAD_RADIUS = 31;
         BlockPos midPos = Coords.midPos(startPos, endPos);
-        BlockPos minLoad = startPos.add(-LOAD_RADIUS, -LOAD_RADIUS, -LOAD_RADIUS);
-        BlockPos maxLoad = endPos.add(LOAD_RADIUS, LOAD_RADIUS, LOAD_RADIUS);
-
-        if (!world.testForCubes(CubePos.fromBlockCoords(minLoad), CubePos.fromBlockCoords(maxLoad),
-                c -> c != null && !(c instanceof BlankCube))) {
-            return false;
-        }
-        ILightBlockAccess blocks = FastCubeBlockAccess.forBlockRegion(world.getCubeCache(), minLoad, maxLoad);
         this.lightPropagator.propagateLight(midPos, BlockPos.getAllInBox(startPos, endPos), blocks, type, world::notifyLightSet);
         return true;
     }
@@ -189,9 +189,11 @@ public class LightingManager {
         private final Cube cube;
         private final boolean[] toUpdateColumns = new boolean[Cube.SIZE * Cube.SIZE];
         private boolean hasUpdates;
+		private ICubicWorld world;
 
         public CubeLightUpdateInfo(Cube cube) {
             this.cube = cube;
+            this.world = cube.getCubicWorld();
         }
 
         void markBlockColumnForUpdate(int localX, int localZ) {
@@ -203,6 +205,17 @@ public class LightingManager {
             if (!this.hasUpdates) {
                 return;
             }
+            
+            CubePos minLoad = cube.getCoords().add(-1, -1, -1);
+            CubePos maxLoad = cube.getCoords().add(1, 1, 1);
+            
+            if (!world.testForCubes(minLoad, maxLoad,
+                    c -> c != null && !(c instanceof BlankCube))) {
+                return;
+            }
+            
+            ILightBlockAccess blocks = new FastCubeBlockAccess(world.getCubeCache(), cube, 1);
+
             for (int localX = 0; localX < Cube.SIZE; localX++) {
                 for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
                     if (!toUpdateColumns[index(localX, localZ)]) {
@@ -211,7 +224,8 @@ public class LightingManager {
                     boolean success = cube.getCubicWorld().getLightingManager().relightMultiBlock(
                             new BlockPos(localToBlock(cube.getX(), localX), cubeToMinBlock(cube.getY()), localToBlock(cube.getZ(), localZ)),
                             new BlockPos(localToBlock(cube.getX(), localX), cubeToMaxBlock(cube.getY()), localToBlock(cube.getZ(), localZ)),
-                            EnumSkyBlock.SKY
+                            EnumSkyBlock.SKY,
+                            blocks
                     );
                     if (!success) {
                         return;
