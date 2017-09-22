@@ -23,6 +23,7 @@
  */
 package cubicchunks.util;
 
+import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
 
 import cubicchunks.client.CubeProviderClient;
@@ -118,8 +119,13 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
         }
     }
 
+    // TODO: Remove calling world: temporary workaround for lighting code being broken
+    
     @Nullable
     private ExtendedBlockStorage getStorage(int blockX, int blockY, int blockZ) {
+        if (true) {
+            return this.world.getCubeFromCubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ)).getStorage();
+        }
         int cubeX = Coords.blockToCube(blockX);
         int cubeY = Coords.blockToCube(blockY);
         int cubeZ = Coords.blockToCube(blockZ);
@@ -128,6 +134,10 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
     }
 
     private void setStorage(int blockX, int blockY, int blockZ, @Nullable ExtendedBlockStorage ebs) {
+        if (true) {
+            this.world.getCubeFromCubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ)).setStorage(ebs);
+            return;
+        }
         int cubeX = Coords.blockToCube(blockX);
         int cubeY = Coords.blockToCube(blockY);
         int cubeZ = Coords.blockToCube(blockZ);
@@ -136,6 +146,9 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
     }
 
     private Cube getCube(int blockX, int blockY, int blockZ) {
+        if (true) {
+            return this.world.getCubeFromCubeCoords(blockToCube(blockX), blockToCube(blockY), blockToCube(blockZ));
+        }
         int cubeX = Coords.blockToCube(blockX);
         int cubeY = Coords.blockToCube(blockY);
         int cubeZ = Coords.blockToCube(blockZ);
