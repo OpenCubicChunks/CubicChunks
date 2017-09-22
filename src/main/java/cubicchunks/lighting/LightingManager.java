@@ -28,6 +28,7 @@ import static cubicchunks.util.Coords.cubeToMaxBlock;
 import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
 
+import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.FastCubeBlockAccess;
@@ -41,9 +42,11 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.WorldServer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -58,11 +61,22 @@ public class LightingManager {
     @Nonnull private ICubicWorld world;
     @Nonnull private LightPropagator lightPropagator = new LightPropagator();
     @Nonnull private final List<IHeightChangeListener> heightUpdateListeners = new ArrayList<>();
+    @Nullable private LightUpdateTracker tracker;
 
     public LightingManager(ICubicWorld world) {
         this.world = world;
+
     }
 
+    @Nullable
+    private LightUpdateTracker getTracker() {
+        if (tracker == null) {
+            if (!world.isRemote()) {
+                tracker = new LightUpdateTracker((PlayerCubeMap) ((WorldServer) world).getPlayerChunkMap());
+            }
+        }
+        return tracker;
+    }
     /**
      * Registers height change listener, that receives all height changes after initial lighting is done
      */
@@ -120,7 +134,7 @@ public class LightingManager {
         int blockZ = localToBlock(cube.getZ(), localZ);
 
         return this.relightMultiBlock(
-                new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY);
+                new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY, world::notifyLightSet);
     }
 
     public void doOnBlockSetLightUpdates(IColumn column, int localX, int oldHeight, int changeY, int localZ) {
@@ -154,7 +168,7 @@ public class LightingManager {
      * @return true if update was successful, false if it failed. If the method returns false, no light values are
      * changed.
      */
-    boolean relightMultiBlock(BlockPos startPos, BlockPos endPos, EnumSkyBlock type) {
+    boolean relightMultiBlock(BlockPos startPos, BlockPos endPos, EnumSkyBlock type, Consumer<BlockPos> notify) {
         // TODO: optimize if needed
 
         // TODO: Figure out why it crashes with value 17
@@ -168,7 +182,7 @@ public class LightingManager {
             return false;
         }
         ILightBlockAccess blocks = FastCubeBlockAccess.forBlockRegion(world.getCubeCache(), minLoad, maxLoad);
-        this.lightPropagator.propagateLight(midPos, BlockPos.getAllInBox(startPos, endPos), blocks, type, world::notifyLightSet);
+        this.lightPropagator.propagateLight(midPos, BlockPos.getAllInBox(startPos, endPos), blocks, type, notify);
         return true;
     }
 
@@ -203,6 +217,7 @@ public class LightingManager {
             if (!this.hasUpdates) {
                 return;
             }
+            LightUpdateTracker tracker = cube.getCubicWorld().getLightingManager().getTracker();
             for (int localX = 0; localX < Cube.SIZE; localX++) {
                 for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
                     if (!toUpdateColumns[index(localX, localZ)]) {
@@ -211,7 +226,12 @@ public class LightingManager {
                     boolean success = cube.getCubicWorld().getLightingManager().relightMultiBlock(
                             new BlockPos(localToBlock(cube.getX(), localX), cubeToMinBlock(cube.getY()), localToBlock(cube.getZ(), localZ)),
                             new BlockPos(localToBlock(cube.getX(), localX), cubeToMaxBlock(cube.getY()), localToBlock(cube.getZ(), localZ)),
-                            EnumSkyBlock.SKY
+                            EnumSkyBlock.SKY, pos -> {
+                                cube.getCubicWorld().notifyLightSet(pos);
+                                if (tracker != null) {
+                                    tracker.onUpdate(pos);
+                                }
+                            }
                     );
                     if (!success) {
                         return;

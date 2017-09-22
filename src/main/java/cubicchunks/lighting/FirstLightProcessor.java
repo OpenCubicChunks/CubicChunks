@@ -98,7 +98,7 @@ public class FirstLightProcessor {
     @Nonnull private final ICubeProvider cache;
 
     @Nonnull private final LightPropagator propagator = new LightPropagator();
-    @Nonnull private final FirstLightUpdateTracker tracker;
+    @Nonnull private final LightUpdateTracker tracker;
 
 
     /**
@@ -106,9 +106,9 @@ public class FirstLightProcessor {
      *
      * @param world the world for which the FirstLightProcessor will be used
      */
-    public FirstLightProcessor(ICubicWorld world) {
+    public FirstLightProcessor(ICubicWorldServer world) {
         this.cache = world.getCubeCache();
-        this.tracker = new FirstLightUpdateTracker(((ICubicWorldServer) world).getPlayerCubeMap());
+        this.tracker = new LightUpdateTracker(world.getPlayerCubeMap());
     }
 
 
