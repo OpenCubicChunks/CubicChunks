@@ -180,17 +180,20 @@ public class CubeWatcher implements XYZAddressable, ITicket {
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
-    boolean sendToPlayers() {
+    SendToPlayersResult sendToPlayers() {
         if (this.sentToPlayers) {
-            return true;
+            return SendToPlayersResult.ALREADY_DONE;
         }
-        if (this.cube == null || !this.cube.isFullyPopulated() || !this.cube.isInitialLightingDone() || this.cube.hasLightUpdates()) {
-            return false;
+        if (this.cube == null || !this.cube.isFullyPopulated() || !this.cube.isInitialLightingDone()) {
+            return SendToPlayersResult.WAITING;
+        }
+        if (this.cube.hasLightUpdates()) {
+            return SendToPlayersResult.WAITING_LIGHT;
         }
         ColumnWatcher columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
         //can't send cubes before columns
         if (columnEntry == null || !columnEntry.isSentToPlayers()) {
-            return false;
+            return SendToPlayersResult.WAITING;
         }
         this.dirtyBlocks.clear();
         //set to true before adding to queue so that sendToPlayer can actually add it
@@ -204,7 +207,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
             sendToPlayer(playerEntry.player);
         }
 
-        return true;
+        return SendToPlayersResult.CUBE_SENT;
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -360,5 +363,9 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
     @Override public boolean shouldTick() {
         return true; // Cubes that players can see should tick
+    }
+
+    public enum SendToPlayersResult {
+        ALREADY_DONE, CUBE_SENT, WAITING, WAITING_LIGHT
     }
 }

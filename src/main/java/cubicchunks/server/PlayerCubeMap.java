@@ -307,9 +307,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 }
 
                 if (success) {
-                    iterator.remove();
-
-                    if (watcher.sendToPlayers()) {
+                    CubeWatcher.SendToPlayersResult state = watcher.sendToPlayers();
+                    if (state == CubeWatcher.SendToPlayersResult.WAITING || state == CubeWatcher.SendToPlayersResult.CUBE_SENT
+                            || state == CubeWatcher.SendToPlayersResult.ALREADY_DONE) {
+                        iterator.remove();
                         this.cubesToSendToClients.remove(watcher);
                     }
 
@@ -336,9 +337,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             while (it.hasNext() && toSend >= 0) {
                 CubeWatcher playerInstance = it.next();
 
-                if (playerInstance.sendToPlayers()) {
+                CubeWatcher.SendToPlayersResult state = playerInstance.sendToPlayers();
+                if (state == CubeWatcher.SendToPlayersResult.ALREADY_DONE || state == CubeWatcher.SendToPlayersResult.CUBE_SENT) {
                     it.remove();
                     --toSend;
+                } else if (state == CubeWatcher.SendToPlayersResult.WAITING_LIGHT) {
+                    if (!cubesToGenerate.contains(playerInstance)) {
+                        cubesToGenerate.add(0, playerInstance);
+                    }
                 }
             }
             getWorld().getProfiler().endSection(); // cubes
