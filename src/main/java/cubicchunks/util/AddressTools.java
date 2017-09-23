@@ -38,8 +38,8 @@ public class AddressTools {
                 | Bits.packUnsignedToInt(localY, 4, 8));
     }
 
-    public static byte getLocalAddress(int localX, int localZ) {
-        return (byte) (Bits.packUnsignedToInt(localX, 4, 0)
+    public static int getLocalAddress(int localX, int localZ) {
+        return (Bits.packUnsignedToInt(localX, 4, 0)
                 | Bits.packUnsignedToInt(localZ, 4, 4));
     }
 

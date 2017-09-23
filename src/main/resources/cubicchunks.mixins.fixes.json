@@ -14,6 +14,7 @@
         "common.MixinEntityFallingBlock_HeightLimits",
         "common.MixinWorld",
         "common.MixinRandomPositionGenerator",
+        "common.MixinPathNavigate",
         "common.MixinPathNavigateGround",
         "common.MixinTeleporter",
         "common.MixinTileEntityEndGateway",
