@@ -74,7 +74,7 @@ class LightUpdateTracker {
             if (updates.size() >= MAX_COUNT) {
                 return;
             }
-            updates.add(AddressTools.getLocalAddress(pos));
+            updates.add((short) AddressTools.getLocalAddress(pos));
         }
 
         void send() {

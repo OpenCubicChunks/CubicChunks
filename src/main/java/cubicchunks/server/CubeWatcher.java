@@ -245,7 +245,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         // forge sends only TEs that have changed,
         // so we need to know all changed blocks. So add everything
         // it's a set so no need to check for duplicates
-        this.dirtyBlocks.add(AddressTools.getLocalAddress(localX, localY, localZ));
+        this.dirtyBlocks.add((short) AddressTools.getLocalAddress(localX, localY, localZ));
     }
 
     // CHECKED: 1.10.2-12.18.1.2092

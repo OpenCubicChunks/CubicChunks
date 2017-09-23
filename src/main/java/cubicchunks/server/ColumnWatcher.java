@@ -231,6 +231,6 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
         if (this.dirtyColumns.isEmpty()) {
             playerCubeMap.addToUpdateEntry(this);
         }
-        this.dirtyColumns.add(AddressTools.getLocalAddress(localX, localZ));
+        this.dirtyColumns.add((byte) AddressTools.getLocalAddress(localX, localZ));
     }
 }

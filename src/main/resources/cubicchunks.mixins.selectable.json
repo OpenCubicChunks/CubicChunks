@@ -6,6 +6,7 @@
     "minVersion": "0.6.15-SNAPSHOT",
     "plugin": "cubicchunks.asm.CubicChunksMixinConfig",
     "mixins": [
+        "common.MixinChunkCache",
         "common.MixinWorld_SlowCollisionCheck",
         "common.MixinWorld_CollisionCheck",
         "common.MixinWorldServer_UpdateBlocks"

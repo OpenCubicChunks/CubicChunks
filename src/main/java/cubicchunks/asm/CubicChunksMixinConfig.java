@@ -105,6 +105,14 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     }
 
     public static enum BoolOptions {
+        USE_CUBE_ARRAYS_INSIDE_CHUNK_CACHE(true, 
+                null, 
+                "cubicchunks.asm.mixin.selectable.common.MixinWorld_ChunkCache",
+                "Enabling this option will mix cube array into chunk cache"
+                        + " for using in entity path navigator."
+                        + " Potentially this will slightly reduce server tick time"
+                        + " in presence of huge amount of living entities."
+                        + " You need to restart Minecraft to apply changes."),
         USE_FAST_COLLISION_CHECK(true, 
                 "cubicchunks.asm.mixin.selectable.common.MixinWorld_SlowCollisionCheck", 
                 "cubicchunks.asm.mixin.selectable.common.MixinWorld_CollisionCheck",
