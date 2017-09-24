@@ -32,14 +32,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class AddressTools {
 
-    public static short getLocalAddress(int localX, int localY, int localZ) {
-        return (short) (Bits.packUnsignedToInt(localX, 4, 0)
+    public static int getLocalAddress(int localX, int localY, int localZ) {
+        return (Bits.packUnsignedToInt(localX, 4, 0)
                 | Bits.packUnsignedToInt(localZ, 4, 4)
                 | Bits.packUnsignedToInt(localY, 4, 8));
     }
 
-    public static byte getLocalAddress(int localX, int localZ) {
-        return (byte) (Bits.packUnsignedToInt(localX, 4, 0)
+    public static int getLocalAddress(int localX, int localZ) {
+        return (Bits.packUnsignedToInt(localX, 4, 0)
                 | Bits.packUnsignedToInt(localZ, 4, 4));
     }
 
@@ -64,7 +64,7 @@ public class AddressTools {
         return Bits.unpackUnsigned(localAddress, 4, 4);
     }
 
-    public static short getLocalAddress(BlockPos pos) {
+    public static int getLocalAddress(BlockPos pos) {
         return getLocalAddress(pos.getX(), pos.getY(), pos.getZ());
     }
 }
