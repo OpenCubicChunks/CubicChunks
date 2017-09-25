@@ -300,6 +300,10 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         //if any of them is true - stop and return false, then negate the result to get true
         return !this.players.forEachValue(value -> !predicate.apply(value.player));
     }
+    
+    boolean hasPlayerMatchingInRange(Predicate<EntityPlayerMP> predicate, int range) {
+        return !this.players.forEachValue(value -> !(predicate.apply(value.player) && this.getDistanceSq(getCubePos(), value.player) < range * range));
+    }
 
     private double getDistanceSq(CubePos cubePos, Entity entity) {
         double blockX = cubePos.getXCenter();

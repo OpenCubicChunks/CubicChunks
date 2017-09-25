@@ -30,6 +30,8 @@ import static net.minecraft.util.math.MathHelper.clamp;
 import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import cubicchunks.CubicChunks;
@@ -55,13 +57,18 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraftforge.common.ForgeChunkManager.Ticket;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -797,5 +804,51 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
      */
     public Iterator<CubeWatcher> getRandomWrappedCubeWatcherIterator(int seed) {
         return this.cubeWatchers.randomWrappedIterator(seed);
+    }
+    
+    public Iterator<Cube> getCubeIterator() {
+        WorldServer world = this.getWorldServer();
+        final Iterator<CubeWatcher> iterator = this.cubeWatchers.iterator();
+        ImmutableSetMultimap<ChunkPos, Ticket> persistentChunksFor = ForgeChunkManager.getPersistentChunksFor(world);
+        world.profiler.startSection("forcedChunkLoading");
+        final Iterator<Cube> persistentCubesIterator = persistentChunksFor.keys().stream()
+                .filter(Objects::nonNull)
+                .map(input -> ((IColumn)world.getChunkFromChunkCoords(input.x, input.z)).getLoadedCubes())
+                .collect(ArrayList<Cube>::new, (list,cubeCollection)->((ArrayList<Cube>)list).addAll(cubeCollection), (list,cubeList)->((ArrayList<Cube>)list).addAll(cubeList))
+                .iterator();
+        world.profiler.endSection();
+        
+        return new AbstractIterator<Cube>() {
+            
+            boolean shouldSkip(Cube cube){
+                if (cube == null) 
+                    return true;
+                if (cube.isEmpty())
+                    return true;
+                if (!cube.isFullyPopulated())
+                    return true;
+                return false;
+            }
+
+            protected Cube computeNext() {
+                while(persistentCubesIterator.hasNext()){
+                    Cube cube = persistentCubesIterator.next();
+                    if(shouldSkip(cube))
+                        continue;
+                    return cube;
+                }
+                
+                while (iterator.hasNext()) {
+                    CubeWatcher watcher = iterator.next();
+                    Cube cube = watcher.getCube();
+                    if(shouldSkip(cube))
+                        continue;
+                    if(!watcher.hasPlayerMatchingInRange(NOT_SPECTATOR, 128))
+                        continue;
+                    return cube;
+                }
+                return this.endOfData();
+            }
+        };
     }
 }
