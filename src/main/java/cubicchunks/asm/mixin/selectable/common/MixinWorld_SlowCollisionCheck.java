@@ -47,7 +47,7 @@ public abstract class MixinWorld_SlowCollisionCheck implements ICubicWorld {
     @Shadow
     public abstract boolean isInsideWorldBorder(Entity p_191503_1_);
 
-    @Overwrite(constraints = "MC_FORGE(22)")
+    @Overwrite(constraints = "MC_FORGE(23)")
     private boolean getCollisionBoxes(@Nullable Entity entity, AxisAlignedBB aabb, boolean flagArg, @Nullable List<AxisAlignedBB> aabbList) {
         int i = MathHelper.floor(aabb.minX) - 1;
         int j = MathHelper.ceil(aabb.maxX) + 1;
