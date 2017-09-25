@@ -194,13 +194,16 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Override
     public boolean tick() {
         // NOTE: the return value is completely ignored
-        profiler.startSection("providerTick("+cubeMap.getSize()+")");
+        profiler.startSection("providerTick");
         long i = System.currentTimeMillis();
         int randomTickSpeed = this.world.getGameRules().getInt("randomTickSpeed");
         Random rand = this.world.rand;
-        for (Cube cube : cubeMap) {
+        PlayerCubeMap playerCubeMap = ((PlayerCubeMap) this.world.getPlayerChunkMap());
+        Iterator<Cube> watchersIterator = playerCubeMap.getCubeIterator();
+        while (watchersIterator.hasNext()) {
+            Cube cube = watchersIterator.next();
             cube.tickCubeServer(() -> System.currentTimeMillis() - i > 40, rand);
-            if (cube.isEmpty() || !doRandomBlockTicksHere)
+            if (!doRandomBlockTicksHere)
                 continue;
             int randomTickCounter = randomTickSpeed;
             while (randomTickCounter-- > 0)
