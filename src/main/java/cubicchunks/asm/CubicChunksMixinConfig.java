@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -76,13 +77,15 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         LOGGER.info("Checking config option for "+mixinClassName);
         for (BoolOptions configOption : BoolOptions.values()) {
-            if (configOption.mixinClassNameOnTrue != null
-                    && mixinClassName.equals(configOption.mixinClassNameOnTrue))
-                return configOption.value;
+            if (configOption.mixinClassNamesOnTrue != null)
+                for (String mixinClassNameOnTrue : configOption.mixinClassNamesOnTrue)
+                    if (mixinClassName.equals(mixinClassNameOnTrue))
+                        return configOption.value;
 
-            if (configOption.mixinClassNameOnFalse != null
-                    && mixinClassName.equals(configOption.mixinClassNameOnFalse))
-                return !configOption.value;
+            if (configOption.mixinClassNamesOnFalse != null)
+                for (String mixinClassNameOnFalse : configOption.mixinClassNamesOnFalse)
+                    if (mixinClassName.equals(mixinClassNameOnFalse))
+                        return !configOption.value;
         }
         return true;
     }
@@ -105,39 +108,48 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     }
 
     public static enum BoolOptions {
+        OPTIMIZE_PATH_NAVIGATOR(false, 
+                null, 
+                new String[] {"cubicchunks.asm.mixin.selectable.common.MixinPathNavigate",
+                        "cubicchunks.asm.mixin.selectable.common.MixinWalkNodeProcessor"},
+                "Enabling this option will optimize work of vanilla path navigator."
+                        + "Using this option in some cases turn entity AI a little dumber."
+                        + " Mob standing in a single axis aligned line with player in a middle of a"
+                        + " chunk will not try to seek path to player outside of chunks if direct path is blocked."
+                        + " You need to restart Minecraft to apply changes."),
         USE_CUBE_ARRAYS_INSIDE_CHUNK_CACHE(true, 
                 null, 
-                "cubicchunks.asm.mixin.selectable.common.MixinWorld_ChunkCache",
+                new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_ChunkCache"},
                 "Enabling this option will mix cube array into chunk cache"
                         + " for using in entity path navigator."
                         + " Potentially this will slightly reduce server tick time"
                         + " in presence of huge amount of living entities."
                         + " You need to restart Minecraft to apply changes."),
         USE_FAST_COLLISION_CHECK(true, 
-                "cubicchunks.asm.mixin.selectable.common.MixinWorld_SlowCollisionCheck", 
-                "cubicchunks.asm.mixin.selectable.common.MixinWorld_CollisionCheck",
+                new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_SlowCollisionCheck"},
+                new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_CollisionCheck"},
                 "Enabling this option allow using fast collision check."
                         + " Fast collision check can reduce server lag."
                         + " You need to restart Minecraft to apply changes."),
         RANDOM_TICK_IN_CUBE(true, 
                 null,
-                "cubicchunks.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks",
+                new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks"},
                 "If set to true, random tick wil be launched from cube instance instead of chunk."
                         + " Cube based random tick may slightly reduce server lag."
                         + " You need to restart Minecraft to apply changes.");
 
         private final boolean defaultValue;
         // Load this Mixin class only if option is false. Can be null.
-        @Nullable private final String mixinClassNameOnFalse;
+        @Nullable private final String[] mixinClassNamesOnFalse;
         // Load this Mixin class only if option is true. Can be null.
-        @Nullable private final String mixinClassNameOnTrue;
+        @Nullable private final String[] mixinClassNamesOnTrue;
         private final String description;
         private boolean value;
 
-        private BoolOptions(boolean defaultValue1, String mixinClassNameOnFalse1, String mixinClassNameOnTrue1, String description1) {
+        private BoolOptions(boolean defaultValue1, String[] mixinClassNamesOnFalse1, String[] mixinClassNamesOnTrue1, String description1) {
             defaultValue = defaultValue1;
-            mixinClassNameOnFalse = mixinClassNameOnFalse1;
-            mixinClassNameOnTrue = mixinClassNameOnTrue1;
+            mixinClassNamesOnFalse = mixinClassNamesOnFalse1;
+            mixinClassNamesOnTrue = mixinClassNamesOnTrue1;
             description = description1;
             value = defaultValue;
         }
@@ -179,6 +191,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     }
     
     private void readConfigFromJson(File configFile) throws IOException {
+        int expectingOptionsNumber = BoolOptions.values().length;
         JsonReader reader = new JsonReader(new FileReader(configFile));
         reader.beginArray();
         while(reader.hasNext()){
@@ -187,6 +200,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 String name = reader.nextName();
                 for(BoolOptions option:BoolOptions.values()){
                     if(option.name().equals(name)){
+                        expectingOptionsNumber--;
                         option.value = reader.nextBoolean();
                         continue next_object;
                     }
@@ -197,5 +211,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         }
         reader.endArray();
         reader.close();
+        if (expectingOptionsNumber != 0)
+            this.writeConfigToJson(configFile);
     }
 }
