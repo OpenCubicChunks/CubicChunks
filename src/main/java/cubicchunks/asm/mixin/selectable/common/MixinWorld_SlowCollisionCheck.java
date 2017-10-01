@@ -47,6 +47,10 @@ public abstract class MixinWorld_SlowCollisionCheck implements ICubicWorld {
     @Shadow
     public abstract boolean isInsideWorldBorder(Entity p_191503_1_);
 
+    /**
+     * @author Barteks2x
+     * @reason Original of that function use constant 64 to check if chunk loaded
+     **/
     @Overwrite(constraints = "MC_FORGE(23)")
     private boolean getCollisionBoxes(@Nullable Entity entity, AxisAlignedBB aabb, boolean flagArg, @Nullable List<AxisAlignedBB> aabbList) {
         int i = MathHelper.floor(aabb.minX) - 1;

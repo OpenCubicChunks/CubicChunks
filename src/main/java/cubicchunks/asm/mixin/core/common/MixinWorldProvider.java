@@ -58,7 +58,7 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
 
     @Shadow public abstract IChunkGenerator createChunkGenerator();
 
-    @Shadow public abstract int getActualHeight();
+    @Shadow(remap = false) public abstract int getActualHeight();
 
     private boolean getActualHeightForceOriginalFlag = false;
 
