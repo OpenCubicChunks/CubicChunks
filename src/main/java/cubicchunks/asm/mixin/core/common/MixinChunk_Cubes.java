@@ -221,6 +221,10 @@ public abstract class MixinChunk_Cubes implements IColumn {
         cbi.cancel();
     }
 
+    /**
+     * @author Barteks2x
+     * @reason Original of that function return array of 16 objects
+     **/
     @Overwrite
     public ExtendedBlockStorage[] getBlockStorageArray() {
         if (isColumn) {
@@ -512,6 +516,10 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //             removeEntityAtIndex
     // ==============================================
 
+    /**
+     * @author Barteks2x
+     * @reason original function limited to chunk entity list array field.
+     */
     @Overwrite
     public void removeEntityAtIndex(Entity entityIn, int index) {
         if (index < Coords.blockToCube(getCubicWorld().getMinHeight())) {
@@ -705,6 +713,10 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //               isEmptyBetween
     // ==============================================
 
+    /**
+     * @author Barteks2x
+     * @reason original function limited to storage arrays.
+     */
     @Overwrite
     public boolean isEmptyBetween(int startY, int endY) {
         if (startY < getCubicWorld().getMinHeight()) {

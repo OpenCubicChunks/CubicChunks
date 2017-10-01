@@ -107,7 +107,8 @@ public class MixinRenderGlobal {
     @Group(name = "renderEntitiesFix")
     @Inject(method = "renderEntities",
             at = @At(value = "INVOKE", target = OPTIFINE_RENDER_CHUNK_GET_CHUNK),
-            locals = LocalCapture.CAPTURE_FAILHARD)
+            locals = LocalCapture.CAPTURE_FAILHARD,
+            remap = false)
     public void onGetPositionOptifine(Entity renderViewEntity, ICamera camera, float partialTicks,
             CallbackInfo ci, int pass, double d0, double d1, double d2,
             Entity entity, double d3, double d4, double d5,
