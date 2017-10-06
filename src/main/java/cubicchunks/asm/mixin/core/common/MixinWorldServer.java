@@ -147,6 +147,11 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         return (PlayerCubeMap) this.playerChunkMap;
     }
     
+    @Override
+    public ChunkGc getChunkGarbageCollector() {
+        return this.chunkGc;
+    }
+    
     @Inject(method = "scheduleUpdate", at = @At("HEAD"), cancellable = true, require = 1)
     public void scheduleUpdateInject(BlockPos pos, Block blockIn, int delay, CallbackInfo ci) {
         if (this.isCubicWorld()) {

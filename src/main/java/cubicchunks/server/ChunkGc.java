@@ -96,7 +96,7 @@ public class ChunkGc implements IConfigUpdateListener {
         }
     }
 
-    private void chunkGc() {
+    public void chunkGc() {
         Iterator<Cube> cubeIt = cubeCache.cubesIterator();
         while (cubeIt.hasNext()) {
             if (cubeCache.tryUnloadCube(cubeIt.next())) {
