@@ -131,6 +131,8 @@ public class CommonEventHandler {
     public void onPlayerJoinWorld(EntityJoinWorldEvent evt) {
         if (evt.getEntity() instanceof EntityPlayerMP && ((ICubicWorld) evt.getWorld()).isCubicWorld()) {
             PacketDispatcher.sendTo(new PacketCubicWorldData((WorldServer) evt.getWorld()), (EntityPlayerMP) evt.getEntity());
+            // Workaround for issue when entities became invisible in cubes where player dies and which are not yet unloaded by garbage collector.
+            ((ICubicWorldServer)evt.getWorld()).getChunkGarbageCollector().chunkGc();
         }
     }
 
