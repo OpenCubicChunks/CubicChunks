@@ -95,6 +95,7 @@ public abstract class MixinWorld implements ICubicWorld {
     @Shadow @Final @Mutable protected ISaveHandler saveHandler;
     @Shadow protected boolean findingSpawnPoint;
     @Shadow protected WorldInfo worldInfo;
+    @Shadow protected int updateLCG;
 
     @Shadow protected abstract boolean isChunkLoaded(int i, int i1, boolean allowEmpty);
 
