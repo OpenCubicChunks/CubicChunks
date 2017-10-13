@@ -207,10 +207,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
             IColumn column = this.getCubeCache().getColumn(Coords.blockToCube(strikeTarget.getX()), Coords.blockToCube(strikeTarget.getZ()),
                     Requirement.GET_CACHED);
             strikeTarget = column.getPrecipitationHeight(strikeTarget);
+            ci.setReturnValue(strikeTarget);
             Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(strikeTarget));
             AxisAlignedBB aabb = (new AxisAlignedBB(strikeTarget)).grow(3.0D);
             if (cube == null) {
-                ci.setReturnValue(strikeTarget);
                 return;
             }
             Iterable<EntityLivingBase> setOfLiving = cube.getEntityContainer().getEntitySet().getByClass(EntityLivingBase.class);
@@ -222,7 +222,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
                     continue;
                 if (entity.getEntityBoundingBox().intersects(aabb)) {
                     // This entity is lucky!
-                    ci.setReturnValue(strikeTarget);
+                    ci.setReturnValue(entityPos);
                     return;
                 }
             }
