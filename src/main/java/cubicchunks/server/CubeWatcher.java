@@ -25,6 +25,8 @@ package cubicchunks.server;
 
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
+import cubicchunks.api.CubeUnWatchEvent;
+import cubicchunks.api.CubeWatchEvent;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketDispatcher;
@@ -49,6 +51,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.ForgeModContainer;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.function.Consumer;
@@ -104,7 +107,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
             playerCubeMap.getWorld()
                     .getCubicEntityTracker()
                     .sendLeashedEntitiesInCube(player, this.getCube());
-            //TODO: cube watch event?
+            MinecraftForge.EVENT_BUS.post(new CubeWatchEvent(cube, this, player));
         }
     }
 
@@ -133,8 +136,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         }
 
         this.players.remove(player.getEntityId());
-        //TODO: Cube unwatch event
-        //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkWatchEvent.UnWatch(this.pos, player));
+        MinecraftForge.EVENT_BUS.post(new CubeUnWatchEvent(cube, this, player));
 
         if (this.players.isEmpty()) {
             playerCubeMap.removeEntry(this);
