@@ -23,7 +23,10 @@
  */
 package cubicchunks.api;
 
+import javax.annotation.Nullable;
+
 import cubicchunks.server.CubeWatcher;
+import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -40,19 +43,26 @@ import net.minecraftforge.fml.common.eventhandler.Event;
  */
 public class CubeUnWatchEvent extends Event {
 
-    private final Cube cube;
+    @Nullable private final Cube cube;
+    private final CubePos cubePos;
     private final CubeWatcher cubeWatcher;
     private final EntityPlayerMP player;
 
-    public CubeUnWatchEvent(Cube cubeIn, CubeWatcher cubeWatcherIn, EntityPlayerMP playerIn) {
+    public CubeUnWatchEvent(@Nullable Cube cubeIn, CubePos cubePosIn, CubeWatcher cubeWatcherIn, EntityPlayerMP playerIn) {
         super();
         cube = cubeIn;
+        cubePos = cubePosIn;
         cubeWatcher = cubeWatcherIn;
         player = playerIn;
     }
 
+    @Nullable
     public Cube getCube() {
         return cube;
+    }
+    
+    public CubePos getCubePos() {
+        return cubePos;
     }
     
     public CubeWatcher getCubeWatcher() {

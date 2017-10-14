@@ -107,7 +107,6 @@ public class CubeWatcher implements XYZAddressable, ITicket {
             playerCubeMap.getWorld()
                     .getCubicEntityTracker()
                     .sendLeashedEntitiesInCube(player, this.getCube());
-            MinecraftForge.EVENT_BUS.post(new CubeWatchEvent(cube, this, player));
         }
     }
 
@@ -136,7 +135,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         }
 
         this.players.remove(player.getEntityId());
-        MinecraftForge.EVENT_BUS.post(new CubeUnWatchEvent(cube, this, player));
+        MinecraftForge.EVENT_BUS.post(new CubeUnWatchEvent(cube, cubePos, this, player));
 
         if (this.players.isEmpty()) {
             playerCubeMap.removeEntry(this);
@@ -202,6 +201,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         this.sentToPlayers = true;
 
         for (WatcherPlayerEntry playerEntry : this.players.valueCollection()) {
+            MinecraftForge.EVENT_BUS.post(new CubeWatchEvent(cube, cubePos, this, playerEntry.player));
             //Sending entities per cube.
             this.playerCubeMap.getWorld()
                     .getCubicEntityTracker()
