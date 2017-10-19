@@ -49,12 +49,16 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.List;
 
@@ -77,6 +81,7 @@ public class MixinRenderGlobal {
     @Shadow private int renderDistanceChunks;
 
     @Shadow private ViewFrustum viewFrustum;
+    @Nullable private WeakReference<Entity> borderRenderEntity;
 
     /**
      * This allows to get the Y position of rendered entity by injecting itself directly before call to
@@ -175,5 +180,37 @@ public class MixinRenderGlobal {
                 MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * 16 ? null :
                         MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * 16 ? null :
                                 this.viewFrustum.getRenderChunk(blockpos);
+    }
+
+    //get render entity, can't fail (inject at HEAD
+    @Inject(method = "renderWorldBorder", at = @At(value = "HEAD"), require = 1)
+    private void getWorldFromExecute(Entity entity, float partialTicks, CallbackInfo cbi) {
+        borderRenderEntity = new WeakReference<>(entity);
+    }
+
+    @ModifyConstant(
+            method = "renderWorldBorder",
+            constant = {
+                    @Constant(doubleValue = 0.0D, ordinal = 0),
+                    @Constant(doubleValue = 0.0D, ordinal = 1),
+                    @Constant(doubleValue = 0.0D, ordinal = 2),
+                    @Constant(doubleValue = 0.0D, ordinal = 3),
+                    @Constant(doubleValue = 0.0D, ordinal = 4),
+                    @Constant(doubleValue = 0.0D, ordinal = 5),
+                    @Constant(doubleValue = 0.0D, ordinal = 6),
+                    @Constant(doubleValue = 0.0D, ordinal = 7),
+                    @Constant(doubleValue = 256.0D)
+            },
+            slice = @Slice(from = @At(value = "HEAD")), require = 2)
+    private double renderWorldBorder_getRenderHeight(double original) {
+        if (borderRenderEntity == null) {
+            return original;
+        }
+        Entity entity = borderRenderEntity.get();
+        if (entity == null) {
+            return original;
+        }
+
+        return original == 0.0D ? entity.posY - 128 : entity.posY + 128;
     }
 }
