@@ -26,7 +26,6 @@ package cubicchunks.asm.mixin.core.client;
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.CHUNK_GET_ENTITY_LISTS;
 import static cubicchunks.asm.JvmNames.OPTIFINE_RENDER_CHUNK_GET_CHUNK;
-import static cubicchunks.asm.JvmNames.TESSELLATOR_DRAW;
 import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
 
 import cubicchunks.util.ClassInheritanceMultiMapFactory;
