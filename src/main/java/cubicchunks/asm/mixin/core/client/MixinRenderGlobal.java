@@ -26,6 +26,7 @@ package cubicchunks.asm.mixin.core.client;
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.CHUNK_GET_ENTITY_LISTS;
 import static cubicchunks.asm.JvmNames.OPTIFINE_RENDER_CHUNK_GET_CHUNK;
+import static cubicchunks.asm.JvmNames.TESSELLATOR_DRAW;
 import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
 
 import cubicchunks.util.ClassInheritanceMultiMapFactory;
@@ -81,7 +82,6 @@ public class MixinRenderGlobal {
     @Shadow private int renderDistanceChunks;
 
     @Shadow private ViewFrustum viewFrustum;
-    @Nullable private WeakReference<Entity> borderRenderEntity;
 
     /**
      * This allows to get the Y position of rendered entity by injecting itself directly before call to
@@ -182,35 +182,14 @@ public class MixinRenderGlobal {
                                 this.viewFrustum.getRenderChunk(blockpos);
     }
 
-    //get render entity, can't fail (inject at HEAD
-    @Inject(method = "renderWorldBorder", at = @At(value = "HEAD"), require = 1)
-    private void getWorldFromExecute(Entity entity, float partialTicks, CallbackInfo cbi) {
-        borderRenderEntity = new WeakReference<>(entity);
-    }
-
     @ModifyConstant(
             method = "renderWorldBorder",
             constant = {
-                    @Constant(doubleValue = 0.0D, ordinal = 0),
-                    @Constant(doubleValue = 0.0D, ordinal = 1),
-                    @Constant(doubleValue = 0.0D, ordinal = 2),
-                    @Constant(doubleValue = 0.0D, ordinal = 3),
-                    @Constant(doubleValue = 0.0D, ordinal = 4),
-                    @Constant(doubleValue = 0.0D, ordinal = 5),
-                    @Constant(doubleValue = 0.0D, ordinal = 6),
-                    @Constant(doubleValue = 0.0D, ordinal = 7),
+                    @Constant(doubleValue = 0.0D),
                     @Constant(doubleValue = 256.0D)
             },
-            slice = @Slice(from = @At(value = "HEAD")), require = 2)
-    private double renderWorldBorder_getRenderHeight(double original) {
-        if (borderRenderEntity == null) {
-            return original;
-        }
-        Entity entity = borderRenderEntity.get();
-        if (entity == null) {
-            return original;
-        }
-
+            slice = @Slice(from = @At(value = "HEAD"), to = @At(value = "INVOKE", target = TESSELLATOR_DRAW)), require = 2)
+    private double renderWorldBorder_getRenderHeight(double original, Entity entity, float partialTicks) {
         return original == 0.0D ? entity.posY - 128 : entity.posY + 128;
     }
 }
