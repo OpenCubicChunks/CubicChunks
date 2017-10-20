@@ -54,7 +54,6 @@ public class JvmNames {
         RENDER_CHUNK = "Lnet/minecraft/client/renderer/chunk/RenderChunk;",
         STRING = "Ljava/lang/String;",
         STRUCTURE_BOUNDING_BOX = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;",
-        TESSELLATOR = "Lnet/minecraft/client/renderer/Tessellator;",
         WORLD = "Lnet/minecraft/world/World;",
         WORLD_CLIENT = "Lnet/minecraft/client/multiplayer/WorldClient;",
         WORLD_SERVER = "Lnet/minecraft/world/WorldServer;";
@@ -83,7 +82,6 @@ public class JvmNames {
         MATERIAL_WATER = MATERIAL + "WATER:" + MATERIAL,
         MUTABLE_BLOCK_POS_CONSTRUCT = MUTABLE_BLOCK_POS + "<init>(III)V",
         POOLED_MUTABLE_BLOCK_POS_SET_POS_D = POOLED_MUTABLE_BLOCK_POS + "setPos(DDD)" + POOLED_MUTABLE_BLOCK_POS,
-        TESSELLATOR_DRAW = TESSELLATOR + "draw()V",
         WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS = WORLD_CLIENT + "getChunkFromBlockCoords(" + BLOCK_POS + ")" + CHUNK,
         WORLD_GET_LIGHT_WITH_FLAG = WORLD + "getLight(" + BLOCK_POS + "Z)I",
         WORLD_GET_PERSISTENT_CHUNKS = WORLD + "getPersistentChunks()" + IMMUTABLE_SET_MULTIMAP,
