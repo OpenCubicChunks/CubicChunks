@@ -49,12 +49,16 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.List;
 
@@ -175,5 +179,16 @@ public class MixinRenderGlobal {
                 MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * 16 ? null :
                         MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * 16 ? null :
                                 this.viewFrustum.getRenderChunk(blockpos);
+    }
+
+    @ModifyConstant(
+            method = "renderWorldBorder",
+            constant = {
+                    @Constant(doubleValue = 0.0D),
+                    @Constant(doubleValue = 256.0D)
+            },
+            slice = @Slice(from = @At(value = "HEAD"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Tessellator;draw()V")), require = 2)
+    private double renderWorldBorder_getRenderHeight(double original, Entity entity, float partialTicks) {
+        return original == 0.0D ? entity.posY - 128 : entity.posY + 128;
     }
 }
