@@ -38,24 +38,24 @@ import org.spongepowered.asm.mixin.Overwrite;
 public class MixinDebugRenderChunkBorder {
 
     /**
-     * Change chunk border renderer to work at any Y value
      * @author Babbaj
+     * @reason Change chunk border renderer to work at any Y value.
      */
     @Overwrite
     public void render(float partialTicks, long finishTimeNano) {
         EntityPlayer player = FMLClientHandler.instance().getClientPlayerEntity();
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
-        double d0 = player.lastTickPosX + (player.posX - player.lastTickPosX) * (double)partialTicks;
-        double d1 = player.lastTickPosY + (player.posY - player.lastTickPosY) * (double)partialTicks;
-        double d2 = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * (double)partialTicks;
-        double yOffset = (Math.round((int)d1 / 16)) * 16 - 128; // Offset the grid's y coord to based on the player's y coord
-        double d3 = (0.0D - d1) + yOffset;
-        double d4 = (256.0D - d1) + yOffset;
+        double playerX = player.lastTickPosX + (player.posX - player.lastTickPosX) * (double)partialTicks;
+        double playerY = player.lastTickPosY + (player.posY - player.lastTickPosY) * (double)partialTicks;
+        double playerZ = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * (double)partialTicks;
+        double yOffset = (Math.round((int)playerY / 16)) * 16 - 128; // Offset the grid's y coord to based on the player's y coord
+        double minY = (0.0D - playerY) + yOffset; // add the offset
+        double maxY = (256.0D - playerY) + yOffset;
         GlStateManager.disableTexture2D();
         GlStateManager.disableBlend();
-        double d5 = (double)(player.chunkCoordX << 4) - d0;
-        double d6 = (double)(player.chunkCoordZ << 4) - d2;
+        double chunkX = (double)(player.chunkCoordX << 4) - playerX;
+        double chunkZ = (double)(player.chunkCoordZ << 4) - playerZ;
         GlStateManager.glLineWidth(1.0F);
         bufferbuilder.begin(3, DefaultVertexFormats.POSITION_COLOR);
 
@@ -64,50 +64,51 @@ public class MixinDebugRenderChunkBorder {
         {
             for (int j = -16; j <= 32; j += 16)
             {
-                bufferbuilder.pos(d5 + (double)i, d3, d6 + (double)j).color(1.0F, 0.0F, 0.0F, 0.0F).endVertex();
-                bufferbuilder.pos(d5 + (double)i, d3, d6 + (double)j).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-                bufferbuilder.pos(d5 + (double)i, d4, d6 + (double)j).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-                bufferbuilder.pos(d5 + (double)i, d4, d6 + (double)j).color(1.0F, 0.0F, 0.0F, 0.0F).endVertex();
+                bufferbuilder.pos(chunkX + (double)i, minY, chunkZ + (double)j).color(1.0F, 0.0F, 0.0F, 0.0F).endVertex();
+                bufferbuilder.pos(chunkX + (double)i, minY, chunkZ + (double)j).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+                bufferbuilder.pos(chunkX + (double)i, maxY, chunkZ + (double)j).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+                bufferbuilder.pos(chunkX + (double)i, maxY, chunkZ + (double)j).color(1.0F, 0.0F, 0.0F, 0.0F).endVertex();
             }
         }
 
         // East-West yellow vertical lines
         for (int k = 2; k < 16; k += 2)
         {
-            bufferbuilder.pos(d5 + (double)k, d3, d6).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
-            bufferbuilder.pos(d5 + (double)k, d3, d6).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5 + (double)k, d4, d6).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5 + (double)k, d4, d6).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
-            bufferbuilder.pos(d5 + (double)k, d3, d6 + 16.0D).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
-            bufferbuilder.pos(d5 + (double)k, d3, d6 + 16.0D).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5 + (double)k, d4, d6 + 16.0D).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5 + (double)k, d4, d6 + 16.0D).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
+            bufferbuilder.pos(chunkX + (double)k, minY, chunkZ).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
+            bufferbuilder.pos(chunkX + (double)k, minY, chunkZ).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX + (double)k, maxY, chunkZ).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX + (double)k, maxY, chunkZ).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
+            bufferbuilder.pos(chunkX + (double)k, minY, chunkZ + 16.0D).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
+            bufferbuilder.pos(chunkX + (double)k, minY, chunkZ + 16.0D).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX + (double)k, maxY, chunkZ + 16.0D).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX + (double)k, maxY, chunkZ + 16.0D).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
         }
 
         // South-North yellow vertical lines
         for (int l = 2; l < 16; l += 2)
         {
-            bufferbuilder.pos(d5, d3, d6 + (double)l).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
-            bufferbuilder.pos(d5, d3, d6 + (double)l).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5, d4, d6 + (double)l).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5, d4, d6 + (double)l).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
-            bufferbuilder.pos(d5 + 16.0D, d3, d6 + (double)l).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
-            bufferbuilder.pos(d5 + 16.0D, d3, d6 + (double)l).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5 + 16.0D, d4, d6 + (double)l).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5 + 16.0D, d4, d6 + (double)l).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
+            bufferbuilder.pos(chunkX, minY, chunkZ + (double)l).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
+            bufferbuilder.pos(chunkX, minY, chunkZ + (double)l).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX, maxY, chunkZ + (double)l).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX, maxY, chunkZ + (double)l).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
+            bufferbuilder.pos(chunkX + 16.0D, minY, chunkZ + (double)l).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
+            bufferbuilder.pos(chunkX + 16.0D, minY, chunkZ + (double)l).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX + 16.0D, maxY, chunkZ + (double)l).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX + 16.0D, maxY, chunkZ + (double)l).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
         }
 
         // Yellow horizontal lines
-        for (int i1 = 0+(int)yOffset; i1 <= 256+(int)yOffset; i1 += 2)
+        //start from the offset
+        for (int i1 = (int)yOffset; i1 <= 256+(int)yOffset; i1 += 2)
         {
-            double d7 = (double)i1 - d1;
-            bufferbuilder.pos(d5, d7, d6).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
-            bufferbuilder.pos(d5, d7, d6).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5, d7, d6 + 16.0D).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5 + 16.0D, d7, d6 + 16.0D).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5 + 16.0D, d7, d6).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5, d7, d6).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5, d7, d6).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
+            double d7 = (double)i1 - playerY;
+            bufferbuilder.pos(chunkX, d7, chunkZ).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
+            bufferbuilder.pos(chunkX, d7, chunkZ).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX, d7, chunkZ + 16.0D).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX + 16.0D, d7, chunkZ + 16.0D).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX + 16.0D, d7, chunkZ).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX, d7, chunkZ).color(1.0F, 1.0F, 0.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX, d7, chunkZ).color(1.0F, 1.0F, 0.0F, 0.0F).endVertex();
         }
 
         tessellator.draw();
@@ -119,24 +120,25 @@ public class MixinDebugRenderChunkBorder {
         {
             for (int l1 = 0; l1 <= 16; l1 += 16)
             {
-                bufferbuilder.pos(d5 + (double)j1, d3, d6 + (double)l1).color(0.25F, 0.25F, 1.0F, 0.0F).endVertex();
-                bufferbuilder.pos(d5 + (double)j1, d3, d6 + (double)l1).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
-                bufferbuilder.pos(d5 + (double)j1, d4, d6 + (double)l1).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
-                bufferbuilder.pos(d5 + (double)j1, d4, d6 + (double)l1).color(0.25F, 0.25F, 1.0F, 0.0F).endVertex();
+                bufferbuilder.pos(chunkX + (double)j1, minY, chunkZ + (double)l1).color(0.25F, 0.25F, 1.0F, 0.0F).endVertex();
+                bufferbuilder.pos(chunkX + (double)j1, minY, chunkZ + (double)l1).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
+                bufferbuilder.pos(chunkX + (double)j1, maxY, chunkZ + (double)l1).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
+                bufferbuilder.pos(chunkX + (double)j1, maxY, chunkZ + (double)l1).color(0.25F, 0.25F, 1.0F, 0.0F).endVertex();
             }
         }
 
         // Blue horizontal lines
-        for (int k1 = 0+(int)yOffset; k1 <= 256+(int)yOffset; k1 += 16)
+        //start from the offset
+        for (int k1 = (int)yOffset; k1 <= 256+(int)yOffset; k1 += 16)
         {
-            double d8 = (double)k1 - d1;
-            bufferbuilder.pos(d5, d8, d6).color(0.25F, 0.25F, 1.0F, 0.0F).endVertex();
-            bufferbuilder.pos(d5, d8, d6).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5, d8, d6 + 16.0D).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5 + 16.0D, d8, d6 + 16.0D).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5 + 16.0D, d8, d6).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5, d8, d6).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
-            bufferbuilder.pos(d5, d8, d6).color(0.25F, 0.25F, 1.0F, 0.0F).endVertex();
+            double d8 = (double)k1 - playerY;
+            bufferbuilder.pos(chunkX, d8, chunkZ).color(0.25F, 0.25F, 1.0F, 0.0F).endVertex();
+            bufferbuilder.pos(chunkX, d8, chunkZ).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX, d8, chunkZ + 16.0D).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX + 16.0D, d8, chunkZ + 16.0D).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX + 16.0D, d8, chunkZ).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX, d8, chunkZ).color(0.25F, 0.25F, 1.0F, 1.0F).endVertex();
+            bufferbuilder.pos(chunkX, d8, chunkZ).color(0.25F, 0.25F, 1.0F, 0.0F).endVertex();
         }
 
         tessellator.draw();
