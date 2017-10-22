@@ -39,7 +39,7 @@ public class HashCache<K, V> {
     private final ToIntFunction<K> hashFunction;
     private final Function<K, V> source;
 
-    @SuppressWarnings("uncecked")
+    @SuppressWarnings("unchecked")
     private HashCache(int size, ToIntFunction<K> hashCode, Function<K, V> source) {
         this.cache = (V[]) new Object[size];
         this.keys = (K[]) new Object[size];
