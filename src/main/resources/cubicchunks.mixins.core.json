@@ -29,7 +29,8 @@
         "client.MixinChunk_Cubes",
         "client.MixinViewFrustum_RenderHeightFix",
         "client.MixinWorldProvider",
-        "client.MixinGuiCreateWorld"
+        "client.MixinGuiCreateWorld",
+        "client.MixinDebugRenderChunkBorder"
     ],
     "server": [
         "server.MixinDedicatedServer_HeightLimits",
