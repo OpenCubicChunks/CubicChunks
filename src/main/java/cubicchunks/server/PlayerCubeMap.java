@@ -36,6 +36,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import cubicchunks.CubicChunks;
 import cubicchunks.lighting.LightingManager;
+import cubicchunks.network.PacketCube;
 import cubicchunks.network.PacketCubes;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.util.CubePos;
@@ -61,6 +62,7 @@ import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -96,6 +98,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                     watcher1.getClosestPlayerDistance(),
                     watcher2.getClosestPlayerDistance()
             ).result();
+            
+    private static final Comparator<CubeToPlayerEntry> CUBE_TO_CLIENT_ORDER = (entry1, entry2) -> ComparisonChain.start().compare(
+            entry1.toPlayer.getDistanceSq(entry1.cube.getCoords().getCenterBlockPos()),
+            entry2.toPlayer.getDistanceSq(entry2.cube.getCoords().getCenterBlockPos())).result();
 
     /**
      * Comparator that specifies order in which columns will be generated and sent to clients
@@ -183,10 +189,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
     private boolean toGenerateNeedSort = true;
     private boolean toSendToClientNeedSort = true;
+    private boolean cubesToSendNeedSort = true;
 
     private final CubeProviderServer cubeCache;
 
-    private final Multimap<EntityPlayerMP, Cube> cubesToSend = Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
+    private final List<CubeToPlayerEntry> cubesToSend = new ArrayList<CubeToPlayerEntry>();
     private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.IntOptions.MAX_GENERATED_CUBES_PER_TICK.getValue();
 
     public PlayerCubeMap(ICubicWorldServer worldServer) {
@@ -261,6 +268,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             this.toSendToClientNeedSort = false;
             this.cubesToSendToClients.sort(CUBE_ORDER);
             this.columnsToSendToClients.sort(COLUMN_ORDER);
+        }
+        
+        if (this.cubesToSendNeedSort && currentTime % 4L == 2L) {
+            this.cubesToSendNeedSort = false;
+            this.cubesToSend.sort(CUBE_TO_CLIENT_ORDER);
         }
 
         getWorld().getProfiler().endStartSection("generate");
@@ -367,11 +379,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             }
         }
         getWorld().getProfiler().endStartSection("sendCubes");//unload
-        for (EntityPlayerMP player : cubesToSend.keySet()) {
-            PacketCubes packet = new PacketCubes(new ArrayList<>(cubesToSend.get(player)));
-            PacketDispatcher.sendTo(packet, player);
+        Iterator<CubeToPlayerEntry> ctsi = cubesToSend.iterator();
+        int toSend = 81 * 8;
+        while (ctsi.hasNext() && toSend-- > 0) {
+            CubeToPlayerEntry entry = ctsi.next();
+            PacketCube packet = new PacketCube(entry.cube);
+            PacketDispatcher.sendTo(packet, entry.toPlayer);
+            ctsi.remove();
         }
-        cubesToSend.clear();
         getWorld().getProfiler().endSection();//sendCubes
         getWorld().getProfiler().endSection();//playerCubeMapTick
     }
@@ -734,7 +749,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     }
 
     public void scheduleSendCubeToPlayer(Cube cube, EntityPlayerMP player) {
-        cubesToSend.put(player, cube);
+        cubesToSend.add(new CubeToPlayerEntry(player, cube));
+        cubesToSendNeedSort = true;
     }
 
     @Nullable public CubeWatcher getCubeWatcher(CubePos pos) {
@@ -751,6 +767,17 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
     public boolean contains(CubePos coords) {
         return this.cubeWatchers.get(coords.getX(), coords.getY(), coords.getZ()) != null;
+    }
+    
+    private static final class CubeToPlayerEntry {
+
+        final EntityPlayerMP toPlayer;
+        final Cube cube;
+
+        CubeToPlayerEntry(EntityPlayerMP toPlayerIn, Cube cubeIn) {
+            toPlayer = toPlayerIn;
+            cube = cubeIn;
+        }
     }
 
     private static final class PlayerWrapper {

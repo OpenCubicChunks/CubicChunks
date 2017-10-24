@@ -68,7 +68,8 @@ public class PacketDispatcher {
         registerMessage(PacketCubicWorldData.Handler.class, PacketCubicWorldData.class);
         registerMessage(PacketHeightMapUpdate.Handler.class, PacketHeightMapUpdate.class);
         registerMessage(PacketCubeSkyLightUpdates.Handler.class, PacketCubeSkyLightUpdates.class);
-
+        
+        registerMessage(PacketCube.Handler.class, PacketCube.class);
     }
 
     /**

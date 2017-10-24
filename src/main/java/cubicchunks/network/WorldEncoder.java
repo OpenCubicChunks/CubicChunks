@@ -87,6 +87,40 @@ class WorldEncoder {
             }
         });
     }
+    
+    static void encodeCube(PacketBuffer out, Cube cube) {
+        // write first all the flags, then all the block data, then all the light data etc for better compression
+
+        // 1. emptiness
+        out.writeBoolean(cube.isEmpty());
+        out.writeBoolean(cube.getStorage() != null);
+
+        // 2. block IDs and metadata
+        if (!cube.isEmpty()) {
+            // noinspection ConstantConditions
+            cube.getStorage().getData().write(out);
+        }
+
+        // 3. block light
+        if (cube.getStorage() != null) {
+            out.writeBytes(cube.getStorage().getBlockLight().getData());
+        }
+
+        // 4. sky light
+        if (cube.getStorage() != null && cube.getCubicWorld().getProvider().hasSkyLight()) {
+            out.writeBytes(cube.getStorage().getSkyLight().getData());
+        }
+
+        // 5. heightmap and bottom-block-y. Each non-empty cube has a chance
+        // to update this data.
+        // trying to keep track of when it changes would be complex, so send
+        // it wil all cubes
+        if (!cube.isEmpty()) {
+            byte[] heightmaps = ((ServerHeightMap) cube.getColumn().getOpacityIndex()).getDataForClient();
+            assert heightmaps.length == Cube.SIZE * Cube.SIZE * Integer.BYTES;
+            out.writeBytes(heightmaps);
+        }
+    }
 
     static void encodeColumn(PacketBuffer out, IColumn column) {
         // 1. biomes
@@ -98,7 +132,7 @@ class WorldEncoder {
         in.readBytes(column.getBiomeArray());
     }
 
-    static void decodeCube(PacketBuffer in, List<Cube> cubes) {
+    static void decodeCubes(PacketBuffer in, List<Cube> cubes) {
         cubes.stream().filter(Objects::nonNull).forEach(Cube::setClientCube);
 
         // 1. emptiness
@@ -159,6 +193,51 @@ class WorldEncoder {
             }
         }
     }
+    
+    static void decodeCube(PacketBuffer in, Cube cube) {
+        cube.setClientCube();
+
+        // 1. emptiness
+        boolean isEmpty = in.readBoolean() || cube == null;
+        boolean hasStorage = in.readBoolean() && cube != null;
+
+        if (hasStorage) {
+            ExtendedBlockStorage storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()),
+                    cube.getCubicWorld().getProvider().hasSkyLight());
+            cube.setStorage(storage);
+        }
+
+        // 2. Block IDs and metadata
+        if (!isEmpty) {
+            // noinspection ConstantConditions
+            cube.getStorage().getData().read(in);
+        }
+
+        // 3. block light
+        if (hasStorage) {
+            // noinspection ConstantConditions
+            byte[] data = cube.getStorage().getBlockLight().getData();
+            in.readBytes(data);
+        }
+
+        // 4. sky light
+        if (hasStorage && cube.getCubicWorld().getProvider().hasSkyLight()) {
+            // noinspection ConstantConditions
+            byte[] data = cube.getStorage().getSkyLight().getData();
+            in.readBytes(data);
+        }
+
+        // 5. heightmaps and after all that - update ref counts
+        if (!isEmpty) {
+            byte[] heightmaps = new byte[Cube.SIZE * Cube.SIZE * Integer.BYTES];
+            in.readBytes(heightmaps);
+            ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
+            coi.setData(heightmaps);
+
+            // noinspection ConstantConditions
+            cube.getStorage().recalculateRefCounts();
+        }
+    }
 
     static int getEncodedSize(IColumn column) {
         return column.getBiomeArray().length;
@@ -198,5 +277,27 @@ class WorldEncoder {
         ByteBuf bytebuf = Unpooled.wrappedBuffer(data);
         bytebuf.readerIndex(0);
         return bytebuf;
+    }
+
+    public static int getEncodedSize(Cube cube) {
+        int size = 0;
+
+        size += 2; // 1. isEmpty and hasStorage flags
+
+        // 2. block IDs and metadata
+        if (!cube.isEmpty()) {
+            // noinspection ConstantConditions
+            size += cube.getStorage().getData().getSerializedSize();
+        }
+        if (cube.getStorage() != null) {
+            size += cube.getStorage().getBlockLight().getData().length;
+            if (cube.getCubicWorld().getProvider().hasSkyLight()) {
+                size += cube.getStorage().getSkyLight().getData().length;
+            }
+        }
+
+        // heightmaps
+        size += 256 * Integer.BYTES;
+        return size;
     }
 }
