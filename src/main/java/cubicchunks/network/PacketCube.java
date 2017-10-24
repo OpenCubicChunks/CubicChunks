@@ -50,60 +50,46 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class PacketCubes implements IMessage {
+public class PacketCube implements IMessage {
 
-    private CubePos[] cubePos;
+    private CubePos cubePos;
     private byte[] data;
     private List<List<NBTTagCompound>> tileEntityTags;
 
-    public PacketCubes() {
+    public PacketCube() {
     }
 
-    public PacketCubes(List<Cube> cubes) {
-        this.cubePos = new CubePos[cubes.size()];
-        for (int i = 0; i < cubes.size(); i++) {
-            cubePos[i] = cubes.get(i).getCoords();
-        }
-        this.data = new byte[WorldEncoder.getEncodedSize(cubes)];
+    public PacketCube(Cube cube) {
+        this.cubePos = cube.getCoords();
+        this.data = new byte[WorldEncoder.getEncodedSize(cube)];
         PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));
 
-        WorldEncoder.encodeCubes(out, cubes);
+        WorldEncoder.encodeCube(out, cube);
 
         this.tileEntityTags = new ArrayList<>();
 
-        cubes.forEach(cube ->
-                tileEntityTags.add(cube.getTileEntityMap().values().stream().map(TileEntity::getUpdateTag).collect(Collectors.toList()))
-        );
+        tileEntityTags.add(cube.getTileEntityMap().values().stream().map(TileEntity::getUpdateTag).collect(Collectors.toList()));
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        int cubeCount = buf.readUnsignedShort();
-        cubePos = new CubePos[cubeCount];
-        for (int i = 0; i < this.cubePos.length; i++) {
-            cubePos[i] = PacketUtils.readCubePos(buf);
-        }
+        cubePos = PacketUtils.readCubePos(buf);
 
         this.data = new byte[buf.readInt()];
         buf.readBytes(this.data);
 
         this.tileEntityTags = new ArrayList<>();
-        for (int i = 0; i < cubeCount; i++) {
-            int numTiles = buf.readInt();
-            List<NBTTagCompound> tags = new ArrayList<>();
-            for (int j = 0; j < numTiles; j++) {
-                tags.add(ByteBufUtils.readTag(buf));
-            }
-            this.tileEntityTags.add(tags);
+        int numTiles = buf.readInt();
+        List<NBTTagCompound> tags = new ArrayList<>();
+        for (int j = 0; j < numTiles; j++) {
+            tags.add(ByteBufUtils.readTag(buf));
         }
+        this.tileEntityTags.add(tags);
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeShort(cubePos.length);
-        for (CubePos pos : cubePos) {
-            PacketUtils.write(buf, pos);
-        }
+        PacketUtils.write(buf, cubePos);
 
         buf.writeInt(this.data.length);
         buf.writeBytes(this.data);
@@ -114,7 +100,7 @@ public class PacketCubes implements IMessage {
         });
     }
 
-    CubePos[] getCubePos() {
+    CubePos getCubePos() {
         return cubePos;
     }
 
@@ -126,32 +112,29 @@ public class PacketCubes implements IMessage {
         return this.tileEntityTags;
     }
 
-    public static class Handler extends AbstractClientMessageHandler<PacketCubes> {
+    public static class Handler extends AbstractClientMessageHandler<PacketCube> {
 
-        @Nullable @Override
-        public IMessage handleClientMessage(EntityPlayer player, PacketCubes message, MessageContext ctx) {
+        @Nullable
+        @Override
+        public IMessage handleClientMessage(EntityPlayer player, PacketCube message, MessageContext ctx) {
             PacketUtils.ensureMainThread(this, player, message, ctx);
 
             ICubicWorldClient worldClient = (ICubicWorldClient) player.getEntityWorld();
             CubeProviderClient cubeCache = worldClient.getCubeCache();
 
-            CubePos[] cubePos = message.getCubePos();
-            List<Cube> cubes = new ArrayList<>();
-            for (CubePos pos : cubePos) {
-                Cube cube = cubeCache.loadCube(pos); // new cube
-                //isEmpty actually checks if the column is a BlankColumn
-                if (cube == null) {
-                    CubicChunks.LOGGER.error("Out of order cube received! No column for cube at {} exists!", pos);
-                }
-                cubes.add(cube);
+            CubePos cubePos = message.getCubePos();
+            Cube cube = cubeCache.loadCube(cubePos); // new cube
+            // isEmpty actually checks if the column is a BlankColumn
+            if (cube == null) {
+                CubicChunks.LOGGER.error("Out of order cube received! No column for cube at {} exists!", cubePos);
             }
-
 
             byte[] data = message.getData();
             ByteBuf buf = WorldEncoder.createByteBufForRead(data);
-            WorldEncoder.decodeCubes(new PacketBuffer(buf), cubes);
+            WorldEncoder.decodeCube(new PacketBuffer(buf), cube);
 
-            cubes.stream().filter(Objects::nonNull).forEach(Cube::markForRenderUpdate);
+            if (cube != null)
+                cube.markForRenderUpdate();
 
             message.getTileEntityTags().forEach(tags -> tags.forEach(tag -> {
                 int blockX = tag.getInteger("x");
@@ -166,9 +149,5 @@ public class PacketCubes implements IMessage {
             }));
             return null;
         }
-    }
-
-    private static int index(int x, int z) {
-        return x << 4 | z;
     }
 }
