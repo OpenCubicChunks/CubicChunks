@@ -115,13 +115,11 @@ public class SelectBlockGui extends ExtraGui {
         UIBorderLayout upperLayout = new UIBorderLayout(this)
                 .setSize(xSize, ySize)
                 .setPosition(xPos, 0)
-                .add(label, UIBorderLayout.Border.CENTER)
-                .init();
+                .add(label, UIBorderLayout.Border.CENTER);
 
         UIBorderLayout lowerLayout = new UIBorderLayout(this)
                 .setSize(xSize, ySize)
-                .setAnchor(Anchor.BOTTOM).setPosition(xPos, 0)
-                .init();
+                .setAnchor(Anchor.BOTTOM).setPosition(xPos, 0);
 
         UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
         tabGroup.add(upperLayout, lowerLayout);

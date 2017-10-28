@@ -34,6 +34,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class MathUtil {
 
+    public static boolean isPowerOfN(int toTest, int n) { // works only for positive numbers
+        while (toTest > n - 1 && toTest % n == 0) {
+            toTest /= n;
+        }
+        return toTest == 1;
+    }
     public static double lerp(final double a, final double min, final double max) {
         return min + a * (max - min);
     }
@@ -45,6 +51,10 @@ public class MathUtil {
 
     public static float unlerp(final float v, final float min, final float max) {
         return (v - min) / (max - min);
+    }
+
+    public static float unlerp(final long v, final long min, final long max) {
+        return (v - min) / (float) (max - min);
     }
 
     public static float lerp(final float a, final float min, final float max) {

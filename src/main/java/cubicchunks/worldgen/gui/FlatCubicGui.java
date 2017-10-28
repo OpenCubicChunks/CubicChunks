@@ -114,14 +114,12 @@ public class FlatCubicGui extends ExtraGui {
                 .setPosition(xPos, 0)
                 .add(prev, UIBorderLayout.Border.LEFT)
                 .add(next, UIBorderLayout.Border.RIGHT)
-                .add(label, UIBorderLayout.Border.CENTER)
-                .init();
+                .add(label, UIBorderLayout.Border.CENTER);
 
         UIBorderLayout lowerLayout = new UIBorderLayout(this)
                 .setSize(xSize, ySize)
                 .setAnchor(Anchor.BOTTOM).setPosition(xPos, 0)
-                .add(done, UIBorderLayout.Border.CENTER)
-                .init();
+                .add(done, UIBorderLayout.Border.CENTER);
 
         UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
         tabGroup.add(upperLayout, lowerLayout);

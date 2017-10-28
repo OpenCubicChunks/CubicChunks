@@ -121,8 +121,7 @@ public class CustomCubicGui extends ExtraGui {
                 .setPosition(xPos, 0)
                 .add(prev, UIBorderLayout.Border.LEFT)
                 .add(next, UIBorderLayout.Border.RIGHT)
-                .add(label, UIBorderLayout.Border.CENTER)
-                .init();
+                .add(label, UIBorderLayout.Border.CENTER);
 
         UIButton done = new UIButton(this, malisisText("done")).setAutoSize(false).setSize(BTN_WIDTH, 20);
         done.register(new Object() {
@@ -152,8 +151,7 @@ public class CustomCubicGui extends ExtraGui {
                                 .add(done = new UIButton(this, malisisText("presets.done")).setAutoSize(false).setSize(0, 20),
                                         new UIVerticalTableLayout.GridLocation(1, 1, 1))
                                 .add(cancel = new UIButton(this, malisisText("presets.cancel")).setAutoSize(false).setSize(0, 20),
-                                        new UIVerticalTableLayout.GridLocation(0, 1, 1))
-                                .init();
+                                        new UIVerticalTableLayout.GridLocation(0, 1, 1));
                         text.setFont(NoTranslationFont.DEFAULT);
                         text.setText(getSettingsJson());
                         text.getCursorPosition().jumpToEnd();
@@ -190,8 +188,7 @@ public class CustomCubicGui extends ExtraGui {
         UIBorderLayout lowerLayout = new UIBorderLayout(this)
                 .setSize(xSize, ySize)
                 .setAnchor(Anchor.BOTTOM).setPosition(xPos, 0)
-                .add(container, UIBorderLayout.Border.CENTER)
-                .init();
+                .add(container, UIBorderLayout.Border.CENTER);
 
         UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
         tabGroup.add(upperLayout, lowerLayout);
@@ -204,11 +201,14 @@ public class CustomCubicGui extends ExtraGui {
         this.mc.displayGuiScreen(parent);
     }
 
-    String getSettingsJson() {
+    CustomGeneratorSettings getConfig() {
         CustomGeneratorSettings conf = CustomGeneratorSettings.defaults();
         this.basicSettings.writeConfig(conf);
         this.oreSettings.writeConfig(conf);
         this.advancedterrainShapeSettings.writeConfig(conf);
-        return conf.toJson();
+        return conf;
+    }
+    String getSettingsJson() {
+        return getConfig().toJson();
     }
 }

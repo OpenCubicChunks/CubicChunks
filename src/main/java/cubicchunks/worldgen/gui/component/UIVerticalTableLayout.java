@@ -45,6 +45,7 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
     private int insetRight;
     private Map<Integer, UIComponent<?>[]> rows = new HashMap<>();
     private int totalRows;
+    private int[] noInsetRowHeights = null;
 
     /**
      * Default constructor, creates the components list.
@@ -57,7 +58,6 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
     }
 
     public UIVerticalTableLayout setInsets(int up, int down, int left, int right) {
-        this.checkNotInitialized();
         this.insetUp = up;
         this.insetDown = down;
         this.insetLeft = left;
@@ -80,28 +80,6 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
         return !rows.containsKey(y) || this.rows.get(y)[x] == null;
     }
 
-    @Override
-    public void initLayout() {
-        this.rows = new HashMap<>();
-        int maxRow = 0;
-        for (Map.Entry<UIComponent<?>, GridLocation> e : componentToLocationMap().entrySet()) {
-            int row = e.getValue().gridY;
-            if (row > maxRow) {
-                maxRow = row;
-            }
-            if (!rows.containsKey(row)) {
-                rows.put(row, new UIComponent[columns]);
-            }
-            int column = e.getValue().gridX;
-            UIComponent<?>[] rowArr = rows.get(row);
-            if (rowArr[column] != null) {
-                throw new IllegalStateException("Found 2 components at the same position: row=" + row + ", column=" + column);
-            }
-            rowArr[column] = e.getKey();
-        }
-        this.totalRows = maxRow + 1;
-    }
-
     @Override protected void onAdd(UIComponent<?> comp, GridLocation at) {
         int row = at.gridY;
         int column = at.gridX;
@@ -120,33 +98,47 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
     }
 
     @Override protected void onRemove(UIComponent<?> comp, GridLocation at) {
-
+        int row = at.gridY;
+        int column = at.gridX;
+        int columns = at.cellsX;
+        if (!rows.containsKey(row)) {
+            throw new IllegalArgumentException(comp + " is not in this " + this + " at " + at);
+        }
+        UIComponent<?>[] rowArr = rows.get(row);
+        for (int i = column; i < column + columns; i++) {
+            if (rowArr[i] == null) {
+                throw new IllegalArgumentException(comp + " is not in this " + this + " at " + at);
+            }
+            rowArr[i] = null;
+        }
+        // remove the row if it's empty so row count calculation is correect
+        boolean hasEntries = false;
+        for (Object x : rowArr) {
+            if (x != null) {
+                hasEntries = true;
+            }
+        }
+        if (!hasEntries) {
+            rows.remove(row);
+        }
+        // recalculate row count
+        totalRows = 0;
+        for (int i : rows.keySet()) {
+            totalRows = Math.max(i + 1, totalRows);
+        }
     }
 
     @Override
     protected void layout() {
-        this.checkInitialized();
         if (getParent() == null) {
             return;
+        }
+        if (noInsetRowHeights == null) {
+            noInsetRowHeights = getNoInsetRowHeights();
         }
         int width = getWidth() - getHorizontalPadding() * 2;
 
         final double noInsetSizeX = width / (float) columns;
-
-        int[] noInsetRowHeights = new int[totalRows];
-
-        for (Map.Entry<Integer, UIComponent<?>[]> rowEntry : rows.entrySet()) {
-            int rowNumber = rowEntry.getKey();
-            UIComponent<?>[] rowArr = rowEntry.getValue();
-
-            int maxHeight = 0;
-            for (UIComponent e : rowArr) {
-                if (e != null) {
-                    maxHeight = Math.max(maxHeight, e.getHeight());
-                }
-            }
-            noInsetRowHeights[rowNumber] = maxHeight + insetUp + insetDown;
-        }
 
         int currentY = 0;
         for (int rowNumber = 0; rowNumber < totalRows; rowNumber++) {
@@ -177,6 +169,39 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
             }
             currentY += currentRowHeight;
         }
+        noInsetRowHeights = null;
+    }
+
+    private int[] getNoInsetRowHeights() {
+        int[] noInsetRowHeights = new int[totalRows];
+
+        for (Map.Entry<Integer, UIComponent<?>[]> rowEntry : rows.entrySet()) {
+            int rowNumber = rowEntry.getKey();
+            UIComponent<?>[] rowArr = rowEntry.getValue();
+
+            int maxHeight = 0;
+            for (UIComponent e : rowArr) {
+                if (e != null) {
+                    maxHeight = Math.max(maxHeight, e.getHeight());
+                }
+            }
+            noInsetRowHeights[rowNumber] = maxHeight + insetUp + insetDown;
+        }
+        return noInsetRowHeights;
+    }
+
+    @Override protected boolean isLayoutChanged() {
+        int[] prev = noInsetRowHeights == null ? new int[0] : noInsetRowHeights;
+        int[] newHeights = noInsetRowHeights = getNoInsetRowHeights();
+        if (newHeights.length != prev.length) {
+            return true;
+        }
+        for (int i = 0; i < prev.length; i++) {
+            if (prev[i] != newHeights[i]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

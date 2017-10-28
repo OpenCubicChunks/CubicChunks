@@ -38,7 +38,6 @@ public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
 
     @Override
     protected void layout() {
-        this.checkInitialized();
         if (getParent() == null) {
             return;
         }
@@ -54,8 +53,8 @@ public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
         }
     }
 
-    @Override
-    protected void initLayout() {
+    @Override protected boolean isLayoutChanged() {
+        return false; // don't update unless something added (handled in superclass)
     }
 
     @Override
