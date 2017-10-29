@@ -230,7 +230,6 @@ dependencies {
 
     compile(project(":RegionLib"))
 
-    // use deobfProvided for now to avoid crash with malisiscore asm, but still have it compiling
     deobfCompile("net.malisis:malisiscore:$malisisCoreVersion") {
         isTransitive = false
     }
@@ -274,6 +273,9 @@ shadowJar.apply {
 
 test.apply {
     systemProperty("lwts.tweaker", "cubicchunks.tweaker.MixinTweakerServer")
+    testLogging {
+        showStandardStreams = true
+    }
 }
 
 processResources.apply {
