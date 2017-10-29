@@ -44,7 +44,7 @@ public class MixinTweakerServer extends AbstractTestTweaker {
     public void injectIntoClassLoader(LaunchClassLoader loader) {
         System.setProperty("net.minecraftforge.gradle.GradleStart.srg.srg-mcp",
                 ((File) ReflectionHelper.getPrivateValue(GradleStartCommon.class, null, "SRG_SRG_MCP")).getPath());
-        System.setProperty("mixin.env.remapRefMap=true", "true");
+        System.setProperty("mixin.env.remapRefMap", "true");
         super.injectIntoClassLoader(loader);
         registerAccessTransformer("META-INF/cubicchunks_at.cfg");
         CubicChunksCoreMod.initMixin();

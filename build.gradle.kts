@@ -273,6 +273,9 @@ shadowJar.apply {
 
 test.apply {
     systemProperty("lwts.tweaker", "cubicchunks.tweaker.MixinTweakerServer")
+    jvmArgs("-Dmixin.debug.verbose=true", //verbose mixin output for easier debugging of mixins
+            "-Dmixin.checks.interfaces=true", //check if all interface methods are overriden in mixin
+            "-Dmixin.env.remapRefMap=true")
     testLogging {
         showStandardStreams = true
     }
