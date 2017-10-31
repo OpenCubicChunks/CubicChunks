@@ -30,7 +30,6 @@ import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonSyntaxException;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.component.NoTranslationFont;
-import cubicchunks.worldgen.gui.component.TerrainPreviewScaleOverlay;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
 import cubicchunks.worldgen.gui.component.UIColoredPanel;
 import cubicchunks.worldgen.gui.component.UIMultilineLabel;
