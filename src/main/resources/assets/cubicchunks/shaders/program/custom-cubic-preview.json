@@ -17,6 +17,7 @@
 
         { "name": "biomeCoordScaleAndOffset", "type": "float", "count": 2, "values": [ 0.001, 0.0 ] },
         { "name": "waterLevel", "type": "float", "count": 1, "values": [ 63 ] },
+        { "name": "biomeCount", "type": "float", "count": 1, "values": [ 1 ] },
 
         { "name": "heightVariationFactor", "type": "float", "count": 1, "values": [ 64.0 ] },
         { "name": "heightVariationSpecial", "type": "float", "count": 1, "values": [ 0.25 ] },

@@ -44,7 +44,7 @@ public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
         int lastElementPosX = 0;
         int lastElementPosY = 0;
         for (UIComponent<?> component : components) {
-            if (lastElementPosX + component.getWidth() > this.getWidth() - this.getHorizontalPadding() * 2) {
+            if (lastElementPosX + component.getWidth() > this.getWidth() - this.getLeftPadding() - this.getRightPadding()) {
                 lastElementPosX = 0;
                 lastElementPosY += component.getHeight();
             }

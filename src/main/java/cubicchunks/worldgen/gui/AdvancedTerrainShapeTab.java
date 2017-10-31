@@ -30,17 +30,25 @@ import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_1_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_2_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_3_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.label;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeCheckbox;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeExponentialSlider;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeFloatSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeIntSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeInvertedExponentialSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 
+import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.gui.component.UITerrainPreview;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
 import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
+import net.malisis.core.client.gui.component.interaction.UICheckBox;
 import net.malisis.core.client.gui.component.interaction.UISlider;
+import net.malisis.core.client.gui.event.ComponentEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 class AdvancedTerrainShapeTab {
 
@@ -79,17 +87,20 @@ class AdvancedTerrainShapeTab {
     private final UISlider<Float> highNoiseFactor;
     private final UISlider<Float> highNoiseOffset;
 
+    // preview
+    private final UICheckBox keepPreviewVisible;
+    private final UISlider<Float> biomeScaleSlider, biomeOffsetSlider;
+
     AdvancedTerrainShapeTab(CustomCubicGui gui, CustomGeneratorSettings settings) {
-
-
         final float MAX_NOISE_FREQ_POWER = -4;
 
         int gridY = -1;
 
-        TerrainPreview terrainPreview = new TerrainPreview(gui);
+        UITerrainPreview terrainPreview = new UITerrainPreview(gui);
         String PERIOD_FMT = " %.2f";
         UIVerticalTableLayout table = new UIVerticalTableLayout(gui, 6);
         table.setPadding(HORIZONTAL_PADDING, 0);
+
         table.setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
                 // height variation
                 .add(label(gui, malisisText("height_variation_group"), 20),
@@ -232,33 +243,78 @@ class AdvancedTerrainShapeTab {
                         -5, 5, -5, 5, settings.highNoiseOffset),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, gridY, WIDTH_3_COL));
 
-        // terrainPreview needs 2 different containers, one for being in the BorderLayout, and one for being in the table
-        // when it's in border layout, it's it has padding added
-        // when it's in the table, the insets and padding are done by the table, so no padding needed
-        UIContainer<?> previewContainer = terrainPreview.containerWithPadding();
+        final int previewHeight = 128;
 
-        UIBorderLayout borderContainer = new UIBorderLayout(gui);
-        borderContainer.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
-        borderContainer.add(table, UIBorderLayout.Border.BOTTOM);
-        borderContainer.add(previewContainer, UIBorderLayout.Border.TOP);
+        UITerrainPreview preview;
 
-        table.setSize(UIComponent.INHERITED, UIComponent.INHERITED - previewContainer.getHeight());
+        UIBorderLayout previewBoderLayout = new UIBorderLayout(gui);
+        previewBoderLayout.setSize(UIComponent.INHERITED, previewHeight + 7);// TODO: +7 because of MalisisCore bug, remove when possible
+        previewBoderLayout.add(preview = new UITerrainPreview(gui).setSize(UIComponent.INHERITED - 200, UIComponent.INHERITED),
+                UIBorderLayout.Border.LEFT);
 
-        this.container = borderContainer;
+        gridY = -1;
+        final float biomeCount = ForgeRegistries.BIOMES.getValues().size();
 
-        terrainPreview.onSetKeepVisible(alwaysVisible -> {
-            if (alwaysVisible) {
-                table.setSize(UIComponent.INHERITED, UIComponent.INHERITED - terrainPreview.containerWithPadding().getHeight());
-                table.remove(terrainPreview.containerNoPadding());
-                UIComponent<?> container = terrainPreview.containerWithPadding();
-                container.setSize(UIComponent.INHERITED, container.getRawHeight());
-                borderContainer.add(container, UIBorderLayout.Border.TOP);
-            } else {
-                borderContainer.remove(terrainPreview.containerWithPadding());
-                table.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
-                table.add(terrainPreview.containerNoPadding(), new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, 0, WIDTH_1_COL));
+        UIContainer<?> settingsContrainer = new UIVerticalTableLayout(gui, 4)
+                .setInsets(5, 5, 5, 5)
+                .add(keepPreviewVisible = makeCheckbox(gui, malisisText("keep_preview_visible"), true),
+                        new UIVerticalTableLayout.GridLocation(0, ++gridY, 4))
+                .add(biomeScaleSlider = makeInvertedExponentialSlider(gui, malisisText("biome_scale", ": %.2f"),
+                        Float.NaN, Float.NaN, -10, -6, 64), new UIVerticalTableLayout.GridLocation(0, ++gridY, 4))
+                .add(biomeOffsetSlider = makeFloatSlider(gui, malisisText("biome_offset", ": %.2f"),
+                        0, biomeCount, 0), new UIVerticalTableLayout.GridLocation(0, ++gridY, 4));
+        settingsContrainer.setSize(200, previewHeight);
+
+
+        UIBorderLayout rootBorderContainer = new UIBorderLayout(gui);
+        rootBorderContainer.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
+        rootBorderContainer.add(table, UIBorderLayout.Border.BOTTOM);
+        rootBorderContainer.add(previewBoderLayout, UIBorderLayout.Border.TOP);
+
+        previewBoderLayout.add(settingsContrainer, UIBorderLayout.Border.RIGHT);
+        biomeScaleSlider.register(new Object() {
+            @Subscribe
+            public void onCheck(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
+                preview.setBiomeScale(evt.getNewValue());
             }
         });
+        biomeOffsetSlider.register(new Object() {
+            @Subscribe
+            public void onCheck(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
+                preview.setBiomeOffset(evt.getNewValue());
+            }
+        });
+        preview.setBiomeScale(biomeScaleSlider.getValue());
+        preview.setBiomeOffset(biomeOffsetSlider.getValue());
+        keepPreviewVisible.register(new Object() {
+            @Subscribe
+            public void onCheck(UICheckBox.CheckEvent evt) {
+                if (evt.isChecked()) {
+                    table.setSize(UIComponent.INHERITED, UIComponent.INHERITED - previewBoderLayout.getHeight());
+                    // check if the container is added, because the first time the event is fired it's not added
+                    if (previewBoderLayout.getParent() == table) {
+                        table.remove(previewBoderLayout);
+                    }
+
+                    previewBoderLayout.setPadding(HORIZONTAL_PADDING + HORIZONTAL_INSETS, 2);
+                    // because the table layout will change the size
+                    previewBoderLayout.setSize(UIComponent.INHERITED, previewBoderLayout.getRawHeight());
+                    rootBorderContainer.add(previewBoderLayout, UIBorderLayout.Border.TOP);
+                } else {
+                    if (previewBoderLayout.getParent() == rootBorderContainer) {
+                        rootBorderContainer.remove(previewBoderLayout);
+                    }
+
+                    previewBoderLayout.setPadding(0, 0);
+                    table.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
+                    table.add(previewBoderLayout, new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, 0, WIDTH_1_COL));
+                }
+            }
+        });
+        // fire the event to correctly set the layout
+        keepPreviewVisible.fireEvent(new UICheckBox.CheckEvent(keepPreviewVisible, keepPreviewVisible.isChecked()));
+
+        this.container = rootBorderContainer;
     }
 
     UIBorderLayout getContainer() {

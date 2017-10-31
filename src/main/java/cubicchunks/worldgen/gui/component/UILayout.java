@@ -31,6 +31,7 @@ import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.GuiRenderer;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
+import net.malisis.core.client.gui.component.control.IControlComponent;
 import net.malisis.core.client.gui.component.control.UIScrollBar;
 
 import java.util.Iterator;

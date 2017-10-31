@@ -30,6 +30,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonSyntaxException;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.component.NoTranslationFont;
+import cubicchunks.worldgen.gui.component.TerrainPreviewScaleOverlay;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
 import cubicchunks.worldgen.gui.component.UIColoredPanel;
 import cubicchunks.worldgen.gui.component.UIMultilineLabel;
@@ -37,11 +38,13 @@ import cubicchunks.worldgen.gui.component.UITabbedContainer;
 import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
 import mcp.MethodsReturnNonnullByDefault;
 import net.malisis.core.client.gui.Anchor;
+import net.malisis.core.client.gui.GuiRenderer;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.interaction.UIButton;
 import net.malisis.core.client.gui.component.interaction.UITextField;
+import net.malisis.core.client.gui.element.SimpleGuiShape;
 import net.malisis.core.renderer.font.FontOptions;
 import net.minecraft.client.gui.GuiCreateWorld;
 
@@ -55,10 +58,10 @@ public class CustomCubicGui extends ExtraGui {
     public static final int WIDTH_2_COL = 3;
     public static final int WIDTH_3_COL = 2;
 
-    static final int VERTICAL_PADDING = 30;
-    static final int HORIZONTAL_PADDING = 25;
-    static final int VERTICAL_INSETS = 2;
-    static final int HORIZONTAL_INSETS = 4;
+    public static final int VERTICAL_PADDING = 30;
+    public static final int HORIZONTAL_PADDING = 25;
+    public static final int VERTICAL_INSETS = 2;
+    public static final int HORIZONTAL_INSETS = 4;
     static final int BTN_WIDTH = 60;
 
     private final GuiCreateWorld parent;
@@ -201,7 +204,7 @@ public class CustomCubicGui extends ExtraGui {
         this.mc.displayGuiScreen(parent);
     }
 
-    CustomGeneratorSettings getConfig() {
+    public CustomGeneratorSettings getConfig() {
         CustomGeneratorSettings conf = CustomGeneratorSettings.defaults();
         this.basicSettings.writeConfig(conf);
         this.oreSettings.writeConfig(conf);

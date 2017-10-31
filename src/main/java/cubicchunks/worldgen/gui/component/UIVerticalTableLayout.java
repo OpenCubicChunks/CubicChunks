@@ -133,10 +133,10 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
         if (getParent() == null) {
             return;
         }
-        if (noInsetRowHeights == null) {
+        if (noInsetRowHeights == null || noInsetRowHeights.length != totalRows) {
             noInsetRowHeights = getNoInsetRowHeights();
         }
-        int width = getWidth() - getHorizontalPadding() * 2;
+        int width = getWidth() - getLeftPadding() - getRightPadding();
 
         final double noInsetSizeX = width / (float) columns;
 

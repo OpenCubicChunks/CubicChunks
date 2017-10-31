@@ -54,14 +54,14 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-public class RawFloatImage implements ITextureObject {
+public class FloatTexture implements ITextureObject {
 
     private final int width, height;
     private int texture;
     private final FloatBuffer data;
     private int channels;
 
-    public RawFloatImage(float[][] imageData, int channels) {
+    public FloatTexture(float[][] imageData, int channels) {
         if (channels > 4 || channels < 1) {
             throw new IllegalArgumentException("Channel count must be between 1 and 4 but was " + channels);
         }
