@@ -2,6 +2,8 @@
 
 #define TEX_SIZE 256
 #define SAMPLES_PER_UNIT 8
+// should be 16 but there is no visible different > 8
+#define MAX_OCTAVES 16
 // pre-generated values
 #define BIOME_WEIGHT_0 50.37709878023948
 #define BIOME_WEIGHT_1 31.383286567439356
@@ -9,7 +11,7 @@
 // inverse of 2*weight1+2*weight2+weight0
 #define BIOME_WEIGHTS_INV 0.005430203690844081
 
-uniform sampler2D perlin1;
+uniform sampler2D perlin;
 uniform sampler2D biomes;
 
 varying vec2 texCoord;
@@ -38,67 +40,91 @@ uniform int depthOctaves;
 
 uniform float selectorFactor;
 uniform float selectorOffset;
-uniform vec3 selectorFreq;
+uniform vec2 selectorFreq;
 uniform int selectorOctaves;
 
 uniform float lowFactor;
 uniform float lowOffset;
-uniform vec3 lowFreq;
+uniform vec2 lowFreq;
 uniform int lowOctaves;
 
 uniform float highFactor;
 uniform float highOffset;
-uniform vec3 highFreq;
+uniform vec2 highFreq;
 uniform int highOctaves;
 
-float perlin(vec2 pos, vec2 freq, int octaves) {
-    vec2 p = pos*SAMPLES_PER_UNIT*(1.0/TEX_SIZE)*freq;
-    float valFactor = 1;
-    float ret = 0;
-    float maxVal = 2 - pow(0.5, octaves - 1);
-    // TODO: reduce max to 8?
-    for (int i = 0; i < 16; i++) { // constant amount vecause glsl may not like dynamic loops witn sampler access inside, assume max 16
-        float val = texture2D(perlin1, p).r;
-        if (i < octaves) {
-            ret += val*valFactor;
-            p *= 2;
-            valFactor *= 0.5;
-        }
+// a helpful macro to avoid repeating code
+#define NOISE(pos, var) valFactor = 1;\
+    for (int i = 0; i < MAX_OCTAVES; i++) {\
+        float val = texture2D(perlin, pos).var * 2 - 1;\
+        if (i < octaves.var) {\
+            ret.var += val * valFactor;\
+        }\
+        pos *= 2;\
+        valFactor *= 0.5;\
     }
+
+// pos vector: block position
+// freq: frequencies, x=selector, y=low, z=high, w=depth
+// octaves: octaves, same as for frequencies
+// return: values for selector, low, high and depth
+vec4 getNoise(vec2 pos, vec2 freqSel, vec2 freqLow, vec2 freqHigh, vec2 freqDepth, ivec4 octaves) {
+    vec2 posBase = pos*SAMPLES_PER_UNIT*(1.0/TEX_SIZE);
+    vec2 pSel = posBase * freqSel;
+    vec2 pLow = posBase * freqLow;
+    vec2 pHigh = posBase * freqHigh;
+    vec2 pDepth = posBase * freqDepth;
+
+    vec4 ret = vec4(0);
+    vec4 maxVal = vec4(2) - pow(vec4(0.5), vec4(octaves) - vec4(1));
+
+    float valFactor;
+
+    NOISE(pSel, x);
+    NOISE(pLow, y);
+    NOISE(pHigh, z);
+    NOISE(pDepth, w);
+
     return ret/maxVal;
 }
-vec2 rawBiomeData(float pos) {
+float intFractToFloat(vec2 intFract) {
+    return (intFract.x*255-128)+intFract.y;
+}
+vec2 rawBiomeData(vec2 pos) {
+    vec4 data = texture2D(biomes, pos);
+    return vec2(intFractToFloat(data.xy), intFractToFloat(data.zw));
+}
+vec2 biomeData(float pos) {
     float p = pos*biomeCoordScaleAndOffset.x + biomeCoordScaleAndOffset.y;
-    return texture2D(biomes, vec2(0, floor(p*biomeCount)/biomeCount + 0.5/biomeCount)).rg;
+    return rawBiomeData(vec2(floor(p*biomeCount)/biomeCount + 0.5/biomeCount, 0));
 }
 vec2 interpBiomeData(float blockPos) {
-    vec2 v_2 = rawBiomeData(blockPos - 8);
-    vec2 v_1 = rawBiomeData(blockPos - 4);
-    vec2 v0 = rawBiomeData(blockPos);
-    vec2 v1 = rawBiomeData(blockPos + 4);
-    vec2 v2 = rawBiomeData(blockPos + 8);
+    vec2 v_2 = biomeData(blockPos - 8);
+    vec2 v_1 = biomeData(blockPos - 4);
+    vec2 v0 = biomeData(blockPos);
+    vec2 v1 = biomeData(blockPos + 4);
+    vec2 v2 = biomeData(blockPos + 8);
     return (BIOME_WEIGHT_2*(v_2+v2) + BIOME_WEIGHT_1*(v_1+v1) + BIOME_WEIGHT_0*v0)*BIOME_WEIGHTS_INV;
 }
 float densityRaw(vec2 pos) {
-    // 2 other positions so that the noise values used aren't exactly the same
-    vec2 pos2 = pos + vec2(1234.5678, 8765.4321);
-    vec2 pos3 = pos + vec2(4321.5678, 5678.4321);
-
     vec2 previewBiomeData = interpBiomeData(pos.x);
     float previewHeight = previewBiomeData.x;
     float previewHeightVariation = previewBiomeData.y;
 
-    float low = perlin(pos, lowFreq.xy, lowOctaves)*lowFactor + lowOffset;
-    float high = perlin(pos2, highFreq.xy, highOctaves)*highFactor + highOffset;
-    float sel = perlin(pos3, selectorFreq.xy, selectorOctaves)*selectorFactor + selectorOffset;
-    sel = clamp(sel, 0, 1);
+    vec4 noiseFactors = vec4(selectorFactor, lowFactor, highFactor, depthFactor);
+    vec4 noiseOffsets = vec4(selectorOffset, lowOffset, highOffset, depthOffset);
+    ivec4 octaves = ivec4(selectorOctaves, lowOctaves, highOctaves, depthOctaves);
+
+    vec4 noise = getNoise(pos, selectorFreq, lowFreq, highFreq, depthFreq, octaves) * noiseFactors + noiseOffsets;
+    noise.x = clamp(noise.x, 0, 1);
 
     float special = 1;
     if (pos.y < previewHeight*heightFactor+heightOffset) {
         special = heightVariationSpecial;
     }
     // biomeData: x=height, y=heightVariation
-    return mix(low, high, sel)*(previewHeightVariation*heightVariationFactor*special+heightVariationOffset)
+    // mix(low, high, selector)
+    return mix(noise.y, noise.z, noise.x)*(previewHeightVariation*heightVariationFactor*special+heightVariationOffset)
                 + (previewHeight*heightFactor+heightOffset) - pos.y;
 }
 float densityInterp(vec2 texCoord) {
@@ -116,6 +142,7 @@ float densityInterp(vec2 texCoord) {
     return v;
 }
 void main() {
+
     vec2 blockCoord1 = floor((previewTransform*vec4(texCoord, 0, 1)).xy);
 
     float v = densityInterp(blockCoord1);

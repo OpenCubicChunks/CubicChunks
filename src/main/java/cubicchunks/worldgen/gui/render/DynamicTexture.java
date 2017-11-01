@@ -23,13 +23,19 @@
  */
 package cubicchunks.worldgen.gui.render;
 
+import static java.nio.ByteOrder.BIG_ENDIAN;
+import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL11.GL_LUMINANCE;
 import static org.lwjgl.opengl.GL11.GL_RED;
 import static org.lwjgl.opengl.GL11.GL_RGB;
 import static org.lwjgl.opengl.GL11.GL_RGBA;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
 import static org.lwjgl.opengl.GL11.glTexImage2D;
+import static org.lwjgl.opengl.GL12.GL_BGRA;
 import static org.lwjgl.opengl.GL12.GL_TEXTURE_MAX_LEVEL;
 import static org.lwjgl.opengl.GL12.GL_TEXTURE_MAX_LOD;
 import static org.lwjgl.opengl.GL12.GL_TEXTURE_MIN_LOD;
@@ -50,31 +56,46 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL30;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-public class FloatTexture implements ITextureObject {
+public class DynamicTexture implements ITextureObject {
 
     private final int width, height;
     private int texture;
-    private final FloatBuffer data;
+    private final ByteBuffer data;
     private int channels;
+    private int glInterpolationMode;
 
-    public FloatTexture(float[][] imageData, int channels) {
-        if (channels > 4 || channels < 1) {
-            throw new IllegalArgumentException("Channel count must be between 1 and 4 but was " + channels);
-        }
+    /**
+     * @param img BufferedImage to create texture from
+     * @param glInterpolationMode either {@link GL11#GL_NEAREST} or {@link GL11#GL_LINEAR}
+     */
+    public DynamicTexture(BufferedImage img, int glInterpolationMode) {
+        this.glInterpolationMode = glInterpolationMode;
         this.channels = channels;
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(imageData.length * imageData[0].length);
-        for (float[] subArr : imageData) {
-            buffer.put(subArr);
+        // Java:
+        // "All BufferedImage objects have an upper left corner coordinate of (0, 0)"
+        // OpenGL:
+        // "The first element corresponds to the lower left corner of the texture image. Subsequent elements progress left-to-right through
+        // the remaining texels in the lowest row of the texture image, and then in successively higher rows of the texture image.
+        // The final element corresponds to the upper right corner of the texture image."
+        // OpenGL has it upside down, so we have to work around that
+        // set little endian order so that it java's ARGB turns into OpenGL's BGRA
+        ByteBuffer buffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
+        IntBuffer intBuf = buffer.order(LITTLE_ENDIAN).asIntBuffer();
+
+        for (int y = img.getHeight() - 1; y >= 0; y--) {
+            intBuf.put(img.getRGB(0, y, img.getWidth(), 1, null, 0, img.getWidth()));
         }
-        buffer.flip();
 
         this.data = buffer;
-        this.width = imageData[0].length / channels;
-        this.height = imageData.length;
+        this.width = img.getWidth();
+        this.height = img.getHeight();
     }
 
     public void delete() {
@@ -95,34 +116,17 @@ public class FloatTexture implements ITextureObject {
         delete();
         int texture = TextureUtil.glGenTextures();
         GlStateManager.bindTexture(texture);
+        // TODO: are these 4 needed for anything?
         GlStateManager.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
         GlStateManager.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, 0);
         GlStateManager.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 0);
-        GlStateManager.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, 0.0F);
+        GlStateManager.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, 0);
+       // GlStateManager.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glInterpolationMode);
+        //GlStateManager.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glInterpolationMode);
 
-        int internalFmt;
-        int fmt;
-        switch (channels) {
-            case 1:
-                internalFmt = GL_R16F;
-                fmt = GL_RED;
-                break;
-            case 2:
-                internalFmt = GL_RG16F;
-                fmt = GL_RG;
-                break;
-            case 3:
-                internalFmt = GL_RGB16F;
-                fmt = GL_RGB;
-                break;
-            case 4:
-                internalFmt = GL_RGBA16F;
-                fmt = GL_RGBA;
-                break;
-            default:
-                throw new Error();
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFmt, width, height, 0, fmt, GL_FLOAT, this.data);
+        int internalFmt = GL_RGBA;
+        int fmt = GL_BGRA;
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFmt, width, height, 0, fmt, GL_UNSIGNED_BYTE, this.data);
         this.texture = texture;
     }
 

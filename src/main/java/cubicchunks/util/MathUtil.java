@@ -27,6 +27,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.sqrt;
 
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -150,5 +151,16 @@ public class MathUtil {
 
     public static boolean rangesIntersect(int min1, int max1, int min2, int max2) {
         return min1 <= max2 && min2 <= max1;
+    }
+
+    public static int packColorARGB(int r, int g, int b, int a) {
+        return a << 24 | r << 16 | g << 8 | b;
+    }
+
+    /**
+     * Converts normalized 0-1 color component to 8-bit integer
+     */
+    public static int to8bitComponent(float value) {
+        return MathHelper.clamp(Math.round(value * 255), 0, 255);
     }
 }

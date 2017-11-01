@@ -25,7 +25,6 @@ package cubicchunks.worldgen.gui.component;
 
 import static com.flowpowered.noise.Noise.gradientNoise3D;
 
-import com.flowpowered.noise.Noise;
 import com.flowpowered.noise.NoiseQuality;
 import com.flowpowered.noise.Utils;
 import cubicchunks.CubicChunks;
@@ -33,19 +32,13 @@ import cubicchunks.util.MathUtil;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.CustomCubicGui;
-import cubicchunks.worldgen.gui.render.FloatTexture;
+import cubicchunks.worldgen.gui.render.DynamicTexture;
 import net.malisis.core.client.gui.ClipArea;
 import net.malisis.core.client.gui.GuiRenderer;
 import net.malisis.core.client.gui.component.IClipable;
-import net.malisis.core.client.gui.component.UIComponent;
-import net.malisis.core.client.gui.component.container.UIContainer;
-import net.malisis.core.client.gui.component.control.IControlComponent;
-import net.malisis.core.client.gui.component.interaction.UICheckBox;
-import net.malisis.core.client.gui.component.interaction.UISlider;
 import net.malisis.core.client.gui.element.SimpleGuiShape;
 import net.malisis.core.renderer.animation.Animation;
 import net.malisis.core.renderer.animation.transformation.ITransformable;
-import net.malisis.core.renderer.animation.transformation.Scale;
 import net.malisis.core.renderer.font.FontOptions;
 import net.malisis.core.renderer.font.MalisisFont;
 import net.malisis.core.util.MouseButton;
@@ -55,13 +48,17 @@ import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
+import java.util.Random;
 
 public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implements ITransformable.Scale, IClipable {
 
@@ -144,17 +141,17 @@ public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implem
         shader.getShaderUniformOrDefault("selectorFactor").set(conf.selectorNoiseFactor);
         shader.getShaderUniformOrDefault("selectorOffset").set(conf.selectorNoiseOffset);
         shader.getShaderUniformOrDefault("selectorFreq").set(
-                conf.selectorNoiseFrequencyX, conf.selectorNoiseFrequencyY, conf.selectorNoiseFrequencyZ);
+                conf.selectorNoiseFrequencyX, conf.selectorNoiseFrequencyY);
         shader.getShaderUniformOrDefault("selectorOctaves").set(conf.selectorNoiseOctaves, 0, 0, 0);
 
         shader.getShaderUniformOrDefault("lowFactor").set(conf.lowNoiseFactor);
         shader.getShaderUniformOrDefault("lowOffset").set(conf.lowNoiseOffset);
-        shader.getShaderUniformOrDefault("lowFreq").set(conf.lowNoiseFrequencyX, conf.lowNoiseFrequencyY, conf.lowNoiseFrequencyZ);
+        shader.getShaderUniformOrDefault("lowFreq").set(conf.lowNoiseFrequencyX, conf.lowNoiseFrequencyY);
         shader.getShaderUniformOrDefault("lowOctaves").set(conf.lowNoiseOctaves, 0, 0, 0);
 
         shader.getShaderUniformOrDefault("highFactor").set(conf.highNoiseFactor);
         shader.getShaderUniformOrDefault("highOffset").set(conf.highNoiseOffset);
-        shader.getShaderUniformOrDefault("highFreq").set(conf.highNoiseFrequencyX, conf.highNoiseFrequencyY, conf.highNoiseFrequencyZ);
+        shader.getShaderUniformOrDefault("highFreq").set(conf.highNoiseFrequencyX, conf.highNoiseFrequencyY);
         shader.getShaderUniformOrDefault("highOctaves").set(conf.highNoiseOctaves, 0, 0, 0);
 
         super.shaderDraw(guiRenderer, mouseX, mouseY, partialTicks);
@@ -370,43 +367,91 @@ public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implem
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        shader.addSamplerTexture("perlin1", generateNoiseTexture());
+        shader.addSamplerTexture("perlin", generateNoiseTexture());
         shader.addSamplerTexture("biomes", generateBiomesTexture());
         return shader;
     }
 
-    private static FloatTexture generateNoiseTexture() {
-        float[][] data = new float[256][256];
+    private static DynamicTexture generateNoiseTexture() {
+        int texSize = 256;
+        int samplesPerPreiod = 8;
+        float freq = 1.0f / samplesPerPreiod;
+        int sampleCount = texSize / samplesPerPreiod;
+
+        BufferedImage data = new BufferedImage(texSize, texSize, BufferedImage.TYPE_INT_ARGB);
+
+
+        // replicate seed selection logic in CustomTerrainGenerator
+        Random rnd = new Random(123456);
+        long rawSeedSel = rnd.nextLong();
+        long rawSeedLow = rnd.nextLong();
+        long rawSeedHigh = rnd.nextLong();
+        long rawSeedDepth = rnd.nextLong();
+        int seedSel = (int) ((rawSeedSel & 0xFFFFFFFF) ^ (rawSeedSel >>> 32));
+        int seedLow = (int) ((rawSeedLow & 0xFFFFFFFF) ^ (rawSeedLow >>> 32));
+        int seedHigh = (int) ((rawSeedHigh & 0xFFFFFFFF) ^ (rawSeedHigh >>> 32));
+        int seedDepth = (int) ((rawSeedDepth & 0xFFFFFFFF) ^ (rawSeedDepth >>> 32));
+
         float max = 0, min = 0;
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length; j++) {
-                data[i][j] = (float) gradientCoherentNoise3DTileable(i * 0.125, j * 0.125, 0, 123456, NoiseQuality.BEST, data.length / 8 - 1);
-                if (data[i][j] > max) {
-                    max = data[i][j];
-                }
-                if (data[i][j] < min) {
-                    min = data[i][j];
-                }
+        for (int x = 0; x < data.getWidth(); x++) {
+            for (int y = 0; y < data.getHeight(); y++) {
+                float sel = (float) gradientCoherentNoise3DTileable(
+                        x * freq, y * freq, 0,
+                        seedSel, NoiseQuality.BEST, texSize - 1);
+                float low = (float) gradientCoherentNoise3DTileable(
+                        x * freq, y * freq, 0,
+                        seedLow, NoiseQuality.BEST, texSize - 1);
+                float high = (float) gradientCoherentNoise3DTileable(
+                        x * freq, y * freq, 0,
+                        seedHigh, NoiseQuality.BEST, texSize - 1);
+                float depth = (float) gradientCoherentNoise3DTileable(
+                        x * freq, y * freq, 0,
+                        seedDepth, NoiseQuality.BEST, texSize - 1);
+
+                int r = MathUtil.to8bitComponent(sel);
+                int g = MathUtil.to8bitComponent(low);
+                int b = MathUtil.to8bitComponent(high);
+                int a = MathUtil.to8bitComponent(depth);
+                int col = MathUtil.packColorARGB(r, g, b, a);
+                data.setRGB(x, y, col);
             }
         }
-        FloatTexture img = new FloatTexture(data, 1);
+        DynamicTexture img = new DynamicTexture(data, GL11.GL_LINEAR);
         img.loadTexture(null);
         return img;
     }
 
-    private static FloatTexture generateBiomesTexture() {
+    private static DynamicTexture generateBiomesTexture() {
         int count = ForgeRegistries.BIOMES.getValues().size();
-        float[][] data = new float[count][2];// 2 values per biome
+        BufferedImage data = new BufferedImage(count, 1, BufferedImage.TYPE_INT_ARGB);
         Biome[] biomes = ForgeRegistries.BIOMES.getValues().toArray(new Biome[0]);
 
         for (int x = 0; x < count; x++) {
             Biome biome = biomes[x];
 
-            data[x][0] = ConversionUtils.biomeHeightVanilla(biome.getBaseHeight());
-            data[x][1] = ConversionUtils.biomeHeightVariationVanilla(biome.getHeightVariation());
+            float h = ConversionUtils.biomeHeightVanilla(biome.getBaseHeight());
+            float hv = ConversionUtils.biomeHeightVariationVanilla(biome.getHeightVariation());
+
+            // r = height integer part (-128 to 127)
+            // g = height fractional part
+            // b = height variation integer part (-128 to 127)
+            // a = height variation fractional part
+
+            float hFrac = (float) MathHelper.frac(h);
+            float hInt = MathHelper.floor(h);
+            float hvFrac = (float) MathHelper.frac(hv);
+            float hvInt = MathHelper.floor(hv);
+
+            int r = MathHelper.clamp(Math.round(hInt + 128), 0, 255);
+            int g = MathUtil.to8bitComponent(hFrac);
+
+            int b = MathHelper.clamp(Math.round(hvInt + 128), 0, 255);
+            int a = MathUtil.to8bitComponent(hvFrac);
+
+            data.setRGB(x, 0, MathUtil.packColorARGB(r, g, b, a));
         }
 
-        FloatTexture obj = new FloatTexture(data, 2);
+        DynamicTexture obj = new DynamicTexture(data, GL11.GL_NEAREST);
         obj.loadTexture(null);
         return obj;
     }
@@ -472,7 +517,7 @@ public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implem
         n1 = gradientNoise3D(x1 + fx - 1, y1 + fy - 1, z1 + fz - 1, x1, y1, z1, seed);
         ix1 = Utils.linearInterp(n0, n1, xs);
         iy1 = Utils.linearInterp(ix0, ix1, ys);
-        return Utils.linearInterp(iy0, iy1, zs) * 2 - 1;
+        return Utils.linearInterp(iy0, iy1, zs);
     }
 
     @Override public ClipArea getClipArea() {
