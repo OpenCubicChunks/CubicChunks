@@ -24,6 +24,7 @@
 package cubicchunks.worldgen.gui.component;
 
 import static com.flowpowered.noise.Noise.gradientNoise3D;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 
 import com.flowpowered.noise.NoiseQuality;
 import com.flowpowered.noise.Utils;
@@ -32,6 +33,7 @@ import cubicchunks.util.MathUtil;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.CustomCubicGui;
+import cubicchunks.worldgen.gui.CustomCubicGuiUtils;
 import cubicchunks.worldgen.gui.render.DynamicTexture;
 import net.malisis.core.client.gui.ClipArea;
 import net.malisis.core.client.gui.GuiRenderer;
@@ -45,6 +47,7 @@ import net.malisis.core.util.MouseButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.shader.ShaderManager;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
@@ -65,6 +68,7 @@ public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implem
     private Matrix4f previewTransform = new Matrix4f();
     private Animation<Scale> zoomAnim;
     private float biomeScale = 0.01f, biomeOffset = 0;
+    private EnumFacing.Axis shownAxis;
 
     public UITerrainPreview(CustomCubicGui gui) {
         super(gui, createShader(gui));
@@ -134,30 +138,40 @@ public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implem
 
         shader.getShaderUniformOrDefault("depthFactor").set(conf.depthNoiseFactor);
         shader.getShaderUniformOrDefault("depthOffset").set(conf.depthNoiseOffset);
-        shader.getShaderUniformOrDefault("depthFreq").set(conf.depthNoiseFrequencyX, conf.depthNoiseFrequencyZ);
+        shader.getShaderUniformOrDefault("depthFreq").set(shownAxis == EnumFacing.Axis.X ? conf.depthNoiseFrequencyX : conf.depthNoiseFrequencyZ);
         // this set method should be named setSafeInts
         shader.getShaderUniformOrDefault("depthOctaves").set(conf.depthNoiseOctaves, 0, 0, 0);
 
         shader.getShaderUniformOrDefault("selectorFactor").set(conf.selectorNoiseFactor);
         shader.getShaderUniformOrDefault("selectorOffset").set(conf.selectorNoiseOffset);
         shader.getShaderUniformOrDefault("selectorFreq").set(
-                conf.selectorNoiseFrequencyX, conf.selectorNoiseFrequencyY);
+                shownAxis == EnumFacing.Axis.X ? conf.selectorNoiseFrequencyX : conf.selectorNoiseFrequencyZ, conf.selectorNoiseFrequencyY);
         shader.getShaderUniformOrDefault("selectorOctaves").set(conf.selectorNoiseOctaves, 0, 0, 0);
 
         shader.getShaderUniformOrDefault("lowFactor").set(conf.lowNoiseFactor);
         shader.getShaderUniformOrDefault("lowOffset").set(conf.lowNoiseOffset);
-        shader.getShaderUniformOrDefault("lowFreq").set(conf.lowNoiseFrequencyX, conf.lowNoiseFrequencyY);
+        shader.getShaderUniformOrDefault("lowFreq").set(
+                shownAxis == EnumFacing.Axis.X ? conf.lowNoiseFrequencyX : conf.lowNoiseFrequencyZ, conf.lowNoiseFrequencyY);
         shader.getShaderUniformOrDefault("lowOctaves").set(conf.lowNoiseOctaves, 0, 0, 0);
 
         shader.getShaderUniformOrDefault("highFactor").set(conf.highNoiseFactor);
         shader.getShaderUniformOrDefault("highOffset").set(conf.highNoiseOffset);
-        shader.getShaderUniformOrDefault("highFreq").set(conf.highNoiseFrequencyX, conf.highNoiseFrequencyY);
+        shader.getShaderUniformOrDefault("highFreq").set(
+                shownAxis == EnumFacing.Axis.X ? conf.highNoiseFrequencyX : conf.highNoiseFrequencyZ, conf.highNoiseFrequencyY);
         shader.getShaderUniformOrDefault("highOctaves").set(conf.highNoiseOctaves, 0, 0, 0);
 
         super.shaderDraw(guiRenderer, mouseX, mouseY, partialTicks);
     }
 
     @Override protected void postShaderDraw(GuiRenderer guiRenderer, int mouseX, int mouseY, float partialTicks) {
+        if (this.disabled) {
+            FontOptions fo = FontOptions.builder().color(0xFFFFFF).shadow().build();
+            String text = malisisText("preview_disabled");
+            float textWidth = MalisisFont.minecraftFont.getStringWidth(text, fo);
+            float textHeight = MalisisFont.minecraftFont.getStringHeight();
+            guiRenderer.drawText(MalisisFont.minecraftFont, text, getWidth() / 2 - textWidth / 2, getHeight() / 2 - textHeight / 2, 0, fo);
+            return;
+        }
         GlStateManager.enableTexture2D();
         drawXScale();
         drawYScale();
@@ -232,11 +246,17 @@ public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implem
     }
 
     private void drawXScale() {
+        if (getWidth() <= 0 || getHeight() <= 0) {
+            return;
+        }
         float blockLeft = posToX(0);
         float blockRight = posToX(getWidth());
 
         float maxVal = Math.max(Math.abs(blockLeft), Math.abs(blockRight));
         int digits = MathHelper.ceil(Math.log(Math.max(maxVal, 1)) / Math.log(10)) + ((blockLeft < 0 || blockRight < 0) ? 1 : 0);
+        if (digits <= 0) {
+            return;
+        }
 
         int increment = getIncrement(blockLeft, blockRight, getWidth() / (7 * digits));
         if (increment < 0 || maxVal + increment > Integer.MAX_VALUE) {
@@ -529,6 +549,14 @@ public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implem
 
     @Override public boolean shouldClipContent() {
         return true;
+    }
+
+    public void setShownAxis(EnumFacing.Axis shownAxis) {
+        this.shownAxis = shownAxis;
+    }
+
+    public EnumFacing.Axis getShownAxis() {
+        return shownAxis;
     }
 
     private static class DynamicZoomTransform extends net.malisis.core.renderer.animation.transformation.Scale {

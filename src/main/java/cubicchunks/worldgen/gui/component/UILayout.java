@@ -25,13 +25,11 @@ package cubicchunks.worldgen.gui.component;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Maps;
 import cubicchunks.worldgen.gui.ExtraGui;
 import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.GuiRenderer;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
-import net.malisis.core.client.gui.component.control.IControlComponent;
 import net.malisis.core.client.gui.component.control.UIScrollBar;
 
 import java.util.Iterator;
@@ -40,7 +38,7 @@ import java.util.Map;
 public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContainer<T> {
     private UIOptionScrollbar scrollbar;
 
-    private boolean needsRelayout = false;
+    private boolean needsLayoutUpdate = false;
     private int lastSizeX, lastSizeY;
     private BiMap<UIComponent<?>, LOC> entries = HashBiMap.create();
 
@@ -80,8 +78,12 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
         this.entries.put(component, at);
         this.onAdd(component, at);
         super.add(component);
-        this.needsRelayout = true;
+        this.needsLayoutUpdate = true;
         return (T) this;
+    }
+
+    public void setNeedsLayoutUpdate() {
+        this.needsLayoutUpdate = true;
     }
 
     @Override
@@ -96,7 +98,7 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
         LOC loc = this.entries.remove(component);
         super.remove(component);
         this.onRemove(component, loc);
-        this.needsRelayout = true;
+        this.needsLayoutUpdate = true;
     }
 
     @Override
@@ -120,10 +122,10 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
 
     @Override
     public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
-        if (needsRelayout || getWidth() != lastSizeX || getHeight() != lastSizeY || isLayoutChanged()) {
+        if (needsLayoutUpdate || getWidth() != lastSizeX || getHeight() != lastSizeY || isLayoutChanged()) {
             lastSizeX = getWidth();
             lastSizeY = getHeight();
-            needsRelayout = false;
+            needsLayoutUpdate = false;
             layout();
         }
         super.drawForeground(renderer, mouseX, mouseY, partialTick);

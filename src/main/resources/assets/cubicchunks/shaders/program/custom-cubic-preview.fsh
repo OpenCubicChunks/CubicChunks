@@ -2,8 +2,8 @@
 
 #define TEX_SIZE 256
 #define SAMPLES_PER_UNIT 8
-// should be 16 but there is no visible different > 8
-#define MAX_OCTAVES 16
+// should be 16 but there is no visible difference > 12, and if there is - it's swamped by shader inaccuracies
+#define MAX_OCTAVES 12
 // pre-generated values
 #define BIOME_WEIGHT_0 50.37709878023948
 #define BIOME_WEIGHT_1 31.383286567439356
@@ -35,7 +35,7 @@ uniform float heightOffset;
 
 uniform float depthFactor;
 uniform float depthOffset;
-uniform vec2 depthFreq;
+uniform float depthFreq;
 uniform int depthOctaves;
 
 uniform float selectorFactor;
@@ -106,6 +106,12 @@ vec2 interpBiomeData(float blockPos) {
     vec2 v2 = biomeData(blockPos + 8);
     return (BIOME_WEIGHT_2*(v_2+v2) + BIOME_WEIGHT_1*(v_1+v1) + BIOME_WEIGHT_0*v0)*BIOME_WEIGHTS_INV;
 }
+float depthTransform(float d) {
+    d *= (d < 0) ? -0.9 : 3;
+    d -= 2;
+    d *= (d < 0) ? 5/28.0 : 0.125;
+    return clamp(d, -5/14.0, 0.125) * (0.2 * 17.0 / 64.0);
+}
 float densityRaw(vec2 pos) {
     vec2 previewBiomeData = interpBiomeData(pos.x);
     float previewHeight = previewBiomeData.x;
@@ -115,23 +121,29 @@ float densityRaw(vec2 pos) {
     vec4 noiseOffsets = vec4(selectorOffset, lowOffset, highOffset, depthOffset);
     ivec4 octaves = ivec4(selectorOctaves, lowOctaves, highOctaves, depthOctaves);
 
-    vec4 noise = getNoise(pos, selectorFreq, lowFreq, highFreq, depthFreq, octaves) * noiseFactors + noiseOffsets;
+    vec4 noise = getNoise(pos, selectorFreq, lowFreq, highFreq, vec2(depthFreq, 0), octaves) * noiseFactors + noiseOffsets;
     noise.x = clamp(noise.x, 0, 1);
 
     float special = 1;
     if (pos.y < previewHeight*heightFactor+heightOffset) {
         special = heightVariationSpecial;
     }
-    // biomeData: x=height, y=heightVariation
+
+    float depth = depthTransform(noise.w);
+
     // mix(low, high, selector)
-    return mix(noise.y, noise.z, noise.x)*(previewHeightVariation*heightVariationFactor*special+heightVariationOffset)
-                + (previewHeight*heightFactor+heightOffset) - pos.y;
+    float rawDensity = mix(noise.y, noise.z, noise.x) + depth;
+    float heightVariation = previewHeightVariation*heightVariationFactor*special+heightVariationOffset;
+    float heightOffset = previewHeight*heightFactor+heightOffset;
+
+    return rawDensity*heightVariation + heightOffset - pos.y;
 }
 float densityInterp(vec2 texCoord) {
-    float v00 = densityRaw(floor(texCoord*vec2(0.25, 0.125))*vec2(4, 8));
-    float v10 = densityRaw(floor(texCoord*vec2(0.25, 0.125))*vec2(4, 8)+vec2(4, 0));
-    float v01 = densityRaw(floor(texCoord*vec2(0.25, 0.125))*vec2(4, 8)+vec2(0, 8));
-    float v11 = densityRaw(floor(texCoord*vec2(0.25, 0.125))*vec2(4, 8)+vec2(4, 8));
+    vec2 posBase = floor(texCoord*vec2(0.25, 0.125))*vec2(4, 8);
+    float v00 = densityRaw(posBase);
+    float v10 = densityRaw(posBase+vec2(4, 0));
+    float v01 = densityRaw(posBase+vec2(0, 8));
+    float v11 = densityRaw(posBase+vec2(4, 8));
 
     vec2 interpA = fract(texCoord*vec2(0.25, 0.125));
 

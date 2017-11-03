@@ -24,13 +24,24 @@
 package cubicchunks.worldgen.gui.component;
 
 import com.google.common.base.Converter;
+import com.mojang.realmsclient.gui.ChatFormatting;
+import net.malisis.core.client.gui.GuiRenderer;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.control.IControlComponent;
 import net.malisis.core.client.gui.component.interaction.UISlider;
+import net.malisis.core.util.MouseButton;
+import net.malisis.core.util.Silenced;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.math.MathHelper;
+import org.apache.commons.lang3.StringUtils;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
-public class UISliderNoScroll<T> extends UISlider<T> {
+public class UISliderImproved<T> extends UISlider<T> {
 
-    public UISliderNoScroll(MalisisGui gui, int width, Converter<Float, T> converter, String text) {
+    public UISliderImproved(MalisisGui gui, int width, Converter<Float, T> converter, String text) {
         super(gui, width, converter, text);
     }
 
@@ -40,5 +51,40 @@ public class UISliderNoScroll<T> extends UISlider<T> {
             return parent.onScrollWheel(x, y, delta);
         }
         return false;
+    }
+
+    // improved accuracy
+    @Override
+    public boolean onDrag(int lastX, int lastY, int x, int y, MouseButton button) {
+        ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+        int realMouseX = Mouse.getEventX();
+        float scaledMouseX = realMouseX / (float) sr.getScaleFactor();
+        float relativeMouseX = scaledMouseX - screenX();
+
+        int l = getWidth() - SLIDER_WIDTH;
+        float pos = MathHelper.clamp(relativeMouseX - SLIDER_WIDTH / 2, 0, l);
+        slideTo( pos / l);
+        return true;
+    }
+
+    @Override
+    public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
+        super.drawForeground(renderer, mouseX, mouseY, partialTick);
+
+        if (this.isDisabled()) {
+            renderer.next();
+            GlStateManager.disableTexture2D();
+
+            rp.setColor(0);
+            rp.setAlpha(128);
+            shape.resetState();
+            shape.setSize(getWidth(), getHeight());
+            renderer.drawShape(shape, rp);
+
+            renderer.next();
+            GlStateManager.enableTexture2D();
+        }
+
+
     }
 }

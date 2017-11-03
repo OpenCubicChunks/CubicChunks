@@ -28,6 +28,7 @@ import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonSyntaxException;
+import cubicchunks.CubicChunks;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.component.NoTranslationFont;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
@@ -38,6 +39,7 @@ import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
 import mcp.MethodsReturnNonnullByDefault;
 import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.GuiRenderer;
+import net.malisis.core.client.gui.GuiTexture;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
@@ -52,6 +54,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CustomCubicGui extends ExtraGui {
+
+    public static final GuiTexture CUSTOM_TEXTURE = new GuiTexture(CubicChunks.location("textures/gui/gui.png"));
 
     public static final int WIDTH_1_COL = 6;
     public static final int WIDTH_2_COL = 3;

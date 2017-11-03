@@ -51,13 +51,15 @@ public class UIShaderComponent<T extends UIShaderComponent<T>> extends UICompone
 
     @Override public void drawForeground(GuiRenderer guiRenderer, int mouseX, int mouseY, float partialTicks) {
         preShaderDraw(guiRenderer, mouseX, mouseY, partialTicks);
-        guiRenderer.next(DefaultVertexFormats.POSITION_TEX);
-        shader.useShader();
-        this.rp.icon.set(icon);
-        shaderDraw(guiRenderer, mouseX, mouseY, partialTicks);
-        guiRenderer.next(MalisisRenderer.malisisVertexFormat);
-        shader.endShader();
-        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        if (!this.disabled) {
+            guiRenderer.next(DefaultVertexFormats.POSITION_TEX);
+            shader.useShader();
+            this.rp.icon.set(icon);
+            shaderDraw(guiRenderer, mouseX, mouseY, partialTicks);
+            guiRenderer.next(MalisisRenderer.malisisVertexFormat);
+            shader.endShader();
+            GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        }
         postShaderDraw(guiRenderer, mouseX, mouseY, partialTicks);
     }
 

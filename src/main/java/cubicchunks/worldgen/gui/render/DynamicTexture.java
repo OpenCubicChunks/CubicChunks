@@ -63,6 +63,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+// TODO: replace with Minecraft's DynamicTexture
 public class DynamicTexture implements ITextureObject {
 
     private final int width, height;

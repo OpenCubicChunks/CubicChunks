@@ -27,7 +27,7 @@
 
         { "name": "depthFactor", "type": "float", "count": 1, "values": [ 1.024 ] },
         { "name": "depthOffset", "type": "float", "count": 1, "values": [ 0.0 ] },
-        { "name": "depthFreq", "type": "float", "count": 2, "values": [ 0.00152587890625, 0.00152587890625 ] },
+        { "name": "depthFreq", "type": "float", "count": 1, "values": [ 0.00152587890625 ] },
         { "name": "depthOctaves", "type": "int", "count": 1, "values": [ 16 ] },
 
         { "name": "selectorFactor", "type": "float", "count": 1, "values": [ 12.75 ] },

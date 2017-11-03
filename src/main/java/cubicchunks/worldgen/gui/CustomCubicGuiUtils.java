@@ -28,7 +28,7 @@ import static java.lang.Math.round;
 import com.google.common.base.Converter;
 import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
-import cubicchunks.worldgen.gui.component.UISliderNoScroll;
+import cubicchunks.worldgen.gui.component.UISliderImproved;
 import cubicchunks.worldgen.gui.converter.Converters;
 import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.MalisisGui;
@@ -47,7 +47,6 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.DoubleSupplier;
 
@@ -67,7 +66,7 @@ public class CustomCubicGuiUtils {
                 .withRoundingRadiusPredicate(isInRoundRadius)
                 .build();
 
-        UISlider<Float> slider = new UISliderNoScroll<>(gui, 100, conv, name).setValue(defaultVal);
+        UISlider<Float> slider = new UISliderImproved<>(gui, 100, conv, name).setValue(defaultVal);
         wrappedSlider[0] = slider;
         return slider;
     }
@@ -87,7 +86,7 @@ public class CustomCubicGuiUtils {
                 .withInfinity().positiveAt((float)Math.pow(2, maxPos)).negativeAt(Float.NaN)
                 .build();
 
-        UISlider<Float> slider = new UISliderNoScroll<>(gui, 100, conv, name).setValue(defaultVal);
+        UISlider<Float> slider = new UISliderImproved<>(gui, 100, conv, name).setValue(defaultVal);
         wrappedSlider[0] = slider;
         return slider;
     }
@@ -106,7 +105,7 @@ public class CustomCubicGuiUtils {
                 .withRoundingRadiusPredicate(isInRoundRadius)
                 .build();
 
-        UISlider<Float> slider = new UISliderNoScroll<>(gui, 100, conv, name).setValue(defaultVal);
+        UISlider<Float> slider = new UISliderImproved<>(gui, 100, conv, name).setValue(defaultVal);
         wrappedSlider[0] = slider;
         return slider;
     }
@@ -147,14 +146,14 @@ public class CustomCubicGuiUtils {
                 .withRoundingRadiusPredicate(isInRoundRadius)
                 .build();
 
-        UISlider<Float> slider = new UISliderNoScroll<>(gui, 100, conv, name).setValue(defaultVal);
+        UISlider<Float> slider = new UISliderImproved<>(gui, 100, conv, name).setValue(defaultVal);
         wrappedSlider[0] = slider;
         return slider;
     }
 
     public static UISlider<Integer> makeIntSlider(MalisisGui gui, String name, int min, int max, int defaultValue) {
         // the explicit <Integer> needs to be there because otherwise it won't compile on some systems
-        UISlider<Integer> slider = new UISliderNoScroll<Integer>(
+        UISlider<Integer> slider = new UISliderImproved<Integer>(
                 gui,
                 100,
                 Converter.from(
@@ -168,7 +167,7 @@ public class CustomCubicGuiUtils {
 
     public static UISlider<Float> makeFloatSlider(MalisisGui gui, String name, float defaultValue) {
         // the explicit <Float> needs to be there because otherwise it won't compile on some systems
-        UISlider<Float> slider = new UISliderNoScroll<Float>(
+        UISlider<Float> slider = new UISliderImproved<Float>(
                 gui,
                 100,
                 Converter.identity(),
@@ -205,6 +204,18 @@ public class CustomCubicGuiUtils {
         return slider;
     }
 
+    public static <T> UISelect<T> makeUISelect(MalisisGui gui, Iterable<T> values) {
+        UISelect<T> select = new UISelect<T>(gui, 0, values);
+        // https://github.com/Ordinastie/MalisisCore/issues/135
+        select.register(new Object() {
+            @Subscribe
+            public void onResize(SpaceChangeEvent.SizeChangeEvent evt) {
+                select.setMaxExpandedWidth(evt.getNewWidth());
+            }
+        });
+        return select;
+    }
+
     public static UISelect<BiomeOption> makeBiomeList(MalisisGui gui) {
         List<BiomeOption> biomes = new ArrayList<>();
         biomes.add(BiomeOption.ALL);
@@ -213,23 +224,18 @@ public class CustomCubicGuiUtils {
                 biomes.add(new BiomeOption(biome));
             }
         }
-        UISelect<BiomeOption> select = new UISelect<>(gui, 0, biomes);
-        select.register(new Object() {
-            @Subscribe
-            public void onResize(SpaceChangeEvent.SizeChangeEvent evt) {
-                select.setMaxExpandedWidth(evt.getNewWidth());
-            }
-        });
+        UISelect<BiomeOption> select = makeUISelect(gui, biomes);
+
         select.select(BiomeOption.ALL);
         select.maxDisplayedOptions(8);
         return select;
     }
 
-    public static UIComponent<?> label(MalisisGui gui, String text, int height) {
+    public static UIComponent<?> label(MalisisGui gui, String text) {
         return wrappedCentered(
                 gui, new UILabel(gui, text)
                         .setFontOptions(FontOptions.builder().color(0xFFFFFF).shadow().build())
-        ).setSize(0, height);
+        ).setSize(0, 15);
     }
 
     public static UIContainer<?> wrappedCentered(MalisisGui gui, UIComponent<?> comp) {

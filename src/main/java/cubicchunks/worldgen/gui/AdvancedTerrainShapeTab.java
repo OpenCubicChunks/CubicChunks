@@ -35,24 +35,29 @@ import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeExponentialSlider
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeFloatSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeIntSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeInvertedExponentialSlider;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeUISelect;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 
 import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.gui.component.UISplitLayout;
 import cubicchunks.worldgen.gui.component.UITerrainPreview;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
 import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.interaction.UICheckBox;
+import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.client.gui.component.interaction.UISlider;
 import net.malisis.core.client.gui.event.ComponentEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.util.EnumFacing;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+
+import java.util.Arrays;
 
 class AdvancedTerrainShapeTab {
 
-    private final UIBorderLayout container;
+    private final UIContainer<?> container;
 
     private final UISlider<Float> heightVariationFactor;
     private final UISlider<Float> heightVariationSpecialFactor;
@@ -90,6 +95,9 @@ class AdvancedTerrainShapeTab {
     // preview
     private final UICheckBox keepPreviewVisible;
     private final UISlider<Float> biomeScaleSlider, biomeOffsetSlider;
+    private final UISelect<EnumFacing.Axis> horizontalAxis;
+    private final UICheckBox lockXZ;
+    private final UICheckBox showPreview;
 
     AdvancedTerrainShapeTab(CustomCubicGui gui, CustomGeneratorSettings settings) {
         final float MAX_NOISE_FREQ_POWER = -4;
@@ -103,7 +111,7 @@ class AdvancedTerrainShapeTab {
 
         table.setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
                 // height variation
-                .add(label(gui, malisisText("height_variation_group"), 20),
+                .add(label(gui, malisisText("height_variation_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, gridY += 2, WIDTH_1_COL))
                 .add(this.heightVariationFactor = makeExponentialSlider(
                         gui, malisisText("height_variation_factor_slider", ": %.2f"),
@@ -111,7 +119,7 @@ class AdvancedTerrainShapeTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++gridY, WIDTH_3_COL))
                 .add(this.heightVariationSpecialFactor = makeExponentialSlider(
                         gui, malisisText("height_variation_special_factor_slider", ": %.2f"),
-                        Float.NaN, Float.NaN, 0, 20, settings.specialHeightVariationFactorBelowAverageY),
+                        Float.NaN, Float.NaN, -6, 6, settings.specialHeightVariationFactorBelowAverageY),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, gridY, WIDTH_3_COL))
                 .add(this.heightVariationOffset = makeExponentialSlider(
                         gui, malisisText("height_variation_offset_slider", ": %.2f"),
@@ -119,7 +127,7 @@ class AdvancedTerrainShapeTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, gridY, WIDTH_3_COL))
 
                 // height
-                .add(label(gui, malisisText("height_group"), 20),
+                .add(label(gui, malisisText("height_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++gridY, WIDTH_1_COL))
                 .add(this.heightFactor = makeExponentialSlider(
                         gui, malisisText("height_factor", ": %.2f"),
@@ -131,7 +139,7 @@ class AdvancedTerrainShapeTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, gridY, WIDTH_2_COL))
 
                 // depth noise
-                .add(label(gui, malisisText("depth_noise_group"), 20),
+                .add(label(gui, malisisText("depth_noise_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++gridY, WIDTH_1_COL))
                 .add(this.depthNoisePeriodX = makeInvertedExponentialSlider(
                         gui, malisisText("depth_noise_period_x", PERIOD_FMT),
@@ -156,7 +164,7 @@ class AdvancedTerrainShapeTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, gridY, WIDTH_3_COL))
 
                 // selector noise
-                .add(label(gui, malisisText("selector_noise_group"), 20),
+                .add(label(gui, malisisText("selector_noise_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++gridY, WIDTH_1_COL))
                 .add(this.selectorNoisePeriodX = makeInvertedExponentialSlider(
                         gui, malisisText("selector_noise_period_x", PERIOD_FMT),
@@ -186,7 +194,7 @@ class AdvancedTerrainShapeTab {
 
 
                 // low noise
-                .add(label(gui, malisisText("low_noise_group"), 20),
+                .add(label(gui, malisisText("low_noise_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++gridY, WIDTH_1_COL))
                 .add(this.lowNoisePeriodX = makeInvertedExponentialSlider(
                         gui, malisisText("low_noise_period_x", PERIOD_FMT),
@@ -215,7 +223,7 @@ class AdvancedTerrainShapeTab {
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, gridY, WIDTH_3_COL))
 
                 // high noise
-                .add(label(gui, malisisText("high_noise_group"), 20),
+                .add(label(gui, malisisText("high_noise_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++gridY, WIDTH_1_COL))
                 .add(this.highNoisePeriodX = makeInvertedExponentialSlider(
                         gui, malisisText("high_noise_period_x", PERIOD_FMT),
@@ -243,81 +251,162 @@ class AdvancedTerrainShapeTab {
                         -5, 5, -5, 5, settings.highNoiseOffset),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, gridY, WIDTH_3_COL));
 
-        final int previewHeight = 128;
-
+        final int previewHeight = 100;
+        final int settingsSize = 150;
         UITerrainPreview preview;
-
-        UIBorderLayout previewBoderLayout = new UIBorderLayout(gui);
-        previewBoderLayout.setSize(UIComponent.INHERITED, previewHeight + 7);// TODO: +7 because of MalisisCore bug, remove when possible
-        previewBoderLayout.add(preview = new UITerrainPreview(gui).setSize(UIComponent.INHERITED - 200, UIComponent.INHERITED),
-                UIBorderLayout.Border.LEFT);
 
         gridY = -1;
         final float biomeCount = ForgeRegistries.BIOMES.getValues().size();
 
         UIContainer<?> settingsContrainer = new UIVerticalTableLayout(gui, 4)
-                .setInsets(5, 5, 5, 5)
+                .setInsets(1, 1, 0, 0)
                 .add(keepPreviewVisible = makeCheckbox(gui, malisisText("keep_preview_visible"), true),
+                        new UIVerticalTableLayout.GridLocation(0, ++gridY, 4))
+                .add(showPreview = makeCheckbox(gui, malisisText("show_preview"), true),
                         new UIVerticalTableLayout.GridLocation(0, ++gridY, 4))
                 .add(biomeScaleSlider = makeInvertedExponentialSlider(gui, malisisText("biome_scale", ": %.2f"),
                         Float.NaN, Float.NaN, -10, -6, 64), new UIVerticalTableLayout.GridLocation(0, ++gridY, 4))
                 .add(biomeOffsetSlider = makeFloatSlider(gui, malisisText("biome_offset", ": %.2f"),
-                        0, biomeCount, 0), new UIVerticalTableLayout.GridLocation(0, ++gridY, 4));
-        settingsContrainer.setSize(200, previewHeight);
+                        0, biomeCount, 0), new UIVerticalTableLayout.GridLocation(0, ++gridY, 4))
+                .add(lockXZ = makeCheckbox(gui, malisisText("lock_xz_together"), true),
+                        new UIVerticalTableLayout.GridLocation(0, ++gridY, 4))
+                .add(horizontalAxis = makeUISelect(gui, Arrays.asList(EnumFacing.Axis.X, EnumFacing.Axis.Z))
+                                .setLabelPattern(malisisText("preview_horizontal_axis", ": %s")),
+                        new UIVerticalTableLayout.GridLocation(0, ++gridY, 4));
+        settingsContrainer.setSize(settingsSize, previewHeight);
 
 
-        UIBorderLayout rootBorderContainer = new UIBorderLayout(gui);
-        rootBorderContainer.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
-        rootBorderContainer.add(table, UIBorderLayout.Border.BOTTOM);
-        rootBorderContainer.add(previewBoderLayout, UIBorderLayout.Border.TOP);
+        UISplitLayout<?> previewSplitView = new UISplitLayout(gui, UISplitLayout.Type.SIDE_BY_SIDE, null, null)
+                .setSeparatorSize(4)
+                .setMinimumUserComponentSize(UISplitLayout.Pos.FIRST, 50)
+                .setMinimumUserComponentSize(UISplitLayout.Pos.SECOND, 150)
+                .setUserResizable(true)
+                .setSizeOf(UISplitLayout.Pos.SECOND, 150);
 
-        previewBoderLayout.add(settingsContrainer, UIBorderLayout.Border.RIGHT);
+        previewSplitView.add(preview = new UITerrainPreview(gui).setSize(UIComponent.INHERITED - settingsSize, UIComponent.INHERITED),
+                UISplitLayout.Pos.FIRST);
+        previewSplitView.add(settingsContrainer, UISplitLayout.Pos.SECOND);
+
+        UISplitLayout<?> rootSplit = new UISplitLayout(gui, UISplitLayout.Type.STACKED, previewSplitView, table);
+        rootSplit.setSize(UIComponent.INHERITED, UIComponent.INHERITED).setMinimumUserComponentSize(UISplitLayout.Pos.SECOND, 64);
+
         biomeScaleSlider.register(new Object() {
             @Subscribe
-            public void onCheck(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
+            public void onUpdate(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
                 preview.setBiomeScale(evt.getNewValue());
             }
         });
         biomeOffsetSlider.register(new Object() {
             @Subscribe
-            public void onCheck(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
+            public void onUpdate(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
                 preview.setBiomeOffset(evt.getNewValue());
             }
         });
+        horizontalAxis.register(new Object() {
+            @Subscribe
+            public void onUpdate(ComponentEvent.ValueChange<UISelect<EnumFacing.Axis>, EnumFacing.Axis> evt) {
+                preview.setShownAxis(evt.getNewValue());
+            }
+        });
+        lockXZ.register(new Object() {
+            @Subscribe
+            public void onCheck(UICheckBox.CheckEvent evt) {
+                setLockedXZ(evt.isChecked());
+            }
+        });
+        showPreview.register(new Object() {
+            @Subscribe
+            public void onCheck(UICheckBox.CheckEvent evt) {
+                preview.setDisabled(!evt.isChecked());
+            }
+        });
+        depthNoisePeriodX.register(new Object() {
+            @Subscribe
+            public void onUpdate(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
+                if (lockXZ.isChecked()) {
+                    depthNoisePeriodZ.setValue(depthNoisePeriodX.getValue());
+                }
+            }
+        });
+        lowNoisePeriodX.register(new Object() {
+            @Subscribe
+            public void onUpdate(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
+                if (lockXZ.isChecked()) {
+                    lowNoisePeriodZ.setValue(lowNoisePeriodX.getValue());
+                }
+            }
+        });
+        highNoisePeriodX.register(new Object() {
+            @Subscribe
+            public void onUpdate(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
+                if (lockXZ.isChecked()) {
+                    highNoisePeriodZ.setValue(highNoisePeriodX.getValue());
+                }
+            }
+        });
+        selectorNoisePeriodX.register(new Object() {
+            @Subscribe
+            public void onUpdate(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
+                if (lockXZ.isChecked()) {
+                    selectorNoisePeriodZ.setValue(selectorNoisePeriodX.getValue());
+                }
+            }
+        });
+        setLockedXZ(lockXZ.isChecked());
         preview.setBiomeScale(biomeScaleSlider.getValue());
         preview.setBiomeOffset(biomeOffsetSlider.getValue());
+        horizontalAxis.setSelectedOption(EnumFacing.Axis.X);
+        preview.setShownAxis(horizontalAxis.getSelectedValue());
         keepPreviewVisible.register(new Object() {
             @Subscribe
             public void onCheck(UICheckBox.CheckEvent evt) {
                 if (evt.isChecked()) {
-                    table.setSize(UIComponent.INHERITED, UIComponent.INHERITED - previewBoderLayout.getHeight());
+                    table.setSize(UIComponent.INHERITED, UIComponent.INHERITED - previewSplitView.getHeight());
                     // check if the container is added, because the first time the event is fired it's not added
-                    if (previewBoderLayout.getParent() == table) {
-                        table.remove(previewBoderLayout);
+                    if (previewSplitView.getParent() == table) {
+                        table.remove(previewSplitView);
                     }
-
-                    previewBoderLayout.setPadding(HORIZONTAL_PADDING + HORIZONTAL_INSETS, 2);
-                    // because the table layout will change the size
-                    previewBoderLayout.setSize(UIComponent.INHERITED, previewBoderLayout.getRawHeight());
-                    rootBorderContainer.add(previewBoderLayout, UIBorderLayout.Border.TOP);
+                    rootSplit.setMinimumUserComponentSize(UISplitLayout.Pos.FIRST, 64)
+                            .setSeparatorSize(4)
+                            .setSizeOf(UISplitLayout.Pos.FIRST, 128)
+                            .setUserResizable(true);
+                    previewSplitView.setPadding(HORIZONTAL_PADDING + HORIZONTAL_INSETS, 2);
+                    rootSplit.add(previewSplitView, UISplitLayout.Pos.FIRST);
                 } else {
-                    if (previewBoderLayout.getParent() == rootBorderContainer) {
-                        rootBorderContainer.remove(previewBoderLayout);
+                    if (previewSplitView.getParent() == rootSplit) {
+                        rootSplit.remove(previewSplitView);
                     }
-
-                    previewBoderLayout.setPadding(0, 0);
+                    previewSplitView.setPadding(0, 0);
+                    rootSplit.setMinimumUserComponentSize(UISplitLayout.Pos.FIRST, 0)
+                            .setSeparatorSize(0)
+                            .setSizeOf(UISplitLayout.Pos.FIRST, 0)
+                            .setUserResizable(false);
                     table.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
-                    table.add(previewBoderLayout, new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, 0, WIDTH_1_COL));
+                    table.add(previewSplitView, new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, 0, WIDTH_1_COL));
                 }
             }
         });
         // fire the event to correctly set the layout
         keepPreviewVisible.fireEvent(new UICheckBox.CheckEvent(keepPreviewVisible, keepPreviewVisible.isChecked()));
 
-        this.container = rootBorderContainer;
+        this.container = rootSplit;
     }
 
-    UIBorderLayout getContainer() {
+    private void setLockedXZ(boolean lock) {
+        this.depthNoisePeriodZ.setDisabled(lock);
+        this.lowNoisePeriodZ.setDisabled(lock);
+        this.highNoisePeriodZ.setDisabled(lock);
+        this.selectorNoisePeriodZ.setDisabled(lock);
+
+        if (lock) {
+            this.depthNoisePeriodZ.setValue(this.depthNoisePeriodX.getValue());
+            this.lowNoisePeriodZ.setValue(this.lowNoisePeriodZ.getValue());
+            this.highNoisePeriodZ.setValue(this.highNoisePeriodZ.getValue());
+            this.selectorNoisePeriodZ.setValue(this.selectorNoisePeriodZ.getValue());
+        }
+    }
+
+    UIContainer<?> getContainer() {
         return container;
     }
 

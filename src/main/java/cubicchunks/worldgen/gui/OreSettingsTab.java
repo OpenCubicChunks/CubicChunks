@@ -112,7 +112,7 @@ class OreSettingsTab {
         layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
                 .setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
 
-                .add(label(gui, malisisText("dirt_group"), 20),
+                .add(label(gui, malisisText("dirt_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.dirtSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.dirtSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
@@ -125,7 +125,7 @@ class OreSettingsTab {
                                         .dirtSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(label(gui, malisisText("gravel_group"), 20),
+                .add(label(gui, malisisText("gravel_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.gravelSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.gravelSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
@@ -138,7 +138,7 @@ class OreSettingsTab {
                                         .gravelSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(label(gui, malisisText("granite_group"), 20),
+                .add(label(gui, malisisText("granite_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.graniteSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.graniteSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
@@ -151,7 +151,7 @@ class OreSettingsTab {
                                         .graniteSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(label(gui, malisisText("diorite_group"), 20),
+                .add(label(gui, malisisText("diorite_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.dioriteSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.dioriteSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
@@ -164,7 +164,7 @@ class OreSettingsTab {
                                         .dioriteSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(label(gui, malisisText("andesite_group"), 20),
+                .add(label(gui, malisisText("andesite_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.andesiteSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.andesiteSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
@@ -177,7 +177,7 @@ class OreSettingsTab {
                         settings.andesiteSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(label(gui, malisisText("coal_ore_group"), 20),
+                .add(label(gui, malisisText("coal_ore_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.coalOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.coalOreSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
@@ -190,7 +190,7 @@ class OreSettingsTab {
                                         .coalOreSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(label(gui, malisisText("iron_ore_group"), 20),
+                .add(label(gui, malisisText("iron_ore_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.ironOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.ironOreSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
@@ -203,7 +203,7 @@ class OreSettingsTab {
                                         .ironOreSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(label(gui, malisisText("gold_ore_group"), 20),
+                .add(label(gui, malisisText("gold_ore_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.goldOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.goldOreSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
@@ -216,7 +216,7 @@ class OreSettingsTab {
                                         .goldOreSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(label(gui, malisisText("redstone_ore_group"), 20),
+                .add(label(gui, malisisText("redstone_ore_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.redstoneOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.redstoneOreSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
@@ -229,7 +229,7 @@ class OreSettingsTab {
                         settings.redstoneOreSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(label(gui, malisisText("diamond_ore_group"), 20),
+                .add(label(gui, malisisText("diamond_ore_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.diamondOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.diamondOreSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
@@ -242,7 +242,7 @@ class OreSettingsTab {
                         settings.diamondOreSpawnMaxHeight),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
 
-                .add(label(gui, malisisText("lapis_lazuli_ore_group"), 20),
+                .add(label(gui, malisisText("lapis_lazuli_ore_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
                 .add(this.lapisLazuliOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.lapisLazuliSpawnSize),
                         new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
