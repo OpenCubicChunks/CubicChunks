@@ -65,7 +65,6 @@ public class SelectBlockTab {
             UIBlockStateButton uiButton = new UIBlockStateButton(gui, blockState, action);
             layout.add(uiButton);
         });
-        layout.init();
         this.container = layout;
     }
 

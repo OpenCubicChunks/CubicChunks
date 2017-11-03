@@ -67,7 +67,6 @@ public class FlatLayersTab implements Comparator<UIFlatTerrainLayer> {
             layout.add(uiLayersList.get(i),
                     new UIVerticalTableLayout.GridLocation(0, i, 1));
         }
-        layout.init();
         return layout;
     }
 

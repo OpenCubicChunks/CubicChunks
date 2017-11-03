@@ -224,13 +224,12 @@ dependencies {
     testCompile("org.mockito:mockito-core:2.1.0-RC.2")
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    compile("org.spongepowered:mixin:0.7.4-SNAPSHOT") {
+    compile("org.spongepowered:mixin:0.7.5-SNAPSHOT") {
         isTransitive = false
     }
 
     compile(project(":RegionLib"))
 
-    // use deobfProvided for now to avoid crash with malisiscore asm, but still have it compiling
     deobfCompile("net.malisis:malisiscore:$malisisCoreVersion") {
         isTransitive = false
     }
@@ -274,6 +273,12 @@ shadowJar.apply {
 
 test.apply {
     systemProperty("lwts.tweaker", "cubicchunks.tweaker.MixinTweakerServer")
+    jvmArgs("-Dmixin.debug.verbose=true", //verbose mixin output for easier debugging of mixins
+            "-Dmixin.checks.interfaces=true", //check if all interface methods are overriden in mixin
+            "-Dmixin.env.remapRefMap=true")
+    testLogging {
+        showStandardStreams = true
+    }
 }
 
 processResources.apply {

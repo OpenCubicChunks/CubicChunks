@@ -24,10 +24,15 @@
 package cubicchunks.tweaker;
 
 import cubicchunks.asm.CubicChunksCoreMod;
+import cubicchunks.util.ReflectionUtil;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.launchwrapper.LaunchClassLoader;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.gradle.GradleStartCommon;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.lwts.AbstractTestTweaker;
+
+import java.io.File;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -37,6 +42,9 @@ public class MixinTweakerServer extends AbstractTestTweaker {
 
     @Override
     public void injectIntoClassLoader(LaunchClassLoader loader) {
+        System.setProperty("net.minecraftforge.gradle.GradleStart.srg.srg-mcp",
+                ((File) ReflectionHelper.getPrivateValue(GradleStartCommon.class, null, "SRG_SRG_MCP")).getPath());
+        System.setProperty("mixin.env.remapRefMap", "true");
         super.injectIntoClassLoader(loader);
         registerAccessTransformer("META-INF/cubicchunks_at.cfg");
         CubicChunksCoreMod.initMixin();

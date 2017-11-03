@@ -27,6 +27,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.sqrt;
 
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -34,6 +35,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class MathUtil {
 
+    public static boolean isPowerOfN(int toTest, int n) { // works only for positive numbers
+        while (toTest > n - 1 && toTest % n == 0) {
+            toTest /= n;
+        }
+        return toTest == 1;
+    }
     public static double lerp(final double a, final double min, final double max) {
         return min + a * (max - min);
     }
@@ -45,6 +52,10 @@ public class MathUtil {
 
     public static float unlerp(final float v, final float min, final float max) {
         return (v - min) / (max - min);
+    }
+
+    public static float unlerp(final long v, final long min, final long max) {
+        return (v - min) / (float) (max - min);
     }
 
     public static float lerp(final float a, final float min, final float max) {
@@ -140,5 +151,16 @@ public class MathUtil {
 
     public static boolean rangesIntersect(int min1, int max1, int min2, int max2) {
         return min1 <= max2 && min2 <= max1;
+    }
+
+    public static int packColorARGB(int r, int g, int b, int a) {
+        return a << 24 | r << 16 | g << 8 | b;
+    }
+
+    /**
+     * Converts normalized 0-1 color component to 8-bit integer
+     */
+    public static int to8bitComponent(float value) {
+        return MathHelper.clamp(Math.round(value * 255), 0, 255);
     }
 }

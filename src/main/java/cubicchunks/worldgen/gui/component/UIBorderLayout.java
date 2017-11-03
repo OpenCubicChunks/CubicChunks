@@ -51,7 +51,8 @@ public class UIBorderLayout extends UILayout<UIBorderLayout, UIBorderLayout.Bord
         });
     }
 
-    @Override protected void initLayout() {
+    @Override protected boolean isLayoutChanged() {
+        return true; // inexpensive so always update
     }
 
     @Override protected void onAdd(UIComponent<?> comp, Border at) {

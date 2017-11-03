@@ -25,7 +25,6 @@ package cubicchunks.worldgen.gui.component;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Maps;
 import cubicchunks.worldgen.gui.ExtraGui;
 import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.GuiRenderer;
@@ -37,15 +36,17 @@ import java.util.Iterator;
 import java.util.Map;
 
 public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContainer<T> {
-
-    private int lastWidth = Integer.MIN_VALUE, lastHeight = Integer.MIN_VALUE;
     private UIOptionScrollbar scrollbar;
 
-    private boolean isInit = false;
+    private boolean needsLayoutUpdate = false;
+    private int lastSizeX, lastSizeY;
     private BiMap<UIComponent<?>, LOC> entries = HashBiMap.create();
 
     public UILayout(ExtraGui gui) {
         super(gui);
+        this.scrollbar = new UIOptionScrollbar((ExtraGui) getGui(), (T) this, UIScrollBar.Type.VERTICAL);
+        this.scrollbar.setPosition(6, 0, Anchor.RIGHT);
+        this.scrollbar.setVisible(true);
     }
 
     protected abstract LOC findNextLocation();
@@ -55,34 +56,11 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
      */
     protected abstract void layout();
 
-    /**
-     * Done before the first layout, when init() is called.
-     * <p>
-     * Allows to add initialization logic for example creating data structures that help with layout.
-     * <p>
-     * After this method is called no components can be added or removed.
-     */
-    protected abstract void initLayout();
+    protected abstract boolean isLayoutChanged();
 
     protected abstract void onAdd(UIComponent<?> comp, LOC at);
 
     protected abstract void onRemove(UIComponent<?> comp, LOC at);
-
-    protected boolean isInit() {
-        return this.isInit;
-    }
-
-    protected void checkNotInitialized() {
-        if (isInit()) {
-            throw new IllegalStateException("Already initialized");
-        }
-    }
-
-    protected void checkInitialized() {
-        if (!isInit()) {
-            throw new IllegalStateException("Not initialized");
-        }
-    }
 
     protected Map<UIComponent<?>, LOC> componentToLocationMap() {
         return entries;
@@ -96,28 +74,20 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
         return entries.get(comp);
     }
 
-    public T init() {
-        this.isInit = true;
-        this.entries.forEach((c, loc) -> super.add(c));
-        this.entries = Maps.unmodifiableBiMap(entries);
-        this.initLayout();
-        this.scrollbar = new UIOptionScrollbar((ExtraGui) getGui(), (T) this, UIScrollBar.Type.VERTICAL);
-        this.scrollbar.setPosition(6, 0, Anchor.RIGHT);
-        this.scrollbar.setVisible(true);
-        this.layout();
+    public T add(UIComponent<?> component, LOC at) {
+        this.entries.put(component, at);
+        this.onAdd(component, at);
+        super.add(component);
+        this.needsLayoutUpdate = true;
         return (T) this;
     }
 
-    public T add(UIComponent<?> component, LOC at) {
-        this.checkNotInitialized();
-        this.entries.put(component, at);
-        this.onAdd(component, at);
-        return (T) this;
+    public void setNeedsLayoutUpdate() {
+        this.needsLayoutUpdate = true;
     }
 
     @Override
     public void add(UIComponent<?>... components) {
-        this.checkNotInitialized();
         for (UIComponent c : components) {
             add(c, findNextLocation());
         }
@@ -125,18 +95,19 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
 
     @Override
     public void remove(UIComponent<?> component) {
-        this.checkNotInitialized();
         LOC loc = this.entries.remove(component);
+        super.remove(component);
         this.onRemove(component, loc);
+        this.needsLayoutUpdate = true;
     }
 
     @Override
     public void removeAll() {
-        this.checkNotInitialized();
         Iterator<BiMap.Entry<UIComponent<?>, LOC>> it = this.entries.entrySet().iterator();
         while (it.hasNext()) {
             BiMap.Entry<UIComponent<?>, LOC> e = it.next();
             it.remove();
+            super.remove(e.getKey());
             this.onRemove(e.getKey(), e.getValue());
         }
     }
@@ -151,10 +122,10 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
 
     @Override
     public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
-        this.checkInitialized();
-        if (getWidth() != lastWidth || getHeight() != lastHeight) {
-            lastWidth = getWidth();
-            lastHeight = getHeight();
+        if (needsLayoutUpdate || getWidth() != lastSizeX || getHeight() != lastSizeY || isLayoutChanged()) {
+            lastSizeX = getWidth();
+            lastSizeY = getHeight();
+            needsLayoutUpdate = false;
             layout();
         }
         super.drawForeground(renderer, mouseX, mouseY, partialTick);

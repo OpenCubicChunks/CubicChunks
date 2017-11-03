@@ -21,24 +21,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui.component;
+package cubicchunks.worldgen.gui.event;
 
-import com.google.common.base.Converter;
-import net.malisis.core.client.gui.MalisisGui;
-import net.malisis.core.client.gui.component.control.IControlComponent;
-import net.malisis.core.client.gui.component.interaction.UISlider;
+import net.malisis.core.util.MouseButton;
 
-public class UISliderNoScroll<T> extends UISlider<T> {
+@FunctionalInterface
+public interface IMouseDragListener {
 
-    public UISliderNoScroll(MalisisGui gui, int width, Converter<Float, T> converter, String text) {
-        super(gui, width, converter, text);
-    }
-
-    @Override
-    public boolean onScrollWheel(int x, int y, int delta) {
-        if (parent != null && !(this instanceof IControlComponent)) {
-            return parent.onScrollWheel(x, y, delta);
-        }
-        return false;
-    }
+    void onDrag(int lastX, int lastY, int x, int y, MouseButton button);
 }

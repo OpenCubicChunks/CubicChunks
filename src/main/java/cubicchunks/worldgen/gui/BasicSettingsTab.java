@@ -127,10 +127,7 @@ class BasicSettingsTab {
                 .add(this.waterLevel = makeExponentialSlider(
                         gui, malisisText("water_level", ": %.2f"),
                         1, 12, 1, 12, settings.waterLevel),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 9, WIDTH_2_COL))
-
-
-                .init();
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 9, WIDTH_2_COL));
 
         this.container = layout;
     }

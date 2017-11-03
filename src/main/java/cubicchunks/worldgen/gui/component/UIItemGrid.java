@@ -38,14 +38,13 @@ public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
 
     @Override
     protected void layout() {
-        this.checkInitialized();
         if (getParent() == null) {
             return;
         }
         int lastElementPosX = 0;
         int lastElementPosY = 0;
         for (UIComponent<?> component : components) {
-            if (lastElementPosX + component.getWidth() > this.getWidth() - this.getHorizontalPadding() * 2) {
+            if (lastElementPosX + component.getWidth() > this.getWidth() - this.getLeftPadding() - this.getRightPadding()) {
                 lastElementPosX = 0;
                 lastElementPosY += component.getHeight();
             }
@@ -54,8 +53,8 @@ public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
         }
     }
 
-    @Override
-    protected void initLayout() {
+    @Override protected boolean isLayoutChanged() {
+        return false; // don't update unless something added (handled in superclass)
     }
 
     @Override
