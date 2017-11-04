@@ -147,7 +147,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         if (loading) {
             return false;
         }
-        if (this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone()))) {
+        if (this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone() && !cube.hasLightUpdates()))) {
             return true;
         }
         int cubeX = cubePos.getX();

@@ -305,7 +305,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
                 getWorld().getProfiler().startSection("chunk=" + pos);
 
-                boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated() && watcher.getCube().isInitialLightingDone();
+                boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated() && watcher.getCube().isInitialLightingDone() &&
+                        !watcher.getCube().hasLightUpdates();
                 if (!success) {
                     boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
                     getWorld().getProfiler().startSection("generate");
