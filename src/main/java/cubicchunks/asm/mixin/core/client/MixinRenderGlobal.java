@@ -25,7 +25,6 @@ package cubicchunks.asm.mixin.core.client;
 
 import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.CHUNK_GET_ENTITY_LISTS;
-import static cubicchunks.asm.JvmNames.OPTIFINE_RENDER_CHUNK_GET_CHUNK;
 import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
 
 import cubicchunks.util.ClassInheritanceMultiMapFactory;
@@ -86,7 +85,7 @@ public class MixinRenderGlobal {
      * This allows to get the Y position of rendered entity by injecting itself directly before call to
      * chunk.getEntityLists
      */
-    @Group(name = "renderEntitiesFix", min = 3, max = 3)
+    @Group(name = "renderEntitiesFix")//, min = 3, max = 3)
     @Inject(method = "renderEntities",
             at = @At(value = "INVOKE", target = WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS),
             locals = LocalCapture.CAPTURE_FAILHARD)
@@ -105,20 +104,42 @@ public class MixinRenderGlobal {
     }
 
     /**
-     * Optifine-specific version of the above method
+     * Optifine-specific version of the above method. Up to version 1.12.2_HD_U_C6
      */
     @SuppressWarnings("UnresolvedMixinReference")
     @Group(name = "renderEntitiesFix")
     @Inject(method = "renderEntities",
-            at = @At(value = "INVOKE", target = OPTIFINE_RENDER_CHUNK_GET_CHUNK),
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk(Lnet/minecraft/world/World;)Lnet/minecraft/world/chunk/Chunk;"),
             locals = LocalCapture.CAPTURE_FAILHARD,
             remap = false)
-    public void onGetPositionOptifine(Entity renderViewEntity, ICamera camera, float partialTicks,
+    public void onGetPositionOptifine_Old(Entity renderViewEntity, ICamera camera, float partialTicks,
             CallbackInfo ci, int pass, double d0, double d1, double d2,
             Entity entity, double d3, double d4, double d5,
             List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
-            BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos, Iterator iterInfosEntities,
+            BlockPos.PooledMutableBlockPos pos, Iterator iterInfosEntities,
             RenderGlobal.ContainerLocalRenderInformation info) {
+        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
+        if (world.isCubicWorld()) {
+            this.position = info.renderChunk.getPosition();
+        } else {
+            this.position = null;
+        }
+    }
+
+    /**
+     * Optifine-specific version of the above method. Versions 1.12.2_HD_U_C7_pre and up
+     */
+    @SuppressWarnings("UnresolvedMixinReference")
+    @Group(name = "renderEntitiesFix")
+    @Inject(method = "renderEntities",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;"),
+            locals = LocalCapture.CAPTURE_FAILHARD,
+            remap = false)
+    public void onGetPositionOptifine_New(Entity renderViewEntity, ICamera camera, float partialTicks,
+            CallbackInfo ci, int pass, double d0, double d1, double d2,
+            Entity entity, double d3, double d4, double d5,
+            List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
+            BlockPos.PooledMutableBlockPos pos, Iterator var22, RenderGlobal.ContainerLocalRenderInformation info) {
         ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
         if (world.isCubicWorld()) {
             this.position = info.renderChunk.getPosition();

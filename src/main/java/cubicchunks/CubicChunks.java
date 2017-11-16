@@ -88,12 +88,20 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.fml.common.versioning.ArtifactVersion;
+import net.minecraftforge.fml.common.versioning.ComparableVersion;
+import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
+import net.minecraftforge.fml.common.versioning.InvalidVersionSpecificationException;
+import net.minecraftforge.fml.common.versioning.VersionRange;
+import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.Consumer;
@@ -106,17 +114,32 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @Mod(modid = CubicChunks.MODID,
         name = "CubicChunks",
-        version = "@@VERSION@@",
+        version = CubicChunks.VERSION,
         guiFactory = "cubicchunks.client.GuiFactory"
         /*@@DEPS_PLACEHOLDER@@*/)// This will be replaced by gradle with actual dependency list, do not alter it
 @Mod.EventBusSubscriber
 public class CubicChunks {
+
+    public static final VersionRange SUPPORTED_SERVER_VERSIONS;
+    public static final VersionRange SUPPORTED_CLIENT_VERSIONS;
+
+    static {
+        try {
+            // currently no known unsupported version. Versions newer than current will be only checked on the other side
+            // (I know this can be hard to actually fully understand)
+            SUPPORTED_SERVER_VERSIONS = VersionRange.createFromVersionSpec("*");
+            SUPPORTED_CLIENT_VERSIONS = VersionRange.createFromVersionSpec("*");
+        } catch (InvalidVersionSpecificationException e) {
+            throw new Error(e);
+        }
+    }
 
     public static final int MIN_BLOCK_Y = Integer.MIN_VALUE >> 1;
     public static final int MAX_BLOCK_Y = Integer.MAX_VALUE >> 1;
 
     public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
     public static final String MODID = "cubicchunks";
+    public static final String VERSION = "@@VERSION@@";
     public static final String MALISIS_VERSION = "@@MALISIS_VERSION@@";
 
     @Nonnull
@@ -250,6 +273,58 @@ public class CubicChunks {
         }
     }
 
+    @NetworkCheckHandler
+    public static boolean checkCanConnectWithMods(Map<String, String> modVersions, Side remoteSide) {
+        String remoteFullVersion = modVersions.get(MODID);
+        if (remoteFullVersion == null) {
+            if (remoteSide.isClient()) {
+                return false; // don't allow client without CC to connect
+            }
+            return true; // allow connecting to server without CC
+        }
+        if (!checkVersionFormat(VERSION, remoteSide.isClient() ? Side.SERVER : Side.CLIENT)) {
+            return true;
+        }
+        if (!checkVersionFormat(remoteFullVersion, remoteSide)) {
+            return true;
+        }
+
+        ArtifactVersion version = new DefaultArtifactVersion(remoteFullVersion);
+        ArtifactVersion currentVersion = new DefaultArtifactVersion(VERSION);
+        if (currentVersion.compareTo(version) < 0) {
+            return true; // allow connection if this version is older, let newer one decide
+        }
+        return (remoteSide.isClient() ? SUPPORTED_CLIENT_VERSIONS : SUPPORTED_SERVER_VERSIONS).containsVersion(version);
+    }
+
+    // returns true if version format is known. Side can be null if not logging connection attempt
+    private static boolean checkVersionFormat(String version, @Nullable Side remoteSide) {
+        int mcVersionSplit = version.indexOf('-');
+        if (mcVersionSplit < 0) {
+            LOGGER.warn("Connection attempt with unexpected " + remoteSide + " version string: " + version + ". Cannot split into MC "
+                    + "version and mod version. Assuming dev environment or special/unknown version, connection will be allowed.");
+            return false;
+        }
+
+        String modVersion = version.substring(mcVersionSplit + 1);
+
+        if (modVersion.isEmpty()) {
+            LOGGER.warn("Connection attempt with unexpected " + remoteSide + " version string: " + version + ". Mod version part not "
+                    + "found. Assuming dev environment or special/unknown version,, connection will be allowed");
+            return false;
+        }
+
+        final String versionRegex = "\\d+\\." + "\\d+\\." + "\\d+\\." + "\\d+" + "(-.+)?";//"MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)"
+
+        if (!modVersion.matches(versionRegex)) {
+            LOGGER.warn("Connection attempt with unexpected " + remoteSide + " version string: " + version + ". Mod version part (" +
+                    modVersion + ") does not match expected format ('MAJORMOD.MAJORAPI.MINOR.PATCH(-optionalText)'). Assuming dev " +
+                    "environment or special/unknown version, connection will be allowed");
+            return false;
+        }
+        return true;
+    }
+
     public static ResourceLocation location(String location) {
         return new ResourceLocation(MODID, location);
     }
@@ -270,7 +345,7 @@ public class CubicChunks {
         LOGGER.log(Level.WARN, "* "+format, data);
         for (int i = 2; i < 10 && i < trace.length; i++)
         {
-            LOGGER.log(Level.WARN, "*  at {}{}", trace[i].toString(), i == 7 ? "..." : "");
+            LOGGER.log(Level.WARN, "*  at {}{}", trace[i].toString(), i == 9 ? "..." : "");
         }
         LOGGER.log(Level.WARN, "****************************************");
     }
