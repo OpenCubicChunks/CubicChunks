@@ -87,19 +87,6 @@ public class ClientHandler implements INetHandler {
         WorldEncoder.decodeColumn(new PacketBuffer(buf), column);
     }
 
-    public void handle(final PacketUnloadCube packet) {
-        IThreadListener taskQueue = Minecraft.getMinecraft();
-        if (!taskQueue.isCallingFromMinecraftThread()) {
-            taskQueue.addScheduledTask(() -> handle(packet));
-            return;
-        }
-
-        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
-        CubeProviderClient cubeCache = worldClient.getCubeCache();
-
-        cubeCache.unloadCube(packet.getCubePos());
-    }
-
     public void handle(final PacketUnloadColumn packet) {
         IThreadListener taskQueue = Minecraft.getMinecraft();
         if (!taskQueue.isCallingFromMinecraftThread()) {
