@@ -122,6 +122,7 @@ class IONbtWriter {
 
         // save the worldgen stage and the target stage
         cubeNbt.setBoolean("populated", cube.isPopulated());
+        cubeNbt.setBoolean("isSurfaceTracked", cube.isSurfaceTracked());
         cubeNbt.setBoolean("fullyPopulated", cube.isFullyPopulated());
 
         cubeNbt.setBoolean("initLightDone", cube.isInitialLightingDone());

@@ -157,6 +157,7 @@ public class IONbtReader {
 
         // set the worldgen stage
         cube.setPopulated(nbt.getBoolean("populated"));
+        cube.setSurfaceTracked(nbt.getBoolean("isSurfaceTracked")); // previous versions will get their surface tracking redone. This is intended
         cube.setFullyPopulated(nbt.getBoolean("fullyPopulated"));
 
         cube.setInitialLightingDone(nbt.getBoolean("initLightDone"));

@@ -24,6 +24,7 @@
 package cubicchunks.world.cube;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.debug.Dbg;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubePos;
@@ -146,14 +147,19 @@ public class Cube implements XYZAddressable {
      * Is this cube loaded and not queued for unload
      */
     private boolean isCubeLoaded;
-    
+
     /**
      * Contains the current Linear Congruential Generator seed for block updates. Used with an A value of 3 and a C
      * value of 0x3c6ef35f, producing a highly planar series of values ill-suited for choosing random blocks in a
      * 16x16x16 field.
      */
     protected int updateLCG = (new Random()).nextInt();
-    
+
+    /**
+     * True only if all the blocks have been added to server height map. Always true clientside.
+     */
+    private boolean isSurfaceTracked = true;
+
     /**
      * Create a new cube in the specified column at the specified location. The newly created cube will only contain air
      * blocks.
@@ -212,6 +218,7 @@ public class Cube implements XYZAddressable {
                 }
             }
         }
+        isSurfaceTracked = true;
         isModified = true;
     }
 
@@ -403,7 +410,7 @@ public class Cube implements XYZAddressable {
             pti.remove();
         }
     }
-    
+
     /**
      * Launch random ticks of a blocks of a cube. Plant growing and other events goes here.
      * @param worldServer - world where random tick is launched
@@ -568,6 +575,27 @@ public class Cube implements XYZAddressable {
         this.world.addTileEntities(this.tileEntityMap.values());
         this.world.loadEntities(this.entities.getEntities());
         this.isCubeLoaded = true;
+        if (!isSurfaceTracked) {
+            trackSurface();
+        }
+    }
+
+    private void trackSurface() {
+        IHeightMap opindex = column.getOpacityIndex();
+        int miny = getCoords().getMinBlockY();
+
+        for (int x = 0; x < Cube.SIZE; x++) {
+            for (int z = 0; z < Cube.SIZE; z++) {
+
+                for (int y = Cube.SIZE - 1; y >= 0; y--) {
+                    IBlockState newstate = this.getBlockState(x, y, z);
+
+                    column.setModified(true); //TODO: maybe ServerHeightMap needs its own isModified?
+                    opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
+                }
+            }
+        }
+        isSurfaceTracked = true;
     }
 
     /**
@@ -666,6 +694,7 @@ public class Cube implements XYZAddressable {
         this.isPopulated = true;
         this.isFullyPopulated = true;
         this.isInitialLightingDone = true;
+        this.isSurfaceTracked = true;
     }
 
     /**
@@ -712,6 +741,20 @@ public class Cube implements XYZAddressable {
     public void setFullyPopulated(boolean populated) {
         this.isFullyPopulated = populated;
         this.isModified = true;
+    }
+
+    /**
+     * Sets internal isSurfaceTracked value. Intended to be used only for deserialization.
+     */
+    public void setSurfaceTracked(boolean value) {
+        this.isSurfaceTracked = value;
+    }
+
+    /**
+     * Gets internal isSurfaceTracked value. Intended to be used only for serialization.
+     */
+    public boolean isSurfaceTracked() {
+        return this.isSurfaceTracked;
     }
 
     /**
