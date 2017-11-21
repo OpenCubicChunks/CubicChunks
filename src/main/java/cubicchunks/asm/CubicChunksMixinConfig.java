@@ -125,12 +125,12 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                         + " Potentially this will slightly reduce server tick time"
                         + " in presence of huge amount of living entities."
                         + " You need to restart Minecraft to apply changes."),
-        USE_FAST_COLLISION_CHECK(true, 
+        USE_FAST_COLLISION_CHECK(false, 
                 new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_SlowCollisionCheck"},
                 new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_CollisionCheck"},
                 "Enabling this option allow using fast collision check."
                         + " Fast collision check can reduce server lag."
-                        + " You need to restart Minecraft to apply changes."),
+                        + " You need to restart Minecraft to apply changes. DO NOT USE UNTIL FIXED!"),
         RANDOM_TICK_IN_CUBE(true, 
                 null,
                 new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks"},
