@@ -349,8 +349,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             return iblockstate == null ? Blocks.AIR.getDefaultState() : iblockstate;
         } else {
             try {
-                //if (y >= 0 && y >> 4 < this.storageArrays.length)
-                {
+                if (isColumn || (y >= 0 && y >> 4 < this.storageArrays.length)) {
                     ExtendedBlockStorage extendedblockstorage = getEBS_CubicChunks(blockToCube(y));
 
                     if (extendedblockstorage != NULL_BLOCK_STORAGE) {
