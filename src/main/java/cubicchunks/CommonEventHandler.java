@@ -24,6 +24,7 @@
 package cubicchunks;
 
 import cubicchunks.network.PacketDispatcher;
+import cubicchunks.event.CreateNewWorldEvent;
 import cubicchunks.network.PacketCubicWorldData;
 import cubicchunks.server.SpawnCubes;
 import cubicchunks.util.IntRange;
@@ -134,6 +135,11 @@ public class CommonEventHandler {
             // Workaround for issue when entities became invisible in cubes where player dies and which are not yet unloaded by garbage collector.
             ((ICubicWorldServer)evt.getWorld()).getChunkGarbageCollector().chunkGc();
         }
+    }
+    
+    @SubscribeEvent
+    public void onCreateWorldSettings(CreateNewWorldEvent event) {
+        ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue());
     }
 
     @SuppressWarnings("unchecked")
