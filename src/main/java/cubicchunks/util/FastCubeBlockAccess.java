@@ -102,8 +102,6 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
         }
     }
 
-    // TODO: Remove calling world: temporary workaround for lighting code being broken
-    
     @Nullable
     private ExtendedBlockStorage getStorage(int blockX, int blockY, int blockZ) {
         int cubeX = Coords.blockToCube(blockX);
