@@ -42,6 +42,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.NextTickListEntry;
@@ -49,6 +50,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import scala.actors.threadpool.Arrays;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -112,6 +114,10 @@ public class Cube implements XYZAddressable {
      * Has the initial light map been calculated?
      */
     private boolean isInitialLightingDone = false;
+    /**
+     * Do neighbor need a sky light update when it is loaded?
+     */
+    public boolean[] edgeNeedSkyLightUpdate = new boolean[6];
     /**
      * The world of this cube
      */
@@ -785,5 +791,9 @@ public class Cube implements XYZAddressable {
     public boolean hasLightUpdates() {
         LightingManager.CubeLightUpdateInfo info = this.getCubeLightUpdateInfo();
         return info != null && info.hasUpdates();
+    }
+
+    public void markEdgeNeedSkyLightUpdate(EnumFacing side) {
+        this.edgeNeedSkyLightUpdate[side.ordinal()] = true;
     }
 }

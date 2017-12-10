@@ -252,6 +252,12 @@ public class IONbtReader {
         NBTTagCompound lightingInfo = nbt.getCompoundTag("LightingInfo");
         int[] lastHeightMap = lightingInfo.getIntArray("LastHeightMap"); // NO NO NO! TODO: Why is hightmap being stored in Cube's data?! kill it!
         int[] currentHeightMap = cube.getColumn().getHeightMap();
+        byte edgeNeedSkyLightUpdate = 0x3F;
+        if (lightingInfo.hasKey("EdgeNeedSkyLightUpdate"))
+            edgeNeedSkyLightUpdate = lightingInfo.getByte("EdgeNeedSkyLightUpdate");
+        for (int i = 0; i < cube.edgeNeedSkyLightUpdate.length; i++) {
+            cube.edgeNeedSkyLightUpdate[i] = (edgeNeedSkyLightUpdate >>> i & 1) == 1;
+        }
 
         // assume changes outside of this cube have no effect on this cube.
         // In practice changes up to 15 blocks above can affect it,
