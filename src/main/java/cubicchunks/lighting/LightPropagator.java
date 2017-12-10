@@ -102,7 +102,10 @@ public class LightPropagator {
                 // this would mean that the current block is in the light area from other block, no need to update that
                 if (lightFromNeighbors <= currentValue - 1) {
                     // set it to 0 and add neighbors to the queue
-                    blocks.setLightFor(type, pos, 0);
+                    if (!blocks.setLightFor(type, pos, 0)) {
+                        this.markNeighborEdgeNeedLightUpdate(pos, blocks, type);
+                        continue;
+                    }
                     setLightCallback.accept(pos);
                     // if no distance left - stop spreading, so that it won't run into problems when updating too much
                     if (distance <= MIN_DISTANCE) {
@@ -131,8 +134,11 @@ public class LightPropagator {
                     // any neighbor. This simplifies logic for decreasing light value. Current code wouldn't work when
                     // decreasing sunlight below a block, because sunlight couldn't spread "into" any block made dark
                     // by light un-spreading code above
-                    blocks.setLightFor(type, pos, emitted);
-                    setLightCallback.accept(pos);
+                    if (blocks.setLightFor(type, pos, emitted)) {
+                        setLightCallback.accept(pos);
+                    } else {
+                        this.markNeighborEdgeNeedLightUpdate(pos, blocks, type);
+                    }
                 }
             });
             // spread out light values
@@ -147,8 +153,13 @@ public class LightPropagator {
                         // can't go further, the next block already has the same or higher light value
                         continue;
                     }
-                    blocks.setLightFor(type, nextPos, newLight);
-                    setLightCallback.accept(nextPos);
+                    if (blocks.setLightFor(type, nextPos, newLight)) {
+                        setLightCallback.accept(nextPos);
+                    } else {
+                        // If cube is not loaded we will notify neighbors so cube will update light when it loads.
+                        blocks.markEdgeNeedLightUpdate(pos, type);
+                        continue;
+                    }
 
                     // if no distance left - stop spreading, so that it won't run into problems when updating too much
                     if (distance - 1 <= MIN_DISTANCE) {
@@ -174,5 +185,13 @@ public class LightPropagator {
 
     private int getExpectedLight(ILightBlockAccess blocks, EnumSkyBlock type, BlockPos pos) {
         return Math.max(blocks.getEmittedLight(pos, type), blocks.getLightFromNeighbors(type, pos));
+    }
+    
+    private void markNeighborEdgeNeedLightUpdate(BlockPos pos, ILightBlockAccess blocks, EnumSkyBlock type) {
+        // If cube is not loaded we will notify neighbors so cube will update light when it loads.
+        for (EnumFacing direction : EnumFacing.values()) {
+            BlockPos offset = pos.offset(direction);
+            blocks.markEdgeNeedLightUpdate(offset, type);
+        }
     }
 }
