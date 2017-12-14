@@ -23,6 +23,7 @@
  */
 package cubicchunks.entity;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.crash.CrashReport;
@@ -32,6 +33,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EntityTrackerEntry;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.SPacketEntityAttach;
 import net.minecraft.network.play.server.SPacketSetPassengers;
@@ -99,5 +101,12 @@ public class CubicEntityTracker extends EntityTracker {
                 LOGGER.error((String) "\"Silently\" catching entity tracking error.", (Throwable) reportedexception);
             }
         }
+    }
+    
+    // Workaround to fix invisible entities bug
+    public void fixEntityInvisibility(int entityId, EntityPlayerMP player) {
+        CubicEntityTrackerEntry entitytrackerentry = (CubicEntityTrackerEntry)this.trackedEntityHashTable.lookup(entityId);
+        entitytrackerentry.sendSpawnPacket(player);
+        CubicChunks.LOGGER.info("Sending spawn packet to missing entity");
     }
 }

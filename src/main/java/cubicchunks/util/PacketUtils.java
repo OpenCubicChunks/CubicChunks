@@ -24,12 +24,15 @@
 package cubicchunks.util;
 
 import cubicchunks.network.AbstractClientMessageHandler;
+import cubicchunks.network.AbstractServerMessageHandler;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.ThreadQuickExitException;
 import net.minecraft.util.IThreadListener;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
@@ -106,6 +109,15 @@ public class PacketUtils {
         IThreadListener taskQueue = Minecraft.getMinecraft();
         if (!taskQueue.isCallingFromMinecraftThread()) {
             taskQueue.addScheduledTask(() -> handler.handleClientMessage(player, message, ctx));
+            throw ThreadQuickExitException.INSTANCE;
+        }
+    }
+    
+    public static <T extends IMessage> void ensureMainThread(AbstractServerMessageHandler<T> handler,
+            EntityPlayer player, T message, MessageContext ctx) {
+        IThreadListener thread = FMLCommonHandler.instance().getWorldThread(ctx.getServerHandler());
+        if (!thread.isCallingFromMinecraftThread()) {
+            thread.addScheduledTask(() -> handler.handleServerMessage(player, message, ctx));
             throw ThreadQuickExitException.INSTANCE;
         }
     }

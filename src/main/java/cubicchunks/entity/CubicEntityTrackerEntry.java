@@ -27,7 +27,9 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTrackerEntry;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.Packet;
 
 public class CubicEntityTrackerEntry extends EntityTrackerEntry {
 
@@ -53,5 +55,11 @@ public class CubicEntityTrackerEntry extends EntityTrackerEntry {
     protected boolean isPlayerWatchingThisChunk(EntityPlayerMP player) {
         return ((ICubicWorldServer) player.getServerWorld()).getPlayerCubeMap()
                 .isPlayerWatchingCube(player, this.trackedEntity.chunkCoordX, this.trackedEntity.chunkCoordY, this.trackedEntity.chunkCoordZ);
+    }
+
+    // Workaround to fix invisible entities bug
+    public void sendSpawnPacket(EntityPlayerMP playerMP) {
+        this.trackingPlayers.remove(playerMP);
+        this.updatePlayerEntity(playerMP);
     }
 }

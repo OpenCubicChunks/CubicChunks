@@ -47,6 +47,7 @@
     ],
     "client": [
         "client.MixinEntityPlayerSP",
+        "client.MixinSPacketEntity",
         "client.isblockloaded.MixinEntity"
     ],
     "server": [
