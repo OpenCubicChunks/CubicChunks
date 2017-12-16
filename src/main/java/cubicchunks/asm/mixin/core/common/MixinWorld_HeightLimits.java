@@ -198,6 +198,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
         if (!isCubicWorld()) {
             return;
         }
+        cbi.cancel();
         Cube cube = this.getCubeCache().getLoadedCube(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()));
         if (allowEmpty) {
             cbi.setReturnValue(cube != null);
