@@ -128,7 +128,6 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         USE_FAST_COLLISION_CHECK(false, 
                 new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_SlowCollisionCheck"},
                 new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_CollisionCheck",
-                        "cubicchunks.asm.mixin.selectable.common.MixinBlockStairs_FastCollision",
                         "cubicchunks.asm.mixin.selectable.common.MixinBlock_FastCollision"},
                 "Enabling this option allow using fast collision check."
                         + " Fast collision check can reduce server lag."

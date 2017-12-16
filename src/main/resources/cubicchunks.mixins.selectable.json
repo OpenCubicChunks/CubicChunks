@@ -11,7 +11,6 @@
         "common.MixinChunkCache",
         "common.MixinWorld_SlowCollisionCheck",
         "common.MixinWorld_CollisionCheck",
-        "common.MixinBlockStairs_FastCollision",
         "common.MixinBlock_FastCollision",
         "common.MixinWorldServer_UpdateBlocks"
     ],
