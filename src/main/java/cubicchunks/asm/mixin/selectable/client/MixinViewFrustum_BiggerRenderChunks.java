@@ -21,10 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core.client;
+package cubicchunks.asm.mixin.selectable.client;
+
+import static cubicchunks.client.RenderConstants.RENDER_CHUNK_SIZE;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -33,15 +47,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Replace updateChunkPositions and getRenderChunk with cubic chunks versions
@@ -49,8 +54,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-@Mixin(ViewFrustum.class)
-public class MixinViewFrustum_RenderHeightFix {
+@Mixin(value = ViewFrustum.class, priority = 1001)
+public class MixinViewFrustum_BiggerRenderChunks {
 
     @Shadow @Final protected World world;
     @SuppressWarnings("MismatchedReadAndWriteOfArray") @Shadow public RenderChunk[] renderChunks;
@@ -58,8 +63,14 @@ public class MixinViewFrustum_RenderHeightFix {
     @Shadow protected int countChunksY;
     @Shadow protected int countChunksZ;
 
-    @Shadow private int getBaseCoordinate(int arg1, int arg2, int arg3) {
-        throw new Error();
+    @Overwrite
+    private int getBaseCoordinate(int view, int sizeInBlocks, int index) {
+        int i = index * RENDER_CHUNK_SIZE;
+        int j = i - view + sizeInBlocks / 2;
+        if (j < 0) {
+            j -= sizeInBlocks - 1;
+        }
+        return i - j / sizeInBlocks * sizeInBlocks;
     }
 
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
@@ -73,13 +84,13 @@ public class MixinViewFrustum_RenderHeightFix {
         double z = view.posZ;
 
         // treat the y dimension the same as all the rest
-        int viewX = MathHelper.floor(x) - Cube.SIZE / 2;
-        int viewY = MathHelper.floor(y) - Cube.SIZE / 2;
-        int viewZ = MathHelper.floor(z) - Cube.SIZE / 2;
+        int viewX = MathHelper.floor(x) - RENDER_CHUNK_SIZE / 2;
+        int viewY = MathHelper.floor(y) - RENDER_CHUNK_SIZE / 2;
+        int viewZ = MathHelper.floor(z) - RENDER_CHUNK_SIZE / 2;
 
-        int xSizeInBlocks = this.countChunksX * Cube.SIZE;
-        int ySizeInBlocks = this.countChunksY * Cube.SIZE;
-        int zSizeInBlocks = this.countChunksZ * Cube.SIZE;
+        int xSizeInBlocks = this.countChunksX * RENDER_CHUNK_SIZE;
+        int ySizeInBlocks = this.countChunksY * RENDER_CHUNK_SIZE;
+        int zSizeInBlocks = this.countChunksZ * RENDER_CHUNK_SIZE;
 
         for (int xIndex = 0; xIndex < this.countChunksX; xIndex++) {
             //getRendererBlockCoord
@@ -112,9 +123,9 @@ public class MixinViewFrustum_RenderHeightFix {
             return;
         }
         // treat the y dimension the same as all the rest
-        int x = MathHelper.intFloorDiv(pos.getX(), Cube.SIZE);
-        int y = MathHelper.intFloorDiv(pos.getY(), Cube.SIZE);
-        int z = MathHelper.intFloorDiv(pos.getZ(), Cube.SIZE);
+        int x = MathHelper.intFloorDiv(pos.getX(), RENDER_CHUNK_SIZE);
+        int y = MathHelper.intFloorDiv(pos.getY(), RENDER_CHUNK_SIZE);
+        int z = MathHelper.intFloorDiv(pos.getZ(), RENDER_CHUNK_SIZE);
         x %= this.countChunksX;
         if (x < 0) {
             x += this.countChunksX;
@@ -131,5 +142,15 @@ public class MixinViewFrustum_RenderHeightFix {
         RenderChunk renderChunk = this.renderChunks[index];
         cbi.cancel();
         cbi.setReturnValue(renderChunk);
+    }
+    
+    @ModifyConstant(method = "createRenderChunks", constant = @Constant(intValue = 16))
+    public int onCreateRenderChunks(int oldValue){
+        return RENDER_CHUNK_SIZE;
+    }
+    
+    @ModifyConstant(method = "markBlocksForUpdate", constant = @Constant(intValue = 16))
+    public int onMarkBlocksForUpdate(int oldValue) {
+        return RENDER_CHUNK_SIZE;
     }
 }

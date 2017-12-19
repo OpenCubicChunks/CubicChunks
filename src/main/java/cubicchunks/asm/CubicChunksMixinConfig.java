@@ -137,7 +137,14 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks"},
                 "If set to true, random tick wil be launched from cube instance instead of chunk."
                         + " Cube based random tick may slightly reduce server lag."
-                        + " You need to restart Minecraft to apply changes.");
+                        + " You need to restart Minecraft to apply changes."),
+        USE_BIGGER_RENDER_CHUNKS(true, 
+                new String[] {
+                        "cubicchunks.asm.mixin.selectable.client.MixinViewFrustum_RenderHeightFix"},
+                new String[] {
+                        "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk",
+                        "cubicchunks.asm.mixin.selectable.client.MixinViewFrustum_BiggerRenderChunks"},
+                "If set to true, render will use 32 blocks in render chunks instead of 16.");
 
         private final boolean defaultValue;
         // Load this Mixin class only if option is false. Can be null.

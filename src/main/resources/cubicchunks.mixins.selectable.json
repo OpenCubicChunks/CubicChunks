@@ -15,6 +15,9 @@
         "common.MixinWorldServer_UpdateBlocks"
     ],
     "client": [
+        "client.MixinRenderChunk",
+        "client.MixinViewFrustum_BiggerRenderChunks",
+        "client.MixinViewFrustum_RenderHeightFix"
     ],
     "server": [
     ],
