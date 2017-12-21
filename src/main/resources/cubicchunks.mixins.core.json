@@ -25,7 +25,6 @@
     "client": [
         "client.MixinWorld_HeightLimits",
         "client.MixinWorldClient",
-        "client.MixinRenderGlobal",
         "client.MixinChunkCache_HeightLimits",
         "client.MixinChunk_Cubes",
         "client.MixinWorldProvider",

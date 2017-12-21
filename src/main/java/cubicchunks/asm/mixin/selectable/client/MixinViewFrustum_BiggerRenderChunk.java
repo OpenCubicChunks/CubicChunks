@@ -55,7 +55,7 @@ import net.minecraft.world.World;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(value = ViewFrustum.class, priority = 1001)
-public class MixinViewFrustum_BiggerRenderChunks {
+public class MixinViewFrustum_BiggerRenderChunk {
 
     @Shadow @Final protected World world;
     @SuppressWarnings("MismatchedReadAndWriteOfArray") @Shadow public RenderChunk[] renderChunks;
@@ -64,13 +64,13 @@ public class MixinViewFrustum_BiggerRenderChunks {
     @Shadow protected int countChunksZ;
 
     @Overwrite
-    private int getBaseCoordinate(int view, int sizeInBlocks, int index) {
-        int i = index * RENDER_CHUNK_SIZE;
-        int j = i - view + sizeInBlocks / 2;
+    private int getBaseCoordinate(int playerWorldAxisPos, int sizeInBlocks, int index) {
+        int relativeAxisPos = index * RENDER_CHUNK_SIZE;
+        int j = relativeAxisPos - playerWorldAxisPos + sizeInBlocks / 2;
         if (j < 0) {
             j -= sizeInBlocks - 1;
         }
-        return i - j / sizeInBlocks * sizeInBlocks;
+        return relativeAxisPos - j / sizeInBlocks * sizeInBlocks;
     }
 
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)

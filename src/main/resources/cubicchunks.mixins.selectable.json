@@ -16,7 +16,10 @@
     ],
     "client": [
         "client.MixinRenderChunk",
-        "client.MixinViewFrustum_BiggerRenderChunks",
+        "client.MixinRenderGlobal",
+        "client.MixinRenderGlobal_BiggerRenderChunk",
+        "client.MixinCompiledChunk_Fix",
+        "client.MixinViewFrustum_BiggerRenderChunk",
         "client.MixinViewFrustum_RenderHeightFix"
     ],
     "server": [
