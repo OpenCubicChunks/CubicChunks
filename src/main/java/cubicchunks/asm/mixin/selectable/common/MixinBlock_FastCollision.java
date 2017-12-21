@@ -58,11 +58,10 @@ public abstract class MixinBlock_FastCollision {
         BlockStateContainer oldBlockStateContainer = this.createBlockState();
         Collection<IProperty<?>> properties = oldBlockStateContainer.getProperties();
         boolean isFullBlock = true;
-        if (!(block instanceof BlockBreakable))
-            for (IBlockState state : oldBlockStateContainer.getValidStates()) {
-                if (!state.isFullCube())
-                    isFullBlock = false;
-            }
+        for (IBlockState state : oldBlockStateContainer.getValidStates()) {
+            if (!state.isFullCube())
+                isFullBlock = false;
+        }
         if (isFullBlock)
             return new FullBlockBlockStateContainer(block, properties.toArray(new IProperty<?>[0]));
         boolean isNonCollideableBlock = false;
