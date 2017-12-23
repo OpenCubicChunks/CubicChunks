@@ -63,12 +63,13 @@ public class TestLightBlockAccessImpl implements ILightBlockAccess {
         return light == null ? 0 : light;
     }
 
-    @Override public void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
+    @Override public boolean setLightFor(EnumSkyBlock lightType, BlockPos pos, int val) {
         if (lightType == EnumSkyBlock.BLOCK) {
             lightValuesBlock.put(pos, val);
         } else {
             lightValuesSky.put(pos, val);
         }
+        return true;
     }
 
     @Override public boolean canSeeSky(BlockPos pos) {
@@ -96,5 +97,9 @@ public class TestLightBlockAccessImpl implements ILightBlockAccess {
 
     public void setOpacity(BlockPos pos, int opacity) {
         this.opacities.put(pos, opacity);
+    }
+
+    @Override
+    public void markEdgeNeedLightUpdate(BlockPos offset, EnumSkyBlock type) {
     }
 }

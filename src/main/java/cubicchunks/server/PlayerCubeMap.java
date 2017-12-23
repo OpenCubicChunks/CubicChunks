@@ -369,8 +369,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         }
         getWorld().getProfiler().endStartSection("sendCubes");//unload
         for (EntityPlayerMP player : cubesToSend.keySet()) {
-            PacketCubes packet = new PacketCubes(new ArrayList<>(cubesToSend.get(player)));
+            Collection<Cube> cubes = cubesToSend.get(player);
+            PacketCubes packet = new PacketCubes(new ArrayList<>(cubes));
             PacketDispatcher.sendTo(packet, player);
+            //Sending entities per cube.
+            for (Cube cube : cubes) {
+                this.getWorld().getCubicEntityTracker()
+                        .sendLeashedEntitiesInCube(player, cube);
+            }
         }
         cubesToSend.clear();
         getWorld().getProfiler().endSection();//sendCubes

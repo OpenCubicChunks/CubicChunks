@@ -202,10 +202,6 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
         for (WatcherPlayerEntry playerEntry : this.players.valueCollection()) {
             MinecraftForge.EVENT_BUS.post(new CubeWatchEvent(cube, cubePos, this, playerEntry.player));
-            //Sending entities per cube.
-            this.playerCubeMap.getWorld()
-                    .getCubicEntityTracker()
-                    .sendLeashedEntitiesInCube(playerEntry.player, cube);
             sendToPlayer(playerEntry.player);
         }
 

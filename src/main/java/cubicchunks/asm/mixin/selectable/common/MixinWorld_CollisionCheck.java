@@ -33,6 +33,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static cubicchunks.util.Coords.*;
+
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
@@ -60,11 +61,11 @@ public abstract class MixinWorld_CollisionCheck implements ICubicWorld {
             int x1 = MathHelper.floor(minX) - 1;
             int y1 = MathHelper.floor(minY) - 1;
             int z1 = MathHelper.floor(minZ) - 1;
-            int x2 = MathHelper.ceil(maxX) + 1;
-            int y2 = MathHelper.ceil(maxY) + 1;
-            int z2 = MathHelper.ceil(maxZ) + 1;
+            int x2 = MathHelper.ceil(maxX);
+            int y2 = MathHelper.ceil(maxY);
+            int z2 = MathHelper.ceil(maxZ);
             BlockPos.PooledMutableBlockPos pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
-            for (int cx = blockToCube(x1); cx <= blockToCube(x2); cx++)
+            next_cube_pos:for (int cx = blockToCube(x1); cx <= blockToCube(x2); cx++)
                 for (int cy = blockToCube(y1); cy <= blockToCube(y2); cy++)
                     for (int cz = blockToCube(z1); cz <= blockToCube(z2); cz++) {
                         CubePos coords = new CubePos(cx, cy, cz);
@@ -82,16 +83,28 @@ public abstract class MixinWorld_CollisionCheck implements ICubicWorld {
                             maxBlockX = maxBlockX < x2 ? maxBlockX : x2;
                             maxBlockY = maxBlockY < y2 ? maxBlockY : y2;
                             maxBlockZ = maxBlockZ < z2 ? maxBlockZ : z2;
-                            for (int x = minBlockX; x <= maxBlockX; x++)
-                                for (int y = minBlockY; y <= maxBlockY; y++)
-                                    for (int z = minBlockZ; z <= maxBlockZ; z++) {
+                            for (int x = minBlockX; x <= maxBlockX; x++) {
+                                boolean isXboundary = x == x1 || x == x2;
+                                for (int z = minBlockZ; z <= maxBlockZ; z++) {
+                                    boolean isZboundary = z == z1 || z == z2;
+                                        if(isXboundary && isZboundary)
+                                            continue;
+                                        for (int y = minBlockY; y <= maxBlockY; y++) {
+                                            boolean isYboundary = y == y2;
+                                            if (isYboundary && (isZboundary || isXboundary))
+                                                continue;
                                         pooledmutableblockpos.setPos(x, y, z);
                                         IBlockState bstate = loadedCube.getStorage().get(blockToLocal(x),blockToLocal(y), blockToLocal(z));
                                         bstate.addCollisionBoxToList((World) (Object) this, pooledmutableblockpos, aabb, aabbList, entity, false);
                                         net.minecraftforge.common.MinecraftForge.EVENT_BUS
                                                 .post(new net.minecraftforge.event.world.GetCollisionBoxesEvent((World) (Object) this, null, aabb,
                                                         aabbList));
+                                        if (breakOnWorldBorder && !aabbList.isEmpty()) {
+                                            break next_cube_pos;
+                                        }
                                     }
+                                }
+                            }
                         }
                     }
             pooledmutableblockpos.release();

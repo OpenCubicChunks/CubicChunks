@@ -289,10 +289,6 @@ public class ClientEventHandler {
             }
         }
 
-        @SubscribeEvent public static void onCreateWorldSettings(CreateNewWorldEvent event) {
-            ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue());
-        }
-
         private static boolean isCreateWorldGui(GuiScreen gui) {
             return gui instanceof GuiCreateWorld;
         }
