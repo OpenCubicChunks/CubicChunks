@@ -46,8 +46,9 @@ import net.minecraft.util.math.BlockPos;
 public abstract class MixinBlock_FastCollision {
 
     /**
+     * Make state.addCollisionBoxToList() faster by replacing calls of block state to direct adding of FULL_BLOCK_AABB for full blocks.
+     *
      * @author Foghrye4
-     * @reason Fasten state.addCollisionBoxToList() by replacing calls of block state to direct adding of FULL_BLOCK_AABB for full blocks.
      **/
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;createBlockState()Lnet/minecraft/block/state/BlockStateContainer;"))
     public BlockStateContainer alterBlockStateCollection(Block block) {

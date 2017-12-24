@@ -1,0 +1,18 @@
+[
+ {
+  "OPTIMIZE_PATH_NAVIGATOR": false,
+  "description": "Enabling this option will optimize work of vanilla path navigator.Using this option in some cases turn entity AI a little dumber. Mob standing in a single axis aligned line with player in a middle of a chunk will not try to seek path to player outside of chunks if direct path is blocked. You need to restart Minecraft to apply changes."
+ },
+ {
+  "USE_CUBE_ARRAYS_INSIDE_CHUNK_CACHE": true,
+  "description": "Enabling this option will mix cube array into chunk cache for using in entity path navigator. Potentially this will slightly reduce server tick time in presence of huge amount of living entities. You need to restart Minecraft to apply changes."
+ },
+ {
+  "USE_FAST_COLLISION_CHECK": false,
+  "description": "Enabling this option allow using fast collision check. Fast collision check can reduce server lag. You need to restart Minecraft to apply changes. DO NOT USE UNTIL FIXED!"
+ },
+ {
+  "RANDOM_TICK_IN_CUBE": true,
+  "description": "If set to true, random tick wil be launched from cube instance instead of chunk. Cube based random tick may slightly reduce server lag. You need to restart Minecraft to apply changes."
+ }
+]

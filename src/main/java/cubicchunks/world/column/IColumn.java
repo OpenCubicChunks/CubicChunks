@@ -349,13 +349,13 @@ public interface IColumn {
     Collection<Cube> getLoadedCubes();
 
     /**
-     * Iterate over all loaded cubes in this column in order. If <code>startY < endY</code>, order is bottom to top,
+     * Iterate over all loaded cubes in this column in order. If {@code startY < endY}, order is bottom to top,
      * otherwise order is top to bottom.
      *
      * @param startY initial cube y position
      * @param endY last cube y position
      *
-     * @return an iterator over all loaded cubes between <code>startY</code> and <code>endY</code>
+     * @return an iterator over all loaded cubes between {@code startY} and {@code endY}
      */
     Iterable<Cube> getLoadedCubes(int startY, int endY);
 

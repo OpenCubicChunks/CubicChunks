@@ -138,7 +138,7 @@ public interface ICubeGenerator {
 
     /**
      * Called to reload structures that apply to {@code cube}. Mostly used to prepare calls to
-     * {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))} <br>
+     * {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos)} <br>
      *
      * @param cube The cube being loaded
      *
@@ -148,7 +148,7 @@ public interface ICubeGenerator {
 
     /**
      * Called to reload structures that apply to {@code column}. Mostly used to prepare calls to
-     * {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))} <br>
+     * {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos)} <br>
      *
      * @param column The column being loaded
      *
