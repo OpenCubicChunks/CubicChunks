@@ -120,8 +120,7 @@ minecraft {
     isUseDepAts = true
 
     replace("@@VERSION@@", project.version)
-    replace("/*@@DEPS_PLACEHOLDER@@*/",
-            ",dependencies = \"after:forge@[13.20.1.2454,);after:malisiscore@[$malisisCoreMinVersion,)\"")
+    replace("\"/*@@DEPS_PLACEHOLDER@@*/", ";after:malisiscore@[$malisisCoreMinVersion,)\"")
     replace("@@MALISIS_VERSION@@", malisisCoreMinVersion)
     replaceIn("cubicchunks/CubicChunks.java")
 
@@ -342,7 +341,7 @@ tasks {
     "coreJar"(ShadowJar::class) {
         // need FQN because ForgeGradle needs this exact class and default imports use different one
         from(mainSourceSet.output) {
-            include("cubicchunks/asm/**", "")
+            include("cubicchunks/asm/**", "**.json")
         }
         // Standard coremod manifest definitions
         manifest {
@@ -363,7 +362,7 @@ tasks {
 jar.apply {
     val coreJar: Jar by tasks
 
-    exclude("cubicchunks/asm/**")
+    exclude("cubicchunks/asm/**", "**.json")
 
     // Add the output of the coremod JAR task to the main JAR for later extraction
     from(coreJar.archivePath.absolutePath) {
@@ -375,7 +374,7 @@ jar.apply {
     manifest {
         // The crucial manifest attribute: Make Forge extract the contained JAR
         attributes["ContainedDeps"] =
-                (embed.dependencies.stream().map { x -> x.getName() }.reduce { x, y -> x + " " + y }).get() + " " + coreJar.archivePath.name
+                (embed.files.stream().map { x -> x.name }.reduce { x, y -> x + " " + y }).get() + " " + coreJar.archivePath.name
     }
     // Only run the main jar task after the coremod JAR was completely built
     dependsOn("reobfCoreJar")
