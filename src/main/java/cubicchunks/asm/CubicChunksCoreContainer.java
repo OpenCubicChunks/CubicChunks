@@ -47,6 +47,6 @@ public class CubicChunksCoreContainer extends DummyModContainer {
 
     @Override
     public List<ArtifactVersion> getDependencies() {
-        return Arrays.asList(new DefaultArtifactVersion("cubicchunks", "[0.0.780.0,)"));
+        return Collections.emptyList();//Arrays.asList(new DefaultArtifactVersion("cubicchunks", "[0.0.780.0,)"));
     }
 }

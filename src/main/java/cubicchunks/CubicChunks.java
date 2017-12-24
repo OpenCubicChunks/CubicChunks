@@ -117,7 +117,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
         version = CubicChunks.VERSION,
         guiFactory = "cubicchunks.client.GuiFactory",
         //@formatter:off
-        dependencies = "after:forge@[13.20.1.2454,);cubicchunkscore@[@@VERSION@@]"/*@@DEPS_PLACEHOLDER@@*/)// This will be replaced by gradle with full deps list not alter it
+        dependencies = "after:forge@[13.20.1.2454,)"/*@@DEPS_PLACEHOLDER@@*/)// This will be replaced by gradle with full deps list not alter it
         //@formatter:on
 @Mod.EventBusSubscriber
 public class CubicChunks {

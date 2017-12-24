@@ -65,6 +65,8 @@ apply {
 // tasks
 val build by tasks
 val jar: Jar by tasks
+val shadowJar: ShadowJar by tasks
+val javadoc: Javadoc by tasks
 val test: Test by tasks
 val processResources: ProcessResources by tasks
 val deobfMcSRG: DeobfuscateJar by tasks
@@ -158,11 +160,11 @@ license {
 }
 
 reobf {
-    create("coreJar").apply {
+    create("shadowJar").apply {
         mappingType = ReobfMappingType.SEARGE
     }
 }
-build.dependsOn("reobfJar")
+build.dependsOn("reobfShadowJar")
 
 jmh {
     iterations = 10
@@ -181,7 +183,6 @@ jmh {
     jmhVersion = "1.17.1"
 }
 
-val javadoc: Javadoc by tasks
 javadoc.apply {
     (options as StandardJavadocDocletOptions).tags = listOf("reason")
 }
@@ -193,7 +194,6 @@ val sourcesJar by tasks.creating(Jar::class) {
     classifier = "sources"
     from(sourceSets["main"].java.srcDirs)
 }
-
 
 // based on:
 // https://github.com/Ordinastie/MalisisCore/blob/30d8efcfd047ac9e9bc75dfb76642bd5977f0305/build.gradle#L204-L256
@@ -271,7 +271,7 @@ uploadArchives.apply {
 // tasks must be before artifacts, don't change the order
 artifacts {
     withGroovyBuilder {
-        "archives"(tasks["jar"], sourcesJar, javadocJar)
+        "archives"(shadowJar, sourcesJar, javadocJar)
     }
 }
 
@@ -336,6 +336,8 @@ dependencies {
     }
 }
 
+// TODO: coremod dependency extraction
+/*
 // modified version of https://github.com/PaleoCrafter/Dependency-Extraction-Example/blob/coremod-separation/build.gradle
 tasks {
     "coreJar"(ShadowJar::class) {
@@ -358,26 +360,30 @@ tasks {
         configurations = listOf(coreShadow)
         classifier = "core"
     }
-}
+}*/*/
+
 jar.apply {
-    val coreJar: Jar by tasks
+    exclude("LICENSE.txt", "log4j2.xml")
+    // TODO: https://github.com/johnrengelman/shadow/issues/355
+    //into("/") {
+    //    from(embed)
+    //}
 
-    exclude("cubicchunks/asm/**", "**.json")
+    manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
+    manifest.attributes["FMLCorePlugin"] = "cubicchunks.asm.CubicChunksCoreMod"
+    manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
+    manifest.attributes["TweakOrder"] = "0"
+    manifest.attributes["ForceLoadAsMod"] = "true"
+    //manifest.attributes["ContainedDeps"] =
+    //        (embed.files.stream().map { x -> x.name }.reduce { x, y -> x + " " + y }).get()// + " " + coreJar.archivePath.name
+}
 
-    // Add the output of the coremod JAR task to the main JAR for later extraction
-    from(coreJar.archivePath.absolutePath) {
-        include("*") // Due to the way Gradle's copy tasks work, we need this line for the JAR to get added
-    }
+shadowJar.apply {
+    configurations = listOf(coreShadow)
+    exclude("log4j2.xml")
     into("/") {
         from(embed)
     }
-    manifest {
-        // The crucial manifest attribute: Make Forge extract the contained JAR
-        attributes["ContainedDeps"] =
-                (embed.files.stream().map { x -> x.name }.reduce { x, y -> x + " " + y }).get() + " " + coreJar.archivePath.name
-    }
-    // Only run the main jar task after the coremod JAR was completely built
-    dependsOn("reobfCoreJar")
 
     classifier = "all"
 }
