@@ -329,7 +329,7 @@ dependencies {
         isTransitive = false
     }
 
-    embed(project(":RegionLib"))
+    embed("io.github.opencubicchunks:regionlib:0.44.0-SNAPSHOT")
 
     deobfCompile("net.malisis:malisiscore:$malisisCoreVersion") {
         isTransitive = false
