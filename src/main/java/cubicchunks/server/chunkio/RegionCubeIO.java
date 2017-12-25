@@ -24,7 +24,7 @@
 package cubicchunks.server.chunkio;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.regionlib.IKey;
+import cubicchunks.regionlib.api.region.key.IKey;
 import cubicchunks.regionlib.impl.EntryLocation2D;
 import cubicchunks.regionlib.impl.EntryLocation3D;
 import cubicchunks.regionlib.impl.SaveCubeColumns;
