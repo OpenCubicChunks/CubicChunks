@@ -138,6 +138,21 @@ public abstract class MixinChunk_Cubes implements IColumn {
         return cube.getStorage();
     }
 
+    @Nullable
+    private ExtendedBlockStorage getLoadedEBS_CubicChunks(int index) {
+        if (!isColumn) {
+            return storageArrays[index];
+        }
+        if (cachedCube != null && cachedCube.getY() == index) {
+            return cachedCube.getStorage();
+        }
+        Cube cube = getCubicWorld().getCubeCache().getLoadedCube(getX(), index, getZ());
+        if (cube != null && !(cube instanceof BlankCube)) {
+            cachedCube = cube;
+        }
+        return cube == null ? null : cube.getStorage();
+    }
+
     // setEBS is unlikely to be used extremely frequently, no caching
     private void setEBS_CubicChunks(int index, ExtendedBlockStorage ebs) {
         if (!isColumn) {
