@@ -23,13 +23,24 @@
  */
 package cubicchunks.lighting;
 
+import static cubicchunks.testutil.LightingMatchers.PosSection.allOf;
+import static cubicchunks.testutil.LightingMatchers.PosSection.block;
+import static cubicchunks.testutil.LightingMatchers.PosSection.neighborsOf;
+import static cubicchunks.testutil.LightingMatchers.PosSection.in;
+import static cubicchunks.testutil.LightingMatchers.PosSection.section;
+import static cubicchunks.testutil.LightingMatchers.hasBlockLightValue;
 import static cubicchunks.testutil.LightingMatchers.hasCorrectLight;
+import static cubicchunks.testutil.LightingMatchers.hasSkyLightValue;
+import static cubicchunks.testutil.LightingMatchers.pos;
+import static cubicchunks.testutil.LightingMatchers.posRange;
 import static cubicchunks.testutil.LightingMatchers.range;
+import static cubicchunks.testutil.TestLightBlockAccessImpl.lightAccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.Lists;
+import cubicchunks.testutil.LightingMatchers;
 import cubicchunks.testutil.TestLightBlockAccessImpl;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.EnumFacing;
@@ -138,66 +149,29 @@ public class TestLightPropagator {
         });
     }
 
+    // test for source strength 3 and hope it generalizes well
     @Test
-    public void testEmitBlockLight3SpreadNearby() {
-        int size = 20;
-        TestLightBlockAccessImpl access = lightAccess(size).
-                currentHeightsForInitSkyLight().
-                make();
+    public void testUnspread3() {
         BlockPos center = pos(0, 0, 0);
         BlockPos toSet = pos(0, 0, 0);
 
-        access.setBlockLightSource(toSet, 3);
-        access.setBlockLightSource(toSet.up(), 3);
+        LightingMatchers.PosSection l3 = block(toSet);
+        LightingMatchers.PosSection l2 = neighborsOf(l3).except(l3);
+        LightingMatchers.PosSection l1 = neighborsOf(l2).except(allOf(l3, l2));
+        int size = 5;
+        TestLightBlockAccessImpl access = lightAccess(size).
+                currentHeightsForInitSkyLight().
+                make();
+
+        l3.toSet().forEach(pos -> access.setLightFor(EnumSkyBlock.BLOCK, pos, 3));
+        l2.toSet().forEach(pos -> access.setLightFor(EnumSkyBlock.BLOCK, pos, 2));
+        l1.toSet().forEach(pos -> access.setLightFor(EnumSkyBlock.BLOCK, pos, 1));
 
         LightPropagator propagator = new LightPropagator();
         propagator.propagateLight(center, BlockPos.getAllInBox(toSet, toSet), access, EnumSkyBlock.BLOCK, p -> {
         });
 
-        verifyEqual(center.add(-2, -2, -2), access, EnumSkyBlock.BLOCK, new int[/*x*/][/*y*/][/*z*/]{
-                {
-                        {0, 0, 0, 0, 0},
-                        {0, 0, 0, 0, 0},
-                        {0, 0, 1, 0, 0},
-                        {0, 0, 0, 0, 0},
-                        {0, 0, 0, 0, 0}
-                },
-                {
-                        {0, 0, 0, 0, 0},
-                        {0, 0, 1, 0, 0},
-                        {0, 1, 2, 1, 0},
-                        {0, 0, 1, 0, 0},
-                        {0, 0, 0, 0, 0}
-                },
-                {
-                        {0, 0, 1, 0, 0},
-                        {0, 1, 2, 1, 0},
-                        {1, 2, 3, 2, 1},
-                        {0, 1, 2, 1, 0},
-                        {0, 0, 1, 0, 0}
-                },
-                {
-                        {0, 0, 1, 0, 0},
-                        {0, 1, 2, 1, 0},
-                        {1, 2, 3, 2, 1},
-                        {0, 1, 2, 1, 0},
-                        {0, 0, 1, 0, 0}
-                },
-                {
-                        {0, 0, 0, 0, 0},
-                        {0, 0, 1, 0, 0},
-                        {0, 1, 2, 1, 0},
-                        {0, 0, 1, 0, 0},
-                        {0, 0, 0, 0, 0}
-                },
-                {
-                        {0, 0, 0, 0, 0},
-                        {0, 0, 0, 0, 0},
-                        {0, 0, 1, 0, 0},
-                        {0, 0, 0, 0, 0},
-                        {0, 0, 0, 0, 0}
-                }
-        });
+        assertThat(access, hasBlockLightValue(0, in(section(pos(-size, -size, -size), pos(size, size, size)))));
     }
 
     @Test
@@ -449,26 +423,6 @@ public class TestLightPropagator {
         verify(access, size);
     }
 
-
-    @Test
-    public void testEmitBlockLight3SpreadNearbyAutomated() {
-        int size = 20;
-        TestLightBlockAccessImpl access = lightAccess(size).
-                currentHeightsForInitSkyLight().
-                make();
-        BlockPos center = pos(0, 0, 0);
-        BlockPos toSet = pos(0, 0, 0);
-
-        access.setBlockLightSource(toSet, 3);
-        access.setBlockLightSource(toSet.up(), 3);
-
-        LightPropagator propagator = new LightPropagator();
-        propagator.propagateLight(center, BlockPos.getAllInBox(toSet, toSet), access, EnumSkyBlock.BLOCK, p -> {
-        });
-
-        verify(access, 10);
-    }
-
     @Test
     public void testEmittingLightUpdateMultipleBlocks() {
         int size = 32;
@@ -576,50 +530,6 @@ public class TestLightPropagator {
         verify(access, size);
     }
 
-    // no-crash tests
-    @Test(timeout = 3000)
-    public void testLimitRelightUnboundedArea() {
-        int size = 20;
-        TestLightBlockAccessImpl access = lightAccess(size).
-                //notice not calling currentHeightsForInitSkyLight()
-                        make();
-        BlockPos center = pos(0, 0, 0);
-        BlockPos toUpdate = pos(0, 0, 0);
-
-        LightPropagator propagator = new LightPropagator();
-
-        propagator.propagateLight(center, BlockPos.getAllInBox(toUpdate, toUpdate), access, EnumSkyBlock.SKY, p -> {
-        });
-        //success if no crash and at least that one block got updated
-        assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate));
-    }
-
-    @Test(timeout = 15000)
-    public void testUnlightSolidBlockInHugeLitArea() {
-        int size = 200;
-        TestLightBlockAccessImpl access = lightAccess(size, 20, size, 20).
-                withOpaque(posRange(pos(-30, -100, -30), pos(30, -100, 30))).
-                currentHeightsForInitSkyLight().
-                make();
-        BlockPos center = pos(0, 0, 0);
-        BlockPos toUpdate = pos(0, 0, 0);
-
-        access.setOpacity(toUpdate, 255);
-
-        LightPropagator propagator = new LightPropagator();
-
-        propagator.propagateLight(center, BlockPos.getAllInBox(toUpdate, toUpdate), access, EnumSkyBlock.SKY, p -> {
-        });
-        // success if no crash and at least that one block and neighbors got updated
-        assertEquals(0, access.getLightFor(EnumSkyBlock.SKY, toUpdate));
-        assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate.up()));
-        assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate.east()));
-        assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate.west()));
-        assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate.north()));
-        assertEquals(15, access.getLightFor(EnumSkyBlock.SKY, toUpdate.south()));
-        assertEquals(14, access.getLightFor(EnumSkyBlock.SKY, toUpdate.down()));
-    }
-
     @Test(timeout = 10000)
     public void testWorksAfterCrash() {
         int size = 20;
@@ -645,6 +555,120 @@ public class TestLightPropagator {
         //success if no crash
     }
 
+
+    /*
+     * Tests for spreading into existing unspread light sources
+     */
+
+    @Test
+    public void testEmitFullLightAroundSources() {
+
+        int size = 20;
+        TestLightBlockAccessImpl access = lightAccess(size).
+                currentHeightsForInitSkyLight().
+                withFullBlockLight(posRange(pos(-1, -1, -1), pos(1, 1, 1))).
+                make();
+        BlockPos center = pos(0, 0, 0);
+        BlockPos toUpdate = pos(0, 0, 0);
+
+        LightPropagator propagator = new LightPropagator();
+        propagator.propagateLight(center, BlockPos.getAllInBox(toUpdate, toUpdate), access, EnumSkyBlock.BLOCK, p -> {
+        });
+
+        assertThat(access, hasBlockLightValue(15, in(block(0, 0, 0))));
+        assertThat(access, hasBlockLightValue(0,
+                in(section(pos(-10, -10, -10), pos(10, 10, 10)))
+                        .except(block(0, 0, 0))
+        ));
+    }
+
+    @Test
+    public void testEmitLightOnSourcesEdge() {
+
+        int size = 20;
+        TestLightBlockAccessImpl access = lightAccess(size).
+                currentHeightsForInitSkyLight().
+                withBlockLight(2, posRange(pos(-1, -1, -1), pos(1, 1, 1))). // use value 2 because it's manual test
+                make();
+        BlockPos center = pos(0, 0, 0);
+        BlockPos toUpdate = pos(1, 0, 0);
+
+        LightPropagator propagator = new LightPropagator();
+        propagator.propagateLight(center, BlockPos.getAllInBox(toUpdate, toUpdate), access, EnumSkyBlock.BLOCK, p -> {
+        });
+
+        LightingMatchers.PosSection untouchedSection = section(pos(-1, -1, -1), pos(1, 1, 1))
+                .except(block(1, 0, 0));
+
+        assertThat(access, hasBlockLightValue(2, in(block(1, 0, 0))));
+        assertThat(access, hasBlockLightValue(1, in(LightingMatchers.PosSection.neighborsOf(1, 0, 0).except(untouchedSection))));
+        assertThat(access, hasBlockLightValue(0, in(untouchedSection)));
+    }
+
+    @Test
+    public void testEmitFullLightInLowerSourceArea() {
+
+        int size = 20;
+        TestLightBlockAccessImpl access = lightAccess(size).
+                currentHeightsForInitSkyLight().
+                withBlockLight(8, posRange(pos(-1, -1, -1), pos(1, 1, 1))).
+                withFullBlockLight(pos(0, 0, 0)).
+                make();
+        BlockPos center = pos(0, 0, 0);
+        BlockPos toUpdate = pos(0, 0, 0);
+
+        LightPropagator propagator = new LightPropagator();
+        propagator.propagateLight(center, BlockPos.getAllInBox(toUpdate, toUpdate), access, EnumSkyBlock.BLOCK, p -> {
+        });
+
+        verify(access, size);
+    }
+
+    @Test
+    public void testEmitFullLightSpreadMatchingSourceArea() {
+
+        int size = 20;
+        TestLightBlockAccessImpl access = lightAccess(size).
+                currentHeightsForInitSkyLight().
+                withBlockLight(14, posRange(pos(-1, -1, -1), pos(1, 1, 1))).
+                withFullBlockLight(pos(0, 0, 0)).
+                make();
+        BlockPos center = pos(0, 0, 0);
+        BlockPos toUpdate = pos(0, 0, 0);
+
+        LightPropagator propagator = new LightPropagator();
+        propagator.propagateLight(center, BlockPos.getAllInBox(toUpdate, toUpdate), access, EnumSkyBlock.BLOCK, p -> {
+        });
+
+        assertThat(access, hasBlockLightValue(15, in(block(0, 0, 0))));
+        assertThat(access, hasBlockLightValue(0,
+                in(section(pos(-10, -10, -10), pos(10, 10, 10)))
+                        .except(block(0, 0, 0))
+        ));
+    }
+
+    @Test(timeout = 15000)
+    public void testUnlightSolidBlockInHugeLitArea() {
+        int size = 21;
+        TestLightBlockAccessImpl access = lightAccess(size, size, size, size).
+                withOpaque(posRange(pos(-size, -size, -size), pos(size, -size, size))).
+                currentHeightsForInitSkyLight().
+                make();
+        BlockPos center = pos(0, 0, 0);
+        BlockPos toUpdate = pos(0, 0, 0);
+
+        access.setOpacity(toUpdate, 255);
+
+        LightPropagator propagator = new LightPropagator();
+
+        propagator.propagateLight(center, BlockPos.getAllInBox(toUpdate, toUpdate), access, EnumSkyBlock.SKY, p -> {
+        });
+        assertThat(access, hasSkyLightValue(0, in(block(toUpdate))));
+        assertThat(access, hasSkyLightValue(15, in(section(
+                pos(-20, -20, -20),
+                pos(20, 20, 20)
+        ).except(block(toUpdate)))));
+    }
 
     // utils
 
@@ -686,76 +710,5 @@ public class TestLightPropagator {
 
     private void verify(ILightBlockAccess lightAccess, int radius) {
         assertThat(lightAccess, hasCorrectLight(range(radius)));
-    }
-
-    private static LightBlockAccessBuilder lightAccess(int size) {
-        return new LightBlockAccessBuilder(size);
-    }
-
-
-    private LightBlockAccessBuilder lightAccess(int size, int lightXSize, int lightYSize, int lightZSize) {
-        return new LightBlockAccessBuilder(size, lightXSize, lightYSize, lightZSize);
-    }
-
-
-    private static BlockPos pos(int x, int y, int z) {
-        return new BlockPos(x, y, z);
-    }
-
-    private static BlockPos[] posRange(BlockPos start, BlockPos end) {
-        ArrayList<BlockPos> p = Lists.newArrayList(BlockPos.getAllInBox(start, end));
-        return p.toArray(new BlockPos[p.size()]);
-    }
-
-    private static class LightBlockAccessBuilder {
-
-        private TestLightBlockAccessImpl access;
-        private int size;
-        private int lightXSize;
-        private int lightYSize;
-        private int lightZSize;
-
-        LightBlockAccessBuilder(int size) {
-            this(size, size, size, size);
-        }
-
-        public LightBlockAccessBuilder(int size, int lightXSize, int lightYSize, int lightZSize) {
-            this.access = new TestLightBlockAccessImpl(size);
-            this.size = size;
-            this.lightXSize = lightXSize;
-            this.lightYSize = lightYSize;
-            this.lightZSize = lightZSize;
-        }
-
-        LightBlockAccessBuilder withFullBlockLight(BlockPos... pos) {
-            for (BlockPos p : pos) {
-                access.setBlockLightSource(p, 15);
-            }
-            return this;
-        }
-
-        LightBlockAccessBuilder withOpaque(BlockPos... pos) {
-            for (BlockPos p : pos) {
-                access.setOpacity(p, 255);
-            }
-            return this;
-        }
-
-        LightBlockAccessBuilder withTransparent(BlockPos... pos) {
-            for (BlockPos p : pos) {
-                access.setOpacity(p, 0);
-            }
-            return this;
-        }
-
-        LightBlockAccessBuilder currentHeightsForInitSkyLight() {
-            BlockPos.getAllInBox(pos(-lightXSize, -lightYSize, -lightZSize), pos(lightXSize, lightYSize, lightZSize)).forEach(pos ->
-                    access.setLightFor(EnumSkyBlock.SKY, pos, access.getEmittedLight(pos, EnumSkyBlock.SKY)));
-            return this;
-        }
-
-        TestLightBlockAccessImpl make() {
-            return access;
-        }
     }
 }

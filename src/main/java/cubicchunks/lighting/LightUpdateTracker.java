@@ -37,16 +37,16 @@ import net.minecraft.util.math.BlockPos;
 /**
  * Tracks FirstLightProcessor lighting updates and sends them to client
  */
-class LightUpdateTracker {
+public class LightUpdateTracker {
 
     private final PlayerCubeMap cubeMap;
     private XYZMap<CubeUpdateList> cubes = new XYZMap<>(0.5f, 100);
 
-    LightUpdateTracker(PlayerCubeMap cubeMap) {
+    public LightUpdateTracker(PlayerCubeMap cubeMap) {
         this.cubeMap = cubeMap;
     }
 
-    void onUpdate(BlockPos blockPos) {
+    public void onUpdate(BlockPos blockPos) {
         CubeUpdateList list = cubes.get(blockPos.getX(), blockPos.getY(), blockPos.getZ());
         if (list == null) {
             list = new CubeUpdateList(CubePos.fromBlockCoords(blockPos));
@@ -55,7 +55,7 @@ class LightUpdateTracker {
         list.add(blockPos);
     }
 
-    void sendAll() {
+    public void sendAll() {
         cubes.forEach(CubeUpdateList::send);
         cubes = new XYZMap<>(0.5f, 100);
     }

@@ -189,13 +189,9 @@ public class Cube implements XYZAddressable {
     public Cube(IColumn column, int cubeY, ICubePrimer primer) {
         this(column, cubeY);
 
-        int miny = cubeToMinBlock(cubeY);
-        IHeightMap opindex = column.getOpacityIndex();
-
         for (int x = 0; x < Cube.SIZE; x++) {
             for (int z = 0; z < Cube.SIZE; z++) {
-
-                for (int y = Cube.SIZE - 1; y >= 0; y--) {
+                for (int y = 0; y < Cube.SIZE; y++) {
                     IBlockState newstate = primer.getBlockState(x, y, z);
 
                     if (newstate.getMaterial() != Material.AIR) {
@@ -203,11 +199,6 @@ public class Cube implements XYZAddressable {
                             newStorage();
                         }
                         storage.set(x, y, z, newstate);
-
-                        if (newstate.getLightOpacity() != 0) {
-                            column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe ServerHeightMap needs its own isModified
-                            opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
-                        }
                     }
                 }
             }
@@ -441,6 +432,26 @@ public class Cube implements XYZAddressable {
     //=========Other methods===========
     //=================================
 
+    public void commitToSurfaceTracker() {
+        if (this.isEmpty()) {
+            return;
+        }
+        int miny = cubeToMinBlock(getY());
+        IHeightMap heightmap = column.getOpacityIndex();
+
+        for (int localX = 0; localX < Cube.SIZE; localX++) {
+            for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
+                for (int localY = Cube.SIZE - 1; localY >= 0; localY--) {
+                    IBlockState state = getBlockState(localX, localY, localZ);
+                    BlockPos pos = new BlockPos(localToBlock(getX(), localX), localToBlock(getY(), localY), localToBlock(getZ(), localZ));
+                    if (state.getLightOpacity(getCubicWorld(), pos) != 0) {
+                        column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe ServerHeightMap needs its own isModified
+                        heightmap.onOpacityChange(localX, miny + localY, localZ, state.getLightOpacity());
+                    }
+                }
+            }
+        }
+    }
     /**
      * Check if there are any non-air blocks in this cube
      *

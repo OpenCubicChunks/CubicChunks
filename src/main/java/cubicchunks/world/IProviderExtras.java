@@ -80,12 +80,14 @@ public interface IProviderExtras {
          */
         GENERATE,
         /**
-         * Populate the cube/column, if necessary
-         */
-        POPULATE,
-        /**
          * Generate lighting information for the cube, if necessary
          */
-        LIGHT
+        LIGHT,
+        /**
+         * Populate the cube/column, if necessary
+         */
+        POPULATE;
+
+        public static final Requirement FINAL = POPULATE;
     }
 }

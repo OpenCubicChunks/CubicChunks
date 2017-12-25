@@ -207,13 +207,6 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
         setStorage(pos.getX(), pos.getY(), pos.getZ(), cube.getStorage());
     }
 
-    @Override public boolean canSeeSky(BlockPos pos) {
-        Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
-        IColumn IColumn = cube.getColumn();
-        int height = IColumn.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
-        return height <= pos.getY();
-    }
-
     @Override public int getEmittedLight(BlockPos pos, EnumSkyBlock type) {
         switch (type) {
             case BLOCK:
@@ -223,6 +216,13 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
             default:
                 throw new AssertionError();
         }
+    }
+
+    @Override public int getTopBlockY(BlockPos pos) {
+        Cube cube = getCube(pos.getX(), pos.getY(), pos.getZ());
+        IColumn IColumn = cube.getColumn();
+        int height = IColumn.getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
+        return height - 1;// TODO: 1 above top
     }
 
     public static ILightBlockAccess forBlockRegion(ICubeProvider prov, BlockPos startPos, BlockPos endPos) {

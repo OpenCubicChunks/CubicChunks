@@ -193,6 +193,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
      * @author Barteks2x
      * @reason CubicChunks needs to check if cube is loaded instead of chunk
      */
+    /*
     @Inject(method = WORLD_IS_BLOCK_LOADED_Z, cancellable = true, at = @At(value = "HEAD"))
     public void isBlockLoaded(BlockPos pos, boolean allowEmpty, CallbackInfoReturnable<Boolean> cbi) {
         if (!isCubicWorld()) {
@@ -204,7 +205,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
         } else {
             cbi.setReturnValue(cube != null && !(cube instanceof BlankCube));
         }
-    }
+    }*/
 
     @Redirect(method = "spawnEntity", at = @At(value = "INVOKE", target = WORLD_IS_CHUNK_LOADED))
     private boolean spawnEntity_isChunkLoaded(World world, int chunkX, int chunkZ, boolean allowEmpty, Entity ent) {

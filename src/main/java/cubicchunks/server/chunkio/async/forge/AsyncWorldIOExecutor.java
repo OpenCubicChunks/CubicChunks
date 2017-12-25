@@ -224,7 +224,7 @@ public class AsyncWorldIOExecutor {
 
         IColumn loadedIColumn;
         if ((loadedIColumn = cache.getLoadedColumn(x, z)) == null) {
-            cache.asyncGetColumn(x, z, IProviderExtras.Requirement.LIGHT, task::setColumn);
+            cache.asyncGetColumn(x, z, IProviderExtras.Requirement.FINAL, task::setColumn);
         } else {
             //it's already there, tell the task to use it
             task.setColumn(loadedIColumn);

@@ -69,7 +69,7 @@ public class CommonEventHandler {
 
         WorldSavedCubicChunksData savedData =
                 (WorldSavedCubicChunksData) evt.getObject().getMapStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
-        boolean forcedCubicChunks = ((ICubicWorldSettings)world.getWorldInfo()).isCubic();
+        boolean forcedCubicChunks = true||((ICubicWorldSettings)world.getWorldInfo()).isCubic();
         // if it's our world type - always cubic chunks
         // is stored in WorldSavedData - it's already existing cubic chunks world
         // if forced cubic chunks - cubic chunks has been enabled by user on this world

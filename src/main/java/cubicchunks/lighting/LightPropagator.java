@@ -24,7 +24,6 @@
 package cubicchunks.lighting;
 
 import static cubicchunks.lighting.LightUpdateQueue.MAX_DISTANCE;
-import static cubicchunks.lighting.LightUpdateQueue.MIN_DISTANCE;
 import static net.minecraft.crash.CrashReportCategory.getCoordinateInfo;
 
 import mcp.MethodsReturnNonnullByDefault;
@@ -35,6 +34,7 @@ import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 
+import java.util.Collection;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -47,14 +47,22 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class LightPropagator {
 
+    public static final Consumer<BlockPos> NULL_CALLBACK = p -> {
+    };
+
     @Nonnull private LightUpdateQueue internalRelightQueue = new LightUpdateQueue();
 
     /**
      * Updates light at all BlockPos in given iterable.
      * <p>
      * For each block in the volume, if light source is brighter than the light value there was before - it will spread
-     * light. If the light source is less bright than the current light value - the method will redo light spreading for
-     * these blocks.
+     * light. If the light source is less bright than the current light value - the method will undo light spreading for
+     * these blocks, and spread inside from the edges.
+     * <p>
+     * Additionally, light sources with light value higher or equal than the result of spreading out light will be ignored and left as is.
+     * This behavior allows to reasonably efficiently update large volumes of terrain from da
+     * This is intended to make initial light propagation more efficient in common cases when starting from complete darkness
+     * without the half-broken initial MC-indev-like lightmap generation.
      * <p>
      * If updating lighting starting at these positions would never end, the algorithm will stop after walking {@link
      * LightUpdateQueue#MAX_DISTANCE} blocks
@@ -63,8 +71,8 @@ public class LightPropagator {
      * centerPos.getX/Y/Z + }{@link LightUpdateQueue#MAX_POS} of centerPos (inclusive) with {@code
      * LightUpdateQueue#MAX_DISTANCE + 1} buffer radius.
      * <p>
-     * WARNING: You probably shouldn't use this method directly and use {@link LightingManager#relightMultiBlock(BlockPos,
-     * BlockPos, EnumSkyBlock)} instead
+     * WARNING: You probably shouldn't use this method directly and use
+     * {@link LightingManager#relightMultiBlock(BlockPos, BlockPos, EnumSkyBlock, Consumer)} instead
      *
      * @param centerPos position relative to which calculations are done. usually average position.
      * @param coords contains all coords that need updating
@@ -74,89 +82,10 @@ public class LightPropagator {
      */
      public void propagateLight(BlockPos centerPos, Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type,
             Consumer<BlockPos> setLightCallback) {
-
         internalRelightQueue.begin(centerPos);
         try {
-            // first add all decreased light values to the queue
-            coords.forEach(pos -> {
-                int emitted = blocks.getEmittedLight(pos, type);
-                if (blocks.getLightFor(type, pos) > emitted) {
-                    //add the emitted value even if it's not used here - it will be used when relighting that area
-                    internalRelightQueue.put(pos, emitted, MAX_DISTANCE);
-                }
-            });
-            // follow decreasing light values until it stops decreasing,
-            // setting each encountered value to 0 for easy spreading
-            while (internalRelightQueue.next()) {
-                BlockPos pos = internalRelightQueue.getPos();
-                int distance = internalRelightQueue.getDistance();
-
-                int currentValue = blocks.getLightFor(type, pos);
-                // note: min value is 0
-                int lightFromNeighbors = getExpectedLight(blocks, type, pos);
-                // if this is true, this blocks currently spreads light out, and has no light coming in from neighbors
-                // lightFromNeighbors == currentValue-1 means that some neighbor has the same light value, or that
-                // currentValue == 1 and all surrounding blocks have light 0
-                // neither of these 2 cases can be ignored.
-                // note that there is no need to handle case when some surrounding block has value one higher -
-                // this would mean that the current block is in the light area from other block, no need to update that
-                if (lightFromNeighbors <= currentValue - 1) {
-                    // set it to 0 and add neighbors to the queue
-                    blocks.setLightFor(type, pos, 0);
-                    setLightCallback.accept(pos);
-                    // if no distance left - stop spreading, so that it won't run into problems when updating too much
-                    if (distance <= MIN_DISTANCE) {
-                        continue;
-                    }
-                    // add all neighbors even those already checked - the check above will fail for them
-                    // because currentValue-1 == -1 (already checked are set to 0)
-                    // and min. possible lightFromNeighbors is 0
-                    for (EnumFacing direction : EnumFacing.values()) {
-                        BlockPos offset = pos.offset(direction);
-                        //add the emitted value even if it's not used here - it will be used when relighting that area
-                        internalRelightQueue.put(offset, blocks.getEmittedLight(offset, type), distance - 1);
-                    }
-                }
-            }
-
-            internalRelightQueue.resetIndex();
-
-            // then handle everything
-            coords.forEach(pos -> {
-                int emitted = blocks.getEmittedLight(pos, type);
-                // blocks where light decreased are already added (previous run over the queue)
-                if (emitted > blocks.getLightFor(type, pos)) {
-                    internalRelightQueue.put(pos, emitted, MAX_DISTANCE);
-                    // do it here so that the loop below only needs to check if the light from this block can go into
-                    // any neighbor. This simplifies logic for decreasing light value. Current code wouldn't work when
-                    // decreasing sunlight below a block, because sunlight couldn't spread "into" any block made dark
-                    // by light un-spreading code above
-                    blocks.setLightFor(type, pos, emitted);
-                    setLightCallback.accept(pos);
-                }
-            });
-            // spread out light values
-            while (internalRelightQueue.next()) {
-                BlockPos pos = internalRelightQueue.getPos();
-                int distance = internalRelightQueue.isBeforeReset() ? MAX_DISTANCE : internalRelightQueue.getDistance();
-
-                for (EnumFacing direction : EnumFacing.values()) {
-                    BlockPos nextPos = pos.offset(direction);
-                    int newLight = getExpectedLight(blocks, type, nextPos);
-                    if (newLight <= blocks.getLightFor(type, nextPos)) {
-                        // can't go further, the next block already has the same or higher light value
-                        continue;
-                    }
-                    blocks.setLightFor(type, nextPos, newLight);
-                    setLightCallback.accept(nextPos);
-
-                    // if no distance left - stop spreading, so that it won't run into problems when updating too much
-                    if (distance - 1 <= MIN_DISTANCE) {
-                        continue;
-                    }
-                    internalRelightQueue.put(nextPos, newLight, distance - 1);
-                }
-            }
+            unspreadDecreased(coords, blocks, type, setLightCallback);
+            spreadIncreased(coords, blocks, type, setLightCallback);
         } catch (Throwable t) {
             CrashReport report = CrashReport.makeCrashReport(t, "Updating skylight");
             CrashReportCategory category = report.makeCategory("Skylight update");
@@ -170,9 +99,89 @@ public class LightPropagator {
         } finally {
             internalRelightQueue.end();
         }
+     }
+
+    private void unspreadDecreased(Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type, Consumer<BlockPos> setLightCallback) {
+        // first add all decreased light values to the queue
+        coords.forEach(pos -> {
+            int emitted = blocks.getEmittedLight(pos, type);
+            if (blocks.getLightFor(type, pos) > emitted) {
+                //add the emitted value even if it's not used here - it will be used when relighting that area
+                internalRelightQueue.put(pos, emitted, MAX_DISTANCE);
+            }
+        });
+        // follow decreasing light values
+        // setting each encountered value to 0 for easy spreading
+        while (internalRelightQueue.next()) {
+            int distance = internalRelightQueue.getDistance();
+            assert distance >= 0;
+            BlockPos pos = internalRelightQueue.getPos();
+
+            int currentValue = blocks.getLightFor(type, pos);
+            blocks.setLightFor(type, pos, 0);
+            setLightCallback.accept(pos);
+
+            for (EnumFacing direction : EnumFacing.values()) {
+                BlockPos offsetPos = pos.offset(direction);
+                int existingOffsetLight = blocks.getLightFor(type, offsetPos);
+                if (existingOffsetLight == 0) {
+                    continue;
+                }
+                int expectedSpread = getLightSpreadInto(blocks, offsetPos, currentValue);
+                if (existingOffsetLight <= expectedSpread) {
+                    // add the emitted value even if it's not used here - it will be used when relighting that area
+                    // TODO: use 2 separate queues, places from where light continues spreading should be added there without all the others
+                    // the distance set here will be reused by spreading code - unspreading follows decreasing light values and spreading
+                    // decreases as it goes, so it can only ever decrease 16 times before dropping to 0
+                    internalRelightQueue.put(offsetPos, blocks.getEmittedLight(offsetPos, type), distance - 1);
+                }
+            }
+        }
+    }
+
+    private void spreadIncreased(Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type, Consumer<BlockPos> setLightCallback) {
+        internalRelightQueue.resetIndex();
+        // then handle everything
+        coords.forEach(pos -> {
+            int emitted = getExpectedLight(blocks, type, pos);//blocks.getEmittedLight(pos, type);
+            // blocks where light decreased are already added (previous run over the queue)
+            if (emitted > blocks.getLightFor(type, pos)) {
+                internalRelightQueue.put(pos, emitted, MAX_DISTANCE);
+                blocks.setLightFor(type, pos, emitted);
+                setLightCallback.accept(pos);
+            }
+        });
+        // spread out light values
+        while (internalRelightQueue.next()) {
+            int light = internalRelightQueue.getValue();
+
+            int distance = internalRelightQueue.getDistance();
+            assert distance >= 0;
+
+            BlockPos pos = internalRelightQueue.getPos();
+
+            for (EnumFacing direction : EnumFacing.values()) {
+                BlockPos nextPos = pos.offset(direction);
+                int newLight = getLightSpreadInto(blocks, nextPos, light);
+                if (newLight <= blocks.getLightFor(type, nextPos) || newLight <= blocks.getEmittedLight(nextPos, type)) {
+                    // can't go further, the next block already has the same or higher light value
+                    continue;
+                }
+                blocks.setLightFor(type, nextPos, newLight);
+                setLightCallback.accept(nextPos);
+
+                if (newLight > 1) {
+                    internalRelightQueue.put(nextPos, newLight, distance - 1);
+                }
+            }
+        }
     }
 
     private int getExpectedLight(ILightBlockAccess blocks, EnumSkyBlock type, BlockPos pos) {
         return Math.max(blocks.getEmittedLight(pos, type), blocks.getLightFromNeighbors(type, pos));
+    }
+
+    private int getLightSpreadInto(ILightBlockAccess blocks, BlockPos pos, int currentValue) {
+        return Math.max(0, currentValue - Math.max(1, blocks.getBlockLightOpacity(pos)));
     }
 }

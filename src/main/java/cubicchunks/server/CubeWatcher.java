@@ -155,7 +155,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
         playerCubeMap.getWorld().getProfiler().startSection("getCube");
         if (canGenerate) {
-            this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT);
+            this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.FINAL);
         } else {
             this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LOAD);
         }

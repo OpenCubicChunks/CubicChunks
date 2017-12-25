@@ -54,8 +54,11 @@ import cubicchunks.worldgen.generator.custom.populator.SnowBiomeDecorator;
 import cubicchunks.worldgen.generator.custom.populator.SwampDecorator;
 import cubicchunks.worldgen.generator.custom.populator.TaigaDecorator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeBeach;
 import net.minecraft.world.biome.BiomeDesert;
@@ -89,10 +92,14 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import optifine.OptifineDevFix;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -214,6 +221,8 @@ public class CubicChunks {
         ConversionUtils.initFlowNoiseHack();
 
         config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
+
+        OptifineDevFix.init();
     }
 
     @EventHandler

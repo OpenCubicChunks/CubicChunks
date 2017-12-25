@@ -150,11 +150,11 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     public Chunk loadChunk(int columnX, int columnZ, @Nullable Runnable runnable) {
         // TODO: Set this to LOAD when PlayerCubeMap works
         if (runnable == null) {
-            return (Chunk) getColumn(columnX, columnZ, /*Requirement.LOAD*/Requirement.LIGHT);
+            return (Chunk) getColumn(columnX, columnZ, /*Requirement.LOAD*/Requirement.FINAL);
         }
 
         // TODO here too
-        asyncGetColumn(columnX, columnZ, Requirement.LIGHT, col -> runnable.run());
+        asyncGetColumn(columnX, columnZ, Requirement.FINAL, col -> runnable.run());
         return null;
     }
 
@@ -384,10 +384,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             }
         }
 
-        //TODO: Direct skylight might have changed and even Cubes that have there
-        //      initial light done, there might be work to do for a cube that just loaded
         if (!cube.isInitialLightingDone()) {
-            calculateDiffuseSkylight(cube);
+            this.worldServer.getFirstLightProcessor().updateSkylightFor(cube.getCoords());
         }
 
         return cube;
@@ -409,9 +407,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         Cube cube = new Cube(column, cubeY, primer);
 
         onCubeLoaded(cube, column);
-
-        this.worldServer.getFirstLightProcessor()
-                .initializeSkylight(cube); // init sky light, (does not require any other cubes, just ServerHeightMap)
 
         return cube;
     }
@@ -450,28 +445,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         }
         
         cube.setFullyPopulated(true);
-    }
-
-    /**
-     * Initialize skylight for the cube at the specified position, generating surrounding cubes as needed.
-     *
-     * @param cube The cube to light up
-     */
-    private void calculateDiffuseSkylight(Cube cube) {
-        int cubeX = cube.getX();
-        int cubeY = cube.getY();
-        int cubeZ = cube.getZ();
-
-        for (int x = -2; x <= 2; x++) {
-            for (int z = -2; z <= 2; z++) {
-                for (int y = 2; y >= -2; y--) {
-                    if (x != 0 || y != 0 || z != 0) {
-                        getCube(x + cubeX, y + cubeY, z + cubeZ);
-                    }
-                }
-            }
-        }
-        this.worldServer.getFirstLightProcessor().diffuseSkylight(cube);
     }
 
 

@@ -23,11 +23,16 @@
  */
 package cubicchunks.testutil;
 
+import static cubicchunks.testutil.LightingMatchers.pos;
+
+import com.google.common.collect.Lists;
 import cubicchunks.lighting.ILightBlockAccess;
+import cubicchunks.util.Coords;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,15 +76,6 @@ public class TestLightBlockAccessImpl implements ILightBlockAccess {
         }
     }
 
-    @Override public boolean canSeeSky(BlockPos pos) {
-        for (BlockPos p = new BlockPos(pos.getX(), size, pos.getZ()); p.getY() >= -size; p = p.down()) {
-            if (getBlockLightOpacity(p) > 0) {
-                return pos.getY() > p.getY();
-            }
-        }
-        return true;
-    }
-
     @Override public int getEmittedLight(BlockPos pos, EnumSkyBlock type) {
         Integer ret;
         if (type == EnumSkyBlock.BLOCK) {
@@ -90,11 +86,88 @@ public class TestLightBlockAccessImpl implements ILightBlockAccess {
         return ret == null ? 0 : ret;
     }
 
+    @Override public int getTopBlockY(BlockPos pos) {
+        for (BlockPos p = new BlockPos(pos.getX(), size, pos.getZ()); p.getY() >= -size; p = p.down()) {
+            if (getBlockLightOpacity(p) > 0) {
+                return p.getY();
+            }
+        }
+        return Coords.NO_HEIGHT;
+    }
+
     public void setBlockLightSource(BlockPos pos, int value) {
         this.emittedLightBlock.put(pos, value);
     }
 
     public void setOpacity(BlockPos pos, int opacity) {
         this.opacities.put(pos, opacity);
+    }
+
+    public static LightBlockAccessBuilder lightAccess(int size) {
+        return new LightBlockAccessBuilder(size);
+    }
+
+
+    public static LightBlockAccessBuilder lightAccess(int size, int lightXSize, int lightYSize, int lightZSize) {
+        return new LightBlockAccessBuilder(size, lightXSize, lightYSize, lightZSize);
+    }
+
+    public static class LightBlockAccessBuilder {
+
+        private TestLightBlockAccessImpl access;
+        private int size;
+        private int lightXSize;
+        private int lightYSize;
+        private int lightZSize;
+
+        LightBlockAccessBuilder(int size) {
+            this(size, size, size, size);
+        }
+
+        public LightBlockAccessBuilder(int size, int lightXSize, int lightYSize, int lightZSize) {
+            this.access = new TestLightBlockAccessImpl(size);
+            this.size = size;
+            this.lightXSize = lightXSize;
+            this.lightYSize = lightYSize;
+            this.lightZSize = lightZSize;
+        }
+
+        public LightBlockAccessBuilder withFullBlockLight(BlockPos... pos) {
+            for (BlockPos p : pos) {
+                access.setBlockLightSource(p, 15);
+            }
+            return this;
+        }
+
+        public LightBlockAccessBuilder withBlockLight(int value, BlockPos... pos) {
+            for (BlockPos p : pos) {
+                access.setBlockLightSource(p, value);
+            }
+            return this;
+        }
+
+        public LightBlockAccessBuilder withOpaque(BlockPos... pos) {
+            for (BlockPos p : pos) {
+                access.setOpacity(p, 255);
+            }
+            return this;
+        }
+
+        public LightBlockAccessBuilder withTransparent(BlockPos... pos) {
+            for (BlockPos p : pos) {
+                access.setOpacity(p, 0);
+            }
+            return this;
+        }
+
+        public LightBlockAccessBuilder currentHeightsForInitSkyLight() {
+            BlockPos.getAllInBox(pos(-lightXSize, -lightYSize, -lightZSize), pos(lightXSize, lightYSize, lightZSize)).forEach(pos ->
+                    access.setLightFor(EnumSkyBlock.SKY, pos, access.getEmittedLight(pos, EnumSkyBlock.SKY)));
+            return this;
+        }
+
+        public TestLightBlockAccessImpl make() {
+            return access;
+        }
     }
 }

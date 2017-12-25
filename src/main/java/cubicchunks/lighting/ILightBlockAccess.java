@@ -23,6 +23,10 @@
  */
 package cubicchunks.lighting;
 
+import cubicchunks.util.Coords;
+import cubicchunks.util.CubePos;
+import cubicchunks.world.IHeightMap;
+import cubicchunks.world.ServerHeightMap;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -30,6 +34,9 @@ import net.minecraft.world.EnumSkyBlock;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+/**
+ *
+ */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public interface ILightBlockAccess {
@@ -40,46 +47,17 @@ public interface ILightBlockAccess {
 
     void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val);
 
-    /**
-     * Faster version of world.getRawLight that works for skylight
-     */
-    default int computeLightValue(BlockPos pos) {
-        if (canSeeSky(pos)) {
-            return 15;
-        }
-        int lightSubtract = getBlockLightOpacity(pos);
-
-        if (lightSubtract < 1) {
-            lightSubtract = 1;
-        }
-
-        if (lightSubtract >= 15) {
-            return 0;
-        }
-        BlockPos.PooledMutableBlockPos currentPos = BlockPos.PooledMutableBlockPos.retain();
-        int maxValue = 0;
-        for (EnumFacing enumfacing : EnumFacing.values()) {
-            currentPos.setPos(pos).move(enumfacing);
-            int currentValue = this.getLightFor(EnumSkyBlock.SKY, currentPos) - lightSubtract;
-
-            if (currentValue > maxValue) {
-                maxValue = currentValue;
-            }
-
-            if (maxValue >= 14) {
-                return maxValue;
-            }
-        }
-
-        currentPos.release();
-        return maxValue;
+    default boolean canSeeSky(BlockPos pos) {
+        return pos.getY() > getTopBlockY(pos);
     }
-
-    boolean canSeeSky(BlockPos pos);
 
     int getEmittedLight(BlockPos pos, EnumSkyBlock type);
 
     default int getLightFromNeighbors(EnumSkyBlock type, BlockPos pos) {
+        return Math.max(0, getUnclampedLightFromNeighbors(type, pos));
+    }
+
+    default int getUnclampedLightFromNeighbors(EnumSkyBlock type, BlockPos pos) {
         //TODO: use MutableBlockPos?
         int max = 0;
         for (EnumFacing direction : EnumFacing.values()) {
@@ -89,6 +67,32 @@ public interface ILightBlockAccess {
             }
         }
         int decrease = Math.max(1, getBlockLightOpacity(pos));
-        return Math.max(0, max - decrease);
+        return max - decrease;
+    }
+
+    /**
+     * Returns Y coordinate of the top already committed opaque block (block Y coordinate ignored)
+     */
+    int getTopBlockY(BlockPos pos);
+
+    /**
+     * Returns Y coordinate of the top opaque block that is already committed or uncommitted but in the specified cube (block Y coordinate ignored)
+     */
+    default int getEffectiveTopBlockY(CubePos cube, BlockPos pos) {
+        return Math.max(getLocalTopBlockY(cube, pos), getTopBlockY(pos));
+    }
+
+    /**
+     * Returns Y coordinate of the top opaque block in given cube, at given coordinates (block Y coordinate ignored), or block right below that
+     * cube if there is none.
+     */
+    default int getLocalTopBlockY(CubePos cube, BlockPos pos) {
+        int bottomY = cube.getMinBlockY();
+        for (int y = cube.getMaxBlockY(); y >= bottomY; y--) {
+            if (getBlockLightOpacity(new BlockPos(pos.getX(), y, pos.getZ())) != 0) {
+                return y;
+            }
+        }
+        return bottomY - 1;
     }
 }

@@ -121,7 +121,7 @@ public class SpawnCubes {
             for (int cubeX = spawnCubeX - radius; cubeX <= spawnCubeX + radius; cubeX++) {
                 for (int cubeZ = spawnCubeZ - radius; cubeZ <= spawnCubeZ + radius; cubeZ++) {
                     for (int cubeY = spawnCubeY + radius; cubeY >= spawnCubeY - radius; cubeY--) {
-                        serverCubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT).getTickets().add(this);
+                        serverCubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.FINAL).getTickets().add(this);
                         generated++;
                         if (System.currentTimeMillis() >= lastTime + progressReportInterval) {
                             lastTime = System.currentTimeMillis();

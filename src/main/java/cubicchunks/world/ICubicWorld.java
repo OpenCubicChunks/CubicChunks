@@ -39,6 +39,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
@@ -57,7 +58,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public interface ICubicWorld extends IMinMaxHeight {
+public interface ICubicWorld extends IMinMaxHeight, IBlockAccess {
 
     /**
      * Updates the world

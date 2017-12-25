@@ -26,6 +26,8 @@ package cubicchunks.asm.mixin.core.common;
 import cubicchunks.CubicChunks;
 import cubicchunks.entity.CubicEntityTracker;
 import cubicchunks.lighting.FirstLightProcessor;
+import cubicchunks.lighting.LightPropagator;
+import cubicchunks.lighting.LightUpdateTracker;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
@@ -91,7 +93,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
         this.saveHandler = new CubicSaveHandler(this, this.getSaveHandler());
 
-        this.firstLightProcessor = new FirstLightProcessor(this);
+        //this.firstLightProcessor = new FirstLightProcessor(getCubeCache(), new LightUpdateTracker(getPlayerCubeMap()), new LightPropagator());
+
         this.entityTracker = new CubicEntityTracker(this);
         CubicChunks.addConfigChangeListener(this);
     }
@@ -131,7 +134,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         if (!this.isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
-        assert this.firstLightProcessor != null;
         return this.firstLightProcessor;
     }
     //vanilla field accessors

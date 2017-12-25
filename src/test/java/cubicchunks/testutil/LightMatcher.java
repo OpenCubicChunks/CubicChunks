@@ -23,6 +23,7 @@
  */
 package cubicchunks.testutil;
 
+import static cubicchunks.testutil.LightingMatchers.pos;
 import static cubicchunks.util.MathUtil.max;
 import static net.minecraft.world.EnumSkyBlock.BLOCK;
 import static net.minecraft.world.EnumSkyBlock.SKY;
@@ -57,17 +58,19 @@ class LightMatcher extends TypeSafeDiagnosingMatcher<ILightBlockAccess> {
      * for the specific type and will never be null.
      */
     @Override protected boolean matchesSafely(ILightBlockAccess access, Description mismatchDescription) {
-        return StreamSupport.stream(BlockPos.getAllInBox(start, end).spliterator(), false).allMatch(pos -> {
-            if (access.getLightFor(SKY, pos) != getExpected(access, pos, SKY)) {
-                addMismatchDescription(mismatchDescription, access, pos, SKY);
-                return false;
-            }
-            if (access.getLightFor(BLOCK, pos) != getExpected(access, pos, BLOCK)) {
-                addMismatchDescription(mismatchDescription, access, pos, BLOCK);
-                return false;
-            }
-            return true;
-        });
+        return StreamSupport.stream(BlockPos.getAllInBox(start, end).spliterator(), false)
+                .map(p -> pos(p.getX(), p.getY(), p.getZ()))
+                .allMatch(pos -> {
+                    if (access.getLightFor(SKY, pos) != getExpected(access, pos, SKY)) {
+                        addMismatchDescription(mismatchDescription, access, pos, SKY);
+                        return false;
+                    }
+                    if (access.getLightFor(BLOCK, pos) != getExpected(access, pos, BLOCK)) {
+                        addMismatchDescription(mismatchDescription, access, pos, BLOCK);
+                        return false;
+                    }
+                    return true;
+                });
     }
 
     private void addMismatchDescription(Description desc, ILightBlockAccess access, BlockPos pos, EnumSkyBlock type) {
