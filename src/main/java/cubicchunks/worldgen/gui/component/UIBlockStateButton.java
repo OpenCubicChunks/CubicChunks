@@ -73,7 +73,7 @@ public class UIBlockStateButton<T extends UIBlockStateButton<T>> extends UICompo
         return self();
     }
 
-    private String generateTooltip(IBlockState blockState) {
+    public static String generateTooltip(IBlockState blockState) {
         StringBuffer sb = new StringBuffer(128);
         sb.append(blockState.getBlock().getLocalizedName());
         for (Entry<IProperty<?>, Comparable<?>> entry : blockState.getProperties().entrySet()) {
