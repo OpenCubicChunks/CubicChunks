@@ -51,7 +51,7 @@ public class UIShaderComponent<T extends UIShaderComponent<T>> extends UICompone
 
     @Override public void drawForeground(GuiRenderer guiRenderer, int mouseX, int mouseY, float partialTicks) {
         preShaderDraw(guiRenderer, mouseX, mouseY, partialTicks);
-        if (!this.disabled) {
+        if (this.isEnabled()) {
             guiRenderer.next(DefaultVertexFormats.POSITION_TEX);
             shader.useShader();
             this.rp.icon.set(icon);

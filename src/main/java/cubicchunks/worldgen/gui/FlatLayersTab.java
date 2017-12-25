@@ -59,7 +59,7 @@ public class FlatLayersTab implements Comparator<UIFlatTerrainLayer> {
     }
 
     public UIVerticalTableLayout generateLayout() {
-        UIVerticalTableLayout layout = new UIVerticalTableLayout(gui, 1);
+        UIVerticalTableLayout<?> layout = new UIVerticalTableLayout<>(gui, 1);
         layout.setPadding(HORIZONTAL_PADDING, 0);
         layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
                 .setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS);

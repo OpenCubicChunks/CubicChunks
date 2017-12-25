@@ -35,10 +35,42 @@ import static cubicchunks.worldgen.generator.custom.ConversionUtils.frequencyFro
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
+import net.minecraft.block.BlockSilverfish;
+import net.minecraft.block.BlockStone;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Biomes;
+import net.minecraft.init.Blocks;
+import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.nbt.NBTException;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTUtil;
+import net.minecraft.util.datafix.FixTypes;
+import net.minecraft.util.datafix.IFixableData;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.ChunkGeneratorSettings;
+import net.minecraftforge.common.util.ModFixs;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class CustomGeneratorSettings {
     /**
@@ -88,91 +120,83 @@ public class CustomGeneratorSettings {
 
     // probability: (vanillaChunkHeight/oreGenRangeSize) / amountOfCubesInVanillaChunk
 
-    public int dirtSpawnSize = 33;
-    public int dirtSpawnTries = 10;
-    public float dirtSpawnProbability = 1f / (256f / Cube.SIZE);
-    public float dirtSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float dirtSpawnMaxHeight = Float.POSITIVE_INFINITY;
+    public List<StandardOreConfig> standardOres = new ArrayList<>();
 
-    public int gravelSpawnSize = 33;
-    public int gravelSpawnTries = 8;
-    public float gravelSpawnProbability = 1f / (256f / Cube.SIZE);
-    public float gravelSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float gravelSpawnMaxHeight = Float.POSITIVE_INFINITY;
+    {
+        standardOres.addAll(Arrays.asList(
+                StandardOreConfig.builder()
+                        .block(Blocks.DIRT.getDefaultState())
+                        .size(33).attempts(10).probability(1f / (256f / Cube.SIZE)).create(),
+                StandardOreConfig.builder()
+                        .block(Blocks.GRAVEL.getDefaultState())
+                        .size(33).attempts(8).probability(1f / (256f / Cube.SIZE)).create(),
 
-    public int graniteSpawnSize = 33;
-    public int graniteSpawnTries = 10;
-    public float graniteSpawnProbability = 256f / 80f / (256f / Cube.SIZE);
-    public float graniteSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float graniteSpawnMaxHeight = (80f - 64f) / 64f;
+                StandardOreConfig.builder()
+                        .block(Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE))
+                        .size(33).attempts(10).probability(256f / 80f / (256f / Cube.SIZE))
+                        .maxHeight((80f - 64f) / 64f).create(),
+                StandardOreConfig.builder()
+                        .block(Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE))
+                        .size(33).attempts(10).probability(256f / 80f / (256f / Cube.SIZE))
+                        .maxHeight((80f - 64f) / 64f).create(),
+                StandardOreConfig.builder()
+                        .block(Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE))
+                        .size(33).attempts(10).probability(256f / 80f / (256f / Cube.SIZE))
+                        .maxHeight((80f - 64f) / 64f).create(),
 
-    public int dioriteSpawnSize = 33;
-    public int dioriteSpawnTries = 10;
-    public float dioriteSpawnProbability = 256f / 80f / (256f / Cube.SIZE);
-    public float dioriteSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float dioriteSpawnMaxHeight = (80f - 64f) / 64f;
+                StandardOreConfig.builder()
+                        .block(Blocks.COAL_ORE.getDefaultState())
+                        .size(17).attempts(20).probability(256f / 128f / (256f / Cube.SIZE))
+                        .maxHeight(1).create(),
+                StandardOreConfig.builder()
+                        .block(Blocks.IRON_ORE.getDefaultState())
+                        .size(33).attempts(10).probability(256f / 64f / (256f / Cube.SIZE))
+                        .maxHeight(0).create(),
+                StandardOreConfig.builder()
+                        .block(Blocks.GOLD_ORE.getDefaultState())
+                        .size(9).attempts(2).probability(256f / 32f / (256f / Cube.SIZE))
+                        .maxHeight(-0.5f).create(),
+                StandardOreConfig.builder()
+                        .block(Blocks.REDSTONE_ORE.getDefaultState())
+                        .size(8).attempts(8).probability(256f / 16f / (256f / Cube.SIZE))
+                        .maxHeight(-0.75f).create(),
+                StandardOreConfig.builder()
+                        .block(Blocks.DIAMOND_ORE.getDefaultState())
+                        .size(8).attempts(1).probability(256f / 16f / (256f / Cube.SIZE))
+                        .maxHeight(-0.75f).create(),
 
-    public int andesiteSpawnSize = 33;
-    public int andesiteSpawnTries = 10;
-    public float andesiteSpawnProbability = 256f / 80f / (256f / Cube.SIZE);
-    public float andesiteSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float andesiteSpawnMaxHeight = (80f - 64f) / 64f;
+                StandardOreConfig.builder()
+                        .block(Blocks.EMERALD_ORE.getDefaultState())
+                        .size(1).attempts(11).probability(0.5f * 256f / 28f / (256f / Cube.SIZE))
+                        .maxHeight(0)
+                        .biomes(Biomes.EXTREME_HILLS, Biomes.EXTREME_HILLS_EDGE, Biomes.EXTREME_HILLS_WITH_TREES, Biomes.MUTATED_EXTREME_HILLS,
+                                Biomes.MUTATED_EXTREME_HILLS_WITH_TREES).create(),
+                StandardOreConfig.builder()
+                        .block(Blocks.MONSTER_EGG.getDefaultState().withProperty(BlockSilverfish.VARIANT, BlockSilverfish.EnumType.STONE))
+                        .size(7).attempts(7).probability(256f / 64f / (256f / Cube.SIZE))
+                        .maxHeight(-0.5f)
+                        .biomes(Biomes.EXTREME_HILLS, Biomes.EXTREME_HILLS_EDGE, Biomes.EXTREME_HILLS_WITH_TREES, Biomes.MUTATED_EXTREME_HILLS,
+                                Biomes.MUTATED_EXTREME_HILLS_WITH_TREES).create(),
+                StandardOreConfig.builder()
+                        .block(Blocks.GOLD_ORE.getDefaultState())
+                        .size(20).attempts(2).probability(256f / 32f / (256f / Cube.SIZE))
+                        .minHeight(-0.5f).maxHeight(0.25f)
+                        .biomes(Biomes.MESA, Biomes.MESA_CLEAR_ROCK, Biomes.MESA_ROCK, Biomes.MUTATED_MESA, Biomes.MUTATED_MESA_CLEAR_ROCK,
+                                Biomes.MUTATED_MESA_ROCK).create()
+        ));
+    }
 
-    public int coalOreSpawnSize = 17;
-    public int coalOreSpawnTries = 20;
-    public float coalOreSpawnProbability = 256f / 128f / (256f / Cube.SIZE);
-    public float coalOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float coalOreSpawnMaxHeight = 1;
+    public List<PeriodicGaussianOreConfig> preiodicGaussianOres = new ArrayList<>();
 
-    public int ironOreSpawnSize = 9;
-    public int ironOreSpawnTries = 20;
-    public float ironOreSpawnProbability = 256f / 64f / (256f / Cube.SIZE);
-    public float ironOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float ironOreSpawnMaxHeight = 0;
-
-    public int goldOreSpawnSize = 9;
-    public int goldOreSpawnTries = 2;
-    public float goldOreSpawnProbability = 256f / 32f / (256f / Cube.SIZE);
-    public float goldOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float goldOreSpawnMaxHeight = -0.5f;
-
-    public int redstoneOreSpawnSize = 8;
-    public int redstoneOreSpawnTries = 8;
-    public float redstoneOreSpawnProbability = 256f / 16f / (256f / Cube.SIZE);
-    public float redstoneOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float redstoneOreSpawnMaxHeight = -0.75f;
-
-    public int diamondOreSpawnSize = 8;
-    public int diamondOreSpawnTries = 1;
-    public float diamondOreSpawnProbability = 256f / 16f / (256f / Cube.SIZE);
-    public float diamondOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float diamondOreSpawnMaxHeight = -0.75f;
-
-    public int lapisLazuliSpawnSize = 7;
-    public int lapisLazuliSpawnTries = 1; //1 try per chunk, just like vanilla
-    public float lapisLazuliSpawnProbability = 0.933307775f; //resulted by approximating triangular behaviour with bell curve
-    public float lapisLazuliHeightMean = -0.75f; // -> first belt at height 16
-    public float lapisLazuliHeightStdDeviation = 0.11231704455f; //* 64 ~= 7.1882908513
-    public float lapisLazuliHeightSpacing = 3.0f; //192
-    public float lapisLazuliSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float lapisLazuliSpawnMaxHeight = -0.5f;
-
-    public int hillsEmeraldOreSpawnTries = 11; // actually there are on average 5.5 attempts per chunk, so multiply prob. by 0.5
-    public float hillsEmeraldOreSpawnProbability = 0.5f * 256f / 28f / (256f / Cube.SIZE);
-    public float hillsEmeraldOreSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float hillsEmeraldOreSpawnMaxHeight = -0.5f;
-
-    public int hillsSilverfishStoneSpawnSize = 7;
-    public int hillsSilverfishStoneSpawnTries = 7;
-    public float hillsSilverfishStoneSpawnProbability = 256f / 64f / (256f / Cube.SIZE);
-    public float hillsSilverfishStoneSpawnMinHeight = Float.NEGATIVE_INFINITY;
-    public float hillsSilverfishStoneSpawnMaxHeight = 0;
-
-    public int mesaAddedGoldOreSpawnSize = 20;
-    public int mesaAddedGoldOreSpawnTries = 2;
-    public float mesaAddedGoldOreSpawnProbability = 256f / 32f / (256f / Cube.SIZE);
-    public float mesaAddedGoldOreSpawnMinHeight = -0.5f;
-    public float mesaAddedGoldOreSpawnMaxHeight = 0.25f;
+    {
+        preiodicGaussianOres.addAll(Arrays.asList(
+                PeriodicGaussianOreConfig.builder()
+                        .block(Blocks.DIRT.getDefaultState())
+                        .size(7).attempts(1).probability(0.933307775f) //resulted by approximating triangular behaviour with bell curve
+                        .heightMean(-0.75f/*first belt at=16*/).heightStdDeviation(0.11231704455f/*x64 = 7.1882908513*/).heightSpacing(3.0/*192*/)
+                        .maxHeight(-0.5f).create()
+        ));
+    }
 
     /**
      * Terrain shape
@@ -287,5 +311,249 @@ public class CustomGeneratorSettings {
     public int getRealMaxHeight() {
         return (int) (this.heightOffset + heightVariationOffset +
                 Math.max(this.heightFactor * 2 + this.heightVariationFactor, this.heightFactor + this.heightVariationFactor * 2));
+    }
+
+    public static void registerDataFixers(ModFixs fixes) {
+        fixes.registerFix(FixTypes.LEVEL, new IFixableData() {
+            @Override public int getFixVersion() {
+                return -1;
+            }
+
+            @Override public NBTTagCompound fixTagCompound(NBTTagCompound compound) {
+                String worldType = compound.getString("generatorName");
+                if (!worldType.equals("CustomCubic")) {
+                    return compound;
+                }
+                String generatorOptions = compound.getString("generatorOptions");
+                Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
+                JsonReader reader = gson.newJsonReader(new StringReader(generatorOptions));
+
+                StringWriter sw = new StringWriter();
+                JsonWriter writer;
+                try {
+                    writer = gson.newJsonWriter(sw);
+                    while (reader.hasNext()) {
+                        // TODO fixer
+                    }
+                } catch (IOException e) {
+                    throw new Error("StringWriter/Reader can't throw IOException", e);
+                }
+
+                return compound;
+            }
+        });
+    }
+
+    public static Gson gson() {
+        return new GsonBuilder().serializeSpecialFloatingPointValues()
+                .registerTypeAdapter(IBlockState.class, new BlockStateSerializer()).create();
+    }
+
+    public static class StandardOreConfig {
+
+        public IBlockState blockstate;
+        // null == no biome restrictions
+        public Set<Biome> biomes;
+        public int spawnSize;
+        public int spawnTries;
+        public float spawnProbability = 1.0f;
+        public float minHeight = Float.NEGATIVE_INFINITY;
+        public float maxHeight = Float.POSITIVE_INFINITY;
+
+        private StandardOreConfig(IBlockState state, Set<Biome> biomes, int spawnSize, int spawnTries, float spawnProbability, float minHeight,
+                float maxHeight) {
+            this.blockstate = state;
+            this.biomes = biomes;
+            this.spawnSize = spawnSize;
+            this.spawnTries = spawnTries;
+            this.spawnProbability = spawnProbability;
+            this.minHeight = minHeight;
+            this.maxHeight = maxHeight;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public static class Builder {
+
+            private IBlockState blockstate;
+            private Set<Biome> biomes = null;
+            private int spawnSize;
+            private int spawnTries;
+            private float spawnProbability;
+            private float minHeight = Float.NEGATIVE_INFINITY;
+            private float maxHeight = Float.POSITIVE_INFINITY;
+
+            public Builder block(IBlockState blockstate) {
+                this.blockstate = blockstate;
+                return this;
+            }
+
+            public Builder size(int spawnSize) {
+                this.spawnSize = spawnSize;
+                return this;
+            }
+
+            public Builder attempts(int spawnTries) {
+                this.spawnTries = spawnTries;
+                return this;
+            }
+
+            public Builder probability(float spawnProbability) {
+                this.spawnProbability = spawnProbability;
+                return this;
+            }
+
+            public Builder minHeight(float minHeight) {
+                this.minHeight = minHeight;
+                return this;
+            }
+
+            public Builder maxHeight(float maxHeight) {
+                this.maxHeight = maxHeight;
+                return this;
+            }
+
+            public Builder biomes(Biome... biomes) {
+                if (this.biomes == null) {
+                    this.biomes = new HashSet<>();
+                }
+                this.biomes.addAll(Arrays.asList(biomes));
+                return this;
+            }
+
+            public StandardOreConfig create() {
+                return new StandardOreConfig(blockstate, biomes, spawnSize, spawnTries, spawnProbability, minHeight, maxHeight);
+            }
+        }
+    }
+
+    public static class PeriodicGaussianOreConfig {
+
+        public IBlockState blockstate;
+        public Set<Biome> biomes = null;
+        public int spawnSize;
+        public int spawnTries;
+        public double spawnProbability;
+        public double heightMean;
+        public double heightStdDeviation;
+        public double heightSpacing;
+        public double minHeight;
+        public double maxHeight;
+
+        private PeriodicGaussianOreConfig(IBlockState blockstate, Set<Biome> biomes, int spawnSize, int spawnTries, double spawnProbability,
+                double heightMean,
+                double heightStdDeviation, double heightSpacing, double minHeight, double maxHeight) {
+            this.blockstate = blockstate;
+            this.biomes = biomes;
+            this.spawnSize = spawnSize;
+            this.spawnTries = spawnTries;
+            this.spawnProbability = spawnProbability;
+            this.heightMean = heightMean;
+            this.heightStdDeviation = heightStdDeviation;
+            this.heightSpacing = heightSpacing;
+            this.minHeight = minHeight;
+            this.maxHeight = maxHeight;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public static class Builder {
+
+            private IBlockState blockstate;
+            private Set<Biome> biomes = null;
+            private int spawnSize;
+            private int spawnTries;
+            private double spawnProbability;
+            private double heightMean;
+            private double heightStdDeviation;
+            private double heightSpacing;
+            private double minHeight;
+            private double maxHeight;
+
+            public Builder block(IBlockState blockstate) {
+                this.blockstate = blockstate;
+                return this;
+            }
+
+            public Builder size(int spawnSize) {
+                this.spawnSize = spawnSize;
+                return this;
+            }
+
+            public Builder attempts(int spawnTries) {
+                this.spawnTries = spawnTries;
+                return this;
+            }
+
+            public Builder probability(double spawnProbability) {
+                this.spawnProbability = spawnProbability;
+                return this;
+            }
+
+            public Builder heightMean(double heightMean) {
+                this.heightMean = heightMean;
+                return this;
+            }
+
+            public Builder heightStdDeviation(double heightStdDeviation) {
+                this.heightStdDeviation = heightStdDeviation;
+                return this;
+            }
+
+            public Builder heightSpacing(double heightSpacing) {
+                this.heightSpacing = heightSpacing;
+                return this;
+            }
+
+            public Builder minHeight(double minHeight) {
+                this.minHeight = minHeight;
+                return this;
+            }
+
+            public Builder maxHeight(double maxHeight) {
+                this.maxHeight = maxHeight;
+                return this;
+            }
+
+            public Builder biomes(Biome... biomes) {
+                if (this.biomes == null) {
+                    this.biomes = new HashSet<>();
+                }
+                this.biomes.addAll(Arrays.asList(biomes));
+                return this;
+            }
+
+            public PeriodicGaussianOreConfig create() {
+                return new PeriodicGaussianOreConfig(blockstate, biomes, spawnSize, spawnTries, spawnProbability, heightMean, heightStdDeviation,
+                        heightSpacing, minHeight, maxHeight);
+            }
+        }
+    }
+
+    private static class BlockStateSerializer implements JsonDeserializer<IBlockState>, JsonSerializer<IBlockState> {
+
+        @Override public IBlockState deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            String jsonString = json.toString();
+            NBTTagCompound tag;
+            try {
+                tag = JsonToNBT.getTagFromJson(jsonString);
+            } catch (NBTException e) {
+                throw new JsonSyntaxException(e);
+            }
+            return NBTUtil.readBlockState(tag);
+        }
+
+        @Override public JsonElement serialize(IBlockState src, Type typeOfSrc, JsonSerializationContext context) {
+            NBTTagCompound tag = new NBTTagCompound();
+            NBTUtil.writeBlockState(tag, src);
+            String tagString = tag.toString();
+            Gson gson = new GsonBuilder().create();
+            JsonElement json = gson.toJsonTree(tagString);
+            return json;
+        }
     }
 }

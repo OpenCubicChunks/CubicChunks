@@ -70,7 +70,7 @@ public final class DefaultDecorator implements ICubicPopulator {
             IBlockState diorite = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE);
             IBlockState granite = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE);
             IBlockState andesite = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE);
-
+/*
             // TODO: events?
             genOreUniform(world, cfg, random, pos, cfg.dirtSpawnTries, cfg.dirtSpawnProbability,
                     new WorldGenMinable(Blocks.DIRT.getDefaultState(), cfg.dirtSpawnSize),
@@ -107,6 +107,7 @@ public final class DefaultDecorator implements ICubicPopulator {
             genOreBellCurve(world, cfg, random, pos, cfg.lapisLazuliSpawnTries, cfg.lapisLazuliSpawnProbability,
                     new WorldGenMinable(Blocks.LAPIS_ORE.getDefaultState(), cfg.lapisLazuliSpawnSize),
                     cfg.lapisLazuliHeightMean, cfg.lapisLazuliHeightStdDeviation, cfg.lapisLazuliHeightSpacing, cfg.lapisLazuliSpawnMinHeight, cfg.lapisLazuliSpawnMaxHeight);
+        */
         }
     }
 

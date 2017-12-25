@@ -83,7 +83,7 @@ public class MesaSurfaceReplacer implements IBiomeBlockReplacer {
         if (biomeMesa.clayBands == null || biomeMesa.worldSeed != world.getSeed()) {
             biomeMesa.generateBands(world.getSeed());
         }
-        // so that we don't cause issues when we replace clayBands and offset noise
+        // so that we don't cause issues when we replace clayBands and scrollOffset noise
         biomeMesa.worldSeed = world.getSeed();
         this.clayBands = Arrays.copyOf(biomeMesa.clayBands, biomeMesa.clayBands.length);
         this.clayBandsOffsetNoise = HashCacheDoubles.create(

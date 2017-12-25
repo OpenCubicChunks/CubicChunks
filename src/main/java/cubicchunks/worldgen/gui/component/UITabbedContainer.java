@@ -80,11 +80,11 @@ public class UITabbedContainer extends UIContainer<UITabbedContainer> {
             currentTab = -1;
         }
         if (currentTab == -1) {
-            previous.setDisabled(false);
-            next.setDisabled(false);
+            previous.setEnabled(true);
+            next.setEnabled(false);
         } else {
-            previous.setDisabled(currentTab <= 0);
-            next.setDisabled(currentTab >= tabs.size() - 1);
+            previous.setEnabled(currentTab > 0);
+            next.setEnabled(currentTab < tabs.size() - 1);
         }
         if (previousTab != -1) {
             // remove the previous tab

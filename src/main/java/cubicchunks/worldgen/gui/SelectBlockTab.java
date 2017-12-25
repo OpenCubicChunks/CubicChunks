@@ -23,6 +23,7 @@
  */
 package cubicchunks.worldgen.gui;
 
+import com.google.common.base.Preconditions;
 import cubicchunks.worldgen.gui.component.UIFlatTerrainLayer;
 
 import static cubicchunks.worldgen.gui.CustomCubicGui.HORIZONTAL_PADDING;
@@ -34,35 +35,43 @@ import cubicchunks.worldgen.gui.component.UIItemGrid;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.minecraft.block.state.IBlockState;
 
+/**
+ * @deprecated This class is mixing general GUI stuff with FlatCubic GUI behavior. Either fix it or remove the class.
+ */
+@Deprecated()
 public class SelectBlockTab {
 
     private final UIItemGrid container;
     private final ExtraGui gui;
     public UIFlatTerrainLayer layer;
 
-    SelectBlockTab(ExtraGui guiFor, UIFlatTerrainLayer layerFor, Collection<IBlockState> blockStates, String clickAction) {
+    SelectBlockTab(ExtraGui guiFor, UIFlatTerrainLayer layerFor, Collection<IBlockState> blockStates, ClickAction clickAction) {
+        Preconditions.checkNotNull(clickAction);
         this.gui = guiFor;
         layer = layerFor;
         UIItemGrid layout = new UIItemGrid(gui, layerFor);
         layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
         layout.setPadding(HORIZONTAL_PADDING, 0);
         blockStates.forEach(blockState -> {
-            Runnable action = null;
-            if (clickAction.equalsIgnoreCase("openChild")) {
-                action = () -> {
-                    new SelectBlockGui(this.layer, blockState.getBlock()).display();
-                };
-            } else if (clickAction.equalsIgnoreCase("setBlockStateAndOpenParent")) {
-                action = () -> {
-                    this.layer.setBlockState(blockState);
-                    this.layer.getGui().display();
-                };
-            } else if (clickAction.equalsIgnoreCase("launchSelectBlockGui")) {
-                action = () -> {
-                    new SelectBlockGui(this.layer, null).display();
-                };
+            Runnable action;
+            switch (clickAction) {
+                case OPEN_CHILD: {
+                    action = () -> {
+                        new SelectBlockGui(this.layer, blockState.getBlock()).display();
+                    };
+                    break;
+                }
+                case SET_STATE_AND_OPEN_PARENT: {
+                    action = () -> {
+                        this.layer.setBlockState(blockState);
+                        this.layer.getGui().display();
+                    };
+                    break;
+                }
+                default:
+                    throw new Error("Unknown ClickAction enum value " + clickAction);
             }
-            UIBlockStateButton uiButton = new UIBlockStateButton(gui, blockState, action);
+            UIBlockStateButton uiButton = new UIBlockStateButton(gui, blockState).onClick(btn -> action.run());
             layout.add(uiButton);
         });
         this.container = layout;
@@ -70,5 +79,9 @@ public class SelectBlockTab {
 
     UIItemGrid getContainer() {
         return container;
+    }
+
+    public enum ClickAction {
+        OPEN_CHILD, SET_STATE_AND_OPEN_PARENT
     }
 }

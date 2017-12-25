@@ -110,6 +110,7 @@ class AdvancedTerrainShapeTab {
         table.setPadding(HORIZONTAL_PADDING, 0);
 
         table.setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
+                .setRightPadding(6)
                 // height variation
                 .add(label(gui, malisisText("height_variation_group")),
                         new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, gridY += 2, WIDTH_1_COL))
@@ -317,7 +318,7 @@ class AdvancedTerrainShapeTab {
         showPreview.register(new Object() {
             @Subscribe
             public void onCheck(UICheckBox.CheckEvent evt) {
-                preview.setDisabled(!evt.isChecked());
+                preview.setEnabled(evt.isChecked());
             }
         });
         depthNoisePeriodX.register(new Object() {
@@ -393,10 +394,10 @@ class AdvancedTerrainShapeTab {
     }
 
     private void setLockedXZ(boolean lock) {
-        this.depthNoisePeriodZ.setDisabled(lock);
-        this.lowNoisePeriodZ.setDisabled(lock);
-        this.highNoisePeriodZ.setDisabled(lock);
-        this.selectorNoisePeriodZ.setDisabled(lock);
+        this.depthNoisePeriodZ.setEnabled(!lock);
+        this.lowNoisePeriodZ.setEnabled(!lock);
+        this.highNoisePeriodZ.setEnabled(!lock);
+        this.selectorNoisePeriodZ.setEnabled(!lock);
 
         if (lock) {
             this.depthNoisePeriodZ.setValue(this.depthNoisePeriodX.getValue());

@@ -25,7 +25,10 @@ package cubicchunks.worldgen.gui;
 
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
@@ -79,15 +82,15 @@ public class SelectBlockGui extends ExtraGui {
         tabs = makeTabContainer();
         SelectBlockTab sbct = null;
         if (block == null) {
-            Set<IBlockState> blockStates = new HashSet<IBlockState>();
+            List<IBlockState> blockStates = new ArrayList<>();
             Block.REGISTRY.forEach(block -> {
                 if (!block.hasTileEntity(block.getDefaultState())) {
                     blockStates.add(block.getDefaultState());
                 }
             });
-            sbct = new SelectBlockTab(this, layer, blockStates, "openChild");
+            sbct = new SelectBlockTab(this, layer, blockStates, SelectBlockTab.ClickAction.OPEN_CHILD);
         } else {
-            sbct = new SelectBlockTab(this, layer, block.getBlockState().getValidStates(), "setBlockStateAndOpenParent");
+            sbct = new SelectBlockTab(this, layer, block.getBlockState().getValidStates(), SelectBlockTab.ClickAction.SET_STATE_AND_OPEN_PARENT);
         }
         tabs.addTab(inPanel(sbct.getContainer()), malisisText("select_block"));
         addToScreen(tabs);

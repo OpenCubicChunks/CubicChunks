@@ -148,7 +148,7 @@ public class CustomCubicGui extends ExtraGui {
 
                         UIButton done, cancel;
                         UITextField text;
-                        UIVerticalTableLayout table = new UIVerticalTableLayout(this, 2);
+                        UIVerticalTableLayout<?> table = new UIVerticalTableLayout<>(this, 2);
                         table.setPadding(HORIZONTAL_PADDING, 0);
                         table.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
                                 .setInsets(5, 5, 10, 10)

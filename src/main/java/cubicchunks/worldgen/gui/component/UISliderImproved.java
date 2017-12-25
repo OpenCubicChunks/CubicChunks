@@ -71,7 +71,7 @@ public class UISliderImproved<T> extends UISlider<T> {
     public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
         super.drawForeground(renderer, mouseX, mouseY, partialTick);
 
-        if (this.isDisabled()) {
+        if (!this.isEnabled()) {
             renderer.next();
             GlStateManager.disableTexture2D();
 

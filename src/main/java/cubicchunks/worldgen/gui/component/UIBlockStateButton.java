@@ -23,9 +23,13 @@
  */
 package cubicchunks.worldgen.gui.component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.vertex.VertexBuffer;
 import org.lwjgl.opengl.GL11;
 
@@ -50,17 +54,23 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 
-public class UIBlockStateButton extends UIComponent<UIBlockStateButton> {
+public class UIBlockStateButton<T extends UIBlockStateButton<T>> extends UIComponent<T> {
 
+    public static final int SIZE = 24;
     private IBlockState iBlockState;
-    private final Runnable onClick;
+    private final List<Consumer<? super UIBlockStateButton<?>>> onClick;
 
-    public UIBlockStateButton(MalisisGui gui, IBlockState iBlockState1, Runnable clickAction) {
+    public UIBlockStateButton(MalisisGui gui, IBlockState iBlockState1) {
         super(gui);
         iBlockState = iBlockState1;
-        onClick = clickAction;
+        onClick = new ArrayList<>();
         setTooltip(generateTooltip(iBlockState));
-        setSize(24, 24);
+        setSize(SIZE, SIZE);
+    }
+
+    public T onClick(Consumer<? super UIBlockStateButton<?>> cons) {
+        this.onClick.add(cons);
+        return self();
     }
 
     private String generateTooltip(IBlockState blockState) {
@@ -75,6 +85,10 @@ public class UIBlockStateButton extends UIComponent<UIBlockStateButton> {
         return sb.toString();
     }
 
+    public IBlockState getState() {
+        return iBlockState;
+    }
+
     public void setBlockState(IBlockState iBlockState1) {
         iBlockState = iBlockState1;
         setTooltip(generateTooltip(iBlockState));
@@ -83,13 +97,17 @@ public class UIBlockStateButton extends UIComponent<UIBlockStateButton> {
     @Override
     public boolean onClick(int x, int y) {
         MalisisGui.playSound(SoundEvents.UI_BUTTON_CLICK);
-        onClick.run();
+        onClick.forEach(cons -> cons.accept(self()));
         return true;
     }
 
     @Override
     public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
         if (iBlockState != null) {
+            RenderHelper.disableStandardItemLighting();
+            RenderHelper.enableGUIStandardItemLighting();
+            GlStateManager.enableRescaleNormal();
+
             BufferBuilder vertexbuffer = Tessellator.getInstance().getBuffer();
             Tessellator.getInstance().draw();
             ITextureObject blockTexture = Minecraft.getMinecraft().getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -97,7 +115,7 @@ public class UIBlockStateButton extends UIComponent<UIBlockStateButton> {
             VertexFormat format = DefaultVertexFormats.BLOCK;
             GlStateManager.pushMatrix();
             GlStateManager.translate((float) this.screenX(), (float) this.screenY() + 16f, 100.0F);
-            GlStateManager.scale(14.0F, 14.0F, -14.0F);
+            GlStateManager.scale(12.0F, 12.0F, -12.0F);
             GlStateManager.rotate(210.0F, 1.0F, 0.0F, 0.0F);
             GlStateManager.rotate(45.0F, 0.0F, 1.0F, 0.0F);
             vertexbuffer.begin(GL11.GL_QUADS, format);
@@ -115,7 +133,9 @@ public class UIBlockStateButton extends UIComponent<UIBlockStateButton> {
                 }
             }
             GlStateManager.popMatrix();
-            renderer.startDrawing();
+            renderer.next();
+
+            GlStateManager.disableRescaleNormal();
         }
     }
 

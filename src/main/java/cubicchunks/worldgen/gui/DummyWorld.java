@@ -28,6 +28,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
@@ -36,6 +37,7 @@ public class DummyWorld implements IBlockAccess {
 
     private static DummyWorld instance;
     private IBlockState blockState;
+    private BlockPos pos = BlockPos.ORIGIN;
 
     public DummyWorld() {
         instance = this;
@@ -43,6 +45,9 @@ public class DummyWorld implements IBlockAccess {
 
     @Override
     public TileEntity getTileEntity(BlockPos pos) {
+        if (!pos.equals(this.pos)) {
+            return null;
+        }
         if (blockState.getBlock().hasTileEntity(blockState)) {
             return blockState.getBlock().createTileEntity(null, blockState);
         }
@@ -51,12 +56,17 @@ public class DummyWorld implements IBlockAccess {
 
     @Override
     public int getCombinedLight(BlockPos pos, int lightValue) {
-        return 15;
+        int i = 15;
+        int j = 15;
+        if (j < lightValue) {
+            j = lightValue;
+        }
+        return i << 20 | i << 4;
     }
 
     @Override
     public IBlockState getBlockState(BlockPos pos) {
-        if (pos.equals(BlockPos.ORIGIN)) {
+        if (pos.equals(this.pos)) {
             return blockState;
         }
         return Blocks.AIR.getDefaultState();
@@ -64,7 +74,7 @@ public class DummyWorld implements IBlockAccess {
 
     @Override
     public boolean isAirBlock(BlockPos pos) {
-        return false;
+        return getBlockState(pos).getBlock() == Blocks.AIR;
     }
 
     @Override
@@ -92,6 +102,16 @@ public class DummyWorld implements IBlockAccess {
             new DummyWorld();
         }
         instance.blockState = iBlockState;
+        instance.pos = BlockPos.ORIGIN;
+        return instance;
+    }
+
+    public static IBlockAccess getInstanceWithBlockStatePos(IBlockState iBlockState, BlockPos pos) {
+        if (instance == null) {
+            new DummyWorld();
+        }
+        instance.blockState = iBlockState;
+        instance.pos = pos;
         return instance;
     }
 }

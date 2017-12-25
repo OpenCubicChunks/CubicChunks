@@ -164,7 +164,7 @@ public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implem
     }
 
     @Override protected void postShaderDraw(GuiRenderer guiRenderer, int mouseX, int mouseY, float partialTicks) {
-        if (this.disabled) {
+        if (!this.isEnabled()) {
             FontOptions fo = FontOptions.builder().color(0xFFFFFF).shadow().build();
             String text = malisisText("preview_disabled");
             float textWidth = MalisisFont.minecraftFont.getStringWidth(text, fo);

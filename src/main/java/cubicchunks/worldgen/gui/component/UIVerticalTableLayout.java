@@ -34,7 +34,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVerticalTableLayout.GridLocation> {
+public class UIVerticalTableLayout<T extends UIVerticalTableLayout<T>> extends UILayout<T, UIVerticalTableLayout.GridLocation> {
 
     private final int columns;
 
@@ -43,8 +43,8 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
     private int insetDown;
     private int insetLeft;
     private int insetRight;
-    private Map<Integer, UIComponent<?>[]> rows = new HashMap<>();
-    private int totalRows;
+    protected Map<Integer, UIComponent<?>[]> rows = new HashMap<>();
+    protected int totalRows;
     private int[] noInsetRowHeights = null;
 
     /**
@@ -128,14 +128,16 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
         }
     }
 
+    @Override protected boolean canAutoSizeX() {
+        return false; // the content size depends on X size here
+    }
+
     @Override
     protected void layout() {
         if (getParent() == null) {
             return;
         }
-        if (noInsetRowHeights == null || noInsetRowHeights.length != totalRows) {
-            noInsetRowHeights = getNoInsetRowHeights();
-        }
+        updateNoInsetRowHeights();
         int width = getWidth() - getLeftPadding() - getRightPadding();
 
         final double noInsetSizeX = width / (float) columns;
@@ -169,12 +171,12 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
             }
             currentY += currentRowHeight;
         }
-        noInsetRowHeights = null;
     }
 
-    private int[] getNoInsetRowHeights() {
-        int[] noInsetRowHeights = new int[totalRows];
+    private boolean updateNoInsetRowHeights() {
+        int[] noInsetRowHeights = (this.noInsetRowHeights == null || this.noInsetRowHeights.length != totalRows) ? new int[totalRows] : this.noInsetRowHeights;
 
+        boolean changed = false;
         for (Map.Entry<Integer, UIComponent<?>[]> rowEntry : rows.entrySet()) {
             int rowNumber = rowEntry.getKey();
             UIComponent<?>[] rowArr = rowEntry.getValue();
@@ -185,23 +187,19 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
                     maxHeight = Math.max(maxHeight, e.getHeight());
                 }
             }
-            noInsetRowHeights[rowNumber] = maxHeight + insetUp + insetDown;
+            int oldV = noInsetRowHeights[rowNumber];
+            int newV = maxHeight + insetUp + insetDown;
+            noInsetRowHeights[rowNumber] = newV;
+            if (oldV != newV) {
+                changed = true;
+            }
         }
-        return noInsetRowHeights;
+        this.noInsetRowHeights = noInsetRowHeights;
+        return changed;
     }
 
     @Override protected boolean isLayoutChanged() {
-        int[] prev = noInsetRowHeights == null ? new int[0] : noInsetRowHeights;
-        int[] newHeights = noInsetRowHeights = getNoInsetRowHeights();
-        if (newHeights.length != prev.length) {
-            return true;
-        }
-        for (int i = 0; i < prev.length; i++) {
-            if (prev[i] != newHeights[i]) {
-                return true;
-            }
-        }
-        return false;
+        return updateNoInsetRowHeights();
     }
 
     @Override
@@ -212,9 +210,9 @@ public class UIVerticalTableLayout extends UILayout<UIVerticalTableLayout, UIVer
 
     public final static class GridLocation {
 
-        private final int gridX;
-        private final int gridY;
-        private final int cellsX;
+        public final int gridX;
+        public final int gridY;
+        public final int cellsX;
 
         public GridLocation(int gridX, int gridY, int cellsX) {
             this.gridX = gridX;

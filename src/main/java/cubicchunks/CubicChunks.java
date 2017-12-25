@@ -38,6 +38,7 @@ import cubicchunks.world.type.VanillaCubicWorldType;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.generator.custom.biome.replacer.MesaSurfaceReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.MutatedSavannaSurfaceReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.SwampWaterWithLilypadReplacer;
@@ -77,9 +78,11 @@ import net.minecraft.world.biome.BiomeTaiga;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.util.ModFixs;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.config.GuiConfig;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -121,6 +124,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
         //@formatter:on
 @Mod.EventBusSubscriber
 public class CubicChunks {
+
+    public static final int FIXER_VERSION = 0;
 
     public static final VersionRange SUPPORTED_SERVER_VERSIONS;
     public static final VersionRange SUPPORTED_CLIENT_VERSIONS;
@@ -239,6 +244,9 @@ public class CubicChunks {
         ConversionUtils.initFlowNoiseHack();
 
         config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
+
+        ModFixs fixes = FMLCommonHandler.instance().getDataFixer().init(MODID, FIXER_VERSION);
+        CustomGeneratorSettings.registerDataFixers(fixes);
     }
 
     @EventHandler

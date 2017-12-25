@@ -23,10 +23,12 @@
  */
 package cubicchunks.worldgen.gui.component;
 
+import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.gui.ExtraGui;
 import jline.internal.Preconditions;
 import net.malisis.core.client.gui.GuiRenderer;
 import net.malisis.core.client.gui.component.UIComponent;
+import net.malisis.core.client.gui.event.component.StateChangeEvent;
 import net.malisis.core.util.MouseButton;
 import org.lwjgl.input.Mouse;
 
@@ -52,6 +54,12 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISpl
     private boolean isMovingSplit;
     private int separatorClickOffset = 0;
 
+    private final Object onVisibilityChange = new Object() {
+        @Subscribe
+        public void onSetVisible(StateChangeEvent.VisibleStateChange evt) {
+            setNeedsLayoutUpdate();
+        }
+    };
     /**
      * Creates a split layout with 2 components provided
      */
@@ -158,9 +166,11 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISpl
     }
 
     @Override protected void onAdd(UIComponent<?> comp, Pos at) {
+        comp.register(onVisibilityChange);
     }
 
     @Override protected void onRemove(UIComponent<?> comp, Pos at) {
+        comp.unregister(onVisibilityChange);
     }
 
     @Override protected Pos findNextLocation() {
@@ -173,21 +183,31 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISpl
         return Pos.FIRST;
     }
 
+    @Override protected boolean canAutoSizeX() {
+        return this.splitType == Type.STACKED;
+    }
+
+    @Override protected boolean canAutoSizeY() {
+        return this.splitType == Type.SIDE_BY_SIDE;
+    }
+
     @Override protected void layout() {
+        boolean shouldResize = getFirst().isVisible() && getSecond().isVisible();
+
         int sizeFirst = getSizeFirst();
-        if (sizeFirst < minSizeFirst) {
+        if (shouldResize && sizeFirst < minSizeFirst) {
             setSizeOf(Pos.FIRST, minSizeFirst);
             sizeFirst = minSizeFirst;
         }
         int sizeSecond = getSizeSecond();
-        if (sizeSecond < minSizeSecond) {
+        if (shouldResize && sizeSecond < minSizeSecond) {
             setSizeOf(Pos.SECOND, minSizeSecond);
             sizeSecond = minSizeSecond;
             sizeFirst = getSizeFirst();
         }
-        assert sizeFirst + sizeSecond == getTotalAvailableSize();
+        assert !shouldResize || sizeFirst + sizeSecond == getTotalAvailableSize();
 
-        int offsetSecond = sizeFirst + separatorSize;
+        int offsetSecond = sizeFirst + getSeparatorSize();
 
         setPosSize(getFirst(), 0, sizeFirst);
         setPosSize(getSecond(), offsetSecond, sizeSecond);
@@ -195,6 +215,9 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISpl
 
 
     @Override public boolean onDrag(int lastX, int lastY, int x, int y, MouseButton button) {
+        if (!isUserResizable()) {
+            return false;
+        }
         int lastCoord = splitType.getSizeCoord(lastX, lastY) - getStartCoordWithPadding();
         int currCoord = splitType.getSizeCoord(x, y) - getStartCoordWithPadding();
         if (isMovingSplit || isSeparator(lastCoord)) {
@@ -223,7 +246,7 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISpl
         }
         int alpha = (isMovingSplit || Mouse.isButtonDown(0)) ? 60 : 40;
         int offset = getSizeFirst() + getStartPadding();
-        int size = separatorSize;
+        int size = getSeparatorSize();
         if (splitType == Type.STACKED) {
             renderer.drawRectangle(0, offset, 0, getWidth(), size, 0xFFFFFF, alpha);
         } else {
@@ -265,6 +288,18 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISpl
     }
 
     private int getSizeFirst() {
+        if (!isUserResizable()) {
+            if (!getFirst().isVisible()) {
+                return 0;
+            }
+            if (!getSecond().isVisible()) {
+                return getTotalAvailableSize();
+            }
+        }
+        return getRawSizeFirst();
+    }
+
+    private int getRawSizeFirst() {
         if (sizeMode == SizeMode.WEIGHT) {
             // x = (totalWidth*ratio)/(ratio+1)
             return Math.round(getTotalAvailableSize() * sizeData / (sizeData + 1));
@@ -272,13 +307,25 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISpl
             return Math.round(sizeData);
         } else {
             assert sizeMode == SizeMode.SIZE_SECOND;
-            return getTotalAvailableSize() - getSizeSecond();
+            return getTotalAvailableSize() - getRawSizeSecond();
         }
     }
 
     private int getSizeSecond() {
+        if (!isUserResizable()) {
+            if (!getSecond().isVisible()) {
+                return 0;
+            }
+            if (!getFirst().isVisible()) {
+                return getTotalAvailableSize();
+            }
+        }
+        return getRawSizeSecond();
+    }
+
+    private int getRawSizeSecond() {
         if (sizeMode == SizeMode.WEIGHT || sizeMode == SizeMode.SIZE_FIRST) {
-            return getTotalAvailableSize() - getSizeFirst();
+            return getTotalAvailableSize() - getRawSizeFirst();
         } else {
             assert sizeMode == SizeMode.SIZE_SECOND;
             return Math.round(sizeData);
@@ -299,23 +346,33 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISpl
         }
     }
 
+    public int getSeparatorSize() {
+        if (!isUserResizable()) {
+            return 0;
+        }
+        return separatorSize;
+    }
+
     private boolean isSeparator(int pos) {
+        if (!isUserResizable()) {
+            return false;
+        }
         int sizeFirst = getSizeFirst();
-        return pos >= sizeFirst && pos < sizeFirst + separatorSize;
+        return pos >= sizeFirst && pos < sizeFirst + getSeparatorSize();
     }
 
     @Nullable
-    private UIComponent<?> getFirst() {
+    public UIComponent<?> getFirst() {
         return locationToComponentMap().get(Pos.FIRST);
     }
 
     @Nullable
-    private UIComponent<?> getSecond() {
+    public UIComponent<?> getSecond() {
         return locationToComponentMap().get(Pos.SECOND);
     }
 
     private int getTotalAvailableSize() {
-        return (splitType == Type.STACKED ? getHeight() : getWidth()) - separatorSize - getStartPadding() - getEndPadding();
+        return (splitType == Type.STACKED ? getHeight() : getWidth()) - getSeparatorSize() - getStartPadding() - getEndPadding();
     }
 
     private int getStartPadding() {

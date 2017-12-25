@@ -206,13 +206,6 @@ public class CustomCubicGuiUtils {
 
     public static <T> UISelect<T> makeUISelect(MalisisGui gui, Iterable<T> values) {
         UISelect<T> select = new UISelect<T>(gui, 0, values);
-        // https://github.com/Ordinastie/MalisisCore/issues/135
-        select.register(new Object() {
-            @Subscribe
-            public void onResize(SpaceChangeEvent.SizeChangeEvent evt) {
-                select.setMaxExpandedWidth(evt.getNewWidth());
-            }
-        });
         return select;
     }
 
