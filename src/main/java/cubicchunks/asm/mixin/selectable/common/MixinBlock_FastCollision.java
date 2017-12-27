@@ -46,8 +46,9 @@ import net.minecraft.util.math.BlockPos;
 public abstract class MixinBlock_FastCollision {
 
     /**
+     * Make state.addCollisionBoxToList() faster by replacing calls of block state to direct adding of FULL_BLOCK_AABB for full blocks.
+     *
      * @author Foghrye4
-     * @reason Fasten state.addCollisionBoxToList() by replacing calls of block state to direct adding of FULL_BLOCK_AABB for full blocks.
      **/
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;createBlockState()Lnet/minecraft/block/state/BlockStateContainer;"))
     public BlockStateContainer alterBlockStateCollection(Block block) {
@@ -58,11 +59,10 @@ public abstract class MixinBlock_FastCollision {
         BlockStateContainer oldBlockStateContainer = this.createBlockState();
         Collection<IProperty<?>> properties = oldBlockStateContainer.getProperties();
         boolean isFullBlock = true;
-        if (!(block instanceof BlockBreakable))
-            for (IBlockState state : oldBlockStateContainer.getValidStates()) {
-                if (!state.isFullCube())
-                    isFullBlock = false;
-            }
+        for (IBlockState state : oldBlockStateContainer.getValidStates()) {
+            if (!state.isFullCube())
+                isFullBlock = false;
+        }
         if (isFullBlock)
             return new FullBlockBlockStateContainer(block, properties.toArray(new IProperty<?>[0]));
         boolean isNonCollideableBlock = false;

@@ -63,8 +63,8 @@ public class LightPropagator {
      * centerPos.getX/Y/Z + }{@link LightUpdateQueue#MAX_POS} of centerPos (inclusive) with {@code
      * LightUpdateQueue#MAX_DISTANCE + 1} buffer radius.
      * <p>
-     * WARNING: You probably shouldn't use this method directly and use {@link LightingManager#relightMultiBlock(BlockPos,
-     * BlockPos, EnumSkyBlock)} instead
+     * WARNING: You probably shouldn't use this method directly and use
+     * {@link LightingManager#relightMultiBlock(BlockPos, BlockPos, EnumSkyBlock, Consumer)} instead
      *
      * @param centerPos position relative to which calculations are done. usually average position.
      * @param coords contains all coords that need updating

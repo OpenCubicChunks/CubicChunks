@@ -36,9 +36,10 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 /**
  * This event fired from server thread every time player stop watching 
  * (stop sending updates to client) {@link Cube} associated with {@link CubeWatcher}. 
- *  This event can be fired several times for a same cube during game session 
- *  for a same and for a different players. 
- *  <br> This event is not {@link Cancelable}. 
+ * This event can be fired several times for a same cube during game session
+ * for a same and for a different players.
+ *
+ * This is not an {@link #isCancelable()} event.
  * This event is fired on the {@link MinecraftForge#EVENT_BUS}.
  */
 public class CubeUnWatchEvent extends Event {

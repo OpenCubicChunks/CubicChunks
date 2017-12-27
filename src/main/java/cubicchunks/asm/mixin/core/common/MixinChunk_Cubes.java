@@ -69,7 +69,10 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -92,7 +95,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public abstract class MixinChunk_Cubes implements IColumn {
 
     @Shadow @Final private ExtendedBlockStorage[] storageArrays;
-    @Shadow @Final public static ExtendedBlockStorage NULL_BLOCK_STORAGE;
+    @Shadow @Final public static ExtendedBlockStorage NULL_BLOCK_STORAGE = null;
 
     @Shadow private boolean hasEntities;
     @Shadow @Final public int x;
@@ -133,6 +136,21 @@ public abstract class MixinChunk_Cubes implements IColumn {
             cachedCube = cube;
         }
         return cube.getStorage();
+    }
+
+    @Nullable
+    private ExtendedBlockStorage getLoadedEBS_CubicChunks(int index) {
+        if (!isColumn) {
+            return storageArrays[index];
+        }
+        if (cachedCube != null && cachedCube.getY() == index) {
+            return cachedCube.getStorage();
+        }
+        Cube cube = getCubicWorld().getCubeCache().getLoadedCube(getX(), index, getZ());
+        if (cube != null && !(cube instanceof BlankCube)) {
+            cachedCube = cube;
+        }
+        return cube == null ? null : cube.getStorage();
     }
 
     // setEBS is unlikely to be used extremely frequently, no caching
@@ -306,7 +324,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             getCubicWorld().getLightingManager().doOnBlockSetLightUpdates(this, localX, oldHeightValue, y, localZ);
         }
     }
-    
+
     // make relightBlock no-op for cubic chunks, handles by injection above
     @Inject(method = "relightBlock", at = @At(value = "HEAD"), cancellable = true)
     private void relightBlock_CubicChunks_Replace(int x, int y, int z, CallbackInfo cbi) {
@@ -388,6 +406,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             target = CHUNK_STORAGE_ARRAYS,
             args = "array=get"
     ))
+    @Nullable
     private ExtendedBlockStorage setBlockState_CubicChunks_EBSGetRedirect(ExtendedBlockStorage[] array, int index) {
         return getEBS_CubicChunks(index);
     }
@@ -400,7 +419,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
     private void setBlockState_CubicChunks_EBSSetRedirect(ExtendedBlockStorage[] array, int index, ExtendedBlockStorage val) {
         setEBS_CubicChunks(index, val);
     }
-    
+
     @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;dirty:Z"))
     private void setIsModifiedFromSetBlockState_Field(Chunk chunk, boolean isModifiedIn, BlockPos pos, IBlockState state) {
         if (isColumn) {
@@ -419,6 +438,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             target = CHUNK_STORAGE_ARRAYS,
             args = "array=get"
     ))
+    @Nullable
     private ExtendedBlockStorage getLightFor_CubicChunks_EBSGetRedirect(ExtendedBlockStorage[] array, int index) {
         return getEBS_CubicChunks(index);
     }
@@ -432,6 +452,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             target = CHUNK_STORAGE_ARRAYS,
             args = "array=get"
     ))
+    @Nullable
     private ExtendedBlockStorage setLightFor_CubicChunks_EBSGetRedirect(ExtendedBlockStorage[] array, int index) {
         return getEBS_CubicChunks(index);
     }
@@ -444,7 +465,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
     private void setLightFor_CubicChunks_EBSSetRedirect(ExtendedBlockStorage[] array, int index, ExtendedBlockStorage ebs) {
         setEBS_CubicChunks(index, ebs);
     }
-    
+
     @Redirect(method = "setLightFor", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;dirty:Z"))
     private void setIsModifiedFromSetLightFor_Field(Chunk chunk, boolean isModifiedIn, EnumSkyBlock type, BlockPos pos, int value) {
         if (isColumn) {
@@ -463,6 +484,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             target = CHUNK_STORAGE_ARRAYS,
             args = "array=get"
     ))
+    @Nullable
     private ExtendedBlockStorage getLightSubtracted_CubicChunks_EBSGetRedirect(ExtendedBlockStorage[] array, int index) {
         return getEBS_CubicChunks(index);
     }
@@ -501,7 +523,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
         entityIn.chunkCoordX = this.x;
         entityIn.chunkCoordY = k;
         entityIn.chunkCoordZ = this.z;
-        
+
         if (!isColumn) {
             entityLists[k].add(entityIn);
         } else if (cachedCube != null && cachedCube.getY() == k) {
@@ -712,29 +734,25 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //               isEmptyBetween
     // ==============================================
 
-    /**
-     * @author Barteks2x
-     * @reason original function limited to storage arrays.
-     */
-    @Overwrite
-    public boolean isEmptyBetween(int startY, int endY) {
-        if (startY < getCubicWorld().getMinHeight()) {
-            startY = getCubicWorld().getMinHeight();
-        }
+    @ModifyConstant(method = "isEmptyBetween", constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.LESS_THAN_ZERO))
+    private int getAreLevelsEmpty_getMinY(int origY) {
+        return getCubicWorld().getMinHeight();
+    }
 
-        if (endY >= getCubicWorld().getMaxHeight()) {
-            endY = getCubicWorld().getMaxHeight() - 1;
-        }
+    @ModifyConstant(method = "isEmptyBetween", constant = @Constant(intValue = 256))
+    private int getAreLevelsEmpty_getMaxY_Compare(int origY) {
+        return getCubicWorld().getMaxHeight();
+    }
 
-        for (int i = startY; i <= endY; i += Cube.SIZE) {
-            ExtendedBlockStorage extendedblockstorage = getEBS_CubicChunks(blockToCube(i));
+    @ModifyConstant(method = "isEmptyBetween", constant = @Constant(intValue = 255))
+    private int getAreLevelsEmpty_getMaxY_Set(int origY) {
+        return getCubicWorld().getMaxHeight() - 1;
+    }
 
-            if (extendedblockstorage != NULL_BLOCK_STORAGE && !extendedblockstorage.isEmpty()) {
-                return false;
-            }
-        }
-
-        return true;
+    @Redirect(method = "isEmptyBetween", at = @At(value = "FIELD", target = CHUNK_STORAGE_ARRAYS, args = "array=get"))
+    @Nullable
+    private ExtendedBlockStorage getAreLevelsEmpty_getEbsAt(ExtendedBlockStorage[] arr, int index) {
+        return getLoadedEBS_CubicChunks(index);
     }
 
     // ==============================================

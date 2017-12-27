@@ -115,8 +115,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mod(modid = CubicChunks.MODID,
         name = "CubicChunks",
         version = CubicChunks.VERSION,
-        guiFactory = "cubicchunks.client.GuiFactory"
-        /*@@DEPS_PLACEHOLDER@@*/)// This will be replaced by gradle with actual dependency list, do not alter it
+        guiFactory = "cubicchunks.client.GuiFactory",
+        //@formatter:off
+        dependencies = "after:forge@[13.20.1.2454,)"/*@@DEPS_PLACEHOLDER@@*/)// This will be replaced by gradle with full deps list not alter it
+        //@formatter:on
 @Mod.EventBusSubscriber
 public class CubicChunks {
 

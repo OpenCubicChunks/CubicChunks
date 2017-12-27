@@ -79,7 +79,7 @@ public class CubicChunksCoreMod implements IFMLLoadingPlugin {
 
     @Nullable @Override
     public String getModContainerClass() {
-        return null;
+        return "cubicchunks.asm.CubicChunksCoreContainer";
     }
 
     @Nullable @Override
