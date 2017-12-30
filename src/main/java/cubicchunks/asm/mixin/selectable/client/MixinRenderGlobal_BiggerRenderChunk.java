@@ -32,20 +32,28 @@ import cubicchunks.client.RenderConstants;
 import cubicchunks.util.ClassInheritanceMultiMapFactory;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.client.renderer.culling.ICamera;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -60,6 +68,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,10 +76,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Fixes renderEntities crashing when rendering cubes
- * that are not at existing array index in chunk.getEntityLists(),
- * <p>
- * Allows to render cubes outside of 0..256 height range.
+ * Fixes renderEntities crashing when rendering cubes that are not at existing array index in chunk.getEntityLists(), <p> Allows to render cubes outside of 0..256 height range.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -78,160 +84,150 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class MixinRenderGlobal_BiggerRenderChunk {
 
     @Nullable private BlockPos position;
-
     @Shadow private int renderDistanceChunks;
-
     @Shadow private ViewFrustum viewFrustum;
+    @Shadow private WorldClient world;
+    @Shadow private int renderEntitiesStartupCounter;
+    @Shadow @Final private RenderManager renderManager;
+    @Shadow private int countEntitiesTotal;
+    @Shadow private int countEntitiesRendered;
+    @Shadow private int countEntitiesHidden;
 
-    /**
-     * This allows to get the Y position of rendered entity by injecting itself directly before call to
-     * chunk.getEntityLists
-     */
-    @Group(name = "renderEntitiesFix")//, min = 3, max = 3)
-    @Inject(method = "renderEntities",
-            at = @At(value = "INVOKE", target = WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS),
-            locals = LocalCapture.CAPTURE_FAILHARD)
-    public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
-            CallbackInfo ci, int pass, double d0, double d1, double d2,
+    @Shadow
+    private boolean isOutlineActive(Entity entityIn, Entity viewer, ICamera camera) {
+        throw new AbstractMethodError();
+    };
+
+    @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;hasNext()Z", remap = false))
+    public boolean onIteratingThruRenderInfos(Iterator<RenderGlobal.ContainerLocalRenderInformation> renderInfosIterator, Entity renderViewEntity,
+            ICamera camera, float partialTicks) {
+        ICubicWorldClient cworld = (ICubicWorldClient) world;
+        if (cworld.isCubicWorld())
+            return false;
+        return renderInfosIterator.hasNext();
+    }
+
+/*    @SuppressWarnings("UnresolvedMixinReference")
+    @Group(name = "renderEntitiesFix")
+    @Inject(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos$PooledMutableBlockPos;release()V"), cancellable = false, locals = LocalCapture.CAPTURE_FAILHARD)
+    public void onRenderEntities(Entity renderViewEntity, ICamera camera, float partialTicks, CallbackInfo ci, int pass, double d0, double d1,
+            double d2,
             Entity entity, double d3, double d4, double d5,
             List<Entity> list, List<Entity> list1, List<Entity> list2,
-            BlockPos.PooledMutableBlockPos pos, Iterator<RenderGlobal.ContainerLocalRenderInformation> var21,
-            RenderGlobal.ContainerLocalRenderInformation info) {
-        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
-        if (world.isCubicWorld()) {
-            this.position = info.renderChunk.getPosition();
-        } else {
-            this.position = null;
-        }
-    }
+            BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos,
+            Iterator<RenderGlobal.ContainerLocalRenderInformation> var21) {
+        ICubicWorldClient cworld = (ICubicWorldClient) world;
+        if (!cworld.isCubicWorld())
+            return;
+        Minecraft mc = Minecraft.getMinecraft();
+        boolean isPlayerSleeping = renderViewEntity instanceof EntityLivingBase
+                ? ((EntityLivingBase) renderViewEntity).isPlayerSleeping() : false;
+        Iterator<Entity> entityIterator = cworld.getCubeCache().getEntityIterator();
+        while (entityIterator.hasNext()) {
+            Entity entity2 = entityIterator.next();
+            if (!entity2.shouldRenderInPass(pass))
+                continue;
+            boolean shouldRender = this.renderManager.shouldRender(entity2, camera, d0, d1, d2) || entity2.isRidingOrBeingRiddenBy(mc.player);
+            if (!shouldRender)
+                continue;
 
-    /**
-     * Optifine-specific version of the above method. Up to version 1.12.2_HD_U_C6
-     */
+            if (entity2 != renderViewEntity || mc.gameSettings.thirdPersonView != 0 || isPlayerSleeping) {
+                ++this.countEntitiesRendered;
+                this.renderManager.renderEntityStatic(entity2, partialTicks, false);
+
+                if (this.isOutlineActive(entity2, entity, camera)) {
+                    list1.add(entity2);
+                }
+
+                if (this.renderManager.isRenderMultipass(entity2)) {
+                    list2.add(entity2);
+                }
+            }
+        }
+    }*/
+    
     @SuppressWarnings("UnresolvedMixinReference")
     @Group(name = "renderEntitiesFix")
-    @Inject(method = "renderEntities",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk(Lnet/minecraft/world/World;)Lnet/minecraft/world/chunk/Chunk;"),
-            locals = LocalCapture.CAPTURE_FAILHARD,
-            remap = false)
-    public void onGetPositionOptifine_Old(Entity renderViewEntity, ICamera camera, float partialTicks,
-            CallbackInfo ci, int pass, double d0, double d1, double d2,
+    @Inject(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos$PooledMutableBlockPos;release()V"), cancellable = false, locals = LocalCapture.CAPTURE_FAILHARD)
+    public void onRenderEntities_Optifine(Entity renderViewEntity, ICamera camera, float partialTicks, CallbackInfo ci, int pass, double d0, double d1,
+            double d2,
             Entity entity, double d3, double d4, double d5,
-            List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
-            BlockPos.PooledMutableBlockPos pos, Iterator iterInfosEntities,
-            RenderGlobal.ContainerLocalRenderInformation info) {
-        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
-        if (world.isCubicWorld()) {
-            this.position = info.renderChunk.getPosition();
-        } else {
-            this.position = null;
+            List<Entity> list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List<Entity> list1, List<Entity> list2,
+            BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos,
+            Iterator<RenderGlobal.ContainerLocalRenderInformation> var21) {
+        ICubicWorldClient cworld = (ICubicWorldClient) world;
+        if (!cworld.isCubicWorld())
+            return;
+        Minecraft mc = Minecraft.getMinecraft();
+        boolean isPlayerSleeping = renderViewEntity instanceof EntityLivingBase
+                ? ((EntityLivingBase) renderViewEntity).isPlayerSleeping() : false;
+        Iterator<ClassInheritanceMultiMap<Entity>> entityContainerIterator = cworld.getCubeCache().getEntityContainerIterator();
+        while (entityContainerIterator.hasNext()) {
+            for (Entity entity2 : entityContainerIterator.next()) {
+                if (!entity2.shouldRenderInPass(pass))
+                    continue;
+                boolean shouldRender = this.renderManager.shouldRender(entity2, camera, d0, d1, d2) || entity2.isRidingOrBeingRiddenBy(mc.player);
+                if (!shouldRender)
+                    continue;
+
+                if (entity2 != renderViewEntity || mc.gameSettings.thirdPersonView != 0 || isPlayerSleeping) {
+                    ++this.countEntitiesRendered;
+                    this.renderManager.renderEntityStatic(entity2, partialTicks, false);
+
+                    if (this.isOutlineActive(entity2, entity, camera)) {
+                        list1.add(entity2);
+                    }
+
+                    if (this.renderManager.isRenderMultipass(entity2)) {
+                        list2.add(entity2);
+                    }
+                }
+            }
         }
     }
 
-    /**
-     * Optifine-specific version of the above method. Versions 1.12.2_HD_U_C7_pre and up
-     */
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Group(name = "renderEntitiesFix")
-    @Inject(method = "renderEntities",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;"),
-            locals = LocalCapture.CAPTURE_FAILHARD,
-            remap = false)
-    public void onGetPositionOptifine_New(Entity renderViewEntity, ICamera camera, float partialTicks,
-            CallbackInfo ci, int pass, double d0, double d1, double d2,
-            Entity entity, double d3, double d4, double d5,
-            List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
-            BlockPos.PooledMutableBlockPos pos, Iterator var22, RenderGlobal.ContainerLocalRenderInformation info) {
-        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
-        if (world.isCubicWorld()) {
-            this.position = info.renderChunk.getPosition();
-        } else {
-            this.position = null;
-        }
-    }
-
-    /**
-     * After chunk.getEntityLists() renderGlobal needs to get correct element of the array.
-     * The array element number is calculated using renderChunk.getPosition().getY() / 16.
-     * getY() is redirected to this method to always return 0.
-     * <p>
-     * Then chunk.getEntityLists is redirected to a method that returns a 1-element array.
-     */
-    @Group(name = "renderEntitiesFix")
-    @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = BLOCK_POS_GETY), require = 1)
-    public int getRenderChunkYPos(BlockPos pos) {
-        //position is null when it's not cubic chunks renderer
-        if (this.position != null) {
-            return 0;//must be 0 (or anything between 0 and 15)
-        }
-        return pos.getY();
-    }
-
-    /**
-     * Return a 1-element array for Cubic Chunks world,
-     * or original chunk.getEntityLists if not cubic chunks world.
-     */
-    @SuppressWarnings("unchecked")
-    @Group(name = "renderEntitiesFix")
-    @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = CHUNK_GET_ENTITY_LISTS), require = 1)
-    public ClassInheritanceMultiMap<Entity>[] getEntityList(Chunk chunk) {
-        if (position == null) {
-            return chunk.getEntityLists(); //TODO: is this right?
-        }
-
-        Cube cube = ((IColumn) chunk).getCube(Coords.blockToCube(position.getY()));
-        if (cube instanceof BlankCube) {
-            return ClassInheritanceMultiMapFactory.EMPTY_ARR;
-        }
-
-        return new ClassInheritanceMultiMap[]{cube.getEntityContainer().getEntitySet()};
-    }
 
     /**
      * Overwrite getRenderChunk(For)Offset to support extended height.
      *
      * @author Barteks2x
-     * @reason Remove hardcoded height checks, it's a simple method and doing it differently would be problematic and
-     * confusing (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
+     * @reason Remove hardcoded height checks, it's a simple method and doing it differently would be problematic and confusing (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
      */
     @Nullable
     @Overwrite
     private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
         BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
-        return MathHelper.abs(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks * RENDER_CHUNK_SIZE ? null :
-                MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * RENDER_CHUNK_SIZE ? null :
-                        MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * RENDER_CHUNK_SIZE ? null :
-                                this.viewFrustum.getRenderChunk(blockpos);
+        return MathHelper.abs(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks * RENDER_CHUNK_SIZE ? null
+                : MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * RENDER_CHUNK_SIZE ? null
+                        : MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * RENDER_CHUNK_SIZE ? null
+                                : this.viewFrustum.getRenderChunk(blockpos);
     }
 
-    @ModifyConstant(
-            method = "renderWorldBorder",
-            constant = {
-                    @Constant(doubleValue = 0.0D),
-                    @Constant(doubleValue = 256.0D)
-            },
-            slice = @Slice(from = @At(value = "HEAD"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Tessellator;draw()V")), require = 2)
+    @ModifyConstant(method = "renderWorldBorder", constant = {
+            @Constant(doubleValue = 0.0D),
+            @Constant(doubleValue = 256.0D)
+    }, slice = @Slice(from = @At(value = "HEAD"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Tessellator;draw()V")), require = 2)
     private double renderWorldBorder_getRenderHeight(double original, Entity entity, float partialTicks) {
         return original == 0.0D ? entity.posY - 128 : entity.posY + 128;
     }
-    
+
     @ModifyConstant(method = "setupTerrain", constant = @Constant(doubleValue = 16.0D))
-    public double onSetupTerrain1(double oldValue){
+    public double onSetupTerrain1(double oldValue) {
         return RENDER_CHUNK_SIZE;
     }
 
     @ModifyConstant(method = "setupTerrain", constant = @Constant(intValue = 16))
-    public int onSetupTerrain2(int oldValue){
+    public int onSetupTerrain2(int oldValue) {
         return RENDER_CHUNK_SIZE;
     }
-    
+
     @ModifyConstant(method = "getVisibleFacings", constant = @Constant(intValue = 4))
-    public int onGetVisibleFacings(int oldValue){
+    public int onGetVisibleFacings(int oldValue) {
         return RENDER_CHUNK_SIZE_BIT;
     }
-    
+
     @ModifyConstant(method = "getVisibleFacings", constant = @Constant(intValue = 15))
-    public int onGetVisibleFacings2(int oldValue){
+    public int onGetVisibleFacings2(int oldValue) {
         return RENDER_CHUNK_MAX_POS_OFFSET;
     }
 }

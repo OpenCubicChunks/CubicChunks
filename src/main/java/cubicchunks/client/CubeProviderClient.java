@@ -34,13 +34,20 @@ import cubicchunks.world.cube.Cube;
 import jline.internal.Preconditions;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
+import java.util.Collections;
+import java.util.Iterator;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.google.common.collect.AbstractIterator;
 
 //TODO: break off ICubeProvider
 @MethodsReturnNonnullByDefault
@@ -179,5 +186,21 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
                 .map(c -> ((IColumn) c).getLoadedCubes().size())
                 .reduce((a, b) -> a + b)
                 .orElse(-1) + "/" + this.chunkMapping.size();
+    }
+
+    public Iterator<ClassInheritanceMultiMap<Entity>> getEntityContainerIterator() {
+        final Iterator<Cube> cubeIterator = this.cubeMap.iterator();
+        if (!cubeIterator.hasNext())
+            return Collections.emptyIterator();
+        return new AbstractIterator<ClassInheritanceMultiMap<Entity>>() {
+
+            @Override
+            protected ClassInheritanceMultiMap<Entity> computeNext() {
+                if (cubeIterator.hasNext()) {
+                    return cubeIterator.next().getEntityContainer().getEntitySet();
+                }
+                return this.endOfData();
+            }
+        };
     }
 }

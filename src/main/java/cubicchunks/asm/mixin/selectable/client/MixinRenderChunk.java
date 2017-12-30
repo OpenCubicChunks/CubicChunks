@@ -30,8 +30,12 @@ import static cubicchunks.client.RenderConstants.RENDER_CHUNK_SIZE;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.chunk.RenderChunk;
@@ -45,6 +49,13 @@ import net.minecraft.client.renderer.chunk.RenderChunk;
 @ParametersAreNonnullByDefault
 @Mixin(RenderChunk.class)
 public class MixinRenderChunk {
+    
+    @Shadow private boolean needsUpdate;
+    
+    @Overwrite
+    public void setNeedsUpdate(boolean immediate) {
+        this.needsUpdate = true;
+    }
 
     @ModifyConstant(method = "setPosition", constant = @Constant(intValue = 16))
     public int onSetPosition(int oldValue) {
@@ -56,8 +67,13 @@ public class MixinRenderChunk {
         return RENDER_CHUNK_MAX_POS_OFFSET;
     }
     
-    @ModifyConstant(method = "rebuildWorldView", constant = @Constant(intValue = 16))
+/*    @ModifyConstant(method = "rebuildWorldView", constant = @Constant(intValue = 16))
     public int onRebuildWorldView(int oldValue) {
+        return RENDER_CHUNK_SIZE;
+    }*/
+    
+    @ModifyConstant(method = "makeChunkCacheOF", constant = @Constant(intValue = 16))
+    public int onMakingChunkCacheOptifine(int oldValue) {
         return RENDER_CHUNK_SIZE;
     }
     
