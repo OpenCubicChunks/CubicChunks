@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.selectable.client;
 
-import static cubicchunks.client.RenderConstants.RENDER_CHUNK_SIZE;
+import static cubicchunks.client.RenderConstants.*;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -73,13 +73,26 @@ public class MixinViewFrustum_BiggerRenderChunk {
         }
         return relativeAxisPos - j / sizeInBlocks * sizeInBlocks;
     }
+    
+    private int frustumUpdatePosRenderChunkX = Integer.MIN_VALUE;
+    private int frustumUpdatePosRenderChunkY = Integer.MIN_VALUE;
+    private int frustumUpdatePosRenderChunkZ = Integer.MIN_VALUE;
 
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void updateChunkPositionsInject(double viewEntityX, double viewEntityZ, CallbackInfo cbi) {
         if (!((ICubicWorld) world).isCubicWorld()) {
             return;
         }
+        cbi.cancel();
         Entity view = Minecraft.getMinecraft().getRenderViewEntity();
+        if (this.frustumUpdatePosRenderChunkX == view.chunkCoordX >> RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS
+                && this.frustumUpdatePosRenderChunkY == view.chunkCoordY >> RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS
+                && this.frustumUpdatePosRenderChunkZ == view.chunkCoordZ >> RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS)
+            return;
+        this.frustumUpdatePosRenderChunkX = view.chunkCoordX >> RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS;
+        this.frustumUpdatePosRenderChunkY = view.chunkCoordY >> RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS;
+        this.frustumUpdatePosRenderChunkZ = view.chunkCoordZ >> RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS;
+        
         double x = view.posX;
         double y = view.posY;
         double z = view.posZ;
@@ -115,7 +128,6 @@ public class MixinViewFrustum_BiggerRenderChunk {
                 }
             }
         }
-        cbi.cancel();
     }
 
     @Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true, require = 1)

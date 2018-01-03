@@ -21,14 +21,31 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.client;
+package cubicchunks.asm.mixin.selectable.client;
 
-public class RenderConstants {
+import static cubicchunks.client.RenderConstants.RENDER_CHUNK_SIZE;
 
-    public static final int RENDER_CHUNK_SIZE_BIT = 5;
-    public static final int RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS = RENDER_CHUNK_SIZE_BIT - 4;
-    public static final int RENDER_CHUNK_SIZE = 1 << RENDER_CHUNK_SIZE_BIT;
-    public static final int RENDER_CHUNK_MAX_POS_OFFSET = RENDER_CHUNK_SIZE - 1;
-    public static final double RENDER_CHUNK_CENTER_POS = RENDER_CHUNK_SIZE / 2.0D;
-    public static final float RENDER_CHUNK_CENTER_POS_FLOAT = RENDER_CHUNK_SIZE / 2.0F;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.renderer.chunk.RenderChunk;
+/**
+ * Fixes renderEntities crashing when rendering cubes
+ * that are not at existing array index in chunk.getEntityLists(),
+ * <p>
+ * Allows to render cubes outside of 0..256 height range.
+ */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+@Mixin(RenderChunk.class)
+public class MixinRenderChunk_OptifineSpecific {
+    
+    @ModifyConstant(method = "makeChunkCacheOF", constant = @Constant(intValue = 16))
+    public int onMakingChunkCacheOptifine(int oldValue) {
+        return RENDER_CHUNK_SIZE;
+    }
 }

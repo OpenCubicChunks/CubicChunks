@@ -27,12 +27,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,6 +41,10 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import net.minecraftforge.fml.relauncher.FMLInjectionData;
+
 /**
  * This Mixin configuration plugin class launched from cubicchunks.mixin.selectable.json.
  * Note, that this plugin is not working in JUnit tests due to missing field of 
@@ -50,11 +52,33 @@ import com.google.gson.stream.JsonWriter;
  * Therefore two Mixin classes with an injection in a same method and with a same priority will cause Mixin to fail. */
 public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
+    private final Object2BooleanMap<String> modDependencyConditions = new Object2BooleanLinkedOpenHashMap<String>();
+    
     @Nonnull
     public static Logger LOGGER = LogManager.getLogger("CubicChunksMixinConfig");
 
     @Override
     public void onLoad(String mixinPackage) {
+        boolean isOptifineCoreModLoaded = true;
+        try {
+            Class.forName("optifine.OptiFineForgeTweaker");
+        } catch (ClassNotFoundException e) {
+            isOptifineCoreModLoaded = false;
+        }
+        modDependencyConditions.defaultReturnValue(true);
+        modDependencyConditions.put(
+                "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_NoOptifine",
+                !isOptifineCoreModLoaded);
+        modDependencyConditions.put(
+                "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_OptifineSpecific",
+                isOptifineCoreModLoaded);
+        modDependencyConditions.put(
+                "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_NoOptifine",
+                !isOptifineCoreModLoaded);
+        modDependencyConditions.put(
+                "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_OptifineSpecific",
+                isOptifineCoreModLoaded);
+
         File folder = new File(".", "config");
         folder.mkdirs();
         File configFile = new File(folder, "cubicchunks_mixin_config.json");
@@ -66,6 +90,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        
     }
 
     @Override
@@ -75,20 +100,22 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        LOGGER.info("Checking config option for "+mixinClassName);
+        return this.shouldApplyMixin(mixinClassName);
+    }
+    
+    public boolean shouldApplyMixin(String mixinClassName) {
         for (BoolOptions configOption : BoolOptions.values()) {
-            if (configOption.mixinClassNamesOnTrue != null)
-                for (String mixinClassNameOnTrue : configOption.mixinClassNamesOnTrue)
-                    if (mixinClassName.equals(mixinClassNameOnTrue))
-                        return configOption.value;
+            for (String mixinClassNameOnTrue : configOption.mixinClassNamesOnTrue)
+                if (mixinClassName.equals(mixinClassNameOnTrue))
+                    return configOption.value && modDependencyConditions.getBoolean(mixinClassName);
 
-            if (configOption.mixinClassNamesOnFalse != null)
-                for (String mixinClassNameOnFalse : configOption.mixinClassNamesOnFalse)
-                    if (mixinClassName.equals(mixinClassNameOnFalse))
-                        return !configOption.value;
+            for (String mixinClassNameOnFalse : configOption.mixinClassNamesOnFalse)
+                if (mixinClassName.equals(mixinClassNameOnFalse))
+                    return !configOption.value && modDependencyConditions.getBoolean(mixinClassName);
         }
         return true;
     }
+
 
     @Override
     public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
@@ -109,7 +136,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
     public static enum BoolOptions {
         OPTIMIZE_PATH_NAVIGATOR(false, 
-                null, 
+                new String[] {}, 
                 new String[] {"cubicchunks.asm.mixin.selectable.common.MixinPathNavigate",
                         "cubicchunks.asm.mixin.selectable.common.MixinWalkNodeProcessor"},
                 "Enabling this option will optimize work of vanilla path navigator."
@@ -118,7 +145,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                         + " chunk will not try to seek path to player outside of chunks if direct path is blocked."
                         + " You need to restart Minecraft to apply changes."),
         USE_CUBE_ARRAYS_INSIDE_CHUNK_CACHE(true, 
-                null, 
+                new String[] {}, 
                 new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_ChunkCache"},
                 "Enabling this option will mix cube array into chunk cache"
                         + " for using in entity path navigator."
@@ -133,7 +160,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                         + " Fast collision check can reduce server lag."
                         + " You need to restart Minecraft to apply changes. DO NOT USE UNTIL FIXED!"),
         RANDOM_TICK_IN_CUBE(true, 
-                null,
+                new String[] {}, 
                 new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks"},
                 "If set to true, random tick wil be launched from cube instance instead of chunk."
                         + " Cube based random tick may slightly reduce server lag."
@@ -143,18 +170,22 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                         "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal",
                         "cubicchunks.asm.mixin.selectable.client.MixinViewFrustum_RenderHeightFix"},
                 new String[] {
-                        "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk",
+                        "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_Common",
+                        "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_NoOptifine",
+                        "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_OptifineSpecific",
                         "cubicchunks.asm.mixin.selectable.client.MixinCompiledChunk_Fix",
-                        "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk",
+                        "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_Common",
+                        "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_NoOptifine",
+                        "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_OptifineSpecific",
                         "cubicchunks.asm.mixin.selectable.client.MixinViewFrustum_BiggerRenderChunk"},
                 "If set to true, render will use 32 blocks in render chunks instead of 16. "
-                + "Incompatibe with Optifine (cause crash). Significally raise FPS.");
+                + "Significally raise FPS.");
 
         private final boolean defaultValue;
         // Load this Mixin class only if option is false. Can be null.
-        @Nullable private final String[] mixinClassNamesOnFalse;
+        private final String[] mixinClassNamesOnFalse;
         // Load this Mixin class only if option is true. Can be null.
-        @Nullable private final String[] mixinClassNamesOnTrue;
+        private final String[] mixinClassNamesOnTrue;
         private final String description;
         private boolean value;
 
