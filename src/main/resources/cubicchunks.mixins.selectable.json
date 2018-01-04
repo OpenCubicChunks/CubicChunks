@@ -22,7 +22,6 @@
         "client.MixinRenderGlobal_BiggerRenderChunk_Common",
         "client.MixinRenderGlobal_BiggerRenderChunk_NoOptifine",
         "client.MixinRenderGlobal_BiggerRenderChunk_OptifineSpecific",
-        "client.MixinCompiledChunk_Fix",
         "client.MixinViewFrustum_BiggerRenderChunk",
         "client.MixinViewFrustum_RenderHeightFix"
     ],

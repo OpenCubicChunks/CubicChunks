@@ -28,9 +28,12 @@ import static cubicchunks.client.RenderConstants.RENDER_CHUNK_SIZE;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
+import cubicchunks.client.IRenderChunk;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 /**
@@ -42,8 +45,19 @@ import net.minecraft.client.renderer.chunk.RenderChunk;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderChunk.class)
-public class MixinRenderChunk_NoOptifine {
+public abstract class MixinRenderChunk_NoOptifine implements IRenderChunk {
     
+    @Shadow private boolean needsUpdate;
+    
+    /**
+     * @author Foghrye4
+     * @reason Workaround to fix frame-freeze on block break
+     */
+    @Overwrite
+    public void setNeedsUpdate(boolean immediate) {
+        this.needsUpdate = true;
+    }
+
     @ModifyConstant(method = "rebuildWorldView", constant = @Constant(intValue = 16))
     public int onRebuildWorldView(int oldValue) {
         return RENDER_CHUNK_SIZE;

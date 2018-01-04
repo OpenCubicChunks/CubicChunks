@@ -23,7 +23,8 @@
  */
 package cubicchunks.asm.mixin.selectable.client;
 
-import static cubicchunks.client.RenderConstants.*;
+import static cubicchunks.client.RenderConstants.RENDER_CHUNK_SIZE;
+import static cubicchunks.client.RenderConstants.RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -35,11 +36,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -80,9 +79,6 @@ public class MixinViewFrustum_BiggerRenderChunk {
 
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void updateChunkPositionsInject(double viewEntityX, double viewEntityZ, CallbackInfo cbi) {
-        if (!((ICubicWorld) world).isCubicWorld()) {
-            return;
-        }
         cbi.cancel();
         Entity view = Minecraft.getMinecraft().getRenderViewEntity();
         if (this.frustumUpdatePosRenderChunkX == view.chunkCoordX >> RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS
@@ -92,7 +88,7 @@ public class MixinViewFrustum_BiggerRenderChunk {
         this.frustumUpdatePosRenderChunkX = view.chunkCoordX >> RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS;
         this.frustumUpdatePosRenderChunkY = view.chunkCoordY >> RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS;
         this.frustumUpdatePosRenderChunkZ = view.chunkCoordZ >> RENDER_CHUNK_SIZE_BIT_SHIFT_CHUNK_POS;
-        
+
         double x = view.posX;
         double y = view.posY;
         double z = view.posZ;
@@ -132,9 +128,6 @@ public class MixinViewFrustum_BiggerRenderChunk {
 
     @Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void getRenderChunkInject(BlockPos pos, CallbackInfoReturnable<RenderChunk> cbi) {
-        if (!((ICubicWorld) world).isCubicWorld()) {
-            return;
-        }
         // treat the y dimension the same as all the rest
         int x = MathHelper.intFloorDiv(pos.getX(), RENDER_CHUNK_SIZE);
         int y = MathHelper.intFloorDiv(pos.getY(), RENDER_CHUNK_SIZE);

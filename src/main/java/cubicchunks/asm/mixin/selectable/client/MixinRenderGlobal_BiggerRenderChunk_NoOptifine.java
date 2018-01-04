@@ -131,5 +131,4 @@ public class MixinRenderGlobal_BiggerRenderChunk_NoOptifine {
             }
         }
     }
-
 }

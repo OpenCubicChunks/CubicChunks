@@ -24,19 +24,22 @@
 package cubicchunks.asm.mixin.selectable.client;
 
 import static cubicchunks.client.RenderConstants.RENDER_CHUNK_CENTER_POS;
-import static cubicchunks.client.RenderConstants.RENDER_CHUNK_MAX_POS_OFFSET;
+import static cubicchunks.client.RenderConstants.RENDER_CHUNK_MAX_POS;
 import static cubicchunks.client.RenderConstants.RENDER_CHUNK_SIZE;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
+import cubicchunks.client.IRenderChunk;
+import cubicchunks.client.VisGraphBigChunkAdapted;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.chunk.RenderChunk;
+import net.minecraft.client.renderer.chunk.VisGraph;
 /**
  * Fixes renderEntities crashing when rendering cubes
  * that are not at existing array index in chunk.getEntityLists(),
@@ -46,15 +49,8 @@ import net.minecraft.client.renderer.chunk.RenderChunk;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderChunk.class)
-public class MixinRenderChunk_Common {
+public abstract class MixinRenderChunk_Common implements IRenderChunk {
     
-    @Shadow private boolean needsUpdate;
-    
-/*    @Overwrite
-    public void setNeedsUpdate(boolean immediate) {
-        this.needsUpdate = true;
-    }*/
-
     @ModifyConstant(method = "setPosition", constant = @Constant(intValue = 16))
     public int onSetPosition(int oldValue) {
         return RENDER_CHUNK_SIZE;
@@ -62,7 +58,12 @@ public class MixinRenderChunk_Common {
     
     @ModifyConstant(method = "rebuildChunk", constant = @Constant(intValue = 15))
     public int onRebuildChunk(int oldValue) {
-        return RENDER_CHUNK_MAX_POS_OFFSET;
+        return RENDER_CHUNK_MAX_POS;
+    }
+    
+    @Redirect(method = "rebuildChunk", at = @At(value = "NEW", target = "Lnet/minecraft/client/renderer/chunk/VisGraph;"))
+    public VisGraph initVisGraph() {
+        return new VisGraphBigChunkAdapted();
     }
     
     @ModifyConstant(method = "getDistanceSq", constant = @Constant(doubleValue = 8.0D))

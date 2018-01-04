@@ -173,13 +173,12 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                         "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_Common",
                         "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_NoOptifine",
                         "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_OptifineSpecific",
-                        "cubicchunks.asm.mixin.selectable.client.MixinCompiledChunk_Fix",
                         "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_Common",
                         "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_NoOptifine",
                         "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_OptifineSpecific",
                         "cubicchunks.asm.mixin.selectable.client.MixinViewFrustum_BiggerRenderChunk"},
                 "If set to true, render will use 32 blocks in render chunks instead of 16. "
-                + "Significally raise FPS.");
+                + "Significally raise FPS. It is strongly reccomended to use OptiFine with this option.");
 
         private final boolean defaultValue;
         // Load this Mixin class only if option is false. Can be null.

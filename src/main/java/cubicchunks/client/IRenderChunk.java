@@ -21,26 +21,8 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.selectable.client;
+package cubicchunks.client;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.renderer.chunk.CompiledChunk;
-import net.minecraft.util.EnumFacing;
-/**
- * Fixes invisibility of some cubes.
- */
-@MethodsReturnNonnullByDefault
-@ParametersAreNonnullByDefault
-@Mixin(CompiledChunk.class)
-public class MixinCompiledChunk_Fix {
-
-    @Overwrite
-    public boolean isVisible(EnumFacing facing, EnumFacing facing2) {
-        return true;
-    }
+public interface IRenderChunk {
+    boolean hasEntities();
 }
