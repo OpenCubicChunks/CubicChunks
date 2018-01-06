@@ -162,10 +162,7 @@ public class ClientHandler implements INetHandler {
             int x = AddressTools.getLocalX(packed);
             int z = AddressTools.getLocalZ(packed);
             int height = message.getHeights().get(i);
-
-            int oldHeight = index.getTopBlockY(x, z);
             index.setHeight(x, z, height);
-            lm.onHeightMapUpdate(column, x, z, oldHeight, height);
         }
     }
 
