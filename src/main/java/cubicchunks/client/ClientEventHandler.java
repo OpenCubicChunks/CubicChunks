@@ -94,48 +94,35 @@ public class ClientEventHandler {
             GuiVideoSettings gvs = (GuiVideoSettings) currentGui;
             try {
                 GuiOptionsRowList gowl = (GuiOptionsRowList) gvs.optionsRowList;
-                GuiOptionsRowList.Row row = this.createRow(100, CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE, gvs.width);
+                GuiOptionsRowList.Row row = this.createRow(100, CubicChunks.Config.IntOptions.RENDER_CHUNK_SIZE_BIT, CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE, gvs.width);
                 gowl.options.add(1, row);
             } catch (NoSuchFieldError err) {
                 int idx = 3;
                 int btnSpacing = 20;
                 CubicChunks.LOGGER.error("Couldn't add vertical view distance options, maybe optifine is installed? Attempting optifine-specific "
                         + "option add", err.toString());
-                gvs.buttonList.add(idx, new GuiCustomSlider(100, gvs.width / 2 - 155 + 160, gvs.height / 6 + btnSpacing * (idx / 2) - 12,
+                gvs.buttonList.add(idx++, new GuiCustomSlider(100, gvs.width / 2 - 155 + 160, gvs.height / 6 + btnSpacing * (idx / 2) - 12,
                         CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE));
-                // reposition all buttons except the last 4 (last 3 and done)
-                for (int i = 0; i < gvs.buttonList.size() - 4; i++) {
+                gvs.buttonList.add(idx, new GuiCustomSlider(101, gvs.width / 2 - 155 + 160, gvs.height / 6 + btnSpacing * (idx / 2) - 12,
+                        CubicChunks.Config.IntOptions.RENDER_CHUNK_SIZE_BIT));
+                // reposition all buttons except "done".
+                for (int i = 0; i < gvs.buttonList.size() - 1; i++) {
                     GuiButton btn = gvs.buttonList.get(i);
                     int x = gvs.width / 2 - 155 + i % 2 * 160;
                     int y = gvs.height / 6 + 21 * (i / 2) - 12;
                     btn.x = x;
                     btn.y = y;
                 }
-                // now position the last 3 buttons excluding "done" to be 3-in-a-row
-                for (int i = gvs.buttonList.size() - 4; i < gvs.buttonList.size() - 1; i++) {
-                    GuiButton btn = gvs.buttonList.get(i);
-
-                    int newBtnWidth = 150 * 2 / 3;
-                    int minX = gvs.width / 2 - 155;
-                    int maxX = gvs.width / 2 - 155 + 160 + btn.width;
-
-                    int minXCenter = minX + newBtnWidth / 2;
-                    int maxXCenter = maxX - newBtnWidth / 2;
-
-                    int x = minXCenter + (i % 3) * (maxXCenter - minXCenter) / 2 - newBtnWidth / 2;
-                    int y = gvs.height / 6 + 21 * (gvs.buttonList.size() - 4) / 2 - 12;
-
-                    btn.x = x;
-                    btn.y = y;
-                    btn.width = newBtnWidth;
-                }
+                GuiButton btn = gvs.buttonList.get(gvs.buttonList.size() - 1);
+                btn.y += 21;
             }
         }
     }
 
-    private GuiOptionsRowList.Row createRow(int buttonId, CubicChunks.Config.IntOptions option, int width) {
-        GuiCustomSlider slider = new GuiCustomSlider(buttonId, width / 2 - 155 + 160, 0, option);
-        return new GuiOptionsRowList.Row(slider, null);
+    private GuiOptionsRowList.Row createRow(int buttonId, CubicChunks.Config.IntOptions option1, CubicChunks.Config.IntOptions option2, int width) {
+        GuiCustomSlider slider1 = new GuiCustomSlider(buttonId, width / 2 - 155, 0, option1);
+        GuiCustomSlider slider2 = new GuiCustomSlider(++buttonId, width / 2 - 155 + 160, 0, option2);
+        return new GuiOptionsRowList.Row(slider1, slider2);
     }
 
 

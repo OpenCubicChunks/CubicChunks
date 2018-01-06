@@ -21,11 +21,8 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.selectable.client;
+package cubicchunks.asm.mixin.core.client;
 
-import static cubicchunks.client.RenderConstants.*;
-
-import java.util.Iterator;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -37,17 +34,21 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import cubicchunks.client.CubeProviderClient;
-import cubicchunks.client.VisGraphBigChunkAdapted;
+import cubicchunks.client.IVisGraph;
+import cubicchunks.client.RenderVariables;
 import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -66,32 +67,35 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderGlobal.class)
-public class MixinRenderGlobal_BiggerRenderChunk_Common {
+public abstract class MixinRenderGlobal_BiggerRenderChunk_Common {
 
     @Nullable private BlockPos position;
     @Shadow private int renderDistanceChunks;
     @Shadow private ViewFrustum viewFrustum;
+    @Shadow @Final private Minecraft mc;
     @Shadow private WorldClient world;
     @Shadow private int renderEntitiesStartupCounter;
     @Shadow @Final private RenderManager renderManager;
     @Shadow private int countEntitiesTotal;
     @Shadow private int countEntitiesRendered;
     @Shadow private int countEntitiesHidden;
-
+    
     @Shadow
     private boolean isOutlineActive(Entity entityIn, Entity viewer, ICamera camera) {
         throw new AbstractMethodError();
     };
-
-    /*
-     * @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;hasNext()Z", remap = false)) public boolean onIteratingThruRenderInfos(Iterator<RenderGlobal.ContainerLocalRenderInformation> renderInfosIterator, Entity renderViewEntity, ICamera camera, float partialTicks) { ICubicWorldClient cworld = (ICubicWorldClient) world; if (cworld.isCubicWorld()) return false; return renderInfosIterator.hasNext(); }
-     */
-
+    
+    @Shadow
+    public abstract void loadRenderers();
+    
+    private int renderChunkSizeBit = -1;
+    
     ClassInheritanceMultiMap<Entity> mutableEntityMapWrapper = new ClassInheritanceMultiMap<Entity>(Entity.class);
     @SuppressWarnings("unchecked") ClassInheritanceMultiMap<Entity>[] dummyEntityStorageArray = new ClassInheritanceMultiMap[1];
 
     @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getPosition()Lnet/minecraft/util/math/BlockPos;"))
     public BlockPos onGetPosition(RenderChunk renderChunk) {
+        int renderChunkCubeSize = RenderVariables.getRenderChunkSize() / Cube.SIZE;
         mutableEntityMapWrapper.values.clear();
         BlockPos rcpos = renderChunk.getPosition();
         int cx0 = Coords.blockToCube(rcpos.getX());
@@ -100,16 +104,16 @@ public class MixinRenderGlobal_BiggerRenderChunk_Common {
         ICubicWorldClient cworld = (ICubicWorldClient) world;
         if (cworld.isCubicWorld()) {
             CubeProviderClient cubeProvider = cworld.getCubeCache();
-            for (int cx = cx0; cx < cx0 + RENDER_CHUNK_SIZE_IN_CUBES; cx++)
-                for (int cy = cy0; cy < cy0 + RENDER_CHUNK_SIZE_IN_CUBES; cy++)
-                    for (int cz = cz0; cz < cz0 + RENDER_CHUNK_SIZE_IN_CUBES; cz++) {
+            for (int cx = cx0; cx < cx0 + renderChunkCubeSize; cx++)
+                for (int cy = cy0; cy < cy0 + renderChunkCubeSize; cy++)
+                    for (int cz = cz0; cz < cz0 + renderChunkCubeSize; cz++) {
                         mutableEntityMapWrapper.values.addAll(cubeProvider.getCube(cx, cy, cz).getEntityContainer().getEntitySet());
                     }
         } else {
-            for (int cx = cx0; cx < cx0 + RENDER_CHUNK_SIZE_IN_CUBES; cx++)
-                for (int cz = cz0; cz < cz0 + RENDER_CHUNK_SIZE_IN_CUBES; cz++) {
+            for (int cx = cx0; cx < cx0 + renderChunkCubeSize; cx++)
+                for (int cz = cz0; cz < cz0 + renderChunkCubeSize; cz++) {
                     ClassInheritanceMultiMap<Entity>[] entityLists = world.getChunkFromChunkCoords(cx, cz).getEntityLists();
-                    for (int cy = cy0; cy < cy0 + RENDER_CHUNK_SIZE_IN_CUBES && cy < 16 && cy >= 0; cy++) {
+                    for (int cy = cy0; cy < cy0 + renderChunkCubeSize && cy < 16 && cy >= 0; cy++) {
                         mutableEntityMapWrapper.values.addAll(entityLists[cy].values);
                     }
                 }
@@ -133,9 +137,10 @@ public class MixinRenderGlobal_BiggerRenderChunk_Common {
     @Overwrite
     private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
         BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
-        return MathHelper.abs(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks * RENDER_CHUNK_SIZE ? null
-                : MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * RENDER_CHUNK_SIZE ? null
-                        : MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * RENDER_CHUNK_SIZE ? null
+        int size = RenderVariables.getRenderChunkSize();
+        return MathHelper.abs(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks * size ? null
+                : MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * size ? null
+                        : MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * size ? null
                                 : this.viewFrustum.getRenderChunk(blockpos);
     }
 
@@ -149,8 +154,9 @@ public class MixinRenderGlobal_BiggerRenderChunk_Common {
 
     @Redirect(method = "setupTerrain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;needsUpdate()Z"))
     public boolean doChunkNeedUpdate(RenderChunk renderChunk) {
+        int maxPos = RenderVariables.getRenderChunkMaxPos();
         return renderChunk.needsUpdate() && world.isAreaLoaded(renderChunk.getPosition(),
-                renderChunk.getPosition().add(RENDER_CHUNK_MAX_POS, RENDER_CHUNK_MAX_POS, RENDER_CHUNK_MAX_POS));
+                renderChunk.getPosition().add(maxPos, maxPos, maxPos));
     }
 
     @ModifyConstant(method = "setupTerrain", constant = @Constant(doubleValue = 16.0D))
@@ -160,7 +166,17 @@ public class MixinRenderGlobal_BiggerRenderChunk_Common {
 
     @ModifyConstant(method = "setupTerrain", constant = @Constant(intValue = 16))
     public int onSetupTerrain2(int oldValue) {
-        return RENDER_CHUNK_SIZE;
+        return RenderVariables.getRenderChunkSize();
+    }
+    
+    @Inject(method = "setupTerrain", at = @At(value = "HEAD"), cancellable = false)
+    public void reloadRendersIfNecessary(Entity viewEntity, double partialTicks, ICamera camera, int frameCount, boolean playerSpectator,
+            CallbackInfo ci) {
+        if (this.renderChunkSizeBit != RenderVariables.getRenderChunkBit()) {
+            this.loadRenderers();
+            this.renderDistanceChunks = this.mc.gameSettings.renderDistanceChunks;
+            this.renderChunkSizeBit = RenderVariables.getRenderChunkBit();
+        }
     }
 
     /**
@@ -169,36 +185,38 @@ public class MixinRenderGlobal_BiggerRenderChunk_Common {
      */
     @Overwrite
     private Set<EnumFacing> getVisibleFacings(BlockPos pos) {
-        VisGraphBigChunkAdapted visgraph = new VisGraphBigChunkAdapted();
-        int bx = pos.getX() & RENDER_CHUNK_START_POS_MASK;
-        int by = pos.getY() & RENDER_CHUNK_START_POS_MASK;
-        int bz = pos.getZ() & RENDER_CHUNK_START_POS_MASK;
+        VisGraph visgraph = new VisGraph();
+        int mask = RenderVariables.getRenderStartPosMask();
+        int renderChunkCubeSize = RenderVariables.getRenderChunkSize() / Cube.SIZE;
+        int bx = pos.getX() & mask;
+        int by = pos.getY() & mask;
+        int bz = pos.getZ() & mask;
         int cx0 = Coords.blockToCube(bx);
         int cy0 = Coords.blockToCube(by);
         int cz0 = Coords.blockToCube(bz);
         ICubicWorldClient cworld = (ICubicWorldClient) world;
         if (cworld.isCubicWorld()) {
             CubeProviderClient cubeProvider = cworld.getCubeCache();
-            for (int cx = cx0; cx < cx0 + RENDER_CHUNK_SIZE_IN_CUBES; cx++)
-                for (int cy = cy0; cy < cy0 + RENDER_CHUNK_SIZE_IN_CUBES; cy++)
-                    for (int cz = cz0; cz < cz0 + RENDER_CHUNK_SIZE_IN_CUBES; cz++) {
+            for (int cx = cx0; cx < cx0 + renderChunkCubeSize; cx++)
+                for (int cy = cy0; cy < cy0 + renderChunkCubeSize; cy++)
+                    for (int cz = cz0; cz < cz0 + renderChunkCubeSize; cz++) {
                         ExtendedBlockStorage ebs = cubeProvider.getCube(cx, cy, cz).getStorage();
-                        this.addAllOpaqueBlocksToVisGraph(visgraph, ebs);
+                        this.addAllOpaqueBlocksToVisGraph((IVisGraph) visgraph, ebs);
                     }
         } else {
-            for (int cx = cx0; cx < cx0 + RENDER_CHUNK_SIZE_IN_CUBES; cx++)
-                for (int cz = cz0; cz < cz0 + RENDER_CHUNK_SIZE_IN_CUBES; cz++) {
+            for (int cx = cx0; cx < cx0 + renderChunkCubeSize; cx++)
+                for (int cz = cz0; cz < cz0 + renderChunkCubeSize; cz++) {
                     ExtendedBlockStorage[] ebsArrays = world.getChunkFromChunkCoords(cx, cz).getBlockStorageArray();
-                    for (int cy = cy0; cy < cy0 + RENDER_CHUNK_SIZE_IN_CUBES && cy < 16 && cy >= 0; cy++) {
+                    for (int cy = cy0; cy < cy0 + renderChunkCubeSize && cy < 16 && cy >= 0; cy++) {
                         ExtendedBlockStorage ebs = ebsArrays[cy];
-                        this.addAllOpaqueBlocksToVisGraph(visgraph, ebs);
+                        this.addAllOpaqueBlocksToVisGraph((IVisGraph) visgraph, ebs);
                     }
                 }
         }
         return visgraph.getVisibleFacings(pos);
     }
 
-    private void addAllOpaqueBlocksToVisGraph(VisGraphBigChunkAdapted visgraph, ExtendedBlockStorage ebs) {
+    private void addAllOpaqueBlocksToVisGraph(IVisGraph visgraph, ExtendedBlockStorage ebs) {
         if (ebs == null || ebs.isEmpty())
             return;
         for (int lx = 0; lx < Cube.SIZE; lx++)

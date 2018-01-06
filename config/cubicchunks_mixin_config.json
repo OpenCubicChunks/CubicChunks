@@ -14,9 +14,5 @@
  {
   "RANDOM_TICK_IN_CUBE": true,
   "description": "If set to true, random tick wil be launched from cube instance instead of chunk. Cube based random tick may slightly reduce server lag. You need to restart Minecraft to apply changes."
- },
- {
-  "USE_BIGGER_RENDER_CHUNKS": true,
-  "description": "If set to true, render will use 32 blocks in render chunks instead of 16. Incompatibe with Optifine (cause crash). Significally raise FPS."
  }
 ]

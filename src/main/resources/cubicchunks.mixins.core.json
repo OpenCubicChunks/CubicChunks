@@ -28,6 +28,10 @@
         "client.MixinChunkCache_HeightLimits",
         "client.MixinChunk_Cubes",
         "client.MixinWorldProvider",
+        "client.MixinVisGraph",
+        "client.MixinRenderChunk_Common",
+        "client.MixinRenderGlobal_BiggerRenderChunk_Common",
+        "client.MixinViewFrustum_BiggerRenderChunk",
         "client.MixinGuiCreateWorld",
         "client.MixinDebugRenderChunkBorder"
     ],

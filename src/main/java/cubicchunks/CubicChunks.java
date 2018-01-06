@@ -37,6 +37,7 @@ import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.client.RenderVariables;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
 import cubicchunks.worldgen.generator.custom.biome.replacer.MesaSurfaceReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.MutatedSavannaSurfaceReplacer;
@@ -105,6 +106,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -237,7 +239,7 @@ public class CubicChunks {
     public void preInit(FMLPreInitializationEvent e) {
         LOGGER = e.getModLog();
         ConversionUtils.initFlowNoiseHack();
-
+        
         config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
     }
 
@@ -272,6 +274,7 @@ public class CubicChunks {
             for (IConfigUpdateListener l : configChangeListeners) {
                 l.onConfigUpdate(config);
             }
+            RenderVariables.setRenderChunkBit(config.getRenderChunkBits());
         }
     }
 
@@ -355,24 +358,29 @@ public class CubicChunks {
     public static class Config {
 
         public static enum IntOptions {
-            MAX_GENERATED_CUBES_PER_TICK(1, Integer.MAX_VALUE, 49 * 16, "The number of cubic chunks to generate per tick."),
-            VERTICAL_CUBE_LOAD_DISTANCE(2, 32, 8, "Similar to Minecraft's view distance, only for vertical chunks."),
+            MAX_GENERATED_CUBES_PER_TICK(1, Integer.MAX_VALUE, 49 * 16, "The number of cubic chunks to generate per tick.", null),
+            VERTICAL_CUBE_LOAD_DISTANCE(2, 32, 8, "Similar to Minecraft's view distance, only for vertical chunks.", null),
+            RENDER_CHUNK_SIZE_BIT(4, 8, 4, "Define a size of RenderChunk. Effective only client side (obviously).", value -> {
+                RenderVariables.setRenderChunkBit(value);
+            }),
             CHUNK_G_C_INTERVAL(1, Integer.MAX_VALUE, 20 * 10,
                     "Chunk garbage collector update interval. A more lower it is - a more CPU load it will generate. "
-                            + "A more high it is - a more memory will be used to store cubes between launches.");
+                            + "A more high it is - a more memory will be used to store cubes between launches.", null);
 
             private final int minValue;
             private final int maxValue;
             private final int defaultValue;
             private final String description;
             private int value;
+            private IntConsumer callback;
 
-            private IntOptions(int minValue1, int maxValue1, int defaultValue1, String description1) {
+            private IntOptions(int minValue1, int maxValue1, int defaultValue1, String description1, IntConsumer callbackIn) {
                 minValue = minValue1;
                 maxValue = maxValue1;
                 defaultValue = defaultValue1;
                 description = description1;
                 value = defaultValue;
+                callback = callbackIn;
             }
 
             public float getNormalValue() {
@@ -386,6 +394,8 @@ public class CubicChunks {
                 for (IConfigUpdateListener l : configChangeListeners) {
                     l.onConfigUpdate(config);
                 }
+                if (callback != null)
+                    callback.accept(value);
             }
 
             public int getValue() {
@@ -478,6 +488,10 @@ public class CubicChunks {
 
         public int getChunkGCInterval() {
             return IntOptions.CHUNK_G_C_INTERVAL.value;
+        }
+        
+        public int getRenderChunkBits() {
+            return IntOptions.RENDER_CHUNK_SIZE_BIT.value;
         }
 
         public boolean useFastEntitySpawner() {

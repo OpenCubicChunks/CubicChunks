@@ -21,22 +21,15 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.selectable.client;
+package cubicchunks.asm.mixin.core.client;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import cubicchunks.client.CubeProviderClient;
 import cubicchunks.client.IRenderChunk;
@@ -47,121 +40,101 @@ import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 /**
  * Fixes renderEntities crashing when rendering cubes
  * that are not at existing array index in chunk.getEntityLists(),
  * <p>
  * Allows to render cubes outside of 0..256 height range.
  */
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.common.ForgeModContainer;
-
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderChunk.class)
-@Implements(@Interface(iface = IRenderChunk.class, prefix = "renderChunk$"))
-public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk {
-
+public abstract class MixinRenderChunk_Common implements IRenderChunk {
+    
     @Shadow @Final public World world;
     @Shadow @Final private BlockPos.MutableBlockPos position;
-
+    
     /** Warning! Field mixed across mixins: 
-     * {@link cubicchunks.asm.mixin.core.client.MixinRenderChunk_Common} and this. */
+     * {@link cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_OptifineSpecific} and this. */
     private Cube[] cubeCache;
     /** Warning! Field mixed across mixins: 
-     * {@link cubicchunks.asm.mixin.core.client.MixinRenderChunk_Common} and this. */
+     * {@link cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_OptifineSpecific} and this. */
     private Chunk[] chunkCache;
-
-    @ModifyConstant(method = "makeChunkCacheOF", constant = @Constant(intValue = 16))
-    public int onMakingChunkCacheOptifine(int oldValue) {
+    
+    @ModifyConstant(method = "setPosition", constant = @Constant(intValue = 16))
+    public int onSetPosition(int oldValue) {
         return RenderVariables.getRenderChunkSize();
     }
-
-    @Inject(method = "isChunkRegionEmpty(Lnet/minecraft/util/math/BlockPos;)Z", at = @At(value = "HEAD"), cancellable = true, remap = false)
-    public void isChunkRegionEmpty(BlockPos posIn, CallbackInfoReturnable<Boolean> cif) {
+    
+    @ModifyConstant(method = "rebuildChunk", constant = @Constant(intValue = 15))
+    public int onRebuildChunk(int oldValue) {
+        return RenderVariables.getRenderChunkMaxPos();
+    }
+    
+    @ModifyConstant(method = "getDistanceSq", constant = @Constant(doubleValue = 8.0D))
+    public double onDistanceSq(double oldValue) {
+        return RenderVariables.getRenderChunkCenterPos();
+    }
+    
+    @Override
+    public boolean hasEntities() {
+        boolean hasEntities = false;
         ICubicWorldClient cworld = (ICubicWorldClient) world;
-        cif.cancel();
         int renderChunkCubeSize = RenderVariables.getRenderChunkSize() / Cube.SIZE;
-        boolean isEmpty = true;
         if (cworld.isCubicWorld()) {
             if (cubeCache == null) {
                 cubeCache = new Cube[1 << RenderVariables.getRenderChunkPosShitBit() * 3];
                 CubeProviderClient cubeProvider = cworld.getCubeCache();
-                int cx0 = Coords.blockToCube(posIn.getX());
-                int cy0 = Coords.blockToCube(posIn.getY());
-                int cz0 = Coords.blockToCube(posIn.getZ());
+                int cx0 = Coords.blockToCube(position.getX());
+                int cy0 = Coords.blockToCube(position.getY());
+                int cz0 = Coords.blockToCube(position.getZ());
                 int index = 0;
                 for (int cx = cx0; cx < cx0 + renderChunkCubeSize; cx++)
                     for (int cy = cy0; cy < cy0 + renderChunkCubeSize; cy++)
                         for (int cz = cz0; cz < cz0 + renderChunkCubeSize; cz++) {
                             Cube cube = cubeProvider.getCube(cx, cy, cz);
                             cubeCache[index++] = cube;
-                            if (!cube.isEmpty())
-                                isEmpty = false;
+                            if (!hasEntities && cube.getEntityContainer().size() != 0)
+                                hasEntities = true;
                         }
-                cif.setReturnValue(isEmpty);
-                return;
+                return hasEntities;
             }
             for (Cube cube : cubeCache) {
-                if (!cube.isEmpty()) {
-                    isEmpty = false;
-                    break;
+                if (cube.getEntityContainer().size() != 0) {
+                    return true;
                 }
             }
         } else {
-            int y0 = posIn.getY();
+            int y0 = position.getY();
             if (y0 < 0 || y0 >= world.getHeight()) {
-                cif.setReturnValue(true);
-                return;
+                return false;
             }
-            int maxPos = RenderVariables.getRenderChunkMaxPos();
+            int cy0 = Coords.blockToCube(y0);
             if (chunkCache == null) {
                 chunkCache = new Chunk[1 << RenderVariables.getRenderChunkPosShitBit() * 2];
-                int cx0 = Coords.blockToCube(posIn.getX());
-                int cz0 = Coords.blockToCube(posIn.getZ());
+                int cx0 = Coords.blockToCube(position.getX());
+                int cz0 = Coords.blockToCube(position.getZ());
                 int index = 0;
                 for (int cx = cx0; cx < cx0 + renderChunkCubeSize; cx++)
                     for (int cz = cz0; cz < cz0 + renderChunkCubeSize; cz++) {
                         Chunk chunk = world.getChunkFromChunkCoords(cx, cz);
                         chunkCache[index++] = chunk;
-                        if (isEmpty && chunk.isEmptyBetween(y0, y0 + maxPos))
-                            isEmpty = false;
+                        for (int cy = cy0; cy < cy0 + renderChunkCubeSize && cy < 16; cy++) {
+                            if (!hasEntities && chunk.getEntityLists()[cy].size() != 0)
+                                hasEntities = true;
+                        }
                     }
-                cif.setReturnValue(isEmpty);
-                return;
+                return hasEntities;
             }
             for (Chunk chunk : chunkCache) {
-                if (chunk.isEmptyBetween(y0, y0 + maxPos)) {
-                    isEmpty = false;
-                    break;
+                for (int cy = cy0; cy < cy0 + renderChunkCubeSize && cy < 16; cy++) {
+                    if (chunk.getEntityLists()[cy].size() != 0)
+                        return true;
                 }
             }
         }
-        cif.setReturnValue(isEmpty);
-    }
-
-    @Inject(method = "setPosition", at = @At(value = "RETURN"), cancellable = false)
-    public void setPosition(int x, int y, int z, CallbackInfo ci) {
-        this.cubeCache = null;
-    }
-
-    @Shadow private boolean needsUpdate;
-    @Shadow private boolean needsImmediateUpdate;
-
-    /**
-     * @author Foghrye4
-     * @reason Workaround to fix frame-freeze on block break
-     */
-    @Overwrite
-    public void setNeedsUpdate(boolean immediate) {
-        this.cubeCache = null;
-        this.chunkCache = null;
-        if (!ForgeModContainer.alwaysSetupTerrainOffThread) {
-            if (this.needsUpdate)
-                immediate |= this.needsImmediateUpdate;
-            this.needsImmediateUpdate = immediate;
-        }
-        this.needsUpdate = true;
+        return hasEntities;
     }
 }

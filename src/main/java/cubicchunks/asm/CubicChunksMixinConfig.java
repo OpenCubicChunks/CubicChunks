@@ -35,14 +35,18 @@ import javax.annotation.Nonnull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.lib.tree.ClassNode;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
+import org.spongepowered.asm.service.MixinService;
 
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.FMLInjectionData;
 
 /**
@@ -72,9 +76,6 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         modDependencyConditions.put(
                 "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_OptifineSpecific",
                 isOptifineCoreModLoaded);
-        modDependencyConditions.put(
-                "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_NoOptifine",
-                !isOptifineCoreModLoaded);
         modDependencyConditions.put(
                 "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_OptifineSpecific",
                 isOptifineCoreModLoaded);
@@ -113,7 +114,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 if (mixinClassName.equals(mixinClassNameOnFalse))
                     return !configOption.value && modDependencyConditions.getBoolean(mixinClassName);
         }
-        return true;
+        return modDependencyConditions.getBoolean(mixinClassName);
     }
 
 
@@ -164,21 +165,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks"},
                 "If set to true, random tick wil be launched from cube instance instead of chunk."
                         + " Cube based random tick may slightly reduce server lag."
-                        + " You need to restart Minecraft to apply changes."),
-        USE_BIGGER_RENDER_CHUNKS(false, 
-                new String[] {
-                        "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal",
-                        "cubicchunks.asm.mixin.selectable.client.MixinViewFrustum_RenderHeightFix"},
-                new String[] {
-                        "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_Common",
-                        "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_NoOptifine",
-                        "cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_OptifineSpecific",
-                        "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_Common",
-                        "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_NoOptifine",
-                        "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobal_BiggerRenderChunk_OptifineSpecific",
-                        "cubicchunks.asm.mixin.selectable.client.MixinViewFrustum_BiggerRenderChunk"},
-                "If set to true, render will use 32 blocks in render chunks instead of 16. "
-                + "Significally raise FPS. It is strongly reccomended to use OptiFine with this option.");
+                        + " You need to restart Minecraft to apply changes.");
 
         private final boolean defaultValue;
         // Load this Mixin class only if option is false. Can be null.

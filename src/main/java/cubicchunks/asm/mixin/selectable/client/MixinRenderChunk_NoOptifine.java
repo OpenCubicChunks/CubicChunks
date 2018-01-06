@@ -23,8 +23,6 @@
  */
 package cubicchunks.asm.mixin.selectable.client;
 
-import static cubicchunks.client.RenderConstants.RENDER_CHUNK_SIZE;
-
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,8 +32,10 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import cubicchunks.client.IRenderChunk;
+import cubicchunks.client.RenderVariables;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.chunk.RenderChunk;
+import net.minecraftforge.common.ForgeModContainer;
 /**
  * Fixes renderEntities crashing when rendering cubes
  * that are not at existing array index in chunk.getEntityLists(),
@@ -48,6 +48,7 @@ import net.minecraft.client.renderer.chunk.RenderChunk;
 public abstract class MixinRenderChunk_NoOptifine implements IRenderChunk {
     
     @Shadow private boolean needsUpdate;
+    @Shadow private boolean needsImmediateUpdate;
     
     /**
      * @author Foghrye4
@@ -55,11 +56,16 @@ public abstract class MixinRenderChunk_NoOptifine implements IRenderChunk {
      */
     @Overwrite
     public void setNeedsUpdate(boolean immediate) {
+        if (!ForgeModContainer.alwaysSetupTerrainOffThread) {
+            if (this.needsUpdate)
+                immediate |= this.needsImmediateUpdate;
+            this.needsImmediateUpdate = immediate;
+        }
         this.needsUpdate = true;
     }
 
     @ModifyConstant(method = "rebuildWorldView", constant = @Constant(intValue = 16))
     public int onRebuildWorldView(int oldValue) {
-        return RENDER_CHUNK_SIZE;
+        return RenderVariables.getRenderChunkSize();
     }
 }
