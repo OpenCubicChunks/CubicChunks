@@ -28,18 +28,6 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.Slice;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import cubicchunks.client.CubeProviderClient;
 import cubicchunks.client.IVisGraph;
 import cubicchunks.client.RenderVariables;
@@ -63,6 +51,17 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -149,10 +148,13 @@ public abstract class MixinRenderGlobal {
                                 : this.viewFrustum.getRenderChunk(blockpos);
     }
 
-    @ModifyConstant(method = "renderWorldBorder", constant = {
-            @Constant(doubleValue = 0.0D),
-            @Constant(doubleValue = 256.0D)
-    }, slice = @Slice(from = @At(value = "HEAD"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Tessellator;draw()V")), require = 2)
+    @ModifyConstant(
+            method = "renderWorldBorder",
+            constant = {
+                    @Constant(doubleValue = 0.0D),
+                    @Constant(doubleValue = 256.0D)
+            },
+            slice = @Slice(from = @At(value = "HEAD"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Tessellator;draw()V")), require = 2)
     private double renderWorldBorder_getRenderHeight(double original, Entity entity, float partialTicks) {
         return original == 0.0D ? entity.posY - 128 : entity.posY + 128;
     }

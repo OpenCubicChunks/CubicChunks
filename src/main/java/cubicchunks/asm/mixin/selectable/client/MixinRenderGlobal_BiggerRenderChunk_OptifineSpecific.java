@@ -65,7 +65,7 @@ import net.minecraft.world.chunk.EmptyChunk;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderGlobal.class)
-public class MixinRenderGlobal_BiggerRenderChunk_OptifineSpecific {
+public abstract class MixinRenderGlobal_BiggerRenderChunk_OptifineSpecific {
 
     @Shadow private WorldClient world;
     @Shadow public List<ContainerLocalRenderInformation> renderInfosEntities;
@@ -79,13 +79,11 @@ public class MixinRenderGlobal_BiggerRenderChunk_OptifineSpecific {
     }
 
     @Shadow
-    private boolean isOutlineActive(Entity entityIn, Entity viewer, ICamera camera) {
-        throw new AbstractMethodError();
-    }
+    abstract boolean isOutlineActive(Entity entityIn, Entity viewer, ICamera camera);
 
     @Redirect(method = "setupTerrain", at = @At(value = "INVOKE", target = "Ljava/util/Deque;poll()Ljava/lang/Object;"), remap = false)
-    public Object onGettingRenderInfoFromQueue(Deque queue) {
-        info = (ContainerLocalRenderInformation) queue.poll();
+    public Object onGettingRenderInfoFromQueue(Deque<ContainerLocalRenderInformation> queue) {
+        info = queue.poll();
         return info;
     }
 

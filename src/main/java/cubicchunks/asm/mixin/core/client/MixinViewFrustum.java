@@ -23,19 +23,6 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import cubicchunks.client.RenderVariables;
 import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
@@ -46,6 +33,14 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Constant;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Replace updateChunkPositions and getRenderChunk with cubic chunks versions that support extended world height.
@@ -75,9 +70,8 @@ public class MixinViewFrustum {
     private int frustumUpdatePosRenderChunkY = Integer.MIN_VALUE;
     private int frustumUpdatePosRenderChunkZ = Integer.MIN_VALUE;
 
-    @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
-    private void updateChunkPositionsInject(double viewEntityX, double viewEntityZ, CallbackInfo cbi) {
-        cbi.cancel();
+    @Overwrite
+    private void updateChunkPositions(double viewEntityX, double viewEntityZ) {
         int shift = RenderVariables.getRenderChunkPosShitBit();
         Entity view = Minecraft.getMinecraft().getRenderViewEntity();
         if (this.frustumUpdatePosRenderChunkX == view.chunkCoordX >> shift
@@ -126,9 +120,8 @@ public class MixinViewFrustum {
         }
     }
 
-    @Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true, require = 1)
-    private void getRenderChunkInject(BlockPos pos, CallbackInfoReturnable<RenderChunk> cbi) {
-        cbi.cancel();
+    @Overwrite
+    private RenderChunk getRenderChunk(BlockPos pos) {
         int rChunkSize = RenderVariables.getRenderChunkSize();
         int x = MathHelper.intFloorDiv(pos.getX(), rChunkSize);
         int y = MathHelper.intFloorDiv(pos.getY(), rChunkSize);
@@ -148,12 +141,10 @@ public class MixinViewFrustum {
                 y += this.countChunksY;
             }
         } else if (y < 0 || y >= this.countChunksY) {
-            cbi.setReturnValue(null);
-            return;
+            return null;
         }
         final int index = (z * this.countChunksY + y) * this.countChunksX + x;
-        RenderChunk renderChunk = this.renderChunks[index];
-        cbi.setReturnValue(renderChunk);
+        return this.renderChunks[index];
     }
 
     @ModifyConstant(method = "createRenderChunks", constant = @Constant(intValue = 16))
