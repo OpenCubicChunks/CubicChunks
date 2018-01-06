@@ -67,7 +67,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderGlobal.class)
-public abstract class MixinRenderGlobal_BiggerRenderChunk_Common {
+public abstract class MixinRenderGlobal {
 
     @Nullable private BlockPos position;
     @Shadow private int renderDistanceChunks;
@@ -81,17 +81,23 @@ public abstract class MixinRenderGlobal_BiggerRenderChunk_Common {
     @Shadow private int countEntitiesHidden;
     
     @Shadow
-    private boolean isOutlineActive(Entity entityIn, Entity viewer, ICamera camera) {
-        throw new AbstractMethodError();
-    };
+    abstract boolean isOutlineActive(Entity entityIn, Entity viewer, ICamera camera);;
     
     @Shadow
     public abstract void loadRenderers();
     
     private int renderChunkSizeBit = -1;
     
-    ClassInheritanceMultiMap<Entity> mutableEntityMapWrapper = new ClassInheritanceMultiMap<Entity>(Entity.class);
-    @SuppressWarnings("unchecked") ClassInheritanceMultiMap<Entity>[] dummyEntityStorageArray = new ClassInheritanceMultiMap[1];
+    ClassInheritanceMultiMap<Entity> mutableEntityMapWrapper;
+    ClassInheritanceMultiMap<Entity>[] dummyEntityStorageArray;
+    
+    @SuppressWarnings("unchecked")
+    @Inject(method = "<init>", at = @At(value = "RETURN"), cancellable = false)
+    public void onConstruct(Minecraft mcIn, CallbackInfo ci) {
+        mutableEntityMapWrapper = new ClassInheritanceMultiMap<Entity>(Entity.class);
+        dummyEntityStorageArray = new ClassInheritanceMultiMap[] {mutableEntityMapWrapper};
+    }
+
 
     @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getPosition()Lnet/minecraft/util/math/BlockPos;"))
     public BlockPos onGetPosition(RenderChunk renderChunk) {
@@ -123,7 +129,6 @@ public abstract class MixinRenderGlobal_BiggerRenderChunk_Common {
 
     @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getEntityLists()[Lnet/minecraft/util/ClassInheritanceMultiMap;"))
     public ClassInheritanceMultiMap<Entity>[] onGettingClassInheritanceMultiMap(Chunk chunk) {
-        dummyEntityStorageArray[0] = mutableEntityMapWrapper;
         return dummyEntityStorageArray;
     }
 

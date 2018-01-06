@@ -103,7 +103,7 @@ public class MixinVisGraph implements IVisGraph {
         this.opaqueBlocksBitSet.set(pos, true);
 
         while (!queue.isEmpty()) {
-            int i = ((Integer) queue.poll()).intValue();
+            int i = queue.poll();
             RenderVariables.addEdges(i, set);
 
             for (EnumFacing enumfacing : EnumFacing.values()) {

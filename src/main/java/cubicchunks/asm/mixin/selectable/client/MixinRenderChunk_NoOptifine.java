@@ -36,12 +36,7 @@ import cubicchunks.client.RenderVariables;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraftforge.common.ForgeModContainer;
-/**
- * Fixes renderEntities crashing when rendering cubes
- * that are not at existing array index in chunk.getEntityLists(),
- * <p>
- * Allows to render cubes outside of 0..256 height range.
- */
+
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderChunk.class)

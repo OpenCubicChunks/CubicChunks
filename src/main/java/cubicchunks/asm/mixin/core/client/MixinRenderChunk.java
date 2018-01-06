@@ -51,7 +51,7 @@ import net.minecraft.world.chunk.Chunk;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderChunk.class)
-public abstract class MixinRenderChunk_Common implements IRenderChunk {
+public abstract class MixinRenderChunk implements IRenderChunk {
     
     @Shadow @Final public World world;
     @Shadow @Final private BlockPos.MutableBlockPos position;
@@ -87,14 +87,14 @@ public abstract class MixinRenderChunk_Common implements IRenderChunk {
             if (cubeCache == null) {
                 cubeCache = new Cube[1 << RenderVariables.getRenderChunkPosShitBit() * 3];
                 CubeProviderClient cubeProvider = cworld.getCubeCache();
-                int cx0 = Coords.blockToCube(position.getX());
-                int cy0 = Coords.blockToCube(position.getY());
-                int cz0 = Coords.blockToCube(position.getZ());
+                int cubePosStartX = Coords.blockToCube(position.getX());
+                int cubePosStartY = Coords.blockToCube(position.getY());
+                int cubePosStartZ = Coords.blockToCube(position.getZ());
                 int index = 0;
-                for (int cx = cx0; cx < cx0 + renderChunkCubeSize; cx++)
-                    for (int cy = cy0; cy < cy0 + renderChunkCubeSize; cy++)
-                        for (int cz = cz0; cz < cz0 + renderChunkCubeSize; cz++) {
-                            Cube cube = cubeProvider.getCube(cx, cy, cz);
+                for (int cubePosX = cubePosStartX; cubePosX < cubePosStartX + renderChunkCubeSize; cubePosX++)
+                    for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize; cubePosY++)
+                        for (int cubePosZ = cubePosStartZ; cubePosZ < cubePosStartZ + renderChunkCubeSize; cubePosZ++) {
+                            Cube cube = cubeProvider.getCube(cubePosX, cubePosY, cubePosZ);
                             cubeCache[index++] = cube;
                             if (!hasEntities && cube.getEntityContainer().size() != 0)
                                 hasEntities = true;
@@ -107,30 +107,30 @@ public abstract class MixinRenderChunk_Common implements IRenderChunk {
                 }
             }
         } else {
-            int y0 = position.getY();
-            if (y0 < 0 || y0 >= world.getHeight()) {
+            int blockPosStartY = position.getY();
+            if (blockPosStartY < 0 || blockPosStartY >= world.getHeight()) {
                 return false;
             }
-            int cy0 = Coords.blockToCube(y0);
+            int cubePosStartY = Coords.blockToCube(blockPosStartY);
             if (chunkCache == null) {
                 chunkCache = new Chunk[1 << RenderVariables.getRenderChunkPosShitBit() * 2];
-                int cx0 = Coords.blockToCube(position.getX());
-                int cz0 = Coords.blockToCube(position.getZ());
+                int chunkPosStartX = Coords.blockToCube(position.getX());
+                int chunkPosStartZ = Coords.blockToCube(position.getZ());
                 int index = 0;
-                for (int cx = cx0; cx < cx0 + renderChunkCubeSize; cx++)
-                    for (int cz = cz0; cz < cz0 + renderChunkCubeSize; cz++) {
-                        Chunk chunk = world.getChunkFromChunkCoords(cx, cz);
+                for (int chunkPosX = chunkPosStartX; chunkPosX < chunkPosStartX + renderChunkCubeSize; chunkPosX++)
+                    for (int chunkPosZ = chunkPosStartZ; chunkPosZ < chunkPosStartZ + renderChunkCubeSize; chunkPosZ++) {
+                        Chunk chunk = world.getChunkFromChunkCoords(chunkPosX, chunkPosZ);
                         chunkCache[index++] = chunk;
-                        for (int cy = cy0; cy < cy0 + renderChunkCubeSize && cy < 16; cy++) {
-                            if (!hasEntities && chunk.getEntityLists()[cy].size() != 0)
+                        for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize && cubePosY < 16; cubePosY++) {
+                            if (!hasEntities && chunk.getEntityLists()[cubePosY].size() != 0)
                                 hasEntities = true;
                         }
                     }
                 return hasEntities;
             }
             for (Chunk chunk : chunkCache) {
-                for (int cy = cy0; cy < cy0 + renderChunkCubeSize && cy < 16; cy++) {
-                    if (chunk.getEntityLists()[cy].size() != 0)
+                for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize && cubePosY < 16; cubePosY++) {
+                    if (chunk.getEntityLists()[cubePosY].size() != 0)
                         return true;
                 }
             }

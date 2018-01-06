@@ -42,7 +42,7 @@ public class RenderVariables {
     private static int visGraphDX;
     private static int visGraphDZ;
     private static int visGraphDY;
-    
+
     static {
         setRenderChunkBit(5);
     }
@@ -74,10 +74,11 @@ public class RenderVariables {
             }
         }
     }
+
     public static int getRenderChunkBit() {
         return renderChunkSizeBit;
     }
-    
+
     public static int getRenderChunkPosShitBit() {
         return renderChunkSizeBitShiftChunkPos;
     }
@@ -85,23 +86,23 @@ public class RenderVariables {
     public static int getRenderChunkBlocksAmount() {
         return renderChunkBlocksAmount;
     }
-    
+
     public static int getRenderChunkSize() {
         return renderChunkSize;
     }
-    
+
     public static int getRenderStartPosMask() {
         return renderChunkStartPosMask;
     }
-    
+
     public static int getRenderChunkMaxPos() {
         return renderChunkMaxPos;
     }
-    
+
     public static double getRenderChunkCenterPos() {
         return renderChunkCenterPos;
     }
-    
+
     public static int getIndex(int x, int y, int z) {
         return x << 0 | y << renderChunkSizeBit * 2 | z << renderChunkSizeBit;
     }
@@ -141,48 +142,33 @@ public class RenderVariables {
     }
 
     public static int getNeighborIndexAtFace(int pos, EnumFacing facing) {
+        int x = pos & renderChunkMaxPos;
+        int y = pos >> renderChunkSizeBit * 2 & renderChunkMaxPos;
+        int z = pos >> renderChunkSizeBit & renderChunkMaxPos;
         switch (facing) {
             case DOWN:
-
-                if ((pos >> renderChunkSizeBit * 2 & renderChunkMaxPos) == 0) {
+                if (y == 0)
                     return -1;
-                }
-
                 return pos - visGraphDY;
             case UP:
-
-                if ((pos >> renderChunkSizeBit * 2 & renderChunkMaxPos) == renderChunkMaxPos) {
+                if (y == renderChunkMaxPos)
                     return -1;
-                }
-
                 return pos + visGraphDY;
             case NORTH:
-
-                if ((pos >> renderChunkSizeBit & renderChunkMaxPos) == 0) {
+                if (z == 0)
                     return -1;
-                }
-
                 return pos - visGraphDZ;
             case SOUTH:
-
-                if ((pos >> renderChunkSizeBit & renderChunkMaxPos) == renderChunkMaxPos) {
+                if (z == renderChunkMaxPos)
                     return -1;
-                }
-
                 return pos + visGraphDZ;
             case WEST:
-
-                if ((pos >> 0 & renderChunkMaxPos) == 0) {
+                if (x == 0)
                     return -1;
-                }
-
                 return pos - visGraphDX;
             case EAST:
-
-                if ((pos >> 0 & renderChunkMaxPos) == renderChunkMaxPos) {
+                if (x == renderChunkMaxPos)
                     return -1;
-                }
-
                 return pos + visGraphDX;
             default:
                 return -1;

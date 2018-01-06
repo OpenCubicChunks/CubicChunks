@@ -105,16 +105,31 @@ public class ClientEventHandler {
                         CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE));
                 gvs.buttonList.add(idx, new GuiCustomSlider(101, gvs.width / 2 - 155 + 160, gvs.height / 6 + btnSpacing * (idx / 2) - 12,
                         CubicChunks.Config.IntOptions.RENDER_CHUNK_SIZE_BIT));
-                // reposition all buttons except "done".
-                for (int i = 0; i < gvs.buttonList.size() - 1; i++) {
+                // reposition all buttons except last 7.
+                for (int i = 0; i < gvs.buttonList.size() - 7; i++) {
                     GuiButton btn = gvs.buttonList.get(i);
                     int x = gvs.width / 2 - 155 + i % 2 * 160;
                     int y = gvs.height / 6 + 21 * (i / 2) - 12;
                     btn.x = x;
                     btn.y = y;
                 }
-                GuiButton btn = gvs.buttonList.get(gvs.buttonList.size() - 1);
-                btn.y += 21;
+                for (int i = gvs.buttonList.size() - 7; i < gvs.buttonList.size() - 1; i++) {
+                    GuiButton btn = gvs.buttonList.get(i);
+
+                    int newBtnWidth = 150 * 2 / 3;
+                    int minX = gvs.width / 2 - 155;
+                    int maxX = gvs.width / 2 - 155 + 160 + btn.width;
+
+                    int minXCenter = minX + newBtnWidth / 2;
+                    int maxXCenter = maxX - newBtnWidth / 2;
+
+                    int x = minXCenter + (i % 3) * (maxXCenter - minXCenter) / 2 - newBtnWidth / 2;
+                    int y = gvs.height / 6 - 12 + 21 * ((i+1) / 3 + 2);
+
+                    btn.x = x;
+                    btn.y = y;
+                    btn.width = newBtnWidth;
+                }
             }
         }
     }

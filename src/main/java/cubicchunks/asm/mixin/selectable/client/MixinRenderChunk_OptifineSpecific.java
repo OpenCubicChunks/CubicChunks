@@ -88,14 +88,14 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
             if (cubeCache == null) {
                 cubeCache = new Cube[1 << RenderVariables.getRenderChunkPosShitBit() * 3];
                 CubeProviderClient cubeProvider = cworld.getCubeCache();
-                int cx0 = Coords.blockToCube(posIn.getX());
-                int cy0 = Coords.blockToCube(posIn.getY());
-                int cz0 = Coords.blockToCube(posIn.getZ());
+                int cubePosStartX = Coords.blockToCube(position.getX());
+                int cubePosStartY = Coords.blockToCube(position.getY());
+                int cubePosStartZ = Coords.blockToCube(position.getZ());
                 int index = 0;
-                for (int cx = cx0; cx < cx0 + renderChunkCubeSize; cx++)
-                    for (int cy = cy0; cy < cy0 + renderChunkCubeSize; cy++)
-                        for (int cz = cz0; cz < cz0 + renderChunkCubeSize; cz++) {
-                            Cube cube = cubeProvider.getCube(cx, cy, cz);
+                for (int cubePosX = cubePosStartX; cubePosX < cubePosStartX + renderChunkCubeSize; cubePosX++)
+                    for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize; cubePosY++)
+                        for (int cubePosZ = cubePosStartZ; cubePosZ < cubePosStartZ + renderChunkCubeSize; cubePosZ++) {
+                            Cube cube = cubeProvider.getCube(cubePosX, cubePosY, cubePosZ);
                             cubeCache[index++] = cube;
                             if (!cube.isEmpty())
                                 isEmpty = false;
@@ -110,29 +110,29 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
                 }
             }
         } else {
-            int y0 = posIn.getY();
-            if (y0 < 0 || y0 >= world.getHeight()) {
+            int blockPosStartY = position.getY();
+            if (blockPosStartY < 0 || blockPosStartY >= world.getHeight()) {
                 cif.setReturnValue(true);
                 return;
             }
             int maxPos = RenderVariables.getRenderChunkMaxPos();
             if (chunkCache == null) {
                 chunkCache = new Chunk[1 << RenderVariables.getRenderChunkPosShitBit() * 2];
-                int cx0 = Coords.blockToCube(posIn.getX());
-                int cz0 = Coords.blockToCube(posIn.getZ());
+                int chunkPosStartX = Coords.blockToCube(position.getX());
+                int chunkPosStartZ = Coords.blockToCube(position.getZ());
                 int index = 0;
-                for (int cx = cx0; cx < cx0 + renderChunkCubeSize; cx++)
-                    for (int cz = cz0; cz < cz0 + renderChunkCubeSize; cz++) {
-                        Chunk chunk = world.getChunkFromChunkCoords(cx, cz);
+                for (int chunkPosX = chunkPosStartX; chunkPosX < chunkPosStartX + renderChunkCubeSize; chunkPosX++)
+                    for (int chunkPosZ = chunkPosStartZ; chunkPosZ < chunkPosStartZ + renderChunkCubeSize; chunkPosZ++) {
+                        Chunk chunk = world.getChunkFromChunkCoords(chunkPosX, chunkPosZ);
                         chunkCache[index++] = chunk;
-                        if (isEmpty && chunk.isEmptyBetween(y0, y0 + maxPos))
+                        if (isEmpty && chunk.isEmptyBetween(blockPosStartY, blockPosStartY + maxPos))
                             isEmpty = false;
                     }
                 cif.setReturnValue(isEmpty);
                 return;
             }
             for (Chunk chunk : chunkCache) {
-                if (chunk.isEmptyBetween(y0, y0 + maxPos)) {
+                if (chunk.isEmptyBetween(blockPosStartY, blockPosStartY + maxPos)) {
                     isEmpty = false;
                     break;
                 }
