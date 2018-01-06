@@ -162,7 +162,11 @@ public class ClientHandler implements INetHandler {
             int x = AddressTools.getLocalX(packed);
             int z = AddressTools.getLocalZ(packed);
             int height = message.getHeights().get(i);
+
+            int oldHeight = index.getTopBlockY(x, z);
             index.setHeight(x, z, height);
+            // Disable due to huge client side performance loss on accepting freshly generated cubes light updates.
+            //lm.onHeightMapUpdate(column, x, z, oldHeight, height);
         }
     }
 
