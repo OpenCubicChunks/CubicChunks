@@ -165,7 +165,9 @@ public class ClientHandler implements INetHandler {
 
             int oldHeight = index.getTopBlockY(x, z);
             index.setHeight(x, z, height);
-            lm.onHeightMapUpdate(column, x, z, oldHeight, height);
+            // Disable due to huge client side performance loss on accepting freshly generated cubes light updates.
+            // More info at  https://github.com/OpenCubicChunks/CubicChunks/pull/328
+            //lm.onHeightMapUpdate(column, x, z, oldHeight, height);
         }
     }
 
