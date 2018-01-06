@@ -151,7 +151,7 @@ public class ClientEventHandler {
             super(buttonId, x, y, 150, 20, "");
             this.sliderValue = 1.0F;
             this.option = optionIn;
-            this.sliderValue = optionIn.getNormalValue();
+            this.sliderValue = optionIn.getNormalizedValueForGUI();
             this.displayString = this.createDisplayString(option);
         }
 
@@ -172,8 +172,8 @@ public class ClientEventHandler {
                 if (this.dragging) {
                     this.sliderValue = (float) (mouseX - (this.x + 4)) / (float) (this.width - 8);
                     this.sliderValue = MathHelper.clamp(this.sliderValue, 0.0F, 1.0F);
-                    this.option.setValueFromNormal(this.sliderValue);
-                    this.sliderValue = this.option.getNormalValue();
+                    this.option.setValueFromGUISlider(this.sliderValue);
+                    this.sliderValue = this.option.getNormalizedValueForGUI();
                     this.displayString = this.createDisplayString(option);
                 }
 
@@ -192,7 +192,7 @@ public class ClientEventHandler {
             if (super.mousePressed(mc, mouseX, mouseY)) {
                 this.sliderValue = (float) (mouseX - (this.x + 4)) / (float) (this.width - 8);
                 this.sliderValue = MathHelper.clamp(this.sliderValue, 0.0F, 1.0F);
-                this.option.setValueFromNormal(this.sliderValue);
+                this.option.setValueFromGUISlider(this.sliderValue);
                 this.displayString = this.createDisplayString(option);
                 this.dragging = true;
                 return true;
@@ -202,7 +202,7 @@ public class ClientEventHandler {
         }
 
         private String createDisplayString(IntOptions option2) {
-            return I18n.format(CubicChunks.MODID + ".gui." + CubicChunks.Config.getNicelyFormattedName(option.name()), option.getValue());
+            return I18n.format(CubicChunks.MODID + ".gui." + CubicChunks.Config.getNicelyFormattedName(option.name()), option.getGUIValue());
         }
 
         /**

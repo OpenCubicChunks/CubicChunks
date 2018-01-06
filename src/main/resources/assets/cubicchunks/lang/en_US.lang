@@ -34,7 +34,7 @@ cubicchunks.gui.customcubic.presets.cancel=Cancel
 #################################
 
 cubicchunks.gui.verticalCubeLoadDistance=Vertical Distance: %d cubes
-cubicchunks.gui.renderChunkSizeBit=Render chunk size bit: %d
+cubicchunks.gui.renderChunkSizeBit=Render chunk size: %d blocks
 
 #################################
 ###   flat terrain layers     ###

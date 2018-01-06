@@ -107,7 +107,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
-
+import java.util.function.IntUnaryOperator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -360,8 +360,10 @@ public class CubicChunks {
         public static enum IntOptions {
             MAX_GENERATED_CUBES_PER_TICK(1, Integer.MAX_VALUE, 49 * 16, "The number of cubic chunks to generate per tick."),
             VERTICAL_CUBE_LOAD_DISTANCE(2, 32, 8, "Similar to Minecraft's view distance, only for vertical chunks."),
-            RENDER_CHUNK_SIZE_BIT(4, 8, 4, "Define a size of RenderChunk. Effective only client side (obviously).", value -> {
+            RENDER_CHUNK_SIZE_BIT(4, 8, 6, 4, "Define a size of RenderChunk. Effective only client side (obviously).", value -> {
                 RenderVariables.setRenderChunkBit(value);
+            }, value -> {
+                return 1 << value;
             }),
             CHUNK_G_C_INTERVAL(1, Integer.MAX_VALUE, 20 * 10,
                     "Chunk garbage collector update interval. A more lower it is - a more CPU load it will generate. "
@@ -369,34 +371,39 @@ public class CubicChunks {
 
             private final int minValue;
             private final int maxValue;
+            private final int guiMaxValue;
             private final int defaultValue;
             private final String description;
             private int value;
             private IntConsumer callback;
+            private IntUnaryOperator guiValueFormatter;
 
-            private IntOptions(int minValue1, int maxValue1, int defaultValue1, String description1, IntConsumer callbackIn) {
+            private IntOptions(int minValue1, int maxValue1, int guiMaxValue1, int defaultValue1, String description1, IntConsumer callbackIn, IntUnaryOperator guiValueFormatterIn) {
                 minValue = minValue1;
                 maxValue = maxValue1;
+                guiMaxValue = guiMaxValue1;
                 defaultValue = defaultValue1;
                 description = description1;
                 value = defaultValue;
                 callback = callbackIn;
+                guiValueFormatter = guiValueFormatterIn;
             }
             
             private IntOptions(int minValue1, int maxValue1, int defaultValue1, String description1) {
                 minValue = minValue1;
                 maxValue = maxValue1;
+                guiMaxValue = maxValue1;
                 defaultValue = defaultValue1;
                 description = description1;
                 value = defaultValue;
             }
 
-            public float getNormalValue() {
-                return (float) (value - minValue) / (maxValue - minValue);
+            public float getNormalizedValueForGUI() {
+                return (float) (value - minValue) / (guiMaxValue - minValue);
             }
 
-            public void setValueFromNormal(float sliderValue) {
-                value = minValue + (int) ((maxValue - minValue) * sliderValue);
+            public void setValueFromGUISlider(float sliderValue) {
+                value = minValue + (int) ((guiMaxValue - minValue) * sliderValue);
                 config.configuration.get(Configuration.CATEGORY_GENERAL, getNicelyFormattedName(this.name()), value).set(value);
                 config.configuration.save();
                 for (IConfigUpdateListener l : configChangeListeners) {
@@ -408,6 +415,12 @@ public class CubicChunks {
 
             public int getValue() {
                 return value;
+            }
+
+            public int getGUIValue() {
+                if (guiValueFormatter == null)
+                    return value;
+                return guiValueFormatter.applyAsInt(value);
             }
         }
         
