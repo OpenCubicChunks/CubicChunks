@@ -45,6 +45,7 @@ import cubicchunks.util.Coords;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.util.math.BlockPos;
 /**
@@ -66,12 +67,17 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
     @Shadow @Final public World world;
     @Shadow @Final private BlockPos.MutableBlockPos position;
 
-    /** Warning! Field mixed across mixins: 
+    /** Warning! Following 3 field mixed across mixins: 
      * {@link cubicchunks.asm.mixin.core.client.MixinRenderChunk_Common} and this. */
     private Cube[] cubeCache;
-    /** Warning! Field mixed across mixins: 
-     * {@link cubicchunks.asm.mixin.core.client.MixinRenderChunk_Common} and this. */
     private Chunk[] chunkCache;
+    private boolean cacheOutdated = true;
+    
+    @Inject(method = "<init>", at = @At(value = "RETURN"), cancellable = false)
+    public void onConstruct(World worldIn, RenderGlobal renderGlobalIn, int indexIn, CallbackInfo ci){
+        cubeCache = new Cube[1 << RenderVariables.getRenderChunkPosShitBit() * 3];
+        chunkCache = new Chunk[1 << RenderVariables.getRenderChunkPosShitBit() * 2];
+    }
 
     @ModifyConstant(method = "makeChunkCacheOF", constant = @Constant(intValue = 16))
     public int onMakingChunkCacheOptifine(int oldValue) {
@@ -85,8 +91,7 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
         int renderChunkCubeSize = RenderVariables.getRenderChunkSize() / Cube.SIZE;
         boolean isEmpty = true;
         if (cworld.isCubicWorld()) {
-            if (cubeCache == null) {
-                cubeCache = new Cube[1 << RenderVariables.getRenderChunkPosShitBit() * 3];
+            if (cacheOutdated) {
                 CubeProviderClient cubeProvider = cworld.getCubeCache();
                 int cubePosStartX = Coords.blockToCube(position.getX());
                 int cubePosStartY = Coords.blockToCube(position.getY());
@@ -100,6 +105,7 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
                             if (!cube.isEmpty())
                                 isEmpty = false;
                         }
+                cacheOutdated = false;
                 cif.setReturnValue(isEmpty);
                 return;
             }
@@ -116,8 +122,7 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
                 return;
             }
             int maxPos = RenderVariables.getRenderChunkMaxPos();
-            if (chunkCache == null) {
-                chunkCache = new Chunk[1 << RenderVariables.getRenderChunkPosShitBit() * 2];
+            if (cacheOutdated) {
                 int chunkPosStartX = Coords.blockToCube(position.getX());
                 int chunkPosStartZ = Coords.blockToCube(position.getZ());
                 int index = 0;
@@ -128,6 +133,7 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
                         if (isEmpty && chunk.isEmptyBetween(blockPosStartY, blockPosStartY + maxPos))
                             isEmpty = false;
                     }
+                cacheOutdated = false;
                 cif.setReturnValue(isEmpty);
                 return;
             }
@@ -143,7 +149,7 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
 
     @Inject(method = "setPosition", at = @At(value = "RETURN"), cancellable = false)
     public void setPosition(int x, int y, int z, CallbackInfo ci) {
-        this.cubeCache = null;
+        cacheOutdated = true;
     }
 
     @Shadow private boolean needsUpdate;
@@ -155,8 +161,7 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
      */
     @Overwrite
     public void setNeedsUpdate(boolean immediate) {
-        this.cubeCache = null;
-        this.chunkCache = null;
+        cacheOutdated = true;
         if (!ForgeModContainer.alwaysSetupTerrainOffThread) {
             if (this.needsUpdate)
                 immediate |= this.needsImmediateUpdate;

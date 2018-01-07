@@ -56,12 +56,11 @@ public abstract class MixinRenderChunk implements IRenderChunk {
     @Shadow @Final public World world;
     @Shadow @Final private BlockPos.MutableBlockPos position;
     
-    /** Warning! Field mixed across mixins: 
+    /** Warning! Following 3 field mixed across mixins: 
      * {@link cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_OptifineSpecific} and this. */
     private Cube[] cubeCache;
-    /** Warning! Field mixed across mixins: 
-     * {@link cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_OptifineSpecific} and this. */
     private Chunk[] chunkCache;
+    private boolean cacheOutdated = true;
     
     @ModifyConstant(method = "setPosition", constant = @Constant(intValue = 16))
     public int onSetPosition(int oldValue) {
@@ -84,8 +83,7 @@ public abstract class MixinRenderChunk implements IRenderChunk {
         ICubicWorldClient cworld = (ICubicWorldClient) world;
         int renderChunkCubeSize = RenderVariables.getRenderChunkSize() / Cube.SIZE;
         if (cworld.isCubicWorld()) {
-            if (cubeCache == null) {
-                cubeCache = new Cube[1 << RenderVariables.getRenderChunkPosShitBit() * 3];
+            if (cacheOutdated) {
                 CubeProviderClient cubeProvider = cworld.getCubeCache();
                 int cubePosStartX = Coords.blockToCube(position.getX());
                 int cubePosStartY = Coords.blockToCube(position.getY());
@@ -99,6 +97,7 @@ public abstract class MixinRenderChunk implements IRenderChunk {
                             if (!hasEntities && cube.getEntityContainer().size() != 0)
                                 hasEntities = true;
                         }
+                cacheOutdated = false;
                 return hasEntities;
             }
             for (Cube cube : cubeCache) {
@@ -112,8 +111,7 @@ public abstract class MixinRenderChunk implements IRenderChunk {
                 return false;
             }
             int cubePosStartY = Coords.blockToCube(blockPosStartY);
-            if (chunkCache == null) {
-                chunkCache = new Chunk[1 << RenderVariables.getRenderChunkPosShitBit() * 2];
+            if (cacheOutdated) {
                 int chunkPosStartX = Coords.blockToCube(position.getX());
                 int chunkPosStartZ = Coords.blockToCube(position.getZ());
                 int index = 0;
@@ -126,6 +124,7 @@ public abstract class MixinRenderChunk implements IRenderChunk {
                                 hasEntities = true;
                         }
                     }
+                cacheOutdated = false;
                 return hasEntities;
             }
             for (Chunk chunk : chunkCache) {
