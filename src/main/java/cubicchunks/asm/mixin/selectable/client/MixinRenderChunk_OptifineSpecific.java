@@ -69,12 +69,13 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
 
     private Cube[] cubeCache;
     private Chunk[] chunkCache;
-    private boolean cacheOutdated = true;
+    private boolean cacheOutdated;
     
     @Inject(method = "<init>", at = @At(value = "RETURN"), cancellable = false)
     public void onConstruct(World worldIn, RenderGlobal renderGlobalIn, int indexIn, CallbackInfo ci){
         cubeCache = new Cube[1 << RenderVariables.getRenderChunkPosShitBit() * 3];
         chunkCache = new Chunk[1 << RenderVariables.getRenderChunkPosShitBit() * 2];
+        cacheOutdated = true;
     }
 
     @ModifyConstant(method = "makeChunkCacheOF", constant = @Constant(intValue = 16))

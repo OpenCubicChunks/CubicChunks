@@ -9,6 +9,7 @@
         "common.MixinChunk_Cubes",
         "common.MixinIBlockAccess_MinMaxHeight",
         "common.MixinMinecraftServer",
+        "common.MixinIntegratedServer",
         "common.MixinWorld_Tick",
         "common.MixinWorld",
         "common.MixinWorldServer",
