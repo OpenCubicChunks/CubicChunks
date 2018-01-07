@@ -52,11 +52,14 @@ public abstract class MixinBlock_FastCollision {
      **/
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;createBlockState()Lnet/minecraft/block/state/BlockStateContainer;"))
     public BlockStateContainer alterBlockStateCollection(Block block) {
+        BlockStateContainer oldBlockStateContainer = this.createBlockState();
+        // If someone already add a custom implementation, we should not do that.
+        if (oldBlockStateContainer.getClass() != BlockStateContainer.class)
+            return oldBlockStateContainer;
         if (block instanceof BlockStairs) {
             return new BlockStairsFieldBasedBlockStateContainer(block,
                     new IProperty[] {BlockStairs.FACING, BlockStairs.HALF, BlockStairs.SHAPE});
         }
-        BlockStateContainer oldBlockStateContainer = this.createBlockState();
         Collection<IProperty<?>> properties = oldBlockStateContainer.getProperties();
         boolean isFullBlock = true;
         for (IBlockState state : oldBlockStateContainer.getValidStates()) {
