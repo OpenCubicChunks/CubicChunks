@@ -51,16 +51,10 @@ import net.minecraft.world.chunk.Chunk;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderChunk.class)
-public abstract class MixinRenderChunk implements IRenderChunk {
+public abstract class MixinRenderChunk {
     
     @Shadow @Final public World world;
     @Shadow @Final private BlockPos.MutableBlockPos position;
-    
-    /** Warning! Following 3 field mixed across mixins: 
-     * {@link cubicchunks.asm.mixin.selectable.client.MixinRenderChunk_OptifineSpecific} and this. */
-    private Cube[] cubeCache;
-    private Chunk[] chunkCache;
-    private boolean cacheOutdated = true;
     
     @ModifyConstant(method = "setPosition", constant = @Constant(intValue = 16))
     public int onSetPosition(int oldValue) {
@@ -75,65 +69,5 @@ public abstract class MixinRenderChunk implements IRenderChunk {
     @ModifyConstant(method = "getDistanceSq", constant = @Constant(doubleValue = 8.0D))
     public double onDistanceSq(double oldValue) {
         return RenderVariables.getRenderChunkCenterPos();
-    }
-    
-    @Override
-    public boolean hasEntities() {
-        boolean hasEntities = false;
-        ICubicWorldClient cworld = (ICubicWorldClient) world;
-        int renderChunkCubeSize = RenderVariables.getRenderChunkSize() / Cube.SIZE;
-        if (cworld.isCubicWorld()) {
-            if (cacheOutdated) {
-                CubeProviderClient cubeProvider = cworld.getCubeCache();
-                int cubePosStartX = Coords.blockToCube(position.getX());
-                int cubePosStartY = Coords.blockToCube(position.getY());
-                int cubePosStartZ = Coords.blockToCube(position.getZ());
-                int index = 0;
-                for (int cubePosX = cubePosStartX; cubePosX < cubePosStartX + renderChunkCubeSize; cubePosX++)
-                    for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize; cubePosY++)
-                        for (int cubePosZ = cubePosStartZ; cubePosZ < cubePosStartZ + renderChunkCubeSize; cubePosZ++) {
-                            Cube cube = cubeProvider.getCube(cubePosX, cubePosY, cubePosZ);
-                            cubeCache[index++] = cube;
-                            if (!hasEntities && cube.getEntityContainer().size() != 0)
-                                hasEntities = true;
-                        }
-                cacheOutdated = false;
-                return hasEntities;
-            }
-            for (Cube cube : cubeCache) {
-                if (cube.getEntityContainer().size() != 0) {
-                    return true;
-                }
-            }
-        } else {
-            int blockPosStartY = position.getY();
-            if (blockPosStartY < 0 || blockPosStartY >= world.getHeight()) {
-                return false;
-            }
-            int cubePosStartY = Coords.blockToCube(blockPosStartY);
-            if (cacheOutdated) {
-                int chunkPosStartX = Coords.blockToCube(position.getX());
-                int chunkPosStartZ = Coords.blockToCube(position.getZ());
-                int index = 0;
-                for (int chunkPosX = chunkPosStartX; chunkPosX < chunkPosStartX + renderChunkCubeSize; chunkPosX++)
-                    for (int chunkPosZ = chunkPosStartZ; chunkPosZ < chunkPosStartZ + renderChunkCubeSize; chunkPosZ++) {
-                        Chunk chunk = world.getChunkFromChunkCoords(chunkPosX, chunkPosZ);
-                        chunkCache[index++] = chunk;
-                        for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize && cubePosY < 16; cubePosY++) {
-                            if (!hasEntities && chunk.getEntityLists()[cubePosY].size() != 0)
-                                hasEntities = true;
-                        }
-                    }
-                cacheOutdated = false;
-                return hasEntities;
-            }
-            for (Chunk chunk : chunkCache) {
-                for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize && cubePosY < 16; cubePosY++) {
-                    if (chunk.getEntityLists()[cubePosY].size() != 0)
-                        return true;
-                }
-            }
-        }
-        return hasEntities;
     }
 }

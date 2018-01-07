@@ -40,7 +40,7 @@ import net.minecraftforge.common.ForgeModContainer;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderChunk.class)
-public abstract class MixinRenderChunk_NoOptifine implements IRenderChunk {
+public abstract class MixinRenderChunk_NoOptifine {
     
     @Shadow private boolean needsUpdate;
     @Shadow private boolean needsImmediateUpdate;
