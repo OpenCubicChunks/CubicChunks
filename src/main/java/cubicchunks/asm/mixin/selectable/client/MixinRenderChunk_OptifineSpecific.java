@@ -121,9 +121,6 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
                 int cubePosZ = cubePosStartZ + (index & mask);
                 Cube cube = cubeProvider.getCube(cubePosX, cubePosY, cubePosZ);
                 cubeCache[index] = cube;
-                if (cube == null) {
-                    throw new NullPointerException("Cube is null while filling cache");
-                }
                 if (!resultOfTest && test.test(cube))
                     resultOfTest = true;
             }
@@ -131,9 +128,6 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
             return resultOfTest;
         }
         for (Cube cube : cubeCache) {
-            if (cube == null) {
-                throw new NullPointerException("Cube is null while quering cache");
-            }
             if (test.test(cube)) {
                 return true;
             }

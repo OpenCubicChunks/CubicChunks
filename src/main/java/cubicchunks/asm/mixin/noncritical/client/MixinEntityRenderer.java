@@ -21,33 +21,25 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.core.common;
+package cubicchunks.asm.mixin.noncritical.client;
 
 import cubicchunks.client.RenderVariables;
-import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.server.management.PlayerList;
+import javax.annotation.ParametersAreNonnullByDefault;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.renderer.EntityRenderer;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-@Mixin(IntegratedServer.class)
-public class MixinIntegratedServer {
+/** Change far plane distance according real distance to an edge of a last 
+ * rendered chunk. Affect fog and polygon render culling. */
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+@Mixin(EntityRenderer.class)
+public class MixinEntityRenderer {
 
-    /**
-     * Change distance of chunk loading to match an actual observed range.
-     **/
-    @ModifyArg(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;setViewDistance(I)V"))
-    private int modifyViewDistance(int viewDistance) {
-        return (viewDistance + 1 << RenderVariables.getRenderChunkPosShitBit()) - 1;
+    @ModifyConstant(method = "setupCameraTransform", constant = @Constant(intValue = 16))
+    public int onSetupCameraTransform(int oldValue) {
+        return RenderVariables.getRenderChunkSize();
     }
-    
-    /**
-     * Change checked distance to match correct.
-     **/
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/management/PlayerList;getViewDistance()I"))
-    private int checkViewDistance(PlayerList playerList) {
-        return playerList.getViewDistance() >>> RenderVariables.getRenderChunkPosShitBit();
-    }
-
 }

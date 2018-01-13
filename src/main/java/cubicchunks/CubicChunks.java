@@ -444,7 +444,7 @@ public class CubicChunks {
             FORCE_OFF_THREAD_TERRAIN_SETUP_WITH_BIG_RENDER_CHUNKS(true,
                     "Enabling this will force 'alwaysSetupTerrainOffThread' config option if render chunk size is higher than 16.",
                     (config, value) -> {
-                        if (config.getRenderChunkBits() > 4) {
+                        if (value && config.getRenderChunkBits() > 4) {
                             ForgeModContainer.alwaysSetupTerrainOffThread = true;
                         }
                     });
