@@ -42,18 +42,15 @@ import cubicchunks.client.CubeProviderClient;
 import cubicchunks.client.IRenderChunk;
 import cubicchunks.client.RenderVariables;
 import cubicchunks.util.Coords;
+import cubicchunks.util.Predicates;
 import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.cube.Cube;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.util.math.BlockPos;
-/**
- * Fixes renderEntities crashing when rendering cubes
- * that are not at existing array index in chunk.getEntityLists(),
- * <p>
- * Allows to render cubes outside of 0..256 height range.
- */
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeModContainer;
@@ -69,13 +66,15 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
 
     private Cube[] cubeCache;
     private Chunk[] chunkCache;
-    private boolean cacheOutdated;
-    
+    private boolean cubeCacheOutdated;
+    private boolean chunkCacheOutdated;
+
     @Inject(method = "<init>", at = @At(value = "RETURN"), cancellable = false)
-    public void onConstruct(World worldIn, RenderGlobal renderGlobalIn, int indexIn, CallbackInfo ci){
+    public void onConstruct(World worldIn, RenderGlobal renderGlobalIn, int indexIn, CallbackInfo ci) {
         cubeCache = new Cube[1 << RenderVariables.getRenderChunkPosShitBit() * 3];
         chunkCache = new Chunk[1 << RenderVariables.getRenderChunkPosShitBit() * 2];
-        cacheOutdated = true;
+        cubeCacheOutdated = true;
+        chunkCacheOutdated = true;
     }
 
     @ModifyConstant(method = "makeChunkCacheOF", constant = @Constant(intValue = 16))
@@ -87,128 +86,99 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
     public void isChunkRegionEmpty(BlockPos posIn, CallbackInfoReturnable<Boolean> cif) {
         ICubicWorldClient cworld = (ICubicWorldClient) world;
         cif.cancel();
-        int renderChunkCubeSize = RenderVariables.getRenderChunkSize() / Cube.SIZE;
-        boolean isEmpty = true;
         if (cworld.isCubicWorld()) {
-            if (cacheOutdated) {
-                CubeProviderClient cubeProvider = cworld.getCubeCache();
-                int cubePosStartX = Coords.blockToCube(position.getX());
-                int cubePosStartY = Coords.blockToCube(position.getY());
-                int cubePosStartZ = Coords.blockToCube(position.getZ());
-                int index = 0;
-                for (int cubePosX = cubePosStartX; cubePosX < cubePosStartX + renderChunkCubeSize; cubePosX++)
-                    for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize; cubePosY++)
-                        for (int cubePosZ = cubePosStartZ; cubePosZ < cubePosStartZ + renderChunkCubeSize; cubePosZ++) {
-                            Cube cube = cubeProvider.getCube(cubePosX, cubePosY, cubePosZ);
-                            cubeCache[index++] = cube;
-                            if (!cube.isEmpty())
-                                isEmpty = false;
-                        }
-                cacheOutdated = false;
-                cif.setReturnValue(isEmpty);
-                return;
-            }
-            for (Cube cube : cubeCache) {
-                if (!cube.isEmpty()) {
-                    isEmpty = false;
-                    break;
-                }
-            }
+            boolean isEmpty = !this.testCubeCacheFor(Predicates.CUBE_NOT_EMPTY);
+            cif.setReturnValue(isEmpty);
         } else {
-            int blockPosStartY = position.getY();
-            if (blockPosStartY < 0 || blockPosStartY >= world.getHeight()) {
-                cif.setReturnValue(true);
-                return;
-            }
-            int maxPos = RenderVariables.getRenderChunkMaxPos();
-            if (cacheOutdated) {
-                int chunkPosStartX = Coords.blockToCube(position.getX());
-                int chunkPosStartZ = Coords.blockToCube(position.getZ());
-                int index = 0;
-                for (int chunkPosX = chunkPosStartX; chunkPosX < chunkPosStartX + renderChunkCubeSize; chunkPosX++)
-                    for (int chunkPosZ = chunkPosStartZ; chunkPosZ < chunkPosStartZ + renderChunkCubeSize; chunkPosZ++) {
-                        Chunk chunk = world.getChunkFromChunkCoords(chunkPosX, chunkPosZ);
-                        chunkCache[index++] = chunk;
-                        if (isEmpty && chunk.isEmptyBetween(blockPosStartY, blockPosStartY + maxPos))
-                            isEmpty = false;
-                    }
-                cacheOutdated = false;
-                cif.setReturnValue(isEmpty);
-                return;
-            }
-            for (Chunk chunk : chunkCache) {
-                if (chunk.isEmptyBetween(blockPosStartY, blockPosStartY + maxPos)) {
-                    isEmpty = false;
-                    break;
-                }
-            }
+            boolean isEmpty = !this.testChunkCacheFor(Predicates.CHUNK_NOT_EMPTY_AT);
+            cif.setReturnValue(isEmpty);
         }
-        cif.setReturnValue(isEmpty);
     }
-    
+
     @Override
     public boolean hasEntities() {
-        boolean hasEntities = false;
         ICubicWorldClient cworld = (ICubicWorldClient) world;
-        int renderChunkCubeSize = RenderVariables.getRenderChunkSize() / Cube.SIZE;
         if (cworld.isCubicWorld()) {
-            if (cacheOutdated) {
-                CubeProviderClient cubeProvider = cworld.getCubeCache();
-                int cubePosStartX = Coords.blockToCube(position.getX());
-                int cubePosStartY = Coords.blockToCube(position.getY());
-                int cubePosStartZ = Coords.blockToCube(position.getZ());
-                int index = 0;
-                for (int cubePosX = cubePosStartX; cubePosX < cubePosStartX + renderChunkCubeSize; cubePosX++)
-                    for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize; cubePosY++)
-                        for (int cubePosZ = cubePosStartZ; cubePosZ < cubePosStartZ + renderChunkCubeSize; cubePosZ++) {
-                            Cube cube = cubeProvider.getCube(cubePosX, cubePosY, cubePosZ);
-                            cubeCache[index++] = cube;
-                            if (!hasEntities && cube.getEntityContainer().size() != 0)
-                                hasEntities = true;
-                        }
-                cacheOutdated = false;
-                return hasEntities;
-            }
-            for (Cube cube : cubeCache) {
-                if (cube.getEntityContainer().size() != 0) {
-                    return true;
-                }
-            }
+            return this.testCubeCacheFor(Predicates.CUBE_HAS_ENTITIES);
         } else {
-            int blockPosStartY = position.getY();
-            if (blockPosStartY < 0 || blockPosStartY >= world.getHeight()) {
-                return false;
-            }
-            int cubePosStartY = Coords.blockToCube(blockPosStartY);
-            if (cacheOutdated) {
-                int chunkPosStartX = Coords.blockToCube(position.getX());
-                int chunkPosStartZ = Coords.blockToCube(position.getZ());
-                int index = 0;
-                for (int chunkPosX = chunkPosStartX; chunkPosX < chunkPosStartX + renderChunkCubeSize; chunkPosX++)
-                    for (int chunkPosZ = chunkPosStartZ; chunkPosZ < chunkPosStartZ + renderChunkCubeSize; chunkPosZ++) {
-                        Chunk chunk = world.getChunkFromChunkCoords(chunkPosX, chunkPosZ);
-                        chunkCache[index++] = chunk;
-                        for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize && cubePosY < 16; cubePosY++) {
-                            if (!hasEntities && chunk.getEntityLists()[cubePosY].size() != 0)
-                                hasEntities = true;
-                        }
-                    }
-                cacheOutdated = false;
-                return hasEntities;
-            }
-            for (Chunk chunk : chunkCache) {
-                for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize && cubePosY < 16; cubePosY++) {
-                    if (chunk.getEntityLists()[cubePosY].size() != 0)
-                        return true;
+            return this.testChunkCacheFor(Predicates.CHUNK_HAS_ENTITIES_AT);
+        }
+    }
+
+    private boolean testCubeCacheFor(Predicate<Cube> test) {
+        boolean resultOfTest = false;
+        ICubicWorldClient cworld = (ICubicWorldClient) world;
+        int bitShift = RenderVariables.getRenderChunkPosShitBit();
+        int mask = (1 << bitShift) - 1;
+        if (cubeCacheOutdated) {
+            CubeProviderClient cubeProvider = cworld.getCubeCache();
+            int cubePosStartX = Coords.blockToCube(position.getX());
+            int cubePosStartY = Coords.blockToCube(position.getY());
+            int cubePosStartZ = Coords.blockToCube(position.getZ());
+            for (int index = 0; index < cubeCache.length; index++) {
+                int cubePosX = cubePosStartX + (index >> bitShift * 2);
+                int cubePosY = cubePosStartY + ((index >> bitShift) & mask);
+                int cubePosZ = cubePosStartZ + (index & mask);
+                Cube cube = cubeProvider.getCube(cubePosX, cubePosY, cubePosZ);
+                cubeCache[index] = cube;
+                if (cube == null) {
+                    throw new NullPointerException("Cube is null while filling cache");
                 }
+                if (!resultOfTest && test.test(cube))
+                    resultOfTest = true;
+            }
+            cubeCacheOutdated = false;
+            return resultOfTest;
+        }
+        for (Cube cube : cubeCache) {
+            if (cube == null) {
+                throw new NullPointerException("Cube is null while quering cache");
+            }
+            if (test.test(cube)) {
+                return true;
             }
         }
-        return hasEntities;
+        return resultOfTest;
+    }
+
+    private boolean testChunkCacheFor(BiPredicate<Chunk, Integer> test) {
+        boolean resultOfTest = false;
+        int renderChunkCubeSize = RenderVariables.getRenderChunkSize() / Cube.SIZE;
+        int blockPosStartY = position.getY();
+        if (blockPosStartY < 0 || blockPosStartY >= world.getHeight()) {
+            return false;
+        }
+        int cubePosStartY = Coords.blockToCube(blockPosStartY);
+        if (chunkCacheOutdated) {
+            int chunkPosStartX = Coords.blockToCube(position.getX());
+            int chunkPosStartZ = Coords.blockToCube(position.getZ());
+            int index = 0;
+            for (int chunkPosX = chunkPosStartX; chunkPosX < chunkPosStartX + renderChunkCubeSize; chunkPosX++)
+                for (int chunkPosZ = chunkPosStartZ; chunkPosZ < chunkPosStartZ + renderChunkCubeSize; chunkPosZ++) {
+                    Chunk chunk = world.getChunkFromChunkCoords(chunkPosX, chunkPosZ);
+                    chunkCache[index++] = chunk;
+                    for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize && cubePosY < 16; cubePosY++) {
+                        if (!resultOfTest && test.test(chunk, cubePosY))
+                            resultOfTest = true;
+                    }
+                }
+            chunkCacheOutdated = false;
+            return resultOfTest;
+        }
+        for (Chunk chunk : chunkCache) {
+            for (int cubePosY = cubePosStartY; cubePosY < cubePosStartY + renderChunkCubeSize && cubePosY < 16; cubePosY++) {
+                if (test.test(chunk, cubePosY))
+                    return true;
+            }
+        }
+
+        return resultOfTest;
     }
 
     @Inject(method = "setPosition", at = @At(value = "RETURN"), cancellable = false)
     public void setPosition(int x, int y, int z, CallbackInfo ci) {
-        cacheOutdated = true;
+        cubeCacheOutdated = true;
+        chunkCacheOutdated = true;
     }
 
     @Shadow private boolean needsUpdate;
@@ -220,7 +190,8 @@ public abstract class MixinRenderChunk_OptifineSpecific implements IRenderChunk 
      */
     @Overwrite
     public void setNeedsUpdate(boolean immediate) {
-        cacheOutdated = true;
+        cubeCacheOutdated = true;
+        chunkCacheOutdated = true;
         if (!ForgeModContainer.alwaysSetupTerrainOffThread) {
             if (this.needsUpdate)
                 immediate |= this.needsImmediateUpdate;

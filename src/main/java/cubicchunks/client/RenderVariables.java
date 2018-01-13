@@ -44,7 +44,7 @@ public class RenderVariables {
     private static int visGraphDY;
 
     static {
-        setRenderChunkBit(5);
+        setRenderChunkBit(4);
     }
 
     public static void setRenderChunkBit(int bit) {
