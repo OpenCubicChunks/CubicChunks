@@ -24,7 +24,7 @@ deploy:
     skip_cleanup: true
     on:
       repo: OpenCubicChunks/CubicChunks
-all_branches: true
+      all_branches: true
 
 notifications:
   email: false
