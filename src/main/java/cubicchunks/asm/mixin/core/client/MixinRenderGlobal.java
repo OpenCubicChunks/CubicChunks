@@ -168,7 +168,7 @@ public abstract class MixinRenderGlobal {
 
     @ModifyConstant(method = "setupTerrain", constant = @Constant(doubleValue = 16.0D))
     public double onSetupTerrain1(double oldValue) {
-        return Double.MAX_VALUE;
+        return RenderVariables.getRenderChunkSize();
     }
 
     @ModifyConstant(method = "setupTerrain", constant = @Constant(intValue = 16))
