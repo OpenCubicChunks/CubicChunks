@@ -72,9 +72,9 @@ class BasicSettingsTab {
 
     BasicSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
 
-        UIVerticalTableLayout<?> layout = new UIVerticalTableLayout<>(gui, 6);
-        layout.setPadding(HORIZONTAL_PADDING, 0);
-        layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
+        UIVerticalTableLayout<?> layout = new UIVerticalTableLayout<>(gui, 6)
+                .setPadding(HORIZONTAL_PADDING, 0)
+                .setSize(UIComponent.INHERITED, UIComponent.INHERITED)
                 .setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
                 .setRightPadding(HORIZONTAL_PADDING + 6)
 

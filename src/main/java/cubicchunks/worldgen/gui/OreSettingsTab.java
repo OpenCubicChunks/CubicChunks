@@ -23,46 +23,44 @@
  */
 package cubicchunks.worldgen.gui;
 
-import static cubicchunks.worldgen.gui.CustomCubicGui.HORIZONTAL_INSETS;
 import static cubicchunks.worldgen.gui.CustomCubicGui.HORIZONTAL_PADDING;
-import static cubicchunks.worldgen.gui.CustomCubicGui.VERTICAL_INSETS;
-import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_1_COL;
-import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_2_COL;
-import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_3_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.label;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeCheckbox;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeFloatSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeIntSlider;
-import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeRangeSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makePositiveExponentialSlider;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeRangeSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
 import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings.PeriodicGaussianOreConfig;
 import cubicchunks.worldgen.gui.component.UIBlockStateButton;
 import cubicchunks.worldgen.gui.component.UIBlockStateSelect;
+import cubicchunks.worldgen.gui.component.UILayout;
 import cubicchunks.worldgen.gui.component.UIList;
-import cubicchunks.worldgen.gui.component.UIOptionScrollbar;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
 import cubicchunks.worldgen.gui.component.UISplitLayout;
+import cubicchunks.worldgen.gui.component.UISplitLayout.Type;
 import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
-import net.malisis.core.client.gui.Anchor;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
-import net.malisis.core.client.gui.component.control.UIScrollBar;
-import net.malisis.core.client.gui.component.decoration.UILabel;
 import net.malisis.core.client.gui.component.interaction.UIButton;
 import net.malisis.core.client.gui.component.interaction.UICheckBox;
+import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.client.gui.component.interaction.UISlider;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 class OreSettingsTab {
+
+    private final ArrayList<UIComponent<?>> componentList;
 
     private final UIContainer<?> container;
 
@@ -70,39 +68,29 @@ class OreSettingsTab {
 
     private final List<UIPeriodicGaussianOreOptions> periodicGaussianOptions = new ArrayList<>();
 
-    OreSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
-        int y = -1;
-        UIVerticalTableLayout<?> layout = new UIVerticalTableLayout<>(gui, 1);
+    <T> OreSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
+        this.componentList = new ArrayList<>();
+        UIList<UIComponent<?>, UIComponent<?>> layout = new UIList<>(gui, this.componentList, x -> x);
         layout.setPadding(HORIZONTAL_PADDING, 0);
-        layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
-                .setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS);
+        layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
+
+        layout.add(new UIButton(gui, malisisText("add_ore")).setAutoSize(false).setSize(UIComponent.INHERITED, 30).register(
+                new Object() {
+                    @Subscribe
+                    public void onClick(UIButton.ClickEvent evt) {
+                        componentList.add(1, new UIStandardOreOptions(gui, CustomGeneratorSettings.StandardOreConfig.builder()
+                                .size(8).probability(1).attempts(4).block(Blocks.TNT.getDefaultState()).create()));
+                    }
+                }
+        ));
 
         for (CustomGeneratorSettings.StandardOreConfig conf : settings.standardOres) {
             layout.add(new UIStandardOreOptions(gui, conf));
         }
 
-                /*
-                .add(label(gui, malisisText("lapis_lazuli_ore_group")),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.lapisLazuliOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.lapisLazuliSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.lapisLazuliOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.lapisLazuliSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.lapisLazuliOreSpawnProbability =
-                                makeFloatSlider(gui, malisisText("spawn_maxprobability", " %.3f"), settings.lapisLazuliSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.lapisLazuliSpacingHeight = makePositiveExponentialSlider(gui, malisisText("spacing_height", " %.3f"), -1f, 6.0f,
-                        settings.lapisLazuliHeightSpacing),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.lapisLazuliSpawnRange = makeRangeSlider(gui, vanillaText("spawn_range"), -4.0f, 4.0f, settings.lapisLazuliSpawnMinHeight,
-                        settings.lapisLazuliSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.lapisLazuliMeanHeight = makeFloatSlider(gui, malisisText("mean_height", " %.3f"), -4.0f, 4.0f,
-                        settings.lapisLazuliHeightMean),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.lapisLazuliHeightStdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), 0f, 1f, settings.lapisLazuliHeightStdDeviation),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL));
-                */
+        for (CustomGeneratorSettings.PeriodicGaussianOreConfig conf : settings.periodicGaussianOres) {
+            layout.add(new UIPeriodicGaussianOreOptions(gui, conf));
+        }
         layout.setRightPadding(HORIZONTAL_PADDING + 6);
         this.container = layout;
     }
@@ -112,128 +100,195 @@ class OreSettingsTab {
     }
 
     void writeConfig(CustomGeneratorSettings conf) {
-        /*
-        conf.lapisLazuliSpawnSize = this.lapisLazuliOreSpawnSize.getValue();
-        conf.lapisLazuliSpawnTries = this.lapisLazuliOreSpawnTries.getValue();
-        conf.lapisLazuliSpawnProbability = this.lapisLazuliOreSpawnProbability.getValue();
-        conf.lapisLazuliSpawnSize = this.lapisLazuliOreSpawnSize.getValue();
-        conf.lapisLazuliHeightMean = this.lapisLazuliMeanHeight.getValue();
-        conf.lapisLazuliHeightStdDeviation = this.lapisLazuliHeightStdDev.getValue();
-        conf.lapisLazuliHeightSpacing = this.lapisLazuliSpacingHeight.getValue();
-        conf.lapisLazuliSpawnMinHeight = this.lapisLazuliSpawnRange.getMinValue();
-        conf.lapisLazuliSpawnMaxHeight = this.lapisLazuliSpawnRange.getMaxValue();
-        */
+        conf.standardOres.clear();
+        conf.periodicGaussianOres.clear();
+        for (UIComponent<?> c : componentList) {
+            if (c instanceof UIPeriodicGaussianOreOptions) {
+                conf.periodicGaussianOres.add(((UIPeriodicGaussianOreOptions) c).toConfig());
+            } else {
+                conf.standardOres.add(((UIStandardOreOptions) c).toConfig());
+            }
+        }
+    }
 
+    private void replaceComponent(UIComponent<?> oldC, UIComponent<?> newC) {
+        this.componentList.add(this.componentList.indexOf(oldC), newC);
+        this.componentList.remove(oldC);
+        ((UILayout<?>) this.container).setNeedsLayoutUpdate();
     }
 
     private class UIStandardOreOptions extends UIVerticalTableLayout {
 
-        private final UIButton delete;
-        private final UILabel name = null;
+        /*
+        The layout:
+
+        Biome selection Off
+        +------+------+------+------+------+------+
+        |BLOCK : <=========NAME==========> :DELETE|
+        |STATE : <=BLOCKSTATE PROPERTIES=> : TYPE |
+        +------+------+------+------+------+------+
+        | <===SPAWN SIZE===> : <===VEIN COUNT===> |
+        | <===SPAWN PROB===> : <==BIOME ON/OFF==> |
+        | <============SPAWN HEIGHTS============> |
+        +------+------+------+------+------+------+
+
+        Biome selection On
+        +------+------+------+------+------+------+ ----\
+        |BLOCK : <=========NAME==========> :DELETE|\TABLE\
+        |STATE : <=BLOCKSTATE PROPERTIES=> : TYPE |/LAYOUT\
+        +--------------+--------------+-----------+        \  VERTICAL TABLE
+        |  SPAWN SIZE  :  VEIN COUNT  |[V]Biome 1||        /  LAYOUT (this)
+        |  SPAWN PROB  : BIOME ON/OFF |[V]Biome 2 |       /
+        | <======SPAWN HEIGHTS======> |[ ]Biome 3 |      /
+        +--------------+--------------^-----------+ ----/
+        |                             |           |
+        |<---VERTICAL TABLE LAYOUT--->|<-UI LIST->|
+                  (MAIN AREA)         \->Split layout
+        */
         private final UIBlockStateButton block;
+        private final UIComponent<?> name;
+        private final UIButton delete;
+        private final UISelect<OreGenType> type;
+
+
         private final UISlider<Integer> size;
         private final UISlider<Integer> attempts;
+
         private final UISlider<Float> probability;
+        private final UICheckBox selectBiomes;
+
         private final UIRangeSlider<Float> heightRange;
 
-        private final UICheckBox selectBiomes;
-        private final UIList<Biome, UICheckBox, ?> biomes;
 
-        private final UISplitLayout<?> split;
-
+        private final UIList<Biome, UICheckBox> biomesArea;
         private CustomGeneratorSettings.StandardOreConfig config;
 
         public UIStandardOreOptions(ExtraGui gui, CustomGeneratorSettings.StandardOreConfig config) {
             super(gui, 6);
 
-            // this.setSize(getWidth(), 30);
-            this.autoResizeToContent(true);
-
-            split = new UISplitLayout<>(
-                    gui, UISplitLayout.Type.SIDE_BY_SIDE,
-                    new UIVerticalTableLayout<>(gui, 6),
-                    new UIList<>(gui, ForgeRegistries.BIOMES.getValues(),
-                            e -> new UICheckBox(gui, e.getBiomeName() + "(" + e.getRegistryName() + ")"))
-            );
-            split.setSizeWeights(2, 1);
-            split.autoResizeToContent(true);
-            split.setUserResizable(false);
-
-            UIContainer<?> label = makeLabel(gui, config);
+            this.config = config;
 
             this.block = new UIBlockStateButton(gui, config.blockstate);
+            this.name = makeLabel(gui, config);
+            this.delete = new UIButton(gui, malisisText("delete")).setSize(10, 20).setAutoSize(false);
+            this.type = new UISelect<>(gui, 10, Arrays.asList(OreGenType.values()));
+            this.size = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, config.spawnSize);
+            this.attempts = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, config.spawnTries);
+            this.probability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), config.spawnProbability);
+            this.selectBiomes = makeCheckbox(gui, malisisText("select_biomes"), config.biomes != null);
+            this.heightRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, config.minHeight, config.maxHeight);
+
+            UISplitLayout<?> deleteTypeArea = new UISplitLayout<>(gui, Type.STACKED, delete, type).setSizeOf(UISplitLayout.Pos.SECOND, 10)
+                    .setSize(0, 30);
+            UIVerticalTableLayout<?> mainArea = new UIVerticalTableLayout<>(gui, 6).autoFitToContent(true);
+
+            // use new ArrayList so it can be sorted
+            biomesArea = new UIList<>(gui, new ArrayList<>(ForgeRegistries.BIOMES.getValues()), this::makeBiomeCheckbox);
+
             this.block.onClick(btn ->
-                    new UIBlockStateSelect<>(gui).display(state -> block.setBlockState(state))
+                    new UIBlockStateSelect<>(gui).display(state -> {
+                        block.setBlockState(state);
+                        updateLabel(gui, name);
+                    })
             );
-
-            this.add(label,
-                    new UIVerticalTableLayout.GridLocation(1, 0, 4));
-            this.add(block, new UIVerticalTableLayout.GridLocation(0, 0, 1));
-            this.add(delete = new UIButton(gui, malisisText("delete")).setSize(10, 20).setAutoSize(false),
-                    new UIVerticalTableLayout.GridLocation(5, 0, 1));
-            this.add(split, new GridLocation(0, 1, 6));
-
-
-            this.config = config;
-            int y = -1;
-
-            UIVerticalTableLayout<?> layout = (UIVerticalTableLayout<?>) split.getFirst();
-
-            biomes = (UIList<Biome, UICheckBox, ?>) split.getSecond();
-
-            layout.add(size = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, config.spawnSize),
-                    new UIVerticalTableLayout.GridLocation(0, ++y, 3));
-            layout.add(attempts = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, config.spawnTries),
-                    new UIVerticalTableLayout.GridLocation(3, y, 3));
-            layout.add(probability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), config.spawnProbability),
-                    new UIVerticalTableLayout.GridLocation(0, ++y, 3));
-            layout.add(selectBiomes = makeCheckbox(gui, malisisText("select_biomes"), config.biomes != null),
-                    new UIVerticalTableLayout.GridLocation(3, y, 3));
-            layout.add(heightRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, config.minHeight, config.maxHeight),
-                    new UIVerticalTableLayout.GridLocation(0, ++y, 6));
-
-            layout.autoResizeToContent(true);
-            selectBiomes.register(new Object() {
-                @Subscribe
-                public void onClick(UICheckBox.CheckEvent evt) {
-                    allowSelectBiomes(evt.isChecked());
-                }
-            });
-            allowSelectBiomes(selectBiomes.isChecked());
-
-            delete.register(new Object() {
+            this.delete.register(new Object() {
                 @Subscribe
                 public void onClick(UIButton.ClickEvent evt) {
-                    standardOptions.remove(UIStandardOreOptions.this);
                     container.remove(UIStandardOreOptions.this);
                 }
             });
+            this.selectBiomes.register(new Object() {
+                @Subscribe
+                public void onClick(UICheckBox.CheckEvent evt) {
+                    allowSelectBiomes(biomesArea, evt.isChecked());
+                }
+            });
+            this.type.register(new Object() {
+                @Subscribe
+                public void onClick(UISelect.SelectEvent evt) {
+                    if (evt.getNewValue() == OreGenType.PERIODIC_GAUSSIAN) {
+                        replaceComponent(UIStandardOreOptions.this, new UIPeriodicGaussianOreOptions(gui,
+                                PeriodicGaussianOreConfig.builder().fromStandard(toConfig()).create()));
+                    }
+                }
+            });
+            this.type.select(OreGenType.UNIFORM);
 
-            biomes.setHeightFunc(() -> ((UIContainer) split.getFirst()).getContentHeight());
-            biomes.setRightPadding(6);
-            //size = null;
-            //attempts = null;
-            //probability = null;
-            //heightRange = null;
-            //selectBiomes = null;
-            //biomes = null;
-            //delete = null;
+            setupMainArea(mainArea);
+            allowSelectBiomes(biomesArea, this.selectBiomes.isChecked());
+            setupBiomeArea(config, biomesArea);
+            setupThis(gui, deleteTypeArea, mainArea, biomesArea);
+        }
+
+        private CustomGeneratorSettings.StandardOreConfig toConfig() {
+            return CustomGeneratorSettings.StandardOreConfig.builder()
+                    .biomes(this.selectBiomes.isChecked() ? this.biomesArea.getData().toArray(new Biome[0]) : null)
+                    .attempts(this.attempts.getValue())
+                    .block(this.block.getState())
+                    .minHeight(this.heightRange.getMinValue())
+                    .maxHeight(this.heightRange.getMaxValue())
+                    .probability(this.probability.getValue())
+                    .size(this.size.getValue())
+                    .create();
+        }
+
+        private void setupMainArea(UIVerticalTableLayout<?> mainArea) {
+            int y = -1;
+            mainArea.add(this.size, new GridLocation(0, ++y, 3));
+            mainArea.add(this.attempts, new GridLocation(3, y, 3));
+            mainArea.add(this.probability, new GridLocation(0, ++y, 3));
+            mainArea.add(this.selectBiomes, new GridLocation(3, y, 3));
+            mainArea.add(this.heightRange, new GridLocation(0, ++y, 6));
+        }
+
+        private void allowSelectBiomes(UIList<Biome, UICheckBox> biomes, boolean checked) {
+            biomes.setVisible(checked);
+            if (!biomes.isVisible()) {
+                // TODO: is this the expected behavior for users? Or should the selected ones persist?
+                biomes.getData().forEach(e -> biomes.component(e).setChecked(true));
+            }
+        }
+
+        private void setupBiomeArea(CustomGeneratorSettings.StandardOreConfig config, UIList<Biome, UICheckBox> biomesArea) {
+            biomesArea.setRightPadding(6);
 
             if (config.biomes != null) {
                 config.biomes.forEach(b -> {
-                    biomes.getAll().get(b).setChecked(true);
+                    biomesArea.component(b).setChecked(true);
                 });
             }
 
-            sortCheckedOnTop(biomes);
+            ((List<Biome>) biomesArea.getData()).sort((b1, b2) ->
+                    biomesArea.component(b1).isChecked() && !biomesArea.component(b2).isChecked() ? 1 : 0
+            );
         }
 
-        private void sortCheckedOnTop(UIList<Biome, UICheckBox, ?> biomes) {
+        private void setupThis(ExtraGui gui, UIComponent<?> deleteTypeArea, UIComponent<?> mainArea, UILayout<?> biomesArea) {
+            UISplitLayout split =
+                    new UISplitLayout<>(gui, Type.SIDE_BY_SIDE, mainArea, biomesArea).sizeWeights(2, 1).autoFitToContent(true).userResizable(false);
 
+            this.autoFitToContent(true);
+            this.add(this.name, new GridLocation(1, 0, 4));
+            this.add(this.block, new GridLocation(0, 0, 1));
+            this.add(deleteTypeArea, new GridLocation(5, 0, 1));
+            this.add(split, new GridLocation(0, 1, 6));
+            biomesArea.setHeightFunc(() -> ((UIContainer) split.getFirst()).getContentHeight());
+        }
+
+        private UICheckBox makeBiomeCheckbox(Biome biome) {
+            return new UICheckBox(getGui(), String.format("%s (%s)", biome.getBiomeName(), biome.getRegistryName()));
         }
 
         private UIContainer<?> makeLabel(ExtraGui gui, CustomGeneratorSettings.StandardOreConfig config) {
-            String stateStr = config.blockstate.toString();
+            UIVerticalTableLayout<?> label = new UIVerticalTableLayout<>(gui, 1).setInsets(0, 0, 0, 0);
+            updateLabel(gui, label);
+            return label;
+        }
+        private void updateLabel(ExtraGui gui, UIComponent<?> label) {
+
+            ((UIContainer) label).removeAll();
+
+            String stateStr = block.getState().toString();
             String name;
             String props;
             if (!stateStr.contains("[")) {
@@ -244,30 +299,230 @@ class OreSettingsTab {
                 name = statesplit[0];
                 props = "[" + statesplit[1];
             }
-            UIVerticalTableLayout<?> label = new UIVerticalTableLayout<>(gui, 1).setInsets(0, 0, 0, 0);
+
 
             UIComponent<?> l1 = label(gui, name);
             UIComponent<?> l2 = label(gui, props);
-            label.add(l1, l2);
+            ((UIContainer<?>) label).add(l1, l2);
             label.setSize(label.getWidth(), l1.getHeight() + l2.getHeight());
-            return label;
-        }
-
-        private void allowSelectBiomes(boolean checked) {
-            biomes.setVisible(checked);
-            if (!biomes.isVisible()) {
-                // TODO: is this the expected behavior for users? Or should the selected ones persist?
-                biomes.getAll().forEach((e, c) -> c.setChecked(true));
-            }
-        }
-
-        @Override protected void layout() {
-            biomes.setSize(biomes.getRawWidth(), ((UIContainer<?>) split.getFirst()).getContentHeight());
-            super.layout();
         }
     }
 
-    private class UIPeriodicGaussianOreOptions {
+    // TODO: avoid duplicating code here
+    private class UIPeriodicGaussianOreOptions extends UIVerticalTableLayout {
 
+        /*
+        The layout:
+
+        Biome selection Off
+        +------+------+------+------+------+------+
+        |BLOCK : <=========NAME==========> :DELETE|
+        |STATE : <=BLOCKSTATE PROPERTIES=> : TYPE |
+        +------+------+------+------+------+------+
+        | <===SPAWN SIZE===> : <===VEIN COUNT===> |
+        | <===SPAWN PROB===> : <==BIOME ON/OFF==> |
+        | <======MEAN======> : <=====SPACING====> |
+        | <============STD DEVIATION============> |
+        | <============SPAWN HEIGHTS============> |
+        +------+------+------+------+------+------+
+
+        Biome selection On
+        +------+------+------+------+------+------+ ----\
+        |BLOCK : <=========NAME==========> :DELETE|\TABLE\
+        |STATE : <=BLOCKSTATE PROPERTIES=> : TYPE |/LAYOUT\
+        +--------------+--------------+-----------+        \
+        |  SPAWN SIZE  :  VEIN COUNT  |[V]Biome 1||         \  VERTICAL TABLE
+        |  SPAWN PROB  : BIOME ON/OFF |[V]Biome 2 |         /  LAYOUT (this)
+        | <===MEAN===> : <=SPACING==> |[V]Biome 3 |        /
+        | <======STD DEVIATION======> |[ ]Biome 4 |       /
+        | <======SPAWN HEIGHTS======> |[ ]Biome 5 |      /
+        +--------------+--------------^-----------+ ----/
+        |                             |           |
+        |<---VERTICAL TABLE LAYOUT--->|<-UI LIST->|
+                  (MAIN AREA)         \->Split layout
+        */
+        private final UIBlockStateButton block;
+        private final UIComponent<?> name;
+        private final UIButton delete;
+        private final UISelect<OreGenType> type;
+
+
+        private final UISlider<Integer> size;
+        private final UISlider<Integer> attempts;
+
+        private final UISlider<Float> mean;
+        private final UISlider<Float> spacing;
+
+        private final UISlider<Float> stdDev;
+
+        private final UISlider<Float> probability;
+        private final UICheckBox selectBiomes;
+
+        private final UIRangeSlider<Float> heightRange;
+
+
+        private final UIList<Biome, UICheckBox> biomesArea;
+
+        private PeriodicGaussianOreConfig config;
+
+        public UIPeriodicGaussianOreOptions(ExtraGui gui, PeriodicGaussianOreConfig config) {
+            super(gui, 6);
+
+            this.config = config;
+
+            this.block = new UIBlockStateButton(gui, config.blockstate);
+            this.name = makeLabel(gui, config);
+            this.delete = new UIButton(gui, malisisText("delete")).setSize(10, 20).setAutoSize(false);
+            this.type = new UISelect<>(gui, 10, Arrays.asList(OreGenType.values()));
+            this.size = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, config.spawnSize);
+            this.attempts = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, config.spawnTries);
+            this.mean = makeFloatSlider(gui, malisisText("mean_height", " %.3f"), -4.0f, 4.0f, config.heightMean);
+            this.spacing = makePositiveExponentialSlider(gui, malisisText("spacing_height", " %.3f"), -1f, 6.0f, config.heightSpacing);
+            this.stdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), 0f, 1f, config.heightStdDeviation);
+            this.probability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), config.spawnProbability);
+            this.selectBiomes = makeCheckbox(gui, malisisText("select_biomes"), config.biomes != null);
+            this.heightRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, config.minHeight, config.maxHeight);
+
+            UISplitLayout<?> deleteTypeArea =
+                    new UISplitLayout<>(gui, Type.STACKED, delete, type).sizeWeights(1, 1).setSizeOf(UISplitLayout.Pos.SECOND, 10)
+                            .setSize(0, 30);
+            UIVerticalTableLayout<?> mainArea = new UIVerticalTableLayout<>(gui, 6).autoFitToContent(true);
+
+            // use new ArrayList so it can be sorted
+            biomesArea = new UIList<>(gui, new ArrayList<>(ForgeRegistries.BIOMES.getValues()), this::makeBiomeCheckbox);
+
+            this.block.onClick(btn ->
+                    new UIBlockStateSelect<>(gui).display(state -> {
+                        block.setBlockState(state);
+                        updateLabel(gui, name);
+                    })
+            );
+            this.delete.register(new Object() {
+                @Subscribe
+                public void onClick(UIButton.ClickEvent evt) {
+                    standardOptions.remove(UIPeriodicGaussianOreOptions.this);
+                    container.remove(UIPeriodicGaussianOreOptions.this);
+                }
+            });
+            this.selectBiomes.register(new Object() {
+                @Subscribe
+                public void onClick(UICheckBox.CheckEvent evt) {
+                    allowSelectBiomes(biomesArea, evt.isChecked());
+                }
+            });
+            this.type.register(new Object() {
+                @Subscribe
+                public void onClick(UISelect.SelectEvent<OreGenType> evt) {
+                    if (evt.getNewValue() == OreGenType.UNIFORM) {
+                        replaceComponent(UIPeriodicGaussianOreOptions.this, new UIStandardOreOptions(gui, CustomGeneratorSettings.StandardOreConfig
+                                .builder().fromPeriodic(toConfig()).create()));
+                    }
+                }
+            });
+            this.type.select(OreGenType.PERIODIC_GAUSSIAN);
+
+            setupMainArea(mainArea);
+            allowSelectBiomes(biomesArea, this.selectBiomes.isChecked());
+            setupBiomeArea(config, biomesArea);
+            setupThis(gui, deleteTypeArea, mainArea, biomesArea);
+        }
+
+        private PeriodicGaussianOreConfig toConfig() {
+            return CustomGeneratorSettings.PeriodicGaussianOreConfig.builder()
+                    .biomes(this.selectBiomes.isChecked() ? this.biomesArea.getData().toArray(new Biome[0]) : null)
+                    .attempts(this.attempts.getValue())
+                    .block(this.block.getState())
+                    .minHeight(this.heightRange.getMinValue())
+                    .maxHeight(this.heightRange.getMaxValue())
+                    .probability(this.probability.getValue())
+                    .size(this.size.getValue())
+                    .heightMean(this.mean.getValue())
+                    .heightSpacing(this.spacing.getValue())
+                    .heightStdDeviation(this.stdDev.getValue())
+                    .create();
+        }
+
+        private void setupMainArea(UIVerticalTableLayout<?> mainArea) {
+            int y = -1;
+            mainArea.add(this.size, new GridLocation(0, ++y, 3));
+            mainArea.add(this.attempts, new GridLocation(3, y, 3));
+            mainArea.add(this.probability, new GridLocation(0, ++y, 3));
+            mainArea.add(this.selectBiomes, new GridLocation(3, y, 3));
+            mainArea.add(this.mean, new GridLocation(0, ++y, 3));
+            mainArea.add(this.spacing, new GridLocation(3, y, 3));
+            mainArea.add(this.stdDev, new GridLocation(0, ++y, 6));
+            mainArea.add(this.heightRange, new GridLocation(0, ++y, 6));
+        }
+
+        private void allowSelectBiomes(UIList<Biome, UICheckBox> biomes, boolean checked) {
+            biomes.setVisible(checked);
+            if (!biomes.isVisible()) {
+                // TODO: is this the expected behavior for users? Or should the selected ones persist?
+                biomes.getData().forEach(e -> biomes.component(e).setChecked(true));
+            }
+        }
+
+        private void setupBiomeArea(PeriodicGaussianOreConfig config, UIList<Biome, UICheckBox> biomesArea) {
+            biomesArea.setRightPadding(6);
+
+            if (config.biomes != null) {
+                config.biomes.forEach(b -> {
+                    biomesArea.component(b).setChecked(true);
+                });
+            }
+
+            ((List<Biome>) biomesArea.getData()).sort((b1, b2) ->
+                    biomesArea.component(b1).isChecked() && !biomesArea.component(b2).isChecked() ? 1 : 0
+            );
+        }
+
+        private void setupThis(ExtraGui gui, UIComponent<?> deleteTypeArea, UIComponent<?> mainArea, UILayout<?> biomesArea) {
+            UISplitLayout split =
+                    new UISplitLayout<>(gui, Type.SIDE_BY_SIDE, mainArea, biomesArea).sizeWeights(2, 1).autoFitToContent(true).userResizable(false);
+
+            this.autoFitToContent(true);
+            this.add(this.name, new GridLocation(1, 0, 4));
+            this.add(this.block, new GridLocation(0, 0, 1));
+            this.add(deleteTypeArea, new GridLocation(5, 0, 1));
+            this.add(split, new GridLocation(0, 1, 6));
+            biomesArea.setHeightFunc(() -> ((UIContainer) split.getFirst()).getContentHeight());
+        }
+
+        private UICheckBox makeBiomeCheckbox(Biome biome) {
+            return new UICheckBox(getGui(), String.format("%s (%s)", biome.getBiomeName(), biome.getRegistryName()));
+        }
+
+        private UIContainer<?> makeLabel(ExtraGui gui, CustomGeneratorSettings.PeriodicGaussianOreConfig config) {
+            UIVerticalTableLayout<?> label = new UIVerticalTableLayout<>(gui, 1).setInsets(0, 0, 0, 0);
+            updateLabel(gui, label);
+            return label;
+        }
+
+        private void updateLabel(ExtraGui gui, UIComponent<?> label) {
+
+            ((UIContainer) label).removeAll();
+
+            String stateStr = block.getState().toString();
+            String name;
+            String props;
+            if (!stateStr.contains("[")) {
+                name = stateStr;
+                props = "[]";
+            } else {
+                String[] statesplit = stateStr.split("\\[");
+                name = statesplit[0];
+                props = "[" + statesplit[1];
+            }
+
+
+            UIComponent<?> l1 = label(gui, name);
+            UIComponent<?> l2 = label(gui, props);
+            ((UIContainer<?>) label).add(l1, l2);
+            label.setSize(label.getWidth(), l1.getHeight() + l2.getHeight());
+        }
+    }
+
+    public enum OreGenType {
+        UNIFORM, PERIODIC_GAUSSIAN
     }
 }

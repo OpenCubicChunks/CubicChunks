@@ -186,8 +186,8 @@ public class UIBlockStateSelect<T extends UIBlockStateSelect<T>> extends UIConta
             int num = i % getLineStates();
 
             RenderHelper.disableStandardItemLighting();
-            RenderHelper.enableGUIStandardItemLighting();
             GlStateManager.enableRescaleNormal();
+            Minecraft.getMinecraft().entityRenderer.enableLightmap();
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, blockTexture.getGlTextureId());
 
             drawState(allStates.get(i), num * UIBlockStateButton.SIZE + PADDING_HORIZ + addPadding,
@@ -198,6 +198,7 @@ public class UIBlockStateSelect<T extends UIBlockStateSelect<T>> extends UIConta
         renderer.next();
 
         GlStateManager.disableRescaleNormal();
+        RenderHelper.disableStandardItemLighting();
     }
 
     private void drawState(IBlockState state, int x, int y) {

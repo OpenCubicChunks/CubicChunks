@@ -73,17 +73,8 @@ cubicchunks.gui.customcubic.riverSize=River Size
 ###  ore generation settings  ###
 #################################
 
-cubicchunks.gui.customcubic.dirt_group=Dirt:
-cubicchunks.gui.customcubic.gravel_group=Gravel:
-cubicchunks.gui.customcubic.granite_group=Granite:
-cubicchunks.gui.customcubic.diorite_group=Diorite:
-cubicchunks.gui.customcubic.andesite_group=Andesite:
-cubicchunks.gui.customcubic.coal_ore_group=Coal Ore:
-cubicchunks.gui.customcubic.iron_ore_group=Iron Ore:
-cubicchunks.gui.customcubic.gold_ore_group=Gold Ore:
-cubicchunks.gui.customcubic.redstone_ore_group=Redstone Ore:
-cubicchunks.gui.customcubic.diamond_ore_group=Diamond Ore:
-cubicchunks.gui.customcubic.lapis_lazuli_ore_group=Lapis Lazuli Ore:
+cubicchunks.gui.customcubic.add_ore=Add ore
+cubicchunks.gui.customcubic.delete=Delete
 
 cubicchunks.gui.customcubic.spawn_size=Spawn Size:
 cubicchunks.gui.customcubic.spawn_tries=Spawn Tries:

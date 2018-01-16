@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
  *
  * The components will together fill the whole layout. The split line is optionally movable by user.
  */
-public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISplitLayout.Pos> {
+public class UISplitLayout<T extends UISplitLayout<T>> extends UIStandardLayout<T, UISplitLayout.Pos> {
 
     private Type splitType;
 
@@ -88,7 +88,7 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISpl
      * @param weight2 weight of the second component
      * @return {@code this}
      */
-    public T setSizeWeights(float weight1, float weight2) {
+    public T sizeWeights(float weight1, float weight2) {
         this.sizeData = weight1 / weight2;
         this.sizeMode = SizeMode.WEIGHT;
         this.setNeedsLayoutUpdate();
@@ -122,7 +122,7 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UILayout<T, UISpl
      *
      * @return {@code this}
      */
-    public T setUserResizable(boolean resizable) {
+    public T userResizable(boolean resizable) {
         this.userResizable = resizable;
         return self();
     }

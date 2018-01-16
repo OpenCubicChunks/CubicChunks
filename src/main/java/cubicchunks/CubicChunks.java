@@ -245,6 +245,13 @@ public class CubicChunks {
 
         config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
 
+        CCFixType.addFixableWorldType(VanillaCubicWorldType.create());
+        CCFixType.addFixableWorldType(FlatCubicWorldType.create());
+        CCFixType.addFixableWorldType(CustomCubicWorldType.create());
+        CCFixType.addFixableWorldType(DebugWorldType.create());
+        LOGGER.debug("Registered world types");
+
+        CCFixType.registerWalkers();
         ModFixs fixes = FMLCommonHandler.instance().getDataFixer().init(MODID, FIXER_VERSION);
         CustomGeneratorSettings.registerDataFixers(fixes);
     }
@@ -252,12 +259,6 @@ public class CubicChunks {
     @EventHandler
     public void init(FMLInitializationEvent event) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
         proxy.registerEvents();
-
-        VanillaCubicWorldType.create();
-        FlatCubicWorldType.create();
-        CustomCubicWorldType.create();
-        DebugWorldType.create();
-        LOGGER.debug("Registered world types");
 
         PacketDispatcher.registerPackets();
         CubeGeneratorsRegistry.computeSortedGeneratorList();

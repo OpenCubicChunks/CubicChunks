@@ -35,18 +35,18 @@ import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.control.UIScrollBar;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.IntSupplier;
 
 import javax.annotation.Nullable;
 
-public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContainer<T> {
+public abstract class UILayout<T extends UILayout<T>> extends UIContainer<T> {
     private UIOptionScrollbar scrollbar;
 
     private boolean needsLayoutUpdate = false;
     private int lastSizeX, lastSizeY;
-    private BiMap<UIComponent<?>, LOC> entries = HashBiMap.create();
     private boolean resizeToContent;
 
     private IntSupplier widthFunc;
@@ -63,30 +63,12 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
         return super.setRightPadding(padding); // scrollbar
     }
 
-    protected abstract LOC findNextLocation();
-
     /**
      * Recalculate positions and sizes of components
      */
     protected abstract void layout();
 
     protected abstract boolean isLayoutChanged();
-
-    protected abstract void onAdd(UIComponent<?> comp, LOC at);
-
-    protected abstract void onRemove(UIComponent<?> comp, LOC at);
-
-    protected Map<UIComponent<?>, LOC> componentToLocationMap() {
-        return entries;
-    }
-
-    protected Map<LOC, UIComponent<?>> locationToComponentMap() {
-        return entries.inverse();
-    }
-
-    protected LOC locationOf(UIComponent<?> comp) {
-        return entries.get(comp);
-    }
 
     protected boolean canAutoSizeX() {
         return true;
@@ -168,16 +150,9 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
         return h;
     }
 
-    public void autoResizeToContent(boolean resizeToContent) {
+    public T autoFitToContent(boolean resizeToContent) {
         this.resizeToContent = resizeToContent;
-    }
-
-    public T add(UIComponent<?> component, LOC at) {
-        this.entries.put(component, at);
-        this.onAdd(component, at);
-        super.add(component);
-        this.needsLayoutUpdate = true;
-        return (T) this;
+        return self();
     }
 
     public void setNeedsLayoutUpdate() {
@@ -186,27 +161,20 @@ public abstract class UILayout<T extends UILayout<T, LOC>, LOC> extends UIContai
 
     @Override
     public void add(UIComponent<?>... components) {
-        for (UIComponent c : components) {
-            add(c, findNextLocation());
-        }
+        this.needsLayoutUpdate = true;
+        super.add(components);
     }
 
     @Override
     public void remove(UIComponent<?> component) {
-        LOC loc = this.entries.remove(component);
-        super.remove(component);
-        this.onRemove(component, loc);
         this.needsLayoutUpdate = true;
+        super.remove(component);
     }
 
     @Override
     public void removeAll() {
-        Iterator<BiMap.Entry<UIComponent<?>, LOC>> it = this.entries.entrySet().iterator();
-        while (it.hasNext()) {
-            BiMap.Entry<UIComponent<?>, LOC> e = it.next();
-            it.remove();
-            super.remove(e.getKey());
-            this.onRemove(e.getKey(), e.getValue());
+        for (UIComponent<?> c : new HashSet<>(components)) {
+            remove(c);
         }
     }
 

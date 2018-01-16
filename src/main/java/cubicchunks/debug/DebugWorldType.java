@@ -65,8 +65,8 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
         return CubicChunks.DEBUG_ENABLED;
     }
 
-    public static void create() {
-        new DebugWorldType();
+    public static DebugWorldType create() {
+        return new DebugWorldType();
     }
 
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {

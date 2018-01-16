@@ -34,7 +34,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class UIVerticalTableLayout<T extends UIVerticalTableLayout<T>> extends UILayout<T, UIVerticalTableLayout.GridLocation> {
+public class UIVerticalTableLayout<T extends UIVerticalTableLayout<T>> extends UIStandardLayout<T, UIVerticalTableLayout.GridLocation> {
 
     private final int columns;
 
@@ -57,12 +57,12 @@ public class UIVerticalTableLayout<T extends UIVerticalTableLayout<T>> extends U
         this.columns = columns;
     }
 
-    public UIVerticalTableLayout setInsets(int up, int down, int left, int right) {
+    public T setInsets(int up, int down, int left, int right) {
         this.insetUp = up;
         this.insetDown = down;
         this.insetLeft = left;
         this.insetRight = right;
-        return this;
+        return self();
     }
 
     @Override protected GridLocation findNextLocation() {

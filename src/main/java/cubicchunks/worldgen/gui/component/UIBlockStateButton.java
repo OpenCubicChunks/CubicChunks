@@ -105,7 +105,6 @@ public class UIBlockStateButton<T extends UIBlockStateButton<T>> extends UICompo
     public void drawForeground(GuiRenderer renderer, int mouseX, int mouseY, float partialTick) {
         if (iBlockState != null) {
             RenderHelper.disableStandardItemLighting();
-            RenderHelper.enableGUIStandardItemLighting();
             GlStateManager.enableRescaleNormal();
 
             BufferBuilder vertexbuffer = Tessellator.getInstance().getBuffer();
@@ -137,6 +136,7 @@ public class UIBlockStateButton<T extends UIBlockStateButton<T>> extends UICompo
 
             GlStateManager.disableRescaleNormal();
         }
+        GlStateManager.enableLighting();
     }
 
     @Override

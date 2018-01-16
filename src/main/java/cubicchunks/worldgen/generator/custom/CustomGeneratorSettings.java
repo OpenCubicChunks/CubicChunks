@@ -35,15 +35,20 @@ import static cubicchunks.worldgen.generator.custom.ConversionUtils.frequencyFro
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import cubicchunks.CCFixType;
 import cubicchunks.CubicChunks;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
@@ -56,11 +61,13 @@ import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTUtil;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.datafix.FixTypes;
 import net.minecraft.util.datafix.IFixableData;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.ChunkGeneratorSettings;
 import net.minecraftforge.common.util.ModFixs;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -71,6 +78,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 public class CustomGeneratorSettings {
     /**
@@ -122,81 +131,7 @@ public class CustomGeneratorSettings {
 
     public List<StandardOreConfig> standardOres = new ArrayList<>();
 
-    {
-        standardOres.addAll(Arrays.asList(
-                StandardOreConfig.builder()
-                        .block(Blocks.DIRT.getDefaultState())
-                        .size(33).attempts(10).probability(1f / (256f / Cube.SIZE)).create(),
-                StandardOreConfig.builder()
-                        .block(Blocks.GRAVEL.getDefaultState())
-                        .size(33).attempts(8).probability(1f / (256f / Cube.SIZE)).create(),
-
-                StandardOreConfig.builder()
-                        .block(Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE))
-                        .size(33).attempts(10).probability(256f / 80f / (256f / Cube.SIZE))
-                        .maxHeight((80f - 64f) / 64f).create(),
-                StandardOreConfig.builder()
-                        .block(Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE))
-                        .size(33).attempts(10).probability(256f / 80f / (256f / Cube.SIZE))
-                        .maxHeight((80f - 64f) / 64f).create(),
-                StandardOreConfig.builder()
-                        .block(Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE))
-                        .size(33).attempts(10).probability(256f / 80f / (256f / Cube.SIZE))
-                        .maxHeight((80f - 64f) / 64f).create(),
-
-                StandardOreConfig.builder()
-                        .block(Blocks.COAL_ORE.getDefaultState())
-                        .size(17).attempts(20).probability(256f / 128f / (256f / Cube.SIZE))
-                        .maxHeight(1).create(),
-                StandardOreConfig.builder()
-                        .block(Blocks.IRON_ORE.getDefaultState())
-                        .size(33).attempts(10).probability(256f / 64f / (256f / Cube.SIZE))
-                        .maxHeight(0).create(),
-                StandardOreConfig.builder()
-                        .block(Blocks.GOLD_ORE.getDefaultState())
-                        .size(9).attempts(2).probability(256f / 32f / (256f / Cube.SIZE))
-                        .maxHeight(-0.5f).create(),
-                StandardOreConfig.builder()
-                        .block(Blocks.REDSTONE_ORE.getDefaultState())
-                        .size(8).attempts(8).probability(256f / 16f / (256f / Cube.SIZE))
-                        .maxHeight(-0.75f).create(),
-                StandardOreConfig.builder()
-                        .block(Blocks.DIAMOND_ORE.getDefaultState())
-                        .size(8).attempts(1).probability(256f / 16f / (256f / Cube.SIZE))
-                        .maxHeight(-0.75f).create(),
-
-                StandardOreConfig.builder()
-                        .block(Blocks.EMERALD_ORE.getDefaultState())
-                        .size(1).attempts(11).probability(0.5f * 256f / 28f / (256f / Cube.SIZE))
-                        .maxHeight(0)
-                        .biomes(Biomes.EXTREME_HILLS, Biomes.EXTREME_HILLS_EDGE, Biomes.EXTREME_HILLS_WITH_TREES, Biomes.MUTATED_EXTREME_HILLS,
-                                Biomes.MUTATED_EXTREME_HILLS_WITH_TREES).create(),
-                StandardOreConfig.builder()
-                        .block(Blocks.MONSTER_EGG.getDefaultState().withProperty(BlockSilverfish.VARIANT, BlockSilverfish.EnumType.STONE))
-                        .size(7).attempts(7).probability(256f / 64f / (256f / Cube.SIZE))
-                        .maxHeight(-0.5f)
-                        .biomes(Biomes.EXTREME_HILLS, Biomes.EXTREME_HILLS_EDGE, Biomes.EXTREME_HILLS_WITH_TREES, Biomes.MUTATED_EXTREME_HILLS,
-                                Biomes.MUTATED_EXTREME_HILLS_WITH_TREES).create(),
-                StandardOreConfig.builder()
-                        .block(Blocks.GOLD_ORE.getDefaultState())
-                        .size(20).attempts(2).probability(256f / 32f / (256f / Cube.SIZE))
-                        .minHeight(-0.5f).maxHeight(0.25f)
-                        .biomes(Biomes.MESA, Biomes.MESA_CLEAR_ROCK, Biomes.MESA_ROCK, Biomes.MUTATED_MESA, Biomes.MUTATED_MESA_CLEAR_ROCK,
-                                Biomes.MUTATED_MESA_ROCK).create()
-        ));
-    }
-
-    public List<PeriodicGaussianOreConfig> preiodicGaussianOres = new ArrayList<>();
-
-    {
-        preiodicGaussianOres.addAll(Arrays.asList(
-                PeriodicGaussianOreConfig.builder()
-                        .block(Blocks.DIRT.getDefaultState())
-                        .size(7).attempts(1).probability(0.933307775f) //resulted by approximating triangular behaviour with bell curve
-                        .heightMean(-0.75f/*first belt at=16*/).heightStdDeviation(0.11231704455f/*x64 = 7.1882908513*/).heightSpacing(3.0/*192*/)
-                        .maxHeight(-0.5f).create()
-        ));
-    }
+    public List<PeriodicGaussianOreConfig> periodicGaussianOres = new ArrayList<>();
 
     /**
      * Terrain shape
@@ -251,7 +186,7 @@ public class CustomGeneratorSettings {
     }
 
     public String toJson() {
-        Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
+        Gson gson = gson();
         return gson.toJson(this);
     }
 
@@ -259,12 +194,87 @@ public class CustomGeneratorSettings {
         if (json.isEmpty()) {
             return defaults();
         }
-        Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
+        Gson gson = gson();
         return gson.fromJson(json, CustomGeneratorSettings.class);
     }
 
     public static CustomGeneratorSettings defaults() {
-        return new CustomGeneratorSettings();
+        CustomGeneratorSettings settings = new CustomGeneratorSettings();
+        {
+            settings.standardOres.addAll(Arrays.asList(
+                    StandardOreConfig.builder()
+                            .block(Blocks.DIRT.getDefaultState())
+                            .size(33).attempts(10).probability(1f / (256f / Cube.SIZE)).create(),
+                    StandardOreConfig.builder()
+                            .block(Blocks.GRAVEL.getDefaultState())
+                            .size(33).attempts(8).probability(1f / (256f / Cube.SIZE)).create(),
+
+                    StandardOreConfig.builder()
+                            .block(Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE))
+                            .size(33).attempts(10).probability(256f / 80f / (256f / Cube.SIZE))
+                            .maxHeight((80f - 64f) / 64f).create(),
+                    StandardOreConfig.builder()
+                            .block(Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE))
+                            .size(33).attempts(10).probability(256f / 80f / (256f / Cube.SIZE))
+                            .maxHeight((80f - 64f) / 64f).create(),
+                    StandardOreConfig.builder()
+                            .block(Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE))
+                            .size(33).attempts(10).probability(256f / 80f / (256f / Cube.SIZE))
+                            .maxHeight((80f - 64f) / 64f).create(),
+
+                    StandardOreConfig.builder()
+                            .block(Blocks.COAL_ORE.getDefaultState())
+                            .size(17).attempts(20).probability(256f / 128f / (256f / Cube.SIZE))
+                            .maxHeight(1).create(),
+                    StandardOreConfig.builder()
+                            .block(Blocks.IRON_ORE.getDefaultState())
+                            .size(33).attempts(10).probability(256f / 64f / (256f / Cube.SIZE))
+                            .maxHeight(0).create(),
+                    StandardOreConfig.builder()
+                            .block(Blocks.GOLD_ORE.getDefaultState())
+                            .size(9).attempts(2).probability(256f / 32f / (256f / Cube.SIZE))
+                            .maxHeight(-0.5f).create(),
+                    StandardOreConfig.builder()
+                            .block(Blocks.REDSTONE_ORE.getDefaultState())
+                            .size(8).attempts(8).probability(256f / 16f / (256f / Cube.SIZE))
+                            .maxHeight(-0.75f).create(),
+                    StandardOreConfig.builder()
+                            .block(Blocks.DIAMOND_ORE.getDefaultState())
+                            .size(8).attempts(1).probability(256f / 16f / (256f / Cube.SIZE))
+                            .maxHeight(-0.75f).create(),
+
+                    StandardOreConfig.builder()
+                            .block(Blocks.EMERALD_ORE.getDefaultState())
+                            .size(1).attempts(11).probability(0.5f * 256f / 28f / (256f / Cube.SIZE))
+                            .maxHeight(0)
+                            .biomes(Biomes.EXTREME_HILLS, Biomes.EXTREME_HILLS_EDGE, Biomes.EXTREME_HILLS_WITH_TREES, Biomes.MUTATED_EXTREME_HILLS,
+                                    Biomes.MUTATED_EXTREME_HILLS_WITH_TREES).create(),
+                    StandardOreConfig.builder()
+                            .block(Blocks.MONSTER_EGG.getDefaultState().withProperty(BlockSilverfish.VARIANT, BlockSilverfish.EnumType.STONE))
+                            .size(7).attempts(7).probability(256f / 64f / (256f / Cube.SIZE))
+                            .maxHeight(-0.5f)
+                            .biomes(Biomes.EXTREME_HILLS, Biomes.EXTREME_HILLS_EDGE, Biomes.EXTREME_HILLS_WITH_TREES, Biomes.MUTATED_EXTREME_HILLS,
+                                    Biomes.MUTATED_EXTREME_HILLS_WITH_TREES).create(),
+                    StandardOreConfig.builder()
+                            .block(Blocks.GOLD_ORE.getDefaultState())
+                            .size(20).attempts(2).probability(256f / 32f / (256f / Cube.SIZE))
+                            .minHeight(-0.5f).maxHeight(0.25f)
+                            .biomes(Biomes.MESA, Biomes.MESA_CLEAR_ROCK, Biomes.MESA_ROCK, Biomes.MUTATED_MESA, Biomes.MUTATED_MESA_CLEAR_ROCK,
+                                    Biomes.MUTATED_MESA_ROCK).create()
+            ));
+        }
+
+        {
+            settings.periodicGaussianOres.addAll(Arrays.asList(
+                    PeriodicGaussianOreConfig.builder()
+                            .block(Blocks.LAPIS_ORE.getDefaultState())
+                            .size(7).attempts(1).probability(0.933307775f) //resulted by approximating triangular behaviour with bell curve
+                            .heightMean(-0.75f/*first belt at=16*/).heightStdDeviation(0.11231704455f/*x64 = 7.1882908513*/)
+                            .heightSpacing(3.0f/*192*/)
+                            .maxHeight(-0.5f).create()
+            ));
+        }
+        return settings;
     }
 
     public static CustomGeneratorSettings fromVanilla(ChunkGeneratorSettings settings) {
@@ -314,39 +324,109 @@ public class CustomGeneratorSettings {
     }
 
     public static void registerDataFixers(ModFixs fixes) {
-        fixes.registerFix(FixTypes.LEVEL, new IFixableData() {
+        fixes.registerFix(CCFixType.forWorldType("CustomCubic"), new IFixableData() {
             @Override public int getFixVersion() {
                 return -1;
             }
 
             @Override public NBTTagCompound fixTagCompound(NBTTagCompound compound) {
-                String worldType = compound.getString("generatorName");
-                if (!worldType.equals("CustomCubic")) {
-                    return compound;
-                }
                 String generatorOptions = compound.getString("generatorOptions");
-                Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
-                JsonReader reader = gson.newJsonReader(new StringReader(generatorOptions));
+                Gson gson = gson();
 
-                StringWriter sw = new StringWriter();
-                JsonWriter writer;
-                try {
-                    writer = gson.newJsonWriter(sw);
-                    while (reader.hasNext()) {
-                        // TODO fixer
-                    }
-                } catch (IOException e) {
-                    throw new Error("StringWriter/Reader can't throw IOException", e);
+                JsonReader reader = new JsonReader(new StringReader(generatorOptions));
+                JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
+
+                JsonArray standardOres = new JsonArray();
+                JsonArray periodicGaussianOres = new JsonArray();
+
+                // kind of ugly but I don'twant to make a special class just so store these 3 objects...
+                String[] standard = {
+                        "dirt",
+                        "gravel",
+                        "granite",
+                        "diorite",
+                        "andesite",
+                        "coalOre",
+                        "ironOre",
+                        "goldOre",
+                        "redstoneOre",
+                        "diamondOre",
+                        "hillsEmeraldOre",
+                        "hillsSilverfishStone",
+                        "mesaAddedGoldOre"
+                };
+                IBlockState[] standardBlockstates = {
+                        Blocks.DIRT.getDefaultState(),
+                        Blocks.GRAVEL.getDefaultState(),
+                        Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE),
+                        Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE),
+                        Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE),
+                        Blocks.COAL_ORE.getDefaultState(),
+                        Blocks.IRON_ORE.getDefaultState(),
+                        Blocks.GOLD_ORE.getDefaultState(),
+                        Blocks.REDSTONE_ORE.getDefaultState(),
+                        Blocks.DIAMOND_ORE.getDefaultState(),
+                        Blocks.EMERALD_ORE.getDefaultState(),
+                        Blocks.MONSTER_EGG.getDefaultState().withProperty(BlockSilverfish.VARIANT, BlockSilverfish.EnumType.STONE),
+                        Blocks.GOLD_ORE.getDefaultState()
+                };
+                Biome[][] standardBiomes = {
+                        null, // dirt
+                        null, // gravel
+                        null, // granite
+                        null, // diorite
+                        null, // andesite
+                        null, // coal
+                        null, // iron
+                        null, // gold
+                        null, // redstone
+                        null, // diamond
+                        {Biomes.EXTREME_HILLS, Biomes.EXTREME_HILLS_EDGE, Biomes.EXTREME_HILLS_WITH_TREES, Biomes.MUTATED_EXTREME_HILLS,
+                                Biomes.MUTATED_EXTREME_HILLS_WITH_TREES},//emerald
+                        {Biomes.EXTREME_HILLS, Biomes.EXTREME_HILLS_EDGE, Biomes.EXTREME_HILLS_WITH_TREES, Biomes.MUTATED_EXTREME_HILLS,
+                                Biomes.MUTATED_EXTREME_HILLS_WITH_TREES},//monster egg
+                        {Biomes.MESA, Biomes.MESA_CLEAR_ROCK, Biomes.MESA_ROCK, Biomes.MUTATED_MESA, Biomes.MUTATED_MESA_CLEAR_ROCK,
+                                Biomes.MUTATED_MESA_ROCK},//mesa gold
+                };
+                for (int i = 0; i < standard.length; i++) {
+                    standardOres.add(convertStandardOre(gson, root, standard[i], standardBlockstates[i], standardBiomes[i]));
                 }
-
+                periodicGaussianOres.add(convertGaussianPeriodicOre(gson, root, "lapisLazuli", Blocks.LAPIS_ORE.getDefaultState(), null));
+                root.add("standardOres", standardOres);
+                root.add("periodicGaussianOres", periodicGaussianOres);
+                compound.setString("generatorOptions", gson.toJson(root));
                 return compound;
+            }
+
+            private JsonObject convertStandardOre(Gson gson, JsonObject root, String ore, IBlockState state, Biome[] biomes) {
+                JsonObject obj = new JsonObject();
+                obj.add("blockstate", gson.toJsonTree(state));
+                if (biomes != null) {
+                    obj.add("biomes", gson.toJsonTree(biomes));
+                }
+                obj.add("spawnSize", root.remove(ore + "SpawnSize"));
+                obj.add("spawnTries", root.remove(ore + "SpawnTries"));
+                obj.add("spawnProbability", root.remove(ore + "SpawnProbability"));
+                obj.add("minHeight", root.remove(ore + "SpawnMinHeight"));
+                obj.add("maxHeight", root.remove(ore + "SpawnMaxHeight"));
+                return obj;
+            }
+
+            private JsonObject convertGaussianPeriodicOre(Gson gson, JsonObject root, String ore, IBlockState state, Biome[] biomes) {
+                JsonObject obj = convertStandardOre(gson, root, ore, state, biomes);
+                obj.add("heightMean", root.remove(ore + "HeightMean"));
+                obj.add("heightStdDeviation", root.remove(ore + "HeightStdDeviation"));
+                obj.add("heightSpacing", root.remove(ore + "HeightSpacing"));
+                return obj;
             }
         });
     }
 
     public static Gson gson() {
         return new GsonBuilder().serializeSpecialFloatingPointValues()
-                .registerTypeAdapter(IBlockState.class, new BlockStateSerializer()).create();
+                .registerTypeHierarchyAdapter(IBlockState.class, new BlockStateSerializer())
+                .registerTypeHierarchyAdapter(Biome.class, new BiomeSerializer())
+                .create();
     }
 
     public static class StandardOreConfig {
@@ -415,7 +495,14 @@ public class CustomGeneratorSettings {
                 return this;
             }
 
-            public Builder biomes(Biome... biomes) {
+            /**
+             * If biomes is non-null, adds the biomes to allowed biomes, if it's null - removes biome-specific generation.
+             */
+            public Builder biomes(@Nullable Biome... biomes) {
+                if (biomes == null) {
+                    this.biomes = null;
+                    return this;
+                }
                 if (this.biomes == null) {
                     this.biomes = new HashSet<>();
                 }
@@ -423,6 +510,15 @@ public class CustomGeneratorSettings {
                 return this;
             }
 
+            public Builder fromPeriodic(PeriodicGaussianOreConfig config) {
+                return minHeight(config.minHeight)
+                        .maxHeight(config.maxHeight)
+                        .probability(config.spawnProbability)
+                        .size(config.spawnSize)
+                        .attempts(config.spawnTries)
+                        .block(config.blockstate)
+                        .biomes(config.biomes == null ? null : config.biomes.toArray(new Biome[0]));
+            }
             public StandardOreConfig create() {
                 return new StandardOreConfig(blockstate, biomes, spawnSize, spawnTries, spawnProbability, minHeight, maxHeight);
             }
@@ -435,16 +531,15 @@ public class CustomGeneratorSettings {
         public Set<Biome> biomes = null;
         public int spawnSize;
         public int spawnTries;
-        public double spawnProbability;
-        public double heightMean;
-        public double heightStdDeviation;
-        public double heightSpacing;
-        public double minHeight;
-        public double maxHeight;
+        public float spawnProbability;
+        public float heightMean;
+        public float heightStdDeviation;
+        public float heightSpacing;
+        public float minHeight;
+        public float maxHeight;
 
-        private PeriodicGaussianOreConfig(IBlockState blockstate, Set<Biome> biomes, int spawnSize, int spawnTries, double spawnProbability,
-                double heightMean,
-                double heightStdDeviation, double heightSpacing, double minHeight, double maxHeight) {
+        private PeriodicGaussianOreConfig(IBlockState blockstate, Set<Biome> biomes, int spawnSize, int spawnTries, float spawnProbability,
+                float heightMean, float heightStdDeviation, float heightSpacing, float minHeight, float maxHeight) {
             this.blockstate = blockstate;
             this.biomes = biomes;
             this.spawnSize = spawnSize;
@@ -467,12 +562,12 @@ public class CustomGeneratorSettings {
             private Set<Biome> biomes = null;
             private int spawnSize;
             private int spawnTries;
-            private double spawnProbability;
-            private double heightMean;
-            private double heightStdDeviation;
-            private double heightSpacing;
-            private double minHeight;
-            private double maxHeight;
+            private float spawnProbability;
+            private float heightMean;
+            private float heightStdDeviation;
+            private float heightSpacing;
+            private float minHeight = Float.NEGATIVE_INFINITY;
+            private float maxHeight = Float.POSITIVE_INFINITY;
 
             public Builder block(IBlockState blockstate) {
                 this.blockstate = blockstate;
@@ -489,37 +584,41 @@ public class CustomGeneratorSettings {
                 return this;
             }
 
-            public Builder probability(double spawnProbability) {
+            public Builder probability(float spawnProbability) {
                 this.spawnProbability = spawnProbability;
                 return this;
             }
 
-            public Builder heightMean(double heightMean) {
+            public Builder heightMean(float heightMean) {
                 this.heightMean = heightMean;
                 return this;
             }
 
-            public Builder heightStdDeviation(double heightStdDeviation) {
+            public Builder heightStdDeviation(float heightStdDeviation) {
                 this.heightStdDeviation = heightStdDeviation;
                 return this;
             }
 
-            public Builder heightSpacing(double heightSpacing) {
+            public Builder heightSpacing(float heightSpacing) {
                 this.heightSpacing = heightSpacing;
                 return this;
             }
 
-            public Builder minHeight(double minHeight) {
+            public Builder minHeight(float minHeight) {
                 this.minHeight = minHeight;
                 return this;
             }
 
-            public Builder maxHeight(double maxHeight) {
+            public Builder maxHeight(float maxHeight) {
                 this.maxHeight = maxHeight;
                 return this;
             }
 
             public Builder biomes(Biome... biomes) {
+                if (biomes == null) {
+                    this.biomes = null;
+                    return this;
+                }
                 if (this.biomes == null) {
                     this.biomes = new HashSet<>();
                 }
@@ -527,14 +626,30 @@ public class CustomGeneratorSettings {
                 return this;
             }
 
+            public Builder fromStandard(StandardOreConfig config) {
+                return minHeight(config.minHeight)
+                        .maxHeight(config.maxHeight)
+                        .probability(config.spawnProbability)
+                        .size(config.spawnSize)
+                        .attempts(config.spawnTries)
+                        .block(config.blockstate)
+                        .biomes(config.biomes == null ? null : config.biomes.toArray(new Biome[0]))
+                        .heightMean(0)
+                        .heightStdDeviation(1)
+                        .heightSpacing(2);
+            }
+
             public PeriodicGaussianOreConfig create() {
                 return new PeriodicGaussianOreConfig(blockstate, biomes, spawnSize, spawnTries, spawnProbability, heightMean, heightStdDeviation,
                         heightSpacing, minHeight, maxHeight);
             }
+
         }
     }
 
     private static class BlockStateSerializer implements JsonDeserializer<IBlockState>, JsonSerializer<IBlockState> {
+
+        public static final BlockStateSerializer INSTANCE = new BlockStateSerializer();
 
         @Override public IBlockState deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             String jsonString = json.toString();
@@ -551,9 +666,18 @@ public class CustomGeneratorSettings {
             NBTTagCompound tag = new NBTTagCompound();
             NBTUtil.writeBlockState(tag, src);
             String tagString = tag.toString();
-            Gson gson = new GsonBuilder().create();
-            JsonElement json = gson.toJsonTree(tagString);
-            return json;
+            return new JsonParser().parse(tagString);
+        }
+    }
+
+    private static class BiomeSerializer implements JsonDeserializer<Biome>, JsonSerializer<Biome> {
+
+        @Override public Biome deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            return ForgeRegistries.BIOMES.getValue(new ResourceLocation(json.getAsString()));
+        }
+
+        @Override public JsonElement serialize(Biome src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(src.getRegistryName().toString());
         }
     }
 }

@@ -66,8 +66,8 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
         super("CustomCubic");
     }
 
-    public static void create() {
-        new CustomCubicWorldType();
+    public static CustomCubicWorldType create() {
+        return new CustomCubicWorldType();
     }
 
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {

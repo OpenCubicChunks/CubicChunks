@@ -50,8 +50,8 @@ public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
         super("FlatCubic");
     }
 
-    public static void create() {
-        new FlatCubicWorldType();
+    public static FlatCubicWorldType create() {
+        return new FlatCubicWorldType();
     }
 
     @Override

@@ -42,7 +42,6 @@ import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.component.UISplitLayout;
 import cubicchunks.worldgen.gui.component.UITerrainPreview;
-import cubicchunks.worldgen.gui.component.UIBorderLayout;
 import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
@@ -106,7 +105,7 @@ class AdvancedTerrainShapeTab {
 
         UITerrainPreview terrainPreview = new UITerrainPreview(gui);
         String PERIOD_FMT = " %.2f";
-        UIVerticalTableLayout table = new UIVerticalTableLayout(gui, 6);
+        UIVerticalTableLayout<?> table = new UIVerticalTableLayout(gui, 6);
         table.setPadding(HORIZONTAL_PADDING, 0);
 
         table.setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
@@ -281,7 +280,7 @@ class AdvancedTerrainShapeTab {
                 .setSeparatorSize(4)
                 .setMinimumUserComponentSize(UISplitLayout.Pos.FIRST, 50)
                 .setMinimumUserComponentSize(UISplitLayout.Pos.SECOND, 150)
-                .setUserResizable(true)
+                .userResizable(true)
                 .setSizeOf(UISplitLayout.Pos.SECOND, 150);
 
         previewSplitView.add(preview = new UITerrainPreview(gui).setSize(UIComponent.INHERITED - settingsSize, UIComponent.INHERITED),
@@ -370,7 +369,7 @@ class AdvancedTerrainShapeTab {
                     rootSplit.setMinimumUserComponentSize(UISplitLayout.Pos.FIRST, 64)
                             .setSeparatorSize(4)
                             .setSizeOf(UISplitLayout.Pos.FIRST, 128)
-                            .setUserResizable(true);
+                            .userResizable(true);
                     previewSplitView.setPadding(HORIZONTAL_PADDING + HORIZONTAL_INSETS, 2);
                     rootSplit.add(previewSplitView, UISplitLayout.Pos.FIRST);
                 } else {
@@ -381,7 +380,7 @@ class AdvancedTerrainShapeTab {
                     rootSplit.setMinimumUserComponentSize(UISplitLayout.Pos.FIRST, 0)
                             .setSeparatorSize(0)
                             .setSizeOf(UISplitLayout.Pos.FIRST, 0)
-                            .setUserResizable(false);
+                            .userResizable(false);
                     table.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
                     table.add(previewSplitView, new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, 0, WIDTH_1_COL));
                 }

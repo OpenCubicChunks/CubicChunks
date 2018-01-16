@@ -94,16 +94,16 @@ public abstract class ExtraGui extends MalisisGui {
 
     private void layout(UIComponent<?> comp) {
         // layout() parent twice as re-layout for children may change result for the parent
-        if (comp instanceof UILayout<?, ?>) {
-            ((UILayout<?, ?>) comp).checkLayout();
+        if (comp instanceof UILayout<?>) {
+            ((UILayout<?>) comp).checkLayout();
         }
         if (comp instanceof UIContainer<?>) {
             UIContainer<?> cont = (UIContainer<?>) comp;
             Set<UIComponent<?>> components = ReflectionUtil.getField(cont, componentsField);
             components.forEach(this::layout);
         }
-        if (comp instanceof UILayout<?, ?>) {
-            ((UILayout<?, ?>) comp).checkLayout();
+        if (comp instanceof UILayout<?>) {
+            ((UILayout<?>) comp).checkLayout();
         }
     }
 

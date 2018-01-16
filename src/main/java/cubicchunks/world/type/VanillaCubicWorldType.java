@@ -45,8 +45,8 @@ public class VanillaCubicWorldType extends WorldType implements ICubicWorldType 
         super("VanillaCubic");
     }
 
-    public static void create() {
-        new VanillaCubicWorldType();
+    public static VanillaCubicWorldType create() {
+        return new VanillaCubicWorldType();
     }
 
     @Override public boolean canBeCreated() {
