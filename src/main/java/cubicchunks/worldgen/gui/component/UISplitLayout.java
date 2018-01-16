@@ -192,7 +192,7 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UIStandardLayout<
     }
 
     @Override protected void layout() {
-        boolean shouldResize = getFirst().isVisible() && getSecond().isVisible();
+        boolean shouldResize = getFirst() != null && getFirst().isVisible() && getSecond() != null && getSecond().isVisible();
 
         int sizeFirst = getSizeFirst();
         if (shouldResize && sizeFirst < minSizeFirst) {
@@ -289,10 +289,10 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UIStandardLayout<
 
     private int getSizeFirst() {
         if (!isUserResizable()) {
-            if (!getFirst().isVisible()) {
+            if (getFirst() == null || !getFirst().isVisible()) {
                 return 0;
             }
-            if (!getSecond().isVisible()) {
+            if (getSecond() == null || !getSecond().isVisible()) {
                 return getTotalAvailableSize();
             }
         }
@@ -313,10 +313,10 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UIStandardLayout<
 
     private int getSizeSecond() {
         if (!isUserResizable()) {
-            if (!getSecond().isVisible()) {
+            if (getSecond() == null || !getSecond().isVisible()) {
                 return 0;
             }
-            if (!getFirst().isVisible()) {
+            if (getFirst() == null || !getFirst().isVisible()) {
                 return getTotalAvailableSize();
             }
         }

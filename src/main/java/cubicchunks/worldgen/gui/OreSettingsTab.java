@@ -103,9 +103,10 @@ class OreSettingsTab {
         conf.standardOres.clear();
         conf.periodicGaussianOres.clear();
         for (UIComponent<?> c : componentList) {
+
             if (c instanceof UIPeriodicGaussianOreOptions) {
                 conf.periodicGaussianOres.add(((UIPeriodicGaussianOreOptions) c).toConfig());
-            } else {
+            } else if (c instanceof UIStandardOreOptions) {
                 conf.standardOres.add(((UIStandardOreOptions) c).toConfig());
             }
         }
