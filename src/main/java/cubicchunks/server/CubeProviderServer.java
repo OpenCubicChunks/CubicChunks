@@ -428,7 +428,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         int cubeZ = cube.getZ();
 
         // TODO: redo this part properly. It's broken.
-        
+
         cubeGen.getPopulationRequirement(cube).forEachPoint((x, y, z) -> {
             Cube popcube = getCube(x + cubeX, y + cubeY, z + cubeZ);
             if (!popcube.isPopulated()) {
