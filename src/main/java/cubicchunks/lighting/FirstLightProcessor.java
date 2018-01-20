@@ -150,6 +150,9 @@ public class FirstLightProcessor {
      * @param cube the cube whose skylight is to be initialized
      */
     public void diffuseSkylight(Cube cube) {
+        if (LightingManager.NO_SUNLIGHT_PROPAGATION) {
+            return;
+        }
         if (!cube.getCubicWorld().getProvider().hasSkyLight()) {
             cube.setInitialLightingDone(true);
             return;

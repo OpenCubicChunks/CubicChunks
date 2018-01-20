@@ -58,6 +58,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class LightingManager {
 
+    public static final boolean NO_SUNLIGHT_PROPAGATION = "true".equalsIgnoreCase(System.getProperty("cubicchunks.nosunlight"));
+
     public static final int MAX_CLIENT_LIGHT_SCAN_DEPTH = 64;
     @Nonnull private ICubicWorld world;
     @Nonnull private LightPropagator lightPropagator = new LightPropagator();
@@ -71,6 +73,9 @@ public class LightingManager {
 
     @Nullable
     private LightUpdateTracker getTracker() {
+        if (NO_SUNLIGHT_PROPAGATION) {
+            return null;
+        }
         if (tracker == null) {
             if (!world.isRemote()) {
                 tracker = new LightUpdateTracker((PlayerCubeMap) ((WorldServer) world).getPlayerChunkMap());
@@ -87,6 +92,9 @@ public class LightingManager {
 
     @Nullable
     public CubeLightUpdateInfo createCubeLightUpdateInfo(Cube cube) {
+        if (NO_SUNLIGHT_PROPAGATION) {
+            return null;
+        }
         if (!cube.getCubicWorld().getProvider().hasSkyLight()) {
             return null;
         }
@@ -94,6 +102,9 @@ public class LightingManager {
     }
 
     private void columnSkylightUpdate(UpdateType type, IColumn column, int localX, int minY, int maxY, int localZ) {
+        if (NO_SUNLIGHT_PROPAGATION) {
+            return;
+        }
         if (!world.getProvider().hasSkyLight()) {
             return;
         }
@@ -151,6 +162,9 @@ public class LightingManager {
     }
 
     public void onHeightMapUpdate(IColumn IColumn, int localX, int localZ, int oldHeight, int newHeight) {
+        if (NO_SUNLIGHT_PROPAGATION) {
+            return;
+        }
         int minCubeY = blockToCube(Math.min(oldHeight, newHeight));
         int maxCubeY = blockToCube(Math.max(oldHeight, newHeight));
         IColumn.getLoadedCubes().stream().filter(cube -> cube.getY() >= minCubeY && cube.getY() <= maxCubeY).forEach(cube -> {
@@ -170,6 +184,9 @@ public class LightingManager {
      * changed.
      */
     boolean relightMultiBlock(BlockPos startPos, BlockPos endPos, EnumSkyBlock type, Consumer<BlockPos> notify) {
+        if (NO_SUNLIGHT_PROPAGATION) {
+            return true;
+        }
         // TODO: optimize if needed
         // TODO: Figure out why it crashes with value 17
         final int LOAD_RADIUS = 17;
@@ -209,6 +226,9 @@ public class LightingManager {
         }
 
         public void tick() {
+            if (NO_SUNLIGHT_PROPAGATION) {
+                return;
+            }
             LightUpdateTracker tracker = cube.getCubicWorld().getLightingManager().getTracker();
             for (EnumFacing dir : EnumFacing.values()) {
                 if (cube.edgeNeedSkyLightUpdate[dir.ordinal()]) {
