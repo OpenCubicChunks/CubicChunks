@@ -238,7 +238,7 @@ public class LightingManager {
                             fromBlockY = extendBack ? toBlockY - 1 : toBlockY;
                             break;
                         case NORTH:
-                            fromBlockZ = fromBlockY - 1;
+                            fromBlockZ = fromBlockZ - 1;
                             toBlockZ = extendBack ? fromBlockZ + 1 : fromBlockZ;
                             break;
                         case SOUTH:
