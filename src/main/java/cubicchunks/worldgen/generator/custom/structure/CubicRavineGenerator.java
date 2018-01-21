@@ -31,7 +31,7 @@ import static net.minecraft.util.math.MathHelper.sin;
 
 import cubicchunks.util.CubePos;
 import cubicchunks.util.StructureGenUtil;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
@@ -141,8 +141,8 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
     }
 
     @Override
-    protected void generate(ICubicWorld world, ICubePrimer cube, int structureX, int structureY, int structureZ,
-            CubePos generatedCubePos) {
+    protected void generate(CubicWorld world, ICubePrimer cube, int structureX, int structureY, int structureZ,
+                            CubePos generatedCubePos) {
         if (rand.nextInt(RAVINE_RARITY) != 0 || structureY > MAX_CUBE_Y) {
             return;
         }

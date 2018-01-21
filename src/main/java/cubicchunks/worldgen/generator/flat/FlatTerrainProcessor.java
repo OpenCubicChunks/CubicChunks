@@ -27,7 +27,7 @@ import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.api.worldgen.populator.CubePopulatorEvent;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
@@ -36,7 +36,6 @@ import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.util.Map.Entry;
@@ -54,7 +53,7 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
 
     private final FlatGeneratorSettings conf;
 
-    public FlatTerrainProcessor(ICubicWorld world) {
+    public FlatTerrainProcessor(CubicWorld world) {
         super(world);
         String json = world.getWorldInfo().getGeneratorOptions();
         conf = FlatGeneratorSettings.fromJson(json);

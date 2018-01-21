@@ -375,7 +375,7 @@ public class TestLightPropagator {
     @Test
     public void testNoChanges() {
         int size = 20;
-        ILightBlockAccess access = lightAccess(size).currentHeightsForInitSkyLight().make();
+        LightBlockAccess access = lightAccess(size).currentHeightsForInitSkyLight().make();
         BlockPos center = pos(0, 0, 0);
         Iterable<BlockPos> coordsToUpdate = BlockPos.getAllInBox(center, center);
 
@@ -389,7 +389,7 @@ public class TestLightPropagator {
     @Test
     public void testEmittingLightUpdate() {
         int size = 20;
-        ILightBlockAccess access = lightAccess(size).
+        LightBlockAccess access = lightAccess(size).
                 currentHeightsForInitSkyLight().
                 withFullBlockLight(pos(0, 0, 0)).
                 make();
@@ -472,7 +472,7 @@ public class TestLightPropagator {
     @Test
     public void testEmittingLightUpdateMultipleBlocks() {
         int size = 32;
-        ILightBlockAccess access = lightAccess(size).
+        LightBlockAccess access = lightAccess(size).
                 currentHeightsForInitSkyLight().
                 withFullBlockLight(
                         pos(0, 0, 0),
@@ -496,7 +496,7 @@ public class TestLightPropagator {
     @Test
     public void testSunlightShaftOpen() {
         int size = 20;
-        ILightBlockAccess access = lightAccess(size).
+        LightBlockAccess access = lightAccess(size).
                 withOpaque(posRange(pos(-30, -10, -30), pos(30, -10, 30))).
                 withOpaque(posRange(pos(-30, 10, -30), pos(30, 10, 30))).
                 currentHeightsForInitSkyLight().
@@ -671,7 +671,7 @@ public class TestLightPropagator {
      * }
      * </pre>
      */
-    private void verifyEqual(BlockPos start, ILightBlockAccess access, EnumSkyBlock type, int[/*max-y*/][/*z*/][/*x*/] data) {
+    private void verifyEqual(BlockPos start, LightBlockAccess access, EnumSkyBlock type, int[/*max-y*/][/*z*/][/*x*/] data) {
         BlockPos end = start.add(data[0][0].length - 1, data.length - 1, data[0].length - 1);
         BlockPos.getAllInBox(start, end).forEach(p -> {
             Vec3i diff = p.subtract(start);
@@ -684,7 +684,7 @@ public class TestLightPropagator {
         });
     }
 
-    private void verify(ILightBlockAccess lightAccess, int radius) {
+    private void verify(LightBlockAccess lightAccess, int radius) {
         assertThat(lightAccess, hasCorrectLight(range(radius)));
     }
 

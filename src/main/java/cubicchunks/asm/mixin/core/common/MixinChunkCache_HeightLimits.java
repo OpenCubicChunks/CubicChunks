@@ -23,20 +23,14 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-
-import cubicchunks.asm.MixinUtils;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -56,11 +50,11 @@ public class MixinChunkCache_HeightLimits {
     @ModifyConstant(method = "getBlockState",
             constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO, ordinal = 0))
     private int getBlockState_getMinHeight(int orig) {
-        return ((ICubicWorld) world).getMinHeight();
+        return ((CubicWorld) world).getMinHeight();
     }
 
     @ModifyConstant(method = "getBlockState", constant = @Constant(intValue = 256))
     private int getBlockState_getMaxHeight(int orig) {
-        return ((ICubicWorld) world).getMaxHeight();
+        return ((CubicWorld) world).getMaxHeight();
     }
 }

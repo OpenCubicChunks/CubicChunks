@@ -21,26 +21,25 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world;
+package cubicchunks.world.provider;
 
+import cubicchunks.worldgen.generator.CubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
-
-import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Interface for WorldSettings and WorldInfo allowing to store custom data into the world.
- * The data is will be stored on disk, but will not be sent to client.
- */
-@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public interface ICubicWorldSettings {
+@MethodsReturnNonnullByDefault
+public interface CubicWorldProvider {
 
-    boolean isCubic();
+    /**
+     * Creates a new Cube generator
+     *
+     * @return a new Cube generator
+     */
+    @Nullable
+    CubeGenerator createCubeGenerator();
 
-    void setCubic(boolean cubic);
+    int getOriginalActualHeight();
 }

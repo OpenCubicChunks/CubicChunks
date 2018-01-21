@@ -20,8 +20,7 @@
 package cubicchunks.server.chunkio.async.forge;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 
 import javax.annotation.Nonnull;
@@ -34,9 +33,9 @@ class QueuedColumn {
 
     final int x;
     final int z;
-    @Nonnull final ICubicWorld world;
+    @Nonnull final CubicWorld world;
 
-    QueuedColumn(int x, int z, ICubicWorld world) {
+    QueuedColumn(int x, int z, CubicWorld world) {
         this.x = x;
         this.z = z;
         this.world = world;

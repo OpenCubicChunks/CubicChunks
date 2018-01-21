@@ -25,8 +25,7 @@ package cubicchunks.asm.mixin.fixes.common.worldgen.tree;
 
 import static cubicchunks.asm.JvmNames.MATERIAL_WATER;
 
-import cubicchunks.asm.JvmNames;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.worldgen.generator.custom.populator.PopulatorUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.material.Material;
@@ -39,7 +38,6 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Random;
@@ -70,7 +68,7 @@ public class MixinWorldGenSwamp {
     // return null to make sure it never succeeds for any block when below minPos
     @Redirect(method = "generate", at = @At(value = "FIELD", target = MATERIAL_WATER, ordinal = 0))
     @Nullable private Material getReplaceMaterial_HeightCheckHack(World worldIn, Random rand, BlockPos position) {
-        if (((ICubicWorld) worldIn).isCubicWorld() && position.getY() < minPos) {
+        if (((CubicWorld) worldIn).isCubicWorld() && position.getY() < minPos) {
             return null;
         }
         return Material.WATER;
@@ -81,18 +79,18 @@ public class MixinWorldGenSwamp {
     // the ordinal=0 is boolean flag = true
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 1, ordinal = 1))
     private int getMinGenHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMinHeight() + 1;
+        return ((CubicWorld) worldIn).getMinHeight() + 1;
     }
 
     @ModifyConstant(method = "generate",
                     constant = @Constant(intValue = 0, ordinal = 1,
                                          expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
     private int getMinGenHeightCompareZero(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMinHeight();
+        return ((CubicWorld) worldIn).getMinHeight();
     }
 
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 256))
     private int getMaxGenHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMaxHeight();
+        return ((CubicWorld) worldIn).getMaxHeight();
     }
 }

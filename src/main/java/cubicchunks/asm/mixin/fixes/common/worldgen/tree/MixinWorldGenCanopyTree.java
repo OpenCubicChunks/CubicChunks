@@ -23,11 +23,10 @@
  */
 package cubicchunks.asm.mixin.fixes.common.worldgen.tree;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenBirchTree;
 import net.minecraft.world.gen.feature.WorldGenCanopyTree;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -44,11 +43,11 @@ public class MixinWorldGenCanopyTree {
 
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 1, ordinal = 0))
     private int getMinGenHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMinHeight() + 1;
+        return ((CubicWorld) worldIn).getMinHeight() + 1;
     }
 
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 256, ordinal = 0))
     private int getMaxGenHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMaxHeight();
+        return ((CubicWorld) worldIn).getMaxHeight();
     }
 }

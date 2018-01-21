@@ -24,9 +24,7 @@
 package cubicchunks.world.column;
 
 import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 
@@ -39,14 +37,12 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
-    private final IColumn column;
+    private final Column column;
 
-    public ColumnTileEntityMap(IColumn column) {
+    public ColumnTileEntityMap(Column column) {
         this.column = column;
     }
 

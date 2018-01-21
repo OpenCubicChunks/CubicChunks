@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -41,7 +41,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinDebugRenderChunkBorder {
 
     private boolean isCubicWorld() {
-        return ((ICubicWorld) Minecraft.getMinecraft().world).isCubicWorld();
+        return ((CubicWorld) Minecraft.getMinecraft().world).isCubicWorld();
     }
 
     /**

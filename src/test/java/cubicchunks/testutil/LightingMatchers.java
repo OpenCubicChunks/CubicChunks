@@ -23,7 +23,7 @@
  */
 package cubicchunks.testutil;
 
-import cubicchunks.lighting.ILightBlockAccess;
+import cubicchunks.lighting.LightBlockAccess;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
@@ -35,7 +35,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class LightingMatchers {
 
-    public static Matcher<ILightBlockAccess> hasCorrectLight(StructureBoundingBox range) {
+    public static Matcher<LightBlockAccess> hasCorrectLight(StructureBoundingBox range) {
         return new LightMatcher(range);
     }
 

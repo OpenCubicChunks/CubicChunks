@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.noncritical.client;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.world.World;
@@ -52,7 +52,7 @@ public class MixinViewFrustum_VertViewDistance {
     //this one can fail, there is safe default
     @Inject(method = "setCountChunksXYZ", at = @At(value = "HEAD"))
     private void onSetCountChunks(int renderDistance, CallbackInfo cbi) {
-        if (((ICubicWorld) world).isCubicWorld()) {
+        if (((CubicWorld) world).isCubicWorld()) {
             this.renderDistance = renderDistance * 2 + 1;
         } else {
             this.renderDistance = 16;

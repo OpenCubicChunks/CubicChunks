@@ -23,16 +23,11 @@
  */
 package cubicchunks.worldgen.generator.custom.populator;
 
-import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreUniform;
-
 import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.api.worldgen.populator.ICubicPopulator;
+import cubicchunks.api.worldgen.populator.CubicPopulator;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.init.Blocks;
-import net.minecraft.world.gen.feature.WorldGenMinable;
 
 import java.util.Random;
 
@@ -40,9 +35,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class MesaDecorator implements ICubicPopulator {
+public class MesaDecorator implements CubicPopulator {
 
-    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+    @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         // TODO: less awful way to get generator settings
         /*
         CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());

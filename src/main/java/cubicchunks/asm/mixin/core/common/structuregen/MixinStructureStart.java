@@ -27,10 +27,10 @@ import static cubicchunks.util.Coords.localToBlock;
 
 import com.google.common.base.Preconditions;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
-import cubicchunks.worldgen.generator.custom.structure.feature.ICubicStructureStart;
+import cubicchunks.worldgen.generator.custom.structure.feature.CubicStructureStart;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
@@ -50,7 +50,7 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 @Mixin(StructureStart.class)
-public abstract class MixinStructureStart implements ICubicStructureStart {
+public abstract class MixinStructureStart implements CubicStructureStart {
 
     @Shadow public abstract int getChunkPosX();
 
@@ -106,7 +106,7 @@ public abstract class MixinStructureStart implements ICubicStructureStart {
     @Inject(method = "markAvailableHeight", at = @At("HEAD"), cancellable = true)
     private void markAvailableHeightCubic(World worldIn, @Nullable Random rand, int minDepth, CallbackInfo cbi) {
         if (!this.isCubic) {
-            if (((ICubicWorld) worldIn).isCubicWorld()) {
+            if (((CubicWorld) worldIn).isCubicWorld()) {
                 Preconditions.checkNotNull(rand);
                 this.markAvailableHeightDone = true;
                 this.minDepth = minDepth;

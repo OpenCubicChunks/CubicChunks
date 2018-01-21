@@ -25,12 +25,11 @@ package cubicchunks.world.type;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.util.IntRange;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.provider.ICubicWorldProvider;
-import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.world.provider.CubicWorldProvider;
+import cubicchunks.worldgen.generator.CubeGenerator;
 import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 
@@ -39,7 +38,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class VanillaCubicWorldType extends WorldType implements ICubicWorldType {
+public class VanillaCubicWorldType extends WorldType implements CubicWorldType {
 
     private VanillaCubicWorldType() {
         super("VanillaCubic");
@@ -54,11 +53,11 @@ public class VanillaCubicWorldType extends WorldType implements ICubicWorldType 
     }
 
     @Nullable @Override
-    public ICubeGenerator createCubeGenerator(ICubicWorld world) {
+    public CubeGenerator createCubeGenerator(CubicWorld world) {
         return new VanillaCompatibilityGenerator(world.getProvider().createChunkGenerator(), world);
     }
 
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
-        return new IntRange(0, ((ICubicWorldProvider) world.provider).getOriginalActualHeight());
+        return new IntRange(0, ((CubicWorldProvider) world.provider).getOriginalActualHeight());
     }
 }

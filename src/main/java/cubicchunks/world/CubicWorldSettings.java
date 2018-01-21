@@ -23,48 +23,24 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.IConfigUpdateListener;
-import cubicchunks.entity.CubicEntityTracker;
-import cubicchunks.lighting.FirstLightProcessor;
-import cubicchunks.server.ChunkGc;
-import cubicchunks.server.CubeProviderServer;
-import cubicchunks.server.PlayerCubeMap;
-import cubicchunks.util.IntRange;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@ParametersAreNonnullByDefault
+/**
+ * Interface for WorldSettings and WorldInfo allowing to store custom data into the world.
+ * The data is will be stored on disk, but will not be sent to client.
+ */
 @MethodsReturnNonnullByDefault
-public interface ICubicWorldServer extends ICubicWorld, IConfigUpdateListener {
+@ParametersAreNonnullByDefault
+public interface CubicWorldSettings {
 
-    /**
-     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
-     * are loaded. Cannot be used more than once.
-     * @param heightRange
-     * @param generationRange
-     */
-    void initCubicWorldServer(IntRange heightRange, IntRange generationRange);
+    boolean isCubic();
 
-    CubeProviderServer getCubeCache();
-
-    PlayerCubeMap getPlayerCubeMap();
-
-    FirstLightProcessor getFirstLightProcessor();
-
-    //field accessors
-    boolean getDisableLevelSaving();
-
-    //vanilla methods
-    @Nullable Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
-
-    boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
-
-    CubicEntityTracker getCubicEntityTracker();
-    
-    ChunkGc getChunkGarbageCollector();
+    void setCubic(boolean cubic);
 }

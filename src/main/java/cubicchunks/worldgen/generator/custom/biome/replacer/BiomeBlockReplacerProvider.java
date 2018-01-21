@@ -23,7 +23,7 @@
  */
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -33,23 +33,23 @@ import java.util.Set;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Creates new IBiomeBlockReplacer based on supplied configuration,
+ * Creates new BiomeBlockReplacer based on supplied configuration,
  * and gives information about all supported configuration options for this replacer.
  * <p>
  * Configuration keys are ResourceLocations
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface IBiomeBlockReplacerProvider {
+public interface BiomeBlockReplacerProvider {
 
-    IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf);
+    BiomeBlockReplacer create(CubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf);
 
     Set<ConfigOptionInfo> getPossibleConfigOptions();
 
-    static IBiomeBlockReplacerProvider of(SimpleReplacerProvider supplier) {
-        return new IBiomeBlockReplacerProvider() {
+    static BiomeBlockReplacerProvider of(SimpleReplacerProvider supplier) {
+        return new BiomeBlockReplacerProvider() {
             @Override
-            public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
+            public BiomeBlockReplacer create(CubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
                 return supplier.create(world, biome, conf);
             }
 
@@ -59,13 +59,13 @@ public interface IBiomeBlockReplacerProvider {
         };
     }
 
-    static IBiomeBlockReplacerProvider of(IBiomeBlockReplacer replacer) {
-        return IBiomeBlockReplacerProvider.of((world, biome, conf) -> replacer);
+    static BiomeBlockReplacerProvider of(BiomeBlockReplacer replacer) {
+        return BiomeBlockReplacerProvider.of((world, biome, conf) -> replacer);
     }
 
     @FunctionalInterface
     interface SimpleReplacerProvider {
 
-        IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf);
+        BiomeBlockReplacer create(CubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf);
     }
 }

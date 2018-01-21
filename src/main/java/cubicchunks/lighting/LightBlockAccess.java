@@ -32,7 +32,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public interface ILightBlockAccess {
+public interface LightBlockAccess {
 
     int getBlockLightOpacity(BlockPos pos);
 

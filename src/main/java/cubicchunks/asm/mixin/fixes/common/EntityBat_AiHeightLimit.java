@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.fixes.common;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.passive.EntityAmbientCreature;
 import net.minecraft.entity.passive.EntityBat;
@@ -45,6 +45,6 @@ public class EntityBat_AiHeightLimit extends EntityAmbientCreature {
 
     @ModifyConstant(method = "updateAITasks", constant = @Constant(intValue = 1, ordinal = 0))
     private int updateAITasks_getMinSpawnPositionY(int originalY) {
-        return ((ICubicWorld) this.world).getMinHeight() + originalY;
+        return ((CubicWorld) this.world).getMinHeight() + originalY;
     }
 }

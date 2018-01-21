@@ -36,7 +36,7 @@ import org.junit.Test;
 
 import cubicchunks.testutil.MinecraftEnvironment;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.flat.FlatGeneratorSettings;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
@@ -62,7 +62,7 @@ public class TestFlatTerrainProcessor {
         int checkFromY = -1;
         int checkToY = 1;
         FlatGeneratorSettings fgs = new FlatGeneratorSettings();
-        ICubicWorld world = mock(ICubicWorld.class);
+        CubicWorld world = mock(CubicWorld.class);
         WorldInfo worldInfo = mock(WorldInfo.class);
         when(world.getWorldInfo()).thenReturn(worldInfo);
         

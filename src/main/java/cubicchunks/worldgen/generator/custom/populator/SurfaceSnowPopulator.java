@@ -24,9 +24,9 @@
 package cubicchunks.worldgen.generator.custom.populator;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.api.worldgen.populator.ICubicPopulator;
+import cubicchunks.api.worldgen.populator.CubicPopulator;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.init.Blocks;
@@ -38,9 +38,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SurfaceSnowPopulator implements ICubicPopulator {
+public class SurfaceSnowPopulator implements CubicPopulator {
 
-    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+    @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         for (int dx = 0; dx < Cube.SIZE; ++dx) {
             for (int dz = 0; dz < Cube.SIZE; ++dz) {
                 int xOffset = dx + Cube.SIZE / 2;

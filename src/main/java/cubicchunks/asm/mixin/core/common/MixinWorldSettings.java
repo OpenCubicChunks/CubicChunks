@@ -23,10 +23,8 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.world.ICubicWorldSettings;
+import cubicchunks.world.CubicWorldSettings;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.storage.WorldInfo;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,22 +32,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(WorldSettings.class)
-public class MixinWorldSettings implements ICubicWorldSettings {
+public class MixinWorldSettings implements CubicWorldSettings {
 
     private boolean isCubic;
 
     @Inject(method = "<init>(Lnet/minecraft/world/storage/WorldInfo;)V", at = @At("RETURN"))
     private void onConstruct(WorldInfo info, CallbackInfo cbi) {
-        this.isCubic = ((ICubicWorldSettings) info).isCubic();
+        this.isCubic = ((CubicWorldSettings) info).isCubic();
     }
     
     @Override public boolean isCubic() {

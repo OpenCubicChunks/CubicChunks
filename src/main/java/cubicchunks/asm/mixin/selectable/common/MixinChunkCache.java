@@ -35,10 +35,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubeProvider;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubeProvider;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.type.ICubicWorldType;
+import cubicchunks.world.type.CubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -64,8 +64,8 @@ public class MixinChunkCache {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void initChunkCache(World worldIn, BlockPos posFromIn, BlockPos posToIn, int subIn, CallbackInfo ci) {
-        if (worldIn == null || !((ICubicWorld) worldIn).isCubicWorld()
-                || !(worldIn.getWorldType() instanceof ICubicWorldType)) {
+        if (worldIn == null || !((CubicWorld) worldIn).isCubicWorld()
+                || !(worldIn.getWorldType() instanceof CubicWorldType)) {
             return;
         }
         this.isCubic = true;
@@ -74,7 +74,7 @@ public class MixinChunkCache {
         dx = Math.abs(end.getX() - start.getX()) + 1;
         dy = Math.abs(end.getY() - start.getY()) + 1;
         dz = Math.abs(end.getZ() - start.getZ()) + 1;
-        ICubeProvider prov = (ICubeProvider) worldIn.getChunkProvider();
+        CubeProvider prov = (CubeProvider) worldIn.getChunkProvider();
         this.cubes = new Cube[dx][dy][dz];
         this.originX = Math.min(start.getX(), end.getX());
         this.originY = Math.min(start.getY(), end.getY());

@@ -21,11 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui.component;
+package cubicchunks.world;
 
-public interface IDragTickable {
+import mcp.MethodsReturnNonnullByDefault;
 
-    void onDragTick(int mouseX, int mouseY, float partialTick);
+import javax.annotation.ParametersAreNonnullByDefault;
 
-    ;
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public interface MinMaxHeight {
+    /**
+     * Returns Y position of the bottom block in the world
+     */
+    default int getMinHeight() {
+        return 0;
+    }
+
+    /**
+     * Returns Y position of block above the top block in the world,
+     */
+    default int getMaxHeight() {
+        return 256;
+    }
 }

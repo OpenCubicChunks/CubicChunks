@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
@@ -39,18 +39,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class MixinUtils {
 
     public static boolean canTickPosition(World world, BlockPos pos) {
-        return canTickPosition((ICubicWorld) world, pos);
+        return canTickPosition((CubicWorld) world, pos);
     }
 
     public static boolean canTickPosition(World world, BlockPos pos, Predicate<Cube> canTickCube) {
-        return canTickPosition((ICubicWorld) world, pos, canTickCube);
+        return canTickPosition((CubicWorld) world, pos, canTickCube);
     }
 
-    public static boolean canTickPosition(ICubicWorld world, BlockPos pos) {
+    public static boolean canTickPosition(CubicWorld world, BlockPos pos) {
         return canTickPosition(world, pos, null);
     }
 
-    public static boolean canTickPosition(ICubicWorld world, BlockPos pos, @Nullable Predicate<Cube> canTickCube) {
+    public static boolean canTickPosition(CubicWorld world, BlockPos pos, @Nullable Predicate<Cube> canTickCube) {
         if (!world.isValid(pos)) {
             return true; // can tick everything outside of limits
         }

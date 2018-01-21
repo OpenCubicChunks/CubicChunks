@@ -28,7 +28,7 @@ import cubicchunks.util.XYZAddressable;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import net.minecraft.world.World;
 
-public interface ICubicStructureStart extends XYZAddressable {
+public interface CubicStructureStart extends XYZAddressable {
     int getChunkPosY();
 
     // internal use instead of constructor argument

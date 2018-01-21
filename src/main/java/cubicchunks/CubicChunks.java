@@ -24,14 +24,11 @@
 package cubicchunks;
 
 import static cubicchunks.api.worldgen.biome.CubicBiome.oceanWaterReplacer;
-import static cubicchunks.api.worldgen.biome.CubicBiome.surfaceDefaultReplacer;
 import static cubicchunks.api.worldgen.biome.CubicBiome.terrainShapeReplacer;
 
-import cubicchunks.debug.DebugTools;
 import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
-import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.world.type.CustomCubicWorldType;
 import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
@@ -75,7 +72,6 @@ import net.minecraft.world.biome.BiomeSnow;
 import net.minecraft.world.biome.BiomeStoneBeach;
 import net.minecraft.world.biome.BiomeSwamp;
 import net.minecraft.world.biome.BiomeTaiga;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.ModFixs;
@@ -94,7 +90,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.versioning.ArtifactVersion;
-import net.minecraftforge.fml.common.versioning.ComparableVersion;
 import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
 import net.minecraftforge.fml.common.versioning.InvalidVersionSpecificationException;
 import net.minecraftforge.fml.common.versioning.VersionRange;
@@ -159,7 +154,7 @@ public class CubicChunks {
     private static Config config;
 
     @Nonnull
-    private static Set<IConfigUpdateListener> configChangeListeners = Collections.newSetFromMap(new WeakHashMap<>());
+    private static Set<ConfigUpdateListener> configChangeListeners = Collections.newSetFromMap(new WeakHashMap<>());
 
     @SubscribeEvent
     public static void registerRegistries(RegistryEvent.NewRegistry evt) {
@@ -278,7 +273,7 @@ public class CubicChunks {
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
         if (eventArgs.getModID().equals(CubicChunks.MODID)) {
             config.syncConfig();
-            for (IConfigUpdateListener l : configChangeListeners) {
+            for (ConfigUpdateListener l : configChangeListeners) {
                 l.onConfigUpdate(config);
             }
         }
@@ -340,7 +335,7 @@ public class CubicChunks {
         return new ResourceLocation(MODID, location);
     }
 
-    public static void addConfigChangeListener(IConfigUpdateListener listener) {
+    public static void addConfigChangeListener(ConfigUpdateListener listener) {
         configChangeListeners.add(listener);
         //notify if the config is already there
         if (config != null) {
@@ -392,7 +387,7 @@ public class CubicChunks {
                 value = minValue + (int) ((maxValue - minValue) * sliderValue);
                 config.configuration.get(Configuration.CATEGORY_GENERAL, getNicelyFormattedName(this.name()), value).set(value);
                 config.configuration.save();
-                for (IConfigUpdateListener l : configChangeListeners) {
+                for (ConfigUpdateListener l : configChangeListeners) {
                     l.onConfigUpdate(config);
                 }
             }

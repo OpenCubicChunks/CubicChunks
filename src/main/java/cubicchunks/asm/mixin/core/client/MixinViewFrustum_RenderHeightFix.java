@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -64,7 +64,7 @@ public class MixinViewFrustum_RenderHeightFix {
 
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void updateChunkPositionsInject(double viewEntityX, double viewEntityZ, CallbackInfo cbi) {
-        if (!((ICubicWorld) world).isCubicWorld()) {
+        if (!((CubicWorld) world).isCubicWorld()) {
             return;
         }
         Entity view = Minecraft.getMinecraft().getRenderViewEntity();
@@ -108,7 +108,7 @@ public class MixinViewFrustum_RenderHeightFix {
 
     @Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void getRenderChunkInject(BlockPos pos, CallbackInfoReturnable<RenderChunk> cbi) {
-        if (!((ICubicWorld) world).isCubicWorld()) {
+        if (!((CubicWorld) world).isCubicWorld()) {
             return;
         }
         // treat the y dimension the same as all the rest

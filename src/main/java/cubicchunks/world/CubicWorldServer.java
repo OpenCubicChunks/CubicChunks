@@ -21,21 +21,50 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.util.ticket;
+package cubicchunks.world;
 
+import cubicchunks.ConfigUpdateListener;
+import cubicchunks.entity.CubicEntityTracker;
+import cubicchunks.lighting.FirstLightProcessor;
+import cubicchunks.server.ChunkGc;
+import cubicchunks.server.CubeProviderServer;
+import cubicchunks.server.PlayerCubeMap;
+import cubicchunks.util.IntRange;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.biome.Biome;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface ITicket {
+public interface CubicWorldServer extends CubicWorld, ConfigUpdateListener {
 
     /**
-     * Weather or not a cube with this ticket should tick.
-     * (should blocks update, entities move around, and furnaces cook?)
-     *
-     * @return should cubes with this ticket tick
+     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
+     * are loaded. Cannot be used more than once.
+     * @param heightRange
+     * @param generationRange
      */
-    boolean shouldTick();
+    void initCubicWorldServer(IntRange heightRange, IntRange generationRange);
+
+    CubeProviderServer getCubeCache();
+
+    PlayerCubeMap getPlayerCubeMap();
+
+    FirstLightProcessor getFirstLightProcessor();
+
+    //field accessors
+    boolean getDisableLevelSaving();
+
+    //vanilla methods
+    @Nullable Biome.SpawnListEntry getSpawnListEntryForTypeAt(EnumCreatureType type, BlockPos pos);
+
+    boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
+
+    CubicEntityTracker getCubicEntityTracker();
+    
+    ChunkGc getChunkGarbageCollector();
 }

@@ -26,7 +26,7 @@ package cubicchunks.asm.mixin.core.client;
 import cubicchunks.asm.mixin.core.common.MixinWorld;
 import cubicchunks.client.CubeProviderClient;
 import cubicchunks.util.IntRange;
-import cubicchunks.world.ICubicWorldClient;
+import cubicchunks.world.CubicWorldClient;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
@@ -43,8 +43,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(WorldClient.class)
-@Implements(@Interface(iface = ICubicWorldClient.class, prefix = "world$"))
-public abstract class MixinWorldClient extends MixinWorld implements ICubicWorldClient {
+@Implements(@Interface(iface = CubicWorldClient.class, prefix = "world$"))
+public abstract class MixinWorldClient extends MixinWorld implements CubicWorldClient {
 
     @Shadow private ChunkProviderClient clientChunkProvider;
 

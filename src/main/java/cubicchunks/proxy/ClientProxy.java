@@ -25,10 +25,8 @@ package cubicchunks.proxy;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.client.ClientEventHandler;
-import cubicchunks.util.AddressTools;
 import cubicchunks.util.ReflectionUtil;
-import cubicchunks.world.ICubicWorldSettings;
-import cubicchunks.world.type.ICubicWorldType;
+import cubicchunks.world.CubicWorldSettings;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -61,7 +59,7 @@ public class ClientProxy extends CommonProxy {
 
     @Override public void setBuildLimit(MinecraftServer server) {
         WorldSettings settings = ReflectionUtil.getFieldValueSrg(server, "field_71350_m");//theWorldSettings
-        if (((ICubicWorldSettings) (Object) settings).isCubic()) {
+        if (((CubicWorldSettings) (Object) settings).isCubic()) {
             server.setBuildLimit(CubicChunks.MAX_BLOCK_Y);
         }
     }

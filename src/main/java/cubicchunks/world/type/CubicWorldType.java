@@ -21,24 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.world.provider;
+package cubicchunks.world.type;
 
-import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.util.IntRange;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.worldgen.generator.CubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.WorldServer;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface ICubicWorldProvider {
+public interface CubicWorldType {
 
-    /**
-     * Creates a new Cube generator
-     *
-     * @return a new Cube generator
-     */
-    @Nullable ICubeGenerator createCubeGenerator();
+    // TODO: Make it Nonnull. VanillaCubic uses null
+    @Nullable
+    CubeGenerator createCubeGenerator(CubicWorld world);
 
-    int getOriginalActualHeight();
+    IntRange calculateGenerationHeightRange(WorldServer world);
 }

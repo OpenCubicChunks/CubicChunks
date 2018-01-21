@@ -37,7 +37,6 @@ import net.minecraft.world.storage.WorldInfo;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -45,10 +44,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CubicSaveHandler implements ISaveHandler {
 
-    private ICubicWorldServer world;
+    private CubicWorldServer world;
     private final ISaveHandler originalHandler;
 
-    public CubicSaveHandler(ICubicWorldServer world, ISaveHandler originalHandler) {
+    public CubicSaveHandler(CubicWorldServer world, ISaveHandler originalHandler) {
         this.world = world;
         this.originalHandler = originalHandler;
     }

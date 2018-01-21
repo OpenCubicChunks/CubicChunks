@@ -31,11 +31,11 @@ import static cubicchunks.util.Coords.getCubeCenter;
 
 import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.util.MathUtil;
-import cubicchunks.world.ICubeProvider;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.IHeightMap;
-import cubicchunks.world.column.IColumn;
+import cubicchunks.world.CubeProvider;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.world.CubicWorldServer;
+import cubicchunks.world.SurfaceTracker;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenCustomHashMap;
@@ -95,7 +95,7 @@ public class FirstLightProcessor {
 
     @Nonnull private final MutableBlockPos mutablePos = new MutableBlockPos();
 
-    @Nonnull private final ICubeProvider cache;
+    @Nonnull private final CubeProvider cache;
 
     @Nonnull private final LightPropagator propagator = new LightPropagator();
     @Nonnull private final LightUpdateTracker tracker;
@@ -106,7 +106,7 @@ public class FirstLightProcessor {
      *
      * @param world the world for which the FirstLightProcessor will be used
      */
-    public FirstLightProcessor(ICubicWorldServer world) {
+    public FirstLightProcessor(CubicWorldServer world) {
         this.cache = world.getCubeCache();
         this.tracker = new LightUpdateTracker(world.getPlayerCubeMap());
     }
@@ -124,7 +124,7 @@ public class FirstLightProcessor {
             return;
         }
 
-        IHeightMap opacityIndex = cube.getColumn().getOpacityIndex();
+        SurfaceTracker surfaceTracker = cube.getColumn().getSurfaceTracker();
 
         int cubeMinY = cubeToMinBlock(cube.getY());
 
@@ -134,7 +134,7 @@ public class FirstLightProcessor {
             for (int localZ = 0; localZ < Cube.SIZE; ++localZ) {
                 for (int localY = Cube.SIZE - 1; localY >= 0; --localY) {
 
-                    if (opacityIndex.isOccluded(localX, cubeMinY + localY, localZ)) {
+                    if (surfaceTracker.isOccluded(localX, cubeMinY + localY, localZ)) {
                         break;
                     }
 
@@ -157,7 +157,7 @@ public class FirstLightProcessor {
             cube.setInitialLightingDone(true);
             return;
         }
-        ICubicWorld world = cube.getCubicWorld();
+        CubicWorld world = cube.getCubicWorld();
 
         // Cache min/max Y, generating them may be expensive
         int[][] minBlockYArr = new int[Cube.SIZE][Cube.SIZE];
@@ -192,7 +192,7 @@ public class FirstLightProcessor {
 
         List<BlockPos> toUpdate = new ArrayList<>();
 
-        IColumn IColumn = cube.getColumn();
+        Column IColumn = cube.getColumn();
         // Iterate over all affected cubes.
         Iterable<Cube> cubes = IColumn.getLoadedCubes(blockToCube(maxMaxHeight), blockToCube(minMinHeight));
         for (Cube otherCube : cubes) {
@@ -363,8 +363,8 @@ public class FirstLightProcessor {
      * @return the y-coordinate of the highest occluding block in the specified block column or {@link
      * cubicchunks.util.Coords#NO_HEIGHT} if no such block exists
      */
-    private static int getOcclusionHeight(@Nonnull IColumn IColumn, int localX, int localZ) {
-        return IColumn.getOpacityIndex().getTopBlockY(localX, localZ);
+    private static int getOcclusionHeight(@Nonnull Column IColumn, int localX, int localZ) {
+        return IColumn.getSurfaceTracker().getTopBlockY(localX, localZ);
     }
 
     /**
@@ -380,9 +380,9 @@ public class FirstLightProcessor {
      * @return the y-coordinate of the highest occluding block underneath the given cube in the specified block column
      * or {@link cubicchunks.util.Coords#NO_HEIGHT} if no such block exists
      */
-    private static int getOcclusionHeightBelowCubeY(@Nonnull IColumn IColumn, int blockX, int blockZ, int cubeY) {
-        IHeightMap index = IColumn.getOpacityIndex();
-        return index.getTopBlockYBelow(blockToLocal(blockX), blockToLocal(blockZ), cubeToMinBlock(cubeY));
+    private static int getOcclusionHeightBelowCubeY(@Nonnull Column IColumn, int blockX, int blockZ, int cubeY) {
+        SurfaceTracker surfaceTracker = IColumn.getSurfaceTracker();
+        return surfaceTracker.getTopBlockYBelow(blockToLocal(blockX), blockToLocal(blockZ), cubeToMinBlock(cubeY));
     }
 
     /**
@@ -398,7 +398,7 @@ public class FirstLightProcessor {
     @Nullable
     private static ImmutablePair<Integer, Integer> getMinMaxLightUpdateY(@Nonnull Cube cube, int localX, int localZ) {
 
-        IColumn IColumn = cube.getColumn();
+        Column IColumn = cube.getColumn();
         int heightMax = getOcclusionHeight(IColumn, localX, localZ);//==Y of the top block
 
         // If the given cube is above the highest occluding block in the column, everything is fully lit.

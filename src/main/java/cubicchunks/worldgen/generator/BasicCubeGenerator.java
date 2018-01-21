@@ -24,8 +24,8 @@
 package cubicchunks.worldgen.generator;
 
 import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.IColumn;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
@@ -39,23 +39,23 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * A partial implementation of {@link ICubeGenerator} that handles biome assignment.
+ * A partial implementation of {@link CubeGenerator} that handles biome assignment.
  * <p>
  * Structure recreation and lookup are not supported by default.
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public abstract class BasicCubeGenerator implements ICubeGenerator {
+public abstract class BasicCubeGenerator implements CubeGenerator {
 
-    protected ICubicWorld world;
+    protected CubicWorld world;
     private Biome[] columnBiomes;
 
-    public BasicCubeGenerator(ICubicWorld world) {
+    public BasicCubeGenerator(CubicWorld world) {
         this.world = world;
     }
 
     @Override
-    public void generateColumn(IColumn column) {
+    public void generateColumn(Column column) {
         this.columnBiomes = this.world.getBiomeProvider()
                 .getBiomes(this.columnBiomes,
                         Coords.cubeToMinBlock(column.getX()),
@@ -74,7 +74,7 @@ public abstract class BasicCubeGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void recreateStructures(IColumn column) {
+    public void recreateStructures(Column column) {
     }
 
     @Override

@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.world.IMinMaxHeight;
+import cubicchunks.world.MinMaxHeight;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.IBlockAccess;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,4 +33,4 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(IBlockAccess.class)
-public interface MixinIBlockAccess_MinMaxHeight extends IMinMaxHeight {}
+public interface MixinIBlockAccess_MinMaxHeight extends MinMaxHeight {}

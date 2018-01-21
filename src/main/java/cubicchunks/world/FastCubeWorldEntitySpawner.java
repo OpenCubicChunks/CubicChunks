@@ -61,7 +61,7 @@ public class FastCubeWorldEntitySpawner extends WorldEntitySpawner {
     public int findChunksForSpawning(WorldServer worldOrig, boolean hostileEnable, boolean peacefulEnable, boolean spawnOnSetTickRate) {
         if (!hostileEnable && !peacefulEnable)
             return 0;
-        ICubicWorldServer world = (ICubicWorldServer) worldOrig;
+        CubicWorldServer world = (CubicWorldServer) worldOrig;
         int spawned = 0;
         next_mob_type: for (EnumCreatureType mobType : EnumCreatureType.values()) {
             if (!shouldSpawnType(mobType, hostileEnable, peacefulEnable, spawnOnSetTickRate)) {
@@ -85,7 +85,7 @@ public class FastCubeWorldEntitySpawner extends WorldEntitySpawner {
         return spawned;
     }
 
-    private int spawnCreatureTypeInAllChunks(EnumCreatureType mobType, ICubicWorldServer world) {
+    private int spawnCreatureTypeInAllChunks(EnumCreatureType mobType, CubicWorldServer world) {
         Random rand = world.getRand();
         BlockPos spawnPoint = world.getSpawnPoint();
         int spawned = 0;
@@ -190,8 +190,8 @@ public class FastCubeWorldEntitySpawner extends WorldEntitySpawner {
                 (type.getAnimal() && !spawnOnSetTickRate));
     }
 
-    public static void initialWorldGenSpawn(ICubicWorld world, CubicBiome biome, int blockX, int blockY, int blockZ,
-            int sizeX, int sizeY, int sizeZ, Random random) {
+    public static void initialWorldGenSpawn(CubicWorld world, CubicBiome biome, int blockX, int blockY, int blockZ,
+                                            int sizeX, int sizeY, int sizeZ, Random random) {
         List<Biome.SpawnListEntry> spawnList = biome.getBiome().getSpawnableList(EnumCreatureType.CREATURE);
 
         if (spawnList.isEmpty()) {

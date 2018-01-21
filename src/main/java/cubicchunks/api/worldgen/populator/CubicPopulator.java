@@ -27,7 +27,7 @@ import java.util.Random;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -40,7 +40,7 @@ import net.minecraftforge.fml.common.IWorldGenerator;
  * single time for each generated cube right after terrain and biome specific
  * generators.
  */
-public interface ICubicPopulator extends IWorldGenerator {
+public interface CubicPopulator extends IWorldGenerator {
 
     /**
      * Generate a specific populator feature for a given cube given a biome.
@@ -56,15 +56,15 @@ public interface ICubicPopulator extends IWorldGenerator {
      *
      * You can also use {@link CubePos#randomPopulationPos} to generate random position in population space.
      *
-     * All block access should be done through the provided {@link ICubicWorld} instance.
+     * All block access should be done through the provided {@link CubicWorld} instance.
      *
      * @param random the cube specific {@link Random}.
      * @param pos is the position of the cube being populated {@link BlockPos}.
-     * @param world The {@link ICubicWorld} we're generating for. Casting it to {@link World} is always safe.
+     * @param world The {@link CubicWorld} we're generating for. Casting it to {@link World} is always safe.
      * @param biome The biome the populator is working in.
      *
      */
-    void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome);
+    void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome);
 
     /**
      * Default implementation of vanilla generate method - calls cubic chunks version for all 16 sections.
@@ -75,7 +75,7 @@ public interface ICubicPopulator extends IWorldGenerator {
         for (int y = 0; y <= 16; y++) {
             CubePos pos = new CubePos(chunkX, y, chunkZ);
             CubicBiome biome = CubicBiome.getCubic(world.getBiome(pos.getCenterBlockPos()));
-            generate((ICubicWorld) world, random, pos, biome);
+            generate((CubicWorld) world, random, pos, biome);
         }
     }
 }

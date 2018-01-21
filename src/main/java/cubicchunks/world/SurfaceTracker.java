@@ -32,7 +32,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface IHeightMap {
+public interface SurfaceTracker {
 
     /**
      * Sets the opacity at the given position to the given value.
@@ -86,6 +86,7 @@ public interface IHeightMap {
     // This class exists only because I don't want to introduce many off-by-one errors when modifying height tracking code to store
     // height-above-the-top-block instead of height-of-the-top-block (which is done so that the heightmap array can be shared with vanilla)
     final class HeightMap {
+        
         private int[] data;
 
         public HeightMap(int[] heightmap) {

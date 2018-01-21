@@ -31,7 +31,6 @@ import static java.lang.Math.round;
 import static java.lang.Math.sin;
 
 import com.google.common.collect.Lists;
-import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import net.minecraft.util.math.BlockPos;
@@ -133,7 +132,7 @@ public class CubicStrongholdGenerator extends CubicFeatureGenerator {
         StructureStart start;
         do {
             start = new MapGenStronghold.Start((World) this.world, this.rand, chunkX, chunkZ);
-            ((ICubicStructureStart) start).initCubic((World) world, conf, chunkY);
+            ((CubicStructureStart) start).initCubic((World) world, conf, chunkY);
         } while (start.getComponents().isEmpty() || ((StructureStrongholdPieces.Stairs2) start.getComponents().get(0)).strongholdPortalRoom == null);
         return start;
     }
@@ -149,7 +148,7 @@ public class CubicStrongholdGenerator extends CubicFeatureGenerator {
         this.initializeStructureData((World) this.world);
         {
             int i = 0;
-            for (ICubicStructureStart start : this.structureMap) {
+            for (CubicStructureStart start : this.structureMap) {
                 if (i >= this.structureCoords.length) {
                     break;
                 }
