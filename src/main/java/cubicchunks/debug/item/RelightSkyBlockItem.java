@@ -29,6 +29,7 @@ import cubicchunks.network.PacketDispatcher;
 import cubicchunks.util.CubePos;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
@@ -61,20 +62,18 @@ public class RelightSkyBlockItem extends ItemRegistered {
         if (!world.isCubicWorld() || world.isRemote()) {
             return EnumActionResult.PASS;
         }
+        ICubicWorldServer sworld = (ICubicWorldServer) worldIn;
+        
         //serverside
         BlockPos placePos = pos.offset(faceHit);
-        if (world.checkLightFor(EnumSkyBlock.SKY, placePos)) {
-            playerIn.sendMessage(new TextComponentString("Successfully updated lighting at " + placePos));
-            CubePos cubePos = CubePos.fromBlockCoords(placePos);
-            ICubeProvider cubeCache = world.getCubeCache();
-            //re-send them to player
-            List<Cube> cubes = new ArrayList<>();
-            cubePos.forEachWithinRange(1, (p) -> cubes.add(cubeCache.getCube(p)));
-            PacketDispatcher.sendTo(new PacketCubes(cubes), (EntityPlayerMP) playerIn);
-        } else {
-            playerIn.sendMessage(new TextComponentString("Updating light at at " + placePos + " failed."));
-        }
-
+        sworld.getFirstLightProcessor().debugMode=true;
+        Cube cube = sworld.getCubeFromBlockCoords(placePos);
+        sworld.getFirstLightProcessor().diffuseSkylight(cube);
+        sworld.getFirstLightProcessor().debugMode=false;
+        playerIn.sendMessage(new TextComponentString("Successfully updated lighting at " + placePos));
+        List<Cube> cubes = new ArrayList<Cube>();
+        cubes.add(cube);
+        PacketDispatcher.sendTo(new PacketCubes(cubes), (EntityPlayerMP) playerIn);
         return EnumActionResult.PASS;
     }
 }
