@@ -54,13 +54,13 @@ uniform vec2 highFreq;
 uniform int highOctaves;
 
 // a helpful macro to avoid repeating code
-#define NOISE(pos, var) valFactor = 1;\
+#define NOISE(pos, var) valFactor = 1.0;\
     for (int i = 0; i < MAX_OCTAVES; i++) {\
         float val = texture2D(perlin, pos).var * 2 - 1;\
         if (i < octaves.var) {\
             ret.var += val * valFactor;\
         }\
-        pos *= 2;\
+        pos *= 2.0;\
         valFactor *= 0.5;\
     }
 
@@ -75,8 +75,8 @@ vec4 getNoise(vec2 pos, vec2 freqSel, vec2 freqLow, vec2 freqHigh, vec2 freqDept
     vec2 pHigh = posBase * freqHigh;
     vec2 pDepth = posBase * freqDepth;
 
-    vec4 ret = vec4(0);
-    vec4 maxVal = vec4(2) - pow(vec4(0.5), vec4(octaves) - vec4(1));
+    vec4 ret = vec4(0.0);
+    vec4 maxVal = vec4(2.0) - pow(vec4(0.5), vec4(octaves) - vec4(1.0));
 
     float valFactor;
 
@@ -107,9 +107,9 @@ vec2 interpBiomeData(float blockPos) {
     return (BIOME_WEIGHT_2*(v_2+v2) + BIOME_WEIGHT_1*(v_1+v1) + BIOME_WEIGHT_0*v0)*BIOME_WEIGHTS_INV;
 }
 float depthTransform(float d) {
-    d *= (d < 0) ? -0.9 : 3;
-    d -= 2;
-    d *= (d < 0) ? 5/28.0 : 0.125;
+    d *= (d < 0.0) ? -0.9 : 3.0;
+    d -= 2.0;
+    d *= (d < 0.0) ? 5/28.0 : 0.125;
     return clamp(d, -5/14.0, 0.125) * (0.2 * 17.0 / 64.0);
 }
 float densityRaw(vec2 pos) {
