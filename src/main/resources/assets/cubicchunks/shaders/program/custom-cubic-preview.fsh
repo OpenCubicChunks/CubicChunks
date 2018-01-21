@@ -54,15 +54,8 @@ uniform vec2 highFreq;
 uniform int highOctaves;
 
 // a helpful macro to avoid repeating code
-#define NOISE(pos, var) valFactor = 1.0;\
-    for (int i = 0; i < MAX_OCTAVES; i++) {\
-        float val = texture2D(perlin, pos).var * 2 - 1;\
-        if (i < octaves.var) {\
-            ret.var += val * valFactor;\
-        }\
-        pos *= 2.0;\
-        valFactor *= 0.5;\
-    }
+// can't use line continuation before glsl 1.3 :(
+#define NOISE(pos, var) valFactor = 1.0; for (int i = 0; i < MAX_OCTAVES; i++) { float val = texture2D(perlin, pos).var * 2 - 1; if (i < octaves.var) { ret.var += val * valFactor; } pos *= 2.0; valFactor *= 0.5; }
 
 // pos vector: block position
 // freq: frequencies, x=selector, y=low, z=high, w=depth
