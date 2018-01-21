@@ -434,7 +434,8 @@ fun getModVersion(): String {
         val git = Grgit.open()
         val describe = DescribeOp(git.repository).call()
         val branch = getGitBranch(git)
-        getModVersion(describe, branch);
+        val snapshotSuffix = if (project.hasProperty("doRelease")) "" else "-SNAPSHOT"
+        getModVersion(describe, branch) + snapshotSuffix;
     } catch(ex: RuntimeException) {
         logger.error("Unknown error when accessing git repository! Are you sure the git repository exists?", ex)
         String.format("%s-%s.%s.%s%s%s", getMcVersion(), "9999", "9999", "9999", "", "NOVERSION")
