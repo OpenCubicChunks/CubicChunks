@@ -26,7 +26,7 @@ package cubicchunks.client;
 import static cubicchunks.util.Coords.blockToLocal;
 
 import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -53,9 +53,9 @@ public class RenderCubeCache extends ChunkCache {
     @Nonnull private final ExtendedBlockStorage[][][] cubeArrays;
     @Nonnull private final Map<BlockPos, TileEntity>[][][] tileEntities;
 
-    @Nonnull private final ICubicWorld world;
+    @Nonnull private final CubicWorld world;
 
-    public RenderCubeCache(ICubicWorld world, BlockPos from, BlockPos to, int subtract) {
+    public RenderCubeCache(CubicWorld world, BlockPos from, BlockPos to, int subtract) {
         super((World) world, from, to, subtract);
         this.world = world;
         this.cubeY = Coords.blockToCube(from.getY() - subtract);

@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.util.ticket;
 
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -29,10 +29,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface IConfigUpdateListener {
+public interface Ticket {
 
     /**
-     * Called when config value is changed. This method may be called from any thread.
+     * Weather or not a cube with this ticket should tick.
+     * (should blocks update, entities move around, and furnaces cook?)
+     *
+     * @return should cubes with this ticket tick
      */
-    void onConfigUpdate(CubicChunks.Config config);
+    boolean shouldTick();
 }

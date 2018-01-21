@@ -23,8 +23,8 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.provider.ICubicWorldProvider;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.world.provider.CubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
@@ -39,7 +39,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(WorldProvider.class)
-public abstract class MixinWorldProvider implements ICubicWorldProvider {
+public abstract class MixinWorldProvider implements CubicWorldProvider {
 
     @Shadow protected World world;
 
@@ -60,7 +60,7 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
         }
     }
     
-    private ICubicWorld cubicWorld() {
-        return (ICubicWorld) world;
+    private CubicWorld cubicWorld() {
+        return (CubicWorld) world;
     }
 }

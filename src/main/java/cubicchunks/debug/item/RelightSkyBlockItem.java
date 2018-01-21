@@ -27,8 +27,8 @@ import cubicchunks.debug.ItemRegistered;
 import cubicchunks.network.PacketCubes;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubeProvider;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubeProvider;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
@@ -57,7 +57,7 @@ public class RelightSkyBlockItem extends ItemRegistered {
     @Override
     public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing faceHit, float hitX, float hitY,
             float hitZ) {
-        ICubicWorld world = (ICubicWorld) worldIn;
+        CubicWorld world = (CubicWorld) worldIn;
         if (!world.isCubicWorld() || world.isRemote()) {
             return EnumActionResult.PASS;
         }
@@ -66,7 +66,7 @@ public class RelightSkyBlockItem extends ItemRegistered {
         if (world.checkLightFor(EnumSkyBlock.SKY, placePos)) {
             playerIn.sendMessage(new TextComponentString("Successfully updated lighting at " + placePos));
             CubePos cubePos = CubePos.fromBlockCoords(placePos);
-            ICubeProvider cubeCache = world.getCubeCache();
+            CubeProvider cubeCache = world.getCubeCache();
             //re-send them to player
             List<Cube> cubes = new ArrayList<>();
             cubePos.forEachWithinRange(1, (p) -> cubes.add(cubeCache.getCube(p)));

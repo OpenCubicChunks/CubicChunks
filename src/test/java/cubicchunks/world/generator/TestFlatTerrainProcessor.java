@@ -36,8 +36,8 @@ import org.junit.Test;
 
 import cubicchunks.testutil.MinecraftEnvironment;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.flat.FlatGeneratorSettings;
 import cubicchunks.worldgen.generator.flat.FlatTerrainProcessor;
 import cubicchunks.worldgen.generator.flat.Layer;
@@ -62,7 +62,7 @@ public class TestFlatTerrainProcessor {
         int checkFromY = -1;
         int checkToY = 1;
         FlatGeneratorSettings fgs = new FlatGeneratorSettings();
-        ICubicWorld world = mock(ICubicWorld.class);
+        CubicWorld world = mock(CubicWorld.class);
         WorldInfo worldInfo = mock(WorldInfo.class);
         when(world.getWorldInfo()).thenReturn(worldInfo);
         
@@ -76,10 +76,10 @@ public class TestFlatTerrainProcessor {
         fgs.layers.clear();
         when(worldInfo.getGeneratorOptions()).thenReturn(fgs.toJson());
         ftp = new FlatTerrainProcessor(world);
-        ICubePrimer primer = null;
+        CubePrimer primer = null;
         for (int i = checkFromY; i <= checkToY; i++) {
             primer = ftp.generateCube(0, i, 0);
-            assertEquals(ICubePrimer.DEFAULT_STATE, primer.getBlockState(8, 8, 8));
+            assertEquals(CubePrimer.DEFAULT_STATE, primer.getBlockState(8, 8, 8));
         }
         
         // Single layer in a middle of every cube
@@ -99,7 +99,7 @@ public class TestFlatTerrainProcessor {
         ftp = new FlatTerrainProcessor(world);
         for (int i = checkFromY; i <= checkToY; i++) {
             primer = ftp.generateCube(0, i, 0);
-            assertEquals(ICubePrimer.DEFAULT_STATE, primer.getBlockState(8, 11, 8));
+            assertEquals(CubePrimer.DEFAULT_STATE, primer.getBlockState(8, 11, 8));
         }
     }
 }

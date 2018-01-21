@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.fixes.common.worldgen.tree;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -45,18 +45,18 @@ public class MixinWorldGenTree_BirchSavanna {
     // the ordinal=0 is boolean flag = true
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 1, ordinal = 1))
     private int getMinGenHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMinHeight() + 1;
+        return ((CubicWorld) worldIn).getMinHeight() + 1;
     }
 
     @ModifyConstant(method = "generate",
                     constant = @Constant(intValue = 0, ordinal = 1,
                                          expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
     private int getMinGenHeightCompareZero(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMinHeight();
+        return ((CubicWorld) worldIn).getMinHeight();
     }
 
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 256))
     private int getMaxGenHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMaxHeight();
+        return ((CubicWorld) worldIn).getMaxHeight();
     }
 }

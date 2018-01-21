@@ -42,7 +42,7 @@ import org.lwjgl.input.Mouse;
 
 import java.util.concurrent.TimeUnit;
 
-public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
+public class UIOptionScrollbar extends UIScrollBar implements DragTickable {
 
     private final CooldownTimer timer = new CooldownTimer(1000 / 20, TimeUnit.MILLISECONDS);
 

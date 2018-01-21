@@ -23,11 +23,9 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import static cubicchunks.asm.JvmNames.CHUNK_SET_CHUNK_MODIFIED;
-
-import cubicchunks.server.ICubicPlayerList;
+import cubicchunks.server.CubicPlayerList;
 import cubicchunks.server.PlayerCubeMap;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -45,7 +43,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(PlayerList.class)
-public abstract class MixinPlayerList implements ICubicPlayerList {
+public abstract class MixinPlayerList implements CubicPlayerList {
 
     @Shadow private int viewDistance;
 
@@ -57,8 +55,8 @@ public abstract class MixinPlayerList implements ICubicPlayerList {
             require = 1)
     private void setChunkModifiedOnPlayerLoggedOut(Chunk chunkIn, EntityPlayerMP playerIn) {
         WorldServer worldserver = playerIn.getServerWorld();
-        if (((ICubicWorld) worldserver).isCubicWorld()) {
-            ((ICubicWorld) worldserver).getCubeFromCubeCoords(playerIn.chunkCoordX, playerIn.chunkCoordY, playerIn.chunkCoordZ).markDirty();
+        if (((CubicWorld) worldserver).isCubicWorld()) {
+            ((CubicWorld) worldserver).getCubeFromCubeCoords(playerIn.chunkCoordX, playerIn.chunkCoordY, playerIn.chunkCoordZ).markDirty();
         } else {
             worldserver.getChunkFromChunkCoords(playerIn.chunkCoordX, playerIn.chunkCoordZ).markDirty();
         }
@@ -77,7 +75,7 @@ public abstract class MixinPlayerList implements ICubicPlayerList {
 
         if (this.mcServer.worlds != null) {
             for (WorldServer worldserver : this.mcServer.worlds) {
-                if (worldserver != null && ((ICubicWorld) worldserver).isCubicWorld()) {
+                if (worldserver != null && ((CubicWorld) worldserver).isCubicWorld()) {
                     ((PlayerCubeMap) worldserver.getPlayerChunkMap()).setPlayerViewDistance(viewDistance, dist);
                     // TODO: entity tracker vertical view distance
                     // worldserver.getEntityTracker().setViewDistance(dist);

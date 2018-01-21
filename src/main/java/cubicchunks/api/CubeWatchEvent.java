@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 
 import cubicchunks.server.CubeWatcher;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.common.MinecraftForge;
@@ -70,8 +70,8 @@ public class CubeWatchEvent extends Event {
         return cubeWatcher;
     }
 
-    public ICubicWorld getWorld() {
-        return (ICubicWorld) player.world;
+    public CubicWorld getWorld() {
+        return (CubicWorld) player.world;
     }
     
     public EntityPlayerMP getPlayer() {

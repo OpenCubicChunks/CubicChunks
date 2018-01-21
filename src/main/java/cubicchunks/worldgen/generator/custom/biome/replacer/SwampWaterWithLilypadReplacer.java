@@ -36,7 +36,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SwampWaterWithLilypadReplacer implements IBiomeBlockReplacer {
+public class SwampWaterWithLilypadReplacer implements BiomeBlockReplacer {
 
     private static final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
 
@@ -64,8 +64,8 @@ public class SwampWaterWithLilypadReplacer implements IBiomeBlockReplacer {
         return previousBlock;
     }
 
-    public static IBiomeBlockReplacerProvider provider() {
-        return IBiomeBlockReplacerProvider.of((world, biome, conf) ->
+    public static BiomeBlockReplacerProvider provider() {
+        return BiomeBlockReplacerProvider.of((world, biome, conf) ->
                 new SwampWaterWithLilypadReplacer(Biome.GRASS_COLOR_NOISE, MathHelper.floor(conf.getDouble(OCEAN_LEVEL)))
         );
     }

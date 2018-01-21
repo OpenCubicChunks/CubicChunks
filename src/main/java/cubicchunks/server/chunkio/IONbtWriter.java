@@ -28,8 +28,8 @@ import static cubicchunks.util.WorldServerAccess.getPendingTickListEntriesThisTi
 
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ServerHeightMap;
-import cubicchunks.world.column.IColumn;
+import cubicchunks.world.ServerSurfaceTracker;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -66,7 +66,7 @@ class IONbtWriter {
         return buf.toByteArray();
     }
 
-    static NBTTagCompound write(IColumn column) {
+    static NBTTagCompound write(Column column) {
         NBTTagCompound columnNbt = new NBTTagCompound();
         NBTTagCompound level = new NBTTagCompound();
         columnNbt.setTag("Level", level);
@@ -95,7 +95,7 @@ class IONbtWriter {
         return cubeNbt;
     }
 
-    private static void writeBaseColumn(IColumn column, NBTTagCompound nbt) {// coords
+    private static void writeBaseColumn(Column column, NBTTagCompound nbt) {// coords
         nbt.setInteger("x", column.getX());
         nbt.setInteger("z", column.getZ());
 
@@ -104,12 +104,12 @@ class IONbtWriter {
         nbt.setLong("InhabitedTime", column.getInhabitedTime());
     }
 
-    private static void writeBiomes(IColumn column, NBTTagCompound nbt) {// biomes
+    private static void writeBiomes(Column column, NBTTagCompound nbt) {// biomes
         nbt.setByteArray("Biomes", column.getBiomeArray());
     }
 
-    private static void writeOpacityIndex(IColumn IColumn, NBTTagCompound nbt) {// light index
-        nbt.setByteArray("OpacityIndex", ((ServerHeightMap) IColumn.getOpacityIndex()).getData());
+    private static void writeOpacityIndex(Column IColumn, NBTTagCompound nbt) {// light index
+        nbt.setByteArray("OpacityIndex", ((ServerSurfaceTracker) IColumn.getSurfaceTracker()).getData());
     }
 
     private static void writeBaseCube(Cube cube, NBTTagCompound cubeNbt) {

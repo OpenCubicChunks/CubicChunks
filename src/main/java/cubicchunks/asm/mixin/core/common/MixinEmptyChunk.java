@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -48,7 +48,7 @@ public abstract class MixinEmptyChunk extends MixinChunk_Column {
 
     @Inject(method = "<init>", at = @At(value = "RETURN"))
     private void cubicChunkColumn_construct(World worldIn, int x, int z, CallbackInfo cbi) {
-        if (((ICubicWorld) worldIn).isCubicWorld()) {
+        if (((CubicWorld) worldIn).isCubicWorld()) {
             blankCube = new BlankCube(this);
         }
     }

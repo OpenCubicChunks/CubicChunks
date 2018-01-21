@@ -23,14 +23,10 @@
  */
 package cubicchunks.asm.mixin.noncritical.client;
 
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
-
-import cubicchunks.asm.MixinUtils;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiOverlayDebug;
-import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -38,7 +34,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -66,7 +61,7 @@ public class MixinGuiOverlayDebug {
                     to = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;isEmpty()Z")
             ))
     private int getMinWorldHeight(int orig) {
-        return ((ICubicWorld) mc.world).getMinHeight();
+        return ((CubicWorld) mc.world).getMinHeight();
     }
 
     // slice not exactly necessary here, but this is a long method that could change, so keep the slice
@@ -80,6 +75,6 @@ public class MixinGuiOverlayDebug {
                     to = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;isEmpty()Z")
             ))
     private int getMaxWorldHeight(int orig) {
-        return ((ICubicWorld) mc.world).getMaxHeight();
+        return ((CubicWorld) mc.world).getMaxHeight();
     }
 }

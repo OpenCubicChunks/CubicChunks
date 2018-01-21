@@ -71,7 +71,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
         if (!hostileEnable && !peacefulEnable) {
             return 0;
         }
-        ICubicWorldServer world = (ICubicWorldServer) worldOrig;
+        CubicWorldServer world = (CubicWorldServer) worldOrig;
         this.cubesForSpawn.clear();
 
         int chunkCount = addEligibleChunks(world, this.cubesForSpawn);
@@ -93,7 +93,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
         return totalSpawnCount;
     }
 
-    private int addEligibleChunks(ICubicWorldServer world, Set<CubePos> possibleChunks) {
+    private int addEligibleChunks(CubicWorldServer world, Set<CubePos> possibleChunks) {
         int chunkCount = 0;
 
         for (EntityPlayer player : world.getPlayerEntities()) {
@@ -130,7 +130,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
         return chunkCount;
     }
 
-    private int spawnCreatureTypeInAllChunks(EnumCreatureType mobType, ICubicWorldServer world, ArrayList<CubePos> chunkList) {
+    private int spawnCreatureTypeInAllChunks(EnumCreatureType mobType, CubicWorldServer world, ArrayList<CubePos> chunkList) {
         BlockPos spawnPoint = world.getSpawnPoint();
         BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 
@@ -241,7 +241,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
                 (type.getAnimal() && !spawnOnSetTickRate));
     }
 
-    private static BlockPos getRandomChunkPosition(ICubicWorldServer world, CubePos pos) {
+    private static BlockPos getRandomChunkPosition(CubicWorldServer world, CubePos pos) {
         int blockX = pos.getMinBlockX() + world.getRand().nextInt(Cube.SIZE);
         int blockZ = pos.getMinBlockZ() + world.getRand().nextInt(Cube.SIZE);
 
@@ -253,8 +253,8 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
         return new BlockPos(blockX, blockY, blockZ);
     }
 
-    public static void initialWorldGenSpawn(ICubicWorld world, CubicBiome biome, int blockX, int blockY, int blockZ,
-            int sizeX, int sizeY, int sizeZ, Random random) {
+    public static void initialWorldGenSpawn(CubicWorld world, CubicBiome biome, int blockX, int blockY, int blockZ,
+                                            int sizeX, int sizeY, int sizeZ, Random random) {
         List<Biome.SpawnListEntry> spawnList = biome.getBiome().getSpawnableList(EnumCreatureType.CREATURE);
 
         if (spawnList.isEmpty()) {

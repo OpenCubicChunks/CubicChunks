@@ -26,9 +26,9 @@ package cubicchunks.worldgen.generator.custom.populator;
 import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.getSurfaceForCube;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.api.worldgen.populator.ICubicPopulator;
+import cubicchunks.api.worldgen.populator.CubicPopulator;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
@@ -41,9 +41,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class JungleDecorator implements ICubicPopulator {
+public class JungleDecorator implements CubicPopulator {
 
-    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+    @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         // BiomeJungle also uses WorldGenVines but it doesn't really do anything
 
         // see red mushroom generator in DefaultDecorator for explanation of that 10

@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.fixes.common.worldgen;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -43,7 +43,7 @@ public class MixinWorldGenDoublePlants {
 
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 254))
     private int getMaxGenHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMaxHeight() - 2;
+        return ((CubicWorld) worldIn).getMaxHeight() - 2;
     }
 
 }

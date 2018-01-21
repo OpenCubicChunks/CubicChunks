@@ -21,11 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui.component;
+package cubicchunks.world.type;
 
-public interface IDragTickable {
+import cubicchunks.util.IntRange;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.worldgen.generator.CubeGenerator;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.WorldServer;
 
-    void onDragTick(int mouseX, int mouseY, float partialTick);
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-    ;
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public interface CubicWorldType {
+
+    // TODO: Make it Nonnull. VanillaCubic uses null
+    @Nullable
+    CubeGenerator createCubeGenerator(CubicWorld world);
+
+    IntRange calculateGenerationHeightRange(WorldServer world);
 }

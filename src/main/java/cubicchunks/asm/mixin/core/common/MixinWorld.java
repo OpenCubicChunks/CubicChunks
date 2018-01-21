@@ -29,12 +29,11 @@ import static cubicchunks.util.Coords.blockToLocal;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.IntRange;
-import cubicchunks.world.ICubeProvider;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldSettings;
+import cubicchunks.world.CubeProvider;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.world.CubicWorldSettings;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.ICubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -79,13 +78,13 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Contains implementation of {@link ICubicWorld} interface.
+ * Contains implementation of {@link CubicWorld} interface.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(World.class)
-@Implements(@Interface(iface = ICubicWorld.class, prefix = "world$"))
-public abstract class MixinWorld implements ICubicWorld {
+@Implements(@Interface(iface = CubicWorld.class, prefix = "world$"))
+public abstract class MixinWorld implements CubicWorld {
 
     @Shadow protected IChunkProvider chunkProvider;
     @Shadow @Final @Mutable public WorldProvider provider;
@@ -105,7 +104,7 @@ public abstract class MixinWorld implements ICubicWorld {
     private int minGenerationHeight = 0, maxGenerationHeight = 256;
 
     protected void initCubicWorld(IntRange heightRange, IntRange generationRange) {
-        ((ICubicWorldSettings) worldInfo).setCubic(true);
+        ((CubicWorldSettings) worldInfo).setCubic(true);
         // Set the world height boundaries to their highest and lowest values respectively
         this.minHeight = heightRange.getMin();
         this.maxHeight = heightRange.getMax();
@@ -137,11 +136,11 @@ public abstract class MixinWorld implements ICubicWorld {
         return this.maxGenerationHeight;
     }
 
-    @Override public ICubeProvider getCubeCache() {
+    @Override public CubeProvider getCubeCache() {
         if (!this.isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
-        return (ICubeProvider) this.chunkProvider;
+        return (CubeProvider) this.chunkProvider;
     }
 
     @Override public LightingManager getLightingManager() {

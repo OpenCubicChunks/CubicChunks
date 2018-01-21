@@ -28,7 +28,7 @@ import static cubicchunks.asm.JvmNames.COMMAND_TP_GET_ENTITY;
 import static net.minecraft.command.CommandBase.getCommandSenderAsPlayer;
 import static net.minecraft.command.CommandBase.getEntity;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandTP;
@@ -52,13 +52,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(CommandTP.class)
 public class MixinCommandTP {
 
-    @Nullable private WeakReference<ICubicWorld> commandWorld;
+    @Nullable private WeakReference<CubicWorld> commandWorld;
 
     @Inject(method = "execute",
             at = @At(value = "INVOKE", target = COMMAND_TP_GET_ENTITY, ordinal = 0))
     private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
         try {
-            commandWorld = new WeakReference<>((ICubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
+            commandWorld = new WeakReference<>((CubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
         } catch (CommandException e) {
             commandWorld = null;
         }
@@ -68,7 +68,7 @@ public class MixinCommandTP {
             at = @At(value = "INVOKE", target = COMMAND_TP_GET_COMMAND_SENDER_AS_PLAYER, ordinal = 0))
     private void postGetEntityPlayerInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
         try {
-            commandWorld = new WeakReference<>((ICubicWorld) getCommandSenderAsPlayer(sender).getEntityWorld());
+            commandWorld = new WeakReference<>((CubicWorld) getCommandSenderAsPlayer(sender).getEntityWorld());
         } catch (PlayerNotFoundException e) {
             commandWorld = null;
         }
@@ -79,7 +79,7 @@ public class MixinCommandTP {
         if (commandWorld == null) {
             return orig;
         }
-        ICubicWorld world = commandWorld.get();
+        CubicWorld world = commandWorld.get();
         if (world == null) {
             return orig;
         }
@@ -91,7 +91,7 @@ public class MixinCommandTP {
         if (commandWorld == null) {
             return orig;
         }
-        ICubicWorld world = commandWorld.get();
+        CubicWorld world = commandWorld.get();
         if (world == null) {
             return orig;
         }

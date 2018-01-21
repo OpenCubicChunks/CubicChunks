@@ -25,22 +25,20 @@ package cubicchunks.api.worldgen.biome;
 
 import com.google.common.base.Preconditions;
 import cubicchunks.CubicChunks;
+import cubicchunks.api.worldgen.populator.CubicPopulator;
 import cubicchunks.api.worldgen.populator.CubicPopulatorList;
-import cubicchunks.api.worldgen.populator.ICubicPopulator;
-import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacerProvider;
+import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerProvider;
 import cubicchunks.worldgen.generator.custom.biome.replacer.OceanWaterReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.SurfaceDefaultReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.TerrainShapeReplacer;
 import cubicchunks.worldgen.generator.custom.populator.AnimalsPopulator;
 import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
 import cubicchunks.worldgen.generator.custom.populator.PrePopulator;
-import cubicchunks.worldgen.generator.custom.populator.SnowBiomeDecorator;
 import cubicchunks.worldgen.generator.custom.populator.SurfaceSnowPopulator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 import net.minecraftforge.registries.RegistryBuilder;
@@ -63,14 +61,14 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
     private static boolean isPostInit = false;
 
     private final Biome originalBiome;
-    private final List<IBiomeBlockReplacerProvider> blockReplacers = new ArrayList<>();
-    private ICubicPopulator decorator;
+    private final List<BiomeBlockReplacerProvider> blockReplacers = new ArrayList<>();
+    private CubicPopulator decorator;
 
-    public Iterable<IBiomeBlockReplacerProvider> getReplacerProviders() {
+    public Iterable<BiomeBlockReplacerProvider> getReplacerProviders() {
         return Collections.unmodifiableList(blockReplacers);
     }
 
-    public ICubicPopulator getDecorator() {
+    public CubicPopulator getDecorator() {
         return decorator;
     }
 
@@ -161,15 +159,15 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
         return biomeMapping.get(vanillaBiome);
     }
 
-    public static IBiomeBlockReplacerProvider terrainShapeReplacer() {
-        return IBiomeBlockReplacerProvider.of(new TerrainShapeReplacer());
+    public static BiomeBlockReplacerProvider terrainShapeReplacer() {
+        return BiomeBlockReplacerProvider.of(new TerrainShapeReplacer());
     }
 
-    public static IBiomeBlockReplacerProvider oceanWaterReplacer() {
+    public static BiomeBlockReplacerProvider oceanWaterReplacer() {
         return OceanWaterReplacer.provider();
     }
 
-    public static IBiomeBlockReplacerProvider surfaceDefaultReplacer() {
+    public static BiomeBlockReplacerProvider surfaceDefaultReplacer() {
         return SurfaceDefaultReplacer.provider();
     }
 
@@ -180,7 +178,7 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
     public static class Builder {
 
         private final Biome biome;
-        private List<IBiomeBlockReplacerProvider> blockReplacers = new ArrayList<>();
+        private List<BiomeBlockReplacerProvider> blockReplacers = new ArrayList<>();
         private ResourceLocation registryName;
         private final CubicPopulatorList decorators = new CubicPopulatorList();
 
@@ -199,7 +197,7 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
                     .addBlockReplacer(oceanWaterReplacer());
         }
 
-        public Builder addBlockReplacer(IBiomeBlockReplacerProvider provider) {
+        public Builder addBlockReplacer(BiomeBlockReplacerProvider provider) {
             Preconditions.checkNotNull(provider);
             this.blockReplacers.add(provider);
             return this;
@@ -218,7 +216,7 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
             return this;
         }
 
-        public Builder decorator(ICubicPopulator decorator) {
+        public Builder decorator(CubicPopulator decorator) {
             this.decorators.add(decorator);
             return this;
         }

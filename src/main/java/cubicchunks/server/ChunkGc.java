@@ -25,15 +25,14 @@ package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.CubicChunks.Config;
-import cubicchunks.IConfigUpdateListener;
-import cubicchunks.world.column.IColumn;
+import cubicchunks.ConfigUpdateListener;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
 import java.util.Collection;
 import java.util.Iterator;
 
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -41,7 +40,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class ChunkGc implements IConfigUpdateListener {
+public class ChunkGc implements ConfigUpdateListener {
 
     private final CubeProviderServer cubeCache;
 
@@ -69,8 +68,8 @@ public class ChunkGc implements IConfigUpdateListener {
         Iterator<Cube> cubeIt = cubeCache.cubesIterator();
         while (cubeIt.hasNext()) {
             Cube cube = cubeIt.next();
-            IColumn cubeCol = cube.getColumn();
-            IColumn storedCol = cubeCache.getLoadedColumn(cube.getX(), cube.getZ());
+            Column cubeCol = cube.getColumn();
+            Column storedCol = cubeCache.getLoadedColumn(cube.getX(), cube.getZ());
             if (storedCol == null) {
                 throw new RuntimeException("Cube with no stored column!");
             }
@@ -79,10 +78,10 @@ public class ChunkGc implements IConfigUpdateListener {
             }
         }
 
-        Iterator<IColumn> columnIt = cubeCache.columnsIterator();
+        Iterator<Column> columnIt = cubeCache.columnsIterator();
         int totalCubes = 0;
         while (columnIt.hasNext()) {
-            IColumn storedCol = columnIt.next();
+            Column storedCol = columnIt.next();
             Collection<Cube> storedColumnCubes = storedCol.getLoadedCubes();
             for (Cube c : storedColumnCubes) {
                 if (cubeCache.getLoadedCube(c.getCoords()) != c) {
@@ -104,7 +103,7 @@ public class ChunkGc implements IConfigUpdateListener {
             }
         }
 
-        Iterator<IColumn> columnIt = cubeCache.columnsIterator();
+        Iterator<Column> columnIt = cubeCache.columnsIterator();
         while (columnIt.hasNext()) {
             if (cubeCache.tryUnloadColumn(columnIt.next())) {
                 columnIt.remove();

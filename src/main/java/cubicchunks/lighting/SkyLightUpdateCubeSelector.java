@@ -28,15 +28,14 @@ import static cubicchunks.util.Coords.cubeToMinBlock;
 import static cubicchunks.util.Coords.localToBlock;
 
 import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.IColumn;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.World;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -60,9 +59,9 @@ class SkyLightUpdateCubeSelector {
      *
      * @return set of affected cube Y positions
      */
-    static TIntSet getCubesY(IColumn column, int localX, int localZ, int minBlockY, int maxBlockY) {
+    static TIntSet getCubesY(Column column, int localX, int localZ, int minBlockY, int maxBlockY) {
         // NOTE: maxBlockY is always the air block above the top block that was added or removed
-        ICubicWorld world = column.getCubicWorld();
+        CubicWorld world = column.getCubicWorld();
 
         TIntSet cubesToDiffuse = new TIntHashSet();
 

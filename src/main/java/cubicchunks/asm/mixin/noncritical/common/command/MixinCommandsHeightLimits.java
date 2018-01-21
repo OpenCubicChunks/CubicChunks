@@ -23,11 +23,10 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.command.CommandClone;
 import net.minecraft.command.CommandCompare;
-import net.minecraft.command.CommandFill;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -50,7 +49,7 @@ public class MixinCommandsHeightLimits {
             constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO, ordinal = 0),
             slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;minY:I")))
     private int command_getMinY1(int orig, MinecraftServer server, ICommandSender sender, String[] args) {
-        return ((ICubicWorld) sender.getEntityWorld()).getMinHeight();
+        return ((CubicWorld) sender.getEntityWorld()).getMinHeight();
     }
 
     @Group(name = "command_getMinY")
@@ -59,7 +58,7 @@ public class MixinCommandsHeightLimits {
             constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO, ordinal = 1),
             slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;minY:I")))
     private int command_getMinY2(int orig, MinecraftServer server, ICommandSender sender, String[] args) {
-        return ((ICubicWorld) sender.getEntityWorld()).getMinHeight();
+        return ((CubicWorld) sender.getEntityWorld()).getMinHeight();
     }
 
     @Group(name = "command_getMaxY", min = 2, max = 2)
@@ -68,7 +67,7 @@ public class MixinCommandsHeightLimits {
             constant = @Constant(intValue = 256, ordinal = 0),
             slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;maxY:I")))
     private int command_getMaxY1(int orig, MinecraftServer server, ICommandSender sender, String[] args) {
-        return ((ICubicWorld) sender.getEntityWorld()).getMaxHeight();
+        return ((CubicWorld) sender.getEntityWorld()).getMaxHeight();
     }
 
     @Group(name = "command_getMaxY")
@@ -77,6 +76,6 @@ public class MixinCommandsHeightLimits {
             constant = @Constant(intValue = 256, ordinal = 1),
             slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/gen/structure/StructureBoundingBox;maxY:I")))
     private int command_getMaxY2(int orig, MinecraftServer server, ICommandSender sender, String[] args) {
-        return ((ICubicWorld) sender.getEntityWorld()).getMaxHeight();
+        return ((CubicWorld) sender.getEntityWorld()).getMaxHeight();
     }
 }

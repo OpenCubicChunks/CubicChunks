@@ -23,7 +23,7 @@
  */
 package cubicchunks.network;
 
-import cubicchunks.world.column.IColumn;
+import cubicchunks.world.column.Column;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
@@ -45,7 +45,7 @@ public class PacketColumn implements IMessage {
     public PacketColumn() {
     }
 
-    public PacketColumn(IColumn column) {
+    public PacketColumn(Column column) {
         this.chunkPos = column.getPos();
         this.data = new byte[WorldEncoder.getEncodedSize(column)];
         PacketBuffer out = new PacketBuffer(WorldEncoder.createByteBufForWrite(this.data));

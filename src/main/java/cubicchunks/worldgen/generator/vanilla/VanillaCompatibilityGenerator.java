@@ -26,12 +26,11 @@ package cubicchunks.worldgen.generator.vanilla;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.column.IColumn;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubePrimer;
-import cubicchunks.worldgen.generator.ICubeGenerator;
-import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.CubeGenerator;
 import cubicchunks.worldgen.generator.WorldGenUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -61,13 +60,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class VanillaCompatibilityGenerator implements ICubeGenerator {
+public class VanillaCompatibilityGenerator implements CubeGenerator {
 
     private boolean isInit = false;
     private int worldHeightBlocks;
     private int worldHeightCubes;
     @Nonnull private IChunkGenerator vanilla;
-    @Nonnull private ICubicWorld world;
+    @Nonnull private CubicWorld world;
     /**
      * Last chunk that was generated from the vanilla world gen
      */
@@ -92,13 +91,13 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
      * @param vanilla The vanilla generator to mirror
      * @param world The world in which cubes are being generated
      */
-    public VanillaCompatibilityGenerator(IChunkGenerator vanilla, ICubicWorld world) {
+    public VanillaCompatibilityGenerator(IChunkGenerator vanilla, CubicWorld world) {
         this.vanilla = vanilla;
         this.world = world;
     }
 
     // lazy initialization to avoid circular dependencies
-    private void tryInit(IChunkGenerator vanilla, ICubicWorld world) {
+    private void tryInit(IChunkGenerator vanilla, CubicWorld world) {
         if (isInit) {
             return;
         }
@@ -160,7 +159,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void generateColumn(IColumn column) {
+    public void generateColumn(Column column) {
 
         this.biomes = this.world.getBiomeProvider()
                 .getBiomes(this.biomes,
@@ -175,12 +174,12 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void recreateStructures(IColumn column) {
+    public void recreateStructures(Column column) {
         vanilla.recreateStructures((Chunk) column, column.getX(), column.getZ());
     }
 
     @Override
-    public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+    public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
         tryInit(vanilla, world);
         CubePrimer primer = new CubePrimer();
 

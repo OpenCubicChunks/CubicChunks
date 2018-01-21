@@ -33,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.pathfinding.NodeProcessor;
@@ -51,7 +51,7 @@ public abstract class MixinWalkNodeProcessor extends NodeProcessor {
 
     @Redirect(method = "getSafePoint", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;collidesWithAnyBlock(Lnet/minecraft/util/math/AxisAlignedBB;)Z"), require = 2)
     private boolean collidesWithAnyBlockRedirect(World worldIn, AxisAlignedBB aabb) {
-        if (((ICubicWorld) worldIn).isCubicWorld()) {
+        if (((CubicWorld) worldIn).isCubicWorld()) {
             List<AxisAlignedBB> aabbList = new ArrayList<AxisAlignedBB>();
             double minX = aabb.minX;
             double minY = aabb.minY;

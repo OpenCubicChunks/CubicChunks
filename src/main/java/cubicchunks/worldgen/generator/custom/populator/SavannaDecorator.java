@@ -24,9 +24,9 @@
 package cubicchunks.worldgen.generator.custom.populator;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.api.worldgen.populator.ICubicPopulator;
+import cubicchunks.api.worldgen.populator.CubicPopulator;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.util.math.BlockPos;
@@ -38,9 +38,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SavannaDecorator implements ICubicPopulator {
+public class SavannaDecorator implements CubicPopulator {
 
-    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+    @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         biome.getBiome().DOUBLE_PLANT_GENERATOR.setPlantType(BlockDoublePlant.EnumPlantType.GRASS);
 
         for (int i = 0; i < 7; ++i) {

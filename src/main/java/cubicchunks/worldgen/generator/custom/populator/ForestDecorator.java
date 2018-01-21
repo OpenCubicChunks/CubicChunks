@@ -24,9 +24,9 @@
 package cubicchunks.worldgen.generator.custom.populator;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.api.worldgen.populator.ICubicPopulator;
+import cubicchunks.api.worldgen.populator.CubicPopulator;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.SurfaceType;
 import mcp.MethodsReturnNonnullByDefault;
@@ -43,9 +43,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ForestDecorator implements ICubicPopulator {
+public class ForestDecorator implements CubicPopulator {
 
-    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+    @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
 
         if (((BiomeForest) biome.getBiome()).type == BiomeForest.Type.ROOFED) {
             this.addMushrooms(world, random, pos, biome);
@@ -61,7 +61,7 @@ public class ForestDecorator implements ICubicPopulator {
     }
 
 
-    public void addMushrooms(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+    public void addMushrooms(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         final int gridSize = 4;
         for (int xGrid = 0; xGrid < Cube.SIZE / gridSize; ++xGrid) {
             for (int zGrid = 0; zGrid < Cube.SIZE / gridSize; ++zGrid) {
@@ -85,7 +85,7 @@ public class ForestDecorator implements ICubicPopulator {
         }
     }
 
-    public void addDoublePlants(ICubicWorld world, Random random, CubePos pos, CubicBiome biome, int amount) {
+    public void addDoublePlants(CubicWorld world, Random random, CubePos pos, CubicBiome biome, int amount) {
         for (int i = 0; i < amount; ++i) {
             int type = random.nextInt(3);
 

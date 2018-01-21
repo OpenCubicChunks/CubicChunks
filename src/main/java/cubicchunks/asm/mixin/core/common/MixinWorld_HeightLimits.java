@@ -23,15 +23,13 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import static cubicchunks.asm.JvmNames.WORLD_GET_LIGHT_WITH_FLAG;
 import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
 import static cubicchunks.asm.JvmNames.WORLD_IS_BLOCK_LOADED_Z;
 import static cubicchunks.asm.JvmNames.WORLD_IS_CHUNK_LOADED;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.cubeToMinBlock;
 
-import cubicchunks.asm.MixinUtils;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -68,7 +66,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(World.class)
-public abstract class MixinWorld_HeightLimits implements ICubicWorld {
+public abstract class MixinWorld_HeightLimits implements CubicWorld {
 
     @Shadow private int skylightSubtracted;
 

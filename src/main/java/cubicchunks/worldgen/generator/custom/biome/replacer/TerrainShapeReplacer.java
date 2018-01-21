@@ -31,7 +31,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class TerrainShapeReplacer implements IBiomeBlockReplacer {
+public class TerrainShapeReplacer implements BiomeBlockReplacer {
 
     /**
      * Replaces any block with greater than 0 density with stone

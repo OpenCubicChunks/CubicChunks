@@ -27,12 +27,12 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.CubicWorldServer;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.WorldServer;
 
 @Mixin(value = WorldServer.class, priority = 1001)
-public abstract class MixinWorldServer_UpdateBlocks implements ICubicWorldServer {
+public abstract class MixinWorldServer_UpdateBlocks implements CubicWorldServer {
 
     /**
      * This redirection (if selected by {@link cubicchunks.asm.CubicChunksMixinConfig})

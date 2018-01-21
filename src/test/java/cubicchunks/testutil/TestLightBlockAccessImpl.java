@@ -23,7 +23,7 @@
  */
 package cubicchunks.testutil;
 
-import cubicchunks.lighting.ILightBlockAccess;
+import cubicchunks.lighting.LightBlockAccess;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -36,7 +36,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class TestLightBlockAccessImpl implements ILightBlockAccess {
+public class TestLightBlockAccessImpl implements LightBlockAccess {
 
     private final int size;
     @Nonnull private final Map<BlockPos, Integer> emittedLightBlock = new HashMap<>();

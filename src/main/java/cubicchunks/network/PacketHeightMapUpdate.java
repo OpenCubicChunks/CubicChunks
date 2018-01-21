@@ -25,7 +25,7 @@ package cubicchunks.network;
 
 import com.google.common.base.Preconditions;
 import cubicchunks.util.AddressTools;
-import cubicchunks.world.IHeightMap;
+import cubicchunks.world.SurfaceTracker;
 import gnu.trove.list.TByteList;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TByteArrayList;
@@ -48,7 +48,7 @@ public class PacketHeightMapUpdate implements IMessage {
     public PacketHeightMapUpdate() {
     }
 
-    public PacketHeightMapUpdate(ChunkPos chunk, TByteList updates, IHeightMap heightMap) {
+    public PacketHeightMapUpdate(ChunkPos chunk, TByteList updates, SurfaceTracker surfaceTracker) {
         this.chunk = chunk;
         this.updates = new TByteArrayList();
         this.heights = new TIntArrayList();
@@ -58,7 +58,7 @@ public class PacketHeightMapUpdate implements IMessage {
                 continue;
             }
             this.updates.add(pos);
-            this.heights.add(heightMap.getTopBlockY(AddressTools.getLocalX(pos), AddressTools.getLocalZ(pos)));
+            this.heights.add(surfaceTracker.getTopBlockY(AddressTools.getLocalX(pos), AddressTools.getLocalZ(pos)));
         }
     }
 

@@ -21,12 +21,31 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui.event;
+package cubicchunks.world;
 
-import net.malisis.core.util.MouseButton;
+import cubicchunks.client.CubeProviderClient;
+import cubicchunks.util.IntRange;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
 
-@FunctionalInterface
-public interface IMouseDragListener {
+import javax.annotation.ParametersAreNonnullByDefault;
 
-    void onDrag(int lastX, int lastY, int x, int y, MouseButton button);
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public interface CubicWorldClient extends CubicWorld {
+
+    /**
+     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
+     * are loaded. Cannot be used more than once.
+     * @param heightRange
+     * @param generationRange
+     */
+    void initCubicWorldClient(IntRange heightRange, IntRange generationRange);
+
+    CubeProviderClient getCubeCache();
+
+    boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
+
+    void setHeightBounds(int minHeight, int maxHeight);
 }

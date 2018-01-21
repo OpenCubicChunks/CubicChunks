@@ -29,16 +29,14 @@ import cubicchunks.network.PacketCubicWorldData;
 import cubicchunks.server.SpawnCubes;
 import cubicchunks.util.IntRange;
 import cubicchunks.util.ReflectionUtil;
-import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldServer;
-import cubicchunks.world.ICubicWorldSettings;
+import cubicchunks.world.CubicWorld;
+import cubicchunks.world.CubicWorldServer;
+import cubicchunks.world.CubicWorldSettings;
 import cubicchunks.world.WorldSavedCubicChunksData;
-import cubicchunks.world.provider.ICubicWorldProvider;
-import cubicchunks.world.type.ICubicWorldType;
+import cubicchunks.world.provider.CubicWorldProvider;
+import cubicchunks.world.type.CubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldServerMulti;
@@ -66,15 +64,15 @@ public class CommonEventHandler {
         if (evt.getObject().isRemote) {
             return; // we will send packet to the client when it joins, client shouldn't change world types as it wants
         }
-        ICubicWorldServer world = (ICubicWorldServer) evt.getObject();
+        CubicWorldServer world = (CubicWorldServer) evt.getObject();
 
         WorldSavedCubicChunksData savedData =
                 (WorldSavedCubicChunksData) evt.getObject().getMapStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
-        boolean forcedCubicChunks = ((ICubicWorldSettings)world.getWorldInfo()).isCubic();
+        boolean forcedCubicChunks = ((CubicWorldSettings)world.getWorldInfo()).isCubic();
         // if it's our world type - always cubic chunks
         // is stored in WorldSavedData - it's already existing cubic chunks world
         // if forced cubic chunks - cubic chunks has been enabled by user on this world
-        if (!(evt.getObject().getWorldType() instanceof ICubicWorldType) && savedData == null && !forcedCubicChunks) {
+        if (!(evt.getObject().getWorldType() instanceof CubicWorldType) && savedData == null && !forcedCubicChunks) {
             return;
         }
 
@@ -85,10 +83,10 @@ public class CommonEventHandler {
         }
         CubicChunks.LOGGER.info("Initializing world " + evt.getObject() + " with type " + evt.getObject().getWorldType());
 
-        IntRange generationRange = new IntRange(0, ((ICubicWorldProvider) world.getProvider()).getOriginalActualHeight());
+        IntRange generationRange = new IntRange(0, ((CubicWorldProvider) world.getProvider()).getOriginalActualHeight());
         WorldType type = evt.getObject().getWorldType();
-        if (type instanceof ICubicWorldType) {
-            generationRange = ((ICubicWorldType) type).calculateGenerationHeightRange((WorldServer) world);
+        if (type instanceof CubicWorldType) {
+            generationRange = ((CubicWorldType) type).calculateGenerationHeightRange((WorldServer) world);
         }
 
         if (savedData == null) {
@@ -104,10 +102,10 @@ public class CommonEventHandler {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load evt) {
-        if (!((ICubicWorld) evt.getWorld()).isCubicWorld()) {
+        if (!((CubicWorld) evt.getWorld()).isCubicWorld()) {
             return;
         }
-        ICubicWorld world = (ICubicWorld) evt.getWorld();
+        CubicWorld world = (CubicWorld) evt.getWorld();
 
         if (!world.isRemote()) {
             SpawnCubes.update(world);
@@ -116,7 +114,7 @@ public class CommonEventHandler {
 
     @SubscribeEvent
     public void onWorldServerTick(TickEvent.WorldTickEvent evt) {
-        ICubicWorldServer world = (ICubicWorldServer) evt.world;
+        CubicWorldServer world = (CubicWorldServer) evt.world;
         //Forge (at least version 11.14.3.1521) doesn't call this event for client world.
         if (evt.phase == TickEvent.Phase.END && world.isCubicWorld() && evt.side == Side.SERVER) {
             world.tickCubicWorld();
@@ -130,16 +128,16 @@ public class CommonEventHandler {
 
     @SubscribeEvent
     public void onPlayerJoinWorld(EntityJoinWorldEvent evt) {
-        if (evt.getEntity() instanceof EntityPlayerMP && ((ICubicWorld) evt.getWorld()).isCubicWorld()) {
+        if (evt.getEntity() instanceof EntityPlayerMP && ((CubicWorld) evt.getWorld()).isCubicWorld()) {
             PacketDispatcher.sendTo(new PacketCubicWorldData((WorldServer) evt.getWorld()), (EntityPlayerMP) evt.getEntity());
             // Workaround for issue when entities became invisible in cubes where player dies and which are not yet unloaded by garbage collector.
-            ((ICubicWorldServer)evt.getWorld()).getChunkGarbageCollector().chunkGc();
+            ((CubicWorldServer)evt.getWorld()).getChunkGarbageCollector().chunkGc();
         }
     }
     
     @SubscribeEvent
     public void onCreateWorldSettings(CreateNewWorldEvent event) {
-        ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue());
+        ((CubicWorldSettings) (Object) event.settings).setCubic(CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue());
     }
 
     @SuppressWarnings("unchecked")

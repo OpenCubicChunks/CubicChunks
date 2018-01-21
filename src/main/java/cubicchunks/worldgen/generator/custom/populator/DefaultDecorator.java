@@ -28,18 +28,15 @@ import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.gen
 import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.getSurfaceForCube;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.api.worldgen.populator.ICubicPopulator;
+import cubicchunks.api.worldgen.populator.CubicPopulator;
 import cubicchunks.util.CubePos;
-import cubicchunks.util.MathUtil;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.SurfaceType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockFlower;
-import net.minecraft.block.BlockStone;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -57,16 +54,16 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class DefaultDecorator implements ICubicPopulator {
+public final class DefaultDecorator implements CubicPopulator {
 
-    public static class Ores implements ICubicPopulator {
+    public static class Ores implements CubicPopulator {
 
-        @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+        @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
             CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
             generateOres(world, cfg, random, pos);
         }
 
-        private void generateOres(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos) {
+        private void generateOres(CubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos) {
             // TODO: allow interleaved order
             for (CustomGeneratorSettings.StandardOreConfig c : cfg.standardOres) {
                 genOreUniform(world, cfg, random, pos, c.spawnTries, c.spawnProbability, new WorldGenMinable(c.blockstate, c.spawnSize),
@@ -79,7 +76,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         }
     }
 
-    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+    @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
 
         // TODO: Biome decoration events?
@@ -305,7 +302,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         return (Math.atan(vanillaY * yScale + yOffset) + Math.PI / 2) * valueScale;
     }
 
-    private void generateOnTop(ICubicWorld world, Random random, CubePos pos, int count, WorldGenerator generator) {
+    private void generateOnTop(CubicWorld world, Random random, CubePos pos, int count, WorldGenerator generator) {
         for (int i = 0; i < count; ++i) {
             int xOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
             int zOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;

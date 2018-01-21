@@ -31,9 +31,9 @@ import static net.minecraft.util.math.MathHelper.sin;
 
 import cubicchunks.util.CubePos;
 import cubicchunks.util.StructureGenUtil;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.CubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -141,8 +141,8 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
     }
 
     @Override
-    protected void generate(ICubicWorld world, ICubePrimer cube, int structureX, int structureY, int structureZ,
-            CubePos generatedCubePos) {
+    protected void generate(CubicWorld world, CubePrimer cube, int structureX, int structureY, int structureZ,
+                            CubePos generatedCubePos) {
         if (rand.nextInt(RAVINE_RARITY) != 0 || structureY > MAX_CUBE_Y) {
             return;
         }
@@ -166,7 +166,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
                 startWalkedDistance, maxWalkedDistance, VERT_SIZE_FACTOR, lavaHeight);
     }
 
-    private void generateNode(ICubePrimer cube, long seed, CubePos generatedCubePos,
+    private void generateNode(CubePrimer cube, long seed, CubePos generatedCubePos,
             double ravineX, double ravineY, double ravineZ,
             float baseRavineSize, float horizDirAngle, float vertDirAngle,
             int startWalkedDistance, int maxWalkedDistance, double vertRavineSizeMod,
@@ -258,7 +258,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
         }
     }
 
-    private void tryCarveBlocks(ICubePrimer cube, CubePos generatedCubePos,
+    private void tryCarveBlocks(CubePrimer cube, CubePos generatedCubePos,
             double ravineX, double ravineY, double ravineZ,
             double ravineSizeHoriz, double ravineSizeVert, int lavaHeight) {
         double genCubeCenterX = generatedCubePos.getXCenter();
@@ -298,7 +298,7 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
         }
     }
 
-    private void carveBlocks(ICubePrimer cube, CubePos generatedCubePos,
+    private void carveBlocks(CubePrimer cube, CubePos generatedCubePos,
             double ravineX, double ravineY, double ravineZ,
             double ravineSizeHoriz, double ravineSizeVert, StructureBoundingBox boundingBox,
             int lavaHeight) {

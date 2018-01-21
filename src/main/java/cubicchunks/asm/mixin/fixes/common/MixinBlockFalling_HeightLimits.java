@@ -24,12 +24,10 @@
 package cubicchunks.asm.mixin.fixes.common;
 
 import static cubicchunks.asm.JvmNames.BLOCK_FALLING_CAN_FALL_THROUGH;
-import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.WORLD_IS_AIR_BLOCK;
 
-import cubicchunks.asm.MixinUtils;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.CubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFalling;
@@ -69,7 +67,7 @@ public abstract class MixinBlockFalling_HeightLimits extends Block {
                     to = @At(value = "FIELD", target = "Lnet/minecraft/block/BlockFalling;fallInstantly:Z")
             ), expect = 1)
     private int checkFallable_getMinY1(int orig, World worldIn, BlockPos pos) {
-        return ((ICubicWorld) worldIn).getMinHeight();
+        return ((CubicWorld) worldIn).getMinHeight();
     }
 
     // Second call - creating entity on block position. Skipped.
@@ -86,12 +84,12 @@ public abstract class MixinBlockFalling_HeightLimits extends Block {
                             + "Lnet/minecraft/block/state/IBlockState;)Z")
             ))
     private int checkFallable_getMinY2(int orig, World worldIn, BlockPos pos) {
-        return ((ICubicWorld) worldIn).getMinHeight();
+        return ((CubicWorld) worldIn).getMinHeight();
     }
     
     @Redirect(method = "checkFallable", at = @At(value = "INVOKE", target = BLOCK_FALLING_CAN_FALL_THROUGH), require = 2)
     private boolean checkCanFallThrough(IBlockState blockState, World worldIn, BlockPos pos) {
-        if(!((ICubicWorld)worldIn).isCubicWorld() || ((ICubicWorld)worldIn).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos.down()))!=null) {
+        if(!((CubicWorld)worldIn).isCubicWorld() || ((CubicWorld)worldIn).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos.down()))!=null) {
             return BlockFalling.canFallThrough(blockState);
         }
         return false;
@@ -99,7 +97,7 @@ public abstract class MixinBlockFalling_HeightLimits extends Block {
     
     @Redirect(method = "checkFallable", at = @At(value = "INVOKE", target = WORLD_IS_AIR_BLOCK), require = 2)
     private boolean checkIsAirBlock(World worldIn, BlockPos pos) {
-        if(!((ICubicWorld)worldIn).isCubicWorld() || ((ICubicWorld)worldIn).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos))!=null) {
+        if(!((CubicWorld)worldIn).isCubicWorld() || ((CubicWorld)worldIn).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos))!=null) {
             return worldIn.isAirBlock(pos);
         }
         return false;
