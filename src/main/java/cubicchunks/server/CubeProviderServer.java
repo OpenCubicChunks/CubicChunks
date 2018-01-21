@@ -25,6 +25,7 @@ package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.asm.CubicChunksMixinConfig;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.chunkio.ICubeIO;
 import cubicchunks.server.chunkio.RegionCubeIO;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
@@ -423,6 +424,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         int cubeY = cube.getY();
         int cubeZ = cube.getZ();
 
+        // TODO: redo this part properly. It's broken.
+
         cubeGen.getPopulationRequirement(cube).forEachPoint((x, y, z) -> {
             Cube popcube = getCube(x + cubeX, y + cubeY, z + cubeZ);
             if (!popcube.isPopulated()) {
@@ -455,6 +458,10 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      * @param cube The cube to light up
      */
     private void calculateDiffuseSkylight(Cube cube) {
+        if (LightingManager.NO_SUNLIGHT_PROPAGATION) {
+            cube.setInitialLightingDone(true);
+            return;
+        }
         int cubeX = cube.getX();
         int cubeY = cube.getY();
         int cubeZ = cube.getZ();

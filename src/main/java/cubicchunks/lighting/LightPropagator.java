@@ -74,7 +74,9 @@ public class LightPropagator {
      */
      public void propagateLight(BlockPos centerPos, Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type,
             Consumer<BlockPos> setLightCallback) {
-
+        if (type == EnumSkyBlock.SKY && LightingManager.NO_SUNLIGHT_PROPAGATION) {
+            return;
+        }
         internalRelightQueue.begin(centerPos);
         try {
             // first add all decreased light values to the queue
