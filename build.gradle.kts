@@ -226,7 +226,7 @@ uploadArchives.apply {
                     withGroovyBuilder {
 
                         "name"(projectName)
-                        "artifactId"(base.archivesBaseName)
+                        "artifactId"(base.archivesBaseName.toLowerCase())
                         "packaging"("jar")
                         "url"("https://github.com/OpenCubicChunks/CubicChunks")
                         "description"("Unlimited world height mod for Minecraft")
