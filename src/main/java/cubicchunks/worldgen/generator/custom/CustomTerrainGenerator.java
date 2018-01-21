@@ -39,7 +39,6 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.worldgen.generator.CubePrimer;
-import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacer;
 import cubicchunks.worldgen.generator.custom.builder.BiomeSource;
 import cubicchunks.worldgen.generator.custom.builder.Builder;
@@ -155,8 +154,8 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
                 .cached(CACHE_SIZE_3D, HASH_3D);
     }
 
-    @Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-        ICubePrimer primer = new CubePrimer();
+    @Override public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+        CubePrimer primer = new CubePrimer();
         generate(primer, cubeX, cubeY, cubeZ);
         generateStructures(primer, new CubePos(cubeX, cubeY, cubeZ));
         return primer;
@@ -211,7 +210,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
      * @param cubeY cube y location
      * @param cubeZ cube z location
      */
-    public void generate(final ICubePrimer cubePrimer, int cubeX, int cubeY, int cubeZ) {
+    public void generate(final CubePrimer cubePrimer, int cubeX, int cubeY, int cubeZ) {
         // when debugging is enabled, allow reloading generator settings after pressing L
         // no need to restart after applying changes.
         // Seed it changed to some constant because world isn't easily accessible here
@@ -245,7 +244,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
         return block;
     }
 
-    private void generateStructures(ICubePrimer cube, CubePos cubePos) {
+    private void generateStructures(CubePrimer cube, CubePos cubePos) {
         // generate world populator
         if (this.conf.caves) {
             this.caveGenerator.generate(world, cube, cubePos);

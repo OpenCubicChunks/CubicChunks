@@ -29,7 +29,7 @@ import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
 import cubicchunks.world.CubicWorld;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.custom.structure.CubicStructureGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.crash.CrashReport;
@@ -73,12 +73,12 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
     public abstract String getStructureName();
 
     @SuppressWarnings("ConstantConditions")
-    @Override public void generate(CubicWorld world, @Nullable ICubePrimer cube, CubePos cubePos) {
+    @Override public void generate(CubicWorld world, @Nullable CubePrimer cube, CubePos cubePos) {
         super.generate(world, cube, cubePos);
     }
 
     @Override
-    protected synchronized void generate(CubicWorld world, @Nullable ICubePrimer cube, int structureX, int structureY, int structureZ,
+    protected synchronized void generate(CubicWorld world, @Nullable CubePrimer cube, int structureX, int structureY, int structureZ,
                                          CubePos generatedCubePos) {
         this.initializeStructureData((World) world);
 

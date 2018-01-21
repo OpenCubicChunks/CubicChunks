@@ -24,7 +24,7 @@
 package cubicchunks.util;
 
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.CubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
@@ -37,7 +37,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class StructureGenUtil {
 
-    public static boolean scanWallsForBlock(ICubePrimer cube,
+    public static boolean scanWallsForBlock(CubePrimer cube,
             StructureBoundingBox boundingBox,
             Predicate<IBlockState> predicate) {
         int minX = boundingBox.minX;

@@ -31,7 +31,6 @@ import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.CubeGenerator;
-import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.WorldGenUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -180,7 +179,7 @@ public class VanillaCompatibilityGenerator implements CubeGenerator {
     }
 
     @Override
-    public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+    public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
         tryInit(vanilla, world);
         CubePrimer primer = new CubePrimer();
 

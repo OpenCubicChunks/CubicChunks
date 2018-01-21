@@ -35,7 +35,7 @@ import cubicchunks.world.CubicWorld;
 import cubicchunks.world.SurfaceTracker;
 import cubicchunks.world.column.Column;
 import cubicchunks.worldgen.generator.CubeGenerator;
-import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.CubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -196,7 +196,7 @@ public class Cube implements XYZAddressable {
      */
     @SuppressWarnings("deprecation") // when a block is generated, does it really have any extra
     // information it could give us about its opacity by knowing its location?
-    public Cube(Column column, int cubeY, ICubePrimer primer) {
+    public Cube(Column column, int cubeY, CubePrimer primer) {
         this(column, cubeY);
 
         int miny = cubeToMinBlock(cubeY);

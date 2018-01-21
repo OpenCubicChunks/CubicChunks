@@ -57,9 +57,9 @@ public interface CubeGenerator {
      * @param cubeY the cube's Y coordinate
      * @param cubeZ the cube's Z coordinate
      *
-     * @return An ICubePrimer with the generated blocks
+     * @return An CubePrimer with the generated blocks
      */
-    ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ);
+    CubePrimer generateCube(int cubeX, int cubeY, int cubeZ);
 
     /**
      * Generate column-global information such as biome data

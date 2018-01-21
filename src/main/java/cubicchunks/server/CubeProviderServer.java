@@ -37,7 +37,7 @@ import cubicchunks.world.ProviderExtras;
 import cubicchunks.world.column.Column;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.CubeGenerator;
-import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
@@ -406,7 +406,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
      * @return The generated cube
      */
     private Cube generateCube(int cubeX, int cubeY, int cubeZ, Column column) {
-        ICubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
+        CubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
         Cube cube = new Cube(column, cubeY, primer);
 
         onCubeLoaded(cube, column);

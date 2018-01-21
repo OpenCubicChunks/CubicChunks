@@ -38,7 +38,6 @@ import cubicchunks.world.type.CubicWorldType;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
 import cubicchunks.worldgen.generator.CubeGenerator;
-import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -100,7 +99,7 @@ public class DebugWorldType extends WorldType implements CubicWorldType {
             return this;
         }
 
-        @Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+        @Override public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
             CubeGenerator gen = generators.get(gridPos(cubeX, cubeZ));
             if (gen == null) {
                 return new CubePrimer();
@@ -137,8 +136,8 @@ public class DebugWorldType extends WorldType implements CubicWorldType {
 
         protected abstract double getDensity(int blockX, int blockY, int blockZ);
 
-        @Override public final ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-            ICubePrimer primer = new CubePrimer();
+        @Override public final CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+            CubePrimer primer = new CubePrimer();
 
             CubePos cubePos = new CubePos(cubeX, cubeY, cubeZ);
             for (BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
