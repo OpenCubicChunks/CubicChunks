@@ -90,7 +90,7 @@ val sourceSets = the<JavaPluginConvention>().sourceSets
 val mainSourceSet = sourceSets["main"]!!
 
 version = getModVersion()
-group = "cubichunks"
+group = "io.github.opencubicchunks"
 (mainSourceSet as ExtensionAware).extra["refMap"] = "cubicchunks.mixins.refmap.json"
 
 idea {
@@ -228,13 +228,13 @@ uploadArchives.apply {
                         "name"(projectName)
                         "artifactId"(base.archivesBaseName)
                         "packaging"("jar")
-                        "url"("https://github.com/OpenCubicChunks/RegionLib")
+                        "url"("https://github.com/OpenCubicChunks/CubicChunks")
                         "description"("Unlimited world height mod for Minecraft")
 
 
                         "scm" {
-                            "connection"("scm:git:git://github.com/OpenCubicChunks/RegionLib.git")
-                            "developerConnection"("scm:git:ssh://git@github.com:OpenCubicChunks/RegionLib.git")
+                            "connection"("scm:git:git://github.com/OpenCubicChunks/CubicChunks.git")
+                            "developerConnection"("scm:git:ssh://git@github.com:OpenCubicChunks/CubicChunks.git")
                             "url"("https://github.com/OpenCubicChunks/RegionLib")
                         }
 
@@ -251,15 +251,12 @@ uploadArchives.apply {
                                 "id"("Barteks2x")
                                 "name"("Barteks2x")
                             }
-                            "developer" {
-                                "id"("xcube16")
-                                "name"("xcube16")
-                            }
+                            // TODO: add more developers
                         }
 
                         "issueManagement" {
                             "system"("github")
-                            "url"("https://github.com/OpenCubicChunks/RegionLib/issues")
+                            "url"("https://github.com/OpenCubicChunks/CubicChunks/issues")
                         }
                     }
                 }
