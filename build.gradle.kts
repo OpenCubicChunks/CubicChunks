@@ -375,23 +375,6 @@ jar.apply {
     //        (embed.files.stream().map { x -> x.name }.reduce { x, y -> x + " " + y }).get()// + " " + coreJar.archivePath.name
 }
 
-task<Jar>("jarDev") {
-    from(mainSourceSet.output)
-    jarConfig()
-    classifier = "dev"
-    tasks["assemble"].dependsOn(this)
-}
-
-fun Jar.jarConfig(): Jar {
-    exclude("LICENSE.txt", "log4j2.xml")
-    manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
-    manifest.attributes["FMLCorePlugin"] = "cubicchunks.asm.CubicChunksCoreMod"
-    manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
-    manifest.attributes["TweakOrder"] = "0"
-    manifest.attributes["ForceLoadAsMod"] = "true"
-    return this
-}
-
 shadowJar.apply {
     configurations = listOf(coreShadow)
     exclude("log4j2.xml")

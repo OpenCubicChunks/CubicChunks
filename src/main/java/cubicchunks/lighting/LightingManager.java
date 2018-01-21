@@ -34,7 +34,6 @@ import cubicchunks.util.CubePos;
 import cubicchunks.util.FastCubeBlockAccess;
 import cubicchunks.world.ICubeProvider;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.iterator.TIntIterator;
