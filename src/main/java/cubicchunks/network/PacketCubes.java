@@ -27,7 +27,7 @@ import cubicchunks.CubicChunks;
 import cubicchunks.client.CubeProviderClient;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.PacketUtils;
-import cubicchunks.world.CubicWorldClient;
+import cubicchunks.world.ICubicWorldClient;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
@@ -132,7 +132,7 @@ public class PacketCubes implements IMessage {
         public IMessage handleClientMessage(EntityPlayer player, PacketCubes message, MessageContext ctx) {
             PacketUtils.ensureMainThread(this, player, message, ctx);
 
-            CubicWorldClient worldClient = (CubicWorldClient) player.getEntityWorld();
+            ICubicWorldClient worldClient = (ICubicWorldClient) player.getEntityWorld();
             CubeProviderClient cubeCache = worldClient.getCubeCache();
 
             CubePos[] cubePos = message.getCubePos();

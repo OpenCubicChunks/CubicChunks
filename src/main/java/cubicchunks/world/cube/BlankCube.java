@@ -27,7 +27,7 @@ import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.ticket.TicketList;
 import cubicchunks.world.BlankEntityContainer;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -35,6 +35,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -50,7 +51,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class BlankCube extends Cube {
 
-    public BlankCube(Column column) {
+    public BlankCube(IColumn column) {
         super(new TicketList(), column.getCubicWorld(), column, new CubePos(0, 0, 0),
                 Cube.NULL_STORAGE, new BlankEntityContainer(), new HashMap<>(), new ConcurrentLinkedQueue<>(),
                 new LightingManager.CubeLightUpdateInfo(null) {

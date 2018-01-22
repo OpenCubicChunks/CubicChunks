@@ -24,7 +24,7 @@
 package cubicchunks.worldgen.gui;
 
 import cubicchunks.util.ReflectionUtil;
-import cubicchunks.worldgen.gui.component.DragTickable;
+import cubicchunks.worldgen.gui.component.IDragTickable;
 import cubicchunks.worldgen.gui.component.UILayout;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
@@ -41,7 +41,7 @@ import java.util.WeakHashMap;
 
 public abstract class ExtraGui extends MalisisGui {
 
-    private Map<DragTickable, DragTickableWrapper> set = new WeakHashMap<>();
+    private Map<IDragTickable, DragTickableWrapper> set = new WeakHashMap<>();
     protected Set<UIComponent<?>> addedComponents = new HashSet<>();
 
     private final Field componentsField;
@@ -107,16 +107,16 @@ public abstract class ExtraGui extends MalisisGui {
         }
     }
 
-    public <T extends UIComponent<X> & DragTickable, X extends UIComponent<X>> void registerDragTickable(T t) {
+    public <T extends UIComponent<X> & IDragTickable, X extends UIComponent<X>> void registerDragTickable(T t) {
         set.put(t, new DragTickableWrapper(t));
     }
 
     public static final class DragTickableWrapper {
 
-        private final DragTickable component;
+        private final IDragTickable component;
         private boolean beforeClickHovered = false;
 
-        public DragTickableWrapper(DragTickable component) {
+        public DragTickableWrapper(IDragTickable component) {
             this.component = component;
         }
 

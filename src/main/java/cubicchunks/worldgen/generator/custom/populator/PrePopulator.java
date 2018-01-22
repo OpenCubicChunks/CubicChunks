@@ -24,9 +24,9 @@
 package cubicchunks.worldgen.generator.custom.populator;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.api.worldgen.populator.CubicPopulator;
+import cubicchunks.api.worldgen.populator.ICubicPopulator;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import mcp.MethodsReturnNonnullByDefault;
@@ -44,9 +44,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PrePopulator implements CubicPopulator {
+public class PrePopulator implements ICubicPopulator {
 
-    @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome cubicBiome) {
+    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome cubicBiome) {
         CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
 
         Biome biome = cubicBiome.getBiome();

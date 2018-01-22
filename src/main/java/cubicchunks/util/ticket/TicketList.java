@@ -36,14 +36,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class TicketList {
 
     private int tickRefs = 0;
-    @Nonnull private List<Ticket> tickets = Lists.newArrayListWithCapacity(1);
+    @Nonnull private List<ITicket> tickets = Lists.newArrayListWithCapacity(1);
 
     /**
      * Removes a ticket form this ticket list if present
      *
      * @param ticket the ticket to remove
      */
-    public void remove(Ticket ticket) {
+    public void remove(ITicket ticket) {
         if (tickets.remove(ticket) && ticket.shouldTick()) {
             tickRefs--;
         }
@@ -54,7 +54,7 @@ public class TicketList {
      *
      * @param ticket the ticket to add
      */
-    public void add(Ticket ticket) {
+    public void add(ITicket ticket) {
         if (tickets.contains(ticket)) {
             return; // we already have that ticket
         }
@@ -67,7 +67,7 @@ public class TicketList {
      *
      * @return {@code true} if this list contains {@code ticket}, {@code false} otherwise
      */
-    public boolean contains(Ticket ticket) {
+    public boolean contains(ITicket ticket) {
         return tickets.contains(ticket);
     }
 

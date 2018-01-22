@@ -24,9 +24,9 @@
 package cubicchunks.worldgen.generator.custom.populator;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.api.worldgen.populator.CubicPopulator;
+import cubicchunks.api.worldgen.populator.ICubicPopulator;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 
 import java.util.Random;
@@ -35,9 +35,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SwampDecorator implements CubicPopulator {
+public class SwampDecorator implements ICubicPopulator {
 
-    @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         // TODO: fossils
     }
 }

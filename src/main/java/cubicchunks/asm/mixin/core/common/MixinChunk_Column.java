@@ -24,10 +24,10 @@
 package cubicchunks.asm.mixin.core.common;
 
 import com.google.common.base.Predicate;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.world.SurfaceTracker;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.CubeMap;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -53,13 +53,13 @@ import java.util.Map;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Implements the Column interface
+ * Implements the IColumn interface
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = Chunk.class, priority = 2000)
-@Implements(@Interface(iface = Column.class, prefix = "chunk$"))
-public abstract class MixinChunk_Column implements Column {
+@Implements(@Interface(iface = IColumn.class, prefix = "chunk$"))
+public abstract class MixinChunk_Column implements IColumn {
 
     /*
      * WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING
@@ -67,7 +67,7 @@ public abstract class MixinChunk_Column implements Column {
      * "cubicchunks.asm.mixin.core.client.MixinChunk_Cubes".
      */
     private CubeMap cubeMap;
-    private SurfaceTracker opacityIndex;
+    private IHeightMap opacityIndex;
     private Cube cachedCube;
 
     @Shadow @Final public int z;
@@ -299,8 +299,8 @@ public abstract class MixinChunk_Column implements Column {
     }
 
 
-    @Override public CubicWorld getCubicWorld() {
-        return (CubicWorld) this.world;
+    @Override public ICubicWorld getCubicWorld() {
+        return (ICubicWorld) this.world;
     }
 
 
@@ -407,7 +407,7 @@ public abstract class MixinChunk_Column implements Column {
     }
 
 
-    @Override public SurfaceTracker getSurfaceTracker() {
+    @Override public IHeightMap getOpacityIndex() {
         return this.opacityIndex;
     }
 

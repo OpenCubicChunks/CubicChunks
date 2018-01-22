@@ -25,13 +25,14 @@ package cubicchunks.worldgen.generator.custom.biome.replacer;
 
 import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.Set;
 
@@ -39,7 +40,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class OceanWaterReplacer implements BiomeBlockReplacer {
+public class OceanWaterReplacer implements IBiomeBlockReplacer {
 
     private final IBlockState oceanBlock;
     private final int oceanLevel;
@@ -60,12 +61,12 @@ public class OceanWaterReplacer implements BiomeBlockReplacer {
         return previousBlock;
     }
 
-    public static BiomeBlockReplacerProvider provider() {
-        return new BiomeBlockReplacerProvider() {
+    public static IBiomeBlockReplacerProvider provider() {
+        return new IBiomeBlockReplacerProvider() {
             private final ResourceLocation OCEAN_BLOCK = CubicChunks.location("ocean_block");
             private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
 
-            @Override public BiomeBlockReplacer create(CubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
+            @Override public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
                 IBlockState oceanBlock = Block.getBlockFromName(conf.getString(OCEAN_BLOCK)).getDefaultState();
                 int oceanHeight = (int) Math.round(conf.getDouble(OCEAN_LEVEL));
                 return new OceanWaterReplacer(oceanBlock, oceanHeight);

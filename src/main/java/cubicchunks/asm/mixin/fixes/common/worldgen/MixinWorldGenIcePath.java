@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.fixes.common.worldgen;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.custom.populator.PopulatorUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
@@ -53,7 +53,7 @@ public class MixinWorldGenIcePath {
 
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 2, ordinal = 0))
     private int getMinGenHeight0(int orig, World worldIn, Random rand, BlockPos position) {
-        if (((CubicWorld) worldIn).isCubicWorld()) {
+        if (((ICubicWorld) worldIn).isCubicWorld()) {
             return minY;
         }
         return orig;

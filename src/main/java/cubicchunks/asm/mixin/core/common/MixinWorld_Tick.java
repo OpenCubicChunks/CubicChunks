@@ -27,7 +27,7 @@ import static cubicchunks.asm.JvmNames.WORLD_GET_PERSISTENT_CHUNKS;
 import static cubicchunks.asm.JvmNames.WORLD_IS_AREA_LOADED;
 
 import cubicchunks.asm.MixinUtils;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
@@ -50,7 +50,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(World.class)
-public abstract class MixinWorld_Tick implements CubicWorld {
+public abstract class MixinWorld_Tick implements ICubicWorld {
 
     private int updateEntity_entityPosY;
     private int updateEntity_entityPosX;

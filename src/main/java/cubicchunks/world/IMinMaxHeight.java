@@ -21,12 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui.event;
+package cubicchunks.world;
 
-import net.malisis.core.util.MouseButton;
+import mcp.MethodsReturnNonnullByDefault;
 
-@FunctionalInterface
-public interface MouseDragListener {
+import javax.annotation.ParametersAreNonnullByDefault;
 
-    void onDrag(int lastX, int lastY, int x, int y, MouseButton button);
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public interface IMinMaxHeight {
+    /**
+     * Returns Y position of the bottom block in the world
+     */
+    default int getMinHeight() {
+        return 0;
+    }
+
+    /**
+     * Returns Y position of block above the top block in the world,
+     */
+    default int getMaxHeight() {
+        return 256;
+    }
 }

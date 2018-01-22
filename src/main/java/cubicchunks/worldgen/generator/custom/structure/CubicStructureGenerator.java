@@ -24,13 +24,14 @@
 package cubicchunks.worldgen.generator.custom.structure;
 
 import cubicchunks.util.CubePos;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.worldgen.generator.CubePrimer;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 
 import java.util.Random;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -50,7 +51,7 @@ public abstract class CubicStructureGenerator {
     @Nonnull protected Random rand = new Random();
 
     /** This world object. */
-    protected CubicWorld world;
+    protected ICubicWorld world;
 
     /** The minimum spacing of structures. */
     protected final int spacing;
@@ -69,7 +70,7 @@ public abstract class CubicStructureGenerator {
      * @param cube the block buffer to be filled with blocks (Cube)
      * @param cubePos position of the cube to generate structures in
      */
-    public void generate(CubicWorld world, CubePrimer cube, CubePos cubePos) {
+    public void generate(ICubicWorld world, ICubePrimer cube, CubePos cubePos) {
 
         //TODO: maybe skip some of this stuff if the cube is empty? (would need to use hints)
 
@@ -119,7 +120,7 @@ public abstract class CubicStructureGenerator {
      * @param structureZ z coordinate of the starting position of currently generated structure
      * @param generatedCubePos position of the cube to fill with blocks
      */
-    protected abstract void generate(CubicWorld world, CubePrimer cube,
-                                     int structureX, int structureY, int structureZ,
-                                     CubePos generatedCubePos);
+    protected abstract void generate(ICubicWorld world, ICubePrimer cube,
+            int structureX, int structureY, int structureZ,
+            CubePos generatedCubePos);
 }

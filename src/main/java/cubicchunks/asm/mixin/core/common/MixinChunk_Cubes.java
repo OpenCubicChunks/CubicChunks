@@ -24,6 +24,8 @@
 package cubicchunks.asm.mixin.core.common;
 
 import static cubicchunks.asm.JvmNames.CHUNK_CONSTRUCT_1;
+import static cubicchunks.asm.JvmNames.CHUNK_IS_CHUNK_LOADED;
+import static cubicchunks.asm.JvmNames.CHUNK_IS_MODIFIED;
 import static cubicchunks.asm.JvmNames.CHUNK_STORAGE_ARRAYS;
 import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
@@ -31,13 +33,13 @@ import static cubicchunks.util.Coords.blockToLocal;
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.Coords;
-import cubicchunks.world.ClientSurfaceTracker;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.world.ServerSurfaceTracker;
-import cubicchunks.world.SurfaceTracker;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.ClientHeightMap;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IHeightMap;
+import cubicchunks.world.ServerHeightMap;
 import cubicchunks.world.column.ColumnTileEntityMap;
 import cubicchunks.world.column.CubeMap;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -87,7 +89,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(Chunk.class)
-public abstract class MixinChunk_Cubes implements Column {
+public abstract class MixinChunk_Cubes implements IColumn {
 
     @Shadow @Final private ExtendedBlockStorage[] storageArrays;
     @Shadow @Final public static ExtendedBlockStorage NULL_BLOCK_STORAGE;
@@ -111,7 +113,7 @@ public abstract class MixinChunk_Cubes implements Column {
      * "cubicchunks.asm.mixin.core.common.MixinChunk_Columns".
      */
     private CubeMap cubeMap;
-    private SurfaceTracker opacityIndex;
+    private IHeightMap opacityIndex;
     private Cube cachedCube; // todo: make it always nonnull using BlankCube
 
     private boolean isColumn = false;
@@ -175,7 +177,7 @@ public abstract class MixinChunk_Cubes implements Column {
 
     @Inject(method = CHUNK_CONSTRUCT_1, at = @At(value = "RETURN"))
     private void cubicChunkColumn_construct(World worldIn, int x, int z, CallbackInfo cbi) {
-        CubicWorld world = (CubicWorld) worldIn;
+        ICubicWorld world = (ICubicWorld) worldIn;
         if (!world.isCubicWorld()) {
             return;
         }
@@ -185,9 +187,9 @@ public abstract class MixinChunk_Cubes implements Column {
         this.cubeMap = new CubeMap();
         //clientside we don't really need that much data. we actually only need top and bottom block Y positions
         if (world.isRemote()) {
-            this.opacityIndex = new ClientSurfaceTracker(this, heightMap);
+            this.opacityIndex = new ClientHeightMap(this, heightMap);
         } else {
-            this.opacityIndex = new ServerSurfaceTracker(heightMap);
+            this.opacityIndex = new ServerHeightMap(heightMap);
         }
 
         // instead of redirecting access to this map, just make the map do the work

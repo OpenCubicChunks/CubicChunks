@@ -27,10 +27,10 @@ import static java.lang.Math.abs;
 
 import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
-import cubicchunks.worldgen.generator.custom.builder.Builder;
+import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import cubicchunks.worldgen.generator.custom.builder.NoiseSource;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockSand;
@@ -45,12 +45,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SurfaceDefaultReplacer implements BiomeBlockReplacer {
+public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
     protected static final IBlockState GRAVEL = Blocks.GRAVEL.getDefaultState();
     protected static final IBlockState RED_SANDSTONE = Blocks.RED_SANDSTONE.getDefaultState();
     protected static final IBlockState SANDSTONE = Blocks.SANDSTONE.getDefaultState();
 
-    private final Builder depthNoise = makeDepthNoise();
+    private final IBuilder depthNoise = makeDepthNoise();
     private final int maxPossibleDepth;
     private IBlockState topBlock;
     private IBlockState fillerBlock;
@@ -110,7 +110,7 @@ public class SurfaceDefaultReplacer implements BiomeBlockReplacer {
         this.fillerBlock = fillerBlock;
     }
 
-    public Builder getDepthNoise() {
+    public IBuilder getDepthNoise() {
         return depthNoise;
     }
 
@@ -122,13 +122,13 @@ public class SurfaceDefaultReplacer implements BiomeBlockReplacer {
         return depth > 0 ? topBlock : Blocks.AIR.getDefaultState();
     }
 
-    public static BiomeBlockReplacerProvider provider() {
-        return new BiomeBlockReplacerProvider() {
+    public static IBiomeBlockReplacerProvider provider() {
+        return new IBiomeBlockReplacerProvider() {
             private final ResourceLocation HORIZONTAL_GRADIENT_DEC = CubicChunks.location("horizontal_gradient_depth_decrease_weight");
             private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
 
             @Override
-            public BiomeBlockReplacer create(CubicWorld world, CubicBiome cubicBiome, BiomeBlockReplacerConfig conf) {
+            public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome cubicBiome, BiomeBlockReplacerConfig conf) {
                 double gradientDec = conf.getDouble(HORIZONTAL_GRADIENT_DEC);
                 double oceanY = conf.getDouble(OCEAN_LEVEL);
                 Biome biome = cubicBiome.getBiome();
@@ -143,7 +143,7 @@ public class SurfaceDefaultReplacer implements BiomeBlockReplacer {
         };
     }
 
-    public static Builder makeDepthNoise() {
+    public static IBuilder makeDepthNoise() {
         return NoiseSource.perlin()
                 .frequency(ConversionUtils.frequencyFromVanilla(0.0625f, 4)).octaves(4).create()
                 .mul((1 << 3) - 1) // TODO: do it properly, currently this value is just temporary until I figure out the right one

@@ -23,7 +23,7 @@
  */
 package cubicchunks.world.generator;
 
-import cubicchunks.api.worldgen.populator.CubicPopulator;
+import cubicchunks.api.worldgen.populator.ICubicPopulator;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -39,7 +39,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class TestCubeGenerator {
     @Test
     public void testGeneration() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
-        CubicPopulator generator = mock(CubicPopulator.class);
+        ICubicPopulator generator = mock(ICubicPopulator.class);
         GameRegistry.registerWorldGenerator(generator, 0);
         CubeGeneratorsRegistry.computeSortedGeneratorList();
         CubeGeneratorsRegistry.generateWorld(null, null, null, null);

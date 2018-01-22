@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.fixes.common;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityFallingBlock;
@@ -63,7 +63,7 @@ public abstract class MixinEntityFallingBlock_HeightLimits extends Entity {
                     // ("doEntityDrops")
             ))
     private int onUpdateGetMinHeight(int orig) {
-        return ((CubicWorld) world).getMinHeight();
+        return ((ICubicWorld) world).getMinHeight();
     }
 
     @Group(name = "onUpdateGetMaxHeight", min = 1, max = 1)
@@ -75,6 +75,6 @@ public abstract class MixinEntityFallingBlock_HeightLimits extends Entity {
                     to = @At(value = "CONSTANT:LAST", args = "stringValue=doEntityDrops") // and this.world.getGameRules().getBoolean("doEntityDrops")
             ))
     private int onUpdateGetMaxHeight(int orig) {
-        return ((CubicWorld) world).getMaxHeight();
+        return ((ICubicWorld) world).getMaxHeight();
     }
 }

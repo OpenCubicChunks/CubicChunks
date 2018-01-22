@@ -29,8 +29,8 @@ import static cubicchunks.asm.JvmNames.WORLD_CLIENT_GET_CHUNK_FROM_BLOCK_COORDS;
 
 import cubicchunks.util.ClassInheritanceMultiMapFactory;
 import cubicchunks.util.Coords;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -57,6 +57,7 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.List;
 
@@ -94,7 +95,7 @@ public class MixinRenderGlobal {
             List<Entity> list, List<Entity> list1, List<Entity> list2,
             BlockPos.PooledMutableBlockPos pos, Iterator<RenderGlobal.ContainerLocalRenderInformation> var21,
             RenderGlobal.ContainerLocalRenderInformation info) {
-        CubicWorld world = (CubicWorld) info.renderChunk.getWorld();
+        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
         if (world.isCubicWorld()) {
             this.position = info.renderChunk.getPosition();
         } else {
@@ -117,7 +118,7 @@ public class MixinRenderGlobal {
             List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
             BlockPos.PooledMutableBlockPos pos, Iterator iterInfosEntities,
             RenderGlobal.ContainerLocalRenderInformation info) {
-        CubicWorld world = (CubicWorld) info.renderChunk.getWorld();
+        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
         if (world.isCubicWorld()) {
             this.position = info.renderChunk.getPosition();
         } else {
@@ -139,7 +140,7 @@ public class MixinRenderGlobal {
             Entity entity, double d3, double d4, double d5,
             List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
             BlockPos.PooledMutableBlockPos pos, Iterator var22, RenderGlobal.ContainerLocalRenderInformation info) {
-        CubicWorld world = (CubicWorld) info.renderChunk.getWorld();
+        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
         if (world.isCubicWorld()) {
             this.position = info.renderChunk.getPosition();
         } else {
@@ -176,7 +177,7 @@ public class MixinRenderGlobal {
             return chunk.getEntityLists(); //TODO: is this right?
         }
 
-        Cube cube = ((Column) chunk).getCube(Coords.blockToCube(position.getY()));
+        Cube cube = ((IColumn) chunk).getCube(Coords.blockToCube(position.getY()));
         if (cube instanceof BlankCube) {
             return ClassInheritanceMultiMapFactory.EMPTY_ARR;
         }

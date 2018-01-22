@@ -51,7 +51,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
 @SideOnly(Side.CLIENT)
-public class UIRangeSlider<T> extends UIComponent<UIRangeSlider<T>> implements IGuiText<UIRangeSlider<T>>, DragTickable {
+public class UIRangeSlider<T> extends UIComponent<UIRangeSlider<T>> implements IGuiText<UIRangeSlider<T>>, IDragTickable {
 
     private static final int FOCUSED_COLOR = 0xFFFFC0;
     private static final int HOVERED_COLOR = 0xFFFF90;

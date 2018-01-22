@@ -38,7 +38,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @FunctionalInterface
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface Builder {
+public interface IBuilder {
 
     DoublePredicate NEGATIVE = x -> x < 0;
     DoublePredicate POSITIVE = x -> x > 0;
@@ -47,47 +47,47 @@ public interface Builder {
 
     double get(int x, int y, int z);
 
-    default Builder add(Builder builder) {
+    default IBuilder add(IBuilder builder) {
         return (x, y, z) -> this.get(x, y, z) + builder.get(x, y, z);
     }
 
-    default Builder add(double c) {
+    default IBuilder add(double c) {
         return apply(x -> x + c);
     }
 
-    default Builder sub(Builder builder) {
+    default IBuilder sub(IBuilder builder) {
         return (x, y, z) -> this.get(x, y, z) - builder.get(x, y, z);
     }
 
-    default Builder sub(double c) {
+    default IBuilder sub(double c) {
         return apply(x -> x - c);
     }
 
-    default Builder mul(Builder builder) {
+    default IBuilder mul(IBuilder builder) {
         return (x, y, z) -> this.get(x, y, z) * builder.get(x, y, z);
     }
 
-    default Builder mul(double c) {
+    default IBuilder mul(double c) {
         return apply(x -> x * c);
     }
 
-    default Builder div(Builder builder) {
+    default IBuilder div(IBuilder builder) {
         return (x, y, z) -> this.get(x, y, z) / builder.get(x, y, z);
     }
 
-    default Builder div(double c) {
+    default IBuilder div(double c) {
         return apply(x -> x / c);
     }
 
-    default Builder clamp(double min, double max) {
+    default IBuilder clamp(double min, double max) {
         return apply(x -> MathHelper.clamp(x, min, max));
     }
 
-    default Builder apply(TDoubleFunction func) {
+    default IBuilder apply(TDoubleFunction func) {
         return (x, y, z) -> func.execute(this.get(x, y, z));
     }
 
-    default Builder addIf(DoublePredicate predicate, Builder builder) {
+    default IBuilder addIf(DoublePredicate predicate, IBuilder builder) {
         return (x, y, z) -> {
             double value = this.get(x, y, z);
             if (predicate.test(value)) {
@@ -97,11 +97,11 @@ public interface Builder {
         };
     }
 
-    default Builder addIf(DoublePredicate predicate, double c) {
+    default IBuilder addIf(DoublePredicate predicate, double c) {
         return applyIf(predicate, x -> x + c);
     }
 
-    default Builder subIf(DoublePredicate predicate, Builder builder) {
+    default IBuilder subIf(DoublePredicate predicate, IBuilder builder) {
         return (x, y, z) -> {
             double value = this.get(x, y, z);
             if (predicate.test(value)) {
@@ -111,11 +111,11 @@ public interface Builder {
         };
     }
 
-    default Builder subIf(DoublePredicate predicate, double c) {
+    default IBuilder subIf(DoublePredicate predicate, double c) {
         return applyIf(predicate, x -> x - c);
     }
 
-    default Builder mulIf(DoublePredicate predicate, Builder builder) {
+    default IBuilder mulIf(DoublePredicate predicate, IBuilder builder) {
         return (x, y, z) -> {
             double value = this.get(x, y, z);
             if (predicate.test(value)) {
@@ -125,11 +125,11 @@ public interface Builder {
         };
     }
 
-    default Builder mulIf(DoublePredicate predicate, double c) {
+    default IBuilder mulIf(DoublePredicate predicate, double c) {
         return applyIf(predicate, x -> x * c);
     }
 
-    default Builder divIf(DoublePredicate predicate, Builder builder) {
+    default IBuilder divIf(DoublePredicate predicate, IBuilder builder) {
         return (x, y, z) -> {
             double value = this.get(x, y, z);
             if (predicate.test(value)) {
@@ -139,18 +139,18 @@ public interface Builder {
         };
     }
 
-    default Builder divIf(DoublePredicate predicate, double c) {
+    default IBuilder divIf(DoublePredicate predicate, double c) {
         return applyIf(predicate, x -> x / c);
     }
 
-    default Builder clampIf(DoublePredicate predicate, double min, double max) {
+    default IBuilder clampIf(DoublePredicate predicate, double min, double max) {
         return apply(x ->
                 predicate.test(x) ?
                         MathHelper.clamp(x, min, max) :
                         x);
     }
 
-    default Builder applyIf(DoublePredicate predicate, TDoubleFunction func) {
+    default IBuilder applyIf(DoublePredicate predicate, TDoubleFunction func) {
         return (x, y, z) -> {
             double value = this.get(x, y, z);
             if (predicate.test(value)) {
@@ -166,22 +166,22 @@ public interface Builder {
      * <p>
      * No clamping is done on selector value, so values exceeding range 0-1 will result in extrapolation.
      */
-    default Builder lerp(Builder low, Builder high) {
+    default IBuilder lerp(IBuilder low, IBuilder high) {
         return (x, y, z) -> MathUtil.lerp(this.get(x, y, z), low.get(x, y, z), high.get(x, y, z));
     }
 
-    default Builder cached(int cacheSize, ToIntFunction<Vec3i> hash) {
+    default IBuilder cached(int cacheSize, ToIntFunction<Vec3i> hash) {
         HashCacheDoubles<Vec3i> cache = HashCacheDoubles.create(cacheSize, hash,
                 v -> this.get(v.getX(), v.getY(), v.getZ()));
         return (x, y, z) -> cache.get(new Vec3i(x, y, z));
     }
 
     /**
-     * Returns Builder that caches values based on x and z coordinates, ignoring Y coordinate.
+     * Returns IBuilder that caches values based on x and z coordinates, ignoring Y coordinate.
      * <p>
-     * This should NEVER be used if the Builder is intended to generate values that depend on Y coordinate
+     * This should NEVER be used if the IBuilder is intended to generate values that depend on Y coordinate
      */
-    default Builder cached2d(int cacheSize, ToIntFunction<Vec3i> hash) {
+    default IBuilder cached2d(int cacheSize, ToIntFunction<Vec3i> hash) {
         HashCacheDoubles<Vec3i> cache = HashCacheDoubles.create(cacheSize,
                 hash,
                 v -> this.get(v.getX(), v.getY(), v.getZ()));

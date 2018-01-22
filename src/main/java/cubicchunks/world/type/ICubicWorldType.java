@@ -21,38 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.asm.mixin.fixes.common.worldgen.tree;
+package cubicchunks.world.type;
 
+import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.WorldGenTaiga2;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldServer;
 
-import java.util.Random;
-
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Mixin(WorldGenTaiga2.class)
-public class MixinWorldGenTaiga2 {
+public interface ICubicWorldType {
 
-    // the second usage of constant 1
-    @ModifyConstant(method = "generate", constant = @Constant(intValue = 1, ordinal = 1))
-    private int getMinGenHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMinHeight() + 1;
-    }
+    // TODO: Make it Nonnull. VanillaCubic uses null
+    @Nullable ICubeGenerator createCubeGenerator(ICubicWorld world);
 
-    @ModifyConstant(method = "generate",
-                    constant = @Constant(intValue = 0, ordinal = 1,
-                                         expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
-    private int getMinGenHeightCompareZero(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((ICubicWorld) worldIn).getMinHeight();
-    }
-
-    // no 256 here, it uses world.getHeight()
+    IntRange calculateGenerationHeightRange(WorldServer world);
 }

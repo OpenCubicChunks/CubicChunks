@@ -35,9 +35,9 @@ import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZAddressable;
-import cubicchunks.util.ticket.Ticket;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.world.ProviderExtras;
+import cubicchunks.util.ticket.ITicket;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IProviderExtras;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.list.TShortList;
 import gnu.trove.list.array.TShortArrayList;
@@ -61,7 +61,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CubeWatcher implements XYZAddressable, Ticket {
+public class CubeWatcher implements XYZAddressable, ITicket {
 
     private final Consumer<Cube> consumer = (c) -> {
         this.cube = c;
@@ -86,7 +86,7 @@ public class CubeWatcher implements XYZAddressable, Ticket {
         this.cubeCache = playerCubeMap.getWorld().getCubeCache();
         this.cubeCache.asyncGetCube(
                 cubePos.getX(), cubePos.getY(), cubePos.getZ(),
-                ProviderExtras.Requirement.LOAD,
+                IProviderExtras.Requirement.LOAD,
                 consumer);
         this.cubePos = cubePos;
     }
@@ -156,9 +156,9 @@ public class CubeWatcher implements XYZAddressable, Ticket {
 
         playerCubeMap.getWorld().getProfiler().startSection("getCube");
         if (canGenerate) {
-            this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, ProviderExtras.Requirement.LIGHT);
+            this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LIGHT);
         } else {
-            this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, ProviderExtras.Requirement.LOAD);
+            this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, IProviderExtras.Requirement.LOAD);
         }
         if (this.cube != null) {
             this.cube.getTickets().add(this);
@@ -257,7 +257,7 @@ public class CubeWatcher implements XYZAddressable, Ticket {
             return;
         }
 
-        CubicWorld world = this.cube.getCubicWorld();
+        ICubicWorld world = this.cube.getCubicWorld();
 
         if (this.dirtyBlocks.size() >= ForgeModContainer.clumpingThreshold) {
             // send whole cube

@@ -26,59 +26,31 @@ package cubicchunks.worldgen.generator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CubePrimer {
-
-    public static IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
-
+public class CubePrimer implements ICubePrimer {
 
     private final char[] data = new char[4096];
 
-    /**
-     * Get the block state at the given location
-     *
-     * @param x cube local x
-     * @param y cube local y
-     * @param z cube local z
-     *
-     * @return the block state
-     */
+    @Override
     public IBlockState getBlockState(int x, int y, int z) {
         @SuppressWarnings("deprecation")
         IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[getBlockIndex(x, y, z)]);
         return iblockstate == null ? DEFAULT_STATE : iblockstate;
     }
 
-    /**
-     * Set the block state at the given location
-     *
-     * @param x cube local x
-     * @param y cube local y
-     * @param z cube local z
-     * @param state the block state
-     */
+    @Override
     public void setBlockState(int x, int y, int z, @Nonnull IBlockState state) {
         @SuppressWarnings("deprecation")
         char value = (char) Block.BLOCK_STATE_IDS.get(state);
         this.data[getBlockIndex(x, y, z)] = value;
     }
 
-    /**
-     * Counting down from the highest block in the cube, find the first non-air block for the given location.<br> <br>
-     * NOTE: This will return -1 if there were no blocks under this location<br> WARNING: Does not check for blocks
-     * above this cube<br>
-     *
-     * @param x cube relative x
-     * @param z cube relative x
-     *
-     * @return the height of the top non-air block at given x, z or -1 if no block was found
-     */
+    @Override
     public int findGroundHeight(int x, int z) {
         int i = (x << 8 | z << 4) + 15;
 

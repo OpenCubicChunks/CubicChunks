@@ -28,7 +28,7 @@ import static cubicchunks.util.Coords.localToBlock;
 
 import cubicchunks.util.CubePos;
 import cubicchunks.util.MathUtil;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import mcp.MethodsReturnNonnullByDefault;
@@ -53,8 +53,8 @@ public class PopulatorUtils {
         return localToBlock(blockToCube(coord), Cube.SIZE / 2);
     }
 
-    public static void genOreUniform(CubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos,
-                                     int count, double probability, WorldGenerator generator, double minY, double maxY) {
+    public static void genOreUniform(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos,
+            int count, double probability, WorldGenerator generator, double minY, double maxY) {
         int minBlockY = Math.round((float) (minY * cfg.heightFactor + cfg.heightOffset));
         int maxBlockY = Math.round((float) (maxY * cfg.heightFactor + cfg.heightOffset));
         if (pos.getMinBlockY() > maxBlockY || pos.getMaxBlockY() < minBlockY) {
@@ -75,8 +75,8 @@ public class PopulatorUtils {
         }
     }
 
-    public static void genOreBellCurve(CubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos, int count,
-                                       double probability, WorldGenerator generator, double mean, double stdDevFactor, double spacing, double minY, double maxY) {
+    public static void genOreBellCurve(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos, int count,
+                                      double probability, WorldGenerator generator, double mean, double stdDevFactor, double spacing, double minY, double maxY) {
 
         int factor = (cfg.getMaxHeight() - cfg.getMinHeight()) / 2;
         int minBlockY = Math.round((float) (minY * factor + cfg.heightOffset));
@@ -115,7 +115,7 @@ public class PopulatorUtils {
      * TODO: make it go up instead of down so it doesn't load unnecessary chunks when forcedAdditionalCubes is nonzero
      */
     @Nullable
-    public static BlockPos getSurfaceForCube(CubicWorld world, CubePos pos, int xOffset, int zOffset, int forcedAdditionalCubes, SurfaceType type) {
+    public static BlockPos getSurfaceForCube(ICubicWorld world, CubePos pos, int xOffset, int zOffset, int forcedAdditionalCubes, SurfaceType type) {
         int maxFreeY = pos.getMaxBlockY() + Cube.SIZE / 2;
         int minFreeY = pos.getMinBlockY() + Cube.SIZE / 2;
         int startY = pos.above().getMaxBlockY() + forcedAdditionalCubes * Cube.SIZE;
@@ -129,7 +129,7 @@ public class PopulatorUtils {
     }
 
     @Nullable
-    public static BlockPos findTopBlock(CubicWorld world, BlockPos start, int minTopY, int maxTopY, SurfaceType type) {
+    public static BlockPos findTopBlock(ICubicWorld world, BlockPos start, int minTopY, int maxTopY, SurfaceType type) {
         BlockPos pos = start;
         IBlockState startState = world.getBlockState(start);
         if (canBeTopBlock((World) world, pos, startState, type)) {

@@ -27,9 +27,9 @@ import static cubicchunks.util.Coords.cubeToCenterBlock;
 
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.CubePrimer;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.structure.CubicStructureGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.crash.CrashReport;
@@ -61,7 +61,7 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
      * generation, the structure generator can avoid generating structures that intersect ones that have already been
      * placed.
      */
-    protected XYZMap<CubicStructureStart> structureMap = new XYZMap<>(0.5f, 1024);
+    protected XYZMap<ICubicStructureStart> structureMap = new XYZMap<>(0.5f, 1024);
 
     /**
      * @param spacing The minimum spacing. Structures thataren't generated at integer multiple coords of this value will be skipped.
@@ -73,13 +73,13 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
     public abstract String getStructureName();
 
     @SuppressWarnings("ConstantConditions")
-    @Override public void generate(CubicWorld world, @Nullable CubePrimer cube, CubePos cubePos) {
+    @Override public void generate(ICubicWorld world, @Nullable ICubePrimer cube, CubePos cubePos) {
         super.generate(world, cube, cubePos);
     }
 
     @Override
-    protected synchronized void generate(CubicWorld world, @Nullable CubePrimer cube, int structureX, int structureY, int structureZ,
-                                         CubePos generatedCubePos) {
+    protected synchronized void generate(ICubicWorld world, @Nullable ICubePrimer cube, int structureX, int structureY, int structureZ,
+            CubePos generatedCubePos) {
         this.initializeStructureData((World) world);
 
         if (!this.structureMap.contains(structureX, structureY, structureZ)) {
@@ -87,7 +87,7 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
             try {
                 if (this.canSpawnStructureAtCoords(structureX, structureY, structureZ)) {
                     StructureStart start = this.getStructureStart(structureX, structureY, structureZ);
-                    this.structureMap.put((CubicStructureStart) start);
+                    this.structureMap.put((ICubicStructureStart) start);
                     if (start.isSizeableStructure()) {
                         this.setStructureStart(structureX, structureY, structureZ, start);
                     }
@@ -109,7 +109,7 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
         int centerY = cubeToCenterBlock(cubePos.getY());
         int centerZ = cubeToCenterBlock(cubePos.getZ());
         boolean generated = false;
-        for (CubicStructureStart cubicStructureStart : this.structureMap) {
+        for (ICubicStructureStart cubicStructureStart : this.structureMap) {
             StructureStart structStart = (StructureStart) cubicStructureStart;
             // TODO: cubic chunks version of isValidForPostProcess and notifyPostProcess (mixin)
             if (structStart.isSizeableStructure() && structStart.isValidForPostProcess(cubePos.chunkPos())
@@ -133,7 +133,7 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
 
     @Nullable
     protected StructureStart getStructureAt(BlockPos pos) {
-        for (CubicStructureStart cubicStructureStart : this.structureMap) {
+        for (ICubicStructureStart cubicStructureStart : this.structureMap) {
             StructureStart start = (StructureStart) cubicStructureStart;
 
             if (start.isSizeableStructure() && start.getBoundingBox().isVecInside(pos)) {
@@ -149,7 +149,7 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
 
     public boolean isPositionInStructure(World world, BlockPos pos) {
         this.initializeStructureData(world);
-        for (CubicStructureStart cubicStart : this.structureMap) {
+        for (ICubicStructureStart cubicStart : this.structureMap) {
             StructureStart start = (StructureStart) cubicStart;
             if (start.isSizeableStructure() && start.getBoundingBox().isVecInside(pos)) {
                 return true;
@@ -183,7 +183,7 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
                         StructureStart structurestart = MapGenStructureIO.getStructureStart(tag, world);
 
                         if (structurestart != null) {
-                            this.structureMap.put((CubicStructureStart) structurestart);
+                            this.structureMap.put((ICubicStructureStart) structurestart);
                         }
                     }
                 }

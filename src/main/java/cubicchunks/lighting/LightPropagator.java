@@ -72,8 +72,8 @@ public class LightPropagator {
      * @param type light type to update
      * @param setLightCallback this will be called for each position where light value is changed
      */
-     public void propagateLight(BlockPos centerPos, Iterable<BlockPos> coords, LightBlockAccess blocks, EnumSkyBlock type,
-                                Consumer<BlockPos> setLightCallback) {
+     public void propagateLight(BlockPos centerPos, Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type,
+            Consumer<BlockPos> setLightCallback) {
         if (type == EnumSkyBlock.SKY && LightingManager.NO_SUNLIGHT_PROPAGATION) {
             return;
         }
@@ -185,11 +185,11 @@ public class LightPropagator {
         }
     }
 
-    private int getExpectedLight(LightBlockAccess blocks, EnumSkyBlock type, BlockPos pos) {
+    private int getExpectedLight(ILightBlockAccess blocks, EnumSkyBlock type, BlockPos pos) {
         return Math.max(blocks.getEmittedLight(pos, type), blocks.getLightFromNeighbors(type, pos));
     }
     
-    private void markNeighborEdgeNeedLightUpdate(BlockPos pos, LightBlockAccess blocks, EnumSkyBlock type) {
+    private void markNeighborEdgeNeedLightUpdate(BlockPos pos, ILightBlockAccess blocks, EnumSkyBlock type) {
         // If cube is not loaded we will notify neighbors so cube will update light when it loads.
         for (EnumFacing direction : EnumFacing.values()) {
             BlockPos offset = pos.offset(direction);

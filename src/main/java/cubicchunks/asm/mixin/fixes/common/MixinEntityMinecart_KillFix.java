@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.fixes.common;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityMinecart;
@@ -48,6 +48,6 @@ public abstract class MixinEntityMinecart_KillFix extends Entity {
      */
     @ModifyConstant(method = "onUpdate", constant = @Constant(doubleValue = -64.0D), require = 1)
     private double getDeathY(double originalY) {
-        return ((CubicWorld) world).getMinHeight() + originalY;
+        return ((ICubicWorld) world).getMinHeight() + originalY;
     }
 }

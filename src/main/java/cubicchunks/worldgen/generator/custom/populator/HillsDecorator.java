@@ -23,18 +23,23 @@
  */
 package cubicchunks.worldgen.generator.custom.populator;
 
+import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreUniform;
 import static net.minecraft.block.state.pattern.BlockMatcher.forBlock;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.api.worldgen.populator.CubicPopulator;
+import cubicchunks.api.worldgen.populator.ICubicPopulator;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.BlockSilverfish;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeHills;
+import net.minecraft.world.gen.feature.WorldGenMinable;
 import net.minecraft.world.gen.feature.WorldGenerator;
 
 import java.util.Random;
@@ -43,9 +48,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class HillsDecorator implements CubicPopulator {
+public class HillsDecorator implements ICubicPopulator {
 
-    @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         // TODO: Find less awful way to do it
         CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
 /*

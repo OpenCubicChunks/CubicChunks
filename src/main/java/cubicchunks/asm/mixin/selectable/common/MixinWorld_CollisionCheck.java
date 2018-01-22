@@ -35,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import static cubicchunks.util.Coords.*;
 
 import cubicchunks.util.CubePos;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -45,7 +45,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 @Mixin(value = World.class, priority = 1001)
-public abstract class MixinWorld_CollisionCheck implements CubicWorld {
+public abstract class MixinWorld_CollisionCheck implements ICubicWorld {
 
     @Inject(method = "getCollisionBoxes(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/AxisAlignedBB;ZLjava/util/List;)Z",
             at = @At("HEAD"), cancellable = true)

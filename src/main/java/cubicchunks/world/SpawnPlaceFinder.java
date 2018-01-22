@@ -43,7 +43,7 @@ public class SpawnPlaceFinder {
 
     private static final int MIN_FREE_SPACE_SPAWN = 32;
 
-    public BlockPos getRandomizedSpawnPoint(CubicWorld world) {
+    public BlockPos getRandomizedSpawnPoint(ICubicWorld world) {
         //TODO: uses getTopSolidOrLiquidBlock() ... not good
         BlockPos ret = world.getSpawnPoint();
 
@@ -74,7 +74,7 @@ public class SpawnPlaceFinder {
         return ret;
     }
 
-    private BlockPos getTopBlockBisect(CubicWorld world, BlockPos pos) {
+    private BlockPos getTopBlockBisect(ICubicWorld world, BlockPos pos) {
         Chunk chunk = ((World) world).getChunkFromBlockCoords(pos);
         BlockPos minPos, maxPos;
         if (findEmpty(chunk, pos) != null) {

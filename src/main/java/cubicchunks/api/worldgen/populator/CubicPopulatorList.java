@@ -25,7 +25,7 @@ package cubicchunks.api.worldgen.populator;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 
 import java.util.ArrayList;
@@ -37,11 +37,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public final class CubicPopulatorList implements CubicPopulator {
+public final class CubicPopulatorList implements ICubicPopulator {
 
-    private List<CubicPopulator> list;
+    private List<ICubicPopulator> list;
 
-    public CubicPopulatorList(List<CubicPopulator> populators) {
+    public CubicPopulatorList(List<ICubicPopulator> populators) {
         this();
         this.list.addAll(populators);
     }
@@ -50,7 +50,7 @@ public final class CubicPopulatorList implements CubicPopulator {
         this.list = new ArrayList<>();
     }
 
-    public void add(CubicPopulator populator) {
+    public void add(ICubicPopulator populator) {
         this.list.add(populator);
     }
 
@@ -58,7 +58,7 @@ public final class CubicPopulatorList implements CubicPopulator {
         this.list = Collections.unmodifiableList(list);
     }
 
-    @Override public void generate(CubicWorld world, Random random, CubePos pos, CubicBiome biome) {
+    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         list.forEach(p -> p.generate(world, random, pos, biome));
     }
 }

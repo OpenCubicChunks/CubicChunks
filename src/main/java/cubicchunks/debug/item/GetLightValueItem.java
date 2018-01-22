@@ -35,7 +35,7 @@ import net.minecraft.world.World;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import cubicchunks.debug.ItemRegistered;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
@@ -49,7 +49,7 @@ public class GetLightValueItem extends ItemRegistered {
     @Override
     public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing faceHit, float hitX, float hitY,
             float hitZ) {
-        CubicWorld world = (CubicWorld) worldIn;
+        ICubicWorld world = (ICubicWorld) worldIn;
         BlockPos placePos = pos.offset(faceHit);
         playerIn.sendMessage(new TextComponentString("Total light level at " + placePos + " is " + worldIn.getLight(placePos) + " \n Side is "
                 + (world.isRemote() ? "client" : "server")));

@@ -23,10 +23,12 @@
  */
 package cubicchunks.asm.mixin.noncritical.common.command;
 
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
 import static cubicchunks.asm.JvmNames.ICOMMAND_SENDER_GET_ENTITY_WORLD;
 import static cubicchunks.asm.JvmNames.WORLD_IS_BLOCK_LOADED;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -56,12 +58,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(CommandFill.class)
 public class MixinCommandFill {
 
-    @Nullable private WeakReference<CubicWorld> commandWorld;
+    @Nullable private WeakReference<ICubicWorld> commandWorld;
 
     //get command sender, can't fail (inject at HEAD
     @Inject(method = "execute", at = @At(value = "HEAD"), require = 1)
     private void getWorldFromExecute(MinecraftServer server, ICommandSender sender, String[] args, CallbackInfo cbi) {
-        commandWorld = new WeakReference<>((CubicWorld) sender.getEntityWorld());
+        commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
     }
 
     @ModifyConstant(
@@ -75,7 +77,7 @@ public class MixinCommandFill {
         if (commandWorld == null) {
             return original;
         }
-        CubicWorld world = commandWorld.get();
+        ICubicWorld world = commandWorld.get();
         if (world == null) {
             return original;
         }
@@ -94,13 +96,13 @@ public class MixinCommandFill {
 
     @Redirect(method = "execute", at = @At(value = "INVOKE", target = WORLD_IS_BLOCK_LOADED))
     private boolean isBlockLoadedCheckForHeightRangeRedirect(World world, BlockPos pos) {
-        if (!((CubicWorld) world).isCubicWorld()) {
+        if (!((ICubicWorld) world).isCubicWorld()) {
             return world.isBlockLoaded(pos);
         }
         if (minY == null) {
             assert maxY == null;
             //if the above injection somehow fails, fall back to something reasonable
-            return ((CubicWorld) world).isBlockColumnLoaded(pos);
+            return ((ICubicWorld) world).isBlockColumnLoaded(pos);
         }
         for (int blockY = minY; blockY <= maxY; blockY += Cube.SIZE) {
             if (!world.isBlockLoaded(new BlockPos(pos.getX(), blockY, pos.getZ()))) {

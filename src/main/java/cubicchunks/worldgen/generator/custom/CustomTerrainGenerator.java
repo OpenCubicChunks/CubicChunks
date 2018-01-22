@@ -24,24 +24,25 @@
 package cubicchunks.worldgen.generator.custom;
 
 import static cubicchunks.util.Coords.blockToLocal;
-import static cubicchunks.worldgen.generator.custom.builder.Builder.NEGATIVE;
-import static cubicchunks.worldgen.generator.custom.builder.Builder.POSITIVE;
+import static cubicchunks.worldgen.generator.custom.builder.IBuilder.NEGATIVE;
+import static cubicchunks.worldgen.generator.custom.builder.IBuilder.POSITIVE;
 
 import cubicchunks.CubicChunks;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.api.worldgen.populator.CubePopulatorEvent;
-import cubicchunks.api.worldgen.populator.CubicPopulator;
+import cubicchunks.api.worldgen.populator.ICubicPopulator;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.worldgen.generator.CubePrimer;
-import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacer;
+import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacer;
 import cubicchunks.worldgen.generator.custom.builder.BiomeSource;
-import cubicchunks.worldgen.generator.custom.builder.Builder;
+import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import cubicchunks.worldgen.generator.custom.builder.NoiseSource;
 import cubicchunks.worldgen.generator.custom.structure.CubicCaveGenerator;
 import cubicchunks.worldgen.generator.custom.structure.CubicRavineGenerator;
@@ -54,8 +55,10 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.lwjgl.input.Keyboard;
 
 import java.util.List;
@@ -78,7 +81,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
     private static final ToIntFunction<Vec3i> HASH_2D = (v) -> v.getX() + v.getZ() * 5;
     private static final ToIntFunction<Vec3i> HASH_3D = (v) -> v.getX() + v.getZ() * 5 + v.getY() * 25;
     // Number of octaves for the noise function
-    private Builder terrainBuilder;
+    private IBuilder terrainBuilder;
     private final BiomeSource biomeSource;
     private final CustomGeneratorSettings conf;
 
@@ -87,7 +90,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
     @Nonnull private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
     @Nonnull private CubicFeatureGenerator strongholds;
 
-    public CustomTerrainGenerator(CubicWorld world, final long seed) {
+    public CustomTerrainGenerator(ICubicWorld world, final long seed) {
         super(world);
 
         String json = world.getWorldInfo().getGeneratorOptions();
@@ -102,7 +105,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
     private void initGenerator(long seed) {
         Random rnd = new Random(seed);
 
-        Builder selector = NoiseSource.perlin()
+        IBuilder selector = NoiseSource.perlin()
                 .seed(rnd.nextLong())
                 .normalizeTo(-1, 1)
                 .frequency(conf.selectorNoiseFrequencyX, conf.selectorNoiseFrequencyY, conf.selectorNoiseFrequencyZ)
@@ -110,7 +113,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
                 .create()
                 .mul(conf.selectorNoiseFactor).add(conf.selectorNoiseOffset).clamp(0, 1);
 
-        Builder low = NoiseSource.perlin()
+        IBuilder low = NoiseSource.perlin()
                 .seed(rnd.nextLong())
                 .normalizeTo(-1, 1)
                 .frequency(conf.lowNoiseFrequencyX, conf.lowNoiseFrequencyY, conf.lowNoiseFrequencyZ)
@@ -118,7 +121,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
                 .create()
                 .mul(conf.lowNoiseFactor).add(conf.lowNoiseOffset);
 
-        Builder high = NoiseSource.perlin()
+        IBuilder high = NoiseSource.perlin()
                 .seed(rnd.nextLong())
                 .normalizeTo(-1, 1)
                 .frequency(conf.highNoiseFrequencyX, conf.highNoiseFrequencyY, conf.highNoiseFrequencyZ)
@@ -126,7 +129,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
                 .create()
                 .mul(conf.highNoiseFactor).add(conf.highNoiseOffset);
 
-        Builder randomHeight2d = NoiseSource.perlin()
+        IBuilder randomHeight2d = NoiseSource.perlin()
                 .seed(rnd.nextLong())
                 .normalizeTo(-1, 1)
                 .frequency(conf.depthNoiseFrequencyX, 0, conf.depthNoiseFrequencyZ)
@@ -138,12 +141,12 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
                 .mul(0.2 * 17 / 64.0)
                 .cached2d(CACHE_SIZE_2D, HASH_2D);
 
-        Builder height = ((Builder) biomeSource::getHeight)
+        IBuilder height = ((IBuilder) biomeSource::getHeight)
                 .mul(conf.heightFactor)
                 .add(conf.heightOffset);
 
         double specialVariationFactor = conf.specialHeightVariationFactorBelowAverageY;
-        Builder volatility = ((Builder) biomeSource::getVolatility)
+        IBuilder volatility = ((IBuilder) biomeSource::getVolatility)
                 .mul((x, y, z) -> height.get(x, y, z) > y ? specialVariationFactor : 1)
                 .mul(conf.heightVariationFactor)
                 .add(conf.heightVariationOffset);
@@ -154,8 +157,8 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
                 .cached(CACHE_SIZE_3D, HASH_3D);
     }
 
-    @Override public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-        CubePrimer primer = new CubePrimer();
+    @Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+        ICubePrimer primer = new CubePrimer();
         generate(primer, cubeX, cubeY, cubeZ);
         generateStructures(primer, new CubePos(cubeX, cubeY, cubeZ));
         return primer;
@@ -177,7 +180,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
             // noticeable issues
             Random rand = new Random(cube.cubeRandomSeed());
 
-            CubicPopulator decorator = biome.getDecorator();
+            ICubicPopulator decorator = biome.getDecorator();
             decorator.generate(world, rand, pos, biome);
             CubeGeneratorsRegistry.generateWorld(world, rand, pos, biome);
 
@@ -210,7 +213,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
      * @param cubeY cube y location
      * @param cubeZ cube z location
      */
-    public void generate(final CubePrimer cubePrimer, int cubeX, int cubeY, int cubeZ) {
+    public void generate(final ICubePrimer cubePrimer, int cubeX, int cubeY, int cubeZ) {
         // when debugging is enabled, allow reloading generator settings after pressing L
         // no need to restart after applying changes.
         // Seed it changed to some constant because world isn't easily accessible here
@@ -235,7 +238,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
      * @return The block state
      */
     private IBlockState getBlock(int x, int y, int z, double dx, double dy, double dz, double density) {
-        List<BiomeBlockReplacer> replacers = biomeSource.getReplacers(x, y, z);
+        List<IBiomeBlockReplacer> replacers = biomeSource.getReplacers(x, y, z);
         IBlockState block = Blocks.AIR.getDefaultState();
         int size = replacers.size();
         for (int i = 0; i < size; i++) {
@@ -244,7 +247,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
         return block;
     }
 
-    private void generateStructures(CubePrimer cube, CubePos cubePos) {
+    private void generateStructures(ICubePrimer cube, CubePos cubePos) {
         // generate world populator
         if (this.conf.caves) {
             this.caveGenerator.generate(world, cube, cubePos);
