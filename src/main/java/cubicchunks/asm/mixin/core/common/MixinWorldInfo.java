@@ -23,33 +23,39 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.world.CubicWorldSettings;
+import cubicchunks.world.ICubicWorldSettings;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldSettings;
+import net.minecraft.world.storage.DerivedWorldInfo;
 import net.minecraft.world.storage.WorldInfo;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(WorldInfo.class)
-public class MixinWorldInfo implements CubicWorldSettings {
+public class MixinWorldInfo implements ICubicWorldSettings {
 
     private boolean isCubic;
 
     @Inject(method = "populateFromWorldSettings", at = @At("RETURN"))
     private void onConstructWithSettings(WorldSettings settings, CallbackInfo cbi) {
-        this.isCubic = ((CubicWorldSettings) (Object) settings).isCubic();
+        this.isCubic = ((ICubicWorldSettings) (Object) settings).isCubic();
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/storage/WorldInfo;)V", at = @At("RETURN"))
     private void onConstructWithSettings(WorldInfo other, CallbackInfo cbi) {
-        this.isCubic = ((CubicWorldSettings) other).isCubic();
+        this.isCubic = ((ICubicWorldSettings) other).isCubic();
     }
 
     @Inject(method = "<init>(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))

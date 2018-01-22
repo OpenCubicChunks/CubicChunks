@@ -24,9 +24,15 @@
 package cubicchunks.world.type;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.util.Box;
+import cubicchunks.util.CubePos;
 import cubicchunks.util.IntRange;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.worldgen.generator.CubeGenerator;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
+import cubicchunks.worldgen.generator.BasicCubeGenerator;
+import cubicchunks.worldgen.generator.CubePrimer;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.generator.custom.CustomTerrainGenerator;
 import cubicchunks.worldgen.gui.CustomCubicGui;
@@ -36,6 +42,7 @@ import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiErrorScreen;
 import net.minecraft.init.Biomes;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
@@ -53,7 +60,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CustomCubicWorldType extends WorldType implements CubicWorldType {
+public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
 
     private CustomCubicWorldType() {
         super("CustomCubic");
@@ -81,7 +88,7 @@ public class CustomCubicWorldType extends WorldType implements CubicWorldType {
     }
 
     @Override
-    public CubeGenerator createCubeGenerator(CubicWorld world) {
+    public ICubeGenerator createCubeGenerator(ICubicWorld world) {
         return new CustomTerrainGenerator(world, world.getSeed());
     }
 

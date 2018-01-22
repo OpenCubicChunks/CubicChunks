@@ -35,8 +35,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 /**
  * Biome block replacer configuration.
  * <p>
- * This should be used in implementation of {@link BiomeBlockReplacerProvider} to create {@link BiomeBlockReplacer}
- * with the specified config. It should NOT be used directly in BiomeBlockReplacer for performance reasons.
+ * This should be used in implementation of {@link IBiomeBlockReplacerProvider} to create {@link IBiomeBlockReplacer}
+ * with the specified config. It should NOT be used directly in IBiomeBlockReplacer for performance reasons.
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault

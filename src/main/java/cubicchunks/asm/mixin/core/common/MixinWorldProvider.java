@@ -23,12 +23,12 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.SpawnPlaceFinder;
-import cubicchunks.world.provider.CubicWorldProvider;
-import cubicchunks.world.type.CubicWorldType;
-import cubicchunks.worldgen.generator.CubeGenerator;
+import cubicchunks.world.provider.ICubicWorldProvider;
+import cubicchunks.world.type.ICubicWorldType;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
@@ -48,7 +48,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(WorldProvider.class)
-public abstract class MixinWorldProvider implements CubicWorldProvider {
+public abstract class MixinWorldProvider implements ICubicWorldProvider {
 
     @Shadow protected World world;
 
@@ -73,10 +73,10 @@ public abstract class MixinWorldProvider implements CubicWorldProvider {
 
     @Inject(method = "getActualHeight", at = @At("HEAD"), cancellable = true, remap = false)
     public void getActualHeight(CallbackInfoReturnable<Integer> cir) {
-        if (world == null || !((CubicWorld) world).isCubicWorld() || !(world.getWorldType() instanceof CubicWorldType)) {
+        if (world == null || !((ICubicWorld) world).isCubicWorld() || !(world.getWorldType() instanceof ICubicWorldType)) {
             return;
         }
-        cir.setReturnValue(((CubicWorld)world).getMaxGenerationHeight());
+        cir.setReturnValue(((ICubicWorld)world).getMaxGenerationHeight());
     }
 
     @Override public int getOriginalActualHeight() {
@@ -88,12 +88,12 @@ public abstract class MixinWorldProvider implements CubicWorldProvider {
         }
     }
 
-    @Nullable @Override public CubeGenerator createCubeGenerator() {
+    @Nullable @Override public ICubeGenerator createCubeGenerator() {
         if (!cubicWorld().isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
-        if (this.getDimensionType() == DimensionType.OVERWORLD && cubicWorld().getWorldType() instanceof CubicWorldType) {
-            return ((CubicWorldType) cubicWorld().getWorldType()).createCubeGenerator(cubicWorld());
+        if (this.getDimensionType() == DimensionType.OVERWORLD && cubicWorld().getWorldType() instanceof ICubicWorldType) {
+            return ((ICubicWorldType) cubicWorld().getWorldType()).createCubeGenerator(cubicWorld());
         }
         return new VanillaCompatibilityGenerator(this.createChunkGenerator(), cubicWorld());
     }
@@ -121,7 +121,7 @@ public abstract class MixinWorldProvider implements CubicWorldProvider {
                 this.world.getGroundAboveSeaLevel(blockpos).getBlock() == Blocks.GRASS;
     }
 */
-    private CubicWorld cubicWorld() {
-        return (CubicWorld) world;
+    private ICubicWorld cubicWorld() {
+        return (ICubicWorld) world;
     }
 }

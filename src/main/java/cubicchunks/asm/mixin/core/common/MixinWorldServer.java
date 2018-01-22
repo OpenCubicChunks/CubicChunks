@@ -29,6 +29,7 @@ import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ChunkGc;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
+import cubicchunks.util.AddressTools;
 import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
@@ -36,17 +37,19 @@ import cubicchunks.util.IntRange;
 import cubicchunks.world.CubeWorldEntitySpawner;
 import cubicchunks.world.CubicSaveHandler;
 import cubicchunks.world.FastCubeWorldEntitySpawner;
-import cubicchunks.world.CubicWorldServer;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.NotCubicChunksWorldException;
-import cubicchunks.world.column.Column;
-import cubicchunks.world.ProviderExtras.Requirement;
+import cubicchunks.world.column.IColumn;
+import cubicchunks.world.IProviderExtras.Requirement;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.provider.CubicWorldProvider;
+import cubicchunks.world.provider.ICubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.init.Blocks;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -68,18 +71,19 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Implementation of {@link CubicWorldServer} interface.
+ * Implementation of {@link ICubicWorldServer} interface.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(WorldServer.class)
-@Implements(@Interface(iface = CubicWorldServer.class, prefix = "world$"))
-public abstract class MixinWorldServer extends MixinWorld implements CubicWorldServer {
+@Implements(@Interface(iface = ICubicWorldServer.class, prefix = "world$"))
+public abstract class MixinWorldServer extends MixinWorld implements ICubicWorldServer {
 
     @Shadow @Mutable @Final private PlayerChunkMap playerChunkMap;
     @Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
@@ -95,7 +99,7 @@ public abstract class MixinWorldServer extends MixinWorld implements CubicWorldS
         this.entitySpawner = new CubeWorldEntitySpawner();
 
         this.chunkProvider = new CubeProviderServer(this,
-                ((CubicWorldProvider) this.provider).createCubeGenerator());
+                ((ICubicWorldProvider) this.provider).createCubeGenerator());
 
         this.playerChunkMap = new PlayerCubeMap(this);
         this.chunkGc = new ChunkGc(getCubeCache());
@@ -200,7 +204,7 @@ public abstract class MixinWorldServer extends MixinWorld implements CubicWorldS
     public void adjustPosToNearbyEntityCubicChunks(BlockPos strikeTarget, CallbackInfoReturnable<BlockPos> ci) {
         if (this.isCubicWorld()) {
             ci.cancel();
-            Column column = this.getCubeCache().getColumn(Coords.blockToCube(strikeTarget.getX()), Coords.blockToCube(strikeTarget.getZ()),
+            IColumn column = this.getCubeCache().getColumn(Coords.blockToCube(strikeTarget.getX()), Coords.blockToCube(strikeTarget.getZ()),
                     Requirement.GET_CACHED);
             strikeTarget = column.getPrecipitationHeight(strikeTarget);
             ci.setReturnValue(strikeTarget);

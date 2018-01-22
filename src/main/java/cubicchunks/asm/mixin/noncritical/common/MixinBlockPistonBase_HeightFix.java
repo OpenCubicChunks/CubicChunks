@@ -23,7 +23,10 @@
  */
 package cubicchunks.asm.mixin.noncritical.common;
 
-import cubicchunks.world.CubicWorld;
+import static cubicchunks.asm.JvmNames.BLOCK_POS_GETY;
+
+import cubicchunks.asm.MixinUtils;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockPistonBase;
 import net.minecraft.block.state.IBlockState;
@@ -34,6 +37,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -51,7 +55,7 @@ public class MixinBlockPistonBase_HeightFix {
             boolean destroyBlocks, EnumFacing p_185646_5_) {
         // keep the old way here because mixin intentionally won't support replacing == 0 and != 0 to avoid issues with booleans
 
-        CubicWorld world = (CubicWorld) worldIn;
+        ICubicWorld world = (ICubicWorld) worldIn;
         // if it's out of bounds - return current value, it's gongto be out of vanilla bounds check
         if (pos.getY() < world.getMinHeight() || pos.getY() >= world.getMaxHeight()) {
             return pos.getY();

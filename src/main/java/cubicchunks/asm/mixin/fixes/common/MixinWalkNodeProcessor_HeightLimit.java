@@ -25,8 +25,8 @@ package cubicchunks.asm.mixin.fixes.common;
 
 import static cubicchunks.asm.JvmNames.IBLOCK_ACCESS_GET_BLOCK_STATE;
 
-import cubicchunks.world.CubicWorld;
-import cubicchunks.world.MinMaxHeight;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IMinMaxHeight;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -49,7 +49,7 @@ public abstract class MixinWalkNodeProcessor_HeightLimit extends NodeProcessor {
 
     @ModifyConstant(method = "getStart", constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_ZERO))
     private int getMinHeight_GetStart(int originalY) {
-        return ((CubicWorld) this.entity.world).getMinHeight() + originalY;
+        return ((ICubicWorld) this.entity.world).getMinHeight() + originalY;
     }
 
     // redirect getBlockState and check if the block is loaded
@@ -70,7 +70,7 @@ public abstract class MixinWalkNodeProcessor_HeightLimit extends NodeProcessor {
                     ordinal = 1
             ))
     private int getMinHeight_GetSafePoint(int originalY) {
-        return ((CubicWorld) this.entity.world).getMinHeight() + originalY;
+        return ((ICubicWorld) this.entity.world).getMinHeight() + originalY;
     }
 
     @ModifyConstant(
@@ -79,6 +79,6 @@ public abstract class MixinWalkNodeProcessor_HeightLimit extends NodeProcessor {
                     intValue = 1, ordinal = 0
             ))
     private int getMinHeight_GetPathNodeType(int originalY, IBlockAccess blockaccessIn, int x, int y, int z) {
-        return ((MinMaxHeight) blockaccessIn).getMinHeight() + originalY;
+        return ((IMinMaxHeight) blockaccessIn).getMinHeight() + originalY;
     }
 }

@@ -23,7 +23,7 @@
  */
 package cubicchunks.server.chunkio;
 
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.storage.IThreadedFileIO;
 
@@ -33,17 +33,16 @@ import javax.annotation.Nullable;
 
 import cubicchunks.world.cube.Cube;
 
-public interface CubeIO extends IThreadedFileIO {
+public interface ICubeIO extends IThreadedFileIO {
 	void flush() throws IOException;
 
-	@Nullable
-	Column loadColumn(int chunkX, int chunkZ) throws IOException;
+	@Nullable IColumn loadColumn(int chunkX, int chunkZ) throws IOException;
 
-	@Nullable PartialCubeData loadCubeAsyncPart(Column column, int cubeY) throws IOException;
+	@Nullable PartialCubeData loadCubeAsyncPart(IColumn column, int cubeY) throws IOException;
 
 	void loadCubeSyncPart(PartialCubeData info);
 
-	void saveColumn(Column column);
+	void saveColumn(IColumn column);
 
 	void saveCube(Cube cube);
 

@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.common;
 
-import cubicchunks.world.CubicWorldSettings;
+import cubicchunks.world.ICubicWorldSettings;
 import net.minecraft.world.storage.DerivedWorldInfo;
 import net.minecraft.world.storage.WorldInfo;
 import org.spongepowered.asm.mixin.Final;
@@ -36,6 +36,6 @@ public class MixinDerivedWorldInfo extends MixinWorldInfo {
     @Shadow @Final private WorldInfo delegate;
 
     @Override public boolean isCubic() {
-        return ((CubicWorldSettings) delegate).isCubic();
+        return ((ICubicWorldSettings) delegate).isCubic();
     }
 }

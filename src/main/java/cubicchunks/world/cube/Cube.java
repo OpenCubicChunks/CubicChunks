@@ -24,18 +24,17 @@
 package cubicchunks.world.cube;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.debug.Dbg;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZAddressable;
-import cubicchunks.util.ticket.Ticket;
 import cubicchunks.util.ticket.TicketList;
 import cubicchunks.world.EntityContainer;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.world.SurfaceTracker;
-import cubicchunks.world.column.Column;
-import cubicchunks.worldgen.generator.CubeGenerator;
-import cubicchunks.worldgen.generator.CubePrimer;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IHeightMap;
+import cubicchunks.world.column.IColumn;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -51,6 +50,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import scala.actors.threadpool.Arrays;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,6 +67,8 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.logging.log4j.LogManager;
+
+import com.google.common.collect.Sets;
 
 import static cubicchunks.util.Coords.*;
 
@@ -92,7 +94,7 @@ public class Cube implements XYZAddressable {
 
     /**
      * Tickets keep this chunk loaded and ticking. See the docs of {@link TicketList} and {@link
-     * Ticket} for additional information.
+     * cubicchunks.util.ticket.ITicket} for additional information.
      */
     @Nonnull private final TicketList tickets; // tickets prevent this Cube from being unloaded
     /**
@@ -119,11 +121,11 @@ public class Cube implements XYZAddressable {
     /**
      * The world of this cube
      */
-    @Nonnull private final CubicWorld world;
+    @Nonnull private final ICubicWorld world;
     /**
      * The column of this cube
      */
-    @Nonnull private final Column column;
+    @Nonnull private final IColumn column;
     /**
      * The position of this cube, in cube space
      */
@@ -171,7 +173,7 @@ public class Cube implements XYZAddressable {
      * @param column column of this cube
      * @param cubeY cube y position
      */
-    public Cube(Column column, int cubeY) {
+    public Cube(IColumn column, int cubeY) {
         this.world = column.getCubicWorld();
         this.column = column;
         this.coords = new CubePos(column.getX(), cubeY, column.getZ());
@@ -196,11 +198,11 @@ public class Cube implements XYZAddressable {
      */
     @SuppressWarnings("deprecation") // when a block is generated, does it really have any extra
     // information it could give us about its opacity by knowing its location?
-    public Cube(Column column, int cubeY, CubePrimer primer) {
+    public Cube(IColumn column, int cubeY, ICubePrimer primer) {
         this(column, cubeY);
 
         int miny = cubeToMinBlock(cubeY);
-        SurfaceTracker surfaceTacker = column.getSurfaceTracker();
+        IHeightMap opindex = column.getOpacityIndex();
 
         for (int x = 0; x < Cube.SIZE; x++) {
             for (int z = 0; z < Cube.SIZE; z++) {
@@ -215,8 +217,8 @@ public class Cube implements XYZAddressable {
                         storage.set(x, y, z, newstate);
 
                         if (newstate.getLightOpacity() != 0) {
-                            column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe ServerSurfaceTracker needs its own isModified
-                            surfaceTacker.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
+                            column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe ServerHeightMap needs its own isModified
+                            opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
                         }
                     }
                 }
@@ -230,9 +232,9 @@ public class Cube implements XYZAddressable {
     /**
      * Constructor to be used from subclasses to provide all field values
      */
-    protected Cube(TicketList tickers, CubicWorld world, Column column, CubePos coords, ExtendedBlockStorage storage,
-                   EntityContainer entities, Map<BlockPos, TileEntity> tileEntityMap,
-                   ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, LightingManager.CubeLightUpdateInfo lightInfo) {
+    protected Cube(TicketList tickers, ICubicWorld world, IColumn column, CubePos coords, ExtendedBlockStorage storage,
+            EntityContainer entities, Map<BlockPos, TileEntity> tileEntityMap,
+            ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, LightingManager.CubeLightUpdateInfo lightInfo) {
         this.tickets = tickers;
         this.world = world;
         this.column = column;
@@ -269,7 +271,7 @@ public class Cube implements XYZAddressable {
      *
      * @return The the old state of the block at the position, or null if there was no change
      *
-     * @see Column#setBlockState(BlockPos, IBlockState)
+     * @see IColumn#setBlockState(BlockPos, IBlockState)
      */
     @Nullable public IBlockState setBlockState(BlockPos pos, IBlockState newstate) {
         return column.setBlockState(pos, newstate);
@@ -478,14 +480,14 @@ public class Cube implements XYZAddressable {
     /**
      * @return this cube's world
      */
-    public CubicWorld getCubicWorld() {
+    public ICubicWorld getCubicWorld() {
         return this.world;
     }
 
     /**
      * @return this cube's column
      */
-    public Column getColumn() {
+    public IColumn getColumn() {
         return this.column;
     }
 
@@ -585,7 +587,7 @@ public class Cube implements XYZAddressable {
     }
 
     private void trackSurface() {
-        SurfaceTracker surfaceTracker = column.getSurfaceTracker();
+        IHeightMap opindex = column.getOpacityIndex();
         int miny = getCoords().getMinBlockY();
 
         for (int x = 0; x < Cube.SIZE; x++) {
@@ -594,8 +596,8 @@ public class Cube implements XYZAddressable {
                 for (int y = Cube.SIZE - 1; y >= 0; y--) {
                     IBlockState newstate = this.getBlockState(x, y, z);
 
-                    column.setModified(true); //TODO: maybe ServerSurfaceTracker needs its own isModified?
-                    surfaceTracker.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
+                    column.setModified(true); //TODO: maybe ServerHeightMap needs its own isModified?
+                    opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
                 }
             }
         }
@@ -703,7 +705,7 @@ public class Cube implements XYZAddressable {
 
     /**
      * Check whether this cube was populated, i.e. if this cube was passed as argument to {@link
-     * CubeGenerator#populate(Cube)}. Check there for more information regarding
+     * cubicchunks.worldgen.generator.ICubeGenerator#populate(Cube)}. Check there for more information regarding
      * population.
      *
      * @return <code>true</code> if this cube has been populated, <code>false</code> otherwise
@@ -714,7 +716,7 @@ public class Cube implements XYZAddressable {
 
     /**
      * Mark this cube as populated. This means that this cube was passed as argument to {@link
-     * CubeGenerator#populate(Cube)}. Check there for more information regarding
+     * cubicchunks.worldgen.generator.ICubeGenerator#populate(Cube)}. Check there for more information regarding
      * population.
      *
      * @param populated whether this cube was populated
@@ -726,7 +728,7 @@ public class Cube implements XYZAddressable {
 
     /**
      * Check whether this cube was fully populated, i.e. if any cube potentially writing to this cube was passed as an
-     * argument to {@link CubeGenerator#populate(Cube)}. Check there for more
+     * argument to {@link cubicchunks.worldgen.generator.ICubeGenerator#populate(Cube)}. Check there for more
      * information regarding population
      *
      * @return <code>true</code> if this cube has been populated, <code>false</code> otherwise
@@ -737,7 +739,7 @@ public class Cube implements XYZAddressable {
 
     /**
      * Mark this cube as fully populated. This means that any cube potentially writing to this cube was passed as an
-     * argument to {@link CubeGenerator#populate(Cube)}. Check there for more
+     * argument to {@link cubicchunks.worldgen.generator.ICubeGenerator#populate(Cube)}. Check there for more
      * information regarding population
      *
      * @param populated whether this cube was fully populated

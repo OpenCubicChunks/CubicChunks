@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockLilyPad;
@@ -49,11 +49,11 @@ public abstract class MixinBlockLilyPad_HeightLimits extends BlockBush {
 
     @ModifyConstant(method = "canBlockStay", constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO), expect = 1)
     private int canBlockStay_getMinY(int orig, World worldIn, BlockPos pos, IBlockState state) {
-        return ((CubicWorld) worldIn).getMinHeight();
+        return ((ICubicWorld) worldIn).getMinHeight();
     }
     
     @ModifyConstant(method = "canBlockStay", constant = @Constant(intValue = 256), expect = 1)
     private int canBlockStay_getMaxY(int orig, World worldIn, BlockPos pos, IBlockState state) {
-        return ((CubicWorld) worldIn).getMaxHeight();
+        return ((ICubicWorld) worldIn).getMaxHeight();
     }
 }

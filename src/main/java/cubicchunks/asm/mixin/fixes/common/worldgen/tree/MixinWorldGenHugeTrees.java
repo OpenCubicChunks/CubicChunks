@@ -23,7 +23,8 @@
  */
 package cubicchunks.asm.mixin.fixes.common.worldgen.tree;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.custom.populator.PopulatorUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -31,6 +32,8 @@ import net.minecraft.world.gen.feature.WorldGenHugeTrees;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+
+import java.util.Random;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -42,12 +45,12 @@ public class MixinWorldGenHugeTrees {
     // the ordinal=0 is boolean flag = true
     @ModifyConstant(method = "isSpaceAt", constant = @Constant(intValue = 1, ordinal = 1))
     private int isSpace_getMinHeight(int val, World worldIn, BlockPos leavesPos, int height) {
-        return ((CubicWorld) worldIn).getMinHeight() + 1;
+        return ((ICubicWorld) worldIn).getMinHeight() + 1;
     }
 
     @ModifyConstant(method = "isSpaceAt", constant = @Constant(intValue = 256))
     private int isSpace_getMaxHeight(int val, World worldIn, BlockPos leavesPos, int height) {
-        return ((CubicWorld) worldIn).getMaxHeight();
+        return ((ICubicWorld) worldIn).getMaxHeight();
     }
 
     @ModifyConstant(method = "isSpaceAt", constant = @Constant(
@@ -55,6 +58,6 @@ public class MixinWorldGenHugeTrees {
             expandZeroConditions = Constant.Condition.LESS_THAN_ZERO,
             ordinal = 1))
     private int getMinScanHeight(int orig, World worldIn, BlockPos leavesPos, int height) {
-        return ((CubicWorld) worldIn).getMinHeight();
+        return ((ICubicWorld) worldIn).getMinHeight();
     }
 }

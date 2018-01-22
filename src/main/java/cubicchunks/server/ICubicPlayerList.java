@@ -23,7 +23,7 @@
  */
 package cubicchunks.server;
 
-public interface CubicPlayerList {
+public interface ICubicPlayerList {
     int getVerticalViewDistance();
 
     int getRawVerticalViewDistance();

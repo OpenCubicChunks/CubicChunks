@@ -25,8 +25,8 @@ package cubicchunks.world.column;
 
 import com.google.common.base.Predicate;
 import cubicchunks.util.Coords;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.world.SurfaceTracker;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.IHeightMap;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -47,7 +47,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface Column {
+public interface IColumn {
 
     /**
      * Return Y position of the block directly above the top non-transparent block, or {@link Coords#NO_HEIGHT} + 1 if
@@ -82,7 +82,7 @@ public interface Column {
      *
      * @return The block state
      *
-     * @see Column#getBlockState(int, int, int)
+     * @see IColumn#getBlockState(int, int, int)
      * @see Cube#getBlockState(BlockPos)
      * <p>
      * CHECKED: 1.11-13.19.0.2148 - super calls the x/y/z version
@@ -98,7 +98,7 @@ public interface Column {
      *
      * @return The block state
      *
-     * @see Column#getBlockState(BlockPos)
+     * @see IColumn#getBlockState(BlockPos)
      * @see Cube#getBlockState(int, int, int)
      */
     IBlockState getBlockState(int blockX, int blockY, int blockZ);
@@ -161,7 +161,7 @@ public interface Column {
      *
      * @param entityIn The entity to remove
      *
-     * @see Column#removeEntityAtIndex(Entity, int)
+     * @see IColumn#removeEntityAtIndex(Entity, int)
      */
     void removeEntity(Entity entityIn);
 
@@ -337,9 +337,9 @@ public interface Column {
     int getZ();
 
     /**
-     * @return the surface tracker of this column
+     * @return the height map of this column
      */
-    SurfaceTracker getSurfaceTracker();
+    IHeightMap getOpacityIndex();
 
     /**
      * Retrieve all cubes in this column that are currently loaded
@@ -422,7 +422,7 @@ public interface Column {
      *
      * @return the world
      */
-    CubicWorld getCubicWorld();
+    ICubicWorld getCubicWorld();
 
     /**
      * Note: this method is intended for internal use only.

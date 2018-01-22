@@ -25,14 +25,14 @@ package cubicchunks.asm.mixin.fixes.common;
 
 import static cubicchunks.asm.JvmNames.CHUNK_IS_POPULATED;
 
-import cubicchunks.world.column.Column;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import cubicchunks.util.Coords;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -45,7 +45,7 @@ import net.minecraft.world.chunk.Chunk;
  * Currently only fixes markAndNotifyBlock checking if chunk is populated instead of checking cubes.
  */
 @Mixin(World.class)
-public abstract class MixinWorld implements CubicWorld {
+public abstract class MixinWorld implements ICubicWorld {
 
     @Shadow public abstract WorldBorder getWorldBorder();
 
@@ -61,7 +61,7 @@ public abstract class MixinWorld implements CubicWorld {
             // vanilla compatibility
             return chunk.isPopulated();
         }
-        Column IColumn = (Column) chunk;
+        IColumn IColumn = (IColumn) chunk;
         Cube cube = IColumn.getCube(Coords.blockToCube(pos.getY()));
         return cube.isFullyPopulated();
     }

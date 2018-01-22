@@ -27,16 +27,19 @@ import static cubicchunks.util.Coords.blockToCube;
 import static cubicchunks.util.Coords.blockToLocal;
 
 import cubicchunks.client.CubeProviderClient;
-import cubicchunks.lighting.LightBlockAccess;
+import cubicchunks.lighting.ILightBlockAccess;
 import cubicchunks.server.CubeProviderServer;
-import cubicchunks.world.CubeProvider;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.crash.CrashReport;
+import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
@@ -56,22 +59,22 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class FastCubeBlockAccess implements LightBlockAccess {
+public class FastCubeBlockAccess implements ILightBlockAccess {
 
     @SidedProxy private static GetLoadedChunksProxy getLoadedChunksProxy;
     @Nonnull private final ExtendedBlockStorage[][][] cache;
     @Nonnull private final Cube[][][] cubes;
-    @Nonnull private final Column[][] columns;
+    @Nonnull private final IColumn[][] columns;
     private final int originX, originY, originZ;
     private final int dx, dy, dz;
-    @Nonnull private final CubicWorld world;
+    @Nonnull private final ICubicWorld world;
 
-    public FastCubeBlockAccess(CubeProvider cache, Cube cube, int radius) {
+    public FastCubeBlockAccess(ICubeProvider cache, Cube cube, int radius) {
         this(cube.getCubicWorld(), cache,
                 cube.getCoords().sub(radius, radius, radius), cube.getCoords().add(radius, radius, radius));
     }
 
-    private FastCubeBlockAccess(CubicWorld world, CubeProvider prov, CubePos start, CubePos end) {
+    private FastCubeBlockAccess(ICubicWorld world, ICubeProvider prov, CubePos start, CubePos end) {
         this.dx = Math.abs(end.getX() - start.getX()) + 1;
         this.dy = Math.abs(end.getY() - start.getY()) + 1;
         this.dz = Math.abs(end.getZ() - start.getZ()) + 1;
@@ -79,7 +82,7 @@ public class FastCubeBlockAccess implements LightBlockAccess {
         this.world = world;
         this.cache = new ExtendedBlockStorage[dx][dy][dz];
         this.cubes = new Cube[dx][dy][dz];
-        this.columns = new Column[dx][dz];
+        this.columns = new IColumn[dx][dz];
         this.originX = Math.min(start.getX(), end.getX());
         this.originY = Math.min(start.getY(), end.getY());
         this.originZ = Math.min(start.getZ(), end.getZ());
@@ -209,7 +212,7 @@ public class FastCubeBlockAccess implements LightBlockAccess {
         cubeZ -= originZ;
         if (cubeX >= dx || cubeZ >= dz)
             return false;
-        Column column = columns[cubeX][cubeZ];
+        IColumn column = columns[cubeX][cubeZ];
         if (column == null)
             return false;
         int height = column.getHeightValue(blockToLocal(blockX), blockToLocal(blockZ));
@@ -227,7 +230,7 @@ public class FastCubeBlockAccess implements LightBlockAccess {
         }
     }
 
-    public static LightBlockAccess forBlockRegion(CubeProvider prov, BlockPos startPos, BlockPos endPos) {
+    public static ILightBlockAccess forBlockRegion(ICubeProvider prov, BlockPos startPos, BlockPos endPos) {
         //TODO: fix it
         BlockPos midPos = Coords.midPos(startPos, endPos);
         Cube center = prov.getCube(CubePos.fromBlockCoords(midPos));
@@ -237,7 +240,7 @@ public class FastCubeBlockAccess implements LightBlockAccess {
 
     private interface GetLoadedChunksProxy {
 
-        Iterable<Chunk> getLoadedChunks(CubeProvider prov);
+        Iterable<Chunk> getLoadedChunks(ICubeProvider prov);
     }
 
     public static final class ServerProxy implements GetLoadedChunksProxy {
@@ -245,7 +248,7 @@ public class FastCubeBlockAccess implements LightBlockAccess {
         public ServerProxy() {
         }
 
-        @Override public Iterable<Chunk> getLoadedChunks(CubeProvider prov) {
+        @Override public Iterable<Chunk> getLoadedChunks(ICubeProvider prov) {
             return ((CubeProviderServer) prov).getLoadedChunks();
         }
     }
@@ -255,7 +258,7 @@ public class FastCubeBlockAccess implements LightBlockAccess {
         public ClientProxy() {
         }
 
-        @Override public Iterable<Chunk> getLoadedChunks(CubeProvider prov) {
+        @Override public Iterable<Chunk> getLoadedChunks(ICubeProvider prov) {
             return ((CubeProviderClient) prov).getLoadedChunks();
         }
     }

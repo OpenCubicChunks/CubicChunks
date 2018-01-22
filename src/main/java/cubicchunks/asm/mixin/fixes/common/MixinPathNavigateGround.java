@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.fixes.common;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLiving;
@@ -53,7 +53,7 @@ public abstract class MixinPathNavigateGround extends PathNavigate {
     @Overwrite
     public Path getPathToPos(BlockPos posIn) {
         BlockPos posOriginal = posIn;
-        CubicWorld world = (CubicWorld) this.world;
+        ICubicWorld world = (ICubicWorld) this.world;
         if (world.getBlockState(posIn).getMaterial() == Material.AIR) {
             BlockPos pos = posIn.down();
 

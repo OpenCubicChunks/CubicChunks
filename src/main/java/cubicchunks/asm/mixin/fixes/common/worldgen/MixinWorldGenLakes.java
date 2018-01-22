@@ -24,8 +24,9 @@
 package cubicchunks.asm.mixin.fixes.common.worldgen;
 
 import static cubicchunks.util.Coords.blockToCube;
+import static cubicchunks.util.Coords.cubeToMinBlock;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.custom.populator.PopulatorUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
@@ -56,7 +57,7 @@ public class MixinWorldGenLakes {
 
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 5, ordinal = 0))
     private int getMinGenHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        if (((CubicWorld) worldIn).isCubicWorld()) {
+        if (((ICubicWorld) worldIn).isCubicWorld()) {
             return minY;
         }
         return orig;
@@ -64,6 +65,6 @@ public class MixinWorldGenLakes {
 
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 4, ordinal = 0))
     private int getMinWorldHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((CubicWorld) worldIn).getMinHeight() + orig;
+        return ((ICubicWorld) worldIn).getMinHeight() + orig;
     }
 }

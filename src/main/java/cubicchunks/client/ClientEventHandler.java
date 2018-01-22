@@ -23,11 +23,14 @@
  */
 package cubicchunks.client;
 
+import cubicchunks.CommonEventHandler;
 import cubicchunks.CubicChunks;
 import cubicchunks.CubicChunks.Config.IntOptions;
-import cubicchunks.server.CubicPlayerList;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.world.type.CubicWorldType;
+import cubicchunks.event.CreateNewWorldEvent;
+import cubicchunks.server.ICubicPlayerList;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldSettings;
+import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -37,6 +40,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiVideoSettings;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -60,7 +64,7 @@ public class ClientEventHandler {
 
     @SubscribeEvent
     public void onWorldClientTickEvent(TickEvent.ClientTickEvent evt) {
-        CubicWorld world = (CubicWorld) FMLClientHandler.instance().getWorldClient();
+        ICubicWorld world = (ICubicWorld) FMLClientHandler.instance().getWorldClient();
         //does the world exist? Is the game paused?
         if (world == null || Minecraft.getMinecraft().isGamePaused()) {
             return;
@@ -73,7 +77,7 @@ public class ClientEventHandler {
     @SubscribeEvent
     public void onServerTick(TickEvent.ServerTickEvent event) {
         // no need to check side, this is only registered in client proxy
-        CubicPlayerList playerList = ((CubicPlayerList)FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList());
+        ICubicPlayerList playerList = ((ICubicPlayerList)FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList());
         int prevDist = playerList.getVerticalViewDistance();
         int newDist = IntOptions.VERTICAL_CUBE_LOAD_DISTANCE.getValue();
         if (prevDist != newDist) {
@@ -272,7 +276,7 @@ public class ClientEventHandler {
                             }
                         }
                         assert enableCC != null;
-                        boolean isCubicChunksType = WorldType.WORLD_TYPES[((GuiCreateWorld) gui).selectedIndex] instanceof CubicWorldType;
+                        boolean isCubicChunksType = WorldType.WORLD_TYPES[((GuiCreateWorld) gui).selectedIndex] instanceof ICubicWorldType;
                         enableCC.visible = mapType != null && !isCubicChunksType && mapType.visible;
                         break;
                     }

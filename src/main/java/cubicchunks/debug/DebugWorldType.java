@@ -32,12 +32,13 @@ import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.IntRange;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.world.type.CubicWorldType;
+import cubicchunks.world.type.ICubicWorldType;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
 import cubicchunks.worldgen.generator.CubePrimer;
-import cubicchunks.worldgen.generator.CubeGenerator;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -53,7 +54,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class DebugWorldType extends WorldType implements CubicWorldType {
+public class DebugWorldType extends WorldType implements ICubicWorldType {
 
     private DebugWorldType() {
         super("DebugCubic");
@@ -72,7 +73,7 @@ public class DebugWorldType extends WorldType implements CubicWorldType {
         return new IntRange(0, 256);
     }
 
-    @Override public CubeGenerator createCubeGenerator(CubicWorld world) {
+    @Override public ICubeGenerator createCubeGenerator(ICubicWorld world) {
         return new MultiGridGenerator(world)
                 .gridSize(blockToCube(2048))
                 .add(0, 0, new LowFrequencyPerlinLightTestGenerator(world))
@@ -83,13 +84,13 @@ public class DebugWorldType extends WorldType implements CubicWorldType {
 
         private int gridSize = blockToCube(1024);
         // actually used as vec2i
-        private Map<Vec3i, CubeGenerator> generators = new HashMap<>();
+        private Map<Vec3i, ICubeGenerator> generators = new HashMap<>();
 
-        MultiGridGenerator(CubicWorld world) {
+        MultiGridGenerator(ICubicWorld world) {
             super(world);
         }
 
-        MultiGridGenerator add(int gridX, int gridZ, CubeGenerator gen) {
+        MultiGridGenerator add(int gridX, int gridZ, ICubeGenerator gen) {
             generators.put(new Vec3i(gridX, 0, gridZ), gen);
             return this;
         }
@@ -99,8 +100,8 @@ public class DebugWorldType extends WorldType implements CubicWorldType {
             return this;
         }
 
-        @Override public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-            CubeGenerator gen = generators.get(gridPos(cubeX, cubeZ));
+        @Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+            ICubeGenerator gen = generators.get(gridPos(cubeX, cubeZ));
             if (gen == null) {
                 return new CubePrimer();
             }
@@ -109,14 +110,14 @@ public class DebugWorldType extends WorldType implements CubicWorldType {
 
 
         @Override public void populate(Cube cube) {
-            CubeGenerator gen = generators.get(gridPos(cube.getX(), cube.getZ()));
+            ICubeGenerator gen = generators.get(gridPos(cube.getX(), cube.getZ()));
             if (gen != null) {
                 gen.populate(cube);
             }
         }
 
         @Override public Box getPopulationRequirement(Cube cube) {
-            CubeGenerator gen = generators.get(gridPos(cube.getX(), cube.getZ()));
+            ICubeGenerator gen = generators.get(gridPos(cube.getX(), cube.getZ()));
             if (gen == null) {
                 return NO_POPULATOR_REQUIREMENT;
             }
@@ -130,14 +131,14 @@ public class DebugWorldType extends WorldType implements CubicWorldType {
 
     private static abstract class NoPopulatorDensityBasedGenerator extends BasicCubeGenerator {
 
-        NoPopulatorDensityBasedGenerator(CubicWorld world) {
+        NoPopulatorDensityBasedGenerator(ICubicWorld world) {
             super(world);
         }
 
         protected abstract double getDensity(int blockX, int blockY, int blockZ);
 
-        @Override public final CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-            CubePrimer primer = new CubePrimer();
+        @Override public final ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+            ICubePrimer primer = new CubePrimer();
 
             CubePos cubePos = new CubePos(cubeX, cubeY, cubeZ);
             for (BlockPos pos : BlockPos.getAllInBoxMutable(cubePos.getMinBlockPos(), cubePos.getMaxBlockPos())) {
@@ -181,7 +182,7 @@ public class DebugWorldType extends WorldType implements CubicWorldType {
             perlin.setSeed((int) world.getSeed());
         }
 
-        public LowFrequencyPerlinLightTestGenerator(CubicWorld world) {
+        public LowFrequencyPerlinLightTestGenerator(ICubicWorld world) {
             super(world);
         }
 
@@ -211,7 +212,7 @@ public class DebugWorldType extends WorldType implements CubicWorldType {
             perlin.setSeed((int) world.getSeed());
         }
 
-        public Lighting2PlatformsTestGenerator(CubicWorld world) {
+        public Lighting2PlatformsTestGenerator(ICubicWorld world) {
             super(world);
         }
 

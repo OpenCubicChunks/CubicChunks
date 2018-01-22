@@ -36,7 +36,7 @@ import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.AddressTools;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XZAddressable;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import gnu.trove.list.TByteList;
 import gnu.trove.list.array.TByteArrayList;
 import mcp.MethodsReturnNonnullByDefault;
@@ -193,10 +193,10 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
         if (!this.isSentToPlayers() || this.dirtyColumns.isEmpty()) {
             return;
         }
-        Column column = getColumn();
+        IColumn column = getColumn();
         assert column != null;
         for (EntityPlayerMP player : this.getPlayers()) {
-            PacketDispatcher.sendTo(new PacketHeightMapUpdate(getPos(), dirtyColumns, column.getSurfaceTracker()), player);
+            PacketDispatcher.sendTo(new PacketHeightMapUpdate(getPos(), dirtyColumns, column.getOpacityIndex()), player);
         }
         this.dirtyColumns.clear();
     }
@@ -204,8 +204,8 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
     //containsPlayer, hasPlayerMatching, hasPlayerMatchingInRange, isAddedToChunkUpdateQueue, getChunk, getClosestPlayerDistance - ok
 
     @Nullable
-    public Column getColumn() {
-        return (Column) this.getChunk();
+    public IColumn getColumn() {
+        return (IColumn) this.getChunk();
     }
 
     private boolean isLoading() {

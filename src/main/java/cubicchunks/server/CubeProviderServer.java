@@ -26,18 +26,18 @@ package cubicchunks.server;
 import cubicchunks.CubicChunks;
 import cubicchunks.asm.CubicChunksMixinConfig;
 import cubicchunks.lighting.LightingManager;
-import cubicchunks.server.chunkio.CubeIO;
+import cubicchunks.server.chunkio.ICubeIO;
 import cubicchunks.server.chunkio.RegionCubeIO;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
-import cubicchunks.world.CubeProvider;
-import cubicchunks.world.CubicWorldServer;
-import cubicchunks.world.ProviderExtras;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.IProviderExtras;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
-import cubicchunks.worldgen.generator.CubeGenerator;
-import cubicchunks.worldgen.generator.CubePrimer;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
@@ -75,19 +75,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class CubeProviderServer extends ChunkProviderServer implements CubeProvider, ProviderExtras {
+public class CubeProviderServer extends ChunkProviderServer implements ICubeProvider, IProviderExtras {
 
-    @Nonnull private CubicWorldServer worldServer;
-    @Nonnull private CubeIO cubeIO;
+    @Nonnull private ICubicWorldServer worldServer;
+    @Nonnull private ICubeIO cubeIO;
 
     // TODO: Use a better hash map!
     @Nonnull private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
 
-    @Nonnull private CubeGenerator cubeGen;
+    @Nonnull private ICubeGenerator cubeGen;
     @Nonnull private Profiler profiler;
     private final boolean doRandomBlockTicksHere;
 
-    public CubeProviderServer(CubicWorldServer worldServer, CubeGenerator cubeGen) {
+    public CubeProviderServer(ICubicWorldServer worldServer, ICubeGenerator cubeGen) {
         super((WorldServer) worldServer,
                 worldServer.getSaveHandler().getChunkLoader(worldServer.getProvider()), // forge uses this in
                 null); // safe to null out IChunkGenerator (Note: lets hope mods don't touch it, ik its public)
@@ -120,8 +120,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
      * Vanilla method, returns a Chunk (Column) only of it's already loaded.
      */
     @Nullable @Override
-    public Column getLoadedColumn(int columnX, int columnZ) {
-        return (Column) this.id2ChunkMap.get(ChunkPos.asLong(columnX, columnZ));
+    public IColumn getLoadedColumn(int columnX, int columnZ) {
+        return (IColumn) this.id2ChunkMap.get(ChunkPos.asLong(columnX, columnZ));
     }
 
     @Nullable
@@ -164,7 +164,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
      * Loads from disk if possible, otherwise generates new Column.
      */
     @Override
-    public Column provideColumn(int cubeX, int cubeZ) {
+    public IColumn provideColumn(int cubeX, int cubeZ) {
         return getColumn(cubeX, cubeZ, Requirement.GENERATE);
     }
 
@@ -182,7 +182,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
             }
         }
         for (Chunk chunk : id2ChunkMap.values()) { // save columns
-            Column column = (Column) chunk;
+            IColumn column = (IColumn) chunk;
             // save the column
             if (column.needsSaving(alwaysTrue)) {
                 this.cubeIO.saveColumn(column);
@@ -288,7 +288,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
 
         if (cube == null) {
             AsyncWorldIOExecutor.queueCubeLoad(worldServer, cubeIO, this, cubeX, cubeY, cubeZ, loaded -> {
-                Column col = getLoadedColumn(cubeX, cubeZ);
+                IColumn col = getLoadedColumn(cubeX, cubeZ);
                 if (col != null) {
                     onCubeLoaded(loaded, col);
                     loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
@@ -307,13 +307,13 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
         }
 
         // try to get the Column
-        Column column = getColumn(cubeX, cubeZ, req);
+        IColumn column = getColumn(cubeX, cubeZ, req);
         if (column == null) {
             return cube; // Column did not reach req, so Cube also does not
         }
 
         if (cube == null) {
-            // a little hack to fix StackOverflowError when loading TileEntities, as Cube methods are now redirected into Column
+            // a little hack to fix StackOverflowError when loading TileEntities, as Cube methods are now redirected into IColumn
             // Column needs cube to be loaded to add TileEntity, so make CubeProvider contain it already
             cube = AsyncWorldIOExecutor.syncCubeLoad(worldServer, cubeIO, this, cubeX, cubeY, cubeZ);
             onCubeLoaded(cube, column);
@@ -328,7 +328,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
      * @param cube The cube that was loaded
      * @param column The column of the cube
      */
-    private void onCubeLoaded(@Nullable Cube cube, Column column) {
+    private void onCubeLoaded(@Nullable Cube cube, IColumn column) {
         if (cube != null) {
             cubeMap.put(cube); // cache the Cube
             //synchronous loading may cause it to be called twice when async loading has been already queued
@@ -355,7 +355,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
      * @return The processed cube, or <code>null</code> if the effort level is not sufficient to provide a cube
      */
     @Nullable
-    private Cube postCubeLoadAttempt(int cubeX, int cubeY, int cubeZ, @Nullable Cube cube, Column column, Requirement req) {
+    private Cube postCubeLoadAttempt(int cubeX, int cubeY, int cubeZ, @Nullable Cube cube, IColumn column, Requirement req) {
         // when async load+generate request is immediately followed by sync request,  the async one will generate the cube in callback, but it won't
         // change the async load request result, so the cube here will still be null. Just to make sure, get the cube here
         // otherwise we may end up generating the same cube twice
@@ -405,14 +405,14 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
      *
      * @return The generated cube
      */
-    private Cube generateCube(int cubeX, int cubeY, int cubeZ, Column column) {
-        CubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
+    private Cube generateCube(int cubeX, int cubeY, int cubeZ, IColumn column) {
+        ICubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
         Cube cube = new Cube(column, cubeY, primer);
 
         onCubeLoaded(cube, column);
 
         this.worldServer.getFirstLightProcessor()
-                .initializeSkylight(cube); // init sky light, (does not require any other cubes, just ServerSurfaceTracker)
+                .initializeSkylight(cube); // init sky light, (does not require any other cubes, just ServerHeightMap)
 
         return cube;
     }
@@ -494,8 +494,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
      *
      * @see CubeProviderServer#getColumn(int, int, Requirement) for the synchronous variant of this method
      */
-    public void asyncGetColumn(int columnX, int columnZ, Requirement req, Consumer<Column> callback) {
-        Column IColumn = getLoadedColumn(columnX, columnZ);
+    public void asyncGetColumn(int columnX, int columnZ, Requirement req, Consumer<IColumn> callback) {
+        IColumn IColumn = getLoadedColumn(columnX, columnZ);
         if (IColumn != null || req == Requirement.GET_CACHED) {
             callback.accept(IColumn);
             return;
@@ -508,8 +508,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
     }
 
     @Nullable @Override
-    public Column getColumn(int columnX, int columnZ, Requirement req) {
-        Column column = getLoadedColumn(columnX, columnZ);
+    public IColumn getColumn(int columnX, int columnZ, Requirement req) {
+        IColumn column = getLoadedColumn(columnX, columnZ);
         if (column != null || req == Requirement.GET_CACHED) {
             return column;
         }
@@ -531,8 +531,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
      * @return The postprocessed column, or <code>null</code>
      */
     @Nullable
-    private Column postProcessColumn(int columnX, int columnZ, @Nullable Column column, Requirement req) {
-        Column loaded = getLoadedColumn(columnX, columnZ);
+    private IColumn postProcessColumn(int columnX, int columnZ, @Nullable IColumn column, Requirement req) {
+        IColumn loaded = getLoadedColumn(columnX, columnZ);
         if (loaded != null) {
             if (column != null && loaded != column) {
                 throw new IllegalStateException("Duplicate column at " + columnX + ", " + columnZ + "!");
@@ -548,7 +548,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
             return null;
         }
 
-        column = (Column) new Chunk((World) worldServer, columnX, columnZ);
+        column = (IColumn) new Chunk((World) worldServer, columnX, columnZ);
         cubeGen.generateColumn(column);
 
         id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
@@ -560,7 +560,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
     public String dumpLoadedCubes() {
         StringBuilder sb = new StringBuilder(10000).append("\n");
         for (Chunk chunk : this.id2ChunkMap.values()) {
-            Column IColumn = (Column) chunk;
+            IColumn IColumn = (IColumn) chunk;
             if (IColumn == null) {
                 sb.append("column = null\n");
                 continue;
@@ -592,8 +592,8 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
     }
 
     @SuppressWarnings("unchecked")
-    Iterator<Column> columnsIterator() {
-        return (Iterator<Column>) (Object) id2ChunkMap.values().iterator();
+    Iterator<IColumn> columnsIterator() {
+        return (Iterator<IColumn>) (Object) id2ChunkMap.values().iterator();
     }
 
     boolean tryUnloadCube(Cube cube) {
@@ -617,7 +617,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
         return true;
     }
 
-    boolean tryUnloadColumn(Column column) {
+    boolean tryUnloadColumn(IColumn column) {
         if (ForgeChunkManager.getPersistentChunksFor(world).containsKey(column.getPos())) {
             return false; // it will be unloaded later by ChunkGC
         }
@@ -641,7 +641,7 @@ public class CubeProviderServer extends ChunkProviderServer implements CubeProvi
         return true;
     }
 
-    public CubeGenerator getCubeGenerator() {
+    public ICubeGenerator getCubeGenerator() {
         return cubeGen;
     }
 

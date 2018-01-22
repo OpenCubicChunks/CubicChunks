@@ -24,7 +24,7 @@
 package cubicchunks.worldgen.builder;
 
 import com.google.common.collect.AbstractIterator;
-import cubicchunks.worldgen.generator.custom.builder.Builder;
+import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
@@ -48,7 +48,7 @@ public class BuilderBenchmark {
     private final ScalingForEachVanillaWithGradientNoOpts vanillaWithGradientsNoOpts = new ScalingForEachVanillaWithGradientNoOpts();
     private final ScalingVanillaNoEntryObject vanillaNoEntryObject = new ScalingVanillaNoEntryObject();
 
-    private Builder builder;
+    private IBuilder builder;
 
     @Setup
     public void setup() {
@@ -85,7 +85,7 @@ public class BuilderBenchmark {
                 .forEachRemaining(v -> bh.consume(v));
     }
 
-    private Iterator<OldScalingIterator.IEntry> iterator(Builder builder, Vec3i start, Vec3i end) {
+    private Iterator<OldScalingIterator.IEntry> iterator(IBuilder builder, Vec3i start, Vec3i end) {
         return new AbstractIterator<OldScalingIterator.IEntry>() {
             Iterator<BlockPos> posIt = BlockPos.getAllInBox(new BlockPos(start), new BlockPos(end)).iterator();
 

@@ -21,18 +21,33 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.api;
 
-import mcp.MethodsReturnNonnullByDefault;
+import java.util.Random;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.common.IWorldGenerator;
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ConfigUpdateListener {
+/**
+ * Implement this interface to your world generators and register them in
+ * {@link net.minecraftforge.fml.common.registry.GameRegistry} to launch them
+ * single time for each generated cube right after terrain and biome specific
+ * generators.
+ *
+ * @deprecated use ICubicPopulator instead. Exists only to keep the one mod that uses it working.
+ */
+@Deprecated
+public interface ICubicWorldGenerator extends IWorldGenerator {
 
     /**
-     * Called when config value is changed. This method may be called from any thread.
+     * Generate some world
+     *
+     * @param random the cube specific {@link Random}.
+     * @param pos is a position of a block in cube with lowest world coordinate
+     *        {@link BlockPos}.
+     * @param world The minecraft {@link World} we're generating for.
+     *
      */
-    void onConfigUpdate(CubicChunks.Config config);
+    void generate(Random random, BlockPos pos, World world);
 }

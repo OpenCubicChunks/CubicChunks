@@ -21,33 +21,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.api;
+package cubicchunks.world.provider;
 
-import java.util.Random;
+import cubicchunks.worldgen.generator.ICubeGenerator;
+import mcp.MethodsReturnNonnullByDefault;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.IWorldGenerator;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Implement this interface to your world generators and register them in
- * {@link net.minecraftforge.fml.common.registry.GameRegistry} to launch them
- * single time for each generated cube right after terrain and biome specific
- * generators.
- *
- * @deprecated use CubicPopulator instead. Exists only to keep the one mod that uses it working.
- */
-@Deprecated
-public interface CubicWorldGenerator extends IWorldGenerator {
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public interface ICubicWorldProvider {
 
     /**
-     * Generate some world
+     * Creates a new Cube generator
      *
-     * @param random the cube specific {@link Random}.
-     * @param pos is a position of a block in cube with lowest world coordinate
-     *        {@link BlockPos}.
-     * @param world The minecraft {@link World} we're generating for.
-     *
+     * @return a new Cube generator
      */
-    void generate(Random random, BlockPos pos, World world);
+    @Nullable ICubeGenerator createCubeGenerator();
+
+    int getOriginalActualHeight();
 }

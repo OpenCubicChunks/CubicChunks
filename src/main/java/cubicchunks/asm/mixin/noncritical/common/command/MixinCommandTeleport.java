@@ -26,7 +26,7 @@ package cubicchunks.asm.mixin.noncritical.common.command;
 import static cubicchunks.asm.JvmNames.COMMAND_TELEPORT_GET_ENTITY;
 import static net.minecraft.command.CommandBase.getEntity;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -49,13 +49,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(CommandTeleport.class)
 public class MixinCommandTeleport {
 
-    @Nullable private WeakReference<CubicWorld> commandWorld;
+    @Nullable private WeakReference<ICubicWorld> commandWorld;
 
     @Inject(method = "execute",
             at = @At(value = "INVOKE", target = COMMAND_TELEPORT_GET_ENTITY, ordinal = 0))
     private void postGetEntityInject(MinecraftServer server, ICommandSender sender, String args[], CallbackInfo ci) {
         try {
-            commandWorld = new WeakReference<>((CubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
+            commandWorld = new WeakReference<>((ICubicWorld) getEntity(server, sender, args[0]).getEntityWorld());
         } catch (CommandException e) {
             commandWorld = null;
         }
@@ -66,7 +66,7 @@ public class MixinCommandTeleport {
         if (commandWorld == null) {
             return original;
         }
-        CubicWorld world = commandWorld.get();
+        ICubicWorld world = commandWorld.get();
         if (world == null) {
             return original;
         }
@@ -78,7 +78,7 @@ public class MixinCommandTeleport {
         if (commandWorld == null) {
             return original;
         }
-        CubicWorld world = commandWorld.get();
+        ICubicWorld world = commandWorld.get();
         if (world == null) {
             return original;
         }

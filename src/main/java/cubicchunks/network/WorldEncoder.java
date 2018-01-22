@@ -24,9 +24,9 @@
 package cubicchunks.network;
 
 import cubicchunks.util.Coords;
-import cubicchunks.world.ClientSurfaceTracker;
-import cubicchunks.world.ServerSurfaceTracker;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.ClientHeightMap;
+import cubicchunks.world.ServerHeightMap;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -81,19 +81,19 @@ class WorldEncoder {
         // it wil all cubes
         cubes.forEach(cube -> {
             if (!cube.isEmpty()) {
-                byte[] heightmaps = ((ServerSurfaceTracker) cube.getColumn().getSurfaceTracker()).getDataForClient();
+                byte[] heightmaps = ((ServerHeightMap) cube.getColumn().getOpacityIndex()).getDataForClient();
                 assert heightmaps.length == Cube.SIZE * Cube.SIZE * Integer.BYTES;
                 out.writeBytes(heightmaps);
             }
         });
     }
 
-    static void encodeColumn(PacketBuffer out, Column column) {
+    static void encodeColumn(PacketBuffer out, IColumn column) {
         // 1. biomes
         out.writeBytes(column.getBiomeArray());
     }
 
-    static void decodeColumn(PacketBuffer in, Column column) {
+    static void decodeColumn(PacketBuffer in, IColumn column) {
         // 1. biomes
         in.readBytes(column.getBiomeArray());
     }
@@ -151,8 +151,8 @@ class WorldEncoder {
                 Cube cube = cubes.get(i);
                 byte[] heightmaps = new byte[Cube.SIZE * Cube.SIZE * Integer.BYTES];
                 in.readBytes(heightmaps);
-                ClientSurfaceTracker surfaceTracker = ((ClientSurfaceTracker) cube.getColumn().getSurfaceTracker());
-                surfaceTracker.setData(heightmaps);
+                ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
+                coi.setData(heightmaps);
 
                 //noinspection ConstantConditions
                 cube.getStorage().recalculateRefCounts();
@@ -160,7 +160,7 @@ class WorldEncoder {
         }
     }
 
-    static int getEncodedSize(Column column) {
+    static int getEncodedSize(IColumn column) {
         return column.getBiomeArray().length;
     }
 

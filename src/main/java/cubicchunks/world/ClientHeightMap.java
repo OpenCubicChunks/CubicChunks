@@ -27,7 +27,7 @@ import static cubicchunks.lighting.LightingManager.MAX_CLIENT_LIGHT_SCAN_DEPTH;
 
 import com.google.common.base.Throwables;
 import cubicchunks.util.Coords;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
@@ -41,13 +41,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ClientSurfaceTracker implements SurfaceTracker {
+public class ClientHeightMap implements IHeightMap {
 
-    private final Column column;
+    private final IColumn column;
     private final HeightMap hmap;
     private int heightMapLowest = Coords.NO_HEIGHT;
 
-    public ClientSurfaceTracker(Column column, int[] heightmap) {
+    public ClientHeightMap(IColumn column, int[] heightmap) {
         this.column = column;
         this.hmap = new HeightMap(heightmap);
     }

@@ -25,7 +25,7 @@ package cubicchunks.asm.mixin.noncritical.common.command;
 
 import static cubicchunks.asm.JvmNames.COMMAND_BASE_PARSE_DOUBLE;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
@@ -46,12 +46,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class MixinCommandBase {
 
     //I hope there are no threads involved...
-    @Nonnull private static WeakReference<CubicWorld> commandWorld = new WeakReference<>(null);
+    @Nonnull private static WeakReference<ICubicWorld> commandWorld = new WeakReference<>(null);
 
     //get command sender, can't fail (inject at HEAD)
     @Inject(method = "parseBlockPos", at = @At(value = "HEAD"))
     private static void parseBlockPosPre(ICommandSender sender, String[] args, int startIndex, boolean centerBlock, CallbackInfoReturnable<?> cbi) {
-        commandWorld = new WeakReference<>((CubicWorld) sender.getEntityWorld());
+        commandWorld = new WeakReference<>((ICubicWorld) sender.getEntityWorld());
     }
 
     //modify parseDouble min argument
@@ -59,7 +59,7 @@ public class MixinCommandBase {
             at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
             index = 2)
     private static int getMinY(int original) {
-        CubicWorld world = commandWorld.get();
+        ICubicWorld world = commandWorld.get();
         if (world == null) {
             return original;
         }
@@ -71,7 +71,7 @@ public class MixinCommandBase {
             at = @At(value = "INVOKE", target = COMMAND_BASE_PARSE_DOUBLE, ordinal = 1),
             index = 3)
     private static int getMaxY(int original) {
-        CubicWorld world = commandWorld.get();
+        ICubicWorld world = commandWorld.get();
         if (world == null) {
             return original;
         }

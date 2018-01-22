@@ -23,7 +23,7 @@
  */
 package cubicchunks.entity;
 
-import cubicchunks.world.CubicWorldServer;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.cube.Cube;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -40,7 +40,7 @@ import net.minecraft.world.WorldServer;
 
 public class CubicEntityTracker extends EntityTracker {
 
-    public CubicEntityTracker(CubicWorldServer worldServer) {
+    public CubicEntityTracker(ICubicWorldServer worldServer) {
         super((WorldServer) worldServer);
     }
 

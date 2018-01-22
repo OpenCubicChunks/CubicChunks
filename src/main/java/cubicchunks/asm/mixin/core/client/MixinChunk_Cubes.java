@@ -26,18 +26,20 @@ package cubicchunks.asm.mixin.core.client;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import cubicchunks.world.SurfaceTracker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.CubeMap;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**
  * Modifies vanilla code in Chunk to use Cubes. Client side only.
@@ -45,7 +47,7 @@ import net.minecraft.world.chunk.Chunk;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(Chunk.class)
-public abstract class MixinChunk_Cubes implements Column {
+public abstract class MixinChunk_Cubes implements IColumn {
 
     /*
      * WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING
@@ -53,7 +55,7 @@ public abstract class MixinChunk_Cubes implements Column {
      * "cubicchunks.asm.mixin.core.common.MixinChunk_Columns".
      */
     private CubeMap cubeMap;
-    private SurfaceTracker opacityIndex;
+    private IHeightMap opacityIndex;
     private Cube cachedCube; // todo: make it always nonnull using BlankCube
 
     private boolean isColumn = false;

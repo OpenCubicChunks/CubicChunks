@@ -26,8 +26,8 @@ package cubicchunks.worldgen.generator.custom.biome.replacer;
 import cubicchunks.CubicChunks;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.util.cache.HashCacheDoubles;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.worldgen.generator.custom.builder.Builder;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockColored;
 import net.minecraft.block.BlockDirt;
@@ -46,7 +46,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class MesaSurfaceReplacer implements BiomeBlockReplacer {
+public class MesaSurfaceReplacer implements IBiomeBlockReplacer {
 
     private static final ResourceLocation HEIGHT_OFFSET = CubicChunks.location("height_offset");
     private static final ResourceLocation HEIGHT_SCALE = CubicChunks.location("height_scale");
@@ -56,7 +56,7 @@ public class MesaSurfaceReplacer implements BiomeBlockReplacer {
     private final double heightScale;
     private final double waterHeight;
 
-    private final Builder depthNoise = SurfaceDefaultReplacer.makeDepthNoise();
+    private final IBuilder depthNoise = SurfaceDefaultReplacer.makeDepthNoise();
 
     private final BiomeMesa biomeMesa;
 
@@ -74,7 +74,7 @@ public class MesaSurfaceReplacer implements BiomeBlockReplacer {
     protected static final IBlockState ORANGE_STAINED_HARDENED_CLAY = STAINED_HARDENED_CLAY.withProperty(BlockColored.COLOR, EnumDyeColor.ORANGE);
 
 
-    public MesaSurfaceReplacer(CubicWorld world, CubicBiome biome, double heightOffset, double heightScale, double waterHeight) {
+    public MesaSurfaceReplacer(ICubicWorld world, CubicBiome biome, double heightOffset, double heightScale, double waterHeight) {
         this.biomeMesa = (BiomeMesa) biome.getBiome();
         this.heightOffset = heightOffset;
         this.heightScale = heightScale;
@@ -179,8 +179,8 @@ public class MesaSurfaceReplacer implements BiomeBlockReplacer {
         return clayBands[(blockY + offset + 64) & 63];
     }
 
-    public static BiomeBlockReplacerProvider provider() {
-        return BiomeBlockReplacerProvider.of((world, biome, conf) ->
+    public static IBiomeBlockReplacerProvider provider() {
+        return IBiomeBlockReplacerProvider.of((world, biome, conf) ->
                 new MesaSurfaceReplacer(world, biome, conf.getDouble(HEIGHT_OFFSET), conf.getDouble(HEIGHT_SCALE), conf.getDouble(OCEAN_LEVEL))
         );
     }

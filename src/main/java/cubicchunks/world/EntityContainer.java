@@ -23,6 +23,7 @@
  */
 package cubicchunks.world;
 
+import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.ClassInheritanceMultiMapFactory;
 import mcp.MethodsReturnNonnullByDefault;
@@ -32,14 +33,17 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ClassInheritanceMultiMap;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 //TODO: Have xcube review this class... I dont trust it
@@ -119,7 +123,7 @@ public class EntityContainer {
     }
 
     //listener is passed from CubeIO to set chunk position
-    public void readFromNbt(NBTTagCompound nbt, String name, CubicWorld world, Consumer<Entity> listener) {
+    public void readFromNbt(NBTTagCompound nbt, String name, ICubicWorld world, Consumer<Entity> listener) {
         NBTTagList nbtEntities = nbt.getTagList(name, 10);
 
         for (int i = 0; i < nbtEntities.tagCount(); i++) {
@@ -128,7 +132,7 @@ public class EntityContainer {
         }
     }
 
-    private Entity readEntity(NBTTagCompound nbtEntity, CubicWorld world, Consumer<Entity> listener) {
+    private Entity readEntity(NBTTagCompound nbtEntity, ICubicWorld world, Consumer<Entity> listener) {
 
         // create the entity
         Entity entity = EntityList.createEntityFromNBT(nbtEntity, (World) world);

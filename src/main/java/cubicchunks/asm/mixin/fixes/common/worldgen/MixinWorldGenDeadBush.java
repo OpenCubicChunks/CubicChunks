@@ -23,9 +23,12 @@
  */
 package cubicchunks.asm.mixin.fixes.common.worldgen;
 
-import cubicchunks.world.CubicWorld;
+import static cubicchunks.asm.JvmNames.MATERIAL_WATER;
+
+import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.custom.populator.PopulatorUtils;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.material.Material;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.WorldGenDeadBush;
@@ -34,6 +37,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Random;
@@ -55,7 +59,7 @@ public class MixinWorldGenDeadBush {
 
     @ModifyConstant(method = "generate", constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_ZERO, ordinal = 0))
     @Nullable private int getReplaceMaterial_HeightCheckHack(int orig, World worldIn, Random rand, BlockPos position) {
-        if (((CubicWorld) worldIn).isCubicWorld()) {
+        if (((ICubicWorld) worldIn).isCubicWorld()) {
             return orig;
         }
         return minPos;

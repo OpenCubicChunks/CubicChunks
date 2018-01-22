@@ -39,7 +39,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ServerSurfaceTracker implements SurfaceTracker {
+public class ServerHeightMap implements IHeightMap {
 
     /**
      * Special value to indicate the absence of a segment in the segments arrays.
@@ -71,11 +71,11 @@ public class ServerSurfaceTracker implements SurfaceTracker {
 
     private boolean needsHash;
 
-    public ServerSurfaceTracker() {
+    public ServerHeightMap() {
         this(new int[Cube.SIZE * Cube.SIZE]);
     }
 
-    public ServerSurfaceTracker(int[] heightmap) {
+    public ServerHeightMap(int[] heightmap) {
         this.ymin = new int[Cube.SIZE * Cube.SIZE];
         this.ymax = new HeightMap(heightmap);
 
@@ -117,7 +117,7 @@ public class ServerSurfaceTracker implements SurfaceTracker {
         return getLastSegmentIndex(segments[xzIndex]) % 2 == 0;
     }
 
-    // Interface: HeightMapImpl ----------------------------------------------------------------------------------------
+    // Interface: IHeightMap ----------------------------------------------------------------------------------------
 
     @Override
     public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {

@@ -21,37 +21,40 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.generator.custom.biome.replacer;
+package cubicchunks.world;
 
+import cubicchunks.util.CubePos;
+import cubicchunks.world.column.IColumn;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.state.IBlockState;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface BiomeBlockReplacer {
+public interface ICubeProvider {
 
-    default void onBlockColumnStart() {
-        // method needed by mesa because of a nasty hack in vanilla
-    }
+    @Nullable
+    Cube getLoadedCube(int cubeX, int cubeY, int cubeZ);
+
+    @Nullable
+    Cube getLoadedCube(CubePos coords);
+
+    Cube getCube(int cubeX, int cubeY, int cubeZ);
+
+    Cube getCube(CubePos coords);
+
     /**
-     * Replaces the given block with another block based on given location, density gradient and density value. Biome
-     * block replacers can be chained (output if one replacer used as input to another replacer)
-     * <p>
-     * The common interpretation of density value: If it's greater than 0, there is block at that position. Density is
-     * scaled in such way that it approximately represents how many blocks below the surface this position is.
-     * <p>
-     * Gradient values approximate how the value will change after going 1 block in x/y/z direction.
+     * Retrieve a column, if it exists and is loaded
      *
-     * @param previousBlock the block that was there before using this replacer
-     * @param x the block X coordinate
-     * @param y the block Y coordinate
-     * @param z the block Z coordinate
-     * @param dx the X component of density gradient
-     * @param dy the Y component of density gradient
-     * @param dz the Z component of density gradient
-     * @param density the density value
+     * @param x The x position of the column
+     * @param z The z position of the column
+     *
+     * @return The column, if loaded. Null, otherwise.
      */
-    IBlockState getReplacedBlock(IBlockState previousBlock, int x, int y, int z, double dx, double dy, double dz, double density);
+    @Nullable
+    IColumn getLoadedColumn(int x, int z); // more strictly define the return type
+
+    IColumn provideColumn(int x, int z);   // more strictly define the return type
 }

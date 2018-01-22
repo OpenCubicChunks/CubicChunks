@@ -24,7 +24,7 @@
 package cubicchunks.worldgen.generator;
 
 import cubicchunks.util.Box;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
@@ -38,7 +38,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface CubeGenerator {
+public interface ICubeGenerator {
 
     Box RECOMMENDED_POPULATOR_REQUIREMENT = new Box(
             -1, -2, -1, // give an extra 16 blocks vertical buffer for things like jungle trees
@@ -57,21 +57,21 @@ public interface CubeGenerator {
      * @param cubeY the cube's Y coordinate
      * @param cubeZ the cube's Z coordinate
      *
-     * @return An CubePrimer with the generated blocks
+     * @return An ICubePrimer with the generated blocks
      */
-    CubePrimer generateCube(int cubeX, int cubeY, int cubeZ);
+    ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ);
 
     /**
      * Generate column-global information such as biome data
      *
      * @param column the target column
      */
-    void generateColumn(Column column);
+    void generateColumn(IColumn column);
 
     /**
      * Populate a cube with multi-block structures that can cross cube boundaries such as trees and ore veins.
      * Population should* be done with the restriction that it may not affect cubes whose call to
-     * {@link CubeGenerator#getPopulationRequirement(Cube)} would does include {@code cube}.
+     * {@link ICubeGenerator#getPopulationRequirement(Cube)} would does include {@code cube}.
      *
      * Note: Unlike vanilla this method will NEVER cause recursive generation, thus the area that it populates is not as strict.
      * Generation should still be restricted as the player might see something generate in a chunk they have already been sent
@@ -83,7 +83,7 @@ public interface CubeGenerator {
     /**
      * Get the bounding box defining a range of cubes whose population contributes to {@code cube} being fully
      * populated.<br> Consider the following example: A call to some implementation of
-     * {@link CubeGenerator#populate(Cube)} populates a 16x16x16 block area in a 2x2x2 area of cubes around the center.
+     * {@link ICubeGenerator#populate(Cube)} populates a 16x16x16 block area in a 2x2x2 area of cubes around the center.
      * <pre>
      * +----------+----------+  . .  The chunk provided as a parameter
      * |          | . . . . .|  . .  to this method (getPopulationRequirement).
@@ -138,23 +138,23 @@ public interface CubeGenerator {
 
     /**
      * Called to reload structures that apply to {@code cube}. Mostly used to prepare calls to
-     * {@link CubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos)} <br>
+     * {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos)} <br>
      *
      * @param cube The cube being loaded
      *
-     * @see CubeGenerator#recreateStructures(Column) for the 2D-equivalent of this method
+     * @see ICubeGenerator#recreateStructures(IColumn) for the 2D-equivalent of this method
      */
     void recreateStructures(Cube cube);
 
     /**
      * Called to reload structures that apply to {@code column}. Mostly used to prepare calls to
-     * {@link CubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos)} <br>
+     * {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos)} <br>
      *
      * @param column The column being loaded
      *
-     * @see CubeGenerator#recreateStructures(Cube) for the 3D-equivalent of this method
+     * @see ICubeGenerator#recreateStructures(Cube) for the 3D-equivalent of this method
      */
-    void recreateStructures(Column column);
+    void recreateStructures(IColumn column);
 
     /**
      * Retrieve a list of creature classes eligible for spawning at the specified location.

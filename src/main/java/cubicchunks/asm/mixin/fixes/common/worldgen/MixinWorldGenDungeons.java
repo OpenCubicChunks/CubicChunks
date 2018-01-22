@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.fixes.common.worldgen;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -46,6 +46,6 @@ public class MixinWorldGenDungeons {
             expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO,
             ordinal = 3))
     private int getMinHeight(int orig, World worldIn, Random rand, BlockPos position) {
-        return ((CubicWorld) worldIn).getMinHeight();
+        return ((ICubicWorld) worldIn).getMinHeight();
     }
 }

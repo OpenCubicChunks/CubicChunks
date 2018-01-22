@@ -26,11 +26,12 @@ package cubicchunks.client;
 import cubicchunks.CubicChunks;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
-import cubicchunks.world.CubeProvider;
-import cubicchunks.world.CubicWorldClient;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.ICubeProvider;
+import cubicchunks.world.ICubicWorldClient;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.BlankCube;
 import cubicchunks.world.cube.Cube;
+import jline.internal.Preconditions;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.util.math.ChunkPos;
@@ -41,29 +42,29 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-//TODO: break off CubeProvider
+//TODO: break off ICubeProvider
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class CubeProviderClient extends ChunkProviderClient implements CubeProvider {
+public class CubeProviderClient extends ChunkProviderClient implements ICubeProvider {
 
-    @Nonnull private CubicWorldClient world;
+    @Nonnull private ICubicWorldClient world;
     @Nonnull private Cube blankCube;
     @Nonnull private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
 
-    public CubeProviderClient(CubicWorldClient world) {
+    public CubeProviderClient(ICubicWorldClient world) {
         super((World) world);
         this.world = world;
-        this.blankCube = new BlankCube((Column) blankChunk);
+        this.blankCube = new BlankCube((IColumn) blankChunk);
     }
 
     @Nullable @Override
-    public Column getLoadedColumn(int x, int z) {
-        return (Column) getLoadedChunk(x, z);
+    public IColumn getLoadedColumn(int x, int z) {
+        return (IColumn) getLoadedChunk(x, z);
     }
 
     @Override
-    public Column provideColumn(int x, int z) {
-        return (Column) provideChunk(x, z);
+    public IColumn provideColumn(int x, int z) {
+        return (IColumn) provideChunk(x, z);
     }
 
     @Override
@@ -119,7 +120,7 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeProvi
         if (cube != null) {
             return cube;
         }
-        Column column = getLoadedColumn(pos.getX(), pos.getZ());
+        IColumn column = getLoadedColumn(pos.getX(), pos.getZ());
         if (column == null) {
             return null;
         }
@@ -137,7 +138,7 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeProvi
      */
     public void unloadCube(CubePos pos) {
         cubeMap.remove(pos.getX(), pos.getY(), pos.getZ());
-        Column IColumn = getLoadedColumn(pos.getX(), pos.getZ());
+        IColumn IColumn = getLoadedColumn(pos.getX(), pos.getZ());
         if (IColumn != null) {
             IColumn.removeCube(pos.getY());
         }
@@ -175,7 +176,7 @@ public class CubeProviderClient extends ChunkProviderClient implements CubeProvi
     public String makeString() {
         return "MultiplayerChunkCache: " + this.chunkMapping.values()
                 .stream()
-                .map(c -> ((Column) c).getLoadedCubes().size())
+                .map(c -> ((IColumn) c).getLoadedCubes().size())
                 .reduce((a, b) -> a + b)
                 .orElse(-1) + "/" + this.chunkMapping.size();
     }

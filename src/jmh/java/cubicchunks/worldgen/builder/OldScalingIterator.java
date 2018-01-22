@@ -27,7 +27,7 @@ import static cubicchunks.util.MathUtil.lerp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import cubicchunks.worldgen.generator.custom.builder.Builder;
+import cubicchunks.worldgen.generator.custom.builder.IBuilder;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.Vec3i;
 
@@ -65,7 +65,7 @@ public class OldScalingIterator implements Iterator<OldScalingIterator.IExtended
     private final int scaleY;
     private final int scaleZ;
 
-    private final Builder builder;
+    private final IBuilder builder;
 
     private int nextGridX;
     private int nextGridY;
@@ -84,7 +84,7 @@ public class OldScalingIterator implements Iterator<OldScalingIterator.IExtended
     private double dxy0, dxy1;
     private double dxyz;
 
-    OldScalingIterator(Builder builder, Vec3i start, Vec3i end, Vec3i scale) {
+    OldScalingIterator(IBuilder builder, Vec3i start, Vec3i end, Vec3i scale) {
         this.builder = builder;
         this.scaleX = scale.getX();
         this.scaleY = scale.getY();

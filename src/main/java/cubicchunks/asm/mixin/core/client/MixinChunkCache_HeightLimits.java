@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.core.client;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.World;
@@ -46,12 +46,12 @@ public abstract class MixinChunkCache_HeightLimits {
     @ModifyConstant(method = "getLightFor",
             constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
     private int getLightFor_getMinHeight(int orig) {
-        return ((CubicWorld) world).getMinHeight();
+        return ((ICubicWorld) world).getMinHeight();
     }
 
     @ModifyConstant(method = "getLightFor", constant = @Constant(intValue = 256))
     private int getLightFor_getMaxHeight(int orig) {
-        return ((CubicWorld) world).getMaxHeight();
+        return ((ICubicWorld) world).getMaxHeight();
     }
 
     @ModifyConstant(method = "getLightForExt",
@@ -59,11 +59,11 @@ public abstract class MixinChunkCache_HeightLimits {
             slice = @Slice(from = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/util/math/BlockPos;getY()I"))
     )
     private int getLightForExt_getMinHeight(int orig) {
-        return ((CubicWorld) world).getMinHeight();
+        return ((ICubicWorld) world).getMinHeight();
     }
 
     @ModifyConstant(method = "getLightForExt", constant = @Constant(intValue = 256))
     private int getLightForExt_getMaxHeight(int orig) {
-        return ((CubicWorld) world).getMaxHeight();
+        return ((ICubicWorld) world).getMaxHeight();
     }
 }

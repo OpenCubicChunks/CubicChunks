@@ -23,7 +23,7 @@
  */
 package cubicchunks.asm.mixin.fixes.common;
 
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockSkull;
 import net.minecraft.tileentity.TileEntitySkull;
@@ -42,6 +42,6 @@ public class MixinBlockSkull_WitherSpawnLimits {
 
     @ModifyConstant(method = "checkWitherSpawn", constant = @Constant(intValue = 2, ordinal = 0))
     private int checkWitherSpawnHeightLimit(int originalHeight, World worldIn, BlockPos pos, TileEntitySkull te) {
-        return ((CubicWorld) worldIn).getMinHeight() + originalHeight;
+        return ((ICubicWorld) worldIn).getMinHeight() + originalHeight;
     }
 }

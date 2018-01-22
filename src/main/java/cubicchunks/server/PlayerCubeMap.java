@@ -30,6 +30,7 @@ import static net.minecraft.util.math.MathHelper.clamp;
 import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -42,8 +43,8 @@ import cubicchunks.util.XYZMap;
 import cubicchunks.util.XZMap;
 import cubicchunks.visibility.CubeSelector;
 import cubicchunks.visibility.CuboidalCubeSelector;
-import cubicchunks.world.CubicWorldServer;
-import cubicchunks.world.column.Column;
+import cubicchunks.world.ICubicWorldServer;
+import cubicchunks.world.column.IColumn;
 import cubicchunks.world.cube.Cube;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -66,6 +67,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -187,11 +189,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     private final Multimap<EntityPlayerMP, Cube> cubesToSend = Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
     private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.IntOptions.MAX_GENERATED_CUBES_PER_TICK.getValue();
 
-    public PlayerCubeMap(CubicWorldServer worldServer) {
+    public PlayerCubeMap(ICubicWorldServer worldServer) {
         super((WorldServer) worldServer);
         this.cubeCache = getWorld().getCubeCache();
         this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(),
-                ((CubicPlayerList) worldServer.getMinecraftServer().getPlayerList()).getVerticalViewDistance());
+                ((ICubicPlayerList) worldServer.getMinecraftServer().getPlayerList()).getVerticalViewDistance());
         worldServer.getLightingManager().registerHeightChangeListener(this);
     }
 
@@ -207,7 +209,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         return new AbstractIterator<Chunk>() {
             @Override protected Chunk computeNext() {
                 while (chunkIt.hasNext()) {
-                    Column column = (Column) chunkIt.next();
+                    IColumn column = (IColumn) chunkIt.next();
                     if (column.shouldTick()) { // shouldTick is true when there Cubes with tickets the request to be ticked
                         return (Chunk) column;
                     }
@@ -750,8 +752,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         return this.columnWatchers.get(pos.x, pos.z);
     }
 
-    @Nonnull public CubicWorldServer getWorld() {
-        return (CubicWorldServer) this.getWorldServer();
+    @Nonnull public ICubicWorldServer getWorld() {
+        return (ICubicWorldServer) this.getWorldServer();
     }
 
     public boolean contains(CubePos coords) {
@@ -815,7 +817,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         world.profiler.startSection("forcedChunkLoading");
         final Iterator<Cube> persistentCubesIterator = persistentChunksFor.keys().stream()
                 .filter(Objects::nonNull)
-                .map(input -> ((Column)world.getChunkFromChunkCoords(input.x, input.z)).getLoadedCubes())
+                .map(input -> ((IColumn)world.getChunkFromChunkCoords(input.x, input.z)).getLoadedCubes())
                 .collect(ArrayList<Cube>::new, (list,cubeCollection)->((ArrayList<Cube>)list).addAll(cubeCollection), (list,cubeList)->((ArrayList<Cube>)list).addAll(cubeList))
                 .iterator();
         world.profiler.endSection();

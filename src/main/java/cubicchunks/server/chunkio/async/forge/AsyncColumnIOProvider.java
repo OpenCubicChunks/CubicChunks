@@ -20,10 +20,11 @@
 package cubicchunks.server.chunkio.async.forge;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.server.chunkio.CubeIO;
-import cubicchunks.world.column.Column;
-import cubicchunks.worldgen.generator.CubeGenerator;
+import cubicchunks.server.chunkio.ICubeIO;
+import cubicchunks.world.column.IColumn;
+import cubicchunks.worldgen.generator.ICubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.chunk.Chunk;
 
 import java.io.IOException;
 
@@ -36,14 +37,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-class AsyncColumnIOProvider extends AsyncIOProvider<Column> {
+class AsyncColumnIOProvider extends AsyncIOProvider<IColumn> {
 
-    @Nonnull private final CubeIO loader;
-    @Nullable private Column column; // The target
+    @Nonnull private final ICubeIO loader;
+    @Nullable private IColumn column; // The target
     @Nonnull private final QueuedColumn colInfo;
-    private CubeGenerator generator;
+    private ICubeGenerator generator;
 
-    AsyncColumnIOProvider(QueuedColumn colInfo, CubeIO loader, CubeGenerator generator) {
+    AsyncColumnIOProvider(QueuedColumn colInfo, ICubeIO loader, ICubeGenerator generator) {
         this.loader = loader;
         this.colInfo = colInfo;
         this.generator = generator;
@@ -60,8 +61,7 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Column> {
         runCallbacks();
     }
 
-    @Nullable @Override
-    Column get() {
+    @Nullable @Override IColumn get() {
         return column;
     }
 

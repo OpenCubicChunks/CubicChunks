@@ -21,10 +21,31 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui.component;
+package cubicchunks.world;
 
-public interface DragTickable {
+import cubicchunks.client.CubeProviderClient;
+import cubicchunks.util.IntRange;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
 
-    void onDragTick(int mouseX, int mouseY, float partialTick);
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public interface ICubicWorldClient extends ICubicWorld {
+
+    /**
+     * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
+     * are loaded. Cannot be used more than once.
+     * @param heightRange
+     * @param generationRange
+     */
+    void initCubicWorldClient(IntRange heightRange, IntRange generationRange);
+
+    CubeProviderClient getCubeCache();
+
+    boolean invalidateRegionAndSetBlock(BlockPos pos, IBlockState blockState);
+
+    void setHeightBounds(int minHeight, int maxHeight);
 }

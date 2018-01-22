@@ -25,14 +25,16 @@ package cubicchunks.network;
 
 import cubicchunks.util.IntRange;
 import cubicchunks.util.PacketUtils;
-import cubicchunks.world.CubicWorld;
-import cubicchunks.world.CubicWorldClient;
-import cubicchunks.world.type.CubicWorldType;
+import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.ICubicWorldClient;
+import cubicchunks.world.type.ICubicWorldType;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.IThreadListener;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -56,12 +58,12 @@ public class PacketCubicWorldData implements IMessage {
     public PacketCubicWorldData(WorldServer world) {
         this.minHeight = 0;
         this.maxHeight = 256;
-        if (((CubicWorld) world).isCubicWorld()) {
+        if (((ICubicWorld) world).isCubicWorld()) {
             this.isCubicWorld = true;
-            this.minHeight = ((CubicWorld) world).getMinHeight();
-            this.maxHeight = ((CubicWorld) world).getMaxHeight();
-            if (world.getWorldType() instanceof CubicWorldType) {
-                CubicWorldType type = (CubicWorldType) world.getWorldType();
+            this.minHeight = ((ICubicWorld) world).getMinHeight();
+            this.maxHeight = ((ICubicWorld) world).getMaxHeight();
+            if (world.getWorldType() instanceof ICubicWorldType) {
+                ICubicWorldType type = (ICubicWorldType) world.getWorldType();
                 IntRange range = type.calculateGenerationHeightRange(world);
                 this.minGenerationHeight = range.getMin();
                 this.maxGenerationHeight = range.getMax();
@@ -119,8 +121,8 @@ public class PacketCubicWorldData implements IMessage {
             if (Minecraft.getMinecraft().getConnection() != null) {
                 WorldClient world = Minecraft.getMinecraft().getConnection().clientWorldController;
                 // initialize only if sending packet about cubic world, but not when already initialized
-                if (message.isCubicWorld() && !((CubicWorld) world).isCubicWorld()) {
-                    ((CubicWorldClient) world).initCubicWorldClient(
+                if (message.isCubicWorld() && !((ICubicWorld) world).isCubicWorld()) {
+                    ((ICubicWorldClient) world).initCubicWorldClient(
                             new IntRange(message.getMinHeight(), message.getMaxHeight()),
                             new IntRange(message.getMinGenerationHeight(), message.getMaxGenerationHeight())
                     );

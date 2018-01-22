@@ -24,11 +24,12 @@
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
-import cubicchunks.world.CubicWorld;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockDirt;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.world.biome.BiomeSavannaMutated;
 
 import java.util.Set;
 
@@ -36,7 +37,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class MutatedSavannaSurfaceReplacer implements BiomeBlockReplacer {
+public class MutatedSavannaSurfaceReplacer implements IBiomeBlockReplacer {
 
     public static final IBlockState COARSE_DIRT = Blocks.DIRT.getDefaultState().withProperty(BlockDirt.VARIANT, BlockDirt.DirtType.COARSE_DIRT);
     private final SurfaceDefaultReplacer defaultReplacer;
@@ -61,11 +62,11 @@ public class MutatedSavannaSurfaceReplacer implements BiomeBlockReplacer {
         return defaultReplacer.getReplacedBlock(previousBlock, x, y, z, dx, dy, dz, density);
     }
 
-    public static BiomeBlockReplacerProvider provider() {
-        return new BiomeBlockReplacerProvider() {
-            private final BiomeBlockReplacerProvider parent = SurfaceDefaultReplacer.provider();
+    public static IBiomeBlockReplacerProvider provider() {
+        return new IBiomeBlockReplacerProvider() {
+            private final IBiomeBlockReplacerProvider parent = SurfaceDefaultReplacer.provider();
 
-            @Override public BiomeBlockReplacer create(CubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
+            @Override public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
                 return new MutatedSavannaSurfaceReplacer((SurfaceDefaultReplacer) parent.create(world, biome, conf));
             }
 

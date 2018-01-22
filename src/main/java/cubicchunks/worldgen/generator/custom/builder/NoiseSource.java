@@ -33,7 +33,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class NoiseSource implements Builder {
+public class NoiseSource implements IBuilder {
 
     private Module module;
 

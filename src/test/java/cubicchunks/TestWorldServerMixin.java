@@ -24,12 +24,15 @@
 package cubicchunks;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import cubicchunks.testutil.MinecraftEnvironment;
-import cubicchunks.world.CubicWorldServer;
+import cubicchunks.util.IntRange;
+import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.type.FlatCubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.profiler.Profiler;
@@ -62,7 +65,7 @@ public class TestWorldServerMixin {
     @Nonnull @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
-    private CubicWorldServer world;
+    private ICubicWorldServer world;
 
     @Before
     public void setUp() throws IOException {
@@ -76,7 +79,7 @@ public class TestWorldServerMixin {
         WorldType cubicChunksType = new FlatCubicWorldType();
         WorldSettings settings = new WorldSettings(0, GameType.SURVIVAL, false, false, cubicChunksType);
         WorldInfo worldInfo = new WorldInfo(settings, "test");
-        this.world = (CubicWorldServer) new WorldServer(server, mockSaveHandler, worldInfo, 0, new Profiler());
+        this.world = (ICubicWorldServer) new WorldServer(server, mockSaveHandler, worldInfo, 0, new Profiler());
     }
     @Test
     public void t() {

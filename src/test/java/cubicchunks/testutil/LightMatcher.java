@@ -27,7 +27,7 @@ import static cubicchunks.util.MathUtil.max;
 import static net.minecraft.world.EnumSkyBlock.BLOCK;
 import static net.minecraft.world.EnumSkyBlock.SKY;
 
-import cubicchunks.lighting.LightBlockAccess;
+import cubicchunks.lighting.ILightBlockAccess;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -42,7 +42,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-class LightMatcher extends TypeSafeDiagnosingMatcher<LightBlockAccess> {
+class LightMatcher extends TypeSafeDiagnosingMatcher<ILightBlockAccess> {
 
     @Nonnull private final BlockPos start;
     @Nonnull private final BlockPos end;
@@ -56,7 +56,7 @@ class LightMatcher extends TypeSafeDiagnosingMatcher<LightBlockAccess> {
      * Subclasses should implement this. The item will already have been checked
      * for the specific type and will never be null.
      */
-    @Override protected boolean matchesSafely(LightBlockAccess access, Description mismatchDescription) {
+    @Override protected boolean matchesSafely(ILightBlockAccess access, Description mismatchDescription) {
         return StreamSupport.stream(BlockPos.getAllInBox(start, end).spliterator(), false).allMatch(pos -> {
             if (access.getLightFor(SKY, pos) != getExpected(access, pos, SKY)) {
                 addMismatchDescription(mismatchDescription, access, pos, SKY);
@@ -70,7 +70,7 @@ class LightMatcher extends TypeSafeDiagnosingMatcher<LightBlockAccess> {
         });
     }
 
-    private void addMismatchDescription(Description desc, LightBlockAccess access, BlockPos pos, EnumSkyBlock type) {
+    private void addMismatchDescription(Description desc, ILightBlockAccess access, BlockPos pos, EnumSkyBlock type) {
         desc.appendText("light value for type " + type + " at " + pos + " didn't match expected value ").
                 appendValue(getExpected(access, pos, type)).appendText(", found ").appendValue(access.getLightFor(type, pos)).
                 appendText(" with neighbors" +
@@ -84,7 +84,7 @@ class LightMatcher extends TypeSafeDiagnosingMatcher<LightBlockAccess> {
                         " opacity=" + access.getBlockLightOpacity(pos));
     }
 
-    private int getExpected(LightBlockAccess access, BlockPos pos, EnumSkyBlock type) {
+    private int getExpected(ILightBlockAccess access, BlockPos pos, EnumSkyBlock type) {
         return max(access.getEmittedLight(pos, type), access.getLightFromNeighbors(type, pos));
     }
 
