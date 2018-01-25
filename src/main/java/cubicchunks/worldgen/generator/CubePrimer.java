@@ -50,22 +50,6 @@ public class CubePrimer implements ICubePrimer {
         this.data[getBlockIndex(x, y, z)] = value;
     }
 
-    @Override
-    public int findGroundHeight(int x, int z) {
-        int i = (x << 8 | z << 4) + 15;
-
-        for (int j = 15; j >= 0; --j) {
-            @SuppressWarnings("deprecation")
-            IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[i + j]);
-
-            if (iblockstate != null && iblockstate != DEFAULT_STATE) {
-                return j;
-            }
-        }
-
-        return -1; // no non-air block found
-    }
-
     /**
      * Map cube local coordinates to an array index in the range [0, 4095].
      *
