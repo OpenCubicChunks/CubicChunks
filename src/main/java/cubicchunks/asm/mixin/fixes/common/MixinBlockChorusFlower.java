@@ -25,11 +25,14 @@ package cubicchunks.asm.mixin.fixes.common;
 
 import cubicchunks.world.ICubicWorld;
 import net.minecraft.block.BlockChorusFlower;
-import net.minecraft.client.Minecraft;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+
+import java.util.Random;
 
 
 /**
@@ -41,9 +44,8 @@ public class MixinBlockChorusFlower {
     // Allows the chorus plant to grow above Y 256
     @ModifyConstant(method = "updateTick",
             constant = @Constant(intValue = 256))
-    private int updateTick(int maxY) {
-        World world = Minecraft.getMinecraft().world;
-        return ((ICubicWorld) world).getMaxHeight();
+    private int updateTick(int maxY, World worldIn, BlockPos pos, IBlockState state, Random rand) {
+        return ((ICubicWorld) worldIn).getMaxHeight();
     }
 
 }
