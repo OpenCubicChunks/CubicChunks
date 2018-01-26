@@ -35,9 +35,6 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import java.util.Random;
 
 
-/**
- * Created by Babbaj on 1/25/2018.
- */
 @Mixin(BlockChorusFlower.class)
 public class MixinBlockChorusFlower {
 
