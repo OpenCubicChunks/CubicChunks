@@ -38,7 +38,10 @@ import java.util.Random;
 @Mixin(BlockChorusFlower.class)
 public class MixinBlockChorusFlower {
 
-    // Allows the chorus plant to grow above Y 256
+    /**
+     * @author Babbaj
+     * @reason Fix hardcoded height check preventing chorus flower from growing above Y=256
+     */
     @ModifyConstant(method = "updateTick",
             constant = @Constant(intValue = 256))
     private int updateTick(int maxY, World worldIn, BlockPos pos, IBlockState state, Random rand) {
