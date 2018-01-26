@@ -60,8 +60,6 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
 
     @Shadow(remap = false) public abstract int getActualHeight();
 
-    private boolean getActualHeightForceOriginalFlag = false;
-
     /**
      * @reason return the real world height instead of hardcoded 256
      * @author Barteks2x
@@ -77,15 +75,6 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
             return;
         }
         cir.setReturnValue(((ICubicWorld)world).getMaxGenerationHeight());
-    }
-
-    @Override public int getOriginalActualHeight() {
-        try {
-            getActualHeightForceOriginalFlag = true;
-            return getActualHeight();
-        } finally {
-            getActualHeightForceOriginalFlag = false;
-        }
     }
 
     @Nullable @Override public ICubeGenerator createCubeGenerator() {
