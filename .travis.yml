@@ -20,10 +20,12 @@ before_install:
 script: ./gradlew clean build
 deploy:
   - provider: script
-    script: "./gradlew uploadArchives"
+    script: "./gradlew clean publish"
     skip_cleanup: true
     on:
       repo: OpenCubicChunks/CubicChunks
+      # check the branch with regex to match master and MC_version branches
+      condition: $TRAVIS_BRANCH =~ ^(master|MC_([0-9]+\.)+[0-9]+)$
       all_branches: true
 
 notifications:

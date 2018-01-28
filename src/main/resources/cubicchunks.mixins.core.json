@@ -1,6 +1,6 @@
 {
     "required": true,
-    "package": "cubicchunks.asm.mixin.core",
+    "package": "io.github.opencubicchunks.cubicchunks.core.asm.mixin.core",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
     "minVersion": "0.6.15-SNAPSHOT",
@@ -17,7 +17,6 @@
         "common.MixinEntity_DeathFix",
         "common.MixinWorldProvider",
         "common.MixinPlayerList",
-        "common.structuregen.MixinStructureStart",
         "common.MixinWorldInfo",
         "common.MixinWorldSettings",
         "common.MixinDerivedWorldInfo"
