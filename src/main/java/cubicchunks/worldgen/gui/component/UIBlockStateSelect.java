@@ -235,9 +235,15 @@ public class UIBlockStateSelect<T extends UIBlockStateSelect<T>> extends UIConta
 
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
 
-        Minecraft.getMinecraft().getBlockRendererDispatcher().renderBlock(state, BlockPos.ORIGIN,
-                DummyWorld.getInstanceWithBlockState(state), buf);
-
+        try {
+            Minecraft.getMinecraft().getBlockRendererDispatcher().renderBlock(state, BlockPos.ORIGIN,
+                    DummyWorld.getInstanceWithBlockState(state), buf);
+        } catch(Throwable t) {
+            if (t instanceof VirtualMachineError || t instanceof VerifyError || t instanceof LinkageError) {
+                throw (Error) t;
+            }
+            // TODO: draw something to indicate it's broken
+        }
         Tessellator.getInstance().draw();
 
         GlStateManager.popMatrix();
