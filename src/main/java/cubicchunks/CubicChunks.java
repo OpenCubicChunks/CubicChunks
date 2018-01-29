@@ -37,6 +37,7 @@ import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
 import cubicchunks.worldgen.generator.CubeGeneratorsRegistry;
 import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.client.RenderVariables;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.generator.custom.biome.replacer.MesaSurfaceReplacer;
@@ -75,6 +76,7 @@ import net.minecraft.world.biome.BiomeSnow;
 import net.minecraft.world.biome.BiomeStoneBeach;
 import net.minecraft.world.biome.BiomeSwamp;
 import net.minecraft.world.biome.BiomeTaiga;
+import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
@@ -108,7 +110,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.Consumer;
-
+import java.util.function.BiConsumer;
+import java.util.function.IntConsumer;
+import java.util.function.IntUnaryOperator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -242,7 +246,7 @@ public class CubicChunks {
     public void preInit(FMLPreInitializationEvent e) {
         LOGGER = e.getModLog();
         ConversionUtils.initFlowNoiseHack();
-
+        
         config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
 
         CCFixType.addFixableWorldType(VanillaCubicWorldType.create());
@@ -281,6 +285,7 @@ public class CubicChunks {
             for (IConfigUpdateListener l : configChangeListeners) {
                 l.onConfigUpdate(config);
             }
+            RenderVariables.setRenderChunkBit(config.getRenderChunkBits());
         }
     }
 
@@ -366,45 +371,73 @@ public class CubicChunks {
         public static enum IntOptions {
             MAX_GENERATED_CUBES_PER_TICK(1, Integer.MAX_VALUE, 49 * 16, "The number of cubic chunks to generate per tick."),
             VERTICAL_CUBE_LOAD_DISTANCE(2, 32, 8, "Similar to Minecraft's view distance, only for vertical chunks."),
+            RENDER_CHUNK_SIZE_BIT(4, 8, 6, 4, "Define a size of RenderChunk. Effective only client side (obviously).", (config, value) -> {
+                RenderVariables.setRenderChunkBit(value);
+                if (value > 4 && config.forceOffThreadTerrainSetupWithBigRenderChunks()) {
+                    ForgeModContainer.alwaysSetupTerrainOffThread = true;
+                }
+            }, value -> {
+                return 1 << value;
+            }),
             CHUNK_G_C_INTERVAL(1, Integer.MAX_VALUE, 20 * 10,
                     "Chunk garbage collector update interval. A more lower it is - a more CPU load it will generate. "
                             + "A more high it is - a more memory will be used to store cubes between launches.");
 
             private final int minValue;
             private final int maxValue;
+            private final int guiMaxValue;
             private final int defaultValue;
             private final String description;
             private int value;
+            private BiConsumer<CubicChunks.Config, Integer> callback = (config, value) -> {};
+            private IntUnaryOperator guiValueFormatter;
 
+            private IntOptions(int minValue1, int maxValue1, int guiMaxValue1, int defaultValue1, String description1, BiConsumer<CubicChunks.Config, Integer> callbackIn, IntUnaryOperator guiValueFormatterIn) {
+                minValue = minValue1;
+                maxValue = maxValue1;
+                guiMaxValue = guiMaxValue1;
+                defaultValue = defaultValue1;
+                description = description1;
+                value = defaultValue;
+                callback = callbackIn;
+                guiValueFormatter = guiValueFormatterIn;
+            }
+            
             private IntOptions(int minValue1, int maxValue1, int defaultValue1, String description1) {
                 minValue = minValue1;
                 maxValue = maxValue1;
+                guiMaxValue = maxValue1;
                 defaultValue = defaultValue1;
                 description = description1;
                 value = defaultValue;
             }
 
-            public float getNormalValue() {
-                return (float) (value - minValue) / (maxValue - minValue);
+            public float getNormalizedValueForGUI() {
+                return (float) (value - minValue) / (guiMaxValue - minValue);
             }
 
-            public void setValueFromNormal(float sliderValue) {
-                value = minValue + (int) ((maxValue - minValue) * sliderValue);
+            public void setValueFromGUISlider(float sliderValue) {
+                value = minValue + (int) ((guiMaxValue - minValue) * sliderValue);
                 config.configuration.get(Configuration.CATEGORY_GENERAL, getNicelyFormattedName(this.name()), value).set(value);
                 config.configuration.save();
                 for (IConfigUpdateListener l : configChangeListeners) {
                     l.onConfigUpdate(config);
                 }
+                callback.accept(config, value);
             }
 
             public int getValue() {
                 return value;
             }
+
+            public int getGUIValue() {
+                if (guiValueFormatter == null)
+                    return value;
+                return guiValueFormatter.applyAsInt(value);
+            }
         }
         
         public static enum BoolOptions {
-            // We need USE_FAST_COLLISION_CHECK here because if we save
-            // config within mixin configuration plugin all description lines will be stripped.
             USE_FAST_ENTITY_SPAWNER(false,
                     "Enabling this option allow using fast entity spawner instead of vanilla-alike."
                             + " Fast entity spawner can reduce server lag."
@@ -416,16 +449,31 @@ public class CubicChunks {
                             + CubicChunks.MODID + " will pregenerate cubes in a range of height from 0 to 255."),
             FORCE_CUBIC_CHUNKS(false,
                     "Enabling this will force creating a cubic chunks world, even if it's not cubic chunks world type. This option is automatically"
-                            + " set in world creation GUI when creating cubic chunks world with non-cubicchunks world type");
+                            + " set in world creation GUI when creating cubic chunks world with non-cubicchunks world type"),
+            FORCE_OFF_THREAD_TERRAIN_SETUP_WITH_BIG_RENDER_CHUNKS(true,
+                    "Enabling this will force 'alwaysSetupTerrainOffThread' config option if render chunk size is higher than 16.",
+                    (config, value) -> {
+                        if (value && config.getRenderChunkBits() > 4) {
+                            ForgeModContainer.alwaysSetupTerrainOffThread = true;
+                        }
+                    });
 
             private final boolean defaultValue;
             private final String description;
             private boolean value;
+            private BiConsumer<CubicChunks.Config, Boolean> callback = (config, value) -> {};
 
             private BoolOptions(boolean defaultValue1, String description1) {
                 defaultValue = defaultValue1;
                 description = description1;
                 value = defaultValue;
+            }
+            
+            private BoolOptions(boolean defaultValue1, String description1, BiConsumer<CubicChunks.Config, Boolean> callbackIn) {
+                defaultValue = defaultValue1;
+                description = description1;
+                value = defaultValue;
+                callback=callbackIn;
             }
 
             public boolean getValue() {
@@ -467,10 +515,12 @@ public class CubicChunks {
             for (IntOptions configOption : IntOptions.values()) {
                 configOption.value = configuration.getInt(getNicelyFormattedName(configOption.name()), Configuration.CATEGORY_GENERAL,
                         configOption.defaultValue, configOption.minValue, configOption.maxValue, configOption.description);
+                configOption.callback.accept(this, configOption.value);
             }
             for (BoolOptions configOption : BoolOptions.values()) {
                 configOption.value = configuration.getBoolean(getNicelyFormattedName(configOption.name()), Configuration.CATEGORY_GENERAL,
                         configOption.defaultValue, configOption.description);
+                configOption.callback.accept(this, configOption.value);
             }
             if (configuration.hasChanged()) {
                 configuration.save();
@@ -488,9 +538,17 @@ public class CubicChunks {
         public int getChunkGCInterval() {
             return IntOptions.CHUNK_G_C_INTERVAL.value;
         }
+        
+        public int getRenderChunkBits() {
+            return IntOptions.RENDER_CHUNK_SIZE_BIT.value;
+        }
 
         public boolean useFastEntitySpawner() {
             return BoolOptions.USE_FAST_ENTITY_SPAWNER.value;
+        }
+        
+        public boolean forceOffThreadTerrainSetupWithBigRenderChunks() {
+            return BoolOptions.FORCE_OFF_THREAD_TERRAIN_SETUP_WITH_BIG_RENDER_CHUNKS.value;
         }
 
         public static class GUI extends GuiConfig {

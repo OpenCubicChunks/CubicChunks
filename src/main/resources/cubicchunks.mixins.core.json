@@ -9,6 +9,7 @@
         "common.MixinChunk_Cubes",
         "common.MixinIBlockAccess_MinMaxHeight",
         "common.MixinMinecraftServer",
+        "common.MixinIntegratedServer",
         "common.MixinWorld_Tick",
         "common.MixinWorld",
         "common.MixinWorldServer",
@@ -25,11 +26,13 @@
     "client": [
         "client.MixinWorld_HeightLimits",
         "client.MixinWorldClient",
-        "client.MixinRenderGlobal",
         "client.MixinChunkCache_HeightLimits",
         "client.MixinChunk_Cubes",
-        "client.MixinViewFrustum_RenderHeightFix",
         "client.MixinWorldProvider",
+        "client.MixinVisGraph",
+        "client.MixinRenderChunk",
+        "client.MixinRenderGlobal",
+        "client.MixinViewFrustum",
         "client.MixinGuiCreateWorld",
         "client.MixinDebugRenderChunkBorder"
     ],

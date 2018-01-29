@@ -15,6 +15,9 @@
         "common.MixinWorldServer_UpdateBlocks"
     ],
     "client": [
+        "client.MixinRenderChunk_NoOptifine",
+        "client.MixinRenderChunk_OptifineSpecific",
+        "client.MixinRenderGlobal_BiggerRenderChunk_OptifineSpecific"
     ],
     "server": [
     ],
