@@ -63,31 +63,31 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         OptifineState optifineState = OptifineState.NOT_LOADED;
-        try {
-            Class optifineInstallerClass = Class.forName("optifine.Installer");
-            Method getVersionHandler = optifineInstallerClass.getMethod("getOptiFineVersion", new Class[0]);
-            String optifineVersion = (String) getVersionHandler.invoke(null, new Object[0]);
-            optifineVersion = optifineVersion.replace("_pre", "");
-            optifineVersion = optifineVersion.substring(optifineVersion.length() - 2, optifineVersion.length());
-            if (optifineVersion.compareTo("D1") >= 0)
-                optifineState = OptifineState.LOADED_D1;
-            else
-                optifineState = OptifineState.LOADED_C7;
-            CubicChunks.LOGGER.info("Detected Optifine version: " + optifineVersion);
-        } catch (ClassNotFoundException e) {
-            optifineState = OptifineState.NOT_LOADED;
-            CubicChunks.LOGGER.info("No Optifine detected");
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        String optifineVersion = System.getProperty("cubicchunks.optifineVersion", "empty");
+        if (optifineVersion.equals("empty")) {
+            try {
+                Class optifineInstallerClass = Class.forName("optifine.Installer");
+                Method getVersionHandler = optifineInstallerClass.getMethod("getOptiFineVersion", new Class[0]);
+                optifineVersion = (String) getVersionHandler.invoke(null, new Object[0]);
+                optifineVersion = optifineVersion.replace("_pre", "");
+                optifineVersion = optifineVersion.substring(optifineVersion.length() - 2, optifineVersion.length());
+                CubicChunks.LOGGER.info("Detected Optifine version: " + optifineVersion);
+            } catch (ClassNotFoundException e) {
+                optifineState = OptifineState.NOT_LOADED;
+                CubicChunks.LOGGER.info("No Optifine detected");
+            } catch (Exception e) {
+                CubicChunks.LOGGER.info("Optifine detected, but have incompatible build. Optifine D1 specific mixins will be loaded.");
+                optifineVersion = "D1";
+            }
         }
+        
+        if(optifineVersion.equalsIgnoreCase("ignore"))
+            optifineState = OptifineState.NOT_LOADED;
+        else if (optifineVersion.compareTo("D1") >= 0)
+            optifineState = OptifineState.LOADED_D1;
+        else
+            optifineState = OptifineState.LOADED_C7;
+
         modDependencyConditions.defaultReturnValue(true);
         modDependencyConditions.put(
                 "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobalNoOptifine",
