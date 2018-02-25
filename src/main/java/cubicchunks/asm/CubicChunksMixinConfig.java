@@ -73,7 +73,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 optifineVersion = optifineVersion.substring(optifineVersion.length() - 2, optifineVersion.length());
                 CubicChunks.LOGGER.info("Detected Optifine version: " + optifineVersion);
             } catch (ClassNotFoundException e) {
-                optifineState = OptifineState.NOT_LOADED;
+                optifineVersion = "ignore";
                 CubicChunks.LOGGER.info("No Optifine detected");
             } catch (Exception e) {
                 CubicChunks.LOGGER.info("Optifine detected, but have incompatible build. Optifine D1 specific mixins will be loaded.");
