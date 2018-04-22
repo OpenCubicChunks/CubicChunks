@@ -23,6 +23,7 @@
  */
 package cubicchunks.worldgen.gui.component;
 
+import cubicchunks.CubicChunks;
 import cubicchunks.worldgen.gui.DummyWorld;
 import cubicchunks.worldgen.gui.ExtraGui;
 import net.malisis.core.client.gui.ClipArea;
@@ -79,14 +80,24 @@ public class UIBlockStateSelect<T extends UIBlockStateSelect<T>> extends UIConta
         List<IBlockState> states = new ArrayList<>();
         for (Block block : ForgeRegistries.BLOCKS) {
             for (IBlockState state : block.getBlockState().getValidStates()) {
-                if (state != block.getStateFromMeta(block.getMetaFromState(state))) {
-                    continue;
+                try {
+                    if (state != block.getStateFromMeta(block.getMetaFromState(state))) {
+                        continue;
+                    }
+                    if (state.getBlock().hasTileEntity(state)
+                            && TileEntityRendererDispatcher.instance.getRenderer(state.getBlock().createTileEntity(null, state)) != null) {
+                        continue; // Don't allow TESR
+                    }
+                    states.add(state);
+                } catch (Throwable t) {
+                    // those are important so rethrow
+                    if (t instanceof VirtualMachineError) {
+                        throw (VirtualMachineError) t;
+                    }
+                    // everything else - -assume mods are stupid and just log it
+                    // this is awful but some mods just need their exceptions to be caught here
+                    CubicChunks.LOGGER.catching(t);
                 }
-                if (state.getBlock().hasTileEntity(state)
-                        && TileEntityRendererDispatcher.instance.getRenderer(state.getBlock().createTileEntity(null, state)) != null) {
-                    continue; // Don't allow TESR
-                }
-                states.add(state);
             }
         }
 
