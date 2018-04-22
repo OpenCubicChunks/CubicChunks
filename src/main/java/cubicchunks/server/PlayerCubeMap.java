@@ -49,6 +49,7 @@ import cubicchunks.world.cube.Cube;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.server.management.PlayerChunkMapEntry;
@@ -189,6 +190,15 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     private final Multimap<EntityPlayerMP, Cube> cubesToSend = Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
     private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.IntOptions.MAX_GENERATED_CUBES_PER_TICK.getValue();
 
+    // these player adds will be processed on the next tick
+    // this exists as temporary workaround to player respawn code calling addPlayer() before spawning
+    // the player in world as it's spawning player in world that triggers sending cubic chunks world
+    // information to client, this causes the server to send columns to the client before the client
+    // knows it's a cubic chunks world delaying addPlayer() by one tick fixes it.
+    // this should be fixed by hooking into the code in a different place to send the cubic chunks world information
+    // (player respawn packet?)
+    private Set<EntityPlayerMP> pendingPlayerAdd = new HashSet<>();
+
     public PlayerCubeMap(ICubicWorldServer worldServer) {
         super((WorldServer) worldServer);
         this.cubeCache = getWorld().getCubeCache();
@@ -229,7 +239,16 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         getWorld().getProfiler().startSection("playerCubeMapTick");
         long currentTime = this.getWorldServer().getTotalWorldTime();
 
-        getWorld().getProfiler().startSection("tickEntries");
+        getWorld().getProfiler().startSection("addPendingPlayers");
+        if (!pendingPlayerAdd.isEmpty()) {
+            // copy in case player still isn't in world
+            Set<EntityPlayerMP> players = pendingPlayerAdd;
+            pendingPlayerAdd = new HashSet<>();
+            for (EntityPlayerMP player : players) {
+                addPlayer(player);
+            }
+        }
+        getWorld().getProfiler().endStartSection("tickEntries");
         //force update-all every 8000 ticks (400 seconds)
         if (currentTime - this.previousWorldTime > 8000L) {
             this.previousWorldTime = currentTime;
@@ -470,6 +489,16 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     // CHECKED: 1.10.2-12.18.1.2092
     @Override
     public void addPlayer(EntityPlayerMP player) {
+        if (player.world != this.getWorldServer()) {
+            CubicChunks.bigWarning("Player world not the same ad PlayerCubeMap world! Adding anyway. This is very likely to cause issues! Player "
+                            + "world dimension ID: %d, PlayerCubeMap dimension ID: %d", player.world.provider.getDimension(),
+                    getWorldServer().provider.getDimension());
+        } else if (!player.world.playerEntities.contains(player)) {
+            CubicChunks.LOGGER.debug("PlayerCubeMap (dimension {}): Adding player to pending to add list", getWorldServer().provider.getDimension());
+            pendingPlayerAdd.add(player);
+            return;
+        }
+
         PlayerWrapper playerWrapper = new PlayerWrapper(player);
         playerWrapper.updateManagedPos();
 
