@@ -87,7 +87,11 @@ public class RegionCubeIO implements ICubeIO {
             }
         }
 
-        this.save.close();
+        try {
+            this.save.close();
+        } catch (Exception ex) {
+            CubicChunks.LOGGER.catching(ex);
+        }
         //if (!this.save.isClosed()) {
         //	this.db.close();
         //} else {
