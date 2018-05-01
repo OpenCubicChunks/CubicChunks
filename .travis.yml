@@ -20,7 +20,7 @@ before_install:
 script: ./gradlew clean build
 deploy:
   - provider: script
-    script: "./gradlew uploadArchives"
+    script: "./gradlew clean uploadArchives"
     skip_cleanup: true
     on:
       repo: OpenCubicChunks/CubicChunks
