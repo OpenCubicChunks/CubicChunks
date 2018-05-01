@@ -268,7 +268,7 @@ uploadArchives.apply {
 // tasks must be before artifacts, don't change the order
 artifacts {
     withGroovyBuilder {
-        "archives"(shadowJar, sourcesJar, javadocJar)
+        "archives"(tasks["reobfShadowJar"], sourcesJar, javadocJar)
     }
 }
 
