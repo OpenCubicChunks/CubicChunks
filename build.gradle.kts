@@ -326,7 +326,7 @@ dependencies {
         isTransitive = false
     }
 
-    embed("io.github.opencubicchunks:regionlib:0.50.0-SNAPSHOT")
+    embed("io.github.opencubicchunks:regionlib:0.51.0-SNAPSHOT")
 
     deobfCompile("net.malisis:malisiscore:$malisisCoreVersion") {
         isTransitive = false
