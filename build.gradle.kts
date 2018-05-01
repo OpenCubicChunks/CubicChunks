@@ -264,11 +264,11 @@ uploadArchives.apply {
         }
     }
 }
-
+uploadArchives.dependsOn("reobfShadowJar")
 // tasks must be before artifacts, don't change the order
 artifacts {
     withGroovyBuilder {
-        "archives"(tasks["reobfShadowJar"], sourcesJar, javadocJar)
+        "archives"(shadowJar, sourcesJar, javadocJar)
     }
 }
 
