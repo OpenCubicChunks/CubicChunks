@@ -193,6 +193,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
             XYZAddressable bucket = this.bucketsByPointer[index];
             if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
                 this.bucketsByPointer[index] = value;
+                this.bucketsByHash[pointerIndex] = value;
                 return (T) bucket;
             }
             pointerIndex = this.getNextPointerIndex(pointerIndex);
@@ -301,17 +302,17 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      *         coordinates in this map
      */
     public boolean contains(int x, int y, int z) {
-        int pointerIndex = this.getPointerIndex(x, y, z);
-        int index = pointers[pointerIndex];
+        int index = this.getPointerIndex(x, y, z);
+        XYZAddressable bucket = this.bucketsByHash[index];
+        while (bucket != null) {
 
-        while (index != 0) {
-            XYZAddressable bucket = this.bucketsByPointer[index];
             // If the correct bucket was found, return it.
             if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
                 return true;
             }
-            pointerIndex = this.getNextPointerIndex(pointerIndex);
-            index = pointers[pointerIndex];
+
+            index = getNextPointerIndex(index);
+            bucket = this.bucketsByHash[index];
         }
 
         // nothing was found
@@ -377,7 +378,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
         this.pointers[holePointerIndex] = 0;
         this.bucketsByPointer[holeIndex] = this.bucketsByPointer[lastElement];
         this.bucketsByHash[holePointerIndex] = null;
-        size--;
+        this.size--;
 
         int pointerIndex = this.getNextPointerIndex(holePointerIndex);
         int index = pointers[pointerIndex];
@@ -385,7 +386,8 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
             XYZAddressable bucket = this.bucketsByPointer[index];
             nextPointersBuckets.add(bucket);
             nextBucketIndexes.add(index);
-            pointers[pointerIndex] = 0;
+            this.pointers[pointerIndex] = 0;
+            this.bucketsByHash[pointerIndex] = null;
             pointerIndex = this.getNextPointerIndex(pointerIndex);
             index = pointers[pointerIndex];
         }
@@ -401,7 +403,8 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
                 newBucketPointerIndex = this.getNextPointerIndex(newBucketPointerIndex);
                 newIndex = pointers[newBucketPointerIndex];
             }
-            pointers[newBucketPointerIndex] = nextBucketIndexes.get(i);
+            this.pointers[newBucketPointerIndex] = nextBucketIndexes.get(i);
+            this.bucketsByHash[newBucketPointerIndex] = bucket;
         }
 
     }
