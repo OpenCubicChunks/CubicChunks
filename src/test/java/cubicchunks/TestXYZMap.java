@@ -106,6 +106,16 @@ public class TestXYZMap {
             }
         }
     }
+    
+    @Test
+    public void testReplace() {
+        XYZAddressable value1 = new Addressable(0, 0, 0, "1");
+        XYZAddressable value2 = new Addressable(0, 0, 0, "2");
+        XYZMap<XYZAddressable> map = new XYZMap<>(0.75f, 10);
+        map.put(value1);
+        map.put(value2);
+        assertEquals(map.get(0, 0, 0), value2);
+    }
 
     @Test
     public void testContains() {
@@ -179,6 +189,7 @@ public class TestXYZMap {
             }
             for (XYZAddressable element : allElements) {
                 assertTrue(map.contains(element));
+                assertTrue(map.get(element.getX(), element.getY(), element.getZ()) != null);
             }
         }
     }
