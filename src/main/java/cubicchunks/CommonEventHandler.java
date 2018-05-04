@@ -33,12 +33,9 @@ import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.ICubicWorldSettings;
 import cubicchunks.world.WorldSavedCubicChunksData;
-import cubicchunks.world.provider.ICubicWorldProvider;
 import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldServerMulti;
@@ -85,7 +82,7 @@ public class CommonEventHandler {
         }
         CubicChunks.LOGGER.info("Initializing world " + evt.getObject() + " with type " + evt.getObject().getWorldType());
 
-        IntRange generationRange = new IntRange(0, ((ICubicWorldProvider) world.getProvider()).getOriginalActualHeight());
+        IntRange generationRange = new IntRange(0, world.getProvider().getActualHeight());
         WorldType type = evt.getObject().getWorldType();
         if (type instanceof ICubicWorldType) {
             generationRange = ((ICubicWorldType) type).calculateGenerationHeightRange((WorldServer) world);
