@@ -43,6 +43,7 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 
@@ -71,6 +72,10 @@ public class DebugWorldType extends WorldType implements ICubicWorldType {
 
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
         return new IntRange(0, 256);
+    }
+
+    @Override public boolean hasCubicGeneratorForWorld(World w) {
+        return w.provider.getDimension() == 0;
     }
 
     @Override public ICubeGenerator createCubeGenerator(ICubicWorld world) {

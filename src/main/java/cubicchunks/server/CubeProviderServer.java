@@ -24,6 +24,7 @@
 package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.CubicChunksConfig;
 import cubicchunks.asm.CubicChunksMixinConfig;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.chunkio.ICubeIO;
@@ -437,7 +438,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             }
         });
         
-        if (!(cubeGen instanceof VanillaCompatibilityGenerator) && CubicChunks.Config.BoolOptions.USE_VANILLA_CHUNK_WORLD_GENERATORS.getValue()) {
+        if (!(cubeGen instanceof VanillaCompatibilityGenerator) && CubicChunksConfig.useVanillaChunkWorldGenerators) {
             for (int x = 0; x < 2; x++) {
                 for (int z = 0; z < 2; z++) {
                     for (int y = 15; y >= 0; y--) {

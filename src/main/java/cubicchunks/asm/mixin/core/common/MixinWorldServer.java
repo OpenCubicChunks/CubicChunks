@@ -24,6 +24,7 @@
 package cubicchunks.asm.mixin.core.common;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.CubicChunksConfig;
 import cubicchunks.entity.CubicEntityTracker;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ChunkGc;
@@ -96,7 +97,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
         super.initCubicWorld(heightRange, generationRange);
         this.isCubicWorld = true;
-        this.entitySpawner = new CubeWorldEntitySpawner();
+        this.entitySpawner = CubicChunksConfig.useFastEntitySpawner ?
+                new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner();
 
         this.chunkProvider = new CubeProviderServer(this,
                 ((ICubicWorldProvider) this.provider).createCubeGenerator());
@@ -108,15 +110,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
         this.firstLightProcessor = new FirstLightProcessor(this);
         this.entityTracker = new CubicEntityTracker(this);
-        CubicChunks.addConfigChangeListener(this);
-    }
-
-    @Override
-    public void onConfigUpdate(CubicChunks.Config config){
-        if(config.useFastEntitySpawner() && this.entitySpawner instanceof CubeWorldEntitySpawner)
-            this.entitySpawner = new FastCubeWorldEntitySpawner();
-        else if(!config.useFastEntitySpawner() && this.entitySpawner instanceof FastCubeWorldEntitySpawner)
-            this.entitySpawner = new CubeWorldEntitySpawner();
     }
 
     @Override public void tickCubicWorld() {
@@ -125,6 +118,11 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         }
         assert chunkGc != null;
         this.chunkGc.tick();
+        // update world entity spawner
+        if (CubicChunksConfig.useFastEntitySpawner != (entitySpawner.getClass() == FastCubeWorldEntitySpawner.class)) {
+            this.entitySpawner = CubicChunksConfig.useFastEntitySpawner ?
+                    new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner();
+        }
     }
 
     @Override public CubicEntityTracker getCubicEntityTracker() {

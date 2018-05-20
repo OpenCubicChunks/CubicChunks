@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import cubicchunks.CubicChunks;
+import cubicchunks.CubicChunksConfig;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.network.PacketCubes;
 import cubicchunks.network.PacketDispatcher;
@@ -185,7 +186,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     private final CubeProviderServer cubeCache;
 
     private final Multimap<EntityPlayerMP, Cube> cubesToSend = Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
-    private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.IntOptions.MAX_GENERATED_CUBES_PER_TICK.getValue();
 
     // these player adds will be processed on the next tick
     // this exists as temporary workaround to player respawn code calling addPlayer() before spawning
@@ -312,7 +312,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             getWorld().getProfiler().startSection("cubes");
 
             long stopTime = System.nanoTime() + 50000000L;
-            int chunksToGenerate = maxGeneratedCubesPerTick;
+            int chunksToGenerate = CubicChunksConfig.maxGeneratedCubesPerTick;
             Iterator<CubeWatcher> iterator = this.cubesToGenerate.iterator();
 
             while (iterator.hasNext() && chunksToGenerate >= 0 && System.nanoTime() < stopTime) {

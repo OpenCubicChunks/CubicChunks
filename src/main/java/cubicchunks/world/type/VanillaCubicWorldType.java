@@ -30,6 +30,7 @@ import cubicchunks.world.provider.ICubicWorldProvider;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import cubicchunks.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
@@ -60,5 +61,9 @@ public class VanillaCubicWorldType extends WorldType implements ICubicWorldType 
 
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
         return new IntRange(0, ((ICubicWorldProvider) world.provider).getOriginalActualHeight());
+    }
+
+    @Override public boolean hasCubicGeneratorForWorld(World object) {
+        return false;
     }
 }

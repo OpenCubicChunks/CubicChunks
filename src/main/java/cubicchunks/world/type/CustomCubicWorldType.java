@@ -76,6 +76,10 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
         return new IntRange(opts.getMinHeight(), opts.getRealMaxHeight());
     }
 
+    @Override public boolean hasCubicGeneratorForWorld(World w) {
+        return w.provider.getDimension() == 0;
+    }
+
     public BiomeProvider getBiomeProvider(World world) {
         if ("true".equalsIgnoreCase(System.getProperty("cubicchunks.debug.biomes"))) {
             return new BiomeProvider() {{

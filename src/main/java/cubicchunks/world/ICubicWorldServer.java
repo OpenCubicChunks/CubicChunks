@@ -23,7 +23,6 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.IConfigUpdateListener;
 import cubicchunks.entity.CubicEntityTracker;
 import cubicchunks.lighting.FirstLightProcessor;
 import cubicchunks.server.ChunkGc;
@@ -40,7 +39,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface ICubicWorldServer extends ICubicWorld, IConfigUpdateListener {
+public interface ICubicWorldServer extends ICubicWorld {
 
     /**
      * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks

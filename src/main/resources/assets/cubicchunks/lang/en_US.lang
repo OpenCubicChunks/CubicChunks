@@ -33,7 +33,7 @@ cubicchunks.gui.customcubic.presets.cancel=Cancel
 ###          options          ###
 #################################
 
-cubicchunks.gui.verticalCubeLoadDistance=Vertical Distance: %d cubes
+cubicchunks.gui.vertical_cube_load_distance=Vertical Distance: %d cubes
 
 #################################
 ###   flat terrain layers     ###
