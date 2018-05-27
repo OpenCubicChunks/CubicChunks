@@ -129,7 +129,7 @@ float densityRaw(vec2 pos) {
     float heightVariation = previewHeightVariation*heightVariationFactor*special+heightVariationOffset;
     float heightOffset = previewHeight*heightFactor+heightOffset;
 
-    return rawDensity*heightVariation + heightOffset - pos.y;
+    return rawDensity*heightVariation + heightOffset - pos.y*sign(heightVariation);
 }
 float densityInterp(vec2 texCoord) {
     vec2 posBase = floor(texCoord*vec2(0.25, 0.125))*vec2(4, 8);

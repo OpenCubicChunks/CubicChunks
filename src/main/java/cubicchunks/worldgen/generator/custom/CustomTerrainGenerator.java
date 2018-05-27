@@ -165,7 +165,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
 
         this.terrainBuilder = selector
                 .lerp(low, high).add(randomHeight2d).mul(volatility).add(height)
-                .sub((x, y, z) -> y)
+                .sub(volatility.signum().mul((x, y, z) -> y))
                 .cached(CACHE_SIZE_3D, HASH_3D);
     }
 
