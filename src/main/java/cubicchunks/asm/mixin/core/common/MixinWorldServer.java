@@ -36,8 +36,8 @@ import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.IntRange;
 import cubicchunks.world.CubeWorldEntitySpawner;
-import cubicchunks.world.CubicSaveHandler;
 import cubicchunks.world.FastCubeWorldEntitySpawner;
+import cubicchunks.world.ICubicSaveHandler;
 import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.NotCubicChunksWorldException;
 import cubicchunks.world.column.IColumn;
@@ -106,8 +106,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.playerChunkMap = new PlayerCubeMap(this);
         this.chunkGc = new ChunkGc(getCubeCache());
 
-        this.saveHandler = new CubicSaveHandler(this, this.getSaveHandler());
-
         this.firstLightProcessor = new FirstLightProcessor(this);
         this.entityTracker = new CubicEntityTracker(this);
     }
@@ -123,6 +121,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
             this.entitySpawner = CubicChunksConfig.useFastEntitySpawner ?
                     new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner();
         }
+        // do it every tick so it also works when something replaces the save handler
+        // TODO: go with the vanilla way and have one global region cache.
+        // region cache per world is likely to run out of file handles with many dimensions
+        ((ICubicSaveHandler) saveHandler).initCubic(getCubeCache().getCubeIO());
     }
 
     @Override public CubicEntityTracker getCubicEntityTracker() {

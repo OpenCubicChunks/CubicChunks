@@ -584,8 +584,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         return sb.toString();
     }
 
-    public void flush() throws IOException {
-        this.cubeIO.flush();
+    @Nonnull public ICubeIO getCubeIO() {
+        return cubeIO;
     }
 
     Iterator<Cube> cubesIterator() {
