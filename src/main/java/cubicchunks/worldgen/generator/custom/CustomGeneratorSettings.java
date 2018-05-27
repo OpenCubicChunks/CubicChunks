@@ -66,6 +66,7 @@ import net.minecraft.util.datafix.FixTypes;
 import net.minecraft.util.datafix.IFixableData;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.ChunkGeneratorSettings;
+import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraftforge.common.util.ModFixs;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
@@ -75,8 +76,10 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -169,6 +172,9 @@ public class CustomGeneratorSettings {
     public float highNoiseFrequencyY = VANILLA_LOWHIGH_NOISE_FREQUENCY_Y;
     public float highNoiseFrequencyZ = VANILLA_LOWHIGH_NOISE_FREQUENCY_XZ;
     public int highNoiseOctaves = 16;
+
+    // note: the AABB uses cube coords to simplify the generator
+    public Map<IntAABB, CustomGeneratorSettings> cubeAreas = new HashMap<>();
 
     // TODO: public boolean negativeHeightVariationInvertsTerrain = true;
 
@@ -424,6 +430,7 @@ public class CustomGeneratorSettings {
 
     public static Gson gson() {
         return new GsonBuilder().serializeSpecialFloatingPointValues()
+                .enableComplexMapKeySerialization()
                 .registerTypeHierarchyAdapter(IBlockState.class, new BlockStateSerializer())
                 .registerTypeHierarchyAdapter(Biome.class, new BiomeSerializer())
                 .create();
@@ -678,6 +685,82 @@ public class CustomGeneratorSettings {
 
         @Override public JsonElement serialize(Biome src, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(src.getRegistryName().toString());
+        }
+    }
+
+    // we can't use vanilla StructureBoundingBox because gson serialization relies on field names to not change
+    // and for vanilla classes they do change because of obfuscation
+    public static class IntAABB {
+
+        /** The first x coordinate of a bounding box. */
+        public int minX;
+        /** The first y coordinate of a bounding box. */
+        public int minY;
+        /** The first z coordinate of a bounding box. */
+        public int minZ;
+        /** The second x coordinate of a bounding box. */
+        public int maxX;
+        /** The second y coordinate of a bounding box. */
+        public int maxY;
+        /** The second z coordinate of a bounding box. */
+        public int maxZ;
+
+        public IntAABB() {
+        }
+
+        public IntAABB(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+            this.minX = minX;
+            this.minY = minY;
+            this.minZ = minZ;
+            this.maxX = maxX;
+            this.maxY = maxY;
+            this.maxZ = maxZ;
+        }
+
+        @Override public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            IntAABB intAABB = (IntAABB) o;
+
+            if (minX != intAABB.minX) {
+                return false;
+            }
+            if (minY != intAABB.minY) {
+                return false;
+            }
+            if (minZ != intAABB.minZ) {
+                return false;
+            }
+            if (maxX != intAABB.maxX) {
+                return false;
+            }
+            if (maxY != intAABB.maxY) {
+                return false;
+            }
+            if (maxZ != intAABB.maxZ) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override public int hashCode() {
+            int result = minX;
+            result = 31 * result + minY;
+            result = 31 * result + minZ;
+            result = 31 * result + maxX;
+            result = 31 * result + maxY;
+            result = 31 * result + maxZ;
+            return result;
+        }
+
+        public boolean contains(int x, int y, int z) {
+            return x >= minX && x <= maxX && z >= minZ && z <= maxZ && y >= minY && y <= maxY;
         }
     }
 }

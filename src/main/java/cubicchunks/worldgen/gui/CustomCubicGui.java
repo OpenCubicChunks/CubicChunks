@@ -49,6 +49,8 @@ import net.malisis.core.client.gui.element.SimpleGuiShape;
 import net.malisis.core.renderer.font.FontOptions;
 import net.minecraft.client.gui.GuiCreateWorld;
 
+import java.util.Map;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -73,6 +75,7 @@ public class CustomCubicGui extends ExtraGui {
     private BasicSettingsTab basicSettings;
     private OreSettingsTab oreSettings;
     private AdvancedTerrainShapeTab advancedterrainShapeSettings;
+    private Map<CustomGeneratorSettings.IntAABB, CustomGeneratorSettings> areas;
 
     public CustomCubicGui(GuiCreateWorld parent) {
         super();
@@ -101,6 +104,8 @@ public class CustomCubicGui extends ExtraGui {
         tabs.addTab(inPanel(oreSettings.getContainer()), vanillaText("ores_tab_title"));
         tabs.addTab(inPanel(advancedterrainShapeSettings.getContainer()), vanillaText("advanced_tab_title"));
         addToScreen(tabs);
+
+        this.areas = conf.cubeAreas;
     }
 
     private UIContainer<?> inPanel(UIComponent<?> comp) {
@@ -212,6 +217,7 @@ public class CustomCubicGui extends ExtraGui {
         this.basicSettings.writeConfig(conf);
         this.oreSettings.writeConfig(conf);
         this.advancedterrainShapeSettings.writeConfig(conf);
+        conf.cubeAreas = areas;
         return conf;
     }
     String getSettingsJson() {
