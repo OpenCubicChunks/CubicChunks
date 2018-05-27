@@ -20,7 +20,8 @@
         "common.structuregen.MixinStructureStart",
         "common.MixinWorldInfo",
         "common.MixinWorldSettings",
-        "common.MixinDerivedWorldInfo"
+        "common.MixinDerivedWorldInfo",
+        "common.MixinAnvilSaveHandler"
     ],
     "client": [
         "client.MixinWorld_HeightLimits",
