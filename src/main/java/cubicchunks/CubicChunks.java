@@ -130,7 +130,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
         version = CubicChunks.VERSION,
         //@formatter:off
         // The dependency placeholder comment will be replaced by gradle with full deps list, do not alter it
-        dependencies = "after:forge@[14.23.0.2487,14.23.3.2655]"/*@@DEPS_PLACEHOLDER@@*/)
+        dependencies = "after:forge@[14.23.0.2487,]"/*@@DEPS_PLACEHOLDER@@*/)
         //@formatter:on
 @Mod.EventBusSubscriber
 public class CubicChunks {

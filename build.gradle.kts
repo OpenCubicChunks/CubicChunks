@@ -371,6 +371,7 @@ jar.apply {
     manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
     manifest.attributes["TweakOrder"] = "0"
     manifest.attributes["ForceLoadAsMod"] = "true"
+    manifest.attributes["FMLCorePluginContainsFMLMod"] = "true" // workaround for mixin double-loading the mod on new forge versions
     //manifest.attributes["ContainedDeps"] =
     //        (embed.files.stream().map { x -> x.name }.reduce { x, y -> x + " " + y }).get()// + " " + coreJar.archivePath.name
 }
