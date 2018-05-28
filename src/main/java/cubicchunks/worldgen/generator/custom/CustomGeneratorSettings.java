@@ -175,20 +175,18 @@ public class CustomGeneratorSettings {
 
     // note: the AABB uses cube coords to simplify the generator
     public Map<IntAABB, CustomGeneratorSettings> cubeAreas = new HashMap<>();
+    public BiomeBlockReplacerConfig replacerConfig = BiomeBlockReplacerConfig.defaults();
 
     // TODO: public boolean negativeHeightVariationInvertsTerrain = true;
 
     public CustomGeneratorSettings() {
-
     }
 
     public BiomeBlockReplacerConfig createBiomeBlockReplacerConfig() {
-        BiomeBlockReplacerConfig conf = new BiomeBlockReplacerConfig();
-        conf.fillDefaults();
-        conf.set(CubicChunks.MODID, "water_level", (double) this.waterLevel);
-        conf.set(CubicChunks.MODID, "height_scale", (double) this.heightFactor);
-        conf.set(CubicChunks.MODID, "height_offset", (double) this.heightOffset);
-        return conf;
+        replacerConfig.setDefault(CubicChunks.MODID, "water_level", (double) this.waterLevel);
+        replacerConfig.setDefault(CubicChunks.MODID, "height_scale", (double) this.heightFactor);
+        replacerConfig.setDefault(CubicChunks.MODID, "height_offset", (double) this.heightOffset);
+        return replacerConfig;
     }
 
     public String toJson() {
@@ -431,8 +429,9 @@ public class CustomGeneratorSettings {
     public static Gson gson() {
         return new GsonBuilder().serializeSpecialFloatingPointValues()
                 .enableComplexMapKeySerialization()
-                .registerTypeHierarchyAdapter(IBlockState.class, new BlockStateSerializer())
+                .registerTypeHierarchyAdapter(IBlockState.class, BlockStateSerializer.INSTANCE)
                 .registerTypeHierarchyAdapter(Biome.class, new BiomeSerializer())
+                .registerTypeAdapter(BiomeBlockReplacerConfig.class, BiomeBlockReplacerConfigSerializer.INSTANCE)
                 .create();
     }
 
@@ -674,6 +673,74 @@ public class CustomGeneratorSettings {
             NBTUtil.writeBlockState(tag, src);
             String tagString = tag.toString();
             return new JsonParser().parse(tagString);
+        }
+    }
+
+    private static class BiomeBlockReplacerConfigSerializer
+            implements JsonDeserializer<BiomeBlockReplacerConfig>, JsonSerializer<BiomeBlockReplacerConfig> {
+
+        public static final BiomeBlockReplacerConfigSerializer INSTANCE = new BiomeBlockReplacerConfigSerializer();
+
+        @Override public BiomeBlockReplacerConfig deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+
+            JsonObject defaults = json.getAsJsonObject().get("defaults").getAsJsonObject();
+            JsonObject overrides = json.getAsJsonObject().get("overrides").getAsJsonObject();
+
+            BiomeBlockReplacerConfig conf = new BiomeBlockReplacerConfig();
+            for (Map.Entry<String, JsonElement> e : defaults.entrySet()) {
+                ResourceLocation key = new ResourceLocation(e.getKey());
+                Object value = getObject(context, e);
+                conf.setDefault(key, value);
+            }
+            for (Map.Entry<String, JsonElement> e : overrides.entrySet()) {
+                ResourceLocation key = new ResourceLocation(e.getKey());
+                Object value = getObject(context, e);
+                conf.set(key, value);
+            }
+            return conf;
+        }
+
+        private Object getObject(JsonDeserializationContext context, Map.Entry<String, JsonElement> e) {
+            Object value;
+            if (e.getValue().isJsonPrimitive()) {
+                value = e.getValue().getAsJsonPrimitive().getAsDouble();
+            } else {
+                // currently the only object suppoorted is blockstate
+                value = BlockStateSerializer.INSTANCE.deserialize(e.getValue(), IBlockState.class, context);
+            }
+            return value;
+        }
+
+        @Override public JsonElement serialize(BiomeBlockReplacerConfig src, Type typeOfSrc, JsonSerializationContext context) {
+            JsonObject root = new JsonObject();
+
+            JsonObject defaults = new JsonObject();
+            JsonObject overrides = new JsonObject();
+
+            for (Map.Entry<ResourceLocation, Object> e : src.getDefaults().entrySet()) {
+                defaults.add(e.getKey().toString(), getJsonElement(context, e));
+            }
+            for (Map.Entry<ResourceLocation, Object> e : src.getOverrides().entrySet()) {
+                overrides.add(e.getKey().toString(), getJsonElement(context, e));
+            }
+            root.add("defaults", defaults);
+            root.add("overrides", overrides);
+            return root;
+        }
+
+        private JsonElement getJsonElement(JsonSerializationContext context, Map.Entry<ResourceLocation, Object> e) {
+            JsonElement v;
+            if (e.getValue() == null) {
+                throw new NullPointerException("Null config entries cannot be serialized");
+            }
+            if (e.getValue() instanceof Number) {
+                v = new JsonPrimitive((Number) e.getValue());
+            } else if (e.getValue() instanceof IBlockState) {
+                v = BlockStateSerializer.INSTANCE.serialize((IBlockState) e.getValue(), IBlockState.class, context);
+            } else {
+                throw new UnsupportedOperationException(e.getValue() + " of type " + e.getValue().getClass() + " is not supported");
+            } return v;
         }
     }
 

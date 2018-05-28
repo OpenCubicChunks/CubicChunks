@@ -30,6 +30,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonSyntaxException;
 import cubicchunks.CubicChunks;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
 import cubicchunks.worldgen.gui.component.NoTranslationFont;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
 import cubicchunks.worldgen.gui.component.UIColoredPanel;
@@ -76,6 +77,7 @@ public class CustomCubicGui extends ExtraGui {
     private OreSettingsTab oreSettings;
     private AdvancedTerrainShapeTab advancedterrainShapeSettings;
     private Map<CustomGeneratorSettings.IntAABB, CustomGeneratorSettings> areas;
+    private BiomeBlockReplacerConfig replacerConf;
 
     public CustomCubicGui(GuiCreateWorld parent) {
         super();
@@ -106,6 +108,7 @@ public class CustomCubicGui extends ExtraGui {
         addToScreen(tabs);
 
         this.areas = conf.cubeAreas;
+        this.replacerConf = conf.replacerConfig;
     }
 
     private UIContainer<?> inPanel(UIComponent<?> comp) {
@@ -217,7 +220,9 @@ public class CustomCubicGui extends ExtraGui {
         this.basicSettings.writeConfig(conf);
         this.oreSettings.writeConfig(conf);
         this.advancedterrainShapeSettings.writeConfig(conf);
+        // no gui for those
         conf.cubeAreas = areas;
+        conf.replacerConfig = replacerConf;
         return conf;
     }
     String getSettingsJson() {

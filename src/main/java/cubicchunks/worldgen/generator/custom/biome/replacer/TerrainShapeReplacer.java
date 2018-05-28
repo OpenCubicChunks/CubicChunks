@@ -23,9 +23,17 @@
  */
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
+import com.google.common.collect.Sets;
+import cubicchunks.CubicChunks;
+import cubicchunks.api.worldgen.biome.CubicBiome;
+import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.biome.Biome;
+
+import java.util.Set;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -33,14 +41,38 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class TerrainShapeReplacer implements IBiomeBlockReplacer {
 
+    private IBlockState terrainFill;
+
+    public TerrainShapeReplacer(IBlockState terrainFill) {
+        this.terrainFill = terrainFill;
+    }
+
     /**
      * Replaces any block with greater than 0 density with stone
      */
     @Override
     public IBlockState getReplacedBlock(IBlockState previousBlock, int x, int y, int z, double dx, double dy, double dz, double density) {
         if (density > 0) {
-            return Blocks.STONE.getDefaultState();
+            return terrainFill;
         }
         return previousBlock;
+    }
+
+    public static IBiomeBlockReplacerProvider provider() {
+        return new IBiomeBlockReplacerProvider() {
+            private final ResourceLocation TERRAIN_FILL_BLOCK = CubicChunks.location("terrain_fill_block");
+
+            @Override
+            public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome cubicBiome, BiomeBlockReplacerConfig conf) {
+                IBlockState terrainFill = conf.getBlockstate(TERRAIN_FILL_BLOCK);
+                return new TerrainShapeReplacer(terrainFill);
+            }
+
+            @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
+                return Sets.newHashSet(
+                        new ConfigOptionInfo(TERRAIN_FILL_BLOCK, Blocks.STONE.getDefaultState())
+                );
+            }
+        };
     }
 }

@@ -23,11 +23,16 @@
  */
 package cubicchunks.worldgen.generator.custom.biome.replacer;
 
+import static java.lang.Math.abs;
+
+import com.google.common.collect.Sets;
 import cubicchunks.CubicChunks;
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import cubicchunks.util.cache.HashCacheDoubles;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.worldgen.generator.custom.ConversionUtils;
 import cubicchunks.worldgen.generator.custom.builder.IBuilder;
+import cubicchunks.worldgen.generator.custom.builder.NoiseSource;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockColored;
 import net.minecraft.block.BlockDirt;
@@ -41,6 +46,7 @@ import net.minecraft.world.gen.NoiseGeneratorPerlin;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Set;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -48,15 +54,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class MesaSurfaceReplacer implements IBiomeBlockReplacer {
 
-    private static final ResourceLocation HEIGHT_OFFSET = CubicChunks.location("height_offset");
-    private static final ResourceLocation HEIGHT_SCALE = CubicChunks.location("height_scale");
-    private static final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
-
+    private final double mesaDepth;
     private final double heightOffset;
     private final double heightScale;
     private final double waterHeight;
 
-    private final IBuilder depthNoise = SurfaceDefaultReplacer.makeDepthNoise();
+    private final IBuilder depthNoise;
 
     private final BiomeMesa biomeMesa;
 
@@ -73,9 +76,9 @@ public class MesaSurfaceReplacer implements IBiomeBlockReplacer {
     protected static final IBlockState HARDENED_CLAY = Blocks.HARDENED_CLAY.getDefaultState();
     protected static final IBlockState ORANGE_STAINED_HARDENED_CLAY = STAINED_HARDENED_CLAY.withProperty(BlockColored.COLOR, EnumDyeColor.ORANGE);
 
-
-    public MesaSurfaceReplacer(ICubicWorld world, CubicBiome biome, double heightOffset, double heightScale, double waterHeight) {
+    public MesaSurfaceReplacer(ICubicWorld world, CubicBiome biome, IBuilder builder, double depth, double heightOffset, double heightScale, double waterHeight) {
         this.biomeMesa = (BiomeMesa) biome.getBiome();
+        this.mesaDepth = depth;
         this.heightOffset = heightOffset;
         this.heightScale = heightScale;
         this.waterHeight = waterHeight;
@@ -99,6 +102,7 @@ public class MesaSurfaceReplacer implements IBiomeBlockReplacer {
         this.pillarRoofNoise = HashCacheDoubles.create(
                 256, p -> p.getX() * 16 + p.getZ(), p -> pillarRoofPerlin.getValue(p.getX(), p.getZ())
         );
+        this.depthNoise = builder;
     }
 
     @Override public IBlockState getReplacedBlock(IBlockState previousBlock, int x, int y, int z, double dx, double dy, double dz, double density) {
@@ -139,7 +143,8 @@ public class MesaSurfaceReplacer implements IBiomeBlockReplacer {
         if (density + dy <= 0) { // if air above
             return top;
         }
-        if (density < 16) {
+        double densityAdjusted = density / abs(dy);
+        if (densityAdjusted < this.mesaDepth) {
             return filler;
         }
         return previousBlock;
@@ -179,9 +184,53 @@ public class MesaSurfaceReplacer implements IBiomeBlockReplacer {
         return clayBands[(blockY + offset + 64) & 63];
     }
 
+
     public static IBiomeBlockReplacerProvider provider() {
-        return IBiomeBlockReplacerProvider.of((world, biome, conf) ->
-                new MesaSurfaceReplacer(world, biome, conf.getDouble(HEIGHT_OFFSET), conf.getDouble(HEIGHT_SCALE), conf.getDouble(OCEAN_LEVEL))
-        );
+        return new IBiomeBlockReplacerProvider() {
+            // TODO: add some inheritance to avoid duplicating code. This is mostly copied  from SurfaceDefaultReplacer
+            private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
+            private final ResourceLocation DEPTH_NOISE_FACTOR = CubicChunks.location("biome_fill_depth_factor");
+            private final ResourceLocation DEPTH_NOISE_OFFSET = CubicChunks.location("biome_fill_depth_offset");
+            private final ResourceLocation DEPTH_NOISE_FREQUENCY = CubicChunks.location("biome_fill_noise_freq");
+            private final ResourceLocation DEPTH_NOISE_OCTAVES = CubicChunks.location("biome_fill_noise_octaves");
+
+            private final ResourceLocation MESA_DEPTH = CubicChunks.location("mesa_depth");
+            private final ResourceLocation HEIGHT_OFFSET = CubicChunks.location("height_offset");
+            private final ResourceLocation HEIGHT_SCALE = CubicChunks.location("height_scale");
+
+            @Override
+            public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome cubicBiome, BiomeBlockReplacerConfig conf) {
+                double oceanY = conf.getDouble(OCEAN_LEVEL);
+
+                double factor = conf.getDouble(DEPTH_NOISE_FACTOR);
+                double offset = conf.getDouble(DEPTH_NOISE_OFFSET);
+                double freq = conf.getDouble(DEPTH_NOISE_FREQUENCY);
+                int octaves = (int) conf.getDouble(DEPTH_NOISE_OCTAVES);
+                double depth = conf.getDouble(MESA_DEPTH);
+                double heightOffset = conf.getDouble(HEIGHT_OFFSET);
+                double heightScale = conf.getDouble(HEIGHT_SCALE);
+
+                IBuilder builder = NoiseSource.perlin()
+                        .frequency(freq).octaves(octaves).create()
+                        .mul(factor).add(offset)
+                        .cached2d(256, v -> v.getX() + v.getZ() * 16);
+                return new MesaSurfaceReplacer(world, cubicBiome, builder, depth, heightOffset, heightScale, oceanY);
+            }
+
+            @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
+                return Sets.newHashSet(
+                        new ConfigOptionInfo(OCEAN_LEVEL, 63.0),
+                        // TODO: do it properly, currently this value is just temporary until I figure out the right one
+                        // TODO: figure out what the above comment actually means
+                        new ConfigOptionInfo(DEPTH_NOISE_FACTOR, ((1 << 3) - 1) / 3.0),
+                        new ConfigOptionInfo(DEPTH_NOISE_OFFSET, 3.0),
+                        new ConfigOptionInfo(DEPTH_NOISE_FREQUENCY, ConversionUtils.frequencyFromVanilla(0.0625f, 4)),
+                        new ConfigOptionInfo(DEPTH_NOISE_OCTAVES, 4.0),
+                        new ConfigOptionInfo(MESA_DEPTH, 16.0),
+                        new ConfigOptionInfo(HEIGHT_OFFSET, 64.0),
+                        new ConfigOptionInfo(HEIGHT_SCALE, 64.0)
+                );
+            }
+        };
     }
 }
