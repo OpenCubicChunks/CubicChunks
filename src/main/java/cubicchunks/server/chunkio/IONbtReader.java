@@ -55,7 +55,7 @@ public class IONbtReader {
     @Nullable
     static IColumn readColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {
         NBTTagCompound level = nbt.getCompoundTag("Level");
-        IColumn column = readBaseColumn(world, x, z, level);
+        Chunk column = readBaseColumn(world, x, z, level);
         if (column == null) {
             return null;
         }
@@ -63,11 +63,11 @@ public class IONbtReader {
         readOpacityIndex(level, column);
 
         column.setModified(false); // its exactly the same as on disk so its not modified
-        return column;
+        return (IColumn) column; // TODO: use Chunk, not IColumn, whenever possible
     }
 
     @Nullable
-    private static IColumn readBaseColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {// check the version number
+    private static Chunk readBaseColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {// check the version number
         byte version = nbt.getByte("v");
         if (version != 1) {
             throw new IllegalArgumentException(String.format("Column has wrong version: %d", version));
@@ -83,19 +83,23 @@ public class IONbtReader {
         }
 
         // create the column
-        IColumn column = (IColumn) new Chunk((World) world, x, z);
+        Chunk column = new Chunk((World) world, x, z);
 
         // read the rest of the column properties
         column.setInhabitedTime(nbt.getLong("InhabitedTime"));
+
+        if (column.getCapabilities() != null && nbt.hasKey("ForgeCaps")) {
+            column.getCapabilities().deserializeNBT(nbt.getCompoundTag("ForgeCaps"));
+        }
         return column;
     }
 
-    private static void readBiomes(NBTTagCompound nbt, IColumn column) {// biomes
+    private static void readBiomes(NBTTagCompound nbt, Chunk column) {// biomes
         System.arraycopy(nbt.getByteArray("Biomes"), 0, column.getBiomeArray(), 0, Cube.SIZE * Cube.SIZE);
     }
 
-    private static void readOpacityIndex(NBTTagCompound nbt, IColumn IColumn) {// biomes
-        ((ServerHeightMap) IColumn.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
+    private static void readOpacityIndex(NBTTagCompound nbt, Chunk chunk) {// biomes
+        ((ServerHeightMap) ((IColumn) chunk).getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
     }
 
     @Nullable

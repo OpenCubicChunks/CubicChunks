@@ -65,7 +65,7 @@ public class BiomeBlockReplacerConfig {
 
     /* Double getters */
     public double getDouble(ResourceLocation location) {
-        return (double) getValue(location);
+        return ((Number) getValue(location)).doubleValue();
     }
 
     public double getDouble(String modid, String name) {
