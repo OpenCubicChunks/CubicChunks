@@ -52,6 +52,8 @@ import net.minecraft.world.gen.feature.WorldGenPumpkin;
 import net.minecraft.world.gen.feature.WorldGenerator;
 
 import java.util.Random;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -69,12 +71,19 @@ public final class DefaultDecorator implements ICubicPopulator {
         private void generateOres(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos) {
             // TODO: allow interleaved order
             for (CustomGeneratorSettings.StandardOreConfig c : cfg.standardOres) {
-                genOreUniform(world, cfg, random, pos, c.spawnTries, c.spawnProbability, new WorldGenMinable(c.blockstate, c.spawnSize),
-                        c.minHeight, c.maxHeight);
+                Set<IBlockState> states = c.genInBlockstates;
+                WorldGenMinable gen = states == null ?
+                        new WorldGenMinable(c.blockstate, c.spawnSize) :
+                        new WorldGenMinable(c.blockstate, c.spawnSize, states::contains);
+                genOreUniform(world, cfg, random, pos, c.spawnTries, c.spawnProbability, gen, c.minHeight, c.maxHeight);
             }
             for (CustomGeneratorSettings.PeriodicGaussianOreConfig c : cfg.periodicGaussianOres) {
-                genOreBellCurve(world, cfg, random, pos, c.spawnTries, c.spawnProbability, new WorldGenMinable(c.blockstate, c.spawnSize),
-                        c.heightMean, c.heightStdDeviation, c.heightSpacing, c.minHeight, c.maxHeight);
+                Set<IBlockState> states = c.genInBlockstates;
+                WorldGenMinable gen = states == null ?
+                        new WorldGenMinable(c.blockstate, c.spawnSize) :
+                        new WorldGenMinable(c.blockstate, c.spawnSize, states::contains);
+                genOreBellCurve(world, cfg, random, pos, c.spawnTries, c.spawnProbability, gen, c.heightMean, c.heightStdDeviation, c.heightSpacing,
+                        c.minHeight, c.maxHeight);
             }
         }
     }

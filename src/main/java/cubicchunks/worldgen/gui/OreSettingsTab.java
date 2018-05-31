@@ -50,6 +50,7 @@ import net.malisis.core.client.gui.component.interaction.UIButton;
 import net.malisis.core.client.gui.component.interaction.UICheckBox;
 import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.client.gui.component.interaction.UISlider;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
@@ -57,6 +58,8 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 class OreSettingsTab {
 
@@ -162,12 +165,15 @@ class OreSettingsTab {
 
 
         private final UIList<Biome, UICheckBox> biomesArea;
+
+        private final Set<IBlockState> genInBlockstates;
         private CustomGeneratorSettings.StandardOreConfig config;
 
         public UIStandardOreOptions(ExtraGui gui, CustomGeneratorSettings.StandardOreConfig config) {
             super(gui, 6);
 
             this.config = config;
+            this.genInBlockstates = config.genInBlockstates;
 
             this.block = new UIBlockStateButton(gui, config.blockstate);
             this.name = makeLabel(gui, config);
@@ -223,7 +229,10 @@ class OreSettingsTab {
 
         private CustomGeneratorSettings.StandardOreConfig toConfig() {
             return CustomGeneratorSettings.StandardOreConfig.builder()
-                    .biomes(this.selectBiomes.isChecked() ? this.biomesArea.getData().toArray(new Biome[0]) : null)
+                    .biomes(this.selectBiomes.isChecked() ?
+                            this.biomesArea.getData().stream().filter(b -> biomesArea.component(b).isChecked()).toArray(Biome[]::new)
+                            : null)
+                    .genInBlockstates(genInBlockstates == null ? null : genInBlockstates.toArray(new IBlockState[0]))
                     .attempts(this.attempts.getValue())
                     .block(this.block.getState())
                     .minHeight(this.heightRange.getMinValue())
@@ -364,12 +373,15 @@ class OreSettingsTab {
 
         private final UIList<Biome, UICheckBox> biomesArea;
 
+        private final Set<IBlockState> genInBlockstates;
         private PeriodicGaussianOreConfig config;
 
         public UIPeriodicGaussianOreOptions(ExtraGui gui, PeriodicGaussianOreConfig config) {
             super(gui, 6);
 
             this.config = config;
+
+            this.genInBlockstates = config.genInBlockstates;
 
             this.block = new UIBlockStateButton(gui, config.blockstate);
             this.name = makeLabel(gui, config);
@@ -430,7 +442,10 @@ class OreSettingsTab {
 
         private PeriodicGaussianOreConfig toConfig() {
             return CustomGeneratorSettings.PeriodicGaussianOreConfig.builder()
-                    .biomes(this.selectBiomes.isChecked() ? this.biomesArea.getData().toArray(new Biome[0]) : null)
+                    .biomes(this.selectBiomes.isChecked() ?
+                            this.biomesArea.getData().stream().filter(b -> biomesArea.component(b).isChecked()).toArray(Biome[]::new)
+                            : null)
+                    .genInBlockstates(genInBlockstates == null ? null : genInBlockstates.toArray(new IBlockState[0]))
                     .attempts(this.attempts.getValue())
                     .block(this.block.getState())
                     .minHeight(this.heightRange.getMinValue())
