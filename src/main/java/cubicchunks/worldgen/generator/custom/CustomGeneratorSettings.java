@@ -232,7 +232,7 @@ public class CustomGeneratorSettings {
                             .maxHeight(1).create(),
                     StandardOreConfig.builder()
                             .block(Blocks.IRON_ORE.getDefaultState())
-                            .size(33).attempts(10).probability(256f / 64f / (256f / Cube.SIZE))
+                            .size(9).attempts(20).probability(256f / 64f / (256f / Cube.SIZE))
                             .maxHeight(0).create(),
                     StandardOreConfig.builder()
                             .block(Blocks.GOLD_ORE.getDefaultState())
