@@ -67,10 +67,11 @@ public class UIFlatTerrainLayer extends UIContainer<UIFlatTerrainLayer> {
         this.flatLayersTab = flatLayersTabFor;
         this.layer = layerFor;
         this.gui = guiFor;
-        blockButton = new UIBlockStateButton(gui, layer.blockState, () -> {
+        blockButton = new UIBlockStateButton<>(gui, layer.blockState).onClick(btn -> {
             new SelectBlockGui(this, null).display();
         }).setPosition(4, 0);
-        super.add(blockButton);
+        add(blockButton);
+
         selectBlock = new UIButton(gui, malisisText("select_block")).setSize(BTN_WIDTH, 20).setPosition(0, 20)
                 .register(new Object() {
 
@@ -79,9 +80,11 @@ public class UIFlatTerrainLayer extends UIContainer<UIFlatTerrainLayer> {
                         new SelectBlockGui(UIFlatTerrainLayer.this, null).display();
                     }
                 });
-        super.add(selectBlock);
+        add(selectBlock);
+
         blockName = new UILabel(gui, this.layer.blockState.getBlock().getLocalizedName()).setPosition(30, 5);
-        super.add(blockName);
+        add(blockName);
+
         addLayer = new UIButton(gui, malisisText("add_layer")).setSize(BTN_WIDTH, 20).setPosition(0, 0)
                 .setAnchor(Anchor.RIGHT)
                 .register(new Object() {
@@ -91,7 +94,8 @@ public class UIFlatTerrainLayer extends UIContainer<UIFlatTerrainLayer> {
                         UIFlatTerrainLayer.this.addLayer();
                     }
                 });
-        super.add(addLayer);
+        add(addLayer);
+
         removeLayer = new UIButton(gui, malisisText("remove_layer")).setSize(BTN_WIDTH, 20).setPosition(0, 20)
                 .setAnchor(Anchor.RIGHT)
                 .register(new Object() {
@@ -101,16 +105,21 @@ public class UIFlatTerrainLayer extends UIContainer<UIFlatTerrainLayer> {
                         UIFlatTerrainLayer.this.removeLayer();
                     }
                 });
-        super.add(removeLayer);
+        add(removeLayer);
+
         toField = new UITextField(gui, String.valueOf(this.layer.toY), false).setPosition(0, 45, Anchor.RIGHT).setSize(40, 5);
-        super.add(toField);
+        add(toField);
+
         to = new UILabel(gui, malisisText("to_exclusively"), false);
         to.setPosition(-10 - toField.getWidth(), 47, Anchor.RIGHT);
-        super.add(to);
+        add(to);
+
         from = new UILabel(gui, malisisText("from"), false).setPosition(0, 47);
-        super.add(from);
+        add(from);
+
         fromField = new UITextField(gui, String.valueOf(this.layer.fromY), false).setPosition(from.getWidth() + 10, 45).setSize(40, 5);
-        super.add(fromField);
+        add(fromField);
+
         separator = new UISeparator(gui, false).setColor(0x767676).setPosition(0, to.getY() + to.getHeight() + 3)
                 .setSize(UIComponent.INHERITED, 1);
         super.add(separator);

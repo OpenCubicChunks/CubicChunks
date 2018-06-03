@@ -37,7 +37,6 @@ public class ConfigOptionInfo {
     private final String unlocalizedDescription;
 
     public ConfigOptionInfo(ResourceLocation location, Object defaultValue, String unlocalizedDescription) {
-
         this.location = location;
         this.defaultValue = defaultValue;
         this.unlocalizedDescription = unlocalizedDescription;

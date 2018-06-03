@@ -23,22 +23,88 @@
  */
 package cubicchunks.worldgen.gui;
 
+import cubicchunks.util.ReflectionUtil;
 import cubicchunks.worldgen.gui.component.IDragTickable;
+import cubicchunks.worldgen.gui.component.UILayout;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
+import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.util.MouseButton;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 public abstract class ExtraGui extends MalisisGui {
 
     private Map<IDragTickable, DragTickableWrapper> set = new WeakHashMap<>();
+    protected Set<UIComponent<?>> addedComponents = new HashSet<>();
+
+    private final Field componentsField;
+
+    private boolean debug = false;
+
+    {
+        try {
+            componentsField = UIContainer.class.getDeclaredField("components");
+        } catch (NoSuchFieldException e) {
+            throw new Error(e);
+        }
+        componentsField.setAccessible(true);
+
+        this.registerKeyListener((character, keyCode) -> {
+            if (Keyboard.isKeyDown(Keyboard.KEY_LMENU) && keyCode == Keyboard.KEY_P) {
+                debug = !debug;
+                return true;
+            }
+            if (debug && keyCode == Keyboard.KEY_L) {
+                addedComponents.forEach(this::layout);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    @Override public void addToScreen(UIComponent<?> component) {
+        addedComponents.add(component);
+        super.addToScreen(component);
+    }
+
+    @Override public void removeFromScreen(UIComponent<?> component) {
+        addedComponents.remove(component);
+        super.removeFromScreen(component);
+    }
+
+    @Override public void clearScreen() {
+        addedComponents.clear();
+        super.clearScreen();
+    }
 
     @Override
     public void update(int mouseX, int mouseY, float partialTick) {
         set.values().forEach(tc -> tc.tick(mouseX, mouseY, partialTick));
+        if (!debug) {
+            addedComponents.forEach(this::layout);
+        }
+    }
+
+    private void layout(UIComponent<?> comp) {
+        // layout() parent twice as re-layout for children may change result for the parent
+        if (comp instanceof UILayout<?>) {
+            ((UILayout<?>) comp).checkLayout();
+        }
+        if (comp instanceof UIContainer<?>) {
+            UIContainer<?> cont = (UIContainer<?>) comp;
+            Set<UIComponent<?>> components = ReflectionUtil.getField(cont, componentsField);
+            components.forEach(this::layout);
+        }
+        if (comp instanceof UILayout<?>) {
+            ((UILayout<?>) comp).checkLayout();
+        }
     }
 
     public <T extends UIComponent<X> & IDragTickable, X extends UIComponent<X>> void registerDragTickable(T t) {

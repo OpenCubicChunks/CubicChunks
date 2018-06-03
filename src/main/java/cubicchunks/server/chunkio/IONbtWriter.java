@@ -122,6 +122,7 @@ class IONbtWriter {
 
         // save the worldgen stage and the target stage
         cubeNbt.setBoolean("populated", cube.isPopulated());
+        cubeNbt.setBoolean("isSurfaceTracked", cube.isSurfaceTracked());
         cubeNbt.setBoolean("fullyPopulated", cube.isFullyPopulated());
 
         cubeNbt.setBoolean("initLightDone", cube.isInitialLightingDone());
@@ -206,6 +207,12 @@ class IONbtWriter {
 
         int[] lastHeightmap = cube.getColumn().getHeightMap();
         lightingInfo.setIntArray("LastHeightMap", lastHeightmap); //TODO: why are we storing the height map on a Cube???
+        byte edgeNeedSkyLightUpdate = 0;
+        for (int i = 0; i < cube.edgeNeedSkyLightUpdate.length; i++) {
+            if (cube.edgeNeedSkyLightUpdate[i])
+                edgeNeedSkyLightUpdate |= 1 << i;
+        }
+        lightingInfo.setByte("EdgeNeedSkyLightUpdate", edgeNeedSkyLightUpdate);
     }
 
     private static List<NextTickListEntry> getScheduledTicks(Cube cube) {

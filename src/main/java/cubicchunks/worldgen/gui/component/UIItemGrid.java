@@ -26,7 +26,11 @@ package cubicchunks.worldgen.gui.component;
 import cubicchunks.worldgen.gui.ExtraGui;
 import net.malisis.core.client.gui.component.UIComponent;
 
-public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
+/**
+ * @deprecated This class is mixing general GUI stuff with FlatCubic GUI behavior. Either fix it or remove the class.
+ */
+@Deprecated()
+public class UIItemGrid extends UIStandardLayout<UIItemGrid, Integer> {
 
     UIFlatTerrainLayer layer;
     int location = 0;
@@ -38,7 +42,6 @@ public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
 
     @Override
     protected void layout() {
-        this.checkInitialized();
         if (getParent() == null) {
             return;
         }
@@ -54,8 +57,8 @@ public class UIItemGrid extends UILayout<UIItemGrid, Integer> {
         }
     }
 
-    @Override
-    protected void initLayout() {
+    @Override protected boolean isLayoutChanged() {
+        return false; // don't update unless something added (handled in superclass)
     }
 
     @Override

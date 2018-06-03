@@ -33,6 +33,7 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiErrorScreen;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
@@ -50,8 +51,8 @@ public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
         super("FlatCubic");
     }
 
-    public static void create() {
-        new FlatCubicWorldType();
+    public static FlatCubicWorldType create() {
+        return new FlatCubicWorldType();
     }
 
     @Override
@@ -61,6 +62,10 @@ public class FlatCubicWorldType extends WorldType implements ICubicWorldType {
 
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
         return new IntRange(0, 256); // TODO: Flat generation height range
+    }
+
+    @Override public boolean hasCubicGeneratorForWorld(World w) {
+        return w.provider.getDimension() == 0;
     }
 
     public boolean isCustomizable() {

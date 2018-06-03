@@ -18,10 +18,13 @@ before_install:
 #setupCIWorkspace is needed because of https://github.com/MinecraftForge/ForgeGradle/issues/410
 # clean because of https://github.com/SpongePowered/MixinGradle/issues/4
 script: ./gradlew clean build
-#ftp deployment
-after_success: 
-  - tar -czf $(ls ./build/libs/ | cut -f 1-3 -d '-' | head -n 1).tar.gz ./build/libs/*.jar || true
-  - curl -T ./*.tar.gz ftp://cubicchunks:$password@forkie.me/./ || true
+deploy:
+  - provider: script
+    script: "./gradlew clean uploadArchives"
+    skip_cleanup: true
+    on:
+      repo: OpenCubicChunks/CubicChunks
+      all_branches: true
 
 notifications:
   email: false

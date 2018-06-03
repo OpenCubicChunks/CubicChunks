@@ -72,8 +72,8 @@ class BasicSettingsTab {
 
     BasicSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
 
-        UIVerticalTableLayout layout = new UIVerticalTableLayout(gui, 6);
-        layout.setPadding(HORIZONTAL_PADDING, 0);
+        UIVerticalTableLayout<?> layout = new UIVerticalTableLayout<>(gui, 6);
+        layout.setPadding(HORIZONTAL_PADDING + 6, 0);
         layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
                 .setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
 
@@ -127,10 +127,7 @@ class BasicSettingsTab {
                 .add(this.waterLevel = makeExponentialSlider(
                         gui, malisisText("water_level", ": %.2f"),
                         1, 12, 1, 12, settings.waterLevel),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 9, WIDTH_2_COL))
-
-
-                .init();
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, 9, WIDTH_2_COL));
 
         this.container = layout;
     }

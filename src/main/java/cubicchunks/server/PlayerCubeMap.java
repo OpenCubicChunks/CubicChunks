@@ -30,13 +30,16 @@ import static net.minecraft.util.math.MathHelper.clamp;
 import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import cubicchunks.CubicChunks;
+import cubicchunks.CubicChunksConfig;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.network.PacketCubes;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.util.CubePos;
+import cubicchunks.util.WatchersSortingList;
 import cubicchunks.util.XYZMap;
 import cubicchunks.util.XZMap;
 import cubicchunks.visibility.CubeSelector;
@@ -55,13 +58,16 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraftforge.common.ForgeChunkManager.Ticket;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -141,7 +147,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
      * Note that this is not the same as cubesToGenerate list.
      * Cube can be loaded while not being fully generated yet (not in the last GeneratorStageRegistry stage).
      */
-    private final List<CubeWatcher> cubesToSendToClients = new ArrayList<>();
+    private final WatchersSortingList<CubeWatcher> cubesToSendToClients = new WatchersSortingList<CubeWatcher>(CUBE_ORDER);
 
     /**
      * Contains all CubeWatchers that still need to be loaded/generated.
@@ -149,7 +155,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
      * Technically it can generate it, using the world's IGeneratorPipeline,
      * but spectator players can't generate chunks if spectatorsGenerateChunks gamerule is set.
      */
-    private final List<CubeWatcher> cubesToGenerate = new ArrayList<>();
+    private final WatchersSortingList<CubeWatcher> cubesToGenerate = new WatchersSortingList<CubeWatcher>(CUBE_ORDER);
 
     /**
      * Contains all ColumnWatchers that need to be sent to clients,
@@ -158,13 +164,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
      * Note that this is not the same as columnsToGenerate list.
      * Columns can be loaded while not being fully generated yet
      */
-    private final List<ColumnWatcher> columnsToSendToClients = new ArrayList<>();
+    private final WatchersSortingList<ColumnWatcher> columnsToSendToClients = new WatchersSortingList<ColumnWatcher>(COLUMN_ORDER);
 
     /**
      * Contains all ColumnWatchers that still need to be loaded/generated.
      * ColumnWatcher constructor attempts to load column from disk, but it won't generate it.
      */
-    private final List<ColumnWatcher> columnsToGenerate = new ArrayList<>();
+    private final WatchersSortingList<ColumnWatcher> columnsToGenerate = new WatchersSortingList<ColumnWatcher>(COLUMN_ORDER);
 
     private int horizontalViewDistance;
     private int verticalViewDistance;
@@ -180,7 +186,15 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     private final CubeProviderServer cubeCache;
 
     private final Multimap<EntityPlayerMP, Cube> cubesToSend = Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
-    private volatile int maxGeneratedCubesPerTick = CubicChunks.Config.IntOptions.MAX_GENERATED_CUBES_PER_TICK.getValue();
+
+    // these player adds will be processed on the next tick
+    // this exists as temporary workaround to player respawn code calling addPlayer() before spawning
+    // the player in world as it's spawning player in world that triggers sending cubic chunks world
+    // information to client, this causes the server to send columns to the client before the client
+    // knows it's a cubic chunks world delaying addPlayer() by one tick fixes it.
+    // this should be fixed by hooking into the code in a different place to send the cubic chunks world information
+    // (player respawn packet?)
+    private Set<EntityPlayerMP> pendingPlayerAdd = new HashSet<>();
 
     public PlayerCubeMap(ICubicWorldServer worldServer) {
         super((WorldServer) worldServer);
@@ -222,7 +236,16 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         getWorld().getProfiler().startSection("playerCubeMapTick");
         long currentTime = this.getWorldServer().getTotalWorldTime();
 
-        getWorld().getProfiler().startSection("tickEntries");
+        getWorld().getProfiler().startSection("addPendingPlayers");
+        if (!pendingPlayerAdd.isEmpty()) {
+            // copy in case player still isn't in world
+            Set<EntityPlayerMP> players = pendingPlayerAdd;
+            pendingPlayerAdd = new HashSet<>();
+            for (EntityPlayerMP player : players) {
+                addPlayer(player);
+            }
+        }
+        getWorld().getProfiler().endStartSection("tickEntries");
         //force update-all every 8000 ticks (400 seconds)
         if (currentTime - this.previousWorldTime > 8000L) {
             this.previousWorldTime = currentTime;
@@ -245,15 +268,15 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         //sort toLoadPending if needed, but at most every 4 ticks
         if (this.toGenerateNeedSort && currentTime % 4L == 0L) {
             this.toGenerateNeedSort = false;
-            this.cubesToGenerate.sort(CUBE_ORDER);
-            this.columnsToGenerate.sort(COLUMN_ORDER);
+            this.cubesToGenerate.sort();
+            this.columnsToGenerate.sort();
         }
         getWorld().getProfiler().endStartSection("sortToSend");
         //sort cubesToSendToClients every other 4 ticks
         if (this.toSendToClientNeedSort && currentTime % 4L == 2L) {
             this.toSendToClientNeedSort = false;
-            this.cubesToSendToClients.sort(CUBE_ORDER);
-            this.columnsToSendToClients.sort(COLUMN_ORDER);
+            this.cubesToSendToClients.sort();
+            this.columnsToSendToClients.sort();
         }
 
         getWorld().getProfiler().endStartSection("generate");
@@ -289,7 +312,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             getWorld().getProfiler().startSection("cubes");
 
             long stopTime = System.nanoTime() + 50000000L;
-            int chunksToGenerate = maxGeneratedCubesPerTick;
+            int chunksToGenerate = CubicChunksConfig.maxGeneratedCubesPerTick;
             Iterator<CubeWatcher> iterator = this.cubesToGenerate.iterator();
 
             while (iterator.hasNext() && chunksToGenerate >= 0 && System.nanoTime() < stopTime) {
@@ -298,7 +321,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
                 getWorld().getProfiler().startSection("chunk=" + pos);
 
-                boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated() && watcher.getCube().isInitialLightingDone();
+                boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated() && watcher.getCube().isInitialLightingDone() &&
+                        !watcher.getCube().hasLightUpdates();
                 if (!success) {
                     boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
                     getWorld().getProfiler().startSection("generate");
@@ -307,9 +331,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 }
 
                 if (success) {
-                    iterator.remove();
-
-                    if (watcher.sendToPlayers()) {
+                    CubeWatcher.SendToPlayersResult state = watcher.sendToPlayers();
+                    if (state == CubeWatcher.SendToPlayersResult.WAITING || state == CubeWatcher.SendToPlayersResult.CUBE_SENT
+                            || state == CubeWatcher.SendToPlayersResult.ALREADY_DONE) {
+                        iterator.remove();
                         this.cubesToSendToClients.remove(watcher);
                     }
 
@@ -336,9 +361,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             while (it.hasNext() && toSend >= 0) {
                 CubeWatcher playerInstance = it.next();
 
-                if (playerInstance.sendToPlayers()) {
+                CubeWatcher.SendToPlayersResult state = playerInstance.sendToPlayers();
+                if (state == CubeWatcher.SendToPlayersResult.ALREADY_DONE || state == CubeWatcher.SendToPlayersResult.CUBE_SENT) {
                     it.remove();
                     --toSend;
+                } else if (state == CubeWatcher.SendToPlayersResult.WAITING_LIGHT) {
+                    if (!cubesToGenerate.contains(playerInstance)) {
+                        cubesToGenerate.appendToStart(playerInstance);
+                    }
                 }
             }
             getWorld().getProfiler().endSection(); // cubes
@@ -355,8 +385,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         }
         getWorld().getProfiler().endStartSection("sendCubes");//unload
         for (EntityPlayerMP player : cubesToSend.keySet()) {
-            PacketCubes packet = new PacketCubes(new ArrayList<>(cubesToSend.get(player)));
+            Collection<Cube> cubes = cubesToSend.get(player);
+            PacketCubes packet = new PacketCubes(new ArrayList<>(cubes));
             PacketDispatcher.sendTo(packet, player);
+            //Sending entities per cube.
+            for (Cube cube : cubes) {
+                this.getWorld().getCubicEntityTracker()
+                        .sendLeashedEntitiesInCube(player, cube);
+            }
         }
         cubesToSend.clear();
         getWorld().getProfiler().endSection();//sendCubes
@@ -392,14 +428,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             if (cubeWatcher.getCube() == null ||
                     !cubeWatcher.getCube().isFullyPopulated() ||
                     !cubeWatcher.getCube().isInitialLightingDone()) {
-                this.cubesToGenerate.add(cubeWatcher);
+                this.cubesToGenerate.appendToEnd(cubeWatcher);
             }
             // vanilla has the below check, which causes the cubes to be sent to client too early and sometimes in too big amounts
             // if they are sent too earlu, client won't have the right player position and renderer positions are wrong
             // which cause some cubes to not be rendered
             // DO NOT make it the same as vanilla until it's confirmed that Mojang fixed MC-120079
             //if (!cubeWatcher.sendToPlayers()) {
-                this.cubesToSendToClients.add(cubeWatcher);
+                this.cubesToSendToClients.appendToEnd(cubeWatcher);
             //}
         }
         return cubeWatcher;
@@ -415,10 +451,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             columnWatcher = new ColumnWatcher(this, chunkPos);
             this.columnWatchers.put(columnWatcher);
             if (columnWatcher.getColumn() == null) {
-                this.columnsToGenerate.add(columnWatcher);
+                this.columnsToGenerate.appendToEnd(columnWatcher);
             }
             if (!columnWatcher.sendToPlayers()) {
-                this.columnsToSendToClients.add(columnWatcher);
+                this.columnsToSendToClients.appendToEnd(columnWatcher);
             }
         }
         return columnWatcher;
@@ -450,6 +486,16 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     // CHECKED: 1.10.2-12.18.1.2092
     @Override
     public void addPlayer(EntityPlayerMP player) {
+        if (player.world != this.getWorldServer()) {
+            CubicChunks.bigWarning("Player world not the same ad PlayerCubeMap world! Adding anyway. This is very likely to cause issues! Player "
+                            + "world dimension ID: %d, PlayerCubeMap dimension ID: %d", player.world.provider.getDimension(),
+                    getWorldServer().provider.getDimension());
+        } else if (!player.world.playerEntities.contains(player)) {
+            CubicChunks.LOGGER.debug("PlayerCubeMap (dimension {}): Adding player to pending to add list", getWorldServer().provider.getDimension());
+            pendingPlayerAdd.add(player);
+            return;
+        }
+
         PlayerWrapper playerWrapper = new PlayerWrapper(player);
         playerWrapper.updateManagedPos();
 
@@ -774,12 +820,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
         boolean cubePosChanged() {
             // did the player move far enough to matter?
-            double blockDX = blockToCube(playerEntity.posX) - this.getManagedCubePosX();
-            double blockDY = blockToCube(playerEntity.posY) - this.getManagedCubePosY();
-            double blockDZ = blockToCube(playerEntity.posZ) - this.getManagedCubePosZ();
-
-            double distanceSquared = blockDX * blockDX + blockDY * blockDY + blockDZ * blockDZ;
-            return distanceSquared > 0.9;//0.9 instead of 1 because floating-point numbers may be weird
+            return blockToCube(playerEntity.posX) != this.getManagedCubePosX()
+                    || blockToCube(playerEntity.posY) != this.getManagedCubePosY()
+                    || blockToCube(playerEntity.posZ) != this.getManagedCubePosZ();
         }
     }
 
@@ -791,5 +834,51 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
      */
     public Iterator<CubeWatcher> getRandomWrappedCubeWatcherIterator(int seed) {
         return this.cubeWatchers.randomWrappedIterator(seed);
+    }
+    
+    public Iterator<Cube> getCubeIterator() {
+        WorldServer world = this.getWorldServer();
+        final Iterator<CubeWatcher> iterator = this.cubeWatchers.iterator();
+        ImmutableSetMultimap<ChunkPos, Ticket> persistentChunksFor = ForgeChunkManager.getPersistentChunksFor(world);
+        world.profiler.startSection("forcedChunkLoading");
+        final Iterator<Cube> persistentCubesIterator = persistentChunksFor.keys().stream()
+                .filter(Objects::nonNull)
+                .map(input -> ((IColumn)world.getChunkFromChunkCoords(input.x, input.z)).getLoadedCubes())
+                .collect(ArrayList<Cube>::new, (list,cubeCollection)->((ArrayList<Cube>)list).addAll(cubeCollection), (list,cubeList)->((ArrayList<Cube>)list).addAll(cubeList))
+                .iterator();
+        world.profiler.endSection();
+        
+        return new AbstractIterator<Cube>() {
+            
+            boolean shouldSkip(Cube cube){
+                if (cube == null) 
+                    return true;
+                if (cube.isEmpty())
+                    return true;
+                if (!cube.isFullyPopulated())
+                    return true;
+                return false;
+            }
+
+            protected Cube computeNext() {
+                while(persistentCubesIterator.hasNext()){
+                    Cube cube = persistentCubesIterator.next();
+                    if(shouldSkip(cube))
+                        continue;
+                    return cube;
+                }
+                
+                while (iterator.hasNext()) {
+                    CubeWatcher watcher = iterator.next();
+                    Cube cube = watcher.getCube();
+                    if(shouldSkip(cube))
+                        continue;
+                    if(!watcher.hasPlayerMatchingInRange(NOT_SPECTATOR, 128))
+                        continue;
+                    return cube;
+                }
+                return this.endOfData();
+            }
+        };
     }
 }

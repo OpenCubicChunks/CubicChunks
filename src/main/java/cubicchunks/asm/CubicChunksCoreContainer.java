@@ -21,18 +21,32 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks;
+package cubicchunks.asm;
 
-import mcp.MethodsReturnNonnullByDefault;
+import net.minecraftforge.common.ForgeVersion;
+import net.minecraftforge.fml.common.DummyModContainer;
+import net.minecraftforge.fml.common.ModContainer;
+import net.minecraftforge.fml.common.ModMetadata;
+import net.minecraftforge.fml.common.versioning.ArtifactVersion;
+import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface IConfigUpdateListener {
+public class CubicChunksCoreContainer extends DummyModContainer {
 
-    /**
-     * Called when config value is changed. This method may be called from any thread.
-     */
-    void onConfigUpdate(CubicChunks.Config config);
+    public CubicChunksCoreContainer() {
+        super(new ModMetadata());
+        ModMetadata meta = getMetadata();
+        meta.modId = "cubicchunkscore";
+        meta.name = "Cubic Chunks Coremod";
+        meta.version = "@@VERSION@@";
+        meta.logoFile = "/assets/cubicchunks/logo.png";
+    }
+
+    @Override
+    public List<ArtifactVersion> getDependencies() {
+        return Collections.emptyList();//Arrays.asList(new DefaultArtifactVersion("cubicchunks", "[0.0.780.0,)"));
+    }
 }

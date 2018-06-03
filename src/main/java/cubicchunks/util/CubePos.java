@@ -252,9 +252,9 @@ public class CubePos {
 
     public BlockPos randomPopulationPos(Random rand) {
         return new BlockPos(
-                rand.nextInt(16) + getXCenter(),
-                rand.nextInt(16) + getYCenter(),
-                rand.nextInt(16) + getZCenter());
+                rand.nextInt(Cube.SIZE) + getXCenter(),
+                rand.nextInt(Cube.SIZE) + getYCenter(),
+                rand.nextInt(Cube.SIZE) + getZCenter());
     }
 
     public CubePos above() {

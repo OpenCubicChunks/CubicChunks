@@ -21,24 +21,25 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.worldgen.gui.component;
+package cubicchunks.asm.mixin.fixes.common;
 
-import com.google.common.base.Converter;
-import net.malisis.core.client.gui.MalisisGui;
-import net.malisis.core.client.gui.component.control.IControlComponent;
-import net.malisis.core.client.gui.component.interaction.UISlider;
+import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Floats;
+import net.minecraft.network.NetHandlerPlayServer;
+import net.minecraft.network.play.client.CPacketPlayer;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 
-public class UISliderNoScroll<T> extends UISlider<T> {
+@Mixin(NetHandlerPlayServer.class)
+public class MixinNetHandlerPlayServer {
 
-    public UISliderNoScroll(MalisisGui gui, int width, Converter<Float, T> converter, String text) {
-        super(gui, width, converter, text);
-    }
-
-    @Override
-    public boolean onScrollWheel(int x, int y, int delta) {
-        if (parent != null && !(this instanceof IControlComponent)) {
-            return parent.onScrollWheel(x, y, delta);
+    @Overwrite
+    private static boolean isMovePlayerPacketInvalid(CPacketPlayer packetIn) {
+        if (Doubles.isFinite(packetIn.getX(0.0D)) && Doubles.isFinite(packetIn.getY(0.0D)) && Doubles.isFinite(packetIn.getZ(0.0D)) && Floats
+                .isFinite(packetIn.getPitch(0.0F)) && Floats.isFinite(packetIn.getYaw(0.0F))) {
+            return Math.abs(packetIn.getX(0.0D)) > 3.0E7D /*|| Math.abs(packetIn.getY(0.0D)) > 3.0E7D*/ || Math.abs(packetIn.getZ(0.0D)) > 3.0E7D;
+        } else {
+            return true;
         }
-        return false;
     }
 }

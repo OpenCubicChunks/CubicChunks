@@ -23,6 +23,8 @@
  */
 package cubicchunks.network;
 
+import static cubicchunks.util.Coords.blockToCube;
+import static cubicchunks.util.Coords.blockToLocal;
 import static net.minecraftforge.fml.common.network.ByteBufUtils.readVarInt;
 
 import cubicchunks.util.AddressTools;
@@ -68,14 +70,14 @@ public class PacketCubeBlockChange implements IMessage {
             int y = AddressTools.getLocalY(localAddress);
             int z = AddressTools.getLocalZ(localAddress);
             this.blockStates[i] = cube.getBlockState(x, y, z);
-            xzAddresses.add(x | z << 4);
+            xzAddresses.add(AddressTools.getLocalAddress(x, z));
         }
         this.heightValues = new int[xzAddresses.size()];
         i = 0;
         TIntIterator it = xzAddresses.iterator();
         while (it.hasNext()) {
             int v = it.next();
-            int height = cube.getColumn().getOpacityIndex().getTopBlockY(v & 0xF, v >> 4);
+            int height = cube.getColumn().getOpacityIndex().getTopBlockY(blockToLocal(v), blockToCube(v));
             v |= height << 8;
             heightValues[i] = v;
             i++;

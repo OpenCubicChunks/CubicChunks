@@ -47,44 +47,47 @@ public abstract class MixinWorld_SlowCollisionCheck implements ICubicWorld {
     @Shadow
     public abstract boolean func_191503_g(Entity p_191503_1_);
 
+    /**
+     * @author Barteks2x
+     * @reason Original of that function use constant 64 to check if chunk loaded
+     **/
     @Overwrite(constraints = "MC_FORGE(20)", remap = false)
     private boolean func_191504_a(@Nullable Entity entity, AxisAlignedBB aabb, boolean flagArg, @Nullable List<AxisAlignedBB> aabbList) {
-        int i = MathHelper.floor(aabb.minX) - 1;
-        int j = MathHelper.ceil(aabb.maxX) + 1;
-        int k = MathHelper.floor(aabb.minY) - 1;
-        int l = MathHelper.ceil(aabb.maxY) + 1;
-        int i1 = MathHelper.floor(aabb.minZ) - 1;
-        int j1 = MathHelper.ceil(aabb.maxZ) + 1;
+        int minX = MathHelper.floor(aabb.minX) - 1;
+        int maxX = MathHelper.ceil(aabb.maxX) + 1;
+        int minY = MathHelper.floor(aabb.minY) - 1;
+        int maxY = MathHelper.ceil(aabb.maxY) + 1;
+        int minZ = MathHelper.floor(aabb.minZ) - 1;
+        int maxZ = MathHelper.ceil(aabb.maxZ) + 1;
         WorldBorder worldborder = this.getWorldBorder();
-        boolean flag = entity != null && entity.isOutsideBorder();
-        boolean flag1 = entity != null && this.func_191503_g(entity);
+        boolean entityOutsideOfBorder = entity != null && entity.isOutsideBorder();
+        boolean entityInsideOfBorder = entity != null && this.func_191503_g(entity);
         IBlockState iblockstate = Blocks.STONE.getDefaultState();
         BlockPos.PooledMutableBlockPos pos = BlockPos.PooledMutableBlockPos.retain();
 
         try {
-            for (int k1 = i; k1 < j; ++k1) {
-                for (int l1 = i1; l1 < j1; ++l1) {
-                    boolean flag2 = k1 == i || k1 == j - 1;
-                    boolean flag3 = l1 == i1 || l1 == j1 - 1;
+            for (int x = minX; x < maxX; ++x) {
+                for (int z = minZ; z < maxZ; ++z) {
+                    boolean isXboundary = x == minX || x == maxX - 1;
+                    boolean isZBoundary = z == minZ || z == maxZ - 1;
 
                     // CubicChunks: change isBlockLoaded to isBlockColumnLoaded
-                    if ((!flag2 || !flag3) && this.isBlockColumnLoaded(pos.setPos(k1, 64, l1))) {
-                        for (int i2 = k; i2 < l; ++i2) {
+                    if ((!isXboundary || !isZBoundary) && this.isBlockColumnLoaded(pos.setPos(x, 64, z))) {
+                        for (int y = minY; y < maxY; ++y) {
                             // CubicChunks: add  && isBlockLoaded(pos.setPos(k1, i2, l1))
-                            if ((!flag2 && !flag3 || i2 != l - 1) && isBlockLoaded(pos.setPos(k1, i2, l1))) {
+                            if ((!isXboundary && !isZBoundary || y != maxY - 1) && isBlockLoaded(pos.setPos(x, y, z))) {
                                 if (flagArg) {
-                                    if (k1 < -30000000 || k1 >= 30000000 || l1 < -30000000 || l1 >= 30000000) {
-                                        boolean lvt_21_1_ = true;
-                                        return lvt_21_1_;
+                                    if (x < -30000000 || x >= 30000000 || z < -30000000 || z >= 30000000) {
+                                        return true;
                                     }
-                                } else if (entity != null && flag == flag1) {
-                                    entity.setOutsideBorder(!flag1);
+                                } else if (entity != null && entityOutsideOfBorder == entityInsideOfBorder) {
+                                    entity.setOutsideBorder(!entityInsideOfBorder);
                                 }
 
-                                pos.setPos(k1, i2, l1);
+                                pos.setPos(x, y, z);
                                 IBlockState iblockstate1;
 
-                                if (!flagArg && !worldborder.contains(pos) && flag1) {
+                                if (!flagArg && !worldborder.contains(pos) && entityInsideOfBorder) {
                                     iblockstate1 = iblockstate;
                                 } else {
                                     iblockstate1 = this.getBlockState(pos);
@@ -96,8 +99,7 @@ public abstract class MixinWorld_SlowCollisionCheck implements ICubicWorld {
                                         .post(new net.minecraftforge.event.world.GetCollisionBoxesEvent((World) (Object) this, null, aabb, aabbList));
 
                                 if (flagArg && !aabbList.isEmpty()) {
-                                    boolean flag5 = true;
-                                    return flag5;
+                                    return true;
                                 }
                             }
                         }

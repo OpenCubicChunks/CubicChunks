@@ -27,6 +27,7 @@ import cubicchunks.util.IntRange;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.worldgen.generator.ICubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 
@@ -41,4 +42,6 @@ public interface ICubicWorldType {
     @Nullable ICubeGenerator createCubeGenerator(ICubicWorld world);
 
     IntRange calculateGenerationHeightRange(WorldServer world);
+
+    boolean hasCubicGeneratorForWorld(World object);
 }

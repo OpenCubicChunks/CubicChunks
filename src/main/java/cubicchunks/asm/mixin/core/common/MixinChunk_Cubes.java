@@ -133,6 +133,21 @@ public abstract class MixinChunk_Cubes implements IColumn {
         return cube.getStorage();
     }
 
+    @Nullable
+    private ExtendedBlockStorage getLoadedEBS_CubicChunks(int index) {
+        if (!isColumn) {
+            return storageArrays[index];
+        }
+        if (cachedCube != null && cachedCube.getY() == index) {
+            return cachedCube.getStorage();
+        }
+        Cube cube = getCubicWorld().getCubeCache().getLoadedCube(getX(), index, getZ());
+        if (cube != null && !(cube instanceof BlankCube)) {
+            cachedCube = cube;
+        }
+        return cube == null ? null : cube.getStorage();
+    }
+
     // setEBS is unlikely to be used extremely frequently, no caching
     private void setEBS_CubicChunks(int index, ExtendedBlockStorage ebs) {
         if (!isColumn) {
@@ -219,6 +234,10 @@ public abstract class MixinChunk_Cubes implements IColumn {
         cbi.cancel();
     }
 
+    /**
+     * @author Barteks2x
+     * @reason Original of that function return array of 16 objects
+     **/
     @Overwrite
     public ExtendedBlockStorage[] getBlockStorageArray() {
         if (isColumn) {
@@ -343,12 +362,11 @@ public abstract class MixinChunk_Cubes implements IColumn {
             return iblockstate == null ? Blocks.AIR.getDefaultState() : iblockstate;
         } else {
             try {
-                //if (y >= 0 && y >> 4 < this.storageArrays.length)
-                {
-                    ExtendedBlockStorage extendedblockstorage = getEBS_CubicChunks(y >> 4);
+                if (isColumn || (y >= 0 && y >> 4 < this.storageArrays.length)) {
+                    ExtendedBlockStorage extendedblockstorage = getEBS_CubicChunks(blockToCube(y));
 
                     if (extendedblockstorage != NULL_BLOCK_STORAGE) {
-                        return extendedblockstorage.get(x & 15, y & 15, z & 15);
+                        return extendedblockstorage.get(blockToLocal(x), blockToLocal(y), blockToLocal(z));
                     }
                 }
 
@@ -479,7 +497,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             entityIn.setDead();
         }
 
-        int k = MathHelper.floor(entityIn.posY / 16.0D);
+        int k = MathHelper.floor(entityIn.posY / Cube.SIZE_D);
 
         if (k < Coords.blockToCube(getCubicWorld().getMinHeight())) {
             k = Coords.blockToCube(getCubicWorld().getMinHeight());
@@ -510,6 +528,10 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //             removeEntityAtIndex
     // ==============================================
 
+    /**
+     * @author Barteks2x
+     * @reason original function limited to chunk entity list array field.
+     */
     @Overwrite
     public void removeEntityAtIndex(Entity entityIn, int index) {
         if (index < Coords.blockToCube(getCubicWorld().getMinHeight())) {
@@ -603,8 +625,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
         }
         cbi.cancel();
 
-        int minY = MathHelper.floor((aabb.minY - World.MAX_ENTITY_RADIUS) / 16.0D);
-        int maxY = MathHelper.floor((aabb.maxY + World.MAX_ENTITY_RADIUS) / 16.0D);
+        int minY = MathHelper.floor((aabb.minY - World.MAX_ENTITY_RADIUS) / Cube.SIZE_D);
+        int maxY = MathHelper.floor((aabb.maxY + World.MAX_ENTITY_RADIUS) / Cube.SIZE_D);
         minY = MathHelper.clamp(minY,
                 blockToCube(getCubicWorld().getMinHeight()),
                 blockToCube(getCubicWorld().getMaxHeight()));
@@ -650,8 +672,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
         }
         cbi.cancel();
 
-        int minY = MathHelper.floor((aabb.minY - World.MAX_ENTITY_RADIUS) / 16.0D);
-        int maxY = MathHelper.floor((aabb.maxY + World.MAX_ENTITY_RADIUS) / 16.0D);
+        int minY = MathHelper.floor((aabb.minY - World.MAX_ENTITY_RADIUS) / Cube.SIZE_D);
+        int maxY = MathHelper.floor((aabb.maxY + World.MAX_ENTITY_RADIUS) / Cube.SIZE_D);
         minY = MathHelper.clamp(minY,
                 blockToCube(getCubicWorld().getMinHeight()),
                 blockToCube(getCubicWorld().getMaxHeight()));
@@ -703,6 +725,10 @@ public abstract class MixinChunk_Cubes implements IColumn {
     //               isEmptyBetween
     // ==============================================
 
+    /**
+     * @author Barteks2x
+     * @reason original function limited to storage arrays.
+     */
     @Overwrite
     public boolean isEmptyBetween(int startY, int endY) {
         if (startY < getCubicWorld().getMinHeight()) {
@@ -713,8 +739,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
             endY = getCubicWorld().getMaxHeight() - 1;
         }
 
-        for (int i = startY; i <= endY; i += 16) {
-            ExtendedBlockStorage extendedblockstorage = getEBS_CubicChunks(i >> 4);
+        for (int i = startY; i <= endY; i += Cube.SIZE) {
+            ExtendedBlockStorage extendedblockstorage = getEBS_CubicChunks(blockToCube(i));
 
             if (extendedblockstorage != NULL_BLOCK_STORAGE && !extendedblockstorage.isEmpty()) {
                 return false;

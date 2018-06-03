@@ -11,16 +11,10 @@ import nl.javadude.gradle.plugins.license.LicenseExtension
 import nl.javadude.gradle.plugins.license.LicensePlugin
 import org.ajoberstar.grgit.Grgit
 import org.ajoberstar.grgit.operation.DescribeOp
-import org.gradle.api.JavaVersion
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.internal.HasConvention
-import org.gradle.api.plugins.BasePluginConvention
-import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.tasks.testing.Test
-import org.gradle.jvm.tasks.Jar
-import org.gradle.language.jvm.tasks.ProcessResources
+import org.gradle.kotlin.dsl.creating
+import org.gradle.kotlin.dsl.extra
 import org.gradle.plugins.ide.idea.model.IdeaModel
-import org.gradle.script.lang.kotlin.*
 import org.spongepowered.asm.gradle.plugins.MixinExtension
 import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
 import kotlin.apply
@@ -51,9 +45,12 @@ buildscript {
 }
 
 plugins {
+    base
     java
     idea
     eclipse
+    maven
+    signing
 }
 
 apply {
@@ -69,6 +66,7 @@ apply {
 val build by tasks
 val jar: Jar by tasks
 val shadowJar: ShadowJar by tasks
+val javadoc: Javadoc by tasks
 val test: Test by tasks
 val processResources: ProcessResources by tasks
 val deobfMcSRG: DeobfuscateJar by tasks
@@ -89,15 +87,13 @@ val versionSuffix by project
 val versionMinorFreeze by project
 
 val sourceSets = the<JavaPluginConvention>().sourceSets
-val mainSourceSet = sourceSets["main"]
-val minecraft = the<ForgeExtension>()
+val mainSourceSet = sourceSets["main"]!!
 
 version = getModVersion()
-group = "cubichunks"
-
+group = "io.github.opencubicchunks"
 (mainSourceSet as ExtensionAware).extra["refMap"] = "cubicchunks.mixins.refmap.json"
 
-configure<IdeaModel> {
+idea {
     module.apply {
         inheritOutputDirs = true
     }
@@ -105,20 +101,20 @@ configure<IdeaModel> {
     module.isDownloadSources = true
 }
 
-configure<BasePluginConvention> {
+base {
     archivesBaseName = "CubicChunks"
 }
 
-configure<JavaPluginConvention> {
+java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-configure<MixinExtension> {
+mixin {
     token("MC_FORGE", extractForgeMinorVersion())
 }
 
-configure<ForgeExtension> {
+minecraft {
     version = theForgeVersion as String
     runDir = "run"
     mappings = theMappingsVersion as String
@@ -126,8 +122,7 @@ configure<ForgeExtension> {
     isUseDepAts = true
 
     replace("@@VERSION@@", project.version)
-    replace("/*@@DEPS_PLACEHOLDER@@*/",
-            ",dependencies = \"after:forge@[13.20.1.2454,);after:malisiscore@[$malisisCoreMinVersion,)\"")
+    replace("\"/*@@DEPS_PLACEHOLDER@@*/", ";after:malisiscore@[$malisisCoreMinVersion,)\"")
     replace("@@MALISIS_VERSION@@", malisisCoreMinVersion)
     replaceIn("cubicchunks/CubicChunks.java")
 
@@ -146,9 +141,11 @@ configure<ForgeExtension> {
 
     clientJvmArgs.addAll(args)
     serverJvmArgs.addAll(args)
+
+
 }
 
-configure<LicenseExtension> {
+license {
     val ext = (this as HasConvention).convention.extraProperties
     ext["project"] = projectName
     ext["year"] = licenseYear
@@ -164,21 +161,14 @@ configure<LicenseExtension> {
     mapping(mapOf("java" to "SLASHSTAR_STYLE"))
 }
 
-configure<NamedDomainObjectContainer<ReobfTaskFactory.ReobfTaskWrapper>> {
+reobf {
     create("shadowJar").apply {
         mappingType = ReobfMappingType.SEARGE
     }
 }
-// temporary until malisiscore updates
-deobfMcSRG.apply {
-    isFailOnAtError = false
-}
-deobfMcMCP.apply{
-    isFailOnAtError = false
-}
 build.dependsOn("reobfShadowJar")
 
-configure<JMHPluginExtension> {
+jmh {
     iterations = 10
     benchmarkMode = listOf("thrpt")
     batchSize = 16
@@ -195,6 +185,101 @@ configure<JMHPluginExtension> {
     jmhVersion = "1.17.1"
 }
 
+javadoc.apply {
+    (options as StandardJavadocDocletOptions).tags = listOf("reason")
+}
+val javadocJar by tasks.creating(Jar::class) {
+    classifier = "javadoc"
+    from(tasks["javadoc"])
+}
+val sourcesJar by tasks.creating(Jar::class) {
+    classifier = "sources"
+    from(sourceSets["main"].java.srcDirs)
+}
+
+// based on:
+// https://github.com/Ordinastie/MalisisCore/blob/30d8efcfd047ac9e9bc75dfb76642bd5977f0305/build.gradle#L204-L256
+// https://github.com/gradle/kotlin-dsl/blob/201534f53d93660c273e09f768557220d33810a9/samples/maven-plugin/build.gradle.kts#L10-L44
+val uploadArchives: Upload by tasks
+uploadArchives.apply {
+    repositories {
+        withConvention(MavenRepositoryHandlerConvention::class) {
+            mavenDeployer {
+                // Sign Maven POM
+                beforeDeployment {
+                    signing.signPom(this)
+                }
+
+                val username = if (project.hasProperty("sonatypeUsername")) project.properties["sonatypeUsername"] else System.getenv("sonatypeUsername")
+                val password = if (project.hasProperty("sonatypePassword")) project.properties["sonatypePassword"] else System.getenv("sonatypePassword")
+
+                withGroovyBuilder {
+                    "snapshotRepository"("url" to "https://oss.sonatype.org/content/repositories/snapshots") {
+                        "authentication"("userName" to username, "password" to password)
+                    }
+
+                    "repository"("url" to "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
+                        "authentication"("userName" to username, "password" to password)
+                    }
+                }
+
+                // Maven POM generation
+                pom.project {
+                    withGroovyBuilder {
+
+                        "name"(projectName)
+                        "artifactId"(base.archivesBaseName.toLowerCase())
+                        "packaging"("jar")
+                        "url"("https://github.com/OpenCubicChunks/CubicChunks")
+                        "description"("Unlimited world height mod for Minecraft")
+
+
+                        "scm" {
+                            "connection"("scm:git:git://github.com/OpenCubicChunks/CubicChunks.git")
+                            "developerConnection"("scm:git:ssh://git@github.com:OpenCubicChunks/CubicChunks.git")
+                            "url"("https://github.com/OpenCubicChunks/RegionLib")
+                        }
+
+                        "licenses" {
+                            "license" {
+                                "name"("The MIT License")
+                                "url"("http://www.tldrlegal.com/license/mit-license")
+                                "distribution"("repo")
+                            }
+                        }
+
+                        "developers" {
+                            "developer" {
+                                "id"("Barteks2x")
+                                "name"("Barteks2x")
+                            }
+                            // TODO: add more developers
+                        }
+
+                        "issueManagement" {
+                            "system"("github")
+                            "url"("https://github.com/OpenCubicChunks/CubicChunks/issues")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+uploadArchives.dependsOn("reobfShadowJar")
+// tasks must be before artifacts, don't change the order
+artifacts {
+    withGroovyBuilder {
+        "archives"(shadowJar, sourcesJar, javadocJar)
+    }
+}
+
+signing {
+    isRequired = false
+    // isRequired = gradle.taskGraph.hasTask("uploadArchives")
+    sign(configurations.archives)
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -207,70 +292,111 @@ repositories {
     }
 }
 
-dependencies {
-    // configurations, some of them aren't necessary but added for consistency when specifying "extendsFrom"
-    val jmh by configurations
-    val forgeGradleMc by configurations
-    val forgeGradleMcDeps by configurations
-    val forgeGradleGradleStart by configurations
-    val compile by configurations
-    val testCompile by configurations
-    val deobfCompile by configurations
+// configurations, needed for extendsFrom
+val jmh by configurations
+val forgeGradleMc by configurations
+val forgeGradleMcDeps by configurations
+val forgeGradleGradleStart by configurations
+val compile by configurations
+val testCompile by configurations
 
-    compile("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
+val embed by configurations.creating
+val coreShadow by configurations.creating
+
+jmh.extendsFrom(compile)
+jmh.extendsFrom(forgeGradleMc)
+jmh.extendsFrom(forgeGradleMcDeps)
+testCompile.extendsFrom(forgeGradleGradleStart)
+testCompile.extendsFrom(forgeGradleMcDeps)
+compile.extendsFrom(embed)
+compile.extendsFrom(coreShadow)
+
+// NOTE for backporting: DON'T do this before 1.12
+// this is needed because it.ozimov:java7-hamcrest-matchers:0.7.0 depends on guava 19, while MC needs guava 21
+//configurations.all { resolutionStrategy { force("com.google.guava:guava:21.0") } }
+
+dependencies {
+    embed("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
+    // https://mvnrepository.com/artifact/com.typesafe/config
+    embed("com.typesafe:config:1.2.0")
     testCompile("junit:junit:4.11")
     testCompile("org.hamcrest:hamcrest-junit:2.0.0.0")
     testCompile("it.ozimov:java7-hamcrest-matchers:0.7.0")
     testCompile("org.mockito:mockito-core:2.1.0-RC.2")
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    compile("org.spongepowered:mixin:0.7.2-SNAPSHOT") {
+    coreShadow("org.spongepowered:mixin:0.7.5-SNAPSHOT") {
         isTransitive = false
     }
 
-    compile(project(":RegionLib"))
+    embed("io.github.opencubicchunks:regionlib:0.51.0-SNAPSHOT")
 
-    // use deobfProvided for now to avoid crash with malisiscore asm, but still have it compiling
     deobfCompile("net.malisis:malisiscore:$malisisCoreVersion") {
         isTransitive = false
     }
-
-    jmh.extendsFrom(compile)
-    jmh.extendsFrom(forgeGradleMc)
-    jmh.extendsFrom(forgeGradleMcDeps)
-    testCompile.extendsFrom(forgeGradleGradleStart)
-    testCompile.extendsFrom(forgeGradleMcDeps)
 }
+
+// TODO: coremod dependency extraction
+/*
+// modified version of https://github.com/PaleoCrafter/Dependency-Extraction-Example/blob/coremod-separation/build.gradle
+tasks {
+    "coreJar"(ShadowJar::class) {
+        // need FQN because ForgeGradle needs this exact class and default imports use different one
+        from(mainSourceSet.output) {
+            include("cubicchunks/asm/**", "**.json")
+        }
+        // Standard coremod manifest definitions
+        manifest {
+            attributes["FMLAT"] = "cubicchunks_at.cfg"
+            attributes["FMLCorePlugin"] = "cubicchunks.asm.CubicChunksCoreMod"
+            attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
+            attributes["TweakOrder"] = "0"
+            // Strictly speaking not required (right now)
+            // Allows Forge to extract the dependency to a local repository (Given that the corresponding PR is merged)
+            // If another mod ships the same dependency, it doesn't have to be extracted twice
+            println("${project.group}:${project.base.archivesBaseName}:${project.version}:core")
+            attributes["Maven-Version"] = "${project.group}:${project.base.archivesBaseName}:${project.version}:core"
+        }
+        configurations = listOf(coreShadow)
+        classifier = "core"
+    }
+}*/*/
 
 jar.apply {
-    jarConfig()
-}
-
-task<Jar>("jarDev") {
-    from(mainSourceSet.output)
-    jarConfig()
-    classifier = "dev"
-    tasks["assemble"].dependsOn(this)
-}
-
-fun Jar.jarConfig(): Jar {
     exclude("LICENSE.txt", "log4j2.xml")
+    // TODO: https://github.com/johnrengelman/shadow/issues/355
+    //into("/") {
+    //    from(embed)
+    //}
+
     manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
     manifest.attributes["FMLCorePlugin"] = "cubicchunks.asm.CubicChunksCoreMod"
     manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
     manifest.attributes["TweakOrder"] = "0"
     manifest.attributes["ForceLoadAsMod"] = "true"
-    return this
+    manifest.attributes["FMLCorePluginContainsFMLMod"] = "true" // workaround for mixin double-loading the mod on new forge versions
+    //manifest.attributes["ContainedDeps"] =
+    //        (embed.files.stream().map { x -> x.name }.reduce { x, y -> x + " " + y }).get()// + " " + coreJar.archivePath.name
 }
 
 shadowJar.apply {
-    relocate("com.flowpowered", "cubicchunks.com.flowpowered")
+    configurations = listOf(coreShadow)
     exclude("log4j2.xml")
-    classifier = ""
+    into("/") {
+        from(embed)
+    }
+
+    classifier = "all"
 }
 
 test.apply {
     systemProperty("lwts.tweaker", "cubicchunks.tweaker.MixinTweakerServer")
+    jvmArgs("-Dmixin.debug.verbose=true", //verbose mixin output for easier debugging of mixins
+            "-Dmixin.checks.interfaces=true", //check if all interface methods are overriden in mixin
+            "-Dmixin.env.remapRefMap=true")
+    testLogging {
+        showStandardStreams = true
+    }
 }
 
 processResources.apply {
@@ -312,7 +438,8 @@ fun getModVersion(): String {
         val git = Grgit.open()
         val describe = DescribeOp(git.repository).call()
         val branch = getGitBranch(git)
-        getModVersion_do(describe, branch);
+        val snapshotSuffix = if (project.hasProperty("doRelease")) "" else "-SNAPSHOT"
+        getModVersion(describe, branch) + snapshotSuffix;
     } catch(ex: RuntimeException) {
         logger.error("Unknown error when accessing git repository! Are you sure the git repository exists?", ex)
         String.format("%s-%s.%s.%s%s%s", getMcVersion(), "9999", "9999", "9999", "", "NOVERSION")
@@ -339,7 +466,7 @@ fun getGitBranch(git: Grgit): String {
     return branch
 }
 
-fun getModVersion_do(describe: String, branch: String): String {
+fun getModVersion(describe: String, branch: String): String {
     if (branch.startsWith("MC_")) {
         val branchMcVersion = branch.substring("MC_".length)
         if (branchMcVersion != getMcVersion()) {
@@ -383,8 +510,7 @@ fun getModVersion_do(describe: String, branch: String): String {
     val minor = if (minorFreeze < 0) commitSinceTag else minorFreeze
     val patch = if (minorFreeze < 0) 0 else (commitSinceTag - minorFreeze)
 
-    val version = String.format("%s-%s.%d.%d%s%s", mcVersion, modAndApiVersion, minor, patch, versionSuffix, branchSuffix)
-    return version
+    return String.format("%s-%s.%d.%d%s%s", mcVersion, modAndApiVersion, minor, patch, versionSuffix, branchSuffix)
 }
 
 fun extractForgeMinorVersion(): String {

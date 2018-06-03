@@ -37,6 +37,7 @@ import net.malisis.core.client.gui.event.component.StateChangeEvent;
 import net.malisis.core.renderer.animation.Animation;
 import net.malisis.core.renderer.animation.transformation.AlphaTransform;
 import net.malisis.core.util.MouseButton;
+import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
 
 import java.util.concurrent.TimeUnit;
@@ -75,13 +76,13 @@ public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
 
     @Override
     protected void setPosition() {
-        int vp = getScrollable().getVerticalPadding();
-        int hp = getScrollable().getHorizontalPadding();
+        int vp = getScrollable().getHorizontalPadding();
+        int hp = getScrollable().getVerticalPadding();
 
-        if (type == Type.HORIZONTAL) {
-            setPosition(hp + offsetX, -vp + offsetY, Anchor.BOTTOM);
+        if (type == UIScrollBar.Type.HORIZONTAL) {
+            setPosition(-hp + offsetX, vp + offsetY, Anchor.BOTTOM);
         } else {
-            setPosition(-hp + offsetX, vp + offsetY, Anchor.RIGHT);
+            setPosition(hp + offsetX, -vp + offsetY, Anchor.RIGHT);
         }
     }
 
@@ -106,7 +107,7 @@ public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
     public int getWidth() {
         int w = super.getWidth();
         if (type == Type.HORIZONTAL) {
-            w -= 2 * getScrollable().getHorizontalPadding();
+            w -= getScrollable().getHorizontalPadding() * 2;
         }
         return w;
     }
@@ -115,7 +116,7 @@ public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
     public int getHeight() {
         int h = super.getHeight();
         if (type == Type.VERTICAL) {
-            h -= 2 * getScrollable().getVerticalPadding();
+            h -= getScrollable().getVerticalPadding() * 2;
         }
         return h;
 
@@ -277,5 +278,23 @@ public class UIOptionScrollbar extends UIScrollBar implements IDragTickable {
         int l = getLength() - scrollHeight;
         int pos = isHorizontal() ? x : y;
         scrollBy((float) pos / l);
+    }
+
+    @Override
+    public boolean onScrollWheel(int x, int y, int delta) {
+        if ((isHorizontal() != GuiScreen.isShiftKeyDown()) && !isHovered()) {
+            return super.onScrollWheel(x, y, delta);
+        }
+        float step = getScrollable().getScrollStep();
+        if (step <= 0) {
+            return false;
+        }
+        scrollBy(-delta * step);
+        //true = stop
+        float o = getOffset();
+        if (!Float.isFinite(o)) {
+            return false;
+        }
+        return !(delta > 0 && o == 0 || delta < 0 && o == 1);
     }
 }

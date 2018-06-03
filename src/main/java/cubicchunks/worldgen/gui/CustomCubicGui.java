@@ -28,7 +28,9 @@ import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonSyntaxException;
+import cubicchunks.CubicChunks;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.generator.custom.biome.replacer.BiomeBlockReplacerConfig;
 import cubicchunks.worldgen.gui.component.NoTranslationFont;
 import cubicchunks.worldgen.gui.component.UIBorderLayout;
 import cubicchunks.worldgen.gui.component.UIColoredPanel;
@@ -37,13 +39,18 @@ import cubicchunks.worldgen.gui.component.UITabbedContainer;
 import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
 import mcp.MethodsReturnNonnullByDefault;
 import net.malisis.core.client.gui.Anchor;
+import net.malisis.core.client.gui.GuiRenderer;
+import net.malisis.core.client.gui.GuiTexture;
 import net.malisis.core.client.gui.MalisisGui;
 import net.malisis.core.client.gui.component.UIComponent;
 import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.interaction.UIButton;
 import net.malisis.core.client.gui.component.interaction.UITextField;
+import net.malisis.core.client.gui.element.SimpleGuiShape;
 import net.malisis.core.renderer.font.FontOptions;
 import net.minecraft.client.gui.GuiCreateWorld;
+
+import java.util.Map;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -51,14 +58,16 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CustomCubicGui extends ExtraGui {
 
+    public static final GuiTexture CUSTOM_TEXTURE = new GuiTexture(CubicChunks.location("textures/gui/gui.png"));
+
     public static final int WIDTH_1_COL = 6;
     public static final int WIDTH_2_COL = 3;
     public static final int WIDTH_3_COL = 2;
 
-    static final int VERTICAL_PADDING = 30;
-    static final int HORIZONTAL_PADDING = 25;
-    static final int VERTICAL_INSETS = 2;
-    static final int HORIZONTAL_INSETS = 4;
+    public static final int VERTICAL_PADDING = 30;
+    public static final int HORIZONTAL_PADDING = 25;
+    public static final int VERTICAL_INSETS = 2;
+    public static final int HORIZONTAL_INSETS = 4;
     static final int BTN_WIDTH = 60;
 
     private final GuiCreateWorld parent;
@@ -67,6 +76,8 @@ public class CustomCubicGui extends ExtraGui {
     private BasicSettingsTab basicSettings;
     private OreSettingsTab oreSettings;
     private AdvancedTerrainShapeTab advancedterrainShapeSettings;
+    private Map<CustomGeneratorSettings.IntAABB, CustomGeneratorSettings> areas;
+    private BiomeBlockReplacerConfig replacerConf;
 
     public CustomCubicGui(GuiCreateWorld parent) {
         super();
@@ -95,6 +106,9 @@ public class CustomCubicGui extends ExtraGui {
         tabs.addTab(inPanel(oreSettings.getContainer()), vanillaText("ores_tab_title"));
         tabs.addTab(inPanel(advancedterrainShapeSettings.getContainer()), vanillaText("advanced_tab_title"));
         addToScreen(tabs);
+
+        this.areas = conf.cubeAreas;
+        this.replacerConf = conf.replacerConfig;
     }
 
     private UIContainer<?> inPanel(UIComponent<?> comp) {
@@ -121,8 +135,7 @@ public class CustomCubicGui extends ExtraGui {
                 .setPosition(xPos, 0)
                 .add(prev, UIBorderLayout.Border.LEFT)
                 .add(next, UIBorderLayout.Border.RIGHT)
-                .add(label, UIBorderLayout.Border.CENTER)
-                .init();
+                .add(label, UIBorderLayout.Border.CENTER);
 
         UIButton done = new UIButton(this, malisisText("done")).setAutoSize(false).setSize(BTN_WIDTH, 20);
         done.register(new Object() {
@@ -143,7 +156,7 @@ public class CustomCubicGui extends ExtraGui {
 
                         UIButton done, cancel;
                         UITextField text;
-                        UIVerticalTableLayout table = new UIVerticalTableLayout(this, 2);
+                        UIVerticalTableLayout<?> table = new UIVerticalTableLayout<>(this, 2);
                         table.setPadding(HORIZONTAL_PADDING, 0);
                         table.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
                                 .setInsets(5, 5, 10, 10)
@@ -152,8 +165,7 @@ public class CustomCubicGui extends ExtraGui {
                                 .add(done = new UIButton(this, malisisText("presets.done")).setAutoSize(false).setSize(0, 20),
                                         new UIVerticalTableLayout.GridLocation(1, 1, 1))
                                 .add(cancel = new UIButton(this, malisisText("presets.cancel")).setAutoSize(false).setSize(0, 20),
-                                        new UIVerticalTableLayout.GridLocation(0, 1, 1))
-                                .init();
+                                        new UIVerticalTableLayout.GridLocation(0, 1, 1));
                         text.setFont(NoTranslationFont.DEFAULT);
                         text.setText(getSettingsJson());
                         text.getCursorPosition().jumpToEnd();
@@ -190,8 +202,7 @@ public class CustomCubicGui extends ExtraGui {
         UIBorderLayout lowerLayout = new UIBorderLayout(this)
                 .setSize(xSize, ySize)
                 .setAnchor(Anchor.BOTTOM).setPosition(xPos, 0)
-                .add(container, UIBorderLayout.Border.CENTER)
-                .init();
+                .add(container, UIBorderLayout.Border.CENTER);
 
         UITabbedContainer tabGroup = new UITabbedContainer(this, prev, next, label::setText);
         tabGroup.add(upperLayout, lowerLayout);
@@ -204,11 +215,17 @@ public class CustomCubicGui extends ExtraGui {
         this.mc.displayGuiScreen(parent);
     }
 
-    String getSettingsJson() {
+    public CustomGeneratorSettings getConfig() {
         CustomGeneratorSettings conf = CustomGeneratorSettings.defaults();
         this.basicSettings.writeConfig(conf);
         this.oreSettings.writeConfig(conf);
         this.advancedterrainShapeSettings.writeConfig(conf);
-        return conf.toJson();
+        // no gui for those
+        conf.cubeAreas = areas;
+        conf.replacerConfig = replacerConf;
+        return conf;
+    }
+    String getSettingsJson() {
+        return getConfig().toJson();
     }
 }

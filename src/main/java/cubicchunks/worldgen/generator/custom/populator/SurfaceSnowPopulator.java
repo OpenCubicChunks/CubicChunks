@@ -41,8 +41,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class SurfaceSnowPopulator implements ICubicPopulator {
 
     @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
-        for (int dx = 0; dx < 16; ++dx) {
-            for (int dz = 0; dz < 16; ++dz) {
+        for (int dx = 0; dx < Cube.SIZE; ++dx) {
+            for (int dz = 0; dz < Cube.SIZE; ++dz) {
                 int xOffset = dx + Cube.SIZE / 2;
                 int zOffset = dz + Cube.SIZE / 2;
                 BlockPos aboveTop = PopulatorUtils.getSurfaceForCube(world, pos, xOffset, zOffset, 0, PopulatorUtils.SurfaceType.BLOCKING_MOVEMENT);

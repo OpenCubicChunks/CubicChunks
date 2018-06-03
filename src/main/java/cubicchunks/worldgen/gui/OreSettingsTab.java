@@ -23,323 +23,522 @@
  */
 package cubicchunks.worldgen.gui;
 
-import static cubicchunks.worldgen.gui.CustomCubicGui.HORIZONTAL_INSETS;
 import static cubicchunks.worldgen.gui.CustomCubicGui.HORIZONTAL_PADDING;
-import static cubicchunks.worldgen.gui.CustomCubicGui.VERTICAL_INSETS;
-import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_1_COL;
-import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_2_COL;
-import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_3_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.label;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeCheckbox;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeFloatSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeIntSlider;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makePositiveExponentialSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeRangeSlider;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.malisisText;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.vanillaText;
 
+import com.google.common.eventbus.Subscribe;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings.PeriodicGaussianOreConfig;
+import cubicchunks.worldgen.gui.component.UIBlockStateButton;
+import cubicchunks.worldgen.gui.component.UIBlockStateSelect;
+import cubicchunks.worldgen.gui.component.UILayout;
+import cubicchunks.worldgen.gui.component.UIList;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
+import cubicchunks.worldgen.gui.component.UISplitLayout;
+import cubicchunks.worldgen.gui.component.UISplitLayout.Type;
 import cubicchunks.worldgen.gui.component.UIVerticalTableLayout;
 import net.malisis.core.client.gui.component.UIComponent;
+import net.malisis.core.client.gui.component.container.UIContainer;
+import net.malisis.core.client.gui.component.interaction.UIButton;
+import net.malisis.core.client.gui.component.interaction.UICheckBox;
+import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.client.gui.component.interaction.UISlider;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.world.biome.Biome;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 class OreSettingsTab {
 
-    private final UIVerticalTableLayout container;
+    private final ArrayList<UIComponent<?>> componentList;
 
-    private final UISlider<Integer> dirtSpawnSize;
-    private final UISlider<Integer> dirtSpawnTries;
-    private final UISlider<Float> dirtSpawnProbability;
-    private final UIRangeSlider<Float> dirtSpawnRange;
+    private final UIContainer<?> container;
 
-    private final UISlider<Integer> gravelSpawnSize;
-    private final UISlider<Integer> gravelSpawnTries;
-    private final UISlider<Float> gravelSpawnProbability;
-    private final UIRangeSlider<Float> gravelSpawnRange;
+    private final List<UIStandardOreOptions> standardOptions = new ArrayList<>();
 
-    private final UISlider<Integer> graniteSpawnSize;
-    private final UISlider<Integer> graniteSpawnTries;
-    private final UISlider<Float> graniteSpawnProbability;
-    private final UIRangeSlider<Float> graniteSpawnRange;
+    private final List<UIPeriodicGaussianOreOptions> periodicGaussianOptions = new ArrayList<>();
 
-    private final UISlider<Integer> dioriteSpawnSize;
-    private final UISlider<Integer> dioriteSpawnTries;
-    private final UISlider<Float> dioriteSpawnProbability;
-    private final UIRangeSlider<Float> dioriteSpawnRange;
-
-    private final UISlider<Integer> andesiteSpawnSize;
-    private final UISlider<Integer> andesiteSpawnTries;
-    private final UISlider<Float> andesiteSpawnProbability;
-    private final UIRangeSlider<Float> andesiteSpawnRange;
-
-    private final UISlider<Integer> coalOreSpawnSize;
-    private final UISlider<Integer> coalOreSpawnTries;
-    private final UISlider<Float> coalOreSpawnProbability;
-    private final UIRangeSlider<Float> coalOreSpawnRange;
-
-    private final UISlider<Integer> ironOreSpawnSize;
-    private final UISlider<Integer> ironOreSpawnTries;
-    private final UISlider<Float> ironOreSpawnProbability;
-    private final UIRangeSlider<Float> ironOreSpawnRange;
-
-    private final UISlider<Integer> goldOreSpawnSize;
-    private final UISlider<Integer> goldOreSpawnTries;
-    private final UISlider<Float> goldOreSpawnProbability;
-    private final UIRangeSlider<Float> goldOreSpawnRange;
-
-    private final UISlider<Integer> redstoneOreSpawnSize;
-    private final UISlider<Integer> redstoneOreSpawnTries;
-    private final UISlider<Float> redstoneOreSpawnProbability;
-    private final UIRangeSlider<Float> redstoneOreSpawnRange;
-
-    private final UISlider<Integer> diamondOreSpawnSize;
-    private final UISlider<Integer> diamondOreSpawnTries;
-    private final UISlider<Float> diamondOreSpawnProbability;
-    private final UIRangeSlider<Float> diamondOreSpawnRange;
-
-    private final UISlider<Integer> lapisLazuliOreSpawnSize;
-    private final UISlider<Integer> lapisLazuliOreSpawnTries;
-    private final UISlider<Float> lapisLazuliOreSpawnProbability;
-    private final UISlider<Float> lapisLazuliMeanHeight;
-    private final UISlider<Float> lapisLazuliHeightStdDev;
-
-    OreSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
-        int y = -1;
-        UIVerticalTableLayout layout = new UIVerticalTableLayout(gui, 6);
+    <T> OreSettingsTab(ExtraGui gui, CustomGeneratorSettings settings) {
+        this.componentList = new ArrayList<>();
+        UIList<UIComponent<?>, UIComponent<?>> layout = new UIList<>(gui, this.componentList, x -> x);
         layout.setPadding(HORIZONTAL_PADDING, 0);
-        layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED)
-                .setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
+        layout.setSize(UIComponent.INHERITED, UIComponent.INHERITED);
 
-                .add(label(gui, malisisText("dirt_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.dirtSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.dirtSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.dirtSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.dirtSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.dirtSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.dirtSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.dirtSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.dirtSpawnMinHeight, settings
-                                        .dirtSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+        layout.add(new UIButton(gui, malisisText("add_ore")).setAutoSize(false).setSize(UIComponent.INHERITED, 30).register(
+                new Object() {
+                    @Subscribe
+                    public void onClick(UIButton.ClickEvent evt) {
+                        componentList.add(1, new UIStandardOreOptions(gui, CustomGeneratorSettings.StandardOreConfig.builder()
+                                .size(8).probability(1).attempts(4).block(Blocks.TNT.getDefaultState()).create()));
+                    }
+                }
+        ));
 
-                .add(label(gui, malisisText("gravel_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.gravelSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.gravelSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.gravelSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.gravelSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.gravelSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.gravelSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.gravelSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.gravelSpawnMinHeight, settings
-                                        .gravelSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
+        for (CustomGeneratorSettings.StandardOreConfig conf : settings.standardOres) {
+            layout.add(new UIStandardOreOptions(gui, conf));
+        }
 
-                .add(label(gui, malisisText("granite_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.graniteSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.graniteSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.graniteSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.graniteSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.graniteSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.graniteSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.graniteSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.graniteSpawnMinHeight, settings
-                                        .graniteSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-
-                .add(label(gui, malisisText("diorite_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.dioriteSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.dioriteSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.dioriteSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.dioriteSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.dioriteSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.dioriteSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.dioriteSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.dioriteSpawnMinHeight, settings
-                                        .dioriteSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-
-                .add(label(gui, malisisText("andesite_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.andesiteSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.andesiteSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.andesiteSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.andesiteSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.andesiteSpawnProbability =
-                                makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.andesiteSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.andesiteSpawnRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.andesiteSpawnMinHeight,
-                        settings.andesiteSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-
-                .add(label(gui, malisisText("coal_ore_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.coalOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.coalOreSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.coalOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.coalOreSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.coalOreSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.coalOreSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.coalOreSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.coalOreSpawnMinHeight, settings
-                                        .coalOreSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-
-                .add(label(gui, malisisText("iron_ore_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.ironOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.ironOreSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.ironOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.ironOreSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.ironOreSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.ironOreSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.ironOreSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.ironOreSpawnMinHeight, settings
-                                        .ironOreSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-
-                .add(label(gui, malisisText("gold_ore_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.goldOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.goldOreSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.goldOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.goldOreSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.goldOreSpawnProbability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.goldOreSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.goldOreSpawnRange =
-                                makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.goldOreSpawnMinHeight, settings
-                                        .goldOreSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-
-                .add(label(gui, malisisText("redstone_ore_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.redstoneOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.redstoneOreSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.redstoneOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.redstoneOreSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.redstoneOreSpawnProbability =
-                                makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.redstoneOreSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.redstoneOreSpawnRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.redstoneOreSpawnMinHeight,
-                        settings.redstoneOreSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-
-                .add(label(gui, malisisText("diamond_ore_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.diamondOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.diamondOreSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.diamondOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.diamondOreSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.diamondOreSpawnProbability =
-                                makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.diamondOreSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.diamondOreSpawnRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, settings.diamondOreSpawnMinHeight,
-                        settings.diamondOreSpawnMaxHeight),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-
-                .add(label(gui, malisisText("lapis_lazuli_ore_group"), 20),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++y, WIDTH_1_COL))
-                .add(this.lapisLazuliOreSpawnSize = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, settings.lapisLazuliSpawnSize),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 0, ++y, WIDTH_3_COL))
-                .add(this.lapisLazuliOreSpawnTries = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, settings.lapisLazuliSpawnTries),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 1, y, WIDTH_3_COL))
-                .add(this.lapisLazuliOreSpawnProbability =
-                                makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), settings.lapisLazuliSpawnProbability),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_3_COL * 2, y, WIDTH_3_COL))
-                .add(this.lapisLazuliMeanHeight = makeFloatSlider(gui, malisisText("mean_height", " %.3f"), -2.0f, 2.0f,
-                        settings.lapisLazuliHeightMean),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++y, WIDTH_2_COL))
-                .add(this.lapisLazuliHeightStdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), -2.0f, 2.0f,
-                        settings.lapisLazuliHeightStdDeviation),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, y, WIDTH_2_COL))
-                .init();
-
+        for (CustomGeneratorSettings.PeriodicGaussianOreConfig conf : settings.periodicGaussianOres) {
+            layout.add(new UIPeriodicGaussianOreOptions(gui, conf));
+        }
+        layout.setPadding(HORIZONTAL_PADDING + 6, layout.getVerticalPadding());
         this.container = layout;
     }
 
-    UIVerticalTableLayout getContainer() {
+    UIContainer<?> getContainer() {
         return container;
     }
 
     void writeConfig(CustomGeneratorSettings conf) {
-        conf.dirtSpawnSize = this.dirtSpawnSize.getValue();
-        conf.dirtSpawnTries = this.dirtSpawnTries.getValue();
-        conf.dirtSpawnProbability = this.dirtSpawnProbability.getValue();
-        conf.dirtSpawnSize = this.dirtSpawnSize.getValue();
-        conf.dirtSpawnMinHeight = this.dirtSpawnRange.getMinValue();
-        conf.dirtSpawnMaxHeight = this.dirtSpawnRange.getMaxValue();
+        conf.standardOres.clear();
+        conf.periodicGaussianOres.clear();
+        for (UIComponent<?> c : componentList) {
 
-        conf.gravelSpawnSize = this.gravelSpawnSize.getValue();
-        conf.gravelSpawnTries = this.gravelSpawnTries.getValue();
-        conf.gravelSpawnProbability = this.gravelSpawnProbability.getValue();
-        conf.gravelSpawnSize = this.gravelSpawnSize.getValue();
-        conf.gravelSpawnMinHeight = this.gravelSpawnRange.getMinValue();
-        conf.gravelSpawnMaxHeight = this.gravelSpawnRange.getMaxValue();
+            if (c instanceof UIPeriodicGaussianOreOptions) {
+                conf.periodicGaussianOres.add(((UIPeriodicGaussianOreOptions) c).toConfig());
+            } else if (c instanceof UIStandardOreOptions) {
+                conf.standardOres.add(((UIStandardOreOptions) c).toConfig());
+            }
+        }
+    }
 
-        conf.graniteSpawnSize = this.graniteSpawnSize.getValue();
-        conf.graniteSpawnTries = this.graniteSpawnTries.getValue();
-        conf.graniteSpawnProbability = this.graniteSpawnProbability.getValue();
-        conf.graniteSpawnSize = this.graniteSpawnSize.getValue();
-        conf.graniteSpawnMinHeight = this.graniteSpawnRange.getMinValue();
-        conf.graniteSpawnMaxHeight = this.graniteSpawnRange.getMaxValue();
+    private void replaceComponent(UIComponent<?> oldC, UIComponent<?> newC) {
+        this.componentList.add(this.componentList.indexOf(oldC), newC);
+        this.componentList.remove(oldC);
+        ((UILayout<?>) this.container).setNeedsLayoutUpdate();
+    }
 
-        conf.dioriteSpawnSize = this.dioriteSpawnSize.getValue();
-        conf.dioriteSpawnTries = this.dioriteSpawnTries.getValue();
-        conf.dioriteSpawnProbability = this.dioriteSpawnProbability.getValue();
-        conf.dioriteSpawnSize = this.dioriteSpawnSize.getValue();
-        conf.dioriteSpawnMinHeight = this.dioriteSpawnRange.getMinValue();
-        conf.dioriteSpawnMaxHeight = this.dioriteSpawnRange.getMaxValue();
+    private class UIStandardOreOptions extends UIVerticalTableLayout {
 
-        conf.andesiteSpawnSize = this.andesiteSpawnSize.getValue();
-        conf.andesiteSpawnTries = this.andesiteSpawnTries.getValue();
-        conf.andesiteSpawnProbability = this.andesiteSpawnProbability.getValue();
-        conf.andesiteSpawnSize = this.andesiteSpawnSize.getValue();
-        conf.andesiteSpawnMinHeight = this.andesiteSpawnRange.getMinValue();
-        conf.andesiteSpawnMaxHeight = this.andesiteSpawnRange.getMaxValue();
+        /*
+        The layout:
 
-        conf.coalOreSpawnSize = this.coalOreSpawnSize.getValue();
-        conf.coalOreSpawnTries = this.coalOreSpawnTries.getValue();
-        conf.coalOreSpawnProbability = this.coalOreSpawnProbability.getValue();
-        conf.coalOreSpawnSize = this.coalOreSpawnSize.getValue();
-        conf.coalOreSpawnMinHeight = this.coalOreSpawnRange.getMinValue();
-        conf.coalOreSpawnMaxHeight = this.coalOreSpawnRange.getMaxValue();
+        Biome selection Off
+        +------+------+------+------+------+------+
+        |BLOCK : <=========NAME==========> :DELETE|
+        |STATE : <=BLOCKSTATE PROPERTIES=> : TYPE |
+        +------+------+------+------+------+------+
+        | <===SPAWN SIZE===> : <===VEIN COUNT===> |
+        | <===SPAWN PROB===> : <==BIOME ON/OFF==> |
+        | <============SPAWN HEIGHTS============> |
+        +------+------+------+------+------+------+
 
-        conf.ironOreSpawnSize = this.ironOreSpawnSize.getValue();
-        conf.ironOreSpawnTries = this.ironOreSpawnTries.getValue();
-        conf.ironOreSpawnProbability = this.ironOreSpawnProbability.getValue();
-        conf.ironOreSpawnSize = this.ironOreSpawnSize.getValue();
-        conf.ironOreSpawnMinHeight = this.ironOreSpawnRange.getMinValue();
-        conf.ironOreSpawnMaxHeight = this.ironOreSpawnRange.getMaxValue();
+        Biome selection On
+        +------+------+------+------+------+------+ ----\
+        |BLOCK : <=========NAME==========> :DELETE|\TABLE\
+        |STATE : <=BLOCKSTATE PROPERTIES=> : TYPE |/LAYOUT\
+        +--------------+--------------+-----------+        \  VERTICAL TABLE
+        |  SPAWN SIZE  :  VEIN COUNT  |[V]Biome 1||        /  LAYOUT (this)
+        |  SPAWN PROB  : BIOME ON/OFF |[V]Biome 2 |       /
+        | <======SPAWN HEIGHTS======> |[ ]Biome 3 |      /
+        +--------------+--------------^-----------+ ----/
+        |                             |           |
+        |<---VERTICAL TABLE LAYOUT--->|<-UI LIST->|
+                  (MAIN AREA)         \->Split layout
+        */
+        private final UIBlockStateButton block;
+        private final UIComponent<?> name;
+        private final UIButton delete;
+        private final UISelect<OreGenType> type;
 
-        conf.goldOreSpawnSize = this.goldOreSpawnSize.getValue();
-        conf.goldOreSpawnTries = this.goldOreSpawnTries.getValue();
-        conf.goldOreSpawnProbability = this.goldOreSpawnProbability.getValue();
-        conf.goldOreSpawnSize = this.goldOreSpawnSize.getValue();
-        conf.goldOreSpawnMinHeight = this.goldOreSpawnRange.getMinValue();
-        conf.goldOreSpawnMaxHeight = this.goldOreSpawnRange.getMaxValue();
 
-        conf.redstoneOreSpawnSize = this.redstoneOreSpawnSize.getValue();
-        conf.redstoneOreSpawnTries = this.redstoneOreSpawnTries.getValue();
-        conf.redstoneOreSpawnProbability = this.redstoneOreSpawnProbability.getValue();
-        conf.redstoneOreSpawnSize = this.redstoneOreSpawnSize.getValue();
-        conf.redstoneOreSpawnMinHeight = this.redstoneOreSpawnRange.getMinValue();
-        conf.redstoneOreSpawnMaxHeight = this.redstoneOreSpawnRange.getMaxValue();
+        private final UISlider<Integer> size;
+        private final UISlider<Integer> attempts;
 
-        conf.diamondOreSpawnSize = this.diamondOreSpawnSize.getValue();
-        conf.diamondOreSpawnTries = this.diamondOreSpawnTries.getValue();
-        conf.diamondOreSpawnProbability = this.diamondOreSpawnProbability.getValue();
-        conf.diamondOreSpawnSize = this.diamondOreSpawnSize.getValue();
-        conf.diamondOreSpawnMinHeight = this.diamondOreSpawnRange.getMinValue();
-        conf.diamondOreSpawnMaxHeight = this.diamondOreSpawnRange.getMaxValue();
+        private final UISlider<Float> probability;
+        private final UICheckBox selectBiomes;
 
-        conf.lapisLazuliSpawnSize = this.lapisLazuliOreSpawnSize.getValue();
-        conf.lapisLazuliSpawnTries = this.lapisLazuliOreSpawnTries.getValue();
-        conf.lapisLazuliSpawnProbability = this.lapisLazuliOreSpawnProbability.getValue();
-        conf.lapisLazuliSpawnSize = this.lapisLazuliOreSpawnSize.getValue();
-        conf.lapisLazuliHeightMean = this.lapisLazuliMeanHeight.getValue();
-        conf.lapisLazuliHeightStdDeviation = this.lapisLazuliHeightStdDev.getValue();
+        private final UIRangeSlider<Float> heightRange;
 
+
+        private final UIList<Biome, UICheckBox> biomesArea;
+
+        private final Set<IBlockState> genInBlockstates;
+        private CustomGeneratorSettings.StandardOreConfig config;
+
+        public UIStandardOreOptions(ExtraGui gui, CustomGeneratorSettings.StandardOreConfig config) {
+            super(gui, 6);
+
+            this.config = config;
+            this.genInBlockstates = config.genInBlockstates;
+
+            this.block = new UIBlockStateButton(gui, config.blockstate);
+            this.name = makeLabel(gui, config);
+            this.delete = new UIButton(gui, malisisText("delete")).setSize(10, 20).setAutoSize(false);
+            this.type = new UISelect<>(gui, 10, Arrays.asList(OreGenType.values()));
+            this.size = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, config.spawnSize);
+            this.attempts = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, config.spawnTries);
+            this.probability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), config.spawnProbability);
+            this.selectBiomes = makeCheckbox(gui, malisisText("select_biomes"), config.biomes != null);
+            this.heightRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, config.minHeight, config.maxHeight);
+
+            UISplitLayout<?> deleteTypeArea = new UISplitLayout<>(gui, Type.STACKED, delete, type).setSizeOf(UISplitLayout.Pos.SECOND, 10)
+                    .setSize(0, 30);
+            UIVerticalTableLayout<?> mainArea = new UIVerticalTableLayout<>(gui, 6).autoFitToContent(true);
+
+            // use new ArrayList so it can be sorted
+            biomesArea = new UIList<>(gui, new ArrayList<>(ForgeRegistries.BIOMES.getValues()), this::makeBiomeCheckbox);
+
+            this.block.onClick(btn ->
+                    new UIBlockStateSelect<>(gui).display(state -> {
+                        block.setBlockState(state);
+                        updateLabel(gui, name);
+                    })
+            );
+            this.delete.register(new Object() {
+                @Subscribe
+                public void onClick(UIButton.ClickEvent evt) {
+                    container.remove(UIStandardOreOptions.this);
+                }
+            });
+            this.selectBiomes.register(new Object() {
+                @Subscribe
+                public void onClick(UICheckBox.CheckEvent evt) {
+                    allowSelectBiomes(biomesArea, evt.isChecked());
+                }
+            });
+            this.type.register(new Object() {
+                @Subscribe
+                public void onClick(UISelect.SelectEvent evt) {
+                    if (evt.getNewValue() == OreGenType.PERIODIC_GAUSSIAN) {
+                        replaceComponent(UIStandardOreOptions.this, new UIPeriodicGaussianOreOptions(gui,
+                                PeriodicGaussianOreConfig.builder().fromStandard(toConfig()).create()));
+                    }
+                }
+            });
+            this.type.select(OreGenType.UNIFORM);
+
+            setupMainArea(mainArea);
+            allowSelectBiomes(biomesArea, this.selectBiomes.isChecked());
+            setupBiomeArea(config, biomesArea);
+            setupThis(gui, deleteTypeArea, mainArea, biomesArea);
+        }
+
+        private CustomGeneratorSettings.StandardOreConfig toConfig() {
+            return CustomGeneratorSettings.StandardOreConfig.builder()
+                    .biomes(this.selectBiomes.isChecked() ?
+                            this.biomesArea.getData().stream().filter(b -> biomesArea.component(b).isChecked()).toArray(Biome[]::new)
+                            : null)
+                    .genInBlockstates(genInBlockstates == null ? null : genInBlockstates.toArray(new IBlockState[0]))
+                    .attempts(this.attempts.getValue())
+                    .block(this.block.getState())
+                    .minHeight(this.heightRange.getMinValue())
+                    .maxHeight(this.heightRange.getMaxValue())
+                    .probability(this.probability.getValue())
+                    .size(this.size.getValue())
+                    .create();
+        }
+
+        private void setupMainArea(UIVerticalTableLayout<?> mainArea) {
+            int y = -1;
+            mainArea.add(this.size, new GridLocation(0, ++y, 3));
+            mainArea.add(this.attempts, new GridLocation(3, y, 3));
+            mainArea.add(this.probability, new GridLocation(0, ++y, 3));
+            mainArea.add(this.selectBiomes, new GridLocation(3, y, 3));
+            mainArea.add(this.heightRange, new GridLocation(0, ++y, 6));
+        }
+
+        private void allowSelectBiomes(UIList<Biome, UICheckBox> biomes, boolean checked) {
+            biomes.setVisible(checked);
+            if (!biomes.isVisible()) {
+                // TODO: is this the expected behavior for users? Or should the selected ones persist?
+                biomes.getData().forEach(e -> biomes.component(e).setChecked(true));
+            }
+        }
+
+        private void setupBiomeArea(CustomGeneratorSettings.StandardOreConfig config, UIList<Biome, UICheckBox> biomesArea) {
+            biomesArea.setPadding(6, biomesArea.getVerticalPadding());
+
+            if (config.biomes != null) {
+                config.biomes.forEach(b -> {
+                    biomesArea.component(b).setChecked(true);
+                });
+            }
+
+            ((List<Biome>) biomesArea.getData()).sort((b1, b2) ->
+                    biomesArea.component(b1).isChecked() && !biomesArea.component(b2).isChecked() ? 1 : 0
+            );
+        }
+
+        private void setupThis(ExtraGui gui, UIComponent<?> deleteTypeArea, UIComponent<?> mainArea, UILayout<?> biomesArea) {
+            UISplitLayout split =
+                    new UISplitLayout<>(gui, Type.SIDE_BY_SIDE, mainArea, biomesArea).sizeWeights(2, 1).autoFitToContent(true).userResizable(false);
+
+            this.autoFitToContent(true);
+            this.add(this.name, new GridLocation(1, 0, 4));
+            this.add(this.block, new GridLocation(0, 0, 1));
+            this.add(deleteTypeArea, new GridLocation(5, 0, 1));
+            this.add(split, new GridLocation(0, 1, 6));
+            biomesArea.setHeightFunc(() -> ((UIContainer) split.getFirst()).getContentHeight());
+        }
+
+        private UICheckBox makeBiomeCheckbox(Biome biome) {
+            return new UICheckBox(getGui(), String.format("%s (%s)", biome.getBiomeName(), biome.getRegistryName()));
+        }
+
+        private UIContainer<?> makeLabel(ExtraGui gui, CustomGeneratorSettings.StandardOreConfig config) {
+            UIVerticalTableLayout<?> label = new UIVerticalTableLayout<>(gui, 1).setInsets(0, 0, 0, 0);
+            updateLabel(gui, label);
+            return label;
+        }
+        private void updateLabel(ExtraGui gui, UIComponent<?> label) {
+
+            ((UIContainer) label).removeAll();
+
+            String stateStr = block.getState().toString();
+            String name;
+            String props;
+            if (!stateStr.contains("[")) {
+                name = stateStr;
+                props = "[]";
+            } else {
+                String[] statesplit = stateStr.split("\\[");
+                name = statesplit[0];
+                props = "[" + statesplit[1];
+            }
+
+
+            UIComponent<?> l1 = label(gui, name);
+            UIComponent<?> l2 = label(gui, props);
+            ((UIContainer<?>) label).add(l1, l2);
+            label.setSize(label.getWidth(), l1.getHeight() + l2.getHeight());
+        }
+    }
+
+    // TODO: avoid duplicating code here
+    private class UIPeriodicGaussianOreOptions extends UIVerticalTableLayout {
+
+        /*
+        The layout:
+
+        Biome selection Off
+        +------+------+------+------+------+------+
+        |BLOCK : <=========NAME==========> :DELETE|
+        |STATE : <=BLOCKSTATE PROPERTIES=> : TYPE |
+        +------+------+------+------+------+------+
+        | <===SPAWN SIZE===> : <===VEIN COUNT===> |
+        | <===SPAWN PROB===> : <==BIOME ON/OFF==> |
+        | <======MEAN======> : <=====SPACING====> |
+        | <============STD DEVIATION============> |
+        | <============SPAWN HEIGHTS============> |
+        +------+------+------+------+------+------+
+
+        Biome selection On
+        +------+------+------+------+------+------+ ----\
+        |BLOCK : <=========NAME==========> :DELETE|\TABLE\
+        |STATE : <=BLOCKSTATE PROPERTIES=> : TYPE |/LAYOUT\
+        +--------------+--------------+-----------+        \
+        |  SPAWN SIZE  :  VEIN COUNT  |[V]Biome 1||         \  VERTICAL TABLE
+        |  SPAWN PROB  : BIOME ON/OFF |[V]Biome 2 |         /  LAYOUT (this)
+        | <===MEAN===> : <=SPACING==> |[V]Biome 3 |        /
+        | <======STD DEVIATION======> |[ ]Biome 4 |       /
+        | <======SPAWN HEIGHTS======> |[ ]Biome 5 |      /
+        +--------------+--------------^-----------+ ----/
+        |                             |           |
+        |<---VERTICAL TABLE LAYOUT--->|<-UI LIST->|
+                  (MAIN AREA)         \->Split layout
+        */
+        private final UIBlockStateButton block;
+        private final UIComponent<?> name;
+        private final UIButton delete;
+        private final UISelect<OreGenType> type;
+
+
+        private final UISlider<Integer> size;
+        private final UISlider<Integer> attempts;
+
+        private final UISlider<Float> mean;
+        private final UISlider<Float> spacing;
+
+        private final UISlider<Float> stdDev;
+
+        private final UISlider<Float> probability;
+        private final UICheckBox selectBiomes;
+
+        private final UIRangeSlider<Float> heightRange;
+
+
+        private final UIList<Biome, UICheckBox> biomesArea;
+
+        private final Set<IBlockState> genInBlockstates;
+        private PeriodicGaussianOreConfig config;
+
+        public UIPeriodicGaussianOreOptions(ExtraGui gui, PeriodicGaussianOreConfig config) {
+            super(gui, 6);
+
+            this.config = config;
+
+            this.genInBlockstates = config.genInBlockstates;
+
+            this.block = new UIBlockStateButton(gui, config.blockstate);
+            this.name = makeLabel(gui, config);
+            this.delete = new UIButton(gui, malisisText("delete")).setSize(10, 20).setAutoSize(false);
+            this.type = new UISelect<>(gui, 10, Arrays.asList(OreGenType.values()));
+            this.size = makeIntSlider(gui, malisisText("spawn_size", " %d"), 1, 50, config.spawnSize);
+            this.attempts = makeIntSlider(gui, malisisText("spawn_tries", " %d"), 1, 40, config.spawnTries);
+            this.mean = makeFloatSlider(gui, malisisText("mean_height", " %.3f"), -4.0f, 4.0f, config.heightMean);
+            this.spacing = makePositiveExponentialSlider(gui, malisisText("spacing_height", " %.3f"), -1f, 6.0f, config.heightSpacing);
+            this.stdDev = makeFloatSlider(gui, malisisText("height_std_dev", " %.3f"), 0f, 1f, config.heightStdDeviation);
+            this.probability = makeFloatSlider(gui, malisisText("spawn_probability", " %.3f"), config.spawnProbability);
+            this.selectBiomes = makeCheckbox(gui, malisisText("select_biomes"), config.biomes != null);
+            this.heightRange = makeRangeSlider(gui, vanillaText("spawn_range"), -2.0f, 2.0f, config.minHeight, config.maxHeight);
+
+            UISplitLayout<?> deleteTypeArea =
+                    new UISplitLayout<>(gui, Type.STACKED, delete, type).sizeWeights(1, 1).setSizeOf(UISplitLayout.Pos.SECOND, 10)
+                            .setSize(0, 30);
+            UIVerticalTableLayout<?> mainArea = new UIVerticalTableLayout<>(gui, 6).autoFitToContent(true);
+
+            // use new ArrayList so it can be sorted
+            biomesArea = new UIList<>(gui, new ArrayList<>(ForgeRegistries.BIOMES.getValues()), this::makeBiomeCheckbox);
+
+            this.block.onClick(btn ->
+                    new UIBlockStateSelect<>(gui).display(state -> {
+                        block.setBlockState(state);
+                        updateLabel(gui, name);
+                    })
+            );
+            this.delete.register(new Object() {
+                @Subscribe
+                public void onClick(UIButton.ClickEvent evt) {
+                    standardOptions.remove(UIPeriodicGaussianOreOptions.this);
+                    container.remove(UIPeriodicGaussianOreOptions.this);
+                }
+            });
+            this.selectBiomes.register(new Object() {
+                @Subscribe
+                public void onClick(UICheckBox.CheckEvent evt) {
+                    allowSelectBiomes(biomesArea, evt.isChecked());
+                }
+            });
+            this.type.register(new Object() {
+                @Subscribe
+                public void onClick(UISelect.SelectEvent<OreGenType> evt) {
+                    if (evt.getNewValue() == OreGenType.UNIFORM) {
+                        replaceComponent(UIPeriodicGaussianOreOptions.this, new UIStandardOreOptions(gui, CustomGeneratorSettings.StandardOreConfig
+                                .builder().fromPeriodic(toConfig()).create()));
+                    }
+                }
+            });
+            this.type.select(OreGenType.PERIODIC_GAUSSIAN);
+
+            setupMainArea(mainArea);
+            allowSelectBiomes(biomesArea, this.selectBiomes.isChecked());
+            setupBiomeArea(config, biomesArea);
+            setupThis(gui, deleteTypeArea, mainArea, biomesArea);
+        }
+
+        private PeriodicGaussianOreConfig toConfig() {
+            return CustomGeneratorSettings.PeriodicGaussianOreConfig.builder()
+                    .biomes(this.selectBiomes.isChecked() ?
+                            this.biomesArea.getData().stream().filter(b -> biomesArea.component(b).isChecked()).toArray(Biome[]::new)
+                            : null)
+                    .genInBlockstates(genInBlockstates == null ? null : genInBlockstates.toArray(new IBlockState[0]))
+                    .attempts(this.attempts.getValue())
+                    .block(this.block.getState())
+                    .minHeight(this.heightRange.getMinValue())
+                    .maxHeight(this.heightRange.getMaxValue())
+                    .probability(this.probability.getValue())
+                    .size(this.size.getValue())
+                    .heightMean(this.mean.getValue())
+                    .heightSpacing(this.spacing.getValue())
+                    .heightStdDeviation(this.stdDev.getValue())
+                    .create();
+        }
+
+        private void setupMainArea(UIVerticalTableLayout<?> mainArea) {
+            int y = -1;
+            mainArea.add(this.size, new GridLocation(0, ++y, 3));
+            mainArea.add(this.attempts, new GridLocation(3, y, 3));
+            mainArea.add(this.probability, new GridLocation(0, ++y, 3));
+            mainArea.add(this.selectBiomes, new GridLocation(3, y, 3));
+            mainArea.add(this.mean, new GridLocation(0, ++y, 3));
+            mainArea.add(this.spacing, new GridLocation(3, y, 3));
+            mainArea.add(this.stdDev, new GridLocation(0, ++y, 6));
+            mainArea.add(this.heightRange, new GridLocation(0, ++y, 6));
+        }
+
+        private void allowSelectBiomes(UIList<Biome, UICheckBox> biomes, boolean checked) {
+            biomes.setVisible(checked);
+            if (!biomes.isVisible()) {
+                // TODO: is this the expected behavior for users? Or should the selected ones persist?
+                biomes.getData().forEach(e -> biomes.component(e).setChecked(true));
+            }
+        }
+
+        private void setupBiomeArea(PeriodicGaussianOreConfig config, UIList<Biome, UICheckBox> biomesArea) {
+            biomesArea.setPadding(6, biomesArea.getVerticalPadding());
+
+            if (config.biomes != null) {
+                config.biomes.forEach(b -> {
+                    biomesArea.component(b).setChecked(true);
+                });
+            }
+
+            ((List<Biome>) biomesArea.getData()).sort((b1, b2) ->
+                    biomesArea.component(b1).isChecked() && !biomesArea.component(b2).isChecked() ? 1 : 0
+            );
+        }
+
+        private void setupThis(ExtraGui gui, UIComponent<?> deleteTypeArea, UIComponent<?> mainArea, UILayout<?> biomesArea) {
+            UISplitLayout split =
+                    new UISplitLayout<>(gui, Type.SIDE_BY_SIDE, mainArea, biomesArea).sizeWeights(2, 1).autoFitToContent(true).userResizable(false);
+
+            this.autoFitToContent(true);
+            this.add(this.name, new GridLocation(1, 0, 4));
+            this.add(this.block, new GridLocation(0, 0, 1));
+            this.add(deleteTypeArea, new GridLocation(5, 0, 1));
+            this.add(split, new GridLocation(0, 1, 6));
+            biomesArea.setHeightFunc(() -> ((UIContainer) split.getFirst()).getContentHeight());
+        }
+
+        private UICheckBox makeBiomeCheckbox(Biome biome) {
+            return new UICheckBox(getGui(), String.format("%s (%s)", biome.getBiomeName(), biome.getRegistryName()));
+        }
+
+        private UIContainer<?> makeLabel(ExtraGui gui, CustomGeneratorSettings.PeriodicGaussianOreConfig config) {
+            UIVerticalTableLayout<?> label = new UIVerticalTableLayout<>(gui, 1).setInsets(0, 0, 0, 0);
+            updateLabel(gui, label);
+            return label;
+        }
+
+        private void updateLabel(ExtraGui gui, UIComponent<?> label) {
+
+            ((UIContainer) label).removeAll();
+
+            String stateStr = block.getState().toString();
+            String name;
+            String props;
+            if (!stateStr.contains("[")) {
+                name = stateStr;
+                props = "[]";
+            } else {
+                String[] statesplit = stateStr.split("\\[");
+                name = statesplit[0];
+                props = "[" + statesplit[1];
+            }
+
+
+            UIComponent<?> l1 = label(gui, name);
+            UIComponent<?> l2 = label(gui, props);
+            ((UIContainer<?>) label).add(l1, l2);
+            label.setSize(label.getWidth(), l1.getHeight() + l2.getHeight());
+        }
+    }
+
+    public enum OreGenType {
+        UNIFORM, PERIODIC_GAUSSIAN
     }
 }

@@ -25,6 +25,7 @@ package cubicchunks.worldgen.generator.custom.biome.replacer;
 
 import cubicchunks.api.worldgen.biome.CubicBiome;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.HashMap;
@@ -42,82 +43,29 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class BiomeBlockReplacerConfig {
 
-    private Map<ResourceLocation, Object> configMap = new HashMap<>();
+    // NOTE: this class is serialized to json. Don't change the fields.
+    private Map<ResourceLocation, Object> defaults = new HashMap<>();
+    private Map<ResourceLocation, Object> overrides = new HashMap<>();
 
     public void set(ResourceLocation location, Object value) {
-        configMap.put(location, value);
+        overrides.put(location, value);
     }
 
     public void set(String modid, String name, Object value) {
-        configMap.put(new ResourceLocation(modid, name), value);
+        overrides.put(new ResourceLocation(modid, name), value);
     }
 
-    /* Boolean getters */
-    public boolean getBoolean(ResourceLocation location) {
-        return (boolean) this.configMap.get(location);
+    public void setDefault(ResourceLocation location, Object defaultValue) {
+        defaults.put(location, defaultValue);
     }
 
-    public boolean getBoolean(String modid, String name) {
-        return getBoolean(new ResourceLocation(modid, name));
-    }
-
-    /* Byte getters */
-    public byte getByte(ResourceLocation location) {
-        return (byte) this.configMap.get(location);
-    }
-
-    public byte getByte(String modid, String name) {
-        return getByte(new ResourceLocation(modid, name));
-    }
-
-    /* Character getters */
-    public char getChar(ResourceLocation location) {
-        return (char) this.configMap.get(location);
-    }
-
-    public char getChar(String modid, String name) {
-        return getChar(new ResourceLocation(modid, name));
-    }
-
-    /* Short getters */
-    public short getShort(ResourceLocation location) {
-        return (short) this.configMap.get(location);
-    }
-
-    public short getShort(String modid, String name) {
-        return getShort(new ResourceLocation(modid, name));
-    }
-
-    /* Int getters */
-    public int getInt(ResourceLocation location) {
-        return (int) this.configMap.get(location);
-    }
-
-    public int getInt(String modid, String name) {
-        return getInt(new ResourceLocation(modid, name));
-    }
-
-    /* Float getters */
-    public float getFloat(ResourceLocation location) {
-        return (float) this.configMap.get(location);
-    }
-
-    public float getFloat(String modid, String name) {
-        return getFloat(new ResourceLocation(modid, name));
-    }
-
-    /* Long getters */
-    public long getLong(ResourceLocation location) {
-        return (long) this.configMap.get(location);
-    }
-
-    public long getLong(String modid, String name) {
-        return getLong(new ResourceLocation(modid, name));
+    public void setDefault(String modid, String name, Object defaultValue) {
+        defaults.put(new ResourceLocation(modid, name), defaultValue);
     }
 
     /* Double getters */
     public double getDouble(ResourceLocation location) {
-        return (double) this.configMap.get(location);
+        return ((Number) getValue(location)).doubleValue();
     }
 
     public double getDouble(String modid, String name) {
@@ -126,23 +74,57 @@ public class BiomeBlockReplacerConfig {
 
     /* String getters */
     public String getString(ResourceLocation location) {
-        Object v = this.configMap.get(location);
+        Object v = getValue(location);
         if (v == null) {
             throw new NullPointerException();
         }
         return (String) v;
     }
 
+    public IBlockState getBlockstate(String modid, String name) {
+        return getBlockstate(new ResourceLocation(modid, name));
+    }
+
+    /* String getters */
+    public IBlockState getBlockstate(ResourceLocation location) {
+        Object v = getValue(location);
+        if (v == null) {
+            throw new NullPointerException();
+        }
+        return (IBlockState) v;
+    }
+
     public String getString(String modid, String name) {
         return getString(new ResourceLocation(modid, name));
+    }
+
+    private Object getValue(ResourceLocation location) {
+        if (defaults.containsKey(location)) {
+            return defaults.get(location);
+        }
+        return this.overrides.get(location);
     }
 
     public void fillDefaults() {
         CubicBiome.REGISTRY.forEach(biome ->
                 biome.getReplacerProviders().forEach(prov ->
                         prov.getPossibleConfigOptions().forEach(confOpt ->
-                                set(confOpt.getLocation(), confOpt.getDefaultValue()))
+                                setDefault(confOpt.getLocation(), confOpt.getDefaultValue()))
                 )
         );
+    }
+
+    public static BiomeBlockReplacerConfig defaults() {
+        BiomeBlockReplacerConfig conf = new BiomeBlockReplacerConfig();
+        conf.fillDefaults();
+        return conf;
+    }
+
+    public Map<ResourceLocation, Object> getDefaults() {
+        return new HashMap<>(defaults);
+    }
+
+    public Map<ResourceLocation, Object> getOverrides() {
+        return new HashMap<>(overrides);
     }
 }

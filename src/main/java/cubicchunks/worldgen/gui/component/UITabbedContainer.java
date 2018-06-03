@@ -81,7 +81,7 @@ public class UITabbedContainer extends UIContainer<UITabbedContainer> {
         }
         if (currentTab == -1) {
             previous.setDisabled(false);
-            next.setDisabled(false);
+            next.setDisabled(true);
         } else {
             previous.setDisabled(currentTab <= 0);
             next.setDisabled(currentTab >= tabs.size() - 1);

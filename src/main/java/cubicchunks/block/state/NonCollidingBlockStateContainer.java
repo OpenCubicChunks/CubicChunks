@@ -21,45 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.client;
-
-import cubicchunks.CubicChunks;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraftforge.fml.client.IModGuiFactory;
-
-import java.util.Set;
+package cubicchunks.block.state;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
-@MethodsReturnNonnullByDefault
-@ParametersAreNonnullByDefault
-public class GuiFactory implements IModGuiFactory {
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
-    @Override public void initialize(Minecraft minecraftInstance) {
+import net.minecraft.block.Block;
+import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.block.state.IBlockState;
+import net.minecraftforge.common.property.IUnlistedProperty;
 
+public class NonCollidingBlockStateContainer extends BlockStateContainer {
+
+    public NonCollidingBlockStateContainer(Block blockIn, IProperty<?>[] properties) {
+        super(blockIn, properties);
     }
 
-    @Override public boolean hasConfigGui() {
-        return true;
-    }
-
-    @Override public GuiScreen createConfigGui(GuiScreen parentScreen) {
-        return new CubicChunks.Config.GUI(parentScreen);
-    }
-
-    @Override public Class<? extends GuiScreen> mainConfigGuiClass() {
-        return null;
-    }
-
-    @Nullable @Override public Set<RuntimeOptionCategoryElement> runtimeGuiCategories() {
-        return null;
-    }
-
-    @Nullable @Override
-    public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement runtimeOptionCategoryElement) {
-        return null;
+    protected StateImplementation createState(Block block, ImmutableMap<IProperty<?>, Comparable<?>> properties, @Nullable ImmutableMap<IUnlistedProperty<?>, Optional<?>> unlistedProperties) {
+        return new NonCollidingBlockStateImplementation(block, properties);
     }
 }

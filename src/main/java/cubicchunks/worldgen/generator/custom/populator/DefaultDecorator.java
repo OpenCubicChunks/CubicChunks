@@ -23,7 +23,7 @@
  */
 package cubicchunks.worldgen.generator.custom.populator;
 
-import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreGaussian;
+import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreBellCurve;
 import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.genOreUniform;
 import static cubicchunks.worldgen.generator.custom.populator.PopulatorUtils.getSurfaceForCube;
 
@@ -52,6 +52,8 @@ import net.minecraft.world.gen.feature.WorldGenPumpkin;
 import net.minecraft.world.gen.feature.WorldGenerator;
 
 import java.util.Random;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -67,49 +69,24 @@ public final class DefaultDecorator implements ICubicPopulator {
         }
 
         private void generateOres(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos) {
-            IBlockState diorite = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.DIORITE);
-            IBlockState granite = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.GRANITE);
-            IBlockState andesite = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.ANDESITE);
-
-            // TODO: events?
-            genOreUniform(world, cfg, random, pos, cfg.dirtSpawnTries, cfg.dirtSpawnProbability,
-                    new WorldGenMinable(Blocks.DIRT.getDefaultState(), cfg.dirtSpawnSize),
-                    cfg.dirtSpawnMinHeight, cfg.dirtSpawnMaxHeight);
-            genOreUniform(world, cfg, random, pos, cfg.gravelSpawnTries, cfg.gravelSpawnProbability,
-                    new WorldGenMinable(Blocks.GRAVEL.getDefaultState(), cfg.gravelSpawnSize),
-                    cfg.gravelSpawnMinHeight, cfg.gravelSpawnMaxHeight);
-            genOreUniform(world, cfg, random, pos, cfg.dioriteSpawnTries, cfg.dioriteSpawnProbability,
-                    new WorldGenMinable(diorite, cfg.dioriteSpawnSize),
-                    cfg.dioriteSpawnMinHeight, cfg.dioriteSpawnMaxHeight);
-            genOreUniform(world, cfg, random, pos, cfg.graniteSpawnTries, cfg.graniteSpawnProbability,
-                    new WorldGenMinable(granite, cfg.graniteSpawnSize),
-                    cfg.graniteSpawnMinHeight, cfg.graniteSpawnMaxHeight);
-            genOreUniform(world, cfg, random, pos, cfg.andesiteSpawnTries, cfg.andesiteSpawnProbability,
-                    new WorldGenMinable(andesite, cfg.andesiteSpawnSize),
-                    cfg.andesiteSpawnMinHeight, cfg.andesiteSpawnMaxHeight);
-
-            genOreUniform(world, cfg, random, pos, cfg.coalOreSpawnTries, cfg.coalOreSpawnProbability,
-                    new WorldGenMinable(Blocks.COAL_ORE.getDefaultState(), cfg.coalOreSpawnSize),
-                    cfg.coalOreSpawnMinHeight, cfg.coalOreSpawnMaxHeight);
-            genOreUniform(world, cfg, random, pos, cfg.ironOreSpawnTries, cfg.ironOreSpawnProbability,
-                    new WorldGenMinable(Blocks.IRON_ORE.getDefaultState(), cfg.ironOreSpawnSize),
-                    cfg.ironOreSpawnMinHeight, cfg.ironOreSpawnMaxHeight);
-            genOreUniform(world, cfg, random, pos, cfg.goldOreSpawnTries, cfg.goldOreSpawnProbability,
-                    new WorldGenMinable(Blocks.GOLD_ORE.getDefaultState(), cfg.goldOreSpawnSize),
-                    cfg.goldOreSpawnMinHeight, cfg.goldOreSpawnMaxHeight);
-            genOreUniform(world, cfg, random, pos, cfg.redstoneOreSpawnTries, cfg.redstoneOreSpawnProbability,
-                    new WorldGenMinable(Blocks.REDSTONE_ORE.getDefaultState(), cfg.redstoneOreSpawnSize),
-                    cfg.redstoneOreSpawnMinHeight, cfg.redstoneOreSpawnMaxHeight);
-            genOreUniform(world, cfg, random, pos, cfg.diamondOreSpawnTries, cfg.diamondOreSpawnProbability,
-                    new WorldGenMinable(Blocks.DIAMOND_ORE.getDefaultState(), cfg.diamondOreSpawnSize),
-                    cfg.diamondOreSpawnMinHeight, cfg.diamondOreSpawnMaxHeight);
-
-            genOreGaussian(world, cfg, random, pos, cfg.lapisLazuliSpawnTries, cfg.lapisLazuliSpawnProbability,
-                    new WorldGenMinable(Blocks.LAPIS_ORE.getDefaultState(), cfg.lapisLazuliSpawnSize),
-                    cfg.lapisLazuliHeightMean, cfg.lapisLazuliHeightStdDeviation);
+            // TODO: allow interleaved order
+            for (CustomGeneratorSettings.StandardOreConfig c : cfg.standardOres) {
+                Set<IBlockState> states = c.genInBlockstates;
+                WorldGenMinable gen = states == null ?
+                        new WorldGenMinable(c.blockstate, c.spawnSize) :
+                        new WorldGenMinable(c.blockstate, c.spawnSize, states::contains);
+                genOreUniform(world, cfg, random, pos, c.spawnTries, c.spawnProbability, gen, c.minHeight, c.maxHeight);
+            }
+            for (CustomGeneratorSettings.PeriodicGaussianOreConfig c : cfg.periodicGaussianOres) {
+                Set<IBlockState> states = c.genInBlockstates;
+                WorldGenMinable gen = states == null ?
+                        new WorldGenMinable(c.blockstate, c.spawnSize) :
+                        new WorldGenMinable(c.blockstate, c.spawnSize, states::contains);
+                genOreBellCurve(world, cfg, random, pos, c.spawnTries, c.spawnProbability, gen, c.heightMean, c.heightStdDeviation, c.heightSpacing,
+                        c.minHeight, c.maxHeight);
+            }
         }
     }
-
 
     @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());

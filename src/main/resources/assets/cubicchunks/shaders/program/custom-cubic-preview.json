@@ -1,0 +1,48 @@
+{
+    "blend": {
+        "func": "add",
+        "srcrgb": "one",
+        "dstrgb": "zero"
+    },
+    "vertex": "cubicchunks:custom-cubic-preview",
+    "fragment": "cubicchunks:custom-cubic-preview",
+    "attributes": [ ],
+    "samplers": [
+        { "name": "perlin" },
+        { "name": "biomes" }
+    ],
+    "uniforms": [
+        { "name": "previewTransform", "type": "matrix4x4", "count": 16,
+            "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+
+        { "name": "biomeCoordScaleAndOffset", "type": "float", "count": 2, "values": [ 0.001, 0.0 ] },
+        { "name": "waterLevel", "type": "float", "count": 1, "values": [ 63 ] },
+        { "name": "biomeCount", "type": "float", "count": 1, "values": [ 1 ] },
+
+        { "name": "heightVariationFactor", "type": "float", "count": 1, "values": [ 64.0 ] },
+        { "name": "heightVariationSpecial", "type": "float", "count": 1, "values": [ 0.25 ] },
+        { "name": "heightVariationOffset", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "heightFactor", "type": "float", "count": 1, "values": [ 64.0 ] },
+        { "name": "heightOffset", "type": "float", "count": 1, "values": [ 64.0 ] },
+
+        { "name": "depthFactor", "type": "float", "count": 1, "values": [ 1.024 ] },
+        { "name": "depthOffset", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "depthFreq", "type": "float", "count": 1, "values": [ 0.00152587890625 ] },
+        { "name": "depthOctaves", "type": "int", "count": 1, "values": [ 16 ] },
+
+        { "name": "selectorFactor", "type": "float", "count": 1, "values": [ 12.75 ] },
+        { "name": "selectorOffset", "type": "float", "count": 1, "values": [ 0.5 ] },
+        { "name": "selectorFreq", "type": "float", "count": 2, "values": [ 0.016709277343750002, 0.008354638671875001 ] },
+        { "name": "selectorOctaves", "type": "int", "count": 1, "values": [ 8 ] },
+
+        { "name": "lowFactor", "type": "float", "count": 1, "values": [ 1.0 ] },
+        { "name": "lowOffset", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "lowFreq", "type": "float", "count": 2, "values": [ 0.005221649169921875, 0.0026108245849609376 ] },
+        { "name": "lowOctaves", "type": "int", "count": 1, "values": [ 16 ] },
+
+        { "name": "highFactor", "type": "float", "count": 1, "values": [ 1.0 ] },
+        { "name": "highOffset", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "highFreq", "type": "float", "count": 2, "values": [ 0.005221649169921875, 0.0026108245849609376 ] },
+        { "name": "highOctaves", "type": "int", "count": 1, "values": [ 16 ] }
+    ]
+}

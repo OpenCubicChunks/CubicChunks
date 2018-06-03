@@ -83,6 +83,10 @@ public interface IBuilder {
         return apply(x -> MathHelper.clamp(x, min, max));
     }
 
+    default IBuilder signum() {
+        return apply(Math::signum);
+    }
+
     default IBuilder apply(TDoubleFunction func) {
         return (x, y, z) -> func.execute(this.get(x, y, z));
     }

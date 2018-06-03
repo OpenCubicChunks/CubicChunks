@@ -50,17 +50,18 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
     protected static final IBlockState RED_SANDSTONE = Blocks.RED_SANDSTONE.getDefaultState();
     protected static final IBlockState SANDSTONE = Blocks.SANDSTONE.getDefaultState();
 
-    private final IBuilder depthNoise = makeDepthNoise();
+    private final IBuilder depthNoise;
     private final int maxPossibleDepth;
     private IBlockState topBlock;
     private IBlockState fillerBlock;
     private final double horizontalGradientDepthDecreaseWeight;
     private final double oceanHeight;
 
-    public SurfaceDefaultReplacer(IBlockState topBlock, IBlockState fillerBlock,
+    public SurfaceDefaultReplacer(IBlockState topBlock, IBlockState fillerBlock, IBuilder depthNoise,
             double horizontalGradientDepthDecreaseWeight, double oceanHeight) {
         this.topBlock = topBlock;
         this.fillerBlock = fillerBlock;
+        this.depthNoise = depthNoise;
         this.horizontalGradientDepthDecreaseWeight = horizontalGradientDepthDecreaseWeight;
         this.oceanHeight = oceanHeight;
         this.maxPossibleDepth = 9;
@@ -126,28 +127,41 @@ public class SurfaceDefaultReplacer implements IBiomeBlockReplacer {
         return new IBiomeBlockReplacerProvider() {
             private final ResourceLocation HORIZONTAL_GRADIENT_DEC = CubicChunks.location("horizontal_gradient_depth_decrease_weight");
             private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
+            private final ResourceLocation DEPTH_NOISE_FACTOR = CubicChunks.location("biome_fill_depth_factor");
+            private final ResourceLocation DEPTH_NOISE_OFFSET = CubicChunks.location("biome_fill_depth_offset");
+            private final ResourceLocation DEPTH_NOISE_FREQUENCY = CubicChunks.location("biome_fill_noise_freq");
+            private final ResourceLocation DEPTH_NOISE_OCTAVES = CubicChunks.location("biome_fill_noise_octaves");
 
             @Override
             public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome cubicBiome, BiomeBlockReplacerConfig conf) {
                 double gradientDec = conf.getDouble(HORIZONTAL_GRADIENT_DEC);
                 double oceanY = conf.getDouble(OCEAN_LEVEL);
+
+                double factor = conf.getDouble(DEPTH_NOISE_FACTOR);
+                double offset = conf.getDouble(DEPTH_NOISE_OFFSET);
+                double freq = conf.getDouble(DEPTH_NOISE_FREQUENCY);
+                int octaves = (int) conf.getDouble(DEPTH_NOISE_OCTAVES);
                 Biome biome = cubicBiome.getBiome();
-                return new SurfaceDefaultReplacer(biome.topBlock, biome.fillerBlock, gradientDec, oceanY);
+
+                IBuilder builder = NoiseSource.perlin()
+                        .frequency(freq).octaves(octaves).create()
+                        .mul(factor).add(offset)
+                        .cached2d(256, v -> v.getX() + v.getZ() * 16);
+                return new SurfaceDefaultReplacer(biome.topBlock, biome.fillerBlock, builder, gradientDec, oceanY);
             }
 
             @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
                 return Sets.newHashSet(
-                        new ConfigOptionInfo(HORIZONTAL_GRADIENT_DEC, 1.0)
+                        new ConfigOptionInfo(HORIZONTAL_GRADIENT_DEC, 1.0),
+                        new ConfigOptionInfo(OCEAN_LEVEL, 63.0),
+                        // TODO: do it properly, currently this value is just temporary until I figure out the right one
+                        // TODO: figure out what the above comment actually means
+                        new ConfigOptionInfo(DEPTH_NOISE_FACTOR, ((1 << 3) - 1) / 3.0),
+                        new ConfigOptionInfo(DEPTH_NOISE_OFFSET, 3.0),
+                        new ConfigOptionInfo(DEPTH_NOISE_FREQUENCY, ConversionUtils.frequencyFromVanilla(0.0625f, 4)),
+                        new ConfigOptionInfo(DEPTH_NOISE_OCTAVES, 4.0)
                 );
             }
         };
-    }
-
-    public static IBuilder makeDepthNoise() {
-        return NoiseSource.perlin()
-                .frequency(ConversionUtils.frequencyFromVanilla(0.0625f, 4)).octaves(4).create()
-                .mul((1 << 3) - 1) // TODO: do it properly, currently this value is just temporary until I figure out the right one
-                .mul(1.0 / 3.0).add(3)
-                .cached2d(256, v -> v.getX() + v.getZ() * 16);
     }
 }
