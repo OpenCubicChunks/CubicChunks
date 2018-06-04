@@ -78,7 +78,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
             // TODO: allow interleaved order
             for (CustomGeneratorSettings.StandardOreConfig c : cfg.standardOres) {
-                if (!c.biomes.contains(biome.getBiome())) {
+                if (c.biomes != null && !c.biomes.contains(biome.getBiome())) {
                     continue;
                 }
                 Set<IBlockState> states = c.genInBlockstates;
@@ -88,7 +88,7 @@ public final class DefaultDecorator implements ICubicPopulator {
                 genOreUniform(world, cfg, random, pos, c.spawnTries, c.spawnProbability, gen, c.minHeight, c.maxHeight);
             }
             for (CustomGeneratorSettings.PeriodicGaussianOreConfig c : cfg.periodicGaussianOres) {
-                if (!c.biomes.contains(biome.getBiome())) {
+                if (c.biomes != null && !c.biomes.contains(biome.getBiome())) {
                     continue;
                 }
                 Set<IBlockState> states = c.genInBlockstates;
