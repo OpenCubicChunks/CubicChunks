@@ -61,10 +61,21 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class DefaultDecorator implements ICubicPopulator {
 
+    private final CustomGeneratorSettings cfg;
+
+    public DefaultDecorator(CustomGeneratorSettings cfg) {
+        this.cfg = cfg;
+    }
+
     public static class Ores implements ICubicPopulator {
 
+        private final CustomGeneratorSettings cfg;
+
+        public Ores(CustomGeneratorSettings cfg) {
+            this.cfg = cfg;
+        }
+
         @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
-            CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
             generateOres(world, cfg, random, pos);
         }
 
@@ -89,8 +100,6 @@ public final class DefaultDecorator implements ICubicPopulator {
     }
 
     @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
-        CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
-
         // TODO: Biome decoration events?
         BiomeDecorator dec = biome.getBiome().decorator;
         generateOnTop(world, random, pos, dec.sandPatchesPerChunk, dec.sandGen);

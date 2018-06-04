@@ -46,9 +46,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class PrePopulator implements ICubicPopulator {
 
-    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome cubicBiome) {
-        CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
+    private final CustomGeneratorSettings cfg;
 
+    public PrePopulator(CustomGeneratorSettings cfg) {
+        this.cfg = cfg;
+    }
+
+    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome cubicBiome) {
         Biome biome = cubicBiome.getBiome();
         if (biome != Biomes.DESERT && biome != Biomes.DESERT_HILLS && cfg.waterLakes && random.nextInt(cfg.waterLakeRarity) == 0) {
             (new WorldGenLakes(Blocks.WATER)).generate((World) world, random, pos.randomPopulationPos(random));

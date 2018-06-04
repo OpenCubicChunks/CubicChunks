@@ -55,7 +55,9 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
@@ -88,6 +90,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
     private IBuilder terrainBuilder;
     private final BiomeSource biomeSource;
     private final CustomGeneratorSettings conf;
+    private final Map<Biome, ICubicPopulator> populators = new HashMap<>();
 
     //TODO: Implement more structures
     @Nonnull private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
@@ -101,6 +104,11 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
     public CustomTerrainGenerator(ICubicWorld world, CustomGeneratorSettings settings, final long seed) {
         super(world);
         this.conf = settings;
+
+        for (Biome biome : ForgeRegistries.BIOMES) {
+            CubicBiome cubicBiome = CubicBiome.getCubic(biome);
+            populators.put(biome, cubicBiome.getDecorator(conf));
+        }
 
         this.strongholds = new CubicStrongholdGenerator(conf);
 
@@ -208,9 +216,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
             // but using this for surface generation doesn't cause any
             // noticeable issues
             Random rand = new Random(cube.cubeRandomSeed());
-
-            ICubicPopulator decorator = biome.getDecorator();
-            decorator.generate(world, rand, pos, biome);
+            populators.get(biome.getBiome()).generate(world, rand, pos, biome);
             CubeGeneratorsRegistry.generateWorld(world, rand, pos, biome);
 
             strongholds.generateStructure((World) world, rand, pos);

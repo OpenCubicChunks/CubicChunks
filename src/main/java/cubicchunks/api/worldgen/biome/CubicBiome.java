@@ -23,16 +23,19 @@
  */
 package cubicchunks.api.worldgen.biome;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import cubicchunks.CubicChunks;
 import cubicchunks.api.worldgen.populator.CubicPopulatorList;
 import cubicchunks.api.worldgen.populator.ICubicPopulator;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.generator.custom.biome.replacer.IBiomeBlockReplacerProvider;
 import cubicchunks.worldgen.generator.custom.biome.replacer.OceanWaterReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.SurfaceDefaultReplacer;
 import cubicchunks.worldgen.generator.custom.biome.replacer.TerrainShapeReplacer;
 import cubicchunks.worldgen.generator.custom.populator.AnimalsPopulator;
 import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
+import cubicchunks.worldgen.generator.custom.populator.DesertDecorator;
 import cubicchunks.worldgen.generator.custom.populator.PrePopulator;
 import cubicchunks.worldgen.generator.custom.populator.SnowBiomeDecorator;
 import cubicchunks.worldgen.generator.custom.populator.SurfaceSnowPopulator;
@@ -64,14 +67,14 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
 
     private final Biome originalBiome;
     private final List<IBiomeBlockReplacerProvider> blockReplacers = new ArrayList<>();
-    private ICubicPopulator decorator;
+    private Function<CustomGeneratorSettings, ICubicPopulator> decoratorProvider;
 
     public Iterable<IBiomeBlockReplacerProvider> getReplacerProviders() {
         return Collections.unmodifiableList(blockReplacers);
     }
 
-    public ICubicPopulator getDecorator() {
-        return decorator;
+    public ICubicPopulator getDecorator(CustomGeneratorSettings conf) {
+        return decoratorProvider.apply(conf);
     }
 
     // INTERNAL USE ONLY
@@ -124,7 +127,11 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
     private CubicBiome(Builder builder) {
         this.originalBiome = builder.biome;
         this.blockReplacers.addAll(builder.blockReplacers);
-        this.decorator = builder.decorators;
+        this.decoratorProvider = conf -> {
+            CubicPopulatorList list = new CubicPopulatorList();
+            builder.decorators.forEach(func -> list.add(func.apply(conf)));
+            return list;
+        };
         this.setRegistryName(builder.registryName);
     }
 
@@ -182,7 +189,7 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
         private final Biome biome;
         private List<IBiomeBlockReplacerProvider> blockReplacers = new ArrayList<>();
         private ResourceLocation registryName;
-        private final CubicPopulatorList decorators = new CubicPopulatorList();
+        private final List<Function<CustomGeneratorSettings, ICubicPopulator>> decorators = new ArrayList<>();
 
         public Builder(Biome biome) {
             this.biome = biome;
@@ -206,21 +213,25 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
         }
 
         public Builder defaultDecorators() {
-            this.decorator(new PrePopulator());
-            this.decorator(new DefaultDecorator.Ores());
-            this.decorator(new DefaultDecorator());
+            this.decoratorProvider(PrePopulator::new);
+            this.decoratorProvider(DefaultDecorator.Ores::new);
+            this.decoratorProvider(DefaultDecorator::new);
             return this;
         }
 
         public Builder defaultPostDecorators() {
-            this.decorator(new AnimalsPopulator());
-            this.decorator(new SurfaceSnowPopulator());
+            this.decoratorProvider(c -> new AnimalsPopulator());
+            this.decoratorProvider(c -> new SurfaceSnowPopulator());
             return this;
         }
 
-        public Builder decorator(ICubicPopulator decorator) {
+        public Builder decoratorProvider(Function<CustomGeneratorSettings, ICubicPopulator> decorator) {
             this.decorators.add(decorator);
             return this;
+        }
+
+        public Builder decorator(ICubicPopulator populator) {
+            return decoratorProvider(c -> populator);
         }
 
         public Builder setRegistryName(ResourceLocation registryName) {

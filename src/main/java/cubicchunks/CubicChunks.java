@@ -50,9 +50,7 @@ import cubicchunks.worldgen.generator.custom.biome.replacer.TaigaSurfaceReplacer
 import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
 import cubicchunks.worldgen.generator.custom.populator.DesertDecorator;
 import cubicchunks.worldgen.generator.custom.populator.ForestDecorator;
-import cubicchunks.worldgen.generator.custom.populator.HillsDecorator;
 import cubicchunks.worldgen.generator.custom.populator.JungleDecorator;
-import cubicchunks.worldgen.generator.custom.populator.MesaDecorator;
 import cubicchunks.worldgen.generator.custom.populator.PlainsDecorator;
 import cubicchunks.worldgen.generator.custom.populator.SavannaDecorator;
 import cubicchunks.worldgen.generator.custom.populator.SnowBiomeDecorator;
@@ -191,13 +189,13 @@ public class CubicChunks {
                 .decorator(new ForestDecorator()).defaultDecorators());
         autoRegister(event, BiomeHills.class, b -> b
                 .addDefaultBlockReplacers()
-                .defaultDecorators().decorator(new HillsDecorator()));
+                .defaultDecorators());
         autoRegister(event, BiomeJungle.class, b -> b
                 .addDefaultBlockReplacers()
                 .defaultDecorators().decorator(new JungleDecorator()));
         autoRegister(event, BiomeMesa.class, b -> b
                 .addBlockReplacer(terrainShapeReplacer()).addBlockReplacer(MesaSurfaceReplacer.provider()).addBlockReplacer(oceanWaterReplacer())
-                .decorator(new DefaultDecorator.Ores()).decorator(new MesaDecorator()).decorator(new DefaultDecorator()));
+                .decoratorProvider(DefaultDecorator.Ores::new).decoratorProvider(DefaultDecorator::new));
         autoRegister(event, BiomeMushroomIsland.class, b -> b
                 .addDefaultBlockReplacers()
                 .defaultDecorators());
