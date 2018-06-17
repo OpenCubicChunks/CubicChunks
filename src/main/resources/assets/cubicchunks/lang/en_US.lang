@@ -89,7 +89,11 @@ cubicchunks.gui.customcubic.spacing_height=Height Spacing:
 ### advanced terrain settings ###
 #################################
 
+cubicchunks.gui.customcubic.expected_heights_group=Expected heights
 cubicchunks.gui.customcubic.lock_expected_heights=Lock expected heights
+cubicchunks.gui.customcubic.actual_height=Actual Height
+cubicchunks.gui.customcubic.expected_base_height=Expected base height
+cubicchunks.gui.customcubic.expected_height_variation=Expected height variation
 cubicchunks.gui.customcubic.keep_preview_visible=Keep preview visible
 cubicchunks.gui.customcubic.biome_scale=Preview biome size
 cubicchunks.gui.customcubic.biome_offset=Preview biome offset

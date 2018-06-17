@@ -248,8 +248,8 @@ public class CustomCubicGuiUtils {
         textField.setEditable(true);
         textField.setText(String.format("%.1f", defaultValue));
         textField.setFontOptions(FontOptions.builder().color(0xFFFFFF).build());
-        UISplitLayout<?> split = new UISplitLayout<>(gui, UISplitLayout.Type.SIDE_BY_SIDE,
-                new UILabel(gui, text).setFontOptions(FontOptions.builder().color(0xFFFFFF).build()), textField);
+        UIComponent<?> label = wrappedMiddle(gui, new UILabel(gui, text).setFontOptions(FontOptions.builder().color(0xFFFFFF).build()));
+        UISplitLayout<?> split = new UISplitLayout<>(gui, UISplitLayout.Type.SIDE_BY_SIDE, label, textField);
         split.setSizeOf(UISplitLayout.Pos.SECOND, 40);
         split.autoFitToContent(true);
         return split;
@@ -257,6 +257,13 @@ public class CustomCubicGuiUtils {
 
     public static UIContainer<?> wrappedCentered(MalisisGui gui, UIComponent<?> comp) {
         comp.setAnchor(Anchor.MIDDLE | Anchor.CENTER);
+        UIContainer<?> cont = new UIContainer<>(gui);
+        cont.add(comp);
+        return cont;
+    }
+
+    public static UIContainer<?> wrappedMiddle(MalisisGui gui, UIComponent<?> comp) {
+        comp.setAnchor(Anchor.MIDDLE);
         UIContainer<?> cont = new UIContainer<>(gui);
         cont.add(comp);
         return cont;
